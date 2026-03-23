@@ -72,6 +72,46 @@
             <RepairOrderInlineForm v-model="newRepairOrder" />
           </div>
 
+          <!--
+            Doco customization: customer details for ERPNext sync.
+            Pre-filled from company defaults; submitted after deal creation
+            to sync_deal_contacts_to_erpnext with user-provided address data.
+          -->
+          <div class="mt-5 border-t pt-5">
+            <p class="mb-3 text-sm font-semibold text-ink-gray-8">
+              {{ __('Customer Details') }}
+              <span class="ml-1 text-xs font-normal text-ink-gray-5">
+                {{ __('(for ERPNext sync)') }}
+              </span>
+            </p>
+            <div class="grid grid-cols-2 gap-4">
+              <FormControl
+                type="text"
+                v-model="customerDetails.address_line1"
+                :label="__('Address Line 1')"
+                :placeholder="__('Street address')"
+              />
+              <FormControl
+                type="text"
+                v-model="customerDetails.city"
+                :label="__('City')"
+                :placeholder="__('City')"
+              />
+              <Link
+                doctype="Sales Territory"
+                v-model="customerDetails.territory"
+                :label="__('Territory')"
+                :placeholder="__('Select territory')"
+              />
+              <Link
+                doctype="Customer Group"
+                v-model="customerDetails.customer_group"
+                :label="__('Customer Group')"
+                :placeholder="__('Select group')"
+              />
+            </div>
+          </div>
+
           <ErrorMessage v-if="error" class="mt-4" :message="__(error)" />
         </div>
       </div>
@@ -94,13 +134,14 @@ import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 // Doco customization: repair order form extracted into its own component.
 import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
+import Link from '@/components/Controls/Link.vue'
 import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
 import { isMobileView } from '@/composables/settings'
 import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
-import { Switch, createResource } from 'frappe-ui'
+import { Switch, FormControl, createResource } from 'frappe-ui'
 import { computed, ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -137,6 +178,27 @@ const newRepairOrder = ref({
   is_wet: false,
   turns_on: false,
   broken_screen: false,
+})
+
+// Doco customization: customer details for ERPNext sync.
+// Pre-filled from company defaults; passed to sync_deal_contacts_to_erpnext
+// after deal creation so every contact gets an Individual Customer + address.
+const customerDetails = ref({
+  address_line1: '',
+  city: '',
+  territory: '',
+  customer_group: '',
+})
+
+createResource({
+  url: 'doco.doco.api.get_company_address_defaults',
+  auto: true,
+  onSuccess(defaults) {
+    customerDetails.value.address_line1 = defaults.address_line1 || ''
+    customerDetails.value.city = defaults.city || ''
+    customerDetails.value.territory = defaults.territory || ''
+    customerDetails.value.customer_group = defaults.customer_group || ''
+  },
 })
 
 const { capture } = useTelemetry()
@@ -272,6 +334,21 @@ async function createDeal() {
           auto: true,
         })
       }
+
+      // Doco customization: sync all deal contacts to ERPNext as Individual Customers.
+      // Fire-and-forget — navigation proceeds immediately; sync happens in background.
+      const getVal = (v) => (v && typeof v === 'object' ? v.value : v)
+      createResource({
+        url: 'doco.doco.api.sync_deal_contacts_to_erpnext',
+        params: {
+          deal_name: name,
+          address_line1: customerDetails.value.address_line1 || null,
+          city: customerDetails.value.city || null,
+          territory: getVal(customerDetails.value.territory) || null,
+          customer_group: getVal(customerDetails.value.customer_group) || null,
+        },
+        auto: true,
+      })
 
       show.value = false
       router.push({ name: 'Deal', params: { dealId: name } })
