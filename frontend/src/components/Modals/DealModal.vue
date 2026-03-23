@@ -98,7 +98,7 @@
                 :placeholder="__('City')"
               />
               <Link
-                doctype="Sales Territory"
+                doctype="Territory"
                 v-model="customerDetails.territory"
                 :label="__('Territory')"
                 :placeholder="__('Select territory')"
