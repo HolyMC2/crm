@@ -155,24 +155,48 @@
 
     <!-- Invoices -->
     <div>
-      <div class="mb-4 flex h-8 items-center">
+      <div class="mb-3 flex h-8 items-center justify-between">
         <span class="text-base font-semibold text-ink-gray-8">
           {{ __('Invoices') }}
         </span>
+      </div>
+
+      <!-- Customer filter pills -->
+      <div v-if="invoiceCustomers.length > 1" class="mb-3 flex flex-wrap gap-1.5">
+        <button
+          class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+          :class="selectedInvoiceCustomer === null
+            ? 'bg-ink-gray-8 text-white'
+            : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+          @click="selectedInvoiceCustomer = null"
+        >
+          {{ __('All') }}
+        </button>
+        <button
+          v-for="c in invoiceCustomers"
+          :key="c"
+          class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+          :class="selectedInvoiceCustomer === c
+            ? 'bg-ink-gray-8 text-white'
+            : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+          @click="selectedInvoiceCustomer = c"
+        >
+          {{ c }}
+        </button>
       </div>
 
       <div v-if="invoices.loading" class="flex justify-center py-4">
         <LoadingIndicator class="h-5 w-5" />
       </div>
       <div
-        v-else-if="!invoiceList.length"
+        v-else-if="!filteredInvoiceList.length"
         class="rounded-lg border border-outline-gray-2 px-4 py-5 text-center text-sm text-ink-gray-5"
       >
         {{ __('No invoices linked to this deal') }}
       </div>
       <div v-else class="flex flex-col gap-2">
         <div
-          v-for="inv in invoiceList"
+          v-for="inv in filteredInvoiceList"
           :key="inv.name"
           class="flex items-center justify-between rounded-lg border border-outline-gray-2 bg-surface-gray-1 px-4 py-3"
         >
@@ -323,6 +347,25 @@ const invoices = createResource({
 })
 
 const invoiceList = computed(() => invoices.data || [])
+
+const invoiceCustomers = computed(() => {
+  const seen = new Set()
+  const result = []
+  for (const inv of invoiceList.value) {
+    if (inv.customer && !seen.has(inv.customer)) {
+      seen.add(inv.customer)
+      result.push(inv.customer)
+    }
+  }
+  return result
+})
+
+const selectedInvoiceCustomer = ref(null)
+
+const filteredInvoiceList = computed(() => {
+  if (!selectedInvoiceCustomer.value) return invoiceList.value
+  return invoiceList.value.filter((inv) => inv.customer === selectedInvoiceCustomer.value)
+})
 
 function invoiceUrl(inv) {
   const route = inv.doctype === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'
