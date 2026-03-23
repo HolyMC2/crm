@@ -1,38 +1,53 @@
 <template>
   <div class="mb-8 flex flex-col gap-8">
-    <!-- Customer -->
+    <!-- Customers -->
     <div>
       <div class="mb-4 flex h-8 items-center justify-between">
         <span class="text-base font-semibold text-ink-gray-8">
-          {{ __('Customer') }}
+          {{ __('Customers') }}
         </span>
-      </div>
-      <div v-if="customer.loading" class="flex justify-center py-4">
-        <LoadingIndicator class="h-5 w-5" />
-      </div>
-      <div v-else-if="customer.data" class="flex items-center justify-between rounded-lg border border-outline-gray-2 bg-surface-gray-1 px-4 py-3">
-        <a
-          :href="`/app/customer/${encodeURIComponent(customer.data)}`"
-          target="_blank"
-          class="text-sm font-semibold text-ink-gray-9 hover:underline"
-        >
-          {{ customer.data }}
-        </a>
-        <span class="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
-          {{ __('Linked') }}
-        </span>
-      </div>
-      <div v-else class="flex items-center justify-between rounded-lg border border-outline-gray-2 px-4 py-3 text-sm text-ink-gray-5">
-        <span>{{ __('No customer linked — required to convert quotations to sales orders') }}</span>
         <Button
           size="sm"
-          variant="solid"
-          :label="__('Create Customer')"
-          :loading="creatingCustomer"
-          @click="createCustomer"
+          variant="ghost"
+          :label="__('Sync')"
+          :loading="syncing"
+          @click="syncCustomers"
         />
       </div>
-      <ErrorMessage v-if="customerError" class="mt-2" :message="customerError" />
+      <div v-if="customers.loading" class="flex justify-center py-4">
+        <LoadingIndicator class="h-5 w-5" />
+      </div>
+      <div
+        v-else-if="!customerList.length"
+        class="rounded-lg border border-outline-gray-2 px-4 py-3 text-sm text-ink-gray-5"
+      >
+        {{ __('No customers linked — click Sync to create from contacts') }}
+      </div>
+      <div v-else class="flex flex-col gap-2">
+        <div
+          v-for="c in customerList"
+          :key="c.customer"
+          class="flex items-center justify-between rounded-lg border border-outline-gray-2 bg-surface-gray-1 px-4 py-3"
+        >
+          <div class="flex flex-col gap-0.5">
+            <a
+              :href="`/app/customer/${encodeURIComponent(c.customer)}`"
+              target="_blank"
+              class="text-sm font-semibold text-ink-gray-9 hover:underline"
+            >
+              {{ c.customer }}
+            </a>
+            <span v-if="c.mobile_no" class="text-xs text-ink-gray-5">{{ c.mobile_no }}</span>
+          </div>
+          <span
+            v-if="c.is_primary"
+            class="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700"
+          >
+            {{ __('Primary') }}
+          </span>
+        </div>
+      </div>
+      <ErrorMessage v-if="syncError" class="mt-2" :message="syncError" />
     </div>
 
     <!-- Quotations -->
@@ -145,47 +160,49 @@ const props = defineProps({
   docname: { type: String, required: true },
 })
 
-// ── Customer ────────────────────────────────────────────────────────────────────────────
+// ── Customers ─────────────────────────────────────────────────────────────────
 
-const creatingCustomer = ref(false)
-const customerError = ref(null)
+const syncing = ref(false)
+const syncError = ref(null)
 
-const customer = createResource({
+const customers = createResource({
   url: 'doco.doco.api.get_deal_customer',
   params: { deal_name: props.docname },
   auto: true,
 })
 
-const createCustomerResource = createResource({
-  url: 'doco.doco.api.create_customer_from_deal',
+const customerList = computed(() => customers.data || [])
+
+const syncResource = createResource({
+  url: 'doco.doco.api.sync_deal_contacts_to_erpnext',
 })
 
-function createCustomer() {
-  customerError.value = null
-  creatingCustomer.value = true
-  createCustomerResource.submit(
+function syncCustomers() {
+  syncError.value = null
+  syncing.value = true
+  syncResource.submit(
     { deal_name: props.docname },
     {
-      onSuccess(name) {
-        creatingCustomer.value = false
-        customer.data = name
+      onSuccess() {
+        syncing.value = false
+        customers.reload()
       },
       onError(err) {
-        creatingCustomer.value = false
-        customerError.value = err.messages?.join('\n') || err.message
+        syncing.value = false
+        syncError.value = err.messages?.join('\n') || err.message
       },
     },
   )
 }
 
-// ── Quotations ────────────────────────────────────────────────────────────────────────
+// ── Quotations ────────────────────────────────────────────────────────────────
 
 const newQuotationUrl = computed(
   () =>
     `/app/quotation/new-quotation-1?quotation_to=CRM%20Deal&party_name=${encodeURIComponent(props.docname)}`,
 )
 
-// ── Quotations ────────────────────────────────────────────────────────────────────────
+// ── Quotations ────────────────────────────────────────────────────────────────
 
 const quotations = createResource({
   url: 'doco.doco.api.get_deal_quotations',
@@ -205,7 +222,7 @@ function quotationStatusClass(status) {
   }
 }
 
-// ── Sales Orders ────────────────────────────────────────────────────────────────────────
+// ── Sales Orders ──────────────────────────────────────────────────────────────
 
 const salesOrders = createResource({
   url: 'doco.doco.api.get_deal_sales_orders',
@@ -225,7 +242,7 @@ function salesOrderStatusClass(status) {
   }
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmt(amount) {
   if (amount == null) return '—'
