@@ -312,31 +312,12 @@ async function createDeal() {
       capture('deal_created')
       isDealCreating.value = false
 
-      const pm = newRepairOrder.value.phone_model
-      if (pm) {
-        const phoneModelVal = pm && typeof pm === 'object' ? pm.value : pm
-        const repairVal = newRepairOrder.value.repair_to_be_done
-        const repairTypeVal = repairVal && typeof repairVal === 'object' ? repairVal.value : repairVal
-        createResource({
-          url: 'doco.doco.api.create_and_link_repair_order',
-          params: {
-            deal_name: name,
-            phone_model: phoneModelVal,
-            repair_to_be_done: repairTypeVal || null,
-            general_status: newRepairOrder.value.general_status || null,
-            client: newRepairOrder.value.client || deal.doc.contact || null,
-            imei: newRepairOrder.value.imei || null,
-            has_sim_tray: newRepairOrder.value.has_sim_tray ? 1 : 0,
-            is_wet: newRepairOrder.value.is_wet ? 1 : 0,
-            turns_on: newRepairOrder.value.turns_on ? 1 : 0,
-            broken_screen: newRepairOrder.value.broken_screen ? 1 : 0,
-          },
-          auto: true,
-        })
-      }
+      // Navigate immediately — background work continues after.
+      show.value = false
+      router.push({ name: 'Deal', params: { dealId: name } })
 
-      // Doco customization: sync all deal contacts to ERPNext as Individual Customers.
-      // Fire-and-forget — navigation proceeds immediately; sync happens in background.
+      // Doco customization: sync contacts first so the Contact → Customer link
+      // exists before the Repair Order is created (client field links to Contact).
       const getVal = (v) => (v && typeof v === 'object' ? v.value : v)
       createResource({
         url: 'doco.doco.api.sync_deal_contacts_to_erpnext',
@@ -348,10 +329,38 @@ async function createDeal() {
           customer_group: getVal(customerDetails.value.customer_group) || null,
         },
         auto: true,
-      })
+        onSuccess(syncResults) {
+          const pm = newRepairOrder.value.phone_model
+          if (!pm) return
 
-      show.value = false
-      router.push({ name: 'Deal', params: { dealId: name } })
+          // Use the explicitly selected client, or fall back to the primary
+          // contact that was just synced to ERPNext as a Customer.
+          const primaryContact =
+            getVal(newRepairOrder.value.client) ||
+            syncResults?.find((r) => r.is_primary)?.contact ||
+            syncResults?.[0]?.contact ||
+            null
+
+          const phoneModelVal = getVal(pm)
+          const repairTypeVal = getVal(newRepairOrder.value.repair_to_be_done)
+          createResource({
+            url: 'doco.doco.api.create_and_link_repair_order',
+            params: {
+              deal_name: name,
+              phone_model: phoneModelVal,
+              repair_to_be_done: repairTypeVal || null,
+              general_status: newRepairOrder.value.general_status || null,
+              client: primaryContact,
+              imei: getVal(newRepairOrder.value.imei) || null,
+              has_sim_tray: newRepairOrder.value.has_sim_tray ? 1 : 0,
+              is_wet: newRepairOrder.value.is_wet ? 1 : 0,
+              turns_on: newRepairOrder.value.turns_on ? 1 : 0,
+              broken_screen: newRepairOrder.value.broken_screen ? 1 : 0,
+            },
+            auto: true,
+          })
+        },
+      })
     },
     onError(err) {
       isDealCreating.value = false
