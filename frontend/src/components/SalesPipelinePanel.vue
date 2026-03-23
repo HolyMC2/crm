@@ -56,9 +56,13 @@
         <span class="text-base font-semibold text-ink-gray-8">
           {{ __('Quotations') }}
         </span>
-        <a :href="newQuotationUrl" target="_blank">
-          <Button size="sm" variant="ghost" :label="__('New')" />
-        </a>
+        <Button
+          size="sm"
+          variant="ghost"
+          :label="__('New')"
+          :loading="creatingQuotation"
+          @click="createQuotation"
+        />
       </div>
 
       <div v-if="quotations.loading" class="flex justify-center py-4">
@@ -197,12 +201,26 @@ function syncCustomers() {
 
 // ── Quotations ────────────────────────────────────────────────────────────────
 
-const newQuotationUrl = computed(
-  () =>
-    `/app/quotation/new-quotation-1?quotation_to=CRM%20Deal&party_name=${encodeURIComponent(props.docname)}`,
-)
+const creatingQuotation = ref(false)
 
-// ── Quotations ────────────────────────────────────────────────────────────────
+function createQuotation() {
+  creatingQuotation.value = true
+  createResource({
+    url: 'doco.doco.api.create_draft_quotation',
+    params: { deal_name: props.docname },
+    auto: true,
+    onSuccess(name) {
+      creatingQuotation.value = false
+      window.open(`/app/quotation/${encodeURIComponent(name)}`, '_blank')
+      quotations.reload()
+    },
+    onError() {
+      creatingQuotation.value = false
+    },
+  })
+}
+
+// ── Quotations list ──────────────────────────────────────────────────────────────
 
 const quotations = createResource({
   url: 'doco.doco.api.get_deal_quotations',
