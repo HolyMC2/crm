@@ -152,6 +152,60 @@
         </div>
       </div>
     </div>
+
+    <!-- Invoices -->
+    <div>
+      <div class="mb-4 flex h-8 items-center">
+        <span class="text-base font-semibold text-ink-gray-8">
+          {{ __('Invoices') }}
+        </span>
+      </div>
+
+      <div v-if="invoices.loading" class="flex justify-center py-4">
+        <LoadingIndicator class="h-5 w-5" />
+      </div>
+      <div
+        v-else-if="!invoiceList.length"
+        class="rounded-lg border border-outline-gray-2 px-4 py-5 text-center text-sm text-ink-gray-5"
+      >
+        {{ __('No invoices linked to this deal') }}
+      </div>
+      <div v-else class="flex flex-col gap-2">
+        <div
+          v-for="inv in invoiceList"
+          :key="inv.name"
+          class="flex items-center justify-between rounded-lg border border-outline-gray-2 bg-surface-gray-1 px-4 py-3"
+        >
+          <div class="flex flex-col gap-0.5">
+            <a
+              :href="invoiceUrl(inv)"
+              target="_blank"
+              class="text-sm font-semibold text-ink-gray-9 hover:underline"
+            >
+              {{ inv.name }}
+            </a>
+            <span class="text-xs text-ink-gray-5">{{ inv.posting_date }}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-ink-gray-7">
+              {{ inv.currency }} {{ fmt(inv.grand_total) }}
+            </span>
+            <span
+              class="rounded px-2 py-0.5 text-xs font-semibold"
+              :class="invoiceTypeClass(inv.doctype)"
+            >
+              {{ inv.doctype === 'POS Invoice' ? __('POS') : __('SI') }}
+            </span>
+            <span
+              class="rounded px-2 py-0.5 text-xs font-semibold"
+              :class="invoiceStatusClass(inv.status)"
+            >
+              {{ __(inv.status) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -164,7 +218,7 @@ const props = defineProps({
   docname: { type: String, required: true },
 })
 
-// ── Customers ─────────────────────────────────────────────────────────────────
+// ── Customers ─────────────────────────────────────────────────────────────────────────────
 
 const syncing = ref(false)
 const syncError = ref(null)
@@ -199,7 +253,7 @@ function syncCustomers() {
   )
 }
 
-// ── Quotations ────────────────────────────────────────────────────────────────
+// ── Quotations ────────────────────────────────────────────────────────────────────────
 
 const creatingQuotation = ref(false)
 
@@ -220,7 +274,7 @@ function createQuotation() {
   })
 }
 
-// ── Quotations list ──────────────────────────────────────────────────────────────
+// ── Quotations list ───────────────────────────────────────────────────────────────────
 
 const quotations = createResource({
   url: 'doco.doco.api.get_deal_quotations',
@@ -240,7 +294,7 @@ function quotationStatusClass(status) {
   }
 }
 
-// ── Sales Orders ──────────────────────────────────────────────────────────────
+// ── Sales Orders ────────────────────────────────────────────────────────────────────────
 
 const salesOrders = createResource({
   url: 'doco.doco.api.get_deal_sales_orders',
@@ -260,7 +314,38 @@ function salesOrderStatusClass(status) {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Invoices ─────────────────────────────────────────────────────────────────────────────
+
+const invoices = createResource({
+  url: 'doco.doco.api.get_deal_invoices',
+  params: { deal_name: props.docname },
+  auto: true,
+})
+
+const invoiceList = computed(() => invoices.data || [])
+
+function invoiceUrl(inv) {
+  const route = inv.doctype === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'
+  return `/app/${route}/${encodeURIComponent(inv.name)}`
+}
+
+function invoiceTypeClass(doctype) {
+  return doctype === 'POS Invoice'
+    ? 'bg-purple-100 text-purple-700'
+    : 'bg-teal-100 text-teal-700'
+}
+
+function invoiceStatusClass(status) {
+  return {
+    'bg-green-100 text-green-700': status === 'Paid',
+    'bg-blue-100 text-blue-700': status === 'Submitted',
+    'bg-orange-100 text-orange-700': status === 'Unpaid',
+    'bg-red-100 text-red-700': ['Cancelled', 'Return'].includes(status),
+    'bg-gray-100 text-gray-500': status === 'Draft',
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────────────
 
 function fmt(amount) {
   if (amount == null) return '—'
