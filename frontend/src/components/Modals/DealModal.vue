@@ -55,6 +55,23 @@
             :data="deal.doc"
             doctype="CRM Deal"
           />
+
+          <!--
+            Doco customization: inline Repair Order creation.
+            All form fields, IMEI creation, and item-group filtering live in
+            RepairOrderInlineForm so this file stays easy to rebase upstream.
+            `newRepairOrder` is read in createDeal() to call the doco API.
+          -->
+          <div class="mt-5 border-t pt-5">
+            <p class="mb-3 text-sm font-semibold text-ink-gray-8">
+              {{ __('New Repair Order') }}
+              <span class="ml-1 text-xs font-normal text-ink-gray-5">
+                {{ __('(optional)') }}
+              </span>
+            </p>
+            <RepairOrderInlineForm v-model="newRepairOrder" />
+          </div>
+
           <ErrorMessage v-if="error" class="mt-4" :message="__(error)" />
         </div>
       </div>
@@ -75,6 +92,8 @@
 <script setup>
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
+// Doco customization: repair order form extracted into its own component.
+import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
 import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
 import { isMobileView } from '@/composables/settings'
@@ -104,6 +123,22 @@ const hasContactSections = ref(true)
 const isDealCreating = ref(false)
 const chooseExistingContact = ref(false)
 const chooseExistingOrganization = ref(false)
+
+// Doco customization: form state for the optional inline Repair Order.
+// RepairOrderInlineForm binds to this via v-model; createDeal() reads it
+// after the deal is saved to optionally call create_and_link_repair_order.
+const newRepairOrder = ref({
+  phone_model: null,
+  repair_to_be_done: null,
+  general_status: '',
+  client: null,
+  imei: null,
+  has_sim_tray: false,
+  is_wet: false,
+  turns_on: false,
+  broken_screen: false,
+})
+
 const { capture } = useTelemetry()
 
 watch(
@@ -214,6 +249,30 @@ async function createDeal() {
     onSuccess(name) {
       capture('deal_created')
       isDealCreating.value = false
+
+      const pm = newRepairOrder.value.phone_model
+      if (pm) {
+        const phoneModelVal = pm && typeof pm === 'object' ? pm.value : pm
+        const repairVal = newRepairOrder.value.repair_to_be_done
+        const repairTypeVal = repairVal && typeof repairVal === 'object' ? repairVal.value : repairVal
+        createResource({
+          url: 'doco.doco.api.create_and_link_repair_order',
+          params: {
+            deal_name: name,
+            phone_model: phoneModelVal,
+            repair_to_be_done: repairTypeVal || null,
+            general_status: newRepairOrder.value.general_status || null,
+            client: newRepairOrder.value.client || deal.doc.contact || null,
+            imei: newRepairOrder.value.imei || null,
+            has_sim_tray: newRepairOrder.value.has_sim_tray ? 1 : 0,
+            is_wet: newRepairOrder.value.is_wet ? 1 : 0,
+            turns_on: newRepairOrder.value.turns_on ? 1 : 0,
+            broken_screen: newRepairOrder.value.broken_screen ? 1 : 0,
+          },
+          auto: true,
+        })
+      }
+
       show.value = false
       router.push({ name: 'Deal', params: { dealId: name } })
     },
