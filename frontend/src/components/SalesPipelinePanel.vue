@@ -159,7 +159,60 @@
         <span class="text-base font-semibold text-ink-gray-8">
           {{ __('Invoices') }}
         </span>
+        <Button
+          size="sm"
+          variant="ghost"
+          :label="__('Link')"
+          @click="showLinkDialog = true"
+        />
       </div>
+
+      <!-- Link Invoice dialog -->
+      <Dialog
+        v-model="showLinkDialog"
+        :options="{ title: __('Link Invoice') }"
+      >
+        <template #body-content>
+          <div class="flex flex-col gap-4">
+            <div class="flex gap-2">
+              <button
+                class="flex-1 rounded-lg border py-2 text-sm font-semibold transition-colors"
+                :class="linkDoctype === 'POS Invoice'
+                  ? 'border-ink-gray-8 bg-ink-gray-8 text-white'
+                  : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'"
+                @click="linkDoctype = 'POS Invoice'; linkInvoiceName = ''"
+              >
+                {{ __('POS Invoice') }}
+              </button>
+              <button
+                class="flex-1 rounded-lg border py-2 text-sm font-semibold transition-colors"
+                :class="linkDoctype === 'Sales Invoice'
+                  ? 'border-ink-gray-8 bg-ink-gray-8 text-white'
+                  : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'"
+                @click="linkDoctype = 'Sales Invoice'; linkInvoiceName = ''"
+              >
+                {{ __('Sales Invoice') }}
+              </button>
+            </div>
+            <Link
+              :key="linkDoctype"
+              :doctype="linkDoctype"
+              :value="linkInvoiceName"
+              :label="__('Invoice')"
+              @change="(v) => (linkInvoiceName = v)"
+            />
+          </div>
+        </template>
+        <template #actions>
+          <Button
+            variant="solid"
+            :label="__('Link')"
+            :disabled="!linkInvoiceName"
+            :loading="linking"
+            @click="doLinkInvoice"
+          />
+        </template>
+      </Dialog>
 
       <!-- Customer filter pills -->
       <div v-if="invoiceCustomers.length > 1" class="mb-3 flex flex-wrap gap-1.5">
@@ -234,8 +287,9 @@
 </template>
 
 <script setup>
+import Link from '@/components/Controls/Link.vue'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
-import { Button, ErrorMessage, createResource } from 'frappe-ui'
+import { Button, Dialog, ErrorMessage, createResource } from 'frappe-ui'
 import { computed, ref } from 'vue'
 
 const props = defineProps({
@@ -366,6 +420,36 @@ const filteredInvoiceList = computed(() => {
   if (!selectedInvoiceCustomer.value) return invoiceList.value
   return invoiceList.value.filter((inv) => inv.customer === selectedInvoiceCustomer.value)
 })
+
+const showLinkDialog = ref(false)
+const linkDoctype = ref('POS Invoice')
+const linkInvoiceName = ref('')
+const linking = ref(false)
+
+const linkResource = createResource({ url: 'doco.doco.api.link_invoice_to_deal' })
+
+function doLinkInvoice() {
+  if (!linkInvoiceName.value) return
+  linking.value = true
+  linkResource.submit(
+    {
+      deal_name: props.docname,
+      invoice_name: linkInvoiceName.value,
+      invoice_doctype: linkDoctype.value,
+    },
+    {
+      onSuccess() {
+        linking.value = false
+        showLinkDialog.value = false
+        linkInvoiceName.value = ''
+        invoices.reload()
+      },
+      onError() {
+        linking.value = false
+      },
+    },
+  )
+}
 
 function invoiceUrl(inv) {
   const route = inv.doctype === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'
