@@ -302,7 +302,7 @@ const syncing = ref(false)
 const syncError = ref(null)
 
 const customers = createResource({
-  url: 'doco.doco.api.get_deal_customer',
+  url: 'doco.doco.customers.get_deal_customer',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -310,7 +310,7 @@ const customers = createResource({
 const customerList = computed(() => customers.data || [])
 
 const syncResource = createResource({
-  url: 'doco.doco.api.sync_deal_contacts_to_erpnext',
+  url: 'doco.doco.customers.sync_deal_contacts_to_erpnext',
 })
 
 function syncCustomers() {
@@ -338,7 +338,7 @@ const creatingQuotation = ref(false)
 function createQuotation() {
   creatingQuotation.value = true
   createResource({
-    url: 'doco.doco.api.create_draft_quotation',
+    url: 'doco.doco.deal_documents.create_draft_quotation',
     params: { deal_name: props.docname },
     auto: true,
     onSuccess(name) {
@@ -355,7 +355,7 @@ function createQuotation() {
 // ── Quotations list ───────────────────────────────────────────────────────────────────
 
 const quotations = createResource({
-  url: 'doco.doco.api.get_deal_quotations',
+  url: 'doco.doco.deal_documents.get_deal_quotations',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -375,7 +375,7 @@ function quotationStatusClass(status) {
 // ── Sales Orders ────────────────────────────────────────────────────────────────────────
 
 const salesOrders = createResource({
-  url: 'doco.doco.api.get_deal_sales_orders',
+  url: 'doco.doco.deal_documents.get_deal_sales_orders',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -395,7 +395,7 @@ function salesOrderStatusClass(status) {
 // ── Invoices ─────────────────────────────────────────────────────────────────────────────
 
 const invoices = createResource({
-  url: 'doco.doco.api.get_deal_invoices',
+  url: 'doco.doco.deal_documents.get_deal_invoices',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -426,7 +426,7 @@ const linkDoctype = ref('POS Invoice')
 const linkInvoiceName = ref('')
 const linking = ref(false)
 
-const linkResource = createResource({ url: 'doco.doco.api.link_invoice_to_deal' })
+const linkResource = createResource({ url: 'doco.doco.deal_documents.link_invoice_to_deal' })
 
 function doLinkInvoice() {
   if (!linkInvoiceName.value) return
