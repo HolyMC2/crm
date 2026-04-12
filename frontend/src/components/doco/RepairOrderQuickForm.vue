@@ -94,11 +94,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const __ = window.__ || ((t) => t)
+
 const checkboxes = [
-  { field: 'has_sim_tray', label: 'Has SIM Tray?' },
-  { field: 'is_wet', label: 'Is it Wet?' },
-  { field: 'turns_on', label: 'Does it Turn On?' },
-  { field: 'broken_screen', label: 'Broken Screen?' },
+  { field: 'has_sim_tray', label: __('Has SIM Tray?') },
+  { field: 'is_wet',       label: __('Is it Wet?') },
+  { field: 'turns_on',     label: __('Does it Turn On?') },
+  { field: 'broken_screen', label: __('Broken Screen?') },
 ]
 
 function update(field, value) {
