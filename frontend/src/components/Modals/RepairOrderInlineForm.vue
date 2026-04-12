@@ -26,15 +26,9 @@
     <!-- Row 1: Phone Model / Repair Type / Condition -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div>
-        <!--
-          :key forces remount when the item-group setting loads so the Link
-          component picks up the filter instead of showing all Items.
-        -->
         <Link
-          :key="settings.data?.phone_item_group || '__all__'"
-          doctype="Item"
+          doctype="Phone Model"
           v-model="form.phone_model"
-          :filters="phoneItemFilters"
           :label="__('Phone Model')"
           :placeholder="__('Select model')"
         />
@@ -102,25 +96,10 @@
  * Upstream rebase impact: zero (this file is new, never conflicts).
  */
 import Link from '@/components/Controls/Link.vue'
-import { useDocoSettings } from '@/composables/docoSettings'
 import { FormControl } from 'frappe-ui'
-import { computed } from 'vue'
 
-// ── v-model ───────────────────────────────────────────────────────────────────────────────
 // defineModel() gives us a two-way binding to the parent's newRepairOrder ref.
-// Mutating `form.value.xxx` (or `form.xxx` in template) propagates back to the
-// parent automatically — no manual emit required.
 const form = defineModel({ required: true })
-
-// ── Phone item group filter ───────────────────────────────────────────────────────────
-// Doco Settings holds the Item Group that scopes phone model selection.
-// The shared singleton resource is already auto-fetching; we just read it.
-const { settings } = useDocoSettings()
-
-const phoneItemFilters = computed(() => {
-  const group = settings.data?.phone_item_group
-  return group ? [['item_group', '=', group]] : []
-})
 
 // ── Static option lists ──────────────────────────────────────────────────────────────
 const conditionOptions = [
@@ -137,8 +116,5 @@ const checkFields = [
   { key: 'broken_screen', label: 'Broken Screen' },
 ]
 
-// Serial No records must be created via the Repair Order classic UI in ERPNext
-// (Repair Order → serial_numbers child table).  Creating them inline from the
-// CRM frontend requires ignore_mandatory=True because ERPNext enforces item_code
-// on Serial No — linking them here is read-only search only.
+
 </script>

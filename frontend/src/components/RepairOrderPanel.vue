@@ -99,10 +99,8 @@
         <div class="flex flex-col gap-4 px-1">
           <div>
             <Link
-              :key="settings.data?.phone_item_group || '__all__'"
-              doctype="Item"
+              doctype="Phone Model"
               v-model="newOrder.phone_model"
-              :filters="phoneItemFilters"
               :label="__('Phone Model *')"
               :placeholder="__('Select model')"
             />
@@ -174,15 +172,8 @@
 import ExternalLinkIcon from '@/components/Icons/ExternalLinkIcon.vue'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import Link from '@/components/Controls/Link.vue'
-import { useDocoSettings } from '@/composables/docoSettings'
 import { Button, FormControl, Dialog, ErrorMessage, createResource } from 'frappe-ui'
-import { computed, ref } from 'vue'
-
-const { settings } = useDocoSettings()
-const phoneItemFilters = computed(() => {
-  const group = settings.data?.phone_item_group
-  return group ? [['item_group', '=', group]] : []
-})
+import { ref } from 'vue'
 
 const props = defineProps({
   docname: { type: String, required: true },
@@ -199,7 +190,7 @@ const checkFields = [
 // ── Existing orders ──────────────────────────────────────────────────────────────────────────
 
 const orders = createResource({
-  url: 'doco.doco.api.get_deal_repair_orders',
+  url: 'doco.doco.repair_orders.get_deal_repair_orders',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -256,7 +247,7 @@ function submitNewOrder() {
 
   creating.value = true
   createResource({
-    url: 'doco.doco.api.create_and_link_repair_order',
+    url: 'doco.doco.repair_orders.create_and_link_repair_order',
     params: {
       deal_name: props.docname,
       phone_model: phoneModelVal,
