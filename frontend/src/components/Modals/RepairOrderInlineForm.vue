@@ -110,10 +110,10 @@ const conditionOptions = [
 ]
 
 const checkFields = [
-  { key: 'has_sim_tray', label: 'Has SIM Tray' },
-  { key: 'is_wet',       label: 'Is Wet' },
-  { key: 'turns_on',     label: 'Turns On' },
-  { key: 'broken_screen', label: 'Broken Screen' },
+  { key: 'has_sim_tray', label: __('Has SIM Tray') },
+  { key: 'is_wet',       label: __('Is Wet') },
+  { key: 'turns_on',     label: __('Turns On') },
+  { key: 'broken_screen', label: __('Broken Screen') },
 ]
 
 
