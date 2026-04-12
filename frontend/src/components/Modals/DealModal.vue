@@ -245,6 +245,9 @@ const tabs = createResource({
           ) {
             hasContactSections.value = true
           }
+          column.fields = column.fields.filter(
+            (field) => !['website', 'annual_revenue'].includes(field.fieldname)
+          )
           column.fields.forEach((field) => {
             if (field.fieldname == 'status') {
               field.fieldtype = 'Select'
