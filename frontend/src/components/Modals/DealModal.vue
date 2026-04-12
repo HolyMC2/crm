@@ -55,6 +55,7 @@
             :data="deal.doc"
             doctype="CRM Deal"
           />
+          <RepairOrderQuickForm v-model="repairData" />
           <ErrorMessage v-if="error" class="mt-4" :message="__(error)" />
         </div>
       </div>
@@ -75,6 +76,7 @@
 <script setup>
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
+import RepairOrderQuickForm from '@/components/doco/RepairOrderQuickForm.vue'
 import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
 import { isMobileView } from '@/composables/settings'
@@ -104,6 +106,16 @@ const hasContactSections = ref(true)
 const isDealCreating = ref(false)
 const chooseExistingContact = ref(false)
 const chooseExistingOrganization = ref(false)
+const repairData = ref({
+  phone_model: '',
+  repair_to_be_done: '',
+  general_status: '',
+  technician: '',
+  has_sim_tray: false,
+  is_wet: false,
+  turns_on: false,
+  broken_screen: false,
+})
 const { capture } = useTelemetry()
 
 watch(
@@ -214,8 +226,32 @@ async function createDeal() {
     onSuccess(name) {
       capture('deal_created')
       isDealCreating.value = false
-      show.value = false
-      router.push({ name: 'Deal', params: { dealId: name } })
+      const navigate = () => {
+        show.value = false
+        router.push({ name: 'Deal', params: { dealId: name } })
+      }
+      if (repairData.value.phone_model) {
+        const rd = repairData.value
+        createResource({
+          url: 'doco.doco.repair_orders.create_and_link_repair_order',
+          params: {
+            deal_name: name,
+            phone_model: rd.phone_model,
+            repair_to_be_done: rd.repair_to_be_done || null,
+            general_status: rd.general_status || null,
+            technician: rd.technician || null,
+            has_sim_tray: rd.has_sim_tray ? 1 : 0,
+            is_wet: rd.is_wet ? 1 : 0,
+            turns_on: rd.turns_on ? 1 : 0,
+            broken_screen: rd.broken_screen ? 1 : 0,
+          },
+          auto: true,
+          onSuccess: navigate,
+          onError: navigate,
+        })
+      } else {
+        navigate()
+      }
     },
     onError(err) {
       isDealCreating.value = false
