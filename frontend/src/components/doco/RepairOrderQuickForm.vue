@@ -51,6 +51,16 @@
           @change="update('technician', $event)"
         />
       </div>
+      <div>
+        <div class="mb-2 text-sm text-ink-gray-5">{{ __('Client') }}</div>
+        <Link
+          class="form-control"
+          :value="modelValue.client"
+          doctype="Contact"
+          :placeholder="__('Select client')"
+          @change="update('client', $event)"
+        />
+      </div>
     </div>
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div
@@ -84,6 +94,7 @@ const props = defineProps({
       repair_to_be_done: '',
       general_status: '',
       technician: '',
+      client: '',
       has_sim_tray: false,
       is_wet: false,
       turns_on: false,
