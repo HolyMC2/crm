@@ -233,7 +233,7 @@ async function createDeal() {
       if (repairData.value.phone_model) {
         const rd = repairData.value
         createResource({
-          url: 'doco.doco.repair_orders.create_and_link_repair_order',
+          url: 'doco.repair.repair_orders.create_and_link_repair_order',
           params: {
             deal_name: name,
             phone_model: rd.phone_model,

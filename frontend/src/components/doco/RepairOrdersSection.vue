@@ -210,7 +210,7 @@ const emptyRepair = () => ({
 const newRepair = ref(emptyRepair())
 
 const repairOrders = createResource({
-  url: 'doco.doco.repair_orders.get_deal_repair_orders',
+  url: 'doco.repair.repair_orders.get_deal_repair_orders',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -228,7 +228,7 @@ function createRepairOrder() {
   createError.value = null
   const rd = newRepair.value
   createResource({
-    url: 'doco.doco.repair_orders.create_and_link_repair_order',
+    url: 'doco.repair.repair_orders.create_and_link_repair_order',
     params: {
       deal_name: props.docname,
       phone_model: rd.phone_model,

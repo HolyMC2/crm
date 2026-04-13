@@ -117,19 +117,19 @@ const creating = ref(false)
 // ── Data fetching ────────────────────────────────────────────────────────────
 
 const quotationsRes = createResource({
-  url: 'doco.doco.deal_documents.get_deal_quotations',
+  url: 'doco.repair.deal_documents.get_deal_quotations',
   params: { deal_name: props.docname },
   auto: true,
 })
 
 const salesOrdersRes = createResource({
-  url: 'doco.doco.deal_documents.get_deal_sales_orders',
+  url: 'doco.repair.deal_documents.get_deal_sales_orders',
   params: { deal_name: props.docname },
   auto: true,
 })
 
 const invoicesRes = createResource({
-  url: 'doco.doco.deal_documents.get_deal_invoices',
+  url: 'doco.repair.deal_documents.get_deal_invoices',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -157,7 +157,7 @@ function reload() {
 function createQuotation() {
   creating.value = true
   createResource({
-    url: 'doco.doco.deal_documents.create_draft_quotation',
+    url: 'doco.repair.deal_documents.create_draft_quotation',
     params: { deal_name: props.docname },
     auto: true,
     onSuccess(quotationName) {
