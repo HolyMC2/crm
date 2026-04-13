@@ -53,7 +53,7 @@
       </div>
     </div>
 
-    <!-- Row 2: Client / IMEI / Condition checkboxes -->
+    <!-- Row 2: Client / Technician / IMEI -->
     <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div>
         <Link
@@ -61,6 +61,14 @@
           v-model="form.client"
           :label="__('Client')"
           :placeholder="__('Select contact')"
+        />
+      </div>
+      <div>
+        <Link
+          doctype="User"
+          v-model="form.technician"
+          :label="__('Technician')"
+          :placeholder="__('Assign technician')"
         />
       </div>
       <div>

@@ -93,11 +93,17 @@
               <div class="font-medium text-ink-gray-8">{{ ro.repair_to_be_done || '—' }}</div>
             </div>
 
-            <!-- Row 2: general status + technician -->
+            <!-- Row 2: client + device condition -->
+            <div>
+              <div class="mb-0.5 text-xs text-ink-gray-5">{{ __('Client') }}</div>
+              <div class="font-medium text-ink-gray-8">{{ ro.client_name || ro.client || '—' }}</div>
+            </div>
             <div>
               <div class="mb-0.5 text-xs text-ink-gray-5">{{ __('Device Condition') }}</div>
               <div class="font-medium text-ink-gray-8">{{ ro.general_status || '—' }}</div>
             </div>
+
+            <!-- Row 3: technician -->
             <div>
               <div class="mb-0.5 text-xs text-ink-gray-5">{{ __('Technician') }}</div>
               <div class="font-medium text-ink-gray-8">{{ ro.technician_name || ro.technician || '—' }}</div>
