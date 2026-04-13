@@ -5,13 +5,22 @@
       <span class="text-base font-semibold text-ink-gray-8">
         {{ __('Documents') }}
       </span>
-      <Button
-        size="sm"
-        variant="subtle"
-        :label="__('New Quotation')"
-        :loading="creating"
-        @click="createQuotation"
-      />
+      <div class="flex gap-2">
+        <Button
+          size="sm"
+          variant="subtle"
+          :label="__('New Quotation')"
+          :loading="creatingQuotation"
+          @click="createQuotation"
+        />
+        <Button
+          size="sm"
+          variant="subtle"
+          :label="__('New Invoice')"
+          :loading="creatingInvoice"
+          @click="createInvoice"
+        />
+      </div>
     </div>
 
     <!-- Loading -->
@@ -112,7 +121,8 @@ const props = defineProps({
   docname: { type: String, required: true },
 })
 
-const creating = ref(false)
+const creatingQuotation = ref(false)
+const creatingInvoice = ref(false)
 
 // ── Data fetching ────────────────────────────────────────────────────────────
 
@@ -155,18 +165,39 @@ function reload() {
 }
 
 function createQuotation() {
-  creating.value = true
+  creatingQuotation.value = true
   createResource({
     url: 'doco.doco.deal_documents.create_draft_quotation',
     params: { deal_name: props.docname },
     auto: true,
     onSuccess(quotationName) {
-      creating.value = false
+      creatingQuotation.value = false
       reload()
       window.open(`/app/quotation/${encodeURIComponent(quotationName)}`, '_blank')
     },
     onError() {
-      creating.value = false
+      creatingQuotation.value = false
+    },
+  })
+}
+
+function createInvoice() {
+  creatingInvoice.value = true
+  createResource({
+    url: 'doco.doco.deal_documents.get_sales_invoice_defaults',
+    params: { deal_name: props.docname },
+    auto: true,
+    onSuccess(defaults) {
+      creatingInvoice.value = false
+      const params = new URLSearchParams({
+        customer: defaults.customer || '',
+        company: defaults.company || '',
+        crm_deal: defaults.crm_deal || '',
+      })
+      window.open(`/app/sales-invoice/new?${params.toString()}`, '_blank')
+    },
+    onError() {
+      creatingInvoice.value = false
     },
   })
 }
