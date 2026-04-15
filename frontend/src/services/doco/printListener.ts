@@ -16,6 +16,7 @@ interface PrintJobPayload {
   copies: number
   backend: 'browser_normal' | 'browser_qz'
   width_mm: number
+  qz_printer_name?: string | null
   qz_algorithm?: string
 }
 
@@ -68,6 +69,9 @@ async function handleJob(payload: PrintJobPayload) {
 
 async function printViaQz(payload: PrintJobPayload) {
   const copies = Math.max(1, Number(payload.copies) || 1)
+  // Route-level override wins over user/localStorage default.
+  const printerName = (payload.qz_printer_name && payload.qz_printer_name.trim())
+    || getPreferredPrinter()
   for (let i = 0; i < copies; i++) {
     await printDocumentViaQz({
       doctype: payload.doctype,
@@ -75,7 +79,7 @@ async function printViaQz(payload: PrintJobPayload) {
       printFormat: payload.print_format,
       letterhead: null,
       noLetterhead: payload.no_letterhead ? 1 : 0,
-      printerName: getPreferredPrinter(),
+      printerName,
       widthMm: payload.width_mm || 80,
     })
   }
