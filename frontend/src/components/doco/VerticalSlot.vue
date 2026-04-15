@@ -11,6 +11,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { createResource } from 'frappe-ui'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import DealDocumentsSection from '@/components/doco/DealDocumentsSection.vue'
 
@@ -21,9 +22,17 @@ const props = defineProps({
   docname: { type: String, required: true },
 })
 
+// CRM SPA has its own get_boot() that doesn't include extend_bootinfo,
+// so fetch the active vertical config via API. Shared cache key so all
+// VerticalSlot instances across the app hit the same resource.
+const verticalConfig = createResource({
+  url: 'doco.docoutils.boot.get_active_vertical_config',
+  cache: 'doco-active-vertical',
+  auto: true,
+})
+
 const resolvedSections = computed(() => {
-  const cfg =
-    (typeof window !== 'undefined' && window.frappeBoot?.doco_vertical) || null
+  const cfg = verticalConfig.data
   if (!cfg || !Array.isArray(cfg.sections)) return []
   return cfg.sections
     .filter((s) => s.enabled && s.render_in === props.slot)
