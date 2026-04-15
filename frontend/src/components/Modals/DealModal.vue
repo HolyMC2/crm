@@ -192,7 +192,7 @@ const customerDetails = ref({
 })
 
 createResource({
-  url: 'doco.doco.customers.get_company_address_defaults',
+  url: 'doco.docoutils.customers.get_company_address_defaults',
   auto: true,
   onSuccess(defaults) {
     customerDetails.value.address_line1 = defaults.address_line1 || ''
@@ -324,7 +324,7 @@ async function createDeal() {
       // exists before the Repair Order is created (client field links to Contact).
       const getVal = (v) => (v && typeof v === 'object' ? v.value : v)
       createResource({
-        url: 'doco.doco.customers.sync_deal_contacts_to_erpnext',
+        url: 'doco.docoutils.customers.sync_deal_contacts_to_erpnext',
         params: {
           deal_name: name,
           address_line1: customerDetails.value.address_line1 || null,
@@ -348,7 +348,7 @@ async function createDeal() {
           const phoneModelVal = getVal(pm)
           const repairTypeVal = getVal(newRepairOrder.value.repair_to_be_done)
           createResource({
-            url: 'doco.doco.repair_orders.create_and_link_repair_order',
+            url: 'doco.repair.repair_orders.create_and_link_repair_order',
             params: {
               deal_name: name,
               phone_model: phoneModelVal,
