@@ -35,8 +35,7 @@
     <span>{{ __('Loading...') }}</span>
   </div>
   <div v-else class="pb-8">
-    <RepairOrdersSection v-if="doctype === 'CRM Deal'" :docname="docname" />
-    <DealDocumentsSection v-if="doctype === 'CRM Deal'" :docname="docname" />
+    <VerticalSlot v-if="doctype === 'CRM Deal'" slot="data_tab" :docname="docname" />
     <FieldLayout
       v-if="tabs.data"
       :tabs="tabs.data"
@@ -61,8 +60,7 @@
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import DataFieldsModal from '@/components/Modals/DataFieldsModal.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
-import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import DealDocumentsSection from '@/components/doco/DealDocumentsSection.vue'
+import VerticalSlot from '@/components/doco/VerticalSlot.vue'
 import { Badge, createResource } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import { usersStore } from '@/stores/users'
