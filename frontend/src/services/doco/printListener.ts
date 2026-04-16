@@ -5,8 +5,6 @@
 import { printDocumentViaQz, getPreferredPrinter } from './qzTray'
 import { silentPrint } from './silentPrint'
 
-declare const frappe: any
-
 interface PrintJobPayload {
   job_id: string
   doctype: string

@@ -7,8 +7,6 @@
 import qz from 'qz-tray'
 import { ref } from 'vue'
 
-declare const frappe: any
-
 export type QzCertStatus = 'unknown' | 'trusted' | 'untrusted'
 
 export interface QzPrintHtmlOptions {
@@ -47,6 +45,14 @@ let certificateProvided = false
 let connectPromise: Promise<boolean> | null = null
 let certificateChecked = false
 
+function getCsrfToken(): string {
+  try {
+    return (window as any).csrf_token || (window as any).frappe?.csrf_token || ''
+  } catch {
+    return ''
+  }
+}
+
 function extractMessage<T>(value: any): T {
   if (value && typeof value === 'object' && 'message' in value) {
     return value.message as T
@@ -55,8 +61,19 @@ function extractMessage<T>(value: any): T {
 }
 
 async function callServer<T>(method: string, args: Record<string, unknown> = {}): Promise<T> {
-  const response = await frappe.call({ method, args })
-  return extractMessage<T>(response)
+  const response = await fetch(`/api/method/${method}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'X-Frappe-CSRF-Token': getCsrfToken(),
+    },
+    body: JSON.stringify(args),
+  })
+  if (!response.ok) throw new Error(`callServer ${method}: ${response.status}`)
+  const json = await response.json()
+  return extractMessage<T>(json)
 }
 
 function buildPrintHtml(html: string, style: string, widthMm: number = 80): string {
@@ -412,19 +429,19 @@ export async function printDocumentViaQz(options: QzPrintDocumentOptions) {
   const noLetterhead =
     options.letterhead && String(options.letterhead).trim() ? 0 : options.noLetterhead ?? 1
 
-  const response = await frappe.call({
-    method: 'frappe.www.printview.get_html_and_style',
-    args: {
+  const response = await callServer<{ html?: string; style?: string }>(
+    'frappe.www.printview.get_html_and_style',
+    {
       doc: options.doctype,
       name: options.name,
       print_format: printFormat,
       no_letterhead: noLetterhead,
       letterhead: options.letterhead || undefined,
     },
-  })
+  )
 
-  const html = response?.html || response?.message?.html
-  const style = response?.style || response?.message?.style || ''
+  const html = (response as any)?.html || ''
+  const style = (response as any)?.style || ''
 
   if (!html) throw new Error('Unable to load print HTML from server.')
 
