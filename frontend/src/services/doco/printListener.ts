@@ -5,6 +5,8 @@
 import { printDocumentViaQz, getPreferredPrinter } from './qzTray'
 import { silentPrint } from './silentPrint'
 
+type BrowserBackend = 'browser_normal' | 'browser_qz'
+
 interface PrintJobPayload {
   job_id: string
   doctype: string
@@ -12,7 +14,8 @@ interface PrintJobPayload {
   print_format: string
   no_letterhead: number
   copies: number
-  backend: 'browser_normal' | 'browser_qz'
+  backend: BrowserBackend
+  fallback_backend?: BrowserBackend | null
   width_mm: number
   qz_printer_name?: string | null
   qz_algorithm?: string
@@ -49,19 +52,38 @@ async function handleJob(payload: PrintJobPayload) {
     return
   }
 
-  const backend = payload.backend
+  const primary = payload.backend
+  const fallback = payload.fallback_backend || null
+
   try {
-    if (backend === 'browser_qz') {
-      await printViaQz(payload)
-    } else if (backend === 'browser_normal') {
-      await printViaIframe(payload)
-    } else {
-      throw new Error(`Unsupported browser backend: ${backend}`)
+    await runBackend(primary, payload)
+    await ack(payload.job_id, 'acked', primary)
+    return
+  } catch (primaryErr: any) {
+    console.warn('[Doco Print] Primary backend failed', primary, primaryErr)
+    if (!fallback || fallback === primary) {
+      await ack(payload.job_id, 'failed', primary, primaryErr?.message || String(primaryErr))
+      return
     }
-    await ack(payload.job_id, 'acked', backend)
-  } catch (err: any) {
-    console.error('[Doco Print] Print job failed', err)
-    await ack(payload.job_id, 'failed', backend, err?.message || String(err))
+    try {
+      await runBackend(fallback, payload)
+      const note = `Primary ${primary} failed: ${primaryErr?.message || primaryErr}. Used fallback ${fallback}.`
+      await ack(payload.job_id, 'acked', fallback, note)
+    } catch (fallbackErr: any) {
+      const combined = `Primary ${primary} failed: ${primaryErr?.message || primaryErr}. Fallback ${fallback} failed: ${fallbackErr?.message || fallbackErr}`
+      console.error('[Doco Print] Fallback also failed', fallbackErr)
+      await ack(payload.job_id, 'failed', fallback, combined)
+    }
+  }
+}
+
+async function runBackend(backend: BrowserBackend, payload: PrintJobPayload) {
+  if (backend === 'browser_qz') {
+    await printViaQz(payload)
+  } else if (backend === 'browser_normal') {
+    await printViaIframe(payload)
+  } else {
+    throw new Error(`Unsupported browser backend: ${backend}`)
   }
 }
 
