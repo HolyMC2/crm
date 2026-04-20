@@ -29,7 +29,7 @@
           :label="__('Create')"
           variant="solid"
           :loading="creating"
-          :disabled="!newRepair.phone_model"
+          :disabled="!newRepair.device_model"
           @click="createRepairOrder"
         />
       </div>
@@ -85,8 +85,8 @@
           <!-- Row 1: device + repair type -->
           <div class="grid grid-cols-2 gap-x-6 gap-y-2.5">
             <div>
-              <div class="mb-0.5 text-xs text-ink-gray-5">{{ __('Phone Model') }}</div>
-              <div class="font-medium text-ink-gray-8">{{ ro.phone_model || '—' }}</div>
+              <div class="mb-0.5 text-xs text-ink-gray-5">{{ __('Device Model') }}</div>
+              <div class="font-medium text-ink-gray-8">{{ ro.device_model || '—' }}</div>
             </div>
             <div>
               <div class="mb-0.5 text-xs text-ink-gray-5">{{ __('Repair') }}</div>
@@ -214,7 +214,7 @@ const creating = ref(false)
 const createError = ref(null)
 
 const emptyRepair = () => ({
-  phone_model: '',
+  device_model: '',
   repair_to_be_done: '',
   general_status: '',
   technician: '',
@@ -249,7 +249,7 @@ function createRepairOrder() {
     url: 'doco.repair.repair_orders.create_and_link_repair_order',
     params: {
       deal_name: props.docname,
-      phone_model: rd.phone_model,
+      device_model: rd.device_model,
       repair_to_be_done: rd.repair_to_be_done || null,
       general_status: rd.general_status || null,
       technician: rd.technician || null,

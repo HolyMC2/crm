@@ -169,7 +169,7 @@ const chooseExistingOrganization = ref(false)
 // RepairOrderInlineForm binds to this via v-model; createDeal() reads it
 // after the deal is saved to optionally call create_and_link_repair_order.
 const newRepairOrder = ref({
-  phone_model: null,
+  device_model: null,
   repair_to_be_done: null,
   general_status: '',
   client: null,
@@ -334,7 +334,7 @@ async function createDeal() {
         },
         auto: true,
         onSuccess(syncResults) {
-          const pm = newRepairOrder.value.phone_model
+          const pm = newRepairOrder.value.device_model
           if (!pm) return
 
           // Use the explicitly selected client, or fall back to the primary
@@ -345,13 +345,13 @@ async function createDeal() {
             syncResults?.[0]?.contact ||
             null
 
-          const phoneModelVal = getVal(pm)
+          const deviceModelVal = getVal(pm)
           const repairTypeVal = getVal(newRepairOrder.value.repair_to_be_done)
           createResource({
             url: 'doco.repair.repair_orders.create_and_link_repair_order',
             params: {
               deal_name: name,
-              phone_model: phoneModelVal,
+              device_model: deviceModelVal,
               repair_to_be_done: repairTypeVal || null,
               general_status: newRepairOrder.value.general_status || null,
               client: primaryContact,

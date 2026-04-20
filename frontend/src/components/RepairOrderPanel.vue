@@ -99,9 +99,9 @@
         <div class="flex flex-col gap-4 px-1">
           <div>
             <Link
-              doctype="Phone Model"
-              v-model="newOrder.phone_model"
-              :label="__('Phone Model *')"
+              doctype="Device Model"
+              v-model="newOrder.device_model"
+              :label="__('Device Model *')"
               :placeholder="__('Select model')"
             />
           </div>
@@ -201,7 +201,7 @@ const orderList = computed(() => orders.data || [])
 
 function staticFields(order) {
   return [
-    { label: __('Phone Model'), value: order.phone_model_name },
+    { label: __('Device Model'), value: order.device_model_name },
     { label: __('Client'), value: order.client },
     { label: __('Repair'), value: order.repair_to_be_done },
   ]
@@ -223,7 +223,7 @@ const creating = ref(false)
 const addError = ref(null)
 
 const newOrder = ref({
-  phone_model: null,
+  device_model: null,
   repair_to_be_done: null,
   general_status: '',
   client: props.dealContact,
@@ -241,9 +241,9 @@ function getVal(v) {
 
 function submitNewOrder() {
   addError.value = null
-  const phoneModelVal = getVal(newOrder.value.phone_model)
-  if (!phoneModelVal) {
-    addError.value = __('Phone Model is required')
+  const deviceModelVal = getVal(newOrder.value.device_model)
+  if (!deviceModelVal) {
+    addError.value = __('Device Model is required')
     return
   }
 
@@ -252,7 +252,7 @@ function submitNewOrder() {
     url: 'doco.doco.repair_orders.create_and_link_repair_order',
     params: {
       deal_name: props.docname,
-      phone_model: phoneModelVal,
+      device_model: deviceModelVal,
       repair_to_be_done: getVal(newOrder.value.repair_to_be_done) || null,
       general_status: newOrder.value.general_status || null,
       client: getVal(newOrder.value.client) || null,
@@ -267,7 +267,7 @@ function submitNewOrder() {
       creating.value = false
       showAddDialog.value = false
       newOrder.value = {
-        phone_model: null, repair_to_be_done: null, general_status: '',
+        device_model: null, repair_to_be_done: null, general_status: '',
         client: props.dealContact, imei: null, has_sim_tray: false, is_wet: false, turns_on: false, broken_screen: false,
       }
       orders.reload()

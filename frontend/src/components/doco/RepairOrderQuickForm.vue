@@ -7,13 +7,13 @@
     </div>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
       <div>
-        <div class="mb-2 text-sm text-ink-gray-5">{{ __('Phone Model') }}</div>
+        <div class="mb-2 text-sm text-ink-gray-5">{{ __('Device Model') }}</div>
         <Link
           class="form-control"
-          :value="modelValue.phone_model"
-          doctype="Phone Model"
+          :value="modelValue.device_model"
+          doctype="Device Model"
           :placeholder="__('Select phone model')"
-          @change="update('phone_model', $event)"
+          @change="update('device_model', $event)"
         />
       </div>
       <div>
@@ -90,7 +90,7 @@ const props = defineProps({
   modelValue: {
     type: Object,
     default: () => ({
-      phone_model: '',
+      device_model: '',
       repair_to_be_done: '',
       general_status: '',
       technician: '',

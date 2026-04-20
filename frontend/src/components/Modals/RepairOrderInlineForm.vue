@@ -12,7 +12,7 @@
     values when submitting, but it has zero knowledge of the form internals.
 
     v-model shape (RepairOrderFields):
-      phone_model        – Item name (filtered by Doco Settings item group)
+      device_model        – Item name (filtered by Doco Settings item group)
       repair_to_be_done  – Repair Type name
       general_status     – 'Good' | 'Bad' | 'Really Bad' | ''
       client             – Contact name
@@ -23,13 +23,13 @@
       broken_screen      – boolean
   -->
   <div>
-    <!-- Row 1: Phone Model / Repair Type / Condition -->
+    <!-- Row 1: Device Model / Repair Type / Condition -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div>
         <Link
-          doctype="Phone Model"
-          v-model="form.phone_model"
-          :label="__('Phone Model')"
+          doctype="Device Model"
+          v-model="form.device_model"
+          :label="__('Device Model')"
           :placeholder="__('Select model')"
         />
       </div>
