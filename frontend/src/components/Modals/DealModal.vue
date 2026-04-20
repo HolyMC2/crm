@@ -348,7 +348,7 @@ async function createDeal() {
           const deviceModelVal = getVal(pm)
           const repairTypeVal = getVal(newRepairOrder.value.repair_to_be_done)
           createResource({
-            url: 'doco.repair.repair_orders.create_and_link_repair_order',
+            url: 'taller.repair.repair_orders.create_and_link_repair_order',
             params: {
               deal_name: name,
               device_model: deviceModelVal,

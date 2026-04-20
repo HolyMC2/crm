@@ -192,7 +192,7 @@ const checkFields = [
 // ── Existing orders ──────────────────────────────────────────────────────────────────────────
 
 const orders = createResource({
-  url: 'doco.doco.repair_orders.get_deal_repair_orders',
+  url: 'taller.repair.repair_orders.get_deal_repair_orders',
   params: { deal_name: props.docname },
   auto: true,
 })
@@ -249,7 +249,7 @@ function submitNewOrder() {
 
   creating.value = true
   createResource({
-    url: 'doco.doco.repair_orders.create_and_link_repair_order',
+    url: 'taller.repair.repair_orders.create_and_link_repair_order',
     params: {
       deal_name: props.docname,
       device_model: deviceModelVal,
