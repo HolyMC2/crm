@@ -68,6 +68,15 @@
           <div class="flex items-center gap-1.5">
             <Badge :label="__(ro.status)" :theme="statusTheme(ro.status)" />
             <button
+              :title="__('Crear Cobro (drafts a POS Invoice — open POSAwesome to bill)')"
+              class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
+              @click="draftCobro(ro.name)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </button>
+            <button
               :title="__('Print Ticket')"
               class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
               @click="printTicket(ro.name)"
@@ -301,6 +310,23 @@ function printTicket(roName) {
     onError(err) {
       const msg = err?.messages?.join('\n') || err?.message || 'Print failed'
       alert(__('Print failed: ') + msg)
+    },
+  })
+}
+
+function draftCobro(roName) {
+  createResource({
+    url: 'taller.repair.repair_orders.draft_pos_invoice_from_ro',
+    params: { ro_name: roName },
+    auto: true,
+    onSuccess(data) {
+      const verb = data.created ? __('drafted') : __('already exists')
+      alert(__('POS Invoice') + ' ' + data.name + ' — ' + verb + '. ' + __('Open POSAwesome to bill the customer.'))
+      repairOrders.reload()
+    },
+    onError(err) {
+      const msg = err?.messages?.join('\n') || err?.message || 'Draft failed'
+      alert(__('Draft failed: ') + msg)
     },
   })
 }
