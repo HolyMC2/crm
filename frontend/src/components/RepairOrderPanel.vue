@@ -55,7 +55,7 @@
               class="rounded px-2 py-0.5 text-xs font-semibold"
               :class="statusClass(order.general_status)"
             >
-              {{ order.general_status || '—' }}
+              {{ order.general_status ? __(order.general_status) : '—' }}
             </span>
           </div>
           <div

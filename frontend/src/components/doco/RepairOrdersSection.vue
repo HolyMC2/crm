@@ -100,7 +100,7 @@
             </div>
             <div>
               <div class="mb-0.5 text-xs text-ink-gray-5">{{ __('Device Condition') }}</div>
-              <div class="font-medium text-ink-gray-8">{{ ro.general_status || '—' }}</div>
+              <div class="font-medium text-ink-gray-8">{{ ro.general_status ? __(ro.general_status) : '—' }}</div>
             </div>
 
             <!-- Row 3: technician -->
@@ -290,12 +290,25 @@ function statusTheme(status) {
 }
 
 function printTicket(roName) {
-  const url =
-    '/printview?doctype=Repair+Order' +
-    '&name=' + encodeURIComponent(roName) +
-    '&format=Ticket+de+Reparaci%C3%B3n' +
-    '&trigger_print=1' +
-    '&simplified=1'
-  window.open(url, '_blank', 'width=400,height=600')
+  createResource({
+    url: 'taller.repair.repair_orders.get_repair_ticket_print_url',
+    params: { name: roName },
+    auto: true,
+    onSuccess(data) {
+      const params = new URLSearchParams({
+        doctype: 'Repair Order',
+        name: roName,
+        format: data.format,
+        trigger_print: '1',
+        simplified: '1',
+      })
+      if (data.letterhead) params.set('letterhead', data.letterhead)
+      window.open('/printview?' + params.toString(), '_blank', 'width=400,height=600')
+    },
+    onError(err) {
+      const msg = err?.messages?.join('\n') || err?.message || 'Print failed'
+      alert(__('Print failed: ') + msg)
+    },
+  })
 }
 </script>
