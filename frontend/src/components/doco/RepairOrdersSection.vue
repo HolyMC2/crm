@@ -154,7 +154,7 @@
 
           <!-- Linked documents -->
           <div
-            v-if="ro.quotation || ro.sales_order || ro.sales_invoice || ro.pos_invoice"
+            v-if="ro.quotation || ro.sales_order || ro.invoices?.length"
             class="mt-2.5 border-t pt-2"
           >
             <div class="mb-1 text-xs text-ink-gray-5">{{ __('Documents') }}</div>
@@ -176,20 +176,13 @@
                 {{ __('SO') }}: {{ ro.sales_order }}
               </a>
               <a
-                v-if="ro.sales_invoice"
-                :href="`/app/sales-invoice/${encodeURIComponent(ro.sales_invoice)}`"
+                v-for="inv in (ro.invoices || [])"
+                :key="`${inv.invoice_type}-${inv.invoice}`"
+                :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
                 target="_blank"
                 class="text-ink-blue-3 hover:underline"
               >
-                {{ __('Invoice') }}: {{ ro.sales_invoice }}
-              </a>
-              <a
-                v-if="ro.pos_invoice"
-                :href="`/app/pos-invoice/${encodeURIComponent(ro.pos_invoice)}`"
-                target="_blank"
-                class="text-ink-blue-3 hover:underline"
-              >
-                {{ __('POS') }}: {{ ro.pos_invoice }}
+                {{ inv.invoice_type === 'POS Invoice' ? __('POS') : __('Invoice') }}: {{ inv.invoice }}
               </a>
             </div>
           </div>
