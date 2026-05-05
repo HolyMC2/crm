@@ -23,10 +23,13 @@ const props = defineProps({
 })
 
 // CRM SPA has its own get_boot() that doesn't include extend_bootinfo,
-// so fetch the active vertical config via API. Shared cache key so all
-// VerticalSlot instances across the app hit the same resource.
+// so fetch the active vertical config via API. Calls taller directly
+// (B-007) — the prior `doco.docoutils.boot.get_active_vertical_config`
+// path was a re-export shim that broke when doco was uninstalled while
+// taller was. Shared cache key so all VerticalSlot instances across
+// the app hit the same resource.
 const verticalConfig = createResource({
-  url: 'doco.docoutils.boot.get_active_vertical_config',
+  url: 'taller.api.vertical.get_active_vertical_config',
   cache: 'doco-active-vertical',
   auto: true,
 })
