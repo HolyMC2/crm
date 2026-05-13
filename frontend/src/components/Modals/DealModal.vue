@@ -87,6 +87,18 @@
             <div class="grid grid-cols-2 gap-4">
               <FormControl
                 type="text"
+                v-model="customerDetails.tax_id"
+                :label="__('RFC / Tax ID')"
+                placeholder="XAXX010101000"
+                class="uppercase"
+              />
+              <FormControl
+                type="date"
+                v-model="customerDetails.birthday"
+                :label="__('Birthday')"
+              />
+              <FormControl
+                type="text"
                 v-model="customerDetails.address_line1"
                 :label="__('Address Line 1')"
                 :placeholder="__('Street address')"
@@ -179,16 +191,27 @@ const newRepairOrder = ref({
   is_wet: false,
   turns_on: false,
   broken_screen: false,
+  has_phone_case: false,
+  unlock_method: 'none',
+  phone_pin: '',
+  phone_pattern: '',
+  quote_amount: 0,
+  advance_amount: 0,
 })
 
 // Doco customization: customer details for ERPNext sync.
 // Pre-filled from company defaults; passed to sync_deal_contacts_to_erpnext
 // after deal creation so every contact gets an Individual Customer + address.
+// tax_id + birthday mirror the Intake (mostrador) SPA "Más datos del cliente"
+// section so the FCRM operator can capture the same identity data without
+// switching apps.
 const customerDetails = ref({
   address_line1: '',
   city: '',
   territory: '',
   customer_group: '',
+  tax_id: '',
+  birthday: '',
 })
 
 createResource({
@@ -331,6 +354,8 @@ async function createDeal() {
           city: customerDetails.value.city || null,
           territory: getVal(customerDetails.value.territory) || null,
           customer_group: getVal(customerDetails.value.customer_group) || null,
+          tax_id: customerDetails.value.tax_id || null,
+          birthday: customerDetails.value.birthday || null,
         },
         auto: true,
         onSuccess(syncResults) {
@@ -347,6 +372,7 @@ async function createDeal() {
 
           const deviceModelVal = getVal(pm)
           const repairTypeVal = getVal(newRepairOrder.value.repair_to_be_done)
+          const unlock = newRepairOrder.value.unlock_method
           createResource({
             url: 'taller.repair.repair_orders.create_and_link_repair_order',
             params: {
@@ -361,6 +387,11 @@ async function createDeal() {
               is_wet: newRepairOrder.value.is_wet ? 1 : 0,
               turns_on: newRepairOrder.value.turns_on ? 1 : 0,
               broken_screen: newRepairOrder.value.broken_screen ? 1 : 0,
+              has_phone_case: newRepairOrder.value.has_phone_case ? 1 : 0,
+              phone_pin: unlock === 'pin' ? (newRepairOrder.value.phone_pin || '') : '',
+              phone_pattern: unlock === 'pattern' ? (newRepairOrder.value.phone_pattern || '') : '',
+              quote_amount: Number(newRepairOrder.value.quote_amount) || 0,
+              advance_amount: Number(newRepairOrder.value.advance_amount) || 0,
             },
             auto: true,
           })

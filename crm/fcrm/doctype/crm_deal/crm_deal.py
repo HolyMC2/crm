@@ -439,7 +439,13 @@ def create_contact(doc):
 		contact.append("email_ids", {"email_id": doc.get("email"), "is_primary": 1})
 
 	if doc.get("mobile_no"):
-		contact.append("phone_nos", {"phone": doc.get("mobile_no"), "is_primary_mobile_no": 1})
+		contact.append(
+			"phone_nos",
+			# is_primary_phone=1 matches how POSAwesome / ERPNext create the
+			# row; without it, Customer.mobile_no reverse-lookup and several
+			# downstream services treat the row as a non-primary number.
+			{"phone": doc.get("mobile_no"), "is_primary_phone": 1, "is_primary_mobile_no": 1},
+		)
 
 	contact.insert(ignore_permissions=True)
 	contact.reload()  # load changes by hooks on contact
