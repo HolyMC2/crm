@@ -246,6 +246,19 @@ watch(
   },
 )
 
+// Doco customization: org-less workflow. Hide every organization-related
+// field + section so the Deal quick view stays focused on contact +
+// repair-order capture.
+const HIDDEN_DEAL_FIELDS = [
+  'website',
+  'annual_revenue',
+  'organization',
+  'organization_name',
+  'no_of_employees',
+  'industry',
+]
+const HIDDEN_DEAL_SECTIONS = ['organization_section', 'organization_details_section']
+
 const tabs = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_fields_layout',
   cache: ['QuickEntry', 'CRM Deal'],
@@ -253,24 +266,19 @@ const tabs = createResource({
   auto: true,
   transform: (_tabs) => {
     hasOrganizationSections.value = false
-    return _tabs.forEach((tab) => {
+    _tabs.forEach((tab) => {
+      tab.sections = tab.sections.filter(
+        (section) => !HIDDEN_DEAL_SECTIONS.includes(section.name),
+      )
       tab.sections.forEach((section) => {
         section.columns.forEach((column) => {
           if (
-            ['organization_section', 'organization_details_section'].includes(
-              section.name,
-            )
-          ) {
-            hasOrganizationSections.value = true
-          } else if (
-            ['contact_section', 'contact_details_section'].includes(
-              section.name,
-            )
+            ['contact_section', 'contact_details_section'].includes(section.name)
           ) {
             hasContactSections.value = true
           }
           column.fields = column.fields.filter(
-            (field) => !['website', 'annual_revenue'].includes(field.fieldname)
+            (field) => !HIDDEN_DEAL_FIELDS.includes(field.fieldname),
           )
           column.fields.forEach((field) => {
             if (field.fieldname == 'status') {
@@ -286,6 +294,7 @@ const tabs = createResource({
         })
       })
     })
+    return _tabs
   },
 })
 

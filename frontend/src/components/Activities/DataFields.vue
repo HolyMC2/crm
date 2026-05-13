@@ -84,11 +84,39 @@ const showDataFieldsModal = ref(false)
 
 const { document } = useDocument(props.doctype, props.docname)
 
+// Doco customization: org-less workflow. Repair-shop tenants don't model
+// customers as organizations, so hide every B2B field from the Data tab.
+// Sections that end up empty after the field strip are dropped too so the
+// layout doesn't leave hollow headers behind.
+const HIDDEN_DEAL_FIELDS = new Set([
+  'organization',
+  'organization_name',
+  'no_of_employees',
+  'industry',
+  'website',
+  'annual_revenue',
+])
+
 const tabs = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_fields_layout',
   cache: ['DataFields', props.doctype],
   params: { doctype: props.doctype, type: 'Data Fields' },
   auto: true,
+  transform: (_tabs) => {
+    if (props.doctype !== 'CRM Deal') return _tabs
+    _tabs.forEach((tab) => {
+      tab.sections = (tab.sections || []).filter((section) => {
+        section.columns = (section.columns || []).map((column) => ({
+          ...column,
+          fields: (column.fields || []).filter(
+            (field) => !HIDDEN_DEAL_FIELDS.has(field.fieldname),
+          ),
+        }))
+        return section.columns.some((c) => c.fields.length > 0)
+      })
+    })
+    return _tabs
+  },
 })
 
 function saveChanges() {
