@@ -462,6 +462,12 @@ def create_deal(doc: dict):
 		doc.get("first_name") or doc.get("last_name") or doc.get("email") or doc.get("mobile_no")
 	):
 		contact = create_contact(doc)
+		# Mirror the freshly created Contact back onto the payload so the
+		# subsequent deal.update(doc) populates the top-level Deal.contact
+		# field. Without this the list view "Contact" column renders blank
+		# for every Deal created via the new-contact path (the contacts
+		# child row is populated but the scalar field stays null).
+		doc["contact"] = contact
 
 	deal.update(
 		{
