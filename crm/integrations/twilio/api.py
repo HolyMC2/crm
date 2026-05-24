@@ -64,11 +64,33 @@ def voice(**kwargs):
 
 	# Generate TwiML instructions to make a call
 	from_number = _get_caller_number(args.Caller)
-	resp = twilio.generate_twilio_dial_response(from_number, args.To)
+	to_number = _normalize_e164(args.To)
+	resp = twilio.generate_twilio_dial_response(from_number, to_number)
 
-	call_details = TwilioCallDetails(args, call_from=from_number)
+	call_details = TwilioCallDetails(args, call_from=from_number, call_to=to_number)
 	create_call_log(call_details)
 	return Response(resp.to_xml(), mimetype="text/xml")
+
+
+def _normalize_e164(number: str, default_country_code: str = "52") -> str:
+	"""Coerce a phone number to E.164 (+CCNNN...).
+
+	Handles common malformed inputs seen on this CRM:
+	- bare 10-digit MX numbers (no country code) -> prepend +52
+	- 11-digit US/CA numbers starting with 1     -> prepend +
+	- legacy MX format with carrier "1" after CC -> drop the 1 (+521NNN -> +52NNN)
+	- already-E.164 numbers                      -> passed through
+	"""
+	if not number:
+		return number
+	digits = "".join(c for c in str(number) if c.isdigit() or c == "+")
+	body = digits[1:] if digits.startswith("+") else digits
+	if body.startswith("521") and len(body) == 13:
+		body = "52" + body[3:]
+	elif len(body) == 10:
+		body = default_country_code + body
+	# 11-digit starting with "1" is left as-is (US/CA); anything else passes through
+	return "+" + body
 
 
 @frappe.whitelist(allow_guest=True)
