@@ -93,6 +93,7 @@
                 class="w-full"
               >
                 <audio
+                  v-if="field.value"
                   class="audio-control w-full"
                   controls
                   :src="field.value"
