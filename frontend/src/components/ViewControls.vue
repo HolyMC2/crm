@@ -1302,6 +1302,33 @@ function applyLikeFilter() {
   updateFilter(filters)
 }
 
+// doco: free-text search across common text fields via or_filters.
+// `extraNames` lets verticals OR in pre-resolved doc names (e.g. taller
+// queries Repair Order then folds matching CRM Deal names back in here).
+function updateSearch(searchText, fields, extraNames) {
+  if (!defaultParams.value) {
+    defaultParams.value = getParams()
+  }
+  list.value.params = defaultParams.value
+  const trimmed = (searchText || '').trim()
+  const hasText = !!(trimmed && fields?.length)
+  const hasExtras = Array.isArray(extraNames) && extraNames.length > 0
+  if (!hasText && !hasExtras) {
+    list.value.params.or_filters = {}
+  } else {
+    const orf = {}
+    if (hasText) {
+      const pattern = `%${trimmed}%`
+      for (const f of fields) orf[f] = ['LIKE', pattern]
+    }
+    if (hasExtras) {
+      orf['name'] = ['in', extraNames]
+    }
+    list.value.params.or_filters = orf
+  }
+  list.value.reload()
+}
+
 function likeDoc({ name, liked }) {
   createResource({
     url: 'frappe.desk.like.toggle_like',
@@ -1322,6 +1349,7 @@ defineExpose({
   viewsDropdownOptions,
   currentView,
   updateSelections,
+  updateSearch,
 })
 
 // Watchers

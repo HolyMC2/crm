@@ -268,9 +268,11 @@ def get_data(
 	kanban_fields: str | list | None = None,
 	view: str | dict | None = None,
 	default_filters: dict | None = None,
+	or_filters: dict | None = None,
 ):
 	custom_view = False
 	filters = frappe._dict(filters)
+	or_filters = frappe.parse_json(or_filters) if or_filters else None
 	rows = frappe.parse_json(rows or "[]")
 	columns = frappe.parse_json(columns or "[]")
 	kanban_fields = frappe.parse_json(kanban_fields or "[]")
@@ -360,6 +362,7 @@ def get_data(
 				doctype,
 				fields=rows,
 				filters=filters,
+				or_filters=or_filters,
 				order_by=order_by,
 				page_length=page_length,
 			)

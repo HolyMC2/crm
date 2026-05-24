@@ -4,6 +4,7 @@
       <ViewBreadcrumbs v-model="viewControls" routeName="Deals" />
     </template>
     <template #right-header>
+      <VerticalSlot slot="deals_list_header" />
       <CustomActions
         v-if="dealsListView?.customListActions"
         :actions="dealsListView.customListActions"
@@ -268,8 +269,9 @@ import { callEnabled } from '@/composables/telephony'
 import { formatDate, timeAgo, website, formatTime } from '@/utils'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Avatar, Dropdown } from 'frappe-ui'
+import VerticalSlot from '@/components/doco/VerticalSlot.vue'
 import { useRoute } from 'vue-router'
-import { ref, reactive, computed, h } from 'vue'
+import { ref, reactive, computed, h, provide } from 'vue'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Deal')
@@ -294,6 +296,11 @@ const loadMore = ref(1)
 const triggerResize = ref(1)
 const updatedPageCount = ref(20)
 const viewControls = ref(null)
+
+// Exposed to <VerticalSlot slot="deals_list_header"> children (e.g. taller's
+// DealsSearchBox) so they can drive ViewControls.updateSearch without
+// touching this file again on rebases.
+provide('dealsViewControls', viewControls)
 
 function getRow(name, field) {
   function getValue(value) {

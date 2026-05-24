@@ -4,7 +4,7 @@
       :is="registry[s.vue_component]"
       v-if="registry[s.vue_component]"
       :docname="docname"
-      v-bind="s.config || {}"
+      v-bind="{ ...$attrs, ...(s.config || {}) }"
     />
   </template>
 </template>
@@ -14,12 +14,19 @@ import { computed } from 'vue'
 import { createResource } from 'frappe-ui'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import DealDocumentsSection from '@/components/doco/DealDocumentsSection.vue'
+import DealsSearchBox from '@/components/doco/DealsSearchBox.vue'
 
-const registry = { RepairOrdersSection, DealDocumentsSection }
+defineOptions({ inheritAttrs: false })
+
+const registry = {
+  RepairOrdersSection,
+  DealDocumentsSection,
+  DealsSearchBox,
+}
 
 const props = defineProps({
   slot: { type: String, required: true },
-  docname: { type: String, required: true },
+  docname: { type: String, default: '' },
 })
 
 // CRM SPA has its own get_boot() that doesn't include extend_bootinfo,
