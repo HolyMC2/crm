@@ -1,26 +1,10 @@
 <template>
   <div class="mt-6 border-t pt-6">
-    <!-- Header -->
+    <!-- Header (draft creation moved to per-RO 'Crear borrador' picker in RepairOrdersSection) -->
     <div class="mb-3 flex items-center justify-between">
       <span class="text-base font-semibold text-ink-gray-8">
         {{ __('Documents') }}
       </span>
-      <div class="flex gap-2">
-        <Button
-          size="sm"
-          variant="subtle"
-          :label="__('New Quotation')"
-          :loading="creatingQuotation"
-          @click="createQuotation"
-        />
-        <Button
-          size="sm"
-          variant="subtle"
-          :label="__('New Invoice')"
-          :loading="creatingInvoice"
-          @click="createInvoice"
-        />
-      </div>
     </div>
 
     <!-- Loading -->
@@ -115,14 +99,11 @@
 
 <script setup>
 import { Badge, createResource } from 'frappe-ui'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   docname: { type: String, required: true },
 })
-
-const creatingQuotation = ref(false)
-const creatingInvoice = ref(false)
 
 // ── Data fetching ────────────────────────────────────────────────────────────
 
@@ -155,52 +136,6 @@ const invoices = computed(() => invoicesRes.data || [])
 const hasAny = computed(
   () => quotations.value.length || salesOrders.value.length || invoices.value.length,
 )
-
-// ── Actions ──────────────────────────────────────────────────────────────────
-
-function reload() {
-  quotationsRes.reload()
-  salesOrdersRes.reload()
-  invoicesRes.reload()
-}
-
-function createQuotation() {
-  creatingQuotation.value = true
-  createResource({
-    url: 'taller.repair.deal_documents.create_draft_quotation',
-    params: { deal_name: props.docname },
-    auto: true,
-    onSuccess(quotationName) {
-      creatingQuotation.value = false
-      reload()
-      window.open(`/app/quotation/${encodeURIComponent(quotationName)}`, '_blank')
-    },
-    onError() {
-      creatingQuotation.value = false
-    },
-  })
-}
-
-function createInvoice() {
-  creatingInvoice.value = true
-  createResource({
-    url: 'taller.repair.deal_documents.get_sales_invoice_defaults',
-    params: { deal_name: props.docname },
-    auto: true,
-    onSuccess(defaults) {
-      creatingInvoice.value = false
-      const params = new URLSearchParams({
-        customer: defaults.customer || '',
-        company: defaults.company || '',
-        crm_deal: defaults.crm_deal || '',
-      })
-      window.open(`/app/sales-invoice/new?${params.toString()}`, '_blank')
-    },
-    onError() {
-      creatingInvoice.value = false
-    },
-  })
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

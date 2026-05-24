@@ -67,15 +67,14 @@
           </a>
           <div class="flex items-center gap-1.5">
             <Badge :label="__(ro.status)" :theme="statusTheme(ro.status)" />
-            <button
-              :title="__('Crear Cobro (drafts a POS Invoice — open POSAwesome to bill)')"
-              class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
-              @click="draftCobro(ro.name)"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-            </button>
+            <Dropdown :options="draftOptions(ro.name)">
+              <Button
+                size="sm"
+                variant="subtle"
+                :label="creatingFor === ro.name ? __('Creando…') : __('Crear borrador')"
+                :loading="creatingFor === ro.name"
+              />
+            </Dropdown>
             <button
               :title="__('Print Ticket')"
               class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
@@ -94,7 +93,13 @@
           <!-- Primary: device + repair type + client + technician -->
           <div class="px-4 py-3 space-y-2">
             <Row :label="__('Device Model')" :value="ro.device_model" />
-            <Row :label="__('Repair')" :value="ro.repair_to_be_done" />
+            <Row :label="__('Repair Type')" :value="ro.repair_to_be_done" />
+            <Row
+              :label="__('Falla reportada')"
+              :value="ro.falla_reportada"
+              :preWrap="true"
+              :emphasize="!ro.falla_reportada"
+            />
             <Row :label="__('Client')" :value="ro.client_name || ro.client" />
             <Row :label="__('Device Condition')" :value="ro.general_status && __(ro.general_status)" />
             <Row :label="__('Technician')" :value="ro.technician_name || ro.technician" />
@@ -179,26 +184,26 @@
             </div>
           </div>
 
-          <!-- Financials -->
-          <div
-            v-if="hasFinancials(ro)"
-            class="px-4 py-3 space-y-2"
-          >
+          <!-- Financials (always shown — operators see cotización/anticipo at a glance) -->
+          <div class="px-4 py-3 space-y-2">
             <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Financials') }}</div>
-            <Row :label="__('Quote')" :value="money(ro.quote_amount)" />
-            <Row :label="__('Advance')" :value="money(ro.advance_amount)" />
-            <Row :label="__('Balance due')" :value="money(ro.balance_due)" :emphasize="(ro.balance_due || 0) > 0" />
-            <Row :label="__('Labor')" :value="money(ro.labor_charge)" />
-            <Row :label="__('Billable total')" :value="money(ro.billing_total)" />
+            <Row :label="__('Cotización')" :value="money(ro.quote_amount) || __('—')" />
+            <Row :label="__('Anticipo')" :value="money(ro.advance_amount) || __('—')" />
+            <Row :label="__('Saldo')" :value="money(ro.balance_due) || __('—')" :emphasize="(ro.balance_due || 0) > 0" />
+            <Row :label="__('Mano de obra')" :value="money(ro.labor_charge) || __('—')" />
+            <Row :label="__('Total facturable')" :value="money(ro.billing_total) || __('—')" />
           </div>
 
-          <!-- Parts -->
-          <div v-if="ro.parts?.length" class="px-4 py-3">
+          <!-- Refacciones (always shown — empty state makes missing parts visible) -->
+          <div class="px-4 py-3">
             <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Parts') }}
-              <span class="text-ink-gray-4">({{ ro.parts.length }})</span>
+              {{ __('Refacciones') }}
+              <span v-if="ro.parts?.length" class="text-ink-gray-4">({{ ro.parts.length }})</span>
             </div>
-            <div class="space-y-1.5">
+            <div v-if="!ro.parts?.length" class="text-xs text-ink-gray-5">
+              {{ __('Sin refacciones cargadas.') }}
+            </div>
+            <div v-else class="space-y-1.5">
               <div
                 v-for="(p, i) in ro.parts"
                 :key="`${ro.name}-part-${i}`"
@@ -213,6 +218,40 @@
                   <span v-if="p.customer_charge != null" class="ml-2 text-ink-gray-5">
                     · {{ money(p.customer_charge) }}
                   </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Repair log (recent entries, newest first) -->
+          <div class="px-4 py-3">
+            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('Repair Log') }}
+              <span v-if="ro.repair_log?.length" class="text-ink-gray-4">({{ ro.repair_log.length }})</span>
+            </div>
+            <div v-if="!ro.repair_log?.length" class="text-xs text-ink-gray-5">
+              {{ __('Sin entradas de log.') }}
+            </div>
+            <div v-else class="space-y-2">
+              <div
+                v-for="e in ro.repair_log"
+                :key="e.name"
+                class="rounded border bg-surface-white px-2 py-1.5"
+              >
+                <div class="flex items-center justify-between gap-2 text-xs">
+                  <div class="flex items-center gap-1.5">
+                    <Badge v-if="e.step_type" size="sm" :label="__(e.step_type)" theme="gray" />
+                    <Badge v-if="e.outcome" size="sm" :label="__(e.outcome)"
+                           :theme="e.outcome === 'OK' ? 'green' : e.outcome === 'KO' ? 'red' : 'gray'" />
+                    <span class="text-ink-gray-7">{{ e.technician_name || e.technician || '—' }}</span>
+                  </div>
+                  <span class="text-ink-gray-5">{{ formatDate(e.entry_datetime) }}</span>
+                </div>
+                <div v-if="e.description" class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-8">
+                  {{ e.description }}
+                </div>
+                <div v-if="e.resolution" class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-7">
+                  <span class="text-ink-gray-5">{{ __('Resolución') }}:</span> {{ e.resolution }}
                 </div>
               </div>
             </div>
@@ -250,20 +289,23 @@
             </div>
           </div>
 
-          <!-- Linked documents -->
-          <div
-            v-if="ro.quotation || ro.sales_order || ro.invoices?.length"
-            class="px-4 py-3"
-          >
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Documents') }}</div>
-            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+          <!-- Documentos financieros (always shown — empty state makes gaps obvious) -->
+          <div class="px-4 py-3">
+            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Documentos financieros') }}</div>
+            <div
+              v-if="!ro.quotation && !ro.sales_order && !ro.invoices?.length"
+              class="text-xs text-ink-gray-5"
+            >
+              {{ __('Sin documentos vinculados.') }}
+            </div>
+            <div v-else class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
               <a
                 v-if="ro.quotation"
                 :href="`/app/quotation/${encodeURIComponent(ro.quotation)}`"
                 target="_blank"
                 class="text-ink-blue-3 hover:underline"
               >
-                {{ __('Quote') }}: {{ ro.quotation }}
+                {{ __('Cotización') }}: {{ ro.quotation }}
               </a>
               <a
                 v-if="ro.sales_order"
@@ -280,7 +322,7 @@
                 target="_blank"
                 class="text-ink-blue-3 hover:underline"
               >
-                {{ inv.invoice_type === 'POS Invoice' ? __('POS') : __('Invoice') }}: {{ inv.invoice }}
+                {{ inv.invoice_type === 'POS Invoice' ? __('POS') : __('Factura') }}: {{ inv.invoice }}
               </a>
             </div>
           </div>
@@ -293,7 +335,7 @@
 
 <script setup>
 import RepairOrderQuickForm from '@/components/doco/RepairOrderQuickForm.vue'
-import { Badge, ErrorMessage, createResource } from 'frappe-ui'
+import { Badge, Button, Dropdown, ErrorMessage, createResource } from 'frappe-ui'
 import { h, ref } from 'vue'
 
 // Small inline helper for a label/value row. Stacked vertical layout —
@@ -306,6 +348,7 @@ const Row = (props) =>
       {
         class: [
           'mt-0.5 font-medium',
+          props.preWrap ? 'whitespace-pre-wrap' : '',
           props.emphasize ? 'text-ink-red-4' : 'text-ink-gray-8',
         ],
       },
@@ -334,16 +377,6 @@ function formatDate(s) {
   const d = new Date(s.replace(' ', 'T'))
   if (Number.isNaN(d.getTime())) return s
   return d.toLocaleString()
-}
-
-function hasFinancials(ro) {
-  return [
-    ro.quote_amount,
-    ro.advance_amount,
-    ro.balance_due,
-    ro.labor_charge,
-    ro.billing_total,
-  ].some((v) => v != null && Number(v) > 0)
 }
 
 const props = defineProps({
@@ -453,17 +486,38 @@ function printTicket(roName) {
   })
 }
 
-function draftCobro(roName) {
+// Mirror taller BillingPanel "Crear borrador" — single picker over the
+// unified create_billing_doc factory. Idempotent server-side: returns the
+// existing draft if one is already linked to the RO.
+const creatingFor = ref(null)
+const DRAFT_DOCTYPES = [
+  { label: '🧾 Sales Invoice', value: 'Sales Invoice' },
+  { label: '💳 POS Invoice', value: 'POS Invoice' },
+  { label: '💵 Cotización', value: 'Quotation' },
+  { label: '📦 Sales Order', value: 'Sales Order' },
+]
+
+function draftOptions(roName) {
+  return DRAFT_DOCTYPES.map((d) => ({
+    label: __(d.label),
+    onClick: () => createBillingDraft(roName, d.value),
+  }))
+}
+
+function createBillingDraft(roName, doctype) {
+  creatingFor.value = roName
   createResource({
-    url: 'taller.repair.repair_orders.draft_pos_invoice_from_ro',
-    params: { ro_name: roName },
+    url: 'taller.api.billing.create_billing_doc',
+    params: { ro_name: roName, doctype },
     auto: true,
     onSuccess(data) {
+      creatingFor.value = null
       const verb = data.created ? __('drafted') : __('already exists')
-      alert(__('POS Invoice') + ' ' + data.name + ' — ' + verb + '. ' + __('Open POSAwesome to bill the customer.'))
+      alert(`${doctype} ${data.name} — ${verb}.`)
       repairOrders.reload()
     },
     onError(err) {
+      creatingFor.value = null
       const msg = err?.messages?.join('\n') || err?.message || 'Draft failed'
       alert(__('Draft failed: ') + msg)
     },
