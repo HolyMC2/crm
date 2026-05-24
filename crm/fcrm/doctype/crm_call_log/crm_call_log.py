@@ -53,6 +53,26 @@ class CRMCallLog(Document):
 		if not self.telephony_medium:
 			self.telephony_medium = "Manual"
 
+	def on_update(self):
+		self._touch_linked_records()
+
+	def _touch_linked_records(self):
+		# Bumping `modified` on the linked Lead/Deal makes the call show up as
+		# the latest activity in list sorts and "last updated" labels, so a new
+		# call moves the record to the top of the agent's view.
+		targets = set()
+		if self.reference_doctype and self.reference_docname:
+			targets.add((self.reference_doctype, self.reference_docname))
+		for link in self.links or []:
+			if link.link_doctype in ("CRM Lead", "CRM Deal"):
+				targets.add((link.link_doctype, link.link_name))
+		if not targets:
+			return
+		now = frappe.utils.now()
+		for dt, name in targets:
+			if frappe.db.exists(dt, name):
+				frappe.db.set_value(dt, name, "modified", now, update_modified=False)
+
 	@staticmethod
 	def default_list_data():
 		columns = [
