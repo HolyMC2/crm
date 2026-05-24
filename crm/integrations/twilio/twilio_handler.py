@@ -186,22 +186,26 @@ def get_twilio_number_owners(phone_number):
 	# remove special characters from phone number and get only digits also remove white spaces
 	# keep + sign in the number at start of the number
 	phone_number = "".join([c for c in phone_number if c.isdigit() or c == "+"])
-	# ignore_permissions: this runs in a Guest-context webhook (Twilio voice_url),
-	# so Frappe's normal permission filter would hide the agent records and the
-	# call would be routed to nobody.
-	user_voice_settings = frappe.get_all(
-		"CRM Telephony Agent",
-		filters={"twilio_number": phone_number},
-		fields=["name", "call_receiving_device", "sip_username"],
-		ignore_permissions=True,
+	# Raw SQL bypass: this runs in a Guest-context webhook (Twilio voice_url),
+	# and Frappe's permission system filters CRM Telephony Agent / User reads
+	# in that context. Talking directly to frappe.db.sql guarantees the routing
+	# logic sees every agent assigned to this Twilio number.
+	user_voice_settings = frappe.db.sql(
+		"""SELECT name, call_receiving_device, sip_username
+		FROM `tabCRM Telephony Agent`
+		WHERE twilio_number = %s""",
+		(phone_number,),
+		as_dict=True,
 	)
 	user_wise_voice_settings = {user["name"]: user for user in user_voice_settings}
 
-	user_general_settings = frappe.get_all(
-		"User",
-		filters=[["name", "IN", user_wise_voice_settings.keys()]],
-		fields=["name", "mobile_no"],
-		ignore_permissions=True,
+	if not user_wise_voice_settings:
+		return {}
+
+	user_general_settings = frappe.db.sql(
+		"""SELECT name, mobile_no FROM `tabUser` WHERE name IN %(users)s""",
+		{"users": tuple(user_wise_voice_settings.keys())},
+		as_dict=True,
 	)
 	user_wise_general_settings = {user["name"]: user for user in user_general_settings}
 
