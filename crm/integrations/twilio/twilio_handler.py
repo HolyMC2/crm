@@ -112,6 +112,26 @@ class Twilio:
 		resp.append(dial)
 		return resp
 
+	def generate_twilio_sip_response(self, sip_uri, caller_id=None, ring_tone="at"):
+		"""Generates voice call instructions to forward the call to a SIP endpoint
+		(softphone registered against the Twilio SIP Domain)."""
+		resp = VoiceResponse()
+		dial = Dial(
+			caller_id=caller_id,
+			ring_tone=ring_tone,
+			record=self.settings.record_calls,
+			recording_status_callback=self.get_recording_status_callback_url(),
+			recording_status_callback_event="completed",
+		)
+		dial.sip(
+			sip_uri,
+			status_callback_event="initiated ringing answered completed",
+			status_callback=self.get_update_call_status_callback_url(),
+			status_callback_method="POST",
+		)
+		resp.append(dial)
+		return resp
+
 	@classmethod
 	def get_twilio_client(self):
 		twilio_settings = frappe.get_doc("CRM Twilio Settings")
@@ -133,7 +153,7 @@ class IncomingCall:
 	def process(self):
 		"""Process the incoming call
 		* Figure out who is going to pick the call (call attender)
-		* Check call attender settings and forward the call to Phone
+		* Check call attender settings and forward the call to Phone / Computer / SIP softphone
 		"""
 		twilio = Twilio.connect()
 		owners = get_twilio_number_owners(self.to_number)
@@ -144,10 +164,15 @@ class IncomingCall:
 			resp.say(_("Agent is unavailable to take the call, please call after some time."))
 			return resp
 
-		if attender["call_receiving_device"] == "Phone":
+		device = attender["call_receiving_device"]
+		if device == "Phone":
 			return twilio.generate_twilio_dial_response(self.from_number, attender["mobile_no"])
-		else:
-			return twilio.generate_twilio_client_response(twilio.safe_identity(attender["name"]))
+		if device == "SIP Phone" and twilio.settings.get("enable_sip_phone") and twilio.settings.get("sip_domain"):
+			sip_username = attender.get("sip_username")
+			if sip_username:
+				sip_uri = f"sip:{sip_username}@{twilio.settings.sip_domain}"
+				return twilio.generate_twilio_sip_response(sip_uri, caller_id=self.from_number)
+		return twilio.generate_twilio_client_response(twilio.safe_identity(attender["name"]))
 
 
 def get_twilio_number_owners(phone_number):
@@ -164,7 +189,7 @@ def get_twilio_number_owners(phone_number):
 	user_voice_settings = frappe.get_all(
 		"CRM Telephony Agent",
 		filters={"twilio_number": phone_number},
-		fields=["name", "call_receiving_device"],
+		fields=["name", "call_receiving_device", "sip_username"],
 	)
 	user_wise_voice_settings = {user["name"]: user for user in user_voice_settings}
 
@@ -206,9 +231,10 @@ def get_the_call_attender(owners, caller=None):
 				current_loggedin_users = [user]
 
 	for name, details in owners.items():
-		if (details["call_receiving_device"] == "Phone" and details["mobile_no"]) or (
-			details["call_receiving_device"] == "Computer" and name in current_loggedin_users
-		):
+		device = details["call_receiving_device"]
+		if (device == "Phone" and details["mobile_no"]) or (
+			device == "Computer" and name in current_loggedin_users
+		) or (device == "SIP Phone" and details.get("sip_username")):
 			return details
 
 
@@ -223,7 +249,8 @@ class TwilioCallDetails:
 		self._call_to = call_to or call_info.get("To")
 
 	def get_direction(self):
-		if self.call_info.get("Caller").lower().startswith("client"):
+		caller = (self.call_info.get("Caller") or "").lower()
+		if caller.startswith("client") or caller.startswith("sip:"):
 			return "Outgoing"
 		return "Incoming"
 

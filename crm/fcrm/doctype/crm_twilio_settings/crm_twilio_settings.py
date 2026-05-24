@@ -21,8 +21,10 @@ class CRMTwilioSettings(Document):
 		api_secret: DF.Password | None
 		app_name: DF.Data | None
 		auth_token: DF.Password | None
+		enable_sip_phone: DF.Check
 		enabled: DF.Check
 		record_calls: DF.Check
+		sip_domain: DF.Data | None
 		twilio_apps: DF.Data | None
 		twiml_sid: DF.Data | None
 	# end: auto-generated types

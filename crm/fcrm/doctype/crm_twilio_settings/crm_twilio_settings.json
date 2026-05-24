@@ -22,7 +22,10 @@
   "api_secret",
   "app_name",
   "section_break_cghd",
-  "twilio_apps"
+  "twilio_apps",
+  "section_break_sip",
+  "enable_sip_phone",
+  "sip_domain"
  ],
  "fields": [
   {
@@ -117,6 +120,26 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Twilio Apps"
+  },
+  {
+   "fieldname": "section_break_sip",
+   "fieldtype": "Section Break",
+   "label": "SIP Phone (Beta)",
+   "depends_on": "enabled"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_sip_phone",
+   "fieldtype": "Check",
+   "label": "Enable SIP Phone Routing",
+   "description": "When on, incoming calls for agents whose Device is 'SIP Phone' get forwarded to their SIP softphone via Twilio SIP Domain instead of the browser dialer."
+  },
+  {
+   "depends_on": "enable_sip_phone",
+   "fieldname": "sip_domain",
+   "fieldtype": "Data",
+   "label": "Twilio SIP Domain",
+   "description": "e.g. docomexico.sip.twilio.com. Configured on the Twilio Console (Voice → SIP → Domains)."
   }
  ],
  "index_web_pages_for_search": 1,

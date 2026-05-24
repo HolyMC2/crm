@@ -72,6 +72,43 @@ def voice(**kwargs):
 	return Response(resp.to_xml(), mimetype="text/xml")
 
 
+@frappe.whitelist(allow_guest=True)
+def sip_voice(**kwargs):
+	"""Webhook called by Twilio when an outbound call originates from a softphone
+	registered against the Twilio SIP Domain. Looks up the agent by sip_username,
+	normalizes the dialed number to E.164 and returns TwiML to dial the PSTN with
+	the agent's twilio_number as caller_id."""
+
+	def _get_caller_number_from_sip(caller):
+		# Twilio sets `From` to `sip:<username>@<sip-domain>` for SIP-originated calls
+		sip_uri = (caller or "").lower()
+		if not sip_uri.startswith("sip:"):
+			return None
+		username = sip_uri.split(":", 1)[1].split("@", 1)[0]
+		if not username:
+			return None
+		return frappe.db.get_value("CRM Telephony Agent", {"sip_username": username}, "twilio_number")
+
+	args = frappe._dict(kwargs)
+	# SIP Domain webhooks don't carry an ApplicationSid; validate AccountSid only.
+	twilio = validate_twilio_request(args)
+
+	if not twilio.settings.get("enable_sip_phone"):
+		# SIP routing disabled — refuse with TwiML "Reject"
+		from twilio.twiml.voice_response import VoiceResponse
+		r = VoiceResponse()
+		r.reject()
+		return Response(r.to_xml(), mimetype="text/xml")
+
+	from_number = _get_caller_number_from_sip(args.From or args.Caller)
+	to_number = _normalize_e164(args.To)
+	resp = twilio.generate_twilio_dial_response(from_number, to_number)
+
+	call_details = TwilioCallDetails(args, call_from=from_number, call_to=to_number)
+	create_call_log(call_details)
+	return Response(resp.to_xml(), mimetype="text/xml")
+
+
 def _normalize_e164(number: str, default_country_code: str = "52") -> str:
 	"""Coerce a phone number to E.164 (+CCNNN...).
 
