@@ -183,6 +183,7 @@ const chooseExistingOrganization = ref(false)
 const newRepairOrder = ref({
   device_model: null,
   repair_to_be_done: null,
+  falla_reportada: '',
   general_status: '',
   client: null,
   technician: null,
@@ -311,6 +312,15 @@ async function createDeal() {
     deal.doc['mobile_no'] = null
   } else deal.doc['contact'] = null
 
+  // Doco: Falla reportada required only when the inline RO is being created
+  // (device_model set). Block here so the Deal isn't created with a dangling
+  // half-filled RO intent.
+  if (newRepairOrder.value.device_model
+      && !(newRepairOrder.value.falla_reportada || '').trim()) {
+    error.value = __('Falla reportada is required when creating a Repair Order.')
+    return
+  }
+
   await triggerOnBeforeCreate?.()
 
   createResource({
@@ -388,6 +398,7 @@ async function createDeal() {
               deal_name: name,
               device_model: deviceModelVal,
               repair_to_be_done: repairTypeVal || null,
+              falla_reportada: (newRepairOrder.value.falla_reportada || '').trim(),
               general_status: newRepairOrder.value.general_status || null,
               client: primaryContact,
               technician: getVal(newRepairOrder.value.technician) || null,

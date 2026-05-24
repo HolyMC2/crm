@@ -55,6 +55,23 @@
       </div>
     </div>
 
+    <!-- Row 1b: Falla reportada (free-text, required when RO is being created) -->
+    <div class="mt-3">
+      <FormControl
+        type="textarea"
+        v-model="form.falla_reportada"
+        :rows="2"
+        :placeholder="__('e.g. No prende, pantalla parpadea, no carga…')"
+      >
+        <template #label>
+          <span class="text-xs text-ink-gray-5">
+            {{ __('Falla reportada') }}
+            <span class="text-ink-red-4">*</span>
+          </span>
+        </template>
+      </FormControl>
+    </div>
+
     <!-- Row 2: Client / Technician / IMEI -->
     <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div>
