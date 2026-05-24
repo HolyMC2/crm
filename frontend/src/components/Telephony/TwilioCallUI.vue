@@ -268,10 +268,29 @@ async function startupClient() {
   try {
     const data = await call('crm.integrations.twilio.api.generate_access_token')
     log.value = 'Got a token.'
-    intitializeDevice(data.token)
+    initDeviceAfterGesture(data.token)
   } catch (err) {
     log.value = 'An error occurred. ' + err.message
   }
+}
+
+function initDeviceAfterGesture(token) {
+  // Browser autoplay policy blocks the AudioContext used by the Twilio Voice SDK
+  // unless the Device is constructed after a user gesture. Wait for the first
+  // pointerdown/keydown if none has occurred yet.
+  const hasGesture = navigator.userActivation?.hasBeenActive ?? false
+  if (hasGesture) {
+    intitializeDevice(token)
+    return
+  }
+  log.value = 'Click anywhere to enable call audio…'
+  const onGesture = () => {
+    document.removeEventListener('pointerdown', onGesture, true)
+    document.removeEventListener('keydown', onGesture, true)
+    intitializeDevice(token)
+  }
+  document.addEventListener('pointerdown', onGesture, { capture: true, once: true })
+  document.addEventListener('keydown', onGesture, { capture: true, once: true })
 }
 
 function intitializeDevice(token) {
