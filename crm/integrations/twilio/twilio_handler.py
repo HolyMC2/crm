@@ -275,9 +275,19 @@ class TwilioCallDetails:
 		receiver = ""
 
 		if direction == "Outgoing":
-			caller = self.call_info.get("Caller")
-			identity = caller.replace("client:", "").strip()
-			caller = Twilio.emailid_from_identity(identity) if identity else ""
+			caller = self.call_info.get("Caller") or ""
+			if caller.lower().startswith("sip:"):
+				# SIP softphone-originated call: sip:<username>@<domain>.
+				# Resolve to the CRM user via CRM Telephony Agent.sip_username.
+				sip_username = caller[4:].split("@", 1)[0]
+				caller = (
+					frappe.db.get_value("CRM Telephony Agent", {"sip_username": sip_username}, "user") or ""
+					if sip_username
+					else ""
+				)
+			else:
+				identity = caller.replace("client:", "").strip()
+				caller = Twilio.emailid_from_identity(identity) if identity else ""
 		else:
 			owners = get_twilio_number_owners(to_number)
 			attender = get_the_call_attender(owners, from_number)
