@@ -132,6 +132,39 @@ class Twilio:
 		resp.append(dial)
 		return resp
 
+	def generate_twilio_parallel_response(self, targets, caller_id=None, ring_tone="at"):
+		"""Ring multiple endpoints simultaneously. First to answer wins, others hang up.
+
+		`targets` is a list of (kind, value) tuples where kind is one of:
+		  - "sip"    : value is a sip: URI (e.g. sip:marco@docomexico.sip.twilio.com)
+		  - "client" : value is a Twilio Client identity (e.g. marco(at)gmail.com)
+		  - "number" : value is a PSTN E.164 number
+		"""
+		resp = VoiceResponse()
+		dial = Dial(
+			caller_id=caller_id,
+			ring_tone=ring_tone,
+			record=self.settings.record_calls,
+			recording_status_callback=self.get_recording_status_callback_url(),
+			recording_status_callback_event="completed",
+		)
+		cb_kwargs = {
+			"status_callback_event": "initiated ringing answered completed",
+			"status_callback": self.get_update_call_status_callback_url(),
+			"status_callback_method": "POST",
+		}
+		for kind, value in targets:
+			if not value:
+				continue
+			if kind == "sip":
+				dial.sip(value, **cb_kwargs)
+			elif kind == "client":
+				dial.client(value, **cb_kwargs)
+			elif kind == "number":
+				dial.number(value, **cb_kwargs)
+		resp.append(dial)
+		return resp
+
 	@classmethod
 	def get_twilio_client(self):
 		twilio_settings = frappe.get_doc("CRM Twilio Settings")
@@ -171,7 +204,12 @@ class IncomingCall:
 			sip_username = attender.get("sip_username")
 			if sip_username:
 				sip_uri = f"sip:{sip_username}@{twilio.settings.sip_domain}"
-				return twilio.generate_twilio_sip_response(sip_uri, caller_id=self.from_number)
+				targets = [("sip", sip_uri)]
+				# Also ring the browser dialer if the agent has an active CRM session,
+				# so calls are picked up from whichever surface answers first.
+				if attender["name"] in get_active_loggedin_users([attender["name"]]):
+					targets.append(("client", twilio.safe_identity(attender["name"])))
+				return twilio.generate_twilio_parallel_response(targets, caller_id=self.from_number)
 		return twilio.generate_twilio_client_response(twilio.safe_identity(attender["name"]))
 
 
