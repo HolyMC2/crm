@@ -137,13 +137,9 @@
           autocomplete="off"
           class="!w-32"
         />
-        <FormControl
+        <PatternPad
           v-if="form.unlock_method === 'pattern'"
-          type="text"
           v-model="form.phone_pattern"
-          :placeholder="__('e.g. 1-2-5-8-9')"
-          autocomplete="off"
-          class="!w-40"
         />
       </div>
     </div>
@@ -197,6 +193,7 @@
  * Upstream rebase impact: zero (this file is new, never conflicts).
  */
 import Link from '@/components/Controls/Link.vue'
+import PatternPad from '@/components/PatternPad.vue'
 import { FormControl } from 'frappe-ui'
 import { computed } from 'vue'
 
