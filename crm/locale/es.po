@@ -8646,3 +8646,51 @@ msgstr ""
 msgid "⚠️ No row found for idx: {0} in parent field: {1}"
 msgstr ""
 
+
+#: frontend/src/components/PatternPad.vue:62
+msgid "Draw pattern"
+msgstr "Dibuja el patrón"
+
+#: frontend/src/components/Telephony/TwilioCallUI.vue:284
+msgid "Click anywhere to enable call audio…"
+msgstr "Haz clic en cualquier parte para habilitar el audio…"
+
+#: crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json
+msgid "SIP Phone"
+msgstr "Teléfono SIP"
+
+#: crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json
+msgid "SIP Username"
+msgstr "Usuario SIP"
+
+#: crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json
+msgid "SIP Password"
+msgstr "Contraseña SIP"
+
+#: crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json
+msgid "Username on the Twilio SIP Domain (e.g. 'marco'). No @ or special chars."
+msgstr "Usuario en el dominio SIP de Twilio (ej. 'marco'). Sin @ ni caracteres especiales."
+
+#: crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json
+msgid "Password for the SIP credential, paired with sip_username on the Twilio Credential List."
+msgstr "Contraseña del credential SIP, emparejada con sip_username en la Credential List de Twilio."
+
+#: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
+msgid "SIP Phone (Beta)"
+msgstr "Teléfono SIP (Beta)"
+
+#: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
+msgid "Enable SIP Phone Routing"
+msgstr "Habilitar enrutamiento de teléfono SIP"
+
+#: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
+msgid "When on, incoming calls for agents whose Device is 'SIP Phone' get forwarded to their SIP softphone via Twilio SIP Domain instead of the browser dialer."
+msgstr "Si está activo, las llamadas entrantes para agentes con dispositivo 'Teléfono SIP' se reenvían a su softphone SIP vía el dominio SIP de Twilio en lugar del marcador del navegador."
+
+#: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
+msgid "Twilio SIP Domain"
+msgstr "Dominio SIP de Twilio"
+
+#: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
+msgid "e.g. docomexico.sip.twilio.com. Configured on the Twilio Console (Voice → SIP → Domains)."
+msgstr "ej. docomexico.sip.twilio.com. Se configura en la consola de Twilio (Voice → SIP → Domains)."

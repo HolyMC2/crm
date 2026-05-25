@@ -57,6 +57,29 @@ they run as evaluated strings in the browser.
 | `frontend/src/stores/meta.js` | `getMeta(doctype)` — fetches DocType meta, exposes `getFields()`, formatters |
 | `frontend/src/stores/global.js` | `$dialog`, `$socket`, `makeCall` |
 
+### Telephony (Doco fork additions)
+| File | Role |
+|---|---|
+| `frontend/src/components/Telephony/TwilioCallUI.vue` | Twilio Voice JS SDK Device wrapper. **Patched**: `initDeviceAfterGesture()` defers `new Device(token)` until first user gesture so browser autoplay policy doesn't block AudioContext |
+| `frontend/src/components/Telephony/CallUI.vue` | Multi-medium router (`twilio` / `exotel`), simultaneous-ring wiring |
+| `frontend/src/components/Modals/CallLogDetailModal.vue` | **Patched**: `<audio v-if="field.value">` guard so empty `recording_url_path` doesn't trigger browser "Cannot play media... text/html" warning |
+| `crm/integrations/twilio/api.py` | `voice()` + `sip_voice()` webhooks. `_normalize_e164()` strips MX 521 prefix + prepends +52 to bare 10-digit numbers before TwiML dial |
+| `crm/integrations/twilio/twilio_handler.py` | `IncomingCall.process()` routes to SIP, Computer, or PSTN device per agent. `generate_twilio_parallel_response()` rings multiple endpoints simultaneously. Per-account routing supports the `enable_sip_phone` flag |
+| `crm/fcrm/doctype/crm_telephony_agent/` | Extended with `sip_username`, `sip_password`, `call_receiving_device='SIP Phone'` option |
+| `crm/fcrm/doctype/crm_twilio_settings/` | Extended with `enable_sip_phone` toggle + `sip_domain` |
+
+### Repair / Doco custom
+| File | Role |
+|---|---|
+| `frontend/src/components/PatternPad.vue` | SVG 3×3 draggable phone-unlock pattern. v-model is the same `1-2-5-8-9` dash-string the legacy text input emitted; pointer-event based, works on mouse + touch + stylus |
+| `frontend/src/components/Modals/RepairOrderInlineForm.vue` | Inline Repair Order form inside Deal modal. Uses PatternPad when `unlock_method === 'pattern'` |
+| `frontend/src/components/Modals/DealModal.vue` | Deal create/edit modal; mounts RepairOrderInlineForm in repair-shop vertical |
+
+### Call log automation (Doco fork additions)
+| File | Role |
+|---|---|
+| `crm/fcrm/doctype/crm_call_log/crm_call_log.py` | **Patched**: `on_update` hook bumps `modified` on every linked CRM Lead/Deal so a fresh call moves the record to the top of "Last updated" sorts |
+
 ---
 
 ## Tests
