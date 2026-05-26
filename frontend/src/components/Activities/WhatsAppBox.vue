@@ -85,6 +85,10 @@ import { ref, nextTick, watch } from 'vue'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
+  // When the Deal has multiple Contacts, the parent tab strip overrides the
+  // `to` number per active tab. Falls back to doc.mobile_no for single-Contact
+  // Deals + all Leads (their .mobile_no IS the chat target).
+  toOverride: { type: String, default: '' },
 })
 
 const doc = defineModel({ type: Object, default: () => ({}) })
@@ -125,7 +129,7 @@ async function sendWhatsAppMessage() {
     reference_doctype: props.doctype,
     reference_name: doc.value.name,
     message: content.value,
-    to: doc.value.mobile_no,
+    to: props.toOverride || doc.value.mobile_no,
     attach: whatsapp.value.attach || '',
     reply_to: reply.value?.name || '',
     content_type: whatsapp.value.content_type,

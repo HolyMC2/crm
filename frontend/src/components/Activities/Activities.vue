@@ -29,12 +29,34 @@
       class="activities"
     >
       <div v-if="title == 'WhatsApp'">
+        <!-- Multi-Contact tab strip: one tab per Contact attached to the Deal/Lead.
+             Hidden when there's only one contact (header alone is enough). -->
+        <div
+          v-if="(whatsappContacts.data || []).length > 1"
+          class="mx-3 mb-2 flex gap-1 overflow-x-auto px-1 sm:mx-10"
+        >
+          <button
+            v-for="(c, i) in whatsappContacts.data"
+            :key="c.phone"
+            type="button"
+            class="whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-medium"
+            :class="
+              activeWhatsappContactIdx === i
+                ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200'
+                : 'border-transparent bg-surface-gray-1 text-ink-gray-7 hover:bg-surface-gray-2'
+            "
+            @click="activeWhatsappContactIdx = i"
+          >
+            {{ c.name }}
+            <span class="ml-1 font-mono text-[10px] opacity-60">{{ c.phone_display }}</span>
+          </button>
+        </div>
         <WhatsAppArea
           v-model="whatsappMessages"
           v-model:reply="replyMessage"
           class="px-3 sm:px-10"
-          :messages="whatsappMessages.data || []"
-          :contact="whatsappHeaderContact"
+          :messages="filteredWhatsappMessages"
+          :contact="activeWhatsappContact"
         />
       </div>
       <div
@@ -423,6 +445,7 @@
       v-model:reply="replyMessage"
       v-model:whatsapp="whatsappMessages"
       :doctype="doctype"
+      :to-override="activeWhatsappContact?.phone || ''"
       @scroll="scroll"
     />
   </div>
@@ -555,24 +578,35 @@ const all_activities = createResource({
 
 const showWhatsappTemplates = ref(false)
 
-// Header data passed to WhatsAppArea: the primary phone + display name for this
-// Lead/Deal. We avoid making a fresh DB call — Lead/Deal already carries mobile_no
-// and a useful display name. For multi-contact Deals (Marco's next-step plan)
-// this becomes a list of contacts and the header turns into tabs.
-const whatsappHeaderContact = computed(() => {
-  const d = doc.value || {}
-  const phone =
-    d.mobile_no ||
-    d.phone ||
-    d.no_of_employees /* placeholder fallback */ ||
-    ''
-  const name =
-    d.lead_name ||
-    d.organization ||
-    d.first_name ||
-    (d.contacts && d.contacts[0] && d.contacts[0].full_name) ||
-    ''
-  return { name, phone, image: d.image || '' }
+// Multi-Contact-per-Deal scoping: pull every Contact attached to the Deal/Lead
+// with their normalized mobile_no. Each Contact becomes one chat tab.
+const whatsappContacts = createResource({
+  url: 'whatsapp_chat.api.deal_contacts.get_deal_whatsapp_contacts',
+  cache: ['whatsapp_deal_contacts', props.doctype, props.docname],
+  params: { doctype: props.doctype, name: props.docname },
+  auto: true,
+})
+
+const activeWhatsappContactIdx = ref(0)
+
+const activeWhatsappContact = computed(() => {
+  const list = whatsappContacts.data || []
+  return list[activeWhatsappContactIdx.value] || list[0] || null
+})
+
+// Filter messages to the active Contact's phone (compare normalized digits).
+const filteredWhatsappMessages = computed(() => {
+  const all = whatsappMessages.data || []
+  const c = activeWhatsappContact.value
+  if (!c || (whatsappContacts.data || []).length <= 1) return all
+  const target = String(c.phone || '').replace(/\D/g, '')
+  if (!target) return all
+  return all.filter((m) => {
+    const from = String(m.from || '').replace(/\D/g, '')
+    const to = String(m.to || '').replace(/\D/g, '')
+    return from.endsWith(target) || target.endsWith(from) ||
+           to.endsWith(target) || target.endsWith(to)
+  })
 })
 
 const whatsappMessages = createResource({
