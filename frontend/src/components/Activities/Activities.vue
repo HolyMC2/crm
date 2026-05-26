@@ -28,12 +28,13 @@
       "
       class="activities"
     >
-      <div v-if="title == 'WhatsApp' && whatsappMessages.data?.length">
+      <div v-if="title == 'WhatsApp'">
         <WhatsAppArea
           v-model="whatsappMessages"
           v-model:reply="replyMessage"
           class="px-3 sm:px-10"
-          :messages="whatsappMessages.data"
+          :messages="whatsappMessages.data || []"
+          :contact="whatsappHeaderContact"
         />
       </div>
       <div
@@ -553,6 +554,26 @@ const all_activities = createResource({
 })
 
 const showWhatsappTemplates = ref(false)
+
+// Header data passed to WhatsAppArea: the primary phone + display name for this
+// Lead/Deal. We avoid making a fresh DB call — Lead/Deal already carries mobile_no
+// and a useful display name. For multi-contact Deals (Marco's next-step plan)
+// this becomes a list of contacts and the header turns into tabs.
+const whatsappHeaderContact = computed(() => {
+  const d = doc.value || {}
+  const phone =
+    d.mobile_no ||
+    d.phone ||
+    d.no_of_employees /* placeholder fallback */ ||
+    ''
+  const name =
+    d.lead_name ||
+    d.organization ||
+    d.first_name ||
+    (d.contacts && d.contacts[0] && d.contacts[0].full_name) ||
+    ''
+  return { name, phone, image: d.image || '' }
+})
 
 const whatsappMessages = createResource({
   url: 'crm.api.whatsapp.get_whatsapp_messages',

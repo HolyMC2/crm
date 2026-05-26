@@ -1,6 +1,32 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
+    <!-- WhatsApp-style conversation header: avatar + name + phone, sticky top -->
+    <div
+      v-if="contact?.phone || contact?.name"
+      class="sticky top-0 z-10 mx-3 mb-3 flex items-center gap-3 rounded-md border bg-surface-white px-3 py-2 shadow-sm dark:bg-surface-gray-2 sm:mx-10"
+    >
+      <div
+        class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-sm font-semibold text-ink-gray-7"
+      >
+        <img
+          v-if="contact?.image"
+          :src="contact.image"
+          :alt="contact?.name || contact?.phone"
+          class="h-full w-full object-cover"
+        />
+        <span v-else>{{ headerInitials }}</span>
+      </div>
+      <div class="flex min-w-0 flex-1 flex-col leading-tight">
+        <div class="truncate text-sm font-semibold text-ink-gray-9">
+          {{ contact?.name || contact?.phone || __('Conversation') }}
+        </div>
+        <div v-if="contact?.phone" class="font-mono text-xs text-ink-gray-5">
+          {{ formattedPhone }}
+        </div>
+      </div>
+    </div>
+
     <div
       v-for="whatsapp in messages"
       :key="whatsapp.name"
@@ -187,13 +213,34 @@ import ReactIcon from '@/components/Icons/ReactIcon.vue'
 import { formatDate, sanitizeHTML } from '@/utils'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Dropdown, createResource, toast } from 'frappe-ui'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-defineProps({
+const props = defineProps({
   messages: { type: Array, default: () => [] },
+  contact: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
 const list = defineModel({ type: Object })
+
+const headerInitials = computed(() => {
+  const n = (props.contact?.name || props.contact?.phone || '?').trim()
+  const parts = n.split(/\s+/).filter(Boolean).slice(0, 2)
+  return parts.map((p) => p[0]).join('').toUpperCase() || '?'
+})
+
+const formattedPhone = computed(() => {
+  const p = props.contact?.phone
+  if (!p) return ''
+  const d = String(p).replace(/\D/g, '')
+  // MX +52 + 10 digits → "+52 669 259 0270"
+  if (d.length === 12 && d.startsWith('52')) {
+    return `+52 ${d.slice(2, 5)} ${d.slice(5, 8)} ${d.slice(8)}`
+  }
+  return p.startsWith('+') ? p : `+${d}`
+})
 
 const { capture } = useTelemetry()
 
