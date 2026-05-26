@@ -205,13 +205,22 @@ def get_contact(phone_number: str, country: str = "IN", exact_match: bool = Fals
 	contacts = query.run(as_dict=True)
 
 	if len(contacts):
-		# Check if the contact is associated with a deal
+		# Check if the contact is associated with a deal — newest deal wins.
+		# Default get_value ordering is by name (effectively oldest first); explicit
+		# ORDER BY modified DESC picks the most recently active deal, which is what
+		# operators expect when the same customer has multiple open jobs.
 		for contact in contacts:
 			if frappe.db.exists("CRM Contacts", {"contact": contact.name, "is_primary": 1}):
-				deal = frappe.db.get_value(
-					"CRM Contacts", {"contact": contact.name, "is_primary": 1}, "parent"
+				deal = frappe.db.sql(
+					"""SELECT cd.name FROM `tabCRM Deal` cd
+					   JOIN `tabCRM Contacts` cc ON cc.parent = cd.name
+					   WHERE cc.contact = %s AND cc.is_primary = 1
+					   ORDER BY cd.modified DESC LIMIT 1""",
+					(contact.name,),
+					as_dict=False,
 				)
-				if are_same_phone_number(
+				deal = deal[0][0] if deal else None
+				if deal and are_same_phone_number(
 					contact.matched_phone, phone_number, country, validate=not exact_match
 				):
 					contact["deal"] = deal
