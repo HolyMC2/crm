@@ -1,5 +1,7 @@
 # CRM — Project Context
 
+> ⚠ **Multi-agent stomping safeguard**: before any edit/restart, read [muelle/AGENTS.md → Coordination](../muelle/AGENTS.md#coordination--multi-agent-freshness-read-before-any-write). Use `bash ../muelle/scripts/muelle-restart.sh <svc> --reason "..."` not raw `docker compose restart`. Memory entries: `feedback_agent_freshness_protocol`, `feedback_restart_coordination`.
+
 ## What this project is
 
 Frappe CRM frontend. Vue 3 + frappe-ui. The backend is Frappe Python. Scripts in
