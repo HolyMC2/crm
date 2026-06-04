@@ -22,7 +22,7 @@
 
     <!-- Inline add form -->
     <div v-if="showForm" class="mb-4 rounded-lg border bg-surface-gray-1 p-4">
-      <RepairOrderQuickForm v-model="newRepair" />
+      <RepairOrderInlineForm v-model="newRepair" />
       <div class="mt-3 flex justify-end gap-2">
         <Button :label="__('Cancel')" @click="toggleForm" />
         <Button
@@ -334,7 +334,7 @@
 </template>
 
 <script setup>
-import RepairOrderQuickForm from '@/components/doco/RepairOrderQuickForm.vue'
+import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
 import { Badge, Button, Dropdown, ErrorMessage, createResource } from 'frappe-ui'
 import { h, ref } from 'vue'
 
@@ -387,16 +387,26 @@ const showForm = ref(false)
 const creating = ref(false)
 const createError = ref(null)
 
+// Full canonical RO intake shape — mirrors DealModal's `newRepairOrder` ref
+// and RepairOrderInlineForm's v-model contract (1:1 with the Intake SPA).
 const emptyRepair = () => ({
-  device_model: '',
-  repair_to_be_done: '',
+  device_model: null,
+  repair_to_be_done: null,
+  falla_reportada: '',
   general_status: '',
-  technician: '',
-  client: '',
+  client: null,
+  technician: null,
+  imei: null,
   has_sim_tray: false,
   is_wet: false,
   turns_on: false,
   broken_screen: false,
+  has_phone_case: false,
+  unlock_method: 'none',
+  phone_pin: '',
+  phone_pattern: '',
+  quote_amount: 0,
+  advance_amount: 0,
 })
 
 const newRepair = ref(emptyRepair())
@@ -416,22 +426,46 @@ function toggleForm() {
 }
 
 function createRepairOrder() {
+  const rd = newRepair.value
+  // Link controls may emit either a bare string or a { value } object.
+  const getVal = (v) => (v && typeof v === 'object' ? v.value : v)
+
+  const deviceModelVal = getVal(rd.device_model)
+  if (!deviceModelVal) {
+    createError.value = __('Device Model is required')
+    return
+  }
+  // Falla reportada is mandatory server-side (create_and_link_repair_order
+  // throws if blank) — block here so the user gets a clean message.
+  const falla = (rd.falla_reportada || '').trim()
+  if (!falla) {
+    createError.value = __('Falla reportada is required when creating a Repair Order.')
+    return
+  }
+
   creating.value = true
   createError.value = null
-  const rd = newRepair.value
+  const unlock = rd.unlock_method
   createResource({
     url: 'taller.repair.repair_orders.create_and_link_repair_order',
     params: {
       deal_name: props.docname,
-      device_model: rd.device_model,
-      repair_to_be_done: rd.repair_to_be_done || null,
+      device_model: deviceModelVal,
+      repair_to_be_done: getVal(rd.repair_to_be_done) || null,
+      falla_reportada: falla,
       general_status: rd.general_status || null,
-      technician: rd.technician || null,
-      client: rd.client || null,
+      client: getVal(rd.client) || null,
+      technician: getVal(rd.technician) || null,
+      imei: getVal(rd.imei) || null,
       has_sim_tray: rd.has_sim_tray ? 1 : 0,
       is_wet: rd.is_wet ? 1 : 0,
       turns_on: rd.turns_on ? 1 : 0,
       broken_screen: rd.broken_screen ? 1 : 0,
+      has_phone_case: rd.has_phone_case ? 1 : 0,
+      phone_pin: unlock === 'pin' ? (rd.phone_pin || '') : '',
+      phone_pattern: unlock === 'pattern' ? (rd.phone_pattern || '') : '',
+      quote_amount: Number(rd.quote_amount) || 0,
+      advance_amount: Number(rd.advance_amount) || 0,
     },
     auto: true,
     onSuccess() {
