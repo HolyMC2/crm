@@ -111,6 +111,45 @@ const routes = [
     name: 'Welcome',
     component: () => import('@/pages/Welcome.vue'),
   },
+  // ── FCRM redesign surfaces (handoff §4.1). Placeholder component until each
+  //    phase ships its real page; meta drives the nav-rail label + back label.
+  {
+    path: '/inbox',
+    name: 'Inbox',
+    component: () => import('@/components/doco/ComingSoon.vue'),
+    meta: { navLabel: 'Inbox', title: 'Inbox', phase: '2' },
+  },
+  {
+    path: '/campaigns',
+    name: 'Campaigns',
+    component: () => import('@/components/doco/ComingSoon.vue'),
+    meta: { navLabel: 'Campaigns', title: 'Campaigns', phase: '4' },
+  },
+  {
+    path: '/campaigns/:campaignId',
+    name: 'Campaign',
+    component: () => import('@/components/doco/ComingSoon.vue'),
+    props: true,
+    meta: { navLabel: 'Campaigns', title: 'Campaign', phase: '4' },
+  },
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: () => import('@/components/doco/ComingSoon.vue'),
+    meta: { navLabel: 'Reports', title: 'Reports', phase: '5' },
+  },
+  {
+    path: '/score-rules',
+    name: 'Score Rules',
+    component: () => import('@/components/doco/ComingSoon.vue'),
+    meta: { navLabel: 'Score Rules', title: 'Score Rules', phase: '3' },
+  },
+  {
+    path: '/webshop',
+    name: 'Webshop',
+    component: () => import('@/components/doco/ComingSoon.vue'),
+    meta: { navLabel: 'Webshop', title: 'Webshop', phase: '5' },
+  },
   {
     path: '/:invalidpath',
     name: 'Invalid Page',
