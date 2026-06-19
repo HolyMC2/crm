@@ -154,20 +154,20 @@ const routes = [
   {
     path: '/reports',
     name: 'Reports',
-    component: () => import('@/components/doco/ComingSoon.vue'),
-    meta: { navLabel: 'Reports', title: 'Reports', phase: '5' },
+    component: () => import('@/pages/Reports.vue'),
+    meta: { navLabel: 'Reports', title: 'Reports' },
   },
   {
     path: '/score-rules',
     name: 'Score Rules',
-    component: () => import('@/components/doco/ComingSoon.vue'),
-    meta: { navLabel: 'Score Rules', title: 'Score Rules', phase: '3' },
+    component: () => import('@/pages/ScoreRules.vue'),
+    meta: { navLabel: 'Score Rules', title: 'Score Rules' },
   },
   {
     path: '/webshop',
     name: 'Webshop',
-    component: () => import('@/components/doco/ComingSoon.vue'),
-    meta: { navLabel: 'Webshop', title: 'Webshop', phase: '5' },
+    component: () => import('@/pages/Webshop.vue'),
+    meta: { navLabel: 'Webshop', title: 'Webshop' },
   },
   {
     path: '/:invalidpath',
