@@ -24,6 +24,10 @@
           <span v-if="row.device">🔧 {{ row.device }}</span>
           <span v-if="row.device" style="color: #d7dae1">·</span>
           <span v-if="row.mobile_no">{{ row.mobile_no }}</span>
+          <template v-if="row.last_message_ts">
+            <span style="color: #d7dae1">·</span>
+            <span class="text-ink-gray-5">{{ __('visto') }} {{ timeAgo(row.last_message_ts) }}</span>
+          </template>
         </div>
       </div>
       <div class="flex flex-none items-center gap-2.5">
@@ -102,6 +106,7 @@ import {
   setStage,
   avatarColor,
   initials,
+  timeAgo,
   GRADE_COLORS,
 } from '@/composables/inbox'
 

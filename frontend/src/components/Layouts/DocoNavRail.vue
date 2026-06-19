@@ -75,9 +75,25 @@
       </button>
     </Tooltip>
 
+    <!-- notifications bell (panel mounted below; toggled via notificationsStore) -->
+    <Tooltip :text="__('Notifications')" placement="right">
+      <button
+        class="relative mt-auto flex h-[38px] w-[38px] items-center justify-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
+        :aria-label="__('Notifications')"
+        @click="toggleNotifications()"
+      >
+        <NotificationsIcon class="h-[18px] w-[18px]" />
+        <span
+          v-if="unreadNotificationsCount"
+          class="absolute right-1.5 top-1.5 h-[7px] w-[7px] rounded-full"
+          style="background: #e5484d; border: 1.5px solid #fbfcfc"
+        />
+      </button>
+    </Tooltip>
+
     <!-- avatar → profile panel -->
     <button
-      class="mt-auto flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white transition-opacity hover:opacity-80"
+      class="mt-1 flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white transition-opacity hover:opacity-80"
       style="background: #c98bdb"
       @click="showProfile = !showProfile"
     >
@@ -155,10 +171,12 @@
 <script setup>
 import Notifications from '@/components/Notifications.vue'
 import Settings from '@/components/Settings/Settings.vue'
+import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
 import { showSettings } from '@/composables/settings'
+import { unreadNotificationsCount, notificationsStore } from '@/stores/notifications'
 import { Tooltip, createResource } from 'frappe-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -179,6 +197,7 @@ const route = useRoute()
 const router = useRouter()
 const { logout } = sessionStore()
 const { getUser } = usersStore()
+const { toggle: toggleNotifications } = notificationsStore()
 const { brand } = getSettings()
 
 const user = computed(() => getUser() || {})

@@ -7,12 +7,22 @@
     <div class="flex-none px-3.5 pb-2.5 pt-3.5">
       <div class="mb-3 flex items-center justify-between">
         <div class="text-[15px] font-bold text-ink-gray-9">{{ __('Mi bandeja') }}</div>
-        <span
-          class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-          style="color: #15803d; background: #e9f7ef"
-        >
-          {{ openCount }} {{ __('abiertas') }}
-        </span>
+        <div class="flex items-center gap-2">
+          <span
+            class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            style="color: #15803d; background: #e9f7ef"
+          >
+            {{ openCount }}
+          </span>
+          <button
+            class="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-white"
+            style="background: #16a34a"
+            :aria-label="__('New Deal')"
+            @click="newDeal"
+          >
+            + {{ __('Trato') }}
+          </button>
+        </div>
       </div>
       <div
         class="mb-3 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px]"
@@ -139,6 +149,7 @@
 import { computed } from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
+import { useDoctypeModal } from '@/composables/doctypeModal'
 import {
   queue,
   channels,
@@ -148,6 +159,7 @@ import {
   selectDeal,
   setQueueChannel,
   onSearchInput,
+  reloadQueue,
   avatarColor,
   initials,
   timeAgo,
@@ -155,6 +167,16 @@ import {
 } from '@/composables/inbox'
 
 const { getDealStatus } = statusesStore()
+const { showModal } = useDoctypeModal()
+
+// reuse the wired CRM Deal modal (doco fork: deal + optional repair order)
+function newDeal() {
+  showModal({
+    doctype: 'CRM Deal',
+    title: __('Deal'),
+    callbacks: { afterInsert: () => reloadQueue() },
+  })
+}
 
 const rows = computed(() => queue.data || [])
 const openCount = computed(() => rows.value.length)

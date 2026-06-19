@@ -90,7 +90,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Tabs } from 'frappe-ui'
+import { Tabs, toast } from 'frappe-ui'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import { globalStore } from '@/stores/global'
 import Activities from '@/components/Activities/Activities.vue'
@@ -100,6 +100,7 @@ import CommentIcon from '@/components/Icons/CommentIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
+import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import MessageThread from '@/components/doco/inbox/MessageThread.vue'
@@ -133,6 +134,7 @@ const tabs = [
 // timeline + emails + comments + calls + real Task modal + notes)
 const dealTabs = [
   { name: 'Activity', label: __('Activity'), icon: ActivityIcon },
+  { name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon },
   { name: 'Emails', label: __('Emails'), icon: EmailIcon },
   { name: 'Comments', label: __('Comments'), icon: CommentIcon },
   { name: 'Calls', label: __('Calls'), icon: PhoneIcon },
@@ -166,17 +168,21 @@ function onWaEvent() {
   loadThread()
   reloadQueue()
 }
+function onWaIn() {
+  toast.success(__('Nuevo mensaje de WhatsApp'))
+  onWaEvent()
+}
 
 onMounted(() => {
   initInbox() // clears any stale singleton state, then loads queue/channels
   if (route.query.deal) selectDeal(String(route.query.deal)) // deep link from Tasks "open conversation"
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)
-  $socket?.on('whatsapp_message_in', onWaEvent)
+  $socket?.on('whatsapp_message_in', onWaIn)
   $socket?.on('whatsapp_message_out', onWaEvent)
 })
 onUnmounted(() => {
   $socket?.off('doco_marketing:thread_update', onThreadUpdate)
-  $socket?.off('whatsapp_message_in', onWaEvent)
+  $socket?.off('whatsapp_message_in', onWaIn)
   $socket?.off('whatsapp_message_out', onWaEvent)
 })
 </script>

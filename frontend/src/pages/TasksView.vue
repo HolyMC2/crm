@@ -1,6 +1,6 @@
 <!--
   Tasks list — FCRM redesign (handoff §5.7). Tabs (All/Overdue/Today/Upcoming) +
-  dense table + inline done/reschedule/delete. New page; upstream Tasks.vue kept at
+  dense table + inline done + the real wired CRM Task modal (create/edit). Upstream Tasks.vue kept at
   /tasks/view/:viewType. No new backend (CRM Task CRUD).
 -->
 <template>
@@ -22,7 +22,7 @@
           </button>
         </div>
       </div>
-      <button class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white" style="background: #16a34a" @click="showAdd = !showAdd">
+      <button class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white" style="background: #16a34a" @click="openNew">
         + {{ __('Nueva tarea') }}
       </button>
     </div>
@@ -37,18 +37,6 @@
         @click="tab = t.key"
       >
         {{ t.label }}
-      </button>
-    </div>
-
-    <div v-if="showAdd" class="flex flex-none gap-2 border-b border-outline-gray-1 px-5 py-2">
-      <input
-        v-model="newTitle"
-        :placeholder="__('Título de la tarea…')"
-        class="flex-1 rounded-[9px] border border-outline-gray-2 px-3 py-2 text-[13px] focus:outline-none focus:ring-0"
-        @keydown.enter="addTask"
-      />
-      <button class="rounded-lg px-3 py-2 text-[12px] font-semibold text-white disabled:opacity-50" style="background: #16a34a" :disabled="!newTitle.trim() || adding" @click="addTask">
-        {{ __('Crear') }}
       </button>
     </div>
 
@@ -83,11 +71,22 @@
         >
           <span v-if="t.status === 'Done'" class="text-[12px]">✓</span>
         </button>
-        <div class="min-w-0">
-          <div class="truncate text-[13px] font-semibold" :class="t.status === 'Done' ? 'text-ink-gray-5 line-through' : 'text-ink-gray-9'">
+        <div class="flex min-w-0 items-center gap-2">
+          <button
+            class="block min-w-0 flex-1 truncate text-left text-[13px] font-semibold hover:underline"
+            :class="t.status === 'Done' ? 'text-ink-gray-5 line-through' : 'text-ink-gray-9'"
+            @click="openEdit(t)"
+          >
             {{ t.title }}
-          </div>
-          <div v-if="t.assigned_to" class="truncate text-[11px] text-ink-gray-4">{{ t.assigned_to }}</div>
+          </button>
+          <span
+            v-if="t.assigned_to"
+            class="flex h-6 w-6 flex-none items-center justify-center rounded-full text-[9px] font-semibold"
+            :style="`background:${avatarColor(t.assigned_to)[0]};color:${avatarColor(t.assigned_to)[1]}`"
+            :title="ownerName(t.assigned_to)"
+          >
+            {{ initials(ownerName(t.assigned_to)) }}
+          </span>
         </div>
         <button
           v-if="t.reference_doctype === 'CRM Deal' && t.reference_docname"
@@ -114,6 +113,19 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
+import { useDoctypeModal } from '@/composables/doctypeModal'
+import { avatarColor, initials } from '@/composables/crmFormat'
+
+// the real wired CRM Task modal (date/assignee/priority/reminder/notifications),
+// mounted globally via DoctypeModals in App.vue
+const { showModal } = useDoctypeModal()
+const taskCallbacks = { afterInsert: () => applyFilters(), afterUpdate: () => applyFilters() }
+function openNew() {
+  showModal({ doctype: 'CRM Task', title: __('Task'), defaults: { status: 'Backlog', priority: 'Low' }, callbacks: taskCallbacks })
+}
+function openEdit(t) {
+  showModal({ name: t.name, doctype: 'CRM Task', title: __('Task'), callbacks: taskCallbacks })
+}
 
 const GRID = '28px 1fr 150px 100px 110px 26px'
 const router = useRouter()
@@ -201,12 +213,8 @@ async function toggleDone(t) {
   await frappeCall('frappe.client.set_value', { doctype: 'CRM Task', name: t.name, fieldname: 'status', value: next })
   applyFilters()
 }
-async function reschedule(t) {
-  const next = window.prompt(__('Nueva fecha (YYYY-MM-DD HH:MM)'))
-  if (!next) return
-  await frappeCall('frappe.client.set_value', { doctype: 'CRM Task', name: t.name, fieldname: 'due_date', value: next })
-  toast.success(__('Reprogramada'))
-  applyFilters()
+function ownerName(email) {
+  return getUser(email)?.full_name || email
 }
 async function deleteTask(t) {
   if (!window.confirm(__('¿Eliminar esta tarea?'))) return
@@ -220,31 +228,10 @@ function openConversation(t) {
 }
 function rowMenu(t) {
   return [
+    { label: __('Editar'), onClick: () => openEdit(t) },
     { label: t.status === 'Done' ? __('Reabrir') : __('Marcar hecho'), onClick: () => toggleDone(t) },
-    { label: __('Reprogramar'), onClick: () => reschedule(t) },
     ...(t.reference_doctype === 'CRM Deal' ? [{ label: __('Abrir conversación'), onClick: () => openConversation(t) }] : []),
     { label: __('Eliminar'), onClick: () => deleteTask(t) },
   ]
-}
-
-// ── add ───────────────────────────────────────────────────────────────────────
-const showAdd = ref(false)
-const newTitle = ref('')
-const adding = ref(false)
-async function addTask() {
-  const title = newTitle.value.trim()
-  if (!title || adding.value) return
-  adding.value = true
-  try {
-    await frappeCall('frappe.client.insert', { doc: { doctype: 'CRM Task', title, status: 'Todo' } })
-    newTitle.value = ''
-    showAdd.value = false
-    toast.success(__('Tarea creada'))
-    applyFilters()
-  } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo crear'))
-  } finally {
-    adding.value = false
-  }
 }
 </script>
