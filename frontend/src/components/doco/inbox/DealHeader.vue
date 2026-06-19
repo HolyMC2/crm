@@ -28,6 +28,14 @@
             <span style="color: #d7dae1">·</span>
             <span class="text-ink-gray-5">{{ __('visto') }} {{ timeAgo(row.last_message_ts) }}</span>
           </template>
+          <span
+            v-if="waWindow"
+            class="rounded px-1.5 py-px text-[10.5px] font-semibold"
+            :style="waWindow.open ? 'color:#b9790a;background:#fdf6e9' : 'color:#e5484d;background:#fdecec'"
+            :title="waWindow.open ? __('Ventana de 24h de WhatsApp abierta') : __('Ventana cerrada — solo plantillas')"
+          >
+            {{ waWindow.open ? `WA ${waWindow.hoursLeft}h` : __('WA cerrada') }}
+          </span>
         </div>
       </div>
       <div class="flex flex-none items-center gap-2.5">
@@ -144,6 +152,31 @@ const stageOptions = computed(() =>
     onClick: () => setStage(s.name),
   })),
 )
+
+// WhatsApp 24h customer-service window (free-form until 24h after last inbound;
+// after that, template-only). Driven by the last Incoming WhatsApp Message.
+const lastInbound = createListResource({
+  doctype: 'WhatsApp Message',
+  fields: ['creation'],
+  orderBy: 'creation desc',
+  pageLength: 1,
+  onError: () => {},
+})
+watch(
+  activeDeal,
+  (d) => {
+    if (!d) return
+    lastInbound.filters = { reference_doctype: 'CRM Deal', reference_name: d, type: 'Incoming' }
+    lastInbound.reload()
+  },
+  { immediate: true },
+)
+const waWindow = computed(() => {
+  const ts = lastInbound.data?.[0]?.creation
+  if (!ts) return null
+  const left = 24 - (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
+  return left > 0 ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) } : { open: false }
+})
 
 // SLA
 const slaSecs = computed(() => sla.data?.first_response_seconds_left)
