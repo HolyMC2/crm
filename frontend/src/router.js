@@ -116,8 +116,8 @@ const routes = [
   {
     path: '/inbox',
     name: 'Inbox',
-    component: () => import('@/components/doco/ComingSoon.vue'),
-    meta: { navLabel: 'Inbox', title: 'Inbox', phase: '2' },
+    component: () => import('@/pages/Inbox.vue'),
+    meta: { navLabel: 'Inbox', title: 'Inbox' },
   },
   {
     path: '/campaigns',
