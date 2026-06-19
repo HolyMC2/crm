@@ -220,16 +220,27 @@ const rows = computed(() => leads.data || [])
 // loaded-row count (not the grand total); '+' signals more pages exist
 const count = computed(() => `${leads.data?.length ?? 0}${leads.hasNextPage ? '+' : ''}`)
 
+// free-text search across all common text fields (was lead_name-only → phone/email
+// searches returned nothing). OR'd via or_filters (same as upstream ViewControls).
+const SEARCH_FIELDS = ['lead_name', 'first_name', 'last_name', 'email', 'mobile_no', 'phone', 'organization']
 function buildFilters() {
   const f = {}
   if (statusF.value.length) f.status = ['in', statusF.value]
   if (gradeF.value.length) f.score_grade = ['in', gradeF.value]
   if (sourceF.value.length) f.source = ['in', sourceF.value]
-  if (search.value.trim()) f.lead_name = ['like', `%${search.value.trim()}%`]
   return f
+}
+function searchOrFilters() {
+  const q = search.value.trim()
+  if (!q) return {}
+  const pat = `%${q}%`
+  const orf = {}
+  for (const fld of SEARCH_FIELDS) orf[fld] = ['LIKE', pat]
+  return orf
 }
 function applyFilters() {
   leads.filters = buildFilters()
+  leads.orFilters = searchOrFilters()
   leads.orderBy = `${sort.value.field} ${sort.value.dir}`
   leads.reload()
 }
@@ -240,10 +251,11 @@ function exportLeads() {
     'name', 'lead_name', 'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'mobile_no', 'organization', 'creation',
   ])
   const filters = JSON.stringify(buildFilters())
+  const orFilters = JSON.stringify(searchOrFilters())
   const order_by = `${sort.value.field} ${sort.value.dir}`
   const url =
     `/api/method/frappe.desk.reportview.export_query?file_format_type=Excel&title=CRM Lead&doctype=CRM Lead` +
-    `&fields=${encodeURIComponent(fields)}&filters=${encodeURIComponent(filters)}` +
+    `&fields=${encodeURIComponent(fields)}&filters=${encodeURIComponent(filters)}&or_filters=${encodeURIComponent(orFilters)}` +
     `&order_by=${encodeURIComponent(order_by)}&page_length=100000&start=0&view=Report&with_comment_count=0`
   window.location.href = url
 }
