@@ -19,7 +19,8 @@ const routes = [
     component: () => import('@/pages/Dashboard.vue'),
   },
   {
-    alias: '/leads',
+    // FCRM redesign owns /leads (LeadsView.vue); upstream list stays reachable
+    // at /leads/view/:viewType for the kanban/calendar view system.
     path: '/leads/view/:viewType?',
     name: 'Leads',
     component: () => import('@/pages/Leads.vue'),
@@ -118,6 +119,12 @@ const routes = [
     name: 'Inbox',
     component: () => import('@/pages/Inbox.vue'),
     meta: { navLabel: 'Inbox', title: 'Inbox' },
+  },
+  {
+    path: '/leads',
+    name: 'Leads List',
+    component: () => import('@/pages/LeadsView.vue'),
+    meta: { navLabel: 'Leads', title: 'Leads' },
   },
   {
     path: '/campaigns',
