@@ -67,6 +67,9 @@
     <!-- bulk bar -->
     <div v-if="selectedRows.length" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2">
       <span class="text-[12.5px] font-semibold text-ink-gray-8">{{ selectedRows.length }} {{ __('seleccionados') }}</span>
+      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2" @click="bulkConvert">
+        {{ __('Convertir a tratos') }}
+      </button>
       <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-4 hover:bg-surface-red-1" @click="bulkDelete">
         {{ __('Eliminar') }}
       </button>
@@ -317,8 +320,16 @@ function openLead(name) {
 function rowMenu(r) {
   return [
     { label: __('Abrir'), onClick: () => openLead(r.name) },
+    { label: __('Convertir a trato'), onClick: () => convertLead(r.name) },
     { label: __('Eliminar'), onClick: () => deleteLead(r.name) },
   ]
+}
+async function convertLead(name) {
+  // upstream convert: lead → deal, then open it in the inbox
+  const deal = await frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })
+  toast.success(__('Convertido a trato'))
+  leads.reload()
+  if (deal) router.push({ path: '/inbox', query: { deal } })
 }
 async function deleteLead(name) {
   if (!window.confirm(__('¿Eliminar este lead?'))) return
@@ -328,10 +339,21 @@ async function deleteLead(name) {
 }
 async function bulkDelete() {
   if (!window.confirm(__('¿Eliminar {0} leads?', [selectedRows.value.length]))) return
-  for (const name of selectedRows.value) {
-    await frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })
-  }
-  toast.success(__('Leads eliminados'))
+  const results = await Promise.allSettled(
+    selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })),
+  )
+  const failed = results.filter((r) => r.status === 'rejected').length
+  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Leads eliminados'))
+  selectedRows.value = []
+  leads.reload()
+}
+async function bulkConvert() {
+  if (!window.confirm(__('¿Convertir {0} leads a tratos?', [selectedRows.value.length]))) return
+  const results = await Promise.allSettled(
+    selectedRows.value.map((name) => frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })),
+  )
+  const failed = results.filter((r) => r.status === 'rejected').length
+  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Convertidos a tratos'))
   selectedRows.value = []
   leads.reload()
 }
