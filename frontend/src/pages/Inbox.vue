@@ -31,29 +31,12 @@
           </button>
         </div>
 
-        <!-- conversation -->
-        <template v-if="activeTab === 'conversation'">
-          <div
-            class="flex flex-none flex-wrap items-center gap-1.5 border-b px-3.5 py-2"
-            style="border-color: #f1f2f4"
-          >
-            <span class="text-[11px] font-semibold text-ink-gray-5">{{ __('Canal') }}</span>
-            <button
-              v-for="c in channelPills"
-              :key="c.key"
-              class="inline-flex items-center gap-1.5 rounded-[7px] border px-2.5 py-1 text-[11.5px] font-semibold"
-              :style="channelPillStyle(c)"
-              :disabled="!c.live"
-              @click="c.live && (activeChannel = c.key)"
-            >
-              <span class="h-[7px] w-[7px] rounded-full" :style="`background:${c.dot}`" />
-              {{ c.label }}
-              <span v-if="!c.live" class="text-[9px] text-ink-gray-4">{{ __('pronto') }}</span>
-            </button>
-          </div>
-          <MessageThread />
-          <Composer />
-        </template>
+        <!-- conversation = the REAL WhatsApp (upstream WhatsAppArea + WhatsAppBox:
+             templates, media, reactions, replies, read receipts) via Activities
+             scoped to the WhatsApp tab. No sub-tab strip rendered (single tab). -->
+        <div v-if="activeTab === 'conversation'" class="flex min-h-0 flex-1 flex-col">
+          <Activities :key="'wa-' + activeDeal" doctype="CRM Deal" :docname="activeDeal" :tabs="convoTabs" />
+        </div>
 
         <!-- full upstream activity/email/comment/call/task/note system (real task
              modal w/ date/assignee/priority/reminder/notifications) — superset.
@@ -103,21 +86,16 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
-import MessageThread from '@/components/doco/inbox/MessageThread.vue'
-import Composer from '@/components/doco/inbox/Composer.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import {
   activeDeal,
-  activeChannel,
   activeTab,
-  channels,
   initInbox,
   loadThread,
   reloadQueue,
   selectDeal,
   onThreadUpdate,
-  CHANNEL_META,
 } from '@/composables/inbox'
 
 const { $socket } = globalStore()
@@ -134,35 +112,14 @@ const tabs = [
 // timeline + emails + comments + calls + real Task modal + notes)
 const dealTabs = [
   { name: 'Activity', label: __('Activity'), icon: ActivityIcon },
-  { name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon },
   { name: 'Emails', label: __('Emails'), icon: EmailIcon },
   { name: 'Comments', label: __('Comments'), icon: CommentIcon },
   { name: 'Calls', label: __('Calls'), icon: PhoneIcon },
   { name: 'Tasks', label: __('Tasks'), icon: TaskIcon },
   { name: 'Notes', label: __('Notes'), icon: NoteIcon },
 ]
-
-// channel selector — live = configured provider; others greyed (B5 will un-grey)
-const channelPills = computed(() => {
-  const live = new Set(
-    (channels.data || [])
-      .filter((c) => c.configured || c.live || c.enabled)
-      .map((c) => c.key),
-  )
-  return ['whatsapp', 'messenger', 'instagram', 'tiktok'].map((key) => ({
-    key,
-    label: CHANNEL_META[key]?.[0] || key,
-    dot: CHANNEL_META[key]?.[1] || '#9aa2ae',
-    live: live.has(key) || (key === 'whatsapp' && !channels.data), // optimistic WA before channels load
-  }))
-})
-function channelPillStyle(c) {
-  if (!c.live) return 'color:#9aa2ae;background:#f8f9fb;border-color:#edeef1;cursor:default;opacity:.7'
-  const on = activeChannel.value === c.key
-  return on
-    ? 'color:#16a34a;background:#e9f7ef;border-color:#c7ecd5'
-    : 'color:#5b6472;background:#fff;border-color:#e4e7ec'
-}
+// Conversación = WhatsApp only (the real WhatsAppArea + WhatsAppBox)
+const convoTabs = [{ name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon }]
 
 function onWaEvent() {
   loadThread()
