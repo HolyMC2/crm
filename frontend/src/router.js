@@ -50,7 +50,7 @@ const routes = [
     component: () => import('@/pages/Notes.vue'),
   },
   {
-    alias: '/tasks',
+    // FCRM redesign owns /tasks (TasksView.vue); upstream list at /tasks/view/.
     path: '/tasks/view/:viewType?',
     name: 'Tasks',
     component: () => import('@/pages/Tasks.vue'),
@@ -80,7 +80,7 @@ const routes = [
     props: true,
   },
   {
-    alias: '/call-logs',
+    // FCRM redesign owns /call-logs (CallsView.vue); upstream list at /call-logs/view/.
     path: '/call-logs/view/:viewType?',
     name: 'Call Logs',
     component: () => import('@/pages/CallLogs.vue'),
@@ -129,15 +129,27 @@ const routes = [
   {
     path: '/campaigns',
     name: 'Campaigns',
-    component: () => import('@/components/doco/ComingSoon.vue'),
-    meta: { navLabel: 'Campaigns', title: 'Campaigns', phase: '4' },
+    component: () => import('@/pages/Campaigns.vue'),
+    meta: { navLabel: 'Campaigns', title: 'Campaigns' },
   },
   {
     path: '/campaigns/:campaignId',
     name: 'Campaign',
-    component: () => import('@/components/doco/ComingSoon.vue'),
+    component: () => import('@/pages/CampaignDetail.vue'),
     props: true,
-    meta: { navLabel: 'Campaigns', title: 'Campaign', phase: '4' },
+    meta: { navLabel: 'Campaigns', title: 'Campaign' },
+  },
+  {
+    path: '/tasks',
+    name: 'Tasks List',
+    component: () => import('@/pages/TasksView.vue'),
+    meta: { navLabel: 'Tasks', title: 'Tasks' },
+  },
+  {
+    path: '/call-logs',
+    name: 'Calls List',
+    component: () => import('@/pages/CallsView.vue'),
+    meta: { navLabel: 'Calls', title: 'Calls' },
   },
   {
     path: '/reports',
