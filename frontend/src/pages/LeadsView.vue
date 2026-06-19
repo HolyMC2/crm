@@ -40,6 +40,18 @@
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
           />
         </div>
+        <Dropdown :options="viewMenu">
+          <button class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7">
+            {{ __('Vistas') }} ⌄
+          </button>
+        </Dropdown>
+        <button
+          class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
+          :title="__('Exportar a Excel')"
+          @click="exportLeads"
+        >
+          ⭳ {{ __('Export') }}
+        </button>
         <button
           class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
           style="background: #16a34a"
@@ -208,16 +220,79 @@ const rows = computed(() => leads.data || [])
 // loaded-row count (not the grand total); '+' signals more pages exist
 const count = computed(() => `${leads.data?.length ?? 0}${leads.hasNextPage ? '+' : ''}`)
 
-function applyFilters() {
+function buildFilters() {
   const f = {}
   if (statusF.value.length) f.status = ['in', statusF.value]
   if (gradeF.value.length) f.score_grade = ['in', gradeF.value]
   if (sourceF.value.length) f.source = ['in', sourceF.value]
   if (search.value.trim()) f.lead_name = ['like', `%${search.value.trim()}%`]
-  leads.filters = f
+  return f
+}
+function applyFilters() {
+  leads.filters = buildFilters()
   leads.orderBy = `${sort.value.field} ${sort.value.dir}`
   leads.reload()
 }
+
+// ── export (reuse Frappe's server export of ALL matching rows) ────────────────
+function exportLeads() {
+  const fields = JSON.stringify([
+    'name', 'lead_name', 'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'mobile_no', 'organization', 'creation',
+  ])
+  const filters = JSON.stringify(buildFilters())
+  const order_by = `${sort.value.field} ${sort.value.dir}`
+  const url =
+    `/api/method/frappe.desk.reportview.export_query?file_format_type=Excel&title=CRM Lead&doctype=CRM Lead` +
+    `&fields=${encodeURIComponent(fields)}&filters=${encodeURIComponent(filters)}` +
+    `&order_by=${encodeURIComponent(order_by)}&page_length=100000&start=0&view=Report&with_comment_count=0`
+  window.location.href = url
+}
+
+// ── saved views (named filter presets, per-browser) ───────────────────────────
+const VIEWS_KEY = 'doco_leads_saved_views'
+const savedViews = ref(loadViews())
+function loadViews() {
+  try {
+    return JSON.parse(window.localStorage.getItem(VIEWS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+function persistViews() {
+  window.localStorage.setItem(VIEWS_KEY, JSON.stringify(savedViews.value))
+}
+function saveCurrentView() {
+  const label = window.prompt(__('Nombre de la vista'))
+  if (!label) return
+  savedViews.value = savedViews.value.filter((v) => v.label !== label)
+  savedViews.value.push({
+    label,
+    status: [...statusF.value],
+    grade: [...gradeF.value],
+    source: [...sourceF.value],
+    search: search.value,
+    sort: { ...sort.value },
+  })
+  persistViews()
+  toast.success(__('Vista guardada'))
+}
+function applyView(v) {
+  statusF.value = [...(v.status || [])]
+  gradeF.value = [...(v.grade || [])]
+  sourceF.value = [...(v.source || [])]
+  search.value = v.search || ''
+  if (v.sort) sort.value = { ...v.sort }
+  applyFilters()
+}
+function deleteView(label) {
+  savedViews.value = savedViews.value.filter((v) => v.label !== label)
+  persistViews()
+}
+const viewMenu = computed(() => [
+  ...savedViews.value.map((v) => ({ label: v.label, onClick: () => applyView(v) })),
+  ...(savedViews.value.length ? [{ label: '—', onClick: () => {} }] : []),
+  { label: '＋ ' + __('Guardar vista actual'), onClick: saveCurrentView },
+])
 watch([statusF, gradeF, sourceF], applyFilters, { deep: true })
 let _t = null
 function onSearch(v) {
