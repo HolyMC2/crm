@@ -103,7 +103,7 @@
 
 <script setup>
 import { computed, watch } from 'vue'
-import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
+import { Dropdown, createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
 import LucidePhone from '~icons/lucide/phone'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
@@ -124,7 +124,40 @@ const { showModal } = useDoctypeModal()
 const { makeCall } = globalStore()
 const { getDealStatus } = statusesStore()
 
-const row = computed(() => (queue.data || []).find((r) => r.deal === activeDeal.value) || {})
+// rich row from the inbox queue when present; otherwise (360° / deep-linked deal not
+// in the queue) build an equivalent from a direct deal+lead fetch so the header isn't sparse.
+const queueRow = computed(() => (queue.data || []).find((r) => r.deal === activeDeal.value) || {})
+const dealFetch = createResource({ url: 'frappe.client.get_value' })
+const leadFetch = createResource({ url: 'frappe.client.get_value' })
+watch(
+  [activeDeal, queueRow],
+  () => {
+    if (!activeDeal.value || queueRow.value.deal) return // in queue → no fetch needed
+    dealFetch.submit({
+      doctype: 'CRM Deal',
+      filters: activeDeal.value,
+      fieldname: JSON.stringify(['status', 'lead', 'mobile_no', 'first_name', 'lead_name']),
+    })
+  },
+  { immediate: true },
+)
+watch(
+  () => dealFetch.data?.lead,
+  (lead) => lead && leadFetch.submit({ doctype: 'CRM Lead', filters: lead, fieldname: JSON.stringify(['lead_score', 'score_grade', 'lead_name', 'mobile_no']) }),
+)
+const row = computed(() => {
+  if (queueRow.value.deal) return queueRow.value
+  const d = dealFetch.data || {}
+  const l = leadFetch.data || {}
+  return {
+    deal: activeDeal.value,
+    status: d.status,
+    contact_name: d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
+    mobile_no: d.mobile_no || l.mobile_no,
+    lead_score: l.lead_score,
+    score_grade: l.score_grade,
+  }
+})
 const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
 const grade = computed(() => row.value.score_grade)
 const score = computed(() => row.value.lead_score ?? '')
