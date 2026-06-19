@@ -101,7 +101,7 @@
 <script setup>
 import { computed, h, watch } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
-import { avatarColor, initials, timeAgo } from '@/composables/inbox'
+import { avatarColor, initials, timeAgo } from '@/composables/crmFormat'
 
 const props = defineProps({ campaignId: { type: String, required: true } })
 

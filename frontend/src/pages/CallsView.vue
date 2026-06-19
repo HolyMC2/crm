@@ -77,7 +77,7 @@
 <script setup>
 import { computed, h, ref, watch } from 'vue'
 import { createListResource } from 'frappe-ui'
-import { timeAgo } from '@/composables/inbox'
+import { timeAgo } from '@/composables/crmFormat'
 import CallDetailDrawer from '@/components/doco/calls/CallDetailDrawer.vue'
 
 const GRID = '70px 1fr 90px 90px 120px 26px'

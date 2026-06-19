@@ -12,7 +12,7 @@
           <div class="text-[14px] font-bold text-ink-gray-9">{{ __('Detalle de llamada') }}</div>
           <div class="text-[12px] text-ink-gray-5">{{ dirLabel }} · {{ fmtDur(d.duration) }}</div>
         </div>
-        <button class="text-[18px] text-ink-gray-5 hover:text-ink-gray-9" @click="$emit('close')">×</button>
+        <button class="text-[18px] text-ink-gray-5 hover:text-ink-gray-9" :aria-label="__('Cerrar')" @click="$emit('close')">×</button>
       </div>
 
       <div class="flex-1 px-5 py-4">

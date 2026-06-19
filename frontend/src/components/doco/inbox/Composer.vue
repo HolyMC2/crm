@@ -43,8 +43,8 @@
         @keydown="onKeydown"
       />
       <div class="mt-1.5 flex items-center gap-3">
-        <span class="text-[12px] text-ink-gray-4">📎</span>
-        <span class="text-[12px] text-ink-gray-4">😊</span>
+        <span class="text-[12px] text-ink-gray-4" aria-hidden="true">📎</span>
+        <span class="text-[12px] text-ink-gray-4" aria-hidden="true">😊</span>
         <button
           class="ml-auto rounded-lg px-4 py-[7px] text-[12.5px] font-semibold text-white disabled:opacity-50"
           :style="`background:${composeMode === 'reply' ? '#16a34a' : '#b9790a'}`"

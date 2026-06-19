@@ -105,7 +105,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
-import { GRADE_COLORS } from '@/composables/inbox'
+import { GRADE_COLORS } from '@/composables/crmFormat'
 
 const operators = ['equals', 'not equals', 'is set', 'is not set', 'contains', 'greater than', 'less than', 'in']
 const legend = [

@@ -152,7 +152,9 @@ const rows = computed(() => tasks.data || [])
 
 function applyFilters() {
   const f = { status: ['not in', ['Done', 'Canceled']] }
-  if (scope.value === 'mine' && currentUser.value) f.assigned_to = ['like', `%${currentUser.value}%`]
+  // exact match (a LIKE %user% substring matched ana@x.com inside mariana@x.com,
+  // and disagreed with the nav-rail badge's exact filter)
+  if (scope.value === 'mine' && currentUser.value) f.assigned_to = currentUser.value
   const todayStr = localDate(new Date())
   if (tab.value === 'overdue') f.due_date = ['<', nowStr()]
   else if (tab.value === 'today') f.due_date = ['between', [`${todayStr} 00:00:00`, `${todayStr} 23:59:59`]]
@@ -213,7 +215,8 @@ async function deleteTask(t) {
   applyFilters()
 }
 function openConversation(t) {
-  router.push('/inbox')
+  // deep-link the inbox to this deal (Inbox.vue reads ?deal= and selects it)
+  router.push({ path: '/inbox', query: { deal: t.reference_docname } })
 }
 function rowMenu(t) {
   return [

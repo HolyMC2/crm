@@ -76,6 +76,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import { globalStore } from '@/stores/global'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
@@ -94,11 +95,13 @@ import {
   initInbox,
   loadThread,
   reloadQueue,
+  selectDeal,
   onThreadUpdate,
   CHANNEL_META,
 } from '@/composables/inbox'
 
 const { $socket } = globalStore()
+const route = useRoute()
 
 const tabs = [
   { key: 'conversation', label: '💬 ' + __('Conversación') },
@@ -135,7 +138,8 @@ function onWaEvent() {
 }
 
 onMounted(() => {
-  initInbox()
+  initInbox() // clears any stale singleton state, then loads queue/channels
+  if (route.query.deal) selectDeal(String(route.query.deal)) // deep link from Tasks "open conversation"
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)
   $socket?.on('whatsapp_message_in', onWaEvent)
   $socket?.on('whatsapp_message_out', onWaEvent)

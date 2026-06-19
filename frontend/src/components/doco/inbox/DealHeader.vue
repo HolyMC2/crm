@@ -114,7 +114,9 @@ const grade = computed(() => row.value.score_grade)
 const score = computed(() => row.value.lead_score ?? '')
 const gradeColor = computed(() => GRADE_COLORS[grade.value]?.[0] || '#9aa2ae')
 
-const stageColor = computed(() => getDealStatus(row.value.status)?.color || '#9aa2ae')
+// guard: a deep-linked deal not in the queue gives an empty row → status undefined;
+// getDealStatus(undefined) throws internally, so only call it when status is set.
+const stageColor = computed(() => (row.value.status ? getDealStatus(row.value.status)?.color : null) || '#9aa2ae')
 const stageBtnStyle = computed(() => {
   const c = stageColor.value
   return `color:${c};background:${c}14;border-color:${c}40`

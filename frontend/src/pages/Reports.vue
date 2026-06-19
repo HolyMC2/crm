@@ -22,6 +22,9 @@
     </div>
 
     <div class="flex flex-col gap-4 p-5">
+      <div v-if="restricted" class="rounded-[10px] border px-4 py-2.5 text-[12.5px]" style="color: #b9790a; background: #fdf6e9; border-color: #f1dca6">
+        {{ __('Algunas métricas (ingresos, atribución) requieren permiso de manager.') }}
+      </div>
       <!-- KPI cards -->
       <div class="grid grid-cols-4 gap-3">
         <KpiCard :label="__('Leads captados')" :value="kpiVal(kpis.total_leads)" to="/leads" />
@@ -101,7 +104,7 @@
 import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { createResource } from 'frappe-ui'
-import { CHANNEL_META, GRADE_COLORS } from '@/composables/inbox'
+import { CHANNEL_META, GRADE_COLORS } from '@/composables/crmFormat'
 
 const router = useRouter()
 
@@ -127,9 +130,14 @@ function range(key) {
   return { from_date: localDate(from), to_date: to }
 }
 
-const kpisRes = createResource({ url: 'doco_marketing.api.reports.get_report_kpis' })
+// get_report_kpis + get_campaign_attribution are manager-gated server-side; a
+// Sales User gets PermissionError. Catch it (no uncaught console error) and show a
+// banner instead of blank cards. The server gate is the real protection.
+const restricted = ref(false)
+const onRestricted = () => (restricted.value = true)
+const kpisRes = createResource({ url: 'doco_marketing.api.reports.get_report_kpis', onError: onRestricted })
 const funnelRes = createResource({ url: 'doco_marketing.api.reports.get_funnel_data' })
-const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_attribution' })
+const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_attribution', onError: onRestricted })
 const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown' })
 
 function load() {

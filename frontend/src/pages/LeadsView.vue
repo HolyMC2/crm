@@ -177,7 +177,7 @@ import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import LeadModal from '@/components/Modals/LeadModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
-import { GRADE_COLORS, avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/inbox'
+import { GRADE_COLORS, avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
 
 const GRID = '28px 1fr 96px 130px 120px 110px 50px 26px'
 const router = useRouter()
@@ -202,7 +202,8 @@ const leads = createListResource({
   pageLength: 50,
 })
 const rows = computed(() => leads.data || [])
-const count = computed(() => leads.data?.length ?? 0)
+// loaded-row count (not the grand total); '+' signals more pages exist
+const count = computed(() => `${leads.data?.length ?? 0}${leads.hasNextPage ? '+' : ''}`)
 
 function applyFilters() {
   const f = {}
