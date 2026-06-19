@@ -134,6 +134,12 @@ const routes = [
     meta: { navLabel: 'Inbox', title: 'Deal 360°' },
   },
   {
+    path: '/pipeline-analysis',
+    name: 'Pipeline Analysis',
+    component: () => import('@/pages/PipelineAnalysis.vue'),
+    meta: { navLabel: 'Leads', title: 'Pipeline Analysis' },
+  },
+  {
     path: '/campaigns',
     name: 'Campaigns',
     component: () => import('@/pages/Campaigns.vue'),

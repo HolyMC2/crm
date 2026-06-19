@@ -359,6 +359,7 @@ const views = [
   { key: 'list', label: '≡ List' },
   { key: 'board', label: '⊞ Board', to: '/leads/view/kanban' },
   { key: 'cal', label: '📅 Cal', to: '/calendar' },
+  { key: 'funnel', label: '∿ Funnel', to: '/pipeline-analysis' },
 ]
 function label(r) {
   return r.lead_name || [r.first_name, r.last_name].filter(Boolean).join(' ') || r.mobile_no || r.name
