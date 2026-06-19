@@ -19,6 +19,7 @@
           💬 {{ __('Chat') }}
         </button>
       </div>
+      <button class="mt-2 w-full text-[11px] text-ink-blue-link" @click="$router.push(`/deal/${activeDeal}`)">⛶ {{ __('Abrir 360°') }}</button>
     </div>
 
     <!-- score (doco-specific; not in the upstream sidepanel) -->
