@@ -55,11 +55,24 @@
           <Composer />
         </template>
 
-        <ActivityTab v-else-if="activeTab === 'activity'" />
+        <!-- full upstream activity/email/comment/call/task/note system (real task
+             modal w/ date/assignee/priority/reminder/notifications) — superset.
+             Tabs wrapper drives the sub-tab strip (same pattern as Deal.vue). -->
+        <div v-else-if="activeTab === 'activity'" class="flex min-h-0 flex-1 flex-col">
+          <Tabs
+            v-model="activityTabIndex"
+            as="div"
+            :tabs="dealTabs"
+            class="flex flex-1 flex-col overflow-hidden [&_[role='tablist']]:min-h-[42px] [&_[role='tablist']]:gap-6 [&_[role='tablist']]:px-4 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
+          >
+            <template #tab-panel>
+              <Activities :key="activeDeal" v-model:tabIndex="activityTabIndex" doctype="CRM Deal" :docname="activeDeal" :tabs="dealTabs" />
+            </template>
+          </Tabs>
+        </div>
         <div v-else-if="activeTab === 'repair'" class="scb flex-1 overflow-y-auto p-5">
           <RepairOrdersSection :docname="activeDeal" />
         </div>
-        <TasksTab v-else-if="activeTab === 'tasks'" />
       </template>
 
       <!-- no selection -->
@@ -75,16 +88,22 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { Tabs } from 'frappe-ui'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import { globalStore } from '@/stores/global'
+import Activities from '@/components/Activities/Activities.vue'
+import ActivityIcon from '@/components/Icons/ActivityIcon.vue'
+import EmailIcon from '@/components/Icons/EmailIcon.vue'
+import CommentIcon from '@/components/Icons/CommentIcon.vue'
+import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
+import TaskIcon from '@/components/Icons/TaskIcon.vue'
+import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import MessageThread from '@/components/doco/inbox/MessageThread.vue'
 import Composer from '@/components/doco/inbox/Composer.vue'
-import ActivityTab from '@/components/doco/inbox/ActivityTab.vue'
-import TasksTab from '@/components/doco/inbox/TasksTab.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import {
@@ -102,12 +121,23 @@ import {
 
 const { $socket } = globalStore()
 const route = useRoute()
+const activityTabIndex = ref(0)
 
 const tabs = [
   { key: 'conversation', label: '💬 ' + __('Conversación') },
   { key: 'activity', label: '⚡ ' + __('Actividad') },
   { key: 'repair', label: '🔧 ' + __('Reparación') },
-  { key: 'tasks', label: '✓ ' + __('Tareas') },
+]
+
+// sub-tabs for the embedded upstream Activities component (the full wired system:
+// timeline + emails + comments + calls + real Task modal + notes)
+const dealTabs = [
+  { name: 'Activity', label: __('Activity'), icon: ActivityIcon },
+  { name: 'Emails', label: __('Emails'), icon: EmailIcon },
+  { name: 'Comments', label: __('Comments'), icon: CommentIcon },
+  { name: 'Calls', label: __('Calls'), icon: PhoneIcon },
+  { name: 'Tasks', label: __('Tasks'), icon: TaskIcon },
+  { name: 'Notes', label: __('Notes'), icon: NoteIcon },
 ]
 
 // channel selector — live = configured provider; others greyed (B5 will un-grey)
