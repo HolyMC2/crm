@@ -25,6 +25,13 @@
           {{ t.label }}
         </button>
       </div>
+      <button
+        class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+        style="background: #16a34a"
+        @click="logCall"
+      >
+        + {{ __('Registrar llamada') }}
+      </button>
     </div>
 
     <!-- header -->
@@ -78,10 +85,16 @@
 import { computed, h, ref, watch } from 'vue'
 import { createListResource } from 'frappe-ui'
 import { timeAgo } from '@/composables/crmFormat'
+import { useDoctypeModal } from '@/composables/doctypeModal'
 import CallDetailDrawer from '@/components/doco/calls/CallDetailDrawer.vue'
 
 const GRID = '70px 1fr 90px 90px 120px 26px'
 const MISSED = ['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled']
+
+const { showModal } = useDoctypeModal()
+function logCall() {
+  showModal({ doctype: 'CRM Call Log', title: __('Call Log'), callbacks: { afterInsert: () => calls.reload() } })
+}
 
 const tab = ref('all')
 const tabs = [
