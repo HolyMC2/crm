@@ -99,6 +99,7 @@ import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-
 import LucidePhone from '~icons/lucide/phone'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
+import { useDoctypeModal } from '@/composables/doctypeModal'
 import {
   activeDeal,
   queue,
@@ -109,6 +110,8 @@ import {
   timeAgo,
   GRADE_COLORS,
 } from '@/composables/inbox'
+
+const { showModal } = useDoctypeModal()
 
 const { makeCall } = globalStore()
 const { getDealStatus } = statusesStore()
@@ -202,17 +205,14 @@ async function markDone() {
   toast.success(__('Tarea completada'))
   tasks.reload()
 }
-async function reschedule() {
+function reschedule() {
+  // open the real wired CRM Task modal (date/assignee/priority/reminder) for editing
   if (!nextTask.value) return
-  const next = window.prompt(__('Nueva fecha (YYYY-MM-DD HH:MM)'))
-  if (!next) return
-  await frappeCall('frappe.client.set_value', {
-    doctype: 'CRM Task',
+  showModal({
     name: nextTask.value.name,
-    fieldname: 'due_date',
-    value: next,
+    doctype: 'CRM Task',
+    title: __('Task'),
+    callbacks: { afterUpdate: () => tasks.reload() },
   })
-  toast.success(__('Tarea reprogramada'))
-  tasks.reload()
 }
 </script>

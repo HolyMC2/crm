@@ -279,7 +279,7 @@ function clearAll() {
 // ── view helpers ─────────────────────────────────────────────────────────────
 const views = [
   { key: 'list', label: '≡ List' },
-  { key: 'board', label: '⊞ Board' },
+  { key: 'board', label: '⊞ Board', to: '/leads/view/kanban' },
   { key: 'cal', label: '📅 Cal', to: '/calendar' },
 ]
 function label(r) {

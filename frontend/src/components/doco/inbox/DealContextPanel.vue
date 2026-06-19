@@ -22,7 +22,7 @@
         <button class="flex-1 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: #16a34a" @click="call">
           ☎ {{ __('Llamar') }}
         </button>
-        <button class="flex-1 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 text-[11.5px] font-medium text-ink-gray-7" @click="$router.push('/inbox')">
+        <button class="flex-1 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 text-[11.5px] font-medium text-ink-gray-7" @click="activeTab = 'conversation'">
           💬 {{ __('Chat') }}
         </button>
       </div>
@@ -92,7 +92,7 @@ import { createResource } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
-import { activeDeal, queue, avatarColor, initials, GRADE_COLORS } from '@/composables/inbox'
+import { activeDeal, activeTab, queue, avatarColor, initials, GRADE_COLORS } from '@/composables/inbox'
 
 const router = useRouter()
 const { makeCall } = globalStore()
