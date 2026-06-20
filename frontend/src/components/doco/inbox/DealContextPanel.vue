@@ -7,11 +7,7 @@
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Acciones') }}</div>
-      <div class="flex items-center justify-between py-1 text-[12px]">
-        <span class="text-ink-gray-5">{{ __('Estado') }}</span>
-        <span v-if="row.status" class="rounded-md px-2 py-[2px] text-[11px] font-semibold" :style="statusChip(row.status)">{{ row.status }}</span>
-      </div>
-      <div class="mt-2 flex gap-2">
+      <div class="flex gap-2">
         <button class="flex-1 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: #16a34a" @click="call">
           ☎ {{ __('Llamar') }}
         </button>
@@ -64,12 +60,10 @@
 import { computed, watch } from 'vue'
 import { createResource } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
-import { statusesStore } from '@/stores/statuses'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import { activeDeal, activeTab, queue, GRADE_COLORS } from '@/composables/inbox'
 
 const { makeCall } = globalStore()
-const { getDealStatus } = statusesStore()
 
 const row = computed(() => (queue.data || []).find((r) => r.deal === activeDeal.value) || {})
 const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
@@ -95,10 +89,6 @@ watch(
   { immediate: true },
 )
 
-function statusChip(status) {
-  const c = getDealStatus(status)?.color || '#5b6472'
-  return `color:${c};background:${c}1a`
-}
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)
 }
