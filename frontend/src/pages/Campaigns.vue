@@ -161,18 +161,23 @@ const Bar = (props) =>
 Bar.props = ['pct', 'color']
 
 function rowMenu(c) {
-  const toggle = c.status === 'Active' ? 'Paused' : 'Active'
-  return [
-    { label: __('Abrir'), onClick: () => router.push(`/campaigns/${c.name}`) },
-    {
-      label: c.status === 'Active' ? __('Pausar') : __('Reanudar'),
-      onClick: () => setStatus(c.name, toggle),
-    },
-  ]
+  const items = [{ label: __('Abrir'), onClick: () => router.push(`/campaigns/${c.name}`) }]
+  // status-aware: Draft→Activar, Active→Pausar, Paused→Reanudar (Completed: none)
+  if (c.status === 'Active') items.push({ label: __('Pausar'), onClick: () => setStatus(c.name, 'Paused') })
+  else if (c.status === 'Paused') items.push({ label: __('Reanudar'), onClick: () => setStatus(c.name, 'Active') })
+  else if (c.status === 'Draft') items.push({ label: __('Activar'), onClick: () => setStatus(c.name, 'Active') })
+  items.push({ label: __('Eliminar'), onClick: () => deleteCampaign(c.name) })
+  return items
 }
 async function setStatus(name, status) {
   await frappeCall('doco_marketing.api.campaigns.set_status', { name, status })
-  toast.success(status === 'Active' ? __('Reanudada') : __('Pausada'))
+  toast.success(__('Estado actualizado'))
+  campaigns.reload()
+}
+async function deleteCampaign(name) {
+  if (!window.confirm(__('¿Eliminar esta campaña?'))) return
+  await frappeCall('frappe.client.delete', { doctype: 'CRM Campaign', name })
+  toast.success(__('Campaña eliminada'))
   campaigns.reload()
 }
 

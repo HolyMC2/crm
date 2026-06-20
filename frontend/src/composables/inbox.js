@@ -8,7 +8,7 @@ import { createResource, call } from 'frappe-ui'
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // CRM Deal name
 export const activeChannel = ref('whatsapp') // send channel + bubble style
-export const activeTab = ref('conversation') // conversation|activity|repair|tasks
+export const activeTab = ref('conversation') // conversation|activity|repair
 export const composeMode = ref('reply') // reply|note|comment
 export const queueChannel = ref(null) // null = Todas
 export const queueSearch = ref('')

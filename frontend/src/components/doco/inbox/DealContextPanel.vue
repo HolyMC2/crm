@@ -7,14 +7,9 @@
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Acciones') }}</div>
-      <div class="flex gap-2">
-        <button class="flex-1 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: #16a34a" @click="call">
-          ☎ {{ __('Llamar') }}
-        </button>
-        <button class="flex-1 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 text-[11.5px] font-medium text-ink-gray-7" @click="activeTab = 'conversation'">
-          💬 {{ __('Chat') }}
-        </button>
-      </div>
+      <button class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: #16a34a" @click="call">
+        ☎ {{ __('Llamar') }}
+      </button>
       <button class="mt-2 w-full text-[11px] text-ink-blue-link" @click="$router.push(`/deal/${activeDeal}`)">⛶ {{ __('Abrir 360°') }}</button>
     </div>
 
@@ -61,11 +56,44 @@ import { computed, watch } from 'vue'
 import { createResource } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
-import { activeDeal, activeTab, queue, GRADE_COLORS } from '@/composables/inbox'
+import { activeDeal, queue, GRADE_COLORS } from '@/composables/inbox'
 
 const { makeCall } = globalStore()
 
-const row = computed(() => (queue.data || []).find((r) => r.deal === activeDeal.value) || {})
+// effective row: the rich inbox queue row when present; else (Deal 360° / deep link,
+// deal not in the queue) a direct deal+lead fetch — same fallback as DealHeader, so
+// the Score card + Llamar don't go blank/no-op on /deal/:id.
+const queueRow = computed(() => (queue.data || []).find((r) => r.deal === activeDeal.value) || {})
+const dealRes = createResource({ url: 'frappe.client.get_value' })
+const leadRes = createResource({ url: 'frappe.client.get_value' })
+watch(
+  activeDeal,
+  (d) =>
+    d &&
+    dealRes.submit({
+      doctype: 'CRM Deal',
+      filters: d,
+      fieldname: JSON.stringify(['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability']),
+    }),
+  { immediate: true },
+)
+watch(
+  () => dealRes.data?.lead,
+  (lead) => lead && leadRes.submit({ doctype: 'CRM Lead', filters: lead, fieldname: JSON.stringify(['lead_score', 'score_grade', 'lead_name', 'mobile_no']) }),
+)
+const row = computed(() => {
+  if (queueRow.value.deal) return queueRow.value
+  const d = dealRes.data || {}
+  const l = leadRes.data || {}
+  return {
+    deal: activeDeal.value,
+    status: d.status,
+    contact_name: d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
+    mobile_no: d.mobile_no || l.mobile_no,
+    lead_score: l.lead_score,
+    score_grade: l.score_grade,
+  }
+})
 const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
 const grade = computed(() => row.value.score_grade)
 const score = computed(() => row.value.lead_score ?? 0)
@@ -80,14 +108,8 @@ const sections = createResource({
   auto: true,
 })
 
-// conversion probability for the Score card
-const probability = computed(() => probRes.data?.probability)
-const probRes = createResource({ url: 'frappe.client.get_value' })
-watch(
-  activeDeal,
-  (d) => d && probRes.submit({ doctype: 'CRM Deal', filters: d, fieldname: 'probability' }),
-  { immediate: true },
-)
+// conversion probability for the Score card (from the deal fetch above)
+const probability = computed(() => dealRes.data?.probability)
 
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)

@@ -136,9 +136,9 @@ function range(key) {
 const restricted = ref(false)
 const onRestricted = () => (restricted.value = true)
 const kpisRes = createResource({ url: 'doco_marketing.api.reports.get_report_kpis', onError: onRestricted })
-const funnelRes = createResource({ url: 'doco_marketing.api.reports.get_funnel_data' })
+const funnelRes = createResource({ url: 'doco_marketing.api.reports.get_funnel_data', onError: onRestricted })
 const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_attribution', onError: onRestricted })
-const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown' })
+const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown', onError: onRestricted })
 
 function load() {
   const r = range(period.value)
