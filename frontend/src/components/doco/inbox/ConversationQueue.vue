@@ -142,14 +142,16 @@
         </div>
       </button>
     </div>
+
+    <DealModal v-if="showDealModal" v-model="showDealModal" />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
-import { useDoctypeModal } from '@/composables/doctypeModal'
+import DealModal from '@/components/Modals/DealModal.vue'
 import {
   queue,
   channels,
@@ -167,15 +169,12 @@ import {
 } from '@/composables/inbox'
 
 const { getDealStatus } = statusesStore()
-const { showModal } = useDoctypeModal()
 
-// reuse the wired CRM Deal modal (doco fork: deal + optional repair order)
+// the doco DealModal — deal + repair-order intake fields (not the generic doctype
+// modal, which only creates a bare deal)
+const showDealModal = ref(false)
 function newDeal() {
-  showModal({
-    doctype: 'CRM Deal',
-    title: __('Deal'),
-    callbacks: { afterInsert: () => reloadQueue() },
-  })
+  showDealModal.value = true
 }
 
 const rows = computed(() => queue.data || [])
