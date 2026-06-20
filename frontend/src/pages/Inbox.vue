@@ -5,7 +5,16 @@
 -->
 <template>
   <div class="flex min-h-0 w-full flex-1">
-    <ConversationQueue />
+    <ConversationQueue v-if="!queueCollapsed" />
+    <button
+      v-else
+      class="flex w-7 flex-none items-center justify-center border-r border-outline-gray-1 text-ink-gray-4 hover:bg-surface-gray-2"
+      :aria-label="__('Mostrar bandeja')"
+      :title="__('Mostrar bandeja')"
+      @click="queueCollapsed = false"
+    >
+      ⟩
+    </button>
     <DealWorkspace />
     <DealContextPanel v-if="activeDeal" />
   </div>
@@ -21,6 +30,7 @@ import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import {
   activeDeal,
+  queueCollapsed,
   initInbox,
   loadThread,
   reloadQueue,

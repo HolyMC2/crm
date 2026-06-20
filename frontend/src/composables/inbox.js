@@ -12,6 +12,7 @@ export const activeTab = ref('conversation') // conversation|activity|repair
 export const composeMode = ref('reply') // reply|note|comment
 export const queueChannel = ref(null) // null = Todas
 export const queueSearch = ref('')
+export const queueCollapsed = ref(false) // hide the left queue pane for a wider workspace
 
 // ── resources ────────────────────────────────────────────────────────────────
 export const queue = createResource({

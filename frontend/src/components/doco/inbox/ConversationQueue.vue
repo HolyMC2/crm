@@ -22,6 +22,14 @@
           >
             + {{ __('Trato') }}
           </button>
+          <button
+            class="text-[13px] text-ink-gray-4 hover:text-ink-gray-9"
+            :aria-label="__('Ocultar bandeja')"
+            :title="__('Ocultar bandeja')"
+            @click="queueCollapsed = true"
+          >
+            ⟨
+          </button>
         </div>
       </div>
       <div
@@ -143,7 +151,7 @@
       </button>
     </div>
 
-    <DealModal v-if="showDealModal" v-model="showDealModal" />
+    <DealModal v-if="showDealModal" v-model="showDealModal" :redirect="{ name: 'Deal 360' }" />
   </div>
 </template>
 
@@ -157,6 +165,7 @@ import {
   channels,
   queueChannel,
   queueSearch,
+  queueCollapsed,
   activeDeal,
   selectDeal,
   setQueueChannel,

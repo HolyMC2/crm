@@ -159,6 +159,9 @@ import { useRouter } from 'vue-router'
 
 const props = defineProps({
   defaults: { type: Object, default: () => ({}) },
+  // where to land after create; default = upstream Deal page. The redesign inbox
+  // passes { name: 'Deal 360' } to land on /deal/:dealId instead.
+  redirect: { type: Object, default: () => ({ name: 'Deal' }) },
 })
 
 const { getUser, isManager } = usersStore()
@@ -360,7 +363,7 @@ async function createDeal() {
 
       // Navigate immediately — background work continues after.
       show.value = false
-      router.push({ name: 'Deal', params: { dealId: name } })
+      router.push({ ...props.redirect, params: { dealId: name } })
 
       // Doco customization: sync contacts first so the Contact → Customer link
       // exists before the Repair Order is created (client field links to Contact).
