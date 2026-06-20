@@ -343,6 +343,87 @@ def react_on_whatsapp_message(emoji: str, reply_to_name: str):
 	return doc.name
 
 
+QUICK_REPLY_SETTINGS_FIELD = "quick_replies"
+QUICK_TEMPLATE_LIMIT = 6
+
+
+@frappe.whitelist()
+def get_quick_replies():
+	"""Team-shared canned WhatsApp replies, stored as JSON on FCRM Settings."""
+	raw = frappe.db.get_single_value("FCRM Settings", QUICK_REPLY_SETTINGS_FIELD)
+	if not raw:
+		return []
+	try:
+		data = json.loads(raw)
+	except (ValueError, TypeError):
+		return []
+	replies = []
+	for item in data if isinstance(data, list) else []:
+		if not isinstance(item, dict):
+			continue
+		text = (item.get("text") or "").strip()
+		if not text:
+			continue
+		label = (item.get("label") or "").strip() or text[:24]
+		replies.append({"label": label, "text": text})
+	return replies
+
+
+@frappe.whitelist()
+def save_quick_replies(quick_replies):
+	"""Replace the team quick-reply list. Editable by any WhatsApp-enabled CRM role."""
+	if not set(frappe.get_roles()).intersection(ALLOWED_WHATSAPP_ROLES):
+		frappe.throw(_("Not permitted to edit quick replies."), frappe.PermissionError)
+
+	if isinstance(quick_replies, str):
+		try:
+			quick_replies = json.loads(quick_replies)
+		except (ValueError, TypeError):
+			frappe.throw(_("Invalid quick replies payload."))
+
+	cleaned = []
+	for item in quick_replies if isinstance(quick_replies, list) else []:
+		if not isinstance(item, dict):
+			continue
+		text = (item.get("text") or "").strip()
+		if not text:
+			continue
+		label = (item.get("label") or "").strip() or text[:24]
+		cleaned.append({"label": label[:60], "text": text[:1000]})
+		if len(cleaned) >= 50:
+			break
+
+	frappe.db.set_single_value("FCRM Settings", QUICK_REPLY_SETTINGS_FIELD, json.dumps(cleaned))
+	return cleaned
+
+
+@frappe.whitelist()
+def get_quick_templates(reference_doctype: str = ""):
+	"""Approved templates for quick access: all when few, else the most-used."""
+	if not frappe.db.exists("DocType", "WhatsApp Templates"):
+		return []
+
+	templates = frappe.get_all(
+		"WhatsApp Templates",
+		filters={"status": "APPROVED", "for_doctype": ["in", [reference_doctype, ""]]},
+		fields=["name", "template", "footer"],
+	)
+	if len(templates) <= QUICK_TEMPLATE_LIMIT:
+		return sorted(templates, key=lambda t: (t.name or "").lower())
+
+	usage = dict(
+		frappe.get_all(
+			"WhatsApp Message",
+			filters={"use_template": 1},
+			fields=["template", "count(name) as uses"],
+			group_by="template",
+			as_list=True,
+		)
+	)
+	templates.sort(key=lambda t: (usage.get(t.name, 0), (t.name or "").lower()), reverse=True)
+	return templates[:QUICK_TEMPLATE_LIMIT]
+
+
 def parse_template_parameters(string, parameters):
 	for i, parameter in enumerate(parameters, start=1):
 		placeholder = "{{" + str(i) + "}}"

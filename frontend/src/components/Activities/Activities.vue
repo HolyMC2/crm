@@ -24,7 +24,7 @@
     <div
       v-else-if="
         activities?.length ||
-        (whatsappMessages.data?.length && title == 'WhatsApp')
+        (title == 'WhatsApp' && (threadItems.length || pinnedNotes.length))
       "
       class="activities"
     >
@@ -55,8 +55,13 @@
           v-model="whatsappMessages"
           v-model:reply="replyMessage"
           class="px-3 sm:px-10"
-          :messages="filteredWhatsappMessages"
+          :messages="threadItems"
           :contact="activeWhatsappContact"
+          :pinned-notes="pinnedNotes"
+          :more-notes="moreNotes"
+          @open-note="(n) => modalRef.showNote(n)"
+          @unpin-note="unpinNote"
+          @open-notes="() => changeTabTo('notes')"
         />
       </div>
       <div
@@ -447,6 +452,8 @@
       :doctype="doctype"
       :to-override="activeWhatsappContact?.phone || ''"
       @scroll="scroll"
+      @send-template="(t) => sendTemplate(t)"
+      @activity="() => all_activities.reload()"
     />
   </div>
   <WhatsappTemplateSelectorModal
@@ -518,7 +525,7 @@ import { whatsappEnabled } from '@/composables/whatsapp'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Button, Tooltip, createResource, toast } from 'frappe-ui'
-import { useElementVisibility } from '@vueuse/core'
+import { useElementVisibility, useStorage } from '@vueuse/core'
 import {
   ref,
   computed,
@@ -608,6 +615,60 @@ const filteredWhatsappMessages = computed(() => {
            to.endsWith(target) || target.endsWith(to)
   })
 })
+
+// Internal comments (same as the Comments tab) rendered inline in the thread.
+const threadComments = computed(() => {
+  const versions = all_activities.data?.versions || []
+  return versions
+    .filter((a) => a.activity_type === 'comment')
+    .map((c) => ({
+      _kind: 'comment',
+      name: c.name,
+      owner: c.owner,
+      owner_name: getUser(c.owner)?.full_name || c.owner,
+      content: c.content,
+      creation: c.creation,
+    }))
+})
+
+// WhatsApp messages + inline comments, interleaved by time.
+const threadItems = computed(() => {
+  const msgs = (filteredWhatsappMessages.value || []).map((m) => ({
+    ...m,
+    _kind: 'whatsapp',
+  }))
+  return [...msgs, ...threadComments.value].sort(
+    (a, b) => new Date(a.creation) - new Date(b.creation),
+  )
+})
+
+// Notes pinned to the top of the conversation. Pinned by default; dismissing
+// one stores its name per-record in localStorage (no backend / no migrate).
+const unpinnedNotes = useStorage(
+  `wa-unpinned-notes-${props.doctype}-${props.docname}`,
+  [],
+)
+const PINNED_NOTES_LIMIT = 3
+
+const visibleNotes = computed(() => {
+  const notes = all_activities.data?.notes || []
+  return sortByModified(notes).filter(
+    (n) => !unpinnedNotes.value.includes(n.name),
+  )
+})
+
+const pinnedNotes = computed(() =>
+  visibleNotes.value.slice(0, PINNED_NOTES_LIMIT),
+)
+const moreNotes = computed(() =>
+  Math.max(0, visibleNotes.value.length - PINNED_NOTES_LIMIT),
+)
+
+function unpinNote(note) {
+  if (!unpinnedNotes.value.includes(note.name)) {
+    unpinnedNotes.value = [...unpinnedNotes.value, note.name]
+  }
+}
 
 const whatsappMessages = createResource({
   url: 'crm.api.whatsapp.get_whatsapp_messages',

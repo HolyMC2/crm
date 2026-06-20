@@ -30,7 +30,8 @@
   "event_notifications",
   "all_day_event_notifications",
   "dropdown_items_tab",
-  "dropdown_items"
+  "dropdown_items",
+  "quick_replies"
  ],
  "fields": [
   {
@@ -186,6 +187,13 @@
    "fieldname": "restore_demo_data",
    "fieldtype": "Button",
    "label": "Restore Demo Data"
+  },
+  {
+   "description": "Team-shared WhatsApp quick replies (JSON). Managed from the CRM WhatsApp composer.",
+   "fieldname": "quick_replies",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "WhatsApp Quick Replies (JSON)"
   }
  ],
  "index_web_pages_for_search": 1,

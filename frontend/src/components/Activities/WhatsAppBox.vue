@@ -1,7 +1,8 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
+  <!-- reply-to preview (reply mode only) -->
   <div
-    v-if="reply?.message"
+    v-if="mode === 'reply' && reply?.message"
     class="flex items-center justify-around gap-2 px-3 pt-2 sm:px-10"
   >
     <div
@@ -24,8 +25,66 @@
 
     <Button variant="ghost" icon="x" @click="reply = {}" />
   </div>
+
+  <!-- composer mode toggle: Reply / Private Note / Internal comment -->
+  <div class="flex flex-wrap items-center gap-2 px-3 pt-2.5 sm:px-10">
+    <button
+      v-for="m in modes"
+      :key="m.value"
+      type="button"
+      class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+      :class="
+        mode === m.value
+          ? m.activeClass
+          : 'text-ink-gray-6 hover:bg-surface-gray-2'
+      "
+      @click="mode = m.value"
+    >
+      {{ m.icon }} {{ __(m.label) }}{{ m.value === 'reply' ? ` · ${channelLabel}` : '' }}
+    </button>
+    <span class="ml-auto hidden text-xs text-ink-gray-4 sm:inline">
+      {{ __('Enter to send') }}
+    </span>
+  </div>
+
+  <!-- quick replies + templates (reply mode only) -->
+  <div
+    v-if="mode === 'reply'"
+    class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10"
+  >
+    <button
+      v-for="(qr, i) in quickReplies.data || []"
+      :key="`qr-${i}`"
+      type="button"
+      class="rounded-md bg-surface-gray-2 px-2 py-1 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-3"
+      :title="qr.text"
+      @click="insertQuickReply(qr.text)"
+    >
+      ⚡ {{ qr.label }}
+    </button>
+    <button
+      v-for="t in quickTemplates.data || []"
+      :key="`tpl-${t.name}`"
+      type="button"
+      class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+      :title="t.template"
+      @click="emit('sendTemplate', t.name)"
+    >
+      📄 {{ t.name }}
+    </button>
+    <button
+      type="button"
+      class="rounded-md px-1.5 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
+      :title="__('Edit quick replies')"
+      @click="openEditor"
+    >
+      <FeatherIcon name="edit-2" class="size-3.5" />
+    </button>
+  </div>
+
+  <!-- input row -->
   <div class="flex items-end gap-2 px-3 py-2.5 sm:px-10" v-bind="$attrs">
-    <div class="flex h-8 items-center gap-2">
+    <div v-if="mode === 'reply'" class="flex h-8 items-center gap-2">
       <FileUploader @success="(file) => uploadFile(file)">
         <template #default="{ openFileSelector }">
           <div class="flex items-center space-x-2">
@@ -56,6 +115,7 @@
       </IconPicker>
     </div>
     <Textarea
+      v-if="mode !== 'comment'"
       ref="textareaRef"
       v-model="content"
       type="textarea"
@@ -64,9 +124,90 @@
       :placeholder="placeholder"
       @focus="rows = 6"
       @blur="rows = 1"
-      @keydown.enter.stop="(e) => sendTextMessage(e)"
+      @keydown.enter.stop="(e) => onEnter(e)"
+    />
+    <!-- Internal comment: mention-capable rich editor so @mentions notify
+         (notify_mentions parses <span class="mention" data-id>…). Enter is
+         left to the editor (newline / pick mention), send via the button. -->
+    <div
+      v-else
+      class="w-full rounded border border-outline-gray-2 bg-surface-white px-2 py-1 dark:bg-surface-gray-2"
+    >
+      <TextEditor
+        :key="commentEditorKey"
+        :content="commentHtml"
+        :editable="true"
+        :editor-class="['prose-sm max-w-none min-h-[2rem]']"
+        :mentions="users"
+        :placeholder="placeholder"
+        @change="commentHtml = $event"
+      />
+    </div>
+    <Button
+      v-if="mode !== 'reply'"
+      :variant="'solid'"
+      :theme="mode === 'note' ? 'orange' : 'blue'"
+      :label="sendLabel"
+      :disabled="sendDisabled"
+      @click="dispatchSend()"
     />
   </div>
+
+  <!-- quick replies editor -->
+  <Dialog
+    v-model="showEditor"
+    :options="{ title: __('Quick replies'), size: 'lg' }"
+  >
+    <template #body-content>
+      <p class="mb-3 text-sm text-ink-gray-5">
+        {{ __('Shared with your whole team. Click a chip to drop its text into the reply box.') }}
+      </p>
+      <div class="flex flex-col gap-2">
+        <div
+          v-for="(row, i) in draft"
+          :key="i"
+          class="flex items-start gap-2"
+        >
+          <Input
+            v-model="row.label"
+            type="text"
+            class="w-40 shrink-0"
+            :placeholder="__('Label')"
+          />
+          <Textarea
+            v-model="row.text"
+            class="w-full"
+            :rows="2"
+            :placeholder="__('Message text…')"
+          />
+          <Button
+            variant="ghost"
+            icon="trash-2"
+            class="mt-1 shrink-0"
+            @click="draft.splice(i, 1)"
+          />
+        </div>
+        <Button
+          variant="subtle"
+          icon-left="plus"
+          :label="__('Add quick reply')"
+          class="self-start"
+          @click="draft.push({ label: '', text: '' })"
+        />
+      </div>
+    </template>
+    <template #actions>
+      <div class="flex justify-end gap-2">
+        <Button :label="__('Cancel')" @click="showEditor = false" />
+        <Button
+          variant="solid"
+          :label="__('Save')"
+          :loading="quickRepliesSave.loading"
+          @click="saveQuickReplies"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
@@ -76,12 +217,18 @@ import { sanitizeHTML } from '@/utils'
 import { useTelemetry } from 'frappe-ui/frappe'
 import {
   createResource,
+  call,
   Textarea,
+  TextEditor,
+  Input,
+  Dialog,
   FileUploader,
   Dropdown,
+  Button,
   toast,
 } from 'frappe-ui'
-import { ref, nextTick, watch } from 'vue'
+import { usersStore } from '@/stores/users'
+import { ref, nextTick, watch, computed } from 'vue'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
@@ -89,7 +236,10 @@ const props = defineProps({
   // `to` number per active tab. Falls back to doc.mobile_no for single-Contact
   // Deals + all Leads (their .mobile_no IS the chat target).
   toOverride: { type: String, default: '' },
+  channelLabel: { type: String, default: 'WhatsApp' },
 })
+
+const emit = defineEmits(['sendTemplate', 'activity'])
 
 const doc = defineModel({ type: Object, default: () => ({}) })
 const whatsapp = defineModel('whatsapp', { type: Object, default: () => ({}) })
@@ -102,9 +252,110 @@ const textareaRef = ref(null)
 const emoji = ref('')
 
 const content = ref('')
-const placeholder = ref(__('Type your message here...'))
 const fileType = ref('')
 
+// Internal-comment rich editor (mentions). Remount via key to clear after send.
+const commentHtml = ref('')
+const commentEditorKey = ref(0)
+
+const { users: usersList } = usersStore()
+const users = computed(
+  () =>
+    usersList.data?.crmUsers
+      ?.filter((u) => u.enabled)
+      .map((u) => ({ label: u.full_name.trimEnd(), value: u.name })) || [],
+)
+
+const commentEmpty = computed(
+  () => !commentHtml.value || commentHtml.value === '<p></p>',
+)
+const sendDisabled = computed(() =>
+  mode.value === 'comment' ? commentEmpty.value : !content.value.trim(),
+)
+
+// ── composer modes ────────────────────────────────────────────────
+const mode = ref('reply')
+const modes = [
+  {
+    value: 'reply',
+    icon: '↩',
+    label: 'Reply',
+    activeClass: 'bg-surface-green-2 text-ink-green-3',
+  },
+  {
+    value: 'note',
+    icon: '✐',
+    label: 'Private note',
+    activeClass: 'bg-surface-amber-2 text-ink-amber-3',
+  },
+  {
+    value: 'comment',
+    icon: '💬',
+    label: 'Internal',
+    activeClass: 'bg-surface-blue-2 text-ink-blue-3',
+  },
+]
+
+const placeholder = computed(() => {
+  if (mode.value === 'note') return __('Private note — only your team sees it…')
+  if (mode.value === 'comment') return __('Internal comment for your team…')
+  return __('Type your message here...')
+})
+
+const sendLabel = computed(() =>
+  mode.value === 'note' ? __('Save note') : __('Comment'),
+)
+
+// ── quick replies (team-shared) + templates ───────────────────────
+const quickReplies = createResource({
+  url: 'crm.api.whatsapp.get_quick_replies',
+  auto: true,
+})
+
+const quickTemplates = createResource({
+  url: 'crm.api.whatsapp.get_quick_templates',
+  params: { reference_doctype: props.doctype },
+  auto: true,
+})
+
+function insertQuickReply(text) {
+  content.value = content.value
+    ? `${content.value.replace(/\s*$/, '')} ${text}`
+    : text
+  nextTick(() => textareaRef.value?.el?.focus())
+  capture('whatsapp_quick_reply_used')
+}
+
+const showEditor = ref(false)
+const draft = ref([])
+
+function openEditor() {
+  draft.value = (quickReplies.data || []).map((r) => ({ ...r }))
+  if (!draft.value.length) draft.value.push({ label: '', text: '' })
+  showEditor.value = true
+}
+
+const quickRepliesSave = createResource({
+  url: 'crm.api.whatsapp.save_quick_replies',
+  onSuccess() {
+    quickReplies.reload()
+    showEditor.value = false
+    toast.success(__('Quick replies saved'))
+    capture('whatsapp_quick_replies_saved')
+  },
+  onError(error) {
+    toast.error(error.messages?.[0] || __('Failed to save quick replies'))
+  },
+})
+
+function saveQuickReplies() {
+  const cleaned = draft.value
+    .map((r) => ({ label: (r.label || '').trim(), text: (r.text || '').trim() }))
+    .filter((r) => r.text)
+  quickRepliesSave.submit({ quick_replies: JSON.stringify(cleaned) })
+}
+
+// ── send ──────────────────────────────────────────────────────────
 function show() {
   nextTick(() => textareaRef.value.el.focus())
 }
@@ -116,10 +367,25 @@ function uploadFile(file) {
   capture('whatsapp_upload_file')
 }
 
-function sendTextMessage(event) {
+function onEnter(event) {
   if (event.shiftKey) return
+  event.preventDefault()
+  dispatchSend()
+}
+
+function dispatchSend() {
+  if (mode.value === 'reply') return sendTextMessage()
+  if (mode.value === 'note') {
+    if (!content.value.trim()) return
+    return saveNote()
+  }
+  if (commentEmpty.value) return
+  return saveComment()
+}
+
+function sendTextMessage() {
   sendWhatsAppMessage()
-  textareaRef.value.el?.blur()
+  textareaRef.value?.el?.blur()
   content.value = ''
   capture('whatsapp_send_message')
 }
@@ -148,6 +414,56 @@ async function sendWhatsAppMessage() {
       toast.error(error.messages?.[0] || __('Failed to send WhatsApp message'))
     },
   })
+}
+
+function toHTML(text) {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  return `<div>${escaped.replace(/\n/g, '<br>')}</div>`
+}
+
+async function saveNote() {
+  const text = content.value.trim()
+  const title = text.split('\n')[0].slice(0, 60) || __('Note')
+  try {
+    await call('frappe.client.insert', {
+      doc: {
+        doctype: 'FCRM Note',
+        title,
+        content: toHTML(text),
+        reference_doctype: props.doctype,
+        reference_docname: doc.value.name,
+      },
+    })
+    content.value = ''
+    emit('activity')
+    toast.success(__('Note added'))
+    capture('whatsapp_note_added')
+  } catch (e) {
+    toast.error(e.messages?.[0] || __('Failed to add note'))
+  }
+}
+
+async function saveComment() {
+  // commentHtml is editor HTML with proper <span class="mention" data-id>…
+  // spans, so notify_mentions picks up @mentions and notifies them.
+  const html = commentHtml.value
+  try {
+    await call('crm.api.comment.add_comment', {
+      reference_doctype: props.doctype,
+      reference_name: doc.value.name,
+      content: html,
+    })
+    commentHtml.value = ''
+    commentEditorKey.value++
+    emit('activity')
+    toast.success(__('Comment added'))
+    capture('whatsapp_comment_added')
+  } catch (e) {
+    toast.error(e.messages?.[0] || __('Failed to add comment'))
+  }
 }
 
 function uploadOptions(openFileSelector) {
@@ -181,6 +497,7 @@ function uploadOptions(openFileSelector) {
 
 watch(reply, (value) => {
   if (value?.message) {
+    mode.value = 'reply'
     show()
   }
 })

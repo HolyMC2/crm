@@ -27,15 +27,91 @@
       </div>
     </div>
 
+    <!-- pinned notes, kept on top of the conversation -->
     <div
-      v-for="whatsapp in messages"
-      :key="whatsapp.name"
-      class="activity group flex gap-2"
-      :class="[
-        whatsapp.type == 'Outgoing' ? 'flex-row-reverse' : '',
-        whatsapp.reaction ? 'mb-7' : 'mb-3',
-      ]"
+      v-if="pinnedNotes.length"
+      class="mx-3 mb-3 flex flex-col gap-2 sm:mx-10"
     >
+      <div
+        v-for="note in pinnedNotes"
+        :key="note.name"
+        class="flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40"
+      >
+        <FeatherIcon
+          name="bookmark"
+          class="mt-0.5 size-4 shrink-0 text-ink-amber-3"
+        />
+        <div
+          class="min-w-0 flex-1 cursor-pointer"
+          @click="emit('openNote', note)"
+        >
+          <div class="truncate text-sm font-semibold text-ink-gray-8">
+            {{ note.title }}
+          </div>
+          <div
+            v-if="note.content"
+            class="prose-f line-clamp-2 text-xs text-ink-gray-6"
+            v-html="sanitizeHTML(note.content)"
+          />
+        </div>
+        <button
+          type="button"
+          class="shrink-0 text-ink-gray-4 hover:text-ink-gray-7"
+          :title="__('Unpin')"
+          @click.stop="emit('unpinNote', note)"
+        >
+          <FeatherIcon name="x" class="size-4" />
+        </button>
+      </div>
+      <button
+        v-if="moreNotes > 0"
+        type="button"
+        class="self-start text-xs font-medium text-ink-blue-link hover:underline"
+        @click="emit('openNotes')"
+      >
+        + {{ moreNotes }} {{ __('more notes') }}
+      </button>
+    </div>
+
+    <template v-for="whatsapp in messages" :key="whatsapp.name">
+      <!-- internal comment, inline in the thread -->
+      <div
+        v-if="whatsapp._kind === 'comment'"
+        class="my-3 flex justify-center px-3 sm:px-10"
+      >
+        <div
+          class="max-w-[88%] rounded-lg border border-blue-200 bg-surface-blue-1 px-3 py-2 dark:border-blue-900/40"
+        >
+          <div class="mb-1 flex flex-wrap items-center gap-2">
+            <span
+              class="rounded bg-surface-blue-2 px-1.5 py-0.5 text-2xs font-semibold uppercase text-ink-blue-3"
+            >
+              {{ __('Internal') }}
+            </span>
+            <span class="text-sm font-medium text-ink-gray-8">
+              {{ whatsapp.owner_name || whatsapp.owner }}
+            </span>
+            <span class="text-2xs text-ink-gray-4">
+              {{ formatDate(whatsapp.creation, 'hh:mm a') }}
+            </span>
+          </div>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div
+            class="prose-f text-sm text-ink-gray-7"
+            v-html="sanitizeHTML(whatsapp.content)"
+          />
+        </div>
+      </div>
+
+      <!-- whatsapp message bubble -->
+      <div
+        v-else
+        class="activity group flex gap-2"
+        :class="[
+          whatsapp.type == 'Outgoing' ? 'flex-row-reverse' : '',
+          whatsapp.reaction ? 'mb-7' : 'mb-3',
+        ]"
+      >
       <div
         :id="whatsapp.name"
         class="group/message relative max-w-[90%] rounded-md bg-surface-gray-1 text-ink-gray-9 p-1.5 pl-2 text-base shadow-sm"
@@ -200,7 +276,8 @@
           </Button>
         </IconPicker>
       </div>
-    </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -221,7 +298,11 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  pinnedNotes: { type: Array, default: () => [] },
+  moreNotes: { type: Number, default: 0 },
 })
+
+const emit = defineEmits(['openNote', 'unpinNote', 'openNotes'])
 
 const list = defineModel({ type: Object })
 
