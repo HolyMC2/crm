@@ -24,8 +24,10 @@
         </button>
       </div>
 
-      <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox) -->
-      <div v-if="activeTab === 'conversation'" class="flex min-h-0 flex-1 flex-col">
+      <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox). The doco
+           WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
+           since DealHeader already identifies the contact (avoids the duplicate). -->
+      <div v-if="activeTab === 'conversation'" class="doco-convo flex min-h-0 flex-1 flex-col">
         <Activities :key="'wa-' + activeDeal" doctype="CRM Deal" :docname="activeDeal" :tabs="convoTabs" />
       </div>
 
@@ -89,3 +91,11 @@ const dealTabs = [
 ]
 const convoTabs = [{ name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon }]
 </script>
+
+<style scoped>
+/* hide the WhatsAppArea sticky contact header inside the inbox (DealHeader already
+   shows the contact) — scoped to this embedding, upstream Deal page keeps it */
+.doco-convo :deep(.sticky.top-0.rounded-md.border.shadow-sm) {
+  display: none;
+}
+</style>
