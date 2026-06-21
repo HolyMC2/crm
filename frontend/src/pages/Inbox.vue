@@ -15,7 +15,8 @@
     >
       ⟩
     </button>
-    <DealWorkspace />
+    <UnassignedWorkspace v-if="activeUnassigned" />
+    <DealWorkspace v-else />
     <DealContextPanel v-if="activeDeal" />
   </div>
 </template>
@@ -26,12 +27,15 @@ import { useRoute } from 'vue-router'
 import { globalStore } from '@/stores/global'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
+import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import {
   activeDeal,
+  activeUnassigned,
   queueCollapsed,
   initInbox,
   reloadQueue,
+  reloadUnassigned,
   selectDeal,
   onThreadUpdate,
 } from '@/composables/inbox'
@@ -48,6 +52,7 @@ const route = useRoute()
 // upstream Activities component's own `whatsapp_message` handler.
 function onWaMessage() {
   reloadQueue()
+  reloadUnassigned() // a new inbound from an unknown number adds a Sin-asignar row
 }
 
 onMounted(() => {

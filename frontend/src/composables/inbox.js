@@ -7,6 +7,7 @@ import { createResource, call } from 'frappe-ui'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // CRM Deal name
+export const activeUnassigned = ref(null) // phone string when viewing a "Sin asignar" orphan thread
 export const activeChannel = ref('whatsapp') // send channel + bubble style
 export const activeTab = ref('conversation') // conversation|activity|repair
 export const composeMode = ref('reply') // reply|note|comment
@@ -21,20 +22,34 @@ export const queue = createResource({
 })
 export const channels = createResource({ url: 'doco_marketing.api.inbox.get_channels' })
 export const thread = createResource({ url: 'doco_marketing.api.inbox.get_communications' })
+// "Sin asignar": inbound WhatsApp from numbers with no Contact/Lead/Deal.
+export const unassigned = createResource({
+  url: 'doco_marketing.api.inbox.get_unassigned_conversations',
+  params: { limit: 50 },
+  auto: false,
+})
+export const unassignedThread = createResource({ url: 'doco_marketing.api.inbox.get_unassigned_thread' })
 export const sla = createResource({ url: 'doco_marketing.api.inbox.get_sla_status' })
 
 export function initInbox() {
   resetInbox() // module singletons persist across navigations — clear stale deal/thread
   channels.fetch()
   reloadQueue()
+  reloadUnassigned()
 }
 
 export function resetInbox() {
   activeDeal.value = null
+  activeUnassigned.value = null
   activeTab.value = 'conversation'
   activeChannel.value = 'whatsapp'
   thread.data = null
+  unassignedThread.data = null
   sla.data = null
+}
+
+export function reloadUnassigned() {
+  unassigned.submit({ limit: 50 })
 }
 
 let _searchTimer = null
@@ -56,11 +71,32 @@ export function setQueueChannel(ch) {
 }
 
 export function selectDeal(name) {
+  activeUnassigned.value = null // leaving the triage view
   if (activeDeal.value === name) return
   activeDeal.value = name
   activeTab.value = 'conversation'
   loadThread()
   sla.submit({ reference_name: name })
+}
+
+export function selectUnassigned(phone) {
+  activeDeal.value = null // orphan threads have no deal/context panel
+  activeUnassigned.value = phone
+  unassignedThread.submit({ phone })
+}
+
+// Convert an orphan number to a Lead or Deal; the backend re-points its
+// messages, so it leaves "Sin asignar" and (if a Deal) enters the normal queue.
+export async function assignUnassigned(phone, targetDoctype) {
+  const res = await call('doco_marketing.api.inbox.assign_unassigned', {
+    phone,
+    target_doctype: targetDoctype,
+  })
+  activeUnassigned.value = null
+  reloadUnassigned()
+  reloadQueue()
+  if (res?.doctype === 'CRM Deal') selectDeal(res.name)
+  return res
 }
 
 export function loadThread() {

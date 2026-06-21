@@ -73,10 +73,55 @@
     </div>
 
     <div class="scb flex-1 overflow-y-auto px-2 pb-2.5 pt-0.5">
-      <div v-if="queue.loading && !rows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+      <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
+        above the deals so an unknown customer never goes unseen; clicking opens
+        the orphan thread + Crear Lead/Trato. -->
+      <div v-if="unassignedRows.length" class="mb-1.5">
+        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+          ⚠ {{ __('Sin asignar') }}
+          <span class="rounded-full bg-amber-100 px-1.5 text-[10px] text-amber-700">{{ unassignedRows.length }}</span>
+        </div>
+        <button
+          v-for="u in unassignedRows"
+          :key="u.phone"
+          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
+          :style="
+            activeUnassigned === u.phone
+              ? 'border-left:3px solid #f59e0b;background:#fff7ed'
+              : 'border-left:3px solid #f59e0b66'
+          "
+          @click="selectUnassigned(u.phone)"
+        >
+          <div class="mb-1 flex items-center gap-2">
+            <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-amber-100 text-amber-700">
+              <LucideMessageCircleQuestion class="h-4 w-4" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-[13px] font-semibold text-ink-gray-9">
+                {{ u.contact_name || formatPhone(u.phone) }}
+              </div>
+              <div class="truncate text-[11px] text-ink-gray-5">{{ formatPhone(u.phone) }}</div>
+            </div>
+            <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">
+              {{ timeAgo(u.last_message_ts) }}
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
+            <span class="inline-flex flex-none items-center gap-1 font-semibold" style="color: #25d366">
+              <span class="h-1.5 w-1.5 rounded-full" style="background: #25d366" />
+              WA
+            </span>
+            <span class="truncate">{{ u.last_message || '—' }}</span>
+            <span v-if="u.count > 1" class="flex-none text-[10px] text-ink-gray-4">· {{ u.count }}</span>
+          </div>
+        </button>
+        <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
+      </div>
+
+      <div v-if="queue.loading && !rows.length && !unassignedRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Cargando…') }}
       </div>
-      <div v-else-if="!rows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+      <div v-else-if="!rows.length && !unassignedRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Sin conversaciones') }}
       </div>
       <button
@@ -164,16 +209,20 @@
 <script setup>
 import { computed, ref } from 'vue'
 import LucideSearch from '~icons/lucide/search'
+import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import { statusesStore } from '@/stores/statuses'
 import DealModal from '@/components/Modals/DealModal.vue'
 import {
   queue,
   channels,
+  unassigned,
   queueChannel,
   queueSearch,
   queueCollapsed,
   activeDeal,
+  activeUnassigned,
   selectDeal,
+  selectUnassigned,
   setQueueChannel,
   onSearchInput,
   reloadQueue,
@@ -194,6 +243,18 @@ function newDeal() {
 
 const rows = computed(() => queue.data || [])
 const openCount = computed(() => rows.value.length)
+const unassignedRows = computed(() => unassigned.data || [])
+
+// Pretty-print a raw WhatsApp number (e.g. 5216691530561 / 526691530561) as
+// +52 669 153 0561 — strip the country code + the MX mobile "1", group the rest.
+function formatPhone(raw) {
+  const d = String(raw || '').replace(/\D/g, '')
+  let n = d
+  if (n.startsWith('521')) n = n.slice(3)
+  else if (n.startsWith('52')) n = n.slice(2)
+  if (n.length === 10) return `+52 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`
+  return raw ? `+${d}` : '—'
+}
 
 // channel pills with live unread counts derived from the queue (WA real; others 0)
 const channelPills = computed(() => {
