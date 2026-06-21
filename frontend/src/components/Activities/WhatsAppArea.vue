@@ -206,8 +206,10 @@
               class="h-40 cursor-pointer rounded-md"
               @click="() => openFileInAnotherTab(whatsapp.attach)"
             />
+            <!-- message is null on media-only rows; guard before .startsWith or
+              the throw blanks the whole thread (Vue aborts the v-for subtree). -->
             <div
-              v-if="!whatsapp.message.startsWith('/files/')"
+              v-if="whatsapp.message && !whatsapp.message.startsWith('/files/')"
               class="mt-1.5"
               v-html="formatWhatsAppMessage(whatsapp.message)"
             />
@@ -237,8 +239,9 @@
               controls
               class="h-40 cursor-pointer rounded-md"
             />
+            <!-- same null guard as the image branch -->
             <div
-              v-if="!whatsapp.message.startsWith('/files/')"
+              v-if="whatsapp.message && !whatsapp.message.startsWith('/files/')"
               class="mt-1.5"
               v-html="formatWhatsAppMessage(whatsapp.message)"
             />
@@ -337,6 +340,14 @@ function openFileInAnotherTab(url) {
 }
 
 function formatWhatsAppMessage(message) {
+  // Guard null/undefined. A single message with no text body (a media-only row,
+  // a template row whose `message` is empty, etc.) would otherwise throw on
+  // .replace() — and because this runs inside the thread's v-for, ONE such
+  // message makes Vue abort the whole subtree and render an EMPTY conversation
+  // while the header/composer (sibling components) stay. That is the
+  // "thread shows empty but the preview has messages" bug.
+  if (message == null) return ''
+  message = String(message)
   // if message contains _text_, make it italic
   message = message.replace(/_(.*?)_/g, '<i>$1</i>')
   // if message contains *text*, make it bold
