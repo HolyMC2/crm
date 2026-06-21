@@ -1,14 +1,16 @@
 <!--
-  Leads list — FCRM redesign (handoff §5.2). Dense pro-tool table with Stage/Score/
-  Source filters + live search + bulk select + New Lead modal. New page (upstream
-  Leads.vue left untouched for rebase-cleanliness); data via createListResource.
+  Deals list — doco redesign, mirror of LeadsView for CRM Deal. Dense table +
+  Status/Source/Owner filters + live search + List/Board/Funnel (inline, 1-click)
+  + bulk select + New Deal modal. "Vista clásica" jumps to the upstream
+  /deals/view (full filters on every field / group-by). New page; upstream
+  Deals.vue untouched for rebase-cleanliness. Data via createListResource.
 -->
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
     <!-- toolbar -->
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Leads') }}</span>
+        <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Tratos') }}</span>
         <span class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6" style="background: #f1f2f4">
           {{ count }}
         </span>
@@ -27,8 +29,8 @@
         </div>
         <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
         <FilterPopover :label="__('Stage')" :options="stageOptions" :selected="statusF" @update:selected="statusF = $event" />
-        <FilterPopover :label="__('Score')" :options="scoreOptions" :selected="gradeF" @update:selected="gradeF = $event" />
         <FilterPopover :label="__('Source')" :options="sourceOptions" :selected="sourceF" @update:selected="sourceF = $event" />
+        <FilterPopover :label="__('Owner')" :options="ownerOptions" :selected="ownerF" @update:selected="ownerF = $event" />
       </div>
       <div class="flex items-center gap-2">
         <div class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5">
@@ -36,7 +38,7 @@
           <input
             :value="search"
             @input="onSearch($event.target.value)"
-            :placeholder="__('Buscar leads…')"
+            :placeholder="__('Buscar tratos…')"
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
           />
         </div>
@@ -48,16 +50,16 @@
         <button
           class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
           :title="__('Exportar a Excel')"
-          @click="exportLeads"
+          @click="exportDeals"
         >
           ⭳ {{ __('Export') }}
         </button>
         <button
           class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
           style="background: #16a34a"
-          @click="showLeadModal = true"
+          @click="showDealModal = true"
         >
-          + {{ __('New Lead') }}
+          + {{ __('New Deal') }}
         </button>
       </div>
     </div>
@@ -79,9 +81,6 @@
     <!-- bulk bar -->
     <div v-if="selectedRows.length" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2">
       <span class="text-[12.5px] font-semibold text-ink-gray-8">{{ selectedRows.length }} {{ __('seleccionados') }}</span>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2" @click="bulkConvert">
-        {{ __('Convertir a tratos') }}
-      </button>
       <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-4 hover:bg-surface-red-1" @click="bulkDelete">
         {{ __('Eliminar') }}
       </button>
@@ -96,8 +95,8 @@
       :style="`grid-template-columns:${GRID};height:34px`"
     >
       <input type="checkbox" style="accent-color: #16a34a" :checked="allSelected" @change="toggleAll" />
-      <button class="text-left uppercase" @click="sortBy('lead_name')">{{ __('Contacto') }}{{ sortArrow('lead_name') }}</button>
-      <button class="text-left uppercase" :style="'color:#16a34a'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
+      <button class="text-left uppercase" @click="sortBy('organization')">{{ __('Trato') }}{{ sortArrow('organization') }}</button>
+      <button class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
       <div>{{ __('Stage') }}</div>
       <div>{{ __('Source') }}</div>
       <button class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
@@ -107,15 +106,15 @@
 
     <!-- rows -->
     <div class="scb min-h-0 flex-1 overflow-y-auto">
-      <div v-if="leads.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin leads') }}</div>
+      <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
+      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
 
       <div
         v-for="r in rows"
         :key="r.name"
         class="grid cursor-pointer items-center border-b px-5 hover:bg-surface-gray-1"
         :style="`grid-template-columns:${GRID};min-height:50px;border-color:#f0f1f3`"
-        @click="openLead(r.name)"
+        @click="openDeal(r.name)"
       >
         <input type="checkbox" style="accent-color: #16a34a" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
         <div class="flex items-center gap-2">
@@ -127,24 +126,10 @@
           </span>
           <div class="min-w-0">
             <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ label(r) }}</div>
-            <div class="truncate text-[11px] text-ink-gray-4">{{ r.organization || r.mobile_no || '—' }}</div>
+            <div class="truncate text-[11px] text-ink-gray-4">{{ r.lead_name || r.mobile_no || '—' }}</div>
           </div>
         </div>
-        <div>
-          <div class="mb-[3px] flex items-center justify-between" style="width: 62px">
-            <span class="text-[12.5px] font-bold" :style="`color:${gradeColor(r.score_grade)}`">{{ r.lead_score ?? '—' }}</span>
-            <span
-              v-if="r.score_grade"
-              class="rounded-[3px] px-[5px] py-px text-[9px] font-bold text-white"
-              :style="`background:${gradeColor(r.score_grade)}`"
-            >
-              {{ r.score_grade }}
-            </span>
-          </div>
-          <div class="h-1 rounded-sm" style="width: 62px; background: #f0f1f3">
-            <div class="h-full rounded-sm" :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`" />
-          </div>
-        </div>
+        <div class="text-[12.5px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</div>
         <div>
           <span
             v-if="r.status"
@@ -161,12 +146,12 @@
         <div class="text-[12px] text-ink-gray-5">{{ timeAgo(r.modified) }}</div>
         <div>
           <span
-            v-if="r.lead_owner"
+            v-if="r.deal_owner"
             class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
-            :style="`background:${avatarColor(r.lead_owner)[0]};color:${avatarColor(r.lead_owner)[1]}`"
-            :title="r.lead_owner"
+            :style="`background:${avatarColor(r.deal_owner)[0]};color:${avatarColor(r.deal_owner)[1]}`"
+            :title="r.deal_owner"
           >
-            {{ initials(ownerName(r.lead_owner)) }}
+            {{ initials(ownerName(r.deal_owner)) }}
           </span>
         </div>
         <Dropdown :options="rowMenu(r)" @click.stop>
@@ -174,8 +159,8 @@
         </Dropdown>
       </div>
 
-      <div v-if="leads.hasNextPage" class="py-3 text-center">
-        <button class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7" @click="leads.next()">
+      <div v-if="deals.hasNextPage" class="py-3 text-center">
+        <button class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7" @click="deals.next()">
           {{ __('Cargar más') }}
         </button>
       </div>
@@ -189,22 +174,17 @@
       :groups="stageOptions"
       :counts="groupCounts"
       group-field="status"
-      @card-click="(r) => openLead(r.name)"
+      :format-value="formatMXN"
+      @card-click="(r) => openDeal(r.name)"
       @change="onBoardChange"
     >
       <template #card="{ row }">
-        <div class="flex items-center justify-between gap-2">
-          <div class="min-w-0">
-            <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ label(row) }}</div>
-            <div class="truncate text-[11px] text-ink-gray-4">{{ row.organization || row.mobile_no || '—' }}</div>
+        <div class="min-w-0">
+          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ label(row) }}</div>
+          <div class="mt-0.5 flex items-center justify-between gap-2">
+            <span class="truncate text-[11px] text-ink-gray-4">{{ row.lead_name || row.mobile_no || '—' }}</span>
+            <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{ formatMXN(row.deal_value) }}</span>
           </div>
-          <span
-            v-if="row.score_grade"
-            class="flex-none rounded px-[5px] py-px text-[9px] font-bold text-white"
-            :style="`background:${gradeColor(row.score_grade)}`"
-          >
-            {{ row.score_grade }}
-          </span>
         </div>
       </template>
     </BoardView>
@@ -212,59 +192,56 @@
     <!-- funnel view -->
     <FunnelView v-else-if="view === 'funnel'" :groups="stageOptions" :counts="groupCounts" />
 
-    <LeadModal v-if="showLeadModal" v-model="showLeadModal" />
+    <DealModal v-if="showDealModal" v-model="showDealModal" />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
-import LeadModal from '@/components/Modals/LeadModal.vue'
+import DealModal from '@/components/Modals/DealModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
-import { GRADE_COLORS, avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
+import { avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
 
-const GRID = '28px 1fr 96px 130px 120px 110px 50px 26px'
+const GRID = '28px 1fr 120px 130px 120px 110px 50px 26px'
 const router = useRouter()
-const { getLeadStatus } = statusesStore()
-const { getUser } = usersStore()
+const { getDealStatus } = statusesStore()
+const { getUser, users: usersList } = usersStore()
 
-const showLeadModal = ref(false)
+const showDealModal = ref(false)
 const statusF = ref([])
-const gradeF = ref([])
 const sourceF = ref([])
+const ownerF = ref([])
 const search = ref('')
-const sort = ref({ field: 'lead_score', dir: 'desc' })
+const sort = ref({ field: 'modified', dir: 'desc' })
 const selectedRows = ref([])
 const view = ref('list')
 const groupCounts = ref({})
 
-const leads = createListResource({
-  doctype: 'CRM Lead',
+const deals = createListResource({
+  doctype: 'CRM Deal',
   fields: [
-    'name', 'lead_name', 'first_name', 'last_name', 'organization', 'mobile_no',
-    'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'modified',
+    'name', 'organization', 'lead_name', 'mobile_no', 'email',
+    'status', 'source', 'deal_owner', 'deal_value', 'currency', 'modified',
   ],
-  orderBy: 'lead_score desc',
+  orderBy: 'modified desc',
   pageLength: 50,
 })
-const rows = computed(() => leads.data || [])
-// loaded-row count (not the grand total); '+' signals more pages exist
-const count = computed(() => `${leads.data?.length ?? 0}${leads.hasNextPage ? '+' : ''}`)
+const rows = computed(() => deals.data || [])
+const count = computed(() => `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''}`)
 
-// free-text search across all common text fields (was lead_name-only → phone/email
-// searches returned nothing). OR'd via or_filters (same as upstream ViewControls).
-const SEARCH_FIELDS = ['lead_name', 'first_name', 'last_name', 'email', 'mobile_no', 'phone', 'organization']
+const SEARCH_FIELDS = ['organization', 'lead_name', 'email', 'mobile_no']
 function buildFilters() {
   const f = {}
   if (statusF.value.length) f.status = ['in', statusF.value]
-  if (gradeF.value.length) f.score_grade = ['in', gradeF.value]
   if (sourceF.value.length) f.source = ['in', sourceF.value]
+  if (ownerF.value.length) f.deal_owner = ['in', ownerF.value]
   return f
 }
 function searchOrFilters() {
@@ -276,44 +253,41 @@ function searchOrFilters() {
   return orf
 }
 function applyFilters() {
-  leads.filters = buildFilters()
-  leads.orFilters = searchOrFilters()
-  leads.orderBy = `${sort.value.field} ${sort.value.dir}`
-  leads.reload()
+  deals.filters = buildFilters()
+  deals.orFilters = searchOrFilters()
+  deals.orderBy = `${sort.value.field} ${sort.value.dir}`
+  deals.reload()
   if (view.value !== 'list') loadCounts()
 }
 
-// Accurate per-status counts for the board headers + funnel (independent of the
-// paginated table). One aggregate query honouring the active filters/search.
+// accurate per-status counts (+ summed value) for board headers + funnel
 async function loadCounts() {
   try {
     const data = await frappeCall('frappe.client.get_list', {
-      doctype: 'CRM Lead',
+      doctype: 'CRM Deal',
       filters: buildFilters(),
       or_filters: searchOrFilters(),
-      fields: ['status', 'count(name) as count'],
+      fields: ['status', 'count(name) as count', 'sum(deal_value) as value'],
       group_by: 'status',
       limit_page_length: 0,
     })
     const map = {}
-    for (const r of data || []) map[r.status || ''] = { count: r.count }
+    for (const r of data || []) map[r.status || ''] = { count: r.count, value: r.value }
     groupCounts.value = map
   } catch (e) {
     /* counts are best-effort */
   }
 }
 
-// 1-click view switch: List/Board/Funnel swap the body in place (toolbar stays);
-// Cal is a genuinely separate page so it still routes.
 function selectView(v) {
   if (v.to) {
     router.push(v.to)
     return
   }
   view.value = v.key
-  if (v.key === 'board' && leads.pageLength < 200) {
-    leads.pageLength = 200
-    leads.reload()
+  if (v.key === 'board' && deals.pageLength < 200) {
+    deals.pageLength = 200
+    deals.reload()
   }
   if (v.key !== 'list') loadCounts()
 }
@@ -321,7 +295,7 @@ function selectView(v) {
 async function onBoardChange(row, status) {
   try {
     await frappeCall('frappe.client.set_value', {
-      doctype: 'CRM Lead',
+      doctype: 'CRM Deal',
       name: row.name,
       fieldname: 'status',
       value: status,
@@ -334,23 +308,22 @@ async function onBoardChange(row, status) {
   }
 }
 
-// ── export (reuse Frappe's server export of ALL matching rows) ────────────────
-function exportLeads() {
+function exportDeals() {
   const fields = JSON.stringify([
-    'name', 'lead_name', 'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'mobile_no', 'organization', 'creation',
+    'name', 'organization', 'lead_name', 'status', 'source', 'deal_owner', 'deal_value', 'mobile_no', 'creation',
   ])
   const filters = JSON.stringify(buildFilters())
   const orFilters = JSON.stringify(searchOrFilters())
   const order_by = `${sort.value.field} ${sort.value.dir}`
   const url =
-    `/api/method/frappe.desk.reportview.export_query?file_format_type=Excel&title=CRM Lead&doctype=CRM Lead` +
+    `/api/method/frappe.desk.reportview.export_query?file_format_type=Excel&title=CRM Deal&doctype=CRM Deal` +
     `&fields=${encodeURIComponent(fields)}&filters=${encodeURIComponent(filters)}&or_filters=${encodeURIComponent(orFilters)}` +
     `&order_by=${encodeURIComponent(order_by)}&page_length=100000&start=0&view=Report&with_comment_count=0`
   window.location.href = url
 }
 
-// ── saved views (named filter presets, per-browser) ───────────────────────────
-const VIEWS_KEY = 'doco_leads_saved_views'
+// ── saved views (per-browser) + classic quick action ──────────────────────────
+const VIEWS_KEY = 'doco_deals_saved_views'
 const savedViews = ref(loadViews())
 function loadViews() {
   try {
@@ -369,8 +342,8 @@ function saveCurrentView() {
   savedViews.value.push({
     label,
     status: [...statusF.value],
-    grade: [...gradeF.value],
     source: [...sourceF.value],
+    owner: [...ownerF.value],
     search: search.value,
     sort: { ...sort.value },
   })
@@ -379,8 +352,8 @@ function saveCurrentView() {
 }
 function applyView(v) {
   statusF.value = [...(v.status || [])]
-  gradeF.value = [...(v.grade || [])]
   sourceF.value = [...(v.source || [])]
+  ownerF.value = [...(v.owner || [])]
   search.value = v.search || ''
   if (v.sort) sort.value = { ...v.sort }
   applyFilters()
@@ -390,11 +363,13 @@ function deleteView(label) {
   persistViews()
 }
 const viewMenu = computed(() => [
+  { label: '↗ ' + __('Vista clásica (todos los filtros)'), onClick: () => router.push('/deals/view') },
+  { label: '—', onClick: () => {} },
   ...savedViews.value.map((v) => ({ label: v.label, onClick: () => applyView(v) })),
   ...(savedViews.value.length ? [{ label: '—', onClick: () => {} }] : []),
   { label: '＋ ' + __('Guardar vista actual'), onClick: saveCurrentView },
 ])
-watch([statusF, gradeF, sourceF], applyFilters, { deep: true })
+
 let _t = null
 function onSearch(v) {
   search.value = v
@@ -410,25 +385,19 @@ function sortArrow(field) {
   if (sort.value.field !== field) return ''
   return sort.value.dir === 'desc' ? ' ↓' : ' ↑'
 }
-onMounted(applyFilters)
+applyFilters()
 
-// ── filter options ───────────────────────────────────────────────────────────
-const leadStatuses = createListResource({
-  doctype: 'CRM Lead Status',
+// ── filter options ────────────────────────────────────────────────────────────
+const dealStatuses = createListResource({
+  doctype: 'CRM Deal Status',
   fields: ['name', 'color'],
   orderBy: 'position asc',
   pageLength: 50,
   auto: true,
 })
 const stageOptions = computed(() =>
-  (leadStatuses.data || []).map((s) => ({ value: s.name, label: s.name, color: s.color })),
+  (dealStatuses.data || []).map((s) => ({ value: s.name, label: s.name, color: s.color })),
 )
-const scoreOptions = [
-  { value: 'A', label: 'A · 80+', color: GRADE_COLORS.A[0] },
-  { value: 'B', label: 'B · 60+', color: GRADE_COLORS.B[0] },
-  { value: 'C', label: 'C · 40+', color: GRADE_COLORS.C[0] },
-  { value: 'D', label: 'D · <40', color: GRADE_COLORS.D[0] },
-]
 const sources = createListResource({
   doctype: 'CRM Lead Source',
   fields: ['name'],
@@ -436,26 +405,32 @@ const sources = createListResource({
   auto: true,
 })
 const sourceOptions = computed(() => (sources.data || []).map((s) => ({ value: s.name, label: s.name })))
+const ownerOptions = computed(() =>
+  (usersList.data?.crmUsers || [])
+    .filter((u) => u.enabled)
+    .map((u) => ({ value: u.name, label: u.full_name?.trim() || u.name })),
+)
 
-// ── chips ────────────────────────────────────────────────────────────────────
+// ── chips ──────────────────────────────────────────────────────────────────────
 const chips = computed(() => {
   const out = []
   for (const v of statusF.value) out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
-  for (const v of gradeF.value) out.push({ key: `gr:${v}`, type: 'grade', value: v, label: `Score ${v}` })
   for (const v of sourceF.value) out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
+  for (const v of ownerF.value) out.push({ key: `ow:${v}`, type: 'owner', value: v, label: ownerName(v) })
   return out
 })
 function removeChip(c) {
-  const ref_ = { status: statusF, grade: gradeF, source: sourceF }[c.type]
+  const ref_ = { status: statusF, source: sourceF, owner: ownerF }[c.type]
   ref_.value = ref_.value.filter((x) => x !== c.value)
 }
 function clearAll() {
   statusF.value = []
-  gradeF.value = []
   sourceF.value = []
+  ownerF.value = []
 }
+watch([statusF, sourceF, ownerF], applyFilters, { deep: true })
 
-// ── view helpers ─────────────────────────────────────────────────────────────
+// ── view helpers ────────────────────────────────────────────────────────────────
 const views = [
   { key: 'list', label: '≡ List' },
   { key: 'board', label: '⊞ Board' },
@@ -463,13 +438,10 @@ const views = [
   { key: 'cal', label: '📅 Cal', to: '/calendar' },
 ]
 function label(r) {
-  return r.lead_name || [r.first_name, r.last_name].filter(Boolean).join(' ') || r.mobile_no || r.name
-}
-function gradeColor(g) {
-  return GRADE_COLORS[g]?.[0] || '#9aa2ae'
+  return r.organization || r.lead_name || r.name
 }
 function statusChip(status) {
-  const c = getLeadStatus(status)?.color || '#5b6472'
+  const c = getDealStatus(status)?.color || '#5b6472'
   return `color:${c};background:${c}1a`
 }
 function sourceDot(source) {
@@ -480,8 +452,14 @@ function sourceDot(source) {
 function ownerName(email) {
   return getUser(email)?.full_name || email
 }
+function formatMXN(v) {
+  if (v == null || v === '') return '—'
+  const n = Number(v) || 0
+  if (!n) return '—'
+  return 'MX$ ' + n.toLocaleString('es-MX', { maximumFractionDigits: 0 })
+}
 
-// ── selection + rows ─────────────────────────────────────────────────────────
+// ── selection + rows ─────────────────────────────────────────────────────────────
 const allSelected = computed(() => rows.value.length > 0 && selectedRows.value.length === rows.value.length)
 function toggleAll() {
   selectedRows.value = allSelected.value ? [] : rows.value.map((r) => r.name)
@@ -491,47 +469,30 @@ function toggleRow(name) {
     ? selectedRows.value.filter((n) => n !== name)
     : [...selectedRows.value, name]
 }
-function openLead(name) {
-  router.push(`/leads/${name}`)
+function openDeal(name) {
+  router.push(`/deal/${name}`)
 }
 function rowMenu(r) {
   return [
-    { label: __('Abrir'), onClick: () => openLead(r.name) },
-    { label: __('Convertir a trato'), onClick: () => convertLead(r.name) },
-    { label: __('Eliminar'), onClick: () => deleteLead(r.name) },
+    { label: __('Abrir'), onClick: () => openDeal(r.name) },
+    { label: __('Vista clásica'), onClick: () => router.push(`/deals/${r.name}`) },
+    { label: __('Eliminar'), onClick: () => deleteDeal(r.name) },
   ]
 }
-async function convertLead(name) {
-  // upstream convert: lead → deal, then open it in the inbox
-  const deal = await frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })
-  toast.success(__('Convertido a trato'))
-  leads.reload()
-  if (deal) router.push({ path: '/inbox', query: { deal } })
-}
-async function deleteLead(name) {
-  if (!window.confirm(__('¿Eliminar este lead?'))) return
-  await frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })
-  toast.success(__('Lead eliminado'))
-  leads.reload()
+async function deleteDeal(name) {
+  if (!window.confirm(__('¿Eliminar este trato?'))) return
+  await frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name })
+  toast.success(__('Trato eliminado'))
+  deals.reload()
 }
 async function bulkDelete() {
-  if (!window.confirm(__('¿Eliminar {0} leads?', [selectedRows.value.length]))) return
+  if (!window.confirm(__('¿Eliminar {0} tratos?', [selectedRows.value.length]))) return
   const results = await Promise.allSettled(
-    selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })),
+    selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name })),
   )
   const failed = results.filter((r) => r.status === 'rejected').length
-  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Leads eliminados'))
+  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Tratos eliminados'))
   selectedRows.value = []
-  leads.reload()
-}
-async function bulkConvert() {
-  if (!window.confirm(__('¿Convertir {0} leads a tratos?', [selectedRows.value.length]))) return
-  const results = await Promise.allSettled(
-    selectedRows.value.map((name) => frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })),
-  )
-  const failed = results.filter((r) => r.status === 'rejected').length
-  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Convertidos a tratos'))
-  selectedRows.value = []
-  leads.reload()
+  deals.reload()
 }
 </script>

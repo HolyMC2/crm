@@ -127,6 +127,12 @@ const routes = [
     meta: { navLabel: 'Leads', title: 'Leads' },
   },
   {
+    path: '/deals',
+    name: 'Deals List',
+    component: () => import('@/pages/DealsView.vue'),
+    meta: { navLabel: 'Deals', title: 'Deals' },
+  },
+  {
     path: '/deal/:dealId',
     name: 'Deal 360',
     component: () => import('@/pages/Deal360.vue'),
