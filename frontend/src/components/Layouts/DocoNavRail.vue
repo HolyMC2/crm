@@ -7,30 +7,47 @@
 -->
 <template>
   <div
-    class="flex h-full w-[58px] flex-none flex-col items-center gap-1 border-r border-outline-gray-1 bg-surface-white py-3"
+    class="relative flex h-full flex-none flex-col gap-1 border-r border-outline-gray-1 bg-surface-white py-3 transition-all duration-200"
+    :class="isExpanded ? 'w-[210px] items-stretch px-2' : 'w-[58px] items-center'"
   >
+    <!-- Notifications slide-out panel. Mounted FIRST so its absolute box
+         (top:auto → static position) anchors at the rail's top, then opens to
+         the right via left:calc(100%+1px). The rail being `relative` is what
+         scopes that offset to the 58/210px rail instead of the viewport. -->
+    <Notifications />
+
     <!-- logo mark -->
     <div
-      class="mb-2.5 flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-[15px] font-bold text-white"
-      style="background: #16a34a"
+      class="mb-2.5 flex items-center gap-2.5"
+      :class="isExpanded ? 'px-1.5' : ''"
     >
-      C
+      <div
+        class="flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-[15px] font-bold text-white"
+        style="background: #16a34a"
+      >
+        C
+      </div>
+      <span
+        v-if="isExpanded"
+        class="truncate text-[15px] font-bold text-ink-gray-9"
+      >
+        {{ brandName }}
+      </span>
     </div>
 
     <!-- primary nav -->
     <Tooltip
       v-for="item in navItems"
       :key="item.key"
-      :text="__(item.label)"
+      :text="isExpanded ? '' : __(item.label)"
       placement="right"
     >
       <button
-        class="relative flex h-[38px] w-[38px] items-center justify-center rounded-[9px] transition-colors"
-        :class="
-          activeGroup === item.group
-            ? ''
-            : 'text-ink-gray-4 hover:bg-surface-gray-2'
-        "
+        class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
+        :class="[
+          isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
+          activeGroup === item.group ? '' : 'text-ink-gray-4 hover:bg-surface-gray-2',
+        ]"
         :style="
           activeGroup === item.group
             ? 'background:#eaf6ee;color:#16a34a'
@@ -38,32 +55,38 @@
         "
         @click="go(item.to)"
       >
-        <component :is="item.icon" class="h-[18px] w-[18px]" />
+        <component :is="item.icon" class="h-[18px] w-[18px] flex-none" />
+        <span v-if="isExpanded" class="truncate text-[13px] font-medium">
+          {{ __(item.label) }}
+        </span>
         <span
           v-if="item.badge && badgeFor(item.badge)"
-          class="absolute right-1.5 top-1.5 h-[7px] w-[7px] rounded-full"
+          class="absolute h-[7px] w-[7px] rounded-full"
+          :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
           :style="`background:${item.badge === 'unread' ? '#e5484d' : '#d9930b'};border:1.5px solid #fbfcfc`"
         />
       </button>
     </Tooltip>
 
     <!-- separator -->
-    <div class="my-1 h-[18px] w-px bg-outline-gray-1" />
+    <div
+      class="my-1 h-px bg-outline-gray-1"
+      :class="isExpanded ? 'w-full' : 'w-[18px]'"
+    />
 
     <!-- secondary nav -->
     <Tooltip
       v-for="item in navItemsBottom"
       :key="item.key"
-      :text="__(item.label)"
+      :text="isExpanded ? '' : __(item.label)"
       placement="right"
     >
       <button
-        class="relative flex h-[38px] w-[38px] items-center justify-center rounded-[9px] transition-colors"
-        :class="
-          activeGroup === item.group
-            ? ''
-            : 'text-ink-gray-4 hover:bg-surface-gray-2'
-        "
+        class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
+        :class="[
+          isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
+          activeGroup === item.group ? '' : 'text-ink-gray-4 hover:bg-surface-gray-2',
+        ]"
         :style="
           activeGroup === item.group
             ? 'background:#eaf6ee;color:#16a34a'
@@ -71,21 +94,29 @@
         "
         @click="go(item.to)"
       >
-        <component :is="item.icon" class="h-[18px] w-[18px]" />
+        <component :is="item.icon" class="h-[18px] w-[18px] flex-none" />
+        <span v-if="isExpanded" class="truncate text-[13px] font-medium">
+          {{ __(item.label) }}
+        </span>
       </button>
     </Tooltip>
 
     <!-- notifications bell (panel mounted below; toggled via notificationsStore) -->
-    <Tooltip :text="__('Notifications')" placement="right">
+    <Tooltip :text="isExpanded ? '' : __('Notifications')" placement="right">
       <button
-        class="relative mt-auto flex h-[38px] w-[38px] items-center justify-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
+        class="relative mt-auto flex h-[38px] items-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
+        :class="isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center'"
         :aria-label="__('Notifications')"
         @click="toggleNotifications()"
       >
-        <NotificationsIcon class="h-[18px] w-[18px]" />
+        <NotificationsIcon class="h-[18px] w-[18px] flex-none" />
+        <span v-if="isExpanded" class="truncate text-[13px] font-medium">
+          {{ __('Notifications') }}
+        </span>
         <span
           v-if="unreadNotificationsCount"
-          class="absolute right-1.5 top-1.5 h-[7px] w-[7px] rounded-full"
+          class="absolute h-[7px] w-[7px] rounded-full"
+          :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
           style="background: #e5484d; border: 1.5px solid #fbfcfc"
         />
       </button>
@@ -93,17 +124,46 @@
 
     <!-- avatar → profile panel -->
     <button
-      class="mt-1 flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white transition-opacity hover:opacity-80"
-      style="background: #c98bdb"
+      class="mt-1 flex items-center rounded-[9px] transition-colors hover:bg-surface-gray-2"
+      :class="isExpanded ? 'w-full justify-start gap-2.5 px-2 py-1' : 'w-[38px] justify-center'"
       @click="showProfile = !showProfile"
     >
-      <img
-        v-if="user.user_image"
-        :src="user.user_image"
-        class="h-full w-full object-cover"
-      />
-      <span v-else>{{ initials }}</span>
+      <span
+        class="flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white"
+        style="background: #c98bdb"
+      >
+        <img
+          v-if="user.user_image"
+          :src="user.user_image"
+          class="h-full w-full object-cover"
+        />
+        <span v-else>{{ initials }}</span>
+      </span>
+      <span
+        v-if="isExpanded"
+        class="truncate text-[13px] font-medium text-ink-gray-8"
+      >
+        {{ user.full_name || __('User') }}
+      </span>
     </button>
+
+    <!-- collapse / expand toggle -->
+    <Tooltip :text="isExpanded ? '' : __('Expand')" placement="right">
+      <button
+        class="mt-1 flex h-[34px] items-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
+        :class="isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center'"
+        :aria-label="isExpanded ? __('Collapse sidebar') : __('Expand sidebar')"
+        @click="isExpanded = !isExpanded"
+      >
+        <component
+          :is="isExpanded ? ChevronsLeftIcon : ChevronsRightIcon"
+          class="h-[18px] w-[18px] flex-none"
+        />
+        <span v-if="isExpanded" class="truncate text-[13px] font-medium">
+          {{ __('Collapse') }}
+        </span>
+      </button>
+    </Tooltip>
 
     <!-- profile panel popup (spec §4.2) -->
     <template v-if="showProfile">
@@ -162,8 +222,7 @@
       </div>
     </template>
 
-    <!-- carried over from AppSidebar: these must still mount somewhere -->
-    <Notifications />
+    <!-- Settings modal (teleported; position-independent) -->
     <Settings />
   </div>
 </template>
@@ -178,11 +237,13 @@ import { getSettings } from '@/stores/settings'
 import { showSettings } from '@/composables/settings'
 import { unreadNotificationsCount, notificationsStore } from '@/stores/notifications'
 import { Tooltip, createResource } from 'frappe-ui'
+import { useStorage } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import DashboardIcon from '~icons/lucide/layout-dashboard'
 import LeadsIcon from '~icons/lucide/users'
+import DealsIcon from '~icons/lucide/handshake'
 import InboxIcon from '~icons/lucide/messages-square'
 import CampaignsIcon from '~icons/lucide/megaphone'
 import CallsIcon from '~icons/lucide/phone'
@@ -192,6 +253,8 @@ import ScoreRulesIcon from '~icons/lucide/sliders-horizontal'
 import WebshopIcon from '~icons/lucide/shopping-cart'
 import SettingsGearIcon from '~icons/lucide/settings'
 import LogOutIcon from '~icons/lucide/log-out'
+import ChevronsLeftIcon from '~icons/lucide/chevrons-left'
+import ChevronsRightIcon from '~icons/lucide/chevrons-right'
 
 const route = useRoute()
 const router = useRouter()
@@ -202,6 +265,10 @@ const { brand } = getSettings()
 
 const user = computed(() => getUser() || {})
 const showProfile = ref(false)
+
+// expand ↔ collapse the rail (icons-only ⇄ icons+labels), persisted per browser.
+const isExpanded = useStorage('doco-nav-expanded', false)
+const brandName = computed(() => brand?.value?.name || 'CRM')
 
 const initials = computed(() => {
   const n = (user.value.full_name || '').trim()
@@ -221,6 +288,7 @@ const navItems = [
   { key: 'dashboard', icon: DashboardIcon, label: 'Dashboard', to: '/dashboard', group: 'dashboard' },
   { key: 'leads', icon: LeadsIcon, label: 'Leads', to: '/leads', group: 'leads' },
   { key: 'inbox', icon: InboxIcon, label: 'Inbox', to: '/inbox', group: 'inbox', badge: 'unread' },
+  { key: 'deals', icon: DealsIcon, label: 'Deals', to: '/deals', group: 'deals' },
   { key: 'campaigns', icon: CampaignsIcon, label: 'Campaigns', to: '/campaigns', group: 'campaigns' },
   { key: 'calls', icon: CallsIcon, label: 'Calls', to: '/call-logs', group: 'calls' },
   { key: 'tasks', icon: TasksIcon, label: 'Tasks', to: '/tasks', group: 'tasks', badge: 'overdue' },
@@ -233,7 +301,8 @@ const navItemsBottom = [
 
 // active-group mapping — handoff §4.1. A route path lights exactly one icon.
 function routeGroup(path) {
-  if (/^\/(inbox|deals)(\/|$)/.test(path)) return 'inbox'
+  if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
+  if (/^\/deals?(\/|$)/.test(path)) return 'deals'
   if (/^\/campaigns(\/|$)/.test(path)) return 'campaigns'
   if (/^\/(leads|pipeline|calendar|stage-scripts|enrichment|pipeline-analysis)(\/|$)/.test(path))
     return 'leads'
