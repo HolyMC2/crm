@@ -5,7 +5,10 @@ import json
 
 import frappe
 from frappe import _
-from frappe.desk.form.assign_to import add as assign
+# Newer Frappe split assign_to.add: the public add() no longer takes
+# ignore_permissions (it delegates to the private _add). assign_agent() needs
+# the system-level assignment, so bind directly to _add.
+from frappe.desk.form.assign_to import _add as assign
 from frappe.model.document import Document
 from frappe.utils import has_gravatar, validate_email_address
 
