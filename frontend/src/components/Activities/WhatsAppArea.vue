@@ -1,10 +1,16 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
-    <!-- WhatsApp-style conversation header: avatar + name + phone, sticky top -->
+    <!-- Header + pinned notes float together at the top: one sticky block with
+         an opaque bg so the message thread scrolls underneath them. -->
+    <div
+      v-if="contact?.phone || contact?.name || pinnedNotes.length"
+      class="sticky top-0 z-20 bg-surface-white pt-2 dark:bg-surface-gray-1"
+    >
+    <!-- WhatsApp-style conversation header: avatar + name + phone -->
     <div
       v-if="contact?.phone || contact?.name"
-      class="sticky top-0 z-10 mx-3 mb-3 flex items-center gap-3 rounded-md border bg-surface-white px-3 py-2 shadow-sm dark:bg-surface-gray-2 sm:mx-10"
+      class="wa-contact-header mx-3 mb-3 flex items-center gap-3 rounded-md border bg-surface-white px-3 py-2 shadow-sm dark:bg-surface-gray-2 sm:mx-10"
     >
       <div
         class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-sm font-semibold text-ink-gray-7"
@@ -71,6 +77,7 @@
       >
         + {{ moreNotes }} {{ __('more notes') }}
       </button>
+    </div>
     </div>
 
     <template v-for="whatsapp in messages" :key="whatsapp.name">

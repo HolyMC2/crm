@@ -43,7 +43,7 @@
       {{ m.icon }} {{ __(m.label) }}{{ m.value === 'reply' ? ` · ${channelLabel}` : '' }}
     </button>
     <span class="ml-auto hidden text-xs text-ink-gray-4 sm:inline">
-      {{ __('Enter to send') }}
+      {{ mode === 'comment' ? __('Ctrl/⌘+Enter to send') : __('Enter to send') }}
     </span>
   </div>
 
@@ -127,11 +127,14 @@
       @keydown.enter.stop="(e) => onEnter(e)"
     />
     <!-- Internal comment: mention-capable rich editor so @mentions notify
-         (notify_mentions parses <span class="mention" data-id>…). Enter is
-         left to the editor (newline / pick mention), send via the button. -->
+         (notify_mentions parses <span class="mention" data-id>…). Plain Enter
+         is left to the editor (newline / pick mention); Ctrl/Cmd+Enter sends.
+         Capture phase so we intercept before tiptap's own Enter handling. -->
     <div
       v-else
       class="w-full rounded border border-outline-gray-2 bg-surface-white px-2 py-1 dark:bg-surface-gray-2"
+      @keydown.ctrl.enter.capture.prevent.stop="dispatchSend()"
+      @keydown.meta.enter.capture.prevent.stop="dispatchSend()"
     >
       <TextEditor
         :key="commentEditorKey"
