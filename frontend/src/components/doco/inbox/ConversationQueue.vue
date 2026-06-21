@@ -112,13 +112,6 @@
             >
               {{ timeAgo(r.last_message_ts) }}
             </div>
-            <span
-              v-if="r.unread"
-              class="mt-[3px] inline-block min-w-[16px] rounded-full px-[5px] py-px text-[9.5px] font-bold text-white"
-              style="background: #25d366"
-            >
-              ●
-            </span>
           </div>
         </div>
         <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
@@ -133,6 +126,19 @@
           <span class="truncate">{{ r.last_message || '—' }}</span>
         </div>
         <div class="mt-[7px] flex flex-wrap gap-1.5">
+          <!-- "needs reply": last message was inbound (backend r.unread =
+            direction=="in"). Labeled amber chip, distinct from the WhatsApp-green
+            channel dot, so it reads as an action ("responder"), not decoration.
+            Clears when you reply (last direction flips to outbound), not on open —
+            it is not a read receipt. -->
+          <span
+            v-if="r.unread"
+            class="inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[9.5px] font-semibold"
+            style="color: #b45309; background: #fef3c7"
+            :title="__('El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes.')"
+          >
+            ↩ {{ __('Responder') }}
+          </span>
           <span
             v-if="r.status"
             class="rounded px-1.5 py-px text-[9.5px] font-semibold"

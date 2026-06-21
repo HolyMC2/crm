@@ -23,7 +23,6 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { toast } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
@@ -32,7 +31,6 @@ import {
   activeDeal,
   queueCollapsed,
   initInbox,
-  loadThread,
   reloadQueue,
   selectDeal,
   onThreadUpdate,
@@ -41,25 +39,25 @@ import {
 const { $socket } = globalStore()
 const route = useRoute()
 
-function onWaEvent() {
-  loadThread()
+// crm core (apps/crm/crm/api/whatsapp.py:on_update) emits a single
+// `whatsapp_message` event for every WhatsApp Message insert/update, both
+// directions, payload { reference_doctype, reference_name }. The old code
+// listened for `whatsapp_message_in` / `whatsapp_message_out`, which nothing
+// emits — so inbound messages never refreshed the LEFT QUEUE (had to F5). This
+// owns the queue/preview only; the open thread's bubbles are refreshed by the
+// upstream Activities component's own `whatsapp_message` handler.
+function onWaMessage() {
   reloadQueue()
-}
-function onWaIn() {
-  toast.success(__('Nuevo mensaje de WhatsApp'))
-  onWaEvent()
 }
 
 onMounted(() => {
   initInbox() // clears any stale singleton state, then loads queue/channels
   if (route.query.deal) selectDeal(String(route.query.deal)) // deep link from Tasks "open conversation"
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)
-  $socket?.on('whatsapp_message_in', onWaIn)
-  $socket?.on('whatsapp_message_out', onWaEvent)
+  $socket?.on('whatsapp_message', onWaMessage)
 })
 onUnmounted(() => {
   $socket?.off('doco_marketing:thread_update', onThreadUpdate)
-  $socket?.off('whatsapp_message_in', onWaIn)
-  $socket?.off('whatsapp_message_out', onWaEvent)
+  $socket?.off('whatsapp_message', onWaMessage)
 })
 </script>

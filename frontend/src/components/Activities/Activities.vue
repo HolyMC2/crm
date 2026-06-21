@@ -690,19 +690,26 @@ watch(
   { immediate: true },
 )
 
+// Named handler so off() removes ONLY this instance's listener. The previous
+// blanket `$socket.off('whatsapp_message')` removed every listener for the event
+// — so switching deals (each remount) silently killed realtime for sibling
+// subscribers (the inbox queue, other Activities), and inbound messages stopped
+// refreshing until a full reload (F5).
+function onWhatsappRealtime(data) {
+  if (
+    data.reference_doctype === props.doctype &&
+    data.reference_name === props.docname
+  ) {
+    whatsappMessages.reload()
+  }
+}
+
 onBeforeUnmount(() => {
-  $socket.off('whatsapp_message')
+  $socket.off('whatsapp_message', onWhatsappRealtime)
 })
 
 onMounted(() => {
-  $socket.on('whatsapp_message', (data) => {
-    if (
-      data.reference_doctype === props.doctype &&
-      data.reference_name === props.docname
-    ) {
-      whatsappMessages.reload()
-    }
-  })
+  $socket.on('whatsapp_message', onWhatsappRealtime)
 
   nextTick(() => {
     const hash = route.hash.slice(1) || null
