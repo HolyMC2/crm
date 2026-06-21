@@ -37,12 +37,17 @@
       </div>
     </div>
 
+    <!-- contacts (upstream SidePanelLayout only renders contacts_section via a
+         parent slot, which this panel doesn't pass — render it standalone here
+         and drop contacts_section from the field layout below to avoid a blank) -->
+    <DealContactsSection v-if="activeDeal" :deal="activeDeal" />
+
     <!-- full editable deal fields (upstream — nothing hidden) -->
     <div class="min-h-0 flex-1">
       <SidePanelLayout
-        v-if="sections.data"
+        v-if="dealSections.length"
         :key="activeDeal"
-        :sections="sections.data"
+        :sections="dealSections"
         doctype="CRM Deal"
         :docname="activeDeal"
         @reload="sections.reload"
@@ -56,6 +61,7 @@ import { computed, watch } from 'vue'
 import { createResource } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
+import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import { activeDeal, queue, GRADE_COLORS } from '@/composables/inbox'
 
 const { makeCall } = globalStore()
@@ -107,6 +113,11 @@ const sections = createResource({
   params: { doctype: 'CRM Deal' },
   auto: true,
 })
+// contacts_section is rendered by DealContactsSection above (SidePanelLayout would
+// show it blank here), so drop it from the field layout to avoid an empty section.
+const dealSections = computed(() =>
+  (sections.data || []).filter((s) => s.name !== 'contacts_section'),
+)
 
 // conversion probability for the Score card (from the deal fetch above)
 const probability = computed(() => dealRes.data?.probability)

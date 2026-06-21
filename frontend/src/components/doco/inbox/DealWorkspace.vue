@@ -93,9 +93,11 @@ const convoTabs = [{ name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon }]
 </script>
 
 <style scoped>
-/* hide the WhatsAppArea sticky contact header inside the inbox (DealHeader already
-   shows the contact) — scoped to this embedding, upstream Deal page keeps it */
-.doco-convo :deep(.sticky.top-0.rounded-md.border.shadow-sm) {
+/* Hide the WhatsAppArea single-contact header inside the inbox — DealHeader already
+   identifies the deal, and the per-contact chat strip (shown when a deal has >1
+   WhatsApp contact) is the switcher here. Pinned notes + the strip stay visible.
+   Scoped to this embedding; the upstream Deal page keeps the header. */
+.doco-convo :deep(.wa-contact-header) {
   display: none;
 }
 </style>

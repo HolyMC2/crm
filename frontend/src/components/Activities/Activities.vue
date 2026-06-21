@@ -24,7 +24,7 @@
     <div
       v-else-if="
         activities?.length ||
-        (title == 'WhatsApp' && (threadItems.length || pinnedNotes.length))
+        (title == 'WhatsApp' && whatsappEnabled)
       "
       class="activities"
     >
