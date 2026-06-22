@@ -296,7 +296,9 @@ def create_whatsapp_message(
 
 
 @frappe.whitelist()
-def send_whatsapp_template(reference_doctype: str, reference_name: str, template: str, to: str):
+def send_whatsapp_template(
+	reference_doctype: str, reference_name: str, template: str, to: str, body_param=None
+):
 	validate_access(reference_doctype, reference_name)
 	doc = frappe.new_doc("WhatsApp Message")
 	doc.update(
@@ -311,8 +313,70 @@ def send_whatsapp_template(reference_doctype: str, reference_name: str, template
 			"to": to,
 		}
 	)
+	# Reviewed/edited variable values from the composer's template review step.
+	# frappe_whatsapp's send_template() consumes `body_param` verbatim (its values in
+	# {{1}},{{2}}… order) instead of re-resolving the mapped ref-doc fields, so what the
+	# agent reviewed is exactly what Meta receives — still a compliant template send.
+	if body_param:
+		if isinstance(body_param, str):
+			try:
+				body_param = json.loads(body_param)
+			except (ValueError, TypeError):
+				frappe.throw(_("Invalid template parameters."))
+		if not isinstance(body_param, dict):
+			frappe.throw(_("Template parameters must be a mapping."))
+		doc.body_param = json.dumps(
+			{str(k): ("" if v is None else str(v)) for k, v in body_param.items()}
+		)
 	doc.insert(ignore_permissions=True)
 	return doc.name
+
+
+@frappe.whitelist()
+def get_template_preview(reference_doctype: str, reference_name: str, template: str):
+	"""Resolve an approved WhatsApp template against the reference doc for the
+	composer's review step: the body, each {{n}} placeholder with the ref-doc field it
+	maps to and that field's current value, plus footer/header. The agent reviews and
+	may override any value before the (still-compliant) template send."""
+	validate_access(reference_doctype, reference_name)
+	tpl = frappe.get_doc("WhatsApp Templates", template)
+	body = tpl.template or ""
+
+	# frappe_whatsapp resolves placeholders from `field_names` (ref-doc fieldnames)
+	# when set, else falls back to the literal `sample_values`. Mirror that exactly so
+	# the preview defaults equal what an un-overridden send would transmit.
+	field_names = (tpl.get("field_names") or "").strip()
+	sample_values = (tpl.get("sample_values") or "").strip()
+	using_fields = bool(field_names)
+	raw = field_names or sample_values
+	tokens = [t.strip() for t in raw.split(",") if t.strip()] if raw else []
+
+	ref_doc = frappe.get_doc(reference_doctype, reference_name) if (tokens and using_fields) else None
+	variables = []
+	for i, tok in enumerate(tokens, start=1):
+		if using_fields:
+			try:
+				value = ref_doc.get_formatted(tok) if ref_doc else ""
+			except Exception:
+				value = ""
+			label = tok
+		else:
+			value = tok  # literal sample value
+			label = _("Variable {0}").format(i)
+		variables.append(
+			{"index": i, "field": tok if using_fields else "", "label": label, "value": value or ""}
+		)
+
+	rendered = parse_template_parameters(body, [v["value"] for v in variables]) if variables else body
+	return {
+		"name": tpl.name,
+		"body": body,
+		"rendered": rendered,
+		"footer": tpl.get("footer") or "",
+		"header_type": tpl.get("header_type") or "",
+		"language_code": tpl.get("language_code") or "",
+		"variables": variables,
+	}
 
 
 @frappe.whitelist()

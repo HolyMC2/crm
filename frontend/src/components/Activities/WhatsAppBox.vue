@@ -68,7 +68,7 @@
       type="button"
       class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-2"
       :title="t.template"
-      @click="emit('sendTemplate', t.name)"
+      @click="emit('pickTemplate', t.name)"
     >
       📄 {{ t.name }}
     </button>
@@ -242,7 +242,7 @@ const props = defineProps({
   channelLabel: { type: String, default: 'WhatsApp' },
 })
 
-const emit = defineEmits(['sendTemplate', 'activity'])
+const emit = defineEmits(['pickTemplate', 'activity'])
 
 const doc = defineModel({ type: Object, default: () => ({}) })
 const whatsapp = defineModel('whatsapp', { type: Object, default: () => ({}) })

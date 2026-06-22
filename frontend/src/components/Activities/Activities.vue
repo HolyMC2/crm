@@ -443,6 +443,15 @@
       :doctype="doctype"
       @scroll="scroll"
     />
+    <WhatsappTemplateReview
+      v-if="title == 'WhatsApp' && reviewTemplate"
+      :doctype="doctype"
+      :docname="docname"
+      :template="reviewTemplate"
+      :sending="templateSending"
+      @send="confirmSendTemplate"
+      @cancel="reviewTemplate = null"
+    />
     <WhatsAppBox
       v-if="title == 'WhatsApp'"
       ref="whatsappBox"
@@ -452,7 +461,7 @@
       :doctype="doctype"
       :to-override="activeWhatsappContact?.phone || ''"
       @scroll="scroll"
-      @send-template="(t) => sendTemplate(t)"
+      @pick-template="(t) => openTemplateReview(t)"
       @activity="() => all_activities.reload()"
     />
   </div>
@@ -460,7 +469,7 @@
     v-if="whatsappEnabled"
     v-model="showWhatsappTemplates"
     :doctype="doctype"
-    @send="(t) => sendTemplate(t)"
+    @send="(t) => openTemplateReview(t)"
   />
   <AllModals
     ref="modalRef"
@@ -516,6 +525,7 @@ import OutboundCallIcon from '@/components/Icons/OutboundCallIcon.vue'
 import FadedScrollableDiv from '@/components/FadedScrollableDiv.vue'
 import CommunicationArea from '@/components/CommunicationArea.vue'
 import WhatsappTemplateSelectorModal from '@/components/Modals/WhatsappTemplateSelectorModal.vue'
+import WhatsappTemplateReview from '@/components/Activities/WhatsappTemplateReview.vue'
 import AllModals from '@/components/Activities/AllModals.vue'
 import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
 import { timeAgo, formatDate, startCase } from '@/utils'
@@ -720,22 +730,39 @@ onMounted(() => {
   })
 })
 
-function sendTemplate(template) {
+// Step 1: open the review panel in the composer (no send yet) — from a quick chip
+// or the template selector modal. Step 2: confirmSendTemplate fires the real,
+// still-compliant template with the reviewed/edited variable values (body_param).
+const reviewTemplate = ref(null)
+const templateSending = ref(false)
+
+function openTemplateReview(template) {
   showWhatsappTemplates.value = false
+  reviewTemplate.value = template
+}
+
+function confirmSendTemplate({ template, body_param }) {
+  templateSending.value = true
   capture('send_whatsapp_template', { doctype: props.doctype })
   createResource({
     url: 'crm.api.whatsapp.send_whatsapp_template',
     params: {
       reference_doctype: props.doctype,
       reference_name: props.docname,
-      to: doc.value.mobile_no,
+      to: activeWhatsappContact.value?.phone || doc.value.mobile_no,
       template,
+      body_param: body_param ? JSON.stringify(body_param) : undefined,
     },
     auto: true,
     onError: (error) => {
+      templateSending.value = false
       toast.error(error.messages?.[0] || __('Failed to send WhatsApp template'))
     },
-    onSuccess: () => whatsappMessages.reload(),
+    onSuccess: () => {
+      templateSending.value = false
+      reviewTemplate.value = null
+      whatsappMessages.reload()
+    },
   })
 }
 
