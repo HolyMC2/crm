@@ -6,13 +6,15 @@ import { ref } from 'vue'
 import { createResource, call } from 'frappe-ui'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
-export const activeDeal = ref(null) // CRM Deal name
+export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
+export const activeDealDoctype = ref('CRM Deal') // 'CRM Deal' | 'CRM Lead' — leads now share the queue
 export const activeUnassigned = ref(null) // phone string when viewing a "Sin asignar" orphan thread
 export const activeChannel = ref('whatsapp') // send channel + bubble style
 export const activeTab = ref('conversation') // conversation|activity|repair
 export const composeMode = ref('reply') // reply|note|comment
 export const queueChannel = ref(null) // null = Todas
 export const queueSearch = ref('')
+export const lastSendAt = ref(0) // epoch ms of our last outgoing send (suppress self-ping)
 export const queueCollapsed = ref(false) // hide the left queue pane for a wider workspace
 
 // ── resources ────────────────────────────────────────────────────────────────
@@ -29,6 +31,9 @@ export const unassigned = createResource({
   auto: false,
 })
 export const unassignedThread = createResource({ url: 'doco_marketing.api.inbox.get_unassigned_thread' })
+// Editable contact/customer card for the active deal/lead (resolver names the
+// exact doc+field each value lives on; edits go via frappe.client.set_value).
+export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_contact_card' })
 export const sla = createResource({ url: 'doco_marketing.api.inbox.get_sla_status' })
 
 export function initInbox() {
@@ -40,11 +45,13 @@ export function initInbox() {
 
 export function resetInbox() {
   activeDeal.value = null
+  activeDealDoctype.value = 'CRM Deal'
   activeUnassigned.value = null
   activeTab.value = 'conversation'
   activeChannel.value = 'whatsapp'
   thread.data = null
   unassignedThread.data = null
+  contactCard.data = null
   sla.data = null
 }
 
@@ -54,7 +61,7 @@ export function reloadUnassigned() {
 
 let _searchTimer = null
 export function reloadQueue() {
-  queue.submit({
+  return queue.submit({
     channel: queueChannel.value || undefined,
     search: queueSearch.value || undefined,
     limit: 50,
@@ -70,13 +77,48 @@ export function setQueueChannel(ch) {
   reloadQueue()
 }
 
-export function selectDeal(name) {
+export function selectDeal(name, doctype = 'CRM Deal') {
   activeUnassigned.value = null // leaving the triage view
-  if (activeDeal.value === name) return
+  if (activeDeal.value === name && activeDealDoctype.value === doctype) return
   activeDeal.value = name
+  activeDealDoctype.value = doctype
   activeTab.value = 'conversation'
   loadThread()
-  sla.submit({ reference_name: name })
+  loadContactCard()
+  // mark read: clear the red unread dot optimistically, persist in background.
+  const r = (queue.data || []).find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
+  if (r) r.unread_dot = false
+  markRead(doctype, name)
+  // SLA is a CRM Deal concept; leads have none.
+  if (doctype === 'CRM Deal') sla.submit({ reference_name: name })
+  else sla.data = null
+}
+
+export async function markRead(doctype, name) {
+  if (!doctype || !name) return
+  try {
+    await call('doco_marketing.api.inbox.mark_read', { reference_doctype: doctype, reference_name: name })
+  } catch (e) {
+    /* read-state is best-effort; never block the UI on it */
+  }
+}
+
+export function loadContactCard() {
+  if (!activeDeal.value) {
+    contactCard.data = null
+    return
+  }
+  contactCard.submit({ reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value })
+}
+
+// Inline-save one field to the exact doc the resolver named (the deal/lead, the
+// linked Customer, or its Address). Real wiring via the permission-checked
+// frappe.client.set_value; then refresh the card + queue so the change shows.
+export async function saveContactField(doctype, name, fieldname, value) {
+  if (!doctype || !name || !fieldname) return
+  await call('frappe.client.set_value', { doctype, name, fieldname, value })
+  loadContactCard()
+  reloadQueue()
 }
 
 export function selectUnassigned(phone) {
@@ -85,30 +127,32 @@ export function selectUnassigned(phone) {
   unassignedThread.submit({ phone })
 }
 
-// Convert an orphan number to a Lead or Deal; the backend re-points its
-// messages, so it leaves "Sin asignar" and (if a Deal) enters the normal queue.
-export async function assignUnassigned(phone, targetDoctype) {
+// Convert an orphan number to a Lead, Deal, or Customer; the backend re-points
+// its messages. A Deal/Lead then enters the normal queue and we open it; a
+// Customer files under its Contact (out of the deal/lead queue).
+export async function assignUnassigned(phone, targetDoctype, fields = {}) {
   const res = await call('doco_marketing.api.inbox.assign_unassigned', {
     phone,
     target_doctype: targetDoctype,
+    ...fields,
   })
   activeUnassigned.value = null
   reloadUnassigned()
   reloadQueue()
-  if (res?.doctype === 'CRM Deal') selectDeal(res.name)
+  if (res?.doctype === 'CRM Deal' || res?.doctype === 'CRM Lead') selectDeal(res.name, res.doctype)
   return res
 }
 
 export function loadThread() {
   if (!activeDeal.value) return
   // no channel filter — backend merges WhatsApp + Email; selector drives send only
-  thread.submit({ reference_doctype: 'CRM Deal', reference_name: activeDeal.value })
+  thread.submit({ reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value })
 }
 
 export async function sendMessage(content, { to, template } = {}) {
   if (!activeDeal.value) return
   const res = await call('doco_marketing.api.inbox.send_message', {
-    reference_doctype: 'CRM Deal',
+    reference_doctype: activeDealDoctype.value,
     reference_name: activeDeal.value,
     channel: activeChannel.value,
     content: content || undefined,
@@ -116,6 +160,7 @@ export async function sendMessage(content, { to, template } = {}) {
     template: template || undefined,
     marketing: 0,
   })
+  lastSendAt.value = Date.now() // the echo realtime event shouldn't ping
   loadThread()
   reloadQueue()
   return res
@@ -135,7 +180,7 @@ export async function savePrivateNote(content, mentions = []) {
 export async function setStage(status) {
   if (!activeDeal.value) return
   await call('frappe.client.set_value', {
-    doctype: 'CRM Deal',
+    doctype: activeDealDoctype.value,
     name: activeDeal.value,
     fieldname: 'status',
     value: status,

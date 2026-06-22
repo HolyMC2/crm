@@ -126,14 +126,14 @@
       </div>
       <button
         v-for="r in rows"
-        :key="r.deal"
+        :key="(r.ref_doctype || 'CRM Deal') + ':' + r.name"
         class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
         :style="
-          activeDeal === r.deal
+          activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
             ? 'border-left:3px solid #16a34a;background:#eef6f0'
             : 'border-left:3px solid transparent'
         "
-        @click="selectDeal(r.deal)"
+        @click="selectDeal(r.name, r.ref_doctype || 'CRM Deal')"
       >
         <div class="mb-1.5 flex items-center gap-2">
           <span
@@ -150,13 +150,21 @@
               {{ r.device || r.mobile_no || '—' }}
             </div>
           </div>
-          <div class="flex-none text-right">
+          <div class="flex flex-none flex-col items-end gap-1">
             <div
               class="text-[10px] font-semibold"
               :style="r.sla_overdue ? 'color:#e5484d' : 'color:#8a93a1'"
             >
               {{ timeAgo(r.last_message_ts) }}
             </div>
+            <!-- red unread dot: there's an inbound message newer than your last
+              open. Clears when you open the conversation (mark-read). -->
+            <span
+              v-if="r.unread_dot"
+              class="h-2.5 w-2.5 rounded-full"
+              style="background: #ef4444"
+              :title="__('No leído')"
+            />
           </div>
         </div>
         <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
@@ -171,6 +179,14 @@
           <span class="truncate">{{ r.last_message || '—' }}</span>
         </div>
         <div class="mt-[7px] flex flex-wrap gap-1.5">
+          <!-- Lead vs Trato (Deal) — leads now share the queue -->
+          <span
+            v-if="r.ref_doctype === 'CRM Lead'"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold"
+            style="color: #7c3aed; background: #f3e8ff"
+          >
+            {{ __('Lead') }}
+          </span>
           <!-- "needs reply": last message was inbound (backend r.unread =
             direction=="in"). Labeled amber chip, distinct from the WhatsApp-green
             channel dot, so it reads as an action ("responder"), not decoration.
@@ -220,6 +236,7 @@ import {
   queueSearch,
   queueCollapsed,
   activeDeal,
+  activeDealDoctype,
   activeUnassigned,
   selectDeal,
   selectUnassigned,

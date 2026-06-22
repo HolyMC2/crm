@@ -110,6 +110,7 @@ import { statusesStore } from '@/stores/statuses'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import {
   activeDeal,
+  activeDealDoctype,
   queue,
   sla,
   setStage,
@@ -122,7 +123,9 @@ import {
 const { showModal } = useDoctypeModal()
 
 const { makeCall } = globalStore()
-const { getDealStatus } = statusesStore()
+const { getDealStatus, getLeadStatus, leadStatuses, dealStatuses: dealStatusList } = statusesStore()
+
+const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 
 // rich row from the inbox queue when present; otherwise (360° / deep-linked deal not
 // in the queue) build an equivalent from a direct deal+lead fetch so the header isn't sparse.
@@ -133,10 +136,15 @@ watch(
   [activeDeal, queueRow],
   () => {
     if (!activeDeal.value || queueRow.value.deal) return // in queue → no fetch needed
+    const isD = activeDealDoctype.value === 'CRM Deal'
     dealFetch.submit({
-      doctype: 'CRM Deal',
+      doctype: activeDealDoctype.value,
       filters: activeDeal.value,
-      fieldname: JSON.stringify(['status', 'lead', 'mobile_no', 'first_name', 'lead_name']),
+      fieldname: JSON.stringify(
+        isD
+          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name']
+          : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
+      ),
     })
   },
   { immediate: true },
@@ -154,8 +162,8 @@ const row = computed(() => {
     status: d.status,
     contact_name: d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
     mobile_no: d.mobile_no || l.mobile_no,
-    lead_score: l.lead_score,
-    score_grade: l.score_grade,
+    lead_score: l.lead_score ?? d.lead_score,
+    score_grade: l.score_grade ?? d.score_grade,
   }
 })
 const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
@@ -165,26 +173,21 @@ const gradeColor = computed(() => GRADE_COLORS[grade.value]?.[0] || '#9aa2ae')
 
 // guard: a deep-linked deal not in the queue gives an empty row → status undefined;
 // getDealStatus(undefined) throws internally, so only call it when status is set.
-const stageColor = computed(() => (row.value.status ? getDealStatus(row.value.status)?.color : null) || '#9aa2ae')
+const stageColor = computed(() => {
+  if (!row.value.status) return '#9aa2ae'
+  const s = isDeal.value ? getDealStatus(row.value.status) : getLeadStatus(row.value.status)
+  return s?.color || '#9aa2ae'
+})
 const stageBtnStyle = computed(() => {
   const c = stageColor.value
   return `color:${c};background:${c}14;border-color:${c}40`
 })
 
-// deal statuses for the stage dropdown
-const dealStatuses = createListResource({
-  doctype: 'CRM Deal Status',
-  fields: ['name', 'color', 'position'],
-  orderBy: 'position asc',
-  pageLength: 50,
-  auto: true,
+// stage dropdown — the right status set for the active doctype (Deal vs Lead)
+const stageOptions = computed(() => {
+  const list = (isDeal.value ? dealStatusList : leadStatuses)?.data || []
+  return list.map((s) => ({ label: s.name, onClick: () => setStage(s.name) }))
 })
-const stageOptions = computed(() =>
-  (dealStatuses.data || []).map((s) => ({
-    label: s.name,
-    onClick: () => setStage(s.name),
-  })),
-)
 
 // WhatsApp 24h customer-service window (free-form until 24h after last inbound;
 // after that, template-only). Driven by the last Incoming WhatsApp Message.
@@ -199,7 +202,7 @@ watch(
   activeDeal,
   (d) => {
     if (!d) return
-    lastInbound.filters = { reference_doctype: 'CRM Deal', reference_name: d, type: 'Incoming' }
+    lastInbound.filters = { reference_doctype: activeDealDoctype.value, reference_name: d, type: 'Incoming' }
     lastInbound.reload()
   },
   { immediate: true },
@@ -242,7 +245,7 @@ watch(
   (d) => {
     if (!d) return
     tasks.filters = {
-      reference_doctype: 'CRM Deal',
+      reference_doctype: activeDealDoctype.value,
       reference_docname: d,
       status: ['not in', ['Done', 'Canceled']],
     }

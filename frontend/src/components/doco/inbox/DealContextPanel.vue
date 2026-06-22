@@ -10,8 +10,16 @@
       <button class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: #16a34a" @click="call">
         ☎ {{ __('Llamar') }}
       </button>
-      <button class="mt-2 w-full text-[11px] text-ink-blue-link" @click="$router.push(`/deal/${activeDeal}`)">⛶ {{ __('Abrir 360°') }}</button>
+      <button
+        class="mt-2 w-full text-[11px] text-ink-blue-link"
+        @click="$router.push(isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`)"
+      >
+        ⛶ {{ isDeal ? __('Abrir 360°') : __('Abrir Lead') }}
+      </button>
     </div>
+
+    <!-- editable contact/customer card (name/phone/email + fiscal) -->
+    <ContactCardEditable />
 
     <!-- score (doco-specific; not in the upstream sidepanel) -->
     <div v-if="grade" class="flex-none border-b border-outline-gray-1 p-3.5">
@@ -40,15 +48,15 @@
     <!-- contacts (upstream SidePanelLayout only renders contacts_section via a
          parent slot, which this panel doesn't pass — render it standalone here
          and drop contacts_section from the field layout below to avoid a blank) -->
-    <DealContactsSection v-if="activeDeal" :deal="activeDeal" />
+    <DealContactsSection v-if="activeDeal && isDeal" :deal="activeDeal" />
 
-    <!-- full editable deal fields (upstream — nothing hidden) -->
+    <!-- full editable record fields (upstream — nothing hidden), per doctype -->
     <div class="min-h-0 flex-1">
       <SidePanelLayout
         v-if="dealSections.length"
-        :key="activeDeal"
+        :key="activeDealDoctype + ':' + activeDeal"
         :sections="dealSections"
-        doctype="CRM Deal"
+        :doctype="activeDealDoctype"
         :docname="activeDeal"
         @reload="sections.reload"
       />
@@ -62,9 +70,12 @@ import { createResource } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
-import { activeDeal, queue, GRADE_COLORS } from '@/composables/inbox'
+import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
+import { activeDeal, activeDealDoctype, queue, GRADE_COLORS } from '@/composables/inbox'
 
 const { makeCall } = globalStore()
+
+const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 
 // effective row: the rich inbox queue row when present; else (Deal 360° / deep link,
 // deal not in the queue) a direct deal+lead fetch — same fallback as DealHeader, so
@@ -74,13 +85,19 @@ const dealRes = createResource({ url: 'frappe.client.get_value' })
 const leadRes = createResource({ url: 'frappe.client.get_value' })
 watch(
   activeDeal,
-  (d) =>
-    d &&
+  (d) => {
+    if (!d) return
+    const isD = activeDealDoctype.value === 'CRM Deal'
     dealRes.submit({
-      doctype: 'CRM Deal',
+      doctype: activeDealDoctype.value,
       filters: d,
-      fieldname: JSON.stringify(['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability']),
-    }),
+      fieldname: JSON.stringify(
+        isD
+          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability']
+          : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
+      ),
+    })
+  },
   { immediate: true },
 )
 watch(
@@ -96,8 +113,8 @@ const row = computed(() => {
     status: d.status,
     contact_name: d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
     mobile_no: d.mobile_no || l.mobile_no,
-    lead_score: l.lead_score,
-    score_grade: l.score_grade,
+    lead_score: l.lead_score ?? d.lead_score,
+    score_grade: l.score_grade ?? d.score_grade,
   }
 })
 const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
@@ -107,12 +124,12 @@ const gradeColor = computed(() => GRADE_COLORS[grade.value]?.[0] || '#9aa2ae')
 const gradeWord = computed(() => ({ A: __('Top tier'), B: __('Bueno'), C: __('Medio'), D: __('Bajo') })[grade.value] || '')
 const dashOffset = computed(() => (113.1 * (100 - Math.min(100, Number(score.value) || 0))) / 100)
 
-// upstream side-panel field layout (all deal fields, editable)
+// upstream side-panel field layout (all record fields, editable), per doctype
 const sections = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_sidepanel_sections',
-  params: { doctype: 'CRM Deal' },
-  auto: true,
+  auto: false,
 })
+watch(activeDealDoctype, (dt) => dt && sections.submit({ doctype: dt }), { immediate: true })
 // contacts_section is rendered by DealContactsSection above (SidePanelLayout would
 // show it blank here), so drop it from the field layout to avoid an empty section.
 const dealSections = computed(() =>

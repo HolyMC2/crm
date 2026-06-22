@@ -10,7 +10,7 @@
 
       <div class="flex h-11 flex-none items-center gap-0.5 border-b border-outline-gray-1 px-3 text-[13px]">
         <button
-          v-for="t in tabs"
+          v-for="t in visibleTabs"
           :key="t.key"
           class="flex h-11 items-center gap-1.5 px-[11px]"
           :style="
@@ -28,7 +28,7 @@
            WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
            since DealHeader already identifies the contact (avoids the duplicate). -->
       <div v-if="activeTab === 'conversation'" class="doco-convo flex min-h-0 flex-1 flex-col">
-        <Activities :key="'wa-' + activeDeal" doctype="CRM Deal" :docname="activeDeal" :tabs="convoTabs" />
+        <Activities :key="'wa-' + activeDeal" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="convoTabs" />
       </div>
 
       <!-- Actividad = full upstream Activities (timeline/emails/comments/calls/tasks/notes) -->
@@ -40,7 +40,7 @@
           class="flex flex-1 flex-col overflow-hidden [&_[role='tablist']]:min-h-[42px] [&_[role='tablist']]:gap-6 [&_[role='tablist']]:px-4 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
         >
           <template #tab-panel>
-            <Activities :key="activeDeal" v-model:tabIndex="activityTabIndex" doctype="CRM Deal" :docname="activeDeal" :tabs="dealTabs" />
+            <Activities :key="activeDeal" v-model:tabIndex="activityTabIndex" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="dealTabs" />
           </template>
         </Tabs>
       </div>
@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Tabs } from 'frappe-ui'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import Activities from '@/components/Activities/Activities.vue'
@@ -72,7 +72,7 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeTab } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
 
@@ -81,6 +81,11 @@ const tabs = [
   { key: 'activity', label: '⚡ ' + __('Actividad') },
   { key: 'repair', label: '🔧 ' + __('Reparación') },
 ]
+// Reparación is a deal-only concept (repair orders). Leads get conversation +
+// activity only.
+const visibleTabs = computed(() =>
+  activeDealDoctype.value === 'CRM Deal' ? tabs : tabs.filter((t) => t.key !== 'repair'),
+)
 const dealTabs = [
   { name: 'Activity', label: __('Activity'), icon: ActivityIcon },
   { name: 'Emails', label: __('Emails'), icon: EmailIcon },

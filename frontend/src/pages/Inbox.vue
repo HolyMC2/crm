@@ -31,12 +31,16 @@ import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import {
   activeDeal,
+  activeDealDoctype,
   activeUnassigned,
+  queue,
   queueCollapsed,
+  lastSendAt,
   initInbox,
   reloadQueue,
   reloadUnassigned,
   selectDeal,
+  markRead,
   onThreadUpdate,
 } from '@/composables/inbox'
 
@@ -50,9 +54,51 @@ const route = useRoute()
 // emits — so inbound messages never refreshed the LEFT QUEUE (had to F5). This
 // owns the queue/preview only; the open thread's bubbles are refreshed by the
 // upstream Activities component's own `whatsapp_message` handler.
+// Notification ping (Web Audio, no asset). Can't ship the actual WhatsApp sound
+// (copyrighted); this is a close two-tone "pop". Only fires on a genuinely new
+// inbound — detected by the unread-dot count rising after a reload — so outbound
+// status echoes (sent→delivered→read) and our own sends don't ping.
+let audioCtx = null
+function playPing() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)()
+    if (audioCtx.state === 'suspended') audioCtx.resume()
+    const t = audioCtx.currentTime
+    for (const [freq, start, dur] of [[880, t, 0.09], [1175, t + 0.07, 0.13]]) {
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0.0001, start)
+      gain.gain.exponentialRampToValueAtTime(0.22, start + 0.012)
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + dur)
+      osc.connect(gain).connect(audioCtx.destination)
+      osc.start(start)
+      osc.stop(start + dur + 0.03)
+    }
+  } catch (e) {
+    /* autoplay policy / no audio — ignore */
+  }
+}
+
+let prevUnread = 0
 function onWaMessage() {
-  reloadQueue()
   reloadUnassigned() // a new inbound from an unknown number adds a Sin-asignar row
+  reloadQueue().then(() => {
+    // the conversation you're actively viewing stays read
+    if (activeDeal.value) {
+      const r = (queue.data || []).find(
+        (x) => x.name === activeDeal.value && (x.ref_doctype || 'CRM Deal') === activeDealDoctype.value,
+      )
+      if (r && r.unread_dot) {
+        r.unread_dot = false
+        markRead(activeDealDoctype.value, activeDeal.value)
+      }
+    }
+    const now = (queue.data || []).filter((r) => r.unread_dot).length
+    if (now > prevUnread && Date.now() - lastSendAt.value > 3000) playPing()
+    prevUnread = now
+  })
 }
 
 onMounted(() => {
