@@ -8,6 +8,15 @@
       <div class="mb-3 flex items-center justify-between">
         <div class="text-[15px] font-bold text-ink-gray-9">{{ __('Mi bandeja') }}</div>
         <div class="flex items-center gap-2">
+          <button
+            :style="soundEnabled ? 'color:#16a34a' : 'color:#9aa2ae'"
+            :title="soundEnabled ? __('Sonido de notificación activado') : __('Activar sonido de notificación')"
+            :aria-label="__('Sonido de notificación')"
+            @click="toggleSound"
+          >
+            <LucideVolume2 v-if="soundEnabled" class="h-4 w-4" />
+            <LucideVolumeX v-else class="h-4 w-4" />
+          </button>
           <span
             class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
             style="color: #15803d; background: #e9f7ef"
@@ -226,7 +235,10 @@
 import { computed, ref } from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
+import LucideVolume2 from '~icons/lucide/volume-2'
+import LucideVolumeX from '~icons/lucide/volume-x'
 import { statusesStore } from '@/stores/statuses'
+import { soundEnabled, toggleSound } from '@/composables/notificationSound'
 import DealModal from '@/components/Modals/DealModal.vue'
 import {
   queue,
