@@ -48,7 +48,7 @@
     <!-- contacts (upstream SidePanelLayout only renders contacts_section via a
          parent slot, which this panel doesn't pass — render it standalone here
          and drop contacts_section from the field layout below to avoid a blank) -->
-    <DealContactsSection v-if="activeDeal && isDeal" :deal="activeDeal" />
+    <DealContactsSection v-if="activeDeal && isDeal" :deal="activeDeal" :hide-primary="true" />
 
     <!-- full editable record fields (upstream — nothing hidden), per doctype -->
     <div class="min-h-0 flex-1">

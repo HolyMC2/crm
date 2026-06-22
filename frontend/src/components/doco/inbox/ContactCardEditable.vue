@@ -1,24 +1,50 @@
 <!--
-  Editable contact/customer card for the inbox right pane. Surfaces the key
-  fields for the active deal/lead (name/phone/email/org/device) plus the linked
-  Customer's fiscal fields (RFC, razón social, cumpleaños, dirección) — each
+  Editable contact/customer card for the inbox right pane — the single identity
+  view for the active deal/lead. Name/phone/email/org/device plus the linked
+  Customer's fiscal fields (RFC, razón social, cumpleaños, dirección), each
   inline-editable, saving straight to the doc the resolver named via
-  frappe.client.set_value (composable saveContactField). Quick UX, no shadow path.
+  frappe.client.set_value (composable saveContactField). Nombre/Apellido persist to
+  the linked Contact (card.name_record) — the canonical identity also shown in the
+  Contactos list — so this card and that list never drift into two half-broken
+  views. Resolver: doco_marketing.api.inbox.get_contact_card.
 -->
 <template>
   <div v-if="card" class="flex-none border-b border-outline-gray-1 p-3.5">
     <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">
       {{ __('Datos del cliente') }}
     </div>
+
+    <!-- identity header: the contact this conversation belongs to (avatar + name +
+         open). Makes the card the one place the person is shown, so the Contactos
+         list below only carries any *additional* contacts. -->
+    <div v-if="card.contact" class="mb-2.5 flex items-center gap-2">
+      <Avatar :label="card.contact_full_name || displayName" :image="card.contact_image" size="lg" />
+      <div class="min-w-0 flex-1">
+        <div class="truncate text-[13px] font-semibold text-ink-gray-9">
+          {{ card.contact_full_name || displayName || __('Sin nombre') }}
+        </div>
+        <div v-if="card.mobile_no" class="truncate font-mono text-[11px] text-ink-gray-5">
+          {{ card.mobile_no }}
+        </div>
+      </div>
+      <Button
+        variant="ghost"
+        icon="external-link"
+        class="!h-6 !w-6"
+        :tooltip="__('Ver contacto')"
+        @click="openContact"
+      />
+    </div>
+
     <div class="flex flex-col gap-1.5">
       <label v-for="f in baseFields" :key="f.field" class="block">
         <span class="text-[10px] font-medium text-ink-gray-5">{{ f.label }}</span>
         <input
           v-model="form[f.field]"
           :type="f.type || 'text'"
-          :disabled="!card.can_write"
+          :disabled="!canWrite(f)"
           class="w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 disabled:opacity-60"
-          @change="save(record.doctype, record.name, f.target, form[f.field])"
+          @change="save(f.doctype, f.name, f.target, form[f.field])"
         />
       </label>
 
@@ -46,10 +72,17 @@
 
 <script setup>
 import { reactive, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { Avatar, Button } from 'frappe-ui'
 import { contactCard, saveContactField } from '@/composables/inbox'
+
+const router = useRouter()
 
 const card = computed(() => contactCard.data)
 const record = computed(() => card.value?.record || {})
+// Name fields persist to the canonical Contact when there is one, else the record.
+const nameRecord = computed(() => card.value?.name_record || record.value)
+const displayName = computed(() => card.value?.name_display || '')
 
 const form = reactive({})
 watch(
@@ -73,14 +106,16 @@ watch(
 )
 
 const baseFields = computed(() => {
+  const rec = record.value
+  const nameRec = nameRecord.value
   const f = [
-    { field: 'first_name', label: __('Nombre'), target: 'first_name' },
-    { field: 'last_name', label: __('Apellido'), target: 'last_name' },
-    { field: 'mobile_no', label: __('Teléfono'), target: 'mobile_no' },
-    { field: 'email', label: __('Email'), target: 'email' },
-    { field: 'organization', label: __('Empresa'), target: 'organization' },
+    { field: 'first_name', label: __('Nombre'), doctype: nameRec.doctype, name: nameRec.name, target: 'first_name' },
+    { field: 'last_name', label: __('Apellido'), doctype: nameRec.doctype, name: nameRec.name, target: 'last_name' },
+    { field: 'mobile_no', label: __('Teléfono'), doctype: rec.doctype, name: rec.name, target: 'mobile_no' },
+    { field: 'email', label: __('Email'), doctype: rec.doctype, name: rec.name, target: 'email' },
+    { field: 'organization', label: __('Empresa'), doctype: rec.doctype, name: rec.name, target: 'organization' },
   ]
-  if (card.value?.is_deal) f.push({ field: 'device', label: __('Dispositivo'), target: 'repair_device' })
+  if (card.value?.is_deal) f.push({ field: 'device', label: __('Dispositivo'), doctype: rec.doctype, name: rec.name, target: 'repair_device' })
   return f
 })
 
@@ -98,6 +133,19 @@ const customerFields = computed(() => {
   }
   return f
 })
+
+// Name fields follow the Contact's write perm (name_record.can_write); the rest
+// follow the deal/lead's (card.can_write).
+function canWrite(f) {
+  if (f.doctype === nameRecord.value.doctype && f.name === nameRecord.value.name) {
+    return card.value?.name_record?.can_write ?? card.value?.can_write
+  }
+  return card.value?.can_write
+}
+
+function openContact() {
+  if (card.value?.contact) router.push({ name: 'Contact', params: { contactId: card.value.contact } })
+}
 
 function save(doctype, name, fieldname, value) {
   if (!doctype || !name) return

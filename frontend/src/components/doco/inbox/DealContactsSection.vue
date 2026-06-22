@@ -9,7 +9,7 @@
   <div class="flex-none border-b border-outline-gray-1 p-3.5">
     <div class="mb-2.5 flex items-center justify-between">
       <div class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">
-        {{ __('Contactos') }}
+        {{ hidePrimary ? __('Otros contactos') : __('Contactos') }}
       </div>
       <Link value="" doctype="Contact" @change="(c) => addContact(c)">
         <template #target="{ togglePopover }">
@@ -21,12 +21,12 @@
     <div v-if="contacts.loading && !contacts.data?.length" class="py-3 text-center text-xs text-ink-gray-4">
       {{ __('Cargando…') }}
     </div>
-    <div v-else-if="!contacts.data?.length" class="py-3 text-center text-xs text-ink-gray-4">
-      {{ __('Sin contactos') }}
+    <div v-else-if="!visibleContacts.length" class="py-3 text-center text-xs text-ink-gray-4">
+      {{ hidePrimary ? __('Sin contactos adicionales') : __('Sin contactos') }}
     </div>
 
     <div
-      v-for="c in contacts.data || []"
+      v-for="c in visibleContacts"
       :key="c.name"
       class="mb-2 rounded-lg border border-outline-gray-1 bg-surface-white p-2.5 last:mb-0"
     >
@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { h, watch } from 'vue'
+import { h, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Avatar, Badge, Dropdown, Button, createResource, call, toast } from 'frappe-ui'
 import Link from '@/components/Controls/Link.vue'
@@ -71,13 +71,23 @@ import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import SuccessIcon from '@/components/Icons/SuccessIcon.vue'
 
-const props = defineProps({ deal: { type: String, required: true } })
+const props = defineProps({
+  deal: { type: String, required: true },
+  // The identity card above already shows the primary contact; hide it here so the
+  // person isn't rendered twice. This section then only carries extra contacts.
+  hidePrimary: { type: Boolean, default: false },
+})
 const router = useRouter()
 
 const contacts = createResource({
   url: 'crm.fcrm.doctype.crm_deal.api.get_deal_contacts',
   params: { name: props.deal },
   auto: true,
+})
+
+const visibleContacts = computed(() => {
+  const list = contacts.data || []
+  return props.hidePrimary ? list.filter((c) => !c.is_primary) : list
 })
 watch(
   () => props.deal,
