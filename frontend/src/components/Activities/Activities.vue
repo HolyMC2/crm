@@ -51,11 +51,24 @@
             <span class="ml-1 font-mono text-[10px] opacity-60">{{ c.phone_display }}</span>
           </button>
         </div>
-        <!-- No WhatsApp on this number yet: no WhatsApp Profile and no prior
-             messages (backend has_whatsapp). Only when explicitly false, so it
-             never flashes while the contact list is still loading. -->
+        <!-- WhatsApp presence (whatsapp_state from get_deal_whatsapp_contacts):
+             'no'  = operator unchecked "Es WhatsApp" on the deal/lead and there's
+                     no exchange → definitive red notice.
+             'unknown' = never contacted and no operator flag (pre-migration) → amber
+                     nudge. 'yes' = no banner. Guarded so it never flashes while the
+             contact list is still loading. -->
         <div
-          v-if="activeWhatsappContact && activeWhatsappContact.has_whatsapp === false"
+          v-if="waBannerState === 'no'"
+          class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-red-200 bg-surface-red-1 px-3 py-2 dark:border-red-900/40 sm:mx-10"
+        >
+          <FeatherIcon name="slash" class="mt-0.5 size-4 shrink-0 text-ink-red-3" />
+          <div class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6">
+            <span class="font-semibold text-ink-red-3">{{ __('Este número no tiene WhatsApp.') }}</span>
+            {{ __('Marcado como sin WhatsApp al crear el trato.') }}
+          </div>
+        </div>
+        <div
+          v-else-if="waBannerState === 'unknown'"
           class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40 sm:mx-10"
         >
           <FeatherIcon name="alert-triangle" class="mt-0.5 size-4 shrink-0 text-ink-amber-3" />
@@ -622,6 +635,16 @@ const activeWhatsappContactIdx = ref(0)
 const activeWhatsappContact = computed(() => {
   const list = whatsappContacts.data || []
   return list[activeWhatsappContactIdx.value] || list[0] || null
+})
+
+// WhatsApp-presence banner: 'no' (operator marked not-WhatsApp) | 'unknown' (never
+// contacted, no flag) | null (on WhatsApp → no banner). Uses the backend
+// whatsapp_state, falling back to the legacy has_whatsapp boolean if absent.
+const waBannerState = computed(() => {
+  const c = activeWhatsappContact.value
+  if (!c) return null
+  if (c.whatsapp_state) return c.whatsapp_state === 'yes' ? null : c.whatsapp_state
+  return c.has_whatsapp === false ? 'unknown' : null
 })
 
 // Filter messages to the active Contact's phone (compare normalized digits).

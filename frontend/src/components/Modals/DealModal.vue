@@ -56,6 +56,19 @@
             doctype="CRM Deal"
           />
 
+          <!-- Doco: mark whether the customer's phone is on WhatsApp, so the inbox
+               knows up front (drives the conversation banner). Defaults to on. -->
+          <label class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7">
+            <input
+              v-model="deal.doc.mobile_is_whatsapp"
+              type="checkbox"
+              :true-value="1"
+              :false-value="0"
+              class="h-4 w-4 rounded border-outline-gray-3 text-green-600 focus:ring-0"
+            />
+            {{ __('El teléfono tiene WhatsApp') }}
+          </label>
+
           <!--
             Doco customization: inline Repair Order creation.
             All form fields, IMEI creation, and item-group filtering live in
@@ -440,6 +453,7 @@ function openQuickEntryModal() {
 
 onMounted(() => {
   deal.doc.no_of_employees = '1-10'
+  if (deal.doc.mobile_is_whatsapp == null) deal.doc.mobile_is_whatsapp = 1
   Object.assign(deal.doc, props.defaults)
 
   if (!deal.doc.deal_owner) {

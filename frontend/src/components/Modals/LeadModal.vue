@@ -27,6 +27,18 @@
         </div>
         <div>
           <FieldLayout v-if="tabs.data" :tabs="tabs.data" :data="lead.doc" />
+
+          <!-- Doco: mark whether the phone is on WhatsApp (inbox banner). Default on. -->
+          <label class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7">
+            <input
+              v-model="lead.doc.mobile_is_whatsapp"
+              type="checkbox"
+              :true-value="1"
+              :false-value="0"
+              class="h-4 w-4 rounded border-outline-gray-3 text-green-600 focus:ring-0"
+            />
+            {{ __('El teléfono tiene WhatsApp') }}
+          </label>
           <ErrorMessage v-if="error" class="mt-4" :message="__(error)" />
         </div>
       </div>
@@ -184,6 +196,7 @@ function openQuickEntryModal() {
 
 onMounted(() => {
   lead.doc.no_of_employees = '1-10'
+  if (lead.doc.mobile_is_whatsapp == null) lead.doc.mobile_is_whatsapp = 1
   Object.assign(lead.doc, props.defaults)
 
   if (!lead.doc?.lead_owner) {
