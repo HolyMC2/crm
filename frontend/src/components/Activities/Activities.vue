@@ -51,6 +51,19 @@
             <span class="ml-1 font-mono text-[10px] opacity-60">{{ c.phone_display }}</span>
           </button>
         </div>
+        <!-- No WhatsApp on this number yet: no WhatsApp Profile and no prior
+             messages (backend has_whatsapp). Only when explicitly false, so it
+             never flashes while the contact list is still loading. -->
+        <div
+          v-if="activeWhatsappContact && activeWhatsappContact.has_whatsapp === false"
+          class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40 sm:mx-10"
+        >
+          <FeatherIcon name="alert-triangle" class="mt-0.5 size-4 shrink-0 text-ink-amber-3" />
+          <div class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6">
+            <span class="font-semibold text-ink-gray-8 dark:text-ink-gray-7">{{ __('Sin WhatsApp para este número.') }}</span>
+            {{ __('No hay conversación de WhatsApp con este número todavía — inicia con una plantilla.') }}
+          </div>
+        </div>
         <WhatsAppArea
           v-model="whatsappMessages"
           v-model:reply="replyMessage"
