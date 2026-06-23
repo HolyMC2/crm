@@ -22,16 +22,16 @@
         </div>
         <div class="mt-0.5 flex items-center gap-2.5 text-[12px] text-ink-gray-6">
           <span v-if="row.device">🔧 {{ row.device }}</span>
-          <span v-if="row.device" style="color: #d7dae1">·</span>
+          <span v-if="row.device" class="text-ink-gray-4">·</span>
           <span v-if="row.mobile_no">{{ row.mobile_no }}</span>
           <template v-if="row.last_message_ts">
-            <span style="color: #d7dae1">·</span>
+            <span class="text-ink-gray-4">·</span>
             <span class="text-ink-gray-5">{{ __('último mensaje enviado') }} {{ timeAgo(row.last_message_ts) }}</span>
           </template>
           <span
             v-if="waWindow"
             class="rounded px-1.5 py-px text-[10.5px] font-semibold"
-            :style="waWindow.open ? 'color:#b9790a;background:#fdf6e9' : 'color:#e5484d;background:#fdecec'"
+            :class="waWindow.open ? 'bg-surface-amber-1 text-ink-amber-3' : 'bg-surface-red-1 text-ink-red-4'"
             :title="waWindow.open ? __('Ventana de 24h de WhatsApp abierta') : __('Ventana cerrada — solo plantillas')"
           >
             {{ waWindow.open ? `WA ${waWindow.hoursLeft}h` : __('WA cerrada') }}
@@ -41,11 +41,11 @@
       <div class="flex flex-none items-center gap-2.5">
         <div v-if="slaLabel" class="text-right">
           <div class="text-[10px] text-ink-gray-5">{{ __('1ª respuesta SLA') }}</div>
-          <div class="text-[13px] font-bold" :style="slaOverdue ? 'color:#e5484d' : 'color:#15803d'">
+          <div class="text-[13px] font-bold" :class="slaOverdue ? 'text-ink-red-4' : 'text-ink-green-3'">
             {{ slaLabel }}
           </div>
         </div>
-        <div class="h-[30px] w-px" style="background: #edeef1" />
+        <div class="h-[30px] w-px bg-outline-gray-2" />
         <Dropdown :options="stageOptions">
           <button
             class="flex items-center gap-1.5 rounded-lg border px-[11px] py-[7px] text-[12.5px] font-semibold"
@@ -69,17 +69,15 @@
     <!-- next action bar -->
     <div
       v-if="nextTask"
-      class="mt-[11px] flex items-center gap-2.5 rounded-[10px] border px-[13px] py-[9px]"
-      style="background: #fdf6e9; border-color: #f1dca6"
+      class="mt-[11px] flex items-center gap-2.5 rounded-[10px] border border-outline-amber-2 bg-surface-amber-1 px-[13px] py-[9px]"
     >
       <span
-        class="flex-none text-[9.5px] font-bold uppercase tracking-[.08em]"
-        style="color: #b9790a"
+        class="flex-none text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-amber-3"
       >
         ⏱ {{ __('Próxima acción') }}
       </span>
       <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{ nextTask.title }}</span>
-      <span v-if="nextTask.due" class="flex-none text-[11.5px]" style="color: #b08a3e">
+      <span v-if="nextTask.due" class="flex-none text-[11.5px] text-ink-amber-2">
         · {{ dueLabel }}
       </span>
       <div class="ml-auto flex flex-none gap-1.5">
@@ -91,7 +89,7 @@
           {{ __('Marcar hecho') }}
         </button>
         <button
-          class="rounded-[7px] border border-outline-gray-2 bg-surface-white px-[11px] py-1.5 text-[11.5px] font-medium text-ink-gray-7"
+          class="rounded-[7px] border border-outline-gray-2 bg-surface-white px-[11px] py-1.5 text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
           @click="reschedule"
         >
           {{ __('Reprogramar') }}

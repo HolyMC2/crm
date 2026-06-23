@@ -9,12 +9,12 @@
   <div class="flex min-w-0 flex-1 flex-col">
     <!-- header -->
     <div class="flex h-[60px] flex-none items-center gap-2.5 border-b border-outline-gray-1 px-4">
-      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
       <div>
         <div class="text-[15px] font-semibold text-ink-gray-9">{{ formatPhone(activeUnassigned) }}</div>
-        <div class="text-[11px] font-medium text-amber-700">{{ __('Sin asignar — captura y convierte') }}</div>
+        <div class="text-[11px] font-medium text-ink-amber-3">{{ __('Sin asignar — captura y convierte') }}</div>
       </div>
     </div>
 
@@ -54,7 +54,7 @@
       </div>
 
       <!-- capture form -->
-      <div class="scb flex w-[300px] flex-none flex-col overflow-y-auto px-3.5 py-3.5" style="background: #fcfcfd">
+      <div class="scb flex w-[300px] flex-none flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5">
         <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Datos') }}</div>
         <div class="grid grid-cols-2 gap-2">
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Nombre') }}</span>
@@ -124,7 +124,7 @@ const waModel = reactive({
 })
 
 const inputCls =
-  'w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 disabled:opacity-60'
+  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
 
 const busy = ref(false)
 const showFiscal = ref(false)

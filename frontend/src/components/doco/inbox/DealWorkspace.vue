@@ -12,11 +12,11 @@
         <button
           v-for="t in visibleTabs"
           :key="t.key"
-          class="flex h-11 items-center gap-1.5 px-[11px]"
-          :style="
+          class="flex h-11 items-center gap-1.5 border-b-2 px-[11px]"
+          :class="
             activeTab === t.key
-              ? 'color:#16a34a;font-weight:600;border-bottom:2px solid #16a34a'
-              : 'color:#5b6472;border-bottom:2px solid transparent'
+              ? 'border-outline-green-2 font-semibold text-ink-green-3'
+              : 'border-transparent text-ink-gray-5'
           "
           @click="activeTab = t.key"
         >

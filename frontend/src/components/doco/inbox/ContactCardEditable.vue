@@ -43,7 +43,7 @@
           v-model="form[f.field]"
           :type="f.type || 'text'"
           :disabled="!canWrite(f)"
-          class="w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 disabled:opacity-60"
+          class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60"
           @change="save(f.doctype, f.name, f.target, form[f.field])"
         />
       </label>
@@ -58,7 +58,7 @@
             v-model="form[f.field]"
             :type="f.type || 'text'"
             :disabled="!card.can_write"
-            class="w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 disabled:opacity-60"
+            class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60"
             @change="save(f.doctype, f.name, f.target, form[f.field])"
           />
         </label>

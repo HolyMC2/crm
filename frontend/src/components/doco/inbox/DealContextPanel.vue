@@ -3,7 +3,7 @@
   editable deal-field sidebar (SidePanelLayout) so no field is hidden. handoff §5.1.
 -->
 <template>
-  <div class="scb flex w-[320px] flex-none flex-col overflow-y-auto border-l border-outline-gray-1" style="background: #fcfcfd">
+  <div class="scb flex w-[320px] flex-none flex-col overflow-y-auto border-l border-outline-gray-1 bg-surface-white">
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Acciones') }}</div>
@@ -24,10 +24,10 @@
     <!-- score (doco-specific; not in the upstream sidepanel) -->
     <div v-if="grade" class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Score') }} · {{ name }}</div>
-      <div class="flex items-center gap-2.5 rounded-[9px] border p-2.5" style="background: #f8fffe; border-color: #c7ecd5">
+      <div class="flex items-center gap-2.5 rounded-[9px] border border-outline-gray-2 bg-surface-gray-2 p-2.5">
         <div class="relative h-11 w-11 flex-none">
           <svg viewBox="0 0 44 44" width="44" height="44" style="transform: rotate(-90deg)">
-            <circle cx="22" cy="22" r="18" fill="none" stroke="#f0f1f3" stroke-width="4" />
+            <circle cx="22" cy="22" r="18" fill="none" style="stroke: var(--outline-gray-2)" stroke-width="4" />
             <circle cx="22" cy="22" r="18" fill="none" :stroke="gradeColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="113.1" :stroke-dashoffset="dashOffset" />
           </svg>
           <div class="absolute inset-0 flex items-center justify-center text-[12px] font-extrabold" :style="`color:${gradeColor}`">{{ score }}</div>
@@ -35,7 +35,7 @@
         <div>
           <div class="flex items-center gap-1.5">
             <span class="text-[17px] font-extrabold" :style="`color:${gradeColor}`">{{ grade }}</span>
-            <span class="rounded px-1.5 py-px text-[10px] font-semibold" style="color: #15803d; background: #e9f7ef">{{ gradeWord }}</span>
+            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-3 bg-surface-green-2">{{ gradeWord }}</span>
           </div>
           <div v-if="probability" class="mt-0.5 text-[10px] text-ink-gray-5">{{ probability }}% {{ __('prob. conversión') }}</div>
         </div>

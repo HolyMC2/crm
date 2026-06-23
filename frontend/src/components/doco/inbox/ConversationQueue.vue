@@ -1,15 +1,14 @@
 <!-- Inbox left pane (286px): search + channel pills + conversation rows. handoff §5.1 -->
 <template>
   <div
-    class="flex w-[286px] flex-none flex-col border-r border-outline-gray-1"
-    style="background: #fcfcfd"
+    class="flex w-[286px] flex-none flex-col border-r border-outline-gray-1 bg-surface-white"
   >
     <div class="flex-none px-3.5 pb-2.5 pt-3.5">
       <div class="mb-3 flex items-center justify-between">
         <div class="text-[15px] font-bold text-ink-gray-9">{{ __('Mi bandeja') }}</div>
         <div class="flex items-center gap-2">
           <button
-            :style="soundEnabled ? 'color:#16a34a' : 'color:#9aa2ae'"
+            :class="soundEnabled ? 'text-ink-green-3' : 'text-ink-gray-4'"
             :title="soundEnabled ? __('Sonido de notificación activado') : __('Activar sonido de notificación')"
             :aria-label="__('Sonido de notificación')"
             @click="toggleSound"
@@ -18,8 +17,7 @@
             <LucideVolumeX v-else class="h-4 w-4" />
           </button>
           <span
-            class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-            style="color: #15803d; background: #e9f7ef"
+            class="rounded-full px-2 py-0.5 text-[11px] font-semibold text-ink-green-3 bg-surface-green-2"
           >
             {{ openCount }}
           </span>
@@ -55,10 +53,10 @@
       <div class="flex flex-wrap gap-1.5">
         <button
           class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-          :style="
+          :class="
             queueChannel === null
-              ? 'color:#fff;background:#1c2230'
-              : 'color:#5b6472;background:#f1f2f4'
+              ? 'bg-surface-gray-7 text-ink-white'
+              : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           @click="setQueueChannel(null)"
         >
@@ -68,10 +66,10 @@
           v-for="p in channelPills"
           :key="p.key"
           class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold"
-          :style="
+          :class="
             queueChannel === p.key
-              ? 'color:#fff;background:#1c2230'
-              : 'color:#5b6472;background:#f1f2f4'
+              ? 'bg-surface-gray-7 text-ink-white'
+              : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           @click="setQueueChannel(p.key)"
         >
@@ -86,23 +84,24 @@
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
       <div v-if="unassignedRows.length" class="mb-1.5">
-        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-3">
           ⚠ {{ __('Sin asignar') }}
-          <span class="rounded-full bg-amber-100 px-1.5 text-[10px] text-amber-700">{{ unassignedRows.length }}</span>
+          <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-3">{{ unassignedRows.length }}</span>
         </div>
         <button
           v-for="u in unassignedRows"
           :key="u.phone"
           class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
+          :class="activeUnassigned === u.phone ? 'bg-surface-amber-1' : ''"
           :style="
             activeUnassigned === u.phone
-              ? 'border-left:3px solid #f59e0b;background:#fff7ed'
+              ? 'border-left:3px solid #f59e0b'
               : 'border-left:3px solid #f59e0b66'
           "
           @click="selectUnassigned(u.phone)"
         >
           <div class="mb-1 flex items-center gap-2">
-            <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-amber-100 text-amber-700">
+            <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
               <LucideMessageCircleQuestion class="h-4 w-4" />
             </span>
             <div class="min-w-0 flex-1">
@@ -136,9 +135,10 @@
         v-for="r in rows"
         :key="(r.ref_doctype || 'CRM Deal') + ':' + r.name"
         class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
+        :class="activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal') ? 'bg-surface-green-2' : ''"
         :style="
           activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
-            ? 'border-left:3px solid #16a34a;background:#eef6f0'
+            ? 'border-left:3px solid #16a34a'
             : 'border-left:3px solid transparent'
         "
         @click="selectDeal(r.name, r.ref_doctype || 'CRM Deal')"
@@ -161,7 +161,7 @@
           <div class="flex flex-none flex-col items-end gap-1">
             <div
               class="text-[10px] font-semibold"
-              :style="r.sla_overdue ? 'color:#e5484d' : 'color:#8a93a1'"
+              :class="r.sla_overdue ? 'text-ink-red-4' : 'text-ink-gray-4'"
             >
               {{ timeAgo(r.last_message_ts) }}
             </div>
@@ -189,8 +189,7 @@
           <!-- Lead vs Trato (Deal) — leads now share the queue -->
           <span
             v-if="r.ref_doctype === 'CRM Lead'"
-            class="rounded px-1.5 py-px text-[9.5px] font-semibold"
-            style="color: #7c3aed; background: #f3e8ff"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-1 bg-surface-violet-1"
           >
             {{ __('Lead') }}
           </span>
@@ -201,8 +200,7 @@
             it is not a read receipt. -->
           <span
             v-if="r.unread"
-            class="inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[9.5px] font-semibold"
-            style="color: #b45309; background: #fef3c7"
+            class="inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-3 bg-surface-amber-1"
             :title="__('El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes.')"
           >
             ↩ {{ __('Responder') }}
@@ -216,8 +214,7 @@
           </span>
           <span
             v-if="r.sla_overdue"
-            class="rounded px-1.5 py-px text-[9.5px] font-semibold"
-            style="color: #e5484d; background: #fdecec"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-red-4 bg-surface-red-1"
           >
             {{ __('SLA vencido') }}
           </span>

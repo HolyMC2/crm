@@ -28,7 +28,7 @@
     <div
       v-for="c in visibleContacts"
       :key="c.name"
-      class="mb-2 rounded-lg border border-outline-gray-1 bg-surface-white p-2.5 last:mb-0"
+      class="mb-2 rounded-lg border border-outline-gray-1 bg-surface-gray-2 p-2.5 last:mb-0"
     >
       <div class="flex items-center gap-2">
         <Avatar :label="c.full_name" :image="c.image" size="md" />
