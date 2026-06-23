@@ -18,8 +18,43 @@
       </button>
     </div>
 
-    <!-- editable contact/customer card (name/phone/email + fiscal) -->
+    <!-- compact contact card (name/phone/email + edit popup) -->
     <ContactCardEditable />
+
+    <!-- deal summary: read-only key facts of the trato -->
+    <div v-if="isDeal" class="flex-none border-b border-outline-gray-1 p-3.5">
+      <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Resumen del trato') }}</div>
+      <div class="flex flex-col gap-1.5 text-[12px]">
+        <div class="flex items-center justify-between gap-2">
+          <span class="flex-none text-ink-gray-5">{{ __('ID') }}</span>
+          <span class="truncate font-mono text-ink-gray-8">{{ dealSummary.id }}</span>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
+          <span class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-gray-7">{{ dealSummary.status || '—' }}</span>
+        </div>
+        <div v-if="dealSummary.device" class="flex items-center justify-between gap-2">
+          <span class="flex-none text-ink-gray-5">{{ __('Dispositivo') }}</span>
+          <span class="truncate text-ink-gray-8">{{ dealSummary.device }}</span>
+        </div>
+        <div v-if="dealSummary.orders" class="flex items-center justify-between gap-2">
+          <span class="flex-none text-ink-gray-5">{{ __('Órdenes de reparación') }}</span>
+          <span class="font-semibold text-ink-gray-8">{{ dealSummary.orders }}</span>
+        </div>
+        <div v-if="dealSummary.value" class="flex items-center justify-between gap-2">
+          <span class="flex-none text-ink-gray-5">{{ __('Valor') }}</span>
+          <span class="font-semibold text-ink-gray-9">{{ dealSummary.value }}</span>
+        </div>
+        <div v-if="dealSummary.source" class="flex items-center justify-between gap-2">
+          <span class="flex-none text-ink-gray-5">{{ __('Origen') }}</span>
+          <span class="truncate text-ink-gray-8">{{ dealSummary.source }}</span>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <span class="flex-none text-ink-gray-5">{{ __('Creado') }}</span>
+          <span class="text-ink-gray-8">{{ dealSummary.created }}</span>
+        </div>
+      </div>
+    </div>
 
     <!-- score (doco-specific; not in the upstream sidepanel) -->
     <div v-if="grade" class="flex-none border-b border-outline-gray-1 p-3.5">
@@ -50,22 +85,31 @@
          and drop contacts_section from the field layout below to avoid a blank) -->
     <DealContactsSection v-if="activeDeal && isDeal" :deal="activeDeal" :hide-primary="true" />
 
-    <!-- full editable record fields (upstream — nothing hidden), per doctype -->
-    <div class="min-h-0 flex-1">
-      <SidePanelLayout
-        v-if="dealSections.length"
-        :key="activeDealDoctype + ':' + activeDeal"
-        :sections="dealSections"
-        :doctype="activeDealDoctype"
-        :docname="activeDeal"
-        @reload="sections.reload"
-      />
+    <!-- full editable record fields (upstream — nothing hidden), collapsed by
+         default so the panel stays compact; expand for the complete field set -->
+    <div v-if="dealSections.length" class="flex-none border-b border-outline-gray-1">
+      <button
+        class="flex w-full items-center justify-between px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4 hover:bg-surface-gray-2"
+        @click="showAllFields = !showAllFields"
+      >
+        {{ __('Todos los campos') }}
+        <span class="text-ink-gray-5">{{ showAllFields ? '▾' : '▸' }}</span>
+      </button>
+      <div v-show="showAllFields">
+        <SidePanelLayout
+          :key="activeDealDoctype + ':' + activeDeal"
+          :sections="dealSections"
+          :doctype="activeDealDoctype"
+          :docname="activeDeal"
+          @reload="sections.reload"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { createResource } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
@@ -93,7 +137,7 @@ watch(
       filters: d,
       fieldname: JSON.stringify(
         isD
-          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability']
+          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability', 'creation', 'repair_device', 'repair_orders_count', 'deal_value', 'source']
           : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
       ),
     })
@@ -138,6 +182,30 @@ const dealSections = computed(() =>
 
 // conversion probability for the Score card (from the deal fetch above)
 const probability = computed(() => dealRes.data?.probability)
+
+// ── deal summary (read-only key facts) + collapsible full-field editor ──────────
+const showAllFields = ref(false)
+function fmtDate(ts) {
+  if (!ts) return '—'
+  const d = new Date(String(ts).replace(' ', 'T'))
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
+}
+function money(v) {
+  const n = Number(v)
+  return n ? n.toLocaleString(undefined, { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }) : null
+}
+const dealSummary = computed(() => {
+  const m = dealRes.data || {}
+  return {
+    id: activeDeal.value,
+    status: row.value.status,
+    device: m.repair_device || row.value.device,
+    orders: m.repair_orders_count,
+    value: money(m.deal_value),
+    source: m.source,
+    created: fmtDate(m.creation),
+  }
+})
 
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)

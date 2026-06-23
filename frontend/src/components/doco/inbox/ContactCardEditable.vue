@@ -1,82 +1,93 @@
 <!--
-  Editable contact/customer card for the inbox right pane — the single identity
-  view for the active deal/lead. Name/phone/email/org/device plus the linked
-  Customer's fiscal fields (RFC, razón social, cumpleaños, dirección), each
-  inline-editable, saving straight to the doc the resolver named via
-  frappe.client.set_value (composable saveContactField). Nombre/Apellido persist to
-  the linked Contact (card.name_record) — the canonical identity also shown in the
-  Contactos list — so this card and that list never drift into two half-broken
-  views. Resolver: doco_marketing.api.inbox.get_contact_card.
+  Compact contact/customer card for the inbox right pane. Shows the identity at a
+  glance (avatar + name + phone + email + device) and moves the full editable field
+  set — name/phone/email/org/device + the linked Customer's fiscal fields (RFC,
+  razón social, cumpleaños, dirección) — into an "Editar datos" popup so the panel
+  stays dense. Each field still live-saves to the exact doc the resolver named via
+  frappe.client.set_value (composable saveContactField); Nombre/Apellido persist to
+  the linked Contact (card.name_record), the canonical identity the Contactos list
+  also shows. Resolver: doco_marketing.api.inbox.get_contact_card.
 -->
 <template>
   <div v-if="card" class="flex-none border-b border-outline-gray-1 p-3.5">
     <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">
-      {{ __('Datos del cliente') }}
+      {{ __('Contacto') }}
     </div>
 
-    <!-- identity header: the contact this conversation belongs to (avatar + name +
-         open). Makes the card the one place the person is shown, so the Contactos
-         list below only carries any *additional* contacts. -->
-    <div v-if="card.contact" class="mb-2.5 flex items-center gap-2">
+    <!-- compact identity -->
+    <div class="flex items-start gap-2.5">
       <Avatar :label="card.contact_full_name || displayName" :image="card.contact_image" size="lg" />
       <div class="min-w-0 flex-1">
-        <div class="truncate text-[13px] font-semibold text-ink-gray-9">
-          {{ card.contact_full_name || displayName || __('Sin nombre') }}
+        <div class="flex items-center gap-1.5">
+          <span class="truncate text-[13.5px] font-semibold text-ink-gray-9">
+            {{ card.contact_full_name || displayName || __('Sin nombre') }}
+          </span>
+          <span v-if="card.customer" class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[9px] font-semibold text-ink-green-3">
+            {{ __('Cliente') }}
+          </span>
         </div>
-        <div v-if="card.mobile_no" class="truncate font-mono text-[11px] text-ink-gray-5">
-          {{ card.mobile_no }}
-        </div>
+        <a v-if="card.mobile_no" :href="`tel:${card.mobile_no}`" class="mt-0.5 block truncate font-mono text-[11.5px] text-ink-gray-6 hover:text-ink-gray-9">
+          ☎ {{ card.mobile_no }}
+        </a>
+        <div v-if="form.email" class="truncate text-[11.5px] text-ink-gray-6">✉ {{ form.email }}</div>
+        <div v-if="card.is_deal && form.device" class="truncate text-[11px] text-ink-gray-5">🔧 {{ form.device }}</div>
       </div>
-      <Button
-        variant="ghost"
-        icon="external-link"
-        class="!h-6 !w-6"
-        :tooltip="__('Ver contacto')"
-        @click="openContact"
-      />
+      <div class="flex flex-none flex-col gap-0.5">
+        <Button variant="ghost" icon="edit-2" class="!h-6 !w-6" :tooltip="__('Editar datos')" @click="editOpen = true" />
+        <Button v-if="card.contact" variant="ghost" icon="external-link" class="!h-6 !w-6" :tooltip="__('Ver contacto')" @click="openContact" />
+      </div>
     </div>
 
-    <div class="flex flex-col gap-1.5">
-      <label v-for="f in baseFields" :key="f.field" class="block">
-        <span class="text-[10px] font-medium text-ink-gray-5">{{ f.label }}</span>
-        <input
-          v-model="form[f.field]"
-          :type="f.type || 'text'"
-          :disabled="!canWrite(f)"
-          class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60"
-          @change="save(f.doctype, f.name, f.target, form[f.field])"
-        />
-      </label>
+    <!-- edit popup: all contact + fiscal fields, each live-saved on change -->
+    <Dialog v-model="editOpen" :options="{ title: __('Editar datos del cliente') }">
+      <template #body-content>
+        <div class="flex flex-col gap-2.5">
+          <label v-for="f in baseFields" :key="f.field" class="block">
+            <span class="text-[10.5px] font-medium text-ink-gray-5">{{ f.label }}</span>
+            <input
+              v-model="form[f.field]"
+              :type="f.type || 'text'"
+              :disabled="!canWrite(f)"
+              :class="inputCls"
+              @change="save(f.doctype, f.name, f.target, form[f.field])"
+            />
+          </label>
 
-      <template v-if="card.customer">
-        <div class="mt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
-          {{ __('Datos fiscales') }}
+          <template v-if="card.customer">
+            <div class="mt-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
+              {{ __('Datos fiscales') }}
+            </div>
+            <label v-for="f in customerFields" :key="f.field" class="block">
+              <span class="text-[10.5px] font-medium text-ink-gray-5">{{ f.label }}</span>
+              <input
+                v-model="form[f.field]"
+                :type="f.type || 'text'"
+                :disabled="!card.can_write"
+                :class="inputCls"
+                @change="save(f.doctype, f.name, f.target, form[f.field])"
+              />
+            </label>
+          </template>
+          <div v-else class="mt-1 text-[10.5px] leading-snug text-ink-gray-5">
+            {{ __('Crea un Cliente (desde Sin asignar) para capturar RFC, dirección y cumpleaños.') }}
+          </div>
         </div>
-        <label v-for="f in customerFields" :key="f.field" class="block">
-          <span class="text-[10px] font-medium text-ink-gray-5">{{ f.label }}</span>
-          <input
-            v-model="form[f.field]"
-            :type="f.type || 'text'"
-            :disabled="!card.can_write"
-            class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60"
-            @change="save(f.doctype, f.name, f.target, form[f.field])"
-          />
-        </label>
       </template>
-      <div v-else class="mt-1 text-[10.5px] leading-snug text-ink-gray-5">
-        {{ __('Crea un Cliente (desde Sin asignar) para capturar RFC, dirección y cumpleaños.') }}
-      </div>
-    </div>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Avatar, Button } from 'frappe-ui'
+import { Avatar, Button, Dialog } from 'frappe-ui'
 import { contactCard, saveContactField } from '@/composables/inbox'
 
 const router = useRouter()
+const editOpen = ref(false)
+
+const inputCls =
+  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
 
 const card = computed(() => contactCard.data)
 const record = computed(() => card.value?.record || {})
