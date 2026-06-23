@@ -46,13 +46,10 @@
         class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
         :class="[
           isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
-          activeGroup === item.group ? '' : 'text-ink-gray-4 hover:bg-surface-gray-2',
-        ]"
-        :style="
           activeGroup === item.group
-            ? 'background:#eaf6ee;color:#16a34a'
-            : ''
-        "
+            ? 'bg-surface-green-2 text-ink-green-3'
+            : 'text-ink-gray-4 hover:bg-surface-gray-2',
+        ]"
         @click="go(item.to)"
       >
         <component :is="item.icon" class="h-[18px] w-[18px] flex-none" />
@@ -63,7 +60,7 @@
           v-if="item.badge && badgeFor(item.badge)"
           class="absolute h-[7px] w-[7px] rounded-full"
           :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
-          :style="`background:${item.badge === 'unread' ? '#e5484d' : '#d9930b'};border:1.5px solid #fbfcfc`"
+          :style="`background:${item.badge === 'unread' ? '#e5484d' : '#d9930b'};border:1.5px solid var(--surface-white)`"
         />
       </button>
     </Tooltip>
@@ -85,13 +82,10 @@
         class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
         :class="[
           isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
-          activeGroup === item.group ? '' : 'text-ink-gray-4 hover:bg-surface-gray-2',
-        ]"
-        :style="
           activeGroup === item.group
-            ? 'background:#eaf6ee;color:#16a34a'
-            : ''
-        "
+            ? 'bg-surface-green-2 text-ink-green-3'
+            : 'text-ink-gray-4 hover:bg-surface-gray-2',
+        ]"
         @click="go(item.to)"
       >
         <component :is="item.icon" class="h-[18px] w-[18px] flex-none" />
@@ -117,7 +111,7 @@
           v-if="unreadNotificationsCount"
           class="absolute h-[7px] w-[7px] rounded-full"
           :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
-          style="background: #e5484d; border: 1.5px solid #fbfcfc"
+          style="background: #e5484d; border: 1.5px solid var(--surface-white)"
         />
       </button>
     </Tooltip>
@@ -129,8 +123,7 @@
       @click="showProfile = !showProfile"
     >
       <span
-        class="flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold text-white"
-        style="background: #c98bdb"
+        class="flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold bg-surface-violet-1 text-ink-violet-1"
       >
         <img
           v-if="user.user_image"
@@ -176,8 +169,7 @@
         <div class="border-b border-outline-gray-1 p-4 pb-3">
           <div class="flex items-center gap-2.5">
             <div
-              class="flex h-[38px] w-[38px] flex-none items-center justify-center overflow-hidden rounded-full text-sm font-semibold text-white"
-              style="background: #c98bdb"
+              class="flex h-[38px] w-[38px] flex-none items-center justify-center overflow-hidden rounded-full text-sm font-semibold bg-surface-violet-1 text-ink-violet-1"
             >
               <img
                 v-if="user.user_image"
@@ -211,8 +203,7 @@
         <!-- sign out -->
         <div class="border-t border-outline-gray-1 py-1.5">
           <button
-            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] hover:bg-surface-red-1"
-            style="color: #e5484d"
+            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-red-4 hover:bg-surface-red-1"
             @click="signOut"
           >
             <LogOutIcon class="h-4 w-4" />

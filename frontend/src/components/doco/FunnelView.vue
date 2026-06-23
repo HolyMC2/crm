@@ -10,14 +10,14 @@
         <div class="w-[140px] flex-none truncate text-[12.5px] font-medium text-ink-gray-7">
           <span
             class="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
-            :style="`background:${g.color || '#9aa2ae'}`"
+            :style="`background:${g.color || 'var(--surface-gray-4)'}`"
           />
           {{ g.label }}
         </div>
         <div class="h-7 flex-1 overflow-hidden rounded-md bg-surface-gray-1">
           <div
             class="flex h-full items-center justify-end rounded-md px-2 text-[11px] font-semibold text-white transition-all"
-            :style="`width:${pct(g.value)}%;min-width:34px;background:${g.color || '#9aa2ae'}`"
+            :style="`width:${pct(g.value)}%;min-width:34px;background:${g.color || 'var(--surface-gray-4)'}`"
           >
             {{ countOf(g.value) }}
           </div>

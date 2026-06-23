@@ -8,15 +8,15 @@
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Campañas') }}</span>
-        <span class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6" style="background: #f1f2f4">
+        <span class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6">
           {{ rows.length }}
         </span>
-        <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
+        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
         <button
           v-for="t in typeTabs"
           :key="t.key"
           class="rounded-full px-3 py-[5px] text-[12px] font-semibold"
-          :style="typeFilter === t.key ? 'color:#fff;background:#1c2230' : 'color:#5b6472;background:#f1f2f4'"
+          :class="typeFilter === t.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
           @click="setType(t.key)"
         >
           {{ t.label }}
@@ -53,8 +53,8 @@
       <div
         v-for="c in rows"
         :key="c.name"
-        class="grid cursor-pointer items-center border-b px-5 hover:bg-surface-gray-1"
-        :style="`grid-template-columns:${GRID};min-height:54px;border-color:#f0f1f3`"
+        class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
+        :style="`grid-template-columns:${GRID};min-height:54px`"
         @click="$router.push(`/campaigns/${c.name}`)"
       >
         <div class="min-w-0">
@@ -62,10 +62,10 @@
           <div class="truncate text-[11px] text-ink-gray-4">{{ c.audience || c.name }}</div>
         </div>
         <div>
-          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :style="typeChip(c.type)">{{ typeLabel(c.type) }}</span>
+          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="typeChip(c.type)">{{ typeLabel(c.type) }}</span>
         </div>
         <div>
-          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :style="statusChip(c.status)">{{ c.status }}</span>
+          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(c.status)">{{ c.status }}</span>
         </div>
         <div class="text-[13px] font-semibold text-ink-gray-8">{{ c.enrolled_count || 0 }}</div>
         <div><Bar :pct="c.open_rate" color="#16a34a" /></div>
@@ -136,24 +136,29 @@ const TYPE_META = {
 function typeLabel(t) {
   return TYPE_META[t]?.[0] || t
 }
-function typeChip(t) {
-  const m = TYPE_META[t] || ['', '#5b6472', '#f1f2f4']
-  return `color:${m[1]};background:${m[2]}`
+// native subtle Badge pairings (theme-aware) — bound via :class
+const TYPE_CHIP = {
+  whatsapp: 'text-ink-green-3 bg-surface-green-2',
+  email: 'text-ink-blue-2 bg-surface-blue-1',
+  sms: 'text-ink-violet-1 bg-surface-violet-1',
+  automation: 'text-ink-amber-3 bg-surface-amber-1',
 }
-const STATUS_META = {
-  Active: ['#15803d', '#e9f7ef'],
-  Paused: ['#b9790a', '#fdf6e9'],
-  Draft: ['#5b6472', '#f1f2f4'],
-  Completed: ['#2f6fed', '#eaf1fe'],
+function typeChip(t) {
+  return TYPE_CHIP[t] || 'text-ink-gray-6 bg-surface-gray-2'
+}
+const STATUS_CHIP = {
+  Active: 'text-ink-green-3 bg-surface-green-2',
+  Paused: 'text-ink-amber-3 bg-surface-amber-1',
+  Draft: 'text-ink-gray-6 bg-surface-gray-2',
+  Completed: 'text-ink-blue-2 bg-surface-blue-1',
 }
 function statusChip(s) {
-  const m = STATUS_META[s] || ['#5b6472', '#f1f2f4']
-  return `color:${m[0]};background:${m[1]}`
+  return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 
 const Bar = (props) =>
   h('div', { class: 'flex items-center gap-1.5' }, [
-    h('div', { class: 'h-1.5 rounded-sm', style: 'width:54px;background:#f0f1f3' }, [
+    h('div', { class: 'h-1.5 rounded-sm bg-surface-gray-3', style: 'width:54px' }, [
       h('div', { class: 'h-full rounded-sm', style: `width:${Math.min(100, props.pct || 0)}%;background:${props.color}` }),
     ]),
     h('span', { class: 'text-[11px] text-ink-gray-5' }, `${props.pct || 0}%`),

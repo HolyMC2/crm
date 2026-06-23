@@ -18,11 +18,11 @@
       <div class="flex-1 px-5 py-4">
         <!-- outcome + quality -->
         <div class="mb-4 flex items-center gap-3">
-          <span class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold" :style="outcomeChip(d.status)">{{ d.status || '—' }}</span>
+          <span class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold" :class="outcomeChip(d.status)">{{ d.status || '—' }}</span>
           <div v-if="d.call_quality_score != null" class="ml-auto flex items-center gap-2">
             <div class="relative h-10 w-10">
               <svg viewBox="0 0 40 40" width="40" height="40" style="transform: rotate(-90deg)">
-                <circle cx="20" cy="20" r="16" fill="none" stroke="#f0f1f3" stroke-width="4" />
+                <circle cx="20" cy="20" r="16" fill="none" style="stroke: var(--outline-gray-2)" stroke-width="4" />
                 <circle cx="20" cy="20" r="16" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round" stroke-dasharray="100.5" :stroke-dashoffset="qualityOffset" />
               </svg>
               <div class="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-ink-gray-9">{{ d.call_quality_score }}</div>
@@ -38,8 +38,8 @@
         </div>
 
         <!-- AI summary -->
-        <div v-if="d.ai_summary" class="mb-4 rounded-[10px] border-l-[3px] p-3" style="background: #e9f7ef; border-color: #16a34a">
-          <div class="mb-1 text-[11px] font-semibold uppercase tracking-[.07em]" style="color: #15803d">{{ __('Resumen IA') }}</div>
+        <div v-if="d.ai_summary" class="mb-4 rounded-[10px] border-l-[3px] bg-surface-green-2 p-3" style="border-color: var(--outline-green-2)">
+          <div class="mb-1 text-[11px] font-semibold uppercase tracking-[.07em] text-ink-green-3">{{ __('Resumen IA') }}</div>
           <div class="text-[12.5px] leading-relaxed text-ink-gray-8">{{ d.ai_summary }}</div>
         </div>
         <button
@@ -70,7 +70,7 @@
           v-model="note"
           rows="3"
           :placeholder="__('Notas de la llamada…')"
-          class="w-full resize-none rounded-[10px] border border-outline-gray-2 p-3 text-[12.5px] focus:outline-none focus:ring-0"
+          class="w-full resize-none rounded-[10px] border border-outline-gray-2 bg-surface-gray-2 p-3 text-[12.5px] text-ink-gray-9 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none focus:ring-0"
         />
         <div class="mt-2 flex gap-2">
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7" :disabled="saving" @click="saveNote">
@@ -113,9 +113,9 @@ function fmtDur(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 function outcomeChip(status) {
-  if (status === 'Completed') return 'color:#15803d;background:#e9f7ef'
-  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'color:#e5484d;background:#fdecec'
-  return 'color:#5b6472;background:#f1f2f4'
+  if (status === 'Completed') return 'text-ink-green-3 bg-surface-green-2'
+  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-4 bg-surface-red-1'
+  return 'text-ink-gray-6 bg-surface-gray-2'
 }
 
 const saving = ref(false)

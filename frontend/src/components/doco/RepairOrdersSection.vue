@@ -118,37 +118,37 @@
             <div class="flex flex-wrap gap-1.5">
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="ro.turns_on ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'"
+                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-red-1 text-ink-red-4'"
               >
                 {{ ro.turns_on ? __('Turns on ✓') : __('Does not turn on ✗') }}
               </span>
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="ro.has_sim_tray ? 'bg-green-100 text-green-700' : 'bg-surface-gray-2 text-ink-gray-5'"
+                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-gray-2 text-ink-gray-5'"
               >
                 {{ ro.has_sim_tray ? __('SIM tray ✓') : __('No SIM tray') }}
               </span>
               <span
                 v-if="ro.has_phone_case"
-                class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
+                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs font-medium text-ink-blue-2"
               >
                 {{ __('Case ✓') }}
               </span>
               <span
                 v-if="ro.broken_screen"
-                class="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs font-medium text-ink-amber-3"
               >
                 {{ __('Broken screen ⚠') }}
               </span>
               <span
                 v-if="ro.is_wet"
-                class="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs font-medium text-ink-amber-3"
               >
                 {{ __('Wet ⚠') }}
               </span>
               <span
                 v-if="ro.is_warranty_claim"
-                class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700"
+                class="inline-flex items-center rounded-full bg-surface-violet-1 px-2 py-0.5 text-xs font-medium text-ink-violet-1"
               >
                 {{ __('Warranty claim') }}
               </span>

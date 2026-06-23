@@ -19,7 +19,7 @@
           v-for="t in tabs"
           :key="t.key"
           class="rounded-full px-3 py-1 text-[11.5px] font-semibold"
-          :style="tab === t.key ? 'color:#fff;background:#1c2230' : 'color:#5b6472;background:#f1f2f4'"
+          :class="tab === t.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
           @click="tab = t.key"
         >
           {{ t.label }}
@@ -55,12 +55,12 @@
       <div
         v-for="r in rows"
         :key="r.name"
-        class="grid cursor-pointer items-center border-b px-5 hover:bg-surface-gray-1"
-        :style="`grid-template-columns:${GRID};min-height:50px;border-color:#f0f1f3`"
+        class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
+        :style="`grid-template-columns:${GRID};min-height:50px`"
         @click="openCall(r.name)"
       >
         <div>
-          <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold" :style="dirChip(r)">
+          <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold" :class="dirChip(r)">
             {{ r.type === 'Outgoing' ? '↑ Out' : '↓ In' }}
           </span>
         </div>
@@ -71,7 +71,7 @@
         <div class="text-[12px] text-ink-gray-5">{{ timeAgo(r.start_time) }}</div>
         <div class="text-[12px] font-medium text-ink-gray-7">{{ fmtDur(r.duration) }}</div>
         <div>
-          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :style="outcomeChip(r.status)">{{ r.status || '—' }}</span>
+          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="outcomeChip(r.status)">{{ r.status || '—' }}</span>
         </div>
         <button class="text-[14px] text-ink-gray-4" @click.stop="openCall(r.name)">›</button>
       </div>
@@ -141,13 +141,13 @@ function fmtDur(s) {
   return `${m}:${String(s % 60).padStart(2, '0')}`
 }
 function dirChip(r) {
-  if (MISSED.includes(r.status)) return 'color:#e5484d;background:#fdecec'
-  return r.type === 'Outgoing' ? 'color:#15803d;background:#e9f7ef' : 'color:#2f6fed;background:#eaf1fe'
+  if (MISSED.includes(r.status)) return 'text-ink-red-4 bg-surface-red-1'
+  return r.type === 'Outgoing' ? 'text-ink-green-3 bg-surface-green-2' : 'text-ink-blue-2 bg-surface-blue-1'
 }
 function outcomeChip(status) {
-  if (status === 'Completed') return 'color:#15803d;background:#e9f7ef'
-  if (MISSED.includes(status)) return 'color:#e5484d;background:#fdecec'
-  return 'color:#5b6472;background:#f1f2f4'
+  if (status === 'Completed') return 'text-ink-green-3 bg-surface-green-2'
+  if (MISSED.includes(status)) return 'text-ink-red-4 bg-surface-red-1'
+  return 'text-ink-gray-6 bg-surface-gray-2'
 }
 function openCall(name) {
   selectedCall.value = name
@@ -156,7 +156,7 @@ function openCall(name) {
 const Stat = (props) =>
   h('div', {}, [
     h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
-    h('div', { class: 'text-[18px] font-bold', style: `color:${props.color || '#1c2230'}` }, String(props.value)),
+    h('div', { class: 'text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'), style: props.color ? `color:${props.color}` : undefined }, String(props.value)),
   ])
 Stat.props = ['label', 'value', 'color']
 </script>

@@ -11,18 +11,17 @@
       v-for="g in groups"
       :key="g.value"
       class="flex w-[260px] flex-none flex-col rounded-lg bg-surface-gray-1"
-      :class="dragOver === g.value ? 'ring-2 ring-green-400' : ''"
+      :class="dragOver === g.value ? 'ring-2 ring-outline-green-2' : ''"
       @dragover.prevent="dragOver = g.value"
       @dragleave="dragOver = null"
       @drop="onDrop(g.value)"
     >
       <div class="flex items-center justify-between px-3 py-2.5">
         <div class="flex items-center gap-2 text-[12.5px] font-semibold text-ink-gray-8">
-          <span class="h-2 w-2 rounded-full" :style="`background:${g.color || '#9aa2ae'}`" />
+          <span class="h-2 w-2 rounded-full" :style="`background:${g.color || 'var(--outline-gray-2)'}`" />
           {{ g.label }}
           <span
-            class="rounded-full px-1.5 text-[11px] font-medium text-ink-gray-5"
-            style="background: #e4e7ec"
+            class="rounded-full bg-surface-gray-2 px-1.5 text-[11px] font-medium text-ink-gray-6"
           >
             {{ counts[g.value]?.count ?? colRows(g.value).length }}
           </span>

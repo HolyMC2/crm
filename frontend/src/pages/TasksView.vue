@@ -14,8 +14,7 @@
             v-for="(s, i) in scopes"
             :key="s.key"
             class="px-[11px] py-[5px] text-[12px]"
-            :class="i ? 'border-l border-outline-gray-2' : ''"
-            :style="scope === s.key ? 'background:#1c2230;color:#fff;font-weight:600' : 'background:#fff;color:#5b6472'"
+            :class="[i ? 'border-l border-outline-gray-2' : '', scope === s.key ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-white text-ink-gray-6']"
             @click="scope = s.key"
           >
             {{ s.label }}
@@ -33,7 +32,7 @@
         v-for="t in tabs"
         :key="t.key"
         class="rounded-full px-3 py-1 text-[11.5px] font-semibold"
-        :style="tabStyle(t)"
+        :class="tabStyle(t)"
         @click="tab = t.key"
       >
         {{ t.label }}
@@ -61,12 +60,13 @@
       <div
         v-for="t in rows"
         :key="t.name"
-        class="grid items-center border-b px-5"
-        :style="`grid-template-columns:${GRID};min-height:52px;${rowStyle(t)}`"
+        class="grid items-center border-b border-outline-gray-1 px-5"
+        :class="rowClass(t)"
+        :style="`grid-template-columns:${GRID};min-height:52px`"
       >
         <button
           class="flex h-5 w-5 flex-none items-center justify-center rounded-md border-[1.5px]"
-          :style="t.status === 'Done' ? 'background:#16a34a;border-color:#16a34a;color:#fff' : 'border-color:#cdd2da'"
+          :class="t.status === 'Done' ? 'bg-surface-green-3 border-outline-green-2 text-white' : 'border-outline-gray-3'"
           @click="toggleDone(t)"
         >
           <span v-if="t.status === 'Done'" class="text-[12px]">✓</span>
@@ -97,9 +97,9 @@
         </button>
         <span v-else class="text-[12px] text-ink-gray-4">—</span>
         <div>
-          <span v-if="t.priority" class="rounded-full px-2.5 py-[3px] text-[10.5px] font-semibold" :style="prioStyle(t.priority)">{{ t.priority }}</span>
+          <span v-if="t.priority" class="rounded-full px-2.5 py-[3px] text-[10.5px] font-semibold" :class="prioStyle(t.priority)">{{ t.priority }}</span>
         </div>
-        <div class="text-[12px]" :style="dueColor(t)">{{ t.due_date ? dueText(t.due_date) : '—' }}</div>
+        <div class="text-[12px]" :class="dueClass(t)">{{ t.due_date ? dueText(t.due_date) : '—' }}</div>
         <Dropdown :options="rowMenu(t)" @click.stop>
           <button class="text-[14px] text-ink-gray-4">···</button>
         </Dropdown>
@@ -183,28 +183,30 @@ function isOverdue(t) {
 function isToday(t) {
   return t.due_date && localDate(new Date(String(t.due_date).replace(' ', 'T'))) === localDate(new Date())
 }
-function rowStyle(t) {
-  if (isOverdue(t)) return 'border-left:3px solid #e5484d;background:#fffbfb;border-color:#f0f1f3'
-  if (isToday(t)) return 'border-left:3px solid #d9930b;background:#fffdf5;border-color:#f0f1f3'
-  return 'border-color:#f0f1f3'
+// Native-token class strings (theme-aware) — bound via :class, not :style.
+function rowClass(t) {
+  if (isOverdue(t)) return 'border-l-[3px] border-outline-red-2 bg-surface-red-1'
+  if (isToday(t)) return 'border-l-[3px] border-outline-amber-2 bg-surface-amber-1'
+  return ''
 }
-function dueColor(t) {
-  if (isOverdue(t)) return 'color:#e5484d;font-weight:600'
-  if (isToday(t)) return 'color:#b9790a;font-weight:600'
-  return 'color:#5b6472'
+function dueClass(t) {
+  if (isOverdue(t)) return 'text-ink-red-4 font-semibold'
+  if (isToday(t)) return 'text-ink-amber-3 font-semibold'
+  return 'text-ink-gray-6'
 }
 function dueText(d) {
   return new Date(String(d).replace(' ', 'T')).toLocaleDateString()
 }
 function prioStyle(p) {
   return (
-    { Urgent: 'color:#e5484d;background:#fdecec', High: 'color:#b9790a;background:#fdf6e9', Medium: 'color:#2563c9;background:#eaf1fe', Low: 'color:#5b6472;background:#f1f2f4' }[p] ||
-    'color:#5b6472;background:#f1f2f4'
+    { Urgent: 'text-ink-red-4 bg-surface-red-1', High: 'text-ink-amber-3 bg-surface-amber-1', Medium: 'text-ink-blue-2 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
+    'text-ink-gray-6 bg-surface-gray-2'
   )
 }
 function tabStyle(t) {
-  if (tab.value === t.key) return 'color:#fff;background:#1c2230'
-  return `color:${t.color || '#5b6472'};background:#f1f2f4`
+  if (tab.value === t.key) return 'bg-surface-gray-3 text-ink-gray-9'
+  const c = t.key === 'overdue' ? 'text-ink-red-4' : t.key === 'today' ? 'text-ink-amber-3' : 'text-ink-gray-6'
+  return `bg-surface-gray-2 ${c}`
 }
 
 // ── actions ───────────────────────────────────────────────────────────────────

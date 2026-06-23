@@ -9,23 +9,22 @@
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Leads') }}</span>
-        <span class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6" style="background: #f1f2f4">
+        <span class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6">
           {{ count }}
         </span>
-        <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
+        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
         <div class="flex overflow-hidden rounded-lg border border-outline-gray-2">
           <button
             v-for="(v, i) in views"
             :key="v.key"
             class="inline-flex items-center gap-1 px-[11px] py-[5px] text-[12px]"
-            :class="i ? 'border-l border-outline-gray-2' : ''"
-            :style="v.key === view ? 'background:#1c2230;color:#fff;font-weight:600' : 'background:#fff;color:#5b6472'"
+            :class="[i ? 'border-l border-outline-gray-2' : '', v.key === view ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-white text-ink-gray-6']"
             @click="selectView(v)"
           >
             {{ v.label }}
           </button>
         </div>
-        <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
+        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
         <FilterPopover :label="__('Stage')" :options="stageOptions" :selected="statusF" @update:selected="statusF = $event" />
         <FilterPopover :label="__('Score')" :options="scoreOptions" :selected="gradeF" @update:selected="gradeF = $event" />
         <FilterPopover :label="__('Source')" :options="sourceOptions" :selected="sourceF" @update:selected="sourceF = $event" />
@@ -67,8 +66,7 @@
       <span
         v-for="c in chips"
         :key="c.key"
-        class="inline-flex items-center gap-1.5 rounded-[7px] border px-2 py-1 text-[11.5px] font-medium"
-        style="color: #16a34a; background: #e9f7ef; border-color: #c7ecd5"
+        class="inline-flex items-center gap-1.5 rounded-[7px] border border-outline-green-2 bg-surface-green-2 px-2 py-1 text-[11.5px] font-medium text-ink-green-3"
       >
         {{ c.label }}
         <button class="text-[13px] leading-none" @click="removeChip(c)">×</button>
@@ -113,8 +111,8 @@
       <div
         v-for="r in rows"
         :key="r.name"
-        class="grid cursor-pointer items-center border-b px-5 hover:bg-surface-gray-1"
-        :style="`grid-template-columns:${GRID};min-height:50px;border-color:#f0f1f3`"
+        class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
+        :style="`grid-template-columns:${GRID};min-height:50px`"
         @click="openLead(r.name)"
       >
         <input type="checkbox" style="accent-color: #16a34a" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
@@ -141,7 +139,7 @@
               {{ r.score_grade }}
             </span>
           </div>
-          <div class="h-1 rounded-sm" style="width: 62px; background: #f0f1f3">
+          <div class="h-1 rounded-sm bg-surface-gray-3" style="width: 62px">
             <div class="h-full rounded-sm" :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`" />
           </div>
         </div>

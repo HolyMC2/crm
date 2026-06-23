@@ -13,7 +13,7 @@
           v-for="p in periods"
           :key="p.key"
           class="rounded-full px-3 py-1 text-[12px] font-medium"
-          :style="period === p.key ? 'color:#fff;background:#1c2230' : 'color:#5b6472;background:#f4f5f7'"
+          :class="period === p.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
           @click="setPeriod(p.key)"
         >
           {{ p.label }}
@@ -22,7 +22,7 @@
     </div>
 
     <div class="flex flex-col gap-4 p-5">
-      <div v-if="restricted" class="rounded-[10px] border px-4 py-2.5 text-[12.5px]" style="color: #b9790a; background: #fdf6e9; border-color: #f1dca6">
+      <div v-if="restricted" class="rounded-[10px] border border-outline-amber-2 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-3">
         {{ __('Algunas métricas (ingresos, atribución) requieren permiso de manager.') }}
       </div>
       <!-- KPI cards -->
@@ -42,7 +42,7 @@
               <span class="font-medium text-ink-gray-8">{{ s.stage }}</span>
               <span class="text-ink-gray-5">{{ s.count }} · {{ s.pct }}%</span>
             </div>
-            <div class="h-2 rounded-sm" style="background: #f0f1f3">
+            <div class="h-2 rounded-sm bg-surface-gray-3">
               <div class="h-full rounded-sm" :style="`width:${s.pct}%;background:#16a34a;opacity:.75`" />
             </div>
           </div>
@@ -52,7 +52,7 @@
         <Card :title="__('Distribución de score')">
           <div v-for="g in gradeBars" :key="g.grade" class="mb-2.5 flex items-center gap-3">
             <span class="w-4 text-[12.5px] font-bold" :style="`color:${g.color}`">{{ g.grade }}</span>
-            <div class="h-2 flex-1 rounded-sm" style="background: #f0f1f3">
+            <div class="h-2 flex-1 rounded-sm bg-surface-gray-3">
               <div class="h-full rounded-sm" :style="`width:${g.pct}%;background:${g.color}`" />
             </div>
             <span class="w-10 text-right text-[12px] text-ink-gray-6">{{ g.count }}</span>
@@ -70,7 +70,7 @@
           <div
             v-for="a in attribution"
             :key="a.campaign"
-            class="grid cursor-pointer items-center border-b border-outline-gray-1 py-2 text-[12.5px] hover:bg-surface-gray-1"
+            class="grid cursor-pointer items-center border-b border-outline-gray-1 py-2 text-[12.5px] hover:bg-surface-gray-2"
             :style="`grid-template-columns:${ATTR_GRID}`"
             @click="$router.push(`/campaigns/${a.campaign}`)"
           >
@@ -226,7 +226,7 @@ const KpiCard = (props) =>
     },
     [
       h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
-      h('div', { class: 'mt-1.5 text-[26px] font-extrabold', style: `color:${props.color || '#1c2230'}` }, String(props.value)),
+      h('div', { class: 'mt-1.5 text-[26px] font-extrabold ' + (props.color ? '' : 'text-ink-gray-9'), style: props.color ? `color:${props.color}` : undefined }, String(props.value)),
     ],
   )
 KpiCard.props = ['label', 'value', 'color', 'to']

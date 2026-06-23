@@ -9,7 +9,7 @@
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex items-center gap-2">
         <button class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9" @click="$router.push('/leads')">← {{ __('Leads') }}</button>
-        <span style="color: #d7dae1">/</span>
+        <span class="text-ink-gray-4">/</span>
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Reglas de Score') }}</span>
       </div>
       <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7" @click="runPreview">
@@ -58,7 +58,8 @@
         >
           <button
             class="flex h-5 w-9 flex-none items-center rounded-full px-0.5 transition"
-            :style="r.enabled ? 'background:#16a34a;justify-content:flex-end' : 'background:#cdd2da;justify-content:flex-start'"
+            :class="r.enabled ? 'bg-surface-green-3' : 'bg-surface-gray-4'"
+            :style="r.enabled ? 'justify-content:flex-end' : 'justify-content:flex-start'"
             @click="toggleRule(r)"
           >
             <span class="h-4 w-4 rounded-full bg-white" />
@@ -69,7 +70,7 @@
               <span class="font-medium">{{ r.field }}</span> {{ r.operator }} <span class="font-medium">{{ r.value }}</span>
             </div>
           </div>
-          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :style="r.points >= 0 ? 'color:#15803d;background:#e9f7ef' : 'color:#e5484d;background:#fdecec'">
+          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :class="r.points >= 0 ? 'text-ink-green-3 bg-surface-green-2' : 'text-ink-red-4 bg-surface-red-1'">
             {{ r.points >= 0 ? '+' : '' }}{{ r.points }}
           </span>
           <button class="flex-none text-[13px] text-ink-gray-4 hover:text-ink-red-4" @click="deleteRule(r)">✕</button>
@@ -81,7 +82,7 @@
         <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Distribución') }}</div>
         <div v-for="g in legend" :key="g.grade" class="mb-2 flex items-center gap-3">
           <span class="w-4 text-[12.5px] font-bold" :style="`color:${g.color}`">{{ g.grade }}</span>
-          <div class="h-2 flex-1 rounded-sm" style="background: #f0f1f3">
+          <div class="h-2 flex-1 rounded-sm bg-surface-gray-2">
             <div class="h-full rounded-sm" :style="`width:${distPct(g.grade)}%;background:${g.color}`" />
           </div>
           <span class="w-8 text-right text-[12px] text-ink-gray-6">{{ dist[g.grade] || 0 }}</span>

@@ -3,10 +3,10 @@
   <div class="relative inline-block">
     <button
       class="flex items-center gap-1 rounded-[7px] border px-[9px] py-1 text-[12px] font-medium"
-      :style="
+      :class="
         selected.length
-          ? 'color:#16a34a;background:#e9f7ef;border-color:#c7ecd5'
-          : 'color:#1c2230;background:#f4f5f7;border-color:#e4e7ec'
+          ? 'border-outline-green-2 bg-surface-green-2 text-ink-green-3'
+          : 'border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8'
       "
       @click="open = !open"
     >

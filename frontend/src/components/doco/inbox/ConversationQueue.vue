@@ -55,7 +55,7 @@
           class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
           :class="
             queueChannel === null
-              ? 'bg-surface-gray-7 text-ink-white'
+              ? 'bg-surface-green-2 text-ink-green-3'
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           @click="setQueueChannel(null)"
@@ -68,7 +68,7 @@
           class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold"
           :class="
             queueChannel === p.key
-              ? 'bg-surface-gray-7 text-ink-white'
+              ? 'bg-surface-green-2 text-ink-green-3'
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           @click="setQueueChannel(p.key)"

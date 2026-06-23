@@ -2,13 +2,15 @@
 // formatting used across Inbox, Leads, Campaigns, Calls, Reports. Extracted from
 // composables/inbox.js so non-inbox surfaces don't couple to inbox state.
 
+// [bg, text] as frappe-ui theme CSS vars so avatars stay subtle + legible in BOTH
+// light and dark (the old fixed pastels rendered as bright circles on the dark UI).
+// Inline `background:var(--surface-x);color:var(--text-ink-x)` resolves per theme.
 const AV_COLORS = [
-  ['#e6d4f2', '#7b3fa0'],
-  ['#cfe3ff', '#2f6fed'],
-  ['#ffe0ec', '#c12f6c'],
-  ['#d9f2e3', '#16a34a'],
-  ['#fde8c8', '#d97706'],
-  ['#dbeafe', '#1d4ed8'],
+  ['var(--surface-violet-1)', 'var(--text-ink-violet-1)'],
+  ['var(--surface-blue-1)', 'var(--text-ink-blue-2)'],
+  ['var(--surface-green-2)', 'var(--text-ink-green-3)'],
+  ['var(--surface-amber-1)', 'var(--text-ink-amber-3)'],
+  ['var(--surface-red-1)', 'var(--text-ink-red-4)'],
 ]
 export function avatarColor(s) {
   let h = 0

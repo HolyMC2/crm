@@ -10,7 +10,7 @@
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Webshop') }}</span>
         <span
           class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-          :style="kpis.connected ? 'color:#15803d;background:#e9f7ef' : 'color:#5b6472;background:#f1f2f4'"
+          :class="kpis.connected ? 'text-ink-green-3 bg-surface-green-2' : 'text-ink-gray-6 bg-surface-gray-2'"
         >
           {{ kpis.connected ? '✓ ' + __('Conectado') : __('Desconectado') }}
         </span>
@@ -68,7 +68,7 @@ async function sync() {
 const Kpi = (props) =>
   h('div', { class: 'rounded-[12px] border border-outline-gray-2 bg-surface-white p-4' }, [
     h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
-    h('div', { class: 'mt-1.5 text-[22px] font-extrabold', style: `color:${props.color || '#1c2230'}` }, String(props.value)),
+    h('div', { class: 'mt-1.5 text-[22px] font-extrabold ' + (props.color ? '' : 'text-ink-gray-9'), style: props.color ? `color:${props.color}` : undefined }, String(props.value)),
   ])
 Kpi.props = ['label', 'value', 'color']
 </script>

@@ -9,16 +9,16 @@
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex min-w-0 items-center gap-2">
         <button class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9" @click="$router.push('/campaigns')">← {{ __('Campañas') }}</button>
-        <span style="color: #d7dae1">/</span>
+        <span class="text-ink-gray-4">/</span>
         <input v-model="form.title" class="min-w-0 border-0 bg-transparent text-[15px] font-bold text-ink-gray-9 focus:outline-none focus:ring-0" :placeholder="__('Nombre de la campaña')" />
-        <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :style="statusChip(form.status)">{{ form.status }}</span>
+        <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(form.status)">{{ form.status }}</span>
       </div>
       <div class="flex items-center gap-2">
         <button v-if="dirty || saving" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: #16a34a" :disabled="saving" @click="save">
           {{ saving ? __('Guardando…') : __('Guardar') }}
         </button>
-        <button v-if="form.status === 'Active'" class="rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold" style="color: #b9790a; border-color: #f1dca6; background: #fdf6e9" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
-        <button v-else-if="form.status === 'Paused'" class="rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold" style="color: #15803d; border-color: #c7ecd5; background: #e9f7ef" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
+        <button v-if="form.status === 'Active'" class="rounded-lg border border-outline-amber-2 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-3" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
+        <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-2 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-3" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
         <button v-else-if="form.status === 'Draft'" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background: #16a34a" @click="activate">▶ {{ __('Activar') }}</button>
       </div>
     </div>
@@ -72,7 +72,7 @@
         <div v-for="(s, i) in form.steps" :key="i" class="mb-2 max-w-[520px]">
           <div class="rounded-[11px] border border-outline-gray-2 p-3">
             <div class="mb-2 flex items-center gap-2">
-              <span class="flex h-7 w-7 flex-none items-center justify-center rounded-lg text-[14px]" style="background: #f1f2f4">{{ stepGlyph(s.step_type) }}</span>
+              <span class="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-surface-gray-2 text-[14px]">{{ stepGlyph(s.step_type) }}</span>
               <select v-model="s.step_type" class="dm-input flex-1" @change="onTypeChange(s)">
                 <option value="send_whatsapp">{{ __('Enviar WhatsApp') }}</option>
                 <option value="send_email">{{ __('Enviar Email') }}</option>
@@ -115,7 +115,7 @@
               {{ s.sent || 0 }} {{ __('enviados') }} · {{ s.opened || 0 }} {{ __('abiertos') }} · {{ s.clicked || 0 }} {{ __('clics') }}
             </div>
           </div>
-          <div v-if="i < form.steps.length - 1" class="ml-[18px] h-3 w-px" style="background: #d7dae1" />
+          <div v-if="i < form.steps.length - 1" class="ml-[18px] h-3 w-px bg-outline-gray-2" />
         </div>
       </div>
 
@@ -132,7 +132,7 @@
             <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ who(e) }}</div>
             <div class="text-[11px] text-ink-gray-4">{{ __('Paso') }} {{ (e.current_step ?? 0) + 1 }} · {{ e.last_sent_at ? timeAgo(e.last_sent_at) : '—' }}</div>
           </div>
-          <span class="flex-none rounded px-2 py-[2px] text-[10.5px] font-semibold" :style="enrStatusChip(e.status)">{{ e.status }}</span>
+          <span class="flex-none rounded px-2 py-[2px] text-[10.5px] font-semibold" :class="enrStatusChip(e.status)">{{ e.status }}</span>
         </div>
       </div>
     </div>
@@ -266,14 +266,13 @@ const TYPE_META = { whatsapp: ['WhatsApp', '#16a34a', '#e9f7ef'], email: ['Email
 function typeLabel(t) {
   return TYPE_META[t]?.[0] || t
 }
-const STATUS_META = { Active: ['#15803d', '#e9f7ef'], Paused: ['#b9790a', '#fdf6e9'], Draft: ['#5b6472', '#f1f2f4'], Completed: ['#2f6fed', '#eaf1fe'] }
+const STATUS_CHIP = { Active: 'text-ink-green-3 bg-surface-green-2', Paused: 'text-ink-amber-3 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-2 bg-surface-blue-1' }
 function statusChip(s) {
-  const m = STATUS_META[s] || ['#5b6472', '#f1f2f4']
-  return `color:${m[0]};background:${m[1]}`
+  return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function enrStatusChip(s) {
-  const map = { Active: '#15803d;background:#e9f7ef', Completed: '#2f6fed;background:#eaf1fe', Suppressed: '#e5484d;background:#fdecec', Paused: '#b9790a;background:#fdf6e9' }
-  return `color:${map[s] || '#5b6472;background:#f1f2f4'}`
+  const map = { Active: 'text-ink-green-3 bg-surface-green-2', Completed: 'text-ink-blue-2 bg-surface-blue-1', Suppressed: 'text-ink-red-4 bg-surface-red-1', Paused: 'text-ink-amber-3 bg-surface-amber-1' }
+  return map[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 const STEP_GLYPH = { send_whatsapp: '💬', send_email: '✉', wait: '⏳', branch: '🔀', end: '⏹' }
 function stepGlyph(t) {
@@ -287,7 +286,7 @@ const Field = (props, { slots }) =>
   h('div', { class: 'flex flex-col gap-1' }, [h('span', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label), slots.default?.()])
 Field.props = ['label']
 const Metric = (props) =>
-  h('div', {}, [h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label), h('div', { class: 'text-[18px] font-bold', style: `color:${props.color || '#1c2230'}` }, String(props.value))])
+  h('div', {}, [h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label), h('div', { class: 'text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'), style: props.color ? `color:${props.color}` : undefined }, String(props.value))])
 Metric.props = ['label', 'value', 'color']
 </script>
 
@@ -297,11 +296,12 @@ Metric.props = ['label', 'value', 'color']
   border-radius: 8px;
   padding: 5px 9px;
   font-size: 12px;
-  background: #fff;
-  color: #1c2230;
+  background: var(--surface-gray-2);
+  color: var(--text-ink-gray-8);
 }
 .dm-input:focus {
   outline: none;
-  border-color: #16a34a;
+  background: var(--surface-white);
+  border-color: var(--outline-green-2);
 }
 </style>
