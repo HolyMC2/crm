@@ -252,16 +252,30 @@
                 {{ formatDate(whatsapp.creation, 'hh:mm a') }}
               </div>
             </Tooltip>
-            <div v-if="whatsapp.type == 'Outgoing'">
-              <CheckIcon
-                v-if="['sent', 'Success'].includes(whatsapp.status)"
-                class="size-4"
-              />
-              <DoubleCheckIcon
-                v-else-if="['read', 'delivered'].includes(whatsapp.status)"
-                class="size-4"
-                :class="{ 'text-ink-blue-2': whatsapp.status == 'read' }"
-              />
+            <!-- WhatsApp-style receipts: ✓ enviado · ✓✓ entregado · ✓✓ azul leído ·
+                 🕓 enviando. Tooltip names each so it's self-explanatory. -->
+            <div v-if="whatsapp.type == 'Outgoing'" class="flex items-end">
+              <Tooltip :text="waStatusLabel(whatsapp.status)">
+                <span class="inline-flex">
+                  <DoubleCheckIcon
+                    v-if="whatsapp.status == 'read'"
+                    class="size-4 text-ink-blue-2"
+                  />
+                  <DoubleCheckIcon
+                    v-else-if="whatsapp.status == 'delivered'"
+                    class="size-4"
+                  />
+                  <CheckIcon
+                    v-else-if="['sent', 'Success'].includes(whatsapp.status)"
+                    class="size-4"
+                  />
+                  <FeatherIcon
+                    v-else-if="whatsapp.status != 'failed'"
+                    name="clock"
+                    class="size-3 text-ink-gray-4"
+                  />
+                </span>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -337,6 +351,20 @@ const { capture } = useTelemetry()
 
 function openFileInAnotherTab(url) {
   window.open(url, '_blank')
+}
+
+// WhatsApp delivery-receipt label for the per-message tooltip. 'Success' is the
+// local post-send state before Meta's first 'sent' callback; both read as Enviado.
+function waStatusLabel(status) {
+  return (
+    {
+      read: __('Leído'),
+      delivered: __('Entregado'),
+      sent: __('Enviado'),
+      Success: __('Enviado'),
+      failed: __('No entregado'),
+    }[status] || __('Enviando…')
+  )
 }
 
 function formatWhatsAppMessage(message) {

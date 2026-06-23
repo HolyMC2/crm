@@ -752,10 +752,13 @@ function onWhatsappRealtime(data) {
 
 onBeforeUnmount(() => {
   $socket.off('whatsapp_message', onWhatsappRealtime)
+  $socket.off('whatsapp_status', onWhatsappRealtime)
 })
 
 onMounted(() => {
   $socket.on('whatsapp_message', onWhatsappRealtime)
+  // delivery-receipt updates (sent→delivered→read) so the ✓/✓✓ refresh live
+  $socket.on('whatsapp_status', onWhatsappRealtime)
 
   nextTick(() => {
     const hash = route.hash.slice(1) || null

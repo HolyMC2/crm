@@ -26,7 +26,7 @@
           <span v-if="row.mobile_no">{{ row.mobile_no }}</span>
           <template v-if="row.last_message_ts">
             <span style="color: #d7dae1">·</span>
-            <span class="text-ink-gray-5">{{ __('visto') }} {{ timeAgo(row.last_message_ts) }}</span>
+            <span class="text-ink-gray-5">{{ __('último mensaje enviado') }} {{ timeAgo(row.last_message_ts) }}</span>
           </template>
           <span
             v-if="waWindow"
