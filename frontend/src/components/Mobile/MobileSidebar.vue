@@ -98,54 +98,25 @@ import DealsIcon from '@/components/Icons/DealsIcon.vue'
 import ContactsIcon from '@/components/Icons/ContactsIcon.vue'
 import OrganizationsIcon from '@/components/Icons/OrganizationsIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
-import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import SidebarLink from '@/components/SidebarLink.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
+import { navItems, navItemsBottom } from '@/composables/navModel'
 import { computed, h } from 'vue'
 import { mobileSidebarOpened as sidebarOpened } from '@/composables/settings'
 
 const { getPinnedViews, getPublicViews } = viewsStore()
 
-const links = [
-  {
-    label: 'Leads',
-    icon: LeadsIcon,
-    to: 'Leads',
-  },
-  {
-    label: 'Deals',
-    icon: DealsIcon,
-    to: 'Deals',
-  },
-  {
-    label: 'Contacts',
-    icon: ContactsIcon,
-    to: 'Contacts',
-  },
-  {
-    label: 'Organizations',
-    icon: OrganizationsIcon,
-    to: 'Organizations',
-  },
-  {
-    label: 'Notes',
-    icon: NoteIcon,
-    to: 'Notes',
-  },
-  {
-    label: 'Tasks',
-    icon: TaskIcon,
-    to: 'Tasks',
-  },
-  {
-    label: 'Call Logs',
-    icon: PhoneIcon,
-    to: 'Call Logs',
-  },
-]
+// primary nav mirrors the desktop DocoNavRail via the shared model, so mobile gets
+// Inbox + the redesign surfaces (was a stale hardcoded list missing Inbox). `to` is a
+// path object → SidebarLink router.push({ path }) (a bare string is treated as a name).
+const links = [...navItems, ...navItemsBottom].map((i) => ({
+  label: i.label,
+  icon: i.icon,
+  to: { path: i.to },
+}))
 
 const allViews = computed(() => {
   let _views = [
