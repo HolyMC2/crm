@@ -11,6 +11,7 @@ export const activeDealDoctype = ref('CRM Deal') // 'CRM Deal' | 'CRM Lead' — 
 export const activeUnassigned = ref(null) // phone string when viewing a "Sin asignar" orphan thread
 export const activeChannel = ref('whatsapp') // send channel + bubble style
 export const activeTab = ref('conversation') // conversation|activity|repair
+export const convoTemplateOpen = ref(false) // macro -> open the WhatsApp template review modal in the convo
 export const composeMode = ref('reply') // reply|note|comment
 export const queueChannel = ref(null) // null = Todas
 export const queueSearch = ref('')

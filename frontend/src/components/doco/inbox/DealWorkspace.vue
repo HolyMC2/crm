@@ -28,7 +28,7 @@
            WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
            since DealHeader already identifies the contact (avoids the duplicate). -->
       <div v-if="activeTab === 'conversation'" class="doco-convo flex min-h-0 flex-1 flex-col">
-        <Activities :key="'wa-' + activeDeal" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="convoTabs" />
+        <Activities :key="'wa-' + activeDeal" v-model:showWhatsappTemplates="convoTemplateOpen" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="convoTabs" />
       </div>
 
       <!-- Actividad = full upstream Activities (timeline/emails/comments/calls/tasks/notes) -->
@@ -72,7 +72,7 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeDealDoctype, activeTab } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
 

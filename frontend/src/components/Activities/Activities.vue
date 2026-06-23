@@ -619,7 +619,9 @@ const all_activities = createResource({
   onSuccess: () => nextTick(() => scroll()),
 })
 
-const showWhatsappTemplates = ref(false)
+// exposed as a model so an external trigger (e.g. an inbox macro) can open the
+// WhatsApp template review; defaults to local false when no parent binds it.
+const showWhatsappTemplates = defineModel('showWhatsappTemplates', { type: Boolean, default: false })
 
 // Multi-Contact-per-Deal scoping: pull every Contact attached to the Deal/Lead
 // with their normalized mobile_no. Each Contact becomes one chat tab.

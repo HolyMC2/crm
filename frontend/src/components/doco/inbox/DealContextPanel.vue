@@ -6,16 +6,75 @@
   <div class="scb flex w-[320px] flex-none flex-col overflow-y-auto border-l border-outline-gray-1 bg-surface-white">
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
-      <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Acciones') }}</div>
+      <div class="mb-2.5 flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Acciones') }}</span>
+        <button class="text-[11px] text-ink-blue-link" @click="$router.push(isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`)">
+          {{ isDeal ? __('Abrir 360°') : __('Abrir Lead') }} →
+        </button>
+      </div>
       <button class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: #16a34a" @click="call">
         ☎ {{ __('Llamar') }}
       </button>
-      <button
-        class="mt-2 w-full text-[11px] text-ink-blue-link"
-        @click="$router.push(isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`)"
-      >
-        ⛶ {{ isDeal ? __('Abrir 360°') : __('Abrir Lead') }}
-      </button>
+
+      <template v-if="isDeal">
+        <!-- inline-editable deal controls -->
+        <div class="mt-3 flex flex-col gap-2 text-[12px]">
+          <div class="flex items-center justify-between gap-2">
+            <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
+            <Dropdown :options="statusOpts" placement="right">
+              <button class="flex items-center gap-1 rounded bg-surface-gray-2 px-2 py-1 text-[11.5px] font-semibold text-ink-gray-8 hover:bg-surface-gray-3">
+                {{ row.status || '—' }} ⌄
+              </button>
+            </Dropdown>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="flex-none text-ink-gray-5">{{ __('Asignado') }}</span>
+            <div class="flex items-center gap-1">
+              <span v-for="a in assignees" :key="a.name" class="group relative leading-none">
+                <Avatar :label="a.label" :image="a.image" size="sm" />
+                <button class="absolute -right-1 -top-1 hidden h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-4 group-hover:flex" :title="__('Quitar')" @click="removeAssignee(a.name)">×</button>
+              </span>
+              <Dropdown :options="userOpts" placement="right">
+                <button class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3">+</button>
+              </Dropdown>
+            </div>
+          </div>
+          <div class="flex items-start justify-between gap-2">
+            <span class="flex-none pt-1 text-ink-gray-5">{{ __('Etiquetas') }}</span>
+            <div class="flex flex-1 flex-wrap justify-end gap-1">
+              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-2">
+                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-4" @click="removeTag(t)">×</button>
+              </span>
+              <input
+                v-if="addingTag"
+                ref="tagInput"
+                v-model="newTag"
+                class="w-20 rounded border border-outline-gray-2 bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-8 focus:bg-surface-white focus:outline-none focus:ring-0"
+                :placeholder="__('etiqueta')"
+                @keyup.enter="addTag"
+                @blur="addTag"
+              />
+              <button v-else class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-5 hover:bg-surface-gray-3" @click="startAddTag">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- macros rápidas: one-click status flip + open the WhatsApp template to review -->
+        <div class="mt-3 border-t border-outline-gray-1 pt-2.5">
+          <div class="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Macros rápidas') }}</div>
+          <div class="flex flex-col gap-1">
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-3 hover:bg-surface-green-2" @click="macroListo">
+              → {{ __('Listo para entregar') }}
+            </button>
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2" @click="macroCompletado">
+              → {{ __('Marcar completado') }}
+            </button>
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-3 hover:bg-surface-amber-1" @click="macroPago">
+              → {{ __('Recordatorio de pago') }}<span v-if="dealSummary.balance" class="text-ink-gray-5"> · {{ dealSummary.balance }}</span>
+            </button>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- compact contact card (name/phone/email + edit popup) -->
@@ -109,13 +168,19 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { createResource } from 'frappe-ui'
+import { computed, ref, watch, nextTick } from 'vue'
+import { createResource, call as frappeCall, toast, Dropdown, Avatar } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
+import { statusesStore } from '@/stores/statuses'
+import { usersStore } from '@/stores/users'
+import { parseAssignees } from '@/utils'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
-import { activeDeal, activeDealDoctype, queue, GRADE_COLORS } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage } from '@/composables/inbox'
+
+const { dealStatuses } = statusesStore()
+const { crmUsers } = usersStore()
 
 const { makeCall } = globalStore()
 
@@ -137,7 +202,7 @@ watch(
       filters: d,
       fieldname: JSON.stringify(
         isD
-          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability', 'creation', 'repair_device', 'repair_orders_count', 'deal_value', 'source']
+          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability', 'creation', 'repair_device', 'repair_orders_count', 'deal_value', 'source', '_assign', '_user_tags']
           : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
       ),
     })
@@ -207,6 +272,10 @@ const dealValue = computed(() =>
     0,
   ) || null,
 )
+// outstanding saldo (what the customer still owes) — for the payment-reminder macro
+const dealBalance = computed(() =>
+  (repairOrders.data || []).reduce((s, ro) => s + (Number(ro.balance_due) || 0), 0) || null,
+)
 
 function fmtDate(ts) {
   if (!ts) return '—'
@@ -225,6 +294,7 @@ const dealSummary = computed(() => {
     device: m.repair_device || row.value.device,
     orders: m.repair_orders_count,
     value: money(dealValue.value),
+    balance: money(dealBalance.value),
     source: m.source,
     created: fmtDate(m.creation),
   }
@@ -232,5 +302,87 @@ const dealSummary = computed(() => {
 
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)
+}
+
+// ── Acciones: inline-editable Estado / Asignado / Etiquetas ─────────────────────
+const statusOpts = computed(() =>
+  (dealStatuses.data || []).map((s) => ({ label: s.name, onClick: () => changeStatus(s.name) })),
+)
+async function changeStatus(status) {
+  if (!activeDeal.value || status === row.value.status) return
+  await setStage(status)
+  dealRes.reload()
+}
+
+const assignees = computed(() => {
+  try {
+    return parseAssignees(JSON.parse(dealRes.data?._assign || '[]'))
+  } catch {
+    return []
+  }
+})
+const userOpts = computed(() =>
+  (crmUsers.value || []).map((u) => ({ label: u.full_name || u.name, onClick: () => assignUser(u.name) })),
+)
+async function assignUser(user) {
+  if (assignees.value.some((a) => a.name === user)) return
+  await frappeCall('frappe.desk.form.assign_to.add', {
+    doctype: activeDealDoctype.value,
+    name: activeDeal.value,
+    assign_to: [user],
+  })
+  dealRes.reload()
+}
+async function removeAssignee(user) {
+  await frappeCall('crm.api.doc.remove_assignments', {
+    doctype: activeDealDoctype.value,
+    name: activeDeal.value,
+    assignees: JSON.stringify([user]),
+  })
+  dealRes.reload()
+}
+
+const tags = computed(() =>
+  (dealRes.data?._user_tags || '').split(',').map((t) => t.trim()).filter(Boolean),
+)
+const addingTag = ref(false)
+const newTag = ref('')
+const tagInput = ref(null)
+function startAddTag() {
+  addingTag.value = true
+  nextTick(() => tagInput.value?.focus())
+}
+async function addTag() {
+  const t = newTag.value.trim()
+  newTag.value = ''
+  addingTag.value = false
+  if (!t || tags.value.includes(t)) return
+  await frappeCall('frappe.desk.doctype.tag.tag.add_tag', { tag: t, dt: activeDealDoctype.value, dn: activeDeal.value })
+  dealRes.reload()
+}
+async function removeTag(t) {
+  await frappeCall('frappe.desk.doctype.tag.tag.remove_tag', { tag: t, dt: activeDealDoctype.value, dn: activeDeal.value })
+  dealRes.reload()
+}
+
+// ── Macros rápidas: flip status + open the WhatsApp template to review ───────────
+function openTemplate() {
+  activeTab.value = 'conversation'
+  nextTick(() => {
+    convoTemplateOpen.value = true
+  })
+}
+async function macroListo() {
+  await changeStatus('Por Entregar')
+  openTemplate()
+  toast.success(__('Estado → Por Entregar. Revisa y envía la plantilla.'))
+}
+async function macroCompletado() {
+  await changeStatus('Completado')
+  toast.success(__('Trato marcado como completado.'))
+}
+function macroPago() {
+  openTemplate()
+  toast.info(__('Elige la plantilla de recordatorio de pago.'))
 }
 </script>
