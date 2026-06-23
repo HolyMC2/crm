@@ -6,9 +6,13 @@
 <template>
   <div class="flex min-w-0 flex-1 flex-col">
     <template v-if="activeDeal">
-      <DealHeader />
+      <!-- mobile: the thread scrolls inside the outer layout scroller, so pin the
+           header + tabs as one sticky block — back / open-context stay reachable
+           without scrolling to the top. `contents` keeps desktop layout untouched. -->
+      <div :class="isMobile ? 'sticky top-0 z-20 bg-surface-white' : 'contents'">
+        <DealHeader />
 
-      <div class="flex h-11 flex-none items-center gap-0.5 border-b border-outline-gray-1 px-3 text-[13px]">
+        <div class="flex h-11 flex-none items-center gap-0.5 border-b border-outline-gray-1 px-3 text-[13px]">
         <button
           v-for="t in visibleTabs"
           :key="t.key"
@@ -22,6 +26,7 @@
         >
           {{ t.label }}
         </button>
+        </div>
       </div>
 
       <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox). The doco
@@ -72,6 +77,7 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
+import { isMobile } from '@/composables/breakpoint'
 import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)

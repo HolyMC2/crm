@@ -7,8 +7,11 @@
 -->
 <template>
   <div class="flex min-w-0 flex-1 flex-col">
-    <!-- header -->
-    <div class="flex h-[60px] flex-none items-center gap-2.5 border-b border-outline-gray-1 px-4">
+    <!-- header (mobile: pinned so back stays reachable while scrolling the thread) -->
+    <div
+      class="flex h-[60px] flex-none items-center gap-2.5 border-b border-outline-gray-1 bg-surface-white px-4"
+      :class="isMobile ? 'sticky top-0 z-20' : ''"
+    >
       <button
         v-if="isMobile"
         class="-ml-1.5 flex h-9 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
