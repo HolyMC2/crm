@@ -48,8 +48,7 @@
         <div class="h-[30px] w-px bg-outline-gray-2" />
         <Dropdown :options="stageOptions">
           <button
-            class="flex items-center gap-1.5 rounded-lg border px-[11px] py-[7px] text-[12.5px] font-semibold"
-            :style="stageBtnStyle"
+            class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-[11px] py-[7px] text-[12.5px] font-semibold text-ink-gray-8"
           >
             <span class="h-2 w-2 rounded-full" :style="`background:${stageColor}`" />
             {{ row.status || __('Estado') }} ⌄
@@ -176,11 +175,6 @@ const stageColor = computed(() => {
   const s = isDeal.value ? getDealStatus(row.value.status) : getLeadStatus(row.value.status)
   return s?.color || '#9aa2ae'
 })
-const stageBtnStyle = computed(() => {
-  const c = stageColor.value
-  return `color:${c};background:${c}14;border-color:${c}40`
-})
-
 // stage dropdown — the right status set for the active doctype (Deal vs Lead)
 const stageOptions = computed(() => {
   const list = (isDeal.value ? dealStatusList : leadStatuses)?.data || []

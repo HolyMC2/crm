@@ -61,12 +61,6 @@
         :label="__('Send Template')"
         @click="showWhatsappTemplates = true"
       />
-      <Button
-        variant="solid"
-        :label="__('New Message')"
-        iconLeft="plus"
-        @click="whatsappBox.show()"
-      />
     </div>
     <Dropdown v-else :options="defaultActions" @click.stop>
       <template #default="{ open }">

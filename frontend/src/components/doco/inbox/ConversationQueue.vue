@@ -207,9 +207,9 @@
           </span>
           <span
             v-if="r.status"
-            class="rounded px-1.5 py-px text-[9.5px] font-semibold"
-            :style="statusChip(r.status)"
+            class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-7"
           >
+            <span class="h-1.5 w-1.5 flex-none rounded-full" :style="`background:${statusColor(r.status)}`" />
             {{ r.status }}
           </span>
           <span
@@ -297,9 +297,10 @@ function chColor(key) {
 function chLabel(key) {
   return key === 'whatsapp' ? 'WA' : key === 'messenger' ? 'Msgr' : key === 'instagram' ? 'IG' : CHANNEL_META[key]?.[0] || key
 }
-function statusChip(status) {
-  const s = getDealStatus(status)
-  const color = s?.color || '#5b6472'
-  return `color:${color};background:${color}1a` // 1a = ~10% alpha
+// status hue as a small dot only; the label rides a theme-aware ink color so it
+// stays readable in dark (the stored status .color can be a dark hex or a color
+// name like "black"/"gray" — using it as text rendered black-on-black in dark).
+function statusColor(status) {
+  return getDealStatus(status)?.color || '#9aa2ae'
 }
 </script>
