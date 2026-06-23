@@ -116,8 +116,7 @@
             </div>
           </div>
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
-            <span class="inline-flex flex-none items-center gap-1 font-semibold" style="color: #25d366">
-              <span class="h-1.5 w-1.5 rounded-full" style="background: #25d366" />
+            <span class="inline-flex flex-none items-center font-semibold" style="color: #25d366">
               WA
             </span>
             <span class="truncate">{{ u.last_message || '—' }}</span>
@@ -179,10 +178,9 @@
         <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
           <span
             v-if="r.last_channel"
-            class="inline-flex flex-none items-center gap-1 font-semibold"
+            class="inline-flex flex-none items-center font-semibold"
             :style="`color:${chColor(r.last_channel)}`"
           >
-            <span class="h-1.5 w-1.5 rounded-full" :style="`background:${chColor(r.last_channel)}`" />
             {{ chLabel(r.last_channel) }}
           </span>
           <span class="truncate">{{ r.last_message || '—' }}</span>
