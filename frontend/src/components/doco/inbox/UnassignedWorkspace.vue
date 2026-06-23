@@ -19,21 +19,37 @@
     </div>
 
     <div class="flex min-h-0 flex-1">
-      <!-- thread -->
-      <div class="scb flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto border-r border-outline-gray-1 px-4 py-4">
-        <div v-if="unassignedThread.loading && !messages.length" class="py-8 text-center text-xs text-ink-gray-4">
-          {{ __('Cargando…') }}
-        </div>
-        <div v-else-if="!messages.length" class="py-8 text-center text-xs text-ink-gray-4">{{ __('Sin mensajes') }}</div>
-        <div v-for="m in messages" :key="m.id" class="flex" :class="m.direction === 'out' ? 'justify-end' : 'justify-start'">
-          <div
-            class="max-w-[80%] rounded-lg px-3 py-1.5 text-sm shadow-sm"
-            :class="m.direction === 'out' ? 'bg-surface-green-2 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-9'"
-          >
-            <img v-if="m.content_type === 'image' && m.attach" :src="m.attach" class="mb-1 max-h-48 rounded-md" />
-            <div v-if="m.content" class="whitespace-pre-wrap break-words">{{ m.content }}</div>
-            <div class="mt-0.5 text-right text-[10px] text-ink-gray-4">{{ hhmm(m.timestamp) }}</div>
+      <!-- thread + reply bar -->
+      <div class="flex min-h-0 flex-1 flex-col border-r border-outline-gray-1">
+        <div class="scb flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
+          <div v-if="unassignedThread.loading && !messages.length" class="py-8 text-center text-xs text-ink-gray-4">
+            {{ __('Cargando…') }}
           </div>
+          <div v-else-if="!messages.length" class="py-8 text-center text-xs text-ink-gray-4">{{ __('Sin mensajes') }}</div>
+          <div v-for="m in messages" :key="m.id" class="flex" :class="m.direction === 'out' ? 'justify-end' : 'justify-start'">
+            <div
+              class="max-w-[80%] rounded-lg px-3 py-1.5 text-sm shadow-sm"
+              :class="m.direction === 'out' ? 'bg-surface-green-2 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-9'"
+            >
+              <img v-if="m.content_type === 'image' && m.attach" :src="m.attach" class="mb-1 max-h-48 rounded-md" />
+              <div v-if="m.content" class="whitespace-pre-wrap break-words">{{ m.content }}</div>
+              <div class="mt-0.5 text-right text-[10px] text-ink-gray-4">{{ hhmm(m.timestamp) }}</div>
+            </div>
+          </div>
+        </div>
+        <!-- reply bar: chat the unknown number BEFORE deciding lead/deal/wrong number.
+             Sends a reference-less WhatsApp message; it stays in this thread until
+             you convert, then assign_unassigned re-points every message to the new
+             record. replyOnly hides notes/comments/templates (no reference doc yet). -->
+        <div class="flex-none border-t border-outline-gray-1">
+          <WhatsAppBox
+            v-model="unassignedDoc"
+            v-model:whatsapp="waModel"
+            v-model:reply="waReply"
+            :doctype="''"
+            :to-override="activeUnassigned || ''"
+            reply-only
+          />
         </div>
       </div>
 
@@ -93,7 +109,19 @@
 import { computed, reactive, ref } from 'vue'
 import { toast } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
+import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import { activeUnassigned, unassignedThread, assignUnassigned, hhmm } from '@/composables/inbox'
+
+// Reply-bar models for WhatsAppBox. No reference doc (name=''), so the send goes
+// out reference-less to the active number; the whatsapp model just proxies the
+// post-send reload back to the orphan thread.
+const unassignedDoc = ref({ name: '' })
+const waReply = ref({})
+const waModel = reactive({
+  attach: '',
+  content_type: 'text',
+  reload: () => unassignedThread.reload(),
+})
 
 const inputCls =
   'w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 disabled:opacity-60'

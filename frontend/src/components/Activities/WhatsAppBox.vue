@@ -26,8 +26,10 @@
     <Button variant="ghost" icon="x" @click="reply = {}" />
   </div>
 
-  <!-- composer mode toggle: Reply / Private Note / Internal comment -->
-  <div class="flex flex-wrap items-center gap-2 px-3 pt-2.5 sm:px-10">
+  <!-- composer mode toggle: Reply / Private Note / Internal comment.
+       Hidden in replyOnly (unassigned threads have no reference doc to attach
+       notes/comments to — only the WhatsApp reply applies). -->
+  <div v-if="!replyOnly" class="flex flex-wrap items-center gap-2 px-3 pt-2.5 sm:px-10">
     <button
       v-for="m in modes"
       :key="m.value"
@@ -63,7 +65,7 @@
       ⚡ {{ qr.label }}
     </button>
     <button
-      v-for="t in quickTemplates.data || []"
+      v-for="t in (replyOnly ? [] : (quickTemplates.data || []))"
       :key="`tpl-${t.name}`"
       type="button"
       class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-2"
@@ -240,6 +242,10 @@ const props = defineProps({
   // Deals + all Leads (their .mobile_no IS the chat target).
   toOverride: { type: String, default: '' },
   channelLabel: { type: String, default: 'WhatsApp' },
+  // Unassigned/orphan threads: only the WhatsApp reply applies (no reference doc
+  // for notes/comments/templates). Sends a reference-less WhatsApp Message to the
+  // number; it stays in the "Sin asignar" thread until the number is converted.
+  replyOnly: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['pickTemplate', 'activity'])
