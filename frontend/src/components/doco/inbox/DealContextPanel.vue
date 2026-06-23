@@ -185,6 +185,29 @@ const probability = computed(() => dealRes.data?.probability)
 
 // ── deal summary (read-only key facts) + collapsible full-field editor ──────────
 const showAllFields = ref(false)
+
+// "Valor" = total quoted across the deal's Repair Orders (the quote lives on the
+// RO, not the deal). Reuses the same taller endpoint the Reparación tab uses; on a
+// tenant without taller it errors silently and Valor is just omitted.
+const repairOrders = createResource({
+  url: 'taller.repair.repair_orders.get_deal_repair_orders',
+  onError: () => {},
+})
+watch(
+  activeDeal,
+  (d) => {
+    if (d && isDeal.value) repairOrders.submit({ deal_name: d })
+    else repairOrders.data = null
+  },
+  { immediate: true },
+)
+const dealValue = computed(() =>
+  (repairOrders.data || []).reduce(
+    (s, ro) => s + (Number(ro.quote_amount) || Number(ro.billing_total) || 0),
+    0,
+  ) || null,
+)
+
 function fmtDate(ts) {
   if (!ts) return '—'
   const d = new Date(String(ts).replace(' ', 'T'))
@@ -201,7 +224,7 @@ const dealSummary = computed(() => {
     status: row.value.status,
     device: m.repair_device || row.value.device,
     orders: m.repair_orders_count,
-    value: money(m.deal_value),
+    value: money(dealValue.value),
     source: m.source,
     created: fmtDate(m.creation),
   }
