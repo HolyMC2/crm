@@ -4,15 +4,13 @@
   selected deal from the inbox composable (activeDeal/activeTab).
 -->
 <template>
-  <div class="flex min-w-0 flex-1 flex-col">
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col">
     <template v-if="activeDeal">
-      <!-- mobile: the thread scrolls inside the outer layout scroller, so pin the
-           header + tabs as one sticky block — back / open-context stay reachable
-           without scrolling to the top. `contents` keeps desktop layout untouched. -->
-      <div :class="isMobile ? 'sticky top-0 z-20 bg-surface-white' : 'contents'">
-        <DealHeader />
+      <!-- header + tabs are flex-none atop a min-h-0 column, so they stay pinned
+           while only the message area (FadedScrollableDiv) scrolls internally. -->
+      <DealHeader />
 
-        <div class="flex h-11 flex-none items-center gap-0.5 border-b border-outline-gray-1 px-3 text-[13px]">
+      <div class="flex h-11 flex-none items-center gap-0.5 border-b border-outline-gray-1 px-3 text-[13px]">
         <button
           v-for="t in visibleTabs"
           :key="t.key"
@@ -26,14 +24,25 @@
         >
           {{ t.label }}
         </button>
-        </div>
       </div>
 
       <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox). The doco
            WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
            since DealHeader already identifies the contact (avoids the duplicate). -->
-      <div v-if="activeTab === 'conversation'" class="doco-convo flex min-h-0 flex-1 flex-col">
+      <div v-if="activeTab === 'conversation'" ref="convoRef" class="doco-convo relative flex min-h-0 flex-1 flex-col">
         <Activities :key="'wa-' + activeDeal" v-model:showWhatsappTemplates="convoTemplateOpen" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="convoTabs" />
+        <!-- jump-to-latest: shows when scrolled up from the tail; floats just above
+             the composer (bottom offset = live composer height) -->
+        <button
+          v-show="showJump"
+          :style="{ bottom: jumpBottom + 'px' }"
+          class="absolute right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-white text-ink-gray-7 shadow-md transition hover:bg-surface-gray-2"
+          :aria-label="__('Ir al último mensaje')"
+          :title="__('Ir al último mensaje')"
+          @click="jumpToBottom"
+        >
+          <LucideChevronDown class="h-5 w-5" />
+        </button>
       </div>
 
       <!-- Actividad = full upstream Activities (timeline/emails/comments/calls/tasks/notes) -->
@@ -64,9 +73,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { Tabs } from 'frappe-ui'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 import Activities from '@/components/Activities/Activities.vue'
 import ActivityIcon from '@/components/Icons/ActivityIcon.vue'
 import EmailIcon from '@/components/Icons/EmailIcon.vue'
@@ -77,10 +87,48 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { isMobile } from '@/composables/breakpoint'
 import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
+
+// ── jump-to-latest FAB ─────────────────────────────────────────────────────────
+// The conversation's message list (Activities' FadedScrollableDiv, the only
+// .overflow-y-auto inside .doco-convo) scrolls internally. Watch its scroll
+// position; show a button when the user has scrolled up from the tail, and offset
+// it above the composer (its height is dynamic — quick-replies wrap, input grows).
+const convoRef = ref(null)
+const showJump = ref(false)
+const jumpBottom = ref(88)
+let scrollEl = null
+
+function onScroll() {
+  if (!scrollEl) return
+  const composer = scrollEl.nextElementSibling // Activities' composer wrapper <div>
+  jumpBottom.value = (composer?.offsetHeight || 76) + 12
+  const distFromBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
+  showJump.value = distFromBottom > 240
+}
+function jumpToBottom() {
+  scrollEl?.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' })
+}
+function detachScroll() {
+  if (scrollEl) scrollEl.removeEventListener('scroll', onScroll)
+  scrollEl = null
+  showJump.value = false
+}
+function bindScroll() {
+  detachScroll()
+  if (activeTab.value !== 'conversation' || !activeDeal.value) return
+  nextTick(() => {
+    scrollEl = convoRef.value?.querySelector('.overflow-y-auto') || null
+    if (!scrollEl) return
+    scrollEl.addEventListener('scroll', onScroll, { passive: true })
+    setTimeout(onScroll, 400) // after the thread renders + auto-scrolls to bottom
+  })
+}
+watch([activeDeal, activeTab], bindScroll)
+onMounted(bindScroll)
+onBeforeUnmount(detachScroll)
 
 const tabs = [
   { key: 'conversation', label: '💬 ' + __('Conversación') },
