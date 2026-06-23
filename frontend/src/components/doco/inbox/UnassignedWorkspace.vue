@@ -9,6 +9,14 @@
   <div class="flex min-w-0 flex-1 flex-col">
     <!-- header -->
     <div class="flex h-[60px] flex-none items-center gap-2.5 border-b border-outline-gray-1 px-4">
+      <button
+        v-if="isMobile"
+        class="-ml-1.5 flex h-9 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
+        :aria-label="__('Volver a la bandeja')"
+        @click="mobileBack"
+      >
+        <LucideChevronLeft class="h-6 w-6" />
+      </button>
       <span class="flex h-9 w-9 items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
@@ -18,9 +26,12 @@
       </div>
     </div>
 
-    <div class="flex min-h-0 flex-1">
+    <div class="flex min-h-0 flex-1" :class="isMobile ? 'flex-col' : ''">
       <!-- thread + reply bar -->
-      <div class="flex min-h-0 flex-1 flex-col border-r border-outline-gray-1">
+      <div
+        class="flex min-h-0 flex-1 flex-col border-outline-gray-1"
+        :class="isMobile ? 'border-b' : 'border-r'"
+      >
         <div class="scb flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
           <div v-if="unassignedThread.loading && !messages.length" class="py-8 text-center text-xs text-ink-gray-4">
             {{ __('Cargando…') }}
@@ -54,7 +65,10 @@
       </div>
 
       <!-- capture form -->
-      <div class="scb flex w-[300px] flex-none flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5">
+      <div
+        class="scb flex flex-none flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5"
+        :class="isMobile ? 'w-full' : 'w-[300px]'"
+      >
         <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Datos') }}</div>
         <div class="grid grid-cols-2 gap-2">
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Nombre') }}</span>
@@ -109,8 +123,10 @@
 import { computed, reactive, ref } from 'vue'
 import { toast } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
+import LucideChevronLeft from '~icons/lucide/chevron-left'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
-import { activeUnassigned, unassignedThread, assignUnassigned, hhmm } from '@/composables/inbox'
+import { isMobile } from '@/composables/breakpoint'
+import { activeUnassigned, unassignedThread, assignUnassigned, hhmm, mobileBack } from '@/composables/inbox'
 
 // Reply-bar models for WhatsAppBox. No reference doc (name=''), so the send goes
 // out reference-less to the active number; the whatsapp model just proxies the

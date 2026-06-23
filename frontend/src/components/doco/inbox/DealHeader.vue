@@ -2,15 +2,34 @@
 <template>
   <div class="flex-none border-b border-outline-gray-1 px-4 py-[11px]">
     <div class="flex items-center gap-3">
+      <!-- mobile: back to the conversation list (← pops the history stack) -->
+      <button
+        v-if="isMobile"
+        class="-ml-1.5 flex h-9 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
+        :aria-label="__('Volver a la bandeja')"
+        @click="mobileBack"
+      >
+        <LucideChevronLeft class="h-6 w-6" />
+      </button>
+      <!-- identity: on mobile this whole block opens the customer/deal data pane
+           (view 4), exactly like tapping the contact name in WhatsApp. -->
       <span
         class="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-full text-sm font-semibold"
+        :class="isMobile ? 'cursor-pointer' : ''"
         :style="`background:${avatarColor(name)[0]};color:${avatarColor(name)[1]}`"
+        @click="isMobile && openContext()"
       >
         {{ initials(name) }}
       </span>
-      <div class="min-w-0 flex-1">
+      <div
+        class="min-w-0 flex-1"
+        :class="isMobile ? 'cursor-pointer' : ''"
+        :role="isMobile ? 'button' : undefined"
+        @click="isMobile && openContext()"
+      >
         <div class="flex flex-wrap items-center gap-2">
           <span class="text-base font-bold text-ink-gray-9">{{ name || '—' }}</span>
+          <LucideChevronRight v-if="isMobile" class="h-4 w-4 flex-none text-ink-gray-4" />
           <span
             v-if="grade"
             class="rounded px-[7px] py-px text-[11px] font-bold text-white"
@@ -39,14 +58,14 @@
         </div>
       </div>
       <div class="flex flex-none items-center gap-2.5">
-        <div v-if="slaLabel" class="text-right">
+        <div v-if="slaLabel && !isMobile" class="text-right">
           <div class="text-[10px] text-ink-gray-5">{{ __('1ª respuesta SLA') }}</div>
           <div class="text-[13px] font-bold" :class="slaOverdue ? 'text-ink-red-4' : 'text-ink-green-3'">
             {{ slaLabel }}
           </div>
         </div>
-        <div class="h-[30px] w-px bg-outline-gray-2" />
-        <Dropdown :options="stageOptions">
+        <div v-if="!isMobile" class="h-[30px] w-px bg-outline-gray-2" />
+        <Dropdown v-if="!isMobile" :options="stageOptions">
           <button
             class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-[11px] py-[7px] text-[12.5px] font-semibold text-ink-gray-8"
           >
@@ -102,15 +121,20 @@
 import { computed, watch } from 'vue'
 import { Dropdown, createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
 import LucidePhone from '~icons/lucide/phone'
+import LucideChevronLeft from '~icons/lucide/chevron-left'
+import LucideChevronRight from '~icons/lucide/chevron-right'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
 import { useDoctypeModal } from '@/composables/doctypeModal'
+import { isMobile } from '@/composables/breakpoint'
 import {
   activeDeal,
   activeDealDoctype,
   queue,
   sla,
   setStage,
+  openContext,
+  mobileBack,
   avatarColor,
   initials,
   timeAgo,

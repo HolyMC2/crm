@@ -3,7 +3,27 @@
   editable deal-field sidebar (SidePanelLayout) so no field is hidden. handoff §5.1.
 -->
 <template>
-  <div class="scb flex w-[320px] flex-none flex-col overflow-y-auto border-l border-outline-gray-1 bg-surface-white">
+  <div
+    class="scb flex flex-col overflow-y-auto bg-surface-white"
+    :class="isMobile ? 'min-h-0 w-full flex-1' : 'w-[320px] flex-none border-l border-outline-gray-1'"
+  >
+    <!-- mobile: back to the conversation thread (← pops the history stack) -->
+    <div
+      v-if="isMobile"
+      class="sticky top-0 z-10 flex flex-none items-center gap-2 border-b border-outline-gray-1 bg-surface-white px-3 py-2.5"
+    >
+      <button
+        class="-ml-1 flex h-8 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
+        :aria-label="__('Volver a la conversación')"
+        @click="mobileBack"
+      >
+        <LucideChevronLeft class="h-6 w-6" />
+      </button>
+      <span class="truncate text-[14px] font-bold text-ink-gray-9">
+        {{ isDeal ? __('Datos del trato') : __('Datos del cliente') }}
+      </span>
+    </div>
+
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 flex items-center justify-between">
@@ -174,10 +194,12 @@ import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import { parseAssignees } from '@/utils'
+import LucideChevronLeft from '~icons/lucide/chevron-left'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage } from '@/composables/inbox'
+import { isMobile } from '@/composables/breakpoint'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, mobileBack } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()

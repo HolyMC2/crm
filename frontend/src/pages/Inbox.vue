@@ -1,10 +1,13 @@
 <!--
   Inbox / Deal workspace — FCRM redesign default workspace (handoff §5.1).
-  3-pane: conversation queue | deal workspace (header + tabs + composer) | context panel.
+  Desktop: 3-pane row (conversation queue | deal workspace | context panel).
+  Mobile (<640px): WhatsApp-style single-pane stack — list → thread → context.
+  Stack state in the inbox composable (mobileView); hardware-back pops a pane.
   Data via doco_marketing.api.inbox.* (B1). Realtime refresh on thread_update + WA events.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1">
+  <!-- desktop: all three panes side-by-side (unchanged) -->
+  <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
     <ConversationQueue v-if="!queueCollapsed" />
     <button
       v-else
@@ -19,12 +22,26 @@
     <DealWorkspace v-else />
     <DealContextPanel v-if="activeDeal" />
   </div>
+
+  <!-- mobile: one pane at a time. v-show (not v-if) keeps panes mounted so the
+       thread scroll + composer survive drilling in/out, like a native app. -->
+  <div v-else class="flex min-h-0 w-full flex-1 flex-col">
+    <ConversationQueue v-show="mobileView === 'list'" />
+    <div v-show="mobileView === 'thread'" class="flex min-h-0 flex-1 flex-col">
+      <UnassignedWorkspace v-if="activeUnassigned" />
+      <DealWorkspace v-else />
+    </div>
+    <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col">
+      <DealContextPanel v-if="activeDeal" />
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { globalStore } from '@/stores/global'
+import { isMobile } from '@/composables/breakpoint'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue'
@@ -35,6 +52,7 @@ import {
   activeUnassigned,
   queue,
   queueCollapsed,
+  mobileView,
   lastSendAt,
   initInbox,
   reloadQueue,
@@ -78,14 +96,60 @@ function onWaMessage() {
   })
 }
 
+// ── mobile back-stack ──────────────────────────────────────────────────────
+// Treat each drill-in (list→thread→context) as a pushed history entry so the
+// Android/gesture back button pops one pane instead of leaving the inbox.
+// Forward transitions push; popstate is the SINGLE place that walks back, so
+// the in-app back buttons (DealHeader / DealContextPanel) just call history.back().
+const DEPTH = { list: 0, thread: 1, context: 2 }
+const FROM_DEPTH = ['list', 'thread', 'context']
+let suppressPush = false
+let mounting = false // restoring state on mount drives mobileView itself; don't push then
+// flush:'sync' so the guard is reliable — restore changes mobileView synchronously
+// inside onMounted, and we rebuild the history stack explicitly afterwards.
+watch(
+  mobileView,
+  (nv, ov) => {
+    if (mounting || !isMobile.value || nv === ov) return
+    if (suppressPush) {
+      suppressPush = false
+      return
+    }
+    // merge into the existing state so vue-router's own bookkeeping survives; URL
+    // stays /inbox (empty url arg), so the router sees no route change on back.
+    if (DEPTH[nv] > DEPTH[ov]) history.pushState({ ...history.state, inboxDepth: DEPTH[nv] }, '')
+  },
+  { flush: 'sync' },
+)
+function onPopState(e) {
+  if (!isMobile.value) return
+  const depth = e.state?.inboxDepth ?? 0
+  const target = FROM_DEPTH[Math.min(2, Math.max(0, depth))]
+  if (target !== mobileView.value) {
+    suppressPush = true // this is a back-walk, don't re-push
+    mobileView.value = target
+  }
+}
+
 onMounted(() => {
-  initInbox() // clears any stale singleton state, then loads queue/channels
+  mounting = true
+  initInbox() // restores the last conversation/pane, then loads queue/channels
   if (route.query.deal) selectDeal(String(route.query.deal)) // deep link from Tasks "open conversation"
+  // Rebuild the mobile back-stack to match the restored pane so hardware-back
+  // walks list ← thread ← context instead of jumping straight out of the inbox.
+  if (isMobile.value) {
+    const depth = DEPTH[mobileView.value] || 0
+    history.replaceState({ ...history.state, inboxDepth: 0 }, '')
+    for (let i = 1; i <= depth; i++) history.pushState({ ...history.state, inboxDepth: i }, '')
+  }
+  mounting = false
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)
   $socket?.on('whatsapp_message', onWaMessage)
+  window.addEventListener('popstate', onPopState)
 })
 onUnmounted(() => {
   $socket?.off('doco_marketing:thread_update', onThreadUpdate)
   $socket?.off('whatsapp_message', onWaMessage)
+  window.removeEventListener('popstate', onPopState)
 })
 </script>

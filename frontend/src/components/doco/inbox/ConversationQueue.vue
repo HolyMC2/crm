@@ -1,7 +1,8 @@
 <!-- Inbox left pane (286px): search + channel pills + conversation rows. handoff §5.1 -->
 <template>
   <div
-    class="flex w-[286px] flex-none flex-col border-r border-outline-gray-1 bg-surface-white"
+    class="flex flex-col bg-surface-white"
+    :class="isMobile ? 'min-h-0 w-full flex-1' : 'w-[286px] flex-none border-r border-outline-gray-1'"
   >
     <div class="flex-none px-3.5 pb-2.5 pt-3.5">
       <div class="mb-3 flex items-center justify-between">
@@ -30,6 +31,7 @@
             + {{ __('Trato') }}
           </button>
           <button
+            v-if="!isMobile"
             class="text-[13px] text-ink-gray-4 hover:text-ink-gray-9"
             :aria-label="__('Ocultar bandeja')"
             :title="__('Ocultar bandeja')"
@@ -234,6 +236,7 @@ import LucideVolume2 from '~icons/lucide/volume-2'
 import LucideVolumeX from '~icons/lucide/volume-x'
 import { statusesStore } from '@/stores/statuses'
 import { soundEnabled, toggleSound } from '@/composables/notificationSound'
+import { isMobile } from '@/composables/breakpoint'
 import DealModal from '@/components/Modals/DealModal.vue'
 import {
   queue,

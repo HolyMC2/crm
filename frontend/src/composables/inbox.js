@@ -2,7 +2,7 @@
 // Module-level reactive singletons (same pattern as composables/settings.js) so the
 // 3-pane tree shares state without prop-drilling. Thin client over the B1 backend:
 // doco_marketing.api.inbox.* — itself a read layer over crm WhatsApp + Communication.
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { createResource, call } from 'frappe-ui'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
@@ -17,6 +17,20 @@ export const queueChannel = ref(null) // null = Todas
 export const queueSearch = ref('')
 export const lastSendAt = ref(0) // epoch ms of our last outgoing send (suppress self-ping)
 export const queueCollapsed = ref(false) // hide the left queue pane for a wider workspace
+
+// ── mobile single-pane stack (ignored on desktop, which shows all panes) ───────
+// WhatsApp-style drill-down: list (queue) → thread (workspace) → context (deal/
+// customer data). Desktop renders the 3 panes side-by-side and never reads this.
+// Forward nav sets mobileView directly (here / selectDeal); Inbox.vue mirrors each
+// drill-in as a history entry. Backward nav goes through mobileBack() → the browser
+// back stack, so the in-app ← buttons and the hardware/gesture back behave identically.
+export const mobileView = ref('list') // 'list' | 'thread' | 'context'
+export function openContext() {
+  mobileView.value = 'context'
+}
+export function mobileBack() {
+  window.history.back()
+}
 
 // ── resources ────────────────────────────────────────────────────────────────
 export const queue = createResource({
@@ -38,10 +52,57 @@ export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_c
 export const sla = createResource({ url: 'doco_marketing.api.inbox.get_sla_status' })
 
 export function initInbox() {
-  resetInbox() // module singletons persist across navigations — clear stale deal/thread
   channels.fetch()
   reloadQueue()
   reloadUnassigned()
+  restoreInbox() // re-open the conversation/pane the user left (survives route round-trips + reloads)
+}
+
+// ── persist the open selection + mobile pane ───────────────────────────────────
+// Opening a Contact / Deal-360 page is a real route nav, so App.vue's
+// <router-view :key="$route.fullPath"> unmounts Inbox.vue; on back it remounts and
+// runs initInbox again. The module singletons would survive the remount, but a full
+// reload would not — so we snapshot to sessionStorage and rehydrate on init. Either
+// way the user lands back on the same conversation and pane, not an empty inbox.
+const PERSIST_KEY = 'doco_inbox_state'
+function persistInbox() {
+  try {
+    sessionStorage.setItem(
+      PERSIST_KEY,
+      JSON.stringify({
+        deal: activeDeal.value,
+        doctype: activeDealDoctype.value,
+        unassigned: activeUnassigned.value,
+        view: mobileView.value,
+        tab: activeTab.value,
+      }),
+    )
+  } catch (e) {
+    /* private mode / quota — persistence is best-effort */
+  }
+}
+// snapshot on every selection/pane/tab change
+watch([activeDeal, activeDealDoctype, activeUnassigned, mobileView, activeTab], persistInbox)
+
+function restoreInbox() {
+  let s = null
+  try {
+    s = JSON.parse(sessionStorage.getItem(PERSIST_KEY) || 'null')
+  } catch (e) {
+    s = null
+  }
+  if (s?.unassigned) {
+    activeUnassigned.value = null // force selectUnassigned to re-load the orphan thread
+    selectUnassigned(s.unassigned)
+    if (s.view) mobileView.value = s.view
+  } else if (s?.deal) {
+    activeDeal.value = null // force selectDeal to re-load (it early-returns on same id)
+    selectDeal(s.deal, s.doctype || 'CRM Deal')
+    if (s.tab) activeTab.value = s.tab
+    if (s.view) mobileView.value = s.view // restore the pane (e.g. context) they were on
+  } else {
+    resetInbox()
+  }
 }
 
 export function resetInbox() {
@@ -50,6 +111,7 @@ export function resetInbox() {
   activeUnassigned.value = null
   activeTab.value = 'conversation'
   activeChannel.value = 'whatsapp'
+  mobileView.value = 'list' // back to the queue on (re)entry
   thread.data = null
   unassignedThread.data = null
   contactCard.data = null
@@ -80,6 +142,7 @@ export function setQueueChannel(ch) {
 
 export function selectDeal(name, doctype = 'CRM Deal') {
   activeUnassigned.value = null // leaving the triage view
+  mobileView.value = 'thread' // mobile: advance the stack to the conversation
   if (activeDeal.value === name && activeDealDoctype.value === doctype) return
   activeDeal.value = name
   activeDealDoctype.value = doctype
@@ -125,6 +188,7 @@ export async function saveContactField(doctype, name, fieldname, value) {
 export function selectUnassigned(phone) {
   activeDeal.value = null // orphan threads have no deal/context panel
   activeUnassigned.value = phone
+  mobileView.value = 'thread' // mobile: advance the stack to the orphan thread
   unassignedThread.submit({ phone })
 }
 
