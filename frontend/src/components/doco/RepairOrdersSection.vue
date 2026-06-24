@@ -58,8 +58,9 @@
       >
         <!-- Card header -->
         <div class="flex items-center justify-between border-b bg-surface-gray-1 px-4 py-2.5">
+          <!-- link to the TALLER SPA order page (operators use that, not the Desk doctype) -->
           <a
-            :href="`/app/repair-order/${encodeURIComponent(ro.name)}`"
+            :href="`/taller/orders/${encodeURIComponent(ro.name)}`"
             target="_blank"
             class="text-sm font-semibold text-ink-blue-3 hover:underline"
           >
@@ -73,6 +74,15 @@
                 variant="subtle"
                 :label="creatingFor === ro.name ? __('Creando…') : __('Crear borrador')"
                 :loading="creatingFor === ro.name"
+              />
+            </Dropdown>
+            <Dropdown :options="sendOptions(ro)">
+              <Button
+                size="sm"
+                variant="subtle"
+                icon="send"
+                :tooltip="__('Enviar resumen al cliente')"
+                :loading="sendingFor === ro.name"
               />
             </Dropdown>
             <button
@@ -89,6 +99,29 @@
 
         <!-- Card body — vertical stack, one field per row -->
         <div class="divide-y text-sm">
+
+          <!-- Photo strip (low-res thumbnails; click opens full-res) -->
+          <div v-if="ro.photos?.length" class="px-4 py-3">
+            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('Fotos') }} <span class="text-ink-gray-4">({{ ro.photos.length }})</span>
+            </div>
+            <div class="flex gap-2 overflow-x-auto pb-1">
+              <button
+                v-for="ph in ro.photos"
+                :key="ph.name"
+                class="relative h-16 w-16 flex-none overflow-hidden rounded-lg border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
+                :title="ph.photo_type || __('Foto')"
+                @click="openPhoto(ph)"
+              >
+                <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
+                <span
+                  v-if="ph.show_on_tracker"
+                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-white"
+                  :title="__('Visible en el tracker del cliente')"
+                >T</span>
+              </button>
+            </div>
+          </div>
 
           <!-- Primary: device + repair type + client + technician -->
           <div class="px-4 py-3 space-y-2">
@@ -335,7 +368,8 @@
 
 <script setup>
 import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
-import { Badge, Button, Dropdown, ErrorMessage, createResource } from 'frappe-ui'
+import { Badge, Button, Dropdown, ErrorMessage, createResource, toast } from 'frappe-ui'
+import { sendOnChannel, contactCard } from '@/composables/inbox'
 import { h, ref } from 'vue'
 
 // Small inline helper for a label/value row. Stacked vertical layout —
@@ -495,6 +529,69 @@ const STATUS_THEMES = {
 
 function statusTheme(status) {
   return STATUS_THEMES[status] || 'gray'
+}
+
+// Open a photo full-res. Local files serve directly; S3-backed originals need a
+// short-lived signed URL (thumbnails are always local, served direct).
+function openPhoto(ph) {
+  if (ph.storage_backend === 'S3' && ph.file_name) {
+    createResource({
+      url: 'taller.file_storage.get_signed_url',
+      params: { file_name: ph.file_name },
+      auto: true,
+      onSuccess(data) {
+        window.open((typeof data === 'string' ? data : data?.url) || ph.image, '_blank')
+      },
+      onError() {
+        window.open(ph.image || ph.thumbnail_url, '_blank')
+      },
+    })
+  } else {
+    window.open(ph.image || ph.thumbnail_url, '_blank')
+  }
+}
+
+// Send a short customer-facing summary of the RO (folio / estado / servicio / saldo)
+// on a chosen channel via the inbox send pipeline (deal context = activeDeal).
+const sendingFor = ref(null)
+
+function buildSummary(ro) {
+  const lines = []
+  if (ro.device_model) lines.push(`📱 ${ro.device_model}`)
+  lines.push(`${__('Folio')}: ${ro.name}`)
+  if (ro.status) lines.push(`${__('Estado')}: ${ro.status}`)
+  if (ro.repair_to_be_done) lines.push(`${__('Servicio')}: ${ro.repair_to_be_done}`)
+  const saldo = money(ro.balance_due)
+  if (saldo) lines.push(`${__('Saldo')}: ${saldo}`)
+  return lines.join('\n')
+}
+
+function sendOptions(ro) {
+  const opts = [{ label: __('💬 WhatsApp'), onClick: () => sendSummary(ro, 'whatsapp') }]
+  if (contactCard.data?.email) {
+    opts.push({ label: __('✉ Email'), onClick: () => sendSummary(ro, 'email') })
+  }
+  return opts
+}
+
+async function sendSummary(ro, channel) {
+  let to
+  if (channel === 'email') {
+    to = contactCard.data?.email
+    if (!to) {
+      toast.error(__('El cliente no tiene correo registrado.'))
+      return
+    }
+  }
+  sendingFor.value = ro.name
+  try {
+    await sendOnChannel(channel, buildSummary(ro), { to })
+    toast.success(channel === 'email' ? __('Resumen enviado por correo.') : __('Resumen enviado por WhatsApp.'))
+  } catch (e) {
+    toast.error(e?.messages?.join('\n') || e?.message || __('No se pudo enviar el resumen.'))
+  } finally {
+    sendingFor.value = null
+  }
 }
 
 function printTicket(roName) {

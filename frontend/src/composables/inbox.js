@@ -181,6 +181,25 @@ export async function clearResponder(doctype, name) {
   }
 }
 
+// Send a one-off message on an EXPLICIT channel (whatsapp/email), bypassing the
+// composer's activeChannel — used by the Reparación tab "send summary" action.
+// Email needs an explicit recipient (no auto-resolve); whatsapp auto-resolves `to`.
+export async function sendOnChannel(channel, content, { to } = {}) {
+  if (!activeDeal.value || !content) return
+  const res = await call('doco_marketing.api.inbox.send_message', {
+    reference_doctype: activeDealDoctype.value,
+    reference_name: activeDeal.value,
+    channel,
+    content,
+    to: to || undefined,
+    marketing: 0,
+  })
+  lastSendAt.value = Date.now() // suppress the echo self-ping
+  loadThread()
+  reloadQueue()
+  return res
+}
+
 export function loadContactCard() {
   if (!activeDeal.value) {
     contactCard.data = null
