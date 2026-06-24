@@ -1,3 +1,7 @@
+// Build tag — a global side-effect (survives minification, unlike a comment) so
+// bumping it forces a fresh content-hashed bundle when an old hash gets poisoned
+// in a CDN cache (a 404 cached during a deploy/warm-up window).
+window.__CRM_BUILD__ = '2026-06-24a'
 import './index.css'
 
 import { createApp } from 'vue'
