@@ -28,7 +28,15 @@
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 flex items-center justify-between">
         <span class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Acciones') }}</span>
-        <button class="text-[11px] text-ink-blue-link" @click="$router.push(isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`)">
+        <!-- on the 360° page → jump to the inbox conversation; in the inbox → open 360° -->
+        <button
+          v-if="onDeal360"
+          class="text-[11px] text-ink-blue-link"
+          @click="$router.push({ path: '/inbox', query: { deal: activeDeal } })"
+        >
+          {{ __('Abrir en Bandeja') }} →
+        </button>
+        <button v-else class="text-[11px] text-ink-blue-link" @click="$router.push(isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`)">
           {{ isDeal ? __('Abrir 360°') : __('Abrir Lead') }} →
         </button>
       </div>
@@ -189,6 +197,7 @@
 
 <script setup>
 import { computed, ref, watch, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import { createResource, call as frappeCall, toast, Dropdown, Avatar } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
@@ -205,6 +214,11 @@ const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()
 
 const { makeCall } = globalStore()
+
+const route = useRoute()
+// On the standalone Deal 360° page (/deal/:id) the top action opens the inbox
+// conversation instead of re-opening 360°.
+const onDeal360 = computed(() => /^\/deal\//.test(route.path))
 
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 

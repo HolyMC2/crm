@@ -106,20 +106,23 @@
               {{ __('Fotos') }} <span class="text-ink-gray-4">({{ ro.photos.length }})</span>
             </div>
             <div class="flex gap-2 overflow-x-auto pb-1">
-              <button
-                v-for="ph in ro.photos"
-                :key="ph.name"
-                class="relative h-16 w-16 flex-none overflow-hidden rounded-lg border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
-                :title="ph.photo_type || __('Foto')"
-                @click="openPhoto(ph)"
-              >
-                <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
-                <span
-                  v-if="ph.show_on_tracker"
-                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-white"
-                  :title="__('Visible en el tracker del cliente')"
-                >T</span>
-              </button>
+              <Dropdown v-for="ph in ro.photos" :key="ph.name" :options="photoOptions(ph)">
+                <button
+                  class="relative h-16 w-16 flex-none overflow-hidden rounded-lg border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
+                  :title="ph.photo_type || __('Foto')"
+                >
+                  <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
+                  <span
+                    v-if="ph.show_on_tracker"
+                    class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-white"
+                    :title="__('Visible en el tracker del cliente')"
+                  >T</span>
+                  <span
+                    v-if="sendingPhoto === ph.name"
+                    class="absolute inset-0 flex items-center justify-center bg-black/50 text-[10px] font-semibold text-ink-white"
+                  >…</span>
+                </button>
+              </Dropdown>
             </div>
           </div>
 
@@ -548,6 +551,66 @@ function openPhoto(ph) {
     })
   } else {
     window.open(ph.image || ph.thumbnail_url, '_blank')
+  }
+}
+
+// ── send a photo to the customer (WhatsApp / Email) ─────────────────────────────
+// WhatsApp sends the photo as a media LINK (Meta fetches it server-side) and email
+// downloads + attaches the bytes — both need a publicly-fetchable URL, so resolve a
+// short-lived signed URL for S3-backed originals (raw B2 URLs are private).
+const sendingPhoto = ref(null)
+
+function resolveSendUrl(ph) {
+  return new Promise((resolve) => {
+    if (ph.storage_backend === 'S3' && ph.file_name) {
+      createResource({
+        url: 'taller.file_storage.get_signed_url',
+        params: { file_name: ph.file_name },
+        auto: true,
+        onSuccess(data) {
+          resolve((typeof data === 'string' ? data : data?.url) || ph.image)
+        },
+        onError() {
+          resolve(ph.image)
+        },
+      })
+    } else {
+      const u = ph.image || ph.thumbnail_url || ''
+      resolve(u.startsWith('http') ? u : window.location.origin + u)
+    }
+  })
+}
+
+function photoOptions(ph) {
+  const opts = [
+    { label: __('🔍 Ver'), onClick: () => openPhoto(ph) },
+    { label: __('💬 Enviar por WhatsApp'), onClick: () => sendPhoto(ph, 'whatsapp') },
+  ]
+  if (contactCard.data?.email) {
+    opts.push({ label: __('✉ Enviar por Email'), onClick: () => sendPhoto(ph, 'email') })
+  }
+  return opts
+}
+
+async function sendPhoto(ph, channel) {
+  let to
+  if (channel === 'email') {
+    to = contactCard.data?.email
+    if (!to) {
+      toast.error(__('El cliente no tiene correo registrado.'))
+      return
+    }
+  }
+  sendingPhoto.value = ph.name
+  try {
+    const attach = await resolveSendUrl(ph)
+    if (!attach) throw new Error(__('No se pudo resolver la URL de la foto.'))
+    await sendOnChannel(channel, '', { to, attach })
+    toast.success(channel === 'email' ? __('Foto enviada por correo.') : __('Foto enviada por WhatsApp.'))
+  } catch (e) {
+    toast.error(e?.messages?.join('\n') || e?.message || __('No se pudo enviar la foto.'))
+  } finally {
+    sendingPhoto.value = null
   }
 }
 
