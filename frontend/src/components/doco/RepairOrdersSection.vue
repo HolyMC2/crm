@@ -76,15 +76,13 @@
                 :loading="creatingFor === ro.name"
               />
             </Dropdown>
-            <Dropdown :options="sendOptions(ro)">
-              <Button
-                size="sm"
-                variant="subtle"
-                icon="send"
-                :tooltip="__('Enviar resumen al cliente')"
-                :loading="sendingFor === ro.name"
-              />
-            </Dropdown>
+            <Button
+              size="sm"
+              variant="subtle"
+              icon="send"
+              :tooltip="__('Revisar y enviar al cliente')"
+              @click="openSend(ro)"
+            />
             <button
               :title="__('Print Ticket')"
               class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
@@ -106,23 +104,20 @@
               {{ __('Fotos') }} <span class="text-ink-gray-4">({{ ro.photos.length }})</span>
             </div>
             <div class="flex gap-2 overflow-x-auto pb-1">
-              <Dropdown v-for="ph in ro.photos" :key="ph.name" :options="photoOptions(ph)">
-                <button
-                  class="relative h-16 w-16 flex-none overflow-hidden rounded-lg border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
-                  :title="ph.photo_type || __('Foto')"
-                >
-                  <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
-                  <span
-                    v-if="ph.show_on_tracker"
-                    class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-white"
-                    :title="__('Visible en el tracker del cliente')"
-                  >T</span>
-                  <span
-                    v-if="sendingPhoto === ph.name"
-                    class="absolute inset-0 flex items-center justify-center bg-black/50 text-[10px] font-semibold text-ink-white"
-                  >…</span>
-                </button>
-              </Dropdown>
+              <button
+                v-for="ph in ro.photos"
+                :key="ph.name"
+                class="relative h-16 w-16 flex-none overflow-hidden rounded-lg border bg-surface-gray-2 hover:ring-2 hover:ring-outline-gray-3"
+                :title="ph.photo_type || __('Foto')"
+                @click="openPhoto(ph)"
+              >
+                <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
+                <span
+                  v-if="ph.show_on_tracker"
+                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-white"
+                  :title="__('Visible en el tracker del cliente')"
+                >T</span>
+              </button>
             </div>
           </div>
 
@@ -366,13 +361,21 @@
         </div>
       </div>
     </div>
+
+    <RepairSendModal
+      v-model="sendModalOpen"
+      :ro="sendRo"
+      :deal-email="contactCard.data?.email || ''"
+      :deal-mobile="contactCard.data?.mobile_no || ''"
+    />
   </div>
 </template>
 
 <script setup>
 import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
-import { Badge, Button, Dropdown, ErrorMessage, createResource, toast } from 'frappe-ui'
-import { sendOnChannel, contactCard } from '@/composables/inbox'
+import RepairSendModal from '@/components/doco/RepairSendModal.vue'
+import { Badge, Button, Dropdown, ErrorMessage, createResource } from 'frappe-ui'
+import { contactCard } from '@/composables/inbox'
 import { h, ref } from 'vue'
 
 // Small inline helper for a label/value row. Stacked vertical layout —
@@ -554,107 +557,12 @@ function openPhoto(ph) {
   }
 }
 
-// ── send a photo to the customer (WhatsApp / Email) ─────────────────────────────
-// WhatsApp sends the photo as a media LINK (Meta fetches it server-side) and email
-// downloads + attaches the bytes — both need a publicly-fetchable URL, so resolve a
-// short-lived signed URL for S3-backed originals (raw B2 URLs are private).
-const sendingPhoto = ref(null)
-
-function resolveSendUrl(ph) {
-  return new Promise((resolve) => {
-    if (ph.storage_backend === 'S3' && ph.file_name) {
-      createResource({
-        url: 'taller.file_storage.get_signed_url',
-        params: { file_name: ph.file_name },
-        auto: true,
-        onSuccess(data) {
-          resolve((typeof data === 'string' ? data : data?.url) || ph.image)
-        },
-        onError() {
-          resolve(ph.image)
-        },
-      })
-    } else {
-      const u = ph.image || ph.thumbnail_url || ''
-      resolve(u.startsWith('http') ? u : window.location.origin + u)
-    }
-  })
-}
-
-function photoOptions(ph) {
-  const opts = [
-    { label: __('🔍 Ver'), onClick: () => openPhoto(ph) },
-    { label: __('💬 Enviar por WhatsApp'), onClick: () => sendPhoto(ph, 'whatsapp') },
-  ]
-  if (contactCard.data?.email) {
-    opts.push({ label: __('✉ Enviar por Email'), onClick: () => sendPhoto(ph, 'email') })
-  }
-  return opts
-}
-
-async function sendPhoto(ph, channel) {
-  let to
-  if (channel === 'email') {
-    to = contactCard.data?.email
-    if (!to) {
-      toast.error(__('El cliente no tiene correo registrado.'))
-      return
-    }
-  }
-  sendingPhoto.value = ph.name
-  try {
-    const attach = await resolveSendUrl(ph)
-    if (!attach) throw new Error(__('No se pudo resolver la URL de la foto.'))
-    await sendOnChannel(channel, '', { to, attach })
-    toast.success(channel === 'email' ? __('Foto enviada por correo.') : __('Foto enviada por WhatsApp.'))
-  } catch (e) {
-    toast.error(e?.messages?.join('\n') || e?.message || __('No se pudo enviar la foto.'))
-  } finally {
-    sendingPhoto.value = null
-  }
-}
-
-// Send a short customer-facing summary of the RO (folio / estado / servicio / saldo)
-// on a chosen channel via the inbox send pipeline (deal context = activeDeal).
-const sendingFor = ref(null)
-
-function buildSummary(ro) {
-  const lines = []
-  if (ro.device_model) lines.push(`📱 ${ro.device_model}`)
-  lines.push(`${__('Folio')}: ${ro.name}`)
-  if (ro.status) lines.push(`${__('Estado')}: ${ro.status}`)
-  if (ro.repair_to_be_done) lines.push(`${__('Servicio')}: ${ro.repair_to_be_done}`)
-  const saldo = money(ro.balance_due)
-  if (saldo) lines.push(`${__('Saldo')}: ${saldo}`)
-  return lines.join('\n')
-}
-
-function sendOptions(ro) {
-  const opts = [{ label: __('💬 WhatsApp'), onClick: () => sendSummary(ro, 'whatsapp') }]
-  if (contactCard.data?.email) {
-    opts.push({ label: __('✉ Email'), onClick: () => sendSummary(ro, 'email') })
-  }
-  return opts
-}
-
-async function sendSummary(ro, channel) {
-  let to
-  if (channel === 'email') {
-    to = contactCard.data?.email
-    if (!to) {
-      toast.error(__('El cliente no tiene correo registrado.'))
-      return
-    }
-  }
-  sendingFor.value = ro.name
-  try {
-    await sendOnChannel(channel, buildSummary(ro), { to })
-    toast.success(channel === 'email' ? __('Resumen enviado por correo.') : __('Resumen enviado por WhatsApp.'))
-  } catch (e) {
-    toast.error(e?.messages?.join('\n') || e?.message || __('No se pudo enviar el resumen.'))
-  } finally {
-    sendingFor.value = null
-  }
+// ── "Revisar y enviar" modal: select photos + log entries, review, then send ────
+const sendModalOpen = ref(false)
+const sendRo = ref(null)
+function openSend(ro) {
+  sendRo.value = ro
+  sendModalOpen.value = true
 }
 
 function printTicket(roName) {
