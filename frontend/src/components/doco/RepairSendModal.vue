@@ -41,6 +41,28 @@
           ✓ {{ __('Ventana de WhatsApp abierta') }} · {{ waWindow.hoursLeft }}h
         </div>
 
+        <!-- template-with-photo path: the only way to deliver a photo when closed -->
+        <div v-if="waBlocked" class="space-y-2 rounded-md border border-outline-gray-2 p-2.5">
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
+            {{ __('Enviar como plantilla (con foto)') }}
+          </div>
+          <template v-if="hasImageTemplates">
+            <select
+              v-model="chosenTemplate"
+              class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none focus:ring-0"
+            >
+              <option value="">{{ __('Elige una plantilla aprobada…') }}</option>
+              <option v-for="t in imageTemplates.data" :key="t.name" :value="t.name">{{ t.name }}</option>
+            </select>
+            <div class="text-[11px] text-ink-gray-5">
+              {{ __('La plantilla lleva 1 foto en el encabezado — se usa la primera foto seleccionada abajo. El texto lo define la plantilla aprobada.') }}
+            </div>
+          </template>
+          <div v-else class="text-[12px] text-ink-gray-5">
+            {{ __('No hay plantillas con foto aprobadas. Crea una plantilla con encabezado de imagen en WhatsApp Manager.') }}
+          </div>
+        </div>
+
         <!-- photos -->
         <div v-if="ro.photos?.length">
           <div class="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
@@ -112,7 +134,7 @@
       <Button :label="__('Cancelar')" @click="show = false" />
       <Button
         variant="solid"
-        :label="sending ? __('Enviando…') : __('Enviar')"
+        :label="sending ? __('Enviando…') : waBlocked ? __('Enviar plantilla') : __('Enviar')"
         :loading="sending"
         :disabled="!canSend"
         @click="send"
@@ -162,6 +184,15 @@ const waWindow = computed(() => {
 })
 const waBlocked = computed(() => channel.value === 'whatsapp' && !waWindow.value.open)
 
+// Image-header templates: send a photo even when the 24h window is closed (templates
+// are window-independent). The chosen template carries ONE photo in its header.
+const imageTemplates = createResource({
+  url: 'doco_marketing.api.inbox.get_image_templates',
+  onError: () => {},
+})
+const chosenTemplate = ref('')
+const hasImageTemplates = computed(() => (imageTemplates.data || []).length > 0)
+
 const channelLabel = computed(() => (channel.value === 'email' ? 'Email' : 'WhatsApp'))
 const recipientLabel = computed(() =>
   channel.value === 'email' ? props.dealEmail || '—' : props.dealMobile || __('WhatsApp del cliente'),
@@ -187,9 +218,14 @@ const composedText = computed(() => {
   return parts.join('\n')
 })
 
-const canSend = computed(
-  () => !sending.value && !waBlocked.value && (selectedPhotos.value.length > 0 || !!composedText.value),
-)
+const canSend = computed(() => {
+  if (sending.value) return false
+  if (waBlocked.value) {
+    // template mode: an approved image template + at least one photo for the header
+    return !!chosenTemplate.value && selectedPhotos.value.length > 0
+  }
+  return selectedPhotos.value.length > 0 || !!composedText.value
+})
 
 function togglePhoto(name) {
   photoSel[name] = !photoSel[name]
@@ -213,7 +249,9 @@ watch(show, (open) => {
       type: 'Incoming',
     }
     lastInbound.reload()
+    imageTemplates.fetch({ reference_doctype: activeDealDoctype.value })
   }
+  chosenTemplate.value = ''
   for (const k of Object.keys(photoSel)) delete photoSel[k]
   for (const k of Object.keys(logSel)) delete logSel[k]
   channel.value = 'whatsapp'
@@ -256,16 +294,30 @@ async function send() {
   }
   sending.value = true
   try {
-    const urls = await Promise.all(selectedPhotos.value.map(resolveSendUrl))
-    await call('doco_marketing.api.inbox.send_bundle', {
-      reference_doctype: activeDealDoctype.value,
-      reference_name: activeDeal.value,
-      channel: channel.value,
-      content: composedText.value || undefined,
-      attachments: JSON.stringify(urls.filter(Boolean)),
-      to: channel.value === 'email' ? props.dealEmail : undefined,
-    })
-    toast.success(channel.value === 'email' ? __('Enviado por correo.') : __('Enviado por WhatsApp.'))
+    if (waBlocked.value) {
+      // window closed → send an approved image-header template carrying the first
+      // selected photo (the only window-independent way to deliver a photo).
+      const url = await resolveSendUrl(selectedPhotos.value[0])
+      await call('doco_marketing.api.inbox.send_message', {
+        reference_doctype: activeDealDoctype.value,
+        reference_name: activeDeal.value,
+        channel: 'whatsapp',
+        template: chosenTemplate.value,
+        attach: url,
+      })
+      toast.success(__('Plantilla enviada por WhatsApp.'))
+    } else {
+      const urls = await Promise.all(selectedPhotos.value.map(resolveSendUrl))
+      await call('doco_marketing.api.inbox.send_bundle', {
+        reference_doctype: activeDealDoctype.value,
+        reference_name: activeDeal.value,
+        channel: channel.value,
+        content: composedText.value || undefined,
+        attachments: JSON.stringify(urls.filter(Boolean)),
+        to: channel.value === 'email' ? props.dealEmail : undefined,
+      })
+      toast.success(channel.value === 'email' ? __('Enviado por correo.') : __('Enviado por WhatsApp.'))
+    }
     show.value = false
     loadThread()
     reloadQueue()

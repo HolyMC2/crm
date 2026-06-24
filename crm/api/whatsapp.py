@@ -297,7 +297,7 @@ def create_whatsapp_message(
 
 @frappe.whitelist()
 def send_whatsapp_template(
-	reference_doctype: str, reference_name: str, template: str, to: str, body_param=None
+	reference_doctype: str, reference_name: str, template: str, to: str, body_param=None, attach=None
 ):
 	validate_access(reference_doctype, reference_name)
 	doc = frappe.new_doc("WhatsApp Message")
@@ -313,6 +313,11 @@ def send_whatsapp_template(
 			"to": to,
 		}
 	)
+	# Media header: frappe_whatsapp's send_template() fills the template's IMAGE/
+	# DOCUMENT header component from doc.attach when the template's header_type is set.
+	# Lets a (window-independent) template carry a photo.
+	if attach:
+		doc.attach = attach
 	# Reviewed/edited variable values from the composer's template review step.
 	# frappe_whatsapp's send_template() consumes `body_param` verbatim (its values in
 	# {{1}},{{2}}… order) instead of re-resolving the mapped ref-doc fields, so what the
