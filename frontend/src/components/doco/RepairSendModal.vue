@@ -24,6 +24,23 @@
           <span class="ml-auto text-[11px] text-ink-gray-5">{{ __('Para') }}: <span class="font-medium text-ink-gray-8">{{ recipientLabel }}</span></span>
         </div>
 
+        <!-- 24h-window guard: free-form WhatsApp won't deliver outside Meta's window -->
+        <div
+          v-if="waBlocked"
+          class="rounded-md border border-outline-amber-2 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-3"
+        >
+          ⚠ <span class="font-semibold">{{ __('Ventana de 24h de WhatsApp cerrada.') }}</span>
+          {{ __('El cliente no ha escrito por WhatsApp en las últimas 24 h. Meta solo entrega plantillas aprobadas — un mensaje libre o una foto NO llegará.') }}
+          <template v-if="dealEmail"> {{ __('Envía por Email, o manda una plantilla desde la conversación.') }}</template>
+          <template v-else> {{ __('Manda una plantilla aprobada desde la conversación.') }}</template>
+        </div>
+        <div
+          v-else-if="channel === 'whatsapp' && waWindow.open"
+          class="text-[11px] text-ink-green-3"
+        >
+          ✓ {{ __('Ventana de WhatsApp abierta') }} · {{ waWindow.hoursLeft }}h
+        </div>
+
         <!-- photos -->
         <div v-if="ro.photos?.length">
           <div class="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
@@ -106,7 +123,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { Dialog, Button, createResource, call, toast } from 'frappe-ui'
+import { Dialog, Button, createResource, createListResource, call, toast } from 'frappe-ui'
 import { activeDeal, activeDealDoctype, loadThread, reloadQueue } from '@/composables/inbox'
 
 const props = defineProps({
@@ -127,6 +144,24 @@ const channelChoices = computed(() => {
   if (props.dealEmail) c.push({ v: 'email', label: '✉ Email' })
   return c
 })
+// WhatsApp 24h customer-service window: free-form (text/media) only delivers within
+// 24h of the customer's last inbound message; outside it Meta accepts ONLY approved
+// templates, so a free-form send/photo would silently never arrive — guard it.
+const lastInbound = createListResource({
+  doctype: 'WhatsApp Message',
+  fields: ['creation'],
+  orderBy: 'creation desc',
+  pageLength: 1,
+  onError: () => {},
+})
+const waWindow = computed(() => {
+  const ts = lastInbound.data?.[0]?.creation
+  if (!ts) return { open: false, hoursLeft: 0 }
+  const left = 24 - (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
+  return left > 0 ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) } : { open: false, hoursLeft: 0 }
+})
+const waBlocked = computed(() => channel.value === 'whatsapp' && !waWindow.value.open)
+
 const channelLabel = computed(() => (channel.value === 'email' ? 'Email' : 'WhatsApp'))
 const recipientLabel = computed(() =>
   channel.value === 'email' ? props.dealEmail || '—' : props.dealMobile || __('WhatsApp del cliente'),
@@ -152,7 +187,9 @@ const composedText = computed(() => {
   return parts.join('\n')
 })
 
-const canSend = computed(() => !sending.value && (selectedPhotos.value.length > 0 || !!composedText.value))
+const canSend = computed(
+  () => !sending.value && !waBlocked.value && (selectedPhotos.value.length > 0 || !!composedText.value),
+)
 
 function togglePhoto(name) {
   photoSel[name] = !photoSel[name]
@@ -169,6 +206,14 @@ function toggleLog(e, i) {
 // reset + prefill a default note each time the modal opens for an RO
 watch(show, (open) => {
   if (!open) return
+  if (activeDeal.value) {
+    lastInbound.filters = {
+      reference_doctype: activeDealDoctype.value,
+      reference_name: activeDeal.value,
+      type: 'Incoming',
+    }
+    lastInbound.reload()
+  }
   for (const k of Object.keys(photoSel)) delete photoSel[k]
   for (const k of Object.keys(logSel)) delete logSel[k]
   channel.value = 'whatsapp'
