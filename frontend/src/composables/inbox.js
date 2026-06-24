@@ -167,6 +167,20 @@ export async function markRead(doctype, name) {
   }
 }
 
+// Manually close the amber "Responder" (needs-reply) chip without replying. The
+// backend also auto-closes it when the deal reaches a terminal status (Won/Lost).
+// A later inbound message re-raises it. Optimistic: drop the chip now, persist async.
+export async function clearResponder(doctype, name) {
+  if (!doctype || !name) return
+  const r = (queue.data || []).find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
+  if (r) r.unread = false
+  try {
+    await call('doco_marketing.api.inbox.clear_responder', { reference_doctype: doctype, reference_name: name })
+  } catch (e) {
+    reloadQueue() // revert the optimistic clear if the server rejected it
+  }
+}
+
 export function loadContactCard() {
   if (!activeDeal.value) {
     contactCard.data = null

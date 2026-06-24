@@ -202,10 +202,18 @@
             it is not a read receipt. -->
           <span
             v-if="r.unread"
-            class="inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-3 bg-surface-amber-1"
-            :title="__('El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes.')"
+            class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold text-ink-amber-3 bg-surface-amber-1"
+            :title="__('El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes o al completar el trato.')"
           >
             ↩ {{ __('Responder') }}
+            <button
+              class="ml-0.5 flex h-3 w-3 items-center justify-center rounded-full leading-none hover:bg-surface-amber-2"
+              :aria-label="__('Marcar como respondido')"
+              :title="__('Marcar como respondido')"
+              @click.stop="clearResponder(r.ref_doctype || 'CRM Deal', r.name)"
+            >
+              ×
+            </button>
           </span>
           <span
             v-if="r.status"
@@ -253,6 +261,7 @@ import {
   setQueueChannel,
   onSearchInput,
   reloadQueue,
+  clearResponder,
   avatarColor,
   initials,
   timeAgo,
