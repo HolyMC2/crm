@@ -58,6 +58,20 @@
         </div>
       </div>
       <div class="flex flex-none items-center gap-2.5">
+        <div
+          v-if="responsible && !isMobile"
+          class="flex items-center gap-1.5"
+          :title="__('Responsable') + ': ' + responsible.name"
+        >
+          <span
+            class="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full text-[10px] font-semibold"
+            :style="`background:${avatarColor(responsible.name)[0]};color:${avatarColor(responsible.name)[1]}`"
+          >
+            {{ initials(responsible.name) }}
+          </span>
+          <span class="text-[12px] font-medium text-ink-gray-7">{{ responsible.name.split(' ')[0] }}</span>
+        </div>
+        <div v-if="responsible && slaLabel && !isMobile" class="h-[30px] w-px bg-outline-gray-2" />
         <div v-if="slaLabel && !isMobile" class="text-right">
           <div class="text-[10px] text-ink-gray-5">{{ __('1ª respuesta SLA') }}</div>
           <div class="text-[13px] font-bold" :class="slaOverdue ? 'text-ink-red-4' : 'text-ink-green-3'">
@@ -125,6 +139,7 @@ import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
+import { usersStore } from '@/stores/users'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { isMobile } from '@/composables/breakpoint'
 import {
@@ -144,6 +159,7 @@ import {
 const { showModal } = useDoctypeModal()
 
 const { makeCall } = globalStore()
+const { getUser } = usersStore()
 const { getDealStatus, getLeadStatus, leadStatuses, dealStatuses: dealStatusList } = statusesStore()
 
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
@@ -163,7 +179,7 @@ watch(
       filters: activeDeal.value,
       fieldname: JSON.stringify(
         isD
-          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name']
+          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'deal_owner']
           : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
       ),
     })
@@ -185,9 +201,18 @@ const row = computed(() => {
     mobile_no: d.mobile_no || l.mobile_no,
     lead_score: l.lead_score ?? d.lead_score,
     score_grade: l.score_grade ?? d.score_grade,
+    deal_owner: d.deal_owner,
   }
 })
 const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
+
+// Responsible owner: the CRM Deal's deal_owner (rides the existing assignment /
+// cascade — no parallel ACL). Resolved to a full name for the header chip.
+const responsible = computed(() => {
+  const u = row.value.deal_owner
+  if (!u) return null
+  return { user: u, name: getUser(u)?.full_name || u }
+})
 const grade = computed(() => row.value.score_grade)
 const score = computed(() => row.value.lead_score ?? '')
 const gradeColor = computed(() => GRADE_COLORS[grade.value]?.[0] || '#9aa2ae')
