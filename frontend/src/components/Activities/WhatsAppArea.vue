@@ -254,6 +254,11 @@
                 {{ formatDateTime(whatsapp.creation) }}
               </div>
             </Tooltip>
+            <Tooltip v-if="provenanceBadge(whatsapp)" :text="provenanceBadge(whatsapp).tip">
+              <span class="rounded bg-surface-gray-3 px-1 text-2xs text-ink-gray-6">
+                {{ provenanceBadge(whatsapp).icon }} {{ provenanceBadge(whatsapp).label }}
+              </span>
+            </Tooltip>
             <!-- WhatsApp-style receipts: ✓ enviado · ✓✓ entregado · ✓✓ azul leído ·
                  🕓 enviando. Tooltip names each so it's self-explanatory. -->
             <div v-if="whatsapp.type == 'Outgoing'" class="flex items-end">
@@ -317,6 +322,24 @@ import { formatDate, formatDateTime, formatTimestampFull, sanitizeHTML } from '@
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Dropdown, createResource, toast } from 'frappe-ui'
 import { ref, computed } from 'vue'
+import { usersStore } from '@/stores/users'
+
+const { getUser } = usersStore()
+
+// Phase-1 message provenance badge: who/how an outgoing message was sent.
+// Automation (which rule) · Bot (which flow) · Human (which teammate typed it).
+function provenanceBadge(wa) {
+  const t = wa.doco_sent_by_type
+  if (t === 'Automation')
+    return { icon: '⚙', label: __('Auto'), tip: wa.doco_automation_source || __('Automatic message') }
+  if (t === 'Bot')
+    return { icon: '🤖', label: wa.doco_bot || __('Bot'), tip: wa.doco_bot || __('Bot') }
+  if (wa.type === 'Outgoing' && wa.doco_actor_user) {
+    const name = getUser(wa.doco_actor_user)?.full_name || wa.doco_actor_user
+    return { icon: '', label: name, tip: __('Sent by') + ' ' + name }
+  }
+  return null
+}
 
 const props = defineProps({
   messages: { type: Array, default: () => [] },

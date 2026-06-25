@@ -151,6 +151,10 @@ def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 					"reference_name",
 					"template_parameters",
 					"template_header_parameters",
+					"doco_sent_by_type",
+					"doco_actor_user",
+					"doco_automation_source",
+					"doco_bot",
 				],
 			)
 
@@ -180,6 +184,10 @@ def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 			"reference_name",
 			"template_parameters",
 			"template_header_parameters",
+			"doco_sent_by_type",
+			"doco_actor_user",
+			"doco_automation_source",
+			"doco_bot",
 		],
 	)
 
@@ -289,6 +297,9 @@ def create_whatsapp_message(
 			"to": to,
 			"attach": attach,
 			"content_type": content_type,
+			# Provenance (Phase 1): a human typed this from the inbox.
+			"doco_sent_by_type": "Human",
+			"doco_actor_user": frappe.session.user,
 		}
 	)
 	doc.insert(ignore_permissions=True)
@@ -311,6 +322,9 @@ def send_whatsapp_template(
 			"use_template": True,
 			"template": template,
 			"to": to,
+			# Provenance (Phase 1): a human picked + sent this template.
+			"doco_sent_by_type": "Human",
+			"doco_actor_user": frappe.session.user,
 		}
 	)
 	# Media header: frappe_whatsapp's send_template() fills the template's IMAGE/
