@@ -341,6 +341,11 @@ function insertQuickReply(qr) {
   nextTick(() => textareaRef.value?.el?.focus())
   capture('whatsapp_quick_reply_used')
 }
+// Drop the canned tag the moment the agent edits the inserted text — so a sent
+// message is only attributed canned when it goes out verbatim.
+watch(content, (v) => {
+  if (lastCanned.value && (v || '').trim() !== lastCanned.value.text.trim()) lastCanned.value = null
+})
 
 const showEditor = ref(false)
 const draft = ref([])

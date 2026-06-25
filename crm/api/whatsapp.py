@@ -120,6 +120,7 @@ def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 	if not frappe.db.exists("DocType", "WhatsApp Message"):
 		return []
 	messages = []
+	wa_fields = _wa_message_fields()
 
 	if reference_doctype == "CRM Deal":
 		lead = reference_doc.get("lead")
@@ -131,31 +132,7 @@ def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 					"reference_doctype": "CRM Lead",
 					"reference_name": lead,
 				},
-				fields=[
-					"name",
-					"type",
-					"to",
-					"from",
-					"content_type",
-					"message_type",
-					"attach",
-					"template",
-					"use_template",
-					"message_id",
-					"is_reply",
-					"reply_to_message_id",
-					"creation",
-					"message",
-					"status",
-					"reference_doctype",
-					"reference_name",
-					"template_parameters",
-					"template_header_parameters",
-					"doco_sent_by_type",
-					"doco_actor_user",
-					"doco_automation_source",
-					"doco_bot",
-				],
+				fields=wa_fields,
 			)
 
 	messages += frappe.get_all(
@@ -164,31 +141,7 @@ def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 			"reference_doctype": reference_doctype,
 			"reference_name": reference_name,
 		},
-		fields=[
-			"name",
-			"type",
-			"to",
-			"from",
-			"content_type",
-			"message_type",
-			"attach",
-			"template",
-			"use_template",
-			"message_id",
-			"is_reply",
-			"reply_to_message_id",
-			"creation",
-			"message",
-			"status",
-			"reference_doctype",
-			"reference_name",
-			"template_parameters",
-			"template_header_parameters",
-			"doco_sent_by_type",
-			"doco_actor_user",
-			"doco_automation_source",
-			"doco_bot",
-		],
+		fields=wa_fields,
 	)
 
 	# Filter messages to get only Template messages
@@ -509,6 +462,21 @@ def get_quick_templates(reference_doctype: str = ""):
 	)
 	templates.sort(key=lambda t: (usage.get(t.name, 0), (t.name or "").lower()), reverse=True)
 	return templates[:QUICK_TEMPLATE_LIMIT]
+
+
+def _wa_message_fields():
+	"""WhatsApp Message fields for the thread. The doco_* provenance columns are
+	custom (added by a crm patch) — guard on has_column so the read endpoint
+	survives a code-before-migrate window or a site where the patch hasn't run."""
+	fields = [
+		"name", "type", "to", "from", "content_type", "message_type", "attach",
+		"template", "use_template", "message_id", "is_reply", "reply_to_message_id",
+		"creation", "message", "status", "reference_doctype", "reference_name",
+		"template_parameters", "template_header_parameters",
+	]
+	if frappe.db.has_column("WhatsApp Message", "doco_sent_by_type"):
+		fields += ["doco_sent_by_type", "doco_actor_user", "doco_automation_source", "doco_bot"]
+	return fields
 
 
 def parse_template_parameters(string, parameters):
