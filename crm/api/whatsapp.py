@@ -269,6 +269,7 @@ def create_whatsapp_message(
 	attach: str,
 	reply_to: str,
 	content_type: str = "text",
+	canned: str = "",
 ):
 	validate_access(reference_doctype, reference_name)
 	doc = frappe.new_doc("WhatsApp Message")
@@ -302,6 +303,9 @@ def create_whatsapp_message(
 			"doco_actor_user": frappe.session.user,
 		}
 	)
+	if canned:
+		# Sent verbatim from a saved quick reply — still Human, but tagged canned.
+		doc.doco_automation_source = f"canned:{canned}"
 	doc.insert(ignore_permissions=True)
 	return doc.name
 

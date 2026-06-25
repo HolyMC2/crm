@@ -60,7 +60,7 @@
       type="button"
       class="rounded-md bg-surface-gray-2 px-2 py-1 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-3"
       :title="qr.text"
-      @click="insertQuickReply(qr.text)"
+      @click="insertQuickReply(qr)"
     >
       ⚡ {{ qr.label }}
     </button>
@@ -327,10 +327,17 @@ const quickTemplates = createResource({
   auto: true,
 })
 
-function insertQuickReply(text) {
+// Track a quick reply dropped into an empty composer, so a verbatim send can be
+// attributed as canned (doco_automation_source="canned:<label>"). Cleared the
+// moment the agent edits or types anything else.
+const lastCanned = ref(null)
+function insertQuickReply(qr) {
+  const text = typeof qr === 'string' ? qr : qr.text
+  const wasEmpty = !content.value
   content.value = content.value
     ? `${content.value.replace(/\s*$/, '')} ${text}`
     : text
+  lastCanned.value = wasEmpty && typeof qr !== 'string' ? { label: qr.label, text } : null
   nextTick(() => textareaRef.value?.el?.focus())
   capture('whatsapp_quick_reply_used')
 }
@@ -400,6 +407,10 @@ function sendTextMessage() {
 }
 
 async function sendWhatsAppMessage() {
+  const canned =
+    lastCanned.value && content.value.trim() === lastCanned.value.text.trim()
+      ? lastCanned.value.label || ''
+      : ''
   let args = {
     reference_doctype: props.doctype,
     reference_name: doc.value.name,
@@ -408,8 +419,10 @@ async function sendWhatsAppMessage() {
     attach: whatsapp.value.attach || '',
     reply_to: reply.value?.name || '',
     content_type: whatsapp.value.content_type,
+    canned,
   }
   content.value = ''
+  lastCanned.value = null
   fileType.value = ''
   whatsapp.value.attach = ''
   whatsapp.value.content_type = 'text'
