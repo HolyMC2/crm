@@ -98,9 +98,11 @@
             <span class="text-sm font-medium text-ink-gray-8">
               {{ whatsapp.owner_name || whatsapp.owner }}
             </span>
-            <span class="text-2xs text-ink-gray-4">
-              {{ formatDate(whatsapp.creation, 'hh:mm a') }}
-            </span>
+            <Tooltip :text="formatTimestampFull(whatsapp.creation)">
+              <span class="text-2xs text-ink-gray-4">
+                {{ formatDateTime(whatsapp.creation) }}
+              </span>
+            </Tooltip>
           </div>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <div
@@ -247,9 +249,9 @@
             />
           </div>
           <div class="-mb-1 flex shrink-0 items-end gap-1 text-ink-gray-5">
-            <Tooltip :text="formatDate(whatsapp.creation, 'ddd, MMM D, YYYY')">
+            <Tooltip :text="formatTimestampFull(whatsapp.creation)">
               <div class="text-2xs">
-                {{ formatDate(whatsapp.creation, 'hh:mm a') }}
+                {{ formatDateTime(whatsapp.creation) }}
               </div>
             </Tooltip>
             <!-- WhatsApp-style receipts: ✓ enviado · ✓✓ entregado · ✓✓ azul leído ·
@@ -311,7 +313,7 @@ import CheckIcon from '@/components/Icons/CheckIcon.vue'
 import DoubleCheckIcon from '@/components/Icons/DoubleCheckIcon.vue'
 import DocumentIcon from '@/components/Icons/DocumentIcon.vue'
 import ReactIcon from '@/components/Icons/ReactIcon.vue'
-import { formatDate, sanitizeHTML } from '@/utils'
+import { formatDate, formatDateTime, formatTimestampFull, sanitizeHTML } from '@/utils'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Dropdown, createResource, toast } from 'frappe-ui'
 import { ref, computed } from 'vue'

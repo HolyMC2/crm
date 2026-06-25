@@ -100,6 +100,17 @@ export function timeAgo(date) {
   return prettyDate(date)
 }
 
+export function formatDateTime(date) {
+  // Compact, glanceable absolute timestamp (day + time, no year) in local tz —
+  // shown next to relative time so the team sees exactly when things happened.
+  return date ? formatDate(date, 'D MMM, h:mm a') : ''
+}
+
+export function formatTimestampFull(date) {
+  // Full timestamp: weekday, date, year and seconds — for hover tooltips / audit.
+  return date ? formatDate(date, 'dddd, D MMM YYYY · h:mm:ss a') : ''
+}
+
 function getBrowserTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone
 }

@@ -17,9 +17,10 @@
         }}</span>
       </div>
       <div class="ml-auto whitespace-nowrap">
-        <Tooltip :text="formatDate(call.creation)">
+        <Tooltip :text="formatTimestampFull(call.creation)">
           <div class="text-sm text-ink-gray-5">
             {{ __(timeAgo(call.creation)) }}
+            <span class="text-ink-gray-4">· {{ formatDateTime(call.creation) }}</span>
           </div>
         </Tooltip>
       </div>
@@ -106,7 +107,7 @@ import MultipleAvatar from '@/components/MultipleAvatar.vue'
 import AudioPlayer from '@/components/Activities/AudioPlayer.vue'
 import CallLogDetailModal from '@/components/Modals/CallLogDetailModal.vue'
 import { statusLabelMap, statusColorMap } from '@/utils/callLog.js'
-import { formatDate, timeAgo } from '@/utils'
+import { formatDate, timeAgo, formatDateTime, formatTimestampFull } from '@/utils'
 import { Avatar, Badge, Tooltip, createResource } from 'frappe-ui'
 import { reactive, ref } from 'vue'
 
