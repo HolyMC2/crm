@@ -81,7 +81,7 @@
 import { reactive, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Avatar, Button, Dialog } from 'frappe-ui'
-import { contactCard, saveContactField } from '@/composables/inbox'
+import { contactCard, saveContactField, hasTaller } from '@/composables/inbox'
 
 const router = useRouter()
 const editOpen = ref(false)
@@ -126,7 +126,7 @@ const baseFields = computed(() => {
     { field: 'email', label: __('Email'), doctype: rec.doctype, name: rec.name, target: 'email' },
     { field: 'organization', label: __('Empresa'), doctype: rec.doctype, name: rec.name, target: 'organization' },
   ]
-  if (card.value?.is_deal) f.push({ field: 'device', label: __('Dispositivo'), doctype: rec.doctype, name: rec.name, target: 'repair_device' })
+  if (card.value?.is_deal && hasTaller.value) f.push({ field: 'device', label: __('Dispositivo'), doctype: rec.doctype, name: rec.name, target: 'repair_device' })
   return f
 })
 

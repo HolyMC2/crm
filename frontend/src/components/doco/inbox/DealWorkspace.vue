@@ -59,7 +59,7 @@
         </Tabs>
       </div>
 
-      <div v-else-if="activeTab === 'repair'" class="scb flex-1 overflow-y-auto p-5">
+      <div v-else-if="activeTab === 'repair' && hasTaller" class="scb flex-1 overflow-y-auto p-5">
         <RepairOrdersSection :docname="activeDeal" />
       </div>
     </template>
@@ -87,7 +87,7 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
 
@@ -135,10 +135,20 @@ const tabs = [
   { key: 'activity', label: '⚡ ' + __('Actividad') },
   { key: 'repair', label: '🔧 ' + __('Reparación') },
 ]
-// Reparación is a deal-only concept (repair orders). Leads get conversation +
-// activity only.
-const visibleTabs = computed(() =>
-  activeDealDoctype.value === 'CRM Deal' ? tabs : tabs.filter((t) => t.key !== 'repair'),
+// Reparación is a deal-only concept (repair orders) AND requires taller — hidden
+// for leads and on tenants without reparaciones (e.g. mumu).
+const visibleTabs = computed(() => {
+  let t = activeDealDoctype.value === 'CRM Deal' ? tabs : tabs.filter((x) => x.key !== 'repair')
+  if (!hasTaller.value) t = t.filter((x) => x.key !== 'repair')
+  return t
+})
+// If the persisted tab is repair but this tenant has no taller, fall back.
+watch(
+  [hasTaller, activeTab],
+  () => {
+    if (!hasTaller.value && activeTab.value === 'repair') activeTab.value = 'conversation'
+  },
+  { immediate: true },
 )
 const dealTabs = [
   { name: 'Activity', label: __('Activity'), icon: ActivityIcon },

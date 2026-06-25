@@ -208,7 +208,7 @@ import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, mobileBack } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, mobileBack, hasTaller } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()
@@ -229,17 +229,21 @@ const queueRow = computed(() => (queue.data || []).find((r) => r.deal === active
 const dealRes = createResource({ url: 'frappe.client.get_value' })
 const leadRes = createResource({ url: 'frappe.client.get_value' })
 watch(
-  activeDeal,
-  (d) => {
+  [activeDeal, hasTaller],
+  () => {
+    const d = activeDeal.value
     if (!d) return
     const isD = activeDealDoctype.value === 'CRM Deal'
+    // repair_device / repair_orders_count are taller custom fields — requesting
+    // them on a tenant without taller (mumu) is an unknown-column error, so only
+    // include them when has_taller. The v-if guards hide the rows when absent.
+    const dealFields = ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability', 'creation', 'deal_value', 'source', '_assign', '_user_tags']
+    if (hasTaller.value) dealFields.push('repair_device', 'repair_orders_count')
     dealRes.submit({
       doctype: activeDealDoctype.value,
       filters: d,
       fieldname: JSON.stringify(
-        isD
-          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability', 'creation', 'repair_device', 'repair_orders_count', 'deal_value', 'source', '_assign', '_user_tags']
-          : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
+        isD ? dealFields : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
       ),
     })
   },
@@ -295,9 +299,10 @@ const repairOrders = createResource({
   onError: () => {},
 })
 watch(
-  activeDeal,
-  (d) => {
-    if (d && isDeal.value) repairOrders.submit({ deal_name: d })
+  [activeDeal, hasTaller],
+  () => {
+    const d = activeDeal.value
+    if (d && isDeal.value && hasTaller.value) repairOrders.submit({ deal_name: d })
     else repairOrders.data = null
   },
   { immediate: true },

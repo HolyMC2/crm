@@ -2,7 +2,7 @@
 // Module-level reactive singletons (same pattern as composables/settings.js) so the
 // 3-pane tree shares state without prop-drilling. Thin client over the B1 backend:
 // doco_marketing.api.inbox.* — itself a read layer over crm WhatsApp + Communication.
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { createResource, call } from 'frappe-ui'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
@@ -38,6 +38,15 @@ export const queue = createResource({
   params: { limit: 50 },
 })
 export const channels = createResource({ url: 'doco_marketing.api.inbox.get_channels' })
+// Per-tenant feature flags. has_taller gates the reparaciones surfaces so the inbox
+// runs cleanly on a tenant without taller (e.g. mumu). Default false until loaded —
+// safe: never request taller-only fields/endpoints before we know they exist.
+export const features = createResource({
+  url: 'doco_marketing.api.inbox.get_inbox_features',
+  cache: 'inbox-features',
+  auto: true,
+})
+export const hasTaller = computed(() => !!features.data?.has_taller)
 export const thread = createResource({ url: 'doco_marketing.api.inbox.get_communications' })
 // "Sin asignar": inbound WhatsApp from numbers with no Contact/Lead/Deal.
 export const unassigned = createResource({
