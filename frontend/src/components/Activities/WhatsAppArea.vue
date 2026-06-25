@@ -59,6 +59,13 @@
             class="prose-f line-clamp-2 text-xs text-ink-gray-6"
             v-html="sanitizeHTML(note.content)"
           />
+          <div
+            v-if="note.modified || note.creation"
+            class="mt-0.5 text-2xs text-ink-gray-5"
+            :title="formatTimestampFull(note.modified || note.creation)"
+          >
+            {{ formatDateTime(note.modified || note.creation) }}
+          </div>
         </div>
         <button
           type="button"
