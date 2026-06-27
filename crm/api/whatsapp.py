@@ -455,13 +455,14 @@ def get_quick_templates(reference_doctype: str = ""):
 	if len(templates) <= QUICK_TEMPLATE_LIMIT:
 		return sorted(templates, key=lambda t: (t.name or "").lower())
 
+	# Raw SQL for the aggregate: newer frappe rejects "count(name) as uses" passed as a
+	# field STRING to get_all (SQL-function-in-string guard) -> ValidationError that broke
+	# fcrm load once there were more approved templates than the limit.
 	usage = dict(
-		frappe.get_all(
-			"WhatsApp Message",
-			filters={"use_template": 1},
-			fields=["template", "count(name) as uses"],
-			group_by="template",
-			as_list=True,
+		frappe.db.sql(
+			"""SELECT template, COUNT(name) FROM `tabWhatsApp Message`
+			   WHERE use_template = 1 AND COALESCE(template, '') != ''
+			   GROUP BY template"""
 		)
 	)
 	templates.sort(key=lambda t: (usage.get(t.name, 0), (t.name or "").lower()), reverse=True)
