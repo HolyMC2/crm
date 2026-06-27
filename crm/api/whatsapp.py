@@ -47,12 +47,16 @@ def validate(doc, method):
 
 
 def on_update(doc, method):
+	# after_commit so the frontend's refetch (triggered by this event) reads the
+	# COMMITTED row — without it the publish races the transaction and the UI shows
+	# stale data until a manual F5.
 	frappe.publish_realtime(
 		"whatsapp_message",
 		{
 			"reference_doctype": doc.reference_doctype,
 			"reference_name": doc.reference_name,
 		},
+		after_commit=True,
 	)
 
 	notify_agent(doc)
