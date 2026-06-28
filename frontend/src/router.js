@@ -195,6 +195,12 @@ const routes = [
     meta: { navLabel: 'Aprobaciones', title: 'Aprobaciones WhatsApp' },
   },
   {
+    path: '/social',
+    name: 'Social',
+    component: () => import('@/pages/SocialCalendar.vue'),
+    meta: { navLabel: 'Social', title: 'Social' },
+  },
+  {
     path: '/:invalidpath',
     name: 'Invalid Page',
     component: () => import('@/pages/InvalidPage.vue'),

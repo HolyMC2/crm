@@ -9,6 +9,7 @@ import DealsIcon from '~icons/lucide/handshake'
 import InboxIcon from '~icons/lucide/messages-square'
 import ReviewQueueIcon from '~icons/lucide/clipboard-check'
 import CampaignsIcon from '~icons/lucide/megaphone'
+import SocialIcon from '~icons/lucide/images'
 import CallsIcon from '~icons/lucide/phone'
 import TasksIcon from '~icons/lucide/square-check-big'
 import ReportsIcon from '~icons/lucide/bar-chart-3'
@@ -22,6 +23,7 @@ export const navItems = [
   { key: 'wa-queue', icon: ReviewQueueIcon, label: 'Aprobaciones', to: '/whatsapp-queue', group: 'wa-queue', badge: 'pending' },
   { key: 'deals', icon: DealsIcon, label: 'Deals', to: '/deals', group: 'deals' },
   { key: 'campaigns', icon: CampaignsIcon, label: 'Campaigns', to: '/campaigns', group: 'campaigns' },
+  { key: 'social', icon: SocialIcon, label: 'Social', to: '/social', group: 'social' },
   { key: 'calls', icon: CallsIcon, label: 'Calls', to: '/call-logs', group: 'calls' },
   { key: 'tasks', icon: TasksIcon, label: 'Tasks', to: '/tasks', group: 'tasks', badge: 'overdue' },
   { key: 'reports', icon: ReportsIcon, label: 'Reports', to: '/reports', group: 'reports' },
@@ -38,6 +40,7 @@ export function routeGroup(path) {
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'wa-queue'
   if (/^\/deals?(\/|$)/.test(path)) return 'deals'
   if (/^\/campaigns(\/|$)/.test(path)) return 'campaigns'
+  if (/^\/social(\/|$)/.test(path)) return 'social'
   if (/^\/(leads|pipeline|calendar|stage-scripts|enrichment|pipeline-analysis)(\/|$)/.test(path)) return 'leads'
   if (/^\/dashboard(\/|$)/.test(path)) return 'dashboard'
   if (/^\/call-logs(\/|$)/.test(path)) return 'calls'
