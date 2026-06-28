@@ -8,7 +8,8 @@ import { createResource, call } from 'frappe-ui'
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
 export const activeDealDoctype = ref('CRM Deal') // 'CRM Deal' | 'CRM Lead' — leads now share the queue
-export const activeUnassigned = ref(null) // phone string when viewing a "Sin asignar" orphan thread
+export const activeUnassigned = ref(null) // phone (WhatsApp) or PSID (Messenger) of the open "Sin asignar" orphan
+export const activeUnassignedChannel = ref('whatsapp') // 'whatsapp' | 'messenger' — which orphan kind is open
 export const activeChannel = ref('whatsapp') // send channel + bubble style
 export const activeTab = ref('conversation') // conversation|activity|repair
 export const convoTemplateOpen = ref(false) // macro -> open the WhatsApp template review modal in the convo
@@ -230,22 +231,22 @@ export async function saveContactField(doctype, name, fieldname, value) {
   reloadQueue()
 }
 
-export function selectUnassigned(phone) {
+export function selectUnassigned(id, channel = 'whatsapp') {
   activeDeal.value = null // orphan threads have no deal/context panel
-  activeUnassigned.value = phone
+  activeUnassigned.value = id
+  activeUnassignedChannel.value = channel
   mobileView.value = 'thread' // mobile: advance the stack to the orphan thread
-  unassignedThread.submit({ phone })
+  unassignedThread.submit(channel === 'messenger' ? { psid: id } : { phone: id })
 }
 
 // Convert an orphan number to a Lead, Deal, or Customer; the backend re-points
 // its messages. A Deal/Lead then enters the normal queue and we open it; a
 // Customer files under its Contact (out of the deal/lead queue).
-export async function assignUnassigned(phone, targetDoctype, fields = {}) {
-  const res = await call('doco_marketing.api.inbox.assign_unassigned', {
-    phone,
-    target_doctype: targetDoctype,
-    ...fields,
-  })
+export async function assignUnassigned(id, targetDoctype, fields = {}, channel = 'whatsapp') {
+  const params = { target_doctype: targetDoctype, ...fields }
+  if (channel === 'messenger') params.psid = id
+  else params.phone = id
+  const res = await call('doco_marketing.api.inbox.assign_unassigned', params)
   activeUnassigned.value = null
   reloadUnassigned()
   reloadQueue()

@@ -24,7 +24,9 @@
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
       <div>
-        <div class="text-[15px] font-semibold text-ink-gray-9">{{ formatPhone(activeUnassigned) }}</div>
+        <div class="text-[15px] font-semibold text-ink-gray-9">
+          {{ isMessenger ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8) : formatPhone(activeUnassigned) }}
+        </div>
         <div class="text-[11px] font-medium text-ink-amber-3">{{ __('Sin asignar — captura y convierte') }}</div>
       </div>
     </div>
@@ -57,6 +59,7 @@
              record. replyOnly hides notes/comments/templates (no reference doc yet). -->
         <div class="flex-none border-t border-outline-gray-1">
           <WhatsAppBox
+            v-if="!isMessenger"
             v-model="unassignedDoc"
             v-model:whatsapp="waModel"
             v-model:reply="waReply"
@@ -64,6 +67,11 @@
             :to-override="activeUnassigned || ''"
             reply-only
           />
+          <!-- Messenger orphan: assign to a Lead/Trato first, then reply from the
+               assigned conversation's Messenger pane (the PSID send needs a reference). -->
+          <p v-else class="px-4 py-3 text-[11.5px] text-ink-gray-5">
+            {{ __('Asigna esta conversación a un Lead o Trato (abajo) para poder responder por Messenger.') }}
+          </p>
         </div>
       </div>
 
@@ -79,14 +87,14 @@
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Apellido') }}</span>
             <input v-model="form.last_name" :class="inputCls" /></label>
         </div>
-        <label class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Teléfono') }}</span>
+        <label v-if="!isMessenger" class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Teléfono') }}</span>
           <input :value="formatPhone(activeUnassigned)" disabled :class="inputCls" /></label>
         <label class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Email') }}</span>
           <input v-model="form.email" type="email" :class="inputCls" /></label>
         <label class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Dispositivo / Empresa') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span></span>
           <input v-model="form.device" :class="inputCls" /></label>
 
-        <button class="mt-3 flex items-center gap-1 text-[11px] font-semibold text-ink-gray-6" @click="showFiscal = !showFiscal">
+        <button v-if="!isMessenger" class="mt-3 flex items-center gap-1 text-[11px] font-semibold text-ink-gray-6" @click="showFiscal = !showFiscal">
           {{ showFiscal ? '▾' : '▸' }} {{ __('Datos fiscales') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span>
         </button>
         <div v-if="showFiscal" class="mt-1.5 flex flex-col gap-2">
@@ -112,7 +120,7 @@
             <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50" :disabled="busy" @click="convert('CRM Lead')">
               + {{ __('Lead') }}
             </button>
-            <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50" :disabled="busy" @click="convert('Customer')">
+            <button v-if="!isMessenger" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50" :disabled="busy" @click="convert('Customer')">
               + {{ __('Cliente') }}
             </button>
           </div>
@@ -129,7 +137,9 @@ import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, unassignedThread, assignUnassigned, hhmm, mobileBack } from '@/composables/inbox'
+import { activeUnassigned, activeUnassignedChannel, unassignedThread, assignUnassigned, hhmm, mobileBack } from '@/composables/inbox'
+
+const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
 
 // Reply-bar models for WhatsAppBox. No reference doc (name=''), so the send goes
 // out reference-less to the active number; the whatsapp model just proxies the
@@ -174,7 +184,7 @@ async function convert(target) {
       if (target === 'CRM Deal') fields.device = form.device
       else fields.organization = form.device
     }
-    const res = await assignUnassigned(activeUnassigned.value, target, fields)
+    const res = await assignUnassigned(activeUnassigned.value, target, fields, activeUnassignedChannel.value)
     const label = target === 'CRM Deal' ? __('Trato') : target === 'Customer' ? __('Cliente') : __('Lead')
     toast.success(`${label} ${__('creado')}: ${res.name}`)
   } catch (e) {

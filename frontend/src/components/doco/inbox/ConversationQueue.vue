@@ -92,15 +92,15 @@
         </div>
         <button
           v-for="u in unassignedRows"
-          :key="u.phone"
+          :key="(u.last_channel === 'messenger' ? 'm:' + u.psid : 'w:' + u.phone)"
           class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
-          :class="activeUnassigned === u.phone ? 'bg-surface-amber-1' : ''"
+          :class="activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone) ? 'bg-surface-amber-1' : ''"
           :style="
-            activeUnassigned === u.phone
+            activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone)
               ? 'border-left:3px solid #f59e0b'
               : 'border-left:3px solid #f59e0b66'
           "
-          @click="selectUnassigned(u.phone)"
+          @click="selectUnassigned(u.last_channel === 'messenger' ? u.psid : u.phone, u.last_channel)"
         >
           <div class="mb-1 flex items-center gap-2">
             <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
@@ -108,17 +108,20 @@
             </span>
             <div class="min-w-0 flex-1">
               <div class="truncate text-[13px] font-semibold text-ink-gray-9">
-                {{ u.contact_name || formatPhone(u.phone) }}
+                {{ u.contact_name || (u.last_channel === 'messenger' ? __('Messenger') + ' ' + (u.psid || '').slice(-6) : formatPhone(u.phone)) }}
               </div>
-              <div class="truncate text-[11px] text-ink-gray-5">{{ formatPhone(u.phone) }}</div>
+              <div class="truncate text-[11px] text-ink-gray-5">{{ u.last_channel === 'messenger' ? __('Messenger') : formatPhone(u.phone) }}</div>
             </div>
             <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">
               {{ timeAgo(u.last_message_ts) }}
             </div>
           </div>
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
-            <span class="inline-flex flex-none items-center font-semibold" style="color: #25d366">
-              WA
+            <span
+              class="inline-flex flex-none items-center font-semibold"
+              :style="`color: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`"
+            >
+              {{ u.last_channel === 'messenger' ? 'Msgr' : 'WA' }}
             </span>
             <span class="truncate">{{ u.last_message || '—' }}</span>
             <span v-if="u.count > 1" class="flex-none text-[10px] text-ink-gray-4">· {{ u.count }}</span>
