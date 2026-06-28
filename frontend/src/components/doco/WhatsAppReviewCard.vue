@@ -48,6 +48,35 @@
       <span v-if="row.attempts" class="opacity-70">· {{ row.attempts }} {{ __('intentos') }}</span>
     </div>
 
+    <!-- variable editor (Pendiente only): map each {{n}} to a field + free-edit;
+         the edited values are sent with Enviar -->
+    <div v-if="row.status === 'Pendiente'" class="mt-2">
+      <button
+        type="button"
+        class="text-2xs font-semibold text-ink-blue-link hover:underline disabled:opacity-50"
+        :disabled="varsLoading"
+        @click="toggleEdit"
+      >{{ editing ? __('Ocultar variables') : (varsLoading ? __('Cargando…') : __('Editar variables')) }}</button>
+      <div v-if="editing && vars.length" class="mt-1.5 flex flex-col gap-1.5">
+        <div v-for="v in vars" :key="v.index" class="flex items-center gap-1.5">
+          <span class="w-7 shrink-0 font-mono text-2xs text-ink-gray-5">{{ v.placeholder }}</span>
+          <select
+            v-model="v.field"
+            class="w-1/3 shrink-0 rounded border border-outline-gray-2 bg-surface-white px-1 py-0.5 text-[11px] text-ink-gray-7 focus:outline-none dark:bg-surface-gray-1"
+            @change="onFieldChange(v)"
+          >
+            <option value="">{{ __('(libre)') }}</option>
+            <option v-for="o in fieldOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+          </select>
+          <input
+            v-model="v.value"
+            type="text"
+            class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-white px-1.5 py-0.5 text-[11.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-1 dark:text-ink-gray-7"
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- actions -->
     <div v-if="canAct" class="mt-2.5 flex items-center gap-2">
       <button
@@ -82,6 +111,52 @@ const props = defineProps({
 const emit = defineEmits(['changed'])
 
 const busy = ref('')
+
+// --- variable editor (prefill + dropdown + free-edit) ----------------------
+const editing = ref(false)
+const varsLoading = ref(false)
+const vars = ref([])
+const fieldOptions = ref([])
+const refDoctype = ref('')
+const refName = ref('')
+
+async function toggleEdit() {
+  if (editing.value) { editing.value = false; return }
+  if (!vars.value.length) {
+    varsLoading.value = true
+    try {
+      const data = await frappeCall('doco_marketing.api.review_queue.get_row_template_vars', { name: props.row.name })
+      vars.value = (data?.variables || []).map((v) => ({ ...v }))
+      refDoctype.value = data?.reference_doctype || ''
+      refName.value = data?.reference_name || ''
+      if (refDoctype.value) {
+        fieldOptions.value = await frappeCall('crm.api.whatsapp.get_template_field_options', {
+          reference_doctype: refDoctype.value,
+        }) || []
+      }
+    } catch (e) {
+      toast.error(e?.messages?.[0] || __('No se pudieron cargar las variables'))
+      return
+    } finally {
+      varsLoading.value = false
+    }
+  }
+  editing.value = true
+}
+
+async function onFieldChange(v) {
+  if (!v.field || !refDoctype.value || !refName.value) return
+  try {
+    const r = await frappeCall('crm.api.whatsapp.resolve_field_value', {
+      reference_doctype: refDoctype.value,
+      reference_name: refName.value,
+      fieldname: v.field,
+    })
+    v.value = r?.value ?? ''
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo leer el campo'))
+  }
+}
 
 const canAct = computed(() => ['Pendiente', 'Fallido'].includes(props.row.status))
 
@@ -145,7 +220,12 @@ async function act(kind) {
   if (busy.value) return
   busy.value = kind
   try {
-    await frappeCall(`doco_marketing.api.review_queue.${kind}`, { name: props.row.name })
+    const params = { name: props.row.name }
+    // carry the reviewer's edited variable values on approve
+    if (kind === 'approve' && editing.value && vars.value.length) {
+      params.body_param = Object.fromEntries(vars.value.map((v) => [String(v.index), v.value ?? '']))
+    }
+    await frappeCall(`doco_marketing.api.review_queue.${kind}`, params)
     toast.success(
       { approve: __('Mensaje enviado'), retry: __('Reintentado'), reject: __('Cancelado') }[kind],
     )

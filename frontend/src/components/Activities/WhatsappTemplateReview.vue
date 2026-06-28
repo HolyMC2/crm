@@ -37,23 +37,40 @@
         </div>
       </div>
 
-      <!-- editable variables (the "template variable" fields Meta fills) -->
+      <!-- editable variables: map each {{n}} to an ERPNext field (prefills the
+           value) + free-edit. Saving the mapping persists it as the template default. -->
       <div v-if="vars.length" class="mt-2.5 flex flex-col gap-2">
-        <div class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
-          {{ __('Variables de la plantilla') }}
+        <div class="flex items-center justify-between">
+          <div class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
+            {{ __('Variables de la plantilla') }}
+          </div>
+          <button
+            type="button"
+            class="text-[10px] font-semibold text-ink-blue-link hover:underline disabled:opacity-50"
+            :disabled="savingMap"
+            @click="saveMap"
+          >{{ savingMap ? __('Guardando…') : __('Guardar mapeo predeterminado') }}</button>
         </div>
         <label v-for="v in vars" :key="v.index" class="block">
           <span class="text-[10px] font-medium text-ink-gray-5">
             <span class="font-mono text-ink-gray-7">{{ v.placeholder }}</span>
-            <span v-if="v.field"> · {{ v.field }}</span>
-            <span v-else> · {{ v.label }}</span>
           </span>
-          <input
-            v-model="v.value"
-            type="text"
-            class="w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 dark:bg-surface-gray-1 dark:text-ink-gray-7"
-            :placeholder="v.label"
-          />
+          <div class="flex gap-1.5">
+            <select
+              v-model="v.field"
+              class="w-2/5 shrink-0 rounded-md border border-outline-gray-2 bg-surface-white px-1.5 py-1 text-[11.5px] text-ink-gray-7 focus:border-green-500 focus:outline-none dark:bg-surface-gray-1"
+              @change="onFieldChange(v)"
+            >
+              <option value="">{{ __('(libre)') }}</option>
+              <option v-for="o in fieldOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+            <input
+              v-model="v.value"
+              type="text"
+              class="flex-1 rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8 focus:border-green-500 focus:outline-none focus:ring-0 dark:bg-surface-gray-1 dark:text-ink-gray-7"
+              :placeholder="v.label"
+            />
+          </div>
         </label>
       </div>
       <div v-else class="mt-2 text-[11px] text-ink-gray-5">
@@ -80,7 +97,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { createResource, Badge, Button } from 'frappe-ui'
+import { createResource, call as frappeCall, toast, Badge, Button } from 'frappe-ui'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -113,6 +130,47 @@ watch(
   () => props.template && props.docname && preview.fetch(),
   { immediate: true },
 )
+
+// candidate ERPNext fields for the mapping dropdown (this reference doctype)
+const fieldOptionsRes = createResource({
+  url: 'crm.api.whatsapp.get_template_field_options',
+  makeParams: () => ({ reference_doctype: props.doctype }),
+  auto: true,
+})
+const fieldOptions = computed(() => fieldOptionsRes.data || [])
+
+// dropdown changed → re-prefill the value from the chosen field on the live doc
+async function onFieldChange(v) {
+  if (!v.field) return // "(libre)" → keep the current free-text value
+  try {
+    const r = await frappeCall('crm.api.whatsapp.resolve_field_value', {
+      reference_doctype: props.doctype,
+      reference_name: props.docname,
+      fieldname: v.field,
+    })
+    v.value = r?.value ?? ''
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo leer el campo'))
+  }
+}
+
+// persist the current variable→field mapping as the template default (field_names)
+const savingMap = ref(false)
+async function saveMap() {
+  savingMap.value = true
+  try {
+    const field_names = vars.value.map((v) => v.field || '').join(',')
+    await frappeCall('crm.api.whatsapp.set_template_field_map', {
+      template: props.template,
+      field_names,
+    })
+    toast.success(__('Mapeo guardado como predeterminado'))
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo guardar el mapeo'))
+  } finally {
+    savingMap.value = false
+  }
+}
 
 // Substitute the (possibly edited) values back into the body for a live preview.
 // Replace {{1}},{{2}}… by index so blank values collapse cleanly.

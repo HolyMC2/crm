@@ -359,6 +359,89 @@ def get_template_preview(reference_doctype: str, reference_name: str, template: 
 	}
 
 
+# Field types worth offering as a template-variable source in the mapping dropdown
+# (scalars that render as a short string). Tables/HTML/attachments are excluded.
+_MAPPABLE_FIELDTYPES = {
+	"Data", "Select", "Link", "Small Text", "Text", "Read Only", "Phone",
+	"Int", "Float", "Currency", "Percent", "Date", "Datetime", "Time",
+}
+
+
+@frappe.whitelist()
+def get_template_field_options(reference_doctype: str):
+	"""Candidate ERPNext fields for the template-variable mapping dropdown: the
+	reference doctype's own scalar fields plus one level of dotted Link traversal
+	for the obvious links (so e.g. a Deal can map {{1}} to its contact's name).
+	[{value, label, group}] — value is the field_names token (plain or dotted)."""
+	validate_access()
+	if not frappe.db.exists("DocType", reference_doctype):
+		return []
+	meta = frappe.get_meta(reference_doctype)
+	opts = []
+	for df in meta.fields:
+		if df.fieldtype in _MAPPABLE_FIELDTYPES and not df.get("hidden"):
+			opts.append({"value": df.fieldname, "label": _(df.label or df.fieldname), "group": reference_doctype})
+	# one-level dotted for Link fields → that target's name-ish + phone-ish fields
+	for df in meta.fields:
+		if df.fieldtype == "Link" and df.options and frappe.db.exists("DocType", df.options):
+			try:
+				sub = frappe.get_meta(df.options)
+			except Exception:
+				continue
+			for sdf in sub.fields:
+				if sdf.fieldtype in ("Data", "Phone", "Read Only", "Select") and not sdf.get("hidden") and (
+					"name" in (sdf.fieldname or "") or "mobile" in (sdf.fieldname or "")
+					or "phone" in (sdf.fieldname or "") or "email" in (sdf.fieldname or "")
+				):
+					opts.append({
+						"value": f"{df.fieldname}.{sdf.fieldname}",
+						"label": f"{_(df.label or df.fieldname)} → {_(sdf.label or sdf.fieldname)}",
+						"group": _(df.label or df.fieldname),
+					})
+	return opts
+
+
+def _resolve_dotted(reference_doctype: str, reference_name: str, token: str) -> str:
+	"""Resolve a field_names token (plain or one-level dotted) to a formatted value."""
+	doc = frappe.get_doc(reference_doctype, reference_name)
+	if "." in token:
+		link_field, sub = token.split(".", 1)
+		df = doc.meta.get_field(link_field)
+		link_name = doc.get(link_field)
+		if df and df.options and link_name:
+			try:
+				return str(frappe.db.get_value(df.options, link_name, sub) or "")
+			except Exception:
+				return ""
+		return ""
+	try:
+		return str(doc.get_formatted(token) or "")
+	except Exception:
+		return str(doc.get(token) or "")
+
+
+@frappe.whitelist()
+def resolve_field_value(reference_doctype: str, reference_name: str, fieldname: str):
+	"""Value for a single mapping choice — used when the dropdown changes the source
+	field, to re-prefill the variable from the live reference doc."""
+	validate_access(reference_doctype, reference_name)
+	return {"value": _resolve_dotted(reference_doctype, reference_name, fieldname)}
+
+
+@frappe.whitelist()
+def set_template_field_map(template: str, field_names: str = ""):
+	"""Persist the template's default variable→field mapping (field_names CSV). Uses
+	db.set_value so it does NOT trigger frappe_whatsapp's on_update → Meta edit (a
+	mapping change is local metadata, not a template-body resubmit). Gated to the
+	roles that own template config."""
+	if not set(frappe.get_roles()).intersection(["System Manager", "Sales Manager"]):
+		frappe.throw(_("Solo un gestor puede guardar el mapeo predeterminado."), frappe.PermissionError)
+	if not frappe.db.exists("WhatsApp Templates", template):
+		frappe.throw(_("Plantilla no encontrada."))
+	frappe.db.set_value("WhatsApp Templates", template, "field_names", (field_names or "").strip())
+	return {"ok": True}
+
+
 @frappe.whitelist()
 def react_on_whatsapp_message(emoji: str, reply_to_name: str):
 	validate_access()
