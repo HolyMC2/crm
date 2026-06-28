@@ -31,18 +31,27 @@
           v-for="day in days"
           :key="day.key"
           class="min-h-[92px] rounded-lg border p-1 text-left"
-          :class="day.inMonth ? 'border-outline-gray-2 bg-surface-white' : 'border-transparent bg-surface-gray-1/50'"
+          :class="[
+            day.inMonth ? 'border-outline-gray-2 bg-surface-white' : 'border-transparent bg-surface-gray-1/50',
+            dragOver === day.key ? 'ring-2 ring-green-400' : '',
+          ]"
           @click="openNew(day)"
+          @dragover.prevent="dragOver = day.key"
+          @dragleave="dragOver = (dragOver === day.key ? '' : dragOver)"
+          @drop="onDrop(day)"
         >
           <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-3' : 'text-ink-gray-4'">{{ day.n }}</div>
           <div class="flex flex-col gap-0.5">
             <button
               v-for="p in (postsByDay[day.key] || [])"
               :key="p.name"
+              draggable="true"
               class="truncate rounded px-1 py-0.5 text-left text-[10.5px] font-medium"
               :class="chip(p.status)"
-              :title="p.title + ' · ' + p.status"
+              :title="p.title + ' · ' + p.status + ' · ' + __('arrastra para reprogramar')"
               @click.stop="openEdit(p)"
+              @dragstart="dragged = p"
+              @dragend="dragged = null"
             >{{ chanIcons(p.channels) }} {{ p.title || p.name }}</button>
           </div>
         </div>
@@ -186,6 +195,24 @@ function chanIcons(chs) {
   return (has('FB') ? '🟦' : '') + (has('IG') ? '🟪' : '')
 }
 
+// ── drag-reschedule ──────────────────────────────────────────────────────
+const dragged = ref(null)
+const dragOver = ref('')
+async function onDrop(day) {
+  dragOver.value = ''
+  const p = dragged.value
+  dragged.value = null
+  if (!p) return
+  const t = (p.scheduled_time || '').slice(11, 16) || '10:00'
+  try {
+    await frappeCall('doco_marketing.api.social.reschedule', { name: p.name, scheduled_time: `${day.key} ${t}:00` })
+    toast.success(__('Reprogramado'))
+    cal.reload()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo reprogramar'))
+  }
+}
+
 // ── composer ───────────────────────────────────────────────────────────────
 const showComposer = ref(false)
 const busy = ref(false)
@@ -261,6 +288,10 @@ async function save(status) {
 }
 
 async function publishNow() {
+  if (!form.value.channels.length) {
+    toast.error(__('Selecciona al menos un canal.'))
+    return
+  }
   busy.value = true
   try {
     const r = await frappeCall('doco_marketing.api.social.save_post', { payload: JSON.stringify(payload(form.value.scheduled_time ? 'Scheduled' : 'Draft')) })
