@@ -20,12 +20,13 @@
       >
         <LucideChevronLeft class="h-6 w-6" />
       </button>
-      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
+      <img v-if="profilePic" :src="profilePic" class="h-9 w-9 flex-none rounded-full object-cover" alt="" />
+      <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
       <div>
         <div class="text-[15px] font-semibold text-ink-gray-9">
-          {{ isMessenger ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8) : formatPhone(activeUnassigned) }}
+          {{ prefillName || (isMessenger ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8) : formatPhone(activeUnassigned)) }}
         </div>
         <div class="text-[11px] font-medium text-ink-amber-3">{{ __('Sin asignar — captura y convierte') }}</div>
       </div>
@@ -152,7 +153,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { toast, call } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
@@ -218,6 +219,33 @@ const form = reactive({
   first_name: '', last_name: '', email: '', device: '',
   rfc: '', legal_name: '', address: '', city: '', birth_date: '',
 })
+
+// FB/WhatsApp avatar (Messenger gives profile_pic; WhatsApp none) + the resolved name.
+const profilePic = computed(() => unassignedThread.data?.prefill?.profile_pic || null)
+const prefillName = computed(() => {
+  const p = unassignedThread.data?.prefill
+  if (!p) return null
+  return [p.first_name, p.last_name].filter(Boolean).join(' ') || null
+})
+
+// Reset the capture form + picker when switching orphans.
+watch(activeUnassigned, () => {
+  Object.assign(form, { first_name: '', last_name: '', email: '', device: '', rfc: '', legal_name: '', address: '', city: '', birth_date: '' })
+  linkQuery.value = ''
+  linkResults.value = []
+})
+// Prefill with whatever the channel actually gave us — never clobber operator edits.
+watch(
+  () => unassignedThread.data,
+  (d) => {
+    const p = d?.prefill
+    if (!p) return
+    if (!form.first_name && p.first_name) form.first_name = p.first_name
+    if (!form.last_name && p.last_name) form.last_name = p.last_name
+    if (!form.email && p.email) form.email = p.email
+    if (!form.birth_date && p.birth_date) form.birth_date = p.birth_date
+  },
+)
 
 function formatPhone(raw) {
   const d = String(raw || '').replace(/\D/g, '')
