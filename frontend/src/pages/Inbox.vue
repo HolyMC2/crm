@@ -19,6 +19,7 @@
       ⟩
     </button>
     <UnassignedWorkspace v-if="activeUnassigned" />
+    <CommentWorkspace v-else-if="activeComment" />
     <DealWorkspace v-else />
     <DealContextPanel v-if="activeDeal" />
   </div>
@@ -29,6 +30,7 @@
     <ConversationQueue v-show="mobileView === 'list'" />
     <div v-show="mobileView === 'thread'" class="flex min-h-0 flex-1 flex-col">
       <UnassignedWorkspace v-if="activeUnassigned" />
+      <CommentWorkspace v-else-if="activeComment" />
       <DealWorkspace v-else />
     </div>
     <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col">
@@ -45,11 +47,13 @@ import { isMobile } from '@/composables/breakpoint'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue'
+import CommentWorkspace from '@/components/doco/inbox/CommentWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import {
   activeDeal,
   activeDealDoctype,
   activeUnassigned,
+  activeComment,
   queue,
   queueCollapsed,
   mobileView,
@@ -60,6 +64,7 @@ import {
   selectDeal,
   markRead,
   onThreadUpdate,
+  onCommentUpdate,
 } from '@/composables/inbox'
 import { playPing } from '@/composables/notificationSound'
 
@@ -144,11 +149,13 @@ onMounted(() => {
   }
   mounting = false
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)
+  $socket?.on('doco_marketing:comment_update', onCommentUpdate)
   $socket?.on('whatsapp_message', onWaMessage)
   window.addEventListener('popstate', onPopState)
 })
 onUnmounted(() => {
   $socket?.off('doco_marketing:thread_update', onThreadUpdate)
+  $socket?.off('doco_marketing:comment_update', onCommentUpdate)
   $socket?.off('whatsapp_message', onWaMessage)
   window.removeEventListener('popstate', onPopState)
 })

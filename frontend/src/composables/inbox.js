@@ -56,6 +56,14 @@ export const unassigned = createResource({
   auto: false,
 })
 export const unassignedThread = createResource({ url: 'doco_marketing.api.inbox.get_unassigned_thread' })
+// "Comentarios": comments on our Facebook Page posts — a warm-lead stream separate
+// from PSID conversations. Reply public/private, convert to Lead, hide.
+export const comments = createResource({
+  url: 'doco_marketing.api.comments.get_comment_queue',
+  params: { status: 'New', limit: 50 },
+  auto: false,
+})
+export const activeComment = ref(null) // name of the open Social Comment (3rd middle-pane mode)
 // Editable contact/customer card for the active deal/lead (resolver names the
 // exact doc+field each value lives on; edits go via frappe.client.set_value).
 export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_contact_card' })
@@ -65,6 +73,7 @@ export function initInbox() {
   channels.fetch()
   reloadQueue()
   reloadUnassigned()
+  reloadComments()
   restoreInbox() // re-open the conversation/pane the user left (survives route round-trips + reloads)
 }
 
@@ -135,6 +144,7 @@ export function resetInbox() {
   activeDeal.value = null
   activeDealDoctype.value = 'CRM Deal'
   activeUnassigned.value = null
+  activeComment.value = null
   activeTab.value = 'conversation'
   activeChannel.value = 'whatsapp'
   mobileView.value = 'list' // back to the queue on (re)entry
@@ -168,6 +178,7 @@ export function setQueueChannel(ch) {
 
 export function selectDeal(name, doctype = 'CRM Deal') {
   activeUnassigned.value = null // leaving the triage view
+  activeComment.value = null
   mobileView.value = 'thread' // mobile: advance the stack to the conversation
   if (activeDeal.value === name && activeDealDoctype.value === doctype) return
   activeDeal.value = name
@@ -249,6 +260,7 @@ export async function saveContactField(doctype, name, fieldname, value) {
 
 export function selectUnassigned(id, channel = 'whatsapp') {
   activeDeal.value = null // orphan threads have no deal/context panel
+  activeComment.value = null
   activeUnassigned.value = id
   activeUnassignedChannel.value = channel
   mobileView.value = 'thread' // mobile: advance the stack to the orphan thread
@@ -333,6 +345,42 @@ export async function setStage(status) {
 export function onThreadUpdate(payload) {
   if (payload?.deal && payload.deal === activeDeal.value) loadThread()
   reloadQueue()
+}
+
+// ── Comentarios (Page-feed comments) ───────────────────────────────────────────
+export function reloadComments() {
+  return comments.submit({ status: 'New', limit: 50 })
+}
+export function selectComment(name) {
+  activeDeal.value = null
+  activeUnassigned.value = null
+  activeComment.value = name
+  mobileView.value = 'thread'
+}
+// Reply under the comment publicly, or DM the commenter (private_replies → mints a
+// Messenger thread that later surfaces in the inbox). Optimistic reload after.
+export async function replyComment(name, message, mode = 'public') {
+  const url =
+    mode === 'private'
+      ? 'doco_marketing.api.comments.reply_private'
+      : 'doco_marketing.api.comments.reply_public'
+  const res = await call(url, { comment_name: name, message })
+  reloadComments()
+  return res
+}
+export async function convertCommentToLead(name) {
+  const lead = await call('doco_marketing.api.comments.create_lead', { comment_name: name })
+  reloadComments()
+  reloadQueue() // the new lead joins the conversation queue
+  return lead
+}
+export async function hideComment(name, hidden = true) {
+  await call('doco_marketing.api.comments.hide_comment', { comment_name: name, hidden: hidden ? 1 : 0 })
+  reloadComments()
+}
+// realtime: a new/changed comment arrived (Social Comment after_insert).
+export function onCommentUpdate() {
+  reloadComments()
 }
 
 // presentational helpers now live in crmFormat.js (shared with non-inbox surfaces)

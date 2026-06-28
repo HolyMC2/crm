@@ -130,10 +130,44 @@
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
       </div>
 
-      <div v-if="queue.loading && !rows.length && !unassignedRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+      <!-- "Comentarios": comments on our Facebook posts. A warm lead — open it to
+        reply (public / private DM), convert to a CRM Lead, or hide on FB. -->
+      <div v-if="commentRows.length" class="mb-1.5">
+        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-3">
+          <LucideFacebook class="h-3 w-3" /> {{ __('Comentarios') }}
+          <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-3">{{ commentRows.length }}</span>
+        </div>
+        <button
+          v-for="cm in commentRows"
+          :key="cm.name"
+          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
+          :class="activeComment === cm.name ? 'bg-surface-blue-1' : ''"
+          :style="activeComment === cm.name ? 'border-left:3px solid #1877f2' : 'border-left:3px solid #1877f266'"
+          @click="selectComment(cm.name)"
+        >
+          <div class="mb-1 flex items-center gap-2">
+            <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-white" style="background: #1877f2">
+              <LucideFacebook class="h-3.5 w-3.5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ cm.from_name || __('Facebook') }}</div>
+              <div class="truncate text-[11px] text-ink-gray-5">{{ __('Comentario en Facebook') }}</div>
+            </div>
+            <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(cm.created_ts) }}</div>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
+            <span class="inline-flex flex-none items-center font-semibold" style="color: #1877f2">FB</span>
+            <span class="truncate">{{ cm.message || '—' }}</span>
+            <span v-if="cm.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-1 bg-surface-violet-1">{{ __('Lead') }}</span>
+          </div>
+        </button>
+        <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
+      </div>
+
+      <div v-if="queue.loading && !rows.length && !unassignedRows.length && !commentRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Cargando…') }}
       </div>
-      <div v-else-if="!rows.length && !unassignedRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+      <div v-else-if="!rows.length && !unassignedRows.length && !commentRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Sin conversaciones') }}
       </div>
       <button
@@ -243,6 +277,7 @@
 import { computed, ref } from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
+import LucideFacebook from '~icons/lucide/facebook'
 import LucideVolume2 from '~icons/lucide/volume-2'
 import LucideVolumeX from '~icons/lucide/volume-x'
 import { statusesStore } from '@/stores/statuses'
@@ -253,14 +288,17 @@ import {
   queue,
   channels,
   unassigned,
+  comments,
   queueChannel,
   queueSearch,
   queueCollapsed,
   activeDeal,
   activeDealDoctype,
   activeUnassigned,
+  activeComment,
   selectDeal,
   selectUnassigned,
+  selectComment,
   setQueueChannel,
   onSearchInput,
   reloadQueue,
@@ -283,6 +321,7 @@ function newDeal() {
 const rows = computed(() => queue.data || [])
 const openCount = computed(() => rows.value.length)
 const unassignedRows = computed(() => unassigned.data || [])
+const commentRows = computed(() => comments.data || [])
 
 // Pretty-print a raw WhatsApp number (e.g. 5216691530561 / 526691530561) as
 // +52 669 153 0561 — strip the country code + the MX mobile "1", group the rest.

@@ -1,8 +1,9 @@
 <!--
   Messenger conversation display (MA-23 / Phase D follow-on). Renders the PSID thread
   returned by doco_marketing.api.inbox.get_communications(channel='messenger'):
-  in = left/grey, out = left-blue (#0084ff). Lean MVP — no reactions/receipts (Messenger
-  has none); attachments shown as a link. Mirrors the slot WhatsAppArea occupies.
+  in = left/grey, out = left-blue (#0084ff). Shows message_reactions as an emoji badge
+  on the bubble + a CTWA/ad referral chip (which ad/link drove the DM). Attachments
+  shown as a link. Mirrors the slot WhatsAppArea occupies.
 -->
 <template>
   <div ref="scrollEl" class="flex max-h-full flex-col gap-2 overflow-y-auto px-3 py-3 sm:px-10">
@@ -12,11 +13,20 @@
     <div
       v-for="m in messages"
       :key="m.id"
-      class="flex"
-      :class="m.direction === 'out' ? 'justify-end' : 'justify-start'"
+      class="flex flex-col"
+      :class="[m.direction === 'out' ? 'items-end' : 'items-start', m.reaction ? 'pb-2' : '']"
     >
+      <!-- attribution: the ad / m.me link / CTWA that drove this conversation -->
       <div
-        class="max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-snug"
+        v-if="m.referral_ref || m.referral_source"
+        class="mb-0.5 inline-flex items-center gap-1 rounded-full bg-surface-blue-1 px-2 py-0.5 text-[10px] font-semibold text-ink-blue-3"
+        :title="__('Origen del mensaje (anuncio / enlace)')"
+      >
+        📣 {{ __('vino de') }}: {{ m.referral_ref || m.referral_source }}
+        <span v-if="m.referral_source && m.referral_ref" class="opacity-70">· {{ m.referral_source }}</span>
+      </div>
+      <div
+        class="relative max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-snug"
         :class="
           m.direction === 'out'
             ? 'bg-[#0084ff] text-white'
@@ -35,6 +45,14 @@
           {{ __('Ver adjunto') }}
         </a>
         <div class="mt-0.5 text-right text-[10px] opacity-60">{{ fmtTime(m.timestamp) }}</div>
+        <!-- message_reaction: the emoji the customer tapped on this message -->
+        <span
+          v-if="m.reaction"
+          class="absolute -bottom-2.5 rounded-full border border-white bg-surface-white px-1 text-[11px] leading-tight shadow-sm dark:border-surface-gray-4 dark:bg-surface-gray-3"
+          :class="m.direction === 'out' ? 'left-1.5' : 'right-1.5'"
+        >
+          {{ m.reaction }}
+        </span>
       </div>
     </div>
   </div>
