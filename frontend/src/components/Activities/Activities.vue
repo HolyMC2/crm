@@ -6,6 +6,7 @@
     v-model:emailBox="emailBox"
     :tabs="tabs"
     :title="title"
+    :conv-is-messenger="convIsMessenger"
     :doc="doc"
     :whatsappBox="whatsappBox"
     :modalRef="modalRef"
@@ -28,7 +29,11 @@
       "
       class="activities"
     >
-      <div v-if="title == 'WhatsApp'">
+      <!-- Messenger (PSID) conversation — same tab slot, channel-detected -->
+      <div v-if="title == 'WhatsApp' && convIsMessenger">
+        <MessengerArea :messages="messengerMessages" />
+      </div>
+      <div v-else-if="title == 'WhatsApp'">
         <!-- Multi-Contact tab strip: one tab per Contact attached to the Deal/Lead.
              Hidden when there's only one contact (header alone is enough). -->
         <div
@@ -489,8 +494,14 @@
       @send="confirmSendTemplate"
       @cancel="reviewTemplate = null"
     />
+    <MessengerBox
+      v-if="title == 'WhatsApp' && convIsMessenger"
+      :doctype="doctype"
+      :docname="docname"
+      @sent="messengerThread.reload()"
+    />
     <WhatsAppBox
-      v-if="title == 'WhatsApp'"
+      v-if="title == 'WhatsApp' && !convIsMessenger"
       ref="whatsappBox"
       v-model="doc"
       v-model:reply="replyMessage"
@@ -548,6 +559,8 @@ import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import EventArea from '@/components/Activities/EventArea.vue'
 import WhatsAppArea from '@/components/Activities/WhatsAppArea.vue'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
+import MessengerArea from '@/components/Activities/MessengerArea.vue'
+import MessengerBox from '@/components/Activities/MessengerBox.vue'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
@@ -750,6 +763,36 @@ watch(
   { immediate: true },
 )
 
+// ── Messenger (PSID) conversation — unified inbox thread (Phase D follow-on) ──
+// A conversation surfaces as Messenger when it has Messenger Message rows AND no
+// WhatsApp ones (a PSID and a phone never coincide). Reuses the same get_communications
+// the omnichannel inbox already serves, filtered to channel='messenger'.
+const messengerThread = createResource({
+  url: 'doco_marketing.api.inbox.get_communications',
+  params: {
+    reference_doctype: props.doctype,
+    reference_name: props.docname,
+    channel: 'messenger',
+  },
+  auto: false,
+})
+const messengerMessages = computed(() => messengerThread.data?.messages || [])
+const convIsMessenger = computed(
+  () => messengerMessages.value.length > 0 && (whatsappMessages.data || []).length === 0,
+)
+// Load the messenger thread whenever the conversation tab is shown.
+watch(
+  () => [title.value, props.docname],
+  () => {
+    if (title.value === 'WhatsApp' && props.docname) messengerThread.fetch()
+  },
+  { immediate: true },
+)
+function onMessengerRealtime(data) {
+  const ref = data?.reference_name || data?.deal
+  if (ref === props.docname) messengerThread.reload()
+}
+
 // Named handler so off() removes ONLY this instance's listener. The previous
 // blanket `$socket.off('whatsapp_message')` removed every listener for the event
 // — so switching deals (each remount) silently killed realtime for sibling
@@ -767,12 +810,17 @@ function onWhatsappRealtime(data) {
 onBeforeUnmount(() => {
   $socket.off('whatsapp_message', onWhatsappRealtime)
   $socket.off('whatsapp_status', onWhatsappRealtime)
+  $socket.off('messenger_message', onMessengerRealtime)
+  $socket.off('doco_marketing:thread_update', onMessengerRealtime)
 })
 
 onMounted(() => {
   $socket.on('whatsapp_message', onWhatsappRealtime)
   // delivery-receipt updates (sent→delivered→read) so the ✓/✓✓ refresh live
   $socket.on('whatsapp_status', onWhatsappRealtime)
+  // Messenger inbound (webhook → publish_thread_update) + our own sends
+  $socket.on('messenger_message', onMessengerRealtime)
+  $socket.on('doco_marketing:thread_update', onMessengerRealtime)
 
   nextTick(() => {
     const hash = route.hash.slice(1) || null
