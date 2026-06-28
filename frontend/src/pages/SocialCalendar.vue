@@ -92,8 +92,12 @@
             >{{ c }}</button>
           </div>
 
-          <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Texto') }}</label>
-          <textarea v-model="form.caption" rows="4" class="mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
+          <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Texto por canal') }}</label>
+          <div v-if="!form.channels.length" class="mb-3 text-[11px] text-ink-gray-4">{{ __('Selecciona un canal arriba.') }}</div>
+          <div v-for="c in form.channels" :key="c" class="mb-2">
+            <span class="text-[10px] font-mono text-ink-gray-5">{{ c }}</span>
+            <textarea v-model="form.captions[c]" rows="2" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
+          </div>
 
           <div class="mb-3 grid grid-cols-2 gap-3">
             <div>
@@ -112,11 +116,14 @@
           <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" class="mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
           <p class="text-[11px] text-ink-gray-4">{{ __('Imágenes/video: S8. IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
         </div>
+        <div v-if="form.name && !canCancel" class="border-t border-outline-gray-1 px-4 pt-2 text-[11px] text-ink-gray-5">
+          {{ __('Publicación en vivo o cancelada — solo lectura. Despublica desde la cola si hace falta.') }}
+        </div>
         <div class="flex flex-wrap items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
           <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-4 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
-          <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7" :disabled="busy" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
-          <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7" :disabled="busy" @click="save('Scheduled')">{{ __('Programar') }}</button>
-          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background:#16a34a" :disabled="busy" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>
+          <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
+          <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Scheduled')">{{ __('Programar') }}</button>
+          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:#16a34a" :disabled="busy || !canCancel" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>
         </div>
       </div>
     </template>
@@ -216,7 +223,7 @@ async function onDrop(day) {
 // ── composer ───────────────────────────────────────────────────────────────
 const showComposer = ref(false)
 const busy = ref(false)
-const blank = () => ({ name: '', title: '', channels: [], caption: '', scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
+const blank = () => ({ name: '', title: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
 const form = ref(blank())
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
 
@@ -235,11 +242,13 @@ function openNew(day) {
 
 async function openEdit(p) {
   const doc = await frappeCall('doco_marketing.api.social.get_post', { name: p.name })
+  const caps = {}
+  for (const c of doc.channels || []) caps[c.channel] = c.caption || ''
   form.value = {
     name: doc.name,
     title: doc.title || '',
     channels: (doc.channels || []).map((c) => c.channel),
-    caption: (doc.channels && doc.channels[0] && doc.channels[0].caption) || '',
+    captions: caps,
     scheduled_time: toDtLocal(doc.scheduled_time),
     cta_type: doc.cta_type || 'WhatsApp',
     cta_link: doc.cta_link || '',
@@ -250,8 +259,12 @@ async function openEdit(p) {
 
 function toggleChannel(c) {
   const i = form.value.channels.indexOf(c)
-  if (i >= 0) form.value.channels.splice(i, 1)
-  else form.value.channels.push(c)
+  if (i >= 0) {
+    form.value.channels.splice(i, 1)
+  } else {
+    form.value.channels.push(c)
+    if (!(c in form.value.captions)) form.value.captions[c] = ''
+  }
 }
 
 function payload(status) {
@@ -263,7 +276,7 @@ function payload(status) {
     scheduled_time: fromDtLocal(form.value.scheduled_time),
     cta_type: form.value.cta_type,
     cta_link: form.value.cta_type === 'None' ? '' : form.value.cta_link,
-    channels: form.value.channels.map((c) => ({ channel: c, caption: form.value.caption })),
+    channels: form.value.channels.map((c) => ({ channel: c, caption: form.value.captions[c] || '' })),
   }
 }
 
