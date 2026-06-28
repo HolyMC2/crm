@@ -83,6 +83,7 @@ function persistInbox() {
         deal: activeDeal.value,
         doctype: activeDealDoctype.value,
         unassigned: activeUnassigned.value,
+        unassignedChannel: activeUnassignedChannel.value,
         view: mobileView.value,
         tab: activeTab.value,
       }),
@@ -103,13 +104,28 @@ function restoreInbox() {
   }
   if (s?.unassigned) {
     activeUnassigned.value = null // force selectUnassigned to re-load the orphan thread
-    selectUnassigned(s.unassigned)
+    selectUnassigned(s.unassigned, s.unassignedChannel || 'whatsapp')
     if (s.view) mobileView.value = s.view
   } else if (s?.deal) {
-    activeDeal.value = null // force selectDeal to re-load (it early-returns on same id)
-    selectDeal(s.deal, s.doctype || 'CRM Deal')
-    if (s.tab) activeTab.value = s.tab
-    if (s.view) mobileView.value = s.view // restore the pane (e.g. context) they were on
+    // Guard: the saved record may have been deleted since (a 404 storm otherwise —
+    // get_communications / get_contact_card / get all 404). Verify it exists first.
+    const doctype = s.doctype || 'CRM Deal'
+    call('frappe.client.get_value', { doctype, filters: { name: s.deal }, fieldname: 'name' })
+      .then((r) => {
+        if (!r?.name) {
+          sessionStorage.removeItem(PERSIST_KEY)
+          resetInbox()
+          return
+        }
+        activeDeal.value = null // force selectDeal to re-load (it early-returns on same id)
+        selectDeal(s.deal, doctype)
+        if (s.tab) activeTab.value = s.tab
+        if (s.view) mobileView.value = s.view // restore the pane (e.g. context) they were on
+      })
+      .catch(() => {
+        sessionStorage.removeItem(PERSIST_KEY)
+        resetInbox()
+      })
   } else {
     resetInbox()
   }
