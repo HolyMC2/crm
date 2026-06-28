@@ -9,18 +9,27 @@
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-white px-5">
       <div class="flex items-center gap-3">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Social') }}</span>
-        <div class="flex items-center gap-1">
+        <div class="flex overflow-hidden rounded-lg border border-outline-gray-2 text-[11.5px] font-semibold">
+          <button class="px-2.5 py-1" :class="view === 'calendar' ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="view = 'calendar'">{{ __('Calendario') }}</button>
+          <button class="px-2.5 py-1" :class="view === 'metrics' ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="showMetrics">{{ __('Métricas') }}</button>
+        </div>
+        <div v-if="view === 'calendar'" class="flex items-center gap-1">
           <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shiftMonth(-1)">‹</button>
           <span class="min-w-[140px] text-center text-[13px] font-semibold capitalize text-ink-gray-8">{{ monthLabel }}</span>
           <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shiftMonth(1)">›</button>
         </div>
       </div>
-      <button class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background:#16a34a" @click="openNew()">
-        + {{ __('Nueva publicación') }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="aiBusy" @click="aiDraft" :title="__('Genera un borrador desde el inventario con IA')">
+          {{ aiBusy ? __('✨ generando…') : __('✨ Borrador IA') }}
+        </button>
+        <button class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background:#16a34a" @click="openNew()">
+          + {{ __('Nueva publicación') }}
+        </button>
+      </div>
     </div>
 
-    <div class="p-4">
+    <div v-if="view === 'calendar'" class="p-4">
       <!-- weekday header -->
       <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
         <div v-for="d in weekdays" :key="d">{{ d }}</div>
@@ -71,6 +80,33 @@
             @dragend="dragged = null"
           >{{ chanIcons(p.channels) }} {{ p.title || p.name }}</button>
         </div>
+      </div>
+    </div>
+
+    <!-- métricas view (S12) -->
+    <div v-else class="p-4">
+      <div class="overflow-hidden rounded-[12px] border border-outline-gray-2 bg-surface-white">
+        <table class="w-full text-[12.5px]">
+          <thead class="bg-surface-gray-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">
+            <tr>
+              <th class="px-3 py-2 text-left">{{ __('Publicación') }}</th>
+              <th class="px-3 py-2 text-right">{{ __('Alcance') }}</th>
+              <th class="px-3 py-2 text-right">{{ __('Interacción') }}</th>
+              <th class="px-3 py-2 text-right">{{ __('Clics') }}</th>
+              <th class="px-3 py-2 text-right text-ink-green-3">{{ __('Leads WA') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in dash.data || []" :key="row.name" class="border-t border-outline-gray-1">
+              <td class="px-3 py-2"><div class="font-medium text-ink-gray-8">{{ row.title || row.name }}</div><div class="text-2xs text-ink-gray-4">{{ row.status }} · {{ (row.scheduled_time || '').slice(0, 10) }}</div></td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ row.reach.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ row.engagement.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ row.link_clicks.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-3">{{ row.leads }}</td>
+            </tr>
+            <tr v-if="!(dash.data || []).length"><td colspan="5" class="px-3 py-8 text-center text-ink-gray-4">{{ dash.loading ? __('Cargando…') : __('Sin datos todavía (las métricas se refrescan a diario).') }}</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -125,6 +161,8 @@
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
           <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-4 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
+          <button v-if="isPending" class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background:#2563eb" :disabled="busy" @click="approvePost">{{ __('Aprobar') }}</button>
+          <button v-if="isPending" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-4" :disabled="busy" @click="rejectPost">{{ __('Rechazar') }}</button>
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Scheduled')">{{ __('Programar') }}</button>
           <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:#16a34a" :disabled="busy || !canCancel" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>
@@ -171,6 +209,14 @@ const cal = createResource({
   makeParams: () => ({ start: days.value[0].key, end: days.value[41].key + ' 23:59:59' }),
   auto: true,
 })
+
+// métricas view (S12)
+const view = ref('calendar')
+const dash = createResource({ url: 'doco_marketing.api.social.get_dashboard', auto: false })
+function showMetrics() {
+  view.value = 'metrics'
+  dash.reload()
+}
 
 const postsByDay = computed(() => {
   const m = {}
@@ -233,6 +279,56 @@ const busy = ref(false)
 const blank = () => ({ name: '', title: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
 const form = ref(blank())
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
+const isPending = computed(() => !!form.value.name && form.value.status === 'Pending Approval')
+
+// ── AI draft + approval (S11) ────────────────────────────────────────────
+const aiBusy = ref(false)
+async function aiDraft() {
+  aiBusy.value = true
+  try {
+    const r = await frappeCall('doco_marketing.services.social.ai_draft.ai_draft_now', {
+      signal: 'new_arrivals',
+      channels: JSON.stringify(['FB Feed']),
+    })
+    toast.success(__('Borrador IA creado'))
+    cal.reload()
+    await openEdit({ name: r.name }) // open for review
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo generar el borrador'))
+  } finally {
+    aiBusy.value = false
+  }
+}
+
+async function approvePost() {
+  busy.value = true
+  try {
+    await frappeCall('doco_marketing.api.social.approve', { name: form.value.name })
+    toast.success(__('Aprobado y programado'))
+    showComposer.value = false
+    cal.reload()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo aprobar'))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function rejectPost() {
+  const reason = window.prompt(__('Motivo del rechazo (opcional):'), '')
+  if (reason === null) return
+  busy.value = true
+  try {
+    await frappeCall('doco_marketing.api.social.reject', { name: form.value.name, reason })
+    toast.success(__('Rechazado'))
+    showComposer.value = false
+    cal.reload()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo rechazar'))
+  } finally {
+    busy.value = false
+  }
+}
 
 function toDtLocal(dt) {
   return dt ? dt.replace(' ', 'T').slice(0, 16) : ''
