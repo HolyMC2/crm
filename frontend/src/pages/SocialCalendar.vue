@@ -63,8 +63,12 @@
         <div class="flex flex-wrap gap-1.5">
           <button
             v-for="p in cal.data.drafts" :key="p.name"
+            draggable="true"
             class="rounded-md px-2 py-1 text-[11.5px] font-medium" :class="chip(p.status)"
+            :title="__('arrastra a un día para fecharlo')"
             @click="openEdit(p)"
+            @dragstart="dragged = p"
+            @dragend="dragged = null"
           >{{ chanIcons(p.channels) }} {{ p.title || p.name }}</button>
         </div>
       </div>
@@ -172,6 +176,9 @@ const postsByDay = computed(() => {
   const m = {}
   for (const p of cal.data?.scheduled || []) {
     if (!p.scheduled_time) continue
+    // Bucket by the DATE STRING (site-tz naive, as the backend stores it) — NOT a
+    // browser-local Date — so a post always lands on its stored day regardless of
+    // the operator's browser timezone (frontend-3). Deployment is single-tz (MX).
     const k = p.scheduled_time.slice(0, 10)
     ;(m[k] = m[k] || []).push(p)
   }
@@ -307,15 +314,17 @@ async function publishNow() {
   }
   busy.value = true
   try {
-    const r = await frappeCall('doco_marketing.api.social.save_post', { payload: JSON.stringify(payload(form.value.scheduled_time ? 'Scheduled' : 'Draft')) })
+    // "Publicar ahora" = immediate: save WITHOUT a future schedule so the publisher
+    // posts now instead of native-scheduling the date field for later.
+    const r = await frappeCall('doco_marketing.api.social.save_post', { payload: JSON.stringify({ ...payload('Draft'), scheduled_time: null }) })
     await frappeCall('doco_marketing.services.social.publish.publish_now', { name: r.name })
     toast.success(__('Publicación enviada'))
     showComposer.value = false
-    cal.reload()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('Falló la publicación'))
   } finally {
     busy.value = false
+    cal.reload() // reload regardless — the post may have persisted even on publish error
   }
 }
 
