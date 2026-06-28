@@ -13,6 +13,15 @@
           <button class="px-2.5 py-1" :class="view === 'calendar' ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="view = 'calendar'">{{ __('Calendario') }}</button>
           <button class="px-2.5 py-1" :class="view === 'metrics' ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="showMetrics">{{ __('Métricas') }}</button>
         </div>
+        <select
+          v-if="isManager || shopOptions.length > 1"
+          v-model="shop" @change="onShopChange"
+          class="rounded-lg border border-outline-gray-2 px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
+          :title="__('Filtrar por sucursal')"
+        >
+          <option v-if="isManager" value="">{{ __('Todas las sucursales') }}</option>
+          <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
+        </select>
         <div v-if="view === 'calendar'" class="flex items-center gap-1">
           <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shiftMonth(-1)">‹</button>
           <span class="min-w-[140px] text-center text-[13px] font-semibold capitalize text-ink-gray-8">{{ monthLabel }}</span>
@@ -83,8 +92,48 @@
       </div>
     </div>
 
-    <!-- métricas view (S12) -->
+    <!-- métricas view (S12) + per-shop leaderboard (D5) -->
     <div v-else class="p-4">
+      <!-- per-shop leaderboard / cross-branch roll-up -->
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Por sucursal') }}</span>
+        <button class="rounded-md border border-outline-gray-2 px-2 py-1 text-[11px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" @click="exportLeaderboard">{{ __('Exportar CSV') }}</button>
+      </div>
+      <div class="mb-5 overflow-hidden rounded-[12px] border border-outline-gray-2 bg-surface-white">
+        <table class="w-full text-[12.5px]">
+          <thead class="bg-surface-gray-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">
+            <tr>
+              <th class="px-3 py-2 text-left">{{ __('Sucursal') }}</th>
+              <th class="px-3 py-2 text-right">{{ __('Pubs') }}</th>
+              <th class="px-3 py-2 text-right">{{ __('Alcance') }}</th>
+              <th class="px-3 py-2 text-right">{{ __('Interacción') }}</th>
+              <th class="px-3 py-2 text-right">{{ __('Clics') }}</th>
+              <th class="px-3 py-2 text-right text-ink-green-3">{{ __('Leads WA') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in lb.data || []" :key="r.shop" class="border-t border-outline-gray-1">
+              <td class="px-3 py-2 font-medium text-ink-gray-8">{{ r.shop_name || r.shop }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.posts }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.reach.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.engagement.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.link_clicks.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-3">{{ r.leads }}</td>
+            </tr>
+            <tr v-if="(lb.data || []).length > 1" class="border-t-2 border-outline-gray-2 bg-surface-gray-1 font-bold">
+              <td class="px-3 py-2 text-ink-gray-7">{{ __('Total red') }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.posts }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.reach.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.engagement.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.link_clicks.toLocaleString() }}</td>
+              <td class="px-3 py-2 text-right tabular-nums text-ink-green-3">{{ lbTotals.leads }}</td>
+            </tr>
+            <tr v-if="!(lb.data || []).length"><td colspan="6" class="px-3 py-6 text-center text-ink-gray-4">{{ lb.loading ? __('Cargando…') : __('Sin datos por sucursal todavía.') }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <span class="mb-2 block text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Por publicación') }}</span>
       <div class="overflow-hidden rounded-[12px] border border-outline-gray-2 bg-surface-white">
         <table class="w-full text-[12.5px]">
           <thead class="bg-surface-gray-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">
@@ -121,6 +170,12 @@
         <div class="max-h-[68vh] overflow-y-auto p-4">
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Título') }}</label>
           <input v-model="form.title" type="text" class="mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Interno')" />
+
+          <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Sucursal') }}</label>
+          <select v-if="isManager" v-model="form.shop" :disabled="!!form.name" class="mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60">
+            <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
+          </select>
+          <div v-else class="mb-3 rounded-md bg-surface-gray-1 px-2 py-1.5 text-[12.5px] text-ink-gray-7">{{ shopLabel(form.shop) || '—' }}</div>
 
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Canales') }}</label>
           <div class="mb-3 flex flex-wrap gap-1.5">
@@ -204,18 +259,32 @@ const days = computed(() => {
   return out
 })
 
+// ── shop selector (D4) — declared before `cal` so its auto-fetch sees it ──────
+const shop = ref('') // '' = all shops (manager); resolved to the lone shop for an employee
+
 const cal = createResource({
   url: 'doco_marketing.api.social.get_calendar',
-  makeParams: () => ({ start: days.value[0].key, end: days.value[41].key + ' 23:59:59' }),
+  makeParams: () => ({ start: days.value[0].key, end: days.value[41].key + ' 23:59:59', shop: shop.value || undefined }),
   auto: true,
 })
 
-// métricas view (S12)
+// métricas view (S12) + per-shop leaderboard (D5)
 const view = ref('calendar')
-const dash = createResource({ url: 'doco_marketing.api.social.get_dashboard', auto: false })
+const dash = createResource({
+  url: 'doco_marketing.api.social.get_dashboard',
+  makeParams: () => ({ shop: shop.value || undefined }),
+  auto: false,
+})
+const lb = createResource({ url: 'doco_marketing.api.social.get_leaderboard', auto: false })
+const lbTotals = computed(() => {
+  const acc = { posts: 0, reach: 0, impressions: 0, engagement: 0, link_clicks: 0, leads: 0 }
+  for (const r of lb.data || []) for (const k in acc) acc[k] += r[k] || 0
+  return acc
+})
 function showMetrics() {
   view.value = 'metrics'
   dash.reload()
+  lb.reload()
 }
 
 const postsByDay = computed(() => {
@@ -236,6 +305,38 @@ watch(() => cursor.value, () => cal.reload())
 
 const channelsRes = createResource({ url: 'doco_marketing.api.social.get_channels', auto: true })
 const channels = computed(() => channelsRes.data || ['FB Feed', 'FB Reel', 'IG Feed', 'IG Reel', 'IG Story'])
+
+// shop selector data (D4): managers get every enabled shop + the 'Todas' option; an
+// employee is auto-pinned to their (single) branch so filters + composer are concrete.
+const shopsRes = createResource({ url: 'doco_marketing.api.social.get_shops', auto: true })
+const isManager = computed(() => !!shopsRes.data?.is_manager)
+const shopOptions = computed(() => shopsRes.data?.shops || [])
+const shopLabel = (name) => shopOptions.value.find((s) => s.name === name)?.shop_name || name
+watch(shopOptions, (opts) => {
+  if (!isManager.value && opts.length && !shop.value) shop.value = opts[0].name
+}, { immediate: true })
+function onShopChange() {
+  cal.reload()
+  if (view.value === 'metrics') { dash.reload() }
+}
+
+// CSV export of the per-shop leaderboard (D5) — built client-side, no backend file.
+function exportLeaderboard() {
+  const rows = lb.data || []
+  if (!rows.length) { toast.error(__('Sin datos para exportar')); return }
+  const cols = ['shop_name', 'posts', 'reach', 'impressions', 'engagement', 'link_clicks', 'leads']
+  const head = ['Sucursal', 'Publicaciones', 'Alcance', 'Impresiones', 'Interacción', 'Clics', 'Leads WA']
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  const csv = [head.map(esc).join(',')]
+    .concat(rows.map((r) => cols.map((c) => esc(r[c])).join(',')))
+    .join('\n')
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'social-sucursales.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 function chip(status) {
   return {
@@ -276,7 +377,7 @@ async function onDrop(day) {
 // ── composer ───────────────────────────────────────────────────────────────
 const showComposer = ref(false)
 const busy = ref(false)
-const blank = () => ({ name: '', title: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
+const blank = () => ({ name: '', title: '', shop: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
 const form = ref(blank())
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
 const isPending = computed(() => !!form.value.name && form.value.status === 'Pending Approval')
@@ -289,6 +390,7 @@ async function aiDraft() {
     const r = await frappeCall('doco_marketing.services.social.ai_draft.ai_draft_now', {
       signal: 'new_arrivals',
       channels: JSON.stringify(['FB Feed']),
+      shop: shop.value || undefined,
     })
     toast.success(__('Borrador IA creado'))
     cal.reload()
@@ -339,6 +441,8 @@ function fromDtLocal(v) {
 
 function openNew(day) {
   form.value = blank()
+  // default the new post's branch to the toolbar selection, else the user's first shop
+  form.value.shop = shop.value || shopOptions.value[0]?.name || ''
   if (day) form.value.scheduled_time = `${day.key}T10:00`
   showComposer.value = true
 }
@@ -350,6 +454,7 @@ async function openEdit(p) {
   form.value = {
     name: doc.name,
     title: doc.title || '',
+    shop: doc.shop || '',
     channels: (doc.channels || []).map((c) => c.channel),
     captions: caps,
     scheduled_time: toDtLocal(doc.scheduled_time),
@@ -374,6 +479,7 @@ function payload(status) {
   return {
     name: form.value.name || undefined,
     title: form.value.title,
+    shop: form.value.shop || undefined,
     status,
     source: 'Manual',
     scheduled_time: fromDtLocal(form.value.scheduled_time),
