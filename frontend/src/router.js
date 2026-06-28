@@ -189,6 +189,12 @@ const routes = [
     meta: { navLabel: 'Webshop', title: 'Webshop' },
   },
   {
+    path: '/whatsapp-queue',
+    name: 'WhatsApp Queue',
+    component: () => import('@/pages/WhatsAppQueue.vue'),
+    meta: { navLabel: 'Aprobaciones', title: 'Aprobaciones WhatsApp' },
+  },
+  {
     path: '/:invalidpath',
     name: 'Invalid Page',
     component: () => import('@/pages/InvalidPage.vue'),

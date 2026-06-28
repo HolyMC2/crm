@@ -7,6 +7,7 @@ import DashboardIcon from '~icons/lucide/layout-dashboard'
 import LeadsIcon from '~icons/lucide/users'
 import DealsIcon from '~icons/lucide/handshake'
 import InboxIcon from '~icons/lucide/messages-square'
+import ReviewQueueIcon from '~icons/lucide/clipboard-check'
 import CampaignsIcon from '~icons/lucide/megaphone'
 import CallsIcon from '~icons/lucide/phone'
 import TasksIcon from '~icons/lucide/square-check-big'
@@ -18,6 +19,7 @@ export const navItems = [
   { key: 'dashboard', icon: DashboardIcon, label: 'Dashboard', to: '/dashboard', group: 'dashboard' },
   { key: 'leads', icon: LeadsIcon, label: 'Leads', to: '/leads', group: 'leads' },
   { key: 'inbox', icon: InboxIcon, label: 'Inbox', to: '/inbox', group: 'inbox', badge: 'unread' },
+  { key: 'wa-queue', icon: ReviewQueueIcon, label: 'Aprobaciones', to: '/whatsapp-queue', group: 'wa-queue', badge: 'pending' },
   { key: 'deals', icon: DealsIcon, label: 'Deals', to: '/deals', group: 'deals' },
   { key: 'campaigns', icon: CampaignsIcon, label: 'Campaigns', to: '/campaigns', group: 'campaigns' },
   { key: 'calls', icon: CallsIcon, label: 'Calls', to: '/call-logs', group: 'calls' },
@@ -33,6 +35,7 @@ export const navItemsBottom = [
 // A route path lights exactly one nav group (handoff §4.1).
 export function routeGroup(path) {
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
+  if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'wa-queue'
   if (/^\/deals?(\/|$)/.test(path)) return 'deals'
   if (/^\/campaigns(\/|$)/.test(path)) return 'campaigns'
   if (/^\/(leads|pipeline|calendar|stage-scripts|enrichment|pipeline-analysis)(\/|$)/.test(path)) return 'leads'

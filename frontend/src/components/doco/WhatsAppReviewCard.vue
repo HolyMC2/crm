@@ -1,0 +1,161 @@
+<!--
+  WhatsAppReviewCard — one row of the supervised WhatsApp Send Review queue.
+  Shows the rendered message, recipient, provenance (⚙ Auto / 👤 approver) and the
+  inline actions a reviewer needs. Used by both the standalone Aprobaciones page
+  (WhatsAppQueue.vue) and the in-conversation strip (ConversationReviewStrip.vue).
+
+  Acts via doco_marketing.api.review_queue.{approve,reject,retry}, which return the
+  row's fresh state; we patch in place and emit `changed` so the parent can reload
+  the surrounding thread (an approved row becomes a real WhatsApp Message).
+-->
+<template>
+  <div class="rounded-[10px] border border-outline-gray-2 bg-surface-white p-3">
+    <!-- header: template + provenance + status -->
+    <div class="mb-1.5 flex items-start justify-between gap-2">
+      <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+        <span class="truncate text-[12.5px] font-bold text-ink-gray-9">{{ row.template }}</span>
+        <span
+          v-if="provenance"
+          class="rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-6"
+          :title="provenance.tip"
+        >{{ provenance.icon }} {{ provenance.label }}</span>
+      </div>
+      <span
+        class="shrink-0 rounded-full px-2 py-0.5 text-2xs font-semibold"
+        :class="statusChip.cls"
+      >{{ statusChip.label }}</span>
+    </div>
+
+    <!-- recipient + reference -->
+    <div class="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-2xs text-ink-gray-5">
+      <span class="font-mono text-ink-gray-6">{{ formattedPhone }}</span>
+      <span v-if="row.reference_name" class="truncate">· {{ refLabel }}</span>
+      <span :title="fullTs">· {{ relTime }}</span>
+    </div>
+
+    <!-- the actual message preview -->
+    <div
+      v-if="row.preview"
+      class="whitespace-pre-line rounded-md bg-surface-gray-1 px-2.5 py-2 text-[12.5px] leading-snug text-ink-gray-8"
+    >{{ row.preview }}</div>
+
+    <!-- failure reason -->
+    <div
+      v-if="row.status === 'Fallido' && row.error"
+      class="mt-1.5 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-4"
+    >
+      {{ shortError }}
+      <span v-if="row.attempts" class="opacity-70">· {{ row.attempts }} {{ __('intentos') }}</span>
+    </div>
+
+    <!-- actions -->
+    <div v-if="canAct" class="mt-2.5 flex items-center gap-2">
+      <button
+        v-if="row.status === 'Pendiente'"
+        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+        style="background:#16a34a"
+        :disabled="!!busy"
+        @click="act('approve')"
+      >{{ busy === 'approve' ? __('Enviando…') : __('Enviar') }}</button>
+      <button
+        v-if="row.status === 'Fallido'"
+        class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-8 disabled:opacity-50"
+        :disabled="!!busy"
+        @click="act('retry')"
+      >{{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}</button>
+      <button
+        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-4 hover:bg-surface-red-1 disabled:opacity-50"
+        :disabled="!!busy"
+        @click="act('reject')"
+      >{{ __('Cancelar') }}</button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed, ref } from 'vue'
+import { call as frappeCall, toast } from 'frappe-ui'
+
+const props = defineProps({
+  row: { type: Object, required: true },
+})
+const emit = defineEmits(['changed'])
+
+const busy = ref('')
+
+const canAct = computed(() => ['Pendiente', 'Fallido'].includes(props.row.status))
+
+const provenance = computed(() => {
+  const r = props.row
+  if (r.auto) return { icon: '⚙', label: __('Auto'), tip: r.source || __('Mensaje automático') }
+  if (r.sent_by_name) return { icon: '', label: r.sent_by_name, tip: __('Aprobado por') + ' ' + r.sent_by_name }
+  return null
+})
+
+const statusChip = computed(() => {
+  return (
+    {
+      Pendiente: { label: __('Pendiente'), cls: 'bg-surface-amber-1 text-ink-amber-3' },
+      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-3' },
+      Fallido: { label: __('Fallido'), cls: 'bg-surface-red-1 text-ink-red-4' },
+      Cancelado: { label: __('Cancelado'), cls: 'bg-surface-gray-2 text-ink-gray-5' },
+    }[props.row.status] || { label: props.row.status, cls: 'bg-surface-gray-2 text-ink-gray-5' }
+  )
+})
+
+const refLabel = computed(() => {
+  const r = props.row
+  if (!r.reference_name) return ''
+  return r.reference_name
+})
+
+const formattedPhone = computed(() => {
+  // MX deployment: normalize to last-10 (drops the 52 / legacy 521 WhatsApp prefix)
+  // and render +52 NNN NNN NNNN. Non-10-digit oddities show raw with a +.
+  const d = String(props.row.to || '').replace(/\D/g, '')
+  if (!d) return ''
+  const last10 = d.slice(-10)
+  if (last10.length === 10) {
+    return `+52 ${last10.slice(0, 3)} ${last10.slice(3, 6)} ${last10.slice(6)}`
+  }
+  return `+${d}`
+})
+
+const shortError = computed(() => {
+  const e = String(props.row.error || '').trim()
+  return e.length > 180 ? e.slice(-180) : e
+})
+
+const fullTs = computed(() => props.row.creation || '')
+const relTime = computed(() => {
+  // lightweight relative time; avoids pulling a date lib into the card
+  const c = props.row.creation
+  if (!c) return ''
+  const then = new Date(c.replace(' ', 'T'))
+  const mins = Math.round((Date.now() - then.getTime()) / 60000)
+  if (Number.isNaN(mins)) return ''
+  if (mins < 1) return __('ahora')
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.round(mins / 60)
+  if (hrs < 24) return `${hrs}h`
+  return `${Math.round(hrs / 24)}d`
+})
+
+async function act(kind) {
+  if (busy.value) return
+  busy.value = kind
+  try {
+    await frappeCall(`doco_marketing.api.review_queue.${kind}`, { name: props.row.name })
+    toast.success(
+      { approve: __('Mensaje enviado'), retry: __('Reintentado'), reject: __('Cancelado') }[kind],
+    )
+    // parent (page / strip) reloads the list on `changed`, which drops this row
+    // out of the Pendiente/Fallido view if its status moved.
+    emit('changed', { kind, name: props.row.name })
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('La acción falló'))
+  } finally {
+    busy.value = ''
+  }
+}
+</script>

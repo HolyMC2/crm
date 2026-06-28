@@ -77,6 +77,17 @@
             {{ __('No hay conversación de WhatsApp con este número todavía — inicia con una plantilla.') }}
           </div>
         </div>
+        <!-- Supervised sends awaiting approval for THIS conversation (scoped by
+             deal/lead + the active contact's phone). One-tap Enviar/Cancelar here so
+             a reviewer never has to leave the chat for the Aprobaciones queue. -->
+        <ConversationReviewStrip
+          v-if="['CRM Deal', 'CRM Lead'].includes(doctype)"
+          class="mx-3 mb-2 sm:mx-10"
+          :reference-doctype="doctype"
+          :reference-name="docname"
+          :phone="activeWhatsappContact?.phone"
+          @changed="whatsappMessages.reload()"
+        />
         <WhatsAppArea
           v-model="whatsappMessages"
           v-model:reply="replyMessage"
@@ -552,6 +563,7 @@ import FadedScrollableDiv from '@/components/FadedScrollableDiv.vue'
 import CommunicationArea from '@/components/CommunicationArea.vue'
 import WhatsappTemplateSelectorModal from '@/components/Modals/WhatsappTemplateSelectorModal.vue'
 import WhatsappTemplateReview from '@/components/Activities/WhatsappTemplateReview.vue'
+import ConversationReviewStrip from '@/components/doco/ConversationReviewStrip.vue'
 import AllModals from '@/components/Activities/AllModals.vue'
 import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
 import { timeAgo, formatDate, startCase } from '@/utils'

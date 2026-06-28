@@ -284,7 +284,9 @@ const badges = createResource({
 })
 function badgeFor(kind) {
   const d = badges.data || {}
-  return kind === 'unread' ? d.unread_messages : d.overdue_tasks
+  if (kind === 'unread') return d.unread_messages
+  if (kind === 'pending') return d.pending_reviews
+  return d.overdue_tasks
 }
 // refresh on navigation — cheap, keeps counts current as the user moves around.
 // (Realtime socket push is a Phase-2 upgrade; see ScheduleWakeup note in PR.)
