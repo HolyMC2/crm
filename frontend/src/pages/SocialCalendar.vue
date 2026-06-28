@@ -29,6 +29,12 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <button v-if="isManager" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" @click="openShops" :title="__('Asignar empleados a sucursales')">
+          {{ __('Sucursales') }}
+        </button>
+        <button v-if="isManager" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="bulkBusy" @click="bulkDraft" :title="__('Un borrador IA por cada sucursal, desde su inventario')">
+          {{ bulkBusy ? __('✨ generando…') : __('✨ IA · todas') }}
+        </button>
         <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="aiBusy" @click="aiDraft" :title="__('Genera un borrador desde el inventario con IA')">
           {{ aiBusy ? __('✨ generando…') : __('✨ Borrador IA') }}
         </button>
@@ -224,6 +230,40 @@
         </div>
       </div>
     </template>
+
+    <!-- sucursales / onboarding modal (D6, manager) -->
+    <template v-if="showShops">
+      <div class="fixed inset-0 z-[300] bg-black/30" @click="showShops = false" />
+      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[480px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
+        <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
+          <span class="text-[14px] font-bold text-ink-gray-9">{{ __('Sucursales y empleados') }}</span>
+          <button class="text-ink-gray-5 hover:text-ink-gray-8" @click="showShops = false">✕</button>
+        </div>
+        <div class="max-h-[68vh] overflow-y-auto p-4">
+          <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Sucursal') }}</label>
+          <select v-model="onbShop" @change="onOnbShopChange" class="mb-4 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]">
+            <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
+          </select>
+
+          <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Empleados asignados') }}</label>
+          <div v-if="!(employeesRes.data || []).length" class="mb-3 text-[12px] text-ink-gray-4">{{ employeesRes.loading ? __('Cargando…') : __('Nadie asignado todavía.') }}</div>
+          <div v-for="u in employeesRes.data || []" :key="u" class="mb-1.5 flex items-center justify-between rounded-md bg-surface-gray-1 px-2.5 py-1.5">
+            <span class="text-[12.5px] text-ink-gray-8">{{ u }}</span>
+            <button class="text-[11px] font-semibold text-ink-red-4 hover:underline disabled:opacity-50" :disabled="onbBusy" @click="unassignEmp(u)">{{ __('Quitar') }}</button>
+          </div>
+
+          <label class="mb-1 mt-4 block text-[11px] font-semibold text-ink-gray-6">{{ __('Agregar empleado') }}</label>
+          <div class="flex items-center gap-2">
+            <select v-model="newEmp" class="flex-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]">
+              <option value="">{{ __('Elegir Marketing User…') }}</option>
+              <option v-for="u in availableToAssign" :key="u" :value="u">{{ u }}</option>
+            </select>
+            <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:#16a34a" :disabled="onbBusy || !newEmp" @click="assignEmp">{{ __('Asignar') }}</button>
+          </div>
+          <p class="mt-3 text-[11px] text-ink-gray-4">{{ __('Solo aparecen usuarios con rol Marketing User. El gestor (Marketing Manager) ve todas las sucursales.') }}</p>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -336,6 +376,76 @@ function exportLeaderboard() {
   a.download = 'social-sucursales.csv'
   a.click()
   URL.revokeObjectURL(url)
+}
+
+// ── D6 bulk draft — one AI draft per enabled branch (manager) ─────────────────
+const bulkBusy = ref(false)
+async function bulkDraft() {
+  bulkBusy.value = true
+  try {
+    const r = await frappeCall('doco_marketing.api.social.bulk_draft', {
+      signal: 'new_arrivals', channels: JSON.stringify(['FB Feed']),
+    })
+    toast.success(__('Borradores IA creados') + ': ' + (r.drafted || []).length)
+    if ((r.skipped || []).length) toast.info(__('Sin stock/IA') + ': ' + r.skipped.join(', '))
+    cal.reload()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudieron generar los borradores'))
+  } finally {
+    bulkBusy.value = false
+  }
+}
+
+// ── D6 onboarding — assign branch employees (manager) ─────────────────────────
+const showShops = ref(false)
+const onbShop = ref('')
+const onbBusy = ref(false)
+const newEmp = ref('')
+const assignableRes = createResource({ url: 'doco_marketing.api.social.get_assignable_users', auto: false })
+const employeesRes = createResource({
+  url: 'doco_marketing.api.social.get_shop_employees',
+  makeParams: () => ({ shop: onbShop.value }),
+  auto: false,
+})
+const availableToAssign = computed(() =>
+  (assignableRes.data || []).filter((u) => !(employeesRes.data || []).includes(u)),
+)
+function openShops() {
+  onbShop.value = shopOptions.value[0]?.name || ''
+  newEmp.value = ''
+  showShops.value = true
+  assignableRes.reload()
+  if (onbShop.value) employeesRes.reload()
+}
+function onOnbShopChange() {
+  newEmp.value = ''
+  if (onbShop.value) employeesRes.reload()
+}
+async function assignEmp() {
+  if (!newEmp.value || !onbShop.value) return
+  onbBusy.value = true
+  try {
+    await frappeCall('doco_marketing.api.social.assign_employee', { user: newEmp.value, shop: onbShop.value })
+    toast.success(__('Asignado'))
+    newEmp.value = ''
+    employeesRes.reload()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo asignar'))
+  } finally {
+    onbBusy.value = false
+  }
+}
+async function unassignEmp(user) {
+  onbBusy.value = true
+  try {
+    await frappeCall('doco_marketing.api.social.unassign_employee', { user, shop: onbShop.value })
+    toast.success(__('Quitado'))
+    employeesRes.reload()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo quitar'))
+  } finally {
+    onbBusy.value = false
+  }
 }
 
 function chip(status) {
