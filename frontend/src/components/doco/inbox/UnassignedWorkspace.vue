@@ -125,6 +125,27 @@
             </button>
           </div>
         </div>
+
+        <!-- or LINK to an existing Lead/Deal (universal — same for every channel) -->
+        <div class="mt-4 border-t border-outline-gray-1 pt-3">
+          <div class="mb-1 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('O vincular a existente') }}</div>
+          <input v-model="linkQuery" :placeholder="__('Buscar Lead o Trato…')" :class="inputCls" @input="onSearch" />
+          <div v-if="linkResults.length" class="mt-1.5 flex flex-col gap-1">
+            <button
+              v-for="t in linkResults"
+              :key="t.doctype + ':' + t.name"
+              class="flex items-center justify-between gap-2 rounded-md border border-outline-gray-2 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-gray-2 disabled:opacity-50"
+              :disabled="busy"
+              @click="linkTo(t)"
+            >
+              <span class="truncate text-ink-gray-8">{{ t.label }}</span>
+              <span class="flex-none rounded bg-surface-gray-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-gray-5">
+                {{ t.doctype === 'CRM Deal' ? __('Trato') : 'Lead' }}
+              </span>
+            </button>
+          </div>
+          <div v-else-if="linkQuery.trim().length >= 2 && !searching" class="mt-1 text-[11px] text-ink-gray-4">{{ __('Sin coincidencias') }}</div>
+        </div>
       </div>
     </div>
   </div>
@@ -132,14 +153,49 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { toast } from 'frappe-ui'
+import { toast, call } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, activeUnassignedChannel, unassignedThread, assignUnassigned, hhmm, mobileBack } from '@/composables/inbox'
+import { activeUnassigned, activeUnassignedChannel, unassignedThread, assignUnassigned, linkUnassignedToExisting, hhmm, mobileBack } from '@/composables/inbox'
 
 const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
+
+// Link-to-existing picker (universal across channels).
+const linkQuery = ref('')
+const linkResults = ref([])
+const searching = ref(false)
+let searchTimer = null
+function onSearch() {
+  clearTimeout(searchTimer)
+  const q = linkQuery.value.trim()
+  if (q.length < 2) { linkResults.value = []; return }
+  searching.value = true
+  searchTimer = setTimeout(async () => {
+    try {
+      linkResults.value = await call('doco_marketing.api.inbox.search_link_targets', { query: q })
+    } catch {
+      linkResults.value = []
+    } finally {
+      searching.value = false
+    }
+  }, 250)
+}
+async function linkTo(t) {
+  if (busy.value) return
+  busy.value = true
+  try {
+    const res = await linkUnassignedToExisting(activeUnassigned.value, t.doctype, t.name, activeUnassignedChannel.value)
+    toast.success(`${__('Vinculado a')} ${res.name}`)
+    linkQuery.value = ''
+    linkResults.value = []
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo vincular'))
+  } finally {
+    busy.value = false
+  }
+}
 
 // Reply-bar models for WhatsAppBox. No reference doc (name=''), so the send goes
 // out reference-less to the active number; the whatsapp model just proxies the

@@ -254,6 +254,20 @@ export async function assignUnassigned(id, targetDoctype, fields = {}, channel =
   return res
 }
 
+// Universal LINK-TO-EXISTING: re-point an orphan (any channel) onto an existing
+// Lead/Deal + bind its durable identity (PSID/phone) so future inbound auto-links.
+export async function linkUnassignedToExisting(id, refDoctype, refName, channel = 'whatsapp') {
+  const params = { reference_doctype: refDoctype, reference_name: refName }
+  if (channel === 'messenger') params.psid = id
+  else params.phone = id
+  const res = await call('doco_marketing.api.inbox.assign_unassigned', params)
+  activeUnassigned.value = null
+  reloadUnassigned()
+  reloadQueue()
+  selectDeal(res.name, res.doctype)
+  return res
+}
+
 export function loadThread() {
   if (!activeDeal.value) return
   // no channel filter — backend merges WhatsApp + Email; selector drives send only
