@@ -64,7 +64,7 @@ export const comments = createResource({
   auto: false,
 })
 export const commentCounts = createResource({ url: 'doco_marketing.api.comments.get_comment_counts', auto: false })
-export const activeComment = ref(null) // name of the open Social Comment (3rd middle-pane mode)
+export const activeCommentPost = ref(null) // post_id of the open comment group (3rd middle-pane mode)
 // Omnichannel inbox tabs (Meta-style): which channel view the left pane shows.
 export const inboxTab = ref('all') // 'all' | 'whatsapp' | 'messenger' | 'comments'
 export const commentStatus = ref('New') // 'New' | 'answered' | 'all' (Comentarios sub-filter)
@@ -149,7 +149,7 @@ export function resetInbox() {
   activeDeal.value = null
   activeDealDoctype.value = 'CRM Deal'
   activeUnassigned.value = null
-  activeComment.value = null
+  activeCommentPost.value = null
   activeTab.value = 'conversation'
   activeChannel.value = 'whatsapp'
   mobileView.value = 'list' // back to the queue on (re)entry
@@ -183,7 +183,7 @@ export function setQueueChannel(ch) {
 
 export function selectDeal(name, doctype = 'CRM Deal') {
   activeUnassigned.value = null // leaving the triage view
-  activeComment.value = null
+  activeCommentPost.value = null
   mobileView.value = 'thread' // mobile: advance the stack to the conversation
   if (activeDeal.value === name && activeDealDoctype.value === doctype) return
   activeDeal.value = name
@@ -265,7 +265,7 @@ export async function saveContactField(doctype, name, fieldname, value) {
 
 export function selectUnassigned(id, channel = 'whatsapp') {
   activeDeal.value = null // orphan threads have no deal/context panel
-  activeComment.value = null
+  activeCommentPost.value = null
   activeUnassigned.value = id
   activeUnassignedChannel.value = channel
   mobileView.value = 'thread' // mobile: advance the stack to the orphan thread
@@ -391,10 +391,11 @@ export function setCommentStatus(s) {
   commentStatus.value = s
   reloadComments()
 }
-export function selectComment(name) {
+// Open a POST group — the workspace shows the post + all its comments (FB-style).
+export function selectCommentGroup(postId) {
   activeDeal.value = null
   activeUnassigned.value = null
-  activeComment.value = name
+  activeCommentPost.value = postId
   mobileView.value = 'thread'
 }
 // Reply under the comment publicly, or DM the commenter (private_replies → mints a

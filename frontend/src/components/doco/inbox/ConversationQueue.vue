@@ -143,29 +143,31 @@
         <div v-if="inboxTab === 'comments' && !commentRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
           {{ __('Sin comentarios') }}
         </div>
+        <!-- one row per POST (grouped) — opens the post + all its comments -->
         <button
-          v-for="cm in commentRows"
-          :key="cm.name"
+          v-for="g in commentGroups"
+          :key="g.post_id || g.latest.name"
           class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
-          :class="activeComment === cm.name ? 'bg-surface-blue-1' : ''"
-          :style="activeComment === cm.name ? 'border-left:3px solid #1877f2' : 'border-left:3px solid #1877f266'"
-          @click="selectComment(cm.name)"
+          :class="activeCommentPost === (g.post_id || g.latest.name) ? 'bg-surface-blue-1' : ''"
+          :style="activeCommentPost === (g.post_id || g.latest.name) ? 'border-left:3px solid #1877f2' : 'border-left:3px solid #1877f266'"
+          @click="selectCommentGroup(g.post_id || g.latest.name)"
         >
           <div class="mb-1 flex items-center gap-2">
             <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-white" style="background: #1877f2">
               <LucideFacebook class="h-3.5 w-3.5" />
             </span>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ cm.from_name || __('Facebook') }}</div>
-              <div class="truncate text-[11px] text-ink-gray-5">{{ __('Comentario en Facebook') }}</div>
+              <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ __('Publicación') }}</div>
+              <div class="truncate text-[11px] text-ink-gray-5">
+                {{ g.count }} {{ g.count === 1 ? __('comentario') : __('comentarios') }}
+              </div>
             </div>
-            <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(cm.created_ts) }}</div>
+            <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(g.latest.created_ts) }}</div>
           </div>
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
-            <span class="inline-flex flex-none items-center font-semibold" style="color: #1877f2">FB</span>
-            <span class="truncate">{{ cm.message || '—' }}</span>
-            <span v-if="cm.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-1 bg-surface-violet-1">{{ __('Lead') }}</span>
-            <span v-else-if="cm.status === 'Replied'" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-green-3 bg-surface-green-2">✓ {{ __('Resp.') }}</span>
+            <span class="inline-flex flex-none items-center font-semibold text-ink-gray-8">{{ g.latest.from_name || 'FB' }}:</span>
+            <span class="truncate">{{ g.latest.message || '—' }}</span>
+            <span v-if="g.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-1 bg-surface-violet-1">{{ __('Lead') }}</span>
           </div>
         </button>
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
@@ -305,10 +307,10 @@ import {
   activeDeal,
   activeDealDoctype,
   activeUnassigned,
-  activeComment,
+  activeCommentPost,
   selectDeal,
   selectUnassigned,
-  selectComment,
+  selectCommentGroup,
   setInboxTab,
   setCommentStatus,
   onSearchInput,
@@ -333,6 +335,25 @@ const rows = computed(() => queue.data || [])
 const openCount = computed(() => rows.value.length)
 const unassignedRows = computed(() => unassigned.data || [])
 const commentRows = computed(() => comments.data || [])
+
+// Group comments by their FB post (like Meta's comments inbox): one row per post,
+// showing the latest comment + how many. Sorted by most-recent activity.
+const commentGroups = computed(() => {
+  const byPost = new Map()
+  for (const cm of commentRows.value) {
+    const key = cm.post_id || cm.name
+    const g = byPost.get(key)
+    if (!g) byPost.set(key, { post_id: cm.post_id, latest: cm, count: 1, lead: cm.lead })
+    else {
+      g.count++
+      if (cm.lead) g.lead = cm.lead
+      if (new Date(cm.created_ts || 0) > new Date(g.latest.created_ts || 0)) g.latest = cm
+    }
+  }
+  return [...byPost.values()].sort(
+    (a, b) => new Date(b.latest.created_ts || 0) - new Date(a.latest.created_ts || 0),
+  )
+})
 
 // Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger.
 const visibleUnassigned = computed(() => {

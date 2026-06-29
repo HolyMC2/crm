@@ -19,7 +19,7 @@
       ⟩
     </button>
     <UnassignedWorkspace v-if="activeUnassigned" />
-    <CommentWorkspace v-else-if="activeComment" />
+    <CommentWorkspace v-else-if="activeCommentPost" />
     <DealWorkspace v-else />
     <DealContextPanel v-if="activeDeal" />
   </div>
@@ -30,7 +30,7 @@
     <ConversationQueue v-show="mobileView === 'list'" />
     <div v-show="mobileView === 'thread'" class="flex min-h-0 flex-1 flex-col">
       <UnassignedWorkspace v-if="activeUnassigned" />
-      <CommentWorkspace v-else-if="activeComment" />
+      <CommentWorkspace v-else-if="activeCommentPost" />
       <DealWorkspace v-else />
     </div>
     <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col">
@@ -57,7 +57,7 @@ import {
   activeDeal,
   activeDealDoctype,
   activeUnassigned,
-  activeComment,
+  activeCommentPost,
   queue,
   queueCollapsed,
   mobileView,
