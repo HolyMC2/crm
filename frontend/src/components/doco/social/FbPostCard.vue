@@ -41,7 +41,7 @@
     </div>
 
     <!-- caption -->
-    <div v-if="message" class="whitespace-pre-wrap px-3 py-2 text-[13.5px] leading-snug text-ink-gray-9">{{ message }}</div>
+    <div v-if="message" class="whitespace-pre-wrap [overflow-wrap:anywhere] px-3 py-2 text-[13.5px] leading-snug text-ink-gray-9">{{ message }}</div>
 
     <!-- media (FB-style grid) -->
     <div v-if="shown.length" class="mt-1 grid gap-0.5" :class="gridClass">
@@ -105,11 +105,8 @@ const props = defineProps({
 const shown = computed(() => props.images.slice(0, 4))
 const extra = computed(() => Math.max(0, props.images.length - 4))
 const tall = computed(() => props.images.length === 1)
-const gridClass = computed(() => {
-  const n = props.images.length
-  if (n <= 1) return 'grid-cols-1'
-  if (n === 3) return 'grid-cols-2' // first tile spans 2 rows
-  return 'grid-cols-2'
-})
+// 1 image = full width; 2/3/4+ = a 2-col grid (the 3-image case spans the first tile
+// across both rows via row-span in the template).
+const gridClass = computed(() => (props.images.length <= 1 ? 'grid-cols-1' : 'grid-cols-2'))
 const hasCounts = computed(() => props.reactions != null || props.comments != null || props.shares != null)
 </script>
