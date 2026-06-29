@@ -31,6 +31,7 @@
             @click="togglePopover"
           />
         </IconPicker>
+        <CannedReplyPicker channel="Messenger" @pick="onCanned" />
       </div>
       <textarea
         ref="textareaRef"
@@ -60,6 +61,7 @@ import { ref } from 'vue'
 import { call, toast, FileUploader, Dropdown, FeatherIcon } from 'frappe-ui'
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
+import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -75,6 +77,10 @@ const textareaRef = ref(null)
 
 function onEmoji() {
   text.value += emoji.value
+  textareaRef.value?.focus?.()
+}
+function onCanned(body) {
+  text.value = text.value.trim() ? text.value + '\n' + body : body
   textareaRef.value?.focus?.()
 }
 

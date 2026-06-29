@@ -91,6 +91,7 @@
                   @click="togglePopover"
                 />
               </IconPicker>
+              <CannedReplyPicker channel="Messenger" @pick="onMsgrCanned" />
             </div>
             <textarea
               ref="msgrTextareaRef"
@@ -219,6 +220,7 @@ import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
+import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { activeUnassigned, activeUnassignedChannel, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack } from '@/composables/inbox'
 
@@ -241,6 +243,10 @@ const msgrEmoji = ref('')
 const msgrTextareaRef = ref(null)
 function onMsgrEmoji() {
   msgrReply.value += msgrEmoji.value
+  msgrTextareaRef.value?.focus?.()
+}
+function onMsgrCanned(body) {
+  msgrReply.value = msgrReply.value.trim() ? msgrReply.value + '\n' + body : body
   msgrTextareaRef.value?.focus?.()
 }
 function msgrUploadOptions(openFileSelector) {

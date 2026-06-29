@@ -111,6 +111,9 @@
                   class="scb flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-2"
                   @keydown.enter.exact.prevent="onReply(cm)"
                 />
+                <div class="flex h-8 items-center">
+                  <CannedReplyPicker channel="Comentarios" @pick="onCanned" />
+                </div>
                 <button class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50" style="background: #1877f2" :disabled="busy || !reply.trim()" @click="onReply(cm)">
                   {{ __('Enviar') }}
                 </button>
@@ -140,6 +143,7 @@ import LucideFacebook from '~icons/lucide/facebook'
 import LucideSearch from '~icons/lucide/search'
 import { isMobile } from '@/composables/breakpoint'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
+import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import {
   activeCommentPost,
   mobileBack,
@@ -237,6 +241,9 @@ function toggleReply(name, m) {
     mode.value = m
     reply.value = ''
   }
+}
+function onCanned(body) {
+  reply.value = reply.value.trim() ? reply.value + '\n' + body : body
 }
 function fmtPostTime(ts) {
   if (!ts) return ''
