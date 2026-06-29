@@ -54,6 +54,29 @@
 
       <!-- body -->
       <div class="scb flex-1 overflow-y-auto px-4 py-4">
+        <!-- quick post view: the Facebook post this comment is on (image + caption +
+             reaction/comment/share counts), like Meta's comments inbox -->
+        <a
+          v-if="post.image || post.message"
+          :href="post.permalink || c.permalink"
+          target="_blank"
+          rel="noopener"
+          class="mb-3 block overflow-hidden rounded-xl border border-outline-gray-1 bg-surface-white hover:bg-surface-gray-1"
+        >
+          <img v-if="post.image" :src="post.image" class="max-h-56 w-full object-cover" :alt="__('publicación')" />
+          <div class="p-3">
+            <div v-if="post.message" class="line-clamp-2 text-[12.5px] text-ink-gray-8">{{ post.message }}</div>
+            <div class="mt-1.5 flex items-center gap-3 text-[11px] text-ink-gray-5">
+              <span>👍 {{ post.reactions ?? 0 }}</span>
+              <span>💬 {{ post.comments ?? 0 }}</span>
+              <span>↗ {{ post.shares ?? 0 }}</span>
+              <span class="ml-auto font-semibold text-ink-blue-3">{{ __('ver en Facebook') }}</span>
+            </div>
+          </div>
+        </a>
+        <div v-else-if="postPreview.loading" class="mb-3 h-28 animate-pulse rounded-xl bg-surface-gray-2" />
+
+        <div class="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">{{ __('Comentario') }}</div>
         <div class="rounded-xl border border-outline-gray-1 bg-surface-white p-3.5 text-[13.5px] text-ink-gray-8">
           {{ c.message || __('(sin texto)') }}
         </div>
@@ -135,7 +158,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { toast } from 'frappe-ui'
+import { toast, createResource } from 'frappe-ui'
 import LucideFacebook from '~icons/lucide/facebook'
 import { isMobile } from '@/composables/breakpoint'
 import {
@@ -155,11 +178,21 @@ const busy = ref(false)
 
 const c = computed(() => (comments.data || []).find((x) => x.name === activeComment.value) || null)
 
-// reset the composer when switching comments
-watch(activeComment, () => {
-  reply.value = ''
-  mode.value = 'public'
-})
+// quick post view — the FB post this comment is on (cached server-side 5 min)
+const postPreview = createResource({ url: 'doco_marketing.api.comments.get_post_preview' })
+const post = computed(() => postPreview.data || {})
+
+// reset the composer + (re)load the post when switching comments
+watch(
+  () => c.value?.name,
+  () => {
+    reply.value = ''
+    mode.value = 'public'
+    postPreview.data = null
+    if (c.value?.post_id) postPreview.submit({ post_id: c.value.post_id })
+  },
+  { immediate: true },
+)
 
 function statusLabel(s) {
   return (
