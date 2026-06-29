@@ -47,7 +47,7 @@
         >
           {{ attachLabel(m.content_type) }}
         </a>
-        <div v-if="m.content" class="whitespace-pre-wrap break-words">{{ m.content }}</div>
+        <div v-if="m.content" class="whitespace-pre-wrap [overflow-wrap:anywhere]">{{ m.content }}</div>
         <div class="mt-0.5 text-right text-[10px] opacity-60">{{ fmtTime(m.timestamp) }}</div>
         <!-- message_reaction: the emoji the customer tapped on this message -->
         <span

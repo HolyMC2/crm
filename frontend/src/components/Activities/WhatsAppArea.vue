@@ -130,7 +130,7 @@
       >
       <div
         :id="whatsapp.name"
-        class="group/message relative max-w-[90%] rounded-md bg-surface-gray-1 text-ink-gray-9 p-1.5 pl-2 text-base shadow-sm"
+        class="group/message relative max-w-[85%] min-w-0 sm:max-w-[34rem] [overflow-wrap:anywhere] [&_a]:[overflow-wrap:anywhere] rounded-md bg-surface-gray-1 text-ink-gray-9 p-1.5 pl-2 text-base shadow-sm"
       >
         <Badge
           v-if="whatsapp.status == 'failed'"
@@ -168,7 +168,7 @@
             </div>
           </div>
         </div>
-        <div class="flex gap-2 justify-between">
+        <div class="flex gap-2 justify-between [&>div]:min-w-0">
           <div
             v-if="whatsapp.status != 'failed'"
             class="absolute -right-0.5 -top-0.5 flex cursor-pointer gap-1 rounded-full bg-surface-white pb-2 pl-2 pr-1.5 pt-1.5 opacity-0 group-hover/message:opacity-100"
