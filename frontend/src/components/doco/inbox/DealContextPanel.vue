@@ -208,7 +208,7 @@ import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, mobileBack, hasTaller } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, requestStage, mobileBack, hasTaller } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()
@@ -347,10 +347,16 @@ function call() {
 
 // ── Acciones: inline-editable Estado / Asignado / Etiquetas ─────────────────────
 const statusOpts = computed(() =>
-  (dealStatuses.data || []).map((s) => ({ label: s.name, onClick: () => changeStatus(s.name) })),
+  (dealStatuses.data || []).map((s) => ({ label: s.name, onClick: () => changeStatus(s.name, s.type) })),
 )
-async function changeStatus(status) {
+async function changeStatus(status, type) {
   if (!activeDeal.value || status === row.value.status) return
+  // A Lost-type status needs a reason captured first (validate_lost_reason on Deal AND
+  // Lead); requestStage opens the prompt and commitLostStage writes status + reason together.
+  if (type === 'Lost') {
+    requestStage(status, type)
+    return
+  }
   await setStage(status)
   dealRes.reload()
 }

@@ -156,7 +156,7 @@ import {
   activeDealDoctype,
   queue,
   sla,
-  setStage,
+  requestStage,
   openContext,
   openLedger,
   mobileBack,
@@ -237,7 +237,7 @@ const stageColor = computed(() => {
 // stage dropdown — the right status set for the active doctype (Deal vs Lead)
 const stageOptions = computed(() => {
   const list = (isDeal.value ? dealStatusList : leadStatuses)?.data || []
-  return list.map((s) => ({ label: s.name, onClick: () => setStage(s.name) }))
+  return list.map((s) => ({ label: s.name, onClick: () => requestStage(s.name, s.type) }))
 })
 
 // WhatsApp 24h customer-service window (free-form until 24h after last inbound;

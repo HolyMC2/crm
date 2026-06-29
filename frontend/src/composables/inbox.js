@@ -366,6 +366,39 @@ export async function setStage(status) {
   reloadQueue()
 }
 
+// Lost-stage capture. A status whose type is 'Lost' (Deal: Cancelado/Abandonado;
+// Lead: Junk/Unqualified) can't be saved without a lost_reason — validate_lost_reason
+// throws on BOTH CRM Deal and CRM Lead — so a bare setStage(status) is rejected and the
+// inbox change silently no-ops. requestStage gates a Lost status behind a reason prompt;
+// commitLostStage writes status + reason + notes together so validation passes.
+export const lostStagePrompt = ref(null) // { status } while awaiting a reason, else null
+
+export async function requestStage(status, type) {
+  if (!activeDeal.value || status == null) return
+  if (type === 'Lost') {
+    lostStagePrompt.value = { status }
+    return
+  }
+  await setStage(status)
+}
+
+export async function commitLostStage(reason, notes = '') {
+  const p = lostStagePrompt.value
+  if (!p || !activeDeal.value) return
+  await call('frappe.client.set_value', {
+    doctype: activeDealDoctype.value,
+    name: activeDeal.value,
+    fieldname: { status: p.status, lost_reason: reason, lost_notes: notes || '' },
+  })
+  lostStagePrompt.value = null
+  reloadQueue()
+  loadThread()
+}
+
+export function cancelLostStage() {
+  lostStagePrompt.value = null
+}
+
 // onThreadUpdate: wired to realtime in the page; reload if it's for the open deal.
 export function onThreadUpdate(payload) {
   if (payload?.deal && payload.deal === activeDeal.value) loadThread()

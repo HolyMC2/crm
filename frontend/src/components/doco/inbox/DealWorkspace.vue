@@ -9,6 +9,7 @@
       <!-- header + tabs are flex-none atop a min-h-0 column, so they stay pinned
            while only the message area (FadedScrollableDiv) scrolls internally. -->
       <DealHeader />
+      <LostStagePrompt />
 
       <div class="flex h-11 flex-none items-center gap-0.5 border-b border-outline-gray-1 px-3 text-[13px]">
         <button
@@ -86,6 +87,7 @@ import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
+import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller } from '@/composables/inbox'
 
