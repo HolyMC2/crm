@@ -68,11 +68,26 @@
             :to-override="activeUnassigned || ''"
             reply-only
           />
-          <!-- Messenger orphan: assign to a Lead/Trato first, then reply from the
-               assigned conversation's Messenger pane (the PSID send needs a reference). -->
-          <p v-else class="px-4 py-3 text-[11.5px] text-ink-gray-5">
-            {{ __('Asigna esta conversación a un Lead o Trato (abajo) para poder responder por Messenger.') }}
-          </p>
+          <!-- Messenger orphan: reply directly by PSID — no assignment needed (the
+               PSID is the recipient). The row stays in this orphan thread and is
+               re-pointed onto the record when you convert/link below. -->
+          <div v-else class="flex items-end gap-2 px-3 py-2.5">
+            <textarea
+              v-model="msgrReply"
+              rows="1"
+              :placeholder="__('Responder por Messenger…')"
+              class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-2"
+              @keydown.enter.exact.prevent="sendMsgr"
+            />
+            <button
+              class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+              style="background: #0084ff"
+              :disabled="busy || !msgrReply.trim()"
+              @click="sendMsgr"
+            >
+              {{ __('Enviar') }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -159,9 +174,25 @@ import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, activeUnassignedChannel, unassignedThread, assignUnassigned, linkUnassignedToExisting, hhmm, mobileBack } from '@/composables/inbox'
+import { activeUnassigned, activeUnassignedChannel, unassignedThread, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack } from '@/composables/inbox'
 
 const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
+
+// Free Messenger reply to an orphan PSID (no assignment required).
+const msgrReply = ref('')
+async function sendMsgr() {
+  if (busy.value || !msgrReply.value.trim()) return
+  busy.value = true
+  try {
+    await sendUnassignedMessenger(msgrReply.value.trim())
+    msgrReply.value = ''
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo enviar'))
+  } finally {
+    busy.value = false
+  }
+}
+watch(activeUnassigned, () => (msgrReply.value = ''))
 
 // Link-to-existing picker (universal across channels).
 const linkQuery = ref('')

@@ -65,6 +65,7 @@ import {
   markRead,
   onThreadUpdate,
   onCommentUpdate,
+  onMessengerInbound,
 } from '@/composables/inbox'
 import { playPing } from '@/composables/notificationSound'
 
@@ -99,6 +100,13 @@ function onWaMessage() {
     if (now > prevUnread && Date.now() - lastSendAt.value > 3000) playPing()
     prevUnread = now
   })
+}
+
+// Messenger realtime (webhook → publish_thread_update, now fires for orphans too).
+// Refresh queue + Sin-asignar + the open orphan thread; ping on a genuine inbound.
+function onMessenger(payload) {
+  onMessengerInbound(payload)
+  if (payload?.direction === 'Incoming' && Date.now() - lastSendAt.value > 3000) playPing()
 }
 
 // ── mobile back-stack ──────────────────────────────────────────────────────
@@ -150,12 +158,14 @@ onMounted(() => {
   mounting = false
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)
   $socket?.on('doco_marketing:comment_update', onCommentUpdate)
+  $socket?.on('messenger_message', onMessenger)
   $socket?.on('whatsapp_message', onWaMessage)
   window.addEventListener('popstate', onPopState)
 })
 onUnmounted(() => {
   $socket?.off('doco_marketing:thread_update', onThreadUpdate)
   $socket?.off('doco_marketing:comment_update', onCommentUpdate)
+  $socket?.off('messenger_message', onMessenger)
   $socket?.off('whatsapp_message', onWaMessage)
   window.removeEventListener('popstate', onPopState)
 })

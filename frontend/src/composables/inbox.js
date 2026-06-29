@@ -383,6 +383,48 @@ export function onCommentUpdate() {
   reloadComments()
 }
 
+// ── Messenger realtime + free orphan reply ─────────────────────────────────────
+export function reloadUnassignedThread() {
+  if (!activeUnassigned.value) return
+  unassignedThread.submit(
+    activeUnassignedChannel.value === 'messenger'
+      ? { psid: activeUnassigned.value }
+      : { phone: activeUnassigned.value },
+  )
+}
+
+// Reply to an orphan Messenger thread WITHOUT assigning it — the PSID is the
+// recipient, no CRM record needed. Stores a reference-less Outgoing row that stays
+// in this thread; converting/linking later re-points every row onto the record.
+export async function sendUnassignedMessenger(content) {
+  if (!activeUnassigned.value || !content?.trim()) return
+  const res = await call('doco_marketing.api.inbox.send_unassigned_messenger', {
+    psid: activeUnassigned.value,
+    content,
+  })
+  lastSendAt.value = Date.now() // suppress the echo self-ping
+  reloadUnassignedThread()
+  reloadUnassigned()
+  return res
+}
+
+// Messenger inbound/echo realtime (webhook → publish_thread_update — now fires for
+// orphans too, the missing piece that made Messenger surface only after a WABA msg).
+// Refresh the queue + Sin-asignar, and the open orphan thread if its PSID matches.
+// The OPEN ASSIGNED thread is refreshed by Activities.vue's own messenger listener.
+export function onMessengerInbound(payload) {
+  reloadQueue()
+  reloadUnassigned()
+  if (
+    activeUnassigned.value &&
+    activeUnassignedChannel.value === 'messenger' &&
+    payload?.psid &&
+    String(payload.psid) === String(activeUnassigned.value)
+  ) {
+    reloadUnassignedThread()
+  }
+}
+
 // presentational helpers now live in crmFormat.js (shared with non-inbox surfaces)
 export {
   avatarColor,
