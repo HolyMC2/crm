@@ -12,7 +12,7 @@
     <template v-else>
       <!-- header -->
       <div class="flex-none border-b border-outline-gray-1 bg-surface-white px-4 py-3">
-        <div class="flex items-center gap-2.5">
+        <div class="mx-auto flex w-full max-w-2xl items-center gap-2.5">
           <button v-if="isMobile" class="text-ink-gray-5 hover:text-ink-gray-9" :aria-label="__('Atrás')" @click="mobileBack">←</button>
           <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-white" style="background: #1877f2">
             <LucideFacebook class="h-4.5 w-4.5" />
@@ -26,8 +26,9 @@
         </div>
       </div>
 
-      <!-- scroll body: post card + comment thread -->
+      <!-- scroll body: post card + comment thread (centered column on desktop) -->
       <div class="scb flex-1 overflow-y-auto px-4 py-4">
+        <div class="mx-auto w-full max-w-2xl">
         <!-- quick post view -->
         <a
           v-if="post.image || post.message"
@@ -101,6 +102,7 @@
               {{ __('El DM abre una conversación de Messenger; aparece en la bandeja cuando respondan.') }}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </template>
