@@ -37,6 +37,9 @@
       <DealContextPanel v-if="activeDeal" />
     </div>
   </div>
+
+  <!-- cross-channel ledger (Bitácora) — overlay, single instance -->
+  <LedgerModal />
 </template>
 
 <script setup>
@@ -49,6 +52,7 @@ import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue'
 import CommentWorkspace from '@/components/doco/inbox/CommentWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
+import LedgerModal from '@/components/doco/inbox/LedgerModal.vue'
 import {
   activeDeal,
   activeDealDoctype,

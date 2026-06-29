@@ -88,6 +88,14 @@
           </button>
         </Dropdown>
         <button
+          class="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
+          :title="__('Bitácora — historial en todos los canales')"
+          :aria-label="__('Bitácora')"
+          @click="openLedger"
+        >
+          <LucideScrollText class="h-4 w-4" />
+        </button>
+        <button
           class="flex h-[34px] w-[34px] items-center justify-center rounded-lg text-[15px] text-white"
           style="background: #16a34a"
           :title="__('Llamar')"
@@ -135,6 +143,7 @@
 import { computed, watch } from 'vue'
 import { Dropdown, createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
 import LucidePhone from '~icons/lucide/phone'
+import LucideScrollText from '~icons/lucide/scroll-text'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import { globalStore } from '@/stores/global'
@@ -149,6 +158,7 @@ import {
   sla,
   setStage,
   openContext,
+  openLedger,
   mobileBack,
   avatarColor,
   initials,
