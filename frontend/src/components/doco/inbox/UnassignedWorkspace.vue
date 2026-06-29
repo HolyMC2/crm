@@ -142,10 +142,31 @@
           </div>
         </div>
 
-        <!-- or LINK to an existing Lead/Deal (universal — same for every channel) -->
+        <!-- or LINK to an existing Contact / Lead / Deal (universal across channels) -->
         <div class="mt-4 border-t border-outline-gray-1 pt-3">
           <div class="mb-1 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('O vincular a existente') }}</div>
-          <input v-model="linkQuery" :placeholder="__('Buscar Lead o Trato…')" :class="inputCls" @input="onSearch" />
+
+          <!-- auto-suggestions by name / number — surfaced, NEVER auto-linked -->
+          <div v-if="suggestionRows.length" class="mb-2">
+            <div class="mb-1 text-[10px] font-semibold text-ink-gray-5">✨ {{ __('Sugerencias') }}</div>
+            <div class="flex flex-col gap-1">
+              <button
+                v-for="t in suggestionRows"
+                :key="'s:' + t.doctype + ':' + t.name"
+                class="flex items-center justify-between gap-2 rounded-md border border-outline-blue-2 bg-surface-blue-1 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-blue-2 disabled:opacity-50"
+                :disabled="busy"
+                @click="linkTo(t)"
+              >
+                <span class="min-w-0">
+                  <span class="block truncate font-medium text-ink-gray-8">{{ t.label }}</span>
+                  <span class="block truncate text-[10.5px] text-ink-gray-5">{{ t.reason }}<template v-if="t.sublabel"> · {{ t.sublabel }}</template></span>
+                </span>
+                <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :style="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
+              </button>
+            </div>
+          </div>
+
+          <input v-model="linkQuery" :placeholder="__('Buscar contacto, Lead o Trato…')" :class="inputCls" @input="onSearch" />
           <div v-if="linkResults.length" class="mt-1.5 flex flex-col gap-1">
             <button
               v-for="t in linkResults"
@@ -154,10 +175,11 @@
               :disabled="busy"
               @click="linkTo(t)"
             >
-              <span class="truncate text-ink-gray-8">{{ t.label }}</span>
-              <span class="flex-none rounded bg-surface-gray-2 px-1.5 py-0.5 text-[10px] font-semibold text-ink-gray-5">
-                {{ t.doctype === 'CRM Deal' ? __('Trato') : 'Lead' }}
+              <span class="min-w-0">
+                <span class="block truncate text-ink-gray-8">{{ t.label }}</span>
+                <span v-if="t.sublabel" class="block truncate text-[10.5px] text-ink-gray-5">{{ t.sublabel }}</span>
               </span>
+              <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :style="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
             </button>
           </div>
           <div v-else-if="linkQuery.trim().length >= 2 && !searching" class="mt-1 text-[11px] text-ink-gray-4">{{ __('Sin coincidencias') }}</div>
@@ -174,9 +196,20 @@ import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, activeUnassignedChannel, unassignedThread, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack } from '@/composables/inbox'
+import { activeUnassigned, activeUnassignedChannel, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack } from '@/composables/inbox'
 
 const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
+
+// auto-suggested existing Contact/Lead/Deal matches (by name + number) for this orphan
+const suggestionRows = computed(() => suggestions.data || [])
+function docLabel(dt) {
+  return dt === 'Contact' ? __('Contacto') : dt === 'CRM Deal' ? __('Trato') : 'Lead'
+}
+function docBadge(dt) {
+  if (dt === 'Contact') return 'color:#5b21b6;background:#ede9fe'
+  if (dt === 'CRM Deal') return 'color:#166534;background:#dcfce7'
+  return 'color:#3730a3;background:#e0e7ff'
+}
 
 // Free Messenger reply to an orphan PSID (no assignment required).
 const msgrReply = ref('')

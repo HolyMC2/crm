@@ -265,6 +265,18 @@ export function selectUnassigned(id, channel = 'whatsapp') {
   activeUnassignedChannel.value = channel
   mobileView.value = 'thread' // mobile: advance the stack to the orphan thread
   unassignedThread.submit(channel === 'messenger' ? { psid: id } : { phone: id })
+  loadSuggestions()
+}
+
+// Auto-suggested existing Contact/Lead/Deal matches for the open orphan (by name +
+// number). Surfaced as one-tap link chips — NEVER auto-linked.
+export const suggestions = createResource({ url: 'doco_marketing.api.inbox.suggest_link_targets' })
+export function loadSuggestions() {
+  if (!activeUnassigned.value) {
+    suggestions.data = []
+    return
+  }
+  suggestions.submit({ channel: activeUnassignedChannel.value, identifier: activeUnassigned.value })
 }
 
 // Convert an orphan number to a Lead, Deal, or Customer; the backend re-points
