@@ -84,7 +84,10 @@
             <div class="text-[13px] text-ink-gray-8">{{ cm.message || __('(sin texto)') }}</div>
 
             <div v-if="cm.reply_text" class="mt-2 rounded-lg border border-outline-blue-1 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8">
-              <span class="font-semibold text-ink-blue-3">{{ __('Tú') }}:</span> {{ cm.reply_text }}
+              <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-3">
+                {{ cm.reply_by || __('Tú') }}<span v-if="cm.reply_at" class="font-normal text-ink-gray-5"> · {{ timeAgo(cm.reply_at) }}</span>
+              </div>
+              {{ cm.reply_text }}
             </div>
 
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11.5px]">
