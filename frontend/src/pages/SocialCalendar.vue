@@ -216,6 +216,22 @@
           </div>
           <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" class="mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
           <p class="text-[11px] text-ink-gray-4">{{ __('Imágenes/video: S8. IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
+
+          <!-- live preview — how the post will look on Facebook -->
+          <div class="mt-4 border-t border-outline-gray-1 pt-3">
+            <div class="mb-2 text-[11px] font-semibold text-ink-gray-6">{{ __('Vista previa (Facebook)') }}</div>
+            <FbPostCard
+              :page-name="previewPost.pageName"
+              :message="previewPost.message"
+              :images="previewPost.images"
+              :time-label="previewPost.timeLabel"
+              :cta="previewPost.cta"
+              show-actions
+            />
+            <p v-if="!previewPost.message && !previewPost.images.length" class="mt-1.5 text-[11px] text-ink-gray-4">
+              {{ __('Escribe el texto del canal FB para ver la vista previa.') }}
+            </p>
+          </div>
         </div>
         <div v-if="form.name && !canCancel" class="border-t border-outline-gray-1 px-4 pt-2 text-[11px] text-ink-gray-5">
           {{ __('Publicación en vivo o cancelada — solo lectura. Despublica desde la cola si hace falta.') }}
@@ -270,6 +286,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
+import FbPostCard from '@/components/doco/social/FbPostCard.vue'
 
 const weekdays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const cursor = ref(new Date())
@@ -489,6 +506,30 @@ const showComposer = ref(false)
 const busy = ref(false)
 const blank = () => ({ name: '', title: '', shop: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
 const form = ref(blank())
+// live FB preview for the composer (FbPostCard) — bound to the FB caption + CTA + schedule
+const previewPost = computed(() => {
+  const caps = form.value.captions || {}
+  const msg = caps['FB Feed'] || caps['FB Reel'] || Object.values(caps).find(Boolean) || ''
+  const cta =
+    form.value.cta_type && form.value.cta_type !== 'None'
+      ? { label: form.value.cta_link || '', button: form.value.cta_type === 'WhatsApp' ? 'WhatsApp' : __('Ver más') }
+      : null
+  let timeLabel = __('Borrador')
+  if (form.value.scheduled_time) {
+    try {
+      timeLabel = __('Programado') + ' · ' + new Date(form.value.scheduled_time).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    } catch {
+      timeLabel = String(form.value.scheduled_time)
+    }
+  }
+  return {
+    pageName: shopLabel(form.value.shop) || __('Tu página'),
+    message: msg,
+    images: form.value.media_urls || [],
+    timeLabel,
+    cta,
+  }
+})
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
 const isPending = computed(() => !!form.value.name && form.value.status === 'Pending Approval')
 

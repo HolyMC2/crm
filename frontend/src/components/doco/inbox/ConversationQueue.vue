@@ -123,10 +123,10 @@
 
       <!-- "Comentarios": comments on our Facebook posts. In the Comentarios TAB the
         status chips (Nuevos/Respondidos/Todos) let you review answered ones too. -->
-      <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentRows.length)" class="mb-1.5">
+      <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentGroups.length)" class="mb-1.5">
         <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-3">
           <LucideFacebook class="h-3 w-3" /> {{ __('Comentarios') }}
-          <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-3">{{ commentRows.length }}</span>
+          <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-3">{{ commentGroups.length }}</span>
         </div>
         <!-- status sub-filter — answered comments stay reviewable, never lost -->
         <div v-if="inboxTab === 'comments'" class="mb-1.5 flex gap-1.5 px-1.5">
@@ -140,17 +140,27 @@
             {{ s.label }}<span v-if="s.count != null" class="ml-1 opacity-70">{{ s.count }}</span>
           </button>
         </div>
-        <div v-if="inboxTab === 'comments' && !commentRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
-          {{ __('Sin comentarios') }}
+        <!-- search by commenter / text -->
+        <div v-if="inboxTab === 'comments'" class="mb-1.5 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[6px]">
+          <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
+          <input
+            :value="commentSearch"
+            @input="setCommentSearch($event.target.value)"
+            :placeholder="__('Buscar comentario o usuario…')"
+            class="w-full border-0 bg-transparent text-[12px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+          />
+        </div>
+        <div v-if="inboxTab === 'comments' && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+          {{ commentSearch ? __('Sin resultados') : __('Sin comentarios') }}
         </div>
         <!-- one row per POST (grouped) — opens the post + all its comments -->
         <button
           v-for="g in commentGroups"
-          :key="g.post_id || g.latest.name"
+          :key="g.post_id || g.latest_name"
           class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
-          :class="activeCommentPost === (g.post_id || g.latest.name) ? 'bg-surface-blue-1' : ''"
-          :style="activeCommentPost === (g.post_id || g.latest.name) ? 'border-left:3px solid #1877f2' : 'border-left:3px solid #1877f266'"
-          @click="selectCommentGroup(g.post_id || g.latest.name)"
+          :class="activeCommentPost === (g.post_id || g.latest_name) ? 'bg-surface-blue-1' : ''"
+          :style="activeCommentPost === (g.post_id || g.latest_name) ? 'border-left:3px solid #1877f2' : 'border-left:3px solid #1877f266'"
+          @click="selectCommentGroup(g.post_id || g.latest_name)"
         >
           <div class="mb-1 flex items-center gap-2">
             <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-white" style="background: #1877f2">
@@ -162,11 +172,11 @@
                 {{ g.count }} {{ g.count === 1 ? __('comentario') : __('comentarios') }}
               </div>
             </div>
-            <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(g.latest.created_ts) }}</div>
+            <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(g.latest_ts) }}</div>
           </div>
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
-            <span class="inline-flex flex-none items-center font-semibold text-ink-gray-8">{{ g.latest.from_name || 'FB' }}:</span>
-            <span class="truncate">{{ g.latest.message || '—' }}</span>
+            <span class="inline-flex flex-none items-center font-semibold text-ink-gray-8">{{ g.from_name || 'FB' }}:</span>
+            <span class="truncate">{{ g.message || '—' }}</span>
             <span v-if="g.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-1 bg-surface-violet-1">{{ __('Lead') }}</span>
           </div>
         </button>
@@ -298,10 +308,12 @@ import DealModal from '@/components/Modals/DealModal.vue'
 import {
   queue,
   unassigned,
-  comments,
+  commentPosts,
   commentCounts,
   inboxTab,
   commentStatus,
+  commentSearch,
+  setCommentSearch,
   queueSearch,
   queueCollapsed,
   activeDeal,
@@ -334,26 +346,8 @@ function newDeal() {
 const rows = computed(() => queue.data || [])
 const openCount = computed(() => rows.value.length)
 const unassignedRows = computed(() => unassigned.data || [])
-const commentRows = computed(() => comments.data || [])
-
-// Group comments by their FB post (like Meta's comments inbox): one row per post,
-// showing the latest comment + how many. Sorted by most-recent activity.
-const commentGroups = computed(() => {
-  const byPost = new Map()
-  for (const cm of commentRows.value) {
-    const key = cm.post_id || cm.name
-    const g = byPost.get(key)
-    if (!g) byPost.set(key, { post_id: cm.post_id, latest: cm, count: 1, lead: cm.lead })
-    else {
-      g.count++
-      if (cm.lead) g.lead = cm.lead
-      if (new Date(cm.created_ts || 0) > new Date(g.latest.created_ts || 0)) g.latest = cm
-    }
-  }
-  return [...byPost.values()].sort(
-    (a, b) => new Date(b.latest.created_ts || 0) - new Date(a.latest.created_ts || 0),
-  )
-})
+// Server-grouped: one entry per post {post_id, count, latest_ts, from_name, message, lead}.
+const commentGroups = computed(() => commentPosts.data || [])
 
 // Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger.
 const visibleUnassigned = computed(() => {

@@ -58,9 +58,10 @@ export const unassigned = createResource({
 export const unassignedThread = createResource({ url: 'doco_marketing.api.inbox.get_unassigned_thread' })
 // "Comentarios": comments on our Facebook Page posts — a warm-lead stream separate
 // from PSID conversations. Reply public/private, convert to Lead, hide.
-export const comments = createResource({
-  url: 'doco_marketing.api.comments.get_comment_queue',
-  params: { status: 'New', limit: 50 },
+// The list is grouped by POST server-side (scales past hundreds of comments).
+export const commentPosts = createResource({
+  url: 'doco_marketing.api.comments.get_comment_post_groups',
+  params: { status: 'New', limit: 60 },
   auto: false,
 })
 export const commentCounts = createResource({ url: 'doco_marketing.api.comments.get_comment_counts', auto: false })
@@ -68,6 +69,7 @@ export const activeCommentPost = ref(null) // post_id of the open comment group 
 // Omnichannel inbox tabs (Meta-style): which channel view the left pane shows.
 export const inboxTab = ref('all') // 'all' | 'whatsapp' | 'messenger' | 'comments'
 export const commentStatus = ref('New') // 'New' | 'answered' | 'all' (Comentarios sub-filter)
+export const commentSearch = ref('') // Comentarios search (commenter name / text)
 // Editable contact/customer card for the active deal/lead (resolver names the
 // exact doc+field each value lives on; edits go via frappe.client.set_value).
 export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_contact_card' })
@@ -372,7 +374,17 @@ export function onThreadUpdate(payload) {
 
 // ── Comentarios (Page-feed comments) ───────────────────────────────────────────
 export function reloadComments() {
-  return comments.submit({ status: commentStatus.value, limit: 50 })
+  return commentPosts.submit({
+    status: commentStatus.value,
+    search: commentSearch.value || undefined,
+    limit: 60,
+  })
+}
+let _cSearchTimer = null
+export function setCommentSearch(q) {
+  commentSearch.value = q
+  clearTimeout(_cSearchTimer)
+  _cSearchTimer = setTimeout(reloadComments, 300)
 }
 // Omnichannel tab switch: scope the deal queue by channel, surface the right sections.
 export function setInboxTab(tab) {
