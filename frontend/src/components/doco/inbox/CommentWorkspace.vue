@@ -92,7 +92,8 @@
 
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11.5px]">
               <button class="font-semibold text-ink-blue-3 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
-              <button class="font-semibold text-ink-blue-3 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
+              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-3 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
+              <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">💬 {{ __('Continuar en Messenger') }}</button>
               <button v-if="!cm.lead" class="font-semibold text-ink-violet-1 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
               <button v-else class="text-ink-violet-1 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
               <button class="text-ink-gray-5 hover:underline" :disabled="busy" @click="onHide(cm)">{{ cm.is_hidden ? __('Mostrar') : __('Ocultar') }}</button>
@@ -145,6 +146,7 @@ import {
   replyComment,
   convertCommentToLead,
   hideComment,
+  openMessengerForPsid,
   timeAgo,
 } from '@/composables/inbox'
 
@@ -262,11 +264,17 @@ async function onReply(cm) {
   if (busy.value || !reply.value.trim()) return
   busy.value = true
   try {
-    await replyComment(cm.name, reply.value.trim(), mode.value)
+    const m = mode.value
+    const res = await replyComment(cm.name, reply.value.trim(), m)
     reply.value = ''
     replyingTo.value = null
     await fetchThread(true)
-    toast.success(__('Respuesta enviada'))
+    if (m === 'private' && res?.already_replied) {
+      toast.success(__('Ya respondiste en privado · abriendo Messenger'))
+      openMessengerForPsid(res.dm_psid || cm.dm_psid)
+    } else {
+      toast.success(m === 'private' ? __('Mensaje privado enviado') : __('Respuesta enviada'))
+    }
   } catch (e) {
     toast.error(e?.messages?.[0] || e?.message || __('No se pudo enviar'))
   } finally {

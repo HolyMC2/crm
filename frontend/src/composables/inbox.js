@@ -436,6 +436,17 @@ export function onCommentUpdate() {
   reloadComments()
   commentCounts.reload()
 }
+// Jump to the Messenger DM thread a private reply created (its Lead/Deal, or orphan).
+export async function openMessengerForPsid(psid) {
+  if (!psid) return
+  try {
+    const t = await call('doco_marketing.api.comments.dm_target', { psid })
+    if (t?.doctype && t?.name) selectDeal(t.name, t.doctype)
+    else selectUnassigned(psid, 'messenger')
+  } catch (e) {
+    selectUnassigned(psid, 'messenger')
+  }
+}
 
 // ── Messenger realtime + free orphan reply ─────────────────────────────────────
 export function reloadUnassignedThread() {
