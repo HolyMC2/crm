@@ -408,11 +408,12 @@ export function reloadUnassignedThread() {
 // Reply to an orphan Messenger thread WITHOUT assigning it — the PSID is the
 // recipient, no CRM record needed. Stores a reference-less Outgoing row that stays
 // in this thread; converting/linking later re-points every row onto the record.
-export async function sendUnassignedMessenger(content) {
-  if (!activeUnassigned.value || !content?.trim()) return
+export async function sendUnassignedMessenger(content, attach) {
+  if (!activeUnassigned.value || (!content?.trim() && !attach)) return
   const res = await call('doco_marketing.api.inbox.send_unassigned_messenger', {
     psid: activeUnassigned.value,
-    content,
+    content: content || undefined,
+    attach: attach || undefined,
   })
   lastSendAt.value = Date.now() // suppress the echo self-ping
   reloadUnassignedThread()

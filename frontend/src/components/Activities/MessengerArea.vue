@@ -33,17 +33,21 @@
             : 'bg-surface-gray-2 text-ink-gray-8 dark:bg-surface-gray-3 dark:text-ink-gray-8'
         "
       >
-        <div v-if="m.content" class="whitespace-pre-wrap break-words">{{ m.content }}</div>
+        <!-- image attachment inline; other types as a typed link -->
+        <a v-if="m.attach && m.content_type === 'image'" :href="m.attach" target="_blank" rel="noopener" class="block">
+          <img :src="m.attach" class="mb-1 max-h-60 rounded-lg" :alt="__('imagen')" />
+        </a>
         <a
-          v-if="m.attach"
+          v-else-if="m.attach"
           :href="m.attach"
           target="_blank"
           rel="noopener"
           class="block break-all underline"
           :class="m.direction === 'out' ? 'text-white' : 'text-ink-blue-3 dark:text-ink-blue-2'"
         >
-          {{ __('Ver adjunto') }}
+          {{ attachLabel(m.content_type) }}
         </a>
+        <div v-if="m.content" class="whitespace-pre-wrap break-words">{{ m.content }}</div>
         <div class="mt-0.5 text-right text-[10px] opacity-60">{{ fmtTime(m.timestamp) }}</div>
         <!-- message_reaction: the emoji the customer tapped on this message -->
         <span
@@ -66,6 +70,14 @@ const props = defineProps({
 })
 
 const scrollEl = ref(null)
+
+function attachLabel(ct) {
+  return ct === 'video'
+    ? '📹 ' + __('Ver video')
+    : ct === 'audio'
+      ? '🎵 ' + __('Escuchar audio')
+      : '📎 ' + __('Ver adjunto')
+}
 
 function fmtTime(ts) {
   if (!ts) return ''

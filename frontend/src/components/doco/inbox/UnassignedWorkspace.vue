@@ -38,7 +38,10 @@
         class="flex min-h-0 flex-1 flex-col border-outline-gray-1"
         :class="isMobile ? 'border-b' : 'border-r'"
       >
-        <div class="scb flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
+        <!-- Messenger orphans render through MessengerArea (reactions + referral chip +
+             inline image attachments, identical to the assigned conversation). -->
+        <MessengerArea v-if="isMessenger" :messages="messages" class="flex-1" />
+        <div v-else class="scb flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
           <div v-if="unassignedThread.loading && !messages.length" class="py-8 text-center text-xs text-ink-gray-4">
             {{ __('Cargando…') }}
           </div>
@@ -71,7 +74,7 @@
           <!-- Messenger orphan: reply directly by PSID — no assignment needed (the
                PSID is the recipient). The row stays in this orphan thread and is
                re-pointed onto the record when you convert/link below. -->
-          <div v-else class="flex items-end gap-2 px-3 py-2.5">
+          <div v-else class="flex items-end gap-1.5 px-3 py-2.5">
             <textarea
               v-model="msgrReply"
               rows="1"
@@ -79,6 +82,20 @@
               class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-2"
               @keydown.enter.exact.prevent="sendMsgr"
             />
+            <EmojiPicker @pick="onEmoji" />
+            <FileUploader @success="(file) => onMsgrFile(file)">
+              <template #default="{ openFileSelector }">
+                <button
+                  type="button"
+                  class="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
+                  :title="__('Adjuntar imagen')"
+                  :disabled="busy"
+                  @click="openFileSelector"
+                >
+                  <LucidePaperclip class="h-4 w-4" />
+                </button>
+              </template>
+            </FileUploader>
             <button
               class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
               style="background: #0084ff"
@@ -191,10 +208,13 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { toast, call } from 'frappe-ui'
+import { toast, call, FileUploader } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
+import LucidePaperclip from '~icons/lucide/paperclip'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
+import MessengerArea from '@/components/Activities/MessengerArea.vue'
+import EmojiPicker from '@/components/doco/inbox/EmojiPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { activeUnassigned, activeUnassignedChannel, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack } from '@/composables/inbox'
 
@@ -213,6 +233,21 @@ function docBadge(dt) {
 
 // Free Messenger reply to an orphan PSID (no assignment required).
 const msgrReply = ref('')
+function onEmoji(e) {
+  msgrReply.value += e
+}
+async function onMsgrFile(file) {
+  if (busy.value || !file?.file_url) return
+  busy.value = true
+  try {
+    await sendUnassignedMessenger(msgrReply.value.trim(), file.file_url)
+    msgrReply.value = ''
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo enviar el adjunto'))
+  } finally {
+    busy.value = false
+  }
+}
 async function sendMsgr() {
   if (busy.value || !msgrReply.value.trim()) return
   busy.value = true
