@@ -52,31 +52,22 @@
           class="w-full border-0 bg-transparent text-[12.5px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
         />
       </div>
+      <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios -->
       <div class="flex flex-wrap gap-1.5">
         <button
-          class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+          v-for="t in inboxTabs"
+          :key="t.id"
+          class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
           :class="
-            queueChannel === null
+            inboxTab === t.id
               ? 'bg-surface-green-2 text-ink-green-3'
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
-          @click="setQueueChannel(null)"
+          @click="setInboxTab(t.id)"
         >
-          {{ __('Todas') }}
-        </button>
-        <button
-          v-for="p in channelPills"
-          :key="p.key"
-          class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold"
-          :class="
-            queueChannel === p.key
-              ? 'bg-surface-green-2 text-ink-green-3'
-              : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
-          "
-          @click="setQueueChannel(p.key)"
-        >
-          <span class="h-1.5 w-1.5 rounded-full" :style="`background:${p.dot}`" />
-          {{ p.count }}
+          <span v-if="t.dot" class="h-1.5 w-1.5 rounded-full" :style="`background:${t.dot}`" />
+          {{ t.label }}
+          <span v-if="t.count != null" class="text-[10px] opacity-70">{{ t.count }}</span>
         </button>
       </div>
     </div>
@@ -85,13 +76,13 @@
       <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
-      <div v-if="unassignedRows.length" class="mb-1.5">
+      <div v-if="visibleUnassigned.length && inboxTab !== 'comments'" class="mb-1.5">
         <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-3">
           ⚠ {{ __('Sin asignar') }}
-          <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-3">{{ unassignedRows.length }}</span>
+          <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-3">{{ visibleUnassigned.length }}</span>
         </div>
         <button
-          v-for="u in unassignedRows"
+          v-for="u in visibleUnassigned"
           :key="(u.last_channel === 'messenger' ? 'm:' + u.psid : 'w:' + u.phone)"
           class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
           :class="activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone) ? 'bg-surface-amber-1' : ''"
@@ -130,12 +121,27 @@
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
       </div>
 
-      <!-- "Comentarios": comments on our Facebook posts. A warm lead — open it to
-        reply (public / private DM), convert to a CRM Lead, or hide on FB. -->
-      <div v-if="commentRows.length" class="mb-1.5">
+      <!-- "Comentarios": comments on our Facebook posts. In the Comentarios TAB the
+        status chips (Nuevos/Respondidos/Todos) let you review answered ones too. -->
+      <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentRows.length)" class="mb-1.5">
         <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-3">
           <LucideFacebook class="h-3 w-3" /> {{ __('Comentarios') }}
           <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-3">{{ commentRows.length }}</span>
+        </div>
+        <!-- status sub-filter — answered comments stay reviewable, never lost -->
+        <div v-if="inboxTab === 'comments'" class="mb-1.5 flex gap-1.5 px-1.5">
+          <button
+            v-for="s in commentStatusChips"
+            :key="s.id"
+            class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+            :class="commentStatus === s.id ? 'bg-surface-blue-2 text-ink-blue-3' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            @click="setCommentStatus(s.id)"
+          >
+            {{ s.label }}<span v-if="s.count != null" class="ml-1 opacity-70">{{ s.count }}</span>
+          </button>
+        </div>
+        <div v-if="inboxTab === 'comments' && !commentRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+          {{ __('Sin comentarios') }}
         </div>
         <button
           v-for="cm in commentRows"
@@ -159,15 +165,17 @@
             <span class="inline-flex flex-none items-center font-semibold" style="color: #1877f2">FB</span>
             <span class="truncate">{{ cm.message || '—' }}</span>
             <span v-if="cm.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-1 bg-surface-violet-1">{{ __('Lead') }}</span>
+            <span v-else-if="cm.status === 'Replied'" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-green-3 bg-surface-green-2">✓ {{ __('Resp.') }}</span>
           </div>
         </button>
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
       </div>
 
-      <div v-if="queue.loading && !rows.length && !unassignedRows.length && !commentRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+      <template v-if="inboxTab !== 'comments'">
+      <div v-if="queue.loading && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Cargando…') }}
       </div>
-      <div v-else-if="!rows.length && !unassignedRows.length && !commentRows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+      <div v-else-if="!rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Sin conversaciones') }}
       </div>
       <button
@@ -267,6 +275,7 @@
           </span>
         </div>
       </button>
+      </template>
     </div>
 
     <DealModal v-if="showDealModal" v-model="showDealModal" :redirect="{ name: 'Deal 360' }" />
@@ -286,10 +295,11 @@ import { isMobile } from '@/composables/breakpoint'
 import DealModal from '@/components/Modals/DealModal.vue'
 import {
   queue,
-  channels,
   unassigned,
   comments,
-  queueChannel,
+  commentCounts,
+  inboxTab,
+  commentStatus,
   queueSearch,
   queueCollapsed,
   activeDeal,
@@ -299,7 +309,8 @@ import {
   selectDeal,
   selectUnassigned,
   selectComment,
-  setQueueChannel,
+  setInboxTab,
+  setCommentStatus,
   onSearchInput,
   reloadQueue,
   clearResponder,
@@ -323,6 +334,13 @@ const openCount = computed(() => rows.value.length)
 const unassignedRows = computed(() => unassigned.data || [])
 const commentRows = computed(() => comments.data || [])
 
+// Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger.
+const visibleUnassigned = computed(() => {
+  if (inboxTab.value === 'whatsapp') return unassignedRows.value.filter((u) => u.last_channel !== 'messenger')
+  if (inboxTab.value === 'messenger') return unassignedRows.value.filter((u) => u.last_channel === 'messenger')
+  return unassignedRows.value
+})
+
 // Pretty-print a raw WhatsApp number (e.g. 5216691530561 / 526691530561) as
 // +52 669 153 0561 — strip the country code + the MX mobile "1", group the rest.
 function formatPhone(raw) {
@@ -334,16 +352,19 @@ function formatPhone(raw) {
   return raw ? `+${d}` : '—'
 }
 
-// channel pills with live unread counts derived from the queue (WA real; others 0)
-const channelPills = computed(() => {
-  const live = (channels.data || []).filter((c) => c.key !== 'email')
-  const order = live.length ? live.map((c) => c.key) : ['whatsapp', 'messenger', 'instagram']
-  return order.map((key) => ({
-    key,
-    dot: CHANNEL_META[key]?.[1] || '#9aa2ae',
-    count: rows.value.filter((r) => r.last_channel === key).length,
-  }))
-})
+// Omnichannel tabs (Meta-style). Counts: per-channel deal rows; Comentarios = new.
+const inboxTabs = computed(() => [
+  { id: 'all', label: __('Todos') },
+  { id: 'whatsapp', label: 'WhatsApp', dot: CHANNEL_META.whatsapp?.[1] || '#25d366', count: rows.value.filter((r) => r.last_channel === 'whatsapp').length },
+  { id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: rows.value.filter((r) => r.last_channel === 'messenger').length },
+  { id: 'comments', label: __('Comentarios'), dot: '#1877f2', count: commentCounts.data?.new ?? null },
+])
+// Comentarios status sub-filter chips (review answered comments).
+const commentStatusChips = computed(() => [
+  { id: 'New', label: __('Nuevos'), count: commentCounts.data?.new },
+  { id: 'answered', label: __('Respondidos'), count: commentCounts.data?.answered },
+  { id: 'all', label: __('Todos'), count: commentCounts.data?.all },
+])
 
 function chColor(key) {
   return CHANNEL_META[key]?.[1] || '#9aa2ae'

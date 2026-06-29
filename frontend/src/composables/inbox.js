@@ -63,7 +63,11 @@ export const comments = createResource({
   params: { status: 'New', limit: 50 },
   auto: false,
 })
+export const commentCounts = createResource({ url: 'doco_marketing.api.comments.get_comment_counts', auto: false })
 export const activeComment = ref(null) // name of the open Social Comment (3rd middle-pane mode)
+// Omnichannel inbox tabs (Meta-style): which channel view the left pane shows.
+export const inboxTab = ref('all') // 'all' | 'whatsapp' | 'messenger' | 'comments'
+export const commentStatus = ref('New') // 'New' | 'answered' | 'all' (Comentarios sub-filter)
 // Editable contact/customer card for the active deal/lead (resolver names the
 // exact doc+field each value lives on; edits go via frappe.client.set_value).
 export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_contact_card' })
@@ -74,6 +78,7 @@ export function initInbox() {
   reloadQueue()
   reloadUnassigned()
   reloadComments()
+  commentCounts.fetch()
   restoreInbox() // re-open the conversation/pane the user left (survives route round-trips + reloads)
 }
 
@@ -367,7 +372,24 @@ export function onThreadUpdate(payload) {
 
 // ── Comentarios (Page-feed comments) ───────────────────────────────────────────
 export function reloadComments() {
-  return comments.submit({ status: 'New', limit: 50 })
+  return comments.submit({ status: commentStatus.value, limit: 50 })
+}
+// Omnichannel tab switch: scope the deal queue by channel, surface the right sections.
+export function setInboxTab(tab) {
+  inboxTab.value = tab
+  setQueueChannel(tab === 'whatsapp' || tab === 'messenger' ? tab : null)
+  if (tab === 'comments') {
+    reloadComments()
+    commentCounts.fetch()
+  } else if (commentStatus.value !== 'New') {
+    // leaving Comentarios — the blended 'Todos' compact section shows New again
+    commentStatus.value = 'New'
+    reloadComments()
+  }
+}
+export function setCommentStatus(s) {
+  commentStatus.value = s
+  reloadComments()
 }
 export function selectComment(name) {
   activeDeal.value = null
@@ -399,6 +421,7 @@ export async function hideComment(name, hidden = true) {
 // realtime: a new/changed comment arrived (Social Comment after_insert).
 export function onCommentUpdate() {
   reloadComments()
+  commentCounts.reload()
 }
 
 // ── Messenger realtime + free orphan reply ─────────────────────────────────────
