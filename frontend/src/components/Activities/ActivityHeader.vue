@@ -4,7 +4,7 @@
     class="mx-4 my-3 flex items-center justify-between text-lg font-medium sm:mx-10 sm:mb-4 sm:mt-8"
   >
     <div class="flex h-8 items-center text-xl font-semibold text-ink-gray-8">
-      {{ convIsMessenger && title == 'WhatsApp' ? __('Messenger') : __(title) }}
+      {{ title == 'WhatsApp' && activeChannelTab === 'messenger' ? __('Messenger') : __(title) }}
     </div>
     <Button
       v-if="title == 'Emails'"
@@ -56,7 +56,7 @@
       iconLeft="plus"
       @click="showFilesUploader = true"
     />
-    <div v-else-if="title == 'WhatsApp' && !convIsMessenger" class="flex gap-2 shrink-0">
+    <div v-else-if="title == 'WhatsApp' && activeChannelTab !== 'messenger'" class="flex gap-2 shrink-0">
       <Button
         :label="__('Send Template')"
         @click="showWhatsappTemplates = true"
@@ -95,6 +95,7 @@ const props = defineProps({
   tabs: { type: Array, default: () => [] },
   title: { type: String, default: '' },
   convIsMessenger: { type: Boolean, default: false },
+  activeChannelTab: { type: String, default: 'whatsapp' },
   doc: { type: Object, default: () => ({}) },
   modalRef: { type: Object, default: () => ({}) },
   whatsappBox: { type: Object, default: () => ({}) },

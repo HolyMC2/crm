@@ -1,9 +1,9 @@
 <!--
-  Messenger composer (MA-23 / Phase D follow-on). Replies through the UNIFIED inbox
-  endpoint doco_marketing.api.inbox.send_message(channel='messenger') — which resolves
-  the conversation PSID, posts via the Page (24h window: free RESPONSE inside, else
-  HUMAN_AGENT tag), records the Outgoing row + touchpoint, and publishes realtime.
-  Mirrors the slot WhatsAppBox occupies; PSID-based, so no phone/template path.
+  Messenger composer. Replies through the UNIFIED inbox endpoint
+  doco_marketing.api.inbox.send_message(channel='messenger') — resolves the PSID,
+  posts via the Page (24h window: free RESPONSE inside, else HUMAN_AGENT tag),
+  records the Outgoing row + touchpoint, publishes realtime. Same emoji + attach UI
+  as WhatsAppBox (IconPicker + FileUploader/Dropdown) for a consistent composer.
 -->
 <template>
   <div class="border-t border-outline-gray-1 bg-surface-white px-3 py-2 dark:bg-surface-gray-1 sm:px-10">
@@ -11,28 +11,35 @@
       {{ __('Responder · Messenger') }}
     </div>
     <div class="flex items-end gap-2">
+      <div class="flex h-8 items-center gap-2">
+        <FileUploader @success="(file) => uploadFile(file)">
+          <template #default="{ openFileSelector }">
+            <div class="flex items-center space-x-2">
+              <Dropdown :options="uploadOptions(openFileSelector)">
+                <FeatherIcon name="plus" class="size-4.5 cursor-pointer text-ink-gray-5" />
+              </Dropdown>
+            </div>
+          </template>
+        </FileUploader>
+        <IconPicker
+          v-slot="{ togglePopover }"
+          v-model="emoji"
+          @update:modelValue="onEmoji"
+        >
+          <SmileIcon
+            class="flex size-4.5 cursor-pointer rounded-sm text-xl leading-none text-ink-gray-4"
+            @click="togglePopover"
+          />
+        </IconPicker>
+      </div>
       <textarea
+        ref="textareaRef"
         v-model="text"
         rows="1"
         :placeholder="__('Escribe un mensaje…')"
         class="min-h-[38px] flex-1 resize-none rounded-lg border border-outline-gray-2 px-3 py-2 text-[13px] text-ink-gray-8 dark:bg-surface-gray-2 dark:text-ink-gray-8"
         @keydown.enter.exact.prevent="send"
       />
-      <EmojiPicker @pick="onEmoji" />
-      <FileUploader @success="(file) => onFile(file)">
-        <template #default="{ openFileSelector }">
-          <button
-            type="button"
-            class="flex h-9 w-9 flex-none items-center justify-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
-            :title="__('Adjuntar imagen')"
-            :aria-label="__('Adjuntar')"
-            :disabled="busy"
-            @click="openFileSelector"
-          >
-            <LucidePaperclip class="h-4 w-4" />
-          </button>
-        </template>
-      </FileUploader>
       <button
         class="flex-none rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
         style="background: #0084ff"
@@ -50,9 +57,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import { call, toast, FileUploader } from 'frappe-ui'
-import LucidePaperclip from '~icons/lucide/paperclip'
-import EmojiPicker from '@/components/doco/inbox/EmojiPicker.vue'
+import { call, toast, FileUploader, Dropdown, FeatherIcon } from 'frappe-ui'
+import IconPicker from '@/components/IconPicker.vue'
+import SmileIcon from '@/components/Icons/SmileIcon.vue'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -62,11 +69,24 @@ const emit = defineEmits(['sent'])
 
 const text = ref('')
 const busy = ref(false)
-function onEmoji(e) {
-  text.value += e
+const emoji = ref('')
+const fileType = ref('')
+const textareaRef = ref(null)
+
+function onEmoji() {
+  text.value += emoji.value
+  textareaRef.value?.focus?.()
 }
 
-async function onFile(file) {
+function uploadOptions(openFileSelector) {
+  return [
+    { label: __('Imagen'), icon: 'image', onClick: () => { fileType.value = 'image'; openFileSelector('image/*') } },
+    { label: __('Video'), icon: 'video', onClick: () => { fileType.value = 'video'; openFileSelector('video/*') } },
+    { label: __('Documento'), icon: 'file', onClick: () => { fileType.value = 'document'; openFileSelector() } },
+  ]
+}
+
+async function uploadFile(file) {
   if (busy.value || !file?.file_url) return
   busy.value = true
   try {

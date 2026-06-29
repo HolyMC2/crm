@@ -7,6 +7,7 @@
     :tabs="tabs"
     :title="title"
     :conv-is-messenger="convIsMessenger"
+    :active-channel-tab="activeChannelTab"
     :doc="doc"
     :whatsappBox="whatsappBox"
     :modalRef="modalRef"
@@ -25,12 +26,36 @@
     <div
       v-else-if="
         activities?.length ||
-        (title == 'WhatsApp' && whatsappEnabled)
+        (title == 'WhatsApp' && (whatsappEnabled || availableChannels.length))
       "
       class="activities"
     >
-      <!-- Messenger (PSID) conversation — same tab slot, channel-detected -->
-      <div v-if="title == 'WhatsApp' && convIsMessenger">
+      <!-- channel tabs: WhatsApp | Messenger | … — only when 2+ channels have msgs -->
+      <div
+        v-if="title == 'WhatsApp' && availableChannels.length > 1"
+        class="mx-3 mb-2 mt-1 flex gap-1.5 px-1 sm:mx-10"
+      >
+        <button
+          v-for="ch in availableChannels"
+          :key="ch.id"
+          type="button"
+          class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-semibold"
+          :class="
+            activeChannelTab === ch.id
+              ? 'border-transparent text-white'
+              : 'border-outline-gray-2 bg-surface-gray-1 text-ink-gray-7 hover:bg-surface-gray-2'
+          "
+          :style="activeChannelTab === ch.id ? `background:${ch.color}` : ''"
+          @click="selectChannelTab(ch.id)"
+        >
+          <span class="h-1.5 w-1.5 rounded-full" :style="`background:${activeChannelTab === ch.id ? '#fff' : ch.color}`" />
+          {{ ch.label }}
+          <span class="text-[10px] opacity-70">{{ ch.count }}</span>
+        </button>
+      </div>
+
+      <!-- Messenger (PSID) conversation -->
+      <div v-if="title == 'WhatsApp' && activeChannelTab === 'messenger'">
         <MessengerArea :messages="messengerMessages" />
       </div>
       <div v-else-if="title == 'WhatsApp'">
@@ -495,13 +520,13 @@
       @cancel="reviewTemplate = null"
     />
     <MessengerBox
-      v-if="title == 'WhatsApp' && convIsMessenger"
+      v-if="title == 'WhatsApp' && activeChannelTab === 'messenger'"
       :doctype="doctype"
       :docname="docname"
       @sent="messengerThread.reload()"
     />
     <WhatsAppBox
-      v-if="title == 'WhatsApp' && !convIsMessenger"
+      v-if="title == 'WhatsApp' && activeChannelTab === 'whatsapp'"
       ref="whatsappBox"
       v-model="doc"
       v-model:reply="replyMessage"
@@ -779,6 +804,51 @@ const messengerThread = createResource({
 const messengerMessages = computed(() => messengerThread.data?.messages || [])
 const convIsMessenger = computed(
   () => messengerMessages.value.length > 0 && (whatsappMessages.data || []).length === 0,
+)
+
+// ── Channel tabs ────────────────────────────────────────────────────────────
+// A deal/lead can carry BOTH WhatsApp and Messenger threads (and more channels
+// later). Expose every channel that has messages as a tab instead of the old
+// binary messenger-only swap. `channels` is the single source of truth — append
+// to it (SMS, Instagram, …) and the strip + content + composer follow.
+const channels = computed(() => {
+  const out = []
+  const wa = whatsappMessages.data || []
+  if (wa.length) out.push({ id: 'whatsapp', label: 'WhatsApp', color: '#25d366', count: wa.length, ts: wa[wa.length - 1]?.creation })
+  const mm = messengerMessages.value
+  if (mm.length) out.push({ id: 'messenger', label: 'Messenger', color: '#0084ff', count: mm.length, ts: mm[mm.length - 1]?.timestamp || mm[mm.length - 1]?.creation })
+  return out
+})
+const availableChannels = computed(() => channels.value)
+const activeChannelTab = ref('whatsapp')
+const userPickedTab = ref(false) // honor an explicit click; otherwise auto-follow latest
+function selectChannelTab(id) {
+  activeChannelTab.value = id
+  userPickedTab.value = true
+}
+// New conversation → forget the explicit pick so the next one auto-defaults.
+watch(
+  () => props.docname,
+  () => {
+    userPickedTab.value = false
+  },
+)
+// Auto-select the channel with the LATEST message — and keep re-evaluating as
+// threads load in (WhatsApp + Messenger fetch independently, so the first to land
+// must not pin the tab). An explicit user click freezes the choice until the
+// conversation changes.
+watch(
+  channels,
+  (chs) => {
+    if (!chs.length) {
+      activeChannelTab.value = 'whatsapp'
+      return
+    }
+    if (userPickedTab.value && chs.some((c) => c.id === activeChannelTab.value)) return
+    const latest = [...chs].sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0))[0]
+    activeChannelTab.value = latest?.id || chs[0].id
+  },
+  { immediate: true },
 )
 // Load the messenger thread whenever the conversation tab is shown.
 watch(

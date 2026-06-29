@@ -301,9 +301,15 @@ export async function linkUnassignedToExisting(id, refDoctype, refName, channel 
   if (channel === 'messenger') params.psid = id
   else params.phone = id
   const res = await call('doco_marketing.api.inbox.assign_unassigned', params)
-  activeUnassigned.value = null
   reloadUnassigned()
   reloadQueue()
+  // Linked to a Contact with no OPEN deal: the identity was bound (ledger) but the
+  // conversation stays unassigned — don't navigate into a closed deal.
+  if (res?.kept_unassigned) {
+    reloadUnassignedThread()
+    return res
+  }
+  activeUnassigned.value = null
   selectDeal(res.name, res.doctype)
   return res
 }
