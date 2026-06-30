@@ -310,6 +310,7 @@ import {
   unassigned,
   commentPosts,
   commentCounts,
+  channelCounts,
   inboxTab,
   commentStatus,
   commentSearch,
@@ -367,11 +368,13 @@ function formatPhone(raw) {
   return raw ? `+${d}` : '—'
 }
 
-// Omnichannel tabs (Meta-style). Counts: per-channel deal rows; Comentarios = new.
+// Omnichannel tabs (Meta-style). Counts are REAL per-channel totals across all
+// conversations (api.inbox.get_channel_counts), not the loaded/channel-filtered page —
+// otherwise the inactive channel always read 0. Comentarios = new comments.
 const inboxTabs = computed(() => [
-  { id: 'all', label: __('Todos') },
-  { id: 'whatsapp', label: 'WhatsApp', dot: CHANNEL_META.whatsapp?.[1] || '#25d366', count: rows.value.filter((r) => r.last_channel === 'whatsapp').length },
-  { id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: rows.value.filter((r) => r.last_channel === 'messenger').length },
+  { id: 'all', label: __('Todos'), count: channelCounts.data?.all ?? null },
+  { id: 'whatsapp', label: 'WhatsApp', dot: CHANNEL_META.whatsapp?.[1] || '#25d366', count: channelCounts.data?.whatsapp ?? null },
+  { id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: channelCounts.data?.messenger ?? null },
   { id: 'comments', label: __('Comentarios'), dot: '#1877f2', count: commentCounts.data?.new ?? null },
 ])
 // Comentarios status sub-filter chips (review answered comments).

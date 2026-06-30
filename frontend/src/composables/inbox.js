@@ -65,6 +65,10 @@ export const commentPosts = createResource({
   auto: false,
 })
 export const commentCounts = createResource({ url: 'doco_marketing.api.comments.get_comment_counts', auto: false })
+// Real per-channel conversation totals for the tab badges (across ALL convos, not the
+// loaded queue page). Refreshed on init + on every thread update (a new message can
+// flip a conversation's last_channel); NOT on search (search doesn't change totals).
+export const channelCounts = createResource({ url: 'doco_marketing.api.inbox.get_channel_counts', auto: false })
 export const activeCommentPost = ref(null) // post_id of the open comment group (3rd middle-pane mode)
 // Omnichannel inbox tabs (Meta-style): which channel view the left pane shows.
 export const inboxTab = ref('all') // 'all' | 'whatsapp' | 'messenger' | 'comments'
@@ -81,6 +85,7 @@ export function initInbox() {
   reloadUnassigned()
   reloadComments()
   commentCounts.fetch()
+  channelCounts.fetch()
   restoreInbox() // re-open the conversation/pane the user left (survives route round-trips + reloads)
 }
 
@@ -403,6 +408,7 @@ export function cancelLostStage() {
 export function onThreadUpdate(payload) {
   if (payload?.deal && payload.deal === activeDeal.value) loadThread()
   reloadQueue()
+  channelCounts.reload() // a new message may flip a conversation's last_channel
 }
 
 // ── Comentarios (Page-feed comments) ───────────────────────────────────────────
