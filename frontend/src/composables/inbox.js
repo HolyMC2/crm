@@ -195,13 +195,58 @@ export function reloadUnassigned() {
   unassigned.submit({ limit: 50 })
 }
 
+// ── paged queue (infinite-scroll) ──────────────────────────────────────────────
+// The backend pages via start/limit; the SPA never did, so the queue was capped at the
+// 50 most-recent. Accumulate pages into queueRows and append on scroll. queueReqId
+// guards against out-of-order responses when the filter (search/channel) changes mid-fetch.
+export const QUEUE_PAGE = 50
+export const queueRows = ref([])
+export const queueHasMore = ref(false)
+export const queueLoadingMore = ref(false)
+let _queueStart = 0
+let _queueReqId = 0
+
 let _searchTimer = null
 export function reloadQueue() {
-  return queue.submit({
-    channel: queueChannel.value || undefined,
-    search: queueSearch.value || undefined,
-    limit: 50,
-  })
+  _queueStart = 0
+  const myId = ++_queueReqId
+  return queue
+    .submit({
+      channel: queueChannel.value || undefined,
+      search: queueSearch.value || undefined,
+      limit: QUEUE_PAGE,
+      start: 0,
+    })
+    .then(() => {
+      if (myId !== _queueReqId) return // a newer reload superseded this page
+      queueRows.value = queue.data || []
+      queueHasMore.value = (queue.data || []).length === QUEUE_PAGE
+    })
+}
+
+// Fetch + append the next page. No-op while one is in flight or when the list is
+// exhausted; a filter change (reloadQueue) bumps _queueReqId and drops a stale page.
+export function loadMoreQueue() {
+  if (!queueHasMore.value || queueLoadingMore.value) return
+  queueLoadingMore.value = true
+  _queueStart += QUEUE_PAGE
+  const myId = _queueReqId
+  return queue
+    .submit({
+      channel: queueChannel.value || undefined,
+      search: queueSearch.value || undefined,
+      limit: QUEUE_PAGE,
+      start: _queueStart,
+    })
+    .then(() => {
+      queueLoadingMore.value = false
+      if (myId !== _queueReqId) return // filter changed mid-flight — discard this page
+      queueRows.value = queueRows.value.concat(queue.data || [])
+      queueHasMore.value = (queue.data || []).length === QUEUE_PAGE
+    })
+    .catch(() => {
+      queueLoadingMore.value = false
+    })
 }
 export function onSearchInput(v) {
   queueSearch.value = v
@@ -224,7 +269,7 @@ export function selectDeal(name, doctype = 'CRM Deal') {
   loadThread()
   loadContactCard()
   // mark read: clear the red unread dot optimistically, persist in background.
-  const r = (queue.data || []).find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
+  const r = queueRows.value.find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
   if (r) r.unread_dot = false
   markRead(doctype, name)
   // SLA is a CRM Deal concept; leads have none.
@@ -246,7 +291,7 @@ export async function markRead(doctype, name) {
 // A later inbound message re-raises it. Optimistic: drop the chip now, persist async.
 export async function clearResponder(doctype, name) {
   if (!doctype || !name) return
-  const r = (queue.data || []).find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
+  const r = queueRows.value.find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
   if (r) r.unread = false
   try {
     await call('doco_marketing.api.inbox.clear_responder', { reference_doctype: doctype, reference_name: name })

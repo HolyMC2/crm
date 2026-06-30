@@ -318,6 +318,11 @@
           </span>
         </div>
       </button>
+      <!-- infinite-scroll: the observer loads the next page as this nears the viewport -->
+      <div v-if="paginatable && queueHasMore" ref="sentinelEl" class="h-px w-full" aria-hidden="true" />
+      <div v-if="paginatable && queueLoadingMore" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">
+        {{ __('Cargando más…') }}
+      </div>
       </template>
     </div>
 
@@ -326,7 +331,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideFacebook from '~icons/lucide/facebook'
@@ -345,6 +350,10 @@ import {
   channelCounts,
   overdue,
   autoAckCount,
+  queueRows,
+  queueHasMore,
+  queueLoadingMore,
+  loadMoreQueue,
   messengerEnabled,
   inboxTab,
   commentStatus,
@@ -384,7 +393,7 @@ function newDeal() {
 // Vencidos tab swaps the row source to the server-ranked overdue list (most-overdue
 // first, across all conversations — an overdue thread buried by recency is the point);
 // every other tab shows the normal recency queue.
-const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queue.data || []))
+const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queueRows.value))
 const openCount = computed(() => rows.value.length)
 // A failed list load must not read as an empty inbox — surface the resource error + retry.
 const listError = computed(() => (inboxTab.value === 'vencidos' ? overdue.error : queue.error))
@@ -454,6 +463,36 @@ function onListKeydown(e) {
   else next = cur < 0 ? 0 : Math.max(cur - 1, 0)
   opts[next]?.focus()
 }
+
+// ── infinite-scroll (#28) ────────────────────────────────────────────────────
+// Only the recency queue pages (Vencidos = its own ranked list; Comentarios/Por-aprobar
+// are separate surfaces). An IntersectionObserver on a bottom sentinel pulls the next
+// page as it nears the viewport — no scroll-event polling, no extra dependency.
+const sentinelEl = ref(null)
+// Only the 'all' tab pages reliably: the backend applies the channel filter AFTER
+// slicing the page, so a channel page can return <limit even when more exist (a full
+// page-of-50 ⟺ more is only true with no channel). Channel tabs keep their first 50;
+// their true total still shows in the tab badge (get_channel_counts).
+const paginatable = computed(() => inboxTab.value === 'all')
+let _io = null
+onMounted(() => {
+  _io = new IntersectionObserver(
+    (entries) => {
+      if (paginatable.value && entries.some((e) => e.isIntersecting)) loadMoreQueue()
+    },
+    { root: listEl.value, rootMargin: '300px' },
+  )
+  // The sentinel is v-if'd (only while more pages exist) — (re)observe it on mount/unmount.
+  watch(
+    sentinelEl,
+    (el, old) => {
+      if (old) _io.unobserve(old)
+      if (el) _io.observe(el)
+    },
+    { immediate: true },
+  )
+})
+onBeforeUnmount(() => _io?.disconnect())
 
 // Compact "time waited" for the response-SLA chip: 45s / 12m / 3h / 5d.
 function formatWaiting(secs) {
