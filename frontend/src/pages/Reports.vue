@@ -83,6 +83,37 @@
         </div>
       </Card>
 
+      <!-- social funnel → pesos: comment / lead-ad / DM → Lead → Deal → Won -->
+      <Card :title="__('Embudo social → pesos')">
+        <div v-if="!socialAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin actividad social en el periodo') }}</div>
+        <div v-else>
+          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${FUNNEL_GRID}`">
+            <div>{{ __('Origen') }}</div><div>{{ __('Leads') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Ingresos') }}</div>
+          </div>
+          <div
+            v-for="r in socialRows"
+            :key="r.origin"
+            class="grid items-center border-b border-outline-gray-1 py-2 text-[12.5px]"
+            :style="`grid-template-columns:${FUNNEL_GRID}`"
+          >
+            <div class="flex items-center gap-1.5 font-medium text-ink-gray-9">
+              <span class="h-2 w-2 flex-none rounded-full" :style="`background:${originDot(r.origin)}`" />{{ r.origin }}
+            </div>
+            <div>{{ r.leads }}</div>
+            <div>{{ r.deals }}</div>
+            <div class="font-semibold" style="color: #16a34a">{{ r.won }}</div>
+            <div class="font-medium">{{ money(r.pesos) }}</div>
+          </div>
+          <div class="grid items-center py-2 text-[12.5px] font-bold text-ink-gray-9" :style="`grid-template-columns:${FUNNEL_GRID}`">
+            <div>{{ socialTotal.origin }}</div>
+            <div>{{ socialTotal.leads }}</div>
+            <div>{{ socialTotal.deals }}</div>
+            <div style="color: #16a34a">{{ socialTotal.won }}</div>
+            <div>{{ money(socialTotal.pesos) }}</div>
+          </div>
+        </div>
+      </Card>
+
       <!-- source breakdown -->
       <Card :title="__('Origen de leads')">
         <div v-if="!sourceCards.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
@@ -109,6 +140,7 @@ import { CHANNEL_META, GRADE_COLORS } from '@/composables/crmFormat'
 const router = useRouter()
 
 const ATTR_GRID = '1fr 70px 80px 70px 110px'
+const FUNNEL_GRID = '1fr 70px 70px 80px 110px'
 const periods = [
   { key: 'week', label: __('Esta semana') },
   { key: 'month', label: __('Este mes') },
@@ -139,6 +171,7 @@ const kpisRes = createResource({ url: 'doco_marketing.api.reports.get_report_kpi
 const funnelRes = createResource({ url: 'doco_marketing.api.reports.get_funnel_data', onError: onRestricted })
 const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_attribution', onError: onRestricted })
 const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown', onError: onRestricted })
+const socialRes = createResource({ url: 'doco_marketing.api.reports.get_social_funnel', onError: onRestricted })
 
 function load() {
   const r = range(period.value)
@@ -146,6 +179,7 @@ function load() {
   funnelRes.submit(r)
   attrRes.submit(r)
   srcRes.submit(r)
+  socialRes.submit(r)
 }
 function setPeriod(k) {
   period.value = k
@@ -156,6 +190,15 @@ load()
 const kpis = computed(() => kpisRes.data || {})
 const funnel = computed(() => funnelRes.data || [])
 const attribution = computed(() => attrRes.data || [])
+const socialRows = computed(() => socialRes.data?.rows || [])
+const socialTotal = computed(() => socialRes.data?.total || { origin: __('Total social'), leads: 0, deals: 0, won: 0, pesos: 0 })
+const socialAny = computed(() => (socialTotal.value.leads || 0) + (socialTotal.value.deals || 0) > 0)
+function originDot(origin) {
+  const o = String(origin || '').toLowerCase()
+  if (o.includes('messenger')) return '#0084ff'
+  if (o.includes('lead ad')) return '#4267b2'
+  return '#1877f2' // FB comments
+}
 
 function kpiVal(x) {
   if (x == null) return 0
