@@ -150,7 +150,7 @@ function onPopState(e) {
 
 onMounted(() => {
   mounting = true
-  initInbox() // restores the last conversation/pane, then loads queue/channels
+  initInbox() // restores the last conversation/pane, then loads queue + counts
   if (route.query.deal) selectDeal(String(route.query.deal)) // deep link from Tasks "open conversation"
   // Rebuild the mobile back-stack to match the restored pane so hardware-back
   // walks list ← thread ← context instead of jumping straight out of the inbox.

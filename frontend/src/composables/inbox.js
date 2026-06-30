@@ -36,7 +36,6 @@ export const queue = createResource({
   url: 'doco_marketing.api.inbox.get_conversation_queue',
   params: { limit: 50 },
 })
-export const channels = createResource({ url: 'doco_marketing.api.inbox.get_channels' })
 // Per-tenant feature flags. has_taller gates the reparaciones surfaces so the inbox
 // runs cleanly on a tenant without taller (e.g. mumu). Default false until loaded —
 // safe: never request taller-only fields/endpoints before we know they exist.
@@ -84,7 +83,6 @@ export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_c
 export const sla = createResource({ url: 'doco_marketing.api.inbox.get_sla_status' })
 
 export function initInbox() {
-  channels.fetch()
   reloadQueue()
   reloadUnassigned()
   reloadComments()
