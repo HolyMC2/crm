@@ -10,10 +10,8 @@ export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lea
 export const activeDealDoctype = ref('CRM Deal') // 'CRM Deal' | 'CRM Lead' — leads now share the queue
 export const activeUnassigned = ref(null) // phone (WhatsApp) or PSID (Messenger) of the open "Sin asignar" orphan
 export const activeUnassignedChannel = ref('whatsapp') // 'whatsapp' | 'messenger' — which orphan kind is open
-export const activeChannel = ref('whatsapp') // send channel + bubble style
 export const activeTab = ref('conversation') // conversation|activity|repair
 export const convoTemplateOpen = ref(false) // macro -> open the WhatsApp template review modal in the convo
-export const composeMode = ref('reply') // reply|note|comment
 export const queueChannel = ref(null) // null = Todas
 export const queueSearch = ref('')
 export const lastSendAt = ref(0) // epoch ms of our last outgoing send (suppress self-ping)
@@ -165,7 +163,6 @@ export function resetInbox() {
   activeUnassigned.value = null
   activeCommentPost.value = null
   activeTab.value = 'conversation'
-  activeChannel.value = 'whatsapp'
   mobileView.value = 'list' // back to the queue on (re)entry
   thread.data = null
   unassignedThread.data = null
@@ -235,28 +232,6 @@ export async function clearResponder(doctype, name) {
   } catch (e) {
     reloadQueue() // revert the optimistic clear if the server rejected it
   }
-}
-
-// Send a one-off message on an EXPLICIT channel (whatsapp/email), bypassing the
-// composer's activeChannel — used by the Reparación tab "send summary" + "send photo"
-// actions. Email needs an explicit recipient (no auto-resolve); whatsapp auto-resolves
-// `to`. `attach` is a publicly-fetchable URL (signed S3 / public file) — WhatsApp sends
-// it as a media link (Meta fetches it); email downloads the bytes and attaches them.
-export async function sendOnChannel(channel, content, { to, attach } = {}) {
-  if (!activeDeal.value || (!content && !attach)) return
-  const res = await call('doco_marketing.api.inbox.send_message', {
-    reference_doctype: activeDealDoctype.value,
-    reference_name: activeDeal.value,
-    channel,
-    content: content || undefined,
-    to: to || undefined,
-    attach: attach || undefined,
-    marketing: 0,
-  })
-  lastSendAt.value = Date.now() // suppress the echo self-ping
-  loadThread()
-  reloadQueue()
-  return res
 }
 
 export function loadContactCard() {
@@ -337,34 +312,6 @@ export function loadThread() {
   if (!activeDeal.value) return
   // no channel filter — backend merges WhatsApp + Email; selector drives send only
   thread.submit({ reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value })
-}
-
-export async function sendMessage(content, { to, template } = {}) {
-  if (!activeDeal.value) return
-  const res = await call('doco_marketing.api.inbox.send_message', {
-    reference_doctype: activeDealDoctype.value,
-    reference_name: activeDeal.value,
-    channel: activeChannel.value,
-    content: content || undefined,
-    to: to || undefined,
-    template: template || undefined,
-    marketing: 0,
-  })
-  lastSendAt.value = Date.now() // the echo realtime event shouldn't ping
-  loadThread()
-  reloadQueue()
-  return res
-}
-
-export async function savePrivateNote(content, mentions = []) {
-  if (!activeDeal.value) return
-  const res = await call('doco_marketing.api.inbox.save_private_note', {
-    reference_doctype: 'CRM Deal',
-    reference_name: activeDeal.value,
-    content,
-    mentions,
-  })
-  return res
 }
 
 export async function setStage(status) {
