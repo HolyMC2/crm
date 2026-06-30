@@ -100,6 +100,15 @@
               <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">💬 {{ __('Continuar en Messenger') }}</button>
               <button v-if="!cm.lead" class="font-semibold text-ink-violet-1 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
               <button v-else class="text-ink-violet-1 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
+              <button
+                class="font-semibold hover:underline"
+                style="color: #16a34a"
+                :disabled="busy"
+                :title="__('Enviar fotos y precios por mensaje privado')"
+                @click="openCatalogForComment(cm)"
+              >
+                📦 {{ __('Catálogo') }}
+              </button>
               <button class="text-ink-gray-5 hover:underline" :disabled="busy" @click="onHide(cm)">{{ cm.is_hidden ? __('Mostrar') : __('Ocultar') }}</button>
             </div>
 
@@ -136,6 +145,10 @@
         </div>
       </div>
     </template>
+
+    <!-- Catalog picker → sends the picked items as a PRIVATE DM to the commenter
+         (opens the DM if needed). Mounted here so it works in the Comentarios pane. -->
+    <CatalogPicker v-if="catalogOpen" @sent="onCatalogSent" />
   </div>
 </template>
 
@@ -148,6 +161,7 @@ import LucideSearch from '~icons/lucide/search'
 import { isMobile } from '@/composables/breakpoint'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
+import CatalogPicker from '@/components/doco/inbox/CatalogPicker.vue'
 import {
   activeCommentPost,
   mobileBack,
@@ -155,6 +169,8 @@ import {
   convertCommentToLead,
   hideComment,
   openMessengerForPsid,
+  catalogOpen,
+  openCatalog,
   timeAgo,
 } from '@/composables/inbox'
 
@@ -320,5 +336,16 @@ async function onHide(cm) {
 }
 function openLead(lead) {
   if (lead) router.push({ name: 'Lead', params: { leadId: lead } })
+}
+
+// 📦 send fotos+precios to this commenter as a private DM. The picker reads catalogCtx;
+// a comment_name target makes sendCatalogItems open the DM + send there (not publicly).
+function openCatalogForComment(cm) {
+  if (busy.value) return
+  openCatalog({ comment_name: cm.name })
+}
+// After a send: the DM is now open → refresh so the comment flips to "Continuar en Messenger".
+function onCatalogSent() {
+  fetchThread(true)
 }
 </script>

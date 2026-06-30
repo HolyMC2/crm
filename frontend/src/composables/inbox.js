@@ -118,7 +118,7 @@ export const sla = createResource({ url: 'doco_marketing.api.inbox.get_sla_statu
 // Search in-stock items from a conversation and send a selection as media messages.
 // catalogCtx carries the conversation target; the picker reads catalogResults.
 export const catalogOpen = ref(false)
-export const catalogCtx = ref(null) // { reference_doctype, reference_name, channel, to }
+export const catalogCtx = ref(null) // { reference_doctype, reference_name, channel, to } OR { comment_name } for a FB comment DM
 export const catalogResults = createResource({ url: 'doco_marketing.api.catalog.search', auto: false })
 export const catalogQuery = ref('')
 export function openCatalog(ctx, initialQuery = '') {
@@ -143,13 +143,20 @@ export function runCatalogSearch() {
 export async function sendCatalogItems(itemCodes) {
   const c = catalogCtx.value
   if (!c || !itemCodes?.length) return { sent_count: 0 }
-  const res = await call('doco_marketing.api.catalog.send_items', {
-    reference_doctype: c.reference_doctype,
-    reference_name: c.reference_name,
-    channel: c.channel,
-    item_codes: JSON.stringify(itemCodes),
-    to: c.to || undefined,
-  })
+  // A FB comment target sends as a PRIVATE DM (opens it if needed); a conversation target
+  // sends into the existing thread. Both reuse the same per-item card send server-side.
+  const res = c.comment_name
+    ? await call('doco_marketing.api.catalog.send_to_comment', {
+        comment_name: c.comment_name,
+        item_codes: JSON.stringify(itemCodes),
+      })
+    : await call('doco_marketing.api.catalog.send_items', {
+        reference_doctype: c.reference_doctype,
+        reference_name: c.reference_name,
+        channel: c.channel,
+        item_codes: JSON.stringify(itemCodes),
+        to: c.to || undefined,
+      })
   lastSendAt.value = Date.now()
   return res
 }
