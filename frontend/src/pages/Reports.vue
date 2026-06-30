@@ -114,6 +114,58 @@
         </div>
       </Card>
 
+      <!-- agent + shop scorecard (#27): who handles volume, how fast, who closes -->
+      <Card :title="__('Desempeño por agente')">
+        <div v-if="!scoreAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin actividad en el periodo') }}</div>
+        <div v-else>
+          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${AGENT_GRID}`">
+            <div>{{ __('Agente') }}</div>
+            <div :title="__('Mensajes WhatsApp enviados por el agente')">{{ __('Envíos') }}</div>
+            <div :title="__('Tiempo medio de primera respuesta')">{{ __('Resp.') }}</div>
+            <div>{{ __('Deals') }}</div>
+            <div>{{ __('Ganados') }}</div>
+            <div>{{ __('Conv.') }}</div>
+            <div>{{ __('Ingresos') }}</div>
+          </div>
+          <div
+            v-for="a in scoreAgents"
+            :key="a.agent"
+            class="grid items-center border-b border-outline-gray-1 py-2 text-[12.5px]"
+            :style="`grid-template-columns:${AGENT_GRID}`"
+          >
+            <div class="truncate font-medium text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
+            <div>{{ a.sent }}</div>
+            <div :class="a.avg_response_secs == null ? 'text-ink-gray-4' : ''">{{ fmtResp(a.avg_response_secs) }}</div>
+            <div>{{ a.deals }}</div>
+            <div class="font-semibold" style="color: #16a34a">{{ a.won }}</div>
+            <div>{{ a.conv_pct }}%</div>
+            <div class="font-medium">{{ money(a.won_pesos) }}</div>
+          </div>
+        </div>
+      </Card>
+
+      <!-- per-territory (shop proxy — no shop dimension on deals): deal metrics only -->
+      <Card :title="__('Desempeño por sucursal (territorio)')">
+        <div v-if="!scoreTerritories.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
+        <div v-else>
+          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${SHOP_GRID}`">
+            <div>{{ __('Territorio') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv.') }}</div><div>{{ __('Ingresos') }}</div>
+          </div>
+          <div
+            v-for="s in scoreTerritories"
+            :key="s.territory"
+            class="grid items-center border-b border-outline-gray-1 py-2 text-[12.5px]"
+            :style="`grid-template-columns:${SHOP_GRID}`"
+          >
+            <div class="truncate font-medium text-ink-gray-9">{{ s.territory }}</div>
+            <div>{{ s.deals }}</div>
+            <div class="font-semibold" style="color: #16a34a">{{ s.won }}</div>
+            <div>{{ s.conv_pct }}%</div>
+            <div class="font-medium">{{ money(s.won_pesos) }}</div>
+          </div>
+        </div>
+      </Card>
+
       <!-- source breakdown -->
       <Card :title="__('Origen de leads')">
         <div v-if="!sourceCards.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
@@ -141,6 +193,8 @@ const router = useRouter()
 
 const ATTR_GRID = '1fr 70px 80px 70px 110px'
 const FUNNEL_GRID = '1fr 70px 70px 80px 110px'
+const AGENT_GRID = '1fr 60px 66px 52px 60px 56px 96px'
+const SHOP_GRID = '1fr 70px 70px 70px 110px'
 const periods = [
   { key: 'week', label: __('Esta semana') },
   { key: 'month', label: __('Este mes') },
@@ -172,6 +226,7 @@ const funnelRes = createResource({ url: 'doco_marketing.api.reports.get_funnel_d
 const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_attribution', onError: onRestricted })
 const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown', onError: onRestricted })
 const socialRes = createResource({ url: 'doco_marketing.api.reports.get_social_funnel', onError: onRestricted })
+const scoreRes = createResource({ url: 'doco_marketing.api.reports.get_agent_scorecard', onError: onRestricted })
 
 function load() {
   const r = range(period.value)
@@ -180,6 +235,7 @@ function load() {
   attrRes.submit(r)
   srcRes.submit(r)
   socialRes.submit(r)
+  scoreRes.submit(r)
 }
 function setPeriod(k) {
   period.value = k
@@ -198,6 +254,19 @@ function originDot(origin) {
   if (o.includes('messenger')) return '#0084ff'
   if (o.includes('lead ad')) return '#4267b2'
   return '#1877f2' // FB comments
+}
+
+// Agent / shop scorecard (#27)
+const scoreAgents = computed(() => scoreRes.data?.agents || [])
+const scoreTerritories = computed(() => scoreRes.data?.territories || [])
+const scoreAny = computed(() => scoreAgents.value.length > 0)
+// Compact response-latency: 45s / 12m / 3h, or — when no measured first-response.
+function fmtResp(secs) {
+  if (secs == null) return '—'
+  const s = Number(secs) || 0
+  if (s < 60) return `${s}s`
+  if (s < 3600) return `${Math.round(s / 60)}m`
+  return `${(s / 3600).toFixed(1)}h`
 }
 
 function kpiVal(x) {
