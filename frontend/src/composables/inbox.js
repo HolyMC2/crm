@@ -77,6 +77,16 @@ export const overdue = createResource({ url: 'doco_marketing.api.inbox.get_overd
 // count drives the tab badge; the list feeds the review panel.
 export const autoAcks = createResource({ url: 'doco_marketing.api.auto_reply.list_pending', params: { limit: 50 }, auto: false })
 export const autoAckCount = createResource({ url: 'doco_marketing.api.auto_reply.pending_count', auto: false })
+// Pending acuses for the OPEN conversation — drives the in-context review strip so a
+// reviewer approves WITH the full thread/calls/items in view (not from the bare list).
+export const autoAckForConvo = createResource({ url: 'doco_marketing.api.auto_reply.pending_for_ref', auto: false })
+export function loadAutoAckForConvo(doctype, name) {
+  if (!doctype || !name || !['CRM Deal', 'CRM Lead'].includes(doctype)) {
+    autoAckForConvo.data = []
+    return
+  }
+  autoAckForConvo.submit({ reference_doctype: doctype, reference_name: name })
+}
 export const activeCommentPost = ref(null) // post_id of the open comment group (3rd middle-pane mode)
 // Omnichannel inbox tabs (Meta-style): which channel view the left pane shows.
 export const inboxTab = ref('all') // 'all' | 'whatsapp' | 'messenger' | 'comments'
@@ -149,10 +159,13 @@ export async function approveAutoAck(name, body) {
   await call('doco_marketing.api.auto_reply.approve', { name, body: body || undefined })
   reloadAutoAcks()
   reloadQueue() // the sent reply clears the conversation's Responder chip
+  if (activeDeal.value) loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
+  if (activeDeal.value) loadThread() // the approved acuse now shows in the thread
 }
 export async function discardAutoAck(name) {
   await call('doco_marketing.api.auto_reply.discard', { name })
   reloadAutoAcks()
+  if (activeDeal.value) loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
 }
 
 // ── persist the open selection + mobile pane ───────────────────────────────────
@@ -308,6 +321,7 @@ export function selectDeal(name, doctype = 'CRM Deal') {
   activeTab.value = 'conversation'
   loadThread()
   loadContactCard()
+  loadAutoAckForConvo(doctype, name) // surface any pending auto-ack to approve in context
   // mark read: clear the red unread dot optimistically, persist in background.
   const r = queueRows.value.find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
   if (r) r.unread_dot = false

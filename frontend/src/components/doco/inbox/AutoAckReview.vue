@@ -31,9 +31,16 @@
         >
           {{ chLabel(r.channel) }}
         </span>
-        <div class="min-w-0 flex-1">
-          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ r.contact_name || r.to || '—' }}</div>
-        </div>
+        <button
+          class="group min-w-0 flex-1 text-left"
+          :title="__('Abrir la conversación para revisar con contexto completo')"
+          @click="openConvo(r)"
+        >
+          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-3">
+            {{ r.contact_name || r.to || '—' }}
+            <span class="text-[10px] font-normal text-ink-blue-3 opacity-0 group-hover:opacity-100">↗ {{ __('abrir') }}</span>
+          </div>
+        </button>
         <span class="flex-none text-[10px] font-semibold text-ink-amber-3" :title="__('Esperando desde el entrante')">
           {{ timeAgo(r.last_inbound_at || r.creation) }}
         </span>
@@ -71,7 +78,7 @@
 <script setup>
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
-import { autoAcks, reloadAutoAcks, approveAutoAck, discardAutoAck, timeAgo, CHANNEL_META } from '@/composables/inbox'
+import { autoAcks, reloadAutoAcks, approveAutoAck, discardAutoAck, selectDeal, timeAgo, CHANNEL_META } from '@/composables/inbox'
 
 const rows = computed(() => autoAcks.data || [])
 // Per-row local edit buffer (so editing one draft never mutates the shared resource)
@@ -88,6 +95,12 @@ watch(
   },
   { immediate: true },
 )
+
+// Open the conversation so the reviewer sees the full thread/calls/items/deal before
+// approving (the acuse then appears in the in-conversation strip).
+function openConvo(r) {
+  if (r.reference_doctype && r.reference_name) selectDeal(r.reference_name, r.reference_doctype)
+}
 
 function chColor(channel) {
   const k = (channel || '').toLowerCase()

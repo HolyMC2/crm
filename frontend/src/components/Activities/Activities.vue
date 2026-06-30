@@ -118,6 +118,8 @@
           :phone="activeWhatsappContact?.phone"
           @changed="whatsappMessages.reload()"
         />
+        <!-- pending auto-acuse for THIS conversation → review with full context -->
+        <ConversationAutoAckStrip v-if="['CRM Deal', 'CRM Lead'].includes(doctype)" />
         <!-- unified customer thread toggle: appears when the phone has >1 deal/RO -->
         <div v-if="contactDealCount > 1" class="mx-3 mb-1.5 sm:mx-10">
           <button
@@ -635,6 +637,7 @@ import CommunicationArea from '@/components/CommunicationArea.vue'
 import WhatsappTemplateSelectorModal from '@/components/Modals/WhatsappTemplateSelectorModal.vue'
 import WhatsappTemplateReview from '@/components/Activities/WhatsappTemplateReview.vue'
 import ConversationReviewStrip from '@/components/doco/ConversationReviewStrip.vue'
+import ConversationAutoAckStrip from '@/components/doco/inbox/ConversationAutoAckStrip.vue'
 import AllModals from '@/components/Activities/AllModals.vue'
 import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
 import { timeAgo, formatDate, startCase } from '@/utils'
