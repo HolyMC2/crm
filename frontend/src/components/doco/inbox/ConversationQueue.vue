@@ -187,7 +187,11 @@
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
       </div>
 
-      <template v-if="inboxTab !== 'comments'">
+      <!-- "Por aprobar": review-gated auto-acuses (#22) swap the whole list for the
+        approval panel — nothing here has been sent to a customer yet. -->
+      <AutoAckReview v-if="inboxTab === 'aprobar'" />
+
+      <template v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar'">
       <div v-if="queue.loading && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Cargando…') }}
       </div>
@@ -315,6 +319,7 @@ import { statusesStore } from '@/stores/statuses'
 import { soundEnabled, toggleSound } from '@/composables/notificationSound'
 import { isMobile } from '@/composables/breakpoint'
 import DealModal from '@/components/Modals/DealModal.vue'
+import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
 import {
   queue,
   unassigned,
@@ -322,6 +327,7 @@ import {
   commentCounts,
   channelCounts,
   overdue,
+  autoAckCount,
   messengerEnabled,
   inboxTab,
   commentStatus,
@@ -375,7 +381,7 @@ const commentGroups = computed(() => commentPosts.data || [])
 // Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger,
 // none on Vencidos (orphans have no record → no response SLA).
 const visibleUnassigned = computed(() => {
-  if (inboxTab.value === 'vencidos') return []
+  if (inboxTab.value === 'vencidos' || inboxTab.value === 'aprobar') return []
   if (inboxTab.value === 'whatsapp') return unassignedRows.value.filter((u) => u.last_channel !== 'messenger')
   if (inboxTab.value === 'messenger') return unassignedRows.value.filter((u) => u.last_channel === 'messenger')
   return unassignedRows.value
@@ -412,6 +418,9 @@ const inboxTabs = computed(() => [
   ...(messengerEnabled.value ? [{ id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: channelCounts.data?.messenger ?? null }] : []),
   { id: 'comments', label: __('Comentarios'), dot: '#1877f2', count: commentCounts.data?.new ?? null },
   { id: 'vencidos', label: __('Vencidos'), dot: '#dc2626', count: overdue.data?.count || null },
+  // Por aprobar: review-gated auto-acuses awaiting a human OK. Only shown when the
+  // feature has ever drafted something (count > 0) — a clean tenant sees no dead tab.
+  ...((autoAckCount.data || 0) > 0 ? [{ id: 'aprobar', label: __('Por aprobar'), dot: '#16a34a', count: autoAckCount.data }] : []),
 ])
 // Comentarios status sub-filter chips (review answered comments).
 const commentStatusChips = computed(() => [

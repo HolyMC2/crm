@@ -72,6 +72,11 @@ export const channelCounts = createResource({ url: 'doco_marketing.api.inbox.get
 // the SLA threshold (most-overdue first, all channels, Deals+Leads). Same refresh
 // cadence as channelCounts — a reply/inbound changes who's overdue.
 export const overdue = createResource({ url: 'doco_marketing.api.inbox.get_overdue_conversations', auto: false })
+// "Por aprobar": review-gated auto-acuses (#22). Drafts the sweep made for unanswered
+// inbound; a human approves (sends) or discards. NOTHING here has been sent yet. The
+// count drives the tab badge; the list feeds the review panel.
+export const autoAcks = createResource({ url: 'doco_marketing.api.auto_reply.list_pending', params: { limit: 50 }, auto: false })
+export const autoAckCount = createResource({ url: 'doco_marketing.api.auto_reply.pending_count', auto: false })
 export const activeCommentPost = ref(null) // post_id of the open comment group (3rd middle-pane mode)
 // Omnichannel inbox tabs (Meta-style): which channel view the left pane shows.
 export const inboxTab = ref('all') // 'all' | 'whatsapp' | 'messenger' | 'comments'
@@ -89,7 +94,25 @@ export function initInbox() {
   commentCounts.fetch()
   channelCounts.fetch()
   overdue.fetch()
+  autoAckCount.fetch() // "por aprobar" badge — count only on init; the list loads on tab open
   restoreInbox() // re-open the conversation/pane the user left (survives route round-trips + reloads)
+}
+
+// ── Por aprobar (auto-acuse review) ────────────────────────────────────────────
+export function reloadAutoAcks() {
+  autoAcks.fetch()
+  autoAckCount.fetch()
+}
+// Approve (and send) a drafted acuse, optionally with an edited body. This is the ONLY
+// path that messages the customer — it routes through the role-gated controller.
+export async function approveAutoAck(name, body) {
+  await call('doco_marketing.api.auto_reply.approve', { name, body: body || undefined })
+  reloadAutoAcks()
+  reloadQueue() // the sent reply clears the conversation's Responder chip
+}
+export async function discardAutoAck(name) {
+  await call('doco_marketing.api.auto_reply.discard', { name })
+  reloadAutoAcks()
 }
 
 // ── persist the open selection + mobile pane ───────────────────────────────────
@@ -362,6 +385,7 @@ export function onThreadUpdate(payload) {
   reloadQueue()
   channelCounts.reload() // a new message may flip a conversation's last_channel
   overdue.reload() // ...and a reply/inbound changes who's overdue
+  autoAckCount.reload() // a reply may resolve a pending draft; an inbound may add one
 }
 
 // ── Comentarios (Page-feed comments) ───────────────────────────────────────────
@@ -383,6 +407,7 @@ export function setInboxTab(tab) {
   inboxTab.value = tab
   setQueueChannel(tab === 'whatsapp' || tab === 'messenger' ? tab : null)
   if (tab === 'vencidos') overdue.fetch() // refresh the Vencidos list on open
+  if (tab === 'aprobar') reloadAutoAcks() // refresh the drafts list on open
   if (tab === 'comments') {
     reloadComments()
     commentCounts.fetch()
