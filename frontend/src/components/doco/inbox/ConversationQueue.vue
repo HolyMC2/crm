@@ -72,7 +72,15 @@
       </div>
     </div>
 
-    <div class="scb flex-1 overflow-y-auto px-2 pb-2.5 pt-0.5">
+    <!-- listbox: roving-tabindex rows (one tab stop), ↑/↓/Home/End move focus, Enter
+      opens (native button). Selection is exposed via aria-selected, not colour alone. -->
+    <div
+      ref="listEl"
+      role="listbox"
+      :aria-label="__('Conversaciones')"
+      class="scb flex-1 overflow-y-auto px-2 pb-2.5 pt-0.5"
+      @keydown="onListKeydown"
+    >
       <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
@@ -83,8 +91,11 @@
         </div>
         <button
           v-for="u in visibleUnassigned"
-          :key="(u.last_channel === 'messenger' ? 'm:' + u.psid : 'w:' + u.phone)"
-          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
+          :key="orphanKey(u)"
+          role="option"
+          :aria-selected="activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone)"
+          :tabindex="rovingKey === orphanKey(u) ? 0 : -1"
+          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-amber-2"
           :class="activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone) ? 'bg-surface-amber-1' : ''"
           :style="
             activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone)
@@ -161,7 +172,10 @@
         <button
           v-for="g in commentGroups"
           :key="g.post_id || g.latest_name"
-          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
+          role="option"
+          :aria-selected="activeCommentPost === (g.post_id || g.latest_name)"
+          :tabindex="rovingKey === commentKey(g) ? 0 : -1"
+          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-2"
           :class="activeCommentPost === (g.post_id || g.latest_name) ? 'bg-surface-blue-1' : ''"
           :style="activeCommentPost === (g.post_id || g.latest_name) ? 'border-left:3px solid #1877f2' : 'border-left:3px solid #1877f266'"
           @click="selectCommentGroup(g.post_id || g.latest_name)"
@@ -205,7 +219,10 @@
       <button
         v-for="r in rows"
         :key="(r.ref_doctype || 'CRM Deal') + ':' + r.name"
-        class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2"
+        role="option"
+        :aria-selected="activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')"
+        :tabindex="rovingKey === convKey(r) ? 0 : -1"
+        class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-green-2"
         :class="activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal') ? 'bg-surface-green-2' : ''"
         :style="
           activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
@@ -339,6 +356,7 @@ import {
   activeDeal,
   activeDealDoctype,
   activeUnassigned,
+  activeUnassignedChannel,
   activeCommentPost,
   selectDeal,
   selectUnassigned,
@@ -386,6 +404,56 @@ const visibleUnassigned = computed(() => {
   if (inboxTab.value === 'messenger') return unassignedRows.value.filter((u) => u.last_channel === 'messenger')
   return unassignedRows.value
 })
+
+// ── a11y: listbox roving tabindex + arrow-key nav (#26) ──────────────────────
+// Per-row identity, shared by the v-for, the roving tab stop, and selection detection.
+const listEl = ref(null)
+function orphanKey(u) {
+  return u.last_channel === 'messenger' ? 'm:' + u.psid : 'w:' + u.phone
+}
+function commentKey(g) {
+  return 'c:' + (g.post_id || g.latest_name)
+}
+function convKey(r) {
+  return (r.ref_doctype || 'CRM Deal') + ':' + r.name
+}
+// The key of the currently-selected row, whatever its kind.
+const selectedRowKey = computed(() => {
+  if (activeUnassigned.value)
+    return (activeUnassignedChannel.value === 'messenger' ? 'm:' : 'w:') + activeUnassigned.value
+  if (activeCommentPost.value) return 'c:' + activeCommentPost.value
+  if (activeDeal.value) return activeDealDoctype.value + ':' + activeDeal.value
+  return null
+})
+// Keys of the rows actually rendered, in DOM order (orphans → comments → conversations).
+const renderedKeys = computed(() => {
+  const ks = []
+  for (const u of visibleUnassigned.value) ks.push(orphanKey(u))
+  const commentsShown = inboxTab.value === 'comments' || (inboxTab.value === 'all' && commentGroups.value.length)
+  if (commentsShown) for (const g of commentGroups.value) ks.push(commentKey(g))
+  if (inboxTab.value !== 'comments' && inboxTab.value !== 'aprobar') for (const r of rows.value) ks.push(convKey(r))
+  return ks
+})
+// The single tab stop: the selected row when it's on screen, else the first row — so
+// Tab always lands on exactly one row and arrows take over from there.
+const rovingKey = computed(() => {
+  if (selectedRowKey.value && renderedKeys.value.includes(selectedRowKey.value)) return selectedRowKey.value
+  return renderedKeys.value[0] || null
+})
+
+function onListKeydown(e) {
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
+  const opts = Array.from(listEl.value?.querySelectorAll('[role="option"]') || [])
+  if (!opts.length) return
+  e.preventDefault()
+  const cur = opts.indexOf(document.activeElement)
+  let next
+  if (e.key === 'Home') next = 0
+  else if (e.key === 'End') next = opts.length - 1
+  else if (e.key === 'ArrowDown') next = cur < 0 ? 0 : Math.min(cur + 1, opts.length - 1)
+  else next = cur < 0 ? 0 : Math.max(cur - 1, 0)
+  opts[next]?.focus()
+}
 
 // Compact "time waited" for the response-SLA chip: 45s / 12m / 3h / 5d.
 function formatWaiting(secs) {
