@@ -32,6 +32,14 @@
           />
         </IconPicker>
         <CannedReplyPicker channel="Messenger" @pick="onCanned" />
+        <button
+          type="button"
+          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-3 hover:bg-surface-green-3"
+          :title="__('Catálogo (o escribe /cat)')"
+          @click="emit('catalog', '')"
+        >
+          📦
+        </button>
       </div>
       <textarea
         ref="textareaRef"
@@ -82,7 +90,8 @@ const props = defineProps({
   // null when we can't tell (no inbound yet); drives the composer note.
   window24h: { type: Object, default: null },
 })
-const emit = defineEmits(['sent', 'sending', 'failed'])
+const emit = defineEmits(['sent', 'sending', 'failed', 'catalog'])
+const CAT_RE = /^\/cat(alogo|álogo)?\b\s*/i
 
 const text = ref('')
 const busy = ref(false)
@@ -127,6 +136,11 @@ async function uploadFile(file) {
 
 async function send() {
   const content = text.value.trim()
+  if (CAT_RE.test(content)) {
+    emit('catalog', content.replace(CAT_RE, ''))
+    text.value = ''
+    return
+  }
   if (!content || busy.value) return
   busy.value = true
   // Optimistic-reply (#21): parent owns the pending bubble, keyed by this token.

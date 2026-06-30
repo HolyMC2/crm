@@ -87,6 +87,46 @@ export const commentSearch = ref('') // Comentarios search (commenter name / tex
 export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_contact_card' })
 export const sla = createResource({ url: 'doco_marketing.api.inbox.get_sla_status' })
 
+// ── Catalog send (/cat picker) ─────────────────────────────────────────────────
+// Search in-stock items from a conversation and send a selection as media messages.
+// catalogCtx carries the conversation target; the picker reads catalogResults.
+export const catalogOpen = ref(false)
+export const catalogCtx = ref(null) // { reference_doctype, reference_name, channel, to }
+export const catalogResults = createResource({ url: 'doco_marketing.api.catalog.search', auto: false })
+export const catalogQuery = ref('')
+export function openCatalog(ctx, initialQuery = '') {
+  catalogCtx.value = ctx
+  catalogQuery.value = initialQuery || ''
+  catalogOpen.value = true
+  runCatalogSearch()
+}
+export function closeCatalog() {
+  catalogOpen.value = false
+}
+let _catTimer = null
+export function onCatalogQuery(q) {
+  catalogQuery.value = q
+  clearTimeout(_catTimer)
+  _catTimer = setTimeout(runCatalogSearch, 300)
+}
+export function runCatalogSearch() {
+  catalogResults.submit({ query: catalogQuery.value || '', limit: 24 })
+}
+// Send the picked items into the active conversation (one media message per item).
+export async function sendCatalogItems(itemCodes) {
+  const c = catalogCtx.value
+  if (!c || !itemCodes?.length) return { sent_count: 0 }
+  const res = await call('doco_marketing.api.catalog.send_items', {
+    reference_doctype: c.reference_doctype,
+    reference_name: c.reference_name,
+    channel: c.channel,
+    item_codes: JSON.stringify(itemCodes),
+    to: c.to || undefined,
+  })
+  lastSendAt.value = Date.now()
+  return res
+}
+
 export function initInbox() {
   reloadQueue()
   reloadUnassigned()

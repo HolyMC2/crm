@@ -55,6 +55,14 @@
     class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10"
   >
     <button
+      type="button"
+      class="rounded-md bg-surface-green-2 px-2 py-1 text-xs font-semibold text-ink-green-3 hover:bg-surface-green-3"
+      :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
+      @click="emit('catalog', '')"
+    >
+      📦 {{ __('Catálogo') }}
+    </button>
+    <button
       v-for="(qr, i) in quickReplies.data || []"
       :key="`qr-${i}`"
       type="button"
@@ -248,7 +256,19 @@ const props = defineProps({
   replyOnly: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['pickTemplate', 'activity', 'sending', 'sent', 'failed'])
+const emit = defineEmits(['pickTemplate', 'activity', 'sending', 'sent', 'failed', 'catalog'])
+
+// /cat <query> (or /catálogo) in the composer opens the catalog picker instead of sending.
+const CAT_RE = /^\/cat(alogo|álogo)?\b\s*/i
+function maybeCatalog() {
+  const txt = (content.value || '').trim()
+  if (mode.value === 'reply' && CAT_RE.test(txt)) {
+    emit('catalog', txt.replace(CAT_RE, ''))
+    content.value = ''
+    return true
+  }
+  return false
+}
 
 const doc = defineModel({ type: Object, default: () => ({}) })
 const whatsapp = defineModel('whatsapp', { type: Object, default: () => ({}) })
@@ -395,6 +415,7 @@ function onEnter(event) {
 }
 
 function dispatchSend() {
+  if (maybeCatalog()) return
   if (mode.value === 'reply') return sendTextMessage()
   if (mode.value === 'note') {
     if (!content.value.trim()) return

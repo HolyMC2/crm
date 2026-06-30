@@ -527,6 +527,7 @@
       @sending="onMsgrSending"
       @sent="onMsgrSent"
       @failed="onMsgrFailed"
+      @catalog="onMsgrCatalog"
     />
     <WhatsAppBox
       v-if="title == 'WhatsApp' && activeChannelTab === 'whatsapp'"
@@ -542,7 +543,9 @@
       @sending="onWaSending"
       @sent="onWaSent"
       @failed="onWaFailed"
+      @catalog="onWaCatalog"
     />
+    <CatalogPicker v-if="catalogOpen" @sent="onCatalogSent" />
   </div>
   <WhatsappTemplateSelectorModal
     v-if="whatsappEnabled"
@@ -592,6 +595,8 @@ import WhatsAppArea from '@/components/Activities/WhatsAppArea.vue'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
 import MessengerBox from '@/components/Activities/MessengerBox.vue'
+import CatalogPicker from '@/components/doco/inbox/CatalogPicker.vue'
+import { catalogOpen, openCatalog } from '@/composables/inbox'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
@@ -987,6 +992,21 @@ function onMsgrSent(p) {
 }
 function onMsgrFailed(p) {
   _optDrop(optimisticMsgr, p.clientToken)
+}
+
+// /cat or 📦 from a composer → open the catalog picker scoped to this conversation.
+function onWaCatalog(q) {
+  openCatalog(
+    { reference_doctype: props.doctype, reference_name: props.docname, channel: 'whatsapp', to: activeWhatsappContact.value?.phone || doc.value.mobile_no },
+    q,
+  )
+}
+function onMsgrCatalog(q) {
+  openCatalog({ reference_doctype: props.doctype, reference_name: props.docname, channel: 'messenger', to: null }, q)
+}
+function onCatalogSent() {
+  whatsappMessages.reload()
+  messengerThread.reload()
 }
 
 // ── Channel tabs ────────────────────────────────────────────────────────────
