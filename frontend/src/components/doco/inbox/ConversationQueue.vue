@@ -262,7 +262,7 @@
             class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold text-ink-amber-3 bg-surface-amber-1"
             :title="__('El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes o al completar el trato.')"
           >
-            ↩ {{ __('Responder') }}
+            ↩ {{ __('Responder') }}<span v-if="r.waiting_secs != null" class="font-bold opacity-80"> · {{ formatWaiting(r.waiting_secs) }}</span>
             <button
               class="ml-0.5 flex h-3 w-3 items-center justify-center rounded-full leading-none hover:bg-surface-amber-2"
               :aria-label="__('Marcar como respondido')"
@@ -311,6 +311,7 @@ import {
   commentPosts,
   commentCounts,
   channelCounts,
+  overdue,
   inboxTab,
   commentStatus,
   commentSearch,
@@ -344,18 +345,32 @@ function newDeal() {
   showDealModal.value = true
 }
 
-const rows = computed(() => queue.data || [])
+// Vencidos tab swaps the row source to the server-ranked overdue list (most-overdue
+// first, across all conversations — an overdue thread buried by recency is the point);
+// every other tab shows the normal recency queue.
+const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queue.data || []))
 const openCount = computed(() => rows.value.length)
 const unassignedRows = computed(() => unassigned.data || [])
 // Server-grouped: one entry per post {post_id, count, latest_ts, from_name, message, lead}.
 const commentGroups = computed(() => commentPosts.data || [])
 
-// Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger.
+// Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger,
+// none on Vencidos (orphans have no record → no response SLA).
 const visibleUnassigned = computed(() => {
+  if (inboxTab.value === 'vencidos') return []
   if (inboxTab.value === 'whatsapp') return unassignedRows.value.filter((u) => u.last_channel !== 'messenger')
   if (inboxTab.value === 'messenger') return unassignedRows.value.filter((u) => u.last_channel === 'messenger')
   return unassignedRows.value
 })
+
+// Compact "time waited" for the response-SLA chip: 45s / 12m / 3h / 5d.
+function formatWaiting(secs) {
+  const s = Number(secs) || 0
+  if (s < 60) return `${s}s`
+  if (s < 3600) return `${Math.floor(s / 60)}m`
+  if (s < 86400) return `${Math.floor(s / 3600)}h`
+  return `${Math.floor(s / 86400)}d`
+}
 
 // Pretty-print a raw WhatsApp number (e.g. 5216691530561 / 526691530561) as
 // +52 669 153 0561 — strip the country code + the MX mobile "1", group the rest.
@@ -376,6 +391,7 @@ const inboxTabs = computed(() => [
   { id: 'whatsapp', label: 'WhatsApp', dot: CHANNEL_META.whatsapp?.[1] || '#25d366', count: channelCounts.data?.whatsapp ?? null },
   { id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: channelCounts.data?.messenger ?? null },
   { id: 'comments', label: __('Comentarios'), dot: '#1877f2', count: commentCounts.data?.new ?? null },
+  { id: 'vencidos', label: __('Vencidos'), dot: '#dc2626', count: overdue.data?.count || null },
 ])
 // Comentarios status sub-filter chips (review answered comments).
 const commentStatusChips = computed(() => [

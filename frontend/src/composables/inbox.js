@@ -69,6 +69,10 @@ export const commentCounts = createResource({ url: 'doco_marketing.api.comments.
 // loaded queue page). Refreshed on init + on every thread update (a new message can
 // flip a conversation's last_channel); NOT on search (search doesn't change totals).
 export const channelCounts = createResource({ url: 'doco_marketing.api.inbox.get_channel_counts', auto: false })
+// Speed-to-lead "Vencidos": {count, conversations} for threads awaiting a reply past
+// the SLA threshold (most-overdue first, all channels, Deals+Leads). Same refresh
+// cadence as channelCounts — a reply/inbound changes who's overdue.
+export const overdue = createResource({ url: 'doco_marketing.api.inbox.get_overdue_conversations', auto: false })
 export const activeCommentPost = ref(null) // post_id of the open comment group (3rd middle-pane mode)
 // Omnichannel inbox tabs (Meta-style): which channel view the left pane shows.
 export const inboxTab = ref('all') // 'all' | 'whatsapp' | 'messenger' | 'comments'
@@ -86,6 +90,7 @@ export function initInbox() {
   reloadComments()
   commentCounts.fetch()
   channelCounts.fetch()
+  overdue.fetch()
   restoreInbox() // re-open the conversation/pane the user left (survives route round-trips + reloads)
 }
 
@@ -409,6 +414,7 @@ export function onThreadUpdate(payload) {
   if (payload?.deal && payload.deal === activeDeal.value) loadThread()
   reloadQueue()
   channelCounts.reload() // a new message may flip a conversation's last_channel
+  overdue.reload() // ...and a reply/inbound changes who's overdue
 }
 
 // ── Comentarios (Page-feed comments) ───────────────────────────────────────────
@@ -429,6 +435,7 @@ export function setCommentSearch(q) {
 export function setInboxTab(tab) {
   inboxTab.value = tab
   setQueueChannel(tab === 'whatsapp' || tab === 'messenger' ? tab : null)
+  if (tab === 'vencidos') overdue.fetch() // refresh the Vencidos list on open
   if (tab === 'comments') {
     reloadComments()
     commentCounts.fetch()
