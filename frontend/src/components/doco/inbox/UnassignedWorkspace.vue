@@ -45,6 +45,10 @@
           <div v-if="unassignedThread.loading && !messages.length" class="py-8 text-center text-xs text-ink-gray-4">
             {{ __('Cargando…') }}
           </div>
+          <div v-else-if="unassignedThread.error && !messages.length" class="py-8 text-center text-xs text-ink-red-3">
+            {{ __('No se pudo cargar la conversación.') }}
+            <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="unassignedThread.reload()">{{ __('Reintentar') }}</button>
+          </div>
           <div v-else-if="!messages.length" class="py-8 text-center text-xs text-ink-gray-4">{{ __('Sin mensajes') }}</div>
           <div v-for="m in messages" :key="m.id" class="flex" :class="m.direction === 'out' ? 'justify-end' : 'justify-start'">
             <div

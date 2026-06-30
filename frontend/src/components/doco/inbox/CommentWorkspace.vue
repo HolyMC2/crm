@@ -70,6 +70,10 @@
           </div>
 
           <div v-if="loading && !threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
+          <div v-else-if="threadError && !threadComments.length" class="py-6 text-center text-[12px] text-ink-red-3">
+            {{ __('No se pudieron cargar los comentarios.') }}
+            <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="fetchThread(true)">{{ __('Reintentar') }}</button>
+          </div>
           <div v-else-if="!threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">
             {{ search ? __('Sin resultados') : __('Sin comentarios') }}
           </div>
@@ -178,6 +182,7 @@ const postComments = createResource({ url: 'doco_marketing.api.comments.get_post
 const threadComments = ref([])
 const hasMore = ref(false)
 const loading = ref(false)
+const threadError = ref(false)
 const start = ref(0)
 
 async function fetchThread(reset = true) {
@@ -198,8 +203,10 @@ async function fetchThread(reset = true) {
     const rows = res?.comments || []
     threadComments.value = reset ? rows : [...threadComments.value, ...rows]
     hasMore.value = !!res?.has_more
+    threadError.value = false
   } catch (e) {
     if (reset) threadComments.value = []
+    threadError.value = true
   } finally {
     loading.value = false
   }

@@ -150,7 +150,11 @@
             class="w-full border-0 bg-transparent text-[12px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
           />
         </div>
-        <div v-if="inboxTab === 'comments' && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+        <div v-if="inboxTab === 'comments' && commentPosts.error && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-red-3">
+          {{ __('No se pudieron cargar los comentarios.') }}
+          <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="reloadComments">{{ __('Reintentar') }}</button>
+        </div>
+        <div v-else-if="inboxTab === 'comments' && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
           {{ commentSearch ? __('Sin resultados') : __('Sin comentarios') }}
         </div>
         <!-- one row per POST (grouped) — opens the post + all its comments -->
@@ -186,6 +190,10 @@
       <template v-if="inboxTab !== 'comments'">
       <div v-if="queue.loading && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Cargando…') }}
+      </div>
+      <div v-else-if="listError && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-red-3">
+        {{ __('No se pudo cargar la bandeja.') }}
+        <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="retryList">{{ __('Reintentar') }}</button>
       </div>
       <div v-else-if="!rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Sin conversaciones') }}
@@ -316,6 +324,7 @@ import {
   inboxTab,
   commentStatus,
   commentSearch,
+  reloadComments,
   setCommentSearch,
   queueSearch,
   queueCollapsed,
@@ -351,6 +360,12 @@ function newDeal() {
 // every other tab shows the normal recency queue.
 const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queue.data || []))
 const openCount = computed(() => rows.value.length)
+// A failed list load must not read as an empty inbox — surface the resource error + retry.
+const listError = computed(() => (inboxTab.value === 'vencidos' ? overdue.error : queue.error))
+function retryList() {
+  if (inboxTab.value === 'vencidos') overdue.fetch()
+  else reloadQueue()
+}
 const unassignedRows = computed(() => unassigned.data || [])
 // Server-grouped: one entry per post {post_id, count, latest_ts, from_name, message, lead}.
 const commentGroups = computed(() => commentPosts.data || [])

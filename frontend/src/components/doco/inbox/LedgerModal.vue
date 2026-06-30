@@ -43,6 +43,10 @@
         <!-- merged timeline -->
         <div class="scb max-h-[55vh] overflow-y-auto">
           <div v-if="ledger.loading" class="py-8 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
+          <div v-else-if="ledger.error && !messages.length" class="py-8 text-center text-[12px] text-ink-red-3">
+            {{ __('No se pudo cargar el historial.') }}
+            <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="ledger.reload()">{{ __('Reintentar') }}</button>
+          </div>
           <div v-else-if="!messages.length" class="py-8 text-center text-[12px] text-ink-gray-4">{{ __('Sin mensajes.') }}</div>
           <div
             v-for="(m, i) in messages"
