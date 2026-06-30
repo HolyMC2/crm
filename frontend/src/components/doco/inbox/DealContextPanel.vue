@@ -420,12 +420,24 @@ function openTemplate() {
   })
 }
 async function macroListo() {
-  await changeStatus('Por Entregar')
+  // The macro hardcodes a status name; if a tenant renamed/didn't seed it, set_value
+  // rejects — surface that instead of an unhandled throw + a false success toast.
+  try {
+    await changeStatus('Por Entregar')
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo cambiar a "Por Entregar" — ¿existe ese estado?'))
+    return
+  }
   openTemplate()
   toast.success(__('Estado → Por Entregar. Revisa y envía la plantilla.'))
 }
 async function macroCompletado() {
-  await changeStatus('Completado')
+  try {
+    await changeStatus('Completado')
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo marcar como completado — ¿existe el estado "Completado"?'))
+    return
+  }
   toast.success(__('Trato marcado como completado.'))
 }
 function macroPago() {
