@@ -18,9 +18,12 @@
             <LucideVolumeX v-else class="h-4 w-4" />
           </button>
           <span
-            class="rounded-full px-2 py-0.5 text-[11px] font-semibold text-ink-green-3 bg-surface-green-2"
+            class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            :class="unattendedTotal ? 'text-ink-amber-3 bg-surface-amber-2' : 'text-ink-green-3 bg-surface-green-2'"
+            :title="__('Cosas sin atender (sin asignar + vencidos + comentarios nuevos)')"
+            :aria-label="__('Cosas sin atender') + ': ' + unattendedTotal"
           >
-            {{ openCount }}
+            {{ unattendedTotal }}
           </span>
           <button
             class="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-white"
@@ -401,6 +404,7 @@ import {
   commentCounts,
   channelCounts,
   overdue,
+  unattendedTotal,
   autoAckCount,
   queueRows,
   queueHasMore,
@@ -446,7 +450,6 @@ function newDeal() {
 // first, across all conversations — an overdue thread buried by recency is the point);
 // every other tab shows the normal recency queue.
 const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queueRows.value))
-const openCount = computed(() => rows.value.length)
 // A failed list load must not read as an empty inbox — surface the resource error + retry.
 const listError = computed(() => (inboxTab.value === 'vencidos' ? overdue.error : queue.error))
 function retryList() {

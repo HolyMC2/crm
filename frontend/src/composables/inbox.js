@@ -89,6 +89,14 @@ export const channelCounts = createResource({ url: 'doco_marketing.api.inbox.get
 // the SLA threshold (most-overdue first, all channels, Deals+Leads). Same refresh
 // cadence as channelCounts — a reply/inbound changes who's overdue.
 export const overdue = createResource({ url: 'doco_marketing.api.inbox.get_overdue_conversations', auto: false })
+// Single "cosas sin atender" total across all four inbox surfaces: WhatsApp + Messenger
+// orphans (Sin asignar) + overdue conversations (Vencidos) + new FB comments. The buckets
+// are disjoint (orphans have no Lead/Deal so are never overdue; comments are a separate
+// doctype), so they sum cleanly — derived from resources initInbox already fetches, no
+// extra round-trip; it tracks them live as each refreshes.
+export const unattendedTotal = computed(
+  () => (unassigned.data?.length || 0) + (overdue.data?.count || 0) + (commentCounts.data?.new || 0),
+)
 // "Por aprobar": review-gated auto-acuses (#22). Drafts the sweep made for unanswered
 // inbound; a human approves (sends) or discards. NOTHING here has been sent yet. The
 // count drives the tab badge; the list feeds the review panel.
