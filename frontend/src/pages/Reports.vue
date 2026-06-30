@@ -166,6 +166,57 @@
         </div>
       </Card>
 
+      <!-- Reactivación / win-back: stage template sends to the supervised review queue.
+        Nothing auto-sends — every reactivation is approved by a human in "Por aprobar". -->
+      <Card :title="__('Reactivación · Win-back')">
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="flex flex-col gap-1 text-[11px] text-ink-gray-6">
+            {{ __('Segmento') }}
+            <select v-model="reactSegment" class="rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2">
+              <option value="cold_leads">{{ __('Leads fríos (sin actividad)') }}</option>
+              <option value="dormant_customers">{{ __('Clientes inactivos (con compra previa)') }}</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-1 text-[11px] text-ink-gray-6">
+            {{ __('Inactivos hace (días)') }}
+            <input v-model.number="reactDays" type="number" min="7" class="w-24 rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2" />
+          </label>
+          <label class="flex flex-col gap-1 text-[11px] text-ink-gray-6">
+            {{ __('Plantilla aprobada') }}
+            <select v-model="reactTemplate" class="min-w-[180px] rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2">
+              <option value="">{{ __('— elegir —') }}</option>
+              <option v-for="t in reactTemplates" :key="t.name" :value="t.name">{{ t.template_name || t.name }}</option>
+            </select>
+          </label>
+          <button
+            class="rounded-md border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
+            :disabled="reactBusy"
+            @click="doPreview"
+          >
+            {{ __('Previsualizar') }}
+          </button>
+          <button
+            class="rounded-md px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+            style="background: #16a34a"
+            :disabled="reactBusy || !reactTemplate || !(reactPreviewData && reactPreviewData.staged)"
+            @click="doStage"
+          >
+            {{ reactBusy ? '…' : __('Enviar {0} a revisión', [(reactPreviewData && reactPreviewData.staged) || 0]) }}
+          </button>
+        </div>
+        <div v-if="reactPreviewData" class="mt-3 text-[12px] text-ink-gray-7">
+          <div class="mb-1 font-semibold text-ink-gray-9">
+            {{ reactPreviewData.staged }} {{ __('por reactivar') }}
+            <span class="font-normal text-ink-gray-5">· {{ reactPreviewData.audience_total }} {{ __('en segmento') }} · {{ reactPreviewData.skipped_suppressed }} {{ __('opt-out') }} · {{ reactPreviewData.skipped_recent }} {{ __('recientes') }}</span>
+          </div>
+          <div v-for="r in reactPreviewData.sample" :key="r.reference_name" class="flex items-center gap-2 border-b border-outline-gray-1 py-1 text-[11.5px]">
+            <span class="min-w-0 flex-1 truncate font-medium text-ink-gray-8">{{ r.name }}</span>
+            <span class="text-ink-gray-5">{{ r.mobile_no }}</span>
+          </div>
+          <div class="mt-1.5 text-[10.5px] text-ink-gray-4">{{ __('Cada reactivación se encola a revisión — un humano aprueba el envío. Nada se envía automáticamente.') }}</div>
+        </div>
+      </Card>
+
       <!-- source breakdown -->
       <Card :title="__('Origen de leads')">
         <div v-if="!sourceCards.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
@@ -184,9 +235,9 @@
 </template>
 
 <script setup>
-import { computed, h, ref } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { createResource } from 'frappe-ui'
+import { createResource, call, toast } from 'frappe-ui'
 import { CHANNEL_META, GRADE_COLORS } from '@/composables/crmFormat'
 
 const router = useRouter()
@@ -267,6 +318,45 @@ function fmtResp(secs) {
   if (s < 60) return `${s}s`
   if (s < 3600) return `${Math.round(s / 60)}m`
   return `${(s / 3600).toFixed(1)}h`
+}
+
+// Reactivación / win-back — preview the audience, then stage template sends into the
+// supervised review queue (auto=0). Nothing reaches a customer without human approval.
+const reactSegment = ref('cold_leads')
+const reactDays = ref(45)
+const reactTemplate = ref('')
+const reactBusy = ref(false)
+const reactPreviewData = ref(null)
+const reactTemplatesRes = createResource({ url: 'doco_marketing.api.reactivation.get_templates', auto: true, onError: onRestricted })
+const reactTemplates = computed(() => reactTemplatesRes.data || [])
+// A changed segment/window invalidates a prior preview (the staged count would be stale).
+watch([reactSegment, reactDays], () => (reactPreviewData.value = null))
+async function doPreview() {
+  reactBusy.value = true
+  try {
+    reactPreviewData.value = await call('doco_marketing.api.reactivation.preview', {
+      segment: reactSegment.value, days: reactDays.value, limit: 200,
+    })
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo previsualizar'))
+  } finally {
+    reactBusy.value = false
+  }
+}
+async function doStage() {
+  if (!reactTemplate.value) return
+  reactBusy.value = true
+  try {
+    const res = await call('doco_marketing.api.reactivation.stage_reactivation', {
+      segment: reactSegment.value, template: reactTemplate.value, days: reactDays.value, limit: 200,
+    })
+    toast.success(__('{0} reactivaciones en cola de revisión', [res.staged]))
+    await doPreview() // refresh — the cooldown drops those just staged
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo encolar'))
+  } finally {
+    reactBusy.value = false
+  }
 }
 
 function kpiVal(x) {
