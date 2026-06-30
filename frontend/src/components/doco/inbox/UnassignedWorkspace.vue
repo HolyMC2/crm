@@ -391,6 +391,12 @@ function formatPhone(raw) {
 
 async function convert(target) {
   if (busy.value) return
+  // Forecasting: a Deal needs an expected value, else the server MandatoryErrors. Block
+  // the blank submit with a clear hint instead of bouncing the raw validation error.
+  if (target === 'CRM Deal' && forecastingEnabled.value && !form.expected_deal_value) {
+    toast.error(__('Captura el valor estimado para crear el trato.'))
+    return
+  }
   busy.value = true
   try {
     const fields = {}

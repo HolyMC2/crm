@@ -81,7 +81,7 @@
 import { reactive, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Avatar, Button, Dialog, toast } from 'frappe-ui'
-import { contactCard, saveContactField, hasTaller } from '@/composables/inbox'
+import { contactCard, saveContactField, reloadQueue, hasTaller } from '@/composables/inbox'
 
 const router = useRouter()
 const editOpen = ref(false)
@@ -168,6 +168,7 @@ async function save(doctype, name, fieldname, value) {
   } catch (e) {
     toast.error(e?.messages?.[0] || e?.message || __('No se pudo guardar el cambio.'))
     contactCard.reload()
+    reloadQueue() // saveContactField threw before its own refresh — revert the queue row too
   }
 }
 </script>
