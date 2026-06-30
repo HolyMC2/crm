@@ -10,6 +10,7 @@ export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lea
 export const activeDealDoctype = ref('CRM Deal') // 'CRM Deal' | 'CRM Lead' — leads now share the queue
 export const activeUnassigned = ref(null) // phone (WhatsApp) or PSID (Messenger) of the open "Sin asignar" orphan
 export const activeUnassignedChannel = ref('whatsapp') // 'whatsapp' | 'messenger' — which orphan kind is open
+export const activeUnassignedArchived = ref(false) // open orphan came from Archivados → header shows "Desarchivar"
 export const activeTab = ref('conversation') // conversation|activity|repair
 export const convoTemplateOpen = ref(false) // macro -> open the WhatsApp template review modal in the convo
 export const queueChannel = ref(null) // null = Todas
@@ -55,6 +56,22 @@ export const unassigned = createResource({
   auto: false,
 })
 export const unassignedThread = createResource({ url: 'doco_marketing.api.inbox.get_unassigned_thread' })
+// "Archivados": orphans the operator closed-but-kept (no lead/deal worth opening). Out of
+// "Sin asignar"/"Esperando respuesta" yet still reachable + replyable here; a newer inbound
+// auto-resurfaces them server-side (no un-archive needed). Loaded on demand (toggle).
+export const archived = createResource({
+  url: 'doco_marketing.api.inbox.get_archived_orphans',
+  params: { limit: 50 },
+  auto: false,
+})
+export const showArchived = ref(false) // is the Archivados section expanded
+export function reloadArchived() {
+  archived.submit({ limit: 50 })
+}
+export function toggleArchived() {
+  showArchived.value = !showArchived.value
+  if (showArchived.value) reloadArchived()
+}
 // "Comentarios": comments on our Facebook Page posts — a warm-lead stream separate
 // from PSID conversations. Reply public/private, convert to Lead, hide.
 // The list is grouped by POST server-side (scales past hundreds of comments).
@@ -235,6 +252,7 @@ export function resetInbox() {
   activeDeal.value = null
   activeDealDoctype.value = 'CRM Deal'
   activeUnassigned.value = null
+  activeUnassignedArchived.value = false
   activeCommentPost.value = null
   activeTab.value = 'conversation'
   mobileView.value = 'list' // back to the queue on (re)entry
@@ -372,11 +390,12 @@ export async function saveContactField(doctype, name, fieldname, value) {
   reloadQueue()
 }
 
-export function selectUnassigned(id, channel = 'whatsapp') {
+export function selectUnassigned(id, channel = 'whatsapp', isArchived = false) {
   activeDeal.value = null // orphan threads have no deal/context panel
   activeCommentPost.value = null
   activeUnassigned.value = id
   activeUnassignedChannel.value = channel
+  activeUnassignedArchived.value = isArchived // archived orphan → header offers Desarchivar
   mobileView.value = 'thread' // mobile: advance the stack to the orphan thread
   unassignedThread.submit(channel === 'messenger' ? { psid: id } : { phone: id })
   loadSuggestions()
@@ -402,9 +421,35 @@ export async function assignUnassigned(id, targetDoctype, fields = {}, channel =
   else params.phone = id
   const res = await call('doco_marketing.api.inbox.assign_unassigned', params)
   activeUnassigned.value = null
+  activeUnassignedArchived.value = false
   reloadUnassigned()
   reloadQueue()
+  if (showArchived.value) reloadArchived() // converting an archived orphan drops it from Archivados
   if (res?.doctype === 'CRM Deal' || res?.doctype === 'CRM Lead') selectDeal(res.name, res.doctype)
+  return res
+}
+
+// Archive an orphan (no lead/deal worth opening): it leaves "Sin asignar" but the thread
+// stays reachable in Archivados + replyable, and a newer inbound auto-resurfaces it. Closes
+// the open orphan workspace (it's no longer in the live list).
+export async function archiveOrphan(channel, identifier) {
+  const res = await call('doco_marketing.api.inbox.archive_orphan', { channel, identifier })
+  activeUnassigned.value = null
+  activeUnassignedArchived.value = false
+  unassignedThread.data = null
+  mobileView.value = 'list'
+  reloadUnassigned()
+  if (showArchived.value) reloadArchived()
+  return res
+}
+
+// Bring an archived orphan back into "Sin asignar" now. Keeps the thread open (the operator
+// may want to keep replying) and flips the header back to "Archivar".
+export async function unarchiveOrphan(channel, identifier) {
+  const res = await call('doco_marketing.api.inbox.unarchive_orphan', { channel, identifier })
+  activeUnassignedArchived.value = false
+  reloadUnassigned()
+  reloadArchived()
   return res
 }
 

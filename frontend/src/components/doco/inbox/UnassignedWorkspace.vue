@@ -24,12 +24,34 @@
       <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
-      <div>
-        <div class="text-[15px] font-semibold text-ink-gray-9">
+      <div class="min-w-0">
+        <div class="truncate text-[15px] font-semibold text-ink-gray-9">
           {{ prefillName || (isMessenger ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8) : formatPhone(activeUnassigned)) }}
         </div>
-        <div class="text-[11px] font-medium text-ink-amber-3">{{ __('Sin asignar — captura y convierte') }}</div>
+        <div class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-3'">
+          {{ isArchived ? __('Archivado — sigue disponible') : __('Sin asignar — captura y convierte') }}
+        </div>
       </div>
+
+      <!-- Archive = "cerrar sin trato pero conservar". Leaves "Sin asignar"; the thread
+           stays here in Archivados and a nuevo mensaje la reaparece sola. -->
+      <button
+        v-if="!isArchived"
+        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[11.5px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
+        :disabled="busy"
+        :title="__('Archivar sin crear lead/trato — seguirá disponible')"
+        @click="onArchive"
+      >
+        <LucideArchive class="h-3.5 w-3.5" /> <span class="hidden sm:inline">{{ __('Archivar') }}</span>
+      </button>
+      <button
+        v-else
+        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-2 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-3 hover:bg-surface-blue-2 disabled:opacity-50"
+        :disabled="busy"
+        @click="onUnarchive"
+      >
+        <LucideArchiveRestore class="h-3.5 w-3.5" /> <span class="hidden sm:inline">{{ __('Desarchivar') }}</span>
+      </button>
     </div>
 
     <div class="flex min-h-0 flex-1" :class="isMobile ? 'flex-col' : ''">
@@ -233,15 +255,43 @@ import { computed, reactive, ref, watch } from 'vue'
 import { toast, call, FileUploader, Dropdown, FeatherIcon } from 'frappe-ui'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
+import LucideArchive from '~icons/lucide/archive'
+import LucideArchiveRestore from '~icons/lucide/archive-restore'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, activeUnassignedChannel, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack, forecastingEnabled } from '@/composables/inbox'
+import { activeUnassigned, activeUnassignedChannel, activeUnassignedArchived, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, archiveOrphan, unarchiveOrphan, hhmm, mobileBack, forecastingEnabled } from '@/composables/inbox'
 
 const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
+const isArchived = computed(() => activeUnassignedArchived.value)
+
+async function onArchive() {
+  if (busy.value) return
+  busy.value = true
+  try {
+    await archiveOrphan(activeUnassignedChannel.value, activeUnassigned.value)
+    toast.success(__('Conversación archivada'))
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo archivar'))
+  } finally {
+    busy.value = false
+  }
+}
+async function onUnarchive() {
+  if (busy.value) return
+  busy.value = true
+  try {
+    await unarchiveOrphan(activeUnassignedChannel.value, activeUnassigned.value)
+    toast.success(__('Conversación desarchivada'))
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo desarchivar'))
+  } finally {
+    busy.value = false
+  }
+}
 
 // auto-suggested existing Contact/Lead/Deal matches (by name + number) for this orphan
 const suggestionRows = computed(() => suggestions.data || [])

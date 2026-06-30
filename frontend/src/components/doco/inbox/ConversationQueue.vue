@@ -132,6 +132,53 @@
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
       </div>
 
+      <!-- "Archivados": orphans the operator closed-but-kept (no lead/deal worth opening).
+        Discreet collapsed toggle; loaded on demand. The thread stays reachable + replyable
+        and a NEWER inbound auto-resurfaces it back into "Sin asignar". -->
+      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar'" class="mb-1.5">
+        <button
+          class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
+          @click="toggleArchived"
+        >
+          <LucideArchive class="h-3 w-3" />
+          {{ __('Archivados') }}
+          <span v-if="showArchived && visibleArchived.length" class="rounded-full bg-surface-gray-3 px-1.5 text-ink-gray-6">{{ visibleArchived.length }}</span>
+          <LucideChevronDown class="ml-auto h-3.5 w-3.5 transition-transform" :class="showArchived ? 'rotate-180' : ''" />
+        </button>
+        <div v-if="showArchived" class="mt-0.5">
+          <div v-if="archived.loading && !visibleArchived.length" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Cargando…') }}</div>
+          <div v-else-if="!visibleArchived.length" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Nada archivado') }}</div>
+          <button
+            v-for="u in visibleArchived"
+            :key="'arch:' + orphanKey(u)"
+            class="mb-1 block w-full rounded-[11px] p-[11px] text-left opacity-75 hover:bg-surface-gray-2 hover:opacity-100"
+            :class="activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone) ? 'bg-surface-gray-2 opacity-100' : ''"
+            style="border-left: 3px solid #cbd5e1"
+            @click="selectUnassigned(u.last_channel === 'messenger' ? u.psid : u.phone, u.last_channel, true)"
+          >
+            <div class="mb-1 flex items-center gap-2">
+              <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-5">
+                <LucideArchive class="h-3.5 w-3.5" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-[13px] font-semibold text-ink-gray-8">
+                  {{ u.contact_name || (u.last_channel === 'messenger' ? __('Messenger') + ' ' + (u.psid || '').slice(-6) : formatPhone(u.phone)) }}
+                </div>
+                <div class="truncate text-[11px] text-ink-gray-5">{{ u.last_channel === 'messenger' ? __('Messenger') : formatPhone(u.phone) }}</div>
+              </div>
+              <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(u.last_message_ts) }}</div>
+            </div>
+            <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
+              <span class="inline-flex flex-none items-center font-semibold" :style="`color: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`">
+                {{ u.last_channel === 'messenger' ? 'Msgr' : 'WA' }}
+              </span>
+              <span class="truncate">{{ u.last_message || '—' }}</span>
+            </div>
+          </button>
+        </div>
+        <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
+      </div>
+
       <!-- "Comentarios": comments on our Facebook posts. In the Comentarios TAB the
         status chips (Nuevos/Respondidos/Todos) let you review answered ones too. -->
       <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentGroups.length)" class="mb-1.5">
@@ -335,6 +382,8 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideFacebook from '~icons/lucide/facebook'
+import LucideArchive from '~icons/lucide/archive'
+import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideVolume2 from '~icons/lucide/volume-2'
 import LucideVolumeX from '~icons/lucide/volume-x'
 import { statusesStore } from '@/stores/statuses'
@@ -345,6 +394,9 @@ import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
 import {
   queue,
   unassigned,
+  archived,
+  showArchived,
+  toggleArchived,
   commentPosts,
   commentCounts,
   channelCounts,
@@ -412,6 +464,14 @@ const visibleUnassigned = computed(() => {
   if (inboxTab.value === 'whatsapp') return unassignedRows.value.filter((u) => u.last_channel !== 'messenger')
   if (inboxTab.value === 'messenger') return unassignedRows.value.filter((u) => u.last_channel === 'messenger')
   return unassignedRows.value
+})
+
+// Archived orphans, same channel-scoping as the live list.
+const archivedRows = computed(() => archived.data || [])
+const visibleArchived = computed(() => {
+  if (inboxTab.value === 'whatsapp') return archivedRows.value.filter((u) => u.last_channel !== 'messenger')
+  if (inboxTab.value === 'messenger') return archivedRows.value.filter((u) => u.last_channel === 'messenger')
+  return archivedRows.value
 })
 
 // ── a11y: listbox roving tabindex + arrow-key nav (#26) ──────────────────────
