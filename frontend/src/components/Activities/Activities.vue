@@ -118,6 +118,19 @@
           :phone="activeWhatsappContact?.phone"
           @changed="whatsappMessages.reload()"
         />
+        <!-- unified customer thread toggle: appears when the phone has >1 deal/RO -->
+        <div v-if="contactDealCount > 1" class="mx-3 mb-1.5 sm:mx-10">
+          <button
+            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+            :class="unifiedThread ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            @click="toggleUnified"
+          >
+            🔗
+            {{ unifiedThread
+              ? __('Viendo toda la conversación · {0} tratos', [contactDealCount])
+              : __('Ver toda la conversación del cliente · {0} tratos', [contactDealCount]) }}
+          </button>
+        </div>
         <WhatsAppArea
           v-model="whatsappMessages"
           v-model:reply="replyMessage"
@@ -740,11 +753,38 @@ const threadComments = computed(() => {
     }))
 })
 
+// Unified CUSTOMER thread: a customer with 2 repair orders has 2 deals, but inbound
+// auto-links to the newest only → the conversation is split. When the phone appears on
+// >1 deal, offer a toggle that merges all their WhatsApp into one thread (backend tags
+// each bubble with its source deal). Deal-scoped by default.
+const contactRefs = createResource({ url: 'doco_marketing.api.inbox.get_contact_refs', auto: false })
+const unifiedMessages = createResource({ url: 'doco_marketing.api.inbox.get_contact_thread', auto: false })
+const unifiedThread = ref(false)
+const contactDealCount = computed(() => contactRefs.data?.count || 1)
+const baseWaMessages = computed(() =>
+  unifiedThread.value ? unifiedMessages.data || [] : filteredWhatsappMessages.value || [],
+)
+function toggleUnified() {
+  unifiedThread.value = !unifiedThread.value
+  if (unifiedThread.value && props.docname)
+    unifiedMessages.submit({ reference_doctype: props.doctype, reference_name: props.docname })
+  nextTick(() => scroll())
+}
+watch(
+  () => props.docname,
+  () => {
+    unifiedThread.value = false
+    if (props.docname && ['CRM Deal', 'CRM Lead'].includes(props.doctype))
+      contactRefs.submit({ reference_doctype: props.doctype, reference_name: props.docname })
+  },
+  { immediate: true },
+)
+
 // WhatsApp messages + inline comments interleaved by time, then optimistic pending
 // bubbles (#21) pinned last — a just-sent message is always newest, so append after the
 // sort instead of relying on a client timestamp that may not match the server tz.
 const threadItems = computed(() => {
-  const msgs = (filteredWhatsappMessages.value || []).map((m) => ({
+  const msgs = baseWaMessages.value.map((m) => ({
     ...m,
     _kind: 'whatsapp',
   }))
@@ -1079,6 +1119,7 @@ function onWhatsappRealtime(data) {
     // Don't yank a reader who's scrolled up; own sends happen at the bottom → scroll.
     if (!_waAtBottom()) _waSuppressScroll = true
     whatsappMessages.reload()
+    if (unifiedThread.value) unifiedMessages.reload()
   }
 }
 

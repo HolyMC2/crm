@@ -139,6 +139,14 @@
           :label="whatsapp.status"
           class="absolute -top-2 right-0"
         />
+        <!-- unified-thread: which other deal/RO this bubble belongs to -->
+        <div
+          v-if="whatsapp._ref_label && !whatsapp._is_active_ref"
+          class="mb-1 inline-flex items-center gap-1 rounded bg-surface-gray-3 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-6"
+          :title="__('De otro trato del mismo cliente')"
+        >
+          🔗 {{ whatsapp._ref_label }}
+        </div>
         <div
           v-if="whatsapp.is_reply"
           class="mb-1 cursor-pointer rounded border-0 border-l-4 bg-surface-gray-3 p-2 text-ink-gray-5"
