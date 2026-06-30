@@ -200,6 +200,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
+import { confirmDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
@@ -208,6 +209,7 @@ import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import { avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
+import { money } from '@/utils/numberFormat'
 
 const GRID = '28px 1fr 120px 130px 120px 110px 50px 26px'
 const router = useRouter()
@@ -456,7 +458,7 @@ function formatMXN(v) {
   if (v == null || v === '') return '—'
   const n = Number(v) || 0
   if (!n) return '—'
-  return 'MX$ ' + n.toLocaleString('es-MX', { maximumFractionDigits: 0 })
+  return money(n) // tenant currency (window.sysdefaults.currency), not hard-coded MX$
 }
 
 // ── selection + rows ─────────────────────────────────────────────────────────────
@@ -479,20 +481,32 @@ function rowMenu(r) {
     { label: __('Eliminar'), onClick: () => deleteDeal(r.name) },
   ]
 }
-async function deleteDeal(name) {
-  if (!window.confirm(__('¿Eliminar este trato?'))) return
-  await frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name })
-  toast.success(__('Trato eliminado'))
-  deals.reload()
+function deleteDeal(name) {
+  confirmDialog({
+    title: __('Eliminar trato'),
+    message: __('¿Eliminar este trato?'),
+    confirmLabel: __('Eliminar'),
+    onConfirm: async () => {
+      await frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name })
+      toast.success(__('Trato eliminado'))
+      deals.reload()
+    },
+  })
 }
-async function bulkDelete() {
-  if (!window.confirm(__('¿Eliminar {0} tratos?', [selectedRows.value.length]))) return
-  const results = await Promise.allSettled(
-    selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name })),
-  )
-  const failed = results.filter((r) => r.status === 'rejected').length
-  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Tratos eliminados'))
-  selectedRows.value = []
-  deals.reload()
+function bulkDelete() {
+  confirmDialog({
+    title: __('Eliminar tratos'),
+    message: __('¿Eliminar {0} tratos?', [selectedRows.value.length]),
+    confirmLabel: __('Eliminar'),
+    onConfirm: async () => {
+      const results = await Promise.allSettled(
+        selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name })),
+      )
+      const failed = results.filter((r) => r.status === 'rejected').length
+      failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Tratos eliminados'))
+      selectedRows.value = []
+      deals.reload()
+    },
+  })
 }
 </script>

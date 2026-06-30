@@ -106,6 +106,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
+import { confirmDialog } from '@/utils/dialogs'
 import { GRADE_COLORS } from '@/composables/crmFormat'
 
 const operators = ['equals', 'not equals', 'is set', 'is not set', 'contains', 'greater than', 'less than', 'in']
@@ -163,10 +164,16 @@ async function toggleRule(r) {
   await frappeCall('frappe.client.set_value', { doctype: 'Lead Scoring Rule', name: r.name, fieldname: 'enabled', value: r.enabled ? 0 : 1 })
   rulesRes.reload()
 }
-async function deleteRule(r) {
-  if (!window.confirm(__('¿Eliminar esta regla?'))) return
-  await frappeCall('frappe.client.delete', { doctype: 'Lead Scoring Rule', name: r.name })
-  toast.success(__('Eliminada'))
-  rulesRes.reload()
+function deleteRule(r) {
+  confirmDialog({
+    title: __('Eliminar regla'),
+    message: __('¿Eliminar esta regla?'),
+    confirmLabel: __('Eliminar'),
+    onConfirm: async () => {
+      await frappeCall('frappe.client.delete', { doctype: 'Lead Scoring Rule', name: r.name })
+      toast.success(__('Eliminada'))
+      rulesRes.reload()
+    },
+  })
 }
 </script>

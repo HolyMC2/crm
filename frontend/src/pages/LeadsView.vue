@@ -218,6 +218,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
+import { confirmDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
@@ -506,30 +507,49 @@ async function convertLead(name) {
   leads.reload()
   if (deal) router.push({ path: '/inbox', query: { deal } })
 }
-async function deleteLead(name) {
-  if (!window.confirm(__('¿Eliminar este lead?'))) return
-  await frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })
-  toast.success(__('Lead eliminado'))
-  leads.reload()
+function deleteLead(name) {
+  confirmDialog({
+    title: __('Eliminar lead'),
+    message: __('¿Eliminar este lead?'),
+    confirmLabel: __('Eliminar'),
+    onConfirm: async () => {
+      await frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })
+      toast.success(__('Lead eliminado'))
+      leads.reload()
+    },
+  })
 }
-async function bulkDelete() {
-  if (!window.confirm(__('¿Eliminar {0} leads?', [selectedRows.value.length]))) return
-  const results = await Promise.allSettled(
-    selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })),
-  )
-  const failed = results.filter((r) => r.status === 'rejected').length
-  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Leads eliminados'))
-  selectedRows.value = []
-  leads.reload()
+function bulkDelete() {
+  confirmDialog({
+    title: __('Eliminar leads'),
+    message: __('¿Eliminar {0} leads?', [selectedRows.value.length]),
+    confirmLabel: __('Eliminar'),
+    onConfirm: async () => {
+      const results = await Promise.allSettled(
+        selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })),
+      )
+      const failed = results.filter((r) => r.status === 'rejected').length
+      failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Leads eliminados'))
+      selectedRows.value = []
+      leads.reload()
+    },
+  })
 }
-async function bulkConvert() {
-  if (!window.confirm(__('¿Convertir {0} leads a tratos?', [selectedRows.value.length]))) return
-  const results = await Promise.allSettled(
-    selectedRows.value.map((name) => frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })),
-  )
-  const failed = results.filter((r) => r.status === 'rejected').length
-  failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Convertidos a tratos'))
-  selectedRows.value = []
-  leads.reload()
+function bulkConvert() {
+  confirmDialog({
+    title: __('Convertir a tratos'),
+    message: __('¿Convertir {0} leads a tratos?', [selectedRows.value.length]),
+    confirmLabel: __('Convertir'),
+    theme: 'blue',
+    onConfirm: async () => {
+      const results = await Promise.allSettled(
+        selectedRows.value.map((name) => frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })),
+      )
+      const failed = results.filter((r) => r.status === 'rejected').length
+      failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Convertidos a tratos'))
+      selectedRows.value = []
+      leads.reload()
+    },
+  })
 }
 </script>

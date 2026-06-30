@@ -193,6 +193,13 @@ export function formatCurrency(value, format, currency = 'USD', precision = 2) {
   return formatNumber(value, format, precision)
 }
 
+// Tenant-aware money formatter: defaults to the company/tenant currency (window.sysdefaults
+// .currency) instead of a hard-coded "$", so a USD tenant renders US$ automatically. Zero
+// decimals by default (prices show whole pesos); pass precision to override.
+export function money(value, currency = null, precision = 0) {
+  return formatCurrency(value, '', currency || window.sysdefaults?.currency || 'MXN', precision)
+}
+
 function getNumberFormat(format = null) {
   return format || window.sysdefaults.number_format || '#,###.##'
 }

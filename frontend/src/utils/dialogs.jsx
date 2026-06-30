@@ -41,3 +41,24 @@ export function createDialog(dialogOptions) {
   }, 0)
   dialogs.value.push(dialog)
 }
+
+// Styled async confirm — replaces window.confirm (ugly + blocking + not mobile-safe). The
+// caller passes already-translated strings + an onConfirm callback run when the user
+// confirms; Cancel just closes. Destructive actions default to a red confirm button.
+export function confirmDialog({ title, message, confirmLabel, theme = 'red', onConfirm }) {
+  createDialog({
+    title: title || message,
+    message: title ? message : undefined,
+    actions: [
+      {
+        label: confirmLabel || 'OK',
+        variant: 'solid',
+        theme,
+        onClick: async (close) => {
+          await onConfirm?.()
+          close()
+        },
+      },
+    ],
+  })
+}

@@ -107,6 +107,7 @@
 import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, Dialog, Button, FormControl, createResource, call as frappeCall, toast } from 'frappe-ui'
+import { confirmDialog } from '@/utils/dialogs'
 
 const GRID = '1fr 120px 110px 90px 130px 130px 26px'
 const router = useRouter()
@@ -179,11 +180,17 @@ async function setStatus(name, status) {
   toast.success(__('Estado actualizado'))
   campaigns.reload()
 }
-async function deleteCampaign(name) {
-  if (!window.confirm(__('¿Eliminar esta campaña?'))) return
-  await frappeCall('frappe.client.delete', { doctype: 'CRM Campaign', name })
-  toast.success(__('Campaña eliminada'))
-  campaigns.reload()
+function deleteCampaign(name) {
+  confirmDialog({
+    title: __('Eliminar campaña'),
+    message: __('¿Eliminar esta campaña?'),
+    confirmLabel: __('Eliminar'),
+    onConfirm: async () => {
+      await frappeCall('frappe.client.delete', { doctype: 'CRM Campaign', name })
+      toast.success(__('Campaña eliminada'))
+      campaigns.reload()
+    },
+  })
 }
 
 // new campaign

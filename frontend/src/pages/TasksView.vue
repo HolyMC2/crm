@@ -112,6 +112,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
+import { confirmDialog } from '@/utils/dialogs'
 import { usersStore } from '@/stores/users'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { avatarColor, initials } from '@/composables/crmFormat'
@@ -218,11 +219,17 @@ async function toggleDone(t) {
 function ownerName(email) {
   return getUser(email)?.full_name || email
 }
-async function deleteTask(t) {
-  if (!window.confirm(__('¿Eliminar esta tarea?'))) return
-  await frappeCall('frappe.client.delete', { doctype: 'CRM Task', name: t.name })
-  toast.success(__('Eliminada'))
-  applyFilters()
+function deleteTask(t) {
+  confirmDialog({
+    title: __('Eliminar tarea'),
+    message: __('¿Eliminar esta tarea?'),
+    confirmLabel: __('Eliminar'),
+    onConfirm: async () => {
+      await frappeCall('frappe.client.delete', { doctype: 'CRM Task', name: t.name })
+      toast.success(__('Eliminada'))
+      applyFilters()
+    },
+  })
 }
 function openConversation(t) {
   // deep-link the inbox to this deal (Inbox.vue reads ?deal= and selects it)
