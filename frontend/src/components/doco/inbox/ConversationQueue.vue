@@ -312,6 +312,7 @@ import {
   commentCounts,
   channelCounts,
   overdue,
+  messengerEnabled,
   inboxTab,
   commentStatus,
   commentSearch,
@@ -389,7 +390,9 @@ function formatPhone(raw) {
 const inboxTabs = computed(() => [
   { id: 'all', label: __('Todos'), count: channelCounts.data?.all ?? null },
   { id: 'whatsapp', label: 'WhatsApp', dot: CHANNEL_META.whatsapp?.[1] || '#25d366', count: channelCounts.data?.whatsapp ?? null },
-  { id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: channelCounts.data?.messenger ?? null },
+  // Messenger tab only when the channel is enabled (Marketing Settings.enable_messenger);
+  // a WhatsApp-only tenant shouldn't see a dead Messenger tab.
+  ...(messengerEnabled.value ? [{ id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: channelCounts.data?.messenger ?? null }] : []),
   { id: 'comments', label: __('Comentarios'), dot: '#1877f2', count: commentCounts.data?.new ?? null },
   { id: 'vencidos', label: __('Vencidos'), dot: '#dc2626', count: overdue.data?.count || null },
 ])

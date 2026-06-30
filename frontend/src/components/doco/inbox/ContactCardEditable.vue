@@ -80,7 +80,7 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Avatar, Button, Dialog } from 'frappe-ui'
+import { Avatar, Button, Dialog, toast } from 'frappe-ui'
 import { contactCard, saveContactField, hasTaller } from '@/composables/inbox'
 
 const router = useRouter()
@@ -158,8 +158,16 @@ function openContact() {
   if (card.value?.contact) router.push({ name: 'Contact', params: { contactId: card.value.contact } })
 }
 
-function save(doctype, name, fieldname, value) {
+async function save(doctype, name, fieldname, value) {
   if (!doctype || !name) return
-  saveContactField(doctype, name, fieldname, value)
+  // A server ValidationError (bad email, owner-equal, etc.) was previously swallowed —
+  // the field silently reverted with no explanation. Surface it + reload so the revert
+  // is explained, not mysterious.
+  try {
+    await saveContactField(doctype, name, fieldname, value)
+  } catch (e) {
+    toast.error(e?.messages?.[0] || e?.message || __('No se pudo guardar el cambio.'))
+    contactCard.reload()
+  }
 }
 </script>

@@ -132,6 +132,15 @@
         <label class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Dispositivo / Empresa') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span></span>
           <input v-model="form.device" :class="inputCls" /></label>
 
+        <!-- Forecasting (only when CRM forecasting is on): a Deal then requires an
+             expected value + closure date, else "Crear Trato" fails server-side. -->
+        <div v-if="forecastingEnabled" class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-2 bg-surface-blue-1 p-2">
+          <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Valor estimado') }} *</span>
+            <input v-model="form.expected_deal_value" type="number" min="0" :class="inputCls" /></label>
+          <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Cierre estimado') }}</span>
+            <input v-model="form.expected_closure_date" type="date" :class="inputCls" /></label>
+        </div>
+
         <button v-if="!isMessenger" class="mt-3 flex items-center gap-1 text-[11px] font-semibold text-ink-gray-6" @click="showFiscal = !showFiscal">
           {{ showFiscal ? '▾' : '▸' }} {{ __('Datos fiscales') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span>
         </button>
@@ -222,7 +231,7 @@ import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, activeUnassignedChannel, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack } from '@/composables/inbox'
+import { activeUnassigned, activeUnassignedChannel, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, hhmm, mobileBack, forecastingEnabled } from '@/composables/inbox'
 
 const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
 
@@ -341,6 +350,7 @@ const messages = computed(() => unassignedThread.data?.messages || [])
 const form = reactive({
   first_name: '', last_name: '', email: '', device: '',
   rfc: '', legal_name: '', address: '', city: '', birth_date: '',
+  expected_deal_value: '', expected_closure_date: '',
 })
 
 // FB/WhatsApp avatar (Messenger gives profile_pic; WhatsApp none) + the resolved name.
@@ -353,7 +363,7 @@ const prefillName = computed(() => {
 
 // Reset the capture form + picker when switching orphans.
 watch(activeUnassigned, () => {
-  Object.assign(form, { first_name: '', last_name: '', email: '', device: '', rfc: '', legal_name: '', address: '', city: '', birth_date: '' })
+  Object.assign(form, { first_name: '', last_name: '', email: '', device: '', rfc: '', legal_name: '', address: '', city: '', birth_date: '', expected_deal_value: '', expected_closure_date: '' })
   linkQuery.value = ''
   linkResults.value = []
 })
