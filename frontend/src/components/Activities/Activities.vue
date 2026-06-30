@@ -131,6 +131,15 @@
               : __('Ver toda la conversación del cliente · {0} tratos', [contactDealCount]) }}
           </button>
         </div>
+        <!-- catalog intent: the customer asked about a price/item → one-tap catalog search -->
+        <div v-if="catalogSuggest.data?.suggest" class="mx-3 mb-1.5 sm:mx-10">
+          <button
+            class="inline-flex items-center gap-1.5 rounded-full bg-surface-amber-1 px-2.5 py-1 text-[11px] font-semibold text-ink-amber-3 hover:bg-surface-amber-2"
+            @click="onWaCatalog(catalogSuggest.data.query)"
+          >
+            💡 {{ __("Buscar '{0}' en catálogo · {1}", [catalogSuggest.data.query, catalogSuggest.data.count]) }}
+          </button>
+        </div>
         <WhatsAppArea
           v-model="whatsappMessages"
           v-model:reply="replyMessage"
@@ -759,6 +768,9 @@ const threadComments = computed(() => {
 // each bubble with its source deal). Deal-scoped by default.
 const contactRefs = createResource({ url: 'doco_marketing.api.inbox.get_contact_refs', auto: false })
 const unifiedMessages = createResource({ url: 'doco_marketing.api.inbox.get_contact_thread', auto: false })
+// Catalog intent: if the customer's last inbound looks like a price/item question, offer
+// a one-tap "buscar en catálogo" chip pre-filled with the extracted terms (never auto-sends).
+const catalogSuggest = createResource({ url: 'doco_marketing.api.catalog.suggest', auto: false })
 const unifiedThread = ref(false)
 const contactDealCount = computed(() => contactRefs.data?.count || 1)
 const baseWaMessages = computed(() =>
@@ -774,8 +786,10 @@ watch(
   () => props.docname,
   () => {
     unifiedThread.value = false
-    if (props.docname && ['CRM Deal', 'CRM Lead'].includes(props.doctype))
+    if (props.docname && ['CRM Deal', 'CRM Lead'].includes(props.doctype)) {
       contactRefs.submit({ reference_doctype: props.doctype, reference_name: props.docname })
+      catalogSuggest.submit({ reference_doctype: props.doctype, reference_name: props.docname })
+    }
   },
   { immediate: true },
 )
@@ -1120,6 +1134,7 @@ function onWhatsappRealtime(data) {
     if (!_waAtBottom()) _waSuppressScroll = true
     whatsappMessages.reload()
     if (unifiedThread.value) unifiedMessages.reload()
+    if (props.docname) catalogSuggest.reload()
   }
 }
 
