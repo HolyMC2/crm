@@ -248,7 +248,7 @@ const props = defineProps({
   replyOnly: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['pickTemplate', 'activity'])
+const emit = defineEmits(['pickTemplate', 'activity', 'sending', 'sent', 'failed'])
 
 const doc = defineModel({ type: Object, default: () => ({}) })
 const whatsapp = defineModel('whatsapp', { type: Object, default: () => ({}) })
@@ -416,14 +416,18 @@ async function sendWhatsAppMessage() {
     lastCanned.value && content.value.trim() === lastCanned.value.text.trim()
       ? lastCanned.value.label || ''
       : ''
+  // Capture BEFORE clearing — the optimistic bubble + a failure-restore both need it.
+  const sentContent = content.value
+  const sentAttach = whatsapp.value.attach || ''
+  const sentContentType = whatsapp.value.content_type
   let args = {
     reference_doctype: props.doctype,
     reference_name: doc.value.name,
-    message: content.value,
+    message: sentContent,
     to: props.toOverride || doc.value.mobile_no,
-    attach: whatsapp.value.attach || '',
+    attach: sentAttach,
     reply_to: reply.value?.name || '',
-    content_type: whatsapp.value.content_type,
+    content_type: sentContentType,
     canned,
   }
   content.value = ''
@@ -432,12 +436,29 @@ async function sendWhatsAppMessage() {
   whatsapp.value.attach = ''
   whatsapp.value.content_type = 'text'
   reply.value = {}
+  // Optimistic-reply lifecycle (#21): the PARENT (Activities) owns the pending bubble;
+  // we only emit the lifecycle keyed by a client token. No in-thread state lives here.
+  // Optimistic bubble only for TEXT sends. An attach-only send has empty content (the
+  // backend coalesces it to the media), so a content-keyed bubble couldn't reconcile and
+  // would flash a duplicate — attach-only keeps the plain reload path.
+  const optimistic = !!sentContent.trim()
+  const clientToken = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  if (optimistic)
+    emit('sending', { clientToken, content: sentContent, attach: sentAttach, content_type: sentContentType, to: args.to })
   createResource({
     url: 'crm.api.whatsapp.create_whatsapp_message',
     params: args,
     auto: true,
-    onSuccess: () => whatsapp.value.reload(),
+    // data === the created WhatsApp Message name (serverId) → deterministic reconcile.
+    onSuccess: (data) => {
+      if (optimistic) emit('sent', { clientToken, serverId: data })
+      whatsapp.value.reload()
+    },
     onError: (error) => {
+      if (optimistic) emit('failed', { clientToken })
+      // Never lose the typed text: restore it, prepended ahead of any new draft started
+      // in the brief send window, so a failed send is always recoverable.
+      if (sentContent) content.value = content.value ? `${sentContent}\n${content.value}` : sentContent
       toast.error(error.messages?.[0] || __('Failed to send WhatsApp message'))
     },
   })

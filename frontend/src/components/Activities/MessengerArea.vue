@@ -27,11 +27,12 @@
       </div>
       <div
         class="relative max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-snug"
-        :class="
+        :class="[
           m.direction === 'out'
             ? 'bg-[#0084ff] text-white'
-            : 'bg-surface-gray-2 text-ink-gray-8 dark:bg-surface-gray-3 dark:text-ink-gray-8'
-        "
+            : 'bg-surface-gray-2 text-ink-gray-8 dark:bg-surface-gray-3 dark:text-ink-gray-8',
+          m._optimistic ? 'opacity-60' : '',
+        ]"
       >
         <!-- image attachment inline; other types as a typed link -->
         <a v-if="m.attach && m.content_type === 'image'" :href="m.attach" target="_blank" rel="noopener" class="block">
@@ -93,13 +94,23 @@ function fmtTime(ts) {
   }
 }
 
-// stick to the newest message
+// Stick to the newest message ONLY when the user is already near the bottom (#21).
+// Measured BEFORE the DOM updates (watch flushes pre-render), so an incoming message
+// while you've scrolled up to read history no longer yanks you down. Your own send
+// happens at the bottom → still auto-scrolls.
 watch(
   () => props.messages.length,
-  () =>
+  () => {
+    const el = scrollEl.value
+    const near = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 120
+    // Our own just-sent (optimistic) bubble always scrolls into view, even if the user
+    // had scrolled up — you should see the message you just sent.
+    const last = props.messages[props.messages.length - 1]
+    const ownSend = !!last?._optimistic
     nextTick(() => {
-      if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
-    }),
+      if ((near || ownSend) && scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
+    })
+  },
   { immediate: true },
 )
 </script>

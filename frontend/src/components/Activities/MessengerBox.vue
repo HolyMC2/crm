@@ -82,7 +82,7 @@ const props = defineProps({
   // null when we can't tell (no inbound yet); drives the composer note.
   window24h: { type: Object, default: null },
 })
-const emit = defineEmits(['sent'])
+const emit = defineEmits(['sent', 'sending', 'failed'])
 
 const text = ref('')
 const busy = ref(false)
@@ -129,16 +129,20 @@ async function send() {
   const content = text.value.trim()
   if (!content || busy.value) return
   busy.value = true
+  // Optimistic-reply (#21): parent owns the pending bubble, keyed by this token.
+  const clientToken = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  emit('sending', { clientToken, content })
   try {
-    await call('doco_marketing.api.inbox.send_message', {
+    const serverId = await call('doco_marketing.api.inbox.send_message', {
       reference_doctype: props.doctype,
       reference_name: props.docname,
       channel: 'messenger',
       content,
     })
     text.value = ''
-    emit('sent')
+    emit('sent', { clientToken, serverId })
   } catch (e) {
+    emit('failed', { clientToken })
     toast.error(e?.messages?.[0] || __('No se pudo enviar el mensaje'))
   } finally {
     busy.value = false

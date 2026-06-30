@@ -56,7 +56,7 @@
 
       <!-- Messenger (PSID) conversation -->
       <div v-if="title == 'WhatsApp' && activeChannelTab === 'messenger'">
-        <MessengerArea :messages="messengerMessages" />
+        <MessengerArea :messages="messengerThreadItems" />
       </div>
       <div v-else-if="title == 'WhatsApp'">
         <!-- Multi-Contact tab strip: one tab per Contact attached to the Deal/Lead.
@@ -524,7 +524,9 @@
       :doctype="doctype"
       :docname="docname"
       :window24h="messengerWindow"
-      @sent="messengerThread.reload()"
+      @sending="onMsgrSending"
+      @sent="onMsgrSent"
+      @failed="onMsgrFailed"
     />
     <WhatsAppBox
       v-if="title == 'WhatsApp' && activeChannelTab === 'whatsapp'"
@@ -537,6 +539,9 @@
       @scroll="scroll"
       @pick-template="(t) => openTemplateReview(t)"
       @activity="() => all_activities.reload()"
+      @sending="onWaSending"
+      @sent="onWaSent"
+      @failed="onWaFailed"
     />
   </div>
   <WhatsappTemplateSelectorModal
@@ -730,15 +735,18 @@ const threadComments = computed(() => {
     }))
 })
 
-// WhatsApp messages + inline comments, interleaved by time.
+// WhatsApp messages + inline comments interleaved by time, then optimistic pending
+// bubbles (#21) pinned last — a just-sent message is always newest, so append after the
+// sort instead of relying on a client timestamp that may not match the server tz.
 const threadItems = computed(() => {
   const msgs = (filteredWhatsappMessages.value || []).map((m) => ({
     ...m,
     _kind: 'whatsapp',
   }))
-  return [...msgs, ...threadComments.value].sort(
+  const base = [...msgs, ...threadComments.value].sort(
     (a, b) => new Date(a.creation) - new Date(b.creation),
   )
+  return [...base, ...optimisticWaItems.value]
 })
 
 // Notes pinned to the top of the conversation. Pinned by default; dismissing
@@ -769,6 +777,18 @@ function unpinNote(note) {
   }
 }
 
+// No-reset scroll (#21): an INCOMING reload while the user has scrolled up to read
+// history must not yank them to the bottom. onWhatsappRealtime sets this when the last
+// message wasn't near the viewport before the reload; onSuccess then skips that scroll.
+// Own sends + initial load are unaffected (they leave the flag false → scroll runs).
+let _waSuppressScroll = false
+function _waAtBottom() {
+  const e = document.getElementsByClassName('activity')
+  const el = e[e.length - 1]
+  if (!el) return true
+  return el.getBoundingClientRect().top < window.innerHeight + 160
+}
+
 const whatsappMessages = createResource({
   url: 'crm.api.whatsapp.get_whatsapp_messages',
   cache: ['whatsapp_messages', props.docname],
@@ -778,7 +798,19 @@ const whatsappMessages = createResource({
   },
   auto: false,
   transform: (data) => sortByCreation(data),
-  onSuccess: () => nextTick(() => scroll()),
+  onSuccess: () =>
+    nextTick(() => {
+      if (_waSuppressScroll) {
+        _waSuppressScroll = false
+        return
+      }
+      scroll()
+    }),
+  // A failed reload must not leave the suppress latch stuck true (it would swallow the
+  // next own-send scroll).
+  onError: () => {
+    _waSuppressScroll = false
+  },
 })
 
 watch(
@@ -819,6 +851,143 @@ const messengerWindow = computed(() => {
   const left = 24 - (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
   return left > 0 ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) } : { open: false }
 })
+
+// ── Optimistic reply (#21) ───────────────────────────────────────────────────
+// Pending out-bubbles live HERE in the parent (never in the composers — those only
+// emit a lifecycle keyed by a client token). Reconciled against the real thread by
+// serverId (the created message name); a content+timestamp consume-once FALLBACK
+// covers the echo-before-resolve race (the after_commit realtime reload can render the
+// committed row before the create promise resolves, when serverId isn't known yet).
+// Render-time HIDE (no key swap → no remount/flicker). A never-matched bubble ages out
+// so a hung send can't leave a ghost. Failed sends drop the bubble (composer kept text).
+const optimisticWa = ref([])
+const optimisticMsgr = ref([])
+const OPT_MAX_AGE = 120000
+
+function _optAdd(list, p) {
+  list.value = [...list.value, { ...p, ts: Date.now(), serverId: null }]
+  // Timer-driven age-out: a hung send (never matched, never re-rendered in a quiet
+  // thread) is dropped from the source ref so it can't ghost or grow the array unbounded.
+  const token = p.clientToken
+  setTimeout(() => _optDrop(list, token), OPT_MAX_AGE)
+}
+function _optMarkSent(list, clientToken, serverId) {
+  list.value = list.value.map((o) => (o.clientToken === clientToken ? { ...o, serverId } : o))
+}
+function _optDrop(list, clientToken) {
+  list.value = list.value.filter((o) => o.clientToken !== clientToken)
+}
+function _tsMs(t) {
+  return t ? new Date(String(t).replace(' ', 'T')).getTime() : 0
+}
+// Survivors = optimistic bubbles with no matching real row yet. Match by serverId
+// (deterministic) OR — for the echo-before-resolve race where serverId isn't known yet
+// — by an out row with the SAME content whose id is NEW (absent from the snapshot taken
+// at send time). The id-snapshot is timezone-proof (no clock compare across browser/site
+// tz) and precise: it can only match a row that appeared AFTER the send. consume-once so
+// two identical messages can't both collapse onto the same real row.
+function _reconcile(optimistic, real, { idOf, contentOf, attachOf, isOut }) {
+  const now = Date.now()
+  const consumed = new Set()
+  const survivors = []
+  for (const o of optimistic) {
+    if (now - o.ts > OPT_MAX_AGE) continue
+    let i = -1
+    if (o.serverId) i = real.findIndex((r, idx) => !consumed.has(idx) && idOf(r) === o.serverId)
+    if (i < 0) {
+      i = real.findIndex(
+        (r, idx) =>
+          !consumed.has(idx) &&
+          isOut(r) &&
+          !o.knownIds.has(idOf(r)) &&
+          (contentOf(r) || '') === (o.content || '') &&
+          (attachOf(r) || '') === (o.attach || ''),
+      )
+    }
+    if (i >= 0) consumed.add(i)
+    else survivors.push(o)
+  }
+  return survivors
+}
+
+// On a multi-contact deal each contact is its own chat tab (filteredWhatsappMessages);
+// a pending bubble belongs ONLY to the contact it was sent to, so scope it the same way
+// — else switching tabs mid-send shows contact A's bubble in contact B's thread.
+const _scopedOptimisticWa = computed(() => {
+  const multi = (whatsappContacts.data || []).length > 1
+  const target = String(activeWhatsappContact.value?.phone || '').replace(/\D/g, '')
+  if (!multi || !target) return optimisticWa.value
+  return optimisticWa.value.filter((o) => {
+    const t = String(o.to || '').replace(/\D/g, '')
+    return !t || t.endsWith(target) || target.endsWith(t)
+  })
+})
+const optimisticWaItems = computed(() =>
+  _reconcile(_scopedOptimisticWa.value, filteredWhatsappMessages.value || [], {
+    idOf: (r) => r.name,
+    contentOf: (r) => r.message,
+    attachOf: (r) => r.attach,
+    isOut: (r) => (r.type || '').toLowerCase() === 'outgoing',
+  }).map((o) => ({
+    _kind: 'whatsapp',
+    _optimistic: true,
+    name: o.clientToken,
+    type: 'Outgoing',
+    message: o.content,
+    attach: o.attach || '',
+    content_type: o.content_type || 'text',
+    creation: new Date(o.ts).toISOString().slice(0, 19).replace('T', ' '),
+    status: '',
+  })),
+)
+const optimisticMsgrItems = computed(() =>
+  _reconcile(optimisticMsgr.value, messengerMessages.value, {
+    idOf: (r) => r.id,
+    contentOf: (r) => r.content,
+    attachOf: (r) => r.attach,
+    isOut: (r) => r.direction === 'out',
+  }).map((o) => ({
+    id: o.clientToken,
+    _optimistic: true,
+    channel: 'messenger',
+    direction: 'out',
+    content: o.content,
+    content_type: 'text',
+    attach: null,
+    timestamp: new Date(o.ts).toISOString(),
+  })),
+)
+// Messenger render list = real thread (time-sorted) + pending bubbles pinned last
+// (a just-sent message is always the newest — append after sort, no tz-fragile compare).
+const messengerThreadItems = computed(() => {
+  const base = [...messengerMessages.value].sort((a, b) => _tsMs(a.timestamp) - _tsMs(b.timestamp))
+  return [...base, ...optimisticMsgrItems.value]
+})
+
+// composer lifecycle → optimistic list. Snapshot the real ids present NOW so the
+// content fallback can only ever match a row that arrives afterwards.
+function onWaSending(p) {
+  const knownIds = new Set((filteredWhatsappMessages.value || []).map((r) => r.name))
+  _optAdd(optimisticWa, { ...p, knownIds })
+  nextTick(() => scroll()) // own send → scroll to the new bubble
+}
+function onWaSent(p) {
+  _optMarkSent(optimisticWa, p.clientToken, p.serverId)
+}
+function onWaFailed(p) {
+  _optDrop(optimisticWa, p.clientToken)
+}
+function onMsgrSending(p) {
+  const knownIds = new Set(messengerMessages.value.map((r) => r.id))
+  _optAdd(optimisticMsgr, { ...p, knownIds })
+}
+function onMsgrSent(p) {
+  if (p?.clientToken) _optMarkSent(optimisticMsgr, p.clientToken, p.serverId)
+  messengerThread.reload()
+}
+function onMsgrFailed(p) {
+  _optDrop(optimisticMsgr, p.clientToken)
+}
 
 // ── Channel tabs ────────────────────────────────────────────────────────────
 // A deal/lead can carry BOTH WhatsApp and Messenger threads (and more channels
@@ -887,6 +1056,8 @@ function onWhatsappRealtime(data) {
     data.reference_doctype === props.doctype &&
     data.reference_name === props.docname
   ) {
+    // Don't yank a reader who's scrolled up; own sends happen at the bottom → scroll.
+    if (!_waAtBottom()) _waSuppressScroll = true
     whatsappMessages.reload()
   }
 }

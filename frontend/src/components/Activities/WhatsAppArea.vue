@@ -131,6 +131,7 @@
       <div
         :id="whatsapp.name"
         class="group/message relative max-w-[85%] min-w-0 sm:max-w-[34rem] [overflow-wrap:anywhere] [&_a]:[overflow-wrap:anywhere] rounded-md bg-surface-gray-1 text-ink-gray-9 p-1.5 pl-2 text-base shadow-sm"
+        :class="{ 'opacity-60': whatsapp._optimistic }"
       >
         <Badge
           v-if="whatsapp.status == 'failed'"
