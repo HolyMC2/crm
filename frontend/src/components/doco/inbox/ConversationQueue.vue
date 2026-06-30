@@ -233,12 +233,14 @@
               {{ timeAgo(r.last_message_ts) }}
             </div>
             <!-- red unread dot: there's an inbound message newer than your last
-              open. Clears when you open the conversation (mark-read). -->
+              open. It's a READ marker — clears when you open the conversation,
+              independent of the amber "Responder" chip (which clears on reply). -->
             <span
               v-if="r.unread_dot"
               class="h-2.5 w-2.5 rounded-full"
               style="background: #ef4444"
-              :title="__('No leído')"
+              :aria-label="__('Mensajes sin abrir')"
+              :title="__('Mensajes nuevos sin abrir · desaparece al abrir la conversación (no es lo mismo que «Responder»)')"
             />
           </div>
         </div>

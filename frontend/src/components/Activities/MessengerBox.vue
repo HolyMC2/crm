@@ -50,7 +50,19 @@
         {{ busy ? '…' : __('Enviar') }}
       </button>
     </div>
-    <p class="mt-1 text-[10px] text-ink-gray-4 dark:text-ink-gray-5">
+    <p
+      v-if="window24h && window24h.open"
+      class="mt-1 text-[10px] font-medium text-ink-green-3 dark:text-ink-green-2"
+    >
+      {{ __('Ventana de 24 h abierta · respuesta gratis ({0} h restantes)', [window24h.hoursLeft]) }}
+    </p>
+    <p
+      v-else-if="window24h && !window24h.open"
+      class="mt-1 text-[10px] font-medium text-ink-amber-3 dark:text-ink-amber-2"
+    >
+      {{ __('Fuera de la ventana de 24 h — Meta solo entrega con etiqueta de agente humano (sin promociones).') }}
+    </p>
+    <p v-else class="mt-1 text-[10px] text-ink-gray-4 dark:text-ink-gray-5">
       {{ __('Fuera de la ventana de 24 h, Meta solo permite mensajes con etiqueta de agente humano.') }}
     </p>
   </div>
@@ -66,6 +78,9 @@ import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 const props = defineProps({
   doctype: { type: String, required: true },
   docname: { type: String, required: true },
+  // { open: bool, hoursLeft?: int } | null — live Messenger 24h policy window.
+  // null when we can't tell (no inbound yet); drives the composer note.
+  window24h: { type: Object, default: null },
 })
 const emit = defineEmits(['sent'])
 

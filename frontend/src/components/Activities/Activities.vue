@@ -523,6 +523,7 @@
       v-if="title == 'WhatsApp' && activeChannelTab === 'messenger'"
       :doctype="doctype"
       :docname="docname"
+      :window24h="messengerWindow"
       @sent="messengerThread.reload()"
     />
     <WhatsAppBox
@@ -805,6 +806,19 @@ const messengerMessages = computed(() => messengerThread.data?.messages || [])
 const convIsMessenger = computed(
   () => messengerMessages.value.length > 0 && (whatsappMessages.data || []).length === 0,
 )
+// Live Messenger 24h policy window: free RESPONSE until 24h after the last INBOUND
+// message, else outbound needs a HUMAN_AGENT tag. Mirrors DealHeader's waWindow so
+// the composer note reflects reality instead of always warning. null = unknown.
+const messengerWindow = computed(() => {
+  const mm = messengerMessages.value
+  let ts = null
+  for (let i = mm.length - 1; i >= 0; i--) {
+    if (mm[i].direction !== 'out') { ts = mm[i].timestamp || mm[i].creation; break }
+  }
+  if (!ts) return null
+  const left = 24 - (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
+  return left > 0 ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) } : { open: false }
+})
 
 // ── Channel tabs ────────────────────────────────────────────────────────────
 // A deal/lead can carry BOTH WhatsApp and Messenger threads (and more channels

@@ -35,8 +35,8 @@
     <div class="flex min-h-0 flex-1" :class="isMobile ? 'flex-col' : ''">
       <!-- thread + reply bar -->
       <div
-        class="flex min-h-0 flex-1 flex-col border-outline-gray-1"
-        :class="isMobile ? 'border-b' : 'border-r'"
+        class="flex min-h-0 flex-col border-outline-gray-1"
+        :class="isMobile ? 'max-h-[38vh] flex-none border-b' : 'flex-1 border-r'"
       >
         <!-- Messenger orphans render through MessengerArea (reactions + referral chip +
              inline image attachments, identical to the assigned conversation). -->
@@ -119,8 +119,8 @@
 
       <!-- capture form -->
       <div
-        class="scb flex flex-none flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5"
-        :class="isMobile ? 'w-full' : 'w-[300px]'"
+        class="scb flex flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5"
+        :class="isMobile ? 'w-full flex-1' : 'w-[300px] flex-none'"
       >
         <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Datos') }}</div>
         <div class="grid grid-cols-2 gap-2">
@@ -202,7 +202,11 @@
           </div>
 
           <input v-model="linkQuery" :placeholder="__('Buscar contacto, Lead o Trato…')" :class="inputCls" @input="onSearch" />
-          <div v-if="linkResults.length" class="mt-1.5 flex flex-col gap-1">
+          <div v-if="searching" class="mt-1.5 flex items-center gap-1.5 text-[11px] text-ink-gray-4">
+            <FeatherIcon name="loader" class="h-3 w-3 animate-spin" /> {{ __('Buscando…') }}
+          </div>
+          <div v-else-if="linkResults.length" class="mt-1.5 flex flex-col gap-1">
+            <div class="text-[10px] font-semibold text-ink-gray-5">🔎 {{ __('Resultados de búsqueda') }}</div>
             <button
               v-for="t in linkResults"
               :key="t.doctype + ':' + t.name"
