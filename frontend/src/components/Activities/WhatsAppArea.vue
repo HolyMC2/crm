@@ -177,7 +177,11 @@
             </div>
           </div>
         </div>
-        <div class="flex gap-2 justify-between [&>div]:min-w-0">
+        <!-- content + timestamp. On mobile the timestamp cluster (date + full sender
+             name + receipts) is wide, so force the content to full width and let the
+             timestamp wrap BELOW it (basis-full) — otherwise the content is squeezed to
+             ~1 char and text renders vertically. Desktop keeps them inline (sm:basis-auto). -->
+        <div class="flex flex-wrap items-end gap-x-2 gap-y-1 [&>div]:min-w-0 [&>div:not(:last-child)]:basis-full sm:[&>div:not(:last-child)]:basis-auto">
           <div
             v-if="whatsapp.status != 'failed'"
             class="absolute -right-0.5 -top-0.5 flex cursor-pointer gap-1 rounded-full bg-surface-white pb-2 pl-2 pr-1.5 pt-1.5 opacity-0 group-hover/message:opacity-100"
@@ -268,7 +272,7 @@
               v-html="formatWhatsAppMessage(whatsapp.message)"
             />
           </div>
-          <div class="-mb-1 flex shrink-0 items-end gap-1 text-ink-gray-5">
+          <div class="-mb-1 ml-auto flex shrink-0 items-end gap-1 text-ink-gray-5">
             <Tooltip :text="formatTimestampFull(whatsapp.creation)">
               <div class="text-2xs">
                 {{ formatDateTime(whatsapp.creation) }}

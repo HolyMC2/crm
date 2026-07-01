@@ -49,11 +49,18 @@
     </span>
   </div>
 
-  <!-- quick replies + templates (reply mode only) -->
-  <div
-    v-if="mode === 'reply'"
-    class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10"
-  >
+  <!-- quick replies + templates (reply mode only). Collapsed on mobile to reclaim
+       vertical space — one toggle expands/hides the whole chip set. -->
+  <div v-if="mode === 'reply'" class="px-3 pt-2 sm:px-10">
+    <button
+      v-if="isMobile && !quickBarOpen"
+      type="button"
+      class="rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs font-medium text-ink-gray-7"
+      @click="quickBarOpen = true"
+    >
+      ⚡ {{ __('Plantillas y respuestas') }} ▾
+    </button>
+    <div v-show="!isMobile || quickBarOpen" class="flex flex-wrap items-center gap-1.5">
     <button
       type="button"
       class="rounded-md bg-surface-green-2 px-2 py-1 text-xs font-semibold text-ink-green-3 hover:bg-surface-green-3"
@@ -90,6 +97,16 @@
     >
       <FeatherIcon name="edit-2" class="size-3.5" />
     </button>
+    <button
+      v-if="isMobile"
+      type="button"
+      class="rounded-full px-2 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
+      :title="__('Ocultar')"
+      @click="quickBarOpen = false"
+    >
+      ▴
+    </button>
+    </div>
   </div>
 
   <!-- input row -->
@@ -241,6 +258,7 @@ import {
   toast,
 } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
+import { isMobile } from '@/composables/breakpoint'
 import { ref, nextTick, watch, computed } from 'vue'
 
 const props = defineProps({
@@ -279,6 +297,8 @@ const { capture } = useTelemetry()
 const rows = ref(1)
 const textareaRef = ref(null)
 const emoji = ref('')
+// composer quick-reply/template chips — collapsed on mobile (isMobile), always shown on desktop
+const quickBarOpen = ref(false)
 
 const content = ref('')
 const fileType = ref('')
