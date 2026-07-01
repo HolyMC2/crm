@@ -67,7 +67,7 @@
             </div>
             <div class="flex min-h-0 flex-col gap-0.5 p-2">
               <div class="line-clamp-2 text-[11.5px] font-medium leading-tight text-ink-gray-8">{{ r.item_name }}</div>
-              <div class="text-[12.5px] font-bold text-ink-gray-9">{{ r.price != null ? money(r.price, r.currency) : __('Consultar') }}</div>
+              <div class="text-[12.5px] font-bold text-ink-gray-9">{{ r.price != null ? money(r.price, r.currency, 2) : __('Consultar') }}</div>
             </div>
           </button>
         </div>
@@ -92,6 +92,7 @@
 <script setup>
 import { ref, computed, reactive, nextTick, onMounted } from 'vue'
 import { toast } from 'frappe-ui'
+import { money } from '@/utils/numberFormat'
 import LucideSearch from '~icons/lucide/search'
 import LucideImageOff from '~icons/lucide/image-off'
 import {
@@ -115,11 +116,6 @@ onMounted(() => nextTick(() => searchRef.value?.focus()))
 function toggle(code) {
   if (selected.has(code)) selected.delete(code)
   else selected.add(code)
-}
-
-function money(v, currency) {
-  const n = Number(v || 0)
-  return `${currency === 'MXN' || !currency ? '$' : currency + ' '}${n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 }
 
 async function send() {

@@ -44,6 +44,13 @@
             {{ __('Vistas') }} ⌄
           </button>
         </Dropdown>
+        <ColumnPicker
+          v-if="view === 'list'"
+          :columns="LEAD_COLUMNS"
+          :selected="visibleCols"
+          @update:selected="setCols"
+          @reset="resetCols"
+        />
         <button
           class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
           :title="__('Exportar a Excel')"
@@ -95,11 +102,11 @@
     >
       <input type="checkbox" style="accent-color: #16a34a" :checked="allSelected" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('lead_name')">{{ __('Contacto') }}{{ sortArrow('lead_name') }}</button>
-      <button class="text-left uppercase" :style="'color:#16a34a'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
-      <div>{{ __('Stage') }}</div>
-      <div>{{ __('Source') }}</div>
-      <button class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
-      <div>{{ __('Owner') }}</div>
+      <button v-if="col('score')" class="text-left uppercase" :style="'color:#16a34a'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
+      <div v-if="col('stage')">{{ __('Stage') }}</div>
+      <div v-if="col('source')">{{ __('Source') }}</div>
+      <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
+      <div v-if="col('owner')">{{ __('Owner') }}</div>
       <div />
     </div>
 
@@ -128,7 +135,7 @@
             <div class="truncate text-[11px] text-ink-gray-4">{{ r.organization || r.mobile_no || '—' }}</div>
           </div>
         </div>
-        <div>
+        <div v-if="col('score')">
           <div class="mb-[3px] flex items-center justify-between" style="width: 62px">
             <span class="text-[12.5px] font-bold" :style="`color:${gradeColor(r.score_grade)}`">{{ r.lead_score ?? '—' }}</span>
             <span
@@ -143,7 +150,7 @@
             <div class="h-full rounded-sm" :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`" />
           </div>
         </div>
-        <div>
+        <div v-if="col('stage')">
           <span
             v-if="r.status"
             class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
@@ -152,12 +159,12 @@
             {{ r.status }}
           </span>
         </div>
-        <div class="flex items-center gap-1.5 text-[12px] text-ink-gray-6">
+        <div v-if="col('source')" class="flex items-center gap-1.5 text-[12px] text-ink-gray-6">
           <span v-if="r.source" class="h-[7px] w-[7px] flex-none rounded-full" :style="`background:${sourceDot(r.source)}`" />
           <span class="truncate">{{ r.source || '—' }}</span>
         </div>
-        <div class="text-[12px] text-ink-gray-5">{{ timeAgo(r.modified) }}</div>
-        <div>
+        <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">{{ timeAgo(r.modified) }}</div>
+        <div v-if="col('owner')">
           <span
             v-if="r.lead_owner"
             class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
@@ -218,18 +225,58 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
-import { confirmDialog } from '@/utils/dialogs'
+import { confirmDialog, inputDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import LeadModal from '@/components/Modals/LeadModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
+import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import { GRADE_COLORS, avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
 
-const GRID = '28px 1fr 96px 130px 120px 110px 50px 26px'
 const router = useRouter()
+
+// ── column config (per-browser show/hide) ─────────────────────────────────────
+// contact is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
+const LEAD_COLUMNS = [
+  { key: 'contact', label: __('Contacto'), fixed: true },
+  { key: 'score', label: __('Score') },
+  { key: 'stage', label: __('Stage') },
+  { key: 'source', label: __('Source') },
+  { key: 'modified', label: __('Última act.') },
+  { key: 'owner', label: __('Owner') },
+]
+const COL_WIDTH = { score: '96px', stage: '130px', source: '120px', modified: '110px', owner: '50px' }
+const DEFAULT_COLS = ['score', 'stage', 'source', 'modified', 'owner']
+const COLS_KEY = 'doco_leads_columns'
+const visibleCols = ref(loadCols())
+function loadCols() {
+  try {
+    const s = JSON.parse(window.localStorage.getItem(COLS_KEY) || 'null')
+    const f = Array.isArray(s) ? s.filter((k) => k in COL_WIDTH) : []
+    return f.length ? f : [...DEFAULT_COLS]
+  } catch {
+    return [...DEFAULT_COLS]
+  }
+}
+function setCols(next) {
+  visibleCols.value = next
+  window.localStorage.setItem(COLS_KEY, JSON.stringify(next))
+}
+function resetCols() {
+  setCols([...DEFAULT_COLS])
+}
+function col(key) {
+  return key === 'contact' || visibleCols.value.includes(key)
+}
+const GRID = computed(() => {
+  const parts = ['28px', '1fr'] // checkbox + contact (always)
+  for (const key of ['score', 'stage', 'source', 'modified', 'owner']) if (col(key)) parts.push(COL_WIDTH[key])
+  parts.push('26px') // row menu
+  return parts.join(' ')
+})
 const { getLeadStatus } = statusesStore()
 const { getUser } = usersStore()
 
@@ -362,19 +409,27 @@ function persistViews() {
   window.localStorage.setItem(VIEWS_KEY, JSON.stringify(savedViews.value))
 }
 function saveCurrentView() {
-  const label = window.prompt(__('Nombre de la vista'))
-  if (!label) return
-  savedViews.value = savedViews.value.filter((v) => v.label !== label)
-  savedViews.value.push({
-    label,
-    status: [...statusF.value],
-    grade: [...gradeF.value],
-    source: [...sourceF.value],
-    search: search.value,
-    sort: { ...sort.value },
+  inputDialog({
+    title: __('Guardar vista'),
+    message: __('Nombre de la vista'),
+    placeholder: __('Ej. Leads calientes'),
+    confirmLabel: __('Guardar'),
+    theme: 'green',
+    required: true,
+    onConfirm: (label) => {
+      savedViews.value = savedViews.value.filter((v) => v.label !== label)
+      savedViews.value.push({
+        label,
+        status: [...statusF.value],
+        grade: [...gradeF.value],
+        source: [...sourceF.value],
+        search: search.value,
+        sort: { ...sort.value },
+      })
+      persistViews()
+      toast.success(__('Vista guardada'))
+    },
   })
-  persistViews()
-  toast.success(__('Vista guardada'))
 }
 function applyView(v) {
   statusF.value = [...(v.status || [])]

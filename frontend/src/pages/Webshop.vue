@@ -43,15 +43,12 @@
 <script setup>
 import { computed, h, ref } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
+import { money } from '@/utils/numberFormat'
 
 const kpisRes = createResource({ url: 'doco_marketing.api.webshop.get_webshop_kpis', auto: true })
 const logsRes = createResource({ url: 'doco_marketing.api.webshop.get_webhook_logs', auto: true })
 const kpis = computed(() => kpisRes.data || {})
 const logs = computed(() => logsRes.data || [])
-
-function money(v) {
-  return `$${Number(v || 0).toLocaleString()}`
-}
 
 const syncing = ref(false)
 async function sync() {

@@ -47,6 +47,13 @@
             {{ __('Vistas') }} ⌄
           </button>
         </Dropdown>
+        <ColumnPicker
+          v-if="view === 'list'"
+          :columns="DEAL_COLUMNS"
+          :selected="visibleCols"
+          @update:selected="setCols"
+          @reset="resetCols"
+        />
         <button
           class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
           :title="__('Exportar a Excel')"
@@ -96,11 +103,11 @@
     >
       <input type="checkbox" style="accent-color: #16a34a" :checked="allSelected" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('organization')">{{ __('Trato') }}{{ sortArrow('organization') }}</button>
-      <button class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
-      <div>{{ __('Stage') }}</div>
-      <div>{{ __('Source') }}</div>
-      <button class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
-      <div>{{ __('Owner') }}</div>
+      <button v-if="col('value')" class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
+      <div v-if="col('stage')">{{ __('Stage') }}</div>
+      <div v-if="col('source')">{{ __('Source') }}</div>
+      <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
+      <div v-if="col('owner')">{{ __('Owner') }}</div>
       <div />
     </div>
 
@@ -129,8 +136,8 @@
             <div class="truncate text-[11px] text-ink-gray-4">{{ r.lead_name || r.mobile_no || '—' }}</div>
           </div>
         </div>
-        <div class="text-[12.5px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</div>
-        <div>
+        <div v-if="col('value')" class="text-[12.5px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</div>
+        <div v-if="col('stage')">
           <span
             v-if="r.status"
             class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
@@ -139,12 +146,12 @@
             {{ r.status }}
           </span>
         </div>
-        <div class="flex items-center gap-1.5 text-[12px] text-ink-gray-6">
+        <div v-if="col('source')" class="flex items-center gap-1.5 text-[12px] text-ink-gray-6">
           <span v-if="r.source" class="h-[7px] w-[7px] flex-none rounded-full" :style="`background:${sourceDot(r.source)}`" />
           <span class="truncate">{{ r.source || '—' }}</span>
         </div>
-        <div class="text-[12px] text-ink-gray-5">{{ timeAgo(r.modified) }}</div>
-        <div>
+        <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">{{ timeAgo(r.modified) }}</div>
+        <div v-if="col('owner')">
           <span
             v-if="r.deal_owner"
             class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
@@ -200,19 +207,59 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
-import { confirmDialog } from '@/utils/dialogs'
+import { confirmDialog, inputDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import DealModal from '@/components/Modals/DealModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
+import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import { avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
 
-const GRID = '28px 1fr 120px 130px 120px 110px 50px 26px'
 const router = useRouter()
+
+// ── column config (per-browser show/hide) ─────────────────────────────────────
+// trato (contact) is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
+const DEAL_COLUMNS = [
+  { key: 'contact', label: __('Trato'), fixed: true },
+  { key: 'value', label: __('Valor') },
+  { key: 'stage', label: __('Stage') },
+  { key: 'source', label: __('Source') },
+  { key: 'modified', label: __('Última act.') },
+  { key: 'owner', label: __('Owner') },
+]
+const COL_WIDTH = { value: '120px', stage: '130px', source: '120px', modified: '110px', owner: '50px' }
+const DEFAULT_COLS = ['value', 'stage', 'source', 'modified', 'owner']
+const COLS_KEY = 'doco_deals_columns'
+const visibleCols = ref(loadCols())
+function loadCols() {
+  try {
+    const s = JSON.parse(window.localStorage.getItem(COLS_KEY) || 'null')
+    const f = Array.isArray(s) ? s.filter((k) => k in COL_WIDTH) : []
+    return f.length ? f : [...DEFAULT_COLS]
+  } catch {
+    return [...DEFAULT_COLS]
+  }
+}
+function setCols(next) {
+  visibleCols.value = next
+  window.localStorage.setItem(COLS_KEY, JSON.stringify(next))
+}
+function resetCols() {
+  setCols([...DEFAULT_COLS])
+}
+function col(key) {
+  return key === 'contact' || visibleCols.value.includes(key)
+}
+const GRID = computed(() => {
+  const parts = ['28px', '1fr'] // checkbox + contact (always)
+  for (const key of ['value', 'stage', 'source', 'modified', 'owner']) if (col(key)) parts.push(COL_WIDTH[key])
+  parts.push('26px') // row menu
+  return parts.join(' ')
+})
 const { getDealStatus } = statusesStore()
 const { getUser, users: usersList } = usersStore()
 
@@ -338,19 +385,27 @@ function persistViews() {
   window.localStorage.setItem(VIEWS_KEY, JSON.stringify(savedViews.value))
 }
 function saveCurrentView() {
-  const label = window.prompt(__('Nombre de la vista'))
-  if (!label) return
-  savedViews.value = savedViews.value.filter((v) => v.label !== label)
-  savedViews.value.push({
-    label,
-    status: [...statusF.value],
-    source: [...sourceF.value],
-    owner: [...ownerF.value],
-    search: search.value,
-    sort: { ...sort.value },
+  inputDialog({
+    title: __('Guardar vista'),
+    message: __('Nombre de la vista'),
+    placeholder: __('Ej. Tratos activos'),
+    confirmLabel: __('Guardar'),
+    theme: 'green',
+    required: true,
+    onConfirm: (label) => {
+      savedViews.value = savedViews.value.filter((v) => v.label !== label)
+      savedViews.value.push({
+        label,
+        status: [...statusF.value],
+        source: [...sourceF.value],
+        owner: [...ownerF.value],
+        search: search.value,
+        sort: { ...sort.value },
+      })
+      persistViews()
+      toast.success(__('Vista guardada'))
+    },
   })
-  persistViews()
-  toast.success(__('Vista guardada'))
 }
 function applyView(v) {
   statusF.value = [...(v.status || [])]

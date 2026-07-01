@@ -286,6 +286,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
+import { inputDialog } from '@/utils/dialogs'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
 
 const weekdays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -567,20 +568,28 @@ async function approvePost() {
   }
 }
 
-async function rejectPost() {
-  const reason = window.prompt(__('Motivo del rechazo (opcional):'), '')
-  if (reason === null) return
-  busy.value = true
-  try {
-    await frappeCall('doco_marketing.api.social.reject', { name: form.value.name, reason })
-    toast.success(__('Rechazado'))
-    showComposer.value = false
-    cal.reload()
-  } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo rechazar'))
-  } finally {
-    busy.value = false
-  }
+function rejectPost() {
+  inputDialog({
+    title: __('Rechazar publicación'),
+    message: __('Motivo del rechazo (opcional):'),
+    type: 'textarea',
+    placeholder: __('Motivo…'),
+    confirmLabel: __('Rechazar'),
+    theme: 'red',
+    onConfirm: async (reason) => {
+      busy.value = true
+      try {
+        await frappeCall('doco_marketing.api.social.reject', { name: form.value.name, reason })
+        toast.success(__('Rechazado'))
+        showComposer.value = false
+        cal.reload()
+      } catch (e) {
+        toast.error(e?.messages?.[0] || __('No se pudo rechazar'))
+      } finally {
+        busy.value = false
+      }
+    },
+  })
 }
 
 function toDtLocal(dt) {

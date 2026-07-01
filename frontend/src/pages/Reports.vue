@@ -239,6 +239,7 @@ import { computed, h, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createResource, call, toast } from 'frappe-ui'
 import { CHANNEL_META, GRADE_COLORS } from '@/composables/crmFormat'
+import { money } from '@/utils/numberFormat'
 
 const router = useRouter()
 
@@ -406,9 +407,6 @@ function sourceDot(name) {
   const k = String(name || '').toLowerCase()
   for (const c of Object.keys(CHANNEL_META)) if (k.includes(c) || k.includes(CHANNEL_META[c][0].toLowerCase())) return CHANNEL_META[c][1]
   return '#9aa2ae'
-}
-function money(v) {
-  return `$${Number(v || 0).toLocaleString()}`
 }
 
 // presentational helpers

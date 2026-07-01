@@ -23,6 +23,32 @@ export let Dialogs = {
                 <p class="text-p-base text-ink-gray-7">{dialog.message}</p>
               ),
               dialog.html && <div v-html={dialog.html} />,
+              dialog.input &&
+                (dialog.input.type === 'textarea' ? (
+                  <textarea
+                    class="mt-1 w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:bg-surface-white focus:outline-none"
+                    rows="3"
+                    autofocus
+                    placeholder={dialog.input.placeholder}
+                    value={dialog.inputValue}
+                    onInput={(e) => (dialog.inputValue = e.target.value)}
+                  />
+                ) : (
+                  <input
+                    class="mt-1 w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:bg-surface-white focus:outline-none"
+                    type="text"
+                    autofocus
+                    placeholder={dialog.input.placeholder}
+                    value={dialog.inputValue}
+                    onInput={(e) => (dialog.inputValue = e.target.value)}
+                    onKeydown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        submitInput(dialog)
+                      }
+                    }}
+                  />
+                )),
               <ErrorMessage class="mt-2" message={dialog.error} />,
             ]
           },
@@ -61,4 +87,52 @@ export function confirmDialog({ title, message, confirmLabel, theme = 'red', onC
       },
     ],
   })
+}
+
+// Fire the dialog's primary action (used for Enter-to-submit on an input dialog).
+function submitInput(dialog) {
+  const primary = dialog.actions?.[0]
+  if (primary?.onClick) primary.onClick(() => (dialog.show = false))
+}
+
+// Styled async text prompt — replaces window.prompt (blocking + unstyled + no dark
+// mode). onConfirm gets the trimmed value; Cancel just closes. type:'textarea' for a
+// multi-line reason. required:true blocks empty submits with an inline error.
+export function inputDialog({
+  title,
+  message,
+  placeholder,
+  defaultValue = '',
+  confirmLabel,
+  theme = 'gray',
+  type = 'text',
+  required = false,
+  requiredMessage,
+  onConfirm,
+}) {
+  const opts = reactive({
+    title: title || message,
+    message: title ? message : undefined,
+    input: { type, placeholder },
+    inputValue: defaultValue,
+    error: '',
+    actions: [
+      {
+        label: confirmLabel || 'OK',
+        variant: 'solid',
+        theme,
+        onClick: async (close) => {
+          const val = (opts.inputValue ?? '').trim()
+          if (required && !val) {
+            opts.error = requiredMessage || __('Este campo es obligatorio')
+            return
+          }
+          opts.error = ''
+          await onConfirm?.(val)
+          close()
+        },
+      },
+    ],
+  })
+  createDialog(opts)
 }
