@@ -218,10 +218,10 @@
             v-else-if="whatsapp.content_type == 'button'"
             v-html="formatWhatsAppMessage(whatsapp.message)"
           />
-          <div v-else-if="whatsapp.content_type == 'image'">
+          <div v-else-if="whatsapp.content_type == 'image'" class="min-w-0 flex-1">
             <img
               :src="whatsapp.attach"
-              class="h-40 cursor-pointer rounded-md"
+              class="max-h-64 w-full max-w-[15rem] cursor-pointer rounded-md object-contain"
               @click="() => openFileInAnotherTab(whatsapp.attach)"
             />
             <!-- message is null on media-only rows; guard before .startsWith or
@@ -250,12 +250,12 @@
           </div>
           <div
             v-else-if="whatsapp.content_type == 'video'"
-            class="flex-col items-center gap-2"
+            class="min-w-0 flex-1 flex-col items-center gap-2"
           >
             <video
               :src="whatsapp.attach"
               controls
-              class="h-40 cursor-pointer rounded-md"
+              class="max-h-64 w-full max-w-[15rem] cursor-pointer rounded-md"
             />
             <!-- same null guard as the image branch -->
             <div
