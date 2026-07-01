@@ -218,10 +218,14 @@
             v-else-if="whatsapp.content_type == 'button'"
             v-html="formatWhatsAppMessage(whatsapp.message)"
           />
-          <div v-else-if="whatsapp.content_type == 'image'" class="min-w-0 flex-1">
+          <div v-else-if="whatsapp.content_type == 'image'">
+            <!-- concrete width (w-60) so the bubble — a shrink-to-fit max-w box —
+                 sizes to the image; max-w-[68vw] keeps it inside narrow phones
+                 (never tied to the collapsing flex item). NO flex-1: flex-basis:0%
+                 inside a shrink-to-fit parent collapses the whole bubble. -->
             <img
               :src="whatsapp.attach"
-              class="max-h-64 w-full max-w-[15rem] cursor-pointer rounded-md object-contain"
+              class="h-auto w-60 max-w-[68vw] cursor-pointer rounded-md sm:max-w-[15rem]"
               @click="() => openFileInAnotherTab(whatsapp.attach)"
             />
             <!-- message is null on media-only rows; guard before .startsWith or
@@ -250,12 +254,12 @@
           </div>
           <div
             v-else-if="whatsapp.content_type == 'video'"
-            class="min-w-0 flex-1 flex-col items-center gap-2"
+            class="flex-col items-center gap-2"
           >
             <video
               :src="whatsapp.attach"
               controls
-              class="max-h-64 w-full max-w-[15rem] cursor-pointer rounded-md"
+              class="h-auto w-60 max-w-[68vw] cursor-pointer rounded-md sm:max-w-[15rem]"
             />
             <!-- same null guard as the image branch -->
             <div
