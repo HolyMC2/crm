@@ -225,7 +225,7 @@
                  inside a shrink-to-fit parent collapses the whole bubble. -->
             <img
               :src="whatsapp.attach"
-              class="h-auto w-60 max-w-[68vw] cursor-pointer rounded-md sm:max-w-[15rem]"
+              class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-md sm:max-w-[15rem]"
               @click="() => openFileInAnotherTab(whatsapp.attach)"
             />
             <!-- message is null on media-only rows; guard before .startsWith or
@@ -259,7 +259,7 @@
             <video
               :src="whatsapp.attach"
               controls
-              class="h-auto w-60 max-w-[68vw] cursor-pointer rounded-md sm:max-w-[15rem]"
+              class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-md sm:max-w-[15rem]"
             />
             <!-- same null guard as the image branch -->
             <div
