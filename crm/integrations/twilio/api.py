@@ -120,7 +120,18 @@ def _normalize_e164(number: str, default_country_code: str = "52") -> str:
 	"""
 	if not number:
 		return number
-	digits = "".join(c for c in str(number) if c.isdigit() or c == "+")
+	# A SIP-Domain call passes `To` as a full URI (sip:5512345678@host:5060);
+	# strip the scheme and everything from '@' on, else the host/port digits
+	# get merged into the dialed number. Works today only because the current
+	# SIP host has no digits — a host rename or an explicit :port would misdial.
+	s = str(number).strip()
+	for scheme in ("sip:", "sips:", "tel:"):
+		if s.lower().startswith(scheme):
+			s = s[len(scheme):]
+			break
+	if "@" in s:
+		s = s.split("@", 1)[0]
+	digits = "".join(c for c in s if c.isdigit() or c == "+")
 	body = digits[1:] if digits.startswith("+") else digits
 	if body.startswith("521") and len(body) == 13:
 		body = "52" + body[3:]
