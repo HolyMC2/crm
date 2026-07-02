@@ -200,6 +200,16 @@
             <textarea v-model="form.captions[c]" rows="2" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
           </div>
 
+          <!-- owner feedback → AI rewrites the caption (same items/voice/facts) -->
+          <div v-if="form.name && canCancel" class="mb-3 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-2">
+            <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Feedback para la IA') }}</label>
+            <div class="flex items-start gap-2">
+              <textarea v-model="aiFeedback" rows="2" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('ej. más corto, menciona la garantía, sin emojis, tono más formal…')" />
+              <button class="shrink-0 rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !aiFeedback.trim()" @click="regeneratePost">{{ busy ? __('…') : __('↻ Regenerar') }}</button>
+            </div>
+            <p class="mt-1 text-[10.5px] text-ink-gray-4">{{ __('Reescribe el texto con tus indicaciones y re-adjunta fotos de los artículos si ya tienen.') }}</p>
+          </div>
+
           <div class="mb-3 grid grid-cols-2 gap-3">
             <div>
               <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Programar') }}</label>
@@ -505,6 +515,7 @@ async function onDrop(day) {
 // ── composer ───────────────────────────────────────────────────────────────
 const showComposer = ref(false)
 const busy = ref(false)
+const aiFeedback = ref('')
 const blank = () => ({ name: '', title: '', shop: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
 const form = ref(blank())
 // live FB preview for the composer (FbPostCard) — bound to the FB caption + CTA + schedule
@@ -608,6 +619,7 @@ function openNew(day) {
 }
 
 async function openEdit(p) {
+  aiFeedback.value = ''
   const doc = await frappeCall('doco_marketing.api.social.get_post', { name: p.name })
   const caps = {}
   for (const c of doc.channels || []) caps[c.channel] = c.caption || ''
@@ -664,6 +676,24 @@ async function save(status) {
     cal.reload()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo guardar'))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function regeneratePost() {
+  if (!form.value.name || !aiFeedback.value.trim()) return
+  busy.value = true
+  try {
+    const r = await frappeCall('doco_marketing.api.social.regenerate', {
+      name: form.value.name,
+      feedback: aiFeedback.value.trim(),
+    })
+    for (const c of Object.keys(form.value.captions)) form.value.captions[c] = r.caption
+    aiFeedback.value = ''
+    toast.success(__('Borrador regenerado'))
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo regenerar'))
   } finally {
     busy.value = false
   }
