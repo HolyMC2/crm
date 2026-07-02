@@ -141,6 +141,18 @@ def get_total_repair_orders(
 	"""
 	Get repair order count for the dashboard.
 	"""
+	# Repair Order belongs to the taller vertical, not installed on every tenant
+	# (e.g. mumulenceria). Degrade to an empty tile instead of 500-ing the whole
+	# dashboard when the doctype is absent.
+	if not frappe.db.exists("DocType", "Repair Order"):
+		return {
+			"title": _("Total repair orders"),
+			"tooltip": _("Total number of repair orders"),
+			"value": 0,
+			"delta": 0,
+			"deltaSuffix": "%",
+		}
+
 	diff = frappe.utils.date_diff(to_date, from_date)
 	if diff == 0:
 		diff = 1

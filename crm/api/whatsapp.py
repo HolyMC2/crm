@@ -401,8 +401,40 @@ def get_template_field_options(reference_doctype: str):
 	return opts
 
 
+def _token_allowed(reference_doctype: str, token: str) -> bool:
+	"""Whitelist a field_names token against exactly what get_template_field_options
+	offers: the ref doctype's own mappable scalar fields, and one-level dotted
+	traversal only into a Link target's name/mobile/phone/email-ish Data-like fields.
+	Prevents resolve_field_value from being turned into an arbitrary-column reader
+	(e.g. `deal_owner.api_key`) on any Link-reachable doctype."""
+	try:
+		meta = frappe.get_meta(reference_doctype)
+	except Exception:
+		return False
+	if "." in token:
+		link_field, sub = token.split(".", 1)
+		df = meta.get_field(link_field)
+		if not df or df.fieldtype != "Link" or not df.options:
+			return False
+		if not frappe.db.exists("DocType", df.options):
+			return False
+		try:
+			sdf = frappe.get_meta(df.options).get_field(sub)
+		except Exception:
+			return False
+		if not sdf or sdf.get("hidden"):
+			return False
+		if sdf.fieldtype not in ("Data", "Phone", "Read Only", "Select"):
+			return False
+		return any(k in (sub or "") for k in ("name", "mobile", "phone", "email"))
+	df = meta.get_field(token)
+	return bool(df and df.fieldtype in _MAPPABLE_FIELDTYPES and not df.get("hidden"))
+
+
 def _resolve_dotted(reference_doctype: str, reference_name: str, token: str) -> str:
 	"""Resolve a field_names token (plain or one-level dotted) to a formatted value."""
+	if not _token_allowed(reference_doctype, token):
+		return ""
 	doc = frappe.get_doc(reference_doctype, reference_name)
 	if "." in token:
 		link_field, sub = token.split(".", 1)
@@ -477,6 +509,7 @@ QUICK_TEMPLATE_LIMIT = 6
 @frappe.whitelist()
 def get_quick_replies():
 	"""Team-shared canned WhatsApp replies, stored as JSON on FCRM Settings."""
+	validate_access()
 	raw = frappe.db.get_single_value("FCRM Settings", QUICK_REPLY_SETTINGS_FIELD)
 	if not raw:
 		return []
@@ -527,6 +560,7 @@ def save_quick_replies(quick_replies):
 @frappe.whitelist()
 def get_quick_templates(reference_doctype: str = ""):
 	"""Approved templates for quick access: all when few, else the most-used."""
+	validate_access()
 	if not frappe.db.exists("DocType", "WhatsApp Templates"):
 		return []
 
