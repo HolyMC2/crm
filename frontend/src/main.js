@@ -82,3 +82,17 @@ if (import.meta.env.DEV) {
 if (import.meta.env.DEV) {
   window.$dialog = createDialog
 }
+
+// PWA staleness guard: the inbox is a long-lived tab (never navigates), so the
+// browser's SW update check — which only runs on navigation — never fires and a
+// deploy leaves the tab on the old bundle until a manual F5. Poll for a new
+// sw.js every 30 min and whenever the tab regains focus; registerSW's
+// autoUpdate handles the actual swap once an update is found.
+if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
+  const checkForSwUpdate = () =>
+    navigator.serviceWorker.getRegistration().then((r) => r?.update()).catch(() => {})
+  setInterval(checkForSwUpdate, 30 * 60 * 1000)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkForSwUpdate()
+  })
+}
