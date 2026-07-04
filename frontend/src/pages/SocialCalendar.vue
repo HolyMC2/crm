@@ -202,6 +202,12 @@
         </div>
 
         <div class="max-h-[68vh] overflow-y-auto p-4">
+          <!-- approval hint: an AI/pending draft only publishes once approved; unapproved → auto-cancel at slot -->
+          <div v-if="isPending" class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-3">
+            <span class="flex-none">⏳</span>
+            <span>{{ __('Requiere aprobación. Pulsa «Aprobar» para publicarla. Si nadie la aprueba antes de la hora programada, se cancela automáticamente.') }}</span>
+          </div>
+
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Título') }}</label>
           <input v-model="form.title" type="text" class="mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Interno')" />
 
