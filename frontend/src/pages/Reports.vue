@@ -122,9 +122,12 @@
             <div>{{ __('Agente') }}</div>
             <div :title="__('Mensajes WhatsApp enviados por el agente')">{{ __('Envíos') }}</div>
             <div :title="__('Tiempo medio de primera respuesta')">{{ __('Resp.') }}</div>
+            <div :title="__('Llamadas registradas')">{{ __('Llam.') }}</div>
+            <div :title="__('Reparaciones entregadas (técnico)')">{{ __('Rep.') }}</div>
             <div>{{ __('Deals') }}</div>
             <div>{{ __('Ganados') }}</div>
             <div>{{ __('Conv.') }}</div>
+            <div :title="__('% de tratos con SLA cumplido (primera respuesta a tiempo)')">{{ __('SLA') }}</div>
             <div>{{ __('Ingresos') }}</div>
           </div>
           <div
@@ -136,32 +139,95 @@
             <div class="truncate font-medium text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
             <div>{{ a.sent }}</div>
             <div :class="a.avg_response_secs == null ? 'text-ink-gray-4' : ''">{{ fmtResp(a.avg_response_secs) }}</div>
+            <div>{{ a.calls || 0 }}</div>
+            <div>{{ a.repairs || 0 }}</div>
             <div>{{ a.deals }}</div>
             <div class="font-semibold" style="color: #16a34a">{{ a.won }}</div>
             <div>{{ a.conv_pct }}%</div>
+            <div :class="a.sla_kept_pct == null ? 'text-ink-gray-4' : slaClass(a.sla_kept_pct)">{{ a.sla_kept_pct == null ? '—' : a.sla_kept_pct + '%' }}</div>
             <div class="font-medium">{{ money(a.won_pesos) }}</div>
           </div>
         </div>
       </Card>
 
-      <!-- per-territory (shop proxy — no shop dimension on deals): deal metrics only -->
-      <Card :title="__('Desempeño por sucursal (territorio)')">
+      <!-- per-shop (real doco_shop dimension; falls back to the territory proxy on
+        sites where the shop fields aren't installed) -->
+      <Card v-if="scoreShops.length" :title="__('Desempeño por sucursal')">
+        <div>
+          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${SHOP_GRID}`">
+            <div>{{ __('Sucursal') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv.') }}</div><div>{{ __('SLA') }}</div><div>{{ __('Ingresos') }}</div>
+          </div>
+          <div
+            v-for="s in scoreShops"
+            :key="s.shop"
+            class="grid items-center border-b border-outline-gray-1 py-2 text-[12.5px]"
+            :style="`grid-template-columns:${SHOP_GRID}`"
+          >
+            <div class="truncate font-medium text-ink-gray-9">{{ s.shop }}</div>
+            <div>{{ s.deals }}</div>
+            <div class="font-semibold" style="color: #16a34a">{{ s.won }}</div>
+            <div>{{ s.conv_pct }}%</div>
+            <div :class="s.sla_kept_pct == null ? 'text-ink-gray-4' : slaClass(s.sla_kept_pct)">{{ s.sla_kept_pct == null ? '—' : s.sla_kept_pct + '%' }}</div>
+            <div class="font-medium">{{ money(s.won_pesos) }}</div>
+          </div>
+        </div>
+      </Card>
+      <Card v-else :title="__('Desempeño por sucursal (territorio)')">
         <div v-if="!scoreTerritories.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
         <div v-else>
-          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${SHOP_GRID}`">
+          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${TERR_GRID}`">
             <div>{{ __('Territorio') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv.') }}</div><div>{{ __('Ingresos') }}</div>
           </div>
           <div
             v-for="s in scoreTerritories"
             :key="s.territory"
             class="grid items-center border-b border-outline-gray-1 py-2 text-[12.5px]"
-            :style="`grid-template-columns:${SHOP_GRID}`"
+            :style="`grid-template-columns:${TERR_GRID}`"
           >
             <div class="truncate font-medium text-ink-gray-9">{{ s.territory }}</div>
             <div>{{ s.deals }}</div>
             <div class="font-semibold" style="color: #16a34a">{{ s.won }}</div>
             <div>{{ s.conv_pct }}%</div>
             <div class="font-medium">{{ money(s.won_pesos) }}</div>
+          </div>
+        </div>
+      </Card>
+
+      <!-- deal hygiene: open deals missing owner/shop/contact/documents, lapsed SLA,
+        or silent 14+ days. Managers see all; a rep only their own. -->
+      <Card :title="__('Higiene de tratos')">
+        <div v-if="!hygiene.count" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Todo en orden — sin pendientes de higiene') }}</div>
+        <div v-else>
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="text-[13px] font-bold text-ink-gray-9">{{ hygiene.count }} {{ __('tratos con pendientes') }}</span>
+            <span
+              v-for="(n, issue) in hygiene.summary"
+              :key="issue"
+              class="rounded-full bg-surface-gray-2 px-2.5 py-0.5 text-[11px] font-medium text-ink-gray-7"
+            >
+              {{ issueLabel(issue) }} · {{ n }}
+            </span>
+          </div>
+          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${HYG_GRID}`">
+            <div>{{ __('Trato') }}</div><div>{{ __('Responsable') }}</div><div>{{ __('Sucursal') }}</div><div>{{ __('Días') }}</div><div>{{ __('Pendientes') }}</div>
+          </div>
+          <div
+            v-for="r in hygieneRows"
+            :key="r.deal"
+            class="grid cursor-pointer items-center border-b border-outline-gray-1 py-2 text-[12.5px] hover:bg-surface-gray-2"
+            :style="`grid-template-columns:${HYG_GRID}`"
+            @click="$router.push(`/deals/${r.deal}`)"
+          >
+            <div class="truncate font-medium text-ink-gray-9">{{ r.deal }}</div>
+            <div class="truncate" :class="r.owner ? 'text-ink-gray-7' : 'font-medium text-ink-red-3'">{{ r.owner || __('Sin responsable') }}</div>
+            <div class="truncate text-ink-gray-7">{{ r.shop || '—' }}</div>
+            <div class="text-ink-gray-6">{{ r.age_days ?? '—' }}</div>
+            <div class="flex flex-wrap gap-1">
+              <span v-for="i in r.issues" :key="i" class="rounded bg-surface-amber-1 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-amber-3">{{ issueLabel(i) }}</span>
+            </div>
+          </div>
+          <div v-if="hygiene.count > hygieneRows.length" class="pt-2 text-[11px] text-ink-gray-4">
+            {{ __('Mostrando {0} de {1} — el resto en el reporte del servidor.', [hygieneRows.length, hygiene.count]) }}
           </div>
         </div>
       </Card>
@@ -245,8 +311,10 @@ const router = useRouter()
 
 const ATTR_GRID = '1fr 70px 80px 70px 110px'
 const FUNNEL_GRID = '1fr 70px 70px 80px 110px'
-const AGENT_GRID = '1fr 60px 66px 52px 60px 56px 96px'
-const SHOP_GRID = '1fr 70px 70px 70px 110px'
+const AGENT_GRID = '1fr 56px 60px 48px 44px 48px 58px 52px 52px 92px'
+const SHOP_GRID = '1fr 64px 70px 64px 56px 110px'
+const TERR_GRID = '1fr 70px 70px 70px 110px'
+const HYG_GRID = '150px 1fr 120px 48px 1.2fr'
 const periods = [
   { key: 'week', label: __('Esta semana') },
   { key: 'month', label: __('Este mes') },
@@ -279,6 +347,8 @@ const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_a
 const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown', onError: onRestricted })
 const socialRes = createResource({ url: 'doco_marketing.api.reports.get_social_funnel', onError: onRestricted })
 const scoreRes = createResource({ url: 'doco_marketing.api.reports.get_agent_scorecard', onError: onRestricted })
+// Hygiene is a live audit, not period-scoped — loaded once (reps get own-only server-side).
+const hygieneRes = createResource({ url: 'doco_marketing.api.reports.get_deal_hygiene', auto: true, onError: onRestricted })
 
 function load() {
   const r = range(period.value)
@@ -311,6 +381,7 @@ function originDot(origin) {
 // Agent / shop scorecard (#27)
 const scoreAgents = computed(() => scoreRes.data?.agents || [])
 const scoreTerritories = computed(() => scoreRes.data?.territories || [])
+const scoreShops = computed(() => scoreRes.data?.shops || [])
 const scoreAny = computed(() => scoreAgents.value.length > 0)
 // Compact response-latency: 45s / 12m / 3h, or — when no measured first-response.
 function fmtResp(secs) {
@@ -320,6 +391,25 @@ function fmtResp(secs) {
   if (s < 3600) return `${Math.round(s / 60)}m`
   return `${(s / 3600).toFixed(1)}h`
 }
+function slaClass(pct) {
+  const p = Number(pct) || 0
+  if (p >= 90) return 'font-semibold text-ink-green-3'
+  if (p >= 70) return 'font-semibold text-ink-amber-3'
+  return 'font-semibold text-ink-red-3'
+}
+
+// Deal hygiene (completeness audit)
+const ISSUE_LABELS = {
+  sin_propietario: __('Sin responsable'),
+  sin_sucursal: __('Sin sucursal'),
+  sin_contacto: __('Sin contacto'),
+  sin_documentos: __('Sin documentos'),
+  sla_vencido: __('SLA vencido'),
+  sin_actividad: __('Sin actividad'),
+}
+const issueLabel = (k) => ISSUE_LABELS[k] || k
+const hygiene = computed(() => hygieneRes.data || { count: 0, summary: {}, rows: [] })
+const hygieneRows = computed(() => (hygiene.value.rows || []).slice(0, 8))
 
 // Reactivación / win-back — preview the audience, then stage template sends into the
 // supervised review queue (auto=0). Nothing reaches a customer without human approval.
