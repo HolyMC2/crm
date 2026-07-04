@@ -42,8 +42,10 @@
               <span class="font-medium text-ink-gray-8">{{ s.stage }}</span>
               <span class="text-ink-gray-5">{{ s.count }} · {{ s.pct }}%</span>
             </div>
-            <div class="h-2 rounded-sm bg-surface-gray-3">
-              <div class="h-full rounded-sm" :style="`width:${s.pct}%;background:#16a34a;opacity:.75`" />
+            <div class="h-2 overflow-hidden rounded-sm bg-surface-gray-3">
+              <!-- pct can exceed 100 (funnel mixes lead+deal cohorts) — the label
+                shows the real number, the bar clamps so it never overflows the card -->
+              <div class="h-full rounded-sm" :style="`width:${Math.min(Number(s.pct) || 0, 100)}%;background:#16a34a;opacity:.75`" />
             </div>
           </div>
         </Card>
@@ -118,14 +120,14 @@
       <Card :title="__('Desempeño por agente')">
         <div v-if="!scoreAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin actividad en el periodo') }}</div>
         <div v-else>
-          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${AGENT_GRID}`">
+          <div class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${AGENT_GRID}`">
             <div>{{ __('Agente') }}</div>
             <div :title="__('Mensajes WhatsApp enviados por el agente')">{{ __('Envíos') }}</div>
             <div :title="__('Tiempo medio de primera respuesta')">{{ __('Resp.') }}</div>
             <div :title="__('Llamadas registradas')">{{ __('Llam.') }}</div>
             <div :title="__('Reparaciones entregadas (técnico)')">{{ __('Rep.') }}</div>
             <div>{{ __('Deals') }}</div>
-            <div>{{ __('Ganados') }}</div>
+            <div :title="__('Deals ganados')">{{ __('Gan.') }}</div>
             <div>{{ __('Conv.') }}</div>
             <div :title="__('% de tratos con SLA cumplido (primera respuesta a tiempo)')">{{ __('SLA') }}</div>
             <div>{{ __('Ingresos') }}</div>
@@ -133,7 +135,7 @@
           <div
             v-for="a in scoreAgents"
             :key="a.agent"
-            class="grid items-center border-b border-outline-gray-1 py-2 text-[12.5px]"
+            class="grid items-center gap-x-2 border-b border-outline-gray-1 py-2 text-[12.5px]"
             :style="`grid-template-columns:${AGENT_GRID}`"
           >
             <div class="truncate font-medium text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
@@ -311,7 +313,7 @@ const router = useRouter()
 
 const ATTR_GRID = '1fr 70px 80px 70px 110px'
 const FUNNEL_GRID = '1fr 70px 70px 80px 110px'
-const AGENT_GRID = '1fr 56px 60px 48px 44px 48px 58px 52px 52px 92px'
+const AGENT_GRID = '1fr 50px 54px 44px 40px 44px 44px 48px 48px 88px'
 const SHOP_GRID = '1fr 64px 70px 64px 56px 110px'
 const TERR_GRID = '1fr 70px 70px 70px 110px'
 const HYG_GRID = '150px 1fr 120px 48px 1.2fr'

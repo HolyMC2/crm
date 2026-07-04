@@ -224,7 +224,10 @@ class CRMDeal(Document):
 		"""
 		Update the closed date based on the "Won" status.
 		"""
-		if self.status == "Won" and not self.closed_date:
+		# By status TYPE, not the literal "Won" name — custom Won statuses
+		# (Completado) must stamp closed_date too, else the dashboard's
+		# won-deals KPI (cohorted by closed_date) undercounts.
+		if not self.closed_date and frappe.db.get_value("CRM Deal Status", self.status, "type") == "Won":
 			self.closed_date = frappe.utils.nowdate()
 
 	def update_default_probability(self):
