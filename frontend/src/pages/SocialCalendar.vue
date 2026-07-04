@@ -173,6 +173,34 @@
           <span class="text-[14px] font-bold text-ink-gray-9">{{ form.name ? __('Editar publicación') : __('Nueva publicación') }}</span>
           <span v-if="form.status" class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="chip(form.status)">{{ form.status }}</span>
         </div>
+
+        <!-- publish outcome: live FB/IG post link(s) · scheduled-in-Meta badge · failure reason -->
+        <div v-if="liveLinks.length || scheduledMeta.length || failedChannels.length" class="flex flex-col gap-1.5 border-b border-outline-gray-1 bg-surface-gray-1 px-4 py-2.5">
+          <a
+            v-for="c in liveLinks" :key="'live-' + c.channel"
+            :href="c.permalink" target="_blank" rel="noopener"
+            class="flex items-center gap-2 rounded-md bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-3 hover:brightness-95"
+          >
+            <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
+            <span>{{ __('Publicado') }} · {{ c.channel }}</span>
+            <span class="ml-auto underline">{{ chLabel(c.channel) }} ↗</span>
+          </a>
+          <div
+            v-for="c in scheduledMeta" :key="'sch-' + c.channel"
+            class="flex items-center gap-2 rounded-md bg-surface-blue-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-blue-3"
+          >
+            <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
+            <span>{{ __('Programado en Meta') }} · {{ c.channel }}</span>
+            <span class="ml-auto text-[11px] font-normal text-ink-gray-6">{{ __('el enlace aparece al publicarse') }}</span>
+          </div>
+          <div
+            v-for="c in failedChannels" :key="'fail-' + c.channel"
+            class="rounded-md bg-surface-red-1 px-2.5 py-1.5 text-[11.5px] text-ink-red-4"
+          >
+            <span class="font-semibold">{{ c.channel }} · {{ __('Falló') }}:</span> {{ c.error }}
+          </div>
+        </div>
+
         <div class="max-h-[68vh] overflow-y-auto p-4">
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Título') }}</label>
           <input v-model="form.title" type="text" class="mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Interno')" />
@@ -236,6 +264,7 @@
               :images="previewPost.images"
               :time-label="previewPost.timeLabel"
               :cta="previewPost.cta"
+              :permalink="previewPost.permalink"
               show-actions
             />
             <p v-if="!previewPost.message && !previewPost.images.length" class="mt-1.5 text-[11px] text-ink-gray-4">
@@ -516,7 +545,7 @@ async function onDrop(day) {
 const showComposer = ref(false)
 const busy = ref(false)
 const aiFeedback = ref('')
-const blank = () => ({ name: '', title: '', shop: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '' })
+const blank = () => ({ name: '', title: '', shop: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '', channelStates: [] })
 const form = ref(blank())
 // live FB preview for the composer (FbPostCard) — bound to the FB caption + CTA + schedule
 const previewPost = computed(() => {
@@ -527,7 +556,9 @@ const previewPost = computed(() => {
       ? { label: form.value.cta_link || '', button: form.value.cta_type === 'WhatsApp' ? 'WhatsApp' : __('Ver más') }
       : null
   let timeLabel = __('Borrador')
-  if (form.value.scheduled_time) {
+  if (form.value.status === 'Published') {
+    timeLabel = __('Publicado')
+  } else if (form.value.scheduled_time) {
     try {
       timeLabel = __('Programado') + ' · ' + new Date(form.value.scheduled_time).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     } catch {
@@ -540,10 +571,31 @@ const previewPost = computed(() => {
     images: form.value.media_urls || [],
     timeLabel,
     cta,
+    // published → the preview card itself becomes a clickable link to the live post
+    permalink: primaryPermalink.value,
   }
 })
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
 const isPending = computed(() => !!form.value.name && form.value.status === 'Pending Approval')
+
+// ── publish outcome surfacing (S13) ───────────────────────────────────────────
+// A live channel carries a permalink → link straight to the FB/IG post. A natively-
+// scheduled channel is handed to Meta but not public yet (link would 404) → info
+// badge, no link. A failed channel shows WHY instead of silently vanishing.
+const liveLinks = computed(() =>
+  (form.value.channelStates || []).filter((c) => c.status === 'Published' && c.permalink),
+)
+const scheduledMeta = computed(() =>
+  (form.value.channelStates || []).filter((c) => c.status === 'Scheduled' && c.native_scheduled),
+)
+const failedChannels = computed(() =>
+  (form.value.channelStates || []).filter((c) => c.status === 'Failed' && c.error),
+)
+// FB post to hang off the preview card (prefer an FB channel, else any live one)
+const primaryPermalink = computed(
+  () => liveLinks.value.find((c) => c.channel.startsWith('FB'))?.permalink || liveLinks.value[0]?.permalink || '',
+)
+const chLabel = (ch) => (ch.startsWith('IG') ? __('Ver en Instagram') : __('Ver en Facebook'))
 
 // ── AI draft + approval (S11) ────────────────────────────────────────────
 const aiBusy = ref(false)
@@ -633,6 +685,16 @@ async function openEdit(p) {
     cta_type: doc.cta_type || 'WhatsApp',
     cta_link: doc.cta_link || '',
     status: doc.status,
+    // per-channel publish state (permalink/status/error) so the composer can link
+    // the live FB post + surface a failure instead of hiding the outcome.
+    channelStates: (doc.channels || []).map((c) => ({
+      channel: c.channel,
+      status: c.status,
+      permalink: c.permalink || '',
+      meta_post_id: c.meta_post_id || '',
+      error: c.error || '',
+      native_scheduled: c.native_scheduled,
+    })),
   }
   showComposer.value = true
 }
