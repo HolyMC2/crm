@@ -532,11 +532,10 @@ function onListKeydown(e) {
 // are separate surfaces). An IntersectionObserver on a bottom sentinel pulls the next
 // page as it nears the viewport — no scroll-event polling, no extra dependency.
 const sentinelEl = ref(null)
-// Only the 'all' tab pages reliably: the backend applies the channel filter AFTER
-// slicing the page, so a channel page can return <limit even when more exist (a full
-// page-of-50 ⟺ more is only true with no channel). Channel tabs keep their first 50;
-// their true total still shows in the tab badge (get_channel_counts).
-const paginatable = computed(() => inboxTab.value === 'all')
+// 'all' + the channel tabs page: the backend applies the channel filter BEFORE the
+// page slice (queue.py wa_ts/mm_ts aggregates), so a full page-of-50 ⟺ more exists
+// holds per channel too. Vencidos/Comentarios/Por-aprobar are separate surfaces.
+const paginatable = computed(() => ['all', 'whatsapp', 'messenger'].includes(inboxTab.value))
 let _io = null
 onMounted(() => {
   _io = new IntersectionObserver(
