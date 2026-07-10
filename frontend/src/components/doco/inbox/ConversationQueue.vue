@@ -47,13 +47,24 @@
       <div
         class="mb-3 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px]"
       >
-        <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
+        <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
         <input
+          ref="searchEl"
           :value="queueSearch"
           @input="onSearchInput($event.target.value)"
-          :placeholder="__('Buscar equipo, cliente…')"
+          @keydown.esc="clearQueueSearch"
+          :placeholder="__('Buscar equipo, cliente…') + (isMobile ? '' : '  ( / )')"
           class="w-full border-0 bg-transparent text-[12.5px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
         />
+        <button
+          v-if="queueSearch"
+          class="flex h-4 w-4 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7"
+          :aria-label="__('Limpiar búsqueda')"
+          :title="__('Limpiar búsqueda')"
+          @click="clearQueueSearch"
+        >
+          <LucideX class="h-3 w-3" />
+        </button>
       </div>
       <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios -->
       <div class="flex flex-wrap gap-1.5">
@@ -203,13 +214,23 @@
         </div>
         <!-- search by commenter / text -->
         <div v-if="inboxTab === 'comments'" class="mb-1.5 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[6px]">
-          <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
+          <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
           <input
             :value="commentSearch"
             @input="setCommentSearch($event.target.value)"
+            @keydown.esc="clearCommentSearch"
             :placeholder="__('Buscar comentario o usuario…')"
             class="w-full border-0 bg-transparent text-[12px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
           />
+          <button
+            v-if="commentSearch"
+            class="flex h-4 w-4 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7"
+            :aria-label="__('Limpiar búsqueda')"
+            :title="__('Limpiar búsqueda')"
+            @click="clearCommentSearch"
+          >
+            <LucideX class="h-3 w-3" />
+          </button>
         </div>
         <div v-if="inboxTab === 'comments' && commentPosts.error && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-red-3">
           {{ __('No se pudieron cargar los comentarios.') }}
@@ -383,6 +404,7 @@
 <script setup>
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import LucideSearch from '~icons/lucide/search'
+import LucideX from '~icons/lucide/x'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideFacebook from '~icons/lucide/facebook'
 import LucideArchive from '~icons/lucide/archive'
@@ -416,7 +438,9 @@ import {
   commentSearch,
   reloadComments,
   setCommentSearch,
+  clearCommentSearch,
   queueSearch,
+  clearQueueSearch,
   queueCollapsed,
   activeDeal,
   activeDealDoctype,
@@ -462,11 +486,19 @@ const commentGroups = computed(() => commentPosts.data || [])
 
 // Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger,
 // none on Vencidos (orphans have no record → no response SLA).
+// The queue search applies here too (client-side — the orphan list is small and
+// already loaded): searching a customer must not leave unrelated pinned orphans
+// shouting above the filtered results.
 const visibleUnassigned = computed(() => {
   if (inboxTab.value === 'vencidos' || inboxTab.value === 'aprobar') return []
-  if (inboxTab.value === 'whatsapp') return unassignedRows.value.filter((u) => u.last_channel !== 'messenger')
-  if (inboxTab.value === 'messenger') return unassignedRows.value.filter((u) => u.last_channel === 'messenger')
-  return unassignedRows.value
+  let rows = unassignedRows.value
+  if (inboxTab.value === 'whatsapp') rows = rows.filter((u) => u.last_channel !== 'messenger')
+  else if (inboxTab.value === 'messenger') rows = rows.filter((u) => u.last_channel === 'messenger')
+  const q = queueSearch.value.trim().toLowerCase()
+  if (!q) return rows
+  return rows.filter((u) =>
+    [u.contact_name, u.phone, u.psid, u.last_message].some((f) => f && String(f).toLowerCase().includes(q)),
+  )
 })
 
 // Archived orphans, same channel-scoping as the live list.
@@ -555,6 +587,20 @@ onMounted(() => {
   )
 })
 onBeforeUnmount(() => _io?.disconnect())
+
+// ── "/" focuses search (Slack/Gmail convention) ──────────────────────────────
+// Global while the inbox is mounted; ignored when the user is already typing
+// somewhere (input/textarea/contenteditable) so message drafts keep their "/".
+const searchEl = ref(null)
+function onGlobalKeydown(e) {
+  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return
+  const t = e.target
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+  e.preventDefault()
+  searchEl.value?.focus()
+}
+onMounted(() => document.addEventListener('keydown', onGlobalKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', onGlobalKeydown))
 
 // Compact "time waited" for the response-SLA chip: 45s / 12m / 3h / 5d.
 function formatWaiting(secs) {

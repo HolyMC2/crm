@@ -4,6 +4,7 @@
 // doco_marketing.api.inbox.* — itself a read layer over crm WhatsApp + Communication.
 import { ref, watch, computed } from 'vue'
 import { createResource, call } from 'frappe-ui'
+import { guardStatusChange } from '@/utils/statusGuard'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
@@ -339,6 +340,14 @@ export function onSearchInput(v) {
   clearTimeout(_searchTimer)
   _searchTimer = setTimeout(reloadQueue, 300)
 }
+// (x) on the searchbox: empty + reload NOW — skipping the 300ms debounce so the
+// full queue is back before the user's eye returns to the list.
+export function clearQueueSearch() {
+  clearTimeout(_searchTimer)
+  if (!queueSearch.value) return
+  queueSearch.value = ''
+  reloadQueue()
+}
 export function setQueueChannel(ch) {
   queueChannel.value = ch
   reloadQueue()
@@ -518,7 +527,9 @@ export async function requestStage(status, type) {
     lostStagePrompt.value = { status }
     return
   }
-  await setStage(status)
+  // Completado/Entregado can auto-send WhatsApp to the customer — explicit
+  // confirm before committing (wrong-WABA misclick guard, utils/statusGuard).
+  guardStatusChange(status, () => setStage(status))
 }
 
 export async function commitLostStage(reason, notes = '') {
@@ -536,6 +547,20 @@ export async function commitLostStage(reason, notes = '') {
 
 export function cancelLostStage() {
   lostStagePrompt.value = null
+}
+
+// Catch-up after a realtime gap (socket reconnect, tab back from a long hidden
+// stretch): any event emitted meanwhile is gone forever, so refetch every inbox
+// surface + the open thread. This is the F5 the operator used to do by hand.
+export function catchUpInbox() {
+  reloadQueue()
+  reloadUnassigned()
+  if (activeDeal.value) loadThread()
+  else if (activeUnassigned.value) reloadUnassignedThread()
+  channelCounts.reload()
+  overdue.reload()
+  autoAckCount.reload()
+  commentCounts.reload()
 }
 
 // onThreadUpdate: wired to realtime in the page; reload if it's for the open deal.
@@ -560,6 +585,12 @@ export function setCommentSearch(q) {
   commentSearch.value = q
   clearTimeout(_cSearchTimer)
   _cSearchTimer = setTimeout(reloadComments, 300)
+}
+export function clearCommentSearch() {
+  clearTimeout(_cSearchTimer)
+  if (!commentSearch.value) return
+  commentSearch.value = ''
+  reloadComments()
 }
 // Omnichannel tab switch: scope the deal queue by channel, surface the right sections.
 export function setInboxTab(tab) {

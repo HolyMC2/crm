@@ -58,6 +58,7 @@ import {
   activeDealDoctype,
   activeUnassigned,
   activeCommentPost,
+  activeUnassignedChannel,
   queue,
   queueCollapsed,
   mobileView,
@@ -65,11 +66,13 @@ import {
   initInbox,
   reloadQueue,
   reloadUnassigned,
+  reloadUnassignedThread,
   selectDeal,
   markRead,
   onThreadUpdate,
   onCommentUpdate,
   onMessengerInbound,
+  catchUpInbox,
 } from '@/composables/inbox'
 import { playPing } from '@/composables/notificationSound'
 
@@ -87,8 +90,19 @@ const route = useRoute()
 // only fires here on a genuinely new inbound — detected by the unread-dot count
 // rising after a reload — so outbound status echoes and our own sends don't ping.
 let prevUnread = 0
-function onWaMessage() {
+function onWaMessage(payload) {
   reloadUnassigned() // a new inbound from an unknown number adds a Sin-asignar row
+  // Un-linked inbound (Sin asignar): if that orphan's thread is the one open,
+  // refresh its bubbles too — same catch Messenger already had (onMessengerInbound).
+  if (
+    !payload?.reference_name &&
+    payload?.phone &&
+    activeUnassigned.value &&
+    activeUnassignedChannel.value !== 'messenger' &&
+    String(payload.phone).replace(/\D/g, '').endsWith(String(activeUnassigned.value).replace(/\D/g, '').slice(-10))
+  ) {
+    reloadUnassignedThread()
+  }
   reloadQueue().then(() => {
     // the conversation you're actively viewing stays read
     if (activeDeal.value) {
@@ -148,6 +162,25 @@ function onPopState(e) {
   }
 }
 
+// ── realtime catch-up ──────────────────────────────────────────────────────
+// Events fired while the socket was down or the tab slept are lost forever —
+// the reason "some messages only show after F5". Two recovery signals:
+// socket.js announces a reconnect after a real gap; and a tab returning to the
+// foreground after ≥60s hidden (sleep/phone-lock throttling can starve the
+// socket without a clean disconnect). Both trigger one full inbox refetch.
+function onSocketReconnected() {
+  catchUpInbox()
+}
+let hiddenAt = 0
+function onVisibility() {
+  if (document.hidden) {
+    hiddenAt = Date.now()
+  } else if (hiddenAt && Date.now() - hiddenAt > 60_000) {
+    hiddenAt = 0
+    catchUpInbox()
+  }
+}
+
 onMounted(() => {
   mounting = true
   initInbox() // restores the last conversation/pane, then loads queue + counts
@@ -165,6 +198,8 @@ onMounted(() => {
   $socket?.on('messenger_message', onMessenger)
   $socket?.on('whatsapp_message', onWaMessage)
   window.addEventListener('popstate', onPopState)
+  window.addEventListener('socket:reconnected', onSocketReconnected)
+  document.addEventListener('visibilitychange', onVisibility)
 })
 onUnmounted(() => {
   $socket?.off('doco_marketing:thread_update', onThreadUpdate)
@@ -172,5 +207,7 @@ onUnmounted(() => {
   $socket?.off('messenger_message', onMessenger)
   $socket?.off('whatsapp_message', onWaMessage)
   window.removeEventListener('popstate', onPopState)
+  window.removeEventListener('socket:reconnected', onSocketReconnected)
+  document.removeEventListener('visibilitychange', onVisibility)
 })
 </script>

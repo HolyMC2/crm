@@ -14,7 +14,10 @@ export let Dialogs = {
       <Dialog
         options={dialog}
         modelValue={dialog.show}
-        onUpdate:modelValue={(val) => (dialog.show = val)}
+        onUpdate:modelValue={(val) => {
+          dialog.show = val
+          if (!val) dialog.onClose?.()
+        }}
       >
         {{
           'body-content': () => {
@@ -71,16 +74,23 @@ export function createDialog(dialogOptions) {
 // Styled async confirm — replaces window.confirm (ugly + blocking + not mobile-safe). The
 // caller passes already-translated strings + an onConfirm callback run when the user
 // confirms; Cancel just closes. Destructive actions default to a red confirm button.
-export function confirmDialog({ title, message, confirmLabel, theme = 'red', onConfirm }) {
+// onCancel fires when the dialog closes any way EXCEPT confirm (X, backdrop, Esc) —
+// callers awaiting an outcome need the "no" as much as the "yes".
+export function confirmDialog({ title, message, confirmLabel, theme = 'red', onConfirm, onCancel }) {
+  let confirmed = false
   createDialog({
     title: title || message,
     message: title ? message : undefined,
+    onClose: () => {
+      if (!confirmed) onCancel?.()
+    },
     actions: [
       {
         label: confirmLabel || 'OK',
         variant: 'solid',
         theme,
         onClick: async (close) => {
+          confirmed = true
           await onConfirm?.()
           close()
         },

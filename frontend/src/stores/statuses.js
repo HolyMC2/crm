@@ -1,5 +1,6 @@
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import { parseColor, isTranslatable } from '@/utils'
+import { guardStatusChange } from '@/utils/statusGuard'
 import { defineStore } from 'pinia'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { createListResource } from 'frappe-ui'
@@ -103,8 +104,12 @@ export const statusesStore = defineStore('crm-statuses', () => {
         value: statusesByName[status]?.name,
         icon: () => h(IndicatorIcon, { class: statusesByName[status]?.color }),
         onClick: async () => {
-          await triggerStatusChange?.(statusesByName[status]?.name)
-          capture('status_changed', { doctype, status })
+          // Completado/Entregado can auto-send WhatsApp — require explicit confirm
+          // (3 wrong-WABA misclick incidents; see utils/statusGuard).
+          guardStatusChange(statusesByName[status]?.name, async () => {
+            await triggerStatusChange?.(statusesByName[status]?.name)
+            capture('status_changed', { doctype, status })
+          })
         },
       })
     }

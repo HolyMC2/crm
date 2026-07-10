@@ -203,6 +203,7 @@ import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import { parseAssignees } from '@/utils'
+import { guardStatusChange } from '@/utils/statusGuard'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
@@ -357,8 +358,12 @@ async function changeStatus(status, type) {
     requestStage(status, type)
     return
   }
-  await setStage(status)
-  dealRes.reload()
+  // Completado/Entregado auto-send WhatsApp — explicit confirm first (statusGuard).
+  // Resolves true/false so macros can skip their success toast on cancel.
+  return guardStatusChange(status, async () => {
+    await setStage(status)
+    dealRes.reload()
+  })
 }
 
 const assignees = computed(() => {
@@ -432,12 +437,14 @@ async function macroListo() {
   toast.success(__('Estado → Por Entregar. Revisa y envía la plantilla.'))
 }
 async function macroCompletado() {
+  let confirmed
   try {
-    await changeStatus('Completado')
+    confirmed = await changeStatus('Completado')
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo marcar como completado — ¿existe el estado "Completado"?'))
     return
   }
+  if (confirmed === false) return // user cancelled the WhatsApp-send guard
   toast.success(__('Trato marcado como completado.'))
 }
 function macroPago() {
