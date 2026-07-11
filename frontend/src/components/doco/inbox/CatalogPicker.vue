@@ -74,16 +74,28 @@
       </div>
 
       <!-- footer -->
-      <div class="flex flex-none items-center justify-between border-t border-outline-gray-1 px-4 py-3">
+      <div class="flex flex-none items-center justify-between gap-2 border-t border-outline-gray-1 px-4 py-3">
         <div class="text-[12px] text-ink-gray-6">{{ selected.size }} {{ __('seleccionados') }}</div>
-        <button
-          class="rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
-          style="background: #16a34a"
-          :disabled="busy || !selected.size"
-          @click="send"
-        >
-          {{ busy ? '…' : __('Enviar {0} al chat', [selected.size]) }}
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- ERP spec P2.1: picked items → draft Quotation lines on the deal -->
+          <button
+            v-if="canQuote"
+            class="rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-[13px] font-semibold text-ink-gray-8 disabled:opacity-50"
+            :disabled="busy || !selected.size"
+            :title="__('Agregar a la cotización del trato')"
+            @click="quote"
+          >
+            🧾 {{ __('Cotizar') }}
+          </button>
+          <button
+            class="rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+            style="background: #16a34a"
+            :disabled="busy || !selected.size"
+            @click="send"
+          >
+            {{ busy ? '…' : __('Enviar {0} al chat', [selected.size]) }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -102,9 +114,12 @@ import {
   runCatalogSearch,
   closeCatalog,
   sendCatalogItems,
+  catalogCtx,
+  salesDocsEnabled,
 } from '@/composables/inbox'
+import { addItemsToQuotation } from '@/composables/salesDocs'
 
-const emit = defineEmits(['sent'])
+const emit = defineEmits(['sent', 'quoted'])
 const rows = computed(() => catalogResults.data || [])
 const selected = reactive(new Set())
 const failed = reactive(new Set()) // item_codes whose image 404'd → show the placeholder
@@ -130,6 +145,30 @@ async function send() {
     closeCatalog()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo enviar el catálogo'))
+  } finally {
+    busy.value = false
+  }
+}
+
+// «Cotizar» only makes sense on a deal conversation (orphans/comments have no deal)
+const canQuote = computed(
+  () => salesDocsEnabled.value && catalogCtx.value?.reference_doctype === 'CRM Deal' && catalogCtx.value?.reference_name,
+)
+
+async function quote() {
+  if (!selected.size) return
+  busy.value = true
+  try {
+    const out = await addItemsToQuotation(
+      catalogCtx.value.reference_name,
+      [...selected].map((c) => ({ item_code: c, qty: 1 })),
+    )
+    toast.success(__('Cotización {0} · {1} líneas', [out.quotation, out.lines.length]))
+    for (const w of out.warnings || []) toast.error(w)
+    emit('quoted', out.quotation)
+    closeCatalog()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo cotizar'))
   } finally {
     busy.value = false
   }

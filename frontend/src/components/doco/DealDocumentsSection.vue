@@ -106,32 +106,22 @@ const props = defineProps({
 })
 
 // ── Data fetching ────────────────────────────────────────────────────────────
+// ERP spec P2.4: one neutral summary call (doco crm_deal joins) replaced the
+// three taller-fed reads — works without taller and matches the inbox panel.
+// Behavior change (spec §6b): invoices are crm_deal-back-link only; the old
+// customer-matched POS path could show unrelated same-customer purchases.
 
-const quotationsRes = createResource({
-  url: 'taller.repair.deal_documents.get_deal_quotations',
-  params: { deal_name: props.docname },
+const summaryRes = createResource({
+  url: 'doco_marketing.api.sales_docs.get_deal_sales_summary',
+  params: { deal: props.docname },
   auto: true,
 })
 
-const salesOrdersRes = createResource({
-  url: 'taller.repair.deal_documents.get_deal_sales_orders',
-  params: { deal_name: props.docname },
-  auto: true,
-})
+const loading = computed(() => summaryRes.loading)
 
-const invoicesRes = createResource({
-  url: 'taller.repair.deal_documents.get_deal_invoices',
-  params: { deal_name: props.docname },
-  auto: true,
-})
-
-const loading = computed(
-  () => quotationsRes.loading || salesOrdersRes.loading || invoicesRes.loading,
-)
-
-const quotations = computed(() => quotationsRes.data || [])
-const salesOrders = computed(() => salesOrdersRes.data || [])
-const invoices = computed(() => invoicesRes.data || [])
+const quotations = computed(() => summaryRes.data?.quotations || [])
+const salesOrders = computed(() => summaryRes.data?.sales_orders || [])
+const invoices = computed(() => summaryRes.data?.invoices || [])
 
 const hasAny = computed(
   () => quotations.value.length || salesOrders.value.length || invoices.value.length,

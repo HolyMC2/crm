@@ -67,6 +67,14 @@
             {{ ro.name }}
           </a>
           <div class="flex items-center gap-1.5">
+            <!-- Purchase-side ETA (ERP spec P3): what «Esperando Pieza» is waiting ON -->
+            <span
+              v-if="waitingPo(ro)"
+              class="rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-3"
+              :title="__('Pieza en camino — Purchase Order vinculado')"
+            >
+              🧩 {{ waitingPo(ro).purchase_order }}<template v-if="waitingPo(ro).po_expected_date"> · {{ __('llega') }} {{ waitingPo(ro).po_expected_date }}</template>
+            </span>
             <Badge :label="__(ro.status)" :theme="statusTheme(ro.status)" />
             <Dropdown :options="draftOptions(ro.name)">
               <Button
@@ -243,6 +251,13 @@
                 <div class="min-w-0 truncate">
                   <span class="font-medium text-ink-gray-8">{{ p.item_name || p.item || '—' }}</span>
                   <span v-if="p.source" class="ml-1.5 text-ink-gray-5">[{{ __(p.source) }}]</span>
+                  <span
+                    v-if="p.purchase_order && p.po_status"
+                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-3"
+                    :title="`${p.purchase_order} · ${p.po_status}`"
+                  >
+                    🧩 {{ p.po_expected_date ? __('llega') + ' ' + p.po_expected_date : p.purchase_order }}
+                  </span>
                 </div>
                 <div class="ml-2 whitespace-nowrap font-mono text-ink-gray-7">
                   {{ p.qty || 0 }}{{ p.uom ? ' ' + p.uom : '' }}
@@ -529,12 +544,23 @@ const STATUS_THEMES = {
   'En Diagnóstico': 'orange',
   'Esperando Aprobación': 'yellow',
   'En Espera de Pieza': 'purple',
+  'Esperando Pieza': 'purple',
+  'Esperando Cliente': 'yellow',
   'Por Revisar': 'gray',
   'Cancelado': 'red',
 }
 
 function statusTheme(status) {
   return STATUS_THEMES[status] || 'gray'
+}
+
+// Purchase-side ETA (ERP spec P3): the first PO-linked part of a waiting order —
+// feeds the header chip. po_status is merged ONLY when the tenant flag is on,
+// and it's the render key — so a flag-off tenant shows nothing even if part
+// rows carry stray purchase_order values.
+function waitingPo(ro) {
+  if (ro.status !== 'Esperando Pieza') return null
+  return (ro.parts || []).find((p) => p.purchase_order && p.po_status) || null
 }
 
 // Open a photo full-res. Local files serve directly; S3-backed originals need a

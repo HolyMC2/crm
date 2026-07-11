@@ -51,6 +51,7 @@
 
       <div v-if="!hasAny" class="py-1 text-[12px] text-ink-gray-5">
         {{ __('Sin documentos de venta todavía.') }}
+        <span class="text-ink-gray-4">{{ __('Cotiza desde 📦 Catálogo → «Cotizar».') }}</span>
       </div>
 
       <div v-else class="flex flex-col gap-2.5">
@@ -76,6 +77,13 @@
                   <span class="text-[10px] text-ink-gray-5">{{ d.transaction_date || d.posting_date }}</span>
                 </div>
               </button>
+              <button
+                v-if="g.doctype === 'Quotation'"
+                class="flex-none rounded px-1 text-[13px] hover:bg-surface-gray-2"
+                :title="d.docstatus === 0 ? __('Editar / enviar cotización') : __('Enviar / convertir cotización')"
+                :aria-label="__('Editar cotización')"
+                @click.stop="editingQuote = d.name"
+              >✏️</button>
               <div class="flex flex-none flex-col items-end gap-0.5">
                 <span class="font-semibold tabular-nums text-ink-gray-8">{{ money(d.grand_total, d.currency) }}</span>
                 <span v-if="d.doctype && d.docstatus === 1 && Number(d.outstanding_amount) > 0" class="text-[10px] font-semibold tabular-nums text-ink-red-4">
@@ -84,6 +92,14 @@
               </div>
             </div>
           </div>
+          <QuoteEditor
+            v-if="g.doctype === 'Quotation' && editingQuote"
+            class="mt-1.5"
+            :deal="deal"
+            :quotation="editingQuote"
+            @close="editingQuote = null"
+            @changed="reloadSalesSummary(deal)"
+          />
         </div>
 
         <!-- payments: display detail (the rollup's authority is the invoices) -->
@@ -147,6 +163,9 @@ import { globalStore } from '@/stores/global'
 import { formatMoney } from '@/composables/crmFormat'
 import { salesDocsEnabled } from '@/composables/inbox'
 import { salesSummary, salesRollup, ensureSalesSummary, reloadSalesSummary } from '@/composables/salesDocs'
+import QuoteEditor from '@/components/doco/inbox/QuoteEditor.vue'
+
+const editingQuote = ref(null)
 
 const props = defineProps({
   deal: { type: String, required: true },
@@ -178,7 +197,10 @@ const groups = computed(() => [
 // flag can resolve after mount (features loads async) — watch both
 watch(
   [() => props.deal, salesDocsEnabled],
-  () => ensureSalesSummary(props.deal),
+  ([deal], [prevDeal] = []) => {
+    if (deal !== prevDeal) editingQuote.value = null
+    ensureSalesSummary(props.deal)
+  },
   { immediate: true },
 )
 

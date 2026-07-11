@@ -157,7 +157,7 @@
       <Card v-if="scoreShops.length" :title="__('Desempeño por sucursal')">
         <div>
           <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${SHOP_GRID}`">
-            <div>{{ __('Sucursal') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv.') }}</div><div>{{ __('SLA') }}</div><div>{{ __('Ingresos') }}</div>
+            <div>{{ __('Sucursal') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv.') }}</div><div>{{ __('SLA') }}</div><div>{{ __('Ingresos') }}</div><div>{{ __('Facturado') }}</div><div>{{ __('Cobrado') }}</div>
           </div>
           <div
             v-for="s in scoreShops"
@@ -171,6 +171,8 @@
             <div>{{ s.conv_pct }}%</div>
             <div :class="s.sla_kept_pct == null ? 'text-ink-gray-4' : slaClass(s.sla_kept_pct)">{{ s.sla_kept_pct == null ? '—' : s.sla_kept_pct + '%' }}</div>
             <div class="font-medium">{{ money(s.won_pesos) }}</div>
+            <div class="font-medium">{{ money(s.invoiced) }}</div>
+            <div class="font-semibold" style="color: #16a34a">{{ money(s.paid) }}</div>
           </div>
         </div>
       </Card>
@@ -314,7 +316,7 @@ const router = useRouter()
 const ATTR_GRID = '1fr 70px 80px 70px 110px'
 const FUNNEL_GRID = '1fr 70px 70px 80px 110px'
 const AGENT_GRID = '1fr 50px 54px 44px 40px 44px 44px 48px 48px 88px'
-const SHOP_GRID = '1fr 64px 70px 64px 56px 110px'
+const SHOP_GRID = '1fr 56px 64px 56px 50px 96px 96px 96px'
 const TERR_GRID = '1fr 70px 70px 70px 110px'
 const HYG_GRID = '150px 1fr 120px 48px 1.2fr'
 const periods = [
