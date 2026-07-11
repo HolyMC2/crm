@@ -514,6 +514,20 @@ export async function setStage(status) {
   reloadQueue()
 }
 
+// Silent stage change ("Cambiar SIN avisar"): the server suppresses campaign
+// auto-sends for this save — for stale orders closed late, so the customer
+// doesn't get a confusing months-later WhatsApp.
+export async function setStageSilent(status) {
+  if (!activeDeal.value) return
+  await call('doco_marketing.api.inbox.set_status', {
+    reference_doctype: activeDealDoctype.value,
+    reference_name: activeDeal.value,
+    status,
+    silent: 1,
+  })
+  reloadQueue()
+}
+
 // Lost-stage capture. A status whose type is 'Lost' (Deal: Cancelado/Abandonado;
 // Lead: Junk/Unqualified) can't be saved without a lost_reason — validate_lost_reason
 // throws on BOTH CRM Deal and CRM Lead — so a bare setStage(status) is rejected and the
@@ -528,8 +542,9 @@ export async function requestStage(status, type) {
     return
   }
   // Completado/Entregado can auto-send WhatsApp to the customer — explicit
-  // confirm before committing (wrong-WABA misclick guard, utils/statusGuard).
-  guardStatusChange(status, () => setStage(status))
+  // confirm before committing (wrong-WABA misclick guard, utils/statusGuard),
+  // with the silent escape for stale orders.
+  guardStatusChange(status, () => setStage(status), { onSilent: () => setStageSilent(status) })
 }
 
 export async function commitLostStage(reason, notes = '') {

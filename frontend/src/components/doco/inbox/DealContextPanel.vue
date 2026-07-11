@@ -209,7 +209,7 @@ import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, requestStage, mobileBack, hasTaller } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()
@@ -358,12 +358,22 @@ async function changeStatus(status, type) {
     requestStage(status, type)
     return
   }
-  // Completado/Entregado auto-send WhatsApp — explicit confirm first (statusGuard).
-  // Resolves true/false so macros can skip their success toast on cancel.
-  return guardStatusChange(status, async () => {
-    await setStage(status)
-    dealRes.reload()
-  })
+  // Completado/Entregado auto-send WhatsApp — explicit confirm first (statusGuard),
+  // with the silent escape for stale orders. Resolves 'changed'/'silent'/false so
+  // macros can skip their success toast on cancel.
+  return guardStatusChange(
+    status,
+    async () => {
+      await setStage(status)
+      dealRes.reload()
+    },
+    {
+      onSilent: async () => {
+        await setStageSilent(status)
+        dealRes.reload()
+      },
+    },
+  )
 }
 
 const assignees = computed(() => {

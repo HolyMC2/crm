@@ -80,7 +80,7 @@ export const statusesStore = defineStore('crm-statuses', () => {
     return communicationStatuses[name]
   }
 
-  function statusOptions(doctype, statuses = [], triggerStatusChange = null) {
+  function statusOptions(doctype, statuses = [], triggerStatusChange = null, triggerStatusChangeSilent = null) {
     let statusesByName =
       doctype == 'deal' ? dealStatusesByName : leadStatusesByName
 
@@ -105,11 +105,24 @@ export const statusesStore = defineStore('crm-statuses', () => {
         icon: () => h(IndicatorIcon, { class: statusesByName[status]?.color }),
         onClick: async () => {
           // Completado/Entregado can auto-send WhatsApp — require explicit confirm
-          // (3 wrong-WABA misclick incidents; see utils/statusGuard).
-          guardStatusChange(statusesByName[status]?.name, async () => {
-            await triggerStatusChange?.(statusesByName[status]?.name)
-            capture('status_changed', { doctype, status })
-          })
+          // (3 wrong-WABA misclick incidents; see utils/statusGuard). Pages that
+          // pass triggerStatusChangeSilent also get the "SIN avisar" escape for
+          // stale orders (silent server path skips campaign enrollment).
+          guardStatusChange(
+            statusesByName[status]?.name,
+            async () => {
+              await triggerStatusChange?.(statusesByName[status]?.name)
+              capture('status_changed', { doctype, status })
+            },
+            {
+              onSilent: triggerStatusChangeSilent
+                ? async () => {
+                    await triggerStatusChangeSilent(statusesByName[status]?.name)
+                    capture('status_changed_silent', { doctype, status })
+                  }
+                : undefined,
+            },
+          )
         },
       })
     }

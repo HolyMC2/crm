@@ -325,6 +325,7 @@ import { viewsStore } from '@/stores/views'
 import { usersStore } from '@/stores/users'
 import { getMeta } from '@/stores/meta'
 import { isEmoji } from '@/utils'
+import { GUARDED_STATUSES, guardStatusChange } from '@/utils/statusGuard'
 import {
   Tooltip,
   createResource,
@@ -929,12 +930,37 @@ function updateColumns(obj) {
 
 function updateKanbanSettings(data) {
   if (data.item && data.to) {
-    call('frappe.client.set_value', {
-      doctype: props.doctype,
-      name: data.item,
-      fieldname: view.value.column_field,
-      value: data.to,
-    })
+    const apply = () =>
+      call('frappe.client.set_value', {
+        doctype: props.doctype,
+        name: data.item,
+        fieldname: view.value.column_field,
+        value: data.to,
+      })
+    // Dragging a card into Completado/Entregado is the same auto-WhatsApp
+    // hazard as the pickers (wrong-WABA misclicks) — guard it. The card has
+    // already moved optimistically, so cancel reloads to snap it back.
+    if (
+      view.value.column_field === 'status' &&
+      GUARDED_STATUSES.includes(data.to) &&
+      ['CRM Deal', 'CRM Lead'].includes(props.doctype)
+    ) {
+      guardStatusChange(data.to, apply, {
+        onSilent: () =>
+          call('doco_marketing.api.inbox.set_status', {
+            reference_doctype: props.doctype,
+            reference_name: data.item,
+            status: data.to,
+            silent: 1,
+          }),
+      })
+        .then((outcome) => {
+          if (outcome === false) list.value.reload()
+        })
+        .catch(() => list.value.reload())
+      return
+    }
+    apply()
     return
   }
 

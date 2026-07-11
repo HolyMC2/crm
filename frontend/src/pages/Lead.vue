@@ -399,7 +399,7 @@ const statuses = computed(() => {
   let customStatuses = document.statuses?.length
     ? document.statuses
     : document._statuses || []
-  return statusOptions('lead', customStatuses, triggerStatusChange)
+  return statusOptions('lead', customStatuses, triggerStatusChange, triggerStatusChangeSilent)
 })
 
 usePageMeta(() => {
@@ -475,6 +475,18 @@ const sections = createResource({
 async function triggerStatusChange(value) {
   await triggerOnChange('status', value)
   setLostReason()
+}
+
+// Silent path ("Cambiar SIN avisar", stale orders): server sets the status with
+// campaign auto-sends suppressed; mirror it locally so the picker updates.
+async function triggerStatusChangeSilent(value) {
+  await call('doco_marketing.api.inbox.set_status', {
+    reference_doctype: 'CRM Lead',
+    reference_name: props.leadId,
+    status: value,
+    silent: 1,
+  })
+  if (document.doc) document.doc.status = value
 }
 
 function updateField(name, value) {
