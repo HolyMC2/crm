@@ -55,6 +55,13 @@
           >
             {{ waWindow.open ? `WA ${waWindow.hoursLeft}h` : __('WA cerrada') }}
           </span>
+          <span
+            v-if="saldoChip"
+            class="rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-4"
+            :title="__('Saldo pendiente en facturas del trato')"
+          >
+            💰 {{ __('Saldo') }} {{ saldoChip }}
+          </span>
         </div>
       </div>
       <div class="flex flex-none items-center gap-2.5">
@@ -164,7 +171,10 @@ import {
   initials,
   timeAgo,
   GRADE_COLORS,
+  salesDocsEnabled,
 } from '@/composables/inbox'
+import { ensureSalesSummary, salesOutstanding, salesRollup } from '@/composables/salesDocs'
+import { formatMoney } from '@/composables/crmFormat'
 
 const { showModal } = useDoctypeModal()
 
@@ -225,6 +235,18 @@ const responsible = computed(() => {
 })
 const grade = computed(() => row.value.score_grade)
 const score = computed(() => row.value.lead_score ?? '')
+
+// 💰 saldo chip (ERP_INTEGRATION_SPEC P1.3): shares the SalesDocsSection resource —
+// one fetch per deal feeds panel + chip. Deal-only; flag can resolve after mount.
+watch(
+  [activeDeal, salesDocsEnabled],
+  () => isDeal.value && activeDeal.value && ensureSalesSummary(activeDeal.value),
+  { immediate: true },
+)
+const saldoChip = computed(() => {
+  if (!salesDocsEnabled.value || !isDeal.value || !(salesOutstanding.value > 0)) return ''
+  return formatMoney(salesOutstanding.value, salesRollup.value?.currency)
+})
 const gradeColor = computed(() => GRADE_COLORS[grade.value]?.[0] || '#9aa2ae')
 
 // guard: a deep-linked deal not in the queue gives an empty row → status undefined;

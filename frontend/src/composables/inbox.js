@@ -49,6 +49,8 @@ export const features = createResource({
 export const hasTaller = computed(() => !!features.data?.has_taller)
 export const messengerEnabled = computed(() => !!features.data?.enable_messenger)
 export const forecastingEnabled = computed(() => !!features.data?.enable_forecasting)
+// 💰 Documentos: neutral deal financial docs (doco crm_deal joins), flag-gated per tenant.
+export const salesDocsEnabled = computed(() => !!features.data?.enable_sales_docs)
 export const thread = createResource({ url: 'doco_marketing.api.inbox.get_communications' })
 // "Sin asignar": inbound WhatsApp from numbers with no Contact/Lead/Deal.
 export const unassigned = createResource({

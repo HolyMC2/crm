@@ -60,3 +60,17 @@ export function hhmm(ts) {
   const d = _date(ts)
   return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
 }
+
+// Shared money formatter (there were 3 divergent per-component copies before the
+// 💰 Documentos work — new money UI should import this one). Whole numbers render
+// without cents; anything fractional keeps 2 decimals.
+export function formatMoney(v, currency) {
+  const n = Number(v)
+  if (!isFinite(n)) return ''
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: currency || window.frappe?.boot?.sysdefaults?.currency || 'MXN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: Number.isInteger(n) ? 0 : 2,
+  }).format(n)
+}

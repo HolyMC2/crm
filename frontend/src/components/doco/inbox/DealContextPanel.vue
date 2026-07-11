@@ -143,6 +143,10 @@
       </div>
     </div>
 
+    <!-- 💰 Documentos (ERP_INTEGRATION_SPEC P1): the deal's money docs + rollup,
+         neutral (doco crm_deal joins) and flag-gated per tenant -->
+    <SalesDocsSection v-if="isDeal && salesDocsEnabled && activeDeal" :deal="activeDeal" />
+
     <!-- score (doco-specific; not in the upstream sidepanel) -->
     <div v-if="grade" class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Score') }} · {{ name }}</div>
@@ -208,8 +212,9 @@ import LucideChevronLeft from '~icons/lucide/chevron-left'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
+import SalesDocsSection from '@/components/doco/inbox/SalesDocsSection.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller, salesDocsEnabled } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()
