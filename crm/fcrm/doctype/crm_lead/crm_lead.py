@@ -355,7 +355,12 @@ class CRMLead(Document):
 		new_deal.update(
 			{
 				"lead": self.name,
-				"contacts": [{"contact": contact}],
+				# Scalar Deal.contact mirrors the primary child row — the deals
+				# list "Contact" column reads it, so every converted lead used
+				# to render a blank Contact (same bug create_deal had; 8268504a
+				# fixed only the direct-creation path).
+				"contact": contact,
+				"contacts": [{"contact": contact, "is_primary": 1}],
 			}
 		)
 
@@ -373,6 +378,9 @@ class CRMLead(Document):
 
 		if deal:
 			new_deal.update(deal)
+		# A caller-supplied deal dict must not blank the scalar back out.
+		if contact and not new_deal.contact:
+			new_deal.contact = contact
 
 		new_deal.insert(ignore_permissions=True)
 
