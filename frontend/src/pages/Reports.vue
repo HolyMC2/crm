@@ -85,6 +85,70 @@
         </div>
       </Card>
 
+      <!-- campaign ROI: enrolled → sends → touched → won → pesos (revenue-only ROI) -->
+      <Card :title="__('ROI por campaña')">
+        <div v-if="!roiRows.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin campañas usadas en el periodo') }}</div>
+        <div v-else>
+          <div class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${ROI_GRID}`">
+            <div>{{ __('Campaña') }}</div>
+            <div :title="__('Enrolamientos en el periodo')">{{ __('Inscr.') }}</div>
+            <div>{{ __('Enviados') }}</div>
+            <div :title="__('Fallidos + omitidos')">{{ __('Fall.') }}</div>
+            <div :title="__('Contactos con al menos un touchpoint de la campaña')">{{ __('Tocados') }}</div>
+            <div :title="__('Deals ganados atribuidos')">{{ __('Gan.') }}</div>
+            <div>{{ __('Conv.') }}</div>
+            <div>{{ __('Ingresos') }}</div>
+          </div>
+          <div
+            v-for="c in roiRows"
+            :key="c.campaign"
+            class="grid cursor-pointer items-center gap-x-2 border-b border-outline-gray-1 py-2 text-[12.5px] hover:bg-surface-gray-2"
+            :style="`grid-template-columns:${ROI_GRID}`"
+            @click="$router.push(`/campaigns/${c.campaign}`)"
+          >
+            <div class="truncate font-medium text-ink-gray-9" :title="c.campaign">{{ c.title || c.campaign }}</div>
+            <div>{{ c.enrolled }}</div>
+            <div>{{ c.sent }}</div>
+            <div :class="(c.failed + c.skipped) ? 'text-ink-red-4' : 'text-ink-gray-4'">{{ c.failed + c.skipped }}</div>
+            <div>{{ c.touched }}</div>
+            <div class="font-semibold" style="color: #16a34a">{{ c.won }}</div>
+            <div>{{ c.conv_pct }}%</div>
+            <div class="font-medium">{{ money(c.revenue) }}</div>
+          </div>
+        </div>
+      </Card>
+
+      <!-- dispatch health: why sends didn't go out (rolling 7 days, not period-scoped) -->
+      <Card :title="__('Salud de envíos (7 días)')">
+        <div v-if="!dispatchAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin envíos registrados') }}</div>
+        <div v-else>
+          <div class="mb-2.5 flex flex-wrap gap-1.5">
+            <span
+              v-for="(n, st) in dispatchStatuses"
+              :key="st"
+              class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+              :class="st === 'Sent' ? 'text-ink-green-3 bg-surface-green-2' : st === 'Failed' ? 'text-ink-red-4 bg-surface-red-1' : st === 'Pending' ? 'text-ink-amber-3 bg-surface-amber-1' : 'text-ink-gray-7 bg-surface-gray-2'"
+            >{{ st }} · {{ n }}</span>
+          </div>
+          <div v-if="dispatchDeferredRows.length" class="mb-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Diferidos (siguen pendientes)') }}</div>
+          <div v-for="d in dispatchDeferredRows" :key="d.reason" class="flex items-center justify-between border-b border-outline-gray-1 py-1.5 text-[12px]">
+            <span class="min-w-0 truncate text-ink-gray-7" :title="d.reason">{{ d.reason }}</span>
+            <span class="ml-2 flex-none font-semibold text-ink-amber-3">{{ d.count }}</span>
+          </div>
+          <div v-if="dispatchTop.length" class="mb-1 mt-2.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Principales motivos de fallo/omisión') }}</div>
+          <div
+            v-for="(r, i) in dispatchTop"
+            :key="i"
+            class="grid items-center gap-x-2 border-b border-outline-gray-1 py-1.5 text-[12px]"
+            :style="`grid-template-columns:${DISP_GRID}`"
+          >
+            <span class="font-semibold" :class="r.status === 'Failed' ? 'text-ink-red-4' : 'text-ink-gray-6'">{{ r.status }}</span>
+            <span class="min-w-0 truncate text-ink-gray-7" :title="r.reason">{{ r.reason || '—' }}</span>
+            <span class="text-right font-semibold text-ink-gray-8">{{ r.count }}</span>
+          </div>
+        </div>
+      </Card>
+
       <!-- social funnel → pesos: comment / lead-ad / DM → Lead → Deal → Won -->
       <Card :title="__('Embudo social → pesos')">
         <div v-if="!socialAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin actividad social en el periodo') }}</div>
@@ -123,6 +187,7 @@
           <div class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${AGENT_GRID}`">
             <div>{{ __('Agente') }}</div>
             <div :title="__('Mensajes WhatsApp enviados por el agente')">{{ __('Envíos') }}</div>
+            <div :title="__('Mensajes Messenger enviados por el agente')">{{ __('Msgr') }}</div>
             <div :title="__('Tiempo medio de primera respuesta')">{{ __('Resp.') }}</div>
             <div :title="__('Llamadas registradas')">{{ __('Llam.') }}</div>
             <div :title="__('Reparaciones entregadas (técnico)')">{{ __('Rep.') }}</div>
@@ -140,6 +205,7 @@
           >
             <div class="truncate font-medium text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
             <div>{{ a.sent }}</div>
+            <div>{{ a.messenger_sent || 0 }}</div>
             <div :class="a.avg_response_secs == null ? 'text-ink-gray-4' : ''">{{ fmtResp(a.avg_response_secs) }}</div>
             <div>{{ a.calls || 0 }}</div>
             <div>{{ a.repairs || 0 }}</div>
@@ -315,10 +381,12 @@ const router = useRouter()
 
 const ATTR_GRID = '1fr 70px 80px 70px 110px'
 const FUNNEL_GRID = '1fr 70px 70px 80px 110px'
-const AGENT_GRID = '1fr 50px 54px 44px 40px 44px 44px 48px 48px 88px'
+const AGENT_GRID = '1fr 46px 42px 50px 42px 38px 42px 42px 46px 46px 84px'
 const SHOP_GRID = '1fr 56px 64px 56px 50px 96px 96px 96px'
 const TERR_GRID = '1fr 70px 70px 70px 110px'
 const HYG_GRID = '150px 1fr 120px 48px 1.2fr'
+const ROI_GRID = '1fr 50px 60px 44px 56px 42px 48px 92px'
+const DISP_GRID = '76px 1fr 48px'
 const periods = [
   { key: 'week', label: __('Esta semana') },
   { key: 'month', label: __('Este mes') },
@@ -351,8 +419,11 @@ const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_a
 const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown', onError: onRestricted })
 const socialRes = createResource({ url: 'doco_marketing.api.reports.get_social_funnel', onError: onRestricted })
 const scoreRes = createResource({ url: 'doco_marketing.api.reports.get_agent_scorecard', onError: onRestricted })
+const roiRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_roi', onError: onRestricted })
 // Hygiene is a live audit, not period-scoped — loaded once (reps get own-only server-side).
 const hygieneRes = createResource({ url: 'doco_marketing.api.reports.get_deal_hygiene', auto: true, onError: onRestricted })
+// Dispatch health takes a rolling `days` window, not from/to — loaded once like hygiene.
+const dispatchRes = createResource({ url: 'doco_marketing.api.reports.dispatch_health', auto: true, onError: onRestricted })
 
 function load() {
   const r = range(period.value)
@@ -362,6 +433,7 @@ function load() {
   srcRes.submit(r)
   socialRes.submit(r)
   scoreRes.submit(r)
+  roiRes.submit(r)
 }
 function setPeriod(k) {
   period.value = k
@@ -381,6 +453,19 @@ function originDot(origin) {
   if (o.includes('lead ad')) return '#4267b2'
   return '#1877f2' // FB comments
 }
+
+// Campaign ROI (roadmap #6 follow-up — endpoint live since 2026-07-02)
+const roiRows = computed(() => roiRes.data || [])
+
+// Dispatch health (roadmap #3 follow-up): by_status chips + deferral reasons
+const dispatchStatuses = computed(() => dispatchRes.data?.by_status || {})
+const dispatchDeferredRows = computed(() =>
+  Object.entries(dispatchRes.data?.deferred || {})
+    .map(([reason, count]) => ({ reason, count }))
+    .sort((a, b) => b.count - a.count),
+)
+const dispatchTop = computed(() => dispatchRes.data?.top_reasons || [])
+const dispatchAny = computed(() => Object.keys(dispatchStatuses.value).length > 0)
 
 // Agent / shop scorecard (#27)
 const scoreAgents = computed(() => scoreRes.data?.agents || [])

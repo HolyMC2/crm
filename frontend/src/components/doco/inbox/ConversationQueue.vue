@@ -387,6 +387,15 @@
           >
             {{ __('SLA vencido') }}
           </span>
+          <!-- 💰 outstanding on the deal's invoices (backend sends it only when
+               the sales-docs flag is on and the deal owes something) -->
+          <span
+            v-if="r.saldo"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-3 bg-surface-amber-1"
+            :title="__('Saldo pendiente en facturas del trato')"
+          >
+            💰 {{ formatMoney(r.saldo) }}
+          </span>
         </div>
       </button>
       <!-- infinite-scroll: the observer loads the next page as this nears the viewport -->
@@ -414,6 +423,7 @@ import LucideVolumeX from '~icons/lucide/volume-x'
 import { statusesStore } from '@/stores/statuses'
 import { soundEnabled, toggleSound } from '@/composables/notificationSound'
 import { isMobile } from '@/composables/breakpoint'
+import { formatMoney } from '@/composables/crmFormat'
 import DealModal from '@/components/Modals/DealModal.vue'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
 import {
