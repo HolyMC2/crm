@@ -149,6 +149,39 @@
         </div>
       </Card>
 
+      <!-- chatflow analytics: drafted → sent (human/auto) → replied per flow/step -->
+      <Card v-if="flowRows.length" :title="__('Flujos de bot (chatflows)')">
+        <div>
+          <div class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${FLOW_GRID}`">
+            <div>{{ __('Flujo') }}</div>
+            <div>{{ __('Paso') }}</div>
+            <div :title="__('Borradores generados')">{{ __('Borr.') }}</div>
+            <div :title="__('Enviados (aprobados + auto)')">{{ __('Env.') }}</div>
+            <div :title="__('Enviados sin revisión (auto_send)')">{{ __('Auto') }}</div>
+            <div :title="__('Descartados / cancelados')">{{ __('Desc.') }}</div>
+            <div>{{ __('Fall.') }}</div>
+            <div :title="__('El cliente respondió después del envío')">{{ __('Resp.') }}</div>
+            <div>%</div>
+          </div>
+          <div
+            v-for="(f, i) in flowRows"
+            :key="i"
+            class="grid items-center gap-x-2 border-b border-outline-gray-1 py-2 text-[12.5px]"
+            :style="`grid-template-columns:${FLOW_GRID}`"
+          >
+            <div class="truncate font-medium text-ink-gray-9" :title="f.flow">{{ f.flow }}</div>
+            <div class="truncate text-ink-gray-7" :title="f.step">{{ f.step }}</div>
+            <div>{{ f.drafted }}</div>
+            <div class="font-semibold" style="color: #16a34a">{{ f.sent }}</div>
+            <div :class="f.auto_sent ? 'text-ink-amber-3' : 'text-ink-gray-4'">{{ f.auto_sent }}</div>
+            <div :class="f.discarded ? '' : 'text-ink-gray-4'">{{ f.discarded }}</div>
+            <div :class="f.failed ? 'text-ink-red-4' : 'text-ink-gray-4'">{{ f.failed }}</div>
+            <div>{{ f.replied }}</div>
+            <div class="font-medium">{{ f.reply_pct }}%</div>
+          </div>
+        </div>
+      </Card>
+
       <!-- social funnel → pesos: comment / lead-ad / DM → Lead → Deal → Won -->
       <Card :title="__('Embudo social → pesos')">
         <div v-if="!socialAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin actividad social en el periodo') }}</div>
@@ -387,6 +420,7 @@ const TERR_GRID = '1fr 70px 70px 70px 110px'
 const HYG_GRID = '150px 1fr 120px 48px 1.2fr'
 const ROI_GRID = '1fr 50px 60px 44px 56px 42px 48px 92px'
 const DISP_GRID = '76px 1fr 48px'
+const FLOW_GRID = '1fr 1fr 44px 44px 44px 44px 40px 44px 52px'
 const periods = [
   { key: 'week', label: __('Esta semana') },
   { key: 'month', label: __('Este mes') },
@@ -420,6 +454,7 @@ const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source
 const socialRes = createResource({ url: 'doco_marketing.api.reports.get_social_funnel', onError: onRestricted })
 const scoreRes = createResource({ url: 'doco_marketing.api.reports.get_agent_scorecard', onError: onRestricted })
 const roiRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_roi', onError: onRestricted })
+const flowRes = createResource({ url: 'doco_marketing.api.reports.get_flow_analytics', onError: onRestricted })
 // Hygiene is a live audit, not period-scoped — loaded once (reps get own-only server-side).
 const hygieneRes = createResource({ url: 'doco_marketing.api.reports.get_deal_hygiene', auto: true, onError: onRestricted })
 // Dispatch health takes a rolling `days` window, not from/to — loaded once like hygiene.
@@ -434,6 +469,7 @@ function load() {
   socialRes.submit(r)
   scoreRes.submit(r)
   roiRes.submit(r)
+  flowRes.submit(r)
 }
 function setPeriod(k) {
   period.value = k
@@ -456,6 +492,9 @@ function originDot(origin) {
 
 // Campaign ROI (roadmap #6 follow-up — endpoint live since 2026-07-02)
 const roiRows = computed(() => roiRes.data || [])
+
+// Chatflow analytics (roadmap #10)
+const flowRows = computed(() => flowRes.data || [])
 
 // Dispatch health (roadmap #3 follow-up): by_status chips + deferral reasons
 const dispatchStatuses = computed(() => dispatchRes.data?.by_status || {})

@@ -367,19 +367,44 @@ _MAPPABLE_FIELDTYPES = {
 }
 
 
+# Curation (ROADMAP #7): the raw meta dump offered ~83 options — reviewers only
+# ever map person/identity fields. Own fields must match one of these substrings
+# to appear; tokens already SAVED on any template stay visible so editing an
+# existing map never loses its selection. Resolution (`_token_allowed`) is
+# unchanged — this only trims the picker.
+_CURATED_FIELD_HINTS = (
+	"name", "mobile", "phone", "email", "status", "source",
+	"device", "folio", "organization", "territory",
+)
+
+
+def _tokens_in_use() -> set:
+	"""Every token currently saved on a template's field_names (CSV)."""
+	used = set()
+	for csv in frappe.get_all(
+		"WhatsApp Templates", filters={"field_names": ["is", "set"]}, pluck="field_names"
+	):
+		used.update(t.strip() for t in str(csv or "").split(",") if t.strip())
+	return used
+
+
 @frappe.whitelist()
 def get_template_field_options(reference_doctype: str):
 	"""Candidate ERPNext fields for the template-variable mapping dropdown: the
-	reference doctype's own scalar fields plus one level of dotted Link traversal
-	for the obvious links (so e.g. a Deal can map {{1}} to its contact's name).
-	[{value, label, group}] — value is the field_names token (plain or dotted)."""
+	reference doctype's CURATED scalar fields plus one level of dotted Link
+	traversal for the obvious links (so e.g. a Deal can map {{1}} to its
+	contact's name). [{value, label, group}] — value is the field_names token."""
 	validate_access()
 	if not frappe.db.exists("DocType", reference_doctype):
 		return []
 	meta = frappe.get_meta(reference_doctype)
+	in_use = _tokens_in_use()
 	opts = []
 	for df in meta.fields:
-		if df.fieldtype in _MAPPABLE_FIELDTYPES and not df.get("hidden"):
+		if df.fieldtype in _MAPPABLE_FIELDTYPES and not df.get("hidden") and (
+			df.fieldname in in_use
+			or any(h in df.fieldname for h in _CURATED_FIELD_HINTS)
+		):
 			opts.append({"value": df.fieldname, "label": _(df.label or df.fieldname), "group": reference_doctype})
 	# one-level dotted for Link fields → that target's name-ish + phone-ish fields
 	for df in meta.fields:
@@ -398,6 +423,12 @@ def get_template_field_options(reference_doctype: str):
 						"label": f"{_(df.label or df.fieldname)} → {_(sdf.label or sdf.fieldname)}",
 						"group": _(df.label or df.fieldname),
 					})
+	# resurrect any saved token the hints missed (edited legacy maps) — but only
+	# resolution-whitelisted ones; the picker must never widen _token_allowed
+	have = {o["value"] for o in opts}
+	for tok in sorted(in_use - have):
+		if _token_allowed(reference_doctype, tok):
+			opts.append({"value": tok, "label": tok, "group": _("En uso")})
 	return opts
 
 
