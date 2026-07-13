@@ -266,7 +266,9 @@ async function save() {
     flows.reload()
     toast.success(__('Flujo guardado'))
   } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo guardar (revisa los pasos)'))
+    // the server message (dup name, frozen steps, guard text) is the real
+    // diagnosis — the generic fallback must not point at steps for a name error
+    toast.error(e?.messages?.[0] || __('No se pudo guardar el flujo'))
   } finally {
     saving.value = false
   }
@@ -300,7 +302,7 @@ function cancelRuns() {
   confirmDialog({
     title: __('Cancelar conversaciones'),
     message: __(
-      'Se cancelan {0} conversación(es) a medio flujo — los pasos pendientes ya no se programarán. Nada se manda al cliente al cancelar.',
+      'Se cancelan {0} conversación(es) a medio flujo — los pasos pendientes ya no se programarán. Un paso que esté saliendo justo en este momento aún puede alcanzar a enviarse.',
       [activeRuns.value],
     ),
     confirmLabel: __('Cancelar conversaciones'),

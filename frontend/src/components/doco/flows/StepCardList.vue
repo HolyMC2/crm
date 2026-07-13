@@ -317,6 +317,7 @@ function addStep() {
     channel: 'whatsapp',
     template: '',
     message: '',
+    assign_to: '',
     wait_hours: 0,
   })
 }
