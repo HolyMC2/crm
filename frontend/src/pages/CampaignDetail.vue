@@ -59,64 +59,14 @@
     </div>
 
     <div class="flex min-h-0 flex-1">
-      <!-- step builder -->
+      <!-- step builder (shared editor — NEXT_BETS #3) -->
       <div class="scb min-h-0 flex-1 overflow-y-auto border-r border-outline-gray-1 p-5">
-        <div class="mb-3 flex items-center justify-between">
-          <div class="text-[13px] font-bold text-ink-gray-9">{{ __('Secuencia') }}</div>
-          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background: #16a34a" @click="addStep">+ {{ __('Paso') }}</button>
-        </div>
-        <div v-if="!form.steps.length" class="rounded-[10px] border border-dashed border-outline-gray-2 py-6 text-center text-xs text-ink-gray-4">
-          {{ __('Sin pasos. Agrega un paso para empezar.') }}
-        </div>
-
-        <div v-for="(s, i) in form.steps" :key="i" class="mb-2 max-w-[520px]">
-          <div class="rounded-[11px] border border-outline-gray-2 p-3">
-            <div class="mb-2 flex items-center gap-2">
-              <span class="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-surface-gray-2 text-[14px]">{{ stepGlyph(s.step_type) }}</span>
-              <select v-model="s.step_type" class="dm-input flex-1" @change="onTypeChange(s)">
-                <option value="send_whatsapp">{{ __('Enviar WhatsApp') }}</option>
-                <option value="send_email">{{ __('Enviar Email') }}</option>
-                <option value="wait">{{ __('Esperar') }}</option>
-                <option value="branch">{{ __('Bifurcación') }}</option>
-                <option value="end">{{ __('Fin') }}</option>
-              </select>
-              <span class="flex-none text-[10.5px] font-semibold text-ink-gray-4">#{{ i + 1 }}</span>
-              <button class="flex-none text-ink-gray-4 hover:text-ink-gray-8 disabled:opacity-30" :disabled="i === 0" @click="moveStep(i, -1)" :aria-label="__('Subir')">▲</button>
-              <button class="flex-none text-ink-gray-4 hover:text-ink-gray-8 disabled:opacity-30" :disabled="i === form.steps.length - 1" @click="moveStep(i, 1)" :aria-label="__('Bajar')">▼</button>
-              <button class="flex-none text-ink-gray-4 hover:text-ink-red-4" @click="removeStep(i)" :aria-label="__('Eliminar')">✕</button>
-            </div>
-
-            <!-- per-type config -->
-            <div v-if="s.step_type === 'wait'" class="flex items-center gap-2 text-[12px]">
-              <span class="text-ink-gray-5">{{ __('Esperar') }}</span>
-              <input v-model.number="s.wait_hours" type="number" min="0" class="dm-input w-20" /><span class="text-ink-gray-5">{{ __('horas') }}</span>
-            </div>
-            <div v-else-if="s.step_type === 'send_whatsapp'" class="flex items-center gap-2 text-[12px]">
-              <span class="text-ink-gray-5">{{ __('Plantilla') }}</span>
-              <select v-model="s.template" class="dm-input flex-1"><option value="">{{ __('(texto libre / ninguna)') }}</option><option v-for="t in waTemplates.data || []" :key="t.name" :value="t.name">{{ t.template_name || t.name }}</option></select>
-            </div>
-            <div v-else-if="s.step_type === 'send_email'" class="flex items-center gap-2 text-[12px]">
-              <span class="text-ink-gray-5">{{ __('Plantilla') }}</span>
-              <select v-model="s.template" class="dm-input flex-1"><option value="">{{ __('(ninguna)') }}</option><option v-for="t in emailTemplates.data || []" :key="t.name" :value="t.name">{{ t.name }}</option></select>
-            </div>
-            <div v-else-if="s.step_type === 'branch'" class="flex flex-wrap items-center gap-2 text-[12px]">
-              <select v-model="s.branch_condition" class="dm-input">
-                <option value="opened_previous">{{ __('Si abrió el anterior') }}</option>
-                <option value="clicked_previous">{{ __('Si dio clic anterior') }}</option>
-                <option value="score_gte">{{ __('Si score ≥') }}</option>
-              </select>
-              <input v-if="s.branch_condition === 'score_gte'" v-model.number="s.branch_value" type="number" class="dm-input w-20" placeholder="60" />
-              <span class="text-ink-gray-5">→ {{ __('saltar a') }}</span>
-              <select v-model.number="s.branch_to_step" class="dm-input">
-                <option v-for="j in forwardSteps(i)" :key="j" :value="j">{{ __('Paso') }} {{ j + 1 }}</option>
-              </select>
-            </div>
-            <div v-if="(s.step_type === 'send_whatsapp' || s.step_type === 'send_email') && (s.sent || s.opened || s.clicked)" class="mt-1.5 text-[11px] text-ink-gray-5">
-              {{ s.sent || 0 }} {{ __('enviados') }} · {{ s.opened || 0 }} {{ __('abiertos') }} · {{ s.clicked || 0 }} {{ __('clics') }}
-            </div>
-          </div>
-          <div v-if="i < form.steps.length - 1" class="ml-[18px] h-3 w-px bg-outline-gray-2" />
-        </div>
+        <StepCardList
+          v-model="form.steps"
+          kind="campaign"
+          :frozen="form.status === 'Active'"
+          :frozen-hint="__('Los pasos están congelados mientras la campaña está Activa — pausa para editarlos (las inscripciones en curso siguen la posición de cada paso).')"
+        />
       </div>
 
       <!-- enrolled -->
@@ -143,6 +93,7 @@
 import { computed, h, ref, watch } from 'vue'
 import { createResource, createListResource, call as frappeCall, toast } from 'frappe-ui'
 import { avatarColor, initials, timeAgo } from '@/composables/crmFormat'
+import StepCardList from '@/components/doco/flows/StepCardList.vue'
 
 const props = defineProps({ campaignId: { type: String, required: true } })
 const TYPES = ['whatsapp', 'email', 'sms', 'automation']
@@ -150,8 +101,6 @@ const TYPES = ['whatsapp', 'email', 'sms', 'automation']
 const campaign = createResource({ url: 'doco_marketing.api.campaigns.get_campaign' })
 const enroll = createResource({ url: 'doco_marketing.api.campaigns.get_enrollments' })
 const audiences = createListResource({ doctype: 'Marketing Audience', fields: ['name', 'title'], pageLength: 100, auto: true })
-const waTemplates = createListResource({ doctype: 'WhatsApp Templates', fields: ['name', 'template_name'], pageLength: 100, auto: true })
-const emailTemplates = createListResource({ doctype: 'Email Template', fields: ['name'], pageLength: 100, auto: true })
 const dealStatuses = createListResource({ doctype: 'CRM Deal Status', fields: ['name'], orderBy: 'position asc', pageLength: 50, auto: true })
 
 const form = ref({ title: '', type: 'automation', status: 'Draft', enrollment_trigger: 'manual', trigger_value: '', audience: '', steps: [] })
@@ -188,28 +137,6 @@ watch(
 const c = computed(() => campaign.data || {})
 const metrics = computed(() => c.value.metrics || {})
 const enrolled = computed(() => enroll.data || [])
-
-// ── step builder ops ─────────────────────────────────────────────────────────
-function addStep() {
-  form.value.steps.push({ step_type: 'send_whatsapp', channel: 'whatsapp', wait_hours: 0, template: '', branch_condition: 'opened_previous' })
-}
-function removeStep(i) {
-  form.value.steps.splice(i, 1)
-}
-function moveStep(i, dir) {
-  const j = i + dir
-  if (j < 0 || j >= form.value.steps.length) return
-  const s = form.value.steps.splice(i, 1)[0]
-  form.value.steps.splice(j, 0, s)
-}
-function onTypeChange(s) {
-  s.channel = s.step_type === 'send_whatsapp' ? 'whatsapp' : s.step_type === 'send_email' ? 'email' : ''
-}
-function forwardSteps(i) {
-  const out = []
-  for (let j = i + 1; j < form.value.steps.length; j++) out.push(j)
-  return out
-}
 
 // ── save / status / enroll ───────────────────────────────────────────────────
 const saving = ref(false)
@@ -273,10 +200,6 @@ function statusChip(s) {
 function enrStatusChip(s) {
   const map = { Active: 'text-ink-green-3 bg-surface-green-2', Completed: 'text-ink-blue-2 bg-surface-blue-1', Suppressed: 'text-ink-red-4 bg-surface-red-1', Paused: 'text-ink-amber-3 bg-surface-amber-1' }
   return map[s] || 'text-ink-gray-6 bg-surface-gray-2'
-}
-const STEP_GLYPH = { send_whatsapp: '💬', send_email: '✉', wait: '⏳', branch: '🔀', end: '⏹' }
-function stepGlyph(t) {
-  return STEP_GLYPH[t] || '•'
 }
 function who(e) {
   return e.contact || e.lead || e.deal || e.customer || e.name

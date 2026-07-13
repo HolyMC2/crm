@@ -159,6 +159,12 @@ const routes = [
     meta: { navLabel: 'Campaigns', title: 'Campaign' },
   },
   {
+    path: '/chatflows',
+    name: 'Chatflows',
+    component: () => import('@/pages/Chatflows.vue'),
+    meta: { navLabel: 'Campaigns', title: 'Chatflows' },
+  },
+  {
     path: '/tasks',
     name: 'Tasks List',
     component: () => import('@/pages/TasksView.vue'),

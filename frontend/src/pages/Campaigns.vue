@@ -22,13 +22,21 @@
           {{ t.label }}
         </button>
       </div>
-      <button
-        class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-        style="background: #16a34a"
-        @click="showNew = true"
-      >
-        + {{ __('Nueva campaña') }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+          @click="$router.push('/chatflows')"
+        >
+          🤖 {{ __('Flujos de bot') }}
+        </button>
+        <button
+          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+          style="background: #16a34a"
+          @click="showNew = true"
+        >
+          + {{ __('Nueva campaña') }}
+        </button>
+      </div>
     </div>
 
     <!-- table header -->

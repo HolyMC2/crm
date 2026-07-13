@@ -39,7 +39,7 @@ export function routeGroup(path) {
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'wa-queue'
   if (/^\/deals?(\/|$)/.test(path)) return 'deals'
-  if (/^\/campaigns(\/|$)/.test(path)) return 'campaigns'
+  if (/^\/(campaigns|chatflows)(\/|$)/.test(path)) return 'campaigns'
   if (/^\/social(\/|$)/.test(path)) return 'social'
   if (/^\/(leads|pipeline|calendar|stage-scripts|enrichment|pipeline-analysis)(\/|$)/.test(path)) return 'leads'
   if (/^\/dashboard(\/|$)/.test(path)) return 'dashboard'
