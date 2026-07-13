@@ -718,11 +718,16 @@ export function onMessengerInbound(payload) {
 
 // ── Bitácora: unified cross-channel ledger (WhatsApp + Messenger + FB comments) ──
 export const ledger = createResource({ url: 'doco_marketing.api.inbox.get_contact_ledger' })
+// consent timeline (manager-gated server-side; 403 for reps → section self-hides)
+export const consentHistory = createResource({ url: 'doco_marketing.api.consent.get_consent_history' })
 export const ledgerOpen = ref(false)
 export function openLedger() {
   if (!activeDeal.value) return
   ledgerOpen.value = true
-  ledger.submit({ reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value })
+  const args = { reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value }
+  ledger.submit(args)
+  consentHistory.data = null
+  consentHistory.submit(args)
 }
 
 // presentational helpers now live in crmFormat.js (shared with non-inbox surfaces)

@@ -29,6 +29,39 @@
           </span>
         </div>
 
+        <!-- consent (manager-gated endpoint: reps get 403 → section self-hides) -->
+        <div v-if="consentRows.length" class="mb-3 rounded-lg border border-outline-gray-1 bg-surface-gray-1 px-3 py-2">
+          <div class="mb-1.5 flex items-center justify-between">
+            <div class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">{{ __('Consentimiento') }}</div>
+            <a
+              class="text-[11px] font-semibold text-ink-gray-6 underline hover:text-ink-gray-9"
+              :href="csvHref"
+              :download="true"
+            >
+              {{ __('Exportar CSV') }}
+            </a>
+          </div>
+          <div
+            v-if="consentTampered"
+            class="mb-1.5 rounded bg-surface-red-1 px-2 py-1 text-[11px] font-semibold text-ink-red-4"
+          >
+            ⚠ {{ __('{0} registro(s) no pasan la verificación de integridad', [consentTampered]) }}
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <span
+              v-for="r in consentRows"
+              :key="r.name"
+              class="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[11px] font-semibold"
+              :class="consentChip(r)"
+              :title="`${r.source_form || ''} · ${r.consent_class || ''}${r.consent_text ? ' · «' + r.consent_text + '»' : ''}`"
+            >
+              {{ r.action === 'Grant' ? '✔' : '✖' }} {{ r.channel }}
+              <span class="font-normal opacity-80">· {{ classLabel(r.consent_class) }} · {{ fmtDay(r.ts) }}</span>
+              <span v-if="r.hash_ok === false">⚠</span>
+            </span>
+          </div>
+        </div>
+
         <!-- linked identities -->
         <div v-if="identities.length" class="mb-3 rounded-lg border border-outline-gray-1 bg-surface-gray-1 px-3 py-2">
           <div class="mb-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">{{ __('Identidades') }}</div>
@@ -72,11 +105,35 @@
 <script setup>
 import { computed } from 'vue'
 import { Dialog } from 'frappe-ui'
-import { ledger, ledgerOpen } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, consentHistory, ledger, ledgerOpen } from '@/composables/inbox'
 
 const messages = computed(() => ledger.data?.messages || [])
 const counts = computed(() => ledger.data?.counts || {})
 const identities = computed(() => ledger.data?.identities || [])
+
+// consent chips (manager-only endpoint; error → empty → hidden)
+const consentRows = computed(() => consentHistory.data?.rows || [])
+const consentTampered = computed(() => consentHistory.data?.tampered || 0)
+const csvHref = computed(
+  () =>
+    `/api/method/doco_marketing.api.consent.export_consent_csv?reference_doctype=${encodeURIComponent(activeDealDoctype.value || '')}&reference_name=${encodeURIComponent(activeDeal.value || '')}`,
+)
+function consentChip(r) {
+  if (r.hash_ok === false) return 'bg-surface-red-1 text-ink-red-4'
+  return r.action === 'Grant' ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-red-1 text-ink-red-4'
+}
+const CLASS_LABEL = { Explicit: 'explícito', Implied: 'implícito', Imported: 'importado' }
+function classLabel(c) {
+  return CLASS_LABEL[c] || c || ''
+}
+function fmtDay(ts) {
+  if (!ts) return ''
+  try {
+    return new Date(String(ts).replace(' ', 'T')).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' })
+  } catch {
+    return String(ts).slice(0, 10)
+  }
+}
 
 const COLORS = {
   WhatsApp: '#25d366',
