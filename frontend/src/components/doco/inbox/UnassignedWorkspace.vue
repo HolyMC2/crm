@@ -20,15 +20,27 @@
       >
         <LucideChevronLeft class="h-6 w-6" />
       </button>
-      <img v-if="profilePic" :src="profilePic" class="h-9 w-9 flex-none rounded-full object-cover" alt="" />
+      <img v-if="headerImage" :src="headerImage" class="h-9 w-9 flex-none rounded-full object-cover" alt="" />
+      <span v-else-if="boundContact" class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold" style="color:#5b21b6;background:#ede9fe">
+        {{ contactInitials }}
+      </span>
       <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
       <div class="min-w-0">
-        <div class="truncate text-[15px] font-semibold text-ink-gray-9">
-          {{ prefillName || (isMessenger ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8) : formatPhone(activeUnassigned)) }}
+        <!-- When the number is bound to a Contact (linked, no open deal → stays here),
+             show the person's name + data on top, like a Deal header. Else fall back to
+             the WhatsApp profile name / raw number. -->
+        <div class="flex items-center gap-1.5">
+          <span class="truncate text-[15px] font-semibold text-ink-gray-9">
+            {{ boundContact?.name || prefillName || (isMessenger ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8) : formatPhone(activeUnassigned)) }}
+          </span>
+          <span v-if="boundContact" class="flex-none rounded px-1.5 py-0.5 text-[9.5px] font-semibold" style="color:#5b21b6;background:#ede9fe">{{ __('Contacto') }}</span>
         </div>
-        <div class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-3'">
+        <div v-if="boundContact" class="truncate text-[11px] font-medium text-ink-gray-5">
+          {{ formatPhone(activeUnassigned) }}<template v-if="boundContact.email"> · {{ boundContact.email }}</template>
+        </div>
+        <div v-else class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-3'">
           {{ isArchived ? __('Archivado — sigue disponible') : __('Sin asignar — captura y convierte') }}
         </div>
       </div>
@@ -72,16 +84,18 @@
             <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="unassignedThread.reload()">{{ __('Reintentar') }}</button>
           </div>
           <div v-else-if="!messages.length" class="py-8 text-center text-xs text-ink-gray-4">{{ __('Sin mensajes') }}</div>
-          <div v-for="m in messages" :key="m.id" class="flex" :class="m.direction === 'out' ? 'justify-end' : 'justify-start'">
-            <div
-              class="max-w-[80%] rounded-lg px-3 py-1.5 text-sm shadow-sm"
-              :class="m.direction === 'out' ? 'bg-surface-green-2 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-9'"
-            >
-              <img v-if="m.content_type === 'image' && m.attach" :src="m.attach" class="mb-1 max-h-48 rounded-md" />
-              <div v-if="m.content" class="whitespace-pre-wrap break-words">{{ m.content }}</div>
-              <div class="mt-0.5 text-right text-[10px] text-ink-gray-4">{{ hhmm(m.timestamp) }}</div>
-            </div>
-          </div>
+          <!-- Reuse the real conversation renderer (templates, media, receipts, replies,
+               provenance) — the same component the assigned deal thread uses, so an
+               outbound Template (e.g. "orden recibida") shows its body instead of a blank
+               bubble. WhatsAppArea's own contact header is suppressed (:contact empty);
+               the workspace header above carries the identity. -->
+          <WhatsAppArea
+            v-else
+            v-model="waList"
+            v-model:reply="waReply"
+            :messages="messages"
+            :contact="{}"
+          />
         </div>
         <!-- reply bar: chat the unknown number BEFORE deciding lead/deal/wrong number.
              Sends a reference-less WhatsApp message; it stays in this thread until
@@ -258,12 +272,13 @@ import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideArchive from '~icons/lucide/archive'
 import LucideArchiveRestore from '~icons/lucide/archive-restore'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
+import WhatsAppArea from '@/components/Activities/WhatsAppArea.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, activeUnassignedChannel, activeUnassignedArchived, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, archiveOrphan, unarchiveOrphan, hhmm, mobileBack, forecastingEnabled } from '@/composables/inbox'
+import { activeUnassigned, activeUnassignedChannel, activeUnassignedArchived, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, archiveOrphan, unarchiveOrphan, mobileBack, forecastingEnabled } from '@/composables/inbox'
 
 const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
 const isArchived = computed(() => activeUnassignedArchived.value)
@@ -398,6 +413,9 @@ const waModel = reactive({
   content_type: 'text',
   reload: () => unassignedThread.reload(),
 })
+// WhatsAppArea's list model — it calls list.reload() after a reaction; route that
+// back to the orphan thread fetch (same reload target as the composer).
+const waList = ref({ reload: () => unassignedThread.reload() })
 
 const inputCls =
   'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
@@ -411,8 +429,16 @@ const form = reactive({
   expected_deal_value: '', expected_closure_date: '',
 })
 
+// Contact bound to this orphan number (kept-unassigned link) — drives the header's
+// name/data + avatar. WhatsApp only; a Messenger orphan carries no phone-bound Contact.
+const boundContact = computed(() => (isMessenger.value ? null : unassignedThread.data?.contact) || null)
+const contactInitials = computed(() => {
+  const parts = (boundContact.value?.name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2)
+  return parts.map((p) => p[0]).join('').toUpperCase() || '?'
+})
 // FB/WhatsApp avatar (Messenger gives profile_pic; WhatsApp none) + the resolved name.
 const profilePic = computed(() => unassignedThread.data?.prefill?.profile_pic || null)
+const headerImage = computed(() => boundContact.value?.image || profilePic.value || null)
 const prefillName = computed(() => {
   const p = unassignedThread.data?.prefill
   if (!p) return null

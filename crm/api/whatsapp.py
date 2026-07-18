@@ -148,6 +148,17 @@ def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 		fields=wa_fields,
 	)
 
+	return enrich_whatsapp_messages(messages)
+
+
+def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
+	"""Resolve Template bodies, attach reactions, thread replies, and stamp `from_name`
+	on a list of raw WhatsApp Message rows (fields per `_wa_message_fields`). Shared by
+	the per-reference thread (`get_whatsapp_messages`) and the reference-less orphan
+	thread (doco_marketing `get_unassigned_thread`) so both render templates/replies
+	identically — an unresolved Template row has `message=None`, so without this it
+	renders as an empty bubble. Reaction rows are folded into their target and dropped
+	from the returned list."""
 	# Filter messages to get only Template messages
 	template_messages = [message for message in messages if message["message_type"] == "Template"]
 
