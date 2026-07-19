@@ -166,7 +166,7 @@ import { isMobileView } from '@/composables/settings'
 import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
-import { Switch, FormControl, createResource } from 'frappe-ui'
+import { Switch, FormControl, createResource, toast } from 'frappe-ui'
 import { computed, ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -430,6 +430,19 @@ async function createDeal() {
               advance_amount: Number(newRepairOrder.value.advance_amount) || 0,
             },
             auto: true,
+            // The deal modal has already closed by the time this resolves —
+            // without these callbacks a rejected RO create vanished silently
+            // (deal created, no RO, no hint why).
+            onSuccess(roName) {
+              toast.success(__('Repair Order {0} created', [roName]))
+            },
+            onError(err) {
+              toast.error(
+                __('Deal created but the Repair Order failed: {0}', [
+                  err.messages?.join('\n') || err.message,
+                ]),
+              )
+            },
           })
         },
       })

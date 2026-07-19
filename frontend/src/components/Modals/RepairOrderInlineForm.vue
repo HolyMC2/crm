@@ -12,7 +12,8 @@
       repair_to_be_done  – Repair Type name
       general_status     – 'Good' | 'Bad' | 'Really Bad' | ''
       client             – Contact name
-      imei               – Serial No name (can be created on the fly)
+      imei               – free-text IMEI / serial (server classifies: 15
+                           digits → IMEI, else SN — taller.utils.serials)
       has_sim_tray       – boolean
       is_wet             – boolean
       turns_on           – boolean
@@ -91,12 +92,18 @@
         />
       </div>
       <div>
-        <!-- Serial No must be pre-created via the Repair Order classic UI. -->
-        <Link
-          doctype="Serial No"
+        <!-- Free-text: server auto-classifies (15 digits → IMEI, else SN).
+             Was a Serial No Link — nobody pre-creates Serial No docs, so the
+             picker was permanently empty. Mirrors the Intake SPA field. -->
+        <FormControl
+          type="text"
           v-model="form.imei"
           :label="__('IMEI / Serial No.')"
-          :placeholder="__('Search existing serial no.')"
+          :placeholder="__('Dial *#06# or scan the box')"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          class="font-mono"
         />
       </div>
       <div class="sm:col-span-3 flex flex-wrap items-end gap-x-6 gap-y-2 pb-1">
