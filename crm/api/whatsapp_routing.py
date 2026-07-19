@@ -13,6 +13,8 @@
 # New file (never conflicts on upstream rebase); crm.api.whatsapp.validate is
 # the only caller.
 
+import re
+
 import frappe
 from frappe.utils import add_days, now_datetime
 
@@ -48,6 +50,13 @@ def resolve_reference_for_number(number: str):
 	contact = get_contact_by_phone_number(number)
 	contact_name = contact.get("name")
 	if not contact_name:
+		# MX trap: WhatsApp sends `from` as 521XXXXXXXXXX while contacts store
+		# +52 XX… — the upstream substring LIKE misses in both directions, so
+		# real customers with open deals resolved as orphans. Fall back to the
+		# trailing-10-digit key (same convention as the orphan grouping in
+		# doco_marketing).
+		contact_name = _contact_by_trailing_digits(number)
+	if not contact_name:
 		# No Contact — upstream fallback covers the CRM Lead path.
 		return get_contact_lead_or_deal_from_number(number)
 
@@ -79,6 +88,24 @@ def resolve_reference_for_number(number: str):
 	if contact.get("lead"):
 		return contact["lead"], "CRM Lead"
 	return None, None
+
+
+def _contact_by_trailing_digits(number: str) -> str | None:
+	"""Contact whose phone shares the trailing 10 digits with `number` —
+	prefix-agnostic (+52 / 52 1 / bare local all collapse to the same key).
+	Searches the phone_nos child table so secondary numbers resolve too."""
+	digits = re.sub(r"\D", "", number or "")[-10:]
+	if len(digits) < 10:
+		return None
+	rows = frappe.db.sql(
+		"""SELECT cp.parent FROM `tabContact Phone` cp
+		   JOIN `tabContact` c ON c.name = cp.parent
+		   WHERE cp.parenttype = 'Contact'
+		     AND RIGHT(REGEXP_REPLACE(cp.phone, '[^0-9]', ''), 10) = %s
+		   ORDER BY c.modified DESC LIMIT 1""",
+		(digits,),
+	)
+	return rows[0][0] if rows else None
 
 
 def _deal_has_active_warranty(deal_name: str) -> bool:

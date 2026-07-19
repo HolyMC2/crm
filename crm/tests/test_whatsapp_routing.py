@@ -110,3 +110,26 @@ class TestWhatsAppRouting(unittest.TestCase):
 
 	def test_unknown_number_is_orphan(self):
 		self.assertEqual(resolve_reference_for_number("+5215550000000"), (None, None))
+
+	def test_mx_prefix_variant_resolves_by_trailing_digits(self):
+		"""WhatsApp `from` = 521XXXXXXXXXX vs contact stored +52 XX… — the
+		upstream substring LIKE misses both directions; the trailing-10 fallback
+		must still land the open deal (the prod bug: real customers with open
+		deals resolved as orphans)."""
+		contact = frappe.get_doc({
+			"doctype": "Contact",
+			"first_name": "Routing MX Prefix Test",
+			"phone_nos": [{"phone": "+52 5559990088", "is_primary_mobile_no": 1}],
+		})
+		contact.flags.ignore_permissions = True
+		contact.insert()
+		deal = frappe.get_doc({
+			"doctype": "CRM Deal",
+			"status": _status("Open"),
+			"contacts": [{"contact": contact.name, "is_primary": 1}],
+		})
+		deal.flags.ignore_permissions = True
+		deal.insert()
+		self.assertEqual(
+			resolve_reference_for_number("5215559990088"), (deal.name, "CRM Deal")
+		)
