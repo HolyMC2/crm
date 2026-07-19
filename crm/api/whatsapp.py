@@ -6,7 +6,6 @@ from frappe.permissions import add_permission, update_permission_property
 
 from crm.api.doc import get_assigned_users
 from crm.fcrm.doctype.crm_notification.crm_notification import notify_user
-from crm.integrations.api import get_contact_lead_or_deal_from_number
 
 ALLOWED_WHATSAPP_ROLES = ["System Manager", "Sales Manager", "Sales User"]
 
@@ -35,10 +34,18 @@ def validate_access(reference_doctype=None, reference_name=None, permtype="read"
 
 
 def validate(doc, method):
+	# Respect explicitly-threaded messages (inbox composer, taller's review
+	# queue): resolution is a FALLBACK for unreferenced messages (webhook
+	# inbounds), never an override — the old unconditional overwrite re-routed
+	# deliberately-threaded sends onto whatever deal the resolver picked.
+	if doc.get("reference_doctype") and doc.get("reference_name"):
+		return
 	phone_number = doc.get("from") if doc.type == "Incoming" else doc.get("to")
 	if phone_number:
 		try:
-			name, doctype = get_contact_lead_or_deal_from_number(phone_number)
+			from crm.api.whatsapp_routing import resolve_reference_for_number
+
+			name, doctype = resolve_reference_for_number(phone_number)
 			if doctype and name is not None:
 				doc.reference_doctype = doctype
 				doc.reference_name = name
