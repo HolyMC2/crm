@@ -1,7 +1,8 @@
 <!--
   Social — content calendar + composer (MA-23, S5). Month grid of scheduled posts
-  (colored by status) + an unscheduled-drafts tray + a composer modal (text/link
-  posts; media lands in S8). Data: doco_marketing.api.social.* + services/social.publish.
+  (colored by status) + an unscheduled-drafts tray + a composer modal (text/link/photo
+  posts — S8 media: up to 10 images, FB carousel; drag tiles to reorder).
+  Data: doco_marketing.api.social.* + services/social.publish.
 -->
 <template>
   <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
@@ -234,6 +235,46 @@
             <textarea v-model="form.captions[c]" rows="2" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
           </div>
 
+          <!-- S8 media — photo tiles: click + to add (multi-select), ✕ to remove, drag to reorder -->
+          <template v-if="form.media.length || canCancel">
+            <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Fotos') }}</label>
+            <div class="mb-1 flex flex-wrap gap-2">
+              <div
+                v-for="(m, i) in form.media" :key="m.media_file + ':' + i"
+                class="group relative size-16 overflow-hidden rounded-md border"
+                :class="mediaOver === i && mediaDrag !== i ? 'border-green-500 ring-2 ring-green-300' : 'border-outline-gray-2'"
+                :draggable="canCancel"
+                :title="canCancel ? __('arrastra para ordenar') : ''"
+                @dragstart="mediaDrag = i"
+                @dragend="mediaDrag = -1; mediaOver = -1"
+                @dragover.prevent="mediaOver = i"
+                @dragleave="mediaOver = (mediaOver === i ? -1 : mediaOver)"
+                @drop.prevent="onMediaDrop(i)"
+              >
+                <img :src="m.media_file" class="size-full object-cover" alt="" />
+                <span v-if="form.media.length > 1" class="absolute bottom-0 left-0 rounded-tr bg-black/50 px-1 text-[9px] font-bold text-white">{{ i + 1 }}</span>
+                <button
+                  v-if="canCancel" type="button"
+                  class="absolute right-0.5 top-0.5 hidden size-4 items-center justify-center rounded-full bg-black/60 text-[10px] leading-none text-white group-hover:flex"
+                  :title="__('Quitar foto')" @click="removeMedia(i)"
+                >✕</button>
+              </div>
+              <button
+                v-if="canCancel && form.media.length < 10" type="button"
+                class="flex size-16 flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-outline-gray-3 text-ink-gray-5 hover:border-green-500 hover:text-ink-green-3 disabled:opacity-50"
+                :disabled="uploadBusy > 0" :title="__('Agregar fotos')" @click="pickMedia"
+              >
+                <span v-if="uploadBusy" class="px-1 text-[9.5px] font-semibold">{{ __('subiendo…') }}</span>
+                <template v-else>
+                  <span class="text-lg leading-none">+</span>
+                  <span class="text-[9.5px] font-semibold">{{ __('Foto') }}</span>
+                </template>
+              </button>
+            </div>
+            <p class="mb-3 text-[10.5px] text-ink-gray-4">{{ __('Hasta 10 fotos (JPG/PNG). Varias fotos se publican como carrusel en FB.') }}</p>
+            <input ref="mediaInput" type="file" accept="image/*" multiple class="hidden" @change="onMediaPick" />
+          </template>
+
           <!-- owner feedback → AI rewrites the caption (same items/voice/facts) -->
           <div v-if="form.name && canCancel" class="mb-3 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-2">
             <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Feedback para la IA') }}</label>
@@ -259,7 +300,7 @@
             </div>
           </div>
           <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" class="mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
-          <p class="text-[11px] text-ink-gray-4">{{ __('Imágenes/video: S8. IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
+          <p class="text-[11px] text-ink-gray-4">{{ __('IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
 
           <!-- live preview — how the post will look on Facebook -->
           <div class="mt-4 border-t border-outline-gray-1 pt-3">
@@ -330,7 +371,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { createResource, call as frappeCall, toast } from 'frappe-ui'
+import { createResource, call as frappeCall, toast, FileUploadHandler } from 'frappe-ui'
 import { inputDialog } from '@/utils/dialogs'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
 
@@ -551,7 +592,7 @@ async function onDrop(day) {
 const showComposer = ref(false)
 const busy = ref(false)
 const aiFeedback = ref('')
-const blank = () => ({ name: '', title: '', shop: '', channels: [], captions: {}, scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '', channelStates: [] })
+const blank = () => ({ name: '', title: '', shop: '', channels: [], captions: {}, media: [], scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '', channelStates: [] })
 const form = ref(blank())
 // live FB preview for the composer (FbPostCard) — bound to the FB caption + CTA + schedule
 const previewPost = computed(() => {
@@ -574,7 +615,7 @@ const previewPost = computed(() => {
   return {
     pageName: shopLabel(form.value.shop) || __('Tu página'),
     message: msg,
-    images: form.value.media_urls || [],
+    images: (form.value.media || []).filter((m) => (m.media_type || 'Image') === 'Image').map((m) => m.media_file),
     timeLabel,
     cta,
     // published → the preview card itself becomes a clickable link to the live post
@@ -583,6 +624,49 @@ const previewPost = computed(() => {
 })
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
 const isPending = computed(() => !!form.value.name && form.value.status === 'Pending Approval')
+
+// ── S8 media — public image uploads (Meta fetches the URL, so never private).
+// Files upload unattached (no docname pre-save); save_post adopts them server-side.
+const mediaInput = ref(null)
+const uploadBusy = ref(0) // uploads in flight
+function pickMedia() {
+  mediaInput.value?.click()
+}
+async function onMediaPick(e) {
+  const files = Array.from(e.target.files || [])
+  e.target.value = '' // allow re-picking the same file
+  const room = 10 - form.value.media.length
+  if (files.length > room) toast.error(__('Máximo 10 fotos por publicación.'))
+  for (const f of files.slice(0, Math.max(room, 0))) {
+    if (!f.type.startsWith('image/')) {
+      toast.error(__('Solo imágenes (JPG/PNG)') + ': ' + f.name)
+      continue
+    }
+    uploadBusy.value++
+    try {
+      const up = await new FileUploadHandler().upload(f, { private: false })
+      form.value.media.push({ media_file: up.file_url, media_type: 'Image' })
+    } catch {
+      toast.error(__('No se pudo subir') + ': ' + f.name)
+    } finally {
+      uploadBusy.value--
+    }
+  }
+}
+function removeMedia(i) {
+  form.value.media.splice(i, 1)
+}
+// drag-to-reorder tiles (same idiom as the calendar's drag-reschedule)
+const mediaDrag = ref(-1)
+const mediaOver = ref(-1)
+function onMediaDrop(i) {
+  const from = mediaDrag.value
+  mediaDrag.value = -1
+  mediaOver.value = -1
+  if (from < 0 || from === i) return
+  const arr = form.value.media
+  arr.splice(i, 0, arr.splice(from, 1)[0])
+}
 
 // ── publish outcome surfacing (S13) ───────────────────────────────────────────
 // A live channel carries a permalink → link straight to the FB/IG post. A natively-
@@ -676,6 +760,13 @@ function openNew(day) {
   showComposer.value = true
 }
 
+// keep channel-targeting rows (Desk-only feature) so a composer round-trip doesn't wipe them
+const mapMedia = (doc) => (doc.media || []).map((m) => ({
+  media_file: m.media_file,
+  media_type: m.media_type || 'Image',
+  channels: (m.channels || []).map((t) => ({ social_channel: t.social_channel })),
+}))
+
 async function openEdit(p) {
   aiFeedback.value = ''
   const doc = await frappeCall('doco_marketing.api.social.get_post', { name: p.name })
@@ -687,6 +778,7 @@ async function openEdit(p) {
     shop: doc.shop || '',
     channels: (doc.channels || []).map((c) => c.channel),
     captions: caps,
+    media: mapMedia(doc),
     scheduled_time: toDtLocal(doc.scheduled_time),
     cta_type: doc.cta_type || 'WhatsApp',
     cta_link: doc.cta_link || '',
@@ -726,6 +818,7 @@ function payload(status) {
     cta_type: form.value.cta_type,
     cta_link: form.value.cta_type === 'None' ? '' : form.value.cta_link,
     channels: form.value.channels.map((c) => ({ channel: c, caption: form.value.captions[c] || '' })),
+    media: form.value.media.map((m, i) => ({ media_file: m.media_file, seq: i, channels: m.channels || [] })),
   }
 }
 
@@ -758,6 +851,10 @@ async function regeneratePost() {
       feedback: aiFeedback.value.trim(),
     })
     for (const c of Object.keys(form.value.captions)) form.value.captions[c] = r.caption
+    // regenerate may swap items server-side and re-attach their photos — refetch
+    // media so a later save doesn't clobber the server's rows with a stale list.
+    const doc = await frappeCall('doco_marketing.api.social.get_post', { name: form.value.name })
+    form.value.media = mapMedia(doc)
     aiFeedback.value = ''
     toast.success(__('Borrador regenerado'))
   } catch (e) {
