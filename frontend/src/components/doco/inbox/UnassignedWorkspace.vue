@@ -7,6 +7,7 @@
 -->
 <template>
   <div class="flex min-w-0 flex-1 flex-col">
+    <CatalogPicker v-if="catalogOpen" @sent="onCatalogSent" />
     <!-- header (mobile: pinned so back stays reachable while scrolling the thread) -->
     <div
       class="flex h-[60px] flex-none items-center gap-2.5 border-b border-outline-gray-1 bg-surface-white px-4"
@@ -110,6 +111,7 @@
             :doctype="''"
             :to-override="activeUnassigned || ''"
             reply-only
+            @catalog="onWaCatalog"
           />
           <!-- Messenger orphan: reply directly by PSID — no assignment needed (the
                PSID is the recipient). The row stays in this orphan thread and is
@@ -278,9 +280,23 @@ import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { activeUnassigned, activeUnassignedChannel, activeUnassignedArchived, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, archiveOrphan, unarchiveOrphan, mobileBack, forecastingEnabled } from '@/composables/inbox'
+import CatalogPicker from '@/components/doco/inbox/CatalogPicker.vue'
+import { activeUnassigned, activeUnassignedChannel, activeUnassignedArchived, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, archiveOrphan, unarchiveOrphan, mobileBack, forecastingEnabled, catalogOpen, openCatalog } from '@/composables/inbox'
 
 const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
+
+// 📦/"/cat" from the orphan composer: the box only EMITS — without this handler
+// (and a mounted CatalogPicker) the Catálogo button was dead in "Sin asignar".
+// Reference-less ctx: send_items threads the cards into this orphan conversation.
+function onWaCatalog(q) {
+  openCatalog(
+    { reference_doctype: '', reference_name: '', channel: 'whatsapp', to: activeUnassigned.value || '' },
+    q,
+  )
+}
+function onCatalogSent() {
+  unassignedThread.reload()
+}
 const isArchived = computed(() => activeUnassignedArchived.value)
 
 async function onArchive() {
