@@ -447,8 +447,10 @@ function dispatchSend() {
 
 function sendTextMessage() {
   sendWhatsAppMessage()
-  textareaRef.value?.el?.blur()
   content.value = ''
+  // Keep the cursor in the box: operators fire several messages in a row, and
+  // the old blur() forced a click back into the field after every Enter.
+  nextTick(() => textareaRef.value?.el?.focus())
   capture('whatsapp_send_message')
 }
 

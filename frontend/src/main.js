@@ -83,16 +83,30 @@ if (import.meta.env.DEV) {
   window.$dialog = createDialog
 }
 
-// PWA staleness guard: the inbox is a long-lived tab (never navigates), so the
-// browser's SW update check — which only runs on navigation — never fires and a
-// deploy leaves the tab on the old bundle until a manual F5. Poll for a new
-// sw.js every 30 min and whenever the tab regains focus; registerSW's
-// autoUpdate handles the actual swap once an update is found.
-if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
+// Deploy-staleness guard: the inbox is a long-lived tab (never navigates), so a
+// deploy leaves it on the old bundle until a manual F5 — and the SW (scoped to
+// /assets/crm/frontend/) can't swap the page for us. Two layers, polled every
+// 30 min and whenever the tab regains focus:
+//   1. SW registration update() — keeps the (minor) SW layer fresh.
+//   2. build.json vs the baked-in __BUILD_ID__ — when they differ a newer build
+//      was deployed, so hard-reload to pick it up. The cache-buster query keeps
+//      Cloudflare/browser caches out of the check.
+if (!import.meta.env.DEV) {
   const checkForSwUpdate = () =>
-    navigator.serviceWorker.getRegistration().then((r) => r?.update()).catch(() => {})
-  setInterval(checkForSwUpdate, 30 * 60 * 1000)
+    navigator.serviceWorker?.getRegistration().then((r) => r?.update()).catch(() => {})
+  const checkBuild = () =>
+    fetch(`/assets/crm/frontend/build.json?t=${Date.now()}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        if (b?.id && b.id !== __BUILD_ID__) window.location.reload()
+      })
+      .catch(() => {})
+  const checkStaleness = () => {
+    checkForSwUpdate()
+    checkBuild()
+  }
+  setInterval(checkStaleness, 30 * 60 * 1000)
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') checkForSwUpdate()
+    if (document.visibilityState === 'visible') checkStaleness()
   })
 }

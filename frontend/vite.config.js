@@ -7,10 +7,28 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development'
+  // Deploy-staleness guard: every build gets a unique id, baked into the bundle
+  // (__BUILD_ID__) AND emitted as build.json next to it. Long-lived tabs compare
+  // the two (main.js) and self-reload after a deploy — no reliance on the SW.
+  const BUILD_ID = String(Date.now())
   const config = {
+    define: {
+      __BUILD_ID__: JSON.stringify(BUILD_ID),
+    },
     plugins: [
       vue(),
       vueJsx(),
+      {
+        name: 'emit-build-id',
+        apply: 'build',
+        generateBundle() {
+          this.emitFile({
+            type: 'asset',
+            fileName: 'build.json',
+            source: JSON.stringify({ id: BUILD_ID }),
+          })
+        },
+      },
       VitePWA({
         registerType: 'autoUpdate',
         devOptions: {
