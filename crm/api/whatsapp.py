@@ -62,6 +62,10 @@ def on_update(doc, method):
 		{
 			"reference_doctype": doc.reference_doctype,
 			"reference_name": doc.reference_name,
+			# The inbox's orphan catch (Inbox.vue onWaMessage) matches the OPEN
+			# "Sin asignar" thread by trailing digits — without a phone in the
+			# payload the open orphan thread never live-refreshes on new inbound.
+			"phone": doc.get("from") if doc.type == "Incoming" else doc.get("to"),
 		},
 		after_commit=True,
 	)
