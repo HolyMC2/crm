@@ -160,6 +160,46 @@ class TestEnrich(unittest.TestCase):
 		self.assertEqual(reply_out["reply_message"], "Mensaje original")
 		self.assertEqual(reply_out["reply_to"], "wa-orig-reply")
 		self.assertEqual(reply_out["reply_to_type"], "Incoming")
+		# reply_to_from labels the REPLIED-TO sender (audit L3 fix: derived from the
+		# replied-to row, not the replying one) — here the orphan original's number.
+		self.assertEqual(reply_out["reply_to_from"], "5215551230777")
+
+	def test_corrupt_template_params_keep_thread_alive(self):
+		"""Audit M6: a Template row with corrupt stored JSON params must not 500 the
+		whole thread (deal + orphan views share this enricher) — the raw template body
+		is kept and the other bubbles still render."""
+		tpl_name = "test_enrich_tpl-es"
+		if not frappe.db.exists("WhatsApp Templates", tpl_name):
+			tpl = frappe.new_doc("WhatsApp Templates")
+			tpl.name = tpl_name
+			tpl.update(
+				{
+					"template_name": "test_enrich_tpl",
+					"actual_name": "test_enrich_tpl",
+					"template": "Hola {{1}}, tu folio {{2}}",
+					"header": "Aviso {{1}}",
+					"footer": "Gracias por tu compra",
+					"language_code": "es",
+					"status": "APPROVED",
+				}
+			)
+			tpl.db_insert()
+
+		normal = _row(frm="5215551230999", message="mensaje normal")
+		corrupt = _row(
+			message_type="Template",
+			template=tpl_name,
+			use_template=1,
+			message=None,
+			template_parameters="{not valid json",  # corrupt
+			template_header_parameters="[oops",  # corrupt
+		)
+		out = enrich_whatsapp_messages([normal, corrupt])  # must NOT raise
+		self.assertEqual(len(out), 2)
+		tpl_out = next(m for m in out if m["message_type"] == "Template")
+		# substitution skipped, raw template body kept (not a blank bubble / 500)
+		self.assertEqual(tpl_out["template"], "Hola {{1}}, tu folio {{2}}")
+		self.assertEqual(tpl_out["header"], "Aviso {{1}}")
 
 	# --- reaction folding ---
 
