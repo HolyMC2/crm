@@ -659,7 +659,14 @@ def parse_template_parameters(string, parameters):
 
 
 def get_from_name(message):
-	doc = frappe.get_doc(message["reference_doctype"], message["reference_name"])
+	ref_dt = message.get("reference_doctype")
+	ref_dn = message.get("reference_name")
+	if not ref_dt or not ref_dn or not frappe.db.exists(ref_dt, ref_dn):
+		# Orphan (unassigned) rows flow through the shared enricher since the
+		# inbox renders them with the real conversation view — there is no
+		# reference doc to name from, so fall back to the sender number.
+		return message.get("from") or ""
+	doc = frappe.get_doc(ref_dt, ref_dn)
 	from_name = ""
 	if message["reference_doctype"] == "CRM Deal":
 		if doc.get("contacts"):
