@@ -182,14 +182,23 @@ def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
 
 		if template:
 			template_message["template_name"] = template.template_name
+			# Corrupt stored params must not 500 the WHOLE thread (deal AND
+			# orphan views share this enricher) — skip substitution, keep the
+			# raw template body as the bubble.
 			if template_message["template_parameters"]:
-				parameters = json.loads(template_message["template_parameters"])
-				template.template = parse_template_parameters(template.template, parameters)
+				try:
+					parameters = json.loads(template_message["template_parameters"])
+					template.template = parse_template_parameters(template.template, parameters)
+				except (ValueError, TypeError):
+					pass
 
 			template_message["template"] = template.template
 			if template_message["template_header_parameters"]:
-				header_parameters = json.loads(template_message["template_header_parameters"])
-				template.header = parse_template_parameters(template.header, header_parameters)
+				try:
+					header_parameters = json.loads(template_message["template_header_parameters"])
+					template.header = parse_template_parameters(template.header, header_parameters)
+				except (ValueError, TypeError):
+					pass
 			template_message["header"] = template.header
 			template_message["footer"] = template.footer
 
@@ -225,7 +234,9 @@ def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
 
 		# If the replied message is found, add the reply details to the reply message
 		if replied_message:
-			from_name = get_from_name(reply_message) if replied_message["from"] else _("You")
+			# reply_to_from labels the REPLIED-TO sender — derive it from the
+			# replied-to message, not the replying one.
+			from_name = get_from_name(replied_message) if replied_message["from"] else _("You")
 			message = replied_message["message"]
 			if replied_message["message_type"] == "Template":
 				message = replied_message["template"]
