@@ -18,6 +18,7 @@
         <span class="h-1.5 w-1.5 flex-none animate-pulse rounded-full" style="background: #d9930b" />
         {{ __('Sin conexión — mostrando lo último guardado') }}
       </div>
+      <OutboxStrip />
       <!-- route-keyed so navigation replays the page-in animation (native-app feel).
            App.vue's router-view is keyed on fullPath too, so this adds no extra
            re-renders — it only hosts the CSS animation. overflow-auto lives HERE
@@ -42,6 +43,7 @@
 import MobileSidebar from '@/components/Mobile/MobileSidebar.vue'
 import MobileAppHeader from '@/components/Mobile/MobileAppHeader.vue'
 import MobileTabBar from '@/components/Mobile/MobileTabBar.vue'
+import OutboxStrip from '@/components/Mobile/OutboxStrip.vue'
 import GlobalModals from '@/components/Modals/GlobalModals.vue'
 import { useRoute } from 'vue-router'
 import { useOnline } from '@vueuse/core'

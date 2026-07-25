@@ -359,6 +359,7 @@ import {
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
 import { notifyTyping, aiEnabled, composerDraft } from '@/composables/inbox'
+import { enqueueOutbox } from '@/composables/outbox'
 import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
@@ -714,6 +715,17 @@ async function sendWhatsAppMessage() {
     reply_to: reply.value?.name || '',
     content_type: sentContentType,
     canned,
+  }
+  // Offline outbox (spec 1.4): no link + TEXT-only send → queue it instead of
+  // failing. Media sends need uploads, so they keep the normal error path.
+  if (!navigator.onLine && sentContent.trim() && !sentAttach) {
+    enqueueOutbox(args)
+    content.value = ''
+    lastCanned.value = null
+    reply.value = {}
+    toast.success(__('Sin conexión — mensaje en cola, se envía al reconectar'))
+    capture('whatsapp_outbox_queued')
+    return
   }
   content.value = ''
   lastCanned.value = null

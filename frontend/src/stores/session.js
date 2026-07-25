@@ -36,7 +36,7 @@ export const sessionStore = defineStore('crm-session', () => {
       // (doco-inbox-queue-*, see composables/inbox.js) — sweep them all.
       try {
         for (const k of Object.keys(localStorage)) {
-          if (k.startsWith('doco-inbox-queue-')) localStorage.removeItem(k)
+          if (k.startsWith('doco-inbox-queue-') || k.startsWith('doco-wa-outbox-')) localStorage.removeItem(k)
         }
       } catch (e) {
         /* storage unavailable — nothing to purge */
