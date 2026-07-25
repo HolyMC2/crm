@@ -251,6 +251,13 @@
         </div>
       </Card>
 
+      <!-- per-agent DEAL analytics (P2 S2 / spec 7.1): abiertos / ganados / valor /
+        respuesta mediana — deal-ownership view, complements the message-provenance
+        scorecard above. Manager-gated; the component shows its own banner on 403. -->
+      <Card :title="__('Analítica por agente (tratos)')">
+        <ReportsAgents :period="period" />
+      </Card>
+
       <!-- per-shop (real doco_shop dimension; falls back to the territory proxy on
         sites where the shop fields aren't installed) -->
       <Card v-if="scoreShops.length" :title="__('Desempeño por sucursal')">
@@ -409,6 +416,7 @@ import { useRouter } from 'vue-router'
 import { createResource, call, toast } from 'frappe-ui'
 import { CHANNEL_META, GRADE_COLORS } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
+import ReportsAgents from '@/components/doco/ReportsAgents.vue'
 
 const router = useRouter()
 

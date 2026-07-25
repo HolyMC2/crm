@@ -9,6 +9,14 @@
         <div class="text-[15px] font-bold text-ink-gray-9">{{ __('Mi bandeja') }}</div>
         <div class="flex items-center gap-2">
           <button
+            class="text-ink-gray-4 hover:text-ink-gray-9"
+            :title="__('Buscar mensajes')"
+            :aria-label="__('Buscar mensajes')"
+            @click="showGlobalSearch = true"
+          >
+            <LucideSearch class="h-4 w-4" />
+          </button>
+          <button
             :class="soundEnabled ? 'text-ink-green-3' : 'text-ink-gray-4'"
             :title="soundEnabled ? __('Sonido de notificación activado') : __('Activar sonido de notificación')"
             :aria-label="__('Sonido de notificación')"
@@ -477,6 +485,7 @@
     </div>
 
     <DealModal v-if="showDealModal" v-model="showDealModal" :redirect="{ name: 'Deal 360' }" />
+    <GlobalSearch v-if="showGlobalSearch" @open="onGlobalSearchOpen" @close="showGlobalSearch = false" />
   </div>
 </template>
 
@@ -497,6 +506,7 @@ import { isMobile } from '@/composables/breakpoint'
 import { formatMoney } from '@/composables/crmFormat'
 import DealModal from '@/components/Modals/DealModal.vue'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
+import GlobalSearch from '@/components/doco/inbox/GlobalSearch.vue'
 import {
   queue,
   unassigned,
@@ -554,6 +564,14 @@ const { getDealStatus } = statusesStore()
 const showDealModal = ref(false)
 function newDeal() {
   showDealModal.value = true
+}
+
+// 🔍 global message search (spec 2.6+2.7): the modal owns its own state; a row tap
+// emits open(reference_doctype, reference_name) → selectDeal (already imported).
+const showGlobalSearch = ref(false)
+function onGlobalSearchOpen(refDoctype, refName) {
+  showGlobalSearch.value = false
+  selectDeal(refName, refDoctype || 'CRM Deal')
 }
 
 // Vencidos tab swaps the row source to the server-ranked overdue list (most-overdue

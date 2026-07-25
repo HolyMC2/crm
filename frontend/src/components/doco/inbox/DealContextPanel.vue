@@ -24,6 +24,9 @@
       </span>
     </div>
 
+    <!-- ⚠ posible duplicado (spec 4.3, detection-only) -->
+    <DuplicateBanner :doctype="activeDealDoctype" :name="activeDeal" @open="onOpenDuplicate" />
+
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 flex items-center justify-between">
@@ -213,8 +216,16 @@ import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
 import SalesDocsSection from '@/components/doco/inbox/SalesDocsSection.vue'
+import DuplicateBanner from '@/components/doco/inbox/DuplicateBanner.vue'
+
+// ⚠ duplicate banner → jump to the other open record (detect+navigate only)
+// NB selectDeal arg order: (name, doctype)
+function onOpenDuplicate(doctype, name) {
+  selectDeal(name, doctype)
+}
+
 import { isMobile } from '@/composables/breakpoint'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller, salesDocsEnabled } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller, salesDocsEnabled, selectDeal } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()

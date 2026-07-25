@@ -39,6 +39,9 @@
         </button>
       </div>
 
+      <!-- 🧠 resumen AI del hilo (P2 S3 / spec 5.2) — hides itself when AI is off -->
+      <ThreadSummary />
+
       <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox). The doco
            WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
            since DealHeader already identifies the contact (avoids the duplicate). -->
@@ -100,6 +103,7 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
+import ThreadSummary from '@/components/doco/inbox/ThreadSummary.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence } from '@/composables/inbox'
 
