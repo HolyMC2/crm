@@ -36,11 +36,37 @@ export default defineConfig(async ({ mode }) => {
         },
         manifest: {
           display: 'standalone',
-          name: 'Frappe CRM',
-          short_name: 'Frappe CRM',
+          name: 'CRM',
+          short_name: 'CRM',
           start_url: '/crm',
+          scope: '/crm',
+          lang: 'es',
+          theme_color: '#16a34a',
+          background_color: '#ffffff',
           description:
             'Modern & 100% Open-source CRM tool to supercharge your sales operations',
+          shortcuts: [
+            {
+              name: 'Inbox',
+              url: '/crm/inbox',
+              icons: [
+                {
+                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+                  sizes: '192x192',
+                },
+              ],
+            },
+            {
+              name: 'Leads',
+              url: '/crm/leads',
+              icons: [
+                {
+                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+                  sizes: '192x192',
+                },
+              ],
+            },
+          ],
           icons: [
             {
               src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
