@@ -100,6 +100,17 @@
             {{ row.status || __('Estado') }} ⌄
           </button>
         </Dropdown>
+        <!-- 💤 snooze/recordar (spec 2.1) -->
+        <Dropdown :options="snoozeOptions">
+          <button
+            class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
+            :class="isSnoozed ? 'bg-surface-violet-1 text-ink-violet-1' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+            :title="isSnoozed ? __('Pospuesta — reaparece sola') : __('Posponer conversación')"
+            :aria-label="__('Posponer')"
+          >
+            <LucideAlarmClock class="h-4 w-4" />
+          </button>
+        </Dropdown>
         <button
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
           :title="__('Bitácora — historial en todos los canales')"
@@ -118,6 +129,26 @@
         </button>
       </div>
     </div>
+
+    <!-- custom snooze datetime -->
+    <Dialog v-model="showSnoozeDialog" :options="{ title: __('Posponer hasta') }">
+      <template #body-content>
+        <input
+          v-model="snoozeCustom"
+          type="datetime-local"
+          :min="minLocal"
+          class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-base text-ink-gray-9"
+        />
+      </template>
+      <template #actions>
+        <Button
+          variant="solid"
+          :label="__('Posponer')"
+          :disabled="!snoozeCustom"
+          @click="confirmCustomSnooze"
+        />
+      </template>
+    </Dialog>
 
     <!-- next action bar -->
     <div
@@ -153,10 +184,11 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
-import { Dropdown, createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
+import { computed, ref, watch } from 'vue'
+import { Button, Dialog, Dropdown, createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
 import LucidePhone from '~icons/lucide/phone'
 import LucideScrollText from '~icons/lucide/scroll-text'
+import LucideAlarmClock from '~icons/lucide/alarm-clock'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import { globalStore } from '@/stores/global'
@@ -178,6 +210,8 @@ import {
   timeAgo,
   GRADE_COLORS,
   salesDocsEnabled,
+  snoozedCount,
+  reloadQueue,
 } from '@/composables/inbox'
 import { ensureSalesSummary, salesOutstanding, salesRollup } from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
@@ -311,6 +345,77 @@ const slaLabel = computed(() => {
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)
 }
+
+// ── 💤 snooze/recordar (spec 2.1) ──────────────────────────────────────────────
+const isSnoozed = computed(() => {
+  const su = row.value.snoozed_until
+  return !!su && new Date(String(su).replace(' ', 'T')) > new Date()
+})
+const showSnoozeDialog = ref(false)
+const snoozeCustom = ref('')
+const minLocal = computed(() => {
+  const d = new Date(Date.now() + 5 * 60000)
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
+})
+function _tomorrow9() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  d.setHours(9, 0, 0, 0)
+  return d
+}
+function _nextMonday9() {
+  const d = new Date()
+  d.setDate(d.getDate() + (((8 - d.getDay()) % 7) || 7))
+  d.setHours(9, 0, 0, 0)
+  return d
+}
+async function _snooze(untilDate) {
+  try {
+    // absolute epoch — immune to device-tz vs site-tz drift
+    await frappeCall('doco_marketing.api.inbox.snooze_conversation', {
+      doctype: activeDealDoctype.value,
+      name: activeDeal.value,
+      until_epoch: untilDate.getTime(),
+    })
+    toast.success(__('Pospuesta — reaparece sola con aviso'))
+    snoozedCount.fetch()
+    reloadQueue()
+    if (isMobile.value) mobileBack() // WhatsApp-archive feel: back to the list
+  } catch (e) {
+    toast.error(e.messages?.[0] || __('No se pudo posponer'))
+  }
+}
+async function _unsnooze() {
+  try {
+    await frappeCall('doco_marketing.api.inbox.unsnooze_conversation', {
+      doctype: activeDealDoctype.value,
+      name: activeDeal.value,
+    })
+    toast.success(__('Conversación reactivada'))
+    snoozedCount.fetch()
+    reloadQueue()
+  } catch (e) {
+    toast.error(e.messages?.[0] || __('No se pudo reactivar'))
+  }
+}
+function confirmCustomSnooze() {
+  if (!snoozeCustom.value) return
+  showSnoozeDialog.value = false
+  _snooze(new Date(snoozeCustom.value)) // datetime-local parses in device tz → absolute epoch
+}
+const snoozeOptions = computed(() => {
+  const o = []
+  if (isSnoozed.value) o.push({ label: __('Reactivar ahora'), onClick: _unsnooze })
+  o.push(
+    { label: __('1 hora'), onClick: () => _snooze(new Date(Date.now() + 3600e3)) },
+    { label: __('3 horas'), onClick: () => _snooze(new Date(Date.now() + 3 * 3600e3)) },
+    { label: __('Mañana 9:00'), onClick: () => _snooze(_tomorrow9()) },
+    { label: __('Lunes 9:00'), onClick: () => _snooze(_nextMonday9()) },
+    { label: __('Elegir fecha…'), onClick: () => (showSnoozeDialog.value = true) },
+  )
+  return o
+})
 
 // next action: earliest open task on this deal
 const tasks = createListResource({

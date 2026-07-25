@@ -115,7 +115,7 @@
       <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
-      <div v-if="visibleUnassigned.length && inboxTab !== 'comments'" class="mb-1.5">
+      <div v-if="visibleUnassigned.length && inboxTab !== 'comments' && inboxTab !== 'snoozed'" class="mb-1.5">
         <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-3">
           ⚠ {{ __('Sin asignar') }}
           <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-3">{{ visibleUnassigned.length }}</span>
@@ -166,7 +166,7 @@
       <!-- "Archivados": orphans the operator closed-but-kept (no lead/deal worth opening).
         Discreet collapsed toggle; loaded on demand. The thread stays reachable + replyable
         and a NEWER inbound auto-resurfaces it back into "Sin asignar". -->
-      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar'" class="mb-1.5">
+      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar' && inboxTab !== 'snoozed'" class="mb-1.5">
         <button
           class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
           @click="toggleArchived"
@@ -418,6 +418,13 @@
             </button>
           </span>
           <span
+            v-if="r.snoozed_until"
+            class="rounded bg-surface-violet-1 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-1"
+            :title="__('Pospuesta — reaparece sola')"
+          >
+            💤 {{ fmtSnooze(r.snoozed_until) }}
+          </span>
+          <span
             v-if="r.status"
             class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-7"
           >
@@ -484,6 +491,7 @@ import {
   unattendedTotal,
   autoAckCount,
   queueRows,
+  snoozedCount,
   queueHasMore,
   queueLoadingMore,
   loadMoreQueue,
@@ -530,6 +538,19 @@ function newDeal() {
 // first, across all conversations — an overdue thread buried by recency is the point);
 // every other tab shows the normal recency queue.
 const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queueRows.value))
+
+function fmtSnooze(ts) {
+  try {
+    return new Date(String(ts).replace(' ', 'T')).toLocaleString('es-MX', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch (e) {
+    return ts
+  }
+}
 
 // ── row swipe (mobile): left-swipe an unread row → «marcar respondido» ─────────
 // Follow-finger translate with the green underlay behind; fires clearResponder
@@ -793,6 +814,8 @@ const inboxTabs = computed(() => [
   ...(messengerEnabled.value ? [{ id: 'messenger', label: 'Messenger', dot: CHANNEL_META.messenger?.[1] || '#0084ff', count: channelCounts.data?.messenger ?? null }] : []),
   { id: 'comments', label: __('Comentarios'), dot: '#1877f2', count: commentCounts.data?.new ?? null },
   { id: 'vencidos', label: __('Vencidos'), dot: '#dc2626', count: overdue.data?.count || null },
+  // 💤 Pospuestas: snoozed conversations waiting for their wake time (hidden at 0)
+  ...((snoozedCount.data || 0) > 0 ? [{ id: 'snoozed', label: __('Pospuestas'), dot: '#8b5cf6', count: snoozedCount.data }] : []),
   // Por aprobar: review-gated auto-acuses awaiting a human OK. Only shown when the
   // feature has ever drafted something (count > 0) — a clean tenant sees no dead tab.
   ...((autoAckCount.data || 0) > 0 ? [{ id: 'aprobar', label: __('Por aprobar'), dot: '#16a34a', count: autoAckCount.data }] : []),

@@ -105,6 +105,8 @@ export const unattendedTotal = computed(
 // count drives the tab badge; the list feeds the review panel.
 export const autoAcks = createResource({ url: 'doco_marketing.api.auto_reply.list_pending', params: { limit: 50 }, auto: false })
 export const autoAckCount = createResource({ url: 'doco_marketing.api.auto_reply.pending_count', auto: false })
+// 💤 active snoozes (Deals+Leads) — «Pospuestas» tab chip, hidden at 0
+export const snoozedCount = createResource({ url: 'doco_marketing.api.inbox.get_snoozed_count', auto: false })
 // Pending acuses for the OPEN conversation — drives the in-context review strip so a
 // reviewer approves WITH the full thread/calls/items in view (not from the bare list).
 export const autoAckForConvo = createResource({ url: 'doco_marketing.api.auto_reply.pending_for_ref', auto: false })
@@ -180,6 +182,7 @@ export function initInbox(opts = {}) {
   channelCounts.fetch()
   overdue.fetch()
   autoAckCount.fetch() // "por aprobar" badge — count only on init; the list loads on tab open
+  snoozedCount.fetch() // «Pospuestas» chip
   // skipRestore: a ?deal= deep link owns the selection — restoreInbox() resolves
   // async and would clobber it with the previously-persisted conversation (audit H1).
   if (!opts.skipRestore) restoreInbox()
@@ -352,6 +355,7 @@ export function reloadQueue(opts = {}) {
     .submit({
       channel: queueChannel.value || undefined,
       search: queueSearch.value || undefined,
+      snoozed: inboxTab.value === 'snoozed' ? 1 : undefined,
       limit: QUEUE_PAGE,
       start: 0,
     })
@@ -405,6 +409,7 @@ export function loadMoreQueue() {
     .submit({
       channel: queueChannel.value || undefined,
       search: queueSearch.value || undefined,
+      snoozed: inboxTab.value === 'snoozed' ? 1 : undefined,
       limit: QUEUE_PAGE,
       start: _queueStart,
     })
@@ -673,6 +678,7 @@ export function onThreadUpdate(payload) {
   channelCounts.reload() // a new message may flip a conversation's last_channel
   overdue.reload() // ...and a reply/inbound changes who's overdue
   autoAckCount.reload() // a reply may resolve a pending draft; an inbound may add one
+  snoozedCount.fetch() // snooze set/cleared elsewhere (or a cron wake) moves the chip
 }
 
 // ── Comentarios (Page-feed comments) ───────────────────────────────────────────
@@ -701,6 +707,8 @@ export function setInboxTab(tab) {
   setQueueChannel(tab === 'whatsapp' || tab === 'messenger' ? tab : null)
   if (tab === 'vencidos') overdue.fetch() // refresh the Vencidos list on open
   if (tab === 'aprobar') reloadAutoAcks() // refresh the drafts list on open
+  if (tab === 'snoozed') snoozedCount.fetch() // refresh the chip on open
+  // (setQueueChannel below always reloadQueue()s — the snoozed param reads inboxTab)
   if (tab === 'comments') {
     reloadComments()
     commentCounts.fetch()
