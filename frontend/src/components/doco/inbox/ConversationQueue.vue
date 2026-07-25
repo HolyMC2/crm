@@ -315,7 +315,7 @@
       <div
         v-for="r in rows"
         :key="(r.ref_doctype || 'CRM Deal') + ':' + r.name"
-        class="relative"
+        class="cv-row relative"
       >
       <!-- swipe-left action underlay (mobile, unread rows): «marcar respondido» -->
       <div

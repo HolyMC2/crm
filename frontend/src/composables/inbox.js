@@ -331,10 +331,23 @@ try {
   /* corrupt cache — ignore, fetch will repopulate */
 }
 
+function _rowKey(r) {
+  return (r.ref_doctype || 'CRM Deal') + ':' + r.name
+}
+
 let _searchTimer = null
-export function reloadQueue() {
-  _queueStart = 0
+let _lastQueueFetch = 0
+// merge=false (filter/search/user actions): REPLACE the list with the fresh first
+// page — deliberate context switch, truncating deep scroll is correct.
+// merge=true (realtime/catch-up): fresh first page moves to the top, previously
+// loaded rows not in it are KEPT below — an inbound message must not throw away
+// the operator's scrolled-in tail (the queue is offset-paged over a live-reordering
+// list; see loadMoreQueue for the companion dedupe).
+export function reloadQueue(opts = {}) {
+  const merge = !!opts.merge
+  if (!merge) _queueStart = 0
   const myId = ++_queueReqId
+  _lastQueueFetch = Date.now()
   return queue
     .submit({
       channel: queueChannel.value || undefined,
@@ -344,14 +357,20 @@ export function reloadQueue() {
     })
     .then(() => {
       if (myId !== _queueReqId) return // a newer reload superseded this page
-      queueRows.value = queue.data || []
-      queueHasMore.value = (queue.data || []).length === QUEUE_PAGE
+      const fresh = queue.data || []
+      if (merge) {
+        const freshKeys = new Set(fresh.map(_rowKey))
+        queueRows.value = fresh.concat(queueRows.value.filter((r) => !freshKeys.has(_rowKey(r))))
+      } else {
+        queueRows.value = fresh
+      }
+      queueHasMore.value = fresh.length === QUEUE_PAGE
       queueFromCache.value = false
       if (!queueChannel.value && !queueSearch.value) {
         try {
           // trim the persisted preview — the cache must paint the list, not
           // archive conversations (audit M2)
-          const rows = (queue.data || []).slice(0, 30).map((r) => ({
+          const rows = fresh.slice(0, 30).map((r) => ({
             ...r,
             last_message: (r.last_message || '').slice(0, 60),
           }))
@@ -361,6 +380,18 @@ export function reloadQueue() {
         }
       }
     })
+}
+
+// Debounced realtime refresh: message bursts (send+ack, multi-webhook) collapse
+// into ONE merge-reload, and a direct reload that just ran suppresses it — fixes
+// the ≥2 queue fetches per inbound the audit flagged (L2).
+let _qrTimer = null
+export function scheduleQueueReload() {
+  clearTimeout(_qrTimer)
+  _qrTimer = setTimeout(() => {
+    if (Date.now() - _lastQueueFetch < 500) return // a reload just covered this burst
+    reloadQueue({ merge: true })
+  }, 400)
 }
 
 // Fetch + append the next page. No-op while one is in flight or when the list is
@@ -380,7 +411,12 @@ export function loadMoreQueue() {
     .then(() => {
       queueLoadingMore.value = false
       if (myId !== _queueReqId) return // filter changed mid-flight — discard this page
-      queueRows.value = queueRows.value.concat(queue.data || [])
+      // DEDUPE on append: pages are offset slices of a list that reorders live
+      // (an inbound message moves its row up), so a row crossing the page
+      // boundary between fetches arrives twice — showed as duplicated
+      // conversations in prod (2026-07-25).
+      const seen = new Set(queueRows.value.map(_rowKey))
+      queueRows.value = queueRows.value.concat((queue.data || []).filter((r) => !seen.has(_rowKey(r))))
       queueHasMore.value = (queue.data || []).length === QUEUE_PAGE
     })
     .catch(() => {
@@ -620,7 +656,7 @@ export function cancelLostStage() {
 // stretch): any event emitted meanwhile is gone forever, so refetch every inbox
 // surface + the open thread. This is the F5 the operator used to do by hand.
 export function catchUpInbox() {
-  reloadQueue()
+  reloadQueue({ merge: true }) // gap recovery must not truncate the scrolled tail
   reloadUnassigned()
   if (activeDeal.value) loadThread()
   else if (activeUnassigned.value) reloadUnassignedThread()
@@ -633,7 +669,7 @@ export function catchUpInbox() {
 // onThreadUpdate: wired to realtime in the page; reload if it's for the open deal.
 export function onThreadUpdate(payload) {
   if (payload?.deal && payload.deal === activeDeal.value) loadThread()
-  reloadQueue()
+  scheduleQueueReload() // debounced merge — bursts + the whatsapp_message reload coalesce
   channelCounts.reload() // a new message may flip a conversation's last_channel
   overdue.reload() // ...and a reply/inbound changes who's overdue
   autoAckCount.reload() // a reply may resolve a pending draft; an inbound may add one

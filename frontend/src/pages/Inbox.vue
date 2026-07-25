@@ -105,7 +105,7 @@ function onWaMessage(payload) {
   ) {
     reloadUnassignedThread()
   }
-  reloadQueue().then(() => {
+  reloadQueue({ merge: true }).then(() => {
     // the conversation you're actively viewing stays read
     if (activeDeal.value) {
       const r = (queue.data || []).find(
@@ -214,6 +214,7 @@ onMounted(() => {
   $socket?.on('whatsapp_message', onWaMessage)
   window.addEventListener('popstate', onPopState)
   window.addEventListener('socket:reconnected', onSocketReconnected)
+  window.addEventListener('online', onSocketReconnected) // dead-zone exit → same catch-up
   document.addEventListener('visibilitychange', onVisibility)
 })
 onUnmounted(() => {
@@ -223,6 +224,7 @@ onUnmounted(() => {
   $socket?.off('whatsapp_message', onWaMessage)
   window.removeEventListener('popstate', onPopState)
   window.removeEventListener('socket:reconnected', onSocketReconnected)
+  window.removeEventListener('online', onSocketReconnected)
   document.removeEventListener('visibilitychange', onVisibility)
 })
 </script>

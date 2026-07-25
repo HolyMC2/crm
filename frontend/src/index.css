@@ -72,6 +72,13 @@ a,
   transform: rotate(45deg);
 }
 
+/* poor-man's list virtualization: browser skips layout/paint of offscreen rows
+   (590-conversation queues on a phone). Estimated height keeps scrollbar sane. */
+.cv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+}
+
 /* skeleton shimmer (cold-start placeholders) — token-based, dark-safe */
 .skel {
   position: relative;
