@@ -31,6 +31,13 @@ export const sessionStore = defineStore('crm-session', () => {
   const logout = createResource({
     url: 'logout',
     onSuccess() {
+      // purge the inbox cold-start cache (customer names/phones/last messages) —
+      // must not survive logout on a shared device. Key mirrors composables/inbox.js.
+      try {
+        localStorage.removeItem('doco-inbox-queue-v1')
+      } catch (e) {
+        /* storage unavailable — nothing to purge */
+      }
       user.value = null
       window.location.href = '/login?redirect-to=/crm'
     },
