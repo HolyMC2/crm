@@ -107,6 +107,13 @@ export const autoAcks = createResource({ url: 'doco_marketing.api.auto_reply.lis
 export const autoAckCount = createResource({ url: 'doco_marketing.api.auto_reply.pending_count', auto: false })
 // 💤 active snoozes (Deals+Leads) — «Pospuestas» tab chip, hidden at 0
 export const snoozedCount = createResource({ url: 'doco_marketing.api.inbox.get_snoozed_count', auto: false })
+// 🏷 etiquetas in use (filter chips + tag-manager suggestions)
+export const conversationTags = createResource({ url: 'doco_marketing.api.inbox.get_conversation_tags', auto: false })
+export const queueTag = ref(null) // active etiqueta filter (null = all)
+export function setQueueTag(tag) {
+  queueTag.value = queueTag.value === tag ? null : tag
+  reloadQueue()
+}
 // Pending acuses for the OPEN conversation — drives the in-context review strip so a
 // reviewer approves WITH the full thread/calls/items in view (not from the bare list).
 export const autoAckForConvo = createResource({ url: 'doco_marketing.api.auto_reply.pending_for_ref', auto: false })
@@ -183,6 +190,7 @@ export function initInbox(opts = {}) {
   overdue.fetch()
   autoAckCount.fetch() // "por aprobar" badge — count only on init; the list loads on tab open
   snoozedCount.fetch() // «Pospuestas» chip
+  conversationTags.fetch() // 🏷 filter chips
   // skipRestore: a ?deal= deep link owns the selection — restoreInbox() resolves
   // async and would clobber it with the previously-persisted conversation (audit H1).
   if (!opts.skipRestore) restoreInbox()
@@ -356,6 +364,7 @@ export function reloadQueue(opts = {}) {
       channel: queueChannel.value || undefined,
       search: queueSearch.value || undefined,
       snoozed: inboxTab.value === 'snoozed' ? 1 : undefined,
+      tag: queueTag.value || undefined,
       limit: QUEUE_PAGE,
       start: 0,
     })
@@ -410,6 +419,7 @@ export function loadMoreQueue() {
       channel: queueChannel.value || undefined,
       search: queueSearch.value || undefined,
       snoozed: inboxTab.value === 'snoozed' ? 1 : undefined,
+      tag: queueTag.value || undefined,
       limit: QUEUE_PAGE,
       start: _queueStart,
     })

@@ -100,6 +100,16 @@
             {{ row.status || __('Estado') }} ⌄
           </button>
         </Dropdown>
+        <!-- 🏷 etiquetas (spec 2.2) -->
+        <button
+          class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
+          :class="(row.tags || []).length ? 'bg-surface-violet-1 text-ink-violet-1' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+          :title="__('Etiquetas')"
+          :aria-label="__('Etiquetas')"
+          @click="openTags"
+        >
+          <LucideTag class="h-4 w-4" />
+        </button>
         <!-- 💤 snooze/recordar (spec 2.1) -->
         <Dropdown :options="snoozeOptions">
           <button
@@ -129,6 +139,45 @@
         </button>
       </div>
     </div>
+
+    <!-- 🏷 etiquetas manager -->
+    <Dialog v-model="showTagsDialog" :options="{ title: __('Etiquetas') }">
+      <template #body-content>
+        <div v-if="localTags.length" class="mb-3 flex flex-wrap gap-1.5">
+          <span
+            v-for="tg in localTags"
+            :key="tg"
+            class="inline-flex items-center gap-1 rounded-full bg-surface-violet-1 px-2.5 py-1 text-[12px] font-semibold text-ink-violet-1"
+          >
+            🏷 {{ tg }}
+            <button class="press text-[13px] leading-none" :aria-label="__('Quitar') + ' ' + tg" @click="removeTag(tg)">×</button>
+          </span>
+        </div>
+        <div v-else class="mb-3 text-[12px] text-ink-gray-5">{{ __('Sin etiquetas') }}</div>
+        <div v-if="tagSuggestions.length" class="mb-3">
+          <div class="mb-1.5 text-[10.5px] font-bold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Sugerencias') }}</div>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              v-for="tg in tagSuggestions"
+              :key="tg"
+              class="press rounded-full bg-surface-gray-2 px-2.5 py-1 text-[12px] font-medium text-ink-gray-7 hover:bg-surface-gray-3"
+              @click="addTag(tg)"
+            >
+              + {{ tg }}
+            </button>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <input
+            v-model="newTag"
+            class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-base text-ink-gray-9"
+            :placeholder="__('Nueva etiqueta… (urgente, garantía, mayoreo)')"
+            @keydown.enter.prevent="addTag(newTag)"
+          />
+          <Button variant="solid" :label="__('Añadir')" :disabled="!newTag.trim()" @click="addTag(newTag)" />
+        </div>
+      </template>
+    </Dialog>
 
     <!-- custom snooze datetime -->
     <Dialog v-model="showSnoozeDialog" :options="{ title: __('Posponer hasta') }">
@@ -189,6 +238,7 @@ import { Button, Dialog, Dropdown, createListResource, createResource, call as f
 import LucidePhone from '~icons/lucide/phone'
 import LucideScrollText from '~icons/lucide/scroll-text'
 import LucideAlarmClock from '~icons/lucide/alarm-clock'
+import LucideTag from '~icons/lucide/tag'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import { globalStore } from '@/stores/global'
@@ -212,6 +262,7 @@ import {
   salesDocsEnabled,
   snoozedCount,
   reloadQueue,
+  conversationTags,
 } from '@/composables/inbox'
 import { ensureSalesSummary, salesOutstanding, salesRollup } from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
@@ -344,6 +395,56 @@ const slaLabel = computed(() => {
 
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)
+}
+
+// ── 🏷 etiquetas (spec 2.2) — optimistic local list; queue refresh reconciles ──
+const showTagsDialog = ref(false)
+const newTag = ref('')
+const localTags = ref([])
+watch(
+  () => row.value.tags,
+  (t) => (localTags.value = [...(t || [])]),
+  { immediate: true },
+)
+const tagSuggestions = computed(() =>
+  (conversationTags.data || []).filter((t) => !localTags.value.includes(t)).slice(0, 8),
+)
+function openTags() {
+  localTags.value = [...(row.value.tags || [])]
+  showTagsDialog.value = true
+}
+async function addTag(tag) {
+  tag = (tag || '').trim()
+  if (!tag || localTags.value.includes(tag)) return
+  localTags.value.push(tag)
+  newTag.value = ''
+  try {
+    await frappeCall('doco_marketing.api.inbox.tag_conversation', {
+      doctype: activeDealDoctype.value,
+      name: activeDeal.value,
+      tag,
+    })
+    conversationTags.fetch()
+    reloadQueue({ merge: true })
+  } catch (e) {
+    localTags.value = localTags.value.filter((t) => t !== tag)
+    toast.error(e.messages?.[0] || __('No se pudo etiquetar'))
+  }
+}
+async function removeTag(tag) {
+  localTags.value = localTags.value.filter((t) => t !== tag)
+  try {
+    await frappeCall('doco_marketing.api.inbox.untag_conversation', {
+      doctype: activeDealDoctype.value,
+      name: activeDeal.value,
+      tag,
+    })
+    conversationTags.fetch()
+    reloadQueue({ merge: true })
+  } catch (e) {
+    localTags.value.push(tag)
+    toast.error(e.messages?.[0] || __('No se pudo quitar'))
+  }
 }
 
 // ── 💤 snooze/recordar (spec 2.1) ──────────────────────────────────────────────

@@ -84,6 +84,18 @@
           <span v-if="t.count != null" class="text-[10px] opacity-70">{{ t.count }}</span>
         </button>
       </div>
+      <!-- 🏷 etiqueta filter (spec 2.2) — one-line scrollable, tap toggles -->
+      <div v-if="(conversationTags.data || []).length" class="mt-2 flex gap-1.5 overflow-x-auto">
+        <button
+          v-for="tg in conversationTags.data"
+          :key="tg"
+          class="press flex-none whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold"
+          :class="queueTag === tg ? 'bg-surface-violet-1 text-ink-violet-1' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+          @click="setQueueTag(tg)"
+        >
+          🏷 {{ tg }}
+        </button>
+      </div>
     </div>
 
     <!-- listbox: roving-tabindex rows (one tab stop), ↑/↓/Home/End move focus, Enter
@@ -115,7 +127,7 @@
       <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
-      <div v-if="visibleUnassigned.length && inboxTab !== 'comments' && inboxTab !== 'snoozed'" class="mb-1.5">
+      <div v-if="visibleUnassigned.length && inboxTab !== 'comments' && inboxTab !== 'snoozed' && !queueTag" class="mb-1.5">
         <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-3">
           ⚠ {{ __('Sin asignar') }}
           <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-3">{{ visibleUnassigned.length }}</span>
@@ -166,7 +178,7 @@
       <!-- "Archivados": orphans the operator closed-but-kept (no lead/deal worth opening).
         Discreet collapsed toggle; loaded on demand. The thread stays reachable + replyable
         and a NEWER inbound auto-resurfaces it back into "Sin asignar". -->
-      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar' && inboxTab !== 'snoozed'" class="mb-1.5">
+      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar' && inboxTab !== 'snoozed' && !queueTag" class="mb-1.5">
         <button
           class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
           @click="toggleArchived"
@@ -425,6 +437,13 @@
             💤 {{ fmtSnooze(r.snoozed_until) }}
           </span>
           <span
+            v-for="tg in (r.tags || []).slice(0, 2)"
+            :key="tg"
+            class="rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-6"
+          >
+            🏷 {{ tg }}
+          </span>
+          <span
             v-if="r.status"
             class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-7"
           >
@@ -492,6 +511,9 @@ import {
   autoAckCount,
   queueRows,
   snoozedCount,
+  conversationTags,
+  queueTag,
+  setQueueTag,
   queueHasMore,
   queueLoadingMore,
   loadMoreQueue,
