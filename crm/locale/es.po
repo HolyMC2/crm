@@ -8694,3 +8694,35 @@ msgstr "Dominio SIP de Twilio"
 #: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
 msgid "e.g. docomexico.sip.twilio.com. Configured on the Twilio Console (Voice → SIP → Domains)."
 msgstr "ej. docomexico.sip.twilio.com. Se configura en la consola de Twilio (Voice → SIP → Domains)."
+
+# --- doco additions (FCRM redesign UI, 2026-07-25) ---
+
+msgid "Reports"
+msgstr "Reportes"
+
+msgid "Dark mode"
+msgstr "Modo oscuro"
+
+msgid "Light mode"
+msgstr "Modo claro"
+
+msgid "Sign out"
+msgstr "Cerrar sesión"
+
+msgid "Close menu"
+msgstr "Cerrar menú"
+
+msgid "Private note"
+msgstr "Nota privada"
+
+msgid "Internal"
+msgstr "Interno"
+
+msgid "Score Rules"
+msgstr "Reglas de puntaje"
+
+msgid "Webshop"
+msgstr "Tienda en línea"
+
+msgid "Campaigns"
+msgstr "Campañas"
