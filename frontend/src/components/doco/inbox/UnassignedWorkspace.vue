@@ -69,9 +69,11 @@
 
     <div class="flex min-h-0 flex-1" :class="isMobile ? 'flex-col' : ''">
       <!-- thread + reply bar -->
+      <!-- mobile: the thread owns the screen (was crushed to 38vh above an
+           always-visible form); the capture form moved to a bottom sheet -->
       <div
         class="flex min-h-0 flex-col border-outline-gray-1"
-        :class="isMobile ? 'max-h-[38vh] flex-none border-b' : 'flex-1 border-r'"
+        :class="isMobile ? 'flex-1' : 'flex-1 border-r'"
       >
         <!-- Messenger orphans render through MessengerArea (reactions + referral chip +
              inline image attachments, identical to the assigned conversation). -->
@@ -155,12 +157,48 @@
         </div>
       </div>
 
-      <!-- capture form -->
+      <!-- mobile CTA: opens the capture sheet (replaces the scroll-to-form UX) -->
       <div
-        class="scb flex flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5"
-        :class="isMobile ? 'w-full flex-1' : 'w-[300px] flex-none'"
+        v-if="isMobile"
+        class="flex flex-none gap-2 border-t border-outline-gray-1 bg-surface-white px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)]"
       >
-        <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Datos') }}</div>
+        <button
+          class="press flex-1 rounded-[10px] py-2.5 text-[13.5px] font-bold text-white"
+          style="background: #16a34a"
+          @click="captureOpen = true"
+        >
+          {{ boundContact ? '✚ ' + __('Crear Trato') : '✚ ' + __('Capturar y convertir') }}
+        </button>
+      </div>
+
+      <!-- backdrop for the mobile capture sheet -->
+      <div
+        v-if="isMobile && captureOpen"
+        class="fixed inset-0 z-40 bg-black/40"
+        @click="captureOpen = false"
+      />
+      <!-- capture form: docked 300px panel on desktop; bottom sheet on mobile -->
+      <div
+        v-show="!isMobile || captureOpen"
+        class="scb flex flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5"
+        :class="
+          isMobile
+            ? 'sheet-in fixed inset-x-0 bottom-0 z-50 max-h-[82vh] rounded-t-2xl pb-[calc(env(safe-area-inset-bottom)+14px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)]'
+            : 'w-[300px] flex-none'
+        "
+      >
+        <div v-if="isMobile" class="mx-auto mb-2 h-1 w-10 flex-none rounded-full bg-surface-gray-4" aria-hidden="true" />
+        <div class="mb-2 flex items-center justify-between">
+          <div class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Datos') }}</div>
+          <button
+            v-if="isMobile"
+            class="press flex h-7 w-7 items-center justify-center rounded-lg text-ink-gray-5"
+            :aria-label="__('Cerrar')"
+            @click="captureOpen = false"
+          >
+            ✕
+          </button>
+        </div>
         <div class="grid grid-cols-2 gap-2">
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Nombre') }}</span>
             <input v-model="form.first_name" :class="inputCls" /></label>
@@ -437,6 +475,11 @@ const inputCls =
   'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
 
 const busy = ref(false)
+// mobile capture bottom sheet — closed by default, reset when switching orphans
+const captureOpen = ref(false)
+watch(activeUnassigned, () => {
+  captureOpen.value = false
+})
 const showFiscal = ref(false)
 const messages = computed(() => unassignedThread.data?.messages || [])
 const form = reactive({

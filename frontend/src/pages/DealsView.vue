@@ -8,7 +8,7 @@
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
+    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Tratos') }}</span>
         <span class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6" style="background: #f1f2f4">
@@ -101,7 +101,7 @@
       class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
       :style="`grid-template-columns:${GRID};height:34px`"
     >
-      <input type="checkbox" class="cb-token" :checked="allSelected" @change="toggleAll" />
+      <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('organization')">{{ __('Trato') }}{{ sortArrow('organization') }}</button>
       <button v-if="col('value')" class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
       <div v-if="col('stage')">{{ __('Stage') }}</div>
@@ -123,7 +123,7 @@
         :style="`grid-template-columns:${GRID};min-height:50px`"
         @click="openDeal(r.name)"
       >
-        <input type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
+        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
         <div class="flex items-center gap-2">
           <span
             class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
@@ -216,6 +216,7 @@ import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
+import { isMobile } from '@/composables/breakpoint'
 import { avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
 
@@ -252,9 +253,12 @@ function resetCols() {
   setCols([...DEFAULT_COLS])
 }
 function col(key) {
+  // phone: contact + stage only — full column set side-scrolled (07-25)
+  if (isMobile.value) return key === 'contact' || key === 'stage'
   return key === 'contact' || visibleCols.value.includes(key)
 }
 const GRID = computed(() => {
+  if (isMobile.value) return '1fr 112px 26px' // contact + stage + menu
   const parts = ['28px', '1fr'] // checkbox + contact (always)
   for (const key of ['value', 'stage', 'source', 'modified', 'owner']) if (col(key)) parts.push(COL_WIDTH[key])
   parts.push('26px') // row menu

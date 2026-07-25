@@ -6,7 +6,7 @@
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
+    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Leads') }}</span>
         <span class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6">
@@ -100,7 +100,7 @@
       class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
       :style="`grid-template-columns:${GRID};height:34px`"
     >
-      <input type="checkbox" class="cb-token" :checked="allSelected" @change="toggleAll" />
+      <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('lead_name')">{{ __('Contacto') }}{{ sortArrow('lead_name') }}</button>
       <button v-if="col('score')" class="text-left uppercase" :style="'color:#16a34a'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
       <div v-if="col('stage')">{{ __('Stage') }}</div>
@@ -122,7 +122,7 @@
         :style="`grid-template-columns:${GRID};min-height:50px`"
         @click="openLead(r.name)"
       >
-        <input type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
+        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
         <div class="flex items-center gap-2">
           <span
             class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
@@ -224,6 +224,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { isMobile } from '@/composables/breakpoint'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
 import { confirmDialog, inputDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
@@ -269,9 +270,12 @@ function resetCols() {
   setCols([...DEFAULT_COLS])
 }
 function col(key) {
+  // phone: contact + score only — the full column set side-scrolled (07-25)
+  if (isMobile.value) return key === 'contact' || key === 'score'
   return key === 'contact' || visibleCols.value.includes(key)
 }
 const GRID = computed(() => {
+  if (isMobile.value) return '1fr 70px 26px' // contact + score + menu (no bulk-select)
   const parts = ['28px', '1fr'] // checkbox + contact (always)
   for (const key of ['score', 'stage', 'source', 'modified', 'owner']) if (col(key)) parts.push(COL_WIDTH[key])
   parts.push('26px') // row menu

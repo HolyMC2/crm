@@ -1,7 +1,12 @@
 <template>
   <div class="flex h-screen w-screen">
     <MobileSidebar />
-    <div class="flex h-full flex-1 flex-col bg-surface-white">
+    <!-- min-w-0 HERE is the real side-scroll fix: this column is the item of the
+         horizontal shell row, so its auto minimum = the widest descendant's
+         intrinsic width (chip scrollers etc. tunnel up through flex-col cross
+         axes untouched by their own min-w-0/overflow). 382px @ 360 on Marco's
+         phone. overflow-x-hidden is the belt. -->
+    <div class="flex h-full min-w-0 flex-1 flex-col overflow-x-hidden bg-surface-white">
       <MobileAppHeader />
       <!-- connectivity strip (spec 3.4): silent socket death and dead zones were
            read as "no me llegan mensajes" — say it out loud instead -->
@@ -17,7 +22,15 @@
            App.vue's router-view is keyed on fullPath too, so this adds no extra
            re-renders — it only hosts the CSS animation. overflow-auto lives HERE
            (not on the column) so the header + bottom tab bar stay pinned. -->
-      <div :key="$route.fullPath" class="page-in flex min-h-0 flex-1 flex-col overflow-auto">
+      <!-- overflow-x-hidden + min-w-0 is THE side-scroll choke point: any inner
+           element's min-content (e.g. a chip row scroller) otherwise propagates
+           up flex ancestors lacking min-w-0 and widens the whole shell past the
+           viewport (382px @ 360 — Marco's phone, 07-25). Inner overflow-x-auto
+           rows still scroll internally. -->
+      <div
+        :key="$route.fullPath"
+        class="page-in flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden"
+      >
         <slot />
       </div>
       <MobileTabBar />

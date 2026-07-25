@@ -28,6 +28,19 @@ a,
 /* route-change enter animation. Applied by MobileLayout on a route-keyed wrapper
    (pages are multi-root fragments, so <transition> can't animate them) — the
    incoming page fades/rises in; leaving is instant. */
+/* bottom-sheet entrance (mobile capture form etc.) */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.sheet-in {
+  animation: sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @keyframes page-in {
   from {
     opacity: 0;

@@ -6,7 +6,7 @@
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
+    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Tareas') }}</span>
         <div class="ml-1 flex overflow-hidden rounded-lg border border-outline-gray-2">
@@ -46,8 +46,10 @@
     >
       <div />
       <div>{{ __('Tarea') }}</div>
-      <div>{{ __('Deal') }}</div>
-      <div>{{ __('Prioridad') }}</div>
+      <template v-if="!isMobile">
+        <div>{{ __('Deal') }}</div>
+        <div>{{ __('Prioridad') }}</div>
+      </template>
       <div>{{ __('Vence') }}</div>
       <div />
     </div>
@@ -88,17 +90,19 @@
             {{ initials(ownerName(t.assigned_to)) }}
           </span>
         </div>
-        <button
-          v-if="t.reference_doctype === 'CRM Deal' && t.reference_docname"
-          class="truncate text-left text-[12px] text-ink-blue-link hover:underline"
-          @click="openConversation(t)"
-        >
-          {{ t.reference_docname }}
-        </button>
-        <span v-else class="text-[12px] text-ink-gray-4">—</span>
-        <div>
-          <span v-if="t.priority" class="rounded-full px-2.5 py-[3px] text-[10.5px] font-semibold" :class="prioStyle(t.priority)">{{ t.priority }}</span>
-        </div>
+        <template v-if="!isMobile">
+          <button
+            v-if="t.reference_doctype === 'CRM Deal' && t.reference_docname"
+            class="truncate text-left text-[12px] text-ink-blue-link hover:underline"
+            @click="openConversation(t)"
+          >
+            {{ t.reference_docname }}
+          </button>
+          <span v-else class="text-[12px] text-ink-gray-4">—</span>
+          <div>
+            <span v-if="t.priority" class="rounded-full px-2.5 py-[3px] text-[10.5px] font-semibold" :class="prioStyle(t.priority)">{{ t.priority }}</span>
+          </div>
+        </template>
         <div class="text-[12px]" :class="dueClass(t)">{{ t.due_date ? dueText(t.due_date) : '—' }}</div>
         <Dropdown :options="rowMenu(t)" @click.stop>
           <button class="text-[14px] text-ink-gray-4">···</button>
@@ -116,6 +120,7 @@ import { confirmDialog } from '@/utils/dialogs'
 import { usersStore } from '@/stores/users'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { avatarColor, initials } from '@/composables/crmFormat'
+import { isMobile } from '@/composables/breakpoint'
 
 // the real wired CRM Task modal (date/assignee/priority/reminder/notifications),
 // mounted globally via DoctypeModals in App.vue
@@ -128,7 +133,11 @@ function openEdit(t) {
   showModal({ name: t.name, doctype: 'CRM Task', title: __('Task'), callbacks: taskCallbacks })
 }
 
-const GRID = '28px 1fr 150px 100px 110px 26px'
+// phone: done-toggle + task + due + menu — the deal/priority columns forced
+// a 414px+ fixed track sum = horizontal scroll on every phone (Marco 07-25)
+const GRID = computed(() =>
+  isMobile.value ? '28px 1fr 92px 26px' : '28px 1fr 150px 100px 110px 26px',
+)
 const router = useRouter()
 const { getUser } = usersStore()
 const currentUser = computed(() => getUser()?.name)
