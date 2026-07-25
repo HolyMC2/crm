@@ -123,7 +123,7 @@
 
   <!-- input row -->
   <div class="flex items-end gap-2 px-3 py-2.5 sm:px-10" v-bind="$attrs">
-    <div v-if="mode === 'reply'" class="flex h-8 items-center gap-2">
+    <div v-if="mode === 'reply' && !recording" class="flex h-8 items-center gap-2">
       <FileUploader @success="(file) => uploadFile(file)">
         <template #default="{ openFileSelector }">
           <div class="flex items-center space-x-2">
@@ -152,9 +152,48 @@
           @click="togglePopover"
         />
       </IconPicker>
+      <!-- voice note (spec 1.2) — hidden when MediaRecorder can't produce a
+           Meta-compatible container on this browser -->
+      <button
+        v-if="recMime"
+        type="button"
+        class="press flex size-4.5 items-center justify-center text-ink-gray-5 hover:text-ink-gray-8"
+        :title="__('Grabar nota de voz')"
+        :aria-label="__('Grabar nota de voz')"
+        @click="startRecording"
+      >
+        <LucideMic class="size-4.5" />
+      </button>
+    </div>
+    <!-- recording bar replaces the textarea while capturing -->
+    <div
+      v-if="mode === 'reply' && recording"
+      class="flex h-10 w-full items-center gap-3 rounded-lg border border-outline-red-2 bg-surface-red-1 px-3"
+    >
+      <span class="h-2.5 w-2.5 flex-none animate-pulse rounded-full" style="background: #e5484d" />
+      <span class="w-12 flex-none font-mono text-[13px] font-semibold text-ink-gray-8">
+        {{ Math.floor(recSecs / 60) }}:{{ String(recSecs % 60).padStart(2, '0') }}
+      </span>
+      <span class="min-w-0 flex-1 truncate text-[12px] text-ink-gray-6">{{ __('Grabando nota de voz…') }}</span>
+      <button
+        type="button"
+        class="press flex-none rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+        @click="cancelRecording"
+      >
+        {{ __('Cancelar') }}
+      </button>
+      <button
+        type="button"
+        class="press flex-none rounded-md px-3 py-1 text-[12px] font-bold text-white"
+        style="background: #16a34a"
+        :disabled="recUploading"
+        @click="sendRecording"
+      >
+        {{ recUploading ? __('Enviando…') : __('Enviar') }}
+      </button>
     </div>
     <Textarea
-      v-if="mode !== 'comment'"
+      v-if="mode !== 'comment' && !(mode === 'reply' && recording)"
       ref="textareaRef"
       v-model="content"
       type="textarea"
@@ -255,6 +294,7 @@
 <script setup>
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
+import LucideMic from '~icons/lucide/mic'
 import { sanitizeHTML } from '@/utils'
 import { useTelemetry } from 'frappe-ui/frappe'
 import {
@@ -271,7 +311,7 @@ import {
 } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
-import { ref, nextTick, watch, computed } from 'vue'
+import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
@@ -440,6 +480,97 @@ function uploadFile(file) {
   capture('whatsapp_upload_file')
 }
 
+// ── voice notes (spec 1.2) ────────────────────────────────────────────────────
+// MediaRecorder → upload_file → the normal attach send path (content_type audio).
+// Container preference matters: Meta's media API accepts ogg/opus + mp4/aac but
+// NOT webm — prefer the compatible ones and hide the mic when only webm exists.
+const recMime = ['audio/ogg;codecs=opus', 'audio/mp4'].find(
+  (m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m),
+)
+const recording = ref(false)
+const recUploading = ref(false)
+const recSecs = ref(0)
+const REC_MAX_SECS = 300
+let _rec = null
+let _recChunks = []
+let _recTimer = null
+let _recStream = null
+
+async function startRecording() {
+  if (recording.value || !recMime) return
+  try {
+    _recStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+  } catch (e) {
+    toast.error(__('Permiso de micrófono denegado'))
+    return
+  }
+  _recChunks = []
+  _rec = new MediaRecorder(_recStream, { mimeType: recMime })
+  _rec.ondataavailable = (e) => e.data.size && _recChunks.push(e.data)
+  _rec.start(1000)
+  recording.value = true
+  recSecs.value = 0
+  _recTimer = setInterval(() => {
+    recSecs.value++
+    if (recSecs.value >= REC_MAX_SECS) sendRecording() // hard cap — never record forever
+  }, 1000)
+  capture('whatsapp_voice_record_start')
+}
+
+function _teardownRec() {
+  clearInterval(_recTimer)
+  _recStream?.getTracks().forEach((t) => t.stop())
+  _recStream = null
+  recording.value = false
+}
+
+function cancelRecording() {
+  try {
+    if (_rec && _rec.state !== 'inactive') _rec.stop()
+  } catch (e) {}
+  _teardownRec()
+  _recChunks = []
+}
+
+async function sendRecording() {
+  if (!_rec || recUploading.value) return
+  recUploading.value = true
+  try {
+    const stopped = new Promise((res) => (_rec.onstop = res))
+    try {
+      if (_rec.state !== 'inactive') _rec.stop()
+    } catch (e) {}
+    await stopped
+    _teardownRec()
+    const blob = new Blob(_recChunks, { type: recMime.split(';')[0] })
+    _recChunks = []
+    if (blob.size < 1000) return // accidental tap — nothing worth sending
+    const ext = recMime.startsWith('audio/ogg') ? 'ogg' : 'm4a'
+    const fd = new FormData()
+    fd.append('file', new File([blob], `nota-voz-${Date.now()}.${ext}`, { type: blob.type }))
+    fd.append('is_private', '0')
+    fd.append('doctype', props.doctype)
+    fd.append('docname', doc.value.name || '')
+    const r = await fetch('/api/method/upload_file', {
+      method: 'POST',
+      headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' },
+      body: fd,
+      credentials: 'include',
+    })
+    const j = await r.json()
+    const url = j.message?.file_url
+    if (!r.ok || !url) throw new Error('upload failed')
+    whatsapp.value.attach = url
+    whatsapp.value.content_type = 'audio'
+    sendWhatsAppMessage()
+    capture('whatsapp_voice_sent')
+  } catch (e) {
+    toast.error(__('No se pudo subir la nota de voz'))
+  } finally {
+    recUploading.value = false
+  }
+}
+
 function onEnter(event) {
   if (event.shiftKey) return
   event.preventDefault()
@@ -604,6 +735,9 @@ watch(reply, (value) => {
     show()
   }
 })
+
+// never leave the mic held open when the thread unmounts mid-recording
+onBeforeUnmount(cancelRecording)
 
 defineExpose({ show })
 </script>
