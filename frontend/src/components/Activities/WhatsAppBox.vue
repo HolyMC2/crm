@@ -29,12 +29,13 @@
   <!-- composer mode toggle: Reply / Private Note / Internal comment.
        Hidden in replyOnly (unassigned threads have no reference doc to attach
        notes/comments to — only the WhatsApp reply applies). -->
-  <div v-if="!replyOnly" class="flex flex-wrap items-center gap-2 px-3 pt-2.5 sm:px-10">
+  <!-- single scrollable line on mobile (was wrapping into two rows) -->
+  <div v-if="!replyOnly" class="flex items-center gap-2 overflow-x-auto px-3 pt-2 sm:flex-wrap sm:px-10 sm:pt-2.5">
     <button
       v-for="m in modes"
       :key="m.value"
       type="button"
-      class="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+      class="press flex-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors"
       :class="
         mode === m.value
           ? m.activeClass
@@ -63,11 +64,22 @@
     <div v-show="!isMobile || quickBarOpen" class="flex flex-wrap items-center gap-1.5">
     <button
       type="button"
-      class="rounded-md bg-surface-green-2 px-2 py-1 text-xs font-semibold text-ink-green-3 hover:bg-surface-green-3"
+      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs font-semibold text-ink-green-3 hover:bg-surface-green-3"
       :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
       @click="emit('catalog', '')"
     >
       📦 {{ __('Catálogo') }}
+    </button>
+    <!-- mobile hides the ActivityHeader (its Send Template button) — keep the
+         full template modal reachable from the composer -->
+    <button
+      v-if="isMobile && !replyOnly"
+      type="button"
+      class="press rounded-md border border-outline-gray-2 px-2 py-1 text-xs font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+      :title="__('Enviar plantilla de WhatsApp')"
+      @click="emit('openTemplates')"
+    >
+      📋 {{ __('Plantilla') }}
     </button>
     <button
       v-for="(qr, i) in quickReplies.data || []"
@@ -149,7 +161,7 @@
       class="min-h-8 w-full"
       :rows="rows"
       :placeholder="placeholder"
-      @focus="rows = 6"
+      @focus="rows = isMobile ? 3 : 6"
       @blur="rows = 1"
       @keydown.enter.stop="(e) => onEnter(e)"
     />
@@ -274,7 +286,7 @@ const props = defineProps({
   replyOnly: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['pickTemplate', 'activity', 'sending', 'sent', 'failed', 'catalog'])
+const emit = defineEmits(['pickTemplate', 'activity', 'sending', 'sent', 'failed', 'catalog', 'openTemplates'])
 
 // /cat <query> (or /catálogo) in the composer opens the catalog picker instead of sending.
 const CAT_RE = /^\/cat(alogo|álogo)?\b\s*/i

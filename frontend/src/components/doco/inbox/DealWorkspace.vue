@@ -11,11 +11,11 @@
       <DealHeader />
       <LostStagePrompt />
 
-      <div class="flex h-11 flex-none items-center gap-0.5 border-b border-outline-gray-1 px-3 text-[13px]">
+      <div class="flex h-11 flex-none items-center gap-0.5 overflow-x-auto border-b border-outline-gray-1 px-3 text-[13px]">
         <button
           v-for="t in visibleTabs"
           :key="t.key"
-          class="flex h-11 items-center gap-1.5 border-b-2 px-[11px]"
+          class="press flex h-11 flex-none items-center gap-1.5 whitespace-nowrap border-b-2 px-[11px] transition-colors duration-150"
           :class="
             activeTab === t.key
               ? 'border-outline-green-2 font-semibold text-ink-green-3'
@@ -170,5 +170,14 @@ const convoTabs = [{ name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon }]
    Scoped to this embedding; the upstream Deal page keeps the header. */
 .doco-convo :deep(.wa-contact-header) {
   display: none;
+}
+
+/* Mobile: the "WhatsApp" title + Send Template row eats ~48px of a small screen
+   and duplicates what DealHeader/tab already say. Templates stay reachable via
+   the 📋 chip in the composer quick bar (WhatsAppBox → open-templates). */
+@media (max-width: 639px) {
+  .doco-convo :deep(.activity-header) {
+    display: none;
+  }
 }
 </style>

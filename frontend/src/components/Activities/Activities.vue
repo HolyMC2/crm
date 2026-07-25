@@ -563,6 +563,7 @@
       :to-override="activeWhatsappContact?.phone || ''"
       @scroll="scroll"
       @pick-template="(t) => openTemplateReview(t)"
+      @open-templates="showWhatsappTemplates = true"
       @activity="() => all_activities.reload()"
       @sending="onWaSending"
       @sent="onWaSent"
