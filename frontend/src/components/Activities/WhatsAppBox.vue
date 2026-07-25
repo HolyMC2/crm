@@ -70,6 +70,17 @@
     >
       📦 {{ __('Catálogo') }}
     </button>
+    <!-- ✨ AI suggested replies (spec 5.1) — fetch on demand, operator edits+sends -->
+    <button
+      v-if="aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)"
+      type="button"
+      class="press rounded-md bg-surface-violet-1 px-2 py-1 text-xs font-semibold text-ink-violet-1 hover:opacity-80 disabled:opacity-50"
+      :disabled="suggestLoading"
+      :title="__('Sugerir respuestas con IA (local)')"
+      @click="fetchSuggestions"
+    >
+      ✨ {{ suggestLoading ? __('Pensando…') : __('Sugerir') }}
+    </button>
     <!-- mobile hides the ActivityHeader (its Send Template button) — keep the
          full template modal reachable from the composer -->
     <button
@@ -119,6 +130,28 @@
       ▴
     </button>
     </div>
+  </div>
+
+  <!-- ✨ suggestions (tap to insert into the composer; verbatim send attributes canned:ai) -->
+  <div v-if="suggestions.length" class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10">
+    <button
+      v-for="(sg, i) in suggestions"
+      :key="'sg' + i"
+      type="button"
+      class="press max-w-full truncate rounded-lg border border-outline-gray-2 bg-surface-white px-2.5 py-1.5 text-left text-xs text-ink-gray-8 hover:bg-surface-gray-2"
+      :title="sg"
+      @click="useSuggestion(sg)"
+    >
+      ✨ {{ sg }}
+    </button>
+    <button
+      type="button"
+      class="press rounded-full px-2 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
+      :aria-label="__('Descartar sugerencias')"
+      @click="suggestions = []"
+    >
+      ✕
+    </button>
   </div>
 
   <!-- input row -->
@@ -312,7 +345,7 @@ import {
 } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
-import { notifyTyping } from '@/composables/inbox'
+import { notifyTyping, aiEnabled } from '@/composables/inbox'
 import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
@@ -571,6 +604,36 @@ async function sendRecording() {
   } finally {
     recUploading.value = false
   }
+}
+
+// ✨ suggested replies (spec 5.1) — on-demand local-AI drafts; inserting one
+// marks lastCanned('ai: …') so a verbatim send is auditable as AI-assisted.
+const suggestions = ref([])
+const suggestLoading = ref(false)
+async function fetchSuggestions() {
+  if (suggestLoading.value) return
+  suggestLoading.value = true
+  suggestions.value = []
+  try {
+    const out = await call('doco_marketing.api.inbox.suggest_replies', {
+      doctype: props.doctype,
+      name: doc.value.name,
+    })
+    suggestions.value = Array.isArray(out) ? out : []
+    if (!suggestions.value.length) toast.error(__('Sin sugerencias — intenta de nuevo'))
+    capture('whatsapp_ai_suggest_fetched')
+  } catch (e) {
+    toast.error(__('No se pudieron generar sugerencias'))
+  } finally {
+    suggestLoading.value = false
+  }
+}
+function useSuggestion(text) {
+  content.value = text
+  lastCanned.value = { label: 'ai', text }
+  suggestions.value = []
+  nextTick(() => textareaRef.value?.el?.focus())
+  capture('whatsapp_ai_suggest_used')
 }
 
 // collision detection (spec 2.4): throttled 'está escribiendo' ping — only for
