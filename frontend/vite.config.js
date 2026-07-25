@@ -34,6 +34,11 @@ export default defineConfig(async ({ mode }) => {
         devOptions: {
           enabled: true,
         },
+        workbox: {
+          // Web Push handlers (spec 1.1) — public/push-sw.js sits next to the
+          // generated sw.js, so a bare relative import resolves in production.
+          importScripts: ['push-sw.js'],
+        },
         manifest: {
           display: 'standalone',
           name: 'CRM',

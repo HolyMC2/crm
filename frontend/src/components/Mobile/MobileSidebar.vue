@@ -164,6 +164,29 @@
                 />
               </span>
             </button>
+            <!-- Web Push toggle (spec 1.1) — hidden when unsupported/unconfigured -->
+            <button
+              v-if="!['unsupported', 'unconfigured'].includes(pushState)"
+              class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-gray-7 hover:bg-surface-gray-2"
+              :disabled="pushBusy || pushState === 'denied'"
+              :class="pushState === 'denied' ? 'opacity-50' : ''"
+              @click="togglePush"
+            >
+              <BellRingIcon class="h-[18px] w-[18px] flex-none" />
+              <span class="flex-1 text-left text-[13.5px] font-medium">
+                {{ pushState === 'denied' ? __('Notificaciones bloqueadas') : __('Notificaciones push') }}
+              </span>
+              <span
+                v-if="pushState !== 'denied'"
+                class="relative h-[18px] w-8 flex-none rounded-full transition-colors duration-200"
+                :class="pushState === 'on' ? 'bg-surface-green-3' : 'bg-surface-gray-4'"
+              >
+                <span
+                  class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-white transition-all duration-200"
+                  :class="pushState === 'on' ? 'left-[18px]' : 'left-[2px]'"
+                />
+              </span>
+            </button>
             <button
               class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-red-4 hover:bg-surface-red-1"
               @click="signOut"
@@ -234,7 +257,7 @@ import Settings from '@/components/Settings/Settings.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
 import { navItems, navItemsBottom, routeGroup } from '@/composables/navModel'
-import { computed, h, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FeatherIcon, createResource, useTheme } from 'frappe-ui'
 import { mobileSidebarOpened as sidebarOpened, showSettings } from '@/composables/settings'
@@ -245,6 +268,8 @@ import SettingsGearIcon from '~icons/lucide/settings'
 import LogOutIcon from '~icons/lucide/log-out'
 import MoonIcon from '~icons/lucide/moon'
 import SunIcon from '~icons/lucide/sun'
+import BellRingIcon from '~icons/lucide/bell-ring'
+import { pushState, pushBusy, refreshPushState, enablePush, disablePush } from '@/composables/push'
 
 const route = useRoute()
 const router = useRouter()
@@ -285,6 +310,13 @@ function openSettings() {
 function signOut() {
   sidebarOpened.value = false
   logout.submit()
+}
+
+// ── web push (spec 1.1) ────────────────────────────────────────────────────
+onMounted(refreshPushState)
+function togglePush() {
+  if (pushState.value === 'on') disablePush()
+  else enablePush() // user gesture — permission prompt allowed here
 }
 
 // ── theme ──────────────────────────────────────────────────────────────────
