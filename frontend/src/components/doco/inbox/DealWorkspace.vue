@@ -9,6 +9,18 @@
       <!-- header + tabs are flex-none atop a min-h-0 column, so they stay pinned
            while only the message area (FadedScrollableDiv) scrolls internally. -->
       <DealHeader />
+      <!-- 👥 collision strip (spec 2.4): who else is in this conversation NOW -->
+      <div
+        v-if="activePresence.length"
+        class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-3"
+        role="status"
+      >
+        <span v-for="p in activePresence" :key="p.user" class="inline-flex items-center gap-1">
+          {{ p.state === 'typing' ? '✍️' : '👁' }}
+          <b>{{ p.full_name || p.user }}</b>
+          {{ p.state === 'typing' ? __('está escribiendo…') : __('está viendo esta conversación') }}
+        </span>
+      </div>
       <LostStagePrompt />
 
       <div class="flex h-11 flex-none items-center gap-0.5 overflow-x-auto border-b border-outline-gray-1 px-3 text-[13px]">
@@ -89,7 +101,7 @@ import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
 

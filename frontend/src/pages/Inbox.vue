@@ -72,6 +72,7 @@ import {
   selectDeal,
   markRead,
   onThreadUpdate,
+  onPresenceEvent,
   onCommentUpdate,
   onMessengerInbound,
   catchUpInbox,
@@ -209,6 +210,7 @@ onMounted(() => {
   }
   mounting = false
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)
+  $socket?.on('doco_marketing:presence', onPresenceEvent)
   $socket?.on('doco_marketing:comment_update', onCommentUpdate)
   $socket?.on('messenger_message', onMessenger)
   $socket?.on('whatsapp_message', onWaMessage)
@@ -219,6 +221,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
   $socket?.off('doco_marketing:thread_update', onThreadUpdate)
+  $socket?.off('doco_marketing:presence', onPresenceEvent)
   $socket?.off('doco_marketing:comment_update', onCommentUpdate)
   $socket?.off('messenger_message', onMessenger)
   $socket?.off('whatsapp_message', onWaMessage)

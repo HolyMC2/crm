@@ -110,6 +110,77 @@ export const snoozedCount = createResource({ url: 'doco_marketing.api.inbox.get_
 // 🏷 etiquetas in use (filter chips + tag-manager suggestions)
 export const conversationTags = createResource({ url: 'doco_marketing.api.inbox.get_conversation_tags', auto: false })
 export const queueTag = ref(null) // active etiqueta filter (null = all)
+
+// ── presence / collision detection (spec 2.4) ─────────────────────────────────
+// Ephemeral map: deal → { user → {state, full_name, ts} }. Fed by the realtime
+// 'doco_marketing:presence' event (Inbox.vue wires the socket); entries age out
+// client-side. We heartbeat our own viewing while a thread is open + visible,
+// and WhatsAppBox throttles typing pings through notifyTyping().
+export const presenceMap = ref({})
+// per-state TTL: viewing outlives its 20s heartbeat; typing fades fast
+const PRESENCE_TTL = { viewing: 25000, typing: 6000 }
+let _presencePrune = null
+export function onPresenceEvent(payload) {
+  if (!payload?.deal || !payload.user) return
+  const me = document.cookie.match(/(?:^|;\s*)user_id=([^;]*)/)
+  if (me && decodeURIComponent(me[1]) === payload.user) return // own echo
+  const byDeal = { ...(presenceMap.value[payload.deal] || {}) }
+  byDeal[payload.user] = { state: payload.state, full_name: payload.full_name, ts: Date.now() }
+  presenceMap.value = { ...presenceMap.value, [payload.deal]: byDeal }
+  if (!_presencePrune) {
+    _presencePrune = setInterval(() => {
+      const now = Date.now()
+      const next = {}
+      let any = false
+      for (const [deal, users] of Object.entries(presenceMap.value)) {
+        const alive = Object.fromEntries(
+          Object.entries(users).filter(([, v]) => now - v.ts < (PRESENCE_TTL[v.state] || 8000)),
+        )
+        if (Object.keys(alive).length) {
+          next[deal] = alive
+          any = true
+        }
+      }
+      presenceMap.value = next
+      if (!any) {
+        clearInterval(_presencePrune)
+        _presencePrune = null
+      }
+    }, 3000)
+  }
+}
+// others present in the ACTIVE conversation (the strip's data)
+export const activePresence = computed(() => {
+  const users = presenceMap.value[activeDeal.value] || {}
+  return Object.entries(users).map(([user, v]) => ({ user, ...v }))
+})
+
+function _pingPresence(state) {
+  if (!activeDeal.value) return
+  call('doco_marketing.api.inbox.presence', {
+    doctype: activeDealDoctype.value,
+    name: activeDeal.value,
+    state,
+  }).catch(() => {})
+}
+let _typingLast = 0
+export function notifyTyping() {
+  const now = Date.now()
+  if (now - _typingLast < 2500) return
+  _typingLast = now
+  _pingPresence('typing')
+}
+// viewing heartbeat: while a conversation is open and the tab is visible
+let _viewTimer = null
+watch(activeDeal, (d) => {
+  clearInterval(_viewTimer)
+  _viewTimer = null
+  if (!d) return
+  _pingPresence('viewing')
+  _viewTimer = setInterval(() => {
+    if (!document.hidden && activeDeal.value) _pingPresence('viewing')
+  }, 20000)
+})
 export function setQueueTag(tag) {
   queueTag.value = queueTag.value === tag ? null : tag
   reloadQueue()

@@ -202,6 +202,7 @@
       :placeholder="placeholder"
       @focus="rows = isMobile ? 3 : 6"
       @blur="rows = 1"
+      @input="onTyping"
       @keydown.enter.stop="(e) => onEnter(e)"
     />
     <!-- Internal comment: mention-capable rich editor so @mentions notify
@@ -311,6 +312,7 @@ import {
 } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
+import { notifyTyping } from '@/composables/inbox'
 import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
@@ -569,6 +571,12 @@ async function sendRecording() {
   } finally {
     recUploading.value = false
   }
+}
+
+// collision detection (spec 2.4): throttled 'está escribiendo' ping — only for
+// conversations (Deal/Lead) and only in reply mode (notes/comments are private)
+function onTyping() {
+  if (mode.value === 'reply' && ['CRM Deal', 'CRM Lead'].includes(props.doctype)) notifyTyping()
 }
 
 function onEnter(event) {

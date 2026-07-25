@@ -31,7 +31,8 @@ import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { swipeBackHandlers } from '@/composables/swipeBack'
-import { activeDeal, selectDeal, mobileView } from '@/composables/inbox'
+import { activeDeal, selectDeal, mobileView, onPresenceEvent } from '@/composables/inbox'
+import { globalStore } from '@/stores/global'
 
 const props = defineProps({ dealId: { type: String, default: '' } })
 const route = useRoute()
@@ -74,10 +75,16 @@ function onPopState(e) {
     mobileView.value = target
   }
 }
+const { $socket } = globalStore()
 onMounted(() => {
   paneEpoch = Date.now()
   focus()
+  // collision strip works on the standalone deal page too (spec 2.4)
+  $socket?.on('doco_marketing:presence', onPresenceEvent)
 })
 onMounted(() => window.addEventListener('popstate', onPopState))
-onUnmounted(() => window.removeEventListener('popstate', onPopState))
+onUnmounted(() => {
+  window.removeEventListener('popstate', onPopState)
+  $socket?.off('doco_marketing:presence', onPresenceEvent)
+})
 </script>
