@@ -64,6 +64,9 @@ function isActive(t) {
   return t.group && activeGroup.value === t.group
 }
 function onTab(t) {
+  try {
+    navigator.vibrate?.(8) // subtle tick on tab switch (Android)
+  } catch (e) {}
   if (!t.to) {
     mobileSidebarOpened.value = true
     return

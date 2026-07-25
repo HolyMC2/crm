@@ -132,6 +132,26 @@ watch([activeDeal, activeTab], bindScroll)
 onMounted(bindScroll)
 onBeforeUnmount(detachScroll)
 
+// ── keyboard-aware thread ─────────────────────────────────────────────────────
+// When the on-screen keyboard opens (visualViewport shrinks) the thread viewport
+// loses ~40% height; if the user was reading the tail, keep it pinned to the
+// newest messages so the composer never covers what they were answering.
+let _vvH = window.visualViewport?.height || 0
+function onVvResize() {
+  const vv = window.visualViewport
+  if (!vv) return
+  const shrunk = vv.height < _vvH - 80
+  _vvH = vv.height
+  if (!shrunk || !scrollEl) return
+  const dist = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
+  if (dist < 300)
+    setTimeout(() => scrollEl?.scrollTo({ top: scrollEl.scrollHeight }), 60)
+}
+onMounted(() => window.visualViewport?.addEventListener('resize', onVvResize))
+onBeforeUnmount(() =>
+  window.visualViewport?.removeEventListener('resize', onVvResize),
+)
+
 const tabs = [
   { key: 'conversation', label: '💬 ' + __('Conversación') },
   { key: 'activity', label: '⚡ ' + __('Actividad') },

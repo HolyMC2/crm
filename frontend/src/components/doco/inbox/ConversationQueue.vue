@@ -94,7 +94,24 @@
       :aria-label="__('Conversaciones')"
       class="scb flex-1 overflow-y-auto px-2 pb-2.5 pt-0.5"
       @keydown="onListKeydown"
+      @touchstart="ptrStart"
+      @touchmove="ptrMove"
+      @touchend="ptrEnd"
+      @touchcancel="ptrEnd"
     >
+      <!-- pull-to-refresh indicator (mobile): grows with the drag, spins while loading -->
+      <div
+        v-if="ptrY > 0 || ptrRefreshing"
+        class="flex items-center justify-center overflow-hidden"
+        :style="`height:${ptrRefreshing ? 40 : Math.min(ptrY, 64)}px`"
+        aria-hidden="true"
+      >
+        <LucideRefreshCw
+          class="h-4.5 w-4.5 text-ink-gray-5"
+          :class="ptrRefreshing ? 'animate-spin' : ''"
+          :style="!ptrRefreshing ? `transform:rotate(${ptrY * 2.4}deg)` : ''"
+        />
+      </div>
       <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
@@ -447,6 +464,7 @@ import LucideArchive from '~icons/lucide/archive'
 import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideVolume2 from '~icons/lucide/volume-2'
 import LucideVolumeX from '~icons/lucide/volume-x'
+import LucideRefreshCw from '~icons/lucide/refresh-cw'
 import { statusesStore } from '@/stores/statuses'
 import { soundEnabled, toggleSound } from '@/composables/notificationSound'
 import { isMobile } from '@/composables/breakpoint'
@@ -491,6 +509,7 @@ import {
   setCommentStatus,
   onSearchInput,
   reloadQueue,
+  reloadUnassigned,
   clearResponder,
   avatarColor,
   initials,
@@ -549,11 +568,57 @@ function rowTouchEnd(r, cancel = false) {
   if (!_sw) return
   const fire = !cancel && _sw.active && swipeX.value <= -96
   _sw = null
-  if (fire) clearResponder(r.ref_doctype || 'CRM Deal', r.name)
+  if (fire) {
+    try {
+      navigator.vibrate?.(15) // tactile confirm (Android; iOS has no vibrate API)
+    } catch (e) {}
+    clearResponder(r.ref_doctype || 'CRM Deal', r.name)
+  }
   swipeX.value = 0 // rowSwipeStyle now has a transition → animates back
   setTimeout(() => {
     swipeKey.value = null
   }, 200)
+}
+
+// ── pull-to-refresh (mobile): drag down from the top of the list ──────────────
+const ptrY = ref(0)
+const ptrRefreshing = ref(false)
+let _ptr = null
+function ptrStart(e) {
+  if (!isMobile.value || ptrRefreshing.value) return
+  if ((listEl.value?.scrollTop || 0) > 0) return
+  _ptr = { y: e.touches[0].clientY, armed: false }
+}
+function ptrMove(e) {
+  if (!_ptr) return
+  const dy = e.touches[0].clientY - _ptr.y
+  if (dy < 0 || (listEl.value?.scrollTop || 0) > 0) {
+    _ptr = null
+    ptrY.value = 0
+    return
+  }
+  if (dy > 8) {
+    _ptr.armed = true
+    e.preventDefault() // the drag is ours, not the scroller's
+    ptrY.value = Math.min(90, dy * 0.5) // rubber-band resistance
+  }
+}
+async function ptrEnd() {
+  if (!_ptr) return
+  const fire = _ptr.armed && ptrY.value >= 48
+  _ptr = null
+  ptrY.value = 0
+  if (!fire) return
+  ptrRefreshing.value = true
+  try {
+    navigator.vibrate?.(10)
+  } catch (e) {}
+  try {
+    await Promise.all([reloadQueue(), reloadUnassigned()])
+  } catch (e) {
+    /* network hiccup — the stale list stays, user can pull again */
+  }
+  ptrRefreshing.value = false
 }
 // A failed list load must not read as an empty inbox — surface the resource error + retry.
 const listError = computed(() => (inboxTab.value === 'vencidos' ? overdue.error : queue.error))

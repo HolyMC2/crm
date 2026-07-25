@@ -30,6 +30,9 @@ export const swipeBackHandlers = {
     }
     if (dx > TRIGGER_PX) {
       _st.fired = true
+      try {
+        navigator.vibrate?.(10)
+      } catch (err) {}
       window.history.back()
     }
   },
