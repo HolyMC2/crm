@@ -141,3 +141,96 @@ Backend:
   won/lost flows 4.5 + post-call 4.4 (hot shared files), per-tenant branding
   8.2 (wide hex sweep = merge hazard), keyset pagination (lead-owned
   queue.py), merge execution for duplicates.
+
+---
+
+# Batch 2 (2026-07-26) — same global rules, four new slices
+
+Lead-owned in this batch (NOT yours, whoever you are): `services/inbox/queue.py`
+(keyset pagination), the brand-color sweep, all mount points, hooks.py, and
+`composables/inbox.js`. Deliver hooks/mount changes as report patches.
+
+## Slice S5 — Cadencias 1:1 (spec 4.2)
+
+Follow-up sequences for ONE deal ("no contestó" → touch at day 1/3/7),
+stop-on-reply. **Reuse the existing campaign machinery — building a second send
+path is automatic rejection.** Recon `services/campaign_engine.py`,
+`services/dispatch/`, `marketing/doctype/crm_campaign*`,
+`whatsapp_send_review` first; put a ≤12-line design at the TOP of your report.
+
+- `crm_campaign.json`: add `is_cadence` (Check, default 0, description es-MX) —
+  bump the doctype `modified`. Cadence campaigns are hidden from the normal
+  Campaigns surfaces later (lead's job), listed only via your API.
+- NEW `services/cadence.py`: `enroll(deal, campaign)` (validate is_cadence,
+  active enrollment dedupe), `stop(deal)` (cancel active cadence enrollments),
+  `stop_on_reply(doc, method)` — WhatsApp/Messenger INBOUND after_insert
+  handler that cancels active cadence enrollments for the reference (deliver
+  the hooks.py patch in your report; do not edit hooks.py).
+- NEW `api/cadence.py`: `list_cadences()`, `enrollment_status(deal)`,
+  `enroll(deal, campaign)`, `stop(deal)` — perm-checked (write on the deal),
+  doctype allowlists.
+- NEW frontend `src/components/doco/inbox/CadencePicker.vue`: chip/dialog —
+  current enrollment state ("Seguimiento activo: X · paso 2/3 · próx. mañana")
+  or picker of cadences + start; stop button. Emits nothing outside itself;
+  fetches by props (doctype, name). Mount patch (DealHeader area) in report.
+- Tests: python (enroll/dedupe/stop/stop_on_reply cancels/perm gate; mock or
+  flag any send-path side effects — remember the lab Meta incident: NEVER
+  insert an Outgoing WhatsApp Message without mocking send_outgoing) + vitest
+  for any pure helpers.
+
+## Slice S6 — Score explicable (spec 5.4)
+
+- Recon `crm_lead_score_log` + `lead_scoring_rule` + `services/scoring.py`.
+- NEW `api/score_explain.py`: `get_score_breakdown(doctype, name)` — for a
+  Lead (or a Deal via its linked lead): current score + grade + per-rule
+  contributions from the score log (rule label, points, count, last hit),
+  ordered by |points| desc, cap 15 rows. Perm-checked read; allowlist.
+- NEW `src/components/doco/ScoreExplainPopover.vue`: prop-driven popover/sheet
+  listing the breakdown ("por qué B·62"); loading/error/empty states.
+- Tests both sides (breakdown math from seeded logs; deal→lead resolution;
+  perm gate).
+- Mount patches (LeadsView score cell + DealHeader grade chip) in report.
+
+## Slice S7 — Post-llamada (spec 4.4)
+
+- NEW `services/postcall.py`: `on_call_log(doc, method)` — CRM Call Log
+  after_insert → `frappe.publish_realtime("doco_marketing:call_ended",
+  {...call, deal/lead ref, duration}, user=<the agent on the call>)` (targeted,
+  NOT broadcast; recon how the call log stores its agent). Deliver hooks patch
+  in report. `log_outcome(call, outcome, note, create_task, task_due_epoch)` in
+  NEW `api/postcall.py`: outcome enum (contesto/no_contesto/buzon/venta/otro),
+  writes a Comment breadcrumb on the call's reference, optional CRM Task
+  (due from epoch — TZ-proof like snooze), perm-checked.
+- NEW `src/components/doco/inbox/PostCallSheet.vue`: bottom sheet (reuse the
+  .sheet-in pattern) that a socket event opens: outcome chips + nota + "crear
+  tarea para mañana 9:00" toggle + guardar/omitir. Socket wiring patch (which
+  page mounts it + $socket.on) in report — do not edit shared pages.
+- Tests: python (comment written, task created with tz-proof due, enum guard,
+  perm) + vitest for pure helpers (tomorrow-9 epoch etc.).
+
+## Slice S8 — Fusión de duplicados (spec 4.3b, human-gated)
+
+You OWN `DuplicateBanner.vue` + `services/dedupe.py` + `api/dedupe.py` for
+this slice (their original author closed out; extend, don't rewrite).
+
+- SAME-DOCTYPE only (deal→deal, lead→lead). Cross-type merge is out of scope.
+- NEW `services/merge.py`: `merge_conversation(source, target, doctype)`:
+  repoint WhatsApp Message, Messenger Message, Comment, ToDo, Tag Link
+  (dedupe/union tags via DocTags), FCRM Note if present — each repoint a
+  BATCHED update, counts returned. Then close the source WITHOUT deleting:
+  prefer a Junk-type status; if only Lost-type exists set
+  lost_reason/«Duplicado» handling per the crm-deal-validation-traps memory
+  (db.set_value bypasses validate — decide deliberately and DOCUMENT which
+  path you took and why). Breadcrumb Comments on BOTH records. Return a
+  summary dict {moved: {doctype: n}, source_closed_as}.
+- `api/dedupe.py`: add `merge_duplicate(source, target, doctype)` —
+  `frappe.only_for(["System Manager", "Sales Manager"])` PLUS write-perm on
+  both records; allowlist; source≠target; both must share the normalized
+  phone (server-side re-check — never trust the client pair).
+- `DuplicateBanner.vue`: add «Fusionar…» (visible only when the backend says
+  the caller may merge — return `can_merge` from find_duplicates) → confirm
+  dialog stating exactly what will move and that the OTHER record closes →
+  call → toast with the moved counts → emit `merged` (mount handler = lead).
+- Tests: python is the heart of this slice — repoint counts per artifact
+  type, tag union, breadcrumbs, closing-status fallback chain, manager gate,
+  phone-mismatch rejection, source==target rejection. Mock any send hooks.
