@@ -28,28 +28,34 @@
         @click="isMobile && openContext()"
       >
         <div class="flex flex-wrap items-center gap-2">
-          <span class="text-base font-bold text-ink-gray-9">{{ name || '—' }}</span>
+          <span class="truncate text-base font-bold text-ink-gray-9">{{ name || '—' }}</span>
           <LucideChevronRight v-if="isMobile" class="h-4 w-4 flex-none text-ink-gray-4" />
           <span
             v-if="grade"
-            class="rounded px-[7px] py-px text-[11px] font-bold text-white"
+            class="flex-none rounded px-[7px] py-px text-[11px] font-bold text-white"
             :style="`background:${gradeColor}`"
           >
             {{ grade }} · {{ score }}
           </span>
-          <span class="text-[11.5px] text-ink-gray-5">{{ activeDeal }}</span>
+          <span class="hidden text-[11.5px] text-ink-gray-5 sm:inline">{{ activeDeal }}</span>
         </div>
-        <div class="mt-0.5 flex items-center gap-2.5 text-[12px] text-ink-gray-6">
-          <span v-if="row.device">🔧 {{ row.device }}</span>
-          <span v-if="row.device" class="text-ink-gray-4">·</span>
-          <span v-if="row.mobile_no">{{ row.mobile_no }}</span>
+        <!-- meta row wraps on narrow screens (was clipping the WA/saldo chips) -->
+        <div class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-ink-gray-6">
+          <span
+            v-if="row.device"
+            class="max-w-[52vw] truncate whitespace-nowrap sm:max-w-none"
+          >🔧 {{ row.device }}</span>
+          <span v-if="row.device" class="hidden text-ink-gray-4 sm:inline">·</span>
+          <span v-if="row.mobile_no" class="whitespace-nowrap">{{ row.mobile_no }}</span>
           <template v-if="row.last_message_ts">
             <span class="text-ink-gray-4">·</span>
-            <span class="text-ink-gray-5">{{ __('último mensaje enviado') }} {{ timeAgo(row.last_message_ts) }}</span>
+            <span class="whitespace-nowrap text-ink-gray-5">
+              <span class="hidden sm:inline">{{ __('último mensaje enviado') }} </span>{{ timeAgo(row.last_message_ts) }}
+            </span>
           </template>
           <span
             v-if="waWindow"
-            class="rounded px-1.5 py-px text-[10.5px] font-semibold"
+            class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
             :class="waWindow.open ? 'bg-surface-amber-1 text-ink-amber-3' : 'bg-surface-red-1 text-ink-red-4'"
             :title="waWindow.open ? __('Ventana de 24h de WhatsApp abierta') : __('Ventana cerrada — solo plantillas')"
           >
@@ -57,14 +63,14 @@
           </span>
           <span
             v-if="saldoChip"
-            class="rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-4"
+            class="flex-none whitespace-nowrap rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-4"
             :title="__('Saldo pendiente en facturas del trato')"
           >
             💰 {{ __('Saldo') }} {{ saldoChip }}
           </span>
         </div>
       </div>
-      <div class="flex flex-none items-center gap-2.5">
+      <div class="flex flex-none items-center gap-1.5 self-start sm:gap-2.5 sm:self-auto">
         <div
           v-if="responsible && !isMobile"
           class="flex items-center gap-1.5"
@@ -95,7 +101,7 @@
           </button>
         </Dropdown>
         <button
-          class="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
+          class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
           :title="__('Bitácora — historial en todos los canales')"
           :aria-label="__('Bitácora')"
           @click="openLedger"
@@ -103,7 +109,7 @@
           <LucideScrollText class="h-4 w-4" />
         </button>
         <button
-          class="flex h-[34px] w-[34px] items-center justify-center rounded-lg text-[15px] text-white"
+          class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg text-[15px] text-white"
           style="background: #16a34a"
           :title="__('Llamar')"
           @click="call"
@@ -116,7 +122,7 @@
     <!-- next action bar -->
     <div
       v-if="nextTask"
-      class="mt-[11px] flex items-center gap-2.5 rounded-[10px] border border-outline-amber-2 bg-surface-amber-1 px-[13px] py-[9px]"
+      class="mt-[11px] flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-[10px] border border-outline-amber-2 bg-surface-amber-1 px-[13px] py-[9px]"
     >
       <span
         class="flex-none text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-amber-3"
