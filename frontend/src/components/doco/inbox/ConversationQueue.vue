@@ -277,8 +277,16 @@
       <AutoAckReview v-if="inboxTab === 'aprobar'" />
 
       <template v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar'">
-      <div v-if="queue.loading && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
-        {{ __('Cargando…') }}
+      <!-- cold-start skeleton (no cached rows yet) — paints structure instantly -->
+      <div v-if="queue.loading && !rows.length && !visibleUnassigned.length" aria-hidden="true" class="pt-0.5">
+        <div v-for="i in 7" :key="'skel' + i" class="mb-1 flex items-center gap-2 rounded-[11px] p-[11px]">
+          <span class="skel h-[30px] w-[30px] flex-none rounded-full" />
+          <div class="min-w-0 flex-1">
+            <div class="skel mb-1.5 h-3 rounded" :style="`width:${55 + ((i * 13) % 35)}%`" />
+            <div class="skel h-2.5 rounded" :style="`width:${68 - ((i * 9) % 30)}%`" />
+          </div>
+          <span class="skel h-2.5 w-8 flex-none rounded" />
+        </div>
       </div>
       <div v-else-if="listError && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-red-3">
         {{ __('No se pudo cargar la bandeja.') }}
@@ -287,20 +295,38 @@
       <div v-else-if="!rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Sin conversaciones') }}
       </div>
-      <button
+      <div
         v-for="r in rows"
         :key="(r.ref_doctype || 'CRM Deal') + ':' + r.name"
+        class="relative"
+      >
+      <!-- swipe-left action underlay (mobile, unread rows): «marcar respondido» -->
+      <div
+        v-if="swipeKey === convKey(r)"
+        class="absolute inset-y-0 right-0 mb-1 flex w-[132px] items-center justify-end rounded-r-[11px] bg-surface-green-2 pr-4 text-[11px] font-bold text-ink-green-3"
+        aria-hidden="true"
+      >
+        ✓ {{ __('Respondido') }}
+      </div>
+      <button
         role="option"
         :aria-selected="activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')"
         :tabindex="rovingKey === convKey(r) ? 0 : -1"
         class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-green-2"
-        :class="activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal') ? 'bg-surface-green-2' : ''"
+        :class="[
+          activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal') ? 'bg-surface-green-2' : '',
+          swipeKey === convKey(r) ? 'bg-surface-white' : '',
+        ]"
         :style="
-          activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
-            ? 'border-left:3px solid #16a34a'
-            : 'border-left:3px solid transparent'
+          (activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
+            ? 'border-left:3px solid #16a34a;'
+            : 'border-left:3px solid transparent;') + rowSwipeStyle(r)
         "
         @click="selectDeal(r.name, r.ref_doctype || 'CRM Deal')"
+        @touchstart="rowTouchStart(r, $event)"
+        @touchmove="rowTouchMove(r, $event)"
+        @touchend="rowTouchEnd(r)"
+        @touchcancel="rowTouchEnd(r, true)"
       >
         <div class="mb-1.5 flex items-center gap-2">
           <span
@@ -398,6 +424,7 @@
           </span>
         </div>
       </button>
+      </div>
       <!-- infinite-scroll: the observer loads the next page as this nears the viewport -->
       <div v-if="paginatable && queueHasMore" ref="sentinelEl" class="h-px w-full" aria-hidden="true" />
       <div v-if="paginatable && queueLoadingMore" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">
@@ -484,6 +511,50 @@ function newDeal() {
 // first, across all conversations — an overdue thread buried by recency is the point);
 // every other tab shows the normal recency queue.
 const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queueRows.value))
+
+// ── row swipe (mobile): left-swipe an unread row → «marcar respondido» ─────────
+// Follow-finger translate with the green underlay behind; fires clearResponder
+// past the threshold. Vertical intent cancels immediately so scrolling never fights.
+const swipeKey = ref(null)
+const swipeX = ref(0)
+let _sw = null
+function rowSwipeStyle(r) {
+  if (swipeKey.value !== convKey(r)) return ''
+  const drag = _sw?.active
+  return `transform:translateX(${swipeX.value}px);transition:${drag ? 'none' : 'transform .18s ease'}`
+}
+function rowTouchStart(r, e) {
+  if (!isMobile.value || !r.unread) return
+  const t = e.touches[0]
+  _sw = { key: convKey(r), x: t.clientX, y: t.clientY, active: false }
+}
+function rowTouchMove(r, e) {
+  if (!_sw) return
+  const t = e.touches[0]
+  const dx = t.clientX - _sw.x
+  const dy = t.clientY - _sw.y
+  if (!_sw.active) {
+    if (Math.abs(dy) > 14) {
+      _sw = null // vertical scroll wins
+      return
+    }
+    if (dx > -14) return // only a left swipe arms
+    _sw.active = true
+    swipeKey.value = _sw.key
+  }
+  e.preventDefault()
+  swipeX.value = Math.max(-132, Math.min(0, dx))
+}
+function rowTouchEnd(r, cancel = false) {
+  if (!_sw) return
+  const fire = !cancel && _sw.active && swipeX.value <= -96
+  _sw = null
+  if (fire) clearResponder(r.ref_doctype || 'CRM Deal', r.name)
+  swipeX.value = 0 // rowSwipeStyle now has a transition → animates back
+  setTimeout(() => {
+    swipeKey.value = null
+  }, 200)
+}
 // A failed list load must not read as an empty inbox — surface the resource error + retry.
 const listError = computed(() => (inboxTab.value === 'vencidos' ? overdue.error : queue.error))
 function retryList() {

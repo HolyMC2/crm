@@ -28,12 +28,13 @@
        thread scroll + composer survive drilling in/out, like a native app. -->
   <div v-else class="flex min-h-0 w-full flex-1 flex-col">
     <ConversationQueue v-show="mobileView === 'list'" />
-    <div v-show="mobileView === 'thread'" class="flex min-h-0 flex-1 flex-col">
+    <!-- edge swipe-back = same history.back() as the ← buttons (pane pop) -->
+    <div v-show="mobileView === 'thread'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
       <UnassignedWorkspace v-if="activeUnassigned" />
       <CommentWorkspace v-else-if="activeCommentPost" />
       <DealWorkspace v-else />
     </div>
-    <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col">
+    <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
       <DealContextPanel v-if="activeDeal" />
     </div>
   </div>
@@ -47,6 +48,7 @@ import { onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { globalStore } from '@/stores/global'
 import { isMobile } from '@/composables/breakpoint'
+import { swipeBackHandlers } from '@/composables/swipeBack'
 import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue'

@@ -14,10 +14,11 @@
 
   <!-- mobile: one pane at a time (v-show keeps the thread mounted, like Inbox) -->
   <div v-else class="flex min-h-0 w-full flex-1 flex-col">
-    <div v-show="mobileView !== 'context'" class="flex min-h-0 flex-1 flex-col">
+    <!-- edge swipe-back mirrors the ← buttons (context → thread → previous page) -->
+    <div v-show="mobileView !== 'context'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
       <DealWorkspace />
     </div>
-    <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col">
+    <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
       <DealContextPanel v-if="activeDeal" />
     </div>
   </div>
@@ -29,6 +30,7 @@ import { useRoute } from 'vue-router'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import { isMobile } from '@/composables/breakpoint'
+import { swipeBackHandlers } from '@/composables/swipeBack'
 import { activeDeal, selectDeal, mobileView } from '@/composables/inbox'
 
 const props = defineProps({ dealId: { type: String, default: '' } })
