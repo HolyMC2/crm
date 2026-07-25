@@ -101,7 +101,7 @@
       class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
       :style="`grid-template-columns:${GRID};height:34px`"
     >
-      <input type="checkbox" style="accent-color: #16a34a" :checked="allSelected" @change="toggleAll" />
+      <input type="checkbox" class="cb-token" :checked="allSelected" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('organization')">{{ __('Trato') }}{{ sortArrow('organization') }}</button>
       <button v-if="col('value')" class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
       <div v-if="col('stage')">{{ __('Stage') }}</div>
@@ -123,7 +123,7 @@
         :style="`grid-template-columns:${GRID};min-height:50px;border-color:#f0f1f3`"
         @click="openDeal(r.name)"
       >
-        <input type="checkbox" style="accent-color: #16a34a" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
+        <input type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
         <div class="flex items-center gap-2">
           <span
             class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"

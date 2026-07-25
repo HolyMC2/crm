@@ -6,6 +6,15 @@
 html {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* native controls (checkboxes, scrollbars, form widgets) follow the app theme —
+   without this they render light-mode white inside dark mode */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
 body {
   overscroll-behavior-y: none;
 }
@@ -33,12 +42,65 @@ a,
   animation: page-in 0.18s cubic-bezier(0.21, 1.02, 0.73, 1);
 }
 
+/* token-styled checkbox (list views) — native checkboxes render light-mode white
+   in dark theme even with color-scheme set, so draw it ourselves off the tokens */
+.cb-token {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 3px;
+  border: 1.5px solid var(--outline-gray-3);
+  background: var(--surface-white);
+  position: relative;
+  cursor: pointer;
+}
+.cb-token:checked {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+.cb-token:checked::after {
+  content: '';
+  position: absolute;
+  left: 3.5px;
+  top: 0.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* skeleton shimmer (cold-start placeholders) — token-based, dark-safe */
+.skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-gray-2);
+}
+.skel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--surface-gray-3), transparent);
+  animation: skel-shimmer 1.2s infinite;
+}
+@keyframes skel-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-in {
     animation: none !important;
   }
   .press {
     transition: none !important;
+  }
+  .skel::after {
+    animation: none !important;
   }
 }
 
