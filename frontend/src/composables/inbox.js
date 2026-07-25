@@ -295,6 +295,22 @@ export const queueLoadingMore = ref(false)
 let _queueStart = 0
 let _queueReqId = 0
 
+// ── cold-start cache: last known queue rows, so the inbox paints instantly on
+// mobile/slow links and the fresh fetch swaps in when it lands. Stale rows are
+// real deals — opening one just loads its live thread. Search/filter reloads
+// overwrite; only the unfiltered first page is persisted.
+const QUEUE_CACHE_KEY = 'doco-inbox-queue-v1'
+export const queueFromCache = ref(false)
+try {
+  const cached = JSON.parse(localStorage.getItem(QUEUE_CACHE_KEY) || 'null')
+  if (Array.isArray(cached) && cached.length) {
+    queueRows.value = cached
+    queueFromCache.value = true
+  }
+} catch (e) {
+  /* corrupt cache — ignore, fetch will repopulate */
+}
+
 let _searchTimer = null
 export function reloadQueue() {
   _queueStart = 0
@@ -310,6 +326,14 @@ export function reloadQueue() {
       if (myId !== _queueReqId) return // a newer reload superseded this page
       queueRows.value = queue.data || []
       queueHasMore.value = (queue.data || []).length === QUEUE_PAGE
+      queueFromCache.value = false
+      if (!queueChannel.value && !queueSearch.value) {
+        try {
+          localStorage.setItem(QUEUE_CACHE_KEY, JSON.stringify((queue.data || []).slice(0, 30)))
+        } catch (e) {
+          /* quota — skip */
+        }
+      }
     })
 }
 
