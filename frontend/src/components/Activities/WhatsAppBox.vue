@@ -132,6 +132,19 @@
     </div>
   </div>
 
+  <!-- pending attach (catálogo photo etc.) — sent together with the edited text -->
+  <div v-if="mode === 'reply' && whatsapp.attach" class="flex items-center px-3 pt-2 sm:px-10">
+    <span class="inline-flex items-center gap-1.5 rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs text-ink-gray-7">
+      📎 {{ __('Foto adjunta — se envía con tu mensaje') }}
+      <button
+        type="button"
+        class="press text-[13px] leading-none"
+        :aria-label="__('Quitar adjunto')"
+        @click="whatsapp.attach = ''; whatsapp.content_type = 'text'"
+      >✕</button>
+    </span>
+  </div>
+
   <!-- ✨ suggestions (tap to insert into the composer; verbatim send attributes canned:ai) -->
   <div v-if="suggestions.length" class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10">
     <button
@@ -345,7 +358,7 @@ import {
 } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
-import { notifyTyping, aiEnabled } from '@/composables/inbox'
+import { notifyTyping, aiEnabled, composerDraft } from '@/composables/inbox'
 import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
@@ -605,6 +618,21 @@ async function sendRecording() {
     recUploading.value = false
   }
 }
+
+// composer draft handoff (catálogo / cobrar): apply once, then clear. The
+// pending attach rides whatsapp.attach and goes out WITH the edited text.
+watch(composerDraft, (d) => {
+  if (!d) return
+  mode.value = 'reply'
+  content.value = d.text || ''
+  if (d.attach) {
+    whatsapp.value.attach = d.attach
+    whatsapp.value.content_type = d.content_type || 'image'
+  }
+  if (d.canned && d.text) lastCanned.value = { label: d.canned, text: d.text }
+  composerDraft.value = null
+  nextTick(() => textareaRef.value?.el?.focus())
+})
 
 // ✨ suggested replies (spec 5.1) — on-demand local-AI drafts; inserting one
 // marks lastCanned('ai: …') so a verbatim send is auditable as AI-assisted.

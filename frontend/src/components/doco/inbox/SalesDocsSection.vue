@@ -84,6 +84,15 @@
                 :aria-label="__('Editar cotización')"
                 @click.stop="editingQuote = d.name"
               >✏️</button>
+              <!-- 💳 cobrar en el chat (spec 4.1): MP link → editable composer draft -->
+              <button
+                v-if="g.doctype === 'Sales Invoice' && d.docstatus === 1 && Number(d.outstanding_amount) > 0"
+                class="press flex-none rounded px-1 text-[13px] hover:bg-surface-gray-2 disabled:opacity-50"
+                :disabled="cobrando === d.name"
+                :title="__('Crear enlace de pago MercadoPago y ponerlo en el mensaje')"
+                :aria-label="__('Cobrar')"
+                @click.stop="cobrar(d)"
+              >{{ cobrando === d.name ? '…' : '💳' }}</button>
               <div class="flex flex-none flex-col items-end gap-0.5">
                 <span class="font-semibold tabular-nums text-ink-gray-8">{{ money(d.grand_total, d.currency) }}</span>
                 <span v-if="d.doctype && d.docstatus === 1 && Number(d.outstanding_amount) > 0" class="text-[10px] font-semibold tabular-nums text-ink-red-4">
@@ -158,14 +167,37 @@
 
 <script setup>
 import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
-import { Badge, Dialog, call } from 'frappe-ui'
+import { Badge, Dialog, call, toast } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import { formatMoney } from '@/composables/crmFormat'
-import { salesDocsEnabled } from '@/composables/inbox'
+import { salesDocsEnabled, setComposerDraft } from '@/composables/inbox'
 import { salesSummary, salesRollup, ensureSalesSummary, reloadSalesSummary } from '@/composables/salesDocs'
 import QuoteEditor from '@/components/doco/inbox/QuoteEditor.vue'
 
 const editingQuote = ref(null)
+
+// 💳 cobrar en el chat (spec 4.1)
+const cobrando = ref(null)
+async function cobrar(d) {
+  cobrando.value = d.name
+  try {
+    const out = await call('doco_marketing.api.inbox.create_payment_link', {
+      deal: props.deal,
+      invoice: d.name,
+    })
+    setComposerDraft({
+      text:
+        `Hola 👋 puede realizar su pago seguro en este enlace:\n${out.url}\n\n` +
+        `*${d.name}* · ${formatMoney(out.amount, d.currency)}`,
+      canned: 'cobro',
+    })
+    toast.success(__('Enlace de pago listo — edítalo y envíalo'))
+  } catch (e) {
+    toast.error(e.messages?.[0] || __('No se pudo crear el enlace de pago'))
+  } finally {
+    cobrando.value = null
+  }
+}
 
 const props = defineProps({
   deal: { type: String, required: true },

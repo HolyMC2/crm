@@ -67,7 +67,7 @@
             </div>
             <div class="flex min-h-0 flex-col gap-0.5 p-2">
               <div class="line-clamp-2 text-[11.5px] font-medium leading-tight text-ink-gray-8">{{ r.item_name }}</div>
-              <div class="text-[12.5px] font-bold text-ink-gray-9">{{ r.price != null ? money(r.price, r.currency, 2) : __('Consultar') }}</div>
+              <div class="text-[12.5px] font-bold text-ink-gray-9">{{ r.price != null ? formatMoney(r.price, r.currency) : __('Consultar') }}</div>
             </div>
           </button>
         </div>
@@ -78,6 +78,15 @@
         <div class="text-[12px] text-ink-gray-6">{{ selected.size }} {{ __('seleccionados') }}</div>
         <div class="flex items-center gap-2">
           <!-- ERP spec P2.1: picked items → draft Quotation lines on the deal -->
+          <!-- single pick → draft into the composer for edit-before-send (Marco 07-25) -->
+          <button
+            v-if="selected.size === 1"
+            class="rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-[13px] font-semibold text-ink-gray-8"
+            :title="__('Poner en el mensaje para editar antes de enviar')"
+            @click="editSend"
+          >
+            ✏️ {{ __('Editar y enviar') }}
+          </button>
           <button
             v-if="canQuote"
             class="rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-[13px] font-semibold text-ink-gray-8 disabled:opacity-50"
@@ -104,10 +113,11 @@
 <script setup>
 import { ref, computed, reactive, nextTick, onMounted } from 'vue'
 import { toast } from 'frappe-ui'
-import { money } from '@/utils/numberFormat'
+import { formatMoney } from '@/composables/crmFormat'
 import LucideSearch from '~icons/lucide/search'
 import LucideImageOff from '~icons/lucide/image-off'
 import {
+  setComposerDraft,
   catalogResults,
   catalogQuery,
   onCatalogQuery,
@@ -131,6 +141,20 @@ onMounted(() => nextTick(() => searchRef.value?.focus()))
 function toggle(code) {
   if (selected.has(code)) selected.delete(code)
   else selected.add(code)
+}
+
+function editSend() {
+  const code = [...selected][0]
+  const r = rows.value.find((x) => x.item_code === code)
+  if (!r) return
+  const price = r.price != null ? formatMoney(r.price, r.currency) : __('Precio a consultar')
+  setComposerDraft({
+    text: `*${r.item_name}*\n${price}`,
+    attach: r.image_url || '',
+    content_type: 'image',
+    canned: 'catalogo',
+  })
+  closeCatalog()
 }
 
 async function send() {

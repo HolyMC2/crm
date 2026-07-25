@@ -113,6 +113,16 @@ export const snoozedCount = createResource({ url: 'doco_marketing.api.inbox.get_
 export const conversationTags = createResource({ url: 'doco_marketing.api.inbox.get_conversation_tags', auto: false })
 export const queueTag = ref(null) // active etiqueta filter (null = all)
 
+// ── composer draft handoff ─────────────────────────────────────────────────────
+// Features (catálogo editable send, cobrar-en-el-chat, …) set a draft; WhatsAppBox
+// applies it (text + optional pending attach) and clears it. The operator ALWAYS
+// edits + sends manually — nothing auto-sends through this path.
+export const composerDraft = ref(null) // {text, attach, content_type, canned}
+export function setComposerDraft(d) {
+  composerDraft.value = { ...d, _ts: Date.now() }
+  mobileView.value = 'thread' // mobile: surface the composer (no-op on desktop)
+}
+
 // ── presence / collision detection (spec 2.4) ─────────────────────────────────
 // Ephemeral map: deal → { user → {state, full_name, ts} }. Fed by the realtime
 // 'doco_marketing:presence' event (Inbox.vue wires the socket); entries age out
