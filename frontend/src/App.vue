@@ -22,10 +22,10 @@ import { computed, defineAsyncComponent, provide } from 'vue'
 const session = sessionStore()
 provide('session', session)
 
+// Apply the persisted theme at boot (useTheme's ref starts at 'light' and nothing
+// else re-applies a stored 'dark'/'system' choice — the mobile toggle needs this).
 const { setTheme } = useTheme()
-if (!localStorage.getItem('theme')) {
-  setTheme('light')
-}
+setTheme(localStorage.getItem('theme') || 'light')
 
 const MobileLayout = defineAsyncComponent(
   () => import('./components/Layouts/MobileLayout.vue'),

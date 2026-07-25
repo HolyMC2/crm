@@ -1,6 +1,53 @@
 @import 'frappe-ui/style.css';
 
+/* ── mobile touch feel ─────────────────────────────────────────────────────
+   Kill the half-second gray tap flash + the double-tap-zoom click delay, and
+   the rubber-band overscroll that makes the SPA feel like a web page. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  overscroll-behavior-y: none;
+}
+button,
+a,
+[role='button'],
+[role='tab'] {
+  touch-action: manipulation;
+}
+
+/* route-change enter animation. Applied by MobileLayout on a route-keyed wrapper
+   (pages are multi-root fragments, so <transition> can't animate them) — the
+   incoming page fades/rises in; leaving is instant. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-in {
+  animation: page-in 0.18s cubic-bezier(0.21, 1.02, 0.73, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-in {
+    animation: none !important;
+  }
+  .press {
+    transition: none !important;
+  }
+}
+
 @layer components {
+  /* tactile press feedback for buttons/chips (native-app feel on touch) */
+  .press {
+    @apply transition-transform duration-100 active:scale-[0.96];
+  }
+
   .prose-f {
     @apply break-all
 			max-w-none
