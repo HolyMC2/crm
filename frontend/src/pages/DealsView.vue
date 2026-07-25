@@ -119,8 +119,8 @@
       <div
         v-for="r in rows"
         :key="r.name"
-        class="grid cursor-pointer items-center border-b px-5 hover:bg-surface-gray-1"
-        :style="`grid-template-columns:${GRID};min-height:50px;border-color:#f0f1f3`"
+        class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
+        :style="`grid-template-columns:${GRID};min-height:50px`"
         @click="openDeal(r.name)"
       >
         <input type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />

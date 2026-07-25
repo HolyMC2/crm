@@ -172,7 +172,7 @@ export async function sendCatalogItems(itemCodes) {
   return res
 }
 
-export function initInbox() {
+export function initInbox(opts = {}) {
   reloadQueue()
   reloadUnassigned()
   reloadComments()
@@ -180,7 +180,9 @@ export function initInbox() {
   channelCounts.fetch()
   overdue.fetch()
   autoAckCount.fetch() // "por aprobar" badge — count only on init; the list loads on tab open
-  restoreInbox() // re-open the conversation/pane the user left (survives route round-trips + reloads)
+  // skipRestore: a ?deal= deep link owns the selection — restoreInbox() resolves
+  // async and would clobber it with the previously-persisted conversation (audit H1).
+  if (!opts.skipRestore) restoreInbox()
 }
 
 // ── Por aprobar (auto-acuse review) ────────────────────────────────────────────
@@ -299,12 +301,30 @@ let _queueReqId = 0
 // mobile/slow links and the fresh fetch swaps in when it lands. Stale rows are
 // real deals — opening one just loads its live thread. Search/filter reloads
 // overwrite; only the unfiltered first page is persisted.
-const QUEUE_CACHE_KEY = 'doco-inbox-queue-v1'
+// Hardening (audit M2): key is namespaced PER USER (cookie user_id) so a second
+// operator on the same browser never paints the first one's customers; entries
+// expire after 24h; logout purges every doco-inbox-queue-* key (session store).
+function _cacheUser() {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)user_id=([^;]*)/)
+    return m ? decodeURIComponent(m[1]) : ''
+  } catch (e) {
+    return ''
+  }
+}
+const QUEUE_CACHE_KEY = `doco-inbox-queue-v2:${_cacheUser()}`
+const QUEUE_CACHE_TTL_MS = 24 * 3600 * 1000
 export const queueFromCache = ref(false)
 try {
+  localStorage.removeItem('doco-inbox-queue-v1') // pre-namespace format
   const cached = JSON.parse(localStorage.getItem(QUEUE_CACHE_KEY) || 'null')
-  if (Array.isArray(cached) && cached.length) {
-    queueRows.value = cached
+  if (
+    cached &&
+    Array.isArray(cached.rows) &&
+    cached.rows.length &&
+    Date.now() - (cached.t || 0) < QUEUE_CACHE_TTL_MS
+  ) {
+    queueRows.value = cached.rows
     queueFromCache.value = true
   }
 } catch (e) {
@@ -329,7 +349,13 @@ export function reloadQueue() {
       queueFromCache.value = false
       if (!queueChannel.value && !queueSearch.value) {
         try {
-          localStorage.setItem(QUEUE_CACHE_KEY, JSON.stringify((queue.data || []).slice(0, 30)))
+          // trim the persisted preview — the cache must paint the list, not
+          // archive conversations (audit M2)
+          const rows = (queue.data || []).slice(0, 30).map((r) => ({
+            ...r,
+            last_message: (r.last_message || '').slice(0, 60),
+          }))
+          localStorage.setItem(QUEUE_CACHE_KEY, JSON.stringify({ t: Date.now(), rows }))
         } catch (e) {
           /* quota — skip */
         }

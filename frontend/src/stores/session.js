@@ -32,9 +32,12 @@ export const sessionStore = defineStore('crm-session', () => {
     url: 'logout',
     onSuccess() {
       // purge the inbox cold-start cache (customer names/phones/last messages) —
-      // must not survive logout on a shared device. Key mirrors composables/inbox.js.
+      // must not survive logout on a shared device. Keys are per-user namespaced
+      // (doco-inbox-queue-*, see composables/inbox.js) — sweep them all.
       try {
-        localStorage.removeItem('doco-inbox-queue-v1')
+        for (const k of Object.keys(localStorage)) {
+          if (k.startsWith('doco-inbox-queue-')) localStorage.removeItem(k)
+        }
       } catch (e) {
         /* storage unavailable — nothing to purge */
       }

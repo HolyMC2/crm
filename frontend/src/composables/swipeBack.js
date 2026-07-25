@@ -5,7 +5,8 @@
 // Returns spreadable listeners: v-on="swipeBackHandlers".
 import { isMobile } from '@/composables/breakpoint'
 
-const EDGE_PX = 36
+const EDGE_MIN_PX = 14 // <14px = OS/browser edge-gesture zone (iOS back-swipe) — leave it alone
+const EDGE_PX = 40
 const TRIGGER_PX = 72
 const MAX_DRIFT_Y = 48
 
@@ -16,7 +17,7 @@ export const swipeBackHandlers = {
     _st = null
     if (!isMobile.value) return
     const t = e.touches[0]
-    if (t.clientX > EDGE_PX) return
+    if (t.clientX > EDGE_PX || t.clientX < EDGE_MIN_PX) return
     _st = { x: t.clientX, y: t.clientY, fired: false }
   },
   touchmove(e) {

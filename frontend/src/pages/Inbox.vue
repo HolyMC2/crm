@@ -138,6 +138,11 @@ const DEPTH = { list: 0, thread: 1, context: 2 }
 const FROM_DEPTH = ['list', 'thread', 'context']
 let suppressPush = false
 let mounting = false // restoring state on mount drives mobileView itself; don't push then
+// Epoch guard (audit M1): pushState can't rewrite ancestor entries, so depth tags
+// from a PREVIOUS inbox visit survive underneath this one's stack. Stamp every
+// entry with a per-mount epoch and ignore foreign-epoch depth on popstate (treat
+// as list) — stale entries can no longer drop the user back INTO a thread.
+let paneEpoch = 0
 // flush:'sync' so the guard is reliable — restore changes mobileView synchronously
 // inside onMounted, and we rebuild the history stack explicitly afterwards.
 watch(
@@ -150,13 +155,14 @@ watch(
     }
     // merge into the existing state so vue-router's own bookkeeping survives; URL
     // stays /inbox (empty url arg), so the router sees no route change on back.
-    if (DEPTH[nv] > DEPTH[ov]) history.pushState({ ...history.state, inboxDepth: DEPTH[nv] }, '')
+    if (DEPTH[nv] > DEPTH[ov])
+      history.pushState({ ...history.state, inboxDepth: DEPTH[nv], inboxEpoch: paneEpoch }, '')
   },
   { flush: 'sync' },
 )
 function onPopState(e) {
   if (!isMobile.value) return
-  const depth = e.state?.inboxDepth ?? 0
+  const depth = e.state?.inboxEpoch === paneEpoch ? (e.state?.inboxDepth ?? 0) : 0
   const target = FROM_DEPTH[Math.min(2, Math.max(0, depth))]
   if (target !== mobileView.value) {
     suppressPush = true // this is a back-walk, don't re-push
@@ -185,14 +191,21 @@ function onVisibility() {
 
 onMounted(() => {
   mounting = true
-  initInbox() // restores the last conversation/pane, then loads queue + counts
-  if (route.query.deal) selectDeal(String(route.query.deal)) // deep link from Tasks "open conversation"
+  paneEpoch = Date.now() // new epoch per mount — invalidates stale depth tags (M1)
+  // Deep link (?deal= from Tasks/push notifications) owns the selection: skip the
+  // async restore that would otherwise clobber it with the persisted conversation
+  // (audit H1). ?doctype=CRM Lead opens leads correctly (was hardcoded Deal).
+  const deepLink = route.query.deal
+  initInbox({ skipRestore: !!deepLink })
+  if (deepLink)
+    selectDeal(String(deepLink), route.query.doctype === 'CRM Lead' ? 'CRM Lead' : 'CRM Deal')
   // Rebuild the mobile back-stack to match the restored pane so hardware-back
   // walks list ← thread ← context instead of jumping straight out of the inbox.
   if (isMobile.value) {
     const depth = DEPTH[mobileView.value] || 0
-    history.replaceState({ ...history.state, inboxDepth: 0 }, '')
-    for (let i = 1; i <= depth; i++) history.pushState({ ...history.state, inboxDepth: i }, '')
+    history.replaceState({ ...history.state, inboxDepth: 0, inboxEpoch: paneEpoch }, '')
+    for (let i = 1; i <= depth; i++)
+      history.pushState({ ...history.state, inboxDepth: i, inboxEpoch: paneEpoch }, '')
   }
   mounting = false
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)

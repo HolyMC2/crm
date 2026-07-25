@@ -36,6 +36,8 @@ import { activeDeal, selectDeal, mobileView } from '@/composables/inbox'
 const props = defineProps({ dealId: { type: String, default: '' } })
 const route = useRoute()
 
+// (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
+// /deal/B remounts this component — onMounted covers every entry.)
 function focus() {
   const id = props.dealId || route.params.dealId
   if (id) selectDeal(String(id))
@@ -43,13 +45,13 @@ function focus() {
   // history.back) then leaves the page, which is correct here (no queue pane).
   mobileView.value = 'thread'
 }
-onMounted(focus)
-watch(() => route.params.dealId, focus)
 
 // ── mobile back-stack (same contract as Inbox.vue, thread↔context only) ────
 // Drilling into context pushes a history entry so hardware/gesture back (and the
 // panel's ← via history.back()) returns to the thread instead of leaving the page.
+// Per-mount epoch invalidates stale dealPane tags from earlier visits (audit M1).
 let suppressPush = false
+let paneEpoch = 0
 watch(
   mobileView,
   (nv, ov) => {
@@ -58,18 +60,24 @@ watch(
       suppressPush = false
       return
     }
-    if (nv === 'context') history.pushState({ ...history.state, dealPane: 'context' }, '')
+    if (nv === 'context')
+      history.pushState({ ...history.state, dealPane: 'context', dealEpoch: paneEpoch }, '')
   },
   { flush: 'sync' },
 )
 function onPopState(e) {
   if (!isMobile.value) return
-  const target = e.state?.dealPane === 'context' ? 'context' : 'thread'
+  const target =
+    e.state?.dealPane === 'context' && e.state?.dealEpoch === paneEpoch ? 'context' : 'thread'
   if (target !== mobileView.value) {
     suppressPush = true
     mobileView.value = target
   }
 }
+onMounted(() => {
+  paneEpoch = Date.now()
+  focus()
+})
 onMounted(() => window.addEventListener('popstate', onPopState))
 onUnmounted(() => window.removeEventListener('popstate', onPopState))
 </script>

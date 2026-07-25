@@ -339,7 +339,7 @@
             ? 'border-left:3px solid #16a34a;'
             : 'border-left:3px solid transparent;') + rowSwipeStyle(r)
         "
-        @click="selectDeal(r.name, r.ref_doctype || 'CRM Deal')"
+        @click="onRowClick(r)"
         @touchstart="rowTouchStart(r, $event)"
         @touchmove="rowTouchMove(r, $event)"
         @touchend="rowTouchEnd(r)"
@@ -537,12 +537,23 @@ const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conve
 const swipeKey = ref(null)
 const swipeX = ref(0)
 let _sw = null
+// audit M4: browsers usually suppress the synthesized click after a real swipe
+// (tap-slop), but that's convention, not contract — guard it explicitly.
+let _swMoved = false
+function onRowClick(r) {
+  if (_swMoved) {
+    _swMoved = false
+    return
+  }
+  selectDeal(r.name, r.ref_doctype || 'CRM Deal')
+}
 function rowSwipeStyle(r) {
   if (swipeKey.value !== convKey(r)) return ''
   const drag = _sw?.active
   return `transform:translateX(${swipeX.value}px);transition:${drag ? 'none' : 'transform .18s ease'}`
 }
 function rowTouchStart(r, e) {
+  _swMoved = false
   if (!isMobile.value || !r.unread) return
   const t = e.touches[0]
   _sw = { key: convKey(r), x: t.clientX, y: t.clientY, active: false }
@@ -559,6 +570,7 @@ function rowTouchMove(r, e) {
     }
     if (dx > -14) return // only a left swipe arms
     _sw.active = true
+    _swMoved = true // suppress the synthesized click after this gesture (M4)
     swipeKey.value = _sw.key
   }
   e.preventDefault()
@@ -715,6 +727,13 @@ const sentinelEl = ref(null)
 // holds per channel too. Vencidos/Comentarios/Por-aprobar are separate surfaces.
 const paginatable = computed(() => ['all', 'whatsapp', 'messenger'].includes(inboxTab.value))
 let _io = null
+// The sentinel is v-if'd (only while more pages exist) — (re)observe as it comes
+// and goes. Top-level watch (not inside onMounted) so its disposal on unmount is
+// explicit, not reliant on hook-scope binding (audit M3).
+const stopSentinelWatch = watch(sentinelEl, (el, old) => {
+  if (old) _io?.unobserve(old)
+  if (el) _io?.observe(el)
+})
 onMounted(() => {
   _io = new IntersectionObserver(
     (entries) => {
@@ -722,17 +741,12 @@ onMounted(() => {
     },
     { root: listEl.value, rootMargin: '300px' },
   )
-  // The sentinel is v-if'd (only while more pages exist) — (re)observe it on mount/unmount.
-  watch(
-    sentinelEl,
-    (el, old) => {
-      if (old) _io.unobserve(old)
-      if (el) _io.observe(el)
-    },
-    { immediate: true },
-  )
+  if (sentinelEl.value) _io.observe(sentinelEl.value)
 })
-onBeforeUnmount(() => _io?.disconnect())
+onBeforeUnmount(() => {
+  stopSentinelWatch()
+  _io?.disconnect()
+})
 
 // ── "/" focuses search (Slack/Gmail convention) ──────────────────────────────
 // Global while the inbox is mounted; ignored when the user is already typing
