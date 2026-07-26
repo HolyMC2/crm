@@ -59,6 +59,7 @@ import CommentWorkspace from '@/components/doco/inbox/CommentWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import LedgerModal from '@/components/doco/inbox/LedgerModal.vue'
 import PostCallSheet from '@/components/doco/inbox/PostCallSheet.vue'
+import { shouldPingWa, shouldPingMessenger } from '@/utils/pingLogic'
 import {
   activeDeal,
   activeDealDoctype,
@@ -127,7 +128,7 @@ function onWaMessage(payload) {
       }
     }
     const now = (queue.data || []).filter((r) => r.unread_dot).length
-    if (now > prevUnread && Date.now() - lastSendAt.value > 3000) playPing()
+    if (shouldPingWa(now, prevUnread, lastSendAt.value)) playPing()
     prevUnread = now
   })
 }
@@ -136,7 +137,7 @@ function onWaMessage(payload) {
 // Refresh queue + Sin-asignar + the open orphan thread; ping on a genuine inbound.
 function onMessenger(payload) {
   onMessengerInbound(payload)
-  if (payload?.direction === 'Incoming' && Date.now() - lastSendAt.value > 3000) playPing()
+  if (shouldPingMessenger(payload?.direction, lastSendAt.value)) playPing()
 }
 
 // ── mobile back-stack ──────────────────────────────────────────────────────
