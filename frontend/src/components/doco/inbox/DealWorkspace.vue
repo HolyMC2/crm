@@ -58,6 +58,16 @@
            WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
            since DealHeader already identifies the contact (avoids the duplicate). -->
       <div v-if="activeTab === 'conversation'" ref="convoRef" class="doco-convo relative flex min-h-0 flex-1 flex-col">
+        <!-- 🔎 búsqueda en el hilo (spec 2.7) — over the LOADED messages -->
+        <ThreadSearch ref="threadSearch" :container="convoRef" />
+        <button
+          class="press absolute right-3 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-white text-[13px] text-ink-gray-6 shadow-sm hover:bg-surface-gray-2"
+          :title="__('Buscar en la conversación')"
+          :aria-label="__('Buscar en la conversación')"
+          @click="threadSearch?.toggle()"
+        >
+          🔎
+        </button>
         <Activities :key="'wa-' + activeDeal" v-model:showWhatsappTemplates="convoTemplateOpen" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="convoTabs" />
         <!-- jump-to-latest: shows when scrolled up from the tail; floats just above
              the composer (bottom offset = live composer height) -->
@@ -117,10 +127,12 @@ import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
 import ThreadSummary from '@/components/doco/inbox/ThreadSummary.vue'
 import IntentChips from '@/components/doco/inbox/IntentChips.vue'
+import ThreadSearch from '@/components/doco/inbox/ThreadSearch.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence, openCatalog, setComposerDraft, pulseSalesDocs } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
+const threadSearch = ref(null)
 
 // ── P2 S10: intent chip → existing surface (chips never send / never auto-charge) ──
 function onIntentCatalogo() {

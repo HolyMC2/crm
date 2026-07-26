@@ -229,6 +229,8 @@
                  inside a shrink-to-fit parent collapses the whole bubble. -->
             <img
               :src="whatsapp.attach"
+              loading="lazy"
+              decoding="async"
               class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-md sm:max-w-[15rem]"
               @click="() => openFileInAnotherTab(whatsapp.attach)"
             />
@@ -254,7 +256,7 @@
             v-else-if="whatsapp.content_type == 'audio'"
             class="flex items-center gap-2"
           >
-            <audio :src="whatsapp.attach" controls class="cursor-pointer" />
+            <audio :src="whatsapp.attach" controls preload="none" class="cursor-pointer" />
           </div>
           <div
             v-else-if="whatsapp.content_type == 'video'"
@@ -263,6 +265,7 @@
             <video
               :src="whatsapp.attach"
               controls
+              preload="metadata"
               class="h-auto w-60 max-w-[60vw] cursor-pointer rounded-md sm:max-w-[15rem]"
             />
             <!-- same null guard as the image branch -->
