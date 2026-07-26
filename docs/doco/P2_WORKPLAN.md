@@ -389,3 +389,147 @@ Recon: `services/inbox/sla.py` (`response_clock`, `first_touch_clock`) and
 3.7 optimistic status/task updates, 3.2 idle chunk prefetch, 1.3 camera-direct
 attach, all settings-json/hooks/push.py patch application, router mount,
 DealWorkspace/composer wiring, integration, builds, prod.
+
+---
+
+# Batch 4 (2026-07-26) — lifecycle flows + quality rails
+
+Same global rules as batches 1-3. Batch-3 addendum stands: NOBODY edits
+`marketing_settings.json` / `hooks.py` / `services/push.py` / `composables/inbox.js` /
+`router.js` / `DealWorkspace.vue` / `DealContextPanel.vue` / any `Activities/*` file —
+settings fields, hooks, and mounts are EXACT patches in your report; the lead applies
+them in one pass. New-files-only otherwise. Tests = DoD. Reports mandatory:
+`/tmp/claude-1000/-home-holymc2/3be36e5d-b02f-4d69-a6db-130adcc46bcb/scratchpad/p2-<slice>.md`.
+
+## Slice S13 — Won/Lost flows (spec 4.5)
+
+Status transitions close the loop: Ganado → offer factura + fast-path the review
+ask; Perdido → optional win-back cadence enrollment. NOTHING sends directly —
+factura/review go through MA-1 (`WhatsApp Send Review`, Pendiente, auto=0; copy
+`services/repair_updates.py`, this batch's reference implementation), win-back
+goes through the cadence engine (`services/cadence.enroll` — same ledger as S5).
+
+Recon first (≤12-line design): `services/inbox/status.py` or wherever status
+changes land (set_status routes through doc.save → doc_events on_update is the
+hook point; detect terminal via the status doctype's `type` — copy
+`_status_is_terminal` usage in services/inbox), `services/reviews.py`
+(sweep_review_asks — your Won fast-path must DEDUPE against the sweep's source
+key so the customer never gets two asks), `services/cadence.py` (enroll validates
+is_cadence; one-active-per-deal), `services/repair_updates.py` (staging pattern).
+
+- NEW `doco_marketing/services/lifecycle.py`: `on_deal_update(doc, method)` —
+  fire only on a REAL status transition (has_value_changed) into a terminal
+  type. Won-type: (a) if EMC installed + deal has submitted sales docs, stage an
+  MA-1 factura-offer template row (settings `won_factura_template`, unset = skip);
+  (b) review fast-path gated on the SAME `enable_review_asks` flag + reviews.py
+  dedupe key. Lost-type: if settings `lost_winback_cadence` names an Active
+  is_cadence campaign, enroll (cadence.enroll swallows 1:1 conflicts — catch +
+  log, never block the save). EVERYTHING try/except-swallowed.
+- Settings fields (REPORT PATCH): `lifecycle_section`, `won_factura_template`
+  (Data, template name, empty = off), `lost_winback_cadence` (Data, campaign
+  name, empty = off), `winback_delay_days` (Int 7 — the cadence's own steps
+  handle timing; this field only documents intent, read it if trivial else drop
+  it and SAY SO in the report).
+- Hook (REPORT PATCH): append to CRM Deal on_update (there is an existing
+  on_update entry — deliver old/new).
+- NEW `tests/test_lifecycle.py`: Won stages ≤1 factura row (auto=0) + dedupes;
+  review fast-path dedupes vs sweep; Lost enrolls exactly once, second Lost
+  no-op, conflict with an active cadence logged not raised; non-terminal
+  transition no-op; flags off no-op; NEVER an Outgoing WhatsApp Message
+  (class-level send_outgoing mock + assertion). Savepoint per test.
+- No frontend (the existing LostStagePrompt/status flows stay untouched).
+- Report: `.../scratchpad/p2-s13-lifecycle.md`.
+
+## Slice S14 — Frontend error telemetry (spec 3.6)
+
+We only see errors users screenshot. Reuse the posawesome telemetry SHAPE
+(sampled, PII-scrubbed, self-limiting) but store in a doco_marketing doctype —
+the monitoring stack is down, so the landing zone is the site DB, viewable in
+Desk.
+
+- NEW doctype `CRM Client Error` (doco_marketing/marketing/doctype/
+  crm_client_error/ — new folder is yours): fields hash (Data, unique-ish),
+  message (Small Text), stack (Text, TRUNCATED server-side to ~4000 chars),
+  url (Data), user_agent (Data 200), user (Link User), count (Int), first_seen /
+  last_seen (Datetime), release (Data — the SPA __BUILD_ID__). Naming: hash.
+  NO customer text may enter: the endpoint stores the error, never form data.
+- NEW `doco_marketing/api/client_error.py`: `report(payload)` whitelisted,
+  session users only (frappe.session.user != Guest → else 403), rate-limited
+  (frappe.cache counter per user, ≤20/h — over = silently accepted+dropped),
+  UPSERT by hash (count++, last_seen), retention cap (on insert, if total rows
+  > 2000 delete oldest 200 — cheap, in the same request, best-effort).
+- NEW frontend `src/composables/telemetry.js`: window.onerror +
+  unhandledrejection listeners; builds {message, stack, url, release} —
+  SCRUB: strip query strings from urls, cap stack, drop messages matching
+  /ResizeObserver|Script error/ noise; hash = simple djb2 of message+top frame;
+  10% sampling for repeats within the session (first occurrence always sent);
+  navigator.sendBeacon fallback fetch keepalive; NEVER throws (telemetry that
+  crashes the app = fired). Export `initTelemetry()`; mount patch (App.vue
+  one-liner) in report.
+- Tests: python (guest 403, rate-limit drop, upsert count++, retention prune,
+  stack truncation) + vitest for the pure parts (hash stable, scrub, sampling
+  gate, noise filter). Savepoint per test.
+- Report: `.../scratchpad/p2-s14-telemetry.md`.
+
+## Slice S15 — Abandoned checkout → cadence (spec 6.4 remainder)
+
+Order→deal thread ALREADY exists (storefront_bridge.on_sales_order_submit).
+What's missing: an abandoned checkout should optionally enroll the deal/lead in
+a follow-up CADENCE (multi-touch, stop-on-reply — S5 machinery) instead of the
+single template nudge `services/abandoned.py` sends today.
+
+Recon first: `services/abandoned.py` END TO END (how carts are detected, the
+SOURCE key, how the template nudge stages, which reference doc it resolves),
+`services/cadence.py` (enroll contract: DEAL-scoped — if the abandoned flow
+resolves to a Lead, look at how conversion/orphans link lead→deal and document
+what you do with lead-only carts), `crm_campaign.is_cadence`.
+
+- NEW `doco_marketing/services/abandoned_cadence.py`: called from the SAME
+  sweep abandoned.py runs (hook/report patch appends your function to the
+  existing scheduler entry or abandoned.py's sweep calls yours — do NOT edit
+  abandoned.py; deliver the one-line call-site patch in the report). Gated on
+  settings `abandoned_cadence` (Data, Active is_cadence campaign name, empty =
+  off — the template nudge keeps working as today). Dedupe: one enrollment per
+  cart/deal (cadence's own 1:1 dedupe + your source stamp). Lead-only carts:
+  document the chosen path (skip with log is acceptable v1).
+- Settings field (REPORT PATCH): `abandoned_cadence` in the existing abandoned
+  section.
+- NEW `tests/test_abandoned_cadence.py`: enrolls once, second sweep no-op,
+  setting empty no-op, non-cadence campaign rejected+logged, reply stops the
+  sequence (assert via cadence.stop_on_reply integration), no Outgoing WA ever.
+- No frontend.
+- Report: `.../scratchpad/p2-s15-abandoned.md`.
+
+## Slice S16 — Coaching notes (spec 7.4)
+
+Manager annotates a conversation privately ("aquí ofrece el combo") — visible
+ONLY to manager roles, never to the agent being coached, never in the customer
+timeline.
+
+- NEW doctype `Coaching Note` (new folder yours): reference_doctype (CRM Deal/
+  CRM Lead), reference_name, author (Link User), note (Small Text), creation.
+  Doctype permissions: read/write/create ONLY System Manager + Sales Manager
+  (role table in the doctype JSON). NOT track_changes-sensitive.
+- NEW `doco_marketing/api/coaching.py`: `list_notes(doctype, name)` /
+  `add_note(doctype, name, note)` / `delete_note(name)` — `frappe.only_for(
+  ["System Manager","Sales Manager"])` on ALL (belt atop doctype perms), read
+  perm on the referenced record, note escape_html'd ON WRITE (the audit L3
+  lesson — every stored free-text escapes at the boundary), author = session
+  user, delete only own note unless System Manager.
+- NEW frontend `src/components/doco/inbox/CoachingPanel.vue`: collapsible
+  section — list (author avatar/initials + timeAgo + note) + add box + delete
+  own. Self-hides entirely when the backend 403s (non-manager sees NOTHING, not
+  an empty box). frappe-ui tokens, es-MX, .press. Mount patch (DealContextPanel,
+  below the duplicate banner area) in report.
+- NEW `src/utils/coachingFormat.js` if you need pure helpers; vitest it.
+  (If you genuinely need none, say so in the report instead of inventing one.)
+- Tests: python (manager gate on all three endpoints, non-manager PermissionError,
+  escape on write, delete-own-only, read-perm on referenced record) + vitest for
+  any pure helpers. Savepoint per test.
+- Report: `.../scratchpad/p2-s16-coaching.md`.
+
+## Lead-owned batch-4 slices (do not touch)
+
+2.7 in-thread search + 3.3 media lazy-load (Activities/WhatsAppArea — upstream
+files), 7.3 SLA-pause-off-shift (services/inbox/sla.py), all patch application,
+mounts, integration, builds, prod.
