@@ -29,6 +29,13 @@ export const mobileView = ref('list') // 'list' | 'thread' | 'context'
 export function openContext() {
   mobileView.value = 'context'
 }
+// One-shot attention pulse for 💰 Documentos (intent chip «pago» on desktop, where
+// the context panel is already visible and openContext alone changes nothing).
+export const salesDocsPulse = ref(0)
+export function pulseSalesDocs() {
+  openContext()
+  salesDocsPulse.value++
+}
 export function mobileBack() {
   window.history.back()
 }

@@ -118,7 +118,7 @@ import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
 import ThreadSummary from '@/components/doco/inbox/ThreadSummary.vue'
 import IntentChips from '@/components/doco/inbox/IntentChips.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence, openCatalog, setComposerDraft, openContext } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence, openCatalog, setComposerDraft, pulseSalesDocs } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
 
@@ -133,8 +133,9 @@ function onIntentCatalogo() {
   })
 }
 function onIntentCobrar() {
-  // 💳 pago → reveal 💰 Documentos (SalesDocsSection) — the charge stays a human tap.
-  openContext()
+  // 💳 pago → reveal + pulse 💰 Documentos (on desktop the panel is already visible,
+  // so the pulse/scroll is the visible response) — the charge stays a human tap.
+  pulseSalesDocs()
 }
 function onIntentFactura() {
   // 🧾 factura → prefill the composer asking for fiscal data; operator edits + sends.

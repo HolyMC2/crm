@@ -8,7 +8,12 @@
   «¿ya pagó?».
 -->
 <template>
-  <div class="flex-none border-b border-outline-gray-1 p-3.5">
+  <div
+    ref="rootEl"
+    class="flex-none border-b border-outline-gray-1 p-3.5 transition-shadow duration-300"
+    :class="pulsing ? 'ring-2 ring-inset' : ''"
+    :style="pulsing ? 'box-shadow: inset 0 0 0 2px var(--brand)' : ''"
+  >
     <div class="mb-2 flex items-center justify-between">
       <span class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">💰 {{ __('Documentos') }}</span>
       <button
@@ -170,7 +175,17 @@ import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import { Badge, Dialog, call, toast } from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import { formatMoney } from '@/composables/crmFormat'
-import { salesDocsEnabled, setComposerDraft } from '@/composables/inbox'
+import { salesDocsEnabled, setComposerDraft, salesDocsPulse } from '@/composables/inbox'
+
+// intent chip «pago»: scroll into view + a brief brand ring so the operator's eye
+// lands on the money documents (desktop shows the panel already — this IS the cue).
+const rootEl = ref(null)
+const pulsing = ref(false)
+watch(salesDocsPulse, () => {
+  rootEl.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  pulsing.value = true
+  setTimeout(() => (pulsing.value = false), 1600)
+})
 import { salesSummary, salesRollup, ensureSalesSummary, reloadSalesSummary } from '@/composables/salesDocs'
 import QuoteEditor from '@/components/doco/inbox/QuoteEditor.vue'
 
