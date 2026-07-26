@@ -17,7 +17,8 @@ import DoctypeModals from '@/components/Modals/DoctypeModals.vue'
 import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
-import { computed, defineAsyncComponent, provide } from 'vue'
+import { computed, defineAsyncComponent, onMounted, provide } from 'vue'
+import { prefetchHotChunks } from '@/utils/prefetch'
 
 const session = sessionStore()
 provide('session', session)
@@ -44,4 +45,7 @@ const Layout = computed(() => {
 setConfig('systemTimezone', window.timezone?.system || null)
 setConfig('localTimezone', window.timezone?.user || null)
 setConfig('translatedMessages', window.translated_messages || {})
+
+// spec 3.2: warm the hot route chunks during idle time after the landing paint
+onMounted(() => prefetchHotChunks())
 </script>
