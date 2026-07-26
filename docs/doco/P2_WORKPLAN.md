@@ -533,3 +533,121 @@ timeline.
 2.7 in-thread search + 3.3 media lazy-load (Activities/WhatsAppArea — upstream
 files), 7.3 SLA-pause-off-shift (services/inbox/sla.py), all patch application,
 mounts, integration, builds, prod.
+
+---
+
+# Batch 5 (2026-07-26) — scoring truth + a11y + cadence authoring
+
+Same global rules as batches 1-4 (new-files-only unless a file is explicitly
+granted; hooks/settings/mounts as EXACT report patches; tests = DoD; reports to
+`/tmp/claude-1000/-home-holymc2/3be36e5d-b02f-4d69-a6db-130adcc46bcb/scratchpad/p2-<slice>.md`).
+
+## Slice S17 — Score backtest report (spec 5.4 remainder)
+
+Agents trust scores they can read (S6 shipped that); MANAGERS trust scores that
+predict. Monthly backtest: did higher-scored leads actually convert more?
+
+Recon: services/scoring.py (grade_for thresholds, compute path), CRM Lead Score
+Log (AGGREGATE deltas only — score/previous_score/delta/trigger/ts; no rule
+identity), CRM Lead fields (lead_score, score_grade, converted, creation),
+api/agent_metrics.py (manager-gate + period-bucket patterns), ReportsAgents.vue
++ pages/ScoreRules.vue (surface conventions; ScoreRules already shows a live
+distribution — your report section mounts THERE).
+
+- NEW `doco_marketing/api/score_backtest.py`: `get_backtest(months=6)` —
+  manager-gated (`frappe.only_for(["System Manager","Sales Manager"])`).
+  Monthly cohorts over CRM Leads CREATED in each month: per grade (A-D)
+  {leads, converted, win_rate}; plus overall {avg_score_converted,
+  avg_score_lost, lift} where lift = A-grade win rate / D-grade win rate
+  (guard div-zero). "Converted" = the lead's `converted` flag OR a linked
+  CRM Deal in a Won-type status — recon which is reliable on this data and
+  DOCUMENT the choice. Score used = the CURRENT stored lead_score (the log has
+  no per-lead point-in-time snapshot — state this honestly in the response as
+  `score_basis: "current"`, and in the report flag the schema addition that
+  would fix it — do NOT add schema).
+  Batched SQL — no per-lead queries.
+- NEW `crm/frontend/src/components/doco/ScoreBacktest.vue`: prop-less panel for
+  ScoreRules.vue: month selector (3/6/12), grade table (leads/converted/%,
+  color-coded), lift headline («Los leads A cierran 4.2× más que los D»),
+  empty/loading states. Mount patch (ScoreRules.vue, below the existing
+  distribution block) in the report.
+- NEW `crm/frontend/src/utils/backtestFormat.js` (pure: pct, lift label,
+  cohort-table shaping) + vitest.
+- Tests: python (cohort math from seeded leads+deals across 2 months, manager
+  gate, empty-data shape, div-zero lift; use tests/fixtures.make_deal + seed
+  leads with converted flags) + vitest for the pure helpers.
+- Report: `.../scratchpad/p2-s17-backtest.md`.
+
+## Slice S18 — a11y pass (spec 8.4) — AUDIT + EXACT PATCHES, no edits
+
+You are read-only on ALL files. Run an accessibility review of the FCRM SPA's
+doco surfaces and deliver EXACT old/new patches the lead applies. NO file edits,
+no git/docker/bench/prod/installs. You may run `node_modules/.bin/vitest run`
+read-only.
+
+Scope (doco-owned surfaces only — upstream files listed as findings, not
+patches): MobileTabBar, MobileSidebar, ConversationQueue (roving tabindex
+exists — verify it), DealHeader, DealWorkspace, DealContextPanel,
+UnassignedWorkspace, WorkloadView, LeadsView, DealsView, TasksView, Campaigns,
+CadencePicker, PostCallSheet, ScoreExplainPopover, IntentChips, GlobalSearch,
+ThreadSearch, CoachingPanel, DuplicateBanner, CatalogPicker, install-nudge strip.
+
+Checklist: every icon-only button has aria-label; active nav carries
+aria-current="page"; dialogs/sheets have role="dialog" + aria-modal + focus
+moved in and restored on close + Escape closes; chips/toggles expose
+aria-pressed where stateful; row swipe actions have button equivalents (rule —
+verify); form inputs have labels or aria-label; live regions (offline strip,
+presence strip) use role="status"; contrast: flag any text under ~4.5:1 against
+its surface token (name the pair, don't guess hex); focus visible (no
+outline-none without replacement); tab order sanity on the 3-pane inbox.
+
+Deliverable: report at `.../scratchpad/p2-s18-a11y.md` — findings grouped
+BLOCKER (unusable by keyboard/SR) / SERIOUS / MODERATE, each with file:line +
+EXACT old/new patch (or "upstream — finding only"). End with a verified-OK list
+(what you checked that's already right) so coverage is provable. SendMessage
+summary to the lead.
+
+## Slice S19 — Cadence authoring surface (spec 4.2 completion)
+
+Cadences exist (S5) but are INVISIBLE in the SPA: list_campaigns filters
+is_cadence=0, so operators can't create or edit one without Desk. Give the
+Campaigns page a «Cadencias» mode.
+
+You OWN `crm/frontend/src/pages/Campaigns.vue` + `pages/CampaignDetail.vue` for
+this slice (doco-owned pages; their original author closed out — extend, don't
+rewrite). Backend `api/campaigns.py` is ALSO granted, narrowly: the two changes
+below only.
+
+Recon: api/campaigns.py (list_campaigns is_cadence filter — batch-2 note says
+authoring via Desk was the stopgap; save_campaign _WRITE_SKIP does NOT skip
+is_cadence so the flag is writable; _assert_can_activate), CampaignDetail.vue
+step editor (form.steps — it already edits steps; a cadence IS a campaign),
+services/cadence.py (list_cadences reads status=Active + is_cadence=1),
+CadencePicker.vue (the consumer).
+
+- Backend (api/campaigns.py, ONLY these): (1) `list_campaigns(type=None,
+  status=None, cadences=0)` — cadences=1 lists is_cadence=1 instead (default
+  unchanged); (2) ensure get_campaign returns is_cadence (add to the fieldset
+  if absent).
+- Frontend Campaigns.vue: a «Campañas | Cadencias» toggle (like existing view
+  toggles); cadence mode lists cadences (reuse the row layout; hide the
+  enrolled/audience columns that don't apply — cadences are 1:1) + «+ Cadencia»
+  creates a Draft campaign with is_cadence=1 preset and day-1/3/7 wait+send
+  scaffold steps prefilled in the editor.
+- CampaignDetail.vue: when the campaign is a cadence, show a «Cadencia 1:1»
+  badge, hide audience/enrollment-trigger controls (cadences enroll from the
+  deal header only), keep the step editor as-is. Never allow flipping
+  is_cadence on an existing campaign with enrollments (guard client-side +
+  DOCUMENT that the server doesn't guard it — flag if you think it should).
+- Tests: vitest for any pure helpers you add (scaffold builder, mode filter);
+  python: extend NOTHING — but ADD `tests/test_campaigns_cadence_list.py`
+  covering list_campaigns(cadences=1) returns only cadences and default
+  excludes them, plus get_campaign carries is_cadence. Savepoint per test.
+- Report: `.../scratchpad/p2-s19-cadence-ui.md` (incl. any mount/nav patches
+  for the lead if needed).
+
+## Lead-owned batch-5 slices (do not touch)
+
+PWA update UX (draft-safe reload toast in main.js), dead-endpoint cleanup
+(api/reports.get_score_distribution dup, api/workload.reassign singular),
+onWaMessage ping test, patch application, integration, builds, prod.
