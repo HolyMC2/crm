@@ -93,7 +93,13 @@ if (import.meta.env.DEV) {
 //      Cloudflare/browser caches out of the check.
 if (!import.meta.env.DEV) {
   const checkForSwUpdate = () =>
-    navigator.serviceWorker?.getRegistration().then((r) => r?.update()).catch(() => {})
+    // The SW's scope is /assets/crm/frontend/ and never controls /crm, so a bare
+    // getRegistration() here resolves undefined and update() never ran (the same
+    // scope trap that broke push subscribe). Ask for the scope explicitly.
+    navigator.serviceWorker
+      ?.getRegistration('/assets/crm/frontend/')
+      .then((r) => r?.update())
+      .catch(() => {})
   const checkBuild = () =>
     fetch(`/assets/crm/frontend/build.json?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
