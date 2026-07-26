@@ -27,6 +27,9 @@
     <!-- ⚠ posible duplicado (spec 4.3, detection-only) -->
     <DuplicateBanner :doctype="activeDealDoctype" :name="activeDeal" @open="onOpenDuplicate" @merged="onMerged" />
 
+    <!-- 🎓 notas de coaching (spec 7.4) — managers only; self-hides for everyone else -->
+    <CoachingPanel :doctype="activeDealDoctype" :name="activeDeal" />
+
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 flex items-center justify-between">
@@ -217,6 +220,7 @@ import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
 import SalesDocsSection from '@/components/doco/inbox/SalesDocsSection.vue'
 import DuplicateBanner from '@/components/doco/inbox/DuplicateBanner.vue'
+import CoachingPanel from '@/components/doco/inbox/CoachingPanel.vue'
 
 // ⚠ duplicate banner → jump to the other open record (detect+navigate only)
 // NB selectDeal arg order: (name, doctype)
