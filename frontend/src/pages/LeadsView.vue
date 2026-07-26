@@ -138,13 +138,14 @@
         <div v-if="col('score')">
           <div class="mb-[3px] flex items-center justify-between" style="width: 62px">
             <span class="text-[12.5px] font-bold" :style="`color:${gradeColor(r.score_grade)}`">{{ r.lead_score ?? '—' }}</span>
-            <span
+            <ScoreExplainPopover
               v-if="r.score_grade"
-              class="rounded-[3px] px-[5px] py-px text-[9px] font-bold text-white"
-              :style="`background:${gradeColor(r.score_grade)}`"
-            >
-              {{ r.score_grade }}
-            </span>
+              doctype="CRM Lead"
+              :name="r.name"
+              :score="r.lead_score"
+              :grade="r.score_grade"
+              variant="chip"
+            />
           </div>
           <div class="h-1 rounded-sm bg-surface-gray-3" style="width: 62px">
             <div class="h-full rounded-sm" :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`" />
@@ -203,13 +204,14 @@
             <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ label(row) }}</div>
             <div class="truncate text-[11px] text-ink-gray-4">{{ row.organization || row.mobile_no || '—' }}</div>
           </div>
-          <span
+          <ScoreExplainPopover
             v-if="row.score_grade"
-            class="flex-none rounded px-[5px] py-px text-[9px] font-bold text-white"
-            :style="`background:${gradeColor(row.score_grade)}`"
-          >
-            {{ row.score_grade }}
-          </span>
+            doctype="CRM Lead"
+            :name="row.name"
+            :score="row.lead_score"
+            :grade="row.score_grade"
+            variant="card"
+          />
         </div>
       </template>
     </BoardView>
@@ -232,6 +234,7 @@ import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import LeadModal from '@/components/Modals/LeadModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
+import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'

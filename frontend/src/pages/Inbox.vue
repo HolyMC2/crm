@@ -41,10 +41,13 @@
 
   <!-- cross-channel ledger (Bitácora) — overlay, single instance -->
   <LedgerModal />
+
+  <!-- post-call outcome sheet — opened by the doco_marketing:call_ended socket -->
+  <PostCallSheet ref="postCallSheet" />
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { globalStore } from '@/stores/global'
 import { isMobile } from '@/composables/breakpoint'
@@ -55,6 +58,7 @@ import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue
 import CommentWorkspace from '@/components/doco/inbox/CommentWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import LedgerModal from '@/components/doco/inbox/LedgerModal.vue'
+import PostCallSheet from '@/components/doco/inbox/PostCallSheet.vue'
 import {
   activeDeal,
   activeDealDoctype,
@@ -80,6 +84,11 @@ import {
 import { playPing } from '@/composables/notificationSound'
 
 const { $socket } = globalStore()
+
+const postCallSheet = ref(null)
+function onCallEnded(payload) {
+  postCallSheet.value?.open(payload)
+}
 const route = useRoute()
 
 // crm core (apps/crm/crm/api/whatsapp.py:on_update) emits a single
@@ -214,6 +223,7 @@ onMounted(() => {
   $socket?.on('doco_marketing:comment_update', onCommentUpdate)
   $socket?.on('messenger_message', onMessenger)
   $socket?.on('whatsapp_message', onWaMessage)
+  $socket?.on('doco_marketing:call_ended', onCallEnded)
   window.addEventListener('popstate', onPopState)
   window.addEventListener('socket:reconnected', onSocketReconnected)
   window.addEventListener('online', onSocketReconnected) // dead-zone exit → same catch-up
@@ -225,6 +235,7 @@ onUnmounted(() => {
   $socket?.off('doco_marketing:comment_update', onCommentUpdate)
   $socket?.off('messenger_message', onMessenger)
   $socket?.off('whatsapp_message', onWaMessage)
+  $socket?.off('doco_marketing:call_ended', onCallEnded)
   window.removeEventListener('popstate', onPopState)
   window.removeEventListener('socket:reconnected', onSocketReconnected)
   window.removeEventListener('online', onSocketReconnected)

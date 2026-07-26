@@ -30,13 +30,14 @@
         <div class="flex flex-wrap items-center gap-2">
           <span class="truncate text-base font-bold text-ink-gray-9">{{ name || '—' }}</span>
           <LucideChevronRight v-if="isMobile" class="h-4 w-4 flex-none text-ink-gray-4" />
-          <span
+          <ScoreExplainPopover
             v-if="grade"
-            class="flex-none rounded px-[7px] py-px text-[11px] font-bold text-white"
-            :style="`background:${gradeColor}`"
-          >
-            {{ grade }} · {{ score }}
-          </span>
+            :doctype="activeDealDoctype"
+            :name="activeDeal"
+            :score="score"
+            :grade="grade"
+            variant="header"
+          />
           <span class="hidden text-[11.5px] text-ink-gray-5 sm:inline">{{ activeDeal }}</span>
         </div>
         <!-- meta row wraps on narrow screens (was clipping the WA/saldo chips) -->
@@ -121,6 +122,8 @@
             <LucideAlarmClock class="h-4 w-4" />
           </button>
         </Dropdown>
+        <!-- 📅 cadencia de seguimiento (spec 4.2) — self-hides for non-deals -->
+        <CadencePicker :doctype="activeDealDoctype" :name="activeDeal" />
         <button
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
           :title="__('Bitácora — historial en todos los canales')"
@@ -241,6 +244,8 @@ import LucideAlarmClock from '~icons/lucide/alarm-clock'
 import LucideTag from '~icons/lucide/tag'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
+import CadencePicker from '@/components/doco/inbox/CadencePicker.vue'
+import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
@@ -258,7 +263,6 @@ import {
   avatarColor,
   initials,
   timeAgo,
-  GRADE_COLORS,
   salesDocsEnabled,
   snoozedCount,
   reloadQueue,
@@ -338,7 +342,6 @@ const saldoChip = computed(() => {
   if (!salesDocsEnabled.value || !isDeal.value || !(salesOutstanding.value > 0)) return ''
   return formatMoney(salesOutstanding.value, salesRollup.value?.currency)
 })
-const gradeColor = computed(() => GRADE_COLORS[grade.value]?.[0] || '#9aa2ae')
 
 // guard: a deep-linked deal not in the queue gives an empty row → status undefined;
 // getDealStatus(undefined) throws internally, so only call it when status is set.
