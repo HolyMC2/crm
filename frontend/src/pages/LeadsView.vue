@@ -234,6 +234,7 @@ import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import LeadModal from '@/components/Modals/LeadModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
+import { userScopedKey } from '@/utils/storageKeys'
 import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
@@ -254,7 +255,7 @@ const LEAD_COLUMNS = [
 ]
 const COL_WIDTH = { score: '96px', stage: '130px', source: '120px', modified: '110px', owner: '50px' }
 const DEFAULT_COLS = ['score', 'stage', 'source', 'modified', 'owner']
-const COLS_KEY = 'doco_leads_columns'
+const COLS_KEY = userScopedKey('doco_leads_columns')
 const visibleCols = ref(loadCols())
 function loadCols() {
   try {
@@ -403,7 +404,7 @@ function exportLeads() {
 }
 
 // ── saved views (named filter presets, per-browser) ───────────────────────────
-const VIEWS_KEY = 'doco_leads_saved_views'
+const VIEWS_KEY = userScopedKey('doco_leads_saved_views')
 const savedViews = ref(loadViews())
 function loadViews() {
   try {

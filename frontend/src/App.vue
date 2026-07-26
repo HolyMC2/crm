@@ -19,6 +19,7 @@ import { sessionStore } from '@/stores/session'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
 import { computed, defineAsyncComponent, onMounted, provide } from 'vue'
 import { prefetchHotChunks } from '@/utils/prefetch'
+import { isMobile } from '@/composables/breakpoint'
 
 const session = sessionStore()
 provide('session', session)
@@ -34,13 +35,9 @@ const MobileLayout = defineAsyncComponent(
 const DesktopLayout = defineAsyncComponent(
   () => import('./components/Layouts/DesktopLayout.vue'),
 )
-const Layout = computed(() => {
-  if (window.innerWidth < 640) {
-    return MobileLayout
-  } else {
-    return DesktopLayout
-  }
-})
+// Reactive breakpoint (audit LOW-3): window.innerWidth alone froze the choice at
+// boot — rotating a tablet across 640px never swapped layouts until a route change.
+const Layout = computed(() => (isMobile.value ? MobileLayout : DesktopLayout))
 
 setConfig('systemTimezone', window.timezone?.system || null)
 setConfig('localTimezone', window.timezone?.user || null)

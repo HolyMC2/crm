@@ -213,6 +213,7 @@ import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import DealModal from '@/components/Modals/DealModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
+import { userScopedKey } from '@/utils/storageKeys'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
@@ -234,7 +235,7 @@ const DEAL_COLUMNS = [
 ]
 const COL_WIDTH = { value: '120px', stage: '130px', source: '120px', modified: '110px', owner: '50px' }
 const DEFAULT_COLS = ['value', 'stage', 'source', 'modified', 'owner']
-const COLS_KEY = 'doco_deals_columns'
+const COLS_KEY = userScopedKey('doco_deals_columns')
 const visibleCols = ref(loadCols())
 function loadCols() {
   try {
@@ -376,7 +377,7 @@ function exportDeals() {
 }
 
 // ── saved views (per-browser) + classic quick action ──────────────────────────
-const VIEWS_KEY = 'doco_deals_saved_views'
+const VIEWS_KEY = userScopedKey('doco_deals_saved_views')
 const savedViews = ref(loadViews())
 function loadViews() {
   try {

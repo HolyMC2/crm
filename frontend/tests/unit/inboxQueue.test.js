@@ -197,6 +197,58 @@ describe('optimistic stage change (spec 3.7)', () => {
   })
 })
 
+describe('lost-stage capture (audit: untested path)', () => {
+  it('commitLostStage writes status+reason+notes together and clears the prompt', async () => {
+    const { inbox, queue } = await freshInbox()
+    queue.data = [row('D-3', { status: 'Abierto' })]
+    await inbox.reloadQueue()
+    inbox.activeDealDoctype.value = 'CRM Deal'
+    inbox.activeDeal.value = 'D-3'
+    const calls = []
+    const { __callState } = await import('frappe-ui')
+    __callState.behavior = async (...a) => calls.push(a)
+    inbox.lostStagePrompt.value = { status: 'Cancelado' }
+    await inbox.commitLostStage('No contestó', 'nota')
+    const [url, params] = calls[0]
+    expect(url).toBe('frappe.client.set_value')
+    // the single fieldname-dict write is what makes validate_lost_reason pass
+    expect(params.fieldname).toEqual({ status: 'Cancelado', lost_reason: 'No contestó', lost_notes: 'nota' })
+    expect(inbox.lostStagePrompt.value).toBeNull()
+    expect(inbox.queueRows.value[0].status).toBe('Cancelado')
+  })
+
+  it('a rejected lost-stage write reverts the row and keeps the prompt open', async () => {
+    const { inbox, queue } = await freshInbox()
+    queue.data = [row('D-4', { status: 'Abierto' })]
+    await inbox.reloadQueue()
+    inbox.activeDealDoctype.value = 'CRM Deal'
+    inbox.activeDeal.value = 'D-4'
+    const { __callState, toast } = await import('frappe-ui')
+    __callState.behavior = async () => {
+      throw new Error('lost_reason requerido')
+    }
+    inbox.lostStagePrompt.value = { status: 'Cancelado' }
+    await inbox.commitLostStage('', '')
+    expect(inbox.queueRows.value[0].status).toBe('Abierto')
+    expect(inbox.lostStagePrompt.value).toEqual({ status: 'Cancelado' })
+    expect(toast.error).toHaveBeenCalled()
+  })
+
+  it('setStage on a deal outside the loaded pages is a safe no-patch (null undo)', async () => {
+    const { inbox, queue } = await freshInbox()
+    queue.data = [row('A')]
+    await inbox.reloadQueue()
+    inbox.activeDealDoctype.value = 'CRM Deal'
+    inbox.activeDeal.value = 'NOT-LOADED' // 360°/deep-link deal not in the queue
+    const { __callState } = await import('frappe-ui')
+    __callState.behavior = async () => {
+      throw new Error('rechazado')
+    }
+    await inbox.setStage('Ganado') // must not throw on the undo?.() null path
+    expect(inbox.queueRows.value.map((r) => r.name)).toEqual(['A'])
+  })
+})
+
 describe('snooze/tag params', () => {
   it('passes snoozed=1 only on the Pospuestas tab and tag when filtering', async () => {
     const { inbox, queue } = await freshInbox()

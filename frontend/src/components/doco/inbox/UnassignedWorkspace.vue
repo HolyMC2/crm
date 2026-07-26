@@ -272,7 +272,7 @@
                   <span class="block truncate font-medium text-ink-gray-8">{{ t.label }}</span>
                   <span class="block truncate text-[10.5px] text-ink-gray-5">{{ t.reason }}<template v-if="t.sublabel"> · {{ t.sublabel }}</template></span>
                 </span>
-                <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :style="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
+                <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :class="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
               </button>
             </div>
           </div>
@@ -294,7 +294,7 @@
                 <span class="block truncate text-ink-gray-8">{{ t.label }}</span>
                 <span v-if="t.sublabel" class="block truncate text-[10.5px] text-ink-gray-5">{{ t.sublabel }}</span>
               </span>
-              <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :style="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
+              <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :class="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
             </button>
           </div>
           <div v-else-if="linkQuery.trim().length >= 2 && !searching" class="mt-1 text-[11px] text-ink-gray-4">{{ __('Sin coincidencias') }}</div>
@@ -368,9 +368,10 @@ function docLabel(dt) {
   return dt === 'Contact' ? __('Contacto') : dt === 'CRM Deal' ? __('Trato') : 'Lead'
 }
 function docBadge(dt) {
-  if (dt === 'Contact') return 'color:#5b21b6;background:#ede9fe'
-  if (dt === 'CRM Deal') return 'color:#166534;background:#dcfce7'
-  return 'color:#3730a3;background:#e0e7ff'
+  // frappe-ui semantic tokens — auto dark-safe (was fixed light-mode hex)
+  if (dt === 'Contact') return 'bg-surface-violet-1 text-ink-violet-1'
+  if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-3'
+  return 'bg-surface-blue-1 text-ink-blue-3'
 }
 
 // Free Messenger reply to an orphan PSID (no assignment required).

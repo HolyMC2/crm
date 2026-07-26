@@ -242,8 +242,13 @@ function openAgent(a) {
   }
   selectedAgent.value = a.user
   selected.value = new Set()
+  // same OPEN definition as the card counts (get_workload returns the terminal
+  // sets) — without this the drill-down listed closed deals the count excluded.
+  const term = data.value?.terminal || {}
   deals.filters = { deal_owner: a.user }
+  if (term['CRM Deal']?.length) deals.filters.status = ['not in', term['CRM Deal']]
   leads.filters = { lead_owner: a.user }
+  if (term['CRM Lead']?.length) leads.filters.status = ['not in', term['CRM Lead']]
   deals.reload()
   leads.reload()
 }

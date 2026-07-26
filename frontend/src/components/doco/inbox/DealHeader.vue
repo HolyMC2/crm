@@ -254,7 +254,7 @@ import { isMobile } from '@/composables/breakpoint'
 import {
   activeDeal,
   activeDealDoctype,
-  queue,
+  queueRows,
   sla,
   requestStage,
   openContext,
@@ -281,7 +281,10 @@ const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 
 // rich row from the inbox queue when present; otherwise (360° / deep-linked deal not
 // in the queue) build an equivalent from a direct deal+lead fetch so the header isn't sparse.
-const queueRow = computed(() => (queue.data || []).find((r) => r.deal === activeDeal.value) || {})
+// AUDIT 2026-07-26: resolve against the ACCUMULATED queueRows, not queue.data — the
+// resource holds only the last-fetched page, so pagination or any merge reload made
+// the open conversation's header silently degrade (device/tags/snooze dropped).
+const queueRow = computed(() => queueRows.value.find((r) => r.deal === activeDeal.value) || {})
 const dealFetch = createResource({ url: 'frappe.client.get_value' })
 const leadFetch = createResource({ url: 'frappe.client.get_value' })
 watch(
