@@ -21,7 +21,7 @@
           </button>
         </div>
       </div>
-      <button class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white" style="background: #16a34a" @click="openNew">
+      <button class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white" style="background: var(--brand)" @click="openNew">
         + {{ __('Nueva tarea') }}
       </button>
     </div>

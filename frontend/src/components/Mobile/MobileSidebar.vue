@@ -25,7 +25,7 @@
           <div class="flex items-center gap-2.5 px-4 pb-2 pt-3.5">
             <div
               class="flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-[15px] font-bold text-white"
-              style="background: #16a34a"
+              style="background: var(--brand)"
             >
               {{ (brandName[0] || 'C').toUpperCase() }}
             </div>

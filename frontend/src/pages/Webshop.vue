@@ -23,7 +23,7 @@
     <div class="p-5">
       <div class="grid grid-cols-5 gap-3">
         <Kpi :label="__('Pedidos en CRM')" :value="kpis.orders_linked || 0" />
-        <Kpi :label="__('Ingresos vía CRM')" :value="money(kpis.revenue_via_crm)" color="#16a34a" />
+        <Kpi :label="__('Ingresos vía CRM')" :value="money(kpis.revenue_via_crm)" color="var(--brand)" />
         <Kpi :label="__('Ticket promedio')" :value="money(kpis.avg_order_value)" />
         <Kpi :label="__('Carritos abandonados')" :value="kpis.cart_abandoned ?? '—'" />
         <Kpi :label="__('Atribución')" :value="kpis.attribution_model || '—'" />

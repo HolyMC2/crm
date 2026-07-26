@@ -7,7 +7,7 @@
     <!-- stats -->
     <div class="flex flex-none gap-6 border-b border-outline-gray-1 px-5 py-3">
       <Stat :label="__('Llamadas')" :value="rows.length" />
-      <Stat :label="__('Conectadas')" :value="connected" color="#16a34a" />
+      <Stat :label="__('Conectadas')" :value="connected" color="var(--brand)" />
       <Stat :label="__('Perdidas')" :value="missed" color="#e5484d" />
       <Stat :label="__('Duración prom.')" :value="avgDuration" />
     </div>
@@ -27,7 +27,7 @@
       </div>
       <button
         class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-        style="background: #16a34a"
+        style="background: var(--brand)"
         @click="logCall"
       >
         + {{ __('Registrar llamada') }}

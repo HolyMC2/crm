@@ -28,7 +28,7 @@
       <!-- KPI cards -->
       <div class="grid grid-cols-4 gap-3">
         <KpiCard :label="__('Leads captados')" :value="kpiVal(kpis.total_leads)" to="/leads" />
-        <KpiCard :label="__('Deals ganados')" :value="kpiVal(kpis.won_deals)" color="#16a34a" />
+        <KpiCard :label="__('Deals ganados')" :value="kpiVal(kpis.won_deals)" color="var(--brand)" />
         <KpiCard :label="__('Conversión')" :value="`${convRate}%`" color="#2f6fed" />
         <KpiCard :label="__('Grado promedio')" :value="kpis.avg_grade || '—'" to="/score-rules" />
       </div>
@@ -45,7 +45,7 @@
             <div class="h-2 overflow-hidden rounded-sm bg-surface-gray-3">
               <!-- pct can exceed 100 (funnel mixes lead+deal cohorts) — the label
                 shows the real number, the bar clamps so it never overflows the card -->
-              <div class="h-full rounded-sm" :style="`width:${Math.min(Number(s.pct) || 0, 100)}%;background:#16a34a;opacity:.75`" />
+              <div class="h-full rounded-sm" :style="`width:${Math.min(Number(s.pct) || 0, 100)}%;background:var(--brand);opacity:.75`" />
             </div>
           </div>
         </Card>
@@ -78,7 +78,7 @@
           >
             <div class="font-medium text-ink-gray-9">{{ a.campaign }}</div>
             <div>{{ a.leads }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ a.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ a.won }}</div>
             <div>{{ a.conv_pct }}%</div>
             <div class="font-medium">{{ money(a.revenue) }}</div>
           </div>
@@ -111,7 +111,7 @@
             <div>{{ c.sent }}</div>
             <div :class="(c.failed + c.skipped) ? 'text-ink-red-4' : 'text-ink-gray-4'">{{ c.failed + c.skipped }}</div>
             <div>{{ c.touched }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ c.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ c.won }}</div>
             <div>{{ c.conv_pct }}%</div>
             <div class="font-medium">{{ money(c.revenue) }}</div>
           </div>
@@ -172,7 +172,7 @@
             <div class="truncate font-medium text-ink-gray-9" :title="f.flow">{{ f.flow }}</div>
             <div class="truncate text-ink-gray-7" :title="f.step">{{ f.step }}</div>
             <div>{{ f.drafted }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ f.sent }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ f.sent }}</div>
             <div :class="f.auto_sent ? 'text-ink-amber-3' : 'text-ink-gray-4'">{{ f.auto_sent }}</div>
             <div :class="f.discarded ? '' : 'text-ink-gray-4'">{{ f.discarded }}</div>
             <div :class="f.failed ? 'text-ink-red-4' : 'text-ink-gray-4'">{{ f.failed }}</div>
@@ -200,14 +200,14 @@
             </div>
             <div>{{ r.leads }}</div>
             <div>{{ r.deals }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ r.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ r.won }}</div>
             <div class="font-medium">{{ money(r.pesos) }}</div>
           </div>
           <div class="grid items-center py-2 text-[12.5px] font-bold text-ink-gray-9" :style="`grid-template-columns:${FUNNEL_GRID}`">
             <div>{{ socialTotal.origin }}</div>
             <div>{{ socialTotal.leads }}</div>
             <div>{{ socialTotal.deals }}</div>
-            <div style="color: #16a34a">{{ socialTotal.won }}</div>
+            <div style="color: var(--brand)">{{ socialTotal.won }}</div>
             <div>{{ money(socialTotal.pesos) }}</div>
           </div>
         </div>
@@ -243,7 +243,7 @@
             <div>{{ a.calls || 0 }}</div>
             <div>{{ a.repairs || 0 }}</div>
             <div>{{ a.deals }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ a.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ a.won }}</div>
             <div>{{ a.conv_pct }}%</div>
             <div :class="a.sla_kept_pct == null ? 'text-ink-gray-4' : slaClass(a.sla_kept_pct)">{{ a.sla_kept_pct == null ? '—' : a.sla_kept_pct + '%' }}</div>
             <div class="font-medium">{{ money(a.won_pesos) }}</div>
@@ -273,12 +273,12 @@
           >
             <div class="truncate font-medium text-ink-gray-9">{{ s.shop }}</div>
             <div>{{ s.deals }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ s.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ s.won }}</div>
             <div>{{ s.conv_pct }}%</div>
             <div :class="s.sla_kept_pct == null ? 'text-ink-gray-4' : slaClass(s.sla_kept_pct)">{{ s.sla_kept_pct == null ? '—' : s.sla_kept_pct + '%' }}</div>
             <div class="font-medium">{{ money(s.won_pesos) }}</div>
             <div class="font-medium">{{ money(s.invoiced) }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ money(s.paid) }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ money(s.paid) }}</div>
           </div>
         </div>
       </Card>
@@ -296,7 +296,7 @@
           >
             <div class="truncate font-medium text-ink-gray-9">{{ s.territory }}</div>
             <div>{{ s.deals }}</div>
-            <div class="font-semibold" style="color: #16a34a">{{ s.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">{{ s.won }}</div>
             <div>{{ s.conv_pct }}%</div>
             <div class="font-medium">{{ money(s.won_pesos) }}</div>
           </div>
@@ -373,7 +373,7 @@
           </button>
           <button
             class="rounded-md px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
-            style="background: #16a34a"
+            style="background: var(--brand)"
             :disabled="reactBusy || !reactTemplate || !(reactPreviewData && reactPreviewData.staged)"
             @click="doStage"
           >

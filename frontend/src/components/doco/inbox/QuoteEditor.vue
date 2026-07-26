@@ -72,7 +72,7 @@
       <div class="mt-2 flex flex-wrap gap-1.5">
         <button
           class="rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white disabled:opacity-50"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           :disabled="busy || !detail.lines.length"
           :title="__('Enviar la cotización en PDF a la conversación de WhatsApp')"
           @click="sendWhatsapp"

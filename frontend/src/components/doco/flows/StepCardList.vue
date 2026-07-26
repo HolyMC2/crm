@@ -13,7 +13,7 @@
       <button
         v-if="!frozen"
         class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white"
-        style="background: #16a34a"
+        style="background: var(--brand)"
         @click="addStep"
       >
         + {{ __('Paso') }}

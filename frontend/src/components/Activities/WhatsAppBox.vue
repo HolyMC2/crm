@@ -231,7 +231,7 @@
       <button
         type="button"
         class="press flex-none rounded-md px-3 py-1 text-[12px] font-bold text-white"
-        style="background: #16a34a"
+        style="background: var(--brand)"
         :disabled="recUploading"
         @click="sendRecording"
       >

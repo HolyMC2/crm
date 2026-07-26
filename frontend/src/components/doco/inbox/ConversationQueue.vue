@@ -35,7 +35,7 @@
           </span>
           <button
             class="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-white"
-            style="background: #16a34a"
+            style="background: var(--brand)"
             :aria-label="__('New Deal')"
             @click="newDeal"
           >
@@ -356,7 +356,7 @@
         ]"
         :style="
           (activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
-            ? 'border-left:3px solid #16a34a;'
+            ? 'border-left:3px solid var(--brand);'
             : 'border-left:3px solid transparent;') + rowSwipeStyle(r)
         "
         @click="onRowClick(r)"
@@ -858,7 +858,7 @@ const inboxTabs = computed(() => [
   ...((snoozedCount.data || 0) > 0 ? [{ id: 'snoozed', label: __('Pospuestas'), dot: '#8b5cf6', count: snoozedCount.data }] : []),
   // Por aprobar: review-gated auto-acuses awaiting a human OK. Only shown when the
   // feature has ever drafted something (count > 0) — a clean tenant sees no dead tab.
-  ...((autoAckCount.data || 0) > 0 ? [{ id: 'aprobar', label: __('Por aprobar'), dot: '#16a34a', count: autoAckCount.data }] : []),
+  ...((autoAckCount.data || 0) > 0 ? [{ id: 'aprobar', label: __('Por aprobar'), dot: 'var(--brand)', count: autoAckCount.data }] : []),
 ])
 // Comentarios status sub-filter chips (review answered comments).
 const commentStatusChips = computed(() => [

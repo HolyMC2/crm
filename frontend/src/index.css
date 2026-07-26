@@ -9,6 +9,15 @@ html {
 
 /* native controls (checkboxes, scrollbars, form widgets) follow the app theme —
    without this they render light-mode white inside dark mode */
+/* Per-tenant brand accent — single source of truth for the green that used to be
+   hardcoded ~60 places. Overridden at boot from FCRM Settings.brand_color when set
+   (stores/settings.js), so a tenant recolor is a backend field, not a rebuild. */
+:root {
+  --brand: #16a34a;
+  --brand-soft: #e9f7ef;
+  --brand-strong: #15803d;
+}
+
 :root[data-theme='light'] {
   color-scheme: light;
 }

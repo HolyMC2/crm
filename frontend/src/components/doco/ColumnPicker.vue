@@ -34,7 +34,7 @@
           >
             <input
               type="checkbox"
-              style="accent-color: #16a34a"
+              style="accent-color: var(--brand)"
               :checked="c.fixed || selected.includes(c.key)"
               :disabled="c.fixed"
               @change="toggle(c.key)"

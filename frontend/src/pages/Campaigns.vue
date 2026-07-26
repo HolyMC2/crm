@@ -31,7 +31,7 @@
         </button>
         <button
           class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           @click="showNew = true"
         >
           + {{ __('Nueva campaña') }}
@@ -76,7 +76,7 @@
           <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(c.status)">{{ c.status }}</span>
         </div>
         <div class="text-[13px] font-semibold text-ink-gray-8">{{ c.enrolled_count || 0 }}</div>
-        <div><Bar :pct="c.open_rate" color="#16a34a" /></div>
+        <div><Bar :pct="c.open_rate" color="var(--brand)" /></div>
         <div><Bar :pct="c.click_rate" color="#2f6fed" /></div>
         <Dropdown :options="rowMenu(c)" @click.stop>
           <button class="text-[14px] text-ink-gray-4" @click.stop>···</button>
@@ -137,7 +137,7 @@ function setType(key) {
 }
 
 const TYPE_META = {
-  whatsapp: ['WhatsApp', '#16a34a', '#e9f7ef'],
+  whatsapp: ['WhatsApp', 'var(--brand)', 'var(--brand-soft)'],
   email: ['Email', '#2f6fed', '#eaf1fe'],
   sms: ['SMS', '#7b3fa0', '#f3e9fb'],
   automation: ['Auto', '#b9790a', '#fdf6e9'],

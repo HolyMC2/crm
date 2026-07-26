@@ -82,7 +82,7 @@
       <button
         v-if="row.status === 'Pendiente'"
         class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
-        style="background:#16a34a"
+        style="background:var(--brand)"
         :disabled="!!busy"
         @click="act('approve')"
       >{{ busy === 'approve' ? __('Enviando…') : __('Enviar') }}</button>

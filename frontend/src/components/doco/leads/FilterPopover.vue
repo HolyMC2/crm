@@ -35,7 +35,7 @@
             <input
               type="checkbox"
               :checked="selected.includes(o.value)"
-              style="accent-color: #16a34a"
+              style="accent-color: var(--brand)"
               @change="toggle(o.value)"
             />
             <span v-if="o.color" class="h-2 w-2 rounded-full" :style="`background:${o.color}`" />

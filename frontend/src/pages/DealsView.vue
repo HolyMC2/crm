@@ -63,7 +63,7 @@
         </button>
         <button
           class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           @click="showDealModal = true"
         >
           + {{ __('New Deal') }}
@@ -77,7 +77,7 @@
         v-for="c in chips"
         :key="c.key"
         class="inline-flex items-center gap-1.5 rounded-[7px] border px-2 py-1 text-[11.5px] font-medium"
-        style="color: #16a34a; background: #e9f7ef; border-color: #c7ecd5"
+        style="color: var(--brand); background: var(--brand-soft); border-color: #c7ecd5"
       >
         {{ c.label }}
         <button class="text-[13px] leading-none" @click="removeChip(c)">×</button>

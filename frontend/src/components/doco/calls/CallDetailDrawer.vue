@@ -23,7 +23,7 @@
             <div class="relative h-10 w-10">
               <svg viewBox="0 0 40 40" width="40" height="40" style="transform: rotate(-90deg)">
                 <circle cx="20" cy="20" r="16" fill="none" style="stroke: var(--outline-gray-2)" stroke-width="4" />
-                <circle cx="20" cy="20" r="16" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round" stroke-dasharray="100.5" :stroke-dashoffset="qualityOffset" />
+                <circle cx="20" cy="20" r="16" fill="none" stroke="var(--brand)" stroke-width="4" stroke-linecap="round" stroke-dasharray="100.5" :stroke-dashoffset="qualityOffset" />
               </svg>
               <div class="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-ink-gray-9">{{ d.call_quality_score }}</div>
             </div>
@@ -76,7 +76,7 @@
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7" :disabled="saving" @click="saveNote">
             {{ __('Guardar nota') }}
           </button>
-          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background: #16a34a" :disabled="saving" @click="saveAndTask">
+          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="saving" @click="saveAndTask">
             {{ __('Guardar y crear tarea') }}
           </button>
         </div>

@@ -64,7 +64,7 @@
         </button>
         <button
           class="rounded-md px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           :disabled="busy[r.name] || !(drafts[r.name] || '').trim()"
           @click="onApprove(r)"
         >

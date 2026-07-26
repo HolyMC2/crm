@@ -58,7 +58,7 @@
               <span
                 v-if="selected.has(r.item_code)"
                 class="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold text-white"
-                style="background: #16a34a"
+                style="background: var(--brand)"
               >✓</span>
               <span
                 class="absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
@@ -98,7 +98,7 @@
           </button>
           <button
             class="rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
-            style="background: #16a34a"
+            style="background: var(--brand)"
             :disabled="busy || !selected.size"
             @click="send"
           >

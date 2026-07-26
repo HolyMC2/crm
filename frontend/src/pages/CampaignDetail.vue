@@ -14,12 +14,12 @@
         <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(form.status)">{{ form.status }}</span>
       </div>
       <div class="flex items-center gap-2">
-        <button v-if="dirty || saving" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: #16a34a" :disabled="saving" @click="save">
+        <button v-if="dirty || saving" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="saving" @click="save">
           {{ saving ? __('Guardando…') : __('Guardar') }}
         </button>
         <button v-if="form.status === 'Active'" class="rounded-lg border border-outline-amber-2 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-3" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
         <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-2 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-3" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
-        <button v-else-if="form.status === 'Draft'" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background: #16a34a" @click="activate">▶ {{ __('Activar') }}</button>
+        <button v-else-if="form.status === 'Draft'" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background: var(--brand)" @click="activate">▶ {{ __('Activar') }}</button>
       </div>
     </div>
 
@@ -54,7 +54,7 @@
     <div class="flex flex-none gap-6 border-b border-outline-gray-1 px-5 py-3">
       <Metric :label="__('Inscritos')" :value="c.enrolled_count || 0" />
       <Metric :label="__('Enviados')" :value="metrics.sent_count || 0" />
-      <Metric :label="__('Apertura')" :value="`${metrics.open_rate || 0}%`" color="#16a34a" />
+      <Metric :label="__('Apertura')" :value="`${metrics.open_rate || 0}%`" color="var(--brand)" />
       <Metric :label="__('Clics')" :value="`${metrics.click_rate || 0}%`" color="#2f6fed" />
     </div>
 
@@ -189,7 +189,7 @@ async function doEnroll() {
 }
 
 // ── view helpers ─────────────────────────────────────────────────────────────
-const TYPE_META = { whatsapp: ['WhatsApp', '#16a34a', '#e9f7ef'], email: ['Email', '#2f6fed', '#eaf1fe'], sms: ['SMS', '#7b3fa0', '#f3e9fb'], automation: ['Automatización', '#b9790a', '#fdf6e9'] }
+const TYPE_META = { whatsapp: ['WhatsApp', 'var(--brand)', 'var(--brand-soft)'], email: ['Email', '#2f6fed', '#eaf1fe'], sms: ['SMS', '#7b3fa0', '#f3e9fb'], automation: ['Automatización', '#b9790a', '#fdf6e9'] }
 function typeLabel(t) {
   return TYPE_META[t]?.[0] || t
 }

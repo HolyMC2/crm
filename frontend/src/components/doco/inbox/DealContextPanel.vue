@@ -43,7 +43,7 @@
           {{ isDeal ? __('Abrir 360°') : __('Abrir Lead') }} →
         </button>
       </div>
-      <button class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: #16a34a" @click="call">
+      <button class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: var(--brand)" @click="call">
         ☎ {{ __('Llamar') }}
       </button>
 

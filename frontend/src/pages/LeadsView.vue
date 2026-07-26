@@ -60,7 +60,7 @@
         </button>
         <button
           class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           @click="showLeadModal = true"
         >
           + {{ __('New Lead') }}
@@ -102,7 +102,7 @@
     >
       <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('lead_name')">{{ __('Contacto') }}{{ sortArrow('lead_name') }}</button>
-      <button v-if="col('score')" class="text-left uppercase" :style="'color:#16a34a'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
+      <button v-if="col('score')" class="text-left uppercase" :style="'color:var(--brand)'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
       <div v-if="col('stage')">{{ __('Stage') }}</div>
       <div v-if="col('source')">{{ __('Source') }}</div>
       <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>

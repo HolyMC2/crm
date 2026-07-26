@@ -141,7 +141,7 @@ const COLORS = {
   Facebook: '#1877f2',
   Instagram: '#e1306c',
   Email: '#6b7280',
-  Phone: '#16a34a',
+  Phone: 'var(--brand)',
 }
 function chColor(ch) {
   return COLORS[ch] || '#9aa2ae'

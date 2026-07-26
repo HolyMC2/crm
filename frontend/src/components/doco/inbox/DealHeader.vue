@@ -131,7 +131,7 @@
         </button>
         <button
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg text-[15px] text-white"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           :title="__('Llamar')"
           @click="call"
         >
@@ -216,7 +216,7 @@
       <div class="ml-auto flex flex-none gap-1.5">
         <button
           class="rounded-[7px] px-[11px] py-1.5 text-[11.5px] font-semibold text-white"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           @click="markDone"
         >
           {{ __('Marcar hecho') }}

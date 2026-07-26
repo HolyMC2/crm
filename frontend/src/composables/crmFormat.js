@@ -26,7 +26,7 @@ export function initials(name) {
 
 // score band → [text, bg] (handoff §8)
 export const GRADE_COLORS = {
-  A: ['#16a34a', '#e9f7ef'],
+  A: ['var(--brand)', 'var(--brand-soft)'],
   B: ['#2f6fed', '#eaf1fe'],
   C: ['#d9930b', '#fdf6e9'],
   D: ['#e5484d', '#fdecec'],

@@ -102,7 +102,7 @@
               <button v-else class="text-ink-violet-1 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
               <button
                 class="font-semibold hover:underline"
-                style="color: #16a34a"
+                style="color: var(--brand)"
                 :disabled="busy"
                 :title="__('Enviar fotos y precios por mensaje privado')"
                 @click="openCatalogForComment(cm)"

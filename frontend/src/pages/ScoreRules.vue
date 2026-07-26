@@ -31,7 +31,7 @@
       <div class="scb min-h-0 flex-1 overflow-y-auto p-5">
         <div class="mb-3 flex items-center justify-between">
           <div class="text-[13px] font-bold text-ink-gray-9">{{ __('Reglas') }}</div>
-          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background: #16a34a" @click="showAdd = !showAdd">
+          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background: var(--brand)" @click="showAdd = !showAdd">
             + {{ __('Nueva regla') }}
           </button>
         </div>
@@ -45,7 +45,7 @@
           </select>
           <input v-model="form.value" :placeholder="__('Valor')" class="rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
           <input v-model.number="form.points" type="number" :placeholder="__('Pts')" class="rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
-          <button class="rounded-md px-2.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background: #16a34a" :disabled="!form.rule_name.trim() || !form.field.trim()" @click="addRule">
+          <button class="rounded-md px-2.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="!form.rule_name.trim() || !form.field.trim()" @click="addRule">
             {{ __('Crear') }}
           </button>
         </div>

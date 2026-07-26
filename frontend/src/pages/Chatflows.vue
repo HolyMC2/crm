@@ -20,7 +20,7 @@
       </div>
       <button
         class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-        style="background: #16a34a"
+        style="background: var(--brand)"
         @click="newFlow"
       >
         + {{ __('Nuevo flujo') }}
@@ -44,7 +44,7 @@
           @click="selectFlow(f.name)"
         >
           <div class="flex items-center gap-2">
-            <span class="h-2 w-2 flex-none rounded-full" :style="`background:${f.enabled ? '#16a34a' : 'var(--outline-gray-2)'}`" />
+            <span class="h-2 w-2 flex-none rounded-full" :style="`background:${f.enabled ? 'var(--brand)' : 'var(--outline-gray-2)'}`" />
             <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink-gray-9">{{ f.flow_name }}</span>
             <span v-if="f.auto_send" class="flex-none rounded bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-semibold text-ink-amber-3">AUTO</span>
           </div>
@@ -80,7 +80,7 @@
             <button
               v-if="dirty || saving"
               class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
-              style="background: #16a34a"
+              style="background: var(--brand)"
               :disabled="saving"
               @click="save"
             >

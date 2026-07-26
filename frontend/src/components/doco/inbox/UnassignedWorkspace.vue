@@ -164,7 +164,7 @@
       >
         <button
           class="press flex-1 rounded-[10px] py-2.5 text-[13.5px] font-bold text-white"
-          style="background: #16a34a"
+          style="background: var(--brand)"
           @click="captureOpen = true"
         >
           {{ boundContact ? '✚ ' + __('Crear Trato') : '✚ ' + __('Capturar y convertir') }}
@@ -240,7 +240,7 @@
         </div>
 
         <div class="mt-4 flex flex-col gap-2">
-          <button class="rounded-lg px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: #16a34a" :disabled="busy" @click="convert('CRM Deal')">
+          <button class="rounded-lg px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="busy" @click="convert('CRM Deal')">
             + {{ __('Crear Trato') }}
           </button>
           <div class="grid grid-cols-2 gap-2">

@@ -39,7 +39,7 @@
         <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="aiBusy" @click="aiDraft" :title="__('Genera un borrador desde el inventario con IA')">
           {{ aiBusy ? __('✨ generando…') : __('✨ Borrador IA') }}
         </button>
-        <button class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background:#16a34a" @click="openNew()">
+        <button class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background:var(--brand)" @click="openNew()">
           + {{ __('Nueva publicación') }}
         </button>
       </div>
@@ -328,7 +328,7 @@
           <button v-if="isPending" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-4" :disabled="busy" @click="rejectPost">{{ __('Rechazar') }}</button>
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Scheduled')">{{ __('Programar') }}</button>
-          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:#16a34a" :disabled="busy || !canCancel" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>
+          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:var(--brand)" :disabled="busy || !canCancel" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>
         </div>
       </div>
     </template>
@@ -360,7 +360,7 @@
               <option value="">{{ __('Elegir Marketing User…') }}</option>
               <option v-for="u in availableToAssign" :key="u" :value="u">{{ u }}</option>
             </select>
-            <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:#16a34a" :disabled="onbBusy || !newEmp" @click="assignEmp">{{ __('Asignar') }}</button>
+            <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:var(--brand)" :disabled="onbBusy || !newEmp" @click="assignEmp">{{ __('Asignar') }}</button>
           </div>
           <p class="mt-3 text-[11px] text-ink-gray-4">{{ __('Solo aparecen usuarios con rol Marketing User. El gestor (Marketing Manager) ve todas las sucursales.') }}</p>
         </div>

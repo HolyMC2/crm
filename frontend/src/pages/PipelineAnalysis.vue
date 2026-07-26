@@ -26,8 +26,8 @@
       <!-- KPIs -->
       <div class="grid grid-cols-4 gap-3">
         <Kpi :label="__('Total tratos')" :value="total" />
-        <Kpi :label="__('Conversión')" :value="`${conversion}%`" color="#16a34a" />
-        <Kpi :label="__('Etapa final')" :value="won" color="#16a34a" />
+        <Kpi :label="__('Conversión')" :value="`${conversion}%`" color="var(--brand)" />
+        <Kpi :label="__('Etapa final')" :value="won" color="var(--brand)" />
         <Kpi :label="__('Mayor caída')" :value="biggestDrop.label" :sub="biggestDrop.drop ? `−${biggestDrop.drop}%` : ''" color="#e5484d" small />
       </div>
 
@@ -46,7 +46,7 @@
           </div>
           <div class="h-6 overflow-hidden rounded-md" style="background: #f0f1f3">
             <div class="flex h-full items-center px-2.5" :style="`width:${Math.max(2, barPct(s))}%;background:#dcfce7`">
-              <span class="text-[11px] font-semibold" style="color: #16a34a">{{ s.count }}</span>
+              <span class="text-[11px] font-semibold" style="color: var(--brand)">{{ s.count }}</span>
             </div>
           </div>
         </div>

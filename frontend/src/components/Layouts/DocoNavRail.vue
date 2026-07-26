@@ -23,7 +23,7 @@
     >
       <div
         class="flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-[15px] font-bold text-white"
-        style="background: #16a34a"
+        style="background: var(--brand)"
       >
         C
       </div>
