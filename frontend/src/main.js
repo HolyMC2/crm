@@ -100,11 +100,41 @@ if (!import.meta.env.DEV) {
       ?.getRegistration('/assets/crm/frontend/')
       .then((r) => r?.update())
       .catch(() => {})
+  // Draft-safe reload (batch 5): a hard reload mid-message would eat the
+  // operator's typing. When a new build lands while any textarea holds text,
+  // defer — the next check (30-min tick / tab refocus / composer emptied on
+  // send) applies it. One quiet toast tells them an update is pending.
+  const hasDraftText = () => {
+    // textareas only: those hold real message/note drafts. Search/filter inputs
+    // keep text for days and would defer the update forever.
+    try {
+      return Array.from(document.querySelectorAll('textarea')).some(
+        (el) => (el.value || '').trim().length > 0,
+      )
+    } catch (e) {
+      return false
+    }
+  }
+  let updateToastShown = false
+  const applyOrDeferUpdate = () => {
+    if (!hasDraftText()) {
+      window.location.reload()
+      return
+    }
+    if (!updateToastShown) {
+      updateToastShown = true
+      import('frappe-ui')
+        .then(({ toast }) =>
+          toast.info(__('🔄 Nueva versión lista — se aplicará cuando termines de escribir')),
+        )
+        .catch(() => {})
+    }
+  }
   const checkBuild = () =>
     fetch(`/assets/crm/frontend/build.json?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((b) => {
-        if (b?.id && b.id !== __BUILD_ID__) window.location.reload()
+        if (b?.id && b.id !== __BUILD_ID__) applyOrDeferUpdate()
       })
       .catch(() => {})
   const checkStaleness = () => {
