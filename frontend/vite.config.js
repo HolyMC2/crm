@@ -38,6 +38,10 @@ export default defineConfig(async ({ mode }) => {
           // Web Push handlers (spec 1.1) — public/push-sw.js sits next to the
           // generated sw.js, so a bare relative import resolves in production.
           importScripts: ['push-sw.js'],
+          // Activities chunk + index.css grew past workbox's 2 MiB precache
+          // default, which HARD-FAILS the build (not a warning). 5 MiB keeps
+          // both precached; revisit if chunks keep growing.
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         },
         manifest: {
           display: 'standalone',
