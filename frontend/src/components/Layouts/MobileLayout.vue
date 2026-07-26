@@ -19,6 +19,30 @@
         {{ __('Sin conexión — mostrando lo último guardado') }}
       </div>
       <OutboxStrip />
+      <!-- install nudge (spec 1.7): shows only when installable + ≥3 distinct-day
+           visits; dismiss is permanent. iOS never fires the event → never shows. -->
+      <div
+        v-if="installNudgeVisible"
+        class="flex flex-none items-center gap-2 border-b border-outline-gray-1 bg-surface-gray-1 px-3 py-1.5 text-[12px] text-ink-gray-7"
+        role="status"
+      >
+        <span aria-hidden="true">📲</span>
+        <span class="min-w-0 flex-1 truncate">{{ __('Instala la app para abrirla más rápido') }}</span>
+        <button
+          class="press flex-none rounded-md px-2.5 py-1 text-[12px] font-semibold text-white"
+          style="background: var(--brand)"
+          @click="acceptInstall"
+        >
+          {{ __('Instalar') }}
+        </button>
+        <button
+          class="press flex-none px-1.5 text-[14px] text-ink-gray-5"
+          :aria-label="__('No mostrar de nuevo')"
+          @click="dismissInstallNudge"
+        >
+          ×
+        </button>
+      </div>
       <!-- route-keyed so navigation replays the page-in animation (native-app feel).
            App.vue's router-view is keyed on fullPath too, so this adds no extra
            re-renders — it only hosts the CSS animation. overflow-auto lives HERE
@@ -47,7 +71,14 @@ import OutboxStrip from '@/components/Mobile/OutboxStrip.vue'
 import GlobalModals from '@/components/Modals/GlobalModals.vue'
 import { useRoute } from 'vue-router'
 import { useOnline } from '@vueuse/core'
+import {
+  initInstallNudge,
+  installNudgeVisible,
+  acceptInstall,
+  dismissInstallNudge,
+} from '@/composables/installNudge'
 
 const $route = useRoute()
 const online = useOnline()
+initInstallNudge()
 </script>
