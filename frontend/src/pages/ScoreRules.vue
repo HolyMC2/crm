@@ -88,6 +88,9 @@
           <span class="w-8 text-right text-[12px] text-ink-gray-6">{{ dist[g.grade] || 0 }}</span>
         </div>
 
+        <!-- 📈 backtest mensual (spec 5.4 remainder) — ¿los A cierran de verdad? -->
+        <ScoreBacktest />
+
         <div v-if="preview.length" class="mt-5">
           <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Vista previa') }} ({{ preview.length }})</div>
           <div v-for="p in preview" :key="p.lead" class="mb-1.5 flex items-center gap-2 rounded-md border border-outline-gray-1 px-2.5 py-1.5 text-[12px]">
@@ -108,6 +111,7 @@ import { computed, ref } from 'vue'
 import { createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
 import { confirmDialog } from '@/utils/dialogs'
 import { GRADE_COLORS } from '@/composables/crmFormat'
+import ScoreBacktest from '@/components/doco/ScoreBacktest.vue'
 
 const operators = ['equals', 'not equals', 'is set', 'is not set', 'contains', 'greater than', 'less than', 'in']
 const legend = [
