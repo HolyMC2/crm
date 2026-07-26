@@ -42,6 +42,18 @@
       <!-- 🧠 resumen AI del hilo (P2 S3 / spec 5.2) — hides itself when AI is off -->
       <ThreadSummary />
 
+      <!-- 💡 intent → action chips (P2 S10 / spec 5.3) — ≤1 one-tap chip; hides itself
+           when AI is off / confidence < 0.6. Chips NEVER send / NEVER auto-charge. -->
+      <IntentChips
+        v-if="activeTab === 'conversation'"
+        :doctype="activeDealDoctype"
+        :name="activeDeal"
+        @catalogo="onIntentCatalogo"
+        @cobrar="onIntentCobrar"
+        @factura="onIntentFactura"
+        @taller="onIntentTaller"
+      />
+
       <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox). The doco
            WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
            since DealHeader already identifies the contact (avoids the duplicate). -->
@@ -104,10 +116,37 @@ import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
 import ThreadSummary from '@/components/doco/inbox/ThreadSummary.vue'
+import IntentChips from '@/components/doco/inbox/IntentChips.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence, openCatalog, setComposerDraft, openContext } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
+
+// ── P2 S10: intent chip → existing surface (chips never send / never auto-charge) ──
+function onIntentCatalogo() {
+  // 🏷 precio → catálogo picker on this conversation; `to` omitted — send_items
+  // resolves the recipient from the reference (verified path in the S10 report).
+  openCatalog({
+    reference_doctype: activeDealDoctype.value,
+    reference_name: activeDeal.value,
+    channel: 'whatsapp',
+  })
+}
+function onIntentCobrar() {
+  // 💳 pago → reveal 💰 Documentos (SalesDocsSection) — the charge stays a human tap.
+  openContext()
+}
+function onIntentFactura() {
+  // 🧾 factura → prefill the composer asking for fiscal data; operator edits + sends.
+  setComposerDraft({
+    text: 'Con gusto le facturamos 🧾. ¿Me comparte sus datos fiscales? RFC, razón social, uso de CFDI y el correo para enviarle la factura.',
+    canned: 'factura',
+  })
+}
+function onIntentTaller() {
+  // 🔧 cotizar_reparacion → jump to Reparación (taller tenants only).
+  if (hasTaller.value) activeTab.value = 'repair'
+}
 
 // ── jump-to-latest FAB ─────────────────────────────────────────────────────────
 // The conversation's message list (Activities' FadedScrollableDiv, the only
