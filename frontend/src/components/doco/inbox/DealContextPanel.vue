@@ -25,7 +25,7 @@
     </div>
 
     <!-- ⚠ posible duplicado (spec 4.3, detection-only) -->
-    <DuplicateBanner :doctype="activeDealDoctype" :name="activeDeal" @open="onOpenDuplicate" />
+    <DuplicateBanner :doctype="activeDealDoctype" :name="activeDeal" @open="onOpenDuplicate" @merged="onMerged" />
 
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
@@ -224,8 +224,16 @@ function onOpenDuplicate(doctype, name) {
   selectDeal(name, doctype)
 }
 
+// merge landed: the record in view just absorbed the source's history, and the
+// retired source must drop out of the queue.
+function onMerged() {
+  dealRes.reload()
+  sections.reload()
+  scheduleQueueReload()
+}
+
 import { isMobile } from '@/composables/breakpoint'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller, salesDocsEnabled, selectDeal } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller, salesDocsEnabled, selectDeal, scheduleQueueReload } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers } = usersStore()
