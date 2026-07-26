@@ -182,6 +182,16 @@
           </div>
         </template>
       </FileUploader>
+      <!-- camera-direct (spec 1.3): capture="environment" opens the rear camera
+           straight from the + menu — one tap photo of the equipo -->
+      <input
+        ref="cameraInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        class="hidden"
+        @change="onCameraCapture"
+      />
       <IconPicker
         v-slot="{ togglePopover }"
         v-model="emoji"
@@ -620,6 +630,37 @@ async function sendRecording() {
   }
 }
 
+// camera-direct attach (spec 1.3): the captured photo goes through the same
+// upload_file path as voice notes, then rides whatsapp.attach as a pending
+// image the agent can caption before sending (NOT auto-sent).
+const cameraInput = ref(null)
+async function onCameraCapture(ev) {
+  const f = ev.target?.files?.[0]
+  ev.target.value = '' // same photo twice must re-fire change
+  if (!f) return
+  try {
+    const fd = new FormData()
+    fd.append('file', f, f.name || `foto-${Date.now()}.jpg`)
+    fd.append('is_private', '0')
+    fd.append('doctype', props.doctype)
+    fd.append('docname', doc.value.name || '')
+    const r = await fetch('/api/method/upload_file', {
+      method: 'POST',
+      headers: { 'X-Frappe-CSRF-Token': window.csrf_token || '' },
+      body: fd,
+      credentials: 'include',
+    })
+    const j = await r.json()
+    const url = j.message?.file_url
+    if (!r.ok || !url) throw new Error('upload failed')
+    whatsapp.value.attach = url
+    whatsapp.value.content_type = 'image'
+    capture('whatsapp_camera_attach')
+  } catch (e) {
+    toast.error(__('No se pudo subir la foto'))
+  }
+}
+
 // composer draft handoff (catálogo / cobrar): apply once, then clear. The
 // pending attach rides whatsapp.attach and goes out WITH the edited text.
 watch(composerDraft, (d) => {
@@ -828,6 +869,11 @@ function uploadOptions(openFileSelector) {
         fileType.value = 'image'
         openFileSelector('image/*')
       },
+    },
+    {
+      label: __('Tomar foto'),
+      icon: 'camera',
+      onClick: () => cameraInput.value?.click(),
     },
     {
       label: __('Upload Video'),
