@@ -3,7 +3,7 @@
 // 3-pane tree shares state without prop-drilling. Thin client over the B1 backend:
 // doco_marketing.api.inbox.* — itself a read layer over crm WhatsApp + Communication.
 import { ref, watch, computed } from 'vue'
-import { createResource, call } from 'frappe-ui'
+import { createResource, call, toast } from 'frappe-ui'
 import { guardStatusChange } from '@/utils/statusGuard'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
@@ -697,15 +697,38 @@ export function loadThread() {
   thread.submit({ reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value })
 }
 
+// Optimistic queue-row patch (spec 3.7): apply locally, return an undo closure.
+// Rows are keyed like _rowKey — a row that scrolled out of the loaded pages just
+// returns null (nothing to patch; the reload covers it).
+function _patchQueueRow(doctype, name, patch) {
+  const key = doctype + ':' + name
+  const idx = queueRows.value.findIndex((r) => _rowKey(r) === key)
+  if (idx === -1) return null
+  const prev = queueRows.value[idx]
+  queueRows.value.splice(idx, 1, { ...prev, ...patch })
+  return () => {
+    const i = queueRows.value.findIndex((r) => _rowKey(r) === key)
+    if (i !== -1) queueRows.value.splice(i, 1, prev)
+  }
+}
+
 export async function setStage(status) {
   if (!activeDeal.value) return
-  await call('frappe.client.set_value', {
-    doctype: activeDealDoctype.value,
-    name: activeDeal.value,
-    fieldname: 'status',
-    value: status,
-  })
-  reloadQueue()
+  // optimistic (spec 3.7): the chip moves NOW; revert + toast if the server says no
+  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, { status })
+  try {
+    await call('frappe.client.set_value', {
+      doctype: activeDealDoctype.value,
+      name: activeDeal.value,
+      fieldname: 'status',
+      value: status,
+    })
+  } catch (e) {
+    undo?.()
+    toast.error(e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'))
+    return
+  }
+  scheduleQueueReload()
 }
 
 // Silent stage change ("Cambiar SIN avisar"): the server suppresses campaign
@@ -713,13 +736,20 @@ export async function setStage(status) {
 // doesn't get a confusing months-later WhatsApp.
 export async function setStageSilent(status) {
   if (!activeDeal.value) return
-  await call('doco_marketing.api.inbox.set_status', {
-    reference_doctype: activeDealDoctype.value,
-    reference_name: activeDeal.value,
-    status,
-    silent: 1,
-  })
-  reloadQueue()
+  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, { status })
+  try {
+    await call('doco_marketing.api.inbox.set_status', {
+      reference_doctype: activeDealDoctype.value,
+      reference_name: activeDeal.value,
+      status,
+      silent: 1,
+    })
+  } catch (e) {
+    undo?.()
+    toast.error(e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'))
+    return
+  }
+  scheduleQueueReload()
 }
 
 // Lost-stage capture. A status whose type is 'Lost' (Deal: Cancelado/Abandonado;
@@ -744,13 +774,20 @@ export async function requestStage(status, type) {
 export async function commitLostStage(reason, notes = '') {
   const p = lostStagePrompt.value
   if (!p || !activeDeal.value) return
-  await call('frappe.client.set_value', {
-    doctype: activeDealDoctype.value,
-    name: activeDeal.value,
-    fieldname: { status: p.status, lost_reason: reason, lost_notes: notes || '' },
-  })
+  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, { status: p.status })
+  try {
+    await call('frappe.client.set_value', {
+      doctype: activeDealDoctype.value,
+      name: activeDeal.value,
+      fieldname: { status: p.status, lost_reason: reason, lost_notes: notes || '' },
+    })
+  } catch (e) {
+    undo?.()
+    toast.error(e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'))
+    return
+  }
   lostStagePrompt.value = null
-  reloadQueue()
+  scheduleQueueReload()
   loadThread()
 }
 

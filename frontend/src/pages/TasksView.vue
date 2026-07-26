@@ -221,9 +221,16 @@ function tabStyle(t) {
 
 // ── actions ───────────────────────────────────────────────────────────────────
 async function toggleDone(t) {
-  const next = t.status === 'Done' ? 'Todo' : 'Done'
-  await frappeCall('frappe.client.set_value', { doctype: 'CRM Task', name: t.name, fieldname: 'status', value: next })
-  applyFilters()
+  // optimistic (spec 3.7): the checkmark flips NOW; revert + toast if the save fails
+  const prev = t.status
+  const next = prev === 'Done' ? 'Todo' : 'Done'
+  t.status = next
+  try {
+    await frappeCall('frappe.client.set_value', { doctype: 'CRM Task', name: t.name, fieldname: 'status', value: next })
+  } catch (e) {
+    t.status = prev
+    toast.error(e?.messages?.[0] || e?.message || __('No se pudo actualizar la tarea'))
+  }
 }
 function ownerName(email) {
   return getUser(email)?.full_name || email

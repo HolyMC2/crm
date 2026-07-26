@@ -8,8 +8,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 // `data` + observe `submit` params. call/toast are inert.
 vi.mock('frappe-ui', () => {
   const resources = {}
+  // NOTE: `call` routes through a swappable plain behavior fn (NOT a vi.fn
+  // returning rejections — vitest-4 false-unhandled trap, see outbox.test.js).
+  const callState = { behavior: async () => ({}) }
   return {
     __resources: resources,
+    __callState: callState,
     createResource: (opts = {}) => {
       const r = {
         url: opts.url,
@@ -27,7 +31,7 @@ vi.mock('frappe-ui', () => {
       resources[opts.url] = r
       return r
     },
-    call: vi.fn(async () => ({})),
+    call: (...a) => callState.behavior(...a),
     toast: { success: vi.fn(), error: vi.fn() },
   }
 })
@@ -156,6 +160,40 @@ describe('cold-start cache', () => {
     await inbox.reloadQueue()
     const stored = JSON.parse(localStorage.getItem('doco-inbox-queue-v2:tester@x.com'))
     expect(stored.rows[0].last_message.length).toBe(60)
+  })
+})
+
+describe('optimistic stage change (spec 3.7)', () => {
+  it('patches the queue row immediately and keeps it on success', async () => {
+    const { inbox, queue } = await freshInbox()
+    queue.data = [row('D-1', { status: 'Abierto' })]
+    await inbox.reloadQueue()
+    inbox.activeDealDoctype.value = 'CRM Deal'
+    inbox.activeDeal.value = 'D-1'
+    let resolveCall
+    const { __callState } = await import('frappe-ui')
+    __callState.behavior = () => new Promise((res) => (resolveCall = res))
+    const p = inbox.setStage('Ganado')
+    // BEFORE the server answers, the chip already moved
+    expect(inbox.queueRows.value[0].status).toBe('Ganado')
+    resolveCall({})
+    await p
+    expect(inbox.queueRows.value[0].status).toBe('Ganado')
+  })
+
+  it('reverts the row and toasts when the server rejects', async () => {
+    const { inbox, queue } = await freshInbox()
+    queue.data = [row('D-2', { status: 'Abierto' })]
+    await inbox.reloadQueue()
+    inbox.activeDealDoctype.value = 'CRM Deal'
+    inbox.activeDeal.value = 'D-2'
+    const { __callState, toast } = await import('frappe-ui')
+    __callState.behavior = async () => {
+      throw new Error('validacion')
+    }
+    await inbox.setStage('Ganado')
+    expect(inbox.queueRows.value[0].status).toBe('Abierto')
+    expect(toast.error).toHaveBeenCalled()
   })
 })
 
