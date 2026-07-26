@@ -19,6 +19,7 @@ import { sessionStore } from '@/stores/session'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
 import { computed, defineAsyncComponent, onMounted, provide } from 'vue'
 import { prefetchHotChunks } from '@/utils/prefetch'
+import { initTelemetry } from '@/composables/telemetry'
 import { isMobile } from '@/composables/breakpoint'
 
 const session = sessionStore()
@@ -43,6 +44,10 @@ setConfig('systemTimezone', window.timezone?.system || null)
 setConfig('localTimezone', window.timezone?.user || null)
 setConfig('translatedMessages', window.translated_messages || {})
 
-// spec 3.2: warm the hot route chunks during idle time after the landing paint
-onMounted(() => prefetchHotChunks())
+// spec 3.2: warm the hot route chunks during idle time after the landing paint;
+// spec 3.6: arm the error-telemetry listeners (un-crashable by design)
+onMounted(() => {
+  prefetchHotChunks()
+  initTelemetry()
+})
 </script>
