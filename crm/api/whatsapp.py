@@ -662,6 +662,10 @@ def _wa_message_fields():
 	]
 	if frappe.db.has_column("WhatsApp Message", "doco_sent_by_type"):
 		fields += ["doco_sent_by_type", "doco_actor_user", "doco_automation_source", "doco_bot"]
+	# Meta's async failure explanation (webhook errors[] — e.g. "131047 ·
+	# Re-engagement message"); fork field, guarded for pre-migrate windows.
+	if frappe.db.has_column("WhatsApp Message", "failure_reason"):
+		fields += ["failure_reason"]
 	return fields
 
 

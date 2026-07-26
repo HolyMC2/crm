@@ -133,12 +133,19 @@
         class="group/message relative max-w-[85%] min-w-0 sm:max-w-[34rem] [overflow-wrap:anywhere] [&_a]:[overflow-wrap:anywhere] rounded-md bg-surface-gray-1 text-ink-gray-9 p-1.5 pl-2 text-base shadow-sm"
         :class="{ 'opacity-60': whatsapp._optimistic }"
       >
-        <Badge
+        <!-- hover explains WHY Meta rejected it (e.g. 131047 = outside the 24h
+             session window → resend as template or from the number with the
+             open session) instead of a bare 'failed' -->
+        <Tooltip
           v-if="whatsapp.status == 'failed'"
-          theme="red"
-          :label="whatsapp.status"
-          class="absolute -top-2 right-0"
-        />
+          :text="whatsapp.failure_reason || __('No entregado')"
+        >
+          <Badge
+            theme="red"
+            :label="__('No entregado')"
+            class="absolute -top-2 right-0"
+          />
+        </Tooltip>
         <!-- unified-thread: which other deal/RO this bubble belongs to -->
         <div
           v-if="whatsapp._ref_label && !whatsapp._is_active_ref"

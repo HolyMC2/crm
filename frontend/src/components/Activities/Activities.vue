@@ -77,6 +77,12 @@
             "
             @click="activeWhatsappContactIdx = i"
           >
+            <!-- green dot = open 24h session (customer wrote <24h ago from this
+                 number): free-form replies deliver here; other tabs need a template -->
+            <span
+              v-if="c.session_open"
+              class="mr-1 inline-block size-1.5 rounded-full bg-green-500 align-middle"
+            />
             {{ c.name }}
             <span class="ml-1 font-mono text-[10px] opacity-60">{{ c.phone_display }}</span>
           </button>
@@ -717,6 +723,22 @@ const whatsappContacts = createResource({
   cache: ['whatsapp_deal_contacts', props.doctype, props.docname],
   params: { doctype: props.doctype, name: props.docname },
   auto: true,
+  onSuccess(data) {
+    // Default to the number with the newest INBOUND message — that's where the
+    // live 24h session is. The contact's primary number is often not the one
+    // the customer writes from; free-form sends to it bounce (Meta 131047).
+    // Runs only on load, so a manual tab click is never overridden.
+    let best = -1
+    let bestTs = 0
+    ;(data || []).forEach((c, i) => {
+      const ts = c.last_incoming ? new Date(c.last_incoming).getTime() : 0
+      if (ts > bestTs) {
+        bestTs = ts
+        best = i
+      }
+    })
+    if (best > 0) activeWhatsappContactIdx.value = best
+  },
 })
 
 const activeWhatsappContactIdx = ref(0)
