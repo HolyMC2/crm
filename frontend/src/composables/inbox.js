@@ -497,6 +497,11 @@ export function loadMoreQueue() {
   queueLoadingMore.value = true
   _queueStart += QUEUE_PAGE
   const myId = _queueReqId
+  // Keyset continuation (2026-07-26): echo the last row's sort key so the next
+  // page resumes AFTER it in sort order — offset pages over the live-reordering
+  // queue could MISS rows that moved across the boundary (dedupe only fixed the
+  // duplicate half of that bug). Falls back to offset when the tail lacks keys.
+  const tail = queueRows.value[queueRows.value.length - 1]
   return queue
     .submit({
       channel: queueChannel.value || undefined,
@@ -505,6 +510,9 @@ export function loadMoreQueue() {
       tag: queueTag.value || undefined,
       limit: QUEUE_PAGE,
       start: _queueStart,
+      cursor_ts: tail?.sort_ts || undefined,
+      cursor_name: tail?.sort_ts ? tail.name : undefined,
+      cursor_rank: tail?.sort_ts ? tail.sort_rank || 1 : undefined,
     })
     .then(() => {
       queueLoadingMore.value = false

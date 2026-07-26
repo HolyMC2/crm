@@ -62,6 +62,30 @@ describe('queue pagination + merge', () => {
     expect(inbox.queueRows.value.map((r) => r.name)).toEqual(['A', 'B', 'C'])
   })
 
+  it('loadMoreQueue sends the tail row as a keyset cursor', async () => {
+    const { inbox, queue } = await freshInbox()
+    queue.data = [row('A', { sort_ts: '2026-07-26 10:00:00', sort_rank: 1 })]
+    await inbox.reloadQueue()
+    inbox.queueHasMore.value = true
+    queue.data = [row('B')]
+    await inbox.loadMoreQueue()
+    expect(queue.lastParams.cursor_ts).toBe('2026-07-26 10:00:00')
+    expect(queue.lastParams.cursor_name).toBe('A')
+    expect(queue.lastParams.cursor_rank).toBe(1)
+  })
+
+  it('loadMoreQueue falls back to offset when the tail has no sort key', async () => {
+    const { inbox, queue } = await freshInbox()
+    queue.data = [row('A')] // pre-keyset backend / cached row without sort_ts
+    await inbox.reloadQueue()
+    inbox.queueHasMore.value = true
+    queue.data = [row('B')]
+    await inbox.loadMoreQueue()
+    expect(queue.lastParams.cursor_ts).toBeUndefined()
+    expect(queue.lastParams.cursor_name).toBeUndefined()
+    expect(queue.lastParams.start).toBe(50)
+  })
+
   it('merge reload keeps the scrolled-in tail below the fresh first page', async () => {
     const { inbox, queue } = await freshInbox()
     queue.data = [row('A'), row('B'), row('C')]
