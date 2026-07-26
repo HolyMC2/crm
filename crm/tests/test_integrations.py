@@ -327,6 +327,57 @@ class TestIntegrations(IntegrationTestCase):
 			if "deal" in result:
 				self.assertEqual(result["deal"], deal.name)
 
+	def test_get_contact_by_phone_number_prefers_open_deal(self):
+		"""A recently-touched closed deal must not capture inbound messages when
+		the contact also has an open one. Regression: a Contact edit re-syncs
+		every linked deal and bumps modified — a 5-month-old Won/Lost deal then
+		became 'newest' and stole the customer's next WhatsApp reply."""
+		for status, stype in (("T Ongoing", "Ongoing"), ("T Won", "Won")):
+			if not frappe.db.exists("CRM Deal Status", status):
+				frappe.get_doc(
+					{"doctype": "CRM Deal Status", "deal_status": status, "type": stype}
+				).insert()
+
+		org = frappe.get_doc(
+			{"doctype": "CRM Organization", "organization_name": "Open Deal Org"}
+		).insert()
+		# The resolver joins Contact Phone (child table), not the mobile_no
+		# scalar — a bare scalar is invisible to it.
+		contact = frappe.get_doc(
+			{
+				"doctype": "Contact",
+				"first_name": "OpenVs",
+				"last_name": "Closed",
+			}
+		)
+		contact.append("phone_nos", {"phone": "4155550400", "is_primary_mobile_no": 1})
+		contact.insert()
+
+		def make_deal(status):
+			d = frappe.get_doc(
+				{
+					"doctype": "CRM Deal",
+					"organization": org.name,
+					"deal_owner": "Administrator",
+					"status": status,
+					# Sites with FCRM forecasting enabled hard-require these.
+					"expected_deal_value": 100,
+					"expected_closure_date": frappe.utils.add_days(frappe.utils.nowdate(), 30),
+				}
+			)
+			d.append("contacts", {"contact": contact.name, "is_primary": 1})
+			d.insert()
+			return d
+
+		open_deal = make_deal("T Ongoing")
+		closed_deal = make_deal("T Won")
+		# Touch the closed deal so its `modified` is newest — the old failure mode.
+		frappe.db.set_value("CRM Deal", closed_deal.name, "probability", 100)
+
+		result = get_contact_by_phone_number("4155550400")
+
+		self.assertEqual(result.get("deal"), open_deal.name)
+
 	def test_get_contact_by_phone_number_returns_phone_only_if_not_found(self):
 		"""Test get_contact_by_phone_number returns phone number if no match found"""
 		result = get_contact_by_phone_number("+9999999999")

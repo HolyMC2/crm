@@ -205,17 +205,22 @@ def get_contact(phone_number: str, country: str = "IN", exact_match: bool = Fals
 	contacts = query.run(as_dict=True)
 
 	if len(contacts):
-		# Check if the contact is associated with a deal — newest deal wins.
-		# Default get_value ordering is by name (effectively oldest first); explicit
-		# ORDER BY modified DESC picks the most recently active deal, which is what
-		# operators expect when the same customer has multiple open jobs.
+		# Check if the contact is associated with a deal — OPEN deals first, then
+		# newest-modified. Ordering by modified alone misrouted inbound messages:
+		# any touch on an old closed deal (a Contact edit re-syncs every linked
+		# deal and bumps modified) made it "newest" and captured the customer's
+		# next reply. A deal whose status type is Won/Lost/Junk only wins when
+		# the customer has no open deal at all.
 		for contact in contacts:
 			if frappe.db.exists("CRM Contacts", {"contact": contact.name, "is_primary": 1}):
 				deal = frappe.db.sql(
 					"""SELECT cd.name FROM `tabCRM Deal` cd
 					   JOIN `tabCRM Contacts` cc ON cc.parent = cd.name
+					   LEFT JOIN `tabCRM Deal Status` st ON st.name = cd.status
 					   WHERE cc.contact = %s AND cc.is_primary = 1
-					   ORDER BY cd.modified DESC LIMIT 1""",
+					   ORDER BY COALESCE(st.type IN ('Won', 'Lost', 'Junk'), 0) ASC,
+					            cd.modified DESC
+					   LIMIT 1""",
 					(contact.name,),
 					as_dict=False,
 				)
