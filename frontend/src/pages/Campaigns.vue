@@ -7,34 +7,60 @@
     <!-- toolbar -->
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Campañas') }}</span>
+        <span class="text-[15px] font-bold text-ink-gray-9">{{ modeLabel }}</span>
         <span class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6">
           {{ rows.length }}
         </span>
-        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
-        <button
-          v-for="t in typeTabs"
-          :key="t.key"
-          class="rounded-full px-3 py-[5px] text-[12px] font-semibold"
-          :class="typeFilter === t.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
-          @click="setType(t.key)"
-        >
-          {{ t.label }}
-        </button>
+        <!-- Campañas | Cadencias mode toggle (spec 4.2 completion) -->
+        <div class="ml-1 flex items-center gap-0.5 rounded-full bg-surface-gray-2 p-0.5">
+          <button
+            v-for="m in modeTabs"
+            :key="m.key"
+            class="press rounded-full px-3 py-[4px] text-[12px] font-semibold"
+            :class="mode === m.key ? 'bg-surface-white text-ink-gray-9 shadow-sm' : 'text-ink-gray-6'"
+            :aria-pressed="mode === m.key"
+            @click="setMode(m.key)"
+          >
+            {{ m.label }}
+          </button>
+        </div>
+        <template v-if="mode === 'campaigns'">
+          <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
+          <button
+            v-for="t in typeTabs"
+            :key="t.key"
+            class="rounded-full px-3 py-[5px] text-[12px] font-semibold"
+            :class="typeFilter === t.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
+            @click="setType(t.key)"
+          >
+            {{ t.label }}
+          </button>
+        </template>
       </div>
       <div class="flex items-center gap-2">
         <button
+          v-if="mode === 'campaigns'"
           class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
           @click="$router.push('/chatflows')"
         >
           🤖 {{ __('Flujos de bot') }}
         </button>
         <button
+          v-if="mode === 'campaigns'"
           class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
           style="background: var(--brand)"
           @click="showNew = true"
         >
           + {{ __('Nueva campaña') }}
+        </button>
+        <button
+          v-else
+          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white disabled:opacity-50"
+          style="background: var(--brand)"
+          :disabled="creatingCadence"
+          @click="createCadence"
+        >
+          + {{ creatingCadence ? __('Creando…') : __('Cadencia') }}
         </button>
       </div>
     </div>
@@ -44,10 +70,10 @@
       class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
       :style="`grid-template-columns:${GRID};height:34px`"
     >
-      <div>{{ __('Campaña') }}</div>
+      <div>{{ mode === 'cadences' ? __('Cadencia') : __('Campaña') }}</div>
       <div>{{ __('Tipo') }}</div>
       <div>{{ __('Estado') }}</div>
-      <div>{{ __('Inscritos') }}</div>
+      <div v-if="mode === 'campaigns'">{{ __('Inscritos') }}</div>
       <div>{{ __('Apertura') }}</div>
       <div>{{ __('Clics') }}</div>
       <div />
@@ -56,7 +82,7 @@
     <!-- rows -->
     <div class="scb min-h-0 flex-1 overflow-y-auto">
       <div v-if="campaigns.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin campañas') }}</div>
+      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ emptyLabel }}</div>
 
       <div
         v-for="c in rows"
@@ -67,7 +93,7 @@
       >
         <div class="min-w-0">
           <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ c.title }}</div>
-          <div class="truncate text-[11px] text-ink-gray-4">{{ c.audience || c.name }}</div>
+          <div class="truncate text-[11px] text-ink-gray-4">{{ mode === 'cadences' ? c.name : (c.audience || c.name) }}</div>
         </div>
         <div>
           <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="typeChip(c.type)">{{ typeLabel(c.type) }}</span>
@@ -75,7 +101,7 @@
         <div>
           <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(c.status)">{{ c.status }}</span>
         </div>
-        <div class="text-[13px] font-semibold text-ink-gray-8">{{ c.enrolled_count || 0 }}</div>
+        <div v-if="mode === 'campaigns'" class="text-[13px] font-semibold text-ink-gray-8">{{ c.enrolled_count || 0 }}</div>
         <div><Bar :pct="c.open_rate" color="var(--brand)" /></div>
         <div><Bar :pct="c.click_rate" color="#2f6fed" /></div>
         <Dropdown :options="rowMenu(c)" @click.stop>
@@ -116,9 +142,23 @@ import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, Dialog, Button, FormControl, createResource, call as frappeCall, toast } from 'frappe-ui'
 import { confirmDialog } from '@/utils/dialogs'
+import { buildCadenceScaffold } from '@/utils/cadenceScaffold'
 
-const GRID = '1fr 120px 110px 90px 130px 130px 26px'
+// Cadences drop the «Inscritos» (enrolled) column — they are 1:1, enrolled from
+// the deal header, so an audience-size count is meaningless for them (spec 4.2).
+const GRID_CAMPAIGNS = '1fr 120px 110px 90px 130px 130px 26px'
+const GRID_CADENCES = '1fr 120px 110px 130px 130px 26px'
 const router = useRouter()
+
+// ── Campañas | Cadencias mode ────────────────────────────────────────────────
+const mode = ref('campaigns') // 'campaigns' | 'cadences'
+const modeTabs = [
+  { key: 'campaigns', label: __('Campañas') },
+  { key: 'cadences', label: __('Cadencias') },
+]
+const modeLabel = computed(() => (mode.value === 'cadences' ? __('Cadencias') : __('Campañas')))
+const emptyLabel = computed(() => (mode.value === 'cadences' ? __('Sin cadencias') : __('Sin campañas')))
+const GRID = computed(() => (mode.value === 'cadences' ? GRID_CADENCES : GRID_CAMPAIGNS))
 
 const typeFilter = ref(null)
 const typeTabs = [
@@ -131,9 +171,22 @@ const typeTabs = [
 
 const campaigns = createResource({ url: 'doco_marketing.api.campaigns.list_campaigns', params: {}, auto: true })
 const rows = computed(() => campaigns.data || [])
+
+// Compose the list params from the active mode + (campaigns-only) type filter.
+function reloadList() {
+  const params = {}
+  if (mode.value === 'cadences') params.cadences = 1
+  else if (typeFilter.value) params.type = typeFilter.value
+  campaigns.submit(params)
+}
+function setMode(key) {
+  if (mode.value === key) return
+  mode.value = key
+  reloadList()
+}
 function setType(key) {
   typeFilter.value = key
-  campaigns.submit(key ? { type: key } : {})
+  reloadList()
 }
 
 const TYPE_META = {
@@ -219,6 +272,32 @@ async function createCampaign() {
     toast.error(e?.messages?.[0] || __('No se pudo crear'))
   } finally {
     creating.value = false
+  }
+}
+
+// new cadence — a Draft campaign flagged is_cadence=1 with a día-1/3/7 scaffold
+// (wait+send pairs, blank template slots). Opens straight in the editor so the
+// operator fills templates then activates; no dialog needed (title/type fixed).
+const creatingCadence = ref(false)
+async function createCadence() {
+  if (creatingCadence.value) return
+  creatingCadence.value = true
+  try {
+    const res = await frappeCall('doco_marketing.api.campaigns.save_campaign', {
+      payload: JSON.stringify({
+        title: __('Cadencia de seguimiento'),
+        type: 'whatsapp',
+        status: 'Draft',
+        is_cadence: 1,
+        enrollment_trigger: 'manual',
+        steps: buildCadenceScaffold(),
+      }),
+    })
+    router.push(`/campaigns/${res.name}`)
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo crear la cadencia'))
+  } finally {
+    creatingCadence.value = false
   }
 }
 </script>

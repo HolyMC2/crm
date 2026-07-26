@@ -12,6 +12,7 @@
         <span class="text-ink-gray-4">/</span>
         <input v-model="form.title" class="min-w-0 border-0 bg-transparent text-[15px] font-bold text-ink-gray-9 focus:outline-none focus:ring-0" :placeholder="__('Nombre de la campaña')" />
         <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(form.status)">{{ form.status }}</span>
+        <span v-if="isCadence" class="flex-none rounded-md bg-surface-violet-1 px-2 py-[3px] text-[11px] font-semibold text-ink-violet-1">{{ __('Cadencia 1:1') }}</span>
       </div>
       <div class="flex items-center gap-2">
         <button v-if="dirty || saving" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="saving" @click="save">
@@ -28,26 +29,47 @@
       <Field :label="__('Tipo')">
         <select v-model="form.type" class="dm-input"><option v-for="t in TYPES" :key="t" :value="t">{{ typeLabel(t) }}</option></select>
       </Field>
-      <Field :label="__('Disparador')">
-        <select v-model="form.enrollment_trigger" class="dm-input">
-          <option value="manual">{{ __('Manual') }}</option>
-          <option value="lead_created">{{ __('Lead creado') }}</option>
-          <option value="stage_entered">{{ __('Entra a etapa') }}</option>
-          <option value="score_threshold">{{ __('Umbral de score') }}</option>
-        </select>
+
+      <!-- Cadencia 1:1 toggle — flips is_cadence. Locked once deals are enrolled
+           (client guard only; the server does NOT enforce it — see S19 report). -->
+      <Field :label="__('Flujo')">
+        <label
+          class="flex h-[29px] cursor-pointer items-center gap-1.5 text-[12px] font-medium"
+          :class="cadenceLocked ? 'cursor-not-allowed text-ink-gray-4' : 'text-ink-gray-7'"
+          :title="cadenceLocked ? __('No se puede cambiar: la campaña ya tiene inscritos.') : ''"
+        >
+          <input type="checkbox" v-model="isCadence" :disabled="cadenceLocked" style="accent-color: var(--brand)" />
+          {{ __('Cadencia 1:1') }}
+        </label>
       </Field>
-      <Field v-if="form.enrollment_trigger === 'stage_entered'" :label="__('Etapa')">
-        <select v-model="form.trigger_value" class="dm-input"><option value="">—</option><option v-for="s in dealStatuses.data || []" :key="s.name" :value="s.name">{{ s.name }}</option></select>
-      </Field>
-      <Field v-else-if="form.enrollment_trigger === 'score_threshold'" :label="__('Score ≥')">
-        <input v-model="form.trigger_value" type="number" class="dm-input w-20" placeholder="60" />
-      </Field>
-      <Field :label="__('Audiencia')">
-        <select v-model="form.audience" class="dm-input"><option value="">—</option><option v-for="a in audiences.data || []" :key="a.name" :value="a.name">{{ a.title || a.name }}</option></select>
-      </Field>
-      <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-50" :disabled="!form.audience || enrolling" @click="doEnroll">
-        {{ enrolling ? __('Inscribiendo…') : '+ ' + __('Inscribir audiencia') }}
-      </button>
+
+      <template v-if="!isCadence">
+        <Field :label="__('Disparador')">
+          <select v-model="form.enrollment_trigger" class="dm-input">
+            <option value="manual">{{ __('Manual') }}</option>
+            <option value="lead_created">{{ __('Lead creado') }}</option>
+            <option value="stage_entered">{{ __('Entra a etapa') }}</option>
+            <option value="score_threshold">{{ __('Umbral de score') }}</option>
+          </select>
+        </Field>
+        <Field v-if="form.enrollment_trigger === 'stage_entered'" :label="__('Etapa')">
+          <select v-model="form.trigger_value" class="dm-input"><option value="">—</option><option v-for="s in dealStatuses.data || []" :key="s.name" :value="s.name">{{ s.name }}</option></select>
+        </Field>
+        <Field v-else-if="form.enrollment_trigger === 'score_threshold'" :label="__('Score ≥')">
+          <input v-model="form.trigger_value" type="number" class="dm-input w-20" placeholder="60" />
+        </Field>
+        <Field :label="__('Audiencia')">
+          <select v-model="form.audience" class="dm-input"><option value="">—</option><option v-for="a in audiences.data || []" :key="a.name" :value="a.name">{{ a.title || a.name }}</option></select>
+        </Field>
+        <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7 disabled:opacity-50" :disabled="!form.audience || enrolling" @click="doEnroll">
+          {{ enrolling ? __('Inscribiendo…') : '+ ' + __('Inscribir audiencia') }}
+        </button>
+      </template>
+
+      <!-- cadences enroll 1:1 from the deal header, never from an audience here -->
+      <div v-else class="flex h-[29px] items-center text-[11.5px] text-ink-gray-5">
+        {{ __('Las cadencias se inician 1:1 desde el encabezado del trato.') }}
+      </div>
     </div>
 
     <!-- metrics -->
@@ -94,6 +116,7 @@ import { computed, h, ref, watch } from 'vue'
 import { createResource, createListResource, call as frappeCall, toast } from 'frappe-ui'
 import { avatarColor, initials, timeAgo } from '@/composables/crmFormat'
 import StepCardList from '@/components/doco/flows/StepCardList.vue'
+import { cadenceToggleLocked } from '@/utils/cadenceScaffold'
 
 const props = defineProps({ campaignId: { type: String, required: true } })
 const TYPES = ['whatsapp', 'email', 'sms', 'automation']
@@ -103,7 +126,7 @@ const enroll = createResource({ url: 'doco_marketing.api.campaigns.get_enrollmen
 const audiences = createListResource({ doctype: 'Marketing Audience', fields: ['name', 'title'], pageLength: 100, auto: true })
 const dealStatuses = createListResource({ doctype: 'CRM Deal Status', fields: ['name'], orderBy: 'position asc', pageLength: 50, auto: true })
 
-const form = ref({ title: '', type: 'automation', status: 'Draft', enrollment_trigger: 'manual', trigger_value: '', audience: '', steps: [] })
+const form = ref({ title: '', type: 'automation', status: 'Draft', enrollment_trigger: 'manual', trigger_value: '', audience: '', is_cadence: 0, steps: [] })
 let loaded = '' // JSON snapshot to detect dirty
 const dirty = computed(() => JSON.stringify(form.value) !== loaded)
 
@@ -115,6 +138,7 @@ function loadForm(d) {
     enrollment_trigger: d.enrollment_trigger || 'manual',
     trigger_value: d.trigger_value || '',
     audience: d.audience || '',
+    is_cadence: d.is_cadence ? 1 : 0,
     steps: (d.steps || []).map((s) => ({
       step_type: s.step_type, channel: s.channel, wait_hours: s.wait_hours, template: s.template || '',
       branch_condition: s.branch_condition || 'opened_previous', branch_value: s.branch_value, branch_to_step: s.branch_to_step,
@@ -137,6 +161,18 @@ watch(
 const c = computed(() => campaign.data || {})
 const metrics = computed(() => c.value.metrics || {})
 const enrolled = computed(() => enroll.data || [])
+
+// Cadencia 1:1 (spec 4.2). is_cadence lives on the form so it round-trips through
+// save_campaign (which does NOT skip it). The toggle is a two-way proxy over the
+// 0/1 flag; it locks once any deal is enrolled — a client-side guard against
+// stranding live enrollments (the server does not enforce this — S19 report).
+const isCadence = computed({
+  get: () => !!form.value.is_cadence,
+  set: (v) => {
+    form.value.is_cadence = v ? 1 : 0
+  },
+})
+const cadenceLocked = computed(() => cadenceToggleLocked(c.value.enrolled_count))
 
 // ── save / status / enroll ───────────────────────────────────────────────────
 const saving = ref(false)
