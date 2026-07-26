@@ -36,16 +36,65 @@
         <button v-if="isManager" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="bulkBusy" @click="bulkDraft" :title="__('Un borrador IA por cada sucursal, desde su inventario')">
           {{ bulkBusy ? __('✨ generando…') : __('✨ IA · todas') }}
         </button>
-        <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="aiBusy" @click="aiDraft" :title="__('Genera un borrador desde el inventario con IA')">
-          {{ aiBusy ? __('✨ generando…') : __('✨ Borrador IA') }}
-        </button>
+        <div class="relative">
+          <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="aiBusy" :aria-expanded="aiMenuOpen" @click="aiMenuOpen = !aiMenuOpen" :title="__('Genera un borrador con IA — elige el enfoque')">
+            {{ aiBusy ? __('✨ generando…') : __('✨ Borrador IA ⌄') }}
+          </button>
+          <template v-if="aiMenuOpen">
+            <div class="fixed inset-0 z-[200]" @click="aiMenuOpen = false" />
+            <div class="absolute right-0 top-full z-[210] mt-1 w-52 overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-white py-1 shadow-lg">
+              <button v-for="o in AI_SIGNALS" :key="o.signal" class="block w-full px-3 py-1.5 text-left text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-2" @click="aiMenuOpen = false; aiDraft(o.signal)">
+                {{ o.label }}
+              </button>
+            </div>
+          </template>
+        </div>
         <button class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background:var(--brand)" @click="openNew()">
           + {{ __('Nueva publicación') }}
         </button>
       </div>
     </div>
 
-    <div v-if="view === 'calendar'" class="p-4">
+    <!-- ⏳ pendientes de aprobación — surfaced instead of buried in the grid -->
+    <div v-if="pendingPosts.length" class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-amber-1 px-4 py-2" role="status">
+      <span class="text-[11.5px] font-bold text-ink-amber-3">⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span>
+      <button
+        v-for="p in pendingPosts.slice(0, 6)"
+        :key="p.name"
+        class="press max-w-[180px] truncate rounded-md bg-surface-white px-2 py-0.5 text-[11px] font-medium text-ink-gray-8"
+        @click="openEdit(p)"
+      >
+        {{ p.title || p.name }}
+      </button>
+      <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-3">+{{ pendingPosts.length - 6 }}</span>
+    </div>
+
+    <div v-if="view === 'calendar' && isMobile" class="p-3">
+      <!-- mobile agenda: the 7-col month grid is unreadable at 390px — list the
+           month's days that have posts (+ hoy), tap day = nueva, tap post = editar -->
+      <div v-if="!agendaDays.length" class="py-10 text-center text-[12px] text-ink-gray-4">
+        {{ __('Sin publicaciones este mes — toca + para crear una') }}
+      </div>
+      <div v-for="day in agendaDays" :key="day.key" class="mb-2 rounded-lg border border-outline-gray-2 bg-surface-white p-2">
+        <div class="mb-1 flex items-center justify-between">
+          <span class="text-[11.5px] font-bold" :class="day.isToday ? 'text-ink-green-3' : 'text-ink-gray-6'">
+            {{ day.label }}<span v-if="day.isToday"> · {{ __('hoy') }}</span>
+          </span>
+          <button class="press px-1 text-[13px] text-ink-gray-5" :aria-label="__('Nueva publicación este día')" @click="openNew(day)">+</button>
+        </div>
+        <button
+          v-for="p in postsByDay[day.key] || []"
+          :key="p.name"
+          class="press mb-0.5 block w-full truncate rounded px-2 py-1 text-left text-[11.5px] font-medium"
+          :class="chip(p.status)"
+          @click="openEdit(p)"
+        >
+          {{ chanIcons(p.channels) }} {{ p.title || p.name }}
+        </button>
+      </div>
+    </div>
+
+    <div v-else-if="view === 'calendar'" class="p-4">
       <!-- weekday header -->
       <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
         <div v-for="d in weekdays" :key="d">{{ d }}</div>
@@ -80,6 +129,11 @@
             >{{ chanIcons(p.channels) }} {{ p.title || p.name }}</button>
           </div>
         </div>
+      </div>
+
+      <!-- status legend -->
+      <div class="mt-3 flex flex-wrap items-center gap-1.5 text-[10.5px]">
+        <span v-for="st in LEGEND" :key="st.status" class="rounded px-1.5 py-0.5 font-medium" :class="chip(st.status)">{{ st.label }}</span>
       </div>
 
       <!-- unscheduled drafts tray -->
@@ -371,6 +425,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { isMobile } from '@/composables/breakpoint'
 import { createResource, call as frappeCall, toast, FileUploadHandler } from 'frappe-ui'
 import { inputDialog } from '@/utils/dialogs'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
@@ -689,11 +744,42 @@ const chLabel = (ch) => (ch.startsWith('IG') ? __('Ver en Instagram') : __('Ver 
 
 // ── AI draft + approval (S11) ────────────────────────────────────────────
 const aiBusy = ref(false)
-async function aiDraft() {
+// AI draft signals — incl. the general «services» mode (2026-07-26, one-theme fix)
+const AI_SIGNALS = [
+  { signal: 'new_arrivals', label: __('🆕 Nuevos ingresos') },
+  { signal: 'top_sellers', label: __('🔥 Más vendidos') },
+  { signal: 'aged_stock', label: __('🏷 Oferta especial') },
+  { signal: 'services', label: __('🏪 Servicios (general)') },
+]
+const aiMenuOpen = ref(false)
+
+const LEGEND = [
+  { status: 'Draft', label: __('Borrador') },
+  { status: 'Pending Approval', label: __('Por aprobar') },
+  { status: 'Scheduled', label: __('Programada') },
+  { status: 'Published', label: __('Publicada') },
+  { status: 'Failed', label: __('Falló') },
+]
+
+// pending-approval posts across the loaded window + unscheduled tray
+const pendingPosts = computed(() => {
+  const all = [...(cal.data?.scheduled || []), ...(cal.data?.drafts || [])]
+  return all.filter((p) => p.status === 'Pending Approval')
+})
+
+// mobile agenda: only the month's days that have posts (plus hoy as an anchor)
+const agendaDays = computed(() =>
+  days.value.filter((d) => d.inMonth && ((postsByDay.value[d.key] || []).length || d.isToday)).map((d) => ({
+    ...d,
+    label: new Date(d.date || d.key).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }),
+  })),
+)
+
+async function aiDraft(signal = 'new_arrivals') {
   aiBusy.value = true
   try {
     const r = await frappeCall('doco_marketing.services.social.ai_draft.ai_draft_now', {
-      signal: 'new_arrivals',
+      signal,
       channels: JSON.stringify(['FB Feed']),
       shop: shop.value || undefined,
     })

@@ -10,6 +10,7 @@ import InboxIcon from '~icons/lucide/messages-square'
 import ReviewQueueIcon from '~icons/lucide/clipboard-check'
 import CampaignsIcon from '~icons/lucide/megaphone'
 import SocialIcon from '~icons/lucide/images'
+import CalendarIcon from '~icons/lucide/calendar-days'
 import CallsIcon from '~icons/lucide/phone'
 import TasksIcon from '~icons/lucide/square-check-big'
 import ReportsIcon from '~icons/lucide/bar-chart-3'
@@ -25,6 +26,7 @@ export const navItems = [
   { key: 'deals', icon: DealsIcon, label: 'Deals', to: '/deals', group: 'deals' },
   { key: 'campaigns', icon: CampaignsIcon, label: 'Campaigns', to: '/campaigns', group: 'campaigns' },
   { key: 'social', icon: SocialIcon, label: 'Social', to: '/social', group: 'social' },
+  { key: 'calendar', icon: CalendarIcon, label: 'Calendario', to: '/calendar', group: 'calendar' },
   { key: 'calls', icon: CallsIcon, label: 'Calls', to: '/call-logs', group: 'calls' },
   { key: 'tasks', icon: TasksIcon, label: 'Tasks', to: '/tasks', group: 'tasks', badge: 'overdue' },
   { key: 'reports', icon: ReportsIcon, label: 'Reports', to: '/reports', group: 'reports' },
@@ -43,7 +45,8 @@ export function routeGroup(path) {
   if (/^\/deals?(\/|$)/.test(path)) return 'deals'
   if (/^\/(campaigns|chatflows)(\/|$)/.test(path)) return 'campaigns'
   if (/^\/social(\/|$)/.test(path)) return 'social'
-  if (/^\/(leads|pipeline|calendar|stage-scripts|enrichment|pipeline-analysis)(\/|$)/.test(path)) return 'leads'
+  if (/^\/calendar(\/|$)/.test(path)) return 'calendar'
+  if (/^\/(leads|pipeline|stage-scripts|enrichment|pipeline-analysis)(\/|$)/.test(path)) return 'leads'
   if (/^\/dashboard(\/|$)/.test(path)) return 'dashboard'
   if (/^\/call-logs(\/|$)/.test(path)) return 'calls'
   if (/^\/tasks(\/|$)/.test(path)) return 'tasks'
