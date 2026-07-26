@@ -183,6 +183,12 @@ const routes = [
     meta: { navLabel: 'Reports', title: 'Reports' },
   },
   {
+    path: '/workload',
+    name: 'Workload',
+    component: () => import('@/pages/WorkloadView.vue'),
+    meta: { navLabel: 'Workload', title: 'Carga de trabajo' },
+  },
+  {
     path: '/score-rules',
     name: 'Score Rules',
     component: () => import('@/pages/ScoreRules.vue'),

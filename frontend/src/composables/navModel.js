@@ -15,6 +15,7 @@ import TasksIcon from '~icons/lucide/square-check-big'
 import ReportsIcon from '~icons/lucide/bar-chart-3'
 import ScoreRulesIcon from '~icons/lucide/sliders-horizontal'
 import WebshopIcon from '~icons/lucide/shopping-cart'
+import WorkloadIcon from '~icons/lucide/scale'
 
 export const navItems = [
   { key: 'dashboard', icon: DashboardIcon, label: 'Dashboard', to: '/dashboard', group: 'dashboard' },
@@ -31,6 +32,7 @@ export const navItems = [
 
 export const navItemsBottom = [
   { key: 'score-rules', icon: ScoreRulesIcon, label: 'Score Rules', to: '/score-rules', group: 'score-rules' },
+  { key: 'workload', icon: WorkloadIcon, label: 'Carga de trabajo', to: '/workload', group: 'workload' },
   { key: 'webshop', icon: WebshopIcon, label: 'Webshop', to: '/webshop', group: 'webshop' },
 ]
 
@@ -48,5 +50,6 @@ export function routeGroup(path) {
   if (/^\/reports(\/|$)/.test(path)) return 'reports'
   if (/^\/score-rules(\/|$)/.test(path)) return 'score-rules'
   if (/^\/webshop(\/|$)/.test(path)) return 'webshop'
+  if (/^\/workload(\/|$)/.test(path)) return 'workload'
   return ''
 }
