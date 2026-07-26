@@ -234,3 +234,158 @@ this slice (their original author closed out; extend, don't rewrite).
 - Tests: python is the heart of this slice — repoint counts per artifact
   type, tag union, breadcrumbs, closing-status fallback chain, manager gate,
   phone-mismatch rejection, source==target rejection. Mock any send hooks.
+
+---
+
+# Batch 3 (2026-07-26) — vertical loops + copiloto + management
+
+Same global rules as above. NEW this batch: **NOBODY edits
+`marketing_settings.json` or `hooks.py`** — every settings field and every hook
+goes into your report as an exact patch; the lead applies all of them in one
+pass (single `modified` bump). `services/push.py`, `composables/inbox.js`,
+`WhatsAppBox.vue`, `DealWorkspace.vue`, `router.js` are lead-owned shared files
+— mount patches only.
+
+## Slice S9 — Repair status → WhatsApp auto-update (spec 6.1)
+
+Taller state changes ("Listo para Entregar") → templated WA to the customer,
+**always review-gated through MA-1** (a `WhatsApp Send Review` row, status
+Pendiente, auto=0 — NEVER auto=1, never a direct send; spec non-goal 3).
+
+Recon facts (verified): `Repair Order` doctype lives in the **taller** app
+(`taller/taller/repair/doctype/repair_order/`); its `status` Select =
+Recibido / En Trabajo / Esperando Cliente / Esperando Pieza / Listo para
+Entregar / Entregado / Cancelado; it has a `crm_deal` Link → CRM Deal. The
+MA-1 staging pattern to copy is `services/chatflow.py::_stage_template_review`
+(WhatsApp Send Review row + `_pending_row_exists`-style dedupe + recipient
+resolution). taller may be ABSENT on a tenant (mumu) — guard everything with
+`frappe.db.exists("DocType", "Repair Order")` and make the handler try/except-
+swallowed (must never block an RO save).
+
+- NEW `doco_marketing/services/repair_updates.py`: `on_repair_order_update(doc,
+  method)` — fire ONLY on a real status transition (`doc.has_value_changed("status")`
+  on on_update), look up the template mapped to the NEW status, resolve the
+  customer number through the linked `crm_deal` (deal→contact→lead chain —
+  mobile_no-is-derived trap!), stage the MA-1 row (source
+  `repair_status:<ro>:<status>`, dedupe repeats), breadcrumb Comment on the deal.
+  Gate on a `enable_repair_status_updates` settings flag (default 0).
+- Settings fields (REPORT PATCH, do not edit the json): `repair_updates_section`
+  + `enable_repair_status_updates` (Check 0) + `repair_status_templates`
+  (Small Text/JSON: {"Listo para Entregar": "<template name>", ...} — parse
+  defensively, unknown status → no-op).
+- Hook (REPORT PATCH): `doc_events["Repair Order"]["on_update"]` append.
+- NEW `doco_marketing/doco_marketing/tests/test_repair_updates.py`: transition
+  stages exactly one Pendiente review row w/ auto=0; repeat save no dup;
+  unmapped status no-op; flag off no-op; missing taller doctype no-op; NEVER
+  insert an Outgoing WhatsApp Message (mock send_outgoing at class level as
+  belt). If `Repair Order` can't be seeded on the bench, drive the handler
+  with a synthetic frappe._dict (test_cadence shows the pattern).
+- No frontend in this slice.
+- Report: `.../scratchpad/p2-s9-taller.md`.
+
+## Slice S10 — Intent → action chips (spec 5.3)
+
+Detect what the customer wants from the thread tail and surface ONE-TAP action
+chips above the composer. Chips never send anything — they open existing
+surfaces or prefill the composer (send stays human).
+
+Recon: `services/ai.py` (`is_enabled`, `complete(prompt, system)` —
+Anthropic-only, PII-redacting; NEVER call any other model path);
+`api/inbox.py::suggest_replies` shows the thread-tail fetch + `_ai_enabled`
+gating pattern; `ThreadSummary.vue` (S2) shows per-last-message caching.
+
+- NEW `doco_marketing/api/intent.py`: `detect_intent(doctype, name)` —
+  perm-checked read, allowlist CRM Deal/CRM Lead; last ~6 INBOUND WA/Messenger
+  texts → ai.complete with a STRICT system prompt returning JSON only:
+  {"intent": one of "factura"|"cotizar_reparacion"|"precio"|"pago"|"otro",
+  "confidence": 0-1, "es_label": short es-MX}. Parse defensively (bad JSON →
+  intent "otro" confidence 0). Cache per (record, last message name) in
+  `frappe.cache` TTL ~6h. Return {"intent", "confidence", "label", "cached"}.
+  Return {"intent": null} when AI disabled or no inbound.
+- NEW `crm/frontend/src/components/doco/inbox/IntentChips.vue`: prop-driven
+  (doctype, name); fetch on mount + when props change; render ≤1 chip
+  (confidence ≥ 0.6 only): 💳 pago → emit('cobrar'), 🧾 factura → emit('factura'),
+  🔧 cotizar_reparacion → emit('taller'), 🏷 precio → emit('catalogo'). Parent
+  wiring is the LEAD's (report patch listing where: DealWorkspace above the
+  composer area; emits map to existing surfaces — catálogo picker open,
+  sales-docs tab, composerDraft canned text for factura).
+- NEW `crm/frontend/src/utils/intentActions.js`: pure map intent→{icon, label,
+  event} + confidence gate fn. Vitest it.
+- NEW `doco_marketing/doco_marketing/tests/test_intent.py`: mocked ai.complete
+  (JSON good/garbage/low confidence), cache hit short-circuits the model,
+  disabled gate, perm gate. NEVER a live Anthropic call in tests.
+- Report: `.../scratchpad/p2-s10-intent.md`.
+
+## Slice S11 — Workload view + rebalance (spec 7.2)
+
+Manager surface: who owns how many OPEN conversations, who's over cap, drag- or
+button-reassign. Pairs with the S3 metrics + 2.3 auto-assignment machinery.
+
+Recon: `services/assignment.py` (`_open_load`, `_terminal_statuses`,
+`OWNER_FIELD`, breadcrumb pattern, `frappe.desk.form.assign_to`);
+`api/agent_metrics.py` (S3) for the manager-gating pattern.
+
+- NEW `doco_marketing/api/workload.py`: manager-gated (`frappe.only_for(
+  ["System Manager", "Sales Manager"])`):
+  `get_workload()` → rows per eligible agent (assignment._pool logic):
+  {user, full_name, open_leads, open_deals, sla_overdue_count, over_cap
+  (vs auto_assign_cap)}, + {"unassigned": n}. Reuse assignment helpers —
+  duplicating the load query is rejection.
+  `reassign(doctype, name, to_user)` + `reassign_bulk(items json)` — write-perm
+  on each record, set the OWNER_FIELD via db.set_value(update_modified=False),
+  swap the ToDo assignment (remove old + assign_add new, both best-effort),
+  breadcrumb Comment "↔ Reasignado a X por Y". Publish
+  `doco_marketing:thread_update` per record.
+- NEW `crm/frontend/src/pages/WorkloadView.vue`: per-agent cards/rows (load
+  bars vs cap, overdue badge) + tap agent → their conversations (reuse
+  `get_conversation_queue`? NO — new param would touch shared files; instead
+  fetch their open deals/leads via `frappe.get_list` client resource with
+  owner filter, fields name/contact/status/modified) + reassign flow (select
+  conversations → "Reasignar a…" user picker → bulk call → toast). Mobile
+  first. Route mount = REPORT PATCH (router.js is lead-owned; propose
+  `/workload`, nav entry under Más drawer).
+- NEW `crm/frontend/src/utils/workloadFormat.js` (pure: cap %, bar color
+  token, sort) + vitest.
+- NEW tests `test_workload.py`: workload rows reflect seeded open/terminal
+  records, manager gate blocks Sales User, reassign flips owner + breadcrumb +
+  perm enforcement.
+- Report: `.../scratchpad/p2-s11-workload.md`.
+
+## Slice S12 — SLA escalation + push quiet hours (spec 2.5 + 7.3 remnant)
+
+Overdue conversations chase the manager; push respects sleep.
+
+Recon: `services/inbox/sla.py` (`response_clock`, `first_touch_clock`) and
+`services/inbox/queue.py` (how rows get `sla_overdue`); `services/push.py`
+(`send_to_users`, `push_enabled`) — push.py is LEAD-OWNED, patch via report.
+
+- NEW `doco_marketing/services/escalation.py`: `run_escalations()` (cron */10
+  — hooks patch in report): find conversations overdue > `sla_escalation_minutes`
+  (settings, default 30, 0=off) using the SAME sla helpers the queue uses (no
+  parallel clock math); notify the escalation audience: `sla_escalation_users`
+  (settings, newline list; empty → all enabled Sales Managers): web push
+  (`push.send_to_users`) + a `Notification Log` row deep-linking
+  `/crm/inbox?deal=<name>`. DEDUPE: one escalation per conversation per
+  `sla_escalation_cooldown_hours` (default 4) — stamp via `frappe.cache`
+  (`setex`) AND survive cache flush by also checking recent Notification Log
+  (belt+braces; document). Quiet hours apply to escalations too.
+- Quiet hours: NEW helper `in_quiet_hours(now=None)` in escalation.py reading
+  `push_quiet_start`/`push_quiet_end` (Time fields, settings; span-midnight
+  aware like assignment._on_shift). REPORT PATCH for `services/push.py::
+  send_to_users` to no-op (return {"skipped": "quiet"}) when in_quiet_hours()
+  — exact old/new snippet, lead applies.
+- Settings fields (REPORT PATCH): `sla_escalation_section`,
+  `sla_escalation_minutes` (Int 30), `sla_escalation_cooldown_hours` (Int 4),
+  `sla_escalation_users` (Small Text), `push_quiet_start`/`push_quiet_end`
+  (Time, empty = no quiet hours).
+- NEW `tests/test_escalation.py`: overdue conversation → exactly one
+  notification set (push mocked), cooldown suppresses repeat, 0=off, quiet
+  hours suppress, audience fallback to Sales Managers, span-midnight quiet
+  window math (pure fn unit-tested hard).
+- Report: `.../scratchpad/p2-s12-sla.md`.
+
+## Lead-owned batch-3 slices (do not touch)
+
+3.7 optimistic status/task updates, 3.2 idle chunk prefetch, 1.3 camera-direct
+attach, all settings-json/hooks/push.py patch application, router mount,
+DealWorkspace/composer wiring, integration, builds, prod.
