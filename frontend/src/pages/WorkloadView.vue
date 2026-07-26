@@ -46,6 +46,7 @@
           type="button"
           class="press rounded-full px-2.5 py-1 text-[11px] font-medium"
           :class="sort.key === c.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
+          :aria-pressed="sort.key === c.key"
           @click="onSort(c.key)"
         >
           {{ c.label }}<span v-if="sort.key === c.key"> {{ sort.dir === 'desc' ? '▼' : '▲' }}</span>
@@ -65,7 +66,7 @@
             :class="a.user === selectedAgent ? 'border-outline-gray-3' : 'border-outline-gray-2'"
           >
             <!-- card head (tap to open conversations) -->
-            <button class="press flex w-full items-center gap-3 p-3 text-left" @click="openAgent(a)">
+            <button class="press flex w-full items-center gap-3 p-3 text-left" :aria-expanded="a.user === selectedAgent" @click="openAgent(a)">
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
                   <span class="truncate text-[13.5px] font-bold text-ink-gray-9" :title="a.user">{{ a.full_name }}</span>
@@ -118,6 +119,9 @@
                     v-for="c in conversations"
                     :key="c.key"
                     type="button"
+                    role="checkbox"
+                    :aria-checked="selected.has(c.key)"
+                    :aria-label="c.label"
                     class="press flex items-center gap-2.5 rounded-[8px] border px-2.5 py-2 text-left"
                     :class="selected.has(c.key) ? 'border-outline-green-2 bg-surface-green-1' : 'border-outline-gray-1 bg-surface-white'"
                     @click="toggle(c.key)"

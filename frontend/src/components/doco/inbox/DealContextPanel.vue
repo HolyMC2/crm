@@ -66,10 +66,10 @@
             <div class="flex items-center gap-1">
               <span v-for="a in assignees" :key="a.name" class="group relative leading-none">
                 <Avatar :label="a.label" :image="a.image" size="sm" />
-                <button class="absolute -right-1 -top-1 hidden h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-4 group-hover:flex" :title="__('Quitar')" @click="removeAssignee(a.name)">×</button>
+                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-4 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
               </span>
               <Dropdown :options="userOpts" placement="right">
-                <button class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3">+</button>
+                <button class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3" :aria-label="__('Asignar usuario')">+</button>
               </Dropdown>
             </div>
           </div>
@@ -77,7 +77,7 @@
             <span class="flex-none pt-1 text-ink-gray-5">{{ __('Etiquetas') }}</span>
             <div class="flex flex-1 flex-wrap justify-end gap-1">
               <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-2">
-                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-4" @click="removeTag(t)">×</button>
+                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-4" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
               </span>
               <input
                 v-if="addingTag"
@@ -88,7 +88,7 @@
                 @keyup.enter="addTag"
                 @blur="addTag"
               />
-              <button v-else class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-5 hover:bg-surface-gray-3" @click="startAddTag">+</button>
+              <button v-else class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-5 hover:bg-surface-gray-3" :aria-label="__('Añadir etiqueta')" @click="startAddTag">+</button>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@
         </div>
       </div>
       <div class="mt-2.5 text-[11px]">
-        <span class="cursor-pointer text-ink-blue-link" @click="$router.push('/score-rules')">{{ __('Reglas de score') }} →</span>
+        <button type="button" class="text-ink-blue-link hover:underline" @click="$router.push('/score-rules')">{{ __('Reglas de score') }} →</button>
       </div>
     </div>
 
@@ -187,6 +187,7 @@
     <div v-if="dealSections.length" class="flex-none border-b border-outline-gray-1">
       <button
         class="flex w-full items-center justify-between px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4 hover:bg-surface-gray-2"
+        :aria-expanded="showAllFields"
         @click="showAllFields = !showAllFields"
       >
         {{ __('Todos los campos') }}

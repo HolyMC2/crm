@@ -20,6 +20,7 @@
             :class="soundEnabled ? 'text-ink-green-3' : 'text-ink-gray-4'"
             :title="soundEnabled ? __('Sonido de notificación activado') : __('Activar sonido de notificación')"
             :aria-label="__('Sonido de notificación')"
+            :aria-pressed="soundEnabled"
             @click="toggleSound"
           >
             <LucideVolume2 v-if="soundEnabled" class="h-4 w-4" />
@@ -53,12 +54,13 @@
         </div>
       </div>
       <div
-        class="mb-3 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px]"
+        class="mb-3 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
       >
         <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
         <input
           ref="searchEl"
           :value="queueSearch"
+          :aria-label="__('Buscar en la bandeja')"
           @input="onSearchInput($event.target.value)"
           @keydown.esc="clearQueueSearch"
           :placeholder="__('Buscar equipo, cliente…') + (isMobile ? '' : '  ( / )')"
@@ -85,6 +87,7 @@
               ? 'bg-surface-green-2 text-ink-green-3'
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
+          :aria-pressed="inboxTab === t.id"
           @click="setInboxTab(t.id)"
         >
           <span v-if="t.dot" class="h-1.5 w-1.5 rounded-full" :style="`background:${t.dot}`" />
@@ -99,6 +102,7 @@
           :key="tg"
           class="press flex-none whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold"
           :class="queueTag === tg ? 'bg-surface-violet-1 text-ink-violet-1' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+          :aria-pressed="queueTag === tg"
           @click="setQueueTag(tg)"
         >
           🏷 {{ tg }}
@@ -189,6 +193,7 @@
       <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar' && inboxTab !== 'snoozed' && !queueTag" class="mb-1.5">
         <button
           class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
+          :aria-expanded="showArchived"
           @click="toggleArchived"
         >
           <LucideArchive class="h-3 w-3" />
@@ -244,16 +249,18 @@
             :key="s.id"
             class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
             :class="commentStatus === s.id ? 'bg-surface-blue-2 text-ink-blue-3' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :aria-pressed="commentStatus === s.id"
             @click="setCommentStatus(s.id)"
           >
             {{ s.label }}<span v-if="s.count != null" class="ml-1 opacity-70">{{ s.count }}</span>
           </button>
         </div>
         <!-- search by commenter / text -->
-        <div v-if="inboxTab === 'comments'" class="mb-1.5 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[6px]">
+        <div v-if="inboxTab === 'comments'" class="mb-1.5 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[6px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
           <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
           <input
             :value="commentSearch"
+            :aria-label="__('Buscar comentario o usuario')"
             @input="setCommentSearch($event.target.value)"
             @keydown.esc="clearCommentSearch"
             :placeholder="__('Buscar comentario o usuario…')"
@@ -345,11 +352,11 @@
       >
         ✓ {{ __('Respondido') }}
       </div>
-      <button
+      <div
         role="option"
         :aria-selected="activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')"
         :tabindex="rovingKey === convKey(r) ? 0 : -1"
-        class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-green-2"
+        class="mb-1 block w-full cursor-pointer rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-green-2"
         :class="[
           activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal') ? 'bg-surface-green-2' : '',
           swipeKey === convKey(r) ? 'bg-surface-white' : '',
@@ -474,7 +481,7 @@
             💰 {{ formatMoney(r.saldo) }}
           </span>
         </div>
-      </button>
+      </div>
       </div>
       <!-- infinite-scroll: the observer loads the next page as this nears the viewport -->
       <div v-if="paginatable && queueHasMore" ref="sentinelEl" class="h-px w-full" aria-hidden="true" />
@@ -765,6 +772,14 @@ const rovingKey = computed(() => {
 })
 
 function onListKeydown(e) {
+  // Enter/Space activate the focused option — the main queue row is a <div>
+  // (a nested clear-responder button forbids button-in-button, a11y S-4), so
+  // activation no longer comes free from a native button.
+  if ((e.key === 'Enter' || e.key === ' ') && document.activeElement?.getAttribute('role') === 'option') {
+    e.preventDefault()
+    document.activeElement.click()
+    return
+  }
   if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
   const opts = Array.from(listEl.value?.querySelectorAll('[role="option"]') || [])
   if (!opts.length) return

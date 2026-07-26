@@ -4,7 +4,7 @@
   media message into the active conversation. Live data; manual (operator-triggered) send.
 -->
 <template>
-  <div class="fixed inset-0 z-40 flex items-end justify-center sm:items-center" @click.self="closeCatalog">
+  <div class="fixed inset-0 z-40 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" :aria-label="__('Catálogo')" @keydown.esc="closeCatalog" @click.self="closeCatalog">
     <div class="absolute inset-0 bg-black/30" />
     <div
       class="relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-white shadow-xl dark:bg-surface-gray-1 sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl"
@@ -15,11 +15,12 @@
           <div class="text-[14px] font-bold text-ink-gray-9">📦 {{ __('Catálogo') }}</div>
           <button class="text-ink-gray-4 hover:text-ink-gray-9" :aria-label="__('Cerrar')" @click="closeCatalog">✕</button>
         </div>
-        <div class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px]">
+        <div class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
             ref="searchRef"
             :value="catalogQuery"
+            :aria-label="__('Buscar artículo')"
             @input="onCatalogQuery($event.target.value)"
             :placeholder="__('Buscar artículo… (p.ej. fundas iphone 11)')"
             class="w-full border-0 bg-transparent text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
@@ -41,6 +42,9 @@
           <button
             v-for="r in rows"
             :key="r.item_code"
+            type="button"
+            :aria-pressed="selected.has(r.item_code)"
+            :aria-label="r.item_name"
             class="group relative flex flex-col overflow-hidden rounded-xl border bg-surface-white text-left transition dark:bg-surface-gray-2"
             :class="selected.has(r.item_code) ? 'border-outline-green-2 ring-2 ring-outline-green-2' : 'border-outline-gray-2 hover:border-outline-gray-3'"
             @click="toggle(r.item_code)"

@@ -17,11 +17,17 @@
       ref="inputEl"
       v-model="query"
       class="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+      :aria-label="__('Buscar en la conversación')"
       :placeholder="__('Buscar en la conversación…')"
       @keydown.enter.prevent="go(1)"
       @keydown.esc.prevent="close"
     />
-    <span class="flex-none text-[11px] tabular-nums text-ink-gray-5">
+    <span
+      class="flex-none text-[11px] tabular-nums text-ink-gray-5"
+      role="status"
+      aria-live="polite"
+      :aria-label="matches.length ? __('resultado {0} de {1}', [current + 1, matches.length]) : ''"
+    >
       {{ matches.length ? `${current + 1}/${matches.length}` : query.trim().length >= 2 ? '0' : '' }}
     </span>
     <button

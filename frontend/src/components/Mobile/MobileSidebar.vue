@@ -8,7 +8,7 @@
 -->
 <template>
   <TransitionRoot :show="sidebarOpened">
-    <Dialog as="div" class="fixed inset-0 z-40" @close="sidebarOpened = false">
+    <Dialog as="div" class="fixed inset-0 z-40" :aria-label="__('Menú')" @close="sidebarOpened = false">
       <TransitionChild
         as="template"
         enter="transition ease-[cubic-bezier(.32,.72,0,1)] duration-200 transform"
@@ -69,6 +69,7 @@
                 :key="item.key"
                 class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5"
                 :class="rowClass(item.group)"
+                :aria-current="activeGroup === item.group ? 'page' : undefined"
                 @click="go({ path: item.to })"
               >
                 <component :is="item.icon" class="h-[18px] w-[18px] flex-none" />
@@ -95,6 +96,7 @@
                 <template #header="{ opened, toggle }">
                   <button
                     class="mt-4 flex h-7 w-full cursor-pointer items-center gap-1.5 px-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-ink-gray-5"
+                    :aria-expanded="opened"
                     @click="toggle()"
                   >
                     <FeatherIcon
@@ -129,7 +131,7 @@
                 :href="app.route"
                 class="press flex flex-col items-center gap-1 rounded-[10px] px-1 py-2 hover:bg-surface-gray-2"
               >
-                <img class="h-7 w-7 rounded-md" :src="app.logo" />
+                <img class="h-7 w-7 rounded-md" :src="app.logo" alt="" />
                 <span class="w-full truncate text-center text-[10.5px] text-ink-gray-7">
                   {{ app.title }}
                 </span>
@@ -204,6 +206,7 @@
                   v-if="user.user_image"
                   :src="user.user_image"
                   class="h-full w-full object-cover"
+                  alt=""
                 />
                 <span v-else>{{ initials }}</span>
               </span>

@@ -31,6 +31,7 @@
             :key="t.key"
             class="rounded-full px-3 py-[5px] text-[12px] font-semibold"
             :class="typeFilter === t.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
+            :aria-pressed="typeFilter === t.key"
             @click="setType(t.key)"
           >
             {{ t.label }}
@@ -87,9 +88,12 @@
       <div
         v-for="c in rows"
         :key="c.name"
+        role="button"
+        tabindex="0"
         class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
         :style="`grid-template-columns:${GRID};min-height:54px`"
         @click="$router.push(`/campaigns/${c.name}`)"
+        @keydown.enter="$router.push(`/campaigns/${c.name}`)"
       >
         <div class="min-w-0">
           <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ c.title }}</div>
@@ -105,7 +109,7 @@
         <div><Bar :pct="c.open_rate" color="var(--brand)" /></div>
         <div><Bar :pct="c.click_rate" color="#2f6fed" /></div>
         <Dropdown :options="rowMenu(c)" @click.stop>
-          <button class="text-[14px] text-ink-gray-4" @click.stop>···</button>
+          <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')" @click.stop>···</button>
         </Dropdown>
       </div>
     </div>

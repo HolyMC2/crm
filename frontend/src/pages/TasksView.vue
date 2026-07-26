@@ -15,6 +15,7 @@
             :key="s.key"
             class="px-[11px] py-[5px] text-[12px]"
             :class="[i ? 'border-l border-outline-gray-2' : '', scope === s.key ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-white text-ink-gray-6']"
+            :aria-pressed="scope === s.key"
             @click="scope = s.key"
           >
             {{ s.label }}
@@ -33,6 +34,7 @@
         :key="t.key"
         class="rounded-full px-3 py-1 text-[11.5px] font-semibold"
         :class="tabStyle(t)"
+        :aria-pressed="tab === t.key"
         @click="tab = t.key"
       >
         {{ t.label }}
@@ -67,11 +69,15 @@
         :style="`grid-template-columns:${GRID};min-height:52px`"
       >
         <button
+          type="button"
+          role="checkbox"
+          :aria-checked="t.status === 'Done'"
+          :aria-label="t.title ? __('Completada') + ': ' + t.title : __('Marcar completada')"
           class="flex h-5 w-5 flex-none items-center justify-center rounded-md border-[1.5px]"
           :class="t.status === 'Done' ? 'bg-surface-green-3 border-outline-green-2 text-white' : 'border-outline-gray-3'"
           @click="toggleDone(t)"
         >
-          <span v-if="t.status === 'Done'" class="text-[12px]">✓</span>
+          <span v-if="t.status === 'Done'" class="text-[12px]" aria-hidden="true">✓</span>
         </button>
         <div class="flex min-w-0 items-center gap-2">
           <button
@@ -86,6 +92,7 @@
             class="flex h-6 w-6 flex-none items-center justify-center rounded-full text-[9px] font-semibold"
             :style="`background:${avatarColor(t.assigned_to)[0]};color:${avatarColor(t.assigned_to)[1]}`"
             :title="ownerName(t.assigned_to)"
+            :aria-label="ownerName(t.assigned_to)"
           >
             {{ initials(ownerName(t.assigned_to)) }}
           </span>
@@ -105,7 +112,7 @@
         </template>
         <div class="text-[12px]" :class="dueClass(t)">{{ t.due_date ? dueText(t.due_date) : '—' }}</div>
         <Dropdown :options="rowMenu(t)" @click.stop>
-          <button class="text-[14px] text-ink-gray-4">···</button>
+          <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')">···</button>
         </Dropdown>
       </div>
     </div>

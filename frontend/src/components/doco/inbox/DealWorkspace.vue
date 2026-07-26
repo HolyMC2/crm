@@ -23,10 +23,12 @@
       </div>
       <LostStagePrompt />
 
-      <div class="flex h-11 flex-none items-center gap-0.5 overflow-x-auto border-b border-outline-gray-1 px-3 text-[13px]">
+      <div role="tablist" class="flex h-11 flex-none items-center gap-0.5 overflow-x-auto border-b border-outline-gray-1 px-3 text-[13px]">
         <button
           v-for="t in visibleTabs"
           :key="t.key"
+          role="tab"
+          :aria-selected="activeTab === t.key"
           class="press flex h-11 flex-none items-center gap-1.5 whitespace-nowrap border-b-2 px-[11px] transition-colors duration-150"
           :class="
             activeTab === t.key

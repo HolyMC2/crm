@@ -32,6 +32,7 @@
         ref="cardRef"
         role="dialog"
         :aria-label="__('Desglose de puntaje')"
+        tabindex="-1"
         class="flex max-h-[82vh] flex-col overflow-hidden border border-outline-gray-2 bg-surface-white shadow-lg"
         :class="
           isMobile
@@ -214,6 +215,7 @@ async function toggle() {
   open.value = true
   ensureLoaded()
   window.addEventListener('keydown', onKey)
+  nextTick(() => cardRef.value?.focus())
   if (!isMobile.value) {
     await nextTick()
     place()
@@ -238,6 +240,7 @@ function close() {
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('scroll', close, true)
   window.removeEventListener('resize', close)
+  triggerRef.value?.focus?.()
 }
 function onKey(e) {
   if (e.key === 'Escape') close()

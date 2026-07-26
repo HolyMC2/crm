@@ -18,7 +18,13 @@
     <div class="fixed inset-0 z-40 bg-black/40" @click="skip" />
 
     <div
+      ref="sheetEl"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="__('Llamada terminada')"
+      tabindex="-1"
       class="sheet-in fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col overflow-y-auto rounded-t-2xl bg-surface-white px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)] sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[380px] sm:rounded-2xl sm:pb-4"
+      @keydown.esc="skip"
     >
       <div class="mx-auto mb-2.5 h-1 w-10 flex-none rounded-full bg-surface-gray-4 sm:hidden" aria-hidden="true" />
 
@@ -47,6 +53,7 @@
           v-for="o in outcomes"
           :key="o.value"
           type="button"
+          :aria-pressed="outcome === o.value"
           class="press inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12.5px] font-medium"
           :class="
             outcome === o.value
@@ -55,7 +62,7 @@
           "
           @click="outcome = o.value"
         >
-          <span>{{ o.emoji }}</span>{{ __(o.label) }}
+          <span aria-hidden="true">{{ o.emoji }}</span>{{ __(o.label) }}
         </button>
       </div>
 
@@ -110,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { call, toast } from 'frappe-ui'
 import { OUTCOMES, tomorrow9Epoch, formatCallDuration } from '@/utils/postcallOutcome'
 
@@ -118,6 +125,8 @@ const outcomes = OUTCOMES
 
 const visible = ref(false)
 const payload = ref(null)
+const sheetEl = ref(null)
+let _restoreFocus = null
 const outcome = ref('')
 const note = ref('')
 const createTask = ref(false)
@@ -143,11 +152,15 @@ function open(callPayload) {
   createTask.value = false
   saving.value = false
   visible.value = true
+  _restoreFocus = document.activeElement
+  nextTick(() => sheetEl.value?.focus())
 }
 
 function close() {
   visible.value = false
   payload.value = null
+  _restoreFocus?.focus?.()
+  _restoreFocus = null
 }
 
 function skip() {

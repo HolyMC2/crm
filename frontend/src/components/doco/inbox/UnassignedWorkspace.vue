@@ -52,6 +52,7 @@
         v-if="!isArchived"
         class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[11.5px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
         :disabled="busy"
+        :aria-label="__('Archivar')"
         :title="__('Archivar sin crear lead/trato — seguirá disponible')"
         @click="onArchive"
       >
@@ -61,6 +62,7 @@
         v-else
         class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-2 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-3 hover:bg-surface-blue-2 disabled:opacity-50"
         :disabled="busy"
+        :aria-label="__('Desarchivar')"
         @click="onUnarchive"
       >
         <LucideArchiveRestore class="h-3.5 w-3.5" /> <span class="hidden sm:inline">{{ __('Desarchivar') }}</span>
@@ -124,7 +126,7 @@
                 <template #default="{ openFileSelector }">
                   <div class="flex items-center space-x-2">
                     <Dropdown :options="msgrUploadOptions(openFileSelector)">
-                      <FeatherIcon name="plus" class="size-4.5 cursor-pointer text-ink-gray-5" />
+                      <FeatherIcon name="plus" class="size-4.5 cursor-pointer text-ink-gray-5" :aria-label="__('Adjuntar')" />
                     </Dropdown>
                   </div>
                 </template>
@@ -132,6 +134,7 @@
               <IconPicker v-slot="{ togglePopover }" v-model="msgrEmoji" @update:modelValue="onMsgrEmoji">
                 <SmileIcon
                   class="flex size-4.5 cursor-pointer rounded-sm text-xl leading-none text-ink-gray-4"
+                  :aria-label="__('Emojis')"
                   @click="togglePopover"
                 />
               </IconPicker>
@@ -141,6 +144,7 @@
               ref="msgrTextareaRef"
               v-model="msgrReply"
               rows="1"
+              :aria-label="__('Responder por Messenger')"
               :placeholder="__('Responder por Messenger…')"
               class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-2"
               @keydown.enter.exact.prevent="sendMsgr"
@@ -180,12 +184,16 @@
       <!-- capture form: docked 300px panel on desktop; bottom sheet on mobile -->
       <div
         v-show="!isMobile || captureOpen"
+        :role="isMobile && captureOpen ? 'dialog' : undefined"
+        :aria-modal="isMobile && captureOpen ? 'true' : undefined"
+        :aria-label="isMobile ? __('Capturar y convertir') : undefined"
         class="scb flex flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5"
         :class="
           isMobile
             ? 'sheet-in fixed inset-x-0 bottom-0 z-50 max-h-[82vh] rounded-t-2xl pb-[calc(env(safe-area-inset-bottom)+14px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)]'
             : 'w-[300px] flex-none'
         "
+        @keydown.esc="captureOpen = false"
       >
         <div v-if="isMobile" class="mx-auto mb-2 h-1 w-10 flex-none rounded-full bg-surface-gray-4" aria-hidden="true" />
         <div class="mb-2 flex items-center justify-between">
@@ -221,7 +229,7 @@
             <input v-model="form.expected_closure_date" type="date" :class="inputCls" /></label>
         </div>
 
-        <button v-if="!isMessenger" class="mt-3 flex items-center gap-1 text-[11px] font-semibold text-ink-gray-6" @click="showFiscal = !showFiscal">
+        <button v-if="!isMessenger" class="mt-3 flex items-center gap-1 text-[11px] font-semibold text-ink-gray-6" :aria-expanded="showFiscal" @click="showFiscal = !showFiscal">
           {{ showFiscal ? '▾' : '▸' }} {{ __('Datos fiscales') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span>
         </button>
         <div v-if="showFiscal" class="mt-1.5 flex flex-col gap-2">

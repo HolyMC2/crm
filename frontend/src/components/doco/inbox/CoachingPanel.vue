@@ -55,6 +55,7 @@
         v-model="draft"
         rows="2"
         class="w-full resize-y rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-[12px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-3 focus:bg-surface-white focus:outline-none focus:ring-0"
+        :aria-label="__('Nota privada para el equipo')"
         :placeholder="__('Nota privada para el equipo…')"
         :maxlength="MAX_NOTE_LEN"
         @keydown.enter.meta.prevent="addNote"

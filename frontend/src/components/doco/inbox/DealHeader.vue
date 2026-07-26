@@ -25,7 +25,9 @@
         class="min-w-0 flex-1"
         :class="isMobile ? 'cursor-pointer' : ''"
         :role="isMobile ? 'button' : undefined"
+        :tabindex="isMobile ? 0 : undefined"
         @click="isMobile && openContext()"
+        @keydown.enter="isMobile && openContext()"
       >
         <div class="flex flex-wrap items-center gap-2">
           <span class="truncate text-base font-bold text-ink-gray-9">{{ name || '—' }}</span>
@@ -136,6 +138,7 @@
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg text-[15px] text-white"
           style="background: var(--brand)"
           :title="__('Llamar')"
+          :aria-label="__('Llamar')"
           @click="call"
         >
           <LucidePhone class="h-4 w-4" />
@@ -174,6 +177,7 @@
           <input
             v-model="newTag"
             class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-base text-ink-gray-9"
+            :aria-label="__('Nueva etiqueta')"
             :placeholder="__('Nueva etiqueta… (urgente, garantía, mayoreo)')"
             @keydown.enter.prevent="addTag(newTag)"
           />
@@ -190,6 +194,7 @@
           type="datetime-local"
           :min="minLocal"
           class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-base text-ink-gray-9"
+          :aria-label="__('Posponer hasta')"
         />
       </template>
       <template #actions>

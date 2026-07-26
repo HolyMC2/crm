@@ -19,6 +19,7 @@
             :key="v.key"
             class="inline-flex items-center gap-1 px-[11px] py-[5px] text-[12px]"
             :class="[i ? 'border-l border-outline-gray-2' : '', v.key === view ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-white text-ink-gray-6']"
+            :aria-pressed="v.key === view"
             @click="selectView(v)"
           >
             {{ v.label }}
@@ -30,10 +31,11 @@
         <FilterPopover :label="__('Source')" :options="sourceOptions" :selected="sourceF" @update:selected="sourceF = $event" />
       </div>
       <div class="flex items-center gap-2">
-        <div class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5">
+        <div class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
             :value="search"
+            :aria-label="__('Buscar leads')"
             @input="onSearch($event.target.value)"
             :placeholder="__('Buscar leads…')"
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
@@ -76,7 +78,7 @@
         class="inline-flex items-center gap-1.5 rounded-[7px] border border-outline-green-2 bg-surface-green-2 px-2 py-1 text-[11.5px] font-medium text-ink-green-3"
       >
         {{ c.label }}
-        <button class="text-[13px] leading-none" @click="removeChip(c)">×</button>
+        <button class="text-[13px] leading-none" :aria-label="__('Quitar filtro') + ' ' + c.label" @click="removeChip(c)">×</button>
       </span>
       <button class="text-[11.5px] text-ink-gray-5" @click="clearAll">{{ __('Limpiar todo') }}</button>
     </div>
@@ -100,7 +102,7 @@
       class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
       :style="`grid-template-columns:${GRID};height:34px`"
     >
-      <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" @change="toggleAll" />
+      <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" :aria-label="__('Seleccionar todo')" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('lead_name')">{{ __('Contacto') }}{{ sortArrow('lead_name') }}</button>
       <button v-if="col('score')" class="text-left uppercase" :style="'color:var(--brand)'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
       <div v-if="col('stage')">{{ __('Stage') }}</div>
@@ -118,11 +120,14 @@
       <div
         v-for="r in rows"
         :key="r.name"
+        role="button"
+        tabindex="0"
         class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
         :style="`grid-template-columns:${GRID};min-height:50px`"
         @click="openLead(r.name)"
+        @keydown.enter="openLead(r.name)"
       >
-        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" @click.stop="toggleRow(r.name)" />
+        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" :aria-label="__('Seleccionar') + ' ' + label(r)" @click.stop="toggleRow(r.name)" />
         <div class="flex items-center gap-2">
           <span
             class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
@@ -176,7 +181,7 @@
           </span>
         </div>
         <Dropdown :options="rowMenu(r)" @click.stop>
-          <button class="text-[14px] text-ink-gray-4" @click.stop>···</button>
+          <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')" @click.stop>···</button>
         </Dropdown>
       </div>
 

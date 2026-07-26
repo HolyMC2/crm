@@ -11,6 +11,10 @@
 <template>
   <div
     class="fixed inset-0 z-40 flex items-stretch justify-center sm:items-start sm:pt-[8vh]"
+    role="dialog"
+    aria-modal="true"
+    :aria-label="__('Buscar mensajes')"
+    @keydown.esc="close"
     @click.self="close"
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
@@ -29,11 +33,12 @@
             <LucideX class="h-4 w-4" />
           </button>
         </div>
-        <div class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px]">
+        <div class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
           <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
           <input
             ref="searchRef"
             :value="query"
+            :aria-label="__('Buscar en las conversaciones')"
             @input="onInput($event.target.value)"
             @keydown.esc="close"
             :placeholder="__('Buscar en las conversaciones…')"
