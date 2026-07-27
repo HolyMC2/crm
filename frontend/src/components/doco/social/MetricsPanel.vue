@@ -1,0 +1,101 @@
+<!--
+  MetricsPanel — the Social "Métricas" view (W6 B0 extract from SocialCalendar.vue).
+  Per-shop leaderboard / cross-branch roll-up (D5) + per-post dashboard table (S12) +
+  client-side CSV export. Reads the get_dashboard / get_leaderboard resources passed
+  down from the page; owns no fetching of its own.
+-->
+<template>
+  <div class="p-4">
+    <!-- per-shop leaderboard / cross-branch roll-up -->
+    <div class="mb-2 flex items-center justify-between">
+      <span class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Por sucursal') }}</span>
+      <button class="rounded-md border border-outline-gray-2 px-2 py-1 text-[11px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" @click="exportLeaderboard">{{ __('Exportar CSV') }}</button>
+    </div>
+    <div class="mb-5 overflow-hidden rounded-[12px] border border-outline-gray-2 bg-surface-white">
+      <table class="w-full text-[12.5px]">
+        <thead class="bg-surface-gray-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">
+          <tr>
+            <th class="px-3 py-2 text-left">{{ __('Sucursal') }}</th>
+            <th class="px-3 py-2 text-right">{{ __('Pubs') }}</th>
+            <th class="px-3 py-2 text-right">{{ __('Alcance') }}</th>
+            <th class="px-3 py-2 text-right">{{ __('Interacción') }}</th>
+            <th class="px-3 py-2 text-right">{{ __('Clics') }}</th>
+            <th class="px-3 py-2 text-right text-ink-green-3">{{ __('Leads WA') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="r in lb.data || []" :key="r.shop" class="border-t border-outline-gray-1">
+            <td class="px-3 py-2 font-medium text-ink-gray-8">{{ r.shop_name || r.shop }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ r.posts }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ r.reach.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ r.engagement.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ r.link_clicks.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-3">{{ r.leads }}</td>
+          </tr>
+          <tr v-if="(lb.data || []).length > 1" class="border-t-2 border-outline-gray-2 bg-surface-gray-1 font-bold">
+            <td class="px-3 py-2 text-ink-gray-7">{{ __('Total red') }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.posts }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.reach.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.engagement.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.link_clicks.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right tabular-nums text-ink-green-3">{{ lbTotals.leads }}</td>
+          </tr>
+          <tr v-if="!(lb.data || []).length"><td colspan="6" class="px-3 py-6 text-center text-ink-gray-4">{{ lb.loading ? __('Cargando…') : __('Sin datos por sucursal todavía.') }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <span class="mb-2 block text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Por publicación') }}</span>
+    <div class="overflow-hidden rounded-[12px] border border-outline-gray-2 bg-surface-white">
+      <table class="w-full text-[12.5px]">
+        <thead class="bg-surface-gray-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">
+          <tr>
+            <th class="px-3 py-2 text-left">{{ __('Publicación') }}</th>
+            <th class="px-3 py-2 text-right">{{ __('Alcance') }}</th>
+            <th class="px-3 py-2 text-right">{{ __('Interacción') }}</th>
+            <th class="px-3 py-2 text-right">{{ __('Clics') }}</th>
+            <th class="px-3 py-2 text-right text-ink-green-3">{{ __('Leads WA') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in dash.data || []" :key="row.name" class="border-t border-outline-gray-1">
+            <td class="px-3 py-2"><div class="font-medium text-ink-gray-8">{{ row.title || row.name }}</div><div class="text-2xs text-ink-gray-4">{{ row.status }} · {{ (row.scheduled_time || '').slice(0, 10) }}</div></td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ row.reach.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ row.engagement.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right tabular-nums">{{ row.link_clicks.toLocaleString() }}</td>
+            <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-3">{{ row.leads }}</td>
+          </tr>
+          <tr v-if="!(dash.data || []).length"><td colspan="5" class="px-3 py-8 text-center text-ink-gray-4">{{ dash.loading ? __('Cargando…') : __('Sin datos todavía (las métricas se refrescan a diario).') }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { toast } from 'frappe-ui'
+
+const props = defineProps({
+  dash: { type: Object, required: true },
+  lb: { type: Object, required: true },
+  lbTotals: { type: Object, required: true },
+})
+
+// CSV export of the per-shop leaderboard (D5) — built client-side, no backend file.
+function exportLeaderboard() {
+  const rows = props.lb.data || []
+  if (!rows.length) { toast.error(__('Sin datos para exportar')); return }
+  const cols = ['shop_name', 'posts', 'reach', 'impressions', 'engagement', 'link_clicks', 'leads']
+  const head = ['Sucursal', 'Publicaciones', 'Alcance', 'Impresiones', 'Interacción', 'Clics', 'Leads WA']
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  const csv = [head.map(esc).join(',')]
+    .concat(rows.map((r) => cols.map((c) => esc(r[c])).join(',')))
+    .join('\n')
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'social-sucursales.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+</script>
