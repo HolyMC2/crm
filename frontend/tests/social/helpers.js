@@ -44,6 +44,17 @@ export async function gotoSocial(page) {
   await expect(SEL.title(page)).toBeVisible({ timeout: 30_000 })
 }
 
+// Authenticated navigation to any CRM SPA route (evergreen/mentions live at /social/*).
+export async function gotoAuthed(page, route = '/social') {
+  await login(page)
+  await page.goto(`/crm${route}`, { waitUntil: 'domcontentloaded' })
+}
+
+// data-testid locator shorthand.
+export function byTestId(page, id) {
+  return page.locator(`[data-testid="${id}"]`)
+}
+
 // Centralized, text/role-based selectors — resilient to the Wave B DOM churn.
 // UPDATE HERE (one place) if the toolbar markup changes.
 export const SEL = {
@@ -55,12 +66,15 @@ export const SEL = {
   nextMonth: (page) => page.getByRole('button', { name: '›' }),
   // month label between the ‹ › buttons, e.g. "julio 2026" (capitalize + a 4-digit year)
   monthLabel: (page) => page.locator('span.capitalize').filter({ hasText: /\d{4}/ }).first(),
+  // Mes/Semana/Lista sub-toggle (calView) — label is the button text
+  calView: (page, label) => page.getByRole('button', { name: label, exact: true }),
+  clearFilters: (page) => page.getByRole('button', { name: /Limpiar/ }),
 }
 
-// Console + page errors, minus the known-benign. A2 changed channels string→dict, so a
-// channel chip renders "[object Object]" until Wave B fixes the UI — ignore that one
-// string (and don't assert chip text anywhere). ResizeObserver loop is browser noise.
-const IGNORE = [/\[object Object\]/, /ResizeObserver loop/]
+// Console + page errors, minus the known-benign. B1's channelBadges now renders the A2
+// {channel,status} dict properly, so the old "[object Object]" chip cosmetic is GONE and is
+// no longer ignored — a reappearance is now a real failure. ResizeObserver loop is browser noise.
+const IGNORE = [/ResizeObserver loop/]
 
 export function collectErrors(page) {
   const errors = []
