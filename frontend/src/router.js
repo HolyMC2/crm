@@ -213,6 +213,12 @@ const routes = [
     meta: { navLabel: 'Social', title: 'Social' },
   },
   {
+    path: '/social/evergreen',
+    name: 'Social Evergreen',
+    component: () => import('@/pages/SocialEvergreen.vue'),
+    meta: { navLabel: 'Social', title: 'Biblioteca evergreen' },
+  },
+  {
     path: '/:invalidpath',
     name: 'Invalid Page',
     component: () => import('@/pages/InvalidPage.vue'),
