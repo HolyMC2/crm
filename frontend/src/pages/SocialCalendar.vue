@@ -26,11 +26,16 @@
           <option v-if="isManager" value="">{{ __('Todas las sucursales') }}</option>
           <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
         </select>
-        <div v-if="view === 'calendar'" class="flex items-center gap-1">
-          <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shiftMonth(-1)">‹</button>
-          <span class="min-w-[140px] text-center text-[13px] font-semibold capitalize text-ink-gray-8">{{ monthLabel }}</span>
-          <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shiftMonth(1)">›</button>
-        </div>
+        <template v-if="view === 'calendar'">
+          <div class="flex overflow-hidden rounded-lg border border-outline-gray-2 text-[11px] font-semibold">
+            <button v-for="cv in CAL_VIEWS" :key="cv.key" class="px-2 py-1" :class="calView === cv.key ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="calView = cv.key">{{ cv.label }}</button>
+          </div>
+          <div class="flex items-center gap-1">
+            <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shift(-1)">‹</button>
+            <span class="min-w-[140px] text-center text-[13px] font-semibold capitalize text-ink-gray-8">{{ rangeLabel }}</span>
+            <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shift(1)">›</button>
+          </div>
+        </template>
       </div>
       <div class="flex items-center gap-2">
         <button v-if="isManager" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" @click="openShops" :title="__('Asignar empleados a sucursales')">
@@ -62,13 +67,44 @@
       <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-3">+{{ pendingPosts.length - 6 }}</span>
     </div>
 
+    <!-- filter chips (pillar / status / channel family) — client-side, combinable -->
+    <div
+      v-if="view === 'calendar' && (visiblePillars.length || visibleStatuses.length || hasFamilies)"
+      class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-white px-4 py-2 text-[11px]"
+    >
+      <button
+        v-for="pl in visiblePillars" :key="'k' + pl.kind"
+        class="rounded-full border px-2 py-0.5 font-medium"
+        :class="filterKinds.includes(pl.kind) ? pl.chip + ' border-transparent ring-1 ring-gray-400 dark:ring-gray-500' : 'border-outline-gray-2 text-ink-gray-6'"
+        @click="toggleFilter('kind', pl.kind)"
+      >{{ pl.emoji }} {{ pl.kind }} · {{ filterCounts.kinds[pl.kind] }}</button>
+      <span v-if="visiblePillars.length && visibleStatuses.length" class="text-ink-gray-3">|</span>
+      <button
+        v-for="st in visibleStatuses" :key="'s' + st"
+        class="rounded-full border px-2 py-0.5 font-medium"
+        :class="filterStatuses.includes(st) ? chip(st) + ' border-transparent ring-1 ring-gray-400 dark:ring-gray-500' : 'border-outline-gray-2 text-ink-gray-6'"
+        @click="toggleFilter('status', st)"
+      >{{ statusLabel(st) }} · {{ filterCounts.statuses[st] }}</button>
+      <span v-if="visibleStatuses.length && hasFamilies" class="text-ink-gray-3">|</span>
+      <button
+        v-for="fam in CHANNEL_FAMILIES.filter((f) => filterCounts.families[f.key])" :key="'f' + fam.key"
+        class="rounded-full border px-2 py-0.5 font-medium"
+        :class="filterFamilies.includes(fam.key) ? 'border-transparent bg-surface-gray-3 text-ink-gray-8 ring-1 ring-gray-400 dark:ring-gray-500' : 'border-outline-gray-2 text-ink-gray-6'"
+        @click="toggleFilter('family', fam.key)"
+      >{{ fam.emoji }} {{ fam.label }} · {{ filterCounts.families[fam.key] }}</button>
+      <button v-if="activeFilterCount" class="ml-auto rounded-full px-2 py-0.5 font-semibold text-ink-gray-5 hover:text-ink-gray-8" @click="clearFilters">✕ {{ __('Limpiar') }} ({{ activeFilterCount }})</button>
+    </div>
+
     <!-- calendar (grid + tray) OR métricas -->
     <CalendarGrid
       v-if="view === 'calendar'"
       :days="days"
       :posts-by-day="postsByDay"
       :agenda-days="agendaDays"
-      :drafts="cal.data?.drafts || []"
+      :drafts="visibleDrafts"
+      :cal-view="calView"
+      :season-by-day="seasonByDay"
+      :today-key="todayKey"
       @open-new="openNewPost"
       @open-edit="openEditPost"
       @reschedule="onReschedule"
@@ -224,19 +260,31 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
-import { useSocialCalendar, KIND_EMOJI } from '@/composables/socialCalendar'
+import { useSocialCalendar, KIND_EMOJI, PILLARS, STATUSES, STATUS_LABEL, CHANNEL_FAMILIES, chip } from '@/composables/socialCalendar'
 import CalendarGrid from '@/components/doco/social/CalendarGrid.vue'
 import MetricsPanel from '@/components/doco/social/MetricsPanel.vue'
 import SocialComposer from '@/components/doco/social/SocialComposer.vue'
 
-// ── shared calendar data core (resources, month nav, shop selector) ──────────
+// ── shared calendar data core (resources, month/week nav, filters, shop selector) ──
 const sc = useSocialCalendar()
 const {
-  monthLabel, days, shiftMonth,
+  calView, rangeLabel, days, shift, todayKey,
   view, dash, lb, lbTotals, showMetrics,
-  cal, postsByDay, pendingPosts, agendaDays, reschedulePost,
+  cal, postsByDay, pendingPosts, agendaDays, visibleDrafts, reschedulePost, seasonByDay,
+  filterKinds, filterStatuses, filterFamilies, toggleFilter, clearFilters, activeFilterCount, filterCounts,
   channels, isManager, shopOptions, shop, onShopChange,
 } = sc
+
+// calendar sub-view toggle + filter-chip helpers (only surface values with posts)
+const CAL_VIEWS = [
+  { key: 'month', label: __('Mes') },
+  { key: 'week', label: __('Semana') },
+  { key: 'list', label: __('Lista') },
+]
+const statusLabel = (s) => STATUS_LABEL[s] || s
+const visiblePillars = computed(() => PILLARS.filter((p) => filterCounts.value.kinds[p.kind]))
+const visibleStatuses = computed(() => STATUSES.filter((s) => filterCounts.value.statuses[s]))
+const hasFamilies = computed(() => !!(filterCounts.value.families.FB || filterCounts.value.families.IG))
 
 // ── composer handoff (imperative open, via the child's exposed methods) ──────
 const composerRef = ref(null)

@@ -1,16 +1,17 @@
 <!--
-  CalendarGrid — the Social calendar view (W6 B0 extract from SocialCalendar.vue).
-  Mobile agenda (list of days with posts) OR the 7-col month grid + status legend +
-  the unscheduled-drafts tray. Drag state is self-contained: month days are drop
-  targets, tiles and tray chips are drag sources. Emits open-new(day) / open-edit(post)
-  and reschedule({ post, dayKey }) up to the page; the page owns the resources.
+  CalendarGrid — the Social calendar view (W6 B0 extract, B1 juiced). Renders one of:
+  · agenda LIST (calView 'list' or mobile) — days with posts,
+  · WEEK row (7 cells) or MONTH grid (42 cells) — same markup, `days` length differs.
+  Tiles are colored by PILLAR (post_kind); each channel shows a status-colored dot;
+  evergreen posts get ♻, recycled get ↺; season ribbons band the grid cells. Drag state
+  is self-contained and past days are not droppable. Emits open-new(day) / open-edit(post)
+  and reschedule({ post, dayKey }) up to the page; the page owns the resources + filters.
 -->
 <template>
-  <!-- mobile agenda: the 7-col month grid is unreadable at 390px — list the
-       month's days that have posts (+ hoy), tap day = nueva, tap post = editar -->
-  <div v-if="isMobile" class="p-3">
+  <!-- agenda / list (also the mobile default): the 7-col grid is unreadable at 390px -->
+  <div v-if="isList" class="p-3">
     <div v-if="!agendaDays.length" class="py-10 text-center text-[12px] text-ink-gray-4">
-      {{ __('Sin publicaciones este mes — toca + para crear una') }}
+      {{ __('Sin publicaciones — toca + para crear una') }}
     </div>
     <div v-for="day in agendaDays" :key="day.key" class="mb-2 rounded-lg border border-outline-gray-2 bg-surface-white p-2">
       <div class="mb-1 flex items-center justify-between">
@@ -23,10 +24,17 @@
         v-for="p in postsByDay[day.key] || []"
         :key="p.name"
         class="press mb-0.5 block w-full truncate rounded px-2 py-1 text-left text-[11.5px] font-medium"
-        :class="chip(p.status)"
+        :class="[pillarChip(p.post_kind), p.status === 'Cancelado' ? 'line-through opacity-60' : '']"
         @click="emit('open-edit', p)"
       >
-        {{ chanIcons(p.channels) }} {{ p.title || p.name }}
+        <span class="mr-0.5 inline-flex items-center gap-px align-middle">
+          <span v-if="p.evergreen" :title="__('Evergreen (rotable)')">♻</span>
+          <span v-if="p.recycled_from" class="opacity-60" :title="__('Reciclado')">↺</span>
+          <span v-for="cb in channelBadges(p.channels)" :key="cb.channel" class="inline-flex items-center" :title="cb.channel + ' · ' + cb.status">
+            <span>{{ cb.emoji }}</span>
+            <span class="ml-px inline-block size-1.5 shrink-0 rounded-full" :class="cb.dot" />
+          </span>
+        </span>{{ p.title || p.name }}
       </button>
     </div>
   </div>
@@ -36,7 +44,7 @@
     <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
       <div v-for="d in WEEKDAYS" :key="d">{{ d }}</div>
     </div>
-    <!-- month grid -->
+    <!-- month (42) or week (7) grid — same cells, driven by `days` length -->
     <div class="mt-1 grid grid-cols-7 gap-1">
       <div
         v-for="day in days"
@@ -44,13 +52,20 @@
         class="min-h-[92px] rounded-lg border p-1 text-left"
         :class="[
           day.inMonth ? 'border-outline-gray-2 bg-surface-white' : 'border-transparent bg-surface-gray-1/50',
-          dragOver === day.key ? 'ring-2 ring-green-400' : '',
+          dragOver === day.key ? 'ring-2 ring-green-400 dark:ring-green-500' : '',
+          day.key < todayKey ? 'opacity-70' : '',
         ]"
         @click="emit('open-new', day)"
-        @dragover.prevent="dragOver = day.key"
+        @dragover.prevent="onDragOver(day)"
         @dragleave="dragOver = (dragOver === day.key ? '' : dragOver)"
         @drop="onDrop(day)"
       >
+        <!-- season ribbons: label on the span's first visible day, emoji elsewhere -->
+        <div
+          v-for="rib in seasonByDay[day.key] || []" :key="rib.name"
+          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-3"
+          :title="rib.label"
+        >{{ rib.isStart ? rib.label : rib.emoji }}</div>
         <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-3' : 'text-ink-gray-4'">{{ day.n }}</div>
         <div class="flex flex-col gap-0.5">
           <button
@@ -58,19 +73,36 @@
             :key="p.name"
             draggable="true"
             class="truncate rounded px-1 py-0.5 text-left text-[10.5px] font-medium"
-            :class="chip(p.status)"
+            :class="[pillarChip(p.post_kind), p.status === 'Cancelado' ? 'line-through opacity-60' : '']"
             :title="p.title + ' · ' + p.status + ' · ' + __('arrastra para reprogramar')"
             @click.stop="emit('open-edit', p)"
             @dragstart="dragged = p"
             @dragend="dragged = null"
-          >{{ chanIcons(p.channels) }} {{ p.title || p.name }}</button>
+          >
+            <span class="mr-0.5 inline-flex items-center gap-px align-middle">
+              <span v-if="p.evergreen" :title="__('Evergreen (rotable)')">♻</span>
+              <span v-if="p.recycled_from" class="opacity-60" :title="__('Reciclado')">↺</span>
+              <span v-for="cb in channelBadges(p.channels)" :key="cb.channel" class="inline-flex items-center" :title="cb.channel + ' · ' + cb.status">
+                <span>{{ cb.emoji }}</span>
+                <span class="ml-px inline-block size-1.5 shrink-0 rounded-full" :class="cb.dot" />
+              </span>
+            </span>{{ p.title || p.name }}
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- status legend -->
+    <!-- pillar legend -->
     <div class="mt-3 flex flex-wrap items-center gap-1.5 text-[10.5px]">
-      <span v-for="st in LEGEND" :key="st.status" class="rounded px-1.5 py-0.5 font-medium" :class="chip(st.status)">{{ st.label }}</span>
+      <span class="font-semibold text-ink-gray-5">{{ __('Tipo') }}:</span>
+      <span v-for="pl in PILLARS" :key="pl.kind" class="rounded px-1.5 py-0.5 font-medium" :class="pl.chip">{{ pl.emoji }} {{ pl.kind }}</span>
+    </div>
+    <!-- channel status-dot legend -->
+    <div class="mt-1.5 flex flex-wrap items-center gap-2 text-[10.5px] text-ink-gray-6">
+      <span class="font-semibold text-ink-gray-5">{{ __('Canal') }}:</span>
+      <span v-for="sd in DOT_LEGEND" :key="sd.status" class="inline-flex items-center gap-1">
+        <span class="inline-block size-1.5 rounded-full" :class="sd.dot" />{{ sd.label }}
+      </span>
     </div>
 
     <!-- unscheduled drafts tray -->
@@ -80,46 +112,64 @@
         <button
           v-for="p in drafts" :key="p.name"
           draggable="true"
-          class="rounded-md px-2 py-1 text-[11.5px] font-medium" :class="chip(p.status)"
+          class="rounded-md px-2 py-1 text-[11.5px] font-medium"
+          :class="[pillarChip(p.post_kind), p.status === 'Cancelado' ? 'line-through opacity-60' : '']"
           :title="__('arrastra a un día para fecharlo')"
           @click="emit('open-edit', p)"
           @dragstart="dragged = p"
           @dragend="dragged = null"
-        >{{ chanIcons(p.channels) }} {{ p.title || p.name }}</button>
+        >
+          <span class="mr-0.5 inline-flex items-center gap-px align-middle">
+            <span v-if="p.evergreen" :title="__('Evergreen (rotable)')">♻</span>
+            <span v-if="p.recycled_from" class="opacity-60" :title="__('Reciclado')">↺</span>
+            <span v-for="cb in channelBadges(p.channels)" :key="cb.channel" class="inline-flex items-center" :title="cb.channel + ' · ' + cb.status">
+              <span>{{ cb.emoji }}</span>
+              <span class="ml-px inline-block size-1.5 shrink-0 rounded-full" :class="cb.dot" />
+            </span>
+          </span>{{ p.title || p.name }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { isMobile } from '@/composables/breakpoint'
-import { WEEKDAYS, chip, chanIcons } from '@/composables/socialCalendar'
+import { WEEKDAYS, PILLARS, pillarChip, channelBadges, statusDot } from '@/composables/socialCalendar'
 
-defineProps({
+const props = defineProps({
   days: { type: Array, default: () => [] },
   postsByDay: { type: Object, default: () => ({}) },
   agendaDays: { type: Array, default: () => [] },
   drafts: { type: Array, default: () => [] },
+  calView: { type: String, default: 'month' },
+  seasonByDay: { type: Object, default: () => ({}) },
+  todayKey: { type: String, default: '' },
 })
 const emit = defineEmits(['open-new', 'open-edit', 'reschedule'])
 
-const LEGEND = [
-  { status: 'Draft', label: __('Borrador') },
-  { status: 'Pending Approval', label: __('Por aprobar') },
-  { status: 'Scheduled', label: __('Programada') },
-  { status: 'Published', label: __('Publicada') },
-  { status: 'Failed', label: __('Falló') },
+// list view (explicit) OR mobile (the grid is unreadable at phone widths)
+const isList = computed(() => props.calView === 'list' || isMobile.value)
+
+const DOT_LEGEND = [
+  { status: 'Published', label: __('Publicada'), dot: statusDot('Published') },
+  { status: 'Scheduled', label: __('Programada'), dot: statusDot('Scheduled') },
+  { status: 'Failed', label: __('Falló'), dot: statusDot('Failed') },
+  { status: 'Skipped', label: __('Omitido'), dot: statusDot('Skipped') },
 ]
 
-// ── drag-reschedule ──────────────────────────────────────────────────────
+// ── drag-reschedule (past days are not droppable) ────────────────────────────
 const dragged = ref(null)
 const dragOver = ref('')
+function onDragOver(day) {
+  if (day.key >= props.todayKey) dragOver.value = day.key
+}
 function onDrop(day) {
   dragOver.value = ''
   const p = dragged.value
   dragged.value = null
-  if (!p) return
+  if (!p || day.key < props.todayKey) return
   emit('reschedule', { post: p, dayKey: day.key })
 }
 </script>
