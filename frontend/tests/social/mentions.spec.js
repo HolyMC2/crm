@@ -12,8 +12,10 @@ test('mentions: page renders, filter chips + default, empty-state copy', async (
   await gotoAuthed(page, '/social/mentions')
 
   const root = byTestId(page, 'mentions-page')
+  // lazy route chunk — give it time to mount before deciding it didn't render
+  await root.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {})
   if (!(await root.count())) {
-    test.fixme(true, '/social/mentions did not render (route/guard/creds) — revisit once creds exist')
+    test.fixme(true, '/social/mentions did not render (route/guard/creds)')
     return
   }
   await expect(root).toBeVisible({ timeout: 15_000 })

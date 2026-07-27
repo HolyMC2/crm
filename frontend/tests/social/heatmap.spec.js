@@ -18,11 +18,15 @@ test('heatmap: Métricas view — heatmap present, fb-only badge, cells ≤ 7×2
   // FB is the only source today, so the "solo Facebook" badge is always shown.
   await expect(byTestId(page, 'fb-only-badge')).toBeVisible()
 
-  // Low-confidence legend key exists regardless of data (identity never color-alone).
-  await expect(page.getByText('Datos insuficientes')).toBeVisible()
-
   const cells = page.locator('[data-testid^="heatmap-cell-"]')
   const n = await cells.count()
+  if (n === 0) {
+    // No insight rows in scope → the component's es-MX empty state, no grid, no legend.
+    await expect(page.getByText('Aún no hay suficientes datos')).toBeVisible()
+  } else {
+    // Grid present → the low-confidence legend key ships with it (never color-alone).
+    await expect(page.getByText('Datos insuficientes')).toBeVisible()
+  }
   if (n > 0) {
     expect(n).toBeLessThanOrEqual(7 * 24) // full grid: one cell per weekday×hour
     // Greyed/hatched thin-data cells only exist when 0<n<min_n posts hit a bucket.

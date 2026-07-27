@@ -11,8 +11,10 @@ test('evergreen: page renders, rows or empty-state, action buttons + cooldown-di
   await gotoAuthed(page, '/social/evergreen')
 
   const root = byTestId(page, 'evergreen-page')
+  // lazy route chunk — give it time to mount before deciding it didn't render
+  await root.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {})
   if (!(await root.count())) {
-    test.fixme(true, '/social/evergreen did not render (route/guard/creds) — revisit once creds exist')
+    test.fixme(true, '/social/evergreen did not render (route/guard/creds)')
     return
   }
   await expect(root).toBeVisible({ timeout: 15_000 })

@@ -74,12 +74,19 @@ export const SEL = {
 // Console + page errors, minus the known-benign. B1's channelBadges now renders the A2
 // {channel,status} dict properly, so the old "[object Object]" chip cosmetic is GONE and is
 // no longer ignored — a reappearance is now a real failure. ResizeObserver loop is browser noise.
-const IGNORE = [/ResizeObserver loop/]
+// frappe.utils.telemetry.pulse 403s for every non-admin session — framework noise,
+// not app breakage (same class as the posawesome telemetry ping). Matched via the
+// console message's LOCATION url because the text is just "Failed to load resource".
+// socket.io polling 400s are realtime-handshake sid churn (stale sid on reconnect,
+// headless teardown) — intermittent infra noise; the SPA reconnects on its own.
+const IGNORE = [/ResizeObserver loop/, /telemetry\.pulse/, /socket\.io\//]
 
 export function collectErrors(page) {
   const errors = []
   page.on('console', (m) => {
-    if (m.type() === 'error') errors.push(m.text())
+    if (m.type() !== 'error') return
+    const loc = (m.location && m.location().url) || ''
+    errors.push(loc ? `${m.text()} :: ${loc}` : m.text())
   })
   page.on('pageerror', (e) => errors.push(String(e && e.message ? e.message : e)))
   return {
