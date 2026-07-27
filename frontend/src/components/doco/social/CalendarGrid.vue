@@ -51,10 +51,14 @@
         :key="day.key"
         class="min-h-[92px] rounded-lg border p-1 text-left"
         :class="[
-          day.inMonth ? 'border-outline-gray-2 bg-surface-white' : 'border-transparent bg-surface-gray-1/50',
+          isBlackout(day)
+            ? 'border-outline-gray-2 bg-surface-gray-3 opacity-60'
+            : day.inMonth ? 'border-outline-gray-2 bg-surface-white' : 'border-transparent bg-surface-gray-1/50',
           dragOver === day.key ? 'ring-2 ring-green-400 dark:ring-green-500' : '',
           day.key < todayKey ? 'opacity-70' : '',
         ]"
+        :title="isBlackout(day) ? __('Día bloqueado') : undefined"
+        :data-testid="isBlackout(day) ? `cal-blackout-${day.key}` : `cal-day-${day.key}`"
         @click="emit('open-new', day)"
         @dragover.prevent="onDragOver(day)"
         @dragleave="dragOver = (dragOver === day.key ? '' : dragOver)"
@@ -66,7 +70,9 @@
           class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-3"
           :title="rib.label"
         >{{ rib.isStart ? rib.label : rib.emoji }}</div>
-        <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-3' : 'text-ink-gray-4'">{{ day.n }}</div>
+        <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-3' : 'text-ink-gray-4'">
+          <span v-if="isBlackout(day)" class="mr-0.5" :title="__('Día bloqueado')">🚫</span>{{ day.n }}
+        </div>
         <div class="flex flex-col gap-0.5">
           <button
             v-for="p in (postsByDay[day.key] || [])"
@@ -134,7 +140,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { createResource } from 'frappe-ui'
 import { isMobile } from '@/composables/breakpoint'
 import { WEEKDAYS, PILLARS, pillarChip, channelBadges, statusDot } from '@/composables/socialCalendar'
 
@@ -152,6 +159,21 @@ const emit = defineEmits(['open-new', 'open-edit', 'reschedule'])
 // list view (explicit) OR mobile (the grid is unreadable at phone widths)
 const isList = computed(() => props.calView === 'list' || isMobile.value)
 
+// ── blackout days (store-wide "no posting" days) — non-droppable + muted (B4) ──
+// The composable is frozen, so the grid owns this resource; it fetches over its own
+// visible range (props.days) and refetches when the shell shifts month/week.
+const blackoutsRes = createResource({
+  url: 'doco_marketing.api.social.get_blackouts',
+  makeParams: () => ({ start: props.days[0]?.key, end: props.days[props.days.length - 1]?.key }),
+  auto: true,
+})
+const blackoutSet = computed(() => new Set(blackoutsRes.data || []))
+const isBlackout = (day) => blackoutSet.value.has(day.key)
+watch(
+  () => `${props.days[0]?.key}|${props.days[props.days.length - 1]?.key}`,
+  () => blackoutsRes.reload(),
+)
+
 const DOT_LEGEND = [
   { status: 'Published', label: __('Publicada'), dot: statusDot('Published') },
   { status: 'Scheduled', label: __('Programada'), dot: statusDot('Scheduled') },
@@ -159,17 +181,17 @@ const DOT_LEGEND = [
   { status: 'Skipped', label: __('Omitido'), dot: statusDot('Skipped') },
 ]
 
-// ── drag-reschedule (past days are not droppable) ────────────────────────────
+// ── drag-reschedule (past AND blackout days are not droppable) ───────────────
 const dragged = ref(null)
 const dragOver = ref('')
 function onDragOver(day) {
-  if (day.key >= props.todayKey) dragOver.value = day.key
+  if (day.key >= props.todayKey && !isBlackout(day)) dragOver.value = day.key
 }
 function onDrop(day) {
   dragOver.value = ''
   const p = dragged.value
   dragged.value = null
-  if (!p || day.key < props.todayKey) return
+  if (!p || day.key < props.todayKey || isBlackout(day)) return
   emit('reschedule', { post: p, dayKey: day.key })
 }
 </script>

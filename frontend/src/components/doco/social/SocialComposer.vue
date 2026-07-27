@@ -65,7 +65,7 @@
           <button
             v-for="c in channels" :key="c" type="button"
             class="rounded-md border px-2.5 py-1 text-[12px] font-medium"
-            :class="form.channels.includes(c) ? 'border-green-500 bg-surface-green-2 text-ink-green-3' : 'border-outline-gray-2 text-ink-gray-6'"
+            :class="form.channels.includes(c) ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-3' : 'border-outline-gray-2 text-ink-gray-6'"
             @click="toggleChannel(c)"
           >{{ c }}</button>
         </div>

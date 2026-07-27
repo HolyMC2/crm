@@ -38,6 +38,12 @@
         </template>
       </div>
       <div class="flex items-center gap-2">
+        <router-link to="/social/evergreen" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" :title="__('Publicaciones evergreen reutilizables')">
+          🌲 {{ __('Biblioteca') }}
+        </router-link>
+        <router-link to="/social/mentions" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" :title="__('Menciones entrantes de clientes')">
+          💬 {{ __('Menciones') }}
+        </router-link>
         <button v-if="isManager" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" @click="openShops" :title="__('Asignar empleados a sucursales')">
           {{ __('Sucursales') }}
         </button>
@@ -176,7 +182,7 @@
               <button
                 v-for="p in composeOpts.recent_posts" :key="p.name" type="button"
                 class="w-[104px] flex-none overflow-hidden rounded-lg border text-left"
-                :class="composeForm.reference_post === p.name ? 'border-blue-500 ring-1 ring-blue-500' : 'border-outline-gray-2 hover:border-outline-gray-3'"
+                :class="composeForm.reference_post === p.name ? 'border-blue-500 dark:border-blue-400 ring-1 ring-blue-500 dark:ring-blue-400' : 'border-outline-gray-2 hover:border-outline-gray-3'"
                 @click="composeForm.reference_post = composeForm.reference_post === p.name ? null : p.name"
               >
                 <img v-if="p.thumb" :src="p.thumb" class="h-[64px] w-full object-cover" loading="lazy" />

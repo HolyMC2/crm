@@ -14,7 +14,7 @@
       <div
         v-for="(m, i) in media" :key="m.media_file + ':' + i"
         class="group relative size-16 overflow-hidden rounded-md border"
-        :class="mediaOver === i && mediaDrag !== i ? 'border-green-500 ring-2 ring-green-300' : 'border-outline-gray-2'"
+        :class="mediaOver === i && mediaDrag !== i ? 'border-green-500 dark:border-green-400 ring-2 ring-green-300 dark:ring-green-500' : 'border-outline-gray-2'"
         :draggable="canCancel"
         :title="canCancel ? __('arrastra para ordenar') : ''"
         @dragstart="mediaDrag = i"
@@ -33,7 +33,7 @@
       </div>
       <button
         v-if="canCancel && media.length < 10" type="button"
-        class="flex size-16 flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-outline-gray-3 text-ink-gray-5 hover:border-green-500 hover:text-ink-green-3 disabled:opacity-50"
+        class="flex size-16 flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-outline-gray-3 text-ink-gray-5 hover:border-green-500 dark:hover:border-green-400 hover:text-ink-green-3 disabled:opacity-50"
         :disabled="uploadBusy > 0" :title="__('Agregar fotos')" @click="pickMedia"
       >
         <span v-if="uploadBusy" class="px-1 text-[9.5px] font-semibold">{{ __('subiendo…') }}</span>
