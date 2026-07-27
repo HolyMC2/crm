@@ -4,3 +4,9 @@ dist
 dist-ssr
 *.local
 components.d.ts
+# playwright e2e (W6): never commit local secrets or run artifacts
+.env
+test-results
+playwright-report
+blob-report
+playwright/.cache
