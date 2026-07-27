@@ -1,10 +1,12 @@
 <!--
-  SocialComposer — the create/edit post dialog (W6 B0 extract from SocialCalendar.vue).
-  Owns all its own state: the form, per-channel captions, S8 photo upload/reorder, the
-  live FB preview, the publish-outcome surfacing (live links / scheduled-in-Meta / failed)
-  and the save/schedule/publish/approve/reject/cancel/regenerate actions. The page opens
-  it imperatively via the exposed openNew(day) / openEdit(post); it emits `reload` when a
-  mutation should refresh the calendar. Read-layer data (shops, channels) comes in as props.
+  SocialComposer — the create/edit post dialog (W6 B0 extract from SocialCalendar.vue;
+  W6 B3 upgrades). Owns the form, per-channel captions, first-comment, live FB preview,
+  publish-outcome surfacing and the save/schedule/publish/approve/reject/cancel/regenerate
+  actions. Three composer/ sub-components carry the heavier pieces: MediaEditor (photo
+  tiles + reorder + upload + alt text), VariantsPanel (manager AI caption variants) and
+  SuggestTimeButton (best-time picker). The page opens it imperatively via the exposed
+  openNew(day) / openEdit(post); it emits `reload` when a mutation should refresh the
+  calendar. Read-layer data (shops, channels) comes in as props.
 -->
 <template>
   <template v-if="showComposer">
@@ -59,7 +61,7 @@
         <div v-else class="mb-3 rounded-md bg-surface-gray-1 px-2 py-1.5 text-[12.5px] text-ink-gray-7">{{ shopLabel(form.shop) || '—' }}</div>
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Canales') }}</label>
-        <div class="mb-3 flex flex-wrap gap-1.5">
+        <div class="mb-1.5 flex flex-wrap gap-1.5">
           <button
             v-for="c in channels" :key="c" type="button"
             class="rounded-md border px-2.5 py-1 text-[12px] font-medium"
@@ -67,53 +69,26 @@
             @click="toggleChannel(c)"
           >{{ c }}</button>
         </div>
+        <!-- IG publishing rides Meta's App Review; those channels Skip harmlessly until it clears -->
+        <p v-if="hasIg" class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-3">
+          <span class="flex-none">ℹ️</span>
+          <span>{{ __('Instagram se activa tras la aprobación de Meta; por ahora esos canales se omiten sin afectar la publicación.') }}</span>
+        </p>
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Texto por canal') }}</label>
         <div v-if="!form.channels.length" class="mb-3 text-[11px] text-ink-gray-4">{{ __('Selecciona un canal arriba.') }}</div>
         <div v-for="c in form.channels" :key="c" class="mb-2">
           <span class="text-[10px] font-mono text-ink-gray-5">{{ c }}</span>
           <textarea v-model="form.captions[c]" rows="2" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
+          <p v-if="c === 'IG Story'" class="mt-0.5 text-[10px] text-ink-gray-4">{{ __('IG Story: sin caption ni enlace (el enlace va en la bio).') }}</p>
+          <p v-else-if="c === 'IG Reel'" class="mt-0.5 text-[10px] text-ink-gray-4">{{ __('IG Reel: requiere video.') }}</p>
         </div>
 
-        <!-- S8 media — photo tiles: click + to add (multi-select), ✕ to remove, drag to reorder -->
-        <template v-if="form.media.length || canCancel">
-          <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Fotos') }}</label>
-          <div class="mb-1 flex flex-wrap gap-2">
-            <div
-              v-for="(m, i) in form.media" :key="m.media_file + ':' + i"
-              class="group relative size-16 overflow-hidden rounded-md border"
-              :class="mediaOver === i && mediaDrag !== i ? 'border-green-500 ring-2 ring-green-300' : 'border-outline-gray-2'"
-              :draggable="canCancel"
-              :title="canCancel ? __('arrastra para ordenar') : ''"
-              @dragstart="mediaDrag = i"
-              @dragend="mediaDrag = -1; mediaOver = -1"
-              @dragover.prevent="mediaOver = i"
-              @dragleave="mediaOver = (mediaOver === i ? -1 : mediaOver)"
-              @drop.prevent="onMediaDrop(i)"
-            >
-              <img :src="m.media_file" class="size-full object-cover" alt="" />
-              <span v-if="form.media.length > 1" class="absolute bottom-0 left-0 rounded-tr bg-black/50 px-1 text-[9px] font-bold text-white">{{ i + 1 }}</span>
-              <button
-                v-if="canCancel" type="button"
-                class="absolute right-0.5 top-0.5 hidden size-4 items-center justify-center rounded-full bg-black/60 text-[10px] leading-none text-white group-hover:flex"
-                :title="__('Quitar foto')" @click="removeMedia(i)"
-              >✕</button>
-            </div>
-            <button
-              v-if="canCancel && form.media.length < 10" type="button"
-              class="flex size-16 flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-outline-gray-3 text-ink-gray-5 hover:border-green-500 hover:text-ink-green-3 disabled:opacity-50"
-              :disabled="uploadBusy > 0" :title="__('Agregar fotos')" @click="pickMedia"
-            >
-              <span v-if="uploadBusy" class="px-1 text-[9.5px] font-semibold">{{ __('subiendo…') }}</span>
-              <template v-else>
-                <span class="text-lg leading-none">+</span>
-                <span class="text-[9.5px] font-semibold">{{ __('Foto') }}</span>
-              </template>
-            </button>
-          </div>
-          <p class="mb-3 text-[10.5px] text-ink-gray-4">{{ __('Hasta 10 fotos (JPG/PNG). Varias fotos se publican como carrusel en FB.') }}</p>
-          <input ref="mediaInput" type="file" accept="image/*" multiple class="hidden" @change="onMediaPick" />
-        </template>
+        <!-- Variantes IA (managers) — AI caption options at a chosen tone + length -->
+        <VariantsPanel v-if="isManager" :post-name="form.name" class="mb-3" @applied="applyVariant" />
+
+        <!-- S8 media — photo tiles (add/remove/reorder) + per-photo alt text -->
+        <MediaEditor :media="form.media" :can-cancel="canCancel" />
 
         <!-- owner feedback → AI rewrites the caption (same items/voice/facts) -->
         <div v-if="form.name && canCancel" class="mb-3 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-2">
@@ -127,7 +102,10 @@
 
         <div class="mb-3 grid grid-cols-2 gap-3">
           <div>
-            <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Programar') }}</label>
+            <div class="mb-1 flex items-center justify-between gap-2">
+              <label class="text-[11px] font-semibold text-ink-gray-6">{{ __('Programar') }}</label>
+              <SuggestTimeButton :shop="form.shop" @pick="pickSuggestedTime" />
+            </div>
             <input v-model="form.scheduled_time" type="datetime-local" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" />
           </div>
           <div>
@@ -140,7 +118,16 @@
           </div>
         </div>
         <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" class="mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
-        <p class="text-[11px] text-ink-gray-4">{{ __('IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
+        <p class="mb-3 text-[11px] text-ink-gray-4">{{ __('IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
+
+        <!-- primer comentario: hashtags/enlaces sin ensuciar el texto principal; se publica tras publicar -->
+        <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Primer comentario') }}</label>
+        <textarea
+          v-model="form.first_comment" rows="2" data-testid="first-comment-input"
+          class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
+          :placeholder="__('Hashtags y enlaces van aquí — se publica como primer comentario, sin ensuciar el texto principal.')"
+        />
+        <p class="text-[10.5px] text-ink-gray-4">{{ __('Se publica automáticamente después de publicar (FB e IG).') }}</p>
 
         <!-- live preview — how the post will look on Facebook -->
         <div class="mt-4 border-t border-outline-gray-1 pt-3">
@@ -176,9 +163,12 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { call as frappeCall, toast, FileUploadHandler } from 'frappe-ui'
+import { call as frappeCall, toast } from 'frappe-ui'
 import { inputDialog } from '@/utils/dialogs'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
+import VariantsPanel from '@/components/doco/social/composer/VariantsPanel.vue'
+import SuggestTimeButton from '@/components/doco/social/composer/SuggestTimeButton.vue'
+import MediaEditor from '@/components/doco/social/composer/MediaEditor.vue'
 import { chip, chLabel, toDtLocal, fromDtLocal, blankForm } from '@/composables/socialCalendar'
 
 const props = defineProps({
@@ -226,48 +216,22 @@ const previewPost = computed(() => {
 })
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
 const isPending = computed(() => !!form.value.name && form.value.status === 'Pending Approval')
+// any IG channel selected → show the App-Review notice + IG media-type hints
+const hasIg = computed(() => (form.value.channels || []).some((c) => c.startsWith('IG')))
 
-// ── S8 media — public image uploads (Meta fetches the URL, so never private).
-// Files upload unattached (no docname pre-save); save_post adopts them server-side.
-const mediaInput = ref(null)
-const uploadBusy = ref(0) // uploads in flight
-function pickMedia() {
-  mediaInput.value?.click()
+// ── AI variants + suggested time ───────────────────────────────────────────────
+// pick_variant already wrote the chosen caption onto every non-published channel row
+// server-side; mirror it into the local per-channel captions so the preview matches.
+function applyVariant({ caption, channels }) {
+  const chs = channels && channels.length ? channels : form.value.channels
+  for (const ch of chs) form.value.captions[ch] = caption
+  const n = chs.length
+  toast.success(__('Variante aplicada') + ` (${n} ${n === 1 ? __('canal') : __('canales')})`)
 }
-async function onMediaPick(e) {
-  const files = Array.from(e.target.files || [])
-  e.target.value = '' // allow re-picking the same file
-  const room = 10 - form.value.media.length
-  if (files.length > room) toast.error(__('Máximo 10 fotos por publicación.'))
-  for (const f of files.slice(0, Math.max(room, 0))) {
-    if (!f.type.startsWith('image/')) {
-      toast.error(__('Solo imágenes (JPG/PNG)') + ': ' + f.name)
-      continue
-    }
-    uploadBusy.value++
-    try {
-      const up = await new FileUploadHandler().upload(f, { private: false })
-      form.value.media.push({ media_file: up.file_url, media_type: 'Image' })
-    } catch {
-      toast.error(__('No se pudo subir') + ': ' + f.name)
-    } finally {
-      uploadBusy.value--
-    }
-  }
-}
-function removeMedia(i) {
-  form.value.media.splice(i, 1)
-}
-// drag-to-reorder tiles (same idiom as the calendar's drag-reschedule)
-const mediaDrag = ref(-1)
-const mediaOver = ref(-1)
-function onMediaDrop(i) {
-  const from = mediaDrag.value
-  mediaDrag.value = -1
-  mediaOver.value = -1
-  if (from < 0 || from === i) return
-  const arr = form.value.media
-  arr.splice(i, 0, arr.splice(from, 1)[0])
+function pickSuggestedTime(dtLocal) {
+  if (!dtLocal) return
+  form.value.scheduled_time = dtLocal
+  toast.success(__('Hora sugerida aplicada'))
 }
 
 // ── publish outcome surfacing (S13) ───────────────────────────────────────────
@@ -328,16 +292,18 @@ function rejectPost() {
 
 function openNew(day) {
   form.value = blankForm()
+  form.value.first_comment = '' // not in blankForm (shared, B1-owned) — seed the key here
   // default the new post's branch to the toolbar selection, else the user's first shop
   form.value.shop = props.shop || props.shopOptions[0]?.name || ''
   if (day) form.value.scheduled_time = `${day.key}T10:00`
   showComposer.value = true
 }
 
-// keep channel-targeting rows (Desk-only feature) so a composer round-trip doesn't wipe them
+// keep channel-targeting rows (Desk-only feature) + alt text so a round-trip doesn't wipe them
 const mapMedia = (doc) => (doc.media || []).map((m) => ({
   media_file: m.media_file,
   media_type: m.media_type || 'Image',
+  alt_text: m.alt_text || '',
   channels: (m.channels || []).map((t) => ({ social_channel: t.social_channel })),
 }))
 
@@ -356,6 +322,7 @@ async function openEdit(p) {
     scheduled_time: toDtLocal(doc.scheduled_time),
     cta_type: doc.cta_type || 'WhatsApp',
     cta_link: doc.cta_link || '',
+    first_comment: doc.first_comment || '',
     status: doc.status,
     // per-channel publish state (permalink/status/error) so the composer can link
     // the live FB post + surface a failure instead of hiding the outcome.
@@ -391,8 +358,9 @@ function payload(status) {
     scheduled_time: fromDtLocal(form.value.scheduled_time),
     cta_type: form.value.cta_type,
     cta_link: form.value.cta_type === 'None' ? '' : form.value.cta_link,
+    first_comment: form.value.first_comment || '',
     channels: form.value.channels.map((c) => ({ channel: c, caption: form.value.captions[c] || '' })),
-    media: form.value.media.map((m, i) => ({ media_file: m.media_file, seq: i, channels: m.channels || [] })),
+    media: form.value.media.map((m, i) => ({ media_file: m.media_file, seq: i, alt_text: m.alt_text || '', channels: m.channels || [] })),
   }
 }
 
