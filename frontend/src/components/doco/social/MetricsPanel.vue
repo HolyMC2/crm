@@ -6,6 +6,13 @@
 -->
 <template>
   <div class="p-4">
+    <!-- mejores horarios: weekday×hour engagement heatmap (W6 B2), scoped to the
+         same shop the dashboard resource is filtered by -->
+    <span class="mb-2 block text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Mejores horarios') }}</span>
+    <div class="mb-5 rounded-[12px] border border-outline-gray-2 bg-surface-white p-3">
+      <SocialHeatmap :shop="heatmapShop" />
+    </div>
+
     <!-- per-shop leaderboard / cross-branch roll-up -->
     <div class="mb-2 flex items-center justify-between">
       <span class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Por sucursal') }}</span>
@@ -73,13 +80,20 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { toast } from 'frappe-ui'
+import SocialHeatmap from '@/components/doco/social/SocialHeatmap.vue'
 
 const props = defineProps({
   dash: { type: Object, required: true },
   lb: { type: Object, required: true },
   lbTotals: { type: Object, required: true },
 })
+
+// Reuse the shop the dashboard is already filtered by (dash.makeParams sets
+// dash.params.shop synchronously on reload) — the heatmap follows the same branch
+// scope without the shell having to thread a new prop through.
+const heatmapShop = computed(() => props.dash?.params?.shop || null)
 
 // CSV export of the per-shop leaderboard (D5) — built client-side, no backend file.
 function exportLeaderboard() {
