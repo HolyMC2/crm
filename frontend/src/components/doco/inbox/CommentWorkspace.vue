@@ -16,11 +16,17 @@
       <div class="flex-none border-b border-outline-gray-1 bg-surface-white px-4 py-3">
         <div class="mx-auto flex w-full max-w-2xl items-center gap-2.5">
           <button v-if="isMobile" class="text-ink-gray-5 hover:text-ink-gray-9" :aria-label="__('Atrás')" @click="mobileBack">←</button>
-          <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-white" style="background: #1877f2">
-            <LucideFacebook class="h-4.5 w-4.5" />
+          <span
+            class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-white"
+            :style="isIG ? 'background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)' : 'background: #1877f2'"
+          >
+            <LucideInstagram v-if="isIG" class="h-4.5 w-4.5" />
+            <LucideFacebook v-else class="h-4.5 w-4.5" />
           </span>
           <div class="min-w-0 flex-1">
-            <div class="truncate text-[14px] font-bold text-ink-gray-9">{{ __('Publicación de Facebook') }}</div>
+            <div class="truncate text-[14px] font-bold text-ink-gray-9">
+              {{ isIG ? __('Publicación de Instagram') : __('Publicación de Facebook') }}
+            </div>
             <div class="text-[11px] text-ink-gray-5">
               {{ post.comments ?? threadComments.length }} {{ (post.comments ?? threadComments.length) === 1 ? __('comentario') : __('comentarios') }}
             </div>
@@ -97,7 +103,9 @@
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11.5px]">
               <button class="font-semibold text-ink-blue-3 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
               <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-3 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
-              <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">💬 {{ __('Continuar en Messenger') }}</button>
+              <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">
+                💬 {{ cm.channel === 'IG' ? __('Continuar en DM') : __('Continuar en Messenger') }}
+              </button>
               <button v-if="!cm.lead" class="font-semibold text-ink-violet-1 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
               <button v-else class="text-ink-violet-1 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
               <button
@@ -127,7 +135,12 @@
                 <div class="flex h-8 items-center">
                   <CannedReplyPicker channel="Comentarios" @pick="onCanned" />
                 </div>
-                <button class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50" style="background: #1877f2" :disabled="busy || !reply.trim()" @click="onReply(cm)">
+                <button
+                  class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+                  :style="cm.channel === 'IG' ? 'background: #E4405F' : 'background: #1877f2'"
+                  :disabled="busy || !reply.trim()"
+                  @click="onReply(cm)"
+                >
                   {{ __('Enviar') }}
                 </button>
               </div>
@@ -157,6 +170,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast, createResource } from 'frappe-ui'
 import LucideFacebook from '~icons/lucide/facebook'
+import LucideInstagram from '~icons/lucide/instagram'
 import LucideSearch from '~icons/lucide/search'
 import { isMobile } from '@/composables/breakpoint'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
@@ -188,9 +202,12 @@ const sortOptions = [
   { id: 'all', label: __('Todos') },
 ]
 
-// post preview (FB card) — server-cached 5 min
+// post preview (FB/IG card) — server-cached 5 min
 const postPreview = createResource({ url: 'doco_marketing.api.comments.get_post_preview' })
 const post = computed(() => postPreview.data || {})
+// Channel of the open group: the preview says it (S3), else the first loaded
+// comment row; FB when neither has arrived yet.
+const isIG = computed(() => (post.value.channel || threadComments.value[0]?.channel) === 'IG')
 
 // paginated thread
 const LIMIT = 30

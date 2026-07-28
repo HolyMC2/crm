@@ -292,15 +292,21 @@
           :tabindex="rovingKey === commentKey(g) ? 0 : -1"
           class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-2"
           :class="activeCommentPost === (g.post_id || g.latest_name) ? 'bg-surface-blue-1' : ''"
-          :style="activeCommentPost === (g.post_id || g.latest_name) ? 'border-left:3px solid #1877f2' : 'border-left:3px solid #1877f266'"
+          :style="`border-left:3px solid ${(g.channel === 'IG' ? '#E4405F' : '#1877f2') + (activeCommentPost === (g.post_id || g.latest_name) ? '' : '66')}`"
           @click="selectCommentGroup(g.post_id || g.latest_name)"
         >
           <div class="mb-1 flex items-center gap-2">
-            <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-white" style="background: #1877f2">
-              <LucideFacebook class="h-3.5 w-3.5" />
+            <span
+              class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-white"
+              :style="g.channel === 'IG' ? 'background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)' : 'background: #1877f2'"
+            >
+              <LucideInstagram v-if="g.channel === 'IG'" class="h-3.5 w-3.5" />
+              <LucideFacebook v-else class="h-3.5 w-3.5" />
             </span>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ __('Publicación') }}</div>
+              <div class="truncate text-[13px] font-semibold text-ink-gray-9">
+                {{ g.channel === 'IG' ? __('Publicación de Instagram') : __('Publicación') }}
+              </div>
               <div class="truncate text-[11px] text-ink-gray-5">
                 {{ g.count }} {{ g.count === 1 ? __('comentario') : __('comentarios') }}
               </div>
@@ -308,7 +314,7 @@
             <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(g.latest_ts) }}</div>
           </div>
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
-            <span class="inline-flex flex-none items-center font-semibold text-ink-gray-8">{{ g.from_name || 'FB' }}:</span>
+            <span class="inline-flex flex-none items-center font-semibold text-ink-gray-8">{{ g.from_name || g.channel || 'FB' }}:</span>
             <span class="truncate">{{ g.message || '—' }}</span>
             <span v-if="g.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-1 bg-surface-violet-1">{{ __('Lead') }}</span>
           </div>
@@ -502,6 +508,7 @@ import LucideSearch from '~icons/lucide/search'
 import LucideX from '~icons/lucide/x'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideFacebook from '~icons/lucide/facebook'
+import LucideInstagram from '~icons/lucide/instagram'
 import LucideArchive from '~icons/lucide/archive'
 import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideVolume2 from '~icons/lucide/volume-2'
