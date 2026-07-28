@@ -95,6 +95,35 @@
             <span class="ml-auto text-[11.5px] text-ink-gray-5">{{ relTime(row.raised_at) }}</span>
           </div>
 
+          <!-- post context (parity with the inbox Comentarios pane): the publication
+               this mention lives on — thumbnail + caption, linked to the network. -->
+          <a
+            v-if="previews[row.name] && (previews[row.name].image || previews[row.name].caption)"
+            :data-testid="`mention-preview-${i}`"
+            :href="previews[row.name].permalink || row.permalink || undefined"
+            target="_blank"
+            rel="noopener"
+            class="mt-2 flex items-center gap-2.5 rounded-lg border border-outline-gray-1 bg-surface-gray-1 p-2 hover:bg-surface-gray-2"
+          >
+            <img
+              v-if="previews[row.name].image"
+              :src="previews[row.name].image"
+              :alt="__('Vista previa de la publicación')"
+              class="h-12 w-12 flex-none rounded-md border border-outline-gray-1 object-cover"
+              loading="lazy"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-[10.5px] font-semibold text-ink-gray-5">
+                {{ previewKindLabel(row, previews[row.name]) }}
+                <template v-if="previews[row.name].username"> · @{{ previews[row.name].username }}</template>
+              </div>
+              <div v-if="previews[row.name].caption" class="line-clamp-2 text-[12px] leading-snug text-ink-gray-7">
+                {{ previews[row.name].caption }}
+              </div>
+            </div>
+            <span class="flex-none text-[11px] font-semibold text-ink-blue-3">→</span>
+          </a>
+
           <!-- what they wrote -->
           <p v-if="row.text" class="mt-2 whitespace-pre-line text-[13px] leading-relaxed text-ink-gray-7">{{ row.text }}</p>
 
@@ -295,6 +324,36 @@ const nuevoRes = createResource({
 })
 const rows = computed(() => mentionsRes.data || [])
 const nuevoCount = computed(() => (nuevoRes.data || []).length)
+
+// ── post context previews (FB-inbox parity) ────────────────────────────────────
+// name -> {image, caption, username, permalink, media_type} | false (none) |
+// null (in flight). Fetched per visible row; the server caches Graph 5 min and
+// degrades to {} on any failure, so a dead preview never blocks the row.
+// Historia rows skip this — their asset is already stored on the row itself.
+const previews = ref({})
+watch(
+  rows,
+  (rs) => {
+    for (const r of rs) {
+      if (r.mention_type === 'Historia' || previews.value[r.name] !== undefined) continue
+      previews.value[r.name] = null
+      frappeCall('doco_marketing.services.social.mentions.get_media_preview', { name: r.name })
+        .then((p) => {
+          previews.value[r.name] = p && (p.image || p.caption) ? p : false
+        })
+        .catch(() => {
+          previews.value[r.name] = false
+        })
+    }
+  },
+  { immediate: true },
+)
+
+function previewKindLabel(row, p) {
+  if (row.mention_type === 'FB') return __('Publicación que te etiquetó')
+  if (p?.media_type === 'VIDEO' || p?.media_type === 'REELS') return __('En el reel')
+  return __('En la publicación')
+}
 
 function setFilter(v) {
   statusFilter.value = v
