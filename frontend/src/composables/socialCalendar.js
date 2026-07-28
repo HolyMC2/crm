@@ -41,7 +41,9 @@ export function statusDot(s) {
 }
 
 // Post-level status filter vocabulary + es-MX labels (chip() gives their colors).
-export const STATUSES = ['Draft', 'Pending Approval', 'Scheduled', 'Publishing', 'Published', 'Partially Published', 'Failed', 'Cancelado']
+// Cancelado is NOT a calendar status anymore — the backend excludes it from
+// get_calendar (still in Desk/reports); STATUS_LABEL/chip keep it for other surfaces.
+export const STATUSES = ['Draft', 'Pending Approval', 'Scheduled', 'Publishing', 'Published', 'Partially Published', 'Failed']
 export const STATUS_LABEL = {
   Draft: 'Borrador', 'Pending Approval': 'Por aprobar', Scheduled: 'Programada',
   Publishing: 'Publicando', Published: 'Publicada', 'Partially Published': 'Parcial',
