@@ -275,22 +275,41 @@ async function startupClient() {
 }
 
 function initDeviceAfterGesture(token) {
+  // A half-configured tenant/user gets a success response with NO usable token.
+  // Never arm the gesture listener with it: new Device(undefined) throws
+  // InvalidArgumentError inside a document-level CAPTURE listener — i.e. on the
+  // operator's next click anywhere — killing whatever that click was doing
+  // (white-screened prod navigation, 2026-07-27). Fail open: no telephony, no crash.
+  if (typeof token !== 'string' || !token) {
+    log.value = 'Twilio sin token para este usuario — llamadas desactivadas'
+    return
+  }
   // Browser autoplay policy blocks the AudioContext used by the Twilio Voice SDK
   // unless the Device is constructed after a user gesture. Wait for the first
   // pointerdown/keydown if none has occurred yet.
   const hasGesture = navigator.userActivation?.hasBeenActive ?? false
   if (hasGesture) {
-    intitializeDevice(token)
+    safeInitializeDevice(token)
     return
   }
   log.value = 'Click anywhere to enable call audio…'
   const onGesture = () => {
     document.removeEventListener('pointerdown', onGesture, true)
     document.removeEventListener('keydown', onGesture, true)
-    intitializeDevice(token)
+    safeInitializeDevice(token)
   }
   document.addEventListener('pointerdown', onGesture, { capture: true, once: true })
   document.addEventListener('keydown', onGesture, { capture: true, once: true })
+}
+
+function safeInitializeDevice(token) {
+  // Runs inside a document-level capture listener — an escaped throw here hijacks
+  // the user's click. Contain EVERY Device failure to the call UI log.
+  try {
+    intitializeDevice(token)
+  } catch (err) {
+    log.value = 'Twilio.Device Error: ' + (err && err.message ? err.message : err)
+  }
 }
 
 function intitializeDevice(token) {
