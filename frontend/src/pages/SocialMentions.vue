@@ -89,6 +89,7 @@
               {{ TYPE_EMOJI[row.mention_type] || '' }} {{ typeLabel(row.mention_type) }}
             </span>
             <span class="text-[13.5px] font-semibold text-ink-gray-9">{{ authorLabel(row.author_username) }}</span>
+            <span v-if="row.rating" class="text-[12px] tracking-tight text-ink-amber-3" :title="`${row.rating}/5`">{{ '★'.repeat(row.rating) }}</span>
             <span class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold" :class="statusChip(row.status)">
               {{ statusLabel(row.status) }}
             </span>
@@ -197,8 +198,30 @@
             </button>
           </div>
 
+          <!-- Reseña → Testimonio draft (any status: a good review stays quotable) -->
+          <div v-if="row.mention_type === 'Reseña'" class="mt-2.5">
+            <button
+              v-if="!row.testimonial_post"
+              :data-testid="`mention-testimonial-${i}`"
+              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              :disabled="busy === row.name"
+              :title="__('Crear un borrador de publicación tipo Testimonio con esta reseña')"
+              @click="onTestimonial(row)"
+            >
+              ⭐ {{ __('Crear testimonio') }}
+            </button>
+            <router-link
+              v-else
+              to="/social"
+              class="text-[12px] font-semibold text-ink-green-3 hover:underline"
+              :title="row.testimonial_post"
+            >
+              ✓ {{ __('Testimonio en borrador — ver calendario →') }}
+            </router-link>
+          </div>
+
           <!-- discarded: allow reactivation -->
-          <div v-else-if="row.status === 'Descartado'" class="mt-2.5">
+          <div v-if="row.status === 'Descartado'" class="mt-2.5">
             <button
               :data-testid="`mention-reactivate-${i}`"
               class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
@@ -249,7 +272,7 @@
 import { ref, computed, watch } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
 
-const TYPE_EMOJI = { Comentario: '💬', Caption: '📝', Historia: '📸', FB: '📘' }
+const TYPE_EMOJI = { Comentario: '💬', Caption: '📝', Historia: '📸', FB: '📘', 'Reseña': '⭐' }
 const FILTERS = [
   { v: 'Nuevo', label: 'Nuevas' },
   { v: 'Atendido', label: 'Atendidas' },
@@ -258,7 +281,7 @@ const FILTERS = [
 ]
 
 function typeLabel(t) {
-  return { Comentario: __('Comentario'), Caption: __('Descripción'), Historia: __('Historia'), FB: __('Facebook') }[t] || t
+  return { Comentario: __('Comentario'), Caption: __('Descripción'), Historia: __('Historia'), FB: __('Facebook'), 'Reseña': __('Reseña') }[t] || t
 }
 function statusChip(s) {
   return {
@@ -335,7 +358,9 @@ watch(
   rows,
   (rs) => {
     for (const r of rs) {
-      if (r.mention_type === 'Historia' || previews.value[r.name] !== undefined) continue
+      // Historia carries its own stored asset; Reseña stories are not readable
+      // via Graph — neither gets a preview call.
+      if (r.mention_type === 'Historia' || r.mention_type === 'Reseña' || previews.value[r.name] !== undefined) continue
       previews.value[r.name] = null
       frappeCall('doco_marketing.services.social.mentions.get_media_preview', { name: r.name })
         .then((p) => {
@@ -423,6 +448,20 @@ async function doSend() {
     reloadAll()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo enviar'))
+  } finally {
+    busy.value = ''
+  }
+}
+
+async function onTestimonial(row) {
+  if (busy.value) return
+  busy.value = row.name
+  try {
+    const r = await frappeCall('doco_marketing.services.social.mentions.create_testimonial', { name: row.name })
+    toast.success(r?.existing ? __('Ya existía un borrador de testimonio') : __('Borrador de testimonio creado — revísalo en el calendario'))
+    reloadAll()
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo crear el testimonio'))
   } finally {
     busy.value = ''
   }
