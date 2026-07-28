@@ -110,13 +110,12 @@ export function encodeBody(payload) {
 function send(payload) {
   try {
     const body = encodeBody(payload)
-    // sendBeacon survives a page unload (an error during navigation is exactly
-    // when we most want the report to land). It can't carry a CSRF header, so
-    // a keepalive fetch — which can — is the fallback.
-    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-      const blob = new Blob([body], { type: 'application/x-www-form-urlencoded' })
-      if (navigator.sendBeacon(ENDPOINT, blob)) return
-    }
+    // keepalive fetch survives page unload (its whole purpose) AND can carry
+    // the CSRF header. sendBeacon cannot — Frappe rejects a CSRF-less POST
+    // with 400, so a beacon that "queues fine" (returns true) still never
+    // lands. That bug silently zeroed CRM Client Error until 2026-07-27.
+    // Beacon remains only as the no-fetch fallback (ancient WebViews), where
+    // a 400 is no worse than not sending at all.
     if (typeof fetch === 'function') {
       const headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
       try {
@@ -132,6 +131,11 @@ function send(payload) {
         keepalive: true,
         credentials: 'same-origin',
       }).catch(() => {})
+      return
+    }
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      const blob = new Blob([body], { type: 'application/x-www-form-urlencoded' })
+      navigator.sendBeacon(ENDPOINT, blob)
     }
   } catch (e) {
     /* telemetry must never throw */

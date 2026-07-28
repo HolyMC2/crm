@@ -1,6 +1,8 @@
 // Frontend error telemetry (spec 3.6): pure scrubbing/hash/sampling logic plus
-// the send path (mocked sendBeacon). No frappe-ui import, so no mock hooks — the
-// vitest-4 rejected-promise-through-a-spy trap doesn't apply here.
+// the send path (mocked fetch; sendBeacon only as the no-fetch fallback — a
+// beacon can't carry the CSRF header, so Frappe 400s it and nothing lands).
+// No frappe-ui import, so no mock hooks — the vitest-4
+// rejected-promise-through-a-spy trap doesn't apply here.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   djb2,
@@ -22,6 +24,8 @@ import {
 const ENDPOINT = '/api/method/doco_marketing.api.client_error.report'
 
 let beacon
+let fetchSpy
+let realFetch
 
 beforeEach(() => {
   _resetSession()
@@ -31,9 +35,13 @@ beforeEach(() => {
     configurable: true,
     writable: true,
   })
+  realFetch = globalThis.fetch
+  fetchSpy = vi.fn(() => Promise.resolve({ ok: true }))
+  globalThis.fetch = fetchSpy
 })
 
 afterEach(() => {
+  globalThis.fetch = realFetch
   vi.restoreAllMocks()
 })
 
@@ -156,20 +164,38 @@ describe('encodeBody', () => {
 })
 
 describe('reportError (send path)', () => {
-  it('sends a real error via sendBeacon to the endpoint', () => {
+  it('sends a real error via keepalive fetch to the endpoint (never beacon)', () => {
     reportError('TypeError: boom', 'at foo (a.js:1:1)', '/crm/inbox?deal=D-1')
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(fetchSpy.mock.calls[0][0]).toBe(ENDPOINT)
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ method: 'POST', keepalive: true })
+    expect(beacon).not.toHaveBeenCalled()
+  })
+  it('includes the CSRF header when window.csrf_token is set', () => {
+    window.csrf_token = 'tok-123'
+    try {
+      reportError('TypeError: boom', 'at foo (a.js:1:1)', '/crm')
+      expect(fetchSpy.mock.calls[0][1].headers['X-Frappe-CSRF-Token']).toBe('tok-123')
+    } finally {
+      delete window.csrf_token
+    }
+  })
+  it('falls back to sendBeacon only when fetch is unavailable', () => {
+    globalThis.fetch = undefined
+    reportError('TypeError: boom', 'at foo (a.js:1:1)', '/crm')
     expect(beacon).toHaveBeenCalledTimes(1)
     expect(beacon.mock.calls[0][0]).toBe(ENDPOINT)
   })
   it('drops noise without sending', () => {
     reportError('ResizeObserver loop limit exceeded', '', '/crm')
+    expect(fetchSpy).not.toHaveBeenCalled()
     expect(beacon).not.toHaveBeenCalled()
   })
   it('sends the first repeat only, then samples', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5) // repeats above the 10% gate
     reportError('TypeError: boom', 'at foo (a.js:1:1)', '/crm')
     reportError('TypeError: boom', 'at foo (a.js:1:1)', '/crm')
-    expect(beacon).toHaveBeenCalledTimes(1) // second repeat gated out
+    expect(fetchSpy).toHaveBeenCalledTimes(1) // second repeat gated out
   })
   it('never throws even if the payload build hits a bad url', () => {
     expect(() => reportError('boom', null, undefined)).not.toThrow()
@@ -179,15 +205,15 @@ describe('reportError (send path)', () => {
 describe('window handlers', () => {
   it('_onError reports from ev.message + ev.error.stack', () => {
     _onError({ message: 'TypeError: boom', error: { stack: 'at foo (a.js:1:1)' } })
-    expect(beacon).toHaveBeenCalledTimes(1)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
   it('_onRejection reports from ev.reason', () => {
     _onRejection({ reason: { message: 'rejected', stack: 'at g (b.js:2:2)' } })
-    expect(beacon).toHaveBeenCalledTimes(1)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
   it('_onRejection tolerates a string reason', () => {
     _onRejection({ reason: 'plain string reason' })
-    expect(beacon).toHaveBeenCalledTimes(1)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
   it('handlers never throw on a malformed event', () => {
     expect(() => _onError(undefined)).not.toThrow()
