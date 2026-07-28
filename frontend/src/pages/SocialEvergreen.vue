@@ -138,7 +138,7 @@
           {{ __('Quitar de la biblioteca') }}
         </div>
         <div class="px-4 py-4 text-[12.5px] leading-relaxed text-ink-gray-7">
-          {{ __('¿Quitar «{0}» de la biblioteca evergreen? Dejará de reciclarse automáticamente. La publicación no se elimina.').replace('{0}', confirmRow.title || confirmRow.name) }}
+          {{ __('¿Quitar «{0}» de la biblioteca evergreen? Dejará de reciclarse automáticamente. La publicación no se elimina.', [confirmRow.title || confirmRow.name]) }}
         </div>
         <div class="flex items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
           <button
@@ -195,7 +195,9 @@ function fmtDate(dt) {
 }
 function recycledLabel(n) {
   const c = Number(n) || 0
-  return c === 0 ? __('Nunca reciclado') : c === 1 ? __('Reciclado 1 vez') : __('Reciclado {0} veces').replace('{0}', c)
+  // {0} args must go through __'s second parameter — a bare __('… {0} …')
+  // throws inside translate()'s format() and white-screens the route.
+  return c === 0 ? __('Nunca reciclado') : c === 1 ? __('Reciclado 1 vez') : __('Reciclado {0} veces', [c])
 }
 // Eligible now when it has never been recycled or its cooldown (next_eligible) has passed.
 function available(row) {

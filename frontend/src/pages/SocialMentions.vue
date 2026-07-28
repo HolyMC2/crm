@@ -251,12 +251,15 @@ function relTime(dt) {
   if (isNaN(d.getTime())) return ''
   const secs = Math.floor((Date.now() - d.getTime()) / 1000)
   if (secs < 60) return __('hace un momento')
+  // Placeholder args MUST go through __'s second parameter — calling
+  // __('… {0} …') bare makes translate() run format(msg, undefined), which
+  // throws inside the replace callback and white-screens the whole route.
   const mins = Math.floor(secs / 60)
-  if (mins < 60) return __('hace {0} min').replace('{0}', mins)
+  if (mins < 60) return __('hace {0} min', [mins])
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return __('hace {0} h').replace('{0}', hrs)
+  if (hrs < 24) return __('hace {0} h', [hrs])
   const days = Math.floor(hrs / 24)
-  if (days < 7) return __('hace {0} d').replace('{0}', days)
+  if (days < 7) return __('hace {0} d', [days])
   return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
 }
 

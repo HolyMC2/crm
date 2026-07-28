@@ -6,8 +6,10 @@ export default function translationPlugin(app) {
 }
 
 function format(message, replace) {
+  // A missing/short args array leaves the placeholder literal instead of
+  // throwing — one bad __() call must never white-screen a whole route.
   return message.replace(/{(\d+)}/g, function (match, number) {
-    return typeof replace[number] != 'undefined' ? replace[number] : match
+    return typeof replace?.[number] != 'undefined' ? replace[number] : match
   })
 }
 
