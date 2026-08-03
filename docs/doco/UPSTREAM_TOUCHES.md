@@ -23,44 +23,74 @@ LIGHT files usually auto-merge — verify the doco lines survived, nothing more.
 | File | Δ | Why touched |
 |---|---|---|
 | frontend/src/components/Activities/WhatsAppBox.vue | +728 −13 | Voice notes, camera attach, composerDraft handoff, suggested replies, quick-bar fold, template chip |
-| frontend/src/components/Activities/Activities.vue | +606 −20 | Superset reuse seams: showWhatsappTemplates defineModel, WhatsApp-scoped tabs, doco slots |
-| crm/api/whatsapp.py | +380 −51 | Provenance fields, routing, review-gated send path, media handling |
-| frontend/src/components/Mobile/MobileSidebar.vue | +305 −88 | Rail-language reskin, dark toggle, apps switcher, settings mount, badges |
-| frontend/src/components/Activities/WhatsAppArea.vue | +253 −30 | Bubble layout fixes (absolute media width, basis-full meta row), provenance, sticky header hide |
+| frontend/src/components/Activities/Activities.vue | +628 −20 | Superset reuse seams: showWhatsappTemplates defineModel, WhatsApp-scoped tabs, doco slots, per-number tab default |
+| crm/api/whatsapp.py | +384 −51 | Provenance fields, routing, review-gated send path, media handling |
+| frontend/src/components/Mobile/MobileSidebar.vue | +308 −88 | Rail-language reskin, dark toggle, apps switcher, settings mount, badges |
+| frontend/src/components/Activities/WhatsAppArea.vue | +269 −36 | Bubble layout fixes (absolute media width, basis-full meta row), provenance, sticky header hide, in-thread search + lazy media |
 | frontend/src/components/Modals/DealModal.vue | +243 −12 | doco capture fields + validations |
-| frontend/src/router.js | +106 −24 | doco routes (/inbox /workload /campaigns …), landing flip, dropped upstream aliases |
+| frontend/src/index.css | +138 −0 | brand vars, press/skel/sheet-in/page-in/cv-row/cb-token utilities, color-scheme |
+| frontend/src/router.js | +118 −24 | doco routes (/inbox /workload /campaigns …), landing flip, dropped upstream aliases |
 | frontend/src/utils/dialogs.jsx | +106 −1 | confirmDialog/inputDialog central primitives |
 | crm/integrations/twilio/twilio_handler.py | +103 −17 | Telephony agent wiring, SIP, call-log lifecycle |
-| frontend/src/index.css | +138 −0 | brand vars, press/skel/sheet-in/page-in/cv-row/cb-token utilities, color-scheme |
 
 ## MEDIUM — real logic, usually mergeable
 
 | File | Δ | Why touched |
 |---|---|---|
-| crm/api/dashboard.py | +53 −56 | Reports backend reuse (manager gating) |
-| crm/permissions/org_hierarchy.py | +62 −15 | Shop scoping / row-level perms |
-| crm/integrations/twilio/api.py | +72 −2 | Telephony endpoints |
 | crm/locale/es.po | +80 −0 | es-MX additions (recompile MO after rebase!) |
-| frontend/src/components/ViewControls.vue | +60 −6 | Column config hooks |
-| frontend/src/main.js | +41 −0 | Build-id staleness guard + SW update (scope-explicit) |
-| frontend/vite.config.js | +51 −2 | PWA manifest/workbox importScripts, build-id emit |
+| crm/integrations/twilio/api.py | +72 −2 | Telephony endpoints |
 | frontend/src/components/Layouts/MobileLayout.vue | +71 −2 | Offline strip, outbox strip, install nudge, side-scroll choke point (min-w-0 — do NOT lose) |
-| crm/fcrm/doctype/crm_deal/crm_deal.py, crm_lead.py, crm_call_log.py | ~+20 each | doco hooks/fields |
+| frontend/src/main.js | +71 −0 | Build-id staleness guard + SW update (scope-explicit) + draft-safe reload |
+| crm/permissions/org_hierarchy.py | +62 −15 | Shop scoping / row-level perms / call-log scoping |
+| frontend/src/components/ViewControls.vue | +60 −6 | Column config hooks |
+| frontend/vite.config.js | +55 −2 | PWA manifest/workbox importScripts, build-id emit, precache cap |
+| crm/api/dashboard.py | +53 −56 | Reports backend reuse (manager gating) |
+| crm/tests/test_integrations.py | +51 −0 | Telephony/SIP + E.164 normalization tests |
+| frontend/src/components/Telephony/TwilioCallUI.vue | +39 −1 | SIP tweaks, gesture-deferred Device init, missing-token guard |
 | crm/tests/test_whatsapp.py | +34 −18 | Provenance/routing tests |
 | frontend/src/components/Activities/DataFields.vue | +30 −0 | doco fields |
+| crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json | +24 −1 | enable_sip_phone + sip_domain |
 | frontend/src/stores/statuses.js | +21 −3 | status-type helpers |
-| frontend/src/components/Telephony/TwilioCallUI.vue | +20 −1 | SIP tweaks |
+| crm/fcrm/doctype/crm_deal/crm_deal.py | +20 −2 | doco hooks/fields |
+| crm/fcrm/doctype/crm_call_log/crm_call_log.py | +20 −0 | on_update bumps `modified` on linked Lead/Deal |
+| crm/integrations/api.py | +18 −4 | Telephony endpoints (contact-by-phone, call-log note/task) |
+| frontend/src/stores/session.js | +18 −0 | Session boot additions |
+| frontend/src/socket.js | +17 −1 | doco realtime channels |
+| crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json | +17 −1 | sip_username / sip_password / 'SIP Phone' device option |
+| frontend/src/App.vue | +17 −11 | Theme boot, idle prefetch, telemetry init |
+| crm/fcrm/doctype/crm_lead/crm_lead.py | +12 −1 | doco hooks/fields |
 
 ## LIGHT — additive few-liners (verify doco lines survive, that's all)
 
-.gitignore, AGENTS.md, crm/api/doc.py (+3), crm/hooks.py (+2),
-crm/integrations/api.py, crm/patches.txt, fcrm_settings.json (+brand fields),
-crm_telephony_agent.{json,py}, crm_twilio_settings.{json,py},
+.gitignore, frontend/.gitignore, AGENTS.md, crm/api/doc.py (+3: `or_filters`),
+crm/hooks.py (+2: CRM Call Log perm hooks), crm/patches.txt (+2: provenance patch),
+fcrm_settings.json (+quick_replies), crm_telephony_agent.py, crm_twilio_settings.py,
 frontend/index.html (viewport comma fix — do NOT lose), frontend/package.json,
-frontend/auto-imports.d.ts, App.vue (+8: theme boot, prefetch), DesktopLayout.vue,
+frontend/auto-imports.d.ts, frontend/src/translation.js, DesktopLayout.vue,
 CallLogDetailModal.vue, LeadModal.vue, CallArea/CommentArea/EmailArea/NoteArea/
 ActivityHeader.vue (activity-header class, ±3), pages/Deal.vue, Deals.vue, Lead.vue,
-socket.js, stores/session.js, stores/settings.js (brand_color boot), utils/index.js,
-utils/numberFormat.js, vitest.config.js, yarn.lock, patches/v1_0/*provenance*.
+stores/settings.js (brand_color boot), utils/index.js, utils/numberFormat.js,
+vitest.config.js, yarn.lock.
 
-Last regenerated: 2026-07-26 against merge-base `91996b8f`.
+## Delta since the 2026-07-26 regeneration
+
+Nine upstream files moved after the ledger was first written, and two were
+missing from it entirely. Re-check these first at the next rebase:
+
+| File | Was | Now | Cause |
+|---|---|---|---|
+| crm/tests/test_integrations.py | *unlisted* | +51 −0 | telephony test round |
+| frontend/src/translation.js | *unlisted* | +3 −1 | i18n plumbing |
+| frontend/src/main.js | +41 −0 | +71 −0 | draft-safe deploy reload |
+| frontend/src/components/Telephony/TwilioCallUI.vue | +20 −1 | +39 −1 | missing-token Device guard (283a428d) |
+| frontend/src/App.vue | +8 | +17 −11 | telemetry init, prefetch |
+| frontend/src/components/Activities/Activities.vue | +606 −20 | +628 −20 | per-number WhatsApp tabs (7f7e0748) |
+| frontend/src/components/Activities/WhatsAppArea.vue | +253 −30 | +269 −36 | in-thread search + lazy media |
+| frontend/src/router.js | +106 −24 | +118 −24 | social routes |
+| crm/integrations/api.py | LIGHT | +18 −4 | promoted to MEDIUM |
+
+Note the two `.gitignore` files are distinct entries (root and `frontend/`).
+`patches/v1_0/*provenance*` is a NEW doco-owned file, not an upstream touch —
+it was listed under LIGHT by mistake and has been removed from that list.
+
+Last regenerated: 2026-08-03 against merge-base `91996b8f`, HEAD `261195f4`.
