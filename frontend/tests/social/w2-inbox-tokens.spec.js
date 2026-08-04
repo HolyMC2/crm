@@ -253,6 +253,48 @@ test.describe('espresso v2 — inbox bucket', () => {
       )
     }
 
+    // ---- accent chips must clear AA in BOTH themes -------------------------
+    //
+    // W1-base's value-exact remap matched v1's LIGHT value and never checked
+    // dark. v1's low-index accent inks were theme-AWARE — ink-violet-1 was
+    // #6846E3 in light but #9D7CEA in dark, deliberately lightened to stay
+    // legible on the dark tinted fill. v2's ink ramp is monotonic and its mid
+    // indices barely move between themes, so the remap landed on tokens with no
+    // dark-mode contrast: violet went 5.05/4.95 -> 4.03/2.32.
+    //
+    // Value-exactness in ONE theme is not correctness. Assert both.
+    const chips = [
+      ['violet chip', '--surface-violet-2', '--ink-violet-8'],
+      ['violet on card', '--surface-base', '--ink-violet-8'],
+      ['red chip', '--surface-red-1', '--ink-red-8'],
+      ['red on card', '--surface-base', '--ink-red-8'],
+    ]
+    const chipResults = {}
+    for (const theme of ['light', 'dark']) {
+      await setTheme(page, theme)
+      await page.waitForTimeout(600)
+      for (const [label, bg, ink] of chips) {
+        const got = await probeVars(page, ink, bg)
+        const ratio = contrast(got.color, got.background)
+        chipResults[`${label} (${theme})`] = +ratio.toFixed(2)
+        expect(ratio, `${label} must clear AA in ${theme}`).toBeGreaterThanOrEqual(4.5)
+      }
+      // And the tokens they replaced must still be measurably worse in dark,
+      // so a revert cannot pass this file.
+      if (theme === 'dark') {
+        for (const [label, bg, oldInk] of [
+          ['violet chip', '--surface-violet-2', '--ink-violet-6'],
+          ['red chip', '--surface-red-1', '--ink-red-7'],
+        ]) {
+          const old = await probeVars(page, oldInk, bg)
+          const r = contrast(old.color, old.background)
+          chipResults[`${label} PRE-FIX (dark)`] = +r.toFixed(2)
+          expect(r, `${label}: the pre-fix token must be below AA in dark`).toBeLessThan(4.5)
+        }
+      }
+    }
+    console.log('accent chip contrast, both themes:', JSON.stringify(chipResults, null, 2))
+
     // ---- THE REGRESSION GUARD. See the header comment. ---------------------
     const results = {}
     for (const theme of ['light', 'dark']) {
