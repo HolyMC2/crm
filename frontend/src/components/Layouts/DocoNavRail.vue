@@ -203,7 +203,7 @@
         <!-- sign out -->
         <div class="border-t border-outline-gray-1 py-1.5">
           <button
-            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-red-7 hover:bg-surface-red-1"
+            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-red-8 hover:bg-surface-red-1"
             @click="signOut"
           >
             <LogOutIcon class="h-4 w-4" />

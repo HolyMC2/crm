@@ -48,13 +48,16 @@ const PAIRS = [
   ['drawer + rail active row', 'bg-surface-green-2', 'text-ink-green-8', 4.5],
   ['tab bar active label', 'bg-surface-base', 'text-ink-green-8', 4.5],
   ['avatar initials', 'bg-surface-violet-2', 'text-ink-violet-8', 4.5],
-  ['drawer notif + unread badge', 'bg-surface-red-1', 'text-ink-red-8', 4.5],
+  // one pairing, three uses: the drawer badges sit on it permanently, the sign-out and
+  // outbox-discard rows hit it on hover. W1-base's value-exact remap put ink-red-7 here,
+  // which matched v1's LIGHT value exactly and collapsed to 4.40 in dark.
+  ['red chip + sign-out/discard hover', 'bg-surface-red-1', 'text-ink-red-8', 4.5],
   ['tab bar unread badge', 'bg-surface-red-7', 'text-ink-red-1', 4.5],
   ['drawer overdue badge', 'bg-surface-amber-1', 'text-ink-amber-8', 3.0],
   ['tab bar overdue badge', 'bg-surface-amber-2', 'text-ink-amber-8', 3.0],
   ['offline strip', 'bg-surface-amber-1', 'text-ink-amber-8', 3.0],
   ['outbox strip', 'bg-surface-blue-1', 'text-ink-blue-8', 3.0],
-  ['sign-out row (resting)', 'bg-surface-base', 'text-ink-red-7', 4.5],
+  ['sign-out row (resting)', 'bg-surface-base', 'text-ink-red-8', 4.5],
   ['drawer inactive row', 'bg-surface-base', 'text-ink-gray-7', 4.5],
   ['saved-view link (SidebarLink)', 'bg-surface-elevation-3', 'text-ink-gray-8', 4.5],
 ]
@@ -213,6 +216,42 @@ test('mobile shell renders tab bar and drawer in both themes', async ({ page }) 
     const drawer = page.locator('div.w-\\[286px\\]')
     await expect(drawer).toBeVisible()
     await shot(page, `w2nav-mobile-drawer-${theme}`)
+
+    // Measure the REAL chrome, not just probes: the drawer surface, the active nav row,
+    // the avatar initials and any live badge. A probe proves the palette pairing; only
+    // this proves the component actually wears it.
+    const live = await drawer.evaluate((d) => {
+      const rows = [...d.querySelectorAll('nav button')]
+      const active = rows.find((b) => b.getAttribute('aria-current') === 'page')
+      const badge = rows.map((b) => b.querySelector('span.rounded-full')).find(Boolean)
+      const avatar = d.querySelector('span.bg-surface-violet-2')
+      const g = (el, p) => (el ? getComputedStyle(el)[p] : null)
+      return {
+        surface: g(d, 'backgroundColor'),
+        activeFg: g(active, 'color'),
+        activeBg: g(active, 'backgroundColor'),
+        badgeFg: g(badge, 'color'),
+        badgeBg: g(badge, 'backgroundColor'),
+        avatarFg: g(avatar, 'color'),
+        avatarBg: g(avatar, 'backgroundColor'),
+      }
+    })
+    const check = (label, fg, bg, floor) => {
+      if (!fg || !bg) return null // element absent (badge counts can legitimately be zero)
+      const f = parseColor(fg)
+      const b = parseColor(bg)
+      if (!f || !b) return `${label}: unparseable ${fg} / ${bg}`
+      // a transparent row background means it inherits the drawer surface
+      const base = b.a === 0 ? parseColor(live.surface) : b
+      const r = contrast(f, base)
+      return r < floor ? `${label}: ${r.toFixed(2)} < ${floor} (${fg} on ${bg})` : null
+    }
+    const liveFails = [
+      check('live active nav row', live.activeFg, live.activeBg, 4.5),
+      check('live avatar initials', live.avatarFg, live.avatarBg, 4.5),
+      check('live drawer badge', live.badgeFg, live.badgeBg, 3.0),
+    ].filter(Boolean)
+    expect(liveFails, `live drawer contrast in ${theme}:\n${liveFails.join('\n')}`).toEqual([])
     await page.keyboard.press('Escape')
     await page.waitForTimeout(500)
   }

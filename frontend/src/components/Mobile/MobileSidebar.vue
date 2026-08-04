@@ -190,7 +190,7 @@
               </span>
             </button>
             <button
-              class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-red-7 hover:bg-surface-red-1"
+              class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-red-8 hover:bg-surface-red-1"
               @click="signOut"
             >
               <LogOutIcon class="h-[18px] w-[18px] flex-none" />

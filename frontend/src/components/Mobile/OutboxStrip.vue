@@ -27,7 +27,7 @@
             <div class="mt-0.5 whitespace-pre-wrap break-words text-[12.5px] text-ink-gray-8">{{ m.message }}</div>
           </div>
           <button
-            class="press flex-none rounded-md px-2 py-1 text-[11.5px] font-medium text-ink-red-7 hover:bg-surface-red-1"
+            class="press flex-none rounded-md px-2 py-1 text-[11.5px] font-medium text-ink-red-8 hover:bg-surface-red-1"
             @click="discardOutbox(i)"
           >
             {{ __('Descartar') }}
