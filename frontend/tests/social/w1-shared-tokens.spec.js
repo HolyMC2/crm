@@ -38,11 +38,63 @@ test.describe('espresso v2 shared layer', () => {
     await page.waitForTimeout(4000)
 
     // The five variables the migrated palette points at must all resolve.
-    const inks = ['--ink-violet-6', '--ink-blue-6', '--ink-green-7', '--ink-amber-7', '--ink-red-7']
+    const inks = ['--ink-violet-8', '--ink-blue-9', '--ink-green-8', '--ink-amber-9', '--ink-red-8']
     const resolved = {}
     for (const v of inks) resolved[v] = await cssVar(page, v)
     console.log('resolved ink vars:', JSON.stringify(resolved, null, 2))
     for (const v of inks) expect(resolved[v], `${v} must resolve`).not.toBe('')
+
+    // ...but RESOLVING IS NOT WORKING. The first version of this spec asserted
+    // only that these variables were non-empty, and passed for hours while the
+    // palette was unreadable: every pair was below WCAG AA, one at 2.32:1.
+    // Measure the contrast the user actually gets, in both themes.
+    for (const theme of ['light', 'dark']) {
+      await setTheme(page, theme)
+      await page.waitForTimeout(400)
+      const ratios = await page.evaluate((pairs) => {
+        // Resolve to real sRGB bytes by painting onto a canvas. Reading
+        // getComputedStyle().color is NOT safe here: Chrome returns oklch()
+        // unchanged for oklch inputs, so parsing its numbers as RGB yields a
+        // luminance of ~0 for every colour and a contrast ratio of ~1.0 for
+        // every pair -- which is exactly how this assertion first "passed".
+        const probe = document.createElement('div')
+        document.body.appendChild(probe)
+        const cv = document.createElement('canvas')
+        cv.width = cv.height = 1
+        const ctx = cv.getContext('2d')
+        const lum = (css) => {
+          probe.style.color = css
+          const resolved = getComputedStyle(probe).color
+          ctx.clearRect(0, 0, 1, 1)
+          ctx.fillStyle = resolved
+          ctx.fillRect(0, 0, 1, 1)
+          const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+          const f = (c) => {
+            c /= 255
+            return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+          }
+          return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+        }
+        const out = pairs.map(([bg, fg]) => {
+          const a = lum(`var(${fg})`), b = lum(`var(${bg})`)
+          const hi = Math.max(a, b), lo = Math.min(a, b)
+          return { bg, fg, ratio: +((hi + 0.05) / (lo + 0.05)).toFixed(2) }
+        })
+        probe.remove()
+        return out
+      }, [
+        ['--surface-violet-2', '--ink-violet-8'],
+        ['--surface-blue-1', '--ink-blue-9'],
+        ['--surface-green-2', '--ink-green-8'],
+        ['--surface-amber-1', '--ink-amber-9'],
+        ['--surface-red-1', '--ink-red-8'],
+      ])
+      console.log(`avatar contrast (${theme}):`, JSON.stringify(ratios, null, 2))
+      for (const { bg, fg, ratio } of ratios) {
+        expect(ratio, `${fg} on ${bg} in ${theme} must clear WCAG AA`).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+    await setTheme(page, 'light')
 
     // The names the old code used must NOT resolve — this is the proof that the
     // pre-migration palette was silently falling back to inherited colour.

@@ -7,12 +7,21 @@
 // Inline `background:var(--surface-x);color:var(--ink-x)` resolves per theme.
 // The ink half is `--ink-*`, NOT `--text-ink-*`: the latter has never been a real
 // frappe-ui variable, so these initials rendered with inherited colour until now.
+//
+// Ink steps are the LOWEST that clear WCAG AA 4.5:1 against their surface in BOTH
+// themes — measured, not chosen by eye. The step is not uniform across families
+// because the ramps are not parallel: blue and amber need to travel two further
+// steps than green to reach the same contrast on their own tint.
+//   violet-8  7.01 / 6.35      blue-9   6.25 / 10.02     green-8  4.54 / 6.70
+//   amber-9   6.72 / 9.71      red-8    6.25 / 6.26
+// Pinned by tests/social/w1-shared-tokens.spec.js — if you change a step, that
+// spec fails with the measured ratio rather than silently letting it drift.
 const AV_COLORS = [
-  ['var(--surface-violet-2)', 'var(--ink-violet-6)'],
-  ['var(--surface-blue-1)', 'var(--ink-blue-6)'],
-  ['var(--surface-green-2)', 'var(--ink-green-7)'],
-  ['var(--surface-amber-1)', 'var(--ink-amber-7)'],
-  ['var(--surface-red-1)', 'var(--ink-red-7)'],
+  ['var(--surface-violet-2)', 'var(--ink-violet-8)'],
+  ['var(--surface-blue-1)', 'var(--ink-blue-9)'],
+  ['var(--surface-green-2)', 'var(--ink-green-8)'],
+  ['var(--surface-amber-1)', 'var(--ink-amber-9)'],
+  ['var(--surface-red-1)', 'var(--ink-red-8)'],
 ]
 export function avatarColor(s) {
   let h = 0
