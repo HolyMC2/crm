@@ -110,7 +110,7 @@ def get_deal_permission_query_conditions(user=None):
 
 def get_call_log_permission_query_conditions(user=None):
 	cond = _permission_query_conditions(user, "CRM Call Log")
-	return cond.get_sql(quote_char="`", secondary_quote_char="'") if cond else ""
+	return cond.get_sql(with_namespace=True, quote_char="`", secondary_quote_char="'") if cond else ""
 
 
 def _has_permission(doc, ptype, user, doctype: str) -> bool | None:
