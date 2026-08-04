@@ -236,8 +236,11 @@ Los `source` que llegan al primer sitio los ponen los productores:
 Si auditas "qué mandó la máquina", filtrar por `doco_sent_by_type="Automation"`
 te devuelve sólo lo que se disparó sin humano. Desde 2026-08-03 la consulta
 correcta para "origen máquina, apruebe quien apruebe" es
-`COALESCE(doco_automation_source,'') <> ''` (los sellados antes de esa fecha
-siguen sin el campo — el backfill no se hizo).
+`COALESCE(doco_automation_source,'') <> ''`. La historia también cuenta: el
+backfill del 2026-08-04 (`doco_marketing/patches/v0_4/backfill_automation_provenance`)
+recuperó el campo para todo envío histórico con fila `Enviado` en la cola
+(224 mensajes en prod vía el link `wa_message` + su `source`; los acuses de
+Inbox Auto Reply viejos no son recuperables — sin link al mensaje).
 
 ### 5.3 El backfill es honesto, no exacto
 
