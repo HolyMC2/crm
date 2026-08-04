@@ -12,10 +12,12 @@
 `validate_access()`:
 
 ```python
-ALLOWED_WHATSAPP_ROLES = ["System Manager", "Sales Manager", "Sales User"]
+ALLOWED_WHATSAPP_ROLES = ["System Manager", "Sales Manager", "Marketing Manager", "Sales User"]
 ```
 
 Sin uno de esos roles: *"Only sales users can access WhatsApp features."*
+(Marketing Manager entró 2026-08-03: aprueba en las colas ojos-de-gerente y el
+seam del inbox le tronaba en `validate_access`.)
 Con referencia (`reference_doctype` + `reference_name`), además comprueba que el
 documento exista y que el usuario tenga el permiso pedido sobre él. Es decir, el
 permiso del **deal** manda sobre el acceso al hilo.

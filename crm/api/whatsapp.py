@@ -7,7 +7,11 @@ from frappe.permissions import add_permission, update_permission_property
 from crm.api.doc import get_assigned_users
 from crm.fcrm.doctype.crm_notification.crm_notification import notify_user
 
-ALLOWED_WHATSAPP_ROLES = ["System Manager", "Sales Manager", "Sales User"]
+# Marketing Manager added 2026-08-03: they hold _APPROVER_ROLES on the review
+# queues (manager-eyes policy) — approving an Inbox Auto Reply whatsapp draft
+# routes through inbox.send_message -> validate_access, which threw for a
+# Marketing-Manager-only approver.
+ALLOWED_WHATSAPP_ROLES = ["System Manager", "Sales Manager", "Marketing Manager", "Sales User"]
 
 
 def validate_access(reference_doctype=None, reference_name=None, permtype="read"):
