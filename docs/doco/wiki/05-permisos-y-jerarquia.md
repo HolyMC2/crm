@@ -69,6 +69,13 @@ dos añadidos: `ptype == "create"` siempre pasa, y un documento sin `name`
   campo `user`.
 - Interruptor: **`FCRM Settings.enable_sales_hierarchy`**.
 - "Está en el árbol" = `frappe.db.exists("CRM Sales Hierarchy", {"user": user})`.
+- **Reglas de rango en el servidor (desde 2026-08-03)**: `validate()` refleja
+  las reglas que antes sólo vivían en la UI (Hierarchy.vue / useDragDrop.js):
+  sólo Sales Manager / Sales User pueden ocupar un nodo, Administrator nunca, y
+  un Sales Manager no puede colgar de un Sales User (rango hijo ≥ rango padre).
+  Antes un insert directo por API podía invertir rangos y el subárbol de un
+  agente se tragaba a su gerente en `_team_mem_query`. Los dashboards también
+  quedaron acotados al subárbol — ver `07-reportes-y-scoring.md` §9.
 - "Mi subárbol" = `_team_mem_query` — auto-join del doctype consigo mismo:
   todos los miembros cuyo `lft` cae entre el `lft` y el `rgt` del gerente. Nota
   que el rango **incluye al propio gerente**.

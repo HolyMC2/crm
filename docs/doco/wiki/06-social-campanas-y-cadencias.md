@@ -370,9 +370,9 @@ Para no documentar funciones muertas:
   está cableado desde el cajón de detalle de llamada, pero el spec la lista como
   diferida. **TODO-VERIFY**: si el backend la implementa de punta a punta o sólo
   encola.
-- **Borrar vistas guardadas no existe**: `deleteView()` está definida en
-  `LeadsView.vue:455` y `DealsView.vue:428` pero **nunca se llama**. Se pueden
-  crear y aplicar vistas, no borrarlas.
+- *Corregido 2026-08-03*: **borrar vistas guardadas ya existe** — la entrada
+  «🗑 Eliminar vista…» del menú Vistas (Leads y Deals) abre un selector y llama
+  la `deleteView()` que antes estaba huérfana.
 - **`Cancelado` es inalcanzable en el calendario social**: `get_calendar` lo
   excluye del lado servidor y `STATUSES` lo omite, aunque el estilo de chip y el
   tachado siguen en el código.

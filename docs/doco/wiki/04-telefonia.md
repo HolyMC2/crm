@@ -178,10 +178,10 @@ Se conservan sólo dígitos y el `+` inicial. Tres bordes exactos:
 - Una entrada vacía o falsy **se devuelve tal cual, sin `+`**; cualquier otro
   camino siempre antepone `+`.
 
-> **Limitación conocida, documentada en el propio código**: el recorte del URI
-> SIP funciona hoy porque el host SIP actual no tiene dígitos. Un host con
-> números en el nombre, o un `:puerto` explícito, **marcaría mal**. Si cambias
-> el dominio SIP, revisa esta función.
+> Nota histórica: una versión previa de esta página advertía que el recorte del
+> URI SIP dependía de que el host no tuviera dígitos. El código actual quita el
+> esquema y **todo desde `@`** antes de extraer dígitos, así que un host con
+> números o un `:puerto` explícito ya no contaminan el número marcado.
 
 ---
 
@@ -354,7 +354,7 @@ configuración viva de Twilio en esta revisión.
 | "Twilio sin token para este usuario — llamadas desactivadas" | El agente no tiene CRM Telephony Agent configurado, o el tenant no tiene Twilio completo |
 | El softphone no timbra | `enable_sip_phone` apagado, `sip_domain` vacío, o el agente sin `sip_username` — cae al navegador |
 | Llamadas del softphone salen rechazadas | `enable_sip_phone = 0` → el webhook `sip_voice` responde `<Reject/>` |
-| Se marca a un número equivocado desde SIP | Host SIP con dígitos o puerto explícito — limitación conocida de `_normalize_e164` |
+| Se marca a un número equivocado desde SIP | Revisar el `To` crudo en el webhook — `_normalize_e164` ya recorta esquema y `@host:puerto`, así que el problema suele venir de origen |
 | Llamadas de softphone quedan como "Incoming" | Regresión en `get_direction()`: debe aceptar el prefijo `sip:` |
 | Nadie timbra aunque hay agentes | Revisar que la consulta de agentes siga siendo SQL directo (contexto Guest) |
 | Un deal no sube al tope tras una llamada | El Call Log no tiene referencia ni link a ese Lead/Deal |

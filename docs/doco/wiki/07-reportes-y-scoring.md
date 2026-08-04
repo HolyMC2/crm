@@ -200,6 +200,15 @@ superficie del rediseño en ese estado.
 `Repair Order` no existe, en vez de tumbar el dashboard entero con un 500 en un
 tenant sin taller.
 
+Desde 2026-08-03 los mosaicos **respetan la jerarquía de ventas**: los charts
+construyen query-builder crudo (que se salta `permission_query_conditions`), así
+que un Sales Manager dentro del árbol veía números org-wide junto a listas
+acotadas a su subárbol. `_scoped_users()` resuelve `user explícito > subárbol
+del gerente > sin filtro` y los 19 charts con filtro de propietario lo aplican
+en ambos periodos (actual y anterior). `get_total_repair_orders` queda sin
+acotar a propósito: Repair Order no tiene dimensión de propietario CRM —
+decisión de producto pendiente.
+
 ---
 
 ## 10. Vistas de lista rediseñadas

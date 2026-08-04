@@ -206,8 +206,13 @@ cambio de esquema.
 | `taller/taller/services/tracker_notify/__init__.py:306-309` | envío directo, sin encolar | `f"taller.tracker_notify:{status}"` — p. ej. `taller.tracker_notify:Recibido` |
 
 Las filas con `auto=0` —o sea, **todo lo que un humano aprobó**— se sellan como
-`Human` con `doco_actor_user = sent_by` (`:98-100`). Eso es lo correcto: quien
-aprobó es el responsable del mensaje.
+`Human` con `doco_actor_user = sent_by`. Eso es lo correcto: quien aprobó es el
+responsable del mensaje. **Desde 2026-08-03** esas mismas filas además sellan
+`doco_automation_source` con el `source` de la fila cuando existe, y un source
+`chatflow:<flow>:<step>` rellena también `doco_bot` / `doco_bot_step` (que
+llevaban sin escribirse desde la compuerta H1). Inbox Auto Reply hace lo
+equivalente en sus dos ramas de envío. El chip sigue leyendo
+`doco_sent_by_type`, así que la UI no cambia.
 
 Los `source` que llegan al primer sitio los ponen los productores:
 `chatflow:{flow}:{step_label}`, `review_ask`, `abandoned_checkout`,
@@ -226,8 +231,10 @@ Los `source` que llegan al primer sitio los ponen los productores:
   un `Automation` — sus mensajes acaban sellados como el humano que los aprobó.
 
 Si auditas "qué mandó la máquina", filtrar por `doco_sent_by_type="Automation"`
-te va a devolver mucho menos de lo que esperas. Filtra también por
-`doco_bot` y por `doco_automation_source LIKE 'canned:%'`.
+te devuelve sólo lo que se disparó sin humano. Desde 2026-08-03 la consulta
+correcta para "origen máquina, apruebe quien apruebe" es
+`COALESCE(doco_automation_source,'') <> ''` (los sellados antes de esa fecha
+siguen sin el campo — el backfill no se hizo).
 
 ### 5.3 El backfill es honesto, no exacto
 
