@@ -90,7 +90,7 @@
     <!-- bulk bar -->
     <div v-if="selectedRows.length" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2">
       <span class="text-[12.5px] font-semibold text-ink-gray-8">{{ selectedRows.length }} {{ __('seleccionados') }}</span>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-7 hover:bg-surface-red-1" @click="bulkDelete">
+      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1" @click="bulkDelete">
         {{ __('Eliminar') }}
       </button>
       <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>

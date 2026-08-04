@@ -89,7 +89,7 @@
       <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2" @click="bulkConvert">
         {{ __('Convertir a tratos') }}
       </button>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-7 hover:bg-surface-red-1" @click="bulkDelete">
+      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1" @click="bulkDelete">
         {{ __('Eliminar') }}
       </button>
       <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>
