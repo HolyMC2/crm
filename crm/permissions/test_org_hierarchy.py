@@ -6,6 +6,8 @@ from frappe.tests import IntegrationTestCase
 from frappe.utils.nestedset import rebuild_tree
 
 from crm.permissions.org_hierarchy import (
+	get_call_log_permission_query_conditions,
+	get_deal_permission_query_conditions,
 	get_lead_permission_query_conditions,
 	has_deal_permission,
 	has_lead_permission,
@@ -143,6 +145,21 @@ class TestOrgHierarchy(IntegrationTestCase):
 			)
 		finally:
 			frappe.set_user("Administrator")
+
+	def test_all_query_conditions_are_namespaced(self):
+		# Every column in the emitted condition must carry its table prefix, otherwise a
+		# report that joins a child table makes bare `name`/`doco_shop` ambiguous and the
+		# whole query errors out for restricted users. CRM Call Log is ours, so the
+		# upstream fix did not cover it.
+		for doctype, getter in (
+			("CRM Lead", get_lead_permission_query_conditions),
+			("CRM Deal", get_deal_permission_query_conditions),
+			("CRM Call Log", get_call_log_permission_query_conditions),
+		):
+			with self.subTest(doctype=doctype):
+				cond = getter("rep1@hier.test")
+				self.assertTrue(cond, f"expected a non-empty condition for {doctype}")
+				self.assertIn(f"`tab{doctype}`.", cond)
 
 	# ------------------------------------------------------------------
 	# Hierarchy disabled
