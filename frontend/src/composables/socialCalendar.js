@@ -199,7 +199,11 @@ export function useSocialCalendar() {
     makeParams: () => ({ shop: shop.value || undefined }),
     auto: false,
   })
-  const lb = createResource({ url: 'doco_marketing.api.social.get_leaderboard', auto: false })
+  const lb = createResource({
+    url: 'doco_marketing.api.social.get_leaderboard',
+    makeParams: () => ({ shop: shop.value || undefined }),
+    auto: false,
+  })
   const lbTotals = computed(() => {
     const acc = { posts: 0, reach: 0, impressions: 0, engagement: 0, link_clicks: 0, leads: 0 }
     for (const r of lb.data || []) for (const k in acc) acc[k] += r[k] || 0
@@ -292,7 +296,7 @@ export function useSocialCalendar() {
   }, { immediate: true })
   function onShopChange() {
     cal.reload()
-    if (view.value === 'metrics') { dash.reload() }
+    if (view.value === 'metrics') { dash.reload(); lb.reload() }
   }
 
   // pending-approval posts across the loaded window + unscheduled tray
