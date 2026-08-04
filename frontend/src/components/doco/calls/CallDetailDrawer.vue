@@ -32,9 +32,10 @@
         </div>
 
         <!-- recording -->
-        <div v-if="d.recording_url" class="mb-4">
+        <!-- recording_url_path = authenticated proxy; the raw recording_url needs Twilio auth -->
+        <div v-if="d.recording_url_path" class="mb-4">
           <div class="mb-1.5 text-[11px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Grabación') }}</div>
-          <audio :src="d.recording_url" controls class="w-full" />
+          <audio :src="d.recording_url_path" controls class="w-full" />
         </div>
 
         <!-- AI summary -->
@@ -122,7 +123,8 @@ const saving = ref(false)
 async function saveNote() {
   saving.value = true
   try {
-    await frappeCall('frappe.client.set_value', { doctype: 'CRM Call Log', name: props.name, fieldname: 'note', value: note.value })
+    // note is a Link -> FCRM Note; save_call_note owns the note-doc round trip
+    await frappeCall('doco_marketing.api.calls.save_call_note', { name: props.name, text: note.value })
     toast.success(__('Nota guardada'))
     emit('changed')
   } finally {
@@ -132,7 +134,7 @@ async function saveNote() {
 async function saveAndTask() {
   saving.value = true
   try {
-    await frappeCall('frappe.client.set_value', { doctype: 'CRM Call Log', name: props.name, fieldname: 'note', value: note.value })
+    await frappeCall('doco_marketing.api.calls.save_call_note', { name: props.name, text: note.value })
     const taskDoc = {
       doctype: 'CRM Task',
       title: __('Seguimiento de llamada'),
