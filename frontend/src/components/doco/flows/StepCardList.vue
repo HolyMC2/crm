@@ -383,7 +383,7 @@ PreviewToggle.emits = ['toggle']
   padding: 5px 9px;
   font-size: 12px;
   background: var(--surface-gray-2);
-  color: var(--text-ink-gray-8);
+  color: var(--ink-gray-8);
 }
 .dm-input:focus {
   outline: none;
