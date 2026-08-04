@@ -59,7 +59,7 @@
             v-for="c in cadences"
             v-else
             :key="c.name"
-            class="press flex items-center justify-between gap-3 rounded-lg border border-outline-gray-2 bg-surface-white p-3 text-left hover:bg-surface-gray-1 disabled:opacity-50"
+            class="press flex items-center justify-between gap-3 rounded-lg border border-outline-gray-2 bg-surface-base p-3 text-left hover:bg-surface-gray-1 disabled:opacity-50"
             :disabled="busy"
             @click="start(c.name)"
           >

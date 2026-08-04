@@ -8,14 +8,14 @@
 <template>
   <nav
     v-show="visible"
-    class="flex flex-none items-stretch border-t border-outline-gray-1 bg-surface-white pb-[env(safe-area-inset-bottom)]"
+    class="flex flex-none items-stretch border-t border-outline-gray-1 bg-surface-base pb-[env(safe-area-inset-bottom)]"
     :aria-label="__('Navegación principal')"
   >
     <button
       v-for="t in tabs"
       :key="t.key"
       class="press relative flex h-[54px] flex-1 flex-col items-center justify-center gap-0.5"
-      :class="isActive(t) ? 'text-ink-green-3' : 'text-ink-gray-5'"
+      :class="isActive(t) ? 'text-ink-green-6' : 'text-ink-gray-5'"
       :aria-label="__(t.label)"
       :aria-current="isActive(t) ? 'page' : undefined"
       @click="onTab(t)"
@@ -25,7 +25,7 @@
         <span
           v-if="t.badge && badgeFor(t.badge)"
           class="absolute -right-2.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold"
-          :class="t.badge === 'unread' ? 'bg-surface-red-5 text-ink-white' : 'bg-surface-amber-2 text-ink-amber-3'"
+          :class="t.badge === 'unread' ? 'bg-surface-red-7 text-ink-base' : 'bg-surface-amber-2 text-ink-amber-6'"
         >
           {{ badgeFor(t.badge) > 99 ? '99+' : badgeFor(t.badge) }}
         </span>

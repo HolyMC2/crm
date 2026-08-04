@@ -13,7 +13,7 @@
     </div>
     <template v-else>
       <!-- header -->
-      <div class="flex-none border-b border-outline-gray-1 bg-surface-white px-4 py-3">
+      <div class="flex-none border-b border-outline-gray-1 bg-surface-base px-4 py-3">
         <div class="mx-auto flex w-full max-w-2xl items-center gap-2.5">
           <button v-if="isMobile" class="text-ink-gray-5 hover:text-ink-gray-9" :aria-label="__('Atrás')" @click="mobileBack">←</button>
           <span
@@ -59,13 +59,13 @@
                 v-for="s in sortOptions"
                 :key="s.id"
                 class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                :class="sort === s.id ? 'bg-surface-blue-2 text-ink-blue-3' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+                :class="sort === s.id ? 'bg-surface-blue-2 text-ink-blue-6' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
                 @click="setSort(s.id)"
               >
                 {{ s.label }}
               </button>
             </div>
-            <div class="ml-auto flex min-w-[160px] flex-1 items-center gap-2 rounded-full border border-outline-gray-2 bg-surface-white px-2.5 py-1">
+            <div class="ml-auto flex min-w-[160px] flex-1 items-center gap-2 rounded-full border border-outline-gray-2 bg-surface-base px-2.5 py-1">
               <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
               <input
                 v-model="search"
@@ -76,16 +76,16 @@
           </div>
 
           <div v-if="loading && !threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
-          <div v-else-if="threadError && !threadComments.length" class="py-6 text-center text-[12px] text-ink-red-3">
+          <div v-else-if="threadError && !threadComments.length" class="py-6 text-center text-[12px] text-ink-red-6">
             {{ __('No se pudieron cargar los comentarios.') }}
-            <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="fetchThread(true)">{{ __('Reintentar') }}</button>
+            <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="fetchThread(true)">{{ __('Reintentar') }}</button>
           </div>
           <div v-else-if="!threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">
             {{ search ? __('Sin resultados') : __('Sin comentarios') }}
           </div>
 
           <!-- comments -->
-          <div v-for="cm in threadComments" :key="cm.name" class="mb-3 rounded-xl border border-outline-gray-1 bg-surface-white p-3">
+          <div v-for="cm in threadComments" :key="cm.name" class="mb-3 rounded-xl border border-outline-gray-1 bg-surface-base p-3">
             <div class="mb-1 flex items-center gap-2">
               <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{ cm.from_name || __('Usuario de Facebook') }}</span>
               <span class="flex-none rounded px-1.5 py-px text-[9.5px] font-semibold" :style="statusChip(cm.status)">{{ statusLabel(cm.status) }}</span>
@@ -94,15 +94,15 @@
             <div class="text-[13px] text-ink-gray-8">{{ cm.message || __('(sin texto)') }}</div>
 
             <div v-if="cm.reply_text" class="mt-2 rounded-lg border border-outline-blue-1 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8">
-              <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-3">
+              <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-6">
                 {{ cm.reply_by || __('Tú') }}<span v-if="cm.reply_at" class="font-normal text-ink-gray-5"> · {{ timeAgo(cm.reply_at) }}</span>
               </div>
               {{ cm.reply_text }}
             </div>
 
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11.5px]">
-              <button class="font-semibold text-ink-blue-3 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
-              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-3 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
+              <button class="font-semibold text-ink-blue-6 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
+              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-6 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
               <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">
                 💬 {{ cm.channel === 'IG' ? __('Continuar en DM') : __('Continuar en Messenger') }}
               </button>
@@ -121,7 +121,7 @@
             </div>
 
             <div v-if="replyingTo === cm.name" class="mt-2">
-              <div class="mb-1 text-[10px] font-semibold" :class="mode === 'private' ? 'text-ink-blue-3' : 'text-ink-gray-5'">
+              <div class="mb-1 text-[10px] font-semibold" :class="mode === 'private' ? 'text-ink-blue-6' : 'text-ink-gray-5'">
                 {{ mode === 'private' ? __('Mensaje privado al autor') : __('Respuesta pública') }}
               </div>
               <div class="flex items-end gap-2">
@@ -129,7 +129,7 @@
                   v-model="reply"
                   rows="2"
                   :placeholder="mode === 'private' ? __('Responder por DM…') : __('Responder en el comentario…')"
-                  class="scb flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-2"
+                  class="scb flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-3"
                   @keydown.enter.exact.prevent="onReply(cm)"
                 />
                 <div class="flex h-8 items-center">

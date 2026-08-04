@@ -5,12 +5,12 @@
 <template>
   <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-white px-5">
+    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-base px-5">
       <div class="flex items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Webshop') }}</span>
         <span
           class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-          :class="kpis.connected ? 'text-ink-green-3 bg-surface-green-2' : 'text-ink-gray-6 bg-surface-gray-2'"
+          :class="kpis.connected ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-gray-6 bg-surface-gray-2'"
         >
           {{ kpis.connected ? '✓ ' + __('Conectado') : __('Desconectado') }}
         </span>
@@ -29,7 +29,7 @@
         <Kpi :label="__('Atribución')" :value="kpis.attribution_model || '—'" />
       </div>
 
-      <div class="mt-4 rounded-[12px] border border-outline-gray-2 bg-surface-white p-4">
+      <div class="mt-4 rounded-[12px] border border-outline-gray-2 bg-surface-base p-4">
         <div class="mb-3 text-[13px] font-bold text-ink-gray-9">{{ __('Registro de webhooks') }}</div>
         <div v-if="!logs.length" class="py-4 text-center text-xs text-ink-gray-4">
           {{ __('El puente storefront→CRM es por eventos (Sales Order on_submit); sin registro manual.') }}
@@ -63,7 +63,7 @@ async function sync() {
 }
 
 const Kpi = (props) =>
-  h('div', { class: 'rounded-[12px] border border-outline-gray-2 bg-surface-white p-4' }, [
+  h('div', { class: 'rounded-[12px] border border-outline-gray-2 bg-surface-base p-4' }, [
     h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
     h('div', { class: 'mt-1.5 text-[22px] font-extrabold ' + (props.color ? '' : 'text-ink-gray-9'), style: props.color ? `color:${props.color}` : undefined }, String(props.value)),
   ])

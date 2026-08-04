@@ -4,7 +4,7 @@
   api.score_rules.* + createListResource('Lead Scoring Rule').
 -->
 <template>
-  <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-white">
+  <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-base">
     <!-- header -->
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex items-center gap-2">
@@ -70,10 +70,10 @@
               <span class="font-medium">{{ r.field }}</span> {{ r.operator }} <span class="font-medium">{{ r.value }}</span>
             </div>
           </div>
-          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :class="r.points >= 0 ? 'text-ink-green-3 bg-surface-green-2' : 'text-ink-red-4 bg-surface-red-1'">
+          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :class="r.points >= 0 ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-red-8 bg-surface-red-1'">
             {{ r.points >= 0 ? '+' : '' }}{{ r.points }}
           </span>
-          <button class="flex-none text-[13px] text-ink-gray-4 hover:text-ink-red-4" @click="deleteRule(r)">✕</button>
+          <button class="flex-none text-[13px] text-ink-gray-4 hover:text-ink-red-8" @click="deleteRule(r)">✕</button>
         </div>
       </div>
 

@@ -2,7 +2,7 @@
   <div class="mt-6 border-t pt-6">
     <!-- Header (draft creation moved to per-RO 'Crear borrador' picker in RepairOrdersSection) -->
     <div class="mb-3 flex items-center justify-between">
-      <span class="text-base font-semibold text-ink-gray-8">
+      <span class="text-base-semibold text-ink-gray-8">
         {{ __('Documents') }}
       </span>
     </div>
@@ -20,7 +20,7 @@
 
       <!-- Quotations -->
       <div v-if="quotations.length">
-        <div class="mb-1.5 text-xs font-medium uppercase tracking-wide text-ink-gray-5">
+        <div class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5">
           {{ __('Quotations') }}
         </div>
         <div class="divide-y rounded-lg border overflow-hidden">
@@ -31,7 +31,7 @@
             target="_blank"
             class="flex items-center justify-between px-3 py-2 text-sm hover:bg-surface-gray-1 transition-colors"
           >
-            <span class="font-medium text-ink-blue-3">{{ doc.name }}</span>
+            <span class="font-medium text-ink-blue-6">{{ doc.name }}</span>
             <div class="flex items-center gap-3 text-right">
               <Badge :label="__(doc.status)" :theme="quotationTheme(doc.status)" size="sm" />
               <span class="text-ink-gray-7 tabular-nums">{{ fmt(doc.grand_total, doc.currency) }}</span>
@@ -43,7 +43,7 @@
 
       <!-- Sales Orders -->
       <div v-if="salesOrders.length">
-        <div class="mb-1.5 text-xs font-medium uppercase tracking-wide text-ink-gray-5">
+        <div class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5">
           {{ __('Sales Orders') }}
         </div>
         <div class="divide-y rounded-lg border overflow-hidden">
@@ -54,7 +54,7 @@
             target="_blank"
             class="flex items-center justify-between px-3 py-2 text-sm hover:bg-surface-gray-1 transition-colors"
           >
-            <span class="font-medium text-ink-blue-3">{{ doc.name }}</span>
+            <span class="font-medium text-ink-blue-6">{{ doc.name }}</span>
             <div class="flex items-center gap-3 text-right">
               <Badge :label="__(doc.status)" :theme="soTheme(doc.status)" size="sm" />
               <span class="text-ink-gray-7 tabular-nums">{{ fmt(doc.grand_total, doc.currency) }}</span>
@@ -66,7 +66,7 @@
 
       <!-- Invoices -->
       <div v-if="invoices.length">
-        <div class="mb-1.5 text-xs font-medium uppercase tracking-wide text-ink-gray-5">
+        <div class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5">
           {{ __('Invoices') }}
         </div>
         <div class="divide-y rounded-lg border overflow-hidden">
@@ -78,7 +78,7 @@
             class="flex items-center justify-between px-3 py-2 text-sm hover:bg-surface-gray-1 transition-colors"
           >
             <div class="flex items-center gap-2">
-              <span class="font-medium text-ink-blue-3">{{ doc.name }}</span>
+              <span class="font-medium text-ink-blue-6">{{ doc.name }}</span>
               <span
                 v-if="doc.doctype === 'POS Invoice'"
                 class="rounded bg-surface-gray-2 px-1 py-0.5 text-xs text-ink-gray-5"

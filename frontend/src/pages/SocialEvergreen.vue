@@ -18,14 +18,14 @@
     class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
   >
     <!-- toolbar -->
-    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-white px-5 py-2">
+    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
       <div class="flex items-center gap-3">
         <span class="text-[15px] font-bold text-ink-gray-9">🌲 {{ __('Biblioteca evergreen') }}</span>
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop"
           @change="onShopChange"
-          class="rounded-lg border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
+          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
           :title="__('Filtrar por sucursal')"
         >
           <option v-if="isManager" value="">{{ __('Todas las sucursales') }}</option>
@@ -34,7 +34,7 @@
       </div>
       <router-link
         to="/social"
-        class="text-[12px] font-semibold text-ink-blue-3 hover:underline"
+        class="text-[12px] font-semibold text-ink-blue-6 hover:underline"
         :title="__('Los borradores reciclados aparecen en Social → Por aprobar')"
       >
         {{ __('Ir al calendario →') }}
@@ -42,7 +42,7 @@
     </div>
 
     <!-- intro -->
-    <p class="flex-none border-b border-outline-gray-1 bg-surface-white px-5 py-2 text-[12px] text-ink-gray-6">
+    <p class="flex-none border-b border-outline-gray-1 bg-surface-base px-5 py-2 text-[12px] text-ink-gray-6">
       {{ __('Las publicaciones evergreen son contenido que sigue funcionando: se re-generan como un nuevo borrador (con su misma imagen), nunca un repost idéntico, y siempre pasan por Aprobar.') }}
     </p>
 
@@ -55,7 +55,7 @@
       <!-- empty -->
       <div
         v-else-if="!rows.length"
-        class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-white px-6 py-10 text-center"
+        class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
       >
         <div class="text-[34px]">🌲</div>
         <div class="mt-2 text-[15px] font-bold text-ink-gray-8">{{ __('Aún no hay publicaciones evergreen') }}</div>
@@ -76,7 +76,7 @@
           v-for="(row, i) in rows"
           :key="row.name"
           :data-testid="`evergreen-row-${i}`"
-          class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-outline-gray-2 bg-surface-white px-4 py-3"
+          class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-outline-gray-2 bg-surface-base px-4 py-3"
         >
           <!-- title + meta -->
           <div class="min-w-[180px] flex-1">
@@ -99,7 +99,7 @@
           <!-- eligibility -->
           <span
             class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="available(row) ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200'"
+            :class="available(row) ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-amber-1 text-ink-amber-6 dark:bg-amber-300/15 dark:text-amber-200'"
           >
             {{ available(row) ? __('Disponible') : __('En pausa hasta') + ' ' + fmtDate(row.next_eligible) }}
           </span>
@@ -133,7 +133,7 @@
     <!-- confirm: quitar de la biblioteca -->
     <template v-if="confirmRow">
       <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="confirmRow = null" />
-      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
+      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
         <div class="border-b border-outline-gray-1 px-4 py-3 text-[14px] font-bold text-ink-gray-9">
           {{ __('Quitar de la biblioteca') }}
         </div>
@@ -148,7 +148,7 @@
             {{ __('Cancelar') }}
           </button>
           <button
-            class="rounded-lg bg-surface-red-5 px-3 py-1.5 text-[12.5px] font-semibold text-ink-white disabled:opacity-50"
+            class="rounded-lg bg-surface-red-7 px-3 py-1.5 text-[12.5px] font-semibold text-ink-base disabled:opacity-50"
             :disabled="busy === confirmRow.name"
             @click="removeConfirmed"
           >
@@ -170,10 +170,10 @@ const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉', Noti
 
 function chip(status) {
   return {
-    Published: 'bg-surface-green-2 text-ink-green-3',
-    'Partially Published': 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200',
-    Scheduled: 'bg-surface-blue-2 text-ink-blue-3',
-    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200',
+    Published: 'bg-surface-green-2 text-ink-green-6',
+    'Partially Published': 'bg-surface-amber-1 text-ink-amber-6 dark:bg-amber-300/15 dark:text-amber-200',
+    Scheduled: 'bg-surface-blue-2 text-ink-blue-6',
+    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-6 dark:bg-amber-300/15 dark:text-amber-200',
     Draft: 'bg-surface-gray-2 text-ink-gray-6',
   }[status] || 'bg-surface-gray-2 text-ink-gray-6'
 }

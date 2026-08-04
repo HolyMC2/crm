@@ -3,7 +3,7 @@
 <template>
   <button
     v-if="outbox.length"
-    class="press flex w-full flex-none items-center justify-center gap-2 bg-surface-blue-1 px-3 py-1.5 text-[12px] font-semibold text-ink-blue-3"
+    class="press flex w-full flex-none items-center justify-center gap-2 bg-surface-blue-1 px-3 py-1.5 text-[12px] font-semibold text-ink-blue-6"
     role="status"
     @click="open = true"
   >
@@ -27,7 +27,7 @@
             <div class="mt-0.5 whitespace-pre-wrap break-words text-[12.5px] text-ink-gray-8">{{ m.message }}</div>
           </div>
           <button
-            class="press flex-none rounded-md px-2 py-1 text-[11.5px] font-medium text-ink-red-4 hover:bg-surface-red-1"
+            class="press flex-none rounded-md px-2 py-1 text-[11.5px] font-medium text-ink-red-8 hover:bg-surface-red-1"
             @click="discardOutbox(i)"
           >
             {{ __('Descartar') }}

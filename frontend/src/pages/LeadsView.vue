@@ -4,7 +4,7 @@
   Leads.vue left untouched for rebase-cleanliness); data via createListResource.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
+  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- toolbar -->
     <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
@@ -18,7 +18,7 @@
             v-for="(v, i) in views"
             :key="v.key"
             class="inline-flex items-center gap-1 px-[11px] py-[5px] text-[12px]"
-            :class="[i ? 'border-l border-outline-gray-2' : '', v.key === view ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-white text-ink-gray-6']"
+            :class="[i ? 'border-l border-outline-gray-2' : '', v.key === view ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-base text-ink-gray-6']"
             :aria-pressed="v.key === view"
             @click="selectView(v)"
           >
@@ -75,7 +75,7 @@
       <span
         v-for="c in chips"
         :key="c.key"
-        class="inline-flex items-center gap-1.5 rounded-[7px] border border-outline-green-2 bg-surface-green-2 px-2 py-1 text-[11.5px] font-medium text-ink-green-3"
+        class="inline-flex items-center gap-1.5 rounded-[7px] border border-outline-green-3 bg-surface-green-2 px-2 py-1 text-[11.5px] font-medium text-ink-green-6"
       >
         {{ c.label }}
         <button class="text-[13px] leading-none" :aria-label="__('Quitar filtro') + ' ' + c.label" @click="removeChip(c)">×</button>
@@ -89,7 +89,7 @@
       <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2" @click="bulkConvert">
         {{ __('Convertir a tratos') }}
       </button>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-4 hover:bg-surface-red-1" @click="bulkDelete">
+      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1" @click="bulkDelete">
         {{ __('Eliminar') }}
       </button>
       <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>

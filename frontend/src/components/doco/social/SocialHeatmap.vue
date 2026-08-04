@@ -24,14 +24,14 @@
       <span
         v-if="fbOnly"
         data-testid="fb-only-badge"
-        class="inline-flex flex-none items-center gap-1 rounded-full bg-surface-blue-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-blue-3"
+        class="inline-flex flex-none items-center gap-1 rounded-full bg-surface-blue-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-blue-6"
         :title="__('Instagram se suma cuando Meta apruebe la app')"
       >🟦 {{ __('Solo datos de Facebook') }}</span>
     </div>
 
     <!-- loading / empty / grid -->
     <div v-if="loading && !hasData" class="py-8 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
-    <div v-else-if="error" class="py-8 text-center text-[12px] text-ink-red-4">{{ __('No se pudo cargar el mapa de calor') }}</div>
+    <div v-else-if="error" class="py-8 text-center text-[12px] text-ink-red-8">{{ __('No se pudo cargar el mapa de calor') }}</div>
     <div v-else-if="!hasData" class="rounded-[12px] border border-dashed border-outline-gray-2 py-10 text-center text-[12px] text-ink-gray-4">
       {{ __('Aún no hay suficientes datos de publicaciones') }}
     </div>

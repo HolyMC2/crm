@@ -67,7 +67,7 @@
         <template #label>
           <span class="text-xs text-ink-gray-5">
             {{ __('Falla reportada') }}
-            <span class="text-ink-red-4">*</span>
+            <span class="text-ink-red-8">*</span>
           </span>
         </template>
       </FormControl>
@@ -119,7 +119,7 @@
 
     <!-- Row 3: Unlock method (none / PIN / pattern) -->
     <div class="mt-4 rounded-md border bg-surface-gray-1 p-3 dark:bg-surface-gray-2">
-      <div class="mb-1.5 text-xs font-semibold text-ink-gray-7">
+      <div class="mb-1.5 text-xs-semibold text-ink-gray-7">
         {{ __('Unlock') }}
       </div>
       <div class="flex flex-wrap items-center gap-4 text-sm text-ink-gray-7">
@@ -153,7 +153,7 @@
 
     <!-- Row 4: Cotización + anticipo + saldo preview -->
     <div class="mt-3 rounded-md border bg-surface-gray-1 p-3 dark:bg-surface-gray-2">
-      <div class="mb-1.5 text-xs font-semibold text-ink-gray-7">
+      <div class="mb-1.5 text-xs-semibold text-ink-gray-7">
         {{ __('Quote & advance') }}
       </div>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -178,8 +178,8 @@
             {{ __('Balance due') }}
           </label>
           <div
-            class="rounded-md border border-dashed bg-surface-white px-3 py-1.5 text-sm font-mono"
-            :class="balance > 0 ? 'text-ink-amber-3' : 'text-ink-gray-5'"
+            class="rounded-md border border-dashed bg-surface-base px-3 py-1.5 text-sm font-mono"
+            :class="balance > 0 ? 'text-ink-amber-6' : 'text-ink-gray-5'"
           >
             {{ formattedBalance }}
           </div>

@@ -16,14 +16,14 @@
     </div>
 
     <div v-if="loading" class="py-2 text-[11.5px] text-ink-gray-5">{{ __('Cargando…') }}</div>
-    <div v-else-if="error" class="py-2 text-[11.5px] text-ink-red-3">{{ error }}</div>
+    <div v-else-if="error" class="py-2 text-[11.5px] text-ink-red-6">{{ error }}</div>
 
     <template v-else-if="detail">
       <div class="flex flex-col gap-1">
         <div
           v-for="l in detail.lines"
           :key="l.name"
-          class="rounded-md bg-surface-white px-2 py-1.5 text-[11.5px] shadow-sm"
+          class="rounded-md bg-surface-base px-2 py-1.5 text-[11.5px] shadow-sm"
         >
           <div class="flex items-center justify-between gap-2">
             <span class="min-w-0 truncate font-medium text-ink-gray-8" :title="l.item_code">{{ l.item_name || l.item_code }}</span>
@@ -34,7 +34,7 @@
               {{ __('Cant.') }}
               <input
                 type="number" min="1" max="999" step="1"
-                class="w-14 rounded border border-outline-gray-2 bg-surface-white px-1 py-0.5 text-[11px]"
+                class="w-14 rounded border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px]"
                 :value="l.qty"
                 :disabled="busy"
                 @change="patchLine(l, { qty: $event.target.value })"
@@ -44,7 +44,7 @@
               {{ __('Desc.') }}
               <input
                 type="number" min="0" max="100" step="1"
-                class="w-14 rounded border border-outline-gray-2 bg-surface-white px-1 py-0.5 text-[11px]"
+                class="w-14 rounded border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px]"
                 :value="l.discount_percentage"
                 :disabled="busy"
                 @change="patchLine(l, { discount_percentage: $event.target.value })"
@@ -52,7 +52,7 @@
             </label>
             <span class="text-[10px] text-ink-gray-4">× {{ money(l.rate) }}</span>
             <button
-              class="ml-auto text-[11px] text-ink-red-3 hover:text-ink-red-4"
+              class="ml-auto text-[11px] text-ink-red-6 hover:text-ink-red-8"
               :disabled="busy"
               :title="__('Quitar línea')"
               @click="dropLine(l)"
@@ -78,14 +78,14 @@
           @click="sendWhatsapp"
         >📤 {{ __('Enviar por WhatsApp') }}</button>
         <button
-          class="rounded-lg border border-outline-gray-2 bg-surface-white px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-gray-8 disabled:opacity-50"
+          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-gray-8 disabled:opacity-50"
           :disabled="busy || !detail.lines.length"
           :title="__('Crea la orden de venta (borrador) — facturación en Desk/POS')"
           @click="accept"
         >🤝 {{ __('Cliente aceptó') }}</button>
         <button
           v-if="editable"
-          class="rounded-lg border border-outline-gray-2 bg-surface-white px-2.5 py-1.5 text-[11.5px] text-ink-gray-7 disabled:opacity-50"
+          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] text-ink-gray-7 disabled:opacity-50"
           :disabled="busy || !detail.lines.length"
           :title="__('Emitir la cotización (ya no será editable aquí)')"
           @click="submit"

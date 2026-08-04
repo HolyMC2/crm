@@ -3,7 +3,7 @@
   row → call detail drawer. New page; upstream CallLogs.vue kept at /call-logs/view/.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
+  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- stats -->
     <div class="flex flex-none gap-6 border-b border-outline-gray-1 px-5 py-3">
       <Stat :label="__('Llamadas')" :value="rows.length" />
@@ -141,12 +141,12 @@ function fmtDur(s) {
   return `${m}:${String(s % 60).padStart(2, '0')}`
 }
 function dirChip(r) {
-  if (MISSED.includes(r.status)) return 'text-ink-red-4 bg-surface-red-1'
-  return r.type === 'Outgoing' ? 'text-ink-green-3 bg-surface-green-2' : 'text-ink-blue-2 bg-surface-blue-1'
+  if (MISSED.includes(r.status)) return 'text-ink-red-8 bg-surface-red-1'
+  return r.type === 'Outgoing' ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-blue-5 bg-surface-blue-1'
 }
 function outcomeChip(status) {
-  if (status === 'Completed') return 'text-ink-green-3 bg-surface-green-2'
-  if (MISSED.includes(status)) return 'text-ink-red-4 bg-surface-red-1'
+  if (status === 'Completed') return 'text-ink-green-6 bg-surface-green-2'
+  if (MISSED.includes(status)) return 'text-ink-red-8 bg-surface-red-1'
   return 'text-ink-gray-6 bg-surface-gray-2'
 }
 function openCall(name) {

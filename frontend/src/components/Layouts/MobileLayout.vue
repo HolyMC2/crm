@@ -6,13 +6,13 @@
          intrinsic width (chip scrollers etc. tunnel up through flex-col cross
          axes untouched by their own min-w-0/overflow). 382px @ 360 on Marco's
          phone. overflow-x-hidden is the belt. -->
-    <div class="flex h-full min-w-0 flex-1 flex-col overflow-x-hidden bg-surface-white">
+    <div class="flex h-full min-w-0 flex-1 flex-col overflow-x-hidden bg-surface-base">
       <MobileAppHeader />
       <!-- connectivity strip (spec 3.4): silent socket death and dead zones were
            read as "no me llegan mensajes" — say it out loud instead -->
       <div
         v-if="!online"
-        class="flex flex-none items-center justify-center gap-2 bg-surface-amber-1 px-3 py-1.5 text-[12px] font-semibold text-ink-amber-3"
+        class="flex flex-none items-center justify-center gap-2 bg-surface-amber-1 px-3 py-1.5 text-[12px] font-semibold text-ink-amber-6"
         role="status"
       >
         <span class="h-1.5 w-1.5 flex-none animate-pulse rounded-full" style="background: #d9930b" />

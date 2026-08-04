@@ -34,7 +34,7 @@
             <span class="flex-none text-[10.5px] text-ink-gray-4">{{ timeAgo(n.creation) }}</span>
             <button
               v-if="n.can_delete"
-              class="press ml-auto flex-none rounded px-1 text-[11px] text-ink-gray-4 hover:text-ink-red-4 disabled:opacity-50"
+              class="press ml-auto flex-none rounded px-1 text-[11px] text-ink-gray-4 hover:text-ink-red-8 disabled:opacity-50"
               :disabled="deleting === n.name"
               :title="__('Borrar nota')"
               :aria-label="__('Borrar nota')"
@@ -54,7 +54,7 @@
       <textarea
         v-model="draft"
         rows="2"
-        class="w-full resize-y rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-[12px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-3 focus:bg-surface-white focus:outline-none focus:ring-0"
+        class="w-full resize-y rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-[12px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-3 focus:bg-surface-base focus:outline-none focus:ring-0"
         :aria-label="__('Nota privada para el equipo')"
         :placeholder="__('Nota privada para el equipo…')"
         :maxlength="MAX_NOTE_LEN"

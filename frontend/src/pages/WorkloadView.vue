@@ -12,11 +12,11 @@
   tokens only (dark-safe), es-MX via __().
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
+  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- manager gate -->
     <div v-if="restricted" class="p-5">
       <div
-        class="rounded-[10px] border border-outline-amber-2 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-3"
+        class="rounded-[10px] border border-outline-amber-3 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-6"
       >
         {{ __('La carga de trabajo requiere permiso de gerente (Sales Manager o System Manager).') }}
       </div>
@@ -62,7 +62,7 @@
           <div
             v-for="a in sorted"
             :key="a.user"
-            class="rounded-[10px] border bg-surface-white"
+            class="rounded-[10px] border bg-surface-base"
             :class="a.user === selectedAgent ? 'border-outline-gray-3' : 'border-outline-gray-2'"
           >
             <!-- card head (tap to open conversations) -->
@@ -72,13 +72,13 @@
                   <span class="truncate text-[13.5px] font-bold text-ink-gray-9" :title="a.user">{{ a.full_name }}</span>
                   <span
                     v-if="a.over_cap"
-                    class="flex-none rounded-md bg-surface-red-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-red-4"
+                    class="flex-none rounded-md bg-surface-red-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-red-8"
                   >
                     {{ __('sobre cap') }}
                   </span>
                   <span
                     v-if="a.sla_overdue_count"
-                    class="flex-none rounded-md bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-amber-3"
+                    class="flex-none rounded-md bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-amber-6"
                     :title="__('Conversaciones con SLA vencido')"
                   >
                     ⏰ {{ a.sla_overdue_count }}
@@ -123,12 +123,12 @@
                     :aria-checked="selected.has(c.key)"
                     :aria-label="c.label"
                     class="press flex items-center gap-2.5 rounded-[8px] border px-2.5 py-2 text-left"
-                    :class="selected.has(c.key) ? 'border-outline-green-2 bg-surface-green-1' : 'border-outline-gray-1 bg-surface-white'"
+                    :class="selected.has(c.key) ? 'border-outline-green-3 bg-surface-green-1' : 'border-outline-gray-1 bg-surface-base'"
                     @click="toggle(c.key)"
                   >
                     <span
-                      class="flex h-4 w-4 flex-none items-center justify-center rounded-[5px] border text-[10px] text-ink-white"
-                      :class="selected.has(c.key) ? 'border-transparent bg-surface-green-3' : 'border-outline-gray-3 bg-surface-white'"
+                      class="flex h-4 w-4 flex-none items-center justify-center rounded-[5px] border text-[10px] text-ink-base"
+                      :class="selected.has(c.key) ? 'border-transparent bg-surface-green-3' : 'border-outline-gray-3 bg-surface-base'"
                     >
                       <span v-if="selected.has(c.key)">✓</span>
                     </span>

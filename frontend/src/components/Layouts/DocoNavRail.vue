@@ -7,7 +7,7 @@
 -->
 <template>
   <div
-    class="relative flex h-full flex-none flex-col gap-1 border-r border-outline-gray-1 bg-surface-white py-3 transition-all duration-200"
+    class="relative flex h-full flex-none flex-col gap-1 border-r border-outline-gray-1 bg-surface-base py-3 transition-all duration-200"
     :class="isExpanded ? 'w-[210px] items-stretch px-2' : 'w-[58px] items-center'"
   >
     <!-- Notifications slide-out panel. Mounted FIRST so its absolute box
@@ -47,7 +47,7 @@
         :class="[
           isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
           activeGroup === item.group
-            ? 'bg-surface-green-2 text-ink-green-3'
+            ? 'bg-surface-green-2 text-ink-green-6'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
         ]"
         @click="go(item.to)"
@@ -60,7 +60,7 @@
           v-if="item.badge && badgeFor(item.badge)"
           class="absolute h-[7px] w-[7px] rounded-full"
           :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
-          :style="`background:${item.badge === 'unread' ? '#e5484d' : '#d9930b'};border:1.5px solid var(--surface-white)`"
+          :style="`background:${item.badge === 'unread' ? '#e5484d' : '#d9930b'};border:1.5px solid var(--surface-base)`"
         />
       </button>
     </Tooltip>
@@ -83,7 +83,7 @@
         :class="[
           isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
           activeGroup === item.group
-            ? 'bg-surface-green-2 text-ink-green-3'
+            ? 'bg-surface-green-2 text-ink-green-6'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
         ]"
         @click="go(item.to)"
@@ -111,7 +111,7 @@
           v-if="unreadNotificationsCount"
           class="absolute h-[7px] w-[7px] rounded-full"
           :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
-          style="background: #e5484d; border: 1.5px solid var(--surface-white)"
+          style="background: #e5484d; border: 1.5px solid var(--surface-base)"
         />
       </button>
     </Tooltip>
@@ -162,14 +162,14 @@
     <template v-if="showProfile">
       <div class="fixed inset-0 z-[290]" @click="showProfile = false" />
       <div
-        class="fixed bottom-[72px] left-2.5 z-[300] w-[242px] overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white"
+        class="fixed bottom-[72px] left-2.5 z-[300] w-[242px] overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base"
         style="box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14)"
       >
         <!-- header -->
         <div class="border-b border-outline-gray-1 p-4 pb-3">
           <div class="flex items-center gap-2.5">
             <div
-              class="flex h-[38px] w-[38px] flex-none items-center justify-center overflow-hidden rounded-full text-sm font-semibold bg-surface-violet-1 text-ink-violet-1"
+              class="flex h-[38px] w-[38px] flex-none items-center justify-center overflow-hidden rounded-full text-sm-semibold bg-surface-violet-1 text-ink-violet-1"
             >
               <img
                 v-if="user.user_image"
@@ -203,7 +203,7 @@
         <!-- sign out -->
         <div class="border-t border-outline-gray-1 py-1.5">
           <button
-            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-red-4 hover:bg-surface-red-1"
+            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-red-8 hover:bg-surface-red-1"
             @click="signOut"
           >
             <LogOutIcon class="h-4 w-4" />

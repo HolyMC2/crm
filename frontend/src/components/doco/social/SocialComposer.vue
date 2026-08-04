@@ -11,7 +11,7 @@
 <template>
   <template v-if="showComposer">
     <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showComposer = false" />
-    <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[560px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
+    <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[560px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
       <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
         <span class="text-[14px] font-bold text-ink-gray-9">{{ form.name ? __('Editar publicación') : __('Nueva publicación') }}</span>
         <span v-if="form.status" class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="chip(form.status)">{{ form.status }}</span>
@@ -22,7 +22,7 @@
         <a
           v-for="c in liveLinks" :key="'live-' + c.channel"
           :href="c.permalink" target="_blank" rel="noopener"
-          class="flex items-center gap-2 rounded-md bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-3 hover:brightness-95"
+          class="flex items-center gap-2 rounded-md bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-6 hover:brightness-95"
         >
           <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
           <span>{{ __('Publicado') }} · {{ c.channel }}</span>
@@ -30,7 +30,7 @@
         </a>
         <div
           v-for="c in scheduledMeta" :key="'sch-' + c.channel"
-          class="flex items-center gap-2 rounded-md bg-surface-blue-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-blue-3"
+          class="flex items-center gap-2 rounded-md bg-surface-blue-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-blue-6"
         >
           <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
           <span>{{ __('Programado en Meta') }} · {{ c.channel }}</span>
@@ -38,7 +38,7 @@
         </div>
         <div
           v-for="c in failedChannels" :key="'fail-' + c.channel"
-          class="rounded-md bg-surface-red-1 px-2.5 py-1.5 text-[11.5px] text-ink-red-4"
+          class="rounded-md bg-surface-red-1 px-2.5 py-1.5 text-[11.5px] text-ink-red-8"
         >
           <span class="font-semibold">{{ c.channel }} · {{ __('Falló') }}:</span> {{ c.error }}
         </div>
@@ -46,7 +46,7 @@
 
       <div class="max-h-[68vh] overflow-y-auto p-4">
         <!-- approval hint: an AI/pending draft only publishes once approved; unapproved → auto-cancel at slot -->
-        <div v-if="isPending" class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-3 dark:bg-amber-300/10 dark:text-amber-200">
+        <div v-if="isPending" class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-6 dark:bg-amber-300/10 dark:text-amber-200">
           <span class="flex-none">⏳</span>
           <span>{{ __('Requiere aprobación. Pulsa «Aprobar» para publicarla. Si nadie la aprueba antes de la hora programada, se cancela automáticamente.') }}</span>
         </div>
@@ -65,12 +65,12 @@
           <button
             v-for="c in channels" :key="c" type="button"
             class="rounded-md border px-2.5 py-1 text-[12px] font-medium"
-            :class="form.channels.includes(c) ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-3' : 'border-outline-gray-2 text-ink-gray-6'"
+            :class="form.channels.includes(c) ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-6' : 'border-outline-gray-2 text-ink-gray-6'"
             @click="toggleChannel(c)"
           >{{ c }}</button>
         </div>
         <!-- IG publishing rides Meta's App Review; those channels Skip harmlessly until it clears -->
-        <p v-if="hasIg" class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-3 dark:bg-amber-300/10 dark:text-amber-200">
+        <p v-if="hasIg" class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-6 dark:bg-amber-300/10 dark:text-amber-200">
           <span class="flex-none">ℹ️</span>
           <span>{{ __('Instagram se activa tras la aprobación de Meta; por ahora esos canales se omiten sin afectar la publicación.') }}</span>
         </p>
@@ -150,9 +150,9 @@
         {{ __('Publicación en vivo o cancelada — solo lectura. Despublica desde la cola si hace falta.') }}
       </div>
       <div class="flex flex-wrap items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
-        <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-4 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
+        <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
         <button v-if="isPending" class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background:#2563eb" :disabled="busy" @click="approvePost">{{ __('Aprobar') }}</button>
-        <button v-if="isPending" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-4" :disabled="busy" @click="rejectPost">{{ __('Rechazar') }}</button>
+        <button v-if="isPending" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-8" :disabled="busy" @click="rejectPost">{{ __('Rechazar') }}</button>
         <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
         <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Scheduled')">{{ __('Programar') }}</button>
         <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:var(--brand)" :disabled="busy || !canCancel" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>

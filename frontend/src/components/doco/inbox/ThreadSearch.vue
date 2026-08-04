@@ -10,7 +10,7 @@
 <template>
   <div
     v-if="open"
-    class="absolute left-1/2 top-2 z-20 flex w-[min(92%,380px)] -translate-x-1/2 items-center gap-1.5 rounded-xl border border-outline-gray-2 bg-surface-white px-2.5 py-1.5 shadow-lg"
+    class="absolute left-1/2 top-2 z-20 flex w-[min(92%,380px)] -translate-x-1/2 items-center gap-1.5 rounded-xl border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 shadow-lg"
   >
     <span aria-hidden="true" class="flex-none text-[13px]">🔎</span>
     <input

@@ -14,7 +14,7 @@
       <!-- identity: on mobile this whole block opens the customer/deal data pane
            (view 4), exactly like tapping the contact name in WhatsApp. -->
       <span
-        class="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-full text-sm font-semibold"
+        class="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-full text-sm-semibold"
         :class="isMobile ? 'cursor-pointer' : ''"
         :style="`background:${avatarColor(name)[0]};color:${avatarColor(name)[1]}`"
         @click="isMobile && openContext()"
@@ -30,7 +30,7 @@
         @keydown.enter="isMobile && openContext()"
       >
         <div class="flex flex-wrap items-center gap-2">
-          <span class="truncate text-base font-bold text-ink-gray-9">{{ name || '—' }}</span>
+          <span class="truncate text-base-bold text-ink-gray-9">{{ name || '—' }}</span>
           <LucideChevronRight v-if="isMobile" class="h-4 w-4 flex-none text-ink-gray-4" />
           <ScoreExplainPopover
             v-if="grade"
@@ -59,14 +59,14 @@
           <span
             v-if="waWindow"
             class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
-            :class="waWindow.open ? 'bg-surface-amber-1 text-ink-amber-3' : 'bg-surface-red-1 text-ink-red-4'"
+            :class="waWindow.open ? 'bg-surface-amber-1 text-ink-amber-6' : 'bg-surface-red-1 text-ink-red-8'"
             :title="waWindow.open ? __('Ventana de 24h de WhatsApp abierta') : __('Ventana cerrada — solo plantillas')"
           >
             {{ waWindow.open ? `WA ${waWindow.hoursLeft}h` : __('WA cerrada') }}
           </span>
           <span
             v-if="saldoChip"
-            class="flex-none whitespace-nowrap rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-4"
+            class="flex-none whitespace-nowrap rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-8"
             :title="__('Saldo pendiente en facturas del trato')"
           >
             💰 {{ __('Saldo') }} {{ saldoChip }}
@@ -90,7 +90,7 @@
         <div v-if="responsible && slaLabel && !isMobile" class="h-[30px] w-px bg-outline-gray-2" />
         <div v-if="slaLabel && !isMobile" class="text-right">
           <div class="text-[10px] text-ink-gray-5">{{ __('1ª respuesta SLA') }}</div>
-          <div class="text-[13px] font-bold" :class="slaOverdue ? 'text-ink-red-4' : 'text-ink-green-3'">
+          <div class="text-[13px] font-bold" :class="slaOverdue ? 'text-ink-red-8' : 'text-ink-green-6'">
             {{ slaLabel }}
           </div>
         </div>
@@ -176,7 +176,7 @@
         <div class="flex gap-2">
           <input
             v-model="newTag"
-            class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-base text-ink-gray-9"
+            class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
             :aria-label="__('Nueva etiqueta')"
             :placeholder="__('Nueva etiqueta… (urgente, garantía, mayoreo)')"
             @keydown.enter.prevent="addTag(newTag)"
@@ -193,7 +193,7 @@
           v-model="snoozeCustom"
           type="datetime-local"
           :min="minLocal"
-          class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-base text-ink-gray-9"
+          class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-base text-ink-gray-9"
           :aria-label="__('Posponer hasta')"
         />
       </template>
@@ -210,15 +210,15 @@
     <!-- next action bar -->
     <div
       v-if="nextTask"
-      class="mt-[11px] flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-[10px] border border-outline-amber-2 bg-surface-amber-1 px-[13px] py-[9px]"
+      class="mt-[11px] flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-[10px] border border-outline-amber-3 bg-surface-amber-1 px-[13px] py-[9px]"
     >
       <span
-        class="flex-none text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-amber-3"
+        class="flex-none text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-amber-6"
       >
         ⏱ {{ __('Próxima acción') }}
       </span>
       <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{ nextTask.title }}</span>
-      <span v-if="nextTask.due" class="flex-none text-[11.5px] text-ink-amber-2">
+      <span v-if="nextTask.due" class="flex-none text-[11.5px] text-ink-amber-5">
         · {{ dueLabel }}
       </span>
       <div class="ml-auto flex flex-none gap-1.5">
@@ -230,7 +230,7 @@
           {{ __('Marcar hecho') }}
         </button>
         <button
-          class="rounded-[7px] border border-outline-gray-2 bg-surface-white px-[11px] py-1.5 text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+          class="rounded-[7px] border border-outline-gray-2 bg-surface-base px-[11px] py-1.5 text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
           @click="reschedule"
         >
           {{ __('Reprogramar') }}

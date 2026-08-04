@@ -6,7 +6,7 @@
   Deals.vue untouched for rebase-cleanliness. Data via createListResource.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
+  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- toolbar -->
     <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
@@ -90,7 +90,7 @@
     <!-- bulk bar -->
     <div v-if="selectedRows.length" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2">
       <span class="text-[12.5px] font-semibold text-ink-gray-8">{{ selectedRows.length }} {{ __('seleccionados') }}</span>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-4 hover:bg-surface-red-1" @click="bulkDelete">
+      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1" @click="bulkDelete">
         {{ __('Eliminar') }}
       </button>
       <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>

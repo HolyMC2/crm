@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-screen w-screen">
     <DocoNavRail />
-    <div class="flex-1 flex flex-col h-full overflow-auto bg-surface-white">
+    <div class="flex-1 flex flex-col h-full overflow-auto bg-surface-base">
       <AppHeader />
       <slot />
     </div>

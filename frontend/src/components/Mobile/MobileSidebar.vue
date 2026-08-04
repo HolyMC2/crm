@@ -19,7 +19,7 @@
         leave-to="-translate-x-full"
       >
         <div
-          class="relative z-10 flex h-full w-[286px] flex-col border-r border-outline-gray-1 bg-surface-white pt-[env(safe-area-inset-top)]"
+          class="relative z-10 flex h-full w-[286px] flex-col border-r border-outline-gray-1 bg-surface-base pt-[env(safe-area-inset-top)]"
         >
           <!-- brand header -->
           <div class="flex items-center gap-2.5 px-4 pb-2 pt-3.5">
@@ -56,7 +56,7 @@
               </span>
               <span
                 v-if="unreadNotificationsCount"
-                class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-surface-red-1 px-1.5 text-[11px] font-bold text-ink-red-4"
+                class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-surface-red-1 px-1.5 text-[11px] font-bold text-ink-red-8"
               >
                 {{ unreadNotificationsCount }}
               </span>
@@ -81,8 +81,8 @@
                   class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full px-1.5 text-[11px] font-bold"
                   :class="
                     item.badge === 'unread'
-                      ? 'bg-surface-red-1 text-ink-red-4'
-                      : 'bg-surface-amber-1 text-ink-amber-3'
+                      ? 'bg-surface-red-1 text-ink-red-8'
+                      : 'bg-surface-amber-1 text-ink-amber-6'
                   "
                 >
                   {{ badgeFor(item.badge) }}
@@ -161,7 +161,7 @@
                 :class="isDark ? 'bg-surface-green-3' : 'bg-surface-gray-4'"
               >
                 <span
-                  class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-white transition-all duration-200"
+                  class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-base transition-all duration-200"
                   :class="isDark ? 'left-[18px]' : 'left-[2px]'"
                 />
               </span>
@@ -184,13 +184,13 @@
                 :class="pushState === 'on' ? 'bg-surface-green-3' : 'bg-surface-gray-4'"
               >
                 <span
-                  class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-white transition-all duration-200"
+                  class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-base transition-all duration-200"
                   :class="pushState === 'on' ? 'left-[18px]' : 'left-[2px]'"
                 />
               </span>
             </button>
             <button
-              class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-red-4 hover:bg-surface-red-1"
+              class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-red-8 hover:bg-surface-red-1"
               @click="signOut"
             >
               <LogOutIcon class="h-[18px] w-[18px] flex-none" />
@@ -234,7 +234,7 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <DialogOverlay class="fixed inset-0 bg-surface-gray-5 bg-opacity-50 backdrop-blur-[2px]" />
+        <DialogOverlay class="fixed inset-0 bg-surface-gray-8 bg-opacity-50 backdrop-blur-[2px]" />
       </TransitionChild>
     </Dialog>
   </TransitionRoot>
@@ -296,7 +296,7 @@ const activeGroup = computed(() => routeGroup(route.path))
 
 function rowClass(group) {
   return group && activeGroup.value === group
-    ? 'bg-surface-green-2 text-ink-green-3'
+    ? 'bg-surface-green-2 text-ink-green-6'
     : 'text-ink-gray-7 hover:bg-surface-gray-2'
 }
 

@@ -5,7 +5,7 @@
 -->
 <template>
   <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
-    <div class="flex h-[52px] flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-white px-5">
+    <div class="flex h-[52px] flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-base px-5">
       <button class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9" @click="$router.push('/leads')">← {{ __('Leads') }}</button>
       <span style="color: #d7dae1">/</span>
       <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Análisis de embudo') }}</span>
@@ -32,7 +32,7 @@
       </div>
 
       <!-- funnel -->
-      <div class="rounded-[12px] border border-outline-gray-2 bg-surface-white p-4">
+      <div class="rounded-[12px] border border-outline-gray-2 bg-surface-base p-4">
         <div class="mb-3 text-[13px] font-bold text-ink-gray-9">{{ __('Embudo por etapa') }}</div>
         <div v-if="funnelRes.loading && !funnel.length" class="py-6 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
         <div v-else-if="!funnel.length" class="py-6 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
@@ -116,7 +116,7 @@ const biggestDrop = computed(() => {
 })
 
 const Kpi = (props) =>
-  h('div', { class: 'rounded-[12px] border border-outline-gray-2 bg-surface-white p-4' }, [
+  h('div', { class: 'rounded-[12px] border border-outline-gray-2 bg-surface-base p-4' }, [
     h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
     h('div', { class: `${props.small ? 'text-[14px]' : 'text-[26px]'} mt-1.5 font-extrabold`, style: `color:${props.color || '#1c2230'}` }, String(props.value)),
     props.sub ? h('div', { class: 'text-[11.5px] font-semibold', style: `color:${props.color || '#5b6472'}` }, props.sub) : null,

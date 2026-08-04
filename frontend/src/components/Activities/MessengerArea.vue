@@ -19,7 +19,7 @@
       <!-- attribution: the ad / m.me link / CTWA that drove this conversation -->
       <div
         v-if="m.referral_ref || m.referral_source"
-        class="mb-0.5 inline-flex items-center gap-1 rounded-full bg-surface-blue-1 px-2 py-0.5 text-[10px] font-semibold text-ink-blue-3"
+        class="mb-0.5 inline-flex items-center gap-1 rounded-full bg-surface-blue-1 px-2 py-0.5 text-[10px] font-semibold text-ink-blue-6"
         :title="__('Origen del mensaje (anuncio / enlace)')"
       >
         📣 {{ __('vino de') }}: {{ m.referral_ref || m.referral_source }}
@@ -44,7 +44,7 @@
           target="_blank"
           rel="noopener"
           class="block break-all underline"
-          :class="m.direction === 'out' ? 'text-white' : 'text-ink-blue-3 dark:text-ink-blue-2'"
+          :class="m.direction === 'out' ? 'text-white' : 'text-ink-blue-6 dark:text-ink-blue-5'"
         >
           {{ attachLabel(m.content_type) }}
         </a>
@@ -53,7 +53,7 @@
         <!-- message_reaction: the emoji the customer tapped on this message -->
         <span
           v-if="m.reaction"
-          class="absolute -bottom-2.5 rounded-full border border-white bg-surface-white px-1 text-[11px] leading-tight shadow-sm dark:border-surface-gray-4 dark:bg-surface-gray-3"
+          class="absolute -bottom-2.5 rounded-full border border-white bg-surface-base px-1 text-[11px] leading-tight shadow-sm dark:border-surface-gray-4 dark:bg-surface-gray-3"
           :class="m.direction === 'out' ? 'left-1.5' : 'right-1.5'"
         >
           {{ m.reaction }}

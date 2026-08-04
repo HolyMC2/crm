@@ -10,9 +10,9 @@
     <div v-if="autoAcks.loading && !rows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
       {{ __('Cargando…') }}
     </div>
-    <div v-else-if="autoAcks.error && !rows.length" class="px-2 py-6 text-center text-xs text-ink-red-3">
+    <div v-else-if="autoAcks.error && !rows.length" class="px-2 py-6 text-center text-xs text-ink-red-6">
       {{ __('No se pudo cargar la lista.') }}
-      <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="reloadAutoAcks">{{ __('Reintentar') }}</button>
+      <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="reloadAutoAcks">{{ __('Reintentar') }}</button>
     </div>
     <div v-else-if="!rows.length" class="px-2 py-8 text-center text-xs text-ink-gray-4">
       ✅ {{ __('Nada por aprobar') }}
@@ -22,7 +22,7 @@
     <div
       v-for="r in rows"
       :key="r.name"
-      class="mb-1.5 rounded-[11px] border border-outline-gray-2 bg-surface-white p-[11px]"
+      class="mb-1.5 rounded-[11px] border border-outline-gray-2 bg-surface-base p-[11px]"
     >
       <div class="mb-1 flex items-center gap-2">
         <span
@@ -36,12 +36,12 @@
           :title="__('Abrir la conversación para revisar con contexto completo')"
           @click="openConvo(r)"
         >
-          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-3">
+          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-6">
             {{ r.contact_name || r.to || '—' }}
-            <span class="text-[10px] font-normal text-ink-blue-3 opacity-0 group-hover:opacity-100">↗ {{ __('abrir') }}</span>
+            <span class="text-[10px] font-normal text-ink-blue-6 opacity-0 group-hover:opacity-100">↗ {{ __('abrir') }}</span>
           </div>
         </button>
-        <span class="flex-none text-[10px] font-semibold text-ink-amber-3" :title="__('Esperando desde el entrante')">
+        <span class="flex-none text-[10px] font-semibold text-ink-amber-6" :title="__('Esperando desde el entrante')">
           {{ timeAgo(r.last_inbound_at || r.creation) }}
         </span>
       </div>

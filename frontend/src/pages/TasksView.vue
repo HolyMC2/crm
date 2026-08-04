@@ -4,7 +4,7 @@
   /tasks/view/:viewType. No new backend (CRM Task CRUD).
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
+  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- toolbar -->
     <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex items-center gap-2">
@@ -14,7 +14,7 @@
             v-for="(s, i) in scopes"
             :key="s.key"
             class="px-[11px] py-[5px] text-[12px]"
-            :class="[i ? 'border-l border-outline-gray-2' : '', scope === s.key ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-white text-ink-gray-6']"
+            :class="[i ? 'border-l border-outline-gray-2' : '', scope === s.key ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-base text-ink-gray-6']"
             :aria-pressed="scope === s.key"
             @click="scope = s.key"
           >
@@ -74,7 +74,7 @@
           :aria-checked="t.status === 'Done'"
           :aria-label="t.title ? __('Completada') + ': ' + t.title : __('Marcar completada')"
           class="flex h-5 w-5 flex-none items-center justify-center rounded-md border-[1.5px]"
-          :class="t.status === 'Done' ? 'bg-surface-green-3 border-outline-green-2 text-white' : 'border-outline-gray-3'"
+          :class="t.status === 'Done' ? 'bg-surface-green-3 border-outline-green-3 text-white' : 'border-outline-gray-3'"
           @click="toggleDone(t)"
         >
           <span v-if="t.status === 'Done'" class="text-[12px]" aria-hidden="true">✓</span>
@@ -202,13 +202,13 @@ function isToday(t) {
 }
 // Native-token class strings (theme-aware) — bound via :class, not :style.
 function rowClass(t) {
-  if (isOverdue(t)) return 'border-l-[3px] border-outline-red-2 bg-surface-red-1'
-  if (isToday(t)) return 'border-l-[3px] border-outline-amber-2 bg-surface-amber-1'
+  if (isOverdue(t)) return 'border-l-[3px] border-outline-red-3 bg-surface-red-1'
+  if (isToday(t)) return 'border-l-[3px] border-outline-amber-3 bg-surface-amber-1'
   return ''
 }
 function dueClass(t) {
-  if (isOverdue(t)) return 'text-ink-red-4 font-semibold'
-  if (isToday(t)) return 'text-ink-amber-3 font-semibold'
+  if (isOverdue(t)) return 'text-ink-red-8 font-semibold'
+  if (isToday(t)) return 'text-ink-amber-6 font-semibold'
   return 'text-ink-gray-6'
 }
 function dueText(d) {
@@ -216,13 +216,13 @@ function dueText(d) {
 }
 function prioStyle(p) {
   return (
-    { Urgent: 'text-ink-red-4 bg-surface-red-1', High: 'text-ink-amber-3 bg-surface-amber-1', Medium: 'text-ink-blue-2 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
+    { Urgent: 'text-ink-red-8 bg-surface-red-1', High: 'text-ink-amber-6 bg-surface-amber-1', Medium: 'text-ink-blue-5 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
     'text-ink-gray-6 bg-surface-gray-2'
   )
 }
 function tabStyle(t) {
   if (tab.value === t.key) return 'bg-surface-gray-3 text-ink-gray-9'
-  const c = t.key === 'overdue' ? 'text-ink-red-4' : t.key === 'today' ? 'text-ink-amber-3' : 'text-ink-gray-6'
+  const c = t.key === 'overdue' ? 'text-ink-red-8' : t.key === 'today' ? 'text-ink-amber-6' : 'text-ink-gray-6'
   return `bg-surface-gray-2 ${c}`
 }
 

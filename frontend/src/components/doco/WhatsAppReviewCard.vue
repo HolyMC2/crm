@@ -9,7 +9,7 @@
   the surrounding thread (an approved row becomes a real WhatsApp Message).
 -->
 <template>
-  <div class="rounded-[10px] border border-outline-gray-2 bg-surface-white p-3">
+  <div class="rounded-[10px] border border-outline-gray-2 bg-surface-base p-3">
     <!-- header: template + provenance + status -->
     <div class="mb-1.5 flex items-start justify-between gap-2">
       <div class="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -21,7 +21,7 @@
         >{{ provenance.icon }} {{ provenance.label }}</span>
       </div>
       <span
-        class="shrink-0 rounded-full px-2 py-0.5 text-2xs font-semibold"
+        class="shrink-0 rounded-full px-2 py-0.5 text-2xs-semibold"
         :class="statusChip.cls"
       >{{ statusChip.label }}</span>
     </div>
@@ -42,7 +42,7 @@
     <!-- failure reason -->
     <div
       v-if="row.status === 'Fallido' && row.error"
-      class="mt-1.5 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-4"
+      class="mt-1.5 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-8"
     >
       {{ shortError }}
       <span v-if="row.attempts" class="opacity-70">· {{ row.attempts }} {{ __('intentos') }}</span>
@@ -53,7 +53,7 @@
     <div v-if="canAct && row.status === 'Pendiente'" class="mt-2">
       <button
         type="button"
-        class="text-2xs font-semibold text-ink-blue-link hover:underline disabled:opacity-50"
+        class="text-2xs-semibold text-ink-blue-link hover:underline disabled:opacity-50"
         :disabled="varsLoading"
         @click="toggleEdit"
       >{{ editing ? __('Ocultar variables') : (varsLoading ? __('Cargando…') : __('Editar variables')) }}</button>
@@ -62,7 +62,7 @@
           <span class="w-7 shrink-0 font-mono text-2xs text-ink-gray-5">{{ v.placeholder }}</span>
           <select
             v-model="v.field"
-            class="w-1/3 shrink-0 rounded border border-outline-gray-2 bg-surface-white px-1 py-0.5 text-[11px] text-ink-gray-7 focus:outline-none dark:bg-surface-gray-1"
+            class="w-1/3 shrink-0 rounded border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px] text-ink-gray-7 focus:outline-none dark:bg-surface-gray-1"
             @change="onFieldChange(v)"
           >
             <option value="">{{ __('(libre)') }}</option>
@@ -71,7 +71,7 @@
           <input
             v-model="v.value"
             type="text"
-            class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-white px-1.5 py-0.5 text-[11.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-1 dark:text-ink-gray-7"
+            class="min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-1.5 py-0.5 text-[11.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-1 dark:text-ink-gray-7"
           />
         </div>
       </div>
@@ -93,7 +93,7 @@
         @click="act('retry')"
       >{{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}</button>
       <button
-        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-4 hover:bg-surface-red-1 disabled:opacity-50"
+        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1 disabled:opacity-50"
         :disabled="!!busy"
         @click="act('reject')"
       >{{ __('Cancelar') }}</button>
@@ -175,9 +175,9 @@ const provenance = computed(() => {
 const statusChip = computed(() => {
   return (
     {
-      Pendiente: { label: __('Pendiente'), cls: 'bg-surface-amber-1 text-ink-amber-3' },
-      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-3' },
-      Fallido: { label: __('Fallido'), cls: 'bg-surface-red-1 text-ink-red-4' },
+      Pendiente: { label: __('Pendiente'), cls: 'bg-surface-amber-1 text-ink-amber-6' },
+      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-6' },
+      Fallido: { label: __('Fallido'), cls: 'bg-surface-red-1 text-ink-red-8' },
       Cancelado: { label: __('Cancelado'), cls: 'bg-surface-gray-2 text-ink-gray-5' },
     }[props.row.status] || { label: props.row.status, cls: 'bg-surface-gray-2 text-ink-gray-5' }
   )

@@ -16,14 +16,14 @@
     class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
   >
     <!-- toolbar -->
-    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-white px-5 py-2">
+    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
       <div class="flex items-center gap-3">
         <span class="text-[15px] font-bold text-ink-gray-9">💬 {{ __('Menciones') }}</span>
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop"
           @change="reloadAll"
-          class="rounded-lg border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
+          class="rounded-lg border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
           :title="__('Filtrar por sucursal')"
         >
           <option v-if="isManager" value="">{{ __('Todas las sucursales') }}</option>
@@ -32,7 +32,7 @@
       </div>
       <router-link
         to="/social"
-        class="text-[12px] font-semibold text-ink-blue-3 hover:underline"
+        class="text-[12px] font-semibold text-ink-blue-6 hover:underline"
         :title="__('Ir al calendario social')"
       >
         {{ __('Ir al calendario →') }}
@@ -40,19 +40,19 @@
     </div>
 
     <!-- status filter chips -->
-    <div class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 bg-surface-white px-5 py-2">
+    <div class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
       <button
         v-for="f in FILTERS"
         :key="f.v"
         :data-testid="`mentions-filter-${f.v || 'todas'}`"
         class="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
-        :class="statusFilter === f.v ? 'bg-surface-gray-7 text-ink-white' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+        :class="statusFilter === f.v ? 'bg-surface-gray-10 text-ink-base' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
         @click="setFilter(f.v)"
       >
         {{ __(f.label) }}
         <span
           v-if="f.v === 'Nuevo' && nuevoCount"
-          class="rounded-full bg-surface-red-5 px-1.5 text-[10px] font-bold text-ink-white"
+          class="rounded-full bg-surface-red-7 px-1.5 text-[10px] font-bold text-ink-base"
         >{{ nuevoCount }}</span>
       </button>
     </div>
@@ -66,7 +66,7 @@
       <!-- empty -->
       <div
         v-else-if="!rows.length"
-        class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-white px-6 py-10 text-center"
+        class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
       >
         <div class="text-[34px]">💬</div>
         <div class="mt-2 text-[15px] font-bold text-ink-gray-8">{{ __('Sin menciones por aquí') }}</div>
@@ -81,7 +81,7 @@
           v-for="(row, i) in rows"
           :key="row.name"
           :data-testid="`mention-card-${i}`"
-          class="rounded-xl border border-outline-gray-2 bg-surface-white px-4 py-3"
+          class="rounded-xl border border-outline-gray-2 bg-surface-base px-4 py-3"
         >
           <!-- head: type + author + time -->
           <div class="flex flex-wrap items-center gap-2">
@@ -89,7 +89,7 @@
               {{ TYPE_EMOJI[row.mention_type] || '' }} {{ typeLabel(row.mention_type) }}
             </span>
             <span class="text-[13.5px] font-semibold text-ink-gray-9">{{ authorLabel(row.author_username) }}</span>
-            <span v-if="row.rating" class="text-[12px] tracking-tight text-ink-amber-3" :title="`${row.rating}/5`">{{ '★'.repeat(row.rating) }}</span>
+            <span v-if="row.rating" class="text-[12px] tracking-tight text-ink-amber-6" :title="`${row.rating}/5`">{{ '★'.repeat(row.rating) }}</span>
             <span class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold" :class="statusChip(row.status)">
               {{ statusLabel(row.status) }}
             </span>
@@ -122,7 +122,7 @@
                 {{ previews[row.name].caption }}
               </div>
             </div>
-            <span class="flex-none text-[11px] font-semibold text-ink-blue-3">→</span>
+            <span class="flex-none text-[11px] font-semibold text-ink-blue-6">→</span>
           </a>
 
           <!-- what they wrote -->
@@ -142,10 +142,10 @@
               :href="row.permalink"
               target="_blank"
               rel="noopener"
-              class="text-[11.5px] font-semibold text-ink-blue-3 hover:underline"
+              class="text-[11.5px] font-semibold text-ink-blue-6 hover:underline"
             >{{ __('Ver en la red →') }}</a>
             <span v-if="isManager && shop === '' && row.shop" class="text-[11.5px] text-ink-gray-5">· {{ shopLabel(row.shop) }}</span>
-            <span v-if="row.status === 'Atendido' && row.replied_at" class="text-[11.5px] text-ink-green-3">
+            <span v-if="row.status === 'Atendido' && row.replied_at" class="text-[11.5px] text-ink-green-6">
               ✓ {{ __('Respondida') }} {{ relTime(row.replied_at) }}
             </span>
           </div>
@@ -162,7 +162,7 @@
               :data-testid="`mention-reply-${i}`"
               rows="3"
               :placeholder="__('Escribe una respuesta pública…')"
-              class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-2 text-[13px] text-ink-gray-8 focus:border-outline-gray-3 focus:outline-none"
+              class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-[13px] text-ink-gray-8 focus:border-outline-gray-3 focus:outline-none"
             />
           </div>
 
@@ -213,7 +213,7 @@
             <router-link
               v-else
               to="/social"
-              class="text-[12px] font-semibold text-ink-green-3 hover:underline"
+              class="text-[12px] font-semibold text-ink-green-6 hover:underline"
               :title="row.testimonial_post"
             >
               ✓ {{ __('Testimonio en borrador — ver calendario →') }}
@@ -238,7 +238,7 @@
     <!-- confirm: publish public reply -->
     <template v-if="confirmSend">
       <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="confirmSend = null" />
-      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[440px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
+      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[440px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
         <div class="border-b border-outline-gray-1 px-4 py-3 text-[14px] font-bold text-ink-gray-9">
           {{ __('Publicar respuesta') }}
         </div>
@@ -285,8 +285,8 @@ function typeLabel(t) {
 }
 function statusChip(s) {
   return {
-    Nuevo: 'bg-surface-blue-2 text-ink-blue-3',
-    Atendido: 'bg-surface-green-2 text-ink-green-3',
+    Nuevo: 'bg-surface-blue-2 text-ink-blue-6',
+    Atendido: 'bg-surface-green-2 text-ink-green-6',
     Descartado: 'bg-surface-gray-2 text-ink-gray-6',
   }[s] || 'bg-surface-gray-2 text-ink-gray-6'
 }

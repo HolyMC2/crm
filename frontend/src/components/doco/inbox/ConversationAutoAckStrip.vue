@@ -5,15 +5,15 @@
   navigates here). Editable before sending; Aprobar y enviar is the only customer-facing path.
 -->
 <template>
-  <div v-if="rows.length" class="mx-3 mb-2 rounded-lg border border-outline-amber-2 bg-surface-amber-1 px-3 py-2.5 sm:mx-10">
-    <div class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-amber-3">
+  <div v-if="rows.length" class="mx-3 mb-2 rounded-lg border border-outline-amber-3 bg-surface-amber-1 px-3 py-2.5 sm:mx-10">
+    <div class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-amber-6">
       ⏳ {{ __('Acuse automático por aprobar') }}
     </div>
     <div v-for="r in rows" :key="r.name" class="mt-1.5 first:mt-0">
       <textarea
         v-model="drafts[r.name]"
         rows="2"
-        class="scb mb-1.5 w-full resize-none rounded-md border border-outline-amber-2 bg-surface-white px-2 py-1.5 text-[12.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-2"
+        class="scb mb-1.5 w-full resize-none rounded-md border border-outline-amber-3 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-2"
       />
       <!-- Manager-eyes policy: only managers act (server enforces _APPROVER_ROLES) -->
       <div v-if="canAct" class="flex items-center justify-end gap-1.5">

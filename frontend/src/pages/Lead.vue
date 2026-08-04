@@ -123,7 +123,7 @@
             </div>
             <div class="flex flex-col gap-2.5 truncate">
               <Tooltip :text="doc.lead_name || __('Set First Name')">
-                <div class="truncate text-3xl-medium text-ink-gray-9">
+                <div class="truncate text-4xl-medium text-ink-gray-9">
                   {{ title }}
                 </div>
               </Tooltip>

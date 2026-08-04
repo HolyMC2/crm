@@ -2,11 +2,11 @@
   <div class="mt-6 border-t pt-6">
     <!-- Header -->
     <div class="flex items-center justify-between mb-3">
-      <span class="text-base font-semibold text-ink-gray-8">
+      <span class="text-base-semibold text-ink-gray-8">
         {{ __('Repair Orders') }}
         <span
           v-if="repairOrders.data?.length"
-          class="ml-1.5 text-xs font-normal text-ink-gray-5"
+          class="ml-1.5 text-xs text-ink-gray-5"
         >
           ({{ repairOrders.data.length }})
         </span>
@@ -54,7 +54,7 @@
       <div
         v-for="ro in repairOrders.data"
         :key="ro.name"
-        class="overflow-hidden rounded-xl border bg-surface-white shadow-sm"
+        class="overflow-hidden rounded-xl border bg-surface-base shadow-sm"
       >
         <!-- Card header -->
         <div class="flex items-center justify-between border-b bg-surface-gray-1 px-4 py-2.5">
@@ -62,7 +62,7 @@
           <a
             :href="`/taller/orders/${encodeURIComponent(ro.name)}`"
             target="_blank"
-            class="text-sm font-semibold text-ink-blue-3 hover:underline"
+            class="text-sm-semibold text-ink-blue-6 hover:underline"
           >
             {{ ro.name }}
           </a>
@@ -70,7 +70,7 @@
             <!-- Purchase-side ETA (ERP spec P3): what «Esperando Pieza» is waiting ON -->
             <span
               v-if="waitingPo(ro)"
-              class="rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-3"
+              class="rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-6"
               :title="__('Pieza en camino — Purchase Order vinculado')"
             >
               🧩 {{ waitingPo(ro).purchase_order }}<template v-if="waitingPo(ro).po_expected_date"> · {{ __('llega') }} {{ waitingPo(ro).po_expected_date }}</template>
@@ -122,7 +122,7 @@
                 <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
                 <span
                   v-if="ph.show_on_tracker"
-                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-white"
+                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-base"
                   :title="__('Visible en el tracker del cliente')"
                 >T</span>
               </button>
@@ -156,38 +156,38 @@
             <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Device State') }}</div>
             <div class="flex flex-wrap gap-1.5">
               <span
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-red-1 text-ink-red-4'"
+                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
+                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-red-1 text-ink-red-8'"
               >
                 {{ ro.turns_on ? __('Turns on ✓') : __('Does not turn on ✗') }}
               </span>
               <span
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-gray-2 text-ink-gray-5'"
+                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
+                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-gray-2 text-ink-gray-5'"
               >
                 {{ ro.has_sim_tray ? __('SIM tray ✓') : __('No SIM tray') }}
               </span>
               <span
                 v-if="ro.has_phone_case"
-                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs font-medium text-ink-blue-2"
+                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs-medium text-ink-blue-5"
               >
                 {{ __('Case ✓') }}
               </span>
               <span
                 v-if="ro.broken_screen"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs font-medium text-ink-amber-3"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-6"
               >
                 {{ __('Broken screen ⚠') }}
               </span>
               <span
                 v-if="ro.is_wet"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs font-medium text-ink-amber-3"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-6"
               >
                 {{ __('Wet ⚠') }}
               </span>
               <span
                 v-if="ro.is_warranty_claim"
-                class="inline-flex items-center rounded-full bg-surface-violet-1 px-2 py-0.5 text-xs font-medium text-ink-violet-1"
+                class="inline-flex items-center rounded-full bg-surface-violet-1 px-2 py-0.5 text-xs-medium text-ink-violet-1"
               >
                 {{ __('Warranty claim') }}
               </span>
@@ -246,14 +246,14 @@
               <div
                 v-for="(p, i) in ro.parts"
                 :key="`${ro.name}-part-${i}`"
-                class="flex items-center justify-between rounded border bg-surface-white px-2 py-1.5 text-xs"
+                class="flex items-center justify-between rounded border bg-surface-base px-2 py-1.5 text-xs"
               >
                 <div class="min-w-0 truncate">
                   <span class="font-medium text-ink-gray-8">{{ p.item_name || p.item || '—' }}</span>
                   <span v-if="p.source" class="ml-1.5 text-ink-gray-5">[{{ __(p.source) }}]</span>
                   <span
                     v-if="p.purchase_order && p.po_status"
-                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-3"
+                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-6"
                     :title="`${p.purchase_order} · ${p.po_status}`"
                   >
                     🧩 {{ p.po_expected_date ? __('llega') + ' ' + p.po_expected_date : p.purchase_order }}
@@ -282,7 +282,7 @@
               <div
                 v-for="e in ro.repair_log"
                 :key="e.name"
-                class="rounded border bg-surface-white px-2 py-1.5"
+                class="rounded border bg-surface-base px-2 py-1.5"
               >
                 <div class="flex items-center justify-between gap-2 text-xs">
                   <div class="flex items-center gap-1.5">
@@ -349,7 +349,7 @@
                 v-if="ro.quotation"
                 :href="`/app/quotation/${encodeURIComponent(ro.quotation)}`"
                 target="_blank"
-                class="text-ink-blue-3 hover:underline"
+                class="text-ink-blue-6 hover:underline"
               >
                 {{ __('Cotización') }}: {{ ro.quotation }}
               </a>
@@ -357,7 +357,7 @@
                 v-if="ro.sales_order"
                 :href="`/app/sales-order/${encodeURIComponent(ro.sales_order)}`"
                 target="_blank"
-                class="text-ink-blue-3 hover:underline"
+                class="text-ink-blue-6 hover:underline"
               >
                 {{ __('SO') }}: {{ ro.sales_order }}
               </a>
@@ -366,7 +366,7 @@
                 :key="`${inv.invoice_type}-${inv.invoice}`"
                 :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
                 target="_blank"
-                class="text-ink-blue-3 hover:underline"
+                class="text-ink-blue-6 hover:underline"
               >
                 {{ inv.invoice_type === 'POS Invoice' ? __('POS') : __('Factura') }}: {{ inv.invoice }}
               </a>
@@ -404,7 +404,7 @@ const Row = (props) =>
         class: [
           'mt-0.5 font-medium',
           props.preWrap ? 'whitespace-pre-wrap' : '',
-          props.emphasize ? 'text-ink-red-4' : 'text-ink-gray-8',
+          props.emphasize ? 'text-ink-red-8' : 'text-ink-gray-8',
         ],
       },
       props.value === undefined || props.value === null || props.value === ''

@@ -6,7 +6,7 @@
   as WhatsAppBox (IconPicker + FileUploader/Dropdown) for a consistent composer.
 -->
 <template>
-  <div class="border-t border-outline-gray-1 bg-surface-white px-3 py-2 dark:bg-surface-gray-1 sm:px-10">
+  <div class="border-t border-outline-gray-1 bg-surface-base px-3 py-2 dark:bg-surface-gray-1 sm:px-10">
     <div class="mb-1 text-[10px] font-semibold uppercase tracking-wide" style="color: #0084ff">
       {{ __('Responder · Messenger') }}
     </div>
@@ -27,14 +27,14 @@
           @update:modelValue="onEmoji"
         >
           <SmileIcon
-            class="flex size-4.5 cursor-pointer rounded-sm text-xl leading-none text-ink-gray-4"
+            class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
             @click="togglePopover"
           />
         </IconPicker>
         <CannedReplyPicker channel="Messenger" @pick="onCanned" />
         <button
           type="button"
-          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-3 hover:bg-surface-green-3"
+          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-6 hover:bg-surface-green-3"
           :title="__('Catálogo (o escribe /cat)')"
           @click="emit('catalog', '')"
         >
@@ -60,13 +60,13 @@
     </div>
     <p
       v-if="window24h && window24h.open"
-      class="mt-1 text-[10px] font-medium text-ink-green-3 dark:text-ink-green-2"
+      class="mt-1 text-[10px] font-medium text-ink-green-6 dark:text-ink-green-5"
     >
       {{ __('Ventana de 24 h abierta · respuesta gratis ({0} h restantes)', [window24h.hoursLeft]) }}
     </p>
     <p
       v-else-if="window24h && !window24h.open"
-      class="mt-1 text-[10px] font-medium text-ink-amber-3 dark:text-ink-amber-2"
+      class="mt-1 text-[10px] font-medium text-ink-amber-6 dark:text-ink-amber-5"
     >
       {{ __('Fuera de la ventana de 24 h — Meta solo entrega con etiqueta de agente humano (sin promociones).') }}
     </p>

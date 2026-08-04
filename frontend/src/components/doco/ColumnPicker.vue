@@ -17,7 +17,7 @@
     <template v-if="open">
       <div class="fixed inset-0 z-[90]" @click="open = false" />
       <div
-        class="absolute right-0 z-[100] mt-1 min-w-[190px] overflow-hidden rounded-[10px] border border-outline-gray-2 bg-surface-white"
+        class="absolute right-0 z-[100] mt-1 min-w-[190px] overflow-hidden rounded-[10px] border border-outline-gray-2 bg-surface-base"
         style="box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12)"
       >
         <div

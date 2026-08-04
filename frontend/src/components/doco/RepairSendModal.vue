@@ -16,7 +16,7 @@
             v-for="c in channelChoices"
             :key="c.v"
             class="rounded-full px-2.5 py-1 text-[12px] font-semibold"
-            :class="channel === c.v ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="channel === c.v ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
             @click="channel = c.v"
           >
             {{ c.label }}
@@ -27,7 +27,7 @@
         <!-- 24h-window guard: free-form WhatsApp won't deliver outside Meta's window -->
         <div
           v-if="waBlocked"
-          class="rounded-md border border-outline-amber-2 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-3"
+          class="rounded-md border border-outline-amber-3 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-6"
         >
           ⚠ <span class="font-semibold">{{ __('Ventana de 24h de WhatsApp cerrada.') }}</span>
           {{ __('El cliente no ha escrito por WhatsApp en las últimas 24 h. Meta solo entrega plantillas aprobadas — un mensaje libre o una foto NO llegará.') }}
@@ -36,7 +36,7 @@
         </div>
         <div
           v-else-if="channel === 'whatsapp' && waWindow.open"
-          class="text-[11px] text-ink-green-3"
+          class="text-[11px] text-ink-green-6"
         >
           ✓ {{ __('Ventana de WhatsApp abierta') }} · {{ waWindow.hoursLeft }}h
         </div>
@@ -49,7 +49,7 @@
           <template v-if="hasImageTemplates">
             <select
               v-model="chosenTemplate"
-              class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none focus:ring-0"
+              class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
             >
               <option value="">{{ __('Elige una plantilla aprobada…') }}</option>
               <option v-for="t in imageTemplates.data" :key="t.name" :value="t.name">{{ t.name }}</option>
@@ -76,14 +76,14 @@
               v-for="ph in ro.photos"
               :key="ph.name"
               class="relative h-16 w-16 overflow-hidden rounded-lg border-2 transition"
-              :class="photoSel[ph.name] ? 'border-outline-green-3 ring-1 ring-outline-green-2' : 'border-outline-gray-2 hover:border-outline-gray-4'"
+              :class="photoSel[ph.name] ? 'border-outline-green-4 ring-1 ring-outline-green-3' : 'border-outline-gray-2 hover:border-outline-gray-4'"
               :title="ph.photo_type || __('Foto')"
               @click="togglePhoto(ph.name)"
             >
               <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
               <span
                 v-if="photoSel[ph.name]"
-                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-3 text-[9px] font-bold text-ink-white"
+                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-3 text-[9px] font-bold text-ink-base"
               >✓</span>
             </button>
           </div>
@@ -99,7 +99,7 @@
               v-for="(e, i) in ro.repair_log"
               :key="e.name || i"
               class="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-[12px]"
-              :class="logSel[logKey(e, i)] ? 'border-outline-green-3 bg-surface-green-1' : 'border-outline-gray-2'"
+              :class="logSel[logKey(e, i)] ? 'border-outline-green-4 bg-surface-green-1' : 'border-outline-gray-2'"
             >
               <input type="checkbox" class="mt-0.5" :checked="!!logSel[logKey(e, i)]" @change="toggleLog(e, i)" />
               <span class="min-w-0">
@@ -116,7 +116,7 @@
           <textarea
             v-model="note"
             rows="3"
-            class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 p-2 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0"
+            class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 p-2 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0"
             :placeholder="__('Mensaje para el cliente…')"
           />
         </div>

@@ -63,7 +63,7 @@
       <button
         v-else
         type="button"
-        class="press text-[12px] font-medium text-ink-blue-3 hover:underline"
+        class="press text-[12px] font-medium text-ink-blue-6 hover:underline"
         @click="refresh"
       >
         {{ __('No se pudo generar — reintentar') }}

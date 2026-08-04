@@ -10,12 +10,12 @@
 <template>
   <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-white px-5">
+    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-base px-5">
       <div class="flex items-center gap-3">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Social') }}</span>
         <div class="flex overflow-hidden rounded-lg border border-outline-gray-2 text-[11.5px] font-semibold">
-          <button class="px-2.5 py-1" :class="view === 'calendar' ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="view = 'calendar'">{{ __('Calendario') }}</button>
-          <button class="px-2.5 py-1" :class="view === 'metrics' ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="showMetrics">{{ __('Métricas') }}</button>
+          <button class="px-2.5 py-1" :class="view === 'calendar' ? 'bg-surface-gray-10 text-ink-base' : 'text-ink-gray-6'" @click="view = 'calendar'">{{ __('Calendario') }}</button>
+          <button class="px-2.5 py-1" :class="view === 'metrics' ? 'bg-surface-gray-10 text-ink-base' : 'text-ink-gray-6'" @click="showMetrics">{{ __('Métricas') }}</button>
         </div>
         <select
           v-if="isManager || shopOptions.length > 1"
@@ -28,7 +28,7 @@
         </select>
         <template v-if="view === 'calendar'">
           <div class="flex overflow-hidden rounded-lg border border-outline-gray-2 text-[11px] font-semibold">
-            <button v-for="cv in CAL_VIEWS" :key="cv.key" class="px-2 py-1" :class="calView === cv.key ? 'bg-surface-gray-7 text-ink-white' : 'text-ink-gray-6'" @click="calView = cv.key">{{ cv.label }}</button>
+            <button v-for="cv in CAL_VIEWS" :key="cv.key" class="px-2 py-1" :class="calView === cv.key ? 'bg-surface-gray-10 text-ink-base' : 'text-ink-gray-6'" @click="calView = cv.key">{{ cv.label }}</button>
           </div>
           <div class="flex items-center gap-1">
             <button class="rounded-md px-1.5 py-1 text-ink-gray-6 hover:bg-surface-gray-2" @click="shift(-1)">‹</button>
@@ -61,22 +61,22 @@
 
     <!-- ⏳ pendientes de aprobación — surfaced instead of buried in the grid -->
     <div v-if="pendingPosts.length" class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-amber-1 px-4 py-2 dark:bg-amber-300/10" role="status">
-      <span class="text-[11.5px] font-bold text-ink-amber-3 dark:text-amber-200">⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span>
+      <span class="text-[11.5px] font-bold text-ink-amber-6 dark:text-amber-200">⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span>
       <button
         v-for="p in pendingPosts.slice(0, 6)"
         :key="p.name"
-        class="press max-w-[180px] truncate rounded-md bg-surface-white px-2 py-0.5 text-[11px] font-medium text-ink-gray-8"
+        class="press max-w-[180px] truncate rounded-md bg-surface-base px-2 py-0.5 text-[11px] font-medium text-ink-gray-8"
         @click="openEditPost(p)"
       >
         {{ p.title || p.name }}
       </button>
-      <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-3">+{{ pendingPosts.length - 6 }}</span>
+      <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-6">+{{ pendingPosts.length - 6 }}</span>
     </div>
 
     <!-- filter chips (pillar / status / channel family) — client-side, combinable -->
     <div
       v-if="view === 'calendar' && (visiblePillars.length || visibleStatuses.length || hasFamilies)"
-      class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-white px-4 py-2 text-[11px]"
+      class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-base px-4 py-2 text-[11px]"
     >
       <button
         v-for="pl in visiblePillars" :key="'k' + pl.kind"
@@ -122,7 +122,7 @@
          operator into the normal edit/Aprobar modal below. -->
     <template v-if="showAiComposer">
       <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showAiComposer = false" />
-      <div class="fixed left-1/2 top-1/2 z-[310] flex max-h-[92vh] w-[94vw] max-w-[680px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
+      <div class="fixed left-1/2 top-1/2 z-[310] flex max-h-[92vh] w-[94vw] max-w-[680px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">✨ {{ __('Compositor IA') }}</span>
           <!-- brand kit mini-panel: the palette + rules the generator is bound to -->
@@ -167,7 +167,7 @@
           <div>
             <div class="mb-1 text-[11.5px] font-bold uppercase tracking-wide text-ink-gray-5">
               {{ __('Brief') }}
-              <span v-if="['Noticia', 'Testimonio'].includes(composeForm.post_kind)" class="text-ink-red-3">*</span>
+              <span v-if="['Noticia', 'Testimonio'].includes(composeForm.post_kind)" class="text-ink-red-6">*</span>
             </div>
             <textarea
               v-model="composeForm.brief" rows="3"
@@ -230,7 +230,7 @@
     <!-- sucursales / onboarding modal (D6, manager) -->
     <template v-if="showShops">
       <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showShops = false" />
-      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[480px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
+      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[480px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">{{ __('Sucursales y empleados') }}</span>
           <button class="text-ink-gray-5 hover:text-ink-gray-8" @click="showShops = false">✕</button>
@@ -245,7 +245,7 @@
           <div v-if="!(employeesRes.data || []).length" class="mb-3 text-[12px] text-ink-gray-4">{{ employeesRes.loading ? __('Cargando…') : __('Nadie asignado todavía.') }}</div>
           <div v-for="u in employeesRes.data || []" :key="u" class="mb-1.5 flex items-center justify-between rounded-md bg-surface-gray-1 px-2.5 py-1.5">
             <span class="text-[12.5px] text-ink-gray-8">{{ u }}</span>
-            <button class="text-[11px] font-semibold text-ink-red-4 hover:underline disabled:opacity-50" :disabled="onbBusy" @click="unassignEmp(u)">{{ __('Quitar') }}</button>
+            <button class="text-[11px] font-semibold text-ink-red-8 hover:underline disabled:opacity-50" :disabled="onbBusy" @click="unassignEmp(u)">{{ __('Quitar') }}</button>
           </div>
 
           <label class="mb-1 mt-4 block text-[11px] font-semibold text-ink-gray-6">{{ __('Agregar empleado') }}</label>

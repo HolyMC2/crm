@@ -34,7 +34,7 @@
     <!-- non-manager: server refused → banner (the server gate is the real guard) -->
     <div
       v-if="restricted"
-      class="rounded-[10px] border border-outline-amber-2 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-3"
+      class="rounded-[10px] border border-outline-amber-3 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-6"
     >
       {{ __('El backtest de score requiere permiso de gerente.') }}
     </div>
@@ -90,7 +90,7 @@
           <div v-for="c in monthlyRows" :key="c.cohort" class="mb-1.5 flex items-center gap-2">
             <span class="w-16 flex-none truncate text-[11px] text-ink-gray-6">{{ monthLabel(c.cohort) }}</span>
             <div class="h-1.5 min-w-0 flex-1 rounded-sm bg-surface-gray-2">
-              <div class="h-full rounded-sm bg-surface-gray-5" :style="`width:${barPct(c.win_rate)}%`" />
+              <div class="h-full rounded-sm bg-surface-gray-8" :style="`width:${barPct(c.win_rate)}%`" />
             </div>
             <span class="w-9 flex-none text-right text-[11px] tabular-nums text-ink-gray-6">{{ pct(c.win_rate) }}</span>
             <span class="w-8 flex-none text-right text-[10.5px] tabular-nums text-ink-gray-4">{{ c.leads }}</span>
@@ -137,6 +137,6 @@ const monthlyRows = computed(() => data.value?.cohorts || [])
 const liftLabel = computed(() => fmtLift(overall.value.lift))
 
 function gradeColor(g) {
-  return GRADE_COLORS[g]?.[0] || 'var(--surface-gray-5)'
+  return GRADE_COLORS[g]?.[0] || 'var(--surface-gray-8)'
 }
 </script>

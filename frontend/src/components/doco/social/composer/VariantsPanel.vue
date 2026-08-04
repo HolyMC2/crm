@@ -27,7 +27,7 @@
             <button
               v-for="t in TONES" :key="t.v" type="button"
               class="rounded-md border px-2 py-0.5 text-[11px] font-medium"
-              :class="tone === t.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-3' : 'border-outline-gray-2 text-ink-gray-6'"
+              :class="tone === t.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-6' : 'border-outline-gray-2 text-ink-gray-6'"
               @click="tone = t.v"
             >{{ t.label }}</button>
           </div>
@@ -38,7 +38,7 @@
             <button
               v-for="l in LENGTHS" :key="l.v" type="button"
               class="rounded-md border px-2 py-0.5 text-[11px] font-medium"
-              :class="length === l.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-3' : 'border-outline-gray-2 text-ink-gray-6'"
+              :class="length === l.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-6' : 'border-outline-gray-2 text-ink-gray-6'"
               @click="length = l.v"
             >{{ l.label }}</button>
           </div>
@@ -47,21 +47,21 @@
 
       <button
         type="button"
-        class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
+        class="w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50"
         :disabled="!postName || loading" @click="generate"
       >{{ loading ? __('Generando…') : (variants.length ? __('↻ Regenerar') : __('Generar 3 variantes')) }}</button>
 
       <p v-if="!postName" class="mt-1 text-[10.5px] text-ink-gray-4">{{ __('Guarda el borrador primero para generar variantes.') }}</p>
 
       <!-- variant cards -->
-      <div v-for="(v, i) in variants" :key="v.name || i" :data-testid="`variant-card-${i}`" class="mt-2 rounded-md border border-outline-gray-2 bg-surface-white p-2">
+      <div v-for="(v, i) in variants" :key="v.name || i" :data-testid="`variant-card-${i}`" class="mt-2 rounded-md border border-outline-gray-2 bg-surface-base p-2">
         <div class="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-[12px] text-ink-gray-8">{{ v.caption }}</div>
         <div class="mt-1.5 flex items-center gap-1.5">
           <span class="rounded-full bg-surface-gray-2 px-1.5 py-0.5 text-[9.5px] font-semibold text-ink-gray-6">{{ toneLabel(v.tone) }}</span>
           <span class="rounded-full bg-surface-gray-2 px-1.5 py-0.5 text-[9.5px] font-semibold text-ink-gray-6">{{ lengthLabel(v.length) }}</span>
           <button
             type="button" :data-testid="`variant-pick-${i}`"
-            class="ml-auto rounded-md bg-surface-green-2 px-2.5 py-1 text-[11px] font-semibold text-ink-green-3 hover:brightness-95 disabled:opacity-50"
+            class="ml-auto rounded-md bg-surface-green-2 px-2.5 py-1 text-[11px] font-semibold text-ink-green-6 hover:brightness-95 disabled:opacity-50"
             :disabled="picking >= 0" @click="pick(v, i)"
           >{{ picking === i ? __('Aplicando…') : __('Usar esta') }}</button>
         </div>

@@ -35,7 +35,7 @@
       v-for="m in modes"
       :key="m.value"
       type="button"
-      class="press flex-none whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+      class="press flex-none whitespace-nowrap rounded-full px-3 py-1 text-xs-semibold transition-colors"
       :class="
         mode === m.value
           ? m.activeClass
@@ -56,7 +56,7 @@
     <button
       v-if="isMobile && !quickBarOpen"
       type="button"
-      class="rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs font-medium text-ink-gray-7"
+      class="rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs-medium text-ink-gray-7"
       @click="quickBarOpen = true"
     >
       ⚡ {{ __('Plantillas y respuestas') }} ▾
@@ -64,7 +64,7 @@
     <div v-show="!isMobile || quickBarOpen" class="flex flex-wrap items-center gap-1.5">
     <button
       type="button"
-      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs font-semibold text-ink-green-3 hover:bg-surface-green-3"
+      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-6 hover:bg-surface-green-3"
       :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
       @click="emit('catalog', '')"
     >
@@ -74,7 +74,7 @@
     <button
       v-if="aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)"
       type="button"
-      class="press rounded-md bg-surface-violet-1 px-2 py-1 text-xs font-semibold text-ink-violet-1 hover:opacity-80 disabled:opacity-50"
+      class="press rounded-md bg-surface-violet-1 px-2 py-1 text-xs-semibold text-ink-violet-1 hover:opacity-80 disabled:opacity-50"
       :disabled="suggestLoading"
       :title="__('Sugerir respuestas con IA (local)')"
       @click="fetchSuggestions"
@@ -86,7 +86,7 @@
     <button
       v-if="isMobile && !replyOnly"
       type="button"
-      class="press rounded-md border border-outline-gray-2 px-2 py-1 text-xs font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+      class="press rounded-md border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
       :title="__('Enviar plantilla de WhatsApp')"
       @click="emit('openTemplates')"
     >
@@ -96,7 +96,7 @@
       v-for="(qr, i) in quickReplies.data || []"
       :key="`qr-${i}`"
       type="button"
-      class="rounded-md bg-surface-gray-2 px-2 py-1 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-3"
+      class="rounded-md bg-surface-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-3"
       :title="qr.text"
       @click="insertQuickReply(qr)"
     >
@@ -106,7 +106,7 @@
       v-for="t in (replyOnly ? [] : (quickTemplates.data || []))"
       :key="`tpl-${t.name}`"
       type="button"
-      class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+      class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-2"
       :title="t.template"
       @click="emit('pickTemplate', t.name)"
     >
@@ -151,7 +151,7 @@
       v-for="(sg, i) in suggestions"
       :key="'sg' + i"
       type="button"
-      class="press max-w-full truncate rounded-lg border border-outline-gray-2 bg-surface-white px-2.5 py-1.5 text-left text-xs text-ink-gray-8 hover:bg-surface-gray-2"
+      class="press max-w-full truncate rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-left text-xs text-ink-gray-8 hover:bg-surface-gray-2"
       :title="sg"
       @click="useSuggestion(sg)"
     >
@@ -204,7 +204,7 @@
         "
       >
         <SmileIcon
-          class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
+          class="flex size-4.5 cursor-pointer rounded-sm text-3xl leading-none text-ink-gray-4"
           @click="togglePopover"
         />
       </IconPicker>
@@ -224,7 +224,7 @@
     <!-- recording bar replaces the textarea while capturing -->
     <div
       v-if="mode === 'reply' && recording"
-      class="flex h-10 w-full items-center gap-3 rounded-lg border border-outline-red-2 bg-surface-red-1 px-3"
+      class="flex h-10 w-full items-center gap-3 rounded-lg border border-outline-red-3 bg-surface-red-1 px-3"
     >
       <span class="h-2.5 w-2.5 flex-none animate-pulse rounded-full" style="background: #e5484d" />
       <span class="w-12 flex-none font-mono text-[13px] font-semibold text-ink-gray-8">
@@ -267,7 +267,7 @@
          Capture phase so we intercept before tiptap's own Enter handling. -->
     <div
       v-else
-      class="w-full rounded border border-outline-gray-2 bg-surface-white px-2 py-1 dark:bg-surface-gray-2"
+      class="w-full rounded border border-outline-gray-2 bg-surface-base px-2 py-1 dark:bg-surface-gray-2"
       @keydown.ctrl.enter.capture.prevent.stop="dispatchSend()"
       @keydown.meta.enter.capture.prevent.stop="dispatchSend()"
     >
@@ -440,19 +440,19 @@ const modes = [
     value: 'reply',
     icon: '↩',
     label: 'Reply',
-    activeClass: 'bg-surface-green-2 text-ink-green-3',
+    activeClass: 'bg-surface-green-2 text-ink-green-6',
   },
   {
     value: 'note',
     icon: '✐',
     label: 'Private note',
-    activeClass: 'bg-surface-amber-2 text-ink-amber-3',
+    activeClass: 'bg-surface-amber-2 text-ink-amber-6',
   },
   {
     value: 'comment',
     icon: '💬',
     label: 'Internal',
-    activeClass: 'bg-surface-blue-2 text-ink-blue-3',
+    activeClass: 'bg-surface-blue-2 text-ink-blue-6',
   },
 ]
 

@@ -1,7 +1,7 @@
 <!-- Inbox left pane (286px): search + channel pills + conversation rows. handoff §5.1 -->
 <template>
   <div
-    class="flex flex-col bg-surface-white"
+    class="flex flex-col bg-surface-base"
     :class="isMobile ? 'min-h-0 w-full flex-1' : 'w-[286px] flex-none border-r border-outline-gray-1'"
   >
     <div class="flex-none px-3.5 pb-2.5 pt-3.5">
@@ -17,7 +17,7 @@
             <LucideSearch class="h-4 w-4" />
           </button>
           <button
-            :class="soundEnabled ? 'text-ink-green-3' : 'text-ink-gray-4'"
+            :class="soundEnabled ? 'text-ink-green-6' : 'text-ink-gray-4'"
             :title="soundEnabled ? __('Sonido de notificación activado') : __('Activar sonido de notificación')"
             :aria-label="__('Sonido de notificación')"
             :aria-pressed="soundEnabled"
@@ -30,7 +30,7 @@
                couldn't subscribe at all. Hidden when unsupported/unconfigured. -->
           <button
             v-if="!['unsupported', 'unconfigured'].includes(pushState)"
-            :class="pushState === 'on' ? 'text-ink-green-3' : 'text-ink-gray-4'"
+            :class="pushState === 'on' ? 'text-ink-green-6' : 'text-ink-gray-4'"
             :disabled="pushBusy || pushState === 'denied'"
             :title="
               pushState === 'denied'
@@ -48,7 +48,7 @@
           </button>
           <span
             class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-            :class="unattendedTotal ? 'text-ink-amber-3 bg-surface-amber-2' : 'text-ink-green-3 bg-surface-green-2'"
+            :class="unattendedTotal ? 'text-ink-amber-6 bg-surface-amber-2' : 'text-ink-green-6 bg-surface-green-2'"
             :title="__('Cosas sin atender (sin asignar + vencidos + comentarios nuevos)')"
             :aria-label="__('Cosas sin atender') + ': ' + unattendedTotal"
           >
@@ -104,7 +104,7 @@
           class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
           :class="
             inboxTab === t.id
-              ? 'bg-surface-green-2 text-ink-green-3'
+              ? 'bg-surface-green-2 text-ink-green-6'
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           :aria-pressed="inboxTab === t.id"
@@ -160,9 +160,9 @@
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
       <div v-if="visibleUnassigned.length && inboxTab !== 'comments' && inboxTab !== 'snoozed' && !queueTag" class="mb-1.5">
-        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-3">
+        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-6">
           ⚠ {{ __('Sin asignar') }}
-          <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-3">{{ visibleUnassigned.length }}</span>
+          <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-6">{{ visibleUnassigned.length }}</span>
         </div>
         <button
           v-for="u in visibleUnassigned"
@@ -170,7 +170,7 @@
           role="option"
           :aria-selected="activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone)"
           :tabindex="rovingKey === orphanKey(u) ? 0 : -1"
-          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-amber-2"
+          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-amber-3"
           :class="activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone) ? 'bg-surface-amber-1' : ''"
           :style="
             activeUnassigned === (u.last_channel === 'messenger' ? u.psid : u.phone)
@@ -180,7 +180,7 @@
           @click="selectUnassigned(u.last_channel === 'messenger' ? u.psid : u.phone, u.last_channel)"
         >
           <div class="mb-1 flex items-center gap-2">
-            <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
+            <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-6">
               <LucideMessageCircleQuestion class="h-4 w-4" />
             </span>
             <div class="min-w-0 flex-1">
@@ -258,9 +258,9 @@
       <!-- "Comentarios": comments on our Facebook posts. In the Comentarios TAB the
         status chips (Nuevos/Respondidos/Todos) let you review answered ones too. -->
       <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentGroups.length)" class="mb-1.5">
-        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-3">
+        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-6">
           <LucideFacebook class="h-3 w-3" /> {{ __('Comentarios') }}
-          <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-3">{{ commentGroups.length }}</span>
+          <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-6">{{ commentGroups.length }}</span>
         </div>
         <!-- status sub-filter — answered comments stay reviewable, never lost -->
         <div v-if="inboxTab === 'comments'" class="mb-1.5 flex gap-1.5 px-1.5">
@@ -268,7 +268,7 @@
             v-for="s in commentStatusChips"
             :key="s.id"
             class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-            :class="commentStatus === s.id ? 'bg-surface-blue-2 text-ink-blue-3' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="commentStatus === s.id ? 'bg-surface-blue-2 text-ink-blue-6' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
             :aria-pressed="commentStatus === s.id"
             @click="setCommentStatus(s.id)"
           >
@@ -296,9 +296,9 @@
             <LucideX class="h-3 w-3" />
           </button>
         </div>
-        <div v-if="inboxTab === 'comments' && commentPosts.error && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-red-3">
+        <div v-if="inboxTab === 'comments' && commentPosts.error && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-red-6">
           {{ __('No se pudieron cargar los comentarios.') }}
-          <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="reloadComments">{{ __('Reintentar') }}</button>
+          <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="reloadComments">{{ __('Reintentar') }}</button>
         </div>
         <div v-else-if="inboxTab === 'comments' && !commentGroups.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
           {{ commentSearch ? __('Sin resultados') : __('Sin comentarios') }}
@@ -310,7 +310,7 @@
           role="option"
           :aria-selected="activeCommentPost === (g.post_id || g.latest_name)"
           :tabindex="rovingKey === commentKey(g) ? 0 : -1"
-          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-2"
+          class="mb-1 block w-full rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-3"
           :class="activeCommentPost === (g.post_id || g.latest_name) ? 'bg-surface-blue-1' : ''"
           :style="`border-left:3px solid ${(g.channel === 'IG' ? '#E4405F' : '#1877f2') + (activeCommentPost === (g.post_id || g.latest_name) ? '' : '66')}`"
           @click="selectCommentGroup(g.post_id || g.latest_name)"
@@ -358,9 +358,9 @@
           <span class="skel h-2.5 w-8 flex-none rounded" />
         </div>
       </div>
-      <div v-else-if="listError && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-red-3">
+      <div v-else-if="listError && !rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-red-6">
         {{ __('No se pudo cargar la bandeja.') }}
-        <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="retryList">{{ __('Reintentar') }}</button>
+        <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="retryList">{{ __('Reintentar') }}</button>
       </div>
       <div v-else-if="!rows.length && !visibleUnassigned.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
         {{ __('Sin conversaciones') }}
@@ -373,7 +373,7 @@
       <!-- swipe-left action underlay (mobile, unread rows): «marcar respondido» -->
       <div
         v-if="swipeKey === convKey(r)"
-        class="absolute inset-y-0 right-0 mb-1 flex w-[132px] items-center justify-end rounded-r-[11px] bg-surface-green-2 pr-4 text-[11px] font-bold text-ink-green-3"
+        class="absolute inset-y-0 right-0 mb-1 flex w-[132px] items-center justify-end rounded-r-[11px] bg-surface-green-2 pr-4 text-[11px] font-bold text-ink-green-6"
         aria-hidden="true"
       >
         ✓ {{ __('Respondido') }}
@@ -382,10 +382,10 @@
         role="option"
         :aria-selected="activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')"
         :tabindex="rovingKey === convKey(r) ? 0 : -1"
-        class="mb-1 block w-full cursor-pointer rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-green-2"
+        class="mb-1 block w-full cursor-pointer rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-green-3"
         :class="[
           activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal') ? 'bg-surface-green-2' : '',
-          swipeKey === convKey(r) ? 'bg-surface-white' : '',
+          swipeKey === convKey(r) ? 'bg-surface-base' : '',
         ]"
         :style="
           (activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
@@ -400,7 +400,7 @@
       >
         <div class="mb-1.5 flex items-center gap-2">
           <span
-            class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-xs font-semibold"
+            class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full text-xs-semibold"
             :style="`background:${avatarColor(r.contact_name)[0]};color:${avatarColor(r.contact_name)[1]}`"
           >
             {{ initials(r.contact_name) }}
@@ -416,7 +416,7 @@
           <div class="flex flex-none flex-col items-end gap-1">
             <div
               class="text-[10px] font-semibold"
-              :class="r.sla_overdue ? 'text-ink-red-4' : 'text-ink-gray-4'"
+              :class="r.sla_overdue ? 'text-ink-red-8' : 'text-ink-gray-4'"
             >
               {{ timeAgo(r.last_message_ts) }}
             </div>
@@ -457,7 +457,7 @@
             it is not a read receipt. -->
           <span
             v-if="r.unread"
-            class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold text-ink-amber-3 bg-surface-amber-1"
+            class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold text-ink-amber-6 bg-surface-amber-1"
             :title="__('El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes o al completar el trato.')"
           >
             ↩ {{ __('Responder') }}<span v-if="r.waiting_secs != null" class="font-bold opacity-80"> · {{ formatWaiting(r.waiting_secs) }}</span>
@@ -493,7 +493,7 @@
           </span>
           <span
             v-if="r.sla_overdue"
-            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-red-4 bg-surface-red-1"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-red-8 bg-surface-red-1"
           >
             {{ __('SLA vencido') }}
           </span>
@@ -501,7 +501,7 @@
                the sales-docs flag is on and the deal owes something) -->
           <span
             v-if="r.saldo"
-            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-3 bg-surface-amber-1"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-6 bg-surface-amber-1"
             :title="__('Saldo pendiente en facturas del trato')"
           >
             💰 {{ formatMoney(r.saldo) }}

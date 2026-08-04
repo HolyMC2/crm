@@ -3,7 +3,7 @@
   net-new (no upstream equivalent). Data via doco_marketing.api.campaigns.list_campaigns.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-white">
+  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- toolbar -->
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex items-center gap-2">
@@ -17,7 +17,7 @@
             v-for="m in modeTabs"
             :key="m.key"
             class="press rounded-full px-3 py-[4px] text-[12px] font-semibold"
-            :class="mode === m.key ? 'bg-surface-white text-ink-gray-9 shadow-sm' : 'text-ink-gray-6'"
+            :class="mode === m.key ? 'bg-surface-base text-ink-gray-9 shadow-sm' : 'text-ink-gray-6'"
             :aria-pressed="mode === m.key"
             @click="setMode(m.key)"
           >
@@ -204,19 +204,19 @@ function typeLabel(t) {
 }
 // native subtle Badge pairings (theme-aware) — bound via :class
 const TYPE_CHIP = {
-  whatsapp: 'text-ink-green-3 bg-surface-green-2',
-  email: 'text-ink-blue-2 bg-surface-blue-1',
+  whatsapp: 'text-ink-green-6 bg-surface-green-2',
+  email: 'text-ink-blue-5 bg-surface-blue-1',
   sms: 'text-ink-violet-1 bg-surface-violet-1',
-  automation: 'text-ink-amber-3 bg-surface-amber-1',
+  automation: 'text-ink-amber-6 bg-surface-amber-1',
 }
 function typeChip(t) {
   return TYPE_CHIP[t] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 const STATUS_CHIP = {
-  Active: 'text-ink-green-3 bg-surface-green-2',
-  Paused: 'text-ink-amber-3 bg-surface-amber-1',
+  Active: 'text-ink-green-6 bg-surface-green-2',
+  Paused: 'text-ink-amber-6 bg-surface-amber-1',
   Draft: 'text-ink-gray-6 bg-surface-gray-2',
-  Completed: 'text-ink-blue-2 bg-surface-blue-1',
+  Completed: 'text-ink-blue-5 bg-surface-blue-1',
 }
 function statusChip(s) {
   return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'

@@ -11,7 +11,7 @@
       v-for="g in groups"
       :key="g.value"
       class="flex w-[260px] flex-none flex-col rounded-lg bg-surface-gray-1"
-      :class="dragOver === g.value ? 'ring-2 ring-outline-green-2' : ''"
+      :class="dragOver === g.value ? 'ring-2 ring-outline-green-3' : ''"
       @dragover.prevent="dragOver = g.value"
       @dragleave="dragOver = null"
       @drop="onDrop(g.value)"
@@ -37,7 +37,7 @@
         <div
           v-for="row in colRows(g.value)"
           :key="row.name"
-          class="cursor-pointer rounded-md border border-outline-gray-1 bg-surface-white p-2.5 shadow-sm hover:border-outline-gray-3"
+          class="cursor-pointer rounded-md border border-outline-gray-1 bg-surface-base p-2.5 shadow-sm hover:border-outline-gray-3"
           draggable="true"
           @dragstart="dragged = row"
           @dragend="dragged = null"

@@ -5,7 +5,7 @@
       class="flex items-center gap-1 rounded-[7px] border px-[9px] py-1 text-[12px] font-medium"
       :class="
         selected.length
-          ? 'border-outline-green-2 bg-surface-green-2 text-ink-green-3'
+          ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-6'
           : 'border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8'
       "
       @click="open = !open"
@@ -18,7 +18,7 @@
     <template v-if="open">
       <div class="fixed inset-0 z-[90]" @click="open = false" />
       <div
-        class="absolute left-0 z-[100] mt-1 min-w-[180px] overflow-hidden rounded-[10px] border border-outline-gray-2 bg-surface-white"
+        class="absolute left-0 z-[100] mt-1 min-w-[180px] overflow-hidden rounded-[10px] border border-outline-gray-2 bg-surface-base"
         style="box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12)"
       >
         <div
@@ -44,7 +44,7 @@
         </div>
         <div class="flex justify-between border-t border-outline-gray-1 px-3 py-2">
           <button class="text-[12px] text-ink-gray-5" @click="clear">{{ __('Limpiar') }}</button>
-          <button class="text-[12px] font-semibold text-ink-green-3" @click="open = false">
+          <button class="text-[12px] font-semibold text-ink-green-6" @click="open = false">
             {{ __('Aplicar') }}
           </button>
         </div>

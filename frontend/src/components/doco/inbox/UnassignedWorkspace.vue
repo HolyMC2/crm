@@ -10,7 +10,7 @@
     <CatalogPicker v-if="catalogOpen" @sent="onCatalogSent" />
     <!-- header (mobile: pinned so back stays reachable while scrolling the thread) -->
     <div
-      class="flex h-[60px] flex-none items-center gap-2.5 border-b border-outline-gray-1 bg-surface-white px-4"
+      class="flex h-[60px] flex-none items-center gap-2.5 border-b border-outline-gray-1 bg-surface-base px-4"
       :class="isMobile ? 'sticky top-0 z-20' : ''"
     >
       <button
@@ -22,10 +22,10 @@
         <LucideChevronLeft class="h-6 w-6" />
       </button>
       <img v-if="headerImage" :src="headerImage" class="h-9 w-9 flex-none rounded-full object-cover" alt="" />
-      <span v-else-if="boundContact" class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold" style="color:#5b21b6;background:#ede9fe">
+      <span v-else-if="boundContact" class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm-semibold" style="color:#5b21b6;background:#ede9fe">
         {{ contactInitials }}
       </span>
-      <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-3">
+      <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-6">
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
       <div class="min-w-0">
@@ -41,7 +41,7 @@
         <div v-if="boundContact" class="truncate text-[11px] font-medium text-ink-gray-5">
           {{ formatPhone(activeUnassigned) }}<template v-if="boundContact.email"> · {{ boundContact.email }}</template>
         </div>
-        <div v-else class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-3'">
+        <div v-else class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-6'">
           {{ isArchived ? __('Archivado — sigue disponible') : __('Sin asignar — captura y convierte') }}
         </div>
       </div>
@@ -60,7 +60,7 @@
       </button>
       <button
         v-else
-        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-2 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-3 hover:bg-surface-blue-2 disabled:opacity-50"
+        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-3 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-6 hover:bg-surface-blue-2 disabled:opacity-50"
         :disabled="busy"
         :aria-label="__('Desarchivar')"
         @click="onUnarchive"
@@ -84,9 +84,9 @@
           <div v-if="unassignedThread.loading && !messages.length" class="py-8 text-center text-xs text-ink-gray-4">
             {{ __('Cargando…') }}
           </div>
-          <div v-else-if="unassignedThread.error && !messages.length" class="py-8 text-center text-xs text-ink-red-3">
+          <div v-else-if="unassignedThread.error && !messages.length" class="py-8 text-center text-xs text-ink-red-6">
             {{ __('No se pudo cargar la conversación.') }}
-            <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="unassignedThread.reload()">{{ __('Reintentar') }}</button>
+            <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="unassignedThread.reload()">{{ __('Reintentar') }}</button>
           </div>
           <div v-else-if="!messages.length" class="py-8 text-center text-xs text-ink-gray-4">{{ __('Sin mensajes') }}</div>
           <!-- Reuse the real conversation renderer (templates, media, receipts, replies,
@@ -133,7 +133,7 @@
               </FileUploader>
               <IconPicker v-slot="{ togglePopover }" v-model="msgrEmoji" @update:modelValue="onMsgrEmoji">
                 <SmileIcon
-                  class="flex size-4.5 cursor-pointer rounded-sm text-xl leading-none text-ink-gray-4"
+                  class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
                   :aria-label="__('Emojis')"
                   @click="togglePopover"
                 />
@@ -146,7 +146,7 @@
               rows="1"
               :aria-label="__('Responder por Messenger')"
               :placeholder="__('Responder por Messenger…')"
-              class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-2"
+              class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-3"
               @keydown.enter.exact.prevent="sendMsgr"
             />
             <button
@@ -164,7 +164,7 @@
       <!-- mobile CTA: opens the capture sheet (replaces the scroll-to-form UX) -->
       <div
         v-if="isMobile"
-        class="flex flex-none gap-2 border-t border-outline-gray-1 bg-surface-white px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)]"
+        class="flex flex-none gap-2 border-t border-outline-gray-1 bg-surface-base px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)]"
       >
         <button
           class="press flex-1 rounded-[10px] py-2.5 text-[13.5px] font-bold text-white"
@@ -187,7 +187,7 @@
         :role="isMobile && captureOpen ? 'dialog' : undefined"
         :aria-modal="isMobile && captureOpen ? 'true' : undefined"
         :aria-label="isMobile ? __('Capturar y convertir') : undefined"
-        class="scb flex flex-col overflow-y-auto bg-surface-white px-3.5 py-3.5"
+        class="scb flex flex-col overflow-y-auto bg-surface-base px-3.5 py-3.5"
         :class="
           isMobile
             ? 'sheet-in fixed inset-x-0 bottom-0 z-50 max-h-[82vh] rounded-t-2xl pb-[calc(env(safe-area-inset-bottom)+14px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)]'
@@ -222,7 +222,7 @@
 
         <!-- Forecasting (only when CRM forecasting is on): a Deal then requires an
              expected value + closure date, else "Crear Trato" fails server-side. -->
-        <div v-if="forecastingEnabled" class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-2 bg-surface-blue-1 p-2">
+        <div v-if="forecastingEnabled" class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-3 bg-surface-blue-1 p-2">
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Valor estimado') }} *</span>
             <input v-model="form.expected_deal_value" type="number" min="0" :class="inputCls" /></label>
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Cierre estimado') }}</span>
@@ -272,7 +272,7 @@
               <button
                 v-for="t in suggestionRows"
                 :key="'s:' + t.doctype + ':' + t.name"
-                class="flex items-center justify-between gap-2 rounded-md border border-outline-blue-2 bg-surface-blue-1 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-blue-2 disabled:opacity-50"
+                class="flex items-center justify-between gap-2 rounded-md border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-blue-2 disabled:opacity-50"
                 :disabled="busy"
                 @click="linkTo(t)"
               >
@@ -378,8 +378,8 @@ function docLabel(dt) {
 function docBadge(dt) {
   // frappe-ui semantic tokens — auto dark-safe (was fixed light-mode hex)
   if (dt === 'Contact') return 'bg-surface-violet-1 text-ink-violet-1'
-  if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-3'
-  return 'bg-surface-blue-1 text-ink-blue-3'
+  if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-6'
+  return 'bg-surface-blue-1 text-ink-blue-6'
 }
 
 // Free Messenger reply to an orphan PSID (no assignment required).
@@ -481,7 +481,7 @@ const waModel = reactive({
 const waList = ref({ reload: () => unassignedThread.reload() })
 
 const inputCls =
-  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
+  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
 
 const busy = ref(false)
 // mobile capture bottom sheet — closed by default, reset when switching orphans

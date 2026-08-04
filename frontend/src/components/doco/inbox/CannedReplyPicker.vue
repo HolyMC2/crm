@@ -17,7 +17,7 @@
     <div
       v-if="open"
       ref="pop"
-      class="absolute bottom-7 left-0 z-30 max-h-72 w-72 overflow-y-auto rounded-xl border border-outline-gray-2 bg-surface-white p-1 shadow-lg"
+      class="absolute bottom-7 left-0 z-30 max-h-72 w-72 overflow-y-auto rounded-xl border border-outline-gray-2 bg-surface-base p-1 shadow-lg"
     >
       <div v-if="res.loading" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Cargando…') }}</div>
       <div v-else-if="!replies.length" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Sin respuestas rápidas') }}</div>

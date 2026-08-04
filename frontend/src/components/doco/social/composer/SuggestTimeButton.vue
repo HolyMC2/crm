@@ -13,7 +13,7 @@
       @click="toggle"
     >{{ __('🕒 Sugerir hora') }}</button>
 
-    <div v-if="open" class="absolute right-0 z-20 mt-1 w-[280px] rounded-lg border border-outline-gray-2 bg-surface-white p-2 shadow-xl">
+    <div v-if="open" class="absolute right-0 z-20 mt-1 w-[280px] rounded-lg border border-outline-gray-2 bg-surface-base p-2 shadow-xl">
       <div v-if="loading" class="px-1 py-2 text-[12px] text-ink-gray-5">{{ __('Buscando el mejor horario…') }}</div>
       <div v-else-if="!suggestions.length" class="px-1 py-2 text-[12px] text-ink-gray-4">{{ __('Sin datos suficientes todavía.') }}</div>
       <template v-else>

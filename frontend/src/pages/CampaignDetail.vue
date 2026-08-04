@@ -4,7 +4,7 @@
   enroll, activate/pause. Saves via doco_marketing.api.campaigns.save_campaign.
 -->
 <template>
-  <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-white">
+  <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-base">
     <!-- header -->
     <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
       <div class="flex min-w-0 items-center gap-2">
@@ -18,8 +18,8 @@
         <button v-if="dirty || saving" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="saving" @click="save">
           {{ saving ? __('Guardando…') : __('Guardar') }}
         </button>
-        <button v-if="form.status === 'Active'" class="rounded-lg border border-outline-amber-2 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-3" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
-        <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-2 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-3" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
+        <button v-if="form.status === 'Active'" class="rounded-lg border border-outline-amber-3 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-6" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
+        <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-3 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-6" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
         <button v-else-if="form.status === 'Draft'" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background: var(--brand)" @click="activate">▶ {{ __('Activar') }}</button>
       </div>
     </div>
@@ -229,12 +229,12 @@ const TYPE_META = { whatsapp: ['WhatsApp', 'var(--brand)', 'var(--brand-soft)'],
 function typeLabel(t) {
   return TYPE_META[t]?.[0] || t
 }
-const STATUS_CHIP = { Active: 'text-ink-green-3 bg-surface-green-2', Paused: 'text-ink-amber-3 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-2 bg-surface-blue-1' }
+const STATUS_CHIP = { Active: 'text-ink-green-6 bg-surface-green-2', Paused: 'text-ink-amber-6 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-5 bg-surface-blue-1' }
 function statusChip(s) {
   return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function enrStatusChip(s) {
-  const map = { Active: 'text-ink-green-3 bg-surface-green-2', Completed: 'text-ink-blue-2 bg-surface-blue-1', Suppressed: 'text-ink-red-4 bg-surface-red-1', Paused: 'text-ink-amber-3 bg-surface-amber-1' }
+  const map = { Active: 'text-ink-green-6 bg-surface-green-2', Completed: 'text-ink-blue-5 bg-surface-blue-1', Suppressed: 'text-ink-red-8 bg-surface-red-1', Paused: 'text-ink-amber-6 bg-surface-amber-1' }
   return map[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function who(e) {
@@ -260,7 +260,7 @@ Metric.props = ['label', 'value', 'color']
 }
 .dm-input:focus {
   outline: none;
-  background: var(--surface-white);
-  border-color: var(--outline-green-2);
+  background: var(--surface-base);
+  border-color: var(--outline-green-3);
 }
 </style>

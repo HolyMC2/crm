@@ -12,7 +12,7 @@
       <!-- 👥 collision strip (spec 2.4): who else is in this conversation NOW -->
       <div
         v-if="activePresence.length"
-        class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-3"
+        class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-6"
         role="status"
       >
         <span v-for="p in activePresence" :key="p.user" class="inline-flex items-center gap-1">
@@ -32,7 +32,7 @@
           class="press flex h-11 flex-none items-center gap-1.5 whitespace-nowrap border-b-2 px-[11px] transition-colors duration-150"
           :class="
             activeTab === t.key
-              ? 'border-outline-green-2 font-semibold text-ink-green-3'
+              ? 'border-outline-green-3 font-semibold text-ink-green-6'
               : 'border-transparent text-ink-gray-5'
           "
           @click="activeTab = t.key"
@@ -63,7 +63,7 @@
         <!-- 🔎 búsqueda en el hilo (spec 2.7) — over the LOADED messages -->
         <ThreadSearch ref="threadSearch" :container="convoRef" />
         <button
-          class="press absolute right-3 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-white text-[13px] text-ink-gray-6 shadow-sm hover:bg-surface-gray-2"
+          class="press absolute right-3 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-base text-[13px] text-ink-gray-6 shadow-sm hover:bg-surface-gray-2"
           :title="__('Buscar en la conversación')"
           :aria-label="__('Buscar en la conversación')"
           @click="threadSearch?.toggle()"
@@ -76,7 +76,7 @@
         <button
           v-show="showJump"
           :style="{ bottom: jumpBottom + 'px' }"
-          class="absolute right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-white text-ink-gray-7 shadow-md transition hover:bg-surface-gray-2"
+          class="absolute right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-outline-gray-2 bg-surface-base text-ink-gray-7 shadow-md transition hover:bg-surface-gray-2"
           :aria-label="__('Ir al último mensaje')"
           :title="__('Ir al último mensaje')"
           @click="jumpToBottom"
@@ -106,7 +106,7 @@
 
     <div v-else class="flex flex-1 flex-col items-center justify-center gap-2 text-ink-gray-4">
       <LucideMessagesSquare class="h-9 w-9" />
-      <div class="text-sm font-medium text-ink-gray-6">{{ __('Selecciona una conversación') }}</div>
+      <div class="text-sm-medium text-ink-gray-6">{{ __('Selecciona una conversación') }}</div>
       <div class="text-xs">{{ __('Elige un equipo de la bandeja para ver el hilo') }}</div>
     </div>
   </div>

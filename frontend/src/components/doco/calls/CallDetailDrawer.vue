@@ -5,7 +5,7 @@
 <template>
   <div class="fixed inset-0 z-[200] flex justify-end" @click.self="$emit('close')">
     <div class="absolute inset-0 bg-black/20" @click="$emit('close')" />
-    <div class="scb relative z-10 flex h-full w-[460px] flex-col overflow-y-auto bg-surface-white shadow-2xl">
+    <div class="scb relative z-10 flex h-full w-[460px] flex-col overflow-y-auto bg-surface-base shadow-2xl">
       <!-- header -->
       <div class="flex flex-none items-center justify-between border-b border-outline-gray-1 px-5 py-3">
         <div class="min-w-0">
@@ -39,8 +39,8 @@
         </div>
 
         <!-- AI summary -->
-        <div v-if="d.ai_summary" class="mb-4 rounded-[10px] border-l-[3px] bg-surface-green-2 p-3" style="border-color: var(--outline-green-2)">
-          <div class="mb-1 text-[11px] font-semibold uppercase tracking-[.07em] text-ink-green-3">{{ __('Resumen IA') }}</div>
+        <div v-if="d.ai_summary" class="mb-4 rounded-[10px] border-l-[3px] bg-surface-green-2 p-3" style="border-color: var(--outline-green-3)">
+          <div class="mb-1 text-[11px] font-semibold uppercase tracking-[.07em] text-ink-green-6">{{ __('Resumen IA') }}</div>
           <div class="text-[12.5px] leading-relaxed text-ink-gray-8">{{ d.ai_summary }}</div>
         </div>
         <button
@@ -71,7 +71,7 @@
           v-model="note"
           rows="3"
           :placeholder="__('Notas de la llamada…')"
-          class="w-full resize-none rounded-[10px] border border-outline-gray-2 bg-surface-gray-2 p-3 text-[12.5px] text-ink-gray-9 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none focus:ring-0"
+          class="w-full resize-none rounded-[10px] border border-outline-gray-2 bg-surface-gray-2 p-3 text-[12.5px] text-ink-gray-9 placeholder-ink-gray-4 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
         />
         <div class="mt-2 flex gap-2">
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-medium text-ink-gray-7" :disabled="saving" @click="saveNote">
@@ -114,8 +114,8 @@ function fmtDur(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 function outcomeChip(status) {
-  if (status === 'Completed') return 'text-ink-green-3 bg-surface-green-2'
-  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-4 bg-surface-red-1'
+  if (status === 'Completed') return 'text-ink-green-6 bg-surface-green-2'
+  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-8 bg-surface-red-1'
   return 'text-ink-gray-6 bg-surface-gray-2'
 }
 

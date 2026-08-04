@@ -19,7 +19,7 @@
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
     <div
-      class="relative flex h-full w-full flex-col overflow-hidden bg-surface-white dark:bg-surface-gray-1 sm:h-auto sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl sm:shadow-xl"
+      class="relative flex h-full w-full flex-col overflow-hidden bg-surface-base dark:bg-surface-gray-1 sm:h-auto sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl sm:shadow-xl"
     >
       <!-- header + search -->
       <div class="flex-none border-b border-outline-gray-1 px-4 pb-3 pt-3.5">
@@ -63,7 +63,7 @@
         <div v-else-if="loading" class="px-4 py-10 text-center text-[12px] text-ink-gray-4">
           {{ __('Buscando…') }}
         </div>
-        <div v-else-if="error" class="px-4 py-10 text-center text-[12px] text-ink-red-3">
+        <div v-else-if="error" class="px-4 py-10 text-center text-[12px] text-ink-red-6">
           {{ __('No se pudo buscar.') }}
           <button class="ml-1 font-semibold underline" @click="runNow">{{ __('Reintentar') }}</button>
         </div>

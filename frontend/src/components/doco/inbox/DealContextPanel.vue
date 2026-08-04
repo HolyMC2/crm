@@ -4,13 +4,13 @@
 -->
 <template>
   <div
-    class="scb flex flex-col overflow-y-auto bg-surface-white"
+    class="scb flex flex-col overflow-y-auto bg-surface-base"
     :class="isMobile ? 'min-h-0 w-full flex-1' : 'w-[320px] flex-none border-l border-outline-gray-1'"
   >
     <!-- mobile: back to the conversation thread (← pops the history stack) -->
     <div
       v-if="isMobile"
-      class="sticky top-0 z-10 flex flex-none items-center gap-2 border-b border-outline-gray-1 bg-surface-white px-3 py-2.5"
+      class="sticky top-0 z-10 flex flex-none items-center gap-2 border-b border-outline-gray-1 bg-surface-base px-3 py-2.5"
     >
       <button
         class="-ml-1 flex h-8 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
@@ -66,7 +66,7 @@
             <div class="flex items-center gap-1">
               <span v-for="a in assignees" :key="a.name" class="group relative leading-none">
                 <Avatar :label="a.label" :image="a.image" size="sm" />
-                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-4 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
+                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-8 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
               </span>
               <Dropdown :options="userOpts" placement="right">
                 <button class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3" :aria-label="__('Asignar usuario')">+</button>
@@ -76,14 +76,14 @@
           <div class="flex items-start justify-between gap-2">
             <span class="flex-none pt-1 text-ink-gray-5">{{ __('Etiquetas') }}</span>
             <div class="flex flex-1 flex-wrap justify-end gap-1">
-              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-2">
-                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-4" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
+              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-5">
+                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-8" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
               </span>
               <input
                 v-if="addingTag"
                 ref="tagInput"
                 v-model="newTag"
-                class="w-20 rounded border border-outline-gray-2 bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-8 focus:bg-surface-white focus:outline-none focus:ring-0"
+                class="w-20 rounded border border-outline-gray-2 bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-8 focus:bg-surface-base focus:outline-none focus:ring-0"
                 :placeholder="__('etiqueta')"
                 @keyup.enter="addTag"
                 @blur="addTag"
@@ -97,13 +97,13 @@
         <div class="mt-3 border-t border-outline-gray-1 pt-2.5">
           <div class="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Macros rápidas') }}</div>
           <div class="flex flex-col gap-1">
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-3 hover:bg-surface-green-2" @click="macroListo">
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-6 hover:bg-surface-green-2" @click="macroListo">
               → {{ __('Listo para entregar') }}
             </button>
             <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2" @click="macroCompletado">
               → {{ __('Marcar completado') }}
             </button>
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-3 hover:bg-surface-amber-1" @click="macroPago">
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-6 hover:bg-surface-amber-1" @click="macroPago">
               → {{ __('Recordatorio de pago') }}<span v-if="dealSummary.balance" class="text-ink-gray-5"> · {{ dealSummary.balance }}</span>
             </button>
           </div>
@@ -167,7 +167,7 @@
         <div>
           <div class="flex items-center gap-1.5">
             <span class="text-[17px] font-extrabold" :style="`color:${gradeColor}`">{{ grade }}</span>
-            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-3 bg-surface-green-2">{{ gradeWord }}</span>
+            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-6 bg-surface-green-2">{{ gradeWord }}</span>
           </div>
           <div v-if="probability" class="mt-0.5 text-[10px] text-ink-gray-5">{{ probability }}% {{ __('prob. conversión') }}</div>
         </div>

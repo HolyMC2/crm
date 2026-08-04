@@ -43,7 +43,7 @@
           </div>
           <div
             v-if="consentTampered"
-            class="mb-1.5 rounded bg-surface-red-1 px-2 py-1 text-[11px] font-semibold text-ink-red-4"
+            class="mb-1.5 rounded bg-surface-red-1 px-2 py-1 text-[11px] font-semibold text-ink-red-8"
           >
             ⚠ {{ __('{0} registro(s) no pasan la verificación de integridad', [consentTampered]) }}
           </div>
@@ -76,9 +76,9 @@
         <!-- merged timeline -->
         <div class="scb max-h-[55vh] overflow-y-auto">
           <div v-if="ledger.loading" class="py-8 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
-          <div v-else-if="ledger.error && !messages.length" class="py-8 text-center text-[12px] text-ink-red-3">
+          <div v-else-if="ledger.error && !messages.length" class="py-8 text-center text-[12px] text-ink-red-6">
             {{ __('No se pudo cargar el historial.') }}
-            <button class="ml-1 font-semibold underline hover:text-ink-red-4" @click="ledger.reload()">{{ __('Reintentar') }}</button>
+            <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="ledger.reload()">{{ __('Reintentar') }}</button>
           </div>
           <div v-else-if="!messages.length" class="py-8 text-center text-[12px] text-ink-gray-4">{{ __('Sin mensajes.') }}</div>
           <div
@@ -119,8 +119,8 @@ const csvHref = computed(
     `/api/method/doco_marketing.api.consent.export_consent_csv?reference_doctype=${encodeURIComponent(activeDealDoctype.value || '')}&reference_name=${encodeURIComponent(activeDeal.value || '')}`,
 )
 function consentChip(r) {
-  if (r.hash_ok === false) return 'bg-surface-red-1 text-ink-red-4'
-  return r.action === 'Grant' ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-red-1 text-ink-red-4'
+  if (r.hash_ok === false) return 'bg-surface-red-1 text-ink-red-8'
+  return r.action === 'Grant' ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-red-1 text-ink-red-8'
 }
 const CLASS_LABEL = { Explicit: 'explícito', Implied: 'implícito', Imported: 'importado' }
 function classLabel(c) {

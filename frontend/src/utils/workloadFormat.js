@@ -25,7 +25,7 @@ export function barWidth(load, cap) {
 export function barToken(load, cap) {
   const pct = capPercent(load, cap)
   if (pct == null) return 'bg-surface-gray-4'
-  if (pct >= 100) return 'bg-surface-red-5'
+  if (pct >= 100) return 'bg-surface-red-7'
   if (pct >= 75) return 'bg-surface-amber-2'
   return 'bg-surface-green-3'
 }

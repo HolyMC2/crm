@@ -20,7 +20,7 @@
     :href="permalink || undefined"
     :target="permalink ? '_blank' : undefined"
     rel="noopener"
-    class="block overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-white shadow-sm"
+    class="block overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-base shadow-sm"
   >
     <!-- header -->
     <div class="flex items-center gap-2.5 px-3 pt-3">

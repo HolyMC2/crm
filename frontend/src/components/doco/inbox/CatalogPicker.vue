@@ -7,7 +7,7 @@
   <div class="fixed inset-0 z-40 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" :aria-label="__('Catálogo')" @keydown.esc="closeCatalog" @click.self="closeCatalog">
     <div class="absolute inset-0 bg-black/30" />
     <div
-      class="relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-white shadow-xl dark:bg-surface-gray-1 sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl"
+      class="relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-base shadow-xl dark:bg-surface-gray-1 sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl"
     >
       <!-- header + search -->
       <div class="flex-none border-b border-outline-gray-1 px-4 pb-3 pt-3.5">
@@ -31,7 +31,7 @@
       <!-- results grid -->
       <div class="scb flex-1 overflow-y-auto px-3 py-3">
         <div v-if="catalogResults.loading" class="py-10 text-center text-[12px] text-ink-gray-4">{{ __('Buscando…') }}</div>
-        <div v-else-if="catalogResults.error" class="py-10 text-center text-[12px] text-ink-red-3">
+        <div v-else-if="catalogResults.error" class="py-10 text-center text-[12px] text-ink-red-6">
           {{ __('No se pudo buscar.') }}
           <button class="ml-1 font-semibold underline" @click="runCatalogSearch">{{ __('Reintentar') }}</button>
         </div>
@@ -45,8 +45,8 @@
             type="button"
             :aria-pressed="selected.has(r.item_code)"
             :aria-label="r.item_name"
-            class="group relative flex flex-col overflow-hidden rounded-xl border bg-surface-white text-left transition dark:bg-surface-gray-2"
-            :class="selected.has(r.item_code) ? 'border-outline-green-2 ring-2 ring-outline-green-2' : 'border-outline-gray-2 hover:border-outline-gray-3'"
+            class="group relative flex flex-col overflow-hidden rounded-xl border bg-surface-base text-left transition dark:bg-surface-gray-2"
+            :class="selected.has(r.item_code) ? 'border-outline-green-3 ring-2 ring-outline-green-3' : 'border-outline-gray-2 hover:border-outline-gray-3'"
             @click="toggle(r.item_code)"
           >
             <div class="relative aspect-square w-full bg-surface-gray-2 dark:bg-surface-gray-3">
@@ -66,7 +66,7 @@
               >✓</span>
               <span
                 class="absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
-                :class="r.stock > 0 ? 'text-ink-green-3 bg-surface-green-2' : 'text-ink-red-4 bg-surface-red-1'"
+                :class="r.stock > 0 ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-red-8 bg-surface-red-1'"
               >{{ r.stock }} {{ __('stock') }}</span>
             </div>
             <div class="flex min-h-0 flex-col gap-0.5 p-2">

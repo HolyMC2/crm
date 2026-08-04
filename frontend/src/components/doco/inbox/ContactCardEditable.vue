@@ -22,7 +22,7 @@
           <span class="truncate text-[13.5px] font-semibold text-ink-gray-9">
             {{ card.contact_full_name || displayName || __('Sin nombre') }}
           </span>
-          <span v-if="card.customer" class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[9px] font-semibold text-ink-green-3">
+          <span v-if="card.customer" class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[9px] font-semibold text-ink-green-6">
             {{ __('Cliente') }}
           </span>
         </div>
@@ -87,7 +87,7 @@ const router = useRouter()
 const editOpen = ref(false)
 
 const inputCls =
-  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-white focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
+  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
 
 const card = computed(() => contactCard.data)
 const record = computed(() => card.value?.record || {})
