@@ -73,7 +73,7 @@
             variant="solid"
             theme="red"
             :label="__('Cancel')"
-            class="rounded-lg text-ink-base"
+            class="rounded-lg"
             :disabled="callStatus == 'initiating'"
             @click="cancelCall"
           >
@@ -88,7 +88,7 @@
             variant="solid"
             theme="green"
             :label="__('Accept')"
-            class="rounded-lg text-ink-base"
+            class="rounded-lg"
             :iconLeft="PhoneIcon"
             @click="acceptIncomingCall"
           />
@@ -97,7 +97,7 @@
             variant="solid"
             theme="red"
             :label="__('Reject')"
-            class="rounded-lg text-ink-base"
+            class="rounded-lg"
             @click="rejectIncomingCall"
           >
             <template #prefix>
@@ -132,7 +132,7 @@
       <Button
         variant="solid"
         theme="red"
-        class="!h-6 !w-6 rounded-full rotate-[135deg] text-ink-base"
+        class="!h-6 !w-6 rounded-full rotate-[135deg]"
         :icon="PhoneIcon"
         @click.stop="hangUpCall"
       />
@@ -144,7 +144,7 @@
       <Button
         variant="solid"
         theme="red"
-        class="!h-6 !w-6 rounded-full rotate-[135deg] text-ink-base"
+        class="!h-6 !w-6 rounded-full rotate-[135deg]"
         :icon="PhoneIcon"
         @click.stop="cancelCall"
       />
@@ -153,7 +153,7 @@
       <Button
         variant="solid"
         theme="green"
-        class="pulse relative !h-6 !w-6 rounded-full animate-pulse text-ink-base"
+        class="pulse relative !h-6 !w-6 rounded-full animate-pulse"
         :tooltip="__('Accept Call')"
         :icon="PhoneIcon"
         @click.stop="acceptIncomingCall"
@@ -161,7 +161,7 @@
       <Button
         variant="solid"
         theme="red"
-        class="!h-6 !w-6 rounded-full rotate-[135deg] text-ink-base"
+        class="!h-6 !w-6 rounded-full rotate-[135deg]"
         :tooltip="__('Reject Call')"
         :icon="PhoneIcon"
         @click.stop="rejectIncomingCall"
