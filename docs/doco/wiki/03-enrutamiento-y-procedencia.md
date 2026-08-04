@@ -202,7 +202,7 @@ cambio de esquema.
 
 | Sitio | Cuándo | Formato de `doco_automation_source` |
 |---|---|---|
-| `doco_marketing/.../whatsapp_send_review.py:94-97` | **sólo** si la fila tiene `auto=1` | el `source` de la fila; si viene vacío, `f"WhatsApp Send Review:{template}"` |
+| `doco_marketing/.../whatsapp_send_review.py:99-120` (rama `auto=1` en `:100-102`) | **sólo** si la fila tiene `auto=1` | el `source` de la fila; si viene vacío, `f"WhatsApp Send Review:{template}"` |
 | `taller/taller/services/tracker_notify/__init__.py:306-309` | envío directo, sin encolar | `f"taller.tracker_notify:{status}"` — p. ej. `taller.tracker_notify:Recibido` |
 
 Las filas con `auto=0` —o sea, **todo lo que un humano aprobó**— se sellan como
@@ -220,10 +220,13 @@ Los `source` que llegan al primer sitio los ponen los productores:
 
 ### 5.2 Dos cosas que NO son "Automation" aunque lo parezcan
 
-- **Los chatflows**: `services/chatflow.py:520-521` sella **`Human`** y mete el
-  nombre del flujo en `doco_bot` (`:543-551`). Contraintuitivo, pero coherente
-  con el diseño: `doco_bot` es la dimensión de bot, y `Automation` se reserva
-  para reglas sin conversación. Además, un Chatflow sólo encola con `auto=1` si
+- **Los chatflows**: `services/chatflow.py` no sella procedencia — sus
+  `:520-521` (`_human_attended`) y `:543-551` (`_recently_triggered`) son
+  **lecturas** (filtros para `frappe.db.exists`), no escrituras. Quien sella es
+  la cola al enviar: la fila escenificada lleva `source =
+  chatflow:<flow>:<step>` y `whatsapp_send_review._send` lo convierte en
+  `doco_automation_source` + `doco_bot`/`doco_bot_step` (desde 2026-08-03).
+  Además, un Chatflow sólo encola con `auto=1` si
   tiene `auto_send=1` (`:135`).
 - **Messenger**: `services/dispatch/messenger.py:227-228` sella `Human` sobre
   Messenger Message.

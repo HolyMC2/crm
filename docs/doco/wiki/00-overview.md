@@ -35,7 +35,7 @@ fork instalado sigue viendo "Frappe CRM" en la pantalla de apps
 
 Este fork es **la capa de presentación** de un stack de cuatro apps. La mayoría
 de la lógica de negocio que el usuario percibe como "el CRM" **no está en este
-repo**. La SPA llama 145 endpoints distintos de `doco_marketing` y sólo unos
+repo**. La SPA llama ~150 endpoints distintos (151 medidos 2026-08-03) de `doco_marketing` y sólo unos
 pocos propios.
 
 ```
@@ -61,7 +61,7 @@ pocos propios.
 
 | App | Endpoints distintos llamados desde la SPA | Qué le toca |
 |---|---|---|
-| `doco_marketing` | **145** | Inbox omnicanal, cola de conversaciones, SLA, etiquetas, snooze, presencia, catálogo, campañas, chatflows, cadencias, social (calendario/menciones/evergreen), reportes, scoring, workload, coaching, dedupe, push, telemetría, review queue |
+| `doco_marketing` | **~150** | Inbox omnicanal, cola de conversaciones, SLA, etiquetas, snooze, presencia, catálogo, campañas, chatflows, cadencias, social (calendario/menciones/evergreen), reportes, scoring, workload, coaching, dedupe, push, telemetría, review queue |
 | `crm` (este repo) | ~35 | Telefonía Twilio/SIP, permisos y jerarquía, creación de mensajes WhatsApp, plantillas, procedencia, enrutamiento entrante, doctypes CRM Lead/Deal/Call Log |
 | `taller` | 7 | Órdenes de reparación dentro del deal, ticket de impresión, config de vertical, documento de facturación |
 | `doco` | 6 | Sincronía de contactos del deal a Customer de ERPNext, defaults de dirección de la compañía, certificado y firma de QZ Tray |
