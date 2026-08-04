@@ -38,13 +38,13 @@
 
         <!-- add form -->
         <div v-if="showAdd" class="mb-3 grid grid-cols-[1fr_1fr_120px_1fr_70px_auto] items-center gap-2 rounded-[10px] border border-outline-gray-2 p-3">
-          <input v-model="form.rule_name" :placeholder="__('Nombre')" class="rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
-          <input v-model="form.field" :placeholder="__('Campo (p.ej. source)')" class="rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
-          <select v-model="form.operator" class="rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px]">
+          <input v-model="form.rule_name" :placeholder="__('Nombre')" class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
+          <input v-model="form.field" :placeholder="__('Campo (p.ej. source)')" class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
+          <select v-model="form.operator" class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px]">
             <option v-for="o in operators" :key="o" :value="o">{{ o }}</option>
           </select>
-          <input v-model="form.value" :placeholder="__('Valor')" class="rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
-          <input v-model.number="form.points" type="number" :placeholder="__('Pts')" class="rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
+          <input v-model="form.value" :placeholder="__('Valor')" class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
+          <input v-model.number="form.points" type="number" :placeholder="__('Pts')" class="fld rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12px] focus:outline-none" />
           <button class="rounded-md px-2.5 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="!form.rule_name.trim() || !form.field.trim()" @click="addRule">
             {{ __('Crear') }}
           </button>
