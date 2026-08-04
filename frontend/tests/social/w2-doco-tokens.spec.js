@@ -27,11 +27,20 @@
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
+import os from 'node:os'
 import { login, collectErrors, evidenceDir } from './helpers.js'
 
-const OUT = path.join(evidenceDir, 'w2-doco')
-// Created lazily, never at module scope: Playwright wipes `outputDir`
-// (test-results/) when the run starts, which would delete a dir made at import.
+// helpers' evidenceDir defaults INSIDE test-results/, which is Playwright's
+// `outputDir` and gets wiped — at run start and again between spec files, so a
+// multi-file run loses screenshots mid-test and then fails on the write. The
+// fallback also lands outside the repo, so an unconfigured run cannot drop
+// untracked files into a working tree five workers are sharing.
+// W6_EVIDENCE_DIR still wins when set explicitly.
+const OUT = path.join(
+  process.env.W6_EVIDENCE_DIR ? evidenceDir : path.join(os.tmpdir(), 'crm-test-evidence'),
+  'w2-doco',
+)
+// Created lazily, never at module scope, for the same reason.
 const outDir = () => (fs.mkdirSync(OUT, { recursive: true }), OUT)
 
 const THEMES = ['light', 'dark']
