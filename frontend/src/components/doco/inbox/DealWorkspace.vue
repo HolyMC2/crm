@@ -12,7 +12,7 @@
       <!-- 👥 collision strip (spec 2.4): who else is in this conversation NOW -->
       <div
         v-if="activePresence.length"
-        class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-7"
+        class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-9"
         role="status"
       >
         <span v-for="p in activePresence" :key="p.user" class="inline-flex items-center gap-1">

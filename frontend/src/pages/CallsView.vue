@@ -142,7 +142,7 @@ function fmtDur(s) {
 }
 function dirChip(r) {
   if (MISSED.includes(r.status)) return 'text-ink-red-8 bg-surface-red-1'
-  return r.type === 'Outgoing' ? 'text-ink-green-8 bg-surface-green-2' : 'text-ink-blue-7 bg-surface-blue-1'
+  return r.type === 'Outgoing' ? 'text-ink-green-8 bg-surface-green-2' : 'text-ink-blue-9 bg-surface-blue-1'
 }
 function outcomeChip(status) {
   if (status === 'Completed') return 'text-ink-green-8 bg-surface-green-2'

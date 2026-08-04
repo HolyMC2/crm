@@ -59,7 +59,7 @@
                 v-for="s in sortOptions"
                 :key="s.id"
                 class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                :class="sort === s.id ? 'bg-surface-blue-2 text-ink-blue-7' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+                :class="sort === s.id ? 'bg-surface-blue-2 text-ink-blue-9' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
                 @click="setSort(s.id)"
               >
                 {{ s.label }}
@@ -94,15 +94,15 @@
             <div class="text-[13px] text-ink-gray-8">{{ cm.message || __('(sin texto)') }}</div>
 
             <div v-if="cm.reply_text" class="mt-2 rounded-lg border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8">
-              <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-7">
+              <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-9">
                 {{ cm.reply_by || __('Tú') }}<span v-if="cm.reply_at" class="font-normal text-ink-gray-5"> · {{ timeAgo(cm.reply_at) }}</span>
               </div>
               {{ cm.reply_text }}
             </div>
 
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11.5px]">
-              <button class="font-semibold text-ink-blue-7 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
-              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-7 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
+              <button class="font-semibold text-ink-blue-9 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
+              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-9 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
               <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">
                 💬 {{ cm.channel === 'IG' ? __('Continuar en DM') : __('Continuar en Messenger') }}
               </button>
@@ -121,7 +121,7 @@
             </div>
 
             <div v-if="replyingTo === cm.name" class="mt-2">
-              <div class="mb-1 text-[10px] font-semibold" :class="mode === 'private' ? 'text-ink-blue-7' : 'text-ink-gray-5'">
+              <div class="mb-1 text-[10px] font-semibold" :class="mode === 'private' ? 'text-ink-blue-9' : 'text-ink-gray-5'">
                 {{ mode === 'private' ? __('Mensaje privado al autor') : __('Respuesta pública') }}
               </div>
               <div class="flex items-end gap-2">

@@ -32,7 +32,7 @@
       </div>
       <router-link
         to="/social"
-        class="text-[12px] font-semibold text-ink-blue-7 hover:underline"
+        class="text-[12px] font-semibold text-ink-blue-9 hover:underline"
         :title="__('Ir al calendario social')"
       >
         {{ __('Ir al calendario →') }}
@@ -122,7 +122,7 @@
                 {{ previews[row.name].caption }}
               </div>
             </div>
-            <span class="flex-none text-[11px] font-semibold text-ink-blue-7">→</span>
+            <span class="flex-none text-[11px] font-semibold text-ink-blue-9">→</span>
           </a>
 
           <!-- what they wrote -->
@@ -142,7 +142,7 @@
               :href="row.permalink"
               target="_blank"
               rel="noopener"
-              class="text-[11.5px] font-semibold text-ink-blue-7 hover:underline"
+              class="text-[11.5px] font-semibold text-ink-blue-9 hover:underline"
             >{{ __('Ver en la red →') }}</a>
             <span v-if="isManager && shop === '' && row.shop" class="text-[11.5px] text-ink-gray-5">· {{ shopLabel(row.shop) }}</span>
             <span v-if="row.status === 'Atendido' && row.replied_at" class="text-[11.5px] text-ink-green-7">
@@ -285,7 +285,7 @@ function typeLabel(t) {
 }
 function statusChip(s) {
   return {
-    Nuevo: 'bg-surface-blue-2 text-ink-blue-7',
+    Nuevo: 'bg-surface-blue-2 text-ink-blue-9',
     Atendido: 'bg-surface-green-2 text-ink-green-8',
     Descartado: 'bg-surface-gray-2 text-ink-gray-6',
   }[s] || 'bg-surface-gray-2 text-ink-gray-6'

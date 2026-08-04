@@ -51,7 +51,7 @@
           <div class="mt-1 flex items-center gap-2 text-[11px] text-ink-gray-5">
             <span>{{ f.trigger_type === 'Inbound Keyword' ? `🔑 «${f.trigger_keyword || '—'}»` : __('Manual') }}</span>
             <span>· {{ f.steps_count }} {{ __('pasos') }}</span>
-            <span v-if="f.active_runs" class="rounded bg-surface-blue-1 px-1.5 py-[1px] font-semibold text-ink-blue-7">
+            <span v-if="f.active_runs" class="rounded bg-surface-blue-1 px-1.5 py-[1px] font-semibold text-ink-blue-9">
               {{ f.active_runs }} {{ __('en curso') }}
             </span>
           </div>
@@ -99,7 +99,7 @@
           <!-- live-runs banner -->
           <div
             v-if="activeRuns > 0"
-            class="mb-4 flex max-w-[640px] items-center gap-3 rounded-[10px] border border-outline-blue-3 bg-surface-blue-1 px-3 py-2 text-[12px] text-ink-blue-7"
+            class="mb-4 flex max-w-[640px] items-center gap-3 rounded-[10px] border border-outline-blue-3 bg-surface-blue-1 px-3 py-2 text-[12px] text-ink-blue-9"
           >
             <span class="flex-1">
               {{ __('{0} conversación(es) siguen este flujo — los pasos están congelados hasta que terminen.', [activeRuns]) }}

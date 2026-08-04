@@ -62,7 +62,7 @@
           <a
             :href="`/taller/orders/${encodeURIComponent(ro.name)}`"
             target="_blank"
-            class="text-sm-semibold text-ink-blue-7 hover:underline"
+            class="text-sm-semibold text-ink-blue-9 hover:underline"
           >
             {{ ro.name }}
           </a>
@@ -349,7 +349,7 @@
                 v-if="ro.quotation"
                 :href="`/app/quotation/${encodeURIComponent(ro.quotation)}`"
                 target="_blank"
-                class="text-ink-blue-7 hover:underline"
+                class="text-ink-blue-9 hover:underline"
               >
                 {{ __('Cotización') }}: {{ ro.quotation }}
               </a>
@@ -357,7 +357,7 @@
                 v-if="ro.sales_order"
                 :href="`/app/sales-order/${encodeURIComponent(ro.sales_order)}`"
                 target="_blank"
-                class="text-ink-blue-7 hover:underline"
+                class="text-ink-blue-9 hover:underline"
               >
                 {{ __('SO') }}: {{ ro.sales_order }}
               </a>
@@ -366,7 +366,7 @@
                 :key="`${inv.invoice_type}-${inv.invoice}`"
                 :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
                 target="_blank"
-                class="text-ink-blue-7 hover:underline"
+                class="text-ink-blue-9 hover:underline"
               >
                 {{ inv.invoice_type === 'POS Invoice' ? __('POS') : __('Factura') }}: {{ inv.invoice }}
               </a>

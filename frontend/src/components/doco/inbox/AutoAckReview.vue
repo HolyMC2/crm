@@ -36,9 +36,9 @@
           :title="__('Abrir la conversación para revisar con contexto completo')"
           @click="openConvo(r)"
         >
-          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-7">
+          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-9">
             {{ r.contact_name || r.to || '—' }}
-            <span class="text-[10px] font-normal text-ink-blue-7 opacity-0 group-hover:opacity-100">↗ {{ __('abrir') }}</span>
+            <span class="text-[10px] font-normal text-ink-blue-9 opacity-0 group-hover:opacity-100">↗ {{ __('abrir') }}</span>
           </div>
         </button>
         <span class="flex-none text-[10px] font-semibold text-ink-amber-7" :title="__('Esperando desde el entrante')">

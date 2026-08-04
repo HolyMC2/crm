@@ -19,7 +19,7 @@
       <!-- attribution: the ad / m.me link / CTWA that drove this conversation -->
       <div
         v-if="m.referral_ref || m.referral_source"
-        class="mb-0.5 inline-flex items-center gap-1 rounded-full bg-surface-blue-1 px-2 py-0.5 text-[10px] font-semibold text-ink-blue-7"
+        class="mb-0.5 inline-flex items-center gap-1 rounded-full bg-surface-blue-1 px-2 py-0.5 text-[10px] font-semibold text-ink-blue-9"
         :title="__('Origen del mensaje (anuncio / enlace)')"
       >
         📣 {{ __('vino de') }}: {{ m.referral_ref || m.referral_source }}
@@ -44,7 +44,7 @@
           target="_blank"
           rel="noopener"
           class="block break-all underline"
-          :class="m.direction === 'out' ? 'text-white' : 'text-ink-blue-7 dark:text-ink-blue-6'"
+          :class="m.direction === 'out' ? 'text-white' : 'text-ink-blue-9'"
         >
           {{ attachLabel(m.content_type) }}
         </a>

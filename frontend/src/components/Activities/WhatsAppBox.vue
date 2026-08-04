@@ -452,7 +452,7 @@ const modes = [
     value: 'comment',
     icon: '💬',
     label: 'Internal',
-    activeClass: 'bg-surface-blue-2 text-ink-blue-7',
+    activeClass: 'bg-surface-blue-2 text-ink-blue-9',
   },
 ]
 

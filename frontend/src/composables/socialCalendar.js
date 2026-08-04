@@ -38,7 +38,7 @@ export const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉
 // those stay dark: overrides.
 // Temporada already carries its own dark: pair and is correct.
 export const PILLARS = [
-  { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-7 dark:text-ink-blue-8' },
+  { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8' },
   { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-2 text-ink-violet-8' },
   { kind: 'Temporada', emoji: '🎉', chip: 'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200' },
   { kind: 'Noticia', emoji: '📣', chip: 'bg-surface-red-2 text-ink-red-6 dark:text-ink-red-8' },
@@ -90,8 +90,8 @@ export function chip(status) {
   return {
     Draft: 'bg-surface-gray-2 text-ink-gray-6',
     'Pending Approval': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
-    Scheduled: 'bg-surface-blue-2 text-ink-blue-7',
-    Publishing: 'bg-surface-blue-2 text-ink-blue-7',
+    Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
+    Publishing: 'bg-surface-blue-2 text-ink-blue-9',
     Published: 'bg-surface-green-2 text-ink-green-8',
     'Partially Published': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
     Failed: 'bg-surface-red-1 text-ink-red-7',

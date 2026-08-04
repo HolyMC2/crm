@@ -70,7 +70,7 @@
           <button
             v-else-if="error"
             type="button"
-            class="press w-full py-4 text-center text-[12.5px] font-medium text-ink-blue-7 hover:underline"
+            class="press w-full py-4 text-center text-[12.5px] font-medium text-ink-blue-9 hover:underline"
             @click="reload"
           >
             {{ __('No se pudo cargar — reintentar') }}

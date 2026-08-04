@@ -76,7 +76,7 @@
           <div class="flex items-start justify-between gap-2">
             <span class="flex-none pt-1 text-ink-gray-5">{{ __('Etiquetas') }}</span>
             <div class="flex flex-1 flex-wrap justify-end gap-1">
-              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-7">
+              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-9">
                 {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-7" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
               </span>
               <input

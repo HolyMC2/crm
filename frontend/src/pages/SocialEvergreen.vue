@@ -34,7 +34,7 @@
       </div>
       <router-link
         to="/social"
-        class="text-[12px] font-semibold text-ink-blue-7 hover:underline"
+        class="text-[12px] font-semibold text-ink-blue-9 hover:underline"
         :title="__('Los borradores reciclados aparecen en Social → Por aprobar')"
       >
         {{ __('Ir al calendario →') }}
@@ -172,7 +172,7 @@ function chip(status) {
   return {
     Published: 'bg-surface-green-2 text-ink-green-8',
     'Partially Published': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
-    Scheduled: 'bg-surface-blue-2 text-ink-blue-7',
+    Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
     'Pending Approval': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
     Draft: 'bg-surface-gray-2 text-ink-gray-6',
   }[status] || 'bg-surface-gray-2 text-ink-gray-6'

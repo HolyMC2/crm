@@ -24,7 +24,7 @@
       <span
         v-if="fbOnly"
         data-testid="fb-only-badge"
-        class="inline-flex flex-none items-center gap-1 rounded-full bg-surface-blue-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-blue-7"
+        class="inline-flex flex-none items-center gap-1 rounded-full bg-surface-blue-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-blue-9"
         :title="__('Instagram se suma cuando Meta apruebe la app')"
       >🟦 {{ __('Solo datos de Facebook') }}</span>
     </div>

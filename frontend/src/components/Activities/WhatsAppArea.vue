@@ -98,7 +98,7 @@
         >
           <div class="mb-1 flex flex-wrap items-center gap-2">
             <span
-              class="rounded bg-surface-blue-2 px-1.5 py-0.5 text-2xs font-semibold uppercase text-ink-blue-7"
+              class="rounded bg-surface-blue-2 px-1.5 py-0.5 text-2xs font-semibold uppercase text-ink-blue-9"
             >
               {{ __('Internal') }}
             </span>

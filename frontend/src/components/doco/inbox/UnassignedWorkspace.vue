@@ -60,7 +60,7 @@
       </button>
       <button
         v-else
-        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-4 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-7 hover:bg-surface-blue-2 disabled:opacity-50"
+        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-4 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-9 hover:bg-surface-blue-2 disabled:opacity-50"
         :disabled="busy"
         :aria-label="__('Desarchivar')"
         @click="onUnarchive"
@@ -379,7 +379,7 @@ function docBadge(dt) {
   // frappe-ui semantic tokens — auto dark-safe (was fixed light-mode hex)
   if (dt === 'Contact') return 'bg-surface-violet-2 text-ink-violet-8'
   if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-8'
-  return 'bg-surface-blue-1 text-ink-blue-7'
+  return 'bg-surface-blue-1 text-ink-blue-9'
 }
 
 // Free Messenger reply to an orphan PSID (no assignment required).

@@ -30,7 +30,7 @@
         </a>
         <div
           v-for="c in scheduledMeta" :key="'sch-' + c.channel"
-          class="flex items-center gap-2 rounded-md bg-surface-blue-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-blue-7"
+          class="flex items-center gap-2 rounded-md bg-surface-blue-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-blue-9"
         >
           <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
           <span>{{ __('Programado en Meta') }} · {{ c.channel }}</span>

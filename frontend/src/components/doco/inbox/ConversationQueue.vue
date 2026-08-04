@@ -258,9 +258,9 @@
       <!-- "Comentarios": comments on our Facebook posts. In the Comentarios TAB the
         status chips (Nuevos/Respondidos/Todos) let you review answered ones too. -->
       <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentGroups.length)" class="mb-1.5">
-        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-7">
+        <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-9">
           <LucideFacebook class="h-3 w-3" /> {{ __('Comentarios') }}
-          <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-7">{{ commentGroups.length }}</span>
+          <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-9">{{ commentGroups.length }}</span>
         </div>
         <!-- status sub-filter — answered comments stay reviewable, never lost -->
         <div v-if="inboxTab === 'comments'" class="mb-1.5 flex gap-1.5 px-1.5">
@@ -268,7 +268,7 @@
             v-for="s in commentStatusChips"
             :key="s.id"
             class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-            :class="commentStatus === s.id ? 'bg-surface-blue-2 text-ink-blue-7' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="commentStatus === s.id ? 'bg-surface-blue-2 text-ink-blue-9' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
             :aria-pressed="commentStatus === s.id"
             @click="setCommentStatus(s.id)"
           >

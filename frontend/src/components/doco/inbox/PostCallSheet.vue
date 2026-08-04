@@ -57,7 +57,7 @@
           class="press inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12.5px] font-medium"
           :class="
             outcome === o.value
-              ? 'border-outline-blue-4 bg-surface-blue-2 text-ink-blue-7'
+              ? 'border-outline-blue-4 bg-surface-blue-2 text-ink-blue-9'
               : 'border-outline-gray-2 bg-surface-base text-ink-gray-7 hover:bg-surface-gray-2'
           "
           @click="outcome = o.value"
@@ -83,7 +83,7 @@
         class="press mt-2.5 flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-[12.5px] font-medium"
         :class="
           createTask
-            ? 'border-outline-blue-4 bg-surface-blue-2 text-ink-blue-7'
+            ? 'border-outline-blue-4 bg-surface-blue-2 text-ink-blue-9'
             : 'border-outline-gray-2 bg-surface-base text-ink-gray-7 hover:bg-surface-gray-2'
         "
         role="switch"

@@ -16,7 +16,7 @@
   <div v-if="chip" class="flex-none px-3 py-1.5">
     <button
       type="button"
-      class="press inline-flex items-center gap-1.5 rounded-full border border-outline-blue-3 bg-surface-blue-1 px-3 py-1 text-[12px] font-semibold text-ink-blue-7 hover:bg-surface-blue-2"
+      class="press inline-flex items-center gap-1.5 rounded-full border border-outline-blue-3 bg-surface-blue-1 px-3 py-1 text-[12px] font-semibold text-ink-blue-9 hover:bg-surface-blue-2"
       :title="label"
       :aria-label="label"
       @click="onTap"
