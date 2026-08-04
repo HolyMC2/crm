@@ -59,7 +59,9 @@
             @click="openNoteModal"
           />
           <Button
-            class="rounded-full bg-surface-red-7 hover:bg-surface-red-8 rotate-[135deg] text-ink-base"
+            variant="solid"
+            theme="red"
+            class="rounded-full rotate-[135deg]"
             :tooltip="__('Hang Up')"
             :icon="PhoneIcon"
             @click="hangUpCall"
