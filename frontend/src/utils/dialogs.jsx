@@ -12,15 +12,19 @@ export let Dialogs = {
   render() {
     return dialogs.value.map((dialog) => (
       <Dialog
-        options={dialog}
-        modelValue={dialog.show}
-        onUpdate:modelValue={(val) => {
+        title={dialog.title}
+        size={dialog.size}
+        icon={dialog.icon}
+        position={dialog.position}
+        actions={dialog.actions}
+        open={dialog.show}
+        onUpdate:open={(val) => {
           dialog.show = val
           if (!val) dialog.onClose?.()
         }}
       >
         {{
-          'body-content': () => {
+          default: () => {
             return [
               dialog.message && (
                 <p class="text-p-base text-ink-gray-7">{dialog.message}</p>

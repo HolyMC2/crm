@@ -10,13 +10,15 @@ from frappe import _
 # the system-level assignment, so bind directly to _add.
 from frappe.desk.form.assign_to import _add as assign
 from frappe.model.document import Document
-from frappe.utils import has_gravatar, validate_email_address
+from frappe.utils import validate_email_address
 
 from crm.fcrm.doctype.crm_service_level_agreement.utils import get_sla
 from crm.fcrm.doctype.crm_status_change_log.crm_status_change_log import (
 	add_status_change_log,
 )
 from crm.fcrm.doctype.utils import add_or_remove_lost_reason_section_in_sidepanel
+
+LEAD_DEAL_FIELD_MAP = {"lead_owner": "deal_owner"}
 
 
 class CRMLead(Document):
@@ -76,6 +78,12 @@ class CRMLead(Document):
 		website: DF.Data | None
 	# end: auto-generated types
 
+	def before_insert(self):
+		# apply CRM enrichment (source/contact) when created via a web form
+		from crm.api.form import enrich_form_submission
+
+		enrich_form_submission(self)
+
 	def before_validate(self):
 		self.set_sla()
 
@@ -97,6 +105,11 @@ class CRMLead(Document):
 			if self.lead_owner != frappe.session.user:
 				self.share_with_agent(self.lead_owner)
 			self.assign_agent(self.lead_owner)
+
+		# Auto-enrich a new Lead from its website (best-effort, background job).
+		from crm.domain_enrichment.tasks import auto_enrich_on_create
+
+		auto_enrich_on_create(self)
 
 	def before_save(self):
 		self.apply_sla()
@@ -143,9 +156,6 @@ class CRMLead(Document):
 
 			if self.email == self.lead_owner:
 				frappe.throw(_("Lead Owner cannot be same as the Lead Email Address"))
-
-			if self.is_new() or not self.image:
-				self.image = has_gravatar(self.email)
 
 	def validate_lost_reason(self):
 		"""
@@ -250,6 +260,7 @@ class CRMLead(Document):
 		)
 		if existing_organization:
 			self.db_set("organization", existing_organization)
+			self.copy_enrichment_from_organization()
 			return existing_organization
 
 		organization = frappe.new_doc("CRM Organization")
@@ -264,6 +275,34 @@ class CRMLead(Document):
 		)
 		organization.insert(ignore_permissions=True)
 		return organization.name
+
+	def copy_enrichment_from_organization(self):
+		"""Fill-empty copy of a linked enriched Organization's fields onto this Lead.
+
+		Called when an existing (already-enriched) CRM Organization is linked. The
+		shared helper mutates ``self`` in place (fill-empty, user data preserved);
+		any filled native fields are then persisted with ``db_set`` to match this
+		branch's already-saved flow. Best-effort -- never blocks the Lead save.
+		"""
+		from crm.domain_enrichment.cross_record import copy_enrichment_from_organization
+
+		enriched_fields = (
+			"organization_logo",
+			"company_description",
+			"industry",
+			"linkedin",
+			"twitter",
+			"facebook",
+		)
+		before = {f: self.get(f) for f in enriched_fields if self.meta.has_field(f)}
+
+		filled = copy_enrichment_from_organization(self)
+
+		for fieldname, old_value in before.items():
+			new_value = self.get(fieldname)
+			if new_value != old_value:
+				self.db_set(fieldname, new_value)
+		return filled
 
 	def update_lead_contact(self, contact):
 		contact = frappe.get_cached_doc("Contact", contact)
@@ -300,10 +339,6 @@ class CRMLead(Document):
 
 	def create_deal(self, contact, organization, deal=None):
 		new_deal = frappe.new_doc("CRM Deal")
-
-		lead_deal_map = {
-			"lead_owner": "deal_owner",
-		}
 
 		restricted_fieldtypes = [
 			"Tab Break",
@@ -342,11 +377,9 @@ class CRMLead(Document):
 			if field.fieldname in restricted_map_fields:
 				continue
 
-			fieldname = field.fieldname
-			if field.fieldname in lead_deal_map:
-				fieldname = lead_deal_map[field.fieldname]
+			fieldname = get_deal_fieldname(field, new_deal.meta)
 
-			if hasattr(new_deal, fieldname):
+			if fieldname:
 				if fieldname == "organization":
 					new_deal.update({fieldname: organization})
 				else:
@@ -425,7 +458,7 @@ class CRMLead(Document):
 	def default_list_data():
 		columns = [
 			{
-				"label": "Name",
+				"label": "Full Name",
 				"type": "Data",
 				"key": "lead_name",
 				"width": "12rem",
@@ -520,3 +553,38 @@ def convert_to_deal(
 	organization = lead.create_organization(existing_organization)
 	_deal = lead.create_deal(contact, organization, deal)
 	return _deal
+
+
+def get_deal_fieldname(field, deal_meta):
+	mapped_fieldname = LEAD_DEAL_FIELD_MAP.get(field.fieldname)
+	if mapped_fieldname:
+		return mapped_fieldname if deal_meta.has_field(mapped_fieldname) else None
+	if deal_meta.has_field(field.fieldname):
+		return field.fieldname
+	if not is_custom_field(field):
+		return None
+	return get_matching_custom_deal_field(field, deal_meta)
+
+
+def get_matching_custom_deal_field(field, deal_meta):
+	matches = [
+		deal_field.fieldname for deal_field in deal_meta.fields if is_matching_custom_field(field, deal_field)
+	]
+	return matches[0] if len(matches) == 1 else None
+
+
+def is_matching_custom_field(lead_field, deal_field):
+	return (
+		is_custom_field(deal_field)
+		and lead_field.label == deal_field.label
+		and lead_field.fieldtype == deal_field.fieldtype
+	)
+
+
+def is_custom_field(field):
+	return bool(
+		field.get("is_custom_field")
+		or field.get("custom")
+		or (field.fieldname or "").startswith("custom_")
+		or field.name == f"{field.parent}-{field.fieldname}"
+	)

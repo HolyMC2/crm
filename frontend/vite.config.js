@@ -109,6 +109,24 @@ export default defineConfig(async ({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, 'src'),
       },
+      // the editor packages must resolve to one copy each: tiptap imports
+      // `@tiptap/pm/model` while prosemirror-state/transform/tables import bare
+      // `prosemirror-model`, so a nested install of either throws "multiple
+      // versions of prosemirror-model were loaded" on mention insert. Unlike
+      // optimizeDeps (dev-only) this also applies to the production build.
+      dedupe: [
+        'vue',
+        'vue-router',
+        'frappe-ui',
+        'dompurify',
+        '@tiptap/core',
+        '@tiptap/pm',
+        '@tiptap/vue-3',
+        'prosemirror-model',
+        'prosemirror-state',
+        'prosemirror-view',
+        'prosemirror-transform',
+      ],
     },
     optimizeDeps: {
       include: [
@@ -122,7 +140,9 @@ export default defineConfig(async ({ mode }) => {
     },
     server: {
       fs: {
-        allow: [path.resolve(__dirname, '..')],
+        // allow the bench `apps/` dir so Vite can serve a linked local frappe-ui
+        // checkout when one exists in a sibling app repo
+        allow: [path.resolve(__dirname, '../..')],
       },
     },
   }
@@ -183,6 +203,19 @@ function getAliases(config) {
       '../frappe-ui/src/style.css',
     ),
     'frappe-ui/frappe': path.resolve(__dirname, '../frappe-ui/frappe/index.js'),
+    // subpath entries must precede the bare `frappe-ui` key: a plain string alias
+    // matches by prefix, so without these subpaths would rewrite under
+    // `.../src/index.ts`.
+    'frappe-ui/icons': path.resolve(__dirname, '../frappe-ui/icons/index.ts'),
+    'frappe-ui/editor': path.resolve(
+      __dirname,
+      '../frappe-ui/src/molecules/editor/index.ts',
+    ),
+    'frappe-ui/editor-style.css': path.resolve(
+      __dirname,
+      '../frappe-ui/src/molecules/editor/style.css',
+    ),
+    'frappe-ui/internals': path.resolve(__dirname, '../frappe-ui/internals.ts'),
     'frappe-ui': path.resolve(__dirname, '../frappe-ui/src/index.ts'),
   }
 }
