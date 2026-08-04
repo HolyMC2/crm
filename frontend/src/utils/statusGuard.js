@@ -6,6 +6,20 @@ import { createDialog } from '@/utils/dialogs'
 // pickers — every UI path that sets one of them must pass through
 // guardStatusChange so a human explicitly confirms first.
 export const GUARDED_STATUSES = ['Completado', 'Entregado']
+// Rename-tolerant matching: a cosmetic Desk rename («Entregado ✅», «Entregado
+// al cliente») must NOT silently drop the guard. Fold accents/case and also
+// stem-match — over-guarding just shows one extra confirm, which is the safe
+// failure direction for a customer-facing auto-send.
+const GUARD_STEMS = ['entregad', 'completad', 'deliver', 'complet']
+const fold = (s) =>
+  String(s || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+const isGuarded = (status) => {
+  const f = fold(status)
+  return GUARDED_STATUSES.some((g) => fold(g) === f) || GUARD_STEMS.some((st) => f.includes(st))
+}
 
 // Wrap a status change: guarded statuses get an explicit dialog with TWO ways
 // through — "Cambiar y avisar" (normal path, auto-sends fire) and, when the
@@ -14,7 +28,7 @@ export const GUARDED_STATUSES = ['Completado', 'Entregado']
 // through. Resolves 'changed' | 'silent' | false (cancelled) — callers that
 // toast/refresh on success must await the outcome, not the call.
 export function guardStatusChange(status, onConfirm, { onSilent } = {}) {
-  if (!GUARDED_STATUSES.includes(status)) return Promise.resolve(onConfirm()).then(() => 'changed')
+  if (!isGuarded(status)) return Promise.resolve(onConfirm()).then(() => 'changed')
   return new Promise((resolve, reject) => {
     let acted = false
     const run = (fn, outcome) => async (close) => {

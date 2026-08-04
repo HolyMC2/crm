@@ -17,8 +17,8 @@
       ref="inputEl"
       v-model="query"
       class="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
-      :aria-label="__('Buscar en la conversación')"
-      :placeholder="__('Buscar en la conversación…')"
+      :aria-label="__('Buscar en la conversación (solo mensajes cargados)')"
+      :placeholder="__('Buscar en lo cargado…')"
       @keydown.enter.prevent="go(1)"
       @keydown.esc.prevent="close"
     />

@@ -122,8 +122,7 @@ def _normalize_e164(number: str, default_country_code: str = "52") -> str:
 		return number
 	# A SIP-Domain call passes `To` as a full URI (sip:5512345678@host:5060);
 	# strip the scheme and everything from '@' on, else the host/port digits
-	# get merged into the dialed number. Works today only because the current
-	# SIP host has no digits — a host rename or an explicit :port would misdial.
+	# would get merged into the dialed number.
 	s = str(number).strip()
 	for scheme in ("sip:", "sips:", "tel:"):
 		if s.lower().startswith(scheme):

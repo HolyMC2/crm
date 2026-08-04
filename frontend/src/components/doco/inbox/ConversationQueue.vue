@@ -26,6 +26,26 @@
             <LucideVolume2 v-if="soundEnabled" class="h-4 w-4" />
             <LucideVolumeX v-else class="h-4 w-4" />
           </button>
+          <!-- Web Push toggle (spec 1.1) — was mobile-sidebar-only; desktop operators
+               couldn't subscribe at all. Hidden when unsupported/unconfigured. -->
+          <button
+            v-if="!['unsupported', 'unconfigured'].includes(pushState)"
+            :class="pushState === 'on' ? 'text-ink-green-3' : 'text-ink-gray-4'"
+            :disabled="pushBusy || pushState === 'denied'"
+            :title="
+              pushState === 'denied'
+                ? __('Notificaciones bloqueadas en el navegador')
+                : pushState === 'on'
+                  ? __('Notificaciones push activadas')
+                  : __('Activar notificaciones push')
+            "
+            :aria-label="__('Notificaciones push')"
+            :aria-pressed="pushState === 'on'"
+            @click="togglePush"
+          >
+            <LucideBellRing v-if="pushState === 'on'" class="h-4 w-4" />
+            <LucideBellOff v-else class="h-4 w-4" />
+          </button>
           <span
             class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
             :class="unattendedTotal ? 'text-ink-amber-3 bg-surface-amber-2' : 'text-ink-green-3 bg-surface-green-2'"
@@ -516,6 +536,7 @@ import LucideVolumeX from '~icons/lucide/volume-x'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
 import { statusesStore } from '@/stores/statuses'
 import { soundEnabled, toggleSound } from '@/composables/notificationSound'
+import { pushState, pushBusy, refreshPushState, enablePush, disablePush } from '@/composables/push'
 import { isMobile } from '@/composables/breakpoint'
 import { formatMoney } from '@/composables/crmFormat'
 import DealModal from '@/components/Modals/DealModal.vue'
@@ -844,6 +865,13 @@ function onGlobalKeydown(e) {
 }
 onMounted(() => document.addEventListener('keydown', onGlobalKeydown))
 onBeforeUnmount(() => document.removeEventListener('keydown', onGlobalKeydown))
+
+// Web Push (desktop surface — same flow as MobileSidebar)
+onMounted(refreshPushState)
+function togglePush() {
+  if (pushState.value === 'on') disablePush()
+  else enablePush() // user gesture — permission prompt allowed here
+}
 
 // Compact "time waited" for the response-SLA chip: 45s / 12m / 3h / 5d.
 function formatWaiting(secs) {

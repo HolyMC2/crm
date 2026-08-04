@@ -5,11 +5,28 @@
 // plays a confirmation ping.
 import { ref } from 'vue'
 
-const STORAGE_KEY = 'inbox_sound_enabled'
+// Per-user key: shared machines (the shop counter) must not leak one operator's
+// sound preference to the next login. user_id cookie is set by Frappe on login.
+function currentUser() {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)user_id=([^;]*)/)
+    return m ? decodeURIComponent(m[1]) : 'guest'
+  } catch {
+    return 'guest'
+  }
+}
+const LEGACY_KEY = 'inbox_sound_enabled'
+const STORAGE_KEY = `${LEGACY_KEY}:${currentUser()}`
 
-export const soundEnabled = ref(
-  typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) === '1',
-)
+function initialEnabled() {
+  if (typeof localStorage === 'undefined') return false
+  const v = localStorage.getItem(STORAGE_KEY)
+  if (v !== null) return v === '1'
+  // one-time migration from the pre-namespaced key
+  return localStorage.getItem(LEGACY_KEY) === '1'
+}
+
+export const soundEnabled = ref(initialEnabled())
 
 let audioCtx = null
 function ctx() {
