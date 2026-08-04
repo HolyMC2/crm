@@ -17,12 +17,24 @@
 //      in LIGHT mode, where everyone was looking.
 //
 //   2. `bg-surface-gray-10 text-ink-base` is CORRECT in both themes and must not
-//      be "fixed" back to a literal white. The gray ramp INVERTS between themes
+//      be "fixed" to a literal white. The gray ramp INVERTS between themes
 //      (surface-gray-10 is near-black in light, near-white in dark) and ink-base
-//      tracks it. The pre-migration `ink-white` was literally white in both, so
-//      in dark it was white-on-near-white — 1.06:1, an invisible label. That is
-//      why this file asserts a contrast FLOOR rather than a colour: a future
-//      worker reverting to white would pass a colour check and fail a human.
+//      tracks it: 17.91 light, 16.86 dark. A literal `text-white` there measures
+//      1.06 in dark — white on a near-white chip, an invisible label. So this
+//      file asserts a contrast FLOOR rather than a colour.
+//
+//      ⚠ The hazard here is a DOC, not the history. Cookbook §2.6 states that v1's
+//      `ink-white` was `neutral/white` in dark, making the rename to `ink-base` a
+//      "complete inversion" and the single largest remaining risk. That is a
+//      misreading of its own source: 0.1.261's colors.json maps
+//      themedVariables.dark.ink.white to `darkMode/gray/900` = #0F0F0F, near-black,
+//      already theme-aware exactly as ink-base is. The rename PRESERVED behaviour;
+//      it neither broke nor fixed anything at these sites.
+//
+//      The guard still earns its place, because anyone acting on §2.6 would
+//      conclude these chips need a literal white restored — and that is the one
+//      change that genuinely breaks them. Guarding a plausible wrong fix, not a
+//      past regression.
 //
 // Run: set -a; source frontend/.env; set +a
 //      npx playwright test tests/social/w2-inbox-tokens.spec.js
