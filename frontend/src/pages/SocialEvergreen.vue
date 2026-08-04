@@ -148,7 +148,7 @@
             {{ __('Cancelar') }}
           </button>
           <button
-            class="rounded-lg bg-surface-red-7 px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-surface-red-7 px-3 py-1.5 text-[12.5px] font-semibold text-ink-red-1 disabled:opacity-50"
             :disabled="busy === confirmRow.name"
             @click="removeConfirmed"
           >

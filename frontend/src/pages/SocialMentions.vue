@@ -52,7 +52,7 @@
         {{ __(f.label) }}
         <span
           v-if="f.v === 'Nuevo' && nuevoCount"
-          class="rounded-full bg-surface-red-7 px-1.5 text-[10px] font-bold text-white"
+          class="rounded-full bg-surface-red-7 px-1.5 text-[10px] font-bold text-ink-red-1"
         >{{ nuevoCount }}</span>
       </button>
     </div>

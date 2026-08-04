@@ -72,7 +72,7 @@
                   <span class="truncate text-[13.5px] font-bold text-ink-gray-9" :title="a.user">{{ a.full_name }}</span>
                   <span
                     v-if="a.over_cap"
-                    class="flex-none rounded-md bg-surface-red-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-red-7"
+                    class="flex-none rounded-md bg-surface-red-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-red-7 dark:text-ink-red-8"
                   >
                     {{ __('sobre cap') }}
                   </span>
@@ -127,7 +127,7 @@
                     @click="toggle(c.key)"
                   >
                     <span
-                      class="flex h-4 w-4 flex-none items-center justify-center rounded-[5px] border text-[10px] text-white"
+                      class="flex h-4 w-4 flex-none items-center justify-center rounded-[5px] border text-[10px] text-ink-green-1"
                       :class="selected.has(c.key) ? 'border-transparent bg-surface-green-7' : 'border-outline-gray-3 bg-surface-base'"
                     >
                       <span v-if="selected.has(c.key)">✓</span>

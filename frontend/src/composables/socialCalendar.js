@@ -15,23 +15,28 @@ export const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉
 // ── pillar (post_kind) color map — frappe-ui semantic tokens ──
 // The espresso v2 accent ink targets were chosen value-exact in LIGHT only (the
 // dark half of the coloured ramps was never derived — cookbook 2.6 leaves it
-// UNKNOWN). Measured against the v1 bundle, every one of these chips lost dark
-// contrast in the migration, two of them badly:
+// UNKNOWN). Measured against the v1 bundle, every chip here lost dark contrast:
 //
-//   chip         v1 dark -> v2 dark      with the dark: override below
-//   Producto        5.94     4.54                     6.74
-//   Servicio        4.95     2.32  (illegible)        6.34
-//   Noticia         3.86     2.34  (illegible)        4.80
-//   Testimonio      5.33     3.73                     6.70
+//   chip         light           dark                    after
+//   Producto     3.82 -> 3.74    5.94 -> 4.54            6.74 dark
+//   Servicio     5.05 -> 4.02    4.95 -> 2.32            7.01 / 6.34
+//   Noticia      3.75 -> 3.79    3.86 -> 2.34            4.80 dark
+//   Testimonio   3.70 -> 3.84    5.33 -> 3.73            6.70 dark
 //
-// The accent ink ramp INVERTS in dark (low index = light), so the fix is not the
-// value-exact light target -- it is an explicit dark override. Index 8 lands
-// closest to the v1 dark contrast across all four; a lower index overshoots to
-// ~13:1 near-white and loses the tinted-chip look. Light is left untouched.
+// The accent ink ramp INVERTS in dark (low index = light), so the value-exact
+// light target is the wrong instrument for dark. Index 8 lands nearest the v1
+// dark value; lower overshoots to ~13:1 near-white and loses the tinted look.
+//
+// Servicio is the ONLY chip that regressed in BOTH themes, so it takes a plain
+// ink-violet-8 (7.01 light / 6.34 dark) rather than a dark: override. The other
+// three were already sub-AA in LIGHT before this migration -- that is frappe-ui's
+// own chip convention (cookbook 12.4, ~97 sites tree-wide, Marco deciding
+// separately), so their light is deliberately left exactly as it was and only
+// the regressed dark half is corrected.
 // Temporada already carries its own dark: pair and is correct.
 export const PILLARS = [
   { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-7 dark:text-ink-blue-8' },
-  { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-2 text-ink-violet-6 dark:text-ink-violet-8' },
+  { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-2 text-ink-violet-8' },
   { kind: 'Temporada', emoji: '🎉', chip: 'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200' },
   { kind: 'Noticia', emoji: '📣', chip: 'bg-surface-red-2 text-ink-red-6 dark:text-ink-red-8' },
   { kind: 'Testimonio', emoji: '💬', chip: 'bg-surface-green-2 text-ink-green-7 dark:text-ink-green-8' },

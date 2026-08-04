@@ -122,7 +122,7 @@
                 <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
                 <span
                   v-if="ph.show_on_tracker"
-                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-7 px-1 text-[8px] font-bold text-white"
+                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-7 px-1 text-[8px] font-bold text-ink-green-1"
                   :title="__('Visible en el tracker del cliente')"
                 >T</span>
               </button>
@@ -187,7 +187,7 @@
               </span>
               <span
                 v-if="ro.is_warranty_claim"
-                class="inline-flex items-center rounded-full bg-surface-violet-2 px-2 py-0.5 text-xs-medium text-ink-violet-6 dark:text-ink-violet-8"
+                class="inline-flex items-center rounded-full bg-surface-violet-2 px-2 py-0.5 text-xs-medium text-ink-violet-8"
               >
                 {{ __('Warranty claim') }}
               </span>

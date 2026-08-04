@@ -70,7 +70,7 @@
               <span class="font-medium">{{ r.field }}</span> {{ r.operator }} <span class="font-medium">{{ r.value }}</span>
             </div>
           </div>
-          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :class="r.points >= 0 ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-red-7 bg-surface-red-1'">
+          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :class="r.points >= 0 ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-red-7 dark:text-ink-red-8 bg-surface-red-1'">
             {{ r.points >= 0 ? '+' : '' }}{{ r.points }}
           </span>
           <button class="flex-none text-[13px] text-ink-gray-4 hover:text-ink-red-7" @click="deleteRule(r)">✕</button>

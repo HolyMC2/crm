@@ -83,7 +83,7 @@
               <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
               <span
                 v-if="photoSel[ph.name]"
-                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-7 text-[9px] font-bold text-white"
+                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-7 text-[9px] font-bold text-ink-green-1"
               >✓</span>
             </button>
           </div>

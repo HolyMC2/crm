@@ -38,7 +38,7 @@
         </div>
         <div
           v-for="c in failedChannels" :key="'fail-' + c.channel"
-          class="rounded-md bg-surface-red-1 px-2.5 py-1.5 text-[11.5px] text-ink-red-7"
+          class="rounded-md bg-surface-red-1 px-2.5 py-1.5 text-[11.5px] text-ink-red-7 dark:text-ink-red-8"
         >
           <span class="font-semibold">{{ c.channel }} · {{ __('Falló') }}:</span> {{ c.error }}
         </div>
@@ -150,7 +150,7 @@
         {{ __('Publicación en vivo o cancelada — solo lectura. Despublica desde la cola si hace falta.') }}
       </div>
       <div class="flex flex-wrap items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
-        <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-7 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
+        <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-7 dark:text-ink-red-8 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
         <button v-if="isPending" class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background:#2563eb" :disabled="busy" @click="approvePost">{{ __('Aprobar') }}</button>
         <button v-if="isPending" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-7" :disabled="busy" @click="rejectPost">{{ __('Rechazar') }}</button>
         <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
