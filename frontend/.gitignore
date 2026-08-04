@@ -1,4 +1,8 @@
 node_modules
+# we install with bun but track yarn.lock (upstream's format, and the single
+# source of truth); bun migrates it and writes bun.lock as a local artifact
+bun.lock
+bun.lockb
 .DS_Store
 dist
 dist-ssr

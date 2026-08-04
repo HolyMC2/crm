@@ -52,12 +52,17 @@ equal-length and mutually consistent (31/31) after resolution.
 
 **`frontend/package.json`** — took upstream's dependency block wholesale (frappe-ui
 `0.1.261` → `1.0.0-beta.29`, TipTap 2 → 3), kept our `qz-tray` and `@playwright/test`,
-took upstream's superset of `resolutions`. Note `brace-expansion: 2.1.0` in that superset
-— that is plausibly the fix for the long-standing `brace_expansion_1.expand is not a
-function` PWA glob crash documented in `reference_crm_spa_build_lab`.
+took upstream's superset of `resolutions`. Note `brace-expansion: 2.1.0` in that superset:
+it does **not** fix the `brace_expansion_1.expand is not a function` PWA glob warning
+documented in `reference_crm_spa_build_lab` — that warning still prints after a fully
+successful build, so it remains the known false alarm. Judge the build by its exit code.
 
-**`frontend/yarn.lock`** — took upstream's wholesale rather than hand-merging, then deleted
-the `@framework/ui@link:../../frappe/ui` entry.
+**`frontend/yarn.lock`** — regenerated, not hand-merged. Taking upstream's lockfile
+wholesale failed `bun install`: bun migrates yarn.lock and then refuses to resolve
+`qz-tray` and `@playwright/test`, which are ours and absent from upstream's lock. Deleted
+it and ran `bun install --yarn`, which produces a complete yarn.lock covering both trees
+(786 installs / 843 packages, frappe-ui `1.0.0-beta.29`). `bun.lock` is gitignored — we
+install with bun but keep yarn.lock as the single tracked lockfile, in upstream's format.
 
 **`frontend/src/utils/dialogs.jsx`** — **took upstream's API, kept our behaviour.**
 frappe-ui v1 replaced `Dialog`'s `options` + `modelValue` with discrete props

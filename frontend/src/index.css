@@ -144,7 +144,7 @@ a,
      #fff while preflight makes their text `color: inherit`, which turns white-on-white
      in dark mode; this re-skins them off the semantic tokens (frappe-ui field look) */
   .fld {
-    @apply bg-surface-gray-2 text-ink-gray-8 placeholder-ink-gray-4 transition-colors focus:border-outline-gray-4 focus:bg-surface-white focus:ring-0;
+    @apply bg-surface-gray-2 text-ink-gray-8 placeholder-ink-gray-4 transition-colors focus:border-outline-gray-4 focus:bg-surface-base focus:ring-0;
   }
 
   .prose-f {
