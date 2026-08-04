@@ -19,27 +19,30 @@ export const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉
 //
 //   chip         light           dark                    after
 //   Producto     3.82 -> 3.74    5.94 -> 4.54            6.74 dark
-//   Servicio     5.05 -> 4.02    4.95 -> 2.32            7.01 / 6.34
-//   Noticia      3.75 -> 3.79    3.86 -> 2.34            4.80 dark
-//   Testimonio   3.70 -> 3.84    5.33 -> 3.73            6.70 dark
+//   Servicio     5.05 -> 4.02    4.95 -> 2.32            7.01 / 6.35
+//   Noticia      3.75 -> 3.79    3.86 -> 2.34            4.81 dark
+//   Testimonio   3.70 -> 3.84    5.33 -> 3.73            4.54 / 6.70
 //
 // The accent ink ramp INVERTS in dark (low index = light), so the value-exact
 // light target is the wrong instrument for dark. Index 8 lands nearest the v1
 // dark value; lower overshoots to ~13:1 near-white and loses the tinted look.
 //
-// Servicio is the ONLY chip that regressed in BOTH themes, so it takes a plain
-// ink-violet-8 (7.01 light / 6.34 dark) rather than a dark: override. The other
-// three were already sub-AA in LIGHT before this migration -- that is frappe-ui's
-// own chip convention (cookbook 12.4, ~97 sites tree-wide, Marco deciding
-// separately), so their light is deliberately left exactly as it was and only
-// the regressed dark half is corrected.
+// Servicio regressed in BOTH themes, so it takes a plain ink-violet-8.
+// Testimonio takes a plain ink-green-8 to match W2-crm's 905ef701 — the
+// surface-green-2 + ink-green-* pairing is the one shared across both buckets,
+// so a dark:-only fix here would render the same chip differently depending on
+// which worker owned the file.
+// Producto and Noticia regressed in dark ONLY (their light was already sub-AA on
+// doco-dev — frappe-ui's own chip convention, cookbook 12.4), and no single
+// index clears 4.5 in both without over-darkening light well past the ruling, so
+// those stay dark: overrides.
 // Temporada already carries its own dark: pair and is correct.
 export const PILLARS = [
   { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-7 dark:text-ink-blue-8' },
   { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-2 text-ink-violet-8' },
   { kind: 'Temporada', emoji: '🎉', chip: 'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200' },
   { kind: 'Noticia', emoji: '📣', chip: 'bg-surface-red-2 text-ink-red-6 dark:text-ink-red-8' },
-  { kind: 'Testimonio', emoji: '💬', chip: 'bg-surface-green-2 text-ink-green-7 dark:text-ink-green-8' },
+  { kind: 'Testimonio', emoji: '💬', chip: 'bg-surface-green-2 text-ink-green-8' },
   { kind: 'Aviso', emoji: 'ℹ️', chip: 'bg-surface-gray-3 text-ink-gray-7' },
 ]
 const PILLAR_MAP = Object.fromEntries(PILLARS.map((p) => [p.kind, p.chip]))
@@ -89,7 +92,7 @@ export function chip(status) {
     'Pending Approval': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
     Scheduled: 'bg-surface-blue-2 text-ink-blue-7',
     Publishing: 'bg-surface-blue-2 text-ink-blue-7',
-    Published: 'bg-surface-green-2 text-ink-green-7',
+    Published: 'bg-surface-green-2 text-ink-green-8',
     'Partially Published': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
     Failed: 'bg-surface-red-1 text-ink-red-7',
     Cancelado: 'bg-surface-gray-2 text-ink-gray-4 line-through',

@@ -16,7 +16,7 @@
             v-for="c in channelChoices"
             :key="c.v"
             class="rounded-full px-2.5 py-1 text-[12px] font-semibold"
-            :class="channel === c.v ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="channel === c.v ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
             @click="channel = c.v"
           >
             {{ c.label }}

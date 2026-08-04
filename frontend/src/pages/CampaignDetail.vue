@@ -19,7 +19,7 @@
           {{ saving ? __('Guardando…') : __('Guardar') }}
         </button>
         <button v-if="form.status === 'Active'" class="rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-7" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
-        <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-4 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-7" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
+        <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-4 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-8" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
         <button v-else-if="form.status === 'Draft'" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background: var(--brand)" @click="activate">▶ {{ __('Activar') }}</button>
       </div>
     </div>
@@ -229,12 +229,12 @@ const TYPE_META = { whatsapp: ['WhatsApp', 'var(--brand)', 'var(--brand-soft)'],
 function typeLabel(t) {
   return TYPE_META[t]?.[0] || t
 }
-const STATUS_CHIP = { Active: 'text-ink-green-7 bg-surface-green-2', Paused: 'text-ink-amber-7 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-6 bg-surface-blue-1' }
+const STATUS_CHIP = { Active: 'text-ink-green-8 bg-surface-green-2', Paused: 'text-ink-amber-7 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-6 bg-surface-blue-1' }
 function statusChip(s) {
   return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function enrStatusChip(s) {
-  const map = { Active: 'text-ink-green-7 bg-surface-green-2', Completed: 'text-ink-blue-6 bg-surface-blue-1', Suppressed: 'text-ink-red-7 bg-surface-red-1', Paused: 'text-ink-amber-7 bg-surface-amber-1' }
+  const map = { Active: 'text-ink-green-8 bg-surface-green-2', Completed: 'text-ink-blue-6 bg-surface-blue-1', Suppressed: 'text-ink-red-7 bg-surface-red-1', Paused: 'text-ink-amber-7 bg-surface-amber-1' }
   return map[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function who(e) {

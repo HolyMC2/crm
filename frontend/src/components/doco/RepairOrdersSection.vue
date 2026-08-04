@@ -157,13 +157,13 @@
             <div class="flex flex-wrap gap-1.5">
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-red-1 text-ink-red-7'"
+                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-red-1 text-ink-red-7'"
               >
                 {{ ro.turns_on ? __('Turns on ✓') : __('Does not turn on ✗') }}
               </span>
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-gray-2 text-ink-gray-5'"
+                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-5'"
               >
                 {{ ro.has_sim_tray ? __('SIM tray ✓') : __('No SIM tray') }}
               </span>

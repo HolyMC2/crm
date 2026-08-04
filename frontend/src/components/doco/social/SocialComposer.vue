@@ -22,7 +22,7 @@
         <a
           v-for="c in liveLinks" :key="'live-' + c.channel"
           :href="c.permalink" target="_blank" rel="noopener"
-          class="flex items-center gap-2 rounded-md bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-7 hover:brightness-95"
+          class="flex items-center gap-2 rounded-md bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-8 hover:brightness-95"
         >
           <span>{{ c.channel.startsWith('IG') ? '🟪' : '🟦' }}</span>
           <span>{{ __('Publicado') }} · {{ c.channel }}</span>
@@ -65,7 +65,7 @@
           <button
             v-for="c in channels" :key="c" type="button"
             class="rounded-md border px-2.5 py-1 text-[12px] font-medium"
-            :class="form.channels.includes(c) ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-7' : 'border-outline-gray-2 text-ink-gray-6'"
+            :class="form.channels.includes(c) ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-8' : 'border-outline-gray-2 text-ink-gray-6'"
             @click="toggleChannel(c)"
           >{{ c }}</button>
         </div>

@@ -114,7 +114,7 @@ function fmtDur(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 function outcomeChip(status) {
-  if (status === 'Completed') return 'text-ink-green-7 bg-surface-green-2'
+  if (status === 'Completed') return 'text-ink-green-8 bg-surface-green-2'
   if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-7 bg-surface-red-1'
   return 'text-ink-gray-6 bg-surface-gray-2'
 }

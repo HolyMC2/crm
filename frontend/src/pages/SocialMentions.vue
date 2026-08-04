@@ -286,7 +286,7 @@ function typeLabel(t) {
 function statusChip(s) {
   return {
     Nuevo: 'bg-surface-blue-2 text-ink-blue-7',
-    Atendido: 'bg-surface-green-2 text-ink-green-7',
+    Atendido: 'bg-surface-green-2 text-ink-green-8',
     Descartado: 'bg-surface-gray-2 text-ink-gray-6',
   }[s] || 'bg-surface-gray-2 text-ink-gray-6'
 }

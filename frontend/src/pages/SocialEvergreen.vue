@@ -99,7 +99,7 @@
           <!-- eligibility -->
           <span
             class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="available(row) ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200'"
+            :class="available(row) ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200'"
           >
             {{ available(row) ? __('Disponible') : __('En pausa hasta') + ' ' + fmtDate(row.next_eligible) }}
           </span>
@@ -170,7 +170,7 @@ const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉', Noti
 
 function chip(status) {
   return {
-    Published: 'bg-surface-green-2 text-ink-green-7',
+    Published: 'bg-surface-green-2 text-ink-green-8',
     'Partially Published': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
     Scheduled: 'bg-surface-blue-2 text-ink-blue-7',
     'Pending Approval': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',

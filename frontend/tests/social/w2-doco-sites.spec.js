@@ -55,7 +55,7 @@ const SITES = [
   ['PILLAR Servicio / RepairOrders:190 / CampaignDetail:15', 'text-ink-violet-8', 'bg-surface-violet-2'],
   ['PILLAR Producto', 'text-ink-blue-7 dark:text-ink-blue-8', 'bg-surface-blue-2'],
   ['PILLAR Noticia', 'text-ink-red-6 dark:text-ink-red-8', 'bg-surface-red-2'],
-  ['PILLAR Testimonio', 'text-ink-green-7 dark:text-ink-green-8', 'bg-surface-green-2'],
+  ['PILLAR Testimonio + all 23 green-2 chips', 'text-ink-green-8', 'bg-surface-green-2'],
   ['red-1 chips (WorkloadView:75, SocialComposer:41/153, ScoreRules:73)', 'text-ink-red-7 dark:text-ink-red-8', 'bg-surface-red-1'],
   ['KEEP: inverting gray chip (SocialCalendar x3, SocialMentions:49)', 'text-ink-base', 'bg-surface-gray-10'],
 ]
@@ -98,10 +98,15 @@ test('W2-doco: every edited class pair, both themes', async ({ page }) => {
   expect(violet.light, 'violet light').toBeGreaterThanOrEqual(4.5)
   expect(violet.dark, 'violet dark').toBeGreaterThanOrEqual(4.5)
   // The dark-only fixes must clear the floor in dark (light is pre-existing).
-  for (const label of ['PILLAR Producto', 'PILLAR Noticia', 'PILLAR Testimonio']) {
+  for (const label of ['PILLAR Producto', 'PILLAR Noticia']) {
     const r = rows.find((x) => x.label === label)
     expect(r.dark, `${label} dark`).toBeGreaterThanOrEqual(4.5)
   }
+  // green is a both-theme swap (aligned with W2-crm 905ef701), so it must
+  // clear the floor in BOTH, not just dark.
+  const green = rows.find((r) => r.fg === 'text-ink-green-8')
+  expect(green.light, 'green chips light').toBeGreaterThanOrEqual(4.5)
+  expect(green.dark, 'green chips dark').toBeGreaterThanOrEqual(4.5)
   const red1 = rows.find((r) => r.bg === 'bg-surface-red-1')
   expect(red1.dark, 'red-1 chips dark').toBeGreaterThanOrEqual(4.5)
   expect(red1.light, 'red-1 chips light').toBeGreaterThanOrEqual(4.5)

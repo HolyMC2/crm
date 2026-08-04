@@ -5,7 +5,7 @@
       class="flex items-center gap-1 rounded-[7px] border px-[9px] py-1 text-[12px] font-medium"
       :class="
         selected.length
-          ? 'border-outline-green-4 bg-surface-green-2 text-ink-green-7'
+          ? 'border-outline-green-4 bg-surface-green-2 text-ink-green-8'
           : 'border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8'
       "
       @click="open = !open"

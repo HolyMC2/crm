@@ -96,7 +96,7 @@
                 </div>
                 <span
                   class="flex-none rounded px-1.5 py-0.5 text-[11px] font-bold tabular-nums"
-                  :class="c.points >= 0 ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-red-1 text-ink-red-6'"
+                  :class="c.points >= 0 ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-red-1 text-ink-red-6'"
                 >{{ signed(c.points) }}</span>
               </li>
             </ul>
