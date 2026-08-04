@@ -15,7 +15,8 @@
         rows="2"
         class="scb mb-1.5 w-full resize-none rounded-md border border-outline-amber-2 bg-surface-white px-2 py-1.5 text-[12.5px] text-ink-gray-8 focus:outline-none dark:bg-surface-gray-2"
       />
-      <div class="flex items-center justify-end gap-1.5">
+      <!-- Manager-eyes policy: only managers act (server enforces _APPROVER_ROLES) -->
+      <div v-if="canAct" class="flex items-center justify-end gap-1.5">
         <button
           class="rounded-md px-2 py-1 text-[11px] font-semibold text-ink-gray-6 hover:bg-surface-amber-2 disabled:opacity-50"
           :disabled="busy[r.name]"
@@ -40,7 +41,10 @@
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
 import { autoAckForConvo, approveAutoAck, discardAutoAck } from '@/composables/inbox'
+import { usersStore } from '@/stores/users'
 
+const { isManager } = usersStore()
+const canAct = computed(() => isManager())
 const rows = computed(() => autoAckForConvo.data || [])
 const drafts = reactive({})
 const busy = reactive({})

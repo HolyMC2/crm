@@ -50,7 +50,7 @@
 
     <!-- variable editor (Pendiente only): map each {{n}} to a field + free-edit;
          the edited values are sent with Enviar -->
-    <div v-if="row.status === 'Pendiente'" class="mt-2">
+    <div v-if="canAct && row.status === 'Pendiente'" class="mt-2">
       <button
         type="button"
         class="text-2xs font-semibold text-ink-blue-link hover:underline disabled:opacity-50"
@@ -104,11 +104,14 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { call as frappeCall, toast } from 'frappe-ui'
+import { usersStore } from '@/stores/users'
 
 const props = defineProps({
   row: { type: Object, required: true },
 })
 const emit = defineEmits(['changed'])
+
+const { isManager } = usersStore()
 
 const busy = ref('')
 
@@ -158,7 +161,9 @@ async function onFieldChange(v) {
   }
 }
 
-const canAct = computed(() => ['Pendiente', 'Fallido'].includes(props.row.status))
+// Manager-eyes policy: only managers act on customer-facing sends (server
+// enforces via _APPROVER_ROLES; this just hides buttons that would 403).
+const canAct = computed(() => isManager() && ['Pendiente', 'Fallido'].includes(props.row.status))
 
 const provenance = computed(() => {
   const r = props.row

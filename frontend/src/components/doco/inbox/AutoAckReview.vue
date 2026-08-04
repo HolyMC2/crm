@@ -54,7 +54,8 @@
         :placeholder="__('Mensaje del acuse…')"
       />
 
-      <div class="flex items-center justify-end gap-1.5">
+      <!-- Manager-eyes policy: only managers act (server enforces _APPROVER_ROLES) -->
+      <div v-if="canAct" class="flex items-center justify-end gap-1.5">
         <button
           class="rounded-md px-2 py-1 text-[11px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
           :disabled="busy[r.name]"
@@ -79,7 +80,10 @@
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
 import { autoAcks, reloadAutoAcks, approveAutoAck, discardAutoAck, selectDeal, timeAgo, CHANNEL_META } from '@/composables/inbox'
+import { usersStore } from '@/stores/users'
 
+const { isManager } = usersStore()
+const canAct = computed(() => isManager())
 const rows = computed(() => autoAcks.data || [])
 // Per-row local edit buffer (so editing one draft never mutates the shared resource)
 // + a busy flag to disable the row while its action is in flight.
