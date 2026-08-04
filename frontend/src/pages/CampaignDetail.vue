@@ -12,7 +12,7 @@
         <span class="text-ink-gray-4">/</span>
         <input v-model="form.title" class="min-w-0 border-0 bg-transparent text-[15px] font-bold text-ink-gray-9 focus:outline-none focus:ring-0" :placeholder="__('Nombre de la campaña')" />
         <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(form.status)">{{ form.status }}</span>
-        <span v-if="isCadence" class="flex-none rounded-md bg-surface-violet-2 px-2 py-[3px] text-[11px] font-semibold text-ink-violet-6">{{ __('Cadencia 1:1') }}</span>
+        <span v-if="isCadence" class="flex-none rounded-md bg-surface-violet-2 px-2 py-[3px] text-[11px] font-semibold text-ink-violet-6 dark:text-ink-violet-8">{{ __('Cadencia 1:1') }}</span>
       </div>
       <div class="flex items-center gap-2">
         <button v-if="dirty || saving" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="saving" @click="save">

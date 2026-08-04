@@ -187,7 +187,7 @@
               </span>
               <span
                 v-if="ro.is_warranty_claim"
-                class="inline-flex items-center rounded-full bg-surface-violet-2 px-2 py-0.5 text-xs-medium text-ink-violet-6"
+                class="inline-flex items-center rounded-full bg-surface-violet-2 px-2 py-0.5 text-xs-medium text-ink-violet-6 dark:text-ink-violet-8"
               >
                 {{ __('Warranty claim') }}
               </span>

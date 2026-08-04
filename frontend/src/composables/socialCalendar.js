@@ -12,13 +12,29 @@ export const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
 export const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉', Noticia: '📣', Testimonio: '💬', Aviso: 'ℹ️' }
 
-// ── pillar (post_kind) color map — frappe-ui semantic tokens (auto light/dark) ──
+// ── pillar (post_kind) color map — frappe-ui semantic tokens ──
+// The espresso v2 accent ink targets were chosen value-exact in LIGHT only (the
+// dark half of the coloured ramps was never derived — cookbook 2.6 leaves it
+// UNKNOWN). Measured against the v1 bundle, every one of these chips lost dark
+// contrast in the migration, two of them badly:
+//
+//   chip         v1 dark -> v2 dark      with the dark: override below
+//   Producto        5.94     4.54                     6.74
+//   Servicio        4.95     2.32  (illegible)        6.34
+//   Noticia         3.86     2.34  (illegible)        4.80
+//   Testimonio      5.33     3.73                     6.70
+//
+// The accent ink ramp INVERTS in dark (low index = light), so the fix is not the
+// value-exact light target -- it is an explicit dark override. Index 8 lands
+// closest to the v1 dark contrast across all four; a lower index overshoots to
+// ~13:1 near-white and loses the tinted-chip look. Light is left untouched.
+// Temporada already carries its own dark: pair and is correct.
 export const PILLARS = [
-  { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-7' },
-  { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-2 text-ink-violet-6' },
+  { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-7 dark:text-ink-blue-8' },
+  { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-2 text-ink-violet-6 dark:text-ink-violet-8' },
   { kind: 'Temporada', emoji: '🎉', chip: 'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200' },
-  { kind: 'Noticia', emoji: '📣', chip: 'bg-surface-red-2 text-ink-red-6' },
-  { kind: 'Testimonio', emoji: '💬', chip: 'bg-surface-green-2 text-ink-green-7' },
+  { kind: 'Noticia', emoji: '📣', chip: 'bg-surface-red-2 text-ink-red-6 dark:text-ink-red-8' },
+  { kind: 'Testimonio', emoji: '💬', chip: 'bg-surface-green-2 text-ink-green-7 dark:text-ink-green-8' },
   { kind: 'Aviso', emoji: 'ℹ️', chip: 'bg-surface-gray-3 text-ink-gray-7' },
 ]
 const PILLAR_MAP = Object.fromEntries(PILLARS.map((p) => [p.kind, p.chip]))
