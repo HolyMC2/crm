@@ -76,7 +76,7 @@
           <div class="flex items-start justify-between gap-2">
             <span class="flex-none pt-1 text-ink-gray-5">{{ __('Etiquetas') }}</span>
             <div class="flex flex-1 flex-wrap justify-end gap-1">
-              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-6">
+              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-7">
                 {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-7" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
               </span>
               <input
@@ -97,7 +97,7 @@
         <div class="mt-3 border-t border-outline-gray-1 pt-2.5">
           <div class="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Macros rápidas') }}</div>
           <div class="flex flex-col gap-1">
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-7 hover:bg-surface-green-2" @click="macroListo">
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-8 hover:bg-surface-green-2" @click="macroListo">
               → {{ __('Listo para entregar') }}
             </button>
             <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2" @click="macroCompletado">
@@ -167,7 +167,7 @@
         <div>
           <div class="flex items-center gap-1.5">
             <span class="text-[17px] font-extrabold" :style="`color:${gradeColor}`">{{ grade }}</span>
-            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-7 bg-surface-green-2">{{ gradeWord }}</span>
+            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-8 bg-surface-green-2">{{ gradeWord }}</span>
           </div>
           <div v-if="probability" class="mt-0.5 text-[10px] text-ink-gray-5">{{ probability }}% {{ __('prob. conversión') }}</div>
         </div>

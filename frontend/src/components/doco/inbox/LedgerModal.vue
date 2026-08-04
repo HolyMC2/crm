@@ -120,7 +120,7 @@ const csvHref = computed(
 )
 function consentChip(r) {
   if (r.hash_ok === false) return 'bg-surface-red-1 text-ink-red-8'
-  return r.action === 'Grant' ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-red-1 text-ink-red-8'
+  return r.action === 'Grant' ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-red-1 text-ink-red-8'
 }
 const CLASS_LABEL = { Explicit: 'explícito', Implied: 'implícito', Imported: 'importado' }
 function classLabel(c) {

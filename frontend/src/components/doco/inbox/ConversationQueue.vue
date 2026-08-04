@@ -48,7 +48,7 @@
           </button>
           <span
             class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-            :class="unattendedTotal ? 'text-ink-amber-7 bg-surface-amber-2' : 'text-ink-green-7 bg-surface-green-2'"
+            :class="unattendedTotal ? 'text-ink-amber-7 bg-surface-amber-2' : 'text-ink-green-8 bg-surface-green-2'"
             :title="__('Cosas sin atender (sin asignar + vencidos + comentarios nuevos)')"
             :aria-label="__('Cosas sin atender') + ': ' + unattendedTotal"
           >
@@ -104,7 +104,7 @@
           class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
           :class="
             inboxTab === t.id
-              ? 'bg-surface-green-2 text-ink-green-7'
+              ? 'bg-surface-green-2 text-ink-green-8'
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           :aria-pressed="inboxTab === t.id"
@@ -373,7 +373,7 @@
       <!-- swipe-left action underlay (mobile, unread rows): «marcar respondido» -->
       <div
         v-if="swipeKey === convKey(r)"
-        class="absolute inset-y-0 right-0 mb-1 flex w-[132px] items-center justify-end rounded-r-[11px] bg-surface-green-2 pr-4 text-[11px] font-bold text-ink-green-7"
+        class="absolute inset-y-0 right-0 mb-1 flex w-[132px] items-center justify-end rounded-r-[11px] bg-surface-green-2 pr-4 text-[11px] font-bold text-ink-green-8"
         aria-hidden="true"
       >
         ✓ {{ __('Respondido') }}

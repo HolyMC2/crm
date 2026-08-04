@@ -34,7 +34,7 @@
         <CannedReplyPicker channel="Messenger" @pick="onCanned" />
         <button
           type="button"
-          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-7 hover:bg-surface-green-7"
+          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-8 hover:bg-surface-green-7"
           :title="__('Catálogo (o escribe /cat)')"
           @click="emit('catalog', '')"
         >

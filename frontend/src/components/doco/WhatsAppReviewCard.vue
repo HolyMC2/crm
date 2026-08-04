@@ -176,7 +176,7 @@ const statusChip = computed(() => {
   return (
     {
       Pendiente: { label: __('Pendiente'), cls: 'bg-surface-amber-1 text-ink-amber-7' },
-      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-7' },
+      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-8' },
       Fallido: { label: __('Fallido'), cls: 'bg-surface-red-1 text-ink-red-8' },
       Cancelado: { label: __('Cancelado'), cls: 'bg-surface-gray-2 text-ink-gray-5' },
     }[props.row.status] || { label: props.row.status, cls: 'bg-surface-gray-2 text-ink-gray-5' }

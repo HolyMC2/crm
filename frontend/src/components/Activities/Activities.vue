@@ -130,7 +130,7 @@
         <div v-if="contactDealCount > 1" class="mx-3 mb-1.5 sm:mx-10">
           <button
             class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="unifiedThread ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="unifiedThread ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
             @click="toggleUnified"
           >
             🔗

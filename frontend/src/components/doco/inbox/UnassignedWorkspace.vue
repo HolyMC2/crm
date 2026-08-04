@@ -378,7 +378,7 @@ function docLabel(dt) {
 function docBadge(dt) {
   // frappe-ui semantic tokens — auto dark-safe (was fixed light-mode hex)
   if (dt === 'Contact') return 'bg-surface-violet-2 text-ink-violet-8'
-  if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-7'
+  if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-8'
   return 'bg-surface-blue-1 text-ink-blue-7'
 }
 

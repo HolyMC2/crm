@@ -64,7 +64,7 @@
     <div v-show="!isMobile || quickBarOpen" class="flex flex-wrap items-center gap-1.5">
     <button
       type="button"
-      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-7 hover:bg-surface-green-7"
+      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-8 hover:bg-surface-green-7"
       :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
       @click="emit('catalog', '')"
     >
@@ -440,7 +440,7 @@ const modes = [
     value: 'reply',
     icon: '↩',
     label: 'Reply',
-    activeClass: 'bg-surface-green-2 text-ink-green-7',
+    activeClass: 'bg-surface-green-2 text-ink-green-8',
   },
   {
     value: 'note',
