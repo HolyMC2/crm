@@ -95,6 +95,9 @@ function parseColor(s) {
   return null
 }
 
+const hexOf = (c) =>
+  '#' + [c.r, c.g, c.b].map((v) => Math.round(v * 255).toString(16).padStart(2, '0')).join('').toUpperCase()
+
 function relLum({ r, g, b }) {
   const f = (x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))
   return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
@@ -256,4 +259,70 @@ test('mobile shell renders tab bar and drawer in both themes', async ({ page }) 
     await page.waitForTimeout(500)
   }
   expect(realErrors(errors)).toEqual([])
+})
+
+// The SidebarLink call site (MobileSidebar.vue:111, import at :258). SidebarLink.vue is
+// upstream-owned and not ours to migrate; this asserts the CALL SITE still behaves on
+// beta.29, which is what decides whether it should move to upstream's SidebarItem.
+//
+// The load-bearing assertion is the active state. Our saved views all share one route
+// NAME and differ only by `?view=`, so `SidebarLink`'s query-aware isActive is doing real
+// work — `SidebarItem` infers from route name/path and ignores query, so it would light
+// every saved view at once. If this test passes, keeping SidebarLink is justified.
+test('saved-view links navigate and mark the active view', async ({ page }) => {
+  await authed(page)
+  await page.setViewportSize(MOBILE)
+  await page.goto('/crm/leads', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(3000)
+
+  const tabbar = page.getByRole('navigation', { name: 'Navegación principal' })
+  const drawer = page.locator('div.w-\\[286px\\]')
+  const openDrawer = async () => {
+    await tabbar.getByRole('button', { name: 'Más', exact: true }).click()
+    await expect(drawer).toBeVisible()
+  }
+  // SidebarLink is the only h-7.5 button in the drawer; everything else is our own chrome.
+  const savedViews = () =>
+    drawer.evaluate((d) =>
+      [...d.querySelectorAll('button')]
+        .filter((b) => b.className.includes('h-7.5'))
+        .map((b) => ({
+          label: b.innerText.trim(),
+          active: /surface-elevation-3/.test(b.className),
+          bg: getComputedStyle(b).backgroundColor,
+          shadow: getComputedStyle(b).boxShadow,
+        })),
+    )
+
+  await openDrawer()
+  const before = await savedViews()
+  test.skip(before.length === 0, 'test user has no public or pinned views — nothing to assert')
+
+  await drawer.locator('button').filter({ hasText: before[0].label }).first().click()
+  await page.waitForTimeout(2000)
+  // the `to` object carries { name, params, query } — the query is what must survive
+  expect(page.url(), 'clicking a saved view did not put its ?view= on the route').toMatch(/[?&]view=/)
+
+  await openDrawer()
+  for (const theme of ['light', 'dark']) {
+    await setTheme(page, theme)
+    const after = await savedViews()
+    const actives = after.filter((v) => v.active)
+    expect(
+      actives.map((v) => v.label),
+      `exactly one saved view must be active in ${theme}; query-blind matching lights them all`,
+    ).toEqual([before[0].label])
+
+    // In light mode surface-elevation-3 equals the drawer surface, so `shadow-sm` is the
+    // ONLY thing distinguishing the active row. Pre-existing (v1 surface-selected was also
+    // #FFFFFF) and upstream's SidebarItem pairs them identically — but if the shadow ever
+    // goes, the active state becomes invisible rather than subtle.
+    const act = actives[0]
+    const drawerBg = await drawer.evaluate((d) => getComputedStyle(d).backgroundColor)
+    const same = parseColor(act.bg) && parseColor(drawerBg) &&
+      hexOf(parseColor(act.bg)) === hexOf(parseColor(drawerBg))
+    if (same) {
+      expect(act.shadow, `active saved view is the same colour as the drawer in ${theme} and has no shadow — invisible`).not.toBe('none')
+    }
+  }
 })
