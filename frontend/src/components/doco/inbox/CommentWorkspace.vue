@@ -59,7 +59,7 @@
                 v-for="s in sortOptions"
                 :key="s.id"
                 class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                :class="sort === s.id ? 'bg-surface-blue-2 text-ink-blue-6' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+                :class="sort === s.id ? 'bg-surface-blue-2 text-ink-blue-7' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
                 @click="setSort(s.id)"
               >
                 {{ s.label }}
@@ -78,7 +78,7 @@
           <div v-if="loading && !threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
           <div v-else-if="threadError && !threadComments.length" class="py-6 text-center text-[12px] text-ink-red-6">
             {{ __('No se pudieron cargar los comentarios.') }}
-            <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="fetchThread(true)">{{ __('Reintentar') }}</button>
+            <button class="ml-1 font-semibold underline hover:text-ink-red-7" @click="fetchThread(true)">{{ __('Reintentar') }}</button>
           </div>
           <div v-else-if="!threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">
             {{ search ? __('Sin resultados') : __('Sin comentarios') }}
@@ -93,21 +93,21 @@
             </div>
             <div class="text-[13px] text-ink-gray-8">{{ cm.message || __('(sin texto)') }}</div>
 
-            <div v-if="cm.reply_text" class="mt-2 rounded-lg border border-outline-blue-1 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8">
-              <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-6">
+            <div v-if="cm.reply_text" class="mt-2 rounded-lg border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8">
+              <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-7">
                 {{ cm.reply_by || __('Tú') }}<span v-if="cm.reply_at" class="font-normal text-ink-gray-5"> · {{ timeAgo(cm.reply_at) }}</span>
               </div>
               {{ cm.reply_text }}
             </div>
 
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11.5px]">
-              <button class="font-semibold text-ink-blue-6 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
-              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-6 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
+              <button class="font-semibold text-ink-blue-7 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
+              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-7 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
               <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">
                 💬 {{ cm.channel === 'IG' ? __('Continuar en DM') : __('Continuar en Messenger') }}
               </button>
-              <button v-if="!cm.lead" class="font-semibold text-ink-violet-1 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
-              <button v-else class="text-ink-violet-1 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
+              <button v-if="!cm.lead" class="font-semibold text-ink-violet-6 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
+              <button v-else class="text-ink-violet-6 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
               <button
                 class="font-semibold hover:underline"
                 style="color: var(--brand)"
@@ -121,7 +121,7 @@
             </div>
 
             <div v-if="replyingTo === cm.name" class="mt-2">
-              <div class="mb-1 text-[10px] font-semibold" :class="mode === 'private' ? 'text-ink-blue-6' : 'text-ink-gray-5'">
+              <div class="mb-1 text-[10px] font-semibold" :class="mode === 'private' ? 'text-ink-blue-7' : 'text-ink-gray-5'">
                 {{ mode === 'private' ? __('Mensaje privado al autor') : __('Respuesta pública') }}
               </div>
               <div class="flex items-end gap-2">
@@ -129,7 +129,7 @@
                   v-model="reply"
                   rows="2"
                   :placeholder="mode === 'private' ? __('Responder por DM…') : __('Responder en el comentario…')"
-                  class="scb flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-3"
+                  class="scb flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-4"
                   @keydown.enter.exact.prevent="onReply(cm)"
                 />
                 <div class="flex h-8 items-center">

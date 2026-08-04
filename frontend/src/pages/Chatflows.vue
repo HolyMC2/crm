@@ -40,18 +40,18 @@
           v-for="f in rows"
           :key="f.name"
           class="mb-1.5 block w-full rounded-[10px] border px-3 py-2.5 text-left"
-          :class="selectedName === f.name ? 'border-outline-green-3 bg-surface-green-2' : 'border-outline-gray-2 hover:bg-surface-gray-2'"
+          :class="selectedName === f.name ? 'border-outline-green-4 bg-surface-green-2' : 'border-outline-gray-2 hover:bg-surface-gray-2'"
           @click="selectFlow(f.name)"
         >
           <div class="flex items-center gap-2">
             <span class="h-2 w-2 flex-none rounded-full" :style="`background:${f.enabled ? 'var(--brand)' : 'var(--outline-gray-2)'}`" />
             <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink-gray-9">{{ f.flow_name }}</span>
-            <span v-if="f.auto_send" class="flex-none rounded bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-semibold text-ink-amber-6">AUTO</span>
+            <span v-if="f.auto_send" class="flex-none rounded bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-semibold text-ink-amber-7">AUTO</span>
           </div>
           <div class="mt-1 flex items-center gap-2 text-[11px] text-ink-gray-5">
             <span>{{ f.trigger_type === 'Inbound Keyword' ? `🔑 «${f.trigger_keyword || '—'}»` : __('Manual') }}</span>
             <span>· {{ f.steps_count }} {{ __('pasos') }}</span>
-            <span v-if="f.active_runs" class="rounded bg-surface-blue-1 px-1.5 py-[1px] font-semibold text-ink-blue-5">
+            <span v-if="f.active_runs" class="rounded bg-surface-blue-1 px-1.5 py-[1px] font-semibold text-ink-blue-6">
               {{ f.active_runs }} {{ __('en curso') }}
             </span>
           </div>
@@ -73,7 +73,7 @@
               :placeholder="__('Nombre del flujo (fijo después de crear)')"
             />
             <span v-else class="text-[15px] font-bold text-ink-gray-9">{{ form.flow_name }}</span>
-            <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="form.enabled ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-gray-2 text-ink-gray-6'">
+            <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="form.enabled ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-gray-2 text-ink-gray-6'">
               {{ form.enabled ? __('Activo') : __('Inactivo') }}
             </span>
             <div class="flex-1" />
@@ -89,7 +89,7 @@
             <button
               v-if="!isNew"
               class="rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold"
-              :class="form.enabled ? 'border-outline-amber-3 bg-surface-amber-1 text-ink-amber-6' : 'border-outline-green-3 bg-surface-green-2 text-ink-green-6'"
+              :class="form.enabled ? 'border-outline-amber-4 bg-surface-amber-1 text-ink-amber-7' : 'border-outline-green-4 bg-surface-green-2 text-ink-green-7'"
               @click="toggleEnabled"
             >
               {{ form.enabled ? '⏸ ' + __('Desactivar') : '▶ ' + __('Activar') }}
@@ -99,7 +99,7 @@
           <!-- live-runs banner -->
           <div
             v-if="activeRuns > 0"
-            class="mb-4 flex max-w-[640px] items-center gap-3 rounded-[10px] border border-outline-blue-1 bg-surface-blue-1 px-3 py-2 text-[12px] text-ink-blue-5"
+            class="mb-4 flex max-w-[640px] items-center gap-3 rounded-[10px] border border-outline-blue-3 bg-surface-blue-1 px-3 py-2 text-[12px] text-ink-blue-6"
           >
             <span class="flex-1">
               {{ __('{0} conversación(es) siguen este flujo — los pasos están congelados hasta que terminen.', [activeRuns]) }}
@@ -340,6 +340,6 @@ Field.props = ['label']
 .dm-input:focus {
   outline: none;
   background: var(--surface-base);
-  border-color: var(--outline-green-3);
+  border-color: var(--outline-green-4);
 }
 </style>

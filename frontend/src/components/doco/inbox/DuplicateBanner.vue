@@ -17,12 +17,12 @@
 <template>
   <div
     v-if="duplicates.length"
-    class="flex-none border-b border-outline-amber-3 bg-surface-amber-1 px-3.5 py-2.5"
+    class="flex-none border-b border-outline-amber-4 bg-surface-amber-1 px-3.5 py-2.5"
   >
     <div class="flex items-start gap-2">
       <span class="flex-none text-[13px] leading-5" aria-hidden="true">⚠</span>
       <div class="min-w-0 flex-1">
-        <div class="text-[11px] font-bold uppercase tracking-[.06em] text-ink-amber-6">
+        <div class="text-[11px] font-bold uppercase tracking-[.06em] text-ink-amber-7">
           {{ __('Posible duplicado') }}
         </div>
         <ul class="mt-1 flex flex-col gap-1.5">
@@ -36,14 +36,14 @@
             </span>
             <div class="flex flex-none items-center gap-1.5">
               <button
-                class="press rounded-md border border-outline-amber-3 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-6 hover:bg-surface-amber-2"
+                class="press rounded-md border border-outline-amber-4 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-7 hover:bg-surface-amber-2"
                 @click="$emit('open', d.doctype, d.name)"
               >
                 {{ __('Ver') }}
               </button>
               <button
                 v-if="canMerge"
-                class="press rounded-md border border-outline-amber-3 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-6 hover:bg-surface-amber-2"
+                class="press rounded-md border border-outline-amber-4 bg-surface-base px-2 py-0.5 text-[11.5px] font-semibold text-ink-amber-7 hover:bg-surface-amber-2"
                 @click="askMerge(d)"
               >
                 {{ __('Fusionar…') }}

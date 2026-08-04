@@ -61,7 +61,7 @@
 
     <!-- ⏳ pendientes de aprobación — surfaced instead of buried in the grid -->
     <div v-if="pendingPosts.length" class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-amber-1 px-4 py-2 dark:bg-amber-300/10" role="status">
-      <span class="text-[11.5px] font-bold text-ink-amber-6 dark:text-amber-200">⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span>
+      <span class="text-[11.5px] font-bold text-ink-amber-7 dark:text-amber-200">⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span>
       <button
         v-for="p in pendingPosts.slice(0, 6)"
         :key="p.name"
@@ -70,7 +70,7 @@
       >
         {{ p.title || p.name }}
       </button>
-      <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-6">+{{ pendingPosts.length - 6 }}</span>
+      <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-7">+{{ pendingPosts.length - 6 }}</span>
     </div>
 
     <!-- filter chips (pillar / status / channel family) — client-side, combinable -->
@@ -245,7 +245,7 @@
           <div v-if="!(employeesRes.data || []).length" class="mb-3 text-[12px] text-ink-gray-4">{{ employeesRes.loading ? __('Cargando…') : __('Nadie asignado todavía.') }}</div>
           <div v-for="u in employeesRes.data || []" :key="u" class="mb-1.5 flex items-center justify-between rounded-md bg-surface-gray-1 px-2.5 py-1.5">
             <span class="text-[12.5px] text-ink-gray-8">{{ u }}</span>
-            <button class="text-[11px] font-semibold text-ink-red-8 hover:underline disabled:opacity-50" :disabled="onbBusy" @click="unassignEmp(u)">{{ __('Quitar') }}</button>
+            <button class="text-[11px] font-semibold text-ink-red-7 hover:underline disabled:opacity-50" :disabled="onbBusy" @click="unassignEmp(u)">{{ __('Quitar') }}</button>
           </div>
 
           <label class="mb-1 mt-4 block text-[11px] font-semibold text-ink-gray-6">{{ __('Agregar empleado') }}</label>

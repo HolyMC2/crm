@@ -27,7 +27,7 @@ export function barToken(load, cap) {
   if (pct == null) return 'bg-surface-gray-4'
   if (pct >= 100) return 'bg-surface-red-7'
   if (pct >= 75) return 'bg-surface-amber-2'
-  return 'bg-surface-green-3'
+  return 'bg-surface-green-7'
 }
 
 // Sortable row keys, in display order. 'full_name' sorts as es-locale text; the rest are

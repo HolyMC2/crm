@@ -141,12 +141,12 @@ function fmtDur(s) {
   return `${m}:${String(s % 60).padStart(2, '0')}`
 }
 function dirChip(r) {
-  if (MISSED.includes(r.status)) return 'text-ink-red-8 bg-surface-red-1'
-  return r.type === 'Outgoing' ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-blue-5 bg-surface-blue-1'
+  if (MISSED.includes(r.status)) return 'text-ink-red-7 bg-surface-red-1'
+  return r.type === 'Outgoing' ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-blue-6 bg-surface-blue-1'
 }
 function outcomeChip(status) {
-  if (status === 'Completed') return 'text-ink-green-6 bg-surface-green-2'
-  if (MISSED.includes(status)) return 'text-ink-red-8 bg-surface-red-1'
+  if (status === 'Completed') return 'text-ink-green-7 bg-surface-green-2'
+  if (MISSED.includes(status)) return 'text-ink-red-7 bg-surface-red-1'
   return 'text-ink-gray-6 bg-surface-gray-2'
 }
 function openCall(name) {

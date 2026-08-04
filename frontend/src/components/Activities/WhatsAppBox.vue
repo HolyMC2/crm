@@ -64,7 +64,7 @@
     <div v-show="!isMobile || quickBarOpen" class="flex flex-wrap items-center gap-1.5">
     <button
       type="button"
-      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-6 hover:bg-surface-green-3"
+      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-7 hover:bg-surface-green-7"
       :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
       @click="emit('catalog', '')"
     >
@@ -74,7 +74,7 @@
     <button
       v-if="aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)"
       type="button"
-      class="press rounded-md bg-surface-violet-1 px-2 py-1 text-xs-semibold text-ink-violet-1 hover:opacity-80 disabled:opacity-50"
+      class="press rounded-md bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-6 hover:opacity-80 disabled:opacity-50"
       :disabled="suggestLoading"
       :title="__('Sugerir respuestas con IA (local)')"
       @click="fetchSuggestions"
@@ -224,7 +224,7 @@
     <!-- recording bar replaces the textarea while capturing -->
     <div
       v-if="mode === 'reply' && recording"
-      class="flex h-10 w-full items-center gap-3 rounded-lg border border-outline-red-3 bg-surface-red-1 px-3"
+      class="flex h-10 w-full items-center gap-3 rounded-lg border border-outline-red-4 bg-surface-red-1 px-3"
     >
       <span class="h-2.5 w-2.5 flex-none animate-pulse rounded-full" style="background: #e5484d" />
       <span class="w-12 flex-none font-mono text-[13px] font-semibold text-ink-gray-8">
@@ -440,19 +440,19 @@ const modes = [
     value: 'reply',
     icon: '↩',
     label: 'Reply',
-    activeClass: 'bg-surface-green-2 text-ink-green-6',
+    activeClass: 'bg-surface-green-2 text-ink-green-7',
   },
   {
     value: 'note',
     icon: '✐',
     label: 'Private note',
-    activeClass: 'bg-surface-amber-2 text-ink-amber-6',
+    activeClass: 'bg-surface-amber-2 text-ink-amber-7',
   },
   {
     value: 'comment',
     icon: '💬',
     label: 'Internal',
-    activeClass: 'bg-surface-blue-2 text-ink-blue-6',
+    activeClass: 'bg-surface-blue-2 text-ink-blue-7',
   },
 ]
 

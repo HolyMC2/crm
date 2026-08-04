@@ -14,7 +14,7 @@
     <button
       class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
       :class="active
-        ? 'bg-surface-violet-1 text-ink-violet-1'
+        ? 'bg-surface-violet-2 text-ink-violet-6'
         : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
       :title="active ? __('Seguimiento activo') + ': ' + (status.campaign_title || '') : __('Iniciar seguimiento')"
       :aria-label="__('Cadencia de seguimiento')"
@@ -27,8 +27,8 @@
       <template #body-content>
         <!-- active enrollment: summary + stop -->
         <div v-if="active" class="flex flex-col gap-3">
-          <div class="rounded-xl border border-outline-violet-1 bg-surface-violet-1 p-3">
-            <div class="flex items-center gap-1.5 text-[13px] font-semibold text-ink-violet-1">
+          <div class="rounded-xl border border-outline-violet-1 bg-surface-violet-2 p-3">
+            <div class="flex items-center gap-1.5 text-[13px] font-semibold text-ink-violet-6">
               <LucideCalendarClock class="h-4 w-4 flex-none" />
               <span class="min-w-0 truncate">{{ status.campaign_title || __('Seguimiento') }}</span>
             </div>
@@ -69,7 +69,7 @@
                 {{ c.touches }} {{ c.touches === 1 ? __('toque') : __('toques') }}
               </span>
             </span>
-            <span class="flex-none text-[12px] font-semibold text-ink-violet-1">{{ __('Iniciar') }}</span>
+            <span class="flex-none text-[12px] font-semibold text-ink-violet-6">{{ __('Iniciar') }}</span>
           </button>
         </div>
       </template>

@@ -22,7 +22,7 @@
           <span class="truncate text-[13.5px] font-semibold text-ink-gray-9">
             {{ card.contact_full_name || displayName || __('Sin nombre') }}
           </span>
-          <span v-if="card.customer" class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[9px] font-semibold text-ink-green-6">
+          <span v-if="card.customer" class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[9px] font-semibold text-ink-green-7">
             {{ __('Cliente') }}
           </span>
         </div>

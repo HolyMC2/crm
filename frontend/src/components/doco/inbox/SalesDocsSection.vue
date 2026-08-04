@@ -41,16 +41,16 @@
             <div class="text-[12.5px] font-bold tabular-nums text-ink-gray-9">{{ money(rollup.invoiced) }}</div>
           </div>
           <div class="rounded-lg bg-surface-green-2 px-1.5 py-1.5">
-            <div class="text-[9.5px] font-bold uppercase tracking-wide text-ink-green-6">{{ __('Pagado') }}</div>
-            <div class="text-[12.5px] font-bold tabular-nums text-ink-green-6">{{ money(rollup.paid) }}</div>
+            <div class="text-[9.5px] font-bold uppercase tracking-wide text-ink-green-7">{{ __('Pagado') }}</div>
+            <div class="text-[12.5px] font-bold tabular-nums text-ink-green-7">{{ money(rollup.paid) }}</div>
           </div>
           <div class="rounded-lg px-1.5 py-1.5" :class="rollup.outstanding > 0 ? 'bg-surface-red-1' : 'bg-surface-gray-2'">
-            <div class="text-[9.5px] font-bold uppercase tracking-wide" :class="rollup.outstanding > 0 ? 'text-ink-red-8' : 'text-ink-gray-5'">{{ __('Saldo') }}</div>
-            <div class="text-[12.5px] font-bold tabular-nums" :class="rollup.outstanding > 0 ? 'text-ink-red-8' : 'text-ink-gray-7'">{{ money(rollup.outstanding) }}</div>
+            <div class="text-[9.5px] font-bold uppercase tracking-wide" :class="rollup.outstanding > 0 ? 'text-ink-red-7' : 'text-ink-gray-5'">{{ __('Saldo') }}</div>
+            <div class="text-[12.5px] font-bold tabular-nums" :class="rollup.outstanding > 0 ? 'text-ink-red-7' : 'text-ink-gray-7'">{{ money(rollup.outstanding) }}</div>
           </div>
         </div>
         <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-gray-3" :title="__('Pagado vs facturado')">
-          <div class="h-full rounded-full bg-surface-green-3" :style="`width:${paidPct}%`" />
+          <div class="h-full rounded-full bg-surface-green-7" :style="`width:${paidPct}%`" />
         </div>
       </div>
 
@@ -100,7 +100,7 @@
               >{{ cobrando === d.name ? '…' : '💳' }}</button>
               <div class="flex flex-none flex-col items-end gap-0.5">
                 <span class="font-semibold tabular-nums text-ink-gray-8">{{ money(d.grand_total, d.currency) }}</span>
-                <span v-if="d.doctype && d.docstatus === 1 && Number(d.outstanding_amount) > 0" class="text-[10px] font-semibold tabular-nums text-ink-red-8">
+                <span v-if="d.doctype && d.docstatus === 1 && Number(d.outstanding_amount) > 0" class="text-[10px] font-semibold tabular-nums text-ink-red-7">
                   {{ __('debe') }} {{ money(d.outstanding_amount, d.currency) }}
                 </span>
               </div>
@@ -128,7 +128,7 @@
                   <template v-if="p.payment_type !== 'Receive'"> · {{ __('egreso') }}</template>
                 </div>
               </div>
-              <span class="flex-none font-semibold tabular-nums text-ink-green-6">{{ money(p.allocated_amount) }}</span>
+              <span class="flex-none font-semibold tabular-nums text-ink-green-7">{{ money(p.allocated_amount) }}</span>
             </div>
           </div>
         </div>

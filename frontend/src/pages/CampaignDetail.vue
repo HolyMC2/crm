@@ -12,14 +12,14 @@
         <span class="text-ink-gray-4">/</span>
         <input v-model="form.title" class="min-w-0 border-0 bg-transparent text-[15px] font-bold text-ink-gray-9 focus:outline-none focus:ring-0" :placeholder="__('Nombre de la campaña')" />
         <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(form.status)">{{ form.status }}</span>
-        <span v-if="isCadence" class="flex-none rounded-md bg-surface-violet-1 px-2 py-[3px] text-[11px] font-semibold text-ink-violet-1">{{ __('Cadencia 1:1') }}</span>
+        <span v-if="isCadence" class="flex-none rounded-md bg-surface-violet-2 px-2 py-[3px] text-[11px] font-semibold text-ink-violet-6">{{ __('Cadencia 1:1') }}</span>
       </div>
       <div class="flex items-center gap-2">
         <button v-if="dirty || saving" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="saving" @click="save">
           {{ saving ? __('Guardando…') : __('Guardar') }}
         </button>
-        <button v-if="form.status === 'Active'" class="rounded-lg border border-outline-amber-3 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-6" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
-        <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-3 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-6" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
+        <button v-if="form.status === 'Active'" class="rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-7" @click="changeStatus('Paused')">⏸ {{ __('Pausar') }}</button>
+        <button v-else-if="form.status === 'Paused'" class="rounded-lg border border-outline-green-4 bg-surface-green-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-green-7" @click="changeStatus('Active')">▶ {{ __('Reanudar') }}</button>
         <button v-else-if="form.status === 'Draft'" class="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold text-white" style="background: var(--brand)" @click="activate">▶ {{ __('Activar') }}</button>
       </div>
     </div>
@@ -229,12 +229,12 @@ const TYPE_META = { whatsapp: ['WhatsApp', 'var(--brand)', 'var(--brand-soft)'],
 function typeLabel(t) {
   return TYPE_META[t]?.[0] || t
 }
-const STATUS_CHIP = { Active: 'text-ink-green-6 bg-surface-green-2', Paused: 'text-ink-amber-6 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-5 bg-surface-blue-1' }
+const STATUS_CHIP = { Active: 'text-ink-green-7 bg-surface-green-2', Paused: 'text-ink-amber-7 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-6 bg-surface-blue-1' }
 function statusChip(s) {
   return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function enrStatusChip(s) {
-  const map = { Active: 'text-ink-green-6 bg-surface-green-2', Completed: 'text-ink-blue-5 bg-surface-blue-1', Suppressed: 'text-ink-red-8 bg-surface-red-1', Paused: 'text-ink-amber-6 bg-surface-amber-1' }
+  const map = { Active: 'text-ink-green-7 bg-surface-green-2', Completed: 'text-ink-blue-6 bg-surface-blue-1', Suppressed: 'text-ink-red-7 bg-surface-red-1', Paused: 'text-ink-amber-7 bg-surface-amber-1' }
   return map[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function who(e) {
@@ -261,6 +261,6 @@ Metric.props = ['label', 'value', 'color']
 .dm-input:focus {
   outline: none;
   background: var(--surface-base);
-  border-color: var(--outline-green-3);
+  border-color: var(--outline-green-4);
 }
 </style>

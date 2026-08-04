@@ -27,7 +27,7 @@
             <button
               v-for="t in TONES" :key="t.v" type="button"
               class="rounded-md border px-2 py-0.5 text-[11px] font-medium"
-              :class="tone === t.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-6' : 'border-outline-gray-2 text-ink-gray-6'"
+              :class="tone === t.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-7' : 'border-outline-gray-2 text-ink-gray-6'"
               @click="tone = t.v"
             >{{ t.label }}</button>
           </div>
@@ -38,7 +38,7 @@
             <button
               v-for="l in LENGTHS" :key="l.v" type="button"
               class="rounded-md border px-2 py-0.5 text-[11px] font-medium"
-              :class="length === l.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-6' : 'border-outline-gray-2 text-ink-gray-6'"
+              :class="length === l.v ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-7' : 'border-outline-gray-2 text-ink-gray-6'"
               @click="length = l.v"
             >{{ l.label }}</button>
           </div>
@@ -61,7 +61,7 @@
           <span class="rounded-full bg-surface-gray-2 px-1.5 py-0.5 text-[9.5px] font-semibold text-ink-gray-6">{{ lengthLabel(v.length) }}</span>
           <button
             type="button" :data-testid="`variant-pick-${i}`"
-            class="ml-auto rounded-md bg-surface-green-2 px-2.5 py-1 text-[11px] font-semibold text-ink-green-6 hover:brightness-95 disabled:opacity-50"
+            class="ml-auto rounded-md bg-surface-green-2 px-2.5 py-1 text-[11px] font-semibold text-ink-green-7 hover:brightness-95 disabled:opacity-50"
             :disabled="picking >= 0" @click="pick(v, i)"
           >{{ picking === i ? __('Aplicando…') : __('Usar esta') }}</button>
         </div>

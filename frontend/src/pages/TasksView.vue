@@ -74,7 +74,7 @@
           :aria-checked="t.status === 'Done'"
           :aria-label="t.title ? __('Completada') + ': ' + t.title : __('Marcar completada')"
           class="flex h-5 w-5 flex-none items-center justify-center rounded-md border-[1.5px]"
-          :class="t.status === 'Done' ? 'bg-surface-green-3 border-outline-green-3 text-white' : 'border-outline-gray-3'"
+          :class="t.status === 'Done' ? 'bg-surface-green-7 border-outline-green-4 text-white' : 'border-outline-gray-3'"
           @click="toggleDone(t)"
         >
           <span v-if="t.status === 'Done'" class="text-[12px]" aria-hidden="true">✓</span>
@@ -202,13 +202,13 @@ function isToday(t) {
 }
 // Native-token class strings (theme-aware) — bound via :class, not :style.
 function rowClass(t) {
-  if (isOverdue(t)) return 'border-l-[3px] border-outline-red-3 bg-surface-red-1'
-  if (isToday(t)) return 'border-l-[3px] border-outline-amber-3 bg-surface-amber-1'
+  if (isOverdue(t)) return 'border-l-[3px] border-outline-red-4 bg-surface-red-1'
+  if (isToday(t)) return 'border-l-[3px] border-outline-amber-4 bg-surface-amber-1'
   return ''
 }
 function dueClass(t) {
-  if (isOverdue(t)) return 'text-ink-red-8 font-semibold'
-  if (isToday(t)) return 'text-ink-amber-6 font-semibold'
+  if (isOverdue(t)) return 'text-ink-red-7 font-semibold'
+  if (isToday(t)) return 'text-ink-amber-7 font-semibold'
   return 'text-ink-gray-6'
 }
 function dueText(d) {
@@ -216,13 +216,13 @@ function dueText(d) {
 }
 function prioStyle(p) {
   return (
-    { Urgent: 'text-ink-red-8 bg-surface-red-1', High: 'text-ink-amber-6 bg-surface-amber-1', Medium: 'text-ink-blue-5 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
+    { Urgent: 'text-ink-red-7 bg-surface-red-1', High: 'text-ink-amber-7 bg-surface-amber-1', Medium: 'text-ink-blue-6 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
     'text-ink-gray-6 bg-surface-gray-2'
   )
 }
 function tabStyle(t) {
   if (tab.value === t.key) return 'bg-surface-gray-3 text-ink-gray-9'
-  const c = t.key === 'overdue' ? 'text-ink-red-8' : t.key === 'today' ? 'text-ink-amber-6' : 'text-ink-gray-6'
+  const c = t.key === 'overdue' ? 'text-ink-red-7' : t.key === 'today' ? 'text-ink-amber-7' : 'text-ink-gray-6'
   return `bg-surface-gray-2 ${c}`
 }
 

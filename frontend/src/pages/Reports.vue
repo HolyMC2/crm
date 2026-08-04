@@ -22,7 +22,7 @@
     </div>
 
     <div class="flex flex-col gap-4 p-5">
-      <div v-if="restricted" class="rounded-[10px] border border-outline-amber-3 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-6">
+      <div v-if="restricted" class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-7">
         {{ __('Algunas métricas (ingresos, atribución) requieren permiso de manager.') }}
       </div>
       <!-- KPI cards -->
@@ -109,7 +109,7 @@
             <div class="truncate font-medium text-ink-gray-9" :title="c.campaign">{{ c.title || c.campaign }}</div>
             <div>{{ c.enrolled }}</div>
             <div>{{ c.sent }}</div>
-            <div :class="(c.failed + c.skipped) ? 'text-ink-red-8' : 'text-ink-gray-4'">{{ c.failed + c.skipped }}</div>
+            <div :class="(c.failed + c.skipped) ? 'text-ink-red-7' : 'text-ink-gray-4'">{{ c.failed + c.skipped }}</div>
             <div>{{ c.touched }}</div>
             <div class="font-semibold" style="color: var(--brand)">{{ c.won }}</div>
             <div>{{ c.conv_pct }}%</div>
@@ -127,13 +127,13 @@
               v-for="(n, st) in dispatchStatuses"
               :key="st"
               class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-              :class="st === 'Sent' ? 'text-ink-green-6 bg-surface-green-2' : st === 'Failed' ? 'text-ink-red-8 bg-surface-red-1' : st === 'Pending' ? 'text-ink-amber-6 bg-surface-amber-1' : 'text-ink-gray-7 bg-surface-gray-2'"
+              :class="st === 'Sent' ? 'text-ink-green-7 bg-surface-green-2' : st === 'Failed' ? 'text-ink-red-7 bg-surface-red-1' : st === 'Pending' ? 'text-ink-amber-7 bg-surface-amber-1' : 'text-ink-gray-7 bg-surface-gray-2'"
             >{{ st }} · {{ n }}</span>
           </div>
           <div v-if="dispatchDeferredRows.length" class="mb-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Diferidos (siguen pendientes)') }}</div>
           <div v-for="d in dispatchDeferredRows" :key="d.reason" class="flex items-center justify-between border-b border-outline-gray-1 py-1.5 text-[12px]">
             <span class="min-w-0 truncate text-ink-gray-7" :title="d.reason">{{ d.reason }}</span>
-            <span class="ml-2 flex-none font-semibold text-ink-amber-6">{{ d.count }}</span>
+            <span class="ml-2 flex-none font-semibold text-ink-amber-7">{{ d.count }}</span>
           </div>
           <div v-if="dispatchTop.length" class="mb-1 mt-2.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Principales motivos de fallo/omisión') }}</div>
           <div
@@ -142,7 +142,7 @@
             class="grid items-center gap-x-2 border-b border-outline-gray-1 py-1.5 text-[12px]"
             :style="`grid-template-columns:${DISP_GRID}`"
           >
-            <span class="font-semibold" :class="r.status === 'Failed' ? 'text-ink-red-8' : 'text-ink-gray-6'">{{ r.status }}</span>
+            <span class="font-semibold" :class="r.status === 'Failed' ? 'text-ink-red-7' : 'text-ink-gray-6'">{{ r.status }}</span>
             <span class="min-w-0 truncate text-ink-gray-7" :title="r.reason">{{ r.reason || '—' }}</span>
             <span class="text-right font-semibold text-ink-gray-8">{{ r.count }}</span>
           </div>
@@ -173,9 +173,9 @@
             <div class="truncate text-ink-gray-7" :title="f.step">{{ f.step }}</div>
             <div>{{ f.drafted }}</div>
             <div class="font-semibold" style="color: var(--brand)">{{ f.sent }}</div>
-            <div :class="f.auto_sent ? 'text-ink-amber-6' : 'text-ink-gray-4'">{{ f.auto_sent }}</div>
+            <div :class="f.auto_sent ? 'text-ink-amber-7' : 'text-ink-gray-4'">{{ f.auto_sent }}</div>
             <div :class="f.discarded ? '' : 'text-ink-gray-4'">{{ f.discarded }}</div>
-            <div :class="f.failed ? 'text-ink-red-8' : 'text-ink-gray-4'">{{ f.failed }}</div>
+            <div :class="f.failed ? 'text-ink-red-7' : 'text-ink-gray-4'">{{ f.failed }}</div>
             <div>{{ f.replied }}</div>
             <div class="font-medium">{{ f.reply_pct }}%</div>
           </div>
@@ -333,7 +333,7 @@
             <div class="truncate text-ink-gray-7">{{ r.shop || '—' }}</div>
             <div class="text-ink-gray-6">{{ r.age_days ?? '—' }}</div>
             <div class="flex flex-wrap gap-1">
-              <span v-for="i in r.issues" :key="i" class="rounded bg-surface-amber-1 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-amber-6">{{ issueLabel(i) }}</span>
+              <span v-for="i in r.issues" :key="i" class="rounded bg-surface-amber-1 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-amber-7">{{ issueLabel(i) }}</span>
             </div>
           </div>
           <div v-if="hygiene.count > hygieneRows.length" class="pt-2 text-[11px] text-ink-gray-4">
@@ -529,8 +529,8 @@ function fmtResp(secs) {
 }
 function slaClass(pct) {
   const p = Number(pct) || 0
-  if (p >= 90) return 'font-semibold text-ink-green-6'
-  if (p >= 70) return 'font-semibold text-ink-amber-6'
+  if (p >= 90) return 'font-semibold text-ink-green-7'
+  if (p >= 70) return 'font-semibold text-ink-amber-7'
   return 'font-semibold text-ink-red-6'
 }
 

@@ -12,7 +12,7 @@
   <div>
     <div
       v-if="restricted"
-      class="rounded-[10px] border border-outline-amber-3 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-6"
+      class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-7"
     >
       {{ __('El desempeño por agente requiere permiso de gerente (Sales Manager o System Manager).') }}
     </div>
@@ -55,7 +55,7 @@
           >
             <div class="truncate font-medium text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
             <div class="text-right text-ink-gray-8">{{ a.open }}</div>
-            <div class="text-right font-semibold text-ink-green-6">{{ a.won }}</div>
+            <div class="text-right font-semibold text-ink-green-7">{{ a.won }}</div>
             <div class="text-right font-medium text-ink-gray-9">{{ money(a.won_value) }}</div>
             <div class="text-right" :class="a.median_response_secs == null ? 'text-ink-gray-4' : 'text-ink-gray-8'">
               {{ fmtDuration(a.median_response_secs) }}
@@ -91,7 +91,7 @@
                 </div>
                 <div>
                   <div class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">{{ __('Ganados') }}</div>
-                  <div class="font-semibold text-ink-green-6">{{ a.won }}</div>
+                  <div class="font-semibold text-ink-green-7">{{ a.won }}</div>
                 </div>
                 <div>
                   <div class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">{{ __('Valor ganado') }}</div>

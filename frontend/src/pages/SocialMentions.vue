@@ -32,7 +32,7 @@
       </div>
       <router-link
         to="/social"
-        class="text-[12px] font-semibold text-ink-blue-6 hover:underline"
+        class="text-[12px] font-semibold text-ink-blue-7 hover:underline"
         :title="__('Ir al calendario social')"
       >
         {{ __('Ir al calendario →') }}
@@ -89,7 +89,7 @@
               {{ TYPE_EMOJI[row.mention_type] || '' }} {{ typeLabel(row.mention_type) }}
             </span>
             <span class="text-[13.5px] font-semibold text-ink-gray-9">{{ authorLabel(row.author_username) }}</span>
-            <span v-if="row.rating" class="text-[12px] tracking-tight text-ink-amber-6" :title="`${row.rating}/5`">{{ '★'.repeat(row.rating) }}</span>
+            <span v-if="row.rating" class="text-[12px] tracking-tight text-ink-amber-7" :title="`${row.rating}/5`">{{ '★'.repeat(row.rating) }}</span>
             <span class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold" :class="statusChip(row.status)">
               {{ statusLabel(row.status) }}
             </span>
@@ -122,7 +122,7 @@
                 {{ previews[row.name].caption }}
               </div>
             </div>
-            <span class="flex-none text-[11px] font-semibold text-ink-blue-6">→</span>
+            <span class="flex-none text-[11px] font-semibold text-ink-blue-7">→</span>
           </a>
 
           <!-- what they wrote -->
@@ -142,10 +142,10 @@
               :href="row.permalink"
               target="_blank"
               rel="noopener"
-              class="text-[11.5px] font-semibold text-ink-blue-6 hover:underline"
+              class="text-[11.5px] font-semibold text-ink-blue-7 hover:underline"
             >{{ __('Ver en la red →') }}</a>
             <span v-if="isManager && shop === '' && row.shop" class="text-[11.5px] text-ink-gray-5">· {{ shopLabel(row.shop) }}</span>
-            <span v-if="row.status === 'Atendido' && row.replied_at" class="text-[11.5px] text-ink-green-6">
+            <span v-if="row.status === 'Atendido' && row.replied_at" class="text-[11.5px] text-ink-green-7">
               ✓ {{ __('Respondida') }} {{ relTime(row.replied_at) }}
             </span>
           </div>
@@ -213,7 +213,7 @@
             <router-link
               v-else
               to="/social"
-              class="text-[12px] font-semibold text-ink-green-6 hover:underline"
+              class="text-[12px] font-semibold text-ink-green-7 hover:underline"
               :title="row.testimonial_post"
             >
               ✓ {{ __('Testimonio en borrador — ver calendario →') }}
@@ -285,8 +285,8 @@ function typeLabel(t) {
 }
 function statusChip(s) {
   return {
-    Nuevo: 'bg-surface-blue-2 text-ink-blue-6',
-    Atendido: 'bg-surface-green-2 text-ink-green-6',
+    Nuevo: 'bg-surface-blue-2 text-ink-blue-7',
+    Atendido: 'bg-surface-green-2 text-ink-green-7',
     Descartado: 'bg-surface-gray-2 text-ink-gray-6',
   }[s] || 'bg-surface-gray-2 text-ink-gray-6'
 }

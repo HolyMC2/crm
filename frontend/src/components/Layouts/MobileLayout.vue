@@ -12,7 +12,7 @@
            read as "no me llegan mensajes" — say it out loud instead -->
       <div
         v-if="!online"
-        class="flex flex-none items-center justify-center gap-2 bg-surface-amber-1 px-3 py-1.5 text-[12px] font-semibold text-ink-amber-6"
+        class="flex flex-none items-center justify-center gap-2 bg-surface-amber-1 px-3 py-1.5 text-[12px] font-semibold text-ink-amber-7"
         role="status"
       >
         <span class="h-1.5 w-1.5 flex-none animate-pulse rounded-full" style="background: #d9930b" />

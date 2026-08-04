@@ -11,7 +11,7 @@
       v-for="g in groups"
       :key="g.value"
       class="flex w-[260px] flex-none flex-col rounded-lg bg-surface-gray-1"
-      :class="dragOver === g.value ? 'ring-2 ring-outline-green-3' : ''"
+      :class="dragOver === g.value ? 'ring-2 ring-outline-green-4' : ''"
       @dragover.prevent="dragOver = g.value"
       @dragleave="dragOver = null"
       @drop="onDrop(g.value)"

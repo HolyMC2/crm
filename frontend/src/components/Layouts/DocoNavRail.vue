@@ -47,7 +47,7 @@
         :class="[
           isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
           activeGroup === item.group
-            ? 'bg-surface-green-2 text-ink-green-6'
+            ? 'bg-surface-green-2 text-ink-green-7'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
         ]"
         @click="go(item.to)"
@@ -83,7 +83,7 @@
         :class="[
           isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
           activeGroup === item.group
-            ? 'bg-surface-green-2 text-ink-green-6'
+            ? 'bg-surface-green-2 text-ink-green-7'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
         ]"
         @click="go(item.to)"
@@ -123,7 +123,7 @@
       @click="showProfile = !showProfile"
     >
       <span
-        class="flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold bg-surface-violet-1 text-ink-violet-1"
+        class="flex h-[30px] w-[30px] flex-none items-center justify-center overflow-hidden rounded-full text-[11px] font-semibold bg-surface-violet-2 text-ink-violet-6"
       >
         <img
           v-if="user.user_image"
@@ -169,7 +169,7 @@
         <div class="border-b border-outline-gray-1 p-4 pb-3">
           <div class="flex items-center gap-2.5">
             <div
-              class="flex h-[38px] w-[38px] flex-none items-center justify-center overflow-hidden rounded-full text-sm-semibold bg-surface-violet-1 text-ink-violet-1"
+              class="flex h-[38px] w-[38px] flex-none items-center justify-center overflow-hidden rounded-full text-sm-semibold bg-surface-violet-2 text-ink-violet-6"
             >
               <img
                 v-if="user.user_image"
@@ -203,7 +203,7 @@
         <!-- sign out -->
         <div class="border-t border-outline-gray-1 py-1.5">
           <button
-            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-red-8 hover:bg-surface-red-1"
+            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-red-7 hover:bg-surface-red-1"
             @click="signOut"
           >
             <LogOutIcon class="h-4 w-4" />

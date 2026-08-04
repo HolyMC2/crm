@@ -34,7 +34,7 @@
             <span class="flex-none text-[10.5px] text-ink-gray-4">{{ timeAgo(n.creation) }}</span>
             <button
               v-if="n.can_delete"
-              class="press ml-auto flex-none rounded px-1 text-[11px] text-ink-gray-4 hover:text-ink-red-8 disabled:opacity-50"
+              class="press ml-auto flex-none rounded px-1 text-[11px] text-ink-gray-4 hover:text-ink-red-7 disabled:opacity-50"
               :disabled="deleting === n.name"
               :title="__('Borrar nota')"
               :aria-label="__('Borrar nota')"

@@ -34,7 +34,7 @@
         <CannedReplyPicker channel="Messenger" @pick="onCanned" />
         <button
           type="button"
-          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-6 hover:bg-surface-green-3"
+          class="rounded-md bg-surface-green-2 px-1.5 py-0.5 text-[12px] font-semibold text-ink-green-7 hover:bg-surface-green-7"
           :title="__('Catálogo (o escribe /cat)')"
           @click="emit('catalog', '')"
         >
@@ -60,13 +60,13 @@
     </div>
     <p
       v-if="window24h && window24h.open"
-      class="mt-1 text-[10px] font-medium text-ink-green-6 dark:text-ink-green-5"
+      class="mt-1 text-[10px] font-medium text-ink-green-7 dark:text-ink-green-6"
     >
       {{ __('Ventana de 24 h abierta · respuesta gratis ({0} h restantes)', [window24h.hoursLeft]) }}
     </p>
     <p
       v-else-if="window24h && !window24h.open"
-      class="mt-1 text-[10px] font-medium text-ink-amber-6 dark:text-ink-amber-5"
+      class="mt-1 text-[10px] font-medium text-ink-amber-7 dark:text-ink-amber-6"
     >
       {{ __('Fuera de la ventana de 24 h — Meta solo entrega con etiqueta de agente humano (sin promociones).') }}
     </p>

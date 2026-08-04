@@ -22,7 +22,7 @@
 
     <div
       v-if="frozen"
-      class="mb-3 max-w-[520px] rounded-[10px] border border-outline-amber-3 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-6"
+      class="mb-3 max-w-[520px] rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-7"
     >
       {{ frozenHint }}
     </div>
@@ -78,14 +78,14 @@
 
             <span
               v-if="kind === 'chatflow' && Number(s.wait_hours) > 0"
-              class="flex-none rounded-full bg-surface-amber-1 px-2 py-[2px] text-[10.5px] font-semibold text-ink-amber-6"
+              class="flex-none rounded-full bg-surface-amber-1 px-2 py-[2px] text-[10.5px] font-semibold text-ink-amber-7"
             >
               ⏳ {{ s.wait_hours }}h
             </span>
             <span class="flex-none text-[10.5px] font-semibold text-ink-gray-4">#{{ i + 1 }}</span>
             <button
               v-if="!frozen"
-              class="flex-none text-ink-gray-4 hover:text-ink-red-8"
+              class="flex-none text-ink-gray-4 hover:text-ink-red-7"
               @click="removeStep(i)"
               :aria-label="__('Eliminar')"
             >
@@ -202,7 +202,7 @@
                 <template v-for="(part, k) in tplParts(previewTpl(s).template)" :key="k">
                   <span
                     v-if="k % 2 === 1"
-                    class="mx-[1px] rounded bg-surface-amber-1 px-1 font-mono text-[11px] font-semibold text-ink-amber-6"
+                    class="mx-[1px] rounded bg-surface-amber-1 px-1 font-mono text-[11px] font-semibold text-ink-amber-7"
                   >{{ part }}</span>
                   <span v-else>{{ part }}</span>
                 </template>
@@ -215,7 +215,7 @@
               <span>{{ variablesHint }}</span>
               <span
                 v-if="previewTpl(s).status && previewTpl(s).status !== 'APPROVED'"
-                class="rounded bg-surface-amber-1 px-1.5 py-[1px] font-semibold text-ink-amber-6"
+                class="rounded bg-surface-amber-1 px-1.5 py-[1px] font-semibold text-ink-amber-7"
               >
                 {{ previewTpl(s).status }}
               </span>
@@ -388,7 +388,7 @@ PreviewToggle.emits = ['toggle']
 .dm-input:focus {
   outline: none;
   background: var(--surface-base);
-  border-color: var(--outline-green-3);
+  border-color: var(--outline-green-4);
 }
 .dm-input:disabled {
   opacity: 0.6;

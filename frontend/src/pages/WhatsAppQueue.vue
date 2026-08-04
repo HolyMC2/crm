@@ -12,7 +12,7 @@
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Aprobaciones WhatsApp') }}</span>
         <span
           v-if="pendingCount"
-          class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-[11px] font-semibold text-ink-amber-6"
+          class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-[11px] font-semibold text-ink-amber-7"
         >{{ pendingCount }} {{ __('pendientes') }}</span>
       </div>
       <button

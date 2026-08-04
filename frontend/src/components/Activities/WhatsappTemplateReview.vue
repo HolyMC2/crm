@@ -77,7 +77,7 @@
         {{ __('Esta plantilla no tiene variables — se envía tal cual.') }}
       </div>
 
-      <div v-if="headerNote" class="mt-2 text-[11px] text-ink-amber-6">
+      <div v-if="headerNote" class="mt-2 text-[11px] text-ink-amber-7">
         {{ headerNote }}
       </div>
 

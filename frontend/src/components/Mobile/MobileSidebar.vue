@@ -56,7 +56,7 @@
               </span>
               <span
                 v-if="unreadNotificationsCount"
-                class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-surface-red-1 px-1.5 text-[11px] font-bold text-ink-red-8"
+                class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-surface-red-1 px-1.5 text-[11px] font-bold text-ink-red-7"
               >
                 {{ unreadNotificationsCount }}
               </span>
@@ -81,8 +81,8 @@
                   class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full px-1.5 text-[11px] font-bold"
                   :class="
                     item.badge === 'unread'
-                      ? 'bg-surface-red-1 text-ink-red-8'
-                      : 'bg-surface-amber-1 text-ink-amber-6'
+                      ? 'bg-surface-red-1 text-ink-red-7'
+                      : 'bg-surface-amber-1 text-ink-amber-7'
                   "
                 >
                   {{ badgeFor(item.badge) }}
@@ -158,7 +158,7 @@
               </span>
               <span
                 class="relative h-[18px] w-8 flex-none rounded-full transition-colors duration-200"
-                :class="isDark ? 'bg-surface-green-3' : 'bg-surface-gray-4'"
+                :class="isDark ? 'bg-surface-green-7' : 'bg-surface-gray-4'"
               >
                 <span
                   class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-base transition-all duration-200"
@@ -181,7 +181,7 @@
               <span
                 v-if="pushState !== 'denied'"
                 class="relative h-[18px] w-8 flex-none rounded-full transition-colors duration-200"
-                :class="pushState === 'on' ? 'bg-surface-green-3' : 'bg-surface-gray-4'"
+                :class="pushState === 'on' ? 'bg-surface-green-7' : 'bg-surface-gray-4'"
               >
                 <span
                   class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-base transition-all duration-200"
@@ -190,7 +190,7 @@
               </span>
             </button>
             <button
-              class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-red-8 hover:bg-surface-red-1"
+              class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-red-7 hover:bg-surface-red-1"
               @click="signOut"
             >
               <LogOutIcon class="h-[18px] w-[18px] flex-none" />
@@ -200,7 +200,7 @@
             <!-- user card -->
             <div class="mt-1 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2">
               <span
-                class="flex h-8 w-8 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-violet-1 text-[11px] font-semibold text-ink-violet-1"
+                class="flex h-8 w-8 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-violet-2 text-[11px] font-semibold text-ink-violet-6"
               >
                 <img
                   v-if="user.user_image"
@@ -296,7 +296,7 @@ const activeGroup = computed(() => routeGroup(route.path))
 
 function rowClass(group) {
   return group && activeGroup.value === group
-    ? 'bg-surface-green-2 text-ink-green-6'
+    ? 'bg-surface-green-2 text-ink-green-7'
     : 'text-ink-gray-7 hover:bg-surface-gray-2'
 }
 

@@ -39,8 +39,8 @@
         </div>
 
         <!-- AI summary -->
-        <div v-if="d.ai_summary" class="mb-4 rounded-[10px] border-l-[3px] bg-surface-green-2 p-3" style="border-color: var(--outline-green-3)">
-          <div class="mb-1 text-[11px] font-semibold uppercase tracking-[.07em] text-ink-green-6">{{ __('Resumen IA') }}</div>
+        <div v-if="d.ai_summary" class="mb-4 rounded-[10px] border-l-[3px] bg-surface-green-2 p-3" style="border-color: var(--outline-green-4)">
+          <div class="mb-1 text-[11px] font-semibold uppercase tracking-[.07em] text-ink-green-7">{{ __('Resumen IA') }}</div>
           <div class="text-[12.5px] leading-relaxed text-ink-gray-8">{{ d.ai_summary }}</div>
         </div>
         <button
@@ -114,8 +114,8 @@ function fmtDur(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 function outcomeChip(status) {
-  if (status === 'Completed') return 'text-ink-green-6 bg-surface-green-2'
-  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-8 bg-surface-red-1'
+  if (status === 'Completed') return 'text-ink-green-7 bg-surface-green-2'
+  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-7 bg-surface-red-1'
   return 'text-ink-gray-6 bg-surface-gray-2'
 }
 

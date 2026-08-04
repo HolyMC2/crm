@@ -70,7 +70,7 @@
           <button
             v-else-if="error"
             type="button"
-            class="press w-full py-4 text-center text-[12.5px] font-medium text-ink-blue-6 hover:underline"
+            class="press w-full py-4 text-center text-[12.5px] font-medium text-ink-blue-7 hover:underline"
             @click="reload"
           >
             {{ __('No se pudo cargar — reintentar') }}
@@ -79,7 +79,7 @@
           <template v-else>
             <p
               v-if="decayed"
-              class="mb-2 rounded-lg bg-surface-amber-1 px-2.5 py-1.5 text-[11.5px] text-ink-amber-6"
+              class="mb-2 rounded-lg bg-surface-amber-1 px-2.5 py-1.5 text-[11.5px] text-ink-amber-7"
             >
               {{ __('Incluye ajuste por inactividad (las reglas suman {0}).', [ruleScore]) }}
             </p>
@@ -96,7 +96,7 @@
                 </div>
                 <span
                   class="flex-none rounded px-1.5 py-0.5 text-[11px] font-bold tabular-nums"
-                  :class="c.points >= 0 ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-red-1 text-ink-red-6'"
+                  :class="c.points >= 0 ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-red-1 text-ink-red-6'"
                 >{{ signed(c.points) }}</span>
               </li>
             </ul>
@@ -121,7 +121,7 @@
                 <span class="flex items-center gap-1.5 text-ink-gray-6">
                   <span
                     class="tabular-nums font-semibold"
-                    :class="h.delta >= 0 ? 'text-ink-green-6' : 'text-ink-red-6'"
+                    :class="h.delta >= 0 ? 'text-ink-green-7' : 'text-ink-red-6'"
                   >{{ signed(h.delta) }}</span>
                   <span>{{ triggerLabel(h.trigger) }}</span>
                 </span>

@@ -46,7 +46,7 @@
             :aria-pressed="selected.has(r.item_code)"
             :aria-label="r.item_name"
             class="group relative flex flex-col overflow-hidden rounded-xl border bg-surface-base text-left transition dark:bg-surface-gray-2"
-            :class="selected.has(r.item_code) ? 'border-outline-green-3 ring-2 ring-outline-green-3' : 'border-outline-gray-2 hover:border-outline-gray-3'"
+            :class="selected.has(r.item_code) ? 'border-outline-green-4 ring-2 ring-outline-green-4' : 'border-outline-gray-2 hover:border-outline-gray-3'"
             @click="toggle(r.item_code)"
           >
             <div class="relative aspect-square w-full bg-surface-gray-2 dark:bg-surface-gray-3">
@@ -66,7 +66,7 @@
               >✓</span>
               <span
                 class="absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
-                :class="r.stock > 0 ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-red-8 bg-surface-red-1'"
+                :class="r.stock > 0 ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-red-7 bg-surface-red-1'"
               >{{ r.stock }} {{ __('stock') }}</span>
             </div>
             <div class="flex min-h-0 flex-col gap-0.5 p-2">

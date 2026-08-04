@@ -42,7 +42,7 @@
     <!-- failure reason -->
     <div
       v-if="row.status === 'Fallido' && row.error"
-      class="mt-1.5 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-8"
+      class="mt-1.5 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-7"
     >
       {{ shortError }}
       <span v-if="row.attempts" class="opacity-70">· {{ row.attempts }} {{ __('intentos') }}</span>
@@ -93,7 +93,7 @@
         @click="act('retry')"
       >{{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}</button>
       <button
-        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1 disabled:opacity-50"
+        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-7 hover:bg-surface-red-1 disabled:opacity-50"
         :disabled="!!busy"
         @click="act('reject')"
       >{{ __('Cancelar') }}</button>
@@ -175,9 +175,9 @@ const provenance = computed(() => {
 const statusChip = computed(() => {
   return (
     {
-      Pendiente: { label: __('Pendiente'), cls: 'bg-surface-amber-1 text-ink-amber-6' },
-      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-6' },
-      Fallido: { label: __('Fallido'), cls: 'bg-surface-red-1 text-ink-red-8' },
+      Pendiente: { label: __('Pendiente'), cls: 'bg-surface-amber-1 text-ink-amber-7' },
+      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-7' },
+      Fallido: { label: __('Fallido'), cls: 'bg-surface-red-1 text-ink-red-7' },
       Cancelado: { label: __('Cancelado'), cls: 'bg-surface-gray-2 text-ink-gray-5' },
     }[props.row.status] || { label: props.row.status, cls: 'bg-surface-gray-2 text-ink-gray-5' }
   )

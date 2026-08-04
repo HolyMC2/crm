@@ -15,7 +15,7 @@
     </div>
     <div v-for="day in agendaDays" :key="day.key" class="mb-2 rounded-lg border border-outline-gray-2 bg-surface-base p-2">
       <div class="mb-1 flex items-center justify-between">
-        <span class="text-[11.5px] font-bold" :class="day.isToday ? 'text-ink-green-6' : 'text-ink-gray-6'">
+        <span class="text-[11.5px] font-bold" :class="day.isToday ? 'text-ink-green-7' : 'text-ink-gray-6'">
           {{ day.label }}<span v-if="day.isToday"> · {{ __('hoy') }}</span>
         </span>
         <button class="press px-1 text-[13px] text-ink-gray-5" :aria-label="__('Nueva publicación este día')" @click="emit('open-new', day)">+</button>
@@ -67,10 +67,10 @@
         <!-- season ribbons: label on the span's first visible day, emoji elsewhere -->
         <div
           v-for="rib in seasonByDay[day.key] || []" :key="rib.name"
-          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-6 dark:bg-amber-300/15 dark:text-amber-200"
+          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200"
           :title="rib.label"
         >{{ rib.isStart ? rib.label : rib.emoji }}</div>
-        <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-6' : 'text-ink-gray-6'">
+        <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-7' : 'text-ink-gray-6'">
           <span v-if="isBlackout(day)" class="mr-0.5" :title="__('Día bloqueado')">🚫</span>{{ day.n }}
         </div>
         <div class="flex flex-col gap-0.5">

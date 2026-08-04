@@ -34,7 +34,7 @@
     <!-- non-manager: server refused → banner (the server gate is the real guard) -->
     <div
       v-if="restricted"
-      class="rounded-[10px] border border-outline-amber-3 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-6"
+      class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-7"
     >
       {{ __('El backtest de score requiere permiso de gerente.') }}
     </div>

@@ -25,7 +25,7 @@
       <span v-else-if="boundContact" class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm-semibold" style="color:#5b21b6;background:#ede9fe">
         {{ contactInitials }}
       </span>
-      <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-6">
+      <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-7">
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
       <div class="min-w-0">
@@ -41,7 +41,7 @@
         <div v-if="boundContact" class="truncate text-[11px] font-medium text-ink-gray-5">
           {{ formatPhone(activeUnassigned) }}<template v-if="boundContact.email"> · {{ boundContact.email }}</template>
         </div>
-        <div v-else class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-6'">
+        <div v-else class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-7'">
           {{ isArchived ? __('Archivado — sigue disponible') : __('Sin asignar — captura y convierte') }}
         </div>
       </div>
@@ -60,7 +60,7 @@
       </button>
       <button
         v-else
-        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-3 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-6 hover:bg-surface-blue-2 disabled:opacity-50"
+        class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-blue-4 bg-surface-blue-1 px-2 py-1.5 text-[11.5px] font-semibold text-ink-blue-7 hover:bg-surface-blue-2 disabled:opacity-50"
         :disabled="busy"
         :aria-label="__('Desarchivar')"
         @click="onUnarchive"
@@ -86,7 +86,7 @@
           </div>
           <div v-else-if="unassignedThread.error && !messages.length" class="py-8 text-center text-xs text-ink-red-6">
             {{ __('No se pudo cargar la conversación.') }}
-            <button class="ml-1 font-semibold underline hover:text-ink-red-8" @click="unassignedThread.reload()">{{ __('Reintentar') }}</button>
+            <button class="ml-1 font-semibold underline hover:text-ink-red-7" @click="unassignedThread.reload()">{{ __('Reintentar') }}</button>
           </div>
           <div v-else-if="!messages.length" class="py-8 text-center text-xs text-ink-gray-4">{{ __('Sin mensajes') }}</div>
           <!-- Reuse the real conversation renderer (templates, media, receipts, replies,
@@ -146,7 +146,7 @@
               rows="1"
               :aria-label="__('Responder por Messenger')"
               :placeholder="__('Responder por Messenger…')"
-              class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-3"
+              class="scb max-h-28 flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-4"
               @keydown.enter.exact.prevent="sendMsgr"
             />
             <button
@@ -222,7 +222,7 @@
 
         <!-- Forecasting (only when CRM forecasting is on): a Deal then requires an
              expected value + closure date, else "Crear Trato" fails server-side. -->
-        <div v-if="forecastingEnabled" class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-3 bg-surface-blue-1 p-2">
+        <div v-if="forecastingEnabled" class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-4 bg-surface-blue-1 p-2">
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Valor estimado') }} *</span>
             <input v-model="form.expected_deal_value" type="number" min="0" :class="inputCls" /></label>
           <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Cierre estimado') }}</span>
@@ -272,7 +272,7 @@
               <button
                 v-for="t in suggestionRows"
                 :key="'s:' + t.doctype + ':' + t.name"
-                class="flex items-center justify-between gap-2 rounded-md border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-blue-2 disabled:opacity-50"
+                class="flex items-center justify-between gap-2 rounded-md border border-outline-blue-4 bg-surface-blue-1 px-2.5 py-1.5 text-left text-[12px] hover:bg-surface-blue-2 disabled:opacity-50"
                 :disabled="busy"
                 @click="linkTo(t)"
               >
@@ -377,9 +377,9 @@ function docLabel(dt) {
 }
 function docBadge(dt) {
   // frappe-ui semantic tokens — auto dark-safe (was fixed light-mode hex)
-  if (dt === 'Contact') return 'bg-surface-violet-1 text-ink-violet-1'
-  if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-6'
-  return 'bg-surface-blue-1 text-ink-blue-6'
+  if (dt === 'Contact') return 'bg-surface-violet-2 text-ink-violet-6'
+  if (dt === 'CRM Deal') return 'bg-surface-green-2 text-ink-green-7'
+  return 'bg-surface-blue-1 text-ink-blue-7'
 }
 
 // Free Messenger reply to an orphan PSID (no assignment required).

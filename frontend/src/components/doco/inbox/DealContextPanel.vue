@@ -66,7 +66,7 @@
             <div class="flex items-center gap-1">
               <span v-for="a in assignees" :key="a.name" class="group relative leading-none">
                 <Avatar :label="a.label" :image="a.image" size="sm" />
-                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-8 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
+                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-7 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
               </span>
               <Dropdown :options="userOpts" placement="right">
                 <button class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3" :aria-label="__('Asignar usuario')">+</button>
@@ -76,8 +76,8 @@
           <div class="flex items-start justify-between gap-2">
             <span class="flex-none pt-1 text-ink-gray-5">{{ __('Etiquetas') }}</span>
             <div class="flex flex-1 flex-wrap justify-end gap-1">
-              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-5">
-                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-8" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
+              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-6">
+                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-7" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
               </span>
               <input
                 v-if="addingTag"
@@ -97,13 +97,13 @@
         <div class="mt-3 border-t border-outline-gray-1 pt-2.5">
           <div class="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Macros rápidas') }}</div>
           <div class="flex flex-col gap-1">
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-6 hover:bg-surface-green-2" @click="macroListo">
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-7 hover:bg-surface-green-2" @click="macroListo">
               → {{ __('Listo para entregar') }}
             </button>
             <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2" @click="macroCompletado">
               → {{ __('Marcar completado') }}
             </button>
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-6 hover:bg-surface-amber-1" @click="macroPago">
+            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-7 hover:bg-surface-amber-1" @click="macroPago">
               → {{ __('Recordatorio de pago') }}<span v-if="dealSummary.balance" class="text-ink-gray-5"> · {{ dealSummary.balance }}</span>
             </button>
           </div>
@@ -167,7 +167,7 @@
         <div>
           <div class="flex items-center gap-1.5">
             <span class="text-[17px] font-extrabold" :style="`color:${gradeColor}`">{{ grade }}</span>
-            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-6 bg-surface-green-2">{{ gradeWord }}</span>
+            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-7 bg-surface-green-2">{{ gradeWord }}</span>
           </div>
           <div v-if="probability" class="mt-0.5 text-[10px] text-ink-gray-5">{{ probability }}% {{ __('prob. conversión') }}</div>
         </div>

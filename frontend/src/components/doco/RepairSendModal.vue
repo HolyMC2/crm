@@ -16,7 +16,7 @@
             v-for="c in channelChoices"
             :key="c.v"
             class="rounded-full px-2.5 py-1 text-[12px] font-semibold"
-            :class="channel === c.v ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="channel === c.v ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
             @click="channel = c.v"
           >
             {{ c.label }}
@@ -27,7 +27,7 @@
         <!-- 24h-window guard: free-form WhatsApp won't deliver outside Meta's window -->
         <div
           v-if="waBlocked"
-          class="rounded-md border border-outline-amber-3 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-6"
+          class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-7"
         >
           ⚠ <span class="font-semibold">{{ __('Ventana de 24h de WhatsApp cerrada.') }}</span>
           {{ __('El cliente no ha escrito por WhatsApp en las últimas 24 h. Meta solo entrega plantillas aprobadas — un mensaje libre o una foto NO llegará.') }}
@@ -36,7 +36,7 @@
         </div>
         <div
           v-else-if="channel === 'whatsapp' && waWindow.open"
-          class="text-[11px] text-ink-green-6"
+          class="text-[11px] text-ink-green-7"
         >
           ✓ {{ __('Ventana de WhatsApp abierta') }} · {{ waWindow.hoursLeft }}h
         </div>
@@ -76,14 +76,14 @@
               v-for="ph in ro.photos"
               :key="ph.name"
               class="relative h-16 w-16 overflow-hidden rounded-lg border-2 transition"
-              :class="photoSel[ph.name] ? 'border-outline-green-4 ring-1 ring-outline-green-3' : 'border-outline-gray-2 hover:border-outline-gray-4'"
+              :class="photoSel[ph.name] ? 'border-outline-green-4 ring-1 ring-outline-green-4' : 'border-outline-gray-2 hover:border-outline-gray-4'"
               :title="ph.photo_type || __('Foto')"
               @click="togglePhoto(ph.name)"
             >
               <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
               <span
                 v-if="photoSel[ph.name]"
-                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-3 text-[9px] font-bold text-ink-base"
+                class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-7 text-[9px] font-bold text-ink-base"
               >✓</span>
             </button>
           </div>

@@ -27,7 +27,7 @@
             <th class="px-3 py-2 text-right">{{ __('Alcance') }}</th>
             <th class="px-3 py-2 text-right">{{ __('Interacción') }}</th>
             <th class="px-3 py-2 text-right">{{ __('Clics') }}</th>
-            <th class="px-3 py-2 text-right text-ink-green-6">{{ __('Leads WA') }}</th>
+            <th class="px-3 py-2 text-right text-ink-green-7">{{ __('Leads WA') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -37,7 +37,7 @@
             <td class="px-3 py-2 text-right tabular-nums">{{ r.reach.toLocaleString() }}</td>
             <td class="px-3 py-2 text-right tabular-nums">{{ r.engagement.toLocaleString() }}</td>
             <td class="px-3 py-2 text-right tabular-nums">{{ r.link_clicks.toLocaleString() }}</td>
-            <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-6">{{ r.leads }}</td>
+            <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-7">{{ r.leads }}</td>
           </tr>
           <tr v-if="(lb.data || []).length > 1" class="border-t-2 border-outline-gray-2 bg-surface-gray-1 font-bold">
             <td class="px-3 py-2 text-ink-gray-7">{{ __('Total red') }}</td>
@@ -45,7 +45,7 @@
             <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.reach.toLocaleString() }}</td>
             <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.engagement.toLocaleString() }}</td>
             <td class="px-3 py-2 text-right tabular-nums">{{ lbTotals.link_clicks.toLocaleString() }}</td>
-            <td class="px-3 py-2 text-right tabular-nums text-ink-green-6">{{ lbTotals.leads }}</td>
+            <td class="px-3 py-2 text-right tabular-nums text-ink-green-7">{{ lbTotals.leads }}</td>
           </tr>
           <tr v-if="!(lb.data || []).length"><td colspan="6" class="px-3 py-6 text-center text-ink-gray-4">{{ lb.loading ? __('Cargando…') : __('Sin datos por sucursal todavía.') }}</td></tr>
         </tbody>
@@ -61,7 +61,7 @@
             <th class="px-3 py-2 text-right">{{ __('Alcance') }}</th>
             <th class="px-3 py-2 text-right">{{ __('Interacción') }}</th>
             <th class="px-3 py-2 text-right">{{ __('Clics') }}</th>
-            <th class="px-3 py-2 text-right text-ink-green-6">{{ __('Leads WA') }}</th>
+            <th class="px-3 py-2 text-right text-ink-green-7">{{ __('Leads WA') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -70,7 +70,7 @@
             <td class="px-3 py-2 text-right tabular-nums">{{ row.reach.toLocaleString() }}</td>
             <td class="px-3 py-2 text-right tabular-nums">{{ row.engagement.toLocaleString() }}</td>
             <td class="px-3 py-2 text-right tabular-nums">{{ row.link_clicks.toLocaleString() }}</td>
-            <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-6">{{ row.leads }}</td>
+            <td class="px-3 py-2 text-right font-bold tabular-nums text-ink-green-7">{{ row.leads }}</td>
           </tr>
           <tr v-if="!(dash.data || []).length"><td colspan="5" class="px-3 py-8 text-center text-ink-gray-4">{{ dash.loading ? __('Cargando…') : __('Sin datos todavía (las métricas se refrescan a diario).') }}</td></tr>
         </tbody>

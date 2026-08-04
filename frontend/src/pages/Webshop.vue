@@ -10,7 +10,7 @@
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Webshop') }}</span>
         <span
           class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-          :class="kpis.connected ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-gray-6 bg-surface-gray-2'"
+          :class="kpis.connected ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-gray-6 bg-surface-gray-2'"
         >
           {{ kpis.connected ? '✓ ' + __('Conectado') : __('Desconectado') }}
         </span>

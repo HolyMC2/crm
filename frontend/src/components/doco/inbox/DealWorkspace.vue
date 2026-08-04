@@ -12,7 +12,7 @@
       <!-- 👥 collision strip (spec 2.4): who else is in this conversation NOW -->
       <div
         v-if="activePresence.length"
-        class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-6"
+        class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-7"
         role="status"
       >
         <span v-for="p in activePresence" :key="p.user" class="inline-flex items-center gap-1">
@@ -32,7 +32,7 @@
           class="press flex h-11 flex-none items-center gap-1.5 whitespace-nowrap border-b-2 px-[11px] transition-colors duration-150"
           :class="
             activeTab === t.key
-              ? 'border-outline-green-3 font-semibold text-ink-green-6'
+              ? 'border-outline-green-4 font-semibold text-ink-green-7'
               : 'border-transparent text-ink-gray-5'
           "
           @click="activeTab = t.key"

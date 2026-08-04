@@ -52,7 +52,7 @@
             </label>
             <span class="text-[10px] text-ink-gray-4">× {{ money(l.rate) }}</span>
             <button
-              class="ml-auto text-[11px] text-ink-red-6 hover:text-ink-red-8"
+              class="ml-auto text-[11px] text-ink-red-6 hover:text-ink-red-7"
               :disabled="busy"
               :title="__('Quitar línea')"
               @click="dropLine(l)"

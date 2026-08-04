@@ -31,7 +31,7 @@
             target="_blank"
             class="flex items-center justify-between px-3 py-2 text-sm hover:bg-surface-gray-1 transition-colors"
           >
-            <span class="font-medium text-ink-blue-6">{{ doc.name }}</span>
+            <span class="font-medium text-ink-blue-7">{{ doc.name }}</span>
             <div class="flex items-center gap-3 text-right">
               <Badge :label="__(doc.status)" :theme="quotationTheme(doc.status)" size="sm" />
               <span class="text-ink-gray-7 tabular-nums">{{ fmt(doc.grand_total, doc.currency) }}</span>
@@ -54,7 +54,7 @@
             target="_blank"
             class="flex items-center justify-between px-3 py-2 text-sm hover:bg-surface-gray-1 transition-colors"
           >
-            <span class="font-medium text-ink-blue-6">{{ doc.name }}</span>
+            <span class="font-medium text-ink-blue-7">{{ doc.name }}</span>
             <div class="flex items-center gap-3 text-right">
               <Badge :label="__(doc.status)" :theme="soTheme(doc.status)" size="sm" />
               <span class="text-ink-gray-7 tabular-nums">{{ fmt(doc.grand_total, doc.currency) }}</span>
@@ -78,7 +78,7 @@
             class="flex items-center justify-between px-3 py-2 text-sm hover:bg-surface-gray-1 transition-colors"
           >
             <div class="flex items-center gap-2">
-              <span class="font-medium text-ink-blue-6">{{ doc.name }}</span>
+              <span class="font-medium text-ink-blue-7">{{ doc.name }}</span>
               <span
                 v-if="doc.doctype === 'POS Invoice'"
                 class="rounded bg-surface-gray-2 px-1 py-0.5 text-xs text-ink-gray-5"

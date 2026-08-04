@@ -58,7 +58,7 @@
         >
           <button
             class="flex h-5 w-9 flex-none items-center rounded-full px-0.5 transition"
-            :class="r.enabled ? 'bg-surface-green-3' : 'bg-surface-gray-4'"
+            :class="r.enabled ? 'bg-surface-green-7' : 'bg-surface-gray-4'"
             :style="r.enabled ? 'justify-content:flex-end' : 'justify-content:flex-start'"
             @click="toggleRule(r)"
           >
@@ -70,10 +70,10 @@
               <span class="font-medium">{{ r.field }}</span> {{ r.operator }} <span class="font-medium">{{ r.value }}</span>
             </div>
           </div>
-          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :class="r.points >= 0 ? 'text-ink-green-6 bg-surface-green-2' : 'text-ink-red-8 bg-surface-red-1'">
+          <span class="flex-none rounded-md px-2 py-[3px] text-[12px] font-bold" :class="r.points >= 0 ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-red-7 bg-surface-red-1'">
             {{ r.points >= 0 ? '+' : '' }}{{ r.points }}
           </span>
-          <button class="flex-none text-[13px] text-ink-gray-4 hover:text-ink-red-8" @click="deleteRule(r)">✕</button>
+          <button class="flex-none text-[13px] text-ink-gray-4 hover:text-ink-red-7" @click="deleteRule(r)">✕</button>
         </div>
       </div>
 

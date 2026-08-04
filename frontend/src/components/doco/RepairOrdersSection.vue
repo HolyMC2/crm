@@ -62,7 +62,7 @@
           <a
             :href="`/taller/orders/${encodeURIComponent(ro.name)}`"
             target="_blank"
-            class="text-sm-semibold text-ink-blue-6 hover:underline"
+            class="text-sm-semibold text-ink-blue-7 hover:underline"
           >
             {{ ro.name }}
           </a>
@@ -70,7 +70,7 @@
             <!-- Purchase-side ETA (ERP spec P3): what «Esperando Pieza» is waiting ON -->
             <span
               v-if="waitingPo(ro)"
-              class="rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-6"
+              class="rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-7"
               :title="__('Pieza en camino — Purchase Order vinculado')"
             >
               🧩 {{ waitingPo(ro).purchase_order }}<template v-if="waitingPo(ro).po_expected_date"> · {{ __('llega') }} {{ waitingPo(ro).po_expected_date }}</template>
@@ -122,7 +122,7 @@
                 <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
                 <span
                   v-if="ph.show_on_tracker"
-                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-3 px-1 text-[8px] font-bold text-ink-base"
+                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-7 px-1 text-[8px] font-bold text-ink-base"
                   :title="__('Visible en el tracker del cliente')"
                 >T</span>
               </button>
@@ -157,37 +157,37 @@
             <div class="flex flex-wrap gap-1.5">
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-red-1 text-ink-red-8'"
+                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-red-1 text-ink-red-7'"
               >
                 {{ ro.turns_on ? __('Turns on ✓') : __('Does not turn on ✗') }}
               </span>
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-6' : 'bg-surface-gray-2 text-ink-gray-5'"
+                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-gray-2 text-ink-gray-5'"
               >
                 {{ ro.has_sim_tray ? __('SIM tray ✓') : __('No SIM tray') }}
               </span>
               <span
                 v-if="ro.has_phone_case"
-                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs-medium text-ink-blue-5"
+                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs-medium text-ink-blue-6"
               >
                 {{ __('Case ✓') }}
               </span>
               <span
                 v-if="ro.broken_screen"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-6"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-7"
               >
                 {{ __('Broken screen ⚠') }}
               </span>
               <span
                 v-if="ro.is_wet"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-6"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-7"
               >
                 {{ __('Wet ⚠') }}
               </span>
               <span
                 v-if="ro.is_warranty_claim"
-                class="inline-flex items-center rounded-full bg-surface-violet-1 px-2 py-0.5 text-xs-medium text-ink-violet-1"
+                class="inline-flex items-center rounded-full bg-surface-violet-2 px-2 py-0.5 text-xs-medium text-ink-violet-6"
               >
                 {{ __('Warranty claim') }}
               </span>
@@ -253,7 +253,7 @@
                   <span v-if="p.source" class="ml-1.5 text-ink-gray-5">[{{ __(p.source) }}]</span>
                   <span
                     v-if="p.purchase_order && p.po_status"
-                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-6"
+                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-7"
                     :title="`${p.purchase_order} · ${p.po_status}`"
                   >
                     🧩 {{ p.po_expected_date ? __('llega') + ' ' + p.po_expected_date : p.purchase_order }}
@@ -349,7 +349,7 @@
                 v-if="ro.quotation"
                 :href="`/app/quotation/${encodeURIComponent(ro.quotation)}`"
                 target="_blank"
-                class="text-ink-blue-6 hover:underline"
+                class="text-ink-blue-7 hover:underline"
               >
                 {{ __('Cotización') }}: {{ ro.quotation }}
               </a>
@@ -357,7 +357,7 @@
                 v-if="ro.sales_order"
                 :href="`/app/sales-order/${encodeURIComponent(ro.sales_order)}`"
                 target="_blank"
-                class="text-ink-blue-6 hover:underline"
+                class="text-ink-blue-7 hover:underline"
               >
                 {{ __('SO') }}: {{ ro.sales_order }}
               </a>
@@ -366,7 +366,7 @@
                 :key="`${inv.invoice_type}-${inv.invoice}`"
                 :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
                 target="_blank"
-                class="text-ink-blue-6 hover:underline"
+                class="text-ink-blue-7 hover:underline"
               >
                 {{ inv.invoice_type === 'POS Invoice' ? __('POS') : __('Factura') }}: {{ inv.invoice }}
               </a>
@@ -404,7 +404,7 @@ const Row = (props) =>
         class: [
           'mt-0.5 font-medium',
           props.preWrap ? 'whitespace-pre-wrap' : '',
-          props.emphasize ? 'text-ink-red-8' : 'text-ink-gray-8',
+          props.emphasize ? 'text-ink-red-7' : 'text-ink-gray-8',
         ],
       },
       props.value === undefined || props.value === null || props.value === ''
