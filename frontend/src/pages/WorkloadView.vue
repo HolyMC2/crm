@@ -127,7 +127,7 @@
                     @click="toggle(c.key)"
                   >
                     <span
-                      class="flex h-4 w-4 flex-none items-center justify-center rounded-[5px] border text-[10px] text-ink-base"
+                      class="flex h-4 w-4 flex-none items-center justify-center rounded-[5px] border text-[10px] text-white"
                       :class="selected.has(c.key) ? 'border-transparent bg-surface-green-7' : 'border-outline-gray-3 bg-surface-base'"
                     >
                       <span v-if="selected.has(c.key)">✓</span>

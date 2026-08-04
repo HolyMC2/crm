@@ -122,7 +122,7 @@
                 <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
                 <span
                   v-if="ph.show_on_tracker"
-                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-7 px-1 text-[8px] font-bold text-ink-base"
+                  class="absolute right-0.5 top-0.5 rounded bg-surface-green-7 px-1 text-[8px] font-bold text-white"
                   :title="__('Visible en el tracker del cliente')"
                 >T</span>
               </button>
