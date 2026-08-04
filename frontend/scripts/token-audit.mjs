@@ -61,16 +61,33 @@ const V2_SENTINELS = [
   'outline-elevation-2',
 ]
 
-// Same name in both versions, different colour. Targets measured against the
-// real compiled values of both bundles (see cookbook 2.3). NOTE these follow the
-// value-exact rule, which is one step DARKER than the codemod's choice on the
-// accent ramps.
+// TRUE silent killers: names the codemod has NO rule for, which nonetheless
+// resolve to a different colour in v2. The codemod only maps accent indices
+// 2/3/4 for ink+outline and 5/6/7 for surface, so anything outside those ranges
+// is left alone -- and in v1 the LOW indices were the saturated end. These are
+// the ones no automated pass will ever touch. Targets measured in OKLCH against
+// the compiled values of both bundles.
+//
+// Kept deliberately disjoint from the rename tables above: a token that IS a
+// codemod key belongs in RETIRED/RENUM, not here. Listing it in both would
+// double-count it in every total.
 const DRIFTED = {
-  'ink-amber-3': 'ink-amber-7', 'ink-amber-2': 'ink-amber-6',
-  'ink-violet-1': 'ink-violet-6', 'surface-green-3': 'surface-green-7',
-  'outline-green-2': 'outline-green-4', 'outline-blue-2': 'outline-blue-4',
-  'outline-blue-1': 'outline-blue-3', 'outline-red-2': 'outline-red-4',
+  'ink-violet-1': 'ink-violet-6',      // v1 violet/500 -> v2 pure WHITE. invisible.
+  'surface-green-3': 'surface-green-7', // dark green fill -> pale mint
   'surface-violet-1': 'surface-violet-2',
+  'outline-blue-1': 'outline-blue-3',
+}
+
+// Tokens the codemod DOES rewrite, but not to the value-preserving target: its
+// accent maps land one step LIGHTER than the colour being replaced. Measured.
+// Use these instead of COLOR_TOKEN_RENAMES[tok] when converting.
+export const VALUE_EXACT_OVERRIDES = {
+  'ink-amber-2': 'ink-amber-6', 'ink-amber-3': 'ink-amber-7',
+  'ink-blue-2': 'ink-blue-6', 'ink-blue-3': 'ink-blue-7',
+  'ink-green-2': 'ink-green-6', 'ink-green-3': 'ink-green-7',
+  'ink-red-4': 'ink-red-7',
+  'outline-green-2': 'outline-green-4', 'outline-blue-2': 'outline-blue-4',
+  'outline-red-2': 'outline-red-4', 'outline-amber-2': 'outline-amber-4',
 }
 
 const RE = {
@@ -132,9 +149,11 @@ for (const r of rows) {
       for (const [tok, n] of Object.entries(list.reduce((a, t) => ((a[t] = (a[t] || 0) + 1), a), {})))
         console.log(`        ${label} ${tok} x${n}${map ? '  ->  ' + map[tok] : ''}`)
     }
-    show('RETIRED', r.retired, RETIRED)
+    // Where the codemod's target is not value-exact, show the override instead.
+    const withOverrides = { ...RETIRED, ...VALUE_EXACT_OVERRIDES }
+    show('RETIRED', r.retired, withOverrides)
     show('DRIFTED', r.drift, DRIFTED)
-    if (r.state !== 'MIGRATED') show('renum? ', r.renum, RENUM)
+    if (r.state !== 'MIGRATED') show('renum? ', r.renum, { ...RENUM, ...VALUE_EXACT_OVERRIDES })
   }
 }
 const n = (k) => rows.reduce((a, r) => a + r[k].length, 0)
