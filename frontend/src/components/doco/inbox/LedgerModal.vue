@@ -43,7 +43,7 @@
           </div>
           <div
             v-if="consentTampered"
-            class="mb-1.5 rounded bg-surface-red-1 px-2 py-1 text-[11px] font-semibold text-ink-red-7"
+            class="mb-1.5 rounded bg-surface-red-1 px-2 py-1 text-[11px] font-semibold text-ink-red-8"
           >
             ⚠ {{ __('{0} registro(s) no pasan la verificación de integridad', [consentTampered]) }}
           </div>
@@ -119,8 +119,8 @@ const csvHref = computed(
     `/api/method/doco_marketing.api.consent.export_consent_csv?reference_doctype=${encodeURIComponent(activeDealDoctype.value || '')}&reference_name=${encodeURIComponent(activeDeal.value || '')}`,
 )
 function consentChip(r) {
-  if (r.hash_ok === false) return 'bg-surface-red-1 text-ink-red-7'
-  return r.action === 'Grant' ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-red-1 text-ink-red-7'
+  if (r.hash_ok === false) return 'bg-surface-red-1 text-ink-red-8'
+  return r.action === 'Grant' ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-red-1 text-ink-red-8'
 }
 const CLASS_LABEL = { Explicit: 'explícito', Implied: 'implícito', Imported: 'importado' }
 function classLabel(c) {

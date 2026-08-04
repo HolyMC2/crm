@@ -121,7 +121,7 @@
           v-for="tg in conversationTags.data"
           :key="tg"
           class="press flex-none whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold"
-          :class="queueTag === tg ? 'bg-surface-violet-2 text-ink-violet-6' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+          :class="queueTag === tg ? 'bg-surface-violet-2 text-ink-violet-8' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
           :aria-pressed="queueTag === tg"
           @click="setQueueTag(tg)"
         >
@@ -336,7 +336,7 @@
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
             <span class="inline-flex flex-none items-center font-semibold text-ink-gray-8">{{ g.from_name || g.channel || 'FB' }}:</span>
             <span class="truncate">{{ g.message || '—' }}</span>
-            <span v-if="g.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-6 bg-surface-violet-2">{{ __('Lead') }}</span>
+            <span v-if="g.lead" class="flex-none rounded px-1 text-[9px] font-semibold text-ink-violet-8 bg-surface-violet-2">{{ __('Lead') }}</span>
           </div>
         </button>
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
@@ -446,7 +446,7 @@
           <!-- Lead vs Trato (Deal) — leads now share the queue -->
           <span
             v-if="r.ref_doctype === 'CRM Lead'"
-            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-6 bg-surface-violet-2"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8 bg-surface-violet-2"
           >
             {{ __('Lead') }}
           </span>
@@ -472,7 +472,7 @@
           </span>
           <span
             v-if="r.snoozed_until"
-            class="rounded bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-6"
+            class="rounded bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
             :title="__('Pospuesta — reaparece sola')"
           >
             💤 {{ fmtSnooze(r.snoozed_until) }}
@@ -493,7 +493,7 @@
           </span>
           <span
             v-if="r.sla_overdue"
-            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-red-7 bg-surface-red-1"
+            class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-red-8 bg-surface-red-1"
           >
             {{ __('SLA vencido') }}
           </span>

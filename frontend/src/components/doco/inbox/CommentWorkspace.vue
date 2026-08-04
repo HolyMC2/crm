@@ -106,8 +106,8 @@
               <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">
                 💬 {{ cm.channel === 'IG' ? __('Continuar en DM') : __('Continuar en Messenger') }}
               </button>
-              <button v-if="!cm.lead" class="font-semibold text-ink-violet-6 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
-              <button v-else class="text-ink-violet-6 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
+              <button v-if="!cm.lead" class="font-semibold text-ink-violet-8 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
+              <button v-else class="text-ink-violet-8 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
               <button
                 class="font-semibold hover:underline"
                 style="color: var(--brand)"

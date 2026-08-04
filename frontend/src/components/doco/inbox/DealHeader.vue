@@ -59,14 +59,14 @@
           <span
             v-if="waWindow"
             class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
-            :class="waWindow.open ? 'bg-surface-amber-1 text-ink-amber-7' : 'bg-surface-red-1 text-ink-red-7'"
+            :class="waWindow.open ? 'bg-surface-amber-1 text-ink-amber-7' : 'bg-surface-red-1 text-ink-red-8'"
             :title="waWindow.open ? __('Ventana de 24h de WhatsApp abierta') : __('Ventana cerrada — solo plantillas')"
           >
             {{ waWindow.open ? `WA ${waWindow.hoursLeft}h` : __('WA cerrada') }}
           </span>
           <span
             v-if="saldoChip"
-            class="flex-none whitespace-nowrap rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-7"
+            class="flex-none whitespace-nowrap rounded bg-surface-red-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-red-8"
             :title="__('Saldo pendiente en facturas del trato')"
           >
             💰 {{ __('Saldo') }} {{ saldoChip }}
@@ -106,7 +106,7 @@
         <!-- 🏷 etiquetas (spec 2.2) -->
         <button
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
-          :class="(row.tags || []).length ? 'bg-surface-violet-2 text-ink-violet-6' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+          :class="(row.tags || []).length ? 'bg-surface-violet-2 text-ink-violet-8' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
           :title="__('Etiquetas')"
           :aria-label="__('Etiquetas')"
           @click="openTags"
@@ -117,7 +117,7 @@
         <Dropdown :options="snoozeOptions">
           <button
             class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
-            :class="isSnoozed ? 'bg-surface-violet-2 text-ink-violet-6' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+            :class="isSnoozed ? 'bg-surface-violet-2 text-ink-violet-8' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
             :title="isSnoozed ? __('Pospuesta — reaparece sola') : __('Posponer conversación')"
             :aria-label="__('Posponer')"
           >
@@ -153,7 +153,7 @@
           <span
             v-for="tg in localTags"
             :key="tg"
-            class="inline-flex items-center gap-1 rounded-full bg-surface-violet-2 px-2.5 py-1 text-[12px] font-semibold text-ink-violet-6"
+            class="inline-flex items-center gap-1 rounded-full bg-surface-violet-2 px-2.5 py-1 text-[12px] font-semibold text-ink-violet-8"
           >
             🏷 {{ tg }}
             <button class="press text-[13px] leading-none" :aria-label="__('Quitar') + ' ' + tg" @click="removeTag(tg)">×</button>

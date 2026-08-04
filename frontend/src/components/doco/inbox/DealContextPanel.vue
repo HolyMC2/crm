@@ -66,7 +66,7 @@
             <div class="flex items-center gap-1">
               <span v-for="a in assignees" :key="a.name" class="group relative leading-none">
                 <Avatar :label="a.label" :image="a.image" size="sm" />
-                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-7 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
+                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-8 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
               </span>
               <Dropdown :options="userOpts" placement="right">
                 <button class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3" :aria-label="__('Asignar usuario')">+</button>

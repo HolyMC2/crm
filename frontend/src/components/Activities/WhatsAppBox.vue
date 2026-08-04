@@ -74,7 +74,7 @@
     <button
       v-if="aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)"
       type="button"
-      class="press rounded-md bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-6 hover:opacity-80 disabled:opacity-50"
+      class="press rounded-md bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-8 hover:opacity-80 disabled:opacity-50"
       :disabled="suggestLoading"
       :title="__('Sugerir respuestas con IA (local)')"
       @click="fetchSuggestions"

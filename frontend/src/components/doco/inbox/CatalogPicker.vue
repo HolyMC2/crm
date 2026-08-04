@@ -66,7 +66,7 @@
               >✓</span>
               <span
                 class="absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
-                :class="r.stock > 0 ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-red-7 bg-surface-red-1'"
+                :class="r.stock > 0 ? 'text-ink-green-7 bg-surface-green-2' : 'text-ink-red-8 bg-surface-red-1'"
               >{{ r.stock }} {{ __('stock') }}</span>
             </div>
             <div class="flex min-h-0 flex-col gap-0.5 p-2">
