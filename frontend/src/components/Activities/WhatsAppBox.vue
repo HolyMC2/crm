@@ -204,7 +204,7 @@
         "
       >
         <SmileIcon
-          class="flex size-4.5 cursor-pointer rounded-sm text-3xl leading-none text-ink-gray-4"
+          class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
           @click="togglePopover"
         />
       </IconPicker>
