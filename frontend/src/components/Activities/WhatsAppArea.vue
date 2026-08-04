@@ -5,12 +5,12 @@
          an opaque bg so the message thread scrolls underneath them. -->
     <div
       v-if="contact?.phone || contact?.name || pinnedNotes.length"
-      class="sticky top-0 z-20 bg-surface-white pt-2 dark:bg-surface-gray-1"
+      class="sticky top-0 z-20 bg-surface-base pt-2 dark:bg-surface-gray-1"
     >
     <!-- WhatsApp-style conversation header: avatar + name + phone -->
     <div
       v-if="contact?.phone || contact?.name"
-      class="wa-contact-header mx-3 mb-3 flex items-center gap-3 rounded-md border bg-surface-white px-3 py-2 shadow-sm dark:bg-surface-gray-2 sm:mx-10"
+      class="wa-contact-header mx-3 mb-3 flex items-center gap-3 rounded-md border bg-surface-base px-3 py-2 shadow-sm dark:bg-surface-gray-2 sm:mx-10"
     >
       <div
         class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-sm font-semibold text-ink-gray-7"
@@ -45,7 +45,7 @@
       >
         <FeatherIcon
           name="bookmark"
-          class="mt-0.5 size-4 shrink-0 text-ink-amber-3"
+          class="mt-0.5 size-4 shrink-0 text-ink-amber-7"
         />
         <div
           class="min-w-0 flex-1 cursor-pointer"
@@ -98,7 +98,7 @@
         >
           <div class="mb-1 flex flex-wrap items-center gap-2">
             <span
-              class="rounded bg-surface-blue-2 px-1.5 py-0.5 text-2xs font-semibold uppercase text-ink-blue-3"
+              class="rounded bg-surface-blue-2 px-1.5 py-0.5 text-2xs font-semibold uppercase text-ink-blue-7"
             >
               {{ __('Internal') }}
             </span>
@@ -303,7 +303,7 @@
                 <span class="inline-flex">
                   <DoubleCheckIcon
                     v-if="whatsapp.status == 'read'"
-                    class="size-4 text-ink-blue-2"
+                    class="size-4 text-ink-blue-6"
                   />
                   <DoubleCheckIcon
                     v-else-if="whatsapp.status == 'delivered'"

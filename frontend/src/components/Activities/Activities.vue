@@ -97,9 +97,9 @@
           v-if="waBannerState === 'no'"
           class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-red-200 bg-surface-red-1 px-3 py-2 dark:border-red-900/40 sm:mx-10"
         >
-          <FeatherIcon name="slash" class="mt-0.5 size-4 shrink-0 text-ink-red-3" />
+          <FeatherIcon name="slash" class="mt-0.5 size-4 shrink-0 text-ink-red-6" />
           <div class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6">
-            <span class="font-semibold text-ink-red-3">{{ __('Este número no tiene WhatsApp.') }}</span>
+            <span class="font-semibold text-ink-red-6">{{ __('Este número no tiene WhatsApp.') }}</span>
             {{ __('Marcado como sin WhatsApp al crear el trato.') }}
           </div>
         </div>
@@ -107,7 +107,7 @@
           v-else-if="waBannerState === 'unknown'"
           class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40 sm:mx-10"
         >
-          <FeatherIcon name="alert-triangle" class="mt-0.5 size-4 shrink-0 text-ink-amber-3" />
+          <FeatherIcon name="alert-triangle" class="mt-0.5 size-4 shrink-0 text-ink-amber-7" />
           <div class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6">
             <span class="font-semibold text-ink-gray-8 dark:text-ink-gray-7">{{ __('Sin WhatsApp para este número.') }}</span>
             {{ __('No hay conversación de WhatsApp con este número todavía — inicia con una plantilla.') }}
@@ -130,7 +130,7 @@
         <div v-if="contactDealCount > 1" class="mx-3 mb-1.5 sm:mx-10">
           <button
             class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="unifiedThread ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="unifiedThread ? 'bg-surface-green-2 text-ink-green-7' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
             @click="toggleUnified"
           >
             🔗
@@ -142,7 +142,7 @@
         <!-- catalog intent: the customer asked about a price/item → one-tap catalog search -->
         <div v-if="catalogSuggest.data?.suggest" class="mx-3 mb-1.5 sm:mx-10">
           <button
-            class="inline-flex items-center gap-1.5 rounded-full bg-surface-amber-1 px-2.5 py-1 text-[11px] font-semibold text-ink-amber-3 hover:bg-surface-amber-2"
+            class="inline-flex items-center gap-1.5 rounded-full bg-surface-amber-1 px-2.5 py-1 text-[11px] font-semibold text-ink-amber-7 hover:bg-surface-amber-2"
             @click="onWaCatalog(catalogSuggest.data.query)"
           >
             💡 {{ __("Buscar '{0}' en catálogo · {1}", [catalogSuggest.data.query, catalogSuggest.data.count]) }}
