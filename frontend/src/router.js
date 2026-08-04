@@ -32,7 +32,8 @@ const routes = [
     props: true,
   },
   {
-    alias: '/deals',
+    // FCRM redesign owns /deals (DealsView.vue); upstream list stays reachable
+    // at /deals/view/:viewType for the kanban/calendar view system.
     path: '/deals/view/:viewType?',
     name: 'Deals',
     component: () => import('@/pages/Deals.vue'),
