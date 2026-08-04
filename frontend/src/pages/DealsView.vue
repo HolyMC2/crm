@@ -212,7 +212,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
-import { confirmDialog, inputDialog } from '@/utils/dialogs'
+import { confirmDialog, createDialog, inputDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
@@ -429,12 +429,29 @@ function deleteView(label) {
   savedViews.value = savedViews.value.filter((v) => v.label !== label)
   persistViews()
 }
+function removeViewPicker() {
+  createDialog({
+    title: __('Eliminar vista'),
+    message: __('Elige la vista guardada que quieres borrar (solo de este navegador).'),
+    actions: savedViews.value.map((v) => ({
+      label: '🗑 ' + v.label,
+      variant: 'subtle',
+      theme: 'red',
+      onClick: (close) => {
+        deleteView(v.label)
+        toast.success(__('Vista eliminada'))
+        close()
+      },
+    })),
+  })
+}
 const viewMenu = computed(() => [
   { label: '↗ ' + __('Vista clásica (todos los filtros)'), onClick: () => router.push('/deals/view') },
   { label: '—', onClick: () => {} },
   ...savedViews.value.map((v) => ({ label: v.label, onClick: () => applyView(v) })),
   ...(savedViews.value.length ? [{ label: '—', onClick: () => {} }] : []),
   { label: '＋ ' + __('Guardar vista actual'), onClick: saveCurrentView },
+  ...(savedViews.value.length ? [{ label: '🗑 ' + __('Eliminar vista…'), onClick: removeViewPicker }] : []),
 ])
 
 let _t = null
