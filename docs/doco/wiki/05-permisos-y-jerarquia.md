@@ -191,17 +191,15 @@ mismo banner "solo gerentes" que usa `pages/Reports.vue`; el panel de coaching
 va más lejos y **se oculta por completo** en vez de mostrar una caja vacía, para
 que el agente coacheado no sepa que existe.
 
-### 5.1 La compuerta de revisión NO es una compuerta de gerente
+### 5.1 La compuerta de revisión SÍ es una compuerta de gerente (desde 2026-08-03)
 
-Vale la pena decirlo explícito, porque es fácil suponer lo contrario: las colas
-de aprobación de WhatsApp aceptan **cuatro** roles —System Manager, Sales
-Manager, **Marketing Manager** y **Sales User**— o sea que **un agente normal
-puede aprobar** un envío encolado (`api/review_queue.py:18`,
-`api/auto_reply.py:13`).
-
-Esa compuerta existe para asegurar que **un humano** vea el mensaje antes de que
-salga, no para reservar la decisión a la gerencia. Las superficies de gerencia
-de arriba sí son restrictivas; la cola de revisión no.
+Política "ojos de gerente" (Marco, 2026-08-03): las colas de aprobación de
+WhatsApp separan **ver** de **actuar**. Los cuatro roles (System Manager, Sales
+Manager, Marketing Manager, Sales User) siguen viendo la cola, pero
+**aprobar / rechazar / reintentar / descartar es solo de gerencia**
+(`_APPROVER_ROLES` = System / Sales / Marketing Manager) — un agente normal ya
+no puede soltar un envío a cliente. Detalle completo y los cuatro sitios de
+guardia: `02-whatsapp-plantillas-y-envios.md` §4.4.
 
 Del lado de este repo, `crm/api/dashboard.py` (+53 −56) añade
 `get_total_repair_orders`, un mosaico del dashboard que **degrada a cero** en

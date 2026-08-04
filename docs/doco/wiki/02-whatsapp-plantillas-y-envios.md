@@ -223,33 +223,33 @@ Endpoints (todos en `doco_marketing`):
 
 ### 4.4 Quién puede aprobar
 
-Los mismos cuatro roles en las dos colas
-(`api/review_queue.py:18`, `api/auto_reply.py:13`):
+**Política "ojos de gerente" (Marco, 2026-08-03).** Desde esa fecha los roles
+están partidos en dos conjuntos, en las dos colas:
 
-**System Manager · Sales Manager · Marketing Manager · Sales User**
+- **VER la cola** — `_QUEUE_ROLES` / `_ROLES`:
+  **System Manager · Sales Manager · Marketing Manager · Sales User**
+- **ACTUAR** (aprobar / rechazar / reintentar / descartar) — `_APPROVER_ROLES`:
+  **System Manager · Sales Manager · Marketing Manager**
 
-Es decir, **un agente de ventas normal puede aprobar** un envío encolado. La
-compuerta no es jerárquica: existe para garantizar que **un humano** vea el
-mensaje antes de que salga, no para reservar la decisión a la gerencia. Sin
-ninguno de esos roles: *"No autorizado para la cola de WhatsApp."*
+Es decir, **un agente de ventas normal ya NO puede aprobar** un envío encolado:
+ve la cola (lectura) pero las acciones cliente-visibles son de gerencia. Sin
+rol de vista: *"No autorizado para la cola de WhatsApp."*; con vista pero sin
+rol de aprobador: *"Solo un gestor puede aprobar/actuar sobre la cola."*
 
-Contrasta con las superficies de gerencia (workload, coaching, backtest,
-métricas por agente), que sí están restringidas a System Manager / Sales Manager
-— ver `05-permisos-y-jerarquia.md` §5.
+El par VER/ACTUAR se repite en los cuatro sitios de guardia — la invariante
+**M16** sigue viva, ahora con dos listas por sitio: `whatsapp_send_review.py`
+(`send_now`, `retry`, `cancel_send`), `api/review_queue.py` (`approve`,
+`reject`, `retry` vía `_approver_guard`), `api/auto_reply.py`
+(`approve`, `discard`) e `inbox_auto_reply.py` (`approve`, `discard`,
+`retry`). Si tocas una lista, tócalas todas.
 
-El mismo conjunto de cuatro roles se repite como `_REVIEW_ROLES`
-(`whatsapp_send_review.py:27`, aplicado en `send_now`, `retry` y `cancel_send`),
-`_QUEUE_ROLES` (`api/review_queue.py:18`) y `_ROLES` (`api/auto_reply.py:13`,
-`inbox_auto_reply.py:20`). Los comentarios del código llaman a esto la
-invariante **"M16" de un solo conjunto de roles** — si tocas uno, tócalos todos.
-
-> **Posible discrepancia entre la compuerta de rol y los DocPerms.** El JSON del
-> doctype `WhatsApp Send Review` concede permisos de documento sólo a
-> **System Manager** y **Sales User**. Sales Manager y Marketing Manager pasan la
-> compuerta `only_for` pero podrían toparse con permisos a nivel documento en el
-> `frappe.get_doc`. (`Inbox Auto Reply` sí incluye Sales Manager en su JSON.)
-> **TODO-VERIFY**: no se probó en un sitio vivo. Si un Sales Manager reporta que
-> la cola se ve pero aprobar truena, empieza por aquí.
+Los DocPerms acompañan la política: gerentes con read/write/create en ambos
+doctypes; **Sales User queda en solo-lectura** (read/print/report). La
+discrepancia histórica (Sales Manager / Marketing Manager pasaban `only_for`
+pero el JSON no les daba permisos de documento) quedó corregida el mismo día.
+En la SPA los botones de acción se ocultan para no-gerentes
+(`WhatsAppReviewCard.vue`, `AutoAckReview.vue`, `ConversationAutoAckStrip.vue`)
+— el servidor sigue siendo la autoridad.
 
 ---
 

@@ -265,7 +265,7 @@ no arma nada. Además `safeInitializeDevice` envuelve la construcción en
 |---|---|---|
 | Marcador flotante | `components/Telephony/TwilioCallUI.vue`, `CallUI.vue` | `CallUI` enruta por medio (`twilio` / `exotel`) |
 | Vista de llamadas | `pages/CallsView.vue` | página nueva del fork |
-| Cajón de detalle | `components/doco/calls/CallDetailDrawer.vue` | consume `doco_marketing.api.calls.get_call_detail`; `enqueue_transcription` para transcripción |
+| Cajón de detalle | `components/doco/calls/CallDetailDrawer.vue` | consume `doco_marketing.api.calls.get_call_detail`; `enqueue_transcription` para transcripción. Desde 2026-08-03 el audio usa `recording_url_path` (proxy autenticado — la URL cruda de Twilio no reproduce en el navegador) y las notas van por `save_call_note`, que crea/actualiza la `FCRM Note` ligada (`note` es Link, texto libre directo tronaba la validación) |
 | Modal de detalle (Desk-like) | `components/Modals/CallLogDetailModal.vue` | parche de upstream: `<audio v-if="field.value">` para que un `recording_url_path` vacío no dispare el warning "Cannot play media… text/html" |
 | Hoja post-llamada | `components/doco/inbox/PostCallSheet.vue` + `utils/postcallOutcome.js` | ver §9.1 |
 

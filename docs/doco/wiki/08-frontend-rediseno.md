@@ -117,33 +117,26 @@ Se construye con `vite-plugin-pwa` (estrategia generateSW de workbox más
 | `workbox.importScripts` | `['push-sw.js']` | los handlers de push viven en `public/push-sw.js`, junto al `sw.js` generado, para que un import relativo resuelva en producción |
 | `maximumFileSizeToCacheInBytes` | **5 MiB** | el chunk de Activities y `index.css` pasaron el default de 2 MiB de workbox, que **falla el build duro** (no es un warning). Revisar si los chunks siguen creciendo |
 
-### 3.1 La PWA NO cachea recursos — verificado
+### 3.1 La PWA sí precachea recursos (corregido 2026-08-03)
 
-**No prometas funcionamiento sin conexión.** El `sw.js` construido
-(`crm/public/frontend/sw.js`, 929 bytes) precachea **exactamente una entrada**:
+Histórico: el `sw.js` construido precacheaba **exactamente una entrada**
+(`manifest.webmanifest`) de los 309 archivos de `assets/`. La causa NO era el
+glob de workbox contra `--base`: era un pin global en `package.json` —
+`"resolutions": { "brace-expansion": "2.1.0" }` — que forzaba el rango
+`^5.0.5` de `minimatch@10` (dependencia de `glob@11`, que usa
+`workbox-build@7.4`) a la 2.1.0, sin el export nombrado `expand`. El glob de
+workbox tronaba con `(0, brace_expansion_1.expand) is not a function`
+(un *warning* del build, fácil de no ver) y precacheaba cero archivos.
 
-```js
-e.precacheAndRoute([{url:"manifest.webmanifest", revision:"6679e394…"}],{})
-```
+Se quitó el pin (los consumidores `^2` resuelven 2.1.0 solitos) y el build pasó
+a precachear **163 entradas (~10.4 MiB)** — js/css/html, sin sourcemaps. El
+tope `maximumFileSizeToCacheInBytes` de 5 MiB por fin protege algo real.
 
-Y en `crm/public/frontend/assets/` hay **309 archivos**. Ninguno está
-precacheado.
+Moraleja doble: (1) un `resolutions` global puede violar semver en silencio;
+(2) los warnings del bloque `PWA vX` del build importan — ahí salió el error.
 
-Lo que el service worker sí hace: `importScripts("push-sw.js")`,
-`skipWaiting()`, `clientsClaim()`, `cleanupOutdatedCaches()` y una
-`NavigationRoute` atada a `index.html`.
-
-O sea que la PWA de hoy es un **cascarón instalable con push**, no una caché de
-recursos para trabajar sin red. Lo único que de verdad sobrevive sin conexión es
-el **outbox** (§6) y la caché de la cola — y ambos viven en `localStorage`, no
-en el service worker.
-
-**Consecuencia incómoda**: el tope de precaché de 5 MiB se subió para que el
-chunk de Activities y `index.css` cupieran… y hoy no se precachea ninguno de los
-dos. La falla de build que motivó ese cambio era real, pero el resultado que
-buscaba no se está logrando. Si alguien quiere offline de verdad, esto es lo
-primero que hay que investigar (probable: los patrones de glob de workbox no
-casan con `assets/` bajo `--base=/assets/crm/frontend/`).
+El outbox (§6) y la caché de la cola siguen viviendo en `localStorage`,
+independientes del service worker.
 
 ---
 

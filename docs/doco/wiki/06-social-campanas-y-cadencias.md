@@ -96,10 +96,10 @@ Endpoints: `doco_marketing.api.social.save_post`, `get_post`, `approve`,
 La vista **"Métricas"** (`MetricsPanel.vue`) usa
 `doco_marketing.api.social.get_dashboard` y `get_leaderboard`.
 
-> **Bug conocido**: el leaderboard **"Por sucursal"** ignora el selector de
-> sucursal. `get_leaderboard` no recibe parámetro `shop` y no se recarga al
-> cambiarlo, así que la tabla se queda igual mientras el resto de la vista
-> cambia. No es que no haya datos: es que no filtra.
+> *Corregido 2026-08-03*: el leaderboard **"Por sucursal"** ya sigue el selector
+> de sucursal — `get_leaderboard` acepta `shop` (mismo contrato que
+> `get_dashboard`, validado con `_assert_shop_access`) y la tabla se recarga al
+> cambiar de sucursal.
 
 El mapa de calor **"Mejores horarios"** (`SocialHeatmap.vue`) viene de
 `doco_marketing.api.social_planner.get_heatmap`.
