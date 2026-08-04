@@ -3,7 +3,7 @@
 <template>
   <button
     v-if="outbox.length"
-    class="press flex w-full flex-none items-center justify-center gap-2 bg-surface-blue-1 px-3 py-1.5 text-[12px] font-semibold text-ink-blue-7"
+    class="press flex w-full flex-none items-center justify-center gap-2 bg-surface-blue-1 px-3 py-1.5 text-[12px] font-semibold text-ink-blue-8"
     role="status"
     @click="open = true"
   >

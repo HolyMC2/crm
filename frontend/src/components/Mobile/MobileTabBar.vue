@@ -15,7 +15,7 @@
       v-for="t in tabs"
       :key="t.key"
       class="press relative flex h-[54px] flex-1 flex-col items-center justify-center gap-0.5"
-      :class="isActive(t) ? 'text-ink-green-7' : 'text-ink-gray-5'"
+      :class="isActive(t) ? 'text-ink-green-8' : 'text-ink-gray-5'"
       :aria-label="__(t.label)"
       :aria-current="isActive(t) ? 'page' : undefined"
       @click="onTab(t)"
@@ -25,7 +25,7 @@
         <span
           v-if="t.badge && badgeFor(t.badge)"
           class="absolute -right-2.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold"
-          :class="t.badge === 'unread' ? 'bg-surface-red-7 text-ink-base' : 'bg-surface-amber-2 text-ink-amber-7'"
+          :class="t.badge === 'unread' ? 'bg-surface-red-7 text-ink-red-1' : 'bg-surface-amber-2 text-ink-amber-8'"
         >
           {{ badgeFor(t.badge) > 99 ? '99+' : badgeFor(t.badge) }}
         </span>

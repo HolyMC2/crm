@@ -1,8 +1,8 @@
 // Single source of truth for the FCRM redesign primary nav. Rendered by BOTH the
-// desktop DocoNavRail (58px icon rail) and the mobile drawer (DocoMobileNav), so the
+// desktop DocoNavRail (58px icon rail) and the mobile drawer (MobileSidebar), so the
 // two never drift — the mobile sidebar was missing Inbox + the new surfaces because
-// it had its own hardcoded list. `to` is a PATH (DocoNavRail router.push(path);
-// SidebarLink wraps it as { path }).
+// it had its own hardcoded list. `to` is a PATH: DocoNavRail does router.push(path),
+// MobileSidebar wraps it as { path } in its own go().
 import DashboardIcon from '~icons/lucide/layout-dashboard'
 import LeadsIcon from '~icons/lucide/users'
 import DealsIcon from '~icons/lucide/handshake'

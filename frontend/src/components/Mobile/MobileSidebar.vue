@@ -56,7 +56,7 @@
               </span>
               <span
                 v-if="unreadNotificationsCount"
-                class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-surface-red-1 px-1.5 text-[11px] font-bold text-ink-red-7"
+                class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full bg-surface-red-1 px-1.5 text-[11px] font-bold text-ink-red-8"
               >
                 {{ unreadNotificationsCount }}
               </span>
@@ -81,8 +81,8 @@
                   class="flex h-5 min-w-5 flex-none items-center justify-center rounded-full px-1.5 text-[11px] font-bold"
                   :class="
                     item.badge === 'unread'
-                      ? 'bg-surface-red-1 text-ink-red-7'
-                      : 'bg-surface-amber-1 text-ink-amber-7'
+                      ? 'bg-surface-red-1 text-ink-red-8'
+                      : 'bg-surface-amber-1 text-ink-amber-8'
                   "
                 >
                   {{ badgeFor(item.badge) }}
@@ -200,7 +200,7 @@
             <!-- user card -->
             <div class="mt-1 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2">
               <span
-                class="flex h-8 w-8 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-violet-2 text-[11px] font-semibold text-ink-violet-6"
+                class="flex h-8 w-8 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-violet-2 text-[11px] font-semibold text-ink-violet-8"
               >
                 <img
                   v-if="user.user_image"
@@ -296,7 +296,7 @@ const activeGroup = computed(() => routeGroup(route.path))
 
 function rowClass(group) {
   return group && activeGroup.value === group
-    ? 'bg-surface-green-2 text-ink-green-7'
+    ? 'bg-surface-green-2 text-ink-green-8'
     : 'text-ink-gray-7 hover:bg-surface-gray-2'
 }
 
