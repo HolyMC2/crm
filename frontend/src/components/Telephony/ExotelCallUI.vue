@@ -179,14 +179,18 @@
       <div class="footer flex justify-between gap-2">
         <div class="flex gap-2">
           <Button
-            class="bg-surface-gray-9 text-ink-base hover:bg-surface-gray-8"
+            variant="solid"
+            theme="gray"
+            class="bg-surface-gray-9 hover:bg-surface-gray-8"
             :tooltip="__('Add a Note')"
             size="md"
             :icon="NoteIcon"
             @click="showNoteWindow"
           />
           <Button
-            class="bg-surface-gray-9 text-ink-base hover:bg-surface-gray-8"
+            variant="solid"
+            theme="gray"
+            class="bg-surface-gray-9 hover:bg-surface-gray-8"
             size="md"
             :tooltip="__('Add a Task')"
             :icon="TaskIcon"
@@ -194,7 +198,9 @@
           />
           <Button
             v-if="contact.deal || contact.lead"
-            class="bg-surface-gray-9 text-ink-base hover:bg-surface-gray-8"
+            variant="solid"
+            theme="gray"
+            class="bg-surface-gray-9 hover:bg-surface-gray-8"
             size="md"
             :iconRight="ArrowUpRightIcon"
             :label="contact.deal ? __('Deal') : __('Lead')"

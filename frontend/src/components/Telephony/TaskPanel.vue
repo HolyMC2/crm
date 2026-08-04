@@ -21,7 +21,9 @@
         <Dropdown :options="taskStatusOptions(updateTaskStatus)">
           <Button
             :label="task.status"
-            class="bg-surface-gray-9 text-ink-base hover:bg-surface-gray-8"
+            variant="solid"
+            theme="gray"
+            class="bg-surface-gray-9 hover:bg-surface-gray-8"
           >
             <template #prefix>
               <TaskStatusIcon :status="task.status" />
@@ -31,7 +33,9 @@
         <Dropdown :options="taskPriorityOptions(updateTaskPriority)">
           <Button
             :label="task.priority"
-            class="bg-surface-gray-9 text-ink-base hover:bg-surface-gray-8"
+            variant="solid"
+            theme="gray"
+            class="bg-surface-gray-9 hover:bg-surface-gray-8"
           >
             <template #prefix>
               <TaskPriorityIcon :priority="task.priority" />
