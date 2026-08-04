@@ -275,21 +275,33 @@ test.describe('espresso v2 — inbox bucket', () => {
     // dark-mode contrast: violet went 5.05/4.95 -> 4.03/2.32.
     //
     // Value-exactness in ONE theme is not correctness. Assert both.
+    // Floors are per THEME, because one pairing is deliberately repaired in only
+    // one of them. Blue's light half measured 3.34 on doco-dev — it was already
+    // sub-AA before this migration, so raising it is a palette decision (Marco's,
+    // via the lead) rather than a regression fix. We restore only the dark half
+    // the remap broke (5.06 -> 3.79 -> 5.33) and pin light at its current value
+    // so it cannot silently rot further while that decision is outstanding.
+    const AA = 4.5
     const chips = [
-      ['violet chip', '--surface-violet-2', '--ink-violet-8'],
-      ['violet on card', '--surface-base', '--ink-violet-8'],
-      ['red chip', '--surface-red-1', '--ink-red-8'],
-      ['red on card', '--surface-base', '--ink-red-8'],
+      ['violet chip', '--surface-violet-2', '--ink-violet-8', AA, AA],
+      ['violet on card', '--surface-base', '--ink-violet-8', AA, AA],
+      ['red chip', '--surface-red-1', '--ink-red-8', AA, AA],
+      ['red on card', '--surface-base', '--ink-red-8', AA, AA],
+      ['green chip', '--surface-green-2', '--ink-green-8', AA, AA],
+      ['blue chip', '--surface-blue-1', '--ink-blue-7', 3.9, AA],
     ]
     const chipResults = {}
     for (const theme of ['light', 'dark']) {
       await setTheme(page, theme)
       await page.waitForTimeout(600)
-      for (const [label, bg, ink] of chips) {
+      for (const [label, bg, ink, floorLight, floorDark] of chips) {
+        const floor = theme === 'light' ? floorLight : floorDark
         const got = await probeVars(page, ink, bg)
         const ratio = contrast(got.color, got.background)
         chipResults[`${label} (${theme})`] = +ratio.toFixed(2)
-        expect(ratio, `${label} must clear AA in ${theme}`).toBeGreaterThanOrEqual(4.5)
+        expect(ratio, `${label} must hold its ${theme} floor (${floor})`).toBeGreaterThanOrEqual(
+          floor,
+        )
       }
       // And the tokens they replaced must still be measurably worse in dark,
       // so a revert cannot pass this file.
@@ -297,6 +309,8 @@ test.describe('espresso v2 — inbox bucket', () => {
         for (const [label, bg, oldInk] of [
           ['violet chip', '--surface-violet-2', '--ink-violet-6'],
           ['red chip', '--surface-red-1', '--ink-red-7'],
+          ['green chip', '--surface-green-2', '--ink-green-7'],
+          ['blue chip', '--surface-blue-1', '--ink-blue-6'],
         ]) {
           const old = await probeVars(page, oldInk, bg)
           const r = contrast(old.color, old.background)
