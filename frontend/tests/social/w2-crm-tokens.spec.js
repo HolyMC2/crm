@@ -155,12 +155,20 @@ const contrastPairs = (page, pairs) =>
   }, pairs)
 
 test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
-  // Guards 6826b58d. W1-base's value-exact remap matched v1's LIGHT value and did
-  // not check dark; v1's ink-red-4 was theme-aware (lightened in dark to stay
-  // legible on the dark tinted fill) while v2's ink ramp is monotonic, so dark
-  // collapsed from 6.19 to 4.40. This asserts the CONTRACT rather than sampling a
-  // rendered chip, so it does not depend on a chip being present in the data.
-  test('the red-on-red chip pairing clears AA in both themes', async ({ page }) => {
+  // Guards 6826b58d and the green/blue repair. W1-base's value-exact remap matched
+  // v1's LIGHT value and never checked dark; the v1 accent inks were theme-aware
+  // (lightened in dark to stay legible on the dark tinted fill) while v2's ramp is
+  // monotonic, so dark collapsed on four of five accent families.
+  //
+  // Ruling applied: "any pairing that lost AA in a theme it previously passed."
+  // Threshold-crossing is the trigger, not size of drop — so amber is excluded
+  // (6.64 -> 4.55 is a big fall that still clears) and is asserted below rather
+  // than repaired, because 4.55 is close enough to tip on the next palette move.
+  //
+  // Asserts the CONTRACT via a probe element rather than sampling a rendered chip,
+  // because the chips are data-dependent and a guard that skips on an empty
+  // fixture is not a guard.
+  test('every accent chip pairing holds its contrast ruling, in both themes', async ({ page }) => {
     await loginRetry(page)
     await page.goto('/crm/deals', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(4000)
@@ -172,23 +180,47 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
       const got = await contrastPairs(page, [
         ['ink-red-8', 'surface-red-1'],
         ['ink-red-8', 'surface-base'],
-        ['ink-red-7', 'surface-red-1'],
+        ['ink-green-8', 'surface-green-2'],
+        ['ink-blue-7', 'surface-blue-1'],
+        ['ink-amber-7', 'surface-amber-1'],
       ])
       console.log(`[${theme}] contrast:`, JSON.stringify(got))
 
-      expect(got['ink-red-8 on surface-red-1'], `the token we migrated TO must clear AA in ${theme}`).toBeGreaterThanOrEqual(4.5)
-      // The buttons only take surface-red-1 on hover; at rest they sit on the page.
-      expect(got['ink-red-8 on surface-base'], `resting state must clear AA in ${theme}`).toBeGreaterThanOrEqual(4.5)
+      // Repaired and fully clearing AA in both themes.
+      expect(got['ink-red-8 on surface-red-1'], `red chip in ${theme}`).toBeGreaterThanOrEqual(4.5)
+      expect(got['ink-green-8 on surface-green-2'], `green chip in ${theme}`).toBeGreaterThanOrEqual(4.5)
+      // The two bulk-delete buttons only take surface-red-1 on hover; at rest they
+      // sit on the page surface, so that state has to clear AA as well.
+      expect(got['ink-red-8 on surface-base'], `red resting state in ${theme}`).toBeGreaterThanOrEqual(4.5)
     }
 
-    // And the reason for the change: the previous token fails in dark. If this
-    // ever passes, the ramp moved and the fix should be re-derived rather than
-    // assumed.
     await setTheme(page, 'dark')
     await page.waitForTimeout(600)
-    const dark = await contrastPairs(page, [['ink-red-7', 'surface-red-1']])
-    console.log('dark ink-red-7 on surface-red-1 (the regression):', JSON.stringify(dark))
-    expect(dark['ink-red-7 on surface-red-1'], 'ink-red-7 is expected to FAIL dark — that is why it was changed').toBeLessThan(4.5)
+    const dark = await contrastPairs(page, [
+      ['ink-blue-7', 'surface-blue-1'],
+      ['ink-amber-7', 'surface-amber-1'],
+      ['ink-red-7', 'surface-red-1'],
+      ['ink-green-7', 'surface-green-2'],
+    ])
+    console.log('[dark] rulings:', JSON.stringify(dark))
+
+    // Blue: the dark half is the part we broke and repaired. Light stays knowingly
+    // sub-AA at 3.92 -- better than the 3.34 we inherited, but not AA. Raising it
+    // means redesigning the chip, which is a palette decision with a different
+    // owner. Signed off by team-lead; do not "fix" it to ink-blue-8 (4.36 light,
+    // a near miss that looks solved and is not).
+    expect(dark['ink-blue-7 on surface-blue-1'], 'blue chip dark half must be repaired').toBeGreaterThanOrEqual(4.5)
+
+    // Amber: measured, deliberately EXCLUDED from repair, and on the watch list.
+    // It clears by 0.05. If a palette move tips it under, this fails and it
+    // becomes a known regression instead of a surprise.
+    expect(dark['ink-amber-7 on surface-amber-1'], 'amber is excluded but at risk — 4.55 vs a 4.5 floor').toBeGreaterThanOrEqual(4.5)
+
+    // The tokens we migrated away from must still fail, which is what makes the
+    // repairs justified. If either starts passing, the ramp moved and the fixes
+    // want re-deriving rather than assuming.
+    expect(dark['ink-red-7 on surface-red-1'], 'ink-red-7 must still fail dark').toBeLessThan(4.5)
+    expect(dark['ink-green-7 on surface-green-2'], 'ink-green-7 must still fail dark').toBeLessThan(4.5)
   })
 
   test('every token this bucket uses resolves, in light AND dark', async ({ page }) => {

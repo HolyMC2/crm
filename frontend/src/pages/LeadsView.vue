@@ -75,7 +75,7 @@
       <span
         v-for="c in chips"
         :key="c.key"
-        class="inline-flex items-center gap-1.5 rounded-[7px] border border-outline-green-4 bg-surface-green-2 px-2 py-1 text-[11.5px] font-medium text-ink-green-7"
+        class="inline-flex items-center gap-1.5 rounded-[7px] border border-outline-green-4 bg-surface-green-2 px-2 py-1 text-[11.5px] font-medium text-ink-green-8"
       >
         {{ c.label }}
         <button class="text-[13px] leading-none" :aria-label="__('Quitar filtro') + ' ' + c.label" @click="removeChip(c)">×</button>

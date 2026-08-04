@@ -127,7 +127,7 @@
               v-for="(n, st) in dispatchStatuses"
               :key="st"
               class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-              :class="st === 'Sent' ? 'text-ink-green-7 bg-surface-green-2' : st === 'Failed' ? 'text-ink-red-8 bg-surface-red-1' : st === 'Pending' ? 'text-ink-amber-7 bg-surface-amber-1' : 'text-ink-gray-7 bg-surface-gray-2'"
+              :class="st === 'Sent' ? 'text-ink-green-8 bg-surface-green-2' : st === 'Failed' ? 'text-ink-red-8 bg-surface-red-1' : st === 'Pending' ? 'text-ink-amber-7 bg-surface-amber-1' : 'text-ink-gray-7 bg-surface-gray-2'"
             >{{ st }} · {{ n }}</span>
           </div>
           <div v-if="dispatchDeferredRows.length" class="mb-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Diferidos (siguen pendientes)') }}</div>

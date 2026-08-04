@@ -216,7 +216,7 @@ function dueText(d) {
 }
 function prioStyle(p) {
   return (
-    { Urgent: 'text-ink-red-8 bg-surface-red-1', High: 'text-ink-amber-7 bg-surface-amber-1', Medium: 'text-ink-blue-6 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
+    { Urgent: 'text-ink-red-8 bg-surface-red-1', High: 'text-ink-amber-7 bg-surface-amber-1', Medium: 'text-ink-blue-7 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
     'text-ink-gray-6 bg-surface-gray-2'
   )
 }
