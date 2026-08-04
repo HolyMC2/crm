@@ -79,7 +79,15 @@ const DRIFTED = {
 }
 
 // Tokens the codemod DOES rewrite, but not to the value-preserving target: its
-// accent maps land one step LIGHTER than the colour being replaced. Measured.
+// `ink` and `outline` accent maps land one step LIGHTER than the colour being
+// replaced. Measured in OKLCH against both compiled bundles.
+//
+// This does NOT extend to `surface` accents -- there the codemod's 5->7, 6->8,
+// 7->9 is already value-exact (surface-red-7 lands d0.0002 from v1's
+// surface-red-5's colour), so "correct every accent ramp one step darker" would
+// break tokens the codemod gets right. Three families, three behaviours:
+// ink and outline need correcting, surface and both gray ramps do not.
+//
 // Use these instead of COLOR_TOKEN_RENAMES[tok] when converting.
 export const VALUE_EXACT_OVERRIDES = {
   'ink-amber-2': 'ink-amber-6', 'ink-amber-3': 'ink-amber-7',
