@@ -114,7 +114,75 @@ async function firstRecord(page, doctype) {
   return body?.message?.[0]?.name ?? null
 }
 
+// WCAG relative luminance from a computed colour string, evaluated in the page so
+// the browser has already resolved oklch() to concrete channels for us. Deriving
+// it by hand is where this bucket's first contrast measurement went wrong: the
+// OKLab->sRGB matrix yields LINEAR rgb, and gamma-decoding it a second time
+// inflates light contrast and deflates dark.
+const contrastPairs = (page, pairs) =>
+  page.evaluate((ps) => {
+    const chan = (c) => {
+      const n = (c.match(/[\d.]+/g) || []).map(Number)
+      return c.startsWith('color(srgb') ? n.slice(0, 3).map((v) => v * 255) : n.slice(0, 3)
+    }
+    const lum = (c) => {
+      const a = chan(c).map((v) => {
+        v /= 255
+        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]
+    }
+    const out = {}
+    for (const [ink, surface] of ps) {
+      const d = document.createElement('div')
+      d.className = `text-${ink} bg-${surface}`
+      d.textContent = 'x'
+      document.body.appendChild(d)
+      const cs = getComputedStyle(d)
+      const [l1, l2] = [lum(cs.color), lum(cs.backgroundColor)].sort((a, b) => b - a)
+      out[`${ink} on ${surface}`] = Number(((l1 + 0.05) / (l2 + 0.05)).toFixed(2))
+      d.remove()
+    }
+    return out
+  }, pairs)
+
 test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
+  // Guards 6826b58d. W1-base's value-exact remap matched v1's LIGHT value and did
+  // not check dark; v1's ink-red-4 was theme-aware (lightened in dark to stay
+  // legible on the dark tinted fill) while v2's ink ramp is monotonic, so dark
+  // collapsed from 6.19 to 4.40. This asserts the CONTRACT rather than sampling a
+  // rendered chip, so it does not depend on a chip being present in the data.
+  test('the red-on-red chip pairing clears AA in both themes', async ({ page }) => {
+    await loginRetry(page)
+    await page.goto('/crm/deals', { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(4000)
+
+    for (const theme of ['light', 'dark']) {
+      await setTheme(page, theme)
+      await page.waitForTimeout(600)
+
+      const got = await contrastPairs(page, [
+        ['ink-red-8', 'surface-red-1'],
+        ['ink-red-8', 'surface-base'],
+        ['ink-red-7', 'surface-red-1'],
+      ])
+      console.log(`[${theme}] contrast:`, JSON.stringify(got))
+
+      expect(got['ink-red-8 on surface-red-1'], `the token we migrated TO must clear AA in ${theme}`).toBeGreaterThanOrEqual(4.5)
+      // The buttons only take surface-red-1 on hover; at rest they sit on the page.
+      expect(got['ink-red-8 on surface-base'], `resting state must clear AA in ${theme}`).toBeGreaterThanOrEqual(4.5)
+    }
+
+    // And the reason for the change: the previous token fails in dark. If this
+    // ever passes, the ramp moved and the fix should be re-derived rather than
+    // assumed.
+    await setTheme(page, 'dark')
+    await page.waitForTimeout(600)
+    const dark = await contrastPairs(page, [['ink-red-7', 'surface-red-1']])
+    console.log('dark ink-red-7 on surface-red-1 (the regression):', JSON.stringify(dark))
+    expect(dark['ink-red-7 on surface-red-1'], 'ink-red-7 is expected to FAIL dark — that is why it was changed').toBeLessThan(4.5)
+  })
+
   test('every token this bucket uses resolves, in light AND dark', async ({ page }) => {
     await loginRetry(page)
     await page.goto('/crm/deals', { waitUntil: 'domcontentloaded' })
