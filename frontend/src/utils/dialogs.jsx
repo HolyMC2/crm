@@ -33,7 +33,7 @@ export let Dialogs = {
               dialog.input &&
                 (dialog.input.type === 'textarea' ? (
                   <textarea
-                    class="mt-1 w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:bg-surface-white focus:outline-none"
+                    class="mt-1 w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:bg-surface-base focus:outline-none"
                     rows="3"
                     autofocus
                     placeholder={dialog.input.placeholder}
@@ -42,7 +42,7 @@ export let Dialogs = {
                   />
                 ) : (
                   <input
-                    class="mt-1 w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:bg-surface-white focus:outline-none"
+                    class="mt-1 w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 py-2 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:bg-surface-base focus:outline-none"
                     type="text"
                     autofocus
                     placeholder={dialog.input.placeholder}

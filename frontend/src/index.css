@@ -74,7 +74,7 @@ a,
   flex: none;
   border-radius: 3px;
   border: 1.5px solid var(--outline-gray-3);
-  background: var(--surface-white);
+  background: var(--surface-base);
   position: relative;
   cursor: pointer;
 }

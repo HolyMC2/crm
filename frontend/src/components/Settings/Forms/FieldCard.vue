@@ -115,7 +115,7 @@
            empty until the author deliberately exposes those records to visitors -->
       <div
         v-if="guestSelectMissing"
-        class="flex items-start gap-2 rounded border border-outline-amber-2 bg-surface-amber-2 p-2.5"
+        class="flex items-start gap-2 rounded border border-outline-amber-4 bg-surface-amber-2 p-2.5"
       >
         <LucideTriangleAlert
           class="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-amber-6"

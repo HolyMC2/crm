@@ -4,13 +4,15 @@
 
 // [bg, text] as frappe-ui theme CSS vars so avatars stay subtle + legible in BOTH
 // light and dark (the old fixed pastels rendered as bright circles on the dark UI).
-// Inline `background:var(--surface-x);color:var(--text-ink-x)` resolves per theme.
+// Inline `background:var(--surface-x);color:var(--ink-x)` resolves per theme.
+// The ink half is `--ink-*`, NOT `--text-ink-*`: the latter has never been a real
+// frappe-ui variable, so these initials rendered with inherited colour until now.
 const AV_COLORS = [
-  ['var(--surface-violet-1)', 'var(--text-ink-violet-1)'],
-  ['var(--surface-blue-1)', 'var(--text-ink-blue-2)'],
-  ['var(--surface-green-2)', 'var(--text-ink-green-3)'],
-  ['var(--surface-amber-1)', 'var(--text-ink-amber-3)'],
-  ['var(--surface-red-1)', 'var(--text-ink-red-4)'],
+  ['var(--surface-violet-2)', 'var(--ink-violet-6)'],
+  ['var(--surface-blue-1)', 'var(--ink-blue-6)'],
+  ['var(--surface-green-2)', 'var(--ink-green-7)'],
+  ['var(--surface-amber-1)', 'var(--ink-amber-7)'],
+  ['var(--surface-red-1)', 'var(--ink-red-7)'],
 ]
 export function avatarColor(s) {
   let h = 0
