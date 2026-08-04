@@ -23,7 +23,15 @@
 //     migration code was silently broken rather than merely different (§10.5).
 //
 // Run: cd frontend && set -a && . ./.env && set +a
-//      npx playwright test tests/social/w2-crm-tokens.spec.js --project=chromium
+//      npx playwright test tests/social/w2-crm-tokens.spec.js --project=chromium \
+//        --output=/tmp/<somewhere-outside-the-repo> \
+//        # and export W6_EVIDENCE_DIR to the same place for the PNGs
+//
+// ⚠ Always pass --output. `outputDir` in playwright.config.js is `test-results`,
+// which is SHARED, and Playwright CLEARS it at run start — running this without
+// the flag deletes whatever another worker's in-flight run has written there.
+// It has already happened once in each direction. The config is shared so the
+// override belongs on the command line, not in it.
 
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
