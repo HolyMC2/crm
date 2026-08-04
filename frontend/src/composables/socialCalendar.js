@@ -16,7 +16,7 @@ export const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉
 export const PILLARS = [
   { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-3' },
   { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-1 text-ink-violet-1' },
-  { kind: 'Temporada', emoji: '🎉', chip: 'bg-surface-amber-2 text-ink-amber-3' },
+  { kind: 'Temporada', emoji: '🎉', chip: 'bg-surface-amber-2 text-ink-amber-3 dark:bg-amber-300/20 dark:text-amber-200' },
   { kind: 'Noticia', emoji: '📣', chip: 'bg-surface-red-2 text-ink-red-3' },
   { kind: 'Testimonio', emoji: '💬', chip: 'bg-surface-green-2 text-ink-green-3' },
   { kind: 'Aviso', emoji: 'ℹ️', chip: 'bg-surface-gray-3 text-ink-gray-7' },
@@ -65,11 +65,11 @@ export function ymd(d) {
 export function chip(status) {
   return {
     Draft: 'bg-surface-gray-2 text-ink-gray-6',
-    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-3',
+    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200',
     Scheduled: 'bg-surface-blue-2 text-ink-blue-3',
     Publishing: 'bg-surface-blue-2 text-ink-blue-3',
     Published: 'bg-surface-green-2 text-ink-green-3',
-    'Partially Published': 'bg-surface-amber-1 text-ink-amber-3',
+    'Partially Published': 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200',
     Failed: 'bg-surface-red-1 text-ink-red-4',
     Cancelado: 'bg-surface-gray-2 text-ink-gray-4 line-through',
   }[status] || 'bg-surface-gray-2 text-ink-gray-6'

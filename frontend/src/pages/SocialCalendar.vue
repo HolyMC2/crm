@@ -20,7 +20,7 @@
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop" @change="onShopChange"
-          class="rounded-lg border border-outline-gray-2 px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
+          class="fld rounded-lg border border-outline-gray-2 px-2 py-1 text-[12px] font-semibold"
           :title="__('Filtrar por sucursal')"
         >
           <option v-if="isManager" value="">{{ __('Todas las sucursales') }}</option>
@@ -60,8 +60,8 @@
     </div>
 
     <!-- ⏳ pendientes de aprobación — surfaced instead of buried in the grid -->
-    <div v-if="pendingPosts.length" class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-amber-1 px-4 py-2" role="status">
-      <span class="text-[11.5px] font-bold text-ink-amber-3">⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span>
+    <div v-if="pendingPosts.length" class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-amber-1 px-4 py-2 dark:bg-amber-300/10" role="status">
+      <span class="text-[11.5px] font-bold text-ink-amber-3 dark:text-amber-200">⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span>
       <button
         v-for="p in pendingPosts.slice(0, 6)"
         :key="p.name"
@@ -121,7 +121,7 @@
          signal dropdown. Generates a Pending-Approval draft and drops the
          operator into the normal edit/Aprobar modal below. -->
     <template v-if="showAiComposer">
-      <div class="fixed inset-0 z-[300] bg-black/30" @click="showAiComposer = false" />
+      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showAiComposer = false" />
       <div class="fixed left-1/2 top-1/2 z-[310] flex max-h-[92vh] w-[94vw] max-w-[680px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">✨ {{ __('Compositor IA') }}</span>
@@ -157,7 +157,7 @@
                 class="rounded-full border border-dashed border-outline-gray-3 px-3 py-1 text-[12px] text-ink-gray-6 hover:bg-surface-gray-2"
                 @click="composeForm.season = suggestedSeason.name"
               >{{ suggestedSeason.emoji }} {{ suggestedSeason.name }} · {{ suggestedSeasonLabel }}</button>
-              <select v-model="composeForm.season" class="rounded-lg border border-outline-gray-2 bg-surface-white px-2 py-1 text-[12.5px] text-ink-gray-8">
+              <select v-model="composeForm.season" class="fld rounded-lg border border-outline-gray-2 px-2 py-1 text-[12.5px]">
                 <option :value="null">{{ __('Sin temporada') }}</option>
                 <option v-for="s in composeOpts?.seasons || []" :key="s.name" :value="s.name">{{ s.emoji }} {{ s.name }}</option>
               </select>
@@ -171,7 +171,7 @@
             </div>
             <textarea
               v-model="composeForm.brief" rows="3"
-              class="w-full rounded-lg border border-outline-gray-2 bg-surface-white px-2.5 py-1.5 text-[13px] text-ink-gray-9"
+              class="fld w-full rounded-lg border border-outline-gray-2 px-2.5 py-1.5 text-[13px]"
               :placeholder="briefPlaceholder"
             />
           </div>
@@ -229,7 +229,7 @@
 
     <!-- sucursales / onboarding modal (D6, manager) -->
     <template v-if="showShops">
-      <div class="fixed inset-0 z-[300] bg-black/30" @click="showShops = false" />
+      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showShops = false" />
       <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[480px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">{{ __('Sucursales y empleados') }}</span>
@@ -237,7 +237,7 @@
         </div>
         <div class="max-h-[68vh] overflow-y-auto p-4">
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Sucursal') }}</label>
-          <select v-model="onbShop" @change="onOnbShopChange" class="mb-4 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]">
+          <select v-model="onbShop" @change="onOnbShopChange" class="fld mb-4 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]">
             <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
           </select>
 
@@ -250,7 +250,7 @@
 
           <label class="mb-1 mt-4 block text-[11px] font-semibold text-ink-gray-6">{{ __('Agregar empleado') }}</label>
           <div class="flex items-center gap-2">
-            <select v-model="newEmp" class="flex-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]">
+            <select v-model="newEmp" class="fld flex-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]">
               <option value="">{{ __('Elegir Marketing User…') }}</option>
               <option v-for="u in availableToAssign" :key="u" :value="u">{{ u }}</option>
             </select>

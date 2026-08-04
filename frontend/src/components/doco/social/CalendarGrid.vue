@@ -67,10 +67,10 @@
         <!-- season ribbons: label on the span's first visible day, emoji elsewhere -->
         <div
           v-for="rib in seasonByDay[day.key] || []" :key="rib.name"
-          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-3"
+          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200"
           :title="rib.label"
         >{{ rib.isStart ? rib.label : rib.emoji }}</div>
-        <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-3' : 'text-ink-gray-4'">
+        <div class="mb-0.5 text-[11px]" :class="day.isToday ? 'font-bold text-ink-green-3' : 'text-ink-gray-6'">
           <span v-if="isBlackout(day)" class="mr-0.5" :title="__('Día bloqueado')">🚫</span>{{ day.n }}
         </div>
         <div class="flex flex-col gap-0.5">

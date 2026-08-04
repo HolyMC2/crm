@@ -10,7 +10,7 @@
 -->
 <template>
   <template v-if="showComposer">
-    <div class="fixed inset-0 z-[300] bg-black/30" @click="showComposer = false" />
+    <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showComposer = false" />
     <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[560px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
       <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
         <span class="text-[14px] font-bold text-ink-gray-9">{{ form.name ? __('Editar publicación') : __('Nueva publicación') }}</span>
@@ -46,16 +46,16 @@
 
       <div class="max-h-[68vh] overflow-y-auto p-4">
         <!-- approval hint: an AI/pending draft only publishes once approved; unapproved → auto-cancel at slot -->
-        <div v-if="isPending" class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-3">
+        <div v-if="isPending" class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-3 dark:bg-amber-300/10 dark:text-amber-200">
           <span class="flex-none">⏳</span>
           <span>{{ __('Requiere aprobación. Pulsa «Aprobar» para publicarla. Si nadie la aprueba antes de la hora programada, se cancela automáticamente.') }}</span>
         </div>
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Título') }}</label>
-        <input v-model="form.title" type="text" class="mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Interno')" />
+        <input v-model="form.title" type="text" class="fld mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Interno')" />
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Sucursal') }}</label>
-        <select v-if="isManager" v-model="form.shop" :disabled="!!form.name" class="mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60">
+        <select v-if="isManager" v-model="form.shop" :disabled="!!form.name" class="fld mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60">
           <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
         </select>
         <div v-else class="mb-3 rounded-md bg-surface-gray-1 px-2 py-1.5 text-[12.5px] text-ink-gray-7">{{ shopLabel(form.shop) || '—' }}</div>
@@ -70,7 +70,7 @@
           >{{ c }}</button>
         </div>
         <!-- IG publishing rides Meta's App Review; those channels Skip harmlessly until it clears -->
-        <p v-if="hasIg" class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-3">
+        <p v-if="hasIg" class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-3 dark:bg-amber-300/10 dark:text-amber-200">
           <span class="flex-none">ℹ️</span>
           <span>{{ __('Instagram se activa tras la aprobación de Meta; por ahora esos canales se omiten sin afectar la publicación.') }}</span>
         </p>
@@ -79,7 +79,7 @@
         <div v-if="!form.channels.length" class="mb-3 text-[11px] text-ink-gray-4">{{ __('Selecciona un canal arriba.') }}</div>
         <div v-for="c in form.channels" :key="c" class="mb-2">
           <span class="text-[10px] font-mono text-ink-gray-5">{{ c }}</span>
-          <textarea v-model="form.captions[c]" rows="2" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
+          <textarea v-model="form.captions[c]" rows="2" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
           <p v-if="c === 'IG Story'" class="mt-0.5 text-[10px] text-ink-gray-4">{{ __('IG Story: sin caption ni enlace (el enlace va en la bio).') }}</p>
           <p v-else-if="c === 'IG Reel'" class="mt-0.5 text-[10px] text-ink-gray-4">{{ __('IG Reel: requiere video.') }}</p>
         </div>
@@ -94,7 +94,7 @@
         <div v-if="form.name && canCancel" class="mb-3 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-2">
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Feedback para la IA') }}</label>
           <div class="flex items-start gap-2">
-            <textarea v-model="aiFeedback" rows="2" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('ej. más corto, menciona la garantía, sin emojis, tono más formal…')" />
+            <textarea v-model="aiFeedback" rows="2" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('ej. más corto, menciona la garantía, sin emojis, tono más formal…')" />
             <button class="shrink-0 rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !aiFeedback.trim()" @click="regeneratePost">{{ busy ? __('…') : __('↻ Regenerar') }}</button>
           </div>
           <p class="mt-1 text-[10.5px] text-ink-gray-4">{{ __('Reescribe el texto con tus indicaciones y re-adjunta fotos de los artículos si ya tienen.') }}</p>
@@ -106,25 +106,25 @@
               <label class="text-[11px] font-semibold text-ink-gray-6">{{ __('Programar') }}</label>
               <SuggestTimeButton :shop="form.shop" @pick="pickSuggestedTime" />
             </div>
-            <input v-model="form.scheduled_time" type="datetime-local" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" />
+            <input v-model="form.scheduled_time" type="datetime-local" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" />
           </div>
           <div>
             <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('CTA') }}</label>
-            <select v-model="form.cta_type" class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]">
+            <select v-model="form.cta_type" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]">
               <option value="WhatsApp">WhatsApp</option>
               <option value="Webshop">Webshop</option>
               <option value="None">{{ __('Ninguno') }}</option>
             </select>
           </div>
         </div>
-        <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" class="mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
+        <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" class="fld mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
         <p class="mb-3 text-[11px] text-ink-gray-4">{{ __('IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
 
         <!-- primer comentario: hashtags/enlaces sin ensuciar el texto principal; se publica tras publicar -->
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Primer comentario') }}</label>
         <textarea
           v-model="form.first_comment" rows="2" data-testid="first-comment-input"
-          class="w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
+          class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
           :placeholder="__('Hashtags y enlaces van aquí — se publica como primer comentario, sin ensuciar el texto principal.')"
         />
         <p class="text-[10.5px] text-ink-gray-4">{{ __('Se publica automáticamente después de publicar (FB e IG).') }}</p>

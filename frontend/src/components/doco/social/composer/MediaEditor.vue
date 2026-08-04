@@ -55,7 +55,7 @@
         <input
           v-model="m.alt_text" type="text" :disabled="!canCancel"
           :data-testid="`alt-text-input-${i}`"
-          class="w-full rounded-md border border-outline-gray-2 px-2 py-1 text-[12px] disabled:opacity-60"
+          class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1 text-[12px] disabled:opacity-60"
           :placeholder="__('Foto') + ' ' + (i + 1) + ' — ' + __('describe la imagen…')"
         />
       </div>

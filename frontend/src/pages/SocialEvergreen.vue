@@ -99,7 +99,7 @@
           <!-- eligibility -->
           <span
             class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="available(row) ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-amber-1 text-ink-amber-3'"
+            :class="available(row) ? 'bg-surface-green-2 text-ink-green-3' : 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200'"
           >
             {{ available(row) ? __('Disponible') : __('En pausa hasta') + ' ' + fmtDate(row.next_eligible) }}
           </span>
@@ -132,7 +132,7 @@
 
     <!-- confirm: quitar de la biblioteca -->
     <template v-if="confirmRow">
-      <div class="fixed inset-0 z-[300] bg-black/30" @click="confirmRow = null" />
+      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="confirmRow = null" />
       <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
         <div class="border-b border-outline-gray-1 px-4 py-3 text-[14px] font-bold text-ink-gray-9">
           {{ __('Quitar de la biblioteca') }}
@@ -171,9 +171,9 @@ const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉', Noti
 function chip(status) {
   return {
     Published: 'bg-surface-green-2 text-ink-green-3',
-    'Partially Published': 'bg-surface-amber-1 text-ink-amber-3',
+    'Partially Published': 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200',
     Scheduled: 'bg-surface-blue-2 text-ink-blue-3',
-    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-3',
+    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-3 dark:bg-amber-300/15 dark:text-amber-200',
     Draft: 'bg-surface-gray-2 text-ink-gray-6',
   }[status] || 'bg-surface-gray-2 text-ink-gray-6'
 }

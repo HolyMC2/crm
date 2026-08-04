@@ -237,7 +237,7 @@
 
     <!-- confirm: publish public reply -->
     <template v-if="confirmSend">
-      <div class="fixed inset-0 z-[300] bg-black/30" @click="confirmSend = null" />
+      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="confirmSend = null" />
       <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[440px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-white shadow-xl">
         <div class="border-b border-outline-gray-1 px-4 py-3 text-[14px] font-bold text-ink-gray-9">
           {{ __('Publicar respuesta') }}
