@@ -94,7 +94,7 @@ export function chip(status) {
     Publishing: 'bg-surface-blue-2 text-ink-blue-9',
     Published: 'bg-surface-green-2 text-ink-green-8',
     'Partially Published': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
-    Failed: 'bg-surface-red-1 text-ink-red-7',
+    Failed: 'bg-surface-red-1 text-ink-red-8',
     Cancelado: 'bg-surface-gray-2 text-ink-gray-4 line-through',
   }[status] || 'bg-surface-gray-2 text-ink-gray-6'
 }

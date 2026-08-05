@@ -72,7 +72,7 @@
                   <span class="truncate text-[13.5px] font-bold text-ink-gray-9" :title="a.user">{{ a.full_name }}</span>
                   <span
                     v-if="a.over_cap"
-                    class="flex-none rounded-md bg-surface-red-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-red-7 dark:text-ink-red-8"
+                    class="flex-none rounded-md bg-surface-red-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-red-8"
                   >
                     {{ __('sobre cap') }}
                   </span>

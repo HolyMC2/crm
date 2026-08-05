@@ -169,7 +169,7 @@
               </span>
               <span
                 v-if="ro.has_phone_case"
-                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs-medium text-ink-blue-6"
+                class="inline-flex items-center rounded-full bg-surface-blue-1 px-2 py-0.5 text-xs-medium text-ink-blue-9"
               >
                 {{ __('Case ✓') }}
               </span>

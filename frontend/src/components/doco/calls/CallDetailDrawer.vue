@@ -115,7 +115,7 @@ function fmtDur(s) {
 }
 function outcomeChip(status) {
   if (status === 'Completed') return 'text-ink-green-8 bg-surface-green-2'
-  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-7 bg-surface-red-1'
+  if (['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled'].includes(status)) return 'text-ink-red-8 bg-surface-red-1'
   return 'text-ink-gray-6 bg-surface-gray-2'
 }
 

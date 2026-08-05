@@ -229,12 +229,12 @@ const TYPE_META = { whatsapp: ['WhatsApp', 'var(--brand)', 'var(--brand-soft)'],
 function typeLabel(t) {
   return TYPE_META[t]?.[0] || t
 }
-const STATUS_CHIP = { Active: 'text-ink-green-8 bg-surface-green-2', Paused: 'text-ink-amber-7 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-6 bg-surface-blue-1' }
+const STATUS_CHIP = { Active: 'text-ink-green-8 bg-surface-green-2', Paused: 'text-ink-amber-7 bg-surface-amber-1', Draft: 'text-ink-gray-6 bg-surface-gray-2', Completed: 'text-ink-blue-9 bg-surface-blue-1' }
 function statusChip(s) {
   return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function enrStatusChip(s) {
-  const map = { Active: 'text-ink-green-8 bg-surface-green-2', Completed: 'text-ink-blue-6 bg-surface-blue-1', Suppressed: 'text-ink-red-7 bg-surface-red-1', Paused: 'text-ink-amber-7 bg-surface-amber-1' }
+  const map = { Active: 'text-ink-green-8 bg-surface-green-2', Completed: 'text-ink-blue-9 bg-surface-blue-1', Suppressed: 'text-ink-red-8 bg-surface-red-1', Paused: 'text-ink-amber-7 bg-surface-amber-1' }
   return map[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }
 function who(e) {

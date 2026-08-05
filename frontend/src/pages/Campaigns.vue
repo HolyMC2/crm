@@ -205,8 +205,8 @@ function typeLabel(t) {
 // native subtle Badge pairings (theme-aware) — bound via :class
 const TYPE_CHIP = {
   whatsapp: 'text-ink-green-8 bg-surface-green-2',
-  email: 'text-ink-blue-6 bg-surface-blue-1',
-  sms: 'text-ink-violet-6 bg-surface-violet-2',
+  email: 'text-ink-blue-9 bg-surface-blue-1',
+  sms: 'text-ink-violet-8 bg-surface-violet-2',
   automation: 'text-ink-amber-7 bg-surface-amber-1',
 }
 function typeChip(t) {
@@ -216,7 +216,7 @@ const STATUS_CHIP = {
   Active: 'text-ink-green-8 bg-surface-green-2',
   Paused: 'text-ink-amber-7 bg-surface-amber-1',
   Draft: 'text-ink-gray-6 bg-surface-gray-2',
-  Completed: 'text-ink-blue-6 bg-surface-blue-1',
+  Completed: 'text-ink-blue-9 bg-surface-blue-1',
 }
 function statusChip(s) {
   return STATUS_CHIP[s] || 'text-ink-gray-6 bg-surface-gray-2'
