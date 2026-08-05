@@ -31,9 +31,12 @@ from crm.api.whatsapp import (
 	on_update,
 )
 
-# frappe_whatsapp imports make_post_request into its doctype module namespace,
-# so the send path resolves it THERE — patch that binding, not the util origin.
-_MPR = "frappe_whatsapp.frappe_whatsapp.doctype.whatsapp_message.whatsapp_message.make_post_request"
+# Our frappe_whatsapp fork routes ALL Graph traffic through its `transport`
+# module (nothing outside it may import make_post_request — see transport.py's
+# module docstring), so the send path resolves the binding THERE. Upstream
+# imports it into the whatsapp_message doctype module instead; this path is
+# fork-specific on purpose.
+_MPR = "frappe_whatsapp.transport.make_post_request"
 
 
 def _row(frm=None, **over) -> dict:
