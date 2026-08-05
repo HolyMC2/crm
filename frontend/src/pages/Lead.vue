@@ -16,12 +16,6 @@
         v-if="document.actions?.length"
         :actions="document.actions"
       />
-      <EnrichFromWebsite
-        doctype="CRM Lead"
-        :docname="leadId"
-        :website="doc.website"
-        @done="onEnriched"
-      />
       <AssignTo v-model="assignees.data" doctype="CRM Lead" :docname="leadId" />
       <Dropdown
         v-if="doc && document.statuses"
@@ -266,7 +260,6 @@ import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import SLASection from '@/components/SLASection.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'
-import EnrichFromWebsite from '@/components/EnrichFromWebsite.vue'
 import {
   openWebsite,
   setupCustomizations,
@@ -568,11 +561,6 @@ function beforeStatusChange(data) {
       onSuccess: () => reloadResources(data),
     })
   }
-}
-
-function onEnriched() {
-  document.reload?.()
-  sections.reload()
 }
 
 function reloadResources(data) {

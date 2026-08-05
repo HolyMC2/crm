@@ -13,13 +13,10 @@ dependencies = [
     # imported directly by crm.integrations.api, crm.integrations.exotel.handler,
     # crm.api.exchange_rate and crm_exotel_settings.
     "requests>=2.28.0",
-    # Required by crm/domain_enrichment/crawler.py. It is NOT optional: crm/install.py
-    # imports the module at top level, and CRM Lead / Deal / Organization all call
-    # auto_enrich_on_create() from after_insert with no guard. The import chain is
-    # tasks -> pipeline -> crawler -> tldextract, so without this every record creation
-    # raises ModuleNotFoundError and `bench run-tests --app crm` cannot even discover
-    # tests. An earlier comment here claimed the module was unwired -- it is not.
-    "tldextract>=5.0.0",
+    # No tldextract: it was only needed by crm/domain_enrichment, which this fork
+    # excludes entirely (module, call sites and UI all removed -- see the commit that
+    # dropped it). Upstream declares it; if the module is ever adopted, it must come
+    # back together with "Domain Enrichment" in modules.txt, or record creation breaks.
 ]
 
 [build-system]
