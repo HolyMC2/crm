@@ -2,16 +2,29 @@
   Catalog picker (#catalog). Opened by the /cat command or the 📦 button in a composer.
   Search in-stock items (foto · $precio · stock), multi-select, and send each as its own
   media message into the active conversation. Live data; manual (operator-triggered) send.
+  `inline` embeds the same picker as a workspace tab panel (no overlay, stays open
+  after a send) — the Artículos tab in DealWorkspace.
 -->
 <template>
-  <div class="fixed inset-0 z-40 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" :aria-label="__('Catálogo')" @keydown.esc="closeCatalog" @click.self="closeCatalog">
-    <div class="absolute inset-0 bg-black/30" />
+  <div
+    :class="inline ? 'flex min-h-0 flex-1 flex-col' : 'fixed inset-0 z-40 flex items-end justify-center sm:items-center'"
+    :role="inline ? undefined : 'dialog'"
+    :aria-modal="inline ? undefined : 'true'"
+    :aria-label="__('Catálogo')"
+    @keydown.esc="inline ? undefined : closeCatalog()"
+    @click.self="inline ? undefined : closeCatalog()"
+  >
+    <div v-if="!inline" class="absolute inset-0 bg-black/30" />
     <div
-      class="relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-base shadow-xl dark:bg-surface-gray-1 sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl"
+      :class="
+        inline
+          ? 'relative flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base'
+          : 'relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-base shadow-xl dark:bg-surface-gray-1 sm:max-h-[80vh] sm:w-[560px] sm:rounded-2xl'
+      "
     >
       <!-- header + search -->
       <div class="flex-none border-b border-outline-gray-1 px-4 pb-3 pt-3.5">
-        <div class="mb-2.5 flex items-center justify-between">
+        <div v-if="!inline" class="mb-2.5 flex items-center justify-between">
           <div class="text-[14px] font-bold text-ink-gray-9">📦 {{ __('Catálogo') }}</div>
           <button class="text-ink-gray-4 hover:text-ink-gray-9" :aria-label="__('Cerrar')" @click="closeCatalog">✕</button>
         </div>
@@ -133,7 +146,11 @@ import {
 } from '@/composables/inbox'
 import { addItemsToQuotation } from '@/composables/salesDocs'
 
-const emit = defineEmits(['sent', 'quoted'])
+const props = defineProps({
+  // Embedded as a tab panel: no overlay/close chrome, selection survives a send.
+  inline: { type: Boolean, default: false },
+})
+const emit = defineEmits(['sent', 'quoted', 'edited'])
 const rows = computed(() => catalogResults.data || [])
 const selected = reactive(new Set())
 const failed = reactive(new Set()) // item_codes whose image 404'd → show the placeholder
@@ -158,7 +175,8 @@ function editSend() {
     content_type: 'image',
     canned: 'catalogo',
   })
-  closeCatalog()
+  if (props.inline) emit('edited')
+  else closeCatalog()
 }
 
 async function send() {
@@ -170,7 +188,8 @@ async function send() {
     if (n) toast.success(__('{0} artículos enviados', [n]))
     if (res?.skipped?.length) toast.error(__('{0} no se pudieron enviar', [res.skipped.length]))
     emit('sent')
-    closeCatalog()
+    if (props.inline) selected.clear()
+    else closeCatalog()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo enviar el catálogo'))
   } finally {
@@ -194,7 +213,8 @@ async function quote() {
     toast.success(__('Cotización {0} · {1} líneas', [out.quotation, out.lines.length]))
     for (const w of out.warnings || []) toast.error(w)
     emit('quoted', out.quotation)
-    closeCatalog()
+    if (props.inline) selected.clear()
+    else closeCatalog()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo cotizar'))
   } finally {
