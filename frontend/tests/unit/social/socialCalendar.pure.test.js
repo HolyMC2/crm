@@ -17,8 +17,8 @@ import {
 
 describe('chip', () => {
   it('maps known statuses to their token classes', () => {
-    expect(chip('Published')).toBe('bg-surface-green-2 text-ink-green-3')
-    expect(chip('Failed')).toBe('bg-surface-red-1 text-ink-red-4')
+    expect(chip('Published')).toBe('bg-surface-green-2 text-ink-green-8')
+    expect(chip('Failed')).toBe('bg-surface-red-1 text-ink-red-8')
     expect(chip('Cancelado')).toContain('line-through')
   })
   it('falls back to a neutral gray for an unknown status', () => {
@@ -62,8 +62,8 @@ describe('statusDot / pillarChip', () => {
     expect(statusDot('???')).toBe('bg-gray-300 dark:bg-gray-600')
   })
   it('pillarChip maps each post_kind, unclassified → neutral default', () => {
-    expect(pillarChip('Producto')).toBe('bg-surface-blue-2 text-ink-blue-3')
-    expect(pillarChip('Temporada')).toBe('bg-surface-amber-2 text-ink-amber-3')
+    expect(pillarChip('Producto')).toBe('bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8')
+    expect(pillarChip('Temporada')).toBe('bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200')
     expect(pillarChip('')).toBe('bg-surface-gray-2 text-ink-gray-6')
     expect(pillarChip('Weird')).toBe('bg-surface-gray-2 text-ink-gray-6')
   })

@@ -38,16 +38,16 @@ describe('barToken', () => {
     expect(barToken(4, 0)).toBe('bg-surface-gray-4')
   })
   it('green under 75% of cap', () => {
-    expect(barToken(7, 10)).toBe('bg-surface-green-3') // 70%
-    expect(barToken(0, 10)).toBe('bg-surface-green-3')
+    expect(barToken(7, 10)).toBe('bg-surface-green-7') // 70%
+    expect(barToken(0, 10)).toBe('bg-surface-green-7')
   })
   it('amber from 75% up to (not incl.) 100%', () => {
     expect(barToken(8, 10)).toBe('bg-surface-amber-2') // 80%
     expect(barToken(75, 100)).toBe('bg-surface-amber-2')
   })
   it('red at or over cap', () => {
-    expect(barToken(10, 10)).toBe('bg-surface-red-5') // 100%
-    expect(barToken(14, 10)).toBe('bg-surface-red-5') // 140%
+    expect(barToken(10, 10)).toBe('bg-surface-red-7') // 100%
+    expect(barToken(14, 10)).toBe('bg-surface-red-7') // 140%
   })
 })
 
