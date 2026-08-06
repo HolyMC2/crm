@@ -90,8 +90,8 @@
         </div>
       </div>
 
-      <!-- footer -->
-      <div class="flex flex-none items-center justify-between gap-2 border-t border-outline-gray-1 px-4 py-3">
+      <!-- footer — wraps on narrow phones so the three actions never overflow -->
+      <div class="flex flex-none flex-wrap items-center justify-between gap-2 border-t border-outline-gray-1 px-4 py-3">
         <div class="text-[12px] text-ink-gray-6">{{ selected.size }} {{ __('seleccionados') }}</div>
         <div class="flex items-center gap-2">
           <!-- ERP spec P2.1: picked items → draft Quotation lines on the deal -->
