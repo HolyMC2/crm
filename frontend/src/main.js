@@ -8,10 +8,13 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createDialog } from './utils/dialogs'
 import { initSocket } from './socket'
-import { registerPrintListener } from '@/services/doco/printListener'
 import router from './router'
 import translationPlugin from './translation'
 import App from './App.vue'
+
+const printRuntime = document.createElement('script')
+printRuntime.src = '/assets/doco/js/printing_runtime.js?v=20260812a'
+document.head.appendChild(printRuntime)
 
 import {
   FrappeUI,
@@ -72,14 +75,12 @@ if (import.meta.env.DEV) {
       }
       socket = initSocket()
       app.config.globalProperties.$socket = socket
-      registerPrintListener(socket)
       app.mount('#app')
     },
   )
 } else {
   socket = initSocket()
   app.config.globalProperties.$socket = socket
-  registerPrintListener(socket)
   app.mount('#app')
 }
 
