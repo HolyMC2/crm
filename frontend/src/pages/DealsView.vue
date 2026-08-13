@@ -51,7 +51,7 @@
         </Dropdown>
         <ColumnPicker
           v-if="view === 'list'"
-          :columns="DEAL_COLUMNS"
+          :columns="availableColumns"
           :selected="visibleCols"
           @update:selected="setCols"
           @reset="resetCols"
@@ -96,25 +96,33 @@
       <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>
     </div>
 
-    <!-- list view -->
+    <!-- list view. Header + rows share ONE scroller so the wider column set (cliente,
+         teléfono, equipo, RO…) side-scrolls with its header attached instead of
+         squeezing every cell to nothing on a narrow laptop. -->
     <template v-if="view === 'list'">
-    <!-- table header -->
-    <div
-      class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
-      :style="`grid-template-columns:${GRID};height:34px`"
-    >
-      <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" :aria-label="__('Seleccionar todo')" @change="toggleAll" />
-      <button class="text-left uppercase" @click="sortBy('organization')">{{ __('Trato') }}{{ sortArrow('organization') }}</button>
-      <button v-if="col('value')" class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
-      <div v-if="col('stage')">{{ __('Stage') }}</div>
-      <div v-if="col('source')">{{ __('Source') }}</div>
-      <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
-      <div v-if="col('owner')">{{ __('Owner') }}</div>
-      <div />
-    </div>
+    <div class="scb min-h-0 flex-1 overflow-auto">
+      <div :style="isMobile ? '' : `min-width:${MIN_W}px`">
+      <!-- table header -->
+      <div
+        class="sticky top-0 z-[5] grid items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+        :style="`grid-template-columns:${GRID};height:34px`"
+      >
+        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" :aria-label="__('Seleccionar todo')" @change="toggleAll" />
+        <button class="text-left uppercase" @click="sortBy('organization')">{{ __('Trato') }}{{ sortArrow('organization') }}</button>
+        <div v-if="col('customer')">{{ __('Cliente') }}</div>
+        <button v-if="col('phone')" class="text-left uppercase" @click="sortBy('mobile_no')">{{ __('Teléfono') }}{{ sortArrow('mobile_no') }}</button>
+        <div v-if="col('device')">{{ __('Equipo') }}</div>
+        <div v-if="col('repair_type')">{{ __('Reparación') }}</div>
+        <div v-if="col('ro')">{{ __('RO') }}</div>
+        <button v-if="col('value')" class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
+        <div v-if="col('stage')">{{ __('Stage') }}</div>
+        <div v-if="col('source')">{{ __('Source') }}</div>
+        <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
+        <div v-if="col('owner')">{{ __('Owner') }}</div>
+        <div />
+      </div>
 
-    <!-- rows -->
-    <div class="scb min-h-0 flex-1 overflow-y-auto">
+      <!-- rows -->
       <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
       <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
 
@@ -138,8 +146,30 @@
           </span>
           <div class="min-w-0">
             <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ label(r) }}</div>
-            <div class="truncate text-[11px] text-ink-gray-4">{{ r.lead_name || r.mobile_no || '—' }}</div>
+            <!-- second line = the customer, so the identity is visible even with the
+                 Cliente column hidden (and on phones, where only 2 columns fit) -->
+            <div class="truncate text-[11px] text-ink-gray-4">{{ customerOf(r) || formatPhone(phoneOf(r)) }}</div>
           </div>
+        </div>
+        <div v-if="col('customer')" class="truncate text-[12.5px] text-ink-gray-8">{{ customerOf(r) || '—' }}</div>
+        <div v-if="col('phone')" class="truncate text-[12px] text-ink-gray-6">{{ formatPhone(phoneOf(r)) }}</div>
+        <div v-if="col('device')" class="truncate text-[12px] text-ink-gray-6" :title="deviceOf(r) || ''">{{ deviceOf(r) || '—' }}</div>
+        <div v-if="col('repair_type')" class="truncate text-[12px] text-ink-gray-6" :title="repairTypeOf(r) || ''">
+          {{ repairTypeOf(r) || '—' }}
+        </div>
+        <div v-if="col('ro')" class="min-w-0">
+          <div v-if="extra(r).repair_order" class="flex items-center gap-1.5">
+            <span class="truncate text-[11.5px] font-medium text-ink-gray-7">{{ extra(r).repair_order }}</span>
+            <span
+              v-if="extra(r).repair_status"
+              class="flex-none rounded px-1.5 py-px text-[10.5px] font-semibold"
+              :style="repairChip(extra(r).repair_status)"
+            >
+              {{ extra(r).repair_status }}
+            </span>
+            <span v-if="extra(r).repair_count > 1" class="flex-none text-[10px] text-ink-gray-4">+{{ extra(r).repair_count - 1 }}</span>
+          </div>
+          <span v-else class="text-[12px] text-ink-gray-4">—</span>
         </div>
         <div v-if="col('value')" class="text-[12.5px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</div>
         <div v-if="col('stage')">
@@ -175,6 +205,7 @@
         <button class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7" @click="deals.next()">
           {{ __('Cargar más') }}
         </button>
+      </div>
       </div>
     </div>
     </template>
@@ -223,24 +254,48 @@ import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
+import { hasTaller } from '@/composables/inbox'
+import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
 
 const router = useRouter()
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
 // trato (contact) is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
+// Marco 2026-08-13: the list was unusable — no customer name, no phone, nothing about
+// the repair. Identity and repair data don't live on the deal row (identity is on the
+// linked Contact, the repair is a taller Repair Order), so those columns are fed by one
+// batched enrichment call per page (api.deals.get_deal_display).
 const DEAL_COLUMNS = [
   { key: 'contact', label: __('Trato'), fixed: true },
+  { key: 'customer', label: __('Cliente') },
+  { key: 'phone', label: __('Teléfono') },
+  { key: 'device', label: __('Equipo') },
+  { key: 'repair_type', label: __('Reparación') },
+  { key: 'ro', label: __('RO') },
   { key: 'value', label: __('Valor') },
   { key: 'stage', label: __('Stage') },
   { key: 'source', label: __('Source') },
   { key: 'modified', label: __('Última act.') },
   { key: 'owner', label: __('Owner') },
 ]
-const COL_WIDTH = { value: '120px', stage: '130px', source: '120px', modified: '110px', owner: '50px' }
-const DEFAULT_COLS = ['value', 'stage', 'source', 'modified', 'owner']
-const COLS_KEY = userScopedKey('doco_deals_columns')
+const COL_ORDER = ['customer', 'phone', 'device', 'repair_type', 'ro', 'value', 'stage', 'source', 'modified', 'owner']
+const COL_WIDTH = {
+  customer: '150px',
+  phone: '130px',
+  device: '140px',
+  repair_type: '130px',
+  ro: '150px',
+  value: '110px',
+  stage: '125px',
+  source: '110px',
+  modified: '100px',
+  owner: '50px',
+}
+const DEFAULT_COLS = ['customer', 'phone', 'device', 'ro', 'stage', 'value', 'modified', 'owner']
+// v2: the column set changed shape (cliente/teléfono/equipo/RO added) — a new key so
+// everyone lands on the new defaults once instead of keeping a stale 5-column pref.
+const COLS_KEY = userScopedKey('doco_deals_columns_v2')
 const visibleCols = ref(loadCols())
 function loadCols() {
   try {
@@ -258,15 +313,28 @@ function setCols(next) {
 function resetCols() {
   setCols([...DEFAULT_COLS])
 }
+// Repair columns only exist where taller does (mumu has no Repair Order) — never
+// render three permanently-empty columns on a retail tenant.
+const REPAIR_COLS = ['device', 'repair_type', 'ro']
+const availableColumns = computed(() =>
+  DEAL_COLUMNS.filter((c) => hasTaller.value || !REPAIR_COLS.includes(c.key)),
+)
 function col(key) {
   // phone: contact + stage only — full column set side-scrolled (07-25)
   if (isMobile.value) return key === 'contact' || key === 'stage'
+  if (!hasTaller.value && REPAIR_COLS.includes(key)) return false
   return key === 'contact' || visibleCols.value.includes(key)
 }
+// Width the grid needs before it starts squeezing cells — drives the side-scroll.
+const MIN_W = computed(() => {
+  let w = 28 + 180 + 26 // checkbox + contact min + row menu
+  for (const key of COL_ORDER) if (col(key)) w += parseInt(COL_WIDTH[key], 10)
+  return w + 40 // px-5 gutters
+})
 const GRID = computed(() => {
   if (isMobile.value) return '1fr 112px 26px' // contact + stage + menu
-  const parts = ['28px', '1fr'] // checkbox + contact (always)
-  for (const key of ['value', 'stage', 'source', 'modified', 'owner']) if (col(key)) parts.push(COL_WIDTH[key])
+  const parts = ['28px', 'minmax(180px,1fr)'] // checkbox + contact (always)
+  for (const key of COL_ORDER) if (col(key)) parts.push(COL_WIDTH[key])
   parts.push('26px') // row menu
   return parts.join(' ')
 })
@@ -291,8 +359,55 @@ const deals = createListResource({
   ],
   orderBy: 'modified desc',
   pageLength: 50,
+  onSuccess: () => loadDisplay(),
 })
 const rows = computed(() => deals.data || [])
+
+// ── display enrichment (cliente / teléfono / equipo / RO) ─────────────────────
+// Not on the deal row: identity lives on the linked Contact and the repair is a
+// taller Repair Order. One batched call per loaded page fills them; the table
+// renders immediately and fills in when it lands (never blocks the list).
+const display = ref({})
+async function loadDisplay() {
+  const names = (deals.data || []).map((d) => d.name).filter((n) => !(n in display.value))
+  if (!names.length) return
+  try {
+    const data = await frappeCall('doco_marketing.api.deals.get_deal_display', { names: JSON.stringify(names) })
+    display.value = { ...display.value, ...(data || {}) }
+  } catch (e) {
+    /* enrichment is additive — a failure leaves the base columns intact */
+  }
+}
+function extra(r) {
+  return display.value[r.name] || {}
+}
+function customerOf(r) {
+  return extra(r).customer_name || r.lead_name || ''
+}
+function phoneOf(r) {
+  return extra(r).mobile_no || r.mobile_no || ''
+}
+function deviceOf(r) {
+  return extra(r).device || ''
+}
+function repairTypeOf(r) {
+  return extra(r).repair_type || ''
+}
+// Repair-order status hue: delivered/cancelled read as done, waiting states amber,
+// in-shop states blue. Keeps the column scannable without a legend.
+const REPAIR_CHIP = {
+  Recibido: '#2563eb',
+  'En Trabajo': '#2563eb',
+  'Esperando Cliente': '#d97706',
+  'Esperando Pieza': '#d97706',
+  'Listo para Entregar': '#16a34a',
+  Entregado: '#6b7280',
+  Cancelado: '#dc2626',
+}
+function repairChip(status) {
+  const c = REPAIR_CHIP[status] || '#5b6472'
+  return `color:${c};background:${c}1a`
+}
 const count = computed(() => `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''}`)
 
 const SEARCH_FIELDS = ['organization', 'lead_name', 'email', 'mobile_no']
@@ -370,6 +485,9 @@ async function onBoardChange(row, status) {
 function exportDeals() {
   const fields = JSON.stringify([
     'name', 'organization', 'lead_name', 'status', 'source', 'deal_owner', 'deal_value', 'mobile_no', 'creation',
+    // repair columns exist only where taller is installed — asking for them on a
+    // retail tenant would fail the whole export
+    ...(hasTaller.value ? ['repair_device', 'repair_type'] : []),
   ])
   const filters = JSON.stringify(buildFilters())
   const orFilters = JSON.stringify(searchOrFilters())
