@@ -5,6 +5,7 @@
 import { ref, watch, computed } from 'vue'
 import { createResource, call, toast } from 'frappe-ui'
 import { guardStatusChange } from '@/utils/statusGuard'
+import { userScopedKey } from '@/utils/storageKeys'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
@@ -136,14 +137,28 @@ export const queueLeadStatus = ref([])
 export const queueRepairStatus = ref([])
 export const queueDateFrom = ref('')
 export const queueDateTo = ref('')
-export const queueFilterCount = computed(
-  () =>
+// Coarse state: '' | 'open' | 'closed'. The server resolves it from the status
+// TYPE, so "abiertos" means "everything except Ganados/Perdidos" and keeps
+// meaning that when a shop adds a status — the thing an enumerated 22-checkbox
+// list can never promise (Marco 2026-08-13).
+export const queueDealState = ref('')
+export const queueLeadState = ref('')
+export const queueFilterCount = computed(() => {
+  // deal_state + lead_state move together as ONE decision ("Abiertos") — counting
+  // them twice makes the badge read 2 for a single tap.
+  const states =
+    queueDealState.value && queueDealState.value === queueLeadState.value
+      ? 1
+      : (queueDealState.value ? 1 : 0) + (queueLeadState.value ? 1 : 0)
+  return (
     queueDealStatus.value.length +
     queueLeadStatus.value.length +
     queueRepairStatus.value.length +
+    states +
     (queueDateFrom.value ? 1 : 0) +
-    (queueDateTo.value ? 1 : 0),
-)
+    (queueDateTo.value ? 1 : 0)
+  )
+})
 // The filter half of the queue params — one source of truth for both the first
 // page and the keyset continuation (a mismatch silently paginates a DIFFERENT list).
 function queueFilterParams() {
@@ -151,24 +166,88 @@ function queueFilterParams() {
     deal_status: queueDealStatus.value.length ? JSON.stringify(queueDealStatus.value) : undefined,
     lead_status: queueLeadStatus.value.length ? JSON.stringify(queueLeadStatus.value) : undefined,
     repair_status: queueRepairStatus.value.length ? JSON.stringify(queueRepairStatus.value) : undefined,
+    deal_state: queueDealState.value || undefined,
+    lead_state: queueLeadState.value || undefined,
     date_from: queueDateFrom.value || undefined,
     date_to: queueDateTo.value || undefined,
+  }
+}
+const FILTERS_KEY = 'doco_inbox_filters'
+// Filters persist per user: an operator who works "solo abiertos" should not have
+// to re-say it after every reload. Restored by initInbox, saved on every change.
+function persistQueueFilters() {
+  try {
+    window.localStorage.setItem(
+      userScopedKey(FILTERS_KEY),
+      JSON.stringify({
+        deal_status: queueDealStatus.value,
+        lead_status: queueLeadStatus.value,
+        repair_status: queueRepairStatus.value,
+        deal_state: queueDealState.value,
+        lead_state: queueLeadState.value,
+        date_from: queueDateFrom.value,
+        date_to: queueDateTo.value,
+      }),
+    )
+  } catch (e) {
+    /* quota / private mode — filters just don't stick */
+  }
+}
+export function restoreQueueFilters() {
+  try {
+    const s = JSON.parse(window.localStorage.getItem(userScopedKey(FILTERS_KEY)) || 'null')
+    // First run on this device: open the inbox on ABIERTOS. A finished deal has
+    // nothing left to answer, so parking hundreds of them in the queue is noise —
+    // the same reasoning as the close-out auto-discard (Marco 2026-08-13). It is a
+    // visible chip, not a hidden mode: one tap on «Abiertos» (or Limpiar) drops it,
+    // and the choice then persists.
+    if (!s) {
+      queueDealState.value = 'open'
+      queueLeadState.value = 'open'
+      persistQueueFilters()
+      return true
+    }
+    queueDealStatus.value = s.deal_status || []
+    queueLeadStatus.value = s.lead_status || []
+    queueRepairStatus.value = s.repair_status || []
+    queueDealState.value = s.deal_state || ''
+    queueLeadState.value = s.lead_state || ''
+    // A saved DATE range is deliberately not restored: "del 1 al 5 de agosto"
+    // is a question you asked once, not a standing preference — and a stale one
+    // silently empties the inbox on the next login.
+    queueDateFrom.value = ''
+    queueDateTo.value = ''
+    return !!queueFilterCount.value
+  } catch (e) {
+    return false
   }
 }
 export function setQueueFilters(patch = {}) {
   if ('deal_status' in patch) queueDealStatus.value = patch.deal_status || []
   if ('lead_status' in patch) queueLeadStatus.value = patch.lead_status || []
   if ('repair_status' in patch) queueRepairStatus.value = patch.repair_status || []
+  if ('deal_state' in patch) queueDealState.value = patch.deal_state || ''
+  if ('lead_state' in patch) queueLeadState.value = patch.lead_state || ''
   if ('date_from' in patch) queueDateFrom.value = patch.date_from || ''
   if ('date_to' in patch) queueDateTo.value = patch.date_to || ''
+  // Explicit statuses and the coarse state answer the same question — keeping both
+  // would show "Abiertos" while the list obeys a hand-picked status. Last one wins.
+  if (patch.deal_status?.length) queueDealState.value = ''
+  if (patch.deal_state) queueDealStatus.value = []
+  if (patch.lead_status?.length) queueLeadState.value = ''
+  if (patch.lead_state) queueLeadStatus.value = []
+  persistQueueFilters()
   reloadQueue()
 }
 export function clearQueueFilters() {
   queueDealStatus.value = []
   queueLeadStatus.value = []
   queueRepairStatus.value = []
+  queueDealState.value = ''
+  queueLeadState.value = ''
   queueDateFrom.value = ''
   queueDateTo.value = ''
+  persistQueueFilters()
   reloadQueue()
 }
 
@@ -324,6 +403,7 @@ export async function sendCatalogItems(itemCodes) {
 }
 
 export function initInbox(opts = {}) {
+  restoreQueueFilters() // before the first fetch, so page 1 already obeys them
   reloadQueue()
   reloadUnassigned()
   reloadComments()

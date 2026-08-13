@@ -7,8 +7,59 @@
 -->
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+    <!-- ── mobile toolbar ──────────────────────────────────────────────────
+         The desktop bar wrapped into three rows at 390px and pushed Export /
+         New Deal off-screen. Phone shape: title + overflow menu, a full-width
+         search, then ONE scrollable pill row (vistas + Filtros). Creating a
+         deal moves to the FAB, where a thumb reaches it. -->
+    <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
+      <div class="flex items-center gap-2 px-3.5 pb-1.5 pt-2.5">
+        <span class="text-[16px] font-bold text-ink-gray-9">{{ __('Tratos') }}</span>
+        <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6">{{ count }}</span>
+        <div class="flex-1" />
+        <Dropdown :options="mobileMenu">
+          <button class="press flex h-9 w-9 items-center justify-center rounded-full text-[16px] text-ink-gray-5" :aria-label="__('Más opciones')">
+            ⋯
+          </button>
+        </Dropdown>
+      </div>
+      <div class="px-3.5 pb-2">
+        <div class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4">
+          <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
+          <input
+            :value="search"
+            :aria-label="__('Buscar tratos')"
+            :placeholder="__('Buscar cliente, equipo…')"
+            class="w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+            @input="onSearch($event.target.value)"
+          />
+          <button v-if="search" class="press flex-none text-[13px] text-ink-gray-4" :aria-label="__('Limpiar')" @click="onSearch('')">✕</button>
+        </div>
+      </div>
+      <div class="scb flex gap-1.5 overflow-x-auto px-3.5 pb-2">
+        <button
+          v-for="v in views"
+          :key="v.key"
+          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          :class="v.key === view ? 'bg-surface-gray-7 text-white' : 'bg-surface-gray-2 text-ink-gray-7'"
+          :aria-pressed="v.key === view"
+          @click="selectView(v)"
+        >
+          {{ v.label }}
+        </button>
+        <span class="my-1 w-px flex-none bg-outline-gray-2" />
+        <button
+          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          :class="chips.length ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-7'"
+          @click="showFilterSheet = true"
+        >
+          {{ __('Filtros') }}<span v-if="chips.length"> · {{ chips.length }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- toolbar -->
-    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
+    <div v-if="!isMobile" class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Tratos') }}</span>
         <span class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6" style="background: #f1f2f4">
@@ -74,7 +125,7 @@
     </div>
 
     <!-- active filter chips -->
-    <div v-if="chips.length" class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2">
+    <div v-if="chips.length && !isMobile" class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2">
       <span
         v-for="c in chips"
         :key="c.key"
@@ -99,7 +150,43 @@
     <!-- list view. Header + rows share ONE scroller so the wider column set (cliente,
          teléfono, equipo, RO…) side-scrolls with its header attached instead of
          squeezing every cell to nothing on a narrow laptop. -->
-    <template v-if="view === 'list'">
+    <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
+    <div v-if="view === 'list' && isMobile" class="scb min-h-0 flex-1 overflow-y-auto">
+      <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
+      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
+      <MobileRecordCard
+        v-for="r in rows"
+        :key="r.name"
+        :title="customerOf(r) || label(r)"
+        :subtitle="mobileSubtitle(r)"
+        :time="timeAgo(r.modified)"
+        :menu="rowMenu(r)"
+        @open="openDeal(r.name)"
+      >
+        <template #chips>
+          <span v-if="r.status" class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold" :style="statusChip(r.status)">
+            {{ r.status }}
+          </span>
+          <span
+            v-if="extra(r).repair_status"
+            class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
+            :style="repairChip(extra(r).repair_status)"
+          >
+            🔧 {{ extra(r).repair_status }}
+          </span>
+          <span v-if="deviceOf(r)" class="truncate text-[11px] text-ink-gray-6">{{ deviceOf(r) }}</span>
+          <span v-if="r.deal_value" class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</span>
+        </template>
+      </MobileRecordCard>
+      <div v-if="deals.hasNextPage" class="px-3.5 py-3">
+        <button class="press h-11 w-full rounded-[10px] border border-outline-gray-2 text-[13px] font-medium text-ink-gray-7" @click="deals.next()">
+          {{ __('Cargar más') }}
+        </button>
+      </div>
+      <div class="h-16" aria-hidden="true" />
+    </div>
+
+    <template v-if="view === 'list' && !isMobile">
     <div class="scb min-h-0 flex-1 overflow-auto">
       <div :style="isMobile ? '' : `min-width:${MIN_W}px`">
       <!-- table header -->
@@ -223,9 +310,9 @@
     >
       <template #card="{ row }">
         <div class="min-w-0">
-          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ label(row) }}</div>
+          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ customerOf(row) || label(row) }}</div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
-            <span class="truncate text-[11px] text-ink-gray-4">{{ row.lead_name || row.mobile_no || '—' }}</span>
+            <span class="truncate text-[11px] text-ink-gray-4">{{ deviceOf(row) || formatPhone(phoneOf(row)) }}</span>
             <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{ formatMXN(row.deal_value) }}</span>
           </div>
         </div>
@@ -234,6 +321,26 @@
 
     <!-- funnel view -->
     <FunnelView v-else-if="view === 'funnel'" :groups="stageOptions" :counts="groupCounts" />
+
+    <!-- mobile: create sits under the thumb, clear of the tab bar -->
+    <button
+      v-if="isMobile"
+      class="press fixed right-4 z-[200] flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white"
+      style="background: var(--brand); bottom: calc(env(safe-area-inset-bottom) + 68px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22)"
+      :aria-label="__('New Deal')"
+      @click="showDealModal = true"
+    >
+      +
+    </button>
+
+    <MobileFilterSheet
+      v-if="isMobile"
+      v-model="showFilterSheet"
+      :groups="mobileFilterGroups"
+      :count="count"
+      @change="onSheetChange"
+      @clear="clearAll"
+    />
 
     <DealModal v-if="showDealModal" v-model="showDealModal" />
   </div>
@@ -253,6 +360,8 @@ import { userScopedKey } from '@/utils/storageKeys'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
+import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
+import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { hasTaller } from '@/composables/inbox'
 import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
@@ -407,6 +516,32 @@ const REPAIR_CHIP = {
 function repairChip(status) {
   const c = REPAIR_CHIP[status] || '#5b6472'
   return `color:${c};background:${c}1a`
+}
+
+// ── mobile shell ─────────────────────────────────────────────────────────────
+const showFilterSheet = ref(false)
+// Folio + phone under the customer's name: the two things a shop reads aloud.
+// When there's no customer the card title IS the folio, so don't repeat it.
+function mobileSubtitle(r) {
+  const parts = []
+  if (customerOf(r)) parts.push(r.name)
+  const ph = phoneOf(r)
+  if (ph) parts.push(formatPhone(ph))
+  return parts.join(' · ')
+}
+// Toolbar actions a phone can't fit inline. Column picking is desktop-only (the
+// card layout has no columns to pick).
+const mobileMenu = computed(() => [
+  ...viewMenu.value,
+  { label: '⭳ ' + __('Export'), onClick: exportDeals },
+])
+const mobileFilterGroups = computed(() => [
+  { key: 'status', label: __('Stage'), options: stageOptions.value, selected: statusF.value },
+  { key: 'source', label: __('Source'), options: sourceOptions.value, selected: sourceF.value },
+  { key: 'owner', label: __('Owner'), options: ownerOptions.value, selected: ownerF.value },
+])
+function onSheetChange({ key, values }) {
+  ;({ status: statusF, source: sourceF, owner: ownerF })[key].value = values
 }
 const count = computed(() => `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''}`)
 

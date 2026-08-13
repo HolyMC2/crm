@@ -5,8 +5,55 @@
 -->
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+    <!-- ── mobile toolbar (see DealsView for the why) ─────────────────────── -->
+    <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
+      <div class="flex items-center gap-2 px-3.5 pb-1.5 pt-2.5">
+        <span class="text-[16px] font-bold text-ink-gray-9">{{ __('Leads') }}</span>
+        <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6">{{ count }}</span>
+        <div class="flex-1" />
+        <Dropdown :options="mobileMenu">
+          <button class="press flex h-9 w-9 items-center justify-center rounded-full text-[16px] text-ink-gray-5" :aria-label="__('Más opciones')">
+            ⋯
+          </button>
+        </Dropdown>
+      </div>
+      <div class="px-3.5 pb-2">
+        <div class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4">
+          <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
+          <input
+            :value="search"
+            :aria-label="__('Buscar leads')"
+            :placeholder="__('Buscar nombre, teléfono…')"
+            class="w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+            @input="onSearch($event.target.value)"
+          />
+          <button v-if="search" class="press flex-none text-[13px] text-ink-gray-4" :aria-label="__('Limpiar')" @click="onSearch('')">✕</button>
+        </div>
+      </div>
+      <div class="scb flex gap-1.5 overflow-x-auto px-3.5 pb-2">
+        <button
+          v-for="v in views"
+          :key="v.key"
+          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          :class="v.key === view ? 'bg-surface-gray-7 text-white' : 'bg-surface-gray-2 text-ink-gray-7'"
+          :aria-pressed="v.key === view"
+          @click="selectView(v)"
+        >
+          {{ v.label }}
+        </button>
+        <span class="my-1 w-px flex-none bg-outline-gray-2" />
+        <button
+          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          :class="chips.length ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-7'"
+          @click="showFilterSheet = true"
+        >
+          {{ __('Filtros') }}<span v-if="chips.length"> · {{ chips.length }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- toolbar -->
-    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
+    <div v-if="!isMobile" class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Leads') }}</span>
         <span class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6">
@@ -71,7 +118,7 @@
     </div>
 
     <!-- active filter chips -->
-    <div v-if="chips.length" class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2">
+    <div v-if="chips.length && !isMobile" class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2">
       <span
         v-for="c in chips"
         :key="c.key"
@@ -95,8 +142,46 @@
       <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>
     </div>
 
+    <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
+    <div v-if="view === 'list' && isMobile" class="scb min-h-0 flex-1 overflow-y-auto">
+      <div v-if="leads.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
+      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin leads') }}</div>
+      <MobileRecordCard
+        v-for="r in rows"
+        :key="r.name"
+        :title="label(r)"
+        :subtitle="mobileSubtitle(r)"
+        :time="timeAgo(r.modified)"
+        :menu="rowMenu(r)"
+        @open="openLead(r.name)"
+      >
+        <template #chips>
+          <span v-if="r.status" class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold" :style="statusChip(r.status)">
+            {{ r.status }}
+          </span>
+          <span
+            v-if="r.score_grade"
+            class="rounded-md px-1.5 py-[2px] text-[11px] font-bold"
+            :style="`color:${gradeColor(r.score_grade)};background:${gradeColor(r.score_grade)}1a`"
+          >
+            {{ r.score_grade }} · {{ r.lead_score ?? '—' }}
+          </span>
+          <span v-if="r.source" class="flex items-center gap-1 text-[11px] text-ink-gray-6">
+            <span class="h-[6px] w-[6px] flex-none rounded-full" :style="`background:${sourceDot(r.source)}`" />
+            {{ r.source }}
+          </span>
+        </template>
+      </MobileRecordCard>
+      <div v-if="leads.hasNextPage" class="px-3.5 py-3">
+        <button class="press h-11 w-full rounded-[10px] border border-outline-gray-2 text-[13px] font-medium text-ink-gray-7" @click="leads.next()">
+          {{ __('Cargar más') }}
+        </button>
+      </div>
+      <div class="h-16" aria-hidden="true" />
+    </div>
+
     <!-- list view -->
-    <template v-if="view === 'list'">
+    <template v-if="view === 'list' && !isMobile">
     <!-- table header -->
     <div
       class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
@@ -224,6 +309,26 @@
     <!-- funnel view -->
     <FunnelView v-else-if="view === 'funnel'" :groups="stageOptions" :counts="groupCounts" />
 
+    <!-- mobile: create sits under the thumb, clear of the tab bar -->
+    <button
+      v-if="isMobile"
+      class="press fixed right-4 z-[200] flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white"
+      style="background: var(--brand); bottom: calc(env(safe-area-inset-bottom) + 68px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22)"
+      :aria-label="__('New Lead')"
+      @click="showLeadModal = true"
+    >
+      +
+    </button>
+
+    <MobileFilterSheet
+      v-if="isMobile"
+      v-model="showFilterSheet"
+      :groups="mobileFilterGroups"
+      :count="count"
+      @change="onSheetChange"
+      @clear="clearAll"
+    />
+
     <LeadModal v-if="showLeadModal" v-model="showLeadModal" />
   </div>
 </template>
@@ -244,7 +349,9 @@ import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
-import { GRADE_COLORS, avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
+import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
+import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
+import { GRADE_COLORS, avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
 
 const router = useRouter()
 
@@ -563,6 +670,27 @@ function sourceDot(source) {
 }
 function ownerName(email) {
   return getUser(email)?.full_name || email
+}
+
+// ── mobile shell ─────────────────────────────────────────────────────────────
+const showFilterSheet = ref(false)
+// Under the name: the organization if there is one, else the phone — what an
+// agent needs before tapping in.
+function mobileSubtitle(r) {
+  const parts = []
+  if (r.organization) parts.push(r.organization)
+  // A nameless lead already shows its number as the card TITLE — don't print it twice.
+  if (r.mobile_no && label(r) !== r.mobile_no) parts.push(formatPhone(r.mobile_no))
+  return parts.join(' · ')
+}
+const mobileMenu = computed(() => [...viewMenu.value, { label: '⭳ ' + __('Export'), onClick: exportLeads }])
+const mobileFilterGroups = computed(() => [
+  { key: 'status', label: __('Stage'), options: stageOptions.value, selected: statusF.value },
+  { key: 'grade', label: __('Score'), options: scoreOptions, selected: gradeF.value },
+  { key: 'source', label: __('Source'), options: sourceOptions.value, selected: sourceF.value },
+])
+function onSheetChange({ key, values }) {
+  ;({ status: statusF, grade: gradeF, source: sourceF })[key].value = values
 }
 
 // ── selection + rows ─────────────────────────────────────────────────────────
