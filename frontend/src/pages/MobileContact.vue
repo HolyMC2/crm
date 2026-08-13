@@ -102,17 +102,17 @@
       v-model="tabIndex"
       as="div"
       :tabs="tabs"
-      class="flex flex-1 overflow-auto flex-col [&_[role='tablist']]:gap-3 [&_[role='tablist']]:px-4 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
+      class="flex min-h-0 flex-1 overflow-hidden flex-col [&_[role='tablist']]:gap-3 [&_[role='tablist']]:overflow-x-auto [&_[role='tablist']]:whitespace-nowrap [&_[role='tablist']]:px-4 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:min-h-0 [&_[role='tabpanel']:not([hidden])]:grow"
     >
       <template #tab-item="{ tab, selected }">
         <button
-          v-if="tab.name == 'Deals'"
           class="group flex items-center gap-2 border-b border-transparent py-2.5 text-base text-ink-gray-5 duration-300 ease-in-out hover:text-ink-gray-9 !px-4"
           :class="{ 'text-ink-gray-9': selected }"
         >
           <component :is="tab.icon" v-if="tab.icon" class="h-5" />
           {{ __(tab.label) }}
           <Badge
+            v-if="tab.count != null"
             class="group-hover:bg-surface-gray-10"
             :class="[selected ? 'bg-surface-gray-10' : 'bg-gray-600']"
             variant="solid"
@@ -124,6 +124,12 @@
         </button>
       </template>
       <template #tab-panel="{ tab }">
+        <VerticalSlot
+          v-if="tab.sectionKey"
+          slot="contact_tab"
+          :section-key="tab.sectionKey"
+          :docname="contact.doc.name"
+        />
         <div v-if="tab.name == 'Details'">
           <div
             v-if="sections.data"
@@ -194,6 +200,8 @@ import { useDoctypeModal } from '@/composables/doctypeModal'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { ref, computed, h, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import VerticalSlot from '@/components/doco/VerticalSlot.vue'
+import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
 
 const { brand } = getSettings()
 const { $dialog, makeCall } = globalStore()
@@ -298,7 +306,8 @@ async function deleteContact() {
 }
 
 const tabIndex = ref(0)
-const tabs = [
+const { contactTabs } = useContact360Tabs()
+const tabs = computed(() => [
   {
     name: 'Details',
     label: __('Details'),
@@ -310,7 +319,8 @@ const tabs = [
     icon: h(DealsIcon, { class: 'h-4 w-4' }),
     count: computed(() => deals.data?.length),
   },
-]
+  ...contactTabs.value,
+])
 
 const deals = createResource({
   url: 'crm.api.contact.get_linked_deals',

@@ -123,7 +123,7 @@
       v-model="tabIndex"
       as="div"
       :tabs="tabs"
-      class="flex flex-1 overflow-hidden flex-col [&_[role='tab']]:px-0 [&_[role='tab']]:shrink-0 [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tablist']]:gap-7.5 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
+      class="flex min-h-0 flex-1 overflow-hidden flex-col [&_[role='tab']]:px-0 [&_[role='tab']]:shrink-0 [&_[role='tablist']]:overflow-x-auto [&_[role='tablist']]:whitespace-nowrap [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tablist']]:gap-7.5 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:min-h-0 [&_[role='tabpanel']:not([hidden])]:grow"
     >
       <template #tab-item="{ tab, selected }">
         <button
@@ -133,6 +133,7 @@
           <component :is="tab.icon" v-if="tab.icon" class="h-5" />
           {{ __(tab.label) }}
           <Badge
+            v-if="tab.count != null"
             class="group-hover:bg-surface-gray-10"
             :class="[selected ? 'bg-surface-gray-10' : 'bg-gray-600']"
             variant="solid"
@@ -144,6 +145,12 @@
         </button>
       </template>
       <template #tab-panel="{ tab }">
+        <VerticalSlot
+          v-if="tab.sectionKey"
+          slot="contact_tab"
+          :section-key="tab.sectionKey"
+          :docname="contact.doc.name"
+        />
         <DealsListView
           v-if="tab.label === 'Deals' && rows.length"
           class="mt-4"
@@ -151,7 +158,11 @@
           :columns="columns"
           :options="{ selectable: false, showTooltip: false }"
         />
-        <EmptyState v-if="!rows.length" :icon="tab.icon" name="Deals" />
+        <EmptyState
+          v-if="tab.label === 'Deals' && !rows.length"
+          :icon="tab.icon"
+          name="Deals"
+        />
       </template>
     </Tabs>
   </div>
@@ -208,6 +219,8 @@ import { useTelemetry } from 'frappe-ui/frappe'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
+import VerticalSlot from '@/components/doco/VerticalSlot.vue'
+import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
 
 const { brand } = getSettings()
 const { makeCall, $dialog, $socket } = globalStore()
@@ -299,13 +312,15 @@ function changeContactImage(file) {
 }
 
 const tabIndex = ref(0)
-const tabs = [
+const { contactTabs } = useContact360Tabs()
+const tabs = computed(() => [
   {
     label: 'Deals',
     icon: DealsIcon,
     count: computed(() => deals.data?.length),
   },
-]
+  ...contactTabs.value,
+])
 
 const deals = createResource({
   url: 'crm.api.contact.get_linked_deals',
