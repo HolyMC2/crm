@@ -417,8 +417,11 @@
             <div class="truncate text-[13px] font-semibold text-ink-gray-9">
               {{ r.contact_name || r.mobile_no || __('Sin nombre') }}
             </div>
+            <!-- the Tratos-list identity line, compressed: equipo · reparación ·
+                 teléfono. It used to show device OR phone, so a repair conversation
+                 hid the number and a plain one hid nothing useful. -->
             <div class="truncate text-[11px] text-ink-gray-5">
-              {{ r.device || r.mobile_no || '—' }}
+              {{ subtitle(r) }}
             </div>
           </div>
           <div class="flex flex-none flex-col items-end gap-1">
@@ -498,6 +501,18 @@
           >
             <span class="h-1.5 w-1.5 flex-none rounded-full" :style="`background:${statusColor(r.status)}`" />
             {{ r.status }}
+          </span>
+          <!-- 🔧 newest repair order: folio + ITS status. The deal status above says
+               where the sale stands; this says where the device stands — the pair the
+               Tratos list shows as separate columns. Absent without taller. -->
+          <span
+            v-if="r.repair_order"
+            class="inline-flex items-center gap-1 rounded bg-surface-blue-1 px-1.5 py-px text-[9.5px] font-semibold text-ink-blue-8"
+            :title="__('Orden de reparación más reciente de este trato')"
+          >
+            🔧 {{ r.repair_order }}
+            <span v-if="r.repair_status" class="opacity-80">· {{ r.repair_status }}</span>
+            <span v-if="r.repair_count > 1" class="opacity-70">+{{ r.repair_count - 1 }}</span>
           </span>
           <span
             v-if="r.sla_overdue"
@@ -904,6 +919,16 @@ function formatPhone(raw) {
   else if (n.startsWith('52')) n = n.slice(2)
   if (n.length === 10) return `+52 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`
   return raw ? `+${d}` : '—'
+}
+
+// Card subtitle. A repair conversation shows the job (Equipo · Reparación); any
+// other one shows the phone. Appending the phone to the repair line looked richer
+// but at 390px it truncated mid-number — worse than not showing it, and the number
+// is one tap away inside the conversation.
+function subtitle(r) {
+  const job = [r.device, r.repair_type].filter((p) => p && String(p).trim())
+  if (job.length) return job.join(' · ')
+  return r.mobile_no ? formatPhone(r.mobile_no) : '—'
 }
 
 // Omnichannel tabs (Meta-style). Counts are REAL per-channel totals across all
