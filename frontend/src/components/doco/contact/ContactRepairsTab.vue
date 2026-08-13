@@ -18,7 +18,7 @@
         <Metric
           :label="__('Garantías activas')"
           :value="data.summary.active_warranties"
-          tone="green"
+          :tone="data.summary.active_warranties > 0 ? 'green' : 'gray'"
         />
         <Metric
           :label="__('Importe')"
@@ -42,7 +42,7 @@
         >
           <div class="min-w-[920px]">
             <div
-              class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
+              class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
             >
               <span>{{ __('Folio') }}</span
               ><span>{{ __('Equipo') }}</span
@@ -57,7 +57,7 @@
               :key="row.name"
               :href="`/taller/orders/${encodeURIComponent(row.name)}`"
               target="_blank"
-              class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] items-center border-t border-outline-gray-1 px-3 py-2 text-sm hover:bg-surface-gray-1"
+              class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] items-center gap-x-3 border-t border-outline-gray-1 px-3 py-2 text-sm hover:bg-surface-gray-1"
             >
               <span class="truncate font-semibold text-ink-blue-link">{{
                 row.name

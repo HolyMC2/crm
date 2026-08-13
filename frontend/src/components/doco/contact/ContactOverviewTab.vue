@@ -21,10 +21,12 @@
           {{ rollup.currency }}
         </div>
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <!-- Red means "this person owes money". A settled account is not an
+               alert, so nothing (or a credit) stays neutral. -->
           <Tile
             :label="__('Saldo')"
             :value="money(rollup.outstanding, rollup.currency)"
-            tone="red"
+            :tone="rollup.outstanding > 0 ? 'red' : 'gray'"
           />
           <Tile
             :label="__('Facturado')"
@@ -38,7 +40,7 @@
           <Tile
             :label="__('Notas de crédito')"
             :value="money(rollup.credited, rollup.currency)"
-            tone="amber"
+            :tone="rollup.credited > 0 ? 'amber' : 'gray'"
           />
         </div>
       </div>
@@ -52,7 +54,7 @@
         <Tile
           :label="__('Garantías activas')"
           :value="String(data.counts.active_warranties || 0)"
-          tone="green"
+          :tone="data.counts.active_warranties > 0 ? 'green' : 'gray'"
         />
         <Tile
           :label="__('Facturas')"

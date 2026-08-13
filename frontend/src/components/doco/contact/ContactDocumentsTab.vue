@@ -42,7 +42,7 @@
         >
           <div class="min-w-[720px]">
             <div
-              class="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
+              class="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
             >
               <span>{{ __('Folio') }}</span
               ><span>{{ __('Fecha') }}</span
@@ -53,7 +53,7 @@
             <button
               v-for="row in group.rows"
               :key="`${row.doctype}-${row.name}`"
-              class="grid w-full grid-cols-[1.4fr_1fr_1fr_1fr_1fr] items-center border-t border-outline-gray-1 px-3 py-2 text-left text-sm hover:bg-surface-gray-1"
+              class="grid w-full grid-cols-[1.4fr_1fr_1fr_1fr_1fr] items-center gap-x-3 border-t border-outline-gray-1 px-3 py-2 text-left text-sm hover:bg-surface-gray-1"
               @click="open(row, group.doctype)"
             >
               <span class="truncate font-semibold text-ink-blue-link">{{

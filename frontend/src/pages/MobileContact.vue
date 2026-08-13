@@ -124,10 +124,9 @@
         </button>
       </template>
       <template #tab-panel="{ tab }">
-        <VerticalSlot
-          v-if="tab.sectionKey"
-          slot="contact_tab"
-          :section-key="tab.sectionKey"
+        <ContactTabPanel
+          v-if="tab.component"
+          :component="tab.component"
           :docname="contact.doc.name"
         />
         <div v-if="tab.name == 'Details'">
@@ -200,7 +199,7 @@ import { useDoctypeModal } from '@/composables/doctypeModal'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { ref, computed, h, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import VerticalSlot from '@/components/doco/VerticalSlot.vue'
+import ContactTabPanel from '@/components/doco/contact/ContactTabPanel.vue'
 import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
 
 const { brand } = getSettings()
