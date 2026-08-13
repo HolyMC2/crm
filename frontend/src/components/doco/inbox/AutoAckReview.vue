@@ -36,9 +36,17 @@
           :title="__('Abrir la conversación para revisar con contexto completo')"
           @click="openConvo(r)"
         >
+          <!-- name first, number second: the backend resolves identity through the
+               contact chain, so a bare phone here means we genuinely don't know them. -->
           <div class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-9">
-            {{ r.contact_name || r.to || '—' }}
+            {{ displayName(r) }}
             <span class="text-[10px] font-normal text-ink-blue-9 opacity-0 group-hover:opacity-100">↗ {{ __('abrir') }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 truncate text-[10.5px] text-ink-gray-5">
+            <span class="truncate">{{ formatPhone(r.mobile_no || r.to) }}</span>
+            <span v-if="r.status" class="flex-none rounded px-1 py-px text-[9.5px] font-semibold" :style="statusChip(r)">
+              {{ r.status }}
+            </span>
           </div>
         </button>
         <span class="flex-none text-[10px] font-semibold text-ink-amber-7" :title="__('Esperando desde el entrante')">
@@ -80,9 +88,12 @@
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
 import { autoAcks, reloadAutoAcks, approveAutoAck, discardAutoAck, selectDeal, timeAgo, CHANNEL_META } from '@/composables/inbox'
+import { formatPhone } from '@/composables/crmFormat'
 import { usersStore } from '@/stores/users'
+import { statusesStore } from '@/stores/statuses'
 
 const { isManager } = usersStore()
+const { getDealStatus, getLeadStatus } = statusesStore()
 const canAct = computed(() => isManager())
 const rows = computed(() => autoAcks.data || [])
 // Per-row local edit buffer (so editing one draft never mutates the shared resource)
@@ -104,6 +115,19 @@ watch(
 // approving (the acuse then appears in the in-conversation strip).
 function openConvo(r) {
   if (r.reference_doctype && r.reference_name) selectDeal(r.reference_name, r.reference_doctype)
+}
+
+// contact_name is server-resolved (Contact → deal fields → primary contact → lead);
+// only fall through to the raw number when nothing named this customer.
+function displayName(r) {
+  return r.contact_name || formatPhone(r.mobile_no || r.to) || '—'
+}
+// Deal and lead statuses live in separate stores; the row's reference tells us which.
+// Hue as text + 10% wash (same treatment as the queue), so it stays readable in dark.
+function statusChip(r) {
+  const store = r.reference_doctype === 'CRM Lead' ? getLeadStatus : getDealStatus
+  const c = store(r.status)?.color || '#5b6472'
+  return `color:${c};background:${c}1a`
 }
 
 function chColor(channel) {

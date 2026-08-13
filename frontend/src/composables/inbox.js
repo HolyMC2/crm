@@ -120,6 +120,58 @@ export const snoozedCount = createResource({ url: 'doco_marketing.api.inbox.get_
 export const conversationTags = createResource({ url: 'doco_marketing.api.inbox.get_conversation_tags', auto: false })
 export const queueTag = ref(null) // active etiqueta filter (null = all)
 
+// ── queue filters (Marco 2026-08-13) ──────────────────────────────────────────
+// The tabs (Todos/WhatsApp/Vencidos/…) are channel+urgency views; these are the
+// RECORD filters an operator asks for: estado del trato / del lead / de la
+// reparación, plus a date range on the conversation's last activity. Naming a
+// deal-side status also scopes the queue to deals (server-side rule) — filtering
+// by "Completado" and still seeing every lead would be noise, not a filter.
+export const queueFilterOptions = createResource({
+  url: 'doco_marketing.api.inbox.get_queue_filter_options',
+  cache: 'inbox-filter-options',
+  auto: false,
+})
+export const queueDealStatus = ref([])
+export const queueLeadStatus = ref([])
+export const queueRepairStatus = ref([])
+export const queueDateFrom = ref('')
+export const queueDateTo = ref('')
+export const queueFilterCount = computed(
+  () =>
+    queueDealStatus.value.length +
+    queueLeadStatus.value.length +
+    queueRepairStatus.value.length +
+    (queueDateFrom.value ? 1 : 0) +
+    (queueDateTo.value ? 1 : 0),
+)
+// The filter half of the queue params — one source of truth for both the first
+// page and the keyset continuation (a mismatch silently paginates a DIFFERENT list).
+function queueFilterParams() {
+  return {
+    deal_status: queueDealStatus.value.length ? JSON.stringify(queueDealStatus.value) : undefined,
+    lead_status: queueLeadStatus.value.length ? JSON.stringify(queueLeadStatus.value) : undefined,
+    repair_status: queueRepairStatus.value.length ? JSON.stringify(queueRepairStatus.value) : undefined,
+    date_from: queueDateFrom.value || undefined,
+    date_to: queueDateTo.value || undefined,
+  }
+}
+export function setQueueFilters(patch = {}) {
+  if ('deal_status' in patch) queueDealStatus.value = patch.deal_status || []
+  if ('lead_status' in patch) queueLeadStatus.value = patch.lead_status || []
+  if ('repair_status' in patch) queueRepairStatus.value = patch.repair_status || []
+  if ('date_from' in patch) queueDateFrom.value = patch.date_from || ''
+  if ('date_to' in patch) queueDateTo.value = patch.date_to || ''
+  reloadQueue()
+}
+export function clearQueueFilters() {
+  queueDealStatus.value = []
+  queueLeadStatus.value = []
+  queueRepairStatus.value = []
+  queueDateFrom.value = ''
+  queueDateTo.value = ''
+  reloadQueue()
+}
+
 // ── composer draft handoff ─────────────────────────────────────────────────────
 // Features (catálogo editable send, cobrar-en-el-chat, …) set a draft; WhatsAppBox
 // applies it (text + optional pending attach) and clears it. The operator ALWAYS
@@ -281,6 +333,7 @@ export function initInbox(opts = {}) {
   autoAckCount.fetch() // "por aprobar" badge — count only on init; the list loads on tab open
   snoozedCount.fetch() // «Pospuestas» chip
   conversationTags.fetch() // 🏷 filter chips
+  queueFilterOptions.fetch() // estado trato / lead / reparación (filter panel)
   // skipRestore: a ?deal= deep link owns the selection — restoreInbox() resolves
   // async and would clobber it with the previously-persisted conversation (audit H1).
   if (!opts.skipRestore) restoreInbox()
@@ -455,6 +508,7 @@ export function reloadQueue(opts = {}) {
       search: queueSearch.value || undefined,
       snoozed: inboxTab.value === 'snoozed' ? 1 : undefined,
       tag: queueTag.value || undefined,
+      ...queueFilterParams(),
       limit: QUEUE_PAGE,
       start: 0,
     })
@@ -469,7 +523,9 @@ export function reloadQueue(opts = {}) {
       }
       queueHasMore.value = fresh.length === QUEUE_PAGE
       queueFromCache.value = false
-      if (!queueChannel.value && !queueSearch.value) {
+      // Only the UNFILTERED list may seed the offline preview cache — caching a
+      // filtered page would repaint it as "the inbox" on the next cold start.
+      if (!queueChannel.value && !queueSearch.value && !queueFilterCount.value) {
         try {
           // trim the persisted preview — the cache must paint the list, not
           // archive conversations (audit M2)
@@ -515,6 +571,7 @@ export function loadMoreQueue() {
       search: queueSearch.value || undefined,
       snoozed: inboxTab.value === 'snoozed' ? 1 : undefined,
       tag: queueTag.value || undefined,
+      ...queueFilterParams(),
       limit: QUEUE_PAGE,
       start: _queueStart,
       cursor_ts: tail?.sort_ts || undefined,
@@ -823,6 +880,9 @@ export function onThreadUpdate(payload) {
   channelCounts.reload() // a new message may flip a conversation's last_channel
   overdue.reload() // ...and a reply/inbound changes who's overdue
   autoAckCount.reload() // a reply may resolve a pending draft; an inbound may add one
+  // ...and while the review list is on screen it must drop rows the server just
+  // auto-discarded (deal Completado / repair Entregado close-out), not only the badge.
+  if (inboxTab.value === 'aprobar') autoAcks.reload()
   snoozedCount.fetch() // snooze set/cleared elsewhere (or a cron wake) moves the chip
 }
 

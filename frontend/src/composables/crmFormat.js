@@ -72,6 +72,18 @@ export function hhmm(ts) {
   return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
 }
 
+// Pretty-print a raw WhatsApp/CRM number (5216691530561 / 526691530561 / 6691530561)
+// as +52 669 153 0561 — strip the country code + the MX mobile "1", group the rest.
+// Shared so the queue, the review cards and the Tratos list all render one shape.
+export function formatPhone(raw) {
+  const d = String(raw || '').replace(/\D/g, '')
+  let n = d
+  if (n.startsWith('521')) n = n.slice(3)
+  else if (n.startsWith('52')) n = n.slice(2)
+  if (n.length === 10) return `+52 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`
+  return raw ? `+${d}` : '—'
+}
+
 // Shared money formatter (there were 3 divergent per-component copies before the
 // 💰 Documentos work — new money UI should import this one). Whole numbers render
 // without cents; anything fractional keeps 2 decimals.

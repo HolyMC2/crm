@@ -115,6 +115,10 @@
           <span v-if="t.count != null" class="text-[10px] opacity-70">{{ t.count }}</span>
         </button>
       </div>
+      <!-- record filters: estado del trato / lead / reparación + rango de fechas.
+           Only on the conversation-list tabs — Vencidos, Comentarios and Por
+           aprobar are separate surfaces with their own queries. -->
+      <QueueFilters v-if="filterableTab" class="mt-2" />
       <!-- 🏷 etiqueta filter (spec 2.2) — one-line scrollable, tap toggles -->
       <div v-if="(conversationTags.data || []).length" class="mt-2 flex gap-1.5 overflow-x-auto">
         <button
@@ -159,7 +163,7 @@
       <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
-      <div v-if="visibleUnassigned.length && inboxTab !== 'comments' && inboxTab !== 'snoozed' && !queueTag" class="mb-1.5">
+      <div v-if="visibleUnassigned.length && inboxTab !== 'comments' && inboxTab !== 'snoozed' && !queueTag && !queueFilterCount" class="mb-1.5">
         <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-7">
           ⚠ {{ __('Sin asignar') }}
           <span class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-7">{{ visibleUnassigned.length }}</span>
@@ -210,7 +214,9 @@
       <!-- "Archivados": orphans the operator closed-but-kept (no lead/deal worth opening).
         Discreet collapsed toggle; loaded on demand. The thread stays reachable + replyable
         and a NEWER inbound auto-resurfaces it back into "Sin asignar". -->
-      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar' && inboxTab !== 'snoozed' && !queueTag" class="mb-1.5">
+      <!-- orphans carry no deal/lead/repair status, so a record filter must hide them —
+           otherwise "Completado" still shows a wall of Sin-asignar numbers -->
+      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar' && inboxTab !== 'snoozed' && !queueTag && !queueFilterCount" class="mb-1.5">
         <button
           class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
           :aria-expanded="showArchived"
@@ -257,7 +263,9 @@
 
       <!-- "Comentarios": comments on our Facebook posts. In the Comentarios TAB the
         status chips (Nuevos/Respondidos/Todos) let you review answered ones too. -->
-      <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentGroups.length)" class="mb-1.5">
+      <!-- same reason as Sin asignar: a FB comment has no deal/lead/repair status, so
+           it must not survive a record filter on the Todos tab -->
+      <div v-if="inboxTab === 'comments' || (inboxTab === 'all' && commentGroups.length && !queueFilterCount)" class="mb-1.5">
         <div class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-9">
           <LucideFacebook class="h-3 w-3" /> {{ __('Comentarios') }}
           <span class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-9">{{ commentGroups.length }}</span>
@@ -542,6 +550,7 @@ import { formatMoney } from '@/composables/crmFormat'
 import DealModal from '@/components/Modals/DealModal.vue'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
 import GlobalSearch from '@/components/doco/inbox/GlobalSearch.vue'
+import QueueFilters from '@/components/doco/inbox/QueueFilters.vue'
 import {
   queue,
   unassigned,
@@ -559,6 +568,7 @@ import {
   conversationTags,
   queueTag,
   setQueueTag,
+  queueFilterCount,
   queueHasMore,
   queueLoadingMore,
   loadMoreQueue,
@@ -613,6 +623,9 @@ function onGlobalSearchOpen(refDoctype, refName) {
 // first, across all conversations — an overdue thread buried by recency is the point);
 // every other tab shows the normal recency queue.
 const rows = computed(() => (inboxTab.value === 'vencidos' ? overdue.data?.conversations || [] : queueRows.value))
+// Record filters ride the queue query, so they're offered only on the tabs that
+// render that query (Vencidos/Comentarios/Por aprobar have their own endpoints).
+const filterableTab = computed(() => ['all', 'whatsapp', 'messenger', 'snoozed'].includes(inboxTab.value))
 
 function fmtSnooze(ts) {
   try {
