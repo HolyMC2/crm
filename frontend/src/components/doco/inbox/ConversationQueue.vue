@@ -211,6 +211,47 @@
         <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
       </div>
 
+      <!-- «Limpiados»: the ledger of conversations an operator marked handled with the
+           × on the Responder chip. On a CLOSED deal that also takes it out of the queue,
+           so this is where it went — with who cleared it and when. -->
+      <div v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar' && inboxTab !== 'snoozed' && !queueTag && !queueFilterCount" class="mb-1.5">
+        <button
+          class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5 hover:bg-surface-gray-2"
+          :aria-expanded="showCleared"
+          @click="toggleCleared"
+        >
+          <LucideCheckCheck class="h-3 w-3" />
+          {{ __('Limpiados') }}
+          <span v-if="showCleared && (cleared.data || []).length" class="rounded-full bg-surface-gray-3 px-1.5 text-ink-gray-6">{{ (cleared.data || []).length }}</span>
+          <LucideChevronDown class="ml-auto h-3.5 w-3.5 transition-transform" :class="showCleared ? 'rotate-180' : ''" />
+        </button>
+        <div v-if="showCleared" class="mt-0.5">
+          <div v-if="cleared.loading && !(cleared.data || []).length" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Cargando…') }}</div>
+          <div v-else-if="!(cleared.data || []).length" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Nada limpiado todavía') }}</div>
+          <button
+            v-for="c in cleared.data || []"
+            :key="'cleared:' + c.ref_doctype + c.name"
+            class="mb-1 block w-full rounded-[11px] p-[11px] text-left opacity-75 hover:bg-surface-gray-2 hover:opacity-100"
+            style="border-left: 3px solid #94a3b8"
+            @click="selectDeal(c.name, c.ref_doctype)"
+          >
+            <div class="flex items-center gap-2">
+              <span class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-gray-3 text-ink-gray-5">
+                <LucideCheckCheck class="h-3.5 w-3.5" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-[13px] font-semibold text-ink-gray-8">{{ c.contact_name || formatPhone(c.mobile_no) }}</div>
+                <div class="truncate text-[11px] text-ink-gray-5">
+                  {{ c.status || '—' }} · {{ __('por') }} {{ (c.cleared_by || '').split('@')[0] }}
+                </div>
+              </div>
+              <div class="flex-none text-right text-[10px] font-semibold text-ink-gray-4">{{ timeAgo(c.cleared_at) }}</div>
+            </div>
+          </button>
+        </div>
+        <div class="mx-1 mb-1 mt-0.5 border-b border-outline-gray-1" />
+      </div>
+
       <!-- "Archivados": orphans the operator closed-but-kept (no lead/deal worth opening).
         Discreet collapsed toggle; loaded on demand. The thread stays reachable + replyable
         and a NEWER inbound auto-resurfaces it back into "Sin asignar". -->
@@ -392,13 +433,19 @@
         :tabindex="rovingKey === convKey(r) ? 0 : -1"
         class="mb-1 block w-full cursor-pointer rounded-[11px] p-[11px] text-left hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-green-4"
         :class="[
-          activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal') ? 'bg-surface-green-2' : '',
+          activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
+            ? 'bg-surface-green-2'
+            : r.mine_to_reply
+              ? 'bg-surface-amber-1'
+              : '',
           swipeKey === convKey(r) ? 'bg-surface-base' : '',
         ]"
         :style="
           (activeDeal === r.name && activeDealDoctype === (r.ref_doctype || 'CRM Deal')
             ? 'border-left:3px solid var(--brand);'
-            : 'border-left:3px solid transparent;') + rowSwipeStyle(r)
+            : r.mine_to_reply
+              ? 'border-left:3px solid #f59e0b;'
+              : 'border-left:3px solid transparent;') + rowSwipeStyle(r)
         "
         @click="onRowClick(r)"
         @touchstart="rowTouchStart(r, $event)"
@@ -553,6 +600,7 @@ import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import LucideFacebook from '~icons/lucide/facebook'
 import LucideInstagram from '~icons/lucide/instagram'
 import LucideArchive from '~icons/lucide/archive'
+import LucideCheckCheck from '~icons/lucide/check-check'
 import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideVolume2 from '~icons/lucide/volume-2'
 import LucideVolumeX from '~icons/lucide/volume-x'
@@ -571,6 +619,9 @@ import {
   unassigned,
   archived,
   showArchived,
+  cleared,
+  showCleared,
+  toggleCleared,
   toggleArchived,
   commentPosts,
   commentCounts,

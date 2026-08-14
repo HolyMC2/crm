@@ -77,6 +77,19 @@ export const archived = createResource({
   params: { limit: 50 },
   auto: false,
 })
+// «Limpiados»: conversations an operator cleaned out by hand (the × on the Responder
+// chip). The ledger answers "what did we mark as handled, and who did it" — the row
+// itself stays reachable; a newer inbound re-raises its flag and it comes back.
+export const cleared = createResource({
+  url: 'doco_marketing.api.inbox.get_cleared_conversations',
+  params: { limit: 50 },
+  auto: false,
+})
+export const showCleared = ref(false)
+export function toggleCleared() {
+  showCleared.value = !showCleared.value
+  if (showCleared.value) cleared.submit({ limit: 50 })
+}
 export const showArchived = ref(false) // is the Archivados section expanded
 export function reloadArchived() {
   archived.submit({ limit: 50 })
