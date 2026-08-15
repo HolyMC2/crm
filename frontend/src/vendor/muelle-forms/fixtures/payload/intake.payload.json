@@ -1,0 +1,47 @@
+{
+  "descriptor": "descriptor.intake.json",
+  "cases": [
+    {
+      "name": "create walkin with child rows: readonly/writable=false/invisible fields excluded, canonical bytes stable",
+      "doc": {
+        "customer_phone": "+526691234567",
+        "kind": "walkin",
+        "received_on": "2026-08-15",
+        "notes": "pantalla estrellada",
+        "total": 55000,
+        "internal_score": 7
+      },
+      "child": {
+        "parts": [
+          {
+            "name": null,
+            "values": {
+              "item": "PANTALLA-IP12",
+              "qty": 1,
+              "rate": 45000
+            }
+          }
+        ]
+      },
+      "opts": {
+        "clientRequestId": "11111111-2222-4333-8444-555555555555"
+      },
+      "expect_canonical": "{\"child\":{\"parts\":[{\"name\":null,\"values\":{\"item\":\"PANTALLA-IP12\",\"qty\":1}}]},\"client_request_id\":\"11111111-2222-4333-8444-555555555555\",\"descriptor_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"doc\":{\"customer_phone\":\"+526691234567\",\"kind\":\"walkin\",\"notes\":\"pantalla estrellada\",\"received_on\":\"2026-08-15\",\"total\":55000},\"variant\":\"intake\"}"
+    },
+    {
+      "name": "pickup: detalle section invisible so notes/total dropped from payload",
+      "doc": {
+        "customer_phone": "+526691234567",
+        "kind": "pickup",
+        "notes": "should not appear",
+        "total": 1
+      },
+      "child": {},
+      "opts": {
+        "name": "RO-00214",
+        "modified": "2026-08-15 18:00:00.000000"
+      },
+      "expect_canonical": "{\"descriptor_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"doc\":{\"customer_phone\":\"+526691234567\",\"kind\":\"pickup\"},\"modified\":\"2026-08-15 18:00:00.000000\",\"name\":\"RO-00214\",\"variant\":\"intake\"}"
+    }
+  ]
+}

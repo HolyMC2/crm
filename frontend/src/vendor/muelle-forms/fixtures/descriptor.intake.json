@@ -1,0 +1,85 @@
+{
+  "contract": "muelle-forms/1",
+  "kind": "form",
+  "doctype": "Repair Order",
+  "surface": "taller",
+  "variant": "intake",
+  "mode": "create",
+  "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "lang": "es",
+  "title": "Recepción de equipo",
+  "sections": [
+    {
+      "key": "cliente",
+      "label": "Cliente",
+      "columns": 2,
+      "fields": [
+        {
+          "fieldname": "customer_phone",
+          "label": "Teléfono",
+          "type": "Data",
+          "widget": "phone",
+          "reqd": true,
+          "rules": [{ "kind": "phone_mx", "message": "Teléfono inválido" }],
+          "actions": ["channel.whatsapp"]
+        },
+        {
+          "fieldname": "kind",
+          "label": "Tipo",
+          "type": "Select",
+          "options": ["walkin", "pickup"],
+          "default": "walkin",
+          "rules": [{ "kind": "options", "value": ["walkin", "pickup"] }]
+        },
+        {
+          "fieldname": "received_on",
+          "label": "Fecha",
+          "type": "Date",
+          "default": { "token": "today" }
+        }
+      ]
+    },
+    {
+      "key": "detalle",
+      "label": "Detalle",
+      "visible_when": { "==": [{ "var": "kind" }, "walkin"] },
+      "fields": [
+        {
+          "fieldname": "notes",
+          "label": "Notas",
+          "type": "Small Text",
+          "rules": [{ "kind": "max_len", "value": 140, "message": "Máx 140" }]
+        },
+        {
+          "fieldname": "total",
+          "label": "Total",
+          "type": "Currency",
+          "widget": "money-mxn",
+          "readonly_when": { "==": [{ "var": "kind" }, "pickup"] }
+        },
+        {
+          "fieldname": "internal_score",
+          "label": "Score",
+          "type": "Int",
+          "writable": false
+        }
+      ]
+    }
+  ],
+  "child_tables": [
+    {
+      "fieldname": "parts",
+      "label": "Refacciones",
+      "doctype": "Repair Order Part",
+      "columns": [
+        { "fieldname": "item", "label": "Artículo", "type": "Link", "link": { "doctype": "Item" } },
+        { "fieldname": "qty", "label": "Cantidad", "type": "Int" },
+        { "fieldname": "rate", "label": "Precio", "type": "Currency", "readonly": true }
+      ]
+    }
+  ],
+  "actions": [
+    { "key": "save", "kind": "primary", "label": "Guardar", "endpoint": "taller.api.orders.intake.intake" }
+  ],
+  "meta": { "overlay_version": 1 }
+}

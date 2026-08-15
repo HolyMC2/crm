@@ -26,8 +26,35 @@
       advance_amount     – number
   -->
   <div>
+    <!--
+      F3 (muelle-forms/1): identity/condition fields render from the server
+      descriptor (surface=crm, variant=intake-inline — fixture shipped by
+      taller, same overlay family as the mostrador SPA), which is what keeps
+      this field set identical to Intake WITHOUT a hand-mirrored copy.
+      Descriptor unavailable → the legacy markup below, unchanged. IMEI,
+      unlock and amounts stay custom (imei is a flow extra, not an RO field;
+      amounts keep the parent's peso-number contract).
+    -->
+    <DocoFormRenderer
+      v-if="descriptor"
+      :descriptor="descriptor"
+      :draft="form"
+      @update:draft="(fieldname, v) => (form[fieldname] = v)"
+    />
+    <div v-if="descriptor" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <FormControl
+        type="text"
+        v-model="form.imei"
+        :label="__('IMEI / Serial No.')"
+        :placeholder="__('Dial *#06# or scan the box')"
+        inputmode="numeric"
+        autocomplete="off"
+        spellcheck="false"
+        class="font-mono"
+      />
+    </div>
     <!-- Row 1: Device Model / Repair Type / Condition -->
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div v-if="!descriptor" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div>
         <Link
           doctype="Device Model"
@@ -57,7 +84,7 @@
     </div>
 
     <!-- Row 1b: Falla reportada (free-text, required when RO is being created) -->
-    <div class="mt-3">
+    <div v-if="!descriptor" class="mt-3">
       <FormControl
         type="textarea"
         v-model="form.falla_reportada"
@@ -74,7 +101,7 @@
     </div>
 
     <!-- Row 2: Client / Technician / IMEI -->
-    <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div v-if="!descriptor" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div>
         <Link
           doctype="Contact"
@@ -201,11 +228,19 @@
  */
 import Link from '@/components/Controls/Link.vue'
 import PatternPad from '@/components/PatternPad.vue'
-import { FormControl } from 'frappe-ui'
-import { computed } from 'vue'
+import DocoFormRenderer from '@/components/doco/forms/DocoFormRenderer.vue'
+import { fetchDescriptor } from '@/components/doco/forms/registry'
+import { FormControl, call } from 'frappe-ui'
+import { computed, onMounted, ref } from 'vue'
 
 // defineModel() gives us a two-way binding to the parent's newRepairOrder ref.
 const form = defineModel({ required: true })
+
+// muelle-forms descriptor (null → legacy markup, the F-series fallback contract)
+const descriptor = ref(null)
+onMounted(async () => {
+  descriptor.value = await fetchDescriptor(call, 'Repair Order', 'intake-inline')
+})
 
 // ── Static option lists ──────────────────────────────────────────────────────────────
 const conditionOptions = [

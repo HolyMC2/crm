@@ -1,0 +1,22 @@
+{
+  "cases": [
+    { "fn": "normalizePhone", "input": "6691234567", "expect": { "ok": true, "e164": "+526691234567", "digits": "526691234567", "display": "669 123 4567" } },
+    { "fn": "normalizePhone", "input": "52 669 123 4567", "expect": { "ok": true, "e164": "+526691234567" } },
+    { "fn": "normalizePhone", "input": "5216691234567", "expect": { "ok": true, "e164": "+526691234567" } },
+    { "fn": "normalizePhone", "input": "+526691234567", "expect": { "ok": true, "e164": "+526691234567" } },
+    { "fn": "normalizePhone", "input": "(669) 123-4567", "expect": { "ok": true, "e164": "+526691234567" } },
+    { "fn": "normalizePhone", "input": "+13105551234", "expect": { "ok": true, "e164": "+13105551234", "display": "+13105551234" } },
+    { "fn": "normalizePhone", "input": "12345", "expect": { "ok": false, "reason": "too_short" } },
+    { "fn": "normalizePhone", "input": "", "expect": { "ok": false, "reason": "empty" } },
+    { "fn": "parseMxn", "input": "1,234.56", "expect": 123456 },
+    { "fn": "parseMxn", "input": "$550", "expect": 55000 },
+    { "fn": "parseMxn", "input": "-0.5", "expect": -50 },
+    { "fn": "parseMxn", "input": "abc", "expect": null },
+    { "fn": "formatMxn", "input": 123456, "expect": "$1,234.56" },
+    { "fn": "formatMxn", "input": 0, "expect": "$0.00" },
+    { "fn": "parseDateMx", "input": "15/08/2026", "expect": "2026-08-15" },
+    { "fn": "parseDateMx", "input": "2026-08-15", "expect": "2026-08-15" },
+    { "fn": "parseDateMx", "input": "31/02/2026", "expect": null },
+    { "fn": "formatDateMx", "input": "2026-08-15", "expect": "15/08/2026" }
+  ]
+}

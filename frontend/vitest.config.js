@@ -1,7 +1,11 @@
 import { defineConfig } from 'vitest/config'
+import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
+  // SFC transform for component tests (doco/forms renderer); pure-JS unit
+  // tests are unaffected.
+  plugins: [vue()],
   test: {
     globals: true,
     environment: 'happy-dom',

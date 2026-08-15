@@ -1,0 +1,271 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://muelle.mx/schemas/muelle-forms-1.schema.json",
+  "title": "muelle-forms/1 descriptor contract",
+  "oneOf": [
+    { "$ref": "#/definitions/formDescriptor" },
+    { "$ref": "#/definitions/dataEnvelope" },
+    { "$ref": "#/definitions/writePayload" },
+    { "$ref": "#/definitions/formsError" }
+  ],
+  "definitions": {
+    "expression": {
+      "type": ["object", "null"],
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "==": { "$ref": "#/definitions/operandPair" },
+        "!=": { "$ref": "#/definitions/operandPair" },
+        "in": { "$ref": "#/definitions/operandPair" },
+        "!in": { "$ref": "#/definitions/operandPair" },
+        ">": { "$ref": "#/definitions/operandPair" },
+        ">=": { "$ref": "#/definitions/operandPair" },
+        "<": { "$ref": "#/definitions/operandPair" },
+        "<=": { "$ref": "#/definitions/operandPair" },
+        "and": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/expression" } },
+        "or": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/expression" } },
+        "not": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/definitions/expression" } },
+        "truthy": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/definitions/operand" } },
+        "empty": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/definitions/operand" } }
+      },
+      "additionalProperties": false
+    },
+    "operand": {
+      "oneOf": [
+        { "type": ["string", "number", "boolean", "null"] },
+        { "type": "array", "items": { "type": ["string", "number", "boolean", "null"] } },
+        {
+          "type": "object",
+          "properties": { "var": { "type": "string", "minLength": 1 } },
+          "required": ["var"],
+          "additionalProperties": false
+        },
+        { "$ref": "#/definitions/expression" }
+      ]
+    },
+    "operandPair": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/definitions/operand" } },
+    "rule": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": ["regex", "min", "max", "min_len", "max_len", "precision", "options", "phone_mx", "rfc", "email", "url", "cp_mx"]
+        },
+        "value": {},
+        "message": { "type": "string" }
+      },
+      "required": ["kind"],
+      "additionalProperties": false
+    },
+    "defaultValue": {
+      "oneOf": [
+        { "type": ["string", "number", "boolean", "null"] },
+        {
+          "type": "object",
+          "properties": { "token": { "enum": ["today", "now", "user", "company", "pos_profile"] } },
+          "required": ["token"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "link": {
+      "type": ["object", "null"],
+      "properties": {
+        "doctype": { "type": ["string", "null"] },
+        "doctype_from": { "type": ["string", "null"] },
+        "search": { "type": "string" },
+        "filters": { "type": "object" },
+        "filters_from": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": { "var": { "type": "string" } },
+            "required": ["var"],
+            "additionalProperties": false
+          }
+        },
+        "create": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "fetch": {
+      "type": ["object", "null"],
+      "properties": {
+        "source_field": { "type": "string" },
+        "source_fieldname": { "type": "string" }
+      },
+      "required": ["source_field", "source_fieldname"],
+      "additionalProperties": false
+    },
+    "field": {
+      "type": "object",
+      "properties": {
+        "fieldname": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "type": { "type": "string" },
+        "widget": { "type": "string" },
+        "reqd": { "type": "boolean" },
+        "readonly": { "type": "boolean" },
+        "hidden": { "type": "boolean" },
+        "default": { "$ref": "#/definitions/defaultValue" },
+        "placeholder": { "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] },
+        "options": { "type": ["array", "null"], "items": { "type": "string" } },
+        "link": { "$ref": "#/definitions/link" },
+        "fetch": { "$ref": "#/definitions/fetch" },
+        "rules": { "type": "array", "items": { "$ref": "#/definitions/rule" } },
+        "visible_when": { "$ref": "#/definitions/expression" },
+        "reqd_when": { "$ref": "#/definitions/expression" },
+        "readonly_when": { "$ref": "#/definitions/expression" },
+        "writable": { "type": "boolean" },
+        "actions": { "type": "array", "items": { "type": "string" } },
+        "grid": { "type": "object" }
+      },
+      "required": ["fieldname", "label", "type"],
+      "additionalProperties": true
+    },
+    "section": {
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "columns": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "collapsible": { "type": "boolean" },
+        "visible_when": { "$ref": "#/definitions/expression" },
+        "fields": { "type": "array", "items": { "$ref": "#/definitions/field" } }
+      },
+      "required": ["key", "fields"],
+      "additionalProperties": true
+    },
+    "childTable": {
+      "type": "object",
+      "properties": {
+        "fieldname": { "type": "string" },
+        "label": { "type": "string" },
+        "doctype": { "type": "string" },
+        "visible_when": { "$ref": "#/definitions/expression" },
+        "columns": { "type": "array", "items": { "$ref": "#/definitions/field" } },
+        "row_form": { "type": ["object", "null"] },
+        "min_rows": { "type": "integer" },
+        "max_rows": { "type": ["integer", "null"] },
+        "can_add": { "type": "boolean" },
+        "can_delete": { "type": "boolean" }
+      },
+      "required": ["fieldname", "doctype", "columns"],
+      "additionalProperties": true
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "kind": { "enum": ["primary", "secondary", "danger", "field"] },
+        "label": { "type": "string" },
+        "endpoint": { "type": "string" },
+        "confirm": { "type": ["string", "null"] },
+        "submit_on_enter": { "type": "boolean" },
+        "success": { "type": ["object", "null"] }
+      },
+      "required": ["key", "kind", "label"],
+      "additionalProperties": true
+    },
+    "formDescriptor": {
+      "type": "object",
+      "properties": {
+        "contract": { "const": "muelle-forms/1" },
+        "kind": { "enum": ["form", "view"] },
+        "doctype": { "type": "string" },
+        "surface": { "enum": ["taller", "mercado", "crm", "storefront", "account", "pos"] },
+        "variant": { "type": "string" },
+        "mode": { "enum": ["create", "edit", "view"] },
+        "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "lang": { "type": "string" },
+        "title": { "type": "string" },
+        "sections": { "type": "array", "items": { "$ref": "#/definitions/section" } },
+        "child_tables": { "type": "array", "items": { "$ref": "#/definitions/childTable" } },
+        "actions": { "type": "array", "items": { "$ref": "#/definitions/action" } },
+        "header": { "type": "object" },
+        "tabs": { "type": "array" },
+        "related": { "type": "array" },
+        "timeline": { "type": "array" },
+        "meta": { "type": "object" }
+      },
+      "required": ["contract", "kind", "doctype", "surface", "variant", "hash", "lang", "sections"],
+      "additionalProperties": true
+    },
+    "dataEnvelope": {
+      "type": "object",
+      "properties": {
+        "contract": { "const": "muelle-forms/1" },
+        "kind": { "const": "data" },
+        "doctype": { "type": "string" },
+        "name": { "type": ["string", "null"] },
+        "modified": { "type": ["string", "null"] },
+        "values": { "type": "object" },
+        "child": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": ["string", "null"] },
+                "idx": { "type": "integer" },
+                "values": { "type": "object" }
+              },
+              "required": ["values"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "descriptor_hash": { "type": "string" }
+      },
+      "required": ["contract", "kind", "doctype", "values"],
+      "additionalProperties": false
+    },
+    "writePayload": {
+      "type": "object",
+      "properties": {
+        "descriptor_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "variant": { "type": "string" },
+        "name": { "type": ["string", "null"] },
+        "modified": { "type": ["string", "null"] },
+        "client_request_id": { "type": ["string", "null"] },
+        "doc": { "type": "object" },
+        "child": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": ["string", "null"] },
+                "values": { "type": "object" }
+              },
+              "required": ["values"],
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "required": ["descriptor_hash", "variant", "doc"],
+      "additionalProperties": false
+    },
+    "formsError": {
+      "type": "object",
+      "properties": {
+        "forms_error": {
+          "type": "object",
+          "properties": {
+            "kind": { "enum": ["guard", "validation", "conflict", "permission", "idempotent_replay"] },
+            "message": { "type": "string" },
+            "fields": { "type": "object", "additionalProperties": { "type": "string" } },
+            "envelope": { "type": ["object", "null"] }
+          },
+          "required": ["kind", "message", "fields"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["forms_error"],
+      "additionalProperties": false
+    }
+  }
+}
