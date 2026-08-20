@@ -11,6 +11,8 @@ import ContactOverviewTab from '@/components/doco/contact/ContactOverviewTab.vue
 import ContactDocumentsTab from '@/components/doco/contact/ContactDocumentsTab.vue'
 import ContactRepairsTab from '@/components/doco/contact/ContactRepairsTab.vue'
 import ContactConnectionsTab from '@/components/doco/contact/ContactConnectionsTab.vue'
+import ContactStorefrontTab from '@/components/doco/contact/ContactStorefrontTab.vue'
+import ContactSaldoTab from '@/components/doco/contact/ContactSaldoTab.vue'
 
 // Deliberately NOT VerticalSlot: the contact tabs are server-owned by
 // doco_marketing (see useContact360Tabs), not by the Doco Vertical registry —
@@ -21,6 +23,8 @@ const registry = {
   ContactDocumentsTab,
   ContactRepairsTab,
   ContactConnectionsTab,
+  ContactStorefrontTab,
+  ContactSaldoTab,
 }
 
 defineProps({

@@ -60,6 +60,17 @@
           :label="__('Facturas')"
           :value="String(data.counts.invoices || 0)"
         />
+        <Tile
+          v-if="data.has_storefront"
+          :label="__('Pedidos tienda')"
+          :value="String(data.counts.storefront_orders || 0)"
+          :tone="data.counts.open_storefront_orders > 0 ? 'amber' : 'gray'"
+        />
+        <Tile
+          v-if="data.has_saldo"
+          :label="__('Recargas')"
+          :value="String(data.counts.recargas || 0)"
+        />
       </div>
 
       <div class="mt-5 grid gap-3 lg:grid-cols-2">
