@@ -13,6 +13,28 @@
       v-else-if="data"
       class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6"
     >
+      <div
+        v-if="data.contact?.mobile_no"
+        class="mb-4 flex flex-wrap items-center gap-2"
+      >
+        <Button
+          variant="solid"
+          :label="__('Enviar mensaje')"
+          @click="composerOpen = true"
+        />
+        <span class="text-[11.5px] text-ink-gray-5">{{
+          __('Abre WhatsApp con el mensaje escrito; tú tocas enviar.')
+        }}</span>
+      </div>
+      <ChannelComposer
+        v-if="data.contact?.mobile_no"
+        v-model="composerOpen"
+        doctype="Contact"
+        :docname="docname"
+        :phone="data.contact.mobile_no"
+        :contact-name="data.contact.full_name"
+      />
+
       <div v-for="rollup in rollups" :key="rollup.currency" class="mb-5">
         <div
           v-if="rollups.length > 1"
@@ -134,10 +156,12 @@
 </template>
 
 <script setup>
-import { computed, defineComponent, h } from 'vue'
-import { createResource } from 'frappe-ui'
+import { computed, defineComponent, h, ref } from 'vue'
+import { Button, createResource } from 'frappe-ui'
+import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
 
 const props = defineProps({ docname: { type: String, required: true } })
+const composerOpen = ref(false)
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_overview',
   params: { contact: props.docname },

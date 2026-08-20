@@ -49,7 +49,15 @@
             class="max-w-[52vw] truncate whitespace-nowrap sm:max-w-none"
           >🔧 {{ row.device }}</span>
           <span v-if="row.device" class="hidden text-ink-gray-4 sm:inline">·</span>
-          <span v-if="row.mobile_no" class="whitespace-nowrap">{{ row.mobile_no }}</span>
+          <!-- The number is the affordance: tapping it opens the composer with the
+               message already rendered. On a WABA tenant the inbox below still owns
+               sending; this is the tier 0/1 rail for everyone else. -->
+          <button
+            v-if="row.mobile_no"
+            class="press whitespace-nowrap font-medium text-ink-blue-link underline decoration-dotted underline-offset-2"
+            :title="__('Enviar mensaje')"
+            @click.stop="composerOpen = true"
+          >{{ row.mobile_no }}</button>
           <template v-if="row.last_message_ts">
             <span class="text-ink-gray-4">·</span>
             <span class="whitespace-nowrap text-ink-gray-5">
@@ -237,6 +245,14 @@
         </button>
       </div>
     </div>
+    <ChannelComposer
+      v-if="row.mobile_no && activeDeal"
+      v-model="composerOpen"
+      :doctype="activeDealDoctype"
+      :docname="activeDeal"
+      :phone="row.mobile_no"
+      :contact-name="row.lead_name || row.first_name || ''"
+    />
   </div>
 </template>
 
@@ -250,6 +266,7 @@ import LucideTag from '~icons/lucide/tag'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import CadencePicker from '@/components/doco/inbox/CadencePicker.vue'
+import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
 import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
@@ -282,6 +299,7 @@ const { makeCall } = globalStore()
 const { getUser } = usersStore()
 const { getDealStatus, getLeadStatus, leadStatuses, dealStatuses: dealStatusList } = statusesStore()
 
+const composerOpen = ref(false)
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 
 // rich row from the inbox queue when present; otherwise (360° / deep-linked deal not
