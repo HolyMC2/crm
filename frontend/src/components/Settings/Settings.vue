@@ -73,6 +73,8 @@ import DefaultsSettings from '@/components/Settings/DefaultsSettings.vue'
 import BrandSettings from '@/components/Settings/BrandSettings.vue'
 import CalendarSettings from '@/components/Settings/CalendarSettings.vue'
 import HomeActions from '@/components/Settings/HomeActions.vue'
+import MarketingSettings from '@/components/Settings/MarketingSettings.vue'
+import LucideMegaphone from '~icons/lucide/megaphone'
 import FormsSettings from '@/components/Settings/Forms/FormsSettings.vue'
 import GeneralSettings from '@/components/Settings/GeneralSettings.vue'
 import DashboardSettings from '@/components/Settings/DashboardSettings.vue'
@@ -93,7 +95,7 @@ import AssignmentRulePage from './AssignmentRules/AssignmentRulePage.vue'
 import ShieldCheck from '~icons/lucide/shield-check'
 import SlaConfig from './Sla/SlaConfig.vue'
 
-const { isManager, getUser } = usersStore()
+const { isAdmin, isManager, getUser } = usersStore()
 
 const user = computed(() => getUser() || {})
 
@@ -207,6 +209,15 @@ const tabs = computed(() => {
           label: __('Forms'),
           component: markRaw(FormsSettings),
           icon: markRaw(LucideTextCursorInput),
+        },
+        {
+          // The channel ladder lives here: tier, shop number, event→action rules.
+          // System Manager only — the doctype grants Sales Manager read but not
+          // write, and an Update button that always 403s is worse than no tab.
+          label: __('Marketing y canal'),
+          component: markRaw(MarketingSettings),
+          icon: markRaw(LucideMegaphone),
+          condition: () => isAdmin(),
         },
       ],
       condition: () => isManager(),
