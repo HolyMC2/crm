@@ -87,6 +87,17 @@
           >
             {{ t.title }}
           </button>
+          <!-- Ladder item 3's last click. The rule put the number and the template
+               on the task; without this the operator had to go find the deal. -->
+          <button
+            v-if="t.doco_channel_phone"
+            class="press flex h-6 w-6 flex-none items-center justify-center rounded-full bg-surface-green-2 text-[11px] text-ink-green-8 hover:bg-surface-green-3"
+            :title="__('Enviar mensaje')"
+            :aria-label="__('Enviar mensaje')"
+            @click.stop="openComposer(t)"
+          >
+            💬
+          </button>
           <span
             v-if="t.assigned_to"
             class="flex h-6 w-6 flex-none items-center justify-center rounded-full text-[9px] font-semibold"
@@ -116,6 +127,16 @@
         </Dropdown>
       </div>
     </div>
+
+    <ChannelComposer
+      v-if="composerTask"
+      v-model="composerOpen"
+      :doctype="composerTask.reference_doctype"
+      :docname="composerTask.reference_docname"
+      :phone="composerTask.doco_channel_phone"
+      :preset-template="composerTask.doco_channel_template || ''"
+      :contact-name="composerTask.title"
+    />
   </div>
 </template>
 
@@ -128,6 +149,7 @@ import { usersStore } from '@/stores/users'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { avatarColor, initials } from '@/composables/crmFormat'
 import { isMobile } from '@/composables/breakpoint'
+import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
 
 // the real wired CRM Task modal (date/assignee/priority/reminder/notifications),
 // mounted globally via DoctypeModals in App.vue
@@ -136,6 +158,14 @@ const taskCallbacks = { afterInsert: () => applyFilters(), afterUpdate: () => ap
 function openNew() {
   showModal({ doctype: 'CRM Task', title: __('Task'), defaults: { status: 'Backlog', priority: 'Low' }, callbacks: taskCallbacks })
 }
+const composerOpen = ref(false)
+const composerTask = ref(null)
+function openComposer(t) {
+  if (!t.reference_doctype || !t.reference_docname) return
+  composerTask.value = t
+  composerOpen.value = true
+}
+
 function openEdit(t) {
   showModal({ name: t.name, doctype: 'CRM Task', title: __('Task'), callbacks: taskCallbacks })
 }
@@ -173,7 +203,9 @@ function nowStr() {
 
 const tasks = createListResource({
   doctype: 'CRM Task',
-  fields: ['name', 'title', 'status', 'priority', 'due_date', 'assigned_to', 'reference_doctype', 'reference_docname'],
+  // doco_* come from the channel rules (ladder item 3): a rule-staged task carries
+  // the number and the template it wants, which is what turns it into ONE click.
+  fields: ['name', 'title', 'status', 'priority', 'due_date', 'assigned_to', 'reference_doctype', 'reference_docname', 'doco_channel_phone', 'doco_channel_template'],
   orderBy: 'due_date asc',
   pageLength: 100,
 })
