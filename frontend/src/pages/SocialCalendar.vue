@@ -129,8 +129,12 @@
     <!-- AI composer (MA-31 W4): full brief-driven menu replacing the old
          signal dropdown. Generates a Pending-Approval draft and drops the
          operator into the normal edit/Aprobar modal below. -->
-    <Dialog v-model="showAiComposer" bare size="2xl">
-      <div class="flex max-h-[86vh] flex-col overflow-hidden rounded-xl bg-surface-base">
+    <component
+      :is="isMobile ? BottomSheet : Dialog"
+      v-model:open="showAiComposer"
+      v-bind="isMobile ? {} : { bare: true, size: '2xl' }"
+    >
+      <div class="flex flex-col bg-surface-base" :class="isMobile ? 'h-full min-h-0' : 'max-h-[86vh] overflow-hidden rounded-xl'">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">✨ {{ __('Compositor IA') }}</span>
           <!-- brand kit mini-panel: the palette + rules the generator is bound to -->
@@ -223,7 +227,7 @@
           >{{ composeBusy ? __('✨ Generando…') : __('✨ Generar borrador') }}</button>
         </div>
       </div>
-    </Dialog>
+    </component>
 
     <!-- composer modal (create/edit) -->
     <SocialComposer
@@ -236,13 +240,17 @@
     />
 
     <!-- sucursales / onboarding modal (D6, manager) -->
-    <Dialog v-model="showShops" bare size="lg">
-      <div class="overflow-hidden rounded-xl bg-surface-base">
+    <component
+      :is="isMobile ? BottomSheet : Dialog"
+      v-model:open="showShops"
+      v-bind="isMobile ? {} : { bare: true, size: 'lg' }"
+    >
+      <div :class="isMobile ? 'flex h-full min-h-0 flex-col bg-surface-base' : 'overflow-hidden rounded-xl bg-surface-base'">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">{{ __('Sucursales y empleados') }}</span>
           <button class="text-ink-gray-5 hover:text-ink-gray-8" @click="showShops = false">✕</button>
         </div>
-        <div class="max-h-[68vh] overflow-y-auto p-4">
+        <div class="overflow-y-auto p-4" :class="isMobile ? 'min-h-0 flex-1' : 'max-h-[68vh]'">
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Sucursal') }}</label>
           <select v-model="onbShop" @change="onOnbShopChange" class="fld mb-4 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]">
             <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
@@ -266,13 +274,14 @@
           <p class="mt-3 text-[11px] text-ink-gray-4">{{ __('Solo aparecen usuarios con rol Marketing User. El gestor (Marketing Manager) ve todas las sucursales.') }}</p>
         </div>
       </div>
-    </Dialog>
+    </component>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Dialog, LoadingIndicator, createResource, call as frappeCall, toast } from 'frappe-ui'
+import { BottomSheet, Dialog, LoadingIndicator, createResource, call as frappeCall, toast } from 'frappe-ui'
+import { isMobile } from '@/composables/breakpoint'
 import { useSocialCalendar, KIND_EMOJI, PILLARS, STATUSES, STATUS_LABEL, CHANNEL_FAMILIES, chip } from '@/composables/socialCalendar'
 import CalendarGrid from '@/components/doco/social/CalendarGrid.vue'
 import MetricsPanel from '@/components/doco/social/MetricsPanel.vue'
