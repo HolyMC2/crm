@@ -74,6 +74,7 @@ import BrandSettings from '@/components/Settings/BrandSettings.vue'
 import CalendarSettings from '@/components/Settings/CalendarSettings.vue'
 import HomeActions from '@/components/Settings/HomeActions.vue'
 import MarketingSettings from '@/components/Settings/MarketingSettings.vue'
+import SocialSettings from '@/components/Settings/SocialSettings.vue'
 import LucideMegaphone from '~icons/lucide/megaphone'
 import FormsSettings from '@/components/Settings/Forms/FormsSettings.vue'
 import GeneralSettings from '@/components/Settings/GeneralSettings.vue'
@@ -217,6 +218,15 @@ const tabs = computed(() => {
           label: __('Marketing y canal'),
           component: markRaw(MarketingSettings),
           icon: markRaw(LucideMegaphone),
+          condition: () => isAdmin(),
+        },
+        {
+          // Social calendar knobs: Holiday List (festivos = blackout), curated
+          // blackouts, posting windows, brand voice. Doctype grants System
+          // Manager + Marketing Manager write, so Update cannot 403 here.
+          label: __('Social (redes)'),
+          component: markRaw(SocialSettings),
+          icon: 'share-2',
           condition: () => isAdmin(),
         },
       ],
