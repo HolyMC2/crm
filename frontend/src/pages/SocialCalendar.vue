@@ -10,8 +10,8 @@
 <template>
   <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-base px-5">
-      <div class="flex items-center gap-3">
+    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
+      <div class="flex flex-wrap items-center gap-3 gap-y-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Social') }}</span>
         <div class="flex overflow-hidden rounded-lg border border-outline-gray-2 text-[11.5px] font-semibold">
           <button class="px-2.5 py-1" :class="view === 'calendar' ? 'bg-surface-gray-10 text-ink-base' : 'text-ink-gray-6'" @click="view = 'calendar'">{{ __('Calendario') }}</button>
@@ -37,7 +37,7 @@
           </div>
         </template>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <router-link to="/social/evergreen" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" :title="__('Publicaciones evergreen reutilizables')">
           🌲 {{ __('Biblioteca') }}
         </router-link>
@@ -45,7 +45,7 @@
           💬 {{ __('Menciones') }}
         </router-link>
         <button v-if="isManager" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" @click="openShops" :title="__('Asignar empleados a sucursales')">
-          {{ __('Sucursales') }}
+          🏪 {{ __('Sucursales') }}
         </button>
         <button v-if="isManager" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="bulkBusy" @click="bulkDraft" :title="__('Un borrador IA por cada sucursal, desde su inventario')">
           {{ bulkBusy ? __('✨ generando…') : __('✨ IA · todas') }}
@@ -101,6 +101,15 @@
       <button v-if="activeFilterCount" class="ml-auto rounded-full px-2 py-0.5 font-semibold text-ink-gray-5 hover:text-ink-gray-8" @click="clearFilters">✕ {{ __('Limpiar') }} ({{ activeFilterCount }})</button>
     </div>
 
+    <!-- fetch robustness: a failed load gets a visible banner + retry, never a silently empty grid -->
+    <div v-if="view === 'calendar' && cal.error" class="flex flex-none items-center gap-2 border-b border-outline-gray-1 bg-surface-red-1 px-4 py-2 text-[12px] text-ink-red-8" role="alert">
+      <span>⚠ {{ __('No se pudo cargar el calendario.') }}</span>
+      <button class="rounded-md border border-outline-gray-2 bg-surface-base px-2 py-0.5 text-[11px] font-semibold text-ink-gray-7" @click="cal.reload()">{{ __('Reintentar') }}</button>
+    </div>
+    <div v-else-if="view === 'calendar' && cal.loading && !cal.data" class="flex flex-none items-center gap-1.5 px-4 py-2 text-[12px] text-ink-gray-5">
+      <LoadingIndicator class="size-3.5" /> {{ __('Cargando calendario…') }}
+    </div>
+
     <!-- calendar (grid + tray) OR métricas -->
     <CalendarGrid
       v-if="view === 'calendar'"
@@ -120,9 +129,8 @@
     <!-- AI composer (MA-31 W4): full brief-driven menu replacing the old
          signal dropdown. Generates a Pending-Approval draft and drops the
          operator into the normal edit/Aprobar modal below. -->
-    <template v-if="showAiComposer">
-      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showAiComposer = false" />
-      <div class="fixed left-1/2 top-1/2 z-[310] flex max-h-[92vh] w-[94vw] max-w-[680px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
+    <Dialog v-model="showAiComposer" bare size="2xl">
+      <div class="flex max-h-[86vh] flex-col overflow-hidden rounded-xl bg-surface-base">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">✨ {{ __('Compositor IA') }}</span>
           <!-- brand kit mini-panel: the palette + rules the generator is bound to -->
@@ -215,7 +223,7 @@
           >{{ composeBusy ? __('✨ Generando…') : __('✨ Generar borrador') }}</button>
         </div>
       </div>
-    </template>
+    </Dialog>
 
     <!-- composer modal (create/edit) -->
     <SocialComposer
@@ -228,9 +236,8 @@
     />
 
     <!-- sucursales / onboarding modal (D6, manager) -->
-    <template v-if="showShops">
-      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showShops = false" />
-      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[480px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
+    <Dialog v-model="showShops" bare size="lg">
+      <div class="overflow-hidden rounded-xl bg-surface-base">
         <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
           <span class="text-[14px] font-bold text-ink-gray-9">{{ __('Sucursales y empleados') }}</span>
           <button class="text-ink-gray-5 hover:text-ink-gray-8" @click="showShops = false">✕</button>
@@ -259,13 +266,13 @@
           <p class="mt-3 text-[11px] text-ink-gray-4">{{ __('Solo aparecen usuarios con rol Marketing User. El gestor (Marketing Manager) ve todas las sucursales.') }}</p>
         </div>
       </div>
-    </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { createResource, call as frappeCall, toast } from 'frappe-ui'
+import { Dialog, LoadingIndicator, createResource, call as frappeCall, toast } from 'frappe-ui'
 import { useSocialCalendar, KIND_EMOJI, PILLARS, STATUSES, STATUS_LABEL, CHANNEL_FAMILIES, chip } from '@/composables/socialCalendar'
 import CalendarGrid from '@/components/doco/social/CalendarGrid.vue'
 import MetricsPanel from '@/components/doco/social/MetricsPanel.vue'

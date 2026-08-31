@@ -9,12 +9,14 @@
   calendar. Read-layer data (shops, channels) comes in as props.
 -->
 <template>
-  <template v-if="showComposer">
-    <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="showComposer = false" />
-    <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[560px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
-      <div class="flex items-center justify-between border-b border-outline-gray-1 px-4 py-3">
+  <!-- frappe-ui Dialog (bare) carries the overlay, Esc, focus trap and scroll lock;
+       the markup inside is ours -->
+  <Dialog v-model="showComposer" bare size="xl">
+    <div class="overflow-hidden rounded-xl bg-surface-base">
+      <div class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3">
         <span class="text-[14px] font-bold text-ink-gray-9">{{ form.name ? __('Editar publicación') : __('Nueva publicación') }}</span>
-        <span v-if="form.status" class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="chip(form.status)">{{ form.status }}</span>
+        <span v-if="form.status" class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="chip(form.status)">{{ STATUS_LABEL[form.status] || form.status }}</span>
+        <button class="ml-auto px-1 text-ink-gray-5 hover:text-ink-gray-8" :aria-label="__('Cerrar')" @click="showComposer = false">✕</button>
       </div>
 
       <!-- publish outcome: live FB/IG post link(s) · scheduled-in-Meta badge · failure reason -->
@@ -52,7 +54,7 @@
         </div>
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Título') }}</label>
-        <input v-model="form.title" type="text" class="fld mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Interno')" />
+        <input v-model="form.title" type="text" :disabled="!canCancel" class="fld mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60" :placeholder="__('Interno')" />
 
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Sucursal') }}</label>
         <select v-if="isManager" v-model="form.shop" :disabled="!!form.name" class="fld mb-3 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60">
@@ -64,7 +66,8 @@
         <div class="mb-1.5 flex flex-wrap gap-1.5">
           <button
             v-for="c in channels" :key="c" type="button"
-            class="rounded-md border px-2.5 py-1 text-[12px] font-medium"
+            :disabled="!canCancel"
+            class="rounded-md border px-2.5 py-1 text-[12px] font-medium disabled:opacity-60"
             :class="form.channels.includes(c) ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-8' : 'border-outline-gray-2 text-ink-gray-6'"
             @click="toggleChannel(c)"
           >{{ c }}</button>
@@ -79,7 +82,7 @@
         <div v-if="!form.channels.length" class="mb-3 text-[11px] text-ink-gray-4">{{ __('Selecciona un canal arriba.') }}</div>
         <div v-for="c in form.channels" :key="c" class="mb-2">
           <span class="text-[10px] font-mono text-ink-gray-5">{{ c }}</span>
-          <textarea v-model="form.captions[c]" rows="2" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px]" :placeholder="__('Caption…')" />
+          <textarea v-model="form.captions[c]" rows="2" :disabled="!canCancel" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[13px] disabled:opacity-60" :placeholder="__('Caption…')" />
           <p v-if="c === 'IG Story'" class="mt-0.5 text-[10px] text-ink-gray-4">{{ __('IG Story: sin caption ni enlace (el enlace va en la bio).') }}</p>
           <p v-else-if="c === 'IG Reel'" class="mt-0.5 text-[10px] text-ink-gray-4">{{ __('IG Reel: requiere video.') }}</p>
         </div>
@@ -106,25 +109,25 @@
               <label class="text-[11px] font-semibold text-ink-gray-6">{{ __('Programar') }}</label>
               <SuggestTimeButton :shop="form.shop" @pick="pickSuggestedTime" />
             </div>
-            <input v-model="form.scheduled_time" type="datetime-local" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" />
+            <input v-model="form.scheduled_time" type="datetime-local" :disabled="!canCancel" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60" />
           </div>
           <div>
             <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('CTA') }}</label>
-            <select v-model="form.cta_type" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]">
+            <select v-model="form.cta_type" :disabled="!canCancel" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60">
               <option value="WhatsApp">WhatsApp</option>
               <option value="Webshop">Webshop</option>
               <option value="None">{{ __('Ninguno') }}</option>
             </select>
           </div>
         </div>
-        <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" class="fld mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
+        <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" :disabled="!canCancel" class="fld mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
         <p class="mb-3 text-[11px] text-ink-gray-4">{{ __('IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
 
         <!-- primer comentario: hashtags/enlaces sin ensuciar el texto principal; se publica tras publicar -->
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Primer comentario') }}</label>
         <textarea
-          v-model="form.first_comment" rows="2" data-testid="first-comment-input"
-          class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]"
+          v-model="form.first_comment" rows="2" data-testid="first-comment-input" :disabled="!canCancel"
+          class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60"
           :placeholder="__('Hashtags y enlaces van aquí — se publica como primer comentario, sin ensuciar el texto principal.')"
         />
         <p class="text-[10.5px] text-ink-gray-4">{{ __('Se publica automáticamente después de publicar (FB e IG).') }}</p>
@@ -168,23 +171,27 @@
         <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
         <button v-if="isPending" class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background:#2563eb" :disabled="busy" @click="approvePost">{{ __('Aprobar') }}</button>
         <button v-if="isPending" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-red-7" :disabled="busy" @click="rejectPost">{{ __('Rechazar') }}</button>
-        <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
-        <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !canCancel" @click="save('Scheduled')">{{ __('Programar') }}</button>
-        <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:var(--brand)" :disabled="busy || !canCancel" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>
+        <!-- a locked post gets no dead disabled trio — just a way out -->
+        <button v-if="!canCancel" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7" @click="showComposer = false">{{ __('Cerrar') }}</button>
+        <template v-else>
+          <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy" @click="save('Draft')">{{ __('Guardar borrador') }}</button>
+          <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy" @click="save('Scheduled')">{{ __('Programar') }}</button>
+          <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50" style="background:var(--brand)" :disabled="busy" @click="publishNow">{{ busy ? __('…') : __('Publicar ahora') }}</button>
+        </template>
       </div>
     </div>
-  </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { call as frappeCall, toast } from 'frappe-ui'
+import { Dialog, call as frappeCall, toast } from 'frappe-ui'
 import { inputDialog } from '@/utils/dialogs'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
 import VariantsPanel from '@/components/doco/social/composer/VariantsPanel.vue'
 import SuggestTimeButton from '@/components/doco/social/composer/SuggestTimeButton.vue'
 import MediaEditor from '@/components/doco/social/composer/MediaEditor.vue'
-import { chip, chLabel, toDtLocal, fromDtLocal, blankForm } from '@/composables/socialCalendar'
+import { chip, chLabel, toDtLocal, blankForm, mapComposerMedia, buildPayload, STATUS_LABEL } from '@/composables/socialCalendar'
 
 const props = defineProps({
   shop: { type: String, default: '' },
@@ -317,14 +324,6 @@ function openNew(day) {
   showComposer.value = true
 }
 
-// keep channel-targeting rows (Desk-only feature) + alt text so a round-trip doesn't wipe them
-const mapMedia = (doc) => (doc.media || []).map((m) => ({
-  media_file: m.media_file,
-  media_type: m.media_type || 'Image',
-  alt_text: m.alt_text || '',
-  channels: (m.channels || []).map((t) => ({ social_channel: t.social_channel })),
-}))
-
 async function openEdit(p) {
   aiFeedback.value = ''
   const doc = await frappeCall('doco_marketing.api.social.get_post', { name: p.name })
@@ -336,7 +335,7 @@ async function openEdit(p) {
     shop: doc.shop || '',
     channels: (doc.channels || []).map((c) => c.channel),
     captions: caps,
-    media: mapMedia(doc),
+    media: mapComposerMedia(doc),
     scheduled_time: toDtLocal(doc.scheduled_time),
     cta_type: doc.cta_type || 'WhatsApp',
     cta_link: doc.cta_link || '',
@@ -367,22 +366,6 @@ function toggleChannel(c) {
   }
 }
 
-function payload(status) {
-  return {
-    name: form.value.name || undefined,
-    title: form.value.title,
-    shop: form.value.shop || undefined,
-    status,
-    source: 'Manual',
-    scheduled_time: fromDtLocal(form.value.scheduled_time),
-    cta_type: form.value.cta_type,
-    cta_link: form.value.cta_type === 'None' ? '' : form.value.cta_link,
-    first_comment: form.value.first_comment || '',
-    channels: form.value.channels.map((c) => ({ channel: c, caption: form.value.captions[c] || '' })),
-    media: form.value.media.map((m, i) => ({ media_file: m.media_file, seq: i, alt_text: m.alt_text || '', channels: m.channels || [] })),
-  }
-}
-
 async function save(status) {
   if (status === 'Scheduled' && (!form.value.scheduled_time || !form.value.channels.length)) {
     toast.error(__('Programar requiere fecha/hora y al menos un canal.'))
@@ -390,7 +373,7 @@ async function save(status) {
   }
   busy.value = true
   try {
-    const r = await frappeCall('doco_marketing.api.social.save_post', { payload: JSON.stringify(payload(status)) })
+    const r = await frappeCall('doco_marketing.api.social.save_post', { payload: JSON.stringify(buildPayload(form.value, status)) })
     form.value.name = r.name
     form.value.status = r.status
     toast.success(__('Guardado'))
@@ -415,7 +398,7 @@ async function regeneratePost() {
     // regenerate may swap items server-side and re-attach their photos — refetch
     // media so a later save doesn't clobber the server's rows with a stale list.
     const doc = await frappeCall('doco_marketing.api.social.get_post', { name: form.value.name })
-    form.value.media = mapMedia(doc)
+    form.value.media = mapComposerMedia(doc)
     aiFeedback.value = ''
     toast.success(__('Borrador regenerado'))
   } catch (e) {
@@ -434,7 +417,7 @@ async function publishNow() {
   try {
     // "Publicar ahora" = immediate: save WITHOUT a future schedule so the publisher
     // posts now instead of native-scheduling the date field for later.
-    const r = await frappeCall('doco_marketing.api.social.save_post', { payload: JSON.stringify({ ...payload('Draft'), scheduled_time: null }) })
+    const r = await frappeCall('doco_marketing.api.social.save_post', { payload: JSON.stringify({ ...buildPayload(form.value, 'Draft'), scheduled_time: null }) })
     await frappeCall('doco_marketing.services.social.publish.publish_now', { name: r.name })
     toast.success(__('Publicación enviada'))
     showComposer.value = false

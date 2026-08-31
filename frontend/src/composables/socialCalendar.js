@@ -134,6 +134,35 @@ export function blankForm() {
   return { name: '', title: '', shop: '', channels: [], captions: {}, media: [], scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '', channelStates: [] }
 }
 
+// ── composer round-trip helpers (SocialComposer) ──
+// Keep channel-targeting rows (Desk-only feature) + alt text so a save doesn't
+// clobber what the server holds.
+export function mapComposerMedia(doc) {
+  return (doc.media || []).map((m) => ({
+    media_file: m.media_file,
+    media_type: m.media_type || 'Image',
+    alt_text: m.alt_text || '',
+    channels: (m.channels || []).map((t) => ({ social_channel: t.social_channel })),
+  }))
+}
+
+// The save_post payload for a plain form object; only author-editable fields travel.
+export function buildPayload(form, status) {
+  return {
+    name: form.name || undefined,
+    title: form.title,
+    shop: form.shop || undefined,
+    status,
+    source: 'Manual',
+    scheduled_time: fromDtLocal(form.scheduled_time),
+    cta_type: form.cta_type,
+    cta_link: form.cta_type === 'None' ? '' : form.cta_link,
+    first_comment: form.first_comment || '',
+    channels: form.channels.map((c) => ({ channel: c, caption: form.captions[c] || '' })),
+    media: form.media.map((m, i) => ({ media_file: m.media_file, seq: i, alt_text: m.alt_text || '', channels: m.channels || [] })),
+  }
+}
+
 const CAL_VIEW_KEY = 'social:calView'
 function readLS(key, fallback) {
   try { return localStorage.getItem(key) || fallback } catch { return fallback }
@@ -303,6 +332,8 @@ export function useSocialCalendar() {
       const k = p.scheduled_time.slice(0, 10)
       ;(m[k] = m[k] || []).push(p)
     }
+    // stable in-day order: by time — naive-string compare, same no-Date rule as above
+    for (const k in m) m[k].sort((a, b) => (a.scheduled_time || '').localeCompare(b.scheduled_time || ''))
     return m
   })
 
@@ -354,6 +385,7 @@ export function useSocialCalendar() {
   async function reschedulePost(post, dayKey) {
     if (!post) return
     if (dayKey < todayKey) return // past days aren't droppable (guard mirrors the grid)
+    if ((post.scheduled_time || '').slice(0, 10) === dayKey) return // dropped on its own day — no-op
     const prev = post.scheduled_time
     const t = (prev || '').slice(11, 16) || '10:00'
     const next = `${dayKey} ${t}:00`

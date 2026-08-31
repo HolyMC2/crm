@@ -130,39 +130,13 @@
       </div>
     </div>
 
-    <!-- confirm: quitar de la biblioteca -->
-    <template v-if="confirmRow">
-      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="confirmRow = null" />
-      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[420px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
-        <div class="border-b border-outline-gray-1 px-4 py-3 text-[14px] font-bold text-ink-gray-9">
-          {{ __('Quitar de la biblioteca') }}
-        </div>
-        <div class="px-4 py-4 text-[12.5px] leading-relaxed text-ink-gray-7">
-          {{ __('¿Quitar «{0}» de la biblioteca evergreen? Dejará de reciclarse automáticamente. La publicación no se elimina.', [confirmRow.title || confirmRow.name]) }}
-        </div>
-        <div class="flex items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
-          <button
-            class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
-            @click="confirmRow = null"
-          >
-            {{ __('Cancelar') }}
-          </button>
-          <button
-            class="rounded-lg bg-surface-red-7 px-3 py-1.5 text-[12.5px] font-semibold text-ink-red-1 disabled:opacity-50"
-            :disabled="busy === confirmRow.name"
-            @click="removeConfirmed"
-          >
-            {{ __('Quitar') }}
-          </button>
-        </div>
-      </div>
-    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
+import { confirmDialog } from '@/utils/dialogs'
 
 // Kept in-page (not imported from socialCalendar.js) to stay decoupled from that
 // concurrently-edited file. Values mirror the calendar's for visual consistency.
@@ -254,23 +228,25 @@ async function recycleNow(row) {
   }
 }
 
-const confirmRow = ref(null)
+// confirm via the shared frappe-ui-backed dialog (Esc/backdrop/focus handled there)
 function askRemove(row) {
-  confirmRow.value = row
-}
-async function removeConfirmed() {
-  const row = confirmRow.value
-  if (!row) return
-  busy.value = row.name
-  try {
-    await frappeCall('doco_marketing.api.social_evergreen.set_evergreen', { name: row.name, on: 0 })
-    toast.success(__('Quitado de la biblioteca'))
-    confirmRow.value = null
-    pool.reload()
-  } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo quitar'))
-  } finally {
-    busy.value = ''
-  }
+  confirmDialog({
+    title: __('Quitar de la biblioteca'),
+    message: __('¿Quitar «{0}» de la biblioteca evergreen? Dejará de reciclarse automáticamente. La publicación no se elimina.', [row.title || row.name]),
+    confirmLabel: __('Quitar'),
+    theme: 'red',
+    onConfirm: async () => {
+      busy.value = row.name
+      try {
+        await frappeCall('doco_marketing.api.social_evergreen.set_evergreen', { name: row.name, on: 0 })
+        toast.success(__('Quitado de la biblioteca'))
+        pool.reload()
+      } catch (e) {
+        toast.error(e?.messages?.[0] || __('No se pudo quitar'))
+      } finally {
+        busy.value = ''
+      }
+    },
+  })
 }
 </script>

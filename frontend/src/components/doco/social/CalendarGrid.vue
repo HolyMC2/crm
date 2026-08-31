@@ -34,7 +34,7 @@
             <span>{{ cb.emoji }}</span>
             <span class="ml-px inline-block size-1.5 shrink-0 rounded-full" :class="cb.dot" />
           </span>
-        </span>{{ p.title || p.name }}
+        </span><span v-if="hm(p)" class="mr-1 tabular-nums text-[11px] opacity-75">{{ hm(p) }}</span>{{ p.title || p.name }}
       </button>
     </div>
   </div>
@@ -49,11 +49,12 @@
       <div
         v-for="day in days"
         :key="day.key"
-        class="min-h-[92px] rounded-lg border p-1 text-left"
+        class="min-h-[92px] cursor-pointer rounded-lg border p-1 text-left"
         :class="[
           isBlackout(day)
             ? 'border-outline-gray-2 bg-surface-gray-3 opacity-60'
-            : day.inMonth ? 'border-outline-gray-2 bg-surface-base' : 'border-transparent bg-surface-gray-1/50',
+            : day.isToday ? 'border-green-400 dark:border-green-500 bg-surface-base'
+            : day.inMonth ? 'border-outline-gray-2 bg-surface-base hover:border-outline-gray-3' : 'border-transparent bg-surface-gray-1/50',
           dragOver === day.key ? 'ring-2 ring-green-400 dark:ring-green-500' : '',
           day.key < todayKey ? 'opacity-70' : '',
         ]"
@@ -75,7 +76,7 @@
         </div>
         <div class="flex flex-col gap-0.5">
           <button
-            v-for="p in (postsByDay[day.key] || [])"
+            v-for="p in cellPosts(day)"
             :key="p.name"
             draggable="true"
             class="truncate rounded px-1 py-0.5 text-left text-[10.5px] font-medium"
@@ -92,8 +93,13 @@
                 <span>{{ cb.emoji }}</span>
                 <span class="ml-px inline-block size-1.5 shrink-0 rounded-full" :class="cb.dot" />
               </span>
-            </span>{{ p.title || p.name }}
+            </span><span v-if="hm(p)" class="mr-0.5 tabular-nums opacity-70">{{ hm(p) }}</span>{{ p.title || p.name }}
           </button>
+          <button
+            v-if="hiddenCount(day)"
+            class="rounded px-1 py-0.5 text-left text-[10px] font-semibold text-ink-gray-5 hover:bg-surface-gray-2 hover:text-ink-gray-8"
+            @click.stop="expand(day)"
+          >+{{ hiddenCount(day) }} {{ __('más') }}</button>
         </div>
       </div>
     </div>
@@ -158,6 +164,28 @@ const emit = defineEmits(['open-new', 'open-edit', 'reschedule'])
 
 // list view (explicit) OR mobile (the grid is unreadable at phone widths)
 const isList = computed(() => props.calView === 'list' || isMobile.value)
+
+// HH:MM off the stored site-tz string — same no-Date rule as postsByDay bucketing
+const hm = (p) => (p.scheduled_time || '').slice(11, 16)
+
+// ── month-cell overflow: cap at 4 tiles, «+N más» expands the day in place ──
+// (week cells have room; list view shows everything by design)
+const CELL_CAP = 4
+const expandedDays = ref(new Set())
+watch(() => props.days[0]?.key, () => (expandedDays.value = new Set())) // new window, collapse
+function cellPosts(day) {
+  const list = props.postsByDay[day.key] || []
+  if (props.calView !== 'month' || list.length <= CELL_CAP || expandedDays.value.has(day.key)) return list
+  return list.slice(0, CELL_CAP - 1)
+}
+function hiddenCount(day) {
+  const list = props.postsByDay[day.key] || []
+  if (props.calView !== 'month' || expandedDays.value.has(day.key) || list.length <= CELL_CAP) return 0
+  return list.length - (CELL_CAP - 1)
+}
+function expand(day) {
+  expandedDays.value = new Set(expandedDays.value).add(day.key)
+}
 
 // ── blackout days (store-wide "no posting" days) — non-droppable + muted (B4) ──
 // The composable is frozen, so the grid owns this resource; it fetches over its own

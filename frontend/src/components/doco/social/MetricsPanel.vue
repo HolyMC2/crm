@@ -18,8 +18,8 @@
       <span class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Por sucursal') }}</span>
       <button class="rounded-md border border-outline-gray-2 px-2 py-1 text-[11px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2" @click="exportLeaderboard">{{ __('Exportar CSV') }}</button>
     </div>
-    <div class="mb-5 overflow-hidden rounded-[12px] border border-outline-gray-2 bg-surface-base">
-      <table class="w-full text-[12.5px]">
+    <div class="mb-5 overflow-x-auto rounded-[12px] border border-outline-gray-2 bg-surface-base">
+      <table class="w-full min-w-[560px] text-[12.5px]">
         <thead class="bg-surface-gray-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">
           <tr>
             <th class="px-3 py-2 text-left">{{ __('Sucursal') }}</th>
@@ -53,8 +53,8 @@
     </div>
 
     <span class="mb-2 block text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Por publicación') }}</span>
-    <div class="overflow-hidden rounded-[12px] border border-outline-gray-2 bg-surface-base">
-      <table class="w-full text-[12.5px]">
+    <div class="overflow-x-auto rounded-[12px] border border-outline-gray-2 bg-surface-base">
+      <table class="w-full min-w-[520px] text-[12.5px]">
         <thead class="bg-surface-gray-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5">
           <tr>
             <th class="px-3 py-2 text-left">{{ __('Publicación') }}</th>
