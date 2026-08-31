@@ -9,10 +9,14 @@
   calendar. Read-layer data (shops, channels) comes in as props.
 -->
 <template>
-  <!-- frappe-ui Dialog (bare) carries the overlay, Esc, focus trap and scroll lock;
-       the markup inside is ours -->
-  <Dialog v-model="showComposer" bare size="xl">
-    <div class="overflow-hidden rounded-xl bg-surface-base">
+  <!-- frappe-ui carries overlay/Esc/focus/scroll-lock; the markup inside is ours.
+       Phone gets a BottomSheet (drag handle, swipe-down dismiss), desk a Dialog. -->
+  <component
+    :is="isMobile ? BottomSheet : Dialog"
+    v-model:open="showComposer"
+    v-bind="isMobile ? {} : { bare: true, size: 'xl' }"
+  >
+    <div :class="isMobile ? 'flex h-full min-h-0 flex-col bg-surface-base' : 'overflow-hidden rounded-xl bg-surface-base'">
       <div class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3">
         <span class="text-[14px] font-bold text-ink-gray-9">{{ form.name ? __('Editar publicación') : __('Nueva publicación') }}</span>
         <span v-if="form.status" class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="chip(form.status)">{{ STATUS_LABEL[form.status] || form.status }}</span>
@@ -46,7 +50,8 @@
         </div>
       </div>
 
-      <div class="max-h-[68vh] overflow-y-auto p-4">
+      <!-- sheet: body flexes inside the 70vh region so header/footer stay reachable -->
+      <div class="overflow-y-auto p-4" :class="isMobile ? 'min-h-0 flex-1' : 'max-h-[68vh]'">
         <!-- approval hint: an AI/pending draft only publishes once approved; unapproved → auto-cancel at slot -->
         <div v-if="isPending" class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-7 dark:bg-amber-300/10 dark:text-amber-200">
           <span class="flex-none">⏳</span>
@@ -180,13 +185,14 @@
         </template>
       </div>
     </div>
-  </Dialog>
+  </component>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Dialog, call as frappeCall, toast } from 'frappe-ui'
+import { BottomSheet, Dialog, call as frappeCall, toast } from 'frappe-ui'
 import { inputDialog } from '@/utils/dialogs'
+import { isMobile } from '@/composables/breakpoint'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
 import VariantsPanel from '@/components/doco/social/composer/VariantsPanel.vue'
 import SuggestTimeButton from '@/components/doco/social/composer/SuggestTimeButton.vue'
