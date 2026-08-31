@@ -149,6 +149,21 @@
       <div v-if="form.name && !canCancel" class="border-t border-outline-gray-1 px-4 pt-2 text-[11px] text-ink-gray-5">
         {{ __('Publicación en vivo o cancelada — solo lectura. Despublica desde la cola si hace falta.') }}
       </div>
+      <!-- evergreen / reuse — the only UI path into the rotation pool for an existing post; both calls are manager+branch-gated server-side -->
+      <div v-if="showEvergreen" class="flex flex-wrap items-center gap-2 border-t border-outline-gray-1 px-4 py-2.5">
+        <span class="text-[11px] font-semibold text-ink-gray-6">♻ {{ __('Evergreen') }}</span>
+        <button
+          type="button" class="rounded-md border px-2.5 py-1 text-[11.5px] font-medium disabled:opacity-50"
+          :class="form.evergreen ? 'border-green-500 dark:border-green-400 bg-surface-green-2 text-ink-green-8' : 'border-outline-gray-2 text-ink-gray-6'"
+          :disabled="busy" @click="toggleEvergreen"
+        >{{ form.evergreen ? __('En biblioteca — quitar') : __('Añadir a biblioteca') }}</button>
+        <button
+          v-if="isLive" type="button" data-testid="reuse-now"
+          class="rounded-md border border-outline-gray-2 px-2.5 py-1 text-[11.5px] font-semibold text-ink-gray-7 disabled:opacity-50"
+          :disabled="busy" @click="reuseNow"
+        >{{ busy ? __('…') : '↺ ' + __('Reutilizar como borrador') }}</button>
+        <span class="basis-full text-[10.5px] text-ink-gray-4">{{ __('Reutilizar crea un borrador nuevo (texto regenerado, fotos reutilizadas) que apruebas y reprogramas — nunca repite el post tal cual.') }}</span>
+      </div>
       <div class="flex flex-wrap items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
         <button v-if="form.name && canCancel" class="mr-auto rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1" :disabled="busy" @click="cancelPost">{{ __('Cancelar publicación') }}</button>
         <button v-if="isPending" class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background:#2563eb" :disabled="busy" @click="approvePost">{{ __('Aprobar') }}</button>
@@ -216,6 +231,9 @@ const previewPost = computed(() => {
 })
 const canCancel = computed(() => !['Published', 'Partially Published', 'Cancelado'].includes(form.value.status))
 const isPending = computed(() => !!form.value.name && form.value.status === 'Pending Approval')
+const isLive = computed(() => ['Published', 'Partially Published'].includes(form.value.status))
+// Cancelado excluded to mirror set_evergreen's own refusal, not just to hide a dead button
+const showEvergreen = computed(() => !!form.value.name && props.isManager && form.value.status !== 'Cancelado')
 // any IG channel selected → show the App-Review notice + IG media-type hints
 const hasIg = computed(() => (form.value.channels || []).some((c) => c.startsWith('IG')))
 
@@ -324,6 +342,7 @@ async function openEdit(p) {
     cta_link: doc.cta_link || '',
     first_comment: doc.first_comment || '',
     status: doc.status,
+    evergreen: !!doc.evergreen,
     // per-channel publish state (permalink/status/error) so the composer can link
     // the live FB post + surface a failure instead of hiding the outcome.
     channelStates: (doc.channels || []).map((c) => ({
@@ -424,6 +443,41 @@ async function publishNow() {
   } finally {
     busy.value = false
     emit('reload') // reload regardless — the post may have persisted even on publish error
+  }
+}
+
+async function toggleEvergreen() {
+  busy.value = true
+  try {
+    const r = await frappeCall('doco_marketing.api.social_evergreen.set_evergreen', {
+      name: form.value.name, on: form.value.evergreen ? 0 : 1,
+    })
+    form.value.evergreen = !!r.evergreen
+    toast.success(r.evergreen ? __('Añadida a la biblioteca evergreen') : __('Quitada de la biblioteca'))
+    emit('reload') // the calendar card's ♻ badge tracks the flag
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo cambiar'))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function reuseNow() {
+  busy.value = true
+  try {
+    // recycle_now refuses a non-evergreen source — flag first so reuse is one click
+    if (!form.value.evergreen) {
+      const r = await frappeCall('doco_marketing.api.social_evergreen.set_evergreen', { name: form.value.name, on: 1 })
+      form.value.evergreen = !!r.evergreen
+    }
+    const r = await frappeCall('doco_marketing.api.social_evergreen.recycle_now', { name: form.value.name })
+    toast.success(__('Borrador creado — apruébalo y reprográmalo'))
+    emit('reload')
+    await openEdit({ name: r.post }) // land on the fresh draft, ready to reschedule
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('No se pudo reutilizar'))
+  } finally {
+    busy.value = false
   }
 }
 
