@@ -18,12 +18,17 @@
     </template>
   </LayoutHeader>
   <div class="flex flex-col overflow-hidden text-ink-gray-9">
+    <TabButtons
+      v-model="activeTab"
+      :buttons="tabs"
+      class="flex px-2.5 py-1 [&_button]:w-full [&_div]:w-full [&_button>span]:w-full"
+    />
     <div
-      v-if="notifications.data?.length"
+      v-if="filtered.length"
       class="divide-y divide-outline-gray-1 overflow-y-auto text-base"
     >
       <RouterLink
-        v-for="n in notifications.data"
+        v-for="n in filtered"
         :key="n.comment"
         :to="getRoute(n)"
         class="flex cursor-pointer items-start gap-3 px-2.5 py-3 hover:bg-surface-gray-2"
@@ -76,11 +81,35 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import { notifications, notificationsStore } from '@/stores/notifications'
 import { globalStore } from '@/stores/global'
 import { timeAgo, sanitizeHTML } from '@/utils'
-import { Breadcrumbs } from 'frappe-ui'
-import { onMounted, onBeforeUnmount } from 'vue'
+import { Breadcrumbs, TabButtons } from 'frappe-ui'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const { $socket } = globalStore()
 const { mark_as_read, mark_doc_as_read } = notificationsStore()
+
+// same per-type management as the desk panel — the WhatsApp flood was burying
+// Assignment/Mention rows in one flat list
+const activeTab = ref('all')
+const TAB_TYPE = { whatsapp: 'WhatsApp', assignment: 'Assignment', mention: 'Mention' }
+const tabs = computed(() => {
+  const data = notifications.data || []
+  const unread = (t) => data.filter((n) => !n.read && n.type === t).length
+  const withCount = (base, t) => {
+    const c = unread(t)
+    return c ? `${base} · ${c}` : base
+  }
+  return [
+    { label: __('Todas'), value: 'all' },
+    { label: withCount('WhatsApp', 'WhatsApp'), value: 'whatsapp' },
+    { label: withCount(__('Asignación'), 'Assignment'), value: 'assignment' },
+    { label: withCount(__('Mención'), 'Mention'), value: 'mention' },
+  ]
+})
+const filtered = computed(() => {
+  const data = notifications.data || []
+  const t = TAB_TYPE[activeTab.value]
+  return t ? data.filter((n) => n.type === t) : data
+})
 
 onBeforeUnmount(() => {
   $socket.off('crm_notification')
@@ -104,7 +133,10 @@ function getRoute(notification) {
   return {
     name: notification.route_name,
     params: params,
-    hash: '#' + notification.comment || notification.notification_type_doc,
+    // the API computes the tab hash (#whatsapp / #tasks / #<mention-doc>) — use it.
+    // The old `'#' + comment || doc` ALWAYS produced '#null' for WhatsApp/Assignment
+    // rows (precedence: '#'+null is truthy), landing every tap on the wrong tab.
+    hash: notification.hash,
   }
 }
 </script>

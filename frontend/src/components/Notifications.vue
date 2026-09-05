@@ -1,15 +1,22 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
+  <!-- desk: 400px slide-out beside the rail; phone: full-screen sheet (a fixed
+       400px box ran OFF a 390px viewport — unclosable, content clipped) -->
   <div
     v-if="visible"
     ref="target"
-    class="absolute z-20 h-screen bg-surface-base transition-all duration-300 ease-in-out"
-    :style="{
-      'box-shadow': '8px 0px 8px rgba(0, 0, 0, 0.1)',
-      'max-width': '400px',
-      'min-width': '400px',
-      left: 'calc(100% + 1px)',
-    }"
+    class="z-20 bg-surface-base transition-all duration-300 ease-in-out"
+    :class="isMobile ? 'fixed inset-0 w-screen' : 'absolute h-screen'"
+    :style="
+      isMobile
+        ? {}
+        : {
+            'box-shadow': '8px 0px 8px rgba(0, 0, 0, 0.1)',
+            'max-width': '400px',
+            'min-width': '400px',
+            left: 'calc(100% + 1px)',
+          }
+    "
   >
     <div class="flex h-screen flex-col text-ink-gray-9">
       <div class="flex justify-between items-center">
@@ -18,12 +25,13 @@
         </div>
         <div class="flex gap-1 mr-3">
           <Button
-            v-if="activeTab == 'all' && notifications.data?.length"
+            v-if="activeTab != 'events' && filtered.length"
             :tooltip="__('Mark all as read')"
             :icon="MarkAsDoneIcon"
             variant="ghost"
             @click="markAllAsRead"
           />
+          <Button :tooltip="__('Cerrar')" icon="x" variant="ghost" @click="toggle()" />
         </div>
       </div>
       <TabButtons
@@ -31,17 +39,17 @@
         :buttons="tabs"
         class="flex px-4 py-0.5 [&_button]:w-full [&_div]:w-full [&_button>span]:w-full"
       />
-      <div v-if="activeTab == 'all'" class="flex h-full">
+      <div v-if="activeTab != 'events'" class="flex h-full">
         <div
-          v-if="notifications.data?.length"
+          v-if="filtered.length"
           class="divide-y divide-outline-elevation-2 overflow-auto text-base"
         >
           <RouterLink
-            v-for="n in notifications.data"
+            v-for="n in filtered"
             :key="n.comment"
             :to="getRoute(n)"
             class="flex cursor-pointer items-start gap-2.5 px-4 py-2.5 hover:bg-surface-gray-2"
-            @click="markAsRead(n.comment || n.notification_type_doc)"
+            @click="openNotification(n)"
           >
             <div class="mt-1 flex items-center gap-2.5">
               <div
@@ -81,10 +89,9 @@
           width="lg"
         />
       </div>
-      <div v-else-if="activeTab == 'events'" class="flex h-full">
+      <div v-else class="flex h-full">
         <EventNotificationsArea />
       </div>
-      <div v-else class="flex h-full"></div>
     </div>
   </div>
 </template>
@@ -106,7 +113,8 @@ import { timeAgo, sanitizeHTML } from '@/utils'
 import { onClickOutside } from '@vueuse/core'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { TabButtons } from 'frappe-ui'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { isMobile } from '@/composables/breakpoint'
 
 const { $socket } = globalStore()
 const { mark_as_read, toggle, mark_doc_as_read } = notificationsStore()
@@ -114,11 +122,36 @@ const { handleEventNotification } = useEventNotificationAlert()
 const { capture } = useTelemetry()
 
 const activeTab = ref('all')
-const tabs = [
-  { label: __('All'), value: 'all' },
-  { label: __('Events'), value: 'events' },
-  // { label: __('Mentions'), value: 'mentions' },
-]
+// per-type tabs with live unread counts — 300+ WhatsApp pings were burying the
+// Assignment/Mention rows in one flat list
+const TAB_TYPE = { whatsapp: 'WhatsApp', assignment: 'Assignment', mention: 'Mention' }
+const tabs = computed(() => {
+  const data = notifications.data || []
+  const unread = (t) => data.filter((n) => !n.read && n.type === t).length
+  const withCount = (base, t) => {
+    const c = unread(t)
+    return c ? `${base} · ${c}` : base
+  }
+  return [
+    { label: __('Todas'), value: 'all' },
+    { label: withCount('WhatsApp', 'WhatsApp'), value: 'whatsapp' },
+    { label: withCount(__('Asignación'), 'Assignment'), value: 'assignment' },
+    { label: withCount(__('Mención'), 'Mention'), value: 'mention' },
+    { label: __('Events'), value: 'events' },
+  ]
+})
+const filtered = computed(() => {
+  const data = notifications.data || []
+  const t = TAB_TYPE[activeTab.value]
+  return t ? data.filter((n) => n.type === t) : data
+})
+
+// opening a notification CLOSES the panel — it used to stay on top of the very
+// page the click navigated to (on phone it covered the whole screen: «no abre»)
+function openNotification(n) {
+  markAsRead(n.comment || n.notification_type_doc)
+  toggle()
+}
 
 const target = ref(null)
 onClickOutside(
