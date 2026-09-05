@@ -126,7 +126,7 @@
           </div>
         </div>
         <input v-if="form.cta_type !== 'None'" v-model="form.cta_link" type="text" :disabled="!canCancel" class="fld mb-2 w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px] disabled:opacity-60" :placeholder="__('Enlace CTA (wa.me / storefront)')" />
-        <p class="mb-3 text-[11px] text-ink-gray-4">{{ __('IG feed/Reels = aviso; enlace por bio. FB lleva enlace clicable.') }}</p>
+        <p class="mb-3 text-[11px] text-ink-gray-4">{{ __('FB con fotos: el enlace se publica como primer comentario (no hay botón en posts con foto). FB sin foto: tarjeta de enlace. IG = aviso; enlace por bio.') }}</p>
 
         <!-- primer comentario: hashtags/enlaces sin ensuciar el texto principal; se publica tras publicar -->
         <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Primer comentario') }}</label>
@@ -218,8 +218,11 @@ const form = ref(blankForm())
 const previewPost = computed(() => {
   const caps = form.value.captions || {}
   const msg = caps['FB Feed'] || caps['FB Reel'] || Object.values(caps).find(Boolean) || ''
+  const hasImages = (form.value.media || []).some((m) => (m.media_type || 'Image') === 'Image')
+  // photo posts get NO card/button on FB (the link rides the first comment) —
+  // don't preview one that won't exist (Marco 09-04)
   const cta =
-    form.value.cta_type && form.value.cta_type !== 'None'
+    form.value.cta_type && form.value.cta_type !== 'None' && !hasImages
       ? { label: form.value.cta_link || '', button: form.value.cta_type === 'WhatsApp' ? 'WhatsApp' : __('Ver más') }
       : null
   let timeLabel = __('Borrador')
