@@ -535,6 +535,16 @@
           >
             💤 {{ fmtSnooze(r.snoozed_until) }}
           </span>
+          <!-- ⏰ the snooze sweep brought this conversation back (backend
+               r.reactivated: woke after your last open, nobody replied since). The
+               row also floats to the top at wake time. Clears when you open it. -->
+          <span
+            v-else-if="r.reactivated"
+            class="rounded bg-surface-violet-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-violet-8"
+            :title="__('Pospuesta vencida: volvió a la bandeja y nadie la ha abierto — desaparece al abrirla')"
+          >
+            ⏰ {{ __('Reactivada') }}
+          </span>
           <span
             v-for="tg in (r.tags || []).slice(0, 2)"
             :key="tg"

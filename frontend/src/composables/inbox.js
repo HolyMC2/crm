@@ -717,7 +717,10 @@ export function selectDeal(name, doctype = 'CRM Deal') {
   loadAutoAckForConvo(doctype, name) // surface any pending auto-ack to approve in context
   // mark read: clear the red unread dot optimistically, persist in background.
   const r = queueRows.value.find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
-  if (r) r.unread_dot = false
+  if (r) {
+    r.unread_dot = false
+    r.reactivated = false // ⏰ chip clears on open, same read receipt
+  }
   markRead(doctype, name)
   // SLA is a CRM Deal concept; leads have none.
   if (doctype === 'CRM Deal') sla.submit({ reference_name: name })
