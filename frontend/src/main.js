@@ -9,6 +9,7 @@ import { createPinia } from 'pinia'
 import { createDialog } from './utils/dialogs'
 import { initSocket } from './socket'
 import router from './router'
+import { listenForPushNavigation } from './utils/pushNavigate'
 import translationPlugin from './translation'
 import App from './App.vue'
 
@@ -87,6 +88,10 @@ if (import.meta.env.DEV) {
 if (import.meta.env.DEV) {
   window.$dialog = createDialog
 }
+
+// Push click → open the conversation in THIS tab. The SW cannot navigate a page it
+// does not control (scope trap below), so it posts the URL and we route in-app.
+listenForPushNavigation(router)
 
 // Deploy-staleness guard: the inbox is a long-lived tab (never navigates), so a
 // deploy leaves it on the old bundle until a manual F5 — and the SW (scoped to

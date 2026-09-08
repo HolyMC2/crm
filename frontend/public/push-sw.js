@@ -2,7 +2,7 @@
 // vite-plugin-pwa `workbox.importScripts` (spec 1.1). Payload contract matches
 // doco_marketing.services.push: { title, body, tag, url }.
 self.addEventListener('push', (event) => {
-  let data = {}
+  let data
   try {
     data = event.data ? event.data.json() : {}
   } catch (e) {
@@ -21,19 +21,51 @@ self.addEventListener('push', (event) => {
   )
 })
 
+// A CRM SPA tab: /crm or /crm/... — NOT the Desk (/app/crm-deal/... also contains
+// "/crm", which is how a click used to focus a Desk tab and go nowhere).
+function isCrmWindow(url) {
+  try {
+    const p = new URL(url).pathname
+    return p === '/crm' || p.startsWith('/crm/')
+  } catch (e) {
+    return false
+  }
+}
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = (event.notification.data && event.notification.data.url) || '/crm/inbox'
+  const url =
+    (event.notification.data && event.notification.data.url) || '/crm/inbox'
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
-      for (const w of wins) {
-        if (w.url.includes('/crm')) {
-          w.focus()
-          if ('navigate' in w) w.navigate(url)
-          return
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(async (wins) => {
+        const crm = wins.filter((w) => isCrmWindow(w.url))
+        // prefer the tab the operator is already looking at
+        const target =
+          crm.find((w) => w.focused) ||
+          crm.find((w) => w.visibilityState === 'visible') ||
+          crm[0]
+        if (!target) return self.clients.openWindow(url)
+        try {
+          await target.focus()
+        } catch (e) {
+          /* focus can be refused; the message below still lands */
         }
-      }
-      return self.clients.openWindow(url)
-    }),
+        // This SW is scoped to /assets/crm/frontend/ and never controls /crm pages
+        // (see composables/push.js), so WindowClient.navigate() rejects there — that
+        // rejection was the "click and nothing happens" (Marco 2026-09-08). Try it
+        // for a controlled client, otherwise hand the URL to the page: main.js routes
+        // in-app, no reload, drafts survive.
+        try {
+          if ('navigate' in target) {
+            await target.navigate(url)
+            return
+          }
+        } catch (e) {
+          /* uncontrolled client — expected */
+        }
+        target.postMessage({ type: 'crm:navigate', url })
+      }),
   )
 })

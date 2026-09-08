@@ -210,6 +210,16 @@ onMounted(() => {
   initInbox({ skipRestore: !!deepLink })
   if (deepLink)
     selectDeal(String(deepLink), route.query.doctype === 'CRM Lead' ? 'CRM Lead' : 'CRM Deal')
+  // The inbox is a long-lived tab: a push click while it is already open changes
+  // only the query (pushNavigate → router.push), so the mount-time deep link above
+  // never re-runs. Follow query changes the same way.
+  watch(
+    () => [route.query.deal, route.query.doctype],
+    ([deal, doctype]) => {
+      if (!deal || route.name !== 'Inbox') return
+      selectDeal(String(deal), doctype === 'CRM Lead' ? 'CRM Lead' : 'CRM Deal')
+    },
+  )
   // Rebuild the mobile back-stack to match the restored pane so hardware-back
   // walks list ← thread ← context instead of jumping straight out of the inbox.
   if (isMobile.value) {
