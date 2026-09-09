@@ -1,7 +1,9 @@
 # Inbox: Artículos y ventas
 
 The Artículos tab in Inbox and Deal 360 uses persistent ERP documents. The chat
-catalog picker remains available separately for composing messages.
+catalog picker remains available separately for composing messages. Stock filtering
+happens before limiting search candidates, so available items are not hidden behind
+a large out-of-stock prefix.
 
 ## Operator workflow
 
@@ -53,3 +55,9 @@ Validation: `frontend/tests/unit/itemWorkspace.test.js`,
 `doco_marketing.tests.test_item_workspace`, and
 `doco.docoutils.test_customer_tree_defaults`. Backend workflow tests use synthetic
 non-stock items and roll back all documents; they do not submit invoices or send messages.
+
+The shared Activities contact resource uses `crm.api.whatsapp.get_deal_whatsapp_contacts`.
+This permission-checked facade delegates to `whatsapp_chat` only when installed;
+other tenants keep the basic conversation without calling an unavailable endpoint.
+Regression coverage: `crm.tests.test_whatsapp_optional` and
+`doco.docoutils.test_catalogue_stock_limit`.

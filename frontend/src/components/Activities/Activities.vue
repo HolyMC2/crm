@@ -710,7 +710,7 @@ const showWhatsappTemplates = defineModel('showWhatsappTemplates', { type: Boole
 // Multi-Contact-per-Deal scoping: pull every Contact attached to the Deal/Lead
 // with their normalized mobile_no. Each Contact becomes one chat tab.
 const whatsappContacts = createResource({
-  url: 'whatsapp_chat.api.deal_contacts.get_deal_whatsapp_contacts',
+  url: 'crm.api.whatsapp.get_deal_whatsapp_contacts',
   cache: ['whatsapp_deal_contacts', props.doctype, props.docname],
   params: { doctype: props.doctype, name: props.docname },
   auto: true,

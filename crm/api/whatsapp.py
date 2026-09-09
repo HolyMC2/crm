@@ -130,6 +130,20 @@ def is_whatsapp_installed():
 
 
 @frappe.whitelist()
+def get_deal_whatsapp_contacts(doctype: str, name: str):
+	"""Keep the optional multi-contact extension behind an installed-app gate."""
+	if doctype not in ("CRM Deal", "CRM Lead"):
+		frappe.throw(_("Unsupported doctype"), frappe.PermissionError)
+	validate_access(doctype, name)
+	if "whatsapp_chat" not in frappe.get_installed_apps():
+		# Activities already falls back to the deal/lead's own phone.
+		return []
+	from whatsapp_chat.api.deal_contacts import get_deal_whatsapp_contacts as get_contacts
+
+	return get_contacts(doctype, name)
+
+
+@frappe.whitelist()
 def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 	reference_doc = validate_access(reference_doctype, reference_name)
 	# twilio integration app is not compatible with crm app
