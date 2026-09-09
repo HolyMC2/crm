@@ -148,6 +148,12 @@
         </div>
         <div class="flex-1 space-y-3.5 overflow-y-auto px-4 py-3.5">
           <!-- pillar -->
+          <div class="flex gap-2">
+            <button class="rounded-lg border px-3 py-2 text-sm" :class="composeMode === 'editorial' ? 'border-blue-500' : 'border-outline-gray-2'" @click="composeMode = 'editorial'">{{ __('Publicación editorial') }}</button>
+            <button class="rounded-lg border px-3 py-2 text-sm" :class="composeMode === 'catalog' ? 'border-blue-500' : 'border-outline-gray-2'" @click="composeMode = 'catalog'">{{ __('Catálogo / muchas fotos') }}</button>
+          </div>
+          <SocialCatalogGenerator v-if="composeMode === 'catalog'" :shop="shop" :options="composeOpts" @created="catalogCreated" />
+          <template v-else>
           <div>
             <div class="mb-1 text-[11.5px] font-bold uppercase tracking-wide text-ink-gray-5">{{ __('Tipo de publicación') }}</div>
             <div class="flex flex-wrap gap-1.5">
@@ -225,11 +231,13 @@
           <label class="flex items-center gap-1.5 text-[12.5px] text-ink-gray-8">
             <input v-model="composeForm.evergreen" type="checkbox" /> 🌲 {{ __('Marcar como evergreen (rotable si rinde bien)') }}
           </label>
+          </template>
         </div>
         <div class="flex items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
           <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7" @click="showAiComposer = false">{{ __('Cancelar') }}</button>
           <button
             class="rounded-lg px-4 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background:var(--brand)"
+            v-if="composeMode === 'editorial'"
             :disabled="composeBusy || (['Noticia', 'Testimonio'].includes(composeForm.post_kind) && !composeForm.brief.trim())"
             @click="generateCompose"
           >{{ composeBusy ? __('✨ Generando…') : __('✨ Generar borrador') }}</button>
@@ -287,6 +295,7 @@
 </template>
 
 <script setup>
+import SocialCatalogGenerator from '@/components/doco/social/SocialCatalogGenerator.vue'
 import { ref, computed } from 'vue'
 import { BottomSheet, Dialog, LoadingIndicator, createResource, call as frappeCall, toast } from 'frappe-ui'
 import { isMobile } from '@/composables/breakpoint'
@@ -401,6 +410,7 @@ async function unassignEmp(user) {
 // ── AI composer (MA-31 W4) — replaces the signal dropdown ────────────────
 const showAiComposer = ref(false)
 const composeBusy = ref(false)
+const composeMode = ref('editorial')
 const composeOpts = ref(null)
 const composeForm = ref({
   post_kind: 'Producto',
@@ -442,6 +452,13 @@ async function openAiComposer() {
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudieron cargar las opciones'))
   }
+}
+
+async function catalogCreated(result) {
+  toast.success(`${result.names.length} ${__('borradores de catálogo creados')}`)
+  showAiComposer.value = false
+  cal.reload()
+  await openEditPost({ name: result.name })
 }
 
 async function generateCompose() {
