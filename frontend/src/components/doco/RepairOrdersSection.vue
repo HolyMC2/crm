@@ -436,9 +436,11 @@ function formatDate(s) {
 
 const props = defineProps({
   docname: { type: String, required: true },
+  initiallyOpen: { type: Boolean, default: false },
 })
 
-const showForm = ref(false)
+const emit = defineEmits(['created'])
+const showForm = ref(props.initiallyOpen)
 const creating = ref(false)
 const createError = ref(null)
 
@@ -528,6 +530,7 @@ function createRepairOrder() {
       showForm.value = false
       newRepair.value = emptyRepair()
       repairOrders.reload()
+      emit('created')
     },
     onError(err) {
       creating.value = false

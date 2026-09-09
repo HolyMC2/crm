@@ -42,7 +42,7 @@
       </div>
 
       <!-- 🧠 resumen AI del hilo (P2 S3 / spec 5.2) — hides itself when AI is off -->
-      <ThreadSummary />
+      <ThreadSummary v-if="activeTab === 'conversation'" />
 
       <!-- 💡 intent → action chips (P2 S10 / spec 5.3) — ≤1 one-tap chip; hides itself
            when AI is off / confidence < 0.6. Chips NEVER send / NEVER auto-charge. -->
@@ -99,11 +99,9 @@
         </Tabs>
       </div>
 
-      <!-- Artículos = the catalog picker embedded as a panel (browse + send while
-           the conversation stays one tab away). Same composable state as the
-           /cat modal; sends target THIS conversation via catalogCtx. -->
+      <!-- Persistent ERP item lines and chronological sales documents. -->
       <div v-else-if="activeTab === 'items'" class="flex min-h-0 flex-1 flex-col">
-        <CatalogPicker :key="'cat-' + activeDeal" inline @edited="activeTab = 'conversation'" />
+        <ItemWorkspace :key="activeDealDoctype + activeDeal" :deal="activeDeal" :doctype="activeDealDoctype" :enabled="salesDocsEnabled" :has-taller="hasTaller" @catalog="onIntentCatalogo" />
       </div>
 
       <div v-else-if="activeTab === 'repair' && hasTaller" class="scb flex-1 overflow-y-auto p-5">
@@ -132,14 +130,14 @@ import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
-import CatalogPicker from '@/components/doco/inbox/CatalogPicker.vue'
+import ItemWorkspace from '@/components/doco/inbox/ItemWorkspace.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
 import ThreadSummary from '@/components/doco/inbox/ThreadSummary.vue'
 import IntentChips from '@/components/doco/inbox/IntentChips.vue'
 import ThreadSearch from '@/components/doco/inbox/ThreadSearch.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence, openCatalog, setComposerDraft, pulseSalesDocs, catalogCtx, runCatalogSearch } from '@/composables/inbox'
+import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence, openCatalog, setComposerDraft, pulseSalesDocs, salesDocsEnabled } from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
 const threadSearch = ref(null)
@@ -231,10 +229,10 @@ onBeforeUnmount(() =>
 )
 
 const tabs = [
-  { key: 'conversation', label: '💬 ' + __('Conversación') },
-  { key: 'activity', label: '⚡ ' + __('Actividad') },
-  { key: 'items', label: '📦 ' + __('Artículos') },
-  { key: 'repair', label: '🔧 ' + __('Reparación') },
+  { key: 'conversation', label: __('Conversación') },
+  { key: 'activity', label: __('Actividad') },
+  { key: 'items', label: __('Artículos') },
+  { key: 'repair', label: __('Reparación') },
 ]
 // Reparación is a deal-only concept (repair orders) AND requires taller — hidden
 // for leads and on tenants without reparaciones (e.g. mumu).
@@ -248,22 +246,6 @@ watch(
   [hasTaller, activeTab],
   () => {
     if (!hasTaller.value && activeTab.value === 'repair') activeTab.value = 'conversation'
-  },
-  { immediate: true },
-)
-// Artículos tab: point catalogCtx at THIS conversation (the send target the /cat
-// modal gets from openCatalog) and refresh results. Re-aimed on deal switch so a
-// send never lands in the previously-selected conversation.
-watch(
-  [activeTab, activeDeal],
-  () => {
-    if (activeTab.value !== 'items' || !activeDeal.value) return
-    catalogCtx.value = {
-      reference_doctype: activeDealDoctype.value,
-      reference_name: activeDeal.value,
-      channel: 'whatsapp',
-    }
-    runCatalogSearch()
   },
   { immediate: true },
 )
