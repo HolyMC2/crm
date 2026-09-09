@@ -175,6 +175,14 @@
               </select>
             </div>
           </div>
+          <div v-if="composeForm.post_kind === 'Producto' && composeOpts?.collections?.length">
+            <label class="mb-1 block text-[11.5px] font-bold uppercase tracking-wide text-ink-gray-5">{{ __('Colección de productos') }}</label>
+            <select v-model="composeForm.collection" class="fld w-full rounded-lg border border-outline-gray-2 px-2 py-1.5 text-[12.5px]">
+              <option :value="null">{{ __('Elegir un tema coherente del catálogo') }}</option>
+              <option v-for="c in composeOpts.collections" :key="c.name" :value="c.name">{{ c.title || c.name }}</option>
+            </select>
+            <p class="mt-1 text-[11px] text-ink-gray-5">{{ __('Solo productos de esta colección con stock en la sucursal. El brief puede precisar el tema.') }}</p>
+          </div>
           <!-- brief -->
           <div>
             <div class="mb-1 text-[11.5px] font-bold uppercase tracking-wide text-ink-gray-5">
@@ -398,6 +406,7 @@ const composeForm = ref({
   post_kind: 'Producto',
   season: null,
   brief: '',
+  collection: null,
   reference_post: null,
   media_mode: 'products',
   evergreen: false,
@@ -412,7 +421,7 @@ const suggestedSeasonLabel = computed(() =>
 const briefPlaceholder = computed(
   () =>
     ({
-      Producto: __('Ej: fundas nuevas de Kitty y micas de hidrogel'),
+      Producto: __('Ej: baterías para iPhone; ayudar a consultar compatibilidad, sin prometer instalación'),
       Servicio: __('Ej: destacar garantía por escrito en reparaciones'),
       Temporada: __('Ej: promo de temporada en accesorios seleccionados'),
       Noticia: __('Obligatorio: el hecho a anunciar (nuevo horario, servicio, sucursal…)'),
@@ -445,6 +454,7 @@ async function generateCompose() {
         post_kind: f.post_kind,
         season: f.season || undefined,
         brief: f.brief || '',
+        collection: f.post_kind === 'Producto' ? f.collection || undefined : undefined,
         reference_post: f.reference_post || undefined,
         media_mode: f.media_mode,
         evergreen: f.evergreen ? 1 : 0,

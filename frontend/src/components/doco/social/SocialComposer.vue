@@ -95,14 +95,22 @@
         <!-- Variantes IA (managers) — AI caption options at a chosen tone + length -->
         <VariantsPanel v-if="isManager" :post-name="form.name" class="mb-3" @applied="applyVariant" />
 
+        <div v-if="form.selected_products?.length" class="mb-3 rounded-md bg-surface-gray-1 p-2 text-[11px] text-ink-gray-7">
+          <div class="mb-1 font-semibold">{{ __('Productos seleccionados') }}</div>
+          <div v-for="product in form.selected_products" :key="product.item">{{ product.item_name }}</div>
+        </div>
+
         <!-- S8 media — photo tiles (add/remove/reorder) + per-photo alt text -->
         <MediaEditor :media="form.media" :can-cancel="canCancel" />
+        <p v-if="form.source === 'AI Auto' && !form.media.length" class="mb-3 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[11px] text-ink-amber-7">
+          {{ __('Este borrador no tiene fotos verificables del catálogo. Agrega una imagen del producto y confirma modelo y color antes de aprobar.') }}
+        </p>
 
         <!-- owner feedback → AI rewrites the caption (same items/voice/facts) -->
         <div v-if="form.name && canCancel" class="mb-3 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-2">
           <label class="mb-1 block text-[11px] font-semibold text-ink-gray-6">{{ __('Feedback para la IA') }}</label>
           <div class="flex items-start gap-2">
-            <textarea v-model="aiFeedback" rows="2" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('ej. más corto, menciona la garantía, sin emojis, tono más formal…')" />
+            <textarea v-model="aiFeedback" rows="2" class="fld w-full rounded-md border border-outline-gray-2 px-2 py-1.5 text-[12.5px]" :placeholder="__('Ej: más corto, enfocado en baterías para iPhone, sin emojis…')" />
             <button class="shrink-0 rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 disabled:opacity-50" :disabled="busy || !aiFeedback.trim()" @click="regeneratePost">{{ busy ? __('…') : __('↻ Regenerar') }}</button>
           </div>
           <p class="mt-1 text-[10.5px] text-ink-gray-4">{{ __('Reescribe el texto con tus indicaciones y re-adjunta fotos de los artículos si ya tienen.') }}</p>
@@ -260,6 +268,10 @@ function applyVariant({ caption, channels }) {
   const chs = channels && channels.length ? channels : form.value.channels
   for (const ch of chs) form.value.captions[ch] = caption
   const n = chs.length
+  if (n) {
+    form.value.status = 'Pending Approval'
+    form.value.source = 'AI Auto'
+  }
   toast.success(__('Variante aplicada') + ` (${n} ${n === 1 ? __('canal') : __('canales')})`)
 }
 function pickSuggestedTime(dtLocal) {
@@ -350,6 +362,8 @@ async function openEdit(p) {
     cta_link: doc.cta_link || '',
     first_comment: doc.first_comment || '',
     status: doc.status,
+    source: doc.source,
+    selected_products: doc.selected_products || [],
     evergreen: !!doc.evergreen,
     // per-channel publish state (permalink/status/error) so the composer can link
     // the live FB post + surface a failure instead of hiding the outcome.
@@ -408,6 +422,9 @@ async function regeneratePost() {
     // media so a later save doesn't clobber the server's rows with a stale list.
     const doc = await frappeCall('doco_marketing.api.social.get_post', { name: form.value.name })
     form.value.media = mapComposerMedia(doc)
+    form.value.status = doc.status
+    form.value.source = doc.source
+    form.value.selected_products = doc.selected_products || []
     aiFeedback.value = ''
     toast.success(__('Borrador regenerado'))
   } catch (e) {
