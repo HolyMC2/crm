@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/assets/crm/frontend/ && yarn copy-html-entry",
+    "build": "vite build --base=/assets/crm/frontend/ && yarn copy-html-entry && node scripts/verify-pwa-build.mjs",
     "copy-html-entry": "cp ../crm/public/frontend/index.html ../crm/www/crm.html",
     "serve": "vite preview",
     "test": "vitest",
@@ -41,7 +41,6 @@
   },
   "resolutions": {
     "dompurify": "3.4.0",
-    "brace-expansion": "2.1.0",
     "picomatch": "4.0.4",
     "prosemirror-model": "1.25.9",
     "prosemirror-view": "1.41.9"
