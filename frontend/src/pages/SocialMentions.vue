@@ -1,7 +1,7 @@
 <!--
   Menciones (W6 C3 SPA — Marco's top ask: "la gente nos @menciona cuando quiere un
-  producto"). A triage inbox over the Social Mention doctype: comments/captions/stories
-  that @'d us on IG + FB tagged posts land here. A manager/marketer can suggest a reply
+  producto"). A triage inbox over received Social Mention records. Coverage depends
+  on provider permissions, subscriptions and delivered events. A manager/marketer can suggest a reply
   (AI/template), edit it, and publish it as a PUBLIC comment (human-gated, MA-1 — nothing
   auto-sends), or discard. Data: doco_marketing.services.social.mentions.* + api.social.get_shops.
 
@@ -30,6 +30,10 @@
           <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
         </select>
       </div>
+      <div class="flex flex-wrap items-center gap-3">
+      <router-link to="/inquiries?capture=1" class="text-[12px] font-semibold text-ink-blue-9 hover:underline">
+        {{ __('Capturar consulta manual') }}
+      </router-link>
       <router-link
         to="/social"
         class="text-[12px] font-semibold text-ink-blue-9 hover:underline"
@@ -37,7 +41,10 @@
       >
         {{ __('Ir al calendario →') }}
       </router-link>
+      </div>
     </div>
+
+    <SocialCaptureHealth :shop="shop" />
 
     <!-- status filter chips -->
     <div class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
@@ -58,6 +65,10 @@
     </div>
 
     <div class="flex-1 p-4">
+      <div v-if="mentionsRes.error" class="mx-auto mb-4 max-w-[820px] space-y-2 rounded-lg border border-outline-gray-2 bg-surface-base p-4">
+        <p role="alert" class="text-sm text-ink-red-7">{{ __('No se pudieron cargar las menciones. Revisa el acceso y la conexión; puedes capturar una consulta manual mientras tanto.') }}</p>
+        <button type="button" class="text-sm font-semibold text-ink-blue-9 hover:underline" @click="reloadAll">{{ __('Reintentar menciones') }}</button>
+      </div>
       <!-- loading -->
       <div v-if="mentionsRes.loading && !rows.length" class="py-16 text-center text-[13px] text-ink-gray-5">
         {{ __('Cargando…') }}
@@ -71,8 +82,9 @@
         <div class="text-[34px]">💬</div>
         <div class="mt-2 text-[15px] font-bold text-ink-gray-8">{{ __('Sin menciones por aquí') }}</div>
         <p class="mx-auto mt-2 max-w-[440px] text-[12.5px] leading-relaxed text-ink-gray-6">
-          {{ __('Cuando alguien te etiquete o @mencione en un comentario, una publicación o una historia de Instagram/Facebook, aparecerá aquí automáticamente. La captación en vivo está pendiente de activación en Meta.') }}
+          {{ __('Aquí se muestran las menciones que la integración pudo recibir. La cobertura depende de los permisos, las suscripciones y los eventos entregados por Meta; las notificaciones de grupos de Facebook no están garantizadas. Si viste una conversación que falta, captura su enlace o texto como consulta.') }}
         </p>
+        <router-link to="/inquiries?capture=1" class="mt-4 inline-block text-sm font-semibold text-ink-blue-9 hover:underline">{{ __('Capturar consulta manual') }}</router-link>
       </div>
 
       <!-- list -->
@@ -148,6 +160,13 @@
             <span v-if="row.status === 'Atendido' && row.replied_at" class="text-[11.5px] text-ink-green-7">
               ✓ {{ __('Respondida') }} {{ relTime(row.replied_at) }}
             </span>
+          </div>
+
+          <!-- Explicit public context capture; the adapter classifies the author. -->
+          <div class="mt-2.5 space-y-2">
+            <router-link v-if="captured[row.name]" :to="{ name: 'Inquiries', query: { name: captured[row.name] } }" class="text-sm font-semibold text-ink-blue-9 hover:underline">{{ __('Abrir consulta capturada') }}</router-link>
+            <button v-else type="button" :data-testid="`mention-capture-${i}`" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40" :disabled="!!captureBusy || !!busy" @click="onCapture(row)">{{ captureBusy === row.name ? __('Capturando…') : __('Capturar consulta') }}</button>
+            <p v-if="captureErrors[row.name]" role="alert" class="text-sm text-ink-red-7">{{ __(captureErrors[row.name]) }}</p>
           </div>
 
           <!-- already-sent reply (read-only) -->
@@ -269,8 +288,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
+import { useRouter } from 'vue-router'
+import { sessionStore } from '@/stores/session'
+import SocialCaptureHealth from '@/components/SocialCaptureHealth.vue'
+import { inquiryError, requestGate } from '@/utils/inquiries'
 
 const TYPE_EMOJI = { Comentario: '💬', Caption: '📝', Historia: '📸', FB: '📘', 'Reseña': '⭐' }
 const FILTERS = [
@@ -321,6 +344,42 @@ const isManager = computed(() => !!shopsRes.data?.is_manager)
 const shopOptions = computed(() => shopsRes.data?.shops || [])
 const shopLabel = (name) => shopOptions.value.find((s) => s.name === name)?.shop_name || name
 const shop = ref('')
+const router = useRouter()
+const session = sessionStore()
+const captureBusy = ref('')
+const captureErrors = ref({})
+const captured = ref({})
+const captureGate = requestGate(() => JSON.stringify([session.user, shop.value]))
+watch(() => session.user, () => {
+  captureGate.invalidate()
+  captureBusy.value = ''
+  captureErrors.value = {}
+  captured.value = {}
+}, { flush: 'sync' })
+watch(shop, () => {
+  captureGate.invalidate()
+  captureBusy.value = ''
+  captureErrors.value = {}
+})
+onBeforeUnmount(() => captureGate.invalidate())
+
+async function onCapture(row) {
+  if (captureBusy.value || busy.value || !session.user) return
+  const token = captureGate.begin()
+  captureBusy.value = row.name
+  captureErrors.value[row.name] = ''
+  try {
+    const inquiry = await frappeCall('doco_marketing.services.social.referrals.capture_mention', { name: row.name })
+    if (!captureGate.current(token)) return
+    if (!inquiry?.name) throw new Error('Invalid inquiry response')
+    captured.value[row.name] = inquiry.name
+    await router.push({ name: 'Inquiries', query: { name: inquiry.name } })
+  } catch (e) {
+    if (captureGate.current(token)) captureErrors.value[row.name] = inquiryError(e).message
+  } finally {
+    if (captureGate.current(token)) captureBusy.value = ''
+  }
+}
 watch(
   shopOptions,
   (opts) => {

@@ -326,6 +326,7 @@ import { usersStore } from '@/stores/users'
 import { getMeta } from '@/stores/meta'
 import { isEmoji } from '@/utils'
 import { GUARDED_STATUSES, guardStatusChange } from '@/utils/statusGuard'
+import { addonAvailable } from '@/utils/crmCapabilities'
 import {
   Combobox,
   Tooltip,
@@ -970,13 +971,13 @@ function updateKanbanSettings(data) {
       ['CRM Deal', 'CRM Lead'].includes(props.doctype)
     ) {
       guardStatusChange(data.to, apply, {
-        onSilent: () =>
+        onSilent: addonAvailable.value ? () =>
           call('doco_marketing.api.inbox.set_status', {
             reference_doctype: props.doctype,
             reference_name: data.item,
             status: data.to,
             silent: 1,
-          }),
+          }) : undefined,
       })
         .then((outcome) => {
           if (outcome === false) list.value.reload()

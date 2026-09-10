@@ -17,10 +17,12 @@ import ReportsIcon from '~icons/lucide/bar-chart-3'
 import ScoreRulesIcon from '~icons/lucide/sliders-horizontal'
 import WebshopIcon from '~icons/lucide/shopping-cart'
 import WorkloadIcon from '~icons/lucide/scale'
+import InquiriesIcon from '~icons/lucide/message-square-plus'
 
 export const navItems = [
   { key: 'dashboard', icon: DashboardIcon, label: 'Dashboard', to: '/dashboard', group: 'dashboard' },
   { key: 'leads', icon: LeadsIcon, label: 'Leads', to: '/leads', group: 'leads' },
+  { key: 'inquiries', icon: InquiriesIcon, label: 'Consultas', to: '/inquiries', group: 'inquiries' },
   { key: 'inbox', icon: InboxIcon, label: 'Inbox', to: '/inbox', group: 'inbox', badge: 'unread' },
   { key: 'wa-queue', icon: ReviewQueueIcon, label: 'Aprobaciones', to: '/whatsapp-queue', group: 'wa-queue', badge: 'pending' },
   { key: 'deals', icon: DealsIcon, label: 'Deals', to: '/deals', group: 'deals' },
@@ -40,6 +42,7 @@ export const navItemsBottom = [
 
 // A route path lights exactly one nav group (handoff §4.1).
 export function routeGroup(path) {
+  if (/^\/inquiries(\/|$)/.test(path)) return 'inquiries'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'wa-queue'
   if (/^\/deals?(\/|$)/.test(path)) return 'deals'

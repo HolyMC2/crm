@@ -3,6 +3,7 @@ import { call } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import { sessionStore } from '@/stores/session'
 import { viewsStore } from '@/stores/views'
+import { loadCapabilities, gateRoute } from '@/utils/crmCapabilities'
 
 let personaChecked = false
 export const PERSONA_DONE_KEY = 'crm_persona_captured'
@@ -35,6 +36,12 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/pages/Dashboard.vue'),
+  },
+  {
+    path: '/inquiries',
+    name: 'Inquiries',
+    component: () => import('@/pages/Inquiries.vue'),
+    meta: { navLabel: 'Consultas', title: 'Consultas' },
   },
   {
     // FCRM redesign owns /leads (LeadsView.vue); upstream list stays reachable
@@ -283,6 +290,11 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
+  // Installed-app availability (not permissions): Home and the addon-backed
+  // surfaces below need it before they can resolve. Cached after the first
+  // answer, so later navigations do not wait.
+  if (isLoggedIn && isCrmUser()) await loadCapabilities()
+
   const isAdminUser = isLoggedIn && (isAdmin() || user === 'Administrator')
 
   // Only admins who haven't finished may reach the wizard, even via direct URL.
@@ -316,12 +328,17 @@ router.beforeEach(async (to, from, next) => {
   if (isLoggedIn && to.name !== 'Not Permitted' && !isCrmUser()) {
     next({ name: 'Not Permitted' })
   } else if (to.name === 'Home' && isLoggedIn) {
-    // FCRM redesign: the omnichannel Inbox is the default landing (handoff §5.1).
-    next({ name: 'Inbox' })
+    // FCRM redesign: the omnichannel Inbox is the default landing (handoff §5.1)
+    // when doco_marketing is installed; otherwise the native Leads list.
+    next(gateRoute(to))
   } else if (!isLoggedIn) {
     window.location.href = '/login?redirect-to=/crm'
   } else if (to.matched.length === 0) {
     next({ name: 'Invalid Page' })
+  } else if (gateRoute(to)) {
+    // Addon-backed surface on a site without the addon: native fallback (the
+    // upstream list / Deal page) or Home. See utils/crmCapabilities.js.
+    next(gateRoute(to))
   } else if (['Deal', 'Lead'].includes(to.name) && !to.hash) {
     let storageKey = to.name === 'Deal' ? 'lastDealTab' : 'lastLeadTab'
     const activeTab = localStorage.getItem(storageKey) || 'activity'

@@ -380,6 +380,7 @@ import { statusesStore } from '@/stores/statuses'
 import { getMeta } from '@/stores/meta'
 import { useDocument } from '@/data/document'
 import { whatsappEnabled } from '@/composables/whatsapp'
+import { addonAvailable } from '@/utils/crmCapabilities'
 import { callEnabled } from '@/composables/telephony'
 import { useBroadcast } from '@/composables/useBroadcast'
 import {
@@ -548,7 +549,7 @@ const statuses = computed(() => {
   let customStatuses = document.statuses?.length
     ? document.statuses
     : document._statuses || []
-  return statusOptions('deal', customStatuses, triggerStatusChange, triggerStatusChangeSilent)
+  return statusOptions('deal', customStatuses, triggerStatusChange, addonAvailable.value ? triggerStatusChangeSilent : null)
 })
 
 usePageMeta(() => {
@@ -725,7 +726,7 @@ if (!dealContacts.data) dealContacts.fetch()
 
 function triggerCall() {
   let primaryContact = dealContacts.data?.find((c) => c.is_primary)
-  let mobile_no = primaryContact.mobile_no || null
+  let mobile_no = primaryContact?.mobile_no || null
 
   if (!primaryContact) {
     toast.error(__('No Primary Contact Set'))

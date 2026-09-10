@@ -63,6 +63,7 @@
     </button>
     <div v-show="!isMobile || quickBarOpen" class="flex flex-wrap items-center gap-1.5">
     <button
+      v-if="addonAvailable"
       type="button"
       class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-8 hover:bg-surface-green-7"
       :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
@@ -369,6 +370,7 @@ import {
 import { usersStore } from '@/stores/users'
 import { isMobile } from '@/composables/breakpoint'
 import { notifyTyping, aiEnabled, composerDraft } from '@/composables/inbox'
+import { addonAvailable } from '@/utils/crmCapabilities'
 import { enqueueOutbox } from '@/composables/outbox'
 import { ref, nextTick, watch, computed, onBeforeUnmount } from 'vue'
 
@@ -390,6 +392,7 @@ const emit = defineEmits(['pickTemplate', 'activity', 'sending', 'sent', 'failed
 // /cat <query> (or /catálogo) in the composer opens the catalog picker instead of sending.
 const CAT_RE = /^\/cat(alogo|álogo)?\b\s*/i
 function maybeCatalog() {
+  if (!addonAvailable.value) return false
   const txt = (content.value || '').trim()
   if (mode.value === 'reply' && CAT_RE.test(txt)) {
     emit('catalog', txt.replace(CAT_RE, ''))
@@ -681,7 +684,7 @@ watch(composerDraft, (d) => {
 const suggestions = ref([])
 const suggestLoading = ref(false)
 async function fetchSuggestions() {
-  if (suggestLoading.value) return
+  if (!addonAvailable.value || suggestLoading.value) return
   suggestLoading.value = true
   suggestions.value = []
   try {

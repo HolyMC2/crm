@@ -274,6 +274,7 @@ import { statusesStore } from '@/stores/statuses'
 import { getMeta } from '@/stores/meta'
 import { useDocument } from '@/data/document'
 import { whatsappEnabled } from '@/composables/whatsapp'
+import { addonAvailable } from '@/utils/crmCapabilities'
 import { callEnabled } from '@/composables/telephony'
 import {
   createResource,
@@ -403,7 +404,7 @@ const statuses = computed(() => {
   let customStatuses = document.statuses?.length
     ? document.statuses
     : document._statuses || []
-  return statusOptions('lead', customStatuses, triggerStatusChange, triggerStatusChangeSilent)
+  return statusOptions('lead', customStatuses, triggerStatusChange, addonAvailable.value ? triggerStatusChangeSilent : null)
 })
 
 usePageMeta(() => {

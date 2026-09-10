@@ -37,7 +37,7 @@
 
     <!-- primary nav -->
     <Tooltip
-      v-for="item in navItems"
+      v-for="item in visibleNavItems"
       :key="item.key"
       :text="isExpanded ? '' : __(item.label)"
       placement="right"
@@ -73,7 +73,7 @@
 
     <!-- secondary nav -->
     <Tooltip
-      v-for="item in navItemsBottom"
+      v-for="item in visibleNavItemsBottom"
       :key="item.key"
       :text="isExpanded ? '' : __(item.label)"
       placement="right"
@@ -191,7 +191,7 @@
         <!-- links -->
         <div class="py-1.5">
           <button
-            v-for="link in profileLinks"
+            v-for="link in visibleProfileLinks"
             :key="link.label"
             class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-left text-[13px] text-ink-gray-8 hover:bg-surface-gray-2"
             @click="link.onClick"
@@ -240,6 +240,8 @@ import ChevronsLeftIcon from '~icons/lucide/chevrons-left'
 import ChevronsRightIcon from '~icons/lucide/chevrons-right'
 // shared with the mobile drawer so the two navs never drift (see navModel.js)
 import { navItems, navItemsBottom, routeGroup } from '@/composables/navModel'
+// installed-app availability: addon-only entries hide without doco_marketing
+import { addonAvailable, loadCapabilities, navItemVisible } from '@/utils/crmCapabilities'
 
 const route = useRoute()
 const router = useRouter()
@@ -277,10 +279,21 @@ function go(to) {
   if (route.path !== to) router.push(to)
 }
 
+// ── installed-app gating ───────────────────────────────────────────────────
+// Entries whose route has no native equivalent (Inbox, Campaigns, …) are hidden
+// until doco_marketing is known to be installed; entries with a native fallback
+// (Leads, Deals, Calls, Tasks) always show — the router picks the page.
+loadCapabilities()
+const visibleByPath = (items) =>
+  items.filter((item) => navItemVisible(router.resolve(item.to).name, addonAvailable.value))
+const visibleNavItems = computed(() => visibleByPath(navItems))
+const visibleNavItemsBottom = computed(() => visibleByPath(navItemsBottom))
+
 // ── badges ───────────────────────────────────────────────────────────────
+// doco_marketing endpoint: only polled once the addon is known to be installed.
 const badges = createResource({
   url: 'doco_marketing.api.shell.get_badge_counts',
-  auto: true,
+  auto: false,
 })
 function badgeFor(kind) {
   const d = badges.data || {}
@@ -288,14 +301,18 @@ function badgeFor(kind) {
   if (kind === 'pending') return d.pending_reviews
   return d.overdue_tasks
 }
+watch(addonAvailable, (ok) => ok && badges.fetch(), { immediate: true })
 // refresh on navigation — cheap, keeps counts current as the user moves around.
 // (Realtime socket push is a Phase-2 upgrade; see ScheduleWakeup note in PR.)
-watch(() => route.path, () => badges.reload())
+watch(
+  () => route.path,
+  () => addonAvailable.value && badges.reload(),
+)
 
 // ── profile panel ──────────────────────────────────────────────────────────
 const profileLinks = [
-  { label: 'Dashboard', icon: DashboardIcon, onClick: () => go('/dashboard') },
-  { label: 'Score Rules', icon: ScoreRulesIcon, onClick: () => go('/score-rules') },
+  { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', onClick: () => go('/dashboard') },
+  { label: 'Score Rules', icon: ScoreRulesIcon, to: '/score-rules', onClick: () => go('/score-rules') },
   {
     label: 'Settings',
     icon: SettingsGearIcon,
@@ -305,6 +322,11 @@ const profileLinks = [
     },
   },
 ]
+const visibleProfileLinks = computed(() =>
+  profileLinks.filter(
+    (link) => !link.to || navItemVisible(router.resolve(link.to).name, addonAvailable.value),
+  ),
+)
 
 function signOut() {
   showProfile.value = false

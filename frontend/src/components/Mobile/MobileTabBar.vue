@@ -12,7 +12,7 @@
     :aria-label="__('Navegación principal')"
   >
     <button
-      v-for="t in tabs"
+      v-for="t in visibleTabs"
       :key="t.key"
       class="press relative flex h-[54px] flex-1 flex-col items-center justify-center gap-0.5"
       :class="isActive(t) ? 'text-ink-green-8' : 'text-ink-gray-5'"
@@ -36,7 +36,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { addonAvailable, navItemVisible } from '@/utils/crmCapabilities'
 import { useRoute, useRouter } from 'vue-router'
 import { createResource } from 'frappe-ui'
 import { routeGroup } from '@/composables/navModel'
@@ -60,6 +61,9 @@ const tabs = [
 ]
 
 const activeGroup = computed(() => routeGroup(route.path))
+const visibleTabs = computed(() => tabs.filter(
+  (tab) => !tab.to || navItemVisible(router.resolve(tab.to).name, addonAvailable.value),
+))
 function isActive(t) {
   return t.group && activeGroup.value === t.group
 }
@@ -99,8 +103,9 @@ const visible = computed(() => !inDrillDown.value && !keyboardOpen.value)
 const badges = createResource({
   url: 'doco_marketing.api.shell.get_badge_counts',
   cache: 'shellBadgeCounts',
-  auto: true,
+  auto: false,
 })
+watch(addonAvailable, (available) => available && badges.fetch(), { immediate: true })
 function badgeFor(kind) {
   const d = badges.data || {}
   if (kind === 'unread') return d.unread_messages

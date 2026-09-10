@@ -1,5 +1,6 @@
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { createResource } from 'frappe-ui'
+import { addonAvailable } from '@/utils/crmCapabilities'
 
 // Source of truth is doco_marketing, not the Doco Vertical registry: a tenant
 // with no vertical set (both retail tenants) must still get the neutral tabs,
@@ -8,10 +9,13 @@ export function useContact360Tabs() {
   const sections = createResource({
     url: 'doco_marketing.api.contact360.get_contact360_sections',
     cache: 'doco-contact360-sections',
-    auto: true,
+    auto: false,
   })
+  watch(addonAvailable, (available) => {
+    if (available) sections.fetch()
+  }, { immediate: true })
   const contactTabs = computed(() =>
-    (sections.data?.sections || []).map((section) => ({
+    (addonAvailable.value ? sections.data?.sections || [] : []).map((section) => ({
       name: section.section_key,
       label: section.label || section.section_key,
       sectionKey: section.section_key,

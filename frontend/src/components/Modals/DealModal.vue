@@ -58,7 +58,7 @@
 
           <!-- Doco: mark whether the customer's phone is on WhatsApp, so the inbox
                knows up front (drives the conversation banner). Defaults to on. -->
-          <label class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7">
+          <label v-if="hasWhatsAppField" class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7">
             <input
               v-model="deal.doc.mobile_is_whatsapp"
               type="checkbox"
@@ -75,7 +75,7 @@
             RepairOrderInlineForm so this file stays easy to rebase upstream.
             `newRepairOrder` is read in createDeal() to call the doco API.
           -->
-          <div class="mt-5 border-t pt-5">
+          <div v-if="repairAvailable" class="mt-5 border-t pt-5">
             <p class="mb-3 text-sm font-semibold text-ink-gray-8">
               {{ __('New Repair Order') }}
               <span class="ml-1 text-xs font-normal text-ink-gray-5">
@@ -90,7 +90,7 @@
             Pre-filled from company defaults; submitted after deal creation
             to sync_deal_contacts_to_erpnext with user-provided address data.
           -->
-          <div class="mt-5 border-t pt-5">
+          <div v-if="erpSyncAvailable" class="mt-5 border-t pt-5">
             <p class="mb-3 text-sm font-semibold text-ink-gray-8">
               {{ __('Customer Details') }}
               <span class="ml-1 text-xs font-normal text-ink-gray-5">
@@ -161,6 +161,8 @@ import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
 import Link from '@/components/Controls/Link.vue'
 import { usersStore } from '@/stores/users'
+import { getMeta } from '@/stores/meta'
+import { hasApp } from '@/utils/crmCapabilities'
 import { statusesStore } from '@/stores/statuses'
 import { isMobileView } from '@/composables/settings'
 import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
@@ -185,6 +187,12 @@ const router = useRouter()
 const error = ref(null)
 
 const { document: deal, triggerOnBeforeCreate } = useDocument('CRM Deal')
+const { doctypeMeta } = getMeta('CRM Deal')
+const erpSyncAvailable = computed(() => hasApp('doco') && hasApp('erpnext'))
+const repairAvailable = computed(() => erpSyncAvailable.value && hasApp('taller'))
+const hasWhatsAppField = computed(() =>
+  doctypeMeta.value?.fields?.some((field) => field.fieldname === 'mobile_is_whatsapp'),
+)
 
 const hasOrganizationSections = ref(true)
 const hasContactSections = ref(true)
@@ -231,9 +239,9 @@ const customerDetails = ref({
   birthday: '',
 })
 
-createResource({
+const companyDefaults = createResource({
   url: 'doco.docoutils.customers.get_company_address_defaults',
-  auto: true,
+  auto: false,
   onSuccess(defaults) {
     customerDetails.value.address_line1 = defaults.address_line1 || ''
     customerDetails.value.city = defaults.city || ''
@@ -241,6 +249,7 @@ createResource({
     customerDetails.value.customer_group = defaults.customer_group || ''
   },
 })
+watch(erpSyncAvailable, (available) => available && companyDefaults.fetch(), { immediate: true })
 
 const { capture } = useTelemetry()
 
@@ -285,9 +294,12 @@ const tabs = createResource({
     hasOrganizationSections.value = false
     _tabs.forEach((tab) => {
       tab.sections = tab.sections.filter(
-        (section) => !HIDDEN_DEAL_SECTIONS.includes(section.name),
+        (section) => !repairAvailable.value || !HIDDEN_DEAL_SECTIONS.includes(section.name),
       )
       tab.sections.forEach((section) => {
+        if (['organization_section', 'organization_details_section'].includes(section.name)) {
+          hasOrganizationSections.value = true
+        }
         section.columns.forEach((column) => {
           if (
             ['contact_section', 'contact_details_section'].includes(section.name)
@@ -295,7 +307,7 @@ const tabs = createResource({
             hasContactSections.value = true
           }
           column.fields = column.fields.filter(
-            (field) => !HIDDEN_DEAL_FIELDS.includes(field.fieldname),
+            (field) => !repairAvailable.value || !HIDDEN_DEAL_FIELDS.includes(field.fieldname),
           )
           column.fields.forEach((field) => {
             if (field.fieldname == 'status') {
@@ -331,7 +343,7 @@ async function createDeal() {
   // Doco: Falla reportada required only when the inline RO is being created
   // (device_model set). Block here so the Deal isn't created with a dangling
   // half-filled RO intent.
-  if (newRepairOrder.value.device_model
+  if (repairAvailable.value && newRepairOrder.value.device_model
       && !(newRepairOrder.value.falla_reportada || '').trim()) {
     error.value = __('Falla reportada is required when creating a Repair Order.')
     return
@@ -377,6 +389,7 @@ async function createDeal() {
       // Navigate immediately — background work continues after.
       show.value = false
       router.push({ ...props.redirect, params: { dealId: name } })
+      if (!erpSyncAvailable.value) return
 
       // Doco customization: sync contacts first so the Contact → Customer link
       // exists before the Repair Order is created (client field links to Contact).
@@ -394,6 +407,7 @@ async function createDeal() {
         },
         auto: true,
         onSuccess(syncResults) {
+          if (!repairAvailable.value) return
           const pm = newRepairOrder.value.device_model
           if (!pm) return
 
@@ -445,6 +459,11 @@ async function createDeal() {
             },
           })
         },
+        onError(err) {
+          toast.error(__('Deal created but customer sync failed: {0}', [
+            err.messages?.join('\n') || err.message,
+          ]))
+        },
       })
     },
     onError(err) {
@@ -466,7 +485,7 @@ function openQuickEntryModal() {
 
 onMounted(() => {
   deal.doc.no_of_employees = '1-10'
-  if (deal.doc.mobile_is_whatsapp == null) deal.doc.mobile_is_whatsapp = 1
+  if (hasWhatsAppField.value && deal.doc.mobile_is_whatsapp == null) deal.doc.mobile_is_whatsapp = 1
   Object.assign(deal.doc, props.defaults)
 
   if (!deal.doc.deal_owner) {

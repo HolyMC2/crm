@@ -6,6 +6,7 @@ import { ref, watch, computed } from 'vue'
 import { createResource, call, toast } from 'frappe-ui'
 import { guardStatusChange } from '@/utils/statusGuard'
 import { userScopedKey } from '@/utils/storageKeys'
+import { ADDON_APP, hasApp, loadCapabilities } from '@/utils/crmCapabilities'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
@@ -49,10 +50,16 @@ export const queue = createResource({
 // Per-tenant feature flags. has_taller gates the reparaciones surfaces so the inbox
 // runs cleanly on a tenant without taller (e.g. mumu). Default false until loaded —
 // safe: never request taller-only fields/endpoints before we know they exist.
+// This module is imported by shell pieces (MobileTabBar) and the upstream detail
+// pages, so the flags load only once doco_marketing is known to be installed —
+// an unconditional auto-fetch would fire on every standalone page load.
 export const features = createResource({
   url: 'doco_marketing.api.inbox.get_inbox_features',
   cache: 'inbox-features',
-  auto: true,
+  auto: false,
+})
+loadCapabilities().then(() => {
+  if (hasApp(ADDON_APP)) features.fetch()
 })
 export const hasTaller = computed(() => !!features.data?.has_taller)
 export const messengerEnabled = computed(() => !!features.data?.enable_messenger)
@@ -319,7 +326,7 @@ export const activePresence = computed(() => {
 })
 
 function _pingPresence(state) {
-  if (!activeDeal.value) return
+  if (!hasApp(ADDON_APP) || !activeDeal.value) return
   call('doco_marketing.api.inbox.presence', {
     doctype: activeDealDoctype.value,
     name: activeDeal.value,

@@ -36,6 +36,7 @@ def get_boot():
 	return frappe._dict(
 		{
 			"frappe_version": frappe.__version__,
+			"installed_apps": list(frappe.get_installed_apps()),
 			"default_route": get_default_route(),
 			"site_name": frappe.local.site,
 			"socketio_port": frappe.conf.socketio_port,

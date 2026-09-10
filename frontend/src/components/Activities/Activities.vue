@@ -117,7 +117,7 @@
              deal/lead + the active contact's phone). One-tap Enviar/Cancelar here so
              a reviewer never has to leave the chat for the Aprobaciones queue. -->
         <ConversationReviewStrip
-          v-if="['CRM Deal', 'CRM Lead'].includes(doctype)"
+          v-if="addonAvailable && ['CRM Deal', 'CRM Lead'].includes(doctype)"
           class="mx-3 mb-2 sm:mx-10"
           :reference-doctype="doctype"
           :reference-name="docname"
@@ -125,9 +125,9 @@
           @changed="whatsappMessages.reload()"
         />
         <!-- pending auto-acuse for THIS conversation → review with full context -->
-        <ConversationAutoAckStrip v-if="['CRM Deal', 'CRM Lead'].includes(doctype)" />
+        <ConversationAutoAckStrip v-if="addonAvailable && ['CRM Deal', 'CRM Lead'].includes(doctype)" />
         <!-- unified customer thread toggle: appears when the phone has >1 deal/RO -->
-        <div v-if="contactDealCount > 1" class="mx-3 mb-1.5 sm:mx-10">
+        <div v-if="addonAvailable && contactDealCount > 1" class="mx-3 mb-1.5 sm:mx-10">
           <button
             class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
             :class="unifiedThread ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
@@ -140,7 +140,7 @@
           </button>
         </div>
         <!-- catalog intent: the customer asked about a price/item → one-tap catalog search -->
-        <div v-if="catalogSuggest.data?.suggest" class="mx-3 mb-1.5 sm:mx-10">
+        <div v-if="addonAvailable && catalogSuggest.data?.suggest" class="mx-3 mb-1.5 sm:mx-10">
           <button
             class="inline-flex items-center gap-1.5 rounded-full bg-surface-amber-1 px-2.5 py-1 text-[11px] font-semibold text-ink-amber-7 hover:bg-surface-amber-2"
             @click="onWaCatalog(catalogSuggest.data.query)"
@@ -538,7 +538,7 @@
       @cancel="reviewTemplate = null"
     />
     <MessengerBox
-      v-if="title == 'WhatsApp' && activeChannelTab === 'messenger'"
+      v-if="addonAvailable && title == 'WhatsApp' && activeChannelTab === 'messenger'"
       :doctype="doctype"
       :docname="docname"
       :window24h="messengerWindow"
@@ -548,7 +548,7 @@
       @catalog="onMsgrCatalog"
     />
     <WhatsAppBox
-      v-if="title == 'WhatsApp' && activeChannelTab === 'whatsapp'"
+      v-if="whatsappEnabled && title == 'WhatsApp' && activeChannelTab === 'whatsapp'"
       ref="whatsappBox"
       v-model="doc"
       v-model:reply="replyMessage"
@@ -564,7 +564,7 @@
       @failed="onWaFailed"
       @catalog="onWaCatalog"
     />
-    <CatalogPicker v-if="catalogOpen" @sent="onCatalogSent" />
+    <CatalogPicker v-if="addonAvailable && catalogOpen" @sent="onCatalogSent" />
   </div>
   <WhatsappTemplateSelectorModal
     v-if="whatsappEnabled"
@@ -641,6 +641,7 @@ import { globalStore } from '@/stores/global'
 import { usersStore } from '@/stores/users'
 import { useTimelinePreferences } from '@/composables/useTimelinePreferences'
 import { whatsappEnabled } from '@/composables/whatsapp'
+import { addonAvailable } from '@/utils/crmCapabilities'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Button, Tooltip, createResource, toast } from 'frappe-ui'
@@ -701,6 +702,9 @@ const all_activities = createResource({
     return { versions, calls, notes, tasks, attachments }
   },
   onSuccess: () => nextTick(() => scroll()),
+  onError: (error) => {
+    toast.error(error.messages?.[0] || __('Failed to load activities'))
+  },
 })
 
 // exposed as a model so an external trigger (e.g. an inbox macro) can open the
@@ -713,7 +717,7 @@ const whatsappContacts = createResource({
   url: 'crm.api.whatsapp.get_deal_whatsapp_contacts',
   cache: ['whatsapp_deal_contacts', props.doctype, props.docname],
   params: { doctype: props.doctype, name: props.docname },
-  auto: true,
+  auto: false,
   onSuccess(data) {
     // Default to the number with the newest INBOUND message — that's where the
     // live 24h session is. The contact's primary number is often not the one
@@ -794,16 +798,17 @@ const baseWaMessages = computed(() =>
   unifiedThread.value ? unifiedMessages.data || [] : filteredWhatsappMessages.value || [],
 )
 function toggleUnified() {
+  if (!addonAvailable.value) return
   unifiedThread.value = !unifiedThread.value
   if (unifiedThread.value && props.docname)
     unifiedMessages.submit({ reference_doctype: props.doctype, reference_name: props.docname })
   nextTick(() => scroll())
 }
 watch(
-  () => props.docname,
+  () => [props.docname, addonAvailable.value],
   () => {
     unifiedThread.value = false
-    if (props.docname && ['CRM Deal', 'CRM Lead'].includes(props.doctype)) {
+    if (addonAvailable.value && props.docname && ['CRM Deal', 'CRM Lead'].includes(props.doctype)) {
       contactRefs.submit({ reference_doctype: props.doctype, reference_name: props.docname })
       catalogSuggest.submit({ reference_doctype: props.doctype, reference_name: props.docname })
     }
@@ -892,7 +897,10 @@ const whatsappMessages = createResource({
 watch(
   whatsappEnabled,
   (enabled) => {
-    if (enabled) whatsappMessages.fetch()
+    if (enabled) {
+      whatsappMessages.fetch()
+      whatsappContacts.fetch()
+    }
   },
   { immediate: true },
 )
@@ -910,7 +918,7 @@ const messengerThread = createResource({
   },
   auto: false,
 })
-const messengerMessages = computed(() => messengerThread.data?.messages || [])
+const messengerMessages = computed(() => addonAvailable.value ? messengerThread.data?.messages || [] : [])
 const convIsMessenger = computed(
   () => messengerMessages.value.length > 0 && (whatsappMessages.data || []).length === 0,
 )
@@ -1059,7 +1067,7 @@ function onMsgrSending(p) {
 }
 function onMsgrSent(p) {
   if (p?.clientToken) _optMarkSent(optimisticMsgr, p.clientToken, p.serverId)
-  messengerThread.reload()
+  if (addonAvailable.value) messengerThread.reload()
 }
 function onMsgrFailed(p) {
   _optDrop(optimisticMsgr, p.clientToken)
@@ -1067,17 +1075,19 @@ function onMsgrFailed(p) {
 
 // /cat or 📦 from a composer → open the catalog picker scoped to this conversation.
 function onWaCatalog(q) {
+  if (!addonAvailable.value) return
   openCatalog(
     { reference_doctype: props.doctype, reference_name: props.docname, channel: 'whatsapp', to: activeWhatsappContact.value?.phone || doc.value.mobile_no },
     q,
   )
 }
 function onMsgrCatalog(q) {
+  if (!addonAvailable.value) return
   openCatalog({ reference_doctype: props.doctype, reference_name: props.docname, channel: 'messenger', to: null }, q)
 }
 function onCatalogSent() {
-  whatsappMessages.reload()
-  messengerThread.reload()
+  if (whatsappEnabled.value) whatsappMessages.reload()
+  if (addonAvailable.value) messengerThread.reload()
 }
 
 // ── Channel tabs ────────────────────────────────────────────────────────────
@@ -1126,15 +1136,15 @@ watch(
 )
 // Load the messenger thread whenever the conversation tab is shown.
 watch(
-  () => [title.value, props.docname],
+  () => [title.value, props.docname, addonAvailable.value],
   () => {
-    if (title.value === 'WhatsApp' && props.docname) messengerThread.fetch()
+    if (addonAvailable.value && title.value === 'WhatsApp' && props.docname) messengerThread.fetch()
   },
   { immediate: true },
 )
 function onMessengerRealtime(data) {
   const ref = data?.reference_name || data?.deal
-  if (ref === props.docname) messengerThread.reload()
+  if (addonAvailable.value && ref === props.docname) messengerThread.reload()
 }
 
 // Named handler so off() removes ONLY this instance's listener. The previous
@@ -1143,6 +1153,7 @@ function onMessengerRealtime(data) {
 // subscribers (the inbox queue, other Activities), and inbound messages stopped
 // refreshing until a full reload (F5).
 function onWhatsappRealtime(data) {
+  if (!whatsappEnabled.value) return
   if (
     data.reference_doctype === props.doctype &&
     data.reference_name === props.docname
@@ -1150,8 +1161,8 @@ function onWhatsappRealtime(data) {
     // Don't yank a reader who's scrolled up; own sends happen at the bottom → scroll.
     if (!_waAtBottom()) _waSuppressScroll = true
     whatsappMessages.reload()
-    if (unifiedThread.value) unifiedMessages.reload()
-    if (props.docname) catalogSuggest.reload()
+    if (addonAvailable.value && unifiedThread.value) unifiedMessages.reload()
+    if (addonAvailable.value && props.docname) catalogSuggest.reload()
   }
 }
 

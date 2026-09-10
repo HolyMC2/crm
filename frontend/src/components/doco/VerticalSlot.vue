@@ -11,10 +11,13 @@
 
 <script setup>
 import { computed } from 'vue'
-import { createResource } from 'frappe-ui'
+import { hasApp } from '@/utils/crmCapabilities'
+import { useVerticalConfig } from '@/composables/verticalConfig'
+import { resolveVerticalSections } from '@/utils/verticalSections'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import DealDocumentsSection from '@/components/doco/DealDocumentsSection.vue'
 import DealsSearchBox from '@/components/doco/DealsSearchBox.vue'
+import ProviderWorkspace from '@/components/doco/ProviderWorkspace.vue'
 
 defineOptions({ inheritAttrs: false })
 
@@ -22,6 +25,7 @@ const registry = {
   RepairOrdersSection,
   DealDocumentsSection,
   DealsSearchBox,
+  ProviderWorkspace,
 }
 
 const props = defineProps({
@@ -29,24 +33,7 @@ const props = defineProps({
   docname: { type: String, default: '' },
 })
 
-// CRM SPA has its own get_boot() that doesn't include extend_bootinfo,
-// so fetch the active vertical config via API. Calls taller directly
-// (B-007) — the prior `doco.docoutils.boot.get_active_vertical_config`
-// path was a re-export shim that broke when doco was uninstalled while
-// taller was. Shared cache key so all VerticalSlot instances across
-// the app hit the same resource.
-const verticalConfig = createResource({
-  url: 'taller.api.vertical.get_active_vertical_config',
-  cache: 'doco-active-vertical',
-  auto: true,
-})
+const verticalConfig = useVerticalConfig(() => props.docname)
 
-const resolvedSections = computed(() => {
-  const cfg = verticalConfig.data
-  if (!cfg || !Array.isArray(cfg.sections)) return []
-  return cfg.sections
-    .filter((s) => s.enabled && s.render_in === props.slot)
-    .slice()
-    .sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
-})
+const resolvedSections = computed(() => resolveVerticalSections(verticalConfig.value, props.slot, hasApp))
 </script>

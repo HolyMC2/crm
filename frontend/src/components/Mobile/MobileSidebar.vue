@@ -168,7 +168,7 @@
             </button>
             <!-- Web Push toggle (spec 1.1) — hidden when unsupported/unconfigured -->
             <button
-              v-if="!['unsupported', 'unconfigured'].includes(pushState)"
+              v-if="addonAvailable && !['unsupported', 'unconfigured'].includes(pushState)"
               class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-gray-7 hover:bg-surface-gray-2"
               :disabled="pushBusy || pushState === 'denied'"
               :class="pushState === 'denied' ? 'opacity-50' : ''"
@@ -260,7 +260,8 @@ import Settings from '@/components/Settings/Settings.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
 import { navItems, navItemsBottom, routeGroup } from '@/composables/navModel'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, ref, watch } from 'vue'
+import { addonAvailable, navItemVisible } from '@/utils/crmCapabilities'
 import { useRoute, useRouter } from 'vue-router'
 import { FeatherIcon, createResource, useTheme } from 'frappe-ui'
 import { mobileSidebarOpened as sidebarOpened, showSettings } from '@/composables/settings'
@@ -291,7 +292,9 @@ const initials = computed(() => {
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?'
 })
 
-const primaryItems = [...navItems, ...navItemsBottom]
+const primaryItems = computed(() => [...navItems, ...navItemsBottom].filter(
+  (item) => navItemVisible(router.resolve(item.to).name, addonAvailable.value),
+))
 const activeGroup = computed(() => routeGroup(route.path))
 
 function rowClass(group) {
@@ -316,7 +319,7 @@ function signOut() {
 }
 
 // ── web push (spec 1.1) ────────────────────────────────────────────────────
-onMounted(refreshPushState)
+watch(addonAvailable, (available) => available && refreshPushState(), { immediate: true })
 function togglePush() {
   if (pushState.value === 'on') disablePush()
   else enablePush() // user gesture — permission prompt allowed here
@@ -338,8 +341,9 @@ function toggleDark() {
 const badges = createResource({
   url: 'doco_marketing.api.shell.get_badge_counts',
   cache: 'shellBadgeCounts',
-  auto: true,
+  auto: false,
 })
+watch(addonAvailable, (available) => available && badges.fetch(), { immediate: true })
 function badgeFor(kind) {
   if (!kind) return 0
   const d = badges.data || {}

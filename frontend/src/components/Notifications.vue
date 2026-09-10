@@ -46,7 +46,7 @@
         >
           <RouterLink
             v-for="n in filtered"
-            :key="n.comment"
+            :key="n.name"
             :to="getRoute(n)"
             class="flex cursor-pointer items-start gap-2.5 px-4 py-2.5 hover:bg-surface-gray-2"
             @click="openNotification(n)"
@@ -115,6 +115,7 @@ import { useTelemetry } from 'frappe-ui/frappe'
 import { TabButtons } from 'frappe-ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { isMobile } from '@/composables/breakpoint'
+import { inquiryNotificationRoute } from '@/utils/inquiries'
 
 const { $socket } = globalStore()
 const { mark_as_read, toggle, mark_doc_as_read } = notificationsStore()
@@ -185,6 +186,8 @@ onMounted(() => {
 })
 
 function getRoute(notification) {
+  const inquiryRoute = inquiryNotificationRoute(notification)
+  if (inquiryRoute) return inquiryRoute
   let params = {
     leadId: notification.reference_name,
   }
