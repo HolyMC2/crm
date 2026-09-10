@@ -35,7 +35,12 @@
     <span>{{ __('Loading...') }}</span>
   </div>
   <div v-else class="pb-8">
-    <VerticalSlot v-if="doctype === 'CRM Deal'" slot="data_tab" :docname="docname" />
+    <VerticalSlot
+      v-if="['CRM Deal', 'CRM Lead', 'Contact'].includes(doctype)"
+      slot="data_tab"
+      :doctype="doctype"
+      :docname="docname"
+    />
     <FieldLayout
       v-if="tabs.data"
       :tabs="tabs.data"
