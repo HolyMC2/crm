@@ -766,7 +766,8 @@ class TestInquiries(IntegrationTestCase):
 		def hooks(name=None, *args, **kwargs):
 			return [] if name == "crm_inquiry_capture_guard" else get_hooks(name, *args, **kwargs)
 
-		with patch("frappe.get_installed_apps", return_value=["frappe", "crm", "doco_marketing"]), \
+		installed = list(dict.fromkeys([*frappe.get_installed_apps(), "doco_marketing"]))
+		with patch("frappe.get_installed_apps", return_value=installed), \
 			patch("frappe.get_hooks", side_effect=hooks):
 			with self.assertRaises(frappe.ValidationError) as error:
 				api.convert_person(first["name"], first["people"][1]["person_key"])
