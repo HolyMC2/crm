@@ -1,0 +1,11 @@
+FAIL locator.waitFor: Timeout 20000ms exceeded.
+Call log:
+[2m  - waiting for locator('.sidebar-item-label').filter({ hasText: /^Search$/ })[22m
+
+    at openFromSearch (/home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/conversation_desk_browser.mjs:76:77)
+    at async file:///home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/conversation_desk_browser.mjs:100:3
+{"errors":[],"workspace":null}
+ Search
+Ctrl+K
+FD
+Frappe CRM

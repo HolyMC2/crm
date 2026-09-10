@@ -1,0 +1,26 @@
+PASS actual scoped RPC excludes other account, disabled private assistant peer and clinical-only/mixed sources
+PASS account → exact historical thread → take → queue; lost response replay creates exactly one durable intent with zero dispatch attempts
+PASS native Desk 375px with inert HTML and no horizontal overflow {"width":375,"scroll":375,"rootScroll":364,"rootWidth":364,"attack":0}
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+AssertionError [ERR_ASSERTION]: The real first queue RPC must commit successfully
+
+417 !== 200
+
+    at file:///home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/conversation_desk_browser.mjs:30:14
+    at async Promise.all (index 1)
+    at async RouteHandler._handleInternal (/home/holymc2/muelle-host/worktrees/meta-crm-20260910/frontend/node_modules/playwright-core/lib/coreBundle.js:59784:27)
+    at async RouteHandler._handleImpl (/home/holymc2/muelle-host/worktrees/meta-crm-20260910/frontend/node_modules/playwright-core/lib/coreBundle.js:59753:18)
+    at async RouteHandler.handle (/home/holymc2/muelle-host/worktrees/meta-crm-20260910/frontend/node_modules/playwright-core/lib/coreBundle.js:59747:16)
+    at async _Page._onRoute (/home/holymc2/muelle-host/worktrees/meta-crm-20260910/frontend/node_modules/playwright-core/lib/coreBundle.js:61037:27) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 417,
+  expected: 200,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.20.0

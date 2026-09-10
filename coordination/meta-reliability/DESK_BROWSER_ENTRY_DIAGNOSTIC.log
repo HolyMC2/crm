@@ -1,0 +1,36 @@
+PASS authenticated Desk Ctrl+K → Conversaciones → Open Conversaciones de clientes
+PASS actual Desk entry consumes the exact authorized account route options
+PASS actual scoped RPC excludes other account, disabled private assistant peer and clinical-only/mixed sources
+PASS first queue RPC committed Queued; only its response was deliberately dropped
+PASS account → exact historical thread → take → queue; lost response replay creates exactly one durable intent with zero dispatch attempts
+PASS native Desk 375px with inert HTML and no horizontal overflow {"width":375,"scroll":375,"rootScroll":364,"rootWidth":364,"attack":0}
+PASS actual cancellation state update and release remove composer; stale generation cannot create a second intent
+{"conversation":"259fc47f5d08a5f8a351ae83ab3d8d7a063d0d885fcfa5e5ae3976c40bf795b2","intent":"0f2eef219d816826365e1d0d9272d5e0432957bfd5c604f244e6dfbee6dfb845","queue_replays":3,"final_state":"Cancelled","actors":["desk-proof-bb398d0e98@example.invalid"]}
+FAIL locator.waitFor: Timeout 20000ms exceeded.
+Call log:
+[2m  - waiting for locator('.sidebar-item-label').filter({ hasText: /^Search$/ }) to be visible[22m
+[2m    43 × locator resolved to hidden <span class="sidebar-item-label">Search</span>[22m
+
+    at openFromSearch (/home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/conversation_desk_browser.mjs:75:77)
+    at async file:///home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/conversation_desk_browser.mjs:173:5
+{"errors":[],"workspace":null}
+ Search
+Ctrl+K
+FD
+Doco
+Escáner
+Marketing
+Mercado
+Organization
+Accounting
+Assets
+Buying
+Frappe CRM
+Manufacturing
+Quality
+Selling
+Stock
+Subcontracting
+ERPNext Settings
+?
+Ayuda

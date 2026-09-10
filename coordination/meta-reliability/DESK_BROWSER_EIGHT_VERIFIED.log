@@ -1,0 +1,10 @@
+PASS authenticated Desk Ctrl+K → Conversaciones → Open Conversaciones de clientes
+PASS actual Desk entry consumes the exact authorized account route options
+PASS actual scoped RPC excludes other account, disabled private assistant peer and clinical-only/mixed sources
+PASS first queue RPC committed Queued; only its response was deliberately dropped
+PASS account → exact thread → take → queue; lost response replay creates exactly one new durable intent with zero dispatch attempts
+PASS native Desk 375px with inert HTML and no horizontal overflow {"width":375,"scroll":375,"rootScroll":364,"rootWidth":364,"attack":0}
+PASS actual cancellation state update and release remove composer; stale generation cannot create a second intent
+{"conversation":"259fc47f5d08a5f8a351ae83ab3d8d7a063d0d885fcfa5e5ae3976c40bf795b2","intent":"e8783a1ac4c260ab38c04362de2d3e4197ede2611c0a9611b99960bf04bc6394","existing_cancelled_rows":1,"new_rows":1,"same_key_requests":2,"total_queue_requests_including_stale":3,"final_state":"Cancelled","actors":["desk-proof-bb398d0e98@example.invalid"]}
+PASS denied account route options show unavailable without selecting another account or its threads
+PASS native Desk browser proof complete; no JavaScript runtime errors

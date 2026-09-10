@@ -1,0 +1,2 @@
+{"site": "crm-inquiry-test-20260909.lab.xoloitzcuintles.com", "apps": {"frappe": "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", "crm": "/tmp/meta-wa-20260910/crm/__init__.py"}, "persistent_flags": [1, 1, 1], "page_exists": true}
+{"actor": "desk-proof-1b8e4d90c4@example.invalid", "site": "crm-inquiry-test-20260909.lab.xoloitzcuintles.com", "user_enabled": 0}

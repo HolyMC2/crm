@@ -1,0 +1,3 @@
+PASS authenticated Desk Ctrl+K → Conversaciones → Open Conversaciones de clientes
+PASS core-only authenticated native Desk Page loads with empty channel capability and no composer
+PASS native Desk browser proof complete; no JavaScript runtime errors

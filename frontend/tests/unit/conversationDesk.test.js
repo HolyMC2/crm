@@ -61,6 +61,53 @@ const response = (method) => {
   return doc
 }
 describe('native Desk customer page', () => {
+  it('consumes an exact authorized route account instead of selecting the first account', async () => {
+    const requested = {
+      ...account,
+      account_id: '456',
+      label: 'Requested account',
+    }
+    const { page, frappe } = mount(async ({ method }) => ({
+      message: method.endsWith('list_accounts')
+        ? { accounts: [account, requested] }
+        : response(method),
+    }))
+    frappe.route_options = { provider: 'WhatsApp', account_id: '456' }
+    await page.load()
+    expect(page.account).toEqual(requested)
+    expect(frappe.route_options).toBeNull()
+    expect(
+      frappe.call.mock.calls.find(([args]) =>
+        args.method.endsWith('list_threads'),
+      )[0].args.account_id,
+    ).toBe('456')
+  })
+  it.each([
+    { provider: 'WhatsApp', account_id: 'denied' },
+    { provider: 'Instagram', account_id: '123' },
+    { provider: 'WhatsApp' },
+  ])(
+    'does not fall back to another account when route scope is unavailable: %j',
+    async (requested) => {
+      const { page, root, frappe } = mount(async ({ method }) => ({
+        message: response(method),
+      }))
+      frappe.route_options = requested
+      await page.load()
+      expect(page.account).toBeUndefined()
+      expect(page.items).toEqual([])
+      expect(root.textContent).toContain(
+        'La cuenta solicitada no está disponible',
+      )
+      expect(root.querySelector('select').value).toBe('')
+      expect(frappe.route_options).toBeNull()
+      expect(
+        frappe.call.mock.calls.some(([args]) =>
+          args.method.endsWith('list_threads'),
+        ),
+      ).toBe(false)
+    },
+  )
   it('walks exact account list to history/control and CRM deep link with inert text', async () => {
     const { page, root, frappe } = mount(async ({ method }) => ({
       message: response(method),

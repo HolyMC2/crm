@@ -98,6 +98,12 @@ class CustomerConversations {
   async load() {
     if (this.actor !== frappe.session.user) this.clear();
     if (this.hasPending() || this.busy) return;
+    const options = frappe.route_options;
+    const requested =
+      options && ("provider" in options || "account_id" in options)
+        ? { provider: options.provider, account_id: options.account_id }
+        : null;
+    if (requested) frappe.route_options = null;
     this.clear();
     const epoch = this.epoch,
       actor = this.actor;
@@ -109,7 +115,15 @@ class CustomerConversations {
       );
       if (!this.fresh(epoch, actor)) return;
       this.accounts = result.accounts || [];
-      this.account = this.accounts[0];
+      this.account = requested
+        ? this.accounts.find(
+            (account) =>
+              account.provider === requested.provider &&
+              account.account_id === requested.account_id,
+          )
+        : this.accounts[0];
+      if (requested && !this.account)
+        this.error = "La cuenta solicitada no está disponible para tu usuario.";
       if (this.account) await this.threads();
     } catch (e) {
       if (this.fresh(epoch, actor)) this.fail(e);
@@ -281,6 +295,16 @@ class CustomerConversations {
     const label = this.el("label", "Cuenta del canal", queue);
     const select = this.el("select", null, label, "form-control");
     select.disabled = this.busy || !!this.hasPending();
+    if (!this.account) {
+      const placeholder = this.el(
+        "option",
+        "Selecciona una cuenta autorizada",
+        select,
+      );
+      placeholder.value = "";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+    }
     for (const [i, account] of this.accounts.entries()) {
       const option = this.el(
         "option",
