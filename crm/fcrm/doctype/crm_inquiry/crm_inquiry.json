@@ -12,6 +12,7 @@
   "source_text",
   "capture_key",
   "capture_payload_hash",
+  "capture_context",
   "assigned_to",
   "next_action_at",
   "people"
@@ -73,6 +74,16 @@
    "hidden": 1,
    "length": 64,
    "no_copy": 1
+  },
+  {
+   "fieldname": "capture_context",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "label": "Capture Context",
+   "read_only": 1,
+   "hidden": 1,
+   "no_copy": 1,
+   "permlevel": 1
   },
   {
    "fieldname": "assigned_to",
