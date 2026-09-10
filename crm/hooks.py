@@ -133,6 +133,7 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
+	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.get_permission_query_conditions",
 	"CRM Conversation": "crm.fcrm.doctype.crm_conversation.crm_conversation.get_permission_query_conditions",
 	"CRM Conversation Control Event": "crm.fcrm.doctype.crm_conversation_control_event.crm_conversation_control_event.get_permission_query_conditions",
 	"CRM Inquiry": "crm.fcrm.doctype.crm_inquiry.crm_inquiry.get_permission_query_conditions",
@@ -144,6 +145,7 @@ permission_query_conditions = {
 }
 
 has_permission = {
+	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.has_permission",
 	"CRM Conversation": "crm.fcrm.doctype.crm_conversation.crm_conversation.has_permission",
 	"CRM Conversation Control Event": "crm.fcrm.doctype.crm_conversation_control_event.crm_conversation_control_event.has_permission",
 	"CRM Inquiry": "crm.fcrm.doctype.crm_inquiry.crm_inquiry.has_permission",

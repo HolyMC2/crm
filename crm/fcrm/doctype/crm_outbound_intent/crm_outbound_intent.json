@@ -1,0 +1,250 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Outbound Intent",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "field_order": [
+  "action_key",
+  "payload_hash",
+  "conversation",
+  "conversation_generation",
+  "provider",
+  "account_id",
+  "peer_id",
+  "actor_user",
+  "origin",
+  "purpose",
+  "source_doctype",
+  "source_name",
+  "source_action",
+  "run_name",
+  "payload",
+  "state",
+  "attempts",
+  "claim_token",
+  "next_attempt_at",
+  "lease_until",
+  "submitted_at",
+  "accepted_at",
+  "delivered_at",
+  "read_at",
+  "expires_at",
+  "provider_message_id",
+  "reason_code",
+  "state_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "action_key",
+   "fieldtype": "Data",
+   "label": "Action Key",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "payload_hash",
+   "fieldtype": "Data",
+   "label": "Payload Hash",
+   "read_only": 1,
+   "reqd": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "conversation",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "read_only": 1,
+   "options": "CRM Conversation",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "conversation_generation",
+   "fieldtype": "Int",
+   "label": "Conversation Generation",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "read_only": 1,
+   "options": "WhatsApp\nMessenger\nInstagram\nWebchat\nEmail",
+   "reqd": 1
+  },
+  {
+   "fieldname": "account_id",
+   "fieldtype": "Data",
+   "label": "Account Id",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "peer_id",
+   "fieldtype": "Data",
+   "label": "Peer Id",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "actor_user",
+   "fieldtype": "Link",
+   "label": "Actor User",
+   "read_only": 1,
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "origin",
+   "fieldtype": "Select",
+   "label": "Origin",
+   "read_only": 1,
+   "options": "Human\nBot\nAutomation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "purpose",
+   "fieldtype": "Select",
+   "label": "Purpose",
+   "read_only": 1,
+   "options": "manual\nservice\nautomation\nmarketing",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_doctype",
+   "fieldtype": "Data",
+   "label": "Source Doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Data",
+   "label": "Source Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_action",
+   "fieldtype": "Data",
+   "label": "Source Action",
+   "read_only": 1
+  },
+  {
+   "fieldname": "run_name",
+   "fieldtype": "Data",
+   "label": "Run Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payload",
+   "fieldtype": "Code",
+   "label": "Payload",
+   "read_only": 1,
+   "options": "JSON",
+   "hidden": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Select",
+   "label": "State",
+   "read_only": 1,
+   "options": "Draft\nQueued\nClaimed\nSubmitting\nAccepted\nDelivered\nRead\nDeferred\nBlocked\nFailed\nCancelled\nUnknown",
+   "default": "Draft",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "attempts",
+   "fieldtype": "Int",
+   "label": "Attempts",
+   "read_only": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "claim_token",
+   "fieldtype": "Data",
+   "label": "Claim Token",
+   "read_only": 1,
+   "length": 64,
+   "hidden": 1
+  },
+  {
+   "fieldname": "next_attempt_at",
+   "fieldtype": "Datetime",
+   "label": "Next Attempt At",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "lease_until",
+   "fieldtype": "Datetime",
+   "label": "Lease Until",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "submitted_at",
+   "fieldtype": "Datetime",
+   "label": "Submitted At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accepted_at",
+   "fieldtype": "Datetime",
+   "label": "Accepted At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivered_at",
+   "fieldtype": "Datetime",
+   "label": "Delivered At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "read_at",
+   "fieldtype": "Datetime",
+   "label": "Read At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expires_at",
+   "fieldtype": "Datetime",
+   "label": "Expires At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "provider_message_id",
+   "fieldtype": "Data",
+   "label": "Provider Message Id",
+   "read_only": 1,
+   "length": 255,
+   "search_index": 1
+  },
+  {
+   "fieldname": "reason_code",
+   "fieldtype": "Data",
+   "label": "Reason Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "state_log",
+   "fieldtype": "Code",
+   "label": "State Log",
+   "read_only": 1,
+   "options": "JSON",
+   "hidden": 1
+  }
+ ],
+ "permissions": [],
+ "actions": [],
+ "links": [],
+ "states": [],
+ "track_changes": 0,
+ "index_web_pages_for_search": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
