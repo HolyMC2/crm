@@ -1,0 +1,120 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Conversation Control Event",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "field_order": [
+  "conversation",
+  "command_key",
+  "input_hash",
+  "origin",
+  "actor_user",
+  "action",
+  "reason",
+  "from_generation",
+  "to_generation",
+  "previous_json",
+  "result_json",
+  "source_receipt"
+ ],
+ "fields": [
+  {
+   "fieldname": "conversation",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "read_only": 1,
+   "options": "CRM Conversation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "command_key",
+   "fieldtype": "Data",
+   "label": "Command Key",
+   "read_only": 1,
+   "unique": 1,
+   "length": 64,
+   "reqd": 1
+  },
+  {
+   "fieldname": "input_hash",
+   "fieldtype": "Data",
+   "label": "Input Hash",
+   "read_only": 1,
+   "length": 64,
+   "reqd": 1
+  },
+  {
+   "fieldname": "origin",
+   "fieldtype": "Select",
+   "label": "Origin",
+   "read_only": 1,
+   "options": "Human\nProvider\nSystem",
+   "reqd": 1
+  },
+  {
+   "fieldname": "actor_user",
+   "fieldtype": "Link",
+   "label": "Actor User",
+   "read_only": 1,
+   "options": "User"
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Data",
+   "label": "Action",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_generation",
+   "fieldtype": "Int",
+   "label": "From Generation",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "to_generation",
+   "fieldtype": "Int",
+   "label": "To Generation",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "previous_json",
+   "fieldtype": "Code",
+   "label": "Previous Json",
+   "read_only": 1,
+   "options": "JSON",
+   "reqd": 1
+  },
+  {
+   "fieldname": "result_json",
+   "fieldtype": "Code",
+   "label": "Result Json",
+   "read_only": 1,
+   "options": "JSON",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_receipt",
+   "fieldtype": "Data",
+   "label": "Source Receipt",
+   "read_only": 1
+  }
+ ],
+ "permissions": [],
+ "actions": [],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "track_changes": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

@@ -1,0 +1,128 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Conversation",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "field_order": [
+  "identity_version",
+  "provider",
+  "account_id",
+  "peer_id",
+  "account_record",
+  "shop_key",
+  "reference_doctype",
+  "reference_name",
+  "control_state",
+  "human_owner",
+  "generation",
+  "bot_enabled",
+  "provider_control"
+ ],
+ "fields": [
+  {
+   "fieldname": "identity_version",
+   "fieldtype": "Int",
+   "label": "Identity Version",
+   "read_only": 1,
+   "default": "1",
+   "reqd": 1
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "read_only": 1,
+   "options": "WhatsApp\nMessenger\nInstagram",
+   "reqd": 1
+  },
+  {
+   "fieldname": "account_id",
+   "fieldtype": "Data",
+   "label": "Account Id",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "peer_id",
+   "fieldtype": "Data",
+   "label": "Peer Id",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "account_record",
+   "fieldtype": "Data",
+   "label": "Account Record",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "shop_key",
+   "fieldtype": "Data",
+   "label": "Shop Key",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Select",
+   "label": "Reference Doctype",
+   "read_only": 1,
+   "options": "\nCRM Inquiry\nCRM Lead\nCRM Deal"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "label": "Reference Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "control_state",
+   "fieldtype": "Select",
+   "label": "Control State",
+   "read_only": 1,
+   "options": "Human\nBot\nPaused\nClosed",
+   "default": "Human",
+   "reqd": 1
+  },
+  {
+   "fieldname": "human_owner",
+   "fieldtype": "Link",
+   "label": "Human Owner",
+   "read_only": 1,
+   "options": "User"
+  },
+  {
+   "fieldname": "generation",
+   "fieldtype": "Int",
+   "label": "Generation",
+   "read_only": 1,
+   "default": "1",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bot_enabled",
+   "fieldtype": "Check",
+   "label": "Bot Enabled",
+   "read_only": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "provider_control",
+   "fieldtype": "Select",
+   "label": "Provider Control",
+   "read_only": 1,
+   "options": "Not Applicable\nOurs\nOther\nUnknown",
+   "default": "Unknown",
+   "reqd": 1
+  }
+ ],
+ "permissions": [],
+ "actions": [],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "track_changes": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
