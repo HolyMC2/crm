@@ -182,6 +182,41 @@ class TestFormAPI(IntegrationTestCase):
 		# "Qualification" is a Deal status; the guard must keep it off the Lead
 		self.assertNotEqual(lead.status, "Qualification")
 
+	# ---- field conditional logic ----
+
+	def test_save_form_persists_field_conditional_rules(self):
+		"""depends_on / mandatory_depends_on / read_only_depends_on authored per field in
+		the builder are stored on the Web Form fields and returned by get_form_config, so
+		the public page can honour them (same model as the framework's Web Form)."""
+		name = make_form(
+			"dep-rules",
+			fields=[
+				{"fieldname": "organization", "fieldtype": "Data"},
+				{"fieldname": "website", "fieldtype": "Data", "depends_on": "eval:doc.organization"},
+				{
+					"fieldname": "phone",
+					"fieldtype": "Data",
+					"mandatory_depends_on": 'eval:doc.organization == "Acme"',
+				},
+				{
+					"fieldname": "last_name",
+					"fieldtype": "Data",
+					"read_only_depends_on": "eval:doc.first_name",
+				},
+			],
+			hidden_fields=[],
+		)
+		by = {f.fieldname: f for f in frappe.get_doc("Web Form", name).web_form_fields}
+		self.assertEqual(by["website"].depends_on, "eval:doc.organization")
+		self.assertEqual(by["phone"].mandatory_depends_on, 'eval:doc.organization == "Acme"')
+		self.assertEqual(by["last_name"].read_only_depends_on, "eval:doc.first_name")
+		self.assertFalse(by["organization"].depends_on)
+
+		cfg = {f["fieldname"]: f for f in F.get_form_config(name)["fields"]}
+		self.assertEqual(cfg["website"]["depends_on"], "eval:doc.organization")
+		self.assertEqual(cfg["phone"]["mandatory_depends_on"], 'eval:doc.organization == "Acme"')
+		self.assertEqual(cfg["last_name"]["read_only_depends_on"], "eval:doc.first_name")
+
 	# ---- layout persistence ----
 
 	def test_save_without_fields_key_preserves_layout(self):
@@ -194,6 +229,65 @@ class TestFormAPI(IntegrationTestCase):
 		F.save_form(name=name, form={"title": "Renamed", "route": "keep-layout", "document_type": "CRM Lead"})
 
 		self.assertEqual(len(F.get_form_config(name)["fields"]), before)
+
+	# ---- field allowlist ----
+
+	def test_save_form_rejects_denied_field(self):
+		"""A payload can't map an internal field the picker excludes."""
+		name = make_form("denied-field")
+		with self.assertRaises(frappe.ValidationError):
+			F.save_form(
+				name=name,
+				form={
+					"title": "D",
+					"route": "denied-field",
+					"document_type": "CRM Lead",
+					"fields": [{"fieldname": "converted", "fieldtype": "Check"}],
+					"hidden_fields": [],
+				},
+			)
+
+	def test_save_form_rejects_layout_break_shadowing_a_field(self):
+		"""A break skips the catalog check, so it must not name a real field."""
+		name = make_form("break-shadow")
+		with self.assertRaises(frappe.ValidationError):
+			F.save_form(
+				name=name,
+				form={
+					"title": "B",
+					"route": "break-shadow",
+					"document_type": "CRM Lead",
+					"fields": [{"fieldname": "converted", "fieldtype": "Section Break"}],
+					"hidden_fields": [],
+				},
+			)
+
+	def test_save_form_rejects_unknown_hidden_field(self):
+		"""Only the system-managed mandatory fields may be hidden fields."""
+		name = make_form("hidden-denied")
+		with self.assertRaises(frappe.ValidationError):
+			F.save_form(
+				name=name,
+				form={
+					"title": "H",
+					"route": "hidden-denied",
+					"document_type": "CRM Lead",
+					"fields": [{"fieldname": "first_name", "fieldtype": "Data"}],
+					"hidden_fields": [{"fieldname": "converted", "fieldtype": "Check", "default": "1"}],
+				},
+			)
+
+	def test_save_form_takes_fieldtype_from_catalog(self):
+		"""fieldtype and options come from the doctype, not the payload."""
+		name = make_form(
+			"spoof-type",
+			fields=[{"fieldname": "first_name", "fieldtype": "Attach", "options": "User"}],
+			hidden_fields=[],
+		)
+		stored = frappe.get_doc("Web Form", name).web_form_fields[0]
+		self.assertEqual(stored.fieldname, "first_name")
+		self.assertEqual(stored.fieldtype, "Data")
+		self.assertFalse(stored.options)
 
 	# ---- draft dry-run ----
 
