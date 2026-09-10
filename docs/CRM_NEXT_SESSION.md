@@ -6,7 +6,11 @@ current [source/verification handoff](CRM_NATIVE_SUPPORT_HANDOFF_2026-09-10.md) 
 It records exact accepted heads, remaining source/provider gates and evidence.
 
 Continue from current shared branches in `~/muelle-host`, preserving later clinic
-and other commits. Relevant references remain:
+and other commits. The clinic lane has published CRM merge `e2cec7e0a` as its frozen
+R3 cutoff; it diverges from our completed native-support source. Before any later
+publication, refresh remote refs and integrate both histories with fresh combined
+validation. Do not overwrite or rebase published clinic history. See the current
+handoff's publication section. Relevant references remain:
 
 - [Workspace instructions](../../AGENTS.md) and target app instructions.
 - [Chat surfaces](CRM_CHAT_SURFACES_2026-09-10.md).

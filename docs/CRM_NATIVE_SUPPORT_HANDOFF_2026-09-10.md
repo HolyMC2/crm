@@ -21,6 +21,29 @@ production deployment/configuration/subscription mutation or customer send was
 performed by this lane. Doco's unrelated dirty books/media/patches and the clinic
 lane's disjoint work were preserved. There is no canonical branch freeze.
 
+## Published clinic R3 cutoff and future integration
+
+The clinic lane subsequently confirmed its separately authorized publication.
+Its frozen CRM R3 cutoff is two-parent merge `e2cec7e0a`: clinic `8b8b3fc48` plus
+Inquiry evidence `48abed320`. The local `origin/doco-dev` tracking ref and clinic
+worktree both resolve to `e2cec7e0a`; the clinic release record reports R3 image
+verification. This lane did not push or independently repeat that image proof.
+
+Keep that published clinic history. It diverges from our completed `b08269d65`
+source: three clinic-side commits and thirteen native-support-side commits after
+common base `48abed320`. The clinic cutoff intentionally excludes our later
+packages; those packages are committed and tested, not dirty P3/P4 work.
+Marketing `751ba32` and its runtime successors are ancestors of accepted `7dabbee`.
+
+Before any later combined publication, refresh the actual remote refs, integrate
+the published clinic merge with the completed native-support history, and validate
+the assembled result. Both `e2cec7e0a` and `b08269d65` must be ancestors of the new
+CRM publication head. Preserve two histories rather than resetting to either tip
+or rebasing already published clinic commits. Fast-forward publication remains
+subject to that lane's existing authorization. The frozen clinic R3 image is not
+evidence for the newer combined source; no clinic retail rollout or Meta activation
+follows from source integration.
+
 ## Implemented behavior, in priority order
 
 | Priority | Accepted behavior | Remaining boundary |
