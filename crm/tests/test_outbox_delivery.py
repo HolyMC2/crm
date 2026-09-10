@@ -180,7 +180,10 @@ class TestOutboxDeliverySql(unittest.TestCase):
         self.assertEqual(self.intent.state, "Accepted")
         self.assertFalse(frappe.db.exists(control.DOCTYPE, control.conversation_key("WhatsApp", self.account.phone_id, self.peer + "1")))
 
-    def test_duplicate_exact_native_targets_are_ambiguous_and_unchanged(self):
+    def test_legacy_unkeyed_duplicate_targets_are_ambiguous_and_unchanged(self):
+        # Pre-column historical rows have no provider key; the additive migration
+        # does not backfill them. New keyed rows must still retain the DB constraint.
+        frappe.db.set_value(outbox.DOCTYPE, self.intent.name, "provider_message_key", None, update_modified=False)
         other = self.new_intent(self.mid)
         receipt, _ = self.receipt()
         with self.assertRaisesRegex(delivery.DeliveryError, "native_delivery_target_ambiguous"):
