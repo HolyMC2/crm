@@ -130,6 +130,9 @@ def _account(provider, account_id, active=True):
 
 
 def _authorize(doc, user=None, write=False):
+    from crm.conversation_scope import assert_customer_peer
+    if doc.get("peer_id"):
+        assert_customer_peer(doc.provider, doc.peer_id)
     user = user or frappe.session.user
     roles = _roles(user)
     if not roles.intersection(_channel_roles(doc.provider)):
@@ -182,7 +185,9 @@ def _load(name):
 def get_or_create(provider, account_id, peer_id, *, reference_doctype=None, reference_name=None):
     """Internal trusted-ingest entry point; no automatic bot or user authority."""
     name = conversation_key(provider, account_id, peer_id)
+    from crm.conversation_scope import assert_customer_peer
     with conversation_fence(name):
+        assert_customer_peer(provider, peer_id)
         existing = frappe.db.get_value(DOCTYPE, name, "name", for_update=True)
         account = _account(provider, account_id)
         if existing:
@@ -291,6 +296,15 @@ def _persist_transition(doc, before, *, key, fingerprint, origin, actor, action,
         "previous_json": json.dumps(before), "result_json": json.dumps(result, default=str), "source_receipt": receipt,
     })
     _mark(event).insert(ignore_permissions=True)
+    if action == "request" and doc.human_owner:
+        # A request does not advance ownership, but its current owner must see it.
+        try:
+            _authorize(doc, doc.human_owner)
+        except frappe.PermissionError:
+            pass
+        else:
+            frappe.publish_realtime("crm_conversation_updated", {"name": doc.name, "generation": doc.generation},
+                                    user=doc.human_owner, after_commit=True)
     if changed:
         # ID/generation only, and only the acting operator: no phone, text or note broadcast.
         if actor and actor != "Guest":

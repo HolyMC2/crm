@@ -1,0 +1,146 @@
+Traceback (most recent call last):
+  File "/tmp/p5-outbox-proof.py", line 20, in <module>
+    spec.loader.exec_module(base)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "/tmp/p5-conversation-fixture.py", line 20, in <module>
+    from crm.api import conversations as api
+  File "/tmp/meta-wa-20260910/crm/api/__init__.py", line 4, in <module>
+    from frappe.core.api.file import get_max_file_size
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/core/api/file.py", line 4, in <module>
+    from frappe.core.doctype.file.file import File
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/core/doctype/file/file.py", line 30, in <module>
+    from frappe.utils.pdf import pdf_contains_js
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/pdf.py", line 29, in <module>
+    cssutils.log.setLog(frappe.logger("cssutils"))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 1485, in logger
+    return get_logger(
+    	module=module,
+    ...<4 lines>...
+    	file_count=file_count,
+    )
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/logger.py", line 83, in get_logger
+    handlers = create_handler(module, site, max_size, file_count, stream_only)
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/utils/logger.py", line 25, in create_handler
+    handler = RotatingFileHandler(log_filename, maxBytes=max_size, backupCount=file_count)
+  File "/usr/local/lib/python3.14/logging/handlers.py", line 161, in __init__
+    BaseRotatingHandler.__init__(self, filename, mode, encoding=encoding,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                 delay=delay, errors=errors)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/logging/handlers.py", line 64, in __init__
+    logging.FileHandler.__init__(self, filename, mode=mode,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                 encoding=encoding, delay=delay,
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                 errors=errors)
+                                 ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/logging/__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/frappe/logs/cssutils.log'
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"account": "control-proof-5dc3f3a88f", "event": "fixtures_committed", "name": "4cc5f497dbca76b60e8515afc4aa1609e3c23455e8c5d745602fad5908eb404b", "prefix": "control-proof-5dc3f3a88f", "shop": "control-proof-5dc3f3a88f", "users": ["control-proof-5dc3f3a88f-1@example.invalid", "control-proof-5dc3f3a88f-2@example.invalid"]}
+{"event": "process_output", "pid": 13420, "value": {"event": "ready", "mode": "queue"}}
+{"event": "process_output", "pid": 13422, "value": {"event": "ready", "mode": "queue"}}
+{"event": "process_output", "pid": 13420, "value": {"event": "queued", "name": "e52a1608d4f420107ab4c606d6ce2cf85b12aed913000eb7429b99c27bccbd2f"}}
+{"event": "process_output", "pid": 13422, "value": {"event": "queued", "name": "e52a1608d4f420107ab4c606d6ce2cf85b12aed913000eb7429b99c27bccbd2f"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13426, "value": {"event": "ready", "mode": "hold"}}
+{"event": "process_output", "pid": 13426, "value": {"event": "provider_double", "intent": "e52a1608d4f420107ab4c606d6ce2cf85b12aed913000eb7429b99c27bccbd2f"}}
+{"event": "process_output", "pid": 13429, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_output", "pid": 13431, "value": {"event": "ready", "mode": "transfer"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_result", "returncode": 1, "stderr": "Traceback (most recent call last):\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 272, in sql\n    self.execute_query(query, values)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 372, in execute_query\n    return self._cursor.execute(query, values)\n           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.14/site-packages/MySQLdb/cursors.py\", line 179, in execute\n    res = self._query(mogrified_query)\n  File \"/home/frappe/frappe-bench/env/lib/python3.14/site-packages/MySQLdb/cursors.py\", line 330, in _query\n    db.query(q)\n    ~~~~~~~~^^^\n  File \"/home/frappe/frappe-bench/env/lib/python3.14/site-packages/MySQLdb/connections.py\", line 280, in query\n    _mysql.connection.query(self, query)\n    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\nMySQLdb.OperationalError: (1020, \"Record has changed since last read in table 'tabCRM Outbound Intent'\")\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/tmp/p5-outbox-proof.py\", line 193, in <module>\n    child(sys.argv[1], json.loads(sys.argv[2]))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/p5-outbox-proof.py\", line 76, in child\n    outbox.dispatch_intent(cfg[\"intent\"])\n    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"/tmp/meta-wa-20260910/crm/api/outbox.py\", line 299, in dispatch_intent\n    doc = _load(intent_name)\n  File \"/tmp/meta-wa-20260910/crm/api/outbox.py\", line 65, in _load\n    return frappe.get_doc(DOCTYPE, _name(name), for_update=True)\n           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/utils/__init__.py\", line 225, in wrapper\n    return dispatch(args[0])(*args, **kw)\n           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 144, in get_doc_str\n    doc = controller(doctype, name, **kwargs)\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 227, in __init__\n    self.load_from_db()\n    ~~~~~~~~~~~~~~~~~^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 276, in load_from_db\n    d = frappe.db.sql(\n    \t\"SELECT * FROM {table_name} WHERE `name` = %s {for_update}\".format(\n    ...<4 lines>...\n    \tas_dict=True,\n    )\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py\", line 278, in sql\n    raise frappe.QueryDeadlockError(e) from e\nfrappe.exceptions.QueryDeadlockError: (1020, \"Record has changed since last read in table 'tabCRM Outbound Intent'\")\n", "stdout": ""}
+{"audit_retained": true, "conversation_closed": true, "event": "cleanup", "fictional_accounts_users_disabled": true}
+Traceback (most recent call last):
+  File "/tmp/p5-outbox-proof.py", line 195, in <module>
+    proof()
+    ~~~~~^^
+  File "/tmp/p5-outbox-proof.py", line 140, in proof
+    finish(holder); finish(duplicate); finish(transfer)
+                    ~~~~~~^^^^^^^^^^^
+  File "/tmp/p5-outbox-proof.py", line 94, in finish
+    assert proc.returncode == code, (stdout, stderr)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (b'', b'Traceback (most recent call last):\n  File "/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py", line 272, in sql\n    self.execute_query(query, values)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File "/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py", line 372, in execute_query\n    return self._cursor.execute(query, values)\n           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File "/home/frappe/frappe-bench/env/lib/python3.14/site-packages/MySQLdb/cursors.py", line 179, in execute\n    res = self._query(mogrified_query)\n  File "/home/frappe/frappe-bench/env/lib/python3.14/site-packages/MySQLdb/cursors.py", line 330, in _query\n    db.query(q)\n    ~~~~~~~~^^^\n  File "/home/frappe/frappe-bench/env/lib/python3.14/site-packages/MySQLdb/connections.py", line 280, in query\n    _mysql.connection.query(self, query)\n    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\nMySQLdb.OperationalError: (1020, "Record has changed since last read in table \'tabCRM Outbound Intent\'")\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File "/tmp/p5-outbox-proof.py", line 193, in <module>\n    child(sys.argv[1], json.loads(sys.argv[2]))\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/tmp/p5-outbox-proof.py", line 76, in child\n    outbox.dispatch_intent(cfg["intent"])\n    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File "/tmp/meta-wa-20260910/crm/api/outbox.py", line 299, in dispatch_intent\n    doc = _load(intent_name)\n  File "/tmp/meta-wa-20260910/crm/api/outbox.py", line 65, in _load\n    return frappe.get_doc(DOCTYPE, _name(name), for_update=True)\n           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/utils/__init__.py", line 225, in wrapper\n    return dispatch(args[0])(*args, **kw)\n           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\n  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 144, in get_doc_str\n    doc = controller(doctype, name, **kwargs)\n  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 227, in __init__\n    self.load_from_db()\n    ~~~~~~~~~~~~~~~~~^^\n  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 276, in load_from_db\n    d = frappe.db.sql(\n    \t"SELECT * FROM {table_name} WHERE `name` = %s {for_update}".format(\n    ...<4 lines>...\n    \tas_dict=True,\n    )\n  File "/home/frappe/frappe-bench/apps/frappe/frappe/database/database.py", line 278, in sql\n    raise frappe.QueryDeadlockError(e) from e\nfrappe.exceptions.QueryDeadlockError: (1020, "Record has changed since last read in table \'tabCRM Outbound Intent\'")\n')
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"account": "control-proof-f7d9b32dea", "event": "fixtures_committed", "name": "5a0c2186ea27903d3c1f35777b918459b6fee69080b111ca02a9f18b82c8275b", "prefix": "control-proof-f7d9b32dea", "shop": "control-proof-f7d9b32dea", "users": ["control-proof-f7d9b32dea-1@example.invalid", "control-proof-f7d9b32dea-2@example.invalid"]}
+{"event": "process_output", "pid": 13511, "value": {"event": "ready", "mode": "queue"}}
+{"event": "process_output", "pid": 13513, "value": {"event": "ready", "mode": "queue"}}
+{"event": "process_output", "pid": 13511, "value": {"event": "queued", "name": "8c239a884da9bb59ecd4ec773fd56542eb1e814df4a4f56df21cdc926a3efe85"}}
+{"event": "process_output", "pid": 13513, "value": {"event": "queued", "name": "8c239a884da9bb59ecd4ec773fd56542eb1e814df4a4f56df21cdc926a3efe85"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13517, "value": {"event": "ready", "mode": "hold"}}
+{"event": "process_output", "pid": 13517, "value": {"event": "provider_double", "intent": "8c239a884da9bb59ecd4ec773fd56542eb1e814df4a4f56df21cdc926a3efe85"}}
+{"event": "process_output", "pid": 13520, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_output", "pid": 13522, "value": {"event": "ready", "mode": "transfer"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"transferred\", \"generation\": 3}\n"}
+{"event": "process_output", "pid": 13532, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Cancelled\"}\n"}
+{"event": "race_and_takeover_pass", "provider_double_attempts": 1, "unique_intents": 2}
+{"event": "process_output", "pid": 13535, "value": {"event": "ready", "mode": "crash_submit"}}
+{"event": "process_output", "pid": 13535, "value": {"event": "provider_double", "intent": "6261f50440368e2419e871176becfb8a61df7c30c18da9365fa126e05e8fcba2"}}
+{"event": "process_result", "returncode": 73, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13538, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Unknown\"}\n"}
+{"event": "process_output", "pid": 13541, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Unknown\"}\n"}
+{"event": "submission_crash_pass", "provider_double_attempts": 1, "state": "Unknown"}
+{"event": "process_output", "pid": 13544, "value": {"event": "ready", "mode": "crash_claim"}}
+{"event": "process_output", "pid": 13544, "value": {"event": "claim_committed"}}
+{"event": "process_result", "returncode": 74, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13547, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"provider_double\", \"intent\": \"896a582ab69852a927d3b70bd5793bcf28eea253471b7289fbf69e226fb479b9\"}\n{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"claims": 2, "event": "claim_crash_pass", "provider_double_attempts": 1, "state": "Accepted"}
+{"audit_retained": true, "conversation_closed": true, "event": "cleanup", "fictional_accounts_users_disabled": true}
+{"event": "PASS", "live_provider_attempts": 0}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"account": "control-proof-8e57948cb7", "event": "fixtures_committed", "name": "585714f6e7c489c71f13f4c9a9b2ceb6c70f1a1c7150a8249dde76ca713b104e", "prefix": "control-proof-8e57948cb7", "shop": "control-proof-8e57948cb7", "users": ["control-proof-8e57948cb7-1@example.invalid", "control-proof-8e57948cb7-2@example.invalid"]}
+{"event": "process_output", "pid": 13576, "value": {"event": "ready", "mode": "queue"}}
+{"event": "process_output", "pid": 13578, "value": {"event": "ready", "mode": "queue"}}
+{"event": "process_output", "pid": 13576, "value": {"event": "queued", "name": "fbe927ba23ca59cc374cf176c8c83ef9a59eb4b9e37f76e4a2c8d6c438470fce"}}
+{"event": "process_output", "pid": 13578, "value": {"event": "queued", "name": "fbe927ba23ca59cc374cf176c8c83ef9a59eb4b9e37f76e4a2c8d6c438470fce"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13582, "value": {"event": "ready", "mode": "hold"}}
+{"event": "process_output", "pid": 13582, "value": {"event": "provider_double", "intent": "fbe927ba23ca59cc374cf176c8c83ef9a59eb4b9e37f76e4a2c8d6c438470fce"}}
+{"event": "process_output", "pid": 13585, "value": {"event": "ready", "mode": "receipt"}}
+{"event": "process_output", "pid": 13585, "value": {"event": "unrelated_receipt_committed"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13588, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_output", "pid": 13590, "value": {"event": "ready", "mode": "transfer"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"transferred\", \"generation\": 3}\n"}
+{"event": "process_output", "pid": 13601, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Cancelled\"}\n"}
+{"event": "race_and_takeover_pass", "provider_double_attempts": 1, "unique_intents": 2, "unrelated_receipt_unblocked": true}
+{"event": "process_output", "pid": 13615, "value": {"event": "ready", "mode": "crash_submit"}}
+{"event": "process_output", "pid": 13615, "value": {"event": "provider_double", "intent": "8086831bd0fa3d342862bb0bf267d67f97537f697ac212e2f2bf6fc6005d1f92"}}
+{"event": "process_result", "returncode": 73, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13647, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Unknown\"}\n"}
+{"event": "process_output", "pid": 13650, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Unknown\"}\n"}
+{"event": "submission_crash_pass", "provider_double_attempts": 1, "state": "Unknown"}
+{"event": "process_output", "pid": 13653, "value": {"event": "ready", "mode": "crash_claim"}}
+{"event": "process_output", "pid": 13653, "value": {"event": "claim_committed"}}
+{"event": "process_result", "returncode": 74, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 13656, "value": {"event": "ready", "mode": "dispatch"}}
+{"event": "process_result", "returncode": 0, "stderr": "", "stdout": "{\"event\": \"provider_double\", \"intent\": \"46d7a25ec3c3409f9af1cc88aa3164954ab0bbd4af04bc95a5d29416650fc31f\"}\n{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"claims": 2, "event": "claim_crash_pass", "provider_double_attempts": 1, "state": "Accepted"}
+{"audit_retained": true, "conversation_closed": true, "event": "cleanup", "fictional_accounts_users_disabled": true}
+{"event": "PASS", "live_provider_attempts": 0}
