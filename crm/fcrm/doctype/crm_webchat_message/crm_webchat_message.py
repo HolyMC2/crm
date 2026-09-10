@@ -21,4 +21,3 @@ class CRMWebchatMessage(Document):
 
     def before_rename(self, old, new, merge=False):
         raise frappe.PermissionError("Webchat identities cannot be renamed.")
-
