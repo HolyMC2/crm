@@ -151,11 +151,11 @@ describe('crmCapabilities: route gates', () => {
   it('without the addon: addon-only surfaces go Home; native routes are untouched', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()
-    for (const name of ['Inbox', 'Campaigns', 'Chatflows', 'Social', 'Reports', 'Workload', 'Score Rules', 'Webshop', 'WhatsApp Queue', 'Pipeline Analysis']) {
+    for (const name of ['Campaigns', 'Chatflows', 'Social', 'Reports', 'Workload', 'Score Rules', 'Webshop', 'WhatsApp Queue', 'Pipeline Analysis']) {
       expect(m.gateRoute({ name })).toEqual({ name: 'Home' })
       expect(m.isAddonOnlyRoute(name)).toBe(true)
     }
-    for (const name of ['Leads', 'Deals', 'Deal', 'Lead', 'Contacts', 'Organizations', 'Notes', 'Tasks', 'Call Logs', 'Calendar', 'Dashboard', 'Notifications']) {
+    for (const name of ['Inbox', 'Leads', 'Deals', 'Deal', 'Lead', 'Contacts', 'Organizations', 'Notes', 'Tasks', 'Call Logs', 'Calendar', 'Dashboard', 'Notifications']) {
       expect(m.gateRoute({ name })).toBeNull()
       expect(m.isAddonOnlyRoute(name)).toBe(false)
     }
@@ -169,13 +169,13 @@ describe('crmCapabilities: route gates', () => {
     await m.loadCapabilities()
     expect(m.gateRoute({ name: 'Home' })).toEqual({ name: 'Leads' })
     expect(m.gateRoute({ name: 'Deals List' })).toEqual({ name: 'Deals' })
-    expect(m.gateRoute({ name: 'Inbox' })).toEqual({ name: 'Home' })
+    expect(m.gateRoute({ name: 'Inbox' })).toBeNull()
   })
 
   it('accepts an explicit availability answer (router/tests decoupled from state)', async () => {
     const m = await fresh()
     expect(m.gateRoute({ name: 'Inbox' }, true)).toBeNull()
-    expect(m.gateRoute({ name: 'Inbox' }, false)).toEqual({ name: 'Home' })
+    expect(m.gateRoute({ name: 'Inbox' }, false)).toBeNull()
   })
 })
 
@@ -183,7 +183,7 @@ describe('crmCapabilities: navigation visibility', () => {
   it('hides addon-only entries without the addon, keeps entries with a native fallback', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()
-    expect(m.navItemVisible('Inbox')).toBe(false)
+    expect(m.navItemVisible('Inbox')).toBe(true)
     expect(m.navItemVisible('Campaigns')).toBe(false)
     expect(m.navItemVisible('Score Rules')).toBe(false)
     expect(m.navItemVisible('Leads List')).toBe(true)
@@ -194,7 +194,7 @@ describe('crmCapabilities: navigation visibility', () => {
 
   it('shows everything with the addon, and hides addon-only entries while pending', async () => {
     const m = await fresh({ apps: WITH_ADDON })
-    expect(m.navItemVisible('Inbox')).toBe(false) // pending: not yet known
+    expect(m.navItemVisible('Inbox')).toBe(true) // native Inbox is available even while addon state is pending
     expect(m.navItemVisible('Leads List')).toBe(true)
     await m.loadCapabilities()
     expect(m.navItemVisible('Inbox')).toBe(true)

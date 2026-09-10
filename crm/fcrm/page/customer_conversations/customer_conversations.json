@@ -1,0 +1,15 @@
+{
+  "doctype": "Page",
+  "name": "customer-conversations",
+  "page_name": "customer-conversations",
+  "title": "Conversaciones de clientes",
+  "module": "FCRM",
+  "standard": "Yes",
+  "system_page": 0,
+  "roles": [
+    { "role": "System Manager" },
+    { "role": "Sales Manager" },
+    { "role": "Marketing Manager" },
+    { "role": "Sales User" }
+  ]
+}

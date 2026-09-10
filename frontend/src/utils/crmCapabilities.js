@@ -1,6 +1,6 @@
 // Installed-app capability source for the CRM shell.
 //
-// The FCRM redesign surfaces (Inbox, Campaigns, Social, custom list pages, …) are
+// The FCRM redesign surfaces (Campaigns, Social, custom list pages, …) are
 // backed by the optional `doco_marketing` addon. A tenant without it (e.g. the
 // demo site: frappe/erpnext/doco/posawesome/crm/print_designer) must still be able
 // to enter the CRM and reach the native Lead / Deal / Task / Call lists.
@@ -94,7 +94,6 @@ export const GATED_ROUTES = Object.freeze({
   'Tasks List': { name: 'Tasks' },
   'Calls List': { name: 'Call Logs' },
   'Deal 360': (to) => ({ name: 'Deal', params: { dealId: to?.params?.dealId } }),
-  Inbox: HOME,
   'WhatsApp Queue': HOME,
   Campaigns: HOME,
   Campaign: HOME,
