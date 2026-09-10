@@ -61,6 +61,81 @@ const response = (method) => {
   return doc
 }
 describe('native Desk customer page', () => {
+  it('retains the same UUID when the request explicitly reports database contention', async () => {
+    let first = true
+    const { page, frappe } = mount(async ({ method }) => {
+      if (method.endsWith('queue_message')) {
+        if (first) {
+          first = false
+          throw { exc_type: 'ReplyRequestPending', status: 409 }
+        }
+        return { message: { name: 'accepted-on-recheck', state: 'Queued' } }
+      }
+      return { message: response(method) }
+    })
+    await page.load()
+    await page.select(doc)
+    page.doc = {
+      ...doc,
+      provider: 'Webchat',
+      human_owner: frappe.session.user,
+      send_available: true,
+      allowed_actions: ['release'],
+    }
+    page.draft = 'Keep this request'
+    await page.queueReply()
+    const original = structuredClone(page.replyPending)
+    expect(original.payload.text).toBe('Keep this request')
+    await page.queueReply()
+    expect(
+      frappe.call.mock.calls
+        .filter(([args]) => args.method.endsWith('queue_message'))
+        .map(([args]) => args.args),
+    ).toEqual([original, original])
+    expect(page.replyPending).toBeNull()
+  })
+  it('replies to Webchat through the same outbox and preserves a draft while refreshing history', async () => {
+    const web = {
+      ...doc,
+      provider: 'Webchat',
+      display_name: 'Visitante ABCDEF12',
+      human_owner: 'one@example.invalid',
+      allowed_actions: ['release'],
+      send_available: true,
+    }
+    const row = {
+      name: 'intent-web',
+      state: 'Accepted',
+      text: 'Respuesta',
+      can_cancel: false,
+    }
+    const { page, root, frappe } = mount(async ({ method }) => ({
+      message: method.endsWith('get_history')
+        ? { conversation: web, messages: [], next_cursor: null }
+        : method.endsWith('list_intents')
+          ? [row]
+          : method.endsWith('queue_message')
+            ? row
+            : response(method),
+    }))
+    await page.load()
+    await page.select(web)
+    expect(root.querySelector('textarea').maxLength).toBe(2000)
+    expect(root.textContent).toContain('Visitante ABCDEF12')
+    expect(root.textContent).toContain('Disponible en la conversación')
+    expect(root.textContent).not.toContain('Aceptado por WhatsApp')
+    page.draft = 'Respuesta'
+    await page.history(web.name)
+    expect(page.draft).toBe('Respuesta')
+    await page.queueReply()
+    expect(
+      frappe.call.mock.calls.find(([args]) =>
+        args.method.endsWith('queue_message'),
+      )[0].args.payload,
+    ).toEqual({ type: 'text', text: 'Respuesta' })
+    expect(page.draft).toBe('')
+  })
+
   it('consumes an exact authorized route account instead of selecting the first account', async () => {
     const requested = {
       ...account,

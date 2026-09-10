@@ -9,6 +9,10 @@ frappe.pages["customer-conversations"].on_page_load = function (wrapper) {
 };
 frappe.pages["customer-conversations"].on_page_show = function (wrapper) {
   wrapper.customer_conversations?.load();
+  wrapper.customer_conversations?.startRefresh();
+};
+frappe.pages["customer-conversations"].on_page_hide = function (wrapper) {
+  wrapper.customer_conversations?.stopRefresh();
 };
 
 class CustomerConversations {
@@ -95,6 +99,30 @@ class CustomerConversations {
   hasPending() {
     return !!(this.pending || this.replyPending || this.intentPending);
   }
+  stopRefresh() {
+    clearTimeout(this.refreshTimer);
+  }
+  startRefresh() {
+    this.stopRefresh();
+    this.refreshTimer = setTimeout(async () => {
+      if (frappe.get_route?.()[0] !== "customer-conversations") return;
+      if (
+        this.account?.provider === "Webchat" &&
+        document.visibilityState === "visible" &&
+        !this.busy &&
+        !this.hasPending() &&
+        !this.draft &&
+        !this.older &&
+        !this.root.contains(document.activeElement)
+      ) {
+        await this.run(async () => {
+          await this.threads();
+          if (this.doc) await this.history(this.doc.name);
+        });
+      }
+      this.startRefresh();
+    }, 15000);
+  }
   async load() {
     if (this.actor !== frappe.session.user) this.clear();
     if (this.hasPending() || this.busy) return;
@@ -170,6 +198,7 @@ class CustomerConversations {
     }
   }
   async history(name, more = false) {
+    const previous = this.doc?.name;
     const result = await this.call("crm.api.conversation_threads.get_history", {
       conversation: name,
       cursor: more ? this.older : null,
@@ -181,8 +210,8 @@ class CustomerConversations {
     this.older = result.next_cursor;
     if (!more) {
       this.outbound = [];
-      this.draft = "";
-      if (this.doc.provider === "WhatsApp") await this.loadOutbox();
+      if (previous !== name) this.draft = "";
+      if (this.nativeChannel()) await this.loadOutbox();
     }
   }
   async select(item) {
@@ -199,6 +228,117 @@ class CustomerConversations {
             peer_id: item.peer_id,
           });
       await this.history(doc.name);
+    });
+  }
+  async configureWebchat() {
+    if (this.busy || this.hasPending()) return;
+    await this.run(async () => {
+      const result = await this.call("crm.api.webchat.list_channels");
+      if (result.has_more)
+        throw new Error("Channel list requires a narrower setup view");
+      const channels = result.channels || [];
+      const dialog = new frappe.ui.Dialog({
+        title: "Chat de tienda",
+        fields: [
+          {
+            fieldname: "channel",
+            fieldtype: "Select",
+            label: "Canal",
+            options: [
+              { label: "Crear canal", value: "" },
+              ...channels.map((row) => ({
+                label: `${row.label} · ${row.public_origin}`,
+                value: row.account_id,
+              })),
+            ],
+            default: "",
+            onchange: () => {
+              const row = channels.find(
+                (item) => item.account_id === dialog.get_value("channel"),
+              );
+              for (const field of [
+                "label",
+                "profile",
+                "public_origin",
+                "enabled",
+              ])
+                dialog.set_value(
+                  field,
+                  row?.[field] ?? (field === "enabled" ? 0 : ""),
+                );
+              for (const field of ["profile", "public_origin"])
+                dialog.set_df_property(field, "read_only", row ? 1 : 0);
+            },
+          },
+          {
+            fieldname: "label",
+            fieldtype: "Data",
+            label: "Nombre del canal",
+            reqd: 1,
+          },
+          {
+            fieldname: "profile",
+            fieldtype: "Data",
+            label: "Perfil de la tienda",
+            reqd: 1,
+            description: "Usa el perfil guardado de esta tienda en Muelle.",
+          },
+          {
+            fieldname: "public_origin",
+            fieldtype: "Data",
+            label: "Dirección pública de la tienda",
+            reqd: 1,
+            description:
+              "Dirección HTTPS completa, sin ruta. Ejemplo: https://tienda.ejemplo.mx",
+          },
+          {
+            fieldname: "enabled",
+            fieldtype: "Check",
+            label: "Activar chat en esta tienda",
+            default: 0,
+            description:
+              "Los agentes Sales User necesitan un Permiso de usuario para este canal. System Manager y Sales Manager pueden atenderlo.",
+          },
+        ],
+        primary_action_label: "Guardar canal",
+        primary_action: async (values) => {
+          if (dialog.saving || this.hasPending()) return;
+          dialog.saving = true;
+          dialog.get_primary_btn().prop("disabled", true);
+          try {
+            const row = channels.find(
+              (item) => item.account_id === values.channel,
+            );
+            const saved = await this.call("crm.api.webchat.configure_channel", {
+              label: values.label,
+              profile: values.profile,
+              public_origin: values.public_origin,
+              enabled: values.enabled ? 1 : 0,
+              ...(row
+                ? {
+                    channel_id: row.account_id,
+                    expected_modified: row.modified,
+                  }
+                : {}),
+            });
+            dialog.hide();
+            if (saved.enabled)
+              frappe.route_options = {
+                provider: "Webchat",
+                account_id: saved.account_id,
+              };
+            await this.load();
+          } catch {
+            frappe.msgprint(
+              "No se confirmó el cambio. Cierra y vuelve a abrir la configuración para comprobar el canal guardado antes de intentar otro cambio.",
+            );
+            // A lost response may already have committed; never reuse this
+            // stale dialog as a second create or an old-revision update.
+            return;
+          }
+        },
+      });
+      dialog.show();
     });
   }
   async control(action, owner, reason) {
@@ -280,6 +420,16 @@ class CustomerConversations {
       () => this.load(),
       !this.hasPending(),
     );
+    if (
+      this.actor === "Administrator" ||
+      frappe.user_roles?.includes("System Manager")
+    )
+      this.button(
+        "Configurar chat de tienda",
+        this.root,
+        () => this.configureWebchat(),
+        !this.hasPending(),
+      );
     if (this.pending) {
       this.el(
         "p",
@@ -308,7 +458,7 @@ class CustomerConversations {
     for (const [i, account] of this.accounts.entries()) {
       const option = this.el(
         "option",
-        `${account.provider} · ${account.label} · ${account.account_id}`,
+        `${account.provider} · ${account.label}${account.provider === "Webchat" ? "" : " · " + account.account_id}`,
         select,
       );
       option.value = String(i);
@@ -323,9 +473,25 @@ class CustomerConversations {
         this.older = null;
         await this.threads();
       });
+    if (
+      this.account?.provider === "Webchat" &&
+      (this.actor === "Administrator" ||
+        frappe.user_roles?.includes("System Manager"))
+    )
+      this.button(
+        "Asignar agente",
+        queue,
+        () =>
+          frappe.new_doc("User Permission", {
+            allow: "CRM Webchat Channel",
+            for_value: this.account.account_id,
+            apply_to_all_doctypes: 1,
+          }),
+        !this.hasPending(),
+      );
     for (const item of this.items) {
       const button = this.button(
-        `${item.peer_id} · ${item.human_owner || "Sin responsable"}${item.materialized ? "" : " · Abrir historial de esta cuenta y destinatario"}`,
+        `${item.display_name || item.peer_id} · ${item.human_owner || "Sin responsable"}${item.materialized ? "" : " · Abrir historial de esta cuenta y destinatario"}`,
         queue,
         () => this.select(item),
         !this.hasPending(),
@@ -349,10 +515,10 @@ class CustomerConversations {
       );
       return;
     }
-    this.el("h3", this.doc.peer_id, detail);
+    this.el("h3", this.doc.display_name || this.doc.peer_id, detail);
     this.el(
       "p",
-      `${this.doc.provider} · Cuenta ${this.doc.account_id}`,
+      `${this.doc.provider} · Cuenta ${this.doc.provider === "Webchat" ? this.account?.label || "Chat de tienda" : this.doc.account_id}`,
       detail,
     );
     const link = this.el("a", "Abrir en CRM Inbox", detail);
@@ -363,6 +529,12 @@ class CustomerConversations {
       detail,
     );
     this.el("p", "Un envío ya iniciado puede seguir en curso.", detail);
+    this.button(
+      "Actualizar conversación",
+      detail,
+      () => this.run(() => this.history(this.doc.name)),
+      !this.hasPending(),
+    );
     for (const request of this.doc.control_requests || [])
       this.el(
         "p",
@@ -398,9 +570,15 @@ class CustomerConversations {
     this.renderOutbox(detail);
     this.renderComposer(detail);
   }
+  nativeChannel() {
+    return ["WhatsApp", "Webchat"].includes(this.doc?.provider);
+  }
+  replyLimit() {
+    return this.doc?.provider === "Webchat" ? 2000 : 4096;
+  }
   canReply() {
     return (
-      this.doc?.provider === "WhatsApp" &&
+      this.nativeChannel() &&
       this.doc.send_available === true &&
       this.doc.control_state === "Human" &&
       this.doc.human_owner === this.actor
@@ -427,7 +605,7 @@ class CustomerConversations {
     );
   }
   async loadOutbox(more = false) {
-    if (this.doc?.provider !== "WhatsApp") return;
+    if (!this.nativeChannel()) return;
     try {
       const rows = await this.call("crm.api.outbox.list_intents", {
         conversation: this.doc.name,
@@ -462,7 +640,7 @@ class CustomerConversations {
       return;
     }
     if (!this.replyPending) {
-      if (!this.draft.trim() || this.draft.length > 4096) return;
+      if (!this.draft.trim() || this.draft.length > this.replyLimit()) return;
       this.replyPending = {
         conversation: this.doc.name,
         expected_generation: this.doc.generation,
@@ -574,7 +752,7 @@ class CustomerConversations {
     if (!this.canReply() && !this.replyPending) {
       this.el(
         "p",
-        this.doc.provider === "WhatsApp"
+        this.nativeChannel()
           ? "Para responder necesitas el control humano vigente de esta conversación."
           : "El envío nativo aún no está disponible para este canal.",
         detail,
@@ -582,10 +760,14 @@ class CustomerConversations {
       return;
     }
     const form = this.el("form", null, detail),
-      label = this.el("label", `Respuesta a ${this.doc.peer_id}`, form);
+      label = this.el(
+        "label",
+        `Respuesta a ${this.doc.display_name || this.doc.peer_id}`,
+        form,
+      );
     const body = this.el("textarea", null, label, "form-control");
     body.rows = 3;
-    body.maxLength = 4096;
+    body.maxLength = this.replyLimit();
     body.required = true;
     body.value = this.draft;
     body.disabled = this.busy || this.hasPending();
@@ -598,7 +780,7 @@ class CustomerConversations {
         "La respuesta no se ha confirmado. Conservamos el texto y la misma solicitud.",
         form,
       );
-    this.el("p", "La entrega se consulta en Envíos.", form);
+    this.el("p", "Consulta el estado en Envíos.", form);
     const submit = this.el(
       "button",
       this.replyPending ? "Comprobar solicitud" : "Enviar respuesta",
@@ -613,7 +795,7 @@ class CustomerConversations {
     };
   }
   renderOutbox(detail) {
-    if (this.doc.provider !== "WhatsApp") return;
+    if (!this.nativeChannel()) return;
     const section = this.el("section", null, detail);
     section.setAttribute("aria-label", "Envíos");
     this.el("h4", "Envíos", section);
@@ -630,7 +812,10 @@ class CustomerConversations {
       Queued: "En cola",
       Claimed: "En preparación",
       Submitting: "Envío en curso",
-      Accepted: "Aceptado por WhatsApp",
+      Accepted:
+        this.doc.provider === "Webchat"
+          ? "Disponible en la conversación"
+          : "Aceptado por WhatsApp",
       Delivered: "Entregado",
       Read: "Leído",
       Blocked: "Bloqueado",

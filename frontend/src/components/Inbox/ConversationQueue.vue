@@ -18,7 +18,8 @@
             :key="accountKey(item)"
             :value="accountKey(item)"
           >
-            {{ item.provider }} · {{ item.label }} · {{ item.account_id
+            {{ item.provider }} · {{ item.label
+            }}{{ item.provider === 'Webchat' ? '' : ' · ' + item.account_id
             }}{{ item.active ? '' : ' (inactiva)' }}
           </option>
         </select>
@@ -27,7 +28,10 @@
         v-if="account"
         class="mt-2 text-xs text-ink-gray-5 [overflow-wrap:anywhere]"
       >
-        {{ account.provider }} · {{ account.account_id }}
+        {{ account.provider }} ·
+        {{
+          account.provider === 'Webchat' ? account.label : account.account_id
+        }}
       </p>
     </div>
     <div class="min-h-0 flex-1 overflow-y-auto">
@@ -45,7 +49,9 @@
         "
         @click="$emit('select', thread)"
       >
-        <span class="block text-sm font-medium">{{ thread.peer_id }}</span>
+        <span class="block text-sm font-medium">{{
+          thread.display_name || thread.peer_id
+        }}</span>
         <span class="mt-1 block text-xs text-ink-gray-5">{{
           thread.materialized
             ? thread.human_owner || 'Sin responsable'

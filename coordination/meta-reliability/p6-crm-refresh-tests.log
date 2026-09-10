@@ -1,0 +1,49 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.js:12:11). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/holymc2/muelle-host/worktrees/meta-crm-20260910/frontend
+
+ ❯ tests/unit/conversationRefresh.test.js (3 tests | 2 failed) 48ms
+     × does not refresh while a queue request is uncertain and reuses its exact frozen command 10ms
+     × rechecks pending state when the polling queue request finishes after a send starts 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/conversationRefresh.test.js > mounted workspace refresh preserves drafts and commands > does not refresh while a queue request is uncertain and reuses its exact frozen command
+TypeError: Cannot read properties of undefined (reading '1')
+ ❯ tests/unit/conversationRefresh.test.js:71:101
+     69|     })
+     70|     await submit(el)
+     71|     const first = structuredClone(context.call.mock.calls.find(([m]) =…
+       |                                                                                                     ^
+     72|     const count = context.call.mock.calls.filter(([m]) => m.endsWith('…
+     73|     context.listeners.crm_conversation_updated({ name: 'conv1' }); awa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/conversationRefresh.test.js > mounted workspace refresh preserves drafts and commands > rechecks pending state when the polling queue request finishes after a send starts
+AssertionError: expected [ [ …(2) ], [ …(2) ] ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ tests/unit/conversationRefresh.test.js:91:80
+     89|     await type(el, 'Started while queue refreshed'); await submit(el)
+     90|     queue.resolve({ items: [], next_cursor: null }); await flush()
+     91|     expect(context.call.mock.calls.filter(([m]) => m.endsWith('get_his…
+       |                                                                                ^
+     92|     expect(el.textContent).toContain('Comprobar solicitud')
+     93|     expect(el.querySelector('textarea').value).toBe('Started while que…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 13 passed (15)
+   Start at  01:25:27
+   Duration  567ms (transform 242ms, setup 29ms, import 378ms, tests 86ms, environment 410ms)
+

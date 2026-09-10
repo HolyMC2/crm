@@ -14,7 +14,7 @@ from frappe.permissions import has_permission as has_document_permission
 
 DOCTYPE = "CRM Conversation"
 EVENT = "CRM Conversation Control Event"
-PROVIDERS = {"WhatsApp", "Messenger", "Instagram"}
+PROVIDERS = {"WhatsApp", "Messenger", "Instagram", "Webchat"}
 REFERENCES = {"CRM Inquiry", "CRM Lead", "CRM Deal"}
 STATES = {"Human", "Bot", "Paused", "Closed"}
 CONTROL_ACTIONS = {"request", "take", "transfer", "release", "pause", "close", "reopen"}
@@ -53,8 +53,9 @@ def _digest(value):
 def conversation_key(provider, account_id, peer_id):
     if provider not in PROVIDERS:
         frappe.throw(_("Unsupported customer conversation provider."))
+    pattern = r"[0-9a-f]{64}" if provider == "Webchat" else r"[0-9]{1,40}"
     for value in (account_id, peer_id):
-        if not isinstance(value, str) or not re.fullmatch(r"[0-9]{1,40}", value):
+        if not isinstance(value, str) or not re.fullmatch(pattern, value):
             frappe.throw(_("An exact provider account and peer are required."))
     return _digest([1, provider, account_id, peer_id])
 
@@ -104,7 +105,7 @@ def _roles(user):
 
 
 def _channel_roles(provider):
-    if provider == "WhatsApp":
+    if provider in {"WhatsApp", "Webchat"}:
         from crm.api.whatsapp import ALLOWED_WHATSAPP_ROLES
         return set(ALLOWED_WHATSAPP_ROLES)
     return {"System Manager", "Sales User"}
@@ -113,6 +114,14 @@ def _channel_roles(provider):
 def _account(provider, account_id, active=True):
     """Current safe metadata only; never load account tokens or fallback settings."""
     apps = frappe.get_installed_apps()
+    if provider == "Webchat":
+        if not frappe.db.exists("DocType", "CRM Webchat Channel"):
+            _deny()
+        row = frappe.db.get_value("CRM Webchat Channel", account_id,
+            ["name", "enabled"], as_dict=True, for_update=True)
+        if not row or (active and row.enabled != 1):
+            _deny()
+        return frappe._dict(name=row.name, shop=None, scoped=False)
     if provider == "WhatsApp" and "frappe_whatsapp" in apps:
         doctype, identity, status, enabled = "WhatsApp Account", "phone_id", "status", "Active"
         shop = "doco_shop" if frappe.db.has_column(doctype, "doco_shop") else None
@@ -138,6 +147,12 @@ def _authorize(doc, user=None, write=False):
     if not roles.intersection(_channel_roles(doc.provider)):
         _deny()
     account = _account(doc.provider, doc.account_id, active=write)
+    if doc.provider == "Webchat" and not roles.intersection({"System Manager", "Sales Manager"}):
+        # Public visitors never acquire a staff role. Channel operators have an
+        # explicit current assignment even on core-only/multi-store installs.
+        if not frappe.db.sql("""SELECT name FROM `tabUser Permission`
+            WHERE user=%s AND allow='CRM Webchat Channel' AND for_value=%s FOR UPDATE""", (user, account.name)):
+            _deny()
     if doc.get("name") and (doc.account_record != account.name or (doc.shop_key or "") != (account.shop or "")):
         # Reconfiguration cannot silently move a conversation's authority.
         _deny()
@@ -201,7 +216,7 @@ def get_or_create(provider, account_id, peer_id, *, reference_doctype=None, refe
             "account_record": account.name, "shop_key": account.shop,
             "reference_doctype": reference_doctype, "reference_name": reference_name,
             "control_state": "Human", "human_owner": None, "generation": 1,
-            "bot_enabled": 0, "provider_control": "Not Applicable" if provider == "WhatsApp" else "Unknown",
+            "bot_enabled": 0, "provider_control": "Not Applicable" if provider in {"WhatsApp", "Webchat"} else "Unknown",
         })
         if reference_doctype or reference_name:
             _authorize(doc, write=True)
@@ -217,7 +232,7 @@ def get_conversation(name):
 
 @frappe.whitelist()
 def list_conversations(provider, account_id, limit=50, start=0):
-    conversation_key(provider, account_id, "1")
+    conversation_key(provider, account_id, "0" * 64 if provider == "Webchat" else "1")
     probe = frappe._dict(provider=provider, account_id=account_id, shop_key=None,
                          reference_doctype=None, reference_name=None)
     _authorize(probe)
@@ -311,6 +326,40 @@ def _persist_transition(doc, before, *, key, fingerprint, origin, actor, action,
             frappe.publish_realtime("crm_conversation_updated", {"name": doc.name, "generation": doc.generation},
                                     user=actor, after_commit=True)
     return result
+
+
+def internal_webchat_customer_reply(conversation_name, message_key):
+    """An immutable local customer message can retire its current bot grant.
+
+    The visitor service calls this after insertion in the same transaction and
+    fence. It is not whitelisted and never accepts customer-supplied authority,
+    a Meta receipt marker, or a staff principal.
+    """
+    from crm.api.webchat import current_session
+    with conversation_fence(conversation_name):
+        doc = _load(conversation_name)
+        if doc.provider != "Webchat":
+            _deny()
+        message = frappe.db.get_value("CRM Webchat Message", message_key,
+            ["name", "channel", "session", "conversation", "direction", "text_hash", "control_generation"],
+            as_dict=True, for_update=True)
+        session = current_session(doc.account_id, doc.peer_id)
+        if not message or message.direction != "Incoming" or message.conversation != doc.name \
+                or message.channel != doc.account_id or message.session != session.name:
+            _deny()
+        key = _event_key(doc.name, "System", "Webchat", message.name)
+        fingerprint = _digest([doc.provider, doc.account_id, doc.peer_id,
+                               message.name, message.text_hash, message.control_generation])
+        replay = _replay(key, fingerprint)
+        if replay:
+            return replay
+        before = _snapshot(doc)
+        reason = "webchat_control_preserved"
+        if doc.control_state == "Bot" and message.control_generation == doc.generation:
+            doc.control_state, doc.human_owner, doc.bot_enabled = "Human", None, 0
+            reason = "webchat_customer_held_bot"
+        return _persist_transition(doc, before, key=key, fingerprint=fingerprint,
+            origin="System", actor=None, action="customer_reply", reason=reason)
 
 
 def _automation_allowed(provider):

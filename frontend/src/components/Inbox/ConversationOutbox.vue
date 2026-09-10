@@ -24,7 +24,11 @@
       :data-intent="row.name"
     >
       <div class="flex flex-wrap justify-between gap-2 text-xs">
-        <strong>{{ labels[row.state] || 'Estado no disponible' }}</strong
+        <strong>{{
+          row.state === 'Accepted' && conversation.provider === 'Webchat'
+            ? 'Disponible en la conversación'
+            : labels[row.state] || 'Estado no disponible'
+        }}</strong
         ><time>{{ row.creation }}</time>
       </div>
       <p class="mt-1 whitespace-pre-wrap">{{ row.text }}</p>
@@ -113,6 +117,10 @@ const reasons = {
   provider_response_uncertain:
     'No se pudo confirmar la respuesta del proveedor',
   channel_not_ready: 'El canal aún no está disponible',
+  webchat_session_unavailable: 'La sesión del visitante ya no está disponible',
+  webchat_storage_unavailable:
+    'No se pudo guardar la respuesta. Puedes reintentar.',
+  provider_identity_conflict: 'La confirmación del proveedor requiere revisión',
 }
 const safeReason = (value) =>
   /^[a-z0-9_]{1,100}$/.test(value || '') ? value : 'unavailable'

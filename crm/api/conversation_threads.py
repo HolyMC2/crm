@@ -54,7 +54,7 @@ def _permitted(check):
 
 
 def _account_probe(provider, account_id, *, write=False):
-    control.conversation_key(provider, account_id, "1")
+    control.conversation_key(provider, account_id, "0" * 64 if provider == "Webchat" else "1")
     probe = frappe._dict(provider=provider, account_id=account_id, name=None,
                         reference_doctype=None, reference_name=None, shop_key=None)
     roles, account = control._authorize(probe, write=write)
@@ -63,6 +63,8 @@ def _account_probe(provider, account_id, *, write=False):
 
 def _channel_available(provider):
     apps = frappe.get_installed_apps()
+    if provider == "Webchat":
+        return all(frappe.db.exists("DocType", dt) for dt in ("CRM Webchat Channel", "CRM Webchat Message", "CRM Webchat Session"))
     if provider == "WhatsApp":
         return "frappe_whatsapp" in apps and frappe.db.exists("DocType", "WhatsApp Account") and frappe.db.exists("DocType", "WhatsApp Message")
     return "doco_marketing" in apps and frappe.db.exists("DocType", "Messenger Page") and frappe.db.exists("DocType", "Messenger Message")
@@ -106,6 +108,9 @@ def _source_allowed(row):
 
 def _scope(provider, account_id):
     _, account = _account_probe(provider, account_id)
+    if provider == "Webchat":
+        return frappe._dict(doctype="CRM Webchat Message", table="`tabCRM Webchat Message`", peer="m.peer_id",
+            where="m.channel=%s AND m.direction IN ('Incoming','Outgoing')", args=[account.name], timestamp="m.creation")
     if provider == "WhatsApp":
         return frappe._dict(doctype="WhatsApp Message", table="`tabWhatsApp Message`",
             peer="CASE WHEN m.type='Incoming' THEN m.`from` ELSE m.`to` END",
@@ -118,8 +123,10 @@ def _scope(provider, account_id):
         timestamp="COALESCE(m.sent_ts,m.creation)")
 
 
-def _reference_clause():
+def _reference_clause(scope=None):
     # Never even fetch Chart/Patient/non-CRM content or attachment columns.
+    if scope and scope.doctype == "CRM Webchat Message":
+        return "1=1"  # This private transcript has no source-document/attachment fields.
     return "(COALESCE(m.reference_doctype,'')='' OR m.reference_doctype IN ('CRM Inquiry','CRM Lead','CRM Deal'))"
 
 
@@ -131,13 +138,17 @@ def _metadata(scope, peer, *, cursor=None, limit=SCAN):
             frappe.throw("Invalid history cursor.")
         before = f" AND ({scope.timestamp}<%s OR ({scope.timestamp}=%s AND m.name<%s))"
         args.extend([cursor[0], cursor[0], cursor[1]])
-    return frappe.db.sql(f"""SELECT m.name, m.reference_doctype, m.reference_name,
+    references = "NULL AS reference_doctype, NULL AS reference_name" if scope.doctype == "CRM Webchat Message" else "m.reference_doctype, m.reference_name"
+    return frappe.db.sql(f"""SELECT m.name, {references},
         {scope.timestamp} AS timestamp FROM {scope.table} m
-        WHERE {scope.where} AND {scope.peer}=%s AND {_reference_clause()}{before}
+        WHERE {scope.where} AND {scope.peer}=%s AND {_reference_clause(scope)}{before}
         ORDER BY {scope.timestamp} DESC,m.name DESC LIMIT {int(limit)} FOR UPDATE""", args, as_dict=True)
 
 
 def _first_visible(scope, peer):
+    if scope.doctype == "CRM Webchat Message":
+        rows = _metadata(scope, peer, limit=1)
+        return rows[0] if rows else None
     # Permission-check distinct references before selecting the preview. A long
     # run of denied messages must not hide an older, readable customer message.
     references = frappe.db.sql(f"""SELECT DISTINCT m.reference_doctype,m.reference_name
@@ -186,7 +197,11 @@ def _safe_attachment(value, doctype, message_name):
 
 
 def _message(scope, metadata):
-    if scope.doctype == "WhatsApp Message":
+    if scope.doctype == "CRM Webchat Message":
+        row = frappe.db.get_value(scope.doctype, metadata.name, ["direction", "text"], as_dict=True, for_update=True)
+        direction, content = row.direction, row.text
+        row.update({"attach": None, "content_type": "text", "status": ""})
+    elif scope.doctype == "WhatsApp Message":
         fields = ["type", "message", "content_type", "attach", "status", "is_demo"]
         row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=True)
         direction, content = row.type, row.message
@@ -228,9 +243,10 @@ def _actions(doc):
 
 def _detail(doc):
     result = control._projection(doc)
+    result["display_name"] = _display_name(doc.provider, doc.peer_id)
     result["allowed_actions"], result["manager_reason_required"] = _actions(doc)
     result["actor"] = frappe.session.user
-    result["send_available"] = bool(doc.provider == "WhatsApp" and doc.control_state == "Human"
+    result["send_available"] = bool(doc.provider in {"WhatsApp", "Webchat"} and doc.control_state == "Human"
         and doc.human_owner == frappe.session.user and "release" in result["allowed_actions"]
         and doc.provider_control in ("Not Applicable", "Ours") and frappe.db.exists("DocType", "CRM Outbound Intent"))
     result["control_requests"] = frappe.db.get_values(control.EVENT,
@@ -239,20 +255,27 @@ def _detail(doc):
     return result
 
 
+def _display_name(provider, peer_id):
+    return "Visitante " + peer_id[:8].upper() if provider == "Webchat" else peer_id
+
+
 @frappe.whitelist()
 def list_accounts():
     _actor()
     result = []
-    for provider in ("WhatsApp", "Messenger", "Instagram"):
+    for provider in ("WhatsApp", "Messenger", "Instagram", "Webchat"):
         if not _channel_available(provider):
             continue
-        if provider == "WhatsApp":
+        if provider == "Webchat":
+            doctype, field, label, status = "CRM Webchat Channel", "account_id", "label", "enabled"
+        elif provider == "WhatsApp":
             doctype, field, label, status = "WhatsApp Account", "phone_id", "account_name", "status"
         else:
             doctype, field, label, status = "Messenger Page", "page_id" if provider == "Messenger" else "ig_account_id", "page_name", "enabled"
         for row in frappe.db.get_values(doctype, {}, ["name", field, label, status], as_dict=True, for_update=True):
             identity = row.get(field)
-            if not isinstance(identity, str) or not re.fullmatch(r"[0-9]{1,40}", identity):
+            pattern = r"[0-9a-f]{64}" if provider == "Webchat" else r"[0-9]{1,40}"
+            if not isinstance(identity, str) or not re.fullmatch(pattern, identity):
                 continue
             if _permitted(lambda: _account_probe(provider, identity)):
                 result.append({"provider": provider, "account_id": identity, "label": row.get(label) or identity,
@@ -266,16 +289,17 @@ def list_threads(provider, account_id, cursor=None, limit=30):
     scope = _scope(provider, account_id)
     context = ["threads", provider, account_id]
     after = _cursor(cursor, context) or ""
-    if not isinstance(after, str) or (after and not re.fullmatch(r"[0-9]{1,40}", after)):
+    pattern = r"[0-9a-f]{64}" if provider == "Webchat" else r"[0-9]{1,40}"
+    if not isinstance(after, str) or (after and not re.fullmatch(pattern, after)):
         frappe.throw("Invalid page cursor.")
     size = _limit(limit)
     # Metadata-only union: materialized controls plus exact historical peers.
     peers = frappe.db.sql(f"""SELECT peer_id FROM (
         SELECT peer_id FROM `tabCRM Conversation` WHERE provider=%s AND account_id=%s
         UNION SELECT {scope.peer} AS peer_id FROM {scope.table} m
-            WHERE {scope.where} AND {_reference_clause()}
-        ) AS candidates WHERE peer_id REGEXP '^[0-9]{{1,40}}$' AND peer_id>%s
-        ORDER BY peer_id LIMIT {SCAN + 1}""", [provider, account_id, *scope.args, after], as_dict=True)
+            WHERE {scope.where} AND {_reference_clause(scope)}
+        ) AS candidates WHERE peer_id REGEXP %s AND peer_id>%s
+        ORDER BY peer_id LIMIT {SCAN + 1}""", [provider, account_id, *scope.args, "^" + pattern + "$", after], as_dict=True)
     items, position = [], None
     for index, row in enumerate(peers[:SCAN]):
         peer, position = row.peer_id, row.peer_id
@@ -291,6 +315,7 @@ def list_threads(provider, account_id, cursor=None, limit=30):
             continue
         message = _message(scope, visible) if visible else None
         item = {"name": name if doc else None, "provider": provider, "account_id": account_id, "peer_id": peer,
+                "display_name": _display_name(provider, peer),
                 "materialized": bool(doc), "control_state": doc.control_state if doc else "Human",
                 "human_owner": doc.human_owner if doc else None,
                 "preview": message["content"][:160] if message else "", "last_message_at": message["timestamp"] if message else None}

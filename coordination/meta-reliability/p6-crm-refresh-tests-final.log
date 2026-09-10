@@ -1,0 +1,12 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.js:12:11). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/holymc2/muelle-host/worktrees/meta-crm-20260910/frontend
+
+
+ Test Files  2 passed (2)
+      Tests  15 passed (15)
+   Start at  01:25:42
+   Duration  719ms (transform 707ms, setup 147ms, import 667ms, tests 83ms, environment 315ms)
+

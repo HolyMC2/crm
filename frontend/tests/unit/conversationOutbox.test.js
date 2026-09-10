@@ -64,6 +64,47 @@ async function submit(el) {
   await flush()
 }
 describe('manual reply durable request', () => {
+  it('keeps the frozen request for the explicit database-contention outcome', async () => {
+    api.call
+      .mockRejectedValueOnce({ exc_type: 'ReplyRequestPending', status: 409 })
+      .mockResolvedValueOnce(intent())
+    const { el } = mount(Composer, {
+      conversation: conversation({ provider: 'Webchat' }),
+      actor,
+    })
+    await reply(el, 'Same question')
+    await submit(el)
+    expect(el.textContent).toContain('Comprobar solicitud')
+    const original = structuredClone(api.call.mock.calls[0][1])
+    await submit(el)
+    expect(api.call.mock.calls[1][1]).toEqual(original)
+    expect(el.querySelector('textarea').value).toBe('')
+  })
+  it('queues Webchat through the native outbox with the visitor label and 2000 character bound', async () => {
+    api.call.mockResolvedValue(intent({ provider: 'Webchat' }))
+    const { el } = mount(Composer, {
+      conversation: conversation({
+        provider: 'Webchat',
+        peer_id: 'a'.repeat(64),
+        display_name: 'Visitante AAAAAAAA',
+      }),
+      actor,
+    })
+    expect(el.textContent).toContain('Visitante AAAAAAAA')
+    expect(el.querySelector('textarea').maxLength).toBe(2000)
+    await reply(el, 'x'.repeat(2001))
+    await submit(el)
+    expect(api.call).not.toHaveBeenCalled()
+    await reply(el, 'Respuesta de la tienda')
+    await submit(el)
+    expect(api.call).toHaveBeenCalledWith(
+      'crm.api.outbox.queue_message',
+      expect.objectContaining({
+        payload: { type: 'text', text: 'Respuesta de la tienda' },
+      }),
+    )
+  })
+
   it('freezes text, generation and UUID across a lost response and does not treat malformed response as success', async () => {
     api.call
       .mockRejectedValueOnce(new TypeError('Lost response'))
@@ -167,6 +208,21 @@ describe('manual reply durable request', () => {
   })
 })
 describe('durable outbound state', () => {
+  it('labels a committed Webchat reply as available without claiming visitor delivery or read', async () => {
+    api.call.mockResolvedValue([
+      intent({ state: 'Accepted', can_cancel: false }),
+    ])
+    const { el } = mount(Outbox, {
+      conversation: conversation({ provider: 'Webchat' }),
+      actor,
+    })
+    await flush()
+    expect(el.textContent).toContain('Disponible en la conversación')
+    expect(el.textContent).not.toContain('Aceptado por WhatsApp')
+    expect(el.textContent).not.toContain('Entregado')
+    expect(el.textContent).not.toContain('Leído')
+  })
+
   it('never restores Unknown action buttons from a stale later response', async () => {
     api.call
       .mockResolvedValueOnce([intent({ state: 'Unknown', can_cancel: false })])

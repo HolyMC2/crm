@@ -183,6 +183,7 @@ export function useConversations({
         : result.messages
       state.messages = [...new Map(combined.map((m) => [m.id, m])).values()]
       state.historyCursor = result.next_cursor
+      state.error = ''
       return true
     } catch (e) {
       if (
@@ -190,7 +191,8 @@ export function useConversations({
         selected === threadEpoch &&
         request === historyRequest
       ) {
-        clearThread()
+        // A temporary refresh failure must not unmount the composer and lose
+        // its draft/frozen command. failed() still clears data on revoked access.
         failed(e)
       }
       return false

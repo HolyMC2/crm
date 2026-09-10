@@ -1,0 +1,68 @@
+FAIL locator.waitFor: Timeout 20000ms exceeded.
+Call log:
+[2m  - waiting for getByText('Search', { exact: true }).first()[22m
+[2m    2 × waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk/setup-wizard/0"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m    - navigated to "http://127.0.0.1:46832/desk/setup-wizard/0"[22m
+[2m    2 × waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    6 × waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk/setup-wizard/0"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    2 × waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk/setup-wizard/0"[22m
+[2m    3 × waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m    - navigated to "http://127.0.0.1:46832/desk/setup-wizard/0"[22m
+[2m    - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m    - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    - waiting for "http://127.0.0.1:46832/apps" navigation to finish...[22m
+[2m    2 × navigated to "http://127.0.0.1:46832/desk"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk/setup-wizard/0"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m    - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    - waiting for "http://127.0.0.1:46832/apps" navigation to finish...[22m
+[2m    3 × navigated to "http://127.0.0.1:46832/desk/setup-wizard/0"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m      - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m      - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m    - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    - waiting for "http://127.0.0.1:46832/desk" navigation to finish...[22m
+[2m    - navigated to "http://127.0.0.1:46832/desk"[22m
+[2m    - waiting for navigation to finish...[22m
+[2m    - navigated to "http://127.0.0.1:46832/desk"[22m
+
+    at /home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/webchat_config_browser.mjs:58:59
+JavaScript errors: []
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot
+Call log:
+[2m  - taking page screenshot[22m
+[2m  - waiting for fonts to load...[22m
+[2m  - fonts loaded[22m
+
+    at /home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/webchat_config_browser.mjs:138:14 {
+  log: [
+    '  - taking page screenshot',
+    '  - waiting for fonts to load...',
+    '  - fonts loaded'
+  ],
+  name: 'Error'
+}
+
+Node.js v24.20.0

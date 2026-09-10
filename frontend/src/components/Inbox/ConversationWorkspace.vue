@@ -63,11 +63,17 @@
             </button>
             <div class="min-w-0 flex-1 [overflow-wrap:anywhere]">
               <h2 class="text-sm font-semibold">
-                {{ state.conversation.peer_id }}
+                {{
+                  state.conversation.display_name || state.conversation.peer_id
+                }}
               </h2>
               <p class="mt-1 text-xs text-ink-gray-5">
                 {{ state.conversation.provider }} · Cuenta
-                {{ state.conversation.account_id }}
+                {{
+                  state.conversation.provider === 'Webchat'
+                    ? state.account?.label
+                    : state.conversation.account_id
+                }}
               </p>
               <a
                 v-if="referenceLink"
@@ -120,7 +126,7 @@
             Algunos adjuntos no están disponibles en esta vista.
           </p>
           <ConversationOutbox
-            v-if="state.conversation.provider === 'WhatsApp'"
+            v-if="['WhatsApp', 'Webchat'].includes(state.conversation.provider)"
             ref="outbox"
             :conversation="state.conversation"
             :actor="session.user"
@@ -226,7 +232,8 @@ async function initialize() {
 }
 function updated(event) {
   if (
-    !state.pending &&
+    !pendingWork.value &&
+    !state.historyLoading &&
     !state.controlLoading &&
     event?.name === state.conversation?.name
   )
@@ -242,6 +249,37 @@ function queued(intent) {
 function outboxUpdated(event) {
   if (event?.conversation === state.conversation?.name) outbox.value?.load()
 }
+let refreshTimer,
+  refreshActive = false
+function scheduleRefresh() {
+  if (!refreshActive) return
+  refreshTimer = setTimeout(async () => {
+    if (
+      state.account?.provider === 'Webchat' &&
+      document.visibilityState === 'visible' &&
+      !pendingWork.value &&
+      !state.loading &&
+      !state.historyLoading &&
+      !state.controlLoading &&
+      !document.activeElement?.closest('textarea, input, select') &&
+      !state.historyCursor
+    ) {
+      const selected = state.conversation?.name
+      await workspace.loadThreads()
+      if (
+        refreshActive &&
+        !pendingWork.value &&
+        !state.historyLoading &&
+        !state.controlLoading &&
+        !document.activeElement?.closest('textarea, input, select') &&
+        selected &&
+        state.conversation?.name === selected
+      )
+        await workspace.loadHistory()
+    }
+    scheduleRefresh()
+  }, 15000)
+}
 watch(
   () => route.query.conversation,
   (name) => {
@@ -255,10 +293,14 @@ watch(
 )
 onMounted(() => {
   initialize()
+  refreshActive = true
+  scheduleRefresh()
   $socket?.on('crm_conversation_updated', updated)
   $socket?.on('crm_outbox_updated', outboxUpdated)
 })
 onUnmounted(() => {
+  refreshActive = false
+  clearTimeout(refreshTimer)
   workspace.reset()
   $socket?.off('crm_conversation_updated', updated)
   $socket?.off('crm_outbox_updated', outboxUpdated)

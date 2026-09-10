@@ -15,11 +15,30 @@ def account_revision(account):
     return "manual_reply:" + hashlib.sha256(json.dumps(values, separators=(",", ":")).encode()).hexdigest()
 
 
+def webchat_revision(account):
+    values = [account.name, account.profile, account.public_origin]
+    return "manual_webchat:" + hashlib.sha256(json.dumps(values, separators=(",", ":")).encode()).hexdigest()
+
+
 def manual_reply_reason(intent):
-    if intent.provider != "WhatsApp" or intent.origin != "Human" or intent.purpose != "manual":
+    if intent.origin != "Human" or intent.purpose != "manual":
         return "producer_not_ready"
     if frappe.conf.get("maintenance_mode"):
         return "site_maintenance"
+    if intent.provider == "Webchat":
+        from crm.api.webchat import current_session
+        try:
+            current_session(intent.account_id, intent.peer_id)
+        except (frappe.PermissionError, frappe.ValidationError, frappe.DoesNotExistError):
+            return "webchat_session_unavailable"
+        channel = frappe.db.get_value("CRM Webchat Channel", intent.account_id,
+            ["name", "profile", "public_origin"], as_dict=True, for_update=True)
+        if not channel or intent.source_doctype != "CRM Webchat Channel" or intent.source_name != channel.name \
+                or intent.source_action != webchat_revision(channel):
+            return "account_configuration_changed"
+        return None
+    if intent.provider != "WhatsApp":
+        return "producer_not_ready"
     rows = frappe.db.get_values("WhatsApp Account", {"phone_id": intent.account_id},
         ["name", "status", "mode", "app_id", "business_id"], as_dict=True, for_update=True)
     if len(rows) != 1 or rows[0].status != "Active" or (rows[0].mode or "Live") != "Live":

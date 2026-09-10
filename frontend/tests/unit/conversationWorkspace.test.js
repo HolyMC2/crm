@@ -186,6 +186,35 @@ describe('customer workspace response boundaries', () => {
     expect(w.state.conversation).toBeNull()
     expect(w.state.messages).toEqual([])
   })
+  it('retains the mounted thread and history after a transient refresh failure, then recovers', async () => {
+    const rpc = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('Network lost'))
+      .mockResolvedValueOnce(history({ generation: 2 }, [{ id: 'fresh' }]))
+    const w = workspace(rpc)
+    w.state.conversation = doc()
+    w.state.messages = [{ id: 'retained' }]
+    expect(await w.loadHistory()).toBe(false)
+    expect(w.state.conversation.name).toBe('conv1')
+    expect(w.state.messages).toEqual([{ id: 'retained' }])
+    expect(w.state.historyLoading).toBe(false)
+    expect(w.state.error).toContain('No se pudo')
+    expect(await w.loadHistory()).toBe(true)
+    expect(w.state.conversation.generation).toBe(2)
+    expect(w.state.messages).toEqual([{ id: 'fresh' }])
+    expect(w.state.error).toBe('')
+  })
+  it('clears private state when a history refresh confirms revoked permission', async () => {
+    const w = workspace(async () => {
+      throw { exc_type: 'PermissionError' }
+    })
+    w.state.conversation = doc()
+    w.state.messages = [{ id: 'sensitive' }]
+    await w.loadHistory()
+    expect(w.state.conversation).toBeNull()
+    expect(w.state.messages).toEqual([])
+    expect(w.state.historyLoading).toBe(false)
+  })
 })
 
 describe('read-only customer presentation', () => {

@@ -1,0 +1,30 @@
+test_actual_recorder_captured_metadata_is_excluded_without_global_change (crm.tests.test_webchat.TestWebchat.test_actual_recorder_captured_metadata_is_excluded_without_global_change) ... ok
+test_bootstrap_private_random_identity_and_no_conversation (crm.tests.test_webchat.TestWebchat.test_bootstrap_private_random_identity_and_no_conversation) ... ok
+test_channel_and_session_isolation (crm.tests.test_webchat.TestWebchat.test_channel_and_session_isolation) ... ok
+test_closed_prior_replay_allowed_new_send_refused_paused_preserved (crm.tests.test_webchat.TestWebchat.test_closed_prior_replay_allowed_new_send_refused_paused_preserved) ... ok
+test_core_private_document_reads_denied_and_native_mutations_still_work (crm.tests.test_webchat.TestWebchat.test_core_private_document_reads_denied_and_native_mutations_still_work) ... ok
+test_customer_message_retires_only_current_bot_and_replay_is_inert (crm.tests.test_webchat.TestWebchat.test_customer_message_retires_only_current_bot_and_replay_is_inert) ... ok
+test_expired_revoked_and_disabled_fail_closed (crm.tests.test_webchat.TestWebchat.test_expired_revoked_and_disabled_fail_closed) ... ok
+test_expiry_is_twenty_four_elapsed_hours_across_dst (crm.tests.test_webchat.TestWebchat.test_expiry_is_twenty_four_elapsed_hours_across_dst) ... ok
+test_first_message_replay_plain_text_and_no_identity_side_effect (crm.tests.test_webchat.TestWebchat.test_first_message_replay_plain_text_and_no_identity_side_effect) ... ok
+test_generic_list_api_uses_actual_production_mode_privacy_hooks (crm.tests.test_webchat.TestWebchat.test_generic_list_api_uses_actual_production_mode_privacy_hooks) ... ok
+test_generic_read_and_mutation_denial_including_administrator (crm.tests.test_webchat.TestWebchat.test_generic_read_and_mutation_denial_including_administrator) ... ok
+test_header_is_consumed_before_frappe_auth_and_authority_is_request_bound (crm.tests.test_webchat.TestWebchat.test_header_is_consumed_before_frappe_auth_and_authority_is_request_bound) ... ok
+test_history_keyset_traverses_more_than_fifty_without_duplicates (crm.tests.test_webchat.TestWebchat.test_history_keyset_traverses_more_than_fifty_without_duplicates) ... ok
+test_local_delivery_is_stable_one_row_and_has_no_transaction_boundary (crm.tests.test_webchat.TestWebchat.test_local_delivery_is_stable_one_row_and_has_no_transaction_boundary) ... ok
+test_malformed_json_normal_snapshot_and_sentry_headers_omit_capability (crm.tests.test_webchat.TestWebchat.test_malformed_json_normal_snapshot_and_sentry_headers_omit_capability) ... ok
+test_manager_binding_immutable_current_revision_default_off (crm.tests.test_webchat.TestWebchat.test_manager_binding_immutable_current_revision_default_off) ... ok
+test_manager_saved_channel_listing_safe_bounded_and_current (crm.tests.test_webchat.TestWebchat.test_manager_saved_channel_listing_safe_bounded_and_current) ... ok
+test_message_and_control_failure_rollback_together (crm.tests.test_webchat.TestWebchat.test_message_and_control_failure_rollback_together) ... ok
+test_message_refresh_is_after_commit_exact_authorized_user_id_only (crm.tests.test_webchat.TestWebchat.test_message_refresh_is_after_commit_exact_authorized_user_id_only) ... ok
+test_payload_and_local_dispatch_guard_first (crm.tests.test_webchat.TestWebchat.test_payload_and_local_dispatch_guard_first) ... ok
+test_raw_boundary_rejects_extra_duplicate_query_size_and_nonfinite (crm.tests.test_webchat.TestWebchat.test_raw_boundary_rejects_extra_duplicate_query_size_and_nonfinite) ... ok
+test_recorder_exclusion_failure_refuses_request_with_static_error (crm.tests.test_webchat.TestWebchat.test_recorder_exclusion_failure_refuses_request_with_static_error) ... ok
+test_redis_quota_and_outage_are_fail_closed_hashed (crm.tests.test_webchat.TestWebchat.test_redis_quota_and_outage_are_fail_closed_hashed) ... ok
+test_shared_egress_budget_does_not_replace_tighter_channel_limit (crm.tests.test_webchat.TestWebchat.test_shared_egress_budget_does_not_replace_tighter_channel_limit) ... ok
+test_unexpected_failure_scrubs_diagnostics_and_never_exposes_exception (crm.tests.test_webchat.TestWebchat.test_unexpected_failure_scrubs_diagnostics_and_never_exposes_exception) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 1.039s
+
+OK

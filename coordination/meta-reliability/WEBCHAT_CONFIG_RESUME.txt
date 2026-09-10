@@ -1,0 +1,4 @@
+RESUME existing committed disabled fixture; no label update or second create is performed
+PASS Asignar agente opens actual unsaved User Permission with exact channel scope; no user grant saved
+PASS read-only isolated DB proof: {"sessions":0,"channel_count":1,"enabled":0,"main_enabled":1}
+PASS native configuration acceptance: no JavaScript errors, no 375px overflow; new channel retained disabled for audit

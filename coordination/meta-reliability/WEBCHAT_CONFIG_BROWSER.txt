@@ -1,0 +1,32 @@
+PASS actual manager Desk dialog mounts without initialization error; saved binding is read-only and label update carries the saved revision
+PASS actual create defaults disabled; deliberately dropped committed response disables stale save and asks to reopen; actual list contains exactly one binding
+FAIL locator.click: Timeout 20000ms exceeded.
+Call log:
+[2m  - waiting for locator('.modal:visible [data-dismiss="modal"]').first()[22m
+[2m    - locator resolved to <button data-dismiss="modal" class="btn btn-ghost btn-modal-close icon-btn">…</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <svg aria-hidden="true" class="icon  icon-sm">…</svg> from <div tabindex="-1" role="dialog" aria-modal="true" class="modal fade show">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <use class="" href="#icon-x">↵⇆⇆⇆</use> from <div tabindex="-1" role="dialog" aria-modal="true" class="modal fade show">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    39 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is visible, enabled and stable[22m
+[2m       - scrolling into view if needed[22m
+[2m       - done scrolling[22m
+[2m       - <use class="" href="#icon-x">↵⇆⇆⇆</use> from <div tabindex="-1" role="dialog" aria-modal="true" class="modal fade show">…</div> subtree intercepts pointer events[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at closeDialogs (/home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/webchat_config_browser.mjs:52:17)
+    at async file:///home/holymc2/muelle-host/worktrees/meta-crm-20260910/coordination/meta-reliability/webchat_config_browser.mjs:134:3
+JavaScript errors: []

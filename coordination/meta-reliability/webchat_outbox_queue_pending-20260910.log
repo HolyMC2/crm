@@ -1,0 +1,6 @@
+test_queue_contention_has_distinct_static_pending_without_transaction_reset (crm.tests.test_webchat.TestWebchat.test_queue_contention_has_distinct_static_pending_without_transaction_reset) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.355s
+
+OK

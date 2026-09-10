@@ -1,0 +1,36 @@
+{"account": "b04d2ad96ab06034710385accb91c0d1cdf1f17336ddbec9d5673e6b0ad0dc67", "actor": "Administrator", "conversation": "07f971a34cebf8b2a58c0554c6250016f0bbe55d0737c852b68cce77c4f1d7a8", "event": "fixtures_committed", "generation": 2, "peer": "6b742fc584b7cce79cd1d2d4706f67c176086d2adeff996945e25972d8c389e5", "prefix": "webchat-commit-15f6bd50dc3c", "session": "3008d474f642c552d2d66e6209e515e2a2eabdb9082b10ab373b573b8158691a", "target": "webchat-commit-15f6bd50dc3c@example.invalid"}
+{"event": "same_request_race_not_run", "reason": "Independently continue remaining scenarios after retained race failure"}
+{"event": "process_output", "pid": 20798, "value": {"event": "ready", "mode": "hold_insert", "pid": 20798}}
+{"event": "process_output", "pid": 20798, "value": {"event": "local_insert_returned", "intent": "a75a4d6f0633da7883b5b4b99a8c9c8fdd1f3ef4e077bb575a42a8f7126f83bb"}}
+{"event": "process_output", "pid": 20801, "value": {"event": "ready", "mode": "dispatch", "pid": 20801}}
+{"event": "process_result", "pid": 20798, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_result", "pid": 20801, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"durable": {"attempts": 1, "conversation_generation": 2, "messages": 1, "provider_message_id": "webchat.f192bd1e8e902e49f4e2bc83ca4c8fafcd46a8a2d99cb69acea55e1824855636", "reason_code": "", "state": "Accepted"}, "event": "two_workers_pass"}
+{"event": "process_output", "pid": 20804, "value": {"event": "ready", "mode": "hold_insert", "pid": 20804}}
+{"event": "process_output", "pid": 20804, "value": {"event": "local_insert_returned", "intent": "ec0900dfb28a4330600e1c70b65cc9d107c9149feef58b262506d2ff798bf79b"}}
+{"event": "process_result", "pid": 20804, "returncode": -9, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 20807, "value": {"event": "ready", "mode": "dispatch", "pid": 20807}}
+{"event": "process_result", "pid": 20807, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"local_insert_returned\", \"intent\": \"ec0900dfb28a4330600e1c70b65cc9d107c9149feef58b262506d2ff798bf79b\"}\n{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"after_recovery": {"attempts": 1, "conversation_generation": 2, "messages": 1, "provider_message_id": "webchat.d73cfe98607be69c767b3f19d2b6f9f0fa05d5118ea1beff5e5345e9c2e25156", "reason_code": "", "state": "Accepted"}, "before_recovery": {"attempts": 0, "conversation_generation": 2, "messages": 0, "provider_message_id": null, "reason_code": null, "state": "Queued"}, "event": "precommit_sigkill_pass"}
+{"event": "process_output", "pid": 20810, "value": {"event": "ready", "mode": "hold_commit", "pid": 20810}}
+{"event": "process_output", "pid": 20810, "value": {"event": "local_insert_returned", "intent": "a4bd73c2fc695ec12dbf14379e2db1312ea7cdbd80a2c2a9432e0745138e3ad7"}}
+{"event": "process_output", "pid": 20810, "value": {"event": "accepted_commit_returned", "intent": "a4bd73c2fc695ec12dbf14379e2db1312ea7cdbd80a2c2a9432e0745138e3ad7"}}
+{"event": "process_result", "pid": 20810, "returncode": -9, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 20813, "value": {"event": "ready", "mode": "dispatch", "pid": 20813}}
+{"event": "process_result", "pid": 20813, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"additional_messages": 0, "durable": {"attempts": 1, "conversation_generation": 2, "messages": 1, "provider_message_id": "webchat.361cd7ed2f524b49cbcd1a1a9cb2b8fedfcfdbcf24be4ca5dfd151825579b3ef", "reason_code": "", "state": "Accepted"}, "event": "postcommit_sigkill_pass"}
+{"event": "process_output", "pid": 20816, "value": {"event": "ready", "mode": "hold_insert", "pid": 20816}}
+{"event": "process_output", "pid": 20816, "value": {"event": "local_insert_returned", "intent": "6fb830bf0c26644b8a289df88343fd145496f7342b4e97a08ad3f9e31b15eba4"}}
+{"event": "process_output", "pid": 20819, "value": {"event": "ready", "mode": "transfer", "pid": 20819}}
+{"event": "process_result", "pid": 20816, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_output", "pid": 20819, "value": {"event": "transferred", "generation": 3}}
+{"event": "process_result", "pid": 20819, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 20822, "value": {"event": "ready", "mode": "dispatch", "pid": 20822}}
+{"event": "process_result", "pid": 20822, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Cancelled\"}\n"}
+{"event": "takeover_wait_and_stale_cancel_pass", "stale": {"attempts": 0, "conversation_generation": 2, "messages": 0, "provider_message_id": null, "reason_code": "conversation_changed", "state": "Cancelled"}}
+{"event": "process_output", "pid": 20825, "value": {"event": "ready", "mode": "forge", "pid": 20825}}
+{"event": "process_output", "pid": 20825, "value": {"event": "forgery_denied"}}
+{"event": "process_result", "pid": 20825, "returncode": 0, "stderr": "", "stdout": ""}
+{"durable": {"attempts": 0, "conversation_generation": 3, "messages": 0, "provider_message_id": null, "reason_code": null, "state": "Queued"}, "event": "direct_forgery_pass"}
+{"event": "PARTIAL_PASS", "live_provider_attempts": 0, "real_commits": true, "scenarios": 5, "sigkill_checkpoints": 2}
+{"account": "b04d2ad96ab06034710385accb91c0d1cdf1f17336ddbec9d5673e6b0ad0dc67", "channel_disabled": true, "closed": true, "conversation": "07f971a34cebf8b2a58c0554c6250016f0bbe55d0737c852b68cce77c4f1d7a8", "event": "cleanup", "fictional_user_disabled": true, "immutable_evidence_retained": true, "session_revoked": true}

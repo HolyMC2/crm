@@ -1,16 +1,16 @@
 <template>
   <section
     class="min-w-0 border-t border-outline-gray-1 p-3 text-sm [overflow-wrap:anywhere]"
-    aria-label="Responder por WhatsApp"
+    aria-label="Responder al cliente"
   >
     <p v-if="error" role="alert" class="mb-2">{{ error }}</p>
     <p v-if="notice" role="status" class="mb-2">{{ notice }}</p>
     <form v-if="eligible || pending" @submit.prevent="submit">
       <label class="block text-xs font-medium"
-        >Respuesta a {{ conversation.peer_id }}
+        >Respuesta a {{ conversation.display_name || conversation.peer_id }}
         <textarea
           v-model="body"
-          maxlength="4096"
+          :maxlength="maxLength"
           rows="3"
           required
           class="mt-2 block w-full min-w-0 resize-y rounded border border-outline-gray-2 bg-surface-white p-2 text-sm"
@@ -24,7 +24,8 @@
       </p>
       <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
         <span class="text-xs text-ink-gray-5"
-          >{{ body.length }}/4096 · La entrega se consulta en Envíos.</span
+          >{{ body.length }}/{{ maxLength }} · Consulta el estado en
+          Envíos.</span
         >
         <button
           type="submit"
@@ -43,7 +44,7 @@
     </form>
     <p v-else class="text-xs text-ink-gray-5">
       {{
-        conversation.provider === 'WhatsApp'
+        nativeChannel
           ? 'Para responder necesitas el control humano vigente de esta conversación.'
           : 'El envío nativo aún no está disponible para este canal.'
       }}
@@ -65,13 +66,19 @@ const body = ref(''),
   error = ref(''),
   notice = ref('')
 let epoch = 0
+const nativeChannel = computed(() =>
+  ['WhatsApp', 'Webchat'].includes(props.conversation.provider),
+)
+const maxLength = computed(() =>
+  props.conversation.provider === 'Webchat' ? 2000 : 4096,
+)
 onUnmounted(() => {
   epoch++
   emit('pending', false)
 })
 const eligible = computed(
   () =>
-    props.conversation.provider === 'WhatsApp' &&
+    nativeChannel.value &&
     props.conversation.send_available === true &&
     props.conversation.control_state === 'Human' &&
     props.conversation.human_owner === props.actor,
@@ -96,7 +103,7 @@ watch(
 async function submit() {
   if (busy.value || props.blocked || (!pending.value && !eligible.value)) return
   if (!pending.value) {
-    if (!body.value.trim() || body.value.length > 4096) return
+    if (!body.value.trim() || body.value.length > maxLength.value) return
     pending.value = Object.freeze({
       conversation: props.conversation.name,
       expected_generation: props.conversation.generation,

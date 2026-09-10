@@ -1,0 +1,1 @@
+{"event": "setup", "manifest": "/tmp/webchat-chain-fixture.json", "site": "meta-reliability-test-20260910.lab.xoloitzcuintles.com", "channel_id": "cd0aa8ac85803c3baa569b6c3f77ef161b20df1ac56152469d3a30dcec6b2914", "blocked": {"external": 0, "mail": 0, "enqueue": 1}}

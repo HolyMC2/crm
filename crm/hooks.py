@@ -133,6 +133,8 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
+	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.get_permission_query_conditions",
+	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.get_permission_query_conditions",
 	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.get_permission_query_conditions",
 	"CRM Conversation": "crm.fcrm.doctype.crm_conversation.crm_conversation.get_permission_query_conditions",
 	"CRM Conversation Control Event": "crm.fcrm.doctype.crm_conversation_control_event.crm_conversation_control_event.get_permission_query_conditions",
@@ -145,6 +147,8 @@ permission_query_conditions = {
 }
 
 has_permission = {
+	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.has_permission",
+	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.has_permission",
 	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.has_permission",
 	"CRM Conversation": "crm.fcrm.doctype.crm_conversation.crm_conversation.has_permission",
 	"CRM Conversation Control Event": "crm.fcrm.doctype.crm_conversation_control_event.crm_conversation_control_event.has_permission",
@@ -280,7 +284,7 @@ ignore_links_on_delete = ["Failed Lead Sync Log"]
 
 # Request Events
 # ----------------
-# before_request = ["crm.utils.before_request"]
+before_request = ["crm.api.webchat.prepare_request"]
 # after_request = ["crm.utils.after_request"]
 
 # Job Events

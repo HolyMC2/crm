@@ -12,6 +12,18 @@ def has_permission(doc, ptype=None, user=None, permission_type=None):
 
 
 class CRMConversation(Document):
+    def notify_update(self):
+        # Private records use explicit, authorized broker hints only.
+        return
+
+    def has_permission(self, permtype="read", *, debug=False, user=None):
+        from crm.api.conversations import _SERVICE_TOKEN
+        return permtype in {"create", "write"} and self.flags.get("crm_conversation_service") is _SERVICE_TOKEN
+
+    def check_permission(self, permtype="read", permlevel=None):
+        if not self.has_permission(permtype):
+            raise frappe.PermissionError("Use the private customer conversation broker.")
+
     def autoname(self):
         from crm.api.conversations import conversation_key
         self.name = conversation_key(self.provider, self.account_id, self.peer_id)

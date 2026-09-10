@@ -184,6 +184,31 @@ class TestOutbox(test_conversations.TestConversations):
         doc, _ = self.dispatch(name, {"state": "Accepted", "provider_message_id": "demo-fake"})
         self.assertEqual(doc.state, "Unknown")
 
+    def test_outbox_provider_identity_cannot_belong_to_two_intents(self):
+        first, _ = self.dispatch(self.queue()["name"])
+        second, send = self.dispatch(self.queue("Another fictional reply")["name"])
+        self.assertEqual((second.state, second.reason_code, second.provider_message_id),
+                         ("Unknown", "provider_identity_conflict", None))
+        self.assertEqual(api._load(first.name).state, "Accepted")
+        self.assertEqual(first.provider_message_key,
+                         api._hash([first.provider, first.account_id, first.provider_message_id]))
+        self.assertFalse(api.get_intent(second.name)["can_retry"])
+        self.worker(second.name)
+        send.assert_called_once()
+
+    def test_outbox_older_provider_identity_is_also_reserved(self):
+        first, _ = self.dispatch(self.queue()["name"])
+        # Additive rollout: a pre-column Accepted row still reserves its ID.
+        frappe.db.set_value(api.DOCTYPE, first.name, "provider_message_key", None)
+        second, _ = self.dispatch(self.queue()["name"])
+        self.assertEqual((second.state, second.reason_code), ("Unknown", "provider_identity_conflict"))
+
+    def test_outbox_unique_provider_key_and_synthetic_success_hold(self):
+        indexes = frappe.db.sql("SHOW INDEX FROM `tabCRM Outbound Intent`", as_dict=True)
+        self.assertTrue(any(row.Column_name == "provider_message_key" and row.Non_unique == 0 for row in indexes))
+        doc, _ = self.dispatch(self.queue()["name"], {"state": "Accepted", "provider_message_id": "wamid.demo-fake"})
+        self.assertEqual(doc.state, "Unknown")
+
     def test_outbox_cancel_idempotent_and_no_transport(self):
         name = self.queue()["name"]
         self.assertEqual(api.cancel_intent(name)["state"], "Cancelled")

@@ -1,0 +1,45 @@
+{"account": "19f2c43c7b87da1468a2a7156ccb5dcc6a31867bdfffe871de676b9c1264b84a", "actor": "Administrator", "conversation": "c8487c67269106fee6139f1a5cb17173fe58b337b1bd9e9f5f4e4026e721ec85", "event": "fixtures_committed", "generation": 2, "peer": "b0ff488326d796c81a39c609de6967e87e3fb51a3e5008f198855194a61bd62c", "prefix": "webchat-commit-4fdc64c577fa", "session": "7109d4f2750244bc1692bca073a25fc55d0348137fe50d0e28de7ad46c8eb5ed", "target": "webchat-commit-4fdc64c577fa@example.invalid"}
+{"event": "process_output", "pid": 20849, "value": {"event": "ready", "mode": "queue", "pid": 20849}}
+{"event": "process_output", "pid": 20852, "value": {"event": "ready", "mode": "queue", "pid": 20852}}
+{"event": "process_output", "pid": 20849, "value": {"caller_rolled_back": true, "event": "request_pending", "exc_type": "ReplyRequestPending"}}
+{"event": "process_output", "pid": 20852, "value": {"event": "queued", "intent": "1eb0a492e2045738214e4fecfa885b2e94add38aaaea8070889b645c8b4f0033"}}
+{"event": "process_result", "pid": 20849, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_result", "pid": 20852, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 20855, "value": {"event": "ready", "mode": "queue", "pid": 20855}}
+{"event": "process_output", "pid": 20855, "value": {"event": "queued", "intent": "1eb0a492e2045738214e4fecfa885b2e94add38aaaea8070889b645c8b4f0033"}}
+{"event": "process_result", "pid": 20855, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "same_request_race_pass", "fresh_request_same_intent": true, "intents": 1, "pending_responses": 1}
+{"event": "process_output", "pid": 20858, "value": {"event": "ready", "mode": "hold_insert", "pid": 20858}}
+{"event": "process_output", "pid": 20858, "value": {"event": "local_insert_returned", "intent": "1eb0a492e2045738214e4fecfa885b2e94add38aaaea8070889b645c8b4f0033"}}
+{"event": "process_output", "pid": 20867, "value": {"event": "ready", "mode": "dispatch", "pid": 20867}}
+{"event": "process_result", "pid": 20858, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_result", "pid": 20867, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"durable": {"attempts": 1, "conversation_generation": 2, "messages": 1, "provider_message_id": "webchat.9e6d6d4c86a48bbe5415ed954a399b2b94e69cf02b69aff782a1bcd41cad2974", "reason_code": "", "state": "Accepted"}, "event": "two_workers_pass"}
+{"event": "process_output", "pid": 20872, "value": {"event": "ready", "mode": "hold_insert", "pid": 20872}}
+{"event": "process_output", "pid": 20872, "value": {"event": "local_insert_returned", "intent": "74856dfb678941a2d2d039eea7708113f5355d87540060b1d6aedddb30ce3829"}}
+{"event": "process_result", "pid": 20872, "returncode": -9, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 20875, "value": {"event": "ready", "mode": "dispatch", "pid": 20875}}
+{"event": "process_result", "pid": 20875, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"local_insert_returned\", \"intent\": \"74856dfb678941a2d2d039eea7708113f5355d87540060b1d6aedddb30ce3829\"}\n{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"after_recovery": {"attempts": 1, "conversation_generation": 2, "messages": 1, "provider_message_id": "webchat.be1f88e0b15ea223a9fa5bcf8f9303c610b7f07e22dbb4dabed48a61354cb4ce", "reason_code": "", "state": "Accepted"}, "before_recovery": {"attempts": 0, "conversation_generation": 2, "messages": 0, "provider_message_id": null, "reason_code": null, "state": "Queued"}, "event": "precommit_sigkill_pass"}
+{"event": "process_output", "pid": 20884, "value": {"event": "ready", "mode": "hold_commit", "pid": 20884}}
+{"event": "process_output", "pid": 20884, "value": {"event": "local_insert_returned", "intent": "809ab906119d4746c0f412b420fe01018203454634eadba2494f951dc189ddf2"}}
+{"event": "process_output", "pid": 20884, "value": {"event": "accepted_commit_returned", "intent": "809ab906119d4746c0f412b420fe01018203454634eadba2494f951dc189ddf2"}}
+{"event": "process_result", "pid": 20884, "returncode": -9, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 20893, "value": {"event": "ready", "mode": "dispatch", "pid": 20893}}
+{"event": "process_result", "pid": 20893, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"additional_messages": 0, "durable": {"attempts": 1, "conversation_generation": 2, "messages": 1, "provider_message_id": "webchat.7fc7d4ed9b6d240bbb51cdcf06b0d6b80cc7e7f824762958106a69db6ae66255", "reason_code": "", "state": "Accepted"}, "event": "postcommit_sigkill_pass"}
+{"event": "process_output", "pid": 20912, "value": {"event": "ready", "mode": "hold_insert", "pid": 20912}}
+{"event": "process_output", "pid": 20912, "value": {"event": "local_insert_returned", "intent": "b366f41a5f5bdb38d9ecde4032a751ee6967c46c16b335ce8a37838d1131ce13"}}
+{"event": "process_output", "pid": 20928, "value": {"event": "ready", "mode": "transfer", "pid": 20928}}
+{"event": "process_result", "pid": 20912, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Accepted\"}\n"}
+{"event": "process_output", "pid": 20928, "value": {"event": "transferred", "generation": 3}}
+{"event": "process_result", "pid": 20928, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 20945, "value": {"event": "ready", "mode": "dispatch", "pid": 20945}}
+{"event": "process_result", "pid": 20945, "returncode": 0, "stderr": "", "stdout": "{\"event\": \"settled\", \"state\": \"Cancelled\"}\n"}
+{"event": "takeover_wait_and_stale_cancel_pass", "stale": {"attempts": 0, "conversation_generation": 2, "messages": 0, "provider_message_id": null, "reason_code": "conversation_changed", "state": "Cancelled"}}
+{"event": "process_output", "pid": 20952, "value": {"event": "ready", "mode": "forge", "pid": 20952}}
+{"event": "process_output", "pid": 20952, "value": {"event": "forgery_denied"}}
+{"event": "process_result", "pid": 20952, "returncode": 0, "stderr": "", "stdout": ""}
+{"durable": {"attempts": 0, "conversation_generation": 3, "messages": 0, "provider_message_id": null, "reason_code": null, "state": "Queued"}, "event": "direct_forgery_pass"}
+{"event": "PASS", "live_provider_attempts": 0, "real_commits": true, "scenarios": 6, "sigkill_checkpoints": 2}
+{"account": "19f2c43c7b87da1468a2a7156ccb5dcc6a31867bdfffe871de676b9c1264b84a", "channel_disabled": true, "closed": true, "conversation": "c8487c67269106fee6139f1a5cb17173fe58b337b1bd9e9f5f4e4026e721ec85", "event": "cleanup", "fictional_user_disabled": true, "immutable_evidence_retained": true, "session_revoked": true}
