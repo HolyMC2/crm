@@ -1,0 +1,80 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Webchat Channel",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "field_order": [
+  "account_id",
+  "binding_key",
+  "label",
+  "profile",
+  "public_origin",
+  "enabled"
+ ],
+ "fields": [
+  {
+   "fieldname": "account_id",
+   "fieldtype": "Data",
+   "label": "Account Id",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "binding_key",
+   "fieldtype": "Data",
+   "label": "Binding Key",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1,
+   "length": 64,
+   "hidden": 1
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "profile",
+   "fieldtype": "Data",
+   "label": "Profile",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "public_origin",
+   "fieldtype": "Data",
+   "label": "Public Origin",
+   "read_only": 1,
+   "reqd": 1,
+   "length": 512
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "read_only": 1,
+   "default": "0"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "actions": [],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "track_changes": 0,
+ "sort_field": "creation",
+ "sort_order": "DESC"
+}

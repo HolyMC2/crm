@@ -1,0 +1,114 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Webchat Message",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "allow_rename": 0,
+ "field_order": [
+  "message_key",
+  "channel",
+  "session",
+  "peer_id",
+  "conversation",
+  "direction",
+  "request_id",
+  "text",
+  "text_hash",
+  "control_generation"
+ ],
+ "fields": [
+  {
+   "fieldname": "message_key",
+   "fieldtype": "Data",
+   "label": "Message Key",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "channel",
+   "fieldtype": "Link",
+   "label": "Channel",
+   "read_only": 1,
+   "options": "CRM Webchat Channel",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "Session",
+   "read_only": 1,
+   "options": "CRM Webchat Session",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "peer_id",
+   "fieldtype": "Data",
+   "label": "Peer Id",
+   "read_only": 1,
+   "reqd": 1,
+   "length": 64,
+   "search_index": 1
+  },
+  {
+   "fieldname": "conversation",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "read_only": 1,
+   "options": "CRM Conversation",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "direction",
+   "fieldtype": "Select",
+   "label": "Direction",
+   "read_only": 1,
+   "options": "Incoming\nOutgoing",
+   "reqd": 1
+  },
+  {
+   "fieldname": "request_id",
+   "fieldtype": "Data",
+   "label": "Request Id",
+   "read_only": 1,
+   "reqd": 1,
+   "length": 80
+  },
+  {
+   "fieldname": "text",
+   "fieldtype": "Code",
+   "label": "Text",
+   "read_only": 1,
+   "reqd": 1,
+   "options": "Text"
+  },
+  {
+   "fieldname": "text_hash",
+   "fieldtype": "Data",
+   "label": "Text Hash",
+   "read_only": 1,
+   "reqd": 1,
+   "length": 64,
+   "hidden": 1
+  },
+  {
+   "fieldname": "control_generation",
+   "fieldtype": "Int",
+   "label": "Control Generation",
+   "read_only": 1,
+   "reqd": 1
+  }
+ ],
+ "permissions": [],
+ "actions": [],
+ "links": [],
+ "states": [],
+ "index_web_pages_for_search": 0,
+ "track_changes": 0,
+ "sort_field": "creation",
+ "sort_order": "DESC"
+}

@@ -31,6 +31,7 @@
   "read_at",
   "expires_at",
   "provider_message_id",
+  "provider_message_key",
   "reason_code",
   "state_log"
  ],
@@ -223,6 +224,15 @@
    "read_only": 1,
    "length": 255,
    "search_index": 1
+  },
+  {
+   "fieldname": "provider_message_key",
+   "fieldtype": "Data",
+   "label": "Provider Message Key",
+   "read_only": 1,
+   "hidden": 1,
+   "unique": 1,
+   "length": 64
   },
   {
    "fieldname": "reason_code",
