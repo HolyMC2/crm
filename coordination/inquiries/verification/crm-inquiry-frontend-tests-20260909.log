@@ -1,0 +1,15 @@
+yarn run v1.22.22
+$ vitest run
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.js:12:11). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.10 /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend
+
+
+ Test Files  46 passed (46)
+      Tests  470 passed (470)
+   Start at  19:43:08
+   Duration  5.06s (transform 3.11s, setup 1.25s, import 4.75s, tests 2.69s, environment 14.31s)
+
+Done in 5.68s.

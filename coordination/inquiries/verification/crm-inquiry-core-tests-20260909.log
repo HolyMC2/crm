@@ -1,0 +1,75 @@
+test_actor_scoped_capture_replay_and_changed_payload (crm.tests.test_inquiries.TestInquiries.test_actor_scoped_capture_replay_and_changed_payload) ... ok
+test_assignees_exclude_noncrm_and_disabled_users (crm.tests.test_inquiries.TestInquiries.test_assignees_exclude_noncrm_and_disabled_users) ... ok
+test_assignment_notification_is_durable_content_free_and_not_replayed (crm.tests.test_inquiries.TestInquiries.test_assignment_notification_is_durable_content_free_and_not_replayed) ... ok
+test_campaign_guard_is_scoped_to_lead_insert_and_restored_on_failure (crm.tests.test_inquiries.TestInquiries.test_campaign_guard_is_scoped_to_lead_insert_and_restored_on_failure) ... ok
+test_closed_inquiry_reads_reopens_and_replays_conversion (crm.tests.test_inquiries.TestInquiries.test_closed_inquiry_reads_reopens_and_replays_conversion) ... ok
+test_conversion_failure_rolls_back_lead_but_preserves_earlier_work (crm.tests.test_inquiries.TestInquiries.test_conversion_failure_rolls_back_lead_but_preserves_earlier_work) ... ok
+test_converted_identity_receipt_and_removal_are_immutable (crm.tests.test_inquiries.TestInquiries.test_converted_identity_receipt_and_removal_are_immutable) ... ok
+test_database_unique_capture_key (crm.tests.test_inquiries.TestInquiries.test_database_unique_capture_key) ... ok
+test_denied_lead_is_redacted_and_replay_is_denied (crm.tests.test_inquiries.TestInquiries.test_denied_lead_is_redacted_and_replay_is_denied) ... ok
+test_duplicate_insert_replay_rolls_back_only_its_savepoint (crm.tests.test_inquiries.TestInquiries.test_duplicate_insert_replay_rolls_back_only_its_savepoint) ... ok
+test_error_boundary_preserves_prior_messages_and_hides_internal_errors (crm.tests.test_inquiries.TestInquiries.test_error_boundary_preserves_prior_messages_and_hides_internal_errors) ... ok
+test_explicit_existing_link_requires_target_write (crm.tests.test_inquiries.TestInquiries.test_explicit_existing_link_requires_target_write) ... ok
+test_generic_child_list_returns_only_authorized_parent_people (crm.tests.test_inquiries.TestInquiries.test_generic_child_list_returns_only_authorized_parent_people) ... ok
+test_generic_child_write_and_cross_parent_row_move_are_denied (crm.tests.test_inquiries.TestInquiries.test_generic_child_write_and_cross_parent_row_move_are_denied) ... ok
+test_generic_create_rejects_forged_owner_capture_and_child_keys (crm.tests.test_inquiries.TestInquiries.test_generic_create_rejects_forged_owner_capture_and_child_keys) ... ok
+test_generic_responses_redact_lead_without_erasing_receipt (crm.tests.test_inquiries.TestInquiries.test_generic_responses_redact_lead_without_erasing_receipt) ... ok
+test_generic_save_rejects_provenance_child_key_and_flags_forgery (crm.tests.test_inquiries.TestInquiries.test_generic_save_rejects_provenance_child_key_and_flags_forgery) ... ok
+test_internal_finder_is_actor_scoped_and_not_whitelisted (crm.tests.test_inquiries.TestInquiries.test_internal_finder_is_actor_scoped_and_not_whitelisted) ... ok
+test_list_and_direct_access_enforce_owner_assignee_manager (crm.tests.test_inquiries.TestInquiries.test_list_and_direct_access_enforce_owner_assignee_manager) ... ok
+test_list_paginates_summaries_and_realtime_contains_no_content (crm.tests.test_inquiries.TestInquiries.test_list_paginates_summaries_and_realtime_contains_no_content) ... ok
+test_noncrm_guest_and_disabled_actor_are_denied (crm.tests.test_inquiries.TestInquiries.test_noncrm_guest_and_disabled_actor_are_denied) ... ok
+test_nonowner_assignee_can_handoff_with_only_minimal_success_response (crm.tests.test_inquiries.TestInquiries.test_nonowner_assignee_can_handoff_with_only_minimal_success_response) ... ok
+test_old_marketing_blocks_new_lead_but_allows_existing_link (crm.tests.test_inquiries.TestInquiries.test_old_marketing_blocks_new_lead_but_allows_existing_link) ... ok
+test_optimistic_api_and_generic_stale_save_are_rejected (crm.tests.test_inquiries.TestInquiries.test_optimistic_api_and_generic_stale_save_are_rejected) ... ok
+test_payload_allowlist_bounds_url_and_explicit_role (crm.tests.test_inquiries.TestInquiries.test_payload_allowlist_bounds_url_and_explicit_role) ... ok
+test_replay_permission_is_checked_before_receipt_content (crm.tests.test_inquiries.TestInquiries.test_replay_permission_is_checked_before_receipt_content) ... ok
+test_replay_uses_immutable_hash_after_edits (crm.tests.test_inquiries.TestInquiries.test_replay_uses_immutable_hash_after_edits) ... ok
+test_selected_prospect_conversion_is_replay_safe_and_does_not_merge (crm.tests.test_inquiries.TestInquiries.test_selected_prospect_conversion_is_replay_safe_and_does_not_merge) ... ok
+test_source_capture_denied_staff_cannot_create_copy_or_read_receipt (crm.tests.test_inquiries.TestInquiries.test_source_capture_denied_staff_cannot_create_copy_or_read_receipt) ... ok
+test_source_capture_namespace_cannot_collide_with_manual_request_id (crm.tests.test_inquiries.TestInquiries.test_source_capture_namespace_cannot_collide_with_manual_request_id) ... ok
+test_source_capture_owner_and_manager_replay_one_record (crm.tests.test_inquiries.TestInquiries.test_source_capture_owner_and_manager_replay_one_record) ... ok
+test_source_enrichment_never_overwrites_original_context_or_people (crm.tests.test_inquiries.TestInquiries.test_source_enrichment_never_overwrites_original_context_or_people) ... ok
+test_source_unique_collision_replays_authorized_snapshot_without_overwrite (crm.tests.test_inquiries.TestInquiries.test_source_unique_collision_replays_authorized_snapshot_without_overwrite) ... ok
+test_non_crm_session_is_rejected_before_any_lookup (crm.tests.test_capabilities.TestGetCapabilities.test_non_crm_session_is_rejected_before_any_lookup) ... ok
+test_passes_through_the_site_list_with_the_addon (crm.tests.test_capabilities.TestGetCapabilities.test_passes_through_the_site_list_with_the_addon) ... ok
+test_passes_through_the_site_list_without_the_addon (crm.tests.test_capabilities.TestGetCapabilities.test_passes_through_the_site_list_without_the_addon) ... ok
+test_reports_installed_apps_for_crm_session (crm.tests.test_capabilities.TestGetCapabilities.test_reports_installed_apps_for_crm_session) ... ok
+test_enrichment_skipped_without_web_form_flag (crm.tests.test_form_api.TestFormAPI.test_enrichment_skipped_without_web_form_flag)
+Outside the web-form path, the hook is a no-op — a normally created Lead ... ok
+test_enrichment_stamps_source_and_hidden_default_on_web_form_insert (crm.tests.test_form_api.TestFormAPI.test_enrichment_stamps_source_and_hidden_default_on_web_form_insert)
+A Lead created through the web-form path — the framework's accept() sets ... ok
+test_get_form_fields_rejects_unsupported_doctype (crm.tests.test_form_api.TestFormAPI.test_get_form_fields_rejects_unsupported_doctype) ... ok
+test_get_form_fields_returns_mappable_and_excludes_breaks (crm.tests.test_form_api.TestFormAPI.test_get_form_fields_returns_mappable_and_excludes_breaks)
+The picker returns collectible fields (first_name) and drops ... ok
+test_hidden_defaults_ignored_when_form_targets_other_doctype (crm.tests.test_form_api.TestFormAPI.test_hidden_defaults_ignored_when_form_targets_other_doctype)
+A submission referencing a form for a different doctype must not pull in ... ok
+test_new_deal_form_seeds_organization (crm.tests.test_form_api.TestFormAPI.test_new_deal_form_seeds_organization) ... ok
+test_new_lead_form_seeds_default_layout (crm.tests.test_form_api.TestFormAPI.test_new_lead_form_seeds_default_layout)
+A brand-new Lead form is seeded with a contact-capture layout and a ... ok
+test_non_crm_web_form_is_out_of_scope (crm.tests.test_form_api.TestFormAPI.test_non_crm_web_form_is_out_of_scope)
+A Web Form from another module that happens to target CRM Lead must not be ... ok
+test_non_manager_cannot_manage_forms (crm.tests.test_form_api.TestFormAPI.test_non_manager_cannot_manage_forms) ... ok
+test_publish_blocked_when_hidden_default_missing (crm.tests.test_form_api.TestFormAPI.test_publish_blocked_when_hidden_default_missing) ... ok
+test_redirect_url_round_trips (crm.tests.test_form_api.TestFormAPI.test_redirect_url_round_trips) ... ok
+test_save_form_persists_edits (crm.tests.test_form_api.TestFormAPI.test_save_form_persists_edits) ... ok
+test_save_form_persists_field_conditional_rules (crm.tests.test_form_api.TestFormAPI.test_save_form_persists_field_conditional_rules)
+depends_on / mandatory_depends_on / read_only_depends_on authored per field in ... ok
+test_save_form_rejects_denied_field (crm.tests.test_form_api.TestFormAPI.test_save_form_rejects_denied_field)
+A payload can't map an internal field the picker excludes. ... ok
+test_save_form_rejects_layout_break_shadowing_a_field (crm.tests.test_form_api.TestFormAPI.test_save_form_rejects_layout_break_shadowing_a_field)
+A break skips the catalog check, so it must not name a real field. ... ok
+test_save_form_rejects_unknown_hidden_field (crm.tests.test_form_api.TestFormAPI.test_save_form_rejects_unknown_hidden_field)
+Only the system-managed mandatory fields may be hidden fields. ... ok
+test_save_form_takes_fieldtype_from_catalog (crm.tests.test_form_api.TestFormAPI.test_save_form_takes_fieldtype_from_catalog)
+fieldtype and options come from the doctype, not the payload. ... ok
+test_save_without_fields_key_preserves_layout (crm.tests.test_form_api.TestFormAPI.test_save_without_fields_key_preserves_layout)
+An update that omits `fields` (e.g. a settings-only save) keeps the existing ... ok
+test_set_published_blocked_when_hidden_default_missing (crm.tests.test_form_api.TestFormAPI.test_set_published_blocked_when_hidden_default_missing) ... ok
+test_test_submit_validates_but_creates_nothing (crm.tests.test_form_api.TestFormAPI.test_test_submit_validates_but_creates_nothing) ... Verified installed apps: frappe, crm; candidate permission hooks loaded
+ok
+
+----------------------------------------------------------------------
+Ran 57 tests in 2.359s
+
+OK

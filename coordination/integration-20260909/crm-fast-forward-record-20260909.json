@@ -1,0 +1,51 @@
+[
+  {
+    "path": "/home/holymc2/muelle-host/doco",
+    "branch": "develop",
+    "before": "f9de9455ac39f65e117c5155393d91dba3ed032c",
+    "after": "0e1534b1aa7a7fc373c166b12091f5d0574800a6",
+    "source": "feat/crm-provider-discovery-20260909"
+  },
+  {
+    "path": "/home/holymc2/muelle-host/clinica",
+    "branch": "main",
+    "before": "0c70011a50156344de74c8a9d1a31ba1f2a25028",
+    "after": "e2d2190e36fcedfa4fe232450f7bc48d467f6cb5",
+    "source": "feat/crm-provider-discovery-20260909"
+  },
+  {
+    "path": "/home/holymc2/muelle-host/taller",
+    "branch": "main",
+    "before": "e1b2bb0e368f4139b92a5d812b56d7e612ad1dfa",
+    "after": "d7b3e100118d04e0e24133f811abf9484943532c",
+    "source": "feat/crm-provider-discovery-20260909"
+  },
+  {
+    "path": "/home/holymc2/muelle-releases/coordination-20260909/canonical/doco_marketing",
+    "branch": "master",
+    "before": "6e779807e8ab2b56b5e277ce427807292db5bc9c",
+    "after": "202d8f15b5eb462fe965bd774f8206e72d2029e7",
+    "source": "feat/crm-automation-hardening-20260909"
+  },
+  {
+    "path": "/home/holymc2/muelle-host/doco_marketing",
+    "branch": "fix/social-editorial-quality",
+    "before": "a475a11039580d4d2968e359253346ecdc9f2f01",
+    "after": "202d8f15b5eb462fe965bd774f8206e72d2029e7",
+    "source": "feat/crm-automation-hardening-20260909"
+  },
+  {
+    "path": "/home/holymc2/muelle-releases/coordination-20260909/canonical/crm",
+    "branch": "doco-dev",
+    "before": "210c1a44a13612a3e0f4a405c2ef050dbd36159f",
+    "after": "42205b72b5b4eae3ec942a64e3af47dd6825e91a",
+    "source": "audit/crm-standalone-20260909"
+  },
+  {
+    "path": "/home/holymc2/muelle-host/crm",
+    "branch": "fix/social-editorial-quality",
+    "before": "39dfc25359b44fe7c4f59b902d5a3e9a9d4af0ff",
+    "after": "42205b72b5b4eae3ec942a64e3af47dd6825e91a",
+    "source": "audit/crm-standalone-20260909"
+  }
+]

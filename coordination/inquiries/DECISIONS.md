@@ -1,0 +1,17 @@
+# Codex decisions
+
+D001: Follow docs/CRM_COMPLETION_PLAN_2026-09-09.md inquiry API/schema contract. Core inquiries have no marketing/Doco/ERP dependency.
+D002: Preserve all pre-existing candidate changes. Backend owns new inquiry Python/schema/tests and only inquiry permission entries in crm/hooks.py. Frontend owns inquiry UI/utilities/tests plus necessary router/nav and SocialMentions changes. Codex owns marketing adapter/readiness and plan/decisions.
+D003: No production mutation, new auto-send, external credentials or migration by builders. Codex handles real execution. Finish bounded assigned implementation rather than expanding to bot runtime.
+D004: Unavailable schema must be surfaced clearly; do not silently fall back to fake success. New API uses normal successful POST transaction commit. Plain source text only, no URL fetching or clinical fields.
+D005: No screenshot upload in first package; manual URL/text capture must fully work. No auto conversion, private identity inference or automatic lead matching. Referrer conversion rejected server-side.
+D006: Hidden immutable capture_payload_hash is approved to distinguish replay from conflicting capture after mutable fields change. Never serialize it. Internal find_inquiry_for_request(client_request_id) returns the authorized original snapshot or None for adapter replay; not whitelisted.
+D007: Both actual Fable attempts returned account usage limit without editing files. Available Codex builders continue the same bounded assignments; no claim that Fable implemented this wave.
+D008: Codex owns frontend/src/components/SocialCaptureHealth.vue. Frontend builder imports/renders it on SocialMentions with current shop. Local readiness is branch scoped; live provider inspection manager-only. A subscription is not delivery or group-coverage proof.
+
+D009: Parent/current-owner permissions use persisted locking reads. Linked lead access has separate target permission, level-1 generic field protection, copy-only response redaction and sanitized error logs. Successful self-revoking handoff returns name/access_revoked only.
+D010: Inquiry lead insertion scopes the campaign guard and restores prior flag in finally. Matching marketing marker required for new-lead conversion when that optional app is installed. No capture-triggered campaign enrollment or send; link-existing remains available.
+D011: Internal capture_source_inquiry owns cross-staff source receipts, distinct from actor-scoped manual keys. Marketing hashes stored provider identity/type, not mutable document name or branch. Generic save preserves existing source identity. Missing identity asks for manual capture; denied inquiry access does not create another copy. This supersedes D006's actor-scoped adapter lookup.
+D012: Mobile initial blank screenshot was async-layout/animation timing. A separate visual defect clipped the capture button by shrinking the header; fixed with flex-none and verified actual button/card/tab geometry and click.
+D013: Shared lab restart populated Redis app_hooks from active source. Candidate test processes load their own hooks using copied, process-local framework developer mode; SQL/concurrency runners assert inquiry hooks. No stored site setting or active app hook cache was changed for this isolation.
+D014: Independent audit corrected exact-Page configuration selection before validating the effective Graph version. Malformed unrelated Messenger settings cannot block a valid Social Page check. Explicit disabled/duplicate/missing-credential account rules retain no fallback.

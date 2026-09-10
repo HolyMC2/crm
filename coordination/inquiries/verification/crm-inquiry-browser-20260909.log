@@ -1,0 +1,4 @@
+PASS full standalone CRM shell opened /inquiries
+PASS real HTTP capture, 3 roles, 2 explicit leads, stable retries, denied referrer conversion, follow-up, close/reopen and reload
+PASS desktop/mobile browser: no runtime errors, no optional-app RPCs, no horizontal overflow
+{"errors":[],"optionalCalls":[]}

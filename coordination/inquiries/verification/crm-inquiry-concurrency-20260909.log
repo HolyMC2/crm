@@ -1,0 +1,4 @@
+PASS concurrent capture: one inquiry, stable retry; safe conflicts=[('ValidationError', 'QueryDeadlockError')]
+PASS concurrent conversion: one lead, stable retry; safe conflicts=[('ValidationError', 'QueryDeadlockError')]
+PASS concurrent known-source capture: one snapshot across retries; safe conflicts=[('ValidationError', 'QueryDeadlockError')]
+PASS revoked assignee: stale snapshot cannot convert, fresh retry denied; outcomes=[('ValidationError', 'QueryDeadlockError')]

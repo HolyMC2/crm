@@ -1,0 +1,31 @@
+test_all_eligible_providers_survive_other_preferred_vertical (doco.crm.test_discovery.DiscoveryTests.test_all_eligible_providers_survive_other_preferred_vertical) ... ok
+test_auth_and_context_denial_precede_provider_calls (doco.crm.test_discovery.DiscoveryTests.test_auth_and_context_denial_precede_provider_calls) ... ok
+test_broken_hook_registry_errors_are_sanitized (doco.crm.test_discovery.DiscoveryTests.test_broken_hook_registry_errors_are_sanitized) ... ok
+test_core_only_and_clinic_only_do_not_import_absent_apps (doco.crm.test_discovery.DiscoveryTests.test_core_only_and_clinic_only_do_not_import_absent_apps) ... ok
+test_disabled_user_cannot_discover (doco.crm.test_discovery.DiscoveryTests.test_disabled_user_cannot_discover) ... ok
+test_duplicate_claims_are_rejected_before_any_import (doco.crm.test_discovery.DiscoveryTests.test_duplicate_claims_are_rejected_before_any_import) ... ok
+test_invalid_import_path_never_reaches_get_attr (doco.crm.test_discovery.DiscoveryTests.test_invalid_import_path_never_reaches_get_attr) ... ok
+test_malformed_descriptor_does_not_remove_other_provider (doco.crm.test_discovery.DiscoveryTests.test_malformed_descriptor_does_not_remove_other_provider) ... ok
+test_permissions_recomputed_and_denied_provider_omitted (doco.crm.test_discovery.DiscoveryTests.test_permissions_recomputed_and_denied_provider_omitted) ... ok
+test_provider_failure_isolated_and_error_messages_not_projected (doco.crm.test_discovery.DiscoveryTests.test_provider_failure_isolated_and_error_messages_not_projected) ... ok
+test_bad_schema_routes_states_duplicates_and_bounds_rejected (doco.crm.test_discovery.WireContractTests.test_bad_schema_routes_states_duplicates_and_bounds_rejected) ... ok
+test_only_bounded_crm_context_is_allowed (doco.crm.test_discovery.WireContractTests.test_only_bounded_crm_context_is_allowed) ... ok
+test_projection_drops_clinical_extras (doco.crm.test_discovery.WireContractTests.test_projection_drops_clinical_extras) ... ok
+test_arbitrary_entity_inputs_rejected (crm.tests.test_vertical_capabilities.VerticalCapabilitiesTests.test_arbitrary_entity_inputs_rejected) ... ok
+test_core_only_is_empty_and_permission_checked_without_optional_imports (crm.tests.test_vertical_capabilities.VerticalCapabilitiesTests.test_core_only_is_empty_and_permission_checked_without_optional_imports) ... ok
+test_denied_context_stops_before_discovery (crm.tests.test_vertical_capabilities.VerticalCapabilitiesTests.test_denied_context_stops_before_discovery) ... ok
+test_legacy_sections_require_their_actual_apps_and_ignore_unsafe_props (crm.tests.test_vertical_capabilities.VerticalCapabilitiesTests.test_legacy_sections_require_their_actual_apps_and_ignore_unsafe_props) ... ok
+test_old_doco_and_bad_layout_do_not_break_core (crm.tests.test_vertical_capabilities.VerticalCapabilitiesTests.test_old_doco_and_bad_layout_do_not_break_core) ... ok
+test_link_preview_restores_author_session_even_when_query_fails (crm.tests.test_audit_boundaries.TestAuditBoundaries.test_link_preview_restores_author_session_even_when_query_fails) ... ok
+test_record_endpoints_reject_before_loading_data (crm.tests.test_audit_boundaries.TestAuditBoundaries.test_record_endpoints_reject_before_loading_data) ... ok
+test_timeline_field_catalog_respects_readable_permlevels (crm.tests.test_audit_boundaries.TestAuditBoundaries.test_timeline_field_catalog_respects_readable_permlevels) ... ok
+test_configuration_access_does_not_imply_agenda_access (clinica_crm_provider_tests.ClinicProviderTests.test_configuration_access_does_not_imply_agenda_access) ... ok
+test_denied_and_disabled_users_receive_no_snapshot (clinica_crm_provider_tests.ClinicProviderTests.test_denied_and_disabled_users_receive_no_snapshot) ... ok
+test_presets_never_promote_demo_or_hospital_features (clinica_crm_provider_tests.ClinicProviderTests.test_presets_never_promote_demo_or_hospital_features) ... ok
+test_available_workspace_does_not_query_jobs_or_pass_record_identity (taller_crm_provider_tests.RepairProviderTests.test_available_workspace_does_not_query_jobs_or_pass_record_identity) ... ok
+test_denied_or_disabled_user_cannot_discover (taller_crm_provider_tests.RepairProviderTests.test_denied_or_disabled_user_cannot_discover) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.017s
+
+OK

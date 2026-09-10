@@ -1,0 +1,1 @@
+{'apps': ['frappe', 'crm'], 'maintenance_mode': 1, 'pause_scheduler': 1, 'mute_emails': 1, 'doctype_count': 41}
