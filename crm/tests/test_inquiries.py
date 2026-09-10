@@ -190,6 +190,155 @@ class TestInquiries(IntegrationTestCase):
 		with self.assertRaises(frappe.PermissionError):
 			api.find_inquiry_for_request(key)
 
+	def source_fixture(self):
+		identity = "meta:v2:Messenger:910001:lead_ad:" + uuid4().hex
+		person = {"display_name": "Original respondent", "role": "Requester",
+			"email": "respondent@example.invalid", "phone": "555-0100"}
+		payload = {"title": "Fictional service request", "source_type": "Facebook", "people": [person]}
+		context = {
+			"version": 1, "mode": "automatic", "provider": "Messenger", "account_id": "910001",
+			"source_kind": "lead_ad", "source_id": "910003", "source_identity": identity,
+			"receipt_name": "fictional-receipt", "policy_hash": "a" * 64,
+			"form_id": "910002", "leadgen_id": "910003", "purpose_statement": "Please email me about this repair.",
+			"response_channel": "Email", "form_revision_hash": "b" * 64,
+			"submitted_at": "2026-09-09 12:00:00", "original_respondent": person.copy(),
+		}
+		return identity, payload, context
+
+	def test_source_evidence_uses_normal_actor_and_redacts_adapter_internals(self):
+		identity, payload, context = self.source_fixture()
+		first = api.capture_source_inquiry(identity, payload, capture_context=context)
+		stored = json.loads(frappe.db.get_value("CRM Inquiry", first["name"], "capture_context"))
+		self.assertEqual(self.users["owner"], stored["capture_user"])
+		self.assertEqual(context["original_respondent"], stored["original_respondent"])
+		self.assertEqual(context["purpose_statement"], first["source_evidence"]["purpose_statement"])
+		for private in ("receipt_name", "policy_hash", "capture_user", "requested_by", "source_identity", "form_revision_hash"):
+			self.assertNotIn(private, first["source_evidence"])
+		self.assertNotIn("capture_context", frappe.get_doc("CRM Inquiry", first["name"]).as_dict())
+		self.assertEqual(first["name"], api.find_source_inquiry(identity)["name"])
+		self.assertNotIn(api.find_source_inquiry, frappe.whitelisted)
+		self.assertIsNone(self.capture()["source_evidence"])
+
+	def test_source_evidence_does_not_follow_added_people_or_create_leads(self):
+		identity, payload, context = self.source_fixture()
+		leads = frappe.db.count("CRM Lead")
+		first = api.capture_source_inquiry(identity, payload, capture_context=context)
+		updated = api.add_person(first["name"], str(first["modified"]), {
+			"display_name": "Someone else", "role": "Interested Person", "email": "different@example.invalid",
+		})
+		self.assertEqual(first["source_evidence"], updated["source_evidence"])
+		self.assertEqual(2, len(updated["people"]))
+		self.assertEqual(leads, frappe.db.count("CRM Lead"))
+		self.mail.assert_not_called()
+
+	def test_source_evidence_replay_preserves_original_policy_across_actors(self):
+		identity, payload, context = self.source_fixture()
+		first = api.capture_source_inquiry(identity, payload, capture_context=context)
+		frappe.set_user(self.users["manager"])
+		later = {**context, "policy_hash": "c" * 64, "purpose_statement": "Later wording."}
+		replay = api.capture_source_inquiry(identity, {}, capture_context=later)
+		self.assertEqual(first["source_evidence"], replay["source_evidence"])
+		self.assertEqual(first["name"], replay["name"])
+		for changes in ({"account_id": "910009"}, {"form_id": "910008"},
+			{"source_id": "910007", "leadgen_id": "910007"}):
+			with self.subTest(changes=changes), self.assertRaises(frappe.ValidationError):
+				api.capture_source_inquiry(identity, {}, capture_context={**context, **changes})
+
+	def test_source_evidence_legacy_receipt_cannot_be_automatically_reinterpreted(self):
+		identity, payload, context = self.source_fixture()
+		first = api.capture_source_inquiry(identity, payload)
+		with self.assertRaises(frappe.ValidationError):
+			api.capture_source_inquiry(identity, payload, capture_context=context)
+		self.assertEqual(first["name"], api.find_source_inquiry(identity)["name"])
+		self.assertFalse(frappe.db.get_value("CRM Inquiry", first["name"], "capture_context"))
+
+	def test_source_evidence_is_denied_to_unrelated_users_and_disabled_actor(self):
+		identity, payload, context = self.source_fixture()
+		first = api.capture_source_inquiry(identity, payload, capture_context=context)
+		for actor in (self.users["outsider"], self.users["noncrm"], "Guest"):
+			frappe.set_user(actor)
+			for action in (lambda: api.find_source_inquiry(identity), lambda: api.get_inquiry(first["name"]),
+				lambda: api.capture_source_inquiry(identity, payload, capture_context=context)):
+				with self.subTest(actor=actor), self.assertRaises(frappe.PermissionError):
+					action()
+
+	def test_source_evidence_context_allowlist_actor_and_respondent_bounds(self):
+		identity, payload, context = self.source_fixture()
+		bad = [{"version": True}, {"version": 2}, {"marketing_consent": True},
+			{"source_identity": "another-key"}, {"provider": "Instagram"}, {"account_id": "a"},
+			{"policy_hash": "bad"}, {"receipt_name": ""}, {"form_id": ""}, {"form_revision_hash": ""},
+			{"purpose_statement": ""}, {"purpose_statement": "x" * 4001}, {"response_channel": "All"},
+			{"submitted_at": "yesterday"}, {"source_id": "different-lead"},
+			{"mode": "manager_reprocess"}, {"original_respondent": {**context["original_respondent"], "role": "Referrer"}},
+			{"original_respondent": {**context["original_respondent"], "email": ""}},
+			{"original_respondent": {**context["original_respondent"], "lead": "forged"}}]
+		for changes in bad:
+			with self.subTest(fields=list(changes)), self.assertRaises(frappe.ValidationError):
+				api.capture_source_inquiry(identity, payload, capture_context={**context, **changes})
+		with self.assertRaises(frappe.PermissionError):
+			api.capture_source_inquiry(identity, payload, capture_context={**context, "capture_user": "Administrator"})
+		for changes in ({"source_type": "Instagram"}, {"people": []},
+			{"people": [*payload["people"], {"display_name": "Other", "role": "Requester"}]}):
+			with self.subTest(fields=list(changes)), self.assertRaises(frappe.ValidationError):
+				api.capture_source_inquiry(identity, {**payload, **changes}, capture_context=context)
+
+	def test_public_social_evidence_cannot_claim_form_purpose_or_buyer_identity(self):
+		identity, payload, context = self.source_fixture()
+		from crm.fcrm.doctype.crm_inquiry.source_evidence import FORM_FIELDS
+
+		context = {key: value for key, value in context.items() if key not in FORM_FIELDS}
+		context["source_kind"] = "fb_mention"
+		with self.assertRaises(frappe.ValidationError):
+			api.capture_source_inquiry(identity, payload, capture_context=context)
+		payload["people"][0]["role"] = "Referrer"
+		with self.assertRaises(frappe.ValidationError):
+			api.capture_source_inquiry(identity, payload, capture_context={**context, "purpose_statement": "Contact me"})
+		first = api.capture_source_inquiry(identity, payload, capture_context=context)
+		self.assertEqual("Referrer", first["people"][0]["role"])
+		self.assertNotIn("purpose_statement", first["source_evidence"])
+
+	def test_generic_capture_evidence_forgery_and_update_cannot_change_snapshot(self):
+		identity, payload, context = self.source_fixture()
+		for actor in (self.users["owner"], "Administrator"):
+			frappe.set_user(actor)
+			with self.subTest(actor=actor), self.assertRaises(frappe.ValidationError):
+				frappe.get_doc({"doctype": "CRM Inquiry", "title": "Forged evidence",
+					"capture_context": json.dumps(context), "flags": {"inquiry_capture": ["token", "a", "b", context]}}).insert()
+		frappe.set_user(self.users["owner"])
+		first = api.capture_source_inquiry(identity, payload, capture_context=context)
+		doc = frappe.get_doc("CRM Inquiry", first["name"])
+		original = doc.capture_context
+		doc.capture_context = "{}"
+		doc.title = "Ordinary staff triage"
+		doc.save()  # Restricted field is restored; ordinary triage still works.
+		self.assertEqual(original, frappe.db.get_value("CRM Inquiry", doc.name, "capture_context"))
+		frappe.set_user("Administrator")
+		doc = frappe.get_doc("CRM Inquiry", first["name"])
+		doc.capture_context = "{}"
+		with self.assertRaises(frappe.ValidationError):
+			doc.save()
+
+	def test_capture_evidence_preserves_literal_form_text_and_existing_transaction(self):
+		identity, payload, context = self.source_fixture()
+		context["purpose_statement"] = '<b>Email me</b> <script>literal evidence only</script>'
+		first = api.capture_source_inquiry(identity, payload, capture_context=context)
+		self.assertEqual(context["purpose_statement"], first["source_evidence"]["purpose_statement"])
+		anchor = self.capture(title="Earlier transaction work")
+		lookup = frappe.db.get_value
+		misses = 2
+
+		def missed(doctype, filters=None, *args, **kwargs):
+			nonlocal misses
+			if misses and doctype == "CRM Inquiry" and isinstance(filters, dict) and "capture_key" in filters:
+				misses -= 1
+				return None
+			return lookup(doctype, filters, *args, **kwargs)
+
+		with patch.object(frappe.db, "get_value", side_effect=missed):
+			replay = api.capture_source_inquiry(identity, payload, capture_context=context)
+		self.assertEqual(first["name"], replay["name"])
+		self.assertTrue(frappe.db.exists("CRM Inquiry", anchor["name"]))
+
 	def test_replay_permission_is_checked_before_receipt_content(self):
 		key = uuid4().hex
 		first = self.capture(key)

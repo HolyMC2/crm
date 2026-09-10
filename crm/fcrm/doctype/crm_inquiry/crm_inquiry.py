@@ -15,11 +15,11 @@ from crm.api.inquiries import (
 
 # Object identity cannot be forged through JSON flags on a generic document save.
 _SERVICE_TOKEN = object()
-PROVENANCE = ("owner", "creation", "source_type", "source_url", "source_text", "capture_key", "capture_payload_hash")
+PROVENANCE = ("owner", "creation", "source_type", "source_url", "source_text", "capture_key", "capture_payload_hash", "capture_context")
 
 
-def prepare_capture(doc, key, fingerprint):
-	doc.flags.inquiry_capture = (_SERVICE_TOKEN, key, fingerprint)
+def prepare_capture(doc, key, fingerprint, context=None):
+	doc.flags.inquiry_capture = (_SERVICE_TOKEN, key, fingerprint, context)
 
 
 def prepare_conversion(doc, person, lead, converted_at):
@@ -62,6 +62,12 @@ def has_permission(doc, ptype=None, user=None, permission_type=None):
 class CRMInquiry(Document):
 	def as_dict(self, *args, **kwargs):
 		result = super().as_dict(*args, **kwargs)
+		# The native inquiry API exposes a finite source_evidence projection.
+		# Generic responses must respect the evidence field's read level too.
+		if frappe.session.user != "Administrator" and (
+			not self.meta.has_field("capture_context") or not self.has_permlevel_access_to("capture_context")
+		):
+			result.pop("capture_context", None)
 		# Generic save/insert/set_value responses do not consistently apply field
 		# read levels. Redact the returned copy; never clear a stored receipt.
 		for row in result.get("people", []):
@@ -71,6 +77,9 @@ class CRMInquiry(Document):
 
 	def validate_higher_perm_levels(self):
 		super().validate_higher_perm_levels()
+		capture = _service_flag(self, "inquiry_capture")
+		if self.is_new() and capture:
+			self.capture_context = capture[3]
 		# lead is hidden from generic reads and unwritable at permission level 1.
 		# Restore only the server-authorized conversion after Frappe resets fields.
 		conversion = _service_flag(self, "inquiry_conversion")
@@ -88,8 +97,8 @@ class CRMInquiry(Document):
 		self.assigned_to = self.assigned_to or frappe.session.user
 		capture = _service_flag(self, "inquiry_capture")
 		if capture:
-			self.capture_key, self.capture_payload_hash = capture[1:]
-		elif self.capture_key or self.capture_payload_hash:
+			self.capture_key, self.capture_payload_hash, self.capture_context = capture[1:]
+		elif self.capture_key or self.capture_payload_hash or self.get("capture_context"):
 			frappe.throw(_("Capture receipts are set by the server."))
 		else:
 			self.capture_key = _digest([self.owner, "desk", uuid4().hex])

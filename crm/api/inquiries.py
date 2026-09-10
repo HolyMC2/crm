@@ -192,8 +192,11 @@ def _version(doc, modified):
 
 def _serialized(doc):
 	doc.check_permission("read")
+	from crm.fcrm.doctype.crm_inquiry.source_evidence import project
+
 	result = {field: doc.get(field) for field in SUMMARY_FIELDS}
 	result["source_text"] = doc.source_text
+	result["source_evidence"] = project(doc)
 	result["can_write"] = bool(doc.has_permission("write"))
 	result["people"] = []
 	for person in doc.people:
@@ -228,7 +231,17 @@ def create_inquiry(payload: dict | str):
 
 
 @_public_errors
-def capture_source_inquiry(source_key: str, payload: dict | str):
+def find_source_inquiry(source_key: str):
+	"""Internal source lookup; never exposes another actor's receipt or bypasses access."""
+	_require_member()
+	source_key = _text(source_key, _("Source key"), 500, required=True)
+	key = _digest(["source", DOCTYPE, source_key])
+	name = frappe.db.get_value(DOCTYPE, {"capture_key": key}, "name")
+	return _serialized(_document(name, lock=True)) if name else None
+
+
+@_public_errors
+def capture_source_inquiry(source_key: str, payload: dict | str, capture_context=None):
 	"""Internal adapter capture: one receipt per known source across CRM actors.
 
 	Adapters must check source and branch access before calling. The receipt still
@@ -237,22 +250,31 @@ def capture_source_inquiry(source_key: str, payload: dict | str):
 	"""
 	_require_member()
 	source_key = _text(source_key, _("Source key"), 500, required=True)
+	from crm.fcrm.doctype.crm_inquiry.source_evidence import check_replay, validate_context, validate_people
+
+	context = validate_context(capture_context, source_key)
 	# Three elements cannot collide with the manual [actor, request_id] namespace.
 	key = _digest(["source", DOCTYPE, source_key])
 	existing = frappe.db.get_value(DOCTYPE, {"capture_key": key}, "name")
 	if existing:
-		return _serialized(_document(existing, lock=True))
+		doc = _document(existing, lock=True)
+		check_replay(doc, context)
+		return _serialized(doc)
 	values = _capture(payload, require_request_id=False)
 	values.pop("client_request_id")
-	return _save_capture(key, values, compare_payload=False)
+	validate_people(context, values)
+	return _save_capture(key, values, compare_payload=False, context=context)
 
 
-def _save_capture(key, values, compare_payload=True):
+def _save_capture(key, values, compare_payload=True, context=None):
 	"""Shared normal insert and unique-index recovery; never exposed by RPC."""
-	fingerprint = _digest(values)
+	from crm.fcrm.doctype.crm_inquiry.source_evidence import check_replay, encode
+
+	fingerprint = _digest({**values, "capture_context": context}) if context else _digest(values)
 
 	def replay(name):
 		doc = _document(name, lock=True)
+		check_replay(doc, context)
 		if compare_payload and doc.capture_payload_hash != fingerprint:
 			frappe.throw(_("This request ID was already used with different inquiry content."))
 		return _serialized(doc)
@@ -264,7 +286,7 @@ def _save_capture(key, values, compare_payload=True):
 	from crm.fcrm.doctype.crm_inquiry.crm_inquiry import prepare_capture
 
 	doc = frappe.get_doc({"doctype": DOCTYPE, **values, "assigned_to": frappe.session.user})
-	prepare_capture(doc, key, fingerprint)
+	prepare_capture(doc, key, fingerprint, encode(context))
 	savepoint = "inquiry_capture_" + uuid4().hex
 	frappe.db.savepoint(savepoint)
 	try:
