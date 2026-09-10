@@ -1,0 +1,204 @@
+Traceback (most recent call last):
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 246, in <module>
+    proof()
+    ~~~~~^^
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 175, in proof
+    cfg = fixture()
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 131, in fixture
+    'enabled': 1, 'send_welcome_email': 0, 'roles': [{'role': 'Sales User'}]}).insert()
+                                                                               ~~~~~~^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 511, in insert
+    self.run_post_save_methods()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1452, in run_post_save_methods
+    self.run_method("on_update")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1258, in run_method
+    out = Document.hook(fn)(self, *args, **kwargs)
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1659, in composer
+    return composed(self, method, *args, **kwargs)
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1633, in runner
+    add_to_return_value(self, fn(self, *args, **kwargs))
+                              ~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py", line 1255, in fn
+    return method_object(*args, **kwargs)
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/core/doctype/user/user.py", line 328, in on_update
+    frappe.enqueue(
+    ~~~~~~~~~~~~~~^
+    	"frappe.core.doctype.user.user.create_contact",
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    	enqueue_after_commit=True,
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1240, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 38, in deny
+    raise AssertionError('External effects prohibited in conversation race proof')
+AssertionError: External effects prohibited in conversation race proof
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"account": "control-proof-0e1d1da332", "event": "fixtures_committed", "name": "e60f0218baf410019fcde648da112cdf447410cad79e19343d7f574a992f295a", "prefix": "control-proof-0e1d1da332", "shop": "control-proof-0e1d1da332", "users": ["control-proof-0e1d1da332-1@example.invalid", "control-proof-0e1d1da332-2@example.invalid"]}
+{"event": "process_output", "pid": 10610, "value": {"event": "ready", "mode": "race", "pid": 10610}}
+{"event": "process_output", "pid": 10611, "value": {"event": "ready", "mode": "race", "pid": 10611}}
+{"event": "process_output", "pid": 10610, "value": {"event": "control", "result": {"account_id": "97219920986243111", "account_record": "control-proof-0e1d1da332", "bot_enabled": 0, "control_state": "Human", "generation": 2, "human_owner": "control-proof-0e1d1da332-1@example.invalid", "modified": "2026-09-10 11:04:47.759345", "name": "e60f0218baf410019fcde648da112cdf447410cad79e19343d7f574a992f295a", "peer_id": "5215550100666", "provider": "WhatsApp", "provider_control": "Not Applicable", "reference_doctype": "", "reference_name": null, "replayed": false, "shop_key": "control-proof-0e1d1da332"}}}
+{"event": "process_output", "pid": 10611, "value": {"event": "conflict", "kind": "TimestampMismatchError"}}
+{"event": "process_result", "pid": 10610, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_result", "pid": 10611, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "race_verified", "events": 1, "generation": 2, "winner": 0}
+{"event": "process_output", "pid": 10616, "value": {"event": "ready", "mode": "take", "pid": 10616}}
+{"event": "process_output", "pid": 10616, "value": {"event": "control", "result": {"account_id": "97219920986243111", "account_record": "control-proof-0e1d1da332", "bot_enabled": 0, "control_state": "Human", "generation": 2, "human_owner": "control-proof-0e1d1da332-1@example.invalid", "modified": "2026-09-10 11:04:47.759345", "name": "e60f0218baf410019fcde648da112cdf447410cad79e19343d7f574a992f295a", "peer_id": "5215550100666", "provider": "WhatsApp", "provider_control": "Not Applicable", "reference_doctype": "", "reference_name": null, "replayed": true, "shop_key": "control-proof-0e1d1da332"}}}
+{"event": "process_result", "pid": 10616, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "lost_response_replay_verified", "events": 1}
+{"event": "process_output", "pid": 10619, "value": {"event": "ready", "mode": "hold", "pid": 10619}}
+{"event": "process_output", "pid": 10619, "value": {"event": "submitting_committed_fence_held", "generation": 2}}
+{"event": "process_output", "pid": 10622, "value": {"event": "ready", "mode": "stale", "pid": 10622}}
+{"event": "process_output", "pid": 10622, "value": {"event": "dispatch_denied", "kind": "TimestampMismatchError"}}
+{"event": "process_result", "pid": 10622, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 10624, "value": {"event": "ready", "mode": "take", "pid": 10624}}
+{"event": "takeover_waited_on_submitting_fence"}
+{"event": "process_output", "pid": 10619, "value": {"event": "fence_released"}}
+{"event": "process_result", "pid": 10619, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 10624, "value": {"event": "control", "result": {"account_id": "97219920986243111", "account_record": "control-proof-0e1d1da332", "bot_enabled": 0, "control_state": "Human", "generation": 3, "human_owner": "Administrator", "modified": "2026-09-10 11:04:50.870979", "name": "e60f0218baf410019fcde648da112cdf447410cad79e19343d7f574a992f295a", "peer_id": "5215550100666", "provider": "WhatsApp", "provider_control": "Not Applicable", "reference_doctype": "", "reference_name": null, "replayed": false, "shop_key": "control-proof-0e1d1da332"}}}
+{"event": "process_result", "pid": 10624, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 10627, "value": {"event": "ready", "mode": "stale", "pid": 10627}}
+{"event": "process_output", "pid": 10627, "value": {"event": "dispatch_denied", "kind": "TimestampMismatchError"}}
+{"event": "process_result", "pid": 10627, "returncode": 0, "stderr": "", "stdout": ""}
+{"dispatched": 0, "event": "fence_verified", "generation": 3, "note": "Real Submitting-like checkpoint commit retained fence; prior in-flight attempt is never claimed recalled", "provider_attempts": 0}
+Traceback (most recent call last):
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 235, in proof
+    cleanup(cfg)
+    ~~~~~~~^^^^^
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 159, in cleanup
+    frappe.delete_doc('WhatsApp Account', cfg['account'], force=True, ignore_permissions=True)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 758, in delete_doc
+    return frappe.model.delete_doc.delete_doc(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+    	doctype,
+     ^^^^^^^^
+    ...<8 lines>...
+    	delete_permanently,
+     ^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/delete_doc.py", line 193, in delete_doc
+    frappe.enqueue(
+    ~~~~~~~~~~~~~~^
+    	"frappe.model.delete_doc.delete_dynamic_links",
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    	enqueue_after_commit=True,
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1240, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 43, in queue
+    return deny()
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 38, in deny
+    raise AssertionError('External effects prohibited in conversation race proof')
+AssertionError: External effects prohibited in conversation race proof
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 252, in <module>
+    proof()
+    ~~~~~^^
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 244, in proof
+    cleanup(cfg)
+    ~~~~~~~^^^^^
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 159, in cleanup
+    frappe.delete_doc('WhatsApp Account', cfg['account'], force=True, ignore_permissions=True)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py", line 758, in delete_doc
+    return frappe.model.delete_doc.delete_doc(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+    	doctype,
+     ^^^^^^^^
+    ...<8 lines>...
+    	delete_permanently,
+     ^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/frappe/frappe-bench/apps/frappe/frappe/model/delete_doc.py", line 193, in delete_doc
+    frappe.enqueue(
+    ~~~~~~~~~~~~~~^
+    	"frappe.model.delete_doc.delete_dynamic_links",
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    	enqueue_after_commit=True,
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1240, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 43, in queue
+    return deny()
+  File "/tmp/meta-wa-20260910/coordination/meta-reliability/conversation_concurrency.py", line 38, in deny
+    raise AssertionError('External effects prohibited in conversation race proof')
+AssertionError: External effects prohibited in conversation race proof
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"accounts": 0, "audit_events": 4, "conversation": 1, "event": "cleanup", "retained": "One closed private fictional conversation plus immutable control events; no account/users/shop remain", "shop": 0, "users": 0}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.core.doctype.user.user.create_contact"}
+{"account": "control-proof-d2526de0eb", "event": "fixtures_committed", "name": "3cc9971a41263c99f6b22a43e62ff4feb60057a356a4386dda67e19458c3eb32", "prefix": "control-proof-d2526de0eb", "shop": "control-proof-d2526de0eb", "users": ["control-proof-d2526de0eb-1@example.invalid", "control-proof-d2526de0eb-2@example.invalid"]}
+{"event": "process_output", "pid": 10728, "value": {"event": "ready", "mode": "race", "pid": 10728}}
+{"event": "process_output", "pid": 10729, "value": {"event": "ready", "mode": "race", "pid": 10729}}
+{"event": "process_output", "pid": 10728, "value": {"event": "conflict", "kind": "TimestampMismatchError"}}
+{"event": "process_output", "pid": 10729, "value": {"event": "control", "result": {"account_id": "97183148080744750", "account_record": "control-proof-d2526de0eb", "bot_enabled": 0, "control_state": "Human", "generation": 2, "human_owner": "control-proof-d2526de0eb-2@example.invalid", "modified": "2026-09-10 11:06:18.957275", "name": "3cc9971a41263c99f6b22a43e62ff4feb60057a356a4386dda67e19458c3eb32", "peer_id": "5215550100666", "provider": "WhatsApp", "provider_control": "Not Applicable", "reference_doctype": "", "reference_name": null, "replayed": false, "shop_key": "control-proof-d2526de0eb"}}}
+{"event": "process_result", "pid": 10728, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_result", "pid": 10729, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "race_verified", "events": 1, "generation": 2, "winner": 1}
+{"event": "process_output", "pid": 10734, "value": {"event": "ready", "mode": "take", "pid": 10734}}
+{"event": "process_output", "pid": 10734, "value": {"event": "control", "result": {"account_id": "97183148080744750", "account_record": "control-proof-d2526de0eb", "bot_enabled": 0, "control_state": "Human", "generation": 2, "human_owner": "control-proof-d2526de0eb-2@example.invalid", "modified": "2026-09-10 11:06:18.957275", "name": "3cc9971a41263c99f6b22a43e62ff4feb60057a356a4386dda67e19458c3eb32", "peer_id": "5215550100666", "provider": "WhatsApp", "provider_control": "Not Applicable", "reference_doctype": "", "reference_name": null, "replayed": true, "shop_key": "control-proof-d2526de0eb"}}}
+{"event": "process_result", "pid": 10734, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "lost_response_replay_verified", "events": 1}
+{"event": "process_output", "pid": 10737, "value": {"event": "ready", "mode": "hold", "pid": 10737}}
+{"event": "process_output", "pid": 10737, "value": {"event": "submitting_committed_fence_held", "generation": 2}}
+{"event": "process_output", "pid": 10740, "value": {"event": "ready", "mode": "stale", "pid": 10740}}
+{"event": "process_output", "pid": 10740, "value": {"event": "dispatch_denied", "kind": "TimestampMismatchError"}}
+{"event": "process_result", "pid": 10740, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 10742, "value": {"event": "ready", "mode": "take", "pid": 10742}}
+{"event": "takeover_waited_on_submitting_fence"}
+{"event": "process_output", "pid": 10737, "value": {"event": "fence_released"}}
+{"event": "process_result", "pid": 10737, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 10742, "value": {"event": "control", "result": {"account_id": "97183148080744750", "account_record": "control-proof-d2526de0eb", "bot_enabled": 0, "control_state": "Human", "generation": 3, "human_owner": "Administrator", "modified": "2026-09-10 11:06:22.282513", "name": "3cc9971a41263c99f6b22a43e62ff4feb60057a356a4386dda67e19458c3eb32", "peer_id": "5215550100666", "provider": "WhatsApp", "provider_control": "Not Applicable", "reference_doctype": "", "reference_name": null, "replayed": false, "shop_key": "control-proof-d2526de0eb"}}}
+{"event": "process_result", "pid": 10742, "returncode": 0, "stderr": "", "stdout": ""}
+{"event": "process_output", "pid": 10745, "value": {"event": "ready", "mode": "stale", "pid": 10745}}
+{"event": "process_output", "pid": 10745, "value": {"event": "dispatch_denied", "kind": "TimestampMismatchError"}}
+{"event": "process_result", "pid": 10745, "returncode": 0, "stderr": "", "stdout": ""}
+{"dispatched": 0, "event": "fence_verified", "generation": 3, "note": "Real Submitting-like checkpoint commit retained fence; prior in-flight attempt is never claimed recalled", "provider_attempts": 0}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"event": "fixture_enqueue_suppressed", "method": "frappe.model.delete_doc.delete_dynamic_links"}
+{"accounts": 0, "audit_events": 4, "conversation": 1, "event": "cleanup", "retained": "One closed private fictional conversation plus immutable control events; no account/users/shop remain", "shop": 0, "users": 0}
+{"child_processes": 7, "event": "PASS", "provider_attempts": 0, "scenarios": 3}

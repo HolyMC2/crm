@@ -1,0 +1,31 @@
+SITE meta-reliability-test-20260910.lab.xoloitzcuintles.com SOURCE /tmp/meta-wa-20260910/crm/api/conversations.py
+APPS ['frappe', 'frappe_whatsapp', 'crm', 'doco', 'erpnext', 'scanner_kit', 'mercado', 'doco_marketing']
+test_absent_channel_adapter_is_denied_without_import (crm.tests.test_conversations.TestConversationCore.test_absent_channel_adapter_is_denied_without_import) ... ok
+test_administrator_generic_create_cannot_forge_service (crm.tests.test_conversations.TestConversationCore.test_administrator_generic_create_cannot_forge_service) ... ok
+test_private_schema_has_no_optional_doctype_links (crm.tests.test_conversations.TestConversationCore.test_private_schema_has_no_optional_doctype_links) ... ok
+test_account_rebinding_and_shop_movement_cannot_redirect (crm.tests.test_conversations.TestConversations.test_account_rebinding_and_shop_movement_cannot_redirect) ... ok
+test_broker_list_never_exposes_another_reference (crm.tests.test_conversations.TestConversations.test_broker_list_never_exposes_another_reference) ... ok
+test_close_reopen_and_no_public_bot_activation (crm.tests.test_conversations.TestConversations.test_close_reopen_and_no_public_bot_activation) ... ok
+test_current_role_and_enabled_user_revocation (crm.tests.test_conversations.TestConversations.test_current_role_and_enabled_user_revocation) ... ok
+test_current_shop_scope_and_target_owner (crm.tests.test_conversations.TestConversations.test_current_shop_scope_and_target_owner) ... ok
+test_dispatch_requires_fence_current_owner_and_active_account (crm.tests.test_conversations.TestConversations.test_dispatch_requires_fence_current_owner_and_active_account) ... ok
+test_external_echo_cannot_reopen_closed_conversation (crm.tests.test_conversations.TestConversations.test_external_echo_cannot_reopen_closed_conversation) ... ok
+test_external_echo_is_deduplicated_and_normal_retry_still_holds (crm.tests.test_conversations.TestConversations.test_external_echo_is_deduplicated_and_normal_retry_still_holds) ... ok
+test_generic_models_and_forged_json_capability_are_private (crm.tests.test_conversations.TestConversations.test_generic_models_and_forged_json_capability_are_private) ... ok
+test_history_and_correlated_echo_never_change_authority (crm.tests.test_conversations.TestConversations.test_history_and_correlated_echo_never_change_authority) ... ok
+test_identity_and_safe_defaults (crm.tests.test_conversations.TestConversations.test_identity_and_safe_defaults) ... ok
+test_messenger_send_roles_stay_narrow (crm.tests.test_conversations.TestConversations.test_messenger_send_roles_stay_narrow) ... ok
+test_no_nested_transaction_boundary_or_sensitive_realtime (crm.tests.test_conversations.TestConversations.test_no_nested_transaction_boundary_or_sensitive_realtime) ... ok
+test_owner_transfer_manager_reason_and_release_never_bot (crm.tests.test_conversations.TestConversations.test_owner_transfer_manager_reason_and_release_never_bot) ... ok
+test_provider_first_attempt_rollback_then_retry_applies_hold (crm.tests.test_conversations.TestConversations.test_provider_first_attempt_rollback_then_retry_applies_hold) ... ok
+test_provider_loss_and_return_never_resume_bot (crm.tests.test_conversations.TestConversations.test_provider_loss_and_return_never_resume_bot) ... ok
+test_provider_observation_rejects_untrusted_and_foreign_account (crm.tests.test_conversations.TestConversations.test_provider_observation_rejects_untrusted_and_foreign_account) ... ok
+test_reference_permission_not_inherited_from_account (crm.tests.test_conversations.TestConversations.test_reference_permission_not_inherited_from_account) ... ok
+test_request_is_audit_only_and_does_not_take_authority (crm.tests.test_conversations.TestConversations.test_request_is_audit_only_and_does_not_take_authority) ... ok
+test_take_conflict_and_stable_command_replay_after_transfer (crm.tests.test_conversations.TestConversations.test_take_conflict_and_stable_command_replay_after_transfer) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 1.190s
+
+OK
+RESULT 23 0 0 skips 0

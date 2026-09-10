@@ -1,0 +1,10 @@
+SITE crm-inquiry-test-20260909.lab.xoloitzcuintles.com APPS ['frappe', 'crm']
+test_absent_channel_adapter_is_denied_without_import (crm.tests.test_conversations.TestConversationCore.test_absent_channel_adapter_is_denied_without_import) ... ok
+test_administrator_generic_create_cannot_forge_service (crm.tests.test_conversations.TestConversationCore.test_administrator_generic_create_cannot_forge_service) ... ok
+test_private_schema_has_no_optional_doctype_links (crm.tests.test_conversations.TestConversationCore.test_private_schema_has_no_optional_doctype_links) ... ok
+RESULT 3 0 0 skips 0
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.080s
+
+OK
