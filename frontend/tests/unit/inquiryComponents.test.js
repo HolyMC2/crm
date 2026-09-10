@@ -393,3 +393,141 @@ describe('inquiry detail actions', () => {
     expect(el.querySelector('[data-testid="detail-add-person"]')).toBeNull()
   })
 })
+
+describe('inquiry source evidence', () => {
+  const evidence = (extra = {}) => ({
+    version: 1,
+    mode: 'automatic',
+    provider: 'Messenger',
+    account_id: '970000000000031',
+    source_kind: 'lead_ad',
+    source_id: 'fictional-source-31',
+    form_id: 'fictional-form-31',
+    leadgen_id: 'fictional-response-31',
+    purpose_statement: 'Responder a la solicitud de reparación de pantalla.',
+    response_channel: 'Phone call',
+    submitted_at: '2026-09-10 10:30:00',
+    original_respondent: {
+      display_name: 'Solicitante del formulario',
+      role: 'Requester',
+      email: 'original@example.test',
+      phone: '+15555550131',
+    },
+    ...extra,
+  })
+
+  it.each([undefined, null])(
+    'hides absent evidence (%s) and preserves the existing source context',
+    (source_evidence) => {
+      const el = mount(InquiryDetail, {
+        inquiry: inquiry({ source_evidence }),
+        mutate: vi.fn(),
+      })
+      expect(
+        el.querySelector('[data-testid="inquiry-source-evidence"]'),
+      ).toBeNull()
+      expect(
+        el.querySelector('[data-testid="inquiry-source-text"]').textContent,
+      ).toBe('Texto público')
+      expect(el.querySelector('a[href]').getAttribute('href')).toBe(
+        'https://example.test/post',
+      )
+    },
+  )
+
+  it('keeps original form purpose and respondent separate when another person is added', async () => {
+    const original = evidence()
+    const snapshot = JSON.stringify(original)
+    const mutate = vi.fn()
+    const props = reactive({
+      inquiry: inquiry({ source_evidence: original }),
+      mutate,
+    })
+    const el = mount(InquiryDetail, props)
+    const block = el.querySelector('[data-testid="inquiry-source-evidence"]')
+    expect(block.textContent).toContain('Finalidad de contacto del formulario')
+    expect(
+      block.querySelector('[data-testid="inquiry-form-purpose"]').textContent,
+    ).toContain(original.purpose_statement)
+    expect(block.textContent).toContain('Llamada telefónica')
+    expect(block.textContent).toContain('Captura automática')
+    expect(block.textContent).toContain('Formulario de anuncio')
+    expect(block.textContent).toContain(original.form_id)
+    expect(block.textContent).toContain(original.leadgen_id)
+    expect(block.textContent).toContain(original.submitted_at)
+
+    props.inquiry = {
+      ...props.inquiry,
+      people: [
+        {
+          person_key: 'added',
+          display_name: 'Otra persona interesada',
+          role: 'Interested Person',
+          email: 'added@example.test',
+        },
+      ],
+    }
+    await nextTick()
+    const respondent = block.querySelector(
+      '[data-testid="inquiry-original-respondent"]',
+    )
+    expect(respondent.textContent).toContain(
+      original.original_respondent.display_name,
+    )
+    expect(respondent.textContent).toContain(original.original_respondent.email)
+    expect(respondent.textContent).toContain(original.original_respondent.phone)
+    expect(block.textContent).not.toContain('Otra persona interesada')
+    const added = el.querySelector('[data-person="added"]')
+    expect(added.textContent).toContain('Otra persona interesada')
+    expect(added.textContent).not.toContain(original.purpose_statement)
+    expect(added.textContent).not.toContain(original.original_respondent.email)
+    expect(block.textContent).toContain(
+      'Agregar otra persona no le transfiere esa finalidad.',
+    )
+    expect(block.textContent).toContain(
+      'no acredita consentimiento de marketing ni autoriza envíos',
+    )
+    expect(JSON.stringify(props.inquiry.source_evidence)).toBe(snapshot)
+    expect(mutate).not.toHaveBeenCalled()
+  })
+
+  it.each([true, false])(
+    'renders malicious evidence as inert read-only text when can_write=%s',
+    async (can_write) => {
+      const text =
+        '<img src=x onerror="alert(1)"><script>alert(2)</script><svg onload="alert(3)">'
+      const mutate = vi.fn()
+      const el = mount(InquiryDetail, {
+        inquiry: inquiry({
+          can_write,
+          source_evidence: evidence({
+            account_id: text,
+            source_id: text,
+            form_id: text,
+            leadgen_id: text,
+            purpose_statement: text,
+            submitted_at: text,
+            original_respondent: {
+              display_name: text,
+              role: 'Requester',
+              email: text,
+              phone: text,
+            },
+          }),
+        }),
+        mutate,
+      })
+      await nextTick()
+      const block = el.querySelector('[data-testid="inquiry-source-evidence"]')
+      expect(block.textContent.split(text)).toHaveLength(10)
+      expect(block.querySelector('img, script, svg, iframe')).toBeNull()
+      expect(
+        block.querySelector(
+          'a, button, input, select, textarea, form, [contenteditable]',
+        ),
+      ).toBeNull()
+      expect(mutate).not.toHaveBeenCalled()
+      expect(api.calls).toEqual([])
+    },
+  )
+})

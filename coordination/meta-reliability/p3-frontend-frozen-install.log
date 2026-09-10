@@ -1,0 +1,36 @@
+yarn install v1.22.22
+[1/4] Resolving packages...
+warning Resolution field "prosemirror-model@1.25.9" is incompatible with requested version "prosemirror-model@^1.25.11"
+warning Resolution field "picomatch@4.0.4" is incompatible with requested version "picomatch@^2.3.1"
+warning Resolution field "picomatch@4.0.4" is incompatible with requested version "picomatch@^2.0.4"
+warning Resolution field "picomatch@4.0.4" is incompatible with requested version "picomatch@^2.2.1"
+warning Resolution field "picomatch@4.0.4" is incompatible with requested version "picomatch@^4.0.5"
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+warning " > @tiptap/vue-3@3.29.2" has unmet peer dependency "@floating-ui/dom@^1.0.0".
+warning "@tiptap/vue-3 > @tiptap/extension-floating-menu@3.29.2" has unmet peer dependency "@floating-ui/dom@^1.0.0".
+warning " > vite-plugin-pwa@0.21.2" has unmet peer dependency "workbox-build@^7.3.0".
+warning " > vite-plugin-pwa@0.21.2" has unmet peer dependency "workbox-window@^7.3.0".
+warning " > typescript-eslint@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning "typescript-eslint > @typescript-eslint/utils@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning "typescript-eslint > @typescript-eslint/parser@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning "typescript-eslint > @typescript-eslint/eslint-plugin@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning "typescript-eslint > @typescript-eslint/typescript-estree@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning "typescript-eslint > @typescript-eslint/eslint-plugin > ts-api-utils@2.5.0" has unmet peer dependency "typescript@>=4.8.4".
+warning "typescript-eslint > @typescript-eslint/eslint-plugin > @typescript-eslint/type-utils@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning "typescript-eslint > @typescript-eslint/typescript-estree > @typescript-eslint/tsconfig-utils@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning "typescript-eslint > @typescript-eslint/typescript-estree > @typescript-eslint/project-service@8.66.0" has unmet peer dependency "typescript@>=4.8.4 <6.1.0".
+warning " > vitest@4.1.10" has incorrect peer dependency "vite@^6.0.0 || ^7.0.0 || ^8.0.0".
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+[4/4] Building fresh packages...
+Done in 5.78s.

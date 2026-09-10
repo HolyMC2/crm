@@ -55,6 +55,7 @@
       >
         {{ inquiry.source_text }}
       </p>
+      <InquirySourceEvidence :evidence="inquiry.source_evidence" />
     </section>
     <form class="space-y-3" @submit.prevent="save">
       <h3 class="font-semibold text-ink-gray-9">{{ __('Seguimiento') }}</h3>
@@ -325,6 +326,7 @@
 import { computed, ref, watch } from 'vue'
 import Link from '@/components/Controls/Link.vue'
 import PersonFields from './PersonFields.vue'
+import InquirySourceEvidence from './InquirySourceEvidence.vue'
 import {
   INQUIRY_LABELS,
   INQUIRY_STATUSES,
