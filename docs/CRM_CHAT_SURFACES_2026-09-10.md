@@ -2,7 +2,9 @@
 
 User direction, 2026-09-10 UTC: keep chat simple across the existing assistant,
 CRM support and storefront; Chatwoot is no longer used. This records the design
-decision and rollout scope, not a claim that a webchat channel is implemented.
+decision and rollout scope. Native Webchat is now implemented and verified in the
+local lab; see the [accepted source handoff](CRM_NATIVE_SUPPORT_HANDOFF_2026-09-10.md).
+Production activation remains gated.
 
 ## Product contract
 
@@ -15,7 +17,7 @@ it is not another floating chat window.
 | --- | --- | --- |
 | Desk / CRM staff | One private assistant launcher | Current authenticated user; private assistant history and permissions |
 | CRM customer support | Existing Inbox navigation and contextual customer thread | Assigned team/staff; explicit human/bot ownership and durable outbound intents |
-| Storefront | One customer-help bubble replacing the current WhatsApp-only FAB when webchat is ready | Server-selected tenant/store, isolated visitor/customer session, customer conversation service |
+| Storefront | One customer-help bubble; WhatsApp/contact fallback when native chat is unavailable | Server-selected tenant/store, isolated visitor session, native customer conversation service |
 
 The storefront bubble may offer WhatsApp as a channel choice within the same
 entry point. Do not stack separate assistant, WhatsApp and support launchers.
@@ -23,23 +25,28 @@ Customers see their own help thread, never staff notes or private assistant
 history. Cross-channel linking requires explicit verified identity; matching a
 phone, name or browser cookie does not merge people or expose another thread.
 
-"CRM support" still needs product clarification: staff helping customers,
-staff asking Muelle for software support, or both. If platform support is needed,
+"CRM support" is implemented as staff helping customers. If platform support is needed,
 it belongs within the same staff Help entry, but routes to a separately authorized
 Muelle support conversation. An ordinary customer thread never grants platform
 operator access. This ambiguity does not block inbound reliability work.
 
-## Existing implementation to reuse
+## Accepted implementation
 
 - Doco's authenticated assistant API and user-addressed realtime transport own
   staff assistant messages. The Desk launcher currently depends on Desk globals;
   CRM needs a thin adapter if the assistant is exposed there. Screen context must
   distinguish concurrent surfaces so one tab cannot overwrite another's context.
-- CRM Inbox and its reply/private-note distinction remain the customer workspace.
-  Browser presence and a recent human message are not durable ownership.
-- Storefront currently has a WhatsApp link, not an embedded webchat receiver.
-  Its server-side lead proxy demonstrates tenant selection; a new chat receiver
-  needs bounded input, server-side visitor scope, rate limits and private history.
+- CRM Inbox and the native Desk Customer Conversations Page use the same private
+  conversation/control/outbox service. Durable ownership and current generation
+  govern manual WhatsApp/Webchat replies; private notes stay outside customer history.
+- Storefront now has an embedded receiver and one persisted bubble. Server-selected
+  tenant/profile/origin, hash-only visitor authority, a Secure/HttpOnly cookie,
+  bounded input/rates and private history were verified. Response loss preserves
+  the same command; session changes never move a pending send into another thread.
+- The optional old WhatsApp widget suppresses its FAB/navbar and blocks phone-only
+  customer APIs/notifications when native CRM is present. Truly old/missing CRM
+  retains compatibility; partial native installs fail closed. Its actual installed-
+  app browser rollout remains a gate.
 - Reuse Frappe database and workers. Keep core CRM usable without marketing,
   Meta or an AI provider. Do not introduce a Chatwoot dependency or another
   workflow engine.
@@ -62,6 +69,12 @@ as every other actor.
    behavior using fictional fixtures and blocked external transports.
 5. Expose each tested surface under its documented rollout gate. A launcher or
    connected account alone is not evidence of a working support journey.
+
+These local source/verification gates passed for manual WhatsApp and Webchat,
+including actual visitor→staff take/reply→visitor, real concurrent commits/crashes,
+private access and mobile behavior. Automation readiness remains false; Messenger
+core dispatch and Instagram transport have separate unresolved gates. Exact
+package heads and current production steps are in the accepted source handoff.
 
 ## Retired Chatwoot attachment
 

@@ -1,36 +1,56 @@
-# Next session: Meta reliability and native CRM automation
+# Next session: native support rollout and remaining provider gates
 
-Paste the following request into the next session. The source integration record is [CRM_INTEGRATION_HANDOFF_2026-09-09.md](CRM_INTEGRATION_HANDOFF_2026-09-09.md). Start from the shared branches listed there, not the retired audit worktrees.
+The September 9 implementation request has been carried through tested, committed
+local integration. **Do not rebuild those slices from the old audit.** Read the
+current [source/verification handoff](CRM_NATIVE_SUPPORT_HANDOFF_2026-09-10.md) first.
+It records exact accepted heads, remaining source/provider gates and evidence.
 
-```text
-Continue the CRM/Meta hardening work from the merged shared sources in ~/muelle-host.
+Continue from current shared branches in `~/muelle-host`, preserving later clinic
+and other commits. Relevant references remain:
 
-Read ~/muelle-host/AGENTS.md, relevant app instructions, and:
-- crm/docs/CRM_INTEGRATION_HANDOFF_2026-09-09.md
-- crm/docs/CRM_META_COVERAGE_AUDIT_2026-09-09.md
-- crm/docs/CRM_COMPLETION_PLAN_2026-09-09.md
-- crm/docs/CRM_POWERHOUSE_REQUIREMENTS.md
-- clinica/docs/CRM_VERTICAL_INTEGRATION.md
+- [Workspace instructions](../../AGENTS.md) and target app instructions.
+- [Chat surfaces](CRM_CHAT_SURFACES_2026-09-10.md).
+- [Original integration handoff](CRM_INTEGRATION_HANDOFF_2026-09-09.md),
+  [Meta audit](CRM_META_COVERAGE_AUDIT_2026-09-09.md),
+  [completion plan](CRM_COMPLETION_PLAN_2026-09-09.md),
+  [requirements](CRM_POWERHOUSE_REQUIREMENTS.md).
+- [Clinic wiring](../../clinica/docs/CRM_VERTICAL_INTEGRATION.md).
 
-Codex owns architecture, business logic, integration and final quality. Use Claude Fable for bounded implementation when available; if its account limit persists, record that and use available builders. Give each builder explicit file ownership. Escalate only consequential identity/consent, schema/rollback, external-effect or compatibility decisions. Preserve other sessions' work.
+## Current product direction
 
-Implement in this priority order, completing a tested/reviewable slice before the next:
+One private staff assistant; CRM Inbox/Customer Conversations for staff helping
+customers; one storefront help bubble using that native customer service, with
+WhatsApp within the same entry point. Chatwoot is retired. Public customer input
+must never acquire the private assistant's authority or history. Channels default
+disabled; bots remain off; identity and consent require explicit evidence.
 
-P0 / META-00: WhatsApp webhook authenticity. The last production audit found configured_secrets() == 0, so signature checking was skipped. Reverify current configuration read-only. Implement and test raw-body authentication and exact app/account routing: valid signatures accepted, missing/tampered signatures rejected before writes, foreign accounts denied. Prepare a concrete controlled configuration/rollout plan. Inventory the second app attached to the WABA; do not assume it is unwanted.
+## Continue in this order
 
-P1 / META-01 + ACQ-04: Durable inbound receipts and full-batch processing. Iterate every entry/change/message/status. Authenticate and validate account scope before receipt creation; uniquely deduplicate events; commit receipt before remote enrichment/action; retain recoverable failures. Remove transaction-wide commit/rollback from nested ingest helpers. Prove replay, reordered/duplicate batches, failed enrichment, restart and no loss of earlier transaction work.
+1. Prepare/execute P0's coordinated real app-secret/source/cache/worker rollout
+   only when production authorization covers it; prove an owned signed inbound.
+   The accepted receiver source fails closed without secrets; the production
+   rollout is still pending. Never restore unsigned acceptance.
+2. Roll out the compatible durable-receipt/control/outbox/privacy bundle through
+   guarded migrations, full deletion review, exact hook-cache refresh and worker
+   source checks. Recheck actual receipt replay/recovery using owned events.
+3. Activate only the intended storefront channel after real Boat/HTTPS routing,
+   scoped agent permission and visitor→CRM→visitor acceptance. Include the optional
+   old WhatsApp widget transition on sites where that app is installed.
+4. Apply reviewed exact Meta subscription additions and remove only the retired
+   Chatwoot attachment when authorized; verify provider delivery separately.
+5. Complete the separately gated native bot producers, Messenger dispatch and
+   current Instagram transport only with demonstrated purpose/control/consent and
+   delivery/crash proof. Native automation readiness remains false until then.
+6. Add further integrations only for a concrete complete business workflow. Keep
+   clinic-owned relationships/actions and clinical privacy boundaries intact.
 
-P1 / META-02/03: Close actual acquisition gaps. App-level Page mention is already enabled, but Doco's Page omits mention. Build a capability/subscription manifest, then prepare a scoped repair preserving existing subscriptions. Prove allowed real-world event delivery separately from configuration. Fix Lead Ads replay, displayed toggles versus actual handlers, and form-specific contact purpose; a submitted phone number is not blanket all-channel marketing permission. Route eligible sources into the existing CRM Inquiry service; keep requester/referrer/additional buyer distinct. Keep manual capture working where Meta cannot expose content.
+Codex owns logic, integration and final quality. Preserve concurrent edits; use
+isolated checkouts, fictional fixtures and blocked external transports for local
+checks. Re-read refs before focused commits/local fast-forwards. Communicate
+consequential identity/consent, compatibility and external-effect decisions.
 
-P1 / META-04 + AUTO-01: Durable human/bot ownership. Consume Messenger/Instagram handover and WhatsApp Business App echoes/coexistence where supported. Actual human takeover/reply invalidates queued bot actions. Historical replay must not trigger bots. No auto-enable during upgrades.
-
-P2 / META-05 + AUTO-03/04: Correct receipt folding, monotonic statuses, account/template quality alerts and explicit Unknown outcomes. Complete native intent/outbox/occurrence identity, version-pinned flows and bounded actions before autonomous sending. Unknown must be reconciled, never blindly retried.
-
-P2 / META-06: Implement advanced events only for a defined business workflow. Audit legacy user subscriptions and unused fields before cleanup. n8n and AI remain optional adapters; do not build another universal workflow engine.
-
-Clínica can work in parallel on the merged read-only provider contract. Keep clinical content outside CRM/marketing. Coordinate shared API changes; Clínica owns patient/guardian/payer relationships, appointments and reminders. Do not merge people by phone/name. Dental stays demo-only and inpatient unavailable until separately proven.
-
-Validation: use isolated checkouts and fictional lab fixtures with external transports blocked. Run relevant SQL/concurrency/permission and desktop/mobile tests. Any schema migration must use the guarded Muelle wrapper, retain full logs, and inspect orphan deletion. Inquiry rollback must retain its permission/controller bundle and consistent hooks across workers. Record exact commits, checks and unresolved gates; never treat enabled subscriptions as working features.
-
-The current request authorizes implementation and local verification. Do not send customer messages, alter production subscriptions/configuration, push source, or deploy without authorization covering those effects. Prepare changes and evidence first. End each completed package with focused commits and fast-forward integration into the agreed shared branches, preserving unrelated edits.
-```
+The current implementation request authorized local source work, lab verification
+and shared-branch fast-forwards. It did **not** authorize remote pushes, production
+configuration/subscription changes/deployment or customer sends. Another lane's
+authorization does not transfer to this lane. Prepare concrete changes/evidence
+before requesting a remaining authorization; do not repeat already granted scope.
