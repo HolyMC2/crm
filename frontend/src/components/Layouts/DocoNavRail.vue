@@ -162,7 +162,7 @@
     <template v-if="showProfile">
       <div class="fixed inset-0 z-[290]" @click="showProfile = false" />
       <div
-        class="fixed bottom-[72px] left-2.5 z-[300] w-[242px] overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base"
+        class="fixed bottom-[72px] left-2.5 z-[300] max-h-[calc(100vh-84px)] w-[242px] overflow-y-auto rounded-[14px] border border-outline-gray-2 bg-surface-base"
         style="box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14)"
       >
         <!-- header -->
@@ -199,6 +199,24 @@
             <component :is="link.icon" class="h-4 w-4 text-ink-gray-6" />
             {{ __(link.label) }}
           </button>
+        </div>
+        <!-- apps: sibling muelle apps + Desk, per installed app (navModel.suiteApps) -->
+        <div class="border-t border-outline-gray-1 py-1.5">
+          <div
+            class="px-3.5 pb-1 pt-1 text-[10.5px] font-semibold uppercase tracking-[.08em] text-ink-gray-5"
+          >
+            {{ __('Apps') }}
+          </div>
+          <a
+            v-for="app in suiteLinks"
+            :key="app.key"
+            :href="app.route"
+            class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-[13px] text-ink-gray-8 hover:bg-surface-gray-2"
+            @click="showProfile = false"
+          >
+            <component :is="app.icon" class="h-4 w-4 text-ink-gray-6" />
+            {{ __(app.label) }}
+          </a>
         </div>
         <!-- sign out -->
         <div class="border-t border-outline-gray-1 py-1.5">
@@ -239,9 +257,9 @@ import LogOutIcon from '~icons/lucide/log-out'
 import ChevronsLeftIcon from '~icons/lucide/chevrons-left'
 import ChevronsRightIcon from '~icons/lucide/chevrons-right'
 // shared with the mobile drawer so the two navs never drift (see navModel.js)
-import { navItems, navItemsBottom, routeGroup } from '@/composables/navModel'
+import { navItems, navItemsBottom, routeGroup, visibleSuiteApps } from '@/composables/navModel'
 // installed-app availability: addon-only entries hide without doco_marketing
-import { addonAvailable, loadCapabilities, navItemVisible } from '@/utils/crmCapabilities'
+import { addonAvailable, hasApp, loadCapabilities, navItemVisible } from '@/utils/crmCapabilities'
 
 const route = useRoute()
 const router = useRouter()
@@ -327,6 +345,9 @@ const visibleProfileLinks = computed(() =>
     (link) => !link.to || navItemVisible(router.resolve(link.to).name, addonAvailable.value),
   ),
 )
+
+// sibling apps — same installed-app gate as the nav (navModel.suiteApps)
+const suiteLinks = computed(() => visibleSuiteApps(hasApp))
 
 function signOut() {
   showProfile.value = false

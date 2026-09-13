@@ -126,12 +126,13 @@
             </div>
             <div class="mt-1.5 grid grid-cols-4 gap-1 px-0.5">
               <a
-                v-for="app in apps.data || []"
+                v-for="app in appLinks"
                 :key="app.name"
                 :href="app.route"
                 class="press flex flex-col items-center gap-1 rounded-[10px] px-1 py-2 hover:bg-surface-gray-2"
               >
-                <img class="h-7 w-7 rounded-md" :src="app.logo" alt="" />
+                <component v-if="app.icon" :is="app.icon" class="h-7 w-7 p-1 text-ink-gray-7" />
+                <img v-else class="h-7 w-7 rounded-md" :src="app.logo" alt="" />
                 <span class="w-full truncate text-center text-[10.5px] text-ink-gray-7">
                   {{ app.title }}
                 </span>
@@ -259,9 +260,9 @@ import SidebarLink from '@/components/SidebarLink.vue'
 import Settings from '@/components/Settings/Settings.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
-import { navItems, navItemsBottom, routeGroup } from '@/composables/navModel'
+import { navItems, navItemsBottom, routeGroup, visibleSuiteApps } from '@/composables/navModel'
 import { computed, h, ref, watch } from 'vue'
-import { addonAvailable, navItemVisible } from '@/utils/crmCapabilities'
+import { addonAvailable, hasApp, navItemVisible } from '@/utils/crmCapabilities'
 import { useRoute, useRouter } from 'vue-router'
 import { FeatherIcon, createResource, useTheme } from 'frappe-ui'
 import { mobileSidebarOpened as sidebarOpened, showSettings } from '@/composables/settings'
@@ -352,31 +353,34 @@ function badgeFor(kind) {
   return d.overdue_tasks
 }
 
-// ── apps switcher (Desk + installed apps; same source as desktop Apps.vue) ──
-const apps = createResource({
+// ── apps switcher: suite apps first (navModel.suiteApps, same installed-app
+// gate as the desktop profile panel), then whatever else is registered on
+// Frappe's apps screen (wiki, …) — the suite apps never are, hence the list.
+const appsScreen = createResource({
   url: 'frappe.apps.get_apps',
   cache: 'apps',
   auto: true,
-  transform: (data) => {
-    let _apps = [
-      {
-        name: 'frappe',
-        logo: '/assets/frappe/images/framework.png',
-        title: __('Desk'),
-        route: '/app',
-      },
-    ]
-    ;(data || []).forEach((app) => {
-      if (app.name === 'crm') return
-      _apps.push({
+  transform: (data) =>
+    (data || [])
+      .filter((app) => app.name !== 'crm')
+      .map((app) => ({
         name: app.name,
         logo: app.logo,
         title: __(app.title),
         route: app.route,
-      })
-    })
-    return _apps
-  },
+      })),
+})
+const appLinks = computed(() => {
+  const suite = visibleSuiteApps(hasApp).map((app) => ({
+    name: app.key,
+    icon: app.icon,
+    title: __(app.label),
+    route: app.route,
+  }))
+  const extras = (appsScreen.data || []).filter(
+    (app) => !suite.some((s) => s.route === app.route),
+  )
+  return [...suite, ...extras]
 })
 
 // ── saved views (public + pinned), unchanged from the old drawer ───────────

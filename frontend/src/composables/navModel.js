@@ -18,6 +18,10 @@ import ScoreRulesIcon from '~icons/lucide/sliders-horizontal'
 import WebshopIcon from '~icons/lucide/shopping-cart'
 import WorkloadIcon from '~icons/lucide/scale'
 import InquiriesIcon from '~icons/lucide/message-square-plus'
+import MercadoIcon from '~icons/lucide/tag'
+import TallerIcon from '~icons/lucide/wrench'
+import PosIcon from '~icons/lucide/receipt'
+import DeskIcon from '~icons/lucide/layout-grid'
 
 export const navItems = [
   { key: 'dashboard', icon: DashboardIcon, label: 'Dashboard', to: '/dashboard', group: 'dashboard' },
@@ -58,4 +62,24 @@ export function routeGroup(path) {
   if (/^\/webshop(\/|$)/.test(path)) return 'webshop'
   if (/^\/workload(\/|$)/.test(path)) return 'workload'
   return ''
+}
+
+// Sibling apps of the muelle suite — the quick access mercado / taller / POS
+// offer from their user menus. None of them register on Frappe's apps screen
+// (`add_to_apps_screen`), so `frappe.apps.get_apps` cannot list them: they are
+// declared here and gated per tenant by installed app (crmCapabilities), so a
+// site without e.g. taller never shows a dead link. Routes are the muelle ones:
+// Desk at /desk (the /app→/desk rename), POS Awesome's web entry at /posapp.
+// Rendered by the DocoNavRail profile panel and the mobile drawer's apps grid.
+export const suiteApps = [
+  { key: 'mercado', app: 'mercado', label: 'Mercado', route: '/mercado/', icon: MercadoIcon },
+  { key: 'taller', app: 'taller', label: 'Taller', route: '/taller/', icon: TallerIcon },
+  { key: 'pos', app: 'posawesome', label: 'POS Awesome', route: '/posapp', icon: PosIcon },
+  { key: 'desk', app: null, label: 'Desk', route: '/desk', icon: DeskIcon },
+]
+
+// `hasApp(name)` is crmCapabilities.hasApp (false while the lookup is pending or
+// unknown), so only Desk (`app: null` = always) shows until the list resolves.
+export function visibleSuiteApps(hasApp) {
+  return suiteApps.filter((app) => !app.app || hasApp(app.app))
 }
