@@ -1,8 +1,7 @@
 # CRM pipeline milestone 1: plan and spec (2026-09-13)
 
 Companion to `CRM_PIPELINE_GAPS_2026_09_13.md`. This is the build spec for the
-first milestone. Branch `feat/crm-pipeline-gaps` in `crm` and `taller`;
-`doco_marketing` changes go on its current branch. The session lead commits;
+first milestone. Branch `feat/crm-pipeline-gaps` in `crm`, `taller` and `doco_marketing`. The session lead commits;
 workers do not commit, do not run `dev-refresh.sh`, do not restart containers.
 
 ## Decisions (already taken, do not re-litigate)
