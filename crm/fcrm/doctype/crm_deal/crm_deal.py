@@ -356,7 +356,7 @@ class CRMDeal(Document):
 	def default_kanban_settings():
 		return {
 			"column_field": "status",
-			"title_field": "organization",
+			"title_field": "deal_name",
 			"kanban_fields": '["annual_revenue", "email", "mobile_no", "_assign", "modified"]',
 		}
 

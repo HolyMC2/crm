@@ -103,19 +103,14 @@
           </div>
         </div>
         <div v-if="!isMobile" class="h-[30px] w-px bg-outline-gray-2" />
-        <!-- Desktop stage control. A DEAL gets the stepper (flow stages in
-             position order + Ganado / Perdido); a lead keeps the plain dropdown —
-             CRM Lead Status has no probability and no Won/Lost outcome pair to
-             step through. Both routes end in requestStage, so the lost-reason
-             prompt and the «Cambiar SIN avisar» guard keep working unchanged.
-             Mobile is untouched: neither control renders there. -->
-        <StageStepper
-          v-if="!isMobile && isDeal"
-          :statuses="visibleStages"
-          :current="row.status || ''"
-          @change="changeStage"
-        />
-        <Dropdown v-else-if="!isMobile" :options="stageOptions">
+        <!-- Desktop LEAD stage control: the plain dropdown — CRM Lead Status has
+             no probability and no Won/Lost outcome pair to step through. A deal
+             gets the stepper on its own row below this cluster: in here, seven
+             stage segments plus Ganado / Perdido squeezed the customer name to
+             a few characters at 1366px. Both routes end in requestStage, so the
+             lost-reason prompt and the «Cambiar SIN avisar» guard keep working
+             unchanged. Mobile is untouched: neither control renders there. -->
+        <Dropdown v-if="!isMobile && !isDeal" :options="stageOptions">
           <button
             class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-[11px] py-[7px] text-[12.5px] font-semibold text-ink-gray-8"
           >
@@ -164,6 +159,17 @@
           <LucidePhone class="h-4 w-4" />
         </button>
       </div>
+    </div>
+
+    <!-- Desktop DEAL stage row: flow stages in position order + Ganado / Perdido.
+         Full width under the identity row; scrolls sideways when a tenant's
+         labels run long instead of squeezing the title. -->
+    <div v-if="!isMobile && isDeal" class="mt-2 overflow-x-auto">
+      <StageStepper
+        :statuses="visibleStages"
+        :current="row.status || ''"
+        @change="changeStage"
+      />
     </div>
 
     <!-- 🏷 etiquetas manager -->

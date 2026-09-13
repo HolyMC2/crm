@@ -14,7 +14,10 @@
   (memory: frappe-ui-button-class-merge).
 -->
 <template>
-  <div class="flex items-center gap-1.5">
+  <!-- w-max: the header renders this inside an overflow-x-auto row, so the
+       stepper keeps its natural width and the row scrolls instead of the
+       segments wrapping their labels. -->
+  <div class="flex w-max items-center gap-1.5">
     <!-- Legacy/hidden stage the visible set no longer carries: never pretend the
          deal is somewhere else — show where it actually is. -->
     <span
@@ -27,11 +30,11 @@
 
     <div
       v-if="model.steps.length"
-      class="flex items-center overflow-hidden rounded-lg border border-outline-gray-2"
+      class="flex flex-none items-center overflow-hidden rounded-lg border border-outline-gray-2"
     >
       <Tooltip v-for="s in model.steps" :key="s.name" :text="stageHint(s)">
         <button
-          class="border-l border-outline-gray-2 px-[9px] py-[6px] text-[11.5px] leading-4 first:border-l-0 disabled:cursor-not-allowed"
+          class="whitespace-nowrap border-l border-outline-gray-2 px-[9px] py-[6px] text-[11.5px] leading-4 first:border-l-0 disabled:cursor-not-allowed"
           :class="s.state === 'current' ? 'font-bold' : 'font-medium hover:bg-surface-gray-2'"
           :style="segmentStyle(s)"
           :disabled="disabled"

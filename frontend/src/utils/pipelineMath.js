@@ -17,6 +17,13 @@ export function displayValue(row) {
   return isFinite(actual) ? actual : 0
 }
 
+/** Open funnel rungs in position order, stopping before the first outcome. */
+export function funnelLadder(stages = []) {
+  const firstClosed = stages.findIndex((s) => s.type === 'Won' || s.type === 'Lost')
+  const ladder = firstClosed === -1 ? stages : stages.slice(0, firstClosed)
+  return ladder.filter((s) => s.type === 'Open')
+}
+
 /**
  * Money for a whole stage, from its aggregate entry { deal_value, expected_deal_value }
  * (each a SUM over the stage). The larger of the two sums wins: expected values

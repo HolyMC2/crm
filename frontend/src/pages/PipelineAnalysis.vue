@@ -76,6 +76,7 @@
 <script setup>
 import { computed, h, ref } from 'vue'
 import { createResource } from 'frappe-ui'
+import { funnelLadder } from '@/utils/pipelineMath'
 
 const periods = [
   { key: 'month', label: __('Este mes') },
@@ -132,10 +133,12 @@ function typeLabel(t) {
   return __(TYPE_LABELS[t] || t || '')
 }
 
-// Drop-off runs down the linear Open chain only: an Ongoing / On Hold stage is a
-// side-track and Won / Lost are desenlaces, so "N% fell from Aprobado to
-// Completado" was never a real funnel step.
-const openStages = computed(() => stages.value.filter((s) => s.type === 'Open'))
+// Drop-off runs down the linear Open chain only, and only up to the first
+// desenlace: an Ongoing / On Hold stage is a side-track, Won / Lost close the
+// funnel, and an Open stage seeded BEHIND them (Warranty Repair sits after
+// Picked Up / Declined) is a re-entry, not the next step — chaining it made
+// "Ready for Pickup → Warranty Repair" the biggest drop on every tenant.
+const openStages = computed(() => funnelLadder(stages.value))
 const drops = computed(() => {
   const out = {}
   const open = openStages.value

@@ -1,7 +1,24 @@
 // Board money rules (utils/pipelineMath.js): which of the two deal values shows,
 // and how a column header weights it by stage probability.
 import { describe, it, expect } from 'vitest'
-import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
+import { displayValue, funnelLadder, stageValue, weightedTotal } from '@/utils/pipelineMath'
+
+describe('funnelLadder', () => {
+  it.each(['Won', 'Lost'])('stops at the first %s outcome before warranty re-entry', (type) => {
+    const quoting = { stage: 'En Cotización', type: 'Open', count: 0 }
+    const ready = { stage: 'Por Entregar', type: 'Open', count: 3 }
+    expect(funnelLadder([
+      quoting, { type: 'On Hold' }, ready, { type },
+      { stage: 'Garantía', type: 'Open', count: 2 },
+    ])).toEqual([quoting, ready])
+  })
+
+  it('keeps open stages when there is no outcome and accepts an empty ladder', () => {
+    const stage = { type: 'Open', count: 0 }
+    expect(funnelLadder([stage, { type: 'Ongoing' }])).toEqual([stage])
+    expect(funnelLadder()).toEqual([])
+  })
+})
 
 describe('displayValue', () => {
   it('prefers the expected value when it is set', () => {

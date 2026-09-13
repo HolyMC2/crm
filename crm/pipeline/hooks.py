@@ -3,7 +3,13 @@
 
 """Document hooks wired from crm/hooks.py doc_events."""
 
+from crm.pipeline.services import deal_title
 from crm.pipeline.services.next_activity import refresh
+
+
+def ensure_deal_name(doc, method=None):
+	"""Give a deal saved without a title its default one; a set title is kept."""
+	deal_title.ensure_deal_name(doc)
 
 
 def on_task_change(doc, method=None):
