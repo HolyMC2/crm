@@ -152,3 +152,29 @@ frontend/tests/unit/pipelineMath.test.js
 - Deal 360 desktop header shows the stepper; clicking "Perdido" still demands a
   lost reason.
 - `npx vitest run` green; crm and taller test modules green on doco-mirror.
+
+## Wave 2 (found while building wave 1; not started)
+
+1. **`deal_name` does not exist on CRM Deal.** taller's
+   `create_deal_from_repair_order` writes `deal_name = "Reparación <device> — <client>"`
+   and Frappe drops it silently. Add `deal_name` (Data, in_list_view, label
+   "Deal Name") to `crm_deal.json`, make it the `title_field`, and add a taller
+   heal that backfills it for repair-order deals. Cards already read
+   `row.deal_name` first.
+2. **Seed does not correct existing status rows.** Positions, colours, types and
+   probabilities are written only at insert; the mirror's Spanish "Abandonado"
+   sits at position 0 while its twin is at 8. Make `_insert_status` enforce the
+   `_SHAPE` values on existing rows too (idempotent, `update_modified=False`).
+3. **Legacy `Repair Order.deal_status` strings** ("Listo para Entregar",
+   "En Reparación", 55 NULL on the mirror) have no twin and are skipped by the
+   heal. Map them through `cleanup_status_taxonomy.DEAL_STATUS_MAP` in the same
+   heal, then re-sync from the linked deal where NULL.
+4. **Expected value from the quote.** When a Repair Order reaches the quoting
+   stage, copy `quote_amount` into the deal's `expected_deal_value` (and
+   `expected_closure_date` from `quote_valid_until` when set); keep
+   `deal_value` invoiced-only. Owner: taller (`repair_orders/deal_sync.py`
+   family), guarded so a manually edited expected value is not stomped.
+5. **Mirror language.** doco-mirror runs `System Settings.language = en` while
+   the tenants run `es-MX`; the wave-1 heal therefore relabelled the mirror to
+   the English set. Set the mirror to `es-MX`, run seed + heal, and accept on a
+   Spanish pipeline like prod.
