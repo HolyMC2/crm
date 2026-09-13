@@ -6,10 +6,15 @@
   (same mobileView stack the Inbox uses; hardware back pops the pane).
 -->
 <template>
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+    <nav class="flex flex-none items-center justify-between gap-3 border-b border-outline-gray-1 px-4 py-2 text-sm" aria-label="Navegación del trato">
+      <RouterLink :to="{ name: 'Deals List' }" class="rounded px-1 py-1 font-medium text-ink-gray-6 hover:text-ink-gray-9">← {{ __('Volver a tratos') }}</RouterLink>
+      <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-ink-gray-7 hover:bg-surface-gray-2" :aria-expanded="isMobile ? mobileView === 'context' : showContext" @click="isMobile ? openContext() : showContext = !showContext">{{ __('Datos y contacto') }}</button>
+    </nav>
   <!-- desktop: workspace + docked context panel -->
   <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
     <DealWorkspace />
-    <DealContextPanel v-if="activeDeal" />
+    <DealContextPanel v-if="activeDeal && showContext" />
   </div>
 
   <!-- mobile: one pane at a time (v-show keeps the thread mounted, like Inbox) -->
@@ -22,26 +27,29 @@
       <DealContextPanel v-if="activeDeal" />
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted, onUnmounted, watch, ref } from 'vue'
+import { useRoute, RouterLink } from 'vue-router'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { swipeBackHandlers } from '@/composables/swipeBack'
-import { activeDeal, selectDeal, mobileView, onPresenceEvent } from '@/composables/inbox'
+import { activeDeal, selectDeal, mobileView, openContext, activeTab, onPresenceEvent } from '@/composables/inbox'
 import { globalStore } from '@/stores/global'
 
 const props = defineProps({ dealId: { type: String, default: '' } })
 const route = useRoute()
+const showContext = ref(false)
 
 // (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
 // /deal/B remounts this component — onMounted covers every entry.)
 function focus() {
   const id = props.dealId || route.params.dealId
   if (id) selectDeal(String(id))
+  activeTab.value = 'overview'
   // standalone page starts on the thread pane; DealHeader's ← (mobileBack →
   // history.back) then leaves the page, which is correct here (no queue pane).
   mobileView.value = 'thread'

@@ -157,7 +157,7 @@
       <MobileRecordCard
         v-for="r in rows"
         :key="r.name"
-        :title="customerOf(r) || label(r)"
+        :title="cardTitle(r)"
         :subtitle="mobileSubtitle(r)"
         :time="timeAgo(r.modified)"
         :menu="rowMenu(r)"
@@ -201,7 +201,7 @@
         :style="`grid-template-columns:${GRID};height:34px`"
       >
         <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" :aria-label="__('Seleccionar todo')" @change="toggleAll" />
-        <button class="text-left uppercase" @click="sortBy('organization')">{{ __('Trato') }}{{ sortArrow('organization') }}</button>
+        <button class="text-left uppercase" @click="sortBy('deal_name')">{{ __('Trato') }}{{ sortArrow('deal_name') }}</button>
         <div v-if="col('customer')">{{ __('Cliente') }}</div>
         <button v-if="col('phone')" class="text-left uppercase" @click="sortBy('mobile_no')">{{ __('Teléfono') }}{{ sortArrow('mobile_no') }}</button>
         <div v-if="col('device')">{{ __('Equipo') }}</div>
@@ -445,7 +445,12 @@ import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/com
 import { money } from '@/utils/numberFormat'
 import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
 
+import { dealListState } from '@/utils/dealListState'
 const router = useRouter()
+const QUEUE_KEY = userScopedKey('crm_deal_list_context')
+let remembered = dealListState()
+try { remembered = dealListState(JSON.parse(sessionStorage.getItem(QUEUE_KEY) || '{}')) } catch {}
+
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
 // trato (contact) is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
@@ -543,25 +548,30 @@ const { getDealStatus } = statusStore
 const { getUser, users: usersList } = usersStore()
 
 const showDealModal = ref(false)
-const statusF = ref([])
-const sourceF = ref([])
-const ownerF = ref([])
-const search = ref('')
-const sort = ref({ field: 'modified', dir: 'desc' })
+const statusF = ref(remembered.status)
+const sourceF = ref(remembered.source)
+const ownerF = ref(remembered.owner)
+const search = ref(remembered.search)
+const sort = ref(remembered.sort)
 const selectedRows = ref([])
-const view = ref('list')
+const view = ref(remembered.view)
 const groupCounts = ref({})
+const countsLoaded = ref(false)
+let countsRequest = 0
+watch([statusF, sourceF, ownerF, search, sort, view], () => {
+  try { sessionStorage.setItem(QUEUE_KEY, JSON.stringify({ status: statusF.value, source: sourceF.value, owner: ownerF.value, search: search.value, sort: sort.value, view: view.value })) } catch {}
+}, { deep: true })
 
 const deals = createListResource({
   doctype: 'CRM Deal',
   fields: [
-    'name', 'organization', 'lead_name', 'mobile_no', 'email',
+    'name', 'deal_name', 'organization', 'lead_name', 'mobile_no', 'email',
     'status', 'source', 'deal_owner', 'deal_value', 'currency', 'modified', 'creation',
     'expected_deal_value', 'expected_closure_date', 'probability',
     'next_activity_at', 'next_activity_title', 'next_activity_type', '_user_tags',
   ],
   orderBy: 'modified desc',
-  pageLength: 50,
+  pageLength: remembered.view === 'board' ? 200 : 50,
   onSuccess: () => loadDisplay(),
 })
 // Sorting by next activity can't be expressed server-side: frappe-ui has no
@@ -649,9 +659,9 @@ const mobileFilterGroups = computed(() => [
 function onSheetChange({ key, values }) {
   ;({ status: statusF, source: sourceF, owner: ownerF })[key].value = values
 }
-const count = computed(() => `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''}`)
+const count = computed(() => countsLoaded.value ? String(Object.values(groupCounts.value).reduce((n, stage) => n + Number(stage.count || 0), 0)) : `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''} ${__('cargados')}`)
 
-const SEARCH_FIELDS = ['organization', 'lead_name', 'email', 'mobile_no']
+const SEARCH_FIELDS = ['deal_name', 'organization', 'lead_name', 'email', 'mobile_no']
 function buildFilters() {
   const f = {}
   if (statusF.value.length) f.status = ['in', statusF.value]
@@ -677,13 +687,15 @@ function applyFilters() {
       ? 'next_activity_at desc'
       : `${sort.value.field} ${sort.value.dir}`
   deals.reload()
-  if (view.value !== 'list') loadCounts()
+  loadCounts()
 }
 
 // accurate per-status counts (+ summed values) for board headers + funnel.
 // Both money columns: the header shows the expected value where there is one,
 // and weights it by the stage probability.
 async function loadCounts() {
+  const request = ++countsRequest
+  countsLoaded.value = false
   try {
     const data = await frappeCall('frappe.client.get_list', {
       doctype: 'CRM Deal',
@@ -708,7 +720,9 @@ async function loadCounts() {
         deal_value: r.value,
         expected_deal_value: r.expected,
       }
+    if (request !== countsRequest) return
     groupCounts.value = map
+    countsLoaded.value = true
   } catch (e) {
     /* counts are best-effort */
   }
@@ -905,13 +919,13 @@ watch([statusF, sourceF, ownerF], applyFilters, { deep: true })
 
 // ── view helpers ────────────────────────────────────────────────────────────────
 const views = [
-  { key: 'list', label: '≡ List' },
-  { key: 'board', label: '⊞ Board' },
-  { key: 'funnel', label: '∿ Funnel' },
-  { key: 'cal', label: '📅 Cal', to: '/calendar' },
+  { key: 'list', label: __('Lista') },
+  { key: 'board', label: __('Tablero') },
+  { key: 'funnel', label: __('Embudo') },
+  { key: 'cal', label: __('Calendario'), to: '/calendar' },
 ]
 function label(r) {
-  return r.organization || r.lead_name || r.name
+  return r.deal_name || r.organization || r.lead_name || r.name
 }
 function statusChip(status) {
   const c = getDealStatus(status)?.color || '#5b6472'

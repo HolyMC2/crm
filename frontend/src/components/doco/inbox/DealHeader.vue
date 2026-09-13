@@ -1,7 +1,7 @@
 <!-- Inbox center top: deal header (identity/score/SLA/stage/call) + next-action bar. §5.1 -->
 <template>
   <div class="flex-none border-b border-outline-gray-1 px-4 py-[11px]">
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-3 sm:flex-nowrap">
       <!-- mobile: back to the conversation list (← pops the history stack) -->
       <button
         v-if="isMobile"
@@ -81,7 +81,7 @@
           </span>
         </div>
       </div>
-      <div class="flex flex-none items-center gap-1.5 self-start sm:gap-2.5 sm:self-auto">
+      <div class="flex w-full flex-none items-center justify-end gap-1.5 sm:w-auto sm:gap-2.5">
         <div
           v-if="responsible && !isMobile"
           class="flex items-center gap-1.5"
@@ -235,7 +235,7 @@
 
     <!-- next action bar -->
     <div
-      v-if="nextTask"
+      v-if="nextTask && !isDeal"
       class="mt-[11px] flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-[13px] py-[9px]"
     >
       <span
@@ -333,14 +333,14 @@ const leadFetch = createResource({ url: 'frappe.client.get_value' })
 watch(
   [activeDeal, queueRow],
   () => {
-    if (!activeDeal.value || queueRow.value.deal) return // in queue → no fetch needed
+    if (!activeDeal.value) return // in queue → no fetch needed
     const isD = activeDealDoctype.value === 'CRM Deal'
     dealFetch.submit({
       doctype: activeDealDoctype.value,
       filters: activeDeal.value,
       fieldname: JSON.stringify(
         isD
-          ? ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'deal_owner']
+          ? ['deal_name', 'status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'deal_owner']
           : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
       ),
     })
@@ -365,7 +365,7 @@ const row = computed(() => {
     deal_owner: d.deal_owner,
   }
 })
-const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
+const name = computed(() => (isDeal.value && dealFetch.data?.deal_name) || row.value.contact_name || row.value.mobile_no || '')
 
 // Responsible owner: the CRM Deal's deal_owner (rides the existing assignment /
 // cascade — no parallel ACL). Resolved to a full name for the header chip.
@@ -590,7 +590,7 @@ const tasks = createListResource({
 watch(
   activeDeal,
   (d) => {
-    if (!d) return
+    if (!d || activeDealDoctype.value === 'CRM Deal') return
     tasks.filters = {
       reference_doctype: activeDealDoctype.value,
       reference_docname: d,

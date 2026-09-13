@@ -28,7 +28,7 @@
     <DuplicateBanner :doctype="activeDealDoctype" :name="activeDeal" @open="onOpenDuplicate" @merged="onMerged" />
 
     <!-- 🎓 notas de coaching (spec 7.4) — managers only; self-hides for everyone else -->
-    <CoachingPanel :doctype="activeDealDoctype" :name="activeDeal" />
+    <!-- Coaching is secondary to the worker's record and contact details. -->
 
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
@@ -182,6 +182,11 @@
          and drop contacts_section from the field layout below to avoid a blank) -->
     <DealContactsSection v-if="activeDeal && isDeal" :deal="activeDeal" :hide-primary="true" />
 
+    <details v-if="isManager()" class="border-b border-outline-gray-1">
+      <summary class="cursor-pointer px-3.5 py-3 text-sm text-ink-gray-6">{{ __('Notas de coaching') }}</summary>
+      <CoachingPanel :doctype="activeDealDoctype" :name="activeDeal" />
+    </details>
+
     <!-- full editable record fields (upstream — nothing hidden), collapsed by
          default so the panel stays compact; expand for the complete field set -->
     <div v-if="dealSections.length" class="flex-none border-b border-outline-gray-1">
@@ -241,7 +246,7 @@ import { isMobile } from '@/composables/breakpoint'
 import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller, salesDocsEnabled, selectDeal, scheduleQueueReload } from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
-const { crmUsers } = usersStore()
+const { crmUsers, isManager } = usersStore()
 
 const { makeCall } = globalStore()
 

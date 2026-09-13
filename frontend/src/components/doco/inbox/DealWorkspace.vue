@@ -8,7 +8,7 @@
     <template v-if="activeDeal">
       <!-- header + tabs are flex-none atop a min-h-0 column, so they stay pinned
            while only the message area (FadedScrollableDiv) scrolls internally. -->
-      <DealHeader />
+      <DealHeader :key="activeDealDoctype + activeDeal" />
       <!-- 👥 collision strip (spec 2.4): who else is in this conversation NOW -->
       <div
         v-if="activePresence.length"
@@ -41,8 +41,9 @@
         </button>
       </div>
 
+      <DealOverview v-if="activeTab === 'overview' && activeDealDoctype === 'CRM Deal'" :key="activeDeal" :name="activeDeal" @navigate="activeTab = $event" />
       <DealConversations
-        v-if="activeTab === 'conversation'"
+        v-else-if="activeTab === 'conversation'"
         :key="activeDealDoctype + activeDeal"
         :doctype="activeDealDoctype"
         :name="activeDeal"
@@ -94,6 +95,7 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import ItemWorkspace from '@/components/doco/inbox/ItemWorkspace.vue'
 import DealHeader from '@/components/doco/inbox/DealHeader.vue'
 import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
+import DealOverview from '@/components/doco/inbox/DealOverview.vue'
 import DealConversations from '@/components/doco/inbox/DealConversations.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import { activeDeal, activeDealDoctype, activeTab, hasTaller, activePresence, openCatalog, salesDocsEnabled } from '@/composables/inbox'
@@ -111,6 +113,7 @@ function onIntentCatalogo() {
   })
 }
 const tabs = [
+  { key: 'overview', label: __('Resumen') },
   { key: 'conversation', label: __('Conversación') },
   { key: 'activity', label: __('Actividad') },
   { key: 'items', label: __('Artículos') },
@@ -119,7 +122,7 @@ const tabs = [
 // Reparación is a deal-only concept (repair orders) AND requires taller — hidden
 // for leads and on tenants without reparaciones (e.g. mumu).
 const visibleTabs = computed(() => {
-  let t = activeDealDoctype.value === 'CRM Deal' ? tabs : tabs.filter((x) => x.key !== 'repair')
+  let t = activeDealDoctype.value === 'CRM Deal' ? tabs : tabs.filter((x) => !['repair', 'overview'].includes(x.key))
   if (!hasTaller.value) t = t.filter((x) => x.key !== 'repair')
   return t
 })

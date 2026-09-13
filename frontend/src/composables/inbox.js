@@ -718,7 +718,7 @@ export function selectDeal(name, doctype = 'CRM Deal') {
   if (activeDeal.value === name && activeDealDoctype.value === doctype) return
   activeDeal.value = name
   activeDealDoctype.value = doctype
-  activeTab.value = 'conversation'
+  activeTab.value = doctype === 'CRM Deal' ? 'overview' : 'conversation'
   loadThread()
   loadContactCard()
   loadAutoAckForConvo(doctype, name) // surface any pending auto-ack to approve in context

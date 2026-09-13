@@ -7,8 +7,8 @@
             <h3 class="text-3xl-semibold leading-6 text-ink-gray-9">
               {{
                 editMode
-                  ? __('Edit ' + (doctypeTitle || doctype))
-                  : __('Create ' + (doctypeTitle || doctype))
+                  ? __('Edit') + ' ' + (doctypeTitle || __(doctype))
+                  : __('Create') + ' ' + (doctypeTitle || __(doctype))
               }}
             </h3>
           </div>
@@ -30,6 +30,7 @@
               variant="ghost"
               class="w-7"
               icon="lucide-x"
+              :aria-label="__('Close')"
               @click="show = false"
             />
           </div>

@@ -108,7 +108,32 @@ quote cannot be distinguished without explicit provenance.
 - Lab refresh completed with both SPA/PWA builds verified. Served and local build
   IDs match `1789318324714`; full log `/tmp/crm-native-handoff-refresh.log`.
 
+## Follow-up — integrated deal workflow polish
+
+- Deal 360 opens on Resumen: canonical next follow-up, expected value, close date,
+  owner, commercial stage, linked repair work, sales documents and conversations.
+  Missing work explains the next action; task creation carries the deal and owner,
+  and task completion guards double clicks and retains errors for retry.
+- Contact details remain one click away; coaching is secondary and collapsed.
+  Mobile stacks follow-up actions and gives identity its own header row.
+- List, board and header use the deal title. Returning to Tratos preserves the
+  user's search, filters, sort and view in per-user session storage. Aggregate
+  counts show the filtered total, with a labelled loaded-count fallback.
+- Follow-up modal headings translate correctly, its close button has an accessible
+  name, and document guidance points to the existing Artículos quotation flow.
+- Validation: all 577 frontend tests passed, including task defaults, duplicate
+  completion prevention, failed completion, and list context normalization.
+  Log: `/tmp/crm-polish-vitest-final.log`.
+- Browser acceptance passed at 1366px and 390px: linked repair status/quote/balance,
+  repair and quotation tab navigation, follow-up dialog open/close, restored list
+  search, zero page errors and no page overflow. Screenshots:
+  `/tmp/crm-polish-overview-desktop.png`, `/tmp/crm-polish-overview-mobile.png`,
+  `/tmp/crm-polish-task-modal.png`; log `/tmp/crm-workflow-polish-browser-final.log`.
+- Both SPA/PWA builds and coordinated lab refresh passed; served and local build
+  IDs match `1789319680282`. Full log:
+  `/tmp/crm-workflow-polish-refresh-final.log`. No production deployment or messages.
+
 ## Still deferred
 
-6. Lists still lack inline edit, group-by, shared saved views, true totals;
+6. Lists still lack inline edit, group-by, shared saved views;
    consider adopting the upstream list/kanban instead of the redesign list.

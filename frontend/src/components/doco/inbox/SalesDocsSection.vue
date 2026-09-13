@@ -56,7 +56,7 @@
 
       <div v-if="!hasAny" class="py-1 text-[12px] text-ink-gray-5">
         {{ __('Sin documentos de venta todavía.') }}
-        <span class="text-ink-gray-4">{{ __('Cotiza desde 📦 Catálogo → «Cotizar».') }}</span>
+        <span class="text-ink-gray-4">{{ __('Abre Artículos, agrega los productos y pulsa Cotizar.') }}</span>
       </div>
 
       <div v-else class="flex flex-col gap-2.5">
