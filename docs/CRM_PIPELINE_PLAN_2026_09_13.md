@@ -33,9 +33,8 @@ we keep both language sets seeded but only the active one is visible.
 
 ## Open before merging (Marco decides)
 
-- Five Frappe test-fixture status rows on the mirror (Qualification, Negotiation,
-  Won, Lost, New Lead) show as empty columns; the worker's delete was refused by
-  the permission classifier. Remove with `frappe.delete_doc` x5 or leave.
+- (2026-09-13 15:40 UTC) Test-fixture status rows deleted from the mirror; board shows the 11 real columns. Any `bench run-tests` on the mirror recreates them.
+
 - doco-mirror `System Settings.language` is `en`; tenants run `es-MX`. Flip the
   mirror, re-run seed + heal, and accept on a Spanish pipeline like prod.
 - Deal 360 header is crowded on 1366px: the stepper squeezes the title; move it
