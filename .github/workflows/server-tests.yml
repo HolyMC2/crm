@@ -104,3 +104,59 @@ jobs:
               uses: ./.github/actions/publish-codecov
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
+
+    undefined-names:
+        # UNDEFINED-NAME GATE (logging audit G18, 2026-09-13). Narrow on
+        # purpose: E9 (syntax / IO errors), F63 (comparisons that never hold),
+        # F7 (statement misuse, F722 included), F82 + F821 (undefined names).
+        # Deliberately NOT this repo's full ruff config: gating on that is red
+        # on arrival over import-order and unused-noqa trivia, and a check
+        # that is always red teaches people to merge past it. This selection
+        # is the one that earned its place — it is what caught
+        # `posawesome.set_batch_nos_for_bundels`, a `safe_log` call whose
+        # import never came with it, and a guest endpoint calling a
+        # `validate_token` that no longer exists: live NameErrors no test
+        # reached.
+        #
+        # per-file-ignores is limited to DocType controllers AND to the two
+        # codes frappe's GENERATED type block produces. ruff does not resolve
+        # `frappe.types.DF.Literal` to `typing.Literal`, so it reads every
+        # option string as a forward annotation: a bare word becomes F821, a
+        # phrase with a space becomes F722. There are 144 such hits here (108
+        # F821 + 36 F722). Every one of them sits between `# begin:
+        # auto-generated types` and `# end: auto-generated types`, and there
+        # are ZERO real undefined names outside those markers (measured
+        # 2026-09-13). Outside DocType controllers both codes still fail the
+        # build, which is the whole point of keeping the ignore path-scoped.
+        name: Undefined names (ruff)
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: read
+        steps:
+            - name: Clone
+              uses: actions/checkout@v6
+
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: "3.14"
+
+            - name: Install ruff
+              # Pinned: a floating ruff turns a new rule or a parser change into
+              # a surprise failure on an unrelated pull request.
+              run: python -m pip install ruff==0.14.14
+
+            - name: Check for undefined names
+              # --isolated so the gate keeps meaning the same thing whatever a
+              # later edit does to [tool.ruff] in pyproject; --no-cache because
+              # a warm ruff cache buys nothing on a single-shot runner. The two
+              # --per-file-ignores are not one comma-joined value on purpose:
+              # ruff's CLI takes exactly one <pattern>:<code> per flag and
+              # rejects the pair (measured with ruff 0.14.14).
+              run: |
+                  python -m ruff check --no-cache --isolated \
+                    --select E9,F63,F7,F82,F821 \
+                    --per-file-ignores '**/doctype/**/*.py:F821' \
+                    --per-file-ignores '**/doctype/**/*.py:F722' \
+                    crm

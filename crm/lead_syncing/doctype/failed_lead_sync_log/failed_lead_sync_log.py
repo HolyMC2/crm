@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import add_days, cint, today
+from frappe.utils import add_to_date, cint, now_datetime
 
 from crm.lead_syncing.doctype.lead_sync_source.facebook import FacebookSyncSource
 
@@ -42,7 +42,13 @@ class FailedLeadSyncLog(Document):
 		days = DEFAULT_RETENTION_DAYS if days is None else cint(days)
 		if days <= 0:
 			return 0
-		cutoff = add_days(today(), -days)
+		# CUTOFF CLOCK. `creation` is written from frappe.utils.now_datetime()
+		# (frappe/model/base_document.py:754 -> utils/data.py:371), a NAIVE
+		# datetime on the SITE's timezone. The cutoff must be built on that same
+		# clock: MariaDB's NOW() is UTC here (time_zone=SYSTEM), and today()
+		# truncates to midnight, so either one moves the window — by the site's
+		# UTC offset, or by up to a whole day.
+		cutoff = add_to_date(now_datetime(), days=-days)
 		deleted = 0
 		while True:
 			frappe.db.sql(
