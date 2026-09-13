@@ -2,10 +2,21 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
+// `~icons/*` is resolved by unplugin-icons inside the frappe-ui vite plugin,
+// which vitest does not load; stub every icon as an empty component so
+// modules that import lucide icons (navModel) can be unit-tested.
+const stubIcons = {
+  name: 'stub-icons',
+  enforce: 'pre',
+  resolveId: (id) => (id.startsWith('~icons/') ? '\0' + id : null),
+  load: (id) =>
+    id.startsWith('\0~icons/') ? 'export default { render: () => null }' : null,
+}
+
 export default defineConfig({
   // SFC transform for component tests (doco/forms renderer); pure-JS unit
   // tests are unaffected.
-  plugins: [vue()],
+  plugins: [vue(), stubIcons],
   test: {
     globals: true,
     environment: 'happy-dom',
