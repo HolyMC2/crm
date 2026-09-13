@@ -260,6 +260,30 @@ def _display_name(provider, peer_id):
 
 
 @frappe.whitelist()
+def list_for_reference(doctype, name, cursor=None):
+    """Linked native conversations, authorized individually; never infer a peer."""
+    _actor()
+    if doctype not in REFS or not _source_allowed({"reference_doctype": doctype, "reference_name": name}):
+        control._deny()
+    context = ["reference_threads", doctype, name]
+    after = _cursor(cursor, context) or ""
+    if not isinstance(after, str) or (after and not re.fullmatch(r"[0-9a-f]{64}", after)):
+        frappe.throw("Invalid page cursor.")
+    rows = frappe.get_all(control.DOCTYPE,
+        filters={"reference_doctype": doctype, "reference_name": name, "name": [">", after]},
+        fields=["name"], order_by="name asc", limit=SCAN + 1)
+    items = []
+    for row in rows[:SCAN]:
+        doc = control._load(row.name)
+        # Check the locked row again: a concurrent relink must not leak it.
+        if doc.reference_doctype != doctype or doc.reference_name != name:
+            continue
+        if _permitted(lambda: control._authorize(doc)):
+            items.append({key: doc.get(key) for key in ("name", "provider", "account_id", "control_state")})
+    return {"items": items, "next_cursor": _next(rows[SCAN - 1].name, context) if len(rows) > SCAN else None}
+
+
+@frappe.whitelist()
 def list_accounts():
     _actor()
     result = []

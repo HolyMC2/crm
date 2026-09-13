@@ -197,6 +197,8 @@ onBeforeRouteUpdate(
 const { $socket } = globalStore()
 const referenceLink = computed(() => {
   const d = state.conversation
+  if (d?.reference_doctype === 'CRM Deal' && d.reference_name)
+    return `/crm/deal/${encodeURIComponent(d.reference_name)}`
   const paths = {
     'CRM Inquiry': 'crm-inquiry',
     'CRM Lead': 'crm-lead',

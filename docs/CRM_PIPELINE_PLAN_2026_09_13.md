@@ -31,18 +31,14 @@ we keep both language sets seeded but only the active one is visible.
   "Approved 1367 MX$ 2,050 pond. MX$ 1,538", stepper renders, funnel reads
   Conversión 95.9%.
 
-## Open before merging (Marco decides)
+## Merge targets (not merged or deployed to production)
 
-- (2026-09-13 15:40 UTC) Test-fixture status rows deleted from the mirror; board shows the 11 real columns. Any `bench run-tests` on the mirror recreates them.
-
-- doco-mirror `System Settings.language` is `en`; tenants run `es-MX`. Flip the
-  mirror, re-run seed + heal, and accept on a Spanish pipeline like prod.
-- Deal 360 stepper now has its own horizontally scrollable row; verified in
-  the browser at 1366px without page overflow.
 - FF-merge target: `fix/social-editorial-quality` (crm, base of this branch),
   `main` (taller), `feat/campaign-registration-20260910` (doco_marketing, base).
 
-## Wave 2 — implemented and tested on lab (2026-09-13 takeover; uncommitted)
+## Wave 2 — committed and tested on lab (2026-09-13)
+
+Commits: CRM `6b8ce8863`, Taller `7728e99a`, Marketing `1b909bb`.
 
 1. `deal_name` field on CRM Deal (taller already writes it; Frappe drops it);
    title_field; heal for repair-order deals.
@@ -66,7 +62,7 @@ Guarded mirror migration passed: 20 installed apps mapped, zero orphan DocTypes,
 zero Deleted Document entries for DocType from the verification window. Full log:
 `/tmp/crm-pipeline-migrate-full.log`. After language-flip tests, seed + heal restored
 the existing English taxonomy (11 visible stages); a second heal changed zero rows.
-The mirror language remains `en`; Spanish acceptance remains open above.
+The follow-up switched the mirror to `es-MX`; see acceptance below.
 
 `dev-refresh.sh crm` completed both host and container SPA builds, PWA verification
 (183 JS/CSS assets), asset publication, and coordinated restarts. Served and local
@@ -78,14 +74,39 @@ unrelated missing database; the target mirror refresh completed. Logs:
 Browser: funnel API HTTP 200, 11 stages; empty rungs render and warranty is excluded
 from drop-off calculations. Deal header loads at 1366px without page overflow.
 Screenshots: `/tmp/crm-pipeline-funnel.png`, `/tmp/crm-pipeline-header-1366.png`.
-The test account received a PermissionError from
-`crm.api.whatsapp.get_deal_whatsapp_contacts`; full conversation acceptance is
-not established by this header check. Backend tests use committed intake fixtures,
-so their test repair orders/deals remain on the mirror.
+The initial header check exposed a retired WhatsApp endpoint; see the follow-up
+below. Backend tests use committed intake fixtures, so their test repair orders/deals
+remain on the mirror.
 
 Quote ownership remains inferred: zero or the previous quote total follows the
 quote; a distinct nonzero manual estimate stays. A manual value identical to the
 quote cannot be distinguished without explicit provenance.
+
+## Follow-up — native conversation handoff and Spanish acceptance
+
+- The permission error was the intentional legacy retirement gate in
+  `whatsapp_chat.api.native_workspace`, not a missing role. DealWorkspace now
+  lists native conversations explicitly linked to the current deal/lead and opens
+  their existing workspace. The native conversation's deal link returns to Deal 360.
+- `conversation_threads.list_for_reference` checks record access and each current
+  account/shop/peer scope; returns finite metadata with reference-bound pagination.
+  It does not infer identities from phone numbers or create conversations.
+- Activity tabs no longer fetch the retired WhatsApp contact endpoint in the
+  background. Empty, denied, and failed conversation lookups have clear next actions.
+- Validation: 19 native conversation integration tests and all 572 frontend tests
+  pass. Tests cover exact identity, record and account denials, cursor isolation,
+  empty lists, and retry. Logs: `/tmp/crm-native-handoff-tests.log` and
+  `/tmp/crm-native-handoff-vitest.log`.
+- Mirror now uses `es-MX`: 11 visible Spanish stages, zero changes on a second heal.
+  There are currently no native conversations linked to mirror deals; positive
+  linked-record behavior is verified with isolated fixtures, not live customer threads.
+- Browser acceptance passed: Spanish funnel HTTP 200 with 11 stages; 1366px header
+  has no page overflow; activity/conversation tab switch, native queue navigation,
+  and browser back work with zero page errors. No messages were sent.
+  Evidence: `/tmp/crm-native-handoff-browser.log`,
+  `/tmp/crm-pipeline-header-spanish-1366.png`, `/tmp/crm-pipeline-funnel-spanish.png`.
+- Lab refresh completed with both SPA/PWA builds verified. Served and local build
+  IDs match `1789318324714`; full log `/tmp/crm-native-handoff-refresh.log`.
 
 ## Still deferred
 

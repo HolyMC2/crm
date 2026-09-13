@@ -895,7 +895,7 @@ const whatsappMessages = createResource({
 })
 
 watch(
-  whatsappEnabled,
+  () => whatsappEnabled.value && title.value === 'WhatsApp',
   (enabled) => {
     if (enabled) {
       whatsappMessages.fetch()

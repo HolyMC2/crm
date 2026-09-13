@@ -71,6 +71,40 @@ class TestConversationThreads(IntegrationTestCase):
         self.assertEqual(history["messages"][0]["content"], "Customer message")
         self.assertFalse(history["conversation"]["send_available"])
 
+    def test_reference_list_preserves_exact_identity_without_materializing(self):
+        inquiry = self.inquiry()
+        doc = control.get_or_create("WhatsApp", self.account_id, self.peer,
+            reference_doctype="CRM Inquiry", reference_name=inquiry)
+        other = self.inquiry()
+        control.get_or_create("WhatsApp", self.account_id, "5215550198766",
+            reference_doctype="CRM Inquiry", reference_name=other)
+        before = frappe.db.count(control.DOCTYPE)
+        result = api.list_for_reference("CRM Inquiry", inquiry)
+        self.assertEqual(result["items"], [{"name": doc.name, "provider": "WhatsApp",
+            "account_id": self.account_id, "control_state": "Human"}])
+        self.assertIsNone(result["next_cursor"])
+        self.assertEqual(frappe.db.count(control.DOCTYPE), before)
+
+    def test_reference_list_denies_unreadable_and_non_crm_records(self):
+        with self.assertRaises(frappe.PermissionError):
+            api.list_for_reference("Patient", "private-chart")
+        with patch.object(api, "has_permission", return_value=False):
+            with self.assertRaises(frappe.PermissionError):
+                api.list_for_reference("CRM Inquiry", self.inquiry())
+
+    def test_reference_list_rechecks_account_access(self):
+        inquiry = self.inquiry()
+        control.get_or_create("WhatsApp", self.account_id, self.peer,
+            reference_doctype="CRM Inquiry", reference_name=inquiry)
+        frappe.db.delete("User Permission", {"user": self.actor, "allow": "Social Shop"})
+        self.assertEqual(api.list_for_reference("CRM Inquiry", inquiry)["items"], [])
+
+    def test_reference_cursor_cannot_be_reused_for_another_record(self):
+        inquiry, other = self.inquiry(), self.inquiry()
+        cursor = api._next("a" * 64, ["reference_threads", "CRM Inquiry", inquiry])
+        with self.assertRaises(frappe.ValidationError):
+            api.list_for_reference("CRM Inquiry", other, cursor=cursor)
+
     def test_exact_account_peer_no_phone_suffix_or_default_fallback(self):
         self.message(peer="5215550198766")
         self.message(peer=self.peer, whatsapp_account=None, message="Default account secret")
