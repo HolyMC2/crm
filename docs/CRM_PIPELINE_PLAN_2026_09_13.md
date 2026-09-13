@@ -178,3 +178,8 @@ frontend/tests/unit/pipelineMath.test.js
    the tenants run `es-MX`; the wave-1 heal therefore relabelled the mirror to
    the English set. Set the mirror to `es-MX`, run seed + heal, and accept on a
    Spanish pipeline like prod.
+6. **Funnel ladder semantics.** `get_pipeline_funnel` groups over deals, so a
+   stage nobody sits on is missing from the ladder (LEFT JOIN from `CRM Deal
+   Status` fixes it), and "Warranty Repair" (Open, position 9, after Won/Lost)
+   is treated as the step after Ready for Pickup. Stop the drop-off chain at the
+   first Won/Lost position; show warranty as a side stage.
