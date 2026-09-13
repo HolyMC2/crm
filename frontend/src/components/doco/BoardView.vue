@@ -26,12 +26,16 @@
             {{ counts[g.value]?.count ?? colRows(g.value).length }}
           </span>
         </div>
-        <span
-          v-if="counts[g.value]?.value"
-          class="text-[11px] font-medium text-ink-gray-5"
-        >
-          {{ formatValue(counts[g.value].value) }}
-        </span>
+        <!-- Deals need two numbers here (sum + weighted); leads only ever have
+             the plain sum, so that stays the default. -->
+        <slot name="header-value" :group="g" :count="counts[g.value]">
+          <span
+            v-if="counts[g.value]?.value"
+            class="text-[11px] font-medium text-ink-gray-5"
+          >
+            {{ formatValue(counts[g.value].value) }}
+          </span>
+        </slot>
       </div>
       <div class="scb flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
         <div

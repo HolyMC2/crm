@@ -170,6 +170,10 @@
             <span class="h-[6px] w-[6px] flex-none rounded-full" :style="`background:${sourceDot(r.source)}`" />
             {{ r.source }}
           </span>
+          <!-- own line: the due label plus the task title needs the full width -->
+          <div v-if="r.next_activity_at" class="w-full">
+            <NextActivityChip :at="r.next_activity_at" :title="r.next_activity_title" :type="r.next_activity_type" />
+          </div>
         </template>
       </MobileRecordCard>
       <div v-if="leads.hasNextPage" class="px-3.5 py-3">
@@ -190,6 +194,9 @@
       <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" :aria-label="__('Seleccionar todo')" @change="toggleAll" />
       <button class="text-left uppercase" @click="sortBy('lead_name')">{{ __('Contacto') }}{{ sortArrow('lead_name') }}</button>
       <button v-if="col('score')" class="text-left uppercase" :style="'color:var(--brand)'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
+      <button v-if="col('next_activity')" class="text-left uppercase" @click="sortBy('next_activity_at')">
+        {{ __('Próxima actividad') }}{{ sortArrow('next_activity_at') }}
+      </button>
       <div v-if="col('stage')">{{ __('Stage') }}</div>
       <div v-if="col('source')">{{ __('Source') }}</div>
       <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
@@ -241,6 +248,14 @@
             <div class="h-full rounded-sm" :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`" />
           </div>
         </div>
+        <div v-if="col('next_activity')" class="min-w-0">
+          <NextActivityChip
+            :at="r.next_activity_at"
+            :title="r.next_activity_title"
+            :type="r.next_activity_type"
+            :empty-label="'—'"
+          />
+        </div>
         <div v-if="col('stage')">
           <span
             v-if="r.status"
@@ -289,19 +304,40 @@
       @change="onBoardChange"
     >
       <template #card="{ row }">
-        <div class="flex items-center justify-between gap-2">
-          <div class="min-w-0">
-            <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ label(row) }}</div>
-            <div class="truncate text-[11px] text-ink-gray-4">{{ row.organization || row.mobile_no || '—' }}</div>
+        <div class="min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ label(row) }}</div>
+              <div class="truncate text-[11px] text-ink-gray-4">{{ row.organization || row.mobile_no || '—' }}</div>
+            </div>
+            <ScoreExplainPopover
+              v-if="row.score_grade"
+              doctype="CRM Lead"
+              :name="row.name"
+              :score="row.lead_score"
+              :grade="row.score_grade"
+              variant="card"
+            />
           </div>
-          <ScoreExplainPopover
-            v-if="row.score_grade"
-            doctype="CRM Lead"
-            :name="row.name"
-            :score="row.lead_score"
-            :grade="row.score_grade"
-            variant="card"
-          />
+          <div class="mt-1.5 flex items-center gap-1.5">
+            <NextActivityChip
+              :at="row.next_activity_at"
+              :title="row.next_activity_title"
+              :type="row.next_activity_type"
+              compact
+            />
+            <div class="ml-auto flex flex-none items-center gap-1.5">
+              <span
+                v-if="row.lead_owner"
+                class="flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-semibold"
+                :style="`background:${avatarColor(row.lead_owner)[0]};color:${avatarColor(row.lead_owner)[1]}`"
+                :title="ownerName(row.lead_owner)"
+              >
+                {{ initials(ownerName(row.lead_owner)) }}
+              </span>
+              <span class="text-[10px] text-ink-gray-4" :title="__('Antigüedad')">{{ timeAgo(row.creation) }}</span>
+            </div>
+          </div>
         </div>
       </template>
     </BoardView>
@@ -351,6 +387,7 @@ import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
+import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import { GRADE_COLORS, avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
 
 const router = useRouter()
@@ -360,14 +397,25 @@ const router = useRouter()
 const LEAD_COLUMNS = [
   { key: 'contact', label: __('Contacto'), fixed: true },
   { key: 'score', label: __('Score') },
+  { key: 'next_activity', label: __('Próxima actividad') },
   { key: 'stage', label: __('Stage') },
   { key: 'source', label: __('Source') },
   { key: 'modified', label: __('Última act.') },
   { key: 'owner', label: __('Owner') },
 ]
-const COL_WIDTH = { score: '96px', stage: '130px', source: '120px', modified: '110px', owner: '50px' }
-const DEFAULT_COLS = ['score', 'stage', 'source', 'modified', 'owner']
-const COLS_KEY = userScopedKey('doco_leads_columns')
+const COL_ORDER = ['score', 'next_activity', 'stage', 'source', 'modified', 'owner']
+const COL_WIDTH = {
+  score: '96px',
+  next_activity: '170px',
+  stage: '130px',
+  source: '120px',
+  modified: '110px',
+  owner: '50px',
+}
+const DEFAULT_COLS = ['score', 'next_activity', 'stage', 'source', 'modified', 'owner']
+// v2: "Próxima actividad" joined the defaults — a stale pref would hide the one
+// column that says what to do next.
+const COLS_KEY = userScopedKey('doco_leads_columns_v2')
 const visibleCols = ref(loadCols())
 function loadCols() {
   try {
@@ -393,11 +441,14 @@ function col(key) {
 const GRID = computed(() => {
   if (isMobile.value) return '1fr 70px 26px' // contact + score + menu (no bulk-select)
   const parts = ['28px', '1fr'] // checkbox + contact (always)
-  for (const key of ['score', 'stage', 'source', 'modified', 'owner']) if (col(key)) parts.push(COL_WIDTH[key])
+  for (const key of COL_ORDER) if (col(key)) parts.push(COL_WIDTH[key])
   parts.push('26px') // row menu
   return parts.join(' ')
 })
-const { getLeadStatus } = statusesStore()
+// Read the visible-stage list THROUGH the store: destructuring a pinia computed
+// unwraps it once and the board would freeze on the first stage set it saw.
+const statusStore = statusesStore()
+const { getLeadStatus } = statusStore
 const { getUser } = usersStore()
 
 const showLeadModal = ref(false)
@@ -414,12 +465,25 @@ const leads = createListResource({
   doctype: 'CRM Lead',
   fields: [
     'name', 'lead_name', 'first_name', 'last_name', 'organization', 'mobile_no',
-    'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'modified',
+    'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'modified', 'creation',
+    'next_activity_at', 'next_activity_title', 'next_activity_type', '_user_tags',
   ],
   orderBy: 'lead_score desc',
   pageLength: 50,
 })
-const rows = computed(() => leads.data || [])
+// Next-activity order can't be expressed server-side (no `ifnull(...)` through
+// frappe-ui, and plain `asc` would float every lead with NOTHING scheduled to the
+// top). The query asks for `desc`, where MariaDB puts NULLs last, and the loaded
+// page is re-ordered here with the unscheduled leads at the end.
+const rows = computed(() => {
+  const data = leads.data || []
+  if (sort.value.field !== 'next_activity_at') return data
+  const dir = sort.value.dir === 'desc' ? -1 : 1
+  const scheduled = data.filter((r) => r.next_activity_at)
+  const unscheduled = data.filter((r) => !r.next_activity_at)
+  scheduled.sort((a, b) => dir * String(a.next_activity_at).localeCompare(String(b.next_activity_at)))
+  return [...scheduled, ...unscheduled]
+})
 // loaded-row count (not the grand total); '+' signals more pages exist
 const count = computed(() => `${leads.data?.length ?? 0}${leads.hasNextPage ? '+' : ''}`)
 
@@ -444,7 +508,11 @@ function searchOrFilters() {
 function applyFilters() {
   leads.filters = buildFilters()
   leads.orFilters = searchOrFilters()
-  leads.orderBy = `${sort.value.field} ${sort.value.dir}`
+  // see `rows`: next-activity order is finished client-side
+  leads.orderBy =
+    sort.value.field === 'next_activity_at'
+      ? 'next_activity_at desc'
+      : `${sort.value.field} ${sort.value.dir}`
   leads.reload()
   if (view.value !== 'list') loadCounts()
 }
@@ -457,7 +525,8 @@ async function loadCounts() {
       doctype: 'CRM Lead',
       filters: buildFilters(),
       or_filters: searchOrFilters(),
-      fields: ['status', 'count(name) as count'],
+      // dict form: Frappe 16 rejects string aggregates in get_list fields
+      fields: ['status', { COUNT: 'name', as: 'count' }],
       group_by: 'status',
       limit_page_length: 0,
     })
@@ -604,15 +673,15 @@ function sortArrow(field) {
 onMounted(applyFilters)
 
 // ── filter options ───────────────────────────────────────────────────────────
-const leadStatuses = createListResource({
-  doctype: 'CRM Lead Status',
-  fields: ['name', 'color'],
-  orderBy: 'position asc',
-  pageLength: 50,
-  auto: true,
-})
+// Stages come from the shared store's visible list (lead statuses have no hidden
+// twin today, but pickers, board and funnel must all read the same source).
 const stageOptions = computed(() =>
-  (leadStatuses.data || []).map((s) => ({ value: s.name, label: s.name, color: s.color })),
+  statusStore.visibleLeadStatuses.map((s) => ({
+    value: s.name,
+    label: s.name,
+    color: s.color,
+    type: s.type,
+  })),
 )
 const scoreOptions = [
   { value: 'A', label: 'A · 80+', color: GRADE_COLORS.A[0] },

@@ -4,7 +4,7 @@ import { guardStatusChange } from '@/utils/statusGuard'
 import { defineStore } from 'pinia'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { createListResource } from 'frappe-ui'
-import { reactive, h } from 'vue'
+import { computed, reactive, h } from 'vue'
 
 export const statusesStore = defineStore('crm-statuses', () => {
   let leadStatusesByName = reactive({})
@@ -29,11 +29,14 @@ export const statusesStore = defineStore('crm-statuses', () => {
     },
   })
 
+  // `probability` drives the weighted column totals; `hidden` marks the stages of
+  // the tenant's INACTIVE language set (taller seeds the taxonomy in both). Cache
+  // key bumped with the field set so nobody is served a cached row without them.
   const dealStatuses = createListResource({
     doctype: 'CRM Deal Status',
-    fields: ['name', 'color', 'position', 'type'],
+    fields: ['name', 'color', 'position', 'type', 'probability', 'hidden'],
     orderBy: 'position asc',
-    cache: 'deal-statuses',
+    cache: 'deal-statuses-v2',
     initialData: [],
     auto: true,
     transform(statuses) {
@@ -58,6 +61,17 @@ export const statusesStore = defineStore('crm-statuses', () => {
       return statuses
     },
   })
+
+  // Pickers, boards, funnels and analytics use these; the by-name maps above keep
+  // EVERY row, so a deal parked on a hidden twin still renders its own colour and
+  // label instead of falling back to gray.
+  // CRM Lead Status has no `hidden` column — the filter is a no-op there.
+  const visibleDealStatuses = computed(() =>
+    (dealStatuses.data || []).filter((s) => !s.hidden),
+  )
+  const visibleLeadStatuses = computed(() =>
+    (leadStatuses.data || []).filter((s) => !s.hidden),
+  )
 
   function getLeadStatus(name) {
     if (!name) {
@@ -95,8 +109,14 @@ export const statusesStore = defineStore('crm-statuses', () => {
       doctype == 'deal' ? 'CRM Deal Status' : 'CRM Lead Status',
     )
 
+    // A hidden stage is excluded from pickers too — otherwise a rep can still
+    // park a deal on the inactive-language twin the board no longer shows. An
+    // explicitly passed `statuses` list wins: the caller asked for those rows.
+    const explicitSubset = Boolean(statuses?.length)
+
     let options = []
     for (const status in statusesByName) {
+      if (!explicitSubset && statusesByName[status]?.hidden) continue
       options.push({
         label: translatable
           ? __(statusesByName[status]?.name)
@@ -132,6 +152,8 @@ export const statusesStore = defineStore('crm-statuses', () => {
   return {
     leadStatuses,
     dealStatuses,
+    visibleLeadStatuses,
+    visibleDealStatuses,
     communicationStatuses,
     getLeadStatus,
     getDealStatus,

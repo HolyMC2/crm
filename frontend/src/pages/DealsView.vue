@@ -175,7 +175,13 @@
             🔧 {{ extra(r).repair_status }}
           </span>
           <span v-if="deviceOf(r)" class="truncate text-[11px] text-ink-gray-6">{{ deviceOf(r) }}</span>
-          <span v-if="r.deal_value" class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</span>
+          <span v-if="displayValue(r)" class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8">
+            {{ formatMXN(displayValue(r)) }}
+          </span>
+          <!-- own line: the due label plus the task title needs the full width -->
+          <div v-if="r.next_activity_at" class="w-full">
+            <NextActivityChip :at="r.next_activity_at" :title="r.next_activity_title" :type="r.next_activity_type" />
+          </div>
         </template>
       </MobileRecordCard>
       <div v-if="deals.hasNextPage" class="px-3.5 py-3">
@@ -202,6 +208,15 @@
         <div v-if="col('repair_type')">{{ __('Reparación') }}</div>
         <div v-if="col('ro')">{{ __('RO') }}</div>
         <button v-if="col('value')" class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
+        <button v-if="col('expected_value')" class="text-left uppercase" @click="sortBy('expected_deal_value')">
+          {{ __('Valor esperado') }}{{ sortArrow('expected_deal_value') }}
+        </button>
+        <button v-if="col('close_date')" class="text-left uppercase" @click="sortBy('expected_closure_date')">
+          {{ __('Cierre') }}{{ sortArrow('expected_closure_date') }}
+        </button>
+        <button v-if="col('next_activity')" class="text-left uppercase" @click="sortBy('next_activity_at')">
+          {{ __('Próxima actividad') }}{{ sortArrow('next_activity_at') }}
+        </button>
         <div v-if="col('stage')">{{ __('Stage') }}</div>
         <div v-if="col('source')">{{ __('Source') }}</div>
         <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
@@ -259,6 +274,16 @@
           <span v-else class="text-[12px] text-ink-gray-4">—</span>
         </div>
         <div v-if="col('value')" class="text-[12.5px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</div>
+        <div v-if="col('expected_value')" class="text-[12.5px] text-ink-gray-7">{{ formatMXN(r.expected_deal_value) }}</div>
+        <div v-if="col('close_date')" class="text-[12px] text-ink-gray-6">{{ formatDate(r.expected_closure_date) }}</div>
+        <div v-if="col('next_activity')" class="min-w-0">
+          <NextActivityChip
+            :at="r.next_activity_at"
+            :title="r.next_activity_title"
+            :type="r.next_activity_type"
+            :empty-label="'—'"
+          />
+        </div>
         <div v-if="col('stage')">
           <span
             v-if="r.status"
@@ -308,12 +333,63 @@
       @card-click="(r) => openDeal(r.name)"
       @change="onBoardChange"
     >
+      <!-- count · total · probability-weighted total -->
+      <template #header-value="{ group }">
+        <div class="flex flex-none flex-col items-end leading-tight">
+          <span v-if="columnValue(group)" class="text-[11px] font-medium text-ink-gray-5">
+            {{ formatMXN(columnValue(group)) }}
+          </span>
+          <span v-if="columnWeighted(group)" class="text-[10px] text-ink-gray-4">
+            {{ __('pond.') }} {{ formatMXN(columnWeighted(group)) }}
+          </span>
+        </div>
+      </template>
       <template #card="{ row }">
         <div class="min-w-0">
-          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ customerOf(row) || label(row) }}</div>
+          <div class="flex items-start justify-between gap-2">
+            <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink-gray-9">{{ cardTitle(row) }}</span>
+            <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{ formatMXN(displayValue(row)) }}</span>
+          </div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
-            <span class="truncate text-[11px] text-ink-gray-4">{{ deviceOf(row) || formatPhone(phoneOf(row)) }}</span>
-            <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{ formatMXN(row.deal_value) }}</span>
+            <span class="min-w-0 flex-1 truncate text-[11px] text-ink-gray-4">
+              {{ deviceOf(row) || formatPhone(phoneOf(row)) }}
+            </span>
+            <span
+              v-if="probabilityOf(row)"
+              class="flex-none rounded-full bg-surface-gray-2 px-1.5 text-[10px] font-semibold text-ink-gray-6"
+              :title="__('Probabilidad')"
+            >
+              {{ probabilityOf(row) }}%
+            </span>
+          </div>
+          <div v-if="tagsOf(row).length" class="mt-1 flex flex-wrap items-center gap-1">
+            <span
+              v-for="t in tagsOf(row)"
+              :key="t"
+              class="max-w-[110px] truncate rounded px-1 py-px text-[10px] font-medium text-ink-gray-6"
+              style="background: var(--surface-gray-2)"
+            >
+              {{ t }}
+            </span>
+          </div>
+          <div class="mt-1.5 flex items-center gap-1.5">
+            <NextActivityChip
+              :at="row.next_activity_at"
+              :title="row.next_activity_title"
+              :type="row.next_activity_type"
+              compact
+            />
+            <div class="ml-auto flex flex-none items-center gap-1.5">
+              <span
+                v-if="row.deal_owner"
+                class="flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-semibold"
+                :style="`background:${avatarColor(row.deal_owner)[0]};color:${avatarColor(row.deal_owner)[1]}`"
+                :title="ownerName(row.deal_owner)"
+              >
+                {{ initials(ownerName(row.deal_owner)) }}
+              </span>
+              <span class="text-[10px] text-ink-gray-4" :title="__('Antigüedad')">{{ timeAgo(row.creation) }}</span>
+            </div>
           </div>
         </div>
       </template>
@@ -362,10 +438,12 @@ import BoardView from '@/components/doco/BoardView.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
+import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { hasTaller } from '@/composables/inbox'
 import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
+import { displayValue, weightedTotal } from '@/utils/pipelineMath'
 
 const router = useRouter()
 
@@ -383,12 +461,18 @@ const DEAL_COLUMNS = [
   { key: 'repair_type', label: __('Reparación') },
   { key: 'ro', label: __('RO') },
   { key: 'value', label: __('Valor') },
+  { key: 'expected_value', label: __('Valor esperado') },
+  { key: 'close_date', label: __('Cierre') },
+  { key: 'next_activity', label: __('Próxima actividad') },
   { key: 'stage', label: __('Stage') },
   { key: 'source', label: __('Source') },
   { key: 'modified', label: __('Última act.') },
   { key: 'owner', label: __('Owner') },
 ]
-const COL_ORDER = ['customer', 'phone', 'device', 'repair_type', 'ro', 'value', 'stage', 'source', 'modified', 'owner']
+const COL_ORDER = [
+  'customer', 'phone', 'device', 'repair_type', 'ro', 'value', 'expected_value',
+  'close_date', 'next_activity', 'stage', 'source', 'modified', 'owner',
+]
 const COL_WIDTH = {
   customer: '150px',
   phone: '130px',
@@ -396,15 +480,19 @@ const COL_WIDTH = {
   repair_type: '130px',
   ro: '150px',
   value: '110px',
+  expected_value: '120px',
+  close_date: '100px',
+  next_activity: '170px',
   stage: '125px',
   source: '110px',
   modified: '100px',
   owner: '50px',
 }
-const DEFAULT_COLS = ['customer', 'phone', 'device', 'ro', 'stage', 'value', 'modified', 'owner']
-// v2: the column set changed shape (cliente/teléfono/equipo/RO added) — a new key so
-// everyone lands on the new defaults once instead of keeping a stale 5-column pref.
-const COLS_KEY = userScopedKey('doco_deals_columns_v2')
+const DEFAULT_COLS = ['customer', 'phone', 'device', 'ro', 'stage', 'value', 'next_activity', 'modified', 'owner']
+// v3: "Próxima actividad" joined the defaults (the whole point of the pipeline
+// milestone is that what needs doing is visible on the row); "Valor esperado" and
+// "Cierre" ship available but off, the row is wide enough already.
+const COLS_KEY = userScopedKey('doco_deals_columns_v3')
 const visibleCols = ref(loadCols())
 function loadCols() {
   try {
@@ -447,7 +535,11 @@ const GRID = computed(() => {
   parts.push('26px') // row menu
   return parts.join(' ')
 })
-const { getDealStatus } = statusesStore()
+// NOTE: read the visible-stage list THROUGH the store (`statusStore.visible…`).
+// Destructuring a pinia computed unwraps it into a one-shot value and the board
+// would keep the stage set it saw on first render.
+const statusStore = statusesStore()
+const { getDealStatus } = statusStore
 const { getUser, users: usersList } = usersStore()
 
 const showDealModal = ref(false)
@@ -464,13 +556,27 @@ const deals = createListResource({
   doctype: 'CRM Deal',
   fields: [
     'name', 'organization', 'lead_name', 'mobile_no', 'email',
-    'status', 'source', 'deal_owner', 'deal_value', 'currency', 'modified',
+    'status', 'source', 'deal_owner', 'deal_value', 'currency', 'modified', 'creation',
+    'expected_deal_value', 'expected_closure_date', 'probability',
+    'next_activity_at', 'next_activity_title', 'next_activity_type', '_user_tags',
   ],
   orderBy: 'modified desc',
   pageLength: 50,
   onSuccess: () => loadDisplay(),
 })
-const rows = computed(() => deals.data || [])
+// Sorting by next activity can't be expressed server-side: frappe-ui has no
+// `ifnull(next_activity_at, '9999-12-31')`, and plain `asc` would float every
+// deal with NOTHING scheduled to the top. So the query asks for `desc` (MariaDB
+// puts NULLs last there) and the loaded page is re-ordered here, nulls last.
+const rows = computed(() => {
+  const data = deals.data || []
+  if (sort.value.field !== 'next_activity_at') return data
+  const dir = sort.value.dir === 'desc' ? -1 : 1
+  const scheduled = data.filter((r) => r.next_activity_at)
+  const unscheduled = data.filter((r) => !r.next_activity_at)
+  scheduled.sort((a, b) => dir * String(a.next_activity_at).localeCompare(String(b.next_activity_at)))
+  return [...scheduled, ...unscheduled]
+})
 
 // ── display enrichment (cliente / teléfono / equipo / RO) ─────────────────────
 // Not on the deal row: identity lives on the linked Contact and the repair is a
@@ -564,28 +670,56 @@ function searchOrFilters() {
 function applyFilters() {
   deals.filters = buildFilters()
   deals.orFilters = searchOrFilters()
-  deals.orderBy = `${sort.value.field} ${sort.value.dir}`
+  // see `rows`: next-activity order is finished client-side, the server only has
+  // to hand us the scheduled ones first
+  deals.orderBy =
+    sort.value.field === 'next_activity_at'
+      ? 'next_activity_at desc'
+      : `${sort.value.field} ${sort.value.dir}`
   deals.reload()
   if (view.value !== 'list') loadCounts()
 }
 
-// accurate per-status counts (+ summed value) for board headers + funnel
+// accurate per-status counts (+ summed values) for board headers + funnel.
+// Both money columns: the header shows the expected value where there is one,
+// and weights it by the stage probability.
 async function loadCounts() {
   try {
     const data = await frappeCall('frappe.client.get_list', {
       doctype: 'CRM Deal',
       filters: buildFilters(),
       or_filters: searchOrFilters(),
-      fields: ['status', 'count(name) as count', 'sum(deal_value) as value'],
+      // Frappe 16 rejects aggregates written as strings ("count(name) as count")
+      // in get_list fields; the dict form is the supported spelling.
+      fields: [
+        'status',
+        { COUNT: 'name', as: 'count' },
+        { SUM: 'deal_value', as: 'value' },
+        { SUM: 'expected_deal_value', as: 'expected' },
+      ],
       group_by: 'status',
       limit_page_length: 0,
     })
     const map = {}
-    for (const r of data || []) map[r.status || ''] = { count: r.count, value: r.value }
+    for (const r of data || [])
+      map[r.status || ''] = {
+        count: r.count,
+        value: r.value,
+        deal_value: r.value,
+        expected_deal_value: r.expected,
+      }
     groupCounts.value = map
   } catch (e) {
     /* counts are best-effort */
   }
+}
+// Column money: the same expected-else-invoiced rule the cards use, then the
+// probability-weighted forecast for that one stage.
+function columnValue(stage) {
+  return displayValue(groupCounts.value[stage.value] || {})
+}
+function columnWeighted(stage) {
+  return weightedTotal(groupCounts.value, [stage])
 }
 
 function selectView(v) {
@@ -725,15 +859,17 @@ function sortArrow(field) {
 applyFilters()
 
 // ── filter options ────────────────────────────────────────────────────────────
-const dealStatuses = createListResource({
-  doctype: 'CRM Deal Status',
-  fields: ['name', 'color'],
-  orderBy: 'position asc',
-  pageLength: 50,
-  auto: true,
-})
+// Stages come from the shared store's VISIBLE list: the taxonomy is seeded in two
+// languages and the inactive twin is marked hidden, so a board built from the raw
+// table would show every stage twice.
 const stageOptions = computed(() =>
-  (dealStatuses.data || []).map((s) => ({ value: s.name, label: s.name, color: s.color })),
+  statusStore.visibleDealStatuses.map((s) => ({
+    value: s.name,
+    label: s.name,
+    color: s.color,
+    probability: s.probability,
+    type: s.type,
+  })),
 )
 const sources = createListResource({
   doctype: 'CRM Lead Source',
@@ -794,6 +930,33 @@ function formatMXN(v) {
   const n = Number(v) || 0
   if (!n) return '—'
   return money(n) // tenant currency (window.sysdefaults.currency), not hard-coded MX$
+}
+function formatDate(v) {
+  if (!v) return '—'
+  const d = new Date(String(v).replace(' ', 'T'))
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
+}
+// Card headline: the deal's own title when the tenant has one, else the customer,
+// else whatever identifies the row. RO-generated deals have no title, which is why
+// the upstream kanban reads "No Title".
+function cardTitle(r) {
+  return r.deal_name || customerOf(r) || label(r)
+}
+// The deal's own probability wins (crm_deal copies the stage one on save, and a
+// rep can override it); the stage probability is the fallback for older rows.
+function probabilityOf(r) {
+  const own = Number(r.probability)
+  if (isFinite(own) && own > 0) return own
+  const stage = Number(getDealStatus(r.status)?.probability)
+  return isFinite(stage) && stage > 0 ? stage : null
+}
+// "_user_tags" arrives as ",uno,dos" — two is all a 260px card can carry.
+function tagsOf(r) {
+  return String(r._user_tags || '')
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 2)
 }
 
 // ── selection + rows ─────────────────────────────────────────────────────────────
