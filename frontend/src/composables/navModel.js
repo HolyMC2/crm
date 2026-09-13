@@ -14,6 +14,7 @@ import CalendarIcon from '~icons/lucide/calendar-days'
 import CallsIcon from '~icons/lucide/phone'
 import TasksIcon from '~icons/lucide/square-check-big'
 import ReportsIcon from '~icons/lucide/bar-chart-3'
+import FunnelIcon from '~icons/lucide/filter'
 import ScoreRulesIcon from '~icons/lucide/sliders-horizontal'
 import WebshopIcon from '~icons/lucide/shopping-cart'
 import WorkloadIcon from '~icons/lucide/scale'
@@ -39,6 +40,10 @@ export const navItems = [
 ]
 
 export const navItemsBottom = [
+  // Pipeline Analysis had a route but no way in (gaps doc §Gap 3). It is an
+  // addon-only route, so navItemVisible hides this entry on a tenant without
+  // doco_marketing — no dead link.
+  { key: 'funnel', icon: FunnelIcon, label: 'Embudo', to: '/pipeline-analysis', group: 'funnel' },
   { key: 'score-rules', icon: ScoreRulesIcon, label: 'Score Rules', to: '/score-rules', group: 'score-rules' },
   { key: 'workload', icon: WorkloadIcon, label: 'Carga de trabajo', to: '/workload', group: 'workload' },
   { key: 'webshop', icon: WebshopIcon, label: 'Webshop', to: '/webshop', group: 'webshop' },
@@ -53,7 +58,10 @@ export function routeGroup(path) {
   if (/^\/(campaigns|chatflows)(\/|$)/.test(path)) return 'campaigns'
   if (/^\/social(\/|$)/.test(path)) return 'social'
   if (/^\/calendar(\/|$)/.test(path)) return 'calendar'
-  if (/^\/(leads|pipeline|stage-scripts|enrichment|pipeline-analysis)(\/|$)/.test(path)) return 'leads'
+  // Ordered before the /leads rule: /pipeline-analysis is its own nav entry now,
+  // and the broader pattern below would otherwise swallow it back into 'leads'.
+  if (/^\/pipeline-analysis(\/|$)/.test(path)) return 'funnel'
+  if (/^\/(leads|pipeline|stage-scripts|enrichment)(\/|$)/.test(path)) return 'leads'
   if (/^\/dashboard(\/|$)/.test(path)) return 'dashboard'
   if (/^\/call-logs(\/|$)/.test(path)) return 'calls'
   if (/^\/tasks(\/|$)/.test(path)) return 'tasks'

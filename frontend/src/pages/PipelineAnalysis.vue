@@ -1,20 +1,25 @@
 <!--
-  Pipeline Analysis / Funnel (handoff §5.17) — stage funnel with drop-off + KPIs,
-  period filter. Reuses doco_marketing.api.reports.get_funnel_data (→ crm funnel) +
-  crm.api.dashboard.get_average_time_to_close_a_deal.
+  Pipeline Analysis / Funnel — stage funnel with drop-off + KPIs, period filter.
+  Reachable from the nav rail («Embudo», navModel.navItemsBottom); addon-gated.
+
+  Payload: doco_marketing.api.reports.get_pipeline_funnel returns
+  { stages: [{stage, count, type, probability, position}], won, lost, conversion }
+  with the tenant's hidden stages (the inactive language twins) already excluded
+  server-side, so a stage is never counted twice.
 -->
 <template>
   <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
     <div class="flex h-[52px] flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-base px-5">
-      <button class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9" @click="$router.push('/leads')">← {{ __('Leads') }}</button>
-      <span style="color: #d7dae1">/</span>
+      <button class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9" @click="$router.push('/deals')">← {{ __('Deals') }}</button>
+      <span class="text-ink-gray-3">/</span>
       <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Análisis de embudo') }}</span>
       <div class="ml-2 flex gap-1.5">
         <button
           v-for="p in periods"
           :key="p.key"
           class="rounded-full px-3 py-1 text-[12px] font-medium"
-          :style="period === p.key ? 'color:#fff;background:#1c2230' : 'color:#5b6472;background:#f4f5f7'"
+          :style="period === p.key ? 'color:#fff;background:#1c2230' : ''"
+          :class="period === p.key ? '' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
           @click="setPeriod(p.key)"
         >
           {{ p.label }}
@@ -23,33 +28,46 @@
     </div>
 
     <div class="flex flex-col gap-4 p-5">
-      <!-- KPIs -->
-      <div class="grid grid-cols-4 gap-3">
+      <!-- KPIs. Conversión is won / (won + lost) — what the pipeline CLOSES.
+           Dividing won by everything still open reported ~0% forever. -->
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Kpi :label="__('Total tratos')" :value="total" />
-        <Kpi :label="__('Conversión')" :value="`${conversion}%`" color="var(--brand)" />
-        <Kpi :label="__('Etapa final')" :value="won" color="var(--brand)" />
-        <Kpi :label="__('Mayor caída')" :value="biggestDrop.label" :sub="biggestDrop.drop ? `−${biggestDrop.drop}%` : ''" color="#e5484d" small />
+        <Kpi :label="__('Conversión')" :value="`${conversion}%`" ink="var(--ink-green-7)" />
+        <Kpi :label="__('Ganados')" :value="won" ink="var(--ink-green-7)" />
+        <Kpi :label="__('Perdidos')" :value="lost" ink="var(--ink-red-7)" />
+        <Kpi :label="__('Mayor caída')" :value="biggestDrop.label" :sub="biggestDrop.drop ? `−${biggestDrop.drop}%` : ''" ink="var(--ink-red-7)" small />
       </div>
 
       <!-- funnel -->
       <div class="rounded-[12px] border border-outline-gray-2 bg-surface-base p-4">
         <div class="mb-3 text-[13px] font-bold text-ink-gray-9">{{ __('Embudo por etapa') }}</div>
-        <div v-if="funnelRes.loading && !funnel.length" class="py-6 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-        <div v-else-if="!funnel.length" class="py-6 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
-        <div v-for="(s, i) in funnel" :key="s.stage" class="mb-3">
+        <div v-if="funnelRes.loading && !stages.length" class="py-6 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
+        <div v-else-if="!stages.length" class="py-6 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
+        <div v-for="s in stages" :key="s.stage" class="mb-3">
           <div class="mb-1 flex items-center justify-between text-[12.5px]">
-            <span class="font-medium text-ink-gray-8">{{ s.stage }}</span>
+            <span class="flex items-center gap-1.5">
+              <span class="font-medium text-ink-gray-8">{{ s.stage }}</span>
+              <span class="text-[10.5px] font-semibold uppercase tracking-[.05em] text-ink-gray-4">
+                {{ typeLabel(s.type) }}<template v-if="s.probability"> · {{ Math.round(s.probability) }}%</template>
+              </span>
+            </span>
             <span class="text-ink-gray-5">
               {{ s.count }} · {{ share(s) }}%
-              <span v-if="i > 0 && dropFrom(i) > 0" class="ml-1 font-semibold" style="color: #e5484d">↓ {{ dropFrom(i) }}%</span>
+              <span v-if="drop(s) > 0" class="ml-1 font-semibold text-ink-red-7">↓ {{ drop(s) }}%</span>
             </span>
           </div>
-          <div class="h-6 overflow-hidden rounded-md" style="background: #f0f1f3">
-            <div class="flex h-full items-center px-2.5" :style="`width:${Math.max(2, barPct(s))}%;background:#dcfce7`">
-              <span class="text-[11px] font-semibold" style="color: var(--brand)">{{ s.count }}</span>
+          <div class="h-6 overflow-hidden rounded-md bg-surface-gray-2">
+            <div
+              class="flex h-full items-center px-2.5"
+              :style="`width:${Math.max(2, barPct(s))}%;background:${barTint(s)}`"
+            >
+              <span class="text-[11px] font-semibold text-ink-gray-8">{{ s.count }}</span>
             </div>
           </div>
         </div>
+        <p v-if="stages.length" class="mt-4 text-[11px] text-ink-gray-4">
+          {{ __('La caída se calcula sólo entre etapas abiertas, en orden de posición. Ganado y perdido son desenlaces, no pasos.') }}
+        </p>
       </div>
     </div>
   </div>
@@ -90,36 +108,81 @@ function setPeriod(k) {
 }
 load()
 
-const funnel = computed(() => funnelRes.data || [])
-const maxCount = computed(() => Math.max(1, ...funnel.value.map((s) => s.count || 0)))
-const total = computed(() => funnel.value.reduce((a, s) => a + (s.count || 0), 0))
-const won = computed(() => (funnel.value.length ? funnel.value[funnel.value.length - 1].count : 0))
-const conversion = computed(() => (total.value ? Math.round((won.value / total.value) * 100) : 0))
-function barPct(s) {
-  return (s.count / maxCount.value) * 100
+// A site still serving the pre-milestone backend answers with a bare stage list;
+// read it as `stages` so the page degrades to counts instead of going blank.
+const payload = computed(() => {
+  const d = funnelRes.data
+  return Array.isArray(d) ? { stages: d } : d || {}
+})
+const stages = computed(() => payload.value.stages || [])
+const won = computed(() => payload.value.won || 0)
+const lost = computed(() => payload.value.lost || 0)
+const conversion = computed(() => payload.value.conversion ?? 0)
+const total = computed(() => stages.value.reduce((a, s) => a + (s.count || 0), 0))
+const maxCount = computed(() => Math.max(1, ...stages.value.map((s) => s.count || 0)))
+
+const TYPE_LABELS = {
+  Open: 'Abierta',
+  Ongoing: 'En curso',
+  'On Hold': 'En pausa',
+  Won: 'Ganada',
+  Lost: 'Perdida',
 }
-function share(s) {
-  return total.value ? Math.round((s.count / total.value) * 100) : 0
+function typeLabel(t) {
+  return __(TYPE_LABELS[t] || t || '')
 }
-function dropFrom(i) {
-  const prev = funnel.value[i - 1]?.count || 0
-  const cur = funnel.value[i]?.count || 0
-  return prev ? Math.round((1 - cur / prev) * 100) : 0
+
+// Drop-off runs down the linear Open chain only: an Ongoing / On Hold stage is a
+// side-track and Won / Lost are desenlaces, so "N% fell from Aprobado to
+// Completado" was never a real funnel step.
+const openStages = computed(() => stages.value.filter((s) => s.type === 'Open'))
+const drops = computed(() => {
+  const out = {}
+  const open = openStages.value
+  for (let i = 1; i < open.length; i++) {
+    const prev = open[i - 1].count || 0
+    const cur = open[i].count || 0
+    out[open[i].stage] = prev ? Math.round((1 - cur / prev) * 100) : 0
+  }
+  return out
+})
+function drop(s) {
+  return drops.value[s.stage] || 0
 }
 const biggestDrop = computed(() => {
+  const open = openStages.value
   let max = { label: '—', drop: 0 }
-  for (let i = 1; i < funnel.value.length; i++) {
-    const d = dropFrom(i)
-    if (d > max.drop) max = { label: `${funnel.value[i - 1].stage} → ${funnel.value[i].stage}`, drop: d }
+  for (let i = 1; i < open.length; i++) {
+    const d = drops.value[open[i].stage] || 0
+    if (d > max.drop) max = { label: `${open[i - 1].stage} → ${open[i].stage}`, drop: d }
   }
   return max
 })
 
+function barPct(s) {
+  return ((s.count || 0) / maxCount.value) * 100
+}
+function share(s) {
+  return total.value ? Math.round(((s.count || 0) / total.value) * 100) : 0
+}
+function barTint(s) {
+  if (s.type === 'Won') return 'var(--surface-green-3)'
+  if (s.type === 'Lost') return 'var(--surface-red-2)'
+  return 'var(--surface-green-2)'
+}
+
 const Kpi = (props) =>
   h('div', { class: 'rounded-[12px] border border-outline-gray-2 bg-surface-base p-4' }, [
     h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
-    h('div', { class: `${props.small ? 'text-[14px]' : 'text-[26px]'} mt-1.5 font-extrabold`, style: `color:${props.color || '#1c2230'}` }, String(props.value)),
-    props.sub ? h('div', { class: 'text-[11.5px] font-semibold', style: `color:${props.color || '#5b6472'}` }, props.sub) : null,
+    h(
+      'div',
+      {
+        class: `${props.small ? 'text-[14px]' : 'text-[26px]'} mt-1.5 font-extrabold text-ink-gray-9`,
+        style: props.ink ? `color:${props.ink}` : '',
+      },
+      String(props.value),
+    ),
+    props.sub ? h('div', { class: 'text-[11.5px] font-semibold', style: `color:${props.ink || 'var(--ink-gray-5)'}` }, props.sub) : null,
   ])
-Kpi.props = ['label', 'value', 'color', 'sub', 'small']
+Kpi.props = ['label', 'value', 'ink', 'sub', 'small']
 </script>

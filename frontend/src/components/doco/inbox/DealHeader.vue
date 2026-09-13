@@ -103,7 +103,19 @@
           </div>
         </div>
         <div v-if="!isMobile" class="h-[30px] w-px bg-outline-gray-2" />
-        <Dropdown v-if="!isMobile" :options="stageOptions">
+        <!-- Desktop stage control. A DEAL gets the stepper (flow stages in
+             position order + Ganado / Perdido); a lead keeps the plain dropdown —
+             CRM Lead Status has no probability and no Won/Lost outcome pair to
+             step through. Both routes end in requestStage, so the lost-reason
+             prompt and the «Cambiar SIN avisar» guard keep working unchanged.
+             Mobile is untouched: neither control renders there. -->
+        <StageStepper
+          v-if="!isMobile && isDeal"
+          :statuses="visibleStages"
+          :current="row.status || ''"
+          @change="changeStage"
+        />
+        <Dropdown v-else-if="!isMobile" :options="stageOptions">
           <button
             class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-[11px] py-[7px] text-[12.5px] font-semibold text-ink-gray-8"
           >
@@ -266,6 +278,7 @@ import LucideTag from '~icons/lucide/tag'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronRight from '~icons/lucide/chevron-right'
 import CadencePicker from '@/components/doco/inbox/CadencePicker.vue'
+import StageStepper from '@/components/doco/StageStepper.vue'
 import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
 import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
 import { globalStore } from '@/stores/global'
@@ -297,7 +310,8 @@ const { showModal } = useDoctypeModal()
 
 const { makeCall } = globalStore()
 const { getUser } = usersStore()
-const { getDealStatus, getLeadStatus, leadStatuses, dealStatuses: dealStatusList } = statusesStore()
+const statusStore = statusesStore()
+const { getDealStatus, getLeadStatus } = statusStore
 
 const composerOpen = ref(false)
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
@@ -376,11 +390,24 @@ const stageColor = computed(() => {
   const s = isDeal.value ? getDealStatus(row.value.status) : getLeadStatus(row.value.status)
   return s?.color || '#9aa2ae'
 })
-// stage dropdown — the right status set for the active doctype (Deal vs Lead)
-const stageOptions = computed(() => {
-  const list = (isDeal.value ? dealStatusList : leadStatuses)?.data || []
-  return list.map((s) => ({ label: s.name, onClick: () => requestStage(s.name, s.type) }))
-})
+// Visible = the tenant's ACTIVE language set; the store filters the hidden twins
+// out. Read them OFF the store object rather than destructuring: a computed
+// pulled out of a Pinia setup store is unwrapped once and stops updating.
+const visibleStages = computed(() =>
+  (isDeal.value ? statusStore.visibleDealStatuses : statusStore.visibleLeadStatuses) || [],
+)
+
+// Lead stage dropdown (deals use the stepper above; same requestStage path).
+const stageOptions = computed(() =>
+  visibleStages.value.map((s) => ({ label: s.name, onClick: () => requestStage(s.name, s.type) })),
+)
+
+// The stepper knows a status NAME only — resolve its type so requestStage can
+// still route a Lost pick into the reason prompt.
+function changeStage(status) {
+  const s = visibleStages.value.find((x) => x.name === status)
+  requestStage(status, s?.type)
+}
 
 // WhatsApp 24h customer-service window (free-form until 24h after last inbound;
 // after that, template-only). Driven by the last Incoming WhatsApp Message.
