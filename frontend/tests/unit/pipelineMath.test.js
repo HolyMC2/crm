@@ -1,7 +1,7 @@
 // Board money rules (utils/pipelineMath.js): which of the two deal values shows,
 // and how a column header weights it by stage probability.
 import { describe, it, expect } from 'vitest'
-import { displayValue, weightedTotal } from '@/utils/pipelineMath'
+import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
 
 describe('displayValue', () => {
   it('prefers the expected value when it is set', () => {
@@ -63,5 +63,17 @@ describe('weightedTotal', () => {
     expect(weightedTotal()).toBe(0)
     expect(weightedTotal({}, statuses)).toBe(0)
     expect(weightedTotal({ Aprobado: { deal_value: 500 } }, [])).toBe(0)
+  })
+})
+
+describe('stageValue', () => {
+  it('takes the larger of the expected and invoiced sums', () => {
+    expect(stageValue({ expected_deal_value: 100, deal_value: 68250 })).toBe(68250)
+    expect(stageValue({ expected_deal_value: 5000, deal_value: 2050 })).toBe(5000)
+    expect(stageValue({})).toBe(0)
+  })
+  it('feeds the weighted total', () => {
+    const counts = { Won: { expected_deal_value: 100, deal_value: 1000 } }
+    expect(weightedTotal(counts, [{ value: 'Won', probability: 100 }])).toBe(1000)
   })
 })

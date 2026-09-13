@@ -443,7 +443,7 @@ import { isMobile } from '@/composables/breakpoint'
 import { hasTaller } from '@/composables/inbox'
 import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
-import { displayValue, weightedTotal } from '@/utils/pipelineMath'
+import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
 
 const router = useRouter()
 
@@ -716,7 +716,7 @@ async function loadCounts() {
 // Column money: the same expected-else-invoiced rule the cards use, then the
 // probability-weighted forecast for that one stage.
 function columnValue(stage) {
-  return displayValue(groupCounts.value[stage.value] || {})
+  return stageValue(groupCounts.value[stage.value] || {})
 }
 function columnWeighted(stage) {
   return weightedTotal(groupCounts.value, [stage])

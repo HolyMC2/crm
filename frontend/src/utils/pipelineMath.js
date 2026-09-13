@@ -18,11 +18,23 @@ export function displayValue(row) {
 }
 
 /**
+ * Money for a whole stage, from its aggregate entry { deal_value, expected_deal_value }
+ * (each a SUM over the stage). The larger of the two sums wins: expected values
+ * are set on a handful of deals today, so preferring them whenever one exists
+ * would show a won column as MX$ 100 next to MX$ 68,250 invoiced.
+ */
+export function stageValue(entry) {
+  const expected = Number(entry?.expected_deal_value)
+  const actual = Number(entry?.deal_value)
+  return Math.max(isFinite(expected) ? expected : 0, isFinite(actual) ? actual : 0)
+}
+
+/**
  * Probability-weighted pipeline total.
  *
  * @param {Object} countsByStatus  status name -> { count, deal_value, expected_deal_value }
  * @param {Array}  statuses        [{ value|name, probability }] — the visible stages
- * @returns {number} sum of displayValue(entry) * probability / 100
+ * @returns {number} sum of stageValue(entry) * probability / 100
  *
  * A stage with no probability contributes nothing: an unweighted stage would
  * otherwise inflate the forecast with its full value.
@@ -36,7 +48,7 @@ export function weightedTotal(countsByStatus = {}, statuses = []) {
     if (!entry) continue
     const probability = Number(status?.probability)
     if (!isFinite(probability) || probability <= 0) continue
-    total += (displayValue(entry) * probability) / 100
+    total += (stageValue(entry) * probability) / 100
   }
   return total
 }
