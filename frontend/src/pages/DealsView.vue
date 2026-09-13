@@ -124,6 +124,16 @@
       </div>
     </div>
 
+    <section class="flex-none border-b border-outline-gray-1 px-3.5 py-2 sm:px-5" aria-label="Colas de seguimiento">
+      <div class="flex gap-2 overflow-x-auto pb-1">
+        <button v-for="q in followUpQueues" :key="q.key" :aria-pressed="followUp === q.key"
+          class="flex-none whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-medium"
+          :class="followUp === q.key ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-9' : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'"
+          @click="selectFollowUp(q.key)">{{ __(q.label) }}</button>
+      </div>
+      <p class="mt-1 text-xs text-ink-gray-5">{{ __(followUpQueues.find(q => q.key === followUp).description) }}</p>
+    </section>
+
     <!-- active filter chips -->
     <div v-if="chips.length && !isMobile" class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2">
       <span
@@ -138,6 +148,10 @@
       <button class="text-[11.5px] text-ink-gray-5" @click="clearAll">{{ __('Limpiar todo') }}</button>
     </div>
 
+    <div v-if="deals.error" role="alert" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 px-5 py-3 text-sm text-ink-red-8">
+      {{ __('No se pudieron cargar los tratos. Tus filtros siguen guardados.') }}
+      <button class="font-semibold underline" @click="applyFilters">{{ __('Reintentar') }}</button>
+    </div>
     <!-- bulk bar -->
     <div v-if="selectedRows.length" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2">
       <span class="text-[12.5px] font-semibold text-ink-gray-8">{{ selectedRows.length }} {{ __('seleccionados') }}</span>
@@ -153,7 +167,7 @@
     <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
     <div v-if="view === 'list' && isMobile" class="scb min-h-0 flex-1 overflow-y-auto">
       <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
+      <div v-else-if="!rows.length && !deals.error" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
       <MobileRecordCard
         v-for="r in rows"
         :key="r.name"
@@ -179,8 +193,8 @@
             {{ formatMXN(displayValue(r)) }}
           </span>
           <!-- own line: the due label plus the task title needs the full width -->
-          <div v-if="r.next_activity_at" class="w-full">
-            <NextActivityChip :at="r.next_activity_at" :title="r.next_activity_title" :type="r.next_activity_type" />
+          <div v-if="r.next_activity_task" class="w-full">
+            <NextActivityChip :at="r.next_activity_at" :title="r.next_activity_title" :type="r.next_activity_type" :empty-label="__('Pendiente sin fecha')" />
           </div>
         </template>
       </MobileRecordCard>
@@ -226,7 +240,7 @@
 
       <!-- rows -->
       <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
+      <div v-else-if="!rows.length && !deals.error" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
 
       <div
         v-for="r in rows"
@@ -281,7 +295,7 @@
             :at="r.next_activity_at"
             :title="r.next_activity_title"
             :type="r.next_activity_type"
-            :empty-label="'—'"
+            :empty-label="r.next_activity_task ? __('Pendiente sin fecha') : __('Sin seguimiento')"
           />
         </div>
         <div v-if="col('stage')">
@@ -425,7 +439,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
+import { Dropdown, createListResource, call as frappeCall, toast, dayjs, getConfig } from 'frappe-ui'
 import { confirmDialog, createDialog, inputDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
@@ -445,6 +459,7 @@ import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/com
 import { money } from '@/utils/numberFormat'
 import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
 
+import { followUpFilters, FOLLOW_UP_QUEUES } from '@/utils/dealFollowUp'
 import { dealListState } from '@/utils/dealListState'
 const router = useRouter()
 const QUEUE_KEY = userScopedKey('crm_deal_list_context')
@@ -548,6 +563,8 @@ const { getDealStatus } = statusStore
 const { getUser, users: usersList } = usersStore()
 
 const showDealModal = ref(false)
+const followUp = ref(remembered.followUp)
+const followUpQueues = FOLLOW_UP_QUEUES
 const statusF = ref(remembered.status)
 const sourceF = ref(remembered.source)
 const ownerF = ref(remembered.owner)
@@ -558,8 +575,8 @@ const view = ref(remembered.view)
 const groupCounts = ref({})
 const countsLoaded = ref(false)
 let countsRequest = 0
-watch([statusF, sourceF, ownerF, search, sort, view], () => {
-  try { sessionStorage.setItem(QUEUE_KEY, JSON.stringify({ status: statusF.value, source: sourceF.value, owner: ownerF.value, search: search.value, sort: sort.value, view: view.value })) } catch {}
+watch([statusF, sourceF, ownerF, search, sort, view, followUp], () => {
+  try { sessionStorage.setItem(QUEUE_KEY, JSON.stringify({ status: statusF.value, source: sourceF.value, owner: ownerF.value, search: search.value, sort: sort.value, view: view.value, followUp: followUp.value })) } catch {}
 }, { deep: true })
 
 const deals = createListResource({
@@ -568,7 +585,7 @@ const deals = createListResource({
     'name', 'deal_name', 'organization', 'lead_name', 'mobile_no', 'email',
     'status', 'source', 'deal_owner', 'deal_value', 'currency', 'modified', 'creation',
     'expected_deal_value', 'expected_closure_date', 'probability',
-    'next_activity_at', 'next_activity_title', 'next_activity_type', '_user_tags',
+    'next_activity_task', 'next_activity_at', 'next_activity_title', 'next_activity_type', '_user_tags',
   ],
   orderBy: 'modified desc',
   pageLength: remembered.view === 'board' ? 200 : 50,
@@ -663,10 +680,13 @@ const count = computed(() => countsLoaded.value ? String(Object.values(groupCoun
 
 const SEARCH_FIELDS = ['deal_name', 'organization', 'lead_name', 'email', 'mobile_no']
 function buildFilters() {
-  const f = {}
-  if (statusF.value.length) f.status = ['in', statusF.value]
-  if (sourceF.value.length) f.source = ['in', sourceF.value]
-  if (ownerF.value.length) f.deal_owner = ['in', ownerF.value]
+  const timezone = getConfig('systemTimezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
+  const today = dayjs().tz(timezone).format('YYYY-MM-DD')
+  const closed = (statusStore.dealStatuses.data || []).filter(s => ['Won', 'Lost'].includes(s.type)).map(s => s.name)
+  const f = followUpFilters(followUp.value, today, closed)
+  if (statusF.value.length) f.push(['status', 'in', statusF.value])
+  if (sourceF.value.length) f.push(['source', 'in', sourceF.value])
+  if (ownerF.value.length) f.push(['deal_owner', 'in', ownerF.value])
   return f
 }
 function searchOrFilters() {
@@ -683,7 +703,7 @@ function applyFilters() {
   // see `rows`: next-activity order is finished client-side, the server only has
   // to hand us the scheduled ones first
   deals.orderBy =
-    sort.value.field === 'next_activity_at'
+    sort.value.field === 'next_activity_at' && !['overdue', 'today'].includes(followUp.value)
       ? 'next_activity_at desc'
       : `${sort.value.field} ${sort.value.dir}`
   deals.reload()
@@ -810,6 +830,7 @@ function saveCurrentView() {
         status: [...statusF.value],
         source: [...sourceF.value],
         owner: [...ownerF.value],
+        followUp: followUp.value,
         search: search.value,
         sort: { ...sort.value },
       })
@@ -819,6 +840,7 @@ function saveCurrentView() {
   })
 }
 function applyView(v) {
+  followUp.value = dealListState(v).followUp
   statusF.value = [...(v.status || [])]
   sourceF.value = [...(v.source || [])]
   ownerF.value = [...(v.owner || [])]
@@ -860,6 +882,10 @@ function onSearch(v) {
   search.value = v
   clearTimeout(_t)
   _t = setTimeout(applyFilters, 300)
+}
+function selectFollowUp(key) {
+  if (['overdue', 'today'].includes(key)) sort.value = { field: 'next_activity_at', dir: 'asc' }
+  followUp.value = key
 }
 function sortBy(field) {
   const dir = sort.value.field === field && sort.value.dir === 'desc' ? 'asc' : 'desc'
@@ -911,11 +937,12 @@ function removeChip(c) {
   ref_.value = ref_.value.filter((x) => x !== c.value)
 }
 function clearAll() {
+  followUp.value = 'all'
   statusF.value = []
   sourceF.value = []
   ownerF.value = []
 }
-watch([statusF, sourceF, ownerF], applyFilters, { deep: true })
+watch([statusF, sourceF, ownerF, followUp, () => statusStore.dealStatuses.data], applyFilters, { deep: true })
 
 // ── view helpers ────────────────────────────────────────────────────────────────
 const views = [

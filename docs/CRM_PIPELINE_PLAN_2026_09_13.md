@@ -133,7 +133,29 @@ quote cannot be distinguished without explicit provenance.
   IDs match `1789319680282`. Full log:
   `/tmp/crm-workflow-polish-refresh-final.log`. No production deployment or messages.
 
-## Still deferred
+## Follow-up — daily work queues
+
+- Added Todos, Vencidos, Para hoy, Sin fecha and Sin seguimiento entry points.
+  The selected queue survives a deal visit and is included in saved browser views.
+- Queue filters run on the server and are shared by rows, aggregate totals and
+  export. Today uses the site timezone. Overdue means before today's midnight;
+  dated queues use server ordering so the earliest tasks lead across pages.
+- Missing follow-up uses the canonical task link and excludes Won/Lost statuses;
+  undated tasks have their own queue and an explicit label. Load failures retain
+  filters and show Reintentar instead of claiming there are no matching deals.
+- All 580 frontend tests pass (`/tmp/crm-followup-queues-tests.log`).
+- Browser: all four filtered queue requests HTTP 200; selected queue restored
+  after a deal visit; 390px layout without page overflow or browser errors.
+  Log `/tmp/crm-followup-queues-browser-tls.log`; screenshots
+  `/tmp/crm-followup-queues-desktop.png`, `/tmp/crm-followup-queues-mobile.png`.
+- Both SPA/PWA builds and asset publication passed (build `1789333582780`), but
+  refresh failed at proxy restart: Tailscale Serve occupies tailnet port 443,
+  conflicting with the proxy's wildcard bind. Normal lab HTTPS is unavailable
+  pending an operator binding decision. Browser acceptance used a temporary
+  localhost-only HTTPS relay to the same frontend/site; the relay was closed.
+  Full refresh log `/tmp/crm-followup-queues-refresh.log`. No Python restart.
+
+## Remaining list capabilities
 
 6. Lists still lack inline edit, group-by, shared saved views;
    consider adopting the upstream list/kanban instead of the redesign list.
