@@ -8,6 +8,7 @@
  "field_order": [
   "deal_status",
   "type",
+  "hidden",
   "position",
   "column_break_ojiu",
   "probability",
@@ -29,6 +30,14 @@
    "label": "Status",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "default": "0",
+   "description": "Excluded from pickers, boards, funnels and analytics. Deals already on this status still render.",
+   "fieldname": "hidden",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Hidden"
   },
   {
    "fieldname": "position",
@@ -58,7 +67,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-05 12:42:47.973700",
+ "modified": "2026-09-13 09:10:00.000000",
  "modified_by": "Administrator",
  "module": "FCRM",
  "name": "CRM Deal Status",

@@ -31,3 +31,4 @@ crm.patches.v1_0.set_persona_captured_for_existing_sites
 crm.patches.v1_0.reorder_address_quick_entry_layout
 
 crm.patches.v1_0.create_message_provenance_fields
+crm.patches.v1_0.backfill_next_activity # 13-09-2026

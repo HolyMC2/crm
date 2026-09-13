@@ -201,6 +201,11 @@ doc_events = {
 			"crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings.create_customer_in_erpnext"
 		],
 	},
+	"CRM Task": {
+		"after_insert": ["crm.pipeline.hooks.on_task_change"],
+		"on_update": ["crm.pipeline.hooks.on_task_change"],
+		"on_trash": ["crm.pipeline.hooks.on_task_change"],
+	},
 	"Sales Order": {
 		"before_validate": [
 			"crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings.create_customer_on_sales_order"

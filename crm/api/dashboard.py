@@ -7,6 +7,7 @@ from frappe.query_builder.functions import Avg, Coalesce, Count, Date, DateForma
 from pypika.functions import Function
 
 from crm.fcrm.doctype.crm_dashboard.crm_dashboard import create_default_manager_dashboard
+from crm.pipeline.queries.stages import exclude_hidden_stages
 from crm.utils import sales_user_only
 
 
@@ -917,6 +918,7 @@ def get_deals_by_stage_axis(
 		.groupby(CRMDeal.status)
 		.orderby(Count("*"), order=frappe.qb.desc)
 	)
+	query = exclude_hidden_stages(query, CRMDealStatus)
 
 	users = _scoped_users(user)
 	if users:
@@ -962,6 +964,7 @@ def get_deals_by_stage_donut(
 		.groupby(CRMDeal.status)
 		.orderby(Count("*"), order=frappe.qb.desc)
 	)
+	query = exclude_hidden_stages(query, CRMDealStatus)
 
 	users = _scoped_users(user)
 	if users:

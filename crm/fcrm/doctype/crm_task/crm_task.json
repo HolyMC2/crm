@@ -10,6 +10,7 @@
  "field_order": [
   "title",
   "priority",
+  "activity_type",
   "start_date",
   "reference_doctype",
   "reference_docname",
@@ -35,6 +36,14 @@
    "in_standard_filter": 1,
    "label": "Priority",
    "options": "Low\nMedium\nHigh"
+  },
+  {
+   "default": "Task",
+   "fieldname": "activity_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Activity Type",
+   "options": "Task\nCall\nWhatsApp\nEmail\nMeeting"
   },
   {
    "fieldname": "start_date",
@@ -90,7 +99,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-26 12:55:16.304522",
+ "modified": "2026-09-13 09:10:00.000000",
  "modified_by": "shariq@frappe.io",
  "module": "FCRM",
  "name": "CRM Task",

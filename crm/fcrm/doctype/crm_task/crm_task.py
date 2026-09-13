@@ -15,6 +15,7 @@ class CRMTask(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		activity_type: DF.Literal["Task", "Call", "WhatsApp", "Email", "Meeting"]
 		assigned_to: DF.Link | None
 		description: DF.TextEditor | None
 		due_date: DF.Datetime | None
