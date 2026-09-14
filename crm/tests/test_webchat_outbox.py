@@ -19,7 +19,7 @@ class TestWebchatOutbox(unittest.TestCase):
         self.addCleanup(frappe.db.rollback)
         self.enterContext(patch.object(frappe.local, "conf", frappe._dict(frappe.conf)))
         frappe.conf.maintenance_mode = 0
-        self.enterContext(patch.object(frappe, "session", frappe._dict(user="Administrator")))
+        self.enterContext(patch.object(frappe, "session", frappe._dict(user="Administrator", data=frappe._dict())))
         self.account, self.peer = secrets.token_hex(32), secrets.token_hex(32)
         profile, origin = "outbox-webchat-" + self.account[:10], "https://webchat.example.invalid"
         self.channel = webchat._mark(frappe.get_doc({"doctype": webchat.CHANNEL,

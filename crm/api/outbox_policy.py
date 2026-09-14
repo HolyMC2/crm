@@ -47,6 +47,19 @@ def manual_reply_reason(intent):
         return "account_configuration_invalid"
     if intent.source_doctype != "WhatsApp Account" or intent.source_name != rows[0].name or intent.source_action != account_revision(rows[0]):
         return "account_configuration_changed"
+    return whatsapp_recipient_reason(intent, account=rows[0])
+
+
+def whatsapp_recipient_reason(intent, account=None):
+    """Shared native/manual recipient rules; the producer validates its source."""
+    if frappe.conf.get("maintenance_mode"):
+        return "site_maintenance"
+    if account is None:
+        rows = frappe.db.get_values("WhatsApp Account", {"phone_id": intent.account_id},
+            ["name", "status", "mode", "app_id", "business_id"], as_dict=True, for_update=True)
+        if len(rows) != 1 or rows[0].status != "Active" or (rows[0].mode or "Live") != "Live" or not rows[0].app_id:
+            return "account_unavailable"
+        account = rows[0]
     # Preserve the existing explicit opt-out policy without treating a missing
     # newsletter confirmation as a ban on a requested service conversation.
     if "doco_marketing" in frappe.get_installed_apps():
@@ -71,7 +84,7 @@ def manual_reply_reason(intent):
           AND CAST(JSON_UNQUOTE(JSON_EXTRACT(payload,'$.change.value.messages[0].timestamp')) AS UNSIGNED)>%s
           AND CAST(JSON_UNQUOTE(JSON_EXTRACT(payload,'$.change.value.messages[0].timestamp')) AS UNSIGNED)<=%s
     """
-    params = (intent.account_id, rows[0].app_id, intent.peer_id, now - 86400, now)
+    params = (intent.account_id, account.app_id, intent.peer_id, now - 86400, now)
     candidate = frappe.db.sql("SELECT name FROM `tabMeta Webhook Receipt` WHERE " + predicate + " LIMIT 1", params)
     incoming = candidate and frappe.db.sql("SELECT name FROM `tabMeta Webhook Receipt` WHERE name=%s AND " +
         predicate + " LIMIT 1 FOR UPDATE", (candidate[0][0], *params))
