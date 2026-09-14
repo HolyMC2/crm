@@ -32,11 +32,9 @@ from crm.api.whatsapp import (
 )
 
 # Our frappe_whatsapp fork routes ALL Graph traffic through its `transport`
-# module (nothing outside it may import make_post_request — see transport.py's
-# module docstring), so the send path resolves the binding THERE. Upstream
-# imports it into the whatsapp_message doctype module instead; this path is
-# fork-specific on purpose.
-_MPR = "frappe_whatsapp.transport.make_post_request"
+# Message sends now use the bounded message HTTP adapter after the scope guard.
+# Keep that guard active and double only the provider call.
+_MPR = "frappe_whatsapp.transport._message_api"
 
 
 def _row(frm=None, **over) -> dict:
@@ -281,7 +279,7 @@ class TestSendPath(unittest.TestCase):
 		# A new WhatsApp Message defaults type=Outgoing (Frappe picks the first
 		# Select option), so the composer send dispatches via the default OUTGOING
 		# account with Meta mocked; ensure one exists.
-		_ensure_account("Conv Send Acct", phone_id="conv_send_pid", incoming=True, outgoing=True)
+		_ensure_account("Conv Send Acct", phone_id="9800011001", incoming=True, outgoing=True)
 
 	def tearDown(self):
 		frappe.db.rollback()
@@ -322,7 +320,7 @@ class TestSendPath(unittest.TestCase):
 		"""A failed Meta send must raise (status Failed + throw), never be swallowed
 		into a silent 'Sent' — the frappe_whatsapp send contract create_whatsapp_message
 		relies on."""
-		acct = _ensure_account("Conv Send Fail Acct", phone_id="conv_send_fail_pid")
+		acct = _ensure_account("Conv Send Fail Acct", phone_id="9800011002")
 		msg = frappe.new_doc("WhatsApp Message")
 		msg.update(
 			{

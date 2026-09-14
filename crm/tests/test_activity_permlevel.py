@@ -51,7 +51,7 @@ class TestActivityPermlevel(IntegrationTestCase):
 
 	def make_lead_with_restricted_change(self):
 		lead = frappe.get_doc(
-			{"doctype": "CRM Lead", "lead_owner": "rep@permlevel.test", "first_name": "Permlevel"}
+			{"doctype": "CRM Lead", "lead_owner": "rep@permlevel.test", "first_name": "Permlevel", "status": "New Lead"}
 		)
 		lead.flags.ignore_mandatory = True
 		lead.insert(ignore_permissions=True)
@@ -84,6 +84,8 @@ class TestActivityPermlevel(IntegrationTestCase):
 
 	def test_unrestricted_fields_are_untouched(self):
 		lead = self.make_lead_with_restricted_change()
+		# A subsequent form save starts from the persisted version.
+		lead.reload()
 		lead.status = "Qualified"
 		lead.save(ignore_permissions=True, ignore_version=False)
 

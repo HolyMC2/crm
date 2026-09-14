@@ -295,6 +295,8 @@ class TestCRMCallLog(IntegrationTestCase):
 				}
 			).insert(ignore_permissions=True)
 
+		# Grant this call only; the linked lead remains private.
+		frappe.share.add("CRM Call Log", call.name, "sales-user@example.com", read=1)
 		frappe.set_user("sales-user@example.com")
 		try:
 			result = get_call_log(call.name)

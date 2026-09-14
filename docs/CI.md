@@ -13,7 +13,7 @@ container. It uses an internal Docker network with no production volumes, ports,
 credentials or outgoing integrations. `GITHUB_TOKEN` needs package pull access.
 
 The image must include Payments (the ERPNext fixture graph requires Payment Gateway)
-and Doco Meta Catalog (the owner of Social Shop). The runner installs both native
+and Doco Meta Catalog and Doco Marketing (the owner of Social Shop). The runner installs both native
 apps and enables Frappe's `mute_emails` setting before app setup.
 
 Record the exact CRM revision, CI run, base digest and final Muelle image digest
