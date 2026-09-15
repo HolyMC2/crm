@@ -61,8 +61,30 @@ describe('one Inbox launcher', () => {
     )
     expect(el.querySelector('[data-native]')).toBeNull()
   })
+  it('defaults to Negocios y actividad when the addon is installed', async () => {
+    addonAvailable.value = true
+    const el = mount()
+    await vi.waitFor(() =>
+      expect(el.querySelector('[data-legacy]')).not.toBeNull(),
+    )
+    expect(el.querySelector('[data-native]')).toBeNull()
+    const buttons = [...el.querySelectorAll('nav button')]
+    expect(buttons[1].getAttribute('aria-pressed')).toBe('true')
+    buttons[0].click()
+    expect(context.replace).toHaveBeenCalledWith({
+      query: { workspace: 'conversations', deal: undefined, conversation: undefined },
+    })
+  })
+  it('opens the conversation queue on request or on a conversation deep link', () => {
+    addonAvailable.value = true
+    context.route.query = { workspace: 'conversations' }
+    expect(mount().querySelector('[data-native]')).not.toBeNull()
+    context.route.query = { conversation: 'a'.repeat(64) }
+    expect(mount().querySelector('[data-native]')).not.toBeNull()
+  })
   it('keeps an uncertain command in its native workspace until resolved', async () => {
     addonAvailable.value = true
+    context.route.query = { workspace: 'conversations' }
     const el = mount()
     el.querySelector('[data-native]').click()
     await nextTick()

@@ -1,4 +1,5 @@
 """Isolated SQL broker contracts; fictional records, no sends/SMTP/dispatch."""
+import json
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -114,6 +115,31 @@ class TestConversationThreads(IntegrationTestCase):
         for value in ("+" + self.peer, self.peer[-10:], "not-a-peer"):
             with self.subTest(value=value), self.assertRaises((frappe.PermissionError, frappe.ValidationError)):
                 api.open_thread("WhatsApp", self.account_id, value)
+
+    def test_whatsapp_reply_spelling_joins_the_customer_thread(self):
+        # Meta delivers a Mexican customer as 521…; frappe_whatsapp stores our
+        # replies to 52…. One phone: one thread, replies inside it, and a template
+        # send shows its rendered body instead of an empty bubble. The thread is
+        # named after the Contact owning the number, else the WhatsApp profile name.
+        peer, reply_to = "5215550198766", "525550198766"
+        template = "tpl_" + uuid4().hex[:8]
+        frappe.get_doc({"doctype": "WhatsApp Templates", "name": template, "template_name": template,
+            "template": "Listo {{1}}, folio {{2}}", "language_code": "es"}).db_insert()
+        self.message("Hola, ¿ya quedó?", peer=peer, profile_name="Pablo H.")
+        self.message("", type="Outgoing", to=reply_to, template=template, creation="2026-01-01 12:05:00",
+                     template_parameters=json.dumps(["Pablo", "RO-1"]), **{"from": None})
+        threads = api.list_threads("WhatsApp", self.account_id)["items"]
+        self.assertEqual([t["peer_id"] for t in threads], [peer])
+        self.assertEqual(threads[0]["display_name"], "Pablo H.")
+        self.assertEqual(threads[0]["preview"], "Listo Pablo, folio RO-1")
+        opened = api.open_thread("WhatsApp", self.account_id, peer)
+        history = api.get_history(opened["name"])
+        self.assertEqual([(m["direction"], m["content"]) for m in history["messages"]],
+                         [("in", "Hola, ¿ya quedó?"), ("out", "Listo Pablo, folio RO-1")])
+        frappe.get_doc({"doctype": "Contact", "name": "contact_" + uuid4().hex[:8], "first_name": "Pablo",
+            "full_name": "Pablo Hernández", "mobile_no": "+52 1 555 019 8766"}).db_insert()
+        self.assertEqual(api.get_history(opened["name"])["conversation"]["display_name"], "Pablo Hernández")
+        self.assertEqual(api.list_threads("WhatsApp", self.account_id)["items"][0]["display_name"], "Pablo Hernández")
 
     def test_denied_sources_never_supply_preview_body_attachment_or_count(self):
         inquiry = self.inquiry()

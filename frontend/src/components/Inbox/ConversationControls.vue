@@ -43,7 +43,7 @@
         <select
           v-model="action"
           :disabled="busy"
-          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-white p-2 text-sm"
+          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
           @change="changed"
         >
           <option value="" disabled>Seleccionar acción</option>
@@ -57,7 +57,7 @@
         <input
           v-model="query"
           placeholder="Buscar operador"
-          class="mt-1 block w-full rounded border border-outline-gray-2 p-2"
+          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
           :disabled="busy"
           @input="$emit('operators', query)"
         />
@@ -65,7 +65,7 @@
           v-model="owner"
           required
           :disabled="busy"
-          class="mt-1 block w-full rounded border border-outline-gray-2 p-2"
+          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
         >
           <option value="" disabled>Seleccionar operador autorizado</option>
           <option
@@ -84,7 +84,7 @@
           maxlength="500"
           :required="reasonRequired"
           :disabled="busy"
-          class="mt-1 block w-full rounded border border-outline-gray-2 p-2"
+          class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
         />
       </label>
       <button

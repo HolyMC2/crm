@@ -18,6 +18,14 @@ from crm.conversation_scope import assert_customer_peer
 MAX_PAGE = 50
 SCAN = 200
 REFS = tuple(sorted(control.REFERENCES))
+# WhatsApp addresses one customer in two spellings: an incoming `from` carries
+# the provider's long form (e.g. 5216463445324) while the outgoing `to` we store
+# is the short form (526463445324). Same phone, so history and the thread list
+# key WhatsApp peers by their last PEER_SUFFIX digits — the phone-key contract
+# shared with doco_marketing.services.dedupe.normalize_phone and the SPA's
+# phoneNormalize.js. Before this, every reply lived in a second, nameless
+# thread (Marco 2026-09-15: «where are our messages?»).
+PEER_SUFFIX = 10
 
 
 def _limit(value):
@@ -100,25 +108,29 @@ def _source_allowed(row):
     if dt not in REFS or not name:
         return False
     def check():
-        doc = frappe.get_doc(dt, name, for_update=True)
+        doc = frappe.get_doc(dt, name, for_update=control._locked())
         if not has_permission(dt, "read", doc=doc, user=frappe.session.user, print_logs=False):
             control._deny()
     return _permitted(check)
 
 
 def _scope(provider, account_id):
+    """Per-provider SQL fragments. `peer` names the peer column, `peer_match` is
+    the predicate (one %s) that scopes rows to a given peer."""
     _, account = _account_probe(provider, account_id)
     if provider == "Webchat":
         return frappe._dict(doctype="CRM Webchat Message", table="`tabCRM Webchat Message`", peer="m.peer_id",
+            peer_match="m.peer_id=%s",
             where="m.channel=%s AND m.direction IN ('Incoming','Outgoing')", args=[account.name], timestamp="m.creation")
     if provider == "WhatsApp":
-        return frappe._dict(doctype="WhatsApp Message", table="`tabWhatsApp Message`",
-            peer="CASE WHEN m.type='Incoming' THEN m.`from` ELSE m.`to` END",
+        peer = "CASE WHEN m.type='Incoming' THEN m.`from` ELSE m.`to` END"
+        return frappe._dict(doctype="WhatsApp Message", table="`tabWhatsApp Message`", peer=peer,
+            peer_match=f"RIGHT({peer},{PEER_SUFFIX})=RIGHT(%s,{PEER_SUFFIX})",
             where="m.whatsapp_account=%s AND m.type IN ('Incoming','Outgoing')", args=[account.name],
             timestamp="COALESCE(m.external_sent_at,m.creation)" if frappe.db.has_column("WhatsApp Message", "external_sent_at") else "m.creation")
-    page_id = frappe.db.get_value("Messenger Page", account.name, "page_id", for_update=True)
+    page_id = frappe.db.get_value("Messenger Page", account.name, "page_id", for_update=control._locked())
     platform = "(m.platform='Messenger' OR m.platform IS NULL OR m.platform='')" if provider == "Messenger" else "m.platform='Instagram'"
-    return frappe._dict(doctype="Messenger Message", table="`tabMessenger Message`", peer="m.psid",
+    return frappe._dict(doctype="Messenger Message", table="`tabMessenger Message`", peer="m.psid", peer_match="m.psid=%s",
         where=f"m.page_id=%s AND {platform} AND m.direction IN ('Incoming','Outgoing')", args=[page_id],
         timestamp="COALESCE(m.sent_ts,m.creation)")
 
@@ -141,8 +153,8 @@ def _metadata(scope, peer, *, cursor=None, limit=SCAN):
     references = "NULL AS reference_doctype, NULL AS reference_name" if scope.doctype == "CRM Webchat Message" else "m.reference_doctype, m.reference_name"
     return frappe.db.sql(f"""SELECT m.name, {references},
         {scope.timestamp} AS timestamp FROM {scope.table} m
-        WHERE {scope.where} AND {scope.peer}=%s AND {_reference_clause(scope)}{before}
-        ORDER BY {scope.timestamp} DESC,m.name DESC LIMIT {int(limit)} FOR UPDATE""", args, as_dict=True)
+        WHERE {scope.where} AND {scope.peer_match} AND {_reference_clause(scope)}{before}
+        ORDER BY {scope.timestamp} DESC,m.name DESC LIMIT {int(limit)}{control._for_update()}""", args, as_dict=True)
 
 
 def _first_visible(scope, peer):
@@ -152,7 +164,7 @@ def _first_visible(scope, peer):
     # Permission-check distinct references before selecting the preview. A long
     # run of denied messages must not hide an older, readable customer message.
     references = frappe.db.sql(f"""SELECT DISTINCT m.reference_doctype,m.reference_name
-        FROM {scope.table} m WHERE {scope.where} AND {scope.peer}=%s
+        FROM {scope.table} m WHERE {scope.where} AND {scope.peer_match}
         AND {_reference_clause()}""", [*scope.args, peer], as_dict=True)
     clauses, args = [], []
     for row in references:
@@ -163,8 +175,8 @@ def _first_visible(scope, peer):
         return None
     rows = frappe.db.sql(f"""SELECT m.name,m.reference_doctype,m.reference_name,
         {scope.timestamp} AS timestamp FROM {scope.table} m
-        WHERE {scope.where} AND {scope.peer}=%s AND ({' OR '.join(clauses)})
-        ORDER BY {scope.timestamp} DESC,m.name DESC LIMIT 1 FOR UPDATE""", [*scope.args, peer, *args], as_dict=True)
+        WHERE {scope.where} AND {scope.peer_match} AND ({' OR '.join(clauses)})
+        ORDER BY {scope.timestamp} DESC,m.name DESC LIMIT 1{control._for_update()}""", [*scope.args, peer, *args], as_dict=True)
     return rows[0] if rows else None
 
 
@@ -177,7 +189,7 @@ def _safe_attachment(value, doctype, message_name):
     if any(part in {".", ".."} for part in parsed.path.split("/")) or "%" in value or "\\" in value:
         return None
     files = frappe.db.get_values("File", {"file_url": value},
-        ["name", "is_private", "attached_to_doctype", "attached_to_name"], as_dict=True, for_update=True)
+        ["name", "is_private", "attached_to_doctype", "attached_to_name"], as_dict=True, for_update=control._locked())
     if len(files) != 1:
         return None
     f = files[0]
@@ -190,28 +202,33 @@ def _safe_attachment(value, doctype, message_name):
     # Protected downloads still require Frappe's actual File permission. This
     # broker does not create public copies or proxy arbitrary provider URLs.
     if f.is_private:
-        file_doc = frappe.get_doc("File", f.name, for_update=True)
+        file_doc = frappe.get_doc("File", f.name, for_update=control._locked())
         if not has_permission("File", "read", doc=file_doc, user=frappe.session.user, print_logs=False):
             return None
     return value
 
 
 def _message(scope, metadata):
+    locked = control._locked()
     if scope.doctype == "CRM Webchat Message":
-        row = frappe.db.get_value(scope.doctype, metadata.name, ["direction", "text"], as_dict=True, for_update=True)
+        row = frappe.db.get_value(scope.doctype, metadata.name, ["direction", "text"], as_dict=True, for_update=locked)
         direction, content = row.direction, row.text
         row.update({"attach": None, "content_type": "text", "status": ""})
     elif scope.doctype == "WhatsApp Message":
-        fields = ["type", "message", "content_type", "attach", "status", "is_demo"]
-        row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=True)
+        fields = ["type", "message", "content_type", "attach", "status", "is_demo",
+                  "template", "template_parameters", "body_param"]
+        row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=locked)
         direction, content = row.type, row.message
     else:
         fields = ["direction", "content", "content_type", "attach", "status"]
-        row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=True)
+        row = frappe.db.get_value(scope.doctype, metadata.name, fields, as_dict=True, for_update=locked)
         direction, content = row.direction, row.content
     attachment = _safe_attachment(row.attach, scope.doctype, metadata.name) if row.attach else None
     content_type = row.content_type or "text"
     text = str(content or "")[:20000]
+    if not text and scope.doctype == "WhatsApp Message" and row.get("template"):
+        # A template send stores only the template name and its parameters.
+        text = _template_text(metadata.name, row)[:20000]
     if content_type != "text" and not text:
         text = {"image": "Imagen", "video": "Video", "audio": "Audio", "document": "Documento"}.get(content_type, "Mensaje sin texto")
     return {"id": metadata.name, "direction": "out" if direction == "Outgoing" else "in",
@@ -243,7 +260,7 @@ def _actions(doc):
 
 def _detail(doc):
     result = control._projection(doc)
-    result["display_name"] = _display_name(doc.provider, doc.peer_id)
+    result["display_name"] = _display_names(doc.provider, [doc.peer_id]).get(doc.peer_id, doc.peer_id)
     result["allowed_actions"], result["manager_reason_required"] = _actions(doc)
     result["actor"] = frappe.session.user
     result["send_available"] = bool(doc.provider in {"WhatsApp", "Webchat"} and doc.control_state == "Human"
@@ -257,6 +274,69 @@ def _detail(doc):
 
 def _display_name(provider, peer_id):
     return "Visitante " + peer_id[:8].upper() if provider == "Webchat" else peer_id
+
+
+def _display_names(provider, peers):
+    """{peer: label}. A WhatsApp peer resolves to the Contact that owns the
+    number (last PEER_SUFFIX digits), else the profile name the customer's own
+    WhatsApp sent with an incoming message, else the raw number. Other
+    providers keep their exact identity."""
+    peers = [p for p in peers if p]
+    names = {p: _display_name(provider, p) for p in peers}
+    if provider != "WhatsApp" or not peers:
+        return names
+    keys = {p: p[-PEER_SUFFIX:] for p in peers}
+    wanted = tuple(sorted(set(keys.values()))[:SCAN])
+    found = {}
+    digits = f"RIGHT(REGEXP_REPLACE(COALESCE(mobile_no,''),'[^0-9]',''),{PEER_SUFFIX})"
+    for c in frappe.db.sql(f"""SELECT {digits} AS k, full_name, first_name, last_name
+        FROM `tabContact` WHERE {digits} IN %(keys)s ORDER BY modified DESC""", {"keys": wanted}, as_dict=True):
+        full = c.full_name or " ".join(p for p in [c.first_name, c.last_name] if p).strip()
+        if full:
+            found.setdefault(c.k, full)
+    missing = tuple(k for k in wanted if k not in found)
+    if missing:
+        for row in frappe.db.sql(f"""SELECT RIGHT(m.`from`,{PEER_SUFFIX}) AS k, m.profile_name
+            FROM `tabWhatsApp Message` m WHERE m.type='Incoming' AND COALESCE(m.profile_name,'')<>''
+            AND RIGHT(m.`from`,{PEER_SUFFIX}) IN %(keys)s ORDER BY m.creation DESC""", {"keys": missing}, as_dict=True):
+            found.setdefault(row.k, row.profile_name)
+    for p, k in keys.items():
+        if k in found:
+            names[p] = found[k]
+    return names
+
+
+def _template_text(message_name, row):
+    """Body of a template send: the supervised queue keeps the exact rendered
+    preview (wins when present); else the template body with its stored
+    parameters substituted; else the template's name."""
+    if frappe.db.exists("DocType", "WhatsApp Send Review"):
+        preview = frappe.db.get_value("WhatsApp Send Review", {"wa_message": message_name}, "preview")
+        if preview:
+            return str(preview)
+    body = frappe.db.get_value("WhatsApp Templates", row.template, "template") if row.template else None
+    if not body:
+        return "Plantilla: " + str(row.template or "")
+    values = []
+    for raw in (row.get("template_parameters"), row.get("body_param")):
+        if not raw:
+            continue
+        try:
+            parsed = json.loads(raw) if isinstance(raw, str) else raw
+        except (TypeError, ValueError):
+            continue
+        if isinstance(parsed, dict):
+            values = [parsed[k] for k in sorted(parsed, key=lambda k: int(k) if str(k).isdigit() else 0)]
+        elif isinstance(parsed, list):
+            values = parsed
+        if values:
+            break
+
+    def substitute(match):
+        index = int(match.group(1)) - 1
+        return str(values[index]) if 0 <= index < len(values) else match.group(0)
+
+    return re.sub(r"\{\{(\d+)\}\}", substitute, str(body))
 
 
 @frappe.whitelist()
@@ -296,7 +376,7 @@ def list_accounts():
             doctype, field, label, status = "WhatsApp Account", "phone_id", "account_name", "status"
         else:
             doctype, field, label, status = "Messenger Page", "page_id" if provider == "Messenger" else "ig_account_id", "page_name", "enabled"
-        for row in frappe.db.get_values(doctype, {}, ["name", field, label, status], as_dict=True, for_update=True):
+        for row in frappe.db.get_values(doctype, {}, ["name", field, label, status], as_dict=True, for_update=control._locked()):
             identity = row.get(field)
             pattern = r"[0-9a-f]{64}" if provider == "Webchat" else r"[0-9]{1,40}"
             if not isinstance(identity, str) or not re.fullmatch(pattern, identity):
@@ -325,12 +405,12 @@ def list_threads(provider, account_id, cursor=None, limit=30):
         ) AS candidates WHERE peer_id REGEXP %s AND peer_id>%s
         ORDER BY peer_id LIMIT {SCAN + 1}""", [provider, account_id, *scope.args, "^" + pattern + "$", after], as_dict=True)
     items, position = [], None
-    for index, row in enumerate(peers[:SCAN]):
-        peer, position = row.peer_id, row.peer_id
+    for row in _collapse_spellings(provider, account_id, peers[:SCAN]):
+        peer, position = row.peer_id, row.position
         if _private_peer(provider, peer):
             continue
         name = control.conversation_key(provider, account_id, peer)
-        exists = frappe.db.get_value(control.DOCTYPE, name, "name", for_update=True)
+        exists = frappe.db.get_value(control.DOCTYPE, name, "name", for_update=control._locked())
         doc = control._load(name) if exists else None
         if doc and not _permitted(lambda: control._authorize(doc)):
             continue
@@ -339,15 +419,41 @@ def list_threads(provider, account_id, cursor=None, limit=30):
             continue
         message = _message(scope, visible) if visible else None
         item = {"name": name if doc else None, "provider": provider, "account_id": account_id, "peer_id": peer,
-                "display_name": _display_name(provider, peer),
+                "display_name": peer,
                 "materialized": bool(doc), "control_state": doc.control_state if doc else "Human",
                 "human_owner": doc.human_owner if doc else None,
                 "preview": message["content"][:160] if message else "", "last_message_at": message["timestamp"] if message else None}
         items.append(item)
         if len(items) == size:
             break
+    names = _display_names(provider, [item["peer_id"] for item in items])
+    for item in items:
+        item["display_name"] = names.get(item["peer_id"], item["peer_id"])
     more = bool(position and any(row.peer_id > position for row in peers))
     return {"items": items, "next_cursor": _next(position, context) if more else None}
+
+
+def _collapse_spellings(provider, account_id, rows):
+    """One thread per phone. WhatsApp rows that share their last PEER_SUFFIX
+    digits are one customer; the group is represented by the spelling that
+    already has a materialized conversation, else by the longest one (the
+    provider's own form). Every member still advances the page cursor."""
+    if provider != "WhatsApp":
+        return [frappe._dict(peer_id=r.peer_id, position=r.peer_id) for r in rows]
+    groups = {}
+    for r in rows:
+        groups.setdefault(r.peer_id[-PEER_SUFFIX:], []).append(r.peer_id)
+    keys = {control.conversation_key(provider, account_id, p): p
+            for members in groups.values() if len(members) > 1 for p in members}
+    known = set()
+    if keys:
+        known = {keys[n] for n in frappe.get_all(control.DOCTYPE, filters={"name": ["in", list(keys)]}, pluck="name")}
+    out = []
+    for members in groups.values():
+        chosen = [p for p in members if p in known] or sorted(members, key=len, reverse=True)
+        out.append(frappe._dict(peer_id=chosen[0], position=max(members)))
+    out.sort(key=lambda r: r.position)
+    return out
 
 
 @frappe.whitelist(methods=["POST"])
