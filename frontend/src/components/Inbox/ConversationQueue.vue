@@ -9,7 +9,7 @@
         <select
           :value="accountKey(account)"
           :disabled="disabled"
-          class="mt-2 block w-full min-w-0 rounded border border-outline-gray-2 bg-surface-white p-2 text-sm"
+          class="mt-2 block w-full min-w-0 rounded border border-outline-gray-2 bg-surface-base p-2 text-sm text-ink-gray-8"
           @change="selectAccount"
         >
           <option value="" disabled>Seleccionar cuenta</option>

@@ -39,17 +39,21 @@ const ConversationLegacyWorkspace = defineAsyncComponent(
 const route = useRoute(),
   router = useRouter()
 const pending = ref(false)
+// Default space is "Negocios y actividad" (Marco 2026-09-15). The native
+// conversation queue opens only when asked for (?workspace=conversations) or
+// when a conversation deep link is present.
 const legacy = computed(
   () =>
     addonAvailable.value &&
-    (route.query.workspace === 'activity' || !!route.query.deal),
+    route.query.workspace !== 'conversations' &&
+    (!!route.query.deal || typeof route.query.conversation !== 'string'),
 )
 function selectWorkspace(activity) {
   if (pending.value) return
   router.replace({
     query: {
       ...route.query,
-      workspace: activity ? 'activity' : undefined,
+      workspace: activity ? undefined : 'conversations',
       deal: undefined,
       conversation: activity ? undefined : route.query.conversation,
     },

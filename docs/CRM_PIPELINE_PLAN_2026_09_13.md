@@ -36,6 +36,53 @@ we keep both language sets seeded but only the active one is visible.
 - FF-merge target: `fix/social-editorial-quality` (crm, base of this branch),
   `main` (taller), `feat/campaign-registration-20260910` (doco_marketing, base).
 
+## Inbox › Conversaciones repair — built 2026-09-15, UNCOMMITTED (crm)
+
+Marco: «conversaciones feature is broken … where are our messages?». Four
+defects, all in the native workspace shipped 09-10:
+1. Every read endpoint locked rows (`FOR UPDATE` in `_roles`, `_account`,
+   `_load`, message scans). The page fires thread list, history and outbox in
+   parallel; they took the account and conversation rows in opposite order and
+   deadlocked → 500 `QueryDeadlockError` → «No se pudo cargar la conversación»
+   and an emptied list. Now `conversations._locked()` is true only inside
+   `conversation_fence` (mutations); list/history reads never lock.
+2. WhatsApp keyed peers by the exact string: incoming `from` is `521…`, stored
+   outgoing `to` is `52…` → replies lived in a second nameless thread (543 of
+   1147 outgoing rows). `PEER_SUFFIX = 10` (the codebase phone-key contract)
+   now scopes history and collapses spellings in the list; the existing
+   exact-peer test still passes, a new test pins the merge.
+3. Template sends have an empty `message` (868 of 1069 deal rows) → blank
+   bubble. `_template_text` renders the review-queue preview, else the template
+   body with its parameters.
+4. Threads showed raw numbers. `_display_names` resolves Contact by number
+   suffix, else the customer's WhatsApp `profile_name`.
+Frontend: default space is «Negocios y actividad» (conversations via
+`?workspace=conversations` or a deep link); the inbox route keeps a stable
+router key so a thread click no longer remounts and re-bootstraps the page;
+selects readable in dark mode. Verified on doco-mirror: no banner, three API
+calls per click, thread 5216463445324 reads «maria ramos» with 7 out / 5 in.
+Python: `test_conversation_threads` 20 ok, `test_conversations` 23 ok (mirror).
+
+## Aprobaciones WhatsApp redesign — built 2026-09-15, UNCOMMITTED on the same worktrees
+
+Marco: the queue card showed a template id, a phone and a deal number; nothing
+said who the customer is or what the send is about. Now
+`doco_marketing.api.review_queue._enrich` resolves per row (batched): customer
+name + phone (deal identity chain via `api.deals.get_deal_display`), device,
+repair type, deal title/status/owner, the repair order the row is about
+(folio pinned from `source`/`body_param`, else newest) with its status, template
+human name; `counts` no longer enriches. Card (`WhatsAppReviewCard.vue`) leads
+with the person linked to Deal 360, RO chip to Desk, deal chip with stage,
+owner, then message, then actions; `showContext=false` in the conversation
+strip. Pills carry pending/failed counts. Pure display rules in
+`utils/reviewCardFormat.js` (phone prefix comes from the data, no `+52`).
+Rows whose reference is gone (deleted test repair orders) still name the
+customer from the Contact behind the number and open the contact. Tests:
+`reviewCardFormat.test.js`, `whatsappReviewCard.test.js` (16 green, suite
+green). Verified headless on doco-mirror `/crm/whatsapp-queue` (26 RO chips,
+75 deal links, 24 contact links, no console errors). Awaiting Marco's review;
+prod needs doco_marketing (Python) and the crm SPA build rolled together.
+
 ## Wave 2 — committed and tested on lab (2026-09-13)
 
 Commits: CRM `6b8ce8863`, Taller `7728e99a`, Marketing `1b909bb`.

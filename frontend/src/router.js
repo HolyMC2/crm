@@ -144,7 +144,10 @@ const routes = [
     path: '/inbox',
     name: 'Inbox',
     component: () => import('@/pages/Inbox.vue'),
-    meta: { navLabel: 'Inbox', title: 'Inbox' },
+    // stableKey: the page keys its own state off the query (workspace, deal,
+    // conversation), so a query change must not remount it — a remount
+    // re-ran the whole bootstrap on every thread click.
+    meta: { navLabel: 'Inbox', title: 'Inbox', stableKey: true },
   },
   {
     path: '/leads',

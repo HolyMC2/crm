@@ -66,6 +66,20 @@ def _lock_key(name):
     return "crmconv:" + _digest([frappe.local.site, name])[:56]
 
 
+def _locked():
+    """True inside a conversation_fence, i.e. while a command mutates state:
+    authorization and state reads then take row locks so the command decides
+    on current committed rows. Plain list/history reads never lock. Locking
+    reads in two concurrent page requests (thread list vs. history/outbox) took
+    the account and conversation rows in opposite order and deadlocked, which
+    the Inbox surfaced as «No se pudo cargar la conversación» (2026-09-15)."""
+    return bool(getattr(frappe.local, "crm_conversation_locking", 0))
+
+
+def _for_update():
+    return " FOR UPDATE" if _locked() else ""
+
+
 @contextmanager
 def conversation_fence(conversation_name, timeout=5):
     """Connection-owned MariaDB fence, reentrant and preserved across commit.
@@ -73,6 +87,7 @@ def conversation_fence(conversation_name, timeout=5):
     Caller owns the transaction and must keep this context open across any
     durable dispatch-start commit and bounded provider attempt. Never acquire
     it while holding a run/intent lock that another conversation worker needs.
+    Reads inside the fence lock their rows (see _locked).
     """
     key = _lock_key(conversation_name)
     if isinstance(timeout, bool) or not isinstance(timeout, int) or not 0 <= timeout <= 30:
@@ -80,9 +95,11 @@ def conversation_fence(conversation_name, timeout=5):
     row = frappe.db.sql("SELECT GET_LOCK(%s, %s)", (key, timeout))
     if not row or row[0][0] != 1:
         _conflict()
+    frappe.local.crm_conversation_locking = getattr(frappe.local, "crm_conversation_locking", 0) + 1
     try:
         yield
     finally:
+        frappe.local.crm_conversation_locking = max(getattr(frappe.local, "crm_conversation_locking", 1) - 1, 0)
         # RELEASE_LOCK is connection-specific; cannot release another worker's lock.
         frappe.db.sql("SELECT RELEASE_LOCK(%s)", (key,))
 
@@ -96,11 +113,11 @@ def _assert_fence(name):
 def _roles(user):
     if not user or user == "Guest":
         _deny()
-    row = frappe.db.get_value("User", user, "enabled", for_update=True)
+    row = frappe.db.get_value("User", user, "enabled", for_update=_locked())
     if not row:
         _deny()
     return {r[0] for r in frappe.db.sql(
-        "SELECT role FROM `tabHas Role` WHERE parent=%s AND parenttype='User' FOR UPDATE", (user,)
+        f"SELECT role FROM `tabHas Role` WHERE parent=%s AND parenttype='User'{_for_update()}", (user,)
     )} | ({"System Manager"} if user == "Administrator" else set())
 
 
@@ -118,7 +135,7 @@ def _account(provider, account_id, active=True):
         if not frappe.db.exists("DocType", "CRM Webchat Channel"):
             _deny()
         row = frappe.db.get_value("CRM Webchat Channel", account_id,
-            ["name", "enabled"], as_dict=True, for_update=True)
+            ["name", "enabled"], as_dict=True, for_update=_locked())
         if not row or (active and row.enabled != 1):
             _deny()
         return frappe._dict(name=row.name, shop=None, scoped=False)
@@ -132,7 +149,7 @@ def _account(provider, account_id, active=True):
     else:
         _deny()
     fields = ["name", identity, status] + ([shop] if shop else [])
-    rows = frappe.db.get_values(doctype, {identity: account_id}, fields, as_dict=True, for_update=True)
+    rows = frappe.db.get_values(doctype, {identity: account_id}, fields, as_dict=True, for_update=_locked())
     if len(rows) != 1 or (active and rows[0].get(status) != enabled):
         _deny()
     return frappe._dict(name=rows[0].name, shop=rows[0].get(shop) if shop else None, scoped=bool(shop))
@@ -150,8 +167,8 @@ def _authorize(doc, user=None, write=False):
     if doc.provider == "Webchat" and not roles.intersection({"System Manager", "Sales Manager"}):
         # Public visitors never acquire a staff role. Channel operators have an
         # explicit current assignment even on core-only/multi-store installs.
-        if not frappe.db.sql("""SELECT name FROM `tabUser Permission`
-            WHERE user=%s AND allow='CRM Webchat Channel' AND for_value=%s FOR UPDATE""", (user, account.name)):
+        if not frappe.db.sql(f"""SELECT name FROM `tabUser Permission`
+            WHERE user=%s AND allow='CRM Webchat Channel' AND for_value=%s{_for_update()}""", (user, account.name)):
             _deny()
     if doc.get("name") and (doc.account_record != account.name or (doc.shop_key or "") != (account.shop or "")):
         # Reconfiguration cannot silently move a conversation's authority.
@@ -163,9 +180,9 @@ def _authorize(doc, user=None, write=False):
         # with current locking reads instead of role/scope/snapshot caches.
         unrestricted = user == "Administrator" or bool(roles & {"System Manager", "Marketing Manager"})
         allowed = {r[0] for r in frappe.db.sql(
-            "SELECT for_value FROM `tabUser Permission` WHERE user=%s AND allow='Social Shop' FOR UPDATE", (user,)
+            f"SELECT for_value FROM `tabUser Permission` WHERE user=%s AND allow='Social Shop'{_for_update()}", (user,)
         )}
-        if account.shop and not frappe.db.get_value("Social Shop", account.shop, "enabled", for_update=True):
+        if account.shop and not frappe.db.get_value("Social Shop", account.shop, "enabled", for_update=_locked()):
             _deny()
         if not unrestricted and (not account.shop or account.shop not in allowed):
             _deny()
@@ -175,7 +192,7 @@ def _authorize(doc, user=None, write=False):
     if doc.reference_doctype:
         if doc.reference_doctype not in REFERENCES:
             _deny()
-        reference = frappe.get_doc(doc.reference_doctype, doc.reference_name, for_update=True)
+        reference = frappe.get_doc(doc.reference_doctype, doc.reference_name, for_update=_locked())
         if not has_document_permission(doc.reference_doctype, permission, doc=reference, user=user, print_logs=False):
             _deny()
     elif not has_document_permission("CRM Deal", "read", user=user, print_logs=False):
@@ -194,7 +211,7 @@ def _mark(doc):
 
 def _load(name):
     _lock_key(name)
-    return frappe.get_doc(DOCTYPE, name, for_update=True)
+    return frappe.get_doc(DOCTYPE, name, for_update=_locked())
 
 
 def get_or_create(provider, account_id, peer_id, *, reference_doctype=None, reference_name=None):

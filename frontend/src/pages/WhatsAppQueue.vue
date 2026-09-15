@@ -28,12 +28,19 @@
         <button
           v-for="f in filters"
           :key="f.value"
-          class="rounded-full px-3 py-1 text-[12.5px] font-semibold transition-colors"
+          class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12.5px] font-semibold transition-colors"
           :class="status === f.value
             ? 'bg-surface-gray-10 text-ink-base'
             : 'bg-surface-base text-ink-gray-7 border border-outline-gray-2 hover:bg-surface-gray-2'"
           @click="status = f.value"
-        >{{ __(f.label) }}</button>
+        >
+          {{ __(f.label) }}
+          <span
+            v-if="badgeCount(f.value)"
+            class="rounded-full px-1.5 text-[10.5px] leading-4"
+            :class="status === f.value ? 'bg-surface-base/20' : (f.value === 'Fallido' ? 'bg-surface-red-1 text-ink-red-8' : 'bg-surface-amber-1 text-ink-amber-7')"
+          >{{ badgeCount(f.value) }}</span>
+        </button>
       </div>
 
       <div v-if="queue.loading && !rows.length" class="py-16 text-center text-sm text-ink-gray-4">
@@ -42,7 +49,7 @@
       <div v-else-if="!rows.length" class="py-16 text-center text-sm text-ink-gray-4">
         {{ __('No hay mensajes en') }} «{{ __(currentLabel) }}».
       </div>
-      <div v-else class="mx-auto flex max-w-[680px] flex-col gap-2.5">
+      <div v-else class="mx-auto flex max-w-[760px] flex-col gap-2.5">
         <WhatsAppReviewCard
           v-for="row in rows"
           :key="row.name"
@@ -76,12 +83,16 @@ const queue = createResource({
 })
 const rows = computed(() => queue.data || [])
 
-// pending badge in the toolbar — independent of the active filter
+// pending / failed badges (toolbar + filter pills) — independent of the active filter
 const pendingRes = createResource({
   url: 'doco_marketing.api.review_queue.counts',
   auto: true,
 })
 const pendingCount = computed(() => pendingRes.data?.pendiente || 0)
+function badgeCount(filterValue) {
+  const c = pendingRes.data || {}
+  return { Pendiente: c.pendiente, Fallido: c.fallido }[filterValue] || 0
+}
 
 watch(status, () => queue.reload())
 

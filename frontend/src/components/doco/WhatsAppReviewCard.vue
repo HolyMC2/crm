@@ -1,63 +1,93 @@
 <!--
   WhatsAppReviewCard — one row of the supervised WhatsApp Send Review queue.
-  Shows the rendered message, recipient, provenance (⚙ Auto / 👤 approver) and the
-  inline actions a reviewer needs. Used by both the standalone Aprobaciones page
-  (WhatsAppQueue.vue) and the in-conversation strip (ConversationReviewStrip.vue).
+  Leads with WHO the message goes to and WHAT it is about (customer, repair order
+  and its status, deal + stage, owner — resolved server-side in
+  doco_marketing.api.review_queue._enrich), then the rendered message, then the
+  actions. Used by the standalone Aprobaciones page (WhatsAppQueue.vue) and, with
+  `showContext=false`, by the in-conversation strip (ConversationReviewStrip.vue)
+  where the surrounding page already is the customer.
 
   Acts via doco_marketing.api.review_queue.{approve,reject,retry}, which return the
-  row's fresh state; we patch in place and emit `changed` so the parent can reload
-  the surrounding thread (an approved row becomes a real WhatsApp Message).
+  row's fresh state; we emit `changed` so the parent reloads the surrounding list
+  or thread (an approved row becomes a real WhatsApp Message).
 -->
 <template>
-  <div class="rounded-[10px] border border-outline-gray-2 bg-surface-base p-3">
-    <!-- header: template + provenance + status -->
-    <div class="mb-1.5 flex items-start justify-between gap-2">
-      <div class="flex min-w-0 flex-wrap items-center gap-1.5">
-        <span class="truncate text-[12.5px] font-bold text-ink-gray-9">{{ row.template }}</span>
-        <span
-          v-if="provenance"
-          class="rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-6"
-          :title="provenance.tip"
-        >{{ provenance.icon }} {{ provenance.label }}</span>
+  <div class="rounded-[10px] border border-outline-gray-2 bg-surface-base">
+    <!-- who + what -->
+    <div v-if="showContext" class="flex items-start gap-2.5 px-3 pt-3">
+      <Avatar :label="customerName || '?'" size="lg" class="mt-0.5 shrink-0" />
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <component
+            :is="recordLink ? RouterLink : 'span'"
+            :to="recordLink || undefined"
+            class="truncate text-[13.5px] font-bold text-ink-gray-9"
+            :class="recordLink ? 'hover:underline' : ''"
+          >{{ customerName || __('Sin nombre') }}</component>
+          <span class="font-mono text-2xs text-ink-gray-6" :title="row.to">{{ phone }}</span>
+        </div>
+        <div v-if="about" class="mt-0.5 truncate text-[12px] text-ink-gray-7">{{ about }}</div>
+        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <a
+            v-if="ctx.repair_order"
+            :href="repairHref"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7 hover:bg-surface-gray-3"
+            :title="__('Abrir la orden')"
+          >
+            <FeatherIcon name="tool" class="size-3" />
+            {{ ctx.repair_order }}<span v-if="ctx.repair_status"> · {{ ctx.repair_status }}</span>
+          </a>
+          <component
+            :is="refLink ? RouterLink : 'span'"
+            v-if="row.reference_name && ctx.kind !== 'Repair Order'"
+            :to="refLink || undefined"
+            class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7"
+            :class="refLink ? 'hover:bg-surface-gray-3' : ''"
+          >
+            {{ kindLabel }} {{ row.reference_name }}<span v-if="ctx.status"> · {{ ctx.status }}</span>
+          </component>
+          <span
+            v-if="ctx.owner_name"
+            class="inline-flex items-center gap-1 rounded px-1 py-0.5 text-2xs text-ink-gray-5"
+            :title="__('Responsable')"
+          >
+            <FeatherIcon name="user" class="size-3" />{{ ctx.owner_name }}
+          </span>
+        </div>
       </div>
-      <span
-        class="shrink-0 rounded-full px-2 py-0.5 text-2xs-semibold"
-        :class="statusChip.cls"
-      >{{ statusChip.label }}</span>
+      <div class="flex shrink-0 flex-col items-end gap-1">
+        <span class="rounded-full px-2 py-0.5 text-2xs-semibold" :class="statusChip.cls">{{ statusChip.label }}</span>
+        <span class="text-2xs text-ink-gray-5" :title="fullTs">{{ relTime }}</span>
+      </div>
     </div>
 
-    <!-- recipient + reference -->
-    <div class="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-2xs text-ink-gray-5">
-      <span class="font-mono text-ink-gray-6">{{ formattedPhone }}</span>
-      <span v-if="row.reference_name" class="truncate">· {{ refLabel }}</span>
-      <span :title="fullTs">· {{ relTime }}</span>
-    </div>
-
-    <!-- the actual message preview -->
-    <div
-      v-if="row.preview"
-      class="whitespace-pre-line rounded-md bg-surface-gray-1 px-2.5 py-2 text-[12.5px] leading-snug text-ink-gray-8"
-    >{{ row.preview }}</div>
-
-    <!-- failure reason -->
-    <div
-      v-if="row.status === 'Fallido' && row.error"
-      class="mt-1.5 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-8"
-    >
-      {{ shortError }}
-      <span v-if="row.attempts" class="opacity-70">· {{ row.attempts }} {{ __('intentos') }}</span>
-    </div>
-
-    <!-- variable editor (Pendiente only): map each {{n}} to a field + free-edit;
-         the edited values are sent with Enviar -->
-    <div v-if="canAct && row.status === 'Pendiente'" class="mt-2">
-      <button
-        type="button"
-        class="text-2xs-semibold text-ink-blue-link hover:underline disabled:opacity-50"
-        :disabled="varsLoading"
-        @click="toggleEdit"
-      >{{ editing ? __('Ocultar variables') : (varsLoading ? __('Cargando…') : __('Editar variables')) }}</button>
-      <div v-if="editing && vars.length" class="mt-1.5 flex flex-col gap-1.5">
+    <!-- the message: template + provenance, rendered preview, variable editor -->
+    <div class="rounded-md bg-surface-gray-1" :class="showContext ? 'mx-3 mt-2.5' : 'm-2'">
+      <div class="flex items-center justify-between gap-2 border-b border-outline-gray-1 px-2.5 py-1.5 text-2xs text-ink-gray-5">
+        <span class="flex min-w-0 items-center gap-1.5">
+          <FeatherIcon name="message-square" class="size-3 shrink-0" />
+          <span class="truncate">{{ templateLabel }}</span>
+          <span v-if="provenance" class="shrink-0" :title="provenance.tip">· {{ provenance.icon }} {{ provenance.label }}</span>
+          <template v-if="!showContext">
+            <span class="shrink-0 rounded-full px-1.5 py-0.5 text-2xs-semibold" :class="statusChip.cls">{{ statusChip.label }}</span>
+            <span class="shrink-0" :title="fullTs">{{ relTime }}</span>
+          </template>
+        </span>
+        <button
+          v-if="canAct && row.status === 'Pendiente'"
+          type="button"
+          class="shrink-0 text-2xs-semibold text-ink-blue-link hover:underline disabled:opacity-50"
+          :disabled="varsLoading"
+          @click="toggleEdit"
+        >{{ editing ? __('Ocultar variables') : (varsLoading ? __('Cargando…') : __('Editar variables')) }}</button>
+      </div>
+      <div
+        v-if="row.preview"
+        class="whitespace-pre-line px-2.5 py-2 text-[12.5px] leading-snug text-ink-gray-8"
+      >{{ row.preview }}</div>
+      <div v-if="editing && vars.length" class="flex flex-col gap-1.5 border-t border-outline-gray-1 px-2.5 py-2">
         <div v-for="v in vars" :key="v.index" class="flex items-center gap-1.5">
           <span class="w-7 shrink-0 font-mono text-2xs text-ink-gray-5">{{ v.placeholder }}</span>
           <select
@@ -77,43 +107,86 @@
       </div>
     </div>
 
-    <!-- actions -->
-    <div v-if="canAct" class="mt-2.5 flex items-center gap-2">
-      <button
-        v-if="row.status === 'Pendiente'"
-        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
-        style="background:var(--brand)"
-        :disabled="!!busy"
-        @click="act('approve')"
-      >{{ busy === 'approve' ? __('Enviando…') : __('Enviar') }}</button>
-      <button
-        v-if="row.status === 'Fallido'"
-        class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-8 disabled:opacity-50"
-        :disabled="!!busy"
-        @click="act('retry')"
-      >{{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}</button>
-      <button
-        class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1 disabled:opacity-50"
-        :disabled="!!busy"
-        @click="act('reject')"
-      >{{ __('Cancelar') }}</button>
+    <!-- failure reason -->
+    <div
+      v-if="row.status === 'Fallido' && row.error"
+      class="mx-3 mt-2 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-8"
+    >
+      {{ shortError }}
+      <span v-if="row.attempts" class="opacity-70">· {{ row.attempts }} {{ __('intentos') }}</span>
+    </div>
+
+    <!-- actions + the way into the record -->
+    <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
+      <div v-if="canAct" class="flex items-center gap-2">
+        <button
+          v-if="row.status === 'Pendiente'"
+          class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+          style="background:var(--brand)"
+          :disabled="!!busy"
+          @click="act('approve')"
+        >{{ busy === 'approve' ? __('Enviando…') : __('Enviar') }}</button>
+        <button
+          v-if="row.status === 'Fallido'"
+          class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-8 disabled:opacity-50"
+          :disabled="!!busy"
+          @click="act('retry')"
+        >{{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}</button>
+        <button
+          class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1 disabled:opacity-50"
+          :disabled="!!busy"
+          @click="act('reject')"
+        >{{ __('Cancelar') }}</button>
+      </div>
+      <span v-else />
+      <RouterLink
+        v-if="showContext && recordLink"
+        :to="recordLink"
+        class="inline-flex items-center gap-1 text-2xs-semibold text-ink-gray-6 hover:text-ink-gray-9"
+      >{{ openLabel }} <FeatherIcon name="arrow-right" class="size-3" /></RouterLink>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import { call as frappeCall, toast } from 'frappe-ui'
+import { RouterLink } from 'vue-router'
+import { Avatar, FeatherIcon, call as frappeCall, toast } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
+import { aboutLine, deskHref, displayPhone, recordRoute, relativeAge } from '@/utils/reviewCardFormat'
 
 const props = defineProps({
   row: { type: Object, required: true },
+  // false inside a conversation, where the page already is the customer
+  showContext: { type: Boolean, default: true },
 })
 const emit = defineEmits(['changed'])
 
 const { isManager } = usersStore()
 
 const busy = ref('')
+
+// --- who / what ------------------------------------------------------------
+const ctx = computed(() => props.row.context || {})
+const customerName = computed(() => ctx.value.customer_name || '')
+// the contact's own number reads better than the raw WhatsApp recipient
+const phone = computed(() => displayPhone(ctx.value.customer_phone || props.row.to))
+const about = computed(() => aboutLine(ctx.value))
+// the reference's own page (deal / lead) — what the reference chip opens
+const refLink = computed(() => recordRoute(props.row.reference_doctype, props.row.reference_name))
+// where the person's name opens: the reference, else the Contact behind the number
+const recordLink = computed(() => refLink.value || recordRoute('', '', ctx.value.contact))
+const repairHref = computed(() => deskHref('Repair Order', ctx.value.repair_order))
+const kindLabel = computed(() => ({
+  'CRM Deal': __('Trato'),
+  'CRM Lead': __('Lead'),
+}[props.row.reference_doctype] || props.row.reference_doctype || ''))
+const openLabel = computed(() => ({
+  'Deal 360': __('Abrir trato'),
+  Lead: __('Abrir lead'),
+  Contact: __('Abrir contacto'),
+}[recordLink.value?.name] || __('Abrir')))
+const templateLabel = computed(() => props.row.template_label || props.row.template || '')
 
 // --- variable editor (prefill + dropdown + free-edit) ----------------------
 const editing = ref(false)
@@ -168,7 +241,7 @@ const canAct = computed(() => isManager() && ['Pendiente', 'Fallido'].includes(p
 const provenance = computed(() => {
   const r = props.row
   if (r.auto) return { icon: '⚙', label: __('Auto'), tip: r.source || __('Mensaje automático') }
-  if (r.sent_by_name) return { icon: '', label: r.sent_by_name, tip: __('Aprobado por') + ' ' + r.sent_by_name }
+  if (r.sent_by_name) return { icon: '', label: __('Aprobado por') + ' ' + r.sent_by_name, tip: r.sent_at || '' }
   return null
 })
 
@@ -183,43 +256,13 @@ const statusChip = computed(() => {
   )
 })
 
-const refLabel = computed(() => {
-  const r = props.row
-  if (!r.reference_name) return ''
-  return r.reference_name
-})
-
-const formattedPhone = computed(() => {
-  // MX deployment: normalize to last-10 (drops the 52 / legacy 521 WhatsApp prefix)
-  // and render +52 NNN NNN NNNN. Non-10-digit oddities show raw with a +.
-  const d = String(props.row.to || '').replace(/\D/g, '')
-  if (!d) return ''
-  const last10 = d.slice(-10)
-  if (last10.length === 10) {
-    return `+52 ${last10.slice(0, 3)} ${last10.slice(3, 6)} ${last10.slice(6)}`
-  }
-  return `+${d}`
-})
-
 const shortError = computed(() => {
   const e = String(props.row.error || '').trim()
   return e.length > 180 ? e.slice(-180) : e
 })
 
 const fullTs = computed(() => props.row.creation || '')
-const relTime = computed(() => {
-  // lightweight relative time; avoids pulling a date lib into the card
-  const c = props.row.creation
-  if (!c) return ''
-  const then = new Date(c.replace(' ', 'T'))
-  const mins = Math.round((Date.now() - then.getTime()) / 60000)
-  if (Number.isNaN(mins)) return ''
-  if (mins < 1) return __('ahora')
-  if (mins < 60) return `${mins}m`
-  const hrs = Math.round(mins / 60)
-  if (hrs < 24) return `${hrs}h`
-  return `${Math.round(hrs / 24)}d`
-})
+const relTime = computed(() => relativeAge(props.row.creation, Date.now(), { now: __('ahora') }))
 
 async function act(kind) {
   if (busy.value) return
