@@ -20,6 +20,7 @@
         v-for="row in rows"
         :key="row.name"
         :row="row"
+        :show-context="false"
         @changed="onChanged"
       />
     </div>
