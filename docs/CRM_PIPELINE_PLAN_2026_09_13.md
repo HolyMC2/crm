@@ -36,7 +36,14 @@ we keep both language sets seeded but only the active one is visible.
 - FF-merge target: `fix/social-editorial-quality` (crm, base of this branch),
   `main` (taller), `feat/campaign-registration-20260910` (doco_marketing, base).
 
-## Inbox › Conversaciones repair — built 2026-09-15, UNCOMMITTED (crm)
+## 2026-09-15 lanes → ON PROD (cell-0) via sealed delta image `crm-inbox-20260915-c5eccbc`
+
+crm candidate `c5eccbc7a` = merge of `1f37ba8ef` (approvals card) + `84f89fe9d`
+(inbox repair) onto the sealed line `release/full-ci-20260914`; doco_marketing
+`9e8a8ae` = cherry-pick of `0081fb3` onto sealed `038809e`. Nothing else from
+this branch is on prod. Lane and evidence: `~/muelle-releases/crm-inbox-20260915/`.
+
+## Inbox › Conversaciones repair — built 2026-09-15 (crm `84f89fe9d`)
 
 Marco: «conversaciones feature is broken … where are our messages?». Four
 defects, all in the native workspace shipped 09-10:
@@ -63,7 +70,7 @@ selects readable in dark mode. Verified on doco-mirror: no banner, three API
 calls per click, thread 5216463445324 reads «maria ramos» with 7 out / 5 in.
 Python: `test_conversation_threads` 20 ok, `test_conversations` 23 ok (mirror).
 
-## Aprobaciones WhatsApp redesign — built 2026-09-15, UNCOMMITTED on the same worktrees
+## Aprobaciones WhatsApp redesign — built 2026-09-15 (crm `1f37ba8ef`, doco_marketing `0081fb3`)
 
 Marco: the queue card showed a template id, a phone and a deal number; nothing
 said who the customer is or what the send is about. Now
