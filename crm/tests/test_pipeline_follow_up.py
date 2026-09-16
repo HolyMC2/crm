@@ -71,7 +71,15 @@ class FollowUpTestCase(IntegrationTestCase):
 		self.sources.append(todo.name)
 		return todo.name
 
-	def make_user(self, enabled: bool = True) -> str:
+	def make_user(self, enabled: bool = True, role: str = "Sales User") -> str:
+		"""A staff owner: enabled, System User, holding a desk role.
+
+		The role is what makes the user type stick. Frappe downgrades a user with
+		no desk-access role to Website User (User.set_system_user), so a fixture
+		that only asks for "System User" silently produces an owner this service
+		must refuse -- which passes or fails with the site's default role rather
+		than with the code. The assertion keeps that from going unnoticed again.
+		"""
 		email = f"zz-followup-{frappe.generate_hash(length=8)}@example.invalid"
 		user = frappe.get_doc(
 			{
@@ -80,11 +88,18 @@ class FollowUpTestCase(IntegrationTestCase):
 				"first_name": "ZZ Follow Up",
 				"user_type": "System User",
 				"send_welcome_email": 0,
+				"roles": [{"role": role}] if role else [],
 			}
 		)
 		user.flags.no_welcome_mail = True
 		user.insert(ignore_permissions=True)
 		self.users.append(email)
+		if role:
+			self.assertEqual(
+				frappe.db.get_value("User", email, "user_type"),
+				"System User",
+				f"{role} must grant desk access for this fixture to model a staff owner",
+			)
 		if not enabled:
 			frappe.db.set_value("User", email, "enabled", 0)
 		return email
@@ -369,6 +384,23 @@ class FollowUpTestCase(IntegrationTestCase):
 		self.assertEqual(
 			follow_up.reassign(slot=self.slot(source), owner=disabled)["owner_skipped"], disabled
 		)
+
+	def test_a_portal_user_never_receives_a_staff_follow_up(self):
+		"""A Website User is a customer account: it must not hold staff work.
+
+		The type is written directly because what Frappe derives from roles on
+		insert depends on the site's own data: the same role-less user is a
+		Website User on a fresh site and a System User on the retail mirror. The
+		service reads the stored type, so the stored type is what this pins.
+		"""
+		deal, source = self.make_deal(), self.make_source()
+		portal = self.make_user(role="")
+		frappe.db.set_value("User", portal, "user_type", "Website User")
+
+		created = self.upsert(deal, source, occurrence="evt-1", owner=portal)
+
+		self.assertEqual(created["owner_skipped"], portal)
+		self.assertIsNone(self.task(created["name"]).assigned_to)
 
 	def test_a_skipped_owner_does_not_drop_the_current_assignee(self):
 		deal, source = self.make_deal(), self.make_source()
