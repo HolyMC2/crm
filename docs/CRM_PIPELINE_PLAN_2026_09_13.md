@@ -31,10 +31,30 @@ we keep both language sets seeded but only the active one is visible.
   "Approved 1367 MX$ 2,050 pond. MX$ 1,538", stepper renders, funnel reads
   Conversión 95.9%.
 
-## Merge targets (not merged or deployed to production)
+## Status 2026-09-15 — the pipeline feature IS on production; targets fast-forwarded
 
-- FF-merge target: `fix/social-editorial-quality` (crm, base of this branch),
-  `main` (taller), `feat/campaign-registration-20260910` (doco_marketing, base).
+- Prod carries it through three sealed rolls: crm `892d91392` (full-CI build 6,
+  09-14, contains milestone 1 + wave 2 + the follow-ups) then `c5eccbc7a`
+  (09-15), taller `b20c14a` (taller-spa 09-14, contains the seed/heal, quote
+  sync and repair-evidence commits), doco_marketing `038809e` (funnel) then
+  `9e8a8ae`. Migrations ran with those rolls.
+- Live data on ventas.docomexico.com: 22 stages, 11 visible (Spanish set
+  active), 763 of 765 deals titled, 339 typed tasks, **0 deals with a next
+  activity, 0 tasks with a due date**. Mumu: upstream 7 stages, 7 deals.
+  The follow-up discipline has no data yet: staff never open a deal to date a
+  task, so the Vencidos/Para hoy queues are empty and "Sin seguimiento" holds
+  everything. Wave 3 attacks this from the list itself (inline follow-up).
+- FF-merged 09-15: crm `fix/social-editorial-quality` → `88832ee9d`,
+  doco_marketing `feat/campaign-registration-20260910` → `0081fb3`, taller
+  `main` → `b20c14a` (the sealed line, a superset of the pipeline commits).
+
+## Wave 4 — proposed, waits for taller's rules
+
+Automatic dated follow-ups from repair stages (taller owns the transitions),
+e.g. quote sent → «Confirmar cotización» +2 days, ready → «Avisar recogida»
+same day, delivered → «Pedir reseña» +3 days. Petition to the taller lane:
+`crm/docs/TALLER_WORKFLOWS_PETITION_2026_09_15.md`. Wave 3 (below) is the
+list-side half of the same goal.
 
 ## 2026-09-15 lanes → ON PROD (cell-0) via sealed delta image `crm-inbox-20260915-c5eccbc`
 
@@ -209,7 +229,46 @@ quote cannot be distinguished without explicit provenance.
   localhost-only HTTPS relay to the same frontend/site; the relay was closed.
   Full refresh log `/tmp/crm-followup-queues-refresh.log`. No Python restart.
 
+## Wave 3 — list capabilities, built and verified on lab 2026-09-15
+
+The production finding: 765 deals, 763 titled, zero with a next activity, zero of
+339 tasks dated. Nobody opens a deal to date a follow-up, so the queues are empty.
+
+- «Próximo paso» is now the row's own action. The cell opens a compact popover
+  (title, date, optional hour, activity type, Hoy/Mañana/+3/+7 from the site day)
+  and writes the canonical CRM Task through `utils/followUpService`: the same
+  `frappe.client.insert` the shared CRM Task modal submits from Deal 360's Resumen,
+  and `frappe.client.set_value` on the task the deal already points at. Nothing
+  writes `next_activity_*`; the deal is re-read after the write and the row takes
+  what the `crm/pipeline` hooks derived, with no list reload.
+- Group-by (etapa, responsable, estado de reparación) with collapsible headers.
+  Stage headers carry the server's filtered count and follow the visible stage
+  positions; the other dimensions are counted off the loaded rows and say
+  «cargados». Desktop list only.
+- Saved views are «CRM View Settings» rows written with the upstream API
+  (create/update/pin/public/set_as_default/delete, read via `crm.api.views`):
+  my views, team views marked público, pin, predeterminada, manager-only publish.
+  `filters`/`order_by`/`group_by_field` stay valid CRM Deal expressions so the row
+  still opens in the classic list; the doco-only context (queue, search, modo,
+  agrupación, columnas) rides in `kanban_fields`, which a list view never reads.
+  `route_name` marks the row as this list's. The default view opens the list on a
+  fresh session only; the per-user session context still wins on the way back from
+  a deal. The old browser-local views stay listed read-only.
+- 656 frontend tests pass (598 before; one of the new ones is another lane's).
+  New: `dealGroups`, `dealViewSettings`, `followUpService`, `followUpCell`,
+  `savedViewPicker`, plus follow-up payload/validation cases.
+- Verified on doco-mirror at 1440px and 390px, light and dark, zero console
+  errors: insert on a deal with no task and reschedule on one with it, both 200
+  and the row updating in place; stage groups («Aprobado 1585»), owner and repair
+  groups marked «cargados»; a view saved, reloaded, applied (queue and grouping
+  restored), pinned, made default and deleted. No horizontal page overflow.
+  Scripts and screenshots under this session's scratchpad (`deals_wave3*.mjs`,
+  `wave3-*.png`).
+- The mirror's System Settings timezone is `Asia/Kolkata`, so "today" there is a
+  day ahead of Mazatlán. The cell and the queues read the same site day, so they
+  agree; the lab site config is what needs fixing.
+
 ## Remaining list capabilities
 
-6. Lists still lack inline edit, group-by, shared saved views;
+6. Lists still lack inline edit of the other fields (stage, value, owner);
    consider adopting the upstream list/kanban instead of the redesign list.
