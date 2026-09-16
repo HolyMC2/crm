@@ -341,7 +341,14 @@ def _template_text(message_name, row):
 
 @frappe.whitelist()
 def list_for_reference(doctype, name, cursor=None):
-    """Linked native conversations, authorized individually; never infer a peer."""
+    """Conversations that belong to this record: the native conversations
+    explicitly linked to it, plus (first page only) the threads implied by the
+    record's OWN messages, i.e. WhatsApp / Messenger rows whose reference is this
+    record. Nothing is inferred from a phone number and nothing is
+    materialized here; an implied thread carries name=None and opens through
+    open_thread like any legacy row. Every account and peer is authorized
+    individually. Before this, a deal with 28 referenced WhatsApp messages
+    showed «No hay conversaciones vinculadas» on production (2026-09-15)."""
     _actor()
     if doctype not in REFS or not _source_allowed({"reference_doctype": doctype, "reference_name": name}):
         control._deny()
@@ -352,15 +359,93 @@ def list_for_reference(doctype, name, cursor=None):
     rows = frappe.get_all(control.DOCTYPE,
         filters={"reference_doctype": doctype, "reference_name": name, "name": [">", after]},
         fields=["name"], order_by="name asc", limit=SCAN + 1)
-    items = []
+    items, seen = [], set()
     for row in rows[:SCAN]:
         doc = control._load(row.name)
-        # Check the locked row again: a concurrent relink must not leak it.
+        # Check the row again: a concurrent relink must not leak it.
         if doc.reference_doctype != doctype or doc.reference_name != name:
             continue
         if _permitted(lambda: control._authorize(doc)):
-            items.append({key: doc.get(key) for key in ("name", "provider", "account_id", "control_state")})
+            items.append(_reference_item(doc.provider, doc.account_id, doc.peer_id, doc))
+            seen.add(doc.name)
+    if not after:
+        items.extend(_implied_threads(doctype, name, seen))
     return {"items": items, "next_cursor": _next(rows[SCAN - 1].name, context) if len(rows) > SCAN else None}
+
+
+def _reference_item(provider, account_id, peer, doc=None):
+    """One row of list_for_reference: the conversation when materialized, else
+    the exact legacy identity, plus the newest visible message as preview."""
+    scope = None
+    try:
+        with _quiet_denial():
+            scope = _scope(provider, account_id)
+    except (frappe.PermissionError, frappe.DoesNotExistError):
+        scope = None
+    visible = _first_visible(scope, peer) if scope else None
+    message = _message(scope, visible) if visible else None
+    return {"name": doc.name if doc else None, "provider": provider, "account_id": account_id, "peer_id": peer,
+            "display_name": _display_names(provider, [peer]).get(peer, peer),
+            "materialized": bool(doc), "control_state": doc.control_state if doc else "Human",
+            "human_owner": doc.human_owner if doc else None,
+            "preview": message["content"][:160] if message else "",
+            "last_message_at": message["timestamp"] if message else None}
+
+
+def _implied_threads(doctype, name, seen):
+    """(provider, account_id, peer) triples named by the record's own messages,
+    one per customer (WhatsApp spellings collapsed), each authorized as the
+    thread list would; already listed conversations are skipped."""
+    candidates = []  # (provider, account_id, peer)
+    if _channel_available("WhatsApp"):
+        rows = frappe.db.sql("""SELECT m.whatsapp_account AS account,
+            CASE WHEN m.type='Incoming' THEN m.`from` ELSE m.`to` END AS peer
+            FROM `tabWhatsApp Message` m
+            WHERE m.reference_doctype=%s AND m.reference_name=%s AND m.type IN ('Incoming','Outgoing')
+            GROUP BY 1, 2""", (doctype, name), as_dict=True)
+        accounts = {}
+        if rows:
+            accounts = {a.name: a.phone_id for a in frappe.get_all("WhatsApp Account",
+                filters={"name": ["in", sorted({r.account for r in rows if r.account})]},
+                fields=["name", "phone_id"], limit_page_length=0)}
+        candidates.extend(("WhatsApp", accounts.get(r.account), r.peer) for r in rows)
+    if _channel_available("Messenger"):
+        rows = frappe.db.sql("""SELECT m.page_id, m.psid, COALESCE(m.platform,'') AS platform
+            FROM `tabMessenger Message` m
+            WHERE m.reference_doctype=%s AND m.reference_name=%s AND m.direction IN ('Incoming','Outgoing')
+            GROUP BY 1, 2, 3""", (doctype, name), as_dict=True)
+        pages = {}
+        if rows:
+            pages = {p.page_id: p.ig_account_id for p in frappe.get_all("Messenger Page",
+                filters={"page_id": ["in", sorted({r.page_id for r in rows if r.page_id})]},
+                fields=["page_id", "ig_account_id"], limit_page_length=0)}
+        for r in rows:
+            if r.platform == "Instagram":
+                candidates.append(("Instagram", pages.get(r.page_id), r.psid))
+            else:
+                candidates.append(("Messenger", r.page_id, r.psid))
+    items = []
+    for provider, account_id, peer in sorted({c for c in candidates if c[1] and c[2]}):
+        if not re.fullmatch(r"[0-9]{1,40}", str(account_id)) or not re.fullmatch(r"[0-9]{1,40}", str(peer)):
+            continue
+        if not _permitted(lambda: _account_probe(provider, account_id)) or _private_peer(provider, peer):
+            continue
+        items.append((provider, account_id, peer))
+    out = []
+    by_account = {}
+    for provider, account_id, peer in items:
+        by_account.setdefault((provider, account_id), []).append(frappe._dict(peer_id=peer))
+    for (provider, account_id), peers in by_account.items():
+        for row in _collapse_spellings(provider, account_id, peers):
+            peer = row.peer_id
+            key = control.conversation_key(provider, account_id, peer)
+            doc = control._load(key) if frappe.db.get_value(control.DOCTYPE, key, "name") else None
+            if doc and (doc.name in seen or not _permitted(lambda: control._authorize(doc))):
+                continue
+            item = _reference_item(provider, account_id, peer, doc)
+            if doc or item["preview"] or item["last_message_at"]:
+                out.append(item)
+    return out
 
 
 @frappe.whitelist()
