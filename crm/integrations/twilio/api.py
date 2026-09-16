@@ -1,4 +1,5 @@
 import json
+import logging
 
 import frappe
 from frappe import _
@@ -224,6 +225,46 @@ def update_recording_info(**kwargs):
 		raise exc
 
 
+# Twilio refuses a user-defined message when the parent call is no longer in
+# progress (21220) and when the parent leg is PSTN, which has no Client SDK
+# listener to receive it. A status callback routinely arrives in both states.
+CALL_NOT_IN_EXPECTED_STATE = 21220
+_PSTN_HAS_NO_CLIENT_LISTENER = "client message not supported for pstn calls"
+
+
+def is_expected_user_message_rejection(exc) -> bool:
+	"""True when Twilio refused the live-status push for an ordinary reason."""
+	from twilio.base.exceptions import TwilioRestException
+
+	if not isinstance(exc, TwilioRestException):
+		return False
+	if getattr(exc, "code", None) == CALL_NOT_IN_EXPECTED_STATE:
+		return True
+	return _PSTN_HAS_NO_CLIENT_LISTENER in f"{getattr(exc, 'msg', '') or exc}".lower()
+
+
+def _report_status_push_failure(exc, call_sid):
+	"""Report without exposing SDK credentials, phone numbers or traceback locals."""
+	message = f"Browser status push failed ({type(exc).__name__}); call log update succeeded."
+	for label, value in (("Twilio code", getattr(exc, "code", None)), ("HTTP status", getattr(exc, "status", None))):
+		if isinstance(value, int):
+			message += f" {label}={value}."
+	try:
+		frappe.log_error(
+			title="Failed to update Twilio call status",
+			message=message,
+			reference_doctype="CRM Call Log",
+			reference_name=call_sid,
+		)
+	except Exception:
+		# The call update has committed. Even failure of both logging outputs
+		# must not turn this optional notification into a failed webhook.
+		try:
+			logging.getLogger(__name__).error("%s call=%s", message, call_sid)
+		except Exception:
+			pass
+
+
 @frappe.whitelist(allow_guest=True)
 def update_call_status_info(**kwargs):
 	args = frappe._dict(kwargs)
@@ -243,12 +284,17 @@ def update_call_status_info(**kwargs):
 		"To": args.To,
 	}
 
+	# Best effort. The authoritative work — the CRM Call Log update above — is
+	# already committed, so a refused live-status push must not fail this
+	# callback: answering 500 only makes Twilio retry a webhook that already
+	# succeeded. Twilio refuses the message in two ordinary situations, and
+	# neither is a shop problem. Anything else is still recorded for a human.
 	try:
 		client = Twilio.get_twilio_client()
 		client.calls(args.ParentCallSid).user_defined_messages.create(content=json.dumps(call_info))
 	except Exception as exc:
-		frappe.log_error(title=_("Failed to update Twilio call status"))
-		raise exc
+		if not is_expected_user_message_rejection(exc):
+			_report_status_push_failure(exc, parent_call_sid)
 
 
 def get_datetime_from_timestamp(timestamp):

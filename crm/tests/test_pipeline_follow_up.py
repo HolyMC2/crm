@@ -172,6 +172,15 @@ class FollowUpTestCase(IntegrationTestCase):
 		self.assertEqual(self.open_of(self.slot(source)), [created["name"]])
 		self.assertEqual(self.task(created["name"]).title, "Confirmar cotizacion revisada")
 
+	def test_identical_reconciliation_does_not_resave_the_task(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-fixed", days=None)
+		before = frappe.db.get_value("CRM Task", created["name"], "modified")
+		retried = self.upsert(deal, source, occurrence="evt-fixed", days=None)
+		self.assertEqual(retried["action"], "reused")
+		self.assertFalse(retried["human_edited"])
+		self.assertEqual(frappe.db.get_value("CRM Task", created["name"], "modified"), before)
+
 	def test_a_new_occurrence_supersedes_the_open_task(self):
 		deal, source = self.make_deal(), self.make_source()
 
