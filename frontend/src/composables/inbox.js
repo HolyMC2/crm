@@ -417,6 +417,7 @@ export async function sendCatalogItems(itemCodes) {
         channel: c.channel,
         item_codes: JSON.stringify(itemCodes),
         to: c.to || undefined,
+        whatsapp_account: c.whatsapp_account || undefined,
       })
   lastSendAt.value = Date.now()
   return res

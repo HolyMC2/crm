@@ -345,6 +345,31 @@ def _persist_transition(doc, before, *, key, fingerprint, origin, actor, action,
     return result
 
 
+def internal_take_for_reply(name, actor, send_key):
+    """A person's reply to an unowned conversation takes it, recorded as `take`.
+
+    Only the transcript bridge calls this, inside its fence, for the send that
+    needs it. It never takes from a current owner, a bot run, a pause or a
+    closed conversation; those stay explicit commands.
+    """
+    send_key = _text(send_key)
+    with conversation_fence(name):
+        doc = _load(name)
+        key = _event_key(name, "Human", actor, "reply:" + send_key)
+        fingerprint = _digest(["take_for_reply", send_key])
+        replay = _replay(key, fingerprint)
+        if replay:
+            return doc
+        _authorize(doc, actor, write=True)
+        if doc.control_state != "Human" or doc.human_owner or doc.provider_control not in {"Ours", "Not Applicable"}:
+            _conflict()
+        before = _snapshot(doc)
+        doc.human_owner, doc.bot_enabled = actor, 0
+        _persist_transition(doc, before, key=key, fingerprint=fingerprint,
+                            origin="Human", actor=actor, action="take", reason="first_reply")
+        return doc
+
+
 def internal_webchat_customer_reply(conversation_name, message_key):
     """An immutable local customer message can retire its current bot grant.
 

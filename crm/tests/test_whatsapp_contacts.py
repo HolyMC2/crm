@@ -21,6 +21,9 @@ class TestWhatsAppContacts(unittest.TestCase):
 		self.point = "wa_contacts_" + uuid4().hex
 		frappe.db.savepoint(self.point)
 		self.enterContext(patch.object(contacts, "_site_region", return_value="MX"))
+		from crm.api import outbox_bridge
+
+		self.usable = self.enterContext(patch.object(outbox_bridge, "usable_send_account", return_value=True))
 
 	def tearDown(self):
 		frappe.db.rollback(save_point=self.point)
@@ -46,11 +49,11 @@ class TestWhatsAppContacts(unittest.TestCase):
 		).db_insert()
 		return name
 
-	def message(self, type, peer, hours_ago):
+	def message(self, type, peer, hours_ago, account=None):
 		field = "from" if type == "Incoming" else "to"
 		frappe.get_doc(
 			{"doctype": "WhatsApp Message", "name": uuid4().hex, "type": type, field: peer,
-			"message": "Fictional", "content_type": "text",
+			"message": "Fictional", "content_type": "text", "whatsapp_account": account,
 			"creation": add_to_date(now_datetime(), hours=-hours_ago)}
 		).db_insert()
 
@@ -58,8 +61,8 @@ class TestWhatsAppContacts(unittest.TestCase):
 		primary, second = _phone(), _phone()
 		deal = self.deal()
 		contact = self.contact(deal, primary, "+52 1 " + second)
-		self.message("Outgoing", "52" + second, hours_ago=30)
-		self.message("Incoming", "521" + second, hours_ago=2)
+		self.message("Outgoing", "52" + second, hours_ago=30, account="fictional-default")
+		self.message("Incoming", "521" + second, hours_ago=2, account="fictional-branch")
 
 		first, other = contacts.list_numbers("CRM Deal", deal)
 
@@ -69,8 +72,21 @@ class TestWhatsAppContacts(unittest.TestCase):
 		self.assertFalse(first["session_open"])
 		self.assertEqual((other["is_primary"], other["peer_key"]), (0, second))
 		self.assertEqual(other["phone"], "521" + second)
+		self.assertEqual(other["whatsapp_account"], "fictional-branch")  # where the customer wrote
+		self.assertIsNone(first["whatsapp_account"])
 		self.assertEqual(other["whatsapp_state"], "yes")
 		self.assertTrue(other["session_open"])
+
+	def test_an_account_this_user_cannot_send_from_is_not_suggested(self):
+		number = _phone()
+		deal = self.deal(mobile_no=number)
+		self.message("Incoming", "521" + number, hours_ago=1, account="fictional-inactive")
+		self.usable.return_value = False
+
+		(tab,) = contacts.list_numbers("CRM Deal", deal)
+
+		self.assertIsNone(tab["whatsapp_account"])
+		self.assertTrue(tab["session_open"])
 
 	def test_spellings_of_one_phone_are_one_tab_and_outgoing_spelling_is_reused(self):
 		number = _phone()

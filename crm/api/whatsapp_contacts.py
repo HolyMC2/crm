@@ -22,11 +22,17 @@ def list_numbers(doctype, name):
 	manual = _manual_whatsapp_flag(doctype, name)
 	region = _site_region()
 	session_start = add_to_date(now_datetime(), hours=-24)
+	from crm.api.outbox_bridge import usable_send_account
+
+	usable = {}
 	out = []
 	for n in numbers:
 		fact = facts.get(n["key"], {})
 		has = bool(fact)
 		last_in = fact.get("last_incoming")
+		account = fact.get("incoming_account") or fact.get("outgoing_account")
+		if account and account not in usable:
+			usable[account] = usable_send_account(account)
 		out.append(
 			{
 				"contact": n["contact"],
@@ -35,6 +41,9 @@ def list_numbers(doctype, name):
 				# to us, else the spelling our sends already used, else the stored number.
 				"phone": fact.get("incoming_peer") or fact.get("outgoing_peer") or _e164_digits(n["raw"], region),
 				"phone_display": n["raw"],
+				# Reply from the business number the customer last wrote to (else last used),
+				# when this user may send from it; otherwise the default account.
+				"whatsapp_account": account if account and usable[account] else None,
 				"peer_key": n["key"],
 				"image": n["image"],
 				"is_primary": n["is_primary"],
@@ -99,17 +108,17 @@ def _record_numbers(doctype, name):
 
 
 def _message_facts(keys):
-	"""Per phone key: newest inbound time and the peer spellings last used each way."""
+	"""Per phone key: newest inbound time, and the peer spelling and account last used each way."""
 	if not keys or not frappe.db.exists("DocType", "WhatsApp Message"):
 		return {}
 	rows = frappe.db.sql(
-		f"""SELECT t.k, t.type, t.peer, t.creation FROM (
+		f"""SELECT t.k, t.type, t.peer, t.account, t.creation FROM (
 			SELECT RIGHT(REGEXP_REPLACE(COALESCE(`from`, ''), '[^0-9]', ''), {PEER_SUFFIX}) AS k,
-				type, REGEXP_REPLACE(`from`, '[^0-9]', '') AS peer, creation
+				type, REGEXP_REPLACE(`from`, '[^0-9]', '') AS peer, whatsapp_account AS account, creation
 			FROM `tabWhatsApp Message` WHERE type = 'Incoming'
 			UNION ALL
 			SELECT RIGHT(REGEXP_REPLACE(COALESCE(`to`, ''), '[^0-9]', ''), {PEER_SUFFIX}),
-				type, REGEXP_REPLACE(`to`, '[^0-9]', ''), creation
+				type, REGEXP_REPLACE(`to`, '[^0-9]', ''), whatsapp_account, creation
 			FROM `tabWhatsApp Message` WHERE type = 'Outgoing'
 		) t WHERE t.k IN %(keys)s ORDER BY t.creation DESC""",
 		{"keys": tuple(keys)},
@@ -119,9 +128,9 @@ def _message_facts(keys):
 	for row in rows:
 		fact = facts.setdefault(row.k, {})
 		if row.type == "Incoming" and "incoming_peer" not in fact:
-			fact.update(incoming_peer=row.peer, last_incoming=row.creation)
+			fact.update(incoming_peer=row.peer, last_incoming=row.creation, incoming_account=row.account)
 		elif row.type == "Outgoing" and "outgoing_peer" not in fact:
-			fact["outgoing_peer"] = row.peer
+			fact.update(outgoing_peer=row.peer, outgoing_account=row.account)
 	return facts
 
 

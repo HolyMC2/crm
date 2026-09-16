@@ -20,8 +20,20 @@ def webchat_revision(account):
     return "manual_webchat:" + hashlib.sha256(json.dumps(values, separators=(",", ":")).encode()).hexdigest()
 
 
+# A person's free-form reply is `manual`; a person's template send is `service`.
+HUMAN_PURPOSES = {"manual", "service"}
+
+
+def requires_window(intent):
+    """Meta delivers a template outside the customer-service window; nothing else."""
+    try:
+        return json.loads(intent.payload).get("type") != "template"
+    except (TypeError, ValueError, AttributeError):
+        return True
+
+
 def manual_reply_reason(intent):
-    if intent.origin != "Human" or intent.purpose != "manual":
+    if intent.origin != "Human" or intent.purpose not in HUMAN_PURPOSES:
         return "producer_not_ready"
     if frappe.conf.get("maintenance_mode"):
         return "site_maintenance"
@@ -39,18 +51,55 @@ def manual_reply_reason(intent):
         return None
     if intent.provider != "WhatsApp":
         return "producer_not_ready"
+    reason, account = whatsapp_account_reason(intent)
+    if reason:
+        return reason
+    return _recipient_reason(intent, account)
+
+
+def automation_reason(intent):
+    """Automated or approved notices: no ownership, but every account, peer and
+    provider-control rule a person's reply obeys. A control change never cancels one."""
+    if intent.origin != "Automation" or intent.purpose != "automation" or intent.provider != "WhatsApp":
+        return "producer_not_ready"
+    if frappe.conf.get("maintenance_mode"):
+        return "site_maintenance"
+    from crm.api import conversations as control
+    try:
+        current = control._load(intent.conversation)
+        if (intent.provider, intent.account_id, intent.peer_id) != (current.provider, current.account_id, current.peer_id):
+            return "conversation_scope_changed"
+        control._authorize(current, intent.actor_user, write=True)
+    except (frappe.PermissionError, frappe.DoesNotExistError):
+        return "authority_revoked"
+    if current.provider_control not in {"Ours", "Not Applicable"}:
+        return "provider_control_unavailable"
+    reason, account = whatsapp_account_reason(intent)
+    if reason:
+        return reason
+    return _recipient_reason(intent, account)
+
+
+def _recipient_reason(intent, account):
+    # Keep the shared call exactly as the bot adapter uses it; only templates skip the window.
+    if requires_window(intent):
+        return whatsapp_recipient_reason(intent, account=account)
+    return whatsapp_recipient_reason(intent, account=account, require_window=False)
+
+
+def whatsapp_account_reason(intent):
     rows = frappe.db.get_values("WhatsApp Account", {"phone_id": intent.account_id},
         ["name", "status", "mode", "app_id", "business_id"], as_dict=True, for_update=True)
     if len(rows) != 1 or rows[0].status != "Active" or (rows[0].mode or "Live") != "Live":
-        return "account_unavailable"
+        return "account_unavailable", None
     if not rows[0].app_id:
-        return "account_configuration_invalid"
+        return "account_configuration_invalid", None
     if intent.source_doctype != "WhatsApp Account" or intent.source_name != rows[0].name or intent.source_action != account_revision(rows[0]):
-        return "account_configuration_changed"
-    return whatsapp_recipient_reason(intent, account=rows[0])
+        return "account_configuration_changed", None
+    return None, rows[0]
 
 
-def whatsapp_recipient_reason(intent, account=None):
+def whatsapp_recipient_reason(intent, account=None, require_window=True):
     """Shared native/manual recipient rules; the producer validates its source."""
     if frappe.conf.get("maintenance_mode"):
         return "site_maintenance"
@@ -71,6 +120,8 @@ def whatsapp_recipient_reason(intent, account=None):
               AND (party=%s OR (%s=1 AND REGEXP_REPLACE(party,'[^0-9]','') LIKE %s))
             LIMIT 1 FOR UPDATE""", (intent.peer_id, int(len(intent.peer_id) >= 10), "%" + tail)):
             return "recipient_suppressed"
+    if not require_window:
+        return None
     if not frappe.db.exists("DocType", "Meta Webhook Receipt"):
         return "customer_window_unverified"
     now = int(time.time())

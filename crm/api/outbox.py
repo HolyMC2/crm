@@ -91,10 +91,13 @@ def validate_intent(doc):
         frappe.throw("Invalid outbound state history.")
     doc.provider_message_key = _hash([doc.provider, doc.account_id, doc.provider_message_id]) if doc.provider_message_id else None
     if not doc.is_new():
+        # transcript_message stays outside the fingerprint so intents created
+        # before the field existed keep their identity; it is immutable all the same.
+        linked = ("transcript_message",) if frappe.db.has_column(DOCTYPE, "transcript_message") else ()
         old = frappe.db.get_value(DOCTYPE, doc.name,
-            [*IMMUTABLE, "payload_hash", "expires_at", "state", "state_log", "attempts", "provider_message_id"],
+            [*IMMUTABLE, *linked, "payload_hash", "expires_at", "state", "state_log", "attempts", "provider_message_id"],
             as_dict=True, for_update=True)
-        if any((doc.get(f) or None) != (old.get(f) or None) for f in (*IMMUTABLE, "payload_hash", "expires_at")):
+        if any((doc.get(f) or None) != (old.get(f) or None) for f in (*IMMUTABLE, *linked, "payload_hash", "expires_at")):
             frappe.throw("Outbound intent identity and content are immutable.")
         previous = json.loads(old.state_log)
         if len(log) != len(previous) + 1 or log[:-1] != previous or doc.state not in TRANSITIONS[old.state]:
@@ -108,10 +111,23 @@ def validate_intent(doc):
 def _projection(doc):
     result = {field: doc.get(field) for field in PUBLIC}
     payload = json.loads(doc.payload)
-    result["text"] = (payload.get("text") or {}).get("body", "") if doc.provider == "WhatsApp" else payload.get("text", "") if doc.provider == "Webchat" else ""
+    result["text"] = _summary(payload) if doc.provider == "WhatsApp" else payload.get("text", "") if doc.provider == "Webchat" else ""
     result["can_retry"] = doc.state in {"Blocked", "Failed", "Deferred"} and not doc.provider_message_id and doc.attempts < MAX_ATTEMPTS
     result["can_cancel"] = doc.state in {"Queued", "Claimed", "Blocked", "Deferred", "Failed"} and not doc.provider_message_id
     return result
+
+
+def _summary(payload):
+    """Operator-facing text of a frozen WhatsApp payload; never the raw JSON."""
+    kind = payload.get("type")
+    content = payload.get(kind) or {}
+    if kind == "text":
+        return content.get("body", "")
+    if kind == "template":
+        return "[{0}] {1}".format(kind, content.get("name", ""))
+    if kind == "reaction":
+        return content.get("emoji", "")
+    return content.get("caption") or "[{0}]".format(kind)
 
 
 def _notify(doc):
@@ -132,6 +148,9 @@ def _transition(doc, state, reason="", **values):
     if state == "Cancelled" and doc.origin == "Bot" and "doco" in frappe.get_installed_apps():
         from doco.docoutils.assistant.bot_budget import release_cancelled
         release_cancelled(doc)
+    if doc.provider == "WhatsApp":
+        from crm.api.outbox_bridge import project_transcript
+        project_transcript(doc)
     _notify(doc)
     return doc
 
@@ -267,9 +286,12 @@ def _worker_only():
 
 
 def _eligibility(doc):
-    from crm.api.outbox_policy import manual_reply_reason
+    from crm.api.outbox_policy import automation_reason, manual_reply_reason
     if doc.expires_at and get_datetime(doc.expires_at) <= now_datetime():
         return "reply_expired"
+    if doc.origin == "Automation":
+        # Notices carry no ownership: a control change must not cancel them.
+        return automation_reason(doc)
     try:
         current = control.assert_current_generation(doc.conversation, doc.conversation_generation,
             origin=doc.origin, actor_user=doc.actor_user, run_name=doc.run_name)
@@ -469,8 +491,13 @@ def cancel_intent(name):
     with control.conversation_fence(conversation):
         doc = _load(name)
         current = control._load(doc.conversation)
-        control._authorize(current, write=True)
-        if current.human_owner != frappe.session.user:
+        roles, _account = control._authorize(current, write=True)
+        user = frappe.session.user
+        # The owner cancels anything; a person cancels their own reply; an unowned
+        # conversation's notice can be cancelled by anyone allowed to write to it.
+        if not (current.human_owner == user or roles & control.MANAGERS
+                or (doc.origin == "Human" and doc.actor_user == user)
+                or (doc.origin == "Automation" and not current.human_owner)):
             _deny()
         if doc.state == "Cancelled":
             return _projection(doc)
@@ -485,9 +512,12 @@ def retry_intent(name):
     conversation = frappe.db.get_value(DOCTYPE, _name(name), "conversation")
     with control.conversation_fence(conversation):
         doc = _load(name)
-        if doc.actor_user != frappe.session.user:
-            _deny()
-        control.assert_current_generation(conversation, doc.conversation_generation, actor_user=doc.actor_user)
+        if doc.origin == "Automation":
+            control._authorize(control._load(conversation), write=True)
+        else:
+            if doc.actor_user != frappe.session.user:
+                _deny()
+            control.assert_current_generation(conversation, doc.conversation_generation, actor_user=doc.actor_user)
         if doc.state in {"Queued", "Claimed"}:
             return _projection(doc)
         if not _projection(doc)["can_retry"] or _eligibility(doc):

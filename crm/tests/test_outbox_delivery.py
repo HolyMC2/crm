@@ -85,7 +85,8 @@ class TestOutboxDeliverySql(unittest.TestCase):
 
     def test_signed_guest_receipt_updates_native_intent_without_legacy_message(self):
         receipt, entry = self.receipt()
-        self.assertFalse(frappe.db.exists("WhatsApp Message", {"message_id": self.mid}))
+        # Native sends keep only their own transcript projection, never a legacy row.
+        self.assertFalse(frappe.db.exists("WhatsApp Message", {"message_id": self.mid, "name": ["not like", "wa-native-%"]}))
         frappe.set_user("Guest")
         result = self.apply(receipt, expected_entry=entry, account_records=(self.account.name,))
         self.assertTrue(result["matched"])
@@ -102,7 +103,8 @@ class TestOutboxDeliverySql(unittest.TestCase):
             result = fold_native_delivery(entry, (self.account.name,))
         self.assertTrue(result["matched"])
         self.assertEqual(result["intent_state"], "Delivered")
-        self.assertFalse(frappe.db.exists("WhatsApp Message", {"message_id": self.mid}))
+        # Native sends keep only their own transcript projection, never a legacy row.
+        self.assertFalse(frappe.db.exists("WhatsApp Message", {"message_id": self.mid, "name": ["not like", "wa-native-%"]}))
 
     def test_delivered_then_read_uses_provider_times_and_does_not_downgrade(self):
         delivered, _ = self.receipt()

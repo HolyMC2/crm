@@ -380,6 +380,8 @@ const props = defineProps({
   // `to` number per active tab. Falls back to doc.mobile_no for single-Contact
   // Deals + all Leads (their .mobile_no IS the chat target).
   toOverride: { type: String, default: '' },
+  // The business number the customer wrote to; empty = the default outgoing account.
+  whatsappAccount: { type: String, default: '' },
   channelLabel: { type: String, default: 'WhatsApp' },
   // Unassigned/orphan threads: only the WhatsApp reply applies (no reference doc
   // for notes/comments/templates). Sends a reference-less WhatsApp Message to the
@@ -759,6 +761,7 @@ async function sendWhatsAppMessage() {
     reply_to: reply.value?.name || '',
     content_type: sentContentType,
     canned,
+    whatsapp_account: props.whatsappAccount || '',
   }
   // Offline outbox (spec 1.4): no link + TEXT-only send → queue it instead of
   // failing. Media sends need uploads, so they keep the normal error path.

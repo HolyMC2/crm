@@ -547,6 +547,16 @@
       @failed="onMsgrFailed"
       @catalog="onMsgrCatalog"
     />
+    <!-- who handles this customer's native conversation, right above the composer -->
+    <ConversationControlStrip
+      v-if="addonAvailable && whatsappEnabled && title == 'WhatsApp' && activeChannelTab === 'whatsapp' && ['CRM Deal', 'CRM Lead'].includes(doctype)"
+      class="mx-3 mt-1 sm:mx-10"
+      :reference-doctype="doctype"
+      :reference-name="docname"
+      :phone="activeWhatsappContact?.phone || doc?.mobile_no || ''"
+      :whatsapp-account="activeWhatsappContact?.whatsapp_account || ''"
+      @changed="whatsappMessages.reload()"
+    />
     <WhatsAppBox
       v-if="whatsappEnabled && title == 'WhatsApp' && activeChannelTab === 'whatsapp'"
       ref="whatsappBox"
@@ -555,6 +565,7 @@
       v-model:whatsapp="whatsappMessages"
       :doctype="doctype"
       :to-override="activeWhatsappContact?.phone || ''"
+      :whatsapp-account="activeWhatsappContact?.whatsapp_account || ''"
       @scroll="scroll"
       @pick-template="(t) => openTemplateReview(t)"
       @open-templates="showWhatsappTemplates = true"
@@ -632,6 +643,7 @@ import CommunicationArea from '@/components/CommunicationArea.vue'
 import WhatsappTemplateSelectorModal from '@/components/Modals/WhatsappTemplateSelectorModal.vue'
 import WhatsappTemplateReview from '@/components/Activities/WhatsappTemplateReview.vue'
 import ConversationReviewStrip from '@/components/doco/ConversationReviewStrip.vue'
+import ConversationControlStrip from '@/components/doco/inbox/ConversationControlStrip.vue'
 import ConversationAutoAckStrip from '@/components/doco/inbox/ConversationAutoAckStrip.vue'
 import AllModals from '@/components/Activities/AllModals.vue'
 import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
@@ -1077,7 +1089,13 @@ function onMsgrFailed(p) {
 function onWaCatalog(q) {
   if (!addonAvailable.value) return
   openCatalog(
-    { reference_doctype: props.doctype, reference_name: props.docname, channel: 'whatsapp', to: activeWhatsappContact.value?.phone || doc.value.mobile_no },
+    {
+      reference_doctype: props.doctype,
+      reference_name: props.docname,
+      channel: 'whatsapp',
+      to: activeWhatsappContact.value?.phone || doc.value.mobile_no,
+      whatsapp_account: activeWhatsappContact.value?.whatsapp_account || undefined,
+    },
     q,
   )
 }
@@ -1223,6 +1241,7 @@ function confirmSendTemplate({ template, body_param }) {
       reference_doctype: props.doctype,
       reference_name: props.docname,
       to: activeWhatsappContact.value?.phone || doc.value.mobile_no,
+      whatsapp_account: activeWhatsappContact.value?.whatsapp_account || undefined,
       template,
       body_param: body_param ? JSON.stringify(body_param) : undefined,
     },

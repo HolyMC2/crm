@@ -146,6 +146,17 @@
             class="absolute -top-2 right-0"
           />
         </Tooltip>
+        <!-- the provider may or may not have delivered it: never offered for retry -->
+        <Tooltip
+          v-else-if="whatsapp.status == 'unknown'"
+          :text="whatsapp.failure_reason || __('Sin confirmar')"
+        >
+          <Badge
+            theme="orange"
+            :label="__('Sin confirmar')"
+            class="absolute -top-2 right-0"
+          />
+        </Tooltip>
         <!-- unified-thread: which other deal/RO this bubble belongs to -->
         <div
           v-if="whatsapp._ref_label && !whatsapp._is_active_ref"
@@ -190,7 +201,7 @@
              ~1 char and text renders vertically. Desktop keeps them inline (sm:basis-auto). -->
         <div class="flex flex-wrap items-end gap-x-2 gap-y-1 [&>div]:min-w-0 [&>div:not(:last-child)]:basis-full sm:[&>div:not(:last-child)]:basis-auto">
           <div
-            v-if="whatsapp.status != 'failed'"
+            v-if="settled(whatsapp)"
             class="absolute -right-0.5 -top-0.5 flex cursor-pointer gap-1 rounded-full bg-surface-base pb-2 pl-2 pr-1.5 pt-1.5 opacity-0 group-hover/message:opacity-100"
             :style="{
               background:
@@ -314,7 +325,7 @@
                     class="size-4"
                   />
                   <FeatherIcon
-                    v-else-if="whatsapp.status != 'failed'"
+                    v-else-if="!['failed', 'unknown'].includes(whatsapp.status)"
                     name="clock"
                     class="size-3 text-ink-gray-4"
                   />
@@ -323,9 +334,36 @@
             </div>
           </div>
         </div>
+        <!-- a native send that did not go out: say why here and let the operator act -->
+        <div
+          v-if="whatsapp.native && (whatsapp.native.can_retry || whatsapp.native.can_cancel)"
+          class="mt-1 flex flex-wrap items-center gap-x-2 border-t border-outline-gray-2 pt-1 text-xs text-ink-gray-6"
+        >
+          <span v-if="whatsapp.native.reason" class="min-w-0 flex-1">{{ whatsapp.native.reason }}</span>
+          <button
+            v-if="whatsapp.native.can_retry"
+            type="button"
+            class="font-semibold text-ink-gray-8 underline"
+            :disabled="nativeBusy === whatsapp.name"
+            @mousedown.prevent
+            @click="nativeAction(whatsapp, 'retry')"
+          >
+            {{ __('Reintentar') }}
+          </button>
+          <button
+            v-if="whatsapp.native.can_cancel"
+            type="button"
+            class="underline"
+            :disabled="nativeBusy === whatsapp.name"
+            @mousedown.prevent
+            @click="nativeAction(whatsapp, 'cancel')"
+          >
+            {{ __('Cancelar envío') }}
+          </button>
+        </div>
       </div>
       <div
-        v-if="whatsapp.status != 'failed'"
+        v-if="settled(whatsapp)"
         class="flex items-center justify-center opacity-0 transition-all ease-in group-hover:opacity-100"
       >
         <IconPicker
@@ -357,7 +395,7 @@ import DocumentIcon from '@/components/Icons/DocumentIcon.vue'
 import ReactIcon from '@/components/Icons/ReactIcon.vue'
 import { formatDate, formatDateTime, formatTimestampFull, sanitizeHTML } from '@/utils'
 import { useTelemetry } from 'frappe-ui/frappe'
-import { Tooltip, Dropdown, createResource, toast } from 'frappe-ui'
+import { Tooltip, Dropdown, call, createResource, toast } from 'frappe-ui'
 import { ref, computed } from 'vue'
 import { usersStore } from '@/stores/users'
 
@@ -425,8 +463,32 @@ function waStatusLabel(status) {
       sent: __('Enviado'),
       Success: __('Enviado'),
       failed: __('No entregado'),
+      Queued: __('En cola'),
+      unknown: __('Sin confirmar'),
     }[status] || __('Enviando…')
   )
+}
+
+// Reply, react and forward need the provider's message id: only once it was sent.
+function settled(wa) {
+  return !['failed', 'unknown', 'Queued', 'Sending'].includes(wa.status)
+}
+
+// A native send that did not go out can be retried or cancelled from its bubble.
+const nativeBusy = ref('')
+async function nativeAction(wa, action) {
+  if (nativeBusy.value || !wa.native?.intent) return
+  nativeBusy.value = wa.name
+  try {
+    await call(action === 'retry' ? 'crm.api.outbox.retry_intent' : 'crm.api.outbox.cancel_intent', {
+      name: wa.native.intent,
+    })
+    list.value?.reload?.()
+  } catch (error) {
+    toast.error(error?.messages?.[0] || __('No se pudo actualizar el envío.'))
+  } finally {
+    nativeBusy.value = ''
+  }
 }
 
 function formatWhatsAppMessage(message) {

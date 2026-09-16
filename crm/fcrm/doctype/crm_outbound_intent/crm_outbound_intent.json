@@ -32,6 +32,7 @@
   "expires_at",
   "provider_message_id",
   "provider_message_key",
+  "transcript_message",
   "reason_code",
   "state_log"
  ],
@@ -233,6 +234,16 @@
    "hidden": 1,
    "unique": 1,
    "length": 64
+  },
+  {
+   "fieldname": "transcript_message",
+   "fieldtype": "Data",
+   "label": "Transcript Message",
+   "read_only": 1,
+   "hidden": 1,
+   "unique": 1,
+   "length": 140,
+   "description": "WhatsApp Message row this intent sends; set once when a transcript producer is bridged."
   },
   {
    "fieldname": "reason_code",

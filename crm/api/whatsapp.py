@@ -5,6 +5,7 @@ from frappe import _
 from frappe.permissions import add_permission, update_permission_property
 
 from crm.api.doc import get_assigned_users
+from crm.api.outbox_bridge import assert_send_account, person_reply
 from crm.fcrm.doctype.crm_notification.crm_notification import notify_user
 
 # Marketing Manager added 2026-08-03: they hold _APPROVER_ROLES on the review
@@ -266,7 +267,9 @@ def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
 			reply_message["reply_to_type"] = replied_message["type"]
 			reply_message["reply_to_from"] = from_name
 
-	return [message for message in messages if message["content_type"] != "reaction"]
+	from crm.api.outbox_bridge import native_states
+
+	return native_states([message for message in messages if message["content_type"] != "reaction"])
 
 
 @frappe.whitelist()
@@ -279,9 +282,13 @@ def create_whatsapp_message(
 	reply_to: str,
 	content_type: str = "text",
 	canned: str = "",
+	whatsapp_account: str = "",
 ):
 	validate_access(reference_doctype, reference_name)
+
 	doc = frappe.new_doc("WhatsApp Message")
+	# Reply from the business number the customer wrote to; default account otherwise.
+	doc.whatsapp_account = assert_send_account(whatsapp_account)
 
 	if reply_to:
 		if not frappe.db.exists("WhatsApp Message", reply_to):
@@ -315,16 +322,20 @@ def create_whatsapp_message(
 	if canned:
 		# Sent verbatim from a saved quick reply — still Human, but tagged canned.
 		doc.doco_automation_source = f"canned:{canned}"
-	doc.insert(ignore_permissions=True)
+	with person_reply():
+		doc.insert(ignore_permissions=True)
 	return doc.name
 
 
 @frappe.whitelist()
 def send_whatsapp_template(
-	reference_doctype: str, reference_name: str, template: str, to: str, body_param=None, attach=None
+	reference_doctype: str, reference_name: str, template: str, to: str, body_param=None, attach=None,
+	whatsapp_account: str = "",
 ):
 	validate_access(reference_doctype, reference_name)
+
 	doc = frappe.new_doc("WhatsApp Message")
+	doc.whatsapp_account = assert_send_account(whatsapp_account)
 	doc.update(
 		{
 			"reference_doctype": reference_doctype,
@@ -360,7 +371,8 @@ def send_whatsapp_template(
 		doc.body_param = json.dumps(
 			{str(k): ("" if v is None else str(v)) for k, v in body_param.items()}
 		)
-	doc.insert(ignore_permissions=True)
+	with person_reply():
+		doc.insert(ignore_permissions=True)
 	return doc.name
 
 
@@ -579,9 +591,12 @@ def react_on_whatsapp_message(emoji: str, reply_to_name: str):
 			"to": to,
 			"reply_to_message_id": reply_to_doc.message_id,
 			"content_type": "reaction",
+			# A reaction belongs to the conversation of the message it reacts to.
+			"whatsapp_account": reply_to_doc.whatsapp_account,
 		}
 	)
-	doc.insert(ignore_permissions=True)
+	with person_reply():
+		doc.insert(ignore_permissions=True)
 	return doc.name
 
 
