@@ -48,13 +48,22 @@ we keep both language sets seeded but only the active one is visible.
   doco_marketing `feat/campaign-registration-20260910` → `0081fb3`, taller
   `main` → `b20c14a` (the sealed line, a superset of the pipeline commits).
 
-## Wave 4 — proposed, waits for taller's rules
+## Wave 4 — automatic dated follow-ups from repair events
 
-Automatic dated follow-ups from repair stages (taller owns the transitions),
-e.g. quote sent → «Confirmar cotización» +2 days, ready → «Avisar recogida»
-same day, delivered → «Pedir reseña» +3 days. Petition to the taller lane:
-`crm/docs/TALLER_WORKFLOWS_PETITION_2026_09_15.md`. Wave 3 (below) is the
-list-side half of the same goal.
+Taller answered the petition in
+`taller/docs/CRM_WORKFLOW_CONTRACT_2026_09_15.md`: taller owns events, the
+per-vertical rule table and superseding its own tasks; CRM owns task storage
+and the next-activity projection through a callable service. CRM's half is
+DONE on lab (`7d038b688`): `crm.pipeline.services.follow_up` (upsert /
+complete / open_tasks / reassign, slot + occurrence identity, human-edit
+protection) and five provenance fields on CRM Task, contract in
+`crm/docs/CRM_FOLLOWUP_TASK_API_2026_09_15.md`. Waiting on taller's phase 1
+(validated delivery write, notification dedup across tracker_notify and
+marketing repair_updates) and its rule table calling the service for quote
+follow-up, waiting parts and ready/pickup; marketing's once-per-deal
+`repair_ready` task then migrates to `upsert` or retires. Prod needs a
+migration (new CRM Task columns). Wave 3 (below) is the list-side half of
+the same goal.
 
 ## 2026-09-15 lanes → ON PROD (cell-0) via sealed delta image `crm-inbox-20260915-c5eccbc`
 
