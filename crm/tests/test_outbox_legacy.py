@@ -123,7 +123,7 @@ class TestLegacyGuardSql(LegacyGuardFixture):
                 with self.guard(payload={**payload, "text": {"body": "Changed"}}):
                     self.fail("substituted payload passed")
             return {"state": "Accepted", "provider_message_id": "wamid.legacy-real-grant"}
-        with patch.object(frappe.db, "rollback"), patch.object(native_outbox, "send_frozen", side_effect=provider):
+        with patch.object(frappe.db, "rollback"), patch.object(frappe.db, "commit"), patch.object(native_outbox, "send_frozen", side_effect=provider):
             outbox.dispatch_intent(name)
         self.assertEqual(outbox._load(name).state, "Accepted")
         with self.assertRaises(legacy.LegacySendBlocked):

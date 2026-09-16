@@ -13,6 +13,10 @@ DEMO_DEALS_KEY = "crm_demo_deals"
 
 
 def create_demo_data(_args: dict | None = None):
+	# Headless tenant provisioning explicitly opts out of fictional CRM data.
+	# Preserve the standalone wizard's legacy default when no choice is given.
+	if isinstance(_args, dict) and "setup_demo" in _args and not frappe.utils.cint(_args["setup_demo"]):
+		return
 	if frappe.db.get_default(DEMO_STATE_KEY):
 		return
 

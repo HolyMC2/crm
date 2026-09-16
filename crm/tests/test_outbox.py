@@ -18,6 +18,8 @@ class TestOutbox(test_conversations.TestConversations):
         super().setUp()
         if not self._testMethodName.startswith("test_outbox_"):
             return
+        # Worker commits are observed by individual tests, but must not persist fixtures.
+        self.enterContext(patch.object(frappe.db, "commit"))
         self.enterContext(patch.object(frappe.local, "conf", frappe._dict(frappe.conf)))
         frappe.conf.maintenance_mode = 0
         frappe.db.set_value("WhatsApp Account", self.account.name,
