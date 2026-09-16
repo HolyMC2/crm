@@ -81,10 +81,30 @@ class TestConversationThreads(IntegrationTestCase):
             reference_doctype="CRM Inquiry", reference_name=other)
         before = frappe.db.count(control.DOCTYPE)
         result = api.list_for_reference("CRM Inquiry", inquiry)
-        self.assertEqual(result["items"], [{"name": doc.name, "provider": "WhatsApp",
-            "account_id": self.account_id, "control_state": "Human"}])
+        self.assertEqual([(i["name"], i["provider"], i["account_id"], i["peer_id"], i["control_state"], i["materialized"])
+                          for i in result["items"]],
+                         [(doc.name, "WhatsApp", self.account_id, self.peer, "Human", True)])
         self.assertIsNone(result["next_cursor"])
         self.assertEqual(frappe.db.count(control.DOCTYPE), before)
+
+    def test_reference_list_implies_threads_from_the_record_own_messages(self):
+        # A deal whose WhatsApp rows reference it must list that customer's thread
+        # even before anyone opened it natively; both spellings of the number are
+        # one row, nothing is materialized, and an explicit open turns it into the
+        # linked conversation without a duplicate.
+        inquiry = self.inquiry()
+        self.message("¿Ya está mi equipo?", peer="5215550198766", reference_doctype="CRM Inquiry", reference_name=inquiry)
+        self.message("Sí, pase por él", type="Outgoing", to="525550198766", creation="2026-01-01 12:05:00",
+                     reference_doctype="CRM Inquiry", reference_name=inquiry, **{"from": None})
+        self.message("Unrelated customer", peer="5215550198777")
+        before = frappe.db.count(control.DOCTYPE)
+        items = api.list_for_reference("CRM Inquiry", inquiry)["items"]
+        self.assertEqual([(i["name"], i["peer_id"], i["materialized"], i["preview"]) for i in items],
+                         [(None, "5215550198766", False, "Sí, pase por él")])
+        self.assertEqual(frappe.db.count(control.DOCTYPE), before)
+        opened = api.open_thread("WhatsApp", self.account_id, "5215550198766")
+        items = api.list_for_reference("CRM Inquiry", inquiry)["items"]
+        self.assertEqual([(i["name"], i["materialized"]) for i in items], [(opened["name"], True)])
 
     def test_reference_list_denies_unreadable_and_non_crm_records(self):
         with self.assertRaises(frappe.PermissionError):
