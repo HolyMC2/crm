@@ -95,15 +95,25 @@
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
           />
         </div>
-        <Dropdown :options="viewMenu">
-          <button class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7">
-            {{ __('Vistas') }} ⌄
+        <Dropdown v-if="view === 'list'" :options="groupByMenu">
+          <button class="rounded-lg border px-3 py-[7px] text-[12px] font-medium"
+            :class="grouped ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8' : 'border-outline-gray-2 text-ink-gray-7'">
+            {{ __('Agrupar') }}<span v-if="grouped"> · {{ __(groupByLabel(groupBy)) }}</span> ⌄
           </button>
         </Dropdown>
+        <SavedViewPicker
+          v-model:selected="viewName"
+          :context="listContext"
+          :legacy-views="savedViews"
+          @apply="applyViewContext"
+          @apply-legacy="applyView"
+          @delete-legacy="deleteView"
+          @default-view="onDefaultView"
+        />
         <ColumnPicker
           v-if="view === 'list'"
           :columns="availableColumns"
-          :selected="visibleCols"
+          :selected="activeCols"
           @update:selected="setCols"
           @reset="resetCols"
         />
@@ -121,6 +131,9 @@
         >
           + {{ __('New Deal') }}
         </button>
+        <Dropdown :options="viewMenu">
+          <button class="rounded-lg border border-outline-gray-2 px-2 py-[7px] text-[12px] text-ink-gray-6" :aria-label="__('Más opciones')">⋯</button>
+        </Dropdown>
       </div>
     </div>
 
@@ -229,7 +242,7 @@
           {{ __('Cierre') }}{{ sortArrow('expected_closure_date') }}
         </button>
         <button v-if="col('next_activity')" class="text-left uppercase" @click="sortBy('next_activity_at')">
-          {{ __('Próxima actividad') }}{{ sortArrow('next_activity_at') }}
+          {{ __('Próximo paso') }}{{ sortArrow('next_activity_at') }}
         </button>
         <div v-if="col('stage')">{{ __('Stage') }}</div>
         <div v-if="col('source')">{{ __('Source') }}</div>
@@ -242,8 +255,19 @@
       <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
       <div v-else-if="!rows.length && !deals.error" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
 
+      <template v-for="g in renderGroups" :key="g.key">
+      <DealGroupHeader
+        v-if="grouped"
+        :label="g.label"
+        :empty-label="__(groupEmptyLabel)"
+        :count="g.count"
+        :exact="g.exact"
+        :collapsed="collapsed[g.key] === true"
+        :color="groupColor(g.key)"
+        @toggle="toggleGroup(g.key)"
+      />
       <div
-        v-for="r in rows"
+        v-for="r in (grouped && collapsed[g.key] ? [] : g.rows)"
         :key="r.name"
         role="button"
         tabindex="0"
@@ -290,14 +314,7 @@
         <div v-if="col('value')" class="text-[12.5px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</div>
         <div v-if="col('expected_value')" class="text-[12.5px] text-ink-gray-7">{{ formatMXN(r.expected_deal_value) }}</div>
         <div v-if="col('close_date')" class="text-[12px] text-ink-gray-6">{{ formatDate(r.expected_closure_date) }}</div>
-        <div v-if="col('next_activity')" class="min-w-0">
-          <NextActivityChip
-            :at="r.next_activity_at"
-            :title="r.next_activity_title"
-            :type="r.next_activity_type"
-            :empty-label="r.next_activity_task ? __('Pendiente sin fecha') : __('Sin seguimiento')"
-          />
-        </div>
+        <FollowUpCell v-if="col('next_activity')" :row="r" :today="siteToday" @saved="onFollowUpSaved(r, $event)" />
         <div v-if="col('stage')">
           <span
             v-if="r.status"
@@ -326,6 +343,7 @@
           <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')" @click.stop>···</button>
         </Dropdown>
       </div>
+      </template>
 
       <div v-if="deals.hasNextPage" class="py-3 text-center">
         <button class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7" @click="deals.next()">
@@ -440,7 +458,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Dropdown, createListResource, call as frappeCall, toast, dayjs, getConfig } from 'frappe-ui'
-import { confirmDialog, createDialog, inputDialog } from '@/utils/dialogs'
+import { confirmDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
@@ -453,18 +471,33 @@ import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
+import FollowUpCell from '@/components/doco/deals/FollowUpCell.vue'
+import DealGroupHeader from '@/components/doco/deals/DealGroupHeader.vue'
+import SavedViewPicker from '@/components/doco/deals/SavedViewPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { hasTaller } from '@/composables/inbox'
+import { hasTaller, reloadQueue } from '@/composables/inbox'
 import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
 import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
 
 import { followUpFilters, FOLLOW_UP_QUEUES } from '@/utils/dealFollowUp'
+import { DEAL_GROUP_BYS, groupByLabel, groupRows, isGroupBy } from '@/utils/dealGroups'
 import { dealListState } from '@/utils/dealListState'
 const router = useRouter()
 const QUEUE_KEY = userScopedKey('crm_deal_list_context')
 let remembered = dealListState()
-try { remembered = dealListState(JSON.parse(sessionStorage.getItem(QUEUE_KEY) || '{}')) } catch {}
+// Whether this tab already has a context: a saved default view opens the list
+// only on a fresh session, never on the way back from a deal.
+let hadRemembered = false
+try {
+  const raw = sessionStorage.getItem(QUEUE_KEY)
+  if (raw) {
+    remembered = dealListState(JSON.parse(raw))
+    hadRemembered = true
+  }
+} catch {
+  /* an unreadable context is no context: the list opens on its defaults */
+}
 
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
@@ -483,7 +516,7 @@ const DEAL_COLUMNS = [
   { key: 'value', label: __('Valor') },
   { key: 'expected_value', label: __('Valor esperado') },
   { key: 'close_date', label: __('Cierre') },
-  { key: 'next_activity', label: __('Próxima actividad') },
+  { key: 'next_activity', label: __('Próximo paso') },
   { key: 'stage', label: __('Stage') },
   { key: 'source', label: __('Source') },
   { key: 'modified', label: __('Última act.') },
@@ -514,6 +547,11 @@ const DEFAULT_COLS = ['customer', 'phone', 'device', 'ro', 'stage', 'value', 'ne
 // "Cierre" ship available but off, the row is wide enough already.
 const COLS_KEY = userScopedKey('doco_deals_columns_v3')
 const visibleCols = ref(loadCols())
+// A saved view carries its own column set. It overrides the browser preference
+// while that view is applied and never overwrites it, so dropping the view
+// returns the worker to the columns they picked.
+const viewCols = ref(null)
+const activeCols = computed(() => viewCols.value || visibleCols.value)
 function loadCols() {
   try {
     const s = JSON.parse(window.localStorage.getItem(COLS_KEY) || 'null')
@@ -524,6 +562,7 @@ function loadCols() {
   }
 }
 function setCols(next) {
+  viewCols.value = null
   visibleCols.value = next
   window.localStorage.setItem(COLS_KEY, JSON.stringify(next))
 }
@@ -540,7 +579,7 @@ function col(key) {
   // phone: contact + stage only — full column set side-scrolled (07-25)
   if (isMobile.value) return key === 'contact' || key === 'stage'
   if (!hasTaller.value && REPAIR_COLS.includes(key)) return false
-  return key === 'contact' || visibleCols.value.includes(key)
+  return key === 'contact' || activeCols.value.includes(key)
 }
 // Width the grid needs before it starts squeezing cells — drives the side-scroll.
 const MIN_W = computed(() => {
@@ -572,11 +611,25 @@ const search = ref(remembered.search)
 const sort = ref(remembered.sort)
 const selectedRows = ref([])
 const view = ref(remembered.view)
+const groupBy = ref(remembered.groupBy)
+const viewName = ref(remembered.viewName)
+const collapsed = ref({})
 const groupCounts = ref({})
 const countsLoaded = ref(false)
 let countsRequest = 0
-watch([statusF, sourceF, ownerF, search, sort, view, followUp], () => {
-  try { sessionStorage.setItem(QUEUE_KEY, JSON.stringify({ status: statusF.value, source: sourceF.value, owner: ownerF.value, search: search.value, sort: sort.value, view: view.value, followUp: followUp.value })) } catch {}
+// What a saved view stores and what a return from a deal restores: one shape.
+const listContext = computed(() => ({
+  status: statusF.value, source: sourceF.value, owner: ownerF.value,
+  search: search.value, sort: sort.value, view: view.value,
+  followUp: followUp.value, groupBy: groupBy.value, viewName: viewName.value,
+  columns: activeCols.value,
+}))
+watch(listContext, (context) => {
+  try {
+    sessionStorage.setItem(QUEUE_KEY, JSON.stringify(context))
+  } catch {
+    /* a full or blocked session store must not break the list */
+  }
 }, { deep: true })
 
 const deals = createListResource({
@@ -679,9 +732,16 @@ function onSheetChange({ key, values }) {
 const count = computed(() => countsLoaded.value ? String(Object.values(groupCounts.value).reduce((n, stage) => n + Number(stage.count || 0), 0)) : `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''} ${__('cargados')}`)
 
 const SEARCH_FIELDS = ['deal_name', 'organization', 'lead_name', 'email', 'mobile_no']
-function buildFilters() {
+// Today in the SITE's timezone. The queues and the inline follow-up cut the day
+// on the same boundary the server does, never on the browser's.
+function siteDay() {
   const timezone = getConfig('systemTimezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
-  const today = dayjs().tz(timezone).format('YYYY-MM-DD')
+  return dayjs().tz(timezone).format('YYYY-MM-DD')
+}
+const siteToday = ref(siteDay())
+function buildFilters() {
+  siteToday.value = siteDay()
+  const today = siteToday.value
   const closed = (statusStore.dealStatuses.data || []).filter(s => ['Won', 'Lost'].includes(s.type)).map(s => s.name)
   const f = followUpFilters(followUp.value, today, closed)
   if (statusF.value.length) f.push(['status', 'in', statusF.value])
@@ -802,7 +862,10 @@ function exportDeals() {
   window.location.href = url
 }
 
-// ── saved views (per-browser) + classic quick action ──────────────────────────
+// ── saved views ───────────────────────────────────────────────────────────────
+// Shared views are "CRM View Settings" rows owned by SavedViewPicker. The views
+// this list used to keep in localStorage stay readable there so nobody loses a
+// filter set; nothing new is written to them.
 const VIEWS_KEY = userScopedKey('doco_deals_saved_views')
 const savedViews = ref(loadViews())
 function loadViews() {
@@ -812,70 +875,86 @@ function loadViews() {
     return []
   }
 }
-function persistViews() {
-  window.localStorage.setItem(VIEWS_KEY, JSON.stringify(savedViews.value))
-}
-function saveCurrentView() {
-  inputDialog({
-    title: __('Guardar vista'),
-    message: __('Nombre de la vista'),
-    placeholder: __('Ej. Tratos activos'),
-    confirmLabel: __('Guardar'),
-    theme: 'green',
-    required: true,
-    onConfirm: (label) => {
-      savedViews.value = savedViews.value.filter((v) => v.label !== label)
-      savedViews.value.push({
-        label,
-        status: [...statusF.value],
-        source: [...sourceF.value],
-        owner: [...ownerF.value],
-        followUp: followUp.value,
-        search: search.value,
-        sort: { ...sort.value },
-      })
-      persistViews()
-      toast.success(__('Vista guardada'))
-    },
-  })
+// Restores a stored context. What a context does not carry (a browser view has
+// no list/board mode or grouping) keeps whatever the worker is looking at.
+function applyViewContext(context = {}) {
+  const state = dealListState({ view: view.value, groupBy: groupBy.value, ...context })
+  followUp.value = state.followUp
+  statusF.value = [...state.status]
+  sourceF.value = [...state.source]
+  ownerF.value = [...state.owner]
+  search.value = state.search
+  sort.value = { ...state.sort }
+  view.value = state.view
+  groupBy.value = state.groupBy
+  const cols = (context.columns || []).filter((k) => k in COL_WIDTH)
+  viewCols.value = cols.length ? cols : null
+  applyFilters()
 }
 function applyView(v) {
-  followUp.value = dealListState(v).followUp
-  statusF.value = [...(v.status || [])]
-  sourceF.value = [...(v.source || [])]
-  ownerF.value = [...(v.owner || [])]
-  search.value = v.search || ''
-  if (v.sort) sort.value = { ...v.sort }
-  applyFilters()
+  viewName.value = ''
+  applyViewContext(v)
 }
 function deleteView(label) {
   savedViews.value = savedViews.value.filter((v) => v.label !== label)
-  persistViews()
+  window.localStorage.setItem(VIEWS_KEY, JSON.stringify(savedViews.value))
+  toast.success(__('Vista eliminada'))
 }
-function removeViewPicker() {
-  createDialog({
-    title: __('Eliminar vista'),
-    message: __('Elige la vista guardada que quieres borrar (solo de este navegador).'),
-    actions: savedViews.value.map((v) => ({
-      label: '🗑 ' + v.label,
-      variant: 'subtle',
-      theme: 'red',
-      onClick: (close) => {
-        deleteView(v.label)
-        toast.success(__('Vista eliminada'))
-        close()
-      },
-    })),
-  })
+// The worker's default view opens the list on a fresh session only: coming back
+// from a deal must land on the context they left.
+function onDefaultView({ name, context }) {
+  if (hadRemembered || viewName.value) return
+  viewName.value = name
+  applyViewContext(context)
 }
+watch(viewName, (name) => {
+  if (!name) viewCols.value = null
+})
 const viewMenu = computed(() => [
   { label: '↗ ' + __('Vista clásica (todos los filtros)'), onClick: () => router.push('/deals/view') },
-  { label: '—', onClick: () => {} },
-  ...savedViews.value.map((v) => ({ label: v.label, onClick: () => applyView(v) })),
-  ...(savedViews.value.length ? [{ label: '—', onClick: () => {} }] : []),
-  { label: '＋ ' + __('Guardar vista actual'), onClick: saveCurrentView },
-  ...(savedViews.value.length ? [{ label: '🗑 ' + __('Eliminar vista…'), onClick: removeViewPicker }] : []),
 ])
+
+// ── group by ──────────────────────────────────────────────────────────────────
+// Only the stage groups carry the server's filtered count; the others are
+// counted off the loaded rows, and the header says so (DealGroupHeader).
+const grouped = computed(() => view.value === 'list' && !isMobile.value && isGroupBy(groupBy.value))
+const GROUP_EMPTY = { status: 'Sin etapa', deal_owner: 'Sin responsable', repair_status: 'Sin reparación' }
+const groupEmptyLabel = computed(() => GROUP_EMPTY[groupBy.value] || 'Sin valor')
+const groupByMenu = computed(() =>
+  DEAL_GROUP_BYS.filter((g) => g.key !== 'repair_status' || hasTaller.value).map((g) => ({
+    label: (g.key === groupBy.value ? '✓ ' : '') + __(g.label),
+    onClick: () => (groupBy.value = g.key),
+  })),
+)
+const renderGroups = computed(() => {
+  if (!grouped.value) return [{ key: '', label: '', count: rows.value.length, exact: true, rows: rows.value }]
+  return groupRows(rows.value, groupBy.value, {
+    order: stageOptions.value.map((s) => s.value),
+    counts: groupBy.value === 'status' && countsLoaded.value ? groupCounts.value : null,
+    complete: !deals.hasNextPage,
+    groupValue: (r) => (groupBy.value === 'repair_status' ? extra(r).repair_status || '' : r[groupBy.value] || ''),
+    labelOf: (value) => (groupBy.value === 'deal_owner' ? ownerName(value) : value),
+  })
+})
+function groupColor(key) {
+  if (!key) return ''
+  if (groupBy.value === 'status') return getDealStatus(key)?.color || ''
+  if (groupBy.value === 'repair_status') return REPAIR_CHIP[key] || ''
+  return ''
+}
+function toggleGroup(key) {
+  collapsed.value = { ...collapsed.value, [key]: !collapsed.value[key] }
+}
+watch(groupBy, () => (collapsed.value = {}))
+
+// A follow-up written from the row: the crm/pipeline hooks derived these fields
+// from the task, so the row takes them as they came back instead of reloading,
+// and the filtered totals and the work queue are asked again.
+function onFollowUpSaved(row, activity) {
+  Object.assign(row, activity)
+  loadCounts()
+  reloadQueue()
+}
 
 let _t = null
 function onSearch(v) {
