@@ -131,16 +131,17 @@ def is_whatsapp_installed():
 
 @frappe.whitelist()
 def get_deal_whatsapp_contacts(doctype: str, name: str):
-	"""Keep the optional multi-contact extension behind an installed-app gate."""
+	"""One chat tab per number of an authorized Deal/Lead, owned by CRM.
+
+	The whatsapp_chat extension's copy is retired once native conversations
+	exist, which left the Deal conversation without its number switcher.
+	"""
 	if doctype not in ("CRM Deal", "CRM Lead"):
 		frappe.throw(_("Unsupported doctype"), frappe.PermissionError)
 	validate_access(doctype, name)
-	if "whatsapp_chat" not in frappe.get_installed_apps():
-		# Activities already falls back to the deal/lead's own phone.
-		return []
-	from whatsapp_chat.api.deal_contacts import get_deal_whatsapp_contacts as get_contacts
+	from crm.api.whatsapp_contacts import list_numbers
 
-	return get_contacts(doctype, name)
+	return list_numbers(doctype, name)
 
 
 @frappe.whitelist()

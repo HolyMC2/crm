@@ -10,12 +10,12 @@ afterEach(() => {
   cleanups.splice(0).forEach((fn) => fn())
   vi.resetAllMocks()
 })
-async function mount() {
+async function mount(extra = {}) {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/inbox', name: 'Inbox', component: { template: '<div />' } }] })
   await router.push('/inbox')
   const el = document.createElement('div')
   document.body.appendChild(el)
-  const app = createApp(DealConversations, { doctype: 'CRM Deal', name: 'DEAL-1' })
+  const app = createApp(DealConversations, { doctype: 'CRM Deal', name: 'DEAL-1', ...extra })
   app.config.globalProperties.__ = (s) => s
   app.use(router).mount(el)
   cleanups.push(() => { app.unmount(); el.remove() })
@@ -61,5 +61,20 @@ describe('deal native conversations', () => {
     await nextTick()
     await vi.waitFor(() => expect(el.querySelector('[role="alert"]')).toBeNull())
     expect(call).toHaveBeenCalledTimes(2)
+  })
+  it('compact line above the deal thread links each thread and stays hidden when there are none', async () => {
+    call.mockResolvedValueOnce({ items: [linked], next_cursor: null })
+    const { el } = await mount({ compact: true })
+    await vi.waitFor(() => expect(el.querySelector('nav a')).not.toBeNull())
+    expect(el.querySelector('nav a').getAttribute('href')).toBe('/inbox?workspace=conversations&conversation=exact-thread')
+    expect(el.querySelector('nav').textContent).toContain('Pablo')
+    expect(el.querySelector('section')).toBeNull()
+
+    call.mockResolvedValueOnce({ items: [], next_cursor: null })
+    const empty = await mount({ compact: true })
+    await vi.waitFor(() => expect(call).toHaveBeenCalledTimes(2))
+    await nextTick()
+    expect(empty.el.querySelector('nav').style.display).toBe('none')
+    expect(empty.el.textContent).not.toContain('No hay conversaciones vinculadas')
   })
 })

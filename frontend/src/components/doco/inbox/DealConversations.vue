@@ -1,5 +1,28 @@
 <template>
-  <section class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5" aria-label="Conversaciones vinculadas">
+  <!-- compact: one line above the deal's thread; the thread is the primary surface,
+       so it stays out of the way while loading, empty or failed -->
+  <nav
+    v-if="compact"
+    v-show="items.length"
+    class="flex flex-none items-center gap-2 overflow-x-auto border-b border-outline-gray-1 px-4 py-1.5 text-xs"
+    :aria-label="__('Conversaciones vinculadas')"
+  >
+    <span class="flex-none text-ink-gray-5">{{ __('Conversaciones') }}:</span>
+    <component
+      :is="item.name ? RouterLink : 'button'"
+      v-for="item in items"
+      :key="itemKey(item)"
+      v-bind="item.name ? { to: conversationRoute(item.name) } : { type: 'button', disabled: opening === itemKey(item) }"
+      :title="`${item.provider} · ${__('Cuenta')} ${item.account_id}`"
+      class="flex-none whitespace-nowrap rounded border border-outline-gray-2 px-2 py-0.5 text-xs text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-60"
+      @click="item.name ? null : open(item)"
+    >
+      {{ item.provider }} · {{ item.display_name || item.peer_id }}
+      {{ opening === itemKey(item) ? __('Abriendo…') : '→' }}
+    </component>
+    <span v-if="error" role="alert" class="flex-none text-ink-red-6">{{ error }}</span>
+  </nav>
+  <section v-else class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5" aria-label="Conversaciones vinculadas">
     <div>
       <h2 class="text-base font-semibold">{{ __('Conversaciones vinculadas') }}</h2>
       <p class="mt-1 text-sm text-ink-gray-5">{{ __('Abre una conversación para ver su historial y responder desde su cuenta.') }}</p>
@@ -44,7 +67,7 @@ import { relativeAge } from '@/utils/reviewCardFormat'
 // conversation (name set) opens directly; a thread only implied by the record's
 // messages (name null) is materialized here through the explicit open, exactly
 // like a legacy row in the conversation queue.
-const props = defineProps({ doctype: { type: String, required: true }, name: { type: String, required: true } })
+const props = defineProps({ doctype: { type: String, required: true }, name: { type: String, required: true }, compact: Boolean })
 const router = useRouter()
 const items = ref([]), cursor = ref(null), loading = ref(false), error = ref(''), opening = ref('')
 

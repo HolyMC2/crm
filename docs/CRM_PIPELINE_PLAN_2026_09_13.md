@@ -119,6 +119,29 @@ green). Verified headless on doco-mirror `/crm/whatsapp-queue` (26 RO chips,
 75 deal links, 24 contact links, no console errors). Awaiting Marco's review;
 prod needs doco_marketing (Python) and the crm SPA build rolled together.
 
+## Deal Conversación thread restored — committed 2026-09-16 (lab only, not on prod)
+
+Marco: the deal's Conversación tab had become a list of links (cf8eea673), which
+lost private notes, internal comments, templates, quick replies, catálogo,
+attachments and voice notes. DealWorkspace renders the WhatsApp/Messenger thread
+again (Activities + WhatsAppBox, ThreadSummary, IntentChips, ThreadSearch,
+jump-to-latest); the record's native threads stay one compact line above it
+(`DealConversations compact`, hidden when there are none).
+The number switcher failed on native sites because whatsapp_chat retires
+`deal_contacts` (`Use native Conversations.`). CRM now owns it:
+`crm.api.whatsapp_contacts.list_numbers` behind the unchanged record check in
+`whatsapp.get_deal_whatsapp_contacts`; tabs keyed by `PEER_SUFFIX`, send target
+= the customer's newest inbound spelling, else our last outbound spelling, else
+the stored number completed from System Settings.country (no `52` constant).
+Tests: `test_whatsapp_contacts` 5 ok, `test_whatsapp_optional` 3 ok,
+`test_whatsapp` 6 ok; vitest 66 files / 657 ok. Verified headless on doco-mirror
+(inbox 1440 and 390, Deal 360 1366): modes Responder/Nota privada/Interno,
+Catálogo, Sugerir, template chips, zero failed API calls, zero page errors.
+Pre-existing, unrelated: `test_conversation_enrich.
+test_create_whatsapp_message_persists_reference_and_provenance` errors with
+`legacy_message_scope_invalid` (its mock predates the frappe_whatsapp send
+guard 97e0ba1). Prod needs a crm roll (Python + SPA), no migration.
+
 ## Wave 2 — committed and tested on lab (2026-09-13)
 
 Commits: CRM `6b8ce8863`, Taller `7728e99a`, Marketing `1b909bb`.
