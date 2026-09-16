@@ -150,18 +150,26 @@
           :component="tab.component"
           :docname="contact.doc.name"
         />
-        <DealsListView
-          v-if="tab.label === 'Deals' && rows.length"
-          class="mt-4"
-          :rows="rows"
-          :columns="columns"
-          :options="{ selectable: false, showTooltip: false }"
-        />
-        <EmptyState
-          v-if="tab.label === 'Deals' && !rows.length"
-          :icon="tab.icon"
-          name="Deals"
-        />
+        <div
+          v-if="tab.label === 'Deals'"
+          class="flex min-h-0 flex-1 flex-col overflow-auto"
+        >
+          <div class="px-5">
+            <VerticalSlot
+              slot="data_tab"
+              doctype="Contact"
+              :docname="contact.doc.name"
+            />
+          </div>
+          <DealsListView
+            v-if="rows.length"
+            class="mt-4"
+            :rows="rows"
+            :columns="columns"
+            :options="{ selectable: false, showTooltip: false }"
+          />
+          <EmptyState v-else :icon="tab.icon" name="Deals" />
+        </div>
       </template>
     </Tabs>
   </div>
@@ -219,6 +227,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import ContactTabPanel from '@/components/doco/contact/ContactTabPanel.vue'
+import VerticalSlot from '@/components/doco/VerticalSlot.vue'
 import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
 
 const { brand } = getSettings()

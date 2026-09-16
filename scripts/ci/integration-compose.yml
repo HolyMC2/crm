@@ -1,0 +1,30 @@
+# Disposable stack: no host ports, lab networks, tenant volumes or Docker socket.
+services:
+  database:
+    image: mariadb:11.8
+    environment:
+      MARIADB_ROOT_PASSWORD: integration-only
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 5s
+      retries: 30
+    networks: [integration]
+  redis:
+    image: redis:6.2-alpine
+    networks: [integration]
+  tests:
+    image: ${CRM_CI_IMAGE:?Set the full multi-app Muelle image}
+    working_dir: /home/frappe/frappe-bench
+    entrypoint: [bash, /candidate/scripts/ci/inside-container.sh]
+    volumes:
+      - ../..:/candidate:ro
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks: [integration]
+networks:
+  integration:
+    internal: true

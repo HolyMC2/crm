@@ -69,7 +69,7 @@ superseded. Never called because a customer wrote «hola»: an incoming message
 focuses the task, it does not complete it.
 
 ```python
-open_tasks(*, source_doctype, source_name) -> list[dict]
+open_tasks(*, source_doctype, source_name, for_update=False) -> list[dict]
 # every open automated task of a repair order: name, slot, occurrence, due_date,
 # assigned_to, title, human_edited
 ```
@@ -166,3 +166,22 @@ What the implementation pins down, on top of the signatures above:
 - The `automation_*` fields are read-only in a collapsible "Automation"
   section. The label is the English source string, translated per user like
   every other CRM label.
+
+## Gap-closing integration hardening
+
+Mutators now use current locking reads for open slot rows, task documents and
+human-edit comparisons. `open_tasks(for_update=True)` gives source coordinators
+the same behavior inside their transaction. Frappe v16 requires the query
+builder for locking list reads; `get_all(for_update=...)` is unsupported.
+`GET_LOCK` still ends at service return, while row locks last until commit.
+MariaDB may reject a stale snapshot with `QueryDeadlockError`; callers must
+roll back and retry the whole transaction, never fall back to a stale read.
+
+An identical reconciliation returns `reused, human_edited=False` without saving
+the task or updating its projection again. Changed automation values still
+refresh, and human changes remain protected. Taller also checks settled history
+before calling `upsert`, so a completed/canceled occurrence is not recreated.
+
+Taller now owns five disabled-by-default rules and explicit permission-scoped
+backfill. Marketing defers its legacy ready task when Taller's enabled rule owns
+it. See [Taller implementation and acceptance](../../taller/docs/GAP_CLOSURE_2026_09_15.md).

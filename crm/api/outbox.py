@@ -40,8 +40,12 @@ TRANSITIONS = {
 
 
 def automation_ready(provider):
-    # Deliberately code-gated until every legacy producer uses durable intents.
-    return False
+    # Capability only. Exact account, active policy, peer and manager grants are
+    # enforced by the customer adapter at start and immediately before delivery.
+    if provider not in {"Webchat", "WhatsApp"} or "doco" not in frappe.get_installed_apps():
+        return False
+    from doco.docoutils.assistant.bot_customer import provider_ready
+    return provider_ready(provider)
 
 
 def _canonical(value):
@@ -125,6 +129,9 @@ def _transition(doc, state, reason="", **values):
     log.append({"state": state, "at": str(now_datetime()), "reason": reason})
     doc.state_log = _canonical(log)
     _mark(doc).save(ignore_permissions=True)
+    if state == "Cancelled" and doc.origin == "Bot" and "doco" in frappe.get_installed_apps():
+        from doco.docoutils.assistant.bot_budget import release_cancelled
+        release_cancelled(doc)
     _notify(doc)
     return doc
 
@@ -272,6 +279,9 @@ def _eligibility(doc):
         return "conversation_changed"
     except (frappe.PermissionError, frappe.DoesNotExistError):
         return "authority_revoked"
+    if doc.origin == "Bot":
+        from doco.docoutils.assistant.bot_customer import dispatch_reason
+        return dispatch_reason(doc)
     return manual_reply_reason(doc)
 
 
@@ -391,6 +401,13 @@ def dispatch_intent(intent_name):
             _transition(doc, "Cancelled" if reason == "conversation_changed" else "Blocked", reason)
             frappe.db.commit()
             return
+        if doc.origin == "Bot":
+            from doco.docoutils.assistant.bot_customer import dispatch_reason
+            reason = dispatch_reason(doc, consume=True)
+            if reason:
+                _transition(doc, "Blocked", reason)
+                frappe.db.commit()
+                return
         _transition(doc, "Submitting", submitted_at=now_datetime(), lease_until=now_datetime() + timedelta(seconds=LEASE_SECONDS))
         frappe.db.commit()  # irreversible-effect boundary: crash from here is Unknown
         try:
@@ -420,6 +437,10 @@ def _dispatch_local(doc, now):
                 lease_until=now + timedelta(seconds=LEASE_SECONDS))
     _transition(doc, "Submitting", submitted_at=now)
     try:
+        if doc.origin == "Bot":
+            from doco.docoutils.assistant.bot_customer import dispatch_reason
+            if dispatch_reason(doc, consume=True):
+                raise ValueError("customer_policy_changed")
         result = _gateway(doc)
         if not isinstance(result, dict) or result.get("state") != "Accepted":
             raise ValueError("local_delivery_unavailable")

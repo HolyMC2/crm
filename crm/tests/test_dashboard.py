@@ -2,6 +2,9 @@
 # See license.txt
 
 
+import json
+from pathlib import Path
+
 import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.tests.utils import make_test_records
@@ -52,6 +55,12 @@ class TestDashboard(IntegrationTestCase):
 		make_test_records("CRM Deal Status")
 		make_test_records("CRM Lead Source")
 		make_test_records("CRM Lost Reason")
+		# The companion link graph can reach Deal while traversing Organization.
+		# Seed its independent roots first so Deal's organization links resolve.
+		path = Path(frappe.get_app_path("crm", "fcrm", "doctype", "crm_organization", "test_records.json"))
+		for record in json.loads(path.read_text()):
+			if not frappe.db.exists("CRM Organization", record["organization_name"]):
+				frappe.get_doc(record).insert(ignore_permissions=True)
 		make_test_records("CRM Organization")  # Load organizations before deals
 		make_test_records("CRM Lead")
 		make_test_records("CRM Deal")

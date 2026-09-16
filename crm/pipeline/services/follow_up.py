@@ -144,7 +144,7 @@ def complete(
 	return {"closed": closed}
 
 
-def open_tasks(*, source_doctype: str, source_name: str) -> list[dict]:
+def open_tasks(*, source_doctype: str, source_name: str, for_update: bool = False) -> list[dict]:
 	"""Every open automated task of one source record, in the order it was opened.
 
 	Not ordered by due date on purpose: MariaDB sorts undated rows first on ASC,
@@ -154,26 +154,19 @@ def open_tasks(*, source_doctype: str, source_name: str) -> list[dict]:
 	if not source_doctype or not source_name:
 		frappe.throw(_("A source document is required."))
 
-	rows = frappe.get_all(
-		"CRM Task",
-		filters={
-			"automation_source_doctype": source_doctype,
-			"automation_source_name": source_name,
-			# "is set", never ["not in", ["", None]]: SQL NOT IN with NULL matches no row.
-			"automation_slot": ["is", "set"],
-			"status": ["in", OPEN_TASK_STATUSES],
-		},
-		fields=[
-			"name",
-			"automation_slot",
-			"automation_occurrence",
-			"automation_values",
-			"due_date",
-			"assigned_to",
-			"title",
-		],
-		order_by="creation asc, name asc",
-	)
+	task = frappe.qb.DocType("CRM Task")
+	query = (frappe.qb.from_(task).select(
+		task.name, task.automation_slot, task.automation_occurrence,
+		task.automation_values, task.due_date, task.assigned_to, task.title,
+	).where(
+		(task.automation_source_doctype == source_doctype)
+		& (task.automation_source_name == source_name)
+		& task.automation_slot.isnotnull() & (task.automation_slot != "")
+		& task.status.isin(OPEN_TASK_STATUSES)
+	).orderby(task.creation, task.name))
+	if for_update:
+		query = query.for_update()
+	rows = query.run(as_dict=True)
 	return [
 		{
 			"name": cstr(row.name),
@@ -182,7 +175,7 @@ def open_tasks(*, source_doctype: str, source_name: str) -> list[dict]:
 			"due_date": row.due_date,
 			"assigned_to": row.assigned_to,
 			"title": row.title,
-			"human_edited": _human_edited(row.name, row.automation_values),
+			"human_edited": _human_edited(row.name, row.automation_values, for_update=for_update),
 		}
 		for row in rows
 	]
@@ -208,8 +201,8 @@ def reassign(*, slot: str, owner: str) -> dict:
 
 	with slot_lock(slot):
 		for row in _open_slot_tasks(slot):
-			doc = frappe.get_doc("CRM Task", row.name)
-			if _human_edited(doc.name, doc.automation_values):
+			doc = frappe.get_doc("CRM Task", row.name, for_update=True)
+			if _human_edited(doc.name, doc.automation_values, for_update=True):
 				result["kept"].append(cstr(doc.name))
 				continue
 			_apply_owner(doc, usable, None)
@@ -287,11 +280,21 @@ def _create(
 
 
 def _refresh(name, *, title, activity_type, due, owner, owner_skipped, description, priority) -> dict:
-	doc = frappe.get_doc("CRM Task", name)
-	if _human_edited(doc.name, doc.automation_values):
+	doc = frappe.get_doc("CRM Task", name, for_update=True)
+	if _human_edited(doc.name, doc.automation_values, for_update=True):
 		# The person's title, date or assignee is the current truth. The task keeps
 		# its slot and occurrence so the next event of the rule still finds it.
 		return {"name": cstr(doc.name), "action": "reused", "human_edited": True}
+
+	changes = {"title": title, "activity_type": activity_type, "due_date": due}
+	if not owner_skipped:
+		changes["assigned_to"] = owner
+	if priority:
+		changes["priority"] = priority
+	if description is not None:
+		changes["description"] = description
+	if all(cstr(doc.get(field)) == cstr(value) for field, value in changes.items()):
+		return {"name": cstr(doc.name), "action": "reused", "human_edited": False}
 
 	doc.title = title
 	doc.activity_type = activity_type
@@ -307,7 +310,7 @@ def _refresh(name, *, title, activity_type, due, owner, owner_skipped, descripti
 
 
 def _close(name, outcome, note=None) -> None:
-	doc = frappe.get_doc("CRM Task", name)
+	doc = frappe.get_doc("CRM Task", name, for_update=True)
 	doc.status = outcome
 	if note:
 		doc.description = _with_note(doc.description, note)
@@ -350,8 +353,8 @@ def _values_json(name) -> str:
 	return json.dumps(_values_of(name), ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
-def _values_of(name) -> dict:
-	row = frappe.db.get_value("CRM Task", name, TRACKED_FIELDS, as_dict=True) or {}
+def _values_of(name, *, for_update=False) -> dict:
+	row = frappe.db.get_value("CRM Task", name, TRACKED_FIELDS, as_dict=True, for_update=for_update) or {}
 	return {
 		"title": cstr(row.get("title")) or None,
 		# The column hands back a datetime and the caller a string: normalise both
@@ -362,7 +365,7 @@ def _values_of(name) -> dict:
 	}
 
 
-def _human_edited(name, written) -> bool:
+def _human_edited(name, written, *, for_update=False) -> bool:
 	if not written:
 		# Values this service cannot prove it wrote are never overwritten.
 		return True
@@ -370,16 +373,16 @@ def _human_edited(name, written) -> bool:
 		stored = json.loads(written)
 	except ValueError:
 		return True
-	return stored != _values_of(name)
+	return stored != _values_of(name, for_update=for_update)
 
 
 def _open_slot_tasks(slot) -> list:
-	return frappe.get_all(
-		"CRM Task",
-		filters={"automation_slot": slot, "status": ["in", OPEN_TASK_STATUSES]},
-		fields=["name", "automation_occurrence"],
-		order_by="creation asc, name asc",
-	)
+	# Current read: GET_LOCK ends before the outer transaction commits.
+	# Frappe v16 get_all does not accept for_update; use the query builder.
+	task = frappe.qb.DocType("CRM Task")
+	return (frappe.qb.from_(task).select(task.name, task.automation_occurrence)
+		.where((task.automation_slot == slot) & task.status.isin(OPEN_TASK_STATUSES))
+		.orderby(task.creation, task.name).for_update().run(as_dict=True))
 
 
 def _check_reference(doctype, name, ignore_permissions) -> None:
