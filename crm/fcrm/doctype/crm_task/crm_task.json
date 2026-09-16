@@ -19,7 +19,13 @@
   "status",
   "due_date",
   "section_break_bzhd",
-  "description"
+  "description",
+  "automation_section",
+  "automation_slot",
+  "automation_occurrence",
+  "automation_source_doctype",
+  "automation_source_name",
+  "automation_values"
  ],
  "fields": [
   {
@@ -95,11 +101,59 @@
    "fieldtype": "Dynamic Link",
    "label": "Reference Doc",
    "options": "reference_doctype"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "automation_section",
+   "fieldtype": "Section Break",
+   "label": "Automation"
+  },
+  {
+   "description": "Logical slot <source doctype>:<source name>:<rule>. At most one open task per slot. Maintained by crm.pipeline.services.follow_up; empty on a task a person created.",
+   "fieldname": "automation_slot",
+   "fieldtype": "Data",
+   "label": "Automation Slot",
+   "no_copy": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "description": "Immutable id of the event that asked for this task. The same occurrence reuses it; a new one supersedes it.",
+   "fieldname": "automation_occurrence",
+   "fieldtype": "Data",
+   "label": "Automation Occurrence",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Where the event came from, kept even when the CRM reference is a shared deal.",
+   "fieldname": "automation_source_doctype",
+   "fieldtype": "Link",
+   "label": "Automation Source Document Type",
+   "no_copy": 1,
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "automation_source_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Automation Source",
+   "no_copy": 1,
+   "options": "automation_source_doctype",
+   "read_only": 1
+  },
+  {
+   "description": "Title, due date, assignee and activity type as the automation last wrote them. A difference against the fields above means a person edited the task, and the automation then stops overwriting it.",
+   "fieldname": "automation_values",
+   "fieldtype": "Small Text",
+   "label": "Automation Values",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-13 09:10:00.000000",
+ "modified": "2026-09-15 10:00:00.000000",
  "modified_by": "shariq@frappe.io",
  "module": "FCRM",
  "name": "CRM Task",
