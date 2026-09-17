@@ -12,6 +12,11 @@ The native job mounts the checkout read-only and copies CRM into its disposable
 container. It uses an internal Docker network with no production volumes, ports,
 credentials or outgoing integrations. `GITHUB_TOKEN` needs package pull access.
 
+Apps that CRM calls into, or that call into CRM, can be newer than the image. The
+workflow checks them out at the commits pinned in `builds.yml` (`FRAPPE_WHATSAPP_REF`)
+under `.ci-companions/<app>`, and the runner copies each over the image's copy before
+the site is created. Bump those pins with the release's source lock.
+
 The image must include Payments (the ERPNext fixture graph requires Payment Gateway)
 and Doco Meta Catalog and Doco Marketing (the owner of Social Shop). The runner installs both native
 apps and enables Frappe's `mute_emails` setting before app setup.

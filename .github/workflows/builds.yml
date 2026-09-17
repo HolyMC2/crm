@@ -10,6 +10,10 @@ permissions:
 concurrency:
   group: crm-release-${{ github.ref }}
   cancel-in-progress: true
+env:
+  # Companion commits the native suite runs against; scripts/ci/inside-container.sh
+  # copies them over the image's older copies. Bump with the release pins.
+  FRAPPE_WHATSAPP_REF: 933fa2ca544ecf0857e37d6beb04bd052a602345
 jobs:
   frontend:
     runs-on: ubuntu-24.04
@@ -32,6 +36,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Checkout pinned companion apps
+        uses: actions/checkout@v4
+        with:
+          repository: HolyMC2/frappe_whatsapp
+          ref: ${{ env.FRAPPE_WHATSAPP_REF }}
+          persist-credentials: false
+          path: .ci-companions/frappe_whatsapp
       - name: Require immutable representative image
         env:
           CRM_CI_IMAGE: ${{ vars.CRM_CI_IMAGE }}
