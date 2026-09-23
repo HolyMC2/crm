@@ -175,14 +175,14 @@
       <template #body-content>
         <div class="flex flex-col gap-3">
           <FormControl
-            :label="__('Título')"
             v-model="form.title"
+            :label="__('Título')"
             :placeholder="__('Reactivación clientes')"
           />
           <FormControl
+            v-model="form.type"
             type="select"
             :label="__('Tipo')"
-            v-model="form.type"
             :options="[
               { label: 'WhatsApp', value: 'whatsapp' },
               { label: 'Email', value: 'email' },

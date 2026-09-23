@@ -8,7 +8,11 @@
 // its clientWidth.
 import { test, expect } from '@playwright/test'
 
-test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+test.use({
+  viewport: { width: 390, height: 844 },
+  isMobile: true,
+  hasTouch: true,
+})
 
 const STATIC_ROUTES = [
   '/',
@@ -52,23 +56,42 @@ async function measure(page) {
     if (!pageEl || !column || !pageEl.clientWidth || !column.clientWidth) {
       throw new Error('CRM mobile shell is missing or has no rendered width')
     }
-    const shell = new Set([pageEl, column, document.body, document.documentElement].filter(Boolean))
+    const shell = new Set(
+      [pageEl, column, document.body, document.documentElement].filter(Boolean),
+    )
     const contained = new Set(['auto', 'scroll', 'hidden', 'clip'])
     const escaped = []
     for (const el of Array.from(document.querySelectorAll('body *'))) {
       const cs = getComputedStyle(el)
-      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'fixed') continue
+      if (
+        cs.display === 'none' ||
+        cs.visibility === 'hidden' ||
+        cs.position === 'fixed'
+      )
+        continue
       const r = el.getBoundingClientRect()
-      if ((r.width === 0 && r.height === 0) || (r.right <= width + 1 && r.left >= -1)) continue
+      if (
+        (r.width === 0 && r.height === 0) ||
+        (r.right <= width + 1 && r.left >= -1)
+      )
+        continue
       let owner = el.parentElement
       let owned = false
       while (owner && !shell.has(owner)) {
-        if (contained.has(getComputedStyle(owner).overflowX)) { owned = true; break }
+        if (contained.has(getComputedStyle(owner).overflowX)) {
+          owned = true
+          break
+        }
         owner = owner.parentElement
       }
       if (owned) continue
-      const cls = typeof el.className === 'string' ? el.className.split(/\s+/).filter(Boolean).slice(0, 3).join('.') : ''
-      escaped.push(`${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}${cls ? '.' + cls : ''} right=${Math.round(r.right)}`)
+      const cls =
+        typeof el.className === 'string'
+          ? el.className.split(/\s+/).filter(Boolean).slice(0, 3).join('.')
+          : ''
+      escaped.push(
+        `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}${cls ? '.' + cls : ''} right=${Math.round(r.right)}`,
+      )
     }
     return {
       width,
@@ -84,26 +107,67 @@ async function measure(page) {
 
 async function expectVerticalOnly(page, route) {
   const response = await page.goto(`/crm${route}`, { waitUntil: 'networkidle' })
-  expect(response, `${route}: navigation returned no document response`).not.toBeNull()
-  expect(response.ok(), `${route}: document returned HTTP ${response.status()}`).toBe(true)
-  await expect(page, `${route}: redirected to login`).not.toHaveURL(/\/login(?:[/?#]|$)/)
-  await expect(page.locator('#app .page-in'), `${route}: CRM mobile shell did not render`).toBeVisible()
-  await expect(page.locator('#app #app-header'), `${route}: CRM header did not mount`).toBeAttached()
-  await expect(page.locator('#app .page-in > :visible').first(), `${route}: route content did not render`).toBeVisible()
+  expect(
+    response,
+    `${route}: navigation returned no document response`,
+  ).not.toBeNull()
+  expect(
+    response.ok(),
+    `${route}: document returned HTTP ${response.status()}`,
+  ).toBe(true)
+  await expect(page, `${route}: redirected to login`).not.toHaveURL(
+    /\/login(?:[/?#]|$)/,
+  )
+  await expect(
+    page.locator('#app .page-in'),
+    `${route}: CRM mobile shell did not render`,
+  ).toBeVisible()
+  await expect(
+    page.locator('#app #app-header'),
+    `${route}: CRM header did not mount`,
+  ).toBeAttached()
+  await expect(
+    page.locator('#app .page-in > :visible').first(),
+    `${route}: route content did not render`,
+  ).toBeVisible()
   await page.waitForTimeout(800) // lists, boards and charts settle
-  await expect(page, `${route}: redirected to login after mounting`).not.toHaveURL(/\/login(?:[/?#]|$)/)
+  await expect(
+    page,
+    `${route}: redirected to login after mounting`,
+  ).not.toHaveURL(/\/login(?:[/?#]|$)/)
   const m = await measure(page)
-  expect(m.documentScrollWidth, `${route}: the document scrolls sideways`).toBeLessThanOrEqual(m.width)
-  expect(m.columnScrollWidth, `${route}: the shell column is wider than the phone`).toBeLessThanOrEqual(m.columnClientWidth)
-  expect(m.pageScrollWidth, `${route}: the page scroller has content wider than the phone`).toBeLessThanOrEqual(m.pageClientWidth)
-  expect(m.escaped, `${route}: content escapes the viewport with no container scrolling it`).toEqual([])
+  expect(
+    m.documentScrollWidth,
+    `${route}: the document scrolls sideways`,
+  ).toBeLessThanOrEqual(m.width)
+  expect(
+    m.columnScrollWidth,
+    `${route}: the shell column is wider than the phone`,
+  ).toBeLessThanOrEqual(m.columnClientWidth)
+  expect(
+    m.pageScrollWidth,
+    `${route}: the page scroller has content wider than the phone`,
+  ).toBeLessThanOrEqual(m.pageClientWidth)
+  expect(
+    m.escaped,
+    `${route}: content escapes the viewport with no container scrolling it`,
+  ).toEqual([])
 }
 
 async function firstName(page, doctype, filters = '') {
-  const res = await page.request.get(`/api/resource/${encodeURIComponent(doctype)}?limit_page_length=1&order_by=modified desc${filters}`, { maxRedirects: 0 })
-  expect(res.ok(), `${doctype}: record lookup returned HTTP ${res.status()}`).toBe(true)
+  const res = await page.request.get(
+    `/api/resource/${encodeURIComponent(doctype)}?limit_page_length=1&order_by=modified desc${filters}`,
+    { maxRedirects: 0 },
+  )
+  expect(
+    res.ok(),
+    `${doctype}: record lookup returned HTTP ${res.status()}`,
+  ).toBe(true)
   const { data } = await res.json()
-  expect(Array.isArray(data), `${doctype}: record lookup did not return a data array`).toBe(true)
+  expect(
+    Array.isArray(data),
+    `${doctype}: record lookup did not return a data array`,
+  ).toBe(true)
   return data[0]?.name || null
 }
 
@@ -118,7 +182,10 @@ test.describe('phone: vertical scroll only', () => {
       ignoreHTTPSErrors: true,
     })
     const res = await api.post('/api/method/login', {
-      form: { usr: process.env.CRM_TEST_USER, pwd: process.env.CRM_TEST_PASSWORD },
+      form: {
+        usr: process.env.CRM_TEST_USER,
+        pwd: process.env.CRM_TEST_PASSWORD,
+      },
     })
     if (!res.ok()) throw new Error(`login failed: HTTP ${res.status()}`)
     cookies = (await api.storageState()).cookies
@@ -217,54 +284,80 @@ test.describe('phone: vertical scroll only', () => {
         document.documentElement.classList.add('dark')
       })
       await page.waitForTimeout(400) // let the theme color transition finish
-      const countContrast = await pager.locator('[aria-current="true"]').evaluate((chip) => {
-        const count = chip.querySelector('.tabular-nums')
-        if (!count) throw new Error('The current Kanban chip has no count')
-        const canvas = document.createElement('canvas')
-        canvas.width = canvas.height = 1
-        const ctx = canvas.getContext('2d', { colorSpace: 'srgb' })
-        if (!ctx) throw new Error('Cannot measure Kanban count contrast without Canvas 2D')
-        // Canvas resolves modern computed colors such as color(srgb ...) and
-        // oklch(...) to sRGB bytes; parsing their numeric text would be wrong.
-        function luminance(cssColor) {
-          ctx.clearRect(0, 0, 1, 1)
-          ctx.fillStyle = cssColor
-          ctx.fillRect(0, 0, 1, 1)
-          const [r, g, b, alpha] = ctx.getImageData(0, 0, 1, 1).data
-          if (alpha !== 255) throw new Error('Kanban count contrast requires opaque text and chip background')
-          const linear = [r, g, b].map((byte) => {
-            const value = byte / 255
-            return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
-          })
-          return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
-        }
-        const foreground = getComputedStyle(count).color
-        const background = getComputedStyle(chip).backgroundColor
-        const ink = luminance(foreground)
-        const surface = luminance(background)
-        return {
-          foreground,
-          background,
-          ratio: (Math.max(ink, surface) + 0.05) / (Math.min(ink, surface) + 0.05),
-        }
-      })
-      expect(countContrast.ratio, `${route}: dark current-column count contrast ${JSON.stringify(countContrast)}`).toBeGreaterThanOrEqual(4.5)
+      const countContrast = await pager
+        .locator('[aria-current="true"]')
+        .evaluate((chip) => {
+          const count = chip.querySelector('.tabular-nums')
+          if (!count) throw new Error('The current Kanban chip has no count')
+          const canvas = document.createElement('canvas')
+          canvas.width = canvas.height = 1
+          const ctx = canvas.getContext('2d', { colorSpace: 'srgb' })
+          if (!ctx)
+            throw new Error(
+              'Cannot measure Kanban count contrast without Canvas 2D',
+            )
+          // Canvas resolves modern computed colors such as color(srgb ...) and
+          // oklch(...) to sRGB bytes; parsing their numeric text would be wrong.
+          function luminance(cssColor) {
+            ctx.clearRect(0, 0, 1, 1)
+            ctx.fillStyle = cssColor
+            ctx.fillRect(0, 0, 1, 1)
+            const [r, g, b, alpha] = ctx.getImageData(0, 0, 1, 1).data
+            if (alpha !== 255)
+              throw new Error(
+                'Kanban count contrast requires opaque text and chip background',
+              )
+            const linear = [r, g, b].map((byte) => {
+              const value = byte / 255
+              return value <= 0.04045
+                ? value / 12.92
+                : ((value + 0.055) / 1.055) ** 2.4
+            })
+            return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+          }
+          const foreground = getComputedStyle(count).color
+          const background = getComputedStyle(chip).backgroundColor
+          const ink = luminance(foreground)
+          const surface = luminance(background)
+          return {
+            foreground,
+            background,
+            ratio:
+              (Math.max(ink, surface) + 0.05) / (Math.min(ink, surface) + 0.05),
+          }
+        })
+      expect(
+        countContrast.ratio,
+        `${route}: dark current-column count contrast ${JSON.stringify(countContrast)}`,
+      ).toBeGreaterThanOrEqual(4.5)
     })
   }
 
-  test('record pages (first lead, deal, contact, organization, campaign)', async ({ page }) => {
+  test('record pages (first lead, deal, contact, organization, campaign)', async ({
+    page,
+  }) => {
     const lead = await firstName(page, 'CRM Lead')
-    if (lead) await expectVerticalOnly(page, `/leads/${encodeURIComponent(lead)}`)
+    if (lead)
+      await expectVerticalOnly(page, `/leads/${encodeURIComponent(lead)}`)
     const deal = await firstName(page, 'CRM Deal')
     if (deal) {
       await expectVerticalOnly(page, `/deals/${encodeURIComponent(deal)}`)
       await expectVerticalOnly(page, `/deal/${encodeURIComponent(deal)}`)
     }
     const contact = await firstName(page, 'Contact')
-    if (contact) await expectVerticalOnly(page, `/contacts/${encodeURIComponent(contact)}`)
+    if (contact)
+      await expectVerticalOnly(page, `/contacts/${encodeURIComponent(contact)}`)
     const org = await firstName(page, 'CRM Organization')
-    if (org) await expectVerticalOnly(page, `/organizations/${encodeURIComponent(org)}`)
+    if (org)
+      await expectVerticalOnly(
+        page,
+        `/organizations/${encodeURIComponent(org)}`,
+      )
     const campaign = await firstName(page, 'CRM Campaign')
-    if (campaign) await expectVerticalOnly(page, `/campaigns/${encodeURIComponent(campaign)}`)
+    if (campaign)
+      await expectVerticalOnly(
+        page,
+        `/campaigns/${encodeURIComponent(campaign)}`,
+      )
   })
 })

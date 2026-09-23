@@ -31,187 +31,195 @@
         }}</span>
       </button>
     </div>
-  <div ref="boardEl" data-kanban-board class="flex h-full min-h-0 overflow-x-auto max-sm:snap-x max-sm:snap-mandatory">
-    <Draggable
-      v-if="columns"
-      :list="columns"
-      item-key="column"
-      :delay="isTouchScreenDevice() ? 200 : 0"
-      class="flex sm:mx-2.5 mx-2 pb-3.5"
-      @end="updateColumn"
+    <div
+      ref="boardEl"
+      data-kanban-board
+      class="flex h-full min-h-0 overflow-x-auto max-sm:snap-x max-sm:snap-mandatory"
     >
-      <template #item="{ element: column }">
-        <!-- phone: a column is most of the viewport and snaps, the next one peeks -->
-        <div
-          v-if="!column.column.delete"
-          data-kanban-column
-          class="flex flex-col gap-2.5 min-w-72 w-72 max-sm:min-w-[86vw] max-sm:w-[86vw] max-sm:snap-start hover:bg-surface-gray-2 rounded-lg p-2.5"
-        >
-          <div class="flex gap-2 items-center group justify-between">
-            <div class="flex items-center text-base">
-              <Popover>
-                <template #target="{ togglePopover }">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="hover:!bg-surface-gray-2"
-                    @click="togglePopover"
-                  >
-                    <IndicatorIcon :class="parseColor(column.column.color)" />
-                  </Button>
-                </template>
-                <template #body>
-                  <div
-                    class="flex flex-col gap-3 px-3 py-2.5 min-w-40 rounded-lg bg-surface-elevation-2 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none"
-                  >
-                    <div class="flex gap-1">
-                      <Button
-                        v-for="color in colors"
-                        :key="color"
-                        variant="ghost"
-                        @click="() => (column.column.color = color)"
-                      >
-                        <IndicatorIcon :class="parseColor(color)" />
-                      </Button>
-                    </div>
-                    <div class="flex flex-row-reverse">
-                      <Button
-                        variant="solid"
-                        :label="__('Apply')"
-                        @click="updateColumn"
-                      />
-                    </div>
-                  </div>
-                </template>
-              </Popover>
-              <div class="text-ink-gray-9">{{ column.column.name }}</div>
-              <span class="ml-1.5 text-sm tabular-nums text-ink-gray-7">{{ columnCount(column) }}</span>
-            </div>
-            <div class="flex">
-              <Dropdown :options="actions(column)">
-                <template #default>
-                  <Button
-                    class="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity"
-                    icon="lucide-more-horizontal"
-                    variant="ghost"
-                  />
-                </template>
-              </Dropdown>
-              <Button
-                icon="lucide-plus"
-                variant="ghost"
-                @click="options.onNewClick(column)"
-              />
-            </div>
-          </div>
-          <div class="overflow-y-auto flex flex-col gap-2 h-full">
-            <Draggable
-              :list="column.data"
-              group="fields"
-              item-key="name"
-              class="flex flex-col gap-3.5 flex-1"
-              :delay="isTouchScreenDevice() ? 200 : 0"
-              :data-column="column.column.name"
-              @end="updateColumn"
-            >
-              <template #item="{ element: fields }">
-                <component
-                  :is="options.getRoute ? 'router-link' : 'div'"
-                  class="pt-3 px-3.5 pb-2.5 rounded-lg border bg-surface-base text-base flex flex-col text-ink-gray-9"
-                  :data-name="fields.name"
-                  v-bind="{
-                    to: options.getRoute ? options.getRoute(fields) : undefined,
-                    onClick: options.onClick
-                      ? () => options.onClick(fields)
-                      : undefined,
-                  }"
-                >
-                  <slot
-                    name="title"
-                    v-bind="{ fields, titleField, itemName: fields.name }"
-                  >
-                    <div class="h-5 flex items-center">
-                      <div v-if="fields[titleField]">
-                        {{ fields[titleField] }}
+      <Draggable
+        v-if="columns"
+        :list="columns"
+        item-key="column"
+        :delay="isTouchScreenDevice() ? 200 : 0"
+        class="flex sm:mx-2.5 mx-2 pb-3.5"
+        @end="updateColumn"
+      >
+        <template #item="{ element: column }">
+          <!-- phone: a column is most of the viewport and snaps, the next one peeks -->
+          <div
+            v-if="!column.column.delete"
+            data-kanban-column
+            class="flex flex-col gap-2.5 min-w-72 w-72 max-sm:min-w-[86vw] max-sm:w-[86vw] max-sm:snap-start hover:bg-surface-gray-2 rounded-lg p-2.5"
+          >
+            <div class="flex gap-2 items-center group justify-between">
+              <div class="flex items-center text-base">
+                <Popover>
+                  <template #target="{ togglePopover }">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      class="hover:!bg-surface-gray-2"
+                      @click="togglePopover"
+                    >
+                      <IndicatorIcon :class="parseColor(column.column.color)" />
+                    </Button>
+                  </template>
+                  <template #body>
+                    <div
+                      class="flex flex-col gap-3 px-3 py-2.5 min-w-40 rounded-lg bg-surface-elevation-2 shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    >
+                      <div class="flex gap-1">
+                        <Button
+                          v-for="color in colors"
+                          :key="color"
+                          variant="ghost"
+                          @click="() => (column.column.color = color)"
+                        >
+                          <IndicatorIcon :class="parseColor(color)" />
+                        </Button>
                       </div>
-                      <div v-else class="text-ink-gray-4">
-                        {{ __('No Title') }}
+                      <div class="flex flex-row-reverse">
+                        <Button
+                          variant="solid"
+                          :label="__('Apply')"
+                          @click="updateColumn"
+                        />
                       </div>
                     </div>
-                  </slot>
-                  <div class="border-b h-px my-2.5" />
-
-                  <div class="flex flex-col gap-3.5">
-                    <template v-for="value in column.fields" :key="value">
-                      <slot
-                        name="fields"
-                        v-bind="{
-                          fields,
-                          fieldName: value,
-                          itemName: fields.name,
-                        }"
-                      >
-                        <div v-if="fields[value]" class="truncate">
-                          {{ fields[value] }}
+                  </template>
+                </Popover>
+                <div class="text-ink-gray-9">{{ column.column.name }}</div>
+                <span class="ml-1.5 text-sm tabular-nums text-ink-gray-7">{{
+                  columnCount(column)
+                }}</span>
+              </div>
+              <div class="flex">
+                <Dropdown :options="actions(column)">
+                  <template #default>
+                    <Button
+                      class="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity"
+                      icon="lucide-more-horizontal"
+                      variant="ghost"
+                    />
+                  </template>
+                </Dropdown>
+                <Button
+                  icon="lucide-plus"
+                  variant="ghost"
+                  @click="options.onNewClick(column)"
+                />
+              </div>
+            </div>
+            <div class="overflow-y-auto flex flex-col gap-2 h-full">
+              <Draggable
+                :list="column.data"
+                group="fields"
+                item-key="name"
+                class="flex flex-col gap-3.5 flex-1"
+                :delay="isTouchScreenDevice() ? 200 : 0"
+                :data-column="column.column.name"
+                @end="updateColumn"
+              >
+                <template #item="{ element: fields }">
+                  <component
+                    :is="options.getRoute ? 'router-link' : 'div'"
+                    class="pt-3 px-3.5 pb-2.5 rounded-lg border bg-surface-base text-base flex flex-col text-ink-gray-9"
+                    :data-name="fields.name"
+                    v-bind="{
+                      to: options.getRoute
+                        ? options.getRoute(fields)
+                        : undefined,
+                      onClick: options.onClick
+                        ? () => options.onClick(fields)
+                        : undefined,
+                    }"
+                  >
+                    <slot
+                      name="title"
+                      v-bind="{ fields, titleField, itemName: fields.name }"
+                    >
+                      <div class="h-5 flex items-center">
+                        <div v-if="fields[titleField]">
+                          {{ fields[titleField] }}
                         </div>
-                      </slot>
-                    </template>
-                  </div>
-                  <div class="border-b h-px mt-2.5 mb-2" />
-                  <slot name="actions" v-bind="{ itemName: fields.name }">
-                    <div class="flex gap-2 items-center justify-between">
-                      <div></div>
-                      <Button
-                        icon="lucide-plus"
-                        variant="ghost"
-                        @click.stop.prevent
-                      />
+                        <div v-else class="text-ink-gray-4">
+                          {{ __('No Title') }}
+                        </div>
+                      </div>
+                    </slot>
+                    <div class="border-b h-px my-2.5" />
+
+                    <div class="flex flex-col gap-3.5">
+                      <template v-for="value in column.fields" :key="value">
+                        <slot
+                          name="fields"
+                          v-bind="{
+                            fields,
+                            fieldName: value,
+                            itemName: fields.name,
+                          }"
+                        >
+                          <div v-if="fields[value]" class="truncate">
+                            {{ fields[value] }}
+                          </div>
+                        </slot>
+                      </template>
                     </div>
-                  </slot>
-                </component>
-              </template>
-            </Draggable>
-            <div
-              v-if="column.column.count < column.column.all_count"
-              class="flex items-center justify-center"
-            >
-              <Button
-                :label="__('Load More')"
-                @click="emit('loadMore', column.column.name)"
-              />
+                    <div class="border-b h-px mt-2.5 mb-2" />
+                    <slot name="actions" v-bind="{ itemName: fields.name }">
+                      <div class="flex gap-2 items-center justify-between">
+                        <div></div>
+                        <Button
+                          icon="lucide-plus"
+                          variant="ghost"
+                          @click.stop.prevent
+                        />
+                      </div>
+                    </slot>
+                  </component>
+                </template>
+              </Draggable>
+              <div
+                v-if="column.column.count < column.column.all_count"
+                class="flex items-center justify-center"
+              >
+                <Button
+                  :label="__('Load More')"
+                  @click="emit('loadMore', column.column.name)"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-    </Draggable>
-    <!-- Rendered only once the columns exist: alone it would be the board's
+        </template>
+      </Draggable>
+      <!-- Rendered only once the columns exist: alone it would be the board's
          first snap target, and Chromium keeps a tracked snap target in view
          through later layout changes — the board opened scrolled to the end. -->
-    <div v-if="columns.length" class="shrink-0 min-w-64 max-sm:snap-start">
-      <Combobox
-        :model-value="null"
-        :options="deletedColumns"
-        @update:selected-option="(e) => addColumn(e)"
-      >
-        <template #trigger="{ open, setOpen }">
-          <Button
-            class="w-full mt-2.5 mb-1 mr-5"
-            :label="__('Add Column')"
-            iconLeft="plus"
-            @click="setOpen(!open)"
-          />
-        </template>
-        <template #footer>
-          <Button
-            class="w-full"
-            :label="__('Reload Columns')"
-            :iconLeft="RefreshIcon"
-            @click="updateColumn(null, true)"
-          />
-        </template>
-      </Combobox>
+      <div v-if="columns.length" class="shrink-0 min-w-64 max-sm:snap-start">
+        <Combobox
+          :model-value="null"
+          :options="deletedColumns"
+          @update:selected-option="(e) => addColumn(e)"
+        >
+          <template #trigger="{ open, setOpen }">
+            <Button
+              class="w-full mt-2.5 mb-1 mr-5"
+              :label="__('Add Column')"
+              iconLeft="plus"
+              @click="setOpen(!open)"
+            />
+          </template>
+          <template #footer>
+            <Button
+              class="w-full"
+              :label="__('Reload Columns')"
+              :iconLeft="RefreshIcon"
+              @click="updateColumn(null, true)"
+            />
+          </template>
+        </Combobox>
+      </div>
     </div>
-  </div>
   </div>
 </template>
 <script setup>

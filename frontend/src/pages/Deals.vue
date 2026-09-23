@@ -21,7 +21,7 @@
        header its fixed width pushed «Crear» past the viewport. Hidden when the
        slot renders nothing. -->
   <div v-if="isMobile" class="px-3 pt-1.5 empty:hidden">
-    <VerticalSlot slot="deals_list_header" />
+    <VerticalSlot slot-name="deals_list_header" />
   </div>
   <ViewControls
     ref="viewControls"
