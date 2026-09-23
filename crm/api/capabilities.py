@@ -19,7 +19,7 @@ def get_capabilities():
 
 
 @frappe.whitelist(methods=["POST"])
-def get_vertical_config(entity=None):
+def get_vertical_config(entity: str | dict | None = None):
 	"""CRM-owned compatibility boundary: no optional app is required to call it.
 
 	The new Doco protocol can roll out before or after CRM. Existing vertical

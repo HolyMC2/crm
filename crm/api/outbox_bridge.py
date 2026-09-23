@@ -335,7 +335,9 @@ def requeue_transcript(row):
 
 
 def _publish(row):
-	if not row:
+	# Activities subscribes to this record's permission-checked document room.
+	# Unlinked/native-only threads already have their conversation refresh path.
+	if not row or row.reference_doctype not in control.REFERENCES or not row.reference_name:
 		return
 	frappe.publish_realtime(
 		"whatsapp_message",
@@ -344,6 +346,8 @@ def _publish(row):
 			"reference_name": row.reference_name,
 			"phone": row.to,
 		},
+		doctype=row.reference_doctype,
+		docname=row.reference_name,
 		after_commit=True,
 	)
 
@@ -424,9 +428,9 @@ def native_states(rows):
 	# A plain read: the thread reloads while the dispatcher holds this intent's
 	# lock, and a locking read here deadlocks against it (09-15 inbox lesson).
 	intents = frappe.db.sql(
-		f"""SELECT i.name, i.transcript_message, i.state, i.reason_code, i.attempts,
+		"""SELECT i.name, i.transcript_message, i.state, i.reason_code, i.attempts,
             i.provider_message_id, i.origin, i.actor_user, c.human_owner
-        FROM `tab{outbox.DOCTYPE}` i LEFT JOIN `tab{control.DOCTYPE}` c ON c.name = i.conversation
+        FROM `tabCRM Outbound Intent` i LEFT JOIN `tabCRM Conversation` c ON c.name = i.conversation
         WHERE i.transcript_message IN %(rows)s OR i.name IN %(intents)s""",
 		{"rows": tuple(candidates), "intents": tuple(projected) or ("",)},
 		as_dict=True,
@@ -472,7 +476,9 @@ def _bridge_ready():
 
 
 @frappe.whitelist()
-def thread_control(reference_doctype, reference_name, phone, whatsapp_account=None):
+def thread_control(
+	reference_doctype: str, reference_name: str, phone: str, whatsapp_account: str | None = None
+):
 	"""Who handles this customer's native conversation, for the thread's strip.
 
 	None when no native conversation governs the number: sends then use the

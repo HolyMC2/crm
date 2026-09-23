@@ -142,7 +142,8 @@ def finish(proc, code=0):
 
 def queue(cfg, label):
 	frappe.db.rollback()
-	frappe.set_user(cfg["actor"])
+	# Security review: fixed isolated proof site; fictional actor/revocation or exact cleanup, no RPC input.
+	frappe.set_user(cfg["actor"])  # nosemgrep: frappe-setuser
 	result = outbox.queue_message(
 		cfg["conversation"], cfg["generation"], label, {"type": "text", "text": "Fictional process proof"}
 	)
@@ -186,7 +187,8 @@ def proof():
 				]
 			)[0]
 			frappe.db.set_value("Meta Webhook Receipt", receipt, "state", "Processed")
-			frappe.set_user(cfg["users"][0])
+			# Security review: fixed isolated proof site; fictional actor/revocation or exact cleanup, no RPC input.
+			frappe.set_user(cfg["users"][0])  # nosemgrep: frappe-setuser
 			taken = control.apply_control(current.name, "take", 1, "proof-take")
 			frappe.db.commit()
 			run = {
@@ -268,7 +270,8 @@ def proof():
 			emit("claim_crash_pass", state="Accepted", claims=2, provider_double_attempts=1)
 		finally:
 			frappe.db.rollback()
-			frappe.set_user("Administrator")
+			# Security review: fixed isolated proof site; fictional actor/revocation or exact cleanup, no RPC input.
+			frappe.set_user("Administrator")  # nosemgrep: frappe-setuser
 			if cfg:
 				current = control._load(cfg["name"])
 				if current.control_state != "Closed":

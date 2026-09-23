@@ -333,8 +333,8 @@ def send_whatsapp_template(
 	reference_name: str,
 	template: str,
 	to: str,
-	body_param=None,
-	attach=None,
+	body_param: dict | str | None = None,
+	attach: str | None = None,
 	whatsapp_account: str = "",
 ):
 	validate_access(reference_doctype, reference_name)

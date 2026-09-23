@@ -16,6 +16,7 @@ sys.path.insert(0, "/tmp/meta-wa-20260910")
 os.chdir("/home/frappe/frappe-bench/sites")
 import frappe
 import frappe.app
+import frappe.sessions
 import requests
 from werkzeug.wrappers import Response
 
@@ -62,24 +63,9 @@ def fixed_init(site=None, *a, **kw):
 
 
 frappe.init = fixed_init
-frappe.init(SITE)
-frappe.connect()
-frappe.set_user("Administrator")
-assert set(frappe.get_installed_apps()) == {
-	"frappe",
-	"erpnext",
-	"crm",
-	"doco",
-	"doco_marketing",
-	"frappe_whatsapp",
-	"mercado",
-	"scanner_kit",
-}
+
 from crm.api import conversations as control
 from crm.api import outbox, webchat
-
-assert webchat.__file__.startswith("/tmp/meta-wa-20260910/")
-assert "crm.api.webchat.prepare_request" in frappe.get_hooks("before_request")
 
 
 def save(data):
@@ -119,162 +105,185 @@ def snapshot(data):
 	}
 
 
-if args.mode == "setup":
-	assert not FIXTURE.exists(), "Preserve the existing private proof manifest"
-	tag = "webchat-chain-" + secrets.token_hex(5)
-	actor, password = tag + "@example.invalid", secrets.token_urlsafe(32)
-	frappe.get_doc(
-		{
-			"doctype": "User",
-			"email": actor,
-			"first_name": "Fictional Webchat operator",
-			"enabled": 1,
-			"send_welcome_email": 0,
-			"user_type": "System User",
-			"language": "en",
-			"roles": [{"role": "Sales User"}],
-		}
-	).insert()
-	from frappe.utils.password import update_password
-
-	update_password(actor, password)
-	channel = webchat.configure_channel("Equipo de Tienda Demo", "chat-fixture", ORIGIN, enabled=1)
-	frappe.get_doc(
-		{
-			"doctype": "User Permission",
-			"user": actor,
-			"allow": webchat.CHANNEL,
-			"for_value": channel["account_id"],
-			"apply_to_all_doctypes": 1,
-		}
-	).insert()
-	data = {
-		"site": SITE,
-		"actor": actor,
-		"password": password,
-		"channel_id": channel["account_id"],
-		"origin": ORIGIN,
+def main():
+	frappe.init(SITE)
+	frappe.connect()
+	frappe.set_user("Administrator")
+	assert set(frappe.get_installed_apps()) == {
+		"frappe",
+		"erpnext",
+		"crm",
+		"doco",
+		"doco_marketing",
+		"frappe_whatsapp",
+		"mercado",
+		"scanner_kit",
 	}
-	frappe.db.commit()
-	save(data)
-	print(
-		json.dumps(
+	assert webchat.__file__.startswith("/tmp/meta-wa-20260910/")
+	assert "crm.api.webchat.prepare_request" in frappe.get_hooks("before_request")
+
+	if args.mode == "setup":
+		assert not FIXTURE.exists(), "Preserve the existing private proof manifest"
+		tag = "webchat-chain-" + secrets.token_hex(5)
+		actor, password = tag + "@example.invalid", secrets.token_urlsafe(32)
+		frappe.get_doc(
 			{
-				"event": "setup",
-				"manifest": str(FIXTURE),
-				"site": SITE,
-				"channel_id": data["channel_id"],
-				"blocked": counts,
+				"doctype": "User",
+				"email": actor,
+				"first_name": "Fictional Webchat operator",
+				"enabled": 1,
+				"send_welcome_email": 0,
+				"user_type": "System User",
+				"language": "en",
+				"roles": [{"role": "Sales User"}],
 			}
-		),
-		flush=True,
-	)
-elif args.mode == "serve":
-	assert FIXTURE.exists()
-	frappe.destroy()
-	frappe.is_setup_complete = lambda: True
-	import frappe.sessions
+		).insert()
+		from frappe.utils.password import update_password
 
-	original_boot = frappe.sessions.get
+		update_password(actor, password)
+		channel = webchat.configure_channel("Equipo de Tienda Demo", "chat-fixture", ORIGIN, enabled=1)
+		frappe.get_doc(
+			{
+				"doctype": "User Permission",
+				"user": actor,
+				"allow": webchat.CHANNEL,
+				"for_value": channel["account_id"],
+				"apply_to_all_doctypes": 1,
+			}
+		).insert()
+		data = {
+			"site": SITE,
+			"actor": actor,
+			"password": password,
+			"channel_id": channel["account_id"],
+			"origin": ORIGIN,
+		}
+		frappe.db.commit()
+		save(data)
+		print(
+			json.dumps(
+				{
+					"event": "setup",
+					"manifest": str(FIXTURE),
+					"site": SITE,
+					"channel_id": data["channel_id"],
+					"blocked": counts,
+				}
+			),
+			flush=True,
+		)
+	elif args.mode == "serve":
+		assert FIXTURE.exists()
+		frappe.destroy()
+		frappe.is_setup_complete = lambda: True
 
-	def fixture_boot():
-		boot = original_boot()
-		boot["setup_complete"] = True
-		boot["sysdefaults"]["setup_complete"] = 1
-		return boot  # Response projection only; no settings/cache write.
+		original_boot = frappe.sessions.get
 
-	frappe.sessions.get = fixture_boot
-	frappe.app._site = SITE
-	from werkzeug.middleware.shared_data import SharedDataMiddleware
-	from werkzeug.serving import run_simple
+		def fixture_boot():
+			boot = original_boot()
+			boot["setup_complete"] = True
+			boot["sysdefaults"]["setup_complete"] = 1
+			return boot  # Response projection only; no settings/cache write.
 
-	app = SharedDataMiddleware(frappe.app.application, {"/assets": "/home/frappe/frappe-bench/sites/assets"})
-	reads = {
-		"bootstrap": {
-			"shop_info": {"company": "Tienda Demo", "landing": {}},
-			"nav": {"nav": []},
-			"collections": {"collections": []},
-		},
-		"catalog": {"items": [], "page": 1, "page_size": 24, "has_more": False, "total": 0},
-		"sucursales": [],
-		"testimonials": [],
-	}
+		frappe.sessions.get = fixture_boot
+		frappe.app._site = SITE
+		from werkzeug.middleware.shared_data import SharedDataMiddleware
+		from werkzeug.serving import run_simple
 
-	def proof_app(environ, start_response):
-		path = environ.get("PATH_INFO", "")
-		if path == "/healthz":
-			return Response("ok")(environ, start_response)
-		prefix = "/api/method/doco.docoutils.storefront."
-		if (
-			environ.get("REQUEST_METHOD") == "GET"
-			and path.startswith(prefix)
-			and path[len(prefix) :] in reads
-		):
-			return Response(
-				json.dumps({"message": reads[path[len(prefix) :]]}), content_type="application/json"
-			)(environ, start_response)
-		return app(environ, start_response)
+		app = SharedDataMiddleware(
+			frappe.app.application, {"/assets": "/home/frappe/frappe-bench/sites/assets"}
+		)
+		reads = {
+			"bootstrap": {
+				"shop_info": {"company": "Tienda Demo", "landing": {}},
+				"nav": {"nav": []},
+				"collections": {"collections": []},
+			},
+			"catalog": {"items": [], "page": 1, "page_size": 24, "has_more": False, "total": 0},
+			"sucursales": [],
+			"testimonials": [],
+		}
 
-	print(
-		json.dumps({"event": "serve", "port": 18155, "site": SITE, "persistent_holds": [1, 1, 1]}), flush=True
-	)
-	run_simple("0.0.0.0", 18155, proof_app, use_reloader=False, use_debugger=False, threaded=True)
-	sys.exit(0)
-else:
-	data = json.loads(FIXTURE.read_text())
-	assert data["site"] == SITE
-	if args.mode == "manager":
-		user = frappe.get_doc("User", data["actor"])
-		if not any(row.role == "System Manager" for row in user.roles):
-			user.append("roles", {"role": "System Manager"})
+		def proof_app(environ, start_response):
+			path = environ.get("PATH_INFO", "")
+			if path == "/healthz":
+				return Response("ok")(environ, start_response)
+			prefix = "/api/method/doco.docoutils.storefront."
+			if (
+				environ.get("REQUEST_METHOD") == "GET"
+				and path.startswith(prefix)
+				and path[len(prefix) :] in reads
+			):
+				return Response(
+					json.dumps({"message": reads[path[len(prefix) :]]}), content_type="application/json"
+				)(environ, start_response)
+			return app(environ, start_response)
+
+		print(
+			json.dumps({"event": "serve", "port": 18155, "site": SITE, "persistent_holds": [1, 1, 1]}),
+			flush=True,
+		)
+		run_simple("0.0.0.0", 18155, proof_app, use_reloader=False, use_debugger=False, threaded=True)
+		sys.exit(0)
+	else:
+		data = json.loads(FIXTURE.read_text())
+		assert data["site"] == SITE
+		if args.mode == "manager":
+			user = frappe.get_doc("User", data["actor"])
+			if not any(row.role == "System Manager" for row in user.roles):
+				user.append("roles", {"role": "System Manager"})
+				user.save()
+				frappe.db.commit()
+			frappe.cache.hdel("bootinfo", data["actor"])
+		elif args.mode == "worker":
+			names = frappe.get_all(
+				outbox.DOCTYPE,
+				filters={"provider": "Webchat", "account_id": data["channel_id"], "state": "Queued"},
+				pluck="name",
+			)
+			frappe.db.rollback()
+			for name in names:
+				outbox.dispatch_intent(name)
+		elif args.mode == "cleanup":
+			rows = frappe.get_all(
+				control.DOCTYPE,
+				filters={"provider": "Webchat", "account_id": data["channel_id"]},
+				fields=["name", "generation", "control_state"],
+			)
+			for row in rows:
+				if row.control_state != "Closed":
+					control.apply_control(
+						row.name,
+						"close",
+						row.generation,
+						secrets.token_hex(16),
+						reason="Close fictional browser proof",
+					)
+			for session in frappe.get_all(
+				webchat.SESSION, filters={"channel": data["channel_id"], "revoked": 0}, pluck="name"
+			):
+				doc = frappe.get_doc(webchat.SESSION, session)
+				doc.revoked = 1
+				webchat._mark(doc).save(ignore_permissions=True)
+			row = webchat._channel(data["channel_id"], active=False)
+			webchat.configure_channel(
+				row.label,
+				row.profile,
+				row.public_origin,
+				enabled=0,
+				channel_id=row.name,
+				expected_modified=str(row.modified),
+			)
+			user = frappe.get_doc("User", data["actor"])
+			user.enabled = 0
 			user.save()
 			frappe.db.commit()
-		frappe.cache.hdel("bootinfo", data["actor"])
-	elif args.mode == "worker":
-		names = frappe.get_all(
-			outbox.DOCTYPE,
-			filters={"provider": "Webchat", "account_id": data["channel_id"], "state": "Queued"},
-			pluck="name",
-		)
-		frappe.db.rollback()
-		for name in names:
-			outbox.dispatch_intent(name)
-	elif args.mode == "cleanup":
-		rows = frappe.get_all(
-			control.DOCTYPE,
-			filters={"provider": "Webchat", "account_id": data["channel_id"]},
-			fields=["name", "generation", "control_state"],
-		)
-		for row in rows:
-			if row.control_state != "Closed":
-				control.apply_control(
-					row.name,
-					"close",
-					row.generation,
-					secrets.token_hex(16),
-					reason="Close fictional browser proof",
-				)
-		for session in frappe.get_all(
-			webchat.SESSION, filters={"channel": data["channel_id"], "revoked": 0}, pluck="name"
-		):
-			doc = frappe.get_doc(webchat.SESSION, session)
-			doc.revoked = 1
-			webchat._mark(doc).save(ignore_permissions=True)
-		row = webchat._channel(data["channel_id"], active=False)
-		webchat.configure_channel(
-			row.label,
-			row.profile,
-			row.public_origin,
-			enabled=0,
-			channel_id=row.name,
-			expected_modified=str(row.modified),
-		)
-		user = frappe.get_doc("User", data["actor"])
-		user.enabled = 0
-		user.save()
-		frappe.db.commit()
-		data.pop("password", None)
-		save(data)
-	print(json.dumps({"event": args.mode, **snapshot(data)}, default=str), flush=True)
-frappe.db.rollback()
-frappe.destroy()
+			data.pop("password", None)
+			save(data)
+		print(json.dumps({"event": args.mode, **snapshot(data)}, default=str), flush=True)
+	frappe.db.rollback()
+	frappe.destroy()
+
+
+if __name__ == "__main__":
+	main()

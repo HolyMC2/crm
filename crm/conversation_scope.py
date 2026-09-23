@@ -16,12 +16,19 @@ def assert_customer_peer(provider, peer_id):
 	if not isinstance(peer_id, str) or not peer_id:
 		frappe.throw("Invalid customer conversation identity.", frappe.PermissionError)
 	if frappe.db.exists("DocType", "Asistente Canal"):
-		private = frappe.db.sql(
-			f"""SELECT name FROM `tabAsistente Canal`
-            WHERE channel='WhatsApp' AND (external_id=%s OR address IN (%s,%s))
-            LIMIT 1{control._for_update()}""",
-			(peer_id, peer_id, "wa:" + peer_id),
+		channel = frappe.qb.DocType("Asistente Canal")
+		query = (
+			frappe.qb.from_(channel)
+			.select(channel.name)
+			.where(
+				(channel.channel == "WhatsApp")
+				& ((channel.external_id == peer_id) | channel.address.isin([peer_id, "wa:" + peer_id]))
+			)
+			.limit(1)
 		)
+		if control._locked():
+			query = query.for_update()
+		private = query.run()
 		if private:
 			_deny()
 	for doctype in ("Books Assistant Chat", "Books Chat Log"):

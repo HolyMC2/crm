@@ -74,7 +74,7 @@ jobs:
               run: git clone --depth 1 https://github.com/frappe/semgrep-rules.git frappe-semgrep-rules
 
             - name: Run Semgrep rules
-              run: semgrep ci --config ./frappe-semgrep-rules/rules --config r/python.lang.correctness
+              run: semgrep ci --no-suppress-errors --config ./frappe-semgrep-rules/rules --config r/python.lang.correctness
 
     pre-commit:
         name: Pre-commit Checks

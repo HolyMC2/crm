@@ -23,6 +23,9 @@ from werkzeug.wrappers import Response
 CHANNEL = "CRM Webchat Channel"
 SESSION = "CRM Webchat Session"
 MESSAGE = "CRM Webchat Message"
+# Preserve raw JSON types until _post and the endpoint validators run inside
+# the guest error envelope; Frappe's argument adapter otherwise coerces 1.0 to 1.
+JSONValue = str | int | float | bool | dict | list | None
 MAX_BODY_BYTES = 16 * 1024
 PAGE_SIZE = 50
 _WRITE_TOKEN = object()
@@ -445,7 +448,14 @@ def list_channels():
 
 
 @frappe.whitelist(methods=["POST"])
-def configure_channel(label, profile, public_origin, enabled=0, channel_id=None, expected_modified=None):
+def configure_channel(
+	label: str,
+	profile: str,
+	public_origin: str,
+	enabled: bool | int | float | str = 0,
+	channel_id: str | None = None,
+	expected_modified: str | None = None,
+):
 	_no_store()
 	_manager()
 	label, profile, public_origin = _short(label), _short(profile), _origin(public_origin)
@@ -490,9 +500,10 @@ def configure_channel(label, profile, public_origin, enabled=0, channel_id=None,
 	return _config_projection(doc)
 
 
-@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])
+# Security review: Public availability only; _post enforces exact Guest JSON request and _public_rate bounds enumeration.
+@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 @_guest
-def get_channel(profile, public_origin):
+def get_channel(profile: JSONValue, public_origin: JSONValue):
 	_post({"profile": profile, "public_origin": public_origin})
 	profile, public_origin = _short(profile), _origin(public_origin)
 	_public_rate(_key(profile, public_origin), "availability")
@@ -505,9 +516,10 @@ def get_channel(profile, public_origin):
 	return {"available": True, "channel_id": row.name, "label": row.label}
 
 
-@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])
+# Security review: Public session creation only; exact Guest JSON and rate limits; returns a new random scoped capability.
+@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 @_guest
-def bootstrap(channel_id):
+def bootstrap(channel_id: JSONValue):
 	_post({"channel_id": channel_id})
 	_hex(channel_id)
 	_public_rate(channel_id, "bootstrap")
@@ -585,7 +597,7 @@ def _message_projection(row):
 
 def _history(session, conversation, cursor=None):
 	values = [session.channel, session.name, session.peer_id]
-	boundary = ""
+	anchor_time = None
 	if cursor is not None:
 		_hex(cursor)
 		anchor = frappe.db.get_value(
@@ -595,13 +607,13 @@ def _history(session, conversation, cursor=None):
 			anchor and (anchor.channel, anchor.session, anchor.peer_id) == tuple(values),
 			"Invalid Webchat history cursor.",
 		)
-		boundary = " AND (creation < %s OR (creation=%s AND name < %s))"
-		values.extend([anchor.creation, anchor.creation, cursor])
+		anchor_time = anchor.creation
 	rows = frappe.db.sql(
-		f"""SELECT name,text,direction,creation FROM `tabCRM Webchat Message`
-        WHERE channel=%s AND session=%s AND peer_id=%s {boundary}
+		"""SELECT name,text,direction,creation FROM `tabCRM Webchat Message`
+        WHERE channel=%s AND session=%s AND peer_id=%s
+        AND (%s IS NULL OR creation < %s OR (creation=%s AND name < %s))
         ORDER BY creation DESC,name DESC LIMIT 51 FOR UPDATE""",
-		tuple(values),
+		(*values, cursor, anchor_time, anchor_time, cursor),
 		as_dict=True,
 	)
 	selected = rows[:PAGE_SIZE]
@@ -613,9 +625,10 @@ def _history(session, conversation, cursor=None):
 	}
 
 
-@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])
+# Security review: Exact Guest JSON plus constant-time capability/session/expiry checks in _visitor; no cross-session history.
+@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 @_guest
-def history(channel_id, cursor=None):
+def history(channel_id: JSONValue, cursor: JSONValue = None):
 	_post({"channel_id": channel_id, "cursor": cursor}, optional={"cursor"})
 	_hex(channel_id)
 	_public_rate(channel_id, "history")
@@ -680,9 +693,10 @@ def _notify_message(conversation, actor=None):
 		frappe.publish_realtime("crm_conversation_updated", {"name": doc.name}, user=user, after_commit=True)
 
 
-@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])
+# Security review: Exact Guest JSON plus _visitor capability/session checks, rate limits and immutable request idempotency.
+@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 @_guest
-def send(channel_id, request_id, text):
+def send(channel_id: JSONValue, request_id: JSONValue, text: JSONValue):
 	_post({"channel_id": channel_id, "request_id": request_id, "text": text})
 	_hex(channel_id)
 	_request_id(request_id)
@@ -708,9 +722,10 @@ def send(channel_id, request_id, text):
 		return {**_history(session, conversation), "message": _message_projection(message), "replayed": False}
 
 
-@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])
+# Security review: Exact Guest JSON plus _visitor capability check; may revoke only that capability session.
+@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 @_guest
-def revoke(channel_id):
+def revoke(channel_id: JSONValue):
 	_post({"channel_id": channel_id})
 	_hex(channel_id)
 	_public_rate(channel_id, "revoke")

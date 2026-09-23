@@ -200,7 +200,8 @@ def _metadata(scope, peer, *, cursor=None, limit=SCAN):
 		if scope.doctype == "CRM Webchat Message"
 		else "m.reference_doctype, m.reference_name"
 	)
-	return frappe.db.sql(
+	# Security review: _scope supplies only fixed SQL structure; all request values use bound parameters.
+	return frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT m.name, {references},
         {scope.timestamp} AS timestamp FROM {scope.table} m
         WHERE {scope.where} AND {scope.peer_match} AND {_reference_clause(scope)}{before}
@@ -216,7 +217,8 @@ def _first_visible(scope, peer):
 		return rows[0] if rows else None
 	# Permission-check distinct references before selecting the preview. A long
 	# run of denied messages must not hide an older, readable customer message.
-	references = frappe.db.sql(
+	# Security review: _scope supplies only fixed SQL structure; all request values use bound parameters.
+	references = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT DISTINCT m.reference_doctype,m.reference_name
         FROM {scope.table} m WHERE {scope.where} AND {scope.peer_match}
         AND {_reference_clause()}""",
@@ -230,7 +232,8 @@ def _first_visible(scope, peer):
 			args.extend([row.reference_doctype or "", row.reference_name or ""])
 	if not clauses:
 		return None
-	rows = frappe.db.sql(
+	# Security review: _scope supplies only fixed SQL structure; all request values use bound parameters.
+	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT m.name,m.reference_doctype,m.reference_name,
         {scope.timestamp} AS timestamp FROM {scope.table} m
         WHERE {scope.where} AND {scope.peer_match} AND ({' OR '.join(clauses)})
@@ -392,11 +395,13 @@ def _display_names(provider, peers):
 	keys = {p: p[-PEER_SUFFIX:] for p in peers}
 	wanted = tuple(sorted(set(keys.values()))[:SCAN])
 	found = {}
-	digits = f"RIGHT(REGEXP_REPLACE(COALESCE(mobile_no,''),'[^0-9]',''),{PEER_SUFFIX})"
 	for c in frappe.db.sql(
-		f"""SELECT {digits} AS k, full_name, first_name, last_name
-        FROM `tabContact` WHERE {digits} IN %(keys)s ORDER BY modified DESC""",
-		{"keys": wanted},
+		"""SELECT RIGHT(REGEXP_REPLACE(COALESCE(mobile_no,''),'[^0-9]',''),%(suffix)s) AS k,
+            full_name, first_name, last_name
+        FROM `tabContact`
+        WHERE RIGHT(REGEXP_REPLACE(COALESCE(mobile_no,''),'[^0-9]',''),%(suffix)s) IN %(keys)s
+        ORDER BY modified DESC""",
+		{"keys": wanted, "suffix": PEER_SUFFIX},
 		as_dict=True,
 	):
 		full = c.full_name or " ".join(p for p in [c.first_name, c.last_name] if p).strip()
@@ -405,10 +410,10 @@ def _display_names(provider, peers):
 	missing = tuple(k for k in wanted if k not in found)
 	if missing:
 		for row in frappe.db.sql(
-			f"""SELECT RIGHT(m.`from`,{PEER_SUFFIX}) AS k, m.profile_name
+			"""SELECT RIGHT(m.`from`,%(suffix)s) AS k, m.profile_name
             FROM `tabWhatsApp Message` m WHERE m.type='Incoming' AND COALESCE(m.profile_name,'')<>''
-            AND RIGHT(m.`from`,{PEER_SUFFIX}) IN %(keys)s ORDER BY m.creation DESC""",
-			{"keys": missing},
+            AND RIGHT(m.`from`,%(suffix)s) IN %(keys)s ORDER BY m.creation DESC""",
+			{"keys": missing, "suffix": PEER_SUFFIX},
 			as_dict=True,
 		):
 			found.setdefault(row.k, row.profile_name)
@@ -452,7 +457,7 @@ def _template_text(message_name, row):
 
 
 @frappe.whitelist()
-def list_for_reference(doctype, name, cursor=None):
+def list_for_reference(doctype: str, name: str, cursor: str | None = None):
 	"""Conversations that belong to this record: the native conversations
 	explicitly linked to it, plus (first page only) the threads implied by the
 	record's OWN messages, i.e. WhatsApp / Messenger rows whose reference is this
@@ -633,7 +638,7 @@ def list_accounts():
 
 
 @frappe.whitelist()
-def list_threads(provider, account_id, cursor=None, limit=30):
+def list_threads(provider: str, account_id: str, cursor: str | None = None, limit: int | str = 30):
 	_actor()
 	scope = _scope(provider, account_id)
 	context = ["threads", provider, account_id]
@@ -643,7 +648,8 @@ def list_threads(provider, account_id, cursor=None, limit=30):
 		frappe.throw("Invalid page cursor.")
 	size = _limit(limit)
 	# Metadata-only union: materialized controls plus exact historical peers.
-	peers = frappe.db.sql(
+	# Security review: _scope supplies only fixed SQL structure; all request values use bound parameters.
+	peers = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT peer_id FROM (
         SELECT peer_id FROM `tabCRM Conversation` WHERE provider=%s AND account_id=%s
         UNION SELECT {scope.peer} AS peer_id FROM {scope.table} m
@@ -720,7 +726,7 @@ def _collapse_spellings(provider, account_id, rows):
 
 
 @frappe.whitelist(methods=["POST"])
-def open_thread(provider, account_id, peer_id):
+def open_thread(provider: str, account_id: str, peer_id: str):
 	_actor()
 	name = control.conversation_key(provider, account_id, peer_id)
 	if _private_peer(provider, peer_id):
@@ -740,7 +746,7 @@ def open_thread(provider, account_id, peer_id):
 
 
 @frappe.whitelist()
-def get_history(conversation, cursor=None, limit=50):
+def get_history(conversation: str, cursor: str | None = None, limit: int | str = 50):
 	_actor()
 	doc = control._load(conversation)
 	control._authorize(doc)
@@ -766,7 +772,7 @@ def get_history(conversation, cursor=None, limit=50):
 
 
 @frappe.whitelist()
-def list_operators(conversation, query=""):
+def list_operators(conversation: str, query: str | None = ""):
 	_actor()
 	doc = control._load(conversation)
 	control._authorize(doc, write=True)

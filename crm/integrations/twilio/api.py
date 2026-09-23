@@ -8,6 +8,8 @@ from werkzeug.wrappers import Response
 from crm.integrations.api import get_contact_by_phone_number
 
 from .twilio_handler import IncomingCall, Twilio, TwilioCallDetails
+from .utils import get_public_url
+from .verification import request_is_authentic
 
 
 def validate_twilio_request(args, require_application_sid: bool = False):
@@ -18,6 +20,14 @@ def validate_twilio_request(args, require_application_sid: bool = False):
 	account_sid = frappe.utils.cstr(args.get("AccountSid"))
 	if not account_sid or account_sid != frappe.utils.cstr(twilio.account_sid):
 		frappe.throw(_("Invalid Twilio account"), frappe.PermissionError)
+
+	request = getattr(frappe.local, "request", None)
+	token = twilio.settings.get_password("auth_token", raise_exception=False)
+	# Use the same public URL convention as generated callbacks, including proxy
+	# HTTPS. A site's configured host_name/hostname supplies its canonical origin.
+	public_url = get_public_url(request.path) if request else ""
+	if not request_is_authentic(request, token, public_url):
+		frappe.throw(_("Invalid Twilio request signature"), frappe.PermissionError)
 
 	if require_application_sid:
 		application_sid = frappe.utils.cstr(args.get("ApplicationSid"))
@@ -73,7 +83,8 @@ def voice(**kwargs):
 	return Response(resp.to_xml(), mimetype="text/xml")
 
 
-@frappe.whitelist(allow_guest=True)
+# Security review: validate_twilio_request verifies account + AuthToken signature before any call/log effect.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: guest-whitelisted-method
 def sip_voice(**kwargs):
 	"""Webhook called by Twilio when an outbound call originates from a softphone
 	registered against the Twilio SIP Domain. Looks up the agent by sip_username,

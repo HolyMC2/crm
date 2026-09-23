@@ -29,7 +29,8 @@ def emit(event, **values):
 def initialize(user="Administrator"):
 	frappe.init(site=SITE)
 	frappe.connect()
-	frappe.set_user(user)
+	# Security review: fixed isolated proof site; fictional actor/revocation or exact cleanup, no RPC input.
+	frappe.set_user(user)  # nosemgrep: frappe-setuser
 	frappe.local.conf.developer_mode = 1
 	assert frappe.local.site == SITE
 	assert frappe.conf.get("pause_scheduler") or frappe.conf.get("disable_scheduler")
@@ -204,7 +205,8 @@ def fixture():
 
 def cleanup(cfg):
 	frappe.db.rollback()
-	frappe.set_user("Administrator")
+	# Security review: fixed isolated proof site; fictional actor/revocation or exact cleanup, no RPC input.
+	frappe.set_user("Administrator")  # nosemgrep: frappe-setuser
 	doc = frappe.get_doc(api.DOCTYPE, cfg["name"])
 	if doc.control_state != "Closed":
 		api.apply_control(

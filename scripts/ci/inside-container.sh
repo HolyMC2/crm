@@ -44,12 +44,12 @@ if [ "$mode" = migration ]; then
   # The helper exists only in the disposable app copy, never in shipped CRM.
   cp /candidate/scripts/ci/migration-probe.py apps/crm/crm/_ci_migration.py
   bench --site "$site" execute crm._ci_migration.seed
+  cp "sites/$site/private/crm-ci-migration.json" /results/migration-baseline.json
   copy_crm /candidate
   cp /candidate/scripts/ci/migration-probe.py apps/crm/crm/_ci_migration.py
   bench --site "$site" execute crm._ci_migration.guard
   bench --site "$site" migrate 2>&1 | tee /results/migrate.log
   bench --site "$site" execute crm._ci_migration.verify
-  cp "sites/$site/private/crm-ci-migration.json" /results/migration-baseline.json
   rm apps/crm/crm/_ci_migration.py
 fi
 

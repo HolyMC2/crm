@@ -309,7 +309,9 @@ def _pending_on_queue_contention(function):
 
 @frappe.whitelist(methods=["POST"])
 @_pending_on_queue_contention
-def queue_message(conversation, expected_generation, request_id, payload):
+def queue_message(
+	conversation: str, expected_generation: bool | int | float | str, request_id: str, payload: dict | str
+):
 	actor = frappe.session.user
 	request_id = control._text(request_id, 140)
 	generation = control._generation(expected_generation)
@@ -365,7 +367,7 @@ def queue_message(conversation, expected_generation, request_id, payload):
 
 
 @frappe.whitelist()
-def get_intent(name):
+def get_intent(name: str):
 	conversation = frappe.db.get_value(DOCTYPE, _name(name), "conversation")
 	with control.conversation_fence(conversation):
 		control._authorize(control._load(conversation))
@@ -373,7 +375,7 @@ def get_intent(name):
 
 
 @frappe.whitelist()
-def list_intents(conversation, limit=50, before=None):
+def list_intents(conversation: str, limit: int | str = 50, before: str | None = None):
 	with control.conversation_fence(conversation):
 		return _list_intents(conversation, limit, before)
 
@@ -655,7 +657,7 @@ def _dispatch_local(doc, now):
 
 
 @frappe.whitelist(methods=["POST"])
-def cancel_intent(name):
+def cancel_intent(name: str):
 	conversation = frappe.db.get_value(DOCTYPE, _name(name), "conversation")
 	with control.conversation_fence(conversation):
 		doc = _load(name)
@@ -680,7 +682,7 @@ def cancel_intent(name):
 
 
 @frappe.whitelist(methods=["POST"])
-def retry_intent(name):
+def retry_intent(name: str):
 	conversation = frappe.db.get_value(DOCTYPE, _name(name), "conversation")
 	with control.conversation_fence(conversation):
 		doc = _load(name)

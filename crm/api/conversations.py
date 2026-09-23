@@ -140,8 +140,8 @@ def _roles(user):
 		_deny()
 	return {
 		r[0]
-		for r in frappe.db.sql(
-			f"SELECT role FROM `tabHas Role` WHERE parent=%s AND parenttype='User'{_for_update()}", (user,)
+		for r in frappe.db.get_values(
+			"Has Role", {"parent": user, "parenttype": "User"}, ["role"], for_update=_locked()
 		)
 	} | ({"System Manager"} if user == "Administrator" else set())
 
@@ -195,10 +195,11 @@ def _authorize(doc, user=None, write=False):
 	if doc.provider == "Webchat" and not roles.intersection({"System Manager", "Sales Manager"}):
 		# Public visitors never acquire a staff role. Channel operators have an
 		# explicit current assignment even on core-only/multi-store installs.
-		if not frappe.db.sql(
-			f"""SELECT name FROM `tabUser Permission`
-            WHERE user=%s AND allow='CRM Webchat Channel' AND for_value=%s{_for_update()}""",
-			(user, account.name),
+		if not frappe.db.get_values(
+			"User Permission",
+			{"user": user, "allow": "CRM Webchat Channel", "for_value": account.name},
+			["name"],
+			for_update=_locked(),
 		):
 			_deny()
 	if doc.get("name") and (
@@ -214,9 +215,11 @@ def _authorize(doc, user=None, write=False):
 		unrestricted = user == "Administrator" or bool(roles & {"System Manager", "Marketing Manager"})
 		allowed = {
 			r[0]
-			for r in frappe.db.sql(
-				f"SELECT for_value FROM `tabUser Permission` WHERE user=%s AND allow='Social Shop'{_for_update()}",
-				(user,),
+			for r in frappe.db.get_values(
+				"User Permission",
+				{"user": user, "allow": "Social Shop"},
+				["for_value"],
+				for_update=_locked(),
 			)
 		}
 		if account.shop and not frappe.db.get_value(
@@ -294,14 +297,16 @@ def get_or_create(provider, account_id, peer_id, *, reference_doctype=None, refe
 
 
 @frappe.whitelist()
-def get_conversation(name):
+def get_conversation(name: str):
 	doc = _load(name)
 	_authorize(doc)
 	return _projection(doc)
 
 
 @frappe.whitelist()
-def list_conversations(provider, account_id, limit=50, start=0):
+def list_conversations(
+	provider: str | None, account_id: str | None, limit: int | str = 50, start: int | str = 0
+):
 	conversation_key(provider, account_id, "0" * 64 if provider == "Webchat" else "1")
 	probe = frappe._dict(
 		provider=provider, account_id=account_id, shop_key=None, reference_doctype=None, reference_name=None
@@ -680,7 +685,14 @@ def handoff_bot(name, generation, run_name, command_id, *, actor_user, step_id, 
 
 
 @frappe.whitelist(methods=["POST"])
-def apply_control(name, action, expected_generation, command_id, owner=None, reason=None):
+def apply_control(
+	name: str,
+	action: str,
+	expected_generation: bool | int | float | str,
+	command_id: str,
+	owner: str | None = None,
+	reason: str | None = None,
+):
 	if action not in CONTROL_ACTIONS:
 		frappe.throw(_("Unsupported conversation control action."))
 	command_id, reason = _text(command_id), _text(reason, 500, required=False)
