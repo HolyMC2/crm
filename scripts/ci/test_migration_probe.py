@@ -13,11 +13,11 @@ from unittest.mock import Mock, patch
 class MetadataDeletionTests(unittest.TestCase):
 	@classmethod
 	def setUpClass(cls):
-		frappe = types.ModuleType("frappe")
-		frappe.db = Mock()
-		frappe.get_doc = Mock()
-		frappe.get_all = Mock()
-		frappe.get_app_path = Mock(return_value="/synthetic/frappe")
+		frappe_stub = types.ModuleType("frappe")
+		frappe_stub.db = Mock()
+		frappe_stub.get_doc = Mock()
+		frappe_stub.get_all = Mock()
+		frappe_stub.get_app_path = Mock(return_value="/synthetic/frappe")
 		cache = types.ModuleType("frappe.cache_manager")
 		cache.clear_controller_cache = Mock()
 		base = types.ModuleType("frappe.model.base_document")
@@ -27,7 +27,8 @@ class MetadataDeletionTests(unittest.TestCase):
 		)
 		cls.probe = importlib.util.module_from_spec(spec)
 		with patch.dict(
-			sys.modules, {"frappe": frappe, "frappe.cache_manager": cache, "frappe.model.base_document": base}
+			sys.modules,
+			{"frappe": frappe_stub, "frappe.cache_manager": cache, "frappe.model.base_document": base},
 		):
 			spec.loader.exec_module(cls.probe)
 
