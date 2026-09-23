@@ -5,26 +5,33 @@
          open and jump to another; it follows the board as it scrolls. -->
     <div
       v-if="isMobile && visibleColumns.length"
+      ref="pagerEl"
+      data-kanban-pager
       class="flex flex-none gap-1.5 overflow-x-auto px-2 pb-1 pt-2 [scrollbar-width:none]"
-      role="tablist"
+      role="group"
       :aria-label="__('Columns')"
     >
       <button
         v-for="(column, i) in visibleColumns"
         :key="column.column.name"
         type="button"
-        role="tab"
-        :aria-selected="i === activeColumn"
-        class="flex flex-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm"
-        :class="i === activeColumn ? 'border-outline-gray-3 bg-surface-gray-3 text-ink-gray-9' : 'border-outline-gray-2 text-ink-gray-6'"
+        :aria-current="i === activeColumn ? 'true' : undefined"
+        class="flex min-h-11 min-w-11 max-w-full flex-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm"
+        :class="
+          i === activeColumn
+            ? 'border-outline-gray-3 bg-surface-gray-3 text-ink-gray-9'
+            : 'border-outline-gray-2 text-ink-gray-6'
+        "
         @click="scrollToColumn(i)"
       >
         <IndicatorIcon :class="parseColor(column.column.color)" />
-        {{ column.column.name }}
-        <span class="tabular-nums text-ink-gray-5">{{ columnCount(column) }}</span>
+        <span class="truncate">{{ column.column.name }}</span>
+        <span class="shrink-0 tabular-nums text-ink-gray-5">{{
+          columnCount(column)
+        }}</span>
       </button>
     </div>
-  <div ref="boardEl" class="flex h-full min-h-0 overflow-x-auto max-sm:snap-x max-sm:snap-mandatory">
+  <div ref="boardEl" data-kanban-board class="flex h-full min-h-0 overflow-x-auto max-sm:snap-x max-sm:snap-mandatory">
     <Draggable
       v-if="columns"
       :list="columns"
@@ -215,7 +222,7 @@ import { isMobile } from '@/composables/breakpoint'
 import Draggable from 'vuedraggable'
 import { Combobox, Dropdown, Popover } from 'frappe-ui'
 import { useEventListener } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 defineProps({
   options: {
@@ -259,7 +266,9 @@ const deletedColumns = computed(() => {
     })
 })
 
-const visibleColumns = computed(() => columns.value.filter((col) => !col.column.delete))
+const visibleColumns = computed(() =>
+  columns.value.filter((col) => !col.column.delete),
+)
 
 // all_count is the server total for the column; count/page_length only say
 // how much of it is loaded so far.
@@ -269,17 +278,29 @@ function columnCount(column) {
 
 // ---- phone pager: which column is snapped into view, and jumping to one ----
 const boardEl = ref(null)
-const activeColumn = ref(0)
+const pagerEl = ref(null)
+const activeColumnName = ref(null)
+const activeColumn = computed(() =>
+  visibleColumns.value.findIndex(
+    (col) => col.column.name === activeColumnName.value,
+  ),
+)
 
 function columnEls() {
-  return boardEl.value ? Array.from(boardEl.value.querySelectorAll('[data-kanban-column]')) : []
+  return boardEl.value
+    ? Array.from(boardEl.value.querySelectorAll('[data-kanban-column]'))
+    : []
 }
 
 // A column's offset inside the board's scroll content, independent of any
 // positioned ancestor (offsetLeft would measure against the wrong parent).
 function columnOffset(el) {
   const board = boardEl.value
-  return el.getBoundingClientRect().left - board.getBoundingClientRect().left + board.scrollLeft
+  return (
+    el.getBoundingClientRect().left -
+    board.getBoundingClientRect().left +
+    board.scrollLeft
+  )
 }
 
 function syncActiveColumn() {
@@ -294,17 +315,62 @@ function syncActiveColumn() {
       best = i
     }
   })
-  activeColumn.value = best
+  activeColumnName.value = visibleColumns.value[best]?.column.name ?? null
 }
 
-function scrollToColumn(i) {
+function scrollToColumn(i, behavior = 'smooth') {
   const el = columnEls()[i]
   if (!boardEl.value || !el) return
-  boardEl.value.scrollTo({ left: columnOffset(el), behavior: 'smooth' })
-  activeColumn.value = i
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+    behavior = 'instant'
+  boardEl.value.scrollTo({ left: columnOffset(el), behavior })
+  activeColumnName.value = visibleColumns.value[i]?.column.name ?? null
 }
 
+function revealActiveChip() {
+  const pager = pagerEl.value
+  const chip = pager?.querySelectorAll('button')[activeColumn.value]
+  if (!chip) return
+  const bounds = pager.getBoundingClientRect()
+  const target = chip.getBoundingClientRect()
+  const delta =
+    target.left < bounds.left
+      ? target.left - bounds.left
+      : Math.max(0, target.right - bounds.right)
+  // Scroll this row only: scrollIntoView can also move the page vertically.
+  if (delta)
+    pager.scrollTo({ left: pager.scrollLeft + delta, behavior: 'instant' })
+}
+
+watch(
+  () => visibleColumns.value.map((col) => col.column.name),
+  (names, previousNames = []) => {
+    if (
+      names.length === previousNames.length &&
+      names.every((name, i) => name === previousNames[i])
+    ) {
+      revealActiveChip()
+      return
+    }
+    let index = names.indexOf(activeColumnName.value)
+    if (index === -1) {
+      // Keep the same position when its column was deleted, or the new last
+      // column when that position no longer exists.
+      index = Math.min(
+        Math.max(previousNames.indexOf(activeColumnName.value), 0),
+        names.length - 1,
+      )
+    }
+    activeColumnName.value = names[index] ?? null
+    if (isMobile.value) scrollToColumn(index, 'instant')
+    revealActiveChip()
+  },
+  { immediate: true, flush: 'post' },
+)
+watch([activeColumn, pagerEl], revealActiveChip, { flush: 'post' })
+
 useEventListener(boardEl, 'scroll', syncActiveColumn, { passive: true })
+useEventListener('resize', revealActiveChip)
 
 function actions(column) {
   return [
