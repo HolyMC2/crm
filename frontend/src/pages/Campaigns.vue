@@ -4,11 +4,12 @@
 -->
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
-    <!-- toolbar -->
+    <!-- toolbar: title, mode toggle and type chips wrap on phones instead of
+         forcing a 700px row; the actions drop to their own line when needed -->
     <div
-      class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5"
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 px-5 py-2"
     >
-      <div class="flex items-center gap-2">
+      <div class="flex min-w-0 flex-wrap items-center gap-2">
         <span class="text-[15px] font-bold text-ink-gray-9">{{
           modeLabel
         }}</span>
@@ -88,11 +89,13 @@
       :style="`grid-template-columns:${GRID};height:34px`"
     >
       <div>{{ mode === 'cadences' ? __('Cadencia') : __('Campaña') }}</div>
-      <div>{{ __('Tipo') }}</div>
+      <div v-if="!isMobile">{{ __('Tipo') }}</div>
       <div>{{ __('Estado') }}</div>
-      <div v-if="mode === 'campaigns'">{{ __('Inscritos') }}</div>
-      <div>{{ __('Apertura') }}</div>
-      <div>{{ __('Clics') }}</div>
+      <template v-if="!isMobile">
+        <div v-if="mode === 'campaigns'">{{ __('Inscritos') }}</div>
+        <div>{{ __('Apertura') }}</div>
+        <div>{{ __('Clics') }}</div>
+      </template>
       <div />
     </div>
 
@@ -126,10 +129,12 @@
             {{ c.title }}
           </div>
           <div class="truncate text-[11px] text-ink-gray-4">
-            {{ mode === 'cadences' ? c.name : c.audience || c.name }}
+            <!-- phone: the type rides in the subtitle; its column and the metrics live on the detail page -->
+            <span v-if="isMobile">{{ typeLabel(c.type) }} · </span
+            >{{ mode === 'cadences' ? c.name : c.audience || c.name }}
           </div>
         </div>
-        <div>
+        <div v-if="!isMobile">
           <span
             class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
             :class="typeChip(c.type)"
@@ -143,14 +148,16 @@
             >{{ c.status }}</span
           >
         </div>
-        <div
-          v-if="mode === 'campaigns'"
-          class="text-[13px] font-semibold text-ink-gray-8"
-        >
-          {{ c.enrolled_count || 0 }}
-        </div>
-        <div><Bar :pct="c.open_rate" color="var(--brand)" /></div>
-        <div><Bar :pct="c.click_rate" color="#2f6fed" /></div>
+        <template v-if="!isMobile">
+          <div
+            v-if="mode === 'campaigns'"
+            class="text-[13px] font-semibold text-ink-gray-8"
+          >
+            {{ c.enrolled_count || 0 }}
+          </div>
+          <div><Bar :pct="c.open_rate" color="var(--brand)" /></div>
+          <div><Bar :pct="c.click_rate" color="#2f6fed" /></div>
+        </template>
         <Dropdown :options="rowMenu(c)" @click.stop>
           <button
             class="text-[14px] text-ink-gray-4"
@@ -168,14 +175,14 @@
       <template #body-content>
         <div class="flex flex-col gap-3">
           <FormControl
-            v-model="form.title"
             :label="__('Título')"
+            v-model="form.title"
             :placeholder="__('Reactivación clientes')"
           />
           <FormControl
-            v-model="form.type"
             type="select"
             :label="__('Tipo')"
+            v-model="form.type"
             :options="[
               { label: 'WhatsApp', value: 'whatsapp' },
               { label: 'Email', value: 'email' },
@@ -213,11 +220,14 @@ import {
 } from 'frappe-ui'
 import { confirmDialog } from '@/utils/dialogs'
 import { buildCadenceScaffold } from '@/utils/cadenceScaffold'
+import { isMobile } from '@/composables/breakpoint'
 
 // Cadences drop the «Inscritos» (enrolled) column — they are 1:1, enrolled from
 // the deal header, so an audience-size count is meaningless for them (spec 4.2).
 const GRID_CAMPAIGNS = '1fr 120px 110px 90px 130px 130px 26px'
 const GRID_CADENCES = '1fr 120px 110px 130px 130px 26px'
+// phone: name + status + menu; the fixed desktop tracks (606px) widened the page
+const GRID_PHONE = 'minmax(0,1fr) 104px 26px'
 const router = useRouter()
 
 // ── Campañas | Cadencias mode ────────────────────────────────────────────────
@@ -233,7 +243,11 @@ const emptyLabel = computed(() =>
   mode.value === 'cadences' ? __('Sin cadencias') : __('Sin campañas'),
 )
 const GRID = computed(() =>
-  mode.value === 'cadences' ? GRID_CADENCES : GRID_CAMPAIGNS,
+  isMobile.value
+    ? GRID_PHONE
+    : mode.value === 'cadences'
+      ? GRID_CADENCES
+      : GRID_CAMPAIGNS,
 )
 
 const typeFilter = ref(null)

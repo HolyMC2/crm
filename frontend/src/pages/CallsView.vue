@@ -5,18 +5,21 @@
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- stats -->
-    <div class="flex flex-none gap-6 border-b border-outline-gray-1 px-5 py-3">
+    <div
+      class="flex flex-none flex-wrap gap-x-6 gap-y-2 border-b border-outline-gray-1 px-5 py-3"
+    >
       <Stat :label="__('Llamadas')" :value="rows.length" />
       <Stat :label="__('Conectadas')" :value="connected" color="var(--brand)" />
       <Stat :label="__('Perdidas')" :value="missed" color="#e5484d" />
       <Stat :label="__('Duración prom.')" :value="avgDuration" />
     </div>
 
-    <!-- toolbar -->
+    <!-- toolbar: wraps on phones so the action button drops under the tabs
+         instead of pushing the row past the viewport -->
     <div
-      class="flex h-[48px] flex-none items-center justify-between border-b border-outline-gray-1 px-5"
+      class="flex min-h-[48px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 px-5 py-1.5"
     >
-      <div class="flex items-center gap-1.5">
+      <div class="flex flex-wrap items-center gap-1.5">
         <button
           v-for="t in tabs"
           :key="t.key"
@@ -47,8 +50,10 @@
     >
       <div>{{ __('Dir.') }}</div>
       <div>{{ __('Contacto') }}</div>
-      <div>{{ __('Hora') }}</div>
-      <div>{{ __('Duración') }}</div>
+      <template v-if="!isMobile">
+        <div>{{ __('Hora') }}</div>
+        <div>{{ __('Duración') }}</div>
+      </template>
       <div>{{ __('Resultado') }}</div>
       <div />
     </div>
@@ -93,13 +98,19 @@
           >
             {{ r.reference_docname }}
           </div>
+          <!-- phone: time and duration ride under the contact; their columns are gone -->
+          <div v-if="isMobile" class="truncate text-[11px] text-ink-gray-5">
+            {{ timeAgo(r.start_time) }} · {{ fmtDur(r.duration) }}
+          </div>
         </div>
-        <div class="text-[12px] text-ink-gray-5">
-          {{ timeAgo(r.start_time) }}
-        </div>
-        <div class="text-[12px] font-medium text-ink-gray-7">
-          {{ fmtDur(r.duration) }}
-        </div>
+        <template v-if="!isMobile">
+          <div class="text-[12px] text-ink-gray-5">
+            {{ timeAgo(r.start_time) }}
+          </div>
+          <div class="text-[12px] font-medium text-ink-gray-7">
+            {{ fmtDur(r.duration) }}
+          </div>
+        </template>
         <div>
           <span
             class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
@@ -130,9 +141,16 @@ import { computed, h, ref, watch } from 'vue'
 import { createListResource } from 'frappe-ui'
 import { timeAgo } from '@/composables/crmFormat'
 import { useDoctypeModal } from '@/composables/doctypeModal'
+import { isMobile } from '@/composables/breakpoint'
 import CallDetailDrawer from '@/components/doco/calls/CallDetailDrawer.vue'
 
-const GRID = '70px 1fr 90px 90px 120px 26px'
+// phone: direction + contact + outcome + chevron — the desktop track sum
+// (396px of fixed columns plus padding) widened every phone past its viewport.
+const GRID = computed(() =>
+  isMobile.value
+    ? '56px minmax(0,1fr) 96px 26px'
+    : '70px 1fr 90px 90px 120px 26px',
+)
 const MISSED = ['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled']
 
 const { showModal } = useDoctypeModal()
