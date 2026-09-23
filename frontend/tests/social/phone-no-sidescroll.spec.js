@@ -211,6 +211,44 @@ test.describe('phone: vertical scroll only', () => {
       const measured = await measure(page)
       expect(measured.documentScrollWidth).toBeLessThanOrEqual(measured.width)
       expect(measured.escaped).toEqual([])
+
+      await page.evaluate(() => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        document.documentElement.classList.add('dark')
+      })
+      await page.waitForTimeout(400) // let the theme color transition finish
+      const countContrast = await pager.locator('[aria-current="true"]').evaluate((chip) => {
+        const count = chip.querySelector('.tabular-nums')
+        if (!count) throw new Error('The current Kanban chip has no count')
+        const canvas = document.createElement('canvas')
+        canvas.width = canvas.height = 1
+        const ctx = canvas.getContext('2d', { colorSpace: 'srgb' })
+        if (!ctx) throw new Error('Cannot measure Kanban count contrast without Canvas 2D')
+        // Canvas resolves modern computed colors such as color(srgb ...) and
+        // oklch(...) to sRGB bytes; parsing their numeric text would be wrong.
+        function luminance(cssColor) {
+          ctx.clearRect(0, 0, 1, 1)
+          ctx.fillStyle = cssColor
+          ctx.fillRect(0, 0, 1, 1)
+          const [r, g, b, alpha] = ctx.getImageData(0, 0, 1, 1).data
+          if (alpha !== 255) throw new Error('Kanban count contrast requires opaque text and chip background')
+          const linear = [r, g, b].map((byte) => {
+            const value = byte / 255
+            return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+          })
+          return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+        }
+        const foreground = getComputedStyle(count).color
+        const background = getComputedStyle(chip).backgroundColor
+        const ink = luminance(foreground)
+        const surface = luminance(background)
+        return {
+          foreground,
+          background,
+          ratio: (Math.max(ink, surface) + 0.05) / (Math.min(ink, surface) + 0.05),
+        }
+      })
+      expect(countContrast.ratio, `${route}: dark current-column count contrast ${JSON.stringify(countContrast)}`).toBeGreaterThanOrEqual(4.5)
     })
   }
 
