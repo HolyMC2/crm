@@ -47,8 +47,11 @@ const STATIC_ROUTES = [
 async function measure(page) {
   return page.evaluate(() => {
     const width = window.innerWidth
-    const pageEl = document.querySelector('.page-in')
+    const pageEl = document.querySelector('#app .page-in')
     const column = pageEl?.parentElement
+    if (!pageEl || !column || !pageEl.clientWidth || !column.clientWidth) {
+      throw new Error('CRM mobile shell is missing or has no rendered width')
+    }
     const shell = new Set([pageEl, column, document.body, document.documentElement].filter(Boolean))
     const contained = new Set(['auto', 'scroll', 'hidden', 'clip'])
     const escaped = []
@@ -70,18 +73,25 @@ async function measure(page) {
     return {
       width,
       documentScrollWidth: document.documentElement.scrollWidth,
-      pageScrollWidth: pageEl?.scrollWidth ?? 0,
-      pageClientWidth: pageEl?.clientWidth ?? width,
-      columnScrollWidth: column?.scrollWidth ?? 0,
-      columnClientWidth: column?.clientWidth ?? width,
+      pageScrollWidth: pageEl.scrollWidth,
+      pageClientWidth: pageEl.clientWidth,
+      columnScrollWidth: column.scrollWidth,
+      columnClientWidth: column.clientWidth,
       escaped: escaped.slice(0, 10),
     }
   })
 }
 
 async function expectVerticalOnly(page, route) {
-  await page.goto(`/crm${route}`, { waitUntil: 'networkidle' })
+  const response = await page.goto(`/crm${route}`, { waitUntil: 'networkidle' })
+  expect(response, `${route}: navigation returned no document response`).not.toBeNull()
+  expect(response.ok(), `${route}: document returned HTTP ${response.status()}`).toBe(true)
+  await expect(page, `${route}: redirected to login`).not.toHaveURL(/\/login(?:[/?#]|$)/)
+  await expect(page.locator('#app .page-in'), `${route}: CRM mobile shell did not render`).toBeVisible()
+  await expect(page.locator('#app #app-header'), `${route}: CRM header did not mount`).toBeAttached()
+  await expect(page.locator('#app .page-in > :visible').first(), `${route}: route content did not render`).toBeVisible()
   await page.waitForTimeout(800) // lists, boards and charts settle
+  await expect(page, `${route}: redirected to login after mounting`).not.toHaveURL(/\/login(?:[/?#]|$)/)
   const m = await measure(page)
   expect(m.documentScrollWidth, `${route}: the document scrolls sideways`).toBeLessThanOrEqual(m.width)
   expect(m.columnScrollWidth, `${route}: the shell column is wider than the phone`).toBeLessThanOrEqual(m.columnClientWidth)
@@ -90,9 +100,11 @@ async function expectVerticalOnly(page, route) {
 }
 
 async function firstName(page, doctype, filters = '') {
-  const res = await page.request.get(`/api/resource/${encodeURIComponent(doctype)}?limit_page_length=1&order_by=modified desc${filters}`)
-  if (!res.ok()) return null
-  return (await res.json())?.data?.[0]?.name || null
+  const res = await page.request.get(`/api/resource/${encodeURIComponent(doctype)}?limit_page_length=1&order_by=modified desc${filters}`, { maxRedirects: 0 })
+  expect(res.ok(), `${doctype}: record lookup returned HTTP ${res.status()}`).toBe(true)
+  const { data } = await res.json()
+  expect(Array.isArray(data), `${doctype}: record lookup did not return a data array`).toBe(true)
+  return data[0]?.name || null
 }
 
 test.describe('phone: vertical scroll only', () => {
