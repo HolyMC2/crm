@@ -43,7 +43,7 @@ def seed():
 				"lead": lead.name,
 				"lead_status": lead.status,
 				"comment": comment.name,
-				"deleted_documents": frappe.db.count("Deleted Document"),
+				"deleted_documents": frappe.get_all("Deleted Document", pluck="name"),
 			},
 			indent=2,
 		)
@@ -74,7 +74,15 @@ def verify():
 	), "Installed apps changed during migration"
 	missing = set(snapshot["doctypes"]) - set(frappe.get_all("DocType", pluck="name"))
 	assert not missing, f"Migration removed DocTypes: {sorted(missing)}"
-	assert frappe.db.count("Deleted Document") == snapshot["deleted_documents"], "Migration deleted records"
+	deletions = frappe.get_all(
+		"Deleted Document",
+		filters={"name": ["not in", snapshot["deleted_documents"] or [""]]},
+		fields=["name", "deleted_doctype", "deleted_name"],
+		order_by="creation asc",
+	)
+	print("Migration deletion audit: " + json.dumps(deletions, default=str), flush=True)
+	Path("/results/migration-deletions.json").write_text(json.dumps(deletions, indent=2, default=str))
+	assert not deletions, "Migration deleted records; inspect migration-deletions.json"
 	organization = frappe.get_doc("CRM Organization", snapshot["organization"])
 	assert organization.currency == "USD" and float(organization.annual_revenue) == 1234.50
 	lead = frappe.get_doc("CRM Lead", snapshot["lead"])
