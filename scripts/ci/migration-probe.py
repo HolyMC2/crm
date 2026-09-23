@@ -164,7 +164,45 @@ def _snapshot_path():
 	return Path(frappe.get_site_path("private", "crm-ci-migration.json"))
 
 
+def _item_groups():
+	return frappe.get_all("Item Group", fields=["name", "parent_item_group", "is_group"])
+
+
+def _seed_erp_root():
+	"""Initialize the synthetic BASE as ERPNext setup does, before the snapshot."""
+	groups = _item_groups()
+	roots = {row["name"] for row in groups if not row["parent_item_group"]}
+	assert roots <= {"All Item Groups"}, f"Unexpected base Item Group roots: {sorted(roots)}"
+	if not roots:
+		assert not groups, "Item Groups exist without a root; do not repair the baseline"
+		frappe.get_doc(
+			{
+				"doctype": "Item Group",
+				"item_group_name": "All Item Groups",
+				"is_group": 1,
+				"parent_item_group": "",
+			}
+		).insert()
+	root = frappe.get_doc("Item Group", "All Item Groups")
+	assert root.is_group == 1 and not root.parent_item_group, "Invalid base ERPNext root"
+
+
+def _validate_item_groups(before, after):
+	assert {row["name"] for row in after if not row["parent_item_group"]} == {
+		"All Item Groups"
+	}, "Migration changed the Item Group root structure"
+	current = {row["name"]: row for row in after}
+	for original in before:
+		name = original["name"]
+		assert name in current, f"Migration removed Item Group: {name}"
+		assert current[name]["is_group"] == original["is_group"], f"Migration changed Item Group: {name}"
+		assert (current[name]["parent_item_group"] or "") == (
+			original["parent_item_group"] or ""
+		), f"Migration reparented Item Group: {name}"
+
+
 def seed():
+	_seed_erp_root()
 	organization = frappe.get_doc(
 		{
 			"doctype": "CRM Organization",
@@ -190,6 +228,7 @@ def seed():
 				"metadata_owner_sources": _owner_sources(),
 				"metadata": _metadata_state(),
 				"doctypes": frappe.get_all("DocType", pluck="name"),
+				"item_groups": _item_groups(),
 				"organization": organization.name,
 				"lead": lead.name,
 				"lead_status": lead.status,
@@ -237,6 +276,7 @@ def verify():
 	after_metadata = _metadata_state()
 	Path("/results/migration-metadata.json").write_text(json.dumps(after_metadata, indent=2))
 	_validate_deletions(deletions, snapshot["metadata"], after_metadata)
+	_validate_item_groups(snapshot["item_groups"], _item_groups())
 	organization = frappe.get_doc("CRM Organization", snapshot["organization"])
 	assert organization.currency == "USD" and float(organization.annual_revenue) == 1234.50
 	lead = frappe.get_doc("CRM Lead", snapshot["lead"])

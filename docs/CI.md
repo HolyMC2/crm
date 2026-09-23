@@ -28,6 +28,24 @@ CRM, Doco, Scanner Kit, POS Awesome, Doco Meta Catalog, Doco Marketing and Talle
 Payments owns Payment Gateway; Doco Marketing owns Social Shop. Email is muted
 before app setup. Native tests use USD fixtures without calling a live FX service.
 
+## Initialized ERP test fixture
+
+Before taking the migration baseline, the disposable base site creates the
+canonical `All Item Groups` root through the native Item Group controller if the
+tree is empty. An unexpected root or a rootless existing tree fails setup; no
+existing group is renamed or reparented. The snapshot records the root and every
+existing group's identity, parent and `is_group`, and verifies their preservation
+before the full CRM test suite starts. No post-migration repair occurs.
+
+This follows the pinned
+[ERPNext 4048fb70 setup fixture](https://github.com/frappe/erpnext/blob/4048fb70e14d1843956fcdabb7c3cca75a1cbcdd/erpnext/setup/setup_wizard/operations/install_fixtures.py).
+Its test bootstrap uses the existing tree root for presets but hardcodes
+`All Item Groups` for test children. On an otherwise uninitialized site,
+[Taller f79e80f9](https://github.com/HolyMC2/taller/blob/f79e80f99c81e9dd3705ae1644968a620e563c67/taller/install.py)
+creates its trade-in group without a parent during `after_migrate`, leaving a
+root incompatible with those ERPNext test records. Preparing the canonical base
+fixture models an initialized ERP tenant and keeps the upgrade assertion intact.
+
 ## Audited migration metadata
 
 The synthetic migration fixture permits at most one deletion of each of nine

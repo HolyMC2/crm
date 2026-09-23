@@ -110,6 +110,13 @@ fi
 			any("_ci_migration.verify" in command or "run-tests" in command for command in commands)
 		)
 
+	def test_failed_preservation_retains_evidence_and_never_starts_native_tests(self):
+		result, commands, artifacts = self.run_runner("migration", failure="crm._ci_migration.verify")
+		self.assertEqual(result.returncode, 17)
+		self.assertIn("migration-baseline.json", artifacts)
+		self.assertIn("migrate.log", artifacts)
+		self.assertFalse(any("run-tests" in command for command in commands))
+
 	def test_native_failure_remains_fatal(self):
 		result, _, _ = self.run_runner(failure="run-tests")
 		self.assertEqual(result.returncode, 17)

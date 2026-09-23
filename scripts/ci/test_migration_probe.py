@@ -49,6 +49,68 @@ class MetadataDeletionTests(unittest.TestCase):
 	def validate(self):
 		self.probe._validate_deletions(self.rows, self.before, self.after)
 
+	def test_empty_base_creates_canonical_native_root(self):
+		self.probe.frappe.get_doc.reset_mock(side_effect=True)
+		self.probe.frappe.get_doc.return_value = types.SimpleNamespace(
+			is_group=1, parent_item_group="", insert=Mock()
+		)
+		with patch.object(self.probe, "_item_groups", return_value=[]):
+			self.probe._seed_erp_root()
+		self.probe.frappe.get_doc.assert_any_call(
+			{
+				"doctype": "Item Group",
+				"item_group_name": "All Item Groups",
+				"is_group": 1,
+				"parent_item_group": "",
+			}
+		)
+		self.probe.frappe.get_doc.return_value.insert.assert_called_once()
+
+	def test_existing_canonical_root_is_not_rewritten(self):
+		self.probe.frappe.get_doc.reset_mock(side_effect=True)
+		self.probe.frappe.get_doc.return_value = types.SimpleNamespace(
+			is_group=1, parent_item_group="", insert=Mock()
+		)
+		with patch.object(
+			self.probe,
+			"_item_groups",
+			return_value=[{"name": "All Item Groups", "parent_item_group": "", "is_group": 1}],
+		):
+			self.probe._seed_erp_root()
+		self.probe.frappe.get_doc.return_value.insert.assert_not_called()
+
+	def test_conflicting_or_rootless_base_is_not_repaired(self):
+		for name, parent in [("Equipos Seminuevos", ""), ("Orphan", "Missing")]:
+			with (
+				self.subTest(name=name),
+				patch.object(
+					self.probe,
+					"_item_groups",
+					return_value=[{"name": name, "parent_item_group": parent, "is_group": 0}],
+				),
+			):
+				with self.assertRaises(AssertionError):
+					self.probe._seed_erp_root()
+
+	def test_root_and_existing_children_must_survive_unchanged(self):
+		before = [
+			{"name": "All Item Groups", "parent_item_group": "", "is_group": 1},
+			{"name": "Existing child", "parent_item_group": "All Item Groups", "is_group": 0},
+		]
+		self.probe._validate_item_groups(
+			before,
+			[*before, {"name": "New companion group", "parent_item_group": "All Item Groups", "is_group": 0}],
+		)
+		for altered in [
+			[*before, {"name": "Unexpected root", "parent_item_group": "", "is_group": 1}],
+			before[1:],
+			[before[0]],
+			[{**before[0], "is_group": 0}, before[1]],
+			[before[0], {**before[1], "parent_item_group": "Elsewhere"}],
+		]:
+			with self.subTest(altered=altered), self.assertRaises(AssertionError):
+				self.probe._validate_item_groups(before, altered)
+
 	def test_exact_nine_cleanup_records_with_canonical_replacements_pass(self):
 		self.validate()
 
