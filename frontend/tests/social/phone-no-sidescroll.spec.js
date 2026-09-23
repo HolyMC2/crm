@@ -122,6 +122,86 @@ test.describe('phone: vertical scroll only', () => {
     })
   }
 
+  for (const route of ['/leads/view/kanban', '/deals/view/kanban']) {
+    test(`Kanban pager navigation ${route}`, async ({ page }) => {
+      await expectVerticalOnly(page, route)
+      const pager = page.locator('[data-kanban-pager]')
+      const board = page.locator('[data-kanban-board]')
+      const buttons = pager.getByRole('button')
+      const currentChipFits = () =>
+        pager.evaluate((el) => {
+          const chip = el
+            .querySelector('[aria-current="true"]')
+            ?.getBoundingClientRect()
+          const bounds = el.getBoundingClientRect()
+          return Boolean(
+            chip &&
+            chip.left >= bounds.left - 1 &&
+            chip.right <= bounds.right + 1,
+          )
+        })
+      await expect(pager).toHaveAttribute('role', 'group')
+      await expect(pager).toHaveAttribute('aria-label', /\S/)
+      await expect(pager.locator('[role="tab"]')).toHaveCount(0)
+      await expect(pager.locator('[aria-current="true"]')).toHaveCount(1)
+      expect(await buttons.count()).toBeGreaterThan(0)
+      const sizes = await buttons.evaluateAll((elements) =>
+        elements.map((el) => {
+          const { width, height } = el.getBoundingClientRect()
+          return { width, height }
+        }),
+      )
+      for (const size of sizes) {
+        expect(size.width).toBeGreaterThanOrEqual(44)
+        expect(size.height).toBeGreaterThanOrEqual(44)
+      }
+
+      // Native buttons all remain in the Tab sequence; Enter selects the stage.
+      await buttons.first().focus()
+      for (let i = 1; i < (await buttons.count()); i++) {
+        await page.keyboard.press('Tab')
+        await expect(buttons.nth(i)).toBeFocused()
+      }
+      await page.keyboard.press('Enter')
+      await expect(buttons.last()).toHaveAttribute('aria-current', 'true')
+      await expect
+        .poll(() =>
+          board.evaluate((el) => {
+            const columns = Array.from(
+              el.querySelectorAll('[data-kanban-column]'),
+            )
+            const left = el.getBoundingClientRect().left
+            const nearest = columns.reduce(
+              (best, column, index) =>
+                Math.abs(column.getBoundingClientRect().left - left) <
+                best.distance
+                  ? {
+                      index,
+                      distance: Math.abs(
+                        column.getBoundingClientRect().left - left,
+                      ),
+                    }
+                  : best,
+              { index: -1, distance: Infinity },
+            )
+            return nearest.index === columns.length - 1
+          }),
+        )
+        .toBe(true)
+      await expect.poll(currentChipFits).toBe(true)
+
+      // A swipe-equivalent board scroll must also update and reveal the chip.
+      await board.evaluate((el) =>
+        el.scrollTo({ left: 0, behavior: 'instant' }),
+      )
+      await expect(buttons.first()).toHaveAttribute('aria-current', 'true')
+      await expect.poll(currentChipFits).toBe(true)
+      const measured = await measure(page)
+      expect(measured.documentScrollWidth).toBeLessThanOrEqual(measured.width)
+      expect(measured.escaped).toEqual([])
+    })
+  }
+
   test('record pages (first lead, deal, contact, organization, campaign)', async ({ page }) => {
     const lead = await firstName(page, 'CRM Lead')
     if (lead) await expectVerticalOnly(page, `/leads/${encodeURIComponent(lead)}`)
