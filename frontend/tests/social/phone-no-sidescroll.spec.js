@@ -215,8 +215,8 @@ test.describe('phone: vertical scroll only', () => {
           const bounds = el.getBoundingClientRect()
           return Boolean(
             chip &&
-            chip.left >= bounds.left - 1 &&
-            chip.right <= bounds.right + 1,
+              chip.left >= bounds.left - 1 &&
+              chip.right <= bounds.right + 1,
           )
         })
       await expect(pager).toHaveAttribute('role', 'group')
