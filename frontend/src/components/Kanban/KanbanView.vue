@@ -1,5 +1,30 @@
 <template>
-  <div class="flex overflow-x-auto h-full">
+  <div class="flex h-full min-h-0 flex-col">
+    <!-- phone pager: one chip per column with its count. The board below shows
+         one snapped column at a time, so this is how you see which column is
+         open and jump to another; it follows the board as it scrolls. -->
+    <div
+      v-if="isMobile && visibleColumns.length"
+      class="flex flex-none gap-1.5 overflow-x-auto px-2 pb-1 pt-2 [scrollbar-width:none]"
+      role="tablist"
+      :aria-label="__('Columns')"
+    >
+      <button
+        v-for="(column, i) in visibleColumns"
+        :key="column.column.name"
+        type="button"
+        role="tab"
+        :aria-selected="i === activeColumn"
+        class="flex flex-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm"
+        :class="i === activeColumn ? 'border-outline-gray-3 bg-surface-gray-3 text-ink-gray-9' : 'border-outline-gray-2 text-ink-gray-6'"
+        @click="scrollToColumn(i)"
+      >
+        <IndicatorIcon :class="parseColor(column.column.color)" />
+        {{ column.column.name }}
+        <span class="tabular-nums text-ink-gray-5">{{ columnCount(column) }}</span>
+      </button>
+    </div>
+  <div ref="boardEl" class="flex h-full min-h-0 overflow-x-auto max-sm:snap-x max-sm:snap-mandatory">
     <Draggable
       v-if="columns"
       :list="columns"
@@ -9,9 +34,11 @@
       @end="updateColumn"
     >
       <template #item="{ element: column }">
+        <!-- phone: a column is most of the viewport and snaps, the next one peeks -->
         <div
           v-if="!column.column.delete"
-          class="flex flex-col gap-2.5 min-w-72 w-72 hover:bg-surface-gray-2 rounded-lg p-2.5"
+          data-kanban-column
+          class="flex flex-col gap-2.5 min-w-72 w-72 max-sm:min-w-[86vw] max-sm:w-[86vw] max-sm:snap-start hover:bg-surface-gray-2 rounded-lg p-2.5"
         >
           <div class="flex gap-2 items-center group justify-between">
             <div class="flex items-center text-base">
@@ -51,6 +78,7 @@
                 </template>
               </Popover>
               <div class="text-ink-gray-9">{{ column.column.name }}</div>
+              <span class="ml-1.5 text-sm tabular-nums text-ink-gray-5">{{ columnCount(column) }}</span>
             </div>
             <div class="flex">
               <Dropdown :options="actions(column)">
@@ -149,7 +177,10 @@
         </div>
       </template>
     </Draggable>
-    <div class="shrink-0 min-w-64">
+    <!-- Rendered only once the columns exist: alone it would be the board's
+         first snap target, and Chromium keeps a tracked snap target in view
+         through later layout changes — the board opened scrolled to the end. -->
+    <div v-if="columns.length" class="shrink-0 min-w-64 max-sm:snap-start">
       <Combobox
         :model-value="null"
         :options="deletedColumns"
@@ -174,14 +205,17 @@
       </Combobox>
     </div>
   </div>
+  </div>
 </template>
 <script setup>
 import RefreshIcon from '@/components/Icons/RefreshIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import { isTouchScreenDevice, colors, parseColor } from '@/utils'
+import { isMobile } from '@/composables/breakpoint'
 import Draggable from 'vuedraggable'
 import { Combobox, Dropdown, Popover } from 'frappe-ui'
-import { computed } from 'vue'
+import { useEventListener } from '@vueuse/core'
+import { computed, ref } from 'vue'
 
 defineProps({
   options: {
@@ -224,6 +258,53 @@ const deletedColumns = computed(() => {
       return { label: col.name, value: col.name }
     })
 })
+
+const visibleColumns = computed(() => columns.value.filter((col) => !col.column.delete))
+
+// all_count is the server total for the column; count/page_length only say
+// how much of it is loaded so far.
+function columnCount(column) {
+  return column.column.all_count ?? column.data?.length ?? 0
+}
+
+// ---- phone pager: which column is snapped into view, and jumping to one ----
+const boardEl = ref(null)
+const activeColumn = ref(0)
+
+function columnEls() {
+  return boardEl.value ? Array.from(boardEl.value.querySelectorAll('[data-kanban-column]')) : []
+}
+
+// A column's offset inside the board's scroll content, independent of any
+// positioned ancestor (offsetLeft would measure against the wrong parent).
+function columnOffset(el) {
+  const board = boardEl.value
+  return el.getBoundingClientRect().left - board.getBoundingClientRect().left + board.scrollLeft
+}
+
+function syncActiveColumn() {
+  const board = boardEl.value
+  if (!board) return
+  let best = 0
+  let bestDistance = Number.POSITIVE_INFINITY
+  columnEls().forEach((el, i) => {
+    const distance = Math.abs(columnOffset(el) - board.scrollLeft)
+    if (distance < bestDistance) {
+      bestDistance = distance
+      best = i
+    }
+  })
+  activeColumn.value = best
+}
+
+function scrollToColumn(i) {
+  const el = columnEls()[i]
+  if (!boardEl.value || !el) return
+  boardEl.value.scrollTo({ left: columnOffset(el), behavior: 'smooth' })
+  activeColumn.value = i
+}
+
+useEventListener(boardEl, 'scroll', syncActiveColumn, { passive: true })
 
 function actions(column) {
   return [
