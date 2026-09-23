@@ -4,7 +4,7 @@
       <ViewBreadcrumbs v-model="viewControls" routeName="Deals" />
     </template>
     <template #right-header>
-      <VerticalSlot slot="deals_list_header" />
+      <VerticalSlot v-if="!isMobile" slot="deals_list_header" />
       <CustomActions
         v-if="dealsListView?.customListActions"
         :actions="dealsListView.customListActions"
@@ -17,6 +17,12 @@
       />
     </template>
   </LayoutHeader>
+  <!-- phone: the deal search box (taller tenants) gets its own row; inside the
+       header its fixed width pushed «Crear» past the viewport. Hidden when the
+       slot renders nothing. -->
+  <div v-if="isMobile" class="px-3 pt-1.5 empty:hidden">
+    <VerticalSlot slot="deals_list_header" />
+  </div>
   <ViewControls
     ref="viewControls"
     v-model="deals"
@@ -271,6 +277,7 @@ import { timestampCell } from '@/composables/useTimelinePreferences'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Avatar, Dropdown } from 'frappe-ui'
 import VerticalSlot from '@/components/doco/VerticalSlot.vue'
+import { isMobile } from '@/composables/breakpoint'
 import { useRoute } from 'vue-router'
 import { ref, reactive, computed, h, provide } from 'vue'
 

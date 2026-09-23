@@ -3,7 +3,8 @@
     <div class="text-3xl-semibold text-ink-gray-8 mb-3">
       {{ __('Welcome {0}, lets add your first lead', [name]) }}
     </div>
-    <div class="flex gap-3">
+    <!-- two fixed-size cards: stack on phones instead of widening the page -->
+    <div class="flex flex-wrap justify-center gap-3">
       <div
         class="flex flex-col px-6 pt-13 pb-7 justify-between bg-surface-gray-1 rounded-2xl items-center space-y-2 size-56"
       >

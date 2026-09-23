@@ -4,7 +4,7 @@
     :placeholder="__('Search deals, devices, ROs…')"
     v-model="searchText"
     @input="onSearchInput"
-    class="w-64"
+    class="w-64 max-sm:w-full"
   >
     <template #prefix>
       <FeatherIcon name="search" class="h-4 w-4 text-ink-gray-5" />
