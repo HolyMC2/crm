@@ -19,12 +19,14 @@ def get_capabilities():
 
 
 @frappe.whitelist(methods=["POST"])
-def get_vertical_config(entity: str | dict | None = None):
+def get_vertical_config(entity: str | dict | list | bool | int | float | None = None):
 	"""CRM-owned compatibility boundary: no optional app is required to call it.
 
 	The new Doco protocol can roll out before or after CRM. Existing vertical
 	sections retain their placement; app and permission checks precede rendering.
 	Personalized responses are never stored in the site's vertical layout cache.
+	Raw JSON types reach the context validator so malformed input keeps the
+	existing ValidationError response instead of a transport-adapter error.
 	"""
 	frappe.local.response.setdefault("headers", {})["Cache-Control"] = "private, no-store"
 	get_session_role_flags()

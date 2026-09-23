@@ -41,6 +41,10 @@ class VerticalCapabilitiesTests(TestCase):
 		for entity in (
 			{"doctype": "Patient", "name": "x"},
 			[],
+			True,
+			False,
+			1,
+			1.0,
 			"x" * 513,
 			{"doctype": "CRM Deal", "name": "x", "provider": "evil"},
 		):

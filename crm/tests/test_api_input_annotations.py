@@ -18,6 +18,13 @@ def adapt(module, method, **values):
 
 
 class TestAPIInputAnnotations(unittest.TestCase):
+	def test_vertical_context_keeps_json_types_for_its_existing_validation_response(self):
+		for value in (None, True, False, 1, 1.0, [], {}, '{"doctype":"CRM Lead","name":"fictional"}'):
+			with self.subTest(value=value):
+				result = adapt("crm.api.capabilities", "get_vertical_config", entity=value)["entity"]
+				self.assertIs(type(result), type(value))
+				self.assertEqual(result, value)
+
 	def test_generation_booleans_and_floats_are_not_coerced_to_valid_integers(self):
 		from crm.api import conversations
 
