@@ -35,7 +35,11 @@
       <Tooltip v-for="s in model.steps" :key="s.name" :text="stageHint(s)">
         <button
           class="whitespace-nowrap border-l border-outline-gray-2 px-[9px] py-[6px] text-[11.5px] leading-4 first:border-l-0 disabled:cursor-not-allowed"
-          :class="s.state === 'current' ? 'font-bold' : 'font-medium hover:bg-surface-gray-2'"
+          :class="
+            s.state === 'current'
+              ? 'font-bold'
+              : 'font-medium hover:bg-surface-gray-2'
+          "
           :style="segmentStyle(s)"
           :disabled="disabled"
           :aria-current="s.state === 'current' ? 'step' : undefined"
@@ -86,7 +90,9 @@ const wonStatus = computed(() => model.value.won[0] || null)
 // The dropdown button names the lost status the deal is ON, so a closed-lost deal
 // reads «Perdido · Cancelado» instead of an inert button.
 const lostLabel = computed(() =>
-  model.value.outcome === 'lost' ? `${__('Perdido')} · ${props.current}` : __('Perdido'),
+  model.value.outcome === 'lost'
+    ? `${__('Perdido')} · ${props.current}`
+    : __('Perdido'),
 )
 const lostOptions = computed(() =>
   model.value.lost.map((s) => ({ label: s.name, onClick: () => pick(s) })),
@@ -100,7 +106,8 @@ function stageHint(s) {
 function segmentStyle(s) {
   if (s.state === 'current')
     return `background:${stageSurface(s.color, 3)};color:${stageInk(s.color, 8)};box-shadow:inset 0 -2px 0 ${stageInk(s.color, 6)}`
-  if (s.state === 'past') return `background:${stageSurface(s.color, 1)};color:${stageInk(s.color, 7)}`
+  if (s.state === 'past')
+    return `background:${stageSurface(s.color, 1)};color:${stageInk(s.color, 7)}`
   return 'color:var(--ink-gray-5)'
 }
 

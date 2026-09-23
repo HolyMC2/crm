@@ -8,11 +8,19 @@
   nothing when the queue is empty. Re-emits `changed` so the parent reloads the thread.
 -->
 <template>
-  <div v-if="rows.length" class="rounded-[10px] border border-amber-200 bg-surface-amber-1 p-2 dark:border-amber-900/40">
+  <div
+    v-if="rows.length"
+    class="rounded-[10px] border border-amber-200 bg-surface-amber-1 p-2 dark:border-amber-900/40"
+  >
     <div class="mb-1.5 flex items-center gap-1.5 px-1">
       <FeatherIcon name="clock" class="size-3.5 text-ink-amber-7" />
       <span class="text-2xs-semibold uppercase tracking-wide text-ink-amber-7">
-        {{ rows.length }} {{ rows.length === 1 ? __('mensaje por aprobar') : __('mensajes por aprobar') }}
+        {{ rows.length }}
+        {{
+          rows.length === 1
+            ? __('mensaje por aprobar')
+            : __('mensajes por aprobar')
+        }}
       </span>
     </div>
     <div class="flex flex-col gap-2">

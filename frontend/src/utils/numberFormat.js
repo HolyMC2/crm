@@ -204,7 +204,12 @@ export function formatCurrency(value, format, currency = 'USD', precision = 2) {
 // .currency) instead of a hard-coded "$", so a USD tenant renders US$ automatically. Zero
 // decimals by default (prices show whole pesos); pass precision to override.
 export function money(value, currency = null, precision = 0) {
-  return formatCurrency(value, '', currency || window.sysdefaults?.currency || 'MXN', precision)
+  return formatCurrency(
+    value,
+    '',
+    currency || window.sysdefaults?.currency || 'MXN',
+    precision,
+  )
 }
 
 function getNumberFormat(format = null) {

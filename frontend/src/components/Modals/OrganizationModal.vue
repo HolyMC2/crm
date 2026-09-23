@@ -81,7 +81,6 @@ const error = ref(null)
 const { document: organization, triggerOnBeforeCreate } =
   useDocument('CRM Organization')
 
-
 async function createOrganization() {
   loading.value = true
   error.value = null

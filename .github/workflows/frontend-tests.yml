@@ -83,7 +83,6 @@ jobs:
                   enable-coverage: "true"
 
             - name: Upload coverage artifact
-              if: github.base_ref == 'develop' || github.ref_name == 'develop'
               uses: ./.github/actions/upload-coverage
               with:
                   artifact-name: coverage-frontend

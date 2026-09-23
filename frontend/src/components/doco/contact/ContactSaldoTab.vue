@@ -149,7 +149,9 @@
               <span
                 class="text-right font-semibold tabular-nums"
                 :class="
-                  row.status === 'Success' ? 'text-ink-gray-8' : 'text-ink-gray-4'
+                  row.status === 'Success'
+                    ? 'text-ink-gray-8'
+                    : 'text-ink-gray-4'
                 "
                 >{{ money(row.amount, data.summary.currency) }}</span
               >

@@ -1,0 +1,38 @@
+name: Prepare supported native CRM environment
+description: Use the approved immutable Frappe 16 image and source-locked companion apps.
+inputs:
+    image:
+        description: Immutable Muelle multi-app image digest
+        required: true
+    registry-token:
+        description: Read-only token for pulling the image
+        required: true
+runs:
+    using: composite
+    steps:
+        - name: Verify native runner failure handling
+          shell: bash
+          run: python3 -m unittest discover -s scripts/ci -p 'test_*.py' -v
+        - name: Download pinned offline coverage tool
+          shell: bash
+          run: |
+              python3 -m pip download --require-hashes --no-deps --only-binary=:all: \
+                --platform any --implementation py --abi none --python-version 3.14 \
+                -r scripts/ci/coverage-requirements.txt --dest .ci-tools
+        - name: Require immutable representative image
+          shell: bash
+          env:
+              CRM_CI_IMAGE: ${{ inputs.image }}
+          run: '[[ "$CRM_CI_IMAGE" =~ ^ghcr.io/holymc2/doco-bench@sha256:[a-f0-9]{64}$ ]]'
+        - name: Checkout pinned companion apps
+          uses: actions/checkout@v4
+          with:
+              repository: HolyMC2/frappe_whatsapp
+              ref: 933fa2ca544ecf0857e37d6beb04bd052a602345
+              persist-credentials: false
+              path: .ci-companions/frappe_whatsapp
+        - uses: docker/login-action@v3
+          with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ inputs.registry-token }}

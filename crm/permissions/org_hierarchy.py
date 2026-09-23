@@ -87,7 +87,9 @@ def _permission_query_conditions(user: str | None, doctype: str):
 		q2 = DT.name.isin(
 			frappe.qb.from_(Todo)
 			.select(Todo.reference_name)
-			.where((Todo.reference_type == doctype) & (Todo.status != "Cancelled") & (Todo.allocated_to == user))
+			.where(
+				(Todo.reference_type == doctype) & (Todo.status != "Cancelled") & (Todo.allocated_to == user)
+			)
 		)
 		cond = q1 | q2
 

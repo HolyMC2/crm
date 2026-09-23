@@ -25,12 +25,18 @@
         <span
           v-if="t.badge && badgeFor(t.badge)"
           class="absolute -right-2.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold"
-          :class="t.badge === 'unread' ? 'bg-surface-red-7 text-ink-red-1' : 'bg-surface-amber-2 text-ink-amber-8'"
+          :class="
+            t.badge === 'unread'
+              ? 'bg-surface-red-7 text-ink-red-1'
+              : 'bg-surface-amber-2 text-ink-amber-8'
+          "
         >
           {{ badgeFor(t.badge) > 99 ? '99+' : badgeFor(t.badge) }}
         </span>
       </span>
-      <span class="text-[10px] font-semibold leading-none">{{ __(t.label) }}</span>
+      <span class="text-[10px] font-semibold leading-none">{{
+        __(t.label)
+      }}</span>
     </button>
   </nav>
 </template>
@@ -53,24 +59,56 @@ const route = useRoute()
 const router = useRouter()
 
 const tabs = [
-  { key: 'inbox', icon: InboxIcon, label: 'Inbox', to: '/inbox', group: 'inbox', badge: 'unread' },
-  { key: 'leads', icon: LeadsIcon, label: 'Leads', to: '/leads', group: 'leads' },
-  { key: 'deals', icon: DealsIcon, label: 'Deals', to: '/deals', group: 'deals' },
-  { key: 'tasks', icon: TasksIcon, label: 'Tasks', to: '/tasks', group: 'tasks', badge: 'overdue' },
+  {
+    key: 'inbox',
+    icon: InboxIcon,
+    label: 'Inbox',
+    to: '/inbox',
+    group: 'inbox',
+    badge: 'unread',
+  },
+  {
+    key: 'leads',
+    icon: LeadsIcon,
+    label: 'Leads',
+    to: '/leads',
+    group: 'leads',
+  },
+  {
+    key: 'deals',
+    icon: DealsIcon,
+    label: 'Deals',
+    to: '/deals',
+    group: 'deals',
+  },
+  {
+    key: 'tasks',
+    icon: TasksIcon,
+    label: 'Tasks',
+    to: '/tasks',
+    group: 'tasks',
+    badge: 'overdue',
+  },
   { key: 'more', icon: MoreIcon, label: 'Más' },
 ]
 
 const activeGroup = computed(() => routeGroup(route.path))
-const visibleTabs = computed(() => tabs.filter(
-  (tab) => !tab.to || navItemVisible(router.resolve(tab.to).name, addonAvailable.value),
-))
+const visibleTabs = computed(() =>
+  tabs.filter(
+    (tab) =>
+      !tab.to ||
+      navItemVisible(router.resolve(tab.to).name, addonAvailable.value),
+  ),
+)
 function isActive(t) {
   return t.group && activeGroup.value === t.group
 }
 function onTab(t) {
   try {
     navigator.vibrate?.(8) // subtle tick on tab switch (Android)
-  } catch (e) {}
+  } catch {
+    // Haptic feedback is optional; navigation must still work when it is refused.
+  }
   if (!t.to) {
     mobileSidebarOpened.value = true
     return
@@ -82,8 +120,7 @@ function onTab(t) {
 // Drill-down panes: the inbox + deal 360° set mobileView to thread/context;
 // there the conversation owns the whole screen (WhatsApp-style) and back is ←.
 const inDrillDown = computed(
-  () =>
-    (/^\/(inbox|deal\/)/.test(route.path)) && mobileView.value !== 'list',
+  () => /^\/(inbox|deal\/)/.test(route.path) && mobileView.value !== 'list',
 )
 // On-screen keyboard: visualViewport shrinks well below the layout viewport.
 const keyboardOpen = ref(false)
@@ -105,7 +142,9 @@ const badges = createResource({
   cache: 'shellBadgeCounts',
   auto: false,
 })
-watch(addonAvailable, (available) => available && badges.fetch(), { immediate: true })
+watch(addonAvailable, (available) => available && badges.fetch(), {
+  immediate: true,
+})
 function badgeFor(kind) {
   const d = badges.data || {}
   if (kind === 'unread') return d.unread_messages

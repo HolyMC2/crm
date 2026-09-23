@@ -30,7 +30,11 @@
             v-for="c in columns"
             :key="c.key"
             class="flex items-center gap-2.5 px-3 py-2 text-[13px] text-ink-gray-8"
-            :class="c.fixed ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-surface-gray-2'"
+            :class="
+              c.fixed
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer hover:bg-surface-gray-2'
+            "
           >
             <input
               type="checkbox"
@@ -43,7 +47,9 @@
           </label>
         </div>
         <div class="flex justify-end border-t border-outline-gray-1 px-3 py-2">
-          <button class="text-[12px] text-ink-gray-5" @click="emit('reset')">{{ __('Restablecer') }}</button>
+          <button class="text-[12px] text-ink-gray-5" @click="emit('reset')">
+            {{ __('Restablecer') }}
+          </button>
         </div>
       </div>
     </template>
@@ -68,6 +74,9 @@ function toggle(key) {
   const has = props.selected.includes(key)
   // never let the last toggleable column be turned off (grid would collapse)
   if (has && props.selected.length <= 1) return
-  emit('update:selected', has ? props.selected.filter((k) => k !== key) : [...props.selected, key])
+  emit(
+    'update:selected',
+    has ? props.selected.filter((k) => k !== key) : [...props.selected, key],
+  )
 }
 </script>

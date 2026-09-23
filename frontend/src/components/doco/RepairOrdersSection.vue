@@ -57,7 +57,9 @@
         class="overflow-hidden rounded-xl border bg-surface-base shadow-sm"
       >
         <!-- Card header -->
-        <div class="flex items-center justify-between border-b bg-surface-gray-1 px-4 py-2.5">
+        <div
+          class="flex items-center justify-between border-b bg-surface-gray-1 px-4 py-2.5"
+        >
           <!-- link to the TALLER SPA order page (operators use that, not the Desk doctype) -->
           <a
             :href="`/taller/orders/${encodeURIComponent(ro.name)}`"
@@ -73,14 +75,22 @@
               class="rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-7"
               :title="__('Pieza en camino — Purchase Order vinculado')"
             >
-              🧩 {{ waitingPo(ro).purchase_order }}<template v-if="waitingPo(ro).po_expected_date"> · {{ __('llega') }} {{ waitingPo(ro).po_expected_date }}</template>
+              🧩 {{ waitingPo(ro).purchase_order
+              }}<template v-if="waitingPo(ro).po_expected_date">
+                · {{ __('llega') }}
+                {{ waitingPo(ro).po_expected_date }}</template
+              >
             </span>
             <Badge :label="__(ro.status)" :theme="statusTheme(ro.status)" />
             <Dropdown :options="draftOptions(ro.name)">
               <Button
                 size="sm"
                 variant="subtle"
-                :label="creatingFor === ro.name ? __('Creando…') : __('Crear borrador')"
+                :label="
+                  creatingFor === ro.name
+                    ? __('Creando…')
+                    : __('Crear borrador')
+                "
                 :loading="creatingFor === ro.name"
               />
             </Dropdown>
@@ -96,8 +106,22 @@
               class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
               @click="printTicket(ro.name)"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path
+                  d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
+                />
+                <rect x="6" y="14" width="12" height="8" />
               </svg>
             </button>
           </div>
@@ -105,11 +129,11 @@
 
         <!-- Card body — vertical stack, one field per row -->
         <div class="divide-y text-sm">
-
           <!-- Photo strip (low-res thumbnails; click opens full-res) -->
           <div v-if="ro.photos?.length" class="px-4 py-3">
             <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Fotos') }} <span class="text-ink-gray-4">({{ ro.photos.length }})</span>
+              {{ __('Fotos') }}
+              <span class="text-ink-gray-4">({{ ro.photos.length }})</span>
             </div>
             <div class="flex gap-2 overflow-x-auto pb-1">
               <button
@@ -119,12 +143,17 @@
                 :title="ph.photo_type || __('Foto')"
                 @click="openPhoto(ph)"
               >
-                <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
+                <img
+                  :src="ph.thumbnail_url"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
+                />
                 <span
                   v-if="ph.show_on_tracker"
                   class="absolute right-0.5 top-0.5 rounded bg-surface-green-7 px-1 text-[8px] font-bold text-ink-green-1"
                   :title="__('Visible en el tracker del cliente')"
-                >T</span>
+                  >T</span
+                >
               </button>
             </div>
           </div>
@@ -140,30 +169,54 @@
               :emphasize="!ro.falla_reportada"
             />
             <Row :label="__('Client')" :value="ro.client_name || ro.client" />
-            <Row :label="__('Device Condition')" :value="ro.general_status && __(ro.general_status)" />
-            <Row :label="__('Technician')" :value="ro.technician_name || ro.technician" />
-            <Row v-if="ro.received_by_name || ro.received_by"
-                 :label="__('Received by')"
-                 :value="ro.received_by_name || ro.received_by" />
-            <Row v-if="ro.delivered_by_name || ro.delivered_by"
-                 :label="__('Delivered by')"
-                 :value="ro.delivered_by_name || ro.delivered_by" />
-            <Row v-if="ro.laboratorio" :label="__('Laboratorio')" :value="ro.laboratorio" />
+            <Row
+              :label="__('Device Condition')"
+              :value="ro.general_status && __(ro.general_status)"
+            />
+            <Row
+              :label="__('Technician')"
+              :value="ro.technician_name || ro.technician"
+            />
+            <Row
+              v-if="ro.received_by_name || ro.received_by"
+              :label="__('Received by')"
+              :value="ro.received_by_name || ro.received_by"
+            />
+            <Row
+              v-if="ro.delivered_by_name || ro.delivered_by"
+              :label="__('Delivered by')"
+              :value="ro.delivered_by_name || ro.delivered_by"
+            />
+            <Row
+              v-if="ro.laboratorio"
+              :label="__('Laboratorio')"
+              :value="ro.laboratorio"
+            />
           </div>
 
           <!-- Device state pills -->
           <div class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Device State') }}</div>
+            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('Device State') }}
+            </div>
             <div class="flex flex-wrap gap-1.5">
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="ro.turns_on ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-red-1 text-ink-red-7'"
+                :class="
+                  ro.turns_on
+                    ? 'bg-surface-green-2 text-ink-green-8'
+                    : 'bg-surface-red-1 text-ink-red-7'
+                "
               >
                 {{ ro.turns_on ? __('Turns on ✓') : __('Does not turn on ✗') }}
               </span>
               <span
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
-                :class="ro.has_sim_tray ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-5'"
+                :class="
+                  ro.has_sim_tray
+                    ? 'bg-surface-green-2 text-ink-green-8'
+                    : 'bg-surface-gray-2 text-ink-gray-5'
+                "
               >
                 {{ ro.has_sim_tray ? __('SIM tray ✓') : __('No SIM tray') }}
               </span>
@@ -196,22 +249,32 @@
 
           <!-- Security: phone PIN / pattern (sensitive) -->
           <div v-if="ro.phone_pin || ro.phone_pattern" class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Security') }}</div>
+            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('Security') }}
+            </div>
             <div class="flex flex-wrap gap-3 font-mono text-xs">
               <span v-if="ro.phone_pin">
                 <span class="text-ink-gray-5">{{ __('PIN') }}:</span>
-                <code class="ml-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8">{{ ro.phone_pin }}</code>
+                <code
+                  class="ml-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
+                  >{{ ro.phone_pin }}</code
+                >
               </span>
               <span v-if="ro.phone_pattern">
                 <span class="text-ink-gray-5">{{ __('Pattern') }}:</span>
-                <code class="ml-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8">{{ ro.phone_pattern }}</code>
+                <code
+                  class="ml-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-ink-gray-8"
+                  >{{ ro.phone_pattern }}</code
+                >
               </span>
             </div>
           </div>
 
           <!-- IMEI / serial numbers -->
           <div v-if="ro.serial_numbers?.length" class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('IMEI / Serial') }}</div>
+            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('IMEI / Serial') }}
+            </div>
             <div class="flex flex-wrap gap-1.5">
               <code
                 v-for="sn in ro.serial_numbers"
@@ -225,19 +288,39 @@
 
           <!-- Financials (always shown — operators see cotización/anticipo at a glance) -->
           <div class="px-4 py-3 space-y-2">
-            <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Financials') }}</div>
-            <Row :label="__('Cotización')" :value="money(ro.quote_amount) || __('—')" />
-            <Row :label="__('Anticipo')" :value="money(ro.advance_amount) || __('—')" />
-            <Row :label="__('Saldo')" :value="money(ro.balance_due) || __('—')" :emphasize="(ro.balance_due || 0) > 0" />
-            <Row :label="__('Mano de obra')" :value="money(ro.labor_charge) || __('—')" />
-            <Row :label="__('Total facturable')" :value="money(ro.billing_total) || __('—')" />
+            <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('Financials') }}
+            </div>
+            <Row
+              :label="__('Cotización')"
+              :value="money(ro.quote_amount) || __('—')"
+            />
+            <Row
+              :label="__('Anticipo')"
+              :value="money(ro.advance_amount) || __('—')"
+            />
+            <Row
+              :label="__('Saldo')"
+              :value="money(ro.balance_due) || __('—')"
+              :emphasize="(ro.balance_due || 0) > 0"
+            />
+            <Row
+              :label="__('Mano de obra')"
+              :value="money(ro.labor_charge) || __('—')"
+            />
+            <Row
+              :label="__('Total facturable')"
+              :value="money(ro.billing_total) || __('—')"
+            />
           </div>
 
           <!-- Refacciones (always shown — empty state makes missing parts visible) -->
           <div class="px-4 py-3">
             <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
               {{ __('Refacciones') }}
-              <span v-if="ro.parts?.length" class="text-ink-gray-4">({{ ro.parts.length }})</span>
+              <span v-if="ro.parts?.length" class="text-ink-gray-4"
+                >({{ ro.parts.length }})</span
+              >
             </div>
             <div v-if="!ro.parts?.length" class="text-xs text-ink-gray-5">
               {{ __('Sin refacciones cargadas.') }}
@@ -249,19 +332,31 @@
                 class="flex items-center justify-between rounded border bg-surface-base px-2 py-1.5 text-xs"
               >
                 <div class="min-w-0 truncate">
-                  <span class="font-medium text-ink-gray-8">{{ p.item_name || p.item || '—' }}</span>
-                  <span v-if="p.source" class="ml-1.5 text-ink-gray-5">[{{ __(p.source) }}]</span>
+                  <span class="font-medium text-ink-gray-8">{{
+                    p.item_name || p.item || '—'
+                  }}</span>
+                  <span v-if="p.source" class="ml-1.5 text-ink-gray-5"
+                    >[{{ __(p.source) }}]</span
+                  >
                   <span
                     v-if="p.purchase_order && p.po_status"
                     class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-7"
                     :title="`${p.purchase_order} · ${p.po_status}`"
                   >
-                    🧩 {{ p.po_expected_date ? __('llega') + ' ' + p.po_expected_date : p.purchase_order }}
+                    🧩
+                    {{
+                      p.po_expected_date
+                        ? __('llega') + ' ' + p.po_expected_date
+                        : p.purchase_order
+                    }}
                   </span>
                 </div>
                 <div class="ml-2 whitespace-nowrap font-mono text-ink-gray-7">
                   {{ p.qty || 0 }}{{ p.uom ? ' ' + p.uom : '' }}
-                  <span v-if="p.customer_charge != null" class="ml-2 text-ink-gray-5">
+                  <span
+                    v-if="p.customer_charge != null"
+                    class="ml-2 text-ink-gray-5"
+                  >
                     · {{ money(p.customer_charge) }}
                   </span>
                 </div>
@@ -273,7 +368,9 @@
           <div class="px-4 py-3">
             <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
               {{ __('Repair Log') }}
-              <span v-if="ro.repair_log?.length" class="text-ink-gray-4">({{ ro.repair_log.length }})</span>
+              <span v-if="ro.repair_log?.length" class="text-ink-gray-4"
+                >({{ ro.repair_log.length }})</span
+              >
             </div>
             <div v-if="!ro.repair_log?.length" class="text-xs text-ink-gray-5">
               {{ __('Sin entradas de log.') }}
@@ -286,28 +383,67 @@
               >
                 <div class="flex items-center justify-between gap-2 text-xs">
                   <div class="flex items-center gap-1.5">
-                    <Badge v-if="e.step_type" size="sm" :label="__(e.step_type)" theme="gray" />
-                    <Badge v-if="e.outcome" size="sm" :label="__(e.outcome)"
-                           :theme="e.outcome === 'OK' ? 'green' : e.outcome === 'KO' ? 'red' : 'gray'" />
-                    <span class="text-ink-gray-7">{{ e.technician_name || e.technician || '—' }}</span>
+                    <Badge
+                      v-if="e.step_type"
+                      size="sm"
+                      :label="__(e.step_type)"
+                      theme="gray"
+                    />
+                    <Badge
+                      v-if="e.outcome"
+                      size="sm"
+                      :label="__(e.outcome)"
+                      :theme="
+                        e.outcome === 'OK'
+                          ? 'green'
+                          : e.outcome === 'KO'
+                            ? 'red'
+                            : 'gray'
+                      "
+                    />
+                    <span class="text-ink-gray-7">{{
+                      e.technician_name || e.technician || '—'
+                    }}</span>
                   </div>
-                  <span class="text-ink-gray-5">{{ formatDate(e.entry_datetime) }}</span>
+                  <span class="text-ink-gray-5">{{
+                    formatDate(e.entry_datetime)
+                  }}</span>
                 </div>
-                <div v-if="e.description" class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-8">
+                <div
+                  v-if="e.description"
+                  class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-8"
+                >
                   {{ e.description }}
                 </div>
-                <div v-if="e.resolution" class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-7">
-                  <span class="text-ink-gray-5">{{ __('Resolución') }}:</span> {{ e.resolution }}
+                <div
+                  v-if="e.resolution"
+                  class="mt-1 whitespace-pre-wrap text-xs text-ink-gray-7"
+                >
+                  <span class="text-ink-gray-5">{{ __('Resolución') }}:</span>
+                  {{ e.resolution }}
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Warranty -->
-          <div v-if="ro.warranty_expires_on || ro.warranty_period_days" class="px-4 py-3 space-y-2">
-            <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Warranty') }}</div>
-            <Row v-if="ro.warranty_period_days" :label="__('Period (days)')" :value="ro.warranty_period_days" />
-            <Row v-if="ro.warranty_expires_on" :label="__('Expires on')" :value="ro.warranty_expires_on" />
+          <div
+            v-if="ro.warranty_expires_on || ro.warranty_period_days"
+            class="px-4 py-3 space-y-2"
+          >
+            <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('Warranty') }}
+            </div>
+            <Row
+              v-if="ro.warranty_period_days"
+              :label="__('Period (days)')"
+              :value="ro.warranty_period_days"
+            />
+            <Row
+              v-if="ro.warranty_expires_on"
+              :label="__('Expires on')"
+              :value="ro.warranty_expires_on"
+            />
           </div>
 
           <!-- Deal status echo -->
@@ -318,7 +454,9 @@
           <!-- Last communication mirror -->
           <div v-if="ro.last_communication" class="px-4 py-3">
             <div class="mb-1.5 flex items-center gap-2">
-              <div class="text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Last communication') }}</div>
+              <div class="text-xs uppercase tracking-wide text-ink-gray-5">
+                {{ __('Last communication') }}
+              </div>
               <Badge
                 v-if="ro.communication_status"
                 size="sm"
@@ -326,7 +464,9 @@
                 :theme="ro.communication_status === 'Open' ? 'orange' : 'green'"
               />
             </div>
-            <div class="text-sm text-ink-gray-8 whitespace-pre-wrap">{{ ro.last_communication }}</div>
+            <div class="text-sm text-ink-gray-8 whitespace-pre-wrap">
+              {{ ro.last_communication }}
+            </div>
             <div class="mt-1 text-xs text-ink-gray-5">
               {{ ro.last_communication_sender || __('Unknown') }}
               <span v-if="ro.last_communication_date">
@@ -337,7 +477,9 @@
 
           <!-- Documentos financieros (always shown — empty state makes gaps obvious) -->
           <div class="px-4 py-3">
-            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Documentos financieros') }}</div>
+            <div class="mb-1.5 text-xs uppercase tracking-wide text-ink-gray-5">
+              {{ __('Documentos financieros') }}
+            </div>
             <div
               v-if="!ro.quotation && !ro.sales_order && !ro.invoices?.length"
               class="text-xs text-ink-gray-5"
@@ -362,17 +504,20 @@
                 {{ __('SO') }}: {{ ro.sales_order }}
               </a>
               <a
-                v-for="inv in (ro.invoices || [])"
+                v-for="inv in ro.invoices || []"
                 :key="`${inv.invoice_type}-${inv.invoice}`"
                 :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
                 target="_blank"
                 class="text-ink-blue-9 hover:underline"
               >
-                {{ inv.invoice_type === 'POS Invoice' ? __('POS') : __('Factura') }}: {{ inv.invoice }}
+                {{
+                  inv.invoice_type === 'POS Invoice'
+                    ? __('POS')
+                    : __('Factura')
+                }}: {{ inv.invoice }}
               </a>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -389,7 +534,13 @@
 <script setup>
 import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
 import RepairSendModal from '@/components/doco/RepairSendModal.vue'
-import { Badge, Button, Dropdown, ErrorMessage, createResource } from 'frappe-ui'
+import {
+  Badge,
+  Button,
+  Dropdown,
+  ErrorMessage,
+  createResource,
+} from 'frappe-ui'
 import { contactCard } from '@/composables/inbox'
 import { h, ref } from 'vue'
 
@@ -496,7 +647,9 @@ function createRepairOrder() {
   // throws if blank) — block here so the user gets a clean message.
   const falla = (rd.falla_reportada || '').trim()
   if (!falla) {
-    createError.value = __('Falla reportada is required when creating a Repair Order.')
+    createError.value = __(
+      'Falla reportada is required when creating a Repair Order.',
+    )
     return
   }
 
@@ -519,8 +672,8 @@ function createRepairOrder() {
       turns_on: rd.turns_on ? 1 : 0,
       broken_screen: rd.broken_screen ? 1 : 0,
       has_phone_case: rd.has_phone_case ? 1 : 0,
-      phone_pin: unlock === 'pin' ? (rd.phone_pin || '') : '',
-      phone_pattern: unlock === 'pattern' ? (rd.phone_pattern || '') : '',
+      phone_pin: unlock === 'pin' ? rd.phone_pin || '' : '',
+      phone_pattern: unlock === 'pattern' ? rd.phone_pattern || '' : '',
       quote_amount: Number(rd.quote_amount) || 0,
       advance_amount: Number(rd.advance_amount) || 0,
     },
@@ -540,7 +693,7 @@ function createRepairOrder() {
 }
 
 const STATUS_THEMES = {
-  'Entregado': 'green',
+  Entregado: 'green',
   'Listo para Entregar': 'green',
   'En Reparación': 'blue',
   'Control de Calidad': 'blue',
@@ -550,7 +703,7 @@ const STATUS_THEMES = {
   'Esperando Pieza': 'purple',
   'Esperando Cliente': 'yellow',
   'Por Revisar': 'gray',
-  'Cancelado': 'red',
+  Cancelado: 'red',
 }
 
 function statusTheme(status) {
@@ -575,7 +728,10 @@ function openPhoto(ph) {
       params: { file_name: ph.file_name },
       auto: true,
       onSuccess(data) {
-        window.open((typeof data === 'string' ? data : data?.url) || ph.image, '_blank')
+        window.open(
+          (typeof data === 'string' ? data : data?.url) || ph.image,
+          '_blank',
+        )
       },
       onError() {
         window.open(ph.image || ph.thumbnail_url, '_blank')
@@ -608,7 +764,11 @@ function printTicket(roName) {
         simplified: '1',
       })
       if (data.letterhead) params.set('letterhead', data.letterhead)
-      window.open('/printview?' + params.toString(), '_blank', 'width=400,height=600')
+      window.open(
+        '/printview?' + params.toString(),
+        '_blank',
+        'width=400,height=600',
+      )
     },
     onError(err) {
       const msg = err?.messages?.join('\n') || err?.message || 'Print failed'

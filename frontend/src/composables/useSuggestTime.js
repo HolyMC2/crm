@@ -14,7 +14,10 @@ export function useSuggestTime() {
   async function fetchSuggestions(shop, after) {
     loading.value = true
     try {
-      const r = await call('doco_marketing.api.social_planner.suggest_time', { shop, after })
+      const r = await call('doco_marketing.api.social_planner.suggest_time', {
+        shop,
+        after,
+      })
       suggestions.value = r?.suggestions || []
       fbOnly.value = r?.fb_only !== false
       return suggestions.value

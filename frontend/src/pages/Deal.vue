@@ -549,7 +549,12 @@ const statuses = computed(() => {
   let customStatuses = document.statuses?.length
     ? document.statuses
     : document._statuses || []
-  return statusOptions('deal', customStatuses, triggerStatusChange, addonAvailable.value ? triggerStatusChangeSilent : null)
+  return statusOptions(
+    'deal',
+    customStatuses,
+    triggerStatusChange,
+    addonAvailable.value ? triggerStatusChangeSilent : null,
+  )
 })
 
 usePageMeta(() => {

@@ -26,12 +26,17 @@
       class="sheet-in fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col overflow-y-auto rounded-t-2xl bg-surface-base px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-[0_-8px_32px_rgba(0,0,0,.18)] sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[380px] sm:rounded-2xl sm:pb-4"
       @keydown.esc="skip"
     >
-      <div class="mx-auto mb-2.5 h-1 w-10 flex-none rounded-full bg-surface-gray-4 sm:hidden" aria-hidden="true" />
+      <div
+        class="mx-auto mb-2.5 h-1 w-10 flex-none rounded-full bg-surface-gray-4 sm:hidden"
+        aria-hidden="true"
+      />
 
       <!-- header -->
       <div class="mb-2 flex items-start justify-between gap-2">
         <div>
-          <div class="text-[13.5px] font-semibold text-ink-gray-8">{{ __('Llamada terminada') }}</div>
+          <div class="text-[13.5px] font-semibold text-ink-gray-8">
+            {{ __('Llamada terminada') }}
+          </div>
           <div class="mt-0.5 text-[11.5px] text-ink-gray-5">
             {{ directionLabel }} · {{ duration }} · {{ counterpart }}
           </div>
@@ -47,7 +52,11 @@
       </div>
 
       <!-- outcome chips -->
-      <div class="mb-1 text-[10.5px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Resultado') }}</div>
+      <div
+        class="mb-1 text-[10.5px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+      >
+        {{ __('Resultado') }}
+      </div>
       <div class="flex flex-wrap gap-1.5">
         <button
           v-for="o in outcomes"
@@ -62,13 +71,17 @@
           "
           @click="outcome = o.value"
         >
-          <span aria-hidden="true">{{ o.emoji }}</span>{{ __(o.label) }}
+          <span aria-hidden="true">{{ o.emoji }}</span
+          >{{ __(o.label) }}
         </button>
       </div>
 
       <!-- note -->
       <label class="mt-3 block">
-        <span class="text-[10.5px] font-medium text-ink-gray-5">{{ __('Nota') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span></span>
+        <span class="text-[10.5px] font-medium text-ink-gray-5"
+          >{{ __('Nota') }}
+          <span class="text-ink-gray-4">({{ __('opcional') }})</span></span
+        >
         <textarea
           v-model="note"
           rows="2"
@@ -91,7 +104,9 @@
         @click="createTask = !createTask"
       >
         <span>📅 {{ __('Crear tarea para mañana 9:00') }}</span>
-        <span class="flex size-4 flex-none items-center justify-center">{{ createTask ? '✓' : '' }}</span>
+        <span class="flex size-4 flex-none items-center justify-center">{{
+          createTask ? '✓' : ''
+        }}</span>
       </button>
 
       <!-- actions -->
@@ -119,7 +134,11 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { call, toast } from 'frappe-ui'
-import { OUTCOMES, tomorrow9Epoch, formatCallDuration } from '@/utils/postcallOutcome'
+import {
+  OUTCOMES,
+  tomorrow9Epoch,
+  formatCallDuration,
+} from '@/utils/postcallOutcome'
 
 const outcomes = OUTCOMES
 
@@ -178,7 +197,9 @@ async function save() {
       create_task: createTask.value ? 1 : 0,
       task_due_epoch: createTask.value ? tomorrow9Epoch() : undefined,
     })
-    toast.success(createTask.value ? __('Guardado — tarea creada') : __('Guardado'))
+    toast.success(
+      createTask.value ? __('Guardado — tarea creada') : __('Guardado'),
+    )
     close()
   } catch (e) {
     toast.error(e.messages?.[0] || __('No se pudo guardar'))

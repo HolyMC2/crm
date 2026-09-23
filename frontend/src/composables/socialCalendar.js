@@ -10,7 +10,14 @@ import { createResource, call as frappeCall, toast } from 'frappe-ui'
 // Monday-first weekday header labels.
 export const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-export const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉', Noticia: '📣', Testimonio: '💬', Aviso: 'ℹ️' }
+export const KIND_EMOJI = {
+  Producto: '🛒',
+  Servicio: '🛠',
+  Temporada: '🎉',
+  Noticia: '📣',
+  Testimonio: '💬',
+  Aviso: 'ℹ️',
+}
 
 // ── pillar (post_kind) color map — frappe-ui semantic tokens ──
 // The espresso v2 accent ink targets were chosen value-exact in LIGHT only (the
@@ -38,11 +45,31 @@ export const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉
 // those stay dark: overrides.
 // Temporada already carries its own dark: pair and is correct.
 export const PILLARS = [
-  { kind: 'Producto', emoji: '🛒', chip: 'bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8' },
-  { kind: 'Servicio', emoji: '🛠', chip: 'bg-surface-violet-2 text-ink-violet-8' },
-  { kind: 'Temporada', emoji: '🎉', chip: 'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200' },
-  { kind: 'Noticia', emoji: '📣', chip: 'bg-surface-red-2 text-ink-red-6 dark:text-ink-red-8' },
-  { kind: 'Testimonio', emoji: '💬', chip: 'bg-surface-green-2 text-ink-green-8' },
+  {
+    kind: 'Producto',
+    emoji: '🛒',
+    chip: 'bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8',
+  },
+  {
+    kind: 'Servicio',
+    emoji: '🛠',
+    chip: 'bg-surface-violet-2 text-ink-violet-8',
+  },
+  {
+    kind: 'Temporada',
+    emoji: '🎉',
+    chip: 'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200',
+  },
+  {
+    kind: 'Noticia',
+    emoji: '📣',
+    chip: 'bg-surface-red-2 text-ink-red-6 dark:text-ink-red-8',
+  },
+  {
+    kind: 'Testimonio',
+    emoji: '💬',
+    chip: 'bg-surface-green-2 text-ink-green-8',
+  },
   { kind: 'Aviso', emoji: 'ℹ️', chip: 'bg-surface-gray-3 text-ink-gray-7' },
 ]
 const PILLAR_MAP = Object.fromEntries(PILLARS.map((p) => [p.kind, p.chip]))
@@ -67,11 +94,24 @@ export function statusDot(s) {
 // Post-level status filter vocabulary + es-MX labels (chip() gives their colors).
 // Cancelado is NOT a calendar status anymore — the backend excludes it from
 // get_calendar (still in Desk/reports); STATUS_LABEL/chip keep it for other surfaces.
-export const STATUSES = ['Draft', 'Pending Approval', 'Scheduled', 'Publishing', 'Published', 'Partially Published', 'Failed']
+export const STATUSES = [
+  'Draft',
+  'Pending Approval',
+  'Scheduled',
+  'Publishing',
+  'Published',
+  'Partially Published',
+  'Failed',
+]
 export const STATUS_LABEL = {
-  Draft: 'Borrador', 'Pending Approval': 'Por aprobar', Scheduled: 'Programada',
-  Publishing: 'Publicando', Published: 'Publicada', 'Partially Published': 'Parcial',
-  Failed: 'Falló', Cancelado: 'Cancelada',
+  Draft: 'Borrador',
+  'Pending Approval': 'Por aprobar',
+  Scheduled: 'Programada',
+  Publishing: 'Publicando',
+  Published: 'Publicada',
+  'Partially Published': 'Parcial',
+  Failed: 'Falló',
+  Cancelado: 'Cancelada',
 }
 export const CHANNEL_FAMILIES = [
   { key: 'FB', emoji: '🟦', label: 'Facebook' },
@@ -87,16 +127,20 @@ export function ymd(d) {
 }
 
 export function chip(status) {
-  return {
-    Draft: 'bg-surface-gray-2 text-ink-gray-6',
-    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
-    Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
-    Publishing: 'bg-surface-blue-2 text-ink-blue-9',
-    Published: 'bg-surface-green-2 text-ink-green-8',
-    'Partially Published': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
-    Failed: 'bg-surface-red-1 text-ink-red-8',
-    Cancelado: 'bg-surface-gray-2 text-ink-gray-4 line-through',
-  }[status] || 'bg-surface-gray-2 text-ink-gray-6'
+  return (
+    {
+      Draft: 'bg-surface-gray-2 text-ink-gray-6',
+      'Pending Approval':
+        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+      Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
+      Publishing: 'bg-surface-blue-2 text-ink-blue-9',
+      Published: 'bg-surface-green-2 text-ink-green-8',
+      'Partially Published':
+        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+      Failed: 'bg-surface-red-1 text-ink-red-8',
+      Cancelado: 'bg-surface-gray-2 text-ink-gray-4 line-through',
+    }[status] || 'bg-surface-gray-2 text-ink-gray-6'
+  )
 }
 
 export function chanIcons(chs) {
@@ -110,7 +154,7 @@ export function chanIcons(chs) {
 export function channelBadges(chs) {
   return (chs || []).map((c) => {
     const ch = chanName(c) || ''
-    const status = (c && c.status != null) ? c.status : ''
+    const status = c && c.status != null ? c.status : ''
     return {
       channel: ch,
       status,
@@ -120,7 +164,8 @@ export function channelBadges(chs) {
   })
 }
 
-export const chLabel = (ch) => (ch.startsWith('IG') ? __('Ver en Instagram') : __('Ver en Facebook'))
+export const chLabel = (ch) =>
+  ch.startsWith('IG') ? __('Ver en Instagram') : __('Ver en Facebook')
 
 export function toDtLocal(dt) {
   return dt ? dt.replace(' ', 'T').slice(0, 16) : ''
@@ -131,7 +176,19 @@ export function fromDtLocal(v) {
 
 // A pristine composer form.
 export function blankForm() {
-  return { name: '', title: '', shop: '', channels: [], captions: {}, media: [], scheduled_time: '', cta_type: 'WhatsApp', cta_link: '', status: '', channelStates: [] }
+  return {
+    name: '',
+    title: '',
+    shop: '',
+    channels: [],
+    captions: {},
+    media: [],
+    scheduled_time: '',
+    cta_type: 'WhatsApp',
+    cta_link: '',
+    status: '',
+    channelStates: [],
+  }
 }
 
 // ── composer round-trip helpers (SocialComposer) ──
@@ -142,7 +199,9 @@ export function mapComposerMedia(doc) {
     media_file: m.media_file,
     media_type: m.media_type || 'Image',
     alt_text: m.alt_text || '',
-    channels: (m.channels || []).map((t) => ({ social_channel: t.social_channel })),
+    channels: (m.channels || []).map((t) => ({
+      social_channel: t.social_channel,
+    })),
   }))
 }
 
@@ -158,17 +217,33 @@ export function buildPayload(form, status) {
     cta_type: form.cta_type,
     cta_link: form.cta_type === 'None' ? '' : form.cta_link,
     first_comment: form.first_comment || '',
-    channels: form.channels.map((c) => ({ channel: c, caption: form.captions[c] || '' })),
-    media: form.media.map((m, i) => ({ media_file: m.media_file, seq: i, alt_text: m.alt_text || '', channels: m.channels || [] })),
+    channels: form.channels.map((c) => ({
+      channel: c,
+      caption: form.captions[c] || '',
+    })),
+    media: form.media.map((m, i) => ({
+      media_file: m.media_file,
+      seq: i,
+      alt_text: m.alt_text || '',
+      channels: m.channels || [],
+    })),
   }
 }
 
 const CAL_VIEW_KEY = 'social:calView'
 function readLS(key, fallback) {
-  try { return localStorage.getItem(key) || fallback } catch { return fallback }
+  try {
+    return localStorage.getItem(key) || fallback
+  } catch {
+    return fallback
+  }
 }
 function writeLS(key, val) {
-  try { localStorage.setItem(key, val) } catch { /* private mode / SSR — non-fatal */ }
+  try {
+    localStorage.setItem(key, val)
+  } catch {
+    /* private mode / SSR — non-fatal */
+  }
 }
 
 function startOfWeek(d) {
@@ -191,12 +266,18 @@ export function useSocialCalendar() {
       d.setDate(d.getDate() + dir * 7)
       cursor.value = d
     } else {
-      cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() + dir, 1)
+      cursor.value = new Date(
+        cursor.value.getFullYear(),
+        cursor.value.getMonth() + dir,
+        1,
+      )
     }
   }
   const gridStart = computed(() => {
     if (calView.value === 'week') return startOfWeek(cursor.value)
-    return startOfWeek(new Date(cursor.value.getFullYear(), cursor.value.getMonth(), 1))
+    return startOfWeek(
+      new Date(cursor.value.getFullYear(), cursor.value.getMonth(), 1),
+    )
   })
   const gridLen = computed(() => (calView.value === 'week' ? 7 : 42))
   const days = computed(() => {
@@ -207,43 +288,61 @@ export function useSocialCalendar() {
       const d = new Date(start)
       d.setDate(start.getDate() + i)
       out.push({
-        key: ymd(d), n: d.getDate(),
+        key: ymd(d),
+        n: d.getDate(),
         // week view has no "other month" dimming; month/list dim the pad days.
         inMonth: calView.value === 'week' ? true : d.getMonth() === focusMonth,
-        isToday: ymd(d) === todayKey, date: d,
+        isToday: ymd(d) === todayKey,
+        date: d,
       })
     }
     return out
   })
   const rangeLabel = computed(() => {
     if (calView.value === 'week') {
-      const a = days.value[0].date, b = days.value[6].date
+      const a = days.value[0].date,
+        b = days.value[6].date
       const fmt = (x, o) => x.toLocaleDateString('es-MX', o)
       return a.getMonth() === b.getMonth()
         ? `${a.getDate()}–${b.getDate()} ${fmt(b, { month: 'short', year: 'numeric' })}`
         : `${fmt(a, { day: 'numeric', month: 'short' })} – ${fmt(b, { day: 'numeric', month: 'short', year: 'numeric' })}`
     }
-    return new Date(cursor.value.getFullYear(), cursor.value.getMonth(), 1)
-      .toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
+    return new Date(
+      cursor.value.getFullYear(),
+      cursor.value.getMonth(),
+      1,
+    ).toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
   })
   // Only re-fetch when the fetched window actually changes (month↔list share a range).
-  const rangeKey = computed(() => `${days.value[0].key}|${days.value[days.value.length - 1].key}`)
+  const rangeKey = computed(
+    () => `${days.value[0].key}|${days.value[days.value.length - 1].key}`,
+  )
 
   // ── shop selector (D4) — declared before `cal` so its auto-fetch sees it ─────
   const shop = ref('') // '' = all shops (manager); resolved to the lone shop for an employee
 
   const cal = createResource({
     url: 'doco_marketing.api.social.get_calendar',
-    makeParams: () => ({ start: days.value[0].key, end: days.value[days.value.length - 1].key + ' 23:59:59', shop: shop.value || undefined }),
+    makeParams: () => ({
+      start: days.value[0].key,
+      end: days.value[days.value.length - 1].key + ' 23:59:59',
+      shop: shop.value || undefined,
+    }),
     auto: true,
   })
   // season ribbons (B1) — clipped spans over the visible window
   const seasonsRes = createResource({
     url: 'doco_marketing.api.social.get_seasons',
-    makeParams: () => ({ start: days.value[0].key, end: days.value[days.value.length - 1].key }),
+    makeParams: () => ({
+      start: days.value[0].key,
+      end: days.value[days.value.length - 1].key,
+    }),
     auto: true,
   })
-  watch(rangeKey, () => { cal.reload(); seasonsRes.reload() })
+  watch(rangeKey, () => {
+    cal.reload()
+    seasonsRes.reload()
+  })
 
   // métricas view (S12) + per-shop leaderboard (D5)
   const view = ref('calendar')
@@ -258,7 +357,14 @@ export function useSocialCalendar() {
     auto: false,
   })
   const lbTotals = computed(() => {
-    const acc = { posts: 0, reach: 0, impressions: 0, engagement: 0, link_clicks: 0, leads: 0 }
+    const acc = {
+      posts: 0,
+      reach: 0,
+      impressions: 0,
+      engagement: 0,
+      link_clicks: 0,
+      leads: 0,
+    }
     for (const r of lb.data || []) for (const k in acc) acc[k] += r[k] || 0
     return acc
   })
@@ -273,7 +379,11 @@ export function useSocialCalendar() {
   const filterStatuses = ref([])
   const filterFamilies = ref([])
   function toggleFilter(dim, val) {
-    const r = { kind: filterKinds, status: filterStatuses, family: filterFamilies }[dim]
+    const r = {
+      kind: filterKinds,
+      status: filterStatuses,
+      family: filterFamilies,
+    }[dim]
     if (!r) return
     const i = r.value.indexOf(val)
     if (i >= 0) r.value.splice(i, 1)
@@ -284,7 +394,12 @@ export function useSocialCalendar() {
     filterStatuses.value = []
     filterFamilies.value = []
   }
-  const activeFilterCount = computed(() => filterKinds.value.length + filterStatuses.value.length + filterFamilies.value.length)
+  const activeFilterCount = computed(
+    () =>
+      filterKinds.value.length +
+      filterStatuses.value.length +
+      filterFamilies.value.length,
+  )
   function postFamilies(p) {
     const out = new Set()
     for (const c of p.channels || []) {
@@ -295,8 +410,13 @@ export function useSocialCalendar() {
     return out
   }
   function matchesFilters(p) {
-    if (filterKinds.value.length && !filterKinds.value.includes(p.post_kind || '')) return false
-    if (filterStatuses.value.length && !filterStatuses.value.includes(p.status)) return false
+    if (
+      filterKinds.value.length &&
+      !filterKinds.value.includes(p.post_kind || '')
+    )
+      return false
+    if (filterStatuses.value.length && !filterStatuses.value.includes(p.status))
+      return false
     if (filterFamilies.value.length) {
       const fams = postFamilies(p)
       if (!filterFamilies.value.some((f) => fams.has(f))) return false
@@ -307,7 +427,9 @@ export function useSocialCalendar() {
   // moment you select it) — the classic multi-facet filter behavior.
   const filterCounts = computed(() => {
     const all = [...(cal.data?.scheduled || []), ...(cal.data?.drafts || [])]
-    const kinds = {}, statuses = {}, families = { FB: 0, IG: 0 }
+    const kinds = {},
+      statuses = {},
+      families = { FB: 0, IG: 0 }
     for (const p of all) {
       const k = p.post_kind || ''
       kinds[k] = (kinds[k] || 0) + 1
@@ -319,8 +441,12 @@ export function useSocialCalendar() {
     return { kinds, statuses, families }
   })
 
-  const filteredScheduled = computed(() => (cal.data?.scheduled || []).filter(matchesFilters))
-  const visibleDrafts = computed(() => (cal.data?.drafts || []).filter(matchesFilters))
+  const filteredScheduled = computed(() =>
+    (cal.data?.scheduled || []).filter(matchesFilters),
+  )
+  const visibleDrafts = computed(() =>
+    (cal.data?.drafts || []).filter(matchesFilters),
+  )
 
   const postsByDay = computed(() => {
     const m = {}
@@ -333,25 +459,52 @@ export function useSocialCalendar() {
       ;(m[k] = m[k] || []).push(p)
     }
     // stable in-day order: by time — naive-string compare, same no-Date rule as above
-    for (const k in m) m[k].sort((a, b) => (a.scheduled_time || '').localeCompare(b.scheduled_time || ''))
+    for (const k in m)
+      m[k].sort((a, b) =>
+        (a.scheduled_time || '').localeCompare(b.scheduled_time || ''),
+      )
     return m
   })
 
-  const channelsRes = createResource({ url: 'doco_marketing.api.social.get_channels', auto: true })
-  const channels = computed(() => channelsRes.data || ['FB Feed', 'FB Reel', 'IG Feed', 'IG Reel', 'IG Story'])
+  const channelsRes = createResource({
+    url: 'doco_marketing.api.social.get_channels',
+    auto: true,
+  })
+  const channels = computed(
+    () =>
+      channelsRes.data || [
+        'FB Feed',
+        'FB Reel',
+        'IG Feed',
+        'IG Reel',
+        'IG Story',
+      ],
+  )
 
   // shop selector data (D4): managers get every enabled shop + the 'Todas' option; an
   // employee is auto-pinned to their (single) branch so filters + composer are concrete.
-  const shopsRes = createResource({ url: 'doco_marketing.api.social.get_shops', auto: true })
+  const shopsRes = createResource({
+    url: 'doco_marketing.api.social.get_shops',
+    auto: true,
+  })
   const isManager = computed(() => !!shopsRes.data?.is_manager)
   const shopOptions = computed(() => shopsRes.data?.shops || [])
-  const shopLabel = (name) => shopOptions.value.find((s) => s.name === name)?.shop_name || name
-  watch(shopOptions, (opts) => {
-    if (!isManager.value && opts.length && !shop.value) shop.value = opts[0].name
-  }, { immediate: true })
+  const shopLabel = (name) =>
+    shopOptions.value.find((s) => s.name === name)?.shop_name || name
+  watch(
+    shopOptions,
+    (opts) => {
+      if (!isManager.value && opts.length && !shop.value)
+        shop.value = opts[0].name
+    },
+    { immediate: true },
+  )
   function onShopChange() {
     cal.reload()
-    if (view.value === 'metrics') { dash.reload(); lb.reload() }
+    if (view.value === 'metrics') {
+      dash.reload()
+      lb.reload()
+    }
   }
 
   // pending-approval posts across the loaded window + unscheduled tray
@@ -362,10 +515,19 @@ export function useSocialCalendar() {
 
   // agenda (list view): only the range's days that have posts (plus hoy as an anchor)
   const agendaDays = computed(() =>
-    days.value.filter((d) => d.inMonth && ((postsByDay.value[d.key] || []).length || d.isToday)).map((d) => ({
-      ...d,
-      label: new Date(d.date || d.key).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }),
-    })),
+    days.value
+      .filter(
+        (d) =>
+          d.inMonth && ((postsByDay.value[d.key] || []).length || d.isToday),
+      )
+      .map((d) => ({
+        ...d,
+        label: new Date(d.date || d.key).toLocaleDateString('es-MX', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        }),
+      })),
   )
 
   // season ribbons: dayKey → [{...span, isStart}] for the grid strips
@@ -374,7 +536,10 @@ export function useSocialCalendar() {
     for (const s of seasonsRes.data || []) {
       for (const d of days.value) {
         if (d.key >= s.start && d.key <= s.end) {
-          ;(m[d.key] = m[d.key] || []).push({ ...s, isStart: d.key === s.start })
+          ;(m[d.key] = m[d.key] || []).push({
+            ...s,
+            isStart: d.key === s.start,
+          })
         }
       }
     }
@@ -391,7 +556,10 @@ export function useSocialCalendar() {
     const next = `${dayKey} ${t}:00`
     post.scheduled_time = next // optimistic — the tile jumps immediately
     try {
-      await frappeCall('doco_marketing.api.social.reschedule', { name: post.name, scheduled_time: next })
+      await frappeCall('doco_marketing.api.social.reschedule', {
+        name: post.name,
+        scheduled_time: next,
+      })
       toast.success(__('Reprogramado'))
       cal.reload()
     } catch (e) {
@@ -402,14 +570,40 @@ export function useSocialCalendar() {
 
   return {
     // view + range
-    calView, cursor, days, rangeLabel, shift, todayKey,
+    calView,
+    cursor,
+    days,
+    rangeLabel,
+    shift,
+    todayKey,
     // top-level view + metrics resources
-    view, dash, lb, lbTotals, showMetrics,
+    view,
+    dash,
+    lb,
+    lbTotals,
+    showMetrics,
     // calendar data (filtered)
-    cal, postsByDay, pendingPosts, agendaDays, visibleDrafts, reschedulePost, seasonByDay,
+    cal,
+    postsByDay,
+    pendingPosts,
+    agendaDays,
+    visibleDrafts,
+    reschedulePost,
+    seasonByDay,
     // filters
-    filterKinds, filterStatuses, filterFamilies, toggleFilter, clearFilters, activeFilterCount, filterCounts,
+    filterKinds,
+    filterStatuses,
+    filterFamilies,
+    toggleFilter,
+    clearFilters,
+    activeFilterCount,
+    filterCounts,
     // channels + shops
-    channels, isManager, shopOptions, shopLabel, shop, onShopChange,
+    channels,
+    isManager,
+    shopOptions,
+    shopLabel,
+    shop,
+    onShopChange,
   }
 }

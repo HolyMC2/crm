@@ -21,10 +21,15 @@ vi.mock('frappe-ui', () => ({
 vi.mock('vue-router', () => ({
   RouterLink: defineComponent({
     props: ['to'],
-    setup: (p, { slots }) => () => h('a', { 'data-route': JSON.stringify(p.to) }, slots.default?.()),
+    setup:
+      (p, { slots }) =>
+      () =>
+        h('a', { 'data-route': JSON.stringify(p.to) }, slots.default?.()),
   }),
 }))
-vi.mock('@/stores/users', () => ({ usersStore: () => ({ isManager: () => session.manager }) }))
+vi.mock('@/stores/users', () => ({
+  usersStore: () => ({ isManager: () => session.manager }),
+}))
 import WhatsAppReviewCard from '@/components/doco/WhatsAppReviewCard.vue'
 
 const mounted = []
@@ -80,8 +85,13 @@ describe('WhatsAppReviewCard', () => {
     const el = mount({ row: dealRow() })
     const text = el.textContent
     expect(el.querySelector('[data-avatar]').dataset.avatar).toBe('Test Orders')
-    const nameLink = [...el.querySelectorAll('a[data-route]')].find((a) => a.textContent.trim() === 'Test Orders')
-    expect(JSON.parse(nameLink.dataset.route)).toEqual({ name: 'Deal 360', params: { dealId: 'CRM-DEAL-2026-00968' } })
+    const nameLink = [...el.querySelectorAll('a[data-route]')].find(
+      (a) => a.textContent.trim() === 'Test Orders',
+    )
+    expect(JSON.parse(nameLink.dataset.route)).toEqual({
+      name: 'Deal 360',
+      params: { dealId: 'CRM-DEAL-2026-00968' },
+    })
     expect(text).toContain('+521 555 555 0000')
     expect(text).toContain('Quitar Virus · Realme C63')
     const ro = el.querySelector('a[href="/app/repair-order/RO-00838"]')
@@ -91,7 +101,9 @@ describe('WhatsAppReviewCard', () => {
     expect(text).toContain('equipo_listo')
     expect(text).toContain('Pendiente')
     expect(text).toContain('Abrir trato')
-    expect([...el.querySelectorAll('button')].map((b) => b.textContent.trim())).toEqual(
+    expect(
+      [...el.querySelectorAll('button')].map((b) => b.textContent.trim()),
+    ).toEqual(
       expect.arrayContaining(['Editar variables', 'Enviar', 'Cancelar']),
     )
   })
@@ -102,7 +114,9 @@ describe('WhatsAppReviewCard', () => {
     expect(el.textContent).not.toContain('Abrir trato')
     expect(el.textContent).toContain('Pendiente')
     expect(el.querySelector('a[href="/app/repair-order/RO-00838"]')).toBeNull()
-    expect([...el.querySelectorAll('button')].map((b) => b.textContent.trim())).toContain('Enviar')
+    expect(
+      [...el.querySelectorAll('button')].map((b) => b.textContent.trim()),
+    ).toContain('Enviar')
   })
 
   it('shows no customer-facing actions to a non-manager', () => {
@@ -117,11 +131,19 @@ describe('WhatsAppReviewCard', () => {
       row: dealRow({
         reference_doctype: 'Repair Order',
         reference_name: 'RO-01041',
-        context: { kind: 'Repair Order', customer_name: 'Test Warranty', repair_order: 'RO-01041', repair_status: 'Entregado', device: 'TWIP DEV' },
+        context: {
+          kind: 'Repair Order',
+          customer_name: 'Test Warranty',
+          repair_order: 'RO-01041',
+          repair_status: 'Entregado',
+          device: 'TWIP DEV',
+        },
       }),
     })
     expect(el.querySelector('a[data-route]')).toBeNull()
-    expect(el.querySelector('a[href="/app/repair-order/RO-01041"]').textContent).toContain('Entregado')
+    expect(
+      el.querySelector('a[href="/app/repair-order/RO-01041"]').textContent,
+    ).toContain('Entregado')
     expect(el.textContent).not.toContain('Trato ')
     expect(el.textContent).toContain('TWIP DEV')
   })
@@ -131,18 +153,30 @@ describe('WhatsAppReviewCard', () => {
       row: dealRow({
         reference_doctype: 'Repair Order',
         reference_name: 'RO-09999',
-        context: { kind: 'Repair Order', customer_name: 'Pablo Hernández', customer_phone: '6951131449', contact: 'Pablo Hernández' },
+        context: {
+          kind: 'Repair Order',
+          customer_name: 'Pablo Hernández',
+          customer_phone: '6951131449',
+          contact: 'Pablo Hernández',
+        },
       }),
     })
-    const nameLink = [...el.querySelectorAll('a[data-route]')].find((a) => a.textContent.trim() === 'Pablo Hernández')
-    expect(JSON.parse(nameLink.dataset.route)).toEqual({ name: 'Contact', params: { contactId: 'Pablo Hernández' } })
+    const nameLink = [...el.querySelectorAll('a[data-route]')].find(
+      (a) => a.textContent.trim() === 'Pablo Hernández',
+    )
+    expect(JSON.parse(nameLink.dataset.route)).toEqual({
+      name: 'Contact',
+      params: { contactId: 'Pablo Hernández' },
+    })
     expect(el.textContent).toContain('695 113 1449')
     expect(el.textContent).toContain('Abrir contacto')
     expect(el.querySelector('a[href*="/app/repair-order/"]')).toBeNull()
   })
 
   it('falls back to the raw recipient and a placeholder when nothing resolved', () => {
-    const el = mount({ row: dealRow({ context: { kind: 'CRM Deal' }, template_label: null }) })
+    const el = mount({
+      row: dealRow({ context: { kind: 'CRM Deal' }, template_label: null }),
+    })
     expect(el.textContent).toContain('Sin nombre')
     expect(el.textContent).toContain('+521 555 555 0000')
     expect(el.textContent).toContain('equipo_listo-')
@@ -151,22 +185,40 @@ describe('WhatsAppReviewCard', () => {
   it('sends the edited variables with the approval and emits changed', async () => {
     api.behavior = async (method) => {
       if (method.endsWith('get_row_template_vars')) {
-        return { variables: [{ index: 1, placeholder: '{{1}}', value: 'Test', field: '' }], reference_doctype: 'CRM Deal', reference_name: 'CRM-DEAL-2026-00968' }
+        return {
+          variables: [
+            { index: 1, placeholder: '{{1}}', value: 'Test', field: '' },
+          ],
+          reference_doctype: 'CRM Deal',
+          reference_name: 'CRM-DEAL-2026-00968',
+        }
       }
       if (method.endsWith('get_template_field_options')) return []
       return {}
     }
     const el = mount({ row: dealRow() })
     const buttons = () => [...el.querySelectorAll('button')]
-    buttons().find((b) => b.textContent.trim() === 'Editar variables').click()
-    await Promise.resolve(); await nextTick(); await Promise.resolve(); await nextTick()
+    buttons()
+      .find((b) => b.textContent.trim() === 'Editar variables')
+      .click()
+    await Promise.resolve()
+    await nextTick()
+    await Promise.resolve()
+    await nextTick()
     const field = el.querySelector('input[type="text"]')
     field.value = 'Pablo'
     field.dispatchEvent(new Event('input', { bubbles: true }))
     await nextTick()
-    buttons().find((b) => b.textContent.trim() === 'Enviar').click()
-    await Promise.resolve(); await nextTick(); await Promise.resolve()
+    buttons()
+      .find((b) => b.textContent.trim() === 'Enviar')
+      .click()
+    await Promise.resolve()
+    await nextTick()
+    await Promise.resolve()
     const approve = api.calls.find(([m]) => m.endsWith('.approve'))
-    expect(approve[1]).toEqual({ name: 'hh59vh33oi', body_param: { 1: 'Pablo' } })
+    expect(approve[1]).toEqual({
+      name: 'hh59vh33oi',
+      body_param: { 1: 'Pablo' },
+    })
   })
 })

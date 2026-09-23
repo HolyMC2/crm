@@ -11,11 +11,9 @@
   phone rows, where the line is already full.
 -->
 <template>
-  <span
-    v-if="state === 'none'"
-    class="truncate text-[11px] text-ink-gray-4"
-    >{{ emptyLabel }}</span
-  >
+  <span v-if="state === 'none'" class="truncate text-[11px] text-ink-gray-4">{{
+    emptyLabel
+  }}</span>
   <span
     v-else
     class="inline-flex min-w-0 max-w-full items-center gap-1 rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
@@ -24,7 +22,9 @@
   >
     <component :is="icon" class="h-3 w-3 flex-none" aria-hidden="true" />
     <span class="flex-none">{{ label }}</span>
-    <span v-if="!compact && title" class="truncate font-medium opacity-90">· {{ title }}</span>
+    <span v-if="!compact && title" class="truncate font-medium opacity-90"
+      >· {{ title }}</span
+    >
   </span>
 </template>
 

@@ -19,7 +19,9 @@ export function displayValue(row) {
 
 /** Open funnel rungs in position order, stopping before the first outcome. */
 export function funnelLadder(stages = []) {
-  const firstClosed = stages.findIndex((s) => s.type === 'Won' || s.type === 'Lost')
+  const firstClosed = stages.findIndex(
+    (s) => s.type === 'Won' || s.type === 'Lost',
+  )
   const ladder = firstClosed === -1 ? stages : stages.slice(0, firstClosed)
   return ladder.filter((s) => s.type === 'Open')
 }
@@ -33,7 +35,10 @@ export function funnelLadder(stages = []) {
 export function stageValue(entry) {
   const expected = Number(entry?.expected_deal_value)
   const actual = Number(entry?.deal_value)
-  return Math.max(isFinite(expected) ? expected : 0, isFinite(actual) ? actual : 0)
+  return Math.max(
+    isFinite(expected) ? expected : 0,
+    isFinite(actual) ? actual : 0,
+  )
 }
 
 /**

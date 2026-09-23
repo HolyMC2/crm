@@ -45,17 +45,46 @@ fs.mkdirSync(OUT, { recursive: true })
 // migration. Derived by grep from the bucket, not hand-listed, so it cannot drift
 // out of sync with the source without this spec noticing.
 const BUCKET_TOKENS = [
-  'ink-amber-7', 'ink-blue-6', 'ink-blue-link', 'ink-gray-4', 'ink-gray-5',
-  'ink-gray-6', 'ink-gray-7', 'ink-gray-8', 'ink-gray-9', 'ink-green-7',
-  'ink-red-6', 'ink-red-7', 'outline-amber-4', 'outline-elevation-2',
-  'outline-gray-1', 'outline-gray-2', 'outline-gray-3', 'outline-gray-4',
-  'outline-green-4', 'outline-red-4', 'surface-amber-1', 'surface-base',
-  'surface-blue-1', 'surface-elevation-2', 'surface-gray-1', 'surface-gray-2',
-  'surface-gray-3', 'surface-green-2', 'surface-green-7', 'surface-red-1',
+  'ink-amber-7',
+  'ink-blue-6',
+  'ink-blue-link',
+  'ink-gray-4',
+  'ink-gray-5',
+  'ink-gray-6',
+  'ink-gray-7',
+  'ink-gray-8',
+  'ink-gray-9',
+  'ink-green-7',
+  'ink-red-6',
+  'ink-red-7',
+  'outline-amber-4',
+  'outline-elevation-2',
+  'outline-gray-1',
+  'outline-gray-2',
+  'outline-gray-3',
+  'outline-gray-4',
+  'outline-green-4',
+  'outline-red-4',
+  'surface-amber-1',
+  'surface-base',
+  'surface-blue-1',
+  'surface-elevation-2',
+  'surface-gray-1',
+  'surface-gray-2',
+  'surface-gray-3',
+  'surface-green-2',
+  'surface-green-7',
+  'surface-red-1',
 ]
 
 // Names this bucket migrated AWAY from. They must emit nothing.
-const RETIRED = ['surface-white', 'ink-white', 'outline-white', 'surface-selected', 'surface-menu-bar']
+const RETIRED = [
+  'surface-white',
+  'ink-white',
+  'outline-white',
+  'surface-selected',
+  'surface-menu-bar',
+]
 
 // Per-tenant brand accent, defined on :root in index.css and used for inline
 // styles in five of these files. A wrong variable name here is even quieter than
@@ -77,7 +106,9 @@ async function loginRetry(page, attempts = 10) {
       return await login(page)
     } catch (err) {
       if (!TRANSIENT.test(String(err)) || i === attempts) throw err
-      console.log(`login transient (${String(err).match(TRANSIENT)[0]}) — backing off ${wait}ms (${i}/${attempts})`)
+      console.log(
+        `login transient (${String(err).match(TRANSIENT)[0]}) — backing off ${wait}ms (${i}/${attempts})`,
+      )
       await page.waitForTimeout(wait)
       wait = Math.min(wait * 2, 30_000)
     }
@@ -93,7 +124,9 @@ const setTheme = (page, theme) =>
 const cssVars = (page, names) =>
   page.evaluate((ns) => {
     const cs = getComputedStyle(document.documentElement)
-    return Object.fromEntries(ns.map((n) => [n, cs.getPropertyValue('--' + n).trim()]))
+    return Object.fromEntries(
+      ns.map((n) => [n, cs.getPropertyValue('--' + n).trim()]),
+    )
   }, names)
 
 // §10.5: paint a throwaway element with a class and read back what it computed to.
@@ -107,7 +140,11 @@ const paint = (page, classes) =>
       d.textContent = 'x'
       document.body.appendChild(d)
       const cs = getComputedStyle(d)
-      out[c] = { fontSize: cs.fontSize, fontWeight: cs.fontWeight, background: cs.backgroundColor }
+      out[c] = {
+        fontSize: cs.fontSize,
+        fontWeight: cs.fontWeight,
+        background: cs.backgroundColor,
+      }
       d.remove()
     }
     return out
@@ -131,7 +168,9 @@ const contrastPairs = (page, pairs) =>
   page.evaluate((ps) => {
     const chan = (c) => {
       const n = (c.match(/[\d.]+/g) || []).map(Number)
-      return c.startsWith('color(srgb') ? n.slice(0, 3).map((v) => v * 255) : n.slice(0, 3)
+      return c.startsWith('color(srgb')
+        ? n.slice(0, 3).map((v) => v * 255)
+        : n.slice(0, 3)
     }
     const lum = (c) => {
       const a = chan(c).map((v) => {
@@ -147,8 +186,12 @@ const contrastPairs = (page, pairs) =>
       d.textContent = 'x'
       document.body.appendChild(d)
       const cs = getComputedStyle(d)
-      const [l1, l2] = [lum(cs.color), lum(cs.backgroundColor)].sort((a, b) => b - a)
-      out[`${ink} on ${surface}`] = Number(((l1 + 0.05) / (l2 + 0.05)).toFixed(2))
+      const [l1, l2] = [lum(cs.color), lum(cs.backgroundColor)].sort(
+        (a, b) => b - a,
+      )
+      out[`${ink} on ${surface}`] = Number(
+        ((l1 + 0.05) / (l2 + 0.05)).toFixed(2),
+      )
       d.remove()
     }
     return out
@@ -168,7 +211,9 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
   // Asserts the CONTRACT via a probe element rather than sampling a rendered chip,
   // because the chips are data-dependent and a guard that skips on an empty
   // fixture is not a guard.
-  test('every accent chip pairing holds its contrast ruling, in both themes', async ({ page }) => {
+  test('every accent chip pairing holds its contrast ruling, in both themes', async ({
+    page,
+  }) => {
     await loginRetry(page)
     await page.goto('/crm/deals', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(4000)
@@ -187,11 +232,20 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
       console.log(`[${theme}] contrast:`, JSON.stringify(got))
 
       // Repaired and fully clearing AA in both themes.
-      expect(got['ink-red-8 on surface-red-1'], `red chip in ${theme}`).toBeGreaterThanOrEqual(4.5)
-      expect(got['ink-green-8 on surface-green-2'], `green chip in ${theme}`).toBeGreaterThanOrEqual(4.5)
+      expect(
+        got['ink-red-8 on surface-red-1'],
+        `red chip in ${theme}`,
+      ).toBeGreaterThanOrEqual(4.5)
+      expect(
+        got['ink-green-8 on surface-green-2'],
+        `green chip in ${theme}`,
+      ).toBeGreaterThanOrEqual(4.5)
       // The two bulk-delete buttons only take surface-red-1 on hover; at rest they
       // sit on the page surface, so that state has to clear AA as well.
-      expect(got['ink-red-8 on surface-base'], `red resting state in ${theme}`).toBeGreaterThanOrEqual(4.5)
+      expect(
+        got['ink-red-8 on surface-base'],
+        `red resting state in ${theme}`,
+      ).toBeGreaterThanOrEqual(4.5)
     }
 
     await setTheme(page, 'dark')
@@ -209,21 +263,35 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
     // means redesigning the chip, which is a palette decision with a different
     // owner. Signed off by team-lead; do not "fix" it to ink-blue-8 (4.36 light,
     // a near miss that looks solved and is not).
-    expect(dark['ink-blue-7 on surface-blue-1'], 'blue chip dark half must be repaired').toBeGreaterThanOrEqual(4.5)
+    expect(
+      dark['ink-blue-7 on surface-blue-1'],
+      'blue chip dark half must be repaired',
+    ).toBeGreaterThanOrEqual(4.5)
 
     // Amber: measured, deliberately EXCLUDED from repair, and on the watch list.
     // It clears by 0.05. If a palette move tips it under, this fails and it
     // becomes a known regression instead of a surprise.
-    expect(dark['ink-amber-7 on surface-amber-1'], 'amber is excluded but at risk — 4.55 vs a 4.5 floor').toBeGreaterThanOrEqual(4.5)
+    expect(
+      dark['ink-amber-7 on surface-amber-1'],
+      'amber is excluded but at risk — 4.55 vs a 4.5 floor',
+    ).toBeGreaterThanOrEqual(4.5)
 
     // The tokens we migrated away from must still fail, which is what makes the
     // repairs justified. If either starts passing, the ramp moved and the fixes
     // want re-deriving rather than assuming.
-    expect(dark['ink-red-7 on surface-red-1'], 'ink-red-7 must still fail dark').toBeLessThan(4.5)
-    expect(dark['ink-green-7 on surface-green-2'], 'ink-green-7 must still fail dark').toBeLessThan(4.5)
+    expect(
+      dark['ink-red-7 on surface-red-1'],
+      'ink-red-7 must still fail dark',
+    ).toBeLessThan(4.5)
+    expect(
+      dark['ink-green-7 on surface-green-2'],
+      'ink-green-7 must still fail dark',
+    ).toBeLessThan(4.5)
   })
 
-  test('every token this bucket uses resolves, in light AND dark', async ({ page }) => {
+  test('every token this bucket uses resolves, in light AND dark', async ({
+    page,
+  }) => {
     await loginRetry(page)
     await page.goto('/crm/deals', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(4000)
@@ -233,29 +301,50 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
       await page.waitForTimeout(600)
 
       const resolved = await cssVars(page, BUCKET_TOKENS)
-      const empty = Object.entries(resolved).filter(([, v]) => !v).map(([k]) => k)
+      const empty = Object.entries(resolved)
+        .filter(([, v]) => !v)
+        .map(([k]) => k)
       console.log(`[${theme}] unresolved bucket tokens:`, JSON.stringify(empty))
-      expect(empty, `all ${BUCKET_TOKENS.length} bucket tokens must resolve in ${theme}`).toEqual([])
+      expect(
+        empty,
+        `all ${BUCKET_TOKENS.length} bucket tokens must resolve in ${theme}`,
+      ).toEqual([])
 
       const brand = await cssVars(page, BRAND)
       console.log(`[${theme}] brand vars:`, JSON.stringify(brand))
-      for (const b of BRAND) expect(brand[b], `--${b} must resolve in ${theme}`).not.toBe('')
+      for (const b of BRAND)
+        expect(brand[b], `--${b} must resolve in ${theme}`).not.toBe('')
 
       const dead = await cssVars(page, RETIRED)
-      const alive = Object.entries(dead).filter(([, v]) => v).map(([k]) => k)
-      console.log(`[${theme}] retired tokens that still resolve:`, JSON.stringify(alive))
+      const alive = Object.entries(dead)
+        .filter(([, v]) => v)
+        .map(([k]) => k)
+      console.log(
+        `[${theme}] retired tokens that still resolve:`,
+        JSON.stringify(alive),
+      )
       expect(alive, `retired names must emit nothing in ${theme}`).toEqual([])
     }
   })
 
-  test('the type scale is the beta.29 one, and the shifted classes mean what we think', async ({ page }) => {
+  test('the type scale is the beta.29 one, and the shifted classes mean what we think', async ({
+    page,
+  }) => {
     await loginRetry(page)
     await page.goto('/crm/deals', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(4000)
 
     const sizes = await paint(page, [
-      'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl',
-      'text-3xl-medium', 'text-4xl-medium', 'text-3xl-semibold', 'text-lg-medium',
+      'text-lg',
+      'text-xl',
+      'text-2xl',
+      'text-3xl',
+      'text-4xl',
+      'text-5xl',
+      'text-3xl-medium',
+      'text-4xl-medium',
+      'text-3xl-semibold',
+      'text-lg-medium',
     ])
     console.log('type scale as rendered:', JSON.stringify(sizes, null, 2))
 
@@ -267,9 +356,14 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
 
     // The scale that makes the revert correct: our v1 text-3xl was 24px and
     // upstream's migrated text-4xl is 24px — pixel-identical, already right.
-    expect(sizes['text-4xl'].fontSize, 'text-4xl is the v2 name for our old 24px').toBe('24px')
+    expect(
+      sizes['text-4xl'].fontSize,
+      'text-4xl is the v2 name for our old 24px',
+    ).toBe('24px')
     expect(sizes['text-3xl-medium'].fontSize, 'record-title class').toBe('20px')
-    expect(sizes['text-3xl-semibold'].fontSize, 'modal-heading class').toBe('20px')
+    expect(sizes['text-3xl-semibold'].fontSize, 'modal-heading class').toBe(
+      '20px',
+    )
     expect(sizes['text-lg-medium'].fontSize, 'Deal subtitle class').toBe('16px')
 
     // The two classes the codemod's double-shift introduced. Tailwind only emits
@@ -278,11 +372,19 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
     // therefore the assertion — it proves nothing in the tree references them.
     // (Both are real classes in beta.29: 5xl=26px, 4xl-medium=24px. If either
     // starts emitting again, something has re-introduced the double-shift.)
-    expect(sizes['text-5xl'].fontSize, 'text-5xl must no longer be emitted').toBe('16px')
-    expect(sizes['text-4xl-medium'].fontSize, 'text-4xl-medium must no longer be emitted').toBe('16px')
+    expect(
+      sizes['text-5xl'].fontSize,
+      'text-5xl must no longer be emitted',
+    ).toBe('16px')
+    expect(
+      sizes['text-4xl-medium'].fontSize,
+      'text-4xl-medium must no longer be emitted',
+    ).toBe('16px')
   })
 
-  test('Lead and Deal record titles are 20px and identical', async ({ page }) => {
+  test('Lead and Deal record titles are 20px and identical', async ({
+    page,
+  }) => {
     await loginRetry(page)
 
     const leadId = await firstRecord(page, 'CRM Lead')
@@ -294,10 +396,16 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
       await page.goto(route, { waitUntil: 'domcontentloaded' })
       await page.waitForTimeout(5000)
       const el = page.locator(`div.${cls}`).first()
-      await expect(el, `${route} title must render`).toBeVisible({ timeout: 30_000 })
+      await expect(el, `${route} title must render`).toBeVisible({
+        timeout: 30_000,
+      })
       return el.evaluate((n) => {
         const cs = getComputedStyle(n)
-        return { fontSize: cs.fontSize, fontWeight: cs.fontWeight, color: cs.color }
+        return {
+          fontSize: cs.fontSize,
+          fontWeight: cs.fontWeight,
+          color: cs.color,
+        }
       })
     }
 
@@ -316,7 +424,9 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
     expect(lead.fontSize, 'Lead and Deal titles must match').toBe(deal.fontSize)
   })
 
-  test('deals list separators are 24px, not the double-shifted 26px', async ({ page }) => {
+  test('deals list separators are 24px, not the double-shifted 26px', async ({
+    page,
+  }) => {
     await loginRetry(page)
     await page.goto('/crm/deals/view/list', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(6000)
@@ -331,18 +441,30 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
 
     const seps = await page.evaluate(() =>
       [...document.querySelectorAll('span[class*="text-4xl"]')]
-        .map((s) => ({ cls: s.className, text: (s.textContent || '').trim(), fontSize: getComputedStyle(s).fontSize }))
+        .map((s) => ({
+          cls: s.className,
+          text: (s.textContent || '').trim(),
+          fontSize: getComputedStyle(s).fontSize,
+        }))
         .slice(0, 6),
     )
     console.log('deal-list separators:', JSON.stringify(seps))
-    test.skip(seps.length === 0, 'actions slot not revealed on lab — separators not in the DOM')
+    test.skip(
+      seps.length === 0,
+      'actions slot not revealed on lab — separators not in the DOM',
+    )
 
     for (const s of seps) {
-      expect(s.fontSize, 'separator must be 24px (v1 text-3xl == v2 text-4xl)').toBe('24px')
+      expect(
+        s.fontSize,
+        'separator must be 24px (v1 text-3xl == v2 text-4xl)',
+      ).toBe('24px')
     }
   })
 
-  test('every screen in this bucket renders in both themes', async ({ page }) => {
+  test('every screen in this bucket renders in both themes', async ({
+    page,
+  }) => {
     await loginRetry(page)
     const routes = {
       'deals-view': '/crm/deals',
@@ -370,14 +492,27 @@ test.describe('W2-crm — deals/leads espresso v2 render proof', () => {
           // The double-shifted classes the codemod introduced. Checked on every
           // route rather than only where the separators live, because this is the
           // assertion that actually guards the regression from coming back.
-          shifted: [...document.querySelectorAll('[class*="text-5xl"], [class*="text-4xl-medium"]')].length,
+          shifted: [
+            ...document.querySelectorAll(
+              '[class*="text-5xl"], [class*="text-4xl-medium"]',
+            ),
+          ].length,
         }))
         console.log(`${name} [${theme}]:`, JSON.stringify(health))
         expect(health.mounted, `${name} must mount`).toBeTruthy()
-        expect(health.text, `${name} must render text in ${theme}`).toBeGreaterThan(0)
-        expect(health.shifted, `${name} must carry no double-shifted type class`).toBe(0)
+        expect(
+          health.text,
+          `${name} must render text in ${theme}`,
+        ).toBeGreaterThan(0)
+        expect(
+          health.shifted,
+          `${name} must carry no double-shifted type class`,
+        ).toBe(0)
 
-        await page.screenshot({ path: path.join(OUT, `${name}-${theme}.png`), fullPage: false })
+        await page.screenshot({
+          path: path.join(OUT, `${name}-${theme}.png`),
+          fullPage: false,
+        })
       }
     }
   })

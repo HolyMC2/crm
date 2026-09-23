@@ -5,19 +5,31 @@
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
+    <div
+      class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5"
+    >
       <div class="flex items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{ modeLabel }}</span>
-        <span class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6">
+        <span class="text-[15px] font-bold text-ink-gray-9">{{
+          modeLabel
+        }}</span>
+        <span
+          class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6"
+        >
           {{ rows.length }}
         </span>
         <!-- Campañas | Cadencias mode toggle (spec 4.2 completion) -->
-        <div class="ml-1 flex items-center gap-0.5 rounded-full bg-surface-gray-2 p-0.5">
+        <div
+          class="ml-1 flex items-center gap-0.5 rounded-full bg-surface-gray-2 p-0.5"
+        >
           <button
             v-for="m in modeTabs"
             :key="m.key"
             class="press rounded-full px-3 py-[4px] text-[12px] font-semibold"
-            :class="mode === m.key ? 'bg-surface-base text-ink-gray-9 shadow-sm' : 'text-ink-gray-6'"
+            :class="
+              mode === m.key
+                ? 'bg-surface-base text-ink-gray-9 shadow-sm'
+                : 'text-ink-gray-6'
+            "
             :aria-pressed="mode === m.key"
             @click="setMode(m.key)"
           >
@@ -30,7 +42,11 @@
             v-for="t in typeTabs"
             :key="t.key"
             class="rounded-full px-3 py-[5px] text-[12px] font-semibold"
-            :class="typeFilter === t.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
+            :class="
+              typeFilter === t.key
+                ? 'bg-surface-gray-3 text-ink-gray-9'
+                : 'bg-surface-gray-2 text-ink-gray-6'
+            "
             :aria-pressed="typeFilter === t.key"
             @click="setType(t.key)"
           >
@@ -82,8 +98,18 @@
 
     <!-- rows -->
     <div class="scb min-h-0 flex-1 overflow-y-auto">
-      <div v-if="campaigns.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ emptyLabel }}</div>
+      <div
+        v-if="campaigns.loading && !rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Cargando…') }}
+      </div>
+      <div
+        v-else-if="!rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ emptyLabel }}
+      </div>
 
       <div
         v-for="c in rows"
@@ -96,20 +122,43 @@
         @keydown.enter="$router.push(`/campaigns/${c.name}`)"
       >
         <div class="min-w-0">
-          <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ c.title }}</div>
-          <div class="truncate text-[11px] text-ink-gray-4">{{ mode === 'cadences' ? c.name : (c.audience || c.name) }}</div>
+          <div class="truncate text-[13px] font-semibold text-ink-gray-9">
+            {{ c.title }}
+          </div>
+          <div class="truncate text-[11px] text-ink-gray-4">
+            {{ mode === 'cadences' ? c.name : c.audience || c.name }}
+          </div>
         </div>
         <div>
-          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="typeChip(c.type)">{{ typeLabel(c.type) }}</span>
+          <span
+            class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+            :class="typeChip(c.type)"
+            >{{ typeLabel(c.type) }}</span
+          >
         </div>
         <div>
-          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="statusChip(c.status)">{{ c.status }}</span>
+          <span
+            class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+            :class="statusChip(c.status)"
+            >{{ c.status }}</span
+          >
         </div>
-        <div v-if="mode === 'campaigns'" class="text-[13px] font-semibold text-ink-gray-8">{{ c.enrolled_count || 0 }}</div>
+        <div
+          v-if="mode === 'campaigns'"
+          class="text-[13px] font-semibold text-ink-gray-8"
+        >
+          {{ c.enrolled_count || 0 }}
+        </div>
         <div><Bar :pct="c.open_rate" color="var(--brand)" /></div>
         <div><Bar :pct="c.click_rate" color="#2f6fed" /></div>
         <Dropdown :options="rowMenu(c)" @click.stop>
-          <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')" @click.stop>···</button>
+          <button
+            class="text-[14px] text-ink-gray-4"
+            :aria-label="__('Más acciones')"
+            @click.stop
+          >
+            ···
+          </button>
         </Dropdown>
       </div>
     </div>
@@ -118,11 +167,15 @@
     <Dialog v-model="showNew" :options="{ title: __('Nueva campaña') }">
       <template #body-content>
         <div class="flex flex-col gap-3">
-          <FormControl :label="__('Título')" v-model="form.title" :placeholder="__('Reactivación clientes')" />
           <FormControl
+            v-model="form.title"
+            :label="__('Título')"
+            :placeholder="__('Reactivación clientes')"
+          />
+          <FormControl
+            v-model="form.type"
             type="select"
             :label="__('Tipo')"
-            v-model="form.type"
             :options="[
               { label: 'WhatsApp', value: 'whatsapp' },
               { label: 'Email', value: 'email' },
@@ -133,7 +186,12 @@
         </div>
       </template>
       <template #actions>
-        <Button variant="solid" :loading="creating" :disabled="!form.title.trim()" @click="createCampaign">
+        <Button
+          variant="solid"
+          :loading="creating"
+          :disabled="!form.title.trim()"
+          @click="createCampaign"
+        >
           {{ __('Crear') }}
         </Button>
       </template>
@@ -144,7 +202,15 @@
 <script setup>
 import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Dropdown, Dialog, Button, FormControl, createResource, call as frappeCall, toast } from 'frappe-ui'
+import {
+  Dropdown,
+  Dialog,
+  Button,
+  FormControl,
+  createResource,
+  call as frappeCall,
+  toast,
+} from 'frappe-ui'
 import { confirmDialog } from '@/utils/dialogs'
 import { buildCadenceScaffold } from '@/utils/cadenceScaffold'
 
@@ -160,9 +226,15 @@ const modeTabs = [
   { key: 'campaigns', label: __('Campañas') },
   { key: 'cadences', label: __('Cadencias') },
 ]
-const modeLabel = computed(() => (mode.value === 'cadences' ? __('Cadencias') : __('Campañas')))
-const emptyLabel = computed(() => (mode.value === 'cadences' ? __('Sin cadencias') : __('Sin campañas')))
-const GRID = computed(() => (mode.value === 'cadences' ? GRID_CADENCES : GRID_CAMPAIGNS))
+const modeLabel = computed(() =>
+  mode.value === 'cadences' ? __('Cadencias') : __('Campañas'),
+)
+const emptyLabel = computed(() =>
+  mode.value === 'cadences' ? __('Sin cadencias') : __('Sin campañas'),
+)
+const GRID = computed(() =>
+  mode.value === 'cadences' ? GRID_CADENCES : GRID_CAMPAIGNS,
+)
 
 const typeFilter = ref(null)
 const typeTabs = [
@@ -173,7 +245,11 @@ const typeTabs = [
   { key: 'automation', label: __('Automatización') },
 ]
 
-const campaigns = createResource({ url: 'doco_marketing.api.campaigns.list_campaigns', params: {}, auto: true })
+const campaigns = createResource({
+  url: 'doco_marketing.api.campaigns.list_campaigns',
+  params: {},
+  auto: true,
+})
 const rows = computed(() => campaigns.data || [])
 
 // Compose the list params from the active mode + (campaigns-only) type filter.
@@ -224,19 +300,40 @@ function statusChip(s) {
 
 const Bar = (props) =>
   h('div', { class: 'flex items-center gap-1.5' }, [
-    h('div', { class: 'h-1.5 rounded-sm bg-surface-gray-3', style: 'width:54px' }, [
-      h('div', { class: 'h-full rounded-sm', style: `width:${Math.min(100, props.pct || 0)}%;background:${props.color}` }),
-    ]),
+    h(
+      'div',
+      { class: 'h-1.5 rounded-sm bg-surface-gray-3', style: 'width:54px' },
+      [
+        h('div', {
+          class: 'h-full rounded-sm',
+          style: `width:${Math.min(100, props.pct || 0)}%;background:${props.color}`,
+        }),
+      ],
+    ),
     h('span', { class: 'text-[11px] text-ink-gray-5' }, `${props.pct || 0}%`),
   ])
 Bar.props = ['pct', 'color']
 
 function rowMenu(c) {
-  const items = [{ label: __('Abrir'), onClick: () => router.push(`/campaigns/${c.name}`) }]
+  const items = [
+    { label: __('Abrir'), onClick: () => router.push(`/campaigns/${c.name}`) },
+  ]
   // status-aware: Draft→Activar, Active→Pausar, Paused→Reanudar (Completed: none)
-  if (c.status === 'Active') items.push({ label: __('Pausar'), onClick: () => setStatus(c.name, 'Paused') })
-  else if (c.status === 'Paused') items.push({ label: __('Reanudar'), onClick: () => setStatus(c.name, 'Active') })
-  else if (c.status === 'Draft') items.push({ label: __('Activar'), onClick: () => setStatus(c.name, 'Active') })
+  if (c.status === 'Active')
+    items.push({
+      label: __('Pausar'),
+      onClick: () => setStatus(c.name, 'Paused'),
+    })
+  else if (c.status === 'Paused')
+    items.push({
+      label: __('Reanudar'),
+      onClick: () => setStatus(c.name, 'Active'),
+    })
+  else if (c.status === 'Draft')
+    items.push({
+      label: __('Activar'),
+      onClick: () => setStatus(c.name, 'Active'),
+    })
   items.push({ label: __('Eliminar'), onClick: () => deleteCampaign(c.name) })
   return items
 }
@@ -251,7 +348,10 @@ function deleteCampaign(name) {
     message: __('¿Eliminar esta campaña?'),
     confirmLabel: __('Eliminar'),
     onConfirm: async () => {
-      await frappeCall('frappe.client.delete', { doctype: 'CRM Campaign', name })
+      await frappeCall('frappe.client.delete', {
+        doctype: 'CRM Campaign',
+        name,
+      })
       toast.success(__('Campaña eliminada'))
       campaigns.reload()
     },
@@ -267,7 +367,11 @@ async function createCampaign() {
   creating.value = true
   try {
     const res = await frappeCall('doco_marketing.api.campaigns.save_campaign', {
-      payload: JSON.stringify({ title: form.value.title.trim(), type: form.value.type, status: 'Draft' }),
+      payload: JSON.stringify({
+        title: form.value.title.trim(),
+        type: form.value.type,
+        status: 'Draft',
+      }),
     })
     showNew.value = false
     form.value = { title: '', type: 'whatsapp' }

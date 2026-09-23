@@ -14,7 +14,13 @@ vi.mock('frappe-ui', async () => {
   const { reactive } = await import('vue')
   return {
     createResource: (opts) => {
-      const r = reactive({ data: null, loading: false, reload: vi.fn(), fetch: vi.fn(), _opts: opts })
+      const r = reactive({
+        data: null,
+        loading: false,
+        reload: vi.fn(),
+        fetch: vi.fn(),
+        _opts: opts,
+      })
       h.resources.push(r)
       return r
     },
@@ -30,11 +36,15 @@ import { useSocialCalendar } from '@/composables/socialCalendar'
 function setup() {
   h.resources.length = 0
   const sc = useSocialCalendar()
-  const byUrl = (frag) => h.resources.find((r) => (r._opts?.url || '').includes(frag))
+  const byUrl = (frag) =>
+    h.resources.find((r) => (r._opts?.url || '').includes(frag))
   return { sc, cal: byUrl('get_calendar'), seasons: byUrl('get_seasons') }
 }
 
-const names = (byDay) => Object.values(byDay).flat().map((p) => p.name)
+const names = (byDay) =>
+  Object.values(byDay)
+    .flat()
+    .map((p) => p.name)
 
 beforeEach(() => {
   h.call.mockReset()
@@ -49,9 +59,27 @@ describe('postsByDay', () => {
     const { sc, cal } = setup()
     cal.data = {
       scheduled: [
-        { name: 'A', scheduled_time: '2026-07-15 10:00:00', post_kind: 'Producto', status: 'Scheduled', channels: [] },
-        { name: 'B', scheduled_time: '2026-07-15 14:00:00', post_kind: 'Servicio', status: 'Scheduled', channels: [] },
-        { name: 'C', scheduled_time: '2026-07-16 09:00:00', post_kind: 'Producto', status: 'Published', channels: [] },
+        {
+          name: 'A',
+          scheduled_time: '2026-07-15 10:00:00',
+          post_kind: 'Producto',
+          status: 'Scheduled',
+          channels: [],
+        },
+        {
+          name: 'B',
+          scheduled_time: '2026-07-15 14:00:00',
+          post_kind: 'Servicio',
+          status: 'Scheduled',
+          channels: [],
+        },
+        {
+          name: 'C',
+          scheduled_time: '2026-07-16 09:00:00',
+          post_kind: 'Producto',
+          status: 'Published',
+          channels: [],
+        },
       ],
       drafts: [],
     }
@@ -66,11 +94,34 @@ describe('filters + counts', () => {
     const s = setup()
     s.cal.data = {
       scheduled: [
-        { name: 'A', scheduled_time: '2026-07-15 10:00:00', post_kind: 'Producto', status: 'Scheduled', channels: [{ channel: 'FB Feed', status: 'Scheduled' }] },
-        { name: 'C', scheduled_time: '2026-07-16 09:00:00', post_kind: 'Producto', status: 'Published', channels: [{ channel: 'IG Feed', status: 'Published' }] },
-        { name: 'D', scheduled_time: '2026-07-17 09:00:00', post_kind: 'Servicio', status: 'Scheduled', channels: [{ channel: 'FB Reel', status: 'Scheduled' }, { channel: 'IG Reel', status: 'Pending' }] },
+        {
+          name: 'A',
+          scheduled_time: '2026-07-15 10:00:00',
+          post_kind: 'Producto',
+          status: 'Scheduled',
+          channels: [{ channel: 'FB Feed', status: 'Scheduled' }],
+        },
+        {
+          name: 'C',
+          scheduled_time: '2026-07-16 09:00:00',
+          post_kind: 'Producto',
+          status: 'Published',
+          channels: [{ channel: 'IG Feed', status: 'Published' }],
+        },
+        {
+          name: 'D',
+          scheduled_time: '2026-07-17 09:00:00',
+          post_kind: 'Servicio',
+          status: 'Scheduled',
+          channels: [
+            { channel: 'FB Reel', status: 'Scheduled' },
+            { channel: 'IG Reel', status: 'Pending' },
+          ],
+        },
       ],
-      drafts: [{ name: 'E', post_kind: 'Producto', status: 'Draft', channels: [] }],
+      drafts: [
+        { name: 'E', post_kind: 'Producto', status: 'Draft', channels: [] },
+      ],
     }
     return s
   }
@@ -119,16 +170,34 @@ describe('seasonByDay (map + clip)', () => {
     const { sc, seasons } = setup()
     sc.cursor.value = new Date(2020, 0, 1) // Jan 2020 — no day is "today"
     seasons.data = [
-      { name: 'InRange', label: '🎉 InRange', emoji: '🎉', start: '2020-01-10', end: '2020-01-12' },
-      { name: 'ClipStart', label: '🎄 ClipStart', emoji: '🎄', start: '2019-12-01', end: '2020-01-02' },
+      {
+        name: 'InRange',
+        label: '🎉 InRange',
+        emoji: '🎉',
+        start: '2020-01-10',
+        end: '2020-01-12',
+      },
+      {
+        name: 'ClipStart',
+        label: '🎄 ClipStart',
+        emoji: '🎄',
+        start: '2019-12-01',
+        end: '2020-01-02',
+      },
     ]
     const sbd = sc.seasonByDay.value
-    expect(sbd['2020-01-10'].find((s) => s.name === 'InRange').isStart).toBe(true)
-    expect(sbd['2020-01-11'].find((s) => s.name === 'InRange').isStart).toBe(false)
+    expect(sbd['2020-01-10'].find((s) => s.name === 'InRange').isStart).toBe(
+      true,
+    )
+    expect(sbd['2020-01-11'].find((s) => s.name === 'InRange').isStart).toBe(
+      false,
+    )
     expect(sbd['2020-01-12'].some((s) => s.name === 'InRange')).toBe(true)
     expect(sbd['2020-01-13']?.some((s) => s.name === 'InRange')).toBeFalsy()
     // start (2019-12-01) is before the grid → any covered in-grid day is isStart=false
-    expect(sbd['2020-01-01'].find((s) => s.name === 'ClipStart').isStart).toBe(false)
+    expect(sbd['2020-01-01'].find((s) => s.name === 'ClipStart').isStart).toBe(
+      false,
+    )
   })
 })
 
@@ -136,7 +205,17 @@ describe('agendaDays', () => {
   it('lists only in-range days that have posts', () => {
     const { sc, cal } = setup()
     sc.cursor.value = new Date(2020, 0, 1)
-    cal.data = { scheduled: [{ name: 'A', scheduled_time: '2020-01-15 10:00:00', status: 'Scheduled', channels: [] }], drafts: [] }
+    cal.data = {
+      scheduled: [
+        {
+          name: 'A',
+          scheduled_time: '2020-01-15 10:00:00',
+          status: 'Scheduled',
+          channels: [],
+        },
+      ],
+      drafts: [],
+    }
     const ad = sc.agendaDays.value
     const keys = ad.map((d) => d.key)
     expect(keys).toContain('2020-01-15')
@@ -163,7 +242,10 @@ describe('reschedulePost', () => {
     h.call.mockResolvedValue({})
     const post = { name: 'SP-1', scheduled_time: '2030-07-10 09:30:00' }
     await sc.reschedulePost(post, '2030-07-15')
-    expect(h.call).toHaveBeenCalledWith('doco_marketing.api.social.reschedule', { name: 'SP-1', scheduled_time: '2030-07-15 09:30:00' })
+    expect(h.call).toHaveBeenCalledWith(
+      'doco_marketing.api.social.reschedule',
+      { name: 'SP-1', scheduled_time: '2030-07-15 09:30:00' },
+    )
     expect(post.scheduled_time).toBe('2030-07-15 09:30:00')
     expect(h.toast.success).toHaveBeenCalled()
     expect(cal.reload).toHaveBeenCalled()
@@ -174,16 +256,25 @@ describe('reschedulePost', () => {
     h.call.mockResolvedValue({})
     const post = { name: 'SP-3', scheduled_time: '' }
     await sc.reschedulePost(post, '2030-07-15')
-    expect(h.call).toHaveBeenCalledWith('doco_marketing.api.social.reschedule', { name: 'SP-3', scheduled_time: '2030-07-15 10:00:00' })
+    expect(h.call).toHaveBeenCalledWith(
+      'doco_marketing.api.social.reschedule',
+      { name: 'SP-3', scheduled_time: '2030-07-15 10:00:00' },
+    )
   })
 
   it('guard throw: reverts the optimistic move and surfaces the es-MX message', async () => {
     const { sc } = setup()
-    h.call.mockRejectedValue({ messages: ['Esta publicación ya fue entregada a Meta y no se puede reprogramar aquí.'] })
+    h.call.mockRejectedValue({
+      messages: [
+        'Esta publicación ya fue entregada a Meta y no se puede reprogramar aquí.',
+      ],
+    })
     const post = { name: 'SP-2', scheduled_time: '2030-07-10 09:30:00' }
     await sc.reschedulePost(post, '2030-07-20')
     expect(post.scheduled_time).toBe('2030-07-10 09:30:00') // reverted
-    expect(h.toast.error).toHaveBeenCalledWith('Esta publicación ya fue entregada a Meta y no se puede reprogramar aquí.')
+    expect(h.toast.error).toHaveBeenCalledWith(
+      'Esta publicación ya fue entregada a Meta y no se puede reprogramar aquí.',
+    )
     expect(h.toast.success).not.toHaveBeenCalled()
   })
 

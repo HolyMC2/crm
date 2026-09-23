@@ -48,7 +48,10 @@
           :style="activeChannelTab === ch.id ? `background:${ch.color}` : ''"
           @click="selectChannelTab(ch.id)"
         >
-          <span class="h-1.5 w-1.5 rounded-full" :style="`background:${activeChannelTab === ch.id ? '#fff' : ch.color}`" />
+          <span
+            class="h-1.5 w-1.5 rounded-full"
+            :style="`background:${activeChannelTab === ch.id ? '#fff' : ch.color}`"
+          />
           {{ ch.label }}
           <span class="text-[10px] opacity-70">{{ ch.count }}</span>
         </button>
@@ -84,7 +87,9 @@
               class="mr-1 inline-block size-1.5 rounded-full bg-green-500 align-middle"
             />
             {{ c.name }}
-            <span class="ml-1 font-mono text-[10px] opacity-60">{{ c.phone_display }}</span>
+            <span class="ml-1 font-mono text-[10px] opacity-60">{{
+              c.phone_display
+            }}</span>
           </button>
         </div>
         <!-- WhatsApp presence (whatsapp_state from get_deal_whatsapp_contacts):
@@ -97,9 +102,16 @@
           v-if="waBannerState === 'no'"
           class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-red-200 bg-surface-red-1 px-3 py-2 dark:border-red-900/40 sm:mx-10"
         >
-          <FeatherIcon name="slash" class="mt-0.5 size-4 shrink-0 text-ink-red-6" />
-          <div class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6">
-            <span class="font-semibold text-ink-red-6">{{ __('Este número no tiene WhatsApp.') }}</span>
+          <FeatherIcon
+            name="slash"
+            class="mt-0.5 size-4 shrink-0 text-ink-red-6"
+          />
+          <div
+            class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6"
+          >
+            <span class="font-semibold text-ink-red-6">{{
+              __('Este número no tiene WhatsApp.')
+            }}</span>
             {{ __('Marcado como sin WhatsApp al crear el trato.') }}
           </div>
         </div>
@@ -107,10 +119,21 @@
           v-else-if="waBannerState === 'unknown'"
           class="mx-3 mb-2 flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40 sm:mx-10"
         >
-          <FeatherIcon name="alert-triangle" class="mt-0.5 size-4 shrink-0 text-ink-amber-7" />
-          <div class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6">
-            <span class="font-semibold text-ink-gray-8 dark:text-ink-gray-7">{{ __('Sin WhatsApp para este número.') }}</span>
-            {{ __('No hay conversación de WhatsApp con este número todavía — inicia con una plantilla.') }}
+          <FeatherIcon
+            name="alert-triangle"
+            class="mt-0.5 size-4 shrink-0 text-ink-amber-7"
+          />
+          <div
+            class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6"
+          >
+            <span class="font-semibold text-ink-gray-8 dark:text-ink-gray-7">{{
+              __('Sin WhatsApp para este número.')
+            }}</span>
+            {{
+              __(
+                'No hay conversación de WhatsApp con este número todavía — inicia con una plantilla.',
+              )
+            }}
           </div>
         </div>
         <!-- Supervised sends awaiting approval for THIS conversation (scoped by
@@ -125,27 +148,51 @@
           @changed="whatsappMessages.reload()"
         />
         <!-- pending auto-acuse for THIS conversation → review with full context -->
-        <ConversationAutoAckStrip v-if="addonAvailable && ['CRM Deal', 'CRM Lead'].includes(doctype)" />
+        <ConversationAutoAckStrip
+          v-if="addonAvailable && ['CRM Deal', 'CRM Lead'].includes(doctype)"
+        />
         <!-- unified customer thread toggle: appears when the phone has >1 deal/RO -->
-        <div v-if="addonAvailable && contactDealCount > 1" class="mx-3 mb-1.5 sm:mx-10">
+        <div
+          v-if="addonAvailable && contactDealCount > 1"
+          class="mx-3 mb-1.5 sm:mx-10"
+        >
           <button
             class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="unifiedThread ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="
+              unifiedThread
+                ? 'bg-surface-green-2 text-ink-green-8'
+                : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
+            "
             @click="toggleUnified"
           >
             🔗
-            {{ unifiedThread
-              ? __('Viendo toda la conversación · {0} tratos', [contactDealCount])
-              : __('Ver toda la conversación del cliente · {0} tratos', [contactDealCount]) }}
+            {{
+              unifiedThread
+                ? __('Viendo toda la conversación · {0} tratos', [
+                    contactDealCount,
+                  ])
+                : __('Ver toda la conversación del cliente · {0} tratos', [
+                    contactDealCount,
+                  ])
+            }}
           </button>
         </div>
         <!-- catalog intent: the customer asked about a price/item → one-tap catalog search -->
-        <div v-if="addonAvailable && catalogSuggest.data?.suggest" class="mx-3 mb-1.5 sm:mx-10">
+        <div
+          v-if="addonAvailable && catalogSuggest.data?.suggest"
+          class="mx-3 mb-1.5 sm:mx-10"
+        >
           <button
             class="inline-flex items-center gap-1.5 rounded-full bg-surface-amber-1 px-2.5 py-1 text-[11px] font-semibold text-ink-amber-7 hover:bg-surface-amber-2"
             @click="onWaCatalog(catalogSuggest.data.query)"
           >
-            💡 {{ __("Buscar '{0}' en catálogo · {1}", [catalogSuggest.data.query, catalogSuggest.data.count]) }}
+            💡
+            {{
+              __("Buscar '{0}' en catálogo · {1}", [
+                catalogSuggest.data.query,
+                catalogSuggest.data.count,
+              ])
+            }}
           </button>
         </div>
         <WhatsAppArea
@@ -538,7 +585,11 @@
       @cancel="reviewTemplate = null"
     />
     <MessengerBox
-      v-if="addonAvailable && title == 'WhatsApp' && activeChannelTab === 'messenger'"
+      v-if="
+        addonAvailable &&
+        title == 'WhatsApp' &&
+        activeChannelTab === 'messenger'
+      "
       :doctype="doctype"
       :docname="docname"
       :window24h="messengerWindow"
@@ -549,7 +600,13 @@
     />
     <!-- who handles this customer's native conversation, right above the composer -->
     <ConversationControlStrip
-      v-if="addonAvailable && whatsappEnabled && title == 'WhatsApp' && activeChannelTab === 'whatsapp' && ['CRM Deal', 'CRM Lead'].includes(doctype)"
+      v-if="
+        addonAvailable &&
+        whatsappEnabled &&
+        title == 'WhatsApp' &&
+        activeChannelTab === 'whatsapp' &&
+        ['CRM Deal', 'CRM Lead'].includes(doctype)
+      "
       class="mx-3 mt-1 sm:mx-10"
       :reference-doctype="doctype"
       :reference-name="docname"
@@ -558,7 +615,11 @@
       @changed="whatsappMessages.reload()"
     />
     <WhatsAppBox
-      v-if="whatsappEnabled && title == 'WhatsApp' && activeChannelTab === 'whatsapp'"
+      v-if="
+        whatsappEnabled &&
+        title == 'WhatsApp' &&
+        activeChannelTab === 'whatsapp'
+      "
       ref="whatsappBox"
       v-model="doc"
       v-model:reply="replyMessage"
@@ -721,7 +782,10 @@ const all_activities = createResource({
 
 // exposed as a model so an external trigger (e.g. an inbox macro) can open the
 // WhatsApp template review; defaults to local false when no parent binds it.
-const showWhatsappTemplates = defineModel('showWhatsappTemplates', { type: Boolean, default: false })
+const showWhatsappTemplates = defineModel('showWhatsappTemplates', {
+  type: Boolean,
+  default: false,
+})
 
 // Multi-Contact-per-Deal scoping: pull every Contact attached to the Deal/Lead
 // with their normalized mobile_no. Each Contact becomes one chat tab.
@@ -761,7 +825,8 @@ const activeWhatsappContact = computed(() => {
 const waBannerState = computed(() => {
   const c = activeWhatsappContact.value
   if (!c) return null
-  if (c.whatsapp_state) return c.whatsapp_state === 'yes' ? null : c.whatsapp_state
+  if (c.whatsapp_state)
+    return c.whatsapp_state === 'yes' ? null : c.whatsapp_state
   return c.has_whatsapp === false ? 'unknown' : null
 })
 
@@ -775,8 +840,12 @@ const filteredWhatsappMessages = computed(() => {
   return all.filter((m) => {
     const from = String(m.from || '').replace(/\D/g, '')
     const to = String(m.to || '').replace(/\D/g, '')
-    return from.endsWith(target) || target.endsWith(from) ||
-           to.endsWith(target) || target.endsWith(to)
+    return (
+      from.endsWith(target) ||
+      target.endsWith(from) ||
+      to.endsWith(target) ||
+      target.endsWith(to)
+    )
   })
 })
 
@@ -799,30 +868,54 @@ const threadComments = computed(() => {
 // auto-links to the newest only → the conversation is split. When the phone appears on
 // >1 deal, offer a toggle that merges all their WhatsApp into one thread (backend tags
 // each bubble with its source deal). Deal-scoped by default.
-const contactRefs = createResource({ url: 'doco_marketing.api.inbox.get_contact_refs', auto: false })
-const unifiedMessages = createResource({ url: 'doco_marketing.api.inbox.get_contact_thread', auto: false })
+const contactRefs = createResource({
+  url: 'doco_marketing.api.inbox.get_contact_refs',
+  auto: false,
+})
+const unifiedMessages = createResource({
+  url: 'doco_marketing.api.inbox.get_contact_thread',
+  auto: false,
+})
 // Catalog intent: if the customer's last inbound looks like a price/item question, offer
 // a one-tap "buscar en catálogo" chip pre-filled with the extracted terms (never auto-sends).
-const catalogSuggest = createResource({ url: 'doco_marketing.api.catalog.suggest', auto: false })
+const catalogSuggest = createResource({
+  url: 'doco_marketing.api.catalog.suggest',
+  auto: false,
+})
 const unifiedThread = ref(false)
 const contactDealCount = computed(() => contactRefs.data?.count || 1)
 const baseWaMessages = computed(() =>
-  unifiedThread.value ? unifiedMessages.data || [] : filteredWhatsappMessages.value || [],
+  unifiedThread.value
+    ? unifiedMessages.data || []
+    : filteredWhatsappMessages.value || [],
 )
 function toggleUnified() {
   if (!addonAvailable.value) return
   unifiedThread.value = !unifiedThread.value
   if (unifiedThread.value && props.docname)
-    unifiedMessages.submit({ reference_doctype: props.doctype, reference_name: props.docname })
+    unifiedMessages.submit({
+      reference_doctype: props.doctype,
+      reference_name: props.docname,
+    })
   nextTick(() => scroll())
 }
 watch(
   () => [props.docname, addonAvailable.value],
   () => {
     unifiedThread.value = false
-    if (addonAvailable.value && props.docname && ['CRM Deal', 'CRM Lead'].includes(props.doctype)) {
-      contactRefs.submit({ reference_doctype: props.doctype, reference_name: props.docname })
-      catalogSuggest.submit({ reference_doctype: props.doctype, reference_name: props.docname })
+    if (
+      addonAvailable.value &&
+      props.docname &&
+      ['CRM Deal', 'CRM Lead'].includes(props.doctype)
+    ) {
+      contactRefs.submit({
+        reference_doctype: props.doctype,
+        reference_name: props.docname,
+      })
+      catalogSuggest.submit({
+        reference_doctype: props.doctype,
+        reference_name: props.docname,
+      })
     }
   },
   { immediate: true },
@@ -930,9 +1023,13 @@ const messengerThread = createResource({
   },
   auto: false,
 })
-const messengerMessages = computed(() => addonAvailable.value ? messengerThread.data?.messages || [] : [])
+const messengerMessages = computed(() =>
+  addonAvailable.value ? messengerThread.data?.messages || [] : [],
+)
 const convIsMessenger = computed(
-  () => messengerMessages.value.length > 0 && (whatsappMessages.data || []).length === 0,
+  () =>
+    messengerMessages.value.length > 0 &&
+    (whatsappMessages.data || []).length === 0,
 )
 // Live Messenger 24h policy window: free RESPONSE until 24h after the last INBOUND
 // message, else outbound needs a HUMAN_AGENT tag. Mirrors DealHeader's waWindow so
@@ -941,11 +1038,18 @@ const messengerWindow = computed(() => {
   const mm = messengerMessages.value
   let ts = null
   for (let i = mm.length - 1; i >= 0; i--) {
-    if (mm[i].direction !== 'out') { ts = mm[i].timestamp || mm[i].creation; break }
+    if (mm[i].direction !== 'out') {
+      ts = mm[i].timestamp || mm[i].creation
+      break
+    }
   }
   if (!ts) return null
-  const left = 24 - (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
-  return left > 0 ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) } : { open: false }
+  const left =
+    24 -
+    (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
+  return left > 0
+    ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) }
+    : { open: false }
 })
 
 // ── Optimistic reply (#21) ───────────────────────────────────────────────────
@@ -968,7 +1072,9 @@ function _optAdd(list, p) {
   setTimeout(() => _optDrop(list, token), OPT_MAX_AGE)
 }
 function _optMarkSent(list, clientToken, serverId) {
-  list.value = list.value.map((o) => (o.clientToken === clientToken ? { ...o, serverId } : o))
+  list.value = list.value.map((o) =>
+    o.clientToken === clientToken ? { ...o, serverId } : o,
+  )
 }
 function _optDrop(list, clientToken) {
   list.value = list.value.filter((o) => o.clientToken !== clientToken)
@@ -989,7 +1095,10 @@ function _reconcile(optimistic, real, { idOf, contentOf, attachOf, isOut }) {
   for (const o of optimistic) {
     if (now - o.ts > OPT_MAX_AGE) continue
     let i = -1
-    if (o.serverId) i = real.findIndex((r, idx) => !consumed.has(idx) && idOf(r) === o.serverId)
+    if (o.serverId)
+      i = real.findIndex(
+        (r, idx) => !consumed.has(idx) && idOf(r) === o.serverId,
+      )
     if (i < 0) {
       i = real.findIndex(
         (r, idx) =>
@@ -1011,7 +1120,10 @@ function _reconcile(optimistic, real, { idOf, contentOf, attachOf, isOut }) {
 // — else switching tabs mid-send shows contact A's bubble in contact B's thread.
 const _scopedOptimisticWa = computed(() => {
   const multi = (whatsappContacts.data || []).length > 1
-  const target = String(activeWhatsappContact.value?.phone || '').replace(/\D/g, '')
+  const target = String(activeWhatsappContact.value?.phone || '').replace(
+    /\D/g,
+    '',
+  )
   if (!multi || !target) return optimisticWa.value
   return optimisticWa.value.filter((o) => {
     const t = String(o.to || '').replace(/\D/g, '')
@@ -1056,14 +1168,18 @@ const optimisticMsgrItems = computed(() =>
 // Messenger render list = real thread (time-sorted) + pending bubbles pinned last
 // (a just-sent message is always the newest — append after sort, no tz-fragile compare).
 const messengerThreadItems = computed(() => {
-  const base = [...messengerMessages.value].sort((a, b) => _tsMs(a.timestamp) - _tsMs(b.timestamp))
+  const base = [...messengerMessages.value].sort(
+    (a, b) => _tsMs(a.timestamp) - _tsMs(b.timestamp),
+  )
   return [...base, ...optimisticMsgrItems.value]
 })
 
 // composer lifecycle → optimistic list. Snapshot the real ids present NOW so the
 // content fallback can only ever match a row that arrives afterwards.
 function onWaSending(p) {
-  const knownIds = new Set((filteredWhatsappMessages.value || []).map((r) => r.name))
+  const knownIds = new Set(
+    (filteredWhatsappMessages.value || []).map((r) => r.name),
+  )
   _optAdd(optimisticWa, { ...p, knownIds })
   nextTick(() => scroll()) // own send → scroll to the new bubble
 }
@@ -1094,14 +1210,23 @@ function onWaCatalog(q) {
       reference_name: props.docname,
       channel: 'whatsapp',
       to: activeWhatsappContact.value?.phone || doc.value.mobile_no,
-      whatsapp_account: activeWhatsappContact.value?.whatsapp_account || undefined,
+      whatsapp_account:
+        activeWhatsappContact.value?.whatsapp_account || undefined,
     },
     q,
   )
 }
 function onMsgrCatalog(q) {
   if (!addonAvailable.value) return
-  openCatalog({ reference_doctype: props.doctype, reference_name: props.docname, channel: 'messenger', to: null }, q)
+  openCatalog(
+    {
+      reference_doctype: props.doctype,
+      reference_name: props.docname,
+      channel: 'messenger',
+      to: null,
+    },
+    q,
+  )
 }
 function onCatalogSent() {
   if (whatsappEnabled.value) whatsappMessages.reload()
@@ -1116,9 +1241,23 @@ function onCatalogSent() {
 const channels = computed(() => {
   const out = []
   const wa = whatsappMessages.data || []
-  if (wa.length) out.push({ id: 'whatsapp', label: 'WhatsApp', color: '#25d366', count: wa.length, ts: wa[wa.length - 1]?.creation })
+  if (wa.length)
+    out.push({
+      id: 'whatsapp',
+      label: 'WhatsApp',
+      color: '#25d366',
+      count: wa.length,
+      ts: wa[wa.length - 1]?.creation,
+    })
   const mm = messengerMessages.value
-  if (mm.length) out.push({ id: 'messenger', label: 'Messenger', color: '#0084ff', count: mm.length, ts: mm[mm.length - 1]?.timestamp || mm[mm.length - 1]?.creation })
+  if (mm.length)
+    out.push({
+      id: 'messenger',
+      label: 'Messenger',
+      color: '#0084ff',
+      count: mm.length,
+      ts: mm[mm.length - 1]?.timestamp || mm[mm.length - 1]?.creation,
+    })
   return out
 })
 const availableChannels = computed(() => channels.value)
@@ -1146,8 +1285,11 @@ watch(
       activeChannelTab.value = 'whatsapp'
       return
     }
-    if (userPickedTab.value && chs.some((c) => c.id === activeChannelTab.value)) return
-    const latest = [...chs].sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0))[0]
+    if (userPickedTab.value && chs.some((c) => c.id === activeChannelTab.value))
+      return
+    const latest = [...chs].sort(
+      (a, b) => new Date(b.ts || 0) - new Date(a.ts || 0),
+    )[0]
     activeChannelTab.value = latest?.id || chs[0].id
   },
   { immediate: true },
@@ -1156,7 +1298,8 @@ watch(
 watch(
   () => [title.value, props.docname, addonAvailable.value],
   () => {
-    if (addonAvailable.value && title.value === 'WhatsApp' && props.docname) messengerThread.fetch()
+    if (addonAvailable.value && title.value === 'WhatsApp' && props.docname)
+      messengerThread.fetch()
   },
   { immediate: true },
 )
@@ -1241,7 +1384,8 @@ function confirmSendTemplate({ template, body_param }) {
       reference_doctype: props.doctype,
       reference_name: props.docname,
       to: activeWhatsappContact.value?.phone || doc.value.mobile_no,
-      whatsapp_account: activeWhatsappContact.value?.whatsapp_account || undefined,
+      whatsapp_account:
+        activeWhatsappContact.value?.whatsapp_account || undefined,
       template,
       body_param: body_param ? JSON.stringify(body_param) : undefined,
     },

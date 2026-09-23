@@ -5,6 +5,7 @@ import json
 
 import frappe
 from frappe import _
+
 # Newer Frappe split assign_to.add: the public add() no longer takes
 # ignore_permissions (it delegates to the private _add). assign_agent() needs
 # the system-level assignment, so bind directly to _add.

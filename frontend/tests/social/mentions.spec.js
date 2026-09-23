@@ -7,7 +7,9 @@
 import { test, expect } from '@playwright/test'
 import { gotoAuthed, byTestId, collectErrors, shot } from './helpers.js'
 
-test('mentions: page renders, filter chips + default, empty-state copy', async ({ page }) => {
+test('mentions: page renders, filter chips + default, empty-state copy', async ({
+  page,
+}) => {
   const errs = collectErrors(page)
   await gotoAuthed(page, '/social/mentions')
 
@@ -33,7 +35,8 @@ test('mentions: page renders, filter chips + default, empty-state copy', async (
     await expect(page.getByText(/menci/i).first()).toBeVisible()
     test.info().annotations.push({
       type: 'fixme',
-      description: 'no mentions on lab (capture pending Meta) — card + reply/dismiss flows need seeded mentions',
+      description:
+        'no mentions on lab (capture pending Meta) — card + reply/dismiss flows need seeded mentions',
     })
   } else {
     await expect(byTestId(page, 'mention-card-0')).toBeVisible()

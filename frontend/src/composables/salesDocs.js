@@ -27,7 +27,9 @@ export function reloadSalesSummary(deal) {
 }
 
 export const salesRollup = computed(() => salesSummary.data?.rollup || null)
-export const salesOutstanding = computed(() => Number(salesRollup.value?.outstanding || 0))
+export const salesOutstanding = computed(() =>
+  Number(salesRollup.value?.outstanding || 0),
+)
 
 // ── quote building (ERP spec P2) ────────────────────────────────────────────
 // Thin wrappers over doco_marketing.api.sales_docs.*; every mutation refreshes
@@ -38,13 +40,24 @@ async function _quoteCall(method, params) {
   return out
 }
 export function addItemsToQuotation(deal, items) {
-  return _quoteCall('add_items_to_quotation', { deal, items: JSON.stringify(items) })
+  return _quoteCall('add_items_to_quotation', {
+    deal,
+    items: JSON.stringify(items),
+  })
 }
 export function getQuotationDetail(deal, quotation) {
-  return call('doco_marketing.api.sales_docs.get_quotation_detail', { deal, quotation })
+  return call('doco_marketing.api.sales_docs.get_quotation_detail', {
+    deal,
+    quotation,
+  })
 }
 export function updateQuotationLine(deal, quotation, row_name, patch) {
-  return _quoteCall('update_quotation_line', { deal, quotation, row_name, ...patch })
+  return _quoteCall('update_quotation_line', {
+    deal,
+    quotation,
+    row_name,
+    ...patch,
+  })
 }
 export function removeQuotationLine(deal, quotation, row_name) {
   return _quoteCall('remove_quotation_line', { deal, quotation, row_name })

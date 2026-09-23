@@ -10,7 +10,11 @@
   truthy value is typed.
 -->
 <template>
-  <SettingsPage doctype="Social Settings" :title="__('Social (redes)')" class="p-8" />
+  <SettingsPage
+    doctype="Social Settings"
+    :title="__('Social (redes)')"
+    class="p-8"
+  />
 </template>
 <script setup>
 import SettingsPage from '@/components/Settings/SettingsPage.vue'

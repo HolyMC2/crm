@@ -8,17 +8,27 @@
     <!-- ── mobile toolbar (see DealsView for the why) ─────────────────────── -->
     <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
       <div class="flex items-center gap-2 px-3.5 pb-1.5 pt-2.5">
-        <span class="text-[16px] font-bold text-ink-gray-9">{{ __('Leads') }}</span>
-        <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6">{{ count }}</span>
+        <span class="text-[16px] font-bold text-ink-gray-9">{{
+          __('Leads')
+        }}</span>
+        <span
+          class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6"
+          >{{ count }}</span
+        >
         <div class="flex-1" />
         <Dropdown :options="mobileMenu">
-          <button class="press flex h-9 w-9 items-center justify-center rounded-full text-[16px] text-ink-gray-5" :aria-label="__('Más opciones')">
+          <button
+            class="press flex h-9 w-9 items-center justify-center rounded-full text-[16px] text-ink-gray-5"
+            :aria-label="__('Más opciones')"
+          >
             ⋯
           </button>
         </Dropdown>
       </div>
       <div class="px-3.5 pb-2">
-        <div class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4">
+        <div
+          class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
+        >
           <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
           <input
             :value="search"
@@ -27,7 +37,14 @@
             class="w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
             @input="onSearch($event.target.value)"
           />
-          <button v-if="search" class="press flex-none text-[13px] text-ink-gray-4" :aria-label="__('Limpiar')" @click="onSearch('')">✕</button>
+          <button
+            v-if="search"
+            class="press flex-none text-[13px] text-ink-gray-4"
+            :aria-label="__('Limpiar')"
+            @click="onSearch('')"
+          >
+            ✕
+          </button>
         </div>
       </div>
       <div class="scb flex gap-1.5 overflow-x-auto px-3.5 pb-2">
@@ -35,7 +52,11 @@
           v-for="v in views"
           :key="v.key"
           class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
-          :class="v.key === view ? 'bg-surface-gray-7 text-white' : 'bg-surface-gray-2 text-ink-gray-7'"
+          :class="
+            v.key === view
+              ? 'bg-surface-gray-7 text-white'
+              : 'bg-surface-gray-2 text-ink-gray-7'
+          "
           :aria-pressed="v.key === view"
           @click="selectView(v)"
         >
@@ -44,28 +65,47 @@
         <span class="my-1 w-px flex-none bg-outline-gray-2" />
         <button
           class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
-          :class="chips.length ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-7'"
+          :class="
+            chips.length
+              ? 'bg-surface-green-2 text-ink-green-8'
+              : 'bg-surface-gray-2 text-ink-gray-7'
+          "
           @click="showFilterSheet = true"
         >
-          {{ __('Filtros') }}<span v-if="chips.length"> · {{ chips.length }}</span>
+          {{ __('Filtros')
+          }}<span v-if="chips.length"> · {{ chips.length }}</span>
         </button>
       </div>
     </div>
 
     <!-- toolbar -->
-    <div v-if="!isMobile" class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
+    <div
+      v-if="!isMobile"
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5"
+    >
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Leads') }}</span>
-        <span class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6">
+        <span class="text-[15px] font-bold text-ink-gray-9">{{
+          __('Leads')
+        }}</span>
+        <span
+          class="rounded-full bg-surface-gray-2 px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6"
+        >
           {{ count }}
         </span>
         <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
-        <div class="flex overflow-hidden rounded-lg border border-outline-gray-2">
+        <div
+          class="flex overflow-hidden rounded-lg border border-outline-gray-2"
+        >
           <button
             v-for="(v, i) in views"
             :key="v.key"
             class="inline-flex items-center gap-1 px-[11px] py-[5px] text-[12px]"
-            :class="[i ? 'border-l border-outline-gray-2' : '', v.key === view ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-base text-ink-gray-6']"
+            :class="[
+              i ? 'border-l border-outline-gray-2' : '',
+              v.key === view
+                ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold'
+                : 'bg-surface-base text-ink-gray-6',
+            ]"
             :aria-pressed="v.key === view"
             @click="selectView(v)"
           >
@@ -73,23 +113,42 @@
           </button>
         </div>
         <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
-        <FilterPopover :label="__('Stage')" :options="stageOptions" :selected="statusF" @update:selected="statusF = $event" />
-        <FilterPopover :label="__('Score')" :options="scoreOptions" :selected="gradeF" @update:selected="gradeF = $event" />
-        <FilterPopover :label="__('Source')" :options="sourceOptions" :selected="sourceF" @update:selected="sourceF = $event" />
+        <FilterPopover
+          :label="__('Stage')"
+          :options="stageOptions"
+          :selected="statusF"
+          @update:selected="statusF = $event"
+        />
+        <FilterPopover
+          :label="__('Score')"
+          :options="scoreOptions"
+          :selected="gradeF"
+          @update:selected="gradeF = $event"
+        />
+        <FilterPopover
+          :label="__('Source')"
+          :options="sourceOptions"
+          :selected="sourceF"
+          @update:selected="sourceF = $event"
+        />
       </div>
       <div class="flex items-center gap-2">
-        <div class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
+        <div
+          class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+        >
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
             :value="search"
             :aria-label="__('Buscar leads')"
-            @input="onSearch($event.target.value)"
             :placeholder="__('Buscar leads…')"
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+            @input="onSearch($event.target.value)"
           />
         </div>
         <Dropdown :options="viewMenu">
-          <button class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7">
+          <button
+            class="rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12px] font-medium text-ink-gray-7"
+          >
             {{ __('Vistas') }} ⌄
           </button>
         </Dropdown>
@@ -118,34 +177,71 @@
     </div>
 
     <!-- active filter chips -->
-    <div v-if="chips.length && !isMobile" class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2">
+    <div
+      v-if="chips.length && !isMobile"
+      class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2"
+    >
       <span
         v-for="c in chips"
         :key="c.key"
         class="inline-flex items-center gap-1.5 rounded-[7px] border border-outline-green-4 bg-surface-green-2 px-2 py-1 text-[11.5px] font-medium text-ink-green-8"
       >
         {{ c.label }}
-        <button class="text-[13px] leading-none" :aria-label="__('Quitar filtro') + ' ' + c.label" @click="removeChip(c)">×</button>
+        <button
+          class="text-[13px] leading-none"
+          :aria-label="__('Quitar filtro') + ' ' + c.label"
+          @click="removeChip(c)"
+        >
+          ×
+        </button>
       </span>
-      <button class="text-[11.5px] text-ink-gray-5" @click="clearAll">{{ __('Limpiar todo') }}</button>
+      <button class="text-[11.5px] text-ink-gray-5" @click="clearAll">
+        {{ __('Limpiar todo') }}
+      </button>
     </div>
 
     <!-- bulk bar -->
-    <div v-if="selectedRows.length" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2">
-      <span class="text-[12.5px] font-semibold text-ink-gray-8">{{ selectedRows.length }} {{ __('seleccionados') }}</span>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2" @click="bulkConvert">
+    <div
+      v-if="selectedRows.length"
+      class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2"
+    >
+      <span class="text-[12.5px] font-semibold text-ink-gray-8"
+        >{{ selectedRows.length }} {{ __('seleccionados') }}</span
+      >
+      <button
+        class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-blue-link hover:bg-surface-gray-2"
+        @click="bulkConvert"
+      >
         {{ __('Convertir a tratos') }}
       </button>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1" @click="bulkDelete">
+      <button
+        class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
+        @click="bulkDelete"
+      >
         {{ __('Eliminar') }}
       </button>
-      <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>
+      <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">
+        {{ __('Deseleccionar') }}
+      </button>
     </div>
 
     <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
-    <div v-if="view === 'list' && isMobile" class="scb min-h-0 flex-1 overflow-y-auto">
-      <div v-if="leads.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin leads') }}</div>
+    <div
+      v-if="view === 'list' && isMobile"
+      class="scb min-h-0 flex-1 overflow-y-auto"
+    >
+      <div
+        v-if="leads.loading && !rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Cargando…') }}
+      </div>
+      <div
+        v-else-if="!rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Sin leads') }}
+      </div>
       <MobileRecordCard
         v-for="r in rows"
         :key="r.name"
@@ -156,7 +252,11 @@
         @open="openLead(r.name)"
       >
         <template #chips>
-          <span v-if="r.status" class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold" :style="statusChip(r.status)">
+          <span
+            v-if="r.status"
+            class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
+            :style="statusChip(r.status)"
+          >
             {{ r.status }}
           </span>
           <span
@@ -166,18 +266,31 @@
           >
             {{ r.score_grade }} · {{ r.lead_score ?? '—' }}
           </span>
-          <span v-if="r.source" class="flex items-center gap-1 text-[11px] text-ink-gray-6">
-            <span class="h-[6px] w-[6px] flex-none rounded-full" :style="`background:${sourceDot(r.source)}`" />
+          <span
+            v-if="r.source"
+            class="flex items-center gap-1 text-[11px] text-ink-gray-6"
+          >
+            <span
+              class="h-[6px] w-[6px] flex-none rounded-full"
+              :style="`background:${sourceDot(r.source)}`"
+            />
             {{ r.source }}
           </span>
           <!-- own line: the due label plus the task title needs the full width -->
           <div v-if="r.next_activity_at" class="w-full">
-            <NextActivityChip :at="r.next_activity_at" :title="r.next_activity_title" :type="r.next_activity_type" />
+            <NextActivityChip
+              :at="r.next_activity_at"
+              :title="r.next_activity_title"
+              :type="r.next_activity_type"
+            />
           </div>
         </template>
       </MobileRecordCard>
       <div v-if="leads.hasNextPage" class="px-3.5 py-3">
-        <button class="press h-11 w-full rounded-[10px] border border-outline-gray-2 text-[13px] font-medium text-ink-gray-7" @click="leads.next()">
+        <button
+          class="press h-11 w-full rounded-[10px] border border-outline-gray-2 text-[13px] font-medium text-ink-gray-7"
+          @click="leads.next()"
+        >
           {{ __('Cargar más') }}
         </button>
       </div>
@@ -186,111 +299,186 @@
 
     <!-- list view -->
     <template v-if="view === 'list' && !isMobile">
-    <!-- table header -->
-    <div
-      class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
-      :style="`grid-template-columns:${GRID};height:34px`"
-    >
-      <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" :aria-label="__('Seleccionar todo')" @change="toggleAll" />
-      <button class="text-left uppercase" @click="sortBy('lead_name')">{{ __('Contacto') }}{{ sortArrow('lead_name') }}</button>
-      <button v-if="col('score')" class="text-left uppercase" :style="'color:var(--brand)'" @click="sortBy('lead_score')">{{ __('Score') }}{{ sortArrow('lead_score') }}</button>
-      <button v-if="col('next_activity')" class="text-left uppercase" @click="sortBy('next_activity_at')">
-        {{ __('Próxima actividad') }}{{ sortArrow('next_activity_at') }}
-      </button>
-      <div v-if="col('stage')">{{ __('Stage') }}</div>
-      <div v-if="col('source')">{{ __('Source') }}</div>
-      <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
-      <div v-if="col('owner')">{{ __('Owner') }}</div>
-      <div />
-    </div>
-
-    <!-- rows -->
-    <div class="scb min-h-0 flex-1 overflow-y-auto">
-      <div v-if="leads.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin leads') }}</div>
-
+      <!-- table header -->
       <div
-        v-for="r in rows"
-        :key="r.name"
-        role="button"
-        tabindex="0"
-        class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
-        :style="`grid-template-columns:${GRID};min-height:50px`"
-        @click="openLead(r.name)"
-        @keydown.enter="openLead(r.name)"
+        class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+        :style="`grid-template-columns:${GRID};height:34px`"
       >
-        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" :aria-label="__('Seleccionar') + ' ' + label(r)" @click.stop="toggleRow(r.name)" />
-        <div class="flex items-center gap-2">
-          <span
-            class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
-            :style="`background:${avatarColor(label(r))[0]};color:${avatarColor(label(r))[1]}`"
-          >
-            {{ initials(label(r)) }}
-          </span>
-          <div class="min-w-0">
-            <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ label(r) }}</div>
-            <div class="truncate text-[11px] text-ink-gray-4">{{ r.organization || r.mobile_no || '—' }}</div>
-          </div>
+        <input
+          v-if="!isMobile"
+          type="checkbox"
+          class="cb-token"
+          :checked="allSelected"
+          :aria-label="__('Seleccionar todo')"
+          @change="toggleAll"
+        />
+        <button class="text-left uppercase" @click="sortBy('lead_name')">
+          {{ __('Contacto') }}{{ sortArrow('lead_name') }}
+        </button>
+        <button
+          v-if="col('score')"
+          class="text-left uppercase"
+          :style="'color:var(--brand)'"
+          @click="sortBy('lead_score')"
+        >
+          {{ __('Score') }}{{ sortArrow('lead_score') }}
+        </button>
+        <button
+          v-if="col('next_activity')"
+          class="text-left uppercase"
+          @click="sortBy('next_activity_at')"
+        >
+          {{ __('Próxima actividad') }}{{ sortArrow('next_activity_at') }}
+        </button>
+        <div v-if="col('stage')">{{ __('Stage') }}</div>
+        <div v-if="col('source')">{{ __('Source') }}</div>
+        <button
+          v-if="col('modified')"
+          class="text-left uppercase"
+          @click="sortBy('modified')"
+        >
+          {{ __('Última act.') }}{{ sortArrow('modified') }}
+        </button>
+        <div v-if="col('owner')">{{ __('Owner') }}</div>
+        <div />
+      </div>
+
+      <!-- rows -->
+      <div class="scb min-h-0 flex-1 overflow-y-auto">
+        <div
+          v-if="leads.loading && !rows.length"
+          class="py-10 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Cargando…') }}
         </div>
-        <div v-if="col('score')">
-          <div class="mb-[3px] flex items-center justify-between" style="width: 62px">
-            <span class="text-[12.5px] font-bold" :style="`color:${gradeColor(r.score_grade)}`">{{ r.lead_score ?? '—' }}</span>
-            <ScoreExplainPopover
-              v-if="r.score_grade"
-              doctype="CRM Lead"
-              :name="r.name"
-              :score="r.lead_score"
-              :grade="r.score_grade"
-              variant="chip"
+        <div
+          v-else-if="!rows.length"
+          class="py-10 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Sin leads') }}
+        </div>
+
+        <div
+          v-for="r in rows"
+          :key="r.name"
+          role="button"
+          tabindex="0"
+          class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
+          :style="`grid-template-columns:${GRID};min-height:50px`"
+          @click="openLead(r.name)"
+          @keydown.enter="openLead(r.name)"
+        >
+          <input
+            v-if="!isMobile"
+            type="checkbox"
+            class="cb-token"
+            :checked="selectedRows.includes(r.name)"
+            :aria-label="__('Seleccionar') + ' ' + label(r)"
+            @click.stop="toggleRow(r.name)"
+          />
+          <div class="flex items-center gap-2">
+            <span
+              class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
+              :style="`background:${avatarColor(label(r))[0]};color:${avatarColor(label(r))[1]}`"
+            >
+              {{ initials(label(r)) }}
+            </span>
+            <div class="min-w-0">
+              <div class="truncate text-[13px] font-semibold text-ink-gray-9">
+                {{ label(r) }}
+              </div>
+              <div class="truncate text-[11px] text-ink-gray-4">
+                {{ r.organization || r.mobile_no || '—' }}
+              </div>
+            </div>
+          </div>
+          <div v-if="col('score')">
+            <div
+              class="mb-[3px] flex items-center justify-between"
+              style="width: 62px"
+            >
+              <span
+                class="text-[12.5px] font-bold"
+                :style="`color:${gradeColor(r.score_grade)}`"
+                >{{ r.lead_score ?? '—' }}</span
+              >
+              <ScoreExplainPopover
+                v-if="r.score_grade"
+                doctype="CRM Lead"
+                :name="r.name"
+                :score="r.lead_score"
+                :grade="r.score_grade"
+                variant="chip"
+              />
+            </div>
+            <div class="h-1 rounded-sm bg-surface-gray-3" style="width: 62px">
+              <div
+                class="h-full rounded-sm"
+                :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`"
+              />
+            </div>
+          </div>
+          <div v-if="col('next_activity')" class="min-w-0">
+            <NextActivityChip
+              :at="r.next_activity_at"
+              :title="r.next_activity_title"
+              :type="r.next_activity_type"
+              :empty-label="'—'"
             />
           </div>
-          <div class="h-1 rounded-sm bg-surface-gray-3" style="width: 62px">
-            <div class="h-full rounded-sm" :style="`width:${Math.min(100, r.lead_score || 0)}%;background:${gradeColor(r.score_grade)}`" />
+          <div v-if="col('stage')">
+            <span
+              v-if="r.status"
+              class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
+              :style="statusChip(r.status)"
+            >
+              {{ r.status }}
+            </span>
           </div>
-        </div>
-        <div v-if="col('next_activity')" class="min-w-0">
-          <NextActivityChip
-            :at="r.next_activity_at"
-            :title="r.next_activity_title"
-            :type="r.next_activity_type"
-            :empty-label="'—'"
-          />
-        </div>
-        <div v-if="col('stage')">
-          <span
-            v-if="r.status"
-            class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
-            :style="statusChip(r.status)"
+          <div
+            v-if="col('source')"
+            class="flex items-center gap-1.5 text-[12px] text-ink-gray-6"
           >
-            {{ r.status }}
-          </span>
+            <span
+              v-if="r.source"
+              class="h-[7px] w-[7px] flex-none rounded-full"
+              :style="`background:${sourceDot(r.source)}`"
+            />
+            <span class="truncate">{{ r.source || '—' }}</span>
+          </div>
+          <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">
+            {{ timeAgo(r.modified) }}
+          </div>
+          <div v-if="col('owner')">
+            <span
+              v-if="r.lead_owner"
+              class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
+              :style="`background:${avatarColor(r.lead_owner)[0]};color:${avatarColor(r.lead_owner)[1]}`"
+              :title="r.lead_owner"
+            >
+              {{ initials(ownerName(r.lead_owner)) }}
+            </span>
+          </div>
+          <Dropdown :options="rowMenu(r)" @click.stop>
+            <button
+              class="text-[14px] text-ink-gray-4"
+              :aria-label="__('Más acciones')"
+              @click.stop
+            >
+              ···
+            </button>
+          </Dropdown>
         </div>
-        <div v-if="col('source')" class="flex items-center gap-1.5 text-[12px] text-ink-gray-6">
-          <span v-if="r.source" class="h-[7px] w-[7px] flex-none rounded-full" :style="`background:${sourceDot(r.source)}`" />
-          <span class="truncate">{{ r.source || '—' }}</span>
-        </div>
-        <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">{{ timeAgo(r.modified) }}</div>
-        <div v-if="col('owner')">
-          <span
-            v-if="r.lead_owner"
-            class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
-            :style="`background:${avatarColor(r.lead_owner)[0]};color:${avatarColor(r.lead_owner)[1]}`"
-            :title="r.lead_owner"
-          >
-            {{ initials(ownerName(r.lead_owner)) }}
-          </span>
-        </div>
-        <Dropdown :options="rowMenu(r)" @click.stop>
-          <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')" @click.stop>···</button>
-        </Dropdown>
-      </div>
 
-      <div v-if="leads.hasNextPage" class="py-3 text-center">
-        <button class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7" @click="leads.next()">
-          {{ __('Cargar más') }}
-        </button>
+        <div v-if="leads.hasNextPage" class="py-3 text-center">
+          <button
+            class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7"
+            @click="leads.next()"
+          >
+            {{ __('Cargar más') }}
+          </button>
+        </div>
       </div>
-    </div>
     </template>
 
     <!-- board view -->
@@ -307,8 +495,12 @@
         <div class="min-w-0">
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0">
-              <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">{{ label(row) }}</div>
-              <div class="truncate text-[11px] text-ink-gray-4">{{ row.organization || row.mobile_no || '—' }}</div>
+              <div class="truncate text-[12.5px] font-semibold text-ink-gray-9">
+                {{ label(row) }}
+              </div>
+              <div class="truncate text-[11px] text-ink-gray-4">
+                {{ row.organization || row.mobile_no || '—' }}
+              </div>
             </div>
             <ScoreExplainPopover
               v-if="row.score_grade"
@@ -335,7 +527,11 @@
               >
                 {{ initials(ownerName(row.lead_owner)) }}
               </span>
-              <span class="text-[10px] text-ink-gray-4" :title="__('Antigüedad')">{{ timeAgo(row.creation) }}</span>
+              <span
+                class="text-[10px] text-ink-gray-4"
+                :title="__('Antigüedad')"
+                >{{ timeAgo(row.creation) }}</span
+              >
             </div>
           </div>
         </div>
@@ -343,13 +539,21 @@
     </BoardView>
 
     <!-- funnel view -->
-    <FunnelView v-else-if="view === 'funnel'" :groups="stageOptions" :counts="groupCounts" />
+    <FunnelView
+      v-else-if="view === 'funnel'"
+      :groups="stageOptions"
+      :counts="groupCounts"
+    />
 
     <!-- mobile: create sits under the thumb, clear of the tab bar -->
     <button
       v-if="isMobile"
       class="press fixed right-4 z-[200] flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white"
-      style="background: var(--brand); bottom: calc(env(safe-area-inset-bottom) + 68px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22)"
+      style="
+        background: var(--brand);
+        bottom: calc(env(safe-area-inset-bottom) + 68px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+      "
       :aria-label="__('New Lead')"
       @click="showLeadModal = true"
     >
@@ -373,7 +577,12 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { isMobile } from '@/composables/breakpoint'
-import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
+import {
+  Dropdown,
+  createListResource,
+  call as frappeCall,
+  toast,
+} from 'frappe-ui'
 import { confirmDialog, createDialog, inputDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
@@ -388,7 +597,14 @@ import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
-import { GRADE_COLORS, avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
+import {
+  GRADE_COLORS,
+  avatarColor,
+  initials,
+  timeAgo,
+  formatPhone,
+  CHANNEL_META,
+} from '@/composables/crmFormat'
 
 const router = useRouter()
 
@@ -403,7 +619,14 @@ const LEAD_COLUMNS = [
   { key: 'modified', label: __('Última act.') },
   { key: 'owner', label: __('Owner') },
 ]
-const COL_ORDER = ['score', 'next_activity', 'stage', 'source', 'modified', 'owner']
+const COL_ORDER = [
+  'score',
+  'next_activity',
+  'stage',
+  'source',
+  'modified',
+  'owner',
+]
 const COL_WIDTH = {
   score: '96px',
   next_activity: '170px',
@@ -412,7 +635,14 @@ const COL_WIDTH = {
   modified: '110px',
   owner: '50px',
 }
-const DEFAULT_COLS = ['score', 'next_activity', 'stage', 'source', 'modified', 'owner']
+const DEFAULT_COLS = [
+  'score',
+  'next_activity',
+  'stage',
+  'source',
+  'modified',
+  'owner',
+]
 // v2: "Próxima actividad" joined the defaults — a stale pref would hide the one
 // column that says what to do next.
 const COLS_KEY = userScopedKey('doco_leads_columns_v2')
@@ -464,9 +694,23 @@ const groupCounts = ref({})
 const leads = createListResource({
   doctype: 'CRM Lead',
   fields: [
-    'name', 'lead_name', 'first_name', 'last_name', 'organization', 'mobile_no',
-    'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'modified', 'creation',
-    'next_activity_at', 'next_activity_title', 'next_activity_type', '_user_tags',
+    'name',
+    'lead_name',
+    'first_name',
+    'last_name',
+    'organization',
+    'mobile_no',
+    'status',
+    'source',
+    'lead_owner',
+    'lead_score',
+    'score_grade',
+    'modified',
+    'creation',
+    'next_activity_at',
+    'next_activity_title',
+    'next_activity_type',
+    '_user_tags',
   ],
   orderBy: 'lead_score desc',
   pageLength: 50,
@@ -481,15 +725,29 @@ const rows = computed(() => {
   const dir = sort.value.dir === 'desc' ? -1 : 1
   const scheduled = data.filter((r) => r.next_activity_at)
   const unscheduled = data.filter((r) => !r.next_activity_at)
-  scheduled.sort((a, b) => dir * String(a.next_activity_at).localeCompare(String(b.next_activity_at)))
+  scheduled.sort(
+    (a, b) =>
+      dir *
+      String(a.next_activity_at).localeCompare(String(b.next_activity_at)),
+  )
   return [...scheduled, ...unscheduled]
 })
 // loaded-row count (not the grand total); '+' signals more pages exist
-const count = computed(() => `${leads.data?.length ?? 0}${leads.hasNextPage ? '+' : ''}`)
+const count = computed(
+  () => `${leads.data?.length ?? 0}${leads.hasNextPage ? '+' : ''}`,
+)
 
 // free-text search across all common text fields (was lead_name-only → phone/email
 // searches returned nothing). OR'd via or_filters (same as upstream ViewControls).
-const SEARCH_FIELDS = ['lead_name', 'first_name', 'last_name', 'email', 'mobile_no', 'phone', 'organization']
+const SEARCH_FIELDS = [
+  'lead_name',
+  'first_name',
+  'last_name',
+  'email',
+  'mobile_no',
+  'phone',
+  'organization',
+]
 function buildFilters() {
   const f = {}
   if (statusF.value.length) f.status = ['in', statusF.value]
@@ -572,7 +830,16 @@ async function onBoardChange(row, status) {
 // ── export (reuse Frappe's server export of ALL matching rows) ────────────────
 function exportLeads() {
   const fields = JSON.stringify([
-    'name', 'lead_name', 'status', 'source', 'lead_owner', 'lead_score', 'score_grade', 'mobile_no', 'organization', 'creation',
+    'name',
+    'lead_name',
+    'status',
+    'source',
+    'lead_owner',
+    'lead_score',
+    'score_grade',
+    'mobile_no',
+    'organization',
+    'creation',
   ])
   const filters = JSON.stringify(buildFilters())
   const orFilters = JSON.stringify(searchOrFilters())
@@ -635,7 +902,9 @@ function deleteView(label) {
 function removeViewPicker() {
   createDialog({
     title: __('Eliminar vista'),
-    message: __('Elige la vista guardada que quieres borrar (solo de este navegador).'),
+    message: __(
+      'Elige la vista guardada que quieres borrar (solo de este navegador).',
+    ),
     actions: savedViews.value.map((v) => ({
       label: '🗑 ' + v.label,
       variant: 'subtle',
@@ -649,10 +918,15 @@ function removeViewPicker() {
   })
 }
 const viewMenu = computed(() => [
-  ...savedViews.value.map((v) => ({ label: v.label, onClick: () => applyView(v) })),
+  ...savedViews.value.map((v) => ({
+    label: v.label,
+    onClick: () => applyView(v),
+  })),
   ...(savedViews.value.length ? [{ label: '—', onClick: () => {} }] : []),
   { label: '＋ ' + __('Guardar vista actual'), onClick: saveCurrentView },
-  ...(savedViews.value.length ? [{ label: '🗑 ' + __('Eliminar vista…'), onClick: removeViewPicker }] : []),
+  ...(savedViews.value.length
+    ? [{ label: '🗑 ' + __('Eliminar vista…'), onClick: removeViewPicker }]
+    : []),
 ])
 watch([statusF, gradeF, sourceF], applyFilters, { deep: true })
 let _t = null
@@ -662,7 +936,8 @@ function onSearch(v) {
   _t = setTimeout(applyFilters, 300)
 }
 function sortBy(field) {
-  const dir = sort.value.field === field && sort.value.dir === 'desc' ? 'asc' : 'desc'
+  const dir =
+    sort.value.field === field && sort.value.dir === 'desc' ? 'asc' : 'desc'
   sort.value = { field, dir }
   applyFilters()
 }
@@ -695,14 +970,19 @@ const sources = createListResource({
   pageLength: 50,
   auto: true,
 })
-const sourceOptions = computed(() => (sources.data || []).map((s) => ({ value: s.name, label: s.name })))
+const sourceOptions = computed(() =>
+  (sources.data || []).map((s) => ({ value: s.name, label: s.name })),
+)
 
 // ── chips ────────────────────────────────────────────────────────────────────
 const chips = computed(() => {
   const out = []
-  for (const v of statusF.value) out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
-  for (const v of gradeF.value) out.push({ key: `gr:${v}`, type: 'grade', value: v, label: `Score ${v}` })
-  for (const v of sourceF.value) out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
+  for (const v of statusF.value)
+    out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
+  for (const v of gradeF.value)
+    out.push({ key: `gr:${v}`, type: 'grade', value: v, label: `Score ${v}` })
+  for (const v of sourceF.value)
+    out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
   return out
 })
 function removeChip(c) {
@@ -723,7 +1003,12 @@ const views = [
   { key: 'cal', label: '📅 Cal', to: '/calendar' },
 ]
 function label(r) {
-  return r.lead_name || [r.first_name, r.last_name].filter(Boolean).join(' ') || r.mobile_no || r.name
+  return (
+    r.lead_name ||
+    [r.first_name, r.last_name].filter(Boolean).join(' ') ||
+    r.mobile_no ||
+    r.name
+  )
 }
 function gradeColor(g) {
   return GRADE_COLORS[g]?.[0] || '#9aa2ae'
@@ -734,7 +1019,9 @@ function statusChip(status) {
 }
 function sourceDot(source) {
   const key = String(source || '').toLowerCase()
-  for (const k of Object.keys(CHANNEL_META)) if (key.includes(k) || key.includes(CHANNEL_META[k][0].toLowerCase())) return CHANNEL_META[k][1]
+  for (const k of Object.keys(CHANNEL_META))
+    if (key.includes(k) || key.includes(CHANNEL_META[k][0].toLowerCase()))
+      return CHANNEL_META[k][1]
   return '#9aa2ae'
 }
 function ownerName(email) {
@@ -749,21 +1036,43 @@ function mobileSubtitle(r) {
   const parts = []
   if (r.organization) parts.push(r.organization)
   // A nameless lead already shows its number as the card TITLE — don't print it twice.
-  if (r.mobile_no && label(r) !== r.mobile_no) parts.push(formatPhone(r.mobile_no))
+  if (r.mobile_no && label(r) !== r.mobile_no)
+    parts.push(formatPhone(r.mobile_no))
   return parts.join(' · ')
 }
-const mobileMenu = computed(() => [...viewMenu.value, { label: '⭳ ' + __('Export'), onClick: exportLeads }])
+const mobileMenu = computed(() => [
+  ...viewMenu.value,
+  { label: '⭳ ' + __('Export'), onClick: exportLeads },
+])
 const mobileFilterGroups = computed(() => [
-  { key: 'status', label: __('Stage'), options: stageOptions.value, selected: statusF.value },
-  { key: 'grade', label: __('Score'), options: scoreOptions, selected: gradeF.value },
-  { key: 'source', label: __('Source'), options: sourceOptions.value, selected: sourceF.value },
+  {
+    key: 'status',
+    label: __('Stage'),
+    options: stageOptions.value,
+    selected: statusF.value,
+  },
+  {
+    key: 'grade',
+    label: __('Score'),
+    options: scoreOptions,
+    selected: gradeF.value,
+  },
+  {
+    key: 'source',
+    label: __('Source'),
+    options: sourceOptions.value,
+    selected: sourceF.value,
+  },
 ])
 function onSheetChange({ key, values }) {
   ;({ status: statusF, grade: gradeF, source: sourceF })[key].value = values
 }
 
 // ── selection + rows ─────────────────────────────────────────────────────────
-const allSelected = computed(() => rows.value.length > 0 && selectedRows.value.length === rows.value.length)
+const allSelected = computed(
+  () =>
+    rows.value.length > 0 && selectedRows.value.length === rows.value.length,
+)
 function toggleAll() {
   selectedRows.value = allSelected.value ? [] : rows.value.map((r) => r.name)
 }
@@ -784,7 +1093,10 @@ function rowMenu(r) {
 }
 async function convertLead(name) {
   // upstream convert: lead → deal, then open it in the inbox
-  const deal = await frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })
+  const deal = await frappeCall(
+    'crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal',
+    { lead: name },
+  )
   toast.success(__('Convertido a trato'))
   leads.reload()
   if (deal) router.push({ path: '/inbox', query: { deal } })
@@ -808,10 +1120,13 @@ function bulkDelete() {
     confirmLabel: __('Eliminar'),
     onConfirm: async () => {
       const results = await Promise.allSettled(
-        selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })),
+        selectedRows.value.map((name) =>
+          frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name }),
+        ),
       )
       const failed = results.filter((r) => r.status === 'rejected').length
-      failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Leads eliminados'))
+      if (failed) toast.error(__('{0} fallaron', [failed]))
+      else toast.success(__('Leads eliminados'))
       selectedRows.value = []
       leads.reload()
     },
@@ -825,10 +1140,15 @@ function bulkConvert() {
     theme: 'blue',
     onConfirm: async () => {
       const results = await Promise.allSettled(
-        selectedRows.value.map((name) => frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', { lead: name })),
+        selectedRows.value.map((name) =>
+          frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', {
+            lead: name,
+          }),
+        ),
       )
       const failed = results.filter((r) => r.status === 'rejected').length
-      failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Convertidos a tratos'))
+      if (failed) toast.error(__('{0} fallaron', [failed]))
+      else toast.success(__('Convertidos a tratos'))
       selectedRows.value = []
       leads.reload()
     },

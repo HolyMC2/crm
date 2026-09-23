@@ -40,21 +40,44 @@ class TestWhatsAppContacts(unittest.TestCase):
 		).db_insert()
 		for i, phone in enumerate(phones, 1):
 			frappe.get_doc(
-				{"doctype": "Contact Phone", "name": uuid4().hex, "parent": name, "parenttype": "Contact",
-				"parentfield": "phone_nos", "idx": i, "phone": phone, "is_primary_mobile_no": int(i == 1)}
+				{
+					"doctype": "Contact Phone",
+					"name": uuid4().hex,
+					"parent": name,
+					"parenttype": "Contact",
+					"parentfield": "phone_nos",
+					"idx": i,
+					"phone": phone,
+					"is_primary_mobile_no": int(i == 1),
+				}
 			).db_insert()
 		frappe.get_doc(
-			{"doctype": "CRM Contacts", "name": uuid4().hex, "parent": deal, "parenttype": "CRM Deal",
-			"parentfield": "contacts", "idx": idx, "contact": name, "is_primary": is_primary}
+			{
+				"doctype": "CRM Contacts",
+				"name": uuid4().hex,
+				"parent": deal,
+				"parenttype": "CRM Deal",
+				"parentfield": "contacts",
+				"idx": idx,
+				"contact": name,
+				"is_primary": is_primary,
+			}
 		).db_insert()
 		return name
 
 	def message(self, type, peer, hours_ago, account=None):
 		field = "from" if type == "Incoming" else "to"
 		frappe.get_doc(
-			{"doctype": "WhatsApp Message", "name": uuid4().hex, "type": type, field: peer,
-			"message": "Fictional", "content_type": "text", "whatsapp_account": account,
-			"creation": add_to_date(now_datetime(), hours=-hours_ago)}
+			{
+				"doctype": "WhatsApp Message",
+				"name": uuid4().hex,
+				"type": type,
+				field: peer,
+				"message": "Fictional",
+				"content_type": "text",
+				"whatsapp_account": account,
+				"creation": add_to_date(now_datetime(), hours=-hours_ago),
+			}
 		).db_insert()
 
 	def test_each_contact_number_is_a_tab_that_sends_where_the_customer_wrote(self):
@@ -112,7 +135,9 @@ class TestWhatsAppContacts(unittest.TestCase):
 	def test_lead_is_a_single_tab_and_empty_records_have_none(self):
 		number = _phone()
 		lead = uuid4().hex
-		frappe.get_doc({"doctype": "CRM Lead", "name": lead, "lead_name": "Fictional lead", "mobile_no": number}).db_insert()
+		frappe.get_doc(
+			{"doctype": "CRM Lead", "name": lead, "lead_name": "Fictional lead", "mobile_no": number}
+		).db_insert()
 
 		(tab,) = contacts.list_numbers("CRM Lead", lead)
 

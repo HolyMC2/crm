@@ -6,7 +6,9 @@
 import { test, expect } from '@playwright/test'
 import { gotoSocial, SEL, byTestId, collectErrors, shot } from './helpers.js'
 
-test('heatmap: Métricas view — heatmap present, fb-only badge, cells ≤ 7×24 or empty-state', async ({ page }) => {
+test('heatmap: Métricas view — heatmap present, fb-only badge, cells ≤ 7×24 or empty-state', async ({
+  page,
+}) => {
   const errs = collectErrors(page)
   await gotoSocial(page)
   await SEL.metricsTab(page).click()
@@ -33,15 +35,19 @@ test('heatmap: Métricas view — heatmap present, fb-only badge, cells ≤ 7×2
     if ((await page.locator('.hm-cell--weak').count()) === 0) {
       test.info().annotations.push({
         type: 'fixme',
-        description: 'no untrusted buckets in lab data — .hm-cell--weak greyed class unverified',
+        description:
+          'no untrusted buckets in lab data — .hm-cell--weak greyed class unverified',
       })
     }
   } else {
     // No posts at all → empty-state placeholder, no grid.
-    await expect(page.getByText('Aún no hay suficientes datos de publicaciones')).toBeVisible()
+    await expect(
+      page.getByText('Aún no hay suficientes datos de publicaciones'),
+    ).toBeVisible()
     test.info().annotations.push({
       type: 'fixme',
-      description: 'heatmap empty on lab — cell-count + greyed assertions need seeded published posts',
+      description:
+        'heatmap empty on lab — cell-count + greyed assertions need seeded published posts',
     })
   }
 

@@ -17,10 +17,11 @@
     </div>
 
     <div v-else class="space-y-4">
-
       <!-- Quotations -->
       <div v-if="quotations.length">
-        <div class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5">
+        <div
+          class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5"
+        >
           {{ __('Quotations') }}
         </div>
         <div class="divide-y rounded-lg border overflow-hidden">
@@ -33,9 +34,17 @@
           >
             <span class="font-medium text-ink-blue-9">{{ doc.name }}</span>
             <div class="flex items-center gap-3 text-right">
-              <Badge :label="__(doc.status)" :theme="quotationTheme(doc.status)" size="sm" />
-              <span class="text-ink-gray-7 tabular-nums">{{ fmt(doc.grand_total, doc.currency) }}</span>
-              <span class="text-xs text-ink-gray-5">{{ doc.transaction_date }}</span>
+              <Badge
+                :label="__(doc.status)"
+                :theme="quotationTheme(doc.status)"
+                size="sm"
+              />
+              <span class="text-ink-gray-7 tabular-nums">{{
+                fmt(doc.grand_total, doc.currency)
+              }}</span>
+              <span class="text-xs text-ink-gray-5">{{
+                doc.transaction_date
+              }}</span>
             </div>
           </a>
         </div>
@@ -43,7 +52,9 @@
 
       <!-- Sales Orders -->
       <div v-if="salesOrders.length">
-        <div class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5">
+        <div
+          class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5"
+        >
           {{ __('Sales Orders') }}
         </div>
         <div class="divide-y rounded-lg border overflow-hidden">
@@ -56,9 +67,17 @@
           >
             <span class="font-medium text-ink-blue-9">{{ doc.name }}</span>
             <div class="flex items-center gap-3 text-right">
-              <Badge :label="__(doc.status)" :theme="soTheme(doc.status)" size="sm" />
-              <span class="text-ink-gray-7 tabular-nums">{{ fmt(doc.grand_total, doc.currency) }}</span>
-              <span class="text-xs text-ink-gray-5">{{ doc.transaction_date }}</span>
+              <Badge
+                :label="__(doc.status)"
+                :theme="soTheme(doc.status)"
+                size="sm"
+              />
+              <span class="text-ink-gray-7 tabular-nums">{{
+                fmt(doc.grand_total, doc.currency)
+              }}</span>
+              <span class="text-xs text-ink-gray-5">{{
+                doc.transaction_date
+              }}</span>
             </div>
           </a>
         </div>
@@ -66,7 +85,9 @@
 
       <!-- Invoices -->
       <div v-if="invoices.length">
-        <div class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5">
+        <div
+          class="mb-1.5 text-xs-medium uppercase tracking-wide text-ink-gray-5"
+        >
           {{ __('Invoices') }}
         </div>
         <div class="divide-y rounded-lg border overflow-hidden">
@@ -82,17 +103,25 @@
               <span
                 v-if="doc.doctype === 'POS Invoice'"
                 class="rounded bg-surface-gray-2 px-1 py-0.5 text-xs text-ink-gray-5"
-              >POS</span>
+                >POS</span
+              >
             </div>
             <div class="flex items-center gap-3 text-right">
-              <Badge :label="__(doc.status)" :theme="invoiceTheme(doc.status)" size="sm" />
-              <span class="text-ink-gray-7 tabular-nums">{{ fmt(doc.grand_total, doc.currency) }}</span>
-              <span class="text-xs text-ink-gray-5">{{ doc.posting_date }}</span>
+              <Badge
+                :label="__(doc.status)"
+                :theme="invoiceTheme(doc.status)"
+                size="sm"
+              />
+              <span class="text-ink-gray-7 tabular-nums">{{
+                fmt(doc.grand_total, doc.currency)
+              }}</span>
+              <span class="text-xs text-ink-gray-5">{{
+                doc.posting_date
+              }}</span>
             </div>
           </a>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -124,7 +153,10 @@ const salesOrders = computed(() => summaryRes.data?.sales_orders || [])
 const invoices = computed(() => summaryRes.data?.invoices || [])
 
 const hasAny = computed(
-  () => quotations.value.length || salesOrders.value.length || invoices.value.length,
+  () =>
+    quotations.value.length ||
+    salesOrders.value.length ||
+    invoices.value.length,
 )
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -143,30 +175,42 @@ function fmt(amount, currency) {
 }
 
 function quotationTheme(status) {
-  return { Open: 'blue', Ordered: 'green', Lost: 'red', Cancelled: 'red', Expired: 'orange' }[status] || 'gray'
+  return (
+    {
+      Open: 'blue',
+      Ordered: 'green',
+      Lost: 'red',
+      Cancelled: 'red',
+      Expired: 'orange',
+    }[status] || 'gray'
+  )
 }
 
 function soTheme(status) {
-  return {
-    'To Deliver and Bill': 'blue',
-    'To Bill': 'blue',
-    'To Deliver': 'blue',
-    Completed: 'green',
-    Cancelled: 'red',
-    Closed: 'gray',
-  }[status] || 'gray'
+  return (
+    {
+      'To Deliver and Bill': 'blue',
+      'To Bill': 'blue',
+      'To Deliver': 'blue',
+      Completed: 'green',
+      Cancelled: 'red',
+      Closed: 'gray',
+    }[status] || 'gray'
+  )
 }
 
 function invoiceTheme(status) {
-  return {
-    Paid: 'green',
-    'Partly Paid': 'orange',
-    Unpaid: 'orange',
-    Overdue: 'red',
-    Cancelled: 'red',
-    Return: 'gray',
-    Consolidated: 'green',
-    Submitted: 'green',
-  }[status] || 'gray'
+  return (
+    {
+      Paid: 'green',
+      'Partly Paid': 'orange',
+      Unpaid: 'orange',
+      Overdue: 'red',
+      Cancelled: 'red',
+      Return: 'gray',
+      Consolidated: 'green',
+      Submitted: 'green',
+    }[status] || 'gray'
+  )
 }
 </script>

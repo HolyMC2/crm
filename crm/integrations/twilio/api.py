@@ -97,6 +97,7 @@ def sip_voice(**kwargs):
 	if not twilio.settings.get("enable_sip_phone"):
 		# SIP routing disabled — refuse with TwiML "Reject"
 		from twilio.twiml.voice_response import VoiceResponse
+
 		r = VoiceResponse()
 		r.reject()
 		return Response(r.to_xml(), mimetype="text/xml")
@@ -127,7 +128,7 @@ def _normalize_e164(number: str, default_country_code: str = "52") -> str:
 	s = str(number).strip()
 	for scheme in ("sip:", "sips:", "tel:"):
 		if s.lower().startswith(scheme):
-			s = s[len(scheme):]
+			s = s[len(scheme) :]
 			break
 	if "@" in s:
 		s = s.split("@", 1)[0]
@@ -246,7 +247,10 @@ def is_expected_user_message_rejection(exc) -> bool:
 def _report_status_push_failure(exc, call_sid):
 	"""Report without exposing SDK credentials, phone numbers or traceback locals."""
 	message = f"Browser status push failed ({type(exc).__name__}); call log update succeeded."
-	for label, value in (("Twilio code", getattr(exc, "code", None)), ("HTTP status", getattr(exc, "status", None))):
+	for label, value in (
+		("Twilio code", getattr(exc, "code", None)),
+		("HTTP status", getattr(exc, "status", None)),
+	):
 		if isinstance(value, int):
 			message += f" {label}={value}."
 	try:

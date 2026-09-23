@@ -18,7 +18,10 @@ const fold = (s) =>
     .toLowerCase()
 const isGuarded = (status) => {
   const f = fold(status)
-  return GUARDED_STATUSES.some((g) => fold(g) === f) || GUARD_STEMS.some((st) => f.includes(st))
+  return (
+    GUARDED_STATUSES.some((g) => fold(g) === f) ||
+    GUARD_STEMS.some((st) => f.includes(st))
+  )
 }
 
 // Wrap a status change: guarded statuses get an explicit dialog with TWO ways
@@ -28,7 +31,8 @@ const isGuarded = (status) => {
 // through. Resolves 'changed' | 'silent' | false (cancelled) — callers that
 // toast/refresh on success must await the outcome, not the call.
 export function guardStatusChange(status, onConfirm, { onSilent } = {}) {
-  if (!isGuarded(status)) return Promise.resolve(onConfirm()).then(() => 'changed')
+  if (!isGuarded(status))
+    return Promise.resolve(onConfirm()).then(() => 'changed')
   return new Promise((resolve, reject) => {
     let acted = false
     const run = (fn, outcome) => async (close) => {

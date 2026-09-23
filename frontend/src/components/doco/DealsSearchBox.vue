@@ -19,13 +19,7 @@ import { useDebounceFn } from '@vueuse/core'
 
 // Deal-native fields the search ORs across via crm.api.doc.get_data's
 // or_filters parameter (added doco-side for free-text search).
-const DEAL_FIELDS = [
-  'name',
-  'organization',
-  'lead_name',
-  'email',
-  'mobile_no',
-]
+const DEAL_FIELDS = ['name', 'organization', 'lead_name', 'email', 'mobile_no']
 
 // viewControls is provided by Deals.vue; without it the slot stays inert
 // instead of crashing on other lists that mount the same slot.
@@ -39,10 +33,9 @@ async function runSearch() {
   let dealIds = []
   if (text && text.trim()) {
     try {
-      dealIds = await call(
-        'taller.api.vertical.search_deal_ids_by_repair',
-        { text },
-      )
+      dealIds = await call('taller.api.vertical.search_deal_ids_by_repair', {
+        text,
+      })
     } catch (e) {
       dealIds = []
     }

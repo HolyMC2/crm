@@ -7,7 +7,11 @@
 -->
 <template>
   <div
-    :class="inline ? 'flex min-h-0 flex-1 flex-col' : 'fixed inset-0 z-40 flex items-end justify-center sm:items-center'"
+    :class="
+      inline
+        ? 'flex min-h-0 flex-1 flex-col'
+        : 'fixed inset-0 z-40 flex items-end justify-center sm:items-center'
+    "
     :role="inline ? undefined : 'dialog'"
     :aria-modal="inline ? undefined : 'true'"
     :aria-label="__('Catálogo')"
@@ -25,10 +29,20 @@
       <!-- header + search -->
       <div class="flex-none border-b border-outline-gray-1 px-4 pb-3 pt-3.5">
         <div v-if="!inline" class="mb-2.5 flex items-center justify-between">
-          <div class="text-[14px] font-bold text-ink-gray-9">📦 {{ __('Catálogo') }}</div>
-          <button class="text-ink-gray-4 hover:text-ink-gray-9" :aria-label="__('Cerrar')" @click="closeCatalog">✕</button>
+          <div class="text-[14px] font-bold text-ink-gray-9">
+            📦 {{ __('Catálogo') }}
+          </div>
+          <button
+            class="text-ink-gray-4 hover:text-ink-gray-9"
+            :aria-label="__('Cerrar')"
+            @click="closeCatalog"
+          >
+            ✕
+          </button>
         </div>
-        <div class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
+        <div
+          class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+        >
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
             ref="searchRef"
@@ -43,13 +57,33 @@
 
       <!-- results grid -->
       <div class="scb flex-1 overflow-y-auto px-3 py-3">
-        <div v-if="catalogResults.loading" class="py-10 text-center text-[12px] text-ink-gray-4">{{ __('Buscando…') }}</div>
-        <div v-else-if="catalogResults.error" class="py-10 text-center text-[12px] text-ink-red-6">
-          {{ __('No se pudo buscar.') }}
-          <button class="ml-1 font-semibold underline" @click="runCatalogSearch">{{ __('Reintentar') }}</button>
+        <div
+          v-if="catalogResults.loading"
+          class="py-10 text-center text-[12px] text-ink-gray-4"
+        >
+          {{ __('Buscando…') }}
         </div>
-        <div v-else-if="!rows.length" class="py-10 text-center text-[12px] text-ink-gray-4">
-          {{ catalogQuery ? __('Sin resultados — prueba con menos palabras.') : __('Escribe para buscar en el catálogo.') }}
+        <div
+          v-else-if="catalogResults.error"
+          class="py-10 text-center text-[12px] text-ink-red-6"
+        >
+          {{ __('No se pudo buscar.') }}
+          <button
+            class="ml-1 font-semibold underline"
+            @click="runCatalogSearch"
+          >
+            {{ __('Reintentar') }}
+          </button>
+        </div>
+        <div
+          v-else-if="!rows.length"
+          class="py-10 text-center text-[12px] text-ink-gray-4"
+        >
+          {{
+            catalogQuery
+              ? __('Sin resultados — prueba con menos palabras.')
+              : __('Escribe para buscar en el catálogo.')
+          }}
         </div>
         <div v-else class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           <button
@@ -59,10 +93,16 @@
             :aria-pressed="selected.has(r.item_code)"
             :aria-label="r.item_name"
             class="group relative flex flex-col overflow-hidden rounded-xl border bg-surface-base text-left transition dark:bg-surface-gray-2"
-            :class="selected.has(r.item_code) ? 'border-outline-green-4 ring-2 ring-outline-green-4' : 'border-outline-gray-2 hover:border-outline-gray-3'"
+            :class="
+              selected.has(r.item_code)
+                ? 'border-outline-green-4 ring-2 ring-outline-green-4'
+                : 'border-outline-gray-2 hover:border-outline-gray-3'
+            "
             @click="toggle(r.item_code)"
           >
-            <div class="relative aspect-square w-full bg-surface-gray-2 dark:bg-surface-gray-3">
+            <div
+              class="relative aspect-square w-full bg-surface-gray-2 dark:bg-surface-gray-3"
+            >
               <img
                 v-if="r.image_url && !failed.has(r.item_code)"
                 :src="r.image_url"
@@ -71,28 +111,53 @@
                 loading="lazy"
                 @error="failed.add(r.item_code)"
               />
-              <div v-else class="flex h-full w-full items-center justify-center text-ink-gray-4"><LucideImageOff class="h-6 w-6" /></div>
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center text-ink-gray-4"
+              >
+                <LucideImageOff class="h-6 w-6" />
+              </div>
               <span
                 v-if="selected.has(r.item_code)"
                 class="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold text-white"
                 style="background: var(--brand)"
-              >✓</span>
+                >✓</span
+              >
               <span
                 class="absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
-                :class="r.stock > 0 ? 'text-ink-green-8 bg-surface-green-2' : 'text-ink-red-8 bg-surface-red-1'"
-              >{{ r.stock }} {{ __('stock') }}</span>
+                :class="
+                  r.stock > 0
+                    ? 'text-ink-green-8 bg-surface-green-2'
+                    : 'text-ink-red-8 bg-surface-red-1'
+                "
+                >{{ r.stock }} {{ __('stock') }}</span
+              >
             </div>
             <div class="flex min-h-0 flex-col gap-0.5 p-2">
-              <div class="line-clamp-2 text-[11.5px] font-medium leading-tight text-ink-gray-8">{{ r.item_name }}</div>
-              <div class="text-[12.5px] font-bold text-ink-gray-9">{{ r.price != null ? formatMoney(r.price, r.currency) : __('Consultar') }}</div>
+              <div
+                class="line-clamp-2 text-[11.5px] font-medium leading-tight text-ink-gray-8"
+              >
+                {{ r.item_name }}
+              </div>
+              <div class="text-[12.5px] font-bold text-ink-gray-9">
+                {{
+                  r.price != null
+                    ? formatMoney(r.price, r.currency)
+                    : __('Consultar')
+                }}
+              </div>
             </div>
           </button>
         </div>
       </div>
 
       <!-- footer — wraps on narrow phones so the three actions never overflow -->
-      <div class="flex flex-none flex-wrap items-center justify-between gap-2 border-t border-outline-gray-1 px-4 py-3">
-        <div class="text-[12px] text-ink-gray-6">{{ selected.size }} {{ __('seleccionados') }}</div>
+      <div
+        class="flex flex-none flex-wrap items-center justify-between gap-2 border-t border-outline-gray-1 px-4 py-3"
+      >
+        <div class="text-[12px] text-ink-gray-6">
+          {{ selected.size }} {{ __('seleccionados') }}
+        </div>
         <div class="flex items-center gap-2">
           <!-- ERP spec P2.1: picked items → draft Quotation lines on the deal -->
           <!-- single pick → draft into the composer for edit-before-send (Marco 07-25) -->
@@ -168,7 +233,10 @@ function editSend() {
   const code = [...selected][0]
   const r = rows.value.find((x) => x.item_code === code)
   if (!r) return
-  const price = r.price != null ? formatMoney(r.price, r.currency) : __('Precio a consultar')
+  const price =
+    r.price != null
+      ? formatMoney(r.price, r.currency)
+      : __('Precio a consultar')
   setComposerDraft({
     text: `*${r.item_name}*\n${price}`,
     attach: r.image_url || '',
@@ -186,7 +254,8 @@ async function send() {
     const res = await sendCatalogItems([...selected])
     const n = res?.sent_count || 0
     if (n) toast.success(__('{0} artículos enviados', [n]))
-    if (res?.skipped?.length) toast.error(__('{0} no se pudieron enviar', [res.skipped.length]))
+    if (res?.skipped?.length)
+      toast.error(__('{0} no se pudieron enviar', [res.skipped.length]))
     emit('sent')
     if (props.inline) selected.clear()
     else closeCatalog()
@@ -199,7 +268,10 @@ async function send() {
 
 // «Cotizar» only makes sense on a deal conversation (orphans/comments have no deal)
 const canQuote = computed(
-  () => salesDocsEnabled.value && catalogCtx.value?.reference_doctype === 'CRM Deal' && catalogCtx.value?.reference_name,
+  () =>
+    salesDocsEnabled.value &&
+    catalogCtx.value?.reference_doctype === 'CRM Deal' &&
+    catalogCtx.value?.reference_name,
 )
 
 async function quote() {
@@ -210,7 +282,9 @@ async function quote() {
       catalogCtx.value.reference_name,
       [...selected].map((c) => ({ item_code: c, qty: 1 })),
     )
-    toast.success(__('Cotización {0} · {1} líneas', [out.quotation, out.lines.length]))
+    toast.success(
+      __('Cotización {0} · {1} líneas', [out.quotation, out.lines.length]),
+    )
     for (const w of out.warnings || []) toast.error(w)
     emit('quoted', out.quotation)
     if (props.inline) selected.clear()

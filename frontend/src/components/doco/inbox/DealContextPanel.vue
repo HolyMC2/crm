@@ -5,7 +5,11 @@
 <template>
   <div
     class="scb flex flex-col overflow-y-auto bg-surface-base"
-    :class="isMobile ? 'min-h-0 w-full flex-1' : 'w-[320px] flex-none border-l border-outline-gray-1'"
+    :class="
+      isMobile
+        ? 'min-h-0 w-full flex-1'
+        : 'w-[320px] flex-none border-l border-outline-gray-1'
+    "
   >
     <!-- mobile: back to the conversation thread (← pops the history stack) -->
     <div
@@ -25,7 +29,12 @@
     </div>
 
     <!-- ⚠ posible duplicado (spec 4.3, detection-only) -->
-    <DuplicateBanner :doctype="activeDealDoctype" :name="activeDeal" @open="onOpenDuplicate" @merged="onMerged" />
+    <DuplicateBanner
+      :doctype="activeDealDoctype"
+      :name="activeDeal"
+      @open="onOpenDuplicate"
+      @merged="onMerged"
+    />
 
     <!-- 🎓 notas de coaching (spec 7.4) — managers only; self-hides for everyone else -->
     <!-- Coaching is secondary to the worker's record and contact details. -->
@@ -33,7 +42,10 @@
     <!-- acciones -->
     <div class="flex-none border-b border-outline-gray-1 p-3.5">
       <div class="mb-2.5 flex items-center justify-between">
-        <span class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Acciones') }}</span>
+        <span
+          class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+          >{{ __('Acciones') }}</span
+        >
         <!-- on the 360° page → jump to the inbox conversation; in the inbox → open 360° -->
         <button
           v-if="onDeal360"
@@ -42,11 +54,23 @@
         >
           {{ __('Abrir en Bandeja') }} →
         </button>
-        <button v-else class="text-[11px] text-ink-blue-link" @click="$router.push(isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`)">
+        <button
+          v-else
+          class="text-[11px] text-ink-blue-link"
+          @click="
+            $router.push(
+              isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`,
+            )
+          "
+        >
           {{ isDeal ? __('Abrir 360°') : __('Abrir Lead') }} →
         </button>
       </div>
-      <button class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white" style="background: var(--brand)" @click="call">
+      <button
+        class="w-full rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold text-white"
+        style="background: var(--brand)"
+        @click="call"
+      >
         ☎ {{ __('Llamar') }}
       </button>
 
@@ -56,7 +80,9 @@
           <div class="flex items-center justify-between gap-2">
             <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
             <Dropdown :options="statusOpts" placement="right">
-              <button class="flex items-center gap-1 rounded bg-surface-gray-2 px-2 py-1 text-[11.5px] font-semibold text-ink-gray-8 hover:bg-surface-gray-3">
+              <button
+                class="flex items-center gap-1 rounded bg-surface-gray-2 px-2 py-1 text-[11.5px] font-semibold text-ink-gray-8 hover:bg-surface-gray-3"
+              >
                 {{ row.status || '—' }} ⌄
               </button>
             </Dropdown>
@@ -64,20 +90,54 @@
           <div class="flex items-center justify-between gap-2">
             <span class="flex-none text-ink-gray-5">{{ __('Asignado') }}</span>
             <div class="flex items-center gap-1">
-              <span v-for="a in assignees" :key="a.name" class="group relative leading-none">
+              <span
+                v-for="a in assignees"
+                :key="a.name"
+                class="group relative leading-none"
+              >
                 <Avatar :label="a.label" :image="a.image" size="sm" />
-                <button class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-8 transition-opacity focus:opacity-100 focus-visible:opacity-100" :class="isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'" :title="__('Quitar asignado')" :aria-label="__('Quitar asignado') + ' ' + a.label" @click="removeAssignee(a.name)">×</button>
+                <button
+                  class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-surface-red-1 text-[8px] leading-none text-ink-red-8 transition-opacity focus:opacity-100 focus-visible:opacity-100"
+                  :class="
+                    isMobile
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover:opacity-100'
+                  "
+                  :title="__('Quitar asignado')"
+                  :aria-label="__('Quitar asignado') + ' ' + a.label"
+                  @click="removeAssignee(a.name)"
+                >
+                  ×
+                </button>
               </span>
               <Dropdown :options="userOpts" placement="right">
-                <button class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3" :aria-label="__('Asignar usuario')">+</button>
+                <button
+                  class="rounded bg-surface-gray-2 px-1.5 py-1 text-[11px] text-ink-gray-5 hover:bg-surface-gray-3"
+                  :aria-label="__('Asignar usuario')"
+                >
+                  +
+                </button>
               </Dropdown>
             </div>
           </div>
           <div class="flex items-start justify-between gap-2">
-            <span class="flex-none pt-1 text-ink-gray-5">{{ __('Etiquetas') }}</span>
+            <span class="flex-none pt-1 text-ink-gray-5">{{
+              __('Etiquetas')
+            }}</span>
             <div class="flex flex-1 flex-wrap justify-end gap-1">
-              <span v-for="t in tags" :key="t" class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-9">
-                {{ t }}<button class="text-ink-gray-5 hover:text-ink-red-7" :aria-label="__('Quitar etiqueta') + ' ' + t" @click="removeTag(t)">×</button>
+              <span
+                v-for="t in tags"
+                :key="t"
+                class="inline-flex items-center gap-0.5 rounded bg-surface-blue-1 px-1.5 py-px text-[10.5px] font-medium text-ink-blue-9"
+              >
+                {{ t
+                }}<button
+                  class="text-ink-gray-5 hover:text-ink-red-7"
+                  :aria-label="__('Quitar etiqueta') + ' ' + t"
+                  @click="removeTag(t)"
+                >
+                  ×
+                </button>
               </span>
               <input
                 v-if="addingTag"
@@ -88,23 +148,46 @@
                 @keyup.enter="addTag"
                 @blur="addTag"
               />
-              <button v-else class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-5 hover:bg-surface-gray-3" :aria-label="__('Añadir etiqueta')" @click="startAddTag">+</button>
+              <button
+                v-else
+                class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] text-ink-gray-5 hover:bg-surface-gray-3"
+                :aria-label="__('Añadir etiqueta')"
+                @click="startAddTag"
+              >
+                +
+              </button>
             </div>
           </div>
         </div>
 
         <!-- macros rápidas: one-click status flip + open the WhatsApp template to review -->
         <div class="mt-3 border-t border-outline-gray-1 pt-2.5">
-          <div class="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">{{ __('Macros rápidas') }}</div>
+          <div
+            class="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4"
+          >
+            {{ __('Macros rápidas') }}
+          </div>
           <div class="flex flex-col gap-1">
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-8 hover:bg-surface-green-2" @click="macroListo">
+            <button
+              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-green-8 hover:bg-surface-green-2"
+              @click="macroListo"
+            >
               → {{ __('Listo para entregar') }}
             </button>
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2" @click="macroCompletado">
+            <button
+              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
+              @click="macroCompletado"
+            >
               → {{ __('Marcar completado') }}
             </button>
-            <button class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-7 hover:bg-surface-amber-1" @click="macroPago">
-              → {{ __('Recordatorio de pago') }}<span v-if="dealSummary.balance" class="text-ink-gray-5"> · {{ dealSummary.balance }}</span>
+            <button
+              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-7 hover:bg-surface-amber-1"
+              @click="macroPago"
+            >
+              → {{ __('Recordatorio de pago')
+              }}<span v-if="dealSummary.balance" class="text-ink-gray-5">
+                · {{ dealSummary.balance }}</span
+              >
             </button>
           </div>
         </div>
@@ -116,29 +199,56 @@
 
     <!-- deal summary: read-only key facts of the trato -->
     <div v-if="isDeal" class="flex-none border-b border-outline-gray-1 p-3.5">
-      <div class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Resumen del trato') }}</div>
+      <div
+        class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+      >
+        {{ __('Resumen del trato') }}
+      </div>
       <div class="flex flex-col gap-1.5 text-[12px]">
         <div class="flex items-center justify-between gap-2">
           <span class="flex-none text-ink-gray-5">{{ __('ID') }}</span>
-          <span class="truncate font-mono text-ink-gray-8">{{ dealSummary.id }}</span>
+          <span class="truncate font-mono text-ink-gray-8">{{
+            dealSummary.id
+          }}</span>
         </div>
         <div class="flex items-center justify-between gap-2">
           <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
-          <span class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-gray-7">{{ dealSummary.status || '—' }}</span>
+          <span
+            class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-gray-7"
+            >{{ dealSummary.status || '—' }}</span
+          >
         </div>
-        <div v-if="dealSummary.device" class="flex items-center justify-between gap-2">
+        <div
+          v-if="dealSummary.device"
+          class="flex items-center justify-between gap-2"
+        >
           <span class="flex-none text-ink-gray-5">{{ __('Dispositivo') }}</span>
           <span class="truncate text-ink-gray-8">{{ dealSummary.device }}</span>
         </div>
-        <div v-if="dealSummary.orders" class="flex items-center justify-between gap-2">
-          <span class="flex-none text-ink-gray-5">{{ __('Órdenes de reparación') }}</span>
-          <span class="font-semibold text-ink-gray-8">{{ dealSummary.orders }}</span>
+        <div
+          v-if="dealSummary.orders"
+          class="flex items-center justify-between gap-2"
+        >
+          <span class="flex-none text-ink-gray-5">{{
+            __('Órdenes de reparación')
+          }}</span>
+          <span class="font-semibold text-ink-gray-8">{{
+            dealSummary.orders
+          }}</span>
         </div>
-        <div v-if="dealSummary.value" class="flex items-center justify-between gap-2">
+        <div
+          v-if="dealSummary.value"
+          class="flex items-center justify-between gap-2"
+        >
           <span class="flex-none text-ink-gray-5">{{ __('Valor') }}</span>
-          <span class="font-semibold text-ink-gray-9">{{ dealSummary.value }}</span>
+          <span class="font-semibold text-ink-gray-9">{{
+            dealSummary.value
+          }}</span>
         </div>
-        <div v-if="dealSummary.source" class="flex items-center justify-between gap-2">
+        <div
+          v-if="dealSummary.source"
+          class="flex items-center justify-between gap-2"
+        >
           <span class="flex-none text-ink-gray-5">{{ __('Origen') }}</span>
           <span class="truncate text-ink-gray-8">{{ dealSummary.source }}</span>
         </div>
@@ -151,45 +261,105 @@
 
     <!-- 💰 Documentos (ERP_INTEGRATION_SPEC P1): the deal's money docs + rollup,
          neutral (doco crm_deal joins) and flag-gated per tenant -->
-    <SalesDocsSection v-if="isDeal && salesDocsEnabled && activeDeal" :deal="activeDeal" />
+    <SalesDocsSection
+      v-if="isDeal && salesDocsEnabled && activeDeal"
+      :deal="activeDeal"
+    />
 
     <!-- score (doco-specific; not in the upstream sidepanel) -->
     <div v-if="grade" class="flex-none border-b border-outline-gray-1 p-3.5">
-      <div class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Score') }} · {{ name }}</div>
-      <div class="flex items-center gap-2.5 rounded-[9px] border border-outline-gray-2 bg-surface-gray-2 p-2.5">
+      <div
+        class="mb-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+      >
+        {{ __('Score') }} · {{ name }}
+      </div>
+      <div
+        class="flex items-center gap-2.5 rounded-[9px] border border-outline-gray-2 bg-surface-gray-2 p-2.5"
+      >
         <div class="relative h-11 w-11 flex-none">
-          <svg viewBox="0 0 44 44" width="44" height="44" style="transform: rotate(-90deg)">
-            <circle cx="22" cy="22" r="18" fill="none" style="stroke: var(--outline-gray-2)" stroke-width="4" />
-            <circle cx="22" cy="22" r="18" fill="none" :stroke="gradeColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="113.1" :stroke-dashoffset="dashOffset" />
+          <svg
+            viewBox="0 0 44 44"
+            width="44"
+            height="44"
+            style="transform: rotate(-90deg)"
+          >
+            <circle
+              cx="22"
+              cy="22"
+              r="18"
+              fill="none"
+              style="stroke: var(--outline-gray-2)"
+              stroke-width="4"
+            />
+            <circle
+              cx="22"
+              cy="22"
+              r="18"
+              fill="none"
+              :stroke="gradeColor"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-dasharray="113.1"
+              :stroke-dashoffset="dashOffset"
+            />
           </svg>
-          <div class="absolute inset-0 flex items-center justify-center text-[12px] font-extrabold" :style="`color:${gradeColor}`">{{ score }}</div>
+          <div
+            class="absolute inset-0 flex items-center justify-center text-[12px] font-extrabold"
+            :style="`color:${gradeColor}`"
+          >
+            {{ score }}
+          </div>
         </div>
         <div>
           <div class="flex items-center gap-1.5">
-            <span class="text-[17px] font-extrabold" :style="`color:${gradeColor}`">{{ grade }}</span>
-            <span class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-8 bg-surface-green-2">{{ gradeWord }}</span>
+            <span
+              class="text-[17px] font-extrabold"
+              :style="`color:${gradeColor}`"
+              >{{ grade }}</span
+            >
+            <span
+              class="rounded px-1.5 py-px text-[10px] font-semibold text-ink-green-8 bg-surface-green-2"
+              >{{ gradeWord }}</span
+            >
           </div>
-          <div v-if="probability" class="mt-0.5 text-[10px] text-ink-gray-5">{{ probability }}% {{ __('prob. conversión') }}</div>
+          <div v-if="probability" class="mt-0.5 text-[10px] text-ink-gray-5">
+            {{ probability }}% {{ __('prob. conversión') }}
+          </div>
         </div>
       </div>
       <div class="mt-2.5 text-[11px]">
-        <button type="button" class="text-ink-blue-link hover:underline" @click="$router.push('/score-rules')">{{ __('Reglas de score') }} →</button>
+        <button
+          type="button"
+          class="text-ink-blue-link hover:underline"
+          @click="$router.push('/score-rules')"
+        >
+          {{ __('Reglas de score') }} →
+        </button>
       </div>
     </div>
 
     <!-- contacts (upstream SidePanelLayout only renders contacts_section via a
          parent slot, which this panel doesn't pass — render it standalone here
          and drop contacts_section from the field layout below to avoid a blank) -->
-    <DealContactsSection v-if="activeDeal && isDeal" :deal="activeDeal" :hide-primary="true" />
+    <DealContactsSection
+      v-if="activeDeal && isDeal"
+      :deal="activeDeal"
+      :hide-primary="true"
+    />
 
     <details v-if="isManager()" class="border-b border-outline-gray-1">
-      <summary class="cursor-pointer px-3.5 py-3 text-sm text-ink-gray-6">{{ __('Notas de coaching') }}</summary>
+      <summary class="cursor-pointer px-3.5 py-3 text-sm text-ink-gray-6">
+        {{ __('Notas de coaching') }}
+      </summary>
       <CoachingPanel :doctype="activeDealDoctype" :name="activeDeal" />
     </details>
 
     <!-- full editable record fields (upstream — nothing hidden), collapsed by
          default so the panel stays compact; expand for the complete field set -->
-    <div v-if="dealSections.length" class="flex-none border-b border-outline-gray-1">
+    <div
+      v-if="dealSections.length"
+      class="flex-none border-b border-outline-gray-1"
+    >
       <button
         class="flex w-full items-center justify-between px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4 hover:bg-surface-gray-2"
         :aria-expanded="showAllFields"
@@ -214,7 +384,13 @@
 <script setup>
 import { computed, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { createResource, call as frappeCall, toast, Dropdown, Avatar } from 'frappe-ui'
+import {
+  createResource,
+  call as frappeCall,
+  toast,
+  Dropdown,
+  Avatar,
+} from 'frappe-ui'
 import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
@@ -243,7 +419,22 @@ function onMerged() {
 }
 
 import { isMobile } from '@/composables/breakpoint'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, queue, GRADE_COLORS, setStage, setStageSilent, requestStage, mobileBack, hasTaller, salesDocsEnabled, selectDeal, scheduleQueueReload } from '@/composables/inbox'
+import {
+  activeDeal,
+  activeDealDoctype,
+  activeTab,
+  convoTemplateOpen,
+  queue,
+  GRADE_COLORS,
+  setStage,
+  setStageSilent,
+  requestStage,
+  mobileBack,
+  hasTaller,
+  salesDocsEnabled,
+  selectDeal,
+  scheduleQueueReload,
+} from '@/composables/inbox'
 
 const { dealStatuses } = statusesStore()
 const { crmUsers, isManager } = usersStore()
@@ -260,7 +451,9 @@ const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 // effective row: the rich inbox queue row when present; else (Deal 360° / deep link,
 // deal not in the queue) a direct deal+lead fetch — same fallback as DealHeader, so
 // the Score card + Llamar don't go blank/no-op on /deal/:id.
-const queueRow = computed(() => (queue.data || []).find((r) => r.deal === activeDeal.value) || {})
+const queueRow = computed(
+  () => (queue.data || []).find((r) => r.deal === activeDeal.value) || {},
+)
 const dealRes = createResource({ url: 'frappe.client.get_value' })
 const leadRes = createResource({ url: 'frappe.client.get_value' })
 watch(
@@ -272,13 +465,35 @@ watch(
     // repair_device / repair_orders_count are taller custom fields — requesting
     // them on a tenant without taller (mumu) is an unknown-column error, so only
     // include them when has_taller. The v-if guards hide the rows when absent.
-    const dealFields = ['status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'probability', 'creation', 'deal_value', 'source', '_assign', '_user_tags']
+    const dealFields = [
+      'status',
+      'lead',
+      'mobile_no',
+      'first_name',
+      'lead_name',
+      'probability',
+      'creation',
+      'deal_value',
+      'source',
+      '_assign',
+      '_user_tags',
+    ]
     if (hasTaller.value) dealFields.push('repair_device', 'repair_orders_count')
     dealRes.submit({
       doctype: activeDealDoctype.value,
       filters: d,
       fieldname: JSON.stringify(
-        isD ? dealFields : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
+        isD
+          ? dealFields
+          : [
+              'status',
+              'mobile_no',
+              'first_name',
+              'last_name',
+              'lead_name',
+              'lead_score',
+              'score_grade',
+            ],
       ),
     })
   },
@@ -286,7 +501,18 @@ watch(
 )
 watch(
   () => dealRes.data?.lead,
-  (lead) => lead && leadRes.submit({ doctype: 'CRM Lead', filters: lead, fieldname: JSON.stringify(['lead_score', 'score_grade', 'lead_name', 'mobile_no']) }),
+  (lead) =>
+    lead &&
+    leadRes.submit({
+      doctype: 'CRM Lead',
+      filters: lead,
+      fieldname: JSON.stringify([
+        'lead_score',
+        'score_grade',
+        'lead_name',
+        'mobile_no',
+      ]),
+    }),
 )
 const row = computed(() => {
   if (queueRow.value.deal) return queueRow.value
@@ -295,7 +521,8 @@ const row = computed(() => {
   return {
     deal: activeDeal.value,
     status: d.status,
-    contact_name: d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
+    contact_name:
+      d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
     mobile_no: d.mobile_no || l.mobile_no,
     lead_score: l.lead_score ?? d.lead_score,
     score_grade: l.score_grade ?? d.score_grade,
@@ -305,15 +532,24 @@ const name = computed(() => row.value.contact_name || row.value.mobile_no || '')
 const grade = computed(() => row.value.score_grade)
 const score = computed(() => row.value.lead_score ?? 0)
 const gradeColor = computed(() => GRADE_COLORS[grade.value]?.[0] || '#9aa2ae')
-const gradeWord = computed(() => ({ A: __('Top tier'), B: __('Bueno'), C: __('Medio'), D: __('Bajo') })[grade.value] || '')
-const dashOffset = computed(() => (113.1 * (100 - Math.min(100, Number(score.value) || 0))) / 100)
+const gradeWord = computed(
+  () =>
+    ({ A: __('Top tier'), B: __('Bueno'), C: __('Medio'), D: __('Bajo') })[
+      grade.value
+    ] || '',
+)
+const dashOffset = computed(
+  () => (113.1 * (100 - Math.min(100, Number(score.value) || 0))) / 100,
+)
 
 // upstream side-panel field layout (all record fields, editable), per doctype
 const sections = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_sidepanel_sections',
   auto: false,
 })
-watch(activeDealDoctype, (dt) => dt && sections.submit({ doctype: dt }), { immediate: true })
+watch(activeDealDoctype, (dt) => dt && sections.submit({ doctype: dt }), {
+  immediate: true,
+})
 // contacts_section is rendered by DealContactsSection above (SidePanelLayout would
 // show it blank here), so drop it from the field layout to avoid an empty section.
 const dealSections = computed(() =>
@@ -337,20 +573,26 @@ watch(
   [activeDeal, hasTaller],
   () => {
     const d = activeDeal.value
-    if (d && isDeal.value && hasTaller.value) repairOrders.submit({ deal_name: d })
+    if (d && isDeal.value && hasTaller.value)
+      repairOrders.submit({ deal_name: d })
     else repairOrders.data = null
   },
   { immediate: true },
 )
-const dealValue = computed(() =>
-  (repairOrders.data || []).reduce(
-    (s, ro) => s + (Number(ro.quote_amount) || Number(ro.billing_total) || 0),
-    0,
-  ) || null,
+const dealValue = computed(
+  () =>
+    (repairOrders.data || []).reduce(
+      (s, ro) => s + (Number(ro.quote_amount) || Number(ro.billing_total) || 0),
+      0,
+    ) || null,
 )
 // outstanding saldo (what the customer still owes) — for the payment-reminder macro
-const dealBalance = computed(() =>
-  (repairOrders.data || []).reduce((s, ro) => s + (Number(ro.balance_due) || 0), 0) || null,
+const dealBalance = computed(
+  () =>
+    (repairOrders.data || []).reduce(
+      (s, ro) => s + (Number(ro.balance_due) || 0),
+      0,
+    ) || null,
 )
 
 function fmtDate(ts) {
@@ -360,7 +602,13 @@ function fmtDate(ts) {
 }
 function money(v) {
   const n = Number(v)
-  return n ? n.toLocaleString(undefined, { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }) : null
+  return n
+    ? n.toLocaleString(undefined, {
+        style: 'currency',
+        currency: 'MXN',
+        maximumFractionDigits: 0,
+      })
+    : null
 }
 const dealSummary = computed(() => {
   const m = dealRes.data || {}
@@ -382,7 +630,10 @@ function call() {
 
 // ── Acciones: inline-editable Estado / Asignado / Etiquetas ─────────────────────
 const statusOpts = computed(() =>
-  (dealStatuses.data || []).map((s) => ({ label: s.name, onClick: () => changeStatus(s.name, s.type) })),
+  (dealStatuses.data || []).map((s) => ({
+    label: s.name,
+    onClick: () => changeStatus(s.name, s.type),
+  })),
 )
 async function changeStatus(status, type) {
   if (!activeDeal.value || status === row.value.status) return
@@ -418,7 +669,10 @@ const assignees = computed(() => {
   }
 })
 const userOpts = computed(() =>
-  (crmUsers.value || []).map((u) => ({ label: u.full_name || u.name, onClick: () => assignUser(u.name) })),
+  (crmUsers.value || []).map((u) => ({
+    label: u.full_name || u.name,
+    onClick: () => assignUser(u.name),
+  })),
 )
 async function assignUser(user) {
   if (assignees.value.some((a) => a.name === user)) return
@@ -439,7 +693,10 @@ async function removeAssignee(user) {
 }
 
 const tags = computed(() =>
-  (dealRes.data?._user_tags || '').split(',').map((t) => t.trim()).filter(Boolean),
+  (dealRes.data?._user_tags || '')
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean),
 )
 const addingTag = ref(false)
 const newTag = ref('')
@@ -453,11 +710,19 @@ async function addTag() {
   newTag.value = ''
   addingTag.value = false
   if (!t || tags.value.includes(t)) return
-  await frappeCall('frappe.desk.doctype.tag.tag.add_tag', { tag: t, dt: activeDealDoctype.value, dn: activeDeal.value })
+  await frappeCall('frappe.desk.doctype.tag.tag.add_tag', {
+    tag: t,
+    dt: activeDealDoctype.value,
+    dn: activeDeal.value,
+  })
   dealRes.reload()
 }
 async function removeTag(t) {
-  await frappeCall('frappe.desk.doctype.tag.tag.remove_tag', { tag: t, dt: activeDealDoctype.value, dn: activeDeal.value })
+  await frappeCall('frappe.desk.doctype.tag.tag.remove_tag', {
+    tag: t,
+    dt: activeDealDoctype.value,
+    dn: activeDeal.value,
+  })
   dealRes.reload()
 }
 
@@ -474,7 +739,10 @@ async function macroListo() {
   try {
     await changeStatus('Por Entregar')
   } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo cambiar a "Por Entregar" — ¿existe ese estado?'))
+    toast.error(
+      e?.messages?.[0] ||
+        __('No se pudo cambiar a "Por Entregar" — ¿existe ese estado?'),
+    )
     return
   }
   openTemplate()
@@ -485,7 +753,12 @@ async function macroCompletado() {
   try {
     confirmed = await changeStatus('Completado')
   } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo marcar como completado — ¿existe el estado "Completado"?'))
+    toast.error(
+      e?.messages?.[0] ||
+        __(
+          'No se pudo marcar como completado — ¿existe el estado "Completado"?',
+        ),
+    )
     return
   }
   if (confirmed === false) return // user cancelled the WhatsApp-send guard

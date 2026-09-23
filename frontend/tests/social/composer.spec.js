@@ -7,30 +7,46 @@
 import { test, expect } from '@playwright/test'
 import { gotoSocial, SEL, byTestId, collectErrors, shot } from './helpers.js'
 
-test('composer: first-comment + variants knobs + suggest-time render (no generate, no save)', async ({ page }) => {
+test('composer: first-comment + variants knobs + suggest-time render (no generate, no save)', async ({
+  page,
+}) => {
   const errs = collectErrors(page)
   await gotoSocial(page)
   await SEL.newPost(page).click()
 
   // Parent dialog: first-comment textarea is present for both new and edit.
-  await expect(byTestId(page, 'first-comment-input')).toBeVisible({ timeout: 10_000 })
+  await expect(byTestId(page, 'first-comment-input')).toBeVisible({
+    timeout: 10_000,
+  })
   await shot(page, 'composer-new')
 
   // Variants panel is manager-only; on an UNSAVED post generate is disabled + a hint shows.
   const variantsOpen = byTestId(page, 'variants-open')
   if (await variantsOpen.count()) {
     await variantsOpen.click()
-    for (const knob of ['Casual', 'Neutral', 'Formal', 'Corto', 'Medio', 'Largo']) {
-      await expect(page.getByRole('button', { name: knob, exact: true })).toBeVisible()
+    for (const knob of [
+      'Casual',
+      'Neutral',
+      'Formal',
+      'Corto',
+      'Medio',
+      'Largo',
+    ]) {
+      await expect(
+        page.getByRole('button', { name: knob, exact: true }),
+      ).toBeVisible()
     }
     // Unsaved → the "save first" hint is shown and generate is disabled. Do NOT generate.
-    await expect(page.getByText('Guarda el borrador primero para generar variantes.')).toBeVisible()
+    await expect(
+      page.getByText('Guarda el borrador primero para generar variantes.'),
+    ).toBeVisible()
     await shot(page, 'composer-variants')
     // FIXME(data/AI): real generate + variant-pick-{i} needs a saved post AND AI enabled.
   } else {
     test.info().annotations.push({
       type: 'fixme',
-      description: 'variants-open absent → test user is not a manager; needs manager creds',
+      description:
+        'variants-open absent → test user is not a manager; needs manager creds',
     })
   }
 
@@ -44,7 +60,8 @@ test('composer: first-comment + variants knobs + suggest-time render (no generat
     } else {
       test.info().annotations.push({
         type: 'fixme',
-        description: 'suggest_time returned no slots (thin FB data) — options unverified',
+        description:
+          'suggest_time returned no slots (thin FB data) — options unverified',
       })
     }
   }

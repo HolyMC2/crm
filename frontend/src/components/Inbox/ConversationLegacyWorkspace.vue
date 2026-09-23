@@ -29,12 +29,20 @@
   <div v-else class="flex min-h-0 w-full flex-1 flex-col">
     <ConversationQueue v-show="mobileView === 'list'" />
     <!-- edge swipe-back = same history.back() as the ← buttons (pane pop) -->
-    <div v-show="mobileView === 'thread'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
+    <div
+      v-show="mobileView === 'thread'"
+      class="flex min-h-0 flex-1 flex-col"
+      v-on="swipeBackHandlers"
+    >
       <UnassignedWorkspace v-if="activeUnassigned" />
       <CommentWorkspace v-else-if="activeCommentPost" />
       <DealWorkspace v-else />
     </div>
-    <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
+    <div
+      v-show="mobileView === 'context'"
+      class="flex min-h-0 flex-1 flex-col"
+      v-on="swipeBackHandlers"
+    >
       <DealContextPanel v-if="activeDeal" />
     </div>
   </div>
@@ -112,7 +120,9 @@ function onWaMessage(payload) {
     payload?.phone &&
     activeUnassigned.value &&
     activeUnassignedChannel.value !== 'messenger' &&
-    String(payload.phone).replace(/\D/g, '').endsWith(String(activeUnassigned.value).replace(/\D/g, '').slice(-10))
+    String(payload.phone)
+      .replace(/\D/g, '')
+      .endsWith(String(activeUnassigned.value).replace(/\D/g, '').slice(-10))
   ) {
     reloadUnassignedThread()
   }
@@ -120,7 +130,9 @@ function onWaMessage(payload) {
     // the conversation you're actively viewing stays read
     if (activeDeal.value) {
       const r = (queue.data || []).find(
-        (x) => x.name === activeDeal.value && (x.ref_doctype || 'CRM Deal') === activeDealDoctype.value,
+        (x) =>
+          x.name === activeDeal.value &&
+          (x.ref_doctype || 'CRM Deal') === activeDealDoctype.value,
       )
       if (r && r.unread_dot) {
         r.unread_dot = false
@@ -167,13 +179,16 @@ watch(
     // merge into the existing state so vue-router's own bookkeeping survives; URL
     // stays /inbox (empty url arg), so the router sees no route change on back.
     if (DEPTH[nv] > DEPTH[ov])
-      history.pushState({ ...history.state, inboxDepth: DEPTH[nv], inboxEpoch: paneEpoch }, '')
+      history.pushState(
+        { ...history.state, inboxDepth: DEPTH[nv], inboxEpoch: paneEpoch },
+        '',
+      )
   },
   { flush: 'sync' },
 )
 function onPopState(e) {
   if (!isMobile.value) return
-  const depth = e.state?.inboxEpoch === paneEpoch ? (e.state?.inboxDepth ?? 0) : 0
+  const depth = e.state?.inboxEpoch === paneEpoch ? e.state?.inboxDepth ?? 0 : 0
   const target = FROM_DEPTH[Math.min(2, Math.max(0, depth))]
   if (target !== mobileView.value) {
     suppressPush = true // this is a back-walk, don't re-push
@@ -209,7 +224,10 @@ onMounted(() => {
   const deepLink = route.query.deal
   initInbox({ skipRestore: !!deepLink })
   if (deepLink)
-    selectDeal(String(deepLink), route.query.doctype === 'CRM Lead' ? 'CRM Lead' : 'CRM Deal')
+    selectDeal(
+      String(deepLink),
+      route.query.doctype === 'CRM Lead' ? 'CRM Lead' : 'CRM Deal',
+    )
   // The inbox is a long-lived tab: a push click while it is already open changes
   // only the query (pushNavigate → router.push), so the mount-time deep link above
   // never re-runs. Follow query changes the same way.
@@ -224,9 +242,15 @@ onMounted(() => {
   // walks list ← thread ← context instead of jumping straight out of the inbox.
   if (isMobile.value) {
     const depth = DEPTH[mobileView.value] || 0
-    history.replaceState({ ...history.state, inboxDepth: 0, inboxEpoch: paneEpoch }, '')
+    history.replaceState(
+      { ...history.state, inboxDepth: 0, inboxEpoch: paneEpoch },
+      '',
+    )
     for (let i = 1; i <= depth; i++)
-      history.pushState({ ...history.state, inboxDepth: i, inboxEpoch: paneEpoch }, '')
+      history.pushState(
+        { ...history.state, inboxDepth: i, inboxEpoch: paneEpoch },
+        '',
+      )
   }
   mounting = false
   $socket?.on('doco_marketing:thread_update', onThreadUpdate)

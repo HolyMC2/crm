@@ -42,7 +42,7 @@ const registry = {
 }
 
 const props = defineProps({
-  slot: { type: String, required: true },
+  slotName: { type: String, required: true },
   docname: { type: String, default: '' },
   doctype: { type: String, default: 'CRM Deal' },
 })
@@ -50,18 +50,23 @@ const props = defineProps({
 const verticalConfig = useVerticalConfig(
   () => props.docname,
   () => props.doctype,
-  () => verticalSlotEligible(props.slot, props.doctype, hasApp),
+  () => verticalSlotEligible(props.slotName, props.doctype, hasApp),
 )
 
 const resolvedSections = computed(() =>
   resolveVerticalSections(
     verticalConfig.value,
-    props.slot,
+    props.slotName,
     hasApp,
     props.doctype,
   ),
 )
 const unavailable = computed(() =>
-  verticalUnavailable(verticalConfig.value, props.slot, props.doctype, hasApp),
+  verticalUnavailable(
+    verticalConfig.value,
+    props.slotName,
+    props.doctype,
+    hasApp,
+  ),
 )
 </script>

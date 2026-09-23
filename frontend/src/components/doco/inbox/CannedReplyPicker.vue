@@ -19,8 +19,18 @@
       ref="pop"
       class="absolute bottom-7 left-0 z-30 max-h-72 w-72 overflow-y-auto rounded-xl border border-outline-gray-2 bg-surface-base p-1 shadow-lg"
     >
-      <div v-if="res.loading" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!replies.length" class="px-2 py-3 text-center text-[11px] text-ink-gray-4">{{ __('Sin respuestas rápidas') }}</div>
+      <div
+        v-if="res.loading"
+        class="px-2 py-3 text-center text-[11px] text-ink-gray-4"
+      >
+        {{ __('Cargando…') }}
+      </div>
+      <div
+        v-else-if="!replies.length"
+        class="px-2 py-3 text-center text-[11px] text-ink-gray-4"
+      >
+        {{ __('Sin respuestas rápidas') }}
+      </div>
       <button
         v-for="r in replies"
         :key="r.name"
@@ -28,7 +38,9 @@
         class="block w-full rounded-lg px-2.5 py-1.5 text-left hover:bg-surface-gray-2"
         @click="pick(r)"
       >
-        <div class="truncate text-[12.5px] font-semibold text-ink-gray-8">{{ r.title }}</div>
+        <div class="truncate text-[12.5px] font-semibold text-ink-gray-8">
+          {{ r.title }}
+        </div>
         <div class="truncate text-[11px] text-ink-gray-5">{{ r.body }}</div>
       </button>
     </div>
@@ -45,7 +57,9 @@ const emit = defineEmits(['pick'])
 
 const open = ref(false)
 const pop = ref(null)
-const res = createResource({ url: 'doco_marketing.api.inbox.get_canned_replies' })
+const res = createResource({
+  url: 'doco_marketing.api.inbox.get_canned_replies',
+})
 const replies = computed(() => res.data || [])
 
 function toggle() {
@@ -57,7 +71,8 @@ function pick(r) {
   open.value = false
 }
 function onDocClick(e) {
-  if (open.value && pop.value && !pop.value.contains(e.target)) open.value = false
+  if (open.value && pop.value && !pop.value.contains(e.target))
+    open.value = false
 }
 onMounted(() => document.addEventListener('click', onDocClick))
 onBeforeUnmount(() => document.removeEventListener('click', onDocClick))

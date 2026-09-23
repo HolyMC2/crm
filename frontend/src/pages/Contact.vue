@@ -156,7 +156,7 @@
         >
           <div class="px-5">
             <VerticalSlot
-              slot="data_tab"
+              slot-name="data_tab"
               doctype="Contact"
               :docname="contact.doc.name"
             />

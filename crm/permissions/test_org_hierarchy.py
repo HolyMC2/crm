@@ -144,7 +144,6 @@ class TestOrgHierarchy(IntegrationTestCase):
 		self.assertEqual(tasks, [])
 		self.assertEqual(attachments, [])
 
-
 	# ------------------------------------------------------------------
 	# Permission query conditions
 	# ------------------------------------------------------------------

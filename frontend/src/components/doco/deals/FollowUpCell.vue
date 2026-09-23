@@ -30,7 +30,11 @@
         :at="row.next_activity_at || ''"
         :title="row.next_activity_title || ''"
         :type="row.next_activity_type || ''"
-        :empty-label="row.next_activity_task ? __('Pendiente sin fecha') : __('Sin seguimiento')"
+        :empty-label="
+          row.next_activity_task
+            ? __('Pendiente sin fecha')
+            : __('Sin seguimiento')
+        "
       />
     </button>
 
@@ -47,13 +51,30 @@
           @keydown.esc.stop.prevent="close"
         >
           <div class="mb-2 flex items-center justify-between gap-2">
-            <h2 class="text-[12px] font-semibold uppercase tracking-[.06em] text-ink-gray-5">
-              {{ row.next_activity_task ? __('Reprogramar seguimiento') : __('Programar seguimiento') }}
+            <h2
+              class="text-[12px] font-semibold uppercase tracking-[.06em] text-ink-gray-5"
+            >
+              {{
+                row.next_activity_task
+                  ? __('Reprogramar seguimiento')
+                  : __('Programar seguimiento')
+              }}
             </h2>
-            <button type="button" class="text-[13px] leading-none text-ink-gray-5" :aria-label="__('Cerrar')" @click="close">✕</button>
+            <button
+              type="button"
+              class="text-[13px] leading-none text-ink-gray-5"
+              :aria-label="__('Cerrar')"
+              @click="close"
+            >
+              ✕
+            </button>
           </div>
 
-          <label class="block text-[11px] font-medium text-ink-gray-6" :for="`fu-title-${uid}`">{{ __('Qué sigue') }}</label>
+          <label
+            class="block text-[11px] font-medium text-ink-gray-6"
+            :for="`fu-title-${uid}`"
+            >{{ __('Qué sigue') }}</label
+          >
           <input
             :id="`fu-title-${uid}`"
             ref="titleInput"
@@ -66,7 +87,11 @@
 
           <div class="flex gap-2">
             <div class="min-w-0 flex-1">
-              <label class="block text-[11px] font-medium text-ink-gray-6" :for="`fu-date-${uid}`">{{ __('Fecha') }}</label>
+              <label
+                class="block text-[11px] font-medium text-ink-gray-6"
+                :for="`fu-date-${uid}`"
+                >{{ __('Fecha') }}</label
+              >
               <input
                 :id="`fu-date-${uid}`"
                 v-model="draft.date"
@@ -75,7 +100,11 @@
               />
             </div>
             <div class="w-[104px] flex-none">
-              <label class="block text-[11px] font-medium text-ink-gray-6" :for="`fu-time-${uid}`">{{ __('Hora (opcional)') }}</label>
+              <label
+                class="block text-[11px] font-medium text-ink-gray-6"
+                :for="`fu-time-${uid}`"
+                >{{ __('Hora (opcional)') }}</label
+              >
               <input
                 :id="`fu-time-${uid}`"
                 v-model="draft.time"
@@ -91,7 +120,11 @@
               :key="s.days"
               type="button"
               class="rounded-full border px-2 py-[3px] text-[11px] font-medium"
-              :class="draft.date === s.date ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8' : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'"
+              :class="
+                draft.date === s.date
+                  ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8'
+                  : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'
+              "
               :aria-pressed="draft.date === s.date"
               @click="draft.date = s.date"
             >
@@ -100,14 +133,20 @@
           </div>
 
           <div class="mt-2" role="group" :aria-label="__('Tipo de actividad')">
-            <span class="block text-[11px] font-medium text-ink-gray-6">{{ __('Tipo') }}</span>
+            <span class="block text-[11px] font-medium text-ink-gray-6">{{
+              __('Tipo')
+            }}</span>
             <div class="mt-1 flex flex-wrap gap-1">
               <button
                 v-for="t in activityTypes"
                 :key="t.value"
                 type="button"
                 class="rounded-md border px-2 py-[3px] text-[11px] font-medium"
-                :class="draft.type === t.value ? 'border-outline-gray-4 bg-surface-gray-3 text-ink-gray-9' : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'"
+                :class="
+                  draft.type === t.value
+                    ? 'border-outline-gray-4 bg-surface-gray-3 text-ink-gray-9'
+                    : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'
+                "
                 :aria-pressed="draft.type === t.value"
                 @click="draft.type = t.value"
               >
@@ -116,10 +155,20 @@
             </div>
           </div>
 
-          <p v-if="error" role="alert" class="mt-2 text-[11.5px] text-ink-red-8">{{ error }}</p>
+          <p
+            v-if="error"
+            role="alert"
+            class="mt-2 text-[11.5px] text-ink-red-8"
+          >
+            {{ error }}
+          </p>
 
           <div class="mt-3 flex items-center justify-end gap-2">
-            <button type="button" class="rounded-lg px-2.5 py-1.5 text-[12px] text-ink-gray-6 hover:bg-surface-gray-2" @click="close">
+            <button
+              type="button"
+              class="rounded-lg px-2.5 py-1.5 text-[12px] text-ink-gray-6 hover:bg-surface-gray-2"
+              @click="close"
+            >
               {{ __('Cancelar') }}
             </button>
             <button
@@ -176,7 +225,13 @@ const triggerLabel = computed(() =>
     ? __('Reprogramar seguimiento de {0}', [label.value])
     : __('Programar seguimiento de {0}', [label.value]),
 )
-const label = computed(() => props.row.deal_name || props.row.organization || props.row.lead_name || props.row.name)
+const label = computed(
+  () =>
+    props.row.deal_name ||
+    props.row.organization ||
+    props.row.lead_name ||
+    props.row.name,
+)
 
 const shortcuts = computed(() =>
   [
@@ -194,7 +249,10 @@ function position() {
   if (!rect) return
   const left = Math.max(8, Math.min(rect.left, window.innerWidth - PANEL_W - 8))
   const below = rect.bottom + 6
-  const top = below + PANEL_H > window.innerHeight ? Math.max(8, rect.top - PANEL_H - 6) : below
+  const top =
+    below + PANEL_H > window.innerHeight
+      ? Math.max(8, rect.top - PANEL_H - 6)
+      : below
   panelStyle.value = `top:${Math.round(top)}px;left:${Math.round(left)}px`
 }
 
@@ -254,7 +312,11 @@ async function submit() {
     toast.success(__('Seguimiento programado'))
     close()
   } catch (e) {
-    error.value = e?.messages?.[0] || __('No se pudo guardar el seguimiento. Revisa tu permiso sobre la tarea y reintenta.')
+    error.value =
+      e?.messages?.[0] ||
+      __(
+        'No se pudo guardar el seguimiento. Revisa tu permiso sobre la tarea y reintenta.',
+      )
   } finally {
     saving.value = false
   }

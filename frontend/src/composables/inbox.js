@@ -62,20 +62,30 @@ loadCapabilities().then(() => {
   if (hasApp(ADDON_APP)) features.fetch()
 })
 export const hasTaller = computed(() => !!features.data?.has_taller)
-export const messengerEnabled = computed(() => !!features.data?.enable_messenger)
-export const forecastingEnabled = computed(() => !!features.data?.enable_forecasting)
+export const messengerEnabled = computed(
+  () => !!features.data?.enable_messenger,
+)
+export const forecastingEnabled = computed(
+  () => !!features.data?.enable_forecasting,
+)
 // 💰 Documentos: neutral deal financial docs (doco crm_deal joins), flag-gated per tenant.
-export const salesDocsEnabled = computed(() => !!features.data?.enable_sales_docs)
+export const salesDocsEnabled = computed(
+  () => !!features.data?.enable_sales_docs,
+)
 // ✨ suggested replies (spec 5.1)
 export const aiEnabled = computed(() => !!features.data?.enable_ai)
-export const thread = createResource({ url: 'doco_marketing.api.inbox.get_communications' })
+export const thread = createResource({
+  url: 'doco_marketing.api.inbox.get_communications',
+})
 // "Sin asignar": inbound WhatsApp from numbers with no Contact/Lead/Deal.
 export const unassigned = createResource({
   url: 'doco_marketing.api.inbox.get_unassigned_conversations',
   params: { limit: 50 },
   auto: false,
 })
-export const unassignedThread = createResource({ url: 'doco_marketing.api.inbox.get_unassigned_thread' })
+export const unassignedThread = createResource({
+  url: 'doco_marketing.api.inbox.get_unassigned_thread',
+})
 // "Archivados": orphans the operator closed-but-kept (no lead/deal worth opening). Out of
 // "Sin asignar"/"Esperando respuesta" yet still reachable + replyable here; a newer inbound
 // auto-resurfaces them server-side (no un-archive needed). Loaded on demand (toggle).
@@ -113,32 +123,57 @@ export const commentPosts = createResource({
   params: { status: 'New', limit: 60 },
   auto: false,
 })
-export const commentCounts = createResource({ url: 'doco_marketing.api.comments.get_comment_counts', auto: false })
+export const commentCounts = createResource({
+  url: 'doco_marketing.api.comments.get_comment_counts',
+  auto: false,
+})
 // Real per-channel conversation totals for the tab badges (across ALL convos, not the
 // loaded queue page). Refreshed on init + on every thread update (a new message can
 // flip a conversation's last_channel); NOT on search (search doesn't change totals).
-export const channelCounts = createResource({ url: 'doco_marketing.api.inbox.get_channel_counts', auto: false })
+export const channelCounts = createResource({
+  url: 'doco_marketing.api.inbox.get_channel_counts',
+  auto: false,
+})
 // Speed-to-lead "Vencidos": {count, conversations} for threads awaiting a reply past
 // the SLA threshold (most-overdue first, all channels, Deals+Leads). Same refresh
 // cadence as channelCounts — a reply/inbound changes who's overdue.
-export const overdue = createResource({ url: 'doco_marketing.api.inbox.get_overdue_conversations', auto: false })
+export const overdue = createResource({
+  url: 'doco_marketing.api.inbox.get_overdue_conversations',
+  auto: false,
+})
 // Single "cosas sin atender" total across all four inbox surfaces: WhatsApp + Messenger
 // orphans (Sin asignar) + overdue conversations (Vencidos) + new FB comments. The buckets
 // are disjoint (orphans have no Lead/Deal so are never overdue; comments are a separate
 // doctype), so they sum cleanly — derived from resources initInbox already fetches, no
 // extra round-trip; it tracks them live as each refreshes.
 export const unattendedTotal = computed(
-  () => (unassigned.data?.length || 0) + (overdue.data?.count || 0) + (commentCounts.data?.new || 0),
+  () =>
+    (unassigned.data?.length || 0) +
+    (overdue.data?.count || 0) +
+    (commentCounts.data?.new || 0),
 )
 // "Por aprobar": review-gated auto-acuses (#22). Drafts the sweep made for unanswered
 // inbound; a human approves (sends) or discards. NOTHING here has been sent yet. The
 // count drives the tab badge; the list feeds the review panel.
-export const autoAcks = createResource({ url: 'doco_marketing.api.auto_reply.list_pending', params: { limit: 50 }, auto: false })
-export const autoAckCount = createResource({ url: 'doco_marketing.api.auto_reply.pending_count', auto: false })
+export const autoAcks = createResource({
+  url: 'doco_marketing.api.auto_reply.list_pending',
+  params: { limit: 50 },
+  auto: false,
+})
+export const autoAckCount = createResource({
+  url: 'doco_marketing.api.auto_reply.pending_count',
+  auto: false,
+})
 // 💤 active snoozes (Deals+Leads) — «Pospuestas» tab chip, hidden at 0
-export const snoozedCount = createResource({ url: 'doco_marketing.api.inbox.get_snoozed_count', auto: false })
+export const snoozedCount = createResource({
+  url: 'doco_marketing.api.inbox.get_snoozed_count',
+  auto: false,
+})
 // 🏷 etiquetas in use (filter chips + tag-manager suggestions)
-export const conversationTags = createResource({ url: 'doco_marketing.api.inbox.get_conversation_tags', auto: false })
+export const conversationTags = createResource({
+  url: 'doco_marketing.api.inbox.get_conversation_tags',
+  auto: false,
+})
 export const queueTag = ref(null) // active etiqueta filter (null = all)
 
 // ── queue filters (Marco 2026-08-13) ──────────────────────────────────────────
@@ -183,9 +218,15 @@ export const queueFilterCount = computed(() => {
 // page and the keyset continuation (a mismatch silently paginates a DIFFERENT list).
 function queueFilterParams() {
   return {
-    deal_status: queueDealStatus.value.length ? JSON.stringify(queueDealStatus.value) : undefined,
-    lead_status: queueLeadStatus.value.length ? JSON.stringify(queueLeadStatus.value) : undefined,
-    repair_status: queueRepairStatus.value.length ? JSON.stringify(queueRepairStatus.value) : undefined,
+    deal_status: queueDealStatus.value.length
+      ? JSON.stringify(queueDealStatus.value)
+      : undefined,
+    lead_status: queueLeadStatus.value.length
+      ? JSON.stringify(queueLeadStatus.value)
+      : undefined,
+    repair_status: queueRepairStatus.value.length
+      ? JSON.stringify(queueRepairStatus.value)
+      : undefined,
     deal_state: queueDealState.value || undefined,
     lead_state: queueLeadState.value || undefined,
     date_from: queueDateFrom.value || undefined,
@@ -215,7 +256,9 @@ function persistQueueFilters() {
 }
 export function restoreQueueFilters() {
   try {
-    const s = JSON.parse(window.localStorage.getItem(userScopedKey(FILTERS_KEY)) || 'null')
+    const s = JSON.parse(
+      window.localStorage.getItem(userScopedKey(FILTERS_KEY)) || 'null',
+    )
     // First run on this device: open the inbox on ABIERTOS. A finished deal has
     // nothing left to answer, so parking hundreds of them in the queue is noise —
     // the same reasoning as the close-out auto-discard (Marco 2026-08-13). It is a
@@ -245,7 +288,8 @@ export function restoreQueueFilters() {
 export function setQueueFilters(patch = {}) {
   if ('deal_status' in patch) queueDealStatus.value = patch.deal_status || []
   if ('lead_status' in patch) queueLeadStatus.value = patch.lead_status || []
-  if ('repair_status' in patch) queueRepairStatus.value = patch.repair_status || []
+  if ('repair_status' in patch)
+    queueRepairStatus.value = patch.repair_status || []
   if ('deal_state' in patch) queueDealState.value = patch.deal_state || ''
   if ('lead_state' in patch) queueLeadState.value = patch.lead_state || ''
   if ('date_from' in patch) queueDateFrom.value = patch.date_from || ''
@@ -295,7 +339,11 @@ export function onPresenceEvent(payload) {
   const me = document.cookie.match(/(?:^|;\s*)user_id=([^;]*)/)
   if (me && decodeURIComponent(me[1]) === payload.user) return // own echo
   const byDeal = { ...(presenceMap.value[payload.deal] || {}) }
-  byDeal[payload.user] = { state: payload.state, full_name: payload.full_name, ts: Date.now() }
+  byDeal[payload.user] = {
+    state: payload.state,
+    full_name: payload.full_name,
+    ts: Date.now(),
+  }
   presenceMap.value = { ...presenceMap.value, [payload.deal]: byDeal }
   if (!_presencePrune) {
     _presencePrune = setInterval(() => {
@@ -304,7 +352,9 @@ export function onPresenceEvent(payload) {
       let any = false
       for (const [deal, users] of Object.entries(presenceMap.value)) {
         const alive = Object.fromEntries(
-          Object.entries(users).filter(([, v]) => now - v.ts < (PRESENCE_TTL[v.state] || 8000)),
+          Object.entries(users).filter(
+            ([, v]) => now - v.ts < (PRESENCE_TTL[v.state] || 8000),
+          ),
         )
         if (Object.keys(alive).length) {
           next[deal] = alive
@@ -357,7 +407,10 @@ export function setQueueTag(tag) {
 }
 // Pending acuses for the OPEN conversation — drives the in-context review strip so a
 // reviewer approves WITH the full thread/calls/items in view (not from the bare list).
-export const autoAckForConvo = createResource({ url: 'doco_marketing.api.auto_reply.pending_for_ref', auto: false })
+export const autoAckForConvo = createResource({
+  url: 'doco_marketing.api.auto_reply.pending_for_ref',
+  auto: false,
+})
 export function loadAutoAckForConvo(doctype, name) {
   if (!doctype || !name || !['CRM Deal', 'CRM Lead'].includes(doctype)) {
     autoAckForConvo.data = []
@@ -372,15 +425,22 @@ export const commentStatus = ref('New') // 'New' | 'answered' | 'all' (Comentari
 export const commentSearch = ref('') // Comentarios search (commenter name / text)
 // Editable contact/customer card for the active deal/lead (resolver names the
 // exact doc+field each value lives on; edits go via frappe.client.set_value).
-export const contactCard = createResource({ url: 'doco_marketing.api.inbox.get_contact_card' })
-export const sla = createResource({ url: 'doco_marketing.api.inbox.get_sla_status' })
+export const contactCard = createResource({
+  url: 'doco_marketing.api.inbox.get_contact_card',
+})
+export const sla = createResource({
+  url: 'doco_marketing.api.inbox.get_sla_status',
+})
 
 // ── Catalog send (/cat picker) ─────────────────────────────────────────────────
 // Search in-stock items from a conversation and send a selection as media messages.
 // catalogCtx carries the conversation target; the picker reads catalogResults.
 export const catalogOpen = ref(false)
 export const catalogCtx = ref(null) // { reference_doctype, reference_name, channel, to } OR { comment_name } for a FB comment DM
-export const catalogResults = createResource({ url: 'doco_marketing.api.catalog.search', auto: false })
+export const catalogResults = createResource({
+  url: 'doco_marketing.api.catalog.search',
+  auto: false,
+})
 export const catalogQuery = ref('')
 export function openCatalog(ctx, initialQuery = '') {
   catalogCtx.value = ctx
@@ -448,16 +508,21 @@ export function reloadAutoAcks() {
 // Approve (and send) a drafted acuse, optionally with an edited body. This is the ONLY
 // path that messages the customer — it routes through the role-gated controller.
 export async function approveAutoAck(name, body) {
-  await call('doco_marketing.api.auto_reply.approve', { name, body: body || undefined })
+  await call('doco_marketing.api.auto_reply.approve', {
+    name,
+    body: body || undefined,
+  })
   reloadAutoAcks()
   reloadQueue() // the sent reply clears the conversation's Responder chip
-  if (activeDeal.value) loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
+  if (activeDeal.value)
+    loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
   if (activeDeal.value) loadThread() // the approved acuse now shows in the thread
 }
 export async function discardAutoAck(name) {
   await call('doco_marketing.api.auto_reply.discard', { name })
   reloadAutoAcks()
-  if (activeDeal.value) loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
+  if (activeDeal.value)
+    loadAutoAckForConvo(activeDealDoctype.value, activeDeal.value)
 }
 
 // ── persist the open selection + mobile pane ───────────────────────────────────
@@ -485,7 +550,10 @@ function persistInbox() {
   }
 }
 // snapshot on every selection/pane/tab change
-watch([activeDeal, activeDealDoctype, activeUnassigned, mobileView, activeTab], persistInbox)
+watch(
+  [activeDeal, activeDealDoctype, activeUnassigned, mobileView, activeTab],
+  persistInbox,
+)
 
 function restoreInbox() {
   let s = null
@@ -502,7 +570,11 @@ function restoreInbox() {
     // Guard: the saved record may have been deleted since (a 404 storm otherwise —
     // get_communications / get_contact_card / get all 404). Verify it exists first.
     const doctype = s.doctype || 'CRM Deal'
-    call('frappe.client.get_value', { doctype, filters: { name: s.deal }, fieldname: 'name' })
+    call('frappe.client.get_value', {
+      doctype,
+      filters: { name: s.deal },
+      fieldname: 'name',
+    })
       .then((r) => {
         if (!r?.name) {
           sessionStorage.removeItem(PERSIST_KEY)
@@ -618,7 +690,9 @@ export function reloadQueue(opts = {}) {
       const fresh = queue.data || []
       if (merge) {
         const freshKeys = new Set(fresh.map(_rowKey))
-        queueRows.value = fresh.concat(queueRows.value.filter((r) => !freshKeys.has(_rowKey(r))))
+        queueRows.value = fresh.concat(
+          queueRows.value.filter((r) => !freshKeys.has(_rowKey(r))),
+        )
       } else {
         queueRows.value = fresh
       }
@@ -626,7 +700,11 @@ export function reloadQueue(opts = {}) {
       queueFromCache.value = false
       // Only the UNFILTERED list may seed the offline preview cache — caching a
       // filtered page would repaint it as "the inbox" on the next cold start.
-      if (!queueChannel.value && !queueSearch.value && !queueFilterCount.value) {
+      if (
+        !queueChannel.value &&
+        !queueSearch.value &&
+        !queueFilterCount.value
+      ) {
         try {
           // trim the persisted preview — the cache must paint the list, not
           // archive conversations (audit M2)
@@ -634,7 +712,10 @@ export function reloadQueue(opts = {}) {
             ...r,
             last_message: (r.last_message || '').slice(0, 60),
           }))
-          localStorage.setItem(QUEUE_CACHE_KEY, JSON.stringify({ t: Date.now(), rows }))
+          localStorage.setItem(
+            QUEUE_CACHE_KEY,
+            JSON.stringify({ t: Date.now(), rows }),
+          )
         } catch (e) {
           /* quota — skip */
         }
@@ -687,7 +768,9 @@ export function loadMoreQueue() {
       // boundary between fetches arrives twice — showed as duplicated
       // conversations in prod (2026-07-25).
       const seen = new Set(queueRows.value.map(_rowKey))
-      queueRows.value = queueRows.value.concat((queue.data || []).filter((r) => !seen.has(_rowKey(r))))
+      queueRows.value = queueRows.value.concat(
+        (queue.data || []).filter((r) => !seen.has(_rowKey(r))),
+      )
       queueHasMore.value = (queue.data || []).length === QUEUE_PAGE
     })
     .catch(() => {
@@ -724,7 +807,9 @@ export function selectDeal(name, doctype = 'CRM Deal') {
   loadContactCard()
   loadAutoAckForConvo(doctype, name) // surface any pending auto-ack to approve in context
   // mark read: clear the red unread dot optimistically, persist in background.
-  const r = queueRows.value.find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
+  const r = queueRows.value.find(
+    (x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype,
+  )
   if (r) {
     r.unread_dot = false
     r.reactivated = false // ⏰ chip clears on open, same read receipt
@@ -738,7 +823,10 @@ export function selectDeal(name, doctype = 'CRM Deal') {
 export async function markRead(doctype, name) {
   if (!doctype || !name) return
   try {
-    await call('doco_marketing.api.inbox.mark_read', { reference_doctype: doctype, reference_name: name })
+    await call('doco_marketing.api.inbox.mark_read', {
+      reference_doctype: doctype,
+      reference_name: name,
+    })
   } catch (e) {
     /* read-state is best-effort; never block the UI on it */
   }
@@ -749,10 +837,15 @@ export async function markRead(doctype, name) {
 // A later inbound message re-raises it. Optimistic: drop the chip now, persist async.
 export async function clearResponder(doctype, name) {
   if (!doctype || !name) return
-  const r = queueRows.value.find((x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype)
+  const r = queueRows.value.find(
+    (x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype,
+  )
   if (r) r.unread = false
   try {
-    await call('doco_marketing.api.inbox.clear_responder', { reference_doctype: doctype, reference_name: name })
+    await call('doco_marketing.api.inbox.clear_responder', {
+      reference_doctype: doctype,
+      reference_name: name,
+    })
   } catch (e) {
     reloadQueue() // revert the optimistic clear if the server rejected it
   }
@@ -763,7 +856,10 @@ export function loadContactCard() {
     contactCard.data = null
     return
   }
-  contactCard.submit({ reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value })
+  contactCard.submit({
+    reference_doctype: activeDealDoctype.value,
+    reference_name: activeDeal.value,
+  })
 }
 
 // Inline-save one field to the exact doc the resolver named (the deal/lead, the
@@ -783,25 +879,37 @@ export function selectUnassigned(id, channel = 'whatsapp', isArchived = false) {
   activeUnassignedChannel.value = channel
   activeUnassignedArchived.value = isArchived // archived orphan → header offers Desarchivar
   mobileView.value = 'thread' // mobile: advance the stack to the orphan thread
-  unassignedThread.submit(channel === 'messenger' ? { psid: id } : { phone: id })
+  unassignedThread.submit(
+    channel === 'messenger' ? { psid: id } : { phone: id },
+  )
   loadSuggestions()
 }
 
 // Auto-suggested existing Contact/Lead/Deal matches for the open orphan (by name +
 // number). Surfaced as one-tap link chips — NEVER auto-linked.
-export const suggestions = createResource({ url: 'doco_marketing.api.inbox.suggest_link_targets' })
+export const suggestions = createResource({
+  url: 'doco_marketing.api.inbox.suggest_link_targets',
+})
 export function loadSuggestions() {
   if (!activeUnassigned.value) {
     suggestions.data = []
     return
   }
-  suggestions.submit({ channel: activeUnassignedChannel.value, identifier: activeUnassigned.value })
+  suggestions.submit({
+    channel: activeUnassignedChannel.value,
+    identifier: activeUnassigned.value,
+  })
 }
 
 // Convert an orphan number to a Lead, Deal, or Customer; the backend re-points
 // its messages. A Deal/Lead then enters the normal queue and we open it; a
 // Customer files under its Contact (out of the deal/lead queue).
-export async function assignUnassigned(id, targetDoctype, fields = {}, channel = 'whatsapp') {
+export async function assignUnassigned(
+  id,
+  targetDoctype,
+  fields = {},
+  channel = 'whatsapp',
+) {
   const params = { target_doctype: targetDoctype, ...fields }
   if (channel === 'messenger') params.psid = id
   else params.phone = id
@@ -811,7 +919,8 @@ export async function assignUnassigned(id, targetDoctype, fields = {}, channel =
   reloadUnassigned()
   reloadQueue()
   if (showArchived.value) reloadArchived() // converting an archived orphan drops it from Archivados
-  if (res?.doctype === 'CRM Deal' || res?.doctype === 'CRM Lead') selectDeal(res.name, res.doctype)
+  if (res?.doctype === 'CRM Deal' || res?.doctype === 'CRM Lead')
+    selectDeal(res.name, res.doctype)
   return res
 }
 
@@ -819,7 +928,10 @@ export async function assignUnassigned(id, targetDoctype, fields = {}, channel =
 // stays reachable in Archivados + replyable, and a newer inbound auto-resurfaces it. Closes
 // the open orphan workspace (it's no longer in the live list).
 export async function archiveOrphan(channel, identifier) {
-  const res = await call('doco_marketing.api.inbox.archive_orphan', { channel, identifier })
+  const res = await call('doco_marketing.api.inbox.archive_orphan', {
+    channel,
+    identifier,
+  })
   activeUnassigned.value = null
   activeUnassignedArchived.value = false
   unassignedThread.data = null
@@ -832,7 +944,10 @@ export async function archiveOrphan(channel, identifier) {
 // Bring an archived orphan back into "Sin asignar" now. Keeps the thread open (the operator
 // may want to keep replying) and flips the header back to "Archivar".
 export async function unarchiveOrphan(channel, identifier) {
-  const res = await call('doco_marketing.api.inbox.unarchive_orphan', { channel, identifier })
+  const res = await call('doco_marketing.api.inbox.unarchive_orphan', {
+    channel,
+    identifier,
+  })
   activeUnassignedArchived.value = false
   reloadUnassigned()
   reloadArchived()
@@ -841,7 +956,12 @@ export async function unarchiveOrphan(channel, identifier) {
 
 // Universal LINK-TO-EXISTING: re-point an orphan (any channel) onto an existing
 // Lead/Deal + bind its durable identity (PSID/phone) so future inbound auto-links.
-export async function linkUnassignedToExisting(id, refDoctype, refName, channel = 'whatsapp') {
+export async function linkUnassignedToExisting(
+  id,
+  refDoctype,
+  refName,
+  channel = 'whatsapp',
+) {
   const params = { reference_doctype: refDoctype, reference_name: refName }
   if (channel === 'messenger') params.psid = id
   else params.phone = id
@@ -862,7 +982,10 @@ export async function linkUnassignedToExisting(id, refDoctype, refName, channel 
 export function loadThread() {
   if (!activeDeal.value) return
   // no channel filter — backend merges WhatsApp + Email; selector drives send only
-  thread.submit({ reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value })
+  thread.submit({
+    reference_doctype: activeDealDoctype.value,
+    reference_name: activeDeal.value,
+  })
 }
 
 // Optimistic queue-row patch (spec 3.7): apply locally, return an undo closure.
@@ -883,7 +1006,9 @@ function _patchQueueRow(doctype, name, patch) {
 export async function setStage(status) {
   if (!activeDeal.value) return
   // optimistic (spec 3.7): the chip moves NOW; revert + toast if the server says no
-  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, { status })
+  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, {
+    status,
+  })
   try {
     await call('frappe.client.set_value', {
       doctype: activeDealDoctype.value,
@@ -893,7 +1018,9 @@ export async function setStage(status) {
     })
   } catch (e) {
     undo?.()
-    toast.error(e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'))
+    toast.error(
+      e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'),
+    )
     return
   }
   scheduleQueueReload()
@@ -904,7 +1031,9 @@ export async function setStage(status) {
 // doesn't get a confusing months-later WhatsApp.
 export async function setStageSilent(status) {
   if (!activeDeal.value) return
-  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, { status })
+  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, {
+    status,
+  })
   try {
     await call('doco_marketing.api.inbox.set_status', {
       reference_doctype: activeDealDoctype.value,
@@ -914,7 +1043,9 @@ export async function setStageSilent(status) {
     })
   } catch (e) {
     undo?.()
-    toast.error(e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'))
+    toast.error(
+      e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'),
+    )
     return
   }
   scheduleQueueReload()
@@ -936,22 +1067,32 @@ export async function requestStage(status, type) {
   // Completado/Entregado can auto-send WhatsApp to the customer — explicit
   // confirm before committing (wrong-WABA misclick guard, utils/statusGuard),
   // with the silent escape for stale orders.
-  guardStatusChange(status, () => setStage(status), { onSilent: () => setStageSilent(status) })
+  guardStatusChange(status, () => setStage(status), {
+    onSilent: () => setStageSilent(status),
+  })
 }
 
 export async function commitLostStage(reason, notes = '') {
   const p = lostStagePrompt.value
   if (!p || !activeDeal.value) return
-  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, { status: p.status })
+  const undo = _patchQueueRow(activeDealDoctype.value, activeDeal.value, {
+    status: p.status,
+  })
   try {
     await call('frappe.client.set_value', {
       doctype: activeDealDoctype.value,
       name: activeDeal.value,
-      fieldname: { status: p.status, lost_reason: reason, lost_notes: notes || '' },
+      fieldname: {
+        status: p.status,
+        lost_reason: reason,
+        lost_notes: notes || '',
+      },
     })
   } catch (e) {
     undo?.()
-    toast.error(e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'))
+    toast.error(
+      e?.messages?.[0] || e?.message || __('No se pudo cambiar el estado'),
+    )
     return
   }
   lostStagePrompt.value = null
@@ -1050,13 +1191,18 @@ export async function replyComment(name, message, mode = 'public') {
   return res
 }
 export async function convertCommentToLead(name) {
-  const lead = await call('doco_marketing.api.comments.create_lead', { comment_name: name })
+  const lead = await call('doco_marketing.api.comments.create_lead', {
+    comment_name: name,
+  })
   reloadComments()
   reloadQueue() // the new lead joins the conversation queue
   return lead
 }
 export async function hideComment(name, hidden = true) {
-  await call('doco_marketing.api.comments.hide_comment', { comment_name: name, hidden: hidden ? 1 : 0 })
+  await call('doco_marketing.api.comments.hide_comment', {
+    comment_name: name,
+    hidden: hidden ? 1 : 0,
+  })
   reloadComments()
 }
 // realtime: a new/changed comment arrived (Social Comment after_insert).
@@ -1120,14 +1266,21 @@ export function onMessengerInbound(payload) {
 }
 
 // ── Bitácora: unified cross-channel ledger (WhatsApp + Messenger + FB comments) ──
-export const ledger = createResource({ url: 'doco_marketing.api.inbox.get_contact_ledger' })
+export const ledger = createResource({
+  url: 'doco_marketing.api.inbox.get_contact_ledger',
+})
 // consent timeline (manager-gated server-side; 403 for reps → section self-hides)
-export const consentHistory = createResource({ url: 'doco_marketing.api.consent.get_consent_history' })
+export const consentHistory = createResource({
+  url: 'doco_marketing.api.consent.get_consent_history',
+})
 export const ledgerOpen = ref(false)
 export function openLedger() {
   if (!activeDeal.value) return
   ledgerOpen.value = true
-  const args = { reference_doctype: activeDealDoctype.value, reference_name: activeDeal.value }
+  const args = {
+    reference_doctype: activeDealDoctype.value,
+    reference_name: activeDeal.value,
+  }
   ledger.submit(args)
   consentHistory.data = null
   consentHistory.submit(args)

@@ -6,22 +6,37 @@
   from the conversation; email uses the contact's address.
 -->
 <template>
-  <Dialog v-model="show" :options="{ title: __('Revisar y enviar al cliente'), size: '2xl' }">
+  <Dialog
+    v-model="show"
+    :options="{ title: __('Revisar y enviar al cliente'), size: '2xl' }"
+  >
     <template #body-content>
       <div v-if="ro" class="space-y-4">
         <!-- channel -->
         <div class="flex items-center gap-2">
-          <span class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">{{ __('Canal') }}</span>
+          <span
+            class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
+            >{{ __('Canal') }}</span
+          >
           <button
             v-for="c in channelChoices"
             :key="c.v"
             class="rounded-full px-2.5 py-1 text-[12px] font-semibold"
-            :class="channel === c.v ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+            :class="
+              channel === c.v
+                ? 'bg-surface-green-2 text-ink-green-8'
+                : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
+            "
             @click="channel = c.v"
           >
             {{ c.label }}
           </button>
-          <span class="ml-auto text-[11px] text-ink-gray-5">{{ __('Para') }}: <span class="font-medium text-ink-gray-8">{{ recipientLabel }}</span></span>
+          <span class="ml-auto text-[11px] text-ink-gray-5"
+            >{{ __('Para') }}:
+            <span class="font-medium text-ink-gray-8">{{
+              recipientLabel
+            }}</span></span
+          >
         </div>
 
         <!-- 24h-window guard: free-form WhatsApp won't deliver outside Meta's window -->
@@ -29,10 +44,27 @@
           v-if="waBlocked"
           class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-7"
         >
-          ⚠ <span class="font-semibold">{{ __('Ventana de 24h de WhatsApp cerrada.') }}</span>
-          {{ __('El cliente no ha escrito por WhatsApp en las últimas 24 h. Meta solo entrega plantillas aprobadas — un mensaje libre o una foto NO llegará.') }}
-          <template v-if="dealEmail"> {{ __('Envía por Email, o manda una plantilla desde la conversación.') }}</template>
-          <template v-else> {{ __('Manda una plantilla aprobada desde la conversación.') }}</template>
+          ⚠
+          <span class="font-semibold">{{
+            __('Ventana de 24h de WhatsApp cerrada.')
+          }}</span>
+          {{
+            __(
+              'El cliente no ha escrito por WhatsApp en las últimas 24 h. Meta solo entrega plantillas aprobadas — un mensaje libre o una foto NO llegará.',
+            )
+          }}
+          <template v-if="dealEmail">
+            {{
+              __(
+                'Envía por Email, o manda una plantilla desde la conversación.',
+              )
+            }}</template
+          >
+          <template v-else>
+            {{
+              __('Manda una plantilla aprobada desde la conversación.')
+            }}</template
+          >
         </div>
         <div
           v-else-if="channel === 'whatsapp' && waWindow.open"
@@ -42,8 +74,13 @@
         </div>
 
         <!-- template-with-photo path: the only way to deliver a photo when closed -->
-        <div v-if="waBlocked" class="space-y-2 rounded-md border border-outline-gray-2 p-2.5">
-          <div class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
+        <div
+          v-if="waBlocked"
+          class="space-y-2 rounded-md border border-outline-gray-2 p-2.5"
+        >
+          <div
+            class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
+          >
             {{ __('Enviar como plantilla (con foto)') }}
           </div>
           <template v-if="hasImageTemplates">
@@ -51,24 +88,53 @@
               v-model="chosenTemplate"
               class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-sm text-ink-gray-8 focus:border-outline-gray-4 focus:bg-surface-base focus:outline-none focus:ring-0"
             >
-              <option value="">{{ __('Elige una plantilla aprobada…') }}</option>
-              <option v-for="t in imageTemplates.data" :key="t.name" :value="t.name">{{ t.name }}</option>
+              <option value="">
+                {{ __('Elige una plantilla aprobada…') }}
+              </option>
+              <option
+                v-for="t in imageTemplates.data"
+                :key="t.name"
+                :value="t.name"
+              >
+                {{ t.name }}
+              </option>
             </select>
             <div class="text-[11px] text-ink-gray-5">
-              {{ __('La plantilla lleva 1 foto en el encabezado — se usa la primera foto seleccionada abajo. El texto lo define la plantilla aprobada.') }}
+              {{
+                __(
+                  'La plantilla lleva 1 foto en el encabezado — se usa la primera foto seleccionada abajo. El texto lo define la plantilla aprobada.',
+                )
+              }}
             </div>
           </template>
           <div v-else class="text-[12px] text-ink-gray-5">
-            {{ __('No hay plantillas con foto aprobadas. Crea una plantilla con encabezado de imagen en WhatsApp Manager.') }}
+            {{
+              __(
+                'No hay plantillas con foto aprobadas. Crea una plantilla con encabezado de imagen en WhatsApp Manager.',
+              )
+            }}
           </div>
         </div>
 
         <!-- photos -->
         <div v-if="ro.photos?.length">
-          <div class="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
-            <span>{{ __('Fotos') }} ({{ selectedPhotos.length }}/{{ ro.photos.length }})</span>
-            <button class="text-[11px] font-medium text-ink-blue-link" @click="toggleAllPhotos">
-              {{ selectedPhotos.length === ro.photos.length ? __('Ninguna') : __('Todas') }}
+          <div
+            class="mb-1.5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
+          >
+            <span
+              >{{ __('Fotos') }} ({{ selectedPhotos.length }}/{{
+                ro.photos.length
+              }})</span
+            >
+            <button
+              class="text-[11px] font-medium text-ink-blue-link"
+              @click="toggleAllPhotos"
+            >
+              {{
+                selectedPhotos.length === ro.photos.length
+                  ? __('Ninguna')
+                  : __('Todas')
+              }}
             </button>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -76,22 +142,33 @@
               v-for="ph in ro.photos"
               :key="ph.name"
               class="relative h-16 w-16 overflow-hidden rounded-lg border-2 transition"
-              :class="photoSel[ph.name] ? 'border-outline-green-4 ring-1 ring-outline-green-4' : 'border-outline-gray-2 hover:border-outline-gray-4'"
+              :class="
+                photoSel[ph.name]
+                  ? 'border-outline-green-4 ring-1 ring-outline-green-4'
+                  : 'border-outline-gray-2 hover:border-outline-gray-4'
+              "
               :title="ph.photo_type || __('Foto')"
               @click="togglePhoto(ph.name)"
             >
-              <img :src="ph.thumbnail_url" class="h-full w-full object-cover" loading="lazy" />
+              <img
+                :src="ph.thumbnail_url"
+                class="h-full w-full object-cover"
+                loading="lazy"
+              />
               <span
                 v-if="photoSel[ph.name]"
                 class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-surface-green-7 text-[9px] font-bold text-ink-green-1"
-              >✓</span>
+                >✓</span
+              >
             </button>
           </div>
         </div>
 
         <!-- repair log entries -->
         <div v-if="ro.repair_log?.length">
-          <div class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
+          <div
+            class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
+          >
             {{ __('Entradas de log') }} ({{ selectedLogs.length }})
           </div>
           <div class="space-y-1.5">
@@ -99,11 +176,22 @@
               v-for="(e, i) in ro.repair_log"
               :key="e.name || i"
               class="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-[12px]"
-              :class="logSel[logKey(e, i)] ? 'border-outline-green-4 bg-surface-green-1' : 'border-outline-gray-2'"
+              :class="
+                logSel[logKey(e, i)]
+                  ? 'border-outline-green-4 bg-surface-green-1'
+                  : 'border-outline-gray-2'
+              "
             >
-              <input type="checkbox" class="mt-0.5" :checked="!!logSel[logKey(e, i)]" @change="toggleLog(e, i)" />
+              <input
+                type="checkbox"
+                class="mt-0.5"
+                :checked="!!logSel[logKey(e, i)]"
+                @change="toggleLog(e, i)"
+              />
               <span class="min-w-0">
-                <span v-if="e.step_type" class="font-semibold text-ink-gray-8">{{ e.step_type }}: </span>
+                <span v-if="e.step_type" class="font-semibold text-ink-gray-8"
+                  >{{ e.step_type }}:
+                </span>
                 <span class="text-ink-gray-7">{{ logText(e) }}</span>
               </span>
             </label>
@@ -112,7 +200,11 @@
 
         <!-- note -->
         <div>
-          <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">{{ __('Mensaje') }}</div>
+          <div
+            class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
+          >
+            {{ __('Mensaje') }}
+          </div>
           <textarea
             v-model="note"
             rows="3"
@@ -122,11 +214,16 @@
         </div>
 
         <!-- review line -->
-        <div class="rounded-md bg-surface-gray-1 p-2 text-[12px] text-ink-gray-6">
+        <div
+          class="rounded-md bg-surface-gray-1 p-2 text-[12px] text-ink-gray-6"
+        >
           {{ __('Se enviará') }}:
-          <span class="font-semibold text-ink-gray-8">{{ selectedPhotos.length }}</span> {{ __('foto(s)') }}
-          · {{ composedText ? __('con mensaje') : __('sin mensaje') }}
-          · <span class="font-semibold text-ink-gray-8">{{ channelLabel }}</span>
+          <span class="font-semibold text-ink-gray-8">{{
+            selectedPhotos.length
+          }}</span>
+          {{ __('foto(s)') }} ·
+          {{ composedText ? __('con mensaje') : __('sin mensaje') }} ·
+          <span class="font-semibold text-ink-gray-8">{{ channelLabel }}</span>
         </div>
       </div>
     </template>
@@ -134,7 +231,13 @@
       <Button :label="__('Cancelar')" @click="show = false" />
       <Button
         variant="solid"
-        :label="sending ? __('Enviando…') : waBlocked ? __('Enviar plantilla') : __('Enviar')"
+        :label="
+          sending
+            ? __('Enviando…')
+            : waBlocked
+              ? __('Enviar plantilla')
+              : __('Enviar')
+        "
         :loading="sending"
         :disabled="!canSend"
         @click="send"
@@ -145,8 +248,20 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { Dialog, Button, createResource, createListResource, call, toast } from 'frappe-ui'
-import { activeDeal, activeDealDoctype, loadThread, reloadQueue } from '@/composables/inbox'
+import {
+  Dialog,
+  Button,
+  createResource,
+  createListResource,
+  call,
+  toast,
+} from 'frappe-ui'
+import {
+  activeDeal,
+  activeDealDoctype,
+  loadThread,
+  reloadQueue,
+} from '@/composables/inbox'
 
 const props = defineProps({
   ro: { type: Object, default: null },
@@ -179,10 +294,16 @@ const lastInbound = createListResource({
 const waWindow = computed(() => {
   const ts = lastInbound.data?.[0]?.creation
   if (!ts) return { open: false, hoursLeft: 0 }
-  const left = 24 - (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
-  return left > 0 ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) } : { open: false, hoursLeft: 0 }
+  const left =
+    24 -
+    (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
+  return left > 0
+    ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) }
+    : { open: false, hoursLeft: 0 }
 })
-const waBlocked = computed(() => channel.value === 'whatsapp' && !waWindow.value.open)
+const waBlocked = computed(
+  () => channel.value === 'whatsapp' && !waWindow.value.open,
+)
 
 // Image-header templates: send a photo even when the 24h window is closed (templates
 // are window-independent). The chosen template carries ONE photo in its header.
@@ -193,9 +314,13 @@ const imageTemplates = createResource({
 const chosenTemplate = ref('')
 const hasImageTemplates = computed(() => (imageTemplates.data || []).length > 0)
 
-const channelLabel = computed(() => (channel.value === 'email' ? 'Email' : 'WhatsApp'))
+const channelLabel = computed(() =>
+  channel.value === 'email' ? 'Email' : 'WhatsApp',
+)
 const recipientLabel = computed(() =>
-  channel.value === 'email' ? props.dealEmail || '—' : props.dealMobile || __('WhatsApp del cliente'),
+  channel.value === 'email'
+    ? props.dealEmail || '—'
+    : props.dealMobile || __('WhatsApp del cliente'),
 )
 
 function logKey(e, i) {
@@ -205,15 +330,20 @@ function logText(e) {
   return e.description || e.resolution || '—'
 }
 
-const selectedPhotos = computed(() => (props.ro?.photos || []).filter((p) => photoSel[p.name]))
-const selectedLogs = computed(() => (props.ro?.repair_log || []).filter((e, i) => logSel[logKey(e, i)]))
+const selectedPhotos = computed(() =>
+  (props.ro?.photos || []).filter((p) => photoSel[p.name]),
+)
+const selectedLogs = computed(() =>
+  (props.ro?.repair_log || []).filter((e, i) => logSel[logKey(e, i)]),
+)
 
 const composedText = computed(() => {
   const parts = []
   if (note.value.trim()) parts.push(note.value.trim())
   for (const e of selectedLogs.value) {
     const t = logText(e)
-    if (t && t !== '—') parts.push(`• ${e.step_type ? e.step_type + ': ' : ''}${t}`)
+    if (t && t !== '—')
+      parts.push(`• ${e.step_type ? e.step_type + ': ' : ''}${t}`)
   }
   return parts.join('\n')
 })
@@ -257,7 +387,10 @@ watch(show, (open) => {
   channel.value = 'whatsapp'
   const r = props.ro
   note.value = r
-    ? [`📱 ${r.device_model || ''}`.trim(), r.status ? `${__('Estado')}: ${r.status}` : '']
+    ? [
+        `📱 ${r.device_model || ''}`.trim(),
+        r.status ? `${__('Estado')}: ${r.status}` : '',
+      ]
         .filter(Boolean)
         .join('\n')
     : ''
@@ -316,13 +449,19 @@ async function send() {
         attachments: JSON.stringify(urls.filter(Boolean)),
         to: channel.value === 'email' ? props.dealEmail : undefined,
       })
-      toast.success(channel.value === 'email' ? __('Enviado por correo.') : __('Enviado por WhatsApp.'))
+      toast.success(
+        channel.value === 'email'
+          ? __('Enviado por correo.')
+          : __('Enviado por WhatsApp.'),
+      )
     }
     show.value = false
     loadThread()
     reloadQueue()
   } catch (e) {
-    toast.error(e?.messages?.join('\n') || e?.message || __('No se pudo enviar.'))
+    toast.error(
+      e?.messages?.join('\n') || e?.message || __('No se pudo enviar.'),
+    )
   } finally {
     sending.value = false
   }

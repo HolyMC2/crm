@@ -14,14 +14,24 @@
       v-if="restricted"
       class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-7"
     >
-      {{ __('El desempeño por agente requiere permiso de gerente (Sales Manager o System Manager).') }}
+      {{
+        __(
+          'El desempeño por agente requiere permiso de gerente (Sales Manager o System Manager).',
+        )
+      }}
     </div>
 
     <template v-else>
-      <div v-if="loading && !agents.length" class="py-6 text-center text-xs text-ink-gray-4">
+      <div
+        v-if="loading && !agents.length"
+        class="py-6 text-center text-xs text-ink-gray-4"
+      >
         {{ __('Cargando…') }}
       </div>
-      <div v-else-if="!agents.length" class="py-4 text-center text-xs text-ink-gray-4">
+      <div
+        v-else-if="!agents.length"
+        class="py-4 text-center text-xs text-ink-gray-4"
+      >
         {{ __('Sin actividad en el periodo') }}
       </div>
 
@@ -44,7 +54,9 @@
               @click="onSort(c.key)"
             >
               <span>{{ c.label }}</span>
-              <span v-if="sort.key === c.key" class="text-[9px]">{{ sort.dir === 'desc' ? '▼' : '▲' }}</span>
+              <span v-if="sort.key === c.key" class="text-[9px]">{{
+                sort.dir === 'desc' ? '▼' : '▲'
+              }}</span>
             </button>
           </div>
           <div
@@ -53,11 +65,24 @@
             class="grid items-center gap-x-2 border-b border-outline-gray-1 py-2 text-[12.5px]"
             :style="`grid-template-columns:${GRID}`"
           >
-            <div class="truncate font-medium text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
+            <div class="truncate font-medium text-ink-gray-9" :title="a.agent">
+              {{ a.agent_name }}
+            </div>
             <div class="text-right text-ink-gray-8">{{ a.open }}</div>
-            <div class="text-right font-semibold text-ink-green-7">{{ a.won }}</div>
-            <div class="text-right font-medium text-ink-gray-9">{{ money(a.won_value) }}</div>
-            <div class="text-right" :class="a.median_response_secs == null ? 'text-ink-gray-4' : 'text-ink-gray-8'">
+            <div class="text-right font-semibold text-ink-green-7">
+              {{ a.won }}
+            </div>
+            <div class="text-right font-medium text-ink-gray-9">
+              {{ money(a.won_value) }}
+            </div>
+            <div
+              class="text-right"
+              :class="
+                a.median_response_secs == null
+                  ? 'text-ink-gray-4'
+                  : 'text-ink-gray-8'
+              "
+            >
               {{ fmtDuration(a.median_response_secs) }}
             </div>
           </div>
@@ -71,10 +96,17 @@
               :key="c.key"
               type="button"
               class="press rounded-full px-2.5 py-1 text-[11px] font-medium"
-              :class="sort.key === c.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
+              :class="
+                sort.key === c.key
+                  ? 'bg-surface-gray-3 text-ink-gray-9'
+                  : 'bg-surface-gray-2 text-ink-gray-6'
+              "
               @click="onSort(c.key)"
             >
-              {{ c.label }}<span v-if="sort.key === c.key"> {{ sort.dir === 'desc' ? '▼' : '▲' }}</span>
+              {{ c.label
+              }}<span v-if="sort.key === c.key">
+                {{ sort.dir === 'desc' ? '▼' : '▲' }}</span
+              >
             </button>
           </div>
           <div class="flex flex-col gap-2.5">
@@ -83,23 +115,52 @@
               :key="a.agent"
               class="rounded-[10px] border border-outline-gray-2 bg-surface-base p-3"
             >
-              <div class="mb-2 truncate text-[13px] font-bold text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
+              <div
+                class="mb-2 truncate text-[13px] font-bold text-ink-gray-9"
+                :title="a.agent"
+              >
+                {{ a.agent_name }}
+              </div>
               <div class="grid grid-cols-2 gap-y-2 text-[12px]">
                 <div>
-                  <div class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">{{ __('Abiertos') }}</div>
+                  <div
+                    class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4"
+                  >
+                    {{ __('Abiertos') }}
+                  </div>
                   <div class="text-ink-gray-9">{{ a.open }}</div>
                 </div>
                 <div>
-                  <div class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">{{ __('Ganados') }}</div>
+                  <div
+                    class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4"
+                  >
+                    {{ __('Ganados') }}
+                  </div>
                   <div class="font-semibold text-ink-green-7">{{ a.won }}</div>
                 </div>
                 <div>
-                  <div class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">{{ __('Valor ganado') }}</div>
-                  <div class="font-medium text-ink-gray-9">{{ money(a.won_value) }}</div>
+                  <div
+                    class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4"
+                  >
+                    {{ __('Valor ganado') }}
+                  </div>
+                  <div class="font-medium text-ink-gray-9">
+                    {{ money(a.won_value) }}
+                  </div>
                 </div>
                 <div>
-                  <div class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">{{ __('Resp. mediana') }}</div>
-                  <div :class="a.median_response_secs == null ? 'text-ink-gray-4' : 'text-ink-gray-9'">
+                  <div
+                    class="text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4"
+                  >
+                    {{ __('Resp. mediana') }}
+                  </div>
+                  <div
+                    :class="
+                      a.median_response_secs == null
+                        ? 'text-ink-gray-4'
+                        : 'text-ink-gray-9'
+                    "
+                  >
                     {{ fmtDuration(a.median_response_secs) }}
                   </div>
                 </div>
@@ -149,7 +210,9 @@ watch(() => props.period, load)
 const loading = computed(() => res.loading)
 const agents = computed(() => res.data?.agents || [])
 const sort = ref({ key: 'won_value', dir: 'desc' })
-const sortedAgents = computed(() => sortAgents(agents.value, sort.value.key, sort.value.dir))
+const sortedAgents = computed(() =>
+  sortAgents(agents.value, sort.value.key, sort.value.dir),
+)
 function onSort(key) {
   sort.value = nextSort(sort.value, key)
 }

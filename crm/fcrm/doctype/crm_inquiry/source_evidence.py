@@ -13,22 +13,58 @@ from frappe import _
 
 from crm.api.inquiries import DOCTYPE, _choice, _date, _mapping, _person, _text
 
-BASE_FIELDS = frozenset({
-	"version", "mode", "provider", "account_id", "source_kind", "source_id",
-	"source_identity", "receipt_name", "policy_hash", "capture_user", "requested_by",
-})
-FORM_FIELDS = frozenset({
-	"form_id", "leadgen_id", "purpose_statement", "response_channel",
-	"form_revision_hash", "submitted_at", "original_respondent",
-})
-STABLE_FIELDS = ("provider", "account_id", "source_kind", "source_id", "source_identity", "form_id", "leadgen_id")
-VISIBLE_FIELDS = frozenset({
-	"version", "mode", "provider", "account_id", "source_kind", "source_id",
-	*FORM_FIELDS,
-}) - {"form_revision_hash"}
+BASE_FIELDS = frozenset(
+	{
+		"version",
+		"mode",
+		"provider",
+		"account_id",
+		"source_kind",
+		"source_id",
+		"source_identity",
+		"receipt_name",
+		"policy_hash",
+		"capture_user",
+		"requested_by",
+	}
+)
+FORM_FIELDS = frozenset(
+	{
+		"form_id",
+		"leadgen_id",
+		"purpose_statement",
+		"response_channel",
+		"form_revision_hash",
+		"submitted_at",
+		"original_respondent",
+	}
+)
+STABLE_FIELDS = (
+	"provider",
+	"account_id",
+	"source_kind",
+	"source_id",
+	"source_identity",
+	"form_id",
+	"leadgen_id",
+)
+VISIBLE_FIELDS = frozenset(
+	{
+		"version",
+		"mode",
+		"provider",
+		"account_id",
+		"source_kind",
+		"source_id",
+		*FORM_FIELDS,
+	}
+) - {"form_revision_hash"}
 KINDS = {
-	"fb_mention": "Messenger", "fb_comment": "Messenger", "lead_ad": "Messenger",
-	"ig_mention": "Instagram", "ig_comment": "Instagram",
+	"fb_mention": "Messenger",
+	"fb_comment": "Messenger",
+	"lead_ad": "Messenger",
+	"ig_mention": "Instagram",
+	"ig_comment": "Instagram",
 }
 
 
@@ -67,13 +103,19 @@ def validate_context(value, source_key):
 	if actor != frappe.session.user:
 		frappe.throw(_("Capture evidence must use the current CRM actor."), frappe.PermissionError)
 	result = {
-		"version": 1, "mode": mode, "provider": provider, "source_kind": kind,
+		"version": 1,
+		"mode": mode,
+		"provider": provider,
+		"source_kind": kind,
 		"account_id": _identifier(value.get("account_id"), _("Provider account")),
 		"source_id": _text(value.get("source_id"), _("Source ID"), 512, required=True),
-		"source_identity": identity, "capture_user": actor,
+		"source_identity": identity,
+		"capture_user": actor,
 		"receipt_name": _text(value.get("receipt_name"), _("Receipt"), 140, required=mode != "manual_source"),
 		"policy_hash": _hash(value.get("policy_hash"), _("Capture policy"), required=mode != "manual_source"),
-		"requested_by": _text(value.get("requested_by"), _("Requested by"), 140, required=mode == "manager_reprocess"),
+		"requested_by": _text(
+			value.get("requested_by"), _("Requested by"), 140, required=mode == "manager_reprocess"
+		),
 	}
 	if kind != "lead_ad":
 		if FORM_FIELDS.intersection(value):
@@ -84,18 +126,30 @@ def validate_context(value, source_key):
 	respondent = _person(value.get("original_respondent"))
 	if respondent["role"] != "Requester":
 		frappe.throw(_("The original form respondent must be a requester."))
-	channel = _choice(value.get("response_channel"), ("Email", "Phone call", "WhatsApp"), _("response channel"))
+	channel = _choice(
+		value.get("response_channel"), ("Email", "Phone call", "WhatsApp"), _("response channel")
+	)
 	if not respondent["email" if channel == "Email" else "phone"]:
 		frappe.throw(_("The form respondent is missing the selected response address."))
-	result.update({
-		"form_id": _identifier(value.get("form_id"), _("Form ID")),
-		"leadgen_id": _identifier(value.get("leadgen_id"), _("Lead submission ID")),
-		"purpose_statement": _text(value.get("purpose_statement"), _("Form contact purpose"), 4000, required=True, multiline=True),
-		"response_channel": channel,
-		"form_revision_hash": _hash(value.get("form_revision_hash"), _("Form revision"), required=True),
-		"submitted_at": str(_date(_text(value.get("submitted_at"), _("Submitted at"), 32, required=True), _("Submitted at"), required=True)),
-		"original_respondent": respondent,
-	})
+	result.update(
+		{
+			"form_id": _identifier(value.get("form_id"), _("Form ID")),
+			"leadgen_id": _identifier(value.get("leadgen_id"), _("Lead submission ID")),
+			"purpose_statement": _text(
+				value.get("purpose_statement"), _("Form contact purpose"), 4000, required=True, multiline=True
+			),
+			"response_channel": channel,
+			"form_revision_hash": _hash(value.get("form_revision_hash"), _("Form revision"), required=True),
+			"submitted_at": str(
+				_date(
+					_text(value.get("submitted_at"), _("Submitted at"), 32, required=True),
+					_("Submitted at"),
+					required=True,
+				)
+			),
+			"original_respondent": respondent,
+		}
+	)
 	if result["source_id"] != result["leadgen_id"]:
 		frappe.throw(_("Form evidence does not match the lead submission."))
 	return result
@@ -133,7 +187,11 @@ def check_replay(doc, context):
 		return
 	stored = _stored(doc)
 	if not stored or any(stored.get(field) != context.get(field) for field in STABLE_FIELDS):
-		frappe.throw(_("This capture identity already has different or unscoped source evidence. A manager must review the mapping."))
+		frappe.throw(
+			_(
+				"This capture identity already has different or unscoped source evidence. A manager must review the mapping."
+			)
+		)
 
 
 def project(doc):

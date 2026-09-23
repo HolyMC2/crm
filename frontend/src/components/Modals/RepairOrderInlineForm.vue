@@ -145,7 +145,9 @@
     </div>
 
     <!-- Row 3: Unlock method (none / PIN / pattern) -->
-    <div class="mt-4 rounded-md border bg-surface-gray-1 p-3 dark:bg-surface-gray-2">
+    <div
+      class="mt-4 rounded-md border bg-surface-gray-1 p-3 dark:bg-surface-gray-2"
+    >
       <div class="mb-1.5 text-xs-semibold text-ink-gray-7">
         {{ __('Unlock') }}
       </div>
@@ -179,7 +181,9 @@
     </div>
 
     <!-- Row 4: Cotización + anticipo + saldo preview -->
-    <div class="mt-3 rounded-md border bg-surface-gray-1 p-3 dark:bg-surface-gray-2">
+    <div
+      class="mt-3 rounded-md border bg-surface-gray-1 p-3 dark:bg-surface-gray-2"
+    >
       <div class="mb-1.5 text-xs-semibold text-ink-gray-7">
         {{ __('Quote & advance') }}
       </div>
@@ -239,7 +243,11 @@ const form = defineModel({ required: true })
 // muelle-forms descriptor (null → legacy markup, the F-series fallback contract)
 const descriptor = ref(null)
 onMounted(async () => {
-  descriptor.value = await fetchDescriptor(call, 'Repair Order', 'intake-inline')
+  descriptor.value = await fetchDescriptor(
+    call,
+    'Repair Order',
+    'intake-inline',
+  )
 })
 
 // ── Static option lists ──────────────────────────────────────────────────────────────
@@ -251,10 +259,10 @@ const conditionOptions = [
 ]
 
 const checkFields = [
-  { key: 'has_sim_tray',   label: __('Has SIM Tray') },
-  { key: 'is_wet',         label: __('Is Wet') },
-  { key: 'turns_on',       label: __('Turns On') },
-  { key: 'broken_screen',  label: __('Broken Screen') },
+  { key: 'has_sim_tray', label: __('Has SIM Tray') },
+  { key: 'is_wet', label: __('Is Wet') },
+  { key: 'turns_on', label: __('Turns On') },
+  { key: 'broken_screen', label: __('Broken Screen') },
   { key: 'has_phone_case', label: __('Has Phone Case') },
 ]
 

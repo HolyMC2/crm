@@ -26,9 +26,19 @@
       class="flex-none text-[11px] tabular-nums text-ink-gray-5"
       role="status"
       aria-live="polite"
-      :aria-label="matches.length ? __('resultado {0} de {1}', [current + 1, matches.length]) : ''"
+      :aria-label="
+        matches.length
+          ? __('resultado {0} de {1}', [current + 1, matches.length])
+          : ''
+      "
     >
-      {{ matches.length ? `${current + 1}/${matches.length}` : query.trim().length >= 2 ? '0' : '' }}
+      {{
+        matches.length
+          ? `${current + 1}/${matches.length}`
+          : query.trim().length >= 2
+            ? '0'
+            : ''
+      }}
     </span>
     <button
       class="press flex-none px-1 text-[13px] text-ink-gray-6 disabled:opacity-40"
@@ -46,7 +56,11 @@
     >
       ↓
     </button>
-    <button class="press flex-none px-1 text-[15px] text-ink-gray-5" :aria-label="__('Cerrar búsqueda')" @click="close">
+    <button
+      class="press flex-none px-1 text-[15px] text-ink-gray-5"
+      :aria-label="__('Cerrar búsqueda')"
+      @click="close"
+    >
       ×
     </button>
   </div>

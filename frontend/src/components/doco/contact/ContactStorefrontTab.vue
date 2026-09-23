@@ -121,7 +121,8 @@
                 row.customer_name || row.customer || '—'
               }}</span>
               <span class="text-ink-gray-5">{{ date(row.date) }}</span>
-              <span class="text-right font-semibold tabular-nums text-ink-gray-8"
+              <span
+                class="text-right font-semibold tabular-nums text-ink-gray-8"
                 >{{ money(row.amount, row.currency) }}
               </span>
             </div>
@@ -158,10 +159,7 @@
           </MobileRecordCard>
         </div>
 
-        <p
-          v-if="data.summary.truncated"
-          class="mt-2 text-xs text-ink-gray-5"
-        >
+        <p v-if="data.summary.truncated" class="mt-2 text-xs text-ink-gray-5">
           {{
             __('Mostrando los {0} más recientes de {1}.', [
               data.orders.length,
@@ -275,9 +273,12 @@ function fulfillmentTheme(value) {
 }
 function returnTheme(status) {
   return (
-    { Abierta: 'orange', 'En proceso': 'blue', Resuelta: 'green', Rechazada: 'red' }[
-      status
-    ] || 'gray'
+    {
+      Abierta: 'orange',
+      'En proceso': 'blue',
+      Resuelta: 'green',
+      Rechazada: 'red',
+    }[status] || 'gray'
   )
 }
 function reasonLabel(reason) {
@@ -286,7 +287,8 @@ function reasonLabel(reason) {
 function openOrder(row) {
   // The public /pedido link is the one the buyer sees; without a configured
   // storefront domain the server sends none, and Desk is the honest fallback.
-  const url = row.order_url || `/app/sales-order/${encodeURIComponent(row.name)}`
+  const url =
+    row.order_url || `/app/sales-order/${encodeURIComponent(row.name)}`
   window.open(url, '_blank', 'noopener')
 }
 function money(value, currency) {

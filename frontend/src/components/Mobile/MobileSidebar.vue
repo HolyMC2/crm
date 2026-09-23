@@ -8,7 +8,12 @@
 -->
 <template>
   <TransitionRoot :show="sidebarOpened">
-    <Dialog as="div" class="fixed inset-0 z-40" :aria-label="__('Menú')" @close="sidebarOpened = false">
+    <Dialog
+      as="div"
+      class="fixed inset-0 z-40"
+      :aria-label="__('Menú')"
+      @close="sidebarOpened = false"
+    >
       <TransitionChild
         as="template"
         enter="transition ease-[cubic-bezier(.32,.72,0,1)] duration-200 transform"
@@ -29,7 +34,9 @@
             >
               {{ (brandName[0] || 'C').toUpperCase() }}
             </div>
-            <span class="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-gray-9">
+            <span
+              class="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-gray-9"
+            >
               {{ brandName }}
             </span>
             <button
@@ -72,8 +79,13 @@
                 :aria-current="activeGroup === item.group ? 'page' : undefined"
                 @click="go({ path: item.to })"
               >
-                <component :is="item.icon" class="h-[18px] w-[18px] flex-none" />
-                <span class="flex-1 truncate text-left text-[13.5px] font-medium">
+                <component
+                  :is="item.icon"
+                  class="h-[18px] w-[18px] flex-none"
+                />
+                <span
+                  class="flex-1 truncate text-left text-[13.5px] font-medium"
+                >
                   {{ __(item.label) }}
                 </span>
                 <span
@@ -121,7 +133,9 @@
             </div>
 
             <!-- apps switcher -->
-            <div class="mt-4 px-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-ink-gray-5">
+            <div
+              class="mt-4 px-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-ink-gray-5"
+            >
               {{ __('Apps') }}
             </div>
             <div class="mt-1.5 grid grid-cols-4 gap-1 px-0.5">
@@ -131,9 +145,15 @@
                 :href="app.route"
                 class="press flex flex-col items-center gap-1 rounded-[10px] px-1 py-2 hover:bg-surface-gray-2"
               >
-                <component v-if="app.icon" :is="app.icon" class="h-7 w-7 p-1 text-ink-gray-7" />
+                <component
+                  v-if="app.icon"
+                  :is="app.icon"
+                  class="h-7 w-7 p-1 text-ink-gray-7"
+                />
                 <img v-else class="h-7 w-7 rounded-md" :src="app.logo" alt="" />
-                <span class="w-full truncate text-center text-[10.5px] text-ink-gray-7">
+                <span
+                  class="w-full truncate text-center text-[10.5px] text-ink-gray-7"
+                >
                   {{ app.title }}
                 </span>
               </a>
@@ -147,13 +167,18 @@
               @click="openSettings"
             >
               <SettingsGearIcon class="h-[18px] w-[18px] flex-none" />
-              <span class="flex-1 text-left text-[13.5px] font-medium">{{ __('Settings') }}</span>
+              <span class="flex-1 text-left text-[13.5px] font-medium">{{
+                __('Settings')
+              }}</span>
             </button>
             <button
               class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-gray-7 hover:bg-surface-gray-2"
               @click="toggleDark"
             >
-              <component :is="isDark ? SunIcon : MoonIcon" class="h-[18px] w-[18px] flex-none" />
+              <component
+                :is="isDark ? SunIcon : MoonIcon"
+                class="h-[18px] w-[18px] flex-none"
+              />
               <span class="flex-1 text-left text-[13.5px] font-medium">
                 {{ isDark ? __('Light mode') : __('Dark mode') }}
               </span>
@@ -169,7 +194,10 @@
             </button>
             <!-- Web Push toggle (spec 1.1) — hidden when unsupported/unconfigured -->
             <button
-              v-if="addonAvailable && !['unsupported', 'unconfigured'].includes(pushState)"
+              v-if="
+                addonAvailable &&
+                !['unsupported', 'unconfigured'].includes(pushState)
+              "
               class="press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-ink-gray-7 hover:bg-surface-gray-2"
               :disabled="pushBusy || pushState === 'denied'"
               :class="pushState === 'denied' ? 'opacity-50' : ''"
@@ -177,12 +205,20 @@
             >
               <BellRingIcon class="h-[18px] w-[18px] flex-none" />
               <span class="flex-1 text-left text-[13.5px] font-medium">
-                {{ pushState === 'denied' ? __('Notificaciones bloqueadas') : __('Notificaciones push') }}
+                {{
+                  pushState === 'denied'
+                    ? __('Notificaciones bloqueadas')
+                    : __('Notificaciones push')
+                }}
               </span>
               <span
                 v-if="pushState !== 'denied'"
                 class="relative h-[18px] w-8 flex-none rounded-full transition-colors duration-200"
-                :class="pushState === 'on' ? 'bg-surface-green-7' : 'bg-surface-gray-4'"
+                :class="
+                  pushState === 'on'
+                    ? 'bg-surface-green-7'
+                    : 'bg-surface-gray-4'
+                "
               >
                 <span
                   class="absolute top-[2px] h-3.5 w-3.5 rounded-full bg-surface-base transition-all duration-200"
@@ -195,11 +231,15 @@
               @click="signOut"
             >
               <LogOutIcon class="h-[18px] w-[18px] flex-none" />
-              <span class="flex-1 text-left text-[13.5px] font-medium">{{ __('Sign out') }}</span>
+              <span class="flex-1 text-left text-[13.5px] font-medium">{{
+                __('Sign out')
+              }}</span>
             </button>
 
             <!-- user card -->
-            <div class="mt-1 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2">
+            <div
+              class="mt-1 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2"
+            >
               <span
                 class="flex h-8 w-8 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-violet-2 text-[11px] font-semibold text-ink-violet-8"
               >
@@ -235,7 +275,9 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <DialogOverlay class="fixed inset-0 bg-surface-gray-8 bg-opacity-50 backdrop-blur-[2px]" />
+        <DialogOverlay
+          class="fixed inset-0 bg-surface-gray-8 bg-opacity-50 backdrop-blur-[2px]"
+        />
       </TransitionChild>
     </Dialog>
   </TransitionRoot>
@@ -260,12 +302,20 @@ import SidebarLink from '@/components/SidebarLink.vue'
 import Settings from '@/components/Settings/Settings.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
-import { navItems, navItemsBottom, routeGroup, visibleSuiteApps } from '@/composables/navModel'
+import {
+  navItems,
+  navItemsBottom,
+  routeGroup,
+  visibleSuiteApps,
+} from '@/composables/navModel'
 import { computed, h, ref, watch } from 'vue'
 import { addonAvailable, hasApp, navItemVisible } from '@/utils/crmCapabilities'
 import { useRoute, useRouter } from 'vue-router'
 import { FeatherIcon, createResource, useTheme } from 'frappe-ui'
-import { mobileSidebarOpened as sidebarOpened, showSettings } from '@/composables/settings'
+import {
+  mobileSidebarOpened as sidebarOpened,
+  showSettings,
+} from '@/composables/settings'
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
@@ -274,7 +324,13 @@ import LogOutIcon from '~icons/lucide/log-out'
 import MoonIcon from '~icons/lucide/moon'
 import SunIcon from '~icons/lucide/sun'
 import BellRingIcon from '~icons/lucide/bell-ring'
-import { pushState, pushBusy, refreshPushState, enablePush, disablePush } from '@/composables/push'
+import {
+  pushState,
+  pushBusy,
+  refreshPushState,
+  enablePush,
+  disablePush,
+} from '@/composables/push'
 
 const route = useRoute()
 const router = useRouter()
@@ -293,9 +349,11 @@ const initials = computed(() => {
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?'
 })
 
-const primaryItems = computed(() => [...navItems, ...navItemsBottom].filter(
-  (item) => navItemVisible(router.resolve(item.to).name, addonAvailable.value),
-))
+const primaryItems = computed(() =>
+  [...navItems, ...navItemsBottom].filter((item) =>
+    navItemVisible(router.resolve(item.to).name, addonAvailable.value),
+  ),
+)
 const activeGroup = computed(() => routeGroup(route.path))
 
 function rowClass(group) {
@@ -320,7 +378,9 @@ function signOut() {
 }
 
 // ── web push (spec 1.1) ────────────────────────────────────────────────────
-watch(addonAvailable, (available) => available && refreshPushState(), { immediate: true })
+watch(addonAvailable, (available) => available && refreshPushState(), {
+  immediate: true,
+})
 function togglePush() {
   if (pushState.value === 'on') disablePush()
   else enablePush() // user gesture — permission prompt allowed here
@@ -344,7 +404,9 @@ const badges = createResource({
   cache: 'shellBadgeCounts',
   auto: false,
 })
-watch(addonAvailable, (available) => available && badges.fetch(), { immediate: true })
+watch(addonAvailable, (available) => available && badges.fetch(), {
+  immediate: true,
+})
 function badgeFor(kind) {
   if (!kind) return 0
   const d = badges.data || {}

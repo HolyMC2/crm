@@ -200,7 +200,11 @@ class IncomingCall:
 		device = attender["call_receiving_device"]
 		if device == "Phone":
 			return twilio.generate_twilio_dial_response(self.from_number, attender["mobile_no"])
-		if device == "SIP Phone" and twilio.settings.get("enable_sip_phone") and twilio.settings.get("sip_domain"):
+		if (
+			device == "SIP Phone"
+			and twilio.settings.get("enable_sip_phone")
+			and twilio.settings.get("sip_domain")
+		):
 			sip_username = attender.get("sip_username")
 			if sip_username:
 				sip_uri = f"sip:{sip_username}@{twilio.settings.sip_domain}"
@@ -281,9 +285,11 @@ def get_the_call_attender(owners, caller=None):
 
 	for name, details in owners.items():
 		device = details["call_receiving_device"]
-		if (device == "Phone" and details["mobile_no"]) or (
-			device == "Computer" and name in current_loggedin_users
-		) or (device == "SIP Phone" and details.get("sip_username")):
+		if (
+			(device == "Phone" and details["mobile_no"])
+			or (device == "Computer" and name in current_loggedin_users)
+			or (device == "SIP Phone" and details.get("sip_username"))
+		):
 			return details
 
 

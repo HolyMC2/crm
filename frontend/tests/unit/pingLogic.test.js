@@ -1,6 +1,11 @@
 // Notification-ping decisions (audit-front named this untested; extracted pure).
 import { describe, it, expect } from 'vitest'
-import { shouldPingWa, shouldPingMessenger, recentSelfSend, SELF_SEND_WINDOW_MS } from '@/utils/pingLogic'
+import {
+  shouldPingWa,
+  shouldPingMessenger,
+  recentSelfSend,
+  SELF_SEND_WINDOW_MS,
+} from '@/utils/pingLogic'
 
 const T = 1_000_000
 

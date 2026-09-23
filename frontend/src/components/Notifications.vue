@@ -31,7 +31,12 @@
             variant="ghost"
             @click="markAllAsRead"
           />
-          <Button :tooltip="__('Cerrar')" icon="x" variant="ghost" @click="toggle()" />
+          <Button
+            :tooltip="__('Cerrar')"
+            icon="x"
+            variant="ghost"
+            @click="toggle()"
+          />
         </div>
       </div>
       <TabButtons
@@ -125,7 +130,11 @@ const { capture } = useTelemetry()
 const activeTab = ref('all')
 // per-type tabs with live unread counts — 300+ WhatsApp pings were burying the
 // Assignment/Mention rows in one flat list
-const TAB_TYPE = { whatsapp: 'WhatsApp', assignment: 'Assignment', mention: 'Mention' }
+const TAB_TYPE = {
+  whatsapp: 'WhatsApp',
+  assignment: 'Assignment',
+  mention: 'Mention',
+}
 const tabs = computed(() => {
   const data = notifications.data || []
   const unread = (t) => data.filter((n) => !n.read && n.type === t).length

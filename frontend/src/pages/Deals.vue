@@ -4,7 +4,7 @@
       <ViewBreadcrumbs v-model="viewControls" routeName="Deals" />
     </template>
     <template #right-header>
-      <VerticalSlot slot="deals_list_header" />
+      <VerticalSlot slot-name="deals_list_header" />
       <CustomActions
         v-if="dealsListView?.customListActions"
         :actions="dealsListView.customListActions"
@@ -298,7 +298,7 @@ const triggerResize = ref(1)
 const updatedPageCount = ref(20)
 const viewControls = ref(null)
 
-// Exposed to <VerticalSlot slot="deals_list_header"> children (e.g. taller's
+// Exposed to <VerticalSlot slot-name="deals_list_header"> children (e.g. taller's
 // DealsSearchBox) so they can drive ViewControls.updateSearch without
 // touching this file again on rebases.
 provide('dealsViewControls', viewControls)

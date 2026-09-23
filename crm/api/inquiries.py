@@ -26,8 +26,16 @@ CAPTURE_FIELDS = frozenset(
 )
 UPDATE_FIELDS = frozenset({"title", "status", "assigned_to", "next_action_at"})
 SUMMARY_FIELDS = (
-	"name", "title", "status", "source_type", "source_url", "assigned_to", "next_action_at",
-	"owner", "creation", "modified",
+	"name",
+	"title",
+	"status",
+	"source_type",
+	"source_url",
+	"assigned_to",
+	"next_action_at",
+	"owner",
+	"creation",
+	"modified",
 )
 
 
@@ -54,14 +62,17 @@ def _public_errors(fn):
 		except frappe.ValidationError:
 			raise
 		except Exception:
-			sanitized_error(_("The inquiry operation could not be completed. Please retry."), frappe.ValidationError)
+			sanitized_error(
+				_("The inquiry operation could not be completed. Please retry."), frappe.ValidationError
+			)
 
 	return wrapped
 
 
 def _eligible(user):
 	return bool(
-		user and user != "Guest"
+		user
+		and user != "Guest"
 		and frappe.db.get_value("User", user, "enabled")
 		and (user == "Administrator" or ROLES.intersection(frappe.get_roles(user)))
 	)
@@ -70,8 +81,12 @@ def _eligible(user):
 def _require_member():
 	if not _eligible(frappe.session.user):
 		frappe.throw(_("An enabled CRM user is required."), frappe.PermissionError)
-	if not frappe.db.exists("DocType", DOCTYPE) or not frappe.get_meta(DOCTYPE).has_field("capture_payload_hash"):
-		frappe.throw(_("Native inquiries are not installed yet. Ask an administrator to complete the CRM upgrade."))
+	if not frappe.db.exists("DocType", DOCTYPE) or not frappe.get_meta(DOCTYPE).has_field(
+		"capture_payload_hash"
+	):
+		frappe.throw(
+			_("Native inquiries are not installed yet. Ask an administrator to complete the CRM upgrade.")
+		)
 
 
 def _text(value, label, maximum, required=False, multiline=False):
@@ -81,8 +96,11 @@ def _text(value, label, maximum, required=False, multiline=False):
 		frappe.throw(_("{0} must be text.").format(label))
 	value = value.strip()
 	if len(value) > maximum or (required and not value):
-		frappe.throw(_("{0} is required and must be at most {1} characters.").format(label, maximum)
-			if required else _("{0} must be at most {1} characters.").format(label, maximum))
+		frappe.throw(
+			_("{0} is required and must be at most {1} characters.").format(label, maximum)
+			if required
+			else _("{0} must be at most {1} characters.").format(label, maximum)
+		)
 	if any(ord(c) < 32 and not (multiline and c in "\n\r\t") for c in value):
 		frappe.throw(_("{0} contains unsupported control characters.").format(label))
 	return value
@@ -119,7 +137,9 @@ def _source_url(value):
 		return ""
 	try:
 		url = urlsplit(value)
-		valid = url.scheme.lower() in ("http", "https") and url.hostname and not url.username and not url.password
+		valid = (
+			url.scheme.lower() in ("http", "https") and url.hostname and not url.username and not url.password
+		)
 		url.port  # Reject malformed ports as well as malformed authorities.
 	except ValueError:
 		valid = False
@@ -137,7 +157,8 @@ def _person(value):
 		"phone": _text(value.get("phone"), _("Phone"), 40),
 	}
 	if result["email"] and (
-		"," in result["email"] or ";" in result["email"]
+		"," in result["email"]
+		or ";" in result["email"]
 		or validate_email_address(result["email"]) != result["email"]
 	):
 		frappe.throw(_("Enter one valid email address."))
@@ -154,13 +175,17 @@ def _capture(value, require_request_id=True):
 		"source_type": _choice(value.get("source_type", "Manual"), SOURCES, _("source type")),
 		"source_url": _source_url(value.get("source_url")),
 		"source_text": _text(value.get("source_text"), _("Source text"), 20000, multiline=True),
-		"client_request_id": _text(value.get("client_request_id"), _("Request ID"), 200, required=require_request_id),
+		"client_request_id": _text(
+			value.get("client_request_id"), _("Request ID"), 200, required=require_request_id
+		),
 		"people": [_person(person) for person in people],
 	}
 
 
 def _digest(value):
-	return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()
+	return hashlib.sha256(
+		json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+	).hexdigest()
 
 
 def _capture_key(client_request_id):
@@ -170,7 +195,9 @@ def _capture_key(client_request_id):
 def _date(value, label, required=False):
 	if not value and not required:
 		return None
-	if isinstance(value, str) and not re.fullmatch(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?", value):
+	if isinstance(value, str) and not re.fullmatch(
+		r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?", value
+	):
 		frappe.throw(_("{0} must be a valid date and time.").format(label))
 	try:
 		return get_datetime(value) if value else frappe.throw(_("{0} is required.").format(label))
@@ -187,7 +214,9 @@ def _document(name, permission="read", lock=False):
 
 def _version(doc, modified):
 	if _date(modified, _("Modified timestamp"), required=True) != get_datetime(doc.modified):
-		frappe.throw(_("This inquiry changed. Reload it and retry your changes."), frappe.TimestampMismatchError)
+		frappe.throw(
+			_("This inquiry changed. Reload it and retry your changes."), frappe.TimestampMismatchError
+		)
 
 
 def _serialized(doc):
@@ -200,14 +229,18 @@ def _serialized(doc):
 	result["can_write"] = bool(doc.has_permission("write"))
 	result["people"] = []
 	for person in doc.people:
-		visible = bool(person.lead and has_document_permission("CRM Lead", "read", doc=person.lead, print_logs=False))
-		result["people"].append({
-			"person_key": person.person_key,
-			**{field: person.get(field) for field in PERSON_FIELDS},
-			"lead": person.lead if visible else None,
-			"converted_at": person.converted_at,
-			"lead_accessible": visible,
-		})
+		visible = bool(
+			person.lead and has_document_permission("CRM Lead", "read", doc=person.lead, print_logs=False)
+		)
+		result["people"].append(
+			{
+				"person_key": person.person_key,
+				**{field: person.get(field) for field in PERSON_FIELDS},
+				"lead": person.lead if visible else None,
+				"converted_at": person.converted_at,
+				"lead_accessible": visible,
+			}
+		)
 	return result
 
 
@@ -303,18 +336,31 @@ def _save_capture(key, values, compare_payload=True, context=None):
 
 @frappe.whitelist(methods=["POST"])
 @_public_errors
-def list_inquiries(status: str | None = None, assigned_to: str | None = None, start: int = 0, page_length: int = 20):
+def list_inquiries(
+	status: str | None = None, assigned_to: str | None = None, start: int = 0, page_length: int = 20
+):
 	_require_member()
-	if (type(start) is not int or type(page_length) is not int or start < 0
-		or start > 1000000 or not 1 <= page_length <= 100):
+	if (
+		type(start) is not int
+		or type(page_length) is not int
+		or start < 0
+		or start > 1000000
+		or not 1 <= page_length <= 100
+	):
 		frappe.throw(_("Choose a valid page between 1 and 100 records."))
 	filters = {}
 	if status:
 		filters["status"] = _choice(status, STATUSES, _("status"))
 	if assigned_to:
 		filters["assigned_to"] = _text(assigned_to, _("Assignee"), 140, required=True)
-	items = frappe.get_list(DOCTYPE, filters=filters, fields=list(SUMMARY_FIELDS), start=start,
-		page_length=page_length + 1, order_by="modified desc, name desc")
+	items = frappe.get_list(
+		DOCTYPE,
+		filters=filters,
+		fields=list(SUMMARY_FIELDS),
+		start=start,
+		page_length=page_length + 1,
+		order_by="modified desc, name desc",
+	)
 	return {"items": items[:page_length], "has_more": len(items) > page_length}
 
 
@@ -389,13 +435,23 @@ def convert_person(name: str, person_key: str, existing_lead: str | None = None)
 		if existing_lead:
 			lead = _authorized_lead(existing_lead, "write")
 		else:
-			if "doco_marketing" in frappe.get_installed_apps() and not frappe.get_hooks("crm_inquiry_capture_guard"):
-				frappe.throw(_("Upgrade the marketing app before creating inquiry leads so campaign enrollment stays disabled. You can still link an existing lead."))
-			lead = frappe.get_doc({
-				"doctype": "CRM Lead", "first_name": person.display_name,
-				"email": person.email or None, "phone": person.phone or None,
-				"lead_owner": frappe.session.user,
-			})
+			if "doco_marketing" in frappe.get_installed_apps() and not frappe.get_hooks(
+				"crm_inquiry_capture_guard"
+			):
+				frappe.throw(
+					_(
+						"Upgrade the marketing app before creating inquiry leads so campaign enrollment stays disabled. You can still link an existing lead."
+					)
+				)
+			lead = frappe.get_doc(
+				{
+					"doctype": "CRM Lead",
+					"first_name": person.display_name,
+					"email": person.email or None,
+					"phone": person.phone or None,
+					"lead_owner": frappe.session.user,
+				}
+			)
 			lead.check_permission("create")
 			previous_guard = frappe.flags.get("crm_inquiry_capture")
 			had_guard = "crm_inquiry_capture" in frappe.flags
@@ -426,8 +482,19 @@ def get_assignees():
 	# Deliberately return only assignment identities, never a User document.
 	user = frappe.qb.DocType("User")
 	role = frappe.qb.DocType("Has Role")
-	return (frappe.qb.from_(user).join(role).on(role.parent == user.name)
-		.select(user.name, user.full_name).distinct()
-		.where((user.enabled == 1) & (user.name != "Guest") & (role.parenttype == "User")
-			& (role.role.isin(sorted(ROLES))))
-		.orderby(user.full_name).limit(200).run(as_dict=True))
+	return (
+		frappe.qb.from_(user)
+		.join(role)
+		.on(role.parent == user.name)
+		.select(user.name, user.full_name)
+		.distinct()
+		.where(
+			(user.enabled == 1)
+			& (user.name != "Guest")
+			& (role.parenttype == "User")
+			& (role.role.isin(sorted(ROLES)))
+		)
+		.orderby(user.full_name)
+		.limit(200)
+		.run(as_dict=True)
+	)

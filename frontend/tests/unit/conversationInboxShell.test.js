@@ -72,7 +72,11 @@ describe('one Inbox launcher', () => {
     expect(buttons[1].getAttribute('aria-pressed')).toBe('true')
     buttons[0].click()
     expect(context.replace).toHaveBeenCalledWith({
-      query: { workspace: 'conversations', deal: undefined, conversation: undefined },
+      query: {
+        workspace: 'conversations',
+        deal: undefined,
+        conversation: undefined,
+      },
     })
   })
   it('opens the conversation queue on request or on a conversation deep link', () => {

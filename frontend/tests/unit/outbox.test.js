@@ -21,7 +21,10 @@ async function fresh({ user = 'me%40x.com' } = {}) {
   vi.resetModules()
   localStorage.clear()
   document.cookie = `user_id=${user}`
-  Object.defineProperty(navigator, 'onLine', { value: true, configurable: true })
+  Object.defineProperty(navigator, 'onLine', {
+    value: true,
+    configurable: true,
+  })
   return await import('@/composables/outbox')
 }
 
@@ -43,7 +46,9 @@ describe('outbox', () => {
     const ob = await fresh()
     ob.enqueueOutbox(item())
     expect(ob.outbox.value).toHaveLength(1)
-    const stored = JSON.parse(localStorage.getItem('doco-wa-outbox-v1:me@x.com'))
+    const stored = JSON.parse(
+      localStorage.getItem('doco-wa-outbox-v1:me@x.com'),
+    )
     expect(stored[0].message).toBe('hola')
   })
 
@@ -57,7 +62,9 @@ describe('outbox', () => {
     expect(calls[0][1].message).toBe('uno')
     expect(calls[1][1].message).toBe('dos')
     expect(ob.outbox.value).toHaveLength(0)
-    expect(JSON.parse(localStorage.getItem('doco-wa-outbox-v1:me@x.com'))).toEqual([])
+    expect(
+      JSON.parse(localStorage.getItem('doco-wa-outbox-v1:me@x.com')),
+    ).toEqual([])
   })
 
   it('a transient failure stops the flush and keeps the item for retry', async () => {
@@ -95,7 +102,10 @@ describe('outbox', () => {
   it('does not flush while offline', async () => {
     const ob = await fresh()
     ob.enqueueOutbox(item())
-    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true })
+    Object.defineProperty(navigator, 'onLine', {
+      value: false,
+      configurable: true,
+    })
     await ob.flushOutbox()
     expect(calls.length).toBe(0)
     expect(ob.outbox.value).toHaveLength(1)

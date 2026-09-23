@@ -6,7 +6,9 @@
 import { test, expect } from '@playwright/test'
 import { gotoSocial, SEL, collectErrors, shot } from './helpers.js'
 
-test('social: loads, calendar renders, month nav works, no unexpected console errors', async ({ page }) => {
+test('social: loads, calendar renders, month nav works, no unexpected console errors', async ({
+  page,
+}) => {
   const errs = collectErrors(page)
 
   await gotoSocial(page)

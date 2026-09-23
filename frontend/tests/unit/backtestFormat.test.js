@@ -1,7 +1,14 @@
 // Pure helpers behind ScoreBacktest.vue (P2 S17): percentage + lift formatting,
 // es-MX month labels, and the grade-row shaping that guarantees four bands.
 import { describe, it, expect } from 'vitest'
-import { pct, fmtLift, monthLabel, gradeRows, barPct, GRADES } from '@/utils/backtestFormat'
+import {
+  pct,
+  fmtLift,
+  monthLabel,
+  gradeRows,
+  barPct,
+  GRADES,
+} from '@/utils/backtestFormat'
 
 describe('pct', () => {
   it('formats a 0..1 ratio as a whole percent', () => {
@@ -51,7 +58,12 @@ describe('gradeRows', () => {
   it('always returns the four bands in order, even from a partial object', () => {
     const rows = gradeRows({ A: { leads: 3, converted: 2, win_rate: 0.6667 } })
     expect(rows.map((r) => r.grade)).toEqual(GRADES)
-    expect(rows[0]).toEqual({ grade: 'A', leads: 3, converted: 2, win_rate: 0.6667 })
+    expect(rows[0]).toEqual({
+      grade: 'A',
+      leads: 3,
+      converted: 2,
+      win_rate: 0.6667,
+    })
     // B/C/D absent → zero rows
     expect(rows[3]).toEqual({ grade: 'D', leads: 0, converted: 0, win_rate: 0 })
   })

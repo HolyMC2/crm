@@ -23,10 +23,15 @@
             :to="recordLink || undefined"
             class="truncate text-[13.5px] font-bold text-ink-gray-9"
             :class="recordLink ? 'hover:underline' : ''"
-          >{{ customerName || __('Sin nombre') }}</component>
-          <span class="font-mono text-2xs text-ink-gray-6" :title="row.to">{{ phone }}</span>
+            >{{ customerName || __('Sin nombre') }}</component
+          >
+          <span class="font-mono text-2xs text-ink-gray-6" :title="row.to">{{
+            phone
+          }}</span>
         </div>
-        <div v-if="about" class="mt-0.5 truncate text-[12px] text-ink-gray-7">{{ about }}</div>
+        <div v-if="about" class="mt-0.5 truncate text-[12px] text-ink-gray-7">
+          {{ about }}
+        </div>
         <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
           <a
             v-if="ctx.repair_order"
@@ -37,7 +42,8 @@
             :title="__('Abrir la orden')"
           >
             <FeatherIcon name="tool" class="size-3" />
-            {{ ctx.repair_order }}<span v-if="ctx.repair_status"> · {{ ctx.repair_status }}</span>
+            {{ ctx.repair_order
+            }}<span v-if="ctx.repair_status"> · {{ ctx.repair_status }}</span>
           </a>
           <component
             :is="refLink ? RouterLink : 'span'"
@@ -46,7 +52,8 @@
             class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7"
             :class="refLink ? 'hover:bg-surface-gray-3' : ''"
           >
-            {{ kindLabel }} {{ row.reference_name }}<span v-if="ctx.status"> · {{ ctx.status }}</span>
+            {{ kindLabel }} {{ row.reference_name
+            }}<span v-if="ctx.status"> · {{ ctx.status }}</span>
           </component>
           <span
             v-if="ctx.owner_name"
@@ -58,20 +65,37 @@
         </div>
       </div>
       <div class="flex shrink-0 flex-col items-end gap-1">
-        <span class="rounded-full px-2 py-0.5 text-2xs-semibold" :class="statusChip.cls">{{ statusChip.label }}</span>
-        <span class="text-2xs text-ink-gray-5" :title="fullTs">{{ relTime }}</span>
+        <span
+          class="rounded-full px-2 py-0.5 text-2xs-semibold"
+          :class="statusChip.cls"
+          >{{ statusChip.label }}</span
+        >
+        <span class="text-2xs text-ink-gray-5" :title="fullTs">{{
+          relTime
+        }}</span>
       </div>
     </div>
 
     <!-- the message: template + provenance, rendered preview, variable editor -->
-    <div class="rounded-md bg-surface-gray-1" :class="showContext ? 'mx-3 mt-2.5' : 'm-2'">
-      <div class="flex items-center justify-between gap-2 border-b border-outline-gray-1 px-2.5 py-1.5 text-2xs text-ink-gray-5">
+    <div
+      class="rounded-md bg-surface-gray-1"
+      :class="showContext ? 'mx-3 mt-2.5' : 'm-2'"
+    >
+      <div
+        class="flex items-center justify-between gap-2 border-b border-outline-gray-1 px-2.5 py-1.5 text-2xs text-ink-gray-5"
+      >
         <span class="flex min-w-0 items-center gap-1.5">
           <FeatherIcon name="message-square" class="size-3 shrink-0" />
           <span class="truncate">{{ templateLabel }}</span>
-          <span v-if="provenance" class="shrink-0" :title="provenance.tip">· {{ provenance.icon }} {{ provenance.label }}</span>
+          <span v-if="provenance" class="shrink-0" :title="provenance.tip"
+            >· {{ provenance.icon }} {{ provenance.label }}</span
+          >
           <template v-if="!showContext">
-            <span class="shrink-0 rounded-full px-1.5 py-0.5 text-2xs-semibold" :class="statusChip.cls">{{ statusChip.label }}</span>
+            <span
+              class="shrink-0 rounded-full px-1.5 py-0.5 text-2xs-semibold"
+              :class="statusChip.cls"
+              >{{ statusChip.label }}</span
+            >
             <span class="shrink-0" :title="fullTs">{{ relTime }}</span>
           </template>
         </span>
@@ -81,22 +105,39 @@
           class="shrink-0 text-2xs-semibold text-ink-blue-link hover:underline disabled:opacity-50"
           :disabled="varsLoading"
           @click="toggleEdit"
-        >{{ editing ? __('Ocultar variables') : (varsLoading ? __('Cargando…') : __('Editar variables')) }}</button>
+        >
+          {{
+            editing
+              ? __('Ocultar variables')
+              : varsLoading
+                ? __('Cargando…')
+                : __('Editar variables')
+          }}
+        </button>
       </div>
       <div
         v-if="row.preview"
         class="whitespace-pre-line px-2.5 py-2 text-[12.5px] leading-snug text-ink-gray-8"
-      >{{ row.preview }}</div>
-      <div v-if="editing && vars.length" class="flex flex-col gap-1.5 border-t border-outline-gray-1 px-2.5 py-2">
+      >
+        {{ row.preview }}
+      </div>
+      <div
+        v-if="editing && vars.length"
+        class="flex flex-col gap-1.5 border-t border-outline-gray-1 px-2.5 py-2"
+      >
         <div v-for="v in vars" :key="v.index" class="flex items-center gap-1.5">
-          <span class="w-7 shrink-0 font-mono text-2xs text-ink-gray-5">{{ v.placeholder }}</span>
+          <span class="w-7 shrink-0 font-mono text-2xs text-ink-gray-5">{{
+            v.placeholder
+          }}</span>
           <select
             v-model="v.field"
             class="w-1/3 shrink-0 rounded border border-outline-gray-2 bg-surface-base px-1 py-0.5 text-[11px] text-ink-gray-7 focus:outline-none dark:bg-surface-gray-1"
             @change="onFieldChange(v)"
           >
             <option value="">{{ __('(libre)') }}</option>
-            <option v-for="o in fieldOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+            <option v-for="o in fieldOptions" :key="o.value" :value="o.value">
+              {{ o.label }}
+            </option>
           </select>
           <input
             v-model="v.value"
@@ -113,7 +154,9 @@
       class="mx-3 mt-2 rounded-md bg-surface-red-1 px-2.5 py-1.5 text-2xs text-ink-red-8"
     >
       {{ shortError }}
-      <span v-if="row.attempts" class="opacity-70">· {{ row.attempts }} {{ __('intentos') }}</span>
+      <span v-if="row.attempts" class="opacity-70"
+        >· {{ row.attempts }} {{ __('intentos') }}</span
+      >
     </div>
 
     <!-- actions + the way into the record -->
@@ -122,28 +165,35 @@
         <button
           v-if="row.status === 'Pendiente'"
           class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
-          style="background:var(--brand)"
+          style="background: var(--brand)"
           :disabled="!!busy"
           @click="act('approve')"
-        >{{ busy === 'approve' ? __('Enviando…') : __('Enviar') }}</button>
+        >
+          {{ busy === 'approve' ? __('Enviando…') : __('Enviar') }}
+        </button>
         <button
           v-if="row.status === 'Fallido'"
           class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-8 disabled:opacity-50"
           :disabled="!!busy"
           @click="act('retry')"
-        >{{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}</button>
+        >
+          {{ busy === 'retry' ? __('Reintentando…') : __('Reintentar') }}
+        </button>
         <button
           class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-ink-red-8 hover:bg-surface-red-1 disabled:opacity-50"
           :disabled="!!busy"
           @click="act('reject')"
-        >{{ __('Cancelar') }}</button>
+        >
+          {{ __('Cancelar') }}
+        </button>
       </div>
       <span v-else />
       <RouterLink
         v-if="showContext && recordLink"
         :to="recordLink"
         class="inline-flex items-center gap-1 text-2xs-semibold text-ink-gray-6 hover:text-ink-gray-9"
-      >{{ openLabel }} <FeatherIcon name="arrow-right" class="size-3" /></RouterLink>
+        >{{ openLabel }} <FeatherIcon name="arrow-right" class="size-3"
+      /></RouterLink>
     </div>
   </div>
 </template>
@@ -153,7 +203,13 @@ import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Avatar, FeatherIcon, call as frappeCall, toast } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
-import { aboutLine, deskHref, displayPhone, recordRoute, relativeAge } from '@/utils/reviewCardFormat'
+import {
+  aboutLine,
+  deskHref,
+  displayPhone,
+  recordRoute,
+  relativeAge,
+} from '@/utils/reviewCardFormat'
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -170,23 +226,41 @@ const busy = ref('')
 const ctx = computed(() => props.row.context || {})
 const customerName = computed(() => ctx.value.customer_name || '')
 // the contact's own number reads better than the raw WhatsApp recipient
-const phone = computed(() => displayPhone(ctx.value.customer_phone || props.row.to))
+const phone = computed(() =>
+  displayPhone(ctx.value.customer_phone || props.row.to),
+)
 const about = computed(() => aboutLine(ctx.value))
 // the reference's own page (deal / lead) — what the reference chip opens
-const refLink = computed(() => recordRoute(props.row.reference_doctype, props.row.reference_name))
+const refLink = computed(() =>
+  recordRoute(props.row.reference_doctype, props.row.reference_name),
+)
 // where the person's name opens: the reference, else the Contact behind the number
-const recordLink = computed(() => refLink.value || recordRoute('', '', ctx.value.contact))
-const repairHref = computed(() => deskHref('Repair Order', ctx.value.repair_order))
-const kindLabel = computed(() => ({
-  'CRM Deal': __('Trato'),
-  'CRM Lead': __('Lead'),
-}[props.row.reference_doctype] || props.row.reference_doctype || ''))
-const openLabel = computed(() => ({
-  'Deal 360': __('Abrir trato'),
-  Lead: __('Abrir lead'),
-  Contact: __('Abrir contacto'),
-}[recordLink.value?.name] || __('Abrir')))
-const templateLabel = computed(() => props.row.template_label || props.row.template || '')
+const recordLink = computed(
+  () => refLink.value || recordRoute('', '', ctx.value.contact),
+)
+const repairHref = computed(() =>
+  deskHref('Repair Order', ctx.value.repair_order),
+)
+const kindLabel = computed(
+  () =>
+    ({
+      'CRM Deal': __('Trato'),
+      'CRM Lead': __('Lead'),
+    })[props.row.reference_doctype] ||
+    props.row.reference_doctype ||
+    '',
+)
+const openLabel = computed(
+  () =>
+    ({
+      'Deal 360': __('Abrir trato'),
+      Lead: __('Abrir lead'),
+      Contact: __('Abrir contacto'),
+    })[recordLink.value?.name] || __('Abrir'),
+)
+const templateLabel = computed(
+  () => props.row.template_label || props.row.template || '',
+)
 
 // --- variable editor (prefill + dropdown + free-edit) ----------------------
 const editing = ref(false)
@@ -197,18 +271,25 @@ const refDoctype = ref('')
 const refName = ref('')
 
 async function toggleEdit() {
-  if (editing.value) { editing.value = false; return }
+  if (editing.value) {
+    editing.value = false
+    return
+  }
   if (!vars.value.length) {
     varsLoading.value = true
     try {
-      const data = await frappeCall('doco_marketing.api.review_queue.get_row_template_vars', { name: props.row.name })
+      const data = await frappeCall(
+        'doco_marketing.api.review_queue.get_row_template_vars',
+        { name: props.row.name },
+      )
       vars.value = (data?.variables || []).map((v) => ({ ...v }))
       refDoctype.value = data?.reference_doctype || ''
       refName.value = data?.reference_name || ''
       if (refDoctype.value) {
-        fieldOptions.value = await frappeCall('crm.api.whatsapp.get_template_field_options', {
-          reference_doctype: refDoctype.value,
-        }) || []
+        fieldOptions.value =
+          (await frappeCall('crm.api.whatsapp.get_template_field_options', {
+            reference_doctype: refDoctype.value,
+          })) || []
       }
     } catch (e) {
       toast.error(e?.messages?.[0] || __('No se pudieron cargar las variables'))
@@ -236,23 +317,47 @@ async function onFieldChange(v) {
 
 // Manager-eyes policy: only managers act on customer-facing sends (server
 // enforces via _APPROVER_ROLES; this just hides buttons that would 403).
-const canAct = computed(() => isManager() && ['Pendiente', 'Fallido'].includes(props.row.status))
+const canAct = computed(
+  () => isManager() && ['Pendiente', 'Fallido'].includes(props.row.status),
+)
 
 const provenance = computed(() => {
   const r = props.row
-  if (r.auto) return { icon: '⚙', label: __('Auto'), tip: r.source || __('Mensaje automático') }
-  if (r.sent_by_name) return { icon: '', label: __('Aprobado por') + ' ' + r.sent_by_name, tip: r.sent_at || '' }
+  if (r.auto)
+    return {
+      icon: '⚙',
+      label: __('Auto'),
+      tip: r.source || __('Mensaje automático'),
+    }
+  if (r.sent_by_name)
+    return {
+      icon: '',
+      label: __('Aprobado por') + ' ' + r.sent_by_name,
+      tip: r.sent_at || '',
+    }
   return null
 })
 
 const statusChip = computed(() => {
   return (
     {
-      Pendiente: { label: __('Pendiente'), cls: 'bg-surface-amber-1 text-ink-amber-7' },
-      Enviado: { label: __('Enviado'), cls: 'bg-surface-green-2 text-ink-green-8' },
+      Pendiente: {
+        label: __('Pendiente'),
+        cls: 'bg-surface-amber-1 text-ink-amber-7',
+      },
+      Enviado: {
+        label: __('Enviado'),
+        cls: 'bg-surface-green-2 text-ink-green-8',
+      },
       Fallido: { label: __('Fallido'), cls: 'bg-surface-red-1 text-ink-red-8' },
-      Cancelado: { label: __('Cancelado'), cls: 'bg-surface-gray-2 text-ink-gray-5' },
-    }[props.row.status] || { label: props.row.status, cls: 'bg-surface-gray-2 text-ink-gray-5' }
+      Cancelado: {
+        label: __('Cancelado'),
+        cls: 'bg-surface-gray-2 text-ink-gray-5',
+      },
+    }[props.row.status] || {
+      label: props.row.status,
+      cls: 'bg-surface-gray-2 text-ink-gray-5',
+    }
   )
 })
 
@@ -262,7 +367,9 @@ const shortError = computed(() => {
 })
 
 const fullTs = computed(() => props.row.creation || '')
-const relTime = computed(() => relativeAge(props.row.creation, Date.now(), { now: __('ahora') }))
+const relTime = computed(() =>
+  relativeAge(props.row.creation, Date.now(), { now: __('ahora') }),
+)
 
 async function act(kind) {
   if (busy.value) return
@@ -271,11 +378,17 @@ async function act(kind) {
     const params = { name: props.row.name }
     // carry the reviewer's edited variable values on approve
     if (kind === 'approve' && editing.value && vars.value.length) {
-      params.body_param = Object.fromEntries(vars.value.map((v) => [String(v.index), v.value ?? '']))
+      params.body_param = Object.fromEntries(
+        vars.value.map((v) => [String(v.index), v.value ?? '']),
+      )
     }
     await frappeCall(`doco_marketing.api.review_queue.${kind}`, params)
     toast.success(
-      { approve: __('Mensaje enviado'), retry: __('Reintentado'), reject: __('Cancelado') }[kind],
+      {
+        approve: __('Mensaje enviado'),
+        retry: __('Reintentado'),
+        reject: __('Cancelado'),
+      }[kind],
     )
     // parent (page / strip) reloads the list on `changed`, which drops this row
     // out of the Pendiente/Fallido view if its status moved.

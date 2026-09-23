@@ -20,7 +20,9 @@
         <Tooltip :text="formatTimestampFull(call.creation)">
           <div class="text-sm text-ink-gray-5">
             {{ __(timeAgo(call.creation)) }}
-            <span class="text-ink-gray-4">· {{ formatDateTime(call.creation) }}</span>
+            <span class="text-ink-gray-4"
+              >· {{ formatDateTime(call.creation) }}</span
+            >
           </div>
         </Tooltip>
       </div>
@@ -108,7 +110,12 @@ import AudioPlayer from '@/components/Activities/AudioPlayer.vue'
 import CallLogDetailModal from '@/components/Modals/CallLogDetailModal.vue'
 import TimelineTimestamp from '@/components/Activities/TimelineTimestamp.vue'
 import { statusLabelMap, statusColorMap } from '@/utils/callLog.js'
-import { formatDate, timeAgo, formatDateTime, formatTimestampFull } from '@/utils'
+import {
+  formatDate,
+  timeAgo,
+  formatDateTime,
+  formatTimestampFull,
+} from '@/utils'
 import { Avatar, Badge, Tooltip, createResource } from 'frappe-ui'
 import { reactive, ref } from 'vue'
 

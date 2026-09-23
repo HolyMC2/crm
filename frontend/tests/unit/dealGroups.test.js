@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { DEAL_GROUP_BYS, groupByLabel, groupRows, isGroupBy } from '@/utils/dealGroups'
+import {
+  DEAL_GROUP_BYS,
+  groupByLabel,
+  groupRows,
+  isGroupBy,
+} from '@/utils/dealGroups'
 
 const ROWS = [
   { name: 'D1', status: 'Aprobado', deal_owner: 'ana@example.invalid' },
@@ -25,11 +30,20 @@ describe('group-by options', () => {
 
 describe('grouping by stage', () => {
   it('follows the visible stage order and leaves the unset group last', () => {
-    expect(names(groupRows(ROWS, 'status', { order: STAGE_ORDER }))).toEqual(['Por Contactar', 'Aprobado', ''])
+    expect(names(groupRows(ROWS, 'status', { order: STAGE_ORDER }))).toEqual([
+      'Por Contactar',
+      'Aprobado',
+      '',
+    ])
   })
   it('keeps a deal parked on a stage the taxonomy no longer shows', () => {
     const rows = [...ROWS, { name: 'D5', status: 'Abandonado' }]
-    expect(names(groupRows(rows, 'status', { order: STAGE_ORDER }))).toEqual(['Por Contactar', 'Aprobado', 'Abandonado', ''])
+    expect(names(groupRows(rows, 'status', { order: STAGE_ORDER }))).toEqual([
+      'Por Contactar',
+      'Aprobado',
+      'Abandonado',
+      '',
+    ])
   })
   it('prefers the server count over the loaded rows and marks it exact', () => {
     const groups = groupRows(ROWS, 'status', {
@@ -42,9 +56,15 @@ describe('grouping by stage', () => {
     expect(approved.rows.map((r) => r.name)).toEqual(['D1', 'D3'])
   })
   it('says a derived count is only the loaded page', () => {
-    const [first] = groupRows(ROWS, 'status', { order: STAGE_ORDER, complete: false })
+    const [first] = groupRows(ROWS, 'status', {
+      order: STAGE_ORDER,
+      complete: false,
+    })
     expect([first.count, first.exact]).toEqual([1, false])
-    const [whole] = groupRows(ROWS, 'status', { order: STAGE_ORDER, complete: true })
+    const [whole] = groupRows(ROWS, 'status', {
+      order: STAGE_ORDER,
+      complete: true,
+    })
     expect([whole.count, whole.exact]).toEqual([1, true])
   })
 })
@@ -53,7 +73,8 @@ describe('grouping by owner and by repair status', () => {
   it('labels an owner by name while keeping the email as the key', () => {
     const groups = groupRows(ROWS, 'deal_owner', {
       complete: true,
-      labelOf: (email) => ({ 'ana@example.invalid': 'Ana Ruiz' })[email] || email,
+      labelOf: (email) =>
+        ({ 'ana@example.invalid': 'Ana Ruiz' })[email] || email,
       emptyLabel: 'Sin responsable',
     })
     expect(groups.map((g) => [g.key, g.label, g.count])).toEqual([
@@ -68,7 +89,11 @@ describe('grouping by owner and by repair status', () => {
       complete: true,
       groupValue: (row) => repair[row.name] || '',
     })
-    expect(groups.map((g) => [g.key, g.count])).toEqual([['En Trabajo', 2], ['Entregado', 1], ['', 1]])
+    expect(groups.map((g) => [g.key, g.count])).toEqual([
+      ['En Trabajo', 2],
+      ['Entregado', 1],
+      ['', 1],
+    ])
   })
   it('groups nothing into nothing', () => {
     expect(groupRows([], 'status', { order: STAGE_ORDER })).toEqual([])

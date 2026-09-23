@@ -19,7 +19,9 @@ describe('formatMovedCounts', () => {
   })
 
   it('drops zero counts and unknown keys', () => {
-    expect(formatMovedCounts({ 'WhatsApp Message': 0, Comment: 2, Bogus: 9 })).toBe('2 comentarios')
+    expect(
+      formatMovedCounts({ 'WhatsApp Message': 0, Comment: 2, Bogus: 9 }),
+    ).toBe('2 comentarios')
   })
 
   it('returns empty string for an all-zero / empty / bad input', () => {

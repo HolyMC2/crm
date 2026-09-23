@@ -9,28 +9,50 @@
   .get_template_preview / send_whatsapp_template(body_param=…).
 -->
 <template>
-  <div class="mx-3 mb-2 mt-1 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 dark:bg-surface-gray-2 sm:mx-10">
+  <div
+    class="mx-3 mb-2 mt-1 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 dark:bg-surface-gray-2 sm:mx-10"
+  >
     <div class="mb-2 flex items-center justify-between gap-2">
       <div class="flex min-w-0 items-center gap-2">
         <span class="text-xs">📄</span>
-        <span class="truncate text-sm-semibold text-ink-gray-8 dark:text-ink-gray-7">
+        <span
+          class="truncate text-sm-semibold text-ink-gray-8 dark:text-ink-gray-7"
+        >
           {{ __('Revisar plantilla') }}: {{ template }}
         </span>
-        <Badge v-if="preview.data?.language_code" variant="subtle" theme="gray" :label="preview.data.language_code" />
+        <Badge
+          v-if="preview.data?.language_code"
+          variant="subtle"
+          theme="gray"
+          :label="preview.data.language_code"
+        />
       </div>
-      <Button variant="ghost" icon="x" :tooltip="__('Cancelar')" @click="emit('cancel')" />
+      <Button
+        variant="ghost"
+        icon="x"
+        :tooltip="__('Cancelar')"
+        @click="emit('cancel')"
+      />
     </div>
 
-    <div v-if="preview.loading" class="py-4 text-center text-xs text-ink-gray-4">
+    <div
+      v-if="preview.loading"
+      class="py-4 text-center text-xs text-ink-gray-4"
+    >
       {{ __('Cargando plantilla…') }}
     </div>
-    <div v-else-if="preview.error" class="py-3 text-center text-xs text-ink-red-6">
+    <div
+      v-else-if="preview.error"
+      class="py-3 text-center text-xs text-ink-red-6"
+    >
       {{ __('No se pudo cargar la plantilla') }}
     </div>
 
     <template v-else-if="preview.data">
       <!-- live preview bubble -->
-      <div class="rounded-md border border-outline-gray-1 bg-surface-base p-2.5 text-base text-ink-gray-8 shadow-sm dark:bg-surface-gray-1 dark:text-ink-gray-7">
+      <div
+        class="rounded-md border border-outline-gray-1 bg-surface-base p-2.5 text-base text-ink-gray-8 shadow-sm dark:bg-surface-gray-1 dark:text-ink-gray-7"
+      >
         <div class="whitespace-pre-wrap break-words">{{ renderedBody }}</div>
         <div v-if="preview.data.footer" class="mt-1.5 text-xs text-ink-gray-4">
           {{ preview.data.footer }}
@@ -41,7 +63,9 @@
            value) + free-edit. Saving the mapping persists it as the template default. -->
       <div v-if="vars.length" class="mt-2.5 flex flex-col gap-2">
         <div class="flex items-center justify-between">
-          <div class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4">
+          <div
+            class="text-[10px] font-bold uppercase tracking-wide text-ink-gray-4"
+          >
             {{ __('Variables de la plantilla') }}
           </div>
           <button
@@ -49,7 +73,11 @@
             class="text-[10px] font-semibold text-ink-blue-link hover:underline disabled:opacity-50"
             :disabled="savingMap"
             @click="saveMap"
-          >{{ savingMap ? __('Guardando…') : __('Guardar mapeo predeterminado') }}</button>
+          >
+            {{
+              savingMap ? __('Guardando…') : __('Guardar mapeo predeterminado')
+            }}
+          </button>
         </div>
         <label v-for="v in vars" :key="v.index" class="block">
           <span class="text-[10px] font-medium text-ink-gray-5">
@@ -62,7 +90,9 @@
               @change="onFieldChange(v)"
             >
               <option value="">{{ __('(libre)') }}</option>
-              <option v-for="o in fieldOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+              <option v-for="o in fieldOptions" :key="o.value" :value="o.value">
+                {{ o.label }}
+              </option>
             </select>
             <input
               v-model="v.value"
@@ -97,7 +127,13 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { createResource, call as frappeCall, toast, Badge, Button } from 'frappe-ui'
+import {
+  createResource,
+  call as frappeCall,
+  toast,
+  Badge,
+  Button,
+} from 'frappe-ui'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -121,7 +157,10 @@ const preview = createResource({
   onSuccess(data) {
     // placeholder kept as a plain string (e.g. "{{1}}") — a literal "{{" inside a
     // template interpolation can't be parsed by Vue, so build it here.
-    vars.value = (data?.variables || []).map((v) => ({ ...v, placeholder: `{{${v.index}}}` }))
+    vars.value = (data?.variables || []).map((v) => ({
+      ...v,
+      placeholder: `{{${v.index}}}`,
+    }))
   },
 })
 
@@ -185,14 +224,18 @@ const renderedBody = computed(() => {
 const headerNote = computed(() => {
   const t = preview.data?.header_type
   if (t === 'IMAGE' || t === 'DOCUMENT')
-    return __('La plantilla incluye un encabezado multimedia; se usa el de la plantilla aprobada.')
+    return __(
+      'La plantilla incluye un encabezado multimedia; se usa el de la plantilla aprobada.',
+    )
   return ''
 })
 
 function send() {
   // {{1}},{{2}}… order preserved; null body_param when the template has no variables.
   const body_param = vars.value.length
-    ? Object.fromEntries(vars.value.map((v) => [String(v.index), v.value ?? '']))
+    ? Object.fromEntries(
+        vars.value.map((v) => [String(v.index), v.value ?? '']),
+      )
     : null
   emit('send', { template: props.template, body_param })
 }

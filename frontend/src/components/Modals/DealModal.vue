@@ -58,7 +58,10 @@
 
           <!-- Doco: mark whether the customer's phone is on WhatsApp, so the inbox
                knows up front (drives the conversation banner). Defaults to on. -->
-          <label v-if="hasWhatsAppField" class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7">
+          <label
+            v-if="hasWhatsAppField"
+            class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7"
+          >
             <input
               v-model="deal.doc.mobile_is_whatsapp"
               type="checkbox"
@@ -189,9 +192,13 @@ const error = ref(null)
 const { document: deal, triggerOnBeforeCreate } = useDocument('CRM Deal')
 const { doctypeMeta } = getMeta('CRM Deal')
 const erpSyncAvailable = computed(() => hasApp('doco') && hasApp('erpnext'))
-const repairAvailable = computed(() => erpSyncAvailable.value && hasApp('taller'))
+const repairAvailable = computed(
+  () => erpSyncAvailable.value && hasApp('taller'),
+)
 const hasWhatsAppField = computed(() =>
-  doctypeMeta.value?.fields?.some((field) => field.fieldname === 'mobile_is_whatsapp'),
+  doctypeMeta.value?.fields?.some(
+    (field) => field.fieldname === 'mobile_is_whatsapp',
+  ),
 )
 
 const hasOrganizationSections = ref(true)
@@ -249,7 +256,9 @@ const companyDefaults = createResource({
     customerDetails.value.customer_group = defaults.customer_group || ''
   },
 })
-watch(erpSyncAvailable, (available) => available && companyDefaults.fetch(), { immediate: true })
+watch(erpSyncAvailable, (available) => available && companyDefaults.fetch(), {
+  immediate: true,
+})
 
 const { capture } = useTelemetry()
 
@@ -283,7 +292,10 @@ const HIDDEN_DEAL_FIELDS = [
   'no_of_employees',
   'industry',
 ]
-const HIDDEN_DEAL_SECTIONS = ['organization_section', 'organization_details_section']
+const HIDDEN_DEAL_SECTIONS = [
+  'organization_section',
+  'organization_details_section',
+]
 
 const tabs = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_fields_layout',
@@ -294,20 +306,30 @@ const tabs = createResource({
     hasOrganizationSections.value = false
     _tabs.forEach((tab) => {
       tab.sections = tab.sections.filter(
-        (section) => !repairAvailable.value || !HIDDEN_DEAL_SECTIONS.includes(section.name),
+        (section) =>
+          !repairAvailable.value ||
+          !HIDDEN_DEAL_SECTIONS.includes(section.name),
       )
       tab.sections.forEach((section) => {
-        if (['organization_section', 'organization_details_section'].includes(section.name)) {
+        if (
+          ['organization_section', 'organization_details_section'].includes(
+            section.name,
+          )
+        ) {
           hasOrganizationSections.value = true
         }
         section.columns.forEach((column) => {
           if (
-            ['contact_section', 'contact_details_section'].includes(section.name)
+            ['contact_section', 'contact_details_section'].includes(
+              section.name,
+            )
           ) {
             hasContactSections.value = true
           }
           column.fields = column.fields.filter(
-            (field) => !repairAvailable.value || !HIDDEN_DEAL_FIELDS.includes(field.fieldname),
+            (field) =>
+              !repairAvailable.value ||
+              !HIDDEN_DEAL_FIELDS.includes(field.fieldname),
           )
           column.fields.forEach((field) => {
             if (field.fieldname == 'status') {
@@ -343,9 +365,14 @@ async function createDeal() {
   // Doco: Falla reportada required only when the inline RO is being created
   // (device_model set). Block here so the Deal isn't created with a dangling
   // half-filled RO intent.
-  if (repairAvailable.value && newRepairOrder.value.device_model
-      && !(newRepairOrder.value.falla_reportada || '').trim()) {
-    error.value = __('Falla reportada is required when creating a Repair Order.')
+  if (
+    repairAvailable.value &&
+    newRepairOrder.value.device_model &&
+    !(newRepairOrder.value.falla_reportada || '').trim()
+  ) {
+    error.value = __(
+      'Falla reportada is required when creating a Repair Order.',
+    )
     return
   }
 
@@ -428,7 +455,9 @@ async function createDeal() {
               deal_name: name,
               device_model: deviceModelVal,
               repair_to_be_done: repairTypeVal || null,
-              falla_reportada: (newRepairOrder.value.falla_reportada || '').trim(),
+              falla_reportada: (
+                newRepairOrder.value.falla_reportada || ''
+              ).trim(),
               general_status: newRepairOrder.value.general_status || null,
               client: primaryContact,
               technician: getVal(newRepairOrder.value.technician) || null,
@@ -438,8 +467,12 @@ async function createDeal() {
               turns_on: newRepairOrder.value.turns_on ? 1 : 0,
               broken_screen: newRepairOrder.value.broken_screen ? 1 : 0,
               has_phone_case: newRepairOrder.value.has_phone_case ? 1 : 0,
-              phone_pin: unlock === 'pin' ? (newRepairOrder.value.phone_pin || '') : '',
-              phone_pattern: unlock === 'pattern' ? (newRepairOrder.value.phone_pattern || '') : '',
+              phone_pin:
+                unlock === 'pin' ? newRepairOrder.value.phone_pin || '' : '',
+              phone_pattern:
+                unlock === 'pattern'
+                  ? newRepairOrder.value.phone_pattern || ''
+                  : '',
               quote_amount: Number(newRepairOrder.value.quote_amount) || 0,
               advance_amount: Number(newRepairOrder.value.advance_amount) || 0,
             },
@@ -460,9 +493,11 @@ async function createDeal() {
           })
         },
         onError(err) {
-          toast.error(__('Deal created but customer sync failed: {0}', [
-            err.messages?.join('\n') || err.message,
-          ]))
+          toast.error(
+            __('Deal created but customer sync failed: {0}', [
+              err.messages?.join('\n') || err.message,
+            ]),
+          )
         },
       })
     },
@@ -485,7 +520,8 @@ function openQuickEntryModal() {
 
 onMounted(() => {
   deal.doc.no_of_employees = '1-10'
-  if (hasWhatsAppField.value && deal.doc.mobile_is_whatsapp == null) deal.doc.mobile_is_whatsapp = 1
+  if (hasWhatsAppField.value && deal.doc.mobile_is_whatsapp == null)
+    deal.doc.mobile_is_whatsapp = 1
   Object.assign(deal.doc, props.defaults)
 
   if (!deal.doc.deal_owner) {

@@ -155,15 +155,26 @@ def open_tasks(*, source_doctype: str, source_name: str, for_update: bool = Fals
 		frappe.throw(_("A source document is required."))
 
 	task = frappe.qb.DocType("CRM Task")
-	query = (frappe.qb.from_(task).select(
-		task.name, task.automation_slot, task.automation_occurrence,
-		task.automation_values, task.due_date, task.assigned_to, task.title,
-	).where(
-		(task.automation_source_doctype == source_doctype)
-		& (task.automation_source_name == source_name)
-		& task.automation_slot.isnotnull() & (task.automation_slot != "")
-		& task.status.isin(OPEN_TASK_STATUSES)
-	).orderby(task.creation, task.name))
+	query = (
+		frappe.qb.from_(task)
+		.select(
+			task.name,
+			task.automation_slot,
+			task.automation_occurrence,
+			task.automation_values,
+			task.due_date,
+			task.assigned_to,
+			task.title,
+		)
+		.where(
+			(task.automation_source_doctype == source_doctype)
+			& (task.automation_source_name == source_name)
+			& task.automation_slot.isnotnull()
+			& (task.automation_slot != "")
+			& task.status.isin(OPEN_TASK_STATUSES)
+		)
+		.orderby(task.creation, task.name)
+	)
 	if for_update:
 		query = query.for_update()
 	rows = query.run(as_dict=True)
@@ -380,9 +391,14 @@ def _open_slot_tasks(slot) -> list:
 	# Current read: GET_LOCK ends before the outer transaction commits.
 	# Frappe v16 get_all does not accept for_update; use the query builder.
 	task = frappe.qb.DocType("CRM Task")
-	return (frappe.qb.from_(task).select(task.name, task.automation_occurrence)
+	return (
+		frappe.qb.from_(task)
+		.select(task.name, task.automation_occurrence)
 		.where((task.automation_slot == slot) & task.status.isin(OPEN_TASK_STATUSES))
-		.orderby(task.creation, task.name).for_update().run(as_dict=True))
+		.orderby(task.creation, task.name)
+		.for_update()
+		.run(as_dict=True)
+	)
 
 
 def _check_reference(doctype, name, ignore_permissions) -> None:

@@ -50,7 +50,12 @@
         <div><ErrorMessage :message="error" /></div>
         <div class="flex gap-2">
           <Button :label="__('Cancel')" @click="onCancel" />
-          <Button variant="solid" :loading="saving" :label="__('Save')" @click="save" />
+          <Button
+            variant="solid"
+            :loading="saving"
+            :label="__('Save')"
+            @click="save"
+          />
         </div>
       </div>
     </template>
@@ -62,7 +67,11 @@ import Link from '@/components/Controls/Link.vue'
 import { createDocument } from '@/composables/document'
 import { Dialog } from 'frappe-ui'
 import { ref, computed, watch } from 'vue'
-import { lostStagePrompt, commitLostStage, cancelLostStage } from '@/composables/inbox'
+import {
+  lostStagePrompt,
+  commitLostStage,
+  cancelLostStage,
+} from '@/composables/inbox'
 
 const linkRef = ref(null)
 const lostReason = ref('')

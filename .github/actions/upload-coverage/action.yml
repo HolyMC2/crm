@@ -16,3 +16,4 @@ runs:
           with:
               name: ${{ inputs.artifact-name }}
               path: ${{ inputs.coverage-path }}
+              if-no-files-found: error

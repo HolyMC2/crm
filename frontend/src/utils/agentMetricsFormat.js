@@ -15,7 +15,13 @@ export function fmtDuration(secs) {
 
 // The sortable columns, in display order. 'agent_name' sorts as es-locale text;
 // every other key is numeric.
-export const AGENT_SORT_KEYS = ['agent_name', 'open', 'won', 'won_value', 'median_response_secs']
+export const AGENT_SORT_KEYS = [
+  'agent_name',
+  'open',
+  'won',
+  'won_value',
+  'median_response_secs',
+]
 
 // Client-side sort. Returns a NEW array — never mutates the source. null/undefined
 // values (e.g. an agent with no measured response, shown as "—") always sink to the

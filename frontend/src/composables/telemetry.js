@@ -1,3 +1,4 @@
+/* global __BUILD_ID__: readonly */
 // Frontend error telemetry (spec 3.6). We only ever see the errors users bother
 // to screenshot; this captures window.onerror + unhandledrejection and posts a
 // scrubbed, sampled, self-limiting record to the site DB (the monitoring stack
@@ -41,7 +42,9 @@ export function djb2(str) {
 export function scrubUrl(url) {
   const s = String(url || '')
   const cut = Math.min(
-    ...[s.indexOf('?'), s.indexOf('#')].filter((i) => i >= 0).concat([s.length]),
+    ...[s.indexOf('?'), s.indexOf('#')]
+      .filter((i) => i >= 0)
+      .concat([s.length]),
   )
   return s.slice(0, cut)
 }
@@ -133,8 +136,13 @@ function send(payload) {
       }).catch(() => {})
       return
     }
-    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-      const blob = new Blob([body], { type: 'application/x-www-form-urlencoded' })
+    if (
+      typeof navigator !== 'undefined' &&
+      typeof navigator.sendBeacon === 'function'
+    ) {
+      const blob = new Blob([body], {
+        type: 'application/x-www-form-urlencoded',
+      })
       navigator.sendBeacon(ENDPOINT, blob)
     }
   } catch (e) {
@@ -197,7 +205,11 @@ const _UNDER_VITEST = !!globalThis.process?.env?.VITEST
 export function initTelemetry() {
   try {
     if (_inited || _UNDER_VITEST) return
-    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return
+    if (
+      typeof window === 'undefined' ||
+      typeof window.addEventListener !== 'function'
+    )
+      return
     _inited = true
     window.addEventListener('error', _onError)
     window.addEventListener('unhandledrejection', _onRejection)

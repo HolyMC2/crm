@@ -3,7 +3,9 @@
     <NotPermitted v-if="$route.name === 'Not Permitted'" />
     <router-view v-else-if="$route.name === 'Onboarding'" />
     <Layout v-else-if="session.isLoggedIn" class="isolate">
-      <router-view :key="$route.meta.stableKey ? $route.path : $route.fullPath" />
+      <router-view
+        :key="$route.meta.stableKey ? $route.path : $route.fullPath"
+      />
     </Layout>
     <Dialogs />
     <DoctypeModals />

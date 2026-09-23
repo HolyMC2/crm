@@ -30,7 +30,10 @@
        Hidden in replyOnly (unassigned threads have no reference doc to attach
        notes/comments to — only the WhatsApp reply applies). -->
   <!-- single scrollable line on mobile (was wrapping into two rows) -->
-  <div v-if="!replyOnly" class="flex items-center gap-2 overflow-x-auto px-3 pt-2 sm:flex-wrap sm:px-10 sm:pt-2.5">
+  <div
+    v-if="!replyOnly"
+    class="flex items-center gap-2 overflow-x-auto px-3 pt-2 sm:flex-wrap sm:px-10 sm:pt-2.5"
+  >
     <button
       v-for="m in modes"
       :key="m.value"
@@ -43,10 +46,13 @@
       "
       @click="mode = m.value"
     >
-      {{ m.icon }} {{ __(m.label) }}{{ m.value === 'reply' ? ` · ${channelLabel}` : '' }}
+      {{ m.icon }} {{ __(m.label)
+      }}{{ m.value === 'reply' ? ` · ${channelLabel}` : '' }}
     </button>
     <span class="ml-auto hidden text-xs text-ink-gray-4 sm:inline">
-      {{ mode === 'comment' ? __('Ctrl/⌘+Enter to send') : __('Enter to send') }}
+      {{
+        mode === 'comment' ? __('Ctrl/⌘+Enter to send') : __('Enter to send')
+      }}
     </span>
   </div>
 
@@ -61,93 +67,108 @@
     >
       ⚡ {{ __('Plantillas y respuestas') }} ▾
     </button>
-    <div v-show="!isMobile || quickBarOpen" class="flex flex-wrap items-center gap-1.5">
-    <button
-      v-if="addonAvailable"
-      type="button"
-      class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-8 hover:bg-surface-green-7"
-      :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
-      @click="emit('catalog', '')"
+    <div
+      v-show="!isMobile || quickBarOpen"
+      class="flex flex-wrap items-center gap-1.5"
     >
-      📦 {{ __('Catálogo') }}
-    </button>
-    <!-- ✨ AI suggested replies (spec 5.1) — fetch on demand, operator edits+sends -->
-    <button
-      v-if="aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)"
-      type="button"
-      class="press rounded-md bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-8 hover:opacity-80 disabled:opacity-50"
-      :disabled="suggestLoading"
-      :title="__('Sugerir respuestas con IA (local)')"
-      @click="fetchSuggestions"
-    >
-      ✨ {{ suggestLoading ? __('Pensando…') : __('Sugerir') }}
-    </button>
-    <!-- mobile hides the ActivityHeader (its Send Template button) — keep the
+      <button
+        v-if="addonAvailable"
+        type="button"
+        class="press rounded-md bg-surface-green-2 px-2 py-1 text-xs-semibold text-ink-green-8 hover:bg-surface-green-7"
+        :title="__('Buscar y enviar artículos del catálogo (o escribe /cat)')"
+        @click="emit('catalog', '')"
+      >
+        📦 {{ __('Catálogo') }}
+      </button>
+      <!-- ✨ AI suggested replies (spec 5.1) — fetch on demand, operator edits+sends -->
+      <button
+        v-if="
+          aiEnabled && !replyOnly && ['CRM Deal', 'CRM Lead'].includes(doctype)
+        "
+        type="button"
+        class="press rounded-md bg-surface-violet-2 px-2 py-1 text-xs-semibold text-ink-violet-8 hover:opacity-80 disabled:opacity-50"
+        :disabled="suggestLoading"
+        :title="__('Sugerir respuestas con IA (local)')"
+        @click="fetchSuggestions"
+      >
+        ✨ {{ suggestLoading ? __('Pensando…') : __('Sugerir') }}
+      </button>
+      <!-- mobile hides the ActivityHeader (its Send Template button) — keep the
          full template modal reachable from the composer -->
-    <button
-      v-if="isMobile && !replyOnly"
-      type="button"
-      class="press rounded-md border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
-      :title="__('Enviar plantilla de WhatsApp')"
-      @click="emit('openTemplates')"
-    >
-      📋 {{ __('Plantilla') }}
-    </button>
-    <button
-      v-for="(qr, i) in quickReplies.data || []"
-      :key="`qr-${i}`"
-      type="button"
-      class="rounded-md bg-surface-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-3"
-      :title="qr.text"
-      @click="insertQuickReply(qr)"
-    >
-      ⚡ {{ qr.label }}
-    </button>
-    <button
-      v-for="t in (replyOnly ? [] : (quickTemplates.data || []))"
-      :key="`tpl-${t.name}`"
-      type="button"
-      class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-2"
-      :title="t.template"
-      @click="emit('pickTemplate', t.name)"
-    >
-      📄 {{ t.name }}
-    </button>
-    <button
-      type="button"
-      class="rounded-md px-1.5 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
-      :title="__('Edit quick replies')"
-      @click="openEditor"
-    >
-      <FeatherIcon name="edit-2" class="size-3.5" />
-    </button>
-    <button
-      v-if="isMobile"
-      type="button"
-      class="rounded-full px-2 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
-      :title="__('Ocultar')"
-      @click="quickBarOpen = false"
-    >
-      ▴
-    </button>
+      <button
+        v-if="isMobile && !replyOnly"
+        type="button"
+        class="press rounded-md border border-outline-gray-2 px-2 py-1 text-xs-semibold text-ink-gray-7 hover:bg-surface-gray-2"
+        :title="__('Enviar plantilla de WhatsApp')"
+        @click="emit('openTemplates')"
+      >
+        📋 {{ __('Plantilla') }}
+      </button>
+      <button
+        v-for="(qr, i) in quickReplies.data || []"
+        :key="`qr-${i}`"
+        type="button"
+        class="rounded-md bg-surface-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-3"
+        :title="qr.text"
+        @click="insertQuickReply(qr)"
+      >
+        ⚡ {{ qr.label }}
+      </button>
+      <button
+        v-for="t in replyOnly ? [] : quickTemplates.data || []"
+        :key="`tpl-${t.name}`"
+        type="button"
+        class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs-medium text-ink-gray-7 hover:bg-surface-gray-2"
+        :title="t.template"
+        @click="emit('pickTemplate', t.name)"
+      >
+        📄 {{ t.name }}
+      </button>
+      <button
+        type="button"
+        class="rounded-md px-1.5 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
+        :title="__('Edit quick replies')"
+        @click="openEditor"
+      >
+        <FeatherIcon name="edit-2" class="size-3.5" />
+      </button>
+      <button
+        v-if="isMobile"
+        type="button"
+        class="rounded-full px-2 py-1 text-xs text-ink-gray-5 hover:bg-surface-gray-2"
+        :title="__('Ocultar')"
+        @click="quickBarOpen = false"
+      >
+        ▴
+      </button>
     </div>
   </div>
 
   <!-- pending attach (catálogo photo etc.) — sent together with the edited text -->
-  <div v-if="mode === 'reply' && whatsapp.attach" class="flex items-center px-3 pt-2 sm:px-10">
-    <span class="inline-flex items-center gap-1.5 rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs text-ink-gray-7">
+  <div
+    v-if="mode === 'reply' && whatsapp.attach"
+    class="flex items-center px-3 pt-2 sm:px-10"
+  >
+    <span
+      class="inline-flex items-center gap-1.5 rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs text-ink-gray-7"
+    >
       📎 {{ __('Foto adjunta — se envía con tu mensaje') }}
       <button
         type="button"
         class="press text-[13px] leading-none"
         :aria-label="__('Quitar adjunto')"
-        @click="whatsapp.attach = ''; whatsapp.content_type = 'text'"
-      >✕</button>
+        @click="removeAttachment"
+      >
+        ✕
+      </button>
     </span>
   </div>
 
   <!-- ✨ suggestions (tap to insert into the composer; verbatim send attributes canned:ai) -->
-  <div v-if="suggestions.length" class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10">
+  <div
+    v-if="suggestions.length"
+    class="flex flex-wrap items-center gap-1.5 px-3 pt-2 sm:px-10"
+  >
     <button
       v-for="(sg, i) in suggestions"
       :key="'sg' + i"
@@ -170,7 +191,10 @@
 
   <!-- input row -->
   <div class="flex items-end gap-2 px-3 py-2.5 sm:px-10" v-bind="$attrs">
-    <div v-if="mode === 'reply' && !recording" class="flex h-8 items-center gap-2">
+    <div
+      v-if="mode === 'reply' && !recording"
+      class="flex h-8 items-center gap-2"
+    >
       <FileUploader @success="(file) => uploadFile(file)">
         <template #default="{ openFileSelector }">
           <div class="flex items-center space-x-2">
@@ -227,11 +251,20 @@
       v-if="mode === 'reply' && recording"
       class="flex h-10 w-full items-center gap-3 rounded-lg border border-outline-red-4 bg-surface-red-1 px-3"
     >
-      <span class="h-2.5 w-2.5 flex-none animate-pulse rounded-full" style="background: #e5484d" />
-      <span class="w-12 flex-none font-mono text-[13px] font-semibold text-ink-gray-8">
-        {{ Math.floor(recSecs / 60) }}:{{ String(recSecs % 60).padStart(2, '0') }}
+      <span
+        class="h-2.5 w-2.5 flex-none animate-pulse rounded-full"
+        style="background: #e5484d"
+      />
+      <span
+        class="w-12 flex-none font-mono text-[13px] font-semibold text-ink-gray-8"
+      >
+        {{ Math.floor(recSecs / 60) }}:{{
+          String(recSecs % 60).padStart(2, '0')
+        }}
       </span>
-      <span class="min-w-0 flex-1 truncate text-[12px] text-ink-gray-6">{{ __('Grabando nota de voz…') }}</span>
+      <span class="min-w-0 flex-1 truncate text-[12px] text-ink-gray-6">{{
+        __('Grabando nota de voz…')
+      }}</span>
       <button
         type="button"
         class="press flex-none rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-gray-7 hover:bg-surface-gray-2"
@@ -299,14 +332,14 @@
   >
     <template #body-content>
       <p class="mb-3 text-sm text-ink-gray-5">
-        {{ __('Shared with your whole team. Click a chip to drop its text into the reply box.') }}
+        {{
+          __(
+            'Shared with your whole team. Click a chip to drop its text into the reply box.',
+          )
+        }}
       </p>
       <div class="flex flex-col gap-2">
-        <div
-          v-for="(row, i) in draft"
-          :key="i"
-          class="flex items-start gap-2"
-        >
+        <div v-for="(row, i) in draft" :key="i" class="flex items-start gap-2">
           <Input
             v-model="row.label"
             type="text"
@@ -389,7 +422,15 @@ const props = defineProps({
   replyOnly: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['pickTemplate', 'activity', 'sending', 'sent', 'failed', 'catalog', 'openTemplates'])
+const emit = defineEmits([
+  'pickTemplate',
+  'activity',
+  'sending',
+  'sent',
+  'failed',
+  'catalog',
+  'openTemplates',
+])
 
 // /cat <query> (or /catálogo) in the composer opens the catalog picker instead of sending.
 const CAT_RE = /^\/cat(alogo|álogo)?\b\s*/i
@@ -493,14 +534,16 @@ function insertQuickReply(qr) {
   content.value = content.value
     ? `${content.value.replace(/\s*$/, '')} ${text}`
     : text
-  lastCanned.value = wasEmpty && typeof qr !== 'string' ? { label: qr.label, text } : null
+  lastCanned.value =
+    wasEmpty && typeof qr !== 'string' ? { label: qr.label, text } : null
   nextTick(() => textareaRef.value?.el?.focus())
   capture('whatsapp_quick_reply_used')
 }
 // Drop the canned tag the moment the agent edits the inserted text — so a sent
 // message is only attributed canned when it goes out verbatim.
 watch(content, (v) => {
-  if (lastCanned.value && (v || '').trim() !== lastCanned.value.text.trim()) lastCanned.value = null
+  if (lastCanned.value && (v || '').trim() !== lastCanned.value.text.trim())
+    lastCanned.value = null
 })
 
 const showEditor = ref(false)
@@ -527,7 +570,10 @@ const quickRepliesSave = createResource({
 
 function saveQuickReplies() {
   const cleaned = draft.value
-    .map((r) => ({ label: (r.label || '').trim(), text: (r.text || '').trim() }))
+    .map((r) => ({
+      label: (r.label || '').trim(),
+      text: (r.text || '').trim(),
+    }))
     .filter((r) => r.text)
   quickRepliesSave.submit({ quick_replies: JSON.stringify(cleaned) })
 }
@@ -588,10 +634,17 @@ function _teardownRec() {
   recording.value = false
 }
 
+function removeAttachment() {
+  whatsapp.value.attach = ''
+  whatsapp.value.content_type = 'text'
+}
+
 function cancelRecording() {
   try {
     if (_rec && _rec.state !== 'inactive') _rec.stop()
-  } catch (e) {}
+  } catch {
+    // The browser may have stopped recording already; teardown still releases the stream.
+  }
   _teardownRec()
   _recChunks = []
 }
@@ -603,7 +656,9 @@ async function sendRecording() {
     const stopped = new Promise((res) => (_rec.onstop = res))
     try {
       if (_rec.state !== 'inactive') _rec.stop()
-    } catch (e) {}
+    } catch {
+      // The browser may already be stopping; its onstop handler finishes the recording.
+    }
     await stopped
     _teardownRec()
     const blob = new Blob(_recChunks, { type: recMime.split(';')[0] })
@@ -611,7 +666,10 @@ async function sendRecording() {
     if (blob.size < 1000) return // accidental tap — nothing worth sending
     const ext = recMime.startsWith('audio/ogg') ? 'ogg' : 'm4a'
     const fd = new FormData()
-    fd.append('file', new File([blob], `nota-voz-${Date.now()}.${ext}`, { type: blob.type }))
+    fd.append(
+      'file',
+      new File([blob], `nota-voz-${Date.now()}.${ext}`, { type: blob.type }),
+    )
     fd.append('is_private', '0')
     fd.append('doctype', props.doctype)
     fd.append('docname', doc.value.name || '')
@@ -695,7 +753,8 @@ async function fetchSuggestions() {
       name: doc.value.name,
     })
     suggestions.value = Array.isArray(out) ? out : []
-    if (!suggestions.value.length) toast.error(__('Sin sugerencias — intenta de nuevo'))
+    if (!suggestions.value.length)
+      toast.error(__('Sin sugerencias — intenta de nuevo'))
     capture('whatsapp_ai_suggest_fetched')
   } catch (e) {
     toast.error(__('No se pudieron generar sugerencias'))
@@ -714,7 +773,11 @@ function useSuggestion(text) {
 // collision detection (spec 2.4): throttled 'está escribiendo' ping — only for
 // conversations (Deal/Lead) and only in reply mode (notes/comments are private)
 function onTyping() {
-  if (mode.value === 'reply' && ['CRM Deal', 'CRM Lead'].includes(props.doctype)) notifyTyping()
+  if (
+    mode.value === 'reply' &&
+    ['CRM Deal', 'CRM Lead'].includes(props.doctype)
+  )
+    notifyTyping()
 }
 
 function onEnter(event) {
@@ -788,7 +851,13 @@ async function sendWhatsAppMessage() {
   const optimistic = !!sentContent.trim()
   const clientToken = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   if (optimistic)
-    emit('sending', { clientToken, content: sentContent, attach: sentAttach, content_type: sentContentType, to: args.to })
+    emit('sending', {
+      clientToken,
+      content: sentContent,
+      attach: sentAttach,
+      content_type: sentContentType,
+      to: args.to,
+    })
   createResource({
     url: 'crm.api.whatsapp.create_whatsapp_message',
     params: args,
@@ -802,7 +871,10 @@ async function sendWhatsAppMessage() {
       if (optimistic) emit('failed', { clientToken })
       // Never lose the typed text: restore it, prepended ahead of any new draft started
       // in the brief send window, so a failed send is always recoverable.
-      if (sentContent) content.value = content.value ? `${sentContent}\n${content.value}` : sentContent
+      if (sentContent)
+        content.value = content.value
+          ? `${sentContent}\n${content.value}`
+          : sentContent
       toast.error(error.messages?.[0] || __('Failed to send WhatsApp message'))
     },
   })

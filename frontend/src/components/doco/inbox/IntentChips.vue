@@ -21,7 +21,8 @@
       :aria-label="label"
       @click="onTap"
     >
-      <span aria-hidden="true">{{ chip.icon }}</span>{{ label }}
+      <span aria-hidden="true">{{ chip.icon }}</span
+      >{{ label }}
     </button>
   </div>
 </template>
@@ -71,7 +72,9 @@ async function load() {
   }
 }
 
-watch(() => [props.doctype, props.name, aiEnabled.value], load, { immediate: true })
+watch(() => [props.doctype, props.name, aiEnabled.value], load, {
+  immediate: true,
+})
 
 function onTap() {
   if (chip.value) emit(chip.value.event)

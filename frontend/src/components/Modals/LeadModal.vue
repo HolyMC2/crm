@@ -29,7 +29,9 @@
           <FieldLayout v-if="tabs.data" :tabs="tabs.data" :data="lead.doc" />
 
           <!-- Doco: mark whether the phone is on WhatsApp (inbox banner). Default on. -->
-          <label class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7">
+          <label
+            class="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-ink-gray-7"
+          >
             <input
               v-model="lead.doc.mobile_is_whatsapp"
               type="checkbox"
@@ -85,7 +87,6 @@ const error = ref(null)
 const isLeadCreating = ref(false)
 
 const { document: lead, triggerOnBeforeCreate } = useDocument('CRM Lead')
-
 
 const { capture } = useTelemetry()
 

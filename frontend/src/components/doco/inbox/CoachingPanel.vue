@@ -12,10 +12,14 @@
 <template>
   <section v-if="show" class="flex-none border-b border-outline-gray-1 p-3.5">
     <div class="mb-2 flex items-center gap-1.5">
-      <span class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">
+      <span
+        class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+      >
         🎓 {{ __('Coaching') }}
       </span>
-      <span class="rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-5">
+      <span
+        class="rounded bg-surface-gray-2 px-1.5 py-px text-[9.5px] font-semibold text-ink-gray-5"
+      >
         {{ __('privado · gerentes') }}
       </span>
     </div>
@@ -27,11 +31,17 @@
           class="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full text-[10px] font-bold"
           :style="`background:${avatarColor(n.author_name)[0]};color:${avatarColor(n.author_name)[1]}`"
           aria-hidden="true"
-        >{{ initials(n.author_name) }}</span>
+          >{{ initials(n.author_name) }}</span
+        >
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5">
-            <span class="min-w-0 truncate text-[11.5px] font-semibold text-ink-gray-8">{{ n.author_name }}</span>
-            <span class="flex-none text-[10.5px] text-ink-gray-4">{{ timeAgo(n.creation) }}</span>
+            <span
+              class="min-w-0 truncate text-[11.5px] font-semibold text-ink-gray-8"
+              >{{ n.author_name }}</span
+            >
+            <span class="flex-none text-[10.5px] text-ink-gray-4">{{
+              timeAgo(n.creation)
+            }}</span>
             <button
               v-if="n.can_delete"
               class="press ml-auto flex-none rounded px-1 text-[11px] text-ink-gray-4 hover:text-ink-red-7 disabled:opacity-50"
@@ -39,9 +49,15 @@
               :title="__('Borrar nota')"
               :aria-label="__('Borrar nota')"
               @click="removeNote(n)"
-            >✕</button>
+            >
+              ✕
+            </button>
           </div>
-          <p class="mt-0.5 whitespace-pre-wrap break-words text-[12px] leading-[1.35] text-ink-gray-7">{{ n.note }}</p>
+          <p
+            class="mt-0.5 whitespace-pre-wrap break-words text-[12px] leading-[1.35] text-ink-gray-7"
+          >
+            {{ n.note }}
+          </p>
         </div>
       </li>
     </ul>
@@ -67,7 +83,9 @@
           style="background: var(--brand)"
           :disabled="!canSubmitNote(draft) || saving"
           @click="addNote"
-        >{{ saving ? __('Guardando…') : __('Agregar nota') }}</button>
+        >
+          {{ saving ? __('Guardando…') : __('Agregar nota') }}
+        </button>
       </div>
     </div>
   </section>
@@ -94,7 +112,11 @@ const deleting = ref(null)
 
 // Only Deals/Leads carry coaching notes. The section renders only after a
 // successful list (manager) — never before, so a non-manager sees no flash.
-const isRef = computed(() => (props.doctype === 'CRM Deal' || props.doctype === 'CRM Lead') && !!props.name)
+const isRef = computed(
+  () =>
+    (props.doctype === 'CRM Deal' || props.doctype === 'CRM Lead') &&
+    !!props.name,
+)
 const show = computed(() => isRef.value && loaded.value && !denied.value)
 
 async function load() {

@@ -15,7 +15,12 @@ vi.mock('frappe-ui', () => ({
   },
   toast: { success() {}, error() {} },
   createResource: (options) => {
-    const resource = reactive({ data: null, loading: false, error: null, reload })
+    const resource = reactive({
+      data: null,
+      loading: false,
+      error: null,
+      reload,
+    })
     async function reload() {
       resource.loading = true
       try {
@@ -31,7 +36,9 @@ vi.mock('frappe-ui', () => ({
     return resource
   },
 }))
-vi.mock('@/stores/users', () => ({ usersStore: () => ({ isManager: () => session.manager }) }))
+vi.mock('@/stores/users', () => ({
+  usersStore: () => ({ isManager: () => session.manager }),
+}))
 vi.mock('@/utils/dialogs', () => ({
   inputDialog: (options) => dialogs.input.push(options),
   confirmDialog: (options) => dialogs.confirm.push(options),
@@ -42,8 +49,13 @@ import { viewPayload } from '@/utils/dealViewSettings'
 
 const SETTINGS = 'crm.fcrm.doctype.crm_view_settings.crm_view_settings'
 const CONTEXT = {
-  status: ['Aprobado'], source: [], owner: [],
-  followUp: 'overdue', search: '', view: 'list', groupBy: 'status',
+  status: ['Aprobado'],
+  source: [],
+  owner: [],
+  followUp: 'overdue',
+  search: '',
+  view: 'list',
+  groupBy: 'status',
   sort: { field: 'next_activity_at', dir: 'asc' },
   columns: ['customer', 'next_activity'],
 }
@@ -52,10 +64,22 @@ const row = (name, label, extra = {}) => ({
   name,
   ...extra,
 })
-const CLASSIC = { name: 4, label: 'Clásica', route_name: 'Deals', filters: '{}', kanban_fields: '[]' }
+const CLASSIC = {
+  name: 4,
+  label: 'Clásica',
+  route_name: 'Deals',
+  filters: '{}',
+  kanban_fields: '[]',
+}
 
 const mounted = []
-const events = { apply: [], selected: [], defaults: [], legacy: [], deleteLegacy: [] }
+const events = {
+  apply: [],
+  selected: [],
+  defaults: [],
+  legacy: [],
+  deleteLegacy: [],
+}
 
 function mount(props = {}) {
   const el = document.createElement('div')
@@ -83,8 +107,10 @@ function mount(props = {}) {
 }
 
 const buttons = (root) => [...root.querySelectorAll('button')]
-const byText = (root, text) => buttons(root).find((b) => b.textContent.trim().startsWith(text))
-const byLabel = (root, label) => buttons(root).find((b) => b.getAttribute('aria-label') === label)
+const byText = (root, text) =>
+  buttons(root).find((b) => b.textContent.trim().startsWith(text))
+const byLabel = (root, label) =>
+  buttons(root).find((b) => b.getAttribute('aria-label') === label)
 async function open(props) {
   const el = mount(props)
   await nextTick()
@@ -100,7 +126,11 @@ async function flush() {
 beforeEach(() => {
   api.calls = []
   api.fail = null
-  api.rows = [row(11, 'Vencidos de Ana'), row(12, 'Del equipo', { public: 1 }), CLASSIC]
+  api.rows = [
+    row(11, 'Vencidos de Ana'),
+    row(12, 'Del equipo', { public: 1 }),
+    CLASSIC,
+  ]
   session.manager = false
   dialogs.input = []
   dialogs.confirm = []
@@ -144,7 +174,9 @@ describe('listing views', () => {
   })
 
   it('offers the browser-only views this list used to save', async () => {
-    const el = await open({ legacyViews: [{ label: 'Vieja', status: ['Aprobado'] }] })
+    const el = await open({
+      legacyViews: [{ label: 'Vieja', status: ['Aprobado'] }],
+    })
     byText(el, 'Vieja').click()
     await nextTick()
     expect(events.legacy).toEqual([{ label: 'Vieja', status: ['Aprobado'] }])

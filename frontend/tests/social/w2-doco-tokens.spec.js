@@ -37,7 +37,9 @@ import { login, collectErrors, evidenceDir } from './helpers.js'
 // untracked files into a working tree five workers are sharing.
 // W6_EVIDENCE_DIR still wins when set explicitly.
 const OUT = path.join(
-  process.env.W6_EVIDENCE_DIR ? evidenceDir : path.join(os.tmpdir(), 'crm-test-evidence'),
+  process.env.W6_EVIDENCE_DIR
+    ? evidenceDir
+    : path.join(os.tmpdir(), 'crm-test-evidence'),
   'w2-doco',
 )
 // Created lazily, never at module scope, for the same reason.
@@ -76,10 +78,13 @@ const contrast = (page, fg, bg) =>
       const parse = (s) => {
         const m = s.match(/[\d.]+/g).map(Number)
         // color() / oklch() resolve to 0..1 triples; rgb() to 0..255.
-        return s.startsWith('color(') ? m.slice(0, 3) : m.slice(0, 3).map((v) => v / 255)
+        return s.startsWith('color(')
+          ? m.slice(0, 3)
+          : m.slice(0, 3).map((v) => v / 255)
       }
       const lum = (rgb) => {
-        const f2 = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+        const f2 = (c) =>
+          c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
         const [r, g, bl] = rgb.map(f2)
         return 0.2126 * r + 0.7152 * g + 0.0722 * bl
       }
@@ -114,7 +119,9 @@ async function loginWithBackoff(p, attempts = 6) {
     } catch (e) {
       if (!String(e.message).includes('429') || i === attempts) throw e
       const waitMs = 20_000 * i
-      console.log(`login 429 (shared budget), retry ${i}/${attempts - 1} in ${waitMs / 1000}s`)
+      console.log(
+        `login 429 (shared budget), retry ${i}/${attempts - 1} in ${waitMs / 1000}s`,
+      )
       await new Promise((r) => setTimeout(r, waitMs))
     }
   }
@@ -143,15 +150,17 @@ test.describe('W2-doco espresso v2 token semantics', () => {
       // --- The retired token must emit NOTHING. This is the proof that the
       //     pre-migration code was silently broken, not merely different.
       const retired = await probe(page, 'text-ink-white bg-surface-white')
-      expect(retired.background, `bg-surface-white must not paint in ${theme}`).toBe(
-        'rgba(0, 0, 0, 0)',
-      )
+      expect(
+        retired.background,
+        `bg-surface-white must not paint in ${theme}`,
+      ).toBe('rgba(0, 0, 0, 0)')
 
       // --- A: white on saturated accents. Literal white in BOTH themes.
       const white = await probe(page, 'text-white')
-      expect(white.color, `text-white must be literally white in ${theme}`).toBe(
-        'rgb(255, 255, 255)',
-      )
+      expect(
+        white.color,
+        `text-white must be literally white in ${theme}`,
+      ).toBe('rgb(255, 255, 255)')
 
       const green = await probe(page, 'bg-surface-green-7')
       const red = await probe(page, 'bg-surface-red-7')
@@ -164,26 +173,33 @@ test.describe('W2-doco espresso v2 token semantics', () => {
 
       // The fix must be at least as readable as what the codemod left behind,
       // in every theme — that is the whole claim being made.
-      expect(cGreenWhite, `white>=ink-base on green-7 (${theme})`).toBeGreaterThanOrEqual(
-        cGreenInk - 0.01,
-      )
-      expect(cRedWhite, `white>=ink-base on red-7 (${theme})`).toBeGreaterThanOrEqual(
-        cRedInk - 0.01,
-      )
+      expect(
+        cGreenWhite,
+        `white>=ink-base on green-7 (${theme})`,
+      ).toBeGreaterThanOrEqual(cGreenInk - 0.01)
+      expect(
+        cRedWhite,
+        `white>=ink-base on red-7 (${theme})`,
+      ).toBeGreaterThanOrEqual(cRedInk - 0.01)
 
       // --- B: ink-base on the INVERTING gray surface must stay high-contrast.
       //     This is the half that must NOT be changed to white.
       const g10 = await probe(page, 'bg-surface-gray-10')
       const cG10Ink = await contrast(page, inkBase.color, g10.background)
       const cG10White = await contrast(page, white.color, g10.background)
-      expect(cG10Ink, `ink-base on surface-gray-10 must be legible in ${theme}`).toBeGreaterThan(
-        4.5,
-      )
+      expect(
+        cG10Ink,
+        `ink-base on surface-gray-10 must be legible in ${theme}`,
+      ).toBeGreaterThan(4.5)
 
       report[theme] = {
         inkBase: inkBase.color,
         white: white.color,
-        surfaces: { green7: green.background, red7: red.background, gray10: g10.background },
+        surfaces: {
+          green7: green.background,
+          red7: red.background,
+          gray10: g10.background,
+        },
         contrast: {
           'green-7 + white': +cGreenWhite.toFixed(2),
           'green-7 + ink-base': +cGreenInk.toFixed(2),
@@ -196,7 +212,10 @@ test.describe('W2-doco espresso v2 token semantics', () => {
     }
 
     console.log('W2-doco token report:\n' + JSON.stringify(report, null, 2))
-    fs.writeFileSync(path.join(outDir(), 'token-report.json'), JSON.stringify(report, null, 2))
+    fs.writeFileSync(
+      path.join(outDir(), 'token-report.json'),
+      JSON.stringify(report, null, 2),
+    )
 
     // The two idioms must genuinely diverge in dark, otherwise this whole
     // distinction is theatre and one of the two fixes is wrong.
@@ -216,12 +235,16 @@ test.describe('W2-doco espresso v2 token semantics', () => {
 
     const cssVar = (n) =>
       page.evaluate(
-        (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim(),
+        (v) =>
+          getComputedStyle(document.documentElement).getPropertyValue(v).trim(),
         n,
       )
 
     // The name that has never existed in any frappe-ui version.
-    expect(await cssVar('--text-ink-gray-8'), '--text-ink-gray-8 must be absent').toBe('')
+    expect(
+      await cssVar('--text-ink-gray-8'),
+      '--text-ink-gray-8 must be absent',
+    ).toBe('')
 
     const seen = {}
     for (const theme of THEMES) {
@@ -231,7 +254,9 @@ test.describe('W2-doco espresso v2 token semantics', () => {
       seen[theme] = v
     }
     // It must actually track the theme, not just exist.
-    expect(seen.light, '--ink-gray-8 must differ between themes').not.toBe(seen.dark)
+    expect(seen.light, '--ink-gray-8 must differ between themes').not.toBe(
+      seen.dark,
+    )
     console.log('--ink-gray-8:', JSON.stringify(seen))
   })
 })
@@ -256,8 +281,7 @@ const ROUTES = [
 // the column does not exist yet and frappe.client.get_single_value answers 417.
 // It fires on every navigation, so it would otherwise mask every real console
 // error in this sweep. Delete this filter once lab is migrated.
-const PENDING_MIGRATE_417 =
-  /get_single_value|417 \(EXPECTATION FAILED\)/
+const PENDING_MIGRATE_417 = /get_single_value|417 \(EXPECTATION FAILED\)/
 
 test.describe('W2-doco route render sweep', () => {
   test('every bucket route mounts and stays quiet in both themes', async () => {
@@ -281,15 +305,26 @@ test.describe('W2-doco route render sweep', () => {
         // chunk actually presents.
         const mounted = await page.evaluate(() => {
           const app = document.querySelector('#app')
-          return !!app && app.children.length > 0 && (app.textContent || '').trim().length > 0
+          return (
+            !!app &&
+            app.children.length > 0 &&
+            (app.textContent || '').trim().length > 0
+          )
         })
         if (!mounted) failures.push(`${name} (${theme}): did not mount`)
 
-        await page.screenshot({ path: path.join(outDir(), `${name}-${theme}.png`), fullPage: false })
+        await page.screenshot({
+          path: path.join(outDir(), `${name}-${theme}.png`),
+          fullPage: false,
+        })
       }
 
-      const fresh = errors.real().slice(before).filter((e) => !PENDING_MIGRATE_417.test(e))
-      if (fresh.length) failures.push(`${name}: console errors:\n  ` + fresh.join('\n  '))
+      const fresh = errors
+        .real()
+        .slice(before)
+        .filter((e) => !PENDING_MIGRATE_417.test(e))
+      if (fresh.length)
+        failures.push(`${name}: console errors:\n  ` + fresh.join('\n  '))
       seen.push(`${name} ${fresh.length ? 'ERR' : 'ok'}`)
     }
 

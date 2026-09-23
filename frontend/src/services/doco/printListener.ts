@@ -21,7 +21,8 @@ interface PrintJobPayload {
   qz_algorithm?: string
 }
 
-const ACK_ENDPOINT = '/api/method/doco.docoutils.printing.dispatch.ack_print_job'
+const ACK_ENDPOINT =
+  '/api/method/doco.docoutils.printing.dispatch.ack_print_job'
 const EVENT = 'doco:print_job'
 
 let registered = false
@@ -62,7 +63,12 @@ async function handleJob(payload: PrintJobPayload) {
   } catch (primaryErr: any) {
     console.warn('[Doco Print] Primary backend failed', primary, primaryErr)
     if (!fallback || fallback === primary) {
-      await ack(payload.job_id, 'failed', primary, primaryErr?.message || String(primaryErr))
+      await ack(
+        payload.job_id,
+        'failed',
+        primary,
+        primaryErr?.message || String(primaryErr),
+      )
       return
     }
     try {
@@ -90,8 +96,9 @@ async function runBackend(backend: BrowserBackend, payload: PrintJobPayload) {
 async function printViaQz(payload: PrintJobPayload) {
   const copies = Math.max(1, Number(payload.copies) || 1)
   // Route-level override wins over user/localStorage default.
-  const printerName = (payload.qz_printer_name && payload.qz_printer_name.trim())
-    || getPreferredPrinter()
+  const printerName =
+    (payload.qz_printer_name && payload.qz_printer_name.trim()) ||
+    getPreferredPrinter()
   for (let i = 0; i < copies; i++) {
     await printDocumentViaQz({
       doctype: payload.doctype,
@@ -150,7 +157,11 @@ async function ack(
       body: body.toString(),
     })
     if (!response.ok) {
-      console.warn('[Doco Print] Ack returned', response.status, await response.text())
+      console.warn(
+        '[Doco Print] Ack returned',
+        response.status,
+        await response.text(),
+      )
     }
   } catch (err) {
     console.warn('[Doco Print] Failed to ack print job', err)
@@ -159,7 +170,9 @@ async function ack(
 
 function getCsrfToken(): string {
   try {
-    return (window as any).csrf_token || (window as any).frappe?.csrf_token || ''
+    return (
+      (window as any).csrf_token || (window as any).frappe?.csrf_token || ''
+    )
   } catch {
     return ''
   }

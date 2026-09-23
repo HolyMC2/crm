@@ -24,7 +24,9 @@
       <!-- header + search -->
       <div class="flex-none border-b border-outline-gray-1 px-4 pb-3 pt-3.5">
         <div class="mb-2.5 flex items-center justify-between">
-          <div class="text-[14px] font-bold text-ink-gray-9">🔍 {{ __('Buscar mensajes') }}</div>
+          <div class="text-[14px] font-bold text-ink-gray-9">
+            🔍 {{ __('Buscar mensajes') }}
+          </div>
           <button
             class="press flex h-7 w-7 items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-9"
             :aria-label="__('Cerrar')"
@@ -33,7 +35,9 @@
             <LucideX class="h-4 w-4" />
           </button>
         </div>
-        <div class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
+        <div
+          class="flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+        >
           <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
           <input
             ref="searchRef"
@@ -57,17 +61,31 @@
 
       <!-- results -->
       <div class="scb flex-1 overflow-y-auto">
-        <div v-if="tooShort" class="px-4 py-10 text-center text-[12px] text-ink-gray-4">
+        <div
+          v-if="tooShort"
+          class="px-4 py-10 text-center text-[12px] text-ink-gray-4"
+        >
           {{ __('Escribe al menos 2 letras para buscar.') }}
         </div>
-        <div v-else-if="loading" class="px-4 py-10 text-center text-[12px] text-ink-gray-4">
+        <div
+          v-else-if="loading"
+          class="px-4 py-10 text-center text-[12px] text-ink-gray-4"
+        >
           {{ __('Buscando…') }}
         </div>
-        <div v-else-if="error" class="px-4 py-10 text-center text-[12px] text-ink-red-6">
+        <div
+          v-else-if="error"
+          class="px-4 py-10 text-center text-[12px] text-ink-red-6"
+        >
           {{ __('No se pudo buscar.') }}
-          <button class="ml-1 font-semibold underline" @click="runNow">{{ __('Reintentar') }}</button>
+          <button class="ml-1 font-semibold underline" @click="runNow">
+            {{ __('Reintentar') }}
+          </button>
         </div>
-        <div v-else-if="!results.length" class="px-4 py-10 text-center text-[12px] text-ink-gray-4">
+        <div
+          v-else-if="!results.length"
+          class="px-4 py-10 text-center text-[12px] text-ink-gray-4"
+        >
           {{ __('Sin resultados para «{0}».', [query]) }}
         </div>
         <ul v-else class="py-1.5">
@@ -84,10 +102,14 @@
               </span>
               <span class="flex min-w-0 flex-1 flex-col">
                 <span class="flex items-center justify-between gap-2">
-                  <span class="truncate text-[12.5px] font-semibold text-ink-gray-8">
+                  <span
+                    class="truncate text-[12.5px] font-semibold text-ink-gray-8"
+                  >
                     {{ r.contact_name || __('Sin nombre') }}
                   </span>
-                  <span class="flex flex-none items-center gap-1.5 text-[10.5px] text-ink-gray-4">
+                  <span
+                    class="flex flex-none items-center gap-1.5 text-[10.5px] text-ink-gray-4"
+                  >
                     <span
                       class="h-1.5 w-1.5 rounded-full"
                       :style="`background:${channelDot(r.channel)}`"
@@ -96,9 +118,13 @@
                     {{ timeAgo(r.ts) }}
                   </span>
                 </span>
-                <span class="mt-0.5 line-clamp-2 text-[12px] leading-snug text-ink-gray-6">
+                <span
+                  class="mt-0.5 line-clamp-2 text-[12px] leading-snug text-ink-gray-6"
+                >
                   <template v-for="(seg, j) in segmentsFor(r.snippet)" :key="j">
-                    <b v-if="seg.match" class="font-semibold text-ink-gray-9">{{ seg.text }}</b>
+                    <b v-if="seg.match" class="font-semibold text-ink-gray-9">{{
+                      seg.text
+                    }}</b>
                     <template v-else>{{ seg.text }}</template>
                   </template>
                 </span>
@@ -116,7 +142,12 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { call } from 'frappe-ui'
 import LucideSearch from '~icons/lucide/search'
 import LucideX from '~icons/lucide/x'
-import { avatarColor, initials, timeAgo, CHANNEL_META } from '@/composables/crmFormat'
+import {
+  avatarColor,
+  initials,
+  timeAgo,
+  CHANNEL_META,
+} from '@/composables/crmFormat'
 import { highlightSegments, debounce } from '@/utils/searchHighlight'
 
 const MIN_LEN = 2
@@ -147,7 +178,10 @@ async function doSearch() {
   loading.value = true
   error.value = false
   try {
-    const rows = await call('doco_marketing.api.search.search_messages', { query: q, limit: 30 })
+    const rows = await call('doco_marketing.api.search.search_messages', {
+      query: q,
+      limit: 30,
+    })
     if (mine !== seq) return // a newer search superseded this one
     results.value = Array.isArray(rows) ? rows : []
   } catch (e) {

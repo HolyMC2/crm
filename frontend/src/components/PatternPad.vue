@@ -166,9 +166,11 @@ function reset() {
 }
 
 const lineCoords = computed(() =>
-  path.value.map((n) => {
-    const c = dotCenter(n)
-    return `${c.x},${c.y}`
-  }).join(' '),
+  path.value
+    .map((n) => {
+      const c = dotCenter(n)
+      return `${c.x},${c.y}`
+    })
+    .join(' '),
 )
 </script>

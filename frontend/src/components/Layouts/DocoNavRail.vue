@@ -8,7 +8,9 @@
 <template>
   <div
     class="relative flex h-full flex-none flex-col gap-1 border-r border-outline-gray-1 bg-surface-base py-3 transition-all duration-200"
-    :class="isExpanded ? 'w-[210px] items-stretch px-2' : 'w-[58px] items-center'"
+    :class="
+      isExpanded ? 'w-[210px] items-stretch px-2' : 'w-[58px] items-center'
+    "
   >
     <!-- Notifications slide-out panel. Mounted FIRST so its absolute box
          (top:auto → static position) anchors at the rail's top, then opens to
@@ -45,7 +47,9 @@
       <button
         class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
         :class="[
-          isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
+          isExpanded
+            ? 'w-full justify-start gap-2.5 px-2.5'
+            : 'w-[38px] justify-center',
           activeGroup === item.group
             ? 'bg-surface-green-2 text-ink-green-8'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
@@ -59,7 +63,11 @@
         <span
           v-if="item.badge && badgeFor(item.badge)"
           class="absolute h-[7px] w-[7px] rounded-full"
-          :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
+          :class="
+            isExpanded
+              ? 'right-2 top-1/2 -translate-y-1/2'
+              : 'right-1.5 top-1.5'
+          "
           :style="`background:${item.badge === 'unread' ? '#e5484d' : '#d9930b'};border:1.5px solid var(--surface-base)`"
         />
       </button>
@@ -81,7 +89,9 @@
       <button
         class="relative flex h-[38px] items-center rounded-[9px] transition-colors"
         :class="[
-          isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center',
+          isExpanded
+            ? 'w-full justify-start gap-2.5 px-2.5'
+            : 'w-[38px] justify-center',
           activeGroup === item.group
             ? 'bg-surface-green-2 text-ink-green-8'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
@@ -99,7 +109,11 @@
     <Tooltip :text="isExpanded ? '' : __('Notifications')" placement="right">
       <button
         class="relative mt-auto flex h-[38px] items-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
-        :class="isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center'"
+        :class="
+          isExpanded
+            ? 'w-full justify-start gap-2.5 px-2.5'
+            : 'w-[38px] justify-center'
+        "
         :aria-label="__('Notifications')"
         @click="toggleNotifications()"
       >
@@ -110,7 +124,11 @@
         <span
           v-if="unreadNotificationsCount"
           class="absolute h-[7px] w-[7px] rounded-full"
-          :class="isExpanded ? 'right-2 top-1/2 -translate-y-1/2' : 'right-1.5 top-1.5'"
+          :class="
+            isExpanded
+              ? 'right-2 top-1/2 -translate-y-1/2'
+              : 'right-1.5 top-1.5'
+          "
           style="background: #e5484d; border: 1.5px solid var(--surface-base)"
         />
       </button>
@@ -119,7 +137,11 @@
     <!-- avatar → profile panel -->
     <button
       class="mt-1 flex items-center rounded-[9px] transition-colors hover:bg-surface-gray-2"
-      :class="isExpanded ? 'w-full justify-start gap-2.5 px-2 py-1' : 'w-[38px] justify-center'"
+      :class="
+        isExpanded
+          ? 'w-full justify-start gap-2.5 px-2 py-1'
+          : 'w-[38px] justify-center'
+      "
       @click="showProfile = !showProfile"
     >
       <span
@@ -144,7 +166,11 @@
     <Tooltip :text="isExpanded ? '' : __('Expand')" placement="right">
       <button
         class="mt-1 flex h-[34px] items-center rounded-[9px] text-ink-gray-4 transition-colors hover:bg-surface-gray-2"
-        :class="isExpanded ? 'w-full justify-start gap-2.5 px-2.5' : 'w-[38px] justify-center'"
+        :class="
+          isExpanded
+            ? 'w-full justify-start gap-2.5 px-2.5'
+            : 'w-[38px] justify-center'
+        "
         :aria-label="isExpanded ? __('Collapse sidebar') : __('Expand sidebar')"
         @click="isExpanded = !isExpanded"
       >
@@ -244,7 +270,10 @@ import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
 import { showSettings } from '@/composables/settings'
-import { unreadNotificationsCount, notificationsStore } from '@/stores/notifications'
+import {
+  unreadNotificationsCount,
+  notificationsStore,
+} from '@/stores/notifications'
 import { Tooltip, createResource } from 'frappe-ui'
 import { useStorage } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
@@ -257,9 +286,19 @@ import LogOutIcon from '~icons/lucide/log-out'
 import ChevronsLeftIcon from '~icons/lucide/chevrons-left'
 import ChevronsRightIcon from '~icons/lucide/chevrons-right'
 // shared with the mobile drawer so the two navs never drift (see navModel.js)
-import { navItems, navItemsBottom, routeGroup, visibleSuiteApps } from '@/composables/navModel'
+import {
+  navItems,
+  navItemsBottom,
+  routeGroup,
+  visibleSuiteApps,
+} from '@/composables/navModel'
 // installed-app availability: addon-only entries hide without doco_marketing
-import { addonAvailable, hasApp, loadCapabilities, navItemVisible } from '@/utils/crmCapabilities'
+import {
+  addonAvailable,
+  hasApp,
+  loadCapabilities,
+  navItemVisible,
+} from '@/utils/crmCapabilities'
 
 const route = useRoute()
 const router = useRouter()
@@ -303,7 +342,9 @@ function go(to) {
 // (Leads, Deals, Calls, Tasks) always show — the router picks the page.
 loadCapabilities()
 const visibleByPath = (items) =>
-  items.filter((item) => navItemVisible(router.resolve(item.to).name, addonAvailable.value))
+  items.filter((item) =>
+    navItemVisible(router.resolve(item.to).name, addonAvailable.value),
+  )
 const visibleNavItems = computed(() => visibleByPath(navItems))
 const visibleNavItemsBottom = computed(() => visibleByPath(navItemsBottom))
 
@@ -329,8 +370,18 @@ watch(
 
 // ── profile panel ──────────────────────────────────────────────────────────
 const profileLinks = [
-  { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', onClick: () => go('/dashboard') },
-  { label: 'Score Rules', icon: ScoreRulesIcon, to: '/score-rules', onClick: () => go('/score-rules') },
+  {
+    label: 'Dashboard',
+    icon: DashboardIcon,
+    to: '/dashboard',
+    onClick: () => go('/dashboard'),
+  },
+  {
+    label: 'Score Rules',
+    icon: ScoreRulesIcon,
+    to: '/score-rules',
+    onClick: () => go('/score-rules'),
+  },
   {
     label: 'Settings',
     icon: SettingsGearIcon,
@@ -342,7 +393,9 @@ const profileLinks = [
 ]
 const visibleProfileLinks = computed(() =>
   profileLinks.filter(
-    (link) => !link.to || navItemVisible(router.resolve(link.to).name, addonAvailable.value),
+    (link) =>
+      !link.to ||
+      navItemVisible(router.resolve(link.to).name, addonAvailable.value),
   ),
 )
 

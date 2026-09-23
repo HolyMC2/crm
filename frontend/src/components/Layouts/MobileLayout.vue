@@ -6,7 +6,9 @@
          intrinsic width (chip scrollers etc. tunnel up through flex-col cross
          axes untouched by their own min-w-0/overflow). 382px @ 360 on Marco's
          phone. overflow-x-hidden is the belt. -->
-    <div class="flex h-full min-w-0 flex-1 flex-col overflow-x-hidden bg-surface-base">
+    <div
+      class="flex h-full min-w-0 flex-1 flex-col overflow-x-hidden bg-surface-base"
+    >
       <MobileAppHeader />
       <!-- connectivity strip (spec 3.4): silent socket death and dead zones were
            read as "no me llegan mensajes" — say it out loud instead -->
@@ -15,7 +17,10 @@
         class="flex flex-none items-center justify-center gap-2 bg-surface-amber-1 px-3 py-1.5 text-[12px] font-semibold text-ink-amber-8"
         role="status"
       >
-        <span class="h-1.5 w-1.5 flex-none animate-pulse rounded-full" style="background: #d9930b" />
+        <span
+          class="h-1.5 w-1.5 flex-none animate-pulse rounded-full"
+          style="background: #d9930b"
+        />
         {{ __('Sin conexión — mostrando lo último guardado') }}
       </div>
       <OutboxStrip />
@@ -27,7 +32,9 @@
         role="status"
       >
         <span aria-hidden="true">📲</span>
-        <span class="min-w-0 flex-1 truncate">{{ __('Instala la app para abrirla más rápido') }}</span>
+        <span class="min-w-0 flex-1 truncate">{{
+          __('Instala la app para abrirla más rápido')
+        }}</span>
         <button
           class="press flex-none rounded-md px-2.5 py-1 text-[12px] font-semibold text-white"
           style="background: var(--brand)"

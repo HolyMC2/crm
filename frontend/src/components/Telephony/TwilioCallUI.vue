@@ -300,7 +300,10 @@ function initDeviceAfterGesture(token) {
     document.removeEventListener('keydown', onGesture, true)
     safeInitializeDevice(token)
   }
-  document.addEventListener('pointerdown', onGesture, { capture: true, once: true })
+  document.addEventListener('pointerdown', onGesture, {
+    capture: true,
+    once: true,
+  })
   document.addEventListener('keydown', onGesture, { capture: true, once: true })
 }
 
@@ -310,7 +313,8 @@ function safeInitializeDevice(token) {
   try {
     intitializeDevice(token)
   } catch (err) {
-    log.value = 'Twilio.Device Error: ' + (err && err.message ? err.message : err)
+    log.value =
+      'Twilio.Device Error: ' + (err && err.message ? err.message : err)
   }
 }
 

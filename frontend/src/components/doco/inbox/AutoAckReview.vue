@@ -7,16 +7,36 @@
 -->
 <template>
   <div class="px-0.5">
-    <div v-if="autoAcks.loading && !rows.length" class="px-2 py-6 text-center text-xs text-ink-gray-4">
+    <div
+      v-if="autoAcks.loading && !rows.length"
+      class="px-2 py-6 text-center text-xs text-ink-gray-4"
+    >
       {{ __('Cargando…') }}
     </div>
-    <div v-else-if="autoAcks.error && !rows.length" class="px-2 py-6 text-center text-xs text-ink-red-6">
+    <div
+      v-else-if="autoAcks.error && !rows.length"
+      class="px-2 py-6 text-center text-xs text-ink-red-6"
+    >
       {{ __('No se pudo cargar la lista.') }}
-      <button class="ml-1 font-semibold underline hover:text-ink-red-7" @click="reloadAutoAcks">{{ __('Reintentar') }}</button>
+      <button
+        class="ml-1 font-semibold underline hover:text-ink-red-7"
+        @click="reloadAutoAcks"
+      >
+        {{ __('Reintentar') }}
+      </button>
     </div>
-    <div v-else-if="!rows.length" class="px-2 py-8 text-center text-xs text-ink-gray-4">
+    <div
+      v-else-if="!rows.length"
+      class="px-2 py-8 text-center text-xs text-ink-gray-4"
+    >
       ✅ {{ __('Nada por aprobar') }}
-      <div class="mt-1 text-[10.5px] text-ink-gray-4">{{ __('Los acuses automáticos pendientes aparecen aquí antes de enviarse.') }}</div>
+      <div class="mt-1 text-[10.5px] text-ink-gray-4">
+        {{
+          __(
+            'Los acuses automáticos pendientes aparecen aquí antes de enviarse.',
+          )
+        }}
+      </div>
     </div>
 
     <div
@@ -33,23 +53,39 @@
         </span>
         <button
           class="group min-w-0 flex-1 text-left"
-          :title="__('Abrir la conversación para revisar con contexto completo')"
+          :title="
+            __('Abrir la conversación para revisar con contexto completo')
+          "
           @click="openConvo(r)"
         >
           <!-- name first, number second: the backend resolves identity through the
                contact chain, so a bare phone here means we genuinely don't know them. -->
-          <div class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-9">
+          <div
+            class="truncate text-[12.5px] font-semibold text-ink-gray-9 group-hover:text-ink-blue-9"
+          >
             {{ displayName(r) }}
-            <span class="text-[10px] font-normal text-ink-blue-9 opacity-0 group-hover:opacity-100">↗ {{ __('abrir') }}</span>
+            <span
+              class="text-[10px] font-normal text-ink-blue-9 opacity-0 group-hover:opacity-100"
+              >↗ {{ __('abrir') }}</span
+            >
           </div>
-          <div class="flex items-center gap-1.5 truncate text-[10.5px] text-ink-gray-5">
+          <div
+            class="flex items-center gap-1.5 truncate text-[10.5px] text-ink-gray-5"
+          >
             <span class="truncate">{{ formatPhone(r.mobile_no || r.to) }}</span>
-            <span v-if="r.status" class="flex-none rounded px-1 py-px text-[9.5px] font-semibold" :style="statusChip(r)">
+            <span
+              v-if="r.status"
+              class="flex-none rounded px-1 py-px text-[9.5px] font-semibold"
+              :style="statusChip(r)"
+            >
               {{ r.status }}
             </span>
           </div>
         </button>
-        <span class="flex-none text-[10px] font-semibold text-ink-amber-7" :title="__('Esperando desde el entrante')">
+        <span
+          class="flex-none text-[10px] font-semibold text-ink-amber-7"
+          :title="__('Esperando desde el entrante')"
+        >
           {{ timeAgo(r.last_inbound_at || r.creation) }}
         </span>
       </div>
@@ -87,7 +123,15 @@
 <script setup>
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
-import { autoAcks, reloadAutoAcks, approveAutoAck, discardAutoAck, selectDeal, timeAgo, CHANNEL_META } from '@/composables/inbox'
+import {
+  autoAcks,
+  reloadAutoAcks,
+  approveAutoAck,
+  discardAutoAck,
+  selectDeal,
+  timeAgo,
+  CHANNEL_META,
+} from '@/composables/inbox'
 import { formatPhone } from '@/composables/crmFormat'
 import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
@@ -106,7 +150,8 @@ const busy = reactive({})
 watch(
   rows,
   (list) => {
-    for (const r of list) if (!(r.name in drafts)) drafts[r.name] = r.draft_body || ''
+    for (const r of list)
+      if (!(r.name in drafts)) drafts[r.name] = r.draft_body || ''
   },
   { immediate: true },
 )
@@ -114,7 +159,8 @@ watch(
 // Open the conversation so the reviewer sees the full thread/calls/items/deal before
 // approving (the acuse then appears in the in-conversation strip).
 function openConvo(r) {
-  if (r.reference_doctype && r.reference_name) selectDeal(r.reference_name, r.reference_doctype)
+  if (r.reference_doctype && r.reference_name)
+    selectDeal(r.reference_name, r.reference_doctype)
 }
 
 // contact_name is server-resolved (Contact → deal fields → primary contact → lead);
@@ -125,7 +171,8 @@ function displayName(r) {
 // Deal and lead statuses live in separate stores; the row's reference tells us which.
 // Hue as text + 10% wash (same treatment as the queue), so it stays readable in dark.
 function statusChip(r) {
-  const store = r.reference_doctype === 'CRM Lead' ? getLeadStatus : getDealStatus
+  const store =
+    r.reference_doctype === 'CRM Lead' ? getLeadStatus : getDealStatus
   const c = store(r.status)?.color || '#5b6472'
   return `color:${c};background:${c}1a`
 }
@@ -136,7 +183,13 @@ function chColor(channel) {
 }
 function chLabel(channel) {
   const k = (channel || '').toLowerCase()
-  return k === 'whatsapp' ? 'WA' : k === 'messenger' ? 'Msgr' : k === 'comment' ? 'FB' : channel
+  return k === 'whatsapp'
+    ? 'WA'
+    : k === 'messenger'
+      ? 'Msgr'
+      : k === 'comment'
+        ? 'FB'
+        : channel
 }
 
 async function onApprove(r) {

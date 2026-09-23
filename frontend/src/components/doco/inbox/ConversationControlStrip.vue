@@ -17,10 +17,24 @@
         :aria-label="__('Motivo')"
         @keydown.enter.prevent="apply(reasonFor, reason)"
       />
-      <button type="button" class="font-semibold underline" :disabled="busy || !reason.trim()" @mousedown.prevent @click="apply(reasonFor, reason)">
+      <button
+        type="button"
+        class="font-semibold underline"
+        :disabled="busy || !reason.trim()"
+        @mousedown.prevent
+        @click="apply(reasonFor, reason)"
+      >
         {{ __('Confirmar') }}
       </button>
-      <button type="button" class="underline" :disabled="busy" @mousedown.prevent @click="reasonFor = ''">{{ __('Cancelar') }}</button>
+      <button
+        type="button"
+        class="underline"
+        :disabled="busy"
+        @mousedown.prevent
+        @click="reasonFor = ''"
+      >
+        {{ __('Cancelar') }}
+      </button>
     </template>
     <template v-else>
       <button
@@ -36,7 +50,10 @@
       </button>
     </template>
     <RouterLink
-      :to="{ name: 'Inbox', query: { workspace: 'conversations', conversation: control.name } }"
+      :to="{
+        name: 'Inbox',
+        query: { workspace: 'conversations', conversation: control.name },
+      }"
       class="text-ink-gray-5 underline"
     >
       {{ __('Gestionar') }}
@@ -115,7 +132,10 @@ async function apply(action, why) {
     reasonFor.value = ''
     emit('changed')
   } catch (error) {
-    toast.error(error?.messages?.[0] || __('La conversación cambió. Revisa su estado y vuelve a intentarlo.'))
+    toast.error(
+      error?.messages?.[0] ||
+        __('La conversación cambió. Revisa su estado y vuelve a intentarlo.'),
+    )
   } finally {
     busy.value = false
     await load()
@@ -126,7 +146,15 @@ function onUpdated(event) {
   if (event?.name && event.name === control.value?.name) load()
 }
 
-watch(() => [props.referenceDoctype, props.referenceName, props.phone, props.whatsappAccount], load)
+watch(
+  () => [
+    props.referenceDoctype,
+    props.referenceName,
+    props.phone,
+    props.whatsappAccount,
+  ],
+  load,
+)
 const { $socket } = globalStore()
 onMounted(() => {
   load()

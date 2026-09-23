@@ -11,8 +11,15 @@ vi.mock('frappe-ui', () => ({
 }))
 
 import {
-  chip, chanIcons, chLabel, toDtLocal, fromDtLocal, blankForm,
-  pillarChip, statusDot, channelBadges,
+  chip,
+  chanIcons,
+  chLabel,
+  toDtLocal,
+  fromDtLocal,
+  blankForm,
+  pillarChip,
+  statusDot,
+  channelBadges,
 } from '@/composables/socialCalendar'
 
 describe('chip', () => {
@@ -28,7 +35,12 @@ describe('chip', () => {
 
 describe('chanIcons (dict + legacy string tolerance)', () => {
   it('resolves FB/IG emoji from {channel,status} dicts', () => {
-    expect(chanIcons([{ channel: 'FB Feed', status: 'Published' }, { channel: 'IG Reel', status: 'Pending' }])).toBe('🟦🟪')
+    expect(
+      chanIcons([
+        { channel: 'FB Feed', status: 'Published' },
+        { channel: 'IG Reel', status: 'Pending' },
+      ]),
+    ).toBe('🟦🟪')
   })
   it('still resolves from bare channel strings', () => {
     expect(chanIcons(['FB Reel'])).toBe('🟦')
@@ -43,14 +55,29 @@ describe('chanIcons (dict + legacy string tolerance)', () => {
 
 describe('channelBadges', () => {
   it('emits one badge per channel with emoji + status dot, preserving the dict', () => {
-    const out = channelBadges([{ channel: 'FB Feed', status: 'Published' }, { channel: 'IG Story', status: 'Failed' }])
+    const out = channelBadges([
+      { channel: 'FB Feed', status: 'Published' },
+      { channel: 'IG Story', status: 'Failed' },
+    ])
     expect(out).toEqual([
-      { channel: 'FB Feed', status: 'Published', emoji: '🟦', dot: statusDot('Published') },
-      { channel: 'IG Story', status: 'Failed', emoji: '🟪', dot: statusDot('Failed') },
+      {
+        channel: 'FB Feed',
+        status: 'Published',
+        emoji: '🟦',
+        dot: statusDot('Published'),
+      },
+      {
+        channel: 'IG Story',
+        status: 'Failed',
+        emoji: '🟪',
+        dot: statusDot('Failed'),
+      },
     ])
   })
   it('tolerates a bare string (status empty, generic bullet for unknown family)', () => {
-    expect(channelBadges(['IG Reel'])).toEqual([{ channel: 'IG Reel', status: '', emoji: '🟪', dot: statusDot('') }])
+    expect(channelBadges(['IG Reel'])).toEqual([
+      { channel: 'IG Reel', status: '', emoji: '🟪', dot: statusDot('') },
+    ])
     expect(channelBadges([{ channel: 'X Post' }])[0].emoji).toBe('•')
   })
 })
@@ -62,8 +89,12 @@ describe('statusDot / pillarChip', () => {
     expect(statusDot('???')).toBe('bg-gray-300 dark:bg-gray-600')
   })
   it('pillarChip maps each post_kind, unclassified → neutral default', () => {
-    expect(pillarChip('Producto')).toBe('bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8')
-    expect(pillarChip('Temporada')).toBe('bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200')
+    expect(pillarChip('Producto')).toBe(
+      'bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8',
+    )
+    expect(pillarChip('Temporada')).toBe(
+      'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200',
+    )
     expect(pillarChip('')).toBe('bg-surface-gray-2 text-ink-gray-6')
     expect(pillarChip('Weird')).toBe('bg-surface-gray-2 text-ink-gray-6')
   })
@@ -95,7 +126,19 @@ describe('blankForm', () => {
   it('returns a pristine composer form with the WhatsApp CTA default', () => {
     const f = blankForm()
     expect(Object.keys(f).sort()).toEqual(
-      ['captions', 'channelStates', 'channels', 'cta_link', 'cta_type', 'media', 'name', 'scheduled_time', 'shop', 'status', 'title'].sort(),
+      [
+        'captions',
+        'channelStates',
+        'channels',
+        'cta_link',
+        'cta_type',
+        'media',
+        'name',
+        'scheduled_time',
+        'shop',
+        'status',
+        'title',
+      ].sort(),
     )
     expect(f.cta_type).toBe('WhatsApp')
     expect(f.channels).toEqual([])

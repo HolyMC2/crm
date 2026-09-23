@@ -6,7 +6,9 @@
 import { test, expect } from '@playwright/test'
 import { gotoAuthed, byTestId, collectErrors, shot } from './helpers.js'
 
-test('evergreen: page renders, rows or empty-state, action buttons + cooldown-disabled logic', async ({ page }) => {
+test('evergreen: page renders, rows or empty-state, action buttons + cooldown-disabled logic', async ({
+  page,
+}) => {
   const errs = collectErrors(page)
   await gotoAuthed(page, '/social/evergreen')
 
@@ -26,7 +28,9 @@ test('evergreen: page renders, rows or empty-state, action buttons + cooldown-di
     await expect(byTestId(page, 'evergreen-toggle-0')).toBeVisible()
     // Cooldown logic: recycle is present as either enabled or [disabled] — never missing.
     // (A source in cooldown carries the disabled attribute; assert the invariant holds.)
-    const recycles = await page.locator('[data-testid^="evergreen-recycle-"]').count()
+    const recycles = await page
+      .locator('[data-testid^="evergreen-recycle-"]')
+      .count()
     expect(recycles).toBeGreaterThan(0)
     // FIXME(mutation): exercise recycle (creates a draft) + Quitar undo only on a disposable seed.
   } else {
@@ -34,7 +38,8 @@ test('evergreen: page renders, rows or empty-state, action buttons + cooldown-di
     await expect(page.getByText(/evergreen/i).first()).toBeVisible()
     test.info().annotations.push({
       type: 'fixme',
-      description: 'no evergreen pool on lab — row + cooldown assertions need seeded evergreen posts',
+      description:
+        'no evergreen pool on lab — row + cooldown assertions need seeded evergreen posts',
     })
   }
 

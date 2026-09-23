@@ -334,13 +334,9 @@ class TestIntegrations(IntegrationTestCase):
 		became 'newest' and stole the customer's next WhatsApp reply."""
 		for status, stype in (("T Ongoing", "Ongoing"), ("T Won", "Won")):
 			if not frappe.db.exists("CRM Deal Status", status):
-				frappe.get_doc(
-					{"doctype": "CRM Deal Status", "deal_status": status, "type": stype}
-				).insert()
+				frappe.get_doc({"doctype": "CRM Deal Status", "deal_status": status, "type": stype}).insert()
 
-		org = frappe.get_doc(
-			{"doctype": "CRM Organization", "organization_name": "Open Deal Org"}
-		).insert()
+		org = frappe.get_doc({"doctype": "CRM Organization", "organization_name": "Open Deal Org"}).insert()
 		# The resolver joins Contact Phone (child table), not the mobile_no
 		# scalar — a bare scalar is invisible to it.
 		contact = frappe.get_doc(

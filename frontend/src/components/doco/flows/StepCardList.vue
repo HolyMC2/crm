@@ -9,7 +9,9 @@
 <template>
   <div>
     <div class="mb-3 flex items-center justify-between">
-      <div class="text-[13px] font-bold text-ink-gray-9">{{ __('Secuencia') }}</div>
+      <div class="text-[13px] font-bold text-ink-gray-9">
+        {{ __('Secuencia') }}
+      </div>
       <button
         v-if="!frozen"
         class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white"
@@ -48,13 +50,22 @@
             >
               <GripIcon class="h-4 w-4" />
             </span>
-            <span class="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-surface-gray-2 text-[14px]">
+            <span
+              class="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-surface-gray-2 text-[14px]"
+            >
               {{ glyph(s) }}
             </span>
 
             <template v-if="kind === 'campaign'">
-              <select v-model="s.step_type" class="dm-input flex-1" :disabled="frozen" @change="onCampaignType(s)">
-                <option value="send_whatsapp">{{ __('Enviar WhatsApp') }}</option>
+              <select
+                v-model="s.step_type"
+                class="dm-input flex-1"
+                :disabled="frozen"
+                @change="onCampaignType(s)"
+              >
+                <option value="send_whatsapp">
+                  {{ __('Enviar WhatsApp') }}
+                </option>
                 <option value="send_email">{{ __('Enviar Email') }}</option>
                 <option value="wait">{{ __('Esperar') }}</option>
                 <option value="branch">{{ __('Bifurcación') }}</option>
@@ -67,9 +78,15 @@
                 class="dm-input w-[130px] flex-none"
                 :placeholder="__('etiqueta')"
                 :disabled="frozen"
-                :title="__('Etiqueta única — el motor identifica el paso por ella')"
+                :title="
+                  __('Etiqueta única — el motor identifica el paso por ella')
+                "
               />
-              <select v-model="s.send_type" class="dm-input flex-1" :disabled="frozen">
+              <select
+                v-model="s.send_type"
+                class="dm-input flex-1"
+                :disabled="frozen"
+              >
                 <option value="message">{{ __('Mensaje') }}</option>
                 <option value="template">{{ __('Plantilla') }}</option>
                 <option value="escalate">{{ __('Escalar a humano') }}</option>
@@ -82,7 +99,9 @@
             >
               ⏳ {{ s.wait_hours }}h
             </span>
-            <span class="flex-none text-[10.5px] font-semibold text-ink-gray-4">#{{ i + 1 }}</span>
+            <span class="flex-none text-[10.5px] font-semibold text-ink-gray-4"
+              >#{{ i + 1 }}</span
+            >
             <button
               v-if="!frozen"
               class="flex-none text-ink-gray-4 hover:text-ink-red-7"
@@ -95,30 +114,76 @@
 
           <!-- ── campaign per-type config ── -->
           <template v-if="kind === 'campaign'">
-            <div v-if="s.step_type === 'wait'" class="flex items-center gap-2 text-[12px]">
+            <div
+              v-if="s.step_type === 'wait'"
+              class="flex items-center gap-2 text-[12px]"
+            >
               <span class="text-ink-gray-5">{{ __('Esperar') }}</span>
-              <input v-model.number="s.wait_hours" type="number" min="0" class="dm-input w-20" :disabled="frozen" />
+              <input
+                v-model.number="s.wait_hours"
+                type="number"
+                min="0"
+                class="dm-input w-20"
+                :disabled="frozen"
+              />
               <span class="text-ink-gray-5">{{ __('horas') }}</span>
             </div>
-            <div v-else-if="s.step_type === 'send_whatsapp'" class="flex items-center gap-2 text-[12px]">
+            <div
+              v-else-if="s.step_type === 'send_whatsapp'"
+              class="flex items-center gap-2 text-[12px]"
+            >
               <span class="text-ink-gray-5">{{ __('Plantilla') }}</span>
-              <select v-model="s.template" class="dm-input flex-1" :disabled="frozen">
+              <select
+                v-model="s.template"
+                class="dm-input flex-1"
+                :disabled="frozen"
+              >
                 <option value="">{{ __('(texto libre / ninguna)') }}</option>
-                <option v-for="t in waList" :key="t.name" :value="t.name">{{ waLabel(t) }}</option>
+                <option v-for="t in waList" :key="t.name" :value="t.name">
+                  {{ waLabel(t) }}
+                </option>
               </select>
-              <PreviewToggle v-if="s.template" :open="isPreviewOpen(s)" @toggle="togglePreview(s)" />
+              <PreviewToggle
+                v-if="s.template"
+                :open="isPreviewOpen(s)"
+                @toggle="togglePreview(s)"
+              />
             </div>
-            <div v-else-if="s.step_type === 'send_email'" class="flex items-center gap-2 text-[12px]">
+            <div
+              v-else-if="s.step_type === 'send_email'"
+              class="flex items-center gap-2 text-[12px]"
+            >
               <span class="text-ink-gray-5">{{ __('Plantilla') }}</span>
-              <select v-model="s.template" class="dm-input flex-1" :disabled="frozen">
+              <select
+                v-model="s.template"
+                class="dm-input flex-1"
+                :disabled="frozen"
+              >
                 <option value="">{{ __('(ninguna)') }}</option>
-                <option v-for="t in emailTemplates.data || []" :key="t.name" :value="t.name">{{ t.name }}</option>
+                <option
+                  v-for="t in emailTemplates.data || []"
+                  :key="t.name"
+                  :value="t.name"
+                >
+                  {{ t.name }}
+                </option>
               </select>
             </div>
-            <div v-else-if="s.step_type === 'branch'" class="flex flex-wrap items-center gap-2 text-[12px]">
-              <select v-model="s.branch_condition" class="dm-input" :disabled="frozen">
-                <option value="opened_previous">{{ __('Si abrió el anterior') }}</option>
-                <option value="clicked_previous">{{ __('Si dio clic anterior') }}</option>
+            <div
+              v-else-if="s.step_type === 'branch'"
+              class="flex flex-wrap items-center gap-2 text-[12px]"
+            >
+              <select
+                v-model="s.branch_condition"
+                class="dm-input"
+                :disabled="frozen"
+              >
+                <option value="opened_previous">
+                  {{ __('Si abrió el anterior') }}
+                </option>
+                <option value="clicked_previous">
+                  {{ __('Si dio clic anterior') }}
+                </option>
                 <option value="score_gte">{{ __('Si score ≥') }}</option>
               </select>
               <input
@@ -130,21 +195,35 @@
                 :disabled="frozen"
               />
               <span class="text-ink-gray-5">→ {{ __('saltar a') }}</span>
-              <select v-model.number="s.branch_to_step" class="dm-input" :disabled="frozen">
-                <option v-for="j in forwardSteps(i)" :key="j" :value="j">{{ __('Paso') }} {{ j + 1 }}</option>
+              <select
+                v-model.number="s.branch_to_step"
+                class="dm-input"
+                :disabled="frozen"
+              >
+                <option v-for="j in forwardSteps(i)" :key="j" :value="j">
+                  {{ __('Paso') }} {{ j + 1 }}
+                </option>
               </select>
             </div>
             <div
-              v-if="(s.step_type === 'send_whatsapp' || s.step_type === 'send_email') && (s.sent || s.opened || s.clicked)"
+              v-if="
+                (s.step_type === 'send_whatsapp' ||
+                  s.step_type === 'send_email') &&
+                (s.sent || s.opened || s.clicked)
+              "
               class="mt-1.5 text-[11px] text-ink-gray-5"
             >
-              {{ s.sent || 0 }} {{ __('enviados') }} · {{ s.opened || 0 }} {{ __('abiertos') }} · {{ s.clicked || 0 }} {{ __('clics') }}
+              {{ s.sent || 0 }} {{ __('enviados') }} · {{ s.opened || 0 }}
+              {{ __('abiertos') }} · {{ s.clicked || 0 }} {{ __('clics') }}
             </div>
           </template>
 
           <!-- ── chatflow per-type config ── -->
           <template v-else>
-            <div v-if="s.send_type === 'message'" class="flex flex-col gap-2 text-[12px]">
+            <div
+              v-if="s.send_type === 'message'"
+              class="flex flex-col gap-2 text-[12px]"
+            >
               <div class="flex items-center gap-2">
                 <span class="text-ink-gray-5">{{ __('Canal') }}</span>
                 <select v-model="s.channel" class="dm-input" :disabled="frozen">
@@ -156,21 +235,41 @@
                 v-model="s.message"
                 rows="2"
                 class="dm-input w-full"
-                :placeholder="__('Texto del mensaje (queda en revisión antes de enviarse)')"
+                :placeholder="
+                  __('Texto del mensaje (queda en revisión antes de enviarse)')
+                "
                 :disabled="frozen"
               />
             </div>
-            <div v-else-if="s.send_type === 'template'" class="flex items-center gap-2 text-[12px]">
+            <div
+              v-else-if="s.send_type === 'template'"
+              class="flex items-center gap-2 text-[12px]"
+            >
               <span class="text-ink-gray-5">{{ __('Plantilla') }}</span>
-              <select v-model="s.template" class="dm-input flex-1" :disabled="frozen">
+              <select
+                v-model="s.template"
+                class="dm-input flex-1"
+                :disabled="frozen"
+              >
                 <option value="">—</option>
-                <option v-for="t in waList" :key="t.name" :value="t.name">{{ waLabel(t) }}</option>
+                <option v-for="t in waList" :key="t.name" :value="t.name">
+                  {{ waLabel(t) }}
+                </option>
               </select>
-              <PreviewToggle v-if="s.template" :open="isPreviewOpen(s)" @toggle="togglePreview(s)" />
+              <PreviewToggle
+                v-if="s.template"
+                :open="isPreviewOpen(s)"
+                @toggle="togglePreview(s)"
+              />
             </div>
-            <div v-else-if="s.send_type === 'escalate'" class="flex flex-col gap-2 text-[12px]">
+            <div
+              v-else-if="s.send_type === 'escalate'"
+              class="flex flex-col gap-2 text-[12px]"
+            >
               <div class="flex items-center gap-2">
-                <span class="flex-none text-ink-gray-5">{{ __('Asignar a') }}</span>
+                <span class="flex-none text-ink-gray-5">{{
+                  __('Asignar a')
+                }}</span>
                 <Link
                   class="flex-1"
                   :value="s.assign_to || ''"
@@ -188,9 +287,17 @@
                 :disabled="frozen"
               />
             </div>
-            <div class="mt-2 flex items-center gap-2 text-[11.5px] text-ink-gray-5">
+            <div
+              class="mt-2 flex items-center gap-2 text-[11.5px] text-ink-gray-5"
+            >
               <span>{{ __('Espera antes de este paso') }}</span>
-              <input v-model.number="s.wait_hours" type="number" min="0" class="dm-input w-16" :disabled="frozen" />
+              <input
+                v-model.number="s.wait_hours"
+                type="number"
+                min="0"
+                class="dm-input w-16"
+                :disabled="frozen"
+              />
               <span>{{ __('horas (0 = inmediato)') }}</span>
             </div>
           </template>
@@ -198,23 +305,36 @@
           <!-- ── WhatsApp template preview (shared) ── -->
           <div v-if="isPreviewOpen(s) && previewTpl(s)" class="mt-2">
             <div class="rounded-[10px] bg-surface-green-2 px-3 py-2">
-              <div class="whitespace-pre-wrap text-[12px] leading-relaxed text-ink-gray-8">
-                <template v-for="(part, k) in tplParts(previewTpl(s).template)" :key="k">
+              <div
+                class="whitespace-pre-wrap text-[12px] leading-relaxed text-ink-gray-8"
+              >
+                <template
+                  v-for="(part, k) in tplParts(previewTpl(s).template)"
+                  :key="k"
+                >
                   <span
                     v-if="k % 2 === 1"
                     class="mx-[1px] rounded bg-surface-amber-1 px-1 font-mono text-[11px] font-semibold text-ink-amber-7"
-                  >{{ part }}</span>
+                    >{{ part }}</span
+                  >
                   <span v-else>{{ part }}</span>
                 </template>
               </div>
-              <div v-if="previewTpl(s).footer" class="mt-1 text-[11px] text-ink-gray-5">
+              <div
+                v-if="previewTpl(s).footer"
+                class="mt-1 text-[11px] text-ink-gray-5"
+              >
                 {{ previewTpl(s).footer }}
               </div>
             </div>
-            <div class="mt-1 flex items-center gap-2 text-[10.5px] text-ink-gray-4">
+            <div
+              class="mt-1 flex items-center gap-2 text-[10.5px] text-ink-gray-4"
+            >
               <span>{{ variablesHint }}</span>
               <span
-                v-if="previewTpl(s).status && previewTpl(s).status !== 'APPROVED'"
+                v-if="
+                  previewTpl(s).status && previewTpl(s).status !== 'APPROVED'
+                "
                 class="rounded bg-surface-amber-1 px-1.5 py-[1px] font-semibold text-ink-amber-7"
               >
                 {{ previewTpl(s).status }}
@@ -222,7 +342,10 @@
             </div>
           </div>
         </div>
-        <div v-if="i < steps.length - 1" class="ml-[18px] h-3 w-px bg-outline-gray-2" />
+        <div
+          v-if="i < steps.length - 1"
+          class="ml-[18px] h-3 w-px bg-outline-gray-2"
+        />
       </div>
     </div>
   </div>
@@ -308,7 +431,9 @@ function addStep() {
     return
   }
   // chatflow labels must be unique + non-blank (server guard) — prefill one
-  const labels = new Set(steps.value.map((x) => (x.step_label || '').trim().toLowerCase()))
+  const labels = new Set(
+    steps.value.map((x) => (x.step_label || '').trim().toLowerCase()),
+  )
   let n = steps.value.length + 1
   while (labels.has(`paso-${n}`)) n++
   steps.value.push({
@@ -325,7 +450,12 @@ function removeStep(i) {
   steps.value.splice(i, 1)
 }
 function onCampaignType(s) {
-  s.channel = s.step_type === 'send_whatsapp' ? 'whatsapp' : s.step_type === 'send_email' ? 'email' : ''
+  s.channel =
+    s.step_type === 'send_whatsapp'
+      ? 'whatsapp'
+      : s.step_type === 'send_email'
+        ? 'email'
+        : ''
 }
 function forwardSteps(i) {
   const out = []
@@ -334,10 +464,18 @@ function forwardSteps(i) {
 }
 
 // ── glyphs ───────────────────────────────────────────────────────────────────
-const CAMPAIGN_GLYPH = { send_whatsapp: '💬', send_email: '✉', wait: '⏳', branch: '🔀', end: '⏹' }
+const CAMPAIGN_GLYPH = {
+  send_whatsapp: '💬',
+  send_email: '✉',
+  wait: '⏳',
+  branch: '🔀',
+  end: '⏹',
+}
 const CHATFLOW_GLYPH = { message: '💬', template: '📋', escalate: '🚨' }
 function glyph(s) {
-  return props.kind === 'campaign' ? CAMPAIGN_GLYPH[s.step_type] || '•' : CHATFLOW_GLYPH[s.send_type] || '•'
+  return props.kind === 'campaign'
+    ? CAMPAIGN_GLYPH[s.step_type] || '•'
+    : CHATFLOW_GLYPH[s.send_type] || '•'
 }
 
 // ── template preview ─────────────────────────────────────────────────────────
@@ -348,7 +486,8 @@ function isPreviewOpen(s) {
 function togglePreview(s) {
   const k = uid(s)
   const next = new Set(openPreviews.value)
-  next.has(k) ? next.delete(k) : next.add(k)
+  if (next.has(k)) next.delete(k)
+  else next.add(k)
   openPreviews.value = next
 }
 function previewTpl(s) {
@@ -360,7 +499,9 @@ function tplParts(body) {
 }
 // built in script — a literal `{{n}}` inside a template interpolation would
 // terminate the interpolation early and break the SFC parse
-const variablesHint = __('Las variables {0} se llenan al enviar', ['{' + '{n}' + '}'])
+const variablesHint = __('Las variables {0} se llenan al enviar', [
+  '{' + '{n}' + '}',
+])
 
 const PreviewToggle = (p, { emit }) =>
   h(

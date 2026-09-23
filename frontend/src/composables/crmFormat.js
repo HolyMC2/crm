@@ -69,7 +69,9 @@ export function timeAgo(ts) {
 }
 export function hhmm(ts) {
   const d = _date(ts)
-  return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+  return d
+    ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : ''
 }
 
 // Pretty-print a raw WhatsApp/CRM number (5216691530561 / 526691530561 / 6691530561)
@@ -80,7 +82,8 @@ export function formatPhone(raw) {
   let n = d
   if (n.startsWith('521')) n = n.slice(3)
   else if (n.startsWith('52')) n = n.slice(2)
-  if (n.length === 10) return `+52 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`
+  if (n.length === 10)
+    return `+52 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`
   return raw ? `+${d}` : '—'
 }
 

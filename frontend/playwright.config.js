@@ -56,7 +56,5 @@ export default defineConfig({
     actionTimeout: 15_000,
     navigationTimeout: 45_000,
   },
-  projects: [
-    { name: 'chromium', use: { browserName: 'chromium' } },
-  ],
+  projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
 })

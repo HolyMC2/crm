@@ -28,7 +28,9 @@ describe('buildCadenceScaffold', () => {
   })
 
   it('leaves every send step with a BLANK template for the operator to fill', () => {
-    const sends = buildCadenceScaffold().filter((s) => SEND_TYPES.has(s.step_type))
+    const sends = buildCadenceScaffold().filter((s) =>
+      SEND_TYPES.has(s.step_type),
+    )
     expect(sends).toHaveLength(3)
     for (const s of sends) {
       expect(s.template).toBe('')
@@ -38,7 +40,9 @@ describe('buildCadenceScaffold', () => {
   })
 
   it('gives wait steps no channel and no template (valid Draft rows)', () => {
-    for (const s of buildCadenceScaffold().filter((x) => x.step_type === 'wait')) {
+    for (const s of buildCadenceScaffold().filter(
+      (x) => x.step_type === 'wait',
+    )) {
       expect(s.channel).toBe('')
       expect(s.template).toBe('')
       expect(Number.isInteger(s.wait_hours)).toBe(true)

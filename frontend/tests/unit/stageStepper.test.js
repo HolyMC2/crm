@@ -21,22 +21,76 @@ import {
 // Shaped like the taller seed (taller/repair/seed/deal_statuses.py), shuffled to
 // prove the helper orders rather than trusting the caller.
 const SEED = [
-  { name: 'Completado', type: 'Won', position: 6, probability: 100, color: 'green' },
-  { name: 'En Cotización', type: 'Open', position: 3, probability: 50, color: 'orange' },
-  { name: 'Por Contactar', type: 'Open', position: 1, probability: 10, color: 'blue' },
-  { name: 'Cancelado', type: 'Lost', position: 7, probability: 0, color: 'red' },
-  { name: 'Aprobado', type: 'Open', position: 4, probability: 75, color: 'purple' },
-  { name: 'Esperando Recepción', type: 'Open', position: 2, probability: 30, color: 'yellow' },
-  { name: 'Por Entregar', type: 'Open', position: 5, probability: 90, color: 'green' },
-  { name: 'Abandonado', type: 'Lost', position: 8, probability: 0, color: 'gray' },
+  {
+    name: 'Completado',
+    type: 'Won',
+    position: 6,
+    probability: 100,
+    color: 'green',
+  },
+  {
+    name: 'En Cotización',
+    type: 'Open',
+    position: 3,
+    probability: 50,
+    color: 'orange',
+  },
+  {
+    name: 'Por Contactar',
+    type: 'Open',
+    position: 1,
+    probability: 10,
+    color: 'blue',
+  },
+  {
+    name: 'Cancelado',
+    type: 'Lost',
+    position: 7,
+    probability: 0,
+    color: 'red',
+  },
+  {
+    name: 'Aprobado',
+    type: 'Open',
+    position: 4,
+    probability: 75,
+    color: 'purple',
+  },
+  {
+    name: 'Esperando Recepción',
+    type: 'Open',
+    position: 2,
+    probability: 30,
+    color: 'yellow',
+  },
+  {
+    name: 'Por Entregar',
+    type: 'Open',
+    position: 5,
+    probability: 90,
+    color: 'green',
+  },
+  {
+    name: 'Abandonado',
+    type: 'Lost',
+    position: 8,
+    probability: 0,
+    color: 'gray',
+  },
 ]
 const names = (list) => list.map((s) => s.name)
 
 describe('stagePartition: ordering', () => {
   it('orders by position regardless of the input order', () => {
     expect(names(orderByPosition(SEED))).toEqual([
-      'Por Contactar', 'Esperando Recepción', 'En Cotización', 'Aprobado',
-      'Por Entregar', 'Completado', 'Cancelado', 'Abandonado',
+      'Por Contactar',
+      'Esperando Recepción',
+      'En Cotización',
+      'Aprobado',
+      'Por Entregar',
+      'Completado',
+      'Cancelado',
+      'Abandonado',
     ])
   })
 
@@ -60,7 +114,11 @@ describe('stagePartition: partition by type, never by name', () => {
   it('splits flow stages from the won and lost outcomes', () => {
     const { steps, won, lost } = partitionStages(SEED)
     expect(names(steps)).toEqual([
-      'Por Contactar', 'Esperando Recepción', 'En Cotización', 'Aprobado', 'Por Entregar',
+      'Por Contactar',
+      'Esperando Recepción',
+      'En Cotización',
+      'Aprobado',
+      'Por Entregar',
     ])
     expect(names(won)).toEqual(['Completado'])
     expect(names(lost)).toEqual(['Cancelado', 'Abandonado'])
@@ -80,9 +138,13 @@ describe('stagePartition: partition by type, never by name', () => {
     const english = SEED.map((s, i) => ({ ...s, name: `EN-${i}` }))
     const es = partitionStages(SEED)
     const en = partitionStages(english)
-    expect(en.steps.map((s) => s.position)).toEqual(es.steps.map((s) => s.position))
+    expect(en.steps.map((s) => s.position)).toEqual(
+      es.steps.map((s) => s.position),
+    )
     expect(en.won.map((s) => s.position)).toEqual(es.won.map((s) => s.position))
-    expect(en.lost.map((s) => s.position)).toEqual(es.lost.map((s) => s.position))
+    expect(en.lost.map((s) => s.position)).toEqual(
+      es.lost.map((s) => s.position),
+    )
   })
 
   it('survives an empty or junk status list', () => {
@@ -119,7 +181,13 @@ describe('stagePartition: stepperModel', () => {
 
   it('leaves the flow unfilled on a lost deal — we cannot know how far it got', () => {
     const m = stepperModel(SEED, 'Cancelado')
-    expect(stateOf(m)).toEqual(['future', 'future', 'future', 'future', 'future'])
+    expect(stateOf(m)).toEqual([
+      'future',
+      'future',
+      'future',
+      'future',
+      'future',
+    ])
     expect(m.outcome).toBe('lost')
   })
 
@@ -127,7 +195,13 @@ describe('stagePartition: stepperModel', () => {
     // A hidden English twin, or a stage retired after the deal was created.
     const m = stepperModel(SEED, 'Approved')
     expect(m.unknown).toBe(true)
-    expect(stateOf(m)).toEqual(['future', 'future', 'future', 'future', 'future'])
+    expect(stateOf(m)).toEqual([
+      'future',
+      'future',
+      'future',
+      'future',
+      'future',
+    ])
   })
 
   it('is not unknown when the deal has no status at all', () => {

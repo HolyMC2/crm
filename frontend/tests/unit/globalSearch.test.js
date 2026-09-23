@@ -32,12 +32,18 @@ describe('highlightSegments', () => {
   })
 
   it('returns a single non-match segment when there is no query', () => {
-    expect(highlightSegments('hola', '')).toEqual([{ text: 'hola', match: false }])
-    expect(highlightSegments('hola', '   ')).toEqual([{ text: 'hola', match: false }])
+    expect(highlightSegments('hola', '')).toEqual([
+      { text: 'hola', match: false },
+    ])
+    expect(highlightSegments('hola', '   ')).toEqual([
+      { text: 'hola', match: false },
+    ])
   })
 
   it('returns a single non-match segment when the query is absent from the text', () => {
-    expect(highlightSegments('hola mundo', 'zzz')).toEqual([{ text: 'hola mundo', match: false }])
+    expect(highlightSegments('hola mundo', 'zzz')).toEqual([
+      { text: 'hola mundo', match: false },
+    ])
   })
 
   it('returns [] for empty/nullish text', () => {

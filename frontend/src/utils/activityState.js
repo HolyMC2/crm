@@ -32,8 +32,18 @@ function pad(n) {
 // Translatable so a language flip reaches the chips; the fallback strings are the
 // Spanish UI copy.
 const MONTHS_SHORT = [
-  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-  'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
 ]
 
 /**
@@ -68,7 +78,8 @@ export function activityLabel(at, now = new Date()) {
   }
 
   const days = dayDiff(d, now)
-  if (days === 0) return __('Hoy {0}:{1}', [pad(d.getHours()), pad(d.getMinutes())])
+  if (days === 0)
+    return __('Hoy {0}:{1}', [pad(d.getHours()), pad(d.getMinutes())])
   if (days === 1) return __('Mañana')
   if (days <= 7) return __('En {0} d', [days])
   return `${d.getDate()} ${__(MONTHS_SHORT[d.getMonth()])}`

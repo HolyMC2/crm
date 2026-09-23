@@ -14,7 +14,10 @@
     <template v-for="section in visibleSections" :key="section.key">
       <div
         class="grid grid-cols-1 gap-3"
-        :class="{ 'sm:grid-cols-2': section.columns === 2, 'sm:grid-cols-3': section.columns === 3 }"
+        :class="{
+          'sm:grid-cols-2': section.columns === 2,
+          'sm:grid-cols-3': section.columns === 3,
+        }"
         :data-section="section.key"
       >
         <template v-for="field in section.fields" :key="field.fieldname">
@@ -76,7 +79,9 @@
               :modelValue="str(draft[field.fieldname])"
               :disabled="isReadonly(field)"
               @update:modelValue="(v) => emitUpdate(field.fieldname, v)"
-              @blur="field.widget === 'phone' && onPhoneBlur(field.fieldname, $event)"
+              @blur="
+                field.widget === 'phone' && onPhoneBlur(field.fieldname, $event)
+              "
             />
             <p
               v-if="errorFor(field.fieldname)"
@@ -120,7 +125,8 @@ const visibleSections = computed(() =>
 )
 
 const str = (v) => (v === null || v === undefined ? '' : String(v))
-const isVisible = (f) => f.hidden || states.value[f.fieldname]?.visible !== false
+const isVisible = (f) =>
+  f.hidden || states.value[f.fieldname]?.visible !== false
 const isReadonly = (f) => states.value[f.fieldname]?.readonly === true
 const selectOptions = (f) => ['', ...(f.options || [])]
 const labelFor = (f) => (f.reqd ? `${f.label} *` : f.label)

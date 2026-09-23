@@ -6,8 +6,13 @@
   as WhatsAppBox (IconPicker + FileUploader/Dropdown) for a consistent composer.
 -->
 <template>
-  <div class="border-t border-outline-gray-1 bg-surface-base px-3 py-2 dark:bg-surface-gray-1 sm:px-10">
-    <div class="mb-1 text-[10px] font-semibold uppercase tracking-wide" style="color: #0084ff">
+  <div
+    class="border-t border-outline-gray-1 bg-surface-base px-3 py-2 dark:bg-surface-gray-1 sm:px-10"
+  >
+    <div
+      class="mb-1 text-[10px] font-semibold uppercase tracking-wide"
+      style="color: #0084ff"
+    >
       {{ __('Responder · Messenger') }}
     </div>
     <div class="flex items-end gap-2">
@@ -16,7 +21,10 @@
           <template #default="{ openFileSelector }">
             <div class="flex items-center space-x-2">
               <Dropdown :options="uploadOptions(openFileSelector)">
-                <FeatherIcon name="plus" class="size-4.5 cursor-pointer text-ink-gray-5" />
+                <FeatherIcon
+                  name="plus"
+                  class="size-4.5 cursor-pointer text-ink-gray-5"
+                />
               </Dropdown>
             </div>
           </template>
@@ -62,16 +70,28 @@
       v-if="window24h && window24h.open"
       class="mt-1 text-[10px] font-medium text-ink-green-7 dark:text-ink-green-6"
     >
-      {{ __('Ventana de 24 h abierta · respuesta gratis ({0} h restantes)', [window24h.hoursLeft]) }}
+      {{
+        __('Ventana de 24 h abierta · respuesta gratis ({0} h restantes)', [
+          window24h.hoursLeft,
+        ])
+      }}
     </p>
     <p
       v-else-if="window24h && !window24h.open"
       class="mt-1 text-[10px] font-medium text-ink-amber-7 dark:text-ink-amber-6"
     >
-      {{ __('Fuera de la ventana de 24 h — Meta solo entrega con etiqueta de agente humano (sin promociones).') }}
+      {{
+        __(
+          'Fuera de la ventana de 24 h — Meta solo entrega con etiqueta de agente humano (sin promociones).',
+        )
+      }}
     </p>
     <p v-else class="mt-1 text-[10px] text-ink-gray-4 dark:text-ink-gray-5">
-      {{ __('Fuera de la ventana de 24 h, Meta solo permite mensajes con etiqueta de agente humano.') }}
+      {{
+        __(
+          'Fuera de la ventana de 24 h, Meta solo permite mensajes con etiqueta de agente humano.',
+        )
+      }}
     </p>
   </div>
 </template>
@@ -110,9 +130,30 @@ function onCanned(body) {
 
 function uploadOptions(openFileSelector) {
   return [
-    { label: __('Imagen'), icon: 'image', onClick: () => { fileType.value = 'image'; openFileSelector('image/*') } },
-    { label: __('Video'), icon: 'video', onClick: () => { fileType.value = 'video'; openFileSelector('video/*') } },
-    { label: __('Documento'), icon: 'file', onClick: () => { fileType.value = 'document'; openFileSelector() } },
+    {
+      label: __('Imagen'),
+      icon: 'image',
+      onClick: () => {
+        fileType.value = 'image'
+        openFileSelector('image/*')
+      },
+    },
+    {
+      label: __('Video'),
+      icon: 'video',
+      onClick: () => {
+        fileType.value = 'video'
+        openFileSelector('video/*')
+      },
+    },
+    {
+      label: __('Documento'),
+      icon: 'file',
+      onClick: () => {
+        fileType.value = 'document'
+        openFileSelector()
+      },
+    },
   ]
 }
 

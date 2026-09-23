@@ -8,7 +8,15 @@ import { createApp, defineComponent, h, reactive } from 'vue'
 vi.mock('frappe-ui', () => ({
   FormControl: defineComponent({
     name: 'FormControl',
-    props: ['type', 'label', 'options', 'modelValue', 'disabled', 'rows', 'placeholder'],
+    props: [
+      'type',
+      'label',
+      'options',
+      'modelValue',
+      'disabled',
+      'rows',
+      'placeholder',
+    ],
     emits: ['update:modelValue', 'blur'],
     setup(props, { emit }) {
       return () =>
@@ -55,18 +63,45 @@ const DESCRIPTOR = {
       key: 'equipo',
       columns: 3,
       fields: [
-        { fieldname: 'device_model', label: 'Modelo', type: 'Link', widget: 'link', link: { doctype: 'Device Model' } },
-        { fieldname: 'general_status', label: 'Condición', type: 'Select', widget: 'select', options: ['Good', 'Bad'] },
+        {
+          fieldname: 'device_model',
+          label: 'Modelo',
+          type: 'Link',
+          widget: 'link',
+          link: { doctype: 'Device Model' },
+        },
+        {
+          fieldname: 'general_status',
+          label: 'Condición',
+          type: 'Select',
+          widget: 'select',
+          options: ['Good', 'Bad'],
+        },
       ],
     },
     {
       key: 'falla',
-      fields: [{ fieldname: 'falla_reportada', label: 'Falla', type: 'Small Text', widget: 'textarea', reqd: true }],
+      fields: [
+        {
+          fieldname: 'falla_reportada',
+          label: 'Falla',
+          type: 'Small Text',
+          widget: 'textarea',
+          reqd: true,
+        },
+      ],
     },
     {
       key: 'oculta',
       visible_when: { '==': [{ var: 'kind' }, 'never'] },
-      fields: [{ fieldname: 'phone_pin', label: 'PIN', type: 'Password', widget: 'password' }],
+      fields: [
+        {
+          fieldname: 'phone_pin',
+          label: 'PIN',
+          type: 'Password',
+          widget: 'password',
+        },
+      ],
     },
   ],
 }
@@ -84,14 +119,28 @@ describe('DocoFormRenderer', () => {
   it('renders visible sections + fields, skips false visible_when sections', () => {
     const el = mountRenderer({ descriptor: DESCRIPTOR, draft: reactive({}) })
     expect(el.querySelector('[data-section="equipo"]')).toBeTruthy()
-    expect(el.querySelector('[data-fieldname="device_model"] [data-mock="link"]')).toBeTruthy()
-    expect(el.querySelector('[data-fieldname="device_model"] [data-doctype="Device Model"]')).toBeTruthy()
-    expect(el.querySelector('[data-fieldname="falla_reportada"] [data-type="textarea"]')).toBeTruthy()
+    expect(
+      el.querySelector('[data-fieldname="device_model"] [data-mock="link"]'),
+    ).toBeTruthy()
+    expect(
+      el.querySelector(
+        '[data-fieldname="device_model"] [data-doctype="Device Model"]',
+      ),
+    ).toBeTruthy()
+    expect(
+      el.querySelector(
+        '[data-fieldname="falla_reportada"] [data-type="textarea"]',
+      ),
+    ).toBeTruthy()
     expect(el.querySelector('[data-section="oculta"]')).toBeNull()
   })
 
   it('sections filter renders only requested keys', () => {
-    const el = mountRenderer({ descriptor: DESCRIPTOR, draft: reactive({}), sections: ['falla'] })
+    const el = mountRenderer({
+      descriptor: DESCRIPTOR,
+      draft: reactive({}),
+      sections: ['falla'],
+    })
     expect(el.querySelector('[data-section="falla"]')).toBeTruthy()
     expect(el.querySelector('[data-section="equipo"]')).toBeNull()
   })
@@ -115,9 +164,17 @@ describe('DocoFormRenderer', () => {
     const el = mountRenderer({
       descriptor: DESCRIPTOR,
       draft: reactive({}),
-      errors: [{ fieldname: 'falla_reportada', kind: 'reqd', message: 'Falla: requerido' }],
+      errors: [
+        {
+          fieldname: 'falla_reportada',
+          kind: 'reqd',
+          message: 'Falla: requerido',
+        },
+      ],
     })
-    const err = el.querySelector('[data-fieldname="falla_reportada"] [aria-live="polite"]')
+    const err = el.querySelector(
+      '[data-fieldname="falla_reportada"] [aria-live="polite"]',
+    )
     expect(err).toBeTruthy()
     expect(err.textContent.trim()).toBe('Falla: requerido')
   })
@@ -126,6 +183,10 @@ describe('DocoFormRenderer', () => {
     const mutated = JSON.parse(JSON.stringify(DESCRIPTOR))
     mutated.sections[0].fields[1].widget = 'x-unknown-99'
     const el = mountRenderer({ descriptor: mutated, draft: reactive({}) })
-    expect(el.querySelector('[data-fieldname="general_status"] [data-mock="formcontrol"]')).toBeTruthy()
+    expect(
+      el.querySelector(
+        '[data-fieldname="general_status"] [data-mock="formcontrol"]',
+      ),
+    ).toBeTruthy()
   })
 })

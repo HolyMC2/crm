@@ -11,82 +11,44 @@ on:
             - "**.po"
             - "**.pot"
     schedule:
-        # Run everday at midnight UTC / 5:30 IST
         - cron: "0 0 * * *"
-env:
-    CRM_BRANCH: ${{ github.base_ref || github.ref_name }}
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    packages: read
 
 concurrency:
-    group: develop-crm-${{ github.event.number }}
+    group: server-crm-${{ github.event.number || github.ref }}
     cancel-in-progress: true
 
 jobs:
-    setup:
-        name: Resolve frappe matrix
-        runs-on: ubuntu-latest
-        outputs:
-            frappe-branches: ${{ steps.resolve.outputs.branches }}
-        steps:
-            - name: Resolve frappe branches from target branch
-              id: resolve
-              run: |
-                  BASE="${{ github.base_ref || github.ref_name }}"
-                  # develop tracks frappe develop; the stable lane ships frappe 15 and 16.
-                  if [ "$BASE" = "develop" ]; then
-                      echo 'branches=["develop"]' >> "$GITHUB_OUTPUT"
-                  else
-                      echo 'branches=["version-15","version-16"]' >> "$GITHUB_OUTPUT"
-                  fi
-
     test:
-        name: Tests (frappe ${{ matrix.frappe-branch }})
-        needs: setup
-        runs-on: ubuntu-latest
+        # The fork declares Frappe >=16 and ships this source-locked multi-app
+        # environment. The upstream README's main/develop table is not a fork matrix.
+        name: Tests (supported Frappe 16 image)
+        runs-on: ubuntu-24.04
         timeout-minutes: 60
-        strategy:
-            fail-fast: false
-            matrix:
-                frappe-branch: ${{ fromJson(needs.setup.outputs.frappe-branches) }}
-
-        services:
-            mysql:
-                image: mariadb:10.6
-                env:
-                    MYSQL_ROOT_PASSWORD: root
-                ports:
-                    - 3306:3306
-                options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
-
         steps:
-            - name: Clone
-              uses: actions/checkout@v6
-
-            - name: Setup environment
-              uses: ./.github/actions/setup-server-env
+            - uses: actions/checkout@v4
               with:
-                  python-version: "3.14"
-                  node-version: "24"
-                  type: "server"
-                  # erpnext: stable lane only, never v16 (v16 test bootstrap broken on bare bench)
-                  install-erpnext: ${{ (github.base_ref == 'main-hotfix' || github.base_ref == 'main') && matrix.frappe-branch != 'version-16' }}
-                  frappe-branch: ${{ matrix.frappe-branch }}
-
-            - name: Run server tests
-              uses: ./.github/actions/run-server-tests
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+                  persist-credentials: false
+            - uses: ./.github/actions/setup-native-environment
               with:
-                  bench-path: "/home/runner/frappe-bench"
-                  site: "test_site"
-                  app: "crm"
-                  enable-coverage: "true"
-                  type: "server"
-                  ci-build-id: ${{ github.run_id }}
-
+                  image: ${{ vars.CRM_CI_IMAGE }}
+                  registry-token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Complete native CRM suite with coverage
+              env:
+                  CRM_CI_IMAGE: ${{ vars.CRM_CI_IMAGE }}
+                  CRM_CI_COVERAGE: "true"
+              run: scripts/ci/run-integration.sh
             - name: Persist coverage artifact
-              if: github.base_ref == 'develop' || github.ref_name == 'develop'
-              uses: ./.github/actions/upload-coverage
+              uses: actions/upload-artifact@v4
               with:
-                  artifact-name: coverage-${{ matrix.frappe-branch }}
-                  coverage-path: /home/runner/frappe-bench/sites/coverage.xml
+                  name: coverage-server
+                  path: .ci-results/coverage.xml
+                  if-no-files-found: error
 
     coverage:
         name: Coverage Wrap Up
@@ -94,12 +56,8 @@ jobs:
         if: github.base_ref == 'develop' || github.ref_name == 'develop'
         runs-on: ubuntu-latest
         steps:
-            - name: Clone
-              uses: actions/checkout@v6
-
-            - name: Download artifacts
-              uses: actions/download-artifact@v4
-
+            - uses: actions/checkout@v4
+            - uses: actions/download-artifact@v4
             - name: Publish coverage
               uses: ./.github/actions/publish-codecov
               with:

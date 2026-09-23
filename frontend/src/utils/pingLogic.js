@@ -11,7 +11,12 @@ export function recentSelfSend(lastSendAt, now = Date.now()) {
 
 // WhatsApp: ping only when the unread-dot count actually ROSE (a genuinely new
 // inbound) and we didn't just send ourselves.
-export function shouldPingWa(unreadNow, unreadPrev, lastSendAt, now = Date.now()) {
+export function shouldPingWa(
+  unreadNow,
+  unreadPrev,
+  lastSendAt,
+  now = Date.now(),
+) {
   return unreadNow > unreadPrev && !recentSelfSend(lastSendAt, now)
 }
 

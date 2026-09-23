@@ -9,13 +9,33 @@ from frappe.permissions import has_permission as has_document_permission
 from frappe.utils import get_datetime
 
 from crm.api.inquiries import (
-	DOCTYPE, MANAGER_ROLES, MAX_PEOPLE, PERSON_FIELDS, SOURCES, STATUSES,
-	_choice, _date, _digest, _eligible, _person, _source_url, _text,
+	DOCTYPE,
+	MANAGER_ROLES,
+	MAX_PEOPLE,
+	PERSON_FIELDS,
+	SOURCES,
+	STATUSES,
+	_choice,
+	_date,
+	_digest,
+	_eligible,
+	_person,
+	_source_url,
+	_text,
 )
 
 # Object identity cannot be forged through JSON flags on a generic document save.
 _SERVICE_TOKEN = object()
-PROVENANCE = ("owner", "creation", "source_type", "source_url", "source_text", "capture_key", "capture_payload_hash", "capture_context")
+PROVENANCE = (
+	"owner",
+	"creation",
+	"source_type",
+	"source_url",
+	"source_text",
+	"capture_key",
+	"capture_payload_hash",
+	"capture_context",
+)
 
 
 def prepare_capture(doc, key, fingerprint, context=None):
@@ -71,7 +91,9 @@ class CRMInquiry(Document):
 		# Generic save/insert/set_value responses do not consistently apply field
 		# read levels. Redact the returned copy; never clear a stored receipt.
 		for row in result.get("people", []):
-			if row.get("lead") and not has_document_permission("CRM Lead", "read", doc=row["lead"], print_logs=False):
+			if row.get("lead") and not has_document_permission(
+				"CRM Lead", "read", doc=row["lead"], print_logs=False
+			):
 				row["lead"] = None
 		return result
 
@@ -102,11 +124,15 @@ class CRMInquiry(Document):
 			frappe.throw(_("Capture receipts are set by the server."))
 		else:
 			self.capture_key = _digest([self.owner, "desk", uuid4().hex])
-			self.capture_payload_hash = _digest({
-				"title": self.title, "source_type": self.source_type, "source_url": self.source_url,
-				"source_text": self.source_text,
-				"people": [{f: row.get(f) for f in PERSON_FIELDS} for row in self.people],
-			})
+			self.capture_payload_hash = _digest(
+				{
+					"title": self.title,
+					"source_type": self.source_type,
+					"source_url": self.source_url,
+					"source_text": self.source_text,
+					"people": [{f: row.get(f) for f in PERSON_FIELDS} for row in self.people],
+				}
+			)
 
 	def validate(self):
 		previous = None
@@ -115,7 +141,10 @@ class CRMInquiry(Document):
 			previous.check_permission("write")
 			original_modified = self.get("_original_modified") or self.modified
 			if get_datetime(original_modified) != get_datetime(previous.modified):
-				frappe.throw(_("This inquiry changed. Reload it and retry your changes."), frappe.TimestampMismatchError)
+				frappe.throw(
+					_("This inquiry changed. Reload it and retry your changes."),
+					frappe.TimestampMismatchError,
+				)
 			for field in PROVENANCE:
 				current, stored = self.get(field), previous.get(field)
 				if field == "creation":
@@ -163,8 +192,11 @@ class CRMInquiry(Document):
 				old_time = get_datetime(before.converted_at) if before.converted_at else None
 				changed = row.lead != before.lead or current_time != old_time
 				permitted = (
-					conversion and not before.lead and row.role in ("Requester", "Interested Person")
-					and conversion[1] == row.person_key and conversion[2] == row.lead
+					conversion
+					and not before.lead
+					and row.role in ("Requester", "Interested Person")
+					and conversion[1] == row.person_key
+					and conversion[2] == row.lead
 					and get_datetime(conversion[3]) == current_time
 				)
 				if changed and not permitted:
@@ -191,13 +223,19 @@ class CRMInquiry(Document):
 		if before:
 			recipients.add(before.assigned_to)
 		if self.assigned_to != frappe.session.user and (not before or before.assigned_to != self.assigned_to):
-			frappe.get_doc({
-				"doctype": "CRM Notification", "type": "Assignment",
-				"from_user": frappe.session.user, "to_user": self.assigned_to,
-				"notification_text": _("Se te asignó una consulta"),
-				"reference_doctype": DOCTYPE, "reference_name": self.name,
-				"notification_type_doctype": DOCTYPE, "notification_type_doc": self.name,
-			}).insert()
+			frappe.get_doc(
+				{
+					"doctype": "CRM Notification",
+					"type": "Assignment",
+					"from_user": frappe.session.user,
+					"to_user": self.assigned_to,
+					"notification_text": _("Se te asignó una consulta"),
+					"reference_doctype": DOCTYPE,
+					"reference_name": self.name,
+					"notification_type_doctype": DOCTYPE,
+					"notification_type_doc": self.name,
+				}
+			).insert()
 			# The existing notification controller also emits before commit. Refresh
 			# this user's notification list after the durable record becomes visible.
 			frappe.publish_realtime("crm_notification", {}, user=self.assigned_to, after_commit=True)

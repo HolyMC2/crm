@@ -8,7 +8,9 @@
 import { test, expect } from '@playwright/test'
 import { gotoSocial, SEL, collectErrors, shot } from './helpers.js'
 
-test('calendar: mount, view switch + persistence, month nav, filters/seasons no-crash', async ({ page }) => {
+test('calendar: mount, view switch + persistence, month nav, filters/seasons no-crash', async ({
+  page,
+}) => {
   const errs = collectErrors(page)
   await gotoSocial(page)
 
@@ -35,7 +37,9 @@ test('calendar: mount, view switch + persistence, month nav, filters/seasons no-
   // Persists across a reload (the whole point of the localStorage key).
   await page.reload({ waitUntil: 'domcontentloaded' })
   await expect(SEL.monthLabel(page)).toBeVisible()
-  expect(await page.evaluate(() => localStorage.getItem('social:calView'))).toBe('month')
+  expect(
+    await page.evaluate(() => localStorage.getItem('social:calView')),
+  ).toBe('month')
 
   // Month nav moves the range label and returns.
   const before = (await SEL.monthLabel(page).textContent())?.trim() ?? ''
@@ -47,7 +51,9 @@ test('calendar: mount, view switch + persistence, month nav, filters/seasons no-
   // Filter bar renders only facets present in the loaded window. When posts exist, a
   // pillar chip toggles the "✕ Limpiar (n)" affordance; empty window → no chips.
   const clear = SEL.clearFilters(page)
-  const pillarChip = page.locator('button').filter({ hasText: /^\s*(🛒|🛠|🎉|📣|💬|ℹ️)/ })
+  const pillarChip = page
+    .locator('button')
+    .filter({ hasText: /^\s*(🛒|🛠|🎉|📣|💬|ℹ️)/ })
   if (await pillarChip.count()) {
     await pillarChip.first().click()
     await expect(clear).toBeVisible()
@@ -56,7 +62,8 @@ test('calendar: mount, view switch + persistence, month nav, filters/seasons no-
   } else {
     test.info().annotations.push({
       type: 'fixme',
-      description: 'no posts in window → filter chips absent; interaction needs seeded posts',
+      description:
+        'no posts in window → filter chips absent; interaction needs seeded posts',
     })
   }
 

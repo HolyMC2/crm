@@ -4,7 +4,10 @@
     "sections_extra_note": "renderers must ignore unknown top-level keys"
   },
   "field_overrides": {
-    "customer_phone": { "widget": "x-unknown-widget-99", "x_future_field_key": 1 }
+    "customer_phone": {
+      "widget": "x-unknown-widget-99",
+      "x_future_field_key": 1
+    }
   },
   "expect": "resolveFormState and buildWritePayload succeed; unknown widget renders via readonly-text fallback (renderer-level assertion, logic pack asserts no-throw)"
 }

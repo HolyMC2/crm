@@ -17,12 +17,18 @@ function mockSW({ reg = null, registerOk = true } = {}) {
       return { active: {}, pushManager: { getSubscription: async () => null } }
     }),
   }
-  Object.defineProperty(globalThis.navigator, 'serviceWorker', { value: sw, configurable: true })
+  Object.defineProperty(globalThis.navigator, 'serviceWorker', {
+    value: sw,
+    configurable: true,
+  })
   return sw
 }
 
 function mockNotification(permission = 'default') {
-  globalThis.Notification = { permission, requestPermission: vi.fn(async () => 'granted') }
+  globalThis.Notification = {
+    permission,
+    requestPermission: vi.fn(async () => 'granted'),
+  }
 }
 
 function mockPushManager() {
@@ -95,7 +101,10 @@ describe('refreshPushState', () => {
     mockPushManager()
     mockNotification('granted')
     mockSW({
-      reg: { active: {}, pushManager: { getSubscription: async () => ({ endpoint: 'e' }) } },
+      reg: {
+        active: {},
+        pushManager: { getSubscription: async () => ({ endpoint: 'e' }) },
+      },
     })
     call.mockResolvedValueOnce({ configured: true, subscribed: true })
     const push = await fresh()

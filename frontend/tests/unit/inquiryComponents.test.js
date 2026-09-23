@@ -4,8 +4,9 @@ import { createApp, defineComponent, h, nextTick, reactive, ref } from 'vue'
 const api = vi.hoisted(() => ({ calls: [], behavior: async () => ({}) }))
 vi.mock('frappe-ui', async () => {
   const dates = await import('../../node_modules/frappe-ui/src/utils/dayjs.ts')
-  const config =
-    await import('../../node_modules/frappe-ui/src/utils/config.ts')
+  const config = await import(
+    '../../node_modules/frappe-ui/src/utils/config.ts'
+  )
   return {
     call: (...args) => {
       api.calls.push(args)

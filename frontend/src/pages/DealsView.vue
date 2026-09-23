@@ -14,17 +14,27 @@
          deal moves to the FAB, where a thumb reaches it. -->
     <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
       <div class="flex items-center gap-2 px-3.5 pb-1.5 pt-2.5">
-        <span class="text-[16px] font-bold text-ink-gray-9">{{ __('Tratos') }}</span>
-        <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6">{{ count }}</span>
+        <span class="text-[16px] font-bold text-ink-gray-9">{{
+          __('Tratos')
+        }}</span>
+        <span
+          class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6"
+          >{{ count }}</span
+        >
         <div class="flex-1" />
         <Dropdown :options="mobileMenu">
-          <button class="press flex h-9 w-9 items-center justify-center rounded-full text-[16px] text-ink-gray-5" :aria-label="__('Más opciones')">
+          <button
+            class="press flex h-9 w-9 items-center justify-center rounded-full text-[16px] text-ink-gray-5"
+            :aria-label="__('Más opciones')"
+          >
             ⋯
           </button>
         </Dropdown>
       </div>
       <div class="px-3.5 pb-2">
-        <div class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4">
+        <div
+          class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
+        >
           <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
           <input
             :value="search"
@@ -33,7 +43,14 @@
             class="w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
             @input="onSearch($event.target.value)"
           />
-          <button v-if="search" class="press flex-none text-[13px] text-ink-gray-4" :aria-label="__('Limpiar')" @click="onSearch('')">✕</button>
+          <button
+            v-if="search"
+            class="press flex-none text-[13px] text-ink-gray-4"
+            :aria-label="__('Limpiar')"
+            @click="onSearch('')"
+          >
+            ✕
+          </button>
         </div>
       </div>
       <div class="scb flex gap-1.5 overflow-x-auto px-3.5 pb-2">
@@ -41,7 +58,11 @@
           v-for="v in views"
           :key="v.key"
           class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
-          :class="v.key === view ? 'bg-surface-gray-7 text-white' : 'bg-surface-gray-2 text-ink-gray-7'"
+          :class="
+            v.key === view
+              ? 'bg-surface-gray-7 text-white'
+              : 'bg-surface-gray-2 text-ink-gray-7'
+          "
           :aria-pressed="v.key === view"
           @click="selectView(v)"
         >
@@ -50,29 +71,48 @@
         <span class="my-1 w-px flex-none bg-outline-gray-2" />
         <button
           class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
-          :class="chips.length ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-7'"
+          :class="
+            chips.length
+              ? 'bg-surface-green-2 text-ink-green-8'
+              : 'bg-surface-gray-2 text-ink-gray-7'
+          "
           @click="showFilterSheet = true"
         >
-          {{ __('Filtros') }}<span v-if="chips.length"> · {{ chips.length }}</span>
+          {{ __('Filtros')
+          }}<span v-if="chips.length"> · {{ chips.length }}</span>
         </button>
       </div>
     </div>
 
     <!-- toolbar -->
-    <div v-if="!isMobile" class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
+    <div
+      v-if="!isMobile"
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5"
+    >
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Tratos') }}</span>
-        <span class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6" style="background: #f1f2f4">
+        <span class="text-[15px] font-bold text-ink-gray-9">{{
+          __('Tratos')
+        }}</span>
+        <span
+          class="rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold text-ink-gray-6"
+          style="background: #f1f2f4"
+        >
           {{ count }}
         </span>
         <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
-        <div class="flex overflow-hidden rounded-lg border border-outline-gray-2">
+        <div
+          class="flex overflow-hidden rounded-lg border border-outline-gray-2"
+        >
           <button
             v-for="(v, i) in views"
             :key="v.key"
             class="inline-flex items-center gap-1 px-[11px] py-[5px] text-[12px]"
             :class="i ? 'border-l border-outline-gray-2' : ''"
-            :style="v.key === view ? 'background:#1c2230;color:#fff;font-weight:600' : 'background:#fff;color:#5b6472'"
+            :style="
+              v.key === view
+                ? 'background:#1c2230;color:#fff;font-weight:600'
+                : 'background:#fff;color:#5b6472'
+            "
             :aria-pressed="v.key === view"
             @click="selectView(v)"
           >
@@ -80,25 +120,49 @@
           </button>
         </div>
         <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
-        <FilterPopover :label="__('Stage')" :options="stageOptions" :selected="statusF" @update:selected="statusF = $event" />
-        <FilterPopover :label="__('Source')" :options="sourceOptions" :selected="sourceF" @update:selected="sourceF = $event" />
-        <FilterPopover :label="__('Owner')" :options="ownerOptions" :selected="ownerF" @update:selected="ownerF = $event" />
+        <FilterPopover
+          :label="__('Stage')"
+          :options="stageOptions"
+          :selected="statusF"
+          @update:selected="statusF = $event"
+        />
+        <FilterPopover
+          :label="__('Source')"
+          :options="sourceOptions"
+          :selected="sourceF"
+          @update:selected="sourceF = $event"
+        />
+        <FilterPopover
+          :label="__('Owner')"
+          :options="ownerOptions"
+          :selected="ownerF"
+          @update:selected="ownerF = $event"
+        />
       </div>
       <div class="flex items-center gap-2">
-        <div class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3">
+        <div
+          class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 px-2.5 py-1.5 focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
+        >
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
             :value="search"
             :aria-label="__('Buscar tratos')"
-            @input="onSearch($event.target.value)"
             :placeholder="__('Buscar tratos…')"
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+            @input="onSearch($event.target.value)"
           />
         </div>
         <Dropdown v-if="view === 'list'" :options="groupByMenu">
-          <button class="rounded-lg border px-3 py-[7px] text-[12px] font-medium"
-            :class="grouped ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8' : 'border-outline-gray-2 text-ink-gray-7'">
-            {{ __('Agrupar') }}<span v-if="grouped"> · {{ __(groupByLabel(groupBy)) }}</span> ⌄
+          <button
+            class="rounded-lg border px-3 py-[7px] text-[12px] font-medium"
+            :class="
+              grouped
+                ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-8'
+                : 'border-outline-gray-2 text-ink-gray-7'
+            "
+          >
+            {{ __('Agrupar')
+            }}<span v-if="grouped"> · {{ __(groupByLabel(groupBy)) }}</span> ⌄
           </button>
         </Dropdown>
         <SavedViewPicker
@@ -132,55 +196,121 @@
           + {{ __('New Deal') }}
         </button>
         <Dropdown :options="viewMenu">
-          <button class="rounded-lg border border-outline-gray-2 px-2 py-[7px] text-[12px] text-ink-gray-6" :aria-label="__('Más opciones')">⋯</button>
+          <button
+            class="rounded-lg border border-outline-gray-2 px-2 py-[7px] text-[12px] text-ink-gray-6"
+            :aria-label="__('Más opciones')"
+          >
+            ⋯
+          </button>
         </Dropdown>
       </div>
     </div>
 
-    <section class="flex-none border-b border-outline-gray-1 px-3.5 py-2 sm:px-5" aria-label="Colas de seguimiento">
+    <section
+      class="flex-none border-b border-outline-gray-1 px-3.5 py-2 sm:px-5"
+      aria-label="Colas de seguimiento"
+    >
       <div class="flex gap-2 overflow-x-auto pb-1">
-        <button v-for="q in followUpQueues" :key="q.key" :aria-pressed="followUp === q.key"
+        <button
+          v-for="q in followUpQueues"
+          :key="q.key"
+          :aria-pressed="followUp === q.key"
           class="flex-none whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-medium"
-          :class="followUp === q.key ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-9' : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'"
-          @click="selectFollowUp(q.key)">{{ __(q.label) }}</button>
+          :class="
+            followUp === q.key
+              ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-9'
+              : 'border-outline-gray-2 text-ink-gray-6 hover:bg-surface-gray-2'
+          "
+          @click="selectFollowUp(q.key)"
+        >
+          {{ __(q.label) }}
+        </button>
       </div>
-      <p class="mt-1 text-xs text-ink-gray-5">{{ __(followUpQueues.find(q => q.key === followUp).description) }}</p>
+      <p class="mt-1 text-xs text-ink-gray-5">
+        {{ __(followUpQueues.find((q) => q.key === followUp).description) }}
+      </p>
     </section>
 
     <!-- active filter chips -->
-    <div v-if="chips.length && !isMobile" class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2">
+    <div
+      v-if="chips.length && !isMobile"
+      class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 px-5 py-2"
+    >
       <span
         v-for="c in chips"
         :key="c.key"
         class="inline-flex items-center gap-1.5 rounded-[7px] border px-2 py-1 text-[11.5px] font-medium"
-        style="color: var(--brand); background: var(--brand-soft); border-color: #c7ecd5"
+        style="
+          color: var(--brand);
+          background: var(--brand-soft);
+          border-color: #c7ecd5;
+        "
       >
         {{ c.label }}
-        <button class="text-[13px] leading-none" :aria-label="__('Quitar filtro') + ' ' + c.label" @click="removeChip(c)">×</button>
+        <button
+          class="text-[13px] leading-none"
+          :aria-label="__('Quitar filtro') + ' ' + c.label"
+          @click="removeChip(c)"
+        >
+          ×
+        </button>
       </span>
-      <button class="text-[11.5px] text-ink-gray-5" @click="clearAll">{{ __('Limpiar todo') }}</button>
+      <button class="text-[11.5px] text-ink-gray-5" @click="clearAll">
+        {{ __('Limpiar todo') }}
+      </button>
     </div>
 
-    <div v-if="deals.error" role="alert" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 px-5 py-3 text-sm text-ink-red-8">
-      {{ __('No se pudieron cargar los tratos. Tus filtros siguen guardados.') }}
-      <button class="font-semibold underline" @click="applyFilters">{{ __('Reintentar') }}</button>
+    <div
+      v-if="deals.error"
+      role="alert"
+      class="flex flex-none items-center gap-3 border-b border-outline-gray-1 px-5 py-3 text-sm text-ink-red-8"
+    >
+      {{
+        __('No se pudieron cargar los tratos. Tus filtros siguen guardados.')
+      }}
+      <button class="font-semibold underline" @click="applyFilters">
+        {{ __('Reintentar') }}
+      </button>
     </div>
     <!-- bulk bar -->
-    <div v-if="selectedRows.length" class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2">
-      <span class="text-[12.5px] font-semibold text-ink-gray-8">{{ selectedRows.length }} {{ __('seleccionados') }}</span>
-      <button class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1" @click="bulkDelete">
+    <div
+      v-if="selectedRows.length"
+      class="flex flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-gray-1 px-5 py-2"
+    >
+      <span class="text-[12.5px] font-semibold text-ink-gray-8"
+        >{{ selectedRows.length }} {{ __('seleccionados') }}</span
+      >
+      <button
+        class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
+        @click="bulkDelete"
+      >
         {{ __('Eliminar') }}
       </button>
-      <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">{{ __('Deseleccionar') }}</button>
+      <button class="text-[12px] text-ink-gray-5" @click="selectedRows = []">
+        {{ __('Deseleccionar') }}
+      </button>
     </div>
 
     <!-- list view. Header + rows share ONE scroller so the wider column set (cliente,
          teléfono, equipo, RO…) side-scrolls with its header attached instead of
          squeezing every cell to nothing on a narrow laptop. -->
     <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
-    <div v-if="view === 'list' && isMobile" class="scb min-h-0 flex-1 overflow-y-auto">
-      <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length && !deals.error" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
+    <div
+      v-if="view === 'list' && isMobile"
+      class="scb min-h-0 flex-1 overflow-y-auto"
+    >
+      <div
+        v-if="deals.loading && !rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Cargando…') }}
+      </div>
+      <div
+        v-else-if="!rows.length && !deals.error"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Sin tratos') }}
+      </div>
       <MobileRecordCard
         v-for="r in rows"
         :key="r.name"
@@ -191,7 +321,11 @@
         @open="openDeal(r.name)"
       >
         <template #chips>
-          <span v-if="r.status" class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold" :style="statusChip(r.status)">
+          <span
+            v-if="r.status"
+            class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
+            :style="statusChip(r.status)"
+          >
             {{ r.status }}
           </span>
           <span
@@ -201,18 +335,33 @@
           >
             🔧 {{ extra(r).repair_status }}
           </span>
-          <span v-if="deviceOf(r)" class="truncate text-[11px] text-ink-gray-6">{{ deviceOf(r) }}</span>
-          <span v-if="displayValue(r)" class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8">
+          <span
+            v-if="deviceOf(r)"
+            class="truncate text-[11px] text-ink-gray-6"
+            >{{ deviceOf(r) }}</span
+          >
+          <span
+            v-if="displayValue(r)"
+            class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8"
+          >
             {{ formatMXN(displayValue(r)) }}
           </span>
           <!-- own line: the due label plus the task title needs the full width -->
           <div v-if="r.next_activity_task" class="w-full">
-            <NextActivityChip :at="r.next_activity_at" :title="r.next_activity_title" :type="r.next_activity_type" :empty-label="__('Pendiente sin fecha')" />
+            <NextActivityChip
+              :at="r.next_activity_at"
+              :title="r.next_activity_title"
+              :type="r.next_activity_type"
+              :empty-label="__('Pendiente sin fecha')"
+            />
           </div>
         </template>
       </MobileRecordCard>
       <div v-if="deals.hasNextPage" class="px-3.5 py-3">
-        <button class="press h-11 w-full rounded-[10px] border border-outline-gray-2 text-[13px] font-medium text-ink-gray-7" @click="deals.next()">
+        <button
+          class="press h-11 w-full rounded-[10px] border border-outline-gray-2 text-[13px] font-medium text-ink-gray-7"
+          @click="deals.next()"
+        >
           {{ __('Cargar más') }}
         </button>
       </div>
@@ -220,138 +369,265 @@
     </div>
 
     <template v-if="view === 'list' && !isMobile">
-    <div class="scb min-h-0 flex-1 overflow-auto">
-      <div :style="isMobile ? '' : `min-width:${MIN_W}px`">
-      <!-- table header -->
-      <div
-        class="sticky top-0 z-[5] grid items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
-        :style="`grid-template-columns:${GRID};height:34px`"
-      >
-        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="allSelected" :aria-label="__('Seleccionar todo')" @change="toggleAll" />
-        <button class="text-left uppercase" @click="sortBy('deal_name')">{{ __('Trato') }}{{ sortArrow('deal_name') }}</button>
-        <div v-if="col('customer')">{{ __('Cliente') }}</div>
-        <button v-if="col('phone')" class="text-left uppercase" @click="sortBy('mobile_no')">{{ __('Teléfono') }}{{ sortArrow('mobile_no') }}</button>
-        <div v-if="col('device')">{{ __('Equipo') }}</div>
-        <div v-if="col('repair_type')">{{ __('Reparación') }}</div>
-        <div v-if="col('ro')">{{ __('RO') }}</div>
-        <button v-if="col('value')" class="text-left uppercase" @click="sortBy('deal_value')">{{ __('Valor') }}{{ sortArrow('deal_value') }}</button>
-        <button v-if="col('expected_value')" class="text-left uppercase" @click="sortBy('expected_deal_value')">
-          {{ __('Valor esperado') }}{{ sortArrow('expected_deal_value') }}
-        </button>
-        <button v-if="col('close_date')" class="text-left uppercase" @click="sortBy('expected_closure_date')">
-          {{ __('Cierre') }}{{ sortArrow('expected_closure_date') }}
-        </button>
-        <button v-if="col('next_activity')" class="text-left uppercase" @click="sortBy('next_activity_at')">
-          {{ __('Próximo paso') }}{{ sortArrow('next_activity_at') }}
-        </button>
-        <div v-if="col('stage')">{{ __('Stage') }}</div>
-        <div v-if="col('source')">{{ __('Source') }}</div>
-        <button v-if="col('modified')" class="text-left uppercase" @click="sortBy('modified')">{{ __('Última act.') }}{{ sortArrow('modified') }}</button>
-        <div v-if="col('owner')">{{ __('Owner') }}</div>
-        <div />
-      </div>
-
-      <!-- rows -->
-      <div v-if="deals.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length && !deals.error" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tratos') }}</div>
-
-      <template v-for="g in renderGroups" :key="g.key">
-      <DealGroupHeader
-        v-if="grouped"
-        :label="g.label"
-        :empty-label="__(groupEmptyLabel)"
-        :count="g.count"
-        :exact="g.exact"
-        :collapsed="collapsed[g.key] === true"
-        :color="groupColor(g.key)"
-        @toggle="toggleGroup(g.key)"
-      />
-      <div
-        v-for="r in (grouped && collapsed[g.key] ? [] : g.rows)"
-        :key="r.name"
-        role="button"
-        tabindex="0"
-        class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
-        :style="`grid-template-columns:${GRID};min-height:50px`"
-        @click="openDeal(r.name)"
-        @keydown.enter="openDeal(r.name)"
-      >
-        <input v-if="!isMobile" type="checkbox" class="cb-token" :checked="selectedRows.includes(r.name)" :aria-label="__('Seleccionar') + ' ' + label(r)" @click.stop="toggleRow(r.name)" />
-        <div class="flex items-center gap-2">
-          <span
-            class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
-            :style="`background:${avatarColor(label(r))[0]};color:${avatarColor(label(r))[1]}`"
+      <div class="scb min-h-0 flex-1 overflow-auto">
+        <div :style="isMobile ? '' : `min-width:${MIN_W}px`">
+          <!-- table header -->
+          <div
+            class="sticky top-0 z-[5] grid items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${GRID};height:34px`"
           >
-            {{ initials(label(r)) }}
-          </span>
-          <div class="min-w-0">
-            <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ label(r) }}</div>
-            <!-- second line = the customer, so the identity is visible even with the
-                 Cliente column hidden (and on phones, where only 2 columns fit) -->
-            <div class="truncate text-[11px] text-ink-gray-4">{{ customerOf(r) || formatPhone(phoneOf(r)) }}</div>
-          </div>
-        </div>
-        <div v-if="col('customer')" class="truncate text-[12.5px] text-ink-gray-8">{{ customerOf(r) || '—' }}</div>
-        <div v-if="col('phone')" class="truncate text-[12px] text-ink-gray-6">{{ formatPhone(phoneOf(r)) }}</div>
-        <div v-if="col('device')" class="truncate text-[12px] text-ink-gray-6" :title="deviceOf(r) || ''">{{ deviceOf(r) || '—' }}</div>
-        <div v-if="col('repair_type')" class="truncate text-[12px] text-ink-gray-6" :title="repairTypeOf(r) || ''">
-          {{ repairTypeOf(r) || '—' }}
-        </div>
-        <div v-if="col('ro')" class="min-w-0">
-          <div v-if="extra(r).repair_order" class="flex items-center gap-1.5">
-            <span class="truncate text-[11.5px] font-medium text-ink-gray-7">{{ extra(r).repair_order }}</span>
-            <span
-              v-if="extra(r).repair_status"
-              class="flex-none rounded px-1.5 py-px text-[10.5px] font-semibold"
-              :style="repairChip(extra(r).repair_status)"
+            <input
+              v-if="!isMobile"
+              type="checkbox"
+              class="cb-token"
+              :checked="allSelected"
+              :aria-label="__('Seleccionar todo')"
+              @change="toggleAll"
+            />
+            <button class="text-left uppercase" @click="sortBy('deal_name')">
+              {{ __('Trato') }}{{ sortArrow('deal_name') }}
+            </button>
+            <div v-if="col('customer')">{{ __('Cliente') }}</div>
+            <button
+              v-if="col('phone')"
+              class="text-left uppercase"
+              @click="sortBy('mobile_no')"
             >
-              {{ extra(r).repair_status }}
-            </span>
-            <span v-if="extra(r).repair_count > 1" class="flex-none text-[10px] text-ink-gray-4">+{{ extra(r).repair_count - 1 }}</span>
+              {{ __('Teléfono') }}{{ sortArrow('mobile_no') }}
+            </button>
+            <div v-if="col('device')">{{ __('Equipo') }}</div>
+            <div v-if="col('repair_type')">{{ __('Reparación') }}</div>
+            <div v-if="col('ro')">{{ __('RO') }}</div>
+            <button
+              v-if="col('value')"
+              class="text-left uppercase"
+              @click="sortBy('deal_value')"
+            >
+              {{ __('Valor') }}{{ sortArrow('deal_value') }}
+            </button>
+            <button
+              v-if="col('expected_value')"
+              class="text-left uppercase"
+              @click="sortBy('expected_deal_value')"
+            >
+              {{ __('Valor esperado') }}{{ sortArrow('expected_deal_value') }}
+            </button>
+            <button
+              v-if="col('close_date')"
+              class="text-left uppercase"
+              @click="sortBy('expected_closure_date')"
+            >
+              {{ __('Cierre') }}{{ sortArrow('expected_closure_date') }}
+            </button>
+            <button
+              v-if="col('next_activity')"
+              class="text-left uppercase"
+              @click="sortBy('next_activity_at')"
+            >
+              {{ __('Próximo paso') }}{{ sortArrow('next_activity_at') }}
+            </button>
+            <div v-if="col('stage')">{{ __('Stage') }}</div>
+            <div v-if="col('source')">{{ __('Source') }}</div>
+            <button
+              v-if="col('modified')"
+              class="text-left uppercase"
+              @click="sortBy('modified')"
+            >
+              {{ __('Última act.') }}{{ sortArrow('modified') }}
+            </button>
+            <div v-if="col('owner')">{{ __('Owner') }}</div>
+            <div />
           </div>
-          <span v-else class="text-[12px] text-ink-gray-4">—</span>
-        </div>
-        <div v-if="col('value')" class="text-[12.5px] font-semibold text-ink-gray-8">{{ formatMXN(r.deal_value) }}</div>
-        <div v-if="col('expected_value')" class="text-[12.5px] text-ink-gray-7">{{ formatMXN(r.expected_deal_value) }}</div>
-        <div v-if="col('close_date')" class="text-[12px] text-ink-gray-6">{{ formatDate(r.expected_closure_date) }}</div>
-        <FollowUpCell v-if="col('next_activity')" :row="r" :today="siteToday" @saved="onFollowUpSaved(r, $event)" />
-        <div v-if="col('stage')">
-          <span
-            v-if="r.status"
-            class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
-            :style="statusChip(r.status)"
-          >
-            {{ r.status }}
-          </span>
-        </div>
-        <div v-if="col('source')" class="flex items-center gap-1.5 text-[12px] text-ink-gray-6">
-          <span v-if="r.source" class="h-[7px] w-[7px] flex-none rounded-full" :style="`background:${sourceDot(r.source)}`" />
-          <span class="truncate">{{ r.source || '—' }}</span>
-        </div>
-        <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">{{ timeAgo(r.modified) }}</div>
-        <div v-if="col('owner')">
-          <span
-            v-if="r.deal_owner"
-            class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
-            :style="`background:${avatarColor(r.deal_owner)[0]};color:${avatarColor(r.deal_owner)[1]}`"
-            :title="r.deal_owner"
-          >
-            {{ initials(ownerName(r.deal_owner)) }}
-          </span>
-        </div>
-        <Dropdown :options="rowMenu(r)" @click.stop>
-          <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')" @click.stop>···</button>
-        </Dropdown>
-      </div>
-      </template>
 
-      <div v-if="deals.hasNextPage" class="py-3 text-center">
-        <button class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7" @click="deals.next()">
-          {{ __('Cargar más') }}
-        </button>
+          <!-- rows -->
+          <div
+            v-if="deals.loading && !rows.length"
+            class="py-10 text-center text-xs text-ink-gray-4"
+          >
+            {{ __('Cargando…') }}
+          </div>
+          <div
+            v-else-if="!rows.length && !deals.error"
+            class="py-10 text-center text-xs text-ink-gray-4"
+          >
+            {{ __('Sin tratos') }}
+          </div>
+
+          <template v-for="g in renderGroups" :key="g.key">
+            <DealGroupHeader
+              v-if="grouped"
+              :label="g.label"
+              :empty-label="__(groupEmptyLabel)"
+              :count="g.count"
+              :exact="g.exact"
+              :collapsed="collapsed[g.key] === true"
+              :color="groupColor(g.key)"
+              @toggle="toggleGroup(g.key)"
+            />
+            <div
+              v-for="r in grouped && collapsed[g.key] ? [] : g.rows"
+              :key="r.name"
+              role="button"
+              tabindex="0"
+              class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
+              :style="`grid-template-columns:${GRID};min-height:50px`"
+              @click="openDeal(r.name)"
+              @keydown.enter="openDeal(r.name)"
+            >
+              <input
+                v-if="!isMobile"
+                type="checkbox"
+                class="cb-token"
+                :checked="selectedRows.includes(r.name)"
+                :aria-label="__('Seleccionar') + ' ' + label(r)"
+                @click.stop="toggleRow(r.name)"
+              />
+              <div class="flex items-center gap-2">
+                <span
+                  class="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold"
+                  :style="`background:${avatarColor(label(r))[0]};color:${avatarColor(label(r))[1]}`"
+                >
+                  {{ initials(label(r)) }}
+                </span>
+                <div class="min-w-0">
+                  <div
+                    class="truncate text-[13px] font-semibold text-ink-gray-9"
+                  >
+                    {{ label(r) }}
+                  </div>
+                  <!-- second line = the customer, so the identity is visible even with the
+                 Cliente column hidden (and on phones, where only 2 columns fit) -->
+                  <div class="truncate text-[11px] text-ink-gray-4">
+                    {{ customerOf(r) || formatPhone(phoneOf(r)) }}
+                  </div>
+                </div>
+              </div>
+              <div
+                v-if="col('customer')"
+                class="truncate text-[12.5px] text-ink-gray-8"
+              >
+                {{ customerOf(r) || '—' }}
+              </div>
+              <div
+                v-if="col('phone')"
+                class="truncate text-[12px] text-ink-gray-6"
+              >
+                {{ formatPhone(phoneOf(r)) }}
+              </div>
+              <div
+                v-if="col('device')"
+                class="truncate text-[12px] text-ink-gray-6"
+                :title="deviceOf(r) || ''"
+              >
+                {{ deviceOf(r) || '—' }}
+              </div>
+              <div
+                v-if="col('repair_type')"
+                class="truncate text-[12px] text-ink-gray-6"
+                :title="repairTypeOf(r) || ''"
+              >
+                {{ repairTypeOf(r) || '—' }}
+              </div>
+              <div v-if="col('ro')" class="min-w-0">
+                <div
+                  v-if="extra(r).repair_order"
+                  class="flex items-center gap-1.5"
+                >
+                  <span
+                    class="truncate text-[11.5px] font-medium text-ink-gray-7"
+                    >{{ extra(r).repair_order }}</span
+                  >
+                  <span
+                    v-if="extra(r).repair_status"
+                    class="flex-none rounded px-1.5 py-px text-[10.5px] font-semibold"
+                    :style="repairChip(extra(r).repair_status)"
+                  >
+                    {{ extra(r).repair_status }}
+                  </span>
+                  <span
+                    v-if="extra(r).repair_count > 1"
+                    class="flex-none text-[10px] text-ink-gray-4"
+                    >+{{ extra(r).repair_count - 1 }}</span
+                  >
+                </div>
+                <span v-else class="text-[12px] text-ink-gray-4">—</span>
+              </div>
+              <div
+                v-if="col('value')"
+                class="text-[12.5px] font-semibold text-ink-gray-8"
+              >
+                {{ formatMXN(r.deal_value) }}
+              </div>
+              <div
+                v-if="col('expected_value')"
+                class="text-[12.5px] text-ink-gray-7"
+              >
+                {{ formatMXN(r.expected_deal_value) }}
+              </div>
+              <div v-if="col('close_date')" class="text-[12px] text-ink-gray-6">
+                {{ formatDate(r.expected_closure_date) }}
+              </div>
+              <FollowUpCell
+                v-if="col('next_activity')"
+                :row="r"
+                :today="siteToday"
+                @saved="onFollowUpSaved(r, $event)"
+              />
+              <div v-if="col('stage')">
+                <span
+                  v-if="r.status"
+                  class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
+                  :style="statusChip(r.status)"
+                >
+                  {{ r.status }}
+                </span>
+              </div>
+              <div
+                v-if="col('source')"
+                class="flex items-center gap-1.5 text-[12px] text-ink-gray-6"
+              >
+                <span
+                  v-if="r.source"
+                  class="h-[7px] w-[7px] flex-none rounded-full"
+                  :style="`background:${sourceDot(r.source)}`"
+                />
+                <span class="truncate">{{ r.source || '—' }}</span>
+              </div>
+              <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">
+                {{ timeAgo(r.modified) }}
+              </div>
+              <div v-if="col('owner')">
+                <span
+                  v-if="r.deal_owner"
+                  class="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10px] font-semibold"
+                  :style="`background:${avatarColor(r.deal_owner)[0]};color:${avatarColor(r.deal_owner)[1]}`"
+                  :title="r.deal_owner"
+                >
+                  {{ initials(ownerName(r.deal_owner)) }}
+                </span>
+              </div>
+              <Dropdown :options="rowMenu(r)" @click.stop>
+                <button
+                  class="text-[14px] text-ink-gray-4"
+                  :aria-label="__('Más acciones')"
+                  @click.stop
+                >
+                  ···
+                </button>
+              </Dropdown>
+            </div>
+          </template>
+
+          <div v-if="deals.hasNextPage" class="py-3 text-center">
+            <button
+              class="rounded-lg border border-outline-gray-2 px-4 py-1.5 text-[12px] font-medium text-ink-gray-7"
+              @click="deals.next()"
+            >
+              {{ __('Cargar más') }}
+            </button>
+          </div>
+        </div>
       </div>
-      </div>
-    </div>
     </template>
 
     <!-- board view -->
@@ -368,10 +644,16 @@
       <!-- count · total · probability-weighted total -->
       <template #header-value="{ group }">
         <div class="flex flex-none flex-col items-end leading-tight">
-          <span v-if="columnValue(group)" class="text-[11px] font-medium text-ink-gray-5">
+          <span
+            v-if="columnValue(group)"
+            class="text-[11px] font-medium text-ink-gray-5"
+          >
             {{ formatMXN(columnValue(group)) }}
           </span>
-          <span v-if="columnWeighted(group)" class="text-[10px] text-ink-gray-4">
+          <span
+            v-if="columnWeighted(group)"
+            class="text-[10px] text-ink-gray-4"
+          >
             {{ __('pond.') }} {{ formatMXN(columnWeighted(group)) }}
           </span>
         </div>
@@ -379,8 +661,13 @@
       <template #card="{ row }">
         <div class="min-w-0">
           <div class="flex items-start justify-between gap-2">
-            <span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink-gray-9">{{ cardTitle(row) }}</span>
-            <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{ formatMXN(displayValue(row)) }}</span>
+            <span
+              class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink-gray-9"
+              >{{ cardTitle(row) }}</span
+            >
+            <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{
+              formatMXN(displayValue(row))
+            }}</span>
           </div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
             <span class="min-w-0 flex-1 truncate text-[11px] text-ink-gray-4">
@@ -394,7 +681,10 @@
               {{ probabilityOf(row) }}%
             </span>
           </div>
-          <div v-if="tagsOf(row).length" class="mt-1 flex flex-wrap items-center gap-1">
+          <div
+            v-if="tagsOf(row).length"
+            class="mt-1 flex flex-wrap items-center gap-1"
+          >
             <span
               v-for="t in tagsOf(row)"
               :key="t"
@@ -420,7 +710,11 @@
               >
                 {{ initials(ownerName(row.deal_owner)) }}
               </span>
-              <span class="text-[10px] text-ink-gray-4" :title="__('Antigüedad')">{{ timeAgo(row.creation) }}</span>
+              <span
+                class="text-[10px] text-ink-gray-4"
+                :title="__('Antigüedad')"
+                >{{ timeAgo(row.creation) }}</span
+              >
             </div>
           </div>
         </div>
@@ -428,13 +722,21 @@
     </BoardView>
 
     <!-- funnel view -->
-    <FunnelView v-else-if="view === 'funnel'" :groups="stageOptions" :counts="groupCounts" />
+    <FunnelView
+      v-else-if="view === 'funnel'"
+      :groups="stageOptions"
+      :counts="groupCounts"
+    />
 
     <!-- mobile: create sits under the thumb, clear of the tab bar -->
     <button
       v-if="isMobile"
       class="press fixed right-4 z-[200] flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white"
-      style="background: var(--brand); bottom: calc(env(safe-area-inset-bottom) + 68px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22)"
+      style="
+        background: var(--brand);
+        bottom: calc(env(safe-area-inset-bottom) + 68px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+      "
       :aria-label="__('New Deal')"
       @click="showDealModal = true"
     >
@@ -457,7 +759,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Dropdown, createListResource, call as frappeCall, toast, dayjs, getConfig } from 'frappe-ui'
+import {
+  Dropdown,
+  createListResource,
+  call as frappeCall,
+  toast,
+  dayjs,
+  getConfig,
+} from 'frappe-ui'
 import { confirmDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
@@ -476,12 +785,23 @@ import DealGroupHeader from '@/components/doco/deals/DealGroupHeader.vue'
 import SavedViewPicker from '@/components/doco/deals/SavedViewPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { hasTaller, reloadQueue } from '@/composables/inbox'
-import { avatarColor, initials, timeAgo, formatPhone, CHANNEL_META } from '@/composables/crmFormat'
+import {
+  avatarColor,
+  initials,
+  timeAgo,
+  formatPhone,
+  CHANNEL_META,
+} from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
 import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
 
 import { followUpFilters, FOLLOW_UP_QUEUES } from '@/utils/dealFollowUp'
-import { DEAL_GROUP_BYS, groupByLabel, groupRows, isGroupBy } from '@/utils/dealGroups'
+import {
+  DEAL_GROUP_BYS,
+  groupByLabel,
+  groupRows,
+  isGroupBy,
+} from '@/utils/dealGroups'
 import { dealListState } from '@/utils/dealListState'
 const router = useRouter()
 const QUEUE_KEY = userScopedKey('crm_deal_list_context')
@@ -498,7 +818,6 @@ try {
 } catch {
   /* an unreadable context is no context: the list opens on its defaults */
 }
-
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
 // trato (contact) is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
@@ -523,8 +842,19 @@ const DEAL_COLUMNS = [
   { key: 'owner', label: __('Owner') },
 ]
 const COL_ORDER = [
-  'customer', 'phone', 'device', 'repair_type', 'ro', 'value', 'expected_value',
-  'close_date', 'next_activity', 'stage', 'source', 'modified', 'owner',
+  'customer',
+  'phone',
+  'device',
+  'repair_type',
+  'ro',
+  'value',
+  'expected_value',
+  'close_date',
+  'next_activity',
+  'stage',
+  'source',
+  'modified',
+  'owner',
 ]
 const COL_WIDTH = {
   customer: '150px',
@@ -541,7 +871,17 @@ const COL_WIDTH = {
   modified: '100px',
   owner: '50px',
 }
-const DEFAULT_COLS = ['customer', 'phone', 'device', 'ro', 'stage', 'value', 'next_activity', 'modified', 'owner']
+const DEFAULT_COLS = [
+  'customer',
+  'phone',
+  'device',
+  'ro',
+  'stage',
+  'value',
+  'next_activity',
+  'modified',
+  'owner',
+]
 // v3: "Próxima actividad" joined the defaults (the whole point of the pipeline
 // milestone is that what needs doing is visible on the row); "Valor esperado" and
 // "Cierre" ship available but off, the row is wide enough already.
@@ -619,26 +959,53 @@ const countsLoaded = ref(false)
 let countsRequest = 0
 // What a saved view stores and what a return from a deal restores: one shape.
 const listContext = computed(() => ({
-  status: statusF.value, source: sourceF.value, owner: ownerF.value,
-  search: search.value, sort: sort.value, view: view.value,
-  followUp: followUp.value, groupBy: groupBy.value, viewName: viewName.value,
+  status: statusF.value,
+  source: sourceF.value,
+  owner: ownerF.value,
+  search: search.value,
+  sort: sort.value,
+  view: view.value,
+  followUp: followUp.value,
+  groupBy: groupBy.value,
+  viewName: viewName.value,
   columns: activeCols.value,
 }))
-watch(listContext, (context) => {
-  try {
-    sessionStorage.setItem(QUEUE_KEY, JSON.stringify(context))
-  } catch {
-    /* a full or blocked session store must not break the list */
-  }
-}, { deep: true })
+watch(
+  listContext,
+  (context) => {
+    try {
+      sessionStorage.setItem(QUEUE_KEY, JSON.stringify(context))
+    } catch {
+      /* a full or blocked session store must not break the list */
+    }
+  },
+  { deep: true },
+)
 
 const deals = createListResource({
   doctype: 'CRM Deal',
   fields: [
-    'name', 'deal_name', 'organization', 'lead_name', 'mobile_no', 'email',
-    'status', 'source', 'deal_owner', 'deal_value', 'currency', 'modified', 'creation',
-    'expected_deal_value', 'expected_closure_date', 'probability',
-    'next_activity_task', 'next_activity_at', 'next_activity_title', 'next_activity_type', '_user_tags',
+    'name',
+    'deal_name',
+    'organization',
+    'lead_name',
+    'mobile_no',
+    'email',
+    'status',
+    'source',
+    'deal_owner',
+    'deal_value',
+    'currency',
+    'modified',
+    'creation',
+    'expected_deal_value',
+    'expected_closure_date',
+    'probability',
+    'next_activity_task',
+    'next_activity_at',
+    'next_activity_title',
+    'next_activity_type',
+    '_user_tags',
   ],
   orderBy: 'modified desc',
   pageLength: remembered.view === 'board' ? 200 : 50,
@@ -654,7 +1021,11 @@ const rows = computed(() => {
   const dir = sort.value.dir === 'desc' ? -1 : 1
   const scheduled = data.filter((r) => r.next_activity_at)
   const unscheduled = data.filter((r) => !r.next_activity_at)
-  scheduled.sort((a, b) => dir * String(a.next_activity_at).localeCompare(String(b.next_activity_at)))
+  scheduled.sort(
+    (a, b) =>
+      dir *
+      String(a.next_activity_at).localeCompare(String(b.next_activity_at)),
+  )
   return [...scheduled, ...unscheduled]
 })
 
@@ -664,10 +1035,14 @@ const rows = computed(() => {
 // renders immediately and fills in when it lands (never blocks the list).
 const display = ref({})
 async function loadDisplay() {
-  const names = (deals.data || []).map((d) => d.name).filter((n) => !(n in display.value))
+  const names = (deals.data || [])
+    .map((d) => d.name)
+    .filter((n) => !(n in display.value))
   if (!names.length) return
   try {
-    const data = await frappeCall('doco_marketing.api.deals.get_deal_display', { names: JSON.stringify(names) })
+    const data = await frappeCall('doco_marketing.api.deals.get_deal_display', {
+      names: JSON.stringify(names),
+    })
     display.value = { ...display.value, ...(data || {}) }
   } catch (e) {
     /* enrichment is additive — a failure leaves the base columns intact */
@@ -722,27 +1097,61 @@ const mobileMenu = computed(() => [
   { label: '⭳ ' + __('Export'), onClick: exportDeals },
 ])
 const mobileFilterGroups = computed(() => [
-  { key: 'status', label: __('Stage'), options: stageOptions.value, selected: statusF.value },
-  { key: 'source', label: __('Source'), options: sourceOptions.value, selected: sourceF.value },
-  { key: 'owner', label: __('Owner'), options: ownerOptions.value, selected: ownerF.value },
+  {
+    key: 'status',
+    label: __('Stage'),
+    options: stageOptions.value,
+    selected: statusF.value,
+  },
+  {
+    key: 'source',
+    label: __('Source'),
+    options: sourceOptions.value,
+    selected: sourceF.value,
+  },
+  {
+    key: 'owner',
+    label: __('Owner'),
+    options: ownerOptions.value,
+    selected: ownerF.value,
+  },
 ])
 function onSheetChange({ key, values }) {
   ;({ status: statusF, source: sourceF, owner: ownerF })[key].value = values
 }
-const count = computed(() => countsLoaded.value ? String(Object.values(groupCounts.value).reduce((n, stage) => n + Number(stage.count || 0), 0)) : `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''} ${__('cargados')}`)
+const count = computed(() =>
+  countsLoaded.value
+    ? String(
+        Object.values(groupCounts.value).reduce(
+          (n, stage) => n + Number(stage.count || 0),
+          0,
+        ),
+      )
+    : `${deals.data?.length ?? 0}${deals.hasNextPage ? '+' : ''} ${__('cargados')}`,
+)
 
-const SEARCH_FIELDS = ['deal_name', 'organization', 'lead_name', 'email', 'mobile_no']
+const SEARCH_FIELDS = [
+  'deal_name',
+  'organization',
+  'lead_name',
+  'email',
+  'mobile_no',
+]
 // Today in the SITE's timezone. The queues and the inline follow-up cut the day
 // on the same boundary the server does, never on the browser's.
 function siteDay() {
-  const timezone = getConfig('systemTimezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
+  const timezone =
+    getConfig('systemTimezone') ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone
   return dayjs().tz(timezone).format('YYYY-MM-DD')
 }
 const siteToday = ref(siteDay())
 function buildFilters() {
   siteToday.value = siteDay()
   const today = siteToday.value
-  const closed = (statusStore.dealStatuses.data || []).filter(s => ['Won', 'Lost'].includes(s.type)).map(s => s.name)
+  const closed = (statusStore.dealStatuses.data || [])
+    .filter((s) => ['Won', 'Lost'].includes(s.type))
+    .map((s) => s.name)
   const f = followUpFilters(followUp.value, today, closed)
   if (statusF.value.length) f.push(['status', 'in', statusF.value])
   if (sourceF.value.length) f.push(['source', 'in', sourceF.value])
@@ -763,7 +1172,8 @@ function applyFilters() {
   // see `rows`: next-activity order is finished client-side, the server only has
   // to hand us the scheduled ones first
   deals.orderBy =
-    sort.value.field === 'next_activity_at' && !['overdue', 'today'].includes(followUp.value)
+    sort.value.field === 'next_activity_at' &&
+    !['overdue', 'today'].includes(followUp.value)
       ? 'next_activity_at desc'
       : `${sort.value.field} ${sort.value.dir}`
   deals.reload()
@@ -847,7 +1257,15 @@ async function onBoardChange(row, status) {
 
 function exportDeals() {
   const fields = JSON.stringify([
-    'name', 'organization', 'lead_name', 'status', 'source', 'deal_owner', 'deal_value', 'mobile_no', 'creation',
+    'name',
+    'organization',
+    'lead_name',
+    'status',
+    'source',
+    'deal_owner',
+    'deal_value',
+    'mobile_no',
+    'creation',
     // repair columns exist only where taller is installed — asking for them on a
     // retail tenant would fail the whole export
     ...(hasTaller.value ? ['repair_device', 'repair_type'] : []),
@@ -878,7 +1296,11 @@ function loadViews() {
 // Restores a stored context. What a context does not carry (a browser view has
 // no list/board mode or grouping) keeps whatever the worker is looking at.
 function applyViewContext(context = {}) {
-  const state = dealListState({ view: view.value, groupBy: groupBy.value, ...context })
+  const state = dealListState({
+    view: view.value,
+    groupBy: groupBy.value,
+    ...context,
+  })
   followUp.value = state.followUp
   statusF.value = [...state.status]
   sourceF.value = [...state.source]
@@ -911,29 +1333,58 @@ watch(viewName, (name) => {
   if (!name) viewCols.value = null
 })
 const viewMenu = computed(() => [
-  { label: '↗ ' + __('Vista clásica (todos los filtros)'), onClick: () => router.push('/deals/view') },
+  {
+    label: '↗ ' + __('Vista clásica (todos los filtros)'),
+    onClick: () => router.push('/deals/view'),
+  },
 ])
 
 // ── group by ──────────────────────────────────────────────────────────────────
 // Only the stage groups carry the server's filtered count; the others are
 // counted off the loaded rows, and the header says so (DealGroupHeader).
-const grouped = computed(() => view.value === 'list' && !isMobile.value && isGroupBy(groupBy.value))
-const GROUP_EMPTY = { status: 'Sin etapa', deal_owner: 'Sin responsable', repair_status: 'Sin reparación' }
-const groupEmptyLabel = computed(() => GROUP_EMPTY[groupBy.value] || 'Sin valor')
+const grouped = computed(
+  () => view.value === 'list' && !isMobile.value && isGroupBy(groupBy.value),
+)
+const GROUP_EMPTY = {
+  status: 'Sin etapa',
+  deal_owner: 'Sin responsable',
+  repair_status: 'Sin reparación',
+}
+const groupEmptyLabel = computed(
+  () => GROUP_EMPTY[groupBy.value] || 'Sin valor',
+)
 const groupByMenu = computed(() =>
-  DEAL_GROUP_BYS.filter((g) => g.key !== 'repair_status' || hasTaller.value).map((g) => ({
+  DEAL_GROUP_BYS.filter(
+    (g) => g.key !== 'repair_status' || hasTaller.value,
+  ).map((g) => ({
     label: (g.key === groupBy.value ? '✓ ' : '') + __(g.label),
     onClick: () => (groupBy.value = g.key),
   })),
 )
 const renderGroups = computed(() => {
-  if (!grouped.value) return [{ key: '', label: '', count: rows.value.length, exact: true, rows: rows.value }]
+  if (!grouped.value)
+    return [
+      {
+        key: '',
+        label: '',
+        count: rows.value.length,
+        exact: true,
+        rows: rows.value,
+      },
+    ]
   return groupRows(rows.value, groupBy.value, {
     order: stageOptions.value.map((s) => s.value),
-    counts: groupBy.value === 'status' && countsLoaded.value ? groupCounts.value : null,
+    counts:
+      groupBy.value === 'status' && countsLoaded.value
+        ? groupCounts.value
+        : null,
     complete: !deals.hasNextPage,
-    groupValue: (r) => (groupBy.value === 'repair_status' ? extra(r).repair_status || '' : r[groupBy.value] || ''),
-    labelOf: (value) => (groupBy.value === 'deal_owner' ? ownerName(value) : value),
+    groupValue: (r) =>
+      groupBy.value === 'repair_status'
+        ? extra(r).repair_status || ''
+        : r[groupBy.value] || '',
+    labelOf: (value) =>
+      groupBy.value === 'deal_owner' ? ownerName(value) : value,
   })
 })
 function groupColor(key) {
@@ -963,11 +1414,13 @@ function onSearch(v) {
   _t = setTimeout(applyFilters, 300)
 }
 function selectFollowUp(key) {
-  if (['overdue', 'today'].includes(key)) sort.value = { field: 'next_activity_at', dir: 'asc' }
+  if (['overdue', 'today'].includes(key))
+    sort.value = { field: 'next_activity_at', dir: 'asc' }
   followUp.value = key
 }
 function sortBy(field) {
-  const dir = sort.value.field === field && sort.value.dir === 'desc' ? 'asc' : 'desc'
+  const dir =
+    sort.value.field === field && sort.value.dir === 'desc' ? 'asc' : 'desc'
   sort.value = { field, dir }
   applyFilters()
 }
@@ -996,7 +1449,9 @@ const sources = createListResource({
   pageLength: 50,
   auto: true,
 })
-const sourceOptions = computed(() => (sources.data || []).map((s) => ({ value: s.name, label: s.name })))
+const sourceOptions = computed(() =>
+  (sources.data || []).map((s) => ({ value: s.name, label: s.name })),
+)
 const ownerOptions = computed(() =>
   (usersList.data?.crmUsers || [])
     .filter((u) => u.enabled)
@@ -1006,9 +1461,12 @@ const ownerOptions = computed(() =>
 // ── chips ──────────────────────────────────────────────────────────────────────
 const chips = computed(() => {
   const out = []
-  for (const v of statusF.value) out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
-  for (const v of sourceF.value) out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
-  for (const v of ownerF.value) out.push({ key: `ow:${v}`, type: 'owner', value: v, label: ownerName(v) })
+  for (const v of statusF.value)
+    out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
+  for (const v of sourceF.value)
+    out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
+  for (const v of ownerF.value)
+    out.push({ key: `ow:${v}`, type: 'owner', value: v, label: ownerName(v) })
   return out
 })
 function removeChip(c) {
@@ -1021,7 +1479,11 @@ function clearAll() {
   sourceF.value = []
   ownerF.value = []
 }
-watch([statusF, sourceF, ownerF, followUp, () => statusStore.dealStatuses.data], applyFilters, { deep: true })
+watch(
+  [statusF, sourceF, ownerF, followUp, () => statusStore.dealStatuses.data],
+  applyFilters,
+  { deep: true },
+)
 
 // ── view helpers ────────────────────────────────────────────────────────────────
 const views = [
@@ -1039,7 +1501,9 @@ function statusChip(status) {
 }
 function sourceDot(source) {
   const key = String(source || '').toLowerCase()
-  for (const k of Object.keys(CHANNEL_META)) if (key.includes(k) || key.includes(CHANNEL_META[k][0].toLowerCase())) return CHANNEL_META[k][1]
+  for (const k of Object.keys(CHANNEL_META))
+    if (key.includes(k) || key.includes(CHANNEL_META[k][0].toLowerCase()))
+      return CHANNEL_META[k][1]
   return '#9aa2ae'
 }
 function ownerName(email) {
@@ -1080,7 +1544,10 @@ function tagsOf(r) {
 }
 
 // ── selection + rows ─────────────────────────────────────────────────────────────
-const allSelected = computed(() => rows.value.length > 0 && selectedRows.value.length === rows.value.length)
+const allSelected = computed(
+  () =>
+    rows.value.length > 0 && selectedRows.value.length === rows.value.length,
+)
 function toggleAll() {
   selectedRows.value = allSelected.value ? [] : rows.value.map((r) => r.name)
 }
@@ -1095,7 +1562,10 @@ function openDeal(name) {
 function rowMenu(r) {
   return [
     { label: __('Abrir'), onClick: () => openDeal(r.name) },
-    { label: __('Vista clásica'), onClick: () => router.push(`/deals/${r.name}`) },
+    {
+      label: __('Vista clásica'),
+      onClick: () => router.push(`/deals/${r.name}`),
+    },
     { label: __('Eliminar'), onClick: () => deleteDeal(r.name) },
   ]
 }
@@ -1118,10 +1588,13 @@ function bulkDelete() {
     confirmLabel: __('Eliminar'),
     onConfirm: async () => {
       const results = await Promise.allSettled(
-        selectedRows.value.map((name) => frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name })),
+        selectedRows.value.map((name) =>
+          frappeCall('frappe.client.delete', { doctype: 'CRM Deal', name }),
+        ),
       )
       const failed = results.filter((r) => r.status === 'rejected').length
-      failed ? toast.error(__('{0} fallaron', [failed])) : toast.success(__('Tratos eliminados'))
+      if (failed) toast.error(__('{0} fallaron', [failed]))
+      else toast.success(__('Tratos eliminados'))
       selectedRows.value = []
       deals.reload()
     },

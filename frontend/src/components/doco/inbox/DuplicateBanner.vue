@@ -22,7 +22,9 @@
     <div class="flex items-start gap-2">
       <span class="flex-none text-[13px] leading-5" aria-hidden="true">⚠</span>
       <div class="min-w-0 flex-1">
-        <div class="text-[11px] font-bold uppercase tracking-[.06em] text-ink-amber-7">
+        <div
+          class="text-[11px] font-bold uppercase tracking-[.06em] text-ink-amber-7"
+        >
           {{ __('Posible duplicado') }}
         </div>
         <ul class="mt-1 flex flex-col gap-1.5">
@@ -32,7 +34,10 @@
             class="flex items-center justify-between gap-2"
           >
             <span class="min-w-0 truncate text-[12px] text-ink-gray-8">
-              {{ d.title }}<span v-if="d.status" class="text-ink-gray-5"> ({{ d.status }})</span>
+              {{ d.title
+              }}<span v-if="d.status" class="text-ink-gray-5">
+                ({{ d.status }})</span
+              >
             </span>
             <div class="flex flex-none items-center gap-1.5">
               <button
@@ -56,10 +61,7 @@
   </div>
 
   <!-- Confirm: states what moves and that the OTHER record (the duplicate) closes. -->
-  <Dialog
-    v-model="confirmOpen"
-    :options="{ title: __('Fusionar duplicado') }"
-  >
+  <Dialog v-model="confirmOpen" :options="{ title: __('Fusionar duplicado') }">
     <template #body-content>
       <div class="flex flex-col gap-3 text-p-base text-ink-gray-7">
         <p>
@@ -71,7 +73,12 @@
           }}
         </p>
         <p class="font-medium text-ink-gray-8">
-          {{ __('El registro «{0}» se cerrará como duplicado. No se elimina nada.', [pending?.title || pending?.name]) }}
+          {{
+            __(
+              'El registro «{0}» se cerrará como duplicado. No se elimina nada.',
+              [pending?.title || pending?.name],
+            )
+          }}
         </p>
       </div>
     </template>
@@ -103,7 +110,10 @@ const props = defineProps({
 const emit = defineEmits(['open', 'merged'])
 
 // A 403 (record the user can't read) must not surface a toast — stay silent.
-const res = createResource({ url: 'doco_marketing.api.dedupe.find_duplicates', onError: () => {} })
+const res = createResource({
+  url: 'doco_marketing.api.dedupe.find_duplicates',
+  onError: () => {},
+})
 
 // Fetch once per conversation change. Only Deals/Leads carry a dedup-able phone.
 watch(
@@ -141,13 +151,19 @@ async function doMerge() {
       doctype: props.doctype,
     })
     const summary = formatMovedCounts(out?.moved)
-    toast.success(summary ? __('Duplicado fusionado: {0}', [summary]) : __('Duplicado fusionado'))
+    toast.success(
+      summary
+        ? __('Duplicado fusionado: {0}', [summary])
+        : __('Duplicado fusionado'),
+    )
     confirmOpen.value = false
     pending.value = null
     res.submit({ doctype: props.doctype, name: props.name }) // refresh the strip
     emit('merged', source.doctype, source.name)
   } catch (e) {
-    toast.error(e?.messages?.[0] || e?.message || __('No se pudo fusionar el duplicado'))
+    toast.error(
+      e?.messages?.[0] || e?.message || __('No se pudo fusionar el duplicado'),
+    )
   } finally {
     merging.value = false
   }

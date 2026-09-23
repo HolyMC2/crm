@@ -1,3 +1,4 @@
+/* global __BUILD_ID__: readonly */
 // Build tag — a global side-effect (survives minification, unlike a comment) so
 // bumping it forces a fresh content-hashed bundle when an old hash gets poisoned
 // in a CDN cache (a 404 cached during a deploy/warm-up window).
@@ -135,13 +136,19 @@ if (!import.meta.env.DEV) {
       updateToastShown = true
       import('frappe-ui')
         .then(({ toast }) =>
-          toast.info(__('🔄 Nueva versión lista — se aplicará cuando termines de escribir')),
+          toast.info(
+            __(
+              '🔄 Nueva versión lista — se aplicará cuando termines de escribir',
+            ),
+          ),
         )
         .catch(() => {})
     }
   }
   const checkBuild = () =>
-    fetch(`/assets/crm/frontend/build.json?t=${Date.now()}`, { cache: 'no-store' })
+    fetch(`/assets/crm/frontend/build.json?t=${Date.now()}`, {
+      cache: 'no-store',
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((b) => {
         if (b?.id && b.id !== __BUILD_ID__) applyOrDeferUpdate()

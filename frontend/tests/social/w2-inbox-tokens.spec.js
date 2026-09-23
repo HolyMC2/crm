@@ -58,19 +58,34 @@ async function loginNoThrottle(page) {
     const out = execFileSync(
       'docker',
       [
-        'compose', 'exec', '-T', 'backend',
-        'bench', '--site', site, 'execute',
+        'compose',
+        'exec',
+        '-T',
+        'backend',
+        'bench',
+        '--site',
+        site,
+        'execute',
         'frappe.www.login._generate_temporary_login_link',
-        '--kwargs', `{'email':'${user}','expiry':300}`,
+        '--kwargs',
+        `{'email':'${user}','expiry':300}`,
       ],
-      { cwd: path.resolve(process.env.HOME, 'muelle-host/muelle'), encoding: 'utf8', timeout: 120_000 },
+      {
+        cwd: path.resolve(process.env.HOME, 'muelle-host/muelle'),
+        encoding: 'utf8',
+        timeout: 120_000,
+      },
     )
     const link = out.trim().split('\n').pop().trim()
-    if (!/^https?:\/\/.*login_via_key\?key=/.test(link)) throw new Error(`unexpected output: ${link}`)
+    if (!/^https?:\/\/.*login_via_key\?key=/.test(link))
+      throw new Error(`unexpected output: ${link}`)
     await page.goto(link, { waitUntil: 'domcontentloaded' })
     return
   } catch (e) {
-    console.warn('temporary-link login unavailable, falling back to password login:', e.message)
+    console.warn(
+      'temporary-link login unavailable, falling back to password login:',
+      e.message,
+    )
     await login(page)
   }
 }
@@ -157,9 +172,12 @@ const relLuminance = (s) => {
     ].map((v) => Math.max(0, Math.min(1, v)))
   } else {
     const scale = t.startsWith('color(') ? 1 : 255
-    lin = n.slice(0, 3)
+    lin = n
+      .slice(0, 3)
       .map((v) => v / scale)
-      .map((x) => (x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)))
+      .map((x) =>
+        x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4),
+      )
   }
   return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
 }
@@ -179,7 +197,8 @@ const PAINTS = /rgba\(0, 0, 0, 0\)|transparent/
 const killServiceWorker = (page) =>
   page.addInitScript(() => {
     if (navigator.serviceWorker) {
-      navigator.serviceWorker.register = () => Promise.resolve({ update() {}, unregister() {} })
+      navigator.serviceWorker.register = () =>
+        Promise.resolve({ update() {}, unregister() {} })
     }
   })
 
@@ -217,8 +236,18 @@ test.describe('espresso v2 — inbox bucket', () => {
     // LIGHT mode. Assert the before/after on the real class pairs.
     const sites = [
       ['no-WhatsApp banner', '--surface-red-1', '--ink-red-3', '--ink-red-6'],
-      ['unknown-WA banner', '--surface-amber-1', '--ink-amber-3', '--ink-amber-7'],
-      ['unified-thread chip', '--surface-green-2', '--ink-green-3', '--ink-green-7'],
+      [
+        'unknown-WA banner',
+        '--surface-amber-1',
+        '--ink-amber-3',
+        '--ink-amber-7',
+      ],
+      [
+        'unified-thread chip',
+        '--surface-green-2',
+        '--ink-green-3',
+        '--ink-green-7',
+      ],
       ['Internal badge', '--surface-blue-2', '--ink-blue-3', '--ink-blue-7'],
     ]
     const beforeAfter = {}
@@ -227,24 +256,39 @@ test.describe('espresso v2 — inbox bucket', () => {
       const now = await probeVars(page, newInk, bg)
       const wasRatio = contrast(was.color, was.background)
       const nowRatio = contrast(now.color, now.background)
-      beforeAfter[label] = { was: +wasRatio.toFixed(2), now: +nowRatio.toFixed(2) }
-      expect(wasRatio, `${label}: the pre-v2 token must be demonstrably broken`).toBeLessThan(1.5)
-      expect(nowRatio, `${label}: the migrated token must be legible`).toBeGreaterThan(2.5)
+      beforeAfter[label] = {
+        was: +wasRatio.toFixed(2),
+        now: +nowRatio.toFixed(2),
+      }
+      expect(
+        wasRatio,
+        `${label}: the pre-v2 token must be demonstrably broken`,
+      ).toBeLessThan(1.5)
+      expect(
+        nowRatio,
+        `${label}: the migrated token must be legible`,
+      ).toBeGreaterThan(2.5)
     }
-    console.log('per-site contrast, unmigrated -> migrated:', JSON.stringify(beforeAfter, null, 2))
+    console.log(
+      'per-site contrast, unmigrated -> migrated:',
+      JSON.stringify(beforeAfter, null, 2),
+    )
 
     // `surface-white` is the one genuinely RETIRED name: deleted in v2, so it
     // emits no CSS at all. WhatsAppArea's sticky header used it, which left the
     // header with no background and the message thread scrolling under it.
     expect(
       await page.evaluate(() =>
-        getComputedStyle(document.documentElement).getPropertyValue('--surface-white').trim(),
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--surface-white')
+          .trim(),
       ),
       '--surface-white must not exist in v2',
     ).toBe('')
-    expect((await probe(page, 'bg-surface-white')).background, 'retired token paints nothing').toMatch(
-      PAINTS,
-    )
+    expect(
+      (await probe(page, 'bg-surface-white')).background,
+      'retired token paints nothing',
+    ).toMatch(PAINTS)
 
     // ---- WhatsApp sticky header, both themes -------------------------------
     // WhatsAppArea's sticky header stack. Light is governed by surface-base,
@@ -256,13 +300,20 @@ test.describe('espresso v2 — inbox bucket', () => {
       const outer = await probe(page, 'bg-surface-base')
       const inner = await probe(page, 'bg-surface-gray-2')
       console.log(`sticky header (${theme}):`, JSON.stringify({ outer, inner }))
-      expect(outer.background, `surface-base must be opaque in ${theme}`).not.toMatch(PAINTS)
-      expect(inner.background, `surface-gray-2 must be opaque in ${theme}`).not.toMatch(PAINTS)
+      expect(
+        outer.background,
+        `surface-base must be opaque in ${theme}`,
+      ).not.toMatch(PAINTS)
+      expect(
+        inner.background,
+        `surface-gray-2 must be opaque in ${theme}`,
+      ).not.toMatch(PAINTS)
       // Opaque means alpha 1 — an rgba() with a fractional alpha would let the
       // thread bleed through even though it "paints".
-      expect(outer.background, `surface-base must not be semi-transparent in ${theme}`).not.toMatch(
-        /rgba\([^)]*,\s*0?\.\d+\)/,
-      )
+      expect(
+        outer.background,
+        `surface-base must not be semi-transparent in ${theme}`,
+      ).not.toMatch(/rgba\([^)]*,\s*0?\.\d+\)/)
     }
 
     // ---- accent chips must clear AA in BOTH themes -------------------------
@@ -299,9 +350,10 @@ test.describe('espresso v2 — inbox bucket', () => {
         const got = await probeVars(page, ink, bg)
         const ratio = contrast(got.color, got.background)
         chipResults[`${label} (${theme})`] = +ratio.toFixed(2)
-        expect(ratio, `${label} must hold its ${theme} floor (${floor})`).toBeGreaterThanOrEqual(
-          floor,
-        )
+        expect(
+          ratio,
+          `${label} must hold its ${theme} floor (${floor})`,
+        ).toBeGreaterThanOrEqual(floor)
       }
       // And the tokens they replaced must still be measurably worse in dark,
       // so a revert cannot pass this file.
@@ -315,11 +367,17 @@ test.describe('espresso v2 — inbox bucket', () => {
           const old = await probeVars(page, oldInk, bg)
           const r = contrast(old.color, old.background)
           chipResults[`${label} PRE-FIX (dark)`] = +r.toFixed(2)
-          expect(r, `${label}: the pre-fix token must be below AA in dark`).toBeLessThan(4.5)
+          expect(
+            r,
+            `${label}: the pre-fix token must be below AA in dark`,
+          ).toBeLessThan(4.5)
         }
       }
     }
-    console.log('accent chip contrast, both themes:', JSON.stringify(chipResults, null, 2))
+    console.log(
+      'accent chip contrast, both themes:',
+      JSON.stringify(chipResults, null, 2),
+    )
 
     // ---- THE REGRESSION GUARD. See the header comment. ---------------------
     const results = {}
@@ -340,17 +398,26 @@ test.describe('espresso v2 — inbox bucket', () => {
         literalWhite: { ...white, ratio: +whiteRatio.toFixed(2) },
       }
 
-      expect(ratio, `ink-base on surface-gray-10 must clear AA in ${theme}`).toBeGreaterThan(4.5)
+      expect(
+        ratio,
+        `ink-base on surface-gray-10 must clear AA in ${theme}`,
+      ).toBeGreaterThan(4.5)
 
       if (theme === 'dark') {
         // Pin the reason: literal white is the WRONG answer here, and by a wide
         // margin. If a future change makes this assertion fail, the ramp stopped
         // inverting and this whole guard needs revisiting.
-        expect(whiteRatio, 'literal white must be demonstrably worse in dark').toBeLessThan(2)
+        expect(
+          whiteRatio,
+          'literal white must be demonstrably worse in dark',
+        ).toBeLessThan(2)
         expect(ratio).toBeGreaterThan(whiteRatio * 4)
       }
     }
-    console.log('ink-base vs literal white on surface-gray-10:', JSON.stringify(results, null, 2))
+    console.log(
+      'ink-base vs literal white on surface-gray-10:',
+      JSON.stringify(results, null, 2),
+    )
 
     // ---- screenshots of the real screens, both themes -----------------------
     for (const route of ['/crm/inbox', '/crm/leads']) {
@@ -360,10 +427,15 @@ test.describe('espresso v2 — inbox bucket', () => {
       for (const theme of ['light', 'dark']) {
         await setTheme(page, theme)
         await page.waitForTimeout(900)
-        await page.screenshot({ path: path.join(OUT, `${slug}-${theme}.png`), fullPage: false })
+        await page.screenshot({
+          path: path.join(OUT, `${slug}-${theme}.png`),
+          fullPage: false,
+        })
       }
       // A blank SPA screenshots just fine, so assert the app actually mounted.
-      const mounted = await page.evaluate(() => document.querySelectorAll('#app *').length)
+      const mounted = await page.evaluate(
+        () => document.querySelectorAll('#app *').length,
+      )
       console.log(`${route}: ${mounted} nodes under #app`)
       expect(mounted, `${route} must render a mounted SPA`).toBeGreaterThan(50)
     }
@@ -397,20 +469,31 @@ test.describe('espresso v2 — inbox bucket', () => {
       for (const theme of ['light', 'dark']) {
         await setTheme(page, theme)
         await page.waitForTimeout(900)
-        await page.screenshot({ path: path.join(OUT, `thread-${theme}.png`), fullPage: false })
+        await page.screenshot({
+          path: path.join(OUT, `thread-${theme}.png`),
+          fullPage: false,
+        })
       }
       // If WhatsAppArea mounted, its header must be opaque — a transparent one
       // is the pre-migration `surface-white` bug rendering live.
       const header = page.locator('.wa-contact-header').first()
       if (await header.count()) {
-        const bg = await header.evaluate((el) => getComputedStyle(el).backgroundColor)
+        const bg = await header.evaluate(
+          (el) => getComputedStyle(el).backgroundColor,
+        )
         console.log('live .wa-contact-header background (dark):', bg)
-        expect(bg, 'wa-contact-header must have a real background').not.toMatch(PAINTS)
+        expect(bg, 'wa-contact-header must have a real background').not.toMatch(
+          PAINTS,
+        )
       } else {
-        console.log('note: .wa-contact-header did not mount for this thread (no contact on record)')
+        console.log(
+          'note: .wa-contact-header did not mount for this thread (no contact on record)',
+        )
       }
     } else {
-      console.log('note: no conversation row matched; skipped the thread render')
+      console.log(
+        'note: no conversation row matched; skipped the thread render',
+      )
     }
   })
 })

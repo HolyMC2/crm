@@ -101,6 +101,8 @@ export async function flushOutbox() {
 _load()
 if (!globalThis.process?.env?.VITEST) {
   window.addEventListener('online', () => setTimeout(flushOutbox, 1200))
-  window.addEventListener('socket:reconnected', () => setTimeout(flushOutbox, 800))
+  window.addEventListener('socket:reconnected', () =>
+    setTimeout(flushOutbox, 800),
+  )
   if (navigator.onLine) setTimeout(flushOutbox, 4000) // boot flush after app settles
 }

@@ -17,8 +17,12 @@ services:
     image: ${CRM_CI_IMAGE:?Set the full multi-app Muelle image}
     working_dir: /home/frappe/frappe-bench
     entrypoint: [bash, /candidate/scripts/ci/inside-container.sh]
+    environment:
+      CRM_CI_MODE: ${CRM_CI_MODE:-tests}
+      CRM_CI_COVERAGE: ${CRM_CI_COVERAGE:-false}
     volumes:
       - ../..:/candidate:ro
+      - ${CRM_CI_RESULTS_DIR:?Set the disposable artifact directory}:/results
     depends_on:
       database:
         condition: service_healthy

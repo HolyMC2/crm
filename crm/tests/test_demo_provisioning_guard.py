@@ -1,4 +1,5 @@
 """An empty tenant must not invoke demo users, conversion or remote currency APIs."""
+
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 

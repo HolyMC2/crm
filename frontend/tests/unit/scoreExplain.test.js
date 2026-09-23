@@ -1,7 +1,12 @@
 // Score-explain pure helpers (ScoreExplainPopover.vue, spec 5.4). No frappe-ui
 // mock here, so the vitest-4 spy-results trap (see outbox.test.js) does not apply.
 import { describe, it, expect } from 'vitest'
-import { signedPoints, criterionText, gradeHeadline, popoverPosition } from '@/utils/scoreExplain'
+import {
+  signedPoints,
+  criterionText,
+  gradeHeadline,
+  popoverPosition,
+} from '@/utils/scoreExplain'
 
 const MINUS = '−' // true minus sign the badge renders
 
@@ -31,11 +36,17 @@ describe('signedPoints', () => {
 
 describe('criterionText', () => {
   it('phrases each operator compactly', () => {
-    expect(criterionText('source', 'equals', 'Website')).toBe('source = Website')
+    expect(criterionText('source', 'equals', 'Website')).toBe(
+      'source = Website',
+    )
     expect(criterionText('source', 'not equals', 'Cold')).toBe('source ≠ Cold')
-    expect(criterionText('mobile_no', 'is set', null)).toBe('mobile_no definido')
+    expect(criterionText('mobile_no', 'is set', null)).toBe(
+      'mobile_no definido',
+    )
     expect(criterionText('email', 'is not set', null)).toBe('email sin definir')
-    expect(criterionText('email', 'contains', 'doco')).toBe('email contiene «doco»')
+    expect(criterionText('email', 'contains', 'doco')).toBe(
+      'email contiene «doco»',
+    )
     expect(criterionText('territory', 'in', 'MX,US')).toBe('territory ∈ MX,US')
     expect(criterionText('score', 'greater than', '50')).toBe('score > 50')
     expect(criterionText('score', 'less than', '10')).toBe('score < 10')

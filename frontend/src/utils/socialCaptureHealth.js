@@ -11,7 +11,8 @@ export const captureHealthLabels = {
   invalid_response: 'Meta devolvió una respuesta no reconocida',
   not_subscribed: 'No se encontró una suscripción',
   missing_mention_subscription: 'Falta la suscripción a menciones',
-  subscription_present_delivery_unverified: 'Suscripción presente; recepción sin comprobar',
+  subscription_present_delivery_unverified:
+    'Suscripción presente; recepción sin comprobar',
   credential_or_permission_error: 'Revisa la credencial y los permisos en Meta',
   rate_limited: 'Meta limitó las consultas; intenta más tarde',
   provider_unavailable: 'No se pudo consultar Meta',

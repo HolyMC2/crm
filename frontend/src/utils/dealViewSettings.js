@@ -76,7 +76,9 @@ export function viewPayload(context = {}, meta = {}) {
 // A view this list wrote. Views made in the classic list carry another route and
 // none of the context below, so the picker leaves them where they were made.
 export function isDealListView(row) {
-  return Boolean(row) && row.route_name === DEAL_VIEW_ROUTE && Boolean(docoBlob(row))
+  return (
+    Boolean(row) && row.route_name === DEAL_VIEW_ROUTE && Boolean(docoBlob(row))
+  )
 }
 
 export function dealListViews(rows) {
@@ -87,15 +89,22 @@ export function dealListViews(rows) {
 // this list's defaults; dealListState() does the final validation.
 export function viewContext(row) {
   const blob = docoBlob(row) || {}
-  const [field, dir] = String(row?.order_by || '').trim().split(/\s+/).filter(Boolean)
+  const [field, dir] = String(row?.order_by || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
   return {
     ...filtersToContext(row?.filters),
-    followUp: FOLLOW_UP_QUEUES.some((q) => q.key === blob.followUp) ? blob.followUp : 'all',
+    followUp: FOLLOW_UP_QUEUES.some((q) => q.key === blob.followUp)
+      ? blob.followUp
+      : 'all',
     search: typeof blob.search === 'string' ? blob.search : '',
     view: ['list', 'board', 'funnel'].includes(blob.view) ? blob.view : 'list',
     groupBy: isGroupBy(blob.groupBy) ? blob.groupBy : 'none',
     sort: { field: field || 'modified', dir: dir === 'asc' ? 'asc' : 'desc' },
-    columns: Array.isArray(blob.columns) ? blob.columns.filter((c) => typeof c === 'string') : [],
+    columns: Array.isArray(blob.columns)
+      ? blob.columns.filter((c) => typeof c === 'string')
+      : [],
   }
 }
 

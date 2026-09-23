@@ -34,7 +34,9 @@
       >
         <LucideSlidersHorizontal class="h-3 w-3" />
         {{ __('Filtros') }}
-        <span v-if="queueFilterCount" class="text-[10px] opacity-80">{{ queueFilterCount }}</span>
+        <span v-if="queueFilterCount" class="text-[10px] opacity-80">{{
+          queueFilterCount
+        }}</span>
       </button>
       <button
         v-if="queueFilterCount"
@@ -53,7 +55,13 @@
         class="inline-flex items-center gap-1 rounded-full bg-surface-gray-2 px-2 py-[3px] text-[10px] font-medium text-ink-gray-7"
       >
         {{ c.label }}
-        <button class="text-[11px] leading-none" :aria-label="__('Quitar filtro') + ' ' + c.label" @click="c.remove()">×</button>
+        <button
+          class="text-[11px] leading-none"
+          :aria-label="__('Quitar filtro') + ' ' + c.label"
+          @click="c.remove()"
+        >
+          ×
+        </button>
       </span>
     </div>
 
@@ -66,7 +74,9 @@
         <div class="scb max-h-[64vh] overflow-y-auto">
           <!-- ── quick filters: the questions people actually ask ───────── -->
           <div class="border-b border-outline-gray-1 px-3 py-2">
-            <div class="pb-1.5 text-[10px] font-bold uppercase tracking-[.07em] text-ink-gray-4">
+            <div
+              class="pb-1.5 text-[10px] font-bold uppercase tracking-[.07em] text-ink-gray-4"
+            >
               {{ __('Rápidos') }}
             </div>
             <div class="flex flex-wrap gap-1.5">
@@ -74,7 +84,11 @@
                 v-for="q in quickFilters"
                 :key="q.id"
                 class="rounded-full px-2.5 py-[5px] text-[11.5px] font-semibold"
-                :class="q.active ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+                :class="
+                  q.active
+                    ? 'bg-surface-green-2 text-ink-green-8'
+                    : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+                "
                 :aria-pressed="q.active"
                 :title="q.hint"
                 @click="q.apply()"
@@ -86,7 +100,9 @@
 
           <!-- ── period ─────────────────────────────────────────────────── -->
           <div class="border-b border-outline-gray-1 px-3 py-2">
-            <div class="pb-1.5 text-[10px] font-bold uppercase tracking-[.07em] text-ink-gray-4">
+            <div
+              class="pb-1.5 text-[10px] font-bold uppercase tracking-[.07em] text-ink-gray-4"
+            >
               {{ __('Última actividad') }}
             </div>
             <div class="mb-1.5 flex flex-wrap gap-1.5">
@@ -94,7 +110,11 @@
                 v-for="p in periods"
                 :key="p.days"
                 class="rounded-full px-2.5 py-[5px] text-[11.5px] font-semibold"
-                :class="activePeriod === p.days ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+                :class="
+                  activePeriod === p.days
+                    ? 'bg-surface-green-2 text-ink-green-8'
+                    : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+                "
                 :aria-pressed="activePeriod === p.days"
                 @click="setPeriod(p.days)"
               >
@@ -121,21 +141,36 @@
           </div>
 
           <!-- ── drill-down: specific statuses, grouped + collapsed ─────── -->
-          <div v-for="s in sections" :key="s.key" class="border-b border-outline-gray-1 last:border-b-0">
+          <div
+            v-for="s in sections"
+            :key="s.key"
+            class="border-b border-outline-gray-1 last:border-b-0"
+          >
             <button
               class="flex w-full items-center gap-1.5 px-3 py-2 text-left"
               :aria-expanded="expanded === s.key"
               @click="expanded = expanded === s.key ? '' : s.key"
             >
-              <span class="text-[10px] text-ink-gray-4">{{ expanded === s.key ? '▾' : '▸' }}</span>
-              <span class="flex-1 text-[10px] font-bold uppercase tracking-[.07em] text-ink-gray-4">{{ s.label }}</span>
-              <span v-if="s.selected.length" class="rounded-full bg-surface-green-2 px-1.5 text-[10px] font-bold text-ink-green-8">
+              <span class="text-[10px] text-ink-gray-4">{{
+                expanded === s.key ? '▾' : '▸'
+              }}</span>
+              <span
+                class="flex-1 text-[10px] font-bold uppercase tracking-[.07em] text-ink-gray-4"
+                >{{ s.label }}</span
+              >
+              <span
+                v-if="s.selected.length"
+                class="rounded-full bg-surface-green-2 px-1.5 text-[10px] font-bold text-ink-green-8"
+              >
                 {{ s.selected.length }}
               </span>
             </button>
             <div v-if="expanded === s.key" class="px-3 pb-2">
               <template v-for="grp in s.groups" :key="grp.label">
-                <div v-if="grp.options.length" class="pb-1 pt-1 text-[9.5px] font-bold uppercase tracking-[.06em] text-ink-gray-4">
+                <div
+                  v-if="grp.options.length"
+                  class="pb-1 pt-1 text-[9.5px] font-bold uppercase tracking-[.06em] text-ink-gray-4"
+                >
                   {{ grp.label }}
                 </div>
                 <label
@@ -149,19 +184,38 @@
                     :checked="s.selected.includes(o.value)"
                     @change="s.toggle(o.value)"
                   />
-                  <span v-if="o.color" class="h-2 w-2 flex-none rounded-full" :style="`background:${o.color}`" />
+                  <span
+                    v-if="o.color"
+                    class="h-2 w-2 flex-none rounded-full"
+                    :style="`background:${o.color}`"
+                  />
                   <span class="truncate">{{ o.label }}</span>
                 </label>
               </template>
-              <div v-if="!s.groups.some((g) => g.options.length)" class="py-1 text-[11px] text-ink-gray-4">
+              <div
+                v-if="!s.groups.some((g) => g.options.length)"
+                class="py-1 text-[11px] text-ink-gray-4"
+              >
                 {{ __('Sin opciones') }}
               </div>
             </div>
           </div>
         </div>
-        <div class="flex justify-between border-t border-outline-gray-1 px-3 py-2">
-          <button class="text-[11.5px] text-ink-gray-5" @click="clearQueueFilters">{{ __('Limpiar todo') }}</button>
-          <button class="text-[11.5px] font-semibold text-ink-green-7" @click="open = false">{{ __('Listo') }}</button>
+        <div
+          class="flex justify-between border-t border-outline-gray-1 px-3 py-2"
+        >
+          <button
+            class="text-[11.5px] text-ink-gray-5"
+            @click="clearQueueFilters"
+          >
+            {{ __('Limpiar todo') }}
+          </button>
+          <button
+            class="text-[11.5px] font-semibold text-ink-green-7"
+            @click="open = false"
+          >
+            {{ __('Listo') }}
+          </button>
         </div>
       </div>
     </template>
@@ -189,7 +243,9 @@ const open = ref(false)
 const expanded = ref('') // which drill-down section is open (one at a time)
 
 const opts = computed(() => queueFilterOptions.data || {})
-const closedTypes = computed(() => opts.value.closed_types || ['Won', 'Lost', 'Junk'])
+const closedTypes = computed(
+  () => opts.value.closed_types || ['Won', 'Lost', 'Junk'],
+)
 const repairOptions = computed(() => opts.value.repair_statuses || [])
 const activeRepair = computed(() => opts.value.active_repair_statuses || [])
 
@@ -223,7 +279,12 @@ const quickFilters = computed(() => [
           active: sameSet(queueRepairStatus.value, activeRepair.value),
           apply: () =>
             setQueueFilters({
-              repair_status: sameSet(queueRepairStatus.value, activeRepair.value) ? [] : [...activeRepair.value],
+              repair_status: sameSet(
+                queueRepairStatus.value,
+                activeRepair.value,
+              )
+                ? []
+                : [...activeRepair.value],
             }),
         },
         {
@@ -233,7 +294,11 @@ const quickFilters = computed(() => [
           active: sameSet(queueRepairStatus.value, ['Listo para Entregar']),
           apply: () =>
             setQueueFilters({
-              repair_status: sameSet(queueRepairStatus.value, ['Listo para Entregar']) ? [] : ['Listo para Entregar'],
+              repair_status: sameSet(queueRepairStatus.value, [
+                'Listo para Entregar',
+              ])
+                ? []
+                : ['Listo para Entregar'],
             }),
         },
       ]
@@ -268,14 +333,19 @@ function daysAgo(n) {
 }
 function setPeriod(days) {
   const from = ymd(daysAgo(days))
-  setQueueFilters({ date_from: queueDateFrom.value === from && !queueDateTo.value ? '' : from, date_to: '' })
+  setQueueFilters({
+    date_from: queueDateFrom.value === from && !queueDateTo.value ? '' : from,
+    date_to: '',
+  })
 }
 
 // ── drill-down sections ──────────────────────────────────────────────────────
 // Statuses grouped by the doctype's own `type`, so the hand-pick list reads
 // "Abiertos / Ganados / Perdidos" instead of one 22-item scroll.
 function groupByType(list) {
-  const open_ = [], won = [], lost = []
+  const open_ = [],
+    won = [],
+    lost = []
   for (const s of list || []) {
     const o = { value: s.name, label: s.name, color: s.color }
     if (s.type === 'Won') won.push(o)
@@ -294,14 +364,16 @@ const sections = computed(() => [
     label: __('Estado del trato'),
     selected: queueDealStatus.value,
     groups: groupByType(opts.value.deal_statuses),
-    toggle: (v) => setQueueFilters({ deal_status: toggleIn(queueDealStatus.value, v) }),
+    toggle: (v) =>
+      setQueueFilters({ deal_status: toggleIn(queueDealStatus.value, v) }),
   },
   {
     key: 'lead',
     label: __('Estado del lead'),
     selected: queueLeadStatus.value,
     groups: groupByType(opts.value.lead_statuses),
-    toggle: (v) => setQueueFilters({ lead_status: toggleIn(queueLeadStatus.value, v) }),
+    toggle: (v) =>
+      setQueueFilters({ lead_status: toggleIn(queueLeadStatus.value, v) }),
   },
   ...(repairOptions.value.length
     ? [
@@ -309,8 +381,16 @@ const sections = computed(() => [
           key: 'repair',
           label: __('Estado de la reparación'),
           selected: queueRepairStatus.value,
-          groups: [{ label: __('Reparación'), options: repairOptions.value.map((s) => ({ value: s, label: s })) }],
-          toggle: (v) => setQueueFilters({ repair_status: toggleIn(queueRepairStatus.value, v) }),
+          groups: [
+            {
+              label: __('Reparación'),
+              options: repairOptions.value.map((s) => ({ value: s, label: s })),
+            },
+          ],
+          toggle: (v) =>
+            setQueueFilters({
+              repair_status: toggleIn(queueRepairStatus.value, v),
+            }),
         },
       ]
     : []),
@@ -333,24 +413,56 @@ const chips = computed(() => {
   if (queueLeadState.value && queueLeadState.value !== queueDealState.value)
     out.push({
       key: 'ls',
-      label: queueLeadState.value === 'open' ? __('Leads abiertos') : __('Leads cerrados'),
+      label:
+        queueLeadState.value === 'open'
+          ? __('Leads abiertos')
+          : __('Leads cerrados'),
       remove: () => setQueueFilters({ lead_state: '' }),
     })
   for (const v of queueDealStatus.value)
-    out.push({ key: `d:${v}`, label: v, remove: () => setQueueFilters({ deal_status: toggleIn(queueDealStatus.value, v) }) })
+    out.push({
+      key: `d:${v}`,
+      label: v,
+      remove: () =>
+        setQueueFilters({ deal_status: toggleIn(queueDealStatus.value, v) }),
+    })
   for (const v of queueLeadStatus.value)
-    out.push({ key: `l:${v}`, label: v, remove: () => setQueueFilters({ lead_status: toggleIn(queueLeadStatus.value, v) }) })
+    out.push({
+      key: `l:${v}`,
+      label: v,
+      remove: () =>
+        setQueueFilters({ lead_status: toggleIn(queueLeadStatus.value, v) }),
+    })
   // A repair quick-filter is many statuses at once — chip it as ONE named chip
   // instead of five, which is what it means to the operator.
   if (sameSet(queueRepairStatus.value, activeRepair.value))
-    out.push({ key: 'r:active', label: '🔧 ' + __('En reparación'), remove: () => setQueueFilters({ repair_status: [] }) })
+    out.push({
+      key: 'r:active',
+      label: '🔧 ' + __('En reparación'),
+      remove: () => setQueueFilters({ repair_status: [] }),
+    })
   else
     for (const v of queueRepairStatus.value)
-      out.push({ key: `r:${v}`, label: `🔧 ${v}`, remove: () => setQueueFilters({ repair_status: toggleIn(queueRepairStatus.value, v) }) })
+      out.push({
+        key: `r:${v}`,
+        label: `🔧 ${v}`,
+        remove: () =>
+          setQueueFilters({
+            repair_status: toggleIn(queueRepairStatus.value, v),
+          }),
+      })
   if (queueDateFrom.value)
-    out.push({ key: 'from', label: `≥ ${queueDateFrom.value}`, remove: () => setQueueFilters({ date_from: '' }) })
+    out.push({
+      key: 'from',
+      label: `≥ ${queueDateFrom.value}`,
+      remove: () => setQueueFilters({ date_from: '' }),
+    })
   if (queueDateTo.value)
-    out.push({ key: 'to', label: `≤ ${queueDateTo.value}`, remove: () => setQueueFilters({ date_to: '' }) })
+    out.push({
+      key: 'to',
+      label: `≤ ${queueDateTo.value}`,
+      remove: () => setQueueFilters({ date_to: '' }),
+    })
   return out
 })
 </script>

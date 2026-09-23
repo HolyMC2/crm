@@ -7,26 +7,47 @@
 -->
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-    <nav class="flex flex-none items-center justify-between gap-3 border-b border-outline-gray-1 px-4 py-2 text-sm" aria-label="Navegación del trato">
-      <RouterLink :to="{ name: 'Deals List' }" class="rounded px-1 py-1 font-medium text-ink-gray-6 hover:text-ink-gray-9">← {{ __('Volver a tratos') }}</RouterLink>
-      <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-ink-gray-7 hover:bg-surface-gray-2" :aria-expanded="isMobile ? mobileView === 'context' : showContext" @click="isMobile ? openContext() : showContext = !showContext">{{ __('Datos y contacto') }}</button>
+    <nav
+      class="flex flex-none items-center justify-between gap-3 border-b border-outline-gray-1 px-4 py-2 text-sm"
+      aria-label="Navegación del trato"
+    >
+      <RouterLink
+        :to="{ name: 'Deals List' }"
+        class="rounded px-1 py-1 font-medium text-ink-gray-6 hover:text-ink-gray-9"
+        >← {{ __('Volver a tratos') }}</RouterLink
+      >
+      <button
+        class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-ink-gray-7 hover:bg-surface-gray-2"
+        :aria-expanded="isMobile ? mobileView === 'context' : showContext"
+        @click="isMobile ? openContext() : (showContext = !showContext)"
+      >
+        {{ __('Datos y contacto') }}
+      </button>
     </nav>
-  <!-- desktop: workspace + docked context panel -->
-  <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
-    <DealWorkspace />
-    <DealContextPanel v-if="activeDeal && showContext" />
-  </div>
-
-  <!-- mobile: one pane at a time (v-show keeps the thread mounted, like Inbox) -->
-  <div v-else class="flex min-h-0 w-full flex-1 flex-col">
-    <!-- edge swipe-back mirrors the ← buttons (context → thread → previous page) -->
-    <div v-show="mobileView !== 'context'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
+    <!-- desktop: workspace + docked context panel -->
+    <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
       <DealWorkspace />
+      <DealContextPanel v-if="activeDeal && showContext" />
     </div>
-    <div v-show="mobileView === 'context'" class="flex min-h-0 flex-1 flex-col" v-on="swipeBackHandlers">
-      <DealContextPanel v-if="activeDeal" />
+
+    <!-- mobile: one pane at a time (v-show keeps the thread mounted, like Inbox) -->
+    <div v-else class="flex min-h-0 w-full flex-1 flex-col">
+      <!-- edge swipe-back mirrors the ← buttons (context → thread → previous page) -->
+      <div
+        v-show="mobileView !== 'context'"
+        class="flex min-h-0 flex-1 flex-col"
+        v-on="swipeBackHandlers"
+      >
+        <DealWorkspace />
+      </div>
+      <div
+        v-show="mobileView === 'context'"
+        class="flex min-h-0 flex-1 flex-col"
+        v-on="swipeBackHandlers"
+      >
+        <DealContextPanel v-if="activeDeal" />
+      </div>
     </div>
-  </div>
   </div>
 </template>
 
@@ -37,7 +58,14 @@ import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { swipeBackHandlers } from '@/composables/swipeBack'
-import { activeDeal, selectDeal, mobileView, openContext, activeTab, onPresenceEvent } from '@/composables/inbox'
+import {
+  activeDeal,
+  selectDeal,
+  mobileView,
+  openContext,
+  activeTab,
+  onPresenceEvent,
+} from '@/composables/inbox'
 import { globalStore } from '@/stores/global'
 
 const props = defineProps({ dealId: { type: String, default: '' } })
@@ -70,14 +98,19 @@ watch(
       return
     }
     if (nv === 'context')
-      history.pushState({ ...history.state, dealPane: 'context', dealEpoch: paneEpoch }, '')
+      history.pushState(
+        { ...history.state, dealPane: 'context', dealEpoch: paneEpoch },
+        '',
+      )
   },
   { flush: 'sync' },
 )
 function onPopState(e) {
   if (!isMobile.value) return
   const target =
-    e.state?.dealPane === 'context' && e.state?.dealEpoch === paneEpoch ? 'context' : 'thread'
+    e.state?.dealPane === 'context' && e.state?.dealEpoch === paneEpoch
+      ? 'context'
+      : 'thread'
   if (target !== mobileView.value) {
     suppressPush = true
     mobileView.value = target

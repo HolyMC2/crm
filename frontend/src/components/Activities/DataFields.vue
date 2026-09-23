@@ -37,7 +37,7 @@
   <div v-else class="pb-8">
     <VerticalSlot
       v-if="['CRM Deal', 'CRM Lead', 'Contact'].includes(doctype)"
-      slot="data_tab"
+      slot-name="data_tab"
       :doctype="doctype"
       :docname="docname"
     />

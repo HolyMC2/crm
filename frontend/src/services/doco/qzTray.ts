@@ -47,7 +47,9 @@ let certificateChecked = false
 
 function getCsrfToken(): string {
   try {
-    return (window as any).csrf_token || (window as any).frappe?.csrf_token || ''
+    return (
+      (window as any).csrf_token || (window as any).frappe?.csrf_token || ''
+    )
   } catch {
     return ''
   }
@@ -60,7 +62,10 @@ function extractMessage<T>(value: any): T {
   return value as T
 }
 
-async function callServer<T>(method: string, args: Record<string, unknown> = {}): Promise<T> {
+async function callServer<T>(
+  method: string,
+  args: Record<string, unknown> = {},
+): Promise<T> {
   const response = await fetch(`/api/method/${method}`, {
     method: 'POST',
     credentials: 'include',
@@ -76,7 +81,11 @@ async function callServer<T>(method: string, args: Record<string, unknown> = {})
   return extractMessage<T>(json)
 }
 
-function buildPrintHtml(html: string, style: string, widthMm: number = 80): string {
+function buildPrintHtml(
+  html: string,
+  style: string,
+  widthMm: number = 80,
+): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -100,7 +109,10 @@ ${style || ''}
 // src attributes break. Browser fetch carries the session cookie.
 const inlinedImageCache = new Map<string, string>()
 
-async function fetchImageAsDataUrl(url: string, timeoutMs = 5000): Promise<string | null> {
+async function fetchImageAsDataUrl(
+  url: string,
+  timeoutMs = 5000,
+): Promise<string | null> {
   if (url.startsWith('data:')) return url
   const cached = inlinedImageCache.get(url)
   if (cached) return cached
@@ -108,7 +120,10 @@ async function fetchImageAsDataUrl(url: string, timeoutMs = 5000): Promise<strin
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const response = await fetch(url, { credentials: 'include', signal: controller.signal })
+    const response = await fetch(url, {
+      credentials: 'include',
+      signal: controller.signal,
+    })
     if (!response.ok) return null
     const blob = await response.blob()
     const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -128,7 +143,10 @@ async function fetchImageAsDataUrl(url: string, timeoutMs = 5000): Promise<strin
 
 async function inlineImagesForQz(html: string): Promise<string> {
   if (!html || !html.includes('<img')) return html
-  const doc = new DOMParser().parseFromString(`<div id="qz-inline-root">${html}</div>`, 'text/html')
+  const doc = new DOMParser().parseFromString(
+    `<div id="qz-inline-root">${html}</div>`,
+    'text/html',
+  )
   const container = doc.getElementById('qz-inline-root')
   if (!container) return html
 
@@ -319,14 +337,21 @@ export async function findQzPrinters(): Promise<string[]> {
 
   try {
     const result = await qz.printers.find()
-    const printers = Array.isArray(result) ? result : result ? [String(result)] : []
+    const printers = Array.isArray(result)
+      ? result
+      : result
+        ? [String(result)]
+        : []
 
     qzPrinters.value = printers
     const saved = getSavedPrinterName()
 
     if (saved && printers.includes(saved)) {
       setSelectedQzPrinter(saved)
-    } else if (selectedQzPrinter.value && printers.includes(selectedQzPrinter.value)) {
+    } else if (
+      selectedQzPrinter.value &&
+      printers.includes(selectedQzPrinter.value)
+    ) {
       setSelectedQzPrinter(selectedQzPrinter.value)
     } else if (printers.length > 0) {
       const firstPrinter = printers[0]
@@ -376,7 +401,9 @@ export async function setupQzCertificate() {
 }
 
 export async function getQzCertificateDownload() {
-  const result = await callServer<{ pem?: string; company?: string }>(DOWNLOAD_ENDPOINT)
+  const result = await callServer<{ pem?: string; company?: string }>(
+    DOWNLOAD_ENDPOINT,
+  )
   if (!result?.pem) throw new Error('QZ certificate is not available.')
   qzCertReady.value = true
   saveCertReady(true)
@@ -388,7 +415,10 @@ export function getQzCertificateFilename(company?: string | null) {
   return clean ? `${clean}.crt` : 'certificate.crt'
 }
 
-export async function printHtmlViaQz(html: string, options: QzPrintHtmlOptions = {}) {
+export async function printHtmlViaQz(
+  html: string,
+  options: QzPrintHtmlOptions = {},
+) {
   if (!html) throw new Error('Nothing to print.')
 
   if (!qz.websocket.isActive()) {
@@ -396,7 +426,8 @@ export async function printHtmlViaQz(html: string, options: QzPrintHtmlOptions =
     if (!connected) throw new Error('QZ Tray is not available.')
   }
 
-  let printer = options.printerName || selectedQzPrinter.value || getPreferredPrinter()
+  let printer =
+    options.printerName || selectedQzPrinter.value || getPreferredPrinter()
   if (!printer) {
     const printers = await findQzPrinters()
     const firstPrinter = printers[0]
@@ -423,11 +454,14 @@ export async function printHtmlViaQz(html: string, options: QzPrintHtmlOptions =
 }
 
 export async function printDocumentViaQz(options: QzPrintDocumentOptions) {
-  if (!options?.doctype || !options?.name) throw new Error('Invalid print document details.')
+  if (!options?.doctype || !options?.name)
+    throw new Error('Invalid print document details.')
 
   const printFormat = options.printFormat || DEFAULT_PRINT_FORMAT
   const noLetterhead =
-    options.letterhead && String(options.letterhead).trim() ? 0 : options.noLetterhead ?? 1
+    options.letterhead && String(options.letterhead).trim()
+      ? 0
+      : options.noLetterhead ?? 1
 
   const response = await callServer<{ html?: string; style?: string }>(
     'frappe.www.printview.get_html_and_style',
@@ -446,5 +480,8 @@ export async function printDocumentViaQz(options: QzPrintDocumentOptions) {
   if (!html) throw new Error('Unable to load print HTML from server.')
 
   const inlinedHtml = await inlineImagesForQz(html)
-  await printHtmlViaQz(buildPrintHtml(inlinedHtml, style, options.widthMm || 80), options)
+  await printHtmlViaQz(
+    buildPrintHtml(inlinedHtml, style, options.widthMm || 80),
+    options,
+  )
 }

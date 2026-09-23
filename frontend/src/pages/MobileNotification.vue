@@ -90,7 +90,11 @@ const { mark_as_read, mark_doc_as_read } = notificationsStore()
 // same per-type management as the desk panel — the WhatsApp flood was burying
 // Assignment/Mention rows in one flat list
 const activeTab = ref('all')
-const TAB_TYPE = { whatsapp: 'WhatsApp', assignment: 'Assignment', mention: 'Mention' }
+const TAB_TYPE = {
+  whatsapp: 'WhatsApp',
+  assignment: 'Assignment',
+  mention: 'Mention',
+}
 const tabs = computed(() => {
   const data = notifications.data || []
   const unread = (t) => data.filter((n) => !n.read && n.type === t).length

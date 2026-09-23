@@ -18,7 +18,9 @@ const SW_URL = '/assets/crm/frontend/sw.js'
 const SW_SCOPE = '/assets/crm/frontend/'
 
 const supported = () =>
-  'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+  'serviceWorker' in navigator &&
+  'PushManager' in window &&
+  'Notification' in window
 
 function b64ToUint8(base64) {
   const pad = '='.repeat((4 - (base64.length % 4)) % 4)
@@ -34,7 +36,9 @@ function b64ToUint8(base64) {
 // for activation.
 async function swRegistration() {
   if (!('serviceWorker' in navigator)) return null
-  let reg = await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => null)
+  let reg = await navigator.serviceWorker
+    .getRegistration(SW_SCOPE)
+    .catch(() => null)
   if (!reg) {
     reg = await navigator.serviceWorker
       .register(SW_URL, { scope: SW_SCOPE })
@@ -101,7 +105,11 @@ export async function enablePush() {
     const reg = await swRegistration()
     if (!reg) {
       pushState.value = 'off'
-      toast.error(__('No se pudo iniciar el service worker — recarga la página e intenta de nuevo'))
+      toast.error(
+        __(
+          'No se pudo iniciar el service worker — recarga la página e intenta de nuevo',
+        ),
+      )
       return
     }
     const sub = await reg.pushManager.subscribe({
@@ -121,7 +129,9 @@ export async function enablePush() {
     const brave = !!navigator.brave
     toast.error(
       brave
-        ? __('Brave bloquea push: activa «Usar servicios de Google para mensajería push» en Configuración → Privacidad y vuelve a intentar')
+        ? __(
+            'Brave bloquea push: activa «Usar servicios de Google para mensajería push» en Configuración → Privacidad y vuelve a intentar',
+          )
         : __('No se pudo activar push en este navegador'),
     )
   } finally {
@@ -136,7 +146,9 @@ export async function disablePush() {
     const reg = await swRegistration()
     const sub = reg ? await reg.pushManager.getSubscription() : null
     if (sub) {
-      await call('doco_marketing.api.push.unsubscribe', { endpoint: sub.endpoint })
+      await call('doco_marketing.api.push.unsubscribe', {
+        endpoint: sub.endpoint,
+      })
       await sub.unsubscribe()
     }
     pushState.value = 'off'

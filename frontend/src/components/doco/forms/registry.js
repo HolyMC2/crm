@@ -20,7 +20,8 @@ export async function fetchDescriptor(call, doctype, variant, mode = 'create') {
       variant,
       mode,
     })
-    if (d?.contract !== 'muelle-forms/1' || !Array.isArray(d.sections)) return null
+    if (d?.contract !== 'muelle-forms/1' || !Array.isArray(d.sections))
+      return null
     return d
   } catch {
     return null

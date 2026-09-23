@@ -21,11 +21,23 @@
       >
         <LucideChevronLeft class="h-6 w-6" />
       </button>
-      <img v-if="headerImage" :src="headerImage" class="h-9 w-9 flex-none rounded-full object-cover" alt="" />
-      <span v-else-if="boundContact" class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm-semibold" style="color:#5b21b6;background:#ede9fe">
+      <img
+        v-if="headerImage"
+        :src="headerImage"
+        class="h-9 w-9 flex-none rounded-full object-cover"
+        alt=""
+      />
+      <span
+        v-else-if="boundContact"
+        class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm-semibold"
+        style="color: #5b21b6; background: #ede9fe"
+      >
         {{ contactInitials }}
       </span>
-      <span v-else class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-7">
+      <span
+        v-else
+        class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-7"
+      >
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
       <div class="min-w-0">
@@ -34,15 +46,40 @@
              the WhatsApp profile name / raw number. -->
         <div class="flex items-center gap-1.5">
           <span class="truncate text-[15px] font-semibold text-ink-gray-9">
-            {{ boundContact?.name || prefillName || (isMessenger ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8) : formatPhone(activeUnassigned)) }}
+            {{
+              boundContact?.name ||
+              prefillName ||
+              (isMessenger
+                ? __('Messenger') + ' · ' + (activeUnassigned || '').slice(-8)
+                : formatPhone(activeUnassigned))
+            }}
           </span>
-          <span v-if="boundContact" class="flex-none rounded px-1.5 py-0.5 text-[9.5px] font-semibold" style="color:#5b21b6;background:#ede9fe">{{ __('Contacto') }}</span>
+          <span
+            v-if="boundContact"
+            class="flex-none rounded px-1.5 py-0.5 text-[9.5px] font-semibold"
+            style="color: #5b21b6; background: #ede9fe"
+            >{{ __('Contacto') }}</span
+          >
         </div>
-        <div v-if="boundContact" class="truncate text-[11px] font-medium text-ink-gray-5">
-          {{ formatPhone(activeUnassigned) }}<template v-if="boundContact.email"> · {{ boundContact.email }}</template>
+        <div
+          v-if="boundContact"
+          class="truncate text-[11px] font-medium text-ink-gray-5"
+        >
+          {{ formatPhone(activeUnassigned)
+          }}<template v-if="boundContact.email">
+            · {{ boundContact.email }}</template
+          >
         </div>
-        <div v-else class="text-[11px] font-medium" :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-7'">
-          {{ isArchived ? __('Archivado — sigue disponible') : __('Sin asignar — captura y convierte') }}
+        <div
+          v-else
+          class="text-[11px] font-medium"
+          :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-7'"
+        >
+          {{
+            isArchived
+              ? __('Archivado — sigue disponible')
+              : __('Sin asignar — captura y convierte')
+          }}
         </div>
       </div>
 
@@ -56,7 +93,8 @@
         :title="__('Archivar sin crear lead/trato — seguirá disponible')"
         @click="onArchive"
       >
-        <LucideArchive class="h-3.5 w-3.5" /> <span class="hidden sm:inline">{{ __('Archivar') }}</span>
+        <LucideArchive class="h-3.5 w-3.5" />
+        <span class="hidden sm:inline">{{ __('Archivar') }}</span>
       </button>
       <button
         v-else
@@ -65,7 +103,8 @@
         :aria-label="__('Desarchivar')"
         @click="onUnarchive"
       >
-        <LucideArchiveRestore class="h-3.5 w-3.5" /> <span class="hidden sm:inline">{{ __('Desarchivar') }}</span>
+        <LucideArchiveRestore class="h-3.5 w-3.5" />
+        <span class="hidden sm:inline">{{ __('Desarchivar') }}</span>
       </button>
     </div>
 
@@ -80,15 +119,34 @@
         <!-- Messenger orphans render through MessengerArea (reactions + referral chip +
              inline image attachments, identical to the assigned conversation). -->
         <MessengerArea v-if="isMessenger" :messages="messages" class="flex-1" />
-        <div v-else class="scb flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
-          <div v-if="unassignedThread.loading && !messages.length" class="py-8 text-center text-xs text-ink-gray-4">
+        <div
+          v-else
+          class="scb flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4"
+        >
+          <div
+            v-if="unassignedThread.loading && !messages.length"
+            class="py-8 text-center text-xs text-ink-gray-4"
+          >
             {{ __('Cargando…') }}
           </div>
-          <div v-else-if="unassignedThread.error && !messages.length" class="py-8 text-center text-xs text-ink-red-6">
+          <div
+            v-else-if="unassignedThread.error && !messages.length"
+            class="py-8 text-center text-xs text-ink-red-6"
+          >
             {{ __('No se pudo cargar la conversación.') }}
-            <button class="ml-1 font-semibold underline hover:text-ink-red-7" @click="unassignedThread.reload()">{{ __('Reintentar') }}</button>
+            <button
+              class="ml-1 font-semibold underline hover:text-ink-red-7"
+              @click="unassignedThread.reload()"
+            >
+              {{ __('Reintentar') }}
+            </button>
           </div>
-          <div v-else-if="!messages.length" class="py-8 text-center text-xs text-ink-gray-4">{{ __('Sin mensajes') }}</div>
+          <div
+            v-else-if="!messages.length"
+            class="py-8 text-center text-xs text-ink-gray-4"
+          >
+            {{ __('Sin mensajes') }}
+          </div>
           <!-- Reuse the real conversation renderer (templates, media, receipts, replies,
                provenance) — the same component the assigned deal thread uses, so an
                outbound Template (e.g. "orden recibida") shows its body instead of a blank
@@ -126,12 +184,20 @@
                 <template #default="{ openFileSelector }">
                   <div class="flex items-center space-x-2">
                     <Dropdown :options="msgrUploadOptions(openFileSelector)">
-                      <FeatherIcon name="plus" class="size-4.5 cursor-pointer text-ink-gray-5" :aria-label="__('Adjuntar')" />
+                      <FeatherIcon
+                        name="plus"
+                        class="size-4.5 cursor-pointer text-ink-gray-5"
+                        :aria-label="__('Adjuntar')"
+                      />
                     </Dropdown>
                   </div>
                 </template>
               </FileUploader>
-              <IconPicker v-slot="{ togglePopover }" v-model="msgrEmoji" @update:modelValue="onMsgrEmoji">
+              <IconPicker
+                v-slot="{ togglePopover }"
+                v-model="msgrEmoji"
+                @update:modelValue="onMsgrEmoji"
+              >
                 <SmileIcon
                   class="flex size-4.5 cursor-pointer rounded-sm text-2xl leading-none text-ink-gray-4"
                   :aria-label="__('Emojis')"
@@ -171,7 +237,11 @@
           style="background: var(--brand)"
           @click="captureOpen = true"
         >
-          {{ boundContact ? '✚ ' + __('Crear Trato') : '✚ ' + __('Capturar y convertir') }}
+          {{
+            boundContact
+              ? '✚ ' + __('Crear Trato')
+              : '✚ ' + __('Capturar y convertir')
+          }}
         </button>
       </div>
 
@@ -195,9 +265,17 @@
         "
         @keydown.esc="captureOpen = false"
       >
-        <div v-if="isMobile" class="mx-auto mb-2 h-1 w-10 flex-none rounded-full bg-surface-gray-4" aria-hidden="true" />
+        <div
+          v-if="isMobile"
+          class="mx-auto mb-2 h-1 w-10 flex-none rounded-full bg-surface-gray-4"
+          aria-hidden="true"
+        />
         <div class="mb-2 flex items-center justify-between">
-          <div class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('Datos') }}</div>
+          <div
+            class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+          >
+            {{ __('Datos') }}
+          </div>
           <button
             v-if="isMobile"
             class="press flex h-7 w-7 items-center justify-center rounded-lg text-ink-gray-5"
@@ -208,54 +286,136 @@
           </button>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Nombre') }}</span>
-            <input v-model="form.first_name" :class="inputCls" /></label>
-          <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Apellido') }}</span>
-            <input v-model="form.last_name" :class="inputCls" /></label>
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Nombre')
+            }}</span>
+            <input v-model="form.first_name" :class="inputCls"
+          /></label>
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Apellido')
+            }}</span>
+            <input v-model="form.last_name" :class="inputCls"
+          /></label>
         </div>
-        <label v-if="!isMessenger" class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Teléfono') }}</span>
-          <input :value="formatPhone(activeUnassigned)" disabled :class="inputCls" /></label>
-        <label class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Email') }}</span>
-          <input v-model="form.email" type="email" :class="inputCls" /></label>
-        <label class="mt-2 block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Dispositivo / Empresa') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span></span>
-          <input v-model="form.device" :class="inputCls" /></label>
+        <label v-if="!isMessenger" class="mt-2 block"
+          ><span class="text-[10px] font-medium text-ink-gray-5">{{
+            __('Teléfono')
+          }}</span>
+          <input
+            :value="formatPhone(activeUnassigned)"
+            disabled
+            :class="inputCls"
+        /></label>
+        <label class="mt-2 block"
+          ><span class="text-[10px] font-medium text-ink-gray-5">{{
+            __('Email')
+          }}</span>
+          <input v-model="form.email" type="email" :class="inputCls"
+        /></label>
+        <label class="mt-2 block"
+          ><span class="text-[10px] font-medium text-ink-gray-5"
+            >{{ __('Dispositivo / Empresa') }}
+            <span class="text-ink-gray-4">({{ __('opcional') }})</span></span
+          >
+          <input v-model="form.device" :class="inputCls"
+        /></label>
 
         <!-- Forecasting (only when CRM forecasting is on): a Deal then requires an
              expected value + closure date, else "Crear Trato" fails server-side. -->
-        <div v-if="forecastingEnabled" class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-4 bg-surface-blue-1 p-2">
-          <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Valor estimado') }} *</span>
-            <input v-model="form.expected_deal_value" type="number" min="0" :class="inputCls" /></label>
-          <label class="block"><span class="text-[10px] font-medium text-ink-gray-6">{{ __('Cierre estimado') }}</span>
-            <input v-model="form.expected_closure_date" type="date" :class="inputCls" /></label>
+        <div
+          v-if="forecastingEnabled"
+          class="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-outline-blue-4 bg-surface-blue-1 p-2"
+        >
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-6"
+              >{{ __('Valor estimado') }} *</span
+            >
+            <input
+              v-model="form.expected_deal_value"
+              type="number"
+              min="0"
+              :class="inputCls"
+          /></label>
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-6">{{
+              __('Cierre estimado')
+            }}</span>
+            <input
+              v-model="form.expected_closure_date"
+              type="date"
+              :class="inputCls"
+          /></label>
         </div>
 
-        <button v-if="!isMessenger" class="mt-3 flex items-center gap-1 text-[11px] font-semibold text-ink-gray-6" :aria-expanded="showFiscal" @click="showFiscal = !showFiscal">
-          {{ showFiscal ? '▾' : '▸' }} {{ __('Datos fiscales') }} <span class="text-ink-gray-4">({{ __('opcional') }})</span>
+        <button
+          v-if="!isMessenger"
+          class="mt-3 flex items-center gap-1 text-[11px] font-semibold text-ink-gray-6"
+          :aria-expanded="showFiscal"
+          @click="showFiscal = !showFiscal"
+        >
+          {{ showFiscal ? '▾' : '▸' }} {{ __('Datos fiscales') }}
+          <span class="text-ink-gray-4">({{ __('opcional') }})</span>
         </button>
         <div v-if="showFiscal" class="mt-1.5 flex flex-col gap-2">
-          <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('RFC') }}</span>
-            <input v-model="form.rfc" :class="inputCls" /></label>
-          <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Razón social') }}</span>
-            <input v-model="form.legal_name" :class="inputCls" /></label>
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('RFC')
+            }}</span>
+            <input v-model="form.rfc" :class="inputCls"
+          /></label>
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Razón social')
+            }}</span>
+            <input v-model="form.legal_name" :class="inputCls"
+          /></label>
           <div class="grid grid-cols-2 gap-2">
-            <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Dirección') }}</span>
-              <input v-model="form.address" :class="inputCls" /></label>
-            <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Ciudad') }}</span>
-              <input v-model="form.city" :class="inputCls" /></label>
+            <label class="block"
+              ><span class="text-[10px] font-medium text-ink-gray-5">{{
+                __('Dirección')
+              }}</span>
+              <input v-model="form.address" :class="inputCls"
+            /></label>
+            <label class="block"
+              ><span class="text-[10px] font-medium text-ink-gray-5">{{
+                __('Ciudad')
+              }}</span>
+              <input v-model="form.city" :class="inputCls"
+            /></label>
           </div>
-          <label class="block"><span class="text-[10px] font-medium text-ink-gray-5">{{ __('Cumpleaños') }}</span>
-            <input v-model="form.birth_date" type="date" :class="inputCls" /></label>
+          <label class="block"
+            ><span class="text-[10px] font-medium text-ink-gray-5">{{
+              __('Cumpleaños')
+            }}</span>
+            <input v-model="form.birth_date" type="date" :class="inputCls"
+          /></label>
         </div>
 
         <div class="mt-4 flex flex-col gap-2">
-          <button class="rounded-lg px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50" style="background: var(--brand)" :disabled="busy" @click="convert('CRM Deal')">
+          <button
+            class="rounded-lg px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-50"
+            style="background: var(--brand)"
+            :disabled="busy"
+            @click="convert('CRM Deal')"
+          >
             + {{ __('Crear Trato') }}
           </button>
           <div class="grid grid-cols-2 gap-2">
-            <button class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50" :disabled="busy" @click="convert('CRM Lead')">
+            <button
+              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
+              :disabled="busy"
+              @click="convert('CRM Lead')"
+            >
               + {{ __('Lead') }}
             </button>
-            <button v-if="!isMessenger" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50" :disabled="busy" @click="convert('Customer')">
+            <button
+              v-if="!isMessenger"
+              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-50"
+              :disabled="busy"
+              @click="convert('Customer')"
+            >
               + {{ __('Cliente') }}
             </button>
           </div>
@@ -263,11 +423,17 @@
 
         <!-- or LINK to an existing Contact / Lead / Deal (universal across channels) -->
         <div class="mt-4 border-t border-outline-gray-1 pt-3">
-          <div class="mb-1 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">{{ __('O vincular a existente') }}</div>
+          <div
+            class="mb-1 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+          >
+            {{ __('O vincular a existente') }}
+          </div>
 
           <!-- auto-suggestions by name / number — surfaced, NEVER auto-linked -->
           <div v-if="suggestionRows.length" class="mb-2">
-            <div class="mb-1 text-[10px] font-semibold text-ink-gray-5">✨ {{ __('Sugerencias') }}</div>
+            <div class="mb-1 text-[10px] font-semibold text-ink-gray-5">
+              ✨ {{ __('Sugerencias') }}
+            </div>
             <div class="flex flex-col gap-1">
               <button
                 v-for="t in suggestionRows"
@@ -277,20 +443,45 @@
                 @click="linkTo(t)"
               >
                 <span class="min-w-0">
-                  <span class="block truncate font-medium text-ink-gray-8">{{ t.label }}</span>
-                  <span class="block truncate text-[10.5px] text-ink-gray-5">{{ t.reason }}<template v-if="t.sublabel"> · {{ t.sublabel }}</template></span>
+                  <span class="block truncate font-medium text-ink-gray-8">{{
+                    t.label
+                  }}</span>
+                  <span class="block truncate text-[10.5px] text-ink-gray-5"
+                    >{{ t.reason
+                    }}<template v-if="t.sublabel">
+                      · {{ t.sublabel }}</template
+                    ></span
+                  >
                 </span>
-                <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :class="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
+                <span
+                  class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                  :class="docBadge(t.doctype)"
+                  >{{ docLabel(t.doctype) }}</span
+                >
               </button>
             </div>
           </div>
 
-          <input v-model="linkQuery" :placeholder="__('Buscar contacto, Lead o Trato…')" :class="inputCls" @input="onSearch" />
-          <div v-if="searching" class="mt-1.5 flex items-center gap-1.5 text-[11px] text-ink-gray-4">
-            <FeatherIcon name="loader" class="h-3 w-3 animate-spin" /> {{ __('Buscando…') }}
+          <input
+            v-model="linkQuery"
+            :placeholder="__('Buscar contacto, Lead o Trato…')"
+            :class="inputCls"
+            @input="onSearch"
+          />
+          <div
+            v-if="searching"
+            class="mt-1.5 flex items-center gap-1.5 text-[11px] text-ink-gray-4"
+          >
+            <FeatherIcon name="loader" class="h-3 w-3 animate-spin" />
+            {{ __('Buscando…') }}
           </div>
-          <div v-else-if="linkResults.length" class="mt-1.5 flex flex-col gap-1">
-            <div class="text-[10px] font-semibold text-ink-gray-5">🔎 {{ __('Resultados de búsqueda') }}</div>
+          <div
+            v-else-if="linkResults.length"
+            class="mt-1.5 flex flex-col gap-1"
+          >
+            <div class="text-[10px] font-semibold text-ink-gray-5">
+              🔎 {{ __('Resultados de búsqueda') }}
+            </div>
             <button
               v-for="t in linkResults"
               :key="t.doctype + ':' + t.name"
@@ -299,13 +490,28 @@
               @click="linkTo(t)"
             >
               <span class="min-w-0">
-                <span class="block truncate text-ink-gray-8">{{ t.label }}</span>
-                <span v-if="t.sublabel" class="block truncate text-[10.5px] text-ink-gray-5">{{ t.sublabel }}</span>
+                <span class="block truncate text-ink-gray-8">{{
+                  t.label
+                }}</span>
+                <span
+                  v-if="t.sublabel"
+                  class="block truncate text-[10.5px] text-ink-gray-5"
+                  >{{ t.sublabel }}</span
+                >
               </span>
-              <span class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold" :class="docBadge(t.doctype)">{{ docLabel(t.doctype) }}</span>
+              <span
+                class="flex-none rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                :class="docBadge(t.doctype)"
+                >{{ docLabel(t.doctype) }}</span
+              >
             </button>
           </div>
-          <div v-else-if="linkQuery.trim().length >= 2 && !searching" class="mt-1 text-[11px] text-ink-gray-4">{{ __('Sin coincidencias') }}</div>
+          <div
+            v-else-if="linkQuery.trim().length >= 2 && !searching"
+            class="mt-1 text-[11px] text-ink-gray-4"
+          >
+            {{ __('Sin coincidencias') }}
+          </div>
         </div>
       </div>
     </div>
@@ -327,16 +533,38 @@ import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
 import CatalogPicker from '@/components/doco/inbox/CatalogPicker.vue'
-import { activeUnassigned, activeUnassignedChannel, activeUnassignedArchived, unassignedThread, suggestions, assignUnassigned, linkUnassignedToExisting, sendUnassignedMessenger, archiveOrphan, unarchiveOrphan, mobileBack, forecastingEnabled, catalogOpen, openCatalog } from '@/composables/inbox'
+import {
+  activeUnassigned,
+  activeUnassignedChannel,
+  activeUnassignedArchived,
+  unassignedThread,
+  suggestions,
+  assignUnassigned,
+  linkUnassignedToExisting,
+  sendUnassignedMessenger,
+  archiveOrphan,
+  unarchiveOrphan,
+  mobileBack,
+  forecastingEnabled,
+  catalogOpen,
+  openCatalog,
+} from '@/composables/inbox'
 
-const isMessenger = computed(() => activeUnassignedChannel.value === 'messenger')
+const isMessenger = computed(
+  () => activeUnassignedChannel.value === 'messenger',
+)
 
 // 📦/"/cat" from the orphan composer: the box only EMITS — without this handler
 // (and a mounted CatalogPicker) the Catálogo button was dead in "Sin asignar".
 // Reference-less ctx: send_items threads the cards into this orphan conversation.
 function onWaCatalog(q) {
   openCatalog(
-    { reference_doctype: '', reference_name: '', channel: 'whatsapp', to: activeUnassigned.value || '' },
+    {
+      reference_doctype: '',
+      reference_name: '',
+      channel: 'whatsapp',
+      to: activeUnassigned.value || '',
+    },
     q,
   )
 }
@@ -373,7 +601,11 @@ async function onUnarchive() {
 // auto-suggested existing Contact/Lead/Deal matches (by name + number) for this orphan
 const suggestionRows = computed(() => suggestions.data || [])
 function docLabel(dt) {
-  return dt === 'Contact' ? __('Contacto') : dt === 'CRM Deal' ? __('Trato') : 'Lead'
+  return dt === 'Contact'
+    ? __('Contacto')
+    : dt === 'CRM Deal'
+      ? __('Trato')
+      : 'Lead'
 }
 function docBadge(dt) {
   // frappe-ui semantic tokens — auto dark-safe (was fixed light-mode hex)
@@ -391,13 +623,23 @@ function onMsgrEmoji() {
   msgrTextareaRef.value?.focus?.()
 }
 function onMsgrCanned(body) {
-  msgrReply.value = msgrReply.value.trim() ? msgrReply.value + '\n' + body : body
+  msgrReply.value = msgrReply.value.trim()
+    ? msgrReply.value + '\n' + body
+    : body
   msgrTextareaRef.value?.focus?.()
 }
 function msgrUploadOptions(openFileSelector) {
   return [
-    { label: __('Imagen'), icon: 'image', onClick: () => openFileSelector('image/*') },
-    { label: __('Video'), icon: 'video', onClick: () => openFileSelector('video/*') },
+    {
+      label: __('Imagen'),
+      icon: 'image',
+      onClick: () => openFileSelector('image/*'),
+    },
+    {
+      label: __('Video'),
+      icon: 'video',
+      onClick: () => openFileSelector('video/*'),
+    },
     { label: __('Documento'), icon: 'file', onClick: () => openFileSelector() },
   ]
 }
@@ -435,11 +677,17 @@ let searchTimer = null
 function onSearch() {
   clearTimeout(searchTimer)
   const q = linkQuery.value.trim()
-  if (q.length < 2) { linkResults.value = []; return }
+  if (q.length < 2) {
+    linkResults.value = []
+    return
+  }
   searching.value = true
   searchTimer = setTimeout(async () => {
     try {
-      linkResults.value = await call('doco_marketing.api.inbox.search_link_targets', { query: q })
+      linkResults.value = await call(
+        'doco_marketing.api.inbox.search_link_targets',
+        { query: q },
+      )
     } catch {
       linkResults.value = []
     } finally {
@@ -451,9 +699,18 @@ async function linkTo(t) {
   if (busy.value) return
   busy.value = true
   try {
-    const res = await linkUnassignedToExisting(activeUnassigned.value, t.doctype, t.name, activeUnassignedChannel.value)
+    const res = await linkUnassignedToExisting(
+      activeUnassigned.value,
+      t.doctype,
+      t.name,
+      activeUnassignedChannel.value,
+    )
     if (res?.kept_unassigned) {
-      toast.success(__('Identidad vinculada al contacto · la conversación sigue sin asignar (sin trato abierto)'))
+      toast.success(
+        __(
+          'Identidad vinculada al contacto · la conversación sigue sin asignar (sin trato abierto)',
+        ),
+      )
     } else {
       toast.success(`${__('Vinculado a')} ${res.name}`)
     }
@@ -492,21 +749,44 @@ watch(activeUnassigned, () => {
 const showFiscal = ref(false)
 const messages = computed(() => unassignedThread.data?.messages || [])
 const form = reactive({
-  first_name: '', last_name: '', email: '', device: '',
-  rfc: '', legal_name: '', address: '', city: '', birth_date: '',
-  expected_deal_value: '', expected_closure_date: '',
+  first_name: '',
+  last_name: '',
+  email: '',
+  device: '',
+  rfc: '',
+  legal_name: '',
+  address: '',
+  city: '',
+  birth_date: '',
+  expected_deal_value: '',
+  expected_closure_date: '',
 })
 
 // Contact bound to this orphan number (kept-unassigned link) — drives the header's
 // name/data + avatar. WhatsApp only; a Messenger orphan carries no phone-bound Contact.
-const boundContact = computed(() => (isMessenger.value ? null : unassignedThread.data?.contact) || null)
+const boundContact = computed(
+  () => (isMessenger.value ? null : unassignedThread.data?.contact) || null,
+)
 const contactInitials = computed(() => {
-  const parts = (boundContact.value?.name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2)
-  return parts.map((p) => p[0]).join('').toUpperCase() || '?'
+  const parts = (boundContact.value?.name || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+  return (
+    parts
+      .map((p) => p[0])
+      .join('')
+      .toUpperCase() || '?'
+  )
 })
 // FB/WhatsApp avatar (Messenger gives profile_pic; WhatsApp none) + the resolved name.
-const profilePic = computed(() => unassignedThread.data?.prefill?.profile_pic || null)
-const headerImage = computed(() => boundContact.value?.image || profilePic.value || null)
+const profilePic = computed(
+  () => unassignedThread.data?.prefill?.profile_pic || null,
+)
+const headerImage = computed(
+  () => boundContact.value?.image || profilePic.value || null,
+)
 const prefillName = computed(() => {
   const p = unassignedThread.data?.prefill
   if (!p) return null
@@ -515,7 +795,19 @@ const prefillName = computed(() => {
 
 // Reset the capture form + picker when switching orphans.
 watch(activeUnassigned, () => {
-  Object.assign(form, { first_name: '', last_name: '', email: '', device: '', rfc: '', legal_name: '', address: '', city: '', birth_date: '', expected_deal_value: '', expected_closure_date: '' })
+  Object.assign(form, {
+    first_name: '',
+    last_name: '',
+    email: '',
+    device: '',
+    rfc: '',
+    legal_name: '',
+    address: '',
+    city: '',
+    birth_date: '',
+    expected_deal_value: '',
+    expected_closure_date: '',
+  })
   linkQuery.value = ''
   linkResults.value = []
 })
@@ -537,7 +829,8 @@ function formatPhone(raw) {
   let n = d
   if (n.startsWith('521')) n = n.slice(3)
   else if (n.startsWith('52')) n = n.slice(2)
-  if (n.length === 10) return `+52 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`
+  if (n.length === 10)
+    return `+52 ${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}`
   return raw ? `+${d}` : '—'
 }
 
@@ -545,22 +838,37 @@ async function convert(target) {
   if (busy.value) return
   // Forecasting: a Deal needs an expected value, else the server MandatoryErrors. Block
   // the blank submit with a clear hint instead of bouncing the raw validation error.
-  if (target === 'CRM Deal' && forecastingEnabled.value && !form.expected_deal_value) {
+  if (
+    target === 'CRM Deal' &&
+    forecastingEnabled.value &&
+    !form.expected_deal_value
+  ) {
     toast.error(__('Captura el valor estimado para crear el trato.'))
     return
   }
   busy.value = true
   try {
     const fields = {}
-    for (const [k, v] of Object.entries(form)) if (v && k !== 'device') fields[k] = v
+    for (const [k, v] of Object.entries(form))
+      if (v && k !== 'device') fields[k] = v
     // one "Dispositivo / Empresa" input: the repair device on a Deal, the
     // organization on a Lead/Customer.
     if (form.device) {
       if (target === 'CRM Deal') fields.device = form.device
       else fields.organization = form.device
     }
-    const res = await assignUnassigned(activeUnassigned.value, target, fields, activeUnassignedChannel.value)
-    const label = target === 'CRM Deal' ? __('Trato') : target === 'Customer' ? __('Cliente') : __('Lead')
+    const res = await assignUnassigned(
+      activeUnassigned.value,
+      target,
+      fields,
+      activeUnassignedChannel.value,
+    )
+    const label =
+      target === 'CRM Deal'
+        ? __('Trato')
+        : target === 'Customer'
+          ? __('Cliente')
+          : __('Lead')
     toast.success(`${label} ${__('creado')}: ${res.name}`)
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo convertir'))

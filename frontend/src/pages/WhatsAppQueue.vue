@@ -5,21 +5,30 @@
   to approve. Data + actions: doco_marketing.api.review_queue.*
 -->
 <template>
-  <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
+  <div
+    class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
+  >
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-base px-5">
+    <div
+      class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-base px-5"
+    >
       <div class="flex items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Aprobaciones WhatsApp') }}</span>
+        <span class="text-[15px] font-bold text-ink-gray-9">{{
+          __('Aprobaciones WhatsApp')
+        }}</span>
         <span
           v-if="pendingCount"
           class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-[11px] font-semibold text-ink-amber-7"
-        >{{ pendingCount }} {{ __('pendientes') }}</span>
+          >{{ pendingCount }} {{ __('pendientes') }}</span
+        >
       </div>
       <button
         class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
         :disabled="queue.loading"
         @click="queue.reload()"
-      >{{ queue.loading ? __('Cargando…') : __('Actualizar') }}</button>
+      >
+        {{ queue.loading ? __('Cargando…') : __('Actualizar') }}
+      </button>
     </div>
 
     <div class="p-5">
@@ -29,24 +38,39 @@
           v-for="f in filters"
           :key="f.value"
           class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12.5px] font-semibold transition-colors"
-          :class="status === f.value
-            ? 'bg-surface-gray-10 text-ink-base'
-            : 'bg-surface-base text-ink-gray-7 border border-outline-gray-2 hover:bg-surface-gray-2'"
+          :class="
+            status === f.value
+              ? 'bg-surface-gray-10 text-ink-base'
+              : 'bg-surface-base text-ink-gray-7 border border-outline-gray-2 hover:bg-surface-gray-2'
+          "
           @click="status = f.value"
         >
           {{ __(f.label) }}
           <span
             v-if="badgeCount(f.value)"
             class="rounded-full px-1.5 text-[10.5px] leading-4"
-            :class="status === f.value ? 'bg-surface-base/20' : (f.value === 'Fallido' ? 'bg-surface-red-1 text-ink-red-8' : 'bg-surface-amber-1 text-ink-amber-7')"
-          >{{ badgeCount(f.value) }}</span>
+            :class="
+              status === f.value
+                ? 'bg-surface-base/20'
+                : f.value === 'Fallido'
+                  ? 'bg-surface-red-1 text-ink-red-8'
+                  : 'bg-surface-amber-1 text-ink-amber-7'
+            "
+            >{{ badgeCount(f.value) }}</span
+          >
         </button>
       </div>
 
-      <div v-if="queue.loading && !rows.length" class="py-16 text-center text-sm text-ink-gray-4">
+      <div
+        v-if="queue.loading && !rows.length"
+        class="py-16 text-center text-sm text-ink-gray-4"
+      >
         {{ __('Cargando…') }}
       </div>
-      <div v-else-if="!rows.length" class="py-16 text-center text-sm text-ink-gray-4">
+      <div
+        v-else-if="!rows.length"
+        class="py-16 text-center text-sm text-ink-gray-4"
+      >
         {{ __('No hay mensajes en') }} «{{ __(currentLabel) }}».
       </div>
       <div v-else class="mx-auto flex max-w-[760px] flex-col gap-2.5">
@@ -74,7 +98,9 @@ const filters = [
   { label: 'Todos', value: 'Todos' },
 ]
 const status = ref('Pendiente')
-const currentLabel = computed(() => filters.find((f) => f.value === status.value)?.label || status.value)
+const currentLabel = computed(
+  () => filters.find((f) => f.value === status.value)?.label || status.value,
+)
 
 const queue = createResource({
   url: 'doco_marketing.api.review_queue.get_queue',

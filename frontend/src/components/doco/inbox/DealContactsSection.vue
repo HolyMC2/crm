@@ -8,20 +8,34 @@
 <template>
   <div class="flex-none border-b border-outline-gray-1 p-3.5">
     <div class="mb-2.5 flex items-center justify-between">
-      <div class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4">
+      <div
+        class="text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
+      >
         {{ hidePrimary ? __('Otros contactos') : __('Contactos') }}
       </div>
       <Link value="" doctype="Contact" @change="(c) => addContact(c)">
         <template #target="{ togglePopover }">
-          <Button variant="ghost" icon="plus" class="!h-6 !w-6" :tooltip="__('Agregar contacto')" @click="togglePopover()" />
+          <Button
+            variant="ghost"
+            icon="plus"
+            class="!h-6 !w-6"
+            :tooltip="__('Agregar contacto')"
+            @click="togglePopover()"
+          />
         </template>
       </Link>
     </div>
 
-    <div v-if="contacts.loading && !contacts.data?.length" class="py-3 text-center text-xs text-ink-gray-4">
+    <div
+      v-if="contacts.loading && !contacts.data?.length"
+      class="py-3 text-center text-xs text-ink-gray-4"
+    >
       {{ __('Cargando…') }}
     </div>
-    <div v-else-if="!visibleContacts.length" class="py-3 text-center text-xs text-ink-gray-4">
+    <div
+      v-else-if="!visibleContacts.length"
+      class="py-3 text-center text-xs text-ink-gray-4"
+    >
       {{ hidePrimary ? __('Sin contactos adicionales') : __('Sin contactos') }}
     </div>
 
@@ -33,15 +47,24 @@
       <div class="flex items-center gap-2">
         <Avatar :label="c.full_name" :image="c.image" size="md" />
         <div class="flex min-w-0 flex-1 items-center gap-1.5">
-          <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{ c.full_name }}</span>
-          <Badge v-if="c.is_primary" variant="outline" theme="green" :label="__('Primary')" />
+          <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{
+            c.full_name
+          }}</span>
+          <Badge
+            v-if="c.is_primary"
+            variant="outline"
+            theme="green"
+            :label="__('Primary')"
+          />
         </div>
         <Button
           variant="ghost"
           icon="external-link"
           class="!h-6 !w-6"
           :tooltip="__('Ver contacto')"
-          @click="router.push({ name: 'Contact', params: { contactId: c.name } })"
+          @click="
+            router.push({ name: 'Contact', params: { contactId: c.name } })
+          "
         />
         <Dropdown :options="contactOptions(c)">
           <Button variant="ghost" icon="more-horizontal" class="!h-6 !w-6" />
@@ -54,7 +77,10 @@
         <div v-if="c.mobile_no" class="flex items-center gap-2">
           <PhoneIcon class="h-3.5 w-3.5 text-ink-gray-4" />{{ c.mobile_no }}
         </div>
-        <div v-if="!c.email && !c.mobile_no" class="text-[11px] text-ink-gray-4">
+        <div
+          v-if="!c.email && !c.mobile_no"
+          class="text-[11px] text-ink-gray-4"
+        >
           {{ __('Sin datos de contacto') }}
         </div>
       </div>
@@ -65,7 +91,15 @@
 <script setup>
 import { h, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Avatar, Badge, Dropdown, Button, createResource, call, toast } from 'frappe-ui'
+import {
+  Avatar,
+  Badge,
+  Dropdown,
+  Button,
+  createResource,
+  call,
+  toast,
+} from 'frappe-ui'
 import Link from '@/components/Controls/Link.vue'
 import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
@@ -98,9 +132,14 @@ function contactOptions(c) {
   const opts = [
     {
       label: __('Ver contacto'),
-      onClick: () => router.push({ name: 'Contact', params: { contactId: c.name } }),
+      onClick: () =>
+        router.push({ name: 'Contact', params: { contactId: c.name } }),
     },
-    { label: __('Quitar'), icon: 'trash-2', onClick: () => removeContact(c.name) },
+    {
+      label: __('Quitar'),
+      icon: 'trash-2',
+      onClick: () => removeContact(c.name),
+    },
   ]
   if (!c.is_primary) {
     opts.push({
@@ -117,17 +156,26 @@ async function addContact(contact) {
     toast.error(__('Contacto ya agregado'))
     return
   }
-  await call('crm.fcrm.doctype.crm_deal.crm_deal.add_contact', { deal: props.deal, contact })
+  await call('crm.fcrm.doctype.crm_deal.crm_deal.add_contact', {
+    deal: props.deal,
+    contact,
+  })
   contacts.reload()
   toast.success(__('Contacto agregado'))
 }
 async function removeContact(contact) {
-  await call('crm.fcrm.doctype.crm_deal.crm_deal.remove_contact', { deal: props.deal, contact })
+  await call('crm.fcrm.doctype.crm_deal.crm_deal.remove_contact', {
+    deal: props.deal,
+    contact,
+  })
   contacts.reload()
   toast.success(__('Contacto quitado'))
 }
 async function setPrimary(contact) {
-  await call('crm.fcrm.doctype.crm_deal.crm_deal.set_primary_contact', { deal: props.deal, contact })
+  await call('crm.fcrm.doctype.crm_deal.crm_deal.set_primary_contact', {
+    deal: props.deal,
+    contact,
+  })
   contacts.reload()
   toast.success(__('Contacto principal actualizado'))
 }

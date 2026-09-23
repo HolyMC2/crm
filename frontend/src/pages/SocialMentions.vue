@@ -16,61 +16,97 @@
     class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
   >
     <!-- toolbar -->
-    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
+    <div
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2"
+    >
       <div class="flex items-center gap-3">
-        <span class="text-[15px] font-bold text-ink-gray-9">💬 {{ __('Menciones') }}</span>
+        <span class="text-[15px] font-bold text-ink-gray-9"
+          >💬 {{ __('Menciones') }}</span
+        >
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop"
-          @change="reloadAll"
           class="rounded-lg border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
           :title="__('Filtrar por sucursal')"
+          @change="reloadAll"
         >
-          <option v-if="isManager" value="">{{ __('Todas las sucursales') }}</option>
-          <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
+          <option v-if="isManager" value="">
+            {{ __('Todas las sucursales') }}
+          </option>
+          <option v-for="s in shopOptions" :key="s.name" :value="s.name">
+            {{ s.shop_name }}
+          </option>
         </select>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-      <router-link to="/inquiries?capture=1" class="text-[12px] font-semibold text-ink-blue-9 hover:underline">
-        {{ __('Capturar consulta manual') }}
-      </router-link>
-      <router-link
-        to="/social"
-        class="text-[12px] font-semibold text-ink-blue-9 hover:underline"
-        :title="__('Ir al calendario social')"
-      >
-        {{ __('Ir al calendario →') }}
-      </router-link>
+        <router-link
+          to="/inquiries?capture=1"
+          class="text-[12px] font-semibold text-ink-blue-9 hover:underline"
+        >
+          {{ __('Capturar consulta manual') }}
+        </router-link>
+        <router-link
+          to="/social"
+          class="text-[12px] font-semibold text-ink-blue-9 hover:underline"
+          :title="__('Ir al calendario social')"
+        >
+          {{ __('Ir al calendario →') }}
+        </router-link>
       </div>
     </div>
 
     <SocialCaptureHealth :shop="shop" />
 
     <!-- status filter chips -->
-    <div class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
+    <div
+      class="flex flex-none flex-wrap items-center gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2"
+    >
       <button
         v-for="f in FILTERS"
         :key="f.v"
         :data-testid="`mentions-filter-${f.v || 'todas'}`"
         class="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
-        :class="statusFilter === f.v ? 'bg-surface-gray-10 text-ink-base' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+        :class="
+          statusFilter === f.v
+            ? 'bg-surface-gray-10 text-ink-base'
+            : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+        "
         @click="setFilter(f.v)"
       >
         {{ __(f.label) }}
         <span
           v-if="f.v === 'Nuevo' && nuevoCount"
           class="rounded-full bg-surface-red-7 px-1.5 text-[10px] font-bold text-ink-red-1"
-        >{{ nuevoCount }}</span>
+          >{{ nuevoCount }}</span
+        >
       </button>
     </div>
 
     <div class="flex-1 p-4">
-      <div v-if="mentionsRes.error" class="mx-auto mb-4 max-w-[820px] space-y-2 rounded-lg border border-outline-gray-2 bg-surface-base p-4">
-        <p role="alert" class="text-sm text-ink-red-7">{{ __('No se pudieron cargar las menciones. Revisa el acceso y la conexión; puedes capturar una consulta manual mientras tanto.') }}</p>
-        <button type="button" class="text-sm font-semibold text-ink-blue-9 hover:underline" @click="reloadAll">{{ __('Reintentar menciones') }}</button>
+      <div
+        v-if="mentionsRes.error"
+        class="mx-auto mb-4 max-w-[820px] space-y-2 rounded-lg border border-outline-gray-2 bg-surface-base p-4"
+      >
+        <p role="alert" class="text-sm text-ink-red-7">
+          {{
+            __(
+              'No se pudieron cargar las menciones. Revisa el acceso y la conexión; puedes capturar una consulta manual mientras tanto.',
+            )
+          }}
+        </p>
+        <button
+          type="button"
+          class="text-sm font-semibold text-ink-blue-9 hover:underline"
+          @click="reloadAll"
+        >
+          {{ __('Reintentar menciones') }}
+        </button>
       </div>
       <!-- loading -->
-      <div v-if="mentionsRes.loading && !rows.length" class="py-16 text-center text-[13px] text-ink-gray-5">
+      <div
+        v-if="mentionsRes.loading && !rows.length"
+        class="py-16 text-center text-[13px] text-ink-gray-5"
+      >
         {{ __('Cargando…') }}
       </div>
 
@@ -80,11 +116,23 @@
         class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
       >
         <div class="text-[34px]">💬</div>
-        <div class="mt-2 text-[15px] font-bold text-ink-gray-8">{{ __('Sin menciones por aquí') }}</div>
-        <p class="mx-auto mt-2 max-w-[440px] text-[12.5px] leading-relaxed text-ink-gray-6">
-          {{ __('Aquí se muestran las menciones que la integración pudo recibir. La cobertura depende de los permisos, las suscripciones y los eventos entregados por Meta; las notificaciones de grupos de Facebook no están garantizadas. Si viste una conversación que falta, captura su enlace o texto como consulta.') }}
+        <div class="mt-2 text-[15px] font-bold text-ink-gray-8">
+          {{ __('Sin menciones por aquí') }}
+        </div>
+        <p
+          class="mx-auto mt-2 max-w-[440px] text-[12.5px] leading-relaxed text-ink-gray-6"
+        >
+          {{
+            __(
+              'Aquí se muestran las menciones que la integración pudo recibir. La cobertura depende de los permisos, las suscripciones y los eventos entregados por Meta; las notificaciones de grupos de Facebook no están garantizadas. Si viste una conversación que falta, captura su enlace o texto como consulta.',
+            )
+          }}
         </p>
-        <router-link to="/inquiries?capture=1" class="mt-4 inline-block text-sm font-semibold text-ink-blue-9 hover:underline">{{ __('Capturar consulta manual') }}</router-link>
+        <router-link
+          to="/inquiries?capture=1"
+          class="mt-4 inline-block text-sm font-semibold text-ink-blue-9 hover:underline"
+          >{{ __('Capturar consulta manual') }}</router-link
+        >
       </div>
 
       <!-- list -->
@@ -97,21 +145,39 @@
         >
           <!-- head: type + author + time -->
           <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-gray-7">
-              {{ TYPE_EMOJI[row.mention_type] || '' }} {{ typeLabel(row.mention_type) }}
+            <span
+              class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-gray-7"
+            >
+              {{ TYPE_EMOJI[row.mention_type] || '' }}
+              {{ typeLabel(row.mention_type) }}
             </span>
-            <span class="text-[13.5px] font-semibold text-ink-gray-9">{{ authorLabel(row.author_username) }}</span>
-            <span v-if="row.rating" class="text-[12px] tracking-tight text-ink-amber-7" :title="`${row.rating}/5`">{{ '★'.repeat(row.rating) }}</span>
-            <span class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold" :class="statusChip(row.status)">
+            <span class="text-[13.5px] font-semibold text-ink-gray-9">{{
+              authorLabel(row.author_username)
+            }}</span>
+            <span
+              v-if="row.rating"
+              class="text-[12px] tracking-tight text-ink-amber-7"
+              :title="`${row.rating}/5`"
+              >{{ '★'.repeat(row.rating) }}</span
+            >
+            <span
+              class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
+              :class="statusChip(row.status)"
+            >
               {{ statusLabel(row.status) }}
             </span>
-            <span class="ml-auto text-[11.5px] text-ink-gray-5">{{ relTime(row.raised_at) }}</span>
+            <span class="ml-auto text-[11.5px] text-ink-gray-5">{{
+              relTime(row.raised_at)
+            }}</span>
           </div>
 
           <!-- post context (parity with the inbox Comentarios pane): the publication
                this mention lives on — thumbnail + caption, linked to the network. -->
           <a
-            v-if="previews[row.name] && (previews[row.name].image || previews[row.name].caption)"
+            v-if="
+              previews[row.name] &&
+              (previews[row.name].image || previews[row.name].caption)
+            "
             :data-testid="`mention-preview-${i}`"
             :href="previews[row.name].permalink || row.permalink || undefined"
             target="_blank"
@@ -128,17 +194,29 @@
             <div class="min-w-0 flex-1">
               <div class="truncate text-[10.5px] font-semibold text-ink-gray-5">
                 {{ previewKindLabel(row, previews[row.name]) }}
-                <template v-if="previews[row.name].username"> · @{{ previews[row.name].username }}</template>
+                <template v-if="previews[row.name].username">
+                  · @{{ previews[row.name].username }}</template
+                >
               </div>
-              <div v-if="previews[row.name].caption" class="line-clamp-2 text-[12px] leading-snug text-ink-gray-7">
+              <div
+                v-if="previews[row.name].caption"
+                class="line-clamp-2 text-[12px] leading-snug text-ink-gray-7"
+              >
                 {{ previews[row.name].caption }}
               </div>
             </div>
-            <span class="flex-none text-[11px] font-semibold text-ink-blue-9">→</span>
+            <span class="flex-none text-[11px] font-semibold text-ink-blue-9"
+              >→</span
+            >
           </a>
 
           <!-- what they wrote -->
-          <p v-if="row.text" class="mt-2 whitespace-pre-line text-[13px] leading-relaxed text-ink-gray-7">{{ row.text }}</p>
+          <p
+            v-if="row.text"
+            class="mt-2 whitespace-pre-line text-[13px] leading-relaxed text-ink-gray-7"
+          >
+            {{ row.text }}
+          </p>
 
           <!-- story asset -->
           <img
@@ -155,27 +233,65 @@
               target="_blank"
               rel="noopener"
               class="text-[11.5px] font-semibold text-ink-blue-9 hover:underline"
-            >{{ __('Ver en la red →') }}</a>
-            <span v-if="isManager && shop === '' && row.shop" class="text-[11.5px] text-ink-gray-5">· {{ shopLabel(row.shop) }}</span>
-            <span v-if="row.status === 'Atendido' && row.replied_at" class="text-[11.5px] text-ink-green-7">
+              >{{ __('Ver en la red →') }}</a
+            >
+            <span
+              v-if="isManager && shop === '' && row.shop"
+              class="text-[11.5px] text-ink-gray-5"
+              >· {{ shopLabel(row.shop) }}</span
+            >
+            <span
+              v-if="row.status === 'Atendido' && row.replied_at"
+              class="text-[11.5px] text-ink-green-7"
+            >
               ✓ {{ __('Respondida') }} {{ relTime(row.replied_at) }}
             </span>
           </div>
 
           <!-- Explicit public context capture; the adapter classifies the author. -->
           <div class="mt-2.5 space-y-2">
-            <router-link v-if="captured[row.name]" :to="{ name: 'Inquiries', query: { name: captured[row.name] } }" class="text-sm font-semibold text-ink-blue-9 hover:underline">{{ __('Abrir consulta capturada') }}</router-link>
-            <button v-else type="button" :data-testid="`mention-capture-${i}`" class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40" :disabled="!!captureBusy || !!busy" @click="onCapture(row)">{{ captureBusy === row.name ? __('Capturando…') : __('Capturar consulta') }}</button>
-            <p v-if="captureErrors[row.name]" role="alert" class="text-sm text-ink-red-7">{{ __(captureErrors[row.name]) }}</p>
+            <router-link
+              v-if="captured[row.name]"
+              :to="{ name: 'Inquiries', query: { name: captured[row.name] } }"
+              class="text-sm font-semibold text-ink-blue-9 hover:underline"
+              >{{ __('Abrir consulta capturada') }}</router-link
+            >
+            <button
+              v-else
+              type="button"
+              :data-testid="`mention-capture-${i}`"
+              class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
+              :disabled="!!captureBusy || !!busy"
+              @click="onCapture(row)"
+            >
+              {{
+                captureBusy === row.name
+                  ? __('Capturando…')
+                  : __('Capturar consulta')
+              }}
+            </button>
+            <p
+              v-if="captureErrors[row.name]"
+              role="alert"
+              class="text-sm text-ink-red-7"
+            >
+              {{ __(captureErrors[row.name]) }}
+            </p>
           </div>
 
           <!-- already-sent reply (read-only) -->
-          <div v-if="row.status === 'Atendido' && row.suggested_reply" class="mt-2 rounded-lg bg-surface-green-1 px-3 py-2 text-[12.5px] text-ink-gray-8">
+          <div
+            v-if="row.status === 'Atendido' && row.suggested_reply"
+            class="mt-2 rounded-lg bg-surface-green-1 px-3 py-2 text-[12.5px] text-ink-gray-8"
+          >
             {{ row.suggested_reply }}
           </div>
 
           <!-- reply editor (Nuevo cards) -->
-          <div v-if="row.status === 'Nuevo' && replyOpen === row.name" class="mt-2.5">
+          <div
+            v-if="row.status === 'Nuevo' && replyOpen === row.name"
+            class="mt-2.5"
+          >
             <textarea
               v-model="replyText"
               :data-testid="`mention-reply-${i}`"
@@ -186,7 +302,10 @@
           </div>
 
           <!-- actions -->
-          <div v-if="row.status === 'Nuevo'" class="mt-2.5 flex flex-wrap items-center gap-2">
+          <div
+            v-if="row.status === 'Nuevo'"
+            class="mt-2.5 flex flex-wrap items-center gap-2"
+          >
             <button
               :data-testid="`mention-suggest-${i}`"
               class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
@@ -194,7 +313,11 @@
               :title="__('Generar una respuesta sugerida')"
               @click="onSuggest(row)"
             >
-              {{ busy === row.name && suggesting === row.name ? __('💡 …') : __('💡 Sugerir respuesta') }}
+              {{
+                busy === row.name && suggesting === row.name
+                  ? __('💡 …')
+                  : __('💡 Sugerir respuesta')
+              }}
             </button>
             <button
               :data-testid="`mention-send-${i}`"
@@ -224,7 +347,11 @@
               :data-testid="`mention-testimonial-${i}`"
               class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2 disabled:opacity-40"
               :disabled="busy === row.name"
-              :title="__('Crear un borrador de publicación tipo Testimonio con esta reseña')"
+              :title="
+                __(
+                  'Crear un borrador de publicación tipo Testimonio con esta reseña',
+                )
+              "
               @click="onTestimonial(row)"
             >
               ⭐ {{ __('Crear testimonio') }}
@@ -256,16 +383,33 @@
 
     <!-- confirm: publish public reply -->
     <template v-if="confirmSend">
-      <div class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60" @click="confirmSend = null" />
-      <div class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[440px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl">
-        <div class="border-b border-outline-gray-1 px-4 py-3 text-[14px] font-bold text-ink-gray-9">
+      <div
+        class="fixed inset-0 z-[300] bg-black/30 dark:bg-black/60"
+        @click="confirmSend = null"
+      />
+      <div
+        class="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-[440px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[14px] border border-outline-gray-2 bg-surface-base shadow-xl"
+      >
+        <div
+          class="border-b border-outline-gray-1 px-4 py-3 text-[14px] font-bold text-ink-gray-9"
+        >
           {{ __('Publicar respuesta') }}
         </div>
         <div class="px-4 py-4 text-[12.5px] leading-relaxed text-ink-gray-7">
-          {{ __('Se publicará como comentario PÚBLICO en la red social, visible para cualquiera. ¿Enviar?') }}
-          <div class="mt-2 rounded-lg bg-surface-gray-2 px-3 py-2 text-[12.5px] text-ink-gray-8">{{ replyText }}</div>
+          {{
+            __(
+              'Se publicará como comentario PÚBLICO en la red social, visible para cualquiera. ¿Enviar?',
+            )
+          }}
+          <div
+            class="mt-2 rounded-lg bg-surface-gray-2 px-3 py-2 text-[12.5px] text-ink-gray-8"
+          >
+            {{ replyText }}
+          </div>
         </div>
-        <div class="flex items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3">
+        <div
+          class="flex items-center justify-end gap-2 border-t border-outline-gray-1 px-4 py-3"
+        >
           <button
             class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7 hover:bg-surface-gray-2"
             @click="confirmSend = null"
@@ -295,7 +439,13 @@ import { sessionStore } from '@/stores/session'
 import SocialCaptureHealth from '@/components/SocialCaptureHealth.vue'
 import { inquiryError, requestGate } from '@/utils/inquiries'
 
-const TYPE_EMOJI = { Comentario: '💬', Caption: '📝', Historia: '📸', FB: '📘', 'Reseña': '⭐' }
+const TYPE_EMOJI = {
+  Comentario: '💬',
+  Caption: '📝',
+  Historia: '📸',
+  FB: '📘',
+  Reseña: '⭐',
+}
 const FILTERS = [
   { v: 'Nuevo', label: 'Nuevas' },
   { v: 'Atendido', label: 'Atendidas' },
@@ -304,17 +454,33 @@ const FILTERS = [
 ]
 
 function typeLabel(t) {
-  return { Comentario: __('Comentario'), Caption: __('Descripción'), Historia: __('Historia'), FB: __('Facebook'), 'Reseña': __('Reseña') }[t] || t
+  return (
+    {
+      Comentario: __('Comentario'),
+      Caption: __('Descripción'),
+      Historia: __('Historia'),
+      FB: __('Facebook'),
+      Reseña: __('Reseña'),
+    }[t] || t
+  )
 }
 function statusChip(s) {
-  return {
-    Nuevo: 'bg-surface-blue-2 text-ink-blue-9',
-    Atendido: 'bg-surface-green-2 text-ink-green-8',
-    Descartado: 'bg-surface-gray-2 text-ink-gray-6',
-  }[s] || 'bg-surface-gray-2 text-ink-gray-6'
+  return (
+    {
+      Nuevo: 'bg-surface-blue-2 text-ink-blue-9',
+      Atendido: 'bg-surface-green-2 text-ink-green-8',
+      Descartado: 'bg-surface-gray-2 text-ink-gray-6',
+    }[s] || 'bg-surface-gray-2 text-ink-gray-6'
+  )
 }
 function statusLabel(s) {
-  return { Nuevo: __('Nueva'), Atendido: __('Atendida'), Descartado: __('Descartada') }[s] || s
+  return (
+    {
+      Nuevo: __('Nueva'),
+      Atendido: __('Atendida'),
+      Descartado: __('Descartada'),
+    }[s] || s
+  )
 }
 function authorLabel(u) {
   return u ? (u.startsWith('@') ? u : '@' + u) : __('Alguien')
@@ -339,23 +505,33 @@ function relTime(dt) {
 }
 
 // ── shop selector (managers get every branch + "Todas"; an employee is auto-pinned) ──
-const shopsRes = createResource({ url: 'doco_marketing.api.social.get_shops', auto: true })
+const shopsRes = createResource({
+  url: 'doco_marketing.api.social.get_shops',
+  auto: true,
+})
 const isManager = computed(() => !!shopsRes.data?.is_manager)
 const shopOptions = computed(() => shopsRes.data?.shops || [])
-const shopLabel = (name) => shopOptions.value.find((s) => s.name === name)?.shop_name || name
+const shopLabel = (name) =>
+  shopOptions.value.find((s) => s.name === name)?.shop_name || name
 const shop = ref('')
 const router = useRouter()
 const session = sessionStore()
 const captureBusy = ref('')
 const captureErrors = ref({})
 const captured = ref({})
-const captureGate = requestGate(() => JSON.stringify([session.user, shop.value]))
-watch(() => session.user, () => {
-  captureGate.invalidate()
-  captureBusy.value = ''
-  captureErrors.value = {}
-  captured.value = {}
-}, { flush: 'sync' })
+const captureGate = requestGate(() =>
+  JSON.stringify([session.user, shop.value]),
+)
+watch(
+  () => session.user,
+  () => {
+    captureGate.invalidate()
+    captureBusy.value = ''
+    captureErrors.value = {}
+    captured.value = {}
+  },
+  { flush: 'sync' },
+)
 watch(shop, () => {
   captureGate.invalidate()
   captureBusy.value = ''
@@ -369,13 +545,17 @@ async function onCapture(row) {
   captureBusy.value = row.name
   captureErrors.value[row.name] = ''
   try {
-    const inquiry = await frappeCall('doco_marketing.services.social.referrals.capture_mention', { name: row.name })
+    const inquiry = await frappeCall(
+      'doco_marketing.services.social.referrals.capture_mention',
+      { name: row.name },
+    )
     if (!captureGate.current(token)) return
     if (!inquiry?.name) throw new Error('Invalid inquiry response')
     captured.value[row.name] = inquiry.name
     await router.push({ name: 'Inquiries', query: { name: inquiry.name } })
   } catch (e) {
-    if (captureGate.current(token)) captureErrors.value[row.name] = inquiryError(e).message
+    if (captureGate.current(token))
+      captureErrors.value[row.name] = inquiryError(e).message
   } finally {
     if (captureGate.current(token)) captureBusy.value = ''
   }
@@ -395,7 +575,10 @@ watch(
 const statusFilter = ref('Nuevo')
 const mentionsRes = createResource({
   url: 'doco_marketing.services.social.mentions.list_mentions',
-  makeParams: () => ({ shop: shop.value || undefined, status: statusFilter.value || undefined }),
+  makeParams: () => ({
+    shop: shop.value || undefined,
+    status: statusFilter.value || undefined,
+  }),
   auto: true,
 })
 // Separate always-on count for the "Nuevas" badge, independent of the active filter.
@@ -419,9 +602,16 @@ watch(
     for (const r of rs) {
       // Historia carries its own stored asset; Reseña stories are not readable
       // via Graph — neither gets a preview call.
-      if (r.mention_type === 'Historia' || r.mention_type === 'Reseña' || previews.value[r.name] !== undefined) continue
+      if (
+        r.mention_type === 'Historia' ||
+        r.mention_type === 'Reseña' ||
+        previews.value[r.name] !== undefined
+      )
+        continue
       previews.value[r.name] = null
-      frappeCall('doco_marketing.services.social.mentions.get_media_preview', { name: r.name })
+      frappeCall('doco_marketing.services.social.mentions.get_media_preview', {
+        name: r.name,
+      })
         .then((p) => {
           previews.value[r.name] = p && (p.image || p.caption) ? p : false
         })
@@ -435,7 +625,8 @@ watch(
 
 function previewKindLabel(row, p) {
   if (row.mention_type === 'FB') return __('Publicación que te etiquetó')
-  if (p?.media_type === 'VIDEO' || p?.media_type === 'REELS') return __('En el reel')
+  if (p?.media_type === 'VIDEO' || p?.media_type === 'REELS')
+    return __('En el reel')
   return __('En la publicación')
 }
 
@@ -466,7 +657,10 @@ async function onSuggest(row) {
   busy.value = row.name
   suggesting.value = row.name
   try {
-    const r = await frappeCall('doco_marketing.services.social.mentions.draft_reply', { name: row.name })
+    const r = await frappeCall(
+      'doco_marketing.services.social.mentions.draft_reply',
+      { name: row.name },
+    )
     openReply(row, r?.suggested_reply || '')
     toast.success(__('Respuesta sugerida — revísala antes de enviar'))
   } catch (e) {
@@ -498,7 +692,8 @@ async function doSend() {
   busy.value = row.name
   try {
     await frappeCall('doco_marketing.services.social.mentions.send_reply', {
-      name: row.name, message: replyText.value,
+      name: row.name,
+      message: replyText.value,
     })
     toast.success(__('Respuesta publicada'))
     confirmSend.value = null
@@ -516,8 +711,15 @@ async function onTestimonial(row) {
   if (busy.value) return
   busy.value = row.name
   try {
-    const r = await frappeCall('doco_marketing.services.social.mentions.create_testimonial', { name: row.name })
-    toast.success(r?.existing ? __('Ya existía un borrador de testimonio') : __('Borrador de testimonio creado — revísalo en el calendario'))
+    const r = await frappeCall(
+      'doco_marketing.services.social.mentions.create_testimonial',
+      { name: row.name },
+    )
+    toast.success(
+      r?.existing
+        ? __('Ya existía un borrador de testimonio')
+        : __('Borrador de testimonio creado — revísalo en el calendario'),
+    )
     reloadAll()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo crear el testimonio'))
@@ -530,7 +732,10 @@ async function onDismiss(row) {
   if (busy.value) return
   busy.value = row.name
   try {
-    await frappeCall('doco_marketing.services.social.mentions.set_status', { name: row.name, status: 'Descartado' })
+    await frappeCall('doco_marketing.services.social.mentions.set_status', {
+      name: row.name,
+      status: 'Descartado',
+    })
     toast.success(__('Descartada'))
     reloadAll()
   } catch (e) {
@@ -544,7 +749,10 @@ async function onReactivate(row) {
   if (busy.value) return
   busy.value = row.name
   try {
-    await frappeCall('doco_marketing.services.social.mentions.set_status', { name: row.name, status: 'Nuevo' })
+    await frappeCall('doco_marketing.services.social.mentions.set_status', {
+      name: row.name,
+      status: 'Nuevo',
+    })
     toast.success(__('Reactivada'))
     reloadAll()
   } catch (e) {

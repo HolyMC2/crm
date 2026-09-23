@@ -62,6 +62,8 @@ class TestAuditBoundaries(TestCase):
 					with self.assertRaises(RuntimeError):
 						_link_field_options("CRM Industry")
 				else:
-					self.assertEqual(_link_field_options("CRM Industry"), [{"value": "Option", "label": "Option"}])
+					self.assertEqual(
+						_link_field_options("CRM Industry"), [{"value": "Option", "label": "Option"}]
+					)
 				self.assertEqual((session.user, session.sid), ("author", "original-session"))
 				self.assertIs(session.data, session_data)

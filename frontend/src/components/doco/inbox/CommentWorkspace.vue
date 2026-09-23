@@ -8,27 +8,52 @@
 -->
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-gray-1">
-    <div v-if="!activeCommentPost" class="flex flex-1 items-center justify-center text-[13px] text-ink-gray-4">
+    <div
+      v-if="!activeCommentPost"
+      class="flex flex-1 items-center justify-center text-[13px] text-ink-gray-4"
+    >
       {{ __('Selecciona una publicación') }}
     </div>
     <template v-else>
       <!-- header -->
-      <div class="flex-none border-b border-outline-gray-1 bg-surface-base px-4 py-3">
+      <div
+        class="flex-none border-b border-outline-gray-1 bg-surface-base px-4 py-3"
+      >
         <div class="mx-auto flex w-full max-w-2xl items-center gap-2.5">
-          <button v-if="isMobile" class="text-ink-gray-5 hover:text-ink-gray-9" :aria-label="__('Atrás')" @click="mobileBack">←</button>
+          <button
+            v-if="isMobile"
+            class="text-ink-gray-5 hover:text-ink-gray-9"
+            :aria-label="__('Atrás')"
+            @click="mobileBack"
+          >
+            ←
+          </button>
           <span
             class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-white"
-            :style="isIG ? 'background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)' : 'background: #1877f2'"
+            :style="
+              isIG
+                ? 'background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)'
+                : 'background: #1877f2'
+            "
           >
             <LucideInstagram v-if="isIG" class="h-4.5 w-4.5" />
             <LucideFacebook v-else class="h-4.5 w-4.5" />
           </span>
           <div class="min-w-0 flex-1">
             <div class="truncate text-[14px] font-bold text-ink-gray-9">
-              {{ isIG ? __('Publicación de Instagram') : __('Publicación de Facebook') }}
+              {{
+                isIG
+                  ? __('Publicación de Instagram')
+                  : __('Publicación de Facebook')
+              }}
             </div>
             <div class="text-[11px] text-ink-gray-5">
-              {{ post.comments ?? threadComments.length }} {{ (post.comments ?? threadComments.length) === 1 ? __('comentario') : __('comentarios') }}
+              {{ post.comments ?? threadComments.length }}
+              {{
+                (post.comments ?? threadComments.length) === 1
+                  ? __('comentario')
+                  : __('comentarios')
+              }}
             </div>
           </div>
         </div>
@@ -50,7 +75,10 @@
             :shares="post.shares"
             :permalink="post.permalink"
           />
-          <div v-else-if="postPreview.loading" class="mb-4 h-40 animate-pulse rounded-xl bg-surface-gray-2" />
+          <div
+            v-else-if="postPreview.loading"
+            class="mb-4 h-40 animate-pulse rounded-xl bg-surface-gray-2"
+          />
 
           <!-- thread controls: sort + search -->
           <div class="mb-3 flex flex-wrap items-center gap-2">
@@ -59,13 +87,19 @@
                 v-for="s in sortOptions"
                 :key="s.id"
                 class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                :class="sort === s.id ? 'bg-surface-blue-2 text-ink-blue-9' : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'"
+                :class="
+                  sort === s.id
+                    ? 'bg-surface-blue-2 text-ink-blue-9'
+                    : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
+                "
                 @click="setSort(s.id)"
               >
                 {{ s.label }}
               </button>
             </div>
-            <div class="ml-auto flex min-w-[160px] flex-1 items-center gap-2 rounded-full border border-outline-gray-2 bg-surface-base px-2.5 py-1">
+            <div
+              class="ml-auto flex min-w-[160px] flex-1 items-center gap-2 rounded-full border border-outline-gray-2 bg-surface-base px-2.5 py-1"
+            >
               <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
               <input
                 v-model="search"
@@ -75,39 +109,112 @@
             </div>
           </div>
 
-          <div v-if="loading && !threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
-          <div v-else-if="threadError && !threadComments.length" class="py-6 text-center text-[12px] text-ink-red-6">
-            {{ __('No se pudieron cargar los comentarios.') }}
-            <button class="ml-1 font-semibold underline hover:text-ink-red-7" @click="fetchThread(true)">{{ __('Reintentar') }}</button>
+          <div
+            v-if="loading && !threadComments.length"
+            class="py-6 text-center text-[12px] text-ink-gray-4"
+          >
+            {{ __('Cargando…') }}
           </div>
-          <div v-else-if="!threadComments.length" class="py-6 text-center text-[12px] text-ink-gray-4">
+          <div
+            v-else-if="threadError && !threadComments.length"
+            class="py-6 text-center text-[12px] text-ink-red-6"
+          >
+            {{ __('No se pudieron cargar los comentarios.') }}
+            <button
+              class="ml-1 font-semibold underline hover:text-ink-red-7"
+              @click="fetchThread(true)"
+            >
+              {{ __('Reintentar') }}
+            </button>
+          </div>
+          <div
+            v-else-if="!threadComments.length"
+            class="py-6 text-center text-[12px] text-ink-gray-4"
+          >
             {{ search ? __('Sin resultados') : __('Sin comentarios') }}
           </div>
 
           <!-- comments -->
-          <div v-for="cm in threadComments" :key="cm.name" class="mb-3 rounded-xl border border-outline-gray-1 bg-surface-base p-3">
+          <div
+            v-for="cm in threadComments"
+            :key="cm.name"
+            class="mb-3 rounded-xl border border-outline-gray-1 bg-surface-base p-3"
+          >
             <div class="mb-1 flex items-center gap-2">
-              <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{ cm.from_name || __('Usuario de Facebook') }}</span>
-              <span class="flex-none rounded px-1.5 py-px text-[9.5px] font-semibold" :style="statusChip(cm.status)">{{ statusLabel(cm.status) }}</span>
-              <span class="ml-auto flex-none text-[10px] text-ink-gray-4">{{ timeAgo(cm.created_ts) }}</span>
+              <span
+                class="truncate text-[13px] font-semibold text-ink-gray-9"
+                >{{ cm.from_name || __('Usuario de Facebook') }}</span
+              >
+              <span
+                class="flex-none rounded px-1.5 py-px text-[9.5px] font-semibold"
+                :style="statusChip(cm.status)"
+                >{{ statusLabel(cm.status) }}</span
+              >
+              <span class="ml-auto flex-none text-[10px] text-ink-gray-4">{{
+                timeAgo(cm.created_ts)
+              }}</span>
             </div>
-            <div class="text-[13px] text-ink-gray-8">{{ cm.message || __('(sin texto)') }}</div>
+            <div class="text-[13px] text-ink-gray-8">
+              {{ cm.message || __('(sin texto)') }}
+            </div>
 
-            <div v-if="cm.reply_text" class="mt-2 rounded-lg border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8">
+            <div
+              v-if="cm.reply_text"
+              class="mt-2 rounded-lg border border-outline-blue-3 bg-surface-blue-1 px-2.5 py-1.5 text-[12px] text-ink-gray-8"
+            >
               <div class="mb-0.5 text-[10px] font-semibold text-ink-blue-9">
-                {{ cm.reply_by || __('Tú') }}<span v-if="cm.reply_at" class="font-normal text-ink-gray-5"> · {{ timeAgo(cm.reply_at) }}</span>
+                {{ cm.reply_by || __('Tú')
+                }}<span v-if="cm.reply_at" class="font-normal text-ink-gray-5">
+                  · {{ timeAgo(cm.reply_at) }}</span
+                >
               </div>
               {{ cm.reply_text }}
             </div>
 
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11.5px]">
-              <button class="font-semibold text-ink-blue-9 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'public')">{{ __('Responder') }}</button>
-              <button v-if="!cm.dm_psid" class="font-semibold text-ink-blue-9 hover:underline" :disabled="busy" @click="toggleReply(cm.name, 'private')">{{ __('DM privado') }}</button>
-              <button v-else class="font-semibold hover:underline" style="color: #0084ff" @click="openMessengerForPsid(cm.dm_psid)">
-                💬 {{ cm.channel === 'IG' ? __('Continuar en DM') : __('Continuar en Messenger') }}
+              <button
+                class="font-semibold text-ink-blue-9 hover:underline"
+                :disabled="busy"
+                @click="toggleReply(cm.name, 'public')"
+              >
+                {{ __('Responder') }}
               </button>
-              <button v-if="!cm.lead" class="font-semibold text-ink-violet-8 hover:underline" :disabled="busy" @click="onConvert(cm)">{{ __('Crear Lead') }}</button>
-              <button v-else class="text-ink-violet-8 hover:underline" @click="openLead(cm.lead)">{{ cm.lead }}</button>
+              <button
+                v-if="!cm.dm_psid"
+                class="font-semibold text-ink-blue-9 hover:underline"
+                :disabled="busy"
+                @click="toggleReply(cm.name, 'private')"
+              >
+                {{ __('DM privado') }}
+              </button>
+              <button
+                v-else
+                class="font-semibold hover:underline"
+                style="color: #0084ff"
+                @click="openMessengerForPsid(cm.dm_psid)"
+              >
+                💬
+                {{
+                  cm.channel === 'IG'
+                    ? __('Continuar en DM')
+                    : __('Continuar en Messenger')
+                }}
+              </button>
+              <button
+                v-if="!cm.lead"
+                class="font-semibold text-ink-violet-8 hover:underline"
+                :disabled="busy"
+                @click="onConvert(cm)"
+              >
+                {{ __('Crear Lead') }}
+              </button>
+              <button
+                v-else
+                class="text-ink-violet-8 hover:underline"
+                @click="openLead(cm.lead)"
+              >
+                {{ cm.lead }}
+              </button>
               <button
                 class="font-semibold hover:underline"
                 style="color: var(--brand)"
@@ -117,18 +224,37 @@
               >
                 📦 {{ __('Catálogo') }}
               </button>
-              <button class="text-ink-gray-5 hover:underline" :disabled="busy" @click="onHide(cm)">{{ cm.is_hidden ? __('Mostrar') : __('Ocultar') }}</button>
+              <button
+                class="text-ink-gray-5 hover:underline"
+                :disabled="busy"
+                @click="onHide(cm)"
+              >
+                {{ cm.is_hidden ? __('Mostrar') : __('Ocultar') }}
+              </button>
             </div>
 
             <div v-if="replyingTo === cm.name" class="mt-2">
-              <div class="mb-1 text-[10px] font-semibold" :class="mode === 'private' ? 'text-ink-blue-9' : 'text-ink-gray-5'">
-                {{ mode === 'private' ? __('Mensaje privado al autor') : __('Respuesta pública') }}
+              <div
+                class="mb-1 text-[10px] font-semibold"
+                :class="
+                  mode === 'private' ? 'text-ink-blue-9' : 'text-ink-gray-5'
+                "
+              >
+                {{
+                  mode === 'private'
+                    ? __('Mensaje privado al autor')
+                    : __('Respuesta pública')
+                }}
               </div>
               <div class="flex items-end gap-2">
                 <textarea
                   v-model="reply"
                   rows="2"
-                  :placeholder="mode === 'private' ? __('Responder por DM…') : __('Responder en el comentario…')"
+                  :placeholder="
+                    mode === 'private'
+                      ? __('Responder por DM…')
+                      : __('Responder en el comentario…')
+                  "
                   class="scb flex-1 resize-none rounded-lg border border-outline-gray-2 px-2.5 py-2 text-[13px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-1 focus:ring-outline-blue-4"
                   @keydown.enter.exact.prevent="onReply(cm)"
                 />
@@ -137,7 +263,11 @@
                 </div>
                 <button
                   class="rounded-lg px-3 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
-                  :style="cm.channel === 'IG' ? 'background: #E4405F' : 'background: #1877f2'"
+                  :style="
+                    cm.channel === 'IG'
+                      ? 'background: #E4405F'
+                      : 'background: #1877f2'
+                  "
                   :disabled="busy || !reply.trim()"
                   @click="onReply(cm)"
                 >
@@ -203,15 +333,21 @@ const sortOptions = [
 ]
 
 // post preview (FB/IG card) — server-cached 5 min
-const postPreview = createResource({ url: 'doco_marketing.api.comments.get_post_preview' })
+const postPreview = createResource({
+  url: 'doco_marketing.api.comments.get_post_preview',
+})
 const post = computed(() => postPreview.data || {})
 // Channel of the open group: the preview says it (S3), else the first loaded
 // comment row; FB when neither has arrived yet.
-const isIG = computed(() => (post.value.channel || threadComments.value[0]?.channel) === 'IG')
+const isIG = computed(
+  () => (post.value.channel || threadComments.value[0]?.channel) === 'IG',
+)
 
 // paginated thread
 const LIMIT = 30
-const postComments = createResource({ url: 'doco_marketing.api.comments.get_post_comments' })
+const postComments = createResource({
+  url: 'doco_marketing.api.comments.get_post_comments',
+})
 const threadComments = ref([])
 const hasMore = ref(false)
 const loading = ref(false)
@@ -288,13 +424,25 @@ function onCanned(body) {
 function fmtPostTime(ts) {
   if (!ts) return ''
   try {
-    return new Date(String(ts).replace(' ', 'T')).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+    return new Date(String(ts).replace(' ', 'T')).toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
   } catch {
     return String(ts).slice(0, 10)
   }
 }
 function statusLabel(s) {
-  return { New: __('Nuevo'), Replied: __('Respondido'), 'Lead Created': __('Lead'), Ignored: __('Ignorado'), Removed: __('Borrado') }[s] || s
+  return (
+    {
+      New: __('Nuevo'),
+      Replied: __('Respondido'),
+      'Lead Created': __('Lead'),
+      Ignored: __('Ignorado'),
+      Removed: __('Borrado'),
+    }[s] || s
+  )
 }
 function statusChip(s) {
   const m = {
@@ -320,7 +468,11 @@ async function onReply(cm) {
       toast.success(__('Ya respondiste en privado · abriendo Messenger'))
       openMessengerForPsid(res.dm_psid || cm.dm_psid)
     } else {
-      toast.success(m === 'private' ? __('Mensaje privado enviado') : __('Respuesta enviada'))
+      toast.success(
+        m === 'private'
+          ? __('Mensaje privado enviado')
+          : __('Respuesta enviada'),
+      )
     }
   } catch (e) {
     toast.error(e?.messages?.[0] || e?.message || __('No se pudo enviar'))

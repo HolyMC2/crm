@@ -35,7 +35,8 @@ async function authed(page, attempts = 5) {
 // field and Frappe answers 417. It is a migrate gap in shared-core, not nav rendering —
 // filtered here, and reported rather than silently swallowed.
 const NAV_IGNORE = [/get_single_value/]
-const realErrors = (errors) => errors.real().filter((t) => !NAV_IGNORE.some((re) => re.test(t)))
+const realErrors = (errors) =>
+  errors.real().filter((t) => !NAV_IGNORE.some((re) => re.test(t)))
 
 const DESKTOP = { width: 1280, height: 800 }
 const MOBILE = { width: 390, height: 844 } // iPhone 14-ish; < 768 → MobileLayout
@@ -51,7 +52,12 @@ const PAIRS = [
   // one pairing, three uses: the drawer badges sit on it permanently, the sign-out and
   // outbox-discard rows hit it on hover. W1-base's value-exact remap put ink-red-7 here,
   // which matched v1's LIGHT value exactly and collapsed to 4.40 in dark.
-  ['red chip + sign-out/discard hover', 'bg-surface-red-1', 'text-ink-red-8', 4.5],
+  [
+    'red chip + sign-out/discard hover',
+    'bg-surface-red-1',
+    'text-ink-red-8',
+    4.5,
+  ],
   ['tab bar unread badge', 'bg-surface-red-7', 'text-ink-red-1', 4.5],
   ['drawer overdue badge', 'bg-surface-amber-1', 'text-ink-amber-8', 3.0],
   ['tab bar overdue badge', 'bg-surface-amber-2', 'text-ink-amber-8', 3.0],
@@ -59,11 +65,21 @@ const PAIRS = [
   ['outbox strip', 'bg-surface-blue-1', 'text-ink-blue-8', 3.0],
   ['sign-out row (resting)', 'bg-surface-base', 'text-ink-red-8', 4.5],
   ['drawer inactive row', 'bg-surface-base', 'text-ink-gray-7', 4.5],
-  ['saved-view link (SidebarLink)', 'bg-surface-elevation-3', 'text-ink-gray-8', 4.5],
+  [
+    'saved-view link (SidebarLink)',
+    'bg-surface-elevation-3',
+    'text-ink-gray-8',
+    4.5,
+  ],
 ]
 
 // Retired by the v2 rename tables — every one of these must paint NOTHING.
-const RETIRED = ['ink-white', 'surface-white', 'surface-selected', 'surface-menu-bar']
+const RETIRED = [
+  'ink-white',
+  'surface-white',
+  'surface-selected',
+  'surface-menu-bar',
+]
 
 // Runs in the page: paint a probe, read back the computed colours, return sRGB triples.
 const PROBE = ([bgClass, fgClass]) => {
@@ -84,22 +100,42 @@ function parseColor(s) {
   // Chromium returns rgb()/rgba() or color(srgb r g b) depending on the source notation.
   let m = s.match(/^rgba?\(([^)]+)\)$/)
   if (m) {
-    const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number)
-    return { r: p[0] / 255, g: p[1] / 255, b: p[2] / 255, a: p.length > 3 ? p[3] : 1 }
+    const p = m[1]
+      .split(/[,\s/]+/)
+      .filter(Boolean)
+      .map(Number)
+    return {
+      r: p[0] / 255,
+      g: p[1] / 255,
+      b: p[2] / 255,
+      a: p.length > 3 ? p[3] : 1,
+    }
   }
   m = s.match(/^color\(srgb ([^)]+)\)$/)
   if (m) {
-    const p = m[1].split(/[\s/]+/).filter(Boolean).map(Number)
+    const p = m[1]
+      .split(/[\s/]+/)
+      .filter(Boolean)
+      .map(Number)
     return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }
   }
   return null
 }
 
 const hexOf = (c) =>
-  '#' + [c.r, c.g, c.b].map((v) => Math.round(v * 255).toString(16).padStart(2, '0')).join('').toUpperCase()
+  '#' +
+  [c.r, c.g, c.b]
+    .map((v) =>
+      Math.round(v * 255)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')
+    .toUpperCase()
 
 function relLum({ r, g, b }) {
-  const f = (x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))
+  const f = (x) =>
+    x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)
   return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
 }
 
@@ -115,12 +151,17 @@ function contrast(fg, bg) {
 // as `oklab(...)`, which is neither the old colour nor the new one. Settle past the
 // transition before reading, or you will chase a colour that never renders at rest.
 async function setTheme(page, theme, settleMs = 400) {
-  await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme)
+  await page.evaluate(
+    (t) => document.documentElement.setAttribute('data-theme', t),
+    theme,
+  )
   await page.waitForTimeout(settleMs)
 }
 
 for (const theme of ['light', 'dark']) {
-  test(`nav chrome tokens resolve and contrast in ${theme} mode`, async ({ page }) => {
+  test(`nav chrome tokens resolve and contrast in ${theme} mode`, async ({
+    page,
+  }) => {
     await authed(page)
     await page.setViewportSize(DESKTOP)
     await page.goto('/crm/leads', { waitUntil: 'domcontentloaded' })
@@ -144,10 +185,15 @@ for (const theme of ['light', 'dark']) {
       }
       const ratio = contrast(fgc, bgc)
       if (ratio < floor) {
-        failures.push(`${label}: ${fgClass} on ${bgClass} = ${ratio.toFixed(2)} < ${floor}`)
+        failures.push(
+          `${label}: ${fgClass} on ${bgClass} = ${ratio.toFixed(2)} < ${floor}`,
+        )
       }
     }
-    expect(failures, `contrast failures in ${theme}:\n${failures.join('\n')}`).toEqual([])
+    expect(
+      failures,
+      `contrast failures in ${theme}:\n${failures.join('\n')}`,
+    ).toEqual([])
 
     // 2. the tokens we migrated away from must paint nothing — proof the old code was broken
     for (const name of RETIRED) {
@@ -160,16 +206,23 @@ for (const theme of ['light', 'dark']) {
         return bg
       }, name)
       const c = parseColor(painted)
-      expect(c === null || c.a === 0, `${name} still paints ${painted} — it should be retired`).toBe(true)
+      expect(
+        c === null || c.a === 0,
+        `${name} still paints ${painted} — it should be retired`,
+      ).toBe(true)
     }
 
     // 3. the CSS variables the nav builds inline styles from must exist (§10.4)
     for (const v of ['--surface-base', '--brand']) {
       const val = await page.evaluate(
-        (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(),
+        (n) =>
+          getComputedStyle(document.documentElement).getPropertyValue(n).trim(),
         v,
       )
-      expect(val, `${v} resolved empty — inline styles using it render nothing`).not.toBe('')
+      expect(
+        val,
+        `${v} resolved empty — inline styles using it render nothing`,
+      ).not.toBe('')
     }
   })
 }
@@ -195,7 +248,9 @@ test('desktop rail renders in both themes', async ({ page }) => {
   expect(realErrors(errors)).toEqual([])
 })
 
-test('mobile shell renders tab bar and drawer in both themes', async ({ page }) => {
+test('mobile shell renders tab bar and drawer in both themes', async ({
+  page,
+}) => {
   const errors = collectErrors(page)
   await authed(page)
   await page.setViewportSize(MOBILE) // must precede goto: isMobileView reads innerWidth once
@@ -207,9 +262,14 @@ test('mobile shell renders tab bar and drawer in both themes', async ({ page }) 
 
   for (const theme of ['light', 'dark']) {
     await setTheme(page, theme)
-    const bg = await tabbar.evaluate((el) => getComputedStyle(el).backgroundColor)
+    const bg = await tabbar.evaluate(
+      (el) => getComputedStyle(el).backgroundColor,
+    )
     const c = parseColor(bg)
-    expect(c, `tab bar background unparseable in ${theme}: ${bg}`).not.toBeNull()
+    expect(
+      c,
+      `tab bar background unparseable in ${theme}: ${bg}`,
+    ).not.toBeNull()
     expect(c.a, `tab bar background transparent in ${theme}`).toBeGreaterThan(0)
     await shot(page, `w2nav-mobile-tabbar-${theme}`)
 
@@ -226,7 +286,9 @@ test('mobile shell renders tab bar and drawer in both themes', async ({ page }) 
     const live = await drawer.evaluate((d) => {
       const rows = [...d.querySelectorAll('nav button')]
       const active = rows.find((b) => b.getAttribute('aria-current') === 'page')
-      const badge = rows.map((b) => b.querySelector('span.rounded-full')).find(Boolean)
+      const badge = rows
+        .map((b) => b.querySelector('span.rounded-full'))
+        .find(Boolean)
       const avatar = d.querySelector('span.bg-surface-violet-2')
       const g = (el, p) => (el ? getComputedStyle(el)[p] : null)
       return {
@@ -247,14 +309,19 @@ test('mobile shell renders tab bar and drawer in both themes', async ({ page }) 
       // a transparent row background means it inherits the drawer surface
       const base = b.a === 0 ? parseColor(live.surface) : b
       const r = contrast(f, base)
-      return r < floor ? `${label}: ${r.toFixed(2)} < ${floor} (${fg} on ${bg})` : null
+      return r < floor
+        ? `${label}: ${r.toFixed(2)} < ${floor} (${fg} on ${bg})`
+        : null
     }
     const liveFails = [
       check('live active nav row', live.activeFg, live.activeBg, 4.5),
       check('live avatar initials', live.avatarFg, live.avatarBg, 4.5),
       check('live drawer badge', live.badgeFg, live.badgeBg, 3.0),
     ].filter(Boolean)
-    expect(liveFails, `live drawer contrast in ${theme}:\n${liveFails.join('\n')}`).toEqual([])
+    expect(
+      liveFails,
+      `live drawer contrast in ${theme}:\n${liveFails.join('\n')}`,
+    ).toEqual([])
     await page.keyboard.press('Escape')
     await page.waitForTimeout(500)
   }
@@ -296,12 +363,22 @@ test('saved-view links navigate and mark the active view', async ({ page }) => {
 
   await openDrawer()
   const before = await savedViews()
-  test.skip(before.length === 0, 'test user has no public or pinned views — nothing to assert')
+  test.skip(
+    before.length === 0,
+    'test user has no public or pinned views — nothing to assert',
+  )
 
-  await drawer.locator('button').filter({ hasText: before[0].label }).first().click()
+  await drawer
+    .locator('button')
+    .filter({ hasText: before[0].label })
+    .first()
+    .click()
   await page.waitForTimeout(2000)
   // the `to` object carries { name, params, query } — the query is what must survive
-  expect(page.url(), 'clicking a saved view did not put its ?view= on the route').toMatch(/[?&]view=/)
+  expect(
+    page.url(),
+    'clicking a saved view did not put its ?view= on the route',
+  ).toMatch(/[?&]view=/)
 
   await openDrawer()
   for (const theme of ['light', 'dark']) {
@@ -318,11 +395,18 @@ test('saved-view links navigate and mark the active view', async ({ page }) => {
     // #FFFFFF) and upstream's SidebarItem pairs them identically — but if the shadow ever
     // goes, the active state becomes invisible rather than subtle.
     const act = actives[0]
-    const drawerBg = await drawer.evaluate((d) => getComputedStyle(d).backgroundColor)
-    const same = parseColor(act.bg) && parseColor(drawerBg) &&
+    const drawerBg = await drawer.evaluate(
+      (d) => getComputedStyle(d).backgroundColor,
+    )
+    const same =
+      parseColor(act.bg) &&
+      parseColor(drawerBg) &&
       hexOf(parseColor(act.bg)) === hexOf(parseColor(drawerBg))
     if (same) {
-      expect(act.shadow, `active saved view is the same colour as the drawer in ${theme} and has no shadow — invisible`).not.toBe('none')
+      expect(
+        act.shadow,
+        `active saved view is the same colour as the drawer in ${theme} and has no shadow — invisible`,
+      ).not.toBe('none')
     }
   }
 })

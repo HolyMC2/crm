@@ -30,7 +30,8 @@ export const soundEnabled = ref(initialEnabled())
 
 let audioCtx = null
 function ctx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+  if (!audioCtx)
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)()
   return audioCtx
 }
 

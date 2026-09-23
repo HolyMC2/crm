@@ -48,13 +48,22 @@ class TestDealTitle(IntegrationTestCase):
 	def test_phone_is_the_last_resort(self):
 		# The controller derives channel fields from the primary Contact row;
 		# a bare top-level mobile_no is deliberately cleared during validate.
-		contact = frappe.get_doc({
-			"doctype": "Contact", "first_name": "Title fallback fixture",
-			"phone_nos": [{"phone": "+5215550000002", "is_primary_mobile_no": 1}],
-		}).insert(ignore_permissions=True)
-		deal = self.make_deal(contacts=[{
-			"contact": contact.name, "is_primary": 1, "mobile_no": "+5215550000002",
-		}])
+		contact = frappe.get_doc(
+			{
+				"doctype": "Contact",
+				"first_name": "Title fallback fixture",
+				"phone_nos": [{"phone": "+5215550000002", "is_primary_mobile_no": 1}],
+			}
+		).insert(ignore_permissions=True)
+		deal = self.make_deal(
+			contacts=[
+				{
+					"contact": contact.name,
+					"is_primary": 1,
+					"mobile_no": "+5215550000002",
+				}
+			]
+		)
 		self.assertEqual(deal.deal_name, "+5215550000002")
 
 	def test_a_given_title_is_kept_across_saves(self):

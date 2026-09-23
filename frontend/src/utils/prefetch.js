@@ -23,7 +23,9 @@ export function prefetchHotChunks() {
     if (i >= HOT_CHUNKS.length) return
     const load = HOT_CHUNKS[i++]
     // failures are irrelevant — the router will import for real on navigation
-    load().catch(() => {}).finally(() => idle(next))
+    load()
+      .catch(() => {})
+      .finally(() => idle(next))
   }
   idle(next)
 }

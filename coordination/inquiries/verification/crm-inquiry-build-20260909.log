@@ -8,7 +8,7 @@ transforming...
 [plugin:frappe-ui-lucide-icons] [plugin frappe-ui-lucide-icons] [frappe-ui-lucide-icons] icon "github" not found in lucide-static (brand icons were removed in lucide v1). Rendering a placeholder. Replace ~icons/lucide/github with an SVG asset or a different icon.
 ✓ 3137 modules transformed.
 rendering chunks...
-[plugin:vite:reporter] [plugin vite:reporter] 
+[plugin:vite:reporter] [plugin vite:reporter]
 (!) /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend/src/pages/NotPermitted.vue is dynamically imported by /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend/src/router.js, /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend/src/router.js, /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend/src/router.js, /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend/src/router.js, /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend/src/router.js but also statically imported by /home/holymc2/muelle-worktrees/crm-standalone-20260909/frontend/src/App.vue, dynamic import will not move module into another chunk.
 
 [frappeui-build-config-plugin] Successfully copied index.html to ../crm/www/crm.html

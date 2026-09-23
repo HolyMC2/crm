@@ -36,7 +36,9 @@ vi.mock('frappe-ui', () => {
   }
 })
 // statusGuard pulls dialog machinery — irrelevant here
-vi.mock('@/utils/statusGuard', () => ({ guardStatusChange: vi.fn((_, __, cb) => cb && cb()) }))
+vi.mock('@/utils/statusGuard', () => ({
+  guardStatusChange: vi.fn((_, __, cb) => cb && cb()),
+}))
 
 const QUEUE_URL = 'doco_marketing.api.inbox.get_conversation_queue'
 
@@ -50,7 +52,12 @@ async function freshInbox({ cache, cookie = 'user_id=tester%40x.com' } = {}) {
   return { inbox, queue: __resources[QUEUE_URL] }
 }
 
-const row = (name, extra = {}) => ({ name, deal: name, ref_doctype: 'CRM Deal', ...extra })
+const row = (name, extra = {}) => ({
+  name,
+  deal: name,
+  ref_doctype: 'CRM Deal',
+  ...extra,
+})
 
 describe('queue pagination + merge', () => {
   beforeEach(() => vi.useFakeTimers())
@@ -96,7 +103,12 @@ describe('queue pagination + merge', () => {
     await inbox.reloadQueue()
     queue.data = [row('D'), row('A')] // D new on top; B/C not in page 1 anymore
     await inbox.reloadQueue({ merge: true })
-    expect(inbox.queueRows.value.map((r) => r.name)).toEqual(['D', 'A', 'B', 'C'])
+    expect(inbox.queueRows.value.map((r) => r.name)).toEqual([
+      'D',
+      'A',
+      'B',
+      'C',
+    ])
   })
 
   it('non-merge reload replaces the list (filter/search semantics)', async () => {
@@ -140,7 +152,10 @@ describe('cold-start cache', () => {
   it('ignores an expired cache (24h TTL)', async () => {
     const key = 'doco-inbox-queue-v2:tester@x.com'
     const { inbox } = await freshInbox({
-      cache: { key, value: { t: Date.now() - 25 * 3600 * 1000, rows: [row('STALE')] } },
+      cache: {
+        key,
+        value: { t: Date.now() - 25 * 3600 * 1000, rows: [row('STALE')] },
+      },
     })
     expect(inbox.queueRows.value).toEqual([])
     expect(inbox.queueFromCache.value).toBe(false)
@@ -158,7 +173,9 @@ describe('cold-start cache', () => {
     const { inbox, queue } = await freshInbox()
     queue.data = [row('A', { last_message: 'x'.repeat(500) })]
     await inbox.reloadQueue()
-    const stored = JSON.parse(localStorage.getItem('doco-inbox-queue-v2:tester@x.com'))
+    const stored = JSON.parse(
+      localStorage.getItem('doco-inbox-queue-v2:tester@x.com'),
+    )
     expect(stored.rows[0].last_message.length).toBe(60)
   })
 })
@@ -212,7 +229,11 @@ describe('lost-stage capture (audit: untested path)', () => {
     const [url, params] = calls[0]
     expect(url).toBe('frappe.client.set_value')
     // the single fieldname-dict write is what makes validate_lost_reason pass
-    expect(params.fieldname).toEqual({ status: 'Cancelado', lost_reason: 'No contestó', lost_notes: 'nota' })
+    expect(params.fieldname).toEqual({
+      status: 'Cancelado',
+      lost_reason: 'No contestó',
+      lost_notes: 'nota',
+    })
     expect(inbox.lostStagePrompt.value).toBeNull()
     expect(inbox.queueRows.value[0].status).toBe('Cancelado')
   })

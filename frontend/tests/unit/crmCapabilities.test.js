@@ -14,7 +14,14 @@ vi.mock('frappe-ui', () => ({
 }))
 
 const WITH_ADDON = ['frappe', 'erpnext', 'crm', 'doco_marketing']
-const DEMO_SITE = ['frappe', 'erpnext', 'doco', 'posawesome', 'crm', 'print_designer']
+const DEMO_SITE = [
+  'frappe',
+  'erpnext',
+  'doco',
+  'posawesome',
+  'crm',
+  'print_designer',
+]
 
 async function fresh({ boot, apps } = {}) {
   vi.resetModules()
@@ -33,7 +40,10 @@ describe('crmCapabilities: source', () => {
     const m = await fresh()
     vi.useFakeTimers()
     let finish
-    h.behavior = () => new Promise((resolve) => { finish = resolve })
+    h.behavior = () =>
+      new Promise((resolve) => {
+        finish = resolve
+      })
     const waiting = m.loadCapabilities()
     await vi.advanceTimersByTimeAsync(m.CAPABILITIES_TIMEOUT_MS)
     await waiting
@@ -111,8 +121,11 @@ describe('crmCapabilities: route gates', () => {
   it('preserves native saved-view filters when redirecting a custom list', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()
-    expect(m.gateRoute({ name: 'Deals List', query: { view: 'My deals' } })).toEqual({
-      name: 'Deals', query: { view: 'My deals' },
+    expect(
+      m.gateRoute({ name: 'Deals List', query: { view: 'My deals' } }),
+    ).toEqual({
+      name: 'Deals',
+      query: { view: 'My deals' },
     })
   })
   it('with the addon: Home lands in Inbox and every surface proceeds', async () => {
@@ -142,7 +155,9 @@ describe('crmCapabilities: route gates', () => {
   it('without the addon: Deal 360 keeps the record and opens the upstream Deal page', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()
-    expect(m.gateRoute({ name: 'Deal 360', params: { dealId: 'CRM-DEAL-7' } })).toEqual({
+    expect(
+      m.gateRoute({ name: 'Deal 360', params: { dealId: 'CRM-DEAL-7' } }),
+    ).toEqual({
       name: 'Deal',
       params: { dealId: 'CRM-DEAL-7' },
     })
@@ -151,11 +166,35 @@ describe('crmCapabilities: route gates', () => {
   it('without the addon: addon-only surfaces go Home; native routes are untouched', async () => {
     const m = await fresh({ boot: DEMO_SITE })
     await m.loadCapabilities()
-    for (const name of ['Campaigns', 'Chatflows', 'Social', 'Reports', 'Workload', 'Score Rules', 'Webshop', 'WhatsApp Queue', 'Pipeline Analysis']) {
+    for (const name of [
+      'Campaigns',
+      'Chatflows',
+      'Social',
+      'Reports',
+      'Workload',
+      'Score Rules',
+      'Webshop',
+      'WhatsApp Queue',
+      'Pipeline Analysis',
+    ]) {
       expect(m.gateRoute({ name })).toEqual({ name: 'Home' })
       expect(m.isAddonOnlyRoute(name)).toBe(true)
     }
-    for (const name of ['Inbox', 'Leads', 'Deals', 'Deal', 'Lead', 'Contacts', 'Organizations', 'Notes', 'Tasks', 'Call Logs', 'Calendar', 'Dashboard', 'Notifications']) {
+    for (const name of [
+      'Inbox',
+      'Leads',
+      'Deals',
+      'Deal',
+      'Lead',
+      'Contacts',
+      'Organizations',
+      'Notes',
+      'Tasks',
+      'Call Logs',
+      'Calendar',
+      'Dashboard',
+      'Notifications',
+    ]) {
       expect(m.gateRoute({ name })).toBeNull()
       expect(m.isAddonOnlyRoute(name)).toBe(false)
     }

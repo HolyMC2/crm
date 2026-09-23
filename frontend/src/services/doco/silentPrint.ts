@@ -58,7 +58,10 @@ function resolveTriggerPrint(
   if (options.triggerPrint !== undefined && options.triggerPrint !== null) {
     return String(options.triggerPrint)
   }
-  return getSearchParamFromHref(getWindowHref(targetWindow), TRIGGER_PRINT_PARAM)
+  return getSearchParamFromHref(
+    getWindowHref(targetWindow),
+    TRIGGER_PRINT_PARAM,
+  )
 }
 
 function resolveDebugPrint(
@@ -99,7 +102,9 @@ function isLoginRedirect(targetWindow: Window | null | undefined) {
     if (path.includes('login')) return true
     const title = targetWindow?.document?.title || ''
     if (/login|session/i.test(title)) return true
-    const loginForm = targetWindow?.document?.querySelector("form[action*='login']")
+    const loginForm = targetWindow?.document?.querySelector(
+      "form[action*='login']",
+    )
     return Boolean(loginForm)
   } catch {
     return false
@@ -118,7 +123,10 @@ function showSessionMessage(targetWindow: Window | null | undefined) {
     )
     targetWindow.document.close()
   } catch (err) {
-    console.warn('[Doco Print] Unable to show session warning in print window', err)
+    console.warn(
+      '[Doco Print] Unable to show session warning in print window',
+      err,
+    )
   }
 }
 
@@ -199,7 +207,10 @@ function waitForDocumentSelectors(
         observer.observe(root, { childList: true, subtree: true })
       }
     } catch (err) {
-      console.warn('[Doco Print] Failed to observe print document mutations', err)
+      console.warn(
+        '[Doco Print] Failed to observe print document mutations',
+        err,
+      )
     }
 
     interval = setInterval(() => {
@@ -215,7 +226,9 @@ function waitForDocumentSelectors(
     }, timeout)
 
     try {
-      targetWindow.addEventListener('beforeunload', handleUnload, { once: true })
+      targetWindow.addEventListener('beforeunload', handleUnload, {
+        once: true,
+      })
     } catch (err) {
       console.warn('[Doco Print] Failed to attach unload handler', err)
     }
@@ -302,7 +315,10 @@ async function ensureReadyAndPrint(
         targetWindow.focus()
         targetWindow.print()
       } catch (printErr) {
-        console.error('[Doco Print] Printing failed after readiness check error', printErr)
+        console.error(
+          '[Doco Print] Printing failed after readiness check error',
+          printErr,
+        )
       }
     }
   }
@@ -323,12 +339,18 @@ export function watchPrintWindow(
     if (doc?.readyState === 'complete') handleLoad()
     else printWindow.addEventListener('load', handleLoad, { once: true })
   } catch (err) {
-    console.warn('[Doco Print] Unable to attach load handler to print window', err)
+    console.warn(
+      '[Doco Print] Unable to attach load handler to print window',
+      err,
+    )
     setTimeout(() => ensureReadyAndPrint(printWindow, options), 0)
   }
 }
 
-export function silentPrint(url: string, options: PrintOptions = {}): Promise<void> {
+export function silentPrint(
+  url: string,
+  options: PrintOptions = {},
+): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!url) {
       reject(new Error('Missing print URL'))

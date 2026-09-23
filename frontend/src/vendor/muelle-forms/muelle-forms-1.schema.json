@@ -22,18 +22,44 @@
         ">=": { "$ref": "#/definitions/operandPair" },
         "<": { "$ref": "#/definitions/operandPair" },
         "<=": { "$ref": "#/definitions/operandPair" },
-        "and": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/expression" } },
-        "or": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/expression" } },
-        "not": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/definitions/expression" } },
-        "truthy": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/definitions/operand" } },
-        "empty": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/definitions/operand" } }
+        "and": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/expression" }
+        },
+        "or": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/expression" }
+        },
+        "not": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/definitions/expression" }
+        },
+        "truthy": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/definitions/operand" }
+        },
+        "empty": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/definitions/operand" }
+        }
       },
       "additionalProperties": false
     },
     "operand": {
       "oneOf": [
         { "type": ["string", "number", "boolean", "null"] },
-        { "type": "array", "items": { "type": ["string", "number", "boolean", "null"] } },
+        {
+          "type": "array",
+          "items": { "type": ["string", "number", "boolean", "null"] }
+        },
         {
           "type": "object",
           "properties": { "var": { "type": "string", "minLength": 1 } },
@@ -43,12 +69,30 @@
         { "$ref": "#/definitions/expression" }
       ]
     },
-    "operandPair": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/definitions/operand" } },
+    "operandPair": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/definitions/operand" }
+    },
     "rule": {
       "type": "object",
       "properties": {
         "kind": {
-          "enum": ["regex", "min", "max", "min_len", "max_len", "precision", "options", "phone_mx", "rfc", "email", "url", "cp_mx"]
+          "enum": [
+            "regex",
+            "min",
+            "max",
+            "min_len",
+            "max_len",
+            "precision",
+            "options",
+            "phone_mx",
+            "rfc",
+            "email",
+            "url",
+            "cp_mx"
+          ]
         },
         "value": {},
         "message": { "type": "string" }
@@ -61,7 +105,11 @@
         { "type": ["string", "number", "boolean", "null"] },
         {
           "type": "object",
-          "properties": { "token": { "enum": ["today", "now", "user", "company", "pos_profile"] } },
+          "properties": {
+            "token": {
+              "enum": ["today", "now", "user", "company", "pos_profile"]
+            }
+          },
           "required": ["token"],
           "additionalProperties": false
         }
@@ -131,7 +179,10 @@
         "columns": { "type": "integer", "minimum": 1, "maximum": 3 },
         "collapsible": { "type": "boolean" },
         "visible_when": { "$ref": "#/definitions/expression" },
-        "fields": { "type": "array", "items": { "$ref": "#/definitions/field" } }
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/field" }
+        }
       },
       "required": ["key", "fields"],
       "additionalProperties": true
@@ -143,7 +194,10 @@
         "label": { "type": "string" },
         "doctype": { "type": "string" },
         "visible_when": { "$ref": "#/definitions/expression" },
-        "columns": { "type": "array", "items": { "$ref": "#/definitions/field" } },
+        "columns": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/field" }
+        },
         "row_form": { "type": ["object", "null"] },
         "min_rows": { "type": "integer" },
         "max_rows": { "type": ["integer", "null"] },
@@ -173,22 +227,42 @@
         "contract": { "const": "muelle-forms/1" },
         "kind": { "enum": ["form", "view"] },
         "doctype": { "type": "string" },
-        "surface": { "enum": ["taller", "mercado", "crm", "storefront", "account", "pos"] },
+        "surface": {
+          "enum": ["taller", "mercado", "crm", "storefront", "account", "pos"]
+        },
         "variant": { "type": "string" },
         "mode": { "enum": ["create", "edit", "view"] },
         "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
         "lang": { "type": "string" },
         "title": { "type": "string" },
-        "sections": { "type": "array", "items": { "$ref": "#/definitions/section" } },
-        "child_tables": { "type": "array", "items": { "$ref": "#/definitions/childTable" } },
-        "actions": { "type": "array", "items": { "$ref": "#/definitions/action" } },
+        "sections": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/section" }
+        },
+        "child_tables": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/childTable" }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/action" }
+        },
         "header": { "type": "object" },
         "tabs": { "type": "array" },
         "related": { "type": "array" },
         "timeline": { "type": "array" },
         "meta": { "type": "object" }
       },
-      "required": ["contract", "kind", "doctype", "surface", "variant", "hash", "lang", "sections"],
+      "required": [
+        "contract",
+        "kind",
+        "doctype",
+        "surface",
+        "variant",
+        "hash",
+        "lang",
+        "sections"
+      ],
       "additionalProperties": true
     },
     "dataEnvelope": {
@@ -224,7 +298,10 @@
     "writePayload": {
       "type": "object",
       "properties": {
-        "descriptor_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "descriptor_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
         "variant": { "type": "string" },
         "name": { "type": ["string", "null"] },
         "modified": { "type": ["string", "null"] },
@@ -255,9 +332,20 @@
         "forms_error": {
           "type": "object",
           "properties": {
-            "kind": { "enum": ["guard", "validation", "conflict", "permission", "idempotent_replay"] },
+            "kind": {
+              "enum": [
+                "guard",
+                "validation",
+                "conflict",
+                "permission",
+                "idempotent_replay"
+              ]
+            },
             "message": { "type": "string" },
-            "fields": { "type": "object", "additionalProperties": { "type": "string" } },
+            "fields": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
             "envelope": { "type": ["object", "null"] }
           },
           "required": ["kind", "message", "fields"],

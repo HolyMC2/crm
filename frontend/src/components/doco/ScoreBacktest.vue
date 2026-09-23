@@ -16,14 +16,22 @@
 <template>
   <section class="mt-5 border-t border-outline-gray-1 pt-4">
     <div class="mb-2.5 flex items-center justify-between gap-2">
-      <div class="text-[11px] font-bold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Backtest de score') }}</div>
+      <div
+        class="text-[11px] font-bold uppercase tracking-[.07em] text-ink-gray-4"
+      >
+        {{ __('Backtest de score') }}
+      </div>
       <div class="flex flex-none gap-1">
         <button
           v-for="m in MONTH_OPTIONS"
           :key="m"
           type="button"
           class="press rounded-full px-2 py-0.5 text-[11px] font-semibold"
-          :class="months === m ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-5'"
+          :class="
+            months === m
+              ? 'bg-surface-gray-3 text-ink-gray-9'
+              : 'bg-surface-gray-2 text-ink-gray-5'
+          "
           @click="months = m"
         >
           {{ __('{0}m', [m]) }}
@@ -40,11 +48,18 @@
     </div>
 
     <template v-else>
-      <div v-if="loading && !data" class="py-5 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
+      <div
+        v-if="loading && !data"
+        class="py-5 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Cargando…') }}
+      </div>
 
       <template v-else-if="hasData">
         <!-- lift headline -->
-        <div class="mb-3 rounded-[10px] border border-outline-gray-1 bg-surface-gray-1 px-3 py-2.5">
+        <div
+          class="mb-3 rounded-[10px] border border-outline-gray-1 bg-surface-gray-1 px-3 py-2.5"
+        >
           <template v-if="liftLabel">
             <div class="text-[12.5px] leading-snug text-ink-gray-8">
               {{ __('Los leads A cierran') }}
@@ -58,49 +73,104 @@
         </div>
 
         <!-- per-grade win-rate bars (overall) -->
-        <div class="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">
+        <div
+          class="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4"
+        >
           <span>{{ __('Cierre por grado') }}</span>
           <span>{{ __('ganados/leads') }}</span>
         </div>
-        <div v-for="row in rows" :key="row.grade" class="mb-2 flex items-center gap-2">
-          <span class="w-3.5 flex-none text-[12.5px] font-bold" :style="`color:${gradeColor(row.grade)}`">{{ row.grade }}</span>
+        <div
+          v-for="row in rows"
+          :key="row.grade"
+          class="mb-2 flex items-center gap-2"
+        >
+          <span
+            class="w-3.5 flex-none text-[12.5px] font-bold"
+            :style="`color:${gradeColor(row.grade)}`"
+            >{{ row.grade }}</span
+          >
           <div class="h-2.5 min-w-0 flex-1 rounded-sm bg-surface-gray-2">
-            <div class="h-full rounded-sm" :style="`width:${barPct(row.win_rate)}%;background:${gradeColor(row.grade)}`" />
+            <div
+              class="h-full rounded-sm"
+              :style="`width:${barPct(row.win_rate)}%;background:${gradeColor(row.grade)}`"
+            />
           </div>
-          <span class="w-14 flex-none text-right text-[11px] tabular-nums text-ink-gray-5">{{ row.converted }}/{{ row.leads }}</span>
-          <span class="w-9 flex-none text-right text-[12px] font-semibold tabular-nums text-ink-gray-8">{{ pct(row.win_rate) }}</span>
+          <span
+            class="w-14 flex-none text-right text-[11px] tabular-nums text-ink-gray-5"
+            >{{ row.converted }}/{{ row.leads }}</span
+          >
+          <span
+            class="w-9 flex-none text-right text-[12px] font-semibold tabular-nums text-ink-gray-8"
+            >{{ pct(row.win_rate) }}</span
+          >
         </div>
 
         <!-- avg-score signal (honest, from the current stored score) -->
         <div
-          v-if="overall.avg_score_converted != null || overall.avg_score_lost != null"
+          v-if="
+            overall.avg_score_converted != null ||
+            overall.avg_score_lost != null
+          "
           class="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-ink-gray-5"
         >
           <span v-if="overall.avg_score_converted != null">
-            {{ __('Score prom. ganados') }}: <span class="font-semibold text-ink-gray-8">{{ overall.avg_score_converted }}</span>
+            {{ __('Score prom. ganados') }}:
+            <span class="font-semibold text-ink-gray-8">{{
+              overall.avg_score_converted
+            }}</span>
           </span>
           <span v-if="overall.avg_score_lost != null">
-            {{ __('perdidos') }}: <span class="font-semibold text-ink-gray-8">{{ overall.avg_score_lost }}</span>
+            {{ __('perdidos') }}:
+            <span class="font-semibold text-ink-gray-8">{{
+              overall.avg_score_lost
+            }}</span>
           </span>
         </div>
 
         <!-- monthly cohorts -->
         <div v-if="monthlyRows.length" class="mt-4">
-          <div class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4">{{ __('Por mes') }}</div>
-          <div v-for="c in monthlyRows" :key="c.cohort" class="mb-1.5 flex items-center gap-2">
-            <span class="w-16 flex-none truncate text-[11px] text-ink-gray-6">{{ monthLabel(c.cohort) }}</span>
+          <div
+            class="mb-1.5 text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4"
+          >
+            {{ __('Por mes') }}
+          </div>
+          <div
+            v-for="c in monthlyRows"
+            :key="c.cohort"
+            class="mb-1.5 flex items-center gap-2"
+          >
+            <span class="w-16 flex-none truncate text-[11px] text-ink-gray-6">{{
+              monthLabel(c.cohort)
+            }}</span>
             <div class="h-1.5 min-w-0 flex-1 rounded-sm bg-surface-gray-2">
-              <div class="h-full rounded-sm bg-surface-gray-8" :style="`width:${barPct(c.win_rate)}%`" />
+              <div
+                class="h-full rounded-sm bg-surface-gray-8"
+                :style="`width:${barPct(c.win_rate)}%`"
+              />
             </div>
-            <span class="w-9 flex-none text-right text-[11px] tabular-nums text-ink-gray-6">{{ pct(c.win_rate) }}</span>
-            <span class="w-8 flex-none text-right text-[10.5px] tabular-nums text-ink-gray-4">{{ c.leads }}</span>
+            <span
+              class="w-9 flex-none text-right text-[11px] tabular-nums text-ink-gray-6"
+              >{{ pct(c.win_rate) }}</span
+            >
+            <span
+              class="w-8 flex-none text-right text-[10.5px] tabular-nums text-ink-gray-4"
+              >{{ c.leads }}</span
+            >
           </div>
         </div>
 
-        <div class="mt-3 text-[10px] leading-snug text-ink-gray-4">{{ __('Basado en el score actual de cada lead, no el del día de creación.') }}</div>
+        <div class="mt-3 text-[10px] leading-snug text-ink-gray-4">
+          {{
+            __(
+              'Basado en el score actual de cada lead, no el del día de creación.',
+            )
+          }}
+        </div>
       </template>
 
-      <div v-else class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin leads en el periodo') }}</div>
+      <div v-else class="py-4 text-center text-xs text-ink-gray-4">
+        {{ __('Sin leads en el periodo') }}
+      </div>
     </template>
   </section>
 </template>
@@ -109,7 +179,13 @@
 import { computed, ref, watch } from 'vue'
 import { createResource } from 'frappe-ui'
 import { GRADE_COLORS } from '@/composables/crmFormat'
-import { pct, fmtLift, monthLabel, gradeRows, barPct } from '@/utils/backtestFormat'
+import {
+  pct,
+  fmtLift,
+  monthLabel,
+  gradeRows,
+  barPct,
+} from '@/utils/backtestFormat'
 
 const MONTH_OPTIONS = [3, 6, 12]
 const months = ref(6)

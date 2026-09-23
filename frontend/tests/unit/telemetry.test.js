@@ -60,10 +60,14 @@ describe('djb2', () => {
 
 describe('scrubUrl', () => {
   it('strips the query string', () => {
-    expect(scrubUrl('https://x.com/crm/inbox?deal=D-1&q=juan')).toBe('https://x.com/crm/inbox')
+    expect(scrubUrl('https://x.com/crm/inbox?deal=D-1&q=juan')).toBe(
+      'https://x.com/crm/inbox',
+    )
   })
   it('strips the fragment', () => {
-    expect(scrubUrl('https://x.com/crm/leads#L-9')).toBe('https://x.com/crm/leads')
+    expect(scrubUrl('https://x.com/crm/leads#L-9')).toBe(
+      'https://x.com/crm/leads',
+    )
   })
   it('leaves a clean url alone', () => {
     expect(scrubUrl('https://x.com/crm/inbox')).toBe('https://x.com/crm/inbox')
@@ -86,7 +90,9 @@ describe('capStack', () => {
 describe('isNoise', () => {
   it('flags ResizeObserver loop notifications', () => {
     expect(isNoise('ResizeObserver loop limit exceeded')).toBe(true)
-    expect(isNoise('ResizeObserver loop completed with undelivered notifications.')).toBe(true)
+    expect(
+      isNoise('ResizeObserver loop completed with undelivered notifications.'),
+    ).toBe(true)
   })
   it('flags opaque cross-origin "Script error"', () => {
     expect(isNoise('Script error.')).toBe(true)
@@ -101,7 +107,8 @@ describe('isNoise', () => {
 
 describe('topFrame', () => {
   it('picks the first "at ..." frame after the message line', () => {
-    const stack = 'TypeError: boom\n    at foo (app.js:10:5)\n    at bar (app.js:20:1)'
+    const stack =
+      'TypeError: boom\n    at foo (app.js:10:5)\n    at bar (app.js:20:1)'
     expect(topFrame(stack)).toBe('at foo (app.js:10:5)')
   })
   it('picks a file:line:col frame when there is no "at "', () => {
@@ -127,7 +134,11 @@ describe('hashError', () => {
 
 describe('buildPayload', () => {
   it('assembles hash/message/stack/url/release and scrubs the url', () => {
-    const p = buildPayload('TypeError: boom', 'at foo (a.js:1:1)', '/crm/inbox?deal=D-1')
+    const p = buildPayload(
+      'TypeError: boom',
+      'at foo (a.js:1:1)',
+      '/crm/inbox?deal=D-1',
+    )
     expect(p.hash).toBe(hashError('TypeError: boom', 'at foo (a.js:1:1)'))
     expect(p.message).toBe('TypeError: boom')
     expect(p.url).toBe('/crm/inbox')
@@ -159,7 +170,10 @@ describe('encodeBody', () => {
   it('form-encodes the payload under a single "payload" field', () => {
     const body = encodeBody({ hash: 'h', message: 'm' })
     const parsed = new URLSearchParams(body)
-    expect(JSON.parse(parsed.get('payload'))).toEqual({ hash: 'h', message: 'm' })
+    expect(JSON.parse(parsed.get('payload'))).toEqual({
+      hash: 'h',
+      message: 'm',
+    })
   })
 })
 
@@ -168,14 +182,19 @@ describe('reportError (send path)', () => {
     reportError('TypeError: boom', 'at foo (a.js:1:1)', '/crm/inbox?deal=D-1')
     expect(fetchSpy).toHaveBeenCalledTimes(1)
     expect(fetchSpy.mock.calls[0][0]).toBe(ENDPOINT)
-    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ method: 'POST', keepalive: true })
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({
+      method: 'POST',
+      keepalive: true,
+    })
     expect(beacon).not.toHaveBeenCalled()
   })
   it('includes the CSRF header when window.csrf_token is set', () => {
     window.csrf_token = 'tok-123'
     try {
       reportError('TypeError: boom', 'at foo (a.js:1:1)', '/crm')
-      expect(fetchSpy.mock.calls[0][1].headers['X-Frappe-CSRF-Token']).toBe('tok-123')
+      expect(fetchSpy.mock.calls[0][1].headers['X-Frappe-CSRF-Token']).toBe(
+        'tok-123',
+      )
     } finally {
       delete window.csrf_token
     }
@@ -204,7 +223,10 @@ describe('reportError (send path)', () => {
 
 describe('window handlers', () => {
   it('_onError reports from ev.message + ev.error.stack', () => {
-    _onError({ message: 'TypeError: boom', error: { stack: 'at foo (a.js:1:1)' } })
+    _onError({
+      message: 'TypeError: boom',
+      error: { stack: 'at foo (a.js:1:1)' },
+    })
     expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
   it('_onRejection reports from ev.reason', () => {

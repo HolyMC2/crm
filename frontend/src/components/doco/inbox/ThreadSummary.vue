@@ -9,7 +9,10 @@
   Assistive only: the summary is rendered as plain text (no v-html).
 -->
 <template>
-  <div v-if="!hidden" class="flex-none border-b border-outline-gray-1 px-3 py-1.5">
+  <div
+    v-if="!hidden"
+    class="flex-none border-b border-outline-gray-1 px-3 py-1.5"
+  >
     <!-- collapsed chip -->
     <button
       v-if="!expanded"
@@ -21,9 +24,14 @@
     </button>
 
     <!-- expanded card -->
-    <div v-else class="rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-3">
+    <div
+      v-else
+      class="rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-3"
+    >
       <div class="mb-1.5 flex items-center justify-between gap-2">
-        <div class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-gray-8">
+        <div
+          class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-gray-8"
+        >
           <span>🧠</span>{{ __('Resumen del hilo') }}
         </div>
         <div class="flex items-center gap-1">
@@ -35,7 +43,10 @@
             :aria-label="__('Actualizar')"
             @click="refresh"
           >
-            <LucideRefreshCw class="size-3.5" :class="loading && 'animate-spin'" />
+            <LucideRefreshCw
+              class="size-3.5"
+              :class="loading && 'animate-spin'"
+            />
           </button>
           <button
             type="button"
@@ -49,10 +60,18 @@
         </div>
       </div>
 
-      <div v-if="loading" class="text-[12.5px] text-ink-gray-4">{{ __('Generando resumen…') }}</div>
+      <div v-if="loading" class="text-[12.5px] text-ink-gray-4">
+        {{ __('Generando resumen…') }}
+      </div>
       <template v-else-if="hasSummary">
-        <p class="whitespace-pre-line text-[12.5px] leading-relaxed text-ink-gray-7">{{ summary }}</p>
-        <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10.5px] text-ink-gray-4">
+        <p
+          class="whitespace-pre-line text-[12.5px] leading-relaxed text-ink-gray-7"
+        >
+          {{ summary }}
+        </p>
+        <div
+          class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10.5px] text-ink-gray-4"
+        >
           <span>{{ __('actualizado') }} {{ staleLabel }}</span>
           <span v-if="data && data.cached">· {{ __('en caché') }}</span>
         </div>
@@ -88,13 +107,20 @@ const nowTick = ref(Date.now())
 // Hidden when AI is disabled for the site, or the backend says this thread has no
 // AI (available:false). aiEnabled short-circuits so we never call the endpoint on
 // an AI-off tenant.
-const hidden = computed(() => !aiEnabled.value || (data.value && data.value.available === false))
+const hidden = computed(
+  () => !aiEnabled.value || (data.value && data.value.available === false),
+)
 const summary = computed(() => data.value?.summary || '')
 const hasSummary = computed(() => !loading.value && !!data.value?.summary)
 const isEmpty = computed(() => {
   const d = data.value
   if (!d || loading.value) return false
-  return d.available !== false && !d.summary && !d.error && (d.message_count || 0) === 0
+  return (
+    d.available !== false &&
+    !d.summary &&
+    !d.error &&
+    (d.message_count || 0) === 0
+  )
 })
 
 const staleLabel = computed(() => {

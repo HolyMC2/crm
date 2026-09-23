@@ -23,11 +23,16 @@ describe('useSuggestTime', () => {
   })
 
   it('fetch success: calls the planner endpoint, fills suggestions, clears loading', async () => {
-    const rows = [{ when: '2026-07-28 19:00:00', score: 0.9, reason: 'buen historial' }]
+    const rows = [
+      { when: '2026-07-28 19:00:00', score: 0.9, reason: 'buen historial' },
+    ]
     h.call.mockResolvedValue({ suggestions: rows, fb_only: false })
     const s = useSuggestTime()
     const ret = await s.fetchSuggestions('Shop A', '2026-07-27 12:00:00')
-    expect(h.call).toHaveBeenCalledWith('doco_marketing.api.social_planner.suggest_time', { shop: 'Shop A', after: '2026-07-27 12:00:00' })
+    expect(h.call).toHaveBeenCalledWith(
+      'doco_marketing.api.social_planner.suggest_time',
+      { shop: 'Shop A', after: '2026-07-27 12:00:00' },
+    )
     expect(s.suggestions.value).toEqual(rows)
     expect(ret).toEqual(rows)
     expect(s.fbOnly.value).toBe(false) // honored the explicit false

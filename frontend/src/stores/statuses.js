@@ -94,7 +94,12 @@ export const statusesStore = defineStore('crm-statuses', () => {
     return communicationStatuses[name]
   }
 
-  function statusOptions(doctype, statuses = [], triggerStatusChange = null, triggerStatusChangeSilent = null) {
+  function statusOptions(
+    doctype,
+    statuses = [],
+    triggerStatusChange = null,
+    triggerStatusChangeSilent = null,
+  ) {
     let statusesByName =
       doctype == 'deal' ? dealStatusesByName : leadStatusesByName
 
@@ -137,7 +142,9 @@ export const statusesStore = defineStore('crm-statuses', () => {
             {
               onSilent: triggerStatusChangeSilent
                 ? async () => {
-                    await triggerStatusChangeSilent(statusesByName[status]?.name)
+                    await triggerStatusChangeSilent(
+                      statusesByName[status]?.name,
+                    )
                     capture('status_changed_silent', { doctype, status })
                   }
                 : undefined,

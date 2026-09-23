@@ -5,17 +5,29 @@
       "name": "walkin shows detalle, total editable",
       "doc": { "kind": "walkin" },
       "expect": {
-        "customer_phone": { "visible": true, "required": true, "readonly": false },
+        "customer_phone": {
+          "visible": true,
+          "required": true,
+          "readonly": false
+        },
         "notes": { "visible": true, "required": false, "readonly": false },
         "total": { "visible": true, "required": false, "readonly": false },
-        "internal_score": { "visible": true, "required": false, "readonly": true }
+        "internal_score": {
+          "visible": true,
+          "required": false,
+          "readonly": true
+        }
       }
     },
     {
       "name": "pickup hides detalle section, total readonly",
       "doc": { "kind": "pickup" },
       "expect": {
-        "customer_phone": { "visible": true, "required": true, "readonly": false },
+        "customer_phone": {
+          "visible": true,
+          "required": true,
+          "readonly": false
+        },
         "notes": { "visible": false, "required": false, "readonly": false },
         "total": { "visible": false, "required": false, "readonly": true }
       }

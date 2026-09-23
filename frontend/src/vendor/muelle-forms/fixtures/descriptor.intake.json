@@ -72,14 +72,29 @@
       "label": "Refacciones",
       "doctype": "Repair Order Part",
       "columns": [
-        { "fieldname": "item", "label": "Artículo", "type": "Link", "link": { "doctype": "Item" } },
+        {
+          "fieldname": "item",
+          "label": "Artículo",
+          "type": "Link",
+          "link": { "doctype": "Item" }
+        },
         { "fieldname": "qty", "label": "Cantidad", "type": "Int" },
-        { "fieldname": "rate", "label": "Precio", "type": "Currency", "readonly": true }
+        {
+          "fieldname": "rate",
+          "label": "Precio",
+          "type": "Currency",
+          "readonly": true
+        }
       ]
     }
   ],
   "actions": [
-    { "key": "save", "kind": "primary", "label": "Guardar", "endpoint": "taller.api.orders.intake.intake" }
+    {
+      "key": "save",
+      "kind": "primary",
+      "label": "Guardar",
+      "endpoint": "taller.api.orders.intake.intake"
+    }
   ],
   "meta": { "overlay_version": 1 }
 }

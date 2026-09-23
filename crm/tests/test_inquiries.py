@@ -23,18 +23,30 @@ class TestInquiries(IntegrationTestCase):
 		super().setUpClass()
 		frappe.set_user("Administrator")
 		if not frappe.db.exists("DocType", "CRM Inquiry"):
-			raise RuntimeError("Install the inquiry DocTypes on a dedicated CRM test site before running this suite.")
+			raise RuntimeError(
+				"Install the inquiry DocTypes on a dedicated CRM test site before running this suite."
+			)
 		cls.prefix = "inquiry-" + uuid4().hex[:10]
 		cls.users = {}
 		with patch("frappe.sendmail"):
-			for label, role in (("owner", "Sales User"), ("assignee", "Sales User"),
-				("outsider", "Sales User"), ("manager", "Sales Manager"), ("noncrm", None)):
+			for label, role in (
+				("owner", "Sales User"),
+				("assignee", "Sales User"),
+				("outsider", "Sales User"),
+				("manager", "Sales Manager"),
+				("noncrm", None),
+			):
 				name = f"{cls.prefix}-{label}@example.invalid"
-				frappe.get_doc({
-					"doctype": "User", "email": name, "first_name": "Inquiry " + label,
-					"send_welcome_email": 0, "enabled": 1,
-					"roles": [{"role": role}] if role else [],
-				}).insert()
+				frappe.get_doc(
+					{
+						"doctype": "User",
+						"email": name,
+						"first_name": "Inquiry " + label,
+						"send_welcome_email": 0,
+						"enabled": 1,
+						"roles": [{"role": role}] if role else [],
+					}
+				).insert()
 				cls.users[label] = name
 
 	def setUp(self):
@@ -52,27 +64,38 @@ class TestInquiries(IntegrationTestCase):
 		super().tearDown()
 
 	def capture(self, request_id=None, **values):
-		return api.create_inquiry({
-			"title": "Fictional public referral", "source_type": "Manual",
-			"source_url": "https://example.invalid/public/post", "source_text": "Public context only.",
-			"client_request_id": request_id or uuid4().hex,
-			"people": [{"display_name": "Public Referrer", "role": "Referrer"}],
-			**values,
-		})
+		return api.create_inquiry(
+			{
+				"title": "Fictional public referral",
+				"source_type": "Manual",
+				"source_url": "https://example.invalid/public/post",
+				"source_text": "Public context only.",
+				"client_request_id": request_id or uuid4().hex,
+				"people": [{"display_name": "Public Referrer", "role": "Referrer"}],
+				**values,
+			}
+		)
 
 	def prospect(self):
-		return self.capture(people=[
-			{"display_name": "Public Referrer", "role": "Referrer", "phone": "555-0100"},
-			{"display_name": "Selected Prospect", "role": "Interested Person", "phone": "555-0100"},
-			{"display_name": "Second Prospect", "role": "Requester"},
-		])
+		return self.capture(
+			people=[
+				{"display_name": "Public Referrer", "role": "Referrer", "phone": "555-0100"},
+				{"display_name": "Selected Prospect", "role": "Interested Person", "phone": "555-0100"},
+				{"display_name": "Second Prospect", "role": "Requester"},
+			]
+		)
 
 	def make_lead(self, owner=None):
 		previous_user = frappe.session.user
 		try:
 			frappe.set_user(owner or self.users["owner"])
-			return frappe.get_doc({"doctype": "CRM Lead", "first_name": "Fictional existing lead",
-				"lead_owner": frappe.session.user}).insert()
+			return frappe.get_doc(
+				{
+					"doctype": "CRM Lead",
+					"first_name": "Fictional existing lead",
+					"lead_owner": frappe.session.user,
+				}
+			).insert()
 		finally:
 			frappe.set_user(previous_user)
 
@@ -90,16 +113,22 @@ class TestInquiries(IntegrationTestCase):
 		key = uuid4().hex
 		first = self.capture(key)
 		updated = api.update_inquiry(first["name"], str(first["modified"]), {"title": "Triaged title"})
-		api.add_person(first["name"], str(updated["modified"]), {"display_name": "New Person", "role": "Requester"})
+		api.add_person(
+			first["name"], str(updated["modified"]), {"display_name": "New Person", "role": "Requester"}
+		)
 		self.assertEqual("Triaged title", self.capture(key)["title"])
 		with self.assertRaises(frappe.ValidationError):
 			self.capture(key, title="Triaged title")
 
 	def test_source_capture_owner_and_manager_replay_one_record(self):
 		source = "doco_marketing:Social Mention:" + uuid4().hex
-		payload = {"title": "Known public source", "source_type": "Facebook", "people": [
-			{"display_name": "Source author", "role": "Referrer"},
-		]}
+		payload = {
+			"title": "Known public source",
+			"source_type": "Facebook",
+			"people": [
+				{"display_name": "Source author", "role": "Referrer"},
+			],
+		}
 		before = frappe.db.count("CRM Inquiry")
 		first = api.capture_source_inquiry(source, payload)
 		self.assertNotIn(api.capture_source_inquiry, frappe.whitelisted)
@@ -113,7 +142,9 @@ class TestInquiries(IntegrationTestCase):
 
 	def test_source_capture_denied_staff_cannot_create_copy_or_read_receipt(self):
 		source = "doco_marketing:Social Mention:" + uuid4().hex
-		first = api.capture_source_inquiry(source, {"title": "Private inquiry title", "source_text": "Stored context"})
+		first = api.capture_source_inquiry(
+			source, {"title": "Private inquiry title", "source_text": "Stored context"}
+		)
 		before = frappe.db.count("CRM Inquiry")
 		for actor in (self.users["outsider"], self.users["noncrm"], "Guest"):
 			frappe.set_user(actor)
@@ -143,15 +174,25 @@ class TestInquiries(IntegrationTestCase):
 		from frappe.utils import get_datetime
 
 		source = "doco_marketing:Social Mention:" + uuid4().hex
-		first = api.capture_source_inquiry(source, {
-			"title": "Original mention", "source_url": "https://example.invalid/original",
-			"source_text": "Original context", "people": [{"display_name": "Original author", "role": "Referrer"}],
-		})
+		first = api.capture_source_inquiry(
+			source,
+			{
+				"title": "Original mention",
+				"source_url": "https://example.invalid/original",
+				"source_text": "Original context",
+				"people": [{"display_name": "Original author", "role": "Referrer"}],
+			},
+		)
 		frappe.set_user(self.users["manager"])
-		replay = api.capture_source_inquiry(source, {
-			"title": "Enriched title", "source_url": "https://example.invalid/enriched",
-			"source_text": "Enriched context", "people": [{"display_name": "Another identity", "role": "Requester"}],
-		})
+		replay = api.capture_source_inquiry(
+			source,
+			{
+				"title": "Enriched title",
+				"source_url": "https://example.invalid/enriched",
+				"source_text": "Enriched context",
+				"people": [{"display_name": "Another identity", "role": "Requester"}],
+			},
+		)
 		for field in ("name", "title", "source_url", "source_text", "people"):
 			self.assertEqual(first[field], replay[field])
 		self.assertEqual(get_datetime(first["modified"]), get_datetime(replay["modified"]))
@@ -192,16 +233,30 @@ class TestInquiries(IntegrationTestCase):
 
 	def source_fixture(self):
 		identity = "meta:v2:Messenger:910001:lead_ad:" + uuid4().hex
-		person = {"display_name": "Original respondent", "role": "Requester",
-			"email": "respondent@example.invalid", "phone": "555-0100"}
+		person = {
+			"display_name": "Original respondent",
+			"role": "Requester",
+			"email": "respondent@example.invalid",
+			"phone": "555-0100",
+		}
 		payload = {"title": "Fictional service request", "source_type": "Facebook", "people": [person]}
 		context = {
-			"version": 1, "mode": "automatic", "provider": "Messenger", "account_id": "910001",
-			"source_kind": "lead_ad", "source_id": "910003", "source_identity": identity,
-			"receipt_name": "fictional-receipt", "policy_hash": "a" * 64,
-			"form_id": "910002", "leadgen_id": "910003", "purpose_statement": "Please email me about this repair.",
-			"response_channel": "Email", "form_revision_hash": "b" * 64,
-			"submitted_at": "2026-09-09 12:00:00", "original_respondent": person.copy(),
+			"version": 1,
+			"mode": "automatic",
+			"provider": "Messenger",
+			"account_id": "910001",
+			"source_kind": "lead_ad",
+			"source_id": "910003",
+			"source_identity": identity,
+			"receipt_name": "fictional-receipt",
+			"policy_hash": "a" * 64,
+			"form_id": "910002",
+			"leadgen_id": "910003",
+			"purpose_statement": "Please email me about this repair.",
+			"response_channel": "Email",
+			"form_revision_hash": "b" * 64,
+			"submitted_at": "2026-09-09 12:00:00",
+			"original_respondent": person.copy(),
 		}
 		return identity, payload, context
 
@@ -212,7 +267,14 @@ class TestInquiries(IntegrationTestCase):
 		self.assertEqual(self.users["owner"], stored["capture_user"])
 		self.assertEqual(context["original_respondent"], stored["original_respondent"])
 		self.assertEqual(context["purpose_statement"], first["source_evidence"]["purpose_statement"])
-		for private in ("receipt_name", "policy_hash", "capture_user", "requested_by", "source_identity", "form_revision_hash"):
+		for private in (
+			"receipt_name",
+			"policy_hash",
+			"capture_user",
+			"requested_by",
+			"source_identity",
+			"form_revision_hash",
+		):
 			self.assertNotIn(private, first["source_evidence"])
 		self.assertNotIn("capture_context", frappe.get_doc("CRM Inquiry", first["name"]).as_dict())
 		self.assertEqual(first["name"], api.find_source_inquiry(identity)["name"])
@@ -223,9 +285,15 @@ class TestInquiries(IntegrationTestCase):
 		identity, payload, context = self.source_fixture()
 		leads = frappe.db.count("CRM Lead")
 		first = api.capture_source_inquiry(identity, payload, capture_context=context)
-		updated = api.add_person(first["name"], str(first["modified"]), {
-			"display_name": "Someone else", "role": "Interested Person", "email": "different@example.invalid",
-		})
+		updated = api.add_person(
+			first["name"],
+			str(first["modified"]),
+			{
+				"display_name": "Someone else",
+				"role": "Interested Person",
+				"email": "different@example.invalid",
+			},
+		)
 		self.assertEqual(first["source_evidence"], updated["source_evidence"])
 		self.assertEqual(2, len(updated["people"]))
 		self.assertEqual(leads, frappe.db.count("CRM Lead"))
@@ -239,8 +307,11 @@ class TestInquiries(IntegrationTestCase):
 		replay = api.capture_source_inquiry(identity, {}, capture_context=later)
 		self.assertEqual(first["source_evidence"], replay["source_evidence"])
 		self.assertEqual(first["name"], replay["name"])
-		for changes in ({"account_id": "910009"}, {"form_id": "910008"},
-			{"source_id": "910007", "leadgen_id": "910007"}):
+		for changes in (
+			{"account_id": "910009"},
+			{"form_id": "910008"},
+			{"source_id": "910007", "leadgen_id": "910007"},
+		):
 			with self.subTest(changes=changes), self.assertRaises(frappe.ValidationError):
 				api.capture_source_inquiry(identity, {}, capture_context={**context, **changes})
 
@@ -257,28 +328,49 @@ class TestInquiries(IntegrationTestCase):
 		first = api.capture_source_inquiry(identity, payload, capture_context=context)
 		for actor in (self.users["outsider"], self.users["noncrm"], "Guest"):
 			frappe.set_user(actor)
-			for action in (lambda: api.find_source_inquiry(identity), lambda: api.get_inquiry(first["name"]),
-				lambda: api.capture_source_inquiry(identity, payload, capture_context=context)):
+			for action in (
+				lambda: api.find_source_inquiry(identity),
+				lambda: api.get_inquiry(first["name"]),
+				lambda: api.capture_source_inquiry(identity, payload, capture_context=context),
+			):
 				with self.subTest(actor=actor), self.assertRaises(frappe.PermissionError):
 					action()
 
 	def test_source_evidence_context_allowlist_actor_and_respondent_bounds(self):
 		identity, payload, context = self.source_fixture()
-		bad = [{"version": True}, {"version": 2}, {"marketing_consent": True},
-			{"source_identity": "another-key"}, {"provider": "Instagram"}, {"account_id": "a"},
-			{"policy_hash": "bad"}, {"receipt_name": ""}, {"form_id": ""}, {"form_revision_hash": ""},
-			{"purpose_statement": ""}, {"purpose_statement": "x" * 4001}, {"response_channel": "All"},
-			{"submitted_at": "yesterday"}, {"source_id": "different-lead"},
-			{"mode": "manager_reprocess"}, {"original_respondent": {**context["original_respondent"], "role": "Referrer"}},
+		bad = [
+			{"version": True},
+			{"version": 2},
+			{"marketing_consent": True},
+			{"source_identity": "another-key"},
+			{"provider": "Instagram"},
+			{"account_id": "a"},
+			{"policy_hash": "bad"},
+			{"receipt_name": ""},
+			{"form_id": ""},
+			{"form_revision_hash": ""},
+			{"purpose_statement": ""},
+			{"purpose_statement": "x" * 4001},
+			{"response_channel": "All"},
+			{"submitted_at": "yesterday"},
+			{"source_id": "different-lead"},
+			{"mode": "manager_reprocess"},
+			{"original_respondent": {**context["original_respondent"], "role": "Referrer"}},
 			{"original_respondent": {**context["original_respondent"], "email": ""}},
-			{"original_respondent": {**context["original_respondent"], "lead": "forged"}}]
+			{"original_respondent": {**context["original_respondent"], "lead": "forged"}},
+		]
 		for changes in bad:
 			with self.subTest(fields=list(changes)), self.assertRaises(frappe.ValidationError):
 				api.capture_source_inquiry(identity, payload, capture_context={**context, **changes})
 		with self.assertRaises(frappe.PermissionError):
-			api.capture_source_inquiry(identity, payload, capture_context={**context, "capture_user": "Administrator"})
-		for changes in ({"source_type": "Instagram"}, {"people": []},
-			{"people": [*payload["people"], {"display_name": "Other", "role": "Requester"}]}):
+			api.capture_source_inquiry(
+				identity, payload, capture_context={**context, "capture_user": "Administrator"}
+			)
+		for changes in (
+			{"source_type": "Instagram"},
+			{"people": []},
+			{"people": [*payload["people"], {"display_name": "Other", "role": "Requester"}]},
+		):
 			with self.subTest(fields=list(changes)), self.assertRaises(frappe.ValidationError):
 				api.capture_source_inquiry(identity, {**payload, **changes}, capture_context=context)
 
@@ -292,7 +384,9 @@ class TestInquiries(IntegrationTestCase):
 			api.capture_source_inquiry(identity, payload, capture_context=context)
 		payload["people"][0]["role"] = "Referrer"
 		with self.assertRaises(frappe.ValidationError):
-			api.capture_source_inquiry(identity, payload, capture_context={**context, "purpose_statement": "Contact me"})
+			api.capture_source_inquiry(
+				identity, payload, capture_context={**context, "purpose_statement": "Contact me"}
+			)
 		first = api.capture_source_inquiry(identity, payload, capture_context=context)
 		self.assertEqual("Referrer", first["people"][0]["role"])
 		self.assertNotIn("purpose_statement", first["source_evidence"])
@@ -302,8 +396,14 @@ class TestInquiries(IntegrationTestCase):
 		for actor in (self.users["owner"], "Administrator"):
 			frappe.set_user(actor)
 			with self.subTest(actor=actor), self.assertRaises(frappe.ValidationError):
-				frappe.get_doc({"doctype": "CRM Inquiry", "title": "Forged evidence",
-					"capture_context": json.dumps(context), "flags": {"inquiry_capture": ["token", "a", "b", context]}}).insert()
+				frappe.get_doc(
+					{
+						"doctype": "CRM Inquiry",
+						"title": "Forged evidence",
+						"capture_context": json.dumps(context),
+						"flags": {"inquiry_capture": ["token", "a", "b", context]},
+					}
+				).insert()
 		frappe.set_user(self.users["owner"])
 		first = api.capture_source_inquiry(identity, payload, capture_context=context)
 		doc = frappe.get_doc("CRM Inquiry", first["name"])
@@ -320,7 +420,7 @@ class TestInquiries(IntegrationTestCase):
 
 	def test_capture_evidence_preserves_literal_form_text_and_existing_transaction(self):
 		identity, payload, context = self.source_fixture()
-		context["purpose_statement"] = '<b>Email me</b> <script>literal evidence only</script>'
+		context["purpose_statement"] = "<b>Email me</b> <script>literal evidence only</script>"
 		first = api.capture_source_inquiry(identity, payload, capture_context=context)
 		self.assertEqual(context["purpose_statement"], first["source_evidence"]["purpose_statement"])
 		anchor = self.capture(title="Earlier transaction work")
@@ -343,9 +443,15 @@ class TestInquiries(IntegrationTestCase):
 		key = uuid4().hex
 		first = self.capture(key)
 		# Simulates access revocation by an administrative ownership repair.
-		frappe.db.set_value("CRM Inquiry", first["name"], {
-			"owner": self.users["outsider"], "assigned_to": self.users["outsider"],
-		}, update_modified=False)
+		frappe.db.set_value(
+			"CRM Inquiry",
+			first["name"],
+			{
+				"owner": self.users["outsider"],
+				"assigned_to": self.users["outsider"],
+			},
+			update_modified=False,
+		)
 		with self.assertRaises(frappe.PermissionError):
 			self.capture(key, title="Changed payload should not disclose a receipt")
 		with self.assertRaises(frappe.PermissionError):
@@ -353,9 +459,13 @@ class TestInquiries(IntegrationTestCase):
 
 	def test_payload_allowlist_bounds_url_and_explicit_role(self):
 		bad = [
-			{"unknown": "value"}, {"title": "x" * 141}, {"source_text": "x" * 20001},
-			{"source_url": "javascript:alert(1)"}, {"source_url": "https://user:secret@example.invalid"},
-			{"source_url": "https://example.invalid:bad"}, {"source_type": "Unverified"},
+			{"unknown": "value"},
+			{"title": "x" * 141},
+			{"source_text": "x" * 20001},
+			{"source_url": "javascript:alert(1)"},
+			{"source_url": "https://user:secret@example.invalid"},
+			{"source_url": "https://example.invalid:bad"},
+			{"source_type": "Unverified"},
 			{"people": [{"display_name": "No role"}]},
 			{"people": [{"display_name": "Alias", "role": "Requester", "lead": "forged"}]},
 			{"people": [{"display_name": "Alias", "role": "Requester", "email": "bad address"}]},
@@ -391,7 +501,12 @@ class TestInquiries(IntegrationTestCase):
 
 		def lookup(doctype, filters=None, *args, **kwargs):
 			nonlocal initial_lookup
-			if initial_lookup and doctype == "CRM Inquiry" and isinstance(filters, dict) and "capture_key" in filters:
+			if (
+				initial_lookup
+				and doctype == "CRM Inquiry"
+				and isinstance(filters, dict)
+				and "capture_key" in filters
+			):
 				initial_lookup = False
 				return None  # Exercise the real unique-index collision and savepoint recovery.
 			return original(doctype, filters, *args, **kwargs)
@@ -415,7 +530,9 @@ class TestInquiries(IntegrationTestCase):
 		with self.assertRaises(frappe.PermissionError):
 			api.update_inquiry(first["name"], str(first["modified"]), {"title": "Forged"})
 		with self.assertRaises(frappe.PermissionError):
-			api.add_person(first["name"], str(first["modified"]), {"display_name": "Forged", "role": "Requester"})
+			api.add_person(
+				first["name"], str(first["modified"]), {"display_name": "Forged", "role": "Requester"}
+			)
 		with self.assertRaises(frappe.PermissionError):
 			api.convert_person(first["name"], first["people"][0]["person_key"])
 		forged = frappe.get_doc("CRM Inquiry", first["name"])
@@ -428,8 +545,12 @@ class TestInquiries(IntegrationTestCase):
 		first = self.capture()
 		for actor in ("Guest", self.users["noncrm"]):
 			frappe.set_user(actor)
-			for method in (lambda: self.capture(), api.list_inquiries, api.get_assignees,
-				lambda: api.get_inquiry(first["name"])):
+			for method in (
+				lambda: self.capture(),
+				api.list_inquiries,
+				api.get_assignees,
+				lambda: api.get_inquiry(first["name"]),
+			):
 				with self.assertRaises(frappe.PermissionError):
 					method()
 		frappe.set_user("Administrator")
@@ -441,21 +562,32 @@ class TestInquiries(IntegrationTestCase):
 	def test_generic_create_rejects_forged_owner_capture_and_child_keys(self):
 		# Frappe stamps owner before the controller sees a new document. Verify
 		# persisted ownership rather than requiring a rejection of normalized input.
-		generic = frappe.get_doc({"doctype": "CRM Inquiry", "title": "Generic capture",
-			"owner": self.users["outsider"]}).insert()
+		generic = frappe.get_doc(
+			{"doctype": "CRM Inquiry", "title": "Generic capture", "owner": self.users["outsider"]}
+		).insert()
 		self.assertEqual(frappe.session.user, frappe.db.get_value("CRM Inquiry", generic.name, "owner"))
-		for values in ({"capture_key": "a" * 64},
+		for values in (
+			{"capture_key": "a" * 64},
 			{"capture_payload_hash": "b" * 64},
 			{"people": [{"display_name": "Forged", "role": "Requester", "person_key": "forged"}]},
-			{"people": [{"display_name": "Forged", "role": "Requester", "lead": "forged"}]}):
-			with self.subTest(values=list(values)), self.assertRaises((frappe.PermissionError, frappe.ValidationError)):
+			{"people": [{"display_name": "Forged", "role": "Requester", "lead": "forged"}]},
+		):
+			with (
+				self.subTest(values=list(values)),
+				self.assertRaises((frappe.PermissionError, frappe.ValidationError)),
+			):
 				frappe.get_doc({"doctype": "CRM Inquiry", "title": "Generic capture", **values}).insert()
 
 	def test_generic_save_rejects_provenance_child_key_and_flags_forgery(self):
 		first = self.capture()
-		for field, value in (("capture_key", "c" * 64), ("capture_payload_hash", "d" * 64),
-			("source_url", "https://example.invalid/changed"), ("source_text", "Changed"),
-			("source_type", "Other"), ("owner", self.users["assignee"])):
+		for field, value in (
+			("capture_key", "c" * 64),
+			("capture_payload_hash", "d" * 64),
+			("source_url", "https://example.invalid/changed"),
+			("source_text", "Changed"),
+			("source_type", "Other"),
+			("owner", self.users["assignee"]),
+		):
 			doc = frappe.get_doc("CRM Inquiry", first["name"])
 			doc.set(field, value)
 			with self.subTest(field=field), self.assertRaises(frappe.ValidationError):
@@ -488,33 +620,52 @@ class TestInquiries(IntegrationTestCase):
 		from frappe.client import get_list
 
 		first_person = {
-			"display_name": "Owned fictional prospect", "role": "Requester",
-			"email": "owned-person@example.invalid", "phone": "555-0101",
+			"display_name": "Owned fictional prospect",
+			"role": "Requester",
+			"email": "owned-person@example.invalid",
+			"phone": "555-0101",
 		}
 		second_person = {
-			"display_name": "Other fictional prospect", "role": "Requester",
-			"email": "other-person@example.invalid", "phone": "555-0102",
+			"display_name": "Other fictional prospect",
+			"role": "Requester",
+			"email": "other-person@example.invalid",
+			"phone": "555-0102",
 		}
 		first = self.capture(people=[first_person])
 		converted = api.convert_person(first["name"], first["people"][0]["person_key"])
-		api.update_inquiry(first["name"], str(converted["inquiry"]["modified"]), {
-			"assigned_to": self.users["assignee"],
-		})
+		api.update_inquiry(
+			first["name"],
+			str(converted["inquiry"]["modified"]),
+			{
+				"assigned_to": self.users["assignee"],
+			},
+		)
 		frappe.set_user(self.users["outsider"])
-		self.assertEqual([], get_list(doctype="CRM Inquiry Person", parent="CRM Inquiry",
-			fields=["parent", "display_name", "email", "phone", "lead"]))
+		self.assertEqual(
+			[],
+			get_list(
+				doctype="CRM Inquiry Person",
+				parent="CRM Inquiry",
+				fields=["parent", "display_name", "email", "phone", "lead"],
+			),
+		)
 		second = self.capture(title="Another owner's inquiry", people=[second_person])
 		people = {first["name"]: first_person, second["name"]: second_person}
 		expected = {
-			"outsider": {second["name"]}, "assignee": {first["name"]},
-			"owner": {first["name"]}, "manager": {first["name"], second["name"]},
+			"outsider": {second["name"]},
+			"assignee": {first["name"]},
+			"owner": {first["name"]},
+			"manager": {first["name"], second["name"]},
 		}
 		for label in ("outsider", "assignee", "owner", "manager"):
 			frappe.set_user(self.users[label])
 			with self.subTest(actor=label):
-				rows = get_list(doctype="CRM Inquiry Person", parent="CRM Inquiry",
+				rows = get_list(
+					doctype="CRM Inquiry Person",
+					parent="CRM Inquiry",
 					fields=["parent", "display_name", "email", "phone", "lead"],
-					filters={"parent": ["in", list(people)]})
+					filters={"parent": ["in", list(people)]},
+				)
 				self.assertEqual(expected[label], {row["parent"] for row in rows})
 				self.assertEqual(len(expected[label]), len(rows))
 				for row in rows:
@@ -525,8 +676,10 @@ class TestInquiries(IntegrationTestCase):
 				for denied_parent in set(people) - expected[label]:
 					self.assertNotIn(people[denied_parent]["email"], frappe.as_json(rows))
 				for allowed_parent in expected[label]:
-					self.assertEqual(people[allowed_parent]["display_name"],
-						api.get_inquiry(allowed_parent)["people"][0]["display_name"])
+					self.assertEqual(
+						people[allowed_parent]["display_name"],
+						api.get_inquiry(allowed_parent)["people"][0]["display_name"],
+					)
 
 	def test_assignees_exclude_noncrm_and_disabled_users(self):
 		frappe.db.set_value("User", self.users["outsider"], "enabled", 0)
@@ -546,37 +699,64 @@ class TestInquiries(IntegrationTestCase):
 		first = self.capture(request_id)
 		filters = {"reference_doctype": "CRM Inquiry", "reference_name": first["name"]}
 		self.assertEqual(0, frappe.db.count("CRM Notification", filters))
-		assigned = api.update_inquiry(first["name"], str(first["modified"]), {
-			"assigned_to": self.users["assignee"],
-		})
+		assigned = api.update_inquiry(
+			first["name"],
+			str(first["modified"]),
+			{
+				"assigned_to": self.users["assignee"],
+			},
+		)
 		self.assertEqual(1, frappe.db.count("CRM Notification", filters))
-		notification = frappe.get_doc("CRM Notification", frappe.db.get_value("CRM Notification", filters, "name"))
+		notification = frappe.get_doc(
+			"CRM Notification", frappe.db.get_value("CRM Notification", filters, "name")
+		)
 		self.assertEqual(self.users["assignee"], notification.to_user)
 		self.assertEqual("Assignment", notification.type)
 		self.assertEqual("CRM Inquiry", notification.notification_type_doctype)
 		self.assertEqual(first["name"], notification.notification_type_doc)
 		self.assertEqual("Se te asignó una consulta", notification.notification_text)
 		self.assertFalse(notification.message)
-		for source in (first["title"], first["source_url"], first["source_text"], first["people"][0]["display_name"]):
+		for source in (
+			first["title"],
+			first["source_url"],
+			first["source_text"],
+			first["people"][0]["display_name"],
+		):
 			self.assertNotIn(source, frappe.as_json(notification))
 		api.update_inquiry(first["name"], str(assigned["modified"]), {"title": "Still assigned"})
 		self.capture(request_id)
 		self.assertEqual(1, frappe.db.count("CRM Notification", filters))
-		self.assertTrue(any(call.args[0] == "crm_notification" and call.kwargs.get("after_commit")
-			and call.kwargs.get("user") == self.users["assignee"] for call in self.realtime.call_args_list))
+		self.assertTrue(
+			any(
+				call.args[0] == "crm_notification"
+				and call.kwargs.get("after_commit")
+				and call.kwargs.get("user") == self.users["assignee"]
+				for call in self.realtime.call_args_list
+			)
+		)
 		self.mail.assert_not_called()
 
 	def test_nonowner_assignee_can_handoff_with_only_minimal_success_response(self):
 		first = self.capture()
-		assigned = api.update_inquiry(first["name"], str(first["modified"]), {
-			"assigned_to": self.users["assignee"],
-		})
+		assigned = api.update_inquiry(
+			first["name"],
+			str(first["modified"]),
+			{
+				"assigned_to": self.users["assignee"],
+			},
+		)
 		frappe.set_user(self.users["assignee"])
-		result = api.update_inquiry(first["name"], str(assigned["modified"]), {
-			"assigned_to": self.users["outsider"],
-		})
+		result = api.update_inquiry(
+			first["name"],
+			str(assigned["modified"]),
+			{
+				"assigned_to": self.users["outsider"],
+			},
+		)
 		self.assertEqual({"name": first["name"], "access_revoked": True}, result)
-		self.assertEqual(self.users["outsider"], frappe.db.get_value("CRM Inquiry", first["name"], "assigned_to"))
+		self.assertEqual(
+			self.users["outsider"], frappe.db.get_value("CRM Inquiry", first["name"], "assigned_to")
+		)
 		with self.assertRaises(frappe.PermissionError):
 			api.get_inquiry(first["name"])
 		frappe.set_user(self.users["outsider"])
@@ -589,7 +769,9 @@ class TestInquiries(IntegrationTestCase):
 		with self.assertRaises(frappe.TimestampMismatchError):
 			api.update_inquiry(first["name"], str(first["modified"]), {"title": "Stale"})
 		with self.assertRaises(frappe.TimestampMismatchError):
-			api.add_person(first["name"], str(first["modified"]), {"display_name": "Stale", "role": "Requester"})
+			api.add_person(
+				first["name"], str(first["modified"]), {"display_name": "Stale", "role": "Requester"}
+			)
 		stale.title = "Stale generic"
 		with self.assertRaises(frappe.TimestampMismatchError):
 			stale.save()
@@ -633,8 +815,12 @@ class TestInquiries(IntegrationTestCase):
 		first = self.prospect()
 		api.convert_person(first["name"], first["people"][1]["person_key"])
 		other_lead = self.make_lead()
-		for field, value in (("display_name", "Changed"), ("role", "Referrer"), ("phone", "999"),
-			("converted_at", None)):
+		for field, value in (
+			("display_name", "Changed"),
+			("role", "Referrer"),
+			("phone", "999"),
+			("converted_at", None),
+		):
 			doc = frappe.get_doc("CRM Inquiry", first["name"])
 			doc.people[1].set(field, value)
 			with self.subTest(field=field), self.assertRaises(frappe.ValidationError):
@@ -676,9 +862,13 @@ class TestInquiries(IntegrationTestCase):
 
 		first = self.prospect()
 		converted = api.convert_person(first["name"], first["people"][1]["person_key"])
-		api.update_inquiry(first["name"], str(converted["inquiry"]["modified"]), {
-			"assigned_to": self.users["assignee"],
-		})
+		api.update_inquiry(
+			first["name"],
+			str(converted["inquiry"]["modified"]),
+			{
+				"assigned_to": self.users["assignee"],
+			},
+		)
 		frappe.set_user(self.users["assignee"])
 		message_start = len(frappe.local.message_log)
 		doc = frappe.get_doc("CRM Inquiry", first["name"])
@@ -709,14 +899,23 @@ class TestInquiries(IntegrationTestCase):
 		with patch.object(api, "_document", side_effect=internal_failure):
 			with self.assertRaises(frappe.ValidationError) as captured:
 				api.get_inquiry("fictional-inquiry")
-		self.assertIn("Earlier unrelated notification", frappe.as_json(frappe.local.message_log[:message_start]))
-		self.assertNotIn("Private internal failure detail", frappe.as_json(frappe.local.message_log[message_start:]))
-		self.assertNotIn("Private internal failure detail", "".join(traceback.format_exception(captured.exception)))
+		self.assertIn(
+			"Earlier unrelated notification", frappe.as_json(frappe.local.message_log[:message_start])
+		)
+		self.assertNotIn(
+			"Private internal failure detail", frappe.as_json(frappe.local.message_log[message_start:])
+		)
+		self.assertNotIn(
+			"Private internal failure detail", "".join(traceback.format_exception(captured.exception))
+		)
 
 	def test_conversion_failure_rolls_back_lead_but_preserves_earlier_work(self):
 		first = self.prospect()
 		before = frappe.db.count("CRM Lead")
-		with patch("crm.fcrm.doctype.crm_inquiry.crm_inquiry.CRMInquiry.save", side_effect=frappe.ValidationError("Test failure")):
+		with patch(
+			"crm.fcrm.doctype.crm_inquiry.crm_inquiry.CRMInquiry.save",
+			side_effect=frappe.ValidationError("Test failure"),
+		):
 			with self.assertRaises(frappe.ValidationError):
 				api.convert_person(first["name"], first["people"][1]["person_key"])
 		self.assertEqual(before, frappe.db.count("CRM Lead"))
@@ -767,8 +966,10 @@ class TestInquiries(IntegrationTestCase):
 			return [] if name == "crm_inquiry_capture_guard" else get_hooks(name, *args, **kwargs)
 
 		installed = list(dict.fromkeys([*frappe.get_installed_apps(), "doco_marketing"]))
-		with patch("frappe.get_installed_apps", return_value=installed), \
-			patch("frappe.get_hooks", side_effect=hooks):
+		with (
+			patch("frappe.get_installed_apps", return_value=installed),
+			patch("frappe.get_hooks", side_effect=hooks),
+		):
 			with self.assertRaises(frappe.ValidationError) as error:
 				api.convert_person(first["name"], first["people"][1]["person_key"])
 			self.assertIn("Upgrade", str(error.exception))
@@ -781,9 +982,13 @@ class TestInquiries(IntegrationTestCase):
 	def test_closed_inquiry_reads_reopens_and_replays_conversion(self):
 		first = self.prospect()
 		converted = api.convert_person(first["name"], first["people"][1]["person_key"])
-		closed = api.update_inquiry(first["name"], str(converted["inquiry"]["modified"]), {"status": "Closed"})
+		closed = api.update_inquiry(
+			first["name"], str(converted["inquiry"]["modified"]), {"status": "Closed"}
+		)
 		self.assertEqual("Closed", api.get_inquiry(first["name"])["status"])
-		self.assertEqual(converted["lead"], api.convert_person(first["name"], first["people"][1]["person_key"])["lead"])
+		self.assertEqual(
+			converted["lead"], api.convert_person(first["name"], first["people"][1]["person_key"])["lead"]
+		)
 		with self.assertRaises(frappe.ValidationError):
 			api.convert_person(first["name"], first["people"][2]["person_key"])
 		reopened = api.update_inquiry(first["name"], str(closed["modified"]), {"status": "In Progress"})

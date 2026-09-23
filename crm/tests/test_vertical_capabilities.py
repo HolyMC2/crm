@@ -5,6 +5,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import frappe
+
 from crm.api import capabilities
 
 
@@ -37,16 +38,22 @@ class VerticalCapabilitiesTests(TestCase):
 			capabilities.get_vertical_config({"doctype": "CRM Deal", "name": "denied"})
 
 	def test_arbitrary_entity_inputs_rejected(self):
-		for entity in ({"doctype": "Patient", "name": "x"}, [], "x" * 513,
-				{"doctype": "CRM Deal", "name": "x", "provider": "evil"}):
+		for entity in (
+			{"doctype": "Patient", "name": "x"},
+			[],
+			"x" * 513,
+			{"doctype": "CRM Deal", "name": "x", "provider": "evil"},
+		):
 			with self.subTest(entity=entity), self.assertRaises(frappe.ValidationError):
 				capabilities.get_vertical_config(entity)
 		self.doc.check_permission.assert_not_called()
 
 	def test_old_doco_and_bad_layout_do_not_break_core(self):
 		self.apps += ["doco"]
-		with patch.dict("sys.modules", {"doco.crm.api": None}), \
-				patch("doco.docoutils.boot.get_active_vertical_config", side_effect=RuntimeError("sensitive")):
+		with (
+			patch.dict("sys.modules", {"doco.crm.api": None}),
+			patch("doco.docoutils.boot.get_active_vertical_config", side_effect=RuntimeError("sensitive")),
+		):
 			result = capabilities.get_vertical_config()
 		self.assertEqual(result["providers"], [])
 		self.assertNotIn("sensitive", str(result))
@@ -54,14 +61,20 @@ class VerticalCapabilitiesTests(TestCase):
 	def test_legacy_sections_require_their_actual_apps_and_ignore_unsafe_props(self):
 		self.apps += ["doco", "taller"]
 		sections = [
-			{"enabled": 1, "vue_component": "RepairOrdersSection", "render_in": "data_tab",
-			 "config": {"docname": "other-record", "onClick": "evil", "initiallyOpen": True}},
+			{
+				"enabled": 1,
+				"vue_component": "RepairOrdersSection",
+				"render_in": "data_tab",
+				"config": {"docname": "other-record", "onClick": "evil", "initiallyOpen": True},
+			},
 			{"enabled": 1, "vue_component": "DealDocumentsSection", "render_in": "data_tab"},
 			{"enabled": 1, "vue_component": "ArbitraryComponent", "render_in": "data_tab"},
 		]
-		with patch("doco.crm.api.discover", return_value={"providers": []}), \
-				patch("doco.docoutils.boot.get_active_vertical_config", return_value={"sections": sections}), \
-				patch.object(frappe, "has_permission", return_value=True):
+		with (
+			patch("doco.crm.api.discover", return_value={"providers": []}),
+			patch("doco.docoutils.boot.get_active_vertical_config", return_value={"sections": sections}),
+			patch.object(frappe, "has_permission", return_value=True),
+		):
 			result = capabilities.get_vertical_config()
 		self.assertEqual([s["vue_component"] for s in result["sections"]], ["RepairOrdersSection"])
 		self.assertEqual(result["sections"][0]["config"], {"initiallyOpen": True})

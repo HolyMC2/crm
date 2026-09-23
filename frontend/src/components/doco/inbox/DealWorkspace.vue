@@ -15,15 +15,26 @@
         class="flex flex-none flex-wrap items-center gap-x-3 gap-y-1 border-b border-outline-gray-1 bg-surface-blue-1 px-4 py-1.5 text-[11.5px] font-medium text-ink-blue-9"
         role="status"
       >
-        <span v-for="p in activePresence" :key="p.user" class="inline-flex items-center gap-1">
+        <span
+          v-for="p in activePresence"
+          :key="p.user"
+          class="inline-flex items-center gap-1"
+        >
           {{ p.state === 'typing' ? '✍️' : '👁' }}
           <b>{{ p.full_name || p.user }}</b>
-          {{ p.state === 'typing' ? __('está escribiendo…') : __('está viendo esta conversación') }}
+          {{
+            p.state === 'typing'
+              ? __('está escribiendo…')
+              : __('está viendo esta conversación')
+          }}
         </span>
       </div>
       <LostStagePrompt />
 
-      <div role="tablist" class="flex h-11 flex-none items-center gap-0.5 overflow-x-auto border-b border-outline-gray-1 px-3 text-[13px]">
+      <div
+        role="tablist"
+        class="flex h-11 flex-none items-center gap-0.5 overflow-x-auto border-b border-outline-gray-1 px-3 text-[13px]"
+      >
         <button
           v-for="t in visibleTabs"
           :key="t.key"
@@ -41,7 +52,12 @@
         </button>
       </div>
 
-      <DealOverview v-if="activeTab === 'overview' && activeDealDoctype === 'CRM Deal'" :key="activeDeal" :name="activeDeal" @navigate="activeTab = $event" />
+      <DealOverview
+        v-if="activeTab === 'overview' && activeDealDoctype === 'CRM Deal'"
+        :key="activeDeal"
+        :name="activeDeal"
+        @navigate="activeTab = $event"
+      />
       <template v-else-if="activeTab === 'conversation'">
         <!-- 🧠 resumen AI del hilo (P2 S3 / spec 5.2) — hides itself when AI is off -->
         <ThreadSummary />
@@ -58,13 +74,21 @@
         />
 
         <!-- the record's native conversation threads, one line; hidden when none -->
-        <DealConversations :key="activeDealDoctype + activeDeal" compact :doctype="activeDealDoctype" :name="activeDeal" />
+        <DealConversations
+          :key="activeDealDoctype + activeDeal"
+          compact
+          :doctype="activeDealDoctype"
+          :name="activeDeal"
+        />
 
         <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox): private notes,
              templates, quick replies, catálogo, attachments and voice notes. The doco
              WhatsAppArea adds a sticky contact header (avatar+name+phone); hide it here
              since DealHeader already identifies the contact (avoids the duplicate). -->
-        <div ref="convoRef" class="doco-convo relative flex min-h-0 flex-1 flex-col">
+        <div
+          ref="convoRef"
+          class="doco-convo relative flex min-h-0 flex-1 flex-col"
+        >
           <!-- 🔎 búsqueda en el hilo (spec 2.7) — over the LOADED messages -->
           <ThreadSearch ref="threadSearch" :container="convoRef" />
           <button
@@ -75,7 +99,13 @@
           >
             🔎
           </button>
-          <Activities :key="'wa-' + activeDealDoctype + activeDeal" v-model:showWhatsappTemplates="convoTemplateOpen" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="convoTabs" />
+          <Activities
+            :key="'wa-' + activeDealDoctype + activeDeal"
+            v-model:showWhatsappTemplates="convoTemplateOpen"
+            :doctype="activeDealDoctype"
+            :docname="activeDeal"
+            :tabs="convoTabs"
+          />
           <!-- jump-to-latest: shows when scrolled up from the tail; floats just above
                the composer (bottom offset = live composer height) -->
           <button
@@ -92,7 +122,10 @@
       </template>
 
       <!-- Actividad = full upstream Activities (timeline/emails/comments/calls/tasks/notes) -->
-      <div v-else-if="activeTab === 'activity'" class="flex min-h-0 flex-1 flex-col">
+      <div
+        v-else-if="activeTab === 'activity'"
+        class="flex min-h-0 flex-1 flex-col"
+      >
         <Tabs
           v-model="activityTabIndex"
           as="div"
@@ -100,25 +133,51 @@
           class="flex flex-1 flex-col overflow-hidden [&_[role='tablist']]:min-h-[42px] [&_[role='tablist']]:gap-6 [&_[role='tablist']]:px-4 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
         >
           <template #tab-panel>
-            <Activities :key="activeDeal" v-model:tabIndex="activityTabIndex" :doctype="activeDealDoctype" :docname="activeDeal" :tabs="dealTabs" />
+            <Activities
+              :key="activeDeal"
+              v-model:tabIndex="activityTabIndex"
+              :doctype="activeDealDoctype"
+              :docname="activeDeal"
+              :tabs="dealTabs"
+            />
           </template>
         </Tabs>
       </div>
 
       <!-- Persistent ERP item lines and chronological sales documents. -->
-      <div v-else-if="activeTab === 'items'" class="flex min-h-0 flex-1 flex-col">
-        <ItemWorkspace :key="activeDealDoctype + activeDeal" :deal="activeDeal" :doctype="activeDealDoctype" :enabled="salesDocsEnabled" :has-taller="hasTaller" @catalog="onIntentCatalogo" />
+      <div
+        v-else-if="activeTab === 'items'"
+        class="flex min-h-0 flex-1 flex-col"
+      >
+        <ItemWorkspace
+          :key="activeDealDoctype + activeDeal"
+          :deal="activeDeal"
+          :doctype="activeDealDoctype"
+          :enabled="salesDocsEnabled"
+          :has-taller="hasTaller"
+          @catalog="onIntentCatalogo"
+        />
       </div>
 
-      <div v-else-if="activeTab === 'repair' && hasTaller" class="scb flex-1 overflow-y-auto p-5">
+      <div
+        v-else-if="activeTab === 'repair' && hasTaller"
+        class="scb flex-1 overflow-y-auto p-5"
+      >
         <RepairOrdersSection :docname="activeDeal" />
       </div>
     </template>
 
-    <div v-else class="flex flex-1 flex-col items-center justify-center gap-2 text-ink-gray-4">
+    <div
+      v-else
+      class="flex flex-1 flex-col items-center justify-center gap-2 text-ink-gray-4"
+    >
       <LucideMessagesSquare class="h-9 w-9" />
-      <div class="text-sm-medium text-ink-gray-6">{{ __('Selecciona una conversación') }}</div>
-      <div class="text-xs">{{ __('Elige un equipo de la bandeja para ver el hilo') }}</div>
+      <div class="text-sm-medium text-ink-gray-6">
+        {{ __('Selecciona una conversación') }}
+      </div>
+      <div class="text-xs">
+        {{ __('Elige un equipo de la bandeja para ver el hilo') }}
+      </div>
     </div>
   </div>
 </template>
@@ -145,7 +204,18 @@ import IntentChips from '@/components/doco/inbox/IntentChips.vue'
 import ThreadSearch from '@/components/doco/inbox/ThreadSearch.vue'
 import DealConversations from '@/components/doco/inbox/DealConversations.vue'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import { activeDeal, activeDealDoctype, activeTab, convoTemplateOpen, hasTaller, activePresence, openCatalog, setComposerDraft, pulseSalesDocs, salesDocsEnabled } from '@/composables/inbox'
+import {
+  activeDeal,
+  activeDealDoctype,
+  activeTab,
+  convoTemplateOpen,
+  hasTaller,
+  activePresence,
+  openCatalog,
+  setComposerDraft,
+  pulseSalesDocs,
+  salesDocsEnabled,
+} from '@/composables/inbox'
 
 const activityTabIndex = ref(0)
 const threadSearch = ref(null)
@@ -191,7 +261,8 @@ function onScroll() {
   if (!scrollEl) return
   const composer = scrollEl.nextElementSibling // Activities' composer wrapper <div>
   jumpBottom.value = (composer?.offsetHeight || 76) + 12
-  const distFromBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
+  const distFromBottom =
+    scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
   showJump.value = distFromBottom > 240
 }
 function jumpToBottom() {
@@ -227,7 +298,8 @@ function onVvResize() {
   const shrunk = vv.height < _vvH - 80
   _vvH = vv.height
   if (!shrunk || !scrollEl) return
-  const dist = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
+  const dist =
+    scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
   if (dist < 300)
     setTimeout(() => scrollEl?.scrollTo({ top: scrollEl.scrollHeight }), 60)
 }
@@ -246,7 +318,10 @@ const tabs = [
 // Reparación is a deal-only concept (repair orders) AND requires taller — hidden
 // for leads and on tenants without reparaciones (e.g. mumu).
 const visibleTabs = computed(() => {
-  let t = activeDealDoctype.value === 'CRM Deal' ? tabs : tabs.filter((x) => !['repair', 'overview'].includes(x.key))
+  let t =
+    activeDealDoctype.value === 'CRM Deal'
+      ? tabs
+      : tabs.filter((x) => !['repair', 'overview'].includes(x.key))
   if (!hasTaller.value) t = t.filter((x) => x.key !== 'repair')
   return t
 })
@@ -254,7 +329,8 @@ const visibleTabs = computed(() => {
 watch(
   [hasTaller, activeTab],
   () => {
-    if (!hasTaller.value && activeTab.value === 'repair') activeTab.value = 'conversation'
+    if (!hasTaller.value && activeTab.value === 'repair')
+      activeTab.value = 'conversation'
   },
   { immediate: true },
 )

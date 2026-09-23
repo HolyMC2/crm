@@ -113,7 +113,12 @@ a,
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, var(--surface-gray-3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--surface-gray-3),
+    transparent
+  );
   animation: skel-shimmer 1.2s infinite;
 }
 @keyframes skel-shimmer {

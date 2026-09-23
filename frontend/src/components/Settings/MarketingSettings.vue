@@ -10,7 +10,11 @@
   rather than an ignore_permissions save.
 -->
 <template>
-  <SettingsPage doctype="Marketing Settings" :title="__('Marketing y canal')" class="p-8" />
+  <SettingsPage
+    doctype="Marketing Settings"
+    :title="__('Marketing y canal')"
+    class="p-8"
+  />
 </template>
 <script setup>
 import SettingsPage from '@/components/Settings/SettingsPage.vue'

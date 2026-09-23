@@ -11,16 +11,22 @@ export function useContact360Tabs() {
     cache: 'doco-contact360-sections',
     auto: false,
   })
-  watch(addonAvailable, (available) => {
-    if (available) sections.fetch()
-  }, { immediate: true })
+  watch(
+    addonAvailable,
+    (available) => {
+      if (available) sections.fetch()
+    },
+    { immediate: true },
+  )
   const contactTabs = computed(() =>
-    (addonAvailable.value ? sections.data?.sections || [] : []).map((section) => ({
-      name: section.section_key,
-      label: section.label || section.section_key,
-      sectionKey: section.section_key,
-      component: section.vue_component,
-    })),
+    (addonAvailable.value ? sections.data?.sections || [] : []).map(
+      (section) => ({
+        name: section.section_key,
+        label: section.label || section.section_key,
+        sectionKey: section.section_key,
+        component: section.vue_component,
+      }),
+    ),
   )
   return { contactTabs, sections }
 }

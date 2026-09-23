@@ -55,7 +55,9 @@ export async function acceptInstall() {
   try {
     p.prompt()
     await p.userChoice // outcome irrelevant — the browser remembers a refusal
-  } catch (e) {}
+  } catch {
+    // The browser may dismiss or invalidate its one-time prompt.
+  }
 }
 
 export function dismissInstallNudge() {
@@ -63,5 +65,7 @@ export function dismissInstallNudge() {
   _deferredPrompt = null
   try {
     localStorage.setItem(DISMISSED_KEY, '1')
-  } catch (e) {}
+  } catch {
+    // Storage may be unavailable; the nudge remains dismissed for this session.
+  }
 }

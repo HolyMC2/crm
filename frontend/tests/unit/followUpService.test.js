@@ -10,7 +10,11 @@ vi.mock('frappe-ui', () => ({
   },
 }))
 
-import { NEXT_ACTIVITY_FIELDS, readNextActivity, saveFollowUp } from '@/utils/followUpService'
+import {
+  NEXT_ACTIVITY_FIELDS,
+  readNextActivity,
+  saveFollowUp,
+} from '@/utils/followUpService'
 
 const DRAFT = {
   deal: 'CRM-DEAL-2026-00042',
@@ -29,13 +33,17 @@ const ACTIVITY = {
 
 beforeEach(() => {
   api.calls = []
-  api.behavior = async (method) => (method === 'frappe.client.get_value' ? { ...ACTIVITY } : { name: '77' })
+  api.behavior = async (method) =>
+    method === 'frappe.client.get_value' ? { ...ACTIVITY } : { name: '77' }
 })
 
 describe('saving a follow-up from the list', () => {
   it('inserts a CRM Task when the deal has none, then reads back the derived fields', async () => {
     const activity = await saveFollowUp({ ...DRAFT, task: '' })
-    expect(api.calls.map((c) => c[0])).toEqual(['frappe.client.insert', 'frappe.client.get_value'])
+    expect(api.calls.map((c) => c[0])).toEqual([
+      'frappe.client.insert',
+      'frappe.client.get_value',
+    ])
     expect(api.calls[0][1]).toEqual({
       doc: {
         doctype: 'CRM Task',
@@ -58,17 +66,26 @@ describe('saving a follow-up from the list', () => {
 
   it('reschedules the task the deal already points at instead of adding a second', async () => {
     await saveFollowUp({ ...DRAFT, task: '77', date: '2026-09-20', time: '' })
-    expect(api.calls.map((c) => c[0])).toEqual(['frappe.client.set_value', 'frappe.client.get_value'])
+    expect(api.calls.map((c) => c[0])).toEqual([
+      'frappe.client.set_value',
+      'frappe.client.get_value',
+    ])
     expect(api.calls[0][1]).toEqual({
       doctype: 'CRM Task',
       name: '77',
-      fieldname: { title: 'Confirmar entrega', activity_type: 'Call', due_date: '2026-09-20 00:00:00' },
+      fieldname: {
+        title: 'Confirmar entrega',
+        activity_type: 'Call',
+        due_date: '2026-09-20 00:00:00',
+      },
     })
   })
 
   it('never writes a next_activity field on the deal', async () => {
     await saveFollowUp({ ...DRAFT, task: '77' })
-    const written = JSON.stringify(api.calls.filter((c) => c[0] !== 'frappe.client.get_value'))
+    const written = JSON.stringify(
+      api.calls.filter((c) => c[0] !== 'frappe.client.get_value'),
+    )
     expect(written).not.toContain('next_activity')
   })
 
@@ -76,13 +93,18 @@ describe('saving a follow-up from the list', () => {
     api.behavior = async () => {
       throw { messages: ['No tienes permiso'] }
     }
-    await expect(saveFollowUp({ ...DRAFT, task: '77' })).rejects.toMatchObject({ messages: ['No tienes permiso'] })
+    await expect(saveFollowUp({ ...DRAFT, task: '77' })).rejects.toMatchObject({
+      messages: ['No tienes permiso'],
+    })
   })
 
   it('reads an empty next activity as empty strings, not undefined', async () => {
     api.behavior = async () => ({})
     expect(await readNextActivity('CRM-DEAL-2026-00042')).toEqual({
-      next_activity_task: '', next_activity_at: '', next_activity_title: '', next_activity_type: '',
+      next_activity_task: '',
+      next_activity_at: '',
+      next_activity_title: '',
+      next_activity_type: '',
     })
   })
 })

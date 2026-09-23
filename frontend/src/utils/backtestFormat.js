@@ -10,7 +10,21 @@ export const GRADES = ['A', 'B', 'C', 'D']
 
 // es-MX abbreviated month names, indexed 1..12 (index 0 unused). Kept as a static
 // table rather than Date/Intl locale so the label is deterministic in any test env.
-const MONTHS_ES = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+const MONTHS_ES = [
+  '',
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+]
 
 // 0..1 win-rate ratio → "50%". null/undefined/NaN (no data) → "—". `digits`
 // controls decimal places for sub-percent precision when a caller wants it.

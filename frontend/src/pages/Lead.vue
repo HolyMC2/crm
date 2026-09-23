@@ -404,7 +404,12 @@ const statuses = computed(() => {
   let customStatuses = document.statuses?.length
     ? document.statuses
     : document._statuses || []
-  return statusOptions('lead', customStatuses, triggerStatusChange, addonAvailable.value ? triggerStatusChangeSilent : null)
+  return statusOptions(
+    'lead',
+    customStatuses,
+    triggerStatusChange,
+    addonAvailable.value ? triggerStatusChangeSilent : null,
+  )
 })
 
 usePageMeta(() => {

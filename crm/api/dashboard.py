@@ -212,9 +212,7 @@ def get_total_repair_orders(
 	current_count = result[0].current_count or 0
 	prev_count = result[0].prev_count or 0
 
-	delta_in_percentage = (
-		(current_count - prev_count) / prev_count * 100 if prev_count else 0
-	)
+	delta_in_percentage = (current_count - prev_count) / prev_count * 100 if prev_count else 0
 
 	return {
 		"title": _("Total repair orders"),

@@ -20,19 +20,32 @@
   <div ref="rootEl" class="heatmap-root" data-testid="social-heatmap">
     <!-- header: FB-only badge -->
     <div class="mb-2 flex items-center justify-between gap-2">
-      <span class="text-[11px] text-ink-gray-5">{{ __('Interacción por día y hora') }}</span>
+      <span class="text-[11px] text-ink-gray-5">{{
+        __('Interacción por día y hora')
+      }}</span>
       <span
         v-if="fbOnly"
         data-testid="fb-only-badge"
         class="inline-flex flex-none items-center gap-1 rounded-full bg-surface-blue-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-blue-9"
         :title="__('Instagram se suma cuando Meta apruebe la app')"
-      >🟦 {{ __('Solo datos de Facebook') }}</span>
+        >🟦 {{ __('Solo datos de Facebook') }}</span
+      >
     </div>
 
     <!-- loading / empty / grid -->
-    <div v-if="loading && !hasData" class="py-8 text-center text-[12px] text-ink-gray-4">{{ __('Cargando…') }}</div>
-    <div v-else-if="error" class="py-8 text-center text-[12px] text-ink-red-7">{{ __('No se pudo cargar el mapa de calor') }}</div>
-    <div v-else-if="!hasData" class="rounded-[12px] border border-dashed border-outline-gray-2 py-10 text-center text-[12px] text-ink-gray-4">
+    <div
+      v-if="loading && !hasData"
+      class="py-8 text-center text-[12px] text-ink-gray-4"
+    >
+      {{ __('Cargando…') }}
+    </div>
+    <div v-else-if="error" class="py-8 text-center text-[12px] text-ink-red-7">
+      {{ __('No se pudo cargar el mapa de calor') }}
+    </div>
+    <div
+      v-else-if="!hasData"
+      class="rounded-[12px] border border-dashed border-outline-gray-2 py-10 text-center text-[12px] text-ink-gray-4"
+    >
       {{ __('Aún no hay suficientes datos de publicaciones') }}
     </div>
 
@@ -47,7 +60,9 @@
           <!-- hour axis -->
           <div class="hm-row hm-axis">
             <div />
-            <div v-for="h in 24" :key="'t' + h" class="hm-tick">{{ (h - 1) % 3 === 0 ? h - 1 : '' }}</div>
+            <div v-for="h in 24" :key="'t' + h" class="hm-tick">
+              {{ (h - 1) % 3 === 0 ? h - 1 : '' }}
+            </div>
             <div class="hm-roll-head">{{ __('Semana') }}</div>
           </div>
 
@@ -58,8 +73,15 @@
               v-for="c in row.cells"
               :key="c.h"
               class="hm-cell"
-              :class="{ 'hm-cell--empty': c.state === 'empty', 'hm-cell--weak': c.state === 'untrusted' }"
-              :style="c.state === 'trusted' ? { background: `var(--seq-${c.step})` } : null"
+              :class="{
+                'hm-cell--empty': c.state === 'empty',
+                'hm-cell--weak': c.state === 'untrusted',
+              }"
+              :style="
+                c.state === 'trusted'
+                  ? { background: `var(--seq-${c.step})` }
+                  : null
+              "
               :title="c.title"
               :data-testid="`heatmap-cell-${c.wd}-${c.h}`"
             />
@@ -77,11 +99,18 @@
       </div>
 
       <!-- legend: sequential scale + low-confidence key (identity never color-alone) -->
-      <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10.5px] text-ink-gray-5">
+      <div
+        class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10.5px] text-ink-gray-5"
+      >
         <div class="flex items-center gap-1.5">
           <span>{{ __('Menos') }}</span>
           <span class="flex overflow-hidden rounded-[3px]">
-            <span v-for="i in 6" :key="'l' + i" class="hm-legend-swatch" :style="{ background: `var(--seq-${i - 1})` }" />
+            <span
+              v-for="i in 6"
+              :key="'l' + i"
+              class="hm-legend-swatch"
+              :style="{ background: `var(--seq-${i - 1})` }"
+            />
           </span>
           <span>{{ __('Más interacción') }}</span>
         </div>
@@ -117,16 +146,27 @@ const error = computed(() => heatmap.error)
 const fbOnly = computed(() => (heatmap.data?.source || 'fb') === 'fb')
 const hasData = computed(() => (heatmap.data?.cells || []).length > 0)
 const minN = computed(() => heatmap.data?.min_n ?? 3)
-const trustedCells = computed(() => (heatmap.data?.cells || []).filter((c) => c.n >= minN.value))
+const trustedCells = computed(() =>
+  (heatmap.data?.cells || []).filter((c) => c.n >= minN.value),
+)
 const hasTrusted = computed(() => trustedCells.value.length > 0)
 
 // es-MX labels — row headers reuse the Monday-first WEEKDAYS export; tooltips get
 // their own lowercase abbreviations + full names (weekday 0 = lunes).
 const WD_ABBR = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom']
-const WD_FULL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+const WD_FULL = [
+  'lunes',
+  'martes',
+  'miércoles',
+  'jueves',
+  'viernes',
+  'sábado',
+  'domingo',
+]
 const hh = (h) => `${String(h).padStart(2, '0')}:00`
 const fmt = (v) => Number(v || 0).toLocaleString('es-MX')
-const nLabel = (n) => `${n} ${n === 1 ? __('publicación') : __('publicaciones')}`
+const nLabel = (n) =>
+  `${n} ${n === 1 ? __('publicación') : __('publicaciones')}`
 
 function cellTitle(wd, h, c, weak) {
   return `${WD_ABBR[wd]} ${hh(h)} — ${__('interacción')} ${fmt(c.engagement)}, ${__('alcance')} ${fmt(c.reach)} (${nLabel(c.n)})${weak ? ' · ' + __('datos insuficientes') : ''}`
@@ -137,7 +177,9 @@ const stepIdx = (t) => Math.max(0, Math.min(5, Math.round(t * 5)))
 const rows = computed(() => {
   const data = heatmap.data
   if (!data) return []
-  const byCell = new Map((data.cells || []).map((c) => [c.weekday * 24 + c.hour, c]))
+  const byCell = new Map(
+    (data.cells || []).map((c) => [c.weekday * 24 + c.hour, c]),
+  )
   const maxEng = Math.max(0, ...trustedCells.value.map((c) => c.engagement))
   const out = []
   for (let wd = 0; wd < 7; wd++) {
@@ -145,12 +187,28 @@ const rows = computed(() => {
     for (let h = 0; h < 24; h++) {
       const c = byCell.get(wd * 24 + h)
       if (!c || !c.n) {
-        cells.push({ wd, h, state: 'empty', title: `${WD_ABBR[wd]} ${hh(h)} — ${__('sin publicaciones')}` })
+        cells.push({
+          wd,
+          h,
+          state: 'empty',
+          title: `${WD_ABBR[wd]} ${hh(h)} — ${__('sin publicaciones')}`,
+        })
       } else if (c.n < minN.value) {
-        cells.push({ wd, h, state: 'untrusted', title: cellTitle(wd, h, c, true) })
+        cells.push({
+          wd,
+          h,
+          state: 'untrusted',
+          title: cellTitle(wd, h, c, true),
+        })
       } else {
         const t = maxEng > 0 ? c.engagement / maxEng : 0
-        cells.push({ wd, h, state: 'trusted', step: stepIdx(t), title: cellTitle(wd, h, c, false) })
+        cells.push({
+          wd,
+          h,
+          state: 'trusted',
+          step: stepIdx(t),
+          title: cellTitle(wd, h, c, false),
+        })
       }
     }
     out.push({ wd, label: WEEKDAYS[wd], cells })
@@ -163,12 +221,22 @@ const rollups = computed(() => {
   const data = heatmap.data
   if (!data) return []
   const byWd = new Map((data.weekdays || []).map((w) => [w.weekday, w]))
-  const maxEng = Math.max(0, ...(data.weekdays || []).filter((w) => w.n >= minN.value).map((w) => w.engagement))
+  const maxEng = Math.max(
+    0,
+    ...(data.weekdays || [])
+      .filter((w) => w.n >= minN.value)
+      .map((w) => w.engagement),
+  )
   const out = []
   for (let wd = 0; wd < 7; wd++) {
     const w = byWd.get(wd)
     if (!w || !w.n) {
-      out.push({ wd, pct: 0, trusted: false, title: `${WD_FULL[wd]} — ${__('sin publicaciones')}` })
+      out.push({
+        wd,
+        pct: 0,
+        trusted: false,
+        title: `${WD_FULL[wd]} — ${__('sin publicaciones')}`,
+      })
       continue
     }
     const trusted = w.n >= minN.value
@@ -182,7 +250,8 @@ const rollups = computed(() => {
   }
   return out
 })
-const rollAt = (wd) => rollups.value[wd] || { pct: 0, trusted: false, title: '' }
+const rollAt = (wd) =>
+  rollups.value[wd] || { pct: 0, trusted: false, title: '' }
 </script>
 
 <!-- Non-scoped but fully namespaced under .heatmap-root (matches the app's
@@ -266,8 +335,11 @@ const rollAt = (wd) => rollups.value[wd] || { pct: 0, trusted: false, title: '' 
 }
 /* low-confidence: greyed + 45° hatch — no fake confidence */
 .heatmap-root .hm-cell--weak {
-  background:
-    repeating-linear-gradient(45deg, transparent 0 3px, var(--hm-hatch) 3px 4px),
+  background: repeating-linear-gradient(
+      45deg,
+      transparent 0 3px,
+      var(--hm-hatch) 3px 4px
+    ),
     var(--hm-weak-base);
 }
 .heatmap-root .hm-roll {
@@ -286,8 +358,11 @@ const rollAt = (wd) => rollups.value[wd] || { pct: 0, trusted: false, title: '' 
   transition: width 0.2s ease;
 }
 .heatmap-root .hm-roll-fill--weak {
-  background:
-    repeating-linear-gradient(45deg, transparent 0 3px, var(--hm-hatch) 3px 4px),
+  background: repeating-linear-gradient(
+      45deg,
+      transparent 0 3px,
+      var(--hm-hatch) 3px 4px
+    ),
     var(--hm-weak-base);
 }
 .heatmap-root .hm-legend-swatch {

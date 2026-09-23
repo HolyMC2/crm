@@ -2,7 +2,12 @@
 // frappe-ui mock, so the vitest-4 spy-results trap (see outbox.test.js) is
 // irrelevant here. Covers the confidence gate + the intent→chip resolution.
 import { describe, it, expect } from 'vitest'
-import { chipForIntent, passesConfidence, MIN_CONFIDENCE, INTENT_CHIPS } from '@/utils/intentActions'
+import {
+  chipForIntent,
+  passesConfidence,
+  MIN_CONFIDENCE,
+  INTENT_CHIPS,
+} from '@/utils/intentActions'
 
 describe('passesConfidence', () => {
   it('accepts a number at or above the threshold', () => {
@@ -27,10 +32,22 @@ describe('passesConfidence', () => {
 
 describe('chipForIntent', () => {
   it('maps each known intent to its icon + event', () => {
-    expect(chipForIntent('pago', 0.9)).toMatchObject({ icon: '💳', event: 'cobrar' })
-    expect(chipForIntent('factura', 0.9)).toMatchObject({ icon: '🧾', event: 'factura' })
-    expect(chipForIntent('cotizar_reparacion', 0.9)).toMatchObject({ icon: '🔧', event: 'taller' })
-    expect(chipForIntent('precio', 0.9)).toMatchObject({ icon: '🏷', event: 'catalogo' })
+    expect(chipForIntent('pago', 0.9)).toMatchObject({
+      icon: '💳',
+      event: 'cobrar',
+    })
+    expect(chipForIntent('factura', 0.9)).toMatchObject({
+      icon: '🧾',
+      event: 'factura',
+    })
+    expect(chipForIntent('cotizar_reparacion', 0.9)).toMatchObject({
+      icon: '🔧',
+      event: 'taller',
+    })
+    expect(chipForIntent('precio', 0.9)).toMatchObject({
+      icon: '🏷',
+      event: 'catalogo',
+    })
   })
 
   it('renders nothing below the confidence threshold', () => {
@@ -53,7 +70,9 @@ describe('chipForIntent', () => {
 
   it('prefers a non-empty backend label over the default', () => {
     expect(chipForIntent('precio', 0.9, 'Ver precio').label).toBe('Ver precio')
-    expect(chipForIntent('factura', 0.9, 'Quiere factura').label).toBe('Quiere factura')
+    expect(chipForIntent('factura', 0.9, 'Quiere factura').label).toBe(
+      'Quiere factura',
+    )
   })
 
   it('ignores a non-string label and falls back to the default', () => {

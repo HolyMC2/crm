@@ -11,7 +11,9 @@
       @click="open = !open"
     >
       {{ label }}
-      <span v-if="selected.length" class="font-semibold">· {{ selected.length }}</span>
+      <span v-if="selected.length" class="font-semibold"
+        >· {{ selected.length }}</span
+      >
       ⌄
     </button>
 
@@ -38,13 +40,24 @@
               style="accent-color: var(--brand)"
               @change="toggle(o.value)"
             />
-            <span v-if="o.color" class="h-2 w-2 rounded-full" :style="`background:${o.color}`" />
+            <span
+              v-if="o.color"
+              class="h-2 w-2 rounded-full"
+              :style="`background:${o.color}`"
+            />
             {{ o.label }}
           </label>
         </div>
-        <div class="flex justify-between border-t border-outline-gray-1 px-3 py-2">
-          <button class="text-[12px] text-ink-gray-5" @click="clear">{{ __('Limpiar') }}</button>
-          <button class="text-[12px] font-semibold text-ink-green-7" @click="open = false">
+        <div
+          class="flex justify-between border-t border-outline-gray-1 px-3 py-2"
+        >
+          <button class="text-[12px] text-ink-gray-5" @click="clear">
+            {{ __('Limpiar') }}
+          </button>
+          <button
+            class="text-[12px] font-semibold text-ink-green-7"
+            @click="open = false"
+          >
             {{ __('Aplicar') }}
           </button>
         </div>

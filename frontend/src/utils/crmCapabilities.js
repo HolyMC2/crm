@@ -93,7 +93,10 @@ export const GATED_ROUTES = Object.freeze({
   'Deals List': { name: 'Deals' },
   'Tasks List': { name: 'Tasks' },
   'Calls List': { name: 'Call Logs' },
-  'Deal 360': (to) => ({ name: 'Deal', params: { dealId: to?.params?.dealId } }),
+  'Deal 360': (to) => ({
+    name: 'Deal',
+    params: { dealId: to?.params?.dealId },
+  }),
   'WhatsApp Queue': HOME,
   Campaigns: HOME,
   Campaign: HOME,

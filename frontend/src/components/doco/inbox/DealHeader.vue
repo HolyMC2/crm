@@ -30,8 +30,13 @@
         @keydown.enter="isMobile && openContext()"
       >
         <div class="flex flex-wrap items-center gap-2">
-          <span class="truncate text-base-bold text-ink-gray-9">{{ name || '—' }}</span>
-          <LucideChevronRight v-if="isMobile" class="h-4 w-4 flex-none text-ink-gray-4" />
+          <span class="truncate text-base-bold text-ink-gray-9">{{
+            name || '—'
+          }}</span>
+          <LucideChevronRight
+            v-if="isMobile"
+            class="h-4 w-4 flex-none text-ink-gray-4"
+          />
           <ScoreExplainPopover
             v-if="grade"
             :doctype="activeDealDoctype"
@@ -40,15 +45,22 @@
             :grade="grade"
             variant="header"
           />
-          <span class="hidden text-[11.5px] text-ink-gray-5 sm:inline">{{ activeDeal }}</span>
+          <span class="hidden text-[11.5px] text-ink-gray-5 sm:inline">{{
+            activeDeal
+          }}</span>
         </div>
         <!-- meta row wraps on narrow screens (was clipping the WA/saldo chips) -->
-        <div class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-ink-gray-6">
+        <div
+          class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-ink-gray-6"
+        >
           <span
             v-if="row.device"
             class="max-w-[52vw] truncate whitespace-nowrap sm:max-w-none"
-          >🔧 {{ row.device }}</span>
-          <span v-if="row.device" class="hidden text-ink-gray-4 sm:inline">·</span>
+            >🔧 {{ row.device }}</span
+          >
+          <span v-if="row.device" class="hidden text-ink-gray-4 sm:inline"
+            >·</span
+          >
           <!-- The number is the affordance: tapping it opens the composer with the
                message already rendered. On a WABA tenant the inbox below still owns
                sending; this is the tier 0/1 rail for everyone else. -->
@@ -57,18 +69,30 @@
             class="press whitespace-nowrap font-medium text-ink-blue-link underline decoration-dotted underline-offset-2"
             :title="__('Enviar mensaje')"
             @click.stop="composerOpen = true"
-          >{{ row.mobile_no }}</button>
+          >
+            {{ row.mobile_no }}
+          </button>
           <template v-if="row.last_message_ts">
             <span class="text-ink-gray-4">·</span>
             <span class="whitespace-nowrap text-ink-gray-5">
-              <span class="hidden sm:inline">{{ __('último mensaje enviado') }} </span>{{ timeAgo(row.last_message_ts) }}
+              <span class="hidden sm:inline"
+                >{{ __('último mensaje enviado') }} </span
+              >{{ timeAgo(row.last_message_ts) }}
             </span>
           </template>
           <span
             v-if="waWindow"
             class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
-            :class="waWindow.open ? 'bg-surface-amber-1 text-ink-amber-7' : 'bg-surface-red-1 text-ink-red-8'"
-            :title="waWindow.open ? __('Ventana de 24h de WhatsApp abierta') : __('Ventana cerrada — solo plantillas')"
+            :class="
+              waWindow.open
+                ? 'bg-surface-amber-1 text-ink-amber-7'
+                : 'bg-surface-red-1 text-ink-red-8'
+            "
+            :title="
+              waWindow.open
+                ? __('Ventana de 24h de WhatsApp abierta')
+                : __('Ventana cerrada — solo plantillas')
+            "
           >
             {{ waWindow.open ? `WA ${waWindow.hoursLeft}h` : __('WA cerrada') }}
           </span>
@@ -81,7 +105,9 @@
           </span>
         </div>
       </div>
-      <div class="flex w-full flex-none items-center justify-end gap-1.5 sm:w-auto sm:gap-2.5">
+      <div
+        class="flex w-full flex-none items-center justify-end gap-1.5 sm:w-auto sm:gap-2.5"
+      >
         <div
           v-if="responsible && !isMobile"
           class="flex items-center gap-1.5"
@@ -93,12 +119,22 @@
           >
             {{ initials(responsible.name) }}
           </span>
-          <span class="text-[12px] font-medium text-ink-gray-7">{{ responsible.name.split(' ')[0] }}</span>
+          <span class="text-[12px] font-medium text-ink-gray-7">{{
+            responsible.name.split(' ')[0]
+          }}</span>
         </div>
-        <div v-if="responsible && slaLabel && !isMobile" class="h-[30px] w-px bg-outline-gray-2" />
+        <div
+          v-if="responsible && slaLabel && !isMobile"
+          class="h-[30px] w-px bg-outline-gray-2"
+        />
         <div v-if="slaLabel && !isMobile" class="text-right">
-          <div class="text-[10px] text-ink-gray-5">{{ __('1ª respuesta SLA') }}</div>
-          <div class="text-[13px] font-bold" :class="slaOverdue ? 'text-ink-red-7' : 'text-ink-green-7'">
+          <div class="text-[10px] text-ink-gray-5">
+            {{ __('1ª respuesta SLA') }}
+          </div>
+          <div
+            class="text-[13px] font-bold"
+            :class="slaOverdue ? 'text-ink-red-7' : 'text-ink-green-7'"
+          >
             {{ slaLabel }}
           </div>
         </div>
@@ -114,14 +150,21 @@
           <button
             class="flex items-center gap-1.5 rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-[11px] py-[7px] text-[12.5px] font-semibold text-ink-gray-8"
           >
-            <span class="h-2 w-2 rounded-full" :style="`background:${stageColor}`" />
+            <span
+              class="h-2 w-2 rounded-full"
+              :style="`background:${stageColor}`"
+            />
             {{ row.status || __('Estado') }} ⌄
           </button>
         </Dropdown>
         <!-- 🏷 etiquetas (spec 2.2) -->
         <button
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
-          :class="(row.tags || []).length ? 'bg-surface-violet-2 text-ink-violet-8' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
+          :class="
+            (row.tags || []).length
+              ? 'bg-surface-violet-2 text-ink-violet-8'
+              : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+          "
           :title="__('Etiquetas')"
           :aria-label="__('Etiquetas')"
           @click="openTags"
@@ -132,8 +175,16 @@
         <Dropdown :options="snoozeOptions">
           <button
             class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
-            :class="isSnoozed ? 'bg-surface-violet-2 text-ink-violet-8' : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
-            :title="isSnoozed ? __('Pospuesta — reaparece sola') : __('Posponer conversación')"
+            :class="
+              isSnoozed
+                ? 'bg-surface-violet-2 text-ink-violet-8'
+                : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+            "
+            :title="
+              isSnoozed
+                ? __('Pospuesta — reaparece sola')
+                : __('Posponer conversación')
+            "
             :aria-label="__('Posponer')"
           >
             <LucideAlarmClock class="h-4 w-4" />
@@ -182,12 +233,24 @@
             class="inline-flex items-center gap-1 rounded-full bg-surface-violet-2 px-2.5 py-1 text-[12px] font-semibold text-ink-violet-8"
           >
             🏷 {{ tg }}
-            <button class="press text-[13px] leading-none" :aria-label="__('Quitar') + ' ' + tg" @click="removeTag(tg)">×</button>
+            <button
+              class="press text-[13px] leading-none"
+              :aria-label="__('Quitar') + ' ' + tg"
+              @click="removeTag(tg)"
+            >
+              ×
+            </button>
           </span>
         </div>
-        <div v-else class="mb-3 text-[12px] text-ink-gray-5">{{ __('Sin etiquetas') }}</div>
+        <div v-else class="mb-3 text-[12px] text-ink-gray-5">
+          {{ __('Sin etiquetas') }}
+        </div>
         <div v-if="tagSuggestions.length" class="mb-3">
-          <div class="mb-1.5 text-[10.5px] font-bold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Sugerencias') }}</div>
+          <div
+            class="mb-1.5 text-[10.5px] font-bold uppercase tracking-[.07em] text-ink-gray-4"
+          >
+            {{ __('Sugerencias') }}
+          </div>
           <div class="flex flex-wrap gap-1.5">
             <button
               v-for="tg in tagSuggestions"
@@ -207,13 +270,21 @@
             :placeholder="__('Nueva etiqueta… (urgente, garantía, mayoreo)')"
             @keydown.enter.prevent="addTag(newTag)"
           />
-          <Button variant="solid" :label="__('Añadir')" :disabled="!newTag.trim()" @click="addTag(newTag)" />
+          <Button
+            variant="solid"
+            :label="__('Añadir')"
+            :disabled="!newTag.trim()"
+            @click="addTag(newTag)"
+          />
         </div>
       </template>
     </Dialog>
 
     <!-- custom snooze datetime -->
-    <Dialog v-model="showSnoozeDialog" :options="{ title: __('Posponer hasta') }">
+    <Dialog
+      v-model="showSnoozeDialog"
+      :options="{ title: __('Posponer hasta') }"
+    >
       <template #body-content>
         <input
           v-model="snoozeCustom"
@@ -243,8 +314,13 @@
       >
         ⏱ {{ __('Próxima acción') }}
       </span>
-      <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{ nextTask.title }}</span>
-      <span v-if="nextTask.due" class="flex-none text-[11.5px] text-ink-amber-6">
+      <span class="truncate text-[13px] font-semibold text-ink-gray-9">{{
+        nextTask.title
+      }}</span>
+      <span
+        v-if="nextTask.due"
+        class="flex-none text-[11.5px] text-ink-amber-6"
+      >
         · {{ dueLabel }}
       </span>
       <div class="ml-auto flex flex-none gap-1.5">
@@ -276,7 +352,15 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button, Dialog, Dropdown, createListResource, createResource, call as frappeCall, toast } from 'frappe-ui'
+import {
+  Button,
+  Dialog,
+  Dropdown,
+  createListResource,
+  createResource,
+  call as frappeCall,
+  toast,
+} from 'frappe-ui'
 import LucidePhone from '~icons/lucide/phone'
 import LucideScrollText from '~icons/lucide/scroll-text'
 import LucideAlarmClock from '~icons/lucide/alarm-clock'
@@ -309,7 +393,11 @@ import {
   reloadQueue,
   conversationTags,
 } from '@/composables/inbox'
-import { ensureSalesSummary, salesOutstanding, salesRollup } from '@/composables/salesDocs'
+import {
+  ensureSalesSummary,
+  salesOutstanding,
+  salesRollup,
+} from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
 
 const { showModal } = useDoctypeModal()
@@ -327,7 +415,9 @@ const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 // AUDIT 2026-07-26: resolve against the ACCUMULATED queueRows, not queue.data — the
 // resource holds only the last-fetched page, so pagination or any merge reload made
 // the open conversation's header silently degrade (device/tags/snooze dropped).
-const queueRow = computed(() => queueRows.value.find((r) => r.deal === activeDeal.value) || {})
+const queueRow = computed(
+  () => queueRows.value.find((r) => r.deal === activeDeal.value) || {},
+)
 const dealFetch = createResource({ url: 'frappe.client.get_value' })
 const leadFetch = createResource({ url: 'frappe.client.get_value' })
 watch(
@@ -340,8 +430,24 @@ watch(
       filters: activeDeal.value,
       fieldname: JSON.stringify(
         isD
-          ? ['deal_name', 'status', 'lead', 'mobile_no', 'first_name', 'lead_name', 'deal_owner']
-          : ['status', 'mobile_no', 'first_name', 'last_name', 'lead_name', 'lead_score', 'score_grade'],
+          ? [
+              'deal_name',
+              'status',
+              'lead',
+              'mobile_no',
+              'first_name',
+              'lead_name',
+              'deal_owner',
+            ]
+          : [
+              'status',
+              'mobile_no',
+              'first_name',
+              'last_name',
+              'lead_name',
+              'lead_score',
+              'score_grade',
+            ],
       ),
     })
   },
@@ -349,7 +455,18 @@ watch(
 )
 watch(
   () => dealFetch.data?.lead,
-  (lead) => lead && leadFetch.submit({ doctype: 'CRM Lead', filters: lead, fieldname: JSON.stringify(['lead_score', 'score_grade', 'lead_name', 'mobile_no']) }),
+  (lead) =>
+    lead &&
+    leadFetch.submit({
+      doctype: 'CRM Lead',
+      filters: lead,
+      fieldname: JSON.stringify([
+        'lead_score',
+        'score_grade',
+        'lead_name',
+        'mobile_no',
+      ]),
+    }),
 )
 const row = computed(() => {
   if (queueRow.value.deal) return queueRow.value
@@ -358,14 +475,21 @@ const row = computed(() => {
   return {
     deal: activeDeal.value,
     status: d.status,
-    contact_name: d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
+    contact_name:
+      d.lead_name || d.first_name || l.lead_name || d.mobile_no || l.mobile_no,
     mobile_no: d.mobile_no || l.mobile_no,
     lead_score: l.lead_score ?? d.lead_score,
     score_grade: l.score_grade ?? d.score_grade,
     deal_owner: d.deal_owner,
   }
 })
-const name = computed(() => (isDeal.value && dealFetch.data?.deal_name) || row.value.contact_name || row.value.mobile_no || '')
+const name = computed(
+  () =>
+    (isDeal.value && dealFetch.data?.deal_name) ||
+    row.value.contact_name ||
+    row.value.mobile_no ||
+    '',
+)
 
 // Responsible owner: the CRM Deal's deal_owner (rides the existing assignment /
 // cascade — no parallel ACL). Resolved to a full name for the header chip.
@@ -381,11 +505,13 @@ const score = computed(() => row.value.lead_score ?? '')
 // one fetch per deal feeds panel + chip. Deal-only; flag can resolve after mount.
 watch(
   [activeDeal, salesDocsEnabled],
-  () => isDeal.value && activeDeal.value && ensureSalesSummary(activeDeal.value),
+  () =>
+    isDeal.value && activeDeal.value && ensureSalesSummary(activeDeal.value),
   { immediate: true },
 )
 const saldoChip = computed(() => {
-  if (!salesDocsEnabled.value || !isDeal.value || !(salesOutstanding.value > 0)) return ''
+  if (!salesDocsEnabled.value || !isDeal.value || !(salesOutstanding.value > 0))
+    return ''
   return formatMoney(salesOutstanding.value, salesRollup.value?.currency)
 })
 
@@ -393,19 +519,27 @@ const saldoChip = computed(() => {
 // getDealStatus(undefined) throws internally, so only call it when status is set.
 const stageColor = computed(() => {
   if (!row.value.status) return '#9aa2ae'
-  const s = isDeal.value ? getDealStatus(row.value.status) : getLeadStatus(row.value.status)
+  const s = isDeal.value
+    ? getDealStatus(row.value.status)
+    : getLeadStatus(row.value.status)
   return s?.color || '#9aa2ae'
 })
 // Visible = the tenant's ACTIVE language set; the store filters the hidden twins
 // out. Read them OFF the store object rather than destructuring: a computed
 // pulled out of a Pinia setup store is unwrapped once and stops updating.
-const visibleStages = computed(() =>
-  (isDeal.value ? statusStore.visibleDealStatuses : statusStore.visibleLeadStatuses) || [],
+const visibleStages = computed(
+  () =>
+    (isDeal.value
+      ? statusStore.visibleDealStatuses
+      : statusStore.visibleLeadStatuses) || [],
 )
 
 // Lead stage dropdown (deals use the stepper above; same requestStage path).
 const stageOptions = computed(() =>
-  visibleStages.value.map((s) => ({ label: s.name, onClick: () => requestStage(s.name, s.type) })),
+  visibleStages.value.map((s) => ({
+    label: s.name,
+    onClick: () => requestStage(s.name, s.type),
+  })),
 )
 
 // The stepper knows a status NAME only — resolve its type so requestStage can
@@ -428,7 +562,11 @@ watch(
   activeDeal,
   (d) => {
     if (!d) return
-    lastInbound.filters = { reference_doctype: activeDealDoctype.value, reference_name: d, type: 'Incoming' }
+    lastInbound.filters = {
+      reference_doctype: activeDealDoctype.value,
+      reference_name: d,
+      type: 'Incoming',
+    }
     lastInbound.reload()
   },
   { immediate: true },
@@ -436,8 +574,12 @@ watch(
 const waWindow = computed(() => {
   const ts = lastInbound.data?.[0]?.creation
   if (!ts) return null
-  const left = 24 - (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
-  return left > 0 ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) } : { open: false }
+  const left =
+    24 -
+    (Date.now() - new Date(String(ts).replace(' ', 'T')).getTime()) / 3600000
+  return left > 0
+    ? { open: true, hoursLeft: Math.max(1, Math.floor(left)) }
+    : { open: false }
 })
 
 // SLA
@@ -469,7 +611,9 @@ watch(
   { immediate: true },
 )
 const tagSuggestions = computed(() =>
-  (conversationTags.data || []).filter((t) => !localTags.value.includes(t)).slice(0, 8),
+  (conversationTags.data || [])
+    .filter((t) => !localTags.value.includes(t))
+    .slice(0, 8),
 )
 function openTags() {
   localTags.value = [...(row.value.tags || [])]
@@ -529,7 +673,7 @@ function _tomorrow9() {
 }
 function _nextMonday9() {
   const d = new Date()
-  d.setDate(d.getDate() + (((8 - d.getDay()) % 7) || 7))
+  d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7))
   d.setHours(9, 0, 0, 0)
   return d
 }
@@ -569,13 +713,23 @@ function confirmCustomSnooze() {
 }
 const snoozeOptions = computed(() => {
   const o = []
-  if (isSnoozed.value) o.push({ label: __('Reactivar ahora'), onClick: _unsnooze })
+  if (isSnoozed.value)
+    o.push({ label: __('Reactivar ahora'), onClick: _unsnooze })
   o.push(
-    { label: __('1 hora'), onClick: () => _snooze(new Date(Date.now() + 3600e3)) },
-    { label: __('3 horas'), onClick: () => _snooze(new Date(Date.now() + 3 * 3600e3)) },
+    {
+      label: __('1 hora'),
+      onClick: () => _snooze(new Date(Date.now() + 3600e3)),
+    },
+    {
+      label: __('3 horas'),
+      onClick: () => _snooze(new Date(Date.now() + 3 * 3600e3)),
+    },
     { label: __('Mañana 9:00'), onClick: () => _snooze(_tomorrow9()) },
     { label: __('Lunes 9:00'), onClick: () => _snooze(_nextMonday9()) },
-    { label: __('Elegir fecha…'), onClick: () => (showSnoozeDialog.value = true) },
+    {
+      label: __('Elegir fecha…'),
+      onClick: () => (showSnoozeDialog.value = true),
+    },
   )
   return o
 })

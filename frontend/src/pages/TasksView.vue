@@ -6,15 +6,26 @@
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- toolbar -->
-    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5">
+    <div
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-y-1.5 border-b border-outline-gray-1 px-5 py-1.5"
+    >
       <div class="flex items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Tareas') }}</span>
-        <div class="ml-1 flex overflow-hidden rounded-lg border border-outline-gray-2">
+        <span class="text-[15px] font-bold text-ink-gray-9">{{
+          __('Tareas')
+        }}</span>
+        <div
+          class="ml-1 flex overflow-hidden rounded-lg border border-outline-gray-2"
+        >
           <button
             v-for="(s, i) in scopes"
             :key="s.key"
             class="px-[11px] py-[5px] text-[12px]"
-            :class="[i ? 'border-l border-outline-gray-2' : '', scope === s.key ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold' : 'bg-surface-base text-ink-gray-6']"
+            :class="[
+              i ? 'border-l border-outline-gray-2' : '',
+              scope === s.key
+                ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold'
+                : 'bg-surface-base text-ink-gray-6',
+            ]"
             :aria-pressed="scope === s.key"
             @click="scope = s.key"
           >
@@ -22,13 +33,19 @@
           </button>
         </div>
       </div>
-      <button class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white" style="background: var(--brand)" @click="openNew">
+      <button
+        class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+        style="background: var(--brand)"
+        @click="openNew"
+      >
         + {{ __('Nueva tarea') }}
       </button>
     </div>
 
     <!-- tabs -->
-    <div class="flex flex-none items-center gap-1.5 border-b border-outline-gray-1 px-5 py-2">
+    <div
+      class="flex flex-none items-center gap-1.5 border-b border-outline-gray-1 px-5 py-2"
+    >
       <button
         v-for="t in tabs"
         :key="t.key"
@@ -58,8 +75,18 @@
 
     <!-- rows -->
     <div class="scb min-h-0 flex-1 overflow-y-auto">
-      <div v-if="tasks.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin tareas') }}</div>
+      <div
+        v-if="tasks.loading && !rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Cargando…') }}
+      </div>
+      <div
+        v-else-if="!rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Sin tareas') }}
+      </div>
 
       <div
         v-for="t in rows"
@@ -72,17 +99,34 @@
           type="button"
           role="checkbox"
           :aria-checked="t.status === 'Done'"
-          :aria-label="t.title ? __('Completada') + ': ' + t.title : __('Marcar completada')"
+          :aria-label="
+            t.title
+              ? __('Completada') + ': ' + t.title
+              : __('Marcar completada')
+          "
           class="flex h-5 w-5 flex-none items-center justify-center rounded-md border-[1.5px]"
-          :class="t.status === 'Done' ? 'bg-surface-green-7 border-outline-green-4 text-white' : 'border-outline-gray-3'"
+          :class="
+            t.status === 'Done'
+              ? 'bg-surface-green-7 border-outline-green-4 text-white'
+              : 'border-outline-gray-3'
+          "
           @click="toggleDone(t)"
         >
-          <span v-if="t.status === 'Done'" class="text-[12px]" aria-hidden="true">✓</span>
+          <span
+            v-if="t.status === 'Done'"
+            class="text-[12px]"
+            aria-hidden="true"
+            >✓</span
+          >
         </button>
         <div class="flex min-w-0 items-center gap-2">
           <button
             class="block min-w-0 flex-1 truncate text-left text-[13px] font-semibold hover:underline"
-            :class="t.status === 'Done' ? 'text-ink-gray-5 line-through' : 'text-ink-gray-9'"
+            :class="
+              t.status === 'Done'
+                ? 'text-ink-gray-5 line-through'
+                : 'text-ink-gray-9'
+            "
             @click="openEdit(t)"
           >
             {{ t.title }}
@@ -118,12 +162,24 @@
           </button>
           <span v-else class="text-[12px] text-ink-gray-4">—</span>
           <div>
-            <span v-if="t.priority" class="rounded-full px-2.5 py-[3px] text-[10.5px] font-semibold" :class="prioStyle(t.priority)">{{ t.priority }}</span>
+            <span
+              v-if="t.priority"
+              class="rounded-full px-2.5 py-[3px] text-[10.5px] font-semibold"
+              :class="prioStyle(t.priority)"
+              >{{ t.priority }}</span
+            >
           </div>
         </template>
-        <div class="text-[12px]" :class="dueClass(t)">{{ t.due_date ? dueText(t.due_date) : '—' }}</div>
+        <div class="text-[12px]" :class="dueClass(t)">
+          {{ t.due_date ? dueText(t.due_date) : '—' }}
+        </div>
         <Dropdown :options="rowMenu(t)" @click.stop>
-          <button class="text-[14px] text-ink-gray-4" :aria-label="__('Más acciones')">···</button>
+          <button
+            class="text-[14px] text-ink-gray-4"
+            :aria-label="__('Más acciones')"
+          >
+            ···
+          </button>
         </Dropdown>
       </div>
     </div>
@@ -143,7 +199,12 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Dropdown, createListResource, call as frappeCall, toast } from 'frappe-ui'
+import {
+  Dropdown,
+  createListResource,
+  call as frappeCall,
+  toast,
+} from 'frappe-ui'
 import { confirmDialog } from '@/utils/dialogs'
 import { usersStore } from '@/stores/users'
 import { useDoctypeModal } from '@/composables/doctypeModal'
@@ -154,9 +215,17 @@ import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
 // the real wired CRM Task modal (date/assignee/priority/reminder/notifications),
 // mounted globally via DoctypeModals in App.vue
 const { showModal } = useDoctypeModal()
-const taskCallbacks = { afterInsert: () => applyFilters(), afterUpdate: () => applyFilters() }
+const taskCallbacks = {
+  afterInsert: () => applyFilters(),
+  afterUpdate: () => applyFilters(),
+}
 function openNew() {
-  showModal({ doctype: 'CRM Task', title: __('Task'), defaults: { status: 'Backlog', priority: 'Low' }, callbacks: taskCallbacks })
+  showModal({
+    doctype: 'CRM Task',
+    title: __('Task'),
+    defaults: { status: 'Backlog', priority: 'Low' },
+    callbacks: taskCallbacks,
+  })
 }
 const composerOpen = ref(false)
 const composerTask = ref(null)
@@ -167,7 +236,12 @@ function openComposer(t) {
 }
 
 function openEdit(t) {
-  showModal({ name: t.name, doctype: 'CRM Task', title: __('Task'), callbacks: taskCallbacks })
+  showModal({
+    name: t.name,
+    doctype: 'CRM Task',
+    title: __('Task'),
+    callbacks: taskCallbacks,
+  })
 }
 
 // phone: done-toggle + task + due + menu — the deal/priority columns forced
@@ -205,7 +279,18 @@ const tasks = createListResource({
   doctype: 'CRM Task',
   // doco_* come from the channel rules (ladder item 3): a rule-staged task carries
   // the number and the template it wants, which is what turns it into ONE click.
-  fields: ['name', 'title', 'status', 'priority', 'due_date', 'assigned_to', 'reference_doctype', 'reference_docname', 'doco_channel_phone', 'doco_channel_template'],
+  fields: [
+    'name',
+    'title',
+    'status',
+    'priority',
+    'due_date',
+    'assigned_to',
+    'reference_doctype',
+    'reference_docname',
+    'doco_channel_phone',
+    'doco_channel_template',
+  ],
   orderBy: 'due_date asc',
   pageLength: 100,
 })
@@ -215,10 +300,12 @@ function applyFilters() {
   const f = { status: ['not in', ['Done', 'Canceled']] }
   // exact match (a LIKE %user% substring matched ana@x.com inside mariana@x.com,
   // and disagreed with the nav-rail badge's exact filter)
-  if (scope.value === 'mine' && currentUser.value) f.assigned_to = currentUser.value
+  if (scope.value === 'mine' && currentUser.value)
+    f.assigned_to = currentUser.value
   const todayStr = localDate(new Date())
   if (tab.value === 'overdue') f.due_date = ['<', nowStr()]
-  else if (tab.value === 'today') f.due_date = ['between', [`${todayStr} 00:00:00`, `${todayStr} 23:59:59`]]
+  else if (tab.value === 'today')
+    f.due_date = ['between', [`${todayStr} 00:00:00`, `${todayStr} 23:59:59`]]
   else if (tab.value === 'upcoming') f.due_date = ['>', `${todayStr} 23:59:59`]
   tasks.filters = f
   tasks.reload()
@@ -227,15 +314,25 @@ watch([scope, tab, currentUser], applyFilters, { immediate: true })
 
 // ── row styling ───────────────────────────────────────────────────────────────
 function isOverdue(t) {
-  return t.due_date && new Date(String(t.due_date).replace(' ', 'T')) < new Date() && t.status !== 'Done'
+  return (
+    t.due_date &&
+    new Date(String(t.due_date).replace(' ', 'T')) < new Date() &&
+    t.status !== 'Done'
+  )
 }
 function isToday(t) {
-  return t.due_date && localDate(new Date(String(t.due_date).replace(' ', 'T'))) === localDate(new Date())
+  return (
+    t.due_date &&
+    localDate(new Date(String(t.due_date).replace(' ', 'T'))) ===
+      localDate(new Date())
+  )
 }
 // Native-token class strings (theme-aware) — bound via :class, not :style.
 function rowClass(t) {
-  if (isOverdue(t)) return 'border-l-[3px] border-outline-red-4 bg-surface-red-1'
-  if (isToday(t)) return 'border-l-[3px] border-outline-amber-4 bg-surface-amber-1'
+  if (isOverdue(t))
+    return 'border-l-[3px] border-outline-red-4 bg-surface-red-1'
+  if (isToday(t))
+    return 'border-l-[3px] border-outline-amber-4 bg-surface-amber-1'
   return ''
 }
 function dueClass(t) {
@@ -248,13 +345,22 @@ function dueText(d) {
 }
 function prioStyle(p) {
   return (
-    { Urgent: 'text-ink-red-8 bg-surface-red-1', High: 'text-ink-amber-7 bg-surface-amber-1', Medium: 'text-ink-blue-9 bg-surface-blue-1', Low: 'text-ink-gray-6 bg-surface-gray-2' }[p] ||
-    'text-ink-gray-6 bg-surface-gray-2'
+    {
+      Urgent: 'text-ink-red-8 bg-surface-red-1',
+      High: 'text-ink-amber-7 bg-surface-amber-1',
+      Medium: 'text-ink-blue-9 bg-surface-blue-1',
+      Low: 'text-ink-gray-6 bg-surface-gray-2',
+    }[p] || 'text-ink-gray-6 bg-surface-gray-2'
   )
 }
 function tabStyle(t) {
   if (tab.value === t.key) return 'bg-surface-gray-3 text-ink-gray-9'
-  const c = t.key === 'overdue' ? 'text-ink-red-7' : t.key === 'today' ? 'text-ink-amber-7' : 'text-ink-gray-6'
+  const c =
+    t.key === 'overdue'
+      ? 'text-ink-red-7'
+      : t.key === 'today'
+        ? 'text-ink-amber-7'
+        : 'text-ink-gray-6'
   return `bg-surface-gray-2 ${c}`
 }
 
@@ -265,10 +371,17 @@ async function toggleDone(t) {
   const next = prev === 'Done' ? 'Todo' : 'Done'
   t.status = next
   try {
-    await frappeCall('frappe.client.set_value', { doctype: 'CRM Task', name: t.name, fieldname: 'status', value: next })
+    await frappeCall('frappe.client.set_value', {
+      doctype: 'CRM Task',
+      name: t.name,
+      fieldname: 'status',
+      value: next,
+    })
   } catch (e) {
     t.status = prev
-    toast.error(e?.messages?.[0] || e?.message || __('No se pudo actualizar la tarea'))
+    toast.error(
+      e?.messages?.[0] || e?.message || __('No se pudo actualizar la tarea'),
+    )
   }
 }
 function ownerName(email) {
@@ -280,7 +393,10 @@ function deleteTask(t) {
     message: __('¿Eliminar esta tarea?'),
     confirmLabel: __('Eliminar'),
     onConfirm: async () => {
-      await frappeCall('frappe.client.delete', { doctype: 'CRM Task', name: t.name })
+      await frappeCall('frappe.client.delete', {
+        doctype: 'CRM Task',
+        name: t.name,
+      })
       toast.success(__('Eliminada'))
       applyFilters()
     },
@@ -293,8 +409,18 @@ function openConversation(t) {
 function rowMenu(t) {
   return [
     { label: __('Editar'), onClick: () => openEdit(t) },
-    { label: t.status === 'Done' ? __('Reabrir') : __('Marcar hecho'), onClick: () => toggleDone(t) },
-    ...(t.reference_doctype === 'CRM Deal' ? [{ label: __('Abrir conversación'), onClick: () => openConversation(t) }] : []),
+    {
+      label: t.status === 'Done' ? __('Reabrir') : __('Marcar hecho'),
+      onClick: () => toggleDone(t),
+    },
+    ...(t.reference_doctype === 'CRM Deal'
+      ? [
+          {
+            label: __('Abrir conversación'),
+            onClick: () => openConversation(t),
+          },
+        ]
+      : []),
     { label: __('Eliminar'), onClick: () => deleteTask(t) },
   ]
 }

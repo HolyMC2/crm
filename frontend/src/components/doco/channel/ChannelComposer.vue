@@ -48,26 +48,37 @@
           class="rounded-md bg-surface-blue-1 px-2.5 py-2 text-[12px] text-ink-blue-3"
         >
           {{
-            __('Saldrá desde el WhatsApp de la tienda ({0}) si esa sesión es la abierta en este navegador.', [
-              config.sender_hint,
-            ])
+            __(
+              'Saldrá desde el WhatsApp de la tienda ({0}) si esa sesión es la abierta en este navegador.',
+              [config.sender_hint],
+            )
           }}
         </p>
         <p
           v-else-if="config && !config.can_auto_send"
           class="rounded-md bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
         >
-          {{ __('Se abrirá TU WhatsApp con el mensaje escrito. Nada se envía solo: tú tocas enviar.') }}
+          {{
+            __(
+              'Se abrirá TU WhatsApp con el mensaje escrito. Nada se envía solo: tú tocas enviar.',
+            )
+          }}
         </p>
         <p
           v-else-if="config?.can_auto_send"
           class="rounded-md bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
         >
-          {{ __('Esta tienda tiene API oficial. Aquí se arma el enlace; el envío automático vive en la Bandeja.') }}
+          {{
+            __(
+              'Esta tienda tiene API oficial. Aquí se arma el enlace; el envío automático vive en la Bandeja.',
+            )
+          }}
         </p>
 
         <div v-if="prefillSupported">
-          <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
+          <label
+            class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
+          >
             {{ __('Plantilla') }}
           </label>
           <select
@@ -77,14 +88,20 @@
           >
             <option value="">{{ __('Mensaje libre (sin plantilla)') }}</option>
             <option v-for="row in templates" :key="row.name" :value="row.name">
-              {{ row.template_name }}{{ row.scope === 'approved' ? ' ·  Meta' : '' }}
+              {{ row.template_name
+              }}{{ row.scope === 'approved' ? ' ·  Meta' : '' }}
             </option>
           </select>
 
           <!-- One input per hole the record could not fill. `sample` is Meta's own
                example for that position, which is exactly what a placeholder is for. -->
-          <div v-if="openHoles.length" class="mt-2 space-y-1.5 rounded-xl border border-outline-amber-2 bg-surface-amber-1 p-2.5">
-            <div class="text-[11px] font-semibold uppercase tracking-wide text-ink-amber-9">
+          <div
+            v-if="openHoles.length"
+            class="mt-2 space-y-1.5 rounded-xl border border-outline-amber-2 bg-surface-amber-1 p-2.5"
+          >
+            <div
+              class="text-[11px] font-semibold uppercase tracking-wide text-ink-amber-9"
+            >
               {{ __('Completa los huecos de la plantilla') }}
             </div>
             <div
@@ -92,7 +109,10 @@
               :key="hole.index"
               class="flex items-center gap-2"
             >
-              <span class="w-14 shrink-0 font-mono text-[12px] text-ink-amber-9">{{ holeToken(hole.index) }}</span>
+              <span
+                class="w-14 shrink-0 font-mono text-[12px] text-ink-amber-9"
+                >{{ holeToken(hole.index) }}</span
+              >
               <input
                 v-model="manual[String(hole.index)]"
                 type="text"
@@ -102,7 +122,11 @@
               />
             </div>
             <p class="text-[11px] text-ink-amber-9">
-              {{ __('Un hueco sin llenar se queda visible en el mensaje — no se borra solo.') }}
+              {{
+                __(
+                  'Un hueco sin llenar se queda visible en el mensaje — no se borra solo.',
+                )
+              }}
             </p>
           </div>
 
@@ -112,35 +136,65 @@
             class="mt-2 w-full rounded-md border border-outline-gray-2 bg-surface-white px-2.5 py-2 text-[13px] leading-relaxed text-ink-gray-8"
             :placeholder="__('Escribe el mensaje…')"
           />
-          <div class="mt-1 flex items-center justify-between text-[11px] text-ink-gray-4">
+          <div
+            class="mt-1 flex items-center justify-between text-[11px] text-ink-gray-4"
+          >
             <span>{{ text.length }} / {{ MAX_PREFILL }}</span>
-            <span v-if="text.length > MAX_PREFILL" class="font-semibold text-ink-red-6">{{
-              __('Se recortará')
-            }}</span>
+            <span
+              v-if="text.length > MAX_PREFILL"
+              class="font-semibold text-ink-red-6"
+              >{{ __('Se recortará') }}</span
+            >
           </div>
         </div>
-        <p v-else class="rounded-md bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6">
-          {{ __('Este canal no acepta texto prellenado; se abrirá la conversación en blanco.') }}
+        <p
+          v-else
+          class="rounded-md bg-surface-gray-2 px-2.5 py-2 text-[12px] text-ink-gray-6"
+        >
+          {{
+            __(
+              'Este canal no acepta texto prellenado; se abrirá la conversación en blanco.',
+            )
+          }}
         </p>
 
-        <p v-if="error" class="text-[12px] font-medium text-ink-red-6">{{ error }}</p>
+        <p v-if="error" class="text-[12px] font-medium text-ink-red-6">
+          {{ error }}
+        </p>
         <p v-if="blockedUrl" class="text-[12px] text-ink-gray-6">
           {{ __('El navegador bloqueó la ventana.') }}
-          <a :href="blockedUrl" target="_blank" rel="noopener" class="font-semibold text-ink-blue-3 underline">{{
-            __('Abrir la conversación')
-          }}</a>
+          <a
+            :href="blockedUrl"
+            target="_blank"
+            rel="noopener"
+            class="font-semibold text-ink-blue-3 underline"
+            >{{ __('Abrir la conversación') }}</a
+          >
         </p>
 
         <!-- The loop-closer: every intent on this record, annotatable whenever the
              answer actually arrives. -->
-        <div v-if="intents.length" class="rounded-xl border border-outline-gray-2 p-3">
-          <div class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">
+        <div
+          v-if="intents.length"
+          class="rounded-xl border border-outline-gray-2 p-3"
+        >
+          <div
+            class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5"
+          >
             {{ __('¿Qué pasó?') }}
           </div>
-          <div v-for="row in intents" :key="row.name" class="mt-2 border-t border-outline-gray-1 pt-2 first:mt-1 first:border-0 first:pt-0">
+          <div
+            v-for="row in intents"
+            :key="row.name"
+            class="mt-2 border-t border-outline-gray-1 pt-2 first:mt-1 first:border-0 first:pt-0"
+          >
             <div class="flex items-baseline justify-between gap-2">
-              <span class="truncate text-[12px] text-ink-gray-7">{{ row.preview || __('(sin texto)') }}</span>
-              <span class="shrink-0 text-[11px] text-ink-gray-4">{{ shortDate(row.communication_date) }}</span>
+              <span class="truncate text-[12px] text-ink-gray-7">{{
+                row.preview || __('(sin texto)')
+              }}</span>
+              <span class="shrink-0 text-[11px] text-ink-gray-4">{{
+                shortDate(row.communication_date)
+              }}</span>
             </div>
             <div class="mt-1.5 flex flex-wrap gap-1.5">
               <button
@@ -167,7 +221,9 @@
         <Button
           variant="solid"
           :loading="busy"
-          :label="intents.length ? __('Abrir de nuevo') : __('Abrir y registrar')"
+          :label="
+            intents.length ? __('Abrir de nuevo') : __('Abrir y registrar')
+          "
           @click="openAndLog"
         />
       </div>
@@ -217,8 +273,12 @@ const channelChoices = [
   { value: 'sms', label: '✉ SMS' },
   { value: 'call', label: '📞 Llamar' },
 ]
-const prefillSupported = computed(() => ['whatsapp', 'sms'].includes(channel.value))
-const openHoles = computed(() => holes.value.filter((h) => h.source !== 'field'))
+const prefillSupported = computed(() =>
+  ['whatsapp', 'sms'].includes(channel.value),
+)
+const openHoles = computed(() =>
+  holes.value.filter((h) => h.source !== 'field'),
+)
 
 // Built in JS, not written in the template: a literal double-brace inside an
 // interpolation closes it early and the whole component fails to compile.
@@ -243,9 +303,12 @@ watch(show, async (open) => {
   template.value = props.presetTemplate || ''
   try {
     config.value = await call('doco_marketing.api.channel.get_channel_config')
-    templates.value = await call('doco_marketing.api.channel.list_channel_templates', {
-      doctype: props.doctype,
-    })
+    templates.value = await call(
+      'doco_marketing.api.channel.list_channel_templates',
+      {
+        doctype: props.doctype,
+      },
+    )
     await loadIntents()
     if (template.value) await loadTemplate()
   } catch (e) {
@@ -255,10 +318,13 @@ watch(show, async (open) => {
 
 async function loadIntents() {
   try {
-    intents.value = await call('doco_marketing.api.channel.list_channel_intents', {
-      doctype: props.doctype,
-      name: props.docname,
-    })
+    intents.value = await call(
+      'doco_marketing.api.channel.list_channel_intents',
+      {
+        doctype: props.doctype,
+        name: props.docname,
+      },
+    )
   } catch (e) {
     intents.value = []
   }
@@ -271,12 +337,15 @@ async function loadTemplate() {
     return
   }
   try {
-    const out = await call('doco_marketing.api.channel.render_channel_template', {
-      template: template.value,
-      doctype: props.doctype,
-      name: props.docname,
-      params: JSON.stringify(manual.value),
-    })
+    const out = await call(
+      'doco_marketing.api.channel.render_channel_template',
+      {
+        template: template.value,
+        doctype: props.doctype,
+        name: props.docname,
+        params: JSON.stringify(manual.value),
+      },
+    )
     holes.value = out.holes || []
     // The server render is authoritative only while the operator has not written
     // their own words into the box. Once they have, filling a hole must not throw
@@ -319,14 +388,17 @@ async function openAndLog() {
   }
   let navigated = false
   try {
-    const composed = await call('doco_marketing.api.channel.compose_channel_message', {
-      channel: channel.value,
-      target: props.phone,
-      text: prefillSupported.value ? text.value : '',
-      pointer: pointerKind(),
-      doctype: props.doctype,
-      name: props.docname,
-    })
+    const composed = await call(
+      'doco_marketing.api.channel.compose_channel_message',
+      {
+        channel: channel.value,
+        target: props.phone,
+        text: prefillSupported.value ? text.value : '',
+        pointer: pointerKind(),
+        doctype: props.doctype,
+        name: props.docname,
+      },
+    )
     if (tab) {
       tab.location.href = composed.url
       navigated = true

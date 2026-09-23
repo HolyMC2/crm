@@ -6,15 +6,24 @@
   shown as a link. Mirrors the slot WhatsAppArea occupies.
 -->
 <template>
-  <div ref="scrollEl" class="flex max-h-full flex-col gap-2 overflow-y-auto px-3 py-3 sm:px-10">
-    <div v-if="!messages.length" class="py-10 text-center text-[13px] text-ink-gray-4 dark:text-ink-gray-5">
+  <div
+    ref="scrollEl"
+    class="flex max-h-full flex-col gap-2 overflow-y-auto px-3 py-3 sm:px-10"
+  >
+    <div
+      v-if="!messages.length"
+      class="py-10 text-center text-[13px] text-ink-gray-4 dark:text-ink-gray-5"
+    >
       {{ __('Sin mensajes todavía.') }}
     </div>
     <div
       v-for="m in messages"
       :key="m.id"
       class="flex flex-col"
-      :class="[m.direction === 'out' ? 'items-end' : 'items-start', m.reaction ? 'pb-2' : '']"
+      :class="[
+        m.direction === 'out' ? 'items-end' : 'items-start',
+        m.reaction ? 'pb-2' : '',
+      ]"
     >
       <!-- attribution: the ad / m.me link / CTWA that drove this conversation -->
       <div
@@ -23,7 +32,9 @@
         :title="__('Origen del mensaje (anuncio / enlace)')"
       >
         📣 {{ __('vino de') }}: {{ m.referral_ref || m.referral_source }}
-        <span v-if="m.referral_source && m.referral_ref" class="opacity-70">· {{ m.referral_source }}</span>
+        <span v-if="m.referral_source && m.referral_ref" class="opacity-70"
+          >· {{ m.referral_source }}</span
+        >
       </div>
       <div
         class="relative max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-snug"
@@ -35,8 +46,18 @@
         ]"
       >
         <!-- image attachment inline; other types as a typed link -->
-        <a v-if="m.attach && m.content_type === 'image'" :href="m.attach" target="_blank" rel="noopener" class="block">
-          <img :src="m.attach" class="mb-1 max-h-60 rounded-lg" :alt="__('imagen')" />
+        <a
+          v-if="m.attach && m.content_type === 'image'"
+          :href="m.attach"
+          target="_blank"
+          rel="noopener"
+          class="block"
+        >
+          <img
+            :src="m.attach"
+            class="mb-1 max-h-60 rounded-lg"
+            :alt="__('imagen')"
+          />
         </a>
         <a
           v-else-if="m.attach"
@@ -48,8 +69,15 @@
         >
           {{ attachLabel(m.content_type) }}
         </a>
-        <div v-if="m.content" class="whitespace-pre-wrap [overflow-wrap:anywhere]">{{ m.content }}</div>
-        <div class="mt-0.5 text-right text-[10px] opacity-60">{{ fmtTime(m.timestamp) }}</div>
+        <div
+          v-if="m.content"
+          class="whitespace-pre-wrap [overflow-wrap:anywhere]"
+        >
+          {{ m.content }}
+        </div>
+        <div class="mt-0.5 text-right text-[10px] opacity-60">
+          {{ fmtTime(m.timestamp) }}
+        </div>
         <!-- message_reaction: the emoji the customer tapped on this message -->
         <span
           v-if="m.reaction"
@@ -108,7 +136,8 @@ watch(
     const last = props.messages[props.messages.length - 1]
     const ownSend = !!last?._optimistic
     nextTick(() => {
-      if ((near || ownSend) && scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
+      if ((near || ownSend) && scrollEl.value)
+        scrollEl.value.scrollTop = scrollEl.value.scrollHeight
     })
   },
   { immediate: true },

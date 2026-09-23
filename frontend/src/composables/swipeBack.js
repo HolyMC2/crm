@@ -33,7 +33,9 @@ export const swipeBackHandlers = {
       _st.fired = true
       try {
         navigator.vibrate?.(10)
-      } catch (err) {}
+      } catch {
+        // Haptic feedback is optional; back navigation must still work.
+      }
       window.history.back()
     }
   },

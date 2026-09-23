@@ -14,8 +14,18 @@ export const FLOW_TYPES = Object.freeze(['Open', 'Ongoing', 'On Hold'])
 // CRM Deal Status.color options, minus `black` (no --ink-black-* token: folds to
 // gray). Used to recover a palette name from whatever colour shape arrives.
 const PALETTE = Object.freeze([
-  'amber', 'blue', 'cyan', 'gray', 'green', 'orange',
-  'pink', 'purple', 'red', 'teal', 'violet', 'yellow',
+  'amber',
+  'blue',
+  'cyan',
+  'gray',
+  'green',
+  'orange',
+  'pink',
+  'purple',
+  'red',
+  'teal',
+  'violet',
+  'yellow',
 ])
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
@@ -64,7 +74,14 @@ export function stageSurface(color, step = 2) {
   // A hex has no token ramp: tint it with an alpha suffix (#rrggbb + 1a ≈ 10%).
   // #abc has to grow to #aabbcc first, or #abc1a is not a colour at all.
   if (HEX.test(raw)) {
-    const six = raw.length === 4 ? `#${raw.slice(1).split('').map((c) => c + c).join('')}` : raw
+    const six =
+      raw.length === 4
+        ? `#${raw
+            .slice(1)
+            .split('')
+            .map((c) => c + c)
+            .join('')}`
+        : raw
     return `${six}1a`
   }
   return `var(--surface-${paletteOf(raw)}-${step})`
@@ -93,7 +110,16 @@ export function stepperModel(statuses = [], current = '') {
     // one stopped somewhere we cannot know, so its steps stay unfilled.
     steps: steps.map((s, i) => ({
       ...s,
-      state: outcome === 'won' ? 'past' : at === -1 ? 'future' : i < at ? 'past' : i === at ? 'current' : 'future',
+      state:
+        outcome === 'won'
+          ? 'past'
+          : at === -1
+            ? 'future'
+            : i < at
+              ? 'past'
+              : i === at
+                ? 'current'
+                : 'future',
     })),
     won,
     lost,

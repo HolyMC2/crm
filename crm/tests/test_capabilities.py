@@ -21,7 +21,9 @@ class TestGetCapabilities(IntegrationTestCase):
 		self.assertNotIn("doco_marketing", result["installed_apps"])
 
 	def test_passes_through_the_site_list_with_the_addon(self):
-		with patch.object(capabilities, "get_installed_apps", return_value=["frappe", "crm", "doco_marketing"]):
+		with patch.object(
+			capabilities, "get_installed_apps", return_value=["frappe", "crm", "doco_marketing"]
+		):
 			result = capabilities.get_capabilities()
 		self.assertIn("doco_marketing", result["installed_apps"])
 

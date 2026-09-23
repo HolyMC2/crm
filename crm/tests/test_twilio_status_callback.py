@@ -52,7 +52,9 @@ class TestTwilioStatusCallback(unittest.TestCase):
 		self.logged.assert_not_called()
 
 	def test_pstn_leg_with_no_client_listener_is_not_an_error(self):
-		self._run_callback(_Refused("Unable to create record: Client message not supported for PSTN calls", code=400))
+		self._run_callback(
+			_Refused("Unable to create record: Client message not supported for PSTN calls", code=400)
+		)
 		self.logged.assert_not_called()
 
 	def test_an_unexpected_failure_is_recorded_but_the_callback_still_succeeds(self):
@@ -91,7 +93,9 @@ class TestTwilioStatusCallback(unittest.TestCase):
 		self.assertNotIn("+520000000000", kwargs["message"])
 
 	def test_unexpected_twilio_error_keeps_diagnostic_codes(self):
-		self._run_callback(TwilioRestException(401, "https://api.twilio.com/fictional", code=20003, msg="secret"))
+		self._run_callback(
+			TwilioRestException(401, "https://api.twilio.com/fictional", code=20003, msg="secret")
+		)
 		message = self.logged.call_args.kwargs["message"]
 		self.assertIn("Twilio code=20003", message)
 		self.assertIn("HTTP status=401", message)

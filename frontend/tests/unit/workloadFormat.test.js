@@ -1,7 +1,12 @@
 // Pure helpers behind WorkloadView.vue (P2 S11): cap math (percent / bar width / color
 // token) + the client-side column sort (null-sinks-to-bottom), all dependency-free.
 import { describe, it, expect } from 'vitest'
-import { capPercent, barWidth, barToken, sortWorkload } from '@/utils/workloadFormat'
+import {
+  capPercent,
+  barWidth,
+  barToken,
+  sortWorkload,
+} from '@/utils/workloadFormat'
 
 describe('capPercent', () => {
   it('returns null when no cap is configured', () => {
@@ -53,9 +58,27 @@ describe('barToken', () => {
 
 describe('sortWorkload', () => {
   const rows = [
-    { full_name: 'Beto', open_total: 6, open_deals: 4, open_leads: 2, sla_overdue_count: 1 },
-    { full_name: 'Ana', open_total: 9, open_deals: 3, open_leads: 6, sla_overdue_count: null },
-    { full_name: 'Caro', open_total: 2, open_deals: 1, open_leads: 1, sla_overdue_count: 3 },
+    {
+      full_name: 'Beto',
+      open_total: 6,
+      open_deals: 4,
+      open_leads: 2,
+      sla_overdue_count: 1,
+    },
+    {
+      full_name: 'Ana',
+      open_total: 9,
+      open_deals: 3,
+      open_leads: 6,
+      sla_overdue_count: null,
+    },
+    {
+      full_name: 'Caro',
+      open_total: 2,
+      open_deals: 1,
+      open_leads: 1,
+      sla_overdue_count: 3,
+    },
   ]
 
   it('never mutates the source array', () => {
@@ -64,17 +87,27 @@ describe('sortWorkload', () => {
     expect(rows).toEqual(snapshot)
   })
   it('numeric desc (open_total)', () => {
-    expect(sortWorkload(rows, 'open_total', 'desc').map((r) => r.full_name)).toEqual(['Ana', 'Beto', 'Caro'])
+    expect(
+      sortWorkload(rows, 'open_total', 'desc').map((r) => r.full_name),
+    ).toEqual(['Ana', 'Beto', 'Caro'])
   })
   it('numeric asc (open_deals)', () => {
-    expect(sortWorkload(rows, 'open_deals', 'asc').map((r) => r.full_name)).toEqual(['Caro', 'Ana', 'Beto'])
+    expect(
+      sortWorkload(rows, 'open_deals', 'asc').map((r) => r.full_name),
+    ).toEqual(['Caro', 'Ana', 'Beto'])
   })
   it('null overdue sinks to the bottom in BOTH directions', () => {
-    expect(sortWorkload(rows, 'sla_overdue_count', 'asc').map((r) => r.full_name)).toEqual(['Beto', 'Caro', 'Ana'])
-    expect(sortWorkload(rows, 'sla_overdue_count', 'desc').map((r) => r.full_name)).toEqual(['Caro', 'Beto', 'Ana'])
+    expect(
+      sortWorkload(rows, 'sla_overdue_count', 'asc').map((r) => r.full_name),
+    ).toEqual(['Beto', 'Caro', 'Ana'])
+    expect(
+      sortWorkload(rows, 'sla_overdue_count', 'desc').map((r) => r.full_name),
+    ).toEqual(['Caro', 'Beto', 'Ana'])
   })
   it('text sort uses es locale (asc)', () => {
-    expect(sortWorkload(rows, 'full_name', 'asc').map((r) => r.full_name)).toEqual(['Ana', 'Beto', 'Caro'])
+    expect(
+      sortWorkload(rows, 'full_name', 'asc').map((r) => r.full_name),
+    ).toEqual(['Ana', 'Beto', 'Caro'])
   })
   it('tolerates null / empty input', () => {
     expect(sortWorkload(null, 'open_total')).toEqual([])

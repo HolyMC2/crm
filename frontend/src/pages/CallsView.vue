@@ -13,13 +13,19 @@
     </div>
 
     <!-- toolbar -->
-    <div class="flex h-[48px] flex-none items-center justify-between border-b border-outline-gray-1 px-5">
+    <div
+      class="flex h-[48px] flex-none items-center justify-between border-b border-outline-gray-1 px-5"
+    >
       <div class="flex items-center gap-1.5">
         <button
           v-for="t in tabs"
           :key="t.key"
           class="rounded-full px-3 py-1 text-[11.5px] font-semibold"
-          :class="tab === t.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
+          :class="
+            tab === t.key
+              ? 'bg-surface-gray-3 text-ink-gray-9'
+              : 'bg-surface-gray-2 text-ink-gray-6'
+          "
           @click="tab = t.key"
         >
           {{ t.label }}
@@ -49,8 +55,18 @@
 
     <!-- rows -->
     <div class="scb min-h-0 flex-1 overflow-y-auto">
-      <div v-if="calls.loading && !rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Cargando…') }}</div>
-      <div v-else-if="!rows.length" class="py-10 text-center text-xs text-ink-gray-4">{{ __('Sin llamadas') }}</div>
+      <div
+        v-if="calls.loading && !rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Cargando…') }}
+      </div>
+      <div
+        v-else-if="!rows.length"
+        class="py-10 text-center text-xs text-ink-gray-4"
+      >
+        {{ __('Sin llamadas') }}
+      </div>
 
       <div
         v-for="r in rows"
@@ -60,24 +76,52 @@
         @click="openCall(r.name)"
       >
         <div>
-          <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold" :class="dirChip(r)">
+          <span
+            class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold"
+            :class="dirChip(r)"
+          >
             {{ r.type === 'Outgoing' ? '↑ Out' : '↓ In' }}
           </span>
         </div>
         <div class="min-w-0">
-          <div class="truncate text-[13px] font-semibold text-ink-gray-9">{{ phoneOf(r) }}</div>
-          <div v-if="r.reference_docname" class="truncate text-[11px] text-ink-gray-4">{{ r.reference_docname }}</div>
+          <div class="truncate text-[13px] font-semibold text-ink-gray-9">
+            {{ phoneOf(r) }}
+          </div>
+          <div
+            v-if="r.reference_docname"
+            class="truncate text-[11px] text-ink-gray-4"
+          >
+            {{ r.reference_docname }}
+          </div>
         </div>
-        <div class="text-[12px] text-ink-gray-5">{{ timeAgo(r.start_time) }}</div>
-        <div class="text-[12px] font-medium text-ink-gray-7">{{ fmtDur(r.duration) }}</div>
+        <div class="text-[12px] text-ink-gray-5">
+          {{ timeAgo(r.start_time) }}
+        </div>
+        <div class="text-[12px] font-medium text-ink-gray-7">
+          {{ fmtDur(r.duration) }}
+        </div>
         <div>
-          <span class="rounded-md px-2 py-[3px] text-[11px] font-semibold" :class="outcomeChip(r.status)">{{ r.status || '—' }}</span>
+          <span
+            class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+            :class="outcomeChip(r.status)"
+            >{{ r.status || '—' }}</span
+          >
         </div>
-        <button class="text-[14px] text-ink-gray-4" @click.stop="openCall(r.name)">›</button>
+        <button
+          class="text-[14px] text-ink-gray-4"
+          @click.stop="openCall(r.name)"
+        >
+          ›
+        </button>
       </div>
     </div>
 
-    <CallDetailDrawer v-if="selectedCall" :name="selectedCall" @close="selectedCall = null" @changed="calls.reload()" />
+    <CallDetailDrawer
+      v-if="selectedCall"
+      :name="selectedCall"
+      @close="selectedCall = null"
+      @changed="calls.reload()"
+    />
   </div>
 </template>
 
@@ -93,7 +137,11 @@ const MISSED = ['No Answer', 'Missed', 'Busy', 'Failed', 'Canceled']
 
 const { showModal } = useDoctypeModal()
 function logCall() {
-  showModal({ doctype: 'CRM Call Log', title: __('Call Log'), callbacks: { afterInsert: () => calls.reload() } })
+  showModal({
+    doctype: 'CRM Call Log',
+    title: __('Call Log'),
+    callbacks: { afterInsert: () => calls.reload() },
+  })
 }
 
 const tab = ref('all')
@@ -107,7 +155,17 @@ const selectedCall = ref(null)
 
 const calls = createListResource({
   doctype: 'CRM Call Log',
-  fields: ['name', 'type', 'status', 'from', 'to', 'duration', 'start_time', 'reference_doctype', 'reference_docname'],
+  fields: [
+    'name',
+    'type',
+    'status',
+    'from',
+    'to',
+    'duration',
+    'start_time',
+    'reference_doctype',
+    'reference_docname',
+  ],
   orderBy: 'start_time desc',
   pageLength: 100,
 })
@@ -124,8 +182,12 @@ function applyFilters() {
 watch(tab, applyFilters, { immediate: true })
 
 // stats (from loaded page)
-const connected = computed(() => rows.value.filter((r) => r.status === 'Completed').length)
-const missed = computed(() => rows.value.filter((r) => MISSED.includes(r.status)).length)
+const connected = computed(
+  () => rows.value.filter((r) => r.status === 'Completed').length,
+)
+const missed = computed(
+  () => rows.value.filter((r) => MISSED.includes(r.status)).length,
+)
 const avgDuration = computed(() => {
   const d = rows.value.map((r) => Number(r.duration) || 0).filter((x) => x > 0)
   if (!d.length) return '—'
@@ -142,7 +204,9 @@ function fmtDur(s) {
 }
 function dirChip(r) {
   if (MISSED.includes(r.status)) return 'text-ink-red-8 bg-surface-red-1'
-  return r.type === 'Outgoing' ? 'text-ink-green-8 bg-surface-green-2' : 'text-ink-blue-9 bg-surface-blue-1'
+  return r.type === 'Outgoing'
+    ? 'text-ink-green-8 bg-surface-green-2'
+    : 'text-ink-blue-9 bg-surface-blue-1'
 }
 function outcomeChip(status) {
   if (status === 'Completed') return 'text-ink-green-8 bg-surface-green-2'
@@ -155,8 +219,23 @@ function openCall(name) {
 
 const Stat = (props) =>
   h('div', {}, [
-    h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
-    h('div', { class: 'text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'), style: props.color ? `color:${props.color}` : undefined }, String(props.value)),
+    h(
+      'div',
+      {
+        class:
+          'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4',
+      },
+      props.label,
+    ),
+    h(
+      'div',
+      {
+        class:
+          'text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'),
+        style: props.color ? `color:${props.color}` : undefined,
+      },
+      String(props.value),
+    ),
   ])
 Stat.props = ['label', 'value', 'color']
 </script>

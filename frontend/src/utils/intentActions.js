@@ -17,14 +17,22 @@ export const MIN_CONFIDENCE = 0.6
 export const INTENT_CHIPS = {
   pago: { icon: '💳', event: 'cobrar', label: 'Cobrar' },
   factura: { icon: '🧾', event: 'factura', label: 'Facturar' },
-  cotizar_reparacion: { icon: '🔧', event: 'taller', label: 'Cotizar reparación' },
+  cotizar_reparacion: {
+    icon: '🔧',
+    event: 'taller',
+    label: 'Cotizar reparación',
+  },
   precio: { icon: '🏷', event: 'catalogo', label: 'Ver catálogo' },
 }
 
 // Confidence must be a real number at or above the threshold. NaN / strings /
 // null all fail closed (nothing renders).
 export function passesConfidence(confidence) {
-  return typeof confidence === 'number' && Number.isFinite(confidence) && confidence >= MIN_CONFIDENCE
+  return (
+    typeof confidence === 'number' &&
+    Number.isFinite(confidence) &&
+    confidence >= MIN_CONFIDENCE
+  )
 }
 
 // The single chip descriptor to render, or null when nothing should show.

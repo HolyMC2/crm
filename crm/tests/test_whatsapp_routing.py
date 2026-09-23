@@ -27,11 +27,13 @@ def _status(status_type: str) -> str:
 class TestWhatsAppRouting(unittest.TestCase):
 	def setUp(self):
 		frappe.set_user("Administrator")
-		self.contact = frappe.get_doc({
-			"doctype": "Contact",
-			"first_name": "Routing Ladder Test",
-			"phone_nos": [{"phone": _PHONE, "is_primary_mobile_no": 1}],
-		})
+		self.contact = frappe.get_doc(
+			{
+				"doctype": "Contact",
+				"first_name": "Routing Ladder Test",
+				"phone_nos": [{"phone": _PHONE, "is_primary_mobile_no": 1}],
+			}
+		)
 		self.contact.flags.ignore_permissions = True
 		self.contact.insert()
 
@@ -39,11 +41,13 @@ class TestWhatsAppRouting(unittest.TestCase):
 		frappe.db.rollback()
 
 	def _deal(self, status_type="Open", modified=None):
-		deal = frappe.get_doc({
-			"doctype": "CRM Deal",
-			"status": _status(status_type),
-			"contacts": [{"contact": self.contact.name, "is_primary": 1}],
-		})
+		deal = frappe.get_doc(
+			{
+				"doctype": "CRM Deal",
+				"status": _status(status_type),
+				"contacts": [{"contact": self.contact.name, "is_primary": 1}],
+			}
+		)
 		deal.flags.ignore_permissions = True
 		deal.insert()
 		if modified:
@@ -80,12 +84,14 @@ class TestWhatsAppRouting(unittest.TestCase):
 		if "taller" not in frappe.get_installed_apps():
 			self.skipTest("taller not installed")
 		won = self._deal("Won", modified=add_days(now_datetime(), -(POST_SALE_GRACE_DAYS + 30)))
-		ro = frappe.get_doc({
-			"doctype": "Repair Order",
-			"status": "Recibido",
-			"client": self.contact.name,
-			"falla_reportada": "routing warranty test",
-		})
+		ro = frappe.get_doc(
+			{
+				"doctype": "Repair Order",
+				"status": "Recibido",
+				"client": self.contact.name,
+				"falla_reportada": "routing warranty test",
+			}
+		)
 		ro.flags.ignore_permissions = True
 		ro.flags.ignore_mandatory = True
 		# Suppress side-effect hooks (deal auto-spawn would fabricate a SECOND
@@ -93,8 +99,11 @@ class TestWhatsAppRouting(unittest.TestCase):
 		ro.flags.via_deal_creation = True
 		ro.insert()
 		frappe.db.set_value(
-			"Repair Order", ro.name, "warranty_expires_on",
-			add_days(now_datetime(), 30), update_modified=False,
+			"Repair Order",
+			ro.name,
+			"warranty_expires_on",
+			add_days(now_datetime(), 30),
+			update_modified=False,
 		)
 		deal = frappe.get_doc("CRM Deal", won)
 		deal.append("repair_orders", {"repair_order": ro.name})
@@ -116,20 +125,22 @@ class TestWhatsAppRouting(unittest.TestCase):
 		upstream substring LIKE misses both directions; the trailing-10 fallback
 		must still land the open deal (the prod bug: real customers with open
 		deals resolved as orphans)."""
-		contact = frappe.get_doc({
-			"doctype": "Contact",
-			"first_name": "Routing MX Prefix Test",
-			"phone_nos": [{"phone": "+52 5559990088", "is_primary_mobile_no": 1}],
-		})
+		contact = frappe.get_doc(
+			{
+				"doctype": "Contact",
+				"first_name": "Routing MX Prefix Test",
+				"phone_nos": [{"phone": "+52 5559990088", "is_primary_mobile_no": 1}],
+			}
+		)
 		contact.flags.ignore_permissions = True
 		contact.insert()
-		deal = frappe.get_doc({
-			"doctype": "CRM Deal",
-			"status": _status("Open"),
-			"contacts": [{"contact": contact.name, "is_primary": 1}],
-		})
+		deal = frappe.get_doc(
+			{
+				"doctype": "CRM Deal",
+				"status": _status("Open"),
+				"contacts": [{"contact": contact.name, "is_primary": 1}],
+			}
+		)
 		deal.flags.ignore_permissions = True
 		deal.insert()
-		self.assertEqual(
-			resolve_reference_for_number("5215559990088"), (deal.name, "CRM Deal")
-		)
+		self.assertEqual(resolve_reference_for_number("5215559990088"), (deal.name, "CRM Deal"))

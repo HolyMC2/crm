@@ -28,10 +28,17 @@
 
     <div class="min-w-0 flex-1">
       <div class="flex items-baseline gap-2">
-        <span class="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink-gray-9">{{ title || '—' }}</span>
-        <span v-if="time" class="flex-none text-[11px] text-ink-gray-4">{{ time }}</span>
+        <span
+          class="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink-gray-9"
+          >{{ title || '—' }}</span
+        >
+        <span v-if="time" class="flex-none text-[11px] text-ink-gray-4">{{
+          time
+        }}</span>
       </div>
-      <div v-if="subtitle" class="truncate text-[11.5px] text-ink-gray-5">{{ subtitle }}</div>
+      <div v-if="subtitle" class="truncate text-[11.5px] text-ink-gray-5">
+        {{ subtitle }}
+      </div>
       <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
         <slot name="chips" />
       </div>

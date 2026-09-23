@@ -4,16 +4,26 @@
   Data: doco_marketing.api.reports.* (which reuses crm.api.dashboard.*).
 -->
 <template>
-  <div class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2">
+  <div
+    class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
+  >
     <!-- toolbar -->
-    <div class="flex h-[52px] flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-base px-5">
-      <span class="text-[15px] font-bold text-ink-gray-9">{{ __('Reportes') }}</span>
+    <div
+      class="flex h-[52px] flex-none items-center gap-3 border-b border-outline-gray-1 bg-surface-base px-5"
+    >
+      <span class="text-[15px] font-bold text-ink-gray-9">{{
+        __('Reportes')
+      }}</span>
       <div class="flex gap-1.5">
         <button
           v-for="p in periods"
           :key="p.key"
           class="rounded-full px-3 py-1 text-[12px] font-medium"
-          :class="period === p.key ? 'bg-surface-gray-3 text-ink-gray-9' : 'bg-surface-gray-2 text-ink-gray-6'"
+          :class="
+            period === p.key
+              ? 'bg-surface-gray-3 text-ink-gray-9'
+              : 'bg-surface-gray-2 text-ink-gray-6'
+          "
           @click="setPeriod(p.key)"
         >
           {{ p.label }}
@@ -22,21 +32,49 @@
     </div>
 
     <div class="flex flex-col gap-4 p-5">
-      <div v-if="restricted" class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-7">
-        {{ __('Algunas métricas (ingresos, atribución) requieren permiso de manager.') }}
+      <div
+        v-if="restricted"
+        class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-7"
+      >
+        {{
+          __(
+            'Algunas métricas (ingresos, atribución) requieren permiso de manager.',
+          )
+        }}
       </div>
       <!-- KPI cards -->
       <div class="grid grid-cols-4 gap-3">
-        <KpiCard :label="__('Leads captados')" :value="kpiVal(kpis.total_leads)" to="/leads" />
-        <KpiCard :label="__('Deals ganados')" :value="kpiVal(kpis.won_deals)" color="var(--brand)" />
-        <KpiCard :label="__('Conversión')" :value="`${convRate}%`" color="#2f6fed" />
-        <KpiCard :label="__('Grado promedio')" :value="kpis.avg_grade || '—'" to="/score-rules" />
+        <KpiCard
+          :label="__('Leads captados')"
+          :value="kpiVal(kpis.total_leads)"
+          to="/leads"
+        />
+        <KpiCard
+          :label="__('Deals ganados')"
+          :value="kpiVal(kpis.won_deals)"
+          color="var(--brand)"
+        />
+        <KpiCard
+          :label="__('Conversión')"
+          :value="`${convRate}%`"
+          color="#2f6fed"
+        />
+        <KpiCard
+          :label="__('Grado promedio')"
+          :value="kpis.avg_grade || '—'"
+          to="/score-rules"
+        />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <!-- funnel -->
         <Card :title="__('Embudo de conversión')">
-          <div v-if="!funnel.length" class="py-6 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
+          <div
+            v-if="!funnel.length"
+            class="py-6 text-center text-xs text-ink-gray-4"
+          >
+            {{ __('Sin datos') }}
+          </div>
           <div v-for="s in funnel" :key="s.stage" class="mb-2.5">
             <div class="mb-1 flex items-center justify-between text-[12px]">
               <span class="font-medium text-ink-gray-8">{{ s.stage }}</span>
@@ -45,29 +83,57 @@
             <div class="h-2 overflow-hidden rounded-sm bg-surface-gray-3">
               <!-- pct can exceed 100 (funnel mixes lead+deal cohorts) — the label
                 shows the real number, the bar clamps so it never overflows the card -->
-              <div class="h-full rounded-sm" :style="`width:${Math.min(Number(s.pct) || 0, 100)}%;background:var(--brand);opacity:.75`" />
+              <div
+                class="h-full rounded-sm"
+                :style="`width:${Math.min(Number(s.pct) || 0, 100)}%;background:var(--brand);opacity:.75`"
+              />
             </div>
           </div>
         </Card>
 
         <!-- score distribution -->
         <Card :title="__('Distribución de score')">
-          <div v-for="g in gradeBars" :key="g.grade" class="mb-2.5 flex items-center gap-3">
-            <span class="w-4 text-[12.5px] font-bold" :style="`color:${g.color}`">{{ g.grade }}</span>
+          <div
+            v-for="g in gradeBars"
+            :key="g.grade"
+            class="mb-2.5 flex items-center gap-3"
+          >
+            <span
+              class="w-4 text-[12.5px] font-bold"
+              :style="`color:${g.color}`"
+              >{{ g.grade }}</span
+            >
             <div class="h-2 flex-1 rounded-sm bg-surface-gray-3">
-              <div class="h-full rounded-sm" :style="`width:${g.pct}%;background:${g.color}`" />
+              <div
+                class="h-full rounded-sm"
+                :style="`width:${g.pct}%;background:${g.color}`"
+              />
             </div>
-            <span class="w-10 text-right text-[12px] text-ink-gray-6">{{ g.count }}</span>
+            <span class="w-10 text-right text-[12px] text-ink-gray-6">{{
+              g.count
+            }}</span>
           </div>
         </Card>
       </div>
 
       <!-- campaign attribution -->
       <Card :title="__('Atribución por campaña')">
-        <div v-if="!attribution.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin atribución registrada') }}</div>
+        <div
+          v-if="!attribution.length"
+          class="py-4 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Sin atribución registrada') }}
+        </div>
         <div v-else>
-          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${ATTR_GRID}`">
-            <div>{{ __('Campaña') }}</div><div>{{ __('Leads') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv%') }}</div><div>{{ __('Ingresos') }}</div>
+          <div
+            class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${ATTR_GRID}`"
+          >
+            <div>{{ __('Campaña') }}</div>
+            <div>{{ __('Leads') }}</div>
+            <div>{{ __('Ganados') }}</div>
+            <div>{{ __('Conv%') }}</div>
+            <div>{{ __('Ingresos') }}</div>
           </div>
           <div
             v-for="a in attribution"
@@ -78,7 +144,9 @@
           >
             <div class="font-medium text-ink-gray-9">{{ a.campaign }}</div>
             <div>{{ a.leads }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ a.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ a.won }}
+            </div>
             <div>{{ a.conv_pct }}%</div>
             <div class="font-medium">{{ money(a.revenue) }}</div>
           </div>
@@ -87,14 +155,28 @@
 
       <!-- campaign ROI: enrolled → sends → touched → won → pesos (revenue-only ROI) -->
       <Card :title="__('ROI por campaña')">
-        <div v-if="!roiRows.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin campañas usadas en el periodo') }}</div>
+        <div
+          v-if="!roiRows.length"
+          class="py-4 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Sin campañas usadas en el periodo') }}
+        </div>
         <div v-else>
-          <div class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${ROI_GRID}`">
+          <div
+            class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${ROI_GRID}`"
+          >
             <div>{{ __('Campaña') }}</div>
-            <div :title="__('Enrolamientos en el periodo')">{{ __('Inscr.') }}</div>
+            <div :title="__('Enrolamientos en el periodo')">
+              {{ __('Inscr.') }}
+            </div>
             <div>{{ __('Enviados') }}</div>
             <div :title="__('Fallidos + omitidos')">{{ __('Fall.') }}</div>
-            <div :title="__('Contactos con al menos un touchpoint de la campaña')">{{ __('Tocados') }}</div>
+            <div
+              :title="__('Contactos con al menos un touchpoint de la campaña')"
+            >
+              {{ __('Tocados') }}
+            </div>
             <div :title="__('Deals ganados atribuidos')">{{ __('Gan.') }}</div>
             <div>{{ __('Conv.') }}</div>
             <div>{{ __('Ingresos') }}</div>
@@ -106,12 +188,25 @@
             :style="`grid-template-columns:${ROI_GRID}`"
             @click="$router.push(`/campaigns/${c.campaign}`)"
           >
-            <div class="truncate font-medium text-ink-gray-9" :title="c.campaign">{{ c.title || c.campaign }}</div>
+            <div
+              class="truncate font-medium text-ink-gray-9"
+              :title="c.campaign"
+            >
+              {{ c.title || c.campaign }}
+            </div>
             <div>{{ c.enrolled }}</div>
             <div>{{ c.sent }}</div>
-            <div :class="(c.failed + c.skipped) ? 'text-ink-red-7' : 'text-ink-gray-4'">{{ c.failed + c.skipped }}</div>
+            <div
+              :class="
+                c.failed + c.skipped ? 'text-ink-red-7' : 'text-ink-gray-4'
+              "
+            >
+              {{ c.failed + c.skipped }}
+            </div>
             <div>{{ c.touched }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ c.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ c.won }}
+            </div>
             <div>{{ c.conv_pct }}%</div>
             <div class="font-medium">{{ money(c.revenue) }}</div>
           </div>
@@ -120,31 +215,73 @@
 
       <!-- dispatch health: why sends didn't go out (rolling 7 days, not period-scoped) -->
       <Card :title="__('Salud de envíos (7 días)')">
-        <div v-if="!dispatchAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin envíos registrados') }}</div>
+        <div
+          v-if="!dispatchAny"
+          class="py-4 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Sin envíos registrados') }}
+        </div>
         <div v-else>
           <div class="mb-2.5 flex flex-wrap gap-1.5">
             <span
               v-for="(n, st) in dispatchStatuses"
               :key="st"
               class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-              :class="st === 'Sent' ? 'text-ink-green-8 bg-surface-green-2' : st === 'Failed' ? 'text-ink-red-8 bg-surface-red-1' : st === 'Pending' ? 'text-ink-amber-7 bg-surface-amber-1' : 'text-ink-gray-7 bg-surface-gray-2'"
-            >{{ st }} · {{ n }}</span>
+              :class="
+                st === 'Sent'
+                  ? 'text-ink-green-8 bg-surface-green-2'
+                  : st === 'Failed'
+                    ? 'text-ink-red-8 bg-surface-red-1'
+                    : st === 'Pending'
+                      ? 'text-ink-amber-7 bg-surface-amber-1'
+                      : 'text-ink-gray-7 bg-surface-gray-2'
+              "
+              >{{ st }} · {{ n }}</span
+            >
           </div>
-          <div v-if="dispatchDeferredRows.length" class="mb-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Diferidos (siguen pendientes)') }}</div>
-          <div v-for="d in dispatchDeferredRows" :key="d.reason" class="flex items-center justify-between border-b border-outline-gray-1 py-1.5 text-[12px]">
-            <span class="min-w-0 truncate text-ink-gray-7" :title="d.reason">{{ d.reason }}</span>
-            <span class="ml-2 flex-none font-semibold text-ink-amber-7">{{ d.count }}</span>
+          <div
+            v-if="dispatchDeferredRows.length"
+            class="mb-1 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+          >
+            {{ __('Diferidos (siguen pendientes)') }}
           </div>
-          <div v-if="dispatchTop.length" class="mb-1 mt-2.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4">{{ __('Principales motivos de fallo/omisión') }}</div>
+          <div
+            v-for="d in dispatchDeferredRows"
+            :key="d.reason"
+            class="flex items-center justify-between border-b border-outline-gray-1 py-1.5 text-[12px]"
+          >
+            <span class="min-w-0 truncate text-ink-gray-7" :title="d.reason">{{
+              d.reason
+            }}</span>
+            <span class="ml-2 flex-none font-semibold text-ink-amber-7">{{
+              d.count
+            }}</span>
+          </div>
+          <div
+            v-if="dispatchTop.length"
+            class="mb-1 mt-2.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+          >
+            {{ __('Principales motivos de fallo/omisión') }}
+          </div>
           <div
             v-for="(r, i) in dispatchTop"
             :key="i"
             class="grid items-center gap-x-2 border-b border-outline-gray-1 py-1.5 text-[12px]"
             :style="`grid-template-columns:${DISP_GRID}`"
           >
-            <span class="font-semibold" :class="r.status === 'Failed' ? 'text-ink-red-7' : 'text-ink-gray-6'">{{ r.status }}</span>
-            <span class="min-w-0 truncate text-ink-gray-7" :title="r.reason">{{ r.reason || '—' }}</span>
-            <span class="text-right font-semibold text-ink-gray-8">{{ r.count }}</span>
+            <span
+              class="font-semibold"
+              :class="
+                r.status === 'Failed' ? 'text-ink-red-7' : 'text-ink-gray-6'
+              "
+              >{{ r.status }}</span
+            >
+            <span class="min-w-0 truncate text-ink-gray-7" :title="r.reason">{{
+              r.reason || '—'
+            }}</span>
+            <span class="text-right font-semibold text-ink-gray-8">{{
+              r.count
+            }}</span>
           </div>
         </div>
       </Card>
@@ -152,15 +289,24 @@
       <!-- chatflow analytics: drafted → sent (human/auto) → replied per flow/step -->
       <Card v-if="flowRows.length" :title="__('Flujos de bot (chatflows)')">
         <div>
-          <div class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${FLOW_GRID}`">
+          <div
+            class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${FLOW_GRID}`"
+          >
             <div>{{ __('Flujo') }}</div>
             <div>{{ __('Paso') }}</div>
             <div :title="__('Borradores generados')">{{ __('Borr.') }}</div>
-            <div :title="__('Enviados (aprobados + auto)')">{{ __('Env.') }}</div>
-            <div :title="__('Enviados sin revisión (auto_send)')">{{ __('Auto') }}</div>
+            <div :title="__('Enviados (aprobados + auto)')">
+              {{ __('Env.') }}
+            </div>
+            <div :title="__('Enviados sin revisión (auto_send)')">
+              {{ __('Auto') }}
+            </div>
             <div :title="__('Descartados / cancelados')">{{ __('Desc.') }}</div>
             <div>{{ __('Fall.') }}</div>
-            <div :title="__('El cliente respondió después del envío')">{{ __('Resp.') }}</div>
+            <div :title="__('El cliente respondió después del envío')">
+              {{ __('Resp.') }}
+            </div>
             <div>%</div>
           </div>
           <div
@@ -169,13 +315,25 @@
             class="grid items-center gap-x-2 border-b border-outline-gray-1 py-2 text-[12.5px]"
             :style="`grid-template-columns:${FLOW_GRID}`"
           >
-            <div class="truncate font-medium text-ink-gray-9" :title="f.flow">{{ f.flow }}</div>
-            <div class="truncate text-ink-gray-7" :title="f.step">{{ f.step }}</div>
+            <div class="truncate font-medium text-ink-gray-9" :title="f.flow">
+              {{ f.flow }}
+            </div>
+            <div class="truncate text-ink-gray-7" :title="f.step">
+              {{ f.step }}
+            </div>
             <div>{{ f.drafted }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ f.sent }}</div>
-            <div :class="f.auto_sent ? 'text-ink-amber-7' : 'text-ink-gray-4'">{{ f.auto_sent }}</div>
-            <div :class="f.discarded ? '' : 'text-ink-gray-4'">{{ f.discarded }}</div>
-            <div :class="f.failed ? 'text-ink-red-7' : 'text-ink-gray-4'">{{ f.failed }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ f.sent }}
+            </div>
+            <div :class="f.auto_sent ? 'text-ink-amber-7' : 'text-ink-gray-4'">
+              {{ f.auto_sent }}
+            </div>
+            <div :class="f.discarded ? '' : 'text-ink-gray-4'">
+              {{ f.discarded }}
+            </div>
+            <div :class="f.failed ? 'text-ink-red-7' : 'text-ink-gray-4'">
+              {{ f.failed }}
+            </div>
             <div>{{ f.replied }}</div>
             <div class="font-medium">{{ f.reply_pct }}%</div>
           </div>
@@ -184,10 +342,19 @@
 
       <!-- social funnel → pesos: comment / lead-ad / DM → Lead → Deal → Won -->
       <Card :title="__('Embudo social → pesos')">
-        <div v-if="!socialAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin actividad social en el periodo') }}</div>
+        <div v-if="!socialAny" class="py-4 text-center text-xs text-ink-gray-4">
+          {{ __('Sin actividad social en el periodo') }}
+        </div>
         <div v-else>
-          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${FUNNEL_GRID}`">
-            <div>{{ __('Origen') }}</div><div>{{ __('Leads') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Ingresos') }}</div>
+          <div
+            class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${FUNNEL_GRID}`"
+          >
+            <div>{{ __('Origen') }}</div>
+            <div>{{ __('Leads') }}</div>
+            <div>{{ __('Deals') }}</div>
+            <div>{{ __('Ganados') }}</div>
+            <div>{{ __('Ingresos') }}</div>
           </div>
           <div
             v-for="r in socialRows"
@@ -196,14 +363,22 @@
             :style="`grid-template-columns:${FUNNEL_GRID}`"
           >
             <div class="flex items-center gap-1.5 font-medium text-ink-gray-9">
-              <span class="h-2 w-2 flex-none rounded-full" :style="`background:${originDot(r.origin)}`" />{{ r.origin }}
+              <span
+                class="h-2 w-2 flex-none rounded-full"
+                :style="`background:${originDot(r.origin)}`"
+              />{{ r.origin }}
             </div>
             <div>{{ r.leads }}</div>
             <div>{{ r.deals }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ r.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ r.won }}
+            </div>
             <div class="font-medium">{{ money(r.pesos) }}</div>
           </div>
-          <div class="grid items-center py-2 text-[12.5px] font-bold text-ink-gray-9" :style="`grid-template-columns:${FUNNEL_GRID}`">
+          <div
+            class="grid items-center py-2 text-[12.5px] font-bold text-ink-gray-9"
+            :style="`grid-template-columns:${FUNNEL_GRID}`"
+          >
             <div>{{ socialTotal.origin }}</div>
             <div>{{ socialTotal.leads }}</div>
             <div>{{ socialTotal.deals }}</div>
@@ -215,19 +390,38 @@
 
       <!-- agent + shop scorecard (#27): who handles volume, how fast, who closes -->
       <Card :title="__('Desempeño por agente')">
-        <div v-if="!scoreAny" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin actividad en el periodo') }}</div>
+        <div v-if="!scoreAny" class="py-4 text-center text-xs text-ink-gray-4">
+          {{ __('Sin actividad en el periodo') }}
+        </div>
         <div v-else>
-          <div class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${AGENT_GRID}`">
+          <div
+            class="grid items-center gap-x-2 border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${AGENT_GRID}`"
+          >
             <div>{{ __('Agente') }}</div>
-            <div :title="__('Mensajes WhatsApp enviados por el agente')">{{ __('Envíos') }}</div>
-            <div :title="__('Mensajes Messenger enviados por el agente')">{{ __('Msgr') }}</div>
-            <div :title="__('Tiempo medio de primera respuesta')">{{ __('Resp.') }}</div>
+            <div :title="__('Mensajes WhatsApp enviados por el agente')">
+              {{ __('Envíos') }}
+            </div>
+            <div :title="__('Mensajes Messenger enviados por el agente')">
+              {{ __('Msgr') }}
+            </div>
+            <div :title="__('Tiempo medio de primera respuesta')">
+              {{ __('Resp.') }}
+            </div>
             <div :title="__('Llamadas registradas')">{{ __('Llam.') }}</div>
-            <div :title="__('Reparaciones entregadas (técnico)')">{{ __('Rep.') }}</div>
+            <div :title="__('Reparaciones entregadas (técnico)')">
+              {{ __('Rep.') }}
+            </div>
             <div>{{ __('Deals') }}</div>
             <div :title="__('Deals ganados')">{{ __('Gan.') }}</div>
             <div>{{ __('Conv.') }}</div>
-            <div :title="__('% de tratos con SLA cumplido (primera respuesta a tiempo)')">{{ __('SLA') }}</div>
+            <div
+              :title="
+                __('% de tratos con SLA cumplido (primera respuesta a tiempo)')
+              "
+            >
+              {{ __('SLA') }}
+            </div>
             <div>{{ __('Ingresos') }}</div>
           </div>
           <div
@@ -236,16 +430,30 @@
             class="grid items-center gap-x-2 border-b border-outline-gray-1 py-2 text-[12.5px]"
             :style="`grid-template-columns:${AGENT_GRID}`"
           >
-            <div class="truncate font-medium text-ink-gray-9" :title="a.agent">{{ a.agent_name }}</div>
+            <div class="truncate font-medium text-ink-gray-9" :title="a.agent">
+              {{ a.agent_name }}
+            </div>
             <div>{{ a.sent }}</div>
             <div>{{ a.messenger_sent || 0 }}</div>
-            <div :class="a.avg_response_secs == null ? 'text-ink-gray-4' : ''">{{ fmtResp(a.avg_response_secs) }}</div>
+            <div :class="a.avg_response_secs == null ? 'text-ink-gray-4' : ''">
+              {{ fmtResp(a.avg_response_secs) }}
+            </div>
             <div>{{ a.calls || 0 }}</div>
             <div>{{ a.repairs || 0 }}</div>
             <div>{{ a.deals }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ a.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ a.won }}
+            </div>
             <div>{{ a.conv_pct }}%</div>
-            <div :class="a.sla_kept_pct == null ? 'text-ink-gray-4' : slaClass(a.sla_kept_pct)">{{ a.sla_kept_pct == null ? '—' : a.sla_kept_pct + '%' }}</div>
+            <div
+              :class="
+                a.sla_kept_pct == null
+                  ? 'text-ink-gray-4'
+                  : slaClass(a.sla_kept_pct)
+              "
+            >
+              {{ a.sla_kept_pct == null ? '—' : a.sla_kept_pct + '%' }}
+            </div>
             <div class="font-medium">{{ money(a.won_pesos) }}</div>
           </div>
         </div>
@@ -262,8 +470,18 @@
         sites where the shop fields aren't installed) -->
       <Card v-if="scoreShops.length" :title="__('Desempeño por sucursal')">
         <div>
-          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${SHOP_GRID}`">
-            <div>{{ __('Sucursal') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv.') }}</div><div>{{ __('SLA') }}</div><div>{{ __('Ingresos') }}</div><div>{{ __('Facturado') }}</div><div>{{ __('Cobrado') }}</div>
+          <div
+            class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${SHOP_GRID}`"
+          >
+            <div>{{ __('Sucursal') }}</div>
+            <div>{{ __('Deals') }}</div>
+            <div>{{ __('Ganados') }}</div>
+            <div>{{ __('Conv.') }}</div>
+            <div>{{ __('SLA') }}</div>
+            <div>{{ __('Ingresos') }}</div>
+            <div>{{ __('Facturado') }}</div>
+            <div>{{ __('Cobrado') }}</div>
           </div>
           <div
             v-for="s in scoreShops"
@@ -273,20 +491,44 @@
           >
             <div class="truncate font-medium text-ink-gray-9">{{ s.shop }}</div>
             <div>{{ s.deals }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ s.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ s.won }}
+            </div>
             <div>{{ s.conv_pct }}%</div>
-            <div :class="s.sla_kept_pct == null ? 'text-ink-gray-4' : slaClass(s.sla_kept_pct)">{{ s.sla_kept_pct == null ? '—' : s.sla_kept_pct + '%' }}</div>
+            <div
+              :class="
+                s.sla_kept_pct == null
+                  ? 'text-ink-gray-4'
+                  : slaClass(s.sla_kept_pct)
+              "
+            >
+              {{ s.sla_kept_pct == null ? '—' : s.sla_kept_pct + '%' }}
+            </div>
             <div class="font-medium">{{ money(s.won_pesos) }}</div>
             <div class="font-medium">{{ money(s.invoiced) }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ money(s.paid) }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ money(s.paid) }}
+            </div>
           </div>
         </div>
       </Card>
       <Card v-else :title="__('Desempeño por sucursal (territorio)')">
-        <div v-if="!scoreTerritories.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
+        <div
+          v-if="!scoreTerritories.length"
+          class="py-4 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Sin datos') }}
+        </div>
         <div v-else>
-          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${TERR_GRID}`">
-            <div>{{ __('Territorio') }}</div><div>{{ __('Deals') }}</div><div>{{ __('Ganados') }}</div><div>{{ __('Conv.') }}</div><div>{{ __('Ingresos') }}</div>
+          <div
+            class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${TERR_GRID}`"
+          >
+            <div>{{ __('Territorio') }}</div>
+            <div>{{ __('Deals') }}</div>
+            <div>{{ __('Ganados') }}</div>
+            <div>{{ __('Conv.') }}</div>
+            <div>{{ __('Ingresos') }}</div>
           </div>
           <div
             v-for="s in scoreTerritories"
@@ -294,9 +536,13 @@
             class="grid items-center border-b border-outline-gray-1 py-2 text-[12.5px]"
             :style="`grid-template-columns:${TERR_GRID}`"
           >
-            <div class="truncate font-medium text-ink-gray-9">{{ s.territory }}</div>
+            <div class="truncate font-medium text-ink-gray-9">
+              {{ s.territory }}
+            </div>
             <div>{{ s.deals }}</div>
-            <div class="font-semibold" style="color: var(--brand)">{{ s.won }}</div>
+            <div class="font-semibold" style="color: var(--brand)">
+              {{ s.won }}
+            </div>
             <div>{{ s.conv_pct }}%</div>
             <div class="font-medium">{{ money(s.won_pesos) }}</div>
           </div>
@@ -306,10 +552,17 @@
       <!-- deal hygiene: open deals missing owner/shop/contact/documents, lapsed SLA,
         or silent 14+ days. Managers see all; a rep only their own. -->
       <Card :title="__('Higiene de tratos')">
-        <div v-if="!hygiene.count" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Todo en orden — sin pendientes de higiene') }}</div>
+        <div
+          v-if="!hygiene.count"
+          class="py-4 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Todo en orden — sin pendientes de higiene') }}
+        </div>
         <div v-else>
           <div class="mb-3 flex flex-wrap items-center gap-2">
-            <span class="text-[13px] font-bold text-ink-gray-9">{{ hygiene.count }} {{ __('tratos con pendientes') }}</span>
+            <span class="text-[13px] font-bold text-ink-gray-9"
+              >{{ hygiene.count }} {{ __('tratos con pendientes') }}</span
+            >
             <span
               v-for="(n, issue) in hygiene.summary"
               :key="issue"
@@ -318,8 +571,15 @@
               {{ issueLabel(issue) }} · {{ n }}
             </span>
           </div>
-          <div class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4" :style="`grid-template-columns:${HYG_GRID}`">
-            <div>{{ __('Trato') }}</div><div>{{ __('Responsable') }}</div><div>{{ __('Sucursal') }}</div><div>{{ __('Días') }}</div><div>{{ __('Pendientes') }}</div>
+          <div
+            class="grid items-center border-b border-outline-gray-1 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            :style="`grid-template-columns:${HYG_GRID}`"
+          >
+            <div>{{ __('Trato') }}</div>
+            <div>{{ __('Responsable') }}</div>
+            <div>{{ __('Sucursal') }}</div>
+            <div>{{ __('Días') }}</div>
+            <div>{{ __('Pendientes') }}</div>
           </div>
           <div
             v-for="r in hygieneRows"
@@ -329,15 +589,35 @@
             @click="$router.push(`/deals/${r.deal}`)"
           >
             <div class="truncate font-medium text-ink-gray-9">{{ r.deal }}</div>
-            <div class="truncate" :class="r.owner ? 'text-ink-gray-7' : 'font-medium text-ink-red-6'">{{ r.owner || __('Sin responsable') }}</div>
+            <div
+              class="truncate"
+              :class="
+                r.owner ? 'text-ink-gray-7' : 'font-medium text-ink-red-6'
+              "
+            >
+              {{ r.owner || __('Sin responsable') }}
+            </div>
             <div class="truncate text-ink-gray-7">{{ r.shop || '—' }}</div>
             <div class="text-ink-gray-6">{{ r.age_days ?? '—' }}</div>
             <div class="flex flex-wrap gap-1">
-              <span v-for="i in r.issues" :key="i" class="rounded bg-surface-amber-1 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-amber-7">{{ issueLabel(i) }}</span>
+              <span
+                v-for="i in r.issues"
+                :key="i"
+                class="rounded bg-surface-amber-1 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-amber-7"
+                >{{ issueLabel(i) }}</span
+              >
             </div>
           </div>
-          <div v-if="hygiene.count > hygieneRows.length" class="pt-2 text-[11px] text-ink-gray-4">
-            {{ __('Mostrando {0} de {1} — el resto en el reporte del servidor.', [hygieneRows.length, hygiene.count]) }}
+          <div
+            v-if="hygiene.count > hygieneRows.length"
+            class="pt-2 text-[11px] text-ink-gray-4"
+          >
+            {{
+              __(
+                'Mostrando {0} de {1} — el resto en el reporte del servidor.',
+                [hygieneRows.length, hygiene.count],
+              )
+            }}
           </div>
         </div>
       </Card>
@@ -348,20 +628,37 @@
         <div class="flex flex-wrap items-end gap-3">
           <label class="flex flex-col gap-1 text-[11px] text-ink-gray-6">
             {{ __('Segmento') }}
-            <select v-model="reactSegment" class="rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2">
-              <option value="cold_leads">{{ __('Leads fríos (sin actividad)') }}</option>
-              <option value="dormant_customers">{{ __('Clientes inactivos (con compra previa)') }}</option>
+            <select
+              v-model="reactSegment"
+              class="rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2"
+            >
+              <option value="cold_leads">
+                {{ __('Leads fríos (sin actividad)') }}
+              </option>
+              <option value="dormant_customers">
+                {{ __('Clientes inactivos (con compra previa)') }}
+              </option>
             </select>
           </label>
           <label class="flex flex-col gap-1 text-[11px] text-ink-gray-6">
             {{ __('Inactivos hace (días)') }}
-            <input v-model.number="reactDays" type="number" min="7" class="w-24 rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2" />
+            <input
+              v-model.number="reactDays"
+              type="number"
+              min="7"
+              class="w-24 rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2"
+            />
           </label>
           <label class="flex flex-col gap-1 text-[11px] text-ink-gray-6">
             {{ __('Plantilla aprobada') }}
-            <select v-model="reactTemplate" class="min-w-[180px] rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2">
+            <select
+              v-model="reactTemplate"
+              class="min-w-[180px] rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[12.5px] text-ink-gray-8 dark:bg-surface-gray-2"
+            >
               <option value="">{{ __('— elegir —') }}</option>
-              <option v-for="t in reactTemplates" :key="t.name" :value="t.name">{{ t.template_name || t.name }}</option>
+              <option v-for="t in reactTemplates" :key="t.name" :value="t.name">
+                {{ t.template_name || t.name }}
+              </option>
             </select>
           </label>
           <button
@@ -374,35 +671,79 @@
           <button
             class="rounded-md px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
             style="background: var(--brand)"
-            :disabled="reactBusy || !reactTemplate || !(reactPreviewData && reactPreviewData.staged)"
+            :disabled="
+              reactBusy ||
+              !reactTemplate ||
+              !(reactPreviewData && reactPreviewData.staged)
+            "
             @click="doStage"
           >
-            {{ reactBusy ? '…' : __('Enviar {0} a revisión', [(reactPreviewData && reactPreviewData.staged) || 0]) }}
+            {{
+              reactBusy
+                ? '…'
+                : __('Enviar {0} a revisión', [
+                    (reactPreviewData && reactPreviewData.staged) || 0,
+                  ])
+            }}
           </button>
         </div>
         <div v-if="reactPreviewData" class="mt-3 text-[12px] text-ink-gray-7">
           <div class="mb-1 font-semibold text-ink-gray-9">
             {{ reactPreviewData.staged }} {{ __('por reactivar') }}
-            <span class="font-normal text-ink-gray-5">· {{ reactPreviewData.audience_total }} {{ __('en segmento') }} · {{ reactPreviewData.skipped_suppressed }} {{ __('opt-out') }} · {{ reactPreviewData.skipped_recent }} {{ __('recientes') }}</span>
+            <span class="font-normal text-ink-gray-5"
+              >· {{ reactPreviewData.audience_total }} {{ __('en segmento') }} ·
+              {{ reactPreviewData.skipped_suppressed }} {{ __('opt-out') }} ·
+              {{ reactPreviewData.skipped_recent }} {{ __('recientes') }}</span
+            >
           </div>
-          <div v-for="r in reactPreviewData.sample" :key="r.reference_name" class="flex items-center gap-2 border-b border-outline-gray-1 py-1 text-[11.5px]">
-            <span class="min-w-0 flex-1 truncate font-medium text-ink-gray-8">{{ r.name }}</span>
+          <div
+            v-for="r in reactPreviewData.sample"
+            :key="r.reference_name"
+            class="flex items-center gap-2 border-b border-outline-gray-1 py-1 text-[11.5px]"
+          >
+            <span class="min-w-0 flex-1 truncate font-medium text-ink-gray-8">{{
+              r.name
+            }}</span>
             <span class="text-ink-gray-5">{{ r.mobile_no }}</span>
           </div>
-          <div class="mt-1.5 text-[10.5px] text-ink-gray-4">{{ __('Cada reactivación se encola a revisión — un humano aprueba el envío. Nada se envía automáticamente.') }}</div>
+          <div class="mt-1.5 text-[10.5px] text-ink-gray-4">
+            {{
+              __(
+                'Cada reactivación se encola a revisión — un humano aprueba el envío. Nada se envía automáticamente.',
+              )
+            }}
+          </div>
         </div>
       </Card>
 
       <!-- source breakdown -->
       <Card :title="__('Origen de leads')">
-        <div v-if="!sourceCards.length" class="py-4 text-center text-xs text-ink-gray-4">{{ __('Sin datos') }}</div>
+        <div
+          v-if="!sourceCards.length"
+          class="py-4 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Sin datos') }}
+        </div>
         <div v-else class="grid grid-cols-3 gap-3">
-          <div v-for="s in sourceCards" :key="s.name" class="rounded-[10px] border border-outline-gray-2 p-3">
-            <div class="flex items-center gap-1.5 text-[12px] font-semibold text-ink-gray-8">
-              <span class="h-2 w-2 rounded-full" :style="`background:${s.dot}`" />{{ s.name }}
+          <div
+            v-for="s in sourceCards"
+            :key="s.name"
+            class="rounded-[10px] border border-outline-gray-2 p-3"
+          >
+            <div
+              class="flex items-center gap-1.5 text-[12px] font-semibold text-ink-gray-8"
+            >
+              <span
+                class="h-2 w-2 rounded-full"
+                :style="`background:${s.dot}`"
+              />{{ s.name }}
             </div>
-            <div class="mt-1 text-[20px] font-bold text-ink-gray-9">{{ s.leads }}</div>
-            <div class="text-[11px] text-ink-gray-5">{{ s.deals }} {{ __('deals') }}</div>
+            <div class="mt-1 text-[20px] font-bold text-ink-gray-9">
+              {{ s.leads }}
+            </div>
+            <div class="text-[11px] text-ink-gray-5">
+              {{ s.deals }} {{ __('deals') }}
+            </div>
           </div>
         </div>
       </Card>
@@ -445,7 +786,8 @@ function range(key) {
   const to = localDate(now)
   let from = new Date(now)
   if (key === 'week') from.setDate(now.getDate() - now.getDay())
-  else if (key === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1)
+  else if (key === 'month')
+    from = new Date(now.getFullYear(), now.getMonth(), 1)
   else from = new Date(now.getFullYear(), 0, 1)
   return { from_date: localDate(from), to_date: to }
 }
@@ -455,18 +797,50 @@ function range(key) {
 // banner instead of blank cards. The server gate is the real protection.
 const restricted = ref(false)
 const onRestricted = () => (restricted.value = true)
-const kpisRes = createResource({ url: 'doco_marketing.api.reports.get_report_kpis', onError: onRestricted })
-const funnelRes = createResource({ url: 'doco_marketing.api.reports.get_funnel_data', onError: onRestricted })
-const attrRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_attribution', onError: onRestricted })
-const srcRes = createResource({ url: 'doco_marketing.api.reports.get_lead_source_breakdown', onError: onRestricted })
-const socialRes = createResource({ url: 'doco_marketing.api.reports.get_social_funnel', onError: onRestricted })
-const scoreRes = createResource({ url: 'doco_marketing.api.reports.get_agent_scorecard', onError: onRestricted })
-const roiRes = createResource({ url: 'doco_marketing.api.reports.get_campaign_roi', onError: onRestricted })
-const flowRes = createResource({ url: 'doco_marketing.api.reports.get_flow_analytics', onError: onRestricted })
+const kpisRes = createResource({
+  url: 'doco_marketing.api.reports.get_report_kpis',
+  onError: onRestricted,
+})
+const funnelRes = createResource({
+  url: 'doco_marketing.api.reports.get_funnel_data',
+  onError: onRestricted,
+})
+const attrRes = createResource({
+  url: 'doco_marketing.api.reports.get_campaign_attribution',
+  onError: onRestricted,
+})
+const srcRes = createResource({
+  url: 'doco_marketing.api.reports.get_lead_source_breakdown',
+  onError: onRestricted,
+})
+const socialRes = createResource({
+  url: 'doco_marketing.api.reports.get_social_funnel',
+  onError: onRestricted,
+})
+const scoreRes = createResource({
+  url: 'doco_marketing.api.reports.get_agent_scorecard',
+  onError: onRestricted,
+})
+const roiRes = createResource({
+  url: 'doco_marketing.api.reports.get_campaign_roi',
+  onError: onRestricted,
+})
+const flowRes = createResource({
+  url: 'doco_marketing.api.reports.get_flow_analytics',
+  onError: onRestricted,
+})
 // Hygiene is a live audit, not period-scoped — loaded once (reps get own-only server-side).
-const hygieneRes = createResource({ url: 'doco_marketing.api.reports.get_deal_hygiene', auto: true, onError: onRestricted })
+const hygieneRes = createResource({
+  url: 'doco_marketing.api.reports.get_deal_hygiene',
+  auto: true,
+  onError: onRestricted,
+})
 // Dispatch health takes a rolling `days` window, not from/to — loaded once like hygiene.
-const dispatchRes = createResource({ url: 'doco_marketing.api.reports.dispatch_health', auto: true, onError: onRestricted })
+const dispatchRes = createResource({
+  url: 'doco_marketing.api.reports.dispatch_health',
+  auto: true,
+  onError: onRestricted,
+})
 
 function load() {
   const r = range(period.value)
@@ -489,8 +863,19 @@ const kpis = computed(() => kpisRes.data || {})
 const funnel = computed(() => funnelRes.data || [])
 const attribution = computed(() => attrRes.data || [])
 const socialRows = computed(() => socialRes.data?.rows || [])
-const socialTotal = computed(() => socialRes.data?.total || { origin: __('Total social'), leads: 0, deals: 0, won: 0, pesos: 0 })
-const socialAny = computed(() => (socialTotal.value.leads || 0) + (socialTotal.value.deals || 0) > 0)
+const socialTotal = computed(
+  () =>
+    socialRes.data?.total || {
+      origin: __('Total social'),
+      leads: 0,
+      deals: 0,
+      won: 0,
+      pesos: 0,
+    },
+)
+const socialAny = computed(
+  () => (socialTotal.value.leads || 0) + (socialTotal.value.deals || 0) > 0,
+)
 function originDot(origin) {
   const o = String(origin || '').toLowerCase()
   if (o.includes('messenger')) return '#0084ff'
@@ -512,7 +897,9 @@ const dispatchDeferredRows = computed(() =>
     .sort((a, b) => b.count - a.count),
 )
 const dispatchTop = computed(() => dispatchRes.data?.top_reasons || [])
-const dispatchAny = computed(() => Object.keys(dispatchStatuses.value).length > 0)
+const dispatchAny = computed(
+  () => Object.keys(dispatchStatuses.value).length > 0,
+)
 
 // Agent / shop scorecard (#27)
 const scoreAgents = computed(() => scoreRes.data?.agents || [])
@@ -544,7 +931,9 @@ const ISSUE_LABELS = {
   sin_actividad: __('Sin actividad'),
 }
 const issueLabel = (k) => ISSUE_LABELS[k] || k
-const hygiene = computed(() => hygieneRes.data || { count: 0, summary: {}, rows: [] })
+const hygiene = computed(
+  () => hygieneRes.data || { count: 0, summary: {}, rows: [] },
+)
 const hygieneRows = computed(() => (hygiene.value.rows || []).slice(0, 8))
 
 // Reactivación / win-back — preview the audience, then stage template sends into the
@@ -554,16 +943,25 @@ const reactDays = ref(45)
 const reactTemplate = ref('')
 const reactBusy = ref(false)
 const reactPreviewData = ref(null)
-const reactTemplatesRes = createResource({ url: 'doco_marketing.api.reactivation.get_templates', auto: true, onError: onRestricted })
+const reactTemplatesRes = createResource({
+  url: 'doco_marketing.api.reactivation.get_templates',
+  auto: true,
+  onError: onRestricted,
+})
 const reactTemplates = computed(() => reactTemplatesRes.data || [])
 // A changed segment/window invalidates a prior preview (the staged count would be stale).
 watch([reactSegment, reactDays], () => (reactPreviewData.value = null))
 async function doPreview() {
   reactBusy.value = true
   try {
-    reactPreviewData.value = await call('doco_marketing.api.reactivation.preview', {
-      segment: reactSegment.value, days: reactDays.value, limit: 200,
-    })
+    reactPreviewData.value = await call(
+      'doco_marketing.api.reactivation.preview',
+      {
+        segment: reactSegment.value,
+        days: reactDays.value,
+        limit: 200,
+      },
+    )
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo previsualizar'))
   } finally {
@@ -574,9 +972,15 @@ async function doStage() {
   if (!reactTemplate.value) return
   reactBusy.value = true
   try {
-    const res = await call('doco_marketing.api.reactivation.stage_reactivation', {
-      segment: reactSegment.value, template: reactTemplate.value, days: reactDays.value, limit: 200,
-    })
+    const res = await call(
+      'doco_marketing.api.reactivation.stage_reactivation',
+      {
+        segment: reactSegment.value,
+        template: reactTemplate.value,
+        days: reactDays.value,
+        limit: 200,
+      },
+    )
     toast.success(__('{0} reactivaciones en cola de revisión', [res.staged]))
     await doPreview() // refresh — the cooldown drops those just staged
   } catch (e) {
@@ -588,7 +992,7 @@ async function doStage() {
 
 function kpiVal(x) {
   if (x == null) return 0
-  return typeof x === 'object' ? (x.value ?? x.count ?? x.total ?? 0) : x
+  return typeof x === 'object' ? x.value ?? x.count ?? x.total ?? 0 : x
 }
 const convRate = computed(() => {
   const l = Number(kpiVal(kpis.value.total_leads)) || 0
@@ -599,7 +1003,8 @@ const convRate = computed(() => {
 // score distribution bars
 const gradeBars = computed(() => {
   const d = kpis.value.score_distribution || {}
-  const total = ['A', 'B', 'C', 'D', 'Ungraded'].reduce((a, g) => a + (d[g] || 0), 0) || 1
+  const total =
+    ['A', 'B', 'C', 'D', 'Ungraded'].reduce((a, g) => a + (d[g] || 0), 0) || 1
   return ['A', 'B', 'C', 'D'].map((g) => ({
     grade: g,
     count: d[g] || 0,
@@ -625,34 +1030,69 @@ const sourceCards = computed(() => {
   const deals = normalize(data.deals_by_source)
   const names = [...new Set([...Object.keys(leads), ...Object.keys(deals)])]
   return names
-    .map((name) => ({ name, leads: leads[name] || 0, deals: deals[name] || 0, dot: sourceDot(name) }))
+    .map((name) => ({
+      name,
+      leads: leads[name] || 0,
+      deals: deals[name] || 0,
+      dot: sourceDot(name),
+    }))
     .sort((a, b) => b.leads - a.leads)
     .slice(0, 6)
 })
 function sourceDot(name) {
   const k = String(name || '').toLowerCase()
-  for (const c of Object.keys(CHANNEL_META)) if (k.includes(c) || k.includes(CHANNEL_META[c][0].toLowerCase())) return CHANNEL_META[c][1]
+  for (const c of Object.keys(CHANNEL_META))
+    if (k.includes(c) || k.includes(CHANNEL_META[c][0].toLowerCase()))
+      return CHANNEL_META[c][1]
   return '#9aa2ae'
 }
 
 // presentational helpers
 const Card = (props, { slots }) =>
-  h('div', { class: 'rounded-[12px] border border-outline-gray-2 bg-surface-base p-4' }, [
-    h('div', { class: 'mb-3 text-[13px] font-bold text-ink-gray-9' }, props.title),
-    slots.default?.(),
-  ])
+  h(
+    'div',
+    {
+      class: 'rounded-[12px] border border-outline-gray-2 bg-surface-base p-4',
+    },
+    [
+      h(
+        'div',
+        { class: 'mb-3 text-[13px] font-bold text-ink-gray-9' },
+        props.title,
+      ),
+      slots.default?.(),
+    ],
+  )
 Card.props = ['title']
 
 const KpiCard = (props) =>
   h(
     'div',
     {
-      class: 'rounded-[12px] border border-outline-gray-2 bg-surface-base p-4' + (props.to ? ' cursor-pointer hover:border-outline-gray-3' : ''),
+      class:
+        'rounded-[12px] border border-outline-gray-2 bg-surface-base p-4' +
+        (props.to ? ' cursor-pointer hover:border-outline-gray-3' : ''),
       onClick: () => props.to && router.push(props.to),
     },
     [
-      h('div', { class: 'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4' }, props.label),
-      h('div', { class: 'mt-1.5 text-[26px] font-extrabold ' + (props.color ? '' : 'text-ink-gray-9'), style: props.color ? `color:${props.color}` : undefined }, String(props.value)),
+      h(
+        'div',
+        {
+          class:
+            'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4',
+        },
+        props.label,
+      ),
+      h(
+        'div',
+        {
+          class:
+            'mt-1.5 text-[26px] font-extrabold ' +
+            (props.color ? '' : 'text-ink-gray-9'),
+          style: props.color ? `color:${props.color}` : undefined,
+        },
+        String(props.value),
+      ),
     ],
   )
 KpiCard.props = ['label', 'value', 'color', 'to']

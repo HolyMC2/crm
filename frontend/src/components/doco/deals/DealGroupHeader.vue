@@ -14,11 +14,26 @@
   >
     <!-- the row grid side-scrolls; the group's identity stays at the left edge -->
     <span class="sticky left-0 flex min-w-0 items-center gap-2 px-5">
-      <span class="w-3 flex-none text-[10px] text-ink-gray-5" aria-hidden="true">{{ collapsed ? '▸' : '▾' }}</span>
-      <span v-if="color" class="h-2 w-2 flex-none rounded-full" :style="`background:${color}`" />
-      <span class="truncate text-[12px] font-semibold text-ink-gray-8">{{ label || emptyLabel }}</span>
-      <span class="flex-none rounded-full bg-surface-gray-3 px-2 py-px text-[11px] font-semibold text-ink-gray-6">{{ count }}</span>
-      <span v-if="!exact" class="flex-none text-[11px] text-ink-gray-4">{{ __('cargados') }}</span>
+      <span
+        class="w-3 flex-none text-[10px] text-ink-gray-5"
+        aria-hidden="true"
+        >{{ collapsed ? '▸' : '▾' }}</span
+      >
+      <span
+        v-if="color"
+        class="h-2 w-2 flex-none rounded-full"
+        :style="`background:${color}`"
+      />
+      <span class="truncate text-[12px] font-semibold text-ink-gray-8">{{
+        label || emptyLabel
+      }}</span>
+      <span
+        class="flex-none rounded-full bg-surface-gray-3 px-2 py-px text-[11px] font-semibold text-ink-gray-6"
+        >{{ count }}</span
+      >
+      <span v-if="!exact" class="flex-none text-[11px] text-ink-gray-4">{{
+        __('cargados')
+      }}</span>
     </span>
   </button>
 </template>

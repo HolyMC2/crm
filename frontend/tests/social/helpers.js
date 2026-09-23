@@ -10,7 +10,9 @@ const REQUIRED = ['CRM_BASE_URL', 'CRM_TEST_USER', 'CRM_TEST_PASSWORD']
 export function env() {
   const missing = REQUIRED.filter((k) => !process.env[k])
   if (missing.length) {
-    throw new Error(`Missing env var(s): ${missing.join(', ')} — see frontend/.env.example`)
+    throw new Error(
+      `Missing env var(s): ${missing.join(', ')} — see frontend/.env.example`,
+    )
   }
   return {
     base: process.env.CRM_BASE_URL,
@@ -20,7 +22,8 @@ export function env() {
 }
 
 export const evidenceDir =
-  process.env.W6_EVIDENCE_DIR || path.resolve(process.cwd(), 'test-results/evidence')
+  process.env.W6_EVIDENCE_DIR ||
+  path.resolve(process.cwd(), 'test-results/evidence')
 
 // Frappe's `sid` cookie is HttpOnly, so JS `document.cookie=` can't set it — the
 // SERVER must. page.request shares the page context's cookie jar, so a login POST
@@ -31,7 +34,9 @@ export async function login(page) {
     form: { usr: user, pwd: password },
   })
   if (!res.ok()) {
-    throw new Error(`login failed: HTTP ${res.status()} — check CRM_TEST_USER / CRM_TEST_PASSWORD`)
+    throw new Error(
+      `login failed: HTTP ${res.status()} — check CRM_TEST_USER / CRM_TEST_PASSWORD`,
+    )
   }
   return res
 }
@@ -60,14 +65,18 @@ export function byTestId(page, id) {
 export const SEL = {
   title: (page) => page.getByText('Social', { exact: true }).first(),
   newPost: (page) => page.getByRole('button', { name: /Nueva publicación/ }),
-  calendarTab: (page) => page.getByRole('button', { name: 'Calendario', exact: true }),
-  metricsTab: (page) => page.getByRole('button', { name: 'Métricas', exact: true }),
+  calendarTab: (page) =>
+    page.getByRole('button', { name: 'Calendario', exact: true }),
+  metricsTab: (page) =>
+    page.getByRole('button', { name: 'Métricas', exact: true }),
   prevMonth: (page) => page.getByRole('button', { name: '‹' }),
   nextMonth: (page) => page.getByRole('button', { name: '›' }),
   // month label between the ‹ › buttons, e.g. "julio 2026" (capitalize + a 4-digit year)
-  monthLabel: (page) => page.locator('span.capitalize').filter({ hasText: /\d{4}/ }).first(),
+  monthLabel: (page) =>
+    page.locator('span.capitalize').filter({ hasText: /\d{4}/ }).first(),
   // Mes/Semana/Lista sub-toggle (calView) — label is the button text
-  calView: (page, label) => page.getByRole('button', { name: label, exact: true }),
+  calView: (page, label) =>
+    page.getByRole('button', { name: label, exact: true }),
   clearFilters: (page) => page.getByRole('button', { name: /Limpiar/ }),
 }
 
@@ -88,7 +97,9 @@ export function collectErrors(page) {
     const loc = (m.location && m.location().url) || ''
     errors.push(loc ? `${m.text()} :: ${loc}` : m.text())
   })
-  page.on('pageerror', (e) => errors.push(String(e && e.message ? e.message : e)))
+  page.on('pageerror', (e) =>
+    errors.push(String(e && e.message ? e.message : e)),
+  )
   return {
     real: () => errors.filter((t) => !IGNORE.some((re) => re.test(t))),
     all: () => [...errors],

@@ -6,8 +6,14 @@
 <template>
   <div class="scb min-h-0 flex-1 overflow-y-auto p-5">
     <div class="mx-auto max-w-[680px] space-y-2.5">
-      <div v-for="(g, i) in groups" :key="g.value" class="flex items-center gap-3">
-        <div class="w-[140px] flex-none truncate text-[12.5px] font-medium text-ink-gray-7">
+      <div
+        v-for="(g, i) in groups"
+        :key="g.value"
+        class="flex items-center gap-3"
+      >
+        <div
+          class="w-[140px] flex-none truncate text-[12.5px] font-medium text-ink-gray-7"
+        >
           <span
             class="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
             :style="`background:${g.color || 'var(--surface-gray-4)'}`"

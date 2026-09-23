@@ -27,7 +27,11 @@
 
   <Teleport to="body">
     <template v-if="open">
-      <div class="fixed inset-0 z-40" :class="isMobile ? 'bg-black/40' : ''" @click="close" />
+      <div
+        class="fixed inset-0 z-40"
+        :class="isMobile ? 'bg-black/40' : ''"
+        @click="close"
+      />
       <div
         ref="cardRef"
         role="dialog"
@@ -42,15 +46,22 @@
         :style="isMobile ? '' : `top:${pos.top}px;left:${pos.left}px`"
         @click.stop
       >
-        <div v-if="isMobile" class="mx-auto mt-2 h-1 w-10 flex-none rounded-full bg-surface-gray-4" aria-hidden="true" />
+        <div
+          v-if="isMobile"
+          class="mx-auto mt-2 h-1 w-10 flex-none rounded-full bg-surface-gray-4"
+          aria-hidden="true"
+        />
 
         <div class="flex items-center justify-between gap-2 px-3.5 pb-2 pt-3">
           <div class="flex items-center gap-2">
             <span
               class="flex-none rounded px-[7px] py-px text-[11px] font-bold text-white"
               :style="`background:${bg}`"
-            >{{ grade }}</span>
-            <span class="text-[13px] font-semibold text-ink-gray-8">{{ headline }}</span>
+              >{{ grade }}</span
+            >
+            <span class="text-[13px] font-semibold text-ink-gray-8">{{
+              headline
+            }}</span>
           </div>
           <button
             v-if="isMobile"
@@ -63,7 +74,10 @@
         </div>
 
         <div class="scb overflow-y-auto px-3.5 pb-3.5">
-          <div v-if="loading" class="py-4 text-center text-[12.5px] text-ink-gray-4">
+          <div
+            v-if="loading"
+            class="py-4 text-center text-[12.5px] text-ink-gray-4"
+          >
             {{ __('Cargando…') }}
           </div>
 
@@ -81,7 +95,11 @@
               v-if="decayed"
               class="mb-2 rounded-lg bg-surface-amber-1 px-2.5 py-1.5 text-[11.5px] text-ink-amber-7"
             >
-              {{ __('Incluye ajuste por inactividad (las reglas suman {0}).', [ruleScore]) }}
+              {{
+                __('Incluye ajuste por inactividad (las reglas suman {0}).', [
+                  ruleScore,
+                ])
+              }}
             </p>
 
             <ul v-if="contributions.length" class="flex flex-col gap-1.5">
@@ -91,13 +109,24 @@
                 class="flex items-start justify-between gap-2 rounded-lg border border-outline-gray-1 bg-surface-gray-1 px-2.5 py-1.5"
               >
                 <div class="min-w-0 flex-1">
-                  <div class="truncate text-[12.5px] font-semibold text-ink-gray-8">{{ c.rule }}</div>
-                  <div class="truncate text-[11px] text-ink-gray-5">{{ c.description || criterion(c) }}</div>
+                  <div
+                    class="truncate text-[12.5px] font-semibold text-ink-gray-8"
+                  >
+                    {{ c.rule }}
+                  </div>
+                  <div class="truncate text-[11px] text-ink-gray-5">
+                    {{ c.description || criterion(c) }}
+                  </div>
                 </div>
                 <span
                   class="flex-none rounded px-1.5 py-0.5 text-[11px] font-bold tabular-nums"
-                  :class="c.points >= 0 ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-red-1 text-ink-red-6'"
-                >{{ signed(c.points) }}</span>
+                  :class="
+                    c.points >= 0
+                      ? 'bg-surface-green-2 text-ink-green-8'
+                      : 'bg-surface-red-1 text-ink-red-6'
+                  "
+                  >{{ signed(c.points) }}</span
+                >
               </li>
             </ul>
 
@@ -105,12 +134,20 @@
               {{ __('Sin reglas activas que expliquen este puntaje.') }}
             </div>
 
-            <div v-if="moreCount > 0" class="mt-1.5 text-center text-[11px] text-ink-gray-4">
+            <div
+              v-if="moreCount > 0"
+              class="mt-1.5 text-center text-[11px] text-ink-gray-4"
+            >
               {{ __('y {0} regla(s) más', [moreCount]) }}
             </div>
 
-            <div v-if="lastChange" class="mt-3 border-t border-outline-gray-1 pt-2">
-              <div class="mb-1 text-[10px] font-bold uppercase tracking-[.06em] text-ink-gray-4">
+            <div
+              v-if="lastChange"
+              class="mt-3 border-t border-outline-gray-1 pt-2"
+            >
+              <div
+                class="mb-1 text-[10px] font-bold uppercase tracking-[.06em] text-ink-gray-4"
+              >
                 {{ __('Cambios recientes') }}
               </div>
               <div
@@ -121,11 +158,16 @@
                 <span class="flex items-center gap-1.5 text-ink-gray-6">
                   <span
                     class="tabular-nums font-semibold"
-                    :class="h.delta >= 0 ? 'text-ink-green-7' : 'text-ink-red-6'"
-                  >{{ signed(h.delta) }}</span>
+                    :class="
+                      h.delta >= 0 ? 'text-ink-green-7' : 'text-ink-red-6'
+                    "
+                    >{{ signed(h.delta) }}</span
+                  >
                   <span>{{ triggerLabel(h.trigger) }}</span>
                 </span>
-                <span class="flex-none text-ink-gray-4">{{ timeAgo(h.ts) }}</span>
+                <span class="flex-none text-ink-gray-4">{{
+                  timeAgo(h.ts)
+                }}</span>
               </div>
             </div>
           </template>
@@ -140,7 +182,12 @@ import { ref, reactive, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 import { createResource } from 'frappe-ui'
 import { GRADE_COLORS, timeAgo } from '@/composables/crmFormat'
 import { isMobile } from '@/composables/breakpoint'
-import { signedPoints, criterionText, gradeHeadline, popoverPosition } from '@/utils/scoreExplain'
+import {
+  signedPoints,
+  criterionText,
+  gradeHeadline,
+  popoverPosition,
+} from '@/utils/scoreExplain'
 
 const props = defineProps({
   // 'CRM Lead' | 'CRM Deal' — a deal is resolved to its linked lead server-side
@@ -168,12 +215,13 @@ const bg = computed(() => GRADE_COLORS[props.grade]?.[0] || '#9aa2ae')
 const triggerText = computed(() =>
   props.variant === 'header' ? `${props.grade} · ${props.score}` : props.grade,
 )
-const triggerClass = computed(() =>
-  ({
-    header: 'flex-none rounded px-[7px] py-px text-[11px] font-bold',
-    card: 'flex-none rounded px-[5px] py-px text-[9px] font-bold',
-    chip: 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
-  })[props.variant] || 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
+const triggerClass = computed(
+  () =>
+    ({
+      header: 'flex-none rounded px-[7px] py-px text-[11px] font-bold',
+      card: 'flex-none rounded px-[5px] py-px text-[9px] font-bold',
+      chip: 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
+    })[props.variant] || 'rounded-[3px] px-[5px] py-px text-[9px] font-bold',
 )
 
 const headline = computed(() => gradeHeadline(props.grade, props.score))
@@ -182,7 +230,9 @@ const error = computed(() => !res.loading && !!res.error)
 const contributions = computed(() => res.data?.contributions || [])
 const decayed = computed(() => !!res.data?.decayed)
 const ruleScore = computed(() => res.data?.rule_score ?? 0)
-const moreCount = computed(() => Math.max(0, (res.data?.matched_rules || 0) - contributions.value.length))
+const moreCount = computed(() =>
+  Math.max(0, (res.data?.matched_rules || 0) - contributions.value.length),
+)
 const history = computed(() => res.data?.history || [])
 const recentHistory = computed(() => history.value.slice(0, 3))
 const lastChange = computed(() => history.value[0] || null)
@@ -191,9 +241,12 @@ const signed = signedPoints
 const criterion = (c) => criterionText(c.field, c.operator, c.value)
 function triggerLabel(t) {
   return (
-    { Activity: __('Actividad'), 'Rule Evaluation': __('Reglas'), Decay: __('Inactividad'), Manual: __('Manual') }[
-      t
-    ] || t
+    {
+      Activity: __('Actividad'),
+      'Rule Evaluation': __('Reglas'),
+      Decay: __('Inactividad'),
+      Manual: __('Manual'),
+    }[t] || t
   )
 }
 

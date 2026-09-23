@@ -19,7 +19,9 @@ export function isGroupBy(key) {
 }
 
 export function groupByLabel(key) {
-  return DEAL_GROUP_BYS.find((g) => g.key === key)?.label || DEAL_GROUP_BYS[0].label
+  return (
+    DEAL_GROUP_BYS.find((g) => g.key === key)?.label || DEAL_GROUP_BYS[0].label
+  )
 }
 
 /**
@@ -59,8 +61,10 @@ export function groupRows(rows, dimension, options = {}) {
   // taxonomy does not (a deal parked on a hidden stage) follows in first-seen
   // order, and the unset group is always last.
   const ordered = []
-  for (const value of order) if (buckets.has(String(value))) ordered.push(String(value))
-  for (const key of buckets.keys()) if (key && !ordered.includes(key)) ordered.push(key)
+  for (const value of order)
+    if (buckets.has(String(value))) ordered.push(String(value))
+  for (const key of buckets.keys())
+    if (key && !ordered.includes(key)) ordered.push(key)
   if (buckets.has('')) ordered.push('')
 
   return ordered.map((key) => {

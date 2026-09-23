@@ -5,8 +5,13 @@
   navigates here). Editable before sending; Aprobar y enviar is the only customer-facing path.
 -->
 <template>
-  <div v-if="rows.length" class="mx-3 mb-2 rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-2.5 sm:mx-10">
-    <div class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-amber-7">
+  <div
+    v-if="rows.length"
+    class="mx-3 mb-2 rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-2.5 sm:mx-10"
+  >
+    <div
+      class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-amber-7"
+    >
       ⏳ {{ __('Acuse automático por aprobar') }}
     </div>
     <div v-for="r in rows" :key="r.name" class="mt-1.5 first:mt-0">
@@ -40,7 +45,11 @@
 <script setup>
 import { computed, reactive, watch } from 'vue'
 import { toast } from 'frappe-ui'
-import { autoAckForConvo, approveAutoAck, discardAutoAck } from '@/composables/inbox'
+import {
+  autoAckForConvo,
+  approveAutoAck,
+  discardAutoAck,
+} from '@/composables/inbox'
 import { usersStore } from '@/stores/users'
 
 const { isManager } = usersStore()
@@ -52,7 +61,8 @@ const busy = reactive({})
 watch(
   rows,
   (list) => {
-    for (const r of list) if (!(r.name in drafts)) drafts[r.name] = r.draft_body || ''
+    for (const r of list)
+      if (!(r.name in drafts)) drafts[r.name] = r.draft_body || ''
   },
   { immediate: true },
 )

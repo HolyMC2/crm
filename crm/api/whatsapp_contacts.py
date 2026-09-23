@@ -39,7 +39,9 @@ def list_numbers(doctype, name):
 				"name": n["name"],
 				# The send target: the customer's own WhatsApp spelling when they wrote
 				# to us, else the spelling our sends already used, else the stored number.
-				"phone": fact.get("incoming_peer") or fact.get("outgoing_peer") or _e164_digits(n["raw"], region),
+				"phone": fact.get("incoming_peer")
+				or fact.get("outgoing_peer")
+				or _e164_digits(n["raw"], region),
 				"phone_display": n["raw"],
 				# Reply from the business number the customer last wrote to (else last used),
 				# when this user may send from it; otherwise the default account.
@@ -90,7 +92,9 @@ def _record_numbers(doctype, name):
 				)
 			label = row.full_name or row.contact
 			for i, phone in enumerate(phones):
-				candidates.append((row.contact, label, phone, row.image, int(row.is_primary or 0) if i == 0 else 0))
+				candidates.append(
+					(row.contact, label, phone, row.image, int(row.is_primary or 0) if i == 0 else 0)
+				)
 		if not candidates:
 			mobile = frappe.db.get_value("CRM Deal", name, "mobile_no")
 			candidates.append((None, mobile, mobile, None, 1))
@@ -102,7 +106,14 @@ def _record_numbers(doctype, name):
 			continue
 		seen.add(key)
 		numbers.append(
-			{"contact": contact, "name": label or raw, "raw": raw, "key": key, "image": image, "is_primary": is_primary}
+			{
+				"contact": contact,
+				"name": label or raw,
+				"raw": raw,
+				"key": key,
+				"image": image,
+				"is_primary": is_primary,
+			}
 		)
 	return numbers
 

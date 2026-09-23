@@ -3,8 +3,9 @@ import { setConfig } from '../../node_modules/frappe-ui/src/utils/config.ts'
 
 vi.mock('frappe-ui', async () => {
   const dates = await import('../../node_modules/frappe-ui/src/utils/dayjs.ts')
-  const config =
-    await import('../../node_modules/frappe-ui/src/utils/config.ts')
+  const config = await import(
+    '../../node_modules/frappe-ui/src/utils/config.ts'
+  )
   return {
     dayjsLocal: dates.dayjsLocal,
     dayjs: dates.dayjs,

@@ -44,7 +44,10 @@ describe('stalenessBucket', () => {
   })
 
   it('clamps a future timestamp to a moment (no negatives)', () => {
-    expect(stalenessBucket(base, base - 5 * MIN)).toEqual({ unit: 'moment', value: 0 })
+    expect(stalenessBucket(base, base - 5 * MIN)).toEqual({
+      unit: 'moment',
+      value: 0,
+    })
   })
 })
 

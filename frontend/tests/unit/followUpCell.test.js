@@ -24,7 +24,11 @@ const ACTIVITY = {
   next_activity_title: 'Confirmar entrega',
   next_activity_type: 'Call',
 }
-const DEAL = { name: 'CRM-DEAL-2026-00042', deal_name: 'Pantalla iPhone 13', deal_owner: 'ana@example.invalid' }
+const DEAL = {
+  name: 'CRM-DEAL-2026-00042',
+  deal_name: 'Pantalla iPhone 13',
+  deal_owner: 'ana@example.invalid',
+}
 
 const mounted = []
 const saved = []
@@ -55,7 +59,10 @@ function mount(row) {
 }
 
 const panel = () => document.querySelector('[role="dialog"]')
-const button = (root, text) => [...root.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith(text))
+const button = (root, text) =>
+  [...root.querySelectorAll('button')].find((b) =>
+    b.textContent.trim().startsWith(text),
+  )
 const type = (input, value) => {
   input.value = value
   input.dispatchEvent(new Event('input', { bubbles: true }))
@@ -71,7 +78,8 @@ beforeEach(() => {
   toasts.error = []
   saved.length = 0
   rowClicks.count = 0
-  api.behavior = async (method) => (method === 'frappe.client.get_value' ? { ...ACTIVITY } : { name: '77' })
+  api.behavior = async (method) =>
+    method === 'frappe.client.get_value' ? { ...ACTIVITY } : { name: '77' }
 })
 afterEach(() => {
   mounted.splice(0).forEach(({ app, el }) => {
@@ -85,13 +93,21 @@ describe('the follow-up cell on the row', () => {
     const { el } = mount(DEAL)
     const trigger = el.querySelector('button[aria-haspopup="dialog"]')
     expect(trigger.textContent).toContain('Sin seguimiento')
-    expect(trigger.getAttribute('aria-label')).toBe('Programar seguimiento de Pantalla iPhone 13')
+    expect(trigger.getAttribute('aria-label')).toBe(
+      'Programar seguimiento de Pantalla iPhone 13',
+    )
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
 
   it('distinguishes a task that exists but carries no date', () => {
-    const { el } = mount({ ...DEAL, next_activity_task: '77', next_activity_title: 'Llamar' })
-    expect(el.querySelector('button[aria-haspopup="dialog"]').textContent).toContain('Pendiente sin fecha')
+    const { el } = mount({
+      ...DEAL,
+      next_activity_task: '77',
+      next_activity_title: 'Llamar',
+    })
+    expect(
+      el.querySelector('button[aria-haspopup="dialog"]').textContent,
+    ).toContain('Pendiente sin fecha')
   })
 
   it('opens the popover without opening the deal behind it', async () => {
@@ -120,7 +136,9 @@ describe('the follow-up cell on the row', () => {
     button(panel(), 'Guardar').click()
     await flush()
     expect(api.calls).toEqual([])
-    expect(panel().querySelector('[role="alert"]').textContent).toContain('Escribe qué sigue')
+    expect(panel().querySelector('[role="alert"]').textContent).toContain(
+      'Escribe qué sigue',
+    )
   })
 
   it('creates the task, updates the row from the derived fields and closes', async () => {
@@ -156,7 +174,9 @@ describe('the follow-up cell on the row', () => {
     const { el } = mount({ ...DEAL, ...ACTIVITY })
     el.querySelector('button[aria-haspopup="dialog"]').click()
     await nextTick()
-    expect(panel().querySelector('input[type="text"]').value).toBe('Confirmar entrega')
+    expect(panel().querySelector('input[type="text"]').value).toBe(
+      'Confirmar entrega',
+    )
     expect(panel().querySelector('input[type="date"]').value).toBe('2026-09-16')
     expect(panel().querySelector('input[type="time"]').value).toBe('09:15')
     button(panel(), 'Guardar').click()
@@ -176,7 +196,9 @@ describe('the follow-up cell on the row', () => {
     button(panel(), 'Guardar').click()
     await flush()
     expect(panel()).toBeTruthy()
-    expect(panel().querySelector('[role="alert"]').textContent).toContain('No tienes permiso')
+    expect(panel().querySelector('[role="alert"]').textContent).toContain(
+      'No tienes permiso',
+    )
     expect(saved).toEqual([])
   })
 
@@ -185,7 +207,9 @@ describe('the follow-up cell on the row', () => {
     const trigger = el.querySelector('button[aria-haspopup="dialog"]')
     trigger.click()
     await nextTick()
-    panel().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    panel().dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    )
     await nextTick()
     expect(panel()).toBeFalsy()
     expect(document.activeElement).toBe(trigger)

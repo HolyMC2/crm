@@ -51,7 +51,12 @@ class TestActivityPermlevel(IntegrationTestCase):
 
 	def make_lead_with_restricted_change(self):
 		lead = frappe.get_doc(
-			{"doctype": "CRM Lead", "lead_owner": "rep@permlevel.test", "first_name": "Permlevel", "status": "New Lead"}
+			{
+				"doctype": "CRM Lead",
+				"lead_owner": "rep@permlevel.test",
+				"first_name": "Permlevel",
+				"status": "New Lead",
+			}
 		)
 		lead.flags.ignore_mandatory = True
 		lead.insert(ignore_permissions=True)

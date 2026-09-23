@@ -17,8 +17,13 @@
       @drop="onDrop(g.value)"
     >
       <div class="flex items-center justify-between px-3 py-2.5">
-        <div class="flex items-center gap-2 text-[12.5px] font-semibold text-ink-gray-8">
-          <span class="h-2 w-2 rounded-full" :style="`background:${g.color || 'var(--outline-gray-2)'}`" />
+        <div
+          class="flex items-center gap-2 text-[12.5px] font-semibold text-ink-gray-8"
+        >
+          <span
+            class="h-2 w-2 rounded-full"
+            :style="`background:${g.color || 'var(--outline-gray-2)'}`"
+          />
           {{ g.label }}
           <span
             class="rounded-full bg-surface-gray-2 px-1.5 text-[11px] font-medium text-ink-gray-6"
@@ -37,7 +42,9 @@
           </span>
         </slot>
       </div>
-      <div class="scb flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
+      <div
+        class="scb flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2"
+      >
         <div
           v-for="row in colRows(g.value)"
           :key="row.name"

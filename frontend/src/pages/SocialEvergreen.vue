@@ -18,37 +18,56 @@
     class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
   >
     <!-- toolbar -->
-    <div class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2">
+    <div
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-2"
+    >
       <div class="flex items-center gap-3">
-        <span class="text-[15px] font-bold text-ink-gray-9">🌲 {{ __('Biblioteca evergreen') }}</span>
+        <span class="text-[15px] font-bold text-ink-gray-9"
+          >🌲 {{ __('Biblioteca evergreen') }}</span
+        >
         <select
           v-if="isManager || shopOptions.length > 1"
           v-model="shop"
-          @change="onShopChange"
           class="rounded-lg border border-outline-gray-2 bg-surface-base px-2 py-1 text-[12px] font-semibold text-ink-gray-7"
           :title="__('Filtrar por sucursal')"
+          @change="onShopChange"
         >
-          <option v-if="isManager" value="">{{ __('Todas las sucursales') }}</option>
-          <option v-for="s in shopOptions" :key="s.name" :value="s.name">{{ s.shop_name }}</option>
+          <option v-if="isManager" value="">
+            {{ __('Todas las sucursales') }}
+          </option>
+          <option v-for="s in shopOptions" :key="s.name" :value="s.name">
+            {{ s.shop_name }}
+          </option>
         </select>
       </div>
       <router-link
         to="/social"
         class="text-[12px] font-semibold text-ink-blue-9 hover:underline"
-        :title="__('Los borradores reciclados aparecen en Social → Por aprobar')"
+        :title="
+          __('Los borradores reciclados aparecen en Social → Por aprobar')
+        "
       >
         {{ __('Ir al calendario →') }}
       </router-link>
     </div>
 
     <!-- intro -->
-    <p class="flex-none border-b border-outline-gray-1 bg-surface-base px-5 py-2 text-[12px] text-ink-gray-6">
-      {{ __('Las publicaciones evergreen son contenido que sigue funcionando: se re-generan como un nuevo borrador (con su misma imagen), nunca un repost idéntico, y siempre pasan por Aprobar.') }}
+    <p
+      class="flex-none border-b border-outline-gray-1 bg-surface-base px-5 py-2 text-[12px] text-ink-gray-6"
+    >
+      {{
+        __(
+          'Las publicaciones evergreen son contenido que sigue funcionando: se re-generan como un nuevo borrador (con su misma imagen), nunca un repost idéntico, y siempre pasan por Aprobar.',
+        )
+      }}
     </p>
 
     <div class="flex-1 p-4">
       <!-- loading -->
-      <div v-if="pool.loading && !rows.length" class="py-16 text-center text-[13px] text-ink-gray-5">
+      <div
+        v-if="pool.loading && !rows.length"
+        class="py-16 text-center text-[13px] text-ink-gray-5"
+      >
         {{ __('Cargando…') }}
       </div>
 
@@ -58,9 +77,17 @@
         class="mx-auto mt-10 max-w-[520px] rounded-2xl border border-dashed border-outline-gray-2 bg-surface-base px-6 py-10 text-center"
       >
         <div class="text-[34px]">🌲</div>
-        <div class="mt-2 text-[15px] font-bold text-ink-gray-8">{{ __('Aún no hay publicaciones evergreen') }}</div>
-        <p class="mx-auto mt-2 max-w-[420px] text-[12.5px] leading-relaxed text-ink-gray-6">
-          {{ __('Marca una publicación como evergreen desde el Compositor IA (casilla «Marcar como evergreen») o al editarla en el calendario. Cuando rinda bien, podrás reciclarla desde aquí.') }}
+        <div class="mt-2 text-[15px] font-bold text-ink-gray-8">
+          {{ __('Aún no hay publicaciones evergreen') }}
+        </div>
+        <p
+          class="mx-auto mt-2 max-w-[420px] text-[12.5px] leading-relaxed text-ink-gray-6"
+        >
+          {{
+            __(
+              'Marca una publicación como evergreen desde el Compositor IA (casilla «Marcar como evergreen») o al editarla en el calendario. Cuando rinda bien, podrás reciclarla desde aquí.',
+            )
+          }}
         </p>
         <router-link
           to="/social"
@@ -81,27 +108,49 @@
           <!-- title + meta -->
           <div class="min-w-[180px] flex-1">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-[13.5px] font-semibold text-ink-gray-9">{{ row.title || row.name }}</span>
-              <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-gray-7">
-                {{ KIND_EMOJI[row.post_kind] || '' }} {{ row.post_kind || __('Sin tipo') }}
+              <span class="text-[13.5px] font-semibold text-ink-gray-9">{{
+                row.title || row.name
+              }}</span>
+              <span
+                class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[10.5px] font-semibold text-ink-gray-7"
+              >
+                {{ KIND_EMOJI[row.post_kind] || '' }}
+                {{ row.post_kind || __('Sin tipo') }}
               </span>
-              <span class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold" :class="chip(row.status)">
+              <span
+                class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
+                :class="chip(row.status)"
+              >
                 {{ statusLabel(row.status) }}
               </span>
             </div>
-            <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-ink-gray-5">
+            <div
+              class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-ink-gray-5"
+            >
               <span>♻ {{ recycledLabel(row.times_recycled) }}</span>
-              <span v-if="row.last_recycled_at">{{ __('Último') }}: {{ fmtDate(row.last_recycled_at) }}</span>
-              <span v-if="isManager && shop === '' && row.shop">· {{ shopLabel(row.shop) }}</span>
+              <span v-if="row.last_recycled_at"
+                >{{ __('Último') }}: {{ fmtDate(row.last_recycled_at) }}</span
+              >
+              <span v-if="isManager && shop === '' && row.shop"
+                >· {{ shopLabel(row.shop) }}</span
+              >
             </div>
           </div>
 
           <!-- eligibility -->
           <span
             class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="available(row) ? 'bg-surface-green-2 text-ink-green-8' : 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200'"
+            :class="
+              available(row)
+                ? 'bg-surface-green-2 text-ink-green-8'
+                : 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200'
+            "
           >
-            {{ available(row) ? __('Disponible') : __('En pausa hasta') + ' ' + fmtDate(row.next_eligible) }}
+            {{
+              available(row)
+                ? __('Disponible')
+                : __('En pausa hasta') + ' ' + fmtDate(row.next_eligible)
+            }}
           </span>
 
           <!-- actions (manager UI; backend re-checks anyway) -->
@@ -111,7 +160,11 @@
               class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-40"
               style="background: var(--brand)"
               :disabled="!available(row) || busy === row.name"
-              :title="available(row) ? __('Crear un borrador reciclado ahora') : __('Disponible el') + ' ' + fmtDate(row.next_eligible)"
+              :title="
+                available(row)
+                  ? __('Crear un borrador reciclado ahora')
+                  : __('Disponible el') + ' ' + fmtDate(row.next_eligible)
+              "
               @click="recycleNow(row)"
             >
               {{ busy === row.name ? __('♻ …') : __('♻ Reciclar ahora') }}
@@ -129,7 +182,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -140,38 +192,59 @@ import { confirmDialog } from '@/utils/dialogs'
 
 // Kept in-page (not imported from socialCalendar.js) to stay decoupled from that
 // concurrently-edited file. Values mirror the calendar's for visual consistency.
-const KIND_EMOJI = { Producto: '🛒', Servicio: '🛠', Temporada: '🎉', Noticia: '📣', Testimonio: '💬', Aviso: 'ℹ️' }
+const KIND_EMOJI = {
+  Producto: '🛒',
+  Servicio: '🛠',
+  Temporada: '🎉',
+  Noticia: '📣',
+  Testimonio: '💬',
+  Aviso: 'ℹ️',
+}
 
 function chip(status) {
-  return {
-    Published: 'bg-surface-green-2 text-ink-green-8',
-    'Partially Published': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
-    Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
-    'Pending Approval': 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
-    Draft: 'bg-surface-gray-2 text-ink-gray-6',
-  }[status] || 'bg-surface-gray-2 text-ink-gray-6'
+  return (
+    {
+      Published: 'bg-surface-green-2 text-ink-green-8',
+      'Partially Published':
+        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+      Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
+      'Pending Approval':
+        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+      Draft: 'bg-surface-gray-2 text-ink-gray-6',
+    }[status] || 'bg-surface-gray-2 text-ink-gray-6'
+  )
 }
 function statusLabel(status) {
-  return {
-    Published: __('Publicado'),
-    'Partially Published': __('Publicado parcial'),
-    Scheduled: __('Programado'),
-    'Pending Approval': __('Por aprobar'),
-    Draft: __('Borrador'),
-  }[status] || status
+  return (
+    {
+      Published: __('Publicado'),
+      'Partially Published': __('Publicado parcial'),
+      Scheduled: __('Programado'),
+      'Pending Approval': __('Por aprobar'),
+      Draft: __('Borrador'),
+    }[status] || status
+  )
 }
 
 function fmtDate(dt) {
   if (!dt) return ''
   const d = new Date(String(dt).replace(' ', 'T'))
   if (isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+  return d.toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 function recycledLabel(n) {
   const c = Number(n) || 0
   // {0} args must go through __'s second parameter — a bare __('… {0} …')
   // throws inside translate()'s format() and white-screens the route.
-  return c === 0 ? __('Nunca reciclado') : c === 1 ? __('Reciclado 1 vez') : __('Reciclado {0} veces', [c])
+  return c === 0
+    ? __('Nunca reciclado')
+    : c === 1
+      ? __('Reciclado 1 vez')
+      : __('Reciclado {0} veces', [c])
 }
 // Eligible now when it has never been recycled or its cooldown (next_eligible) has passed.
 function available(row) {
@@ -181,15 +254,20 @@ function available(row) {
 }
 
 // ── shop selector (managers get every branch + "Todas"; an employee is auto-pinned) ──
-const shopsRes = createResource({ url: 'doco_marketing.api.social.get_shops', auto: true })
+const shopsRes = createResource({
+  url: 'doco_marketing.api.social.get_shops',
+  auto: true,
+})
 const isManager = computed(() => !!shopsRes.data?.is_manager)
 const shopOptions = computed(() => shopsRes.data?.shops || [])
-const shopLabel = (name) => shopOptions.value.find((s) => s.name === name)?.shop_name || name
+const shopLabel = (name) =>
+  shopOptions.value.find((s) => s.name === name)?.shop_name || name
 const shop = ref('')
 watch(
   shopOptions,
   (opts) => {
-    if (!isManager.value && opts.length && !shop.value) shop.value = opts[0].name
+    if (!isManager.value && opts.length && !shop.value)
+      shop.value = opts[0].name
   },
   { immediate: true },
 )
@@ -207,7 +285,9 @@ function onShopChange() {
 // available first, then whatever order the backend returned (stable sort)
 const rows = computed(() => {
   const data = pool.data || []
-  return [...data].sort((a, b) => (available(a) === available(b) ? 0 : available(a) ? -1 : 1))
+  return [...data].sort((a, b) =>
+    available(a) === available(b) ? 0 : available(a) ? -1 : 1,
+  )
 })
 
 // ── actions (backend enforces manager + branch + eligibility regardless) ────────
@@ -217,7 +297,9 @@ async function recycleNow(row) {
   if (!available(row) || busy.value) return
   busy.value = row.name
   try {
-    await frappeCall('doco_marketing.api.social_evergreen.recycle_now', { name: row.name })
+    await frappeCall('doco_marketing.api.social_evergreen.recycle_now', {
+      name: row.name,
+    })
     toast.success(__('Borrador creado — pendiente de aprobación'))
     toast.info(__('Aparece en Social → Por aprobar'))
     pool.reload()
@@ -232,13 +314,19 @@ async function recycleNow(row) {
 function askRemove(row) {
   confirmDialog({
     title: __('Quitar de la biblioteca'),
-    message: __('¿Quitar «{0}» de la biblioteca evergreen? Dejará de reciclarse automáticamente. La publicación no se elimina.', [row.title || row.name]),
+    message: __(
+      '¿Quitar «{0}» de la biblioteca evergreen? Dejará de reciclarse automáticamente. La publicación no se elimina.',
+      [row.title || row.name],
+    ),
     confirmLabel: __('Quitar'),
     theme: 'red',
     onConfirm: async () => {
       busy.value = row.name
       try {
-        await frappeCall('doco_marketing.api.social_evergreen.set_evergreen', { name: row.name, on: 0 })
+        await frappeCall('doco_marketing.api.social_evergreen.set_evergreen', {
+          name: row.name,
+          on: 0,
+        })
         toast.success(__('Quitado de la biblioteca'))
         pool.reload()
       } catch (e) {

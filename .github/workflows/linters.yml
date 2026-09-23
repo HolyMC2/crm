@@ -3,6 +3,11 @@ name: Linters
 on:
     pull_request:
     workflow_dispatch:
+        inputs:
+            base_ref:
+                description: Git revision from which to check candidate commit titles
+                required: true
+                default: origin/doco-dev
 
 permissions:
     contents: read
@@ -16,7 +21,8 @@ jobs:
         steps:
             - uses: actions/checkout@v6
               with:
-                  fetch-depth: 200
+                  fetch-depth: 0
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
             - uses: actions/setup-node@v6
               with:
@@ -27,7 +33,22 @@ jobs:
               run: npm install --no-save @commitlint/cli @commitlint/config-conventional
 
             - name: Check commit titles
-              run: npx commitlint --verbose --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}"
+              env:
+                  PR_BASE: ${{ github.event.pull_request.base.sha }}
+                  MANUAL_BASE: ${{ inputs.base_ref }}
+              run: |
+                  head=$(git rev-parse HEAD)
+                  if [ -n "$PR_BASE" ]; then
+                      base="$PR_BASE"
+                  else
+                      base=$(git merge-base "$MANUAL_BASE" "$head")
+                      # Dispatch on the base branch still checks its latest commit.
+                      if [ "$base" = "$head" ]; then
+                          base=$(git rev-parse HEAD^)
+                      fi
+                  fi
+                  git cat-file -e "$base^{commit}"
+                  npx commitlint --verbose --from "$base" --to "$head"
 
     semgrep:
         name: Semgrep Rules

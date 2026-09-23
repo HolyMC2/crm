@@ -22,8 +22,10 @@ export function displayPhone(value) {
 // the Contact resolved from the phone when the reference itself has no SPA page
 // (a repair order, or a deleted record); null when there is nowhere to go.
 export function recordRoute(kind, name, contact = '') {
-  if (name && kind === 'CRM Deal') return { name: 'Deal 360', params: { dealId: name } }
-  if (name && kind === 'CRM Lead') return { name: 'Lead', params: { leadId: name } }
+  if (name && kind === 'CRM Deal')
+    return { name: 'Deal 360', params: { dealId: name } }
+  if (name && kind === 'CRM Lead')
+    return { name: 'Lead', params: { leadId: name } }
   if (contact) return { name: 'Contact', params: { contactId: contact } }
   return null
 }
@@ -40,28 +42,45 @@ export function deskHref(doctype, name) {
 // what the card already shows (the customer's phone, or a composed
 // "<device> — <customer>" name) is dropped so nothing reads twice.
 export function aboutLine(ctx = {}) {
-  const name = String(ctx.customer_name ?? '').trim().toLowerCase()
-  const phoneKey = String(ctx.customer_phone ?? '').replace(/\D/g, '').slice(-LOCAL_LEN)
-  const device = String(ctx.device ?? '').trim().toLowerCase()
+  const name = String(ctx.customer_name ?? '')
+    .trim()
+    .toLowerCase()
+  const phoneKey = String(ctx.customer_phone ?? '')
+    .replace(/\D/g, '')
+    .slice(-LOCAL_LEN)
+  const device = String(ctx.device ?? '')
+    .trim()
+    .toLowerCase()
   const title = String(ctx.title ?? '').trim()
   const titleDigits = title.replace(/\D/g, '')
   const titleLower = title.toLowerCase()
   const redundantTitle =
     !title ||
-    (titleDigits.length >= LOCAL_LEN && titleDigits.slice(-LOCAL_LEN) === phoneKey) ||
+    (titleDigits.length >= LOCAL_LEN &&
+      titleDigits.slice(-LOCAL_LEN) === phoneKey) ||
     (name && titleLower.includes(name)) ||
     (device && titleLower.includes(device))
   const parts = []
-  for (const v of [ctx.repair_type, ctx.device, redundantTitle ? '' : title, ctx.organization]) {
+  for (const v of [
+    ctx.repair_type,
+    ctx.device,
+    redundantTitle ? '' : title,
+    ctx.organization,
+  ]) {
     const s = String(v ?? '').trim()
-    if (s && !parts.some((p) => p.toLowerCase() === s.toLowerCase())) parts.push(s)
+    if (s && !parts.some((p) => p.toLowerCase() === s.toLowerCase()))
+      parts.push(s)
   }
   return parts.join(' · ')
 }
 
 // Lightweight relative age ("ahora", "12m", "3h", "7d"); `now` is injectable
 // for tests. Returns '' for a missing or unparseable timestamp.
-export function relativeAge(creation, now = Date.now(), labels = { now: 'ahora' }) {
+export function relativeAge(
+  creation,
+  now = Date.now(),
+  labels = { now: 'ahora' },
+) {
   if (!creation) return ''
   const then = new Date(String(creation).replace(' ', 'T')).getTime()
   if (Number.isNaN(then)) return ''

@@ -329,7 +329,12 @@ def create_whatsapp_message(
 
 @frappe.whitelist()
 def send_whatsapp_template(
-	reference_doctype: str, reference_name: str, template: str, to: str, body_param=None, attach=None,
+	reference_doctype: str,
+	reference_name: str,
+	template: str,
+	to: str,
+	body_param=None,
+	attach=None,
 	whatsapp_account: str = "",
 ):
 	validate_access(reference_doctype, reference_name)
@@ -368,9 +373,7 @@ def send_whatsapp_template(
 				frappe.throw(_("Invalid template parameters."))
 		if not isinstance(body_param, dict):
 			frappe.throw(_("Template parameters must be a mapping."))
-		doc.body_param = json.dumps(
-			{str(k): ("" if v is None else str(v)) for k, v in body_param.items()}
-		)
+		doc.body_param = json.dumps({str(k): ("" if v is None else str(v)) for k, v in body_param.items()})
 	with person_reply():
 		doc.insert(ignore_permissions=True)
 	return doc.name
@@ -426,8 +429,20 @@ def get_template_preview(reference_doctype: str, reference_name: str, template: 
 # Field types worth offering as a template-variable source in the mapping dropdown
 # (scalars that render as a short string). Tables/HTML/attachments are excluded.
 _MAPPABLE_FIELDTYPES = {
-	"Data", "Select", "Link", "Small Text", "Text", "Read Only", "Phone",
-	"Int", "Float", "Currency", "Percent", "Date", "Datetime", "Time",
+	"Data",
+	"Select",
+	"Link",
+	"Small Text",
+	"Text",
+	"Read Only",
+	"Phone",
+	"Int",
+	"Float",
+	"Currency",
+	"Percent",
+	"Date",
+	"Datetime",
+	"Time",
 }
 
 
@@ -437,8 +452,16 @@ _MAPPABLE_FIELDTYPES = {
 # existing map never loses its selection. Resolution (`_token_allowed`) is
 # unchanged — this only trims the picker.
 _CURATED_FIELD_HINTS = (
-	"name", "mobile", "phone", "email", "status", "source",
-	"device", "folio", "organization", "territory",
+	"name",
+	"mobile",
+	"phone",
+	"email",
+	"status",
+	"source",
+	"device",
+	"folio",
+	"organization",
+	"territory",
 )
 
 
@@ -465,11 +488,14 @@ def get_template_field_options(reference_doctype: str):
 	in_use = _tokens_in_use()
 	opts = []
 	for df in meta.fields:
-		if df.fieldtype in _MAPPABLE_FIELDTYPES and not df.get("hidden") and (
-			df.fieldname in in_use
-			or any(h in df.fieldname for h in _CURATED_FIELD_HINTS)
+		if (
+			df.fieldtype in _MAPPABLE_FIELDTYPES
+			and not df.get("hidden")
+			and (df.fieldname in in_use or any(h in df.fieldname for h in _CURATED_FIELD_HINTS))
 		):
-			opts.append({"value": df.fieldname, "label": _(df.label or df.fieldname), "group": reference_doctype})
+			opts.append(
+				{"value": df.fieldname, "label": _(df.label or df.fieldname), "group": reference_doctype}
+			)
 	# one-level dotted for Link fields → that target's name-ish + phone-ish fields
 	for df in meta.fields:
 		if df.fieldtype == "Link" and df.options and frappe.db.exists("DocType", df.options):
@@ -478,15 +504,23 @@ def get_template_field_options(reference_doctype: str):
 			except Exception:
 				continue
 			for sdf in sub.fields:
-				if sdf.fieldtype in ("Data", "Phone", "Read Only", "Select") and not sdf.get("hidden") and (
-					"name" in (sdf.fieldname or "") or "mobile" in (sdf.fieldname or "")
-					or "phone" in (sdf.fieldname or "") or "email" in (sdf.fieldname or "")
+				if (
+					sdf.fieldtype in ("Data", "Phone", "Read Only", "Select")
+					and not sdf.get("hidden")
+					and (
+						"name" in (sdf.fieldname or "")
+						or "mobile" in (sdf.fieldname or "")
+						or "phone" in (sdf.fieldname or "")
+						or "email" in (sdf.fieldname or "")
+					)
 				):
-					opts.append({
-						"value": f"{df.fieldname}.{sdf.fieldname}",
-						"label": f"{_(df.label or df.fieldname)} → {_(sdf.label or sdf.fieldname)}",
-						"group": _(df.label or df.fieldname),
-					})
+					opts.append(
+						{
+							"value": f"{df.fieldname}.{sdf.fieldname}",
+							"label": f"{_(df.label or df.fieldname)} → {_(sdf.label or sdf.fieldname)}",
+							"group": _(df.label or df.fieldname),
+						}
+					)
 	# resurrect any saved token the hints missed (edited legacy maps) — but only
 	# resolution-whitelisted ones; the picker must never widen _token_allowed
 	have = {o["value"] for o in opts}
@@ -689,10 +723,25 @@ def _wa_message_fields():
 	custom (added by a crm patch) — guard on has_column so the read endpoint
 	survives a code-before-migrate window or a site where the patch hasn't run."""
 	fields = [
-		"name", "type", "to", "from", "content_type", "message_type", "attach",
-		"template", "use_template", "message_id", "is_reply", "reply_to_message_id",
-		"creation", "message", "status", "reference_doctype", "reference_name",
-		"template_parameters", "template_header_parameters",
+		"name",
+		"type",
+		"to",
+		"from",
+		"content_type",
+		"message_type",
+		"attach",
+		"template",
+		"use_template",
+		"message_id",
+		"is_reply",
+		"reply_to_message_id",
+		"creation",
+		"message",
+		"status",
+		"reference_doctype",
+		"reference_name",
+		"template_parameters",
+		"template_header_parameters",
 	]
 	if frappe.db.has_column("WhatsApp Message", "doco_sent_by_type"):
 		fields += ["doco_sent_by_type", "doco_actor_user", "doco_automation_source", "doco_bot"]

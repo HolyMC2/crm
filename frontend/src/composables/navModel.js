@@ -25,28 +25,127 @@ import PosIcon from '~icons/lucide/receipt'
 import DeskIcon from '~icons/lucide/layout-grid'
 
 export const navItems = [
-  { key: 'dashboard', icon: DashboardIcon, label: 'Dashboard', to: '/dashboard', group: 'dashboard' },
-  { key: 'leads', icon: LeadsIcon, label: 'Leads', to: '/leads', group: 'leads' },
-  { key: 'inquiries', icon: InquiriesIcon, label: 'Consultas', to: '/inquiries', group: 'inquiries' },
-  { key: 'inbox', icon: InboxIcon, label: 'Inbox', to: '/inbox', group: 'inbox', badge: 'unread' },
-  { key: 'wa-queue', icon: ReviewQueueIcon, label: 'Aprobaciones', to: '/whatsapp-queue', group: 'wa-queue', badge: 'pending' },
-  { key: 'deals', icon: DealsIcon, label: 'Deals', to: '/deals', group: 'deals' },
-  { key: 'campaigns', icon: CampaignsIcon, label: 'Campaigns', to: '/campaigns', group: 'campaigns' },
-  { key: 'social', icon: SocialIcon, label: 'Social', to: '/social', group: 'social' },
-  { key: 'calendar', icon: CalendarIcon, label: 'Calendario', to: '/calendar', group: 'calendar' },
-  { key: 'calls', icon: CallsIcon, label: 'Calls', to: '/call-logs', group: 'calls' },
-  { key: 'tasks', icon: TasksIcon, label: 'Tasks', to: '/tasks', group: 'tasks', badge: 'overdue' },
-  { key: 'reports', icon: ReportsIcon, label: 'Reports', to: '/reports', group: 'reports' },
+  {
+    key: 'dashboard',
+    icon: DashboardIcon,
+    label: 'Dashboard',
+    to: '/dashboard',
+    group: 'dashboard',
+  },
+  {
+    key: 'leads',
+    icon: LeadsIcon,
+    label: 'Leads',
+    to: '/leads',
+    group: 'leads',
+  },
+  {
+    key: 'inquiries',
+    icon: InquiriesIcon,
+    label: 'Consultas',
+    to: '/inquiries',
+    group: 'inquiries',
+  },
+  {
+    key: 'inbox',
+    icon: InboxIcon,
+    label: 'Inbox',
+    to: '/inbox',
+    group: 'inbox',
+    badge: 'unread',
+  },
+  {
+    key: 'wa-queue',
+    icon: ReviewQueueIcon,
+    label: 'Aprobaciones',
+    to: '/whatsapp-queue',
+    group: 'wa-queue',
+    badge: 'pending',
+  },
+  {
+    key: 'deals',
+    icon: DealsIcon,
+    label: 'Deals',
+    to: '/deals',
+    group: 'deals',
+  },
+  {
+    key: 'campaigns',
+    icon: CampaignsIcon,
+    label: 'Campaigns',
+    to: '/campaigns',
+    group: 'campaigns',
+  },
+  {
+    key: 'social',
+    icon: SocialIcon,
+    label: 'Social',
+    to: '/social',
+    group: 'social',
+  },
+  {
+    key: 'calendar',
+    icon: CalendarIcon,
+    label: 'Calendario',
+    to: '/calendar',
+    group: 'calendar',
+  },
+  {
+    key: 'calls',
+    icon: CallsIcon,
+    label: 'Calls',
+    to: '/call-logs',
+    group: 'calls',
+  },
+  {
+    key: 'tasks',
+    icon: TasksIcon,
+    label: 'Tasks',
+    to: '/tasks',
+    group: 'tasks',
+    badge: 'overdue',
+  },
+  {
+    key: 'reports',
+    icon: ReportsIcon,
+    label: 'Reports',
+    to: '/reports',
+    group: 'reports',
+  },
 ]
 
 export const navItemsBottom = [
   // Pipeline Analysis had a route but no way in (gaps doc §Gap 3). It is an
   // addon-only route, so navItemVisible hides this entry on a tenant without
   // doco_marketing — no dead link.
-  { key: 'funnel', icon: FunnelIcon, label: 'Embudo', to: '/pipeline-analysis', group: 'funnel' },
-  { key: 'score-rules', icon: ScoreRulesIcon, label: 'Score Rules', to: '/score-rules', group: 'score-rules' },
-  { key: 'workload', icon: WorkloadIcon, label: 'Carga de trabajo', to: '/workload', group: 'workload' },
-  { key: 'webshop', icon: WebshopIcon, label: 'Webshop', to: '/webshop', group: 'webshop' },
+  {
+    key: 'funnel',
+    icon: FunnelIcon,
+    label: 'Embudo',
+    to: '/pipeline-analysis',
+    group: 'funnel',
+  },
+  {
+    key: 'score-rules',
+    icon: ScoreRulesIcon,
+    label: 'Score Rules',
+    to: '/score-rules',
+    group: 'score-rules',
+  },
+  {
+    key: 'workload',
+    icon: WorkloadIcon,
+    label: 'Carga de trabajo',
+    to: '/workload',
+    group: 'workload',
+  },
+  {
+    key: 'webshop',
+    icon: WebshopIcon,
+    label: 'Webshop',
+    to: '/webshop',
+    group: 'webshop',
+  },
 ]
 
 // A route path lights exactly one nav group (handoff §4.1).
@@ -61,7 +160,8 @@ export function routeGroup(path) {
   // Ordered before the /leads rule: /pipeline-analysis is its own nav entry now,
   // and the broader pattern below would otherwise swallow it back into 'leads'.
   if (/^\/pipeline-analysis(\/|$)/.test(path)) return 'funnel'
-  if (/^\/(leads|pipeline|stage-scripts|enrichment)(\/|$)/.test(path)) return 'leads'
+  if (/^\/(leads|pipeline|stage-scripts|enrichment)(\/|$)/.test(path))
+    return 'leads'
   if (/^\/dashboard(\/|$)/.test(path)) return 'dashboard'
   if (/^\/call-logs(\/|$)/.test(path)) return 'calls'
   if (/^\/tasks(\/|$)/.test(path)) return 'tasks'
@@ -80,9 +180,27 @@ export function routeGroup(path) {
 // Desk at /desk (the /app→/desk rename), POS Awesome's web entry at /posapp.
 // Rendered by the DocoNavRail profile panel and the mobile drawer's apps grid.
 export const suiteApps = [
-  { key: 'mercado', app: 'mercado', label: 'Mercado', route: '/mercado/', icon: MercadoIcon },
-  { key: 'taller', app: 'taller', label: 'Taller', route: '/taller/', icon: TallerIcon },
-  { key: 'pos', app: 'posawesome', label: 'POS Awesome', route: '/posapp', icon: PosIcon },
+  {
+    key: 'mercado',
+    app: 'mercado',
+    label: 'Mercado',
+    route: '/mercado/',
+    icon: MercadoIcon,
+  },
+  {
+    key: 'taller',
+    app: 'taller',
+    label: 'Taller',
+    route: '/taller/',
+    icon: TallerIcon,
+  },
+  {
+    key: 'pos',
+    app: 'posawesome',
+    label: 'POS Awesome',
+    route: '/posapp',
+    icon: PosIcon,
+  },
   { key: 'desk', app: null, label: 'Desk', route: '/desk', icon: DeskIcon },
 ]
 

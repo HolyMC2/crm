@@ -29,6 +29,8 @@ describe('normalizePhone', () => {
   })
 
   it('distinct local numbers do not collide', () => {
-    expect(normalizePhone('5215512345678')).not.toBe(normalizePhone('5215599998888'))
+    expect(normalizePhone('5215512345678')).not.toBe(
+      normalizePhone('5215599998888'),
+    )
   })
 })

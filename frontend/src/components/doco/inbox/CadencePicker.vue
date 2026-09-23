@@ -13,10 +13,16 @@
   <template v-if="isDeal">
     <button
       class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
-      :class="active
-        ? 'bg-surface-violet-2 text-ink-violet-8'
-        : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'"
-      :title="active ? __('Seguimiento activo') + ': ' + (status.campaign_title || '') : __('Iniciar seguimiento')"
+      :class="
+        active
+          ? 'bg-surface-violet-2 text-ink-violet-8'
+          : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
+      "
+      :title="
+        active
+          ? __('Seguimiento activo') + ': ' + (status.campaign_title || '')
+          : __('Iniciar seguimiento')
+      "
       :aria-label="__('Cadencia de seguimiento')"
       @click="openDialog"
     >
@@ -27,14 +33,24 @@
       <template #body-content>
         <!-- active enrollment: summary + stop -->
         <div v-if="active" class="flex flex-col gap-3">
-          <div class="rounded-xl border border-outline-violet-1 bg-surface-violet-2 p-3">
-            <div class="flex items-center gap-1.5 text-[13px] font-semibold text-ink-violet-8">
+          <div
+            class="rounded-xl border border-outline-violet-1 bg-surface-violet-2 p-3"
+          >
+            <div
+              class="flex items-center gap-1.5 text-[13px] font-semibold text-ink-violet-8"
+            >
               <LucideCalendarClock class="h-4 w-4 flex-none" />
-              <span class="min-w-0 truncate">{{ status.campaign_title || __('Seguimiento') }}</span>
+              <span class="min-w-0 truncate">{{
+                status.campaign_title || __('Seguimiento')
+              }}</span>
             </div>
-            <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-ink-gray-7">
+            <div
+              class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-ink-gray-7"
+            >
               <span v-if="stepLabel">{{ stepLabel }}</span>
-              <span v-if="stepLabel && nextLabel" class="text-ink-gray-4">·</span>
+              <span v-if="stepLabel && nextLabel" class="text-ink-gray-4"
+                >·</span
+              >
               <span v-if="nextLabel">{{ __('próx.') }} {{ nextLabel }}</span>
             </div>
           </div>
@@ -49,10 +65,16 @@
 
         <!-- no enrollment: pick a cadence to start -->
         <div v-else class="flex flex-col gap-2">
-          <div v-if="loadingList" class="py-6 text-center text-[12.5px] text-ink-gray-4">
+          <div
+            v-if="loadingList"
+            class="py-6 text-center text-[12.5px] text-ink-gray-4"
+          >
             {{ __('Cargando cadencias…') }}
           </div>
-          <div v-else-if="!cadences.length" class="py-6 text-center text-[12.5px] text-ink-gray-4">
+          <div
+            v-else-if="!cadences.length"
+            class="py-6 text-center text-[12.5px] text-ink-gray-4"
+          >
             {{ __('No hay cadencias activas configuradas.') }}
           </div>
           <button
@@ -64,12 +86,19 @@
             @click="start(c.name)"
           >
             <span class="min-w-0">
-              <span class="block truncate text-[13px] font-semibold text-ink-gray-8">{{ c.title }}</span>
+              <span
+                class="block truncate text-[13px] font-semibold text-ink-gray-8"
+                >{{ c.title }}</span
+              >
               <span class="block text-[11.5px] text-ink-gray-5">
-                {{ c.touches }} {{ c.touches === 1 ? __('toque') : __('toques') }}
+                {{ c.touches }}
+                {{ c.touches === 1 ? __('toque') : __('toques') }}
               </span>
             </span>
-            <span class="flex-none text-[12px] font-semibold text-ink-violet-8">{{ __('Iniciar') }}</span>
+            <span
+              class="flex-none text-[12px] font-semibold text-ink-violet-8"
+              >{{ __('Iniciar') }}</span
+            >
           </button>
         </div>
       </template>
@@ -99,9 +128,13 @@ const busy = ref(false)
 
 const active = computed(() => !!status.value?.active)
 const stepLabel = computed(() =>
-  active.value ? touchLabel(status.value.touches_done, status.value.total_touches) : '',
+  active.value
+    ? touchLabel(status.value.touches_done, status.value.total_touches)
+    : '',
 )
-const nextLabel = computed(() => (active.value ? nextTouchLabel(status.value.next_run_at) : ''))
+const nextLabel = computed(() =>
+  active.value ? nextTouchLabel(status.value.next_run_at) : '',
+)
 
 async function loadStatus() {
   if (!isDeal.value) {
@@ -138,7 +171,10 @@ async function start(campaign) {
   if (busy.value) return
   busy.value = true
   try {
-    status.value = await call('doco_marketing.api.cadence.enroll', { deal: props.name, campaign })
+    status.value = await call('doco_marketing.api.cadence.enroll', {
+      deal: props.name,
+      campaign,
+    })
     toast.success(__('Seguimiento iniciado'))
   } catch (e) {
     toast.error(e.messages?.[0] || __('No se pudo iniciar el seguimiento'))
@@ -151,7 +187,9 @@ async function stop() {
   if (busy.value) return
   busy.value = true
   try {
-    status.value = await call('doco_marketing.api.cadence.stop', { deal: props.name })
+    status.value = await call('doco_marketing.api.cadence.stop', {
+      deal: props.name,
+    })
     toast.success(__('Seguimiento detenido'))
   } catch (e) {
     toast.error(e.messages?.[0] || __('No se pudo detener el seguimiento'))
