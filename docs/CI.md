@@ -28,6 +28,41 @@ CRM, Doco, Scanner Kit, POS Awesome, Doco Meta Catalog, Doco Marketing and Talle
 Payments owns Payment Gateway; Doco Marketing owns Social Shop. Email is muted
 before app setup. Native tests use USD fixtures without calling a live FX service.
 
+## Audited migration metadata
+
+The synthetic migration fixture permits at most one deletion of each of nine
+exact metadata identities, only with these owner and replacement checks:
+
+- Scanner Kit's `Escáner` Workspace is removed by native orphan synchronization
+  because its source is a fixture. Scanner Kit's `after_migrate` hook restores it;
+  module, app, visibility and the `/scan` shortcut must match before and after.
+- Mercado's six named Number Cards and `Mercado: Cambios de precio por día`
+  chart are deliberately deleted and recreated by `mercado.desk.ensure`.
+  Every canonical query, filter, module and visibility field must match before
+  and after, and the Mercado Workspace must retain their widget links.
+- Frappe's `Frappe Framework` Desktop Icon is removed by
+  `frappe.model.sync.delete_duplicate_icons`, not by a CRM data patch. The
+  pre-upgrade state must contain both App icons for `frappe`, with a source JSON
+  for `Framework` and none for the old identity. After migration the obsolete
+  icon must be absent and canonical `Framework` must still open `/desk/build`.
+
+No other deletion is accepted, including CRM records, DocTypes, similarly named
+metadata or repeated deletion of an allowed identity. The existing app, DocType
+and CRM data/link/write checks remain mandatory. These are synthetic CI records,
+not a claim about live tenant data preservation. Deleted Document contents are
+never copied into artifacts; only the row ID, deleted DocType and record name.
+
+The audited image is
+`ghcr.io/holymc2/doco-bench@sha256:0c78449c7e9ab01406b8c58f7459d071b50b67c23b61b89c0763a7abdb802171`,
+from [Muelle source lock f27125fe](https://github.com/HolyMC2/muelle/blob/f27125fe18958a1a7910399aa16ad07b44b0af1e/build/source-lock.json).
+Its owning sources are
+[Frappe 988e54f3](https://github.com/frappe/frappe/blob/988e54f3c4c291e2077a83809663f123731abe76/frappe/model/sync.py),
+[Scanner Kit bae4f299](https://github.com/HolyMC2/scanner_kit/blob/bae4f2991116bf17dd33bf0f2bae877eefb46b94/scanner_kit/install.py)
+and [Mercado 02bfc46f](https://github.com/HolyMC2/mercado/blob/02bfc46fb2cef16f80c226edba51b92bc2dd8f8b/mercado/desk.py).
+The probe checks source-file SHA-256 fingerprints and records the matching
+revision evidence in the baseline. An image update changing those files requires
+re-auditing this narrow metadata contract; a version label alone cannot waive it.
+
 ## Gates
 
 - **Server** installs the candidate and executes the complete native CRM suite
@@ -43,7 +78,10 @@ before app setup. Native tests use USD fixtures without calling a live FX servic
   Afterwards it verifies installed apps, all original DocTypes, record values
   and links, and a write through the upgraded controller. It also rejects
   unexpected Deleted Document entries and runs the complete candidate CRM suite.
-  The full native and migration logs and both revision IDs are retained.
+  The full native and migration logs, both revision IDs, pre-upgrade baseline,
+  individual deletion identities and available metadata postconditions are retained even on
+  verification failure. Artifact collection is restricted to `.ci-results/`; its
+  hidden directory is explicitly included, not other hidden checkout files.
   Manual dispatch requires a distinct `base_ref` (default `doco-dev`); comparing
   a revision with itself fails instead of masquerading as an upgrade.
 - **Frontend** runs the existing full lint, production build and unit test gates.

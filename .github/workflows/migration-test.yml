@@ -63,4 +63,5 @@ jobs:
               with:
                   name: migration-evidence
                   path: .ci-results/
+                  include-hidden-files: true
                   if-no-files-found: error
