@@ -4,6 +4,7 @@ import copy
 import importlib.util
 import json
 import sys
+import tempfile
 import types
 import unittest
 from pathlib import Path
@@ -48,6 +49,48 @@ class MetadataDeletionTests(unittest.TestCase):
 
 	def validate(self):
 		self.probe._validate_deletions(self.rows, self.before, self.after)
+
+	def test_migration_seed_preserves_native_historical_creation(self):
+		for returned_creation in [self.probe._LEGACY_CREATION, "2026-09-23 00:00:00"]:
+			with (
+				self.subTest(returned_creation=returned_creation),
+				tempfile.TemporaryDirectory() as directory,
+			):
+				organization = types.SimpleNamespace(name="CI Organization")
+				organization.insert = lambda: organization
+				lead = types.SimpleNamespace(name="CI Lead", status="Lead", creation=returned_creation)
+				lead.insert = lambda: lead
+				lead.reload = Mock()
+				lead.add_comment = Mock(return_value=types.SimpleNamespace(name="CI Comment"))
+				self.probe.frappe.get_doc.side_effect = [organization, lead]
+				self.probe.frappe.get_doc.reset_mock()
+				self.probe.frappe.db.set_value.reset_mock()
+				snapshot_path = Path(directory) / "baseline.json"
+				with (
+					patch.object(self.probe, "_seed_erp_root"),
+					patch.object(self.probe, "_snapshot_path", return_value=snapshot_path),
+					patch.object(self.probe, "_owner_sources", return_value={}),
+					patch.object(self.probe, "_metadata_state", return_value={}),
+					patch.object(self.probe, "_item_groups", return_value=[]),
+					patch.object(self.probe.frappe, "get_all", return_value=[]),
+					patch.object(
+						self.probe.frappe, "get_installed_apps", return_value=["frappe", "crm"], create=True
+					),
+				):
+					if returned_creation == self.probe._LEGACY_CREATION:
+						self.probe.seed()
+						self.assertEqual(
+							json.loads(snapshot_path.read_text())["lead_creation"], returned_creation
+						)
+					else:
+						with self.assertRaisesRegex(AssertionError, "Historical fixture date"):
+							self.probe.seed()
+						self.assertFalse(snapshot_path.exists())
+				self.assertNotIn("creation", self.probe.frappe.get_doc.call_args_list[1].args[0])
+				self.probe.frappe.db.set_value.assert_called_once_with(
+					"CRM Lead", "CI Lead", "creation", self.probe._LEGACY_CREATION, update_modified=False
+				)
+				lead.reload.assert_called_once()
 
 	def test_empty_base_creates_canonical_native_root(self):
 		self.probe.frappe.get_doc.reset_mock(side_effect=True)

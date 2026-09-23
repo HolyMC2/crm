@@ -28,6 +28,7 @@ _REPLACEMENTS = (
 	("Dashboard Chart", _CHART_NAME),
 )
 _OLD_ICON = ("Desktop Icon", "Frappe Framework")
+_LEGACY_CREATION = "2000-01-01 00:00:00"
 _OWNER_SOURCES = {
 	"frappe": {
 		"revision": "988e54f3c4c291e2077a83809663f123731abe76",
@@ -220,6 +221,11 @@ def seed():
 			"organization": organization.name,
 		}
 	).insert()
+	# Native insert sets creation to now. Date only this synthetic base fixture,
+	# then reload the persisted timestamp without changing any global Frappe flags.
+	frappe.db.set_value("CRM Lead", lead.name, "creation", _LEGACY_CREATION, update_modified=False)
+	lead.reload()
+	assert str(lead.creation) == _LEGACY_CREATION, "Historical fixture date was not persisted"
 	comment = lead.add_comment("Comment", "Preserve this pre-upgrade activity")
 	_snapshot_path().write_text(
 		json.dumps(
@@ -231,6 +237,7 @@ def seed():
 				"item_groups": _item_groups(),
 				"organization": organization.name,
 				"lead": lead.name,
+				"lead_creation": str(lead.creation),
 				"lead_status": lead.status,
 				"comment": comment.name,
 				"deleted_documents": frappe.get_all("Deleted Document", pluck="name"),
@@ -281,6 +288,7 @@ def verify():
 	assert organization.currency == "USD" and float(organization.annual_revenue) == 1234.50
 	lead = frappe.get_doc("CRM Lead", snapshot["lead"])
 	assert lead.email == "migration@example.invalid"
+	assert str(lead.creation) == snapshot["lead_creation"], "Migration changed the original lead timestamp"
 	assert lead.organization == organization.name and lead.status == snapshot["lead_status"]
 	comment = frappe.get_doc("Comment", snapshot["comment"])
 	assert (comment.reference_doctype, comment.reference_name) == ("CRM Lead", lead.name)

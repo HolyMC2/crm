@@ -35,7 +35,12 @@ canonical `All Item Groups` root through the native Item Group controller if the
 tree is empty. An unexpected root or a rootless existing tree fails setup; no
 existing group is renamed or reparented. The snapshot records the root and every
 existing group's identity, parent and `is_group`, and verifies their preservation
-before the full CRM test suite starts. No post-migration repair occurs.
+before the full CRM test suite starts. No post-migration repair occurs. The preserved lead has a fixed historical
+creation timestamp (`2000-01-01 00:00:00`): normal native insertion runs first,
+then the framework database setter dates the synthetic baseline record. The
+persisted value is reloaded and checked before the snapshot and after migration. This keeps historical upgrade data outside the current
+month's dashboard test fixtures without deleting it or changing their expected
+counts.
 
 This follows the pinned
 [ERPNext 4048fb70 setup fixture](https://github.com/frappe/erpnext/blob/4048fb70e14d1843956fcdabb7c3cca75a1cbcdd/erpnext/setup/setup_wizard/operations/install_fixtures.py).
