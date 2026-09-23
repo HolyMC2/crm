@@ -220,6 +220,7 @@ import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import { parseAssignees } from '@/utils'
 import { guardStatusChange } from '@/utils/statusGuard'
+import { repairReadyStage } from '@/utils/repairReadyStage'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
@@ -382,7 +383,7 @@ function call() {
 
 // ── Acciones: inline-editable Estado / Asignado / Etiquetas ─────────────────────
 const statusOpts = computed(() =>
-  (dealStatuses.data || []).map((s) => ({ label: s.name, onClick: () => changeStatus(s.name, s.type) })),
+  (dealStatuses.data || []).filter((s) => !Number(s.hidden || 0)).map((s) => ({ label: s.name, onClick: () => changeStatus(s.name, s.type) })),
 )
 async function changeStatus(status, type) {
   if (!activeDeal.value || status === row.value.status) return
@@ -469,16 +470,20 @@ function openTemplate() {
   })
 }
 async function macroListo() {
-  // The macro hardcodes a status name; if a tenant renamed/didn't seed it, set_value
-  // rejects — surface that instead of an unhandled throw + a false success toast.
+  const ready = repairReadyStage(dealStatuses.data || [])
+  if (!ready) {
+    toast.error(__('Configura una etapa visible de reparación lista antes de usar esta acción.'))
+    return
+  }
   try {
-    await changeStatus('Por Entregar')
+    const changed = await changeStatus(ready.name, ready.type)
+    if (changed === false) return
   } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo cambiar a "Por Entregar" — ¿existe ese estado?'))
+    toast.error(e?.messages?.[0] || __('No se pudo actualizar la etapa de reparación.'))
     return
   }
   openTemplate()
-  toast.success(__('Estado → Por Entregar. Revisa y envía la plantilla.'))
+  toast.success(__('Estado actualizado: {0}. Revisa y envía la plantilla.', [ready.name]))
 }
 async function macroCompletado() {
   let confirmed
