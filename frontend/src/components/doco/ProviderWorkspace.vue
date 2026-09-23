@@ -21,6 +21,8 @@
         {{ __(module.label)
         }}<template v-if="module.state === 'demo_only'">
           · {{ __('Demonstration') }}</template
+        ><template v-else-if="module.state === 'setup_required'">
+          · {{ __('Setup pending') }}</template
         >
       </span>
     </div>
@@ -39,7 +41,7 @@ const props = defineProps({
 })
 const modules = computed(() =>
   (props.provider.modules || []).filter((module) =>
-    ['available', 'demo_only'].includes(module.state),
+    ['available', 'demo_only', 'setup_required'].includes(module.state),
   ),
 )
 </script>
