@@ -26,7 +26,7 @@
       >
         <IndicatorIcon :class="parseColor(column.column.color)" />
         <span class="truncate">{{ column.column.name }}</span>
-        <span class="shrink-0 tabular-nums text-ink-gray-5">{{
+        <span class="shrink-0 tabular-nums text-ink-gray-7">{{
           columnCount(column)
         }}</span>
       </button>
@@ -85,7 +85,7 @@
                 </template>
               </Popover>
               <div class="text-ink-gray-9">{{ column.column.name }}</div>
-              <span class="ml-1.5 text-sm tabular-nums text-ink-gray-5">{{ columnCount(column) }}</span>
+              <span class="ml-1.5 text-sm tabular-nums text-ink-gray-7">{{ columnCount(column) }}</span>
             </div>
             <div class="flex">
               <Dropdown :options="actions(column)">
