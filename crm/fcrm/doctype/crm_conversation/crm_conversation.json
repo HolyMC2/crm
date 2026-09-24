@@ -17,7 +17,12 @@
   "human_owner",
   "generation",
   "bot_enabled",
-  "provider_control"
+  "provider_control",
+  "department",
+  "routed_at",
+  "context_links",
+  "automation_run",
+  "automation_state"
  ],
  "fields": [
   {
@@ -115,6 +120,44 @@
    "options": "Not Applicable\nOurs\nOther\nUnknown",
    "default": "Unknown",
    "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Select",
+   "label": "Department",
+   "read_only": 1,
+   "options": "\nmarketing\nsales\nsupport\nfinance\nwarehouse\ntechnicians",
+   "search_index": 1,
+   "description": "Work queue routing. Routing grants department eligibility, never a sales role."
+  },
+  {
+   "fieldname": "routed_at",
+   "fieldtype": "Datetime",
+   "label": "Routed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "context_links",
+   "fieldtype": "Code",
+   "label": "Context Links",
+   "options": "JSON",
+   "read_only": 1,
+   "hidden": 1,
+   "description": "Owning-app records linked by an authorized person or pinned automation; each viewer's read permission is checked."
+  },
+  {
+   "fieldname": "automation_run",
+   "fieldtype": "Data",
+   "label": "Automation Run",
+   "read_only": 1,
+   "length": 140
+  },
+  {
+   "fieldname": "automation_state",
+   "fieldtype": "Data",
+   "label": "Automation State",
+   "read_only": 1,
+   "length": 40
   }
  ],
  "permissions": [],
