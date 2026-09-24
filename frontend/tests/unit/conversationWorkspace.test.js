@@ -265,3 +265,73 @@ describe('read-only customer presentation', () => {
     expect(retried).toHaveBeenCalledOnce()
   })
 })
+
+describe('provider ownership verification', () => {
+  it('retries the exact probe command and reloads current ownership', async () => {
+    let attempts = 0
+    const rpc = vi.fn((method) => {
+      if (method === 'crm.api.provider_control.verify') {
+        if (++attempts === 1) return Promise.reject(new Error('response lost'))
+        return Promise.resolve({ message: 'Control confirmado por Meta' })
+      }
+      if (method.endsWith('get_history'))
+        return Promise.resolve(
+          history({
+            provider: 'Messenger',
+            provider_control: 'Ours',
+            generation: 2,
+          }),
+        )
+      return Promise.resolve({ items: [], next_cursor: null })
+    })
+    const w = workspace(rpc)
+    w.state.account = account
+    w.state.conversation = doc({
+      provider: 'Messenger',
+      provider_control: 'Unknown',
+    })
+    expect(await w.applyControl('verify_provider')).toBe(false)
+    expect(w.state.pending.command_id).toBe('stable-command')
+    expect(await w.applyControl()).toBe(true)
+    const probes = rpc.mock.calls.filter(
+      ([method]) => method === 'crm.api.provider_control.verify',
+    )
+    expect(probes).toHaveLength(2)
+    expect(probes[0][1]).toEqual({
+      name: 'conv1',
+      expected_generation: 1,
+      command_id: 'stable-command',
+    })
+    expect(probes[1][1]).toEqual(probes[0][1])
+    expect(w.state.pending).toBe(null)
+    expect(w.state.conversation.provider_control).toBe('Ours')
+    expect(w.state.providerNotice).toBe('Control confirmado por Meta')
+  })
+  it('offers provider checking to the current owner and manager only', () => {
+    const owned = mount(ConversationControls, {
+      conversation: doc({
+        provider: 'Messenger',
+        actor: 'one',
+        human_owner: 'one',
+      }),
+    })
+    expect(owned.textContent).toContain('Comprobar control en Meta')
+    const outsider = mount(ConversationControls, {
+      conversation: doc({
+        provider: 'Messenger',
+        actor: 'two',
+        human_owner: 'one',
+      }),
+    })
+    expect(outsider.textContent).not.toContain('Comprobar control en Meta')
+    const manager = mount(ConversationControls, {
+      conversation: doc({
+        provider: 'Instagram',
+        actor: 'two',
+        human_owner: 'one',
+        manager_reason_required: true,
+      }),
+    })
+    expect(manager.textContent).toContain('Comprobar control en Meta')
+  })
+})

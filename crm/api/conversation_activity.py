@@ -1,4 +1,4 @@
-"""Trusted customer replies can retire an existing bot grant; never start one."""
+"""Trusted replies continue a matching collect step or retire the bot grant."""
 
 import hashlib
 import json
@@ -83,13 +83,14 @@ def _receipt(receipt_name, provider, account_id, peer_id, provider_timestamp):
 
 
 def internal_apply_customer_activity(provider, account_id, peer_id, *, receipt_name, provider_timestamp):
-    """Retire only an existing Bot grant newer customer evidence supersedes.
+    """Continue a pending input or retire the Bot grant for newer evidence.
 
     No age cutoff: delayed replies newer than the grant still hold it. Provider
     seconds must be strictly newer than current control.modified and nonfuture.
     Equal-second ambiguity, replay/history and earlier evidence cannot undo a
     newer control decision. Receipt and control changes share the outer worker's
-    transaction; this method has no commits, rollbacks, sends or enqueue.
+    transaction. The owning adapter may enqueue continuation after commit;
+    this boundary never sends a message or admits a new bot grant.
     """
     name = control.conversation_key(provider, account_id, peer_id)
     row, payload, timestamp = _receipt(receipt_name, provider, account_id, peer_id, provider_timestamp)
@@ -121,13 +122,18 @@ def internal_apply_customer_activity(provider, account_id, peer_id, *, receipt_n
         sent_at = convert_utc_to_system_timezone(datetime.fromtimestamp(timestamp, timezone.utc).replace(tzinfo=None)).replace(tzinfo=None)
         before = control._snapshot(doc)
         reason = "customer_activity_control_preserved"
+        continuation = None
         if sent_at > now_datetime():
             reason = "customer_activity_future"
         elif not doc.modified or sent_at <= get_datetime(doc.modified):
             reason = "customer_activity_precedes_control"
         elif doc.control_state == "Bot":
-            doc.control_state, doc.human_owner, doc.bot_enabled = "Human", None, 0
-            reason = "customer_reply_held_bot"
+            message = payload["change"]["value"]["messages"][0]
+            text = (message.get("text") or {}).get("body") if message.get("type") == "text" else None
+            evidence = {"kind": "meta", "provider": provider, "account_id": account_id, "peer_id": peer_id,
+                "message": receipt_name, "text": text if isinstance(text, str) else "",
+                "received_at": str(sent_at), "generation": doc.generation}
+            reason, continuation = control.customer_reply_control(doc, evidence)
         return control._persist_transition(doc, before, key=key, fingerprint=fingerprint,
             origin="Provider", actor=None, action="customer_reply", reason=reason, receipt=receipt_name,
-            grant={"state": "Processed", "reason_code": reason, "provider_timestamp": timestamp})
+            grant={"state": "Processed", "reason_code": reason, "provider_timestamp": timestamp, **(continuation or {})})

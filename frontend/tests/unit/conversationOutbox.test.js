@@ -91,8 +91,9 @@ describe('manual reply durable request', () => {
       actor,
     })
     expect(el.textContent).toContain('Visitante AAAAAAAA')
-    expect(el.querySelector('textarea').maxLength).toBe(2000)
+    expect(el.textContent).toContain('0/2000')
     await reply(el, 'x'.repeat(2001))
+    expect(el.querySelector('button[type="submit"]').disabled).toBe(true)
     await submit(el)
     expect(api.call).not.toHaveBeenCalled()
     await reply(el, 'Respuesta de la tienda')

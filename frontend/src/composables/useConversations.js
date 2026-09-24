@@ -3,6 +3,7 @@ import { call } from 'frappe-ui'
 
 const API = 'crm.api.conversation_threads.'
 const CONTROL = 'crm.api.conversations.apply_control'
+const VERIFY = 'crm.api.provider_control.verify'
 const errorType = (e) =>
   e?.exc_type ||
   e?.responseJSON?.exc_type ||
@@ -29,6 +30,7 @@ export function useConversations({
     controlLoading: false,
     pending: null,
     error: '',
+    providerNotice: '',
     initialized: false,
   })
   let epoch = 0
@@ -43,6 +45,7 @@ export function useConversations({
     state.messages = []
     state.historyCursor = null
     state.operators = []
+    state.providerNotice = ''
     state.historyLoading = false
   }
   const reset = () => {
@@ -254,12 +257,29 @@ export function useConversations({
     state.controlLoading = true
     state.error = ''
     try {
-      await rpc(CONTROL, command)
+      const verifying = command.action === 'verify_provider'
+      const result = await rpc(
+        verifying ? VERIFY : CONTROL,
+        verifying
+          ? {
+              name: command.name,
+              expected_generation: command.expected_generation,
+              command_id: command.command_id,
+            }
+          : command,
+      )
       if (!current(stamp, user)) return false
       state.pending = null
       // A replay may describe an older generation. Always fetch current state.
       await loadHistory(false, command.name)
       await loadThreads()
+      if (!current(stamp, user)) return false
+      if (verifying)
+        state.providerNotice =
+          result?.message ||
+          (state.conversation?.provider_control === 'Ours'
+            ? 'Meta confirma que esta aplicación controla la conversación.'
+            : 'Meta no confirmó el control. Revisa la cuenta y la aplicación de enrutamiento en Meta Business Suite.')
       return true
     } catch (e) {
       if (!current(stamp, user)) return false
