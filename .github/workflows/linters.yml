@@ -1,6 +1,8 @@
 name: Linters
 
 on:
+    push:
+        branches: [doco-dev]
     pull_request:
     workflow_dispatch:
         inputs:
@@ -8,6 +10,10 @@ on:
                 description: Git revision from which to check candidate commit titles
                 required: true
                 default: origin/doco-dev
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
     contents: read
@@ -17,6 +23,7 @@ jobs:
     commit-lint:
         name: Semantic Commits
         runs-on: ubuntu-latest
+        timeout-minutes: 10
 
         steps:
             - uses: actions/checkout@v6
@@ -35,7 +42,7 @@ jobs:
             - name: Check commit titles
               env:
                   PR_BASE: ${{ github.event.pull_request.base.sha }}
-                  MANUAL_BASE: ${{ inputs.base_ref }}
+                  MANUAL_BASE: ${{ inputs.base_ref || github.event.before }}
               run: |
                   head=$(git rev-parse HEAD)
                   if [ -n "$PR_BASE" ]; then
@@ -53,6 +60,7 @@ jobs:
     semgrep:
         name: Semgrep Rules
         runs-on: ubuntu-latest
+        timeout-minutes: 15
 
         env:
             PIP_DISABLE_PIP_VERSION_CHECK: "1"
@@ -60,6 +68,8 @@ jobs:
 
         steps:
             - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
 
             - name: Set up Python
               uses: actions/setup-python@v6
@@ -74,11 +84,28 @@ jobs:
               run: git clone --depth 1 https://github.com/frappe/semgrep-rules.git frappe-semgrep-rules
 
             - name: Run Semgrep rules
-              run: semgrep ci --no-suppress-errors --config ./frappe-semgrep-rules/rules --config r/python.lang.correctness
+              env:
+                  PUSH_BEFORE: ${{ github.event.before }}
+                  MANUAL_BASE: ${{ inputs.base_ref }}
+              run: |
+                  # semgrep ci is diff-aware on a pull request. Pushes and dispatches
+                  # get the same gate (findings the new commits add) rather than a
+                  # full scan that fails on the findings the fork already carries.
+                  if [ "$GITHUB_EVENT_NAME" = push ]; then
+                      export SEMGREP_BASELINE_REF="$PUSH_BEFORE"
+                  elif [ -n "$MANUAL_BASE" ]; then
+                      base=$(git merge-base "$MANUAL_BASE" HEAD)
+                      if [ "$base" = "$(git rev-parse HEAD)" ]; then
+                          base=$(git rev-parse HEAD^)
+                      fi
+                      export SEMGREP_BASELINE_REF="$base"
+                  fi
+                  semgrep ci --no-suppress-errors --config ./frappe-semgrep-rules/rules --config r/python.lang.correctness
 
     pre-commit:
         name: Pre-commit Checks
         runs-on: ubuntu-latest
+        timeout-minutes: 20
 
         env:
             PIP_DISABLE_PIP_VERSION_CHECK: "1"

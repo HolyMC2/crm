@@ -1,6 +1,8 @@
 name: Server
 
 on:
+    push:
+        branches: [doco-dev]
     pull_request:
         paths-ignore:
             - "**.css"
@@ -55,6 +57,7 @@ jobs:
         needs: test
         if: github.base_ref == 'develop' || github.ref_name == 'develop'
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v4
             - uses: actions/download-artifact@v4

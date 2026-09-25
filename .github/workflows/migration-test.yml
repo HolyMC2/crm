@@ -1,6 +1,8 @@
 name: Migration
 
 on:
+    push:
+        branches: [doco-dev]
     pull_request:
         paths-ignore:
             - "**.css"
@@ -40,7 +42,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                   repository: ${{ github.repository }}
-                  ref: ${{ github.event.pull_request.base.sha || inputs.base_ref }}
+                  ref: ${{ github.event.pull_request.base.sha || inputs.base_ref || github.event.before }}
                   path: .ci-base/crm
                   persist-credentials: false
             - name: Record immutable migration revisions

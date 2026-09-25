@@ -1,9 +1,6 @@
 name: CRM release CI
 on:
   workflow_dispatch:
-  push:
-    branches: [main, main-hotfix, 'release/full-ci-*']
-    tags: ['full-ci-*']
 permissions:
   contents: read
   packages: read
