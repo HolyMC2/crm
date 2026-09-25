@@ -31,6 +31,8 @@ class TestAPIInputAnnotations(unittest.TestCase):
 		for module, method in (
 			("crm.api.conversations", "apply_control"),
 			("crm.api.outbox", "queue_message"),
+			("crm.api.automation", "route_conversation"),
+			("crm.api.provider_control", "verify"),
 		):
 			for value in (True, False, 1.0, 1.5):
 				with self.subTest(method=method, value=value):

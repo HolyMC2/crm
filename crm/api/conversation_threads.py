@@ -38,8 +38,16 @@ def _limit(value):
 
 
 def _actor():
+	"""Channel staff, or a department member who may hold routed conversations.
+
+	Department roles only pass this entry gate; every conversation, account and
+	record is still authorized individually by the control broker.
+	"""
 	actor = frappe.session.user
-	if not control._roles(actor).intersection(control._channel_roles("WhatsApp")):
+	roles = control._roles(actor)
+	if not roles.intersection(control._channel_roles("WhatsApp")) and not roles.intersection(
+		control.departments.member_roles()
+	):
 		control._deny()
 	return actor
 
@@ -121,12 +129,16 @@ def _private_peer(provider, peer):
 	return not _permitted(lambda: assert_customer_peer(provider, peer))
 
 
-def _source_allowed(row):
+def _source_allowed(row, conversation_reference=None):
 	dt, name = row.get("reference_doctype"), row.get("reference_name")
 	if not dt and not name:
 		return True
 	if dt not in REFS or not name:
 		return False
+	if conversation_reference and (dt, name) == conversation_reference:
+		# The conversation itself was just authorized for this exact record,
+		# through its read permission or the department's own linked record.
+		return True
 
 	def check():
 		doc = frappe.get_doc(dt, name, for_update=control._locked())
@@ -136,10 +148,16 @@ def _source_allowed(row):
 	return _permitted(check)
 
 
-def _scope(provider, account_id):
+def _scope(provider, account_id, doc=None):
 	"""Per-provider SQL fragments. `peer` names the peer column, `peer_match` is
-	the predicate (one %s) that scopes rows to a given peer."""
-	_, account = _account_probe(provider, account_id)
+	the predicate (one %s) that scopes rows to a given peer. With `doc`, the
+	exact conversation is authorized instead of the whole account."""
+	if doc is not None:
+		if (doc.provider, doc.account_id) != (provider, account_id):
+			control._deny()
+		_, account = control._authorize(doc)
+	else:
+		_, account = _account_probe(provider, account_id)
 	if provider == "Webchat":
 		return frappe._dict(
 			doctype="CRM Webchat Message",
@@ -174,7 +192,8 @@ def _scope(provider, account_id):
 		table="`tabMessenger Message`",
 		peer="m.psid",
 		peer_match="m.psid=%s",
-		where=f"m.page_id=%s AND {platform} AND m.direction IN ('Incoming','Outgoing')",
+		where=f"m.page_id=%s AND {platform} AND m.direction IN ('Incoming','Outgoing')"
+		" AND COALESCE(NULLIF(m.event_type,''),'message') IN ('message','echo')",
 		args=[page_id],
 		timestamp="COALESCE(m.sent_ts,m.creation)",
 	)
@@ -339,7 +358,7 @@ def _actions(doc):
 		return [], False
 	actor = frappe.session.user
 	roles = control._roles(actor)
-	manager = bool(roles & control.MANAGERS)
+	manager = control.manager_for(roles, doc)
 	owns = doc.human_owner == actor
 	actions = []
 	if doc.control_state != "Closed" and (not doc.human_owner or owns or manager):
@@ -360,14 +379,19 @@ def _detail(doc):
 	result["display_name"] = _display_names(doc.provider, [doc.peer_id]).get(doc.peer_id, doc.peer_id)
 	result["allowed_actions"], result["manager_reason_required"] = _actions(doc)
 	result["actor"] = frappe.session.user
+	from crm.api.outbox import channel_send_ready
+
 	result["send_available"] = bool(
-		doc.provider in {"WhatsApp", "Webchat"}
-		and doc.control_state == "Human"
+		doc.control_state == "Human"
 		and doc.human_owner == frappe.session.user
 		and "release" in result["allowed_actions"]
 		and doc.provider_control in ("Not Applicable", "Ours")
 		and frappe.db.exists("DocType", "CRM Outbound Intent")
+		and (doc.provider in {"WhatsApp", "Webchat"} or channel_send_ready(doc.provider))
 	)
+	result["context_links"] = control.context_view(doc)
+	result["automation_run"] = doc.get("automation_run") or None
+	result["routed_at"] = doc.get("routed_at")
 	result["control_requests"] = frappe.db.get_values(
 		control.EVENT,
 		{"conversation": doc.name, "action": "request", "to_generation": doc.generation},
@@ -752,14 +776,15 @@ def get_history(conversation: str, cursor: str | None = None, limit: int | str =
 	control._authorize(doc)
 	if _private_peer(doc.provider, doc.peer_id):
 		control._deny()
-	scope = _scope(doc.provider, doc.account_id)
+	scope = _scope(doc.provider, doc.account_id, doc=doc)
 	context = ["history", doc.name]
 	position = _cursor(cursor, context)
 	rows = _metadata(scope, doc.peer_id, cursor=position, limit=SCAN + 1)
 	size, items, last = _limit(limit), [], None
+	same = (doc.reference_doctype, doc.reference_name) if doc.reference_doctype else None
 	for row in rows[:SCAN]:
 		last = [str(row.timestamp), row.name]
-		if _source_allowed(row):
+		if _source_allowed(row, same):
 			items.append(_message(scope, row))
 		if len(items) == size:
 			break

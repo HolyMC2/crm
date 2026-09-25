@@ -75,13 +75,19 @@
                     : state.conversation.account_id
                 }}
               </p>
-              <a
-                v-if="referenceLink"
-                :href="referenceLink"
-                class="mt-1 block text-xs underline"
-                >{{ state.conversation.reference_doctype }} ·
-                {{ state.conversation.reference_name }}</a
+              <nav
+                v-if="recordLinks.length"
+                class="mt-2 flex flex-wrap gap-2 text-xs"
+                aria-label="Registros de la conversación"
               >
+                <a
+                  v-for="link in recordLinks"
+                  :key="link.doctype + ':' + link.name"
+                  :href="link.url"
+                  class="underline [overflow-wrap:anywhere]"
+                  >{{ link.label || `${link.doctype} · ${link.name}` }}</a
+                >
+              </nav>
             </div>
             <button
               type="button"
@@ -102,6 +108,7 @@
               outboxPending
             "
             :pending="state.pending"
+            :provider-notice="state.providerNotice"
             @control="workspace.applyControl"
             @retry="workspace.applyControl()"
             @operators="workspace.loadOperators"
@@ -126,7 +133,7 @@
             Algunos adjuntos no están disponibles en esta vista.
           </p>
           <ConversationOutbox
-            v-if="['WhatsApp', 'Webchat'].includes(state.conversation.provider)"
+            v-if="NATIVE_PROVIDERS.includes(state.conversation.provider)"
             ref="outbox"
             :conversation="state.conversation"
             :actor="session.user"
@@ -170,6 +177,7 @@ import ConversationControls from './ConversationControls.vue'
 import ConversationComposer from './ConversationComposer.vue'
 import ConversationOutbox from './ConversationOutbox.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
+const NATIVE_PROVIDERS = ['WhatsApp', 'Webchat', 'Messenger', 'Instagram']
 const session = sessionStore(),
   route = useRoute(),
   router = useRouter()
@@ -208,6 +216,23 @@ const referenceLink = computed(() => {
     ? `/app/${paths[d.reference_doctype]}/${encodeURIComponent(d.reference_name)}`
     : null
 })
+const recordLinks = computed(() => {
+  const doc = state.conversation
+  const rows = [...(doc?.context_links || [])]
+  if (referenceLink.value)
+    rows.unshift({
+      doctype: doc.reference_doctype,
+      name: doc.reference_name,
+      url: referenceLink.value,
+    })
+  return [
+    ...new Map(
+      rows
+        .filter((row) => /^\/(?:app|desk|crm)\//.test(row.url || ''))
+        .map((row) => [`${row.doctype}:${row.name}`, row]),
+    ).values(),
+  ]
+})
 async function select(thread) {
   if (pendingWork.value) return
   if (await workspace.selectThread(thread)) {
@@ -240,6 +265,17 @@ function updated(event) {
     event?.name === state.conversation?.name
   )
     workspace.loadHistory()
+}
+// Messenger/Instagram rows (customer messages, echoes, accepted replies)
+// announce only their page-scoped peer; reload just that open conversation.
+function socialMessage(event) {
+  const current = state.conversation
+  if (
+    ['Messenger', 'Instagram'].includes(current?.provider) &&
+    typeof event?.psid === 'string' &&
+    event.psid === current.peer_id
+  )
+    updated({ name: current.name })
 }
 function selectAccount(account) {
   if (!pendingWork.value) workspace.selectAccount(account)
@@ -299,6 +335,7 @@ onMounted(() => {
   scheduleRefresh()
   $socket?.on('crm_conversation_updated', updated)
   $socket?.on('crm_outbox_updated', outboxUpdated)
+  $socket?.on('messenger_message', socialMessage)
 })
 onUnmounted(() => {
   refreshActive = false
@@ -306,5 +343,6 @@ onUnmounted(() => {
   workspace.reset()
   $socket?.off('crm_conversation_updated', updated)
   $socket?.off('crm_outbox_updated', outboxUpdated)
+  $socket?.off('messenger_message', socialMessage)
 })
 </script>

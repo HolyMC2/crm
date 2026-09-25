@@ -25,9 +25,9 @@
     >
       <div class="flex flex-wrap justify-between gap-2 text-xs">
         <strong>{{
-          row.state === 'Accepted' && conversation.provider === 'Webchat'
-            ? 'Disponible en la conversación'
-            : labels[row.state] || 'Estado no disponible'
+          (row.state === 'Accepted' && accepted[conversation.provider]) ||
+          labels[row.state] ||
+          'Estado no disponible'
         }}</strong
         ><time>{{ row.creation }}</time>
       </div>
@@ -91,11 +91,18 @@ onUnmounted(() => {
   epoch++
   emit('pending', false)
 })
+// Accepted means the provider took the message, never that the customer got it.
+const accepted = {
+  WhatsApp: 'Aceptado por WhatsApp',
+  Messenger: 'Aceptado por Messenger',
+  Instagram: 'Aceptado por Instagram',
+  Webchat: 'Disponible en la conversación',
+}
 const labels = {
   Queued: 'En cola',
   Claimed: 'En preparación',
   Submitting: 'Envío en curso',
-  Accepted: 'Aceptado por WhatsApp',
+  Accepted: 'Aceptado por el proveedor',
   Delivered: 'Entregado',
   Read: 'Leído',
   Blocked: 'Bloqueado',
@@ -121,6 +128,25 @@ const reasons = {
   webchat_storage_unavailable:
     'No se pudo guardar la respuesta. Puedes reintentar.',
   provider_identity_conflict: 'La confirmación del proveedor requiere revisión',
+  provider_account_changed:
+    'La cuenta o aplicación cambió durante la verificación. Vuelve a comprobar el control.',
+  provider_owner_other_app: 'Meta asignó esta conversación a otra aplicación.',
+  provider_owner_not_confirmed:
+    'Meta no confirmó el control de esta conversación.',
+  provider_control_unsupported:
+    'Este modo de conexión no permite comprobar el control en Meta.',
+  provider_app_unconfigured: 'Configura la aplicación de Meta de esta cuenta.',
+  provider_control_denied:
+    'Meta no permitió comprobar el control. Revisa los permisos de la aplicación.',
+  provider_response_invalid:
+    'La respuesta de Meta no permitió comprobar el control.',
+  provider_control_unavailable:
+    'No se pudo consultar el control en Meta. Reintenta más tarde.',
+  provider_rejected: 'El proveedor rechazó el mensaje',
+  provider_rate_limited: 'El proveedor limitó los envíos. Reintenta más tarde.',
+  attempts_exhausted: 'Se agotaron los intentos de envío',
+  frozen_payload_invalid: 'El contenido no es válido para este canal',
+  site_maintenance: 'El sitio está en mantenimiento',
 }
 const safeReason = (value) =>
   /^[a-z0-9_]{1,100}$/.test(value || '') ? value : 'unavailable'

@@ -6,6 +6,7 @@ Unknown is evidence of an uncertain effect, never a retryable failure.
 """
 
 import hashlib
+import importlib
 import json
 import re
 import secrets
@@ -74,14 +75,97 @@ TRANSITIONS = {
 }
 
 
+HOOKED_CHANNELS = frozenset({"Messenger", "Instagram"})
+TEXT_LIMITS = {"Webchat": 2000, "Messenger": 2000, "Instagram": 1000}
+# Only states that carry the provider's own acceptance get a history row.
+HISTORY_STATES = frozenset({"Accepted", "Delivered", "Read"})
+# Meta Send API message ids are opaque; bounded like the ledger column and
+# never a local synthetic/skip-send marker.
+_META_MESSAGE_ID = re.compile(r"[A-Za-z0-9._~+/=:$-]{1,255}")
+_SYNTHETIC_IDS = ("m_fake", "ig_fake", "fake", "demo", "m_demo", "wamid.demo")
+
+
+def _adapter_module(path):
+	"""Import one registered adapter module from an installed app, else None."""
+	if not isinstance(path, str) or not re.fullmatch(r"[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)+", path):
+		return None
+	if path.split(".", 1)[0] not in frappe.get_installed_apps():
+		return None
+	try:
+		return importlib.import_module(path)
+	except ImportError:
+		return None
+
+
+def channel_adapter(provider):
+	"""Owning-app transport adapter from hooks `crm_channel_adapters = {provider: module}`.
+
+	Dependency-safe: CRM never imports another app's transport directly. Zero or
+	several registrations for one provider are ambiguous and fail closed.
+	"""
+	if provider not in HOOKED_CHANNELS:
+		return None
+	hooks = frappe.get_hooks("crm_channel_adapters") or {}
+	paths = hooks.get(provider) if isinstance(hooks, dict) else None
+	paths = [paths] if isinstance(paths, str) else paths
+	if not isinstance(paths, list) or len(set(paths)) != 1:
+		return None
+	return _adapter_module(paths[0])
+
+
+def bot_adapter():
+	"""Customer-run adapter from hooks `crm_bot_automation = [module]`; exactly one."""
+	paths = frappe.get_hooks("crm_bot_automation") or []
+	paths = [paths] if isinstance(paths, str) else paths
+	if not isinstance(paths, list) or len(set(paths)) != 1:
+		return None
+	return _adapter_module(paths[0])
+
+
+def _adapter_call(adapter, name, *args, **kwargs):
+	function = getattr(adapter, name, None) if adapter else None
+	if not callable(function):
+		return None
+	return function(*args, **kwargs)
+
+
 def automation_ready(provider):
 	# Capability only. Exact account, active policy, peer and manager grants are
 	# enforced by the customer adapter at start and immediately before delivery.
+	if provider in HOOKED_CHANNELS:
+		try:
+			return _adapter_call(channel_adapter(provider), "automation_ready", provider) is True
+		except Exception:
+			return False
 	if provider not in {"Webchat", "WhatsApp"} or "doco" not in frappe.get_installed_apps():
 		return False
 	from doco.docoutils.assistant.bot_customer import provider_ready
 
 	return provider_ready(provider)
+
+
+def channel_send_ready(provider):
+	"""Whether people may queue native replies on this provider at all."""
+	if provider in {"Webchat", "WhatsApp"}:
+		return frappe.db.exists("DocType", DOCTYPE) is not None
+	try:
+		return _adapter_call(channel_adapter(provider), "send_ready", provider) is True
+	except Exception:
+		return False
+
+
+def bot_dispatch_reason(intent, *, consume=False):
+	"""Bot intents are checked by the run family that produced them.
+
+	The registered Chatflow adapter routes pinned graph runs and delegates static
+	runs to Doco's reviewed customer adapter; without it, Doco's adapter decides.
+	"""
+	adapter = bot_adapter()
+	if adapter and callable(getattr(adapter, "dispatch_reason", None)):
+		return adapter.dispatch_reason(intent, consume=consume)
+	from doco.docoutils.assistant.bot_customer import dispatch_reason
+
+	return dispatch_reason(intent, consume=consume)
 
 
 def _canonical(value):
@@ -165,13 +249,14 @@ def validate_intent(doc):
 def _projection(doc):
 	result = {field: doc.get(field) for field in PUBLIC}
 	payload = json.loads(doc.payload)
-	result["text"] = (
-		_summary(payload)
-		if doc.provider == "WhatsApp"
-		else payload.get("text", "")
-		if doc.provider == "Webchat"
-		else ""
-	)
+	if doc.provider == "WhatsApp":
+		result["text"] = _summary(payload)
+	elif doc.provider == "Webchat":
+		result["text"] = payload.get("text", "")
+	elif doc.provider in HOOKED_CHANNELS and isinstance(payload.get("message"), dict):
+		result["text"] = str(payload["message"].get("text") or "")
+	else:
+		result["text"] = ""
 	result["can_retry"] = (
 		doc.state in {"Blocked", "Failed", "Deferred"}
 		and not doc.provider_message_id
@@ -223,8 +308,25 @@ def _transition(doc, state, reason="", **values):
 		from crm.api.outbox_bridge import project_transcript
 
 		project_transcript(doc)
+	if doc.origin == "Bot" and state in {"Accepted", "Blocked", "Failed", "Cancelled", "Unknown"}:
+		_nudge_run(doc)
 	_notify(doc)
 	return doc
+
+
+def _nudge_run(doc):
+	"""After-commit hint so a pinned run re-checks its delivery promptly.
+
+	Never authority and never a state change: the run reloads the intent under
+	its own fence; the periodic sweeper remains the fallback.
+	"""
+	adapter = bot_adapter()
+	nudge = getattr(adapter, "intent_settled", None) if adapter else None
+	if callable(nudge) and doc.run_name:
+		try:
+			nudge(doc.run_name)
+		except Exception:
+			pass
 
 
 def _payload(payload, conversation):
@@ -235,7 +337,8 @@ def _payload(payload, conversation):
 	if not isinstance(payload, dict) or set(payload) != {"type", "text"} or payload.get("type") != "text":
 		frappe.throw("This reply action requires plain text.")
 	body = payload["text"]
-	max_length = 2000 if conversation.provider == "Webchat" else 4096
+	# Mirrors the owning validators (Webchat, Meta Send API), which stay authoritative.
+	max_length = TEXT_LIMITS.get(conversation.provider, 4096)
 	if not isinstance(body, str) or not body.strip() or len(body) > max_length:
 		frappe.throw("Enter a reply of at most {0} characters.".format(max_length))
 	if conversation.provider == "Webchat":
@@ -247,6 +350,23 @@ def _payload(payload, conversation):
 			).decode()
 		except ValueError:
 			frappe.throw("Invalid reply content.")
+	if conversation.provider in HOOKED_CHANNELS:
+		# The owning transport freezes its exact wire payload; CRM stores it.
+		adapter = channel_adapter(conversation.provider)
+		if not adapter or not callable(getattr(adapter, "freeze_text", None)):
+			frappe.throw("Native sending is not ready for this channel.")
+		try:
+			frozen = adapter.freeze_text(
+				body,
+				provider=conversation.provider,
+				account_id=conversation.account_id,
+				peer_id=conversation.peer_id,
+			)
+		except ValueError:
+			frappe.throw("Invalid reply content.")
+		if not isinstance(frozen, str):
+			frappe.throw("Invalid reply content.")
+		return frozen
 	if conversation.provider != "WhatsApp":
 		frappe.throw("Native sending is not ready for this channel.")
 	frozen = {
@@ -264,6 +384,40 @@ def _payload(payload, conversation):
 		).decode()
 	except ValueError:
 		frappe.throw("Invalid reply content.")
+
+
+def _channel_source(conversation):
+	"""(source doctype, record, revision) of the exact current account, from its owner."""
+	try:
+		source = _adapter_call(channel_adapter(conversation.provider), "account_source", conversation)
+	except (frappe.PermissionError, frappe.ValidationError, ValueError):
+		source = None
+	if (
+		not isinstance(source, tuple | list)
+		or len(source) != 3
+		or not all(isinstance(v, str) and v for v in source)
+	):
+		frappe.throw("Native sending is not ready for this channel.")
+	if len(source[2]) > 140 or source[1] != conversation.account_record:
+		frappe.throw("Native sending is not ready for this channel.")
+	return tuple(source)
+
+
+def _channel_reply_reason(intent):
+	"""Current eligibility from the owning transport: account revision, window, suppression."""
+	if intent.origin not in {"Human", "Bot"} or intent.purpose not in {"manual", "service", "automation"}:
+		return "producer_not_ready"
+	if frappe.conf.get("maintenance_mode"):
+		return "site_maintenance"
+	adapter = channel_adapter(intent.provider)
+	if not adapter or not callable(getattr(adapter, "reply_reason", None)):
+		return "channel_not_ready"
+	reason = adapter.reply_reason(intent)
+	if reason is None:
+		return None
+	if not isinstance(reason, str) or not re.fullmatch(r"[a-z0-9_]{1,100}", reason):
+		return "channel_not_ready"
+	return reason
 
 
 def _enqueue(names):
@@ -328,14 +482,22 @@ def queue_message(
 		control.assert_current_generation(conversation, generation, actor_user=actor)
 		from crm.api.outbox_policy import account_revision, webchat_revision
 
-		source = "CRM Webchat Channel" if current.provider == "Webchat" else "WhatsApp Account"
-		fields = (
-			["name", "profile", "public_origin"]
-			if current.provider == "Webchat"
-			else ["name", "app_id", "business_id"]
-		)
-		account = frappe.db.get_value(source, current.account_record, fields, as_dict=True, for_update=True)
-		revision = webchat_revision(account) if current.provider == "Webchat" else account_revision(account)
+		if current.provider in HOOKED_CHANNELS:
+			source, source_name, revision = _channel_source(current)
+		else:
+			source = "CRM Webchat Channel" if current.provider == "Webchat" else "WhatsApp Account"
+			fields = (
+				["name", "profile", "public_origin"]
+				if current.provider == "Webchat"
+				else ["name", "app_id", "business_id"]
+			)
+			account = frappe.db.get_value(
+				source, current.account_record, fields, as_dict=True, for_update=True
+			)
+			source_name = account.name
+			revision = (
+				webchat_revision(account) if current.provider == "Webchat" else account_revision(account)
+			)
 		doc = frappe.get_doc(
 			{
 				"doctype": DOCTYPE,
@@ -351,7 +513,7 @@ def queue_message(
 				"purpose": "manual",
 				"payload": frozen,
 				"source_doctype": source,
-				"source_name": account.name,
+				"source_name": source_name,
 				"source_action": revision,
 				"state": "Queued",
 				"attempts": 0,
@@ -432,10 +594,14 @@ def _eligibility(doc):
 		return "conversation_changed"
 	except (frappe.PermissionError, frappe.DoesNotExistError):
 		return "authority_revoked"
+	if doc.provider in HOOKED_CHANNELS:
+		# Window/suppression/account evidence from the owning transport applies
+		# to people and bots alike; a bot additionally needs its run's approval.
+		reason = _channel_reply_reason(doc)
+		if reason or doc.origin != "Bot":
+			return reason
 	if doc.origin == "Bot":
-		from doco.docoutils.assistant.bot_customer import dispatch_reason
-
-		return dispatch_reason(doc)
+		return bot_dispatch_reason(doc)
 	return manual_reply_reason(doc)
 
 
@@ -459,6 +625,11 @@ def _gateway(doc):
 		from crm.api.webchat import deliver_local as send_frozen
 	elif doc.provider == "WhatsApp":
 		from frappe_whatsapp.native_outbox import send_frozen
+	elif doc.provider in HOOKED_CHANNELS:
+		adapter = channel_adapter(doc.provider)
+		send_frozen = getattr(adapter, "send_frozen", None) if adapter else None
+		if not callable(send_frozen):
+			return {"state": "Blocked", "reason_code": "channel_not_ready"}
 	else:
 		return {"state": "Blocked", "reason_code": "channel_not_ready"}
 	payload = json.loads(doc.payload)
@@ -477,12 +648,20 @@ def _result(doc, result):
 	state = result.get("state")
 	if state == "Accepted":
 		message_id = result.get("provider_message_id")
-		pattern = r"webchat\.[0-9a-f]{64}" if doc.provider == "Webchat" else r"wamid\.[^\s]{1,249}"
-		if (
-			isinstance(message_id, str)
-			and re.fullmatch(pattern, message_id)
-			and not message_id.startswith("wamid.demo-")
-		):
+		if doc.provider in HOOKED_CHANNELS:
+			valid = (
+				isinstance(message_id, str)
+				and bool(_META_MESSAGE_ID.fullmatch(message_id))
+				and not message_id.lower().startswith(_SYNTHETIC_IDS)
+			)
+		else:
+			pattern = r"webchat\.[0-9a-f]{64}" if doc.provider == "Webchat" else r"wamid\.[^\s]{1,249}"
+			valid = (
+				isinstance(message_id, str)
+				and bool(re.fullmatch(pattern, message_id))
+				and not message_id.startswith("wamid.demo-")
+			)
+		if valid:
 			return _accept_provider_id(doc, message_id)
 	elif state in {"Blocked", "Failed", "Unknown"}:
 		reason = result.get("reason_code")
@@ -578,9 +757,7 @@ def dispatch_intent(intent_name):
 			frappe.db.commit()
 			return
 		if doc.origin == "Bot":
-			from doco.docoutils.assistant.bot_customer import dispatch_reason
-
-			reason = dispatch_reason(doc, consume=True)
+			reason = bot_dispatch_reason(doc, consume=True)
 			if reason:
 				_transition(doc, "Blocked", reason)
 				frappe.db.commit()
@@ -598,6 +775,8 @@ def dispatch_intent(intent_name):
 			result = {"state": "Unknown", "reason_code": "provider_response_uncertain"}
 		_result(_load(intent_name), result)
 		frappe.db.commit()
+		if doc.provider in HOOKED_CHANNELS:
+			_project_history(intent_name)
 
 
 def _dispatch_local(doc, now):
@@ -625,9 +804,7 @@ def _dispatch_local(doc, now):
 	_transition(doc, "Submitting", submitted_at=now)
 	try:
 		if doc.origin == "Bot":
-			from doco.docoutils.assistant.bot_customer import dispatch_reason
-
-			if dispatch_reason(doc, consume=True):
+			if bot_dispatch_reason(doc, consume=True):
 				raise ValueError("customer_policy_changed")
 		result = _gateway(doc)
 		if not isinstance(result, dict) or result.get("state") != "Accepted":
@@ -654,6 +831,58 @@ def _dispatch_local(doc, now):
 		)
 		_transition(failed, "Blocked", "webchat_storage_unavailable")
 		frappe.db.commit()
+
+
+def _project_history(intent_name):
+	"""Owning-app history row for a settled Messenger/Instagram send.
+
+	Runs in its own transaction after the Accepted commit, still inside the
+	dispatcher's fence, which the webhook echo of the same message waits on. A
+	projection failure never rewrites the ledger; recover_intents repairs the
+	missing row later. It is never an effect and never delivery evidence.
+	"""
+	try:
+		_history(_load(intent_name))
+		frappe.db.commit()
+	except Exception:
+		frappe.db.rollback()
+
+
+def _history(doc):
+	if doc.provider not in HOOKED_CHANNELS or doc.state not in HISTORY_STATES or not doc.provider_message_id:
+		return None
+	adapter = channel_adapter(doc.provider)
+	project = getattr(adapter, "project_history", None) if adapter else None
+	if not callable(project):
+		return None
+	result = project(doc)
+	if isinstance(result, dict) and result.get("projected") and result.get("changed"):
+		# Same ID-only hint a new Webchat transcript row sends.
+		from crm.api.webchat import _notify_message
+
+		_notify_message(doc.conversation, doc.actor_user)
+	return result
+
+
+def _repair_history():
+	"""Bounded catch-up for accepted social sends whose history row is missing."""
+	seen = []
+	for provider in sorted(HOOKED_CHANNELS):
+		adapter = channel_adapter(provider)
+		candidates = getattr(adapter, "history_repair_candidates", None) if adapter else None
+		if not callable(candidates) or adapter in seen:
+			continue
+		seen.append(adapter)
+		for row in candidates(20) or []:
+			try:
+				# A busy fence means a dispatcher or receipt is working on this
+				# conversation right now; the next sweep tries again.
+				with control.conversation_fence(row["conversation"], timeout=0):
+					frappe.db.rollback()
+					_history(_load(row["name"]))
+					frappe.db.commit()
+			except Exception:
+				frappe.db.rollback()
 
 
 @frappe.whitelist(methods=["POST"])
@@ -715,3 +944,7 @@ def recover_intents():
 		(now_datetime(), now_datetime()),
 	)
 	_enqueue(tuple(row[0] for row in names))
+	try:
+		_repair_history()
+	except Exception:
+		frappe.db.rollback()

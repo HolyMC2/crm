@@ -11,6 +11,23 @@
       El control determina quién puede responder. Un envío ya iniciado puede
       seguir en curso.
     </p>
+    <div v-if="canVerifyProvider" class="mt-2 text-xs">
+      <button
+        type="button"
+        class="underline"
+        :disabled="busy || !!pending"
+        @click="$emit('control', 'verify_provider')"
+      >
+        Comprobar control en Meta
+      </button>
+      <p class="mt-1 text-ink-gray-5">
+        Consulta quién puede responder; no envía mensajes ni toma control de
+        otra aplicación.
+      </p>
+      <p v-if="providerNotice" class="mt-2" role="status">
+        {{ providerNotice }}
+      </p>
+    </div>
     <p
       v-for="request in conversation.control_requests || []"
       :key="request.actor_user + request.creation"
@@ -107,6 +124,7 @@ const props = defineProps({
   operators: { type: Array, default: () => [] },
   busy: Boolean,
   pending: { type: Object, default: null },
+  providerNotice: { type: String, default: '' },
 })
 const emit = defineEmits(['control', 'retry', 'operators'])
 const labels = {
@@ -129,6 +147,14 @@ const action = ref(''),
   reason = ref(''),
   query = ref('')
 const actions = computed(() => props.conversation.allowed_actions || [])
+const canVerifyProvider = computed(
+  () =>
+    props.conversation.control_state !== 'Closed' &&
+    ['Messenger', 'Instagram'].includes(props.conversation.provider) &&
+    (props.conversation.manager_reason_required ||
+      (props.conversation.human_owner &&
+        props.conversation.human_owner === props.conversation.actor)),
+)
 const reasonRequired = computed(
   () =>
     props.conversation.manager_reason_required && action.value !== 'request',

@@ -1,0 +1,224 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Automation Policy",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "allow_rename": 0,
+ "description": "Explicit, published inbound automation for one exact customer account. Publishing pins the bot route and the published Chatflow revision; pausing revokes outstanding bot grants immediately.",
+ "field_order": [
+  "title",
+  "provider",
+  "account_id",
+  "account_record",
+  "column_break_route",
+  "flow",
+  "flow_hash",
+  "department",
+  "cooldown_minutes",
+  "section_publication",
+  "status",
+  "revision",
+  "published_revision",
+  "published_hash",
+  "route_key",
+  "bot_binding",
+  "bot_profile",
+  "column_break_publication",
+  "published_by",
+  "published_at",
+  "approval_note",
+  "paused_by",
+  "paused_at",
+  "pause_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "read_only": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "read_only": 1,
+   "options": "WhatsApp\nMessenger\nInstagram\nWebchat",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "account_id",
+   "fieldtype": "Data",
+   "label": "Exact Account Id",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "account_record",
+   "fieldtype": "Data",
+   "label": "Account Record",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_route",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "flow",
+   "fieldtype": "Data",
+   "label": "Chatflow",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "flow_hash",
+   "fieldtype": "Data",
+   "label": "Published Flow Hash",
+   "read_only": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Select",
+   "label": "Fallback Department",
+   "read_only": 1,
+   "options": "\nmarketing\nsales\nsupport\nfinance\nwarehouse\ntechnicians"
+  },
+  {
+   "fieldname": "cooldown_minutes",
+   "fieldtype": "Int",
+   "label": "Cooldown (minutes)",
+   "read_only": 1,
+   "default": "1440",
+   "description": "No automatic start while a person or bot handled this conversation within this window."
+  },
+  {
+   "fieldname": "section_publication",
+   "fieldtype": "Section Break",
+   "label": "Publication"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "read_only": 1,
+   "options": "Draft\nPublished\nPaused",
+   "default": "Draft",
+   "reqd": 1,
+   "in_list_view": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "Revision",
+   "read_only": 1,
+   "default": "1"
+  },
+  {
+   "fieldname": "published_revision",
+   "fieldtype": "Int",
+   "label": "Published Revision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "published_hash",
+   "fieldtype": "Data",
+   "label": "Published Hash",
+   "read_only": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "route_key",
+   "fieldtype": "Data",
+   "label": "Route Key",
+   "read_only": 1,
+   "hidden": 1,
+   "unique": 1,
+   "length": 64
+  },
+  {
+   "fieldname": "bot_binding",
+   "fieldtype": "Data",
+   "label": "Bot Channel Binding",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bot_profile",
+   "fieldtype": "Data",
+   "label": "Bot Profile",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_publication",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "published_by",
+   "fieldtype": "Link",
+   "label": "Published By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "published_at",
+   "fieldtype": "Datetime",
+   "label": "Published At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_note",
+   "fieldtype": "Small Text",
+   "label": "Approval Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "paused_by",
+   "fieldtype": "Link",
+   "label": "Paused By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "paused_at",
+   "fieldtype": "Datetime",
+   "label": "Paused At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pause_reason",
+   "fieldtype": "Small Text",
+   "label": "Pause Reason",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "report": 1
+  },
+  {
+   "role": "Marketing Manager",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "actions": [],
+ "links": [],
+ "states": [],
+ "track_changes": 1,
+ "index_web_pages_for_search": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "title"
+}

@@ -47,6 +47,10 @@ class CRMConversation(Document):
 			frappe.throw(frappe._("Invalid conversation control state."))
 		if self.control_state == "Bot" and self.human_owner:
 			frappe.throw(frappe._("A bot cannot own a human conversation."))
+		if self.get("department"):
+			from crm.api.automation_departments import department
+
+			department(self.department)
 		if not self.is_new():
 			previous = frappe.db.get_value(
 				self.doctype,
