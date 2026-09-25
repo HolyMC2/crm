@@ -15,6 +15,7 @@ from datetime import timedelta
 from functools import wraps
 
 import frappe
+from frappe import _
 from frappe.utils import get_datetime, now_datetime
 
 from crm.api import conversations as control
@@ -177,12 +178,12 @@ def _hash(value):
 
 
 def _deny():
-	frappe.throw("Not permitted to dispatch this reply.", frappe.PermissionError)
+	frappe.throw(_("Not permitted to dispatch this reply."), frappe.PermissionError)
 
 
 def _name(value):
 	if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
-		frappe.throw("Invalid outbound intent identity.")
+		frappe.throw(_("Invalid outbound intent identity."))
 	return value
 
 
@@ -201,14 +202,14 @@ def _fingerprint(doc):
 
 def validate_intent(doc):
 	if doc.name != _name(doc.action_key) or doc.payload_hash != _fingerprint(doc):
-		frappe.throw("Outbound intent identity and content are immutable.")
+		frappe.throw(_("Outbound intent identity and content are immutable."))
 	if doc.state not in TRANSITIONS or type(doc.attempts) is not int or not 0 <= doc.attempts <= MAX_ATTEMPTS:
-		frappe.throw("Invalid outbound intent state.")
+		frappe.throw(_("Invalid outbound intent state."))
 	log = json.loads(doc.state_log or "[]")
 	if not isinstance(log, list) or not 1 <= len(log) <= 40:
-		frappe.throw("Invalid outbound state history.")
+		frappe.throw(_("Invalid outbound state history."))
 	if log[-1].get("state") != doc.state or any(set(entry) != {"state", "at", "reason"} for entry in log):
-		frappe.throw("Invalid outbound state history.")
+		frappe.throw(_("Invalid outbound state history."))
 	doc.provider_message_key = (
 		_hash([doc.provider, doc.account_id, doc.provider_message_id]) if doc.provider_message_id else None
 	)
@@ -236,14 +237,14 @@ def validate_intent(doc):
 			(doc.get(f) or None) != (old.get(f) or None)
 			for f in (*IMMUTABLE, *linked, "payload_hash", "expires_at")
 		):
-			frappe.throw("Outbound intent identity and content are immutable.")
+			frappe.throw(_("Outbound intent identity and content are immutable."))
 		previous = json.loads(old.state_log)
 		if len(log) != len(previous) + 1 or log[:-1] != previous or doc.state not in TRANSITIONS[old.state]:
-			frappe.throw("Invalid outbound state transition.")
+			frappe.throw(_("Invalid outbound state transition."))
 		if doc.attempts != old.attempts + int(doc.state == "Claimed"):
-			frappe.throw("Invalid outbound claim attempt.")
+			frappe.throw(_("Invalid outbound claim attempt."))
 		if old.provider_message_id and doc.provider_message_id != old.provider_message_id:
-			frappe.throw("Provider message identity is immutable.")
+			frappe.throw(_("Provider message identity is immutable."))
 
 
 def _projection(doc):
@@ -292,7 +293,7 @@ def _notify(doc):
 
 def _transition(doc, state, reason="", **values):
 	if reason and not re.fullmatch(r"[a-z0-9_]{1,100}", reason):
-		frappe.throw("Invalid outbound reason.")
+		frappe.throw(_("Invalid outbound reason."))
 	for key, value in values.items():
 		doc.set(key, value)
 	doc.state, doc.reason_code = state, reason
@@ -332,15 +333,15 @@ def _nudge_run(doc):
 def _payload(payload, conversation):
 	if isinstance(payload, str):
 		if len(payload.encode()) > 20000:
-			frappe.throw("Reply is too large.")
+			frappe.throw(_("Reply is too large."))
 		payload = frappe.parse_json(payload)
 	if not isinstance(payload, dict) or set(payload) != {"type", "text"} or payload.get("type") != "text":
-		frappe.throw("This reply action requires plain text.")
+		frappe.throw(_("This reply action requires plain text."))
 	body = payload["text"]
 	# Mirrors the owning validators (Webchat, Meta Send API), which stay authoritative.
 	max_length = TEXT_LIMITS.get(conversation.provider, 4096)
 	if not isinstance(body, str) or not body.strip() or len(body) > max_length:
-		frappe.throw("Enter a reply of at most {0} characters.".format(max_length))
+		frappe.throw(_("Enter a reply of at most {0} characters.").format(max_length))
 	if conversation.provider == "Webchat":
 		from crm.api.webchat import validate_payload
 
@@ -349,12 +350,12 @@ def _payload(payload, conversation):
 				payload, account_id=conversation.account_id, peer_id=conversation.peer_id
 			).decode()
 		except ValueError:
-			frappe.throw("Invalid reply content.")
+			frappe.throw(_("Invalid reply content."))
 	if conversation.provider in HOOKED_CHANNELS:
 		# The owning transport freezes its exact wire payload; CRM stores it.
 		adapter = channel_adapter(conversation.provider)
 		if not adapter or not callable(getattr(adapter, "freeze_text", None)):
-			frappe.throw("Native sending is not ready for this channel.")
+			frappe.throw(_("Native sending is not ready for this channel."))
 		try:
 			frozen = adapter.freeze_text(
 				body,
@@ -363,12 +364,12 @@ def _payload(payload, conversation):
 				peer_id=conversation.peer_id,
 			)
 		except ValueError:
-			frappe.throw("Invalid reply content.")
+			frappe.throw(_("Invalid reply content."))
 		if not isinstance(frozen, str):
-			frappe.throw("Invalid reply content.")
+			frappe.throw(_("Invalid reply content."))
 		return frozen
 	if conversation.provider != "WhatsApp":
-		frappe.throw("Native sending is not ready for this channel.")
+		frappe.throw(_("Native sending is not ready for this channel."))
 	frozen = {
 		"messaging_product": "whatsapp",
 		"recipient_type": "individual",
@@ -383,7 +384,7 @@ def _payload(payload, conversation):
 			frozen, account_id=conversation.account_id, peer_id=conversation.peer_id
 		).decode()
 	except ValueError:
-		frappe.throw("Invalid reply content.")
+		frappe.throw(_("Invalid reply content."))
 
 
 def _channel_source(conversation):
@@ -397,9 +398,9 @@ def _channel_source(conversation):
 		or len(source) != 3
 		or not all(isinstance(v, str) and v for v in source)
 	):
-		frappe.throw("Native sending is not ready for this channel.")
+		frappe.throw(_("Native sending is not ready for this channel."))
 	if len(source[2]) > 140 or source[1] != conversation.account_record:
-		frappe.throw("Native sending is not ready for this channel.")
+		frappe.throw(_("Native sending is not ready for this channel."))
 	return tuple(source)
 
 
@@ -477,7 +478,7 @@ def queue_message(
 		if frappe.db.get_value(DOCTYPE, name, "name", for_update=True):
 			existing = _load(name)
 			if existing.payload != frozen or existing.conversation_generation != generation:
-				frappe.throw("Reply request ID was already used for different content.")
+				frappe.throw(_("Reply request ID was already used for different content."))
 			return _projection(existing)
 		control.assert_current_generation(conversation, generation, actor_user=actor)
 		from crm.api.outbox_policy import account_revision, webchat_revision
@@ -905,7 +906,7 @@ def cancel_intent(name: str):
 		if doc.state == "Cancelled":
 			return _projection(doc)
 		if not _projection(doc)["can_cancel"]:
-			frappe.throw("This reply can no longer be cancelled.")
+			frappe.throw(_("This reply can no longer be cancelled."))
 		_transition(doc, "Cancelled", "operator_cancelled")
 		return _projection(doc)
 
@@ -926,7 +927,7 @@ def retry_intent(name: str):
 		if doc.state in {"Queued", "Claimed"}:
 			return _projection(doc)
 		if not _projection(doc)["can_retry"] or _eligibility(doc):
-			frappe.throw("This reply cannot be retried. Review its current status.")
+			frappe.throw(_("This reply cannot be retried. Review its current status."))
 		_transition(doc, "Queued", "operator_retry", next_attempt_at=None, lease_until=None)
 		_after_commit(doc.name)
 		return _projection(doc)
