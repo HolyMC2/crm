@@ -96,8 +96,75 @@ def automation_reason(intent):
 	return _recipient_reason(intent, account)
 
 
+def whatsapp_template_reason(intent, account):
+	"""A frozen template remains bound to its current approved account/language.
+
+	Commerce templates are not certified by the catalog producer yet. They must
+	not use this generic service path to bypass its item/catalog/window checks.
+	Marketing templates require the installed consent owner to prove permission.
+	"""
+	try:
+		payload = json.loads(intent.payload)
+	except (TypeError, ValueError):
+		return "frozen_payload_invalid"
+	if payload.get("type") != "template":
+		return None
+	template = payload.get("template") or {}
+	name = template.get("name")
+	language = (template.get("language") or {}).get("code")
+	if not isinstance(name, str) or not isinstance(language, str):
+		return "template_unavailable"
+	rows = frappe.db.sql(
+		"""SELECT name,status,category,buttons FROM `tabWhatsApp Templates`
+		WHERE whatsapp_account=%s AND language_code=%s
+		AND (actual_name=%s OR (COALESCE(actual_name,'')='' AND template_name=%s))
+		LIMIT 2 FOR UPDATE""",
+		(account.name, language, name, name),
+		as_dict=True,
+	)
+	if len(rows) != 1 or rows[0].status != "APPROVED":
+		return "template_unavailable"
+	try:
+		buttons = json.loads(rows[0].buttons or "[]")
+	except (TypeError, ValueError):
+		return "template_unavailable"
+	components = template.get("components") or []
+	if not isinstance(buttons, list) or not isinstance(components, list):
+		return "template_unavailable"
+	if any(not isinstance(button, dict) for button in buttons + components):
+		return "template_unavailable"
+	if any(str(button.get("type", "")).upper() in {"CATALOG", "MPM"} for button in buttons):
+		return "catalog_template_not_ready"
+	for component in components:
+		if component.get("sub_type") in {"mpm", "catalog"}:
+			return "catalog_template_not_ready"
+		parameters = component.get("parameters") or []
+		if not isinstance(parameters, list) or any(not isinstance(row, dict) for row in parameters):
+			return "template_unavailable"
+		if any(row.get("type") == "action" for row in parameters):
+			return "catalog_template_not_ready"
+	if rows[0].category == "MARKETING":
+		paths = frappe.get_hooks("crm_whatsapp_marketing_consent") or []
+		paths = [paths] if isinstance(paths, str) else paths
+		if not isinstance(paths, list) or len(set(paths)) != 1:
+			return "marketing_consent_unverified"
+		from crm.api.outbox import _adapter_module
+
+		module = _adapter_module(paths[0])
+		if module is None or not callable(getattr(module, "check", None)):
+			return "marketing_consent_unverified"
+		if module.check(intent.peer_id) is not True:
+			return "marketing_consent_unverified"
+	elif rows[0].category not in {"UTILITY", "AUTHENTICATION", "TRANSACTIONAL", "OTP"}:
+		return "template_unavailable"
+	return None
+
+
 def _recipient_reason(intent, account):
-	# Keep the shared call exactly as the bot adapter uses it; only templates skip the window.
+	reason = whatsapp_template_reason(intent, account)
+	if reason:
+		return reason
+	# Only currently approved, eligible templates skip the customer window.
 	if requires_window(intent):
 		return whatsapp_recipient_reason(intent, account=account)
 	return whatsapp_recipient_reason(intent, account=account, require_window=False)
