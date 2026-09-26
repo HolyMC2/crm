@@ -1,11 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { effectScope, nextTick, ref } from 'vue'
+import { effectScope, nextTick, reactive, ref } from 'vue'
 import {
   emptyRepair,
   repairMoney,
   repairOrderHref,
   repairReturnPath,
 } from '@/utils/repairOrders'
+const sessionState = vi.hoisted(() => ({ current: null }))
+vi.mock('@/stores/session', () => ({
+  sessionStore: () => sessionState.current,
+}))
 vi.mock('frappe-ui', () => ({ call: vi.fn() }))
 import { call } from 'frappe-ui'
 import { useRepairOrders } from '@/composables/repairOrders'
@@ -46,6 +50,7 @@ const settle = async () => {
 }
 const originalConfirm = Object.getOwnPropertyDescriptor(window, 'confirm')
 beforeEach(() => {
+  sessionState.current = reactive({ user: 'repair-agent@example.test' })
   sessionStorage.clear()
   document.cookie = 'user_id=repair-agent%40example.test'
   call.mockReset()
@@ -347,6 +352,17 @@ describe('bounded repair recovery receipts', () => {
     } finally {
       storage.mockRestore()
     }
+  })
+  it('clears plaintext synchronously on reactive logout with no focus, request or navigation event', async () => {
+    const api = await setup()
+    fill(api)
+    expect(api.state.value.draft.phone_pin).toBe('1234')
+    sessionState.current.user = null
+    // Deliberately no nextTick/focus/API call: the auth source itself owns cleanup.
+    expect(api.state.value.draft.phone_pin).toBe('')
+    expect(api.state.value.context).toBeNull()
+    expect(api.state.value.intent).toBeNull()
+    expect(api.state.value.loadError).toContain('La sesión cambió')
   })
   it('partitions lookup receipts by actor across logout/relogin and discards stale sensitive callbacks on actor switch', async () => {
     const reply = deferred()

@@ -13,6 +13,7 @@ vi.mock('vue-router', () => ({
     api.update = fn
   },
 }))
+vi.mock('@/stores/session', () => ({ sessionStore: () => api.session }))
 vi.mock('frappe-ui', () => ({
   call: (...args) => api.call(...args),
   createResource: vi.fn(),
@@ -130,6 +131,7 @@ async function mount(
   return props
 }
 beforeEach(() => {
+  api.session = reactive({ user: 'repair-agent@example.test' })
   sessionStorage.clear()
   document.cookie = 'user_id=repair-agent%40example.test'
   api.call.mockReset()

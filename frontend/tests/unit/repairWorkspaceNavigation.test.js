@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, reactive } from 'vue'
 const api = vi.hoisted(() => ({ call: vi.fn(), intake: null }))
+vi.mock('@/stores/session', () => ({ sessionStore: () => api.session }))
 vi.mock('frappe-ui', () => ({
   call: (...args) => api.call(...args),
   createResource: (options) =>
@@ -85,6 +86,7 @@ const settle = async () => {
 }
 const originalConfirm = Object.getOwnPropertyDescriptor(window, 'confirm')
 beforeEach(() => {
+  api.session = reactive({ user: 'repair-agent@example.test' })
   sessionStorage.clear()
   document.cookie = 'user_id=repair-agent%40example.test'
   api.call.mockImplementation(async () => ({

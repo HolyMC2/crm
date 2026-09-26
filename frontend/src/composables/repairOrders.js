@@ -1,5 +1,6 @@
 import { computed, onScopeDispose, reactive, ref, watch } from 'vue'
 import { call } from 'frappe-ui'
+import { sessionStore } from '@/stores/session'
 import { registerRepairNavigationGuard } from '@/utils/repairNavigationGuard'
 import { emptyRepair, repairError, repairPayload } from '@/utils/repairOrders'
 import {
@@ -21,6 +22,8 @@ export function useRepairOrders(
   const state = ref(null)
   let disposed = false
   const actor = repairActorKey()
+  const currentSession = sessionStore()
+  const initialUser = currentSession.user
   let actorChanged = false
   function session(name) {
     if (!sessions.has(name)) {
@@ -75,7 +78,12 @@ export function useRepairOrders(
     ),
   )
   function sameActor() {
-    if (!actorChanged && actor === repairActorKey()) return true
+    if (
+      !actorChanged &&
+      actor === repairActorKey() &&
+      initialUser === currentSession.user
+    )
+      return true
     actorChanged = true
     for (const s of sessions.values()) {
       ++s.read
@@ -92,6 +100,9 @@ export function useRepairOrders(
     }
     return false
   }
+  // Auth changes can happen inside this window without focus or navigation.
+  // Flush synchronously so plaintext intake never survives a reactive user switch.
+  watch(() => currentSession.user, sameActor, { flush: 'sync' })
   function persist(s) {
     try {
       saveRepairReceipt(s.deal, s.intent.client_uuid, actor)
