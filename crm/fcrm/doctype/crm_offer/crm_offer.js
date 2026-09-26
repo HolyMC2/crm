@@ -311,7 +311,7 @@
         frappe.set_route("List", "CRM Offer", { deal: data.deal }),
       );
       frm.add_web_link(
-        `/crm/deals/${encodeURIComponent(data.deal)}?tab=offers`,
+        `/crm/deals/${encodeURIComponent(data.deal)}#offers`,
         __("Open in CRM"),
       );
       if (caps.can_export)
