@@ -133,6 +133,7 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
+	"CRM Offer": "crm.offers.permissions.get_permission_query_conditions",
 	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_query",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.get_permission_query_conditions",
 	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.get_permission_query_conditions",
@@ -148,6 +149,7 @@ permission_query_conditions = {
 }
 
 has_permission = {
+	"CRM Offer": "crm.offers.permissions.has_permission",
 	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_permission",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.has_permission",
 	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.has_permission",
@@ -163,6 +165,7 @@ has_permission = {
 }
 
 filter_shared_documents = {
+	"CRM Offer": "crm.pipeline.services.configuration.deny_shared_documents",
 	"CRM Lead": "crm.pipeline.services.configuration.filter_shared_documents",
 	"CRM Deal": "crm.pipeline.services.configuration.filter_shared_documents",
 	"CRM Pipeline": "crm.pipeline.services.configuration.filter_shared_documents",
