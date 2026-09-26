@@ -1,0 +1,35 @@
+# Storefront order context in customer chat
+
+The customer opens chat on an existing order page, explicitly shares that order,
+then writes their question. Sharing alone does not send a message or notify an
+unassigned queue. The next ordinary Webchat message enters the existing CRM
+conversation with its linked order available to permitted staff.
+
+`crm.api.webchat.share_order` accepts only POST JSON `{channel_id, order_token}`
+under the same private visitor bearer protocol as chat history and messages.
+The storefront BFF supplies the current bound channel and capability; browser
+requests instead carry the current `view_revision`. The order proof is the
+canonical 36-character alphanumeric token issued by checkout. It is never
+stored in conversation metadata, events, messages or browser recovery storage.
+
+The optional Doco adapter resolves current rows for the named enabled Storefront
+Profile and the exact existing storefront Sales Order, requiring matching
+profile and company. It does not call `order_status`, poll a gateway, submit an
+order, assert a Customer identity or merge a person. Canceled orders remain
+supportable. Missing configuration or mismatched proof fails closed.
+
+The visitor receives only `{shared: true, replayed: boolean}`. Existing
+conversation context and its private event ledger provide idempotency under the
+conversation fence. A staff unlink is preserved: retrying the old share cannot
+restore that link. Closed conversations reject new shares. Replays revalidate
+the active session, channel, profile and current order token first.
+
+Staff context projections retain native order read permissions and title-field
+masks. Sharing changes no routing, owner, generation, bot grant or financial
+status. An ordinary customer message uses the existing message/control policy.
+
+`crm.tests.test_storefront_support` covers the real SQL/controller chain with
+rollback-only fictional ERP fixtures and forbidden outbound transport. Tests
+must run in the complete app graph; standalone CRM retains Webchat and exposes
+no functioning commerce action without its owning app. Source checks alone are
+not acceptance; consult the exact-source release receipt for native evidence.

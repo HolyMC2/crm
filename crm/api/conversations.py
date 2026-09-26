@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 import frappe
 from frappe import _
+from frappe.model import get_permitted_fields
 from frappe.permissions import has_permission as has_document_permission
 from frappe.utils import now_datetime
 
@@ -1412,8 +1413,13 @@ def context_view(doc, user=None):
 			continue
 		if not has_document_permission(doctype, "read", doc=record, user=user, print_logs=False):
 			continue
-		title_field = frappe.get_meta(doctype).get_title_field()
-		label = record.get(title_field) if title_field and title_field != "name" else None
+		meta = frappe.get_meta(doctype)
+		title_field = meta.get_title_field()
+		readable = set(get_permitted_fields(doctype, user=user, permission_type="read"))
+		masked = {field.fieldname for field in meta.get_masked_fields()}
+		label = (
+			record.get(title_field) if title_field in readable - masked and title_field != "name" else None
+		)
 		out.append(
 			{
 				"doctype": doctype,

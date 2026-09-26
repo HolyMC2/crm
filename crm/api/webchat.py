@@ -29,8 +29,8 @@ JSONValue = str | int | float | bool | dict | list | None
 MAX_BODY_BYTES = 16 * 1024
 PAGE_SIZE = 50
 _WRITE_TOKEN = object()
-_PUBLIC_METHODS = frozenset({"get_channel", "bootstrap", "history", "send", "revoke"})
-_AUTHENTICATED_METHODS = frozenset({"history", "send", "revoke"})
+_PUBLIC_METHODS = frozenset({"get_channel", "bootstrap", "history", "send", "revoke", "share_order"})
+_AUTHENTICATED_METHODS = frozenset({"history", "send", "revoke", "share_order"})
 _VISITOR_PATHS = {
 	prefix + "crm.api.webchat." + method: method
 	for prefix in ("/api/method/", "/api/v1/method/")
@@ -734,6 +734,22 @@ def revoke(channel_id: JSONValue):
 			session.revoked = 1
 			_mark(session).save(ignore_permissions=True)
 		return {"revoked": True}
+
+
+# Security review: two scoped bearer proofs, strict Guest JSON, current session/channel/profile;
+# finite acknowledgement only, no order/payment mutation or staff authority.
+@frappe.whitelist(allow_guest=True, xss_safe=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
+@_guest
+def share_order(channel_id: JSONValue, order_token: JSONValue):
+	_post({"channel_id": channel_id, "order_token": order_token})
+	_hex(channel_id)
+	_require(isinstance(order_token, str) and re.fullmatch(r"[A-Za-z0-9]{36}", order_token))
+	_public_rate(channel_id, "share_order")
+	with _visitor(channel_id) as (session, conversation):
+		_rate("share_order", session.name, 30)
+		from crm.api.webchat_commerce import share
+
+		return share(session, conversation, order_token)
 
 
 def validate_payload(payload, *, account_id, peer_id):
