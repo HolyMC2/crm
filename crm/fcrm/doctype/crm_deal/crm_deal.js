@@ -15,6 +15,16 @@ frappe.ui.form.on("CRM Deal", {
   refresh(frm) {
     frm.trigger("pipeline");
     frm.add_web_link(`/crm/deals/${frm.doc.name}`, __("Open in Portal"));
+    if (!frm.is_new()) {
+      frm.add_custom_button(__("Offers"), () =>
+        frappe.set_route("List", "CRM Offer", { deal: frm.doc.name }),
+      );
+      if (frappe.model.can_create("CRM Offer")) {
+        frm.add_custom_button(__("New offer"), () =>
+          frappe.new_doc("CRM Offer", { deal: frm.doc.name }),
+        );
+      }
+    }
   },
   update_total: function (frm) {
     let total = 0;

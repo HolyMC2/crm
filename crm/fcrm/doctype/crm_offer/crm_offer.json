@@ -1,0 +1,350 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Offer",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "allow_rename": 0,
+ "track_changes": 1,
+ "title_field": "title",
+ "search_fields": "title,deal,root_offer",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "field_order": [
+  "title",
+  "deal",
+  "status",
+  "revision",
+  "root_offer",
+  "previous_revision",
+  "sales_company",
+  "currency",
+  "currency_precision",
+  "valid_until",
+  "products",
+  "total",
+  "net_total",
+  "terms",
+  "terms_hash",
+  "issued_by",
+  "issued_at",
+  "decision_by",
+  "decision_at",
+  "decision_channel",
+  "decision_evidence",
+  "erp_quotation",
+  "erp_snapshot_hash",
+  "erp_review",
+  "erp_created_by",
+  "erp_created_at",
+  "request_key",
+  "request_fingerprint",
+  "erp_preview",
+  "erp_preview_hash",
+  "erp_preview_by",
+  "erp_preview_at",
+  "issued_snapshot"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "read_only": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "deal",
+   "fieldtype": "Link",
+   "label": "Deal",
+   "read_only": 1,
+   "options": "CRM Deal",
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "read_only": 1,
+   "options": "Draft\nIssued\nAccepted\nRejected\nExpired",
+   "default": "Draft",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "Revision",
+   "read_only": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "root_offer",
+   "fieldtype": "Data",
+   "label": "Root Offer",
+   "read_only": 1,
+   "search_index": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "previous_revision",
+   "fieldtype": "Link",
+   "label": "Previous Revision",
+   "read_only": 1,
+   "options": "CRM Offer"
+  },
+  {
+   "fieldname": "sales_company",
+   "fieldtype": "Data",
+   "label": "Sales Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "read_only": 1,
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "currency_precision",
+   "fieldtype": "Int",
+   "label": "Currency Precision",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "valid_until",
+   "fieldtype": "Date",
+   "label": "Valid Until",
+   "read_only": 1,
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "products",
+   "fieldtype": "Table",
+   "label": "Products",
+   "read_only": 1,
+   "options": "CRM Products",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Before Discount",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "net_total",
+   "fieldtype": "Currency",
+   "label": "Commercial Proposal Total",
+   "read_only": 1,
+   "options": "currency",
+   "in_list_view": 1,
+   "description": "Proposal amount only. Taxes are not calculated here. This is not an invoice, inventory reservation or payment receipt."
+  },
+  {
+   "fieldname": "terms",
+   "fieldtype": "Small Text",
+   "label": "Terms",
+   "read_only": 1
+  },
+  {
+   "fieldname": "terms_hash",
+   "fieldtype": "Data",
+   "label": "Terms Hash",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "read_only": 1,
+   "options": "User"
+  },
+  {
+   "fieldname": "issued_at",
+   "fieldtype": "Datetime",
+   "label": "Issued At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decision_by",
+   "fieldtype": "Link",
+   "label": "Decision Recorded By",
+   "read_only": 1,
+   "options": "User"
+  },
+  {
+   "fieldname": "decision_at",
+   "fieldtype": "Datetime",
+   "label": "Decision Recorded At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decision_channel",
+   "fieldtype": "Select",
+   "label": "Decision Channel",
+   "read_only": 1,
+   "options": "\nEmail\nPhone\nWhatsApp\nIn Person\nOther"
+  },
+  {
+   "fieldname": "decision_evidence",
+   "fieldtype": "Small Text",
+   "label": "Customer Decision Evidence",
+   "read_only": 1
+  },
+  {
+   "fieldname": "erp_quotation",
+   "fieldtype": "Data",
+   "label": "ERP Quotation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "erp_snapshot_hash",
+   "fieldtype": "Data",
+   "label": "Erp Snapshot Hash",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "erp_review",
+   "fieldtype": "Long Text",
+   "label": "ERP Handoff Review",
+   "read_only": 1,
+   "print_hide": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "erp_created_by",
+   "fieldtype": "Link",
+   "label": "Erp Created By",
+   "read_only": 1,
+   "options": "User",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "erp_created_at",
+   "fieldtype": "Datetime",
+   "label": "Erp Created At",
+   "read_only": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "request_key",
+   "fieldtype": "Data",
+   "label": "Request Key",
+   "read_only": 1,
+   "unique": 1,
+   "hidden": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "request_fingerprint",
+   "fieldtype": "Data",
+   "label": "Request Fingerprint",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "erp_preview",
+   "fieldtype": "Long Text",
+   "label": "Erp Preview",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "erp_preview_hash",
+   "fieldtype": "Data",
+   "label": "Erp Preview Hash",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "erp_preview_by",
+   "fieldtype": "Link",
+   "label": "Erp Preview By",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1,
+   "options": "User",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "erp_preview_at",
+   "fieldtype": "Datetime",
+   "label": "Erp Preview At",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "issued_snapshot",
+   "fieldtype": "Long Text",
+   "label": "Issued Terms Snapshot",
+   "read_only": 1,
+   "hidden": 1,
+   "print_hide": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "System Manager",
+   "permlevel": 1,
+   "read": 1,
+   "write": 1
+  }
+ ],
+ "actions": [],
+ "links": [],
+ "states": []
+}
