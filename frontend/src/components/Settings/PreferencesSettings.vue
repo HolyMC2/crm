@@ -65,10 +65,14 @@
         <div class="flex items-center justify-between mt-6">
           <div class="flex flex-col gap-1">
             <span class="text-base-medium text-ink-gray-8">
-              {{ __('Timezone') }}
+              {{ __('Your display timezone') }}
             </span>
             <span class="text-p-sm text-ink-gray-6">
-              {{ __('Change timezone of the application.') }}
+              {{
+                __(
+                  'Changes your display preference. Business hours, task dates and assignment weekdays use the site timezone.',
+                )
+              }}
             </span>
           </div>
           <Combobox

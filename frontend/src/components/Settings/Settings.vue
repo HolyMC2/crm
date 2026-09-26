@@ -141,6 +141,7 @@ import Hierarchy from '@/components/Settings/Hierarchy/Hierarchy.vue'
 import InviteUserPage from '@/components/Settings/InviteUserPage.vue'
 import ProfilePage from '@/components/Settings/Profile/ProfilePage.vue'
 import PreferencesSettings from '@/components/Settings/PreferencesSettings.vue'
+import EffectiveSettings from '@/components/Settings/EffectiveSettings.vue'
 import WhatsAppSettings from '@/components/Settings/WhatsAppSettings.vue'
 import ERPNextSettings from '@/components/Settings/ERPNextSettings.vue'
 import LeadSyncSourcePage from '@/components/Settings/LeadSyncing/LeadSyncSourcePage.vue'
@@ -213,6 +214,11 @@ const tabs = computed(() => {
     {
       label: __('System Configuration'),
       items: [
+        {
+          label: __('Effective configuration'),
+          component: markRaw(EffectiveSettings),
+          icon: MonitorCogIcon,
+        },
         {
           label: __('General'),
           component: markRaw(GeneralSettings),

@@ -123,6 +123,16 @@ vi.mock('@/components/Settings/Profile/ProfilePage.vue', async () => {
     },
   }
 })
+vi.mock('@/components/Settings/EffectiveSettings.vue', () => ({
+  default: {
+    mounted() {
+      state.mounted.push('EffectiveSettings')
+    },
+    render() {
+      return null
+    },
+  },
+}))
 vi.mock('@/components/Settings/PreferencesSettings.vue', async () => {
   const { h, ref } = await import('vue')
   const { useSettingsDraft } = await import('@/composables/settingsSession')
@@ -402,6 +412,17 @@ describe('settings workspace', () => {
     expect(showSettings.value).toBe(true)
     expect(el.querySelector('input').value).toBe('Profile draft')
     expect(window.confirm).toHaveBeenCalledOnce()
+  })
+  it('opens effective configuration on phones and returns to an intact editor draft', async () => {
+    const el = await mount(390)
+    await click(el, 'Profile')
+    await edit(el, 'Manager draft')
+    await click(el, 'Back to settings')
+    await click(el, 'Effective configuration')
+    expect(state.mounted).toContain('EffectiveSettings')
+    await click(el, 'Back to settings')
+    await click(el, 'Profile')
+    expect(el.querySelector('input').value).toBe('Manager draft')
   })
   it('blocks dismissal and route changes during a save, then retains the queue route', async () => {
     const el = await mount()
