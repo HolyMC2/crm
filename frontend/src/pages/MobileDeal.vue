@@ -36,6 +36,7 @@
       </div>
     </header>
   </LayoutHeader>
+  <SalesQueueReturn />
   <div
     v-if="doc.name"
     class="flex h-12 items-center justify-between gap-2 border-b px-3 py-2.5"
@@ -264,6 +265,7 @@
   />
 </template>
 <script setup>
+import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Icon from '@/components/Icon.vue'

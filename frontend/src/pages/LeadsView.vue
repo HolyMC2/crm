@@ -228,6 +228,7 @@
     <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
     <div
       v-if="view === 'list' && isMobile"
+      ref="queueScroller"
       class="scb min-h-0 flex-1 overflow-y-auto"
     >
       <div
@@ -344,7 +345,7 @@
       </div>
 
       <!-- rows -->
-      <div class="scb min-h-0 flex-1 overflow-y-auto">
+      <div ref="queueScroller" class="scb min-h-0 flex-1 overflow-y-auto">
         <div
           v-if="leads.loading && !rows.length"
           class="py-10 text-center text-xs text-ink-gray-4"
@@ -570,11 +571,48 @@
     />
 
     <LeadModal v-if="showLeadModal" v-model="showLeadModal" />
+    <section
+      v-if="conversionRows.length"
+      class="shrink-0 max-h-48 overflow-auto border-t border-outline-gray-2 p-3"
+      aria-label="Conversion results"
+    >
+      <h3 class="font-semibold">{{ __('Conversion review') }}</h3>
+      <ul>
+        <li
+          v-for="row in conversionRows"
+          :key="row.name"
+          class="flex flex-wrap items-center gap-2 py-1"
+        >
+          <span>{{ row.name }}</span>
+          <span v-if="row.deal">{{ __('Converted: {0}', [row.deal]) }}</span>
+          <span v-else-if="row.error" role="alert">{{ row.error }}</span>
+          <span v-else>{{ __('Identity review required') }}</span>
+          <button
+            v-if="!row.deal"
+            type="button"
+            class="min-h-11 rounded border border-outline-gray-2 px-3"
+            :disabled="conversionPending"
+            @click="reviewConversion(row.name)"
+          >
+            {{ __('Review and convert') }}
+          </button>
+        </li>
+      </ul>
+    </section>
+    <ConvertToDealModal
+      v-if="conversionLead"
+      :key="conversionLead.name"
+      v-model="conversionOpen"
+      :lead="conversionLead"
+      @pending="conversionPending = $event"
+      @converted="onConverted"
+      @failed="onConversionFailed"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { isMobile } from '@/composables/breakpoint'
 import {
@@ -588,6 +626,7 @@ import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import LeadModal from '@/components/Modals/LeadModal.vue'
+import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import { userScopedKey } from '@/utils/storageKeys'
 import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
@@ -682,13 +721,64 @@ const { getLeadStatus } = statusStore
 const { getUser } = usersStore()
 
 const showLeadModal = ref(false)
-const statusF = ref([])
-const gradeF = ref([])
-const sourceF = ref([])
-const search = ref('')
-const sort = ref({ field: 'lead_score', dir: 'desc' })
-const selectedRows = ref([])
-const view = ref('list')
+const queueKey = userScopedKey('crm_leads_queue_context')
+let remembered = {}
+try {
+  remembered = JSON.parse(sessionStorage.getItem(queueKey) || '{}') || {}
+} catch {
+  /* private/blocked storage */
+}
+const listValues = (key) =>
+  Array.isArray(remembered[key])
+    ? remembered[key].filter((v) => typeof v === 'string').slice(0, 500)
+    : []
+const statusF = ref(listValues('status')),
+  gradeF = ref(listValues('grade')),
+  sourceF = ref(listValues('source'))
+const search = ref(
+  typeof remembered.search === 'string' ? remembered.search : '',
+)
+const sort = ref(
+  remembered.sort &&
+    [
+      'lead_score',
+      'modified',
+      'creation',
+      'next_activity_at',
+      'status',
+      'lead_name',
+    ].includes(remembered.sort.field) &&
+    ['asc', 'desc'].includes(remembered.sort.dir)
+    ? remembered.sort
+    : { field: 'lead_score', dir: 'desc' },
+)
+const selectedRows = ref(listValues('selected'))
+const view = ref(
+  ['list', 'board', 'funnel'].includes(remembered.view)
+    ? remembered.view
+    : 'list',
+)
+const queueScroller = ref(null)
+onBeforeUnmount(() => {
+  try {
+    sessionStorage.setItem(
+      queueKey,
+      JSON.stringify({
+        status: statusF.value,
+        grade: gradeF.value,
+        source: sourceF.value,
+        search: search.value,
+        sort: sort.value,
+        selected: selectedRows.value,
+        view: view.value,
+        scroll: queueScroller.value?.scrollTop || 0,
+        loaded: rows.value.length,
+      }),
+    )
+  } catch {
+    /* navigation must work when browser storage is unavailable */
+  }
+})
 const groupCounts = ref({})
 
 const leads = createListResource({
@@ -713,7 +803,7 @@ const leads = createListResource({
     '_user_tags',
   ],
   orderBy: 'lead_score desc',
-  pageLength: 50,
+  pageLength: Math.min(500, Math.max(50, Number(remembered.loaded) || 50)),
 })
 // Next-activity order can't be expressed server-side (no `ifnull(...)` through
 // frappe-ui, and plain `asc` would float every lead with NOTHING scheduled to the
@@ -731,6 +821,14 @@ const rows = computed(() => {
       String(a.next_activity_at).localeCompare(String(b.next_activity_at)),
   )
   return [...scheduled, ...unscheduled]
+})
+let restoredScroll = false
+watch(rows, async (data) => {
+  if (restoredScroll || !data.length) return
+  await nextTick()
+  if (queueScroller.value)
+    queueScroller.value.scrollTop = Math.max(0, Number(remembered.scroll) || 0)
+  restoredScroll = true
 })
 // loaded-row count (not the grand total); '+' signals more pages exist
 const count = computed(
@@ -1082,7 +1180,11 @@ function toggleRow(name) {
     : [...selectedRows.value, name]
 }
 function openLead(name) {
-  router.push(`/leads/${name}`)
+  router.push({
+    name: 'Lead',
+    params: { leadId: name },
+    query: { returnTo: '/leads' },
+  })
 }
 function rowMenu(r) {
   return [
@@ -1091,16 +1193,44 @@ function rowMenu(r) {
     { label: __('Eliminar'), onClick: () => deleteLead(r.name) },
   ]
 }
-async function convertLead(name) {
-  // upstream convert: lead → deal, then open it in the inbox
-  const deal = await frappeCall(
-    'crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal',
-    { lead: name },
-  )
-  toast.success(__('Convertido a trato'))
-  leads.reload()
-  if (deal) router.push({ path: '/inbox', query: { deal } })
+const conversionRows = ref([]),
+  conversionLead = ref(null),
+  conversionOpen = ref(false),
+  conversionPending = ref(false)
+watch(conversionOpen, (open) => {
+  if (!open && !conversionPending.value) conversionLead.value = null
+})
+function reviewConversion(name) {
+  if (conversionPending.value) return
+  conversionLead.value = rows.value.find((row) => row.name === name) || { name }
+  conversionOpen.value = true
 }
+function convertLead(name) {
+  if (conversionPending.value) return
+  if (!conversionRows.value.some((row) => row.name === name))
+    conversionRows.value.push({ name })
+  reviewConversion(name)
+}
+function onConverted(deal) {
+  const row = conversionRows.value.find(
+    (row) => row.name === conversionLead.value?.name,
+  )
+  if (row) {
+    row.deal = deal
+    row.error = ''
+  }
+  selectedRows.value = selectedRows.value.filter(
+    (name) => name !== conversionLead.value?.name,
+  )
+  leads.reload()
+}
+function onConversionFailed(error) {
+  const row = conversionRows.value.find(
+    (row) => row.name === conversionLead.value?.name,
+  )
+  if (row) row.error = error
+}
+
 function deleteLead(name) {
   confirmDialog({
     title: __('Eliminar lead'),
@@ -1133,25 +1263,14 @@ function bulkDelete() {
   })
 }
 function bulkConvert() {
-  confirmDialog({
-    title: __('Convertir a tratos'),
-    message: __('¿Convertir {0} leads a tratos?', [selectedRows.value.length]),
-    confirmLabel: __('Convertir'),
-    theme: 'blue',
-    onConfirm: async () => {
-      const results = await Promise.allSettled(
-        selectedRows.value.map((name) =>
-          frappeCall('crm.fcrm.doctype.crm_lead.crm_lead.convert_to_deal', {
-            lead: name,
-          }),
-        ),
-      )
-      const failed = results.filter((r) => r.status === 'rejected').length
-      if (failed) toast.error(__('{0} fallaron', [failed]))
-      else toast.success(__('Convertidos a tratos'))
-      selectedRows.value = []
-      leads.reload()
-    },
-  })
+  if (conversionPending.value) return
+  // Each prospect has its own reviewed identity/scope. Never silently batch-write
+  // ambiguous contacts; successful rows leave selection and failures remain.
+  const prior = new Map(conversionRows.value.map((row) => [row.name, row]))
+  for (const name of selectedRows.value)
+    if (!prior.has(name)) prior.set(name, { name })
+  conversionRows.value = [...prior.values()]
+  const next = conversionRows.value.find((row) => !row.deal)
+  if (next) reviewConversion(next.name)
 }
 </script>

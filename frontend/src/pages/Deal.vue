@@ -36,6 +36,7 @@
       </Dropdown>
     </template>
   </LayoutHeader>
+  <SalesQueueReturn />
   <div v-if="doc.name" class="flex h-full overflow-hidden">
     <Tabs
       v-model="tabIndex"
@@ -341,6 +342,7 @@
   />
 </template>
 <script setup>
+import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'

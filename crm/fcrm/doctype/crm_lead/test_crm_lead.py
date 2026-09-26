@@ -391,7 +391,11 @@ class TestCRMLead(IntegrationTestCase):
 		)
 
 		# Convert lead using existing contact and org
-		deal_name = lead.convert_to_deal()
+		deal_name = convert_to_deal(
+			lead=lead.name,
+			existing_contact=existing_contact.name,
+			existing_organization=existing_org.name,
+		)
 
 		# Verify deal was created with existing records
 		deal = frappe.get_doc("CRM Deal", deal_name)

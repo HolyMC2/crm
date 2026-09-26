@@ -28,6 +28,11 @@ class CRMTask(Document):
 		title: DF.Data
 	# end: auto-generated types
 
+	def before_validate(self):
+		from crm.lead.conversion import normalize_task_reference
+
+		normalize_task_reference(self)
+
 	def after_insert(self):
 		self.assign_to()
 
