@@ -94,14 +94,7 @@ def get_chart(
 
 
 def _scoped_users(user):
-	"""Owner scope for a chart: explicit user > manager subtree > unrestricted.
-
-	Lists already honour the sales hierarchy through
-	org_hierarchy.permission_query_conditions, but the charts below build raw
-	query-builder queries that bypass permission hooks entirely — so a Sales
-	Manager inside the tree used to read org-wide numbers next to a subtree-scoped
-	list. Returns a list of users to filter owner fields by, or None for no filter.
-	"""
+	"""Additional owner filter; native record permission scope is always applied."""
 	if user:
 		return [user]
 
@@ -126,6 +119,17 @@ def _scoped_users(user):
 		return users or [session]
 
 	return None
+
+
+def _permitted_from(doctype, table, fields):
+	from crm.api.sales_reports import _fields
+
+	_fields(doctype, fields)
+	return frappe.qb.from_(table).where(table.name.isin(_permitted_names(doctype)))
+
+
+def _permitted_names(doctype):
+	return frappe.qb.get_query(doctype, fields=["name"], ignore_permissions=False, order_by=None)
 
 
 def get_total_leads(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
@@ -153,7 +157,7 @@ def get_total_leads(from_date: str | None = None, to_date: str | None = None, us
 		prev_cond = prev_cond & (Lead.lead_owner.isin(users))
 
 	# Build query with CASE expressions
-	query = frappe.qb.from_(Lead).select(
+	query = _permitted_from("CRM Lead", Lead, ["creation", "lead_owner", "name"]).select(
 		Count(Case().when(current_cond, Lead.name).else_(None)).as_("current_month_leads"),
 		Count(Case().when(prev_cond, Lead.name).else_(None)).as_("prev_month_leads"),
 	)
@@ -206,7 +210,7 @@ def get_total_repair_orders(
 	current_cond = (RO.creation >= from_date) & (RO.creation < to_date_plus_one)
 	prev_cond = (RO.creation >= prev_from_date) & (RO.creation < from_date)
 
-	query = frappe.qb.from_(RO).select(
+	query = _permitted_from("Repair Order", RO, ["creation", "name"]).select(
 		Count(Case().when(current_cond, RO.name).else_(None)).as_("current_count"),
 		Count(Case().when(prev_cond, RO.name).else_(None)).as_("prev_count"),
 	)
@@ -260,7 +264,7 @@ def get_ongoing_deals(from_date: str | None = None, to_date: str | None = None, 
 
 	# Build query with CASE expressions
 	query = (
-		frappe.qb.from_(Deal)
+		_permitted_from("CRM Deal", Deal, ["creation", "deal_owner", "name", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.select(
@@ -325,7 +329,7 @@ def get_average_ongoing_deal_value(
 
 	# Build query with CASE expressions
 	query = (
-		frappe.qb.from_(Deal)
+		_permitted_from("CRM Deal", Deal, ["creation", "deal_owner", "deal_value", "exchange_rate", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.select(
@@ -379,7 +383,7 @@ def get_won_deals(from_date: str | None = None, to_date: str | None = None, user
 
 	# Build query with CASE expressions
 	query = (
-		frappe.qb.from_(Deal)
+		_permitted_from("CRM Deal", Deal, ["closed_date", "deal_owner", "name", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.select(
@@ -440,7 +444,9 @@ def get_average_won_deal_value(
 
 	# Build query with CASE expressions
 	query = (
-		frappe.qb.from_(Deal)
+		_permitted_from(
+			"CRM Deal", Deal, ["closed_date", "deal_owner", "deal_value", "exchange_rate", "status"]
+		)
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.select(
@@ -496,7 +502,7 @@ def get_average_deal_value(from_date: str | None = None, to_date: str | None = N
 
 	# Build query with CASE expressions
 	query = (
-		frappe.qb.from_(Deal)
+		_permitted_from("CRM Deal", Deal, ["creation", "deal_owner", "deal_value", "exchange_rate", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.select(
@@ -560,11 +566,11 @@ def get_average_time_to_close_a_lead(
 
 	# Build query
 	query = (
-		frappe.qb.from_(Deal)
+		_permitted_from("CRM Deal", Deal, ["closed_date", "creation", "deal_owner", "lead", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.left_join(Lead)
-		.on(Deal.lead == Lead.name)
+		.on((Deal.lead == Lead.name) & Lead.name.isin(_permitted_names("CRM Lead")))
 		.where(base_cond)
 		.select(
 			Avg(Case().when(current_cond, time_diff).else_(None)).as_("current_avg_lead"),
@@ -625,11 +631,11 @@ def get_average_time_to_close_a_deal(
 
 	# Build query
 	query = (
-		frappe.qb.from_(Deal)
+		_permitted_from("CRM Deal", Deal, ["closed_date", "creation", "deal_owner", "lead", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.left_join(Lead)
-		.on(Deal.lead == Lead.name)
+		.on((Deal.lead == Lead.name) & Lead.name.isin(_permitted_names("CRM Lead")))
 		.where(base_cond)
 		.select(
 			Avg(Case().when(current_cond, time_diff).else_(None)).as_("current_avg_deal"),
@@ -673,7 +679,7 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 
 	# Build leads query
 	leads_query = (
-		frappe.qb.from_(Lead)
+		_permitted_from("CRM Lead", Lead, ["creation", "lead_owner"])
 		.select(
 			Date(Lead.creation).as_("date"),
 			Count("*").as_("leads"),
@@ -691,7 +697,7 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 
 	# Build deals query
 	deals_query = (
-		frappe.qb.from_(Deal)
+		_permitted_from("CRM Deal", Deal, ["creation", "deal_owner", "status"])
 		.join(Status)
 		.on(Deal.status == Status.name)
 		.select(
@@ -855,7 +861,7 @@ def get_funnel_conversion(from_date: str | None = None, to_date: str | None = No
 	CRMLead = DocType("CRM Lead")
 
 	query = (
-		frappe.qb.from_(CRMLead)
+		_permitted_from("CRM Lead", CRMLead, ["creation", "lead_owner"])
 		.select(Count("*").as_("count"))
 		.where(Date(CRMLead.creation).between(from_date, to_date))
 	)
@@ -911,7 +917,7 @@ def get_deals_by_stage_axis(
 	CRMDealStatus = DocType("CRM Deal Status")
 
 	query = (
-		frappe.qb.from_(CRMDeal)
+		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "status"])
 		.join(CRMDealStatus)
 		.on(CRMDeal.status == CRMDealStatus.name)
 		.select(CRMDeal.status.as_("stage"), Count("*").as_("count"), CRMDealStatus.type.as_("status_type"))
@@ -957,7 +963,7 @@ def get_deals_by_stage_donut(
 	CRMDealStatus = DocType("CRM Deal Status")
 
 	query = (
-		frappe.qb.from_(CRMDeal)
+		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "status"])
 		.join(CRMDealStatus)
 		.on(CRMDeal.status == CRMDealStatus.name)
 		.select(CRMDeal.status.as_("stage"), Count("*").as_("count"), CRMDealStatus.type.as_("status_type"))
@@ -995,7 +1001,7 @@ def get_lost_deal_reasons(from_date: str | None = None, to_date: str | None = No
 	CRMDealStatus = DocType("CRM Deal Status")
 
 	query = (
-		frappe.qb.from_(CRMDeal)
+		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "lost_reason", "status"])
 		.join(CRMDealStatus)
 		.on(CRMDeal.status == CRMDealStatus.name)
 		.select(CRMDeal.lost_reason.as_("reason"), Count("*").as_("count"))
@@ -1041,7 +1047,7 @@ def get_leads_by_source(from_date: str | None = None, to_date: str | None = None
 	CRMLead = DocType("CRM Lead")
 
 	query = (
-		frappe.qb.from_(CRMLead)
+		_permitted_from("CRM Lead", CRMLead, ["creation", "lead_owner", "source"])
 		.select(IfNull(CRMLead.source, "Empty").as_("source"), Count("*").as_("count"))
 		.where(Date(CRMLead.creation).between(from_date, to_date))
 		.groupby(CRMLead.source)
@@ -1075,7 +1081,7 @@ def get_deals_by_source(from_date: str | None = None, to_date: str | None = None
 	CRMDeal = DocType("CRM Deal")
 
 	query = (
-		frappe.qb.from_(CRMDeal)
+		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "source"])
 		.select(IfNull(CRMDeal.source, "Empty").as_("source"), Count("*").as_("count"))
 		.where(Date(CRMDeal.creation).between(from_date, to_date))
 		.groupby(CRMDeal.source)
@@ -1109,7 +1115,9 @@ def get_deals_by_territory(from_date: str | None = None, to_date: str | None = N
 	CRMDeal = DocType("CRM Deal")
 
 	query = (
-		frappe.qb.from_(CRMDeal)
+		_permitted_from(
+			"CRM Deal", CRMDeal, ["creation", "deal_owner", "deal_value", "exchange_rate", "territory"]
+		)
 		.select(
 			IfNull(CRMDeal.territory, "Empty").as_("territory"),
 			Count("*").as_("deals"),
@@ -1166,7 +1174,7 @@ def get_deals_by_salesperson(
 	User = DocType("User")
 
 	query = (
-		frappe.qb.from_(CRMDeal)
+		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "deal_value", "exchange_rate"])
 		.left_join(User)
 		.on(User.name == CRMDeal.deal_owner)
 		.select(
@@ -1251,6 +1259,14 @@ def get_deal_status_change_counts(
 		)
 		.groupby(CRMStatusChangeLog.to, TargetStatus.position)
 		.orderby(TargetStatus.position)
+	)
+	from crm.api.sales_reports import _fields
+	from crm.pipeline.queries.stages import permitted_deals
+
+	_fields("CRM Deal", ["creation", "status", "deal_owner", "status_change_log"])
+	query = query.where(CRMDeal.name.isin(permitted_deals())).where(
+		(CRMStatusChangeLog.parenttype == "CRM Deal")
+		& (CRMStatusChangeLog.parentfield == "status_change_log")
 	)
 
 	# Handle optional user filter if deal_conds contains user condition

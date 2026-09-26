@@ -165,3 +165,22 @@ class TestSalesReports(IntegrationTestCase):
 				get_report(filters)
 		with self.assertRaises(frappe.ValidationError):
 			get_records(self.filters, "tasks", {"source": "x"})
+
+	def test_legacy_dashboard_cannot_disclose_other_owner_records(self):
+		from crm.api import dashboard
+
+		self.deal()
+		hidden = self.deal(owner="Administrator")
+		self.lead()
+		frappe.set_user(self.actor)
+		self.assertFalse(frappe.has_permission("CRM Deal", "read", hidden))
+		for method in (dashboard.get_ongoing_deals, dashboard.get_average_deal_value):
+			self.assertEqual(method(today(), today(), "Administrator")["value"], 0)
+		for method in (
+			dashboard.get_deals_by_source,
+			dashboard.get_deals_by_territory,
+			dashboard.get_deals_by_salesperson,
+			dashboard.get_leads_by_source,
+			dashboard.get_sales_trend,
+		):
+			self.assertEqual(method(today(), today(), "Administrator")["data"], [])
