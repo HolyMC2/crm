@@ -1,10 +1,18 @@
 <template>
   <div class="h-full w-full">
     <div
-      v-if="item.type == 'number_chart'"
+      v-if="item.data?.unavailable"
+      class="flex h-full w-full flex-col justify-center gap-2 rounded bg-surface-base p-4 text-ink-gray-7"
+      role="status"
+    >
+      <strong>{{ item.data.title || __('Metric unavailable') }}</strong>
+      <p class="text-sm">{{ item.data.reason }}</p>
+    </div>
+    <div
+      v-else-if="item.type == 'number_chart'"
       class="flex h-full w-full rounded shadow overflow-hidden cursor-pointer"
     >
-      <Tooltip :text="__(item.data.tooltip)">
+      <Tooltip :text="__(item.data?.tooltip || '')">
         <NumberChart
           v-if="item.data"
           :key="index"

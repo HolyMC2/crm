@@ -56,8 +56,8 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 		method_name = f"get_{l['name']}"
 		if hasattr(frappe.get_attr("crm.api.dashboard"), method_name):
 			method = getattr(frappe.get_attr("crm.api.dashboard"), method_name)
-			l["data"] = method(
-				from_date, to_date, requested_user if l["name"] == "forecasted_revenue" else user
+			l["data"] = _read_chart(
+				method, from_date, to_date, requested_user if l["name"] == "forecasted_revenue" else user
 			)
 		else:
 			l["data"] = None
@@ -88,9 +88,23 @@ def get_chart(
 	method_name = f"get_{name}"
 	if hasattr(frappe.get_attr("crm.api.dashboard"), method_name):
 		method = getattr(frappe.get_attr("crm.api.dashboard"), method_name)
-		return method(from_date, to_date, requested_user if name == "forecasted_revenue" else user)
+		return _read_chart(
+			method, from_date, to_date, requested_user if name == "forecasted_revenue" else user
+		)
 	else:
 		return {"error": _("Invalid chart name")}
+
+
+def _read_chart(method, *args):
+	try:
+		return method(*args)
+	except frappe.PermissionError:
+		return {
+			"unavailable": True,
+			"reason": _(
+				"Your permissions do not allow this metric. Other permitted metrics remain available."
+			),
+		}
 
 
 def _scoped_users(user):
@@ -192,10 +206,8 @@ def get_total_repair_orders(
 	if not frappe.db.exists("DocType", "Repair Order"):
 		return {
 			"title": _("Total repair orders"),
-			"tooltip": _("Total number of repair orders"),
-			"value": 0,
-			"delta": 0,
-			"deltaSuffix": "%",
+			"unavailable": True,
+			"reason": _("Repairs are not installed on this site."),
 		}
 
 	diff = frappe.utils.date_diff(to_date, from_date)
