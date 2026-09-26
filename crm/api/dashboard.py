@@ -7,7 +7,7 @@ from frappe.query_builder.functions import Avg, Coalesce, Count, Date, DateForma
 from pypika.functions import Function
 
 from crm.fcrm.doctype.crm_dashboard.crm_dashboard import create_default_manager_dashboard
-from crm.pipeline.queries.stages import exclude_hidden_stages
+from crm.pipeline.queries.stages import exclude_hidden_stages, metric_query, permitted_deals, pipeline_funnel
 from crm.utils import sales_user_only
 
 
@@ -34,14 +34,6 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
 		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
 
-	requested_user = user
-	roles = frappe.get_roles(frappe.session.user)
-	is_sales_manager = "Sales Manager" in roles or "System Manager" in roles
-	is_sales_user = "Sales User" in roles and not is_sales_manager
-
-	if is_sales_user:
-		user = frappe.session.user
-
 	dashboard = frappe.db.exists("CRM Dashboard", "Manager Dashboard")
 
 	layout = []
@@ -56,9 +48,7 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 		method_name = f"get_{l['name']}"
 		if hasattr(frappe.get_attr("crm.api.dashboard"), method_name):
 			method = getattr(frappe.get_attr("crm.api.dashboard"), method_name)
-			l["data"] = _read_chart(
-				method, from_date, to_date, requested_user if l["name"] == "forecasted_revenue" else user
-			)
+			l["data"] = _read_chart(method, from_date, to_date, user)
 		else:
 			l["data"] = None
 
@@ -77,20 +67,10 @@ def get_chart(
 		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
 		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
 
-	requested_user = user
-	roles = frappe.get_roles(frappe.session.user)
-	is_sales_manager = "Sales Manager" in roles or "System Manager" in roles
-	is_sales_user = "Sales User" in roles and not is_sales_manager
-
-	if is_sales_user:
-		user = frappe.session.user
-
 	method_name = f"get_{name}"
 	if hasattr(frappe.get_attr("crm.api.dashboard"), method_name):
 		method = getattr(frappe.get_attr("crm.api.dashboard"), method_name)
-		return _read_chart(
-			method, from_date, to_date, requested_user if name == "forecasted_revenue" else user
-		)
+		return _read_chart(method, from_date, to_date, user)
 	else:
 		return {"error": _("Invalid chart name")}
 
@@ -146,16 +126,87 @@ def _permitted_names(doctype):
 	return frappe.qb.get_query(doctype, fields=["name"], ignore_permissions=False, order_by=None)
 
 
+def _period_bounds(from_date, to_date):
+	"""Inclusive dates and an immediately preceding window of the same length."""
+	start = frappe.utils.getdate(from_date or frappe.utils.get_first_day(frappe.utils.nowdate()))
+	end = frappe.utils.getdate(to_date or frappe.utils.get_last_day(frappe.utils.nowdate()))
+	if start > end:
+		frappe.throw(_("Start date must be before end date."), frappe.ValidationError)
+	return start, frappe.utils.add_days(end, 1), frappe.utils.add_days(start, -(end - start).days - 1)
+
+
+def _metric_base(fields, user=None, *, amounts=True):
+	from crm.api.sales_reports import _fields
+
+	_fields("CRM Deal", ["status", "deal_owner", *fields])
+	if frappe.db.has_column("CRM Deal", "pipeline"):
+		_fields("CRM Deal", ["pipeline"])
+	query, deal, status, expressions = metric_query(include_eligibility=True)
+	users = _scoped_users(user)
+	allowed = permitted_deals({"deal_owner": ["in", users]} if users else None, amounts=amounts)
+	return query.where(deal.name.isin(allowed)), deal, status, expressions
+
+
+def _amount_note(missing):
+	return _("Excluded {0} deals with missing exchange rates.").format(missing) if missing else ""
+
+
+def _average_value(from_date, to_date, user, kind, title, definition):
+	start, end, previous = _period_bounds(from_date, to_date)
+	date_basis = "closed_date" if kind == "won" else "creation"
+	query, deal, status, amounts = _metric_base([date_basis], user)
+	eligible = status.type == "Won" if kind == "won" else amounts["open_deal"] == 1
+	if kind == "combined":
+		eligible |= status.type == "Won"
+	date = deal[date_basis]
+	query = query.where(eligible).where(date >= previous).where(date < end)
+	for key, condition in (("current", date >= start), ("previous", date < start)):
+		query = query.select(
+			Avg(Case().when(condition, amounts["commercial_value"]).else_(None)).as_(key),
+			Count(Case().when(condition, amounts["commercial_value"]).else_(None)).as_(f"{key}_count"),
+			Sum(Case().when(condition, amounts["missing_exchange_rate_count"]).else_(0)).as_(
+				f"{key}_missing"
+			),
+		)
+	row = query.run(as_dict=True)[0]
+	missing = int(row.current_missing or 0)
+	note = " ".join(part for part in (definition, _amount_note(missing)) if part)
+	if row.previous_missing:
+		note += " " + _("Previous period excludes {0} deals with missing exchange rates.").format(
+			int(row.previous_missing)
+		)
+	return {
+		"title": title,
+		"tooltip": note,
+		"metric_note": note,
+		"value": row.current or 0,
+		"delta": None
+		if row.previous_missing and not row.previous_count
+		else (row.current or 0) - (row.previous or 0),
+		"deltaSuffix": " " + _base_currency(),
+		"prefix": get_base_currency_symbol(),
+		"currency": _base_currency(),
+		"date_basis": date_basis,
+		"sample_count": int(row.current_count or 0),
+		"missing_exchange_rate_count": missing,
+		"previous_sample_count": int(row.previous_count or 0),
+		"previous_missing_exchange_rate_count": int(row.previous_missing or 0),
+		"unavailable": bool(missing and not row.current_count),
+		"reason": _amount_note(missing) + " " + _("No amounts can be converted to the base currency.")
+		if missing and not row.current_count
+		else None,
+	}
+
+
+def _base_currency():
+	return frappe.db.get_single_value("FCRM Settings", "currency") or "USD"
+
+
 def get_total_leads(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
 	"""
 	Get lead count for the dashboard.
 	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
+	from_date, to_date_plus_one, prev_from_date = _period_bounds(from_date, to_date)
 
 	Lead = DocType("CRM Lead")
 	users = _scoped_users(user)
@@ -210,12 +261,7 @@ def get_total_repair_orders(
 			"reason": _("Repairs are not installed on this site."),
 		}
 
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
+	from_date, to_date_plus_one, prev_from_date = _period_bounds(from_date, to_date)
 
 	RO = DocType("Repair Order")
 
@@ -243,139 +289,47 @@ def get_total_repair_orders(
 	}
 
 
-def get_ongoing_deals(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""
-	Get ongoing deal count for the dashboard, and also calculate average deal value for ongoing deals.
-	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
-
-	Deal = DocType("CRM Deal")
-	Status = DocType("CRM Deal Status")
-	users = _scoped_users(user)
-
-	# Build conditions for current period
-	current_cond = (
-		(Deal.creation >= from_date)
-		& (Deal.creation < to_date_plus_one)
-		& (Status.type.notin(["Won", "Lost"]))
-	)
-	if users:
-		current_cond = current_cond & (Deal.deal_owner.isin(users))
-
-	# Build conditions for previous period
-	prev_cond = (
-		(Deal.creation >= prev_from_date) & (Deal.creation < from_date) & (Status.type.notin(["Won", "Lost"]))
-	)
-	if users:
-		prev_cond = prev_cond & (Deal.deal_owner.isin(users))
-
-	# Build query with CASE expressions
-	query = (
-		_permitted_from("CRM Deal", Deal, ["creation", "deal_owner", "name", "status"])
-		.join(Status)
-		.on(Deal.status == Status.name)
+def get_ongoing_deals(from_date=None, to_date=None, user=None):
+	start, end, previous = _period_bounds(from_date, to_date)
+	query, deal, _status, amounts = _metric_base(["creation"], user, amounts=False)
+	row = (
+		query.where(amounts["open_deal"] == 1)
+		.where(deal.creation >= previous)
+		.where(deal.creation < end)
 		.select(
-			Count(Case().when(current_cond, Deal.name).else_(None)).as_("current_month_deals"),
-			Count(Case().when(prev_cond, Deal.name).else_(None)).as_("prev_month_deals"),
+			Count(Case().when(deal.creation >= start, deal.name).else_(None)).as_("current"),
+			Count(Case().when(deal.creation < start, deal.name).else_(None)).as_("previous"),
 		)
+		.run(as_dict=True)[0]
 	)
-
-	result = query.run(as_dict=True)
-
-	current_month_deals = result[0].current_month_deals or 0
-	prev_month_deals = result[0].prev_month_deals or 0
-
-	delta_in_percentage = (
-		(current_month_deals - prev_month_deals) / prev_month_deals * 100 if prev_month_deals else 0
-	)
-
 	return {
 		"title": _("Ongoing deals"),
-		"tooltip": _("Total number of non won/lost deals"),
-		"value": current_month_deals,
-		"delta": delta_in_percentage,
+		"tooltip": _(
+			"Active Open, Ongoing and On Hold deals created in the selected period; historical stages remain in stage charts."
+		),
+		"value": row.current,
+		"delta": 100 * (row.current - row.previous) / row.previous if row.previous else 0,
 		"deltaSuffix": "%",
+		"date_basis": "creation",
 	}
 
 
-def get_average_ongoing_deal_value(
-	from_date: str | None = None, to_date: str | None = None, user: str | None = None
-):
-	"""
-	Get ongoing deal count for the dashboard, and also calculate average deal value for ongoing deals.
-	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
-
-	Deal = DocType("CRM Deal")
-	Status = DocType("CRM Deal Status")
-	users = _scoped_users(user)
-
-	# Build conditions for current period
-	current_cond = (
-		(Deal.creation >= from_date)
-		& (Deal.creation < to_date_plus_one)
-		& (Status.type.notin(["Won", "Lost"]))
+def get_average_ongoing_deal_value(from_date=None, to_date=None, user=None):
+	return _average_value(
+		from_date,
+		to_date,
+		user,
+		"open",
+		_("Avg. ongoing deal value"),
+		_("Open expected amount per active open deal created in the selected period; includes zero amounts."),
 	)
-	if users:
-		current_cond = current_cond & (Deal.deal_owner.isin(users))
-
-	# Build conditions for previous period
-	prev_cond = (
-		(Deal.creation >= prev_from_date) & (Deal.creation < from_date) & (Status.type.notin(["Won", "Lost"]))
-	)
-	if users:
-		prev_cond = prev_cond & (Deal.deal_owner.isin(users))
-
-	# Calculate deal value with exchange rate
-	deal_value_expr = Deal.deal_value * IfNull(Deal.exchange_rate, 1)
-
-	# Build query with CASE expressions
-	query = (
-		_permitted_from("CRM Deal", Deal, ["creation", "deal_owner", "deal_value", "exchange_rate", "status"])
-		.join(Status)
-		.on(Deal.status == Status.name)
-		.select(
-			Avg(Case().when(current_cond, deal_value_expr).else_(None)).as_("current_month_avg_value"),
-			Avg(Case().when(prev_cond, deal_value_expr).else_(None)).as_("prev_month_avg_value"),
-		)
-	)
-
-	result = query.run(as_dict=True)
-
-	current_month_avg_value = result[0].current_month_avg_value or 0
-	prev_month_avg_value = result[0].prev_month_avg_value or 0
-
-	avg_value_delta = current_month_avg_value - prev_month_avg_value if prev_month_avg_value else 0
-
-	return {
-		"title": _("Avg. ongoing deal value"),
-		"tooltip": _("Average deal value of non won/lost deals"),
-		"value": current_month_avg_value,
-		"delta": avg_value_delta,
-		"prefix": get_base_currency_symbol(),
-	}
 
 
 def get_won_deals(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
 	"""
 	Get won deal count for the dashboard, and also calculate average deal value for won deals.
 	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
+	from_date, to_date_plus_one, prev_from_date = _period_bounds(from_date, to_date)
 
 	Deal = DocType("CRM Deal")
 	Status = DocType("CRM Deal Status")
@@ -422,122 +376,28 @@ def get_won_deals(from_date: str | None = None, to_date: str | None = None, user
 	}
 
 
-def get_average_won_deal_value(
-	from_date: str | None = None, to_date: str | None = None, user: str | None = None
-):
-	"""
-	Get won deal count for the dashboard, and also calculate average deal value for won deals.
-	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
-
-	Deal = DocType("CRM Deal")
-	Status = DocType("CRM Deal Status")
-	users = _scoped_users(user)
-
-	# Build conditions for current period
-	current_cond = (
-		(Deal.closed_date >= from_date) & (Deal.closed_date < to_date_plus_one) & (Status.type == "Won")
-	)
-	if users:
-		current_cond = current_cond & (Deal.deal_owner.isin(users))
-
-	# Build conditions for previous period
-	prev_cond = (Deal.closed_date >= prev_from_date) & (Deal.closed_date < from_date) & (Status.type == "Won")
-	if users:
-		prev_cond = prev_cond & (Deal.deal_owner.isin(users))
-
-	# Calculate deal value with exchange rate
-	deal_value_expr = Deal.deal_value * IfNull(Deal.exchange_rate, 1)
-
-	# Build query with CASE expressions
-	query = (
-		_permitted_from(
-			"CRM Deal", Deal, ["closed_date", "deal_owner", "deal_value", "exchange_rate", "status"]
-		)
-		.join(Status)
-		.on(Deal.status == Status.name)
-		.select(
-			Avg(Case().when(current_cond, deal_value_expr).else_(None)).as_("current_month_avg_value"),
-			Avg(Case().when(prev_cond, deal_value_expr).else_(None)).as_("prev_month_avg_value"),
-		)
+def get_average_won_deal_value(from_date=None, to_date=None, user=None):
+	return _average_value(
+		from_date,
+		to_date,
+		user,
+		"won",
+		_("Avg. won deal value"),
+		_("Won commercial amount per deal closed in the selected period; not invoiced or collected."),
 	)
 
-	result = query.run(as_dict=True)
 
-	current_month_avg_value = result[0].current_month_avg_value or 0
-	prev_month_avg_value = result[0].prev_month_avg_value or 0
-
-	avg_value_delta = current_month_avg_value - prev_month_avg_value if prev_month_avg_value else 0
-
-	return {
-		"title": _("Avg. won deal value"),
-		"tooltip": _("Average deal value of won deals"),
-		"value": current_month_avg_value,
-		"delta": avg_value_delta,
-		"prefix": get_base_currency_symbol(),
-	}
-
-
-def get_average_deal_value(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""
-	Get average deal value for the dashboard.
-	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
-
-	Deal = DocType("CRM Deal")
-	Status = DocType("CRM Deal Status")
-
-	users = _scoped_users(user)
-
-	# Build conditions for current period
-	current_cond = (Deal.creation >= from_date) & (Deal.creation < to_date_plus_one) & (Status.type != "Lost")
-	if users:
-		current_cond = current_cond & (Deal.deal_owner.isin(users))
-
-	# Build conditions for previous period
-	prev_cond = (Deal.creation >= prev_from_date) & (Deal.creation < from_date) & (Status.type != "Lost")
-	if users:
-		prev_cond = prev_cond & (Deal.deal_owner.isin(users))
-
-	# Calculate deal value with exchange rate
-	deal_value_expr = Deal.deal_value * IfNull(Deal.exchange_rate, 1)
-
-	# Build query with CASE expressions
-	query = (
-		_permitted_from("CRM Deal", Deal, ["creation", "deal_owner", "deal_value", "exchange_rate", "status"])
-		.join(Status)
-		.on(Deal.status == Status.name)
-		.select(
-			Avg(Case().when(current_cond, deal_value_expr).else_(None)).as_("current_month_avg"),
-			Avg(Case().when(prev_cond, deal_value_expr).else_(None)).as_("prev_month_avg"),
-		)
+def get_average_deal_value(from_date=None, to_date=None, user=None):
+	return _average_value(
+		from_date,
+		to_date,
+		user,
+		"combined",
+		_("Avg. deal value"),
+		_(
+			"Average ongoing & won commercial amount for active open and won deals created in the selected period; not invoiced or collected."
+		),
 	)
-
-	result = query.run(as_dict=True)
-
-	current_month_avg = result[0].current_month_avg or 0
-	prev_month_avg = result[0].prev_month_avg or 0
-
-	delta = current_month_avg - prev_month_avg if prev_month_avg else 0
-
-	return {
-		"title": _("Avg. deal value"),
-		"tooltip": _("Average deal value of ongoing & won deals"),
-		"value": current_month_avg,
-		"prefix": get_base_currency_symbol(),
-		"delta": delta,
-		"deltaSuffix": "%",
-	}
 
 
 def get_average_time_to_close_a_lead(
@@ -546,12 +406,7 @@ def get_average_time_to_close_a_lead(
 	"""
 	Get average time to close deals for the dashboard.
 	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
+	from_date, to_date_plus_one, prev_from_date = _period_bounds(from_date, to_date)
 	prev_to_date = from_date
 
 	Deal = DocType("CRM Deal")
@@ -613,12 +468,7 @@ def get_average_time_to_close_a_deal(
 	"""
 	Get average time to close deals for the dashboard.
 	"""
-	diff = frappe.utils.date_diff(to_date, from_date)
-	if diff == 0:
-		diff = 1
-
-	prev_from_date = frappe.utils.add_days(from_date, -diff)
-	to_date_plus_one = frappe.utils.add_days(to_date, 1)
+	from_date, to_date_plus_one, prev_from_date = _period_bounds(from_date, to_date)
 	prev_to_date = from_date
 
 	Deal = DocType("CRM Deal")
@@ -757,7 +607,8 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 	return {
 		"data": sales_trend,
 		"title": _("Sales trend"),
-		"subtitle": _("Daily performance of leads, deals, and wins"),
+		"subtitle": _("Leads and deals created per day; won deals show their current outcome"),
+		"date_basis": "creation",
 		"xAxis": {
 			"title": _("Date"),
 			"key": "date",
@@ -777,15 +628,11 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 
 def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
 	"""Open weighted forecast and commercial wins, never invoiced/collected revenue."""
-	from crm.pipeline.queries.stages import metric_query, permitted_deals
-
 	from_date = frappe.utils.getdate(from_date or frappe.utils.get_first_day(frappe.utils.nowdate()))
 	to_date = frappe.utils.getdate(to_date or frappe.utils.get_last_day(frappe.utils.nowdate()))
 	if from_date > to_date:
 		frappe.throw(_("Start date must be before end date."), frappe.ValidationError)
-	base_query, deal, status, amounts = metric_query()
-	# Caller filters can only narrow the actor's native list permissions.
-	allowed = permitted_deals({"deal_owner": user} if user else None, amounts=True)
+	base_query, deal, status, amounts = _metric_base(["expected_closure_date", "closed_date"], user)
 	result = {}
 	missing_rates = 0
 	for key, amount, date_field, outcome in (
@@ -793,9 +640,9 @@ def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = N
 			"forecasted",
 			"weighted_forecast",
 			deal.expected_closure_date,
-			status.type.isin(["Open", "Ongoing", "On Hold"]),
+			amounts["open_deal"] == 1,
 		),
-		("actual", "won_value", Coalesce(deal.closed_date, deal.expected_closure_date), status.type == "Won"),
+		("actual", "won_value", deal.closed_date, status.type == "Won"),
 	):
 		query = (
 			base_query.select(
@@ -803,7 +650,6 @@ def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = N
 				Sum(amounts[amount]).as_("value"),
 				Sum(amounts["missing_exchange_rate_count"]).as_("missing_rates"),
 			)
-			.where(deal.name.isin(allowed))
 			.where(outcome)
 			.where(date_field >= from_date)
 			.where(date_field < frappe.utils.add_days(to_date, 1))
@@ -813,12 +659,17 @@ def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = N
 			query = exclude_hidden_stages(query, status)
 		for row in query.run(as_dict=True):
 			month = f"{row.month}-01"
-			result.setdefault(month, {"month": month, "forecasted": 0, "actual": 0})[key] = row.value or 0
+			result.setdefault(month, {"month": month, "forecasted": 0, "actual": 0})[key] = row.value
 			missing_rates += row.missing_rates or 0
 
 	return {
 		"data": [result[month] for month in sorted(result)],
-		"title": _("Forecasted revenue"),
+		"title": _("Open forecast and won value"),
+		"metric_note": _(
+			"Open weighted forecast uses expected closure date; won commercial amount uses actual closure date. Neither proves invoicing or collection."
+		)
+		+ (" " + _amount_note(missing_rates) if missing_rates else ""),
+		"date_basis": {"forecasted": "expected_closure_date", "actual": "closed_date"},
 		"subtitle": _("Open weighted forecast and won deal value; not invoiced or collected amounts")
 		+ (
 			". " + _("Excluded {0} deals with missing exchange rates.").format(missing_rates)
@@ -847,154 +698,85 @@ def get_pipeline_funnel(
 	return pipeline_funnel(from_date, to_date, filters)
 
 
-def get_funnel_conversion(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""
-	Get funnel conversion data for the dashboard.
-	"""
-	lead_conds = ""
-	deal_conds = ""
-
-	if not from_date or not to_date:
-		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
-		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
-
-	lead_filters = {"from": from_date, "to": to_date}
-	deal_filters = {"from": from_date, "to": to_date}
-
-	if user:
-		lead_conds += " AND lead_owner = %(user)s"
-		deal_conds += " AND deal_owner = %(user)s"
-		lead_filters["user"] = user
-		deal_filters["user"] = user
-
-	result = []
-
-	# Get total leads using Query Builder
-	CRMLead = DocType("CRM Lead")
-
-	query = (
-		_permitted_from("CRM Lead", CRMLead, ["creation", "lead_owner"])
-		.select(Count("*").as_("count"))
-		.where(Date(CRMLead.creation).between(from_date, to_date))
-	)
-
+def get_funnel_conversion(from_date=None, to_date=None, user=None):
+	"""Conversion belongs to one lead creation cohort, never repeated deal transitions."""
+	start, end, _previous = _period_bounds(from_date, to_date)
+	lead = DocType("CRM Lead")
+	query = _permitted_from("CRM Lead", lead, ["creation", "lead_owner", "converted"])
+	query = query.where(lead.creation >= start).where(lead.creation < end)
 	users = _scoped_users(user)
 	if users:
-		query = query.where(CRMLead.lead_owner.isin(users))
-
-	total_leads = query.run(as_dict=True)
-	total_leads_count = total_leads[0].count if total_leads else 0
-
-	result.append({"stage": "Leads", "count": total_leads_count})
-
-	result += get_deal_status_change_counts(from_date, to_date, deal_conds, deal_filters)
-
+		query = query.where(lead.lead_owner.isin(users))
+	row = query.select(
+		Count(lead.name).as_("total"),
+		Count(Case().when(lead.converted == 1, lead.name).else_(None)).as_("converted"),
+	).run(as_dict=True)[0]
 	return {
-		"data": result or [],
-		"title": _("Funnel conversion"),
-		"subtitle": _("Lead to deal conversion pipeline"),
-		"xAxis": {
-			"title": _("Stage"),
-			"key": "stage",
-			"type": "category",
-		},
-		"yAxis": {
-			"title": _("Count"),
-		},
-		"swapXY": True,
-		"series": [
-			{
-				"name": "count",
-				"type": "bar",
-				"echartOptions": {
-					"colorBy": "data",
-				},
-			},
+		"data": [
+			{"stage": _("Leads"), "count": row.total},
+			{"stage": _("Converted leads"), "count": row.converted},
 		],
-	}
-
-
-def get_deals_by_stage_axis(
-	from_date: str | None = None, to_date: str | None = None, user: str | None = None
-):
-	"""
-	Get deal data by stage for the dashboard.
-	"""
-	if not from_date or not to_date:
-		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
-		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
-
-	# Using Frappe Query Builder with NOT IN clause
-	CRMDeal = DocType("CRM Deal")
-	CRMDealStatus = DocType("CRM Deal Status")
-
-	query = (
-		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "status"])
-		.join(CRMDealStatus)
-		.on(CRMDeal.status == CRMDealStatus.name)
-		.select(CRMDeal.status.as_("stage"), Count("*").as_("count"), CRMDealStatus.type.as_("status_type"))
-		.where((Date(CRMDeal.creation).between(from_date, to_date)) & (CRMDealStatus.type.notin(["Lost"])))
-		.groupby(CRMDeal.status)
-		.orderby(Count("*"), order=frappe.qb.desc)
-	)
-	query = exclude_hidden_stages(query, CRMDealStatus)
-
-	users = _scoped_users(user)
-	if users:
-		query = query.where(CRMDeal.deal_owner.isin(users))
-
-	result = query.run(as_dict=True)
-
-	return {
-		"data": result or [],
-		"title": _("Deals by ongoing & won stage"),
-		"xAxis": {
-			"title": _("Stage"),
-			"key": "stage",
-			"type": "category",
-		},
+		"title": _("Lead conversion"),
+		"subtitle": _("Current converted state of leads created in the selected period"),
+		"date_basis": "creation",
+		"conversion": 100 * row.converted / row.total if row.total else 0,
+		"xAxis": {"title": _("State"), "key": "stage", "type": "category"},
 		"yAxis": {"title": _("Count")},
-		"series": [
-			{"name": "count", "type": "bar"},
-		],
+		"swapXY": True,
+		"series": [{"name": "count", "type": "bar", "echartOptions": {"colorBy": "data"}}],
 	}
 
 
-def get_deals_by_stage_donut(
-	from_date: str | None = None, to_date: str | None = None, user: str | None = None
-):
-	"""
-	Get deal data by stage for the dashboard.
-	"""
-	if not from_date or not to_date:
-		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
-		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
+def _stage_distribution(from_date, to_date, user):
+	from crm.api.sales_reports import _fields
 
-	# Using Frappe Query Builder with JOIN
-	CRMDeal = DocType("CRM Deal")
-	CRMDealStatus = DocType("CRM Deal Status")
-
-	query = (
-		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "status"])
-		.join(CRMDealStatus)
-		.on(CRMDeal.status == CRMDealStatus.name)
-		.select(CRMDeal.status.as_("stage"), Count("*").as_("count"), CRMDealStatus.type.as_("status_type"))
-		.where(Date(CRMDeal.creation).between(from_date, to_date))
-		.groupby(CRMDeal.status)
-		.orderby(Count("*"), order=frappe.qb.desc)
-	)
-	query = exclude_hidden_stages(query, CRMDealStatus)
-
+	_fields("CRM Deal", ["creation", "deal_owner", "status"])
+	if frappe.db.has_column("CRM Deal", "pipeline"):
+		_fields("CRM Deal", ["pipeline"])
+	start, end, _previous = _period_bounds(from_date, to_date)
 	users = _scoped_users(user)
-	if users:
-		query = query.where(CRMDeal.deal_owner.isin(users))
+	cohort = pipeline_funnel(
+		start, frappe.utils.add_days(end, -1), {"deal_owner": ["in", users]} if users else None
+	)
+	rows = cohort["stages"] + cohort["historical_stages"] + cohort["unclassified_stages"]
+	result = []
+	for row in rows:
+		if not row["count"]:
+			continue
+		# Keep the exact identities for drill-down and distinguish the same status in different pipelines.
+		label = row["stage"]
+		if row.get("pipeline"):
+			label += " · " + (row.get("pipeline_name") or row["pipeline"])
+		if row.get("hidden"):
+			label += " · " + _("Historical")
+		elif row["type"] == "Unknown":
+			label += " · " + _("Unclassified")
+		result.append({**row, "stage": label, "status_type": row["type"]})
+	return sorted(result, key=lambda row: (-row["count"], row["stage"]))
 
-	result = query.run(as_dict=True)
 
+def get_deals_by_stage_axis(from_date=None, to_date=None, user=None):
 	return {
-		"data": result or [],
+		"data": _stage_distribution(from_date, to_date, user),
 		"title": _("Deals by stage"),
-		"subtitle": _("Current pipeline distribution"),
+		"subtitle": _(
+			"Current stage of deals created in the selected period, including lost and historical stages"
+		),
+		"date_basis": "creation",
+		"xAxis": {"title": _("Stage"), "key": "stage", "type": "category"},
+		"yAxis": {"title": _("Count")},
+		"series": [{"name": "count", "type": "bar"}],
+	}
+
+
+def get_deals_by_stage_donut(from_date=None, to_date=None, user=None):
+	return {
+		"data": _stage_distribution(from_date, to_date, user),
+		"title": _("Deals by stage"),
+		"subtitle": _(
+			"Current stage of deals created in the selected period, including lost and historical stages"
+		),
+		"date_basis": "creation",
 		"categoryColumn": "stage",
 		"valueColumn": "count",
 	}
@@ -1115,55 +897,48 @@ def get_deals_by_source(from_date: str | None = None, to_date: str | None = None
 	}
 
 
-def get_deals_by_territory(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""
-	Get deal data by territory for the dashboard.
-	"""
-	if not from_date or not to_date:
-		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
-		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
-
-	# Using Frappe Query Builder with complex aggregations
-	CRMDeal = DocType("CRM Deal")
-
-	query = (
-		_permitted_from(
-			"CRM Deal", CRMDeal, ["creation", "deal_owner", "deal_value", "exchange_rate", "territory"]
-		)
-		.select(
-			IfNull(CRMDeal.territory, "Empty").as_("territory"),
-			Count("*").as_("deals"),
-			Sum(Coalesce(CRMDeal.deal_value, 0) * IfNull(CRMDeal.exchange_rate, 1)).as_("value"),
-		)
-		.where(Date(CRMDeal.creation).between(from_date, to_date))
-		.groupby(CRMDeal.territory)
-		.orderby(Count("*"), order=frappe.qb.desc)
-		.orderby(
-			Sum(Coalesce(CRMDeal.deal_value, 0) * IfNull(CRMDeal.exchange_rate, 1)), order=frappe.qb.desc
+def _grouped_deal_values(from_date, to_date, user, field, label):
+	start, end, _previous = _period_bounds(from_date, to_date)
+	query, deal, _status, amounts = _metric_base(["creation", field], user)
+	group = Case().when(Coalesce(deal[field], "") == "", _("Unassigned")).else_(deal[field])
+	query = query.where(deal.creation >= start).where(deal.creation < end)
+	query = query.select(group.as_(label), Count(deal.name).as_("deals"))
+	query = query.select(
+		*(
+			Sum(amounts[key]).as_(key)
+			for key in (
+				"commercial_value",
+				"open_expected_value",
+				"weighted_forecast",
+				"won_value",
+				"missing_exchange_rate_count",
+			)
 		)
 	)
-
-	users = _scoped_users(user)
-	if users:
-		query = query.where(CRMDeal.deal_owner.isin(users))
-
-	result = query.run(as_dict=True)
-
+	rows = query.groupby(group).orderby(Count(deal.name), order=frappe.qb.desc).run(as_dict=True)
+	for row in rows:
+		row["value"] = row.commercial_value
+		row["missing_exchange_rate_count"] = int(row.missing_exchange_rate_count or 0)
+	missing = sum(row.missing_exchange_rate_count for row in rows)
+	note = _(
+		"Recorded commercial amount includes lost and historical deals; it is not forecast, invoiced or collected revenue."
+	)
+	if missing:
+		note += " " + _amount_note(missing)
 	return {
-		"data": result or [],
-		"title": _("Deals by territory"),
-		"subtitle": _("Geographic distribution of deals and revenue"),
+		"data": rows,
+		"subtitle": _("Deals created in the selected period"),
+		"metric_note": note,
+		"currency": _base_currency(),
+		"date_basis": "creation",
+		"missing_exchange_rate_count": missing,
 		"xAxis": {
-			"title": _("Territory"),
-			"key": "territory",
+			"title": _("Territory") if field == "territory" else _("Salesperson"),
+			"key": label,
 			"type": "category",
 		},
-		"yAxis": {
-			"title": _("Number of deals"),
-		},
-		"y2Axis": {
-			"title": _("Deal value") + f" ({get_base_currency_symbol()})",
-		},
+		"yAxis": {"title": _("Number of deals")},
+		"y2Axis": {"title": _("Recorded commercial amount") + f" ({_base_currency()})"},
 		"series": [
 			{"name": "deals", "type": "bar"},
 			{"name": "value", "type": "line", "showDataPoints": True, "axis": "y2"},
@@ -1171,62 +946,18 @@ def get_deals_by_territory(from_date: str | None = None, to_date: str | None = N
 	}
 
 
-def get_deals_by_salesperson(
-	from_date: str | None = None, to_date: str | None = None, user: str | None = None
-):
-	"""
-	Get deal data by salesperson for the dashboard.
-	"""
-	if not from_date or not to_date:
-		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
-		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
-
-	# Using Frappe Query Builder with LEFT JOIN
-	CRMDeal = DocType("CRM Deal")
-	User = DocType("User")
-
-	query = (
-		_permitted_from("CRM Deal", CRMDeal, ["creation", "deal_owner", "deal_value", "exchange_rate"])
-		.left_join(User)
-		.on(User.name == CRMDeal.deal_owner)
-		.select(
-			IfNull(User.full_name, CRMDeal.deal_owner).as_("salesperson"),
-			Count("*").as_("deals"),
-			Sum(Coalesce(CRMDeal.deal_value, 0) * IfNull(CRMDeal.exchange_rate, 1)).as_("value"),
-		)
-		.where(Date(CRMDeal.creation).between(from_date, to_date))
-		.groupby(CRMDeal.deal_owner)
-		.orderby(Count("*"), order=frappe.qb.desc)
-		.orderby(
-			Sum(Coalesce(CRMDeal.deal_value, 0) * IfNull(CRMDeal.exchange_rate, 1)), order=frappe.qb.desc
-		)
-	)
-
-	users = _scoped_users(user)
-	if users:
-		query = query.where(CRMDeal.deal_owner.isin(users))
-
-	result = query.run(as_dict=True)
-
+def get_deals_by_territory(from_date=None, to_date=None, user=None):
 	return {
-		"data": result or [],
+		**_grouped_deal_values(from_date, to_date, user, "territory", "territory"),
+		"title": _("Deals by territory"),
+	}
+
+
+def get_deals_by_salesperson(from_date=None, to_date=None, user=None):
+	# Owner IDs are stable chart identities; duplicate full names must not merge categories.
+	return {
+		**_grouped_deal_values(from_date, to_date, user, "deal_owner", "salesperson"),
 		"title": _("Deals by salesperson"),
-		"subtitle": _("Number of deals and total value per salesperson"),
-		"xAxis": {
-			"title": _("Salesperson"),
-			"key": "salesperson",
-			"type": "category",
-		},
-		"yAxis": {
-			"title": _("Number of deals"),
-		},
-		"y2Axis": {
-			"title": _("Deal value") + f" ({get_base_currency_symbol()})",
-		},
-		"series": [
-			{"name": "deals", "type": "bar"},
-			{"name": "value", "type": "line", "showDataPoints": True, "axis": "y2"},
-		],
 	}
 
 

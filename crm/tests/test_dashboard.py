@@ -250,7 +250,7 @@ class TestDashboard(IntegrationTestCase):
 		"""Test get_forecasted_revenue returns forecasted vs actual revenue comparison"""
 		result = get_forecasted_revenue(self.from_date, self.to_date)
 
-		self.assertEqual(result["title"], "Forecasted revenue")
+		self.assertEqual(result["title"], "Open forecast and won value")
 
 		# Should have both forecasted and actual series
 		if result["series"]:
@@ -266,7 +266,7 @@ class TestDashboard(IntegrationTestCase):
 		"""Test get_funnel_conversion returns correct pipeline funnel data"""
 		result = get_funnel_conversion(self.from_date, self.to_date)
 
-		self.assertEqual(result["title"], "Funnel conversion")
+		self.assertEqual(result["title"], "Lead conversion")
 		self.assertGreater(len(result["data"]), 0)
 
 		# Verify funnel starts with Leads
@@ -299,7 +299,7 @@ class TestDashboard(IntegrationTestCase):
 		"""Test get_deals_by_stage_axis returns deal distribution by stage"""
 		result = get_deals_by_stage_axis(self.from_date, self.to_date)
 
-		self.assertEqual(result["title"], "Deals by ongoing & won stage")
+		self.assertEqual(result["title"], "Deals by stage")
 
 		# Should have data for stages
 		if result["data"]:

@@ -3,7 +3,20 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from crm.api.dashboard import get_chart, get_forecasted_revenue, get_pipeline_funnel
+from crm.api.dashboard import (
+	get_average_deal_value,
+	get_average_ongoing_deal_value,
+	get_average_won_deal_value,
+	get_chart,
+	get_deals_by_salesperson,
+	get_deals_by_stage_axis,
+	get_deals_by_stage_donut,
+	get_deals_by_territory,
+	get_forecasted_revenue,
+	get_funnel_conversion,
+	get_ongoing_deals,
+	get_pipeline_funnel,
+)
 from crm.api.doc import aggregate_deal_metrics
 
 
@@ -239,3 +252,164 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.assertEqual(historical[0]["count"], 1)
 		self.assertEqual(current[0]["count"], 1)
 		self.assertEqual(result["total"], 2)
+
+	def test_dashboard_averages_use_per_record_money_and_include_real_zero(self):
+		self.deal(expected=100, value=10, probability=0)
+		self.deal(expected=0, value=900, probability=100)
+		self.deal("On Hold", expected=0, value=0)
+		self.deal("Open", expected=200, currency="MXN", exchange_rate=0.05)
+		self.deal(expected=99999, currency="MXN", exchange_rate=0)
+		self.deal("Won", expected=100, value=800, closed_date="2040-02-29")
+		self.deal("Won", expected=600, value=0, closed_date="2040-02-29")
+		self.deal("Lost", expected=9000, probability=100)
+		current = get_average_ongoing_deal_value("2040-02-01", "2040-02-29", self.user)
+		self.assertEqual(current["value"], 252.5)  # (100 + 900 + 0 + 10) / 4 known open amounts.
+		self.assertEqual(current["sample_count"], 4)
+		self.assertEqual(current["missing_exchange_rate_count"], 1)
+		self.assertIn("Excluded 1", current["metric_note"])
+		self.assertEqual(current["deltaSuffix"], " USD")
+		won = get_average_won_deal_value("2040-02-01", "2040-02-29", self.user)
+		self.assertEqual(won["value"], 700)
+		self.assertEqual(won["sample_count"], 2)
+		combined = get_average_deal_value("2040-02-01", "2040-02-29", self.user)
+		self.assertAlmostEqual(combined["value"], 2410 / 6)
+		self.assertEqual(combined["sample_count"], 6)
+		# Grouped charts cover every record, including Lost, but expose it as recorded commercial value.
+		for chart in (get_deals_by_territory, get_deals_by_salesperson):
+			result = chart("2040-02-01", "2040-02-29", self.user)
+			self.assertEqual(sum(row.deals for row in result["data"]), 8)
+			self.assertEqual(sum(row.value or 0 for row in result["data"]), 11410)
+			self.assertEqual(sum(row.open_expected_value or 0 for row in result["data"]), 1010)
+			self.assertEqual(sum(row.weighted_forecast or 0 for row in result["data"]), 905)
+			self.assertEqual(sum(row.won_value or 0 for row in result["data"]), 1400)
+			self.assertEqual(result["missing_exchange_rate_count"], 1)
+			self.assertIn("not forecast", result["metric_note"])
+
+	def test_missing_rates_are_unavailable_instead_of_an_invented_zero(self):
+		self.deal(currency="MXN", exchange_rate=0)
+		result = get_average_ongoing_deal_value("2040-02-01", "2040-02-29", self.user)
+		self.assertTrue(result["unavailable"])
+		self.assertEqual(result["sample_count"], 0)
+		self.assertIn("Excluded 1", result["reason"])
+		group = get_deals_by_salesperson("2040-02-01", "2040-02-29", self.user)["data"][0]
+		self.assertIsNone(group.value)
+		self.assertEqual(group.deals, 1)
+		forecast = get_forecasted_revenue("2040-02-01", "2040-02-29", self.user)
+		self.assertIsNone(forecast["data"][0]["forecasted"])
+		self.assertEqual(forecast["missing_exchange_rate_count"], 1)
+
+	def test_previous_window_has_equal_inclusive_length_and_wins_use_closure(self):
+		self.deal(expected=100, creation="2040-02-03 00:00:00")
+		self.deal(expected=300, creation="2040-02-04 23:59:59")
+		self.deal(expected=10000, creation="2040-02-05 00:00:00")
+		self.deal(expected=50, creation="2040-02-01 00:00:00")
+		self.deal(expected=150, creation="2040-02-02 23:59:59")
+		self.deal(expected=99999, creation="2040-01-31 23:59:59")
+		result = get_average_ongoing_deal_value("2040-02-03", "2040-02-04", self.user)
+		self.assertEqual(result["value"], 200)
+		self.assertEqual(result["delta"], 100)
+		self.assertEqual(result["previous_sample_count"], 2)
+		self.assertEqual(get_ongoing_deals("2040-02-03", "2040-02-04", self.user)["delta"], 0)
+		self.deal("Won", value=700, creation="2040-01-01", closed_date="2040-02-04")
+		self.deal("Won", value=9000, creation="2040-02-03", closed_date="2040-02-05")
+		won = get_average_won_deal_value("2040-02-03", "2040-02-04", self.user)
+		self.assertEqual(won["value"], 700)
+		self.assertEqual(won["date_basis"], "closed_date")
+
+	def test_stage_charts_preserve_lost_hidden_unclassified_and_pipeline_identity(self):
+		self.deal("Ongoing", expected=99999)
+		self.deal("Lost", expected=9000)
+		self.deal("Won", value=800, closed_date="2040-02-10")
+		self.deal("On Hold", expected=500)
+		frappe.db.set_value("CRM Deal Status", self.statuses["On Hold"], "hidden", 1)
+		self.pipeline.stages[1].archived = 1
+		self.pipeline.save()
+		other = frappe.get_doc(
+			{
+				"doctype": "CRM Pipeline",
+				"pipeline_name": f"Other dashboard {self.key}",
+				"probability_policy": "Manual",
+				"stages": [{"status": self.statuses["Ongoing"], "probability": 50}],
+			}
+		).insert()
+		self.deal("Ongoing", expected=100, pipeline=other.name)
+		stale = self.deal("Open")
+		stale.db_set("status", f"Missing {self.key}", update_modified=False)
+		self.deal("Open", creation="2040-03-01 00:00:00")
+		for chart in (get_deals_by_stage_axis, get_deals_by_stage_donut):
+			rows = chart("2040-02-01", "2040-02-29", self.user)["data"]
+			self.assertEqual(sum(row["count"] for row in rows), 6)
+			self.assertEqual(len({row["stage"] for row in rows}), 6)
+			twins = [row for row in rows if row["status"] == self.statuses["Ongoing"]]
+			self.assertEqual(len(twins), 2)
+			self.assertEqual({row["pipeline"] for row in twins}, {self.pipeline.name, other.name})
+			self.assertEqual(sum(row["count"] for row in rows if row.get("hidden")), 2)
+			self.assertEqual(sum(row["count"] for row in rows if row["status_type"] == "Unknown"), 1)
+		self.assertEqual(get_ongoing_deals("2040-02-01", "2040-02-29", self.user)["value"], 1)
+		self.assertEqual(get_average_ongoing_deal_value("2040-02-01", "2040-02-29", self.user)["value"], 100)
+
+	def test_lead_conversion_uses_one_cohort_despite_unrelated_repeated_deal_transitions(self):
+		for converted, creation in ((1, "2040-02-29 23:59:59"), (0, "2040-02-10"), (1, "2040-03-01")):
+			lead = frappe.get_doc(
+				{
+					"doctype": "CRM Lead",
+					"first_name": f"Cohort {self.key}",
+					"lead_owner": self.user,
+					"pipeline": self.pipeline.name,
+				}
+			).insert()
+			lead.db_set({"converted": converted, "creation": creation}, update_modified=False)
+		deal = self.deal()
+		for _ in range(3):
+			frappe.get_doc(
+				{
+					"doctype": "CRM Status Change Log",
+					"parent": deal.name,
+					"parenttype": "CRM Deal",
+					"parentfield": "status_change_log",
+					"to": self.statuses["Ongoing"],
+					"from": self.statuses["Open"],
+					"from_date": "2040-02-10 12:00:00",
+					"to_date": "2040-02-10 13:00:00",
+				}
+			).insert()
+		result = get_funnel_conversion("2040-02-01", "2040-02-29", self.user)
+		self.assertEqual(
+			result["data"], [{"stage": "Leads", "count": 2}, {"stage": "Converted leads", "count": 1}]
+		)
+		self.assertEqual(result["conversion"], 50)
+
+	def test_dashboard_entry_points_include_assignments_but_cannot_expand_actor_scope(self):
+		self.deal(expected=100)
+		assigned = self.deal(expected=800, deal_owner="Administrator")
+		self.deal(expected=99999, deal_owner="Administrator")
+		frappe.get_doc(
+			{
+				"doctype": "ToDo",
+				"reference_type": "CRM Deal",
+				"reference_name": assigned.name,
+				"allocated_to": self.user,
+				"description": "Dashboard assignment",
+				"status": "Open",
+			}
+		).insert()
+		frappe.set_user(self.user)
+		for chart_name in ("average_deal_value", "average_ongoing_deal_value"):
+			self.assertEqual(get_chart(chart_name, "number", "2040-02-01", "2040-02-29")["value"], 450)
+			self.assertEqual(
+				get_chart(chart_name, "number", "2040-02-01", "2040-02-29", "Administrator")["value"], 800
+			)
+		for chart_name in ("deals_by_stage_axis", "deals_by_stage_donut"):
+			self.assertEqual(
+				sum(
+					row["count"] for row in get_chart(chart_name, "axis", "2040-02-01", "2040-02-29")["data"]
+				),
+				2,
+			)
+		self.assertEqual(
+			sum(
+				row.deals
+				for row in get_chart("deals_by_salesperson", "axis", "2040-02-01", "2040-02-29")["data"]
+			),
+			2,
+		)

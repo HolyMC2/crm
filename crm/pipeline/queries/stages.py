@@ -46,7 +46,7 @@ def exclude_hidden_stages(query, status_table):
 	return query
 
 
-def metric_expressions(deal, status, pipeline_stage=None, pipeline=None):
+def metric_expressions(deal, status, pipeline_stage=None, pipeline=None, *, include_eligibility=False):
 	"""Commercial amounts in FCRM base currency, calculated before aggregation.
 
 	Deal value is a recorded commercial amount, never proof of invoicing/payment.
@@ -78,13 +78,17 @@ def metric_expressions(deal, status, pipeline_stage=None, pipeline=None):
 		is_open &= Coalesce(pipeline.archived, 0) == 0
 	if frappe.db.has_column("CRM Deal Status", "hidden"):
 		is_open &= Coalesce(status.hidden, 0) == 0
-	return {
+	expressions = {
 		"commercial_value": value * rate,
 		"open_expected_value": Case().when(is_open, expected * rate).else_(0),
 		"weighted_forecast": Case().when(is_open, expected * rate * probability / 100).else_(0),
 		"won_value": Case().when(status.type == "Won", value * rate).else_(0),
 		"missing_exchange_rate_count": Case().when(rate.isnull(), 1).else_(0),
 	}
+	if include_eligibility:
+		# Count eligibility independently of money: an actual zero still belongs in an average.
+		expressions["open_deal"] = Case().when(is_open, 1).else_(0)
+	return expressions
 
 
 def permitted_deals(filters=None, or_filters=None, amounts=False):
@@ -111,7 +115,7 @@ def permitted_deals(filters=None, or_filters=None, amounts=False):
 	)
 
 
-def metric_query():
+def metric_query(*, include_eligibility=False):
 	"""Join the selected pipeline policy when its schema is available."""
 	deal, status = DocType("CRM Deal"), DocType("CRM Deal Status")
 	query = frappe.qb.from_(deal).left_join(status).on(deal.status == status.name)
@@ -123,7 +127,12 @@ def metric_query():
 			(pipeline_stage.parent == deal.pipeline) & (pipeline_stage.status == deal.status)
 		)
 		query = query.left_join(pipeline).on(pipeline.name == deal.pipeline)
-	return query, deal, status, metric_expressions(deal, status, pipeline_stage, pipeline)
+	return (
+		query,
+		deal,
+		status,
+		metric_expressions(deal, status, pipeline_stage, pipeline, include_eligibility=include_eligibility),
+	)
 
 
 def deal_metrics(filters=None, or_filters=None):

@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full w-full">
+  <div class="flex h-full w-full flex-col">
     <div
       v-if="item.data?.unavailable"
       class="flex h-full w-full flex-col justify-center gap-2 rounded bg-surface-base p-4 text-ink-gray-7"
@@ -10,13 +10,13 @@
     </div>
     <div
       v-else-if="item.type == 'number_chart'"
-      class="flex h-full w-full rounded shadow overflow-hidden cursor-pointer"
+      class="flex min-h-0 w-full flex-1 rounded shadow overflow-hidden cursor-pointer"
     >
       <Tooltip :text="__(item.data?.tooltip || '')">
         <NumberChart
           v-if="item.data"
           :key="index"
-          class="!items-start"
+          class="!items-start !px-3 !pt-2 !pb-2"
           :config="item.data"
         />
       </Tooltip>
@@ -30,16 +30,23 @@
     </div>
     <div
       v-else-if="item.type == 'axis_chart'"
-      class="h-full w-full rounded-md bg-surface-base shadow"
+      class="min-h-0 w-full flex-1 rounded-md bg-surface-base shadow"
     >
       <AxisChart v-if="item.data" :config="item.data" />
     </div>
     <div
       v-else-if="item.type == 'donut_chart'"
-      class="h-full w-full rounded-md bg-surface-base shadow overflow-hidden"
+      class="min-h-0 w-full flex-1 rounded-md bg-surface-base shadow overflow-hidden"
     >
       <DonutChart v-if="item.data" :config="item.data" />
     </div>
+    <p
+      v-if="item.data?.metric_note && !item.data?.unavailable"
+      role="note"
+      class="max-h-10 shrink-0 overflow-auto bg-surface-base px-3 py-1 text-xs text-ink-gray-6"
+    >
+      {{ item.data.metric_note }}
+    </p>
   </div>
 </template>
 <script setup>
