@@ -44,6 +44,13 @@
   >
     {{ __('An offer action is pending. Open Offers to continue.') }}
   </button>
+  <button
+    v-if="commerceState.pending || commerceState.busy"
+    class="min-h-11 shrink-0 border-b border-outline-gray-2 bg-surface-base px-3 text-left text-sm text-ink-gray-9"
+    @click="tabIndex = tabs.findIndex((tab) => tab.name === 'Orders')"
+  >
+    {{ __('An order action is pending. Open Orders to continue.') }}
+  </button>
   <div v-if="doc.name" class="flex h-full overflow-hidden">
     <Tabs
       v-model="tabIndex"
@@ -56,6 +63,11 @@
           v-if="tab.name === 'Offers'"
           :deal="doc"
           :state="offerState"
+        />
+        <DealOrders
+          v-else-if="tab.name === 'Orders'"
+          :deal="doc.name"
+          :state="commerceState"
         />
         <Activities
           v-else
@@ -357,6 +369,8 @@
 <script setup>
 import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
 import OfferWorkspace from '@/components/Offers/OfferWorkspace.vue'
+import DealOrders from '@/components/Commerce/DealOrders.vue'
+import { useCommerceState } from '@/components/Commerce/commerceState'
 import { useOfferState } from '@/components/Offers/offerState'
 
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
@@ -405,7 +419,7 @@ import { statusesStore } from '@/stores/statuses'
 import { getMeta } from '@/stores/meta'
 import { useDocument } from '@/data/document'
 import { whatsappEnabled } from '@/composables/whatsapp'
-import { addonAvailable } from '@/utils/crmCapabilities'
+import { addonAvailable, hasApp } from '@/utils/crmCapabilities'
 import { callEnabled } from '@/composables/telephony'
 import { useBroadcast } from '@/composables/useBroadcast'
 import {
@@ -442,6 +456,7 @@ const { updateOnboardingStep, isOnboardingStepsCompleted } =
   useOnboarding('frappecrm')
 
 const offerState = useOfferState()
+const commerceState = useCommerceState()
 const route = useRoute()
 const router = useRouter()
 
@@ -633,6 +648,12 @@ const tabs = computed(() => {
       name: 'Offers',
       label: __('Offers'),
       icon: NoteIcon,
+    },
+    {
+      name: 'Orders',
+      label: __('Orders'),
+      icon: NoteIcon,
+      condition: () => hasApp('erpnext') && hasApp('doco'),
     },
     {
       name: 'Data',

@@ -87,7 +87,7 @@
         role="status"
       >
         <p>
-          {{ __('Pedido borrador creado: {0}', [linkedOrder.sales_order]) }}
+          {{ __('Pedido vinculado: {0}', [linkedOrder.sales_order]) }}
         </p>
         <p class="mt-1 text-xs">
           {{
@@ -102,6 +102,13 @@
           >{{ __('Abrir pedido de venta') }}</a
         >
       </div>
+      <OrderContinuation
+        v-if="linkedOrder"
+        :sales-order="linkedOrder.sales_order"
+        :cart="name"
+        :state="commerceState"
+        :blocked="blocked"
+      />
       <div v-else class="space-y-3">
         <p class="text-xs text-ink-gray-5">
           {{
@@ -213,8 +220,17 @@
   </section>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  inject,
+  onUnmounted,
+  ref,
+  watch,
+} from 'vue'
 import { call } from 'frappe-ui'
+import OrderContinuation from '@/components/Commerce/OrderContinuation.vue'
+import { createCommerceState } from '@/components/Commerce/commerceState'
 const Link = defineAsyncComponent(
   () => import('@/components/Controls/Link.vue'),
 )
@@ -224,6 +240,8 @@ const props = defineProps({
   blocked: Boolean,
 })
 const emit = defineEmits(['pending', 'created'])
+const session = inject('session', null)
+const commerceState = createCommerceState(session?.user || '')
 const cart = ref(null),
   loading = ref(false),
   error = ref(''),
@@ -366,7 +384,11 @@ watch([customer, company, warehouse, deal], () => {
   notice.value = ''
 })
 watch(
-  () => !!pending.value || reviewing.value,
+  () =>
+    !!pending.value ||
+    reviewing.value ||
+    commerceState.busy ||
+    !!commerceState.pending,
   (value) => emit('pending', value),
   { flush: 'sync' },
 )

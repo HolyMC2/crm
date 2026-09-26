@@ -445,11 +445,38 @@ describe('received cart review and draft order', () => {
       original,
     ])
     expect(original.review_token).toBe('review-1')
-    expect(el.textContent).toContain('Pedido borrador creado: SO-001')
+    expect(el.textContent).toContain('Pedido vinculado: SO-001')
     expect(el.textContent).toContain('no acredita un pago')
     expect(el.querySelector('a').getAttribute('href')).toBe(
       '/app/sales-order/SO-001',
     )
+  })
+  it('continues the canonical cart order without hiding its original requested lines', async () => {
+    api.call.mockImplementation((method) => {
+      if (method.endsWith('get_cart'))
+        return Promise.resolve({
+          ...cart(),
+          sales_order: 'SO-001',
+          sales_order_url: '/app/sales-order/SO-001',
+        })
+      if (method === 'crm.api.commerce.get_context')
+        return Promise.resolve({
+          available: false,
+          reason_code: 'erp_checkout_unavailable',
+          orders: [],
+          selected: null,
+        })
+      throw new Error(`Unexpected method ${method}`)
+    })
+    const { el } = await mount(Review, { name: 'cart-1', context: context() })
+    expect(el.textContent).toContain('2 × 10.00 MXN')
+    expect(el.textContent).toContain('Pedido vinculado: SO-001')
+    expect(calls('get_context').map(([, args]) => args)).toEqual([
+      { sales_order: 'SO-001', cart: 'cart-1' },
+    ])
+    expect(calls('create_order')).toHaveLength(0)
+    expect(calls('queue_checkout')).toHaveLength(0)
+    expect(calls('request_payment_link')).toHaveLength(0)
   })
   it('requires a new review after the server refuses a stale token', async () => {
     const { el } = await mountReview()
