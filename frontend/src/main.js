@@ -15,7 +15,7 @@ import translationPlugin from './translation'
 import App from './App.vue'
 
 const printRuntime = document.createElement('script')
-printRuntime.src = '/assets/doco/js/printing_runtime.js?v=20260812a'
+printRuntime.src = '/assets/doco/js/printing_runtime.js?v=20260926a'
 document.head.appendChild(printRuntime)
 
 import {
