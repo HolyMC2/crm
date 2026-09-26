@@ -28,12 +28,7 @@
         >
           <!-- brand header -->
           <div class="flex items-center gap-2.5 px-4 pb-2 pt-3.5">
-            <div
-              class="flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-[15px] font-bold text-white"
-              style="background: var(--brand)"
-            >
-              {{ (brandName[0] || 'C').toUpperCase() }}
-            </div>
+            <BrandLogo :model-value="brand" />
             <span
               class="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-gray-9"
             >
@@ -319,6 +314,7 @@ import {
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
+import BrandLogo from '@/components/BrandLogo.vue'
 import SettingsGearIcon from '~icons/lucide/settings'
 import LogOutIcon from '~icons/lucide/log-out'
 import MoonIcon from '~icons/lucide/moon'
@@ -341,7 +337,7 @@ const { brand } = getSettings()
 const { setTheme } = useTheme()
 
 const user = computed(() => getUser() || {})
-const brandName = computed(() => brand?.value?.name || 'CRM')
+const brandName = computed(() => brand.name)
 const initials = computed(() => {
   const n = (user.value.full_name || '').trim()
   if (!n) return '?'
@@ -358,7 +354,7 @@ const activeGroup = computed(() => routeGroup(route.path))
 
 function rowClass(group) {
   return group && activeGroup.value === group
-    ? 'bg-surface-green-2 text-ink-green-8'
+    ? 'bg-[var(--brand-soft)] text-ink-gray-9'
     : 'text-ink-gray-7 hover:bg-surface-gray-2'
 }
 

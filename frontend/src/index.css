@@ -13,9 +13,11 @@ html {
    hardcoded ~60 places. Overridden at boot from FCRM Settings.brand_color when set
    (stores/settings.js), so a tenant recolor is a backend field, not a rebuild. */
 :root {
-  --brand: #16a34a;
-  --brand-soft: #e9f7ef;
-  --brand-strong: #15803d;
+  --brand: #0f6b78;
+  --brand-soft-light: #e7f0f2;
+  --brand-soft-dark: #16292b;
+  --brand-soft: var(--brand-soft-light);
+  --brand-strong: #0c5660;
 }
 
 :root[data-theme='light'] {
@@ -23,6 +25,7 @@ html {
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
+  --brand-soft: var(--brand-soft-dark);
 }
 body {
   overscroll-behavior-y: none;

@@ -89,6 +89,9 @@ class CRMLead(Document):
 		self.set_sla()
 
 	def validate(self):
+		from crm.pipeline.services.configuration import validate_record
+
+		validate_record(self)
 		self.validate_status()
 		self.set_full_name()
 		self.set_lead_name()

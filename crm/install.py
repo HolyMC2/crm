@@ -11,12 +11,17 @@ from crm.fcrm.doctype.crm_products.crm_products import create_product_details_sc
 
 
 def before_install():
-	pass
+	from crm.pipeline.services.configuration import require_shared_scope_support
+
+	require_shared_scope_support()
 
 
 def after_install(force=False):
 	add_default_lead_statuses()
 	add_default_deal_statuses()
+	from crm.pipeline.services.migration import execute as create_default_pipeline
+
+	create_default_pipeline()
 	add_default_communication_statuses()
 	add_default_fields_layout(force)
 	add_property_setter()

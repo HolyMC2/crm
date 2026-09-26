@@ -1,0 +1,13 @@
+# Pipeline permissions and the supported Frappe base
+
+Pipeline scope is mandatory across native Desk lists, document reads, imports, forms and CRM queries. A DocShare grant supplies ownership access only within the recipient's allowed pipelines and company scope. Existing unscoped/legacy records retain compatibility access until the additive mapping completes.
+
+Frappe 16's standard list and document permission fallback unions DocShare records after permission-query conditions. The supported Muelle image therefore includes an explicit source hook in `frappe.share.get_shared`, exposed as `FILTER_SHARED_DOCUMENTS_VERSION = 1`. Each application's `filter_shared_documents` dictionary maps a DocType to handlers accepting `(user, doctype, names)`. Each handler receives only current native share names and can only shrink them. The framework intersects every result, applies the caller's limit after filtering, includes explicit/everyone shares, and propagates hook failures. Private broker records reject every generic share.
+
+The image helper `muelle/scripts/lib/shared_document_scope.py` pins the complete reviewed upstream `share.py` hash and exact function. It refuses source drift, is idempotent, and records before/after/helper hashes in `.muelle/shared-document-scope.json`. This is a declared source modification after the source-lock check; the upstream commit pin alone does not describe the patched runtime. No import-time or runtime monkeypatch is installed.
+
+Rollout order: build and verify the supported base image; run native permission tests against that image; then install or migrate CRM on the disposable/lab site; finally use the approved release process. CRM refuses installation, migration and pipeline configuration on a base without version 1. Requests on an installed CRM site with the pipeline schema also fail closed if the base is rolled back. Removing CRM from unrelated sites adds no request gate. A rollback must retain the compatible base or roll back the CRM schema/code as a coordinated release.
+
+Standalone validation means Frappe plus CRM on this supported base. ERPNext, Taller and marketing remain optional for pipeline configuration; their absence is unrelated to the framework permission requirement.
+
+Pipeline probability policies: Stage always uses the selected pipeline stage probability. Manual retains explicit zero and falls back only for missing values. Legacy preserves historic stored values and the former new-record behavior, where a zero/omitted probability initializes from the stage. Stages reuse stable CRM Deal Status IDs; archive membership instead of deleting history. The mapping preview reports missing/blank pipelines and missing status IDs before any update, and execution changes only pipeline links.

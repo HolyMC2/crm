@@ -1,126 +1,112 @@
-// Board money rules (utils/pipelineMath.js): which of the two deal values shows,
-// and how a column header weights it by stage probability.
 import { describe, it, expect } from 'vitest'
 import {
   displayValue,
+  dealProbability,
   funnelLadder,
   stageValue,
   weightedTotal,
 } from '@/utils/pipelineMath'
 
-describe('funnelLadder', () => {
-  it.each(['Won', 'Lost'])(
-    'stops at the first %s outcome before warranty re-entry',
-    (type) => {
-      const quoting = { stage: 'En Cotización', type: 'Open', count: 0 }
-      const ready = { stage: 'Por Entregar', type: 'Open', count: 3 }
+describe('commercial metric contract', () => {
+  const rows = [
+    { expected_deal_value: 100, deal_value: 10, probability: 80 },
+    { expected_deal_value: 0, deal_value: 900, probability: 20 },
+  ]
+  it('reconciles heterogeneous deal cards with the server stage sum', () => {
+    const cardTotal = rows.reduce((sum, row) => sum + displayValue(row), 0)
+    expect(cardTotal).toBe(1000)
+    expect(
+      stageValue({
+        commercial_value: 1000,
+        expected_deal_value: 100,
+        deal_value: 910,
+      }),
+    ).toBe(cardTotal)
+    // MAX(SUM(expected), SUM(deal)) was 910, dropping 90 from these same cards.
+  })
+  it('uses each deal probability, including explicit zero, rather than weighting a whole stage', () => {
+    const weighted = rows.reduce(
+      (sum, row) => sum + (displayValue(row) * dealProbability(row)) / 100,
+      0,
+    )
+    expect(weighted).toBe(260)
+    expect(
+      weightedTotal({ Proposal: { weighted_forecast: weighted } }, [
+        { name: 'Proposal', type: 'Ongoing', probability: 50 },
+      ]),
+    ).toBe(260)
+    expect(dealProbability({ probability: 0 }, { probability: 60 })).toBe(0)
+    expect(dealProbability({ probability: null }, { probability: 60 })).toBe(60)
+  })
+  it('never forecasts outcomes or archived stages even when supplied a stale aggregate', () => {
+    for (const stage of [
+      { type: 'Lost' },
+      { type: 'Won' },
+      { type: 'Unknown' },
+      { type: 'Open', archived: 1 },
+    ]) {
       expect(
-        funnelLadder([
-          quoting,
-          { type: 'On Hold' },
-          ready,
-          { type },
-          { stage: 'Garantía', type: 'Open', count: 2 },
+        weightedTotal({ X: { weighted_forecast: 500 } }, [
+          { name: 'X', ...stage },
         ]),
-      ).toEqual([quoting, ready])
+      ).toBe(0)
+    }
+  })
+  it('shows the recorded won amount without describing it as paid', () => {
+    expect(
+      displayValue(
+        { expected_deal_value: 100, deal_value: 68250 },
+        { type: 'Won' },
+      ),
+    ).toBe(68250)
+    expect(
+      displayValue(
+        { expected_deal_value: 100, deal_value: 0 },
+        { type: 'Won' },
+      ),
+    ).toBe(100)
+  })
+  it('does not reconstruct a total from incompatible legacy sums', () => {
+    expect(stageValue({ expected_deal_value: 100, deal_value: 910 })).toBe(0)
+    expect(weightedTotal()).toBe(0)
+    expect(displayValue(null)).toBe(0)
+    expect(displayValue({ expected_deal_value: '1200.50' })).toBe(1200.5)
+    expect(dealProbability({ probability: 150 })).toBe(100)
+    expect(dealProbability({ probability: -1 })).toBe(0)
+  })
+})
+
+describe('normal sales funnel', () => {
+  it('includes Open, Ongoing and On Hold in position order', () => {
+    const qualification = { stage: 'Qualification', type: 'Open', position: 1 }
+    const proposal = { stage: 'Propuesta', type: 'Ongoing', position: 2 }
+    const hold = { stage: 'En pausa', type: 'On Hold', position: 3 }
+    expect(
+      funnelLadder([
+        hold,
+        qualification,
+        proposal,
+        { type: 'Won', position: 4 },
+      ]),
+    ).toEqual([qualification, proposal, hold])
+  })
+  it.each(['Won', 'Lost'])(
+    'keeps repair warranty re-entry after %s outside the normal ladder',
+    (type) => {
+      const ready = { stage: 'Por Entregar', type: 'Open' }
+      expect(
+        funnelLadder([ready, { type }, { stage: 'Garantía', type: 'Open' }]),
+      ).toEqual([ready])
     },
   )
-
-  it('keeps open stages when there is no outcome and accepts an empty ladder', () => {
-    const stage = { type: 'Open', count: 0 }
-    expect(funnelLadder([stage, { type: 'Ongoing' }])).toEqual([stage])
-    expect(funnelLadder()).toEqual([])
-  })
-})
-
-describe('displayValue', () => {
-  it('prefers the expected value when it is set', () => {
-    expect(displayValue({ expected_deal_value: 1200, deal_value: 300 })).toBe(
-      1200,
-    )
-  })
-
-  it('falls back to the invoiced value when expected is missing, zero or blank', () => {
-    expect(displayValue({ deal_value: 300 })).toBe(300)
-    expect(displayValue({ expected_deal_value: 0, deal_value: 300 })).toBe(300)
-    expect(displayValue({ expected_deal_value: null, deal_value: 300 })).toBe(
-      300,
-    )
-    expect(displayValue({ expected_deal_value: '', deal_value: 300 })).toBe(300)
-  })
-
-  it('reads the numeric strings the wire sends', () => {
-    expect(displayValue({ expected_deal_value: '1200.50' })).toBe(1200.5)
-  })
-
-  it('is 0 for an empty or missing row', () => {
-    expect(displayValue({})).toBe(0)
-    expect(displayValue(null)).toBe(0)
-    expect(displayValue({ expected_deal_value: 'x', deal_value: 'y' })).toBe(0)
-  })
-})
-
-describe('weightedTotal', () => {
-  const statuses = [
-    { value: 'En Cotizacion', probability: 25 },
-    { value: 'Aprobado', probability: 60 },
-    { value: 'Completado', probability: 100 },
-  ]
-
-  it('weights each stage by its probability', () => {
-    const counts = {
-      'En Cotizacion': { count: 2, expected_deal_value: 1000, deal_value: 0 },
-      Aprobado: { count: 1, expected_deal_value: 0, deal_value: 500 },
-      Completado: { count: 3, expected_deal_value: 0, deal_value: 900 },
-    }
-    // 1000*.25 + 500*.60 + 900*1 = 250 + 300 + 900
-    expect(weightedTotal(counts, statuses)).toBe(1450)
-  })
-
-  it('ignores stages with no probability rather than counting them in full', () => {
-    const counts = { Abandonado: { count: 4, deal_value: 8000 } }
+  it('keeps archived and missing stages outside the live ladder', () => {
     expect(
-      weightedTotal(counts, [{ value: 'Abandonado', probability: null }]),
-    ).toBe(0)
-    expect(weightedTotal(counts, [{ value: 'Abandonado' }])).toBe(0)
-  })
-
-  it('ignores stages with no loaded aggregate, and hidden stages absent from the list', () => {
-    const counts = {
-      Aprobado: { count: 1, deal_value: 500 },
-      Approved: { count: 9, deal_value: 9000 },
-    }
-    expect(weightedTotal(counts, statuses)).toBe(300)
-  })
-
-  it('accepts status rows keyed by name as well as value', () => {
-    const counts = { Aprobado: { expected_deal_value: 200 } }
-    expect(weightedTotal(counts, [{ name: 'Aprobado', probability: 50 }])).toBe(
-      100,
-    )
-  })
-
-  it('is 0 with nothing to add up', () => {
-    expect(weightedTotal()).toBe(0)
-    expect(weightedTotal({}, statuses)).toBe(0)
-    expect(weightedTotal({ Aprobado: { deal_value: 500 } }, [])).toBe(0)
-  })
-})
-
-describe('stageValue', () => {
-  it('takes the larger of the expected and invoiced sums', () => {
-    expect(stageValue({ expected_deal_value: 100, deal_value: 68250 })).toBe(
-      68250,
-    )
-    expect(stageValue({ expected_deal_value: 5000, deal_value: 2050 })).toBe(
-      5000,
-    )
-    expect(stageValue({})).toBe(0)
-  })
-  it('feeds the weighted total', () => {
-    const counts = { Won: { expected_deal_value: 100, deal_value: 1000 } }
-    expect(weightedTotal(counts, [{ value: 'Won', probability: 100 }])).toBe(
-      1000,
-    )
+      funnelLadder([
+        { type: 'Open', hidden: 1 },
+        { type: 'Ongoing', archived: 1 },
+        { type: 'Unknown' },
+      ]),
+    ).toEqual([])
+    expect(funnelLadder()).toEqual([])
   })
 })

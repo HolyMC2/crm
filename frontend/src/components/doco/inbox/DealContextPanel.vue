@@ -75,6 +75,15 @@
       </button>
 
       <template v-if="isDeal">
+        <PipelineSelector
+          v-if="dealRes.data"
+          :key="activeDeal"
+          :doc="dealRes.data"
+          class="mt-3"
+          @change="changePipeline"
+          @stages="pipelineStages = $event"
+        />
+
         <!-- inline-editable deal controls -->
         <div class="mt-3 flex flex-col gap-2 text-[12px]">
           <div class="flex items-center justify-between gap-2">
@@ -382,6 +391,7 @@
 </template>
 
 <script setup>
+import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import { computed, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import {
@@ -467,6 +477,11 @@ watch(
     // them on a tenant without taller (mumu) is an unknown-column error, so only
     // include them when has_taller. The v-if guards hide the rows when absent.
     const dealFields = [
+      'name',
+      'pipeline',
+      'sales_company',
+      'currency',
+      'modified',
       'status',
       'lead',
       'mobile_no',
@@ -630,8 +645,25 @@ function call() {
 }
 
 // ── Acciones: inline-editable Estado / Asignado / Etiquetas ─────────────────────
+const pipelineStages = ref([])
+async function changePipeline(values) {
+  try {
+    await frappeCall('crm.pipeline.api.change_deal_pipeline', {
+      name: activeDeal.value,
+      values,
+      modified: dealRes.data.modified,
+    })
+    await dealRes.reload()
+    scheduleQueueReload()
+  } catch (error) {
+    toast.error(error.messages?.join(' ') || error.message)
+  }
+}
 const statusOpts = computed(() =>
-  (dealStatuses.data || [])
+  (dealRes.data?.pipeline
+    ? pipelineStages.value.filter((stage) => !stage.archived)
+    : dealStatuses.data || []
+  )
     .filter((s) => !Number(s.hidden || 0))
     .map((s) => ({
       label: s.name,

@@ -20,13 +20,29 @@ import DoctypeModals from '@/components/Modals/DoctypeModals.vue'
 import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
-import { computed, defineAsyncComponent, onMounted, provide } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  provide,
+  watch,
+} from 'vue'
+import { useRoute } from 'vue-router'
+import { syncBrandFavicon } from '@/stores/settings'
 import { prefetchHotChunks } from '@/utils/prefetch'
 import { initTelemetry } from '@/composables/telemetry'
 import { isMobile } from '@/composables/breakpoint'
 
 const session = sessionStore()
 provide('session', session)
+
+const route = useRoute()
+watch(
+  () => route.fullPath,
+  () => nextTick(syncBrandFavicon),
+  { flush: 'post' },
+)
 
 // Apply the persisted theme at boot (useTheme's ref starts at 'light' and nothing
 // else re-applies a stored 'dark'/'system' choice — the mobile toggle needs this).

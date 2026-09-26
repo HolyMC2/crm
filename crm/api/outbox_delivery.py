@@ -184,6 +184,8 @@ def apply_delivery_receipt(receipt_name, *, expected_entry=None, account_records
 			return _missing()
 		_require(len(matches) == 1, "native_delivery_target_ambiguous")
 		doc = outbox._load(matches[0].name)
+		from crm.api.catalog_commerce import delivery_source_matches
+
 		_require(
 			(doc.provider, doc.account_id, doc.peer_id, doc.provider_message_id, doc.conversation)
 			== ("WhatsApp", row.account_id, entry["recipient_id"], entry["id"], name),
@@ -192,7 +194,7 @@ def apply_delivery_receipt(receipt_name, *, expected_entry=None, account_records
 		_require(
 			doc.source_doctype == "WhatsApp Account"
 			and doc.source_name == account.name
-			and doc.source_action == account_revision(account),
+			and (doc.source_action == account_revision(account) or delivery_source_matches(doc, account)),
 			"native_delivery_account_changed",
 		)
 		current = control._load(name)

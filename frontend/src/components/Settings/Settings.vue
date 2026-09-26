@@ -70,6 +70,7 @@ import WhatsAppSettings from '@/components/Settings/WhatsAppSettings.vue'
 import ERPNextSettings from '@/components/Settings/ERPNextSettings.vue'
 import LeadSyncSourcePage from '@/components/Settings/LeadSyncing/LeadSyncSourcePage.vue'
 import DefaultsSettings from '@/components/Settings/DefaultsSettings.vue'
+import PipelineSettings from '@/components/Settings/PipelineSettings.vue'
 import BrandSettings from '@/components/Settings/BrandSettings.vue'
 import CalendarSettings from '@/components/Settings/CalendarSettings.vue'
 import HomeActions from '@/components/Settings/HomeActions.vue'
@@ -134,6 +135,11 @@ const tabs = computed(() => {
           label: __('Dashboard'),
           component: markRaw(DashboardSettings),
           icon: LucideLayoutDashboard,
+        },
+        {
+          label: __('Sales pipelines'),
+          component: markRaw(PipelineSettings),
+          icon: LucideNetwork,
         },
         {
           label: __('Defaults'),

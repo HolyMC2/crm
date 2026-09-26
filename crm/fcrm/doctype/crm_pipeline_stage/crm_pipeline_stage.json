@@ -1,0 +1,69 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Pipeline Stage",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "field_order": [
+  "status",
+  "outcome",
+  "probability",
+  "archived",
+  "required_fields",
+  "allowed_from",
+  "transition_roles"
+ ],
+ "fields": [
+  {
+   "fieldname": "status",
+   "label": "Stage",
+   "fieldtype": "Link",
+   "options": "CRM Deal Status",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "outcome",
+   "label": "Outcome",
+   "fieldtype": "Select",
+   "options": "Open\nOngoing\nOn Hold\nWon\nLost",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "probability",
+   "label": "Probability",
+   "fieldtype": "Percent",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "archived",
+   "label": "Archived",
+   "fieldtype": "Check",
+   "default": "0",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "required_fields",
+   "label": "Required deal fields",
+   "fieldtype": "Small Text",
+   "description": "Comma-separated field names, e.g. expected_deal_value, expected_closure_date."
+  },
+  {
+   "fieldname": "allowed_from",
+   "label": "Allowed previous stages",
+   "fieldtype": "Small Text",
+   "description": "One exact stage ID per line. Empty permits all previous stages. Applies when entering this stage."
+  },
+  {
+   "fieldname": "transition_roles",
+   "label": "Roles allowed to enter",
+   "fieldtype": "Small Text",
+   "description": "One role per line. Empty permits every role allowed in this pipeline."
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "istable": 1
+}

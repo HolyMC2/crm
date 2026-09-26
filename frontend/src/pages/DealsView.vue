@@ -84,6 +84,34 @@
       </div>
     </div>
 
+    <div
+      class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-2"
+    >
+      <label for="deal-pipeline" class="text-sm text-ink-gray-6">{{
+        __('Sales pipeline')
+      }}</label>
+      <select
+        id="deal-pipeline"
+        v-model="pipelineF"
+        class="min-h-11 max-w-full rounded border border-outline-gray-2 bg-surface-base px-3 text-sm"
+      >
+        <option value="">{{ __('All pipelines') }}</option>
+        <option
+          v-for="pipeline in pipelines.data || []"
+          :key="pipeline.name"
+          :value="pipeline.name"
+        >
+          {{ pipeline.pipeline_name
+          }}{{ pipeline.archived ? ' · ' + __('Archived') : '' }}
+        </option>
+      </select>
+      <span
+        v-if="pipelines.error"
+        role="alert"
+        class="text-sm text-ink-red-5"
+        >{{ __('Pipelines could not load') }}</span
+      >
+    </div>
     <!-- toolbar -->
     <div
       v-if="!isMobile"
@@ -341,10 +369,12 @@
             >{{ deviceOf(r) }}</span
           >
           <span
-            v-if="displayValue(r)"
+            v-if="displayValue(r, getDealStatus(r.status))"
             class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8"
           >
-            {{ formatMXN(displayValue(r)) }}
+            {{
+              formatMXN(displayValue(r, getDealStatus(r.status)), r.currency)
+            }}
           </span>
           <!-- own line: the due label plus the task title needs the full width -->
           <div v-if="r.next_activity_task" class="w-full">
@@ -556,13 +586,13 @@
                 v-if="col('value')"
                 class="text-[12.5px] font-semibold text-ink-gray-8"
               >
-                {{ formatMXN(r.deal_value) }}
+                {{ formatMXN(r.deal_value, r.currency) }}
               </div>
               <div
                 v-if="col('expected_value')"
                 class="text-[12.5px] text-ink-gray-7"
               >
-                {{ formatMXN(r.expected_deal_value) }}
+                {{ formatMXN(r.expected_deal_value, r.currency) }}
               </div>
               <div v-if="col('close_date')" class="text-[12px] text-ink-gray-6">
                 {{ formatDate(r.expected_closure_date) }}
@@ -644,6 +674,20 @@
       <!-- count · total · probability-weighted total -->
       <template #header-value="{ group }">
         <div class="flex flex-none flex-col items-end leading-tight">
+          <button
+            v-if="metricsError"
+            class="text-[10px] text-ink-red-6"
+            @click="loadCounts"
+          >
+            {{ __('Totals unavailable · Retry') }}
+          </button>
+          <span
+            v-if="groupCounts[group.value]?.missing_exchange_rate_count"
+            class="text-[10px] text-ink-orange-6"
+          >
+            {{ __('Missing exchange rate') }}:
+            {{ groupCounts[group.value].missing_exchange_rate_count }}
+          </span>
           <span
             v-if="columnValue(group)"
             class="text-[11px] font-medium text-ink-gray-5"
@@ -666,7 +710,10 @@
               >{{ cardTitle(row) }}</span
             >
             <span class="flex-none text-[11px] font-semibold text-ink-gray-7">{{
-              formatMXN(displayValue(row))
+              formatMXN(
+                displayValue(row, getDealStatus(row.status)),
+                row.currency,
+              )
             }}</span>
           </div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
@@ -752,16 +799,21 @@
       @clear="clearAll"
     />
 
-    <DealModal v-if="showDealModal" v-model="showDealModal" />
+    <DealModal
+      v-if="showDealModal"
+      v-model="showDealModal"
+      :defaults="pipelineF ? { pipeline: pipelineF } : {}"
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   Dropdown,
   createListResource,
+  createResource,
   call as frappeCall,
   toast,
   dayjs,
@@ -793,7 +845,12 @@ import {
   CHANNEL_META,
 } from '@/composables/crmFormat'
 import { money } from '@/utils/numberFormat'
-import { displayValue, stageValue, weightedTotal } from '@/utils/pipelineMath'
+import {
+  displayValue,
+  dealProbability,
+  stageValue,
+  weightedTotal,
+} from '@/utils/pipelineMath'
 
 import { followUpFilters, FOLLOW_UP_QUEUES } from '@/utils/dealFollowUp'
 import {
@@ -804,6 +861,7 @@ import {
 } from '@/utils/dealGroups'
 import { dealListState } from '@/utils/dealListState'
 const router = useRouter()
+const route = useRoute()
 const QUEUE_KEY = userScopedKey('crm_deal_list_context')
 let remembered = dealListState()
 // Whether this tab already has a context: a saved default view opens the list
@@ -817,6 +875,18 @@ try {
   }
 } catch {
   /* an unreadable context is no context: the list opens on its defaults */
+}
+
+// A report drill-down replaces unrelated remembered filters; its cohort survives
+// opening a record and returning to this list through the existing session state.
+if (route.query.report === 'pipeline') {
+  remembered = dealListState({
+    pipeline: route.query.pipeline,
+    status: typeof route.query.status === 'string' ? [route.query.status] : [],
+    createdFrom: route.query.created_from,
+    createdTo: route.query.created_to,
+  })
+  hadRemembered = true
 }
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
@@ -944,6 +1014,21 @@ const { getUser, users: usersList } = usersStore()
 const showDealModal = ref(false)
 const followUp = ref(remembered.followUp)
 const followUpQueues = FOLLOW_UP_QUEUES
+const pipelineF = ref(remembered.pipeline || '')
+const createdFrom = ref(remembered.createdFrom || '')
+const createdTo = ref(remembered.createdTo || '')
+const pipelines = createResource({
+  url: 'crm.pipeline.api.get_pipelines',
+  params: { include_archived: true },
+  auto: true,
+})
+const scopedStages = computed(() =>
+  pipelineF.value
+    ? (pipelines.data || [])
+        .find((pipeline) => pipeline.name === pipelineF.value)
+        ?.stages?.filter((stage) => !stage.archived) || []
+    : statusStore.visibleDealStatuses,
+)
 const statusF = ref(remembered.status)
 const sourceF = ref(remembered.source)
 const ownerF = ref(remembered.owner)
@@ -959,6 +1044,9 @@ const countsLoaded = ref(false)
 let countsRequest = 0
 // What a saved view stores and what a return from a deal restores: one shape.
 const listContext = computed(() => ({
+  pipeline: pipelineF.value,
+  createdFrom: createdFrom.value,
+  createdTo: createdTo.value,
   status: statusF.value,
   source: sourceF.value,
   owner: ownerF.value,
@@ -992,6 +1080,7 @@ const deals = createListResource({
     'mobile_no',
     'email',
     'status',
+    'pipeline',
     'source',
     'deal_owner',
     'deal_value',
@@ -1153,6 +1242,14 @@ function buildFilters() {
     .filter((s) => ['Won', 'Lost'].includes(s.type))
     .map((s) => s.name)
   const f = followUpFilters(followUp.value, today, closed)
+  if (createdFrom.value) f.push(['creation', '>=', createdFrom.value])
+  if (createdTo.value)
+    f.push([
+      'creation',
+      '<',
+      dayjs(createdTo.value).add(1, 'day').format('YYYY-MM-DD'),
+    ])
+  if (pipelineF.value) f.push(['pipeline', '=', pipelineF.value])
   if (statusF.value.length) f.push(['status', 'in', statusF.value])
   if (sourceF.value.length) f.push(['source', 'in', sourceF.value])
   if (ownerF.value.length) f.push(['deal_owner', 'in', ownerF.value])
@@ -1180,47 +1277,32 @@ function applyFilters() {
   loadCounts()
 }
 
-// accurate per-status counts (+ summed values) for board headers + funnel.
-// Both money columns: the header shows the expected value where there is one,
-// and weights it by the stage probability.
+// Totals cover all matching records, using each deal's value, probability and FX.
+const metricsCurrency = ref(null)
+const metricsError = ref(false)
 async function loadCounts() {
   const request = ++countsRequest
   countsLoaded.value = false
+  metricsError.value = false
   try {
-    const data = await frappeCall('frappe.client.get_list', {
-      doctype: 'CRM Deal',
+    const data = await frappeCall('crm.api.doc.aggregate_deal_metrics', {
       filters: buildFilters(),
       or_filters: searchOrFilters(),
-      // Frappe 16 rejects aggregates written as strings ("count(name) as count")
-      // in get_list fields; the dict form is the supported spelling.
-      fields: [
-        'status',
-        { COUNT: 'name', as: 'count' },
-        { SUM: 'deal_value', as: 'value' },
-        { SUM: 'expected_deal_value', as: 'expected' },
-      ],
-      group_by: 'status',
-      limit_page_length: 0,
     })
-    const map = {}
-    for (const r of data || [])
-      map[r.status || ''] = {
-        count: r.count,
-        value: r.value,
-        deal_value: r.value,
-        expected_deal_value: r.expected,
-      }
     if (request !== countsRequest) return
-    groupCounts.value = map
+    groupCounts.value = Object.fromEntries(
+      (data.stages || []).map((entry) => [entry.status || '', entry]),
+    )
+    metricsCurrency.value = data.currency
     countsLoaded.value = true
-  } catch (e) {
-    /* counts are best-effort */
+  } catch {
+    if (request !== countsRequest) return
+    groupCounts.value = {}
+    metricsError.value = true
   }
 }
-// Column money: the same expected-else-invoiced rule the cards use, then the
-// probability-weighted forecast for that one stage.
 function columnValue(stage) {
-  return stageValue(groupCounts.value[stage.value] || {})
+  return stageValue(groupCounts.value[stage.value])
 }
 function columnWeighted(stage) {
   return weightedTotal(groupCounts.value, [stage])
@@ -1302,6 +1384,9 @@ function applyViewContext(context = {}) {
     ...context,
   })
   followUp.value = state.followUp
+  pipelineF.value = state.pipeline || ''
+  createdFrom.value = state.createdFrom || ''
+  createdTo.value = state.createdTo || ''
   statusF.value = [...state.status]
   sourceF.value = [...state.source]
   ownerF.value = [...state.owner]
@@ -1435,14 +1520,17 @@ applyFilters()
 // languages and the inactive twin is marked hidden, so a board built from the raw
 // table would show every stage twice.
 const stageOptions = computed(() =>
-  statusStore.visibleDealStatuses.map((s) => ({
+  scopedStages.value.map((s) => ({
     value: s.name,
     label: s.name,
-    color: s.color,
+    color: getDealStatus(s.name)?.color || s.color,
     probability: s.probability,
     type: s.type,
   })),
 )
+watch(pipelineF, () => {
+  statusF.value = []
+})
 const sources = createListResource({
   doctype: 'CRM Lead Source',
   fields: ['name'],
@@ -1461,6 +1549,12 @@ const ownerOptions = computed(() =>
 // ── chips ──────────────────────────────────────────────────────────────────────
 const chips = computed(() => {
   const out = []
+  if (createdFrom.value || createdTo.value)
+    out.push({
+      key: 'creation-period',
+      type: 'period',
+      label: `${__('Created')}: ${createdFrom.value || '…'} → ${createdTo.value || '…'}`,
+    })
   for (const v of statusF.value)
     out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
   for (const v of sourceF.value)
@@ -1470,17 +1564,33 @@ const chips = computed(() => {
   return out
 })
 function removeChip(c) {
+  if (c.type === 'period') {
+    createdFrom.value = ''
+    createdTo.value = ''
+    return
+  }
   const ref_ = { status: statusF, source: sourceF, owner: ownerF }[c.type]
   ref_.value = ref_.value.filter((x) => x !== c.value)
 }
 function clearAll() {
+  createdFrom.value = ''
+  createdTo.value = ''
   followUp.value = 'all'
   statusF.value = []
   sourceF.value = []
   ownerF.value = []
 }
 watch(
-  [statusF, sourceF, ownerF, followUp, () => statusStore.dealStatuses.data],
+  [
+    pipelineF,
+    statusF,
+    sourceF,
+    ownerF,
+    followUp,
+    createdFrom,
+    createdTo,
+    () => statusStore.dealStatuses.data,
+  ],
   applyFilters,
   { deep: true },
 )
@@ -1509,11 +1619,11 @@ function sourceDot(source) {
 function ownerName(email) {
   return getUser(email)?.full_name || email
 }
-function formatMXN(v) {
+function formatMXN(v, currency = metricsCurrency.value) {
   if (v == null || v === '') return '—'
   const n = Number(v) || 0
   if (!n) return '—'
-  return money(n) // tenant currency (window.sysdefaults.currency), not hard-coded MX$
+  return money(n, currency || metricsCurrency.value)
 }
 function formatDate(v) {
   if (!v) return '—'
@@ -1526,13 +1636,12 @@ function formatDate(v) {
 function cardTitle(r) {
   return r.deal_name || customerOf(r) || label(r)
 }
-// The deal's own probability wins (crm_deal copies the stage one on save, and a
-// rep can override it); the stage probability is the fallback for older rows.
 function probabilityOf(r) {
-  const own = Number(r.probability)
-  if (isFinite(own) && own > 0) return own
-  const stage = Number(getDealStatus(r.status)?.probability)
-  return isFinite(stage) && stage > 0 ? stage : null
+  const policy = (pipelines.data || []).find(
+    (pipeline) => pipeline.name === r.pipeline,
+  )
+  const stage = policy?.stages?.find((stage) => stage.name === r.status)
+  return dealProbability(r, stage || getDealStatus(r.status))
 }
 // "_user_tags" arrives as ",uno,dos" — two is all a 260px card can carry.
 function tagsOf(r) {

@@ -279,6 +279,14 @@ def _summary(payload):
 		return "[{0}] {1}".format(kind, content.get("name", ""))
 	if kind == "reaction":
 		return content.get("emoji", "")
+	if kind == "interactive" and content.get("type") in {"catalog_message", "product", "product_list"}:
+		body = (content.get("body") or {}).get("text", "")
+		action = content.get("action") or {}
+		codes = [action["product_retailer_id"]] if action.get("product_retailer_id") else []
+		for section in action.get("sections", []):
+			codes.extend(row["product_retailer_id"] for row in section.get("product_items", []))
+		label = _("Catalog") if content["type"] == "catalog_message" else _("Products")
+		return "{0}: {1}{2}".format(label, body, " · " + ", ".join(codes) if codes else "")
 	return content.get("caption") or "[{0}]".format(kind)
 
 
@@ -467,14 +475,38 @@ def _pending_on_queue_contention(function):
 def queue_message(
 	conversation: str, expected_generation: bool | int | float | str, request_id: str, payload: dict | str
 ):
+	return _queue_human(conversation, expected_generation, request_id, payload)
+
+
+@_pending_on_queue_contention
+def queue_catalog_message(conversation, expected_generation, request_id, payload):
+	return _queue_human(conversation, expected_generation, request_id, payload, action="catalog_reply")
+
+
+def _queue_human(conversation, expected_generation, request_id, payload, *, action="manual_reply"):
 	actor = frappe.session.user
 	request_id = control._text(request_id, 140)
 	generation = control._generation(expected_generation)
-	name = _hash([1, conversation, actor, "manual_reply", request_id])
+	name = _hash([1, conversation, actor, action, request_id])
 	with control.conversation_fence(conversation):
 		current = control._load(conversation)
 		control._authorize(current)
-		frozen = _payload(payload, current)
+		catalog_source = None
+		if action == "catalog_reply":
+			from crm.api.catalog_commerce import catalog_request_fingerprint, freeze, request_matches
+
+			request_fingerprint = catalog_request_fingerprint(payload)
+			if frappe.db.get_value(DOCTYPE, name, "name", for_update=True):
+				existing = _load(name)
+				if (
+					not request_matches(existing, request_fingerprint)
+					or existing.conversation_generation != generation
+				):
+					frappe.throw(_("Reply request ID was already used for different content."))
+				return _projection(existing)
+			frozen, catalog_source = freeze(payload, current)
+		else:
+			frozen = _payload(payload, current)
 		if frappe.db.get_value(DOCTYPE, name, "name", for_update=True):
 			existing = _load(name)
 			if existing.payload != frozen or existing.conversation_generation != generation:
@@ -483,7 +515,9 @@ def queue_message(
 		control.assert_current_generation(conversation, generation, actor_user=actor)
 		from crm.api.outbox_policy import account_revision, webchat_revision
 
-		if current.provider in HOOKED_CHANNELS:
+		if catalog_source:
+			source, source_name, revision = catalog_source
+		elif current.provider in HOOKED_CHANNELS:
 			source, source_name, revision = _channel_source(current)
 		else:
 			source = "CRM Webchat Channel" if current.provider == "Webchat" else "WhatsApp Account"

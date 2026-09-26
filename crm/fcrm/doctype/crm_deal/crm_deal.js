@@ -2,7 +2,18 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("CRM Deal", {
+  async pipeline(frm) {
+    const response = await frappe.call("crm.pipeline.api.get_visible_stages", {
+      doctype: "CRM Deal",
+      pipeline: frm.doc.pipeline,
+    });
+    const stages = response.message || [];
+    frm.set_query("status", () => ({
+      filters: { name: ["in", stages.map((stage) => stage.name)] },
+    }));
+  },
   refresh(frm) {
+    frm.trigger("pipeline");
     frm.add_web_link(`/crm/deals/${frm.doc.name}`, __("Open in Portal"));
   },
   update_total: function (frm) {

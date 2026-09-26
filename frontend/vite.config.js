@@ -49,17 +49,16 @@ export default defineConfig(async ({ mode }) => {
           start_url: '/crm',
           scope: '/crm',
           lang: 'es',
-          theme_color: '#16a34a',
+          theme_color: '#0f6b78',
           background_color: '#ffffff',
-          description:
-            'Modern & 100% Open-source CRM tool to supercharge your sales operations',
+          description: 'CRM: ventas, clientes y seguimiento en Muelle',
           shortcuts: [
             {
               name: 'Inbox',
               url: '/crm/inbox',
               icons: [
                 {
-                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png?v=crm-1',
                   sizes: '192x192',
                 },
               ],
@@ -69,7 +68,7 @@ export default defineConfig(async ({ mode }) => {
               url: '/crm/leads',
               icons: [
                 {
-                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png?v=crm-1',
                   sizes: '192x192',
                 },
               ],
@@ -77,25 +76,25 @@ export default defineConfig(async ({ mode }) => {
           ],
           icons: [
             {
-              src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+              src: '/assets/crm/manifest/manifest-icon-192.maskable.png?v=crm-1',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+              src: '/assets/crm/manifest/manifest-icon-192.maskable.png?v=crm-1',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'maskable',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-512.maskable.png',
+              src: '/assets/crm/manifest/manifest-icon-512.maskable.png?v=crm-1',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-512.maskable.png',
+              src: '/assets/crm/manifest/manifest-icon-512.maskable.png?v=crm-1',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
