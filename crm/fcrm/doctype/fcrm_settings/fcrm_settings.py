@@ -55,6 +55,9 @@ class FCRMSettings(Document):
 		self.do_not_allow_to_delete_if_standard()
 		self.setup_forecasting()
 		self.make_currency_read_only()
+		capacity = self.get("workload_advisory_capacity") or 0
+		if not 0 <= capacity <= 100000:
+			frappe.throw(_("Advisory workload capacity must be between 0 and 100000; 0 means unset."))
 
 	def do_not_allow_to_delete_if_standard(self):
 		if not self.has_value_changed("dropdown_items"):

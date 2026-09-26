@@ -37,7 +37,7 @@ export const WORKLOAD_SORT_KEYS = [
   'open_total',
   'open_leads',
   'open_deals',
-  'sla_overdue_count',
+  'overdue_tasks',
 ]
 
 // Client-side sort. Returns a NEW array — never mutates the source. null/undefined values
@@ -57,4 +57,55 @@ export function sortWorkload(rows, key, dir = 'desc') {
     if (numeric) return (Number(av) - Number(bv)) * factor
     return String(av).localeCompare(String(bv), 'es') * factor
   })
+}
+
+// Retain failed rows with their original version. Reload is deliberate; never
+// silently turn a stale command into an authorization to move the newer record.
+export function retainFailedSelection(selectedRows, results) {
+  const succeeded = new Set(
+    (results || []).filter((row) => row.ok).map(workItemKey),
+  )
+  return selectedRows.filter((row) => !succeeded.has(workItemKey(row)))
+}
+
+export function workItemKey(row) {
+  return `${row.doctype}:${row.name}`
+}
+
+export function workItemHref(row) {
+  if (row.doctype === 'CRM Lead')
+    return `/crm/leads/${encodeURIComponent(row.name)}`
+  if (row.doctype === 'CRM Deal')
+    return `/crm/deals/${encodeURIComponent(row.name)}`
+  return `/app/crm-task/${encodeURIComponent(row.name)}`
+}
+
+export function safeWorkloadState(value) {
+  const result = {
+    pipeline: '',
+    company: '',
+    owner: null,
+    kind: 'deals',
+    overdue: false,
+    offset: 0,
+    agentOffset: 0,
+    scroll: 0,
+  }
+  if (!value || typeof value !== 'object') return result
+  for (const key of ['pipeline', 'company', 'owner']) {
+    if (typeof value[key] === 'string' && value[key].length <= 140)
+      result[key] = value[key]
+  }
+  if (['leads', 'deals', 'tasks'].includes(value.kind)) result.kind = value.kind
+  result.overdue = value.overdue === true && result.kind === 'tasks'
+  for (const key of ['offset', 'agentOffset', 'scroll']) {
+    if (
+      Number.isInteger(value[key]) &&
+      value[key] >= 0 &&
+      value[key] <= 1000000 &&
+      (key === 'scroll' || value[key] % 25 === 0)
+    )
+      result[key] = value[key]
+  }
+  return result
 }

@@ -1,314 +1,481 @@
-<!--
-  WorkloadView — manager surface (P2 spec 7.2 / S11). Who owns how many OPEN
-  conversations, who is over their auto-assign cap, and one-tap reassignment. Pairs with
-  the per-agent metrics (S2) and the 2.3 auto-assignment machinery; the numbers come
-  straight from doco_marketing.api.workload.get_workload, which reuses the assignment
-  service's own pool + open-load definitions.
-
-  Manager-gated server-side (System/Sales Manager). A non-manager gets a PermissionError
-  → the amber "solo gerentes" banner (same pattern as ReportsAgents / Reports). Mobile
-  first: agent cards with a load bar vs cap + overdue badge; tap an agent to see their
-  open conversations, multi-select, and reassign to another agent in the pool. frappe-ui
-  tokens only (dark-safe), es-MX via __().
--->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
-    <!-- manager gate -->
-    <div v-if="loadError" class="p-5" role="alert">
-      <div
-        class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-7"
-      >
-        <p>{{ errorMessage(loadError) }}</p>
-        <button
-          type="button"
-          class="mt-3 min-h-11 rounded-lg border border-outline-gray-2 bg-surface-base px-4 font-semibold text-ink-gray-8 focus-visible:ring-2"
-          :disabled="loading"
-          @click="load"
-        >
-          {{ loading ? __('Cargando…') : __('Reintentar') }}
-        </button>
-      </div>
+  <div
+    ref="scroller"
+    class="min-h-0 flex-1 overflow-y-auto bg-surface-base p-4 text-ink-gray-9"
+    @scroll="remember"
+  >
+    <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-xl font-semibold">{{ __('Carga de trabajo') }}</h1>
+      <button class="action" :disabled="loading || moving" @click="refresh">
+        {{ __('Actualizar') }}
+      </button>
+    </header>
+    <p v-if="loading" role="status" aria-live="polite">
+      {{ __('Cargando el alcance seleccionado…') }}
+    </p>
+    <div v-else-if="loadError" role="alert" class="notice">
+      <p>{{ errorMessage(loadError) }}</p>
+      <button class="action mt-2" :disabled="loading" @click="load">
+        {{ __('Reintentar') }}
+      </button>
     </div>
-
     <template v-else>
-      <!-- stats -->
-      <div
-        class="flex flex-none items-center justify-between border-b border-outline-gray-1 px-5 py-3"
-      >
-        <div class="flex gap-6">
-          <Stat :label="__('Agentes')" :value="agents.length" />
-          <Stat
-            :label="__('Sin asignar')"
-            :value="data.unassigned"
-            :color="data.unassigned ? '#e5484d' : undefined"
-          />
-          <Stat
-            :label="__('Sobre cap')"
-            :value="overCapCount"
-            :color="overCapCount ? '#e5484d' : undefined"
-          />
-        </div>
-        <button
-          class="press rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12.5px] font-semibold text-ink-gray-7"
-          :disabled="loading"
-          @click="load"
-        >
-          {{ __('Actualizar') }}
-        </button>
-      </div>
-
-      <!-- sort chips -->
-      <div
-        class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 px-5 py-2.5"
-      >
-        <button
-          v-for="c in columns"
-          :key="c.key"
-          type="button"
-          class="press rounded-full px-2.5 py-1 text-[11px] font-medium"
-          :class="
-            sort.key === c.key
-              ? 'bg-surface-gray-3 text-ink-gray-9'
-              : 'bg-surface-gray-2 text-ink-gray-6'
-          "
-          :aria-pressed="sort.key === c.key"
-          @click="onSort(c.key)"
-        >
-          {{ c.label
-          }}<span v-if="sort.key === c.key">
-            {{ sort.dir === 'desc' ? '▼' : '▲' }}</span
+      <div class="mb-4 flex flex-wrap gap-3">
+        <label
+          >{{ __('Pipeline') }}
+          <select
+            v-model="state.pipeline"
+            class="control"
+            :disabled="moving"
+            @change="changeScope"
           >
+            <option value="">{{ __('Todos los permitidos') }}</option>
+            <option
+              v-for="p in data.pipelines || []"
+              :key="p.name"
+              :value="p.name"
+            >
+              {{ p.label }}
+            </option>
+          </select>
+        </label>
+        <label
+          >{{ __('Empresa') }}
+          <select
+            v-model="state.company"
+            class="control"
+            :disabled="moving"
+            @change="changeScope"
+          >
+            <option value="">{{ __('Todas las permitidas') }}</option>
+            <option
+              v-for="company in companies"
+              :key="company"
+              :value="company"
+            >
+              {{ company }}
+            </option>
+          </select>
+        </label>
+      </div>
+      <p class="mb-2 text-sm text-ink-gray-6">
+        {{
+          __(
+            data.definitions ||
+              'Los conteos y las filas usan tus permisos actuales.',
+          )
+        }}
+      </p>
+      <p v-if="data.as_of" class="mb-4 text-xs text-ink-gray-6">
+        {{ __('Consultado') }}: {{ data.as_of }} · {{ data.timezone }}
+      </p>
+      <section class="mb-4 rounded-lg border border-outline-gray-2 p-3">
+        <h2 class="font-semibold">{{ __('Capacidad orientativa') }}</h2>
+        <p>
+          {{
+            cap
+              ? `${cap} ${__('leads + deals abiertos por persona')}`
+              : __('Sin límite orientativo configurado (0)')
+          }}
+          · {{ data.capacity?.source || 'FCRM Settings' }}
+        </p>
+        <p class="text-sm text-ink-gray-6">
+          {{
+            __(
+              'Se compara sólo la carga visible en el alcance seleccionado. No bloquea asignaciones ni cambia el reparto automático.',
+            )
+          }}
+        </p>
+        <p v-if="data.capacity?.routing" class="mt-2 text-sm text-ink-gray-6">
+          {{ __(data.capacity.routing) }}
+        </p>
+        <div class="mt-2 flex flex-wrap gap-4 text-sm underline">
+          <a href="/app/fcrm-settings" target="_blank" rel="noopener">{{
+            data.capacity?.can_configure
+              ? __('Configurar capacidad')
+              : __('Ver configuración de CRM')
+          }}</a>
+          <a href="/app/assignment-rule" target="_blank" rel="noopener">{{
+            __('Reglas nativas de asignación')
+          }}</a>
+        </div>
+        <details
+          v-if="marketing.state && marketing.state !== 'absent'"
+          class="mt-3 text-sm"
+        >
+          <summary>
+            {{ __('Política opcional de Marketing') }} · {{ marketing.state }}
+          </summary>
+          <template v-if="marketing.state === 'available'">
+            <p>
+              {{ __('Reparto automático') }}:
+              {{ marketing.enabled ? __('Activo') : __('Inactivo') }} ·
+              {{ __('Deals') }}:
+              {{ marketing.deals_enabled ? __('Activos') : __('Inactivos') }} ·
+              {{ __('Capacidad flexible') }}:
+              {{ marketing.soft_cap || __('Sin límite') }}
+            </p>
+            <p>
+              {{ __('Preferencia por turno') }}:
+              {{ marketing.shift_aware ? __('Activa') : __('Inactiva') }}
+            </p>
+            <p>{{ __(marketing.policy) }}</p>
+            <p>
+              {{ __('Grupo configurado') }}:
+              {{
+                marketing.pool?.join(', ') ||
+                __('Usuarios habilitados con rol Sales User')
+              }}
+            </p>
+            <a
+              class="underline"
+              href="/app/marketing-settings"
+              target="_blank"
+              rel="noopener"
+              >{{ __('Ver configuración de Marketing') }}</a
+            >
+          </template>
+          <p v-else>
+            {{
+              __(
+                'La política no se pudo verificar con tus permisos. No se interpreta como desactivada.',
+              )
+            }}
+          </p>
+        </details>
+      </section>
+      <section class="mb-5 grid grid-cols-2 gap-2 md:grid-cols-4">
+        <button class="metric" @click="openQueue(null, 'leads')">
+          {{ __('Leads abiertos') }}
+          <strong>{{ data.summary?.open_leads || 0 }}</strong>
+        </button>
+        <button class="metric" @click="openQueue(null, 'deals')">
+          {{ __('Deals abiertos') }}
+          <strong>{{ data.summary?.open_deals || 0 }}</strong>
+        </button>
+        <button class="metric" @click="openQueue(null, 'tasks')">
+          {{ __('Tareas abiertas') }}
+          <strong>{{ data.summary?.open_tasks || 0 }}</strong>
+        </button>
+        <button class="metric" @click="openQueue(null, 'tasks', true)">
+          {{ __('Tareas vencidas') }}
+          <strong>{{ data.summary?.overdue_tasks || 0 }}</strong>
+        </button>
+      </section>
+      <div class="mb-4 flex flex-wrap gap-2">
+        <button
+          v-for="kind in kinds"
+          :key="kind.value"
+          class="action"
+          @click="openQueue('', kind.value)"
+        >
+          {{ __('Sin asignar') }} · {{ kind.label }}:
+          {{ data.unassigned?.[`open_${kind.value}`] || 0 }}
         </button>
       </div>
-
-      <!-- agent list -->
-      <div class="scb min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        <div
-          v-if="loading && !agents.length"
-          class="py-10 text-center text-xs text-ink-gray-4"
-        >
-          {{ __('Cargando…') }}
-        </div>
-        <div
-          v-else-if="!agents.length"
-          class="py-10 text-center text-xs text-ink-gray-4"
-        >
-          {{ __('Nadie en la rotación') }}
-        </div>
-
-        <div v-else class="flex flex-col gap-2.5">
+      <section class="mb-5">
+        <h2 class="mb-2 font-semibold">
+          {{ __('Personas') }} · {{ data.total_agents || 0 }}
+        </h2>
+        <p v-if="loading">{{ __('Cargando…') }}</p>
+        <p v-else-if="!agents.length">{{ __('Nadie en la rotación') }}</p>
+        <div class="grid gap-2 md:grid-cols-2">
           <div
-            v-for="a in sorted"
-            :key="a.user"
-            class="rounded-[10px] border bg-surface-base"
-            :class="
-              a.user === selectedAgent
-                ? 'border-outline-gray-3'
-                : 'border-outline-gray-2'
-            "
+            v-for="agent in agents"
+            :key="agent.user"
+            class="rounded-lg border border-outline-gray-2 p-3"
           >
-            <!-- card head (tap to open conversations) -->
             <button
-              class="press flex w-full items-center gap-3 p-3 text-left"
-              :aria-expanded="a.user === selectedAgent"
-              @click="openAgent(a)"
+              class="min-h-11 text-left font-semibold underline"
+              :aria-expanded="state.owner === agent.user"
+              @click="openQueue(agent.user, state.kind)"
             >
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="truncate text-[13.5px] font-bold text-ink-gray-9"
-                    :title="a.user"
-                    >{{ a.full_name }}</span
-                  >
-                  <span
-                    v-if="a.over_cap"
-                    class="flex-none rounded-md bg-surface-red-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-red-8"
-                  >
-                    {{ __('sobre cap') }}
-                  </span>
-                  <span
-                    v-if="a.sla_overdue_count"
-                    class="flex-none rounded-md bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-bold text-ink-amber-7"
-                    :title="__('Conversaciones con SLA vencido')"
-                  >
-                    ⏰ {{ a.sla_overdue_count }}
-                  </span>
-                </div>
-                <div class="mt-1 flex items-center gap-2">
-                  <div class="text-[11.5px] text-ink-gray-5">
-                    {{ a.open_total }} {{ __('abiertas') }}
-                    <span class="text-ink-gray-4"
-                      >· {{ a.open_leads }} leads ·
-                      {{ a.open_deals }} deals</span
-                    >
-                  </div>
-                </div>
-                <!-- load bar vs cap -->
-                <div v-if="cap > 0" class="mt-2 flex items-center gap-2">
-                  <div
-                    class="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-gray-3"
-                  >
-                    <div
-                      class="h-full rounded-full"
-                      :class="barToken(a.open_total, cap)"
-                      :style="`width:${barWidth(a.open_total, cap)}%`"
-                    />
-                  </div>
-                  <span
-                    class="w-11 flex-none text-right text-[10.5px] font-medium text-ink-gray-5"
-                    >{{ a.open_total }}/{{ cap }}</span
-                  >
-                </div>
-              </div>
-              <span class="flex-none text-[15px] text-ink-gray-4">{{
-                a.user === selectedAgent ? '▾' : '›'
-              }}</span>
+              {{ agent.full_name }}
             </button>
-
-            <!-- conversations panel -->
+            <p class="text-sm">
+              {{ agent.open_total }} {{ __('leads + deals abiertos') }} ·
+              {{ agent.open_tasks || 0 }} {{ __('tareas') }}
+            </p>
             <div
-              v-if="a.user === selectedAgent"
-              class="border-t border-outline-gray-1 px-3 pb-3 pt-2"
+              v-if="cap"
+              class="my-2 h-1.5 overflow-hidden rounded bg-surface-gray-3"
             >
               <div
-                v-if="convLoading"
-                class="py-4 text-center text-[11.5px] text-ink-gray-4"
-              >
-                {{ __('Cargando conversaciones…') }}
-              </div>
-              <div
-                v-else-if="convError"
-                class="py-3 text-[12px] text-ink-gray-7"
-                role="alert"
-              >
-                <p>{{ errorMessage(convError, true) }}</p>
-                <button
-                  type="button"
-                  class="mt-2 min-h-11 rounded-lg border border-outline-gray-2 px-3 font-semibold focus-visible:ring-2"
-                  @click="reloadConversations"
-                >
-                  {{ __('Reintentar') }}
-                </button>
-              </div>
-              <div
-                v-else-if="!conversations.length"
-                class="py-4 text-center text-[11.5px] text-ink-gray-4"
-              >
-                {{ __('Sin conversaciones') }}
-              </div>
-
-              <template v-else>
-                <div class="mb-1.5 flex items-center justify-between">
-                  <button
-                    class="press text-[11px] font-semibold text-ink-gray-6"
-                    @click="toggleAll"
-                  >
-                    {{
-                      allSelected
-                        ? __('Quitar selección')
-                        : __('Seleccionar todo')
-                    }}
-                  </button>
-                  <span class="text-[11px] text-ink-gray-4"
-                    >{{ selected.size }} {{ __('seleccionadas') }}</span
-                  >
-                </div>
-
-                <div class="flex flex-col gap-1">
-                  <button
-                    v-for="c in conversations"
-                    :key="c.key"
-                    type="button"
-                    role="checkbox"
-                    :aria-checked="selected.has(c.key)"
-                    :aria-label="c.label"
-                    class="press flex items-center gap-2.5 rounded-[8px] border px-2.5 py-2 text-left"
-                    :class="
-                      selected.has(c.key)
-                        ? 'border-outline-green-4 bg-surface-green-1'
-                        : 'border-outline-gray-1 bg-surface-base'
-                    "
-                    @click="toggle(c.key)"
-                  >
-                    <span
-                      class="flex h-4 w-4 flex-none items-center justify-center rounded-[5px] border text-[10px] text-ink-green-1"
-                      :class="
-                        selected.has(c.key)
-                          ? 'border-transparent bg-surface-green-7'
-                          : 'border-outline-gray-3 bg-surface-base'
-                      "
-                    >
-                      <span v-if="selected.has(c.key)">✓</span>
-                    </span>
-                    <span class="min-w-0 flex-1">
-                      <span
-                        class="block truncate text-[12.5px] font-medium text-ink-gray-9"
-                        >{{ c.label }}</span
-                      >
-                      <span class="block truncate text-[10.5px] text-ink-gray-4"
-                        >{{ c.kind }} · {{ c.status || '—' }}</span
-                      >
-                    </span>
-                  </button>
-                </div>
-
-                <!-- reassign footer -->
-                <div class="mt-2.5 flex items-center justify-end">
-                  <Dropdown
-                    v-if="selected.size"
-                    :options="reassignOptions"
-                    placement="right"
-                  >
-                    <button
-                      class="press rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-                      style="background: var(--brand)"
-                    >
-                      {{ __('Reasignar a…') }}
-                    </button>
-                  </Dropdown>
-                </div>
-              </template>
+                class="h-full"
+                :class="barToken(agent.open_total, cap)"
+                :style="{ width: `${barWidth(agent.open_total, cap)}%` }"
+              />
             </div>
+            <p v-if="agent.at_capacity" class="text-sm text-ink-amber-7">
+              {{ __('Capacidad orientativa alcanzada en este alcance') }}
+            </p>
+            <p class="text-xs text-ink-gray-6">{{ __(agent.reason || '') }}</p>
+            <p
+              class="text-xs text-ink-gray-6"
+              :title="__(agent.shift_reason || '')"
+            >
+              {{ __('Turno') }}: {{ shiftLabel(agent.shift) }}
+            </p>
+            <button
+              class="mt-1 min-h-11 text-sm underline"
+              @click="openQueue(agent.user, 'tasks', true)"
+            >
+              {{ __('Tareas vencidas') }}: {{ agent.overdue_tasks || 0 }}
+            </button>
           </div>
         </div>
-      </div>
+        <div class="mt-2 flex gap-2">
+          <button
+            class="action"
+            :disabled="!state.agentOffset || loading || moving"
+            @click="agentPage(-25)"
+          >
+            {{ __('Personas anteriores') }}
+          </button>
+          <button
+            class="action"
+            :disabled="!data.has_more || loading || moving"
+            @click="agentPage(25)"
+          >
+            {{ __('Más personas') }}
+          </button>
+        </div>
+      </section>
+      <section class="rounded-lg border border-outline-gray-2 p-3">
+        <h2 class="font-semibold">{{ __('Cola') }} · {{ ownerLabel }}</h2>
+        <div class="my-3 flex flex-wrap items-end gap-3">
+          <label
+            >{{ __('Registros')
+            }}<select
+              v-model="state.kind"
+              class="control"
+              :disabled="moving"
+              @change="changeKind"
+            >
+              <option
+                v-for="kind in kinds"
+                :key="kind.value"
+                :value="kind.value"
+              >
+                {{ kind.label }}
+              </option>
+            </select></label
+          >
+          <label
+            v-if="state.kind === 'tasks'"
+            class="flex min-h-11 items-center gap-2"
+            ><input
+              v-model="state.overdue"
+              type="checkbox"
+              :disabled="moving"
+              @change="changeKind"
+            />{{ __('Sólo con fecha vencida') }}</label
+          >
+          <button
+            class="action"
+            :disabled="moving"
+            @click="openQueue(null, state.kind)"
+          >
+            {{ __('Todos los propietarios') }}
+          </button>
+        </div>
+        <p class="mb-2 text-sm text-ink-gray-6">
+          {{
+            __(
+              'Las tareas sin fecha no se consideran vencidas. Cambiar el propietario de un lead o deal conserva los responsables de sus tareas; reasigna esas tareas por separado si hace falta.',
+            )
+          }}
+        </p>
+        <div v-if="convError" role="alert" class="notice">
+          <p>{{ errorMessage(convError, true) }}</p>
+          <button class="action mt-2" @click="loadItems">
+            {{ __('Reintentar') }}
+          </button>
+        </div>
+        <p v-else-if="itemsLoading">{{ __('Cargando conversaciones…') }}</p>
+        <template v-else>
+          <p class="mb-2 text-sm">
+            {{ queue.total || 0 }} {{ __('registros en total') }} ·
+            {{ __('Página') }} {{ state.offset / 25 + 1 }}
+          </p>
+          <p v-if="!queue.items?.length">{{ __('Sin conversaciones') }}</p>
+          <div
+            v-for="row in queue.items || []"
+            :key="workItemKey(row)"
+            class="flex items-start gap-3 border-t border-outline-gray-1 py-3"
+          >
+            <input
+              class="mt-3 size-5"
+              type="checkbox"
+              :aria-label="__('Seleccionar') + ' ' + (row.label || row.name)"
+              :checked="
+                selected.some((item) => workItemKey(item) === workItemKey(row))
+              "
+              :disabled="moving"
+              @change="toggle(row)"
+            />
+            <div class="min-w-0 flex-1">
+              <a
+                :href="workItemHref(row)"
+                class="inline-block min-h-11 break-words py-2 font-medium underline"
+                @click="openRecord"
+                >{{ row.label || row.name }}</a
+              >
+              <p class="text-xs text-ink-gray-6">
+                {{ row.name }} · {{ row.status }} ·
+                {{ row.owner || __('Sin asignar')
+                }}<span v-if="row.due_date"> · {{ row.due_date }}</span>
+              </p>
+            </div>
+          </div>
+        </template>
+        <div class="mt-3 flex gap-2">
+          <button
+            class="action"
+            :disabled="!state.offset || itemsLoading || moving"
+            @click="queuePage(-25)"
+          >
+            {{ __('Anterior') }}</button
+          ><button
+            class="action"
+            :disabled="!queue.has_more || itemsLoading || moving"
+            @click="queuePage(25)"
+          >
+            {{ __('Siguiente') }}
+          </button>
+        </div>
+        <div class="mt-4 border-t border-outline-gray-2 pt-3">
+          <p>{{ selected.length }} {{ __('seleccionados') }}</p>
+          <label
+            >{{ __('Reasignar a')
+            }}<select v-model="target" class="control" :disabled="moving">
+              <option value="">{{ __('Elige una persona habilitada') }}</option>
+              <option
+                v-for="agent in data.candidates || []"
+                :key="agent.user"
+                :value="agent.user"
+              >
+                {{ agent.full_name
+                }}{{
+                  agent.at_capacity
+                    ? ' · ' + __('Capacidad orientativa alcanzada')
+                    : ''
+                }}
+              </option>
+            </select></label
+          >
+          <p class="my-2 text-xs text-ink-gray-6">
+            {{
+              __(
+                'Se comprobarán los permisos actuales de la persona para cada registro. La capacidad y el turno no son bloqueos de asignación manual.',
+              )
+            }}
+          </p>
+          <button
+            class="action"
+            :disabled="moving || !selected.length || !target"
+            @click="move"
+          >
+            {{ moving ? __('Reasignando…') : __('Reasignar selección') }}
+          </button>
+          <button
+            v-if="selected.length"
+            class="action ml-2"
+            :disabled="moving"
+            @click="clearSelection"
+          >
+            {{ __('Limpiar selección y recargar') }}
+          </button>
+          <div v-if="moveError" role="alert" class="notice mt-2">
+            {{ moveError }}
+          </div>
+          <ul v-if="results.length" class="mt-3 space-y-2" aria-live="polite">
+            <li
+              v-for="result in results"
+              :key="workItemKey(result)"
+              :class="result.ok ? 'text-ink-green-7' : 'text-ink-red-7'"
+            >
+              {{ result.name }}:
+              {{
+                result.ok
+                  ? __(
+                      'Reasignado. Responsables de tareas vinculadas conservados.',
+                    )
+                  : result.error
+              }}
+            </li>
+          </ul>
+        </div>
+      </section>
     </template>
   </div>
 </template>
 
 <script setup>
-import { computed, h, ref } from 'vue'
-import { call, createListResource, toast, Dropdown } from 'frappe-ui'
-import { barToken, barWidth, sortWorkload } from '@/utils/workloadFormat'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { call } from 'frappe-ui'
+import { onBeforeRouteLeave } from 'vue-router'
+import {
+  barToken,
+  barWidth,
+  retainFailedSelection,
+  safeWorkloadState,
+  workItemHref,
+  workItemKey,
+} from '@/utils/workloadFormat'
 import { workloadError } from '@/utils/workloadError'
 
-const columns = [
-  { key: 'open_total', label: __('Abiertas') },
-  { key: 'open_deals', label: __('Deals') },
-  { key: 'open_leads', label: __('Leads') },
-  { key: 'sla_overdue_count', label: __('SLA') },
-  { key: 'full_name', label: __('Agente') },
-]
-
-// ── workload (manager-gated; PermissionError → banner) ───────────────────────
-const loadError = ref('')
-const loading = ref(false)
-const data = ref({ cap: 0, unassigned: 0, agents: [] })
-
-async function load() {
-  if (loading.value) return
-  loading.value = true
-  try {
-    data.value = await call('doco_marketing.api.workload.get_workload')
-    loadError.value = ''
-  } catch (e) {
-    loadError.value = workloadError(e)
-  } finally {
-    loading.value = false
-  }
+const storageKey = 'crm.workload.queue.v2'
+let stored
+try {
+  stored = JSON.parse(sessionStorage.getItem(storageKey))
+} catch {
+  /* unavailable storage */
 }
-load()
-
+const state = ref(safeWorkloadState(stored))
+const initialScroll = state.value.scroll
+const scroller = ref(null)
+const data = ref({ agents: [] })
+const queue = ref({ items: [], total: 0 })
+const loading = ref(false)
+const itemsLoading = ref(false)
+const loadError = ref('')
+const convError = ref('')
+const moveError = ref('')
+const selected = ref([])
+const results = ref([])
+const target = ref('')
+const moving = ref(false)
+let loadId = 0
+let itemsId = 0
+const kinds = [
+  { value: 'leads', label: __('Leads') },
+  { value: 'deals', label: __('Deals') },
+  { value: 'tasks', label: __('Tareas') },
+]
+const agents = computed(() => data.value.agents || [])
+const cap = computed(() => data.value.capacity?.cap || 0)
+const marketing = computed(() => data.value.capacity?.marketing || {})
+const companies = computed(
+  () =>
+    data.value.companies || [
+      ...new Set(
+        (data.value.pipelines || []).map((p) => p.company).filter(Boolean),
+      ),
+    ],
+)
+const ownerLabel = computed(() =>
+  state.value.owner === null
+    ? __('Todos')
+    : state.value.owner === ''
+      ? __('Sin asignar')
+      : (data.value.candidates || []).find((a) => a.user === state.value.owner)
+          ?.full_name || state.value.owner,
+)
+const filters = () => ({
+  pipeline: state.value.pipeline,
+  company: state.value.company,
+})
 function errorMessage(kind, conversations = false) {
   if (kind === 'permission')
     return conversations
@@ -332,160 +499,188 @@ function errorMessage(kind, conversations = false) {
         'No se pudo cargar la carga de trabajo. Revisa tu conexión y reintenta.',
       )
 }
-
-const cap = computed(() => data.value.cap || 0)
-const agents = computed(() => data.value.agents || [])
-const overCapCount = computed(
-  () => agents.value.filter((a) => a.over_cap).length,
-)
-
-const sort = ref({ key: 'open_total', dir: 'desc' })
-const sorted = computed(() =>
-  sortWorkload(agents.value, sort.value.key, sort.value.dir),
-)
-function onSort(key) {
-  // clicking a new column starts descending; re-clicking the active one toggles.
-  if (sort.value.key !== key) sort.value = { key, dir: 'desc' }
-  else sort.value = { key, dir: sort.value.dir === 'desc' ? 'asc' : 'desc' }
+function shiftLabel(value) {
+  return value === 'on_shift'
+    ? __('En turno')
+    : value === 'off_shift'
+      ? __('Fuera de turno')
+      : __('Desconocido')
 }
-
-// ── per-agent conversations (owner-filtered; NOT get_conversation_queue — that's a
-//    shared file. Plain list resources with an owner filter, newest-first). ─────
-const selectedAgent = ref(null)
-const selected = ref(new Set())
-const convError = ref('')
-
-const deals = createListResource({
-  doctype: 'CRM Deal',
-  fields: ['name', 'status', 'modified', 'organization'],
-  orderBy: 'modified desc',
-  pageLength: 50,
-})
-const leads = createListResource({
-  doctype: 'CRM Lead',
-  fields: ['name', 'status', 'modified', 'lead_name'],
-  orderBy: 'modified desc',
-  pageLength: 50,
-})
-const convLoading = computed(() => deals.loading || leads.loading)
-
-const conversations = computed(() => {
-  const d = (deals.data || []).map((r) => ({
-    key: `CRM Deal:${r.name}`,
-    label: r.organization || r.name,
-    status: r.status,
-    kind: __('Deal'),
-    modified: r.modified,
-  }))
-  const l = (leads.data || []).map((r) => ({
-    key: `CRM Lead:${r.name}`,
-    label: r.lead_name || r.name,
-    status: r.status,
-    kind: __('Lead'),
-    modified: r.modified,
-  }))
-  return [...d, ...l].sort((a, b) => (a.modified < b.modified ? 1 : -1))
-})
-
-function openAgent(a) {
-  if (selectedAgent.value === a.user) {
-    selectedAgent.value = null
+function remember() {
+  if (loading.value || itemsLoading.value) return
+  if (scroller.value) state.value.scroll = Math.round(scroller.value.scrollTop)
+  try {
+    sessionStorage.setItem(storageKey, JSON.stringify(state.value))
+  } catch {
+    /* unavailable storage */
+  }
+}
+async function load() {
+  const id = ++loadId
+  loading.value = true
+  try {
+    const value = await call('crm.api.workload.get_workload', {
+      filters: filters(),
+      offset: state.value.agentOffset,
+    })
+    if (id !== loadId) return
+    data.value = value
+    loadError.value = ''
+  } catch (error) {
+    if (id === loadId) loadError.value = workloadError(error)
+  } finally {
+    if (id === loadId) loading.value = false
+  }
+}
+async function loadItems() {
+  const id = ++itemsId
+  itemsLoading.value = true
+  try {
+    const value = await call('crm.api.workload.get_work_items', {
+      filters: filters(),
+      kind: state.value.kind,
+      owner: state.value.owner,
+      overdue: state.value.overdue,
+      offset: state.value.offset,
+    })
+    if (id !== itemsId) return
+    queue.value = value
+    convError.value = ''
+  } catch (error) {
+    if (id === itemsId) convError.value = workloadError(error)
+  } finally {
+    if (id === itemsId) itemsLoading.value = false
+  }
+}
+async function refresh() {
+  const scroll = scroller.value?.scrollTop ?? state.value.scroll
+  await Promise.all([load(), loadItems()])
+  await nextTick()
+  if (scroller.value) scroller.value.scrollTop = scroll
+  remember()
+}
+function openQueue(owner, kind, overdue = false) {
+  if (moving.value) return
+  Object.assign(state.value, { owner, kind, overdue, offset: 0 })
+  selected.value = []
+  remember()
+  loadItems()
+}
+function changeScope() {
+  state.value.offset = 0
+  state.value.agentOffset = 0
+  selected.value = []
+  target.value = ''
+  refresh()
+}
+function changeKind() {
+  state.value.offset = 0
+  if (state.value.kind !== 'tasks') state.value.overdue = false
+  selected.value = []
+  remember()
+  loadItems()
+}
+function queuePage(delta) {
+  state.value.offset += delta
+  selected.value = []
+  remember()
+  loadItems()
+}
+function agentPage(delta) {
+  state.value.agentOffset += delta
+  remember()
+  load()
+}
+function toggle(row) {
+  const key = workItemKey(row)
+  selected.value = selected.value.some((item) => workItemKey(item) === key)
+    ? selected.value.filter((item) => workItemKey(item) !== key)
+    : [
+        ...selected.value,
+        {
+          doctype: row.doctype,
+          name: row.name,
+          modified: row.modified,
+          owner: row.owner || '',
+        },
+      ]
+}
+function clearSelection() {
+  selected.value = []
+  results.value = []
+  moveError.value = ''
+  loadItems()
+}
+async function move() {
+  if (moving.value || !selected.value.length || !target.value) return
+  moving.value = true
+  moveError.value = ''
+  try {
+    const response = await call('crm.api.workload.reassign_bulk', {
+      items: selected.value,
+      target: target.value,
+      filters: filters(),
+    })
+    results.value = response.results
+    selected.value = retainFailedSelection(selected.value, response.results)
+    await refresh()
+  } catch {
+    moveError.value = __(
+      'No se pudo confirmar la reasignación. Conservamos tu selección; revisa los registros antes de reintentar.',
+    )
+  } finally {
+    moving.value = false
+  }
+}
+function openRecord(event) {
+  if (!mayLeave()) {
+    event.preventDefault()
     return
   }
-  selectedAgent.value = a.user
-  selected.value = new Set()
-  // same OPEN definition as the card counts (get_workload returns the terminal
-  // sets) — without this the drill-down listed closed deals the count excluded.
-  const term = data.value?.terminal || {}
-  deals.filters = { deal_owner: a.user }
-  if (term['CRM Deal']?.length)
-    deals.filters.status = ['not in', term['CRM Deal']]
-  leads.filters = { lead_owner: a.user }
-  if (term['CRM Lead']?.length)
-    leads.filters.status = ['not in', term['CRM Lead']]
-  reloadConversations()
+  remember()
 }
-
-async function reloadConversations() {
-  const agent = selectedAgent.value
-  convError.value = ''
-  try {
-    await Promise.all([deals.reload(), leads.reload()])
-  } catch (e) {
-    if (selectedAgent.value === agent) convError.value = workloadError(e)
+function mayLeave() {
+  if (!moving.value) return true
+  moveError.value = __(
+    'La reasignación sigue pendiente. Espera la respuesta; conservamos la selección y no asumimos que terminó.',
+  )
+  return false
+}
+onBeforeRouteLeave(mayLeave)
+function beforeUnload(event) {
+  if (!moving.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+window.addEventListener('beforeunload', beforeUnload)
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', beforeUnload)
+  remember()
+  ++loadId
+  ++itemsId
+})
+load().then(async () => {
+  if (!loadError.value) {
+    await loadItems()
+    await nextTick()
+    if (scroller.value) scroller.value.scrollTop = initialScroll
   }
-}
-
-function toggle(key) {
-  const s = new Set(selected.value)
-  if (s.has(key)) s.delete(key)
-  else s.add(key)
-  selected.value = s
-}
-const allSelected = computed(
-  () =>
-    conversations.value.length > 0 &&
-    conversations.value.every((c) => selected.value.has(c.key)),
-)
-function toggleAll() {
-  selected.value = allSelected.value
-    ? new Set()
-    : new Set(conversations.value.map((c) => c.key))
-}
-
-// picker = the other agents in the pool (never reassign to the same owner).
-const reassignOptions = computed(() =>
-  agents.value
-    .filter((a) => a.user !== selectedAgent.value)
-    .map((a) => ({
-      label: a.full_name,
-      onClick: () => reassignSelected(a.user),
-    })),
-)
-
-async function reassignSelected(toUser) {
-  const items = [...selected.value].map((k) => {
-    const i = k.indexOf(':')
-    return { doctype: k.slice(0, i), name: k.slice(i + 1) }
-  })
-  if (!items.length) return
-  try {
-    const res = await call('doco_marketing.api.workload.reassign_bulk', {
-      items: JSON.stringify(items),
-      to_user: toUser,
-    })
-    const moved = res?.moved || 0
-    const failed = items.length - moved
-    if (moved) toast.success(__('{0} conversación(es) reasignada(s)', [moved]))
-    if (failed) toast.error(__('{0} no se pudo(ieron) reasignar', [failed]))
-    selected.value = new Set()
-    await load()
-    await reloadConversations()
-  } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo reasignar'))
-  }
-}
-
-// tiny inline stat (same shape as CallsView.vue)
-const Stat = (props) =>
-  h('div', {}, [
-    h(
-      'div',
-      {
-        class:
-          'text-[10px] font-semibold uppercase tracking-[.07em] text-ink-gray-4',
-      },
-      props.label,
-    ),
-    h(
-      'div',
-      {
-        class:
-          'text-[18px] font-bold ' + (props.color ? '' : 'text-ink-gray-9'),
-        style: props.color ? `color:${props.color}` : undefined,
-      },
-      String(props.value ?? 0),
-    ),
-  ])
-Stat.props = ['label', 'value', 'color']
+})
 </script>
+<style scoped>
+.action {
+  @apply min-h-11 rounded-lg border border-outline-gray-2 px-3 py-2 text-sm font-medium disabled:opacity-50;
+}
+.control {
+  @apply mt-1 block min-h-11 max-w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm;
+}
+.metric {
+  @apply flex min-h-16 flex-col items-start rounded-lg border border-outline-gray-2 p-3 text-left text-sm;
+}
+.metric strong {
+  @apply text-xl;
+}
+.notice {
+  @apply rounded-lg border border-outline-amber-4 bg-surface-amber-1 p-3 text-sm text-ink-amber-7;
+}
+</style>

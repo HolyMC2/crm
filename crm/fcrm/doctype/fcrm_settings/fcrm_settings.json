@@ -10,6 +10,7 @@
   "restore_demo_data",
   "enable_forecasting",
   "enable_sales_hierarchy",
+  "workload_advisory_capacity",
   "auto_update_expected_deal_value",
   "update_timestamp_on_new_communication",
   "auto_mark_replied_on_response",
@@ -40,6 +41,13 @@
   "persona_captured"
  ],
  "fields": [
+  {
+   "fieldname": "workload_advisory_capacity",
+   "fieldtype": "Int",
+   "label": "Advisory Workload Capacity",
+   "default": "0",
+   "description": "Open leads plus deals per owner shown in CRM Workload. 0 means unset. Advisory only: this does not change native Assignment Rules or optional Marketing routing."
+  },
   {
    "fieldname": "restore_defaults",
    "fieldtype": "Button",

@@ -6,6 +6,9 @@ import {
   barWidth,
   barToken,
   sortWorkload,
+  retainFailedSelection,
+  safeWorkloadState,
+  workItemHref,
 } from '@/utils/workloadFormat'
 
 describe('capPercent', () => {
@@ -112,5 +115,49 @@ describe('sortWorkload', () => {
   it('tolerates null / empty input', () => {
     expect(sortWorkload(null, 'open_total')).toEqual([])
     expect(sortWorkload([], 'open_total')).toEqual([])
+  })
+})
+
+describe('workload command and return continuity', () => {
+  it('retains missing and failed outcomes instead of claiming that the whole batch moved', () => {
+    const rows = [1, 2, 3].map((name) => ({
+      doctype: 'CRM Task',
+      name: String(name),
+      modified: 'old-version',
+    }))
+    expect(
+      retainFailedSelection(rows, [
+        { ...rows[0], ok: true },
+        { ...rows[1], ok: false },
+      ]),
+    ).toEqual([rows[1], rows[2]])
+    expect(rows).toHaveLength(3)
+  })
+  it('preserves an explicit unassigned owner and rejects malformed stored paging state', () => {
+    expect(
+      safeWorkloadState({
+        owner: '',
+        kind: 'tasks',
+        overdue: true,
+        offset: 25,
+        scroll: 172,
+      }),
+    ).toMatchObject({ owner: '', overdue: true, offset: 25, scroll: 172 })
+    expect(
+      safeWorkloadState({
+        owner: {},
+        kind: 'arbitrary',
+        offset: -1,
+        scroll: Infinity,
+      }),
+    ).toMatchObject({ owner: null, kind: 'deals', offset: 0, scroll: 0 })
+  })
+  it('links actual native records with encoded identities', () => {
+    expect(workItemHref({ doctype: 'CRM Task', name: 'task/1' })).toBe(
+      '/app/crm-task/task%2F1',
+    )
+    expect(workItemHref({ doctype: 'CRM Deal', name: 'deal?1' })).toBe(
+      '/crm/deals/deal%3F1',
+    )
   })
 })

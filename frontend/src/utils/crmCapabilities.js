@@ -104,7 +104,6 @@ export const GATED_ROUTES = Object.freeze({
   Social: HOME,
   'Social Evergreen': HOME,
   'Social Mentions': HOME,
-  Workload: HOME,
   'Score Rules': HOME,
   Webshop: HOME,
 })
