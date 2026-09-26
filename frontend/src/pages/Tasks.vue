@@ -203,7 +203,7 @@ import { timestampCell } from '@/composables/useTimelinePreferences'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Avatar, TextEditor, Dropdown, call } from 'frappe-ui'
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Task')
@@ -211,7 +211,8 @@ const { getUser } = usersStore()
 const { updateOnboardingStep } = useOnboarding('frappecrm')
 const { capture } = useTelemetry()
 
-const router = useRouter()
+const router = useRouter(),
+  route = useRoute()
 
 const tasksListView = ref(null)
 
@@ -384,7 +385,11 @@ function redirect(doctype, docname) {
   if (name == 'Deal') {
     params = { dealId: docname }
   }
-  router.push({ name: name, params: params })
+  router.push({
+    name: name,
+    params: params,
+    query: { returnTo: route.fullPath },
+  })
 }
 
 const openTaskFromURL = () => {

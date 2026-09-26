@@ -500,29 +500,37 @@ class CRMLead(Document):
 		}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def convert_to_deal(
 	lead: str,
 	doc: Document | None = None,
 	deal: str | dict | None = None,
 	existing_contact: str | None = None,
 	existing_organization: str | None = None,
+	create_new_contact: bool = False,
+	expected_modified: str | None = None,
+	request_id: str | None = None,
 ):
-	if not (doc and doc.flags.get("ignore_permissions")) and not frappe.has_permission(
-		"CRM Lead", "write", lead
-	):
-		frappe.throw(_("Not allowed to convert Lead to Deal"), frappe.PermissionError)
+	from crm.lead.conversion import convert
 
-	lead = frappe.get_cached_doc("CRM Lead", lead)
-	if frappe.db.exists("CRM Lead Status", "Qualified"):
-		lead.db_set("status", "Qualified")
-	lead.db_set("converted", 1)
-	if lead.sla and frappe.db.exists("CRM Communication Status", "Replied"):
-		lead.db_set("communication_status", "Replied")
-	contact = lead.create_contact(existing_contact, False)
-	organization = lead.create_organization(existing_organization)
-	_deal = lead.create_deal(contact, organization, deal)
-	return _deal
+	# The legacy doc argument remains for callers; it never elevates the actor.
+	try:
+		return convert(
+			lead,
+			deal,
+			existing_contact,
+			existing_organization,
+			create_new_contact,
+			expected_modified,
+			request_id,
+		)
+	except frappe.QueryDeadlockError:
+		# Task._save owns its row before the existing projection hook touches a
+		# lead. A simultaneous conversion can conflict; never retry effects here.
+		frappe.throw(
+			_("Another task or conversion changed this lead. Review its current state and retry."),
+			frappe.TimestampMismatchError,
+		)
 
 
 def get_deal_fieldname(field, deal_meta):
