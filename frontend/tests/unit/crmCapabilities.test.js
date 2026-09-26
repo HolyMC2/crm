@@ -170,12 +170,10 @@ describe('crmCapabilities: route gates', () => {
       'Campaigns',
       'Chatflows',
       'Social',
-      'Reports',
       'Workload',
       'Score Rules',
       'Webshop',
       'WhatsApp Queue',
-      'Pipeline Analysis',
     ]) {
       expect(m.gateRoute({ name })).toEqual({ name: 'Home' })
       expect(m.isAddonOnlyRoute(name)).toBe(true)
@@ -193,6 +191,8 @@ describe('crmCapabilities: route gates', () => {
       'Call Logs',
       'Calendar',
       'Dashboard',
+      'Reports',
+      'Pipeline Analysis',
       'Notifications',
     ]) {
       expect(m.gateRoute({ name })).toBeNull()

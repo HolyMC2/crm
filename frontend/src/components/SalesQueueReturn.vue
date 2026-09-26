@@ -7,7 +7,12 @@
     <RouterLink
       :to="target"
       class="inline-flex min-h-11 items-center rounded px-2 text-sm underline focus-visible:ring-2"
-      >← {{ __('Return to queue') }}</RouterLink
+      >←
+      {{
+        target.startsWith('/reports')
+          ? __('Return to report')
+          : __('Return to queue')
+      }}</RouterLink
     >
   </nav>
 </template>

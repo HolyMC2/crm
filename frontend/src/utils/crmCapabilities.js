@@ -104,11 +104,9 @@ export const GATED_ROUTES = Object.freeze({
   Social: HOME,
   'Social Evergreen': HOME,
   'Social Mentions': HOME,
-  Reports: HOME,
   Workload: HOME,
   'Score Rules': HOME,
   Webshop: HOME,
-  'Pipeline Analysis': HOME,
 })
 
 // Routes with no native equivalent: hidden from navigation without the addon.
