@@ -238,6 +238,7 @@ import { FormControl, call } from 'frappe-ui'
 import { computed, onMounted, ref } from 'vue'
 
 // defineModel() gives us a two-way binding to the parent's newRepairOrder ref.
+const props = defineProps({ currency: { type: String, default: undefined } })
 const form = defineModel({ required: true })
 
 // muelle-forms descriptor (null → legacy markup, the F-series fallback contract)
@@ -273,10 +274,15 @@ const balance = computed(() => {
 })
 
 const formattedBalance = computed(() => {
+  if (props.currency === null)
+    return new Intl.NumberFormat().format(balance.value)
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency: window.frappe?.boot?.sysdefaults?.currency || 'MXN',
+      currency:
+        props.currency === undefined
+          ? window.frappe?.boot?.sysdefaults?.currency || 'MXN'
+          : props.currency,
     }).format(balance.value)
   } catch {
     return balance.value.toFixed(2)

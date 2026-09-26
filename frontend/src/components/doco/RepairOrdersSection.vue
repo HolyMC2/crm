@@ -1,49 +1,203 @@
 <template>
-  <div class="mt-6 border-t pt-6">
+  <div class="mt-6 border-t pt-6" @click.capture="guardLink">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-3">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <span class="text-base-semibold text-ink-gray-8">
         {{ __('Repair Orders') }}
         <span
-          v-if="repairOrders.data?.length"
+          v-if="state.context?.orders?.length"
           class="ml-1.5 text-xs text-ink-gray-5"
         >
-          ({{ repairOrders.data.length }})
+          ({{ state.context.orders.length }})
         </span>
       </span>
       <Button
+        v-if="state.context?.can_create || state.showForm || state.intent"
         size="sm"
         variant="subtle"
-        :icon="showForm ? 'x' : 'plus'"
-        :tooltip="showForm ? __('Cancel') : __('Add Repair Order')"
+        :icon="state.showForm ? 'x' : 'plus'"
+        :label="state.showForm ? __('Cancel') : __('Add Repair Order')"
+        :disabled="state.creating || state.resolving || !!state.intent"
         @click="toggleForm"
       />
     </div>
 
-    <!-- Inline add form -->
-    <div v-if="showForm" class="mb-4 rounded-lg border bg-surface-gray-1 p-4">
-      <RepairOrderInlineForm v-model="newRepair" />
-      <div class="mt-3 flex justify-end gap-2">
-        <Button :label="__('Cancel')" @click="toggleForm" />
-        <Button
-          :label="__('Create')"
-          variant="solid"
-          :loading="creating"
-          :disabled="!newRepair.device_model"
-          @click="createRepairOrder"
-        />
-      </div>
-      <ErrorMessage v-if="createError" class="mt-2" :message="createError" />
-    </div>
-
-    <!-- Loading -->
-    <div v-if="repairOrders.loading" class="py-3 text-sm text-ink-gray-5">
-      {{ __('Loading...') }}
-    </div>
-
-    <!-- Empty state -->
     <div
-      v-else-if="!repairOrders.data?.length"
+      v-for="pendingDeal in otherPending"
+      :key="pendingDeal.deal"
+      class="mb-3 rounded border p-3 text-sm"
+      role="alert"
+    >
+      <p>{{ __('Creación pendiente en el trato:') }} {{ pendingDeal.deal }}</p>
+      <p v-if="pendingDeal.createError" class="mt-1 text-ink-red-7">
+        {{ pendingDeal.createError }}
+      </p>
+      <Button
+        class="mt-2"
+        :loading="pendingDeal.creating || pendingDeal.resolving"
+        :disabled="pendingDeal.creating || pendingDeal.resolving"
+        :label="__('Reintentar misma solicitud')"
+        @click="retryPending(pendingDeal.deal)"
+      />
+      <Button
+        class="mt-2"
+        :label="__('Guardar referencia pendiente y permitir salir')"
+        :disabled="pendingDeal.creating || pendingDeal.resolving"
+        @click="saveForLater(pendingDeal)"
+      />
+    </div>
+    <p
+      v-if="state.recoveryError"
+      role="alert"
+      class="mb-3 text-sm text-ink-red-7"
+    >
+      {{ state.recoveryError }}
+      <Button
+        v-if="!state.intent"
+        :label="__('Reintentar consulta')"
+        @click="refresh()"
+      />
+    </p>
+    <p v-if="state.notice" role="alert" class="mb-3 text-sm text-ink-orange-7">
+      {{ state.notice }}
+    </p>
+    <p
+      v-if="state.createdName"
+      role="status"
+      class="mb-3 text-sm text-ink-green-8"
+    >
+      {{ __('Reparación vinculada:') }}
+      <a :href="orderHref(state.createdName)" class="font-medium underline"
+        >{{ state.createdName }} · {{ __('Abrir en Taller') }}</a
+      >
+    </p>
+    <div
+      v-if="state.showForm"
+      class="mb-4 rounded-lg border bg-surface-gray-1 p-4"
+    >
+      <template v-if="state.context?.can_create || state.intent">
+        <p class="mb-3 text-sm text-ink-gray-6">
+          {{
+            currency
+              ? __('Moneda:') + ' ' + currency
+              : __(
+                  'Moneda no disponible. Confírmala en el laboratorio antes de crear.',
+                )
+          }}
+        </p>
+        <fieldset
+          v-if="!state.recoveryOnly"
+          :disabled="state.creating || state.resolving || !!state.intent"
+          :inert="state.creating || !!state.intent || undefined"
+        >
+          <label
+            v-if="state.context?.laboratorios?.length"
+            class="mb-3 block text-sm text-ink-gray-7"
+          >
+            {{ __('Laboratorio') }}
+            <select
+              v-model="state.draft.laboratorio"
+              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2"
+            >
+              <option :value="null">{{ __('Seleccionar laboratorio') }}</option>
+              <option
+                v-for="lab in state.context.laboratorios"
+                :key="lab.name"
+                :value="lab.name"
+              >
+                {{ lab.label }}
+              </option>
+            </select>
+          </label>
+          <RepairOrderInlineForm v-model="state.draft" :currency="currency" />
+        </fieldset>
+        <p
+          v-if="state.intent && !state.creating"
+          class="mt-3 text-sm text-ink-orange-7"
+        >
+          {{
+            __(
+              'Conservamos exactamente los datos enviados. Reintenta para confirmar el resultado sin crear otra reparación.',
+            )
+          }}
+        </p>
+        <div class="mt-3 flex flex-wrap justify-end gap-2">
+          <Button
+            :label="__('Cancel')"
+            :disabled="state.creating || state.resolving || !!state.intent"
+            @click="toggleForm"
+          />
+          <Button
+            v-if="!state.recoveryOnly"
+            :label="
+              state.intent ? __('Reintentar misma solicitud') : __('Create')
+            "
+            variant="solid"
+            :loading="state.creating"
+            :disabled="
+              state.creating ||
+              state.resolving ||
+              (!state.intent && !!state.recoveryError)
+            "
+            @click="create"
+          />
+        </div>
+        <div v-if="state.intent" class="mt-3 flex flex-wrap gap-2">
+          <Button
+            :label="__('Consultar resultado')"
+            :loading="state.resolving"
+            :disabled="state.creating || state.resolving"
+            @click="resolve()"
+          />
+          <Button
+            :label="__('Guardar referencia pendiente y permitir salir')"
+            :disabled="state.creating || state.resolving"
+            @click="saveForLater()"
+          />
+          <p class="w-full text-xs text-ink-gray-6">
+            {{
+              __(
+                'Solo se guarda el trato y la referencia de solicitud para tu usuario en esta pestaña. No se guardan datos del equipo, PIN ni importes. La reparación sigue pendiente de confirmar.',
+              )
+            }}
+          </p>
+        </div>
+        <ErrorMessage
+          v-if="state.createError"
+          class="mt-2"
+          :message="state.createError"
+        />
+      </template>
+    </div>
+    <p
+      v-if="state.context && !state.context.can_create"
+      class="mb-3 text-sm text-ink-gray-6"
+    >
+      {{
+        state.context.create_blocked_reason ||
+        __('No tienes permiso para crear una reparación desde este trato.')
+      }}
+    </p>
+    <div
+      v-if="state.loading"
+      role="status"
+      class="py-3 text-sm text-ink-gray-5"
+    >
+      {{ __('Cargando reparaciones…') }}
+    </div>
+    <div
+      v-else-if="state.loadError"
+      role="alert"
+      class="space-y-2 py-3 text-sm text-ink-red-7"
+    >
+      <p>
+        {{ __('No se pudieron cargar las reparaciones.') }}
+        {{ state.loadError }}
+      </p>
+      <Button :label="__('Reintentar consulta')" @click="refresh()" />
+    </div>
+    <div
+      v-else-if="!state.context?.orders?.length"
       class="py-2 text-sm text-ink-gray-5"
     >
       {{ __('No repair orders linked to this deal.') }}
@@ -52,27 +206,26 @@
     <!-- Repair order cards -->
     <div v-else class="space-y-3">
       <div
-        v-for="ro in repairOrders.data"
+        v-for="ro in state.context.orders"
         :key="ro.name"
         class="overflow-hidden rounded-xl border bg-surface-base shadow-sm"
       >
         <!-- Card header -->
         <div
-          class="flex items-center justify-between border-b bg-surface-gray-1 px-4 py-2.5"
+          class="flex flex-wrap items-start justify-between gap-2 border-b bg-surface-gray-1 px-4 py-2.5"
         >
           <!-- link to the TALLER SPA order page (operators use that, not the Desk doctype) -->
           <a
-            :href="`/taller/orders/${encodeURIComponent(ro.name)}`"
-            target="_blank"
-            class="text-sm-semibold text-ink-blue-9 hover:underline"
+            :href="orderHref(ro.name)"
+            class="min-w-0 break-all text-sm-semibold text-ink-blue-9 hover:underline"
           >
             {{ ro.name }}
           </a>
-          <div class="flex items-center gap-1.5">
+          <div class="flex min-w-0 flex-wrap items-center gap-1.5">
             <!-- Purchase-side ETA (ERP spec P3): what «Esperando Pieza» is waiting ON -->
             <span
               v-if="waitingPo(ro)"
-              class="rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-7"
+              class="break-all rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-7"
               :title="__('Pieza en camino — Purchase Order vinculado')"
             >
               🧩 {{ waitingPo(ro).purchase_order
@@ -82,26 +235,13 @@
               >
             </span>
             <Badge :label="__(ro.status)" :theme="statusTheme(ro.status)" />
-            <Dropdown :options="draftOptions(ro.name)">
-              <Button
-                size="sm"
-                variant="subtle"
-                :label="
-                  creatingFor === ro.name
-                    ? __('Creando…')
-                    : __('Crear borrador')
-                "
-                :loading="creatingFor === ro.name"
-              />
-            </Dropdown>
-            <Button
-              size="sm"
-              variant="subtle"
-              icon="send"
-              :tooltip="__('Revisar y enviar al cliente')"
-              @click="openSend(ro)"
-            />
+            <a
+              :href="orderHref(ro.name)"
+              class="rounded border px-2 py-1 text-xs text-ink-blue-9 hover:underline"
+              >{{ __('Abrir en Taller') }}</a
+            >
             <button
+              v-if="ro.capabilities?.can_print"
               :title="__('Print Ticket')"
               class="rounded p-1 text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-8"
               @click="printTicket(ro.name)"
@@ -158,6 +298,13 @@
             </div>
           </div>
 
+          <p class="px-4 py-2 text-xs text-ink-gray-6">
+            {{
+              __(
+                'Continúa el diagnóstico, documentos y comunicación con el cliente en Taller. Allí verás las acciones disponibles para tu rol.',
+              )
+            }}
+          </p>
           <!-- Primary: device + repair type + client + technician -->
           <div class="px-4 py-3 space-y-2">
             <Row :label="__('Device Model')" :value="ro.device_model" />
@@ -201,6 +348,7 @@
             </div>
             <div class="flex flex-wrap gap-1.5">
               <span
+                v-if="ro.turns_on != null"
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
                 :class="
                   ro.turns_on
@@ -211,6 +359,7 @@
                 {{ ro.turns_on ? __('Turns on ✓') : __('Does not turn on ✗') }}
               </span>
               <span
+                v-if="ro.has_sim_tray != null"
                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs-medium"
                 :class="
                   ro.has_sim_tray
@@ -289,28 +438,29 @@
           <!-- Financials (always shown — operators see cotización/anticipo at a glance) -->
           <div class="px-4 py-3 space-y-2">
             <div class="mb-0.5 text-xs uppercase tracking-wide text-ink-gray-5">
-              {{ __('Financials') }}
+              {{ __('Financials') }} ·
+              {{ ro.currency || __('Moneda no disponible') }}
             </div>
             <Row
               :label="__('Cotización')"
-              :value="money(ro.quote_amount) || __('—')"
+              :value="money(ro.quote_amount, ro.currency) || __('—')"
             />
             <Row
               :label="__('Anticipo')"
-              :value="money(ro.advance_amount) || __('—')"
+              :value="money(ro.advance_amount, ro.currency) || __('—')"
             />
             <Row
               :label="__('Saldo')"
-              :value="money(ro.balance_due) || __('—')"
+              :value="money(ro.balance_due, ro.currency) || __('—')"
               :emphasize="(ro.balance_due || 0) > 0"
             />
             <Row
               :label="__('Mano de obra')"
-              :value="money(ro.labor_charge) || __('—')"
+              :value="money(ro.labor_charge, ro.currency) || __('—')"
             />
             <Row
               :label="__('Total facturable')"
-              :value="money(ro.billing_total) || __('—')"
+              :value="money(ro.billing_total, ro.currency) || __('—')"
             />
           </div>
 
@@ -357,7 +507,7 @@
                     v-if="p.customer_charge != null"
                     class="ml-2 text-ink-gray-5"
                   >
-                    · {{ money(p.customer_charge) }}
+                    · {{ money(p.customer_charge, ro.currency) }}
                   </span>
                 </div>
               </div>
@@ -491,6 +641,7 @@
                 v-if="ro.quotation"
                 :href="`/app/quotation/${encodeURIComponent(ro.quotation)}`"
                 target="_blank"
+                rel="noopener noreferrer"
                 class="text-ink-blue-9 hover:underline"
               >
                 {{ __('Cotización') }}: {{ ro.quotation }}
@@ -499,6 +650,7 @@
                 v-if="ro.sales_order"
                 :href="`/app/sales-order/${encodeURIComponent(ro.sales_order)}`"
                 target="_blank"
+                rel="noopener noreferrer"
                 class="text-ink-blue-9 hover:underline"
               >
                 {{ __('SO') }}: {{ ro.sales_order }}
@@ -508,6 +660,7 @@
                 :key="`${inv.invoice_type}-${inv.invoice}`"
                 :href="`/app/${inv.invoice_type === 'POS Invoice' ? 'pos-invoice' : 'sales-invoice'}/${encodeURIComponent(inv.invoice)}`"
                 target="_blank"
+                rel="noopener noreferrer"
                 class="text-ink-blue-9 hover:underline"
               >
                 {{
@@ -521,28 +674,16 @@
         </div>
       </div>
     </div>
-
-    <RepairSendModal
-      v-model="sendModalOpen"
-      :ro="sendRo"
-      :deal-email="contactCard.data?.email || ''"
-      :deal-mobile="contactCard.data?.mobile_no || ''"
-    />
   </div>
 </template>
 
 <script setup>
 import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
-import RepairSendModal from '@/components/doco/RepairSendModal.vue'
-import {
-  Badge,
-  Button,
-  Dropdown,
-  ErrorMessage,
-  createResource,
-} from 'frappe-ui'
-import { contactCard } from '@/composables/inbox'
-import { h, ref } from 'vue'
+import { Badge, Button, ErrorMessage, createResource } from 'frappe-ui'
+import { h, onBeforeUnmount } from 'vue'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
+import { useRepairOrders } from '@/composables/repairOrders'
+import { repairMoney as money, repairOrderHref } from '@/utils/repairOrders'
 
 // Small inline helper for a label/value row. Stacked vertical layout —
 // label on top, value below, both full-width.
@@ -564,20 +705,6 @@ const Row = (props) =>
     ),
   ])
 
-function money(v) {
-  if (v == null) return null
-  const n = Number(v)
-  if (!Number.isFinite(n) || n === 0) return null
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: window.frappe?.boot?.sysdefaults?.currency || 'MXN',
-    }).format(n)
-  } catch {
-    return n.toFixed(2)
-  }
-}
-
 function formatDate(s) {
   if (!s) return ''
   const d = new Date(s.replace(' ', 'T'))
@@ -591,106 +718,39 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['created'])
-const showForm = ref(props.initiallyOpen)
-const creating = ref(false)
-const createError = ref(null)
-
-// Full canonical RO intake shape — mirrors DealModal's `newRepairOrder` ref
-// and RepairOrderInlineForm's v-model contract (1:1 with the Intake SPA).
-const emptyRepair = () => ({
-  device_model: null,
-  repair_to_be_done: null,
-  falla_reportada: '',
-  general_status: '',
-  client: null,
-  technician: null,
-  imei: null,
-  has_sim_tray: false,
-  is_wet: false,
-  turns_on: false,
-  broken_screen: false,
-  has_phone_case: false,
-  unlock_method: 'none',
-  phone_pin: '',
-  phone_pattern: '',
-  quote_amount: 0,
-  advance_amount: 0,
+const route = useRoute()
+const {
+  state,
+  dirty,
+  pending,
+  otherPending,
+  retryPending,
+  resolve,
+  saveForLater,
+  currency,
+  refresh,
+  toggleForm,
+  create,
+  canLeave,
+} = useRepairOrders(() => props.docname, {
+  initiallyOpen: props.initiallyOpen,
+  onCreated: (name) => emit('created', name),
 })
-
-const newRepair = ref(emptyRepair())
-
-const repairOrders = createResource({
-  url: 'taller.repair.repair_orders.get_deal_repair_orders',
-  params: { deal_name: props.docname },
-  auto: true,
-})
-
-function toggleForm() {
-  showForm.value = !showForm.value
-  if (!showForm.value) {
-    newRepair.value = emptyRepair()
-    createError.value = null
-  }
+const orderHref = (name) => repairOrderHref(name, props.docname, route.fullPath)
+function guardLink(event) {
+  const link = event.target.closest('a[href]')
+  if (link && link.target !== '_blank' && !canLeave()) event.preventDefault()
 }
-
-function createRepairOrder() {
-  const rd = newRepair.value
-  // Link controls may emit either a bare string or a { value } object.
-  const getVal = (v) => (v && typeof v === 'object' ? v.value : v)
-
-  const deviceModelVal = getVal(rd.device_model)
-  if (!deviceModelVal) {
-    createError.value = __('Device Model is required')
-    return
-  }
-  // Falla reportada is mandatory server-side (create_and_link_repair_order
-  // throws if blank) — block here so the user gets a clean message.
-  const falla = (rd.falla_reportada || '').trim()
-  if (!falla) {
-    createError.value = __(
-      'Falla reportada is required when creating a Repair Order.',
-    )
-    return
-  }
-
-  creating.value = true
-  createError.value = null
-  const unlock = rd.unlock_method
-  createResource({
-    url: 'taller.repair.repair_orders.create_and_link_repair_order',
-    params: {
-      deal_name: props.docname,
-      device_model: deviceModelVal,
-      repair_to_be_done: getVal(rd.repair_to_be_done) || null,
-      falla_reportada: falla,
-      general_status: rd.general_status || null,
-      client: getVal(rd.client) || null,
-      technician: getVal(rd.technician) || null,
-      imei: getVal(rd.imei) || null,
-      has_sim_tray: rd.has_sim_tray ? 1 : 0,
-      is_wet: rd.is_wet ? 1 : 0,
-      turns_on: rd.turns_on ? 1 : 0,
-      broken_screen: rd.broken_screen ? 1 : 0,
-      has_phone_case: rd.has_phone_case ? 1 : 0,
-      phone_pin: unlock === 'pin' ? rd.phone_pin || '' : '',
-      phone_pattern: unlock === 'pattern' ? rd.phone_pattern || '' : '',
-      quote_amount: Number(rd.quote_amount) || 0,
-      advance_amount: Number(rd.advance_amount) || 0,
-    },
-    auto: true,
-    onSuccess() {
-      creating.value = false
-      showForm.value = false
-      newRepair.value = emptyRepair()
-      repairOrders.reload()
-      emit('created')
-    },
-    onError(err) {
-      creating.value = false
-      createError.value = err.messages?.join('\n') || err.message
-    },
-  })
+function beforeUnload(event) {
+  if (!dirty.value && !pending.value) return
+  event.preventDefault()
+  event.returnValue = ''
 }
+onBeforeRouteLeave(canLeave)
+onBeforeRouteUpdate(canLeave)
+window.addEventListener('beforeunload', beforeUnload)
+onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
+defineExpose({ canLeave })
 
 const STATUS_THEMES = {
   Entregado: 'green',
@@ -742,14 +802,6 @@ function openPhoto(ph) {
   }
 }
 
-// ── "Revisar y enviar" modal: select photos + log entries, review, then send ────
-const sendModalOpen = ref(false)
-const sendRo = ref(null)
-function openSend(ro) {
-  sendRo.value = ro
-  sendModalOpen.value = true
-}
-
 function printTicket(roName) {
   createResource({
     url: 'taller.repair.repair_orders.get_repair_ticket_print_url',
@@ -773,44 +825,6 @@ function printTicket(roName) {
     onError(err) {
       const msg = err?.messages?.join('\n') || err?.message || 'Print failed'
       alert(__('Print failed: ') + msg)
-    },
-  })
-}
-
-// Mirror taller BillingPanel "Crear borrador" — single picker over the
-// unified create_billing_doc factory. Idempotent server-side: returns the
-// existing draft if one is already linked to the RO.
-const creatingFor = ref(null)
-const DRAFT_DOCTYPES = [
-  { label: '🧾 Sales Invoice', value: 'Sales Invoice' },
-  { label: '💳 POS Invoice', value: 'POS Invoice' },
-  { label: '💵 Cotización', value: 'Quotation' },
-  { label: '📦 Sales Order', value: 'Sales Order' },
-]
-
-function draftOptions(roName) {
-  return DRAFT_DOCTYPES.map((d) => ({
-    label: __(d.label),
-    onClick: () => createBillingDraft(roName, d.value),
-  }))
-}
-
-function createBillingDraft(roName, doctype) {
-  creatingFor.value = roName
-  createResource({
-    url: 'taller.api.billing.create_billing_doc',
-    params: { ro_name: roName, doctype },
-    auto: true,
-    onSuccess(data) {
-      creatingFor.value = null
-      const verb = data.created ? __('drafted') : __('already exists')
-      alert(`${doctype} ${data.name} — ${verb}.`)
-      repairOrders.reload()
-    },
-    onError(err) {
-      creatingFor.value = null
-      const msg = err?.messages?.join('\n') || err?.message || 'Draft failed'
-      alert(__('Draft failed: ') + msg)
     },
   })
 }

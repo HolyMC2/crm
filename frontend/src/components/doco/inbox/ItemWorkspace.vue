@@ -454,11 +454,13 @@
       ></Dialog
     >
     <Dialog
-      v-model="repairOpen"
+      :model-value="repairOpen"
       :options="{ title: __('Reparaciones del trato'), size: '4xl' }"
+      @update:model-value="setRepairOpen"
       ><template #body-content
         ><RepairOrdersSection
           v-if="repairOpen && hasTaller"
+          ref="repairSection"
           :docname="deal"
           initially-open
           @created="refresh" /></template
@@ -534,6 +536,12 @@ import { formatMoney } from '@/composables/crmFormat'
 import { reloadSalesSummary } from '@/composables/salesDocs'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import WorkspaceItemPicker from './WorkspaceItemPicker.vue'
+
+const repairSection = ref(null)
+function setRepairOpen(open) {
+  if (!open && repairSection.value?.canLeave() === false) return
+  repairOpen.value = open
+}
 
 const props = defineProps({
   deal: String,

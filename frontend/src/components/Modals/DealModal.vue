@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:open="show" :size="'3xl'">
+  <Dialog :open="show" :size="'3xl'" @update:open="setShow">
     <template #body>
       <div class="bg-surface-elevation-2 px-4 pb-6 pt-5 sm:px-6">
         <div class="mb-5 flex items-center justify-between">
@@ -21,7 +21,7 @@
               variant="ghost"
               class="w-7"
               icon="lucide-x"
-              @click="show = false"
+              @click="setShow(false)"
             />
           </div>
         </div>
@@ -79,21 +79,26 @@
             {{ __('El teléfono tiene WhatsApp') }}
           </label>
 
-          <!--
-            Doco customization: inline Repair Order creation.
-            All form fields, IMEI creation, and item-group filtering live in
-            RepairOrderInlineForm so this file stays easy to rebase upstream.
-            `newRepairOrder` is read in createDeal() to call the doco API.
-          -->
-          <div v-if="repairAvailable" class="mt-5 border-t pt-5">
-            <p class="mb-3 text-sm font-semibold text-ink-gray-8">
-              {{ __('New Repair Order') }}
-              <span class="ml-1 text-xs font-normal text-ink-gray-5">
-                {{ __('(optional)') }}
-              </span>
-            </p>
-            <RepairOrderInlineForm v-model="newRepairOrder" />
-          </div>
+          <label
+            v-if="repairAvailable"
+            class="mt-5 flex items-start gap-2 border-t pt-5 text-sm text-ink-gray-7"
+          >
+            <input
+              v-model="continueRepair"
+              type="checkbox"
+              :disabled="isDealCreating"
+              class="mt-0.5 rounded"
+            />
+            <span
+              >{{
+                __('Continuar a la recepción de reparación después de guardar')
+              }}<small class="mt-1 block text-ink-gray-5">{{
+                __(
+                  'Primero guardamos el trato y su contacto. Después revisas el laboratorio y los datos del equipo antes de crear la reparación.',
+                )
+              }}</small></span
+            >
+          </label>
 
           <!--
             Doco customization: customer details for ERPNext sync.
@@ -168,8 +173,7 @@
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
-// Doco customization: repair order form extracted into its own component.
-import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
+import { repairIntakeDestination } from '@/utils/repairOrders'
 import Link from '@/components/Controls/Link.vue'
 import { usersStore } from '@/stores/users'
 import { getMeta } from '@/stores/meta'
@@ -179,9 +183,9 @@ import { isMobileView } from '@/composables/settings'
 import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
-import { Switch, FormControl, createResource, call, toast } from 'frappe-ui'
-import { computed, ref, onMounted, nextTick, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { Switch, FormControl, createResource, toast } from 'frappe-ui'
+import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { useRouter, onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 
 const props = defineProps({
   defaults: { type: Object, default: () => ({}) },
@@ -217,28 +221,28 @@ const isDealCreating = ref(false)
 const chooseExistingContact = ref(false)
 const chooseExistingOrganization = ref(false)
 
-// Doco customization: form state for the optional inline Repair Order.
-// RepairOrderInlineForm binds to this via v-model; createDeal() reads it
-// after the deal is saved to optionally call create_and_link_repair_order.
-const newRepairOrder = ref({
-  device_model: null,
-  repair_to_be_done: null,
-  falla_reportada: '',
-  general_status: '',
-  client: null,
-  technician: null,
-  imei: null,
-  has_sim_tray: false,
-  is_wet: false,
-  turns_on: false,
-  broken_screen: false,
-  has_phone_case: false,
-  unlock_method: 'none',
-  phone_pin: '',
-  phone_pattern: '',
-  quote_amount: 0,
-  advance_amount: 0,
-})
+const continueRepair = ref(false)
+const intakeHandoffPending = ref(false)
+function canLeaveIntakeHandoff() {
+  if (!intakeHandoffPending.value) return true
+  error.value = __(
+    'El trato y su contacto siguen guardándose. Espera el resultado para continuar a la recepción.',
+  )
+  return false
+}
+function setShow(value) {
+  if (!value && !canLeaveIntakeHandoff()) return
+  show.value = value
+}
+function beforeUnload(event) {
+  if (!intakeHandoffPending.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+onBeforeRouteLeave(canLeaveIntakeHandoff)
+onBeforeRouteUpdate(canLeaveIntakeHandoff)
+window.addEventListener('beforeunload', beforeUnload)
+onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
 
 // Doco customization: customer details for ERPNext sync.
 // Pre-filled from company defaults; passed to sync_deal_contacts_to_erpnext
@@ -376,6 +380,7 @@ watch(dealStatuses, (options) => {
 })
 
 async function createDeal() {
+  if (isDealCreating.value) return
   if (deal.doc.website && !deal.doc.website.startsWith('http')) {
     deal.doc.website = 'https://' + deal.doc.website
   }
@@ -386,19 +391,7 @@ async function createDeal() {
     deal.doc['mobile_no'] = null
   } else deal.doc['contact'] = null
 
-  // Doco: Falla reportada required only when the inline RO is being created
-  // (device_model set). Block here so the Deal isn't created with a dangling
-  // half-filled RO intent.
-  if (
-    repairAvailable.value &&
-    newRepairOrder.value.device_model &&
-    !(newRepairOrder.value.falla_reportada || '').trim()
-  ) {
-    error.value = __(
-      'Falla reportada is required when creating a Repair Order.',
-    )
-    return
-  }
+  const repairRequested = repairAvailable.value && continueRepair.value
 
   await triggerOnBeforeCreate?.()
 
@@ -432,18 +425,27 @@ async function createDeal() {
         return error.value
       }
       isDealCreating.value = true
+      intakeHandoffPending.value = repairRequested
     },
     onSuccess(name) {
       capture('deal_created')
-      isDealCreating.value = false
+      const finish = () => {
+        intakeHandoffPending.value = false
+        isDealCreating.value = false
+        show.value = false
+        router.push(
+          repairIntakeDestination(name, props.redirect, repairRequested),
+        )
+      }
+      // Keep the existing immediate route when intake was not requested.
+      if (!repairRequested) finish()
+      if (!erpSyncAvailable.value) {
+        if (repairRequested) finish()
+        return
+      }
 
-      // Navigate immediately — background work continues after.
-      show.value = false
-      router.push({ ...props.redirect, params: { dealId: name } })
-      if (!erpSyncAvailable.value) return
-
-      // Doco customization: sync contacts first so the Contact → Customer link
-      // exists before the Repair Order is created (client field links to Contact).
+      // The existing contact sync settles before opening explicit repair intake.
+      // No Repair Order is created in this background callback.
       const getVal = (v) => (v && typeof v === 'object' ? v.value : v)
       createResource({
         url: 'doco.docoutils.customers.sync_deal_contacts_to_erpnext',
@@ -457,64 +459,8 @@ async function createDeal() {
           birthday: customerDetails.value.birthday || null,
         },
         auto: true,
-        onSuccess(syncResults) {
-          if (!repairAvailable.value) return
-          const pm = newRepairOrder.value.device_model
-          if (!pm) return
-
-          // Use the explicitly selected client, or fall back to the primary
-          // contact that was just synced to ERPNext as a Customer.
-          const primaryContact =
-            getVal(newRepairOrder.value.client) ||
-            syncResults?.find((r) => r.is_primary)?.contact ||
-            syncResults?.[0]?.contact ||
-            null
-
-          const deviceModelVal = getVal(pm)
-          const repairTypeVal = getVal(newRepairOrder.value.repair_to_be_done)
-          const unlock = newRepairOrder.value.unlock_method
-          createResource({
-            url: 'taller.repair.repair_orders.create_and_link_repair_order',
-            params: {
-              deal_name: name,
-              device_model: deviceModelVal,
-              repair_to_be_done: repairTypeVal || null,
-              falla_reportada: (
-                newRepairOrder.value.falla_reportada || ''
-              ).trim(),
-              general_status: newRepairOrder.value.general_status || null,
-              client: primaryContact,
-              technician: getVal(newRepairOrder.value.technician) || null,
-              imei: getVal(newRepairOrder.value.imei) || null,
-              has_sim_tray: newRepairOrder.value.has_sim_tray ? 1 : 0,
-              is_wet: newRepairOrder.value.is_wet ? 1 : 0,
-              turns_on: newRepairOrder.value.turns_on ? 1 : 0,
-              broken_screen: newRepairOrder.value.broken_screen ? 1 : 0,
-              has_phone_case: newRepairOrder.value.has_phone_case ? 1 : 0,
-              phone_pin:
-                unlock === 'pin' ? newRepairOrder.value.phone_pin || '' : '',
-              phone_pattern:
-                unlock === 'pattern'
-                  ? newRepairOrder.value.phone_pattern || ''
-                  : '',
-              quote_amount: Number(newRepairOrder.value.quote_amount) || 0,
-              advance_amount: Number(newRepairOrder.value.advance_amount) || 0,
-            },
-            auto: true,
-            // The deal modal has already closed by the time this resolves —
-            // without these callbacks a rejected RO create vanished silently
-            // (deal created, no RO, no hint why).
-            onSuccess(roName) {
-              toast.success(__('Repair Order {0} created', [roName]))
-            },
-            onError(err) {
-              toast.error(
-                __('Deal created but the Repair Order failed: {0}', [
-                  err.messages?.join('\n') || err.message,
-                ]),
-              )
-            },
-          })
+        onSuccess() {
+          if (repairRequested) finish()
         },
         onError(err) {
           toast.error(
@@ -522,10 +468,12 @@ async function createDeal() {
               err.messages?.join('\n') || err.message,
             ]),
           )
+          if (repairRequested) finish()
         },
       })
     },
     onError(err) {
+      intakeHandoffPending.value = false
       isDealCreating.value = false
       if (!err.messages) {
         error.value = err.message
@@ -537,6 +485,7 @@ async function createDeal() {
 }
 
 function openQuickEntryModal() {
+  if (!canLeaveIntakeHandoff()) return
   showQuickEntryModal.value = true
   quickEntryProps.value = { doctype: 'CRM Deal' }
   nextTick(() => (show.value = false))

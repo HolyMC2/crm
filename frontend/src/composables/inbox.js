@@ -5,6 +5,7 @@
 import { ref, watch, computed } from 'vue'
 import { createResource, call, toast } from 'frappe-ui'
 import { guardStatusChange } from '@/utils/statusGuard'
+import { canLeaveRepairWork } from '@/utils/repairNavigationGuard'
 import { userScopedKey } from '@/utils/storageKeys'
 import { ADDON_APP, hasApp, loadCapabilities } from '@/utils/crmCapabilities'
 
@@ -796,6 +797,11 @@ export function setQueueChannel(ch) {
 }
 
 export function selectDeal(name, doctype = 'CRM Deal') {
+  if (
+    (activeDeal.value !== name || activeDealDoctype.value !== doctype) &&
+    !canLeaveRepairWork()
+  )
+    return false
   activeUnassigned.value = null // leaving the triage view
   activeCommentPost.value = null
   mobileView.value = 'thread' // mobile: advance the stack to the conversation
@@ -873,6 +879,7 @@ export async function saveContactField(doctype, name, fieldname, value) {
 }
 
 export function selectUnassigned(id, channel = 'whatsapp', isArchived = false) {
+  if (!canLeaveRepairWork()) return false
   activeDeal.value = null // orphan threads have no deal/context panel
   activeCommentPost.value = null
   activeUnassigned.value = id
@@ -1174,6 +1181,7 @@ export function setCommentStatus(s) {
 }
 // Open a POST group — the workspace shows the post + all its comments (FB-style).
 export function selectCommentGroup(postId) {
+  if (!canLeaveRepairWork()) return false
   activeDeal.value = null
   activeUnassigned.value = null
   activeCommentPost.value = postId

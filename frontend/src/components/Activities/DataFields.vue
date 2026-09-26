@@ -35,8 +35,16 @@
     <span>{{ __('Loading...') }}</span>
   </div>
   <div v-else class="pb-8">
+    <section v-if="repairIntakeActive" aria-label="Recepción de reparación">
+      <Button :label="__('Terminar recepción')" @click="finishRepairIntake" />
+      <RepairOrdersSection
+        ref="repairIntake"
+        :docname="docname"
+        initially-open
+      />
+    </section>
     <VerticalSlot
-      v-if="['CRM Deal', 'CRM Lead', 'Contact'].includes(doctype)"
+      v-else-if="['CRM Deal', 'CRM Lead', 'Contact'].includes(doctype)"
       slot-name="data_tab"
       :doctype="doctype"
       :docname="docname"
@@ -66,17 +74,36 @@ import EditIcon from '@/components/Icons/EditIcon.vue'
 import DataFieldsModal from '@/components/Modals/DataFieldsModal.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 import VerticalSlot from '@/components/doco/VerticalSlot.vue'
+import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
+import { hasApp } from '@/utils/crmCapabilities'
+import { useRoute, useRouter } from 'vue-router'
 import { Badge, createResource } from 'frappe-ui'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import { usersStore } from '@/stores/users'
 import { useDocument } from '@/data/document'
 import { isMobileView } from '@/composables/settings'
-import { ref, watch, getCurrentInstance } from 'vue'
+import { computed, ref, watch, getCurrentInstance } from 'vue'
 
 const props = defineProps({
   doctype: { type: String, required: true },
   docname: { type: String, required: true },
 })
+
+const route = useRoute(),
+  router = useRouter()
+const repairIntake = ref(null)
+const repairIntakeActive = computed(
+  () =>
+    props.doctype === 'CRM Deal' &&
+    hasApp('taller') &&
+    route.query.repair_intake === '1',
+)
+function finishRepairIntake() {
+  if (repairIntake.value?.canLeave() === false) return
+  const query = { ...route.query }
+  delete query.repair_intake
+  router.replace({ query, hash: route.hash })
+}
 
 const emit = defineEmits(['beforeSave', 'afterSave'])
 
