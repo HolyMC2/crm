@@ -171,6 +171,22 @@ class TestWebchat(unittest.TestCase):
 			),
 		)
 
+	def test_optional_commerce_absence_cannot_create_context_or_break_chat(self):
+		# On the standalone cohort these are the actual installed apps. The full
+		# graph also exercises the disabled capability branch without deleting apps.
+		with patch.object(frappe, "get_installed_apps", return_value=["frappe", "crm"]):
+			self.failure(
+				417,
+				lambda: self.rpc(
+					"share_order",
+					capability=self.capability,
+					channel_id=self.channel["account_id"],
+					order_token="a" * 36,
+				),
+			)
+			self.assertFalse(frappe.db.exists(control.DOCTYPE, self.conversation()))
+			self.assertEqual(self.send()["message"]["direction"], "Incoming")
+
 	def test_expired_revoked_and_disabled_fail_closed(self):
 		session = self.session()
 		with patch.object(api, "now_datetime", return_value=session.expires_at):
