@@ -337,20 +337,27 @@ describe('bounded repair recovery receipts', () => {
         : Promise.reject(new Error('timeout')),
     )
     fill(api)
-    const storage = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new Error('Quota exceeded')
-      })
+    // Happy DOM binds methods on the Storage instance. Replace the actual
+    // browser boundary so an earlier setItem call cannot bypass this failure.
+    const storage = sessionStorage
+    const failWrite = vi.fn(() => {
+      throw new Error('Quota exceeded')
+    })
+    vi.stubGlobal('sessionStorage', {
+      getItem: storage.getItem.bind(storage),
+      setItem: failWrite,
+      removeItem: storage.removeItem.bind(storage),
+    })
     try {
       await api.create()
       expect(api.saveForLater()).toBe(false)
+      expect(failWrite).toHaveBeenCalledTimes(2)
       expect(api.canLeave()).toBe(false)
       expect(api.state.value.recoveryError).toContain('No se pudo guardar')
       expect(api.state.value.draft.phone_pin).toBe('1234')
       expect(api.state.value.intent.phone_pin).toBe('1234')
     } finally {
-      storage.mockRestore()
+      vi.unstubAllGlobals()
     }
   })
   it('clears plaintext synchronously on reactive logout with no focus, request or navigation event', async () => {
