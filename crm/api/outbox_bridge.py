@@ -73,6 +73,15 @@ def reason_message(code, owner=None):
 			"Pasaron más de 24 horas desde el último mensaje del cliente. Envía una plantilla."
 		),
 		"recipient_suppressed": _("El cliente pidió no recibir mensajes por WhatsApp."),
+		"template_unavailable": _(
+			"La plantilla ya no está aprobada para esta cuenta e idioma. Actualiza la selección."
+		),
+		"catalog_template_not_ready": _(
+			"Usa el selector de catálogo dentro de las 24 horas del último mensaje del cliente."
+		),
+		"marketing_consent_unverified": _(
+			"Registra el consentimiento explícito del destinatario antes de enviar una plantilla promocional."
+		),
 		"account_unavailable": _("La cuenta de WhatsApp no puede enviar. Revisa su configuración."),
 		"account_configuration_invalid": _("La cuenta de WhatsApp no puede enviar. Revisa su configuración."),
 		"account_configuration_changed": _(
