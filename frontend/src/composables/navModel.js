@@ -18,6 +18,7 @@ import FunnelIcon from '~icons/lucide/filter'
 import ScoreRulesIcon from '~icons/lucide/sliders-horizontal'
 import WebshopIcon from '~icons/lucide/shopping-cart'
 import WorkloadIcon from '~icons/lucide/scale'
+import AutomationsIcon from '~icons/lucide/workflow'
 import InquiriesIcon from '~icons/lucide/message-square-plus'
 import MercadoIcon from '~icons/lucide/tag'
 import TallerIcon from '~icons/lucide/wrench'
@@ -115,6 +116,13 @@ export const navItems = [
 ]
 
 export const navItemsBottom = [
+  {
+    key: 'automations',
+    icon: AutomationsIcon,
+    label: 'Automations',
+    to: '/automations',
+    group: 'automations',
+  },
   // Pipeline Analysis had a route but no way in (gaps doc §Gap 3). It is an
   // addon-only route, so navItemVisible hides this entry on a tenant without
   // doco_marketing — no dead link.
@@ -150,6 +158,7 @@ export const navItemsBottom = [
 
 // A route path lights exactly one nav group (handoff §4.1).
 export function routeGroup(path) {
+  if (/^\/automations(\/|$)/.test(path)) return 'automations'
   if (/^\/inquiries(\/|$)/.test(path)) return 'inquiries'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'wa-queue'

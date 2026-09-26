@@ -188,6 +188,12 @@ const routes = [
     meta: { navLabel: 'Campaigns', title: 'Campaign' },
   },
   {
+    path: '/automations',
+    name: 'Automations',
+    component: () => import('@/pages/AutomationWorkspace.vue'),
+    meta: { navLabel: 'Automations', title: 'Sales automations' },
+  },
+  {
     path: '/chatflows',
     name: 'Chatflows',
     component: () => import('@/pages/Chatflows.vue'),

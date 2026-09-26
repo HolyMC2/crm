@@ -8,6 +8,7 @@
       </Breadcrumbs>
     </template>
     <template v-if="!errorTitle" #right-header>
+      <AutomationLink v-if="doc.name" doctype="CRM Deal" :name="doc.name" />
       <CustomActions
         v-if="document._actions?.length"
         :actions="document._actions"
@@ -368,6 +369,7 @@
 </template>
 <script setup>
 import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
+import AutomationLink from '@/components/AutomationLink.vue'
 import OfferWorkspace from '@/components/Offers/OfferWorkspace.vue'
 import DealOrders from '@/components/Commerce/DealOrders.vue'
 import { useCommerceState } from '@/components/Commerce/commerceState'

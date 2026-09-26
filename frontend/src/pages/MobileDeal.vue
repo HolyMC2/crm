@@ -50,6 +50,7 @@
   >
     <AssignTo v-model="assignees.data" doctype="CRM Deal" :docname="dealId" />
     <div class="flex items-center gap-2">
+      <AutomationLink doctype="CRM Deal" :name="doc.name" />
       <CustomActions
         v-if="document._actions?.length"
         :actions="document._actions"
@@ -290,6 +291,7 @@
 </template>
 <script setup>
 import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
+import AutomationLink from '@/components/AutomationLink.vue'
 import OfferWorkspace from '@/components/Offers/OfferWorkspace.vue'
 import DealOrders from '@/components/Commerce/DealOrders.vue'
 import { hasApp } from '@/utils/crmCapabilities'
