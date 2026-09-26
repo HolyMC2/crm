@@ -23,6 +23,12 @@
         <p class="text-xs text-ink-gray-5">
           {{ __('Catálogo de WhatsApp') }} · {{ context.account_name }}
         </p>
+        <p class="mt-1 text-xs text-ink-gray-5" role="status">
+          {{ connectionText }}
+          <span v-if="context.connection?.checked_at">
+            · {{ __('Consulta: {0}', [context.connection.checked_at]) }}
+          </span>
+        </p>
         <p class="mt-1 text-xs text-ink-gray-5">
           {{
             __(
@@ -146,6 +152,24 @@ const canOfferProducts = computed(() =>
     (kind) => context.value?.capabilities?.[kind] === true,
   ),
 )
+const connectionText = computed(() => {
+  const state = context.value?.connection?.state
+  if (state === 'Observed')
+    return __(
+      'Meta confirmó el vínculo del catálogo y su visibilidad en la última consulta. La entrega de cada mensaje se confirma por separado.',
+    )
+  if (state === 'Unavailable')
+    return __(
+      'La última consulta detectó que el teléfono o el catálogo no está disponible. Revisa la conexión en WhatsApp Manager.',
+    )
+  if (state === 'Stale')
+    return __(
+      'La comprobación de la conexión venció. Un administrador puede actualizar el diagnóstico del catálogo.',
+    )
+  return __(
+    'El catálogo está configurado aquí; Meta todavía no ha confirmado su vínculo mediante la API. Revisa WhatsApp Manager si rechaza el envío.',
+  )
+})
 function reasonText(code) {
   const reasons = {
     catalog_not_configured: __('Esta cuenta no tiene un catálogo configurado.'),
