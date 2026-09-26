@@ -37,6 +37,13 @@
     </template>
   </LayoutHeader>
   <SalesQueueReturn />
+  <button
+    v-if="offerState.pending"
+    class="min-h-11 shrink-0 border-b border-outline-gray-2 bg-surface-base px-3 text-left text-sm text-ink-gray-9"
+    @click="tabIndex = tabs.findIndex((tab) => tab.name === 'Offers')"
+  >
+    {{ __('An offer action is pending. Open Offers to continue.') }}
+  </button>
   <div v-if="doc.name" class="flex h-full overflow-hidden">
     <Tabs
       v-model="tabIndex"
@@ -44,8 +51,14 @@
       :tabs="tabs"
       class="flex flex-1 overflow-hidden flex-col [&_[role='tab']]:px-0 [&_[role='tab']]:shrink-0 [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tablist']]:gap-7.5 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
     >
-      <template #tab-panel>
+      <template #tab-panel="{ tab }">
+        <OfferWorkspace
+          v-if="tab.name === 'Offers'"
+          :deal="doc"
+          :state="offerState"
+        />
         <Activities
+          v-else
           ref="activities"
           v-model:reload="reload"
           v-model:tabIndex="tabIndex"
@@ -343,6 +356,9 @@
 </template>
 <script setup>
 import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
+import OfferWorkspace from '@/components/Offers/OfferWorkspace.vue'
+import { useOfferState } from '@/components/Offers/offerState'
+
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
@@ -425,6 +441,7 @@ const { doctypeMeta } = getMeta('CRM Deal')
 const { updateOnboardingStep, isOnboardingStepsCompleted } =
   useOnboarding('frappecrm')
 
+const offerState = useOfferState()
 const route = useRoute()
 const router = useRouter()
 
@@ -611,6 +628,11 @@ const tabs = computed(() => {
       name: 'Comments',
       label: __('Comments'),
       icon: CommentIcon,
+    },
+    {
+      name: 'Offers',
+      label: __('Offers'),
+      icon: NoteIcon,
     },
     {
       name: 'Data',
@@ -827,12 +849,13 @@ function deleteDeal() {
 
 const activities = ref(null)
 
-function openEmailBox() {
-  let currentTab = tabs.value[tabIndex.value]
-  if (!['Emails', 'Comments', 'Activities'].includes(currentTab.name)) {
-    activities.value.changeTabTo('emails')
+async function openEmailBox() {
+  const currentTab = tabs.value[tabIndex.value]
+  if (!['Emails', 'Comments', 'Activity'].includes(currentTab?.name)) {
+    tabIndex.value = tabs.value.findIndex((tab) => tab.name === 'Emails')
   }
-  nextTick(() => (activities.value.emailBox.show = true))
+  await nextTick()
+  if (activities.value?.emailBox) activities.value.emailBox.show = true
 }
 
 function statusLabel(status) {

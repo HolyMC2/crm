@@ -37,6 +37,13 @@
     </header>
   </LayoutHeader>
   <SalesQueueReturn />
+  <button
+    v-if="offerState.pending"
+    class="min-h-11 shrink-0 border-b border-outline-gray-2 bg-surface-base px-3 text-left text-sm text-ink-gray-9"
+    @click="tabIndex = tabs.findIndex((tab) => tab.name === 'Offers')"
+  >
+    {{ __('An offer action is pending. Open Offers to continue.') }}
+  </button>
   <div
     v-if="doc.name"
     class="flex h-12 items-center justify-between gap-2 border-b px-3 py-2.5"
@@ -214,6 +221,11 @@
             </SidePanelLayout>
           </div>
         </div>
+        <OfferWorkspace
+          v-else-if="tab.name === 'Offers'"
+          :deal="doc"
+          :state="offerState"
+        />
         <Activities
           v-else
           v-model:reload="reload"
@@ -266,6 +278,9 @@
 </template>
 <script setup>
 import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
+import OfferWorkspace from '@/components/Offers/OfferWorkspace.vue'
+import { useOfferState } from '@/components/Offers/offerState'
+
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Icon from '@/components/Icon.vue'
@@ -323,6 +338,7 @@ const { $dialog, $socket } = globalStore()
 const { statusOptions, getDealStatus } = statusesStore()
 const { doctypeMeta } = getMeta('CRM Deal')
 
+const offerState = useOfferState()
 const route = useRoute()
 const router = useRouter()
 
@@ -452,6 +468,11 @@ const tabs = computed(() => {
       name: 'Comments',
       label: __('Comments'),
       icon: CommentIcon,
+    },
+    {
+      name: 'Offers',
+      label: __('Offers'),
+      icon: NoteIcon,
     },
     {
       name: 'Data',
