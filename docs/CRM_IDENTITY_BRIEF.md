@@ -1,32 +1,21 @@
 # CRM identity brief
 
-Date: 2026-09-26. Status: **proposal for selection; no runtime rename or icon replacement has been applied.**
+Date: 2026-09-26. Status: **name confirmed by the user: CRM**. Distinct icon and unified tenant-aware identity are in implementation; visual/PWA acceptance remains required.
 
-Marco requested a distinct name and icon because the product now differs substantially from Frappe CRM. The identity should present an independent Muelle sales/customer product while retaining upstream attribution. See the [product roadmap](CRM_PRODUCT_ROADMAP.md).
+Marco requested a distinct identity because the fork differs substantially from Frappe CRM, then confirmed that the name should stay **CRM**. Earlier Muelle Ronda/Ventas/Clientes proposals are superseded. Keep Muelle suite context and accurate upstream attribution. See the [product roadmap](CRM_PRODUCT_ROADMAP.md) and [acceptance contract](CRM_ACCEPTANCE.md).
 
-## Naming recommendation
+## Naming decision
 
-- **Working proposal:** Muelle Ronda
-- **Descriptor:** Ventas y clientes
-- **Short navigation label:** Ronda
-
-Ronda suggests an ongoing rhythm of customer contact and follow-up, with room for sales, service and connected channels. The Muelle endorsement makes it part of the suite; the descriptor explains the work. Use the full product name in onboarding, About and public product pages.
-
-Two alternatives to discuss before visual rollout:
-
-| Name | Strength | Tradeoff |
-| --- | --- | --- |
-| Muelle Ronda | Memorable, broad enough for sales and continuing customer relationships | Needs the descriptor at first introduction |
-| Muelle Ventas | Immediately understandable and sales-led | More descriptive than distinctive; service features need context |
-| Muelle Clientes | Clear relationship focus beyond a sales transaction | Understates pipeline/closing capability |
-
-A limited public search on 2026-09-26 found direct CRM use of [Trato](https://trato.pro/), [Lazo](https://lazo.digital/) and [Vinculo](https://staractiv.fr/), so they are not preferred candidates for a request specifically motivated by confusion. This research does not establish exclusivity of the working proposal; final identity selection remains open.
+- Product and short navigation label: **CRM**.
+- Suite attribution: Muelle; display separately where useful.
+- Optional descriptive copy: Ventas y clientes.
+- Tenant name/logo/favicon/accent remain intentional overrides.
 
 ## Icon direction
 
 **Concept: an open relationship loop with a shared junction.** Two confident rounded strokes form an asymmetric loop around a small open centre; their meeting point suggests the handoff from conversation to an agreed next action. Give the silhouette a recognisable break rather than an arrowhead, so it does not read as refresh/sync. Keep the mark legible without initials or a wordmark.
 
-Prepare two optical versions after name selection: a simplified small mark for 16–24px and a full mark for launcher/PWA sizes. Deliver editable SVG, monochrome/light/dark treatments, transparent raster exports, favicon, Apple touch icon and 192/512 maskable icons. Test both the whole silhouette and its central negative space at actual size.
+Prepare two optical versions for the confirmed name: a simplified small mark for 16–24px and a full mark for launcher/PWA sizes. Deliver editable SVG, monochrome/light/dark treatments, transparent raster exports, favicon, Apple touch icon and 192/512 maskable icons. Test both the whole silhouette and its central negative space at actual size.
 
 No drawing is accepted by this brief alone. The selection deliverable is a contact sheet showing the mark beside the existing POS/Taller/Mercado icons, on both themes, in the active desktop rail, phone header, Desk launcher and installed app icon. Choose one direction before generating the final asset set.
 
@@ -51,7 +40,7 @@ The distinctive element is the mark. The working UI should be quiet: aligned lis
 
 ## Product and tenant identity
 
-Product defaults identify Muelle Ronda. Existing tenant name/logo/favicon/accent settings remain intentional overrides; show the tenant's business identity separately where there is room and keep the product visible in About/help.
+Product defaults identify CRM, part of Muelle. Existing tenant name/logo/favicon/accent settings remain intentional overrides; show the tenant's business identity separately where there is room and keep the product visible in About/help.
 
 Implement one identity resolver and shared mark component, reusing the current settings service. Handle unavailable settings, invalid image, missing overrides and settings updates consistently. Never overwrite tenant custom values during migration.
 
@@ -86,4 +75,4 @@ Keep technical identifiers `crm`, `FCRM`, existing DocTypes, Python paths, endpo
 - Build and inspect the actual served assets. Record source/CI, asset and deployment evidence separately. Email tests use preview/blocked transport, not customers.
 - Publish product/site/app changes only within the current authorised release scope.
 
-The identity selection gates visual implementation only. Sales-model and correctness work can continue independently.
+Name selection is complete. Visual implementation requires the same real-surface acceptance as other product changes; sales-model and correctness work continues in parallel.

@@ -1,13 +1,16 @@
 # CRM next session
 
-Current product direction (2026-09-26): build a distinctly named Muelle product
+Current product direction (2026-09-26): build Muelle's product named **CRM**, with a distinct icon,
 that excels at standalone sales, with connected POS/Taller/storefront work and
 optional omnichannel/bot capabilities. Use the
 [prioritized product roadmap](CRM_PRODUCT_ROADMAP.md) and its **First execution
-queue**; naming and icon selection live in the
+queue**; confirmed name and icon direction live in the
 [identity brief](CRM_IDENTITY_BRIEF.md).
 
-Start with identity/correctness and independent sales semantics. Preserve native
+The full roadmap is approved. Facebook/WhatsApp catalog commerce is the first
+integration priority; Mercado Libre follows. Final acceptance requires the
+[harsh contract](CRM_ACCEPTANCE.md) and actual Claude Opus 5.5 READY review.
+Continue identity/correctness and independent sales semantics. Preserve native
 tasks, conversations, commercial adapters and automation already implemented.
 Verify current source, installed apps and runtime before executing any rollout.
 The September 25 production receipt supersedes older package-deployment claims;

@@ -1,4 +1,4 @@
-> **Muelle CRM fork:** this repository contains Muelle's substantially extended CRM product. Start with the [current product roadmap](docs/CRM_PRODUCT_ROADMAP.md) and [name/icon proposal](docs/CRM_IDENTITY_BRIEF.md). The final product identity is pending selection. The upstream introduction below is retained for provenance; it is not the fork's current feature, deployment or support guide.
+> **Muelle CRM fork:** this repository contains Muelle's substantially extended product, named **CRM**, with a distinct mark and tenant branding. Start with the [approved product roadmap](docs/CRM_PRODUCT_ROADMAP.md), [identity brief](docs/CRM_IDENTITY_BRIEF.md) and [acceptance contract](docs/CRM_ACCEPTANCE.md). Facebook/WhatsApp catalog commerce is the first integration priority. The upstream introduction below is retained for provenance; it is not the fork's current feature, deployment or support guide.
 
 <div align="center" markdown="1">
 

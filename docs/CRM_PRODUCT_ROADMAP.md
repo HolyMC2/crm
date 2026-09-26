@@ -2,7 +2,7 @@
 
 Date: 2026-09-26. Product direction: Marco's request for a distinct identity, excellent standalone sales, connected POS/Taller/storefront, extensible channels and bots, premium mobile and Desk experiences, and powerful configuration.
 
-**Status: prioritized implementation roadmap; this document does not mark planned features as shipped.** Product name and icon are proposed in the [identity brief](CRM_IDENTITY_BRIEF.md). This is the current product-priority entry point. Older plans remain evidence of their dated scope; the form-scripting plan is a technical backlog, and the shop-bot plan continues to own automation implementation.
+**Status: approved for full implementation; planned features are not yet certified as shipped.** User confirmed the name **CRM** and requires a distinct icon; see the [identity brief](CRM_IDENTITY_BRIEF.md). Facebook and WhatsApp catalog commerce are the first integration priority; selected marketplace Mercado Libre follows. The [acceptance contract](CRM_ACCEPTANCE.md) requires exact-source evidence and an actual Claude Opus 5.5 READY verdict. Older plans remain dated evidence; the form-scripting plan is a technical backlog, and the shop-bot plan continues to own automation implementation.
 
 ## Product promise
 
@@ -33,9 +33,11 @@ Source anchors: [pipeline arithmetic](../frontend/src/utils/pipelineMath.js), [n
 
 Each row is a product outcome with a release gate. Mobile, Desk, configuration and failure recovery are requirements throughout, not a final polish phase. There are no calendar promises until the first packages are sized and staffed.
 
+**Execution override from the user:** complete the active P0/P1 foundations while delivering Facebook/WhatsApp catalog commerce as the first connected sales journey. Pull its necessary customer, conversation and ERP order contracts forward from P2/P3. Next comes Mercado Libre. This ordering does not remove standalone sales, POS, Taller, storefront, bots or SaaS acceptance.
+
 | Priority | Outcome | Main work | Depends on | Exit gate |
 | --- | --- | --- | --- | --- |
-| P0 | A distinct product with trustworthy basics | Name/icon package, unified identity, sales-number corrections, zoom and truthful errors | Identity selection only blocks visual rollout | Consistent identity across surfaces; reconciled funnel/forecast; usable recovery |
+| P0 | A distinct product with trustworthy basics | Confirmed CRM name, distinct icon, unified identity, sales-number corrections, zoom and truthful errors | Name confirmed | Consistent identity across surfaces; reconciled funnel/forecast; usable recovery |
 | P1 | An excellent standalone sales CRM | Independent pipelines, prospect-to-close workflow, native reports/proposals, daily queues, team configuration and premium core UI | P0 calculation contract; rebrand can run in parallel | Real Frappe + CRM seller and manager journeys with optional apps absent |
 | P2 | Sell once, fulfil through the owning app | ERP/POS, Taller and storefront handoffs; canonical customer/product/document links | P1 identities, amounts, pipeline and action contracts | Quote-to-paid/fulfilled and blocked/return journeys without re-entry or duplicate effects |
 | P3 | A dependable omnichannel customer workspace | Channel capabilities, native queue convergence, social and marketplace journeys, routing/search/media | P1 customer scope; P2 commerce adapters for order actions | Each advertised channel passes account-specific receipt, reply, takeover and recovery |
@@ -91,10 +93,12 @@ Remove the accidental marketing dependency from ERP commercial discovery/facades
 
 Owners: CRM customer conversation/control/outbox; existing channel adapters for delivery; Marketing for campaigns/acquisition; Mercado for marketplace commerce.
 
+**First connected package — Facebook and WhatsApp catalog commerce:** reuse `doco_meta_catalog` and the canonical storefront catalog. Prove publication, stock/price changes, rejected-item diagnostics and removal/reconciliation; send catalog/product/product-list through CRM's governed outbox; preserve product inquiry and cart context; review every cart line and identity before making one canonical draft order. Carry the order through payment, fulfilment and return with the customer conversation intact. Facebook catalog/Shop availability and Marketplace listing/order APIs are distinct account-dependent capabilities and must be presented truthfully. Mercado Libre is the next selected provider after this package.
+
 1. **Unify staff work.** Project conversation queues, unread/needs-reply, assignment, SLA, snooze and linked sales work from canonical records. Preserve an exact account/peer identity and historical receipts. One help entry per customer surface; staff-private assistant history remains separate.
 2. **Certify existing channels before adding breadth.** Publish a capability matrix for WhatsApp, Webchat, email, calls, Messenger and Instagram: receive, reply, attachments/media, templates/window rules, receipts, ownership, search and recovery. A connected account does not imply full channel support. Instagram Login native replies remain blocked until its ownership contract is implemented and proven.
 3. **Connect social acquisition to sales.** Ads, forms, mentions/referrals and permitted comments retain source/campaign evidence, assigned follow-up and explicit person selection. A marketing audience is not the same thing as a verified customer. Preserve consent/purpose and opt-out across channels.
-4. **Qualify one marketplace at a time.** No complete marketplace connector was established by this review. Inventory Mercado's catalog/import and existing commerce contracts, then choose one concrete provider and implement its account/external-ID mappings through a bounded adapter. Link seller account, external buyer/order/listing, canonical customer/order and sales opportunity. Only expose messaging when the provider supports the account/use case. Prove inquiry/order → staff action → fulfilment → return/refund, including settlement visibility when supported.
+4. **Qualify one marketplace at a time.** After Meta catalog commerce, implement the selected Mercado Libre account/external-ID mappings through a bounded adapter, reusing Mercado's catalog/import and existing commerce contracts. Link seller account, external buyer/order/listing, canonical customer/order and sales opportunity. Only expose messaging when the provider supports the account/use case. Prove inquiry/order → staff action → fulfilment → return/refund, including settlement visibility when supported.
 
 **Done per channel/provider:** own-account inbound, correct staff queue, human reply, accepted/delivered/unknown distinction, media where advertised, takeover, expired credentials, replay/reconnect, opt-out and tenant isolation. Unsupported actions show a useful next step rather than claiming parity. No new marketplace-wide connector framework without a first working chain.
 
@@ -164,10 +168,11 @@ Ship configuration with its feature: pipeline controls in P1, handoff defaults i
 
 | ID | Task | Evidence needed before completion |
 | --- | --- | --- |
-| CRM-01 | Select identity and build the single brand resolver/mark surface inventory | Approved name/icon direction; no unresolved default/tenant conflict; complete surface check |
+| CRM-01 | Apply confirmed CRM identity and build the single brand resolver/mark surface inventory | Distinct icon; no unresolved default/tenant conflict; complete surface check |
 | CRM-02 | Correct generic funnel and reconcile forecast semantics | Normal sales + repair + currency fixtures; report/board/detail drill-down agreement |
 | CRM-03 | Restore mobile zoom and truthful workload error recovery | Phone zoom and keyboard checks; denied vs transient-error browser paths |
 | CRM-04 | Specify and implement independent pipeline migration | Preview mapping, preserved repair/history links, multiple-pipeline and role tests |
+| META-01/03 | First integration: Facebook/WhatsApp catalog → governed conversation → reviewed cart → canonical order | Publication/reconciliation, signed account receipts, native outbox fences, complete price/identity review, replay-safe order and actual provider evidence |
 | CRM-05 | Prove standalone capture → conversion → task → close | Fresh minimal installation; repeated conversion, identity ambiguity and task continuity |
 | CRM-06 | Deliver standalone offer and native essential reporting | Versioned offer acceptance; no optional-app requests; reconciled totals |
 | CRM-07 | Complete one ERP/POS commercial handoff | Accepted offer to canonical documents/payment/fulfilment, retry and return evidence |
