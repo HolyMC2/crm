@@ -1,6 +1,7 @@
 """Native order proof → existing conversation context, without money effects."""
 
 import json
+import sys
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -9,8 +10,8 @@ from doco.docoutils.test_order_checkout_native import OrderCheckoutFixture
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.tests import IntegrationTestCase
 
+from crm.api import automation, conversation_threads, webchat
 from crm.api import conversations as control
-from crm.api import webchat
 from crm.tests import test_webchat as protocol
 
 
@@ -66,6 +67,27 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 				**overrides,
 			},
 		)
+
+	def staff(self, company=None):
+		"""Real channel-assigned Sales User; no permission result is mocked."""
+		actor = frappe.get_doc(
+			{
+				"doctype": "User",
+				"email": f"support-{uuid4().hex}@example.invalid",
+				"first_name": "Order support",
+				"send_welcome_email": 0,
+				"roles": [{"role": "Sales User"}],
+			}
+		).insert()
+		for allow, value in (
+			("CRM Webchat Channel", self.session().channel),
+			("Company", company or self.company.name),
+		):
+			frappe.get_doc(
+				{"doctype": "User Permission", "user": actor.name, "allow": allow, "for_value": value}
+			).insert()
+		self.addCleanup(lambda: frappe.clear_cache(user=actor.name))
+		return actor.name
 
 	def test_explicit_share_replay_and_inquiry_preserve_order_and_identity(self):
 		before = {
@@ -162,7 +184,8 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 		frappe.db.set_value(control.DOCTYPE, doc.name, {"control_state": "Paused", "generation": 9})
 		self.share()
 		self.assertEqual((doc.reload().control_state, doc.generation), ("Paused", 9))
-		control.link_record(doc.name, "Sales Order", self.order.name, uuid4().hex, remove=True)
+		frappe.set_user(self.staff())
+		automation.unlink_record(doc.name, "Sales Order", self.order.name, uuid4().hex)
 		self.failure(417, self.share)
 		self.assertEqual(json.loads(doc.reload().context_links), [])
 
@@ -184,19 +207,74 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 	def test_staff_projection_still_requires_native_order_permission(self):
 		self.share()
 		doc = frappe.get_doc(control.DOCTYPE, self.conversation())
-		self.assertTrue(any(row["name"] == self.order.name for row in control.context_view(doc)))
-		self.assertEqual(control.context_view(doc, user="Guest"), [])
+		other_company = frappe.get_doc(
+			{
+				"doctype": "Company",
+				"company_name": "Other support " + self.tag,
+				"abbr": "S" + self.tag[:5].upper(),
+				"default_currency": "MXN",
+				"country": "Mexico",
+				"chart_of_accounts": "Standard",
+			}
+		).insert()
+		denied, allowed = self.staff(other_company.name), self.staff()
+		frappe.set_user(denied)
+		control._authorize(doc)  # Channel access does not lend Sales Order access.
+		self.assertFalse(frappe.has_permission("Sales Order", "read", doc=self.order))
+		self.assertEqual(control.context_view(doc), [])
+		self.assertEqual(conversation_threads._detail(doc)["context_links"], [])
+		frappe.set_user(allowed)
+		control._authorize(doc)
+		self.assertTrue(frappe.has_permission("Sales Order", "read", doc=self.order))
+		links = control.context_view(doc)
+		self.assertEqual([row["name"] for row in links], [self.order.name])
+		self.assertEqual(conversation_threads._detail(doc)["context_links"], links)
+
+	def test_guest_proof_never_labels_customer_or_supplies_staff_authority(self):
+		self.share()
+		doc = frappe.get_doc(control.DOCTYPE, self.conversation())
+		title = frappe.get_meta("Sales Order").get_title_field()
+		self.assertTrue(self.order.get(title) and self.order.get(title) != self.order.name)
+		frappe.set_user(self.staff())
+		self.assertTrue(frappe.has_permission("Sales Order", "read", doc=self.order))
+		links = control.context_view(doc)
+		self.assertEqual(links[0]["label"], self.order.name)
+		self.assertEqual(links[0]["source"], "storefront_order_proof")
+		self.assertFalse(control._department_record(doc, frappe.session.user, "sales"))
 
 	def test_context_label_respects_native_title_field_mask(self):
 		self.share()
 		doc = frappe.get_doc(control.DOCTYPE, self.conversation())
+		# Ordinary staff links may use a title, but still honor native masking.
+		links = json.loads(doc.context_links)
+		links[0]["source"] = "person"
+		doc.context_links = json.dumps(links)
 		title = frappe.get_meta("Sales Order").get_title_field()
 		self.assertTrue(title and title != "name", "ERP Sales Order must supply its native title field")
 		make_property_setter("Sales Order", title, "mask", 1, "Check")
 		self.permission_doctypes.append("Sales Order")
 		frappe.clear_cache(doctype="Sales Order")
+		frappe.set_user(self.staff())
 		links = control.context_view(doc)
 		self.assertEqual(links[0]["label"], self.order.name)
+
+	def test_older_doco_without_adapter_refuses_before_any_context_effect(self):
+		with patch.dict(sys.modules, {"doco.docoutils.storefront.support_context": None}):
+			self.failure(417, self.share)
+		self.assertFalse(frappe.db.exists(control.DOCTYPE, self.conversation()))
+		self.assertTrue(self.share()["shared"])
+
+	def test_busy_fence_keeps_retryable_outcome_and_original_receipt(self):
+		self.share()
+		with patch.object(control, "conversation_fence", side_effect=frappe.TimestampMismatchError):
+			self.assertEqual(self.failure(503, self.share)["reason"], "conflict_retry")
+		self.assertTrue(self.share()["replayed"])
+		self.assertEqual(
+			frappe.db.count(
+				control.EVENT, {"conversation": self.conversation(), "action": "storefront_order_share"}
+			),
+			1,
+		)
 
 	def test_exact_request_shape_and_post_only(self):
 		body = {"channel_id": self.channel["account_id"], "order_token": self.token}

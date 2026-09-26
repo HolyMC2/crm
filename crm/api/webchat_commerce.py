@@ -17,7 +17,12 @@ from crm.api import webchat
 def share(session, conversation, order_token):
 	control._assert_fence(conversation)
 	webchat._require("doco" in frappe.get_installed_apps(), "Storefront support is unavailable.")
-	from doco.docoutils.storefront.support_context import resolve_order
+	try:
+		from doco.docoutils.storefront.support_context import resolve_order
+	except ImportError:
+		# Companion lanes may be deployed in different orders. An absent adapter
+		# is a definitive refusal before any context mutation, not a lost result.
+		raise frappe.ValidationError("Storefront support is unavailable.") from None
 
 	channel = webchat._channel(session.channel)
 	record = resolve_order(order_token, channel.profile)

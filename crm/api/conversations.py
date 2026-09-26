@@ -271,6 +271,9 @@ def _department_record(doc, user, department):
 	"""
 	allowed = set(departments.record_doctypes(department))
 	for link in departments.parse_links(doc.get("context_links")):
+		# A forwardable visitor proof supplies context, never staff authority.
+		if link.get("source") == "storefront_order_proof":
+			continue
 		if link["doctype"] not in allowed or not frappe.db.exists("DocType", link["doctype"]):
 			continue
 		try:
@@ -1418,7 +1421,11 @@ def context_view(doc, user=None):
 		readable = set(get_permitted_fields(doctype, user=user, permission_type="read"))
 		masked = {field.fieldname for field in meta.get_masked_fields()}
 		label = (
-			record.get(title_field) if title_field in readable - masked and title_field != "name" else None
+			record.get(title_field)
+			if link.get("source") != "storefront_order_proof"
+			and title_field in readable - masked
+			and title_field != "name"
+			else None
 		)
 		out.append(
 			{

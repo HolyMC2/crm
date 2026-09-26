@@ -13,8 +13,8 @@ canonical 36-character alphanumeric token issued by checkout. It is never
 stored in conversation metadata, events, messages or browser recovery storage.
 
 The optional Doco adapter resolves current rows for the named enabled Storefront
-Profile and the exact existing storefront Sales Order, requiring matching
-profile and company. It does not call `order_status`, poll a gateway, submit an
+Profile and the exact existing storefront Sales Order in one nonlocking SQL
+statement, requiring matching profile and company. It does not call `order_status`, poll a gateway, submit an
 order, assert a Customer identity or merge a person. Canceled orders remain
 supportable. Missing configuration or mismatched proof fails closed.
 
@@ -24,8 +24,20 @@ conversation fence. A staff unlink is preserved: retrying the old share cannot
 restore that link. Closed conversations reject new shares. Replays revalidate
 the active session, channel, profile and current order token first.
 
-Staff context projections retain native order read permissions and title-field
-masks. Sharing changes no routing, owner, generation, bot grant or financial
+Staff context projections retain native order read permissions. Visitor-proof
+links show only the order number and an explicit unverified-identity caption;
+they never use the customer's name as a conversation label or grant staff
+authority. A forwarded order URL is not buyer identification. Staff must follow
+the existing identity-verification process before disclosing personal details
+or accepting sensitive order changes such as a new delivery address. Ordinary
+staff links retain title-field masks.
+
+An older Doco without the support adapter refuses before any mutation. A busy
+conversation fence is a retryable outage, never evidence that a prior share
+failed. The storefront retains the same proof/revision pair for explicit
+recheck while ordinary questions, history and ending the chat stay available.
+
+Sharing changes no routing, owner, generation, bot grant or financial
 status. An ordinary customer message uses the existing message/control policy.
 
 `crm.tests.test_storefront_support` covers the real SQL/controller chain with

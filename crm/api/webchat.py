@@ -192,6 +192,14 @@ def _guest(fn=None, *, scrub_after=True):
 					"rate_limited",
 					"Webchat is temporarily unavailable. Try again later.",
 				)
+			elif isinstance(error, frappe.TimestampMismatchError):
+				# A fence timeout does not disprove an earlier in-flight command.
+				# Preserve the client's frozen retry identity like other outages.
+				status, reason, message = (
+					503,
+					"conflict_retry",
+					"Webchat is temporarily unavailable. Try again later.",
+				)
 			elif isinstance(error, frappe.ValidationError):
 				status, reason, message = 417, "request_invalid", "Invalid Webchat request."
 			else:
