@@ -12,9 +12,12 @@ requests instead carry the current `view_revision`. The order proof is the
 canonical 36-character alphanumeric token issued by checkout. It is never
 stored in conversation metadata, events, messages or browser recovery storage.
 
-The optional Doco adapter resolves current rows for the named enabled Storefront
-Profile and the exact existing storefront Sales Order in one nonlocking SQL
-statement, requiring matching profile and company. It does not call `order_status`, poll a gateway, submit an
+The optional Doco adapter resolves the named enabled Storefront Profile and the
+exact existing storefront Sales Order in one nonlocking SQL statement, requiring
+matching profile and company. It reads the request's transaction snapshot;
+each new request revalidates the proof. A concurrent token rotation or profile
+disable may take effect after that snapshot, so this is not linearizable
+revocation. It does not call `order_status`, poll a gateway, submit an
 order, assert a Customer identity or merge a person. Canceled orders remain
 supportable. Missing configuration or mismatched proof fails closed.
 
@@ -22,7 +25,8 @@ The visitor receives only `{shared: true, replayed: boolean}`. Existing
 conversation context and its private event ledger provide idempotency under the
 conversation fence. A staff unlink is preserved: retrying the old share cannot
 restore that link. Closed conversations reject new shares. Replays revalidate
-the active session, channel, profile and current order token first.
+the active session and channel, then the profile and order token in the new
+request's snapshot.
 
 Staff context projections retain native order read permissions. Visitor-proof
 links show only the order number and an explicit unverified-identity caption;
