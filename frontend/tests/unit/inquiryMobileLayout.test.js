@@ -58,6 +58,9 @@ vi.mock('@/stores/session', () => ({
 vi.mock('@/stores/global', () => ({
   globalStore: () => ({ $socket: { on() {}, off() {} } }),
 }))
+// Favicon synchronization is a shell side effect, independent of the real
+// route-slot/breakpoint behavior under test. Identity behavior has its own suite.
+vi.mock('@/stores/settings', () => ({ syncBrandFavicon() {} }))
 vi.mock('@/utils/prefetch', () => ({ prefetchHotChunks() {} }))
 vi.mock('@/composables/telemetry', () => ({ initTelemetry() {} }))
 vi.mock('@/utils/dialogs', () => ({ Dialogs: { render: () => null } }))
