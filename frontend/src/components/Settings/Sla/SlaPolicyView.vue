@@ -244,6 +244,7 @@
 </template>
 
 <script setup>
+import { useSettingsDraft } from '@/composables/settingsSession'
 import {
   Badge,
   Button,
@@ -528,5 +529,13 @@ onUnmounted(() => {
   removeEventListener('beforeunload', beforeUnloadHandler)
   resetSlaDataErrors()
   disableSettingModalOutsideClick.value = false
+})
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () =>
+    slaPolicyListResource.setValue.loading ||
+    slaPolicyListResource.insert.loading ||
+    renameSlaResource.loading,
 })
 </script>

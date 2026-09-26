@@ -1,9 +1,17 @@
 <template>
+  <div v-if="getAssignmentRuleData.error" role="alert" class="p-4">
+    <p>{{ settingsErrorMessage(getAssignmentRuleData.error) }}</p>
+    <Button
+      :label="__('Retry')"
+      class="mt-3 min-h-11"
+      @click="getAssignmentRuleData.reload().catch(() => {})"
+    />
+  </div>
   <div
-    v-if="!getAssignmentRuleData.loading"
-    class="flex flex-col h-full gap-6 px-6 py-8 text-ink-gray-8"
+    v-else-if="!getAssignmentRuleData.loading"
+    class="flex flex-col h-full gap-6 p-4 sm:px-6 sm:py-8 text-ink-gray-8"
   >
-    <div class="flex justify-between px-2 w-full">
+    <div class="flex flex-wrap items-start gap-3 justify-between px-2 w-full">
       <div class="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -32,7 +40,8 @@
           <span class="text-sm text-ink-gray-7">{{ __('Enabled') }}</span>
         </div>
         <Button
-          :disabled="Boolean(!isDirty && step.data)"
+          :disabled="!canWrite || Boolean(!isDirty && step.data)"
+          class="min-h-11"
           :label="__('Save')"
           theme="gray"
           variant="solid"
@@ -41,8 +50,14 @@
         />
       </div>
     </div>
-    <div class="overflow-y-auto px-2">
-      <div class="grid grid-cols-2 gap-5">
+    <p v-if="!canWrite" class="text-sm">
+      {{ __('Saving this assignment rule requires additional permission.') }}
+    </p>
+    <fieldset
+      :disabled="isLoading || !canWrite"
+      class="min-w-0 overflow-y-auto px-2"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <FormControl
             v-model="assignmentRuleData.assignmentRuleName"
@@ -313,7 +328,7 @@
       </div>
       <hr class="my-8" />
       <AssigneeRules />
-    </div>
+    </fieldset>
   </div>
   <div v-else class="flex items-center h-full justify-center">
     <LoadingIndicator class="w-4" />
@@ -328,6 +343,10 @@
 </template>
 
 <script setup>
+import {
+  useSettingsDraft,
+  settingsErrorMessage,
+} from '@/composables/settingsSession'
 import {
   Badge,
   Button,
@@ -366,6 +385,7 @@ const isLoading = ref(false)
 const updateStep = inject('updateStep')
 const { capture } = useTelemetry()
 const step = inject('step')
+const canWrite = computed(() => step.value.data?.can_write !== false)
 const { $dialog } = globalStore()
 
 const showConfirmDialog = ref({
@@ -572,6 +592,7 @@ if (!step.value.data) {
 }
 
 const goBack = () => {
+  if (isLoading.value) return
   if (isDirty.value && !showConfirmDialog.value.show) {
     $dialog({
       title: __('Unsaved Changes'),
@@ -597,6 +618,7 @@ const goBack = () => {
 }
 
 const saveAssignmentRule = () => {
+  if (isLoading.value || !canWrite.value) return
   const validationErrors = validateAssignmentRule(undefined, !useNewUI.value)
   const expandedErrors = Object.keys(validationErrors)
     .filter((key) => validationErrors[key])
@@ -815,4 +837,6 @@ onUnmounted(() => {
   removeEventListener('beforeunload', beforeUnloadHandler)
   disableSettingModalOutsideClick.value = false
 })
+
+useSettingsDraft({ dirty: isDirty, pending: isLoading })
 </script>

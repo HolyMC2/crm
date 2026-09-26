@@ -82,6 +82,7 @@
 </template>
 
 <script setup>
+import { useSettingsDraft } from '@/composables/settingsSession'
 import { computed, reactive, ref } from 'vue'
 import { call, toast } from 'frappe-ui'
 import EmailProviderIcon from './EmailProviderIcon.vue'
@@ -215,4 +216,11 @@ function errorHandler() {
   loading.value = false
   error.value = __('Failed to update email account: invalid credentials')
 }
+
+useSettingsDraft({
+  dirty: () =>
+    isDirty.value ||
+    state.email_account_name !== props.accountData.email_account_name,
+  pending: loading,
+})
 </script>

@@ -93,6 +93,7 @@
 </template>
 
 <script setup>
+import { useSettingsDraft } from '@/composables/settingsSession'
 import { computed, reactive, ref } from 'vue'
 import { createResource, toast } from 'frappe-ui'
 import { useTelemetry } from 'frappe-ui/frappe'
@@ -158,6 +159,11 @@ function createEmailAccount() {
   addEmailRes.submit({ data: state })
   capture('email_account_created')
 }
+
+useSettingsDraft({
+  dirty: () => Object.values(state).some(Boolean),
+  pending: () => addEmailRes.loading,
+})
 </script>
 
 <style scoped></style>

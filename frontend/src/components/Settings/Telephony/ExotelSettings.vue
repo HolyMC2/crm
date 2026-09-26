@@ -129,6 +129,10 @@
   </SettingsLayoutBase>
 </template>
 <script setup>
+import {
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import { setEnabled } from '@/composables/telephony'
 import { useDocument } from '@/data/document'
 import { Switch } from 'frappe-ui'
@@ -164,5 +168,11 @@ const isDirty = computed(() => {
     exotel.originalDoc &&
     JSON.stringify(exotel.doc) !== JSON.stringify(exotel.originalDoc)
   )
+})
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () => exotel.save.loading,
+  discard: () => discardSettingsDocument(exotel),
 })
 </script>

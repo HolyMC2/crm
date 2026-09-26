@@ -251,15 +251,11 @@
         </div>
       </div>
     </template>
-
-    <!-- Settings modal (teleported; position-independent) -->
-    <Settings />
   </div>
 </template>
 
 <script setup>
 import Notifications from '@/components/Notifications.vue'
-import Settings from '@/components/Settings/Settings.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'

@@ -136,6 +136,10 @@
   </SettingsLayoutBase>
 </template>
 <script setup>
+import {
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import { setEnabled } from '@/composables/telephony'
 import { useDocument } from '@/data/document'
 import { Combobox, Switch } from 'frappe-ui'
@@ -191,5 +195,11 @@ const isDirty = computed(() => {
     twilio.originalDoc &&
     JSON.stringify(twilio.doc) !== JSON.stringify(twilio.originalDoc)
   )
+})
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () => twilio.save.loading,
+  discard: () => discardSettingsDocument(twilio),
 })
 </script>

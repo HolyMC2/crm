@@ -130,6 +130,10 @@
 </template>
 
 <script setup>
+import {
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import { getSettings } from '@/stores/settings'
 import { FormControl, Switch, toast } from 'frappe-ui'
 
@@ -161,4 +165,10 @@ function save() {
     onSuccess: () => toast.success(__('Setting updated successfully')),
   })
 }
+
+useSettingsDraft({
+  dirty: () => settings.isDirty,
+  pending: () => settings.save.loading,
+  discard: () => discardSettingsDocument(settings),
+})
 </script>

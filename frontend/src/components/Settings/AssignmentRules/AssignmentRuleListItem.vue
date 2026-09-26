@@ -2,7 +2,11 @@
   <div
     class="flex p-3 items-center justify-between cursor-pointer hover:bg-surface-sidebar rounded"
   >
-    <div class="w-7/12" @click="updateStep('view', data)">
+    <button
+      type="button"
+      class="min-h-11 w-7/12 min-w-0 text-left focus-visible:ring-2"
+      @click="updateStep('view', data)"
+    >
       <div class="text-base-medium text-ink-gray-7">{{ data.name }}</div>
       <div
         v-if="data.description && data.description.length > 0"
@@ -10,12 +14,13 @@
       >
         {{ data.description }}
       </div>
-    </div>
+    </button>
     <div class="w-3/12">
       <select
         v-model="localData.priority"
-        class="w-full h-7 text-base hover:bg-surface-gray-3 rounded-md p-0 pl-2 pr-5 bg-transparent -ml-2 border-0 text-ink-gray-8 focus-visible:!ring-0 bg-none truncate"
-        @update:modelValue="onPriorityChange"
+        class="w-full min-h-11 text-base hover:bg-surface-gray-3 rounded-md p-0 pl-2 pr-5 bg-transparent -ml-2 border-0 text-ink-gray-8 focus-visible:!ring-0 bg-none truncate"
+        :disabled="pending || !data.can_write"
+        :aria-label="__('Assignment priority')"
         @change="onPriorityChange"
       >
         <option
@@ -30,18 +35,29 @@
     <div class="flex justify-between items-center w-2/12">
       <Switch
         size="sm"
+        :disabled="pending || !data.can_write"
         :modelValue="!data.disabled"
         @update:modelValue="onToggle"
       />
-      <Dropdown placement="right" :options="dropdownOptions">
+      <Dropdown
+        v-if="dropdownOptions.length"
+        placement="right"
+        :options="dropdownOptions"
+      >
         <Button
           icon="lucide-more-horizontal"
+          :aria-label="__('Assignment actions')"
+          :disabled="pending"
+          class="min-h-11 min-w-11"
           variant="ghost"
           @click="isConfirmingDelete = false"
         />
       </Dropdown>
     </div>
   </div>
+  <p v-if="error" role="alert" class="p-3 text-sm text-ink-red-5">
+    {{ error }}
+  </p>
   <Dialog
     v-model:open="duplicateDialog.show"
     :title="__('Duplicate Assignment Rule')"
@@ -62,7 +78,13 @@
           :label="__('Close')"
           @click="duplicateDialog.show = false"
         />
-        <Button variant="solid" :label="__('Duplicate')" @click="duplicate()" />
+        <Button
+          variant="solid"
+          :label="__('Duplicate')"
+          :loading="pending"
+          class="min-h-11"
+          @click="duplicate()"
+        />
       </div>
     </template>
   </Dialog>
@@ -71,7 +93,7 @@
 <script setup>
 import {
   Button,
-  createResource,
+  call,
   Dialog,
   Dropdown,
   FormControl,
@@ -79,8 +101,12 @@ import {
   toast,
 } from 'frappe-ui'
 import { useTelemetry } from 'frappe-ui/frappe'
-import { inject, ref, reactive, watch } from 'vue'
+import { computed, inject, ref, reactive, watch } from 'vue'
 import { ConfirmDelete } from '../../../utils'
+import {
+  useSettingsDraft,
+  settingsErrorMessage,
+} from '@/composables/settingsSession'
 
 const { capture } = useTelemetry()
 
@@ -113,56 +139,78 @@ const duplicateDialog = ref({
 
 const isConfirmingDelete = ref(false)
 
-const deleteAssignmentRule = () => {
-  createResource({
-    url: 'frappe.client.delete',
-    params: {
+const pending = ref(false)
+const error = ref('')
+useSettingsDraft({
+  dirty: () => duplicateDialog.value.show && !!duplicateDialog.value.name,
+  pending,
+})
+async function mutate(method, args, onSuccess) {
+  if (pending.value) return
+  pending.value = true
+  error.value = ''
+  try {
+    const result = await call(method, args)
+    onSuccess?.(result)
+    await assignmentRulesList.reload()
+  } catch (e) {
+    Object.assign(localData, props.data)
+    error.value =
+      e.exc_type === 'ValidationError'
+        ? e.messages?.[0] || e.message
+        : settingsErrorMessage(e)
+  } finally {
+    pending.value = false
+  }
+}
+const deleteAssignmentRule = () =>
+  mutate(
+    'frappe.client.delete',
+    {
       doctype: 'Assignment Rule',
       name: props.data.name,
     },
-    onSuccess: () => {
-      assignmentRulesList.reload()
+    () => {
       isConfirmingDelete.value = false
       toast.success(__('Assignment rule deleted'))
     },
-    auto: true,
-  })
-}
-
-const dropdownOptions = [
-  {
-    label: __('Duplicate'),
-    onClick: () => {
-      duplicateDialog.value = {
-        show: true,
-        name: props.data.name + ' (Copy)',
-      }
-    },
-    icon: 'copy',
-  },
-  ...ConfirmDelete({
-    onConfirmDelete: () => deleteAssignmentRule(),
-    isConfirmingDelete,
-  }),
-]
-
-const duplicate = () => {
-  createResource({
-    url: 'crm.api.assignment_rule.duplicate_assignment_rule',
-    params: {
+  )
+const dropdownOptions = computed(() => [
+  ...(props.data.can_duplicate
+    ? [
+        {
+          label: __('Duplicate'),
+          icon: 'copy',
+          onClick: () => {
+            duplicateDialog.value = {
+              show: true,
+              name: props.data.name + ' (Copy)',
+            }
+          },
+        },
+      ]
+    : []),
+  ...(props.data.can_delete
+    ? ConfirmDelete({
+        onConfirmDelete: deleteAssignmentRule,
+        isConfirmingDelete,
+      })
+    : []),
+])
+const duplicate = () =>
+  mutate(
+    'crm.api.assignment_rule.duplicate_assignment_rule',
+    {
       docname: props.data.name,
       new_name: duplicateDialog.value.name,
     },
-    onSuccess: (data) => {
-      assignmentRulesList.reload()
-      toast.success(__('Assignment rule duplicated'))
+    (data) => {
       duplicateDialog.value.show = false
       duplicateDialog.value.name = ''
+      toast.success(__('Assignment rule duplicated'))
       updateStep('view', data)
     },
-    auto: true,
-  })
-}
+  )
 
 const onPriorityChange = () => {
   setAssignmentRuleValue('priority', localData.priority)
@@ -178,19 +226,16 @@ const onToggle = () => {
 }
 
 const setAssignmentRuleValue = (key, value, fieldName = undefined) => {
-  createResource({
-    url: 'frappe.client.set_value',
-    params: {
+  if (!props.data.can_write) return
+  return mutate(
+    'frappe.client.set_value',
+    {
       doctype: 'Assignment Rule',
       name: props.data.name,
       fieldname: key,
-      value: value,
+      value,
     },
-    onSuccess: () => {
-      assignmentRulesList.reload()
-      toast.success(__('Assignment rule {0} updated', [fieldName || key]))
-    },
-    auto: true,
-  })
+    () => toast.success(__('Assignment rule {0} updated', [fieldName || key])),
+  )
 }
 </script>

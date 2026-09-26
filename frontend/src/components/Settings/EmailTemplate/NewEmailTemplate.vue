@@ -123,6 +123,7 @@
   </div>
 </template>
 <script setup>
+import { useSettingsDraft } from '@/composables/settingsSession'
 import { useBroadcast } from '@/composables/useBroadcast'
 import { TextEditor, FormControl, Switch, toast } from 'frappe-ui'
 import { inject, onMounted, ref } from 'vue'
@@ -191,5 +192,16 @@ onMounted(() => {
   } else {
     Object.assign(template.value, props.templateData)
   }
+})
+
+useSettingsDraft({
+  dirty: () =>
+    !!(
+      template.value.name ||
+      template.value.subject ||
+      template.value.response ||
+      template.value.response_html
+    ),
+  pending: () => templates.insert.loading,
 })
 </script>

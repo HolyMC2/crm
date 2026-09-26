@@ -458,9 +458,13 @@
 
 <script setup>
 import {
+  settingsDocumentResource,
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
+import {
   Button,
   Combobox,
-  createDocumentResource,
   createResource,
   FormControl,
   LoadingIndicator,
@@ -478,7 +482,7 @@ import { useTelemetry } from 'frappe-ui/frappe'
 const { $dialog, $socket } = globalStore()
 const { capture } = useTelemetry()
 
-const erpnextCRMSettingsResource = createDocumentResource({
+const erpnextCRMSettingsResource = settingsDocumentResource({
   doctype: 'ERPNext CRM Settings',
   name: 'ERPNext CRM Settings',
   whitelistedMethods: {
@@ -859,4 +863,12 @@ function onSyncComplete() {
 }
 onMounted(() => $socket.on('crm_product_sync_complete', onSyncComplete))
 onBeforeUnmount(() => $socket.off('crm_product_sync_complete', onSyncComplete))
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () =>
+    erpnextCRMSettingsResource.setValue.loading ||
+    erpnextCRMSettingsResource.runProductSync.loading,
+  discard: () => discardSettingsDocument(erpnextCRMSettingsResource),
+})
 </script>

@@ -164,6 +164,10 @@
 </template>
 
 <script setup>
+import {
+  useSettingsDraft,
+  discardSettingsDocument,
+} from '@/composables/settingsSession'
 import { useDocument } from '@/data/document'
 import { onMounted, inject, ref, computed, watch } from 'vue'
 import { supportedSourceTypes } from './leadSyncSourceConfig'
@@ -251,6 +255,7 @@ const syncSource = ref({
     fieldsMap.value.background_sync_frequency?.default || 'Hourly',
 })
 
+const baseline = ref(JSON.stringify(syncSource.value))
 const isLocal = ref(true)
 
 const selectedSourceType = computed(() =>
@@ -311,6 +316,7 @@ function createOrUpdateSource() {
 onMounted(() => {
   if (props.sourceData?.name) {
     Object.assign(syncSource.value, props.sourceData)
+    baseline.value = JSON.stringify(syncSource.value)
     isLocal.value = false // edit form
     docResource.value = getSourceDocResource(props.sourceData.name)
   }
@@ -331,6 +337,7 @@ watch(
         ...newDoc,
         type: newDoc.type,
       })
+      baseline.value = JSON.stringify(syncSource.value)
 
       mappingFormDocResource.value = useDocument(
         'Facebook Lead Form',
@@ -390,4 +397,18 @@ function getSourceDocResource(name) {
     },
   })
 }
+useSettingsDraft({
+  dirty: () =>
+    JSON.stringify(syncSource.value) !== baseline.value ||
+    mappingFormDocResource.value?.document?.isDirty,
+  pending: () =>
+    sources.setValue.loading ||
+    sources.insert.loading ||
+    mappingFormDocResource.value?.document?.save?.loading ||
+    docResource.value?.document?.syncLeads?.loading,
+  discard: () => {
+    if (mappingFormDocResource.value?.document)
+      discardSettingsDocument(mappingFormDocResource.value.document)
+  },
+})
 </script>

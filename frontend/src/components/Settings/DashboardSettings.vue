@@ -169,6 +169,10 @@
   </div>
 </template>
 <script setup>
+import {
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import { getSettings } from '@/stores/settings'
 import { globalStore } from '@/stores/global'
 import { useBroadcast } from '@/composables/useBroadcast'
@@ -256,4 +260,10 @@ function setCurrency(value) {
     ],
   })
 }
+
+useSettingsDraft({
+  dirty: () => settings.isDirty,
+  pending: () => settings.save.loading,
+  discard: () => discardSettingsDocument(settings),
+})
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col gap-6 p-8 text-ink-gray-8">
+  <div class="flex h-full flex-col gap-6 p-4 sm:p-8 text-ink-gray-8">
     <!-- Header -->
     <div class="flex justify-between text-ink-gray-8">
       <div class="flex flex-col gap-1">
@@ -36,26 +36,36 @@
   </div>
 </template>
 <script setup>
+import {
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import Grid from '@/components/Controls/Grid.vue'
 import { ErrorMessage } from 'frappe-ui'
-import { showSettings } from '@/composables/settings'
+import { getSettings } from '@/stores/settings'
 import { useDocument } from '@/data/document'
 import { ref, provide } from 'vue'
 
+const sharedSettings = getSettings()._settings
+const previousAuto = sharedSettings.auto
+sharedSettings.auto = false
 const { document, triggerOnChange } = useDocument(
   'FCRM Settings',
   'FCRM Settings',
 )
+sharedSettings.auto = previousAuto
 
 provide('triggerOnChange', triggerOnChange)
 
 const errorMessage = ref('')
 
 function updateSettings() {
-  document.save.submit(null, {
-    onSuccess: () => {
-      showSettings.value = false
-    },
-  })
+  document.save.submit()
 }
+
+useSettingsDraft({
+  dirty: () => document.isDirty,
+  pending: () => document.save.loading,
+  discard: () => discardSettingsDocument(document),
+})
 </script>

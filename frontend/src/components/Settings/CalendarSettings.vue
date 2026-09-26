@@ -256,8 +256,11 @@
   </div>
 </template>
 <script setup>
+import {
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import { getSettings } from '@/stores/settings'
-import { showSettings } from '@/composables/settings'
 import { min, max, handleIntervalChange } from '@/components/Calendar/utils'
 import { FormControl, TimePicker } from 'frappe-ui'
 import { computed } from 'vue'
@@ -276,9 +279,13 @@ const allDayNotifications = computed({
 
 function updateSettings() {
   settings.save.submit(null, {
-    onSuccess: () => {
-      showSettings.value = false
-    },
+    onSuccess: () => {},
   })
 }
+
+useSettingsDraft({
+  dirty: () => settings.isDirty,
+  pending: () => settings.save.loading,
+  discard: () => discardSettingsDocument(settings),
+})
 </script>

@@ -141,8 +141,8 @@
                 class="press flex flex-col items-center gap-1 rounded-[10px] px-1 py-2 hover:bg-surface-gray-2"
               >
                 <component
-                  v-if="app.icon"
                   :is="app.icon"
+                  v-if="app.icon"
                   class="h-7 w-7 p-1 text-ink-gray-7"
                 />
                 <img v-else class="h-7 w-7 rounded-md" :src="app.logo" alt="" />
@@ -256,9 +256,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Settings modal lives here on mobile (desktop mounts it in DocoNavRail) -->
-          <Settings />
         </div>
       </TransitionChild>
       <TransitionChild
@@ -294,7 +291,6 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import SidebarLink from '@/components/SidebarLink.vue'
-import Settings from '@/components/Settings/Settings.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
 import {

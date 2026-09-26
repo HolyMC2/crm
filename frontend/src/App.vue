@@ -7,6 +7,7 @@
         :key="$route.meta.stableKey ? $route.path : $route.fullPath"
       />
     </Layout>
+    <Settings v-if="session.isLoggedIn && showSettings" />
     <Dialogs />
     <DoctypeModals />
     <EventNotificationPopup />
@@ -33,6 +34,10 @@ import { syncBrandFavicon } from '@/stores/settings'
 import { prefetchHotChunks } from '@/utils/prefetch'
 import { initTelemetry } from '@/composables/telemetry'
 import { isMobile } from '@/composables/breakpoint'
+import { showSettings } from '@/composables/settings'
+const Settings = defineAsyncComponent(
+  () => import('@/components/Settings/Settings.vue'),
+)
 
 const session = sessionStore()
 provide('session', session)

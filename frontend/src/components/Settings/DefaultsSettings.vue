@@ -144,14 +144,19 @@
 </template>
 
 <script setup>
+import {
+  settingsDocumentResource,
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import Link from '@/components/Controls/Link.vue'
 import { getMeta } from '@/stores/meta'
-import { Select, Button, toast, createDocumentResource } from 'frappe-ui'
+import { Select, Button, toast } from 'frappe-ui'
 import { computed } from 'vue'
 
 const { getFields } = getMeta('System Settings')
 
-const settings = createDocumentResource({
+const settings = settingsDocumentResource({
   doctype: 'System Settings',
   name: 'System Settings',
 })
@@ -178,4 +183,10 @@ function getOptions(fieldname) {
   const field = fieldsMeta.value.find((f) => f.fieldname === fieldname)
   return field?.options || []
 }
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () => settings.save.loading,
+  discard: () => discardSettingsDocument(settings),
+})
 </script>

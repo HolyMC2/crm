@@ -122,6 +122,7 @@
   </div>
 </template>
 <script setup>
+import { useSettingsDraft } from '@/composables/settingsSession'
 import {
   TextEditor,
   FormControl,
@@ -242,5 +243,10 @@ const renameDoc = createResource({
 onMounted(() => {
   template.value = { ...props.templateData }
   template.value.content_type = template.value.use_html ? 'HTML' : 'Rich Text'
+})
+
+useSettingsDraft({
+  dirty,
+  pending: () => renameDoc.loading || templates.setValue.loading,
 })
 </script>

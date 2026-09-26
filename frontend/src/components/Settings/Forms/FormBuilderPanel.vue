@@ -29,7 +29,9 @@
         </div>
         <Button
           :label="mode === 'edit' ? __('Preview') : __('Edit')"
-          @click="(mode = mode === 'edit' ? 'preview' : 'edit'), resetPreview()"
+          @click="
+            ((mode = mode === 'edit' ? 'preview' : 'edit'), resetPreview())
+          "
         >
           <template #prefix>
             <LucideEye v-if="mode === 'edit'" class="h-4 w-4" />
@@ -196,13 +198,13 @@
                               (e) => addFieldToColumn(col, e)
                             "
                           >
-                            <template #trigger="{ open, setOpen }">
+                            <template #trigger="{ open: pickerOpen, setOpen }">
                               <Button
                                 class="!h-8 w-full !bg-surface-elevation-2"
                                 variant="outline"
                                 :label="__('Add Field')"
                                 icon-left="plus"
-                                @click="openFieldPicker(open, setOpen)"
+                                @click="openFieldPicker(pickerOpen, setOpen)"
                               />
                             </template>
                           </Combobox>
@@ -316,7 +318,7 @@
                         <input
                           v-model="form.route"
                           class="min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
-                          @input="(routeEdited = true), markDirty()"
+                          @input="((routeEdited = true), markDirty())"
                         />
                       </div>
                     </div>
@@ -393,8 +395,8 @@
                         class="flex text-ink-gray-5 transition-colors hover:text-ink-gray-8"
                         :title="__('Copy link')"
                         @click="
-                          copyToClipboard(publicUrl),
-                            capture('form_embed_copied', { embed_type: 'link' })
+                          (copyToClipboard(publicUrl),
+                          capture('form_embed_copied', { embed_type: 'link' }))
                         "
                       >
                         <LucideCopy class="h-4 w-4" />
@@ -448,10 +450,10 @@
                         class="absolute right-2 top-2 flex text-ink-gray-5 transition-colors hover:text-ink-gray-8"
                         :title="__('Copy')"
                         @click="
-                          copyToClipboard(iframeSnippet),
-                            capture('form_embed_copied', {
-                              embed_type: 'iframe',
-                            })
+                          (copyToClipboard(iframeSnippet),
+                          capture('form_embed_copied', {
+                            embed_type: 'iframe',
+                          }))
                         "
                       >
                         <LucideCopy class="h-4 w-4" />
@@ -561,8 +563,8 @@
                     class="flex flex-col gap-4"
                   >
                     <div
-                      v-show="fieldVisible(f)"
                       v-for="f in col"
+                      v-show="fieldVisible(f)"
                       :key="f.fieldname"
                     >
                       <div
@@ -656,6 +658,7 @@
 </template>
 
 <script setup>
+import { useSettingsDraft } from '@/composables/settingsSession'
 import {
   Badge,
   Button,
@@ -1016,6 +1019,7 @@ async function saveNow() {
 // with autosave gone, warn before leaving the editor with unsaved changes
 // (same $dialog pattern as the Assignment Rule page)
 function goBack() {
+  if (saving.value) return
   if (dirty.value) {
     $dialog({
       title: __('Unsaved Changes'),
@@ -1532,6 +1536,8 @@ function togglePublish() {
   form.published = form.published ? 0 : 1
   markDirty()
 }
+
+useSettingsDraft({ dirty, pending: saving })
 </script>
 
 <style>

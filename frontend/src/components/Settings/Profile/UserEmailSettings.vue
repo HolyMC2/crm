@@ -117,12 +117,16 @@
   </SettingsLayoutBase>
 </template>
 <script setup>
+import {
+  settingsDocumentResource,
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import {
   Badge,
   Button,
   Combobox,
-  createDocumentResource,
   createListResource,
   TextEditor,
   toast,
@@ -133,7 +137,7 @@ const emit = defineEmits(['updateStep'])
 
 const { user: sessionUser } = inject('session')
 
-const user = createDocumentResource({ doctype: 'User', name: sessionUser })
+const user = settingsDocumentResource({ doctype: 'User', name: sessionUser })
 
 const emails = createListResource({
   doctype: 'Email Account',
@@ -195,5 +199,11 @@ useKeyboardShortcuts({
       },
     },
   ],
+})
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () => user.save.loading,
+  discard: () => discardSettingsDocument(user),
 })
 </script>

@@ -132,6 +132,11 @@
 </template>
 
 <script setup>
+import {
+  settingsDocumentResource,
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import SettingsLayoutBase from '@/components/Layouts/SettingsLayoutBase.vue'
 import ChangePasswordModal from '@/components/Modals/ChangePasswordModal.vue'
@@ -144,14 +149,13 @@ import {
   LoadingIndicator,
   toast,
   Tooltip,
-  createDocumentResource,
 } from 'frappe-ui'
 import { ref, computed, inject, useTemplateRef, nextTick } from 'vue'
 
 const emit = defineEmits(['updateStep'])
 
 const { user: sessionUser } = inject('session')
-const user = createDocumentResource({ doctype: 'User', name: sessionUser })
+const user = settingsDocumentResource({ doctype: 'User', name: sessionUser })
 
 const showChangePasswordModal = ref(false)
 const isHoveringRemove = ref(false)
@@ -217,5 +221,11 @@ useKeyboardShortcuts({
       },
     },
   ],
+})
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () => user.save.loading,
+  discard: () => discardSettingsDocument(user),
 })
 </script>

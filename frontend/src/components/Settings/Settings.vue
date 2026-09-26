@@ -1,46 +1,121 @@
 <template>
   <Dialog
     v-model:open="showSettings"
-    :size="'5xl'"
-    :disableOutsideClickToClose="disableSettingModalOutsideClick"
-    @close="activeSettingsPage = ''"
+    size="5xl"
+    :disableOutsideClickToClose="
+      disableSettingModalOutsideClick || session.pending.value
+    "
   >
     <template #body>
-      <div class="flex h-[calc(100vh_-_8rem)] bg-surface-gray-1">
-        <div
-          class="flex flex-col m-1 rounded-l-lg w-56 shrink-0 bg-surface-gray-1 overflow-y-auto"
+      <div
+        class="flex h-[min(48rem,calc(100dvh_-_8rem))] min-w-0 flex-col bg-surface-gray-1 text-ink-gray-8"
+      >
+        <header
+          class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-outline-gray-2 p-3"
         >
-          <template v-for="(tab, i) in tabs" :key="tab.label">
-            <div v-if="!tab.hideLabel && i != 0" class="mx-1 mb-0.5 mt-[5px]" />
-            <div
-              v-if="!tab.hideLabel"
-              class="h-7.5 px-2 py-[7px] my-[3px] flex cursor-pointer gap-1.5 text-xs-medium text-ink-gray-5 transition-all duration-300 ease-in-out sticky top-0 z-10 bg-surface-gray-1"
-            >
-              <span>{{ __(tab.label) }}</span>
-            </div>
-            <nav class="space-y-[3px] px-1">
-              <SidebarItem
-                v-for="item in tab.items"
-                :key="item.label"
-                :label="__(item.label)"
-                :active="activeTab?.label == item.label"
-                class="w-full"
-                :class="
-                  activeTab?.label != item.label && 'hover:!bg-surface-gray-3'
-                "
-                @click="activeSettingsPage = item.label"
+          <button
+            v-if="isMobileView && !categories"
+            type="button"
+            class="min-h-11 rounded px-3 focus-visible:ring-2"
+            @click="categories = true"
+          >
+            {{ __('Back to settings') }}
+          </button>
+          <h1 v-else class="text-lg font-semibold">{{ __('Settings') }}</h1>
+          <span
+            v-if="session.dirty.value"
+            class="text-sm text-ink-gray-6"
+            role="status"
+            >{{ __('Unsaved changes') }}</span
+          >
+          <button
+            type="button"
+            class="min-h-11 rounded border border-outline-gray-2 px-3 focus-visible:ring-2"
+            @click="showSettings = false"
+          >
+            {{ __('Return to work') }}
+          </button>
+        </header>
+        <p v-if="notice" role="alert" class="px-4 py-2 text-sm">{{ notice }}</p>
+        <div class="flex min-h-0 min-w-0 flex-1">
+          <nav
+            v-show="!isMobileView || categories"
+            :aria-label="__('Settings categories')"
+            class="min-w-0 flex-1 overflow-y-auto p-2 md:w-56 md:flex-none"
+          >
+            <template v-for="group in tabs" :key="group.label">
+              <h2
+                v-if="!group.hideLabel"
+                class="px-3 pb-1 pt-4 text-xs font-semibold text-ink-gray-6"
               >
-                <template #prefix>
-                  <Icon :icon="item.icon" class="size-4 text-ink-gray-7" />
-                </template>
-              </SidebarItem>
-            </nav>
-          </template>
-        </div>
-        <div
-          class="flex flex-col flex-1 overflow-y-auto bg-surface-elevation-2"
-        >
-          <component :is="activeTab.component" v-if="activeTab" />
+                {{ group.label }}
+              </h2>
+              <button
+                v-for="item in group.items"
+                :key="item.label"
+                type="button"
+                class="flex min-h-11 w-full items-center gap-2 rounded px-3 py-2 text-left text-sm focus-visible:ring-2"
+                :class="
+                  activeTab?.label === item.label
+                    ? 'bg-surface-gray-3'
+                    : 'hover:bg-surface-gray-2'
+                "
+                :aria-current="
+                  activeTab?.label === item.label ? 'page' : undefined
+                "
+                :disabled="session.pending.value"
+                @click="selectTab(item.label)"
+              >
+                <Icon :icon="item.icon" class="size-4 shrink-0" />
+                <span class="min-w-0 break-words">{{ item.label }}</span>
+              </button>
+            </template>
+            <div
+              v-if="isAdmin() && marketingState !== 'present'"
+              class="mt-4 rounded border border-outline-gray-2 p-3 text-sm"
+              role="status"
+            >
+              <p v-if="marketingState === 'missing'">
+                {{
+                  __(
+                    'Marketing and Social settings are unavailable because Marketing is not installed.',
+                  )
+                }}
+              </p>
+              <p v-else-if="marketingState === 'pending'">
+                {{ __('Checking optional settings…') }}
+              </p>
+              <template v-else>
+                <p>
+                  {{
+                    __(
+                      'Optional settings could not be checked. Native CRM settings remain available.',
+                    )
+                  }}
+                </p>
+                <button
+                  type="button"
+                  class="mt-2 min-h-11 rounded border px-3 focus-visible:ring-2"
+                  @click="loadCapabilities"
+                >
+                  {{ __('Retry') }}
+                </button>
+              </template>
+            </div>
+          </nav>
+          <section
+            v-show="!isMobileView || !categories"
+            :aria-label="activeTab?.label"
+            class="settings-content min-w-0 flex-1 overflow-y-auto bg-surface-elevation-2"
+          >
+            <KeepAlive>
+              <component
+                :is="activeTab.component"
+                v-if="activeTab && (!isMobileView || !categories)"
+                :key="activeTab.label"
+              />
+            </KeepAlive>
+          </section>
         </div>
       </div>
     </template>
@@ -89,10 +164,22 @@ import {
   showSettings,
   activeSettingsPage,
   disableSettingModalOutsideClick,
+  isMobileView,
+  registerSettingsCloseGuard,
 } from '@/composables/settings'
 import { isWhatsappInstalled } from '@/composables/whatsapp'
-import { Dialog, Avatar, SidebarItem } from 'frappe-ui'
-import { ref, markRaw, computed, watch, h } from 'vue'
+import { Dialog, Avatar } from 'frappe-ui'
+import { ref, markRaw, computed, watch, h, provide, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  addonAvailable,
+  appState,
+  loadCapabilities,
+} from '@/utils/crmCapabilities'
+import {
+  createSettingsSession,
+  SETTINGS_SESSION,
+} from '@/composables/settingsSession'
 import AssignmentRulePage from './AssignmentRules/AssignmentRulePage.vue'
 import ShieldCheck from '~icons/lucide/shield-check'
 import SlaConfig from './Sla/SlaConfig.vue'
@@ -224,7 +311,7 @@ const tabs = computed(() => {
           label: __('Marketing y canal'),
           component: markRaw(MarketingSettings),
           icon: markRaw(LucideMegaphone),
-          condition: () => isAdmin(),
+          condition: () => isAdmin() && addonAvailable.value,
         },
         {
           // Social calendar knobs: Holiday List (festivos = blackout), curated
@@ -233,7 +320,7 @@ const tabs = computed(() => {
           label: __('Social (redes)'),
           component: markRaw(SocialSettings),
           icon: 'share-2',
-          condition: () => isAdmin(),
+          condition: () => isAdmin() && addonAvailable.value,
         },
       ],
       condition: () => isManager(),
@@ -291,17 +378,87 @@ const tabs = computed(() => {
   })
 })
 
-const activeTab = ref(tabs.value[0].items[0])
+const session = createSettingsSession()
+provide(SETTINGS_SESSION, session)
+const categories = ref(!activeSettingsPage.value)
+const notice = ref('')
+const activeTab = computed(
+  () =>
+    tabs.value
+      .flatMap((group) => group.items)
+      .find((item) => item.label === activeSettingsPage.value) ||
+    tabs.value[0]?.items[0],
+)
+const marketingState = computed(() => appState('doco_marketing'))
+loadCapabilities()
 
-function setActiveTab(tabName) {
-  activeTab.value =
-    (tabName &&
-      tabs.value
-        .map((tab) => tab.items)
-        .flat()
-        .find((tab) => tab.label === tabName)) ||
-    tabs.value[0].items[0]
+function selectTab(label) {
+  if (session.pending.value) {
+    notice.value = __(
+      'Wait for the current save to finish. Your settings stay open.',
+    )
+    return
+  }
+  notice.value = ''
+  activeSettingsPage.value = label
+  categories.value = false
 }
+let restoringPage = false
+watch(
+  activeSettingsPage,
+  (page, previous) => {
+    if (restoringPage) return
+    if (session.pending.value && page !== previous) {
+      restoringPage = true
+      activeSettingsPage.value = previous
+      restoringPage = false
+      notice.value = __(
+        'Wait for the current save to finish. Your settings stay open.',
+      )
+    } else categories.value = false
+  },
+  { flush: 'sync' },
+)
 
-watch(activeSettingsPage, (activePage) => setActiveTab(activePage))
+function canClose() {
+  if (session.pending.value) {
+    notice.value = __(
+      'Wait for the current save to finish. Your settings stay open.',
+    )
+    return false
+  }
+  return session.canLeave(() =>
+    window.confirm(__('Discard unsaved settings and return to your work?')),
+  )
+}
+const removeCloseGuard = registerSettingsCloseGuard(canClose)
+const removeRouteGuard = useRouter().beforeEach(() => {
+  if (!showSettings.value) return true
+  showSettings.value = false
+  return !showSettings.value
+})
+function beforeUnload(event) {
+  if (!session.dirty.value && !session.pending.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+window.addEventListener('beforeunload', beforeUnload)
+onBeforeUnmount(() => {
+  removeCloseGuard()
+  removeRouteGuard()
+  window.removeEventListener('beforeunload', beforeUnload)
+})
 </script>
+
+<style scoped>
+@media (max-width: 767px) {
+  .settings-content :deep(button),
+  .settings-content :deep(select),
+  .settings-content :deep(input:not([type='checkbox']):not([type='radio'])) {
+    min-height: 2.75rem;
+  }
+  .settings-content :deep(.p-8) {
+    padding: 1rem;
+  }
+}
+</style>

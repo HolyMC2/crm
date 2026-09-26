@@ -83,19 +83,18 @@
 </template>
 
 <script setup>
+import {
+  settingsDocumentResource,
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import ThemeSwitcher from '@/components/Settings/ThemeSwitcher.vue'
 import SettingsLayoutBase from '@/components/Layouts/SettingsLayoutBase.vue'
 import Link from '@/components/Controls/Link.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { getSettings } from '@/stores/settings'
-import {
-  Combobox,
-  Badge,
-  toast,
-  createResource,
-  createDocumentResource,
-} from 'frappe-ui'
+import { Combobox, Badge, toast, createResource } from 'frappe-ui'
 import { ref, computed, inject } from 'vue'
 
 const refreshRequired = ref(false)
@@ -103,7 +102,7 @@ const refreshRequired = ref(false)
 const { user: sessionUser } = inject('session')
 
 const { brand } = getSettings()
-const user = createDocumentResource({ doctype: 'User', name: sessionUser })
+const user = settingsDocumentResource({ doctype: 'User', name: sessionUser })
 
 function save() {
   refreshRequired.value =
@@ -149,5 +148,11 @@ useKeyboardShortcuts({
       },
     },
   ],
+})
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () => user.save.loading,
+  discard: () => discardSettingsDocument(user),
 })
 </script>

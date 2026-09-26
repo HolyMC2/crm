@@ -95,6 +95,7 @@
   </div>
 </template>
 <script setup>
+import { useSettingsDraft } from '@/composables/settingsSession'
 import { validateEmail, convertArrayToString } from '@/utils'
 import { usersStore } from '@/stores/users'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
@@ -210,4 +211,9 @@ function updateInvitees(value) {
     .filter((email) => validateEmail(email))
   invitees.value = emails
 }
+
+useSettingsDraft({
+  dirty: () => invitees.value.length > 0,
+  pending: () => inviteByEmail.loading || pendingInvitations.delete.loading,
+})
 </script>

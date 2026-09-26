@@ -2,7 +2,12 @@
   <div class="p-5 space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h2 class="text-2xl-semibold">{{ __('Sales pipelines') }}</h2>
-      <Button :label="__('New pipeline')" @click="newPipeline" />
+      <Button
+        :label="__('New pipeline')"
+        :disabled="saving"
+        class="min-h-11"
+        @click="newPipeline"
+      />
     </div>
     <p class="text-sm text-ink-gray-6">
       {{
@@ -23,11 +28,26 @@
           (pipeline.archived ? ' · ' + __('Archived') : '')
         "
         :variant="draft?.name === pipeline.name ? 'solid' : 'subtle'"
+        :disabled="saving"
+        class="min-h-11"
         @click="load(pipeline.name)"
       />
     </div>
-    <p v-if="error" role="alert" class="text-sm text-ink-red-5">{{ error }}</p>
-    <div v-if="draft" class="space-y-5">
+    <div v-if="error" role="alert" class="text-sm">
+      <p class="text-ink-red-5">{{ error }}</p>
+      <Button
+        :label="__('Reload settings')"
+        class="mt-2 min-h-11"
+        :loading="pipelines.loading || editor.loading"
+        @click="retryOptions"
+      />
+    </div>
+    <p v-if="loading" role="status">{{ __('Loading pipeline…') }}</p>
+    <fieldset
+      v-if="draft"
+      :disabled="saving || loading"
+      class="min-w-0 space-y-5"
+    >
       <div class="grid gap-4 sm:grid-cols-2">
         <FormControl
           v-model="draft.pipeline_name"
@@ -220,7 +240,7 @@
           >{{ __('Open in Desk') }}</a
         >
       </div>
-    </div>
+    </fieldset>
     <details class="border-t pt-4">
       <summary class="cursor-pointer text-sm">
         {{ __('Compatibility mapping preview') }}
@@ -253,34 +273,68 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import {
+  useSettingsDraft,
+  settingsErrorMessage,
+} from '@/composables/settingsSession'
 import { Button, FormControl, createResource, call, toast } from 'frappe-ui'
 import Link from '@/components/Controls/Link.vue'
 const draft = ref(null)
 const error = ref('')
 const saving = ref(false)
+const loading = ref(false)
+const baseline = ref('null')
+let loadVersion = 0
+const dirty = computed(() => JSON.stringify(draft.value) !== baseline.value)
+useSettingsDraft({ dirty, pending: saving })
+function canReplaceDraft() {
+  return (
+    !saving.value &&
+    (!dirty.value || window.confirm(__('Discard this unsaved pipeline draft?')))
+  )
+}
+function acceptDraft(data) {
+  data.stages.forEach((stage) => {
+    stage.persisted = true
+  })
+  draft.value = data
+  baseline.value = JSON.stringify(data)
+}
 const pipelines = createResource({
   url: 'crm.pipeline.api.get_pipelines',
   params: { include_archived: true },
   auto: true,
   onError: (e) => {
-    error.value = e.message
+    error.value = settingsErrorMessage(e)
   },
 })
 const editor = createResource({
   url: 'crm.pipeline.api.get_pipeline_editor_options',
   auto: true,
   onError: (e) => {
-    error.value = e.message
+    error.value = settingsErrorMessage(e)
   },
 })
 const preview = createResource({
   url: 'crm.pipeline.api.preview_pipeline_mapping',
   onError: (e) => {
-    error.value = e.message
+    error.value = settingsErrorMessage(e)
   },
 })
+async function retryOptions() {
+  error.value = ''
+  const results = await Promise.allSettled([
+    pipelines.reload(),
+    editor.reload(),
+  ])
+  const failed = results.find((result) => result.status === 'rejected')
+  if (failed) error.value = settingsErrorMessage(failed.reason)
+}
 function newPipeline() {
+  if (!canReplaceDraft()) return
+  loadVersion += 1
+  loading.value = false
   error.value = ''
   draft.value = {
     pipeline_name: '',
@@ -294,28 +348,32 @@ function newPipeline() {
   }
 }
 async function load(name) {
+  if (!canReplaceDraft()) return
+  const version = ++loadVersion
+  loading.value = true
+  error.value = ''
   try {
-    draft.value = await call('crm.pipeline.api.get_pipeline_settings', { name })
-    draft.value.stages.forEach((stage) => {
-      stage.persisted = true
-    })
-    error.value = ''
+    const data = await call('crm.pipeline.api.get_pipeline_settings', { name })
+    if (version === loadVersion) acceptDraft(data)
   } catch (e) {
-    error.value = e.message
+    if (version === loadVersion) error.value = settingsErrorMessage(e)
+  } finally {
+    if (version === loadVersion) loading.value = false
   }
 }
 async function save() {
+  if (saving.value || loading.value) return
   saving.value = true
   error.value = ''
   try {
     const result = await call('crm.pipeline.api.save_pipeline', {
       data: draft.value,
     })
-    await load(result.name)
-    await pipelines.reload()
+    acceptDraft(result)
     toast.success(__('Pipeline saved'))
+    await pipelines.reload()
   } catch (e) {
-    error.value = e.messages?.join(' ') || e.message
+    error.value = e.messages?.join(' ') || settingsErrorMessage(e)
   } finally {
     saving.value = false
   }

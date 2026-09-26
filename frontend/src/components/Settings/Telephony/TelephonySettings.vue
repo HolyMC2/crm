@@ -200,6 +200,10 @@
 </template>
 <script setup>
 import {
+  discardSettingsDocument,
+  useSettingsDraft,
+} from '@/composables/settingsSession'
+import {
   FormControl,
   Badge,
   ErrorMessage,
@@ -269,5 +273,11 @@ const isDirty = computed(() => {
     JSON.stringify(telephonyAgent.doc) !==
       JSON.stringify(telephonyAgent.originalDoc)
   )
+})
+
+useSettingsDraft({
+  dirty: isDirty,
+  pending: () => insertResource.loading || telephonyAgent.save?.loading,
+  discard: () => discardSettingsDocument(telephonyAgent),
 })
 </script>
