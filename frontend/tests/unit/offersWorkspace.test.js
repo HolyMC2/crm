@@ -52,12 +52,20 @@ const deal = () => ({
   products: draftOffer().products,
 })
 const cleanups = []
+const originalConfirm = Object.getOwnPropertyDescriptor(window, 'confirm')
 beforeEach(() => {
   api.call.mockReset()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  // happy-dom omits browser dialogs; supply only this explicit interaction seam.
+  Object.defineProperty(window, 'confirm', {
+    configurable: true,
+    writable: true,
+    value: vi.fn(() => true),
+  })
 })
 afterEach(() => {
   cleanups.splice(0).forEach((fn) => fn())
+  if (originalConfirm) Object.defineProperty(window, 'confirm', originalConfirm)
+  else delete window.confirm
   vi.restoreAllMocks()
 })
 async function flush() {
@@ -192,6 +200,9 @@ describe('native offer lifecycle', () => {
     expect(window.confirm).toHaveBeenCalledWith(
       'Leave this unsaved offer draft?',
     )
+    window.confirm.mockReturnValue(false)
+    expect(api.leave()).toBe(false)
+    expect(state.draft.title).toBe('Changed proposal')
   })
   it('retains stale edits and requires refresh before another save', async () => {
     let stale = true
@@ -301,7 +312,13 @@ describe('native offer lifecycle', () => {
           review_hash: 'hash-1',
           currency: 'USD',
           financial_drift: true,
-          grand_total: 24,
+          grand_total: 24.04,
+          net_total: 20,
+          taxes: 4.04,
+          rounded_total: 24,
+          rounding_applied: true,
+          payable_total: 24,
+          total_difference: 4,
           offer_total: 20,
           items: [],
         })
@@ -314,6 +331,12 @@ describe('native offer lifecycle', () => {
     await click(el, 'Proposal A')
     await click(el, 'Review ERP quotation')
     expect(button(el, 'Create draft ERP quotation').disabled).toBe(true)
+    expect(el.querySelector('[data-erp-payable]').textContent).toBe('USD 24.00')
+    expect(el.querySelector('[data-erp-difference]').textContent).toBe(
+      'USD 4.00',
+    )
+    expect(el.textContent).toContain('ERP taxes and charges')
+    expect(el.textContent).toContain('USD 4.04')
     state.reviewNote = 'Tax difference reviewed'
     await nextTick()
     await click(el, 'Create draft ERP quotation')
@@ -323,6 +346,58 @@ describe('native offer lifecycle', () => {
       review_note: 'Tax difference reviewed',
     })
     expect(el.querySelector('a[href="/app/quotation/QUOT-1"]')).toBeTruthy()
+  })
+  it('preserves a legitimate rounded zero and never inherits customer acceptance onto ERP terms', async () => {
+    const accepted = draftOffer({
+      status: 'Accepted',
+      capabilities: { can_erp: true },
+    })
+    const { el } = await mount(accepted, (method) =>
+      method.endsWith('preview_erp')
+        ? Promise.resolve({
+            available: true,
+            review_hash: 'zero-rounded',
+            currency: 'USD',
+            offer_total: 0.4,
+            net_total: 0.4,
+            grand_total: 0.4,
+            taxes: 0,
+            rounded_total: 0,
+            payable_total: 0,
+            rounding_applied: true,
+            total_difference: -0.4,
+            financial_drift: true,
+            items: [],
+          })
+        : undefined,
+    )
+    await click(el, 'Proposal A')
+    await click(el, 'Review ERP quotation')
+    expect(el.querySelector('[data-erp-payable]').textContent).toBe('USD 0.00')
+    expect(el.querySelector('[data-erp-difference]').textContent).toBe(
+      'USD -0.40',
+    )
+    expect(button(el, 'Create draft ERP quotation').disabled).toBe(true)
+    expect(el.textContent).toContain(
+      'ERP quotation needs its own customer approval if terms differ',
+    )
+  })
+  it('blocks an incomplete payable preview rather than guessing its total', async () => {
+    const { el } = await mount(
+      draftOffer({ status: 'Accepted', capabilities: { can_erp: true } }),
+      (method) =>
+        method.endsWith('preview_erp')
+          ? Promise.resolve({
+              available: true,
+              grand_total: 20,
+              review_hash: 'incomplete',
+            })
+          : undefined,
+    )
+    await click(el, 'Proposal A')
+    await click(el, 'Review ERP quotation')
+    expect(el.textContent).toContain('ERP preview is incomplete')
+    expect(button(el, 'Create draft ERP quotation')).toBeUndefined()
   })
   it('blocks a second mutation while the first request is in flight', async () => {
     let resolve
