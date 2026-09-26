@@ -315,12 +315,42 @@
         >
           <h4 class="font-semibold">{{ __('Review draft ERP quotation') }}</h4>
           <p>{{ state.erp.company }} · {{ state.erp.customer }}</p>
-          <p>
-            {{ __('Offered amount') }}:
-            {{ amount(state.erp.offer_total, state.erp.currency) }} ·
-            {{ __('ERP total including taxes') }}:
-            {{ amount(state.erp.grand_total, state.erp.currency) }}
-          </p>
+          <dl class="grid gap-2 sm:grid-cols-2">
+            <div>
+              <dt>{{ __('Offered amount') }}</dt>
+              <dd>{{ amount(state.erp.offer_total, state.erp.currency) }}</dd>
+            </div>
+            <div>
+              <dt>{{ __('ERP net subtotal') }}</dt>
+              <dd>{{ amount(state.erp.net_total, state.erp.currency) }}</dd>
+            </div>
+            <div>
+              <dt>{{ __('ERP taxes and charges') }}</dt>
+              <dd>{{ amount(state.erp.taxes, state.erp.currency) }}</dd>
+            </div>
+            <div>
+              <dt>{{ __('ERP total including taxes') }}</dt>
+              <dd>{{ amount(state.erp.grand_total, state.erp.currency) }}</dd>
+            </div>
+            <div>
+              <dt>
+                {{
+                  state.erp.rounding_applied
+                    ? __('Rounded ERP payable amount')
+                    : __('ERP payable amount')
+                }}
+              </dt>
+              <dd class="font-semibold" data-erp-payable>
+                {{ amount(state.erp.payable_total, state.erp.currency) }}
+              </dd>
+            </div>
+            <div>
+              <dt>{{ __('Payable difference from offered amount') }}</dt>
+              <dd data-erp-difference>
+                {{ amount(state.erp.total_difference, state.erp.currency) }}
+              </dd>
+            </div>
+          </dl>
           <ul>
             <li v-for="(row, index) in state.erp.items" :key="index">
               {{ row.item_name || row.item_code }} · {{ row.qty }}
@@ -621,6 +651,16 @@ async function reviewErp() {
           'ERP quotation is unavailable. Review the company, customer and product setup in Desk.',
         ),
       )
+    if (
+      !Number.isFinite(result.payable_total) ||
+      typeof result.rounding_applied !== 'boolean'
+    ) {
+      throw new Error(
+        __(
+          'The ERP preview is incomplete. Refresh the review before creating a quotation.',
+        ),
+      )
+    }
     state.erp = result
     state.reviewNote = ''
   } catch (error) {
