@@ -1,5 +1,6 @@
 """Native canonical tasks, immutable revision stops, actor scope and takeover."""
 
+import secrets
 from unittest import TestCase
 from unittest.mock import patch
 from uuid import uuid4
@@ -182,7 +183,7 @@ class TestOfferFollowUp(OfferFixture, IntegrationTestCase):
 		self.assertEqual(self.run_followup()["task"], second["task"])
 
 	def test_explicit_conversation_generation_takeover_stops_without_message(self):
-		account = uuid4().hex
+		account = secrets.token_hex(32)
 		origin = "https://follow-up.example.invalid"
 		channel = webchat._mark(
 			frappe.get_doc(
@@ -209,7 +210,7 @@ class TestOfferFollowUp(OfferFixture, IntegrationTestCase):
 
 	def test_other_deal_conversation_is_never_inferred_or_allowed(self):
 		# Reuse a permitted native Webchat channel, but an explicitly wrong deal.
-		account, origin = uuid4().hex, "https://other-follow-up.example.invalid"
+		account, origin = secrets.token_hex(32), "https://other-follow-up.example.invalid"
 		webchat._mark(
 			frappe.get_doc(
 				{
