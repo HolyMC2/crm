@@ -1,5 +1,7 @@
 # CRM pipeline (Odoo gap work) — state and next steps
 
+> **Priority update, 2026-09-26:** current work is ordered in the [CRM product roadmap](CRM_PRODUCT_ROADMAP.md). This tracker preserves the September implementation history. Its repair-led pipeline decision and older lab-only/pending labels are dated context; future sales pipelines must preserve repair history while supporting independent commercial stages.
+
 Lean tracker. Trim as items land; delete when the initiative closes.
 
 ## Why (assessment, 2026-09-13, condensed)

@@ -1,4 +1,23 @@
-# Next session: native support rollout and remaining provider gates
+# CRM next session
+
+Current product direction (2026-09-26): build a distinctly named Muelle product
+that excels at standalone sales, with connected POS/Taller/storefront work and
+optional omnichannel/bot capabilities. Use the
+[prioritized product roadmap](CRM_PRODUCT_ROADMAP.md) and its **First execution
+queue**; naming and icon selection live in the
+[identity brief](CRM_IDENTITY_BRIEF.md).
+
+Start with identity/correctness and independent sales semantics. Preserve native
+tasks, conversations, commercial adapters and automation already implemented.
+Verify current source, installed apps and runtime before executing any rollout.
+The September 25 production receipt supersedes older package-deployment claims;
+deployment does not imply that a tenant's follow-up rules or bots are activated.
+
+## Historical handoff: native support, 2026-09-10
+
+The remainder is preserved as dated context. Its branch-divergence, pending-rollout
+and automation-readiness statements are historical, not current assignments.
+Revalidate any provider-specific gate against today's account and implementation.
 
 The September 9 implementation request has been carried through tested, committed
 local integration. **Do not rebuild those slices from the old audit.** Read the

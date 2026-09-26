@@ -14,7 +14,9 @@ they run as evaluated strings in the browser.
 
 | Task | Read first |
 |---|---|
-| What are we building next | [PLAN.md](./.pi/PLAN.md) |
+| Product priorities and next delivery packages | [CRM product roadmap](./docs/CRM_PRODUCT_ROADMAP.md) |
+| Product naming and icon change | [Identity brief](./docs/CRM_IDENTITY_BRIEF.md) |
+| Form-scripting technical backlog | [PLAN.md](./.pi/PLAN.md) |
 | Stable API contracts (setFieldProperty, formDialog, helpers) | [SPEC.md](./.pi/SPEC.md) |
 | Why code is the way it is (decisions, bugs fixed, history) | [ARCHIVE.md](./.pi/ARCHIVE.md) |
 | Form scripting user guide | [feats/form-scripting/guide.md](./.pi/feats/form-scripting/guide.md) |

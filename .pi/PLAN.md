@@ -1,5 +1,7 @@
 # CRM Development Plan
 
+> **Scope update, 2026-09-26:** this is the form-scripting technical backlog. Product delivery priorities live in the [CRM product roadmap](../docs/CRM_PRODUCT_ROADMAP.md); the order below is local to this technical workstream.
+
 > **This file**: Current and upcoming work only. No completed phases.  
 > **Completed phases**: [ARCHIVE.md](./ARCHIVE.md)  
 > **Stable API contracts**: [SPEC.md](./SPEC.md)

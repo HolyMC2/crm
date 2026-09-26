@@ -1,5 +1,7 @@
 # CRM powerhouse — implementation contract
 
+> **Status note, 2026-09-26:** retain the invariants and dated acceptance below. Product scope/order now starts at the [CRM product roadmap](CRM_PRODUCT_ROADMAP.md). The September 9 execution statements (including “Waves B–D are unbuilt”) are historical; later native-support/automation acceptance and the September 25 release supersede them. Recheck per-tenant activation separately.
+
 Source status: locally integrated into the shared branches; see [integration handoff](CRM_INTEGRATION_HANDOFF_2026-09-09.md) and [next-session request](CRM_NEXT_SESSION.md). Historical isolated-candidate evidence below remains valid within its stated limits.
 
 Owner: Codex (architecture, acceptance and final audit). Builder: Claude Fable, delegated per wave. Date: 2026-09-09. This is the full feature scope; completion is tracked per requirement and proven by evidence, never inferred from the existence of code.

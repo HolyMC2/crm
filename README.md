@@ -1,3 +1,5 @@
+> **Muelle CRM fork:** this repository contains Muelle's substantially extended CRM product. Start with the [current product roadmap](docs/CRM_PRODUCT_ROADMAP.md) and [name/icon proposal](docs/CRM_IDENTITY_BRIEF.md). The final product identity is pending selection. The upstream introduction below is retained for provenance; it is not the fork's current feature, deployment or support guide.
+
 <div align="center" markdown="1">
 
 <a href="https://frappe.io/products/crm">
