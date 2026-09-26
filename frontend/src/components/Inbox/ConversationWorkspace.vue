@@ -80,13 +80,24 @@
                 class="mt-2 flex flex-wrap gap-2 text-xs"
                 aria-label="Registros de la conversación"
               >
-                <a
+                <div
                   v-for="link in recordLinks"
                   :key="link.doctype + ':' + link.name"
-                  :href="link.url"
-                  class="underline [overflow-wrap:anywhere]"
-                  >{{ link.label || `${link.doctype} · ${link.name}` }}</a
+                  class="min-w-0 max-w-full [overflow-wrap:anywhere]"
                 >
+                  <a :href="link.url" class="underline">{{
+                    link.source === 'storefront_order_proof'
+                      ? `${link.doctype} · ${link.name}`
+                      : link.label || `${link.doctype} · ${link.name}`
+                  }}</a>
+                  <p
+                    v-if="link.source === 'storefront_order_proof'"
+                    class="mt-1 text-ink-gray-5"
+                  >
+                    Compartido por el visitante con el enlace del pedido; no
+                    verifica identidad
+                  </p>
+                </div>
               </nav>
             </div>
             <button

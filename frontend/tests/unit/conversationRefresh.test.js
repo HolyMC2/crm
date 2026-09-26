@@ -173,3 +173,58 @@ describe('mounted workspace refresh preserves drafts and commands', () => {
     )
   })
 })
+
+describe('conversation context link provenance', () => {
+  const proof = {
+    doctype: 'Sales Order',
+    name: 'SO-visitor-shared',
+    url: '/app/sales-order/SO-visitor-shared',
+    source: 'storefront_order_proof',
+    // A cached response must not turn a forwarded proof into a customer title.
+    label: 'Private customer from an older response',
+  }
+  const normal = {
+    doctype: 'CRM Deal',
+    name: 'DEAL-linked',
+    url: '/app/crm-deal/DEAL-linked',
+    source: 'manual',
+    label: 'Existing permitted commercial context',
+  }
+  function links(rows) {
+    context.call.mockImplementation((method) =>
+      method.endsWith('get_history')
+        ? {
+            ...history,
+            conversation: { ...conversation, context_links: rows },
+          }
+        : base(method),
+    )
+  }
+  it('labels a visitor-shared order as unverified while preserving ordinary link labels', async () => {
+    links([proof, normal])
+    const el = await mount()
+    const nav = el.querySelector('nav[aria-label="Registros de la conversación"]')
+    const order = nav.querySelector(`a[href="${proof.url}"]`)
+    expect(order.textContent).toBe('Sales Order · SO-visitor-shared')
+    expect(order.parentElement.textContent.replace(/\s+/g, ' ')).toContain(
+      'Compartido por el visitante con el enlace del pedido; no verifica identidad',
+    )
+    expect(el.textContent).not.toContain(proof.label)
+    const deal = nav.querySelector(`a[href="${normal.url}"]`)
+    expect(deal.textContent).toBe(normal.label)
+    expect(deal.parentElement.querySelector('p')).toBeNull()
+  })
+  it('removes the proof notice when current permitted history no longer returns that relationship', async () => {
+    links([proof])
+    const el = await mount()
+    expect(el.textContent).toContain('Compartido por el visitante')
+    links([normal])
+    context.listeners.crm_conversation_updated({ name: conversation.name })
+    await flush()
+    expect(el.textContent).not.toContain('Compartido por el visitante')
+    expect(el.querySelector(`a[href="${proof.url}"]`)).toBeNull()
+    expect(el.querySelector(`a[href="${normal.url}"]`).textContent).toBe(
+      normal.label,
+    )
+  })
+})
