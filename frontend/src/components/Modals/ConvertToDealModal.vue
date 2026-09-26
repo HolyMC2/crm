@@ -64,10 +64,7 @@
             :key="contact.name"
             type="button"
             class="block min-h-11 rounded border border-outline-gray-2 px-3"
-            @click="
-              existingContactChecked = true
-              existingContact = contact.name
-            "
+            @click="selectExistingContact(contact.name)"
           >
             {{ contact.full_name || contact.name }}
           </button>
@@ -79,10 +76,7 @@
             :key="organization.name"
             type="button"
             class="block min-h-11 rounded border border-outline-gray-2 px-3"
-            @click="
-              existingOrganizationChecked = true
-              existingOrganization = organization.name
-            "
+            @click="selectExistingOrganization(organization.name)"
           >
             {{ organization.organization_name || organization.name }}
           </button>
@@ -312,6 +306,14 @@ const existingOrganizationChecked = ref(false)
 
 const existingContact = ref('')
 const existingOrganization = ref('')
+function selectExistingContact(name) {
+  existingContactChecked.value = true
+  existingContact.value = name
+}
+function selectExistingOrganization(name) {
+  existingOrganizationChecked.value = true
+  existingOrganization.value = name
+}
 const error = ref('')
 const { capture } = useTelemetry()
 
