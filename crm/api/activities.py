@@ -10,6 +10,18 @@ from frappe.translate import get_translated_doctypes
 from crm.fcrm.doctype.crm_call_log.crm_call_log import parse_call_log
 from crm.fcrm.doctype.crm_fields_layout.crm_fields_layout import get_permlevel_access
 
+ATTACHMENT_FIELDS = (
+	"name",
+	"file_name",
+	"file_type",
+	"file_url",
+	"file_size",
+	"is_private",
+	"modified",
+	"creation",
+	"owner",
+)
+
 
 @frappe.whitelist()
 def get_activities(name: str):
@@ -27,6 +39,7 @@ def get_deal_activities(name: str):
 
 	get_docinfo("", "CRM Deal", name)
 	docinfo = frappe.response["docinfo"]
+	attachment_index = _activity_attachments(docinfo)
 	deal_fields = get_readable_fields("CRM Deal")
 	avoid_fields = [
 		"lead",
@@ -126,7 +139,7 @@ def get_deal_activities(name: str):
 			"creation": comment.creation,
 			"owner": comment.owner,
 			"content": comment.content,
-			"attachments": get_attachments("Comment", comment.name),
+			"attachments": attachment_index.get(("Comment", comment.name), []),
 			"is_lead": False,
 		}
 		activities.append(activity)
@@ -145,7 +158,7 @@ def get_deal_activities(name: str):
 				"recipients": communication.recipients,
 				"cc": communication.cc,
 				"bcc": communication.bcc,
-				"attachments": get_attachments("Communication", communication.name),
+				"attachments": attachment_index.get(("Communication", communication.name), []),
 				"read_by_recipient": communication.read_by_recipient,
 				"delivery_status": communication.delivery_status,
 			},
@@ -164,9 +177,10 @@ def get_deal_activities(name: str):
 		}
 		activities.append(activity)
 
-	calls = calls + get_linked_calls(name).get("calls", [])
-	notes = notes + get_linked_notes(name) + get_linked_calls(name).get("notes", [])
-	tasks = tasks + get_linked_tasks(name) + get_linked_calls(name).get("tasks", [])
+	linked_calls = get_linked_calls(name)
+	calls = calls + linked_calls.get("calls", [])
+	notes = notes + get_linked_notes(name) + linked_calls.get("notes", [])
+	tasks = tasks + get_linked_tasks(name) + linked_calls.get("tasks", [])
 	attachments = attachments + get_attachments("CRM Deal", name)
 
 	activities.sort(key=lambda x: x["creation"], reverse=True)
@@ -181,6 +195,7 @@ def get_lead_activities(name: str):
 
 	get_docinfo("", "CRM Lead", name)
 	docinfo = frappe.response["docinfo"]
+	attachment_index = _activity_attachments(docinfo)
 	lead_fields = get_readable_fields("CRM Lead")
 	avoid_fields = [
 		"converted",
@@ -264,7 +279,7 @@ def get_lead_activities(name: str):
 			"creation": comment.creation,
 			"owner": comment.owner,
 			"content": comment.content,
-			"attachments": get_attachments("Comment", comment.name),
+			"attachments": attachment_index.get(("Comment", comment.name), []),
 			"is_lead": True,
 		}
 		activities.append(activity)
@@ -283,7 +298,7 @@ def get_lead_activities(name: str):
 				"recipients": communication.recipients,
 				"cc": communication.cc,
 				"bcc": communication.bcc,
-				"attachments": get_attachments("Communication", communication.name),
+				"attachments": attachment_index.get(("Communication", communication.name), []),
 				"read_by_recipient": communication.read_by_recipient,
 				"delivery_status": communication.delivery_status,
 			},
@@ -302,9 +317,10 @@ def get_lead_activities(name: str):
 		}
 		activities.append(activity)
 
-	calls = get_linked_calls(name).get("calls", [])
-	notes = get_linked_notes(name) + get_linked_calls(name).get("notes", [])
-	tasks = get_linked_tasks(name) + get_linked_calls(name).get("tasks", [])
+	linked_calls = get_linked_calls(name)
+	calls = linked_calls.get("calls", [])
+	notes = get_linked_notes(name) + linked_calls.get("notes", [])
+	tasks = get_linked_tasks(name) + linked_calls.get("tasks", [])
 	attachments = get_attachments("CRM Lead", name)
 
 	activities.sort(key=lambda x: x["creation"], reverse=True)
@@ -333,20 +349,35 @@ def get_attachments(doctype: str, name: str):
 		frappe.db.get_all(
 			"File",
 			filters={"attached_to_doctype": doctype, "attached_to_name": name},
-			fields=[
-				"name",
-				"file_name",
-				"file_type",
-				"file_url",
-				"file_size",
-				"is_private",
-				"modified",
-				"creation",
-				"owner",
-			],
+			fields=list(ATTACHMENT_FIELDS),
 		)
 		or []
 	)
+
+
+def _activity_attachments(docinfo):
+	"""Two reads for the exact entries already admitted by native docinfo.
+
+	Keep Comment and Communication names in separate scopes; identical names
+	across DocTypes cannot borrow another entry's files. Return the existing DTO.
+	"""
+	index = {}
+	for doctype, entries in (
+		("Comment", docinfo.comments),
+		("Communication", docinfo.communications + docinfo.automated_messages),
+	):
+		names = list(dict.fromkeys(entry.name for entry in entries))
+		if not names:
+			continue
+		rows = frappe.db.get_all(
+			"File",
+			filters={"attached_to_doctype": doctype, "attached_to_name": ["in", names]},
+			fields=[*ATTACHMENT_FIELDS, "attached_to_name"],
+		)
+		for row in rows:
+			name = row.pop("attached_to_name")
+			index.setdefault((doctype, name), []).append(row)
+	return index
 
 
 def handle_multiple_versions(versions: list):
