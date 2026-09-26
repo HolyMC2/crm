@@ -1,7 +1,7 @@
 app_name = "crm"
-app_title = "Frappe CRM"
+app_title = "CRM"
 app_publisher = "Frappe Technologies Pvt. Ltd."
-app_description = "Kick-ass Open Source CRM"
+app_description = "CRM: ventas, clientes y seguimiento en Muelle"
 app_email = "shariq@frappe.io"
 app_license = "AGPLv3"
 app_icon_url = "/assets/crm/images/logo.svg"
@@ -133,6 +133,7 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
+	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_query",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.get_permission_query_conditions",
 	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.get_permission_query_conditions",
 	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.get_permission_query_conditions",
@@ -147,6 +148,7 @@ permission_query_conditions = {
 }
 
 has_permission = {
+	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_permission",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.has_permission",
 	"CRM Webchat Message": "crm.fcrm.doctype.crm_webchat_message.crm_webchat_message.has_permission",
 	"CRM Outbound Intent": "crm.fcrm.doctype.crm_outbound_intent.crm_outbound_intent.has_permission",
@@ -158,6 +160,19 @@ has_permission = {
 	"CRM Deal": "crm.permissions.org_hierarchy.has_deal_permission",
 	"CRM Call Log": "crm.permissions.org_hierarchy.has_call_log_permission",
 	"CRM Notification": "crm.fcrm.doctype.crm_notification.crm_notification.has_permission",
+}
+
+filter_shared_documents = {
+	"CRM Lead": "crm.pipeline.services.configuration.filter_shared_documents",
+	"CRM Deal": "crm.pipeline.services.configuration.filter_shared_documents",
+	"CRM Pipeline": "crm.pipeline.services.configuration.filter_shared_documents",
+	"CRM Webchat Session": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Webchat Message": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Outbound Intent": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Conversation": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Conversation Control Event": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Inquiry": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Inquiry Person": "crm.pipeline.services.configuration.deny_shared_documents",
 }
 
 # DocType Class
@@ -174,6 +189,7 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
+	"CRM Deal Status": {"after_insert": "crm.pipeline.services.configuration.add_legacy_status"},
 	"Contact": {
 		"validate": ["crm.api.contact.validate"],
 	},
@@ -290,7 +306,12 @@ ignore_links_on_delete = ["Failed Lead Sync Log"]
 
 # Request Events
 # ----------------
-before_request = ["crm.api.webchat.prepare_request"]
+before_request = [
+	"crm.pipeline.services.configuration.check_request_compatibility",
+	"crm.api.webchat.prepare_request",
+]
+
+before_migrate = "crm.pipeline.services.configuration.require_shared_scope_support"
 # after_request = ["crm.utils.after_request"]
 
 # Job Events

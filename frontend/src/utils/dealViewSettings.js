@@ -26,6 +26,7 @@ export const DEAL_VIEW_ROUTE = 'Deals List'
 // rather than stored as an empty `in`, which would match nothing.
 export function viewFilters(context = {}) {
   const filters = {}
+  if (context.pipeline) filters.pipeline = context.pipeline
   if (context.status?.length) filters.status = ['in', [...context.status]]
   if (context.source?.length) filters.source = ['in', [...context.source]]
   if (context.owner?.length) filters.deal_owner = ['in', [...context.owner]]
@@ -35,6 +36,9 @@ export function viewFilters(context = {}) {
 export function filtersToContext(raw) {
   const filters = parseJson(raw, {})
   return {
+    ...(typeof filters.pipeline === 'string' && filters.pipeline
+      ? { pipeline: filters.pipeline }
+      : {}),
     status: valuesOf(filters.status),
     source: valuesOf(filters.source),
     owner: valuesOf(filters.deal_owner),

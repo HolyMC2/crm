@@ -105,7 +105,8 @@
               state.controlLoading ||
               state.historyLoading ||
               queuePending ||
-              outboxPending
+              outboxPending ||
+              commercePending
             "
             :pending="state.pending"
             :provider-notice="state.providerNotice"
@@ -137,14 +138,32 @@
             ref="outbox"
             :conversation="state.conversation"
             :actor="session.user"
-            :blocked="!!state.pending || queuePending"
+            :blocked="!!state.pending || queuePending || commercePending"
             @pending="outboxPending = $event"
+            @refresh="workspace.loadHistory()"
+          />
+          <CatalogCommerce
+            :conversation="state.conversation"
+            :actor="session.user"
+            :blocked="
+              !!state.pending ||
+              queuePending ||
+              outboxPending ||
+              state.historyLoading
+            "
+            @pending="commercePending = $event"
+            @queued="queued"
             @refresh="workspace.loadHistory()"
           />
           <ConversationComposer
             :conversation="state.conversation"
             :actor="session.user"
-            :blocked="!!state.pending || outboxPending || state.historyLoading"
+            :blocked="
+              !!state.pending ||
+              outboxPending ||
+              commercePending ||
+              state.historyLoading
+            "
             @pending="queuePending = $event"
             @queued="queued"
             @refresh="workspace.loadHistory()"
@@ -176,6 +195,7 @@ import ConversationQueue from './ConversationQueue.vue'
 import ConversationControls from './ConversationControls.vue'
 import ConversationComposer from './ConversationComposer.vue'
 import ConversationOutbox from './ConversationOutbox.vue'
+import CatalogCommerce from './CatalogCommerce.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
 const NATIVE_PROVIDERS = ['WhatsApp', 'Webchat', 'Messenger', 'Instagram']
 const session = sessionStore(),
@@ -185,9 +205,14 @@ const workspace = useConversations({ actor: () => session.user })
 const { state } = workspace
 const outbox = ref(null),
   queuePending = ref(false),
-  outboxPending = ref(false)
+  outboxPending = ref(false),
+  commercePending = ref(false)
 const pendingWork = computed(
-  () => !!state.pending || queuePending.value || outboxPending.value,
+  () =>
+    !!state.pending ||
+    queuePending.value ||
+    outboxPending.value ||
+    commercePending.value,
 )
 const emit = defineEmits(['pending'])
 watch(

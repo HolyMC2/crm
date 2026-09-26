@@ -18,7 +18,14 @@ export function dealListState(raw = {}) {
     Array.isArray(raw?.[key])
       ? raw[key].filter((v) => typeof v === 'string')
       : []
+  const date = (value) =>
+    typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
   return {
+    ...(date(raw?.createdFrom) ? { createdFrom: raw.createdFrom } : {}),
+    ...(date(raw?.createdTo) ? { createdTo: raw.createdTo } : {}),
+    ...(typeof raw?.pipeline === 'string' && raw.pipeline
+      ? { pipeline: raw.pipeline }
+      : {}),
     status: list('status'),
     source: list('source'),
     owner: list('owner'),

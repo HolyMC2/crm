@@ -34,6 +34,7 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
 		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
 
+	requested_user = user
 	roles = frappe.get_roles(frappe.session.user)
 	is_sales_manager = "Sales Manager" in roles or "System Manager" in roles
 	is_sales_user = "Sales User" in roles and not is_sales_manager
@@ -55,7 +56,9 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 		method_name = f"get_{l['name']}"
 		if hasattr(frappe.get_attr("crm.api.dashboard"), method_name):
 			method = getattr(frappe.get_attr("crm.api.dashboard"), method_name)
-			l["data"] = method(from_date, to_date, user)
+			l["data"] = method(
+				from_date, to_date, requested_user if l["name"] == "forecasted_revenue" else user
+			)
 		else:
 			l["data"] = None
 
@@ -74,6 +77,7 @@ def get_chart(
 		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
 		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
 
+	requested_user = user
 	roles = frappe.get_roles(frappe.session.user)
 	is_sales_manager = "Sales Manager" in roles or "System Manager" in roles
 	is_sales_user = "Sales User" in roles and not is_sales_manager
@@ -84,7 +88,7 @@ def get_chart(
 	method_name = f"get_{name}"
 	if hasattr(frappe.get_attr("crm.api.dashboard"), method_name):
 		method = getattr(frappe.get_attr("crm.api.dashboard"), method_name)
-		return method(from_date, to_date, user)
+		return method(from_date, to_date, requested_user if name == "forecasted_revenue" else user)
 	else:
 		return {"error": _("Invalid chart name")}
 
@@ -754,76 +758,75 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 
 
 def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""
-	Get forecasted revenue for the dashboard.
-	"""
-	# Using Frappe Query Builder with CASE expressions
-	CRMDeal = DocType("CRM Deal")
-	CRMDealStatus = DocType("CRM Deal Status")
+	"""Open weighted forecast and commercial wins, never invoiced/collected revenue."""
+	from crm.pipeline.queries.stages import metric_query, permitted_deals
 
-	# Calculate the date 12 months ago
-	twelve_months_ago = frappe.utils.add_months(frappe.utils.nowdate(), -12)
-
-	forecasted_value = (
-		Case()
-		.when(CRMDealStatus.type == "Lost", CRMDeal.expected_deal_value * IfNull(CRMDeal.exchange_rate, 1))
-		.else_(
-			CRMDeal.expected_deal_value
-			* IfNull(CRMDeal.probability, 0)
-			/ 100
-			* IfNull(CRMDeal.exchange_rate, 1)
+	from_date = frappe.utils.getdate(from_date or frappe.utils.get_first_day(frappe.utils.nowdate()))
+	to_date = frappe.utils.getdate(to_date or frappe.utils.get_last_day(frappe.utils.nowdate()))
+	if from_date > to_date:
+		frappe.throw(_("Start date must be before end date."), frappe.ValidationError)
+	base_query, deal, status, amounts = metric_query()
+	# Caller filters can only narrow the actor's native list permissions.
+	allowed = permitted_deals({"deal_owner": user} if user else None, amounts=True)
+	result = {}
+	missing_rates = 0
+	for key, amount, date_field, outcome in (
+		(
+			"forecasted",
+			"weighted_forecast",
+			deal.expected_closure_date,
+			status.type.isin(["Open", "Ongoing", "On Hold"]),
+		),
+		("actual", "won_value", Coalesce(deal.closed_date, deal.expected_closure_date), status.type == "Won"),
+	):
+		query = (
+			base_query.select(
+				DateFormat(date_field, "%Y-%m").as_("month"),
+				Sum(amounts[amount]).as_("value"),
+				Sum(amounts["missing_exchange_rate_count"]).as_("missing_rates"),
+			)
+			.where(deal.name.isin(allowed))
+			.where(outcome)
+			.where(date_field >= from_date)
+			.where(date_field < frappe.utils.add_days(to_date, 1))
+			.groupby(DateFormat(date_field, "%Y-%m"))
 		)
-	)
-
-	actual_value = (
-		Case()
-		.when(CRMDealStatus.type == "Won", CRMDeal.deal_value * IfNull(CRMDeal.exchange_rate, 1))
-		.else_(0)
-	)
-
-	query = (
-		frappe.qb.from_(CRMDeal)
-		.join(CRMDealStatus)
-		.on(CRMDeal.status == CRMDealStatus.name)
-		.select(
-			DateFormat(CRMDeal.expected_closure_date, "%Y-%m").as_("month"),
-			Sum(forecasted_value).as_("forecasted"),
-			Sum(actual_value).as_("actual"),
-		)
-		.where(CRMDeal.expected_closure_date >= twelve_months_ago)
-		.groupby(DateFormat(CRMDeal.expected_closure_date, "%Y-%m"))
-		.orderby(DateFormat(CRMDeal.expected_closure_date, "%Y-%m"))
-	)
-
-	users = _scoped_users(user)
-	if users:
-		query = query.where(CRMDeal.deal_owner.isin(users))
-
-	result = query.run(as_dict=True)
-
-	for row in result:
-		row["month"] = frappe.utils.get_datetime(row["month"]).strftime("%Y-%m-01")
-		row["forecasted"] = row["forecasted"] or ""
-		row["actual"] = row["actual"] or ""
+		if key == "forecasted":
+			query = exclude_hidden_stages(query, status)
+		for row in query.run(as_dict=True):
+			month = f"{row.month}-01"
+			result.setdefault(month, {"month": month, "forecasted": 0, "actual": 0})[key] = row.value or 0
+			missing_rates += row.missing_rates or 0
 
 	return {
-		"data": result or [],
+		"data": [result[month] for month in sorted(result)],
 		"title": _("Forecasted revenue"),
-		"subtitle": _("Projected vs actual revenue based on deal probability"),
-		"xAxis": {
-			"title": _("Month"),
-			"key": "month",
-			"type": "time",
-			"timeGrain": "month",
-		},
-		"yAxis": {
-			"title": _("Revenue") + f" ({get_base_currency_symbol()})",
-		},
+		"subtitle": _("Open weighted forecast and won deal value; not invoiced or collected amounts")
+		+ (
+			". " + _("Excluded {0} deals with missing exchange rates.").format(missing_rates)
+			if missing_rates
+			else ""
+		),
+		"currency": frappe.db.get_single_value("FCRM Settings", "currency") or "USD",
+		"missing_exchange_rate_count": missing_rates,
+		"xAxis": {"title": _("Month"), "key": "month", "type": "time", "timeGrain": "month"},
+		"yAxis": {"title": _("Deal value") + f" ({get_base_currency_symbol()})"},
+		# Keep stored dashboard series keys compatible; `actual` means won value.
 		"series": [
 			{"name": "forecasted", "type": "line", "showDataPoints": True},
 			{"name": "actual", "type": "line", "showDataPoints": True},
 		],
 	}
+
+
+@frappe.whitelist()
+@sales_user_only
+def get_pipeline_funnel(
+	from_date: str | None = None, to_date: str | None = None, filters: dict | str | None = None
+):
+	from crm.pipeline.queries.stages import pipeline_funnel
+
+	return pipeline_funnel(from_date, to_date, filters)
 
 
 def get_funnel_conversion(from_date: str | None = None, to_date: str | None = None, user: str | None = None):

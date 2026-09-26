@@ -1,66 +1,53 @@
-// Pipeline arithmetic shared by the deal board, its column headers and the lists.
-//
-// Two numbers live on a deal: `expected_deal_value` is the pipeline number (what
-// we think we will close) and `deal_value` is the invoiced one. The board shows
-// the expected value when it is set, else the invoiced one — one rule, one place.
-//
-// Pure functions: they take plain rows / aggregate entries, never a resource.
+// Commercial deal amounts are not evidence of invoicing or collection.
+const OPEN_TYPES = new Set(['Open', 'Ongoing', 'On Hold'])
 
-/**
- * Board / card money for a deal row (or for an aggregate entry that carries the
- * same two field names). Expected value wins when it is a real positive number.
- */
-export function displayValue(row) {
-  const expected = Number(row?.expected_deal_value)
-  if (isFinite(expected) && expected > 0) return expected
-  const actual = Number(row?.deal_value)
-  return isFinite(actual) ? actual : 0
+function number(value) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
 }
 
-/** Open funnel rungs in position order, stopping before the first outcome. */
+/** A card's commercial value in its own currency. */
+export function displayValue(row, stage = {}) {
+  const actual = number(row?.deal_value)
+  if (stage.type === 'Won' && actual > 0) return actual
+  const expected = number(row?.expected_deal_value)
+  return expected > 0 ? expected : actual
+}
+
+/** Explicit 0 is meaningful; only absent values inherit the stage probability. */
+export function dealProbability(row, stage = {}) {
+  const own = row?.probability
+  const value = own == null || own === '' ? stage.probability : own
+  return Math.max(0, Math.min(100, number(value)))
+}
+
+/** Normal sales rungs before an outcome; post-outcome repair re-entry is separate. */
 export function funnelLadder(stages = []) {
-  const firstClosed = stages.findIndex(
-    (s) => s.type === 'Won' || s.type === 'Lost',
+  const ordered = [...stages].sort(
+    (a, b) => number(a.position) - number(b.position),
   )
-  const ladder = firstClosed === -1 ? stages : stages.slice(0, firstClosed)
-  return ladder.filter((s) => s.type === 'Open')
+  const firstClosed = ordered.findIndex(
+    (stage) => stage.type === 'Won' || stage.type === 'Lost',
+  )
+  const ladder = firstClosed === -1 ? ordered : ordered.slice(0, firstClosed)
+  return ladder.filter(
+    (stage) => OPEN_TYPES.has(stage.type) && !stage.hidden && !stage.archived,
+  )
 }
 
-/**
- * Money for a whole stage, from its aggregate entry { deal_value, expected_deal_value }
- * (each a SUM over the stage). The larger of the two sums wins: expected values
- * are set on a handful of deals today, so preferring them whenever one exists
- * would show a won column as MX$ 100 next to MX$ 68,250 invoiced.
- */
+/** Server SUM of per-deal commercial values in the returned base currency. */
 export function stageValue(entry) {
-  const expected = Number(entry?.expected_deal_value)
-  const actual = Number(entry?.deal_value)
-  return Math.max(
-    isFinite(expected) ? expected : 0,
-    isFinite(actual) ? actual : 0,
-  )
+  return number(entry?.commercial_value)
 }
 
-/**
- * Probability-weighted pipeline total.
- *
- * @param {Object} countsByStatus  status name -> { count, deal_value, expected_deal_value }
- * @param {Array}  statuses        [{ value|name, probability }] — the visible stages
- * @returns {number} sum of stageValue(entry) * probability / 100
- *
- * A stage with no probability contributes nothing: an unweighted stage would
- * otherwise inflate the forecast with its full value.
- */
+/** Server SUM already respects per-deal probability, outcomes, FX and permissions. */
 export function weightedTotal(countsByStatus = {}, statuses = []) {
-  let total = 0
-  for (const status of statuses || []) {
-    const key = status?.value ?? status?.name
-    if (key == null) continue
-    const entry = countsByStatus?.[key]
-    if (!entry) continue
-    const probability = Number(status?.probability)
-    if (!isFinite(probability) || probability <= 0) continue
-    total += (stageValue(entry) * probability) / 100
-  }
-  return total
+  return (statuses || []).reduce((sum, stage) => {
+    if (!OPEN_TYPES.has(stage.type) || stage.hidden || stage.archived)
+      return sum
+    return (
+      sum +
+      number(countsByStatus?.[stage.value ?? stage.name]?.weighted_forecast)
+    )
+  }, 0)
 }

@@ -841,3 +841,19 @@ def delete_bulk_docs(doctype: str, items: str | list, delete_linked: bool = Fals
 	else:
 		delete_bulk(doctype, items)
 	return "success"
+
+
+@frappe.whitelist()
+def aggregate_deal_metrics(
+	filters: dict | list | str | None = None, or_filters: dict | list | str | None = None
+):
+	"""Board totals use the same filters and native permissions as its deal list."""
+	from crm.pipeline.queries.stages import deal_metrics
+
+	return {
+		"currency": frappe.db.get_single_value("FCRM Settings", "currency") or "USD",
+		"stages": deal_metrics(
+			frappe.parse_json(filters) if isinstance(filters, str) else filters,
+			frappe.parse_json(or_filters) if isinstance(or_filters, str) else or_filters,
+		),
+	}

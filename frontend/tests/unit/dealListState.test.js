@@ -37,6 +37,24 @@ describe('deal list return context', () => {
     })
     expect(dealListState(null).view).toBe('list')
   })
+  it('preserves a report creation cohort across record return', () => {
+    expect(
+      dealListState({
+        pipeline: 'sales',
+        status: ['Proposal'],
+        createdFrom: '2040-02-01',
+        createdTo: '2040-02-29',
+      }),
+    ).toMatchObject({
+      pipeline: 'sales',
+      status: ['Proposal'],
+      createdFrom: '2040-02-01',
+      createdTo: '2040-02-29',
+    })
+    expect(
+      dealListState({ createdFrom: ['2040-02-01'], createdTo: 'invalid' }),
+    ).not.toHaveProperty('createdTo')
+  })
   it('drops a grouping the list no longer offers', () => {
     expect(dealListState({ groupBy: 'currency' }).groupBy).toBe('none')
     expect(dealListState({ groupBy: 'repair_status' }).groupBy).toBe(

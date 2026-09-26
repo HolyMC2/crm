@@ -1,18 +1,24 @@
 <template>
   <svg
-    width="300"
-    height="300"
-    viewBox="0 0 300 300"
+    viewBox="0 0 32 32"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    role="img"
+    :aria-label="label"
   >
+    <rect width="32" height="32" rx="9" :fill="PRODUCT_IDENTITY.color" />
     <path
-      d="M214.286 0H85.7143C38.3756 0 0 38.3756 0 85.7143V214.286C0 261.624 38.3756 300 85.7143 300H214.286C261.624 300 300 261.624 300 214.286V85.7143C300 38.3756 261.624 0 214.286 0Z"
-      fill="#EF0BF5"
+      d="M19 8H14a8 8 0 0 0 0 16h4a7 7 0 0 0 7-7v-1"
+      stroke="white"
+      stroke-width="3"
+      stroke-linecap="round"
     />
-    <path
-      d="M64.2141 90.301V111.862H214.339V140.214L160.187 193.146V208.993L139.705 208.885V193.146L85.6605 140.214H64.2141V149.269L118.259 202.202V230.23L181.634 230.769V202.202L235.786 149.269V90.301H64.2141Z"
-      fill="white"
-    />
+    <circle cx="24" cy="8" r="3" fill="white" />
   </svg>
 </template>
+
+<script setup>
+import { PRODUCT_IDENTITY } from '@/utils/productIdentity'
+
+defineProps({ label: { type: String, default: PRODUCT_IDENTITY.name } })
+</script>

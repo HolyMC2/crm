@@ -49,6 +49,13 @@
             v-if="hasOrganizationSections || hasContactSections"
             class="h-px w-full border-t my-5"
           />
+          <PipelineSelector
+            :doc="deal.doc"
+            select-default
+            class="mb-4"
+            @change="Object.assign(deal.doc, $event)"
+            @stages="pipelineStages = $event"
+          />
           <FieldLayout
             v-if="tabs.data?.length"
             :tabs="tabs.data"
@@ -158,6 +165,7 @@
 </template>
 
 <script setup>
+import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 // Doco customization: repair order form extracted into its own component.
@@ -190,6 +198,7 @@ const router = useRouter()
 const error = ref(null)
 
 const { document: deal, triggerOnBeforeCreate } = useDocument('CRM Deal')
+Object.assign(deal.doc, props.defaults)
 const { doctypeMeta } = getMeta('CRM Deal')
 const erpSyncAvailable = computed(() => hasApp('doco') && hasApp('erpnext'))
 const repairAvailable = computed(
@@ -335,7 +344,7 @@ const tabs = createResource({
             if (field.fieldname == 'status') {
               field.fieldtype = 'Select'
               field.options = dealStatuses.value
-              field.prefix = getDealStatus(deal.doc.status).color
+              field.prefix = getDealStatus(deal.doc.status)?.color
             }
 
             if (field.fieldtype === 'Table') {
@@ -349,7 +358,22 @@ const tabs = createResource({
   },
 })
 
-const dealStatuses = computed(() => statusOptions('deal'))
+const pipelineStages = ref([])
+const dealStatuses = computed(() =>
+  deal.doc.pipeline
+    ? pipelineStages.value
+        .filter((stage) => !stage.archived)
+        .map((stage) => ({ label: stage.name, value: stage.name }))
+    : statusOptions('deal'),
+)
+watch(dealStatuses, (options) => {
+  for (const tab of tabs.data || [])
+    for (const section of tab.sections)
+      for (const column of section.columns)
+        for (const field of column.fields) {
+          if (field.fieldname === 'status') field.options = options
+        }
+})
 
 async function createDeal() {
   if (deal.doc.website && !deal.doc.website.startsWith('http')) {
@@ -522,13 +546,12 @@ onMounted(() => {
   deal.doc.no_of_employees = '1-10'
   if (hasWhatsAppField.value && deal.doc.mobile_is_whatsapp == null)
     deal.doc.mobile_is_whatsapp = 1
-  Object.assign(deal.doc, props.defaults)
 
   if (!deal.doc.deal_owner) {
     deal.doc.deal_owner = getUser().name
   }
-  if (!deal.doc.status && dealStatuses.value[0].value) {
-    deal.doc.status = dealStatuses.value[0].value
+  if (!deal.doc.status && dealStatuses.value[0]?.value) {
+    deal.doc.status = dealStatuses.value[0]?.value
   }
 })
 </script>

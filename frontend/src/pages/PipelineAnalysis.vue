@@ -1,12 +1,4 @@
-<!--
-  Pipeline Analysis / Funnel — stage funnel with drop-off + KPIs, period filter.
-  Reachable from the nav rail («Embudo», navModel.navItemsBottom); addon-gated.
-
-  Payload: doco_marketing.api.reports.get_pipeline_funnel returns
-  { stages: [{stage, count, type, probability, position}], won, lost, conversion }
-  with the tenant's hidden stages (the inactive language twins) already excluded
-  server-side, so a stage is never counted twice.
--->
+<!-- Current stage distribution for a creation cohort, using CRM-native permissions. -->
 <template>
   <div
     class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
@@ -43,27 +35,57 @@
     </div>
 
     <div class="flex flex-col gap-4 p-5">
+      <label class="flex flex-wrap items-center gap-2 text-sm text-ink-gray-7">
+        {{ __('Sales pipeline') }}
+        <select
+          v-model="pipeline"
+          class="min-h-11 max-w-full rounded border border-outline-gray-2 bg-surface-base px-3"
+          @change="load"
+        >
+          <option value="">{{ __('All pipelines') }}</option>
+          <option
+            v-for="item in pipelines.data || []"
+            :key="item.name"
+            :value="item.name"
+          >
+            {{ item.pipeline_name
+            }}{{ item.archived ? ' · ' + __('Archived') : '' }}
+          </option>
+        </select>
+      </label>
       <!-- KPIs. Conversión is won / (won + lost) — what the pipeline CLOSES.
            Dividing won by everything still open reported ~0% forever. -->
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Kpi :label="__('Total tratos')" :value="total" />
         <Kpi
-          :label="__('Conversión')"
+          :label="__('Ganados / cerrados')"
           :value="`${conversion}%`"
           ink="var(--ink-green-7)"
         />
         <Kpi :label="__('Ganados')" :value="won" ink="var(--ink-green-7)" />
         <Kpi :label="__('Perdidos')" :value="lost" ink="var(--ink-red-7)" />
         <Kpi
-          :label="__('Mayor caída')"
-          :value="biggestDrop.label"
-          :sub="biggestDrop.drop ? `−${biggestDrop.drop}%` : ''"
+          :label="__('Etapas activas')"
+          :value="openStages.length"
           ink="var(--ink-red-7)"
-          small
         />
       </div>
 
-      <!-- funnel -->
+      <div
+        v-if="funnelRes.error"
+        role="alert"
+        class="rounded-lg bg-surface-red-2 p-3 text-sm text-ink-red-7"
+      >
+        {{
+          __(
+            'No se pudo cargar el embudo. Revisa el acceso e inténtalo de nuevo.',
+          )
+        }}
+        <button class="ml-2 underline" @click="load">
+          {{ __('Reintentar') }}
+        </button>
+      </div>
+      <!-- current stage distribution -->
       <div
         class="rounded-[12px] border border-outline-gray-2 bg-surface-base p-4"
       >
@@ -82,10 +104,20 @@
         >
           {{ __('Sin datos') }}
         </div>
-        <div v-for="s in stages" :key="s.stage" class="mb-3">
+        <div
+          v-for="s in allStages"
+          :key="`${s.pipeline || ''}:${s.stage}`"
+          class="mb-3"
+        >
           <div class="mb-1 flex items-center justify-between text-[12.5px]">
             <span class="flex items-center gap-1.5">
-              <span class="font-medium text-ink-gray-8">{{ s.stage }}</span>
+              <button
+                class="font-medium text-ink-gray-8 underline"
+                @click="openStage(s)"
+              >
+                {{ !pipeline && s.pipeline_name ? s.pipeline_name + ' · ' : ''
+                }}{{ s.stage }}
+              </button>
               <span
                 class="text-[10.5px] font-semibold uppercase tracking-[.05em] text-ink-gray-4"
               >
@@ -97,9 +129,9 @@
             </span>
             <span class="text-ink-gray-5">
               {{ s.count }} · {{ share(s) }}%
-              <span v-if="drop(s) > 0" class="ml-1 font-semibold text-ink-red-7"
-                >↓ {{ drop(s) }}%</span
-              >
+              <span v-if="s.hidden || s.archived" class="ml-1">{{
+                __('Archivada')
+              }}</span>
             </span>
           </div>
           <div class="h-6 overflow-hidden rounded-md bg-surface-gray-2">
@@ -116,7 +148,7 @@
         <p v-if="stages.length" class="mt-4 text-[11px] text-ink-gray-4">
           {{
             __(
-              'La caída se calcula sólo entre etapas abiertas, en orden de posición. Ganado y perdido son desenlaces, no pasos.',
+              'Distribución actual de los tratos creados en el período. No representa el historial de avance ni una tasa de abandono.',
             )
           }}
         </p>
@@ -128,6 +160,7 @@
 <script setup>
 import { computed, h, ref } from 'vue'
 import { createResource } from 'frappe-ui'
+import { useRouter } from 'vue-router'
 import { funnelLadder } from '@/utils/pipelineMath'
 
 const periods = [
@@ -136,6 +169,13 @@ const periods = [
   { key: 'all', label: __('Todo') },
 ]
 const period = ref('all')
+const pipeline = ref('')
+const router = useRouter()
+const pipelines = createResource({
+  url: 'crm.pipeline.api.get_pipelines',
+  params: { include_archived: true },
+  auto: true,
+})
 
 function localDate(d) {
   const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
@@ -144,18 +184,39 @@ function localDate(d) {
 function range(key) {
   const now = new Date()
   const to = localDate(now)
-  if (key === 'all') return { from_date: '2000-01-01', to_date: to }
+  if (key === 'all') return { to_date: to }
   let from = new Date(now)
-  if (key === 'q') from.setDate(now.getDate() - 90)
+  if (key === 'q') from.setDate(now.getDate() - 89)
   else from = new Date(now.getFullYear(), now.getMonth(), 1)
   return { from_date: localDate(from), to_date: to }
 }
 
 const funnelRes = createResource({
-  url: 'doco_marketing.api.reports.get_pipeline_funnel',
+  url: 'crm.api.dashboard.get_pipeline_funnel',
 })
 function load() {
-  funnelRes.submit(range(period.value))
+  funnelRes.data = null
+  funnelRes
+    .submit({
+      ...range(period.value),
+      filters: pipeline.value ? { pipeline: pipeline.value } : {},
+    })
+    .catch(() => {})
+}
+function openStage(stage) {
+  const dates = range(period.value)
+  router.push({
+    path: '/deals',
+    query: {
+      report: 'pipeline',
+      status: stage.status ?? stage.stage,
+      ...(stage.pipeline || pipeline.value
+        ? { pipeline: stage.pipeline || pipeline.value }
+        : {}),
+      ...(dates.from_date ? { created_from: dates.from_date } : {}),
+      created_to: dates.to_date,
+    },
+  })
 }
 function setPeriod(k) {
   period.value = k
@@ -170,14 +231,21 @@ const payload = computed(() => {
   return Array.isArray(d) ? { stages: d } : d || {}
 })
 const stages = computed(() => payload.value.stages || [])
+const allStages = computed(() => [
+  ...stages.value,
+  ...(payload.value.historical_stages || []),
+  ...(payload.value.unclassified_stages || []),
+])
 const won = computed(() => payload.value.won || 0)
 const lost = computed(() => payload.value.lost || 0)
 const conversion = computed(() => payload.value.conversion ?? 0)
-const total = computed(() =>
-  stages.value.reduce((a, s) => a + (s.count || 0), 0),
+const total = computed(
+  () =>
+    payload.value.total ??
+    allStages.value.reduce((a, s) => a + (s.count || 0), 0),
 )
 const maxCount = computed(() =>
-  Math.max(1, ...stages.value.map((s) => s.count || 0)),
+  Math.max(1, ...allStages.value.map((s) => s.count || 0)),
 )
 
 const TYPE_LABELS = {
@@ -186,39 +254,19 @@ const TYPE_LABELS = {
   'On Hold': 'En pausa',
   Won: 'Ganada',
   Lost: 'Perdida',
+  Unknown: 'Sin clasificar',
 }
 function typeLabel(t) {
   return __(TYPE_LABELS[t] || t || '')
 }
 
-// Drop-off runs down the linear Open chain only, and only up to the first
-// desenlace: an Ongoing / On Hold stage is a side-track, Won / Lost close the
-// funnel, and an Open stage seeded BEHIND them (Warranty Repair sits after
-// Picked Up / Declined) is a re-entry, not the next step — chaining it made
-// "Ready for Pickup → Warranty Repair" the biggest drop on every tenant.
-const openStages = computed(() => funnelLadder(stages.value))
-const drops = computed(() => {
-  const out = {}
-  const open = openStages.value
-  for (let i = 1; i < open.length; i++) {
-    const prev = open[i - 1].count || 0
-    const cur = open[i].count || 0
-    out[open[i].stage] = prev ? Math.round((1 - cur / prev) * 100) : 0
-  }
-  return out
-})
-function drop(s) {
-  return drops.value[s.stage] || 0
-}
-const biggestDrop = computed(() => {
-  const open = openStages.value
-  let max = { label: '—', drop: 0 }
-  for (let i = 1; i < open.length; i++) {
-    const d = drops.value[open[i].stage] || 0
-    if (d > max.drop)
-      max = { label: `${open[i - 1].stage} → ${open[i].stage}`, drop: d }
-  }
-  return max
+// Outcome stages and post-outcome repair re-entry do not form a sales ladder.
+const openStages = computed(() => {
+  const byPipeline = stages.value.reduce((groups, stage) => {
+    ;(groups[stage.pipeline || ''] ||= []).push(stage)
+    return groups
+  }, {})
+  return Object.values(byPipeline).flatMap((rows) => funnelLadder(rows))
 })
 
 function barPct(s) {

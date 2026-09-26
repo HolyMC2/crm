@@ -127,6 +127,12 @@
           </div>
         </div>
       </div>
+      <PipelineSelector
+        :doc="doc"
+        class="px-4 py-3"
+        @change="changePipeline"
+        @stages="pipelineStages = $event"
+      />
       <SLASection
         v-if="doc.sla_status"
         v-model="doc"
@@ -335,6 +341,7 @@
   />
 </template>
 <script setup>
+import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Icon from '@/components/Icon.vue'
@@ -545,10 +552,32 @@ const title = computed(() => {
   return doc.value?.[t] || props.dealId
 })
 
+const pipelineStages = ref([])
+async function changePipeline(values) {
+  const previous = Object.fromEntries(
+    Object.keys(values).map((key) => [key, doc.value[key]]),
+  )
+  Object.assign(doc.value, values)
+  try {
+    await document.save.submit()
+  } catch (error) {
+    Object.assign(doc.value, previous)
+    toast.error(error.messages?.join(' ') || error.message)
+  }
+}
 const statuses = computed(() => {
   let customStatuses = document.statuses?.length
     ? document.statuses
     : document._statuses || []
+  if (doc.value.pipeline) {
+    const allowed = pipelineStages.value
+      .filter((stage) => !stage.archived)
+      .map((stage) => stage.name)
+    customStatuses = customStatuses.length
+      ? customStatuses.filter((name) => allowed.includes(name))
+      : allowed
+    if (!customStatuses.length) return []
+  }
   return statusOptions(
     'deal',
     customStatuses,

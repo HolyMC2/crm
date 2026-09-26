@@ -1,16 +1,12 @@
 <!--
   Simple horizontal funnel for the doco list pages. `groups` is the ordered status
   list; `counts` is an aggregate map { value: { count, value? } }. Bars are scaled
-  to the largest stage; the trailing column shows stage-to-stage conversion %.
+  to the largest stage; the trailing column shows share of current records.
 -->
 <template>
   <div class="scb min-h-0 flex-1 overflow-y-auto p-5">
     <div class="mx-auto max-w-[680px] space-y-2.5">
-      <div
-        v-for="(g, i) in groups"
-        :key="g.value"
-        class="flex items-center gap-3"
-      >
+      <div v-for="g in groups" :key="g.value" class="flex items-center gap-3">
         <div
           class="w-[140px] flex-none truncate text-[12.5px] font-medium text-ink-gray-7"
         >
@@ -29,9 +25,16 @@
           </div>
         </div>
         <div class="w-[64px] flex-none text-right text-[11px] text-ink-gray-5">
-          <span v-if="i > 0">{{ dropOff(i) }}</span>
+          <span>{{ shareOf(g.value) }}%</span>
         </div>
       </div>
+      <p v-if="total" class="pt-3 text-[11px] text-ink-gray-5">
+        {{
+          __(
+            'Current stage distribution; percentages are shares of the total, not conversion rates.',
+          )
+        }}
+      </p>
       <div v-if="!total" class="py-10 text-center text-xs text-ink-gray-4">
         {{ __('Sin datos') }}
       </div>
@@ -59,10 +62,7 @@ const total = computed(() =>
 function pct(v) {
   return Math.round((countOf(v) / maxCount.value) * 100)
 }
-function dropOff(i) {
-  const prev = countOf(props.groups[i - 1].value)
-  const cur = countOf(props.groups[i].value)
-  if (!prev) return ''
-  return `${Math.round((cur / prev) * 100)}%`
+function shareOf(value) {
+  return total.value ? Math.round((countOf(value) / total.value) * 100) : 0
 }
 </script>

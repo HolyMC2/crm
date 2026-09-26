@@ -115,6 +115,17 @@ def whatsapp_account_reason(intent):
 		return "account_unavailable", None
 	if not rows[0].app_id:
 		return "account_configuration_invalid", None
+	from crm.api import catalog_commerce
+
+	try:
+		payload = json.loads(intent.payload)
+	except (ValueError, TypeError):
+		return "frozen_payload_invalid", None
+	if catalog_commerce.is_catalog_payload(payload) or (intent.source_action or "").startswith("cat1:"):
+		if intent.source_doctype != "WhatsApp Account" or intent.source_name != rows[0].name:
+			return "account_configuration_changed", None
+		reason = catalog_commerce.dispatch_reason(intent, rows[0])
+		return (reason, None) if reason else (None, rows[0])
 	if (
 		intent.source_doctype != "WhatsApp Account"
 		or intent.source_name != rows[0].name

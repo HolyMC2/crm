@@ -1,0 +1,101 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Pipeline",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "field_order": [
+  "pipeline_name",
+  "sales_company",
+  "currency",
+  "is_default",
+  "archived",
+  "probability_policy",
+  "stages",
+  "roles"
+ ],
+ "fields": [
+  {
+   "fieldname": "pipeline_name",
+   "label": "Pipeline name",
+   "fieldtype": "Data",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sales_company",
+   "label": "Company scope",
+   "fieldtype": "Data",
+   "description": "Optional company identifier. Pipeline roles and existing record permissions both apply."
+  },
+  {
+   "fieldname": "currency",
+   "label": "Default currency",
+   "fieldtype": "Link",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "is_default",
+   "label": "Default for this company scope",
+   "fieldtype": "Check",
+   "default": "0"
+  },
+  {
+   "fieldname": "archived",
+   "label": "Archived",
+   "fieldtype": "Check",
+   "default": "0",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "probability_policy",
+   "label": "Probability policy",
+   "fieldtype": "Select",
+   "options": "Stage\nManual\nLegacy",
+   "default": "Stage",
+   "reqd": 1,
+   "description": "Stage: use each stage probability. Manual: preserve explicit deal probability. Legacy: preserve historical probabilities."
+  },
+  {
+   "fieldname": "stages",
+   "label": "Stages",
+   "fieldtype": "Table",
+   "options": "CRM Pipeline Stage",
+   "reqd": 1
+  },
+  {
+   "fieldname": "roles",
+   "label": "Permitted roles",
+   "fieldtype": "Table",
+   "options": "CRM Pipeline Role",
+   "description": "Empty allows all CRM sales roles. Existing record and company permissions still apply."
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "create": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "create": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "autoname": "hash",
+ "title_field": "pipeline_name",
+ "search_fields": "pipeline_name,sales_company"
+}

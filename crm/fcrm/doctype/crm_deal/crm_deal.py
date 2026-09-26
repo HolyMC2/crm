@@ -91,6 +91,9 @@ class CRMDeal(Document):
 		self.set_sla()
 
 	def validate(self):
+		from crm.pipeline.services.configuration import validate_record
+
+		validate_record(self)
 		self.validate_status()
 		self.set_primary_contact()
 		self.set_primary_email_mobile_no()
@@ -241,7 +244,7 @@ class CRMDeal(Document):
 		"""
 		Update the default probability based on the status.
 		"""
-		if not self.probability or self.probability == 0:
+		if self.probability is None:
 			self.probability = frappe.db.get_value("CRM Deal Status", self.status, "probability") or 0
 
 	def update_expected_deal_value(self):

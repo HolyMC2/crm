@@ -101,13 +101,20 @@ def _permission_query_conditions(user: str | None, doctype: str):
 
 
 def get_lead_permission_query_conditions(user=None):
-	cond = _permission_query_conditions(user, "CRM Lead")
-	return cond.get_sql(with_namespace=True, quote_char="`", secondary_quote_char="'") if cond else ""
+	return _scoped_record_query(user, "CRM Lead")
 
 
 def get_deal_permission_query_conditions(user=None):
-	cond = _permission_query_conditions(user, "CRM Deal")
-	return cond.get_sql(with_namespace=True, quote_char="`", secondary_quote_char="'") if cond else ""
+	return _scoped_record_query(user, "CRM Deal")
+
+
+def _scoped_record_query(user, doctype):
+	from crm.pipeline.services.configuration import record_query
+
+	cond = _permission_query_conditions(user, doctype)
+	hierarchy = cond.get_sql(with_namespace=True, quote_char="`", secondary_quote_char="'") if cond else ""
+	pipeline = record_query(doctype, user)
+	return " AND ".join(f"({part})" for part in (hierarchy, pipeline) if part)
 
 
 def get_call_log_permission_query_conditions(user=None):
@@ -141,11 +148,21 @@ def _has_permission(doc, ptype, user, doctype: str) -> bool | None:
 
 
 def has_lead_permission(doc, ptype, user):
-	return _has_permission(doc, ptype, user, "CRM Lead")
+	return _scoped_record_permission(doc, ptype, user, "CRM Lead")
 
 
 def has_deal_permission(doc, ptype, user):
-	return _has_permission(doc, ptype, user, "CRM Deal")
+	return _scoped_record_permission(doc, ptype, user, "CRM Deal")
+
+
+def _scoped_record_permission(doc, ptype, user, doctype):
+	from crm.pipeline.services.configuration import can_access_pipeline, record_company_allowed
+
+	if not can_access_pipeline(doc.get("pipeline"), user) or not record_company_allowed(
+		doc.get("sales_company"), user
+	):
+		return False
+	return _has_permission(doc, ptype, user, doctype)
 
 
 def has_call_log_permission(doc, ptype, user):

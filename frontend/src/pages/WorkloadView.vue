@@ -14,15 +14,19 @@
 <template>
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- manager gate -->
-    <div v-if="restricted" class="p-5">
+    <div v-if="loadError" class="p-5" role="alert">
       <div
         class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-4 py-2.5 text-[12.5px] text-ink-amber-7"
       >
-        {{
-          __(
-            'La carga de trabajo requiere permiso de gerente (Sales Manager o System Manager).',
-          )
-        }}
+        <p>{{ errorMessage(loadError) }}</p>
+        <button
+          type="button"
+          class="mt-3 min-h-11 rounded-lg border border-outline-gray-2 bg-surface-base px-4 font-semibold text-ink-gray-8 focus-visible:ring-2"
+          :disabled="loading"
+          @click="load"
+        >
+          {{ loading ? __('Cargando…') : __('Reintentar') }}
+        </button>
       </div>
     </div>
 
@@ -46,6 +50,7 @@
         </div>
         <button
           class="press rounded-lg border border-outline-gray-2 px-3 py-[7px] text-[12.5px] font-semibold text-ink-gray-7"
+          :disabled="loading"
           @click="load"
         >
           {{ __('Actualizar') }}
@@ -172,6 +177,20 @@
                 {{ __('Cargando conversaciones…') }}
               </div>
               <div
+                v-else-if="convError"
+                class="py-3 text-[12px] text-ink-gray-7"
+                role="alert"
+              >
+                <p>{{ errorMessage(convError, true) }}</p>
+                <button
+                  type="button"
+                  class="mt-2 min-h-11 rounded-lg border border-outline-gray-2 px-3 font-semibold focus-visible:ring-2"
+                  @click="reloadConversations"
+                >
+                  {{ __('Reintentar') }}
+                </button>
+              </div>
+              <div
                 v-else-if="!conversations.length"
                 class="py-4 text-center text-[11.5px] text-ink-gray-4"
               >
@@ -261,6 +280,7 @@
 import { computed, h, ref } from 'vue'
 import { call, createListResource, toast, Dropdown } from 'frappe-ui'
 import { barToken, barWidth, sortWorkload } from '@/utils/workloadFormat'
+import { workloadError } from '@/utils/workloadError'
 
 const columns = [
   { key: 'open_total', label: __('Abiertas') },
@@ -271,22 +291,47 @@ const columns = [
 ]
 
 // ── workload (manager-gated; PermissionError → banner) ───────────────────────
-const restricted = ref(false)
+const loadError = ref('')
 const loading = ref(false)
 const data = ref({ cap: 0, unassigned: 0, agents: [] })
 
 async function load() {
+  if (loading.value) return
   loading.value = true
-  restricted.value = false
   try {
     data.value = await call('doco_marketing.api.workload.get_workload')
+    loadError.value = ''
   } catch (e) {
-    restricted.value = true
+    loadError.value = workloadError(e)
   } finally {
     loading.value = false
   }
 }
 load()
+
+function errorMessage(kind, conversations = false) {
+  if (kind === 'permission')
+    return conversations
+      ? __(
+          'No tienes permiso para consultar estas conversaciones. Contacta a tu administrador.',
+        )
+      : __(
+          'La carga de trabajo requiere permiso de gerente (Sales Manager o System Manager).',
+        )
+  if (kind === 'session')
+    return __('Tu sesión expiró. Vuelve a iniciar sesión y reintenta.')
+  if (kind === 'unavailable')
+    return __(
+      'El servicio no está disponible. Reintenta o consulta con tu administrador si continúa.',
+    )
+  return conversations
+    ? __(
+        'No se pudieron cargar las conversaciones. Revisa tu conexión y reintenta.',
+      )
+    : __(
+        'No se pudo cargar la carga de trabajo. Revisa tu conexión y reintenta.',
+      )
+}
 
 const cap = computed(() => data.value.cap || 0)
 const agents = computed(() => data.value.agents || [])
@@ -308,6 +353,7 @@ function onSort(key) {
 //    shared file. Plain list resources with an owner filter, newest-first). ─────
 const selectedAgent = ref(null)
 const selected = ref(new Set())
+const convError = ref('')
 
 const deals = createListResource({
   doctype: 'CRM Deal',
@@ -357,8 +403,17 @@ function openAgent(a) {
   leads.filters = { lead_owner: a.user }
   if (term['CRM Lead']?.length)
     leads.filters.status = ['not in', term['CRM Lead']]
-  deals.reload()
-  leads.reload()
+  reloadConversations()
+}
+
+async function reloadConversations() {
+  const agent = selectedAgent.value
+  convError.value = ''
+  try {
+    await Promise.all([deals.reload(), leads.reload()])
+  } catch (e) {
+    if (selectedAgent.value === agent) convError.value = workloadError(e)
+  }
 }
 
 function toggle(key) {
@@ -405,8 +460,7 @@ async function reassignSelected(toUser) {
     if (failed) toast.error(__('{0} no se pudo(ieron) reasignar', [failed]))
     selected.value = new Set()
     await load()
-    deals.reload()
-    leads.reload()
+    await reloadConversations()
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo reasignar'))
   }

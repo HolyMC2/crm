@@ -43,6 +43,8 @@
   "gender",
   "phone",
   "column_break_dbsv",
+  "pipeline",
+  "sales_company",
   "status",
   "no_of_employees",
   "annual_revenue",
@@ -501,6 +503,20 @@
    "no_copy": 1,
    "options": "CRM Task",
    "read_only": 1
+  },
+  {
+   "fieldname": "pipeline",
+   "label": "Sales pipeline",
+   "fieldtype": "Link",
+   "options": "CRM Pipeline",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "sales_company",
+   "label": "Sales company",
+   "fieldtype": "Data",
+   "in_standard_filter": 1
   }
  ],
  "grid_page_length": 50,

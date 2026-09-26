@@ -23,12 +23,7 @@
       class="mb-2.5 flex items-center gap-2.5"
       :class="isExpanded ? 'px-1.5' : ''"
     >
-      <div
-        class="flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-[15px] font-bold text-white"
-        style="background: var(--brand)"
-      >
-        C
-      </div>
+      <BrandLogo :model-value="brand" />
       <span
         v-if="isExpanded"
         class="truncate text-[15px] font-bold text-ink-gray-9"
@@ -51,7 +46,7 @@
             ? 'w-full justify-start gap-2.5 px-2.5'
             : 'w-[38px] justify-center',
           activeGroup === item.group
-            ? 'bg-surface-green-2 text-ink-green-8'
+            ? 'bg-[var(--brand-soft)] text-ink-gray-9'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
         ]"
         @click="go(item.to)"
@@ -93,7 +88,7 @@
             ? 'w-full justify-start gap-2.5 px-2.5'
             : 'w-[38px] justify-center',
           activeGroup === item.group
-            ? 'bg-surface-green-2 text-ink-green-8'
+            ? 'bg-[var(--brand-soft)] text-ink-gray-9'
             : 'text-ink-gray-4 hover:bg-surface-gray-2',
         ]"
         @click="go(item.to)"
@@ -269,6 +264,7 @@ import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
+import BrandLogo from '@/components/BrandLogo.vue'
 import { showSettings } from '@/composables/settings'
 import {
   unreadNotificationsCount,
@@ -312,7 +308,7 @@ const showProfile = ref(false)
 
 // expand ↔ collapse the rail (icons-only ⇄ icons+labels), persisted per browser.
 const isExpanded = useStorage('doco-nav-expanded', false)
-const brandName = computed(() => brand?.value?.name || 'CRM')
+const brandName = computed(() => brand.name)
 
 const initials = computed(() => {
   const n = (user.value.full_name || '').trim()
@@ -323,7 +319,7 @@ const initials = computed(() => {
 
 const subline = computed(() => {
   const role = user.value.role
-  const company = brand?.value?.name
+  const company = brand.tenantName
   return [role, company].filter(Boolean).join(' · ') || user.value.name || ''
 })
 
