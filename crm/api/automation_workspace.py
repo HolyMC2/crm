@@ -33,7 +33,8 @@ def _reference(doctype, name):
 	if not doctype and not name:
 		return None
 	if (
-		doctype not in REFERENCES
+		not isinstance(doctype, str)
+		or doctype not in REFERENCES
 		or not isinstance(name, str)
 		or not name
 		or len(name) > 140

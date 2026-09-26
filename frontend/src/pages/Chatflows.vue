@@ -8,14 +8,14 @@
   <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- toolbar -->
     <div
-      class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 px-5"
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 px-3"
     >
       <div class="flex items-center gap-2">
         <button
           class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9"
-          @click="$router.push('/campaigns')"
+          @click="$router.push('/automations')"
         >
-          ← {{ __('Campañas') }}
+          ← {{ __('Automations') }}
         </button>
         <span class="text-ink-gray-4">/</span>
         <span class="text-[15px] font-bold text-ink-gray-9">{{
@@ -30,11 +30,35 @@
       <button
         class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
         style="background: var(--brand)"
+        :disabled="saving || flowLoading || forbidden"
         @click="newFlow"
       >
         + {{ __('Nuevo flujo') }}
       </button>
     </div>
+
+    <p
+      v-if="saving || flowLoading"
+      role="status"
+      class="px-3 py-2 text-sm text-ink-gray-6"
+    >
+      {{
+        saving
+          ? __('Guardando cambios. Espera antes de cambiar de flujo.')
+          : __('Cargando flujo…')
+      }}
+    </p>
+    <p v-if="hasApp('doco')" class="px-3 py-2 text-sm text-ink-gray-6">
+      <RouterLink
+        class="inline-flex min-h-11 items-center underline"
+        to="/automations"
+        >{{
+          __(
+            'Open the automation workspace for reviewed publication, account policies and run history.',
+          )
+        }}</RouterLink
+      >
+    </p>
 
     <div v-if="forbidden" class="p-8 text-center text-[13px] text-ink-gray-5">
       {{ __('Solo los gestores pueden editar flujos de bot.') }}
@@ -43,13 +67,33 @@
     <div v-else class="flex min-h-0 flex-1">
       <!-- flow list -->
       <div
-        class="scb min-h-0 w-[300px] flex-none overflow-y-auto border-r border-outline-gray-1 p-3"
+        class="scb min-h-0 w-full flex-none overflow-y-auto border-r border-outline-gray-1 p-3 md:w-[300px]"
+        :class="editing ? 'hidden md:block' : ''"
       >
         <div
           v-if="flows.loading && !rows.length"
           class="py-8 text-center text-xs text-ink-gray-4"
         >
           {{ __('Cargando…') }}
+        </div>
+        <div
+          v-else-if="flows.error"
+          role="alert"
+          class="space-y-3 py-4 text-sm"
+        >
+          <p>
+            {{
+              __(
+                'No se pudo cargar la lista de flujos. Reintenta sin perder tus cambios.',
+              )
+            }}
+          </p>
+          <button
+            class="rounded border border-outline-gray-2 px-3"
+            @click="flows.reload()"
+          >
+            {{ __('Reintentar') }}
+          </button>
         </div>
         <div
           v-else-if="!rows.length"
@@ -66,6 +110,7 @@
               ? 'border-outline-green-4 bg-surface-green-2'
               : 'border-outline-gray-2 hover:bg-surface-gray-2'
           "
+          :disabled="saving || flowLoading"
           @click="selectFlow(f.name)"
         >
           <div class="flex items-center gap-2">
@@ -101,17 +146,27 @@
       </div>
 
       <!-- editor -->
-      <div class="scb min-h-0 flex-1 overflow-y-auto p-5">
+      <div
+        class="scb min-h-0 min-w-0 flex-1 overflow-y-auto p-3 md:p-5"
+        :class="editing ? '' : 'hidden md:block'"
+      >
         <div v-if="!editing" class="py-10 text-center text-xs text-ink-gray-4">
           {{ __('Elige un flujo o crea uno nuevo.') }}
         </div>
-        <template v-else>
+        <fieldset v-else class="min-w-0" :disabled="saving || flowLoading">
+          <button
+            type="button"
+            class="mb-3 rounded border border-outline-gray-2 px-3 md:hidden"
+            @click="closeEditor"
+          >
+            {{ __('Volver a flujos') }}
+          </button>
           <!-- name + actions -->
           <div class="mb-4 flex flex-wrap items-center gap-2">
             <input
               v-if="isNew"
               v-model="form.flow_name"
-              class="dm-input min-w-[220px] flex-1 text-[14px] font-bold"
+              class="dm-input min-w-0 flex-1 text-[14px] font-bold"
               :placeholder="__('Nombre del flujo (fijo después de crear)')"
             />
             <span v-else class="text-[15px] font-bold text-ink-gray-9">{{
@@ -260,22 +315,27 @@
               )
             "
           />
-        </template>
+        </fieldset>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, h, ref } from 'vue'
+import { computed, h, onUnmounted, ref } from 'vue'
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { createResource, call as frappeCall, toast } from 'frappe-ui'
 import StepCardList from '@/components/doco/flows/StepCardList.vue'
 import { confirmDialog } from '@/utils/dialogs'
+import { hasApp } from '@/utils/crmCapabilities'
 
 const forbidden = ref(false)
 const flows = createResource({
   url: 'doco_marketing.api.chatflow.flows_overview',
   auto: true,
+  onSuccess: () => {
+    forbidden.value = false
+  },
   onError: (e) => {
     if (
       (e?.messages?.[0] || '').toLowerCase().includes('permission') ||
@@ -293,7 +353,44 @@ const editing = ref(false)
 const activeRuns = ref(0)
 const form = ref(emptyForm())
 let loaded = ''
-const dirty = computed(() => JSON.stringify(form.value) !== loaded)
+const dirty = computed(
+  () => editing.value && JSON.stringify(form.value) !== loaded,
+)
+const flowLoading = ref(false)
+let selectionEpoch = 0
+async function mayLeave() {
+  if (saving.value || flowLoading.value) return false
+  if (!dirty.value) return true
+  return new Promise((resolve) =>
+    confirmDialog({
+      title: __('¿Descartar cambios del flujo?'),
+      message: __(
+        'Los cambios no guardados se perderán. Puedes quedarte para guardarlos.',
+      ),
+      confirmLabel: __('Descartar cambios'),
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false),
+    }),
+  )
+}
+onBeforeRouteLeave(mayLeave)
+onBeforeRouteUpdate(mayLeave)
+function beforeUnload(event) {
+  if (!dirty.value && !saving.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+window.addEventListener('beforeunload', beforeUnload)
+onUnmounted(() => {
+  selectionEpoch++
+  window.removeEventListener('beforeunload', beforeUnload)
+})
+async function closeEditor() {
+  if (!(await mayLeave())) return
+  selectionEpoch++
+  editing.value = false
+  selectedName.value = ''
+}
 
 function emptyForm() {
   return {
@@ -333,19 +430,28 @@ function loadForm(d) {
 }
 
 async function selectFlow(name) {
+  if (!(await mayLeave())) return
+  const stamp = ++selectionEpoch
+  flowLoading.value = true
   try {
     const d = await frappeCall('doco_marketing.api.chatflow.get_flow', { name })
+    if (stamp !== selectionEpoch) return
     selectedName.value = name
     isNew.value = false
     editing.value = true
     activeRuns.value = d.active_runs || 0
     loadForm(d)
   } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo cargar el flujo'))
+    if (stamp === selectionEpoch)
+      toast.error(e?.messages?.[0] || __('No se pudo cargar el flujo'))
+  } finally {
+    if (stamp === selectionEpoch) flowLoading.value = false
   }
 }
 
-function newFlow() {
+async function newFlow() {
+  if (!(await mayLeave())) return
+  selectionEpoch++
   selectedName.value = ''
   isNew.value = true
   editing.value = true
@@ -357,6 +463,7 @@ function newFlow() {
 // ── save / toggle / cancel-runs ──────────────────────────────────────────────
 const saving = ref(false)
 async function save() {
+  if (saving.value || flowLoading.value) return
   if (isNew.value && !form.value.flow_name.trim()) {
     toast.error(__('Ponle nombre al flujo.'))
     return
@@ -384,8 +491,10 @@ async function save() {
 }
 
 async function toggleEnabled() {
+  if (saving.value || flowLoading.value) return
   if (dirty.value) await save()
   if (dirty.value) return // save failed — don't flip a flow whose edits didn't land
+  saving.value = true
   try {
     const next = form.value.enabled ? 0 : 1
     if (next) {
@@ -409,10 +518,14 @@ async function toggleEnabled() {
     )
   } catch (e) {
     toast.error(e?.messages?.[0] || __('No se pudo cambiar el estado'))
+  } finally {
+    saving.value = false
   }
 }
 
 function cancelRuns() {
+  if (saving.value || flowLoading.value) return
+  const flow = selectedName.value
   confirmDialog({
     title: __('Cancelar conversaciones'),
     message: __(
@@ -421,15 +534,20 @@ function cancelRuns() {
     ),
     confirmLabel: __('Cancelar conversaciones'),
     onConfirm: async () => {
+      if (saving.value || flowLoading.value || selectedName.value !== flow)
+        return
+      saving.value = true
       try {
         const r = await frappeCall('doco_marketing.api.chatflow.cancel_runs', {
-          flow: selectedName.value,
+          flow,
         })
         toast.success(__('{0} conversación(es) canceladas', [r.cancelled]))
         activeRuns.value = 0
         flows.reload()
       } catch (e) {
         toast.error(e?.messages?.[0] || __('No se pudo cancelar'))
+      } finally {
+        saving.value = false
       }
     },
   })
@@ -452,6 +570,14 @@ Field.props = ['label']
 </script>
 
 <style scoped>
+button,
+.dm-input {
+  min-height: 44px;
+}
+button:focus-visible {
+  outline: 2px solid var(--ink-gray-7);
+  outline-offset: 2px;
+}
 .dm-input {
   border: 1px solid var(--outline-gray-2, #e4e7ec);
   border-radius: 8px;
