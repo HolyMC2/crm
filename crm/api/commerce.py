@@ -116,12 +116,13 @@ def _read_status_fields():
 def _checkout_receipt(order):
 	if "posawesome" not in frappe.get_installed_apps():
 		return None
-	names = frappe.get_all(
+	names = frappe.db.get_values(
 		"POS Charge Request",
 		filters={"reference_doctype": "Sales Order", "reference_name": order.name},
-		pluck="name",
+		fieldname="name",
+		pluck=True,
 		order_by="creation desc",
-		limit_page_length=1,
+		limit=1,
 		for_update=True,
 	)
 	if not names:
@@ -354,11 +355,11 @@ def request_payment_link(sales_order, review_hash, request_id, deal=None, cart=N
 		# The owner resolves a durable retry before any fresh effect. A lost HTTP
 		# response must not ask the seller to manufacture a different intent key.
 		service.contract.identifier(request_id)
-		if frappe.get_all(
+		if frappe.db.get_values(
 			"MercadoPago Order",
 			filters={"sales_order": order.name, "request_id": request_id, "flow": "Online"},
-			fields=["name"],
-			limit_page_length=1,
+			fieldname=["name"],
+			limit=1,
 			for_update=True,
 		):
 			return service.request_link(order.name, request_id)

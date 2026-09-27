@@ -116,6 +116,9 @@ class TestOffers(OfferFixture, IntegrationTestCase):
 
 	def test_create_replay_and_changed_request_identity(self):
 		first = offers.save_draft(self.deal.name, self.values, request_id=self.key)
+		saved = frappe.get_doc("CRM Offer", first["name"])
+		self.assertEqual(saved.name, "CRM-OFF-" + saved.request_key[:24])
+		self.assertEqual((saved.root_offer, saved.revision), (saved.name, 1))
 		replay = offers.save_draft(self.deal.name, self.values, request_id=self.key)
 		self.assertEqual(first["name"], replay["name"])
 		self.assertEqual(frappe.db.count("CRM Offer", {"deal": self.deal.name}), 1)

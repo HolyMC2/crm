@@ -69,11 +69,11 @@ def _stale(doc, modified):
 
 
 def _current(doc):
-	return not frappe.get_all(
+	return not frappe.db.get_values(
 		"CRM Offer",
 		filters={"root_offer": doc.root_offer, "revision": [">", doc.revision]},
-		fields=["name"],
-		limit_page_length=1,
+		fieldname=["name"],
+		limit=1,
 		for_update=True,
 	)
 
@@ -196,7 +196,6 @@ def _new(deal, values, key, fingerprint, previous=None):
 	doc = frappe.get_doc(
 		{
 			"doctype": "CRM Offer",
-			"name": name,
 			"deal": deal.name,
 			"root_offer": previous.root_offer if previous else name,
 			"previous_revision": previous.name if previous else None,

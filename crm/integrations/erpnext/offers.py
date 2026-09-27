@@ -35,13 +35,13 @@ def _view_fence(doctype, filters):
 	Current locking reads also fence changes until the quotation transaction ends.
 	Bounds fail visibly instead of silently pricing an incomplete policy set.
 	"""
-	options = {"filters": filters, "fields": ["*"], "order_by": "name asc", "limit_page_length": 1001}
-	current = frappe.get_all(doctype, **options, for_update=True)
+	options = {"filters": filters, "fieldname": ["*"], "order_by": "name asc", "limit": 1001, "as_dict": True}
+	current = frappe.db.get_values(doctype, **options, for_update=True)
 	if len(current) > 1000:
 		service._fail(
 			"ERP pricing configuration exceeds the bounded offer preview. Use ERP quotation review."
 		)
-	if digest(current) != digest(frappe.get_all(doctype, **options)):
+	if digest(current) != digest(frappe.db.get_values(doctype, **options)):
 		service._fail(
 			"ERP pricing configuration changed during this request. Reload the quotation preview.",
 			frappe.TimestampMismatchError,
@@ -53,12 +53,15 @@ def _view_fence(doctype, filters):
 		for field in frappe.get_meta(doctype).get_table_fields():
 			child_options = {
 				"filters": {"parenttype": doctype, "parent": ["in", [r.name for r in current]]},
-				"fields": ["*"],
+				"fieldname": ["*"],
 				"order_by": "parent asc, idx asc, name asc",
-				"limit_page_length": 10001,
+				"limit": 10001,
+				"as_dict": True,
 			}
-			rows = frappe.get_all(field.options, **child_options, for_update=True)
-			if len(rows) > 10000 or digest(rows) != digest(frappe.get_all(field.options, **child_options)):
+			rows = frappe.db.get_values(field.options, **child_options, for_update=True)
+			if len(rows) > 10000 or digest(rows) != digest(
+				frappe.db.get_values(field.options, **child_options)
+			):
 				service._fail(
 					"ERP pricing detail changed or exceeds the preview bound. Review it in ERP.",
 					frappe.TimestampMismatchError,
@@ -150,10 +153,10 @@ def _build(doc):
 		doctype: digest(_view_fence(doctype, {}))
 		for doctype in ("Pricing Rule", "Tax Rule", "Sales Taxes and Charges Template", "Item Tax Template")
 	}
-	prices = frappe.get_all(
+	prices = frappe.db.get_values(
 		"Item Price",
 		filters={"item_code": ["in", sorted(items)], "price_list": price_list.name, "selling": 1},
-		fields=[
+		fieldname=[
 			"name",
 			"item_code",
 			"price_list_rate",
@@ -169,7 +172,7 @@ def _build(doc):
 		],
 		order_by="name asc",
 		for_update=True,
-		limit_page_length=0,
+		as_dict=True,
 	)
 	base_rates, sources = {}, []
 	for code, item in items.items():
