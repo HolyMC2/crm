@@ -305,6 +305,10 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 
 	def test_native_legacy_link_titles_stay_private_after_display_metadata_changes(self):
 		secret = "HISTORICAL-TITLE-" + self.key
+		# Native field naming synchronizes organization_name to the document ID
+		# on every validation. Configure independent naming through actual metadata
+		# so a historical display title is genuinely distinct from its target ID.
+		make_property_setter("CRM Organization", None, "autoname", "hash", "Data", for_doctype=True)
 		make_property_setter(
 			"CRM Organization", None, "title_field", "organization_name", "Data", for_doctype=True
 		)
@@ -313,6 +317,7 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 		)
 		frappe.clear_cache(doctype="CRM Organization")
 		meta = frappe.get_meta("CRM Organization", cached=False)
+		self.assertEqual(meta.autoname, "hash")
 		self.assertEqual(meta.get_title_field(), "organization_name")
 		self.assertEqual(meta.show_title_field_in_link, 1)
 		self.assertEqual(frappe.get_meta("CRM Deal").get_field("organization").fieldtype, "Link")

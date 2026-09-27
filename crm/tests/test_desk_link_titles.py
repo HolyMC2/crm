@@ -43,12 +43,14 @@ class TestDeskLinkTitles(OfferFixture, IntegrationTestCase):
 		)
 		self.make_fixture()
 		for prop, value, fieldtype in (
+			("autoname", "hash", "Data"),
 			("title_field", "organization_name", "Data"),
 			("show_title_field_in_link", 1, "Check"),
 		):
 			make_property_setter("CRM Organization", None, prop, value, fieldtype, for_doctype=True)
 		frappe.clear_cache(doctype="CRM Organization")
 		self.assert_title_metadata("CRM Organization", "organization_name")
+		self.assertEqual(frappe.get_meta("CRM Organization").autoname, "hash")
 		link = frappe.get_meta("CRM Deal", cached=False).get_field("organization")
 		self.assertEqual((link.fieldtype, link.options), ("Link", "CRM Organization"))
 		self.organization = self.make_organization("Private title " + self.key)
@@ -91,12 +93,15 @@ class TestDeskLinkTitles(OfferFixture, IntegrationTestCase):
 	def make_organization(self, title):
 		# The identifier must not itself contain the confidential title. Native
 		# insert(set_name=...) still runs the owning controller and validators.
+		# Native field:organization_name naming synchronizes the title to the ID;
+		# the real fixture Property Setter separates naming from the title field.
 		name = "title-target-" + frappe.generate_hash(length=16)
 		organization = frappe.get_doc(
 			{"doctype": "CRM Organization", "organization_name": title, "currency": "USD"}
 		).insert(set_name=name)
 		self.assertEqual(organization.name, name)
 		self.assertNotEqual(organization.name, title)
+		self.assertEqual(organization.reload().organization_name, title)
 		return organization
 
 	def stored_history(self):
