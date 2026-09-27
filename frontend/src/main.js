@@ -56,7 +56,8 @@ let pinia = createPinia()
 let app = createApp(App)
 
 setConfig('resourceFetcher', frappeRequest)
-app.use(FrappeUI)
+// CRM initializes its boot-aware socket below before mounting consumers.
+app.use(FrappeUI, { socketio: false })
 app.use(spritePlugin)
 app.use(pinia)
 app.use(router)
