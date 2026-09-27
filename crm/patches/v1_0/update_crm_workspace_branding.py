@@ -9,8 +9,11 @@ def execute():
 	)
 	if not workspace:
 		return
-	defaults = {"label": "CRM · Muelle", "title": "CRM"}
-	updates = {field: value for field, value in defaults.items() if workspace.get(field) == "Frappe CRM"}
+	# The label must stay unique: ERPNext's own CRM Workspace owns "CRM".
+	defaults = {"label": "Sales CRM", "title": "CRM"}
+	# "CRM · Muelle" was an interim label from an unreleased revision.
+	originals = {"label": {"Frappe CRM", "CRM · Muelle"}, "title": {"Frappe CRM"}}
+	updates = {field: value for field, value in defaults.items() if workspace.get(field) in originals[field]}
 	if not updates:
 		return
 	frappe.db.set_value("Workspace", "Frappe CRM", updates, update_modified=False)

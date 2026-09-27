@@ -14,7 +14,7 @@ def require_shared_scope_support():
 	if getattr(share, "FILTER_SHARED_DOCUMENTS_VERSION", 0) != 1:
 		frappe.throw(
 			_(
-				"CRM requires the Muelle shared-document scope hook (version 1). Install the supported base image before enabling or migrating CRM."
+				"CRM requires the shared-document scope framework hook (version 1). Ask an administrator to install the supported base image."
 			),
 			frappe.PermissionError,
 		)

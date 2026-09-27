@@ -31,7 +31,7 @@ def missing():
 
 def unsupported_message():
 	return _(
-		"This CRM action needs the supported Muelle framework base. Ask an administrator to update the site image."
+		"This CRM action needs the supported framework base. Ask an administrator to update the site image."
 	)
 
 

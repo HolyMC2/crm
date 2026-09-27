@@ -24,14 +24,20 @@ class TestWorkspaceBrandingPatch(unittest.TestCase):
 	def test_updates_original_labels_on_the_existing_record_only(self):
 		frappe = self.run_patch({"label": "Frappe CRM", "title": "Frappe CRM"})
 		frappe.db.set_value.assert_called_once_with(
-			"Workspace", "Frappe CRM", {"label": "CRM · Muelle", "title": "CRM"}, update_modified=False
+			"Workspace", "Frappe CRM", {"label": "Sales CRM", "title": "CRM"}, update_modified=False
 		)
 		frappe.clear_document_cache.assert_called_once_with("Workspace", "Frappe CRM")
 
 	def test_rerun_and_missing_workspace_do_not_write(self):
-		for current in (None, {"label": "CRM · Muelle", "title": "CRM"}):
+		for current in (None, {"label": "Sales CRM", "title": "CRM"}):
 			with self.subTest(current=current):
 				self.run_patch(current).db.set_value.assert_not_called()
+
+	def test_interim_branded_label_is_replaced(self):
+		frappe = self.run_patch({"label": "CRM · Muelle", "title": "CRM"})
+		frappe.db.set_value.assert_called_once_with(
+			"Workspace", "Frappe CRM", {"label": "Sales CRM"}, update_modified=False
+		)
 
 	def test_custom_labels_survive(self):
 		self.run_patch({"label": "Mi negocio", "title": "Mis ventas"}).db.set_value.assert_not_called()
@@ -45,7 +51,7 @@ class TestWorkspaceBrandingPatch(unittest.TestCase):
 		workspace = json.loads(path.read_text())
 		self.assertEqual(workspace["name"], "Frappe CRM")
 		self.assertEqual(workspace["title"], "CRM")
-		self.assertEqual(workspace["label"], "CRM · Muelle")
+		self.assertEqual(workspace["label"], "Sales CRM")
 		# Workspace.before_export renames when title != label and label == name.
 		self.assertNotEqual(workspace["label"], workspace["name"])
 		# ERPNext's independent CRM Workspace owns the unique label "CRM".

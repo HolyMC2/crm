@@ -9,7 +9,7 @@
           </div>
         </div>
         <p class="mt-3 text-center text-sm text-ink-gray-6">
-          {{ __('Part of Muelle. Built on Frappe CRM.') }}
+          {{ __('Built on Frappe CRM.') }}
         </p>
         <hr class="border-t my-3 mx-2" />
         <div>

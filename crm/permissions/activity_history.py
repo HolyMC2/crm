@@ -21,7 +21,7 @@ def require_framework(*args, **kwargs):
 		or getattr(load, "LINK_TITLES_FILTER_VERSION", 0) != 1
 	):
 		frappe.throw(
-			frappe._("CRM requires the supported Muelle history privacy base before installation or use."),
+			frappe._("CRM requires the supported history privacy framework base before this action."),
 			frappe.PermissionError,
 		)
 

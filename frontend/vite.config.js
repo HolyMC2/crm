@@ -51,7 +51,7 @@ export default defineConfig(async ({ mode }) => {
           lang: 'es',
           theme_color: '#0f6b78',
           background_color: '#ffffff',
-          description: 'CRM: ventas, clientes y seguimiento en Muelle',
+          description: 'Sales, customers and follow-up in one CRM',
           shortcuts: [
             {
               name: 'Inbox',

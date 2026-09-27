@@ -1,7 +1,7 @@
 app_name = "crm"
 app_title = "CRM"
 app_publisher = "Frappe Technologies Pvt. Ltd."
-app_description = "CRM: ventas, clientes y seguimiento en Muelle"
+app_description = "Sales, customers and follow-up in one CRM"
 app_email = "shariq@frappe.io"
 app_license = "AGPLv3"
 app_icon_url = "/assets/crm/images/logo.svg"
