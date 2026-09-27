@@ -113,7 +113,7 @@ def get_deal_activities(name: str):
 		if not data.get("changed") or not data["changed"][0]:
 			continue
 
-		if change := data.get("changed")[0]:
+		for change in data["changed"]:
 			field = deal_fields.get(change[0], None)
 
 			if not field or change[0] in avoid_fields:
@@ -267,7 +267,7 @@ def get_lead_activities(name: str):
 		if not data.get("changed") or not data["changed"][0]:
 			continue
 
-		if change := data.get("changed")[0]:
+		for change in data["changed"]:
 			field = lead_fields.get(change[0], None)
 
 			if not field or change[0] in avoid_fields:
