@@ -87,15 +87,20 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 
 	def staff(self, company=None):
 		"""Real channel-assigned Sales User; no permission result is mocked."""
-		actor = frappe.get_doc(
-			{
-				"doctype": "User",
-				"email": f"support-{uuid4().hex}@example.invalid",
-				"first_name": "Order support",
-				"send_welcome_email": 0,
-				"roles": [{"role": "Sales User"}],
-			}
-		).insert()
+		# Native User setup schedules contact creation. Isolate only this fixture
+		# step; the strict enqueue guard remains active for every support action.
+		with patch("frappe.enqueue") as fixture_jobs:
+			actor = frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": f"support-{uuid4().hex}@example.invalid",
+					"first_name": "Order support",
+					"send_welcome_email": 0,
+					"roles": [{"role": "Sales User"}],
+				}
+			).insert()
+		for call in fixture_jobs.call_args_list:
+			self.assertEqual(call.args[0], "frappe.core.doctype.user.user.create_contact")
 		for allow, value in (
 			("CRM Webchat Channel", self.session().channel),
 			("Company", company or self.company.name),
@@ -120,7 +125,7 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 				"CRM Lead",
 			)
 		}
-		order_before = self.order.as_dict()
+		order_before = self.order.reload().as_dict()
 		self.assertEqual(self.share(), {"shared": True, "replayed": False})
 		self.assertEqual(self.share(), {"shared": True, "replayed": True})
 		doc = frappe.get_doc(control.DOCTYPE, self.conversation())
