@@ -1,11 +1,20 @@
 // Frontend error telemetry (spec 3.6): pure scrubbing/hash/sampling logic plus
 // the send path (mocked fetch; sendBeacon only as the no-fetch fallback — a
 // beacon can't carry the CSRF header, so Frappe 400s it and nothing lands).
-// No frappe-ui import, so no mock hooks — the vitest-4
-// rejected-promise-through-a-spy trap doesn't apply here.
+// Real installed-app capability resolver; only its native RPC transport is
+// replaced. Rejections use a plain function to avoid spy promise bookkeeping.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import {
-  djb2,
+const native = vi.hoisted(() => ({ calls: [], behavior: async () => ({}) }))
+vi.mock('frappe-ui', () => ({
+  call: (...args) => {
+    native.calls.push(args)
+    return native.behavior(...args)
+  },
+}))
+
+let capabilities
+let telemetry
+let djb2,
   scrubUrl,
   capStack,
   isNoise,
@@ -18,8 +27,35 @@ import {
   _onError,
   _onRejection,
   _resetSession,
-  initTelemetry,
-} from '@/composables/telemetry'
+  initTelemetry
+
+async function site({
+  boot = ['frappe', 'crm', 'doco_marketing'],
+  resolve = true,
+} = {}) {
+  vi.resetModules()
+  delete window.installed_apps
+  if (boot !== null) window.installed_apps = boot
+  capabilities = await import('@/utils/crmCapabilities')
+  telemetry = await import('@/composables/telemetry')
+  ;({
+    djb2,
+    scrubUrl,
+    capStack,
+    isNoise,
+    topFrame,
+    hashError,
+    buildPayload,
+    shouldSend,
+    encodeBody,
+    reportError,
+    _onError,
+    _onRejection,
+    _resetSession,
+    initTelemetry,
+  } = telemetry)
+  if (resolve) await capabilities.loadCapabilities()
+}
 
 const ENDPOINT = '/api/method/doco_marketing.api.client_error.report'
 
@@ -27,7 +63,10 @@ let beacon
 let fetchSpy
 let realFetch
 
-beforeEach(() => {
+beforeEach(async () => {
+  native.calls = []
+  native.behavior = async () => ({})
+  await site()
   _resetSession()
   beacon = vi.fn(() => true)
   Object.defineProperty(globalThis.navigator, 'sendBeacon', {
@@ -42,7 +81,80 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = realFetch
+  delete window.installed_apps
   vi.restoreAllMocks()
+})
+
+describe('optional Marketing reporting owner', () => {
+  it('drops real error and rejection events on native standalone boot without another lookup', async () => {
+    await site({ boot: ['frappe', 'crm'] })
+    _onError({ message: 'TypeError: real rendering error' })
+    _onRejection({ reason: new Error('Failed to fetch') })
+    expect(capabilities.appState('doco_marketing')).toBe('missing')
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(beacon).not.toHaveBeenCalled()
+    expect(native.calls).toEqual([])
+  })
+
+  it('does not fall back to beacon when the owner is absent', async () => {
+    await site({ boot: ['frappe', 'crm'] })
+    globalThis.fetch = undefined
+    reportError('boom', '', '/crm')
+    expect(beacon).not.toHaveBeenCalled()
+  })
+
+  it('keeps pending availability inert and preserves first-report sampling after native resolution', async () => {
+    await site({ boot: null, resolve: false })
+    native.behavior = async () => ({
+      installed_apps: ['frappe', 'crm', 'doco_marketing'],
+    })
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
+    reportError('same error', 'at f (app.js:1:1)', '/crm?secret=value#private')
+    expect(capabilities.appState('doco_marketing')).toBe('pending')
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(native.calls).toEqual([])
+    await capabilities.loadCapabilities()
+    reportError('same error', 'at f (app.js:1:1)', '/crm?secret=value#private')
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(native.calls).toEqual([['crm.api.capabilities.get_capabilities']])
+    const options = fetchSpy.mock.calls[0][1]
+    expect(options.credentials).toBe('same-origin')
+    expect(
+      JSON.parse(new URLSearchParams(options.body).get('payload')).url,
+    ).toBe('/crm')
+  })
+
+  it('drops reports after a failed capability lookup without retrying from the error handler', async () => {
+    native.behavior = async () => {
+      throw new Error('native capability unavailable')
+    }
+    await site({ boot: null })
+    expect(capabilities.appState('doco_marketing')).toBe('unknown')
+    expect(() =>
+      _onRejection({ reason: new Error('Failed to fetch') }),
+    ).not.toThrow()
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(beacon).not.toHaveBeenCalled()
+    expect(native.calls).toHaveLength(1)
+  })
+
+  it('does not treat malformed native availability as permission to report', async () => {
+    native.behavior = async () => ({ installed_apps: 'doco_marketing' })
+    await site({ boot: null })
+    reportError('boom', '', '/crm')
+    expect(capabilities.appState('doco_marketing')).toBe('unknown')
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(beacon).not.toHaveBeenCalled()
+  })
+
+  it('uses integrated native boot without another RPC and retains never-throw transport behavior', () => {
+    expect(capabilities.appState('doco_marketing')).toBe('present')
+    expect(native.calls).toEqual([])
+    globalThis.fetch = () => {
+      throw new Error('transport failed')
+    }
+    expect(() => reportError('boom', '', '/crm')).not.toThrow()
+  })
 })
 
 describe('djb2', () => {

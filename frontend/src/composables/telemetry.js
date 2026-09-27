@@ -11,6 +11,8 @@
 // Backend: doco_marketing.api.client_error.report (session-only, rate-limited,
 // upsert-by-hash, retention-capped).
 
+import { ADDON_APP, hasApp } from '@/utils/crmCapabilities'
+
 const ENDPOINT = '/api/method/doco_marketing.api.client_error.report'
 const MAX_MESSAGE = 500
 const MAX_STACK = 4000
@@ -150,9 +152,12 @@ function send(payload) {
   }
 }
 
-// Build → sample-gate → send. Exported so tests can drive it directly.
+// The router resolves the native installed-app capability before entering CRM.
+// Never probe the optional owner while reporting an error: pending/unknown or
+// missing availability drops this report without consuming its sample budget.
 export function reportError(message, stack, url) {
   try {
+    if (!hasApp(ADDON_APP)) return
     if (isNoise(message)) return
     const payload = buildPayload(message, stack, url)
     if (!shouldSend(payload.hash)) return
