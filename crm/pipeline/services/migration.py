@@ -80,7 +80,8 @@ def execute():
 				)
 				else 1,
 				"stages": [
-					{"status": row.name, "probability": flt(row.probability), "archived": cint(row.hidden)}
+					# A hidden status is an unoffered alias, not a retired stage.
+					{"status": row.name, "probability": flt(row.probability), "archived": 0}
 					for row in before["stages"]
 				],
 			}

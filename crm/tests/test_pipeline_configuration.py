@@ -130,15 +130,32 @@ class TestPipelineConfiguration(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			self.a.save()
 
-	def test_later_global_hide_preserves_history_but_prevents_new_entry(self):
+	def test_global_hide_leaves_pickers_but_keeps_server_writes_working(self):
 		deal = self.deal(status=self.next)
 		frappe.db.set_value("CRM Deal Status", self.next, "hidden", 1)
 		visible = next(row for row in get_pipelines() if row.name == self.a.name)
 		self.assertTrue(next(row for row in visible.stages if row["name"] == self.next)["archived"])
 		deal.next_step = "Retain existing hidden stage"
 		deal.save()
-		with self.assertRaises(frappe.ValidationError):
-			self.deal(status=self.next)
+		# Integrations (taller spawn, storefront bridge) may still name a hidden alias.
+		self.assertEqual(self.deal(status=self.next).status, self.next)
+		# The default stage never picks a hidden status.
+		frappe.db.set_value("CRM Deal Status", self.next, "hidden", 0)
+		frappe.db.set_value("CRM Deal Status", self.open, "hidden", 1)
+		self.assertNotEqual(self.deal().status, self.open)
+
+	def test_hidden_status_joins_compatibility_pipeline_unarchived(self):
+		status = frappe.get_doc(
+			{
+				"doctype": "CRM Deal Status",
+				"deal_status": "Pipeline alias " + frappe.generate_hash(length=10),
+				"type": "Open",
+				"hidden": 1,
+			}
+		).insert()
+		legacy = frappe.get_doc("CRM Pipeline", LEGACY_PIPELINE)
+		self.assertFalse(next(row for row in legacy.stages if row.status == status.name).archived)
+		self.assertEqual(self.deal(LEGACY_PIPELINE, status=status.name).status, status.name)
 
 	def test_pipeline_archive_keeps_existing_record(self):
 		deal = self.deal()

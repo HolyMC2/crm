@@ -227,7 +227,10 @@ def validate_record(doc):
 	stage = next((row for row in pipeline.stages if row.status == doc.status), None)
 	if not stage:
 		frappe.throw(_("Stage {0} is not part of pipeline {1}.").format(doc.status, pipeline.pipeline_name))
-	stage_archived = stage.archived or status_metadata.get(stage.status, {}).get("hidden")
+	# Only a manager's pipeline archive refuses new entry. A globally hidden
+	# status (e.g. the inactive language alias) stays out of pickers and the
+	# default stage, but server-side callers that still write it keep working.
+	stage_archived = stage.archived
 	entering = changed_pipeline or not before or before.status != doc.status
 	if entering:
 		if stage_archived:
@@ -349,6 +352,6 @@ def add_legacy_status(doc, method=None):
 		return
 	pipeline.append(
 		"stages",
-		{"status": doc.name, "probability": flt(doc.probability), "archived": cint(doc.get("hidden"))},
+		{"status": doc.name, "probability": flt(doc.probability), "archived": 0},
 	)
 	pipeline.save(ignore_permissions=True)
