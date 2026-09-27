@@ -262,6 +262,21 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 		self.assertEqual(data, original)
 		self.assertEqual(json.loads(version.reload().data), original)
 
+	def test_repeated_child_rows_reuse_only_projection_local_field_decisions(self):
+		data = self.child_history()
+		data["added"] *= 100
+		self.protect("CRM Contacts", "phone")
+		# Observe real native field decisions; no authority result is replaced.
+		with patch.object(history, "_readable_fields", wraps=history._readable_fields) as observed:
+			result = self.project(data)
+			self.assertEqual(len(result["added"]), 100)
+			self.assertNotIn("PRIVATE-", frappe.as_json(result))
+			self.assertEqual([call.args[0] for call in observed.call_args_list], ["CRM Deal", "CRM Contacts"])
+			observed.reset_mock()
+			self.protect("CRM Deal", "contacts")
+			self.assertIsNone(self.project(data))
+			self.assertEqual([call.args[0] for call in observed.call_args_list], ["CRM Deal"])
+
 	def test_child_permlevel_and_parent_table_masks_both_apply(self):
 		data = self.child_history()
 		self.protect("CRM Contacts", "phone", "permlevel", 9)
@@ -297,9 +312,17 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 			"CRM Organization", None, "show_title_field_in_link", 1, "Check", for_doctype=True
 		)
 		frappe.clear_cache(doctype="CRM Organization")
+		meta = frappe.get_meta("CRM Organization", cached=False)
+		self.assertEqual(meta.get_title_field(), "organization_name")
+		self.assertEqual(meta.show_title_field_in_link, 1)
+		self.assertEqual(frappe.get_meta("CRM Deal").get_field("organization").fieldtype, "Link")
 		organization = frappe.get_doc(
 			{"doctype": "CRM Organization", "organization_name": secret, "currency": "USD"}
 		).insert(set_name="public-org-" + self.key)
+		self.assertEqual(organization.reload().organization_name, secret)
+		self.assertEqual(
+			frappe.db.get_value("CRM Organization", organization.name, "organization_name"), secret
+		)
 		self.deal.organization = organization.name
 		self.deal.save(ignore_version=False)
 		self.deal.reload().organization = None
@@ -316,6 +339,8 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 				)
 				make_property_setter("CRM Organization", None, "title_field", title, "Data", for_doctype=True)
 				frappe.clear_cache(doctype="CRM Organization")
+				meta = frappe.get_meta("CRM Organization", cached=False)
+				self.assertEqual((meta.show_title_field_in_link, meta.get_title_field()), (display, title))
 				frappe.set_user(self.user)
 				with patch.dict(frappe.response, {"docs": []}, clear=True):
 					load.getdoc("CRM Deal", self.deal.name)

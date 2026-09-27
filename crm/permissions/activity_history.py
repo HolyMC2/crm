@@ -14,8 +14,12 @@ STRUCTURAL = {"name", "idx", "doctype", "parentfield"}
 
 def require_framework(*args, **kwargs):
 	from frappe.core.doctype.version import version
+	from frappe.desk.form import load
 
-	if getattr(version, "VERSION_HISTORY_FILTER_VERSION", 0) != 1:
+	if (
+		getattr(version, "VERSION_HISTORY_FILTER_VERSION", 0) != 1
+		or getattr(load, "LINK_TITLES_FILTER_VERSION", 0) != 1
+	):
 		frappe.throw(
 			frappe._("CRM requires the supported Muelle history privacy base before installation or use."),
 			frappe.PermissionError,
@@ -31,14 +35,24 @@ def _scalar(value):
 	)
 
 
-def _fields(doctype, user, *, parenttype=None):
+def _fields(doctype, user, *, parenttype=None, cache=None):
+	key = (doctype, parenttype, user)
+	if cache is not None and key in cache:
+		return cache[key]
+	fields = _readable_fields(doctype, user, parenttype=parenttype)
+	if cache is not None:
+		cache[key] = fields
+	return fields
+
+
+def _readable_fields(doctype, user, *, parenttype=None):
 	meta = frappe.get_meta(doctype)
 	if user == "Administrator":
 		return {field.fieldname: field for field in meta.fields if field.fieldtype != "Password"}
 	permitted = set(get_permitted_fields(doctype, user=user, parenttype=parenttype, permission_type="read"))
 	levels = set(meta.get_permlevel_access("read", parenttype=parenttype, user=user))
-	if not meta.get_permissions(parenttype=parenttype) or frappe.share.get_shared(
-		parenttype or doctype, user, rights=["read"], limit=1
+	if not meta.get_permissions(parenttype=parenttype) or (
+		0 not in levels and frappe.share.get_shared(parenttype or doctype, user, rights=["read"], limit=1)
 	):
 		levels.add(0)
 	# Native get_masked_fields uses the session actor, which can be Administrator
@@ -85,24 +99,24 @@ def _changes(changes, fields, user, *, pseudo=False):
 	return result
 
 
-def _table(name, fields, user, parenttype):
+def _table(name, fields, user, parenttype, cache):
 	field = fields.get(name) if isinstance(name, str) else None
 	if not field or field.fieldtype not in {"Table", "Table MultiSelect"} or not field.options:
 		return None
 	try:
-		return field, _fields(field.options, user, parenttype=parenttype)
+		return field, _fields(field.options, user, parenttype=parenttype, cache=cache)
 	except frappe.DoesNotExistError:
 		return None
 
 
-def _rows(rows, fields, user, parenttype):
+def _rows(rows, fields, user, parenttype, cache):
 	if not isinstance(rows, list) or len(rows) > MAX_CHANGES:
 		return []
 	result = []
 	for entry in rows:
 		if not isinstance(entry, (list, tuple)) or len(entry) != 2 or not isinstance(entry[1], dict):
 			continue
-		table = _table(entry[0], fields, user, parenttype)
+		table = _table(entry[0], fields, user, parenttype, cache)
 		if not table:
 			continue
 		field, child_fields = table
@@ -129,7 +143,7 @@ def _rows(rows, fields, user, parenttype):
 	return result
 
 
-def _row_changes(rows, fields, user, parenttype):
+def _row_changes(rows, fields, user, parenttype, cache):
 	if not isinstance(rows, list) or len(rows) > MAX_CHANGES:
 		return []
 	result = []
@@ -143,7 +157,7 @@ def _row_changes(rows, fields, user, parenttype):
 			or len(row[2]) > 140
 		):
 			continue
-		table = _table(row[0], fields, user, parenttype)
+		table = _table(row[0], fields, user, parenttype, cache)
 		if table and (changes := _changes(row[3], table[1], user)):
 			result.append([row[0], row[1], row[2], changes])
 	return result
@@ -157,12 +171,13 @@ def project(doctype, docname, data, user):
 		raise frappe.PermissionError("Not permitted")
 	if not isinstance(data, dict):
 		return None
-	fields = _fields(doctype, user)
+	cache = {}
+	fields = _fields(doctype, user, cache=cache)
 	result = {
 		"changed": _changes(data.get("changed", []), fields, user, pseudo=True),
-		"added": _rows(data.get("added", []), fields, user, doctype),
-		"removed": _rows(data.get("removed", []), fields, user, doctype),
-		"row_changed": _row_changes(data.get("row_changed", []), fields, user, doctype),
+		"added": _rows(data.get("added", []), fields, user, doctype, cache),
+		"removed": _rows(data.get("removed", []), fields, user, doctype, cache),
+		"row_changed": _row_changes(data.get("row_changed", []), fields, user, doctype, cache),
 	}
 	# Native Desk requires an updater reference to render creation. Preserve that
 	# event with fixed text; historical import/batch labels and URLs can identify

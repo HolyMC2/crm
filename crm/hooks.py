@@ -331,6 +331,11 @@ filter_version_history = {
 	"CRM Deal": "crm.permissions.activity_history.project",
 }
 
+filter_link_titles = {
+	"CRM Lead": "crm.permissions.link_titles.project",
+	"CRM Deal": "crm.permissions.link_titles.project",
+}
+
 # User Data Protection
 # --------------------
 

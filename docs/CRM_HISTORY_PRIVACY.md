@@ -6,17 +6,30 @@ records remain unchanged. The same current parent permission, field levels and
 masks apply when a digest is assembled by an administrative background session
 for another recipient.
 
-The supported Muelle Frappe base supplies `VERSION_HISTORY_FILTER_VERSION=1` and
-the `filter_version_history` hook. CRM checks this requirement before installation,
+The supported Muelle Frappe base supplies `VERSION_HISTORY_FILTER_VERSION=1`,
+`LINK_TITLES_FILTER_VERSION=1` and their `filter_version_history` /
+`filter_link_titles` hooks. CRM checks both requirements before installation,
 migration, requests and background jobs. Install the compatible base before this
 CRM revision. The build helper pins all three upstream source files and records
 its modifications separately from the upstream source manifest. There is no
 runtime replacement of framework functions.
 
+Native Desk also appends current linked-record titles to the response separately
+from document fields. CRM admits those entries only for current readable,
+unmasked Link or Dynamic Link fields, including admitted child tables. Both the
+target record and its title field must be readable; native query scope and
+per-record hooks both apply. Candidate keys cannot add unrelated records, and
+the framework only permits removal of entries without changing their values.
+This filter uses the current Desk actor, writes no data and leaves ordinary
+non-CRM response behavior unchanged.
+
 Parent changes, added/removed child rows and every child-row difference retain
 only currently readable, unmasked fields. Password values are excluded. Child
 fields inherit their owning parent's permission levels; a denied table cannot
 expose its row identities. Unknown or malformed data has no raw fallback.
+Field-policy decisions are memoized only within one projection, so repeated
+child rows do not repeat the same metadata/share checks or retain decisions
+between actors or requests.
 
 Historical Link and Dynamic Link values are omitted while their field-change
 event remains. Native Version data does not retain stable target IDs or the
