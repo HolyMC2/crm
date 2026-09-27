@@ -78,7 +78,7 @@ vi.mock('@/App.vue', async () => {
 })
 
 let listeners
-let priorSite, priorPort
+let priorSite, priorPort, priorApps
 beforeEach(() => {
   vi.resetModules()
   vi.clearAllMocks()
@@ -93,6 +93,8 @@ beforeEach(() => {
   })
   priorSite = window.site_name
   priorPort = window.socketio_port
+  priorApps = window.installed_apps
+  delete window.installed_apps
   document.body.innerHTML = '<div id="app"></div>'
   listeners = vi.spyOn(document, 'addEventListener')
 })
@@ -107,6 +109,7 @@ afterEach(() => {
   document.body.innerHTML = ''
   window.site_name = priorSite
   window.socketio_port = priorPort
+  window.installed_apps = priorApps
   vi.clearAllTimers()
   vi.useRealTimers()
   vi.unstubAllEnvs()
@@ -155,36 +158,100 @@ function expectCanonicalSocket() {
   return socket
 }
 
+const printRuntimeUrl = '/assets/doco/js/printing_runtime.js?v=20260812a'
+const printingScripts = () =>
+  document.querySelectorAll(
+    'script[src*="/assets/doco/js/printing_runtime.js"]',
+  )
+
 describe('CRM socket bootstrap ownership', () => {
   it('starts only the boot-aware CRM socket in production, preserving plugin services', async () => {
     vi.stubEnv('DEV', false)
     window.site_name = 'crm-roadmap.localhost'
     window.socketio_port = 18060
+    window.installed_apps = ['frappe', 'crm']
     await import('@/main')
     expectCanonicalSocket()
     expect(fixture.request).not.toHaveBeenCalled()
+    expect(printingScripts()).toHaveLength(0)
   })
 
-  it('waits for development boot before opening a socket or mounting consumers', async () => {
-    vi.stubEnv('DEV', true)
-    delete window.site_name
-    delete window.socketio_port
-    let resolveBoot
-    fixture.request.mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveBoot = resolve
-      }),
-    )
+  it.each([
+    ['standalone', ['frappe', 'crm'], 0],
+    ['Doco', ['frappe', 'crm', 'doco'], 1],
+  ])(
+    'waits for %s development boot before sockets, printing or consumers',
+    async (_, installedApps, scripts) => {
+      vi.stubEnv('DEV', true)
+      delete window.site_name
+      delete window.socketio_port
+      let resolveBoot
+      fixture.request.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveBoot = resolve
+        }),
+      )
+      await import('@/main')
+      expect(fixture.request).toHaveBeenCalledWith({
+        url: '/api/method/crm.www.crm.get_context_for_dev',
+      })
+      expect(fixture.sockets).toHaveLength(0)
+      expect(fixture.roots).toHaveLength(0)
+      expect(printingScripts()).toHaveLength(0)
+      resolveBoot({
+        site_name: 'crm-roadmap.localhost',
+        socketio_port: 18060,
+        installed_apps: installedApps,
+      })
+      await Promise.resolve()
+      expectCanonicalSocket()
+      expect(printingScripts()).toHaveLength(scripts)
+    },
+  )
+
+  it('loads the unchanged printing runtime once for an installed Doco owner', async () => {
+    vi.stubEnv('DEV', false)
+    window.site_name = 'crm-roadmap.localhost'
+    window.socketio_port = 18060
+    window.installed_apps = ['frappe', 'crm', 'doco']
     await import('@/main')
-    expect(fixture.request).toHaveBeenCalledWith({
-      url: '/api/method/crm.www.crm.get_context_for_dev',
-    })
-    expect(fixture.sockets).toHaveLength(0)
-    expect(fixture.roots).toHaveLength(0)
-    resolveBoot({ site_name: 'crm-roadmap.localhost', socketio_port: 18060 })
-    await Promise.resolve()
     expectCanonicalSocket()
+    expect(printingScripts()).toHaveLength(1)
+    expect(printingScripts()[0].getAttribute('src')).toBe(printRuntimeUrl)
   })
+
+  it.each(['relative', 'absolute'])(
+    'preserves an existing %s printing script without duplicating it',
+    async (kind) => {
+      vi.stubEnv('DEV', false)
+      window.site_name = 'crm-roadmap.localhost'
+      window.socketio_port = 18060
+      window.installed_apps = ['frappe', 'crm', 'doco']
+      const script = document.createElement('script')
+      script.src =
+        kind === 'absolute'
+          ? new URL(printRuntimeUrl, document.baseURI).href
+          : printRuntimeUrl
+      document.head.append(script)
+      await import('@/main')
+      expectCanonicalSocket()
+      expect(printingScripts()).toHaveLength(1)
+      expect(printingScripts()[0]).toBe(script)
+    },
+  )
+
+  it.each([undefined, 'doco'])(
+    'keeps optional printing unloaded for absent or malformed boot apps (%s)',
+    async (apps) => {
+      vi.stubEnv('DEV', false)
+      window.site_name = 'crm-roadmap.localhost'
+      window.socketio_port = 18060
+      window.installed_apps = apps
+      await import('@/main')
+      expectCanonicalSocket()
+      expect(printingScripts()).toHaveLength(0)
+    },
+  )
 
   it('retains resource refresh and reconnect recovery on the published socket', async () => {
     vi.stubEnv('DEV', false)

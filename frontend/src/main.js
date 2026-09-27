@@ -15,9 +15,20 @@ import { installTelemetry } from './utils/startupTelemetry'
 import translationPlugin from './translation'
 import App from './App.vue'
 
-const printRuntime = document.createElement('script')
-printRuntime.src = '/assets/doco/js/printing_runtime.js?v=20260812a'
-document.head.appendChild(printRuntime)
+function loadPrintingRuntime() {
+  if (
+    !Array.isArray(window.installed_apps) ||
+    !window.installed_apps.includes('doco')
+  ) {
+    return
+  }
+  const src = '/assets/doco/js/printing_runtime.js?v=20260812a'
+  const url = new URL(src, document.baseURI).href
+  if (Array.from(document.scripts).some((script) => script.src === url)) return
+  const printRuntime = document.createElement('script')
+  printRuntime.src = src
+  document.head.appendChild(printRuntime)
+}
 
 import {
   FrappeUI,
@@ -76,12 +87,14 @@ if (import.meta.env.DEV) {
       for (let key in values) {
         window[key] = values[key]
       }
+      loadPrintingRuntime()
       socket = initSocket()
       app.config.globalProperties.$socket = socket
       app.mount('#app')
     },
   )
 } else {
+  loadPrintingRuntime()
   socket = initSocket()
   app.config.globalProperties.$socket = socket
   app.mount('#app')
