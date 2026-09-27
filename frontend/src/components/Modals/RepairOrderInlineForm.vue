@@ -274,15 +274,15 @@ const balance = computed(() => {
 })
 
 const formattedBalance = computed(() => {
-  if (props.currency === null)
-    return new Intl.NumberFormat().format(balance.value)
+  const currency =
+    props.currency === undefined
+      ? window.frappe?.boot?.sysdefaults?.currency
+      : props.currency
+  if (!currency) return new Intl.NumberFormat().format(balance.value)
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency:
-        props.currency === undefined
-          ? window.frappe?.boot?.sysdefaults?.currency || 'MXN'
-          : props.currency,
+      currency,
     }).format(balance.value)
   } catch {
     return balance.value.toFixed(2)
