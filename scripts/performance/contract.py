@@ -97,7 +97,7 @@ PARAMS = {
 	},
 	"crm.api.doc.aggregate_deal_metrics": {"filters", "or_filters"},
 	"frappe.client.get": {"doctype", "name"},
-	"crm.api.activities.get_activities": {"name"},
+	"crm.api.activities.get_activities": {"name", "doctype"},
 	"crm.api.conversation_threads.list_threads": {"provider", "account_id", "cursor", "limit"},
 	"crm.api.conversation_threads.get_history": {"conversation", "cursor", "limit"},
 	"crm.api.outbox.list_intents": {"conversation", "before", "limit"},
@@ -296,7 +296,7 @@ def validate_bindings(doc, manifest):
 					and len(canonical(params)) <= 32_000,
 					"invalid_rpc_parameters",
 				)
-				if method.startswith("frappe.client."):
+				if method.startswith("frappe.client.") or method == "crm.api.activities.get_activities":
 					require(params.get("doctype") == "CRM Deal", "invalid_doctype")
 				if method == "frappe.client.get_list":
 					require(

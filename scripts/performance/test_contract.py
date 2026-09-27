@@ -89,7 +89,7 @@ def fixture():
 						{"doctype": "CRM Deal", "fields": ["name"], "limit_page_length": 50}
 						if method == "frappe.client.get_list"
 						else {"doctype": "CRM Deal", "name": f"fixture-{index}"}
-						if method == "frappe.client.get"
+						if method in {"frappe.client.get", "crm.api.activities.get_activities"}
 						else {}
 					)
 					case.append(
@@ -194,6 +194,16 @@ class ContractTests(unittest.TestCase):
 			manifest["environment"]["attestation_digest"] = checksum(bad)
 			with self.assertRaises(ContractError):
 				validate_attestation(bad, manifest)
+
+	def test_activity_bundle_requires_the_spa_parent_type(self):
+		for doctype in (None, "CRM Lead", "Sales Order"):
+			with self.subTest(doctype=doctype):
+				manifest, bindings, _ = fixture()
+				cases = bindings["scenarios"]["seller_deal_detail"]
+				cases[0][1]["params"]["doctype"] = doctype
+				manifest["scenarios"]["seller_deal_detail"]["cases_digest"] = checksum(cases)
+				with self.assertRaisesRegex(ContractError, "invalid_doctype"):
+					validate_bindings(bindings, manifest)
 
 	def test_bindings_cannot_change_fixture_checks_method_scope_or_page_bound(self):
 		for key, value in (

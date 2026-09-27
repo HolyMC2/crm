@@ -977,7 +977,7 @@ function _waAtBottom() {
 
 const whatsappMessages = createResource({
   url: 'crm.api.whatsapp.get_whatsapp_messages',
-  cache: ['whatsapp_messages', props.docname],
+  cache: ['whatsapp_messages', props.doctype, props.docname],
   params: {
     reference_doctype: props.doctype,
     reference_name: props.docname,

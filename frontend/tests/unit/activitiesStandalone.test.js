@@ -49,7 +49,11 @@ vi.mock('frappe-ui', async () => {
     toast: { error: () => {} },
     createResource: (options) => {
       const request = (params) => {
-        h.requests.push({ url: options.url, params })
+        h.requests.push({
+          url: options.url,
+          params: params ?? options.params,
+          cache: options.cache,
+        })
         return Promise.resolve()
       }
       if (options.auto) request(options.params)
@@ -212,18 +216,22 @@ afterEach(() => {
   container?.remove()
   scope.stop()
 })
-async function mountActivities(addon, whatsapp, title = 'Activity') {
+async function mountActivities(
+  addon,
+  whatsapp,
+  title = 'Activity',
+  doctype = 'CRM Deal',
+) {
   h.addon.value = addon
   h.whatsapp.value = whatsapp
   // reset module so each instance gets this test's capability refs.
   vi.resetModules()
-  const { default: Activities } = await import(
-    '@/components/Activities/Activities.vue'
-  )
+  const { default: Activities } =
+    await import('@/components/Activities/Activities.vue')
   container = document.createElement('div')
   document.body.appendChild(container)
   app = createApp(Activities, {
-    doctype: 'CRM Deal',
+    doctype,
     docname: 'fictional-deal',
     tabs: [{ name: title }],
   })
@@ -234,6 +242,30 @@ async function mountActivities(addon, whatsapp, title = 'Activity') {
 }
 
 describe('native Activities with optional messaging', () => {
+  it.each(['CRM Lead', 'CRM Deal'])(
+    'keeps %s activity and WhatsApp resources scoped to their parent type',
+    async (doctype) => {
+      await mountActivities(false, true, 'WhatsApp', doctype)
+      expect(
+        h.requests.find((r) => r.url === 'crm.api.activities.get_activities'),
+      ).toMatchObject({
+        params: { name: 'fictional-deal', doctype },
+        cache: ['activity', doctype, 'fictional-deal'],
+      })
+      expect(
+        h.requests.find(
+          (r) => r.url === 'crm.api.whatsapp.get_whatsapp_messages',
+        ),
+      ).toMatchObject({
+        params: {
+          reference_name: 'fictional-deal',
+          reference_doctype: doctype,
+        },
+        cache: ['whatsapp_messages', doctype, 'fictional-deal'],
+      })
+    },
+  )
+
   it('core and clinic-only views load native activities without optional requests, including realtime', async () => {
     await mountActivities(false, false)
     expect(h.requests.map((r) => r.url)).toEqual([
