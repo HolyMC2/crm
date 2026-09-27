@@ -797,5 +797,244 @@ class TestCounterCompanyPermissionSetup(unittest.TestCase):
 				self.assertEqual(seed.f.session.user, "Administrator")
 
 
+class TestSeedCustomerContacts(unittest.TestCase):
+	"""Strict native API adapters; not executed native controller evidence."""
+
+	def setUp(self):
+		import sys
+		from types import ModuleType
+
+		self.events = []
+		self.rows = {}
+		self.denied = set()
+		self.hidden = set()
+		self.list_denied = set()
+		self.title = "PERF abc123 A"
+		test = self
+
+		class Document(dict):
+			def __getattr__(self, key):
+				return self.get(key)
+
+			def __setattr__(self, key, value):
+				self[key] = value
+
+			def check_permission(self, permission_type):
+				test.events.append(("permission", self.doctype, self.name, permission_type))
+				if (self.doctype, self.name) in test.denied:
+					raise PermissionError("native read denied")
+
+			def insert(self):
+				self.name = "fallback-contact"
+				test.events.append(("insert", self.doctype, self.name))
+				test.rows[(self.doctype, self.name)] = self
+				return self
+
+			def save(self):
+				test.events.append(("save", self.doctype, self.name))
+				return self
+
+		self.Document = Document
+		self.customer = Document(doctype="Customer", name="customer-a", customer_primary_contact=None)
+		self.rows[("Customer", self.customer.name)] = self.customer
+
+		class Database:
+			def get_values(
+				self, doctype, filters, fieldname, *, limit, for_update, pluck=False, as_dict=False
+			):
+				test.events.append(("query", doctype, copy.deepcopy(filters), fieldname, limit, for_update))
+				if doctype == "Contact":
+					return [
+						doc.name
+						for (dt, _), doc in test.rows.items()
+						if dt == doctype and all(doc.get(k) == v for k, v in filters.items())
+					][:limit]
+				test.assertEqual(doctype, "Dynamic Link")
+				test.assertEqual(filters["parenttype"], "Contact")
+				test.assertEqual(filters["parentfield"], "links")
+				rows = []
+				for (dt, _), doc in test.rows.items():
+					if dt != "Contact":
+						continue
+					for link in doc.links:
+						row = dict(link, parent=doc.name, parenttype="Contact", parentfield="links")
+						if all(row.get(k) == v for k, v in filters.items()):
+							rows.append(row[fieldname] if pluck else {k: row[k] for k in fieldname})
+				return rows[:limit]
+
+		def get_doc(doctype, name=None, **kwargs):
+			if isinstance(doctype, dict):
+				return Document(copy.deepcopy(doctype))
+			self.events.append(("load", doctype, name, kwargs))
+			return self.rows[(doctype, name)]
+
+		def get_list(doctype, *, filters, pluck, limit_page_length):
+			self.assertEqual((doctype, pluck, limit_page_length), ("Contact", "name", 1))
+			return [] if filters["name"] in self.list_denied else [filters["name"]]
+
+		fields = ModuleType("crm.permissions.activity_history")
+		fields._fields = lambda doctype, user, parenttype=None: (
+			{
+				"Customer": {"customer_primary_contact"},
+				"Contact": {"links", "is_primary_contact", "first_name"},
+				"Dynamic Link": {"link_doctype", "link_name"},
+			}[doctype]
+			- self.hidden
+		)
+		self.modules = patch.dict(sys.modules, {fields.__name__: fields})
+		self.modules.start()
+		self.addCleanup(self.modules.stop)
+		self.seed = object.__new__(Seed)
+		self.seed.f = SimpleNamespace(
+			db=Database(), get_doc=get_doc, get_list=get_list, session=SimpleNamespace(user="Administrator")
+		)
+		self.seed.records = {"customer_a": {"doctype": "Customer", "name": "customer-a"}}
+		self.seed.pending = 0
+
+	def contact(
+		self, name="native-primary", *, linked_customer="customer-a", primary=True, first_name="Native first"
+	):
+		doc = self.Document(
+			doctype="Contact",
+			name=name,
+			first_name=first_name,
+			is_primary_contact=1,
+			links=[{"link_doctype": "Customer", "link_name": linked_customer}],
+		)
+		self.rows[("Contact", name)] = doc
+		if primary:
+			self.customer.customer_primary_contact = name
+		return doc
+
+	def run_contact(self):
+		return self.seed._ensure_customer_contact("a", self.title)
+
+	def writes(self):
+		return [event for event in self.events if event[0] in ("insert", "save")]
+
+	def test_native_primary_is_reused_without_name_rewrite_or_write(self):
+		doc = self.contact(first_name="PERF")
+		before = copy.deepcopy(doc)
+		self.assertIs(self.run_contact(), doc)
+		self.assertEqual(doc, before)
+		self.assertEqual(self.writes(), [])
+		self.assertEqual(self.seed.records["contact_a"]["name"], "native-primary")
+		self.assertTrue(all(e[-1] is True and e[-2] == 2 for e in self.events if e[0] == "query"))
+
+	def test_absent_hook_creates_exact_one_native_contact_and_binds_customer(self):
+		created = self.run_contact()
+		self.assertEqual(created.first_name, self.title)
+		self.assertEqual(self.customer.customer_primary_contact, created.name)
+		self.assertEqual(
+			self.writes(), [("insert", "Contact", created.name), ("save", "Customer", "customer-a")]
+		)
+		self.assertIs(self.run_contact(), created)
+		self.assertEqual(len(self.writes()), 2)
+
+	def test_unjournaled_native_primary_recovery_does_not_create_again(self):
+		self.contact()
+		self.run_contact()
+		del self.seed.records["contact_a"]
+		self.assertEqual(self.run_contact().name, "native-primary")
+		self.assertEqual(self.writes(), [])
+
+	def test_interrupted_fallback_adopts_only_exact_task_owned_link(self):
+		doc = self.contact(primary=False, first_name=self.title)
+		self.assertIs(self.run_contact(), doc)
+		self.assertEqual(self.customer.customer_primary_contact, doc.name)
+		self.assertEqual(self.writes(), [("save", "Customer", "customer-a")])
+
+	def test_missing_primary_after_journal_is_not_rebound(self):
+		self.contact()
+		self.run_contact()
+		self.customer.customer_primary_contact = None
+		with self.assertRaisesRegex(ContractError, "seed_contact_primary_missing"):
+			self.run_contact()
+		self.assertEqual(self.writes(), [])
+
+	def test_changed_primary_fails_existing_identity_guard(self):
+		self.contact()
+		self.run_contact()
+		self.rows.pop(("Contact", "native-primary"))
+		self.contact(name="different-primary")
+		with self.assertRaisesRegex(ContractError, "seed_identity_changed"):
+			self.run_contact()
+		self.assertEqual(self.writes(), [])
+
+	def test_foreign_primary_link_rejected_before_adoption(self):
+		self.contact(linked_customer="other-customer")
+		with self.assertRaisesRegex(ContractError, "seed_contact_primary_link"):
+			self.run_contact()
+		self.assertNotIn("contact_a", self.seed.records)
+		self.assertEqual(self.writes(), [])
+
+	def test_second_contact_for_customer_fails_without_master_count_waiver(self):
+		self.contact()
+		self.contact(name="duplicate", primary=False)
+		with self.assertRaisesRegex(ContractError, "seed_contact_ambiguous_customer"):
+			self.run_contact()
+		self.assertEqual(self.writes(), [])
+
+	def test_second_link_to_another_customer_is_not_adopted(self):
+		doc = self.contact()
+		doc.links.append({"link_doctype": "Customer", "link_name": "other-customer"})
+		with self.assertRaisesRegex(ContractError, "seed_contact_customer_link"):
+			self.run_contact()
+		self.assertEqual(self.writes(), [])
+
+	def test_unowned_fallback_link_is_not_adopted(self):
+		self.contact(primary=False, first_name="Unrelated person")
+		with self.assertRaisesRegex(ContractError, "seed_record_drift"):
+			self.run_contact()
+		self.assertEqual(self.writes(), [])
+
+	def test_customer_or_contact_native_read_denial_stops_without_writes(self):
+		self.contact()
+		for identity in (("Customer", "customer-a"), ("Contact", "native-primary")):
+			with self.subTest(identity=identity):
+				self.denied.add(identity)
+				with self.assertRaises(PermissionError):
+					self.run_contact()
+				self.denied.clear()
+		self.assertEqual(self.writes(), [])
+
+	def test_native_list_and_parent_child_field_denials_stop_without_writes(self):
+		self.contact()
+		self.list_denied.add("native-primary")
+		with self.assertRaisesRegex(ContractError, "seed_contact_list_permission"):
+			self.run_contact()
+		self.list_denied.clear()
+		for field in ("customer_primary_contact", "links", "link_name", "is_primary_contact"):
+			with self.subTest(field=field):
+				self.hidden.add(field)
+				with self.assertRaisesRegex(ContractError, "seed_contact_field_permission"):
+					self.run_contact()
+				self.hidden.clear()
+		self.assertEqual(self.writes(), [])
+
+	def test_controller_changed_primary_fails_before_journal_checkpoint(self):
+		self.seed.pending = 99
+
+		def changed_primary(doc):
+			doc.customer_primary_contact = None
+			return doc
+
+		with (
+			patch.object(self.Document, "save", changed_primary),
+			patch.object(self.seed, "checkpoint") as checkpoint,
+		):
+			with self.assertRaisesRegex(ContractError, "seed_contact_binding_changed"):
+				self.run_contact()
+			checkpoint.assert_not_called()
+		self.assertNotIn("contact_a", self.seed.records)
+		self.assertEqual(self.seed.pending, 99)
+
+	def test_database_error_never_turns_into_missing_contact_or_retry(self):
+		with patch.object(self.seed.f.db, "get_values", side_effect=OSError("native outage")):
+			with self.assertRaises(OSError):
+				self.run_contact()
+		self.assertEqual(self.writes(), [])
+
+
 if __name__ == "__main__":
 	unittest.main()

@@ -478,6 +478,113 @@ class Seed:
 			self.checkpoint()
 		return doc
 
+	def _contact_fields(self, doctype, names, *, parenttype=None):
+		# Reuse the same Table/child/mask projection as the native Contact API.
+		from crm.permissions.activity_history import _fields
+
+		require(
+			set(names).issubset(_fields(doctype, self.f.session.user, parenttype=parenttype)),
+			"seed_contact_field_permission",
+		)
+
+	def _customer_contact_binding(self, branch):
+		f = self.f
+		customer = f.get_doc("Customer", self.name("customer_" + branch), for_update=True)
+		customer.check_permission("read")
+		self._contact_fields("Customer", ["customer_primary_contact"])
+		self._contact_fields("Contact", ["links", "is_primary_contact", "first_name"])
+		self._contact_fields("Dynamic Link", ["link_doctype", "link_name"], parenttype="Contact")
+		linked = f.db.get_values(
+			"Dynamic Link",
+			filters={
+				"parenttype": "Contact",
+				"parentfield": "links",
+				"link_doctype": "Customer",
+				"link_name": customer.name,
+			},
+			fieldname="parent",
+			pluck=True,
+			limit=2,
+			for_update=True,
+		)
+		require(len(linked) <= 1, "seed_contact_ambiguous_customer")
+		primary = customer.get("customer_primary_contact") or None
+		if primary:
+			require(linked == [primary], "seed_contact_primary_link")
+		return customer, primary, linked
+
+	def _read_customer_contact(self, name, customer):
+		f = self.f
+		doc = f.get_doc("Contact", name, for_update=True)
+		doc.check_permission("read")
+		require(
+			f.get_list("Contact", filters={"name": name}, pluck="name", limit_page_length=1) == [name],
+			"seed_contact_list_permission",
+		)
+		options = {
+			"filters": {"parent": name, "parenttype": "Contact", "parentfield": "links"},
+			"fieldname": ["link_doctype", "link_name"],
+			"as_dict": True,
+			"limit": 2,
+		}
+		links = f.db.get_values("Dynamic Link", **options, for_update=True)
+		expected = [{"link_doctype": "Customer", "link_name": customer}]
+		require(links == expected, "seed_contact_customer_link")
+		require(
+			[{key: row.get(key) for key in ("link_doctype", "link_name")} for row in doc.get("links") or []]
+			== links,
+			"seed_contact_snapshot_changed",
+		)
+		return doc
+
+	def _ensure_customer_contact(self, branch, title):
+		"""Adopt the native primary Contact; optional-hook absence uses one normal insert.
+
+		Never infer identity from a display name when a primary link exists. Exact
+		Customer links and the unchanged journal identity fence govern recovery.
+		"""
+		f = self.f
+		key = "contact_" + branch
+		self.last_key = key
+		customer, primary, linked = self._customer_contact_binding(branch)
+		values = {
+			"links": [{"link_doctype": "Customer", "link_name": customer.name}],
+			"is_primary_contact": 1,
+		}
+		recorded = self.records.get(key)
+		if primary:
+			resume_name(recorded, [primary])
+			doc = self._read_customer_contact(primary, customer.name)
+			verify_fields(doc, values)
+		else:
+			require(not recorded, "seed_contact_primary_missing")
+			if linked:
+				# Interrupted fallback before its Customer save: recover only the
+				# unique exact task-owned Contact, never an arbitrary linked person.
+				doc = self._read_customer_contact(linked[0], customer.name)
+				verify_fields(doc, {"first_name": title, **values})
+				customer.customer_primary_contact = doc.name
+				customer.save()
+				_, bound, rebound = self._customer_contact_binding(branch)
+				require(bound == doc.name and rebound == [doc.name], "seed_contact_binding_changed")
+				primary = doc.name
+
+		def create():
+			doc = f.get_doc({"doctype": "Contact", "first_name": title, **values}).insert()
+			customer.customer_primary_contact = doc.name
+			customer.save()
+			self._read_customer_contact(doc.name, customer.name)
+			_, bound, rebound = self._customer_contact_binding(branch)
+			require(bound == doc.name and rebound == [doc.name], "seed_contact_binding_changed")
+			return doc
+
+		doc = self.ensure(
+			key, "Contact", {"name": primary} if primary else {"first_name": title}, values, create=create
+		)
+		_, bound, linked = self._customer_contact_binding(branch)
+		require(bound == doc.name and linked == [doc.name], "seed_contact_binding_changed")
+		return doc
+
 	def name(self, key):
 		require(key in self.records, "seed_phase_missing")
 		return self.records[key]["name"]
@@ -807,15 +914,7 @@ class Seed:
 						"marketing_opt_in": 0,
 					},
 				)
-				self.ensure(
-					"contact_" + branch,
-					"Contact",
-					{"first_name": title},
-					{
-						"first_name": title,
-						"links": [{"link_doctype": "Customer", "link_name": self.name("customer_" + branch)}],
-					},
-				)
+				self._ensure_customer_contact(branch, title)
 				members = (
 					[{"user": self.user("counter"), "role": "Technician", "is_default_for_user": 1}]
 					if branch == "a"
@@ -1112,6 +1211,19 @@ class Seed:
 				set(f.get_all(dt, pluck="name", limit_page_length=0))
 				== {self.name(prefix + branch) for branch in ("a", "b")},
 				"seed_master_population",
+			)
+		for branch in ("a", "b"):
+			customer, primary, linked = self._customer_contact_binding(branch)
+			require(
+				primary == self.name("contact_" + branch) and linked == [primary],
+				"seed_contact_binding_changed",
+			)
+			verify_fields(
+				self._read_customer_contact(primary, customer.name),
+				{
+					"links": [{"link_doctype": "Customer", "link_name": customer.name}],
+					"is_primary_contact": 1,
+				},
 			)
 		for i in range(self.sizes["deals"]):
 			doc = f.get_doc("CRM Deal", self.name(f"deal:{i}"))
