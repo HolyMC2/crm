@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlsplit
 import frappe
 from frappe.tests import IntegrationTestCase
 
+from crm.api.automation import _reference
 from crm.api.automation_workspace import _return_path, get_context
 
 
@@ -17,6 +18,40 @@ class TestAutomationWorkspace(IntegrationTestCase):
 	def tearDown(self):
 		frappe.set_user("Administrator")
 		super().tearDown()
+
+	def reference_fixture(self):
+		# Only isolate fixture notifications; record permissions stay native.
+		with patch("frappe.enqueue"), patch("frappe.sendmail"), patch("frappe.publish_realtime"):
+			user = frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": f"automation-reader-{frappe.generate_hash(length=10)}@example.invalid",
+					"first_name": "Automation seller",
+					"send_welcome_email": 0,
+					"roles": [{"role": "Sales User"}],
+				}
+			).insert()
+			lead = frappe.get_doc(
+				{
+					"doctype": "CRM Lead",
+					"first_name": "Linked automation source",
+					"lead_owner": user.name,
+				}
+			).insert()
+		return user.name, frappe._dict(reference_doctype="CRM Lead", reference_name=lead.name)
+
+	def test_queue_reference_authorizes_the_explicit_native_reader(self):
+		user, reference = self.reference_fixture()
+		frappe.set_user("Guest")
+		result = _reference(reference, user)
+		self.assertEqual(result["doctype"], "CRM Lead")
+		self.assertEqual(result["name"], reference.reference_name)
+		self.assertEqual(result["url"], "/crm/leads/" + reference.reference_name)
+
+	def test_queue_reference_cannot_borrow_the_session_administrators_access(self):
+		_, reference = self.reference_fixture()
+		self.assertEqual(frappe.session.user, "Administrator")
+		self.assertIsNone(_reference(reference, "Guest"))
 
 	def test_guest_cannot_open_even_an_absent_workspace(self):
 		frappe.set_user("Guest")

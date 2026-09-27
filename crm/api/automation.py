@@ -8,6 +8,7 @@ Mutations are POST-only and idempotent by command/request id.
 
 import frappe
 from frappe import _
+from frappe.permissions import has_permission
 
 from crm.api import automation_departments as departments
 from crm.api import automation_policy as policies
@@ -51,7 +52,7 @@ def _reference(doc, user):
 		record = frappe.get_doc(doc.reference_doctype, doc.reference_name)
 	except frappe.DoesNotExistError:
 		return None
-	if not frappe.has_permission(doc.reference_doctype, "read", doc=record, user=user, print_logs=False):
+	if not has_permission(doc.reference_doctype, "read", doc=record, user=user, print_logs=False):
 		return None
 	return {
 		"doctype": doc.reference_doctype,
