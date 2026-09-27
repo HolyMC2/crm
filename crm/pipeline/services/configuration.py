@@ -173,7 +173,12 @@ def validate_record(doc):
 		frappe.throw(_("Select an available sales pipeline. Ask a manager to configure a default."))
 	if not can_access_pipeline(doc.pipeline):
 		frappe.throw(_("You do not have access to this sales pipeline."), frappe.PermissionError)
-	pipeline = frappe.get_doc("CRM Pipeline", doc.pipeline, for_update=True)
+	# A shared lock keeps a concurrent configuration change from interleaving
+	# with this validation, while saves in the same pipeline never serialize
+	# on (or deadlock over) the pipeline row.
+	share_mode = "FOR SHARE" if frappe.db.db_type == "postgres" else "LOCK IN SHARE MODE"
+	frappe.db.sql(f"SELECT name FROM `tabCRM Pipeline` WHERE name = %s {share_mode}", doc.pipeline)
+	pipeline = frappe.get_doc("CRM Pipeline", doc.pipeline)
 	changed_pipeline = not before or before.pipeline != doc.pipeline
 	if pipeline.archived and changed_pipeline:
 		frappe.throw(_("This pipeline is archived. Select an active pipeline."))

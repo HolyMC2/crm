@@ -298,6 +298,22 @@ class TestPipelineConfiguration(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			self.a.save()
 
+	def test_record_save_never_takes_an_exclusive_pipeline_lock(self):
+		deal = self.deal()
+		queries = []
+		sql = frappe.db.sql
+
+		def spy(query, *args, **kwargs):
+			queries.append(str(query))
+			return sql(query, *args, **kwargs)
+
+		deal.next_step = "Call back"
+		with patch.object(frappe.db, "sql", side_effect=spy):
+			deal.save()
+		pipeline_locks = [q for q in queries if "tabCRM Pipeline" in q and "FOR UPDATE" in q.upper()]
+		self.assertEqual(pipeline_locks, [])
+		self.assertTrue(any("tabCRM Pipeline" in q and "SHARE" in q.upper() for q in queries))
+
 	def test_lead_target_pipeline_does_not_replace_lead_status(self):
 		lead = frappe.get_doc(
 			{"doctype": "CRM Lead", "first_name": "Pipeline prospect", "pipeline": self.b.name}
