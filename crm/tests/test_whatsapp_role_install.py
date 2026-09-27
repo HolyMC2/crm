@@ -9,7 +9,6 @@ from frappe.permissions import has_permission, update_permission_property
 from frappe.tests import IntegrationTestCase
 
 from crm.api.whatsapp import add_roles, after_app_install
-from crm.patches.v1_0.fix_whatsapp_role_read_permissions import LEGACY_RIGHTS, execute
 
 DOCTYPES = ("WhatsApp Message", "WhatsApp Templates", "WhatsApp Settings")
 ROLES = ("Sales Manager", "Sales User")
@@ -66,11 +65,14 @@ class TestWhatsAppRoleInstall(IntegrationTestCase):
 
 	def test_canonical_setup_supplies_native_read_and_field_admission(self):
 		self.assertFalse(has_permission("WhatsApp Message", "read", user=self.actor, print_logs=False))
+		# Native Custom DocPerm defaults read to 1 even when add_permission is
+		# called with ptype="write". Do not treat a later read=0 as legacy damage.
+		self.assertEqual(int(frappe.get_meta("Custom DocPerm").get_field("read").default), 1)
 		add_roles()
 		self.assertEqual(len(self.grants()), 6)
 		self.assertTrue(all(row.write and row.create for row in self.grants()))
 		for row in self.grants():
-			self.assertEqual(bool(row.read), row.parent == "WhatsApp Message")
+			self.assertTrue(row.read)
 		self.assertTrue(has_permission("WhatsApp Message", "read", user=self.actor, print_logs=False))
 		self.assertTrue(
 			{"message", "from", "reference_doctype", "reference_name"}.issubset(
@@ -82,7 +84,7 @@ class TestWhatsAppRoleInstall(IntegrationTestCase):
 		after_app_install("frappe_whatsapp")
 		self.assertEqual(len(self.grants()), 6)
 		for row in self.grants():
-			self.assertEqual(bool(row.read), row.parent == "WhatsApp Message")
+			self.assertTrue(row.read)
 		self.assertIn("crm.api.whatsapp.after_app_install", frappe.get_hooks("after_app_install"))
 
 	def test_unrelated_app_install_does_not_create_channel_grants(self):
@@ -98,27 +100,19 @@ class TestWhatsAppRoleInstall(IntegrationTestCase):
 		self.assertEqual(self.grants(), before)
 		self.assertFalse(has_permission("WhatsApp Message", "read", user=self.actor, print_logs=False))
 
-	def test_upgrade_repairs_only_exact_legacy_defaults(self):
+	def test_canonical_setup_preserves_all_existing_write_only_rules(self):
 		add_roles()
 		for row in self.grants():
-			frappe.get_doc("Custom DocPerm", row.name).update(LEGACY_RIGHTS).save()
-		# A tenant-customized rule is not the known generated fingerprint.
-		update_permission_property("WhatsApp Message", "Sales User", 0, "export", 0)
-		execute()
-		for row in self.grants():
-			self.assertEqual(bool(row.read), (row.parent, row.role) == ("WhatsApp Message", "Sales Manager"))
-		before = self.grants()
-		execute()
-		self.assertEqual(self.grants(), before)
-
-	def test_upgrade_preserves_custom_owner_only_sibling(self):
+			frappe.get_doc("Custom DocPerm", row.name).update({"read": 0}).save()
+		before = {row.name: frappe.get_doc("Custom DocPerm", row.name).as_dict() for row in self.grants()}
 		add_roles()
-		name = frappe.db.get_value(
-			"Custom DocPerm",
-			{"parent": "WhatsApp Message", "role": "Sales User", "permlevel": 0, "if_owner": 0},
-			"name",
+		after_app_install("frappe_whatsapp")
+		self.assertEqual(
+			{row.name: frappe.get_doc("Custom DocPerm", row.name).as_dict() for row in self.grants()}, before
 		)
-		frappe.get_doc("Custom DocPerm", name).update(LEGACY_RIGHTS).save()
+		self.assertFalse(has_permission("WhatsApp Message", "read", user=self.actor, print_logs=False))
+
+	def test_canonical_setup_does_not_expand_an_owner_only_custom_rule(self):
 		owner_rule = frappe.get_doc(
 			{
 				"doctype": "Custom DocPerm",
@@ -128,11 +122,18 @@ class TestWhatsAppRoleInstall(IntegrationTestCase):
 				"role": "Sales User",
 				"permlevel": 0,
 				"if_owner": 1,
+				"read": 0,
 				"write": 1,
 				"select": 1,
 			}
 		).insert()
 		before = owner_rule.as_dict()
-		execute()
+		add_roles()
+		after_app_install("frappe_whatsapp")
 		self.assertEqual(owner_rule.reload().as_dict(), before)
-		self.assertEqual(frappe.db.get_value("Custom DocPerm", name, "read"), 1)
+		self.assertFalse(
+			frappe.db.exists(
+				"Custom DocPerm",
+				{"parent": "WhatsApp Message", "role": "Sales User", "permlevel": 0, "if_owner": 0},
+			)
+		)
