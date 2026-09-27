@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
 import { usersStore } from '@/stores/users'
@@ -66,7 +67,7 @@ import { statusesStore } from '@/stores/statuses'
 import { sessionStore } from '@/stores/session'
 import { isMobileView } from '@/composables/settings'
 import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import { createResource, call, toast } from 'frappe-ui'
 import { useDocument } from '@/data/document'
 import { computed, onMounted, ref, nextTick } from 'vue'
@@ -79,7 +80,7 @@ const props = defineProps({
 const { user } = sessionStore()
 const { getUser, isManager } = usersStore()
 const { getLeadStatus, statusOptions } = statusesStore()
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 
 const show = defineModel({ type: Boolean })
 const router = useRouter()

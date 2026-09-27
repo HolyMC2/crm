@@ -39,8 +39,11 @@ vi.mock('frappe-ui', () => ({
   }),
 }))
 vi.mock('frappe-ui/frappe', () => ({
-  useOnboarding: () => ({ updateOnboardingStep() {} }),
   useTelemetry: () => ({ capture() {} }),
+}))
+// Completion is covered with the real native helper in crmOnboarding.test.js.
+vi.mock('@/composables/onboarding', () => ({
+  useCrmOnboarding: () => ({ updateOnboardingStep() {} }),
 }))
 vi.mock('@/data/document', () => ({
   useDocument: () => ({

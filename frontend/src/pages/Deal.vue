@@ -368,6 +368,7 @@
   />
 </template>
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import SalesQueueReturn from '@/components/SalesQueueReturn.vue'
 import AutomationLink from '@/components/AutomationLink.vue'
 import OfferWorkspace from '@/components/Offers/OfferWorkspace.vue'
@@ -435,7 +436,6 @@ import {
   usePageMeta,
   toast,
 } from 'frappe-ui'
-import { useOnboarding } from 'frappe-ui/frappe'
 import {
   ref,
   computed,
@@ -454,8 +454,7 @@ const { $dialog, $socket, makeCall } = globalStore()
 const { statusOptions, getDealStatus } = statusesStore()
 const { doctypeMeta } = getMeta('CRM Deal')
 
-const { updateOnboardingStep, isOnboardingStepsCompleted } =
-  useOnboarding('frappecrm')
+const { updateOnboardingStep, isOnboardingStepsCompleted } = useCrmOnboarding()
 
 const offerState = useOfferState()
 const commerceState = useCommerceState()

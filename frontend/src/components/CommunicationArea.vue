@@ -87,6 +87,7 @@
 </template>
 
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import EmailEditor from '@/components/EmailEditor.vue'
 import CommentBox from '@/components/CommentBox.vue'
 import CommentIcon from '@/components/Icons/CommentIcon.vue'
@@ -94,7 +95,7 @@ import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import { isContentEmpty } from '@/utils'
 import { usersStore } from '@/stores/users'
 import { useStorage } from '@vueuse/core'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import { call, createResource, toast } from 'frappe-ui'
 import { ref, watch, computed } from 'vue'
 
@@ -108,7 +109,7 @@ const reload = defineModel('reload', { type: Boolean })
 const emit = defineEmits(['scroll'])
 
 const { getUser } = usersStore()
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 const { capture } = useTelemetry()
 
 const showEmailBox = ref(false)

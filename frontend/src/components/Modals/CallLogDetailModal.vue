@@ -169,6 +169,7 @@
 </template>
 
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
 import DurationIcon from '@/components/Icons/DurationIcon.vue'
@@ -185,7 +186,7 @@ import { sanitizeHTML } from '@/utils'
 import { isMobileView } from '@/composables/settings'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { useDocument } from '@/data/document'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import { FeatherIcon, Dropdown, Avatar, Tooltip, call, toast } from 'frappe-ui'
 import { ref, computed, h, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -196,7 +197,7 @@ const show = defineModel({ type: Boolean })
 
 const callLog = defineModel('callLog', { type: Object })
 
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 const { capture } = useTelemetry()
 const { showModal } = useDoctypeModal()
 

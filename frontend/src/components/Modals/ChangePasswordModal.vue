@@ -71,14 +71,14 @@
   </Dialog>
 </template>
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import LockKeyhole from '~icons/lucide/lock-keyhole'
 import { Dialog, toast, createResource, Password } from 'frappe-ui'
-import { useOnboarding } from 'frappe-ui/frappe'
 import { ref, watch } from 'vue'
 
 const show = defineModel({ type: Boolean })
 
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 
 const currentPassword = ref('')
 const newPassword = ref('')

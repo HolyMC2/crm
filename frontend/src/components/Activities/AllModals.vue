@@ -8,10 +8,11 @@
   />
 </template>
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import EventModal from '@/components/Modals/EventModal.vue'
 import { showEventModal, activeEvent } from '@/composables/event'
 import { useDoctypeModal } from '@/composables/doctypeModal'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import { call } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -23,7 +24,7 @@ const props = defineProps({
 const activities = defineModel({ type: Object })
 
 const { showModal } = useDoctypeModal()
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 const { capture } = useTelemetry()
 
 // Event

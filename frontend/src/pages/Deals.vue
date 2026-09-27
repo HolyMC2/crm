@@ -249,6 +249,7 @@
 </template>
 
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import MultipleAvatar from '@/components/MultipleAvatar.vue'
 import CustomActions from '@/components/CustomActions.vue'
@@ -274,7 +275,7 @@ import { statusesStore } from '@/stores/statuses'
 import { callEnabled } from '@/composables/telephony'
 import { formatDate, timeAgo, website, formatTime } from '@/utils'
 import { timestampCell } from '@/composables/useTimelinePreferences'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Avatar, Dropdown } from 'frappe-ui'
 import VerticalSlot from '@/components/doco/VerticalSlot.vue'
 import { isMobile } from '@/composables/breakpoint'
@@ -287,7 +288,7 @@ const { makeCall } = globalStore()
 const { getUser } = usersStore()
 const { getOrganization } = organizationsStore()
 const { getDealStatus } = statusesStore()
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 const { capture } = useTelemetry()
 const { showModal } = useDoctypeModal()
 

@@ -184,6 +184,7 @@
 </template>
 
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
@@ -200,7 +201,7 @@ import { getMeta } from '@/stores/meta'
 import { usersStore } from '@/stores/users'
 import { formatDate } from '@/utils'
 import { timestampCell } from '@/composables/useTimelinePreferences'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Avatar, TextEditor, Dropdown, call } from 'frappe-ui'
 import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -208,7 +209,7 @@ import { useRouter, useRoute } from 'vue-router'
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Task')
 const { getUser } = usersStore()
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 const { capture } = useTelemetry()
 
 const router = useRouter(),

@@ -92,6 +92,7 @@
 </template>
 
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
@@ -101,12 +102,12 @@ import { useDoctypeModal } from '@/composables/doctypeModal'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import { usersStore } from '@/stores/users'
 import { timeAgo, formatDate } from '@/utils'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import { TextEditor, call, Dropdown, Tooltip, ListFooter } from 'frappe-ui'
 import { ref, watch } from 'vue'
 
 const { getUser } = usersStore()
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 const { capture } = useTelemetry()
 
 const { showModal } = useDoctypeModal()

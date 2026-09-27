@@ -7,9 +7,8 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 const api = vi.hoisted(() => ({ calls: [] }))
 vi.mock('frappe-ui', async () => {
   const dates = await import('../../node_modules/frappe-ui/src/utils/dayjs.ts')
-  const config = await import(
-    '../../node_modules/frappe-ui/src/utils/config.ts'
-  )
+  const config =
+    await import('../../node_modules/frappe-ui/src/utils/config.ts')
   return {
     dayjs: dates.dayjs,
     dayjsLocal: dates.dayjsLocal,
@@ -63,6 +62,9 @@ vi.mock('@/stores/global', () => ({
 vi.mock('@/stores/settings', () => ({ syncBrandFavicon() {} }))
 vi.mock('@/utils/prefetch', () => ({ prefetchHotChunks() {} }))
 vi.mock('@/composables/telemetry', () => ({ initTelemetry() {} }))
+// Onboarding has its own real-resource shell suite; keep this route/layout
+// test's existing assertion that every request belongs to inquiries.
+vi.mock('@/composables/onboarding', () => ({ useCrmOnboarding: () => null }))
 vi.mock('@/utils/dialogs', () => ({ Dialogs: { render: () => null } }))
 vi.mock('@/pages/NotPermitted.vue', () => ({ default: { render: () => null } }))
 vi.mock('@/components/EventNotificationPopup.vue', () => ({

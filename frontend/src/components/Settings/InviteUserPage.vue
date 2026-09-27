@@ -95,10 +95,11 @@
   </div>
 </template>
 <script setup>
+import { useCrmOnboarding } from '@/composables/onboarding'
 import { useSettingsDraft } from '@/composables/settingsSession'
 import { validateEmail, convertArrayToString } from '@/utils'
 import { usersStore } from '@/stores/users'
-import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
+import { useTelemetry } from 'frappe-ui/frappe'
 import {
   toast,
   createListResource,
@@ -107,7 +108,7 @@ import {
 } from 'frappe-ui'
 import { ref, computed } from 'vue'
 
-const { updateOnboardingStep } = useOnboarding('frappecrm')
+const { updateOnboardingStep } = useCrmOnboarding()
 const { users, isAdmin } = usersStore()
 const { capture } = useTelemetry()
 

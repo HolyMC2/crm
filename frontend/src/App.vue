@@ -3,6 +3,22 @@
     <NotPermitted v-if="$route.name === 'Not Permitted'" />
     <router-view v-else-if="$route.name === 'Onboarding'" />
     <Layout v-else-if="session.isLoggedIn" class="isolate">
+      <div
+        v-if="onboarding?.error.value"
+        role="alert"
+        class="flex items-center justify-between gap-3 border-b border-outline-gray-2 bg-surface-elevation-1 px-4 py-3 text-sm text-ink-gray-8"
+      >
+        <span>{{
+          __(
+            'Onboarding progress is unavailable. Retry setup to synchronize pending progress.',
+          )
+        }}</span>
+        <Button
+          :label="__('Retry')"
+          :loading="onboarding.loading.value"
+          @click="onboarding.retry()"
+        />
+      </div>
       <router-view
         :key="$route.meta.stableKey ? $route.path : $route.fullPath"
       />
@@ -20,6 +36,7 @@ import EventNotificationPopup from '@/components/EventNotificationPopup.vue'
 import DoctypeModals from '@/components/Modals/DoctypeModals.vue'
 import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
+import { useCrmOnboarding } from '@/composables/onboarding'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
 import {
   computed,
@@ -27,6 +44,7 @@ import {
   nextTick,
   onMounted,
   provide,
+  shallowRef,
   watch,
 } from 'vue'
 import { useRoute } from 'vue-router'
@@ -41,6 +59,15 @@ const Settings = defineAsyncComponent(
 
 const session = sessionStore()
 provide('session', session)
+
+const onboarding = shallowRef(null)
+watch(
+  () => session.user,
+  () => {
+    onboarding.value = session.isLoggedIn ? useCrmOnboarding() : null
+  },
+  { immediate: true },
+)
 
 const route = useRoute()
 watch(
