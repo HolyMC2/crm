@@ -5,6 +5,7 @@ Optional app imports occur only after explicit capability and record checks.
 """
 
 from contextlib import contextmanager
+from importlib import import_module
 from urllib.parse import quote
 
 import frappe
@@ -27,24 +28,47 @@ def _identifier(value):
 	return value
 
 
+def _optional(app, module):
+	# Companion apps may be deployed before or after the adapter this CRM
+	# revision needs; an absent adapter means the capability is unavailable.
+	if app not in frappe.get_installed_apps():
+		return None
+	try:
+		return import_module(module)
+	except ImportError:
+		return None
+
+
+def _checkout_module():
+	if "erpnext" not in frappe.get_installed_apps():
+		return None
+	return _optional("doco", "doco.docoutils.order_checkout")
+
+
+def _payments_modules():
+	# `service` and `source` may be submodules; import each one explicitly.
+	package = "mercadopago_connector.services.order_payments"
+	service = _optional("mercadopago_connector", package + ".service")
+	source = _optional("mercadopago_connector", package + ".source")
+	return (service, source) if service and source else None
+
+
 def _available():
-	return {"erpnext", "doco"}.issubset(frappe.get_installed_apps())
+	return _checkout_module() is not None
 
 
 def _owner():
-	if not _available():
+	owner = _checkout_module()
+	if owner is None:
 		_fail("Native ERP order checkout is not installed on this site.")
-	from doco.docoutils import order_checkout
-
-	return order_checkout
+	return owner
 
 
 def _payments():
-	if "mercadopago_connector" not in frappe.get_installed_apps():
+	payments = _payments_modules()
+	if payments is None:
 		_fail("Mercado Pago order payments are not installed on this site.")
-	from mercadopago_connector.services.order_payments import service, source
-
-	return service, source
+	return payments
 
 
 def _deal(name, *, write=False):
@@ -217,7 +241,7 @@ def get_context(sales_order=None, deal=None, cart=None):
 		can_write = order.has_permission("write") and (
 			not order.get("crm_deal") or _deal(order.crm_deal).has_permission("write")
 		)
-		payment_installed = "mercadopago_connector" in frappe.get_installed_apps()
+		payment_installed = _payments_modules() is not None
 		payment_available = False
 		payment_reason = "payment_adapter_unavailable"
 		payments = []
