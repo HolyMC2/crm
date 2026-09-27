@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -33,7 +34,7 @@ class CRMNotification(Document):
 
 			scope = ReadScope()
 			if not scope.notification(self, self.to_user):
-				frappe.throw("Not permitted to notify this recipient.", frappe.PermissionError)
+				frappe.throw(_("Not permitted to notify this recipient."), frappe.PermissionError)
 			# Canonical context, never a copied transcript or caller-provided HTML.
 			self.message = ""
 			self.notification_text = notification_text(scope.load_message(self.notification_type_doc))

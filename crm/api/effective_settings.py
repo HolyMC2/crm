@@ -7,6 +7,7 @@ record. A pipeline/company selector is not a substitute for their native scope.
 from urllib.parse import quote
 
 import frappe
+from frappe import _
 from frappe.model import get_permitted_fields
 from frappe.utils import get_system_timezone
 
@@ -356,9 +357,9 @@ def get_effective_settings(pipeline=None, company=None):
 		if value is not None and (
 			not isinstance(value, str) or len(value) > 140 or any(ord(character) < 32 for character in value)
 		):
-			frappe.throw("Choose a valid pipeline and company scope.")
+			frappe.throw(_("Choose a valid pipeline and company scope."))
 	if not record_company_allowed(company):
-		frappe.throw("This company scope is unavailable.", frappe.PermissionError)
+		frappe.throw(_("This company scope is unavailable."), frappe.PermissionError)
 	validate_company(company)
 	sections = {
 		"pipeline": _capture(lambda: _pipeline(pipeline, company)),

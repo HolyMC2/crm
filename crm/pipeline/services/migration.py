@@ -1,6 +1,7 @@
 """Additive compatibility mapping; preview never writes or renames business records."""
 
 import frappe
+from frappe import _
 from frappe.utils import cint, flt
 
 from crm.permissions.framework import warn_if_missing
@@ -90,5 +91,5 @@ def execute():
 		)
 	after = preview()
 	if after["records_to_map"] != {"CRM Lead": 0, "CRM Deal": held}:
-		frappe.throw("Pipeline mapping did not complete.")
+		frappe.throw(_("Pipeline mapping did not complete."))
 	return {"before": before, "after": after, "held_for_review": held}

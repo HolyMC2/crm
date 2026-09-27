@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -19,7 +20,7 @@ class CRMOffer(Document):
 		validate_offer(self)
 
 	def on_trash(self):
-		frappe.throw("Offer revisions and decision evidence cannot be deleted.", frappe.PermissionError)
+		frappe.throw(_("Offer revisions and decision evidence cannot be deleted."), frappe.PermissionError)
 
 	def before_rename(self, old, new, merge=False):
-		frappe.throw("Offer revision identities cannot be renamed.", frappe.PermissionError)
+		frappe.throw(_("Offer revision identities cannot be renamed."), frappe.PermissionError)

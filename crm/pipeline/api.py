@@ -4,6 +4,7 @@
 """Whitelisted entrypoints for the pipeline. Authorization and delegation only."""
 
 import frappe
+from frappe import _
 
 from crm.pipeline.queries.stages import status_doctype, visible_statuses
 
@@ -15,7 +16,7 @@ def get_visible_stages(doctype: str, pipeline: str | None = None):
 	if pipeline and status_doctype(doctype) == "CRM Deal Status":
 		config = next((row for row in get_pipelines(include_archived=True) if row.name == pipeline), None)
 		if not config:
-			frappe.throw("Pipeline is unavailable.", frappe.PermissionError)
+			frappe.throw(_("Pipeline is unavailable."), frappe.PermissionError)
 		return [row for row in config.stages if not row["archived"]]
 	return visible_statuses(doctype)
 
@@ -115,7 +116,7 @@ def save_pipeline(data: dict):
 		doc = frappe.get_doc("CRM Pipeline", data["name"])
 		doc.check_permission("write")
 		if not data.get("modified") or str(data["modified"]) != str(doc.modified):
-			frappe.throw("Pipeline settings changed. Reload before saving.", frappe.TimestampMismatchError)
+			frappe.throw(_("Pipeline settings changed. Reload before saving."), frappe.TimestampMismatchError)
 	else:
 		frappe.has_permission("CRM Pipeline", "create", throw=True)
 		doc = frappe.new_doc("CRM Pipeline")
@@ -188,7 +189,9 @@ def change_deal_pipeline(name: str, values: dict, modified: str):
 	doc = frappe.get_doc("CRM Deal", name)
 	doc.check_permission("write")
 	if str(doc.modified) != str(modified):
-		frappe.throw("This deal changed. Reload before choosing a pipeline.", frappe.TimestampMismatchError)
+		frappe.throw(
+			_("This deal changed. Reload before choosing a pipeline."), frappe.TimestampMismatchError
+		)
 	for field in ("pipeline", "sales_company", "status", "currency"):
 		if field in values:
 			doc.set(field, values[field])
