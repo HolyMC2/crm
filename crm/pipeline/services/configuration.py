@@ -28,7 +28,9 @@ def filter_shared_documents(user, doctype, names):
 		return []
 	if not installed():
 		return list(names)
-	condition = record_query(doctype, user, field="name" if doctype == "CRM Pipeline" else "pipeline")
+	condition = (
+		record_query(doctype, user, field="name" if doctype == "CRM Pipeline" else "pipeline") or "1=1"
+	)
 	# Security review: fixed doctype set and lock clause; scope condition is built with frappe.db.escape.
 	return frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"SELECT name FROM `tab{doctype}` WHERE name IN %(names)s AND ({condition})",
@@ -113,7 +115,10 @@ def record_query(doctype, user=None, field="pipeline"):
 	names = allowed_pipeline_names(user)
 	column = f"`tab{doctype}`.`{field}`"
 	allowed = ", ".join(frappe.db.escape(name) for name in names) or "NULL"
-	condition = f"({column} IS NULL OR {column} = '' OR {column} IN ({allowed}))"
+	# Access to every pipeline restricts nothing (Link validation keeps values
+	# existing), so native lists keep their empty condition for such users.
+	every_pipeline = set(names) == set(frappe.get_all("CRM Pipeline", pluck="name"))
+	conditions = [] if every_pipeline else [f"({column} IS NULL OR {column} = '' OR {column} IN ({allowed}))"]
 	user = user or frappe.session.user
 	if (
 		doctype != "CRM Pipeline"
@@ -124,8 +129,10 @@ def record_query(doctype, user=None, field="pipeline"):
 		if companies:
 			company_values = ", ".join(frappe.db.escape(company) for company in companies)
 			company_column = f"`tab{doctype}`.`sales_company`"
-			condition += f" AND ({company_column} IS NULL OR {company_column} = '' OR {company_column} IN ({company_values}))"
-	return condition
+			conditions.append(
+				f"({company_column} IS NULL OR {company_column} = '' OR {company_column} IN ({company_values}))"
+			)
+	return " AND ".join(conditions)
 
 
 def validate_company(company):
