@@ -253,7 +253,7 @@ class TestPipelineConfiguration(IntegrationTestCase):
 		from crm.permissions import framework
 
 		with (
-			patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0),
+			patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0, create=True),
 			patch.dict(frappe.local.form_dict, {"doctype": "CRM Deal"}, clear=True),
 		):
 			with self.assertRaises(frappe.PermissionError):
@@ -263,7 +263,7 @@ class TestPipelineConfiguration(IntegrationTestCase):
 
 	def test_unsupported_framework_still_seeds_pipelines_during_migrate(self):
 		with (
-			patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0),
+			patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0, create=True),
 			patch.object(frappe.flags, "in_migrate", True),
 		):
 			self.assertTrue(self.make_pipeline([self.open]).name)

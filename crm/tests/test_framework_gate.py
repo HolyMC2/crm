@@ -4,7 +4,6 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import frappe
-from frappe.core.doctype.version import version
 from frappe.tests import IntegrationTestCase
 
 from crm.permissions import framework
@@ -18,7 +17,7 @@ class TestFrameworkGate(IntegrationTestCase):
 		)
 
 	def unsupported(self):
-		return patch.object(version, "VERSION_HISTORY_FILTER_VERSION", 0)
+		return patch.object(framework, "missing", return_value=["VERSION_HISTORY_FILTER_VERSION"])
 
 	def check(self, path="/api/method/ping", **form):
 		request, form_dict = self.request(path, **form)
@@ -52,6 +51,12 @@ class TestFrameworkGate(IntegrationTestCase):
 			framework.before_migrate()
 			with self.assertRaises(frappe.PermissionError):
 				framework.check_job(method="crm.api.whatsapp.notify_agent")
+
+	def test_missing_reports_each_absent_marker(self):
+		from frappe.core.doctype.version import version
+
+		with patch.object(version, "VERSION_HISTORY_FILTER_VERSION", 0, create=True):
+			self.assertIn("VERSION_HISTORY_FILTER_VERSION", framework.missing())
 
 	def test_supported_base_passes_everything(self):
 		with patch.object(framework, "missing", return_value=[]):
