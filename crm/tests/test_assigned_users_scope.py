@@ -1,4 +1,4 @@
-"""Native assignment metadata requires the current reader's parent authority."""
+"""Native assignment reads and removals require the actor's parent authority."""
 
 from unittest.mock import patch
 
@@ -6,7 +6,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import CallbackManager
 
-from crm.api.doc import get_assigned_users
+from crm.api.doc import get_assigned_users, remove_assignments
 from crm.tests.test_offers import OfferFixture
 
 
@@ -77,10 +77,10 @@ class TestAssignedUsersScope(OfferFixture, IntegrationTestCase):
 		self.assertFalse(frappe.has_permission("CRM Deal", "read", self.other.name))
 		self.assertEqual(frappe.get_list("CRM Deal", filters={"name": self.other.name}), [])
 
-	def assignments(self):
+	def assignments(self, name=None):
 		return frappe.get_all(
 			"ToDo",
-			filters={"reference_type": "CRM Deal", "reference_name": self.deal.name},
+			filters={"reference_type": "CRM Deal", "reference_name": name or self.deal.name},
 			fields=["name", "allocated_to", "status", "modified"],
 			order_by="name",
 		)
@@ -156,3 +156,42 @@ class TestAssignedUsersScope(OfferFixture, IntegrationTestCase):
 		self.assertEqual(notification_assignments("CRM Deal", self.deal.name), [self.user])
 		with self.assertRaises(frappe.PermissionError):
 			frappe.is_whitelisted(internal)
+
+	def test_removal_cannot_bypass_denied_parent_with_client_flag(self):
+		before = self.assignments(self.other.name)
+		self.assertTrue(before)
+		parent_before = frappe.get_doc("CRM Deal", self.other.name).as_dict()
+		self.restrict_to_own_deal()
+		with self.assertRaises(frappe.PermissionError):
+			remove_assignments("CRM Deal", self.other.name, ["Administrator"], ignore_permissions=True)
+		self.assertEqual(self.assignments(self.other.name), before)
+		self.assertEqual(frappe.get_doc("CRM Deal", self.other.name).as_dict(), parent_before)
+		self.assertEqual(frappe.session.user, self.user)
+
+	def test_read_only_share_cannot_remove_parent_assignment(self):
+		from frappe.share import add_docshare
+
+		add_docshare("CRM Deal", self.other.name, user=self.user, read=1, write=0)
+		frappe.clear_cache(user=self.user)
+		before = self.assignments(self.other.name)
+		self.assertTrue(before)
+		parent_before = frappe.get_doc("CRM Deal", self.other.name).as_dict()
+		frappe.set_user(self.user)
+		self.assertTrue(frappe.has_permission("CRM Deal", "read", self.other.name))
+		self.assertFalse(frappe.has_permission("CRM Deal", "write", self.other.name))
+		with self.assertRaises(frappe.PermissionError):
+			remove_assignments("CRM Deal", self.other.name, ["Administrator"])
+		self.assertEqual(self.assignments(self.other.name), before)
+		self.assertEqual(frappe.get_doc("CRM Deal", self.other.name).as_dict(), parent_before)
+		self.assertEqual(frappe.session.user, self.user)
+
+	def test_writable_parent_keeps_native_assignment_cancellation(self):
+		self.restrict_to_own_deal()
+		self.assertTrue(frappe.has_permission("CRM Deal", "write", self.deal.name))
+		before = self.assignments()
+		remove_assignments("CRM Deal", self.deal.name, [self.user])
+		after = self.assignments()
+		self.assertEqual([row.name for row in after], [row.name for row in before])
+		self.assertTrue(all(row.status == "Cancelled" for row in after))
+		self.assertEqual(get_assigned_users("CRM Deal", self.deal.name), [])
+		self.assertEqual(frappe.session.user, self.user)

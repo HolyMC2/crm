@@ -592,10 +592,23 @@ def get_records_based_on_order(doctype, rows, filters, page_length, order):
 
 @frappe.whitelist()
 def remove_assignments(doctype: str, name: str, assignees: str | list, ignore_permissions: bool = False):
+	if ignore_permissions:
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
 	assignees = frappe.parse_json(assignees)
 
 	if not assignees:
 		return
+	if not isinstance(assignees, list) or any(
+		not isinstance(assignee, str) or not assignee.strip() for assignee in assignees
+	):
+		frappe.throw(_("Assignees must be a list of user IDs"))
+
+	doc = frappe.get_doc(doctype, name)
+	doc.check_permission("write")
+	if not doc.meta.issingle and not frappe.get_list(
+		doctype, filters={"name": doc.name}, pluck="name", limit_page_length=1
+	):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
 	for assign_to in assignees:
 		set_status(
@@ -604,7 +617,7 @@ def remove_assignments(doctype: str, name: str, assignees: str | list, ignore_pe
 			todo=None,
 			assign_to=assign_to,
 			status="Cancelled",
-			ignore_permissions=ignore_permissions,
+			ignore_permissions=False,
 		)
 
 
