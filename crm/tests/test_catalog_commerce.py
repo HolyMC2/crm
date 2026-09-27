@@ -14,14 +14,17 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import frappe
-from doco_meta_catalog.tests.test_commerce import CatalogFixture
 from frappe.utils import now_datetime
 from frappe_whatsapp import native_outbox
 from frappe_whatsapp.webhook_receipts import record_events
 
 from crm.api import catalog_commerce, conversations, outbox, outbox_delivery
+from crm.tests.companion import fixture, skip_if_missing
+
+CatalogFixture, MISSING_CATALOG = fixture("doco_meta_catalog.tests.test_commerce", "CatalogFixture")
 
 
+@skip_if_missing(MISSING_CATALOG)
 class TestCatalogOutbox(CatalogFixture, unittest.TestCase):
 	def queue(self, request_id=None, generation=2, **selection):
 		return catalog_commerce.queue_catalog(

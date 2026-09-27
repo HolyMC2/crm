@@ -7,13 +7,20 @@ fixture supplies real ERP company/taxes/items/register/shift/terminal records.
 from uuid import uuid4
 
 import frappe
-from doco.docoutils.test_order_checkout_native import OrderCheckoutFixture
 from frappe.tests import IntegrationTestCase
-from mercadopago_connector.tests.test_order_payments_native import configure_company
 
 from crm.api import commerce
+from crm.tests.companion import fixture, skip_if_missing
+
+OrderCheckoutFixture, MISSING_CHECKOUT = fixture(
+	"doco.docoutils.test_order_checkout_native", "OrderCheckoutFixture"
+)
+configure_company, MISSING_PAYMENTS = fixture(
+	"mercadopago_connector.tests.test_order_payments_native", "configure_company"
+)
 
 
+@skip_if_missing(MISSING_CHECKOUT, MISSING_PAYMENTS)
 class TestCommerceBroker(OrderCheckoutFixture, IntegrationTestCase):
 	def setUp(self):
 		super().setUp()

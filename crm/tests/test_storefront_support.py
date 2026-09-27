@@ -6,15 +6,20 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import frappe
-from doco.docoutils.test_order_checkout_native import OrderCheckoutFixture
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.tests import IntegrationTestCase
 
 from crm.api import automation, conversation_threads, webchat
 from crm.api import conversations as control
 from crm.tests import test_webchat as protocol
+from crm.tests.companion import fixture, skip_if_missing
+
+OrderCheckoutFixture, MISSING_CHECKOUT = fixture(
+	"doco.docoutils.test_order_checkout_native", "OrderCheckoutFixture"
+)
 
 
+@skip_if_missing(MISSING_CHECKOUT)
 class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 	request = protocol.TestWebchat.request
 	rpc = protocol.TestWebchat.rpc
