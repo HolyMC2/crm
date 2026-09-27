@@ -121,7 +121,7 @@ def verified_receipt_reference(doc):
 			and conversation.account_id == account.phone_id
 			and conversation.account_record == account.name
 			and conversation.peer_id == doc.get("from")
-			and (conversation.shop_key or "") == (account.get("shop") or "")
+			and (conversation.shop_key or "") == (account.get("doco_shop") or "")
 			and conversation.reference_doctype in {"CRM Lead", "CRM Deal"}
 			and conversation.reference_name
 			and frappe.db.exists(conversation.reference_doctype, conversation.reference_name)

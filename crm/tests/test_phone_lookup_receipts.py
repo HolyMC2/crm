@@ -19,6 +19,7 @@ class TestPhoneLookupReceipts(unittest.TestCase):
 
 	def setUp(self):
 		create_conversation = control.get_or_create
+		self.create_conversation = create_conversation
 		fixtures.TestConversationActivitySql.setUp(self)
 		self.lead = frappe.get_doc(
 			{"doctype": "CRM Lead", "first_name": "Receipt reference", "lead_owner": "Administrator"}
@@ -42,6 +43,55 @@ class TestPhoneLookupReceipts(unittest.TestCase):
 			message_id=receipt.event_id,
 			**{"from": self.peer},
 		)
+
+	def scoped_conversation(self):
+		"""Bind through the same physical account field used by the normal broker."""
+		self.assertTrue(self.account.meta.has_field("doco_shop"))
+		shop = frappe.get_doc(
+			{"doctype": "Social Shop", "shop_name": "Receipt scope " + self.account_id, "enabled": 1}
+		).insert()
+		self.account.doco_shop = shop.name
+		self.account.save()
+		self.peer = str(int(self.peer) + 1)
+		self.doc = self.create_conversation(
+			"WhatsApp",
+			self.account_id,
+			self.peer,
+			reference_doctype="CRM Lead",
+			reference_name=self.lead.name,
+		)
+		self.assertEqual(self.doc.shop_key, shop.name)
+		self.seed("Human")
+		return shop
+
+	def test_scoped_account_receipt_preserves_explicit_reference(self):
+		self.scoped_conversation()
+		receipt = self.receipt()
+		frappe.set_user("Guest")
+		with self.context(receipt):
+			self.apply(receipt)
+			message = self.message(receipt)
+			validate(message, None)
+			self.assertEqual(
+				(message.reference_name, message.reference_doctype), (self.lead.name, "CRM Lead")
+			)
+
+	def test_changed_account_shop_cannot_reuse_prior_scoped_receipt(self):
+		self.scoped_conversation()
+		receipt = self.receipt()
+		with self.context(receipt):
+			self.apply(receipt)
+			self.assertEqual(verified_receipt_reference(self.message(receipt)), (self.lead.name, "CRM Lead"))
+			other = frappe.get_doc(
+				{
+					"doctype": "Social Shop",
+					"shop_name": "Other receipt scope " + self.account_id,
+					"enabled": 1,
+				}
+			).insert()
+			self.account.doco_shop = other.name
+			self.account.save()
+			self.assertEqual(verified_receipt_reference(self.message(receipt)), (None, None))
 
 	def test_verified_native_receipt_preserves_only_scoped_conversation_reference(self):
 		receipt = self.receipt()
