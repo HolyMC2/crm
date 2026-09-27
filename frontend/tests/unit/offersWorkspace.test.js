@@ -74,7 +74,7 @@ async function flush() {
     await nextTick()
   }
 }
-async function mount(offer = draftOffer(), behavior) {
+async function mount(offer = draftOffer(), behavior, options = {}) {
   api.call.mockImplementation((method, args) => {
     if (behavior) {
       const result = behavior(method, args)
@@ -99,10 +99,17 @@ async function mount(offer = draftOffer(), behavior) {
   const app = createApp({
     setup() {
       state = useOfferState()
-      return () => (shown.value ? h(Workspace, { ...props, state }) : null)
+      return () =>
+        shown.value
+          ? options.copies
+            ? Array.from({ length: options.copies }, () =>
+                h(Workspace, { ...props, state }),
+              )
+            : h(Workspace, { ...props, state })
+          : null
     },
   })
-  app.config.globalProperties.__ = globalThis.__
+  app.config.globalProperties.__ = options.translate || globalThis.__
   app.mount(el)
   cleanups.push(() => {
     app.unmount()
@@ -283,6 +290,68 @@ describe('native offer lifecycle', () => {
     fail = false
     await click(el, 'Retry same action')
     expect(calls('record_decision')[1][1]).toEqual(first)
+  })
+  it('labels the rendered decision select without its option text and submits the selected channel', async () => {
+    const issued = draftOffer({
+      status: 'Issued',
+      effective_status: 'Issued',
+      capabilities: { can_decide: true },
+    })
+    const { el } = await mount(issued)
+    await click(el, 'Proposal A')
+    await click(el, 'Record acceptance')
+    const select = el.querySelector('form select')
+    expect(select.labels).toHaveLength(1)
+    const label = select.labels[0]
+    expect(label.textContent.trim()).toBe('Decision channel')
+    expect(select.id).toBeTruthy()
+    expect(label.htmlFor).toBe(select.id)
+    expect(label.control).toBe(select)
+    select.value = 'Other'
+    select.dispatchEvent(new Event('change', { bubbles: true }))
+    const evidence = el.querySelector('form textarea')
+    evidence.value = 'Customer approved the exact issued revision in person'
+    evidence.dispatchEvent(new Event('input', { bubbles: true }))
+    await nextTick()
+    await click(el, 'Save customer decision')
+    expect(calls('record_decision')).toHaveLength(1)
+    expect(calls('record_decision')[0][1]).toEqual({
+      name: 'OFFER-1',
+      modified: 'v1',
+      decision: 'Accepted',
+      channel: 'Other',
+      evidence: evidence.value,
+    })
+  })
+  it('keeps translated decision labels associated with their own workspace instances', async () => {
+    const translated = {
+      'Decision channel': 'Canal de decisión',
+      Email: 'Correo',
+      Other: 'Otro',
+    }
+    const { el } = await mount(
+      draftOffer({ status: 'Issued', capabilities: { can_decide: true } }),
+      undefined,
+      { copies: 2, translate: (text) => translated[text] || text },
+    )
+    await click(el, 'Proposal A')
+    await click(el, 'Record rejection')
+    const selects = [...el.querySelectorAll('form select')]
+    expect(selects).toHaveLength(2)
+    expect(new Set(selects.map((select) => select.id)).size).toBe(2)
+    for (const select of selects) {
+      expect(select.id).toBeTruthy()
+      expect(select.labels).toHaveLength(1)
+      const label = select.labels[0]
+      expect(label.textContent.trim()).toBe('Canal de decisión')
+      expect(label.htmlFor).toBe(select.id)
+      expect(label.control).toBe(select)
+      expect(document.getElementById(label.htmlFor)).toBe(select)
+      expect(select.querySelector('option[value="Other"]').textContent).toBe(
+        'Otro',
+      )
+    }
+    expect(calls('record_decision')).toHaveLength(0)
   })
   it('isolates the permissioned print preview from scripts', async () => {
     const { el } = await mount(draftOffer(), (method) =>

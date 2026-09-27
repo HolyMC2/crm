@@ -270,9 +270,15 @@
                 )
               }}
             </p>
-            <label class="block"
-              >{{ __('Decision channel')
-              }}<select v-model="state.channel" class="offer-input">
+            <div>
+              <label :for="decisionChannelId" class="block">
+                {{ __('Decision channel') }}
+              </label>
+              <select
+                :id="decisionChannelId"
+                v-model="state.channel"
+                class="offer-input"
+              >
                 <option
                   v-for="channel in channels"
                   :key="channel"
@@ -280,8 +286,8 @@
                 >
                   {{ __(channel) }}
                 </option>
-              </select></label
-            >
+              </select>
+            </div>
             <label class="block"
               >{{ __('Decision evidence')
               }}<textarea
@@ -406,7 +412,7 @@
   </section>
 </template>
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import { call } from 'frappe-ui'
 import OfferDraft from './OfferDraft.vue'
 import { draftValues } from './offerState'
@@ -415,6 +421,7 @@ const props = defineProps({
   state: { type: Object, required: true },
 })
 const state = props.state
+const decisionChannelId = useId()
 const previewFrame = ref(null)
 const channels = ['Email', 'Phone', 'WhatsApp', 'In Person', 'Other']
 const locked = computed(() => state.busy || !!state.pending || state.loading)
