@@ -115,7 +115,7 @@ def whatsapp_template_reason(intent, account):
 	if not isinstance(name, str) or not isinstance(language, str):
 		return "template_unavailable"
 	rows = frappe.db.sql(
-		"""SELECT name,status,category,buttons FROM `tabWhatsApp Templates`
+		"""SELECT name,status,category FROM `tabWhatsApp Templates`
 		WHERE whatsapp_account=%s AND language_code=%s
 		AND (actual_name=%s OR (COALESCE(actual_name,'')='' AND template_name=%s))
 		LIMIT 2 FOR UPDATE""",
@@ -124,16 +124,21 @@ def whatsapp_template_reason(intent, account):
 	)
 	if len(rows) != 1 or rows[0].status != "APPROVED":
 		return "template_unavailable"
-	try:
-		buttons = json.loads(rows[0].buttons or "[]")
-	except (TypeError, ValueError):
-		return "template_unavailable"
+	# Buttons are native child records, not JSON on the template table. Lock
+	# the current children under the already account/language-bound parent.
+	buttons = frappe.db.sql(
+		"""SELECT button_type FROM `tabWhatsApp Button`
+		WHERE parent=%s AND parenttype='WhatsApp Templates' AND parentfield='buttons'
+		ORDER BY idx,name FOR UPDATE""",
+		(rows[0].name,),
+		as_dict=True,
+	)
 	components = template.get("components") or []
-	if not isinstance(buttons, list) or not isinstance(components, list):
+	if not isinstance(components, list):
 		return "template_unavailable"
-	if any(not isinstance(button, dict) for button in buttons + components):
+	if any(not isinstance(component, dict) for component in components):
 		return "template_unavailable"
-	if any(str(button.get("type", "")).upper() in {"CATALOG", "MPM"} for button in buttons):
+	if any(button.button_type in {"Catalog", "Multi-Product Message"} for button in buttons):
 		return "catalog_template_not_ready"
 	for component in components:
 		if component.get("sub_type") in {"mpm", "catalog"}:
