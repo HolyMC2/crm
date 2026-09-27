@@ -8,7 +8,8 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import frappe
-from frappe.permissions import has_permission
+from frappe.desk.form.assign_to import add as assign
+from frappe.permissions import has_permission, has_user_permission
 from frappe.tests import IntegrationTestCase
 from frappe.utils import CallbackManager
 
@@ -79,17 +80,39 @@ class WhatsAppReadFixture(OfferFixture):
 					"is_default_outgoing": 0,
 				}
 			).insert()
-		frappe.get_doc(
-			{
-				"doctype": "ToDo",
-				"description": "Native two-account assignment",
-				"allocated_to": self.actor_b,
-				"reference_type": "CRM Deal",
-				"reference_name": self.deal.name,
-			}
-		).insert()
 		self.peer = "521" + str(int(uuid4().hex[:10], 16))
 		self.message_a = self.make_message("a", "VISIBLE-A-" + self.key)
+		# The native inbound hook homes this previously unscoped Deal in shop A.
+		# Complete actor B's explicit parent grant after that normal lifecycle.
+		self.deal.reload()
+		self.assertEqual(self.deal.doco_shop, self.shops["a"].name)
+		self.assertFalse(has_user_permission(self.deal, self.actor_b))
+		# The public native assignment action also grants a read share when the
+		# assignee's complete native permissions need it. A bare ToDo insert only
+		# establishes CRM's assignment predicate, not that complete read grant.
+		assign(
+			{
+				"assign_to": [self.actor_b],
+				"doctype": "CRM Deal",
+				"name": self.deal.name,
+				"description": "Native two-account assignment",
+			}
+		)
+		self.assertTrue(
+			frappe.db.exists(
+				"ToDo",
+				{
+					"reference_type": "CRM Deal",
+					"reference_name": self.deal.name,
+					"allocated_to": self.actor_b,
+					"status": "Open",
+				},
+			)
+		)
+		self.assertTrue(
+			frappe.get_list("CRM Deal", user=self.actor_b, filters={"name": self.deal.name}, pluck="name")
+		)
+
 		self.message_b = self.make_message("b", "SECRET-B-" + self.key)
 		self.assertTrue(
 			has_permission("CRM Deal", "read", doc=self.deal.name, user=self.actor_a, print_logs=False)
