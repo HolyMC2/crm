@@ -263,8 +263,8 @@ class TestPipelineConfiguration(IntegrationTestCase):
 				"frappe.get_attr",
 				side_effect=lambda name: failing if name == "test.shared_filter" else original_attr(name),
 			):
-				with self.assertRaisesRegex(RuntimeError, "permission filter failed"):
-					frappe.share.get_shared("CRM Deal", user)
+				# The framework fails closed per call: no rows, a deferred Error Log.
+				self.assertEqual(frappe.share.get_shared("CRM Deal", user), [])
 
 	def test_unsupported_framework_fails_crm_request_and_configuration(self):
 		from crm.permissions import framework
@@ -281,7 +281,7 @@ class TestPipelineConfiguration(IntegrationTestCase):
 	def test_unsupported_framework_still_seeds_pipelines_during_migrate(self):
 		with (
 			patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0, create=True),
-			patch.object(frappe.flags, "in_migrate", True),
+			patch.dict(frappe.flags, {"in_migrate": True}),
 		):
 			self.assertTrue(self.make_pipeline([self.open]).name)
 
