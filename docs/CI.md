@@ -91,10 +91,30 @@ The probe checks source-file SHA-256 fingerprints and records the matching
 revision evidence in the baseline. An image update changing those files requires
 re-auditing this narrow metadata contract; a version label alone cannot waive it.
 
+## Mandatory standalone conversation cohort
+
+The Muelle roadmap runner explicitly executes
+`crm.tests.standalone_conversations` on its isolated Frappe+CRM-only site. Its
+three native tests check private conversation schema, rejection of absent
+channel adapters, and rejection of forged service records. Every test first
+requires exactly those two installed and available apps and verifies that the
+optional companion packages cannot be imported. Installed-app or importability
+mismatches fail; they never skip or substitute mocked absence.
+
+The module intentionally lacks the `test_` discovery prefix because provider
+absence cannot be tested on the full-app site. Full-app discovery retains all
+20 account-backed tests in `crm.tests.test_conversations`, including their
+existing inheritance into the 55-case OutboxBridge suite. Release evidence needs
+both cohorts; a full-app result alone does not prove standalone operation. The
+same strict log guard rejects skipped or empty standalone results. Relocating
+the three tests does not waive them or establish native passing evidence.
+
 ## Gates
 
-- **Server** installs the candidate and executes the complete native CRM suite
-  with coverage. No modules or tests are excluded. The pinned, hash-checked
+- **Server** installs the candidate and executes the complete discoverable
+  full-app native CRM suite with coverage. No full-app tests are excluded; the
+  three mandatory standalone tests run in the separate cohort described above.
+  The pinned, hash-checked
   coverage wheel is downloaded on the runner and installed offline in the test
   container; the image does not need developer-only packages. A missing coverage
   XML fails the job. Every successful run publishes a coverage artifact. The
