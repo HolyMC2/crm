@@ -1,5 +1,8 @@
 import frappe
 from frappe import _
+from frappe.model import get_permitted_fields
+
+from crm.permissions.activity_history import _fields
 
 
 def validate(doc, method):
@@ -28,38 +31,65 @@ def update_deals_email_mobile_no(doc):
 
 @frappe.whitelist()
 def get_linked_deals(contact: str):
-	"""Get linked deals for a contact"""
+	"""Return the permitted Contact-to-Deal relationships and finite list DTO."""
 
 	if not frappe.has_permission("Contact", "read", contact):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
+	user = frappe.session.user
+	if not frappe.get_list("Contact", filters={"name": contact}, pluck="name", limit_page_length=1):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+	if "name" not in get_permitted_fields("Contact", user=user, permission_type="read") or (
+		frappe.get_meta("Contact").get_field("name") and "name" not in _fields("Contact", user)
+	):
+		return []
+	deal_fields = _fields("CRM Deal", user)
+	if "contacts" not in deal_fields or "contact" not in _fields("CRM Contacts", user, parenttype="CRM Deal"):
+		return []
+	scalar_fields = set(get_permitted_fields("CRM Deal", user=user, permission_type="read"))
+	meta = frappe.get_meta("CRM Deal")
+	if "name" not in scalar_fields or (meta.get_field("name") and "name" not in deal_fields):
+		return []
 
 	deal_names = frappe.get_all(
 		"CRM Contacts",
-		filters={"contact": contact, "parenttype": "CRM Deal"},
+		filters={"contact": contact, "parenttype": "CRM Deal", "parentfield": "contacts"},
 		fields=["parent"],
 		distinct=True,
 	)
-
-	# get deals data
+	names = sorted({row.parent for row in deal_names if row.parent})
+	columns = (
+		"name",
+		"organization",
+		"currency",
+		"deal_value",
+		"status",
+		"email",
+		"mobile_no",
+		"deal_owner",
+		"modified",
+	)
+	fields = [
+		field
+		for field in columns
+		if field in deal_fields
+		or (field in {"name", "modified"} and field in scalar_fields and not meta.get_field(field))
+	]
 	deals = []
-	for d in deal_names:
-		deal = frappe.get_cached_doc(
-			"CRM Deal",
-			d.parent,
-			fields=[
-				"name",
-				"organization",
-				"currency",
-				"deal_value",
-				"status",
-				"email",
-				"mobile_no",
-				"deal_owner",
-				"modified",
-			],
-		)
-		deals.append(deal.as_dict())
-
+	for offset in range(0, len(names), 200):
+		batch = names[offset : offset + 200]
+		try:
+			rows = frappe.get_list(
+				"CRM Deal",
+				filters={"name": ["in", batch]},
+				fields=fields,
+				limit_page_length=len(batch),
+				order_by="name",
+			)
+		except frappe.PermissionError:
+			continue
+		for row in rows:
+			if row.get("name") in batch and frappe.has_permission("CRM Deal", "read", doc=row.name):
+				deals.append({field: row.get(field) for field in columns})
 	return deals
 
 
