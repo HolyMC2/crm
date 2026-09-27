@@ -29,14 +29,22 @@ class TestAuditBoundaries(TestCase):
 
 	def test_timeline_field_catalog_respects_readable_permlevels(self):
 		fields = [
-			SimpleNamespace(fieldname="public", label="Public", options="", permlevel=0),
-			SimpleNamespace(fieldname="private", label="Private", options="", permlevel=1),
+			SimpleNamespace(fieldname="public", label="Public", options="", permlevel=0, fieldtype="Data"),
+			SimpleNamespace(fieldname="private", label="Private", options="", permlevel=1, fieldtype="Data"),
+			SimpleNamespace(fieldname="masked", label="Masked", options="", permlevel=0, fieldtype="Data"),
+			SimpleNamespace(
+				fieldname="password", label="Secret", options="", permlevel=0, fieldtype="Password"
+			),
 		]
 		for allowed, expected in (([], {"public"}), ([1], {"public", "private"})):
 			with (
 				self.subTest(allowed=allowed),
 				patch("crm.api.activities.get_permlevel_access", return_value=allowed),
-				patch.object(frappe, "get_meta", return_value=SimpleNamespace(fields=fields)),
+				patch.object(
+					frappe,
+					"get_meta",
+					return_value=SimpleNamespace(fields=fields, get_masked_fields=lambda: [fields[2]]),
+				),
 			):
 				self.assertEqual(set(get_readable_fields("CRM Lead")), expected)
 

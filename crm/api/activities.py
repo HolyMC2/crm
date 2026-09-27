@@ -24,7 +24,14 @@ ATTACHMENT_FIELDS = (
 
 
 @frappe.whitelist()
-def get_activities(name: str):
+def get_activities(name: str, doctype: str | None = None):
+	if doctype is not None:
+		if doctype == "CRM Deal":
+			return get_deal_activities(name)
+		if doctype == "CRM Lead":
+			return get_lead_activities(name)
+		frappe.throw(_("Unsupported activity document type"), frappe.ValidationError)
+	# Older clients did not send a type. New clients keep the exact parent identity.
 	if frappe.db.exists("CRM Deal", name):
 		return get_deal_activities(name)
 	elif frappe.db.exists("CRM Lead", name):
@@ -93,7 +100,7 @@ def get_deal_activities(name: str):
 
 	for version in docinfo.versions:
 		data = json.loads(version.data)
-		if not data.get("changed"):
+		if not data.get("changed") or not data["changed"][0]:
 			continue
 
 		if change := data.get("changed")[0]:
@@ -189,10 +196,10 @@ def get_deal_activities(name: str):
 		}
 		activities.append(activity)
 
-	linked_calls = get_linked_calls(name)
+	linked_calls = get_linked_calls("CRM Deal", name)
 	calls = calls + linked_calls.get("calls", [])
-	notes = notes + get_linked_notes(name) + linked_calls.get("notes", [])
-	tasks = tasks + get_linked_tasks(name) + linked_calls.get("tasks", [])
+	notes = notes + get_linked_notes("CRM Deal", name) + linked_calls.get("notes", [])
+	tasks = tasks + get_linked_tasks("CRM Deal", name) + linked_calls.get("tasks", [])
 	attachments = attachments + get_attachments("CRM Deal", name)
 
 	activities.sort(key=lambda x: x["creation"], reverse=True)
@@ -232,7 +239,7 @@ def get_lead_activities(name: str):
 
 	for version in docinfo.versions:
 		data = json.loads(version.data)
-		if not data.get("changed"):
+		if not data.get("changed") or not data["changed"][0]:
 			continue
 
 		if change := data.get("changed")[0]:
@@ -328,10 +335,10 @@ def get_lead_activities(name: str):
 		}
 		activities.append(activity)
 
-	linked_calls = get_linked_calls(name)
+	linked_calls = get_linked_calls("CRM Lead", name)
 	calls = linked_calls.get("calls", [])
-	notes = get_linked_notes(name) + linked_calls.get("notes", [])
-	tasks = get_linked_tasks(name) + linked_calls.get("tasks", [])
+	notes = get_linked_notes("CRM Lead", name) + linked_calls.get("notes", [])
+	tasks = get_linked_tasks("CRM Lead", name) + linked_calls.get("tasks", [])
 	attachments = get_attachments("CRM Lead", name)
 
 	activities.sort(key=lambda x: x["creation"], reverse=True)
@@ -432,10 +439,10 @@ def parse_grouped_versions(versions: list):
 	return version
 
 
-def get_linked_calls(name: str):
+def get_linked_calls(doctype: str, name: str):
 	calls = frappe.db.get_all(
 		"CRM Call Log",
-		filters={"reference_docname": name},
+		filters={"reference_doctype": doctype, "reference_docname": name},
 		fields=[
 			"name",
 			"caller",
@@ -454,7 +461,14 @@ def get_linked_calls(name: str):
 	)
 
 	linked_calls = frappe.db.get_all(
-		"Dynamic Link", filters={"link_name": name, "parenttype": "CRM Call Log"}, pluck="parent"
+		"Dynamic Link",
+		filters={
+			"link_doctype": doctype,
+			"link_name": name,
+			"parenttype": "CRM Call Log",
+			"parentfield": "links",
+		},
+		pluck="parent",
 	)
 
 	notes = []
@@ -483,7 +497,11 @@ def get_linked_calls(name: str):
 				Link.link_name,
 			)
 			.join(Link, JoinType.inner)
-			.on(Link.parent == CallLog.name)
+			.on(
+				(Link.parent == CallLog.name)
+				& (Link.parenttype == "CRM Call Log")
+				& (Link.parentfield == "links")
+			)
 			.where(CallLog.name.isin(linked_calls))
 		)
 		_calls = query.run(as_dict=True)
@@ -526,19 +544,19 @@ def get_linked_calls(name: str):
 	return {"calls": calls, "notes": notes, "tasks": tasks}
 
 
-def get_linked_notes(name: str):
+def get_linked_notes(doctype: str, name: str):
 	notes = frappe.db.get_all(
 		"FCRM Note",
-		filters={"reference_docname": name},
+		filters={"reference_doctype": doctype, "reference_docname": name},
 		fields=["name", "title", "content", "owner", "modified", "creation"],
 	)
 	return notes or []
 
 
-def get_linked_tasks(name: str):
+def get_linked_tasks(doctype: str, name: str):
 	tasks = frappe.db.get_all(
 		"CRM Task",
-		filters={"reference_docname": name},
+		filters={"reference_doctype": doctype, "reference_docname": name},
 		fields=[
 			"name",
 			"title",
