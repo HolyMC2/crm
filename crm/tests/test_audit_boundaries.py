@@ -24,7 +24,10 @@ class TestAuditBoundaries(TestCase):
 			):
 				with self.assertRaises(frappe.PermissionError):
 					endpoint("restricted-record")
-				query.assert_not_called()
+				# Translating the denial may lazily load native Translation rows.
+				# No business document may be queried before permission succeeds.
+				for call in query.call_args_list:
+					self.assertEqual(call.args[0], "Translation")
 				cached.assert_not_called()
 
 	def test_timeline_field_catalog_respects_readable_permlevels(self):

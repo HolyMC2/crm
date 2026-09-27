@@ -61,6 +61,7 @@ class TestActivityBatchQueries(OfferFixture, IntegrationTestCase):
 				"doctype": "CRM Call Log",
 				"telephony_medium": "Manual",
 				"type": "Outgoing",
+				"from": "+12025550100",
 				"to": "+12025550123",
 				"status": "Completed",
 			}
