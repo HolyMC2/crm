@@ -103,9 +103,71 @@ class TestActivityPrivacy(OfferFixture, IntegrationTestCase):
 		self.assertNotIn(secret, frappe.as_json({**frappe.response, "message": result}))
 		lead_history = [row for row in result[0] if row.get("is_lead")]
 		self.assertIn("status", changed_fields(lead_history))
+		self.assert_withheld_event(lead_history, "status")
 		self.assertNotIn("job_title", changed_fields(lead_history))
 		entry = next(row for row in lead_history if row.get("name") == comment.name)
 		self.assertEqual([row["name"] for row in entry["attachments"]], [file.name])
+
+	def assert_withheld_event(self, history, field):
+		entry = next(
+			entry
+			for activity in history
+			for entry in [activity, *(activity.get("other_versions") or [])]
+			if isinstance(entry.get("data"), dict) and entry["data"].get("field") == field
+		)
+		self.assertEqual(entry["activity_type"], "changed")
+		self.assertTrue(entry["data"]["field_label"])
+		self.assertTrue(entry["creation"])
+		self.assertTrue(entry["owner"])
+		self.assertEqual(entry["data"]["old_value"], "")
+		self.assertEqual(entry["data"]["value"], "")
+		self.assertTrue(entry["data"]["values_withheld"])
+
+	def test_deal_link_event_survives_projection_without_hiding_scalar_history(self):
+		organization = frappe.get_doc(
+			{
+				"doctype": "CRM Organization",
+				"organization_name": "History organization " + self.key,
+				"currency": "USD",
+			}
+		).insert()
+		self.deal.organization = organization.name
+		self.deal.website = "https://example.invalid/history-" + self.key
+		self.deal.save(ignore_version=False)
+		stored = frappe.get_all(
+			"Version",
+			filters={"ref_doctype": "CRM Deal", "docname": self.deal.name},
+			fields=["name", "data"],
+			order_by="name",
+		)
+		self.assertTrue(
+			any(
+				change[0] == "organization" and change[2]
+				for row in stored
+				for change in json.loads(row.data).get("changed", [])
+			)
+		)
+		frappe.set_user(self.user)
+		history = activities.get_activities(self.deal.name, "CRM Deal")[0]
+		self.assert_withheld_event(history, "organization")
+		website = next(
+			entry["data"]
+			for activity in history
+			for entry in [activity, *(activity.get("other_versions") or [])]
+			if isinstance(entry.get("data"), dict) and entry["data"].get("field") == "website"
+		)
+		self.assertEqual(website["value"], self.deal.website)
+		self.assertFalse(website.get("values_withheld"))
+		frappe.set_user("Administrator")
+		self.assertEqual(
+			stored,
+			frappe.get_all(
+				"Version",
+				filters={"ref_doctype": "CRM Deal", "docname": self.deal.name},
+				fields=["name", "data"],
+				order_by="name",
+			),
+		)
 
 	def test_native_docinfo_is_internal_and_preserves_existing_response_state(self):
 		self.versioned_deal()

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, effectScope, nextTick, ref } from 'vue'
 const h = vi.hoisted(() => ({
   requests: [],
+  activityRows: [],
   handlers: {},
   addon: null,
   whatsapp: null,
@@ -44,7 +45,11 @@ vi.mock('frappe-ui/frappe', () => ({
 vi.mock('frappe-ui', async () => {
   const { reactive } = await import('vue')
   return {
-    Button: { inheritAttrs: false, template: '<button />' },
+    Button: {
+      inheritAttrs: false,
+      emits: ['click'],
+      template: '<button @click="$emit(\'click\')" />',
+    },
     Tooltip: { inheritAttrs: false, template: '<span />' },
     toast: { error: () => {} },
     createResource: (options) => {
@@ -58,7 +63,10 @@ vi.mock('frappe-ui', async () => {
       }
       if (options.auto) request(options.params)
       return reactive({
-        data: null,
+        data:
+          options.url === 'crm.api.activities.get_activities'
+            ? options.transform([h.activityRows, [], [], [], []])
+            : null,
         loading: false,
         fetch: request,
         reload: request,
@@ -173,7 +181,7 @@ vi.mock('@/components/Icons/OutboundCallIcon.vue', () => ({
   default: { inheritAttrs: false, template: '<span />' },
 }))
 vi.mock('@/components/FadedScrollableDiv.vue', () => ({
-  default: { inheritAttrs: false, template: '<span />' },
+  default: { inheritAttrs: false, template: '<div><slot /></div>' },
 }))
 vi.mock('@/components/CommunicationArea.vue', () => ({
   default: { inheritAttrs: false, template: '<span />' },
@@ -205,6 +213,7 @@ h.addon = ref(false)
 h.whatsapp = ref(false)
 beforeEach(() => {
   h.requests = []
+  h.activityRows = []
   h.handlers = {}
   h.addon.value = false
   h.whatsapp.value = false
@@ -321,3 +330,76 @@ describe('native Activities with optional messaging', () => {
     ).toHaveLength(before + 1)
   })
 })
+
+function fieldChange(field, oldValue, value, extra = {}) {
+  return {
+    activity_type: 'changed',
+    creation: '2026-09-26 12:00:00',
+    owner: 'fictional@example.invalid',
+    is_lead: false,
+    data: { field, field_label: field, old_value: oldValue, value, ...extra },
+  }
+}
+
+describe('native Activities history presentation', () => {
+  it('keeps a withheld change readable without empty from/to labels or leaking supplied values', async () => {
+    h.activityRows = [
+      fieldChange('Status', 'PRIVATE-OLD', 'PRIVATE-NEW', {
+        values_withheld: true,
+      }),
+      fieldChange('Description', 'Before', 'After'),
+    ]
+    await mountActivities(false, false)
+    expect(historyParts('Status')).toEqual([
+      'Fictional user',
+      'changed',
+      'Status',
+      '(Valores históricos ocultos)',
+    ])
+    expect(historyParts('Description')).toEqual([
+      'Fictional user',
+      'changed',
+      'Description',
+      'from',
+      'Before',
+      'to',
+      'After',
+    ])
+    expect(container.textContent).not.toContain('PRIVATE-')
+  })
+
+  it('renders withheld and permitted changes together after expanding a real group', async () => {
+    const status = fieldChange('Status', '', '', { values_withheld: true })
+    status.other_versions = [fieldChange('Description', 'Before', 'After')]
+    h.activityRows = [status]
+    await mountActivities(false, false)
+    expect(container.textContent).not.toContain('Valores históricos ocultos')
+    container.querySelector('.activities button').click()
+    await nextTick()
+    expect(historyParts('Status')).toEqual([
+      'Status',
+      'changed',
+      '(Valores históricos ocultos)',
+    ])
+    expect(historyParts('Description')).toEqual([
+      'Description',
+      'changed',
+      'Before',
+      'to',
+      'After',
+    ])
+    expect(
+      container.textContent.match(/Valores históricos ocultos/g),
+    ).toHaveLength(1)
+  })
+})
+
+function historyParts(label) {
+  const field = [...container.querySelectorAll('span')].find(
+    (element) => element.textContent.trim() === label,
+  )
+  expect(field).toBeDefined()
+  return [...field.parentElement.children]
+    .map((element) => element.textContent.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+}

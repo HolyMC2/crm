@@ -116,7 +116,14 @@ def get_deal_activities(name: str):
 		if change := data.get("changed")[0]:
 			field = deal_fields.get(change[0], None)
 
-			if not field or change[0] in avoid_fields or (not change[1] and not change[2]):
+			if not field or change[0] in avoid_fields:
+				continue
+
+			# The native history projection retains readable Link change events
+			# but withholds legacy values whose target identity is not recorded.
+			# Preserve that event without trying to recover either old title.
+			values_withheld = not change[1] and not change[2]
+			if values_withheld and field.get("fieldtype") not in ("Link", "Dynamic Link"):
 				continue
 
 			field_label = field.get("label") or change[0]
@@ -129,6 +136,8 @@ def get_deal_activities(name: str):
 				"old_value": change[1],
 				"value": change[2],
 			}
+			if values_withheld:
+				data["values_withheld"] = True
 
 			if not change[1] and change[2]:
 				activity_type = "added"
@@ -261,7 +270,14 @@ def get_lead_activities(name: str):
 		if change := data.get("changed")[0]:
 			field = lead_fields.get(change[0], None)
 
-			if not field or change[0] in avoid_fields or (not change[1] and not change[2]):
+			if not field or change[0] in avoid_fields:
+				continue
+
+			# The native history projection retains readable Link change events
+			# but withholds legacy values whose target identity is not recorded.
+			# Preserve that event without trying to recover either old title.
+			values_withheld = not change[1] and not change[2]
+			if values_withheld and field.get("fieldtype") not in ("Link", "Dynamic Link"):
 				continue
 
 			field_label = field.get("label") or change[0]
@@ -274,6 +290,8 @@ def get_lead_activities(name: str):
 				"old_value": change[1],
 				"value": change[2],
 			}
+			if values_withheld:
+				data["values_withheld"] = True
 
 			if not change[1] and change[2]:
 				activity_type = "added"
@@ -380,7 +398,11 @@ def get_readable_fields(doctype: str):
 	masked = {field.fieldname for field in meta.get_masked_fields()}
 
 	return {
-		field.fieldname: {"label": field.label, "options": field.options}
+		field.fieldname: {
+			"label": field.label,
+			"options": field.options,
+			"fieldtype": field.fieldtype,
+		}
 		for field in meta.fields
 		if (field.permlevel == 0 or field.permlevel in allowed_permlevels)
 		and field.fieldname not in masked

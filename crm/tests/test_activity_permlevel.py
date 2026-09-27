@@ -104,6 +104,16 @@ class TestActivityPermlevel(IntegrationTestCase):
 		activities = self.activities_as("rep@permlevel.test", lead.name)
 		self.assertIn("status", changed_fields(activities))
 		self.assertNotIn(RESTRICTED_FIELD, changed_fields(activities))
+		status = next(
+			entry
+			for activity in activities
+			for entry in [activity, *(activity.get("other_versions") or [])]
+			if isinstance(entry.get("data"), dict) and entry["data"].get("field") == "status"
+		)
+		self.assertEqual(status["activity_type"], "changed")
+		self.assertEqual(status["data"]["old_value"], "")
+		self.assertEqual(status["data"]["value"], "")
+		self.assertTrue(status["data"]["values_withheld"])
 
 
 def changed_fields(activities):

@@ -446,7 +446,9 @@
                 </span>
                 <span v-if="activity.value">{{ __(activity.value) }}</span>
                 <span
-                  v-if="activity.data?.old_value"
+                  v-if="
+                    !activity.data?.values_withheld && activity.data?.old_value
+                  "
                   class="max-w-xs font-medium text-ink-gray-8"
                 >
                   <div
@@ -462,7 +464,7 @@
                 </span>
                 <span v-if="activity.to">{{ __('to') }}</span>
                 <span
-                  v-if="activity.data?.value"
+                  v-if="!activity.data?.values_withheld && activity.data?.value"
                   class="max-w-xs font-medium text-ink-gray-8"
                 >
                   <div
@@ -475,6 +477,9 @@
                   <div v-else class="truncate">
                     {{ activity.data.value }}
                   </div>
+                </span>
+                <span v-if="activity.data?.values_withheld" class="text-sm">
+                  ({{ __('Valores históricos ocultos') }})
                 </span>
               </div>
 
@@ -509,7 +514,7 @@
                     {{ startCase(__(a.type)) }}
                   </span>
                   <span
-                    v-if="a.data?.old_value"
+                    v-if="!a.data?.values_withheld && a.data?.old_value"
                     class="max-w-xs font-medium text-ink-gray-8"
                   >
                     <div
@@ -525,7 +530,7 @@
                   </span>
                   <span v-if="a.to">{{ __('to') }}</span>
                   <span
-                    v-if="a.data?.value"
+                    v-if="!a.data?.values_withheld && a.data?.value"
                     class="max-w-xs font-medium text-ink-gray-8"
                   >
                     <div
@@ -538,6 +543,9 @@
                     <div v-else class="truncate">
                       {{ a.data.value }}
                     </div>
+                  </span>
+                  <span v-if="a.data?.values_withheld" class="text-sm">
+                    ({{ __('Valores históricos ocultos') }})
                   </span>
                 </div>
 
@@ -1491,8 +1499,10 @@ function update_activities_details(activity) {
     activity.value = 'value'
   } else if (activity.activity_type == 'changed') {
     activity.type = 'changed'
-    activity.value = 'from'
-    activity.to = 'to'
+    if (!activity.data?.values_withheld) {
+      activity.value = 'from'
+      activity.to = 'to'
+    }
   }
 }
 
