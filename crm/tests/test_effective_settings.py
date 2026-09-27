@@ -100,7 +100,6 @@ class TestEffectiveSettings(IntegrationTestCase):
 		return frappe.get_doc(
 			{
 				"doctype": "Assignment Rule",
-				"assignment_rule_name": f"Effective {doctype} {self.key}",
 				"document_type": doctype,
 				"disabled": 1,
 				"rule": "Round Robin",
@@ -109,7 +108,7 @@ class TestEffectiveSettings(IntegrationTestCase):
 				"users": [{"user": self.admin}],
 				"assignment_days": [{"day": "Tuesday"}],
 			}
-		).insert()
+		).insert(set_name=f"Effective {doctype} {self.key}")
 
 	def test_sales_user_cannot_discover_manager_configuration(self):
 		frappe.set_user(self.seller)

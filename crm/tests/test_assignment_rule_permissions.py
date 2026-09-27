@@ -27,21 +27,24 @@ class TestAssignmentRulePermissions(IntegrationTestCase):
 		super().tearDown()
 
 	def user(self, label, role):
-		return frappe.get_doc(
-			{
-				"doctype": "User",
-				"email": f"assignment-{label}-{self.key}@example.invalid",
-				"first_name": label,
-				"send_welcome_email": 0,
-				"roles": [{"role": role}],
-			}
-		).insert().name
+		return (
+			frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": f"assignment-{label}-{self.key}@example.invalid",
+					"first_name": label,
+					"send_welcome_email": 0,
+					"roles": [{"role": role}],
+				}
+			)
+			.insert()
+			.name
+		)
 
 	def rule(self, doctype):
 		return frappe.get_doc(
 			{
 				"doctype": "Assignment Rule",
-				"assignment_rule_name": f"CRM settings {doctype} {self.key}",
 				"description": "Native permission test; disabled",
 				"document_type": doctype,
 				"disabled": 1,
@@ -51,7 +54,7 @@ class TestAssignmentRulePermissions(IntegrationTestCase):
 				"users": [{"user": self.manager}],
 				"assignment_days": [{"day": "Monday"}],
 			}
-		).insert()
+		).insert(set_name=f"CRM settings {doctype} {self.key}")
 
 	def test_seller_cannot_list_or_discover_configuration_capabilities(self):
 		frappe.set_user(self.seller)

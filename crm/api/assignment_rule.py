@@ -69,8 +69,7 @@ def duplicate_assignment_rule(docname: str, new_name: str):
 		frappe.throw(_("An assignment rule name is required."))
 	doc = frappe.copy_doc(source)
 	doc.name = None
-	doc.assignment_rule_name = new_name.strip()
 	# Copying a rule must not carry the previous routing cursor into its first run.
 	doc.last_user = None
-	doc.insert()
+	doc.insert(set_name=new_name.strip())
 	return doc
