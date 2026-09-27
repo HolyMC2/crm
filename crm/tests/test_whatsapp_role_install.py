@@ -127,7 +127,7 @@ class TestWhatsAppRoleInstall(IntegrationTestCase):
 				"select": 1,
 			}
 		).insert()
-		before = owner_rule.as_dict()
+		before = owner_rule.reload().as_dict()
 		add_roles()
 		after_app_install("frappe_whatsapp")
 		self.assertEqual(owner_rule.reload().as_dict(), before)
