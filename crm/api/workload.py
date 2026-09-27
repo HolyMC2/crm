@@ -10,6 +10,7 @@ from frappe.utils import CallbackManager, add_days, cint, get_datetime, get_time
 from crm.permissions.org_hierarchy import _in_hierarchy, _team_mem_query, hierarchy_enabled
 from crm.pipeline.constants import OPEN_TASK_STATUSES
 from crm.pipeline.services.configuration import can_access_pipeline, record_company_allowed
+from crm.utils.query import subquery_sql
 
 TYPES = {
 	"leads": ("CRM Lead", "lead_owner", "lead_name"),
@@ -60,9 +61,11 @@ def _allowed(kind, filters):
 		for key, field in (("pipeline", "pipeline"), ("company", "sales_company"))
 		if filters[key]
 	}
-	return frappe.qb.get_query(
-		doctype, fields=["name"], filters=conditions, ignore_permissions=False, order_by=None
-	).get_sql()
+	return subquery_sql(
+		frappe.qb.get_query(
+			doctype, fields=["name"], filters=conditions, ignore_permissions=False, order_by=None
+		)
+	)
 
 
 def _source(kind, filters, *, owner=None, overdue=False, as_of=None):
@@ -84,9 +87,9 @@ def _source(kind, filters, *, owner=None, overdue=False, as_of=None):
 				"reference_docname",
 			],
 		)
-		allowed = frappe.qb.get_query(
-			doctype, fields=["name"], ignore_permissions=False, order_by=None
-		).get_sql()
+		allowed = subquery_sql(
+			frappe.qb.get_query(doctype, fields=["name"], ignore_permissions=False, order_by=None)
+		)
 		leads, deals = _allowed("leads", filters), _allowed("deals", filters)
 		where = f"d.name IN ({allowed}) AND d.status IN %(task_open)s AND ((d.reference_doctype='CRM Lead' AND d.reference_docname IN ({leads})) OR (d.reference_doctype='CRM Deal' AND d.reference_docname IN ({deals})))"
 		join = ""
@@ -116,12 +119,13 @@ def _team_users():
 		and hierarchy_enabled()
 		and _in_hierarchy(actor)
 	):
-		condition = f" AND u.name IN ({_team_mem_query(actor).get_sql()})"
+		condition = f" AND u.name IN ({subquery_sql(_team_mem_query(actor))})"
 	rows = frappe.db.sql(
 		f"""SELECT u.name AS user,u.enabled,u.user_type
 		FROM `tabUser` u WHERE u.name NOT IN ('Guest','Administrator')
 		AND EXISTS (SELECT 1 FROM `tabHas Role` r WHERE r.parent=u.name AND r.parenttype='User' AND r.role IN ('Sales User','Sales Manager')) {condition}
 		ORDER BY u.name""",
+		{},
 		as_dict=True,
 	)
 
@@ -382,6 +386,7 @@ def get_workload(filters=None, offset=0):
 		companies.update(
 			frappe.db.sql(
 				f"SELECT DISTINCT sales_company FROM `tab{TYPES[kind][0]}` WHERE name IN ({allowed}) AND COALESCE(sales_company,'')<>''",
+				{},
 				pluck=True,
 			)
 		)

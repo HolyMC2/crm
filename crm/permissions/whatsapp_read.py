@@ -11,6 +11,8 @@ from frappe import _
 from frappe.model import get_permitted_fields
 from frappe.permissions import has_permission as has_document_permission
 
+from crm.utils.query import subquery_sql
+
 BATCH_SIZE = 200
 MESSAGE_FIELDS = [
 	"name",
@@ -303,7 +305,7 @@ def message_query(user=None):
 
 
 def message_query_conditions(user=None):
-	return "`tabWhatsApp Message`.`name` IN (" + message_query(user).get_sql() + ")"
+	return "`tabWhatsApp Message`.`name` IN (" + subquery_sql(message_query(user)) + ")"
 
 
 def message_permission(doc, ptype=None, user=None, permission_type=None):

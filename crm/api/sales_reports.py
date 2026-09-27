@@ -7,6 +7,7 @@ from frappe.utils import add_days, getdate, now_datetime, today
 
 from crm.pipeline.constants import OPEN_TASK_STATUSES
 from crm.pipeline.queries.stages import deal_metrics
+from crm.utils.query import subquery_sql
 
 KINDS = {"leads": "CRM Lead", "deals": "CRM Deal", "tasks": "CRM Task"}
 FILTERS = {"from_date", "to_date", "owner", "pipeline", "company"}
@@ -84,20 +85,22 @@ def _allowed(kind, filters, bucket=None):
 	_fields(
 		doctype, ["creation", "pipeline", "sales_company", "lead_owner" if kind == "leads" else "deal_owner"]
 	)
-	return frappe.qb.get_query(
-		doctype,
-		fields=["name"],
-		filters=_record_filters(kind, filters, bucket),
-		ignore_permissions=False,
-		order_by=None,
-	).get_sql()
+	return subquery_sql(
+		frappe.qb.get_query(
+			doctype,
+			fields=["name"],
+			filters=_record_filters(kind, filters, bucket),
+			ignore_permissions=False,
+			order_by=None,
+		)
+	)
 
 
 def _tasks(filters, bucket=None):
 	"""Task visibility AND parent visibility; date cohort belongs to the parent."""
-	allowed = frappe.qb.get_query(
-		"CRM Task", fields=["name"], ignore_permissions=False, order_by=None
-	).get_sql()
+	allowed = subquery_sql(
+		frappe.qb.get_query("CRM Task", fields=["name"], ignore_permissions=False, order_by=None)
+	)
 	leads, deals = _allowed("leads", filters), _allowed("deals", filters)
 	conditions = [
 		f"t.name IN ({allowed})",
@@ -121,7 +124,7 @@ def _tasks(filters, bucket=None):
 
 
 def _count(scope, table):
-	return int(frappe.db.sql(f"SELECT COUNT(*) FROM `{table}` WHERE name IN ({scope})")[0][0])
+	return int(frappe.db.sql(f"SELECT COUNT(*) FROM `{table}` WHERE name IN ({scope})", {})[0][0])
 
 
 @frappe.whitelist()
@@ -138,7 +141,7 @@ def get_report(filters=None):
 	tasks, params = _tasks(filters)
 	lead_count = _count(leads, "tabCRM Lead")
 	converted = int(
-		frappe.db.sql(f"SELECT COUNT(*) FROM `tabCRM Lead` WHERE converted=1 AND name IN ({leads})")[0][0]
+		frappe.db.sql(f"SELECT COUNT(*) FROM `tabCRM Lead` WHERE converted=1 AND name IN ({leads})", {})[0][0]
 	)
 	# One row per deal even when repaired history contains several open log rows.
 	stages = frappe.db.sql(
@@ -171,6 +174,7 @@ def get_report(filters=None):
 		join = "" if kind == "leads" else "LEFT JOIN `tabCRM Deal Status` s ON s.name=d.status"
 		rows = frappe.db.sql(
 			f"SELECT COALESCE(d.source,'') AS source,COUNT(*) AS count,{extra} AS outcome FROM `{table}` d {join} WHERE d.name IN ({scope}) GROUP BY d.source",
+			{},
 			as_dict=True,
 		)
 		for row in rows:
@@ -181,6 +185,7 @@ def get_report(filters=None):
 			item["converted_leads" if kind == "leads" else "won"] += int(row.outcome or 0)
 		rows = frappe.db.sql(
 			f"SELECT COALESCE({owner},'') AS owner,COUNT(*) AS count FROM `{table}` WHERE name IN ({scope}) GROUP BY {owner}",
+			{},
 			as_dict=True,
 		)
 		for row in rows:

@@ -62,11 +62,12 @@ def publish_notification(name):
 
 def get_permission_query_conditions(user=None):
 	from crm.permissions.whatsapp_read import notification_query
+	from crm.utils.query import subquery_sql
 
 	user = user or frappe.session.user
 	manager = user == "Administrator" or "System Manager" in frappe.get_roles(user)
 	base = "1=1" if manager else f"`tabCRM Notification`.`to_user` = {frappe.db.escape(user)}"
-	return f"({base}) AND `tabCRM Notification`.`name` IN ({notification_query(user).get_sql()})"
+	return f"({base}) AND `tabCRM Notification`.`name` IN ({subquery_sql(notification_query(user))})"
 
 
 def has_permission(doc, ptype, user):

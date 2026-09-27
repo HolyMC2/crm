@@ -20,5 +20,6 @@ def get_permission_query_conditions(user=None):
 	if user and user != frappe.session.user:
 		return "1=0"
 	from crm.pipeline.queries.stages import permitted_deals
+	from crm.utils.query import subquery_sql
 
-	return "`tabCRM Offer`.`deal` in (" + permitted_deals().get_sql() + ")"
+	return "`tabCRM Offer`.`deal` in (" + subquery_sql(permitted_deals()) + ")"
