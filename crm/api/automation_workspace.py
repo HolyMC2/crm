@@ -65,7 +65,11 @@ def get_context(
 	result = {"available": False, "reason": "not_installed", "return_to": return_to, "reference": reference}
 	if "doco" not in frappe.get_installed_apps():
 		return result
-	from doco.docoutils.assistant.automation import permissions, store
+	try:
+		from doco.docoutils.assistant.automation import permissions, store
+	except ImportError:
+		# A Doco revision without the automation workspace is the same as none.
+		return result
 
 	actor = permissions.current_user()
 	if not permissions.can_manage("sales", actor):
