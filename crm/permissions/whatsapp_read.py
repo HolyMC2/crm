@@ -46,8 +46,15 @@ def rows(doctype, filters, fields):
 	last = ""
 	while True:
 		page_filters = [*[list(pair) for pair in filters], ["name", ">", last]]
-		page = frappe.get_all(
-			doctype, filters=page_filters, fields=fields, order_by="name asc", limit_page_length=BATCH_SIZE
+		# Internal identity metadata must remain exact even when its display field
+		# is masked; callers authorize before fetching/projecting any content.
+		page = frappe.db.get_values(
+			doctype,
+			filters=page_filters,
+			fieldname=fields,
+			as_dict=True,
+			order_by="name asc",
+			limit=BATCH_SIZE,
 		)
 		if not page:
 			return
