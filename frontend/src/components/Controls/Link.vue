@@ -1,11 +1,22 @@
 <template>
   <div class="space-y-1.5 p-[2px] !-m-[2px]">
-    <label v-if="attrs.label" class="block" :class="labelClasses">
+    <label
+      v-if="attrs.label"
+      :id="labelId"
+      :for="controlId"
+      class="block"
+      :class="labelClasses"
+    >
       {{ __(attrs.label) }}
     </label>
     <Autocomplete
+      :id="controlId"
       ref="autocomplete"
       v-model="value"
+      :label-id="attrs.label ? labelId : undefined"
+      :search-label="
+        attrs.label ? `${__('Search')} ${__(attrs.label)}` : undefined
+      "
       :options="options.data"
       :size="attrs.size || 'sm'"
       :variant="attrs.variant"
@@ -14,8 +25,8 @@
       :placement="attrs.placement"
       :filterable="false"
     >
-      <template #target="{ open, togglePopover }">
-        <slot name="target" v-bind="{ open, togglePopover }" />
+      <template #target="{ open, togglePopover, targetAttrs }">
+        <slot name="target" v-bind="{ open, togglePopover, targetAttrs }" />
       </template>
 
       <template #prefix>
@@ -71,9 +82,10 @@ import Autocomplete from '@/components/frappe-ui/Autocomplete.vue'
 import { isTranslatable } from '@/utils'
 import { watchDebounced } from '@vueuse/core'
 import { createResource } from 'frappe-ui'
-import { useAttrs, computed, ref } from 'vue'
+import { useAttrs, useId, computed, ref } from 'vue'
 
 const props = defineProps({
+  id: { type: String, default: undefined },
   doctype: { type: String, required: true },
   filters: { type: [Array, Object, String], default: () => [] },
   modelValue: { type: String, default: '' },
@@ -83,6 +95,9 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'change'])
 
 const attrs = useAttrs()
+const generatedId = useId()
+const controlId = computed(() => props.id || `crm-link-${generatedId}`)
+const labelId = computed(() => `${controlId.value}-label`)
 
 const valuePropPassed = computed(() => 'value' in attrs)
 

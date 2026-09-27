@@ -1,5 +1,5 @@
 <template>
-  <Combobox v-model="selectedValue" nullable>
+  <Combobox v-model="selectedValue" :disabled="disabled" nullable>
     <Popover v-model:show="showOptions" class="w-full" :placement="placement">
       <template #target="{ open: openPopover, togglePopover }">
         <slot
@@ -10,10 +10,12 @@
             isOpen: showOptions,
             selectedValue,
             displayValue,
+            targetAttrs,
           }"
         >
           <div class="w-full">
             <button
+              v-bind="targetAttrs"
               class="relative flex h-7 w-full items-center justify-between gap-2 rounded px-2 py-1 transition-colors pr-7"
               :class="inputClasses"
               @click="() => !disabled && togglePopover()"
@@ -55,6 +57,7 @@
                 :value="query"
                 autocomplete="off"
                 :placeholder="__('Search')"
+                :aria-label="searchLabel || __('Search')"
                 @change="
                   (e) => {
                     query = e.target.value
@@ -62,6 +65,9 @@
                 "
               />
               <button
+                type="button"
+                :disabled="disabled"
+                :aria-label="__('Clear')"
                 class="absolute right-1.5 inline-flex h-7 w-7 items-center justify-center"
                 @click="selectedValue = null"
               >
@@ -146,6 +152,9 @@ import { Popover } from 'frappe-ui'
 import { ref, computed, useAttrs, useSlots, watch, nextTick } from 'vue'
 
 const props = defineProps({
+  id: { type: String, default: undefined },
+  labelId: { type: String, default: undefined },
+  searchLabel: { type: String, default: undefined },
   modelValue: {
     type: String,
     default: '',
@@ -188,6 +197,21 @@ const emit = defineEmits(['update:modelValue', 'update:query', 'change'])
 const query = ref('')
 const showOptions = ref(false)
 const search = ref(null)
+const targetAttrs = computed(() => ({
+  id: props.id,
+  type: 'button',
+  disabled: props.disabled,
+  'aria-labelledby': props.labelId,
+  'aria-haspopup': 'listbox',
+  'aria-expanded': showOptions.value,
+}))
+
+watch(
+  () => props.disabled,
+  (disabled) => {
+    if (disabled) showOptions.value = false
+  },
+)
 
 const attrs = useAttrs()
 const slots = useSlots()
