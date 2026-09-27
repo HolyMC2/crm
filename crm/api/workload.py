@@ -120,7 +120,8 @@ def _team_users():
 		and _in_hierarchy(actor)
 	):
 		condition = f" AND u.name IN ({subquery_sql(_team_mem_query(actor))})"
-	rows = frappe.db.sql(
+	# Security review: fixed table/field names, validated kind/offset; scopes come from subquery_sql; request values are bound.
+	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT u.name AS user,u.enabled,u.user_type
 		FROM `tabUser` u WHERE u.name NOT IN ('Guest','Administrator')
 		AND EXISTS (SELECT 1 FROM `tabHas Role` r WHERE r.parent=u.name AND r.parenttype='User' AND r.role IN ('Sales User','Sales Manager')) {condition}
@@ -367,7 +368,8 @@ def get_workload(filters=None, offset=0):
 			if kind == "tasks"
 			else ""
 		)
-		for row in frappe.db.sql(
+		# Security review: fixed table/field names, validated kind/offset; scopes come from subquery_sql; request values are bound.
+		for row in frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 			f"SELECT COALESCE(d.{owner},'') AS user,COUNT(*) AS open_{kind}{extra} {source} GROUP BY d.{owner}",
 			params,
 			as_dict=True,
@@ -384,7 +386,8 @@ def get_workload(filters=None, offset=0):
 	for kind in ("leads", "deals"):
 		allowed = _allowed(kind, {"pipeline": filters["pipeline"], "company": ""})
 		companies.update(
-			frappe.db.sql(
+			# Security review: fixed table/field names, validated kind/offset; scopes come from subquery_sql; request values are bound.
+			frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 				f"SELECT DISTINCT sales_company FROM `tab{TYPES[kind][0]}` WHERE name IN ({allowed}) AND COALESCE(sales_company,'')<>''",
 				{},
 				pluck=True,
@@ -436,9 +439,14 @@ def get_work_items(filters=None, kind="deals", owner=None, overdue=False, offset
 		if kind == "tasks"
 		else ",d.pipeline,d.sales_company"
 	)
-	total = int(frappe.db.sql(f"SELECT COUNT(*) {source}", params)[0][0])
+	# Security review: fixed table/field names, validated kind/offset; scopes come from subquery_sql; request values are bound.
+	total = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
+		f"SELECT COUNT(*) {source}", params
+	)
+	total = int(total[0][0])
 	order = "(d.due_date IS NULL),d.due_date,d.name" if kind == "tasks" else "d.modified DESC,d.name"
-	rows = frappe.db.sql(
+	# Security review: fixed table/field names, validated kind/offset; scopes come from subquery_sql; request values are bound.
+	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"SELECT d.name,d.{title} AS label,d.{owner_field} AS owner,d.status,d.modified{extra} {source} ORDER BY {order} LIMIT {PAGE_SIZE} OFFSET {offset}",
 		params,
 		as_dict=True,

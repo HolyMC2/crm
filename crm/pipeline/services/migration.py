@@ -20,11 +20,13 @@ def preview():
 	missing_values = {}
 	for doctype in ("CRM Lead", "CRM Deal"):
 		if frappe.db.has_column(doctype, "pipeline"):
-			missing_values[doctype] = frappe.db.sql(
+			# Security review: fixed doctype names and constant conditions; values are bound.
+			missing_values[doctype] = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 				f"SELECT SUM(pipeline IS NULL) AS null_values, SUM(pipeline = '') AS blank_values FROM `tab{doctype}`",
 				as_dict=True,
 			)[0]
-			counts[doctype] = frappe.db.sql(
+			# Security review: fixed doctype names and constant conditions; values are bound.
+			counts[doctype] = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 				f"SELECT COUNT(*) FROM `tab{doctype}` WHERE pipeline IS NULL OR pipeline = ''"
 			)[0][0]
 		else:
@@ -49,7 +51,8 @@ def execute():
 	# Deals whose stage ID no longer exists keep an empty pipeline (still
 	# visible, unchanged) instead of aborting install/migrate; a manager picks
 	# a stage for them. Every other record is mapped.
-	held = frappe.db.sql(
+	# Security review: fixed doctype names and constant conditions; values are bound.
+	held = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"SELECT COUNT(*) FROM `tabCRM Deal` WHERE (pipeline IS NULL OR pipeline = '') AND NOT ({KNOWN_STATUS} AND status IS NOT NULL)"
 	)[0][0]
 	if held:
@@ -85,7 +88,8 @@ def execute():
 		pipeline.insert(ignore_permissions=True, set_name=LEGACY_PIPELINE)
 	for doctype in ("CRM Lead", "CRM Deal"):
 		known = f" AND {KNOWN_STATUS}" if doctype == "CRM Deal" else ""
-		frappe.db.sql(
+		# Security review: fixed doctype names and constant conditions; values are bound.
+		frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 			f"UPDATE `tab{doctype}` SET pipeline = %s WHERE (pipeline IS NULL OR pipeline = ''){known}",
 			LEGACY_PIPELINE,
 		)

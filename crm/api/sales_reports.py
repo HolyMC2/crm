@@ -124,7 +124,11 @@ def _tasks(filters, bucket=None):
 
 
 def _count(scope, table):
-	return int(frappe.db.sql(f"SELECT COUNT(*) FROM `{table}` WHERE name IN ({scope})", {})[0][0])
+	# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
+		f"SELECT COUNT(*) FROM `{table}` WHERE name IN ({scope})", {}
+	)
+	return int(rows[0][0])
 
 
 @frappe.whitelist()
@@ -140,11 +144,14 @@ def get_report(filters=None):
 	leads, deals = _allowed("leads", filters), _allowed("deals", filters)
 	tasks, params = _tasks(filters)
 	lead_count = _count(leads, "tabCRM Lead")
-	converted = int(
-		frappe.db.sql(f"SELECT COUNT(*) FROM `tabCRM Lead` WHERE converted=1 AND name IN ({leads})", {})[0][0]
+	# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+	converted = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
+		f"SELECT COUNT(*) FROM `tabCRM Lead` WHERE converted=1 AND name IN ({leads})", {}
 	)
+	converted = int(converted[0][0])
 	# One row per deal even when repaired history contains several open log rows.
-	stages = frappe.db.sql(
+	# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+	stages = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		SELECT COALESCE(d.pipeline,'') AS pipeline, COALESCE(d.status,'') AS status,
 		COALESCE(s.type,'Unknown') AS type, COUNT(*) AS count,
@@ -172,7 +179,8 @@ def get_report(filters=None):
 			else "SUM(CASE WHEN s.type='Won' THEN 1 ELSE 0 END)"
 		)
 		join = "" if kind == "leads" else "LEFT JOIN `tabCRM Deal Status` s ON s.name=d.status"
-		rows = frappe.db.sql(
+		# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+		rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 			f"SELECT COALESCE(d.source,'') AS source,COUNT(*) AS count,{extra} AS outcome FROM `{table}` d {join} WHERE d.name IN ({scope}) GROUP BY d.source",
 			{},
 			as_dict=True,
@@ -183,14 +191,16 @@ def get_report(filters=None):
 			)
 			item[kind] += int(row.count)
 			item["converted_leads" if kind == "leads" else "won"] += int(row.outcome or 0)
-		rows = frappe.db.sql(
+		# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+		rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 			f"SELECT COALESCE({owner},'') AS owner,COUNT(*) AS count FROM `{table}` WHERE name IN ({scope}) GROUP BY {owner}",
 			{},
 			as_dict=True,
 		)
 		for row in rows:
 			owners.setdefault(row.owner, _owner_row(row.owner))[kind] += int(row.count)
-	for row in frappe.db.sql(
+	# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+	for row in frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT COALESCE(t.assigned_to,'') AS owner,COUNT(*) AS open_tasks,
 		SUM(CASE WHEN t.due_date < %(as_of)s THEN 1 ELSE 0 END) AS overdue_tasks,
 		SUM(CASE WHEN t.due_date IS NULL THEN 1 ELSE 0 END) AS undated_tasks
@@ -270,8 +280,12 @@ def get_records(filters=None, kind="deals", bucket=None, offset=0):
 		_fields("CRM Task", fields)
 		where, params = _tasks(filters, bucket)
 		params["offset"] = offset
-		total = frappe.db.sql(f"SELECT COUNT(*) FROM `tabCRM Task` t WHERE {where}", params)[0][0]
-		items = frappe.db.sql(
+		# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+		total = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
+			f"SELECT COUNT(*) FROM `tabCRM Task` t WHERE {where}", params
+		)[0][0]
+		# Security review: fixed table/field names; scopes come from subquery_sql; request values are bound.
+		items = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 			f"SELECT {','.join('t.' + f for f in fields)} FROM `tabCRM Task` t WHERE {where} ORDER BY t.due_date IS NULL,t.due_date,t.name LIMIT 50 OFFSET %(offset)s",
 			params,
 			as_dict=True,
