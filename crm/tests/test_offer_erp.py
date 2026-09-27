@@ -43,12 +43,20 @@ class TestOfferERP(OfferFixture, IntegrationTestCase):
 				"enabled": 1,
 			}
 		).insert()
+		self.customer_group = frappe.get_doc(
+			{
+				"doctype": "Customer Group",
+				"customer_group_name": "Offer customers " + self.key,
+				"parent_customer_group": "All Customer Groups",
+				"is_group": 0,
+			}
+		).insert()
 		self.customer = frappe.get_doc(
 			{
 				"doctype": "Customer",
 				"customer_name": "Offer customer " + self.key,
 				"customer_type": "Individual",
-				"customer_group": "All Customer Groups",
+				"customer_group": self.customer_group.name,
 				"territory": "All Territories",
 				"default_price_list": self.price_list.name,
 			}
@@ -160,7 +168,7 @@ class TestOfferERP(OfferFixture, IntegrationTestCase):
 				"doctype": "Customer",
 				"customer_name": "Different offer customer " + self.key,
 				"customer_type": "Individual",
-				"customer_group": "All Customer Groups",
+				"customer_group": self.customer_group.name,
 				"territory": "All Territories",
 				"default_price_list": self.price_list.name,
 			}
