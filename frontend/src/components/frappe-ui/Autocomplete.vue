@@ -16,6 +16,7 @@
           <div class="w-full">
             <button
               v-bind="targetAttrs"
+              :aria-describedby="selectedValue ? valueId : undefined"
               class="relative flex h-7 w-full items-center justify-between gap-2 rounded px-2 py-1 transition-colors pr-7"
               :class="inputClasses"
               @click="() => !disabled && togglePopover()"
@@ -25,7 +26,7 @@
                 class="flex text-base leading-5 items-center truncate"
               >
                 <slot name="prefix" />
-                <span class="truncate">
+                <span :id="valueId" class="truncate">
                   {{ displayValue(selectedValue) }}
                 </span>
               </div>
@@ -197,6 +198,7 @@ const emit = defineEmits(['update:modelValue', 'update:query', 'change'])
 const query = ref('')
 const showOptions = ref(false)
 const search = ref(null)
+const valueId = computed(() => (props.id ? `${props.id}-value` : undefined))
 const targetAttrs = computed(() => ({
   id: props.id,
   type: 'button',

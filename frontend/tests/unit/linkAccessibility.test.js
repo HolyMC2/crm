@@ -64,6 +64,19 @@ describe('record selector accessibility', () => {
     expect(label.control).toBe(button)
     expect(button.getAttribute('aria-labelledby')).toBe(label.id)
     expect(label.textContent.trim()).toBe('Cliente')
+    const valueId = button.getAttribute('aria-describedby')
+    expect(valueId).toBeTruthy()
+    expect(document.getElementById(valueId)?.textContent.trim()).toBe(
+      'Cliente A',
+    )
+    props.modelValue = 'Cliente B'
+    await nextTick()
+    expect(document.getElementById(valueId)?.textContent.trim()).toBe(
+      'Cliente B',
+    )
+    props.modelValue = ''
+    await nextTick()
+    expect(button.hasAttribute('aria-describedby')).toBe(false)
   })
 
   it('makes a disabled selector natively unfocusable and unable to open', async () => {
