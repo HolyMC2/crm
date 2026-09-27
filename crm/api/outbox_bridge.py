@@ -344,21 +344,16 @@ def requeue_transcript(row):
 
 
 def _publish(row):
-	# Activities subscribes to this record's permission-checked document room.
-	# Unlinked/native-only threads already have their conversation refresh path.
+	# Parent access alone does not grant every channel account on that record.
+	# Reload the persisted message and each recipient's scope after commit, just
+	# as the ordinary WhatsApp update hook does.
 	if not row or row.reference_doctype not in control.REFERENCES or not row.reference_name:
 		return
-	frappe.publish_realtime(
-		"whatsapp_message",
-		{
-			"reference_doctype": row.reference_doctype,
-			"reference_name": row.reference_name,
-			"phone": row.to,
-		},
-		doctype=row.reference_doctype,
-		docname=row.reference_name,
-		after_commit=True,
-	)
+	from functools import partial
+
+	from crm.permissions.whatsapp_read import publish_message
+
+	frappe.db.after_commit.add(partial(publish_message, row.name))
 
 
 def project_transcript(doc):
@@ -386,7 +381,7 @@ def project_transcript(doc):
 	else:
 		values["failure_reason"] = None
 	frappe.db.set_value(ROW, target, values)
-	_publish(frappe.db.get_value(ROW, target, ["reference_doctype", "reference_name", "to"], as_dict=True))
+	_publish(frappe.db.get_value(ROW, target, ["name", "reference_doctype", "reference_name"], as_dict=True))
 
 
 def _insert_projection(doc, name):

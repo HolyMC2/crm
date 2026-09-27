@@ -789,3 +789,84 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 
 	def test_higher_level_source_reference_edge_cannot_be_copied_into_label_or_notification(self):
 		self.check_hidden_reference_projection("permlevel", 1, "Int")
+
+	def register_transcript_projection(self):
+		from frappe.utils.password import set_encrypted_password
+
+		from crm.api.outbox_bridge import project_transcript
+
+		frappe.set_user("Administrator")
+		# A normal outgoing controller insert uses the account's native Demo
+		# transport; only its fictional credential is needed before that transport.
+		set_encrypted_password("WhatsApp Account", self.accounts["a"].name, "fictional-unused", "token")
+		row = frappe.get_doc(
+			{
+				"doctype": "WhatsApp Message",
+				"type": "Outgoing",
+				"to": self.peer,
+				"whatsapp_account": self.accounts["a"].name,
+				"message": "Fictional projected reply",
+				"content_type": "text",
+				"reference_doctype": "CRM Deal",
+				"reference_name": self.deal.name,
+			}
+		).insert()
+		self.assertTrue(row.is_demo)
+		frappe.db.after_commit = CallbackManager()
+		self.realtime.reset_mock()
+		# Exercise the production projection entry point. Outbox acceptance is
+		# covered in test_outbox_bridge; recipient authority stays fully native.
+		project_transcript(
+			frappe._dict(
+				name="fictional-projection-" + self.key,
+				transcript_message=row.name,
+				state="Accepted",
+				provider_message_id="wamid.projected." + self.key,
+			)
+		)
+		self.assertFalse(self.realtime.called)
+		row.reload()
+		self.assertEqual((row.status, row.message_id), ("Success", "wamid.projected." + self.key))
+		return row
+
+	def projected_recipients(self):
+		# Drain the registered callback without committing this test's fixture.
+		frappe.db.after_commit.run()
+		calls = [call for call in self.realtime.call_args_list if call.args[0] == "whatsapp_message"]
+		self.assertTrue(calls)
+		for call in calls:
+			self.assertEqual(call.kwargs["room"], "user:" + call.kwargs["user"])
+			self.assertNotIn("doctype", call.kwargs)
+			self.assertNotIn("docname", call.kwargs)
+			self.assertEqual(call.args[1]["phone"], self.peer)
+		return {call.kwargs["user"] for call in calls}
+
+	def test_transcript_projection_uses_current_account_recipients_after_commit(self):
+		self.register_transcript_projection()
+		users = self.projected_recipients()
+		self.assertIn(self.actor_a, users)
+		self.assertNotIn(self.actor_b, users)
+		self.assertNotIn(self.outsider, users)
+
+	def test_transcript_projection_rechecks_account_revocation_before_dispatch(self):
+		self.register_transcript_projection()
+		self.revoke_account()
+		users = self.projected_recipients()
+		self.assertNotIn(self.actor_a, users)
+		self.assertNotIn(self.actor_b, users)
+
+	def test_transcript_projection_rechecks_parent_revocation_before_dispatch(self):
+		self.register_transcript_projection()
+		self.restrict_pipeline()
+		users = self.projected_recipients()
+		self.assertNotIn(self.actor_a, users)
+		self.assertNotIn(self.actor_b, users)
+
+	def test_transcript_projection_reloads_message_binding_before_dispatch(self):
+		row = self.register_transcript_projection()
+		# A stored binding correction between registration and delivery must not
+		# retain the old account's recipients through captured presentation data.
+		row.db_set("whatsapp_account", self.accounts["b"].name, update_modified=False)
+		users = self.projected_recipients()
+		self.assertNotIn(self.actor_a, users)
+		self.assertIn(self.actor_b, users)
