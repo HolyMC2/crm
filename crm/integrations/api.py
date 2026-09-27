@@ -348,13 +348,13 @@ def _phone_fields(doctype, *, parenttype=None):
 	allowed = set(get_permitted_fields(doctype, parenttype=parenttype, permission_type="read"))
 	levels = set(meta.get_permlevel_access("read", parenttype=parenttype))
 	# Tables are absent from get_permitted_fields (they have no scalar SQL column).
-	# Level zero still requires a permitted parent row before any value can escape.
+	# Mirror native shared-record fallback; row permission remains required below.
+	if 0 not in levels and frappe.share.get_shared(parenttype or doctype, rights=["read"], limit=1):
+		levels.add(0)
 	for field in meta.fields:
-		if field.fieldtype in {"Table", "Table MultiSelect"} and (
-			not field.permlevel or field.permlevel in levels
-		):
+		if field.fieldtype in {"Table", "Table MultiSelect"} and (field.permlevel or 0) in levels:
 			allowed.add(field.fieldname)
-	return allowed - {field.fieldname for field in meta.get_masked_fields()}
+	return allowed - {field.fieldname for field in meta.get_masked_fields(parenttype=parenttype)}
 
 
 def _phone_rows(doctype, names, fields, *, trusted=False):

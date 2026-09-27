@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import frappe
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+from frappe.permissions import update_permission_property
 from frappe.tests import IntegrationTestCase
 
 from crm.api import whatsapp, whatsapp_routing
@@ -153,9 +154,22 @@ class TestPhoneLookupScope(IntegrationTestCase):
 		self.assertNotIn("name", self.lookup())
 
 	def test_masked_child_phone_blocks_contact_lookup(self):
-		self.contact()
+		contact = self.contact()
 		make_property_setter("Contact Phone", "phone", "mask", 1, "Check")
 		frappe.clear_cache(doctype="Contact Phone")
+		self.assertNotIn("name", self.lookup())
+		frappe.set_user("Administrator")
+		update_permission_property("Contact", "Sales User", 0, "mask", 1)
+		frappe.clear_cache(doctype="Contact")
+		frappe.clear_cache(doctype="Contact Phone")
+		self.assertEqual(self.lookup()["name"], contact.name)
+
+	def test_phone_table_requires_native_parent_read_level(self):
+		contact = self.contact()
+		self.assertEqual(self.lookup()["name"], contact.name)
+		frappe.set_user("Administrator")
+		make_property_setter("Contact", "phone_nos", "permlevel", 1, "Int")
+		frappe.clear_cache(doctype="Contact")
 		self.assertNotIn("name", self.lookup())
 
 	def test_masked_contact_display_values_are_not_returned(self):
