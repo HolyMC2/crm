@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from unittest.mock import patch
+
 import frappe
 from frappe.permissions import add_permission, update_permission_property
 from frappe.tests import IntegrationTestCase
@@ -69,7 +71,12 @@ class TestActivityPermlevel(IntegrationTestCase):
 	def activities_as(self, user, name):
 		frappe.set_user(user)
 		try:
-			activities, *_ = get_activities(name)
+			with patch.dict(frappe.response, {}, clear=True):
+				activities, *_ = get_activities(name)
+				# Frappe serializes extra response keys alongside the returned message.
+				self.assertNotIn("docinfo", frappe.response)
+				if user == "rep@permlevel.test":
+					self.assertNotIn(RESTRICTED_VALUE, frappe.as_json(frappe.response))
 		finally:
 			frappe.set_user("Administrator")
 		return activities

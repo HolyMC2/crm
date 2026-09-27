@@ -33,12 +33,24 @@ def get_activities(name: str):
 		frappe.throw(_("Document not found"), frappe.DoesNotExistError)
 
 
+def _get_activity_docinfo(doctype: str, name: str):
+	"""Use native history internally without adding raw Versions to the RPC response."""
+	missing = object()
+	previous = frappe.response.pop("docinfo", missing)
+	try:
+		get_docinfo("", doctype, name)
+		return frappe.response["docinfo"]
+	finally:
+		frappe.response.pop("docinfo", None)
+		if previous is not missing:
+			frappe.response["docinfo"] = previous
+
+
 def get_deal_activities(name: str):
 	if not frappe.has_permission("CRM Deal", "read", name):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-	get_docinfo("", "CRM Deal", name)
-	docinfo = frappe.response["docinfo"]
+	docinfo = _get_activity_docinfo("CRM Deal", name)
 	attachment_index = _activity_attachments(docinfo)
 	deal_fields = get_readable_fields("CRM Deal")
 	avoid_fields = [
@@ -193,8 +205,7 @@ def get_lead_activities(name: str):
 	if not frappe.has_permission("CRM Lead", "read", name):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-	get_docinfo("", "CRM Lead", name)
-	docinfo = frappe.response["docinfo"]
+	docinfo = _get_activity_docinfo("CRM Lead", name)
 	attachment_index = _activity_attachments(docinfo)
 	lead_fields = get_readable_fields("CRM Lead")
 	avoid_fields = [
@@ -332,15 +343,19 @@ def get_lead_activities(name: str):
 def get_readable_fields(doctype: str):
 	"""Map of fieldname to label & options, skipping fields the user cannot read.
 
-	Permlevel restrictions already hide these fields on the form layout, so the
-	activity timeline has to hide them too instead of leaking their values.
+	History must respect current field permissions and masking, including values
+	written before a field became masked. Password history is never displayed.
 	"""
 	allowed_permlevels = get_permlevel_access("read", doctype)
+	meta = frappe.get_meta(doctype)
+	masked = {field.fieldname for field in meta.get_masked_fields()}
 
 	return {
 		field.fieldname: {"label": field.label, "options": field.options}
-		for field in frappe.get_meta(doctype).fields
-		if field.permlevel == 0 or field.permlevel in allowed_permlevels
+		for field in meta.fields
+		if (field.permlevel == 0 or field.permlevel in allowed_permlevels)
+		and field.fieldname not in masked
+		and field.fieldtype != "Password"
 	}
 
 
