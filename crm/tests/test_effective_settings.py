@@ -121,6 +121,7 @@ class TestEffectiveSettings(IntegrationTestCase):
 			for doc in (self.pipeline, self.sla, self.holiday, self.assignment)
 		}
 		frappe.set_user(self.admin)
+		self.assertTrue(frappe.has_permission("CRM Pipeline", "read", doc=self.pipeline.name))
 		result = get_effective_settings(pipeline=self.pipeline.name)
 		sections = result["sections"]
 		self.assertEqual(sections["pipeline"]["state"], "configured")
@@ -238,7 +239,14 @@ class TestEffectiveSettings(IntegrationTestCase):
 		frappe.clear_cache(doctype="CRM Service Day")
 		frappe.set_user(self.manager)
 		section = get_effective_settings(pipeline=self.pipeline.name)["sections"]["slas"]
-		self.assertEqual(section, {"state": "denied"})
+		self.assertEqual(section["state"], "denied")
+		self.assertEqual(section["items"], [])
+		self.assertIn("denied", section["warnings"])
+		self.assertNotIn(self.sla.name, frappe.as_json(section))
+		self.assertNotIn('"hours":', frappe.as_json(section))
+		# List-level setup guidance is still readable; denied records and child
+		# values are absent without pretending the whole DocType is forbidden.
+		self.assertEqual(section["source"]["doctype"], "CRM Service Level Agreement")
 
 	def test_read_failure_is_unavailable_not_false_empty_configuration(self):
 		original = frappe.get_doc

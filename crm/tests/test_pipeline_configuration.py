@@ -175,6 +175,23 @@ class TestPipelineConfiguration(IntegrationTestCase):
 			deal.status = self.other
 			deal.save(ignore_permissions=True)
 
+	def test_native_pipeline_read_continues_to_role_and_record_permissions(self):
+		user = self.user()
+		frappe.set_user(user)
+		self.assertTrue(frappe.has_permission("CRM Pipeline", "read", doc=self.a.name))
+		self.assertFalse(frappe.has_permission("CRM Pipeline", "write", doc=self.a.name))
+		self.assertFalse(frappe.has_permission("CRM Pipeline", "create"))
+		self.assertIn(self.a.name, frappe.get_list("CRM Pipeline", pluck="name"))
+		frappe.get_doc("CRM Pipeline", self.a.name).check_permission("read")
+		frappe.set_user("Administrator")
+		self.a.append("roles", {"role": "System Manager"})
+		self.a.save()
+		frappe.set_user(user)
+		self.assertFalse(frappe.has_permission("CRM Pipeline", "read", doc=self.a.name))
+		self.assertNotIn(self.a.name, frappe.get_list("CRM Pipeline", pluck="name"))
+		with self.assertRaises(frappe.PermissionError):
+			frappe.get_doc("CRM Pipeline", self.a.name).check_permission("read")
+
 	def test_transition_role_is_server_enforced(self):
 		user = self.user()
 		self.a.stages[1].transition_roles = "Sales Manager"

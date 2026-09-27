@@ -93,10 +93,12 @@ def can_access_pipeline(name, user=None):
 
 def pipeline_permission(doc, ptype=None, user=None, **kwargs):
 	if ptype == "create" or doc.is_new():
-		return None
+		return True
 	if doc.name and not can_access_pipeline(doc.name, user):
 		return False
-	return None
+	# Native v16 treats any false-valued registered hook result as a denial.
+	# True permits the ordinary DocPerm/user/owner checks to continue.
+	return True
 
 
 def pipeline_query(user=None):
