@@ -7,8 +7,7 @@ from pathlib import Path
 
 import frappe
 from frappe.tests import IntegrationTestCase
-from frappe.tests.utils import make_test_records
-from frappe.utils import add_days, get_first_day, get_last_day, nowdate
+from frappe.utils import add_days, date_diff, get_datetime, nowdate
 
 from crm.api.dashboard import (
 	get_average_deal_value,
@@ -42,34 +41,133 @@ class TestDashboard(IntegrationTestCase):
 		"""Set up test records once for all tests"""
 		super().setUpClass()
 
-		# Mark timestamp before creating test data
-		cls.test_start_time = frappe.utils.now()
-
-		cls.from_date = get_first_day(nowdate())
-		cls.to_date = get_last_day(nowdate())
+		# An upgraded/full-suite site can already contain these fixture values.
+		# Own explicit new identities rather than depending on the native generator's
+		# shared journal, which is reset per CLI run but retained between classes.
+		cls.from_date = "1998-02-01"
+		cls.to_date = "1998-02-28"
+		cls._before = cls._snapshot_records()
+		cls._protected = cls._before
+		cls.addClassCleanup(cls._restore_fixture)
+		previous_start = add_days(cls.from_date, -date_diff(cls.to_date, cls.from_date) - 1)
+		for doctype, fields in cls._report_dates().items():
+			for field in fields:
+				if frappe.db.exists(
+					doctype, {field: ["between", [previous_start, add_days(cls.to_date, 1)]]}
+				):
+					raise AssertionError(f"Dashboard fixture period is not empty: {doctype}.{field}")
 		cls.user = "crm.manager@example.com"  # CRM manager from test_records.json
 		cls.user2_email = "crm.user1@example.com"  # Test user from test_records.json
 
-		# Load test records from test_records.json files in dependency order
-		make_test_records("CRM Lead Status")
-		make_test_records("CRM Deal Status")
-		make_test_records("CRM Lead Source")
-		make_test_records("CRM Lost Reason")
-		# The companion link graph can reach Deal while traversing Organization.
-		# Seed its independent roots first so Deal's organization links resolve.
-		path = Path(frappe.get_app_path("crm", "fcrm", "doctype", "crm_organization", "test_records.json"))
-		for record in json.loads(path.read_text()):
-			if not frappe.db.exists("CRM Organization", record["organization_name"]):
-				frappe.get_doc(record).insert(ignore_permissions=True)
-		make_test_records("CRM Organization")  # Load organizations before deals
-		make_test_records("CRM Lead")
-		make_test_records("CRM Deal")
+		# These roots have stable field-based names. Do not recursively generate the
+		# companion Link graph or update already existing roots to satisfy the test.
+		for doctype, identity in (
+			("CRM Lead Status", "lead_status"),
+			("CRM Deal Status", "deal_status"),
+			("CRM Lead Source", "source_name"),
+			("CRM Lost Reason", "lost_reason"),
+			("CRM Organization", "organization_name"),
+		):
+			for record in cls._fixture_records(doctype):
+				if not frappe.db.exists(doctype, record[identity]):
+					frappe.get_doc(record).insert()
+		prerequisites = cls._snapshot_records()
+		cls._assert_existing_unchanged(prerequisites)
+		cls._protected = prerequisites
+		cls._owned = {}
+		for doctype, count in (("CRM Lead", 35), ("CRM Deal", 32)):
+			records = cls._fixture_records(doctype)
+			if len(records) != count or any(record.get("name") for record in records):
+				raise AssertionError(f"Dashboard fixture identity/count contract changed: {doctype}")
+			cls._owned[doctype] = {frappe.get_doc(record).insert().name for record in records}
+			if len(cls._owned[doctype]) != count:
+				raise AssertionError(f"Dashboard fixture did not create distinct {doctype} identities")
+		cls._isolate_new_cohort()
 
 	@classmethod
-	def tearDownClass(cls):
-		"""Clean up test records after all tests"""
-		frappe.db.rollback()
-		super().tearDownClass()
+	def _fixture_records(cls, doctype):
+		path = Path(frappe.get_app_path("crm", "fcrm", "doctype", frappe.scrub(doctype), "test_records.json"))
+		records = json.loads(path.read_text())
+		if any(record.get("doctype") != doctype for record in records):
+			raise AssertionError(f"Unexpected DocType in Dashboard fixture: {doctype}")
+		return records
+
+	@classmethod
+	def _report_dates(cls):
+		return {
+			"CRM Lead": ("creation",),
+			"CRM Deal": ("creation", "closed_date", "expected_closure_date"),
+		}
+
+	@classmethod
+	def _snapshot_records(cls):
+		return {
+			doctype: {row.name: dict(row) for row in frappe.get_all(doctype, fields=["*"])}
+			for doctype in ("CRM Lead", "CRM Deal", "CRM Status Change Log")
+		}
+
+	@classmethod
+	def _assert_existing_unchanged(cls, current):
+		for doctype, rows in cls._protected.items():
+			if any(current[doctype].get(name) != row for name, row in rows.items()):
+				raise AssertionError(f"Dashboard fixture changed preexisting {doctype} records")
+
+	@classmethod
+	def _isolate_new_cohort(cls):
+		after = cls._snapshot_records()
+		cls._assert_existing_unchanged(after)
+		owned = cls._owned
+		for doctype, names in owned.items():
+			if set(after[doctype]) - set(cls._protected[doctype]) != names:
+				raise AssertionError(f"Dashboard generated unexpected {doctype} identities")
+		# One whole-day shift preserves lead/closure intervals and history duration.
+		first_creation = min(
+			get_datetime(after[doctype][name]["creation"])
+			for doctype, names in owned.items()
+			for name in names
+		)
+		days = date_diff("1998-02-15", first_creation)
+		for doctype, names in owned.items():
+			for name in names:
+				row = after[doctype][name]
+				values = {
+					field: add_days(row[field], days)
+					for field in cls._report_dates()[doctype]
+					if row.get(field)
+				}
+				if not cls.from_date <= str(values["creation"])[:10] <= cls.to_date:
+					raise AssertionError("Dashboard fixture creation spans beyond the reserved period")
+				frappe.db.set_value(doctype, name, values, update_modified=False)
+		for name, row in after["CRM Status Change Log"].items():
+			if name in cls._protected["CRM Status Change Log"]:
+				continue
+			if row["parenttype"] not in owned or row["parent"] not in owned[row["parenttype"]]:
+				raise AssertionError("Dashboard fixture generated history outside its owned cohort")
+			values = {
+				field: add_days(row[field], days)
+				for field in ("creation", "from_date", "to_date")
+				if row.get(field)
+			}
+			frappe.db.set_value("CRM Status Change Log", name, values, update_modified=False)
+		cls._assert_existing_unchanged(cls._snapshot_records())
+
+	@classmethod
+	def _restore_fixture(cls):
+		try:
+			cls._assert_existing_unchanged(cls._snapshot_records())
+		finally:
+			frappe.db.rollback()
+		if cls._snapshot_records() != cls._before:
+			raise AssertionError("Dashboard class rollback did not restore the original records/history")
+
+	def setUp(self):
+		super().setUp()
+		frappe.db.savepoint("dashboard_method")
+		self.addCleanup(self._restore_method)
+
+	def _restore_method(self):
+		frappe.db.rollback(save_point="dashboard_method")
+		frappe.clear_cache(doctype="FCRM Settings")
 
 	def test_get_total_leads(self):
 		"""Test get_total_leads returns correct lead count and delta calculation"""
