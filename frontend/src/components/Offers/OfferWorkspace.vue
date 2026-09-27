@@ -86,7 +86,9 @@
           "
           @click="select(offer)"
         >
-          <span class="block break-words">{{ offer.title || offer.name }}</span
+          <span class="block break-words">{{
+            offer.title?.trim() || offer.name
+          }}</span
           ><span class="block text-sm"
             >{{ __('Revision {0}', [offer.revision]) }} ·
             {{ __(offer.effective_status || offer.status) }}</span
@@ -108,10 +110,17 @@
       <div class="min-w-0 space-y-4">
         <template v-if="state.selected">
           <div class="flex flex-wrap gap-3 items-center">
-            <h3 class="font-semibold">
-              {{ state.selected.name }} ·
-              {{ __('Revision {0}', [state.selected.revision]) }}
-            </h3>
+            <div class="min-w-0 flex-1">
+              <h3 class="break-words text-xl font-semibold">
+                {{ state.selected.title?.trim() || __('Untitled offer') }}
+                <span class="block text-sm font-normal text-ink-gray-6">
+                  {{ __('Revision {0}', [state.selected.revision]) }}
+                </span>
+              </h3>
+              <p data-offer-id class="mt-1 break-all text-sm text-ink-gray-6">
+                {{ __('Offer ID: {0}', [state.selected.name]) }}
+              </p>
+            </div>
             <a
               class="offer-button"
               :href="deskUrl"
@@ -126,16 +135,37 @@
             {{ amount(state.selected.net_total, state.selected.currency) }}
           </p>
           <p
-            v-if="state.selected.decision_at"
+            v-if="
+              state.selected.decision_at ||
+              state.selected.decision_by ||
+              ['Accepted', 'Rejected'].includes(state.selected.status)
+            "
+            data-offer-decision
             class="break-words text-sm text-ink-gray-6"
+            :title="
+              __('Recorded actor: {0} · Recorded time: {1}', [
+                state.selected.decision_by || __('Not recorded'),
+                state.selected.decision_at || __('Not recorded'),
+              ])
+            "
           >
             {{
               __('Decision recorded by {0} on {1} via {2}', [
-                state.selected.decision_by,
-                state.selected.decision_at,
+                decisionActor,
+                decisionTime,
                 __(state.selected.decision_channel),
               ])
-            }}<br />{{ state.selected.decision_evidence }}
+            }}
+            <span
+              v-if="
+                state.selected.decision_by &&
+                decisionActor !== state.selected.decision_by
+              "
+              class="block"
+            >
+              {{ __('Recorded actor: {0}', [state.selected.decision_by]) }}
+            </span>
+            <span class="block">{{ state.selected.decision_evidence }}</span>
           </p>
           <p v-if="state.selected.is_current === false" class="text-sm">
             {{
@@ -416,11 +446,24 @@ import { computed, ref, useId, watch } from 'vue'
 import { call } from 'frappe-ui'
 import OfferDraft from './OfferDraft.vue'
 import { draftValues } from './offerState'
+import { offerDecisionTime } from './offerPresentation'
+import { usersStore } from '@/stores/users'
 const props = defineProps({
   deal: { type: Object, required: true },
   state: { type: Object, required: true },
 })
 const state = props.state
+const users = usersStore()
+const decisionActor = computed(() => {
+  const actor = state.selected?.decision_by
+  // Read the existing permissioned directory only. getUser() would resolve
+  // unknown identities over RPC and synthesize a name from an email address.
+  const known = users.allUsers?.find((user) => user.name === actor)
+  return known?.full_name?.trim() || actor || __('Unknown user')
+})
+const decisionTime = computed(() =>
+  offerDecisionTime(state.selected?.decision_at),
+)
 const decisionChannelId = useId()
 const previewFrame = ref(null)
 const channels = ['Email', 'Phone', 'WhatsApp', 'In Person', 'Other']

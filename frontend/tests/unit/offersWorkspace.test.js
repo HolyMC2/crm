@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, reactive, ref } from 'vue'
 const api = vi.hoisted(() => ({ call: vi.fn(), leave: null, update: null }))
-vi.mock('frappe-ui', () => ({ call: (...args) => api.call(...args) }))
+vi.mock('frappe-ui', async () => {
+  // Keep the real pinned timezone parser/config; only the RPC transport is stubbed.
+  const dates = await import('../../node_modules/frappe-ui/src/utils/dayjs.ts')
+  const config =
+    await import('../../node_modules/frappe-ui/src/utils/config.ts')
+  return { ...dates, ...config, call: (...args) => api.call(...args) }
+})
+vi.mock('@/stores/users', () => ({ usersStore: () => knownUsers }))
 vi.mock('vue-router', () => ({
   onBeforeRouteLeave: (fn) => {
     api.leave = fn
@@ -15,6 +22,8 @@ vi.mock('@/components/Controls/Link.vue', () => ({
 }))
 import Workspace from '@/components/Offers/OfferWorkspace.vue'
 import { useOfferState } from '@/components/Offers/offerState'
+import { setConfig } from '../../node_modules/frappe-ui/src/utils/config.ts'
+const knownUsers = reactive({ allUsers: [] })
 const draftOffer = (extra = {}) => ({
   name: 'OFFER-1',
   deal: 'DEAL-1',
@@ -55,6 +64,9 @@ const cleanups = []
 const originalConfirm = Object.getOwnPropertyDescriptor(window, 'confirm')
 beforeEach(() => {
   api.call.mockReset()
+  knownUsers.allUsers = []
+  setConfig('systemTimezone', 'America/Mazatlan')
+  setConfig('localTimezone', 'America/Mazatlan')
   // happy-dom omits browser dialogs; supply only this explicit interaction seam.
   Object.defineProperty(window, 'confirm', {
     configurable: true,
@@ -66,6 +78,8 @@ afterEach(() => {
   cleanups.splice(0).forEach((fn) => fn())
   if (originalConfirm) Object.defineProperty(window, 'confirm', originalConfirm)
   else delete window.confirm
+  setConfig('systemTimezone', null)
+  setConfig('localTimezone', null)
   vi.restoreAllMocks()
 })
 async function flush() {
@@ -487,4 +501,176 @@ describe('native offer lifecycle', () => {
     resolve(draftOffer())
     await flush()
   })
+})
+
+describe('offer presentation and decision provenance', () => {
+  const acceptedOffer = (extra = {}) =>
+    draftOffer({
+      status: 'Accepted',
+      effective_status: 'Accepted',
+      decision_by: 'seller@example.test',
+      decision_at: '2026-09-27 18:04:05.123456',
+      decision_channel: 'Other',
+      decision_evidence: 'Customer approved these terms.',
+      capabilities: { can_export: true },
+      ...extra,
+    })
+  it('leads with the human title and revision while retaining the stable ID and Desk link', async () => {
+    const { el } = await mount(acceptedOffer({ revision: 3 }))
+    await click(el, 'Proposal A')
+    const heading = el.querySelector('h3')
+    expect(heading.textContent).toContain('Proposal A')
+    expect(heading.textContent).toContain('Revision 3')
+    expect(heading.textContent).not.toContain('OFFER-1')
+    expect(el.querySelector('[data-offer-id]').textContent).toContain('OFFER-1')
+    expect(el.querySelector('a[href="/app/crm-offer/OFFER-1"]')).toBeTruthy()
+  })
+  it('retains a long human title as literal wrapping text without replacing or interpreting it', async () => {
+    const title = (
+      '<b>Annual service proposal</b> ' + 'with support '.repeat(8)
+    ).trim()
+    const { el } = await mount(acceptedOffer({ title }))
+    await click(el, title)
+    const heading = el.querySelector('h3')
+    expect(heading.textContent).toContain(title)
+    expect(heading.classList.contains('break-words')).toBe(true)
+    expect(heading.querySelector('b')).toBeNull()
+    expect(heading.textContent).not.toContain('OFFER-1')
+  })
+  it('uses a translated honest title fallback instead of promoting the random ID', async () => {
+    const translate = (text, args) =>
+      globalThis.__(
+        text === 'Untitled offer' ? 'Oferta sin título' : text,
+        args,
+      )
+    const { el } = await mount(acceptedOffer({ title: '  ' }), undefined, {
+      translate,
+    })
+    await click(el, 'OFFER-1')
+    expect(el.querySelector('h3').textContent).toContain('Oferta sin título')
+    expect(el.querySelector('h3').textContent).not.toContain('OFFER-1')
+    expect(el.querySelector('[data-offer-id]').textContent).toContain('OFFER-1')
+  })
+  it.each([
+    [
+      'America/Mazatlan',
+      'Asia/Tokyo',
+      '2026-09-27 18:04:05.123456',
+      '28 Sep 2026, 10:04 am · Asia/Tokyo',
+    ],
+    [
+      'UTC',
+      'America/Los_Angeles',
+      '2026-01-15 01:30:00.000001',
+      '14 Jan 2026, 5:30 pm · America/Los_Angeles',
+    ],
+    [
+      'UTC',
+      'America/Los_Angeles',
+      '2026-07-15 01:30:00',
+      '14 Jul 2026, 6:30 pm · America/Los_Angeles',
+    ],
+  ])(
+    'converts native %s time to configured %s with date/DST boundaries',
+    async (site, user, raw, label) => {
+      setConfig('systemTimezone', site)
+      setConfig('localTimezone', user)
+      const { el } = await mount(acceptedOffer({ decision_at: raw }))
+      await click(el, 'Proposal A')
+      const decision = el.querySelector('[data-offer-decision]')
+      expect(decision.textContent).toContain(label)
+      expect(decision.textContent).not.toContain(raw)
+      expect(decision.title).toContain(raw)
+      expect(decision.textContent).toContain('via Other')
+      expect(decision.textContent).toContain('Customer approved these terms.')
+    },
+  )
+  it('uses only already-known human actor names and retains the exact identity without another lookup', async () => {
+    knownUsers.allUsers = [
+      { name: 'seller@example.test', full_name: 'Ana García' },
+    ]
+    const { el } = await mount(acceptedOffer())
+    await click(el, 'Proposal A')
+    const decision = el.querySelector('[data-offer-decision]')
+    expect(decision.textContent).toContain('Decision recorded by Ana García')
+    expect(decision.title).toContain('seller@example.test')
+    expect(api.call.mock.calls.map(([name]) => name)).toEqual([
+      'crm.api.offers.get_offers',
+      'crm.api.offers.get_offer',
+    ])
+    knownUsers.allUsers = []
+    await nextTick()
+    expect(decision.textContent).toContain(
+      'Decision recorded by seller@example.test',
+    )
+    knownUsers.allUsers = [
+      { name: 'other@example.test', full_name: 'Unrelated actor' },
+    ]
+    await nextTick()
+    expect(decision.textContent).not.toContain('Unrelated actor')
+    expect(api.call).toHaveBeenCalledTimes(2)
+  })
+  it.each([null, 'not/a-site-zone'])(
+    'labels unverified site timezone %s without assuming browser time',
+    async (site) => {
+      setConfig('systemTimezone', site)
+      setConfig('localTimezone', 'Asia/Tokyo')
+      const { el } = await mount(acceptedOffer())
+      await click(el, 'Proposal A')
+      const decision = el.querySelector('[data-offer-decision]')
+      expect(decision.textContent).toContain(
+        '27 Sep 2026, 6:04 pm · Timezone unavailable',
+      )
+      expect(decision.textContent).not.toContain('Asia/Tokyo')
+      expect(decision.title).toContain('2026-09-27 18:04:05.123456')
+    },
+  )
+  it('uses the existing browser timezone fallback when no personal zone is configured', async () => {
+    setConfig('localTimezone', null)
+    const options = new Intl.DateTimeFormat().resolvedOptions()
+    vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+      ...options,
+      timeZone: 'Asia/Tokyo',
+    })
+    const { el } = await mount(acceptedOffer())
+    await click(el, 'Proposal A')
+    expect(el.querySelector('[data-offer-decision]').textContent).toContain(
+      '28 Sep 2026, 10:04 am · Asia/Tokyo',
+    )
+  })
+  it('shows incomplete accepted decision provenance honestly when the timestamp and actor are missing', async () => {
+    const { el } = await mount(
+      acceptedOffer({ decision_at: null, decision_by: null }),
+    )
+    await click(el, 'Proposal A')
+    const decision = el.querySelector('[data-offer-decision]')
+    expect(decision.textContent).toContain('Unknown user')
+    expect(decision.textContent).toContain('Recorded time unavailable')
+    expect(decision.title).toContain('Recorded time: Not recorded')
+    expect(decision.textContent).toContain('Customer approved these terms.')
+    expect(calls('record_decision')).toHaveLength(0)
+  })
+  it('falls back to the known site timezone when the personal timezone is invalid', async () => {
+    setConfig('localTimezone', 'not/a-timezone')
+    const { el } = await mount(acceptedOffer())
+    await click(el, 'Proposal A')
+    expect(el.querySelector('[data-offer-decision]').textContent).toContain(
+      '27 Sep 2026, 6:04 pm · America/Mazatlan',
+    )
+  })
+  it.each(['2026-02-30 18:04:05', 'not a date'])(
+    'preserves malformed recorded time %s as provenance without inventing a date',
+    async (raw) => {
+      const { el } = await mount(
+        acceptedOffer({ decision_at: raw, decision_by: null }),
+      )
+      await click(el, 'Proposal A')
+      const decision = el.querySelector('[data-offer-decision]')
+      expect(decision.textContent).toContain('Recorded time unavailable')
+      expect(decision.textContent).toContain('Unknown user')
+      expect(decision.textContent).not.toContain('Invalid Date')
+      expect(decision.title).toContain(raw)
+      expect(calls('record_decision')).toHaveLength(0)
+    },
+  )
 })
