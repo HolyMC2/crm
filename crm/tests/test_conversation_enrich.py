@@ -68,9 +68,9 @@ class StoredConversationFixture(WhatsAppReadFixture):
 
 
 def _open_status() -> str:
-	name = frappe.db.get_value("CRM Deal Status", {"type": "Open"}, "name") or frappe.db.get_value(
-		"CRM Deal Status", {"type": "Ongoing"}, "name"
-	)
+	name = frappe.db.get_value(
+		"CRM Deal Status", {"type": "Open", "hidden": 0}, "name"
+	) or frappe.db.get_value("CRM Deal Status", {"type": "Ongoing", "hidden": 0}, "name")
 	assert name, "site has no non-terminal CRM Deal Status"
 	return name
 
@@ -341,7 +341,7 @@ class TestSendPath(unittest.TestCase):
 
 
 class TestValidateResolverIntegration(unittest.TestCase):
-	"""Unverified inbound text cannot infer authority from a matching phone.
+	"""Unreferenced inbound text auto-attaches to the contact's open deal.
 	An explicitly authorized preset reference survives the normal insert.
 	Verified receipt attribution is covered in test_phone_lookup_receipts.
 	"""
@@ -388,11 +388,17 @@ class TestValidateResolverIntegration(unittest.TestCase):
 		doc.update(over)
 		return doc
 
-	def test_unverified_incoming_does_not_resolve_open_deal_on_real_insert(self):
+	def test_validate_resolves_open_deal_on_real_insert(self):
 		with patch(_MPR, return_value={"messages": [{"id": "wamid.mock"}]}):
 			doc = self._incoming()
 			doc.insert(ignore_permissions=True)
-		self.assertFalse(doc.reference_doctype)
+		self.assertEqual(doc.reference_doctype, "CRM Deal")
+		self.assertEqual(doc.reference_name, self.deal.name)
+
+	def test_incoming_catalog_order_is_not_attached_by_phone(self):
+		with patch(_MPR, return_value={"messages": [{"id": "wamid.mock"}]}):
+			doc = self._incoming(content_type="order")
+			doc.insert(ignore_permissions=True)
 		self.assertFalse(doc.reference_name)
 
 	def test_validate_respects_preset_reference(self):

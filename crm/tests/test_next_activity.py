@@ -14,9 +14,9 @@ VISIBLE_STAGE = "ZZ Test Visible Stage"
 
 
 def open_deal_status() -> str:
-	name = frappe.db.get_value("CRM Deal Status", {"type": "Open"}, "name") or frappe.db.get_value(
-		"CRM Deal Status", {"type": "Ongoing"}, "name"
-	)
+	name = frappe.db.get_value(
+		"CRM Deal Status", {"type": "Open", "hidden": 0}, "name"
+	) or frappe.db.get_value("CRM Deal Status", {"type": "Ongoing", "hidden": 0}, "name")
 	assert name, "site has no non-terminal CRM Deal Status"
 	return name
 

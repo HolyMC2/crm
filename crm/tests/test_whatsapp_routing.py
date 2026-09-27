@@ -20,7 +20,8 @@ _PHONE = "+5215559990042"
 
 
 def _status(status_type: str) -> str:
-	name = frappe.db.get_value("CRM Deal Status", {"type": status_type}, "name")
+	# Hidden stages refuse new entry; fixtures use a visible one.
+	name = frappe.db.get_value("CRM Deal Status", {"type": status_type, "hidden": 0}, "name")
 	assert name, f"site has no CRM Deal Status of type {status_type}"
 	return name
 
