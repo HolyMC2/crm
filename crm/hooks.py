@@ -97,7 +97,7 @@ setup_wizard_complete = "crm.demo.api.create_demo_data"
 # Installation
 # ------------
 
-before_install = "crm.install.before_install"
+before_install = ["crm.permissions.activity_history.require_framework", "crm.install.before_install"]
 after_install = "crm.install.after_install"
 
 # Uninstallation
@@ -311,16 +311,25 @@ ignore_links_on_delete = ["Failed Lead Sync Log"]
 # ----------------
 before_request = [
 	"crm.pipeline.services.configuration.check_request_compatibility",
+	"crm.permissions.activity_history.require_framework",
 	"crm.api.webchat.prepare_request",
 ]
 
-before_migrate = "crm.pipeline.services.configuration.require_shared_scope_support"
+before_migrate = [
+	"crm.pipeline.services.configuration.require_shared_scope_support",
+	"crm.permissions.activity_history.require_framework",
+]
 # after_request = ["crm.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["crm.utils.before_job"]
+before_job = ["crm.permissions.activity_history.require_framework"]
 # after_job = ["crm.utils.after_job"]
+
+filter_version_history = {
+	"CRM Lead": "crm.permissions.activity_history.project",
+	"CRM Deal": "crm.permissions.activity_history.project",
+}
 
 # User Data Protection
 # --------------------
