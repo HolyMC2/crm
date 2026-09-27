@@ -206,8 +206,16 @@ class TestEffectiveSettings(IntegrationTestCase):
 	def test_unconfigured_holidays_and_empty_weekdays_are_not_unified(self):
 		self.sla.holiday_list = None
 		self.sla.save()
-		self.assignment.assignment_days = []
-		self.assignment.save()
+		# Native v16 requires weekdays on save. Exercise a pre-existing incomplete
+		# rule without weakening that validation or inventing a valid save path.
+		frappe.db.delete(
+			self.assignment.meta.get_field("assignment_days").options,
+			{
+				"parent": self.assignment.name,
+				"parenttype": "Assignment Rule",
+				"parentfield": "assignment_days",
+			},
+		)
 		frappe.set_user(self.admin)
 		sections = get_effective_settings()["sections"]
 		rule = next(item for item in sections["slas"]["items"] if item["name"] == self.sla.name)
@@ -217,6 +225,20 @@ class TestEffectiveSettings(IntegrationTestCase):
 		self.assertEqual(rule["holiday"], {"state": "not_configured"})
 		self.assertEqual(assignment["weekdays"], [])
 		self.assertEqual(rule["hours"][0]["day"], "Monday")
+
+	def test_masked_parent_table_does_not_disclose_stage_contents(self):
+		make_property_setter("CRM Pipeline", "stages", "mask", 1, "Check")
+		frappe.clear_cache(doctype="CRM Pipeline")
+		frappe.set_user(self.manager)
+		section = get_effective_settings(pipeline=self.pipeline.name)["sections"]["pipeline"]
+		self.assertEqual(section, {"state": "denied"})
+
+	def test_masked_child_field_is_checked_with_parent_permissions(self):
+		make_property_setter("CRM Service Day", "start_time", "mask", 1, "Check")
+		frappe.clear_cache(doctype="CRM Service Day")
+		frappe.set_user(self.manager)
+		section = get_effective_settings(pipeline=self.pipeline.name)["sections"]["slas"]
+		self.assertEqual(section, {"state": "denied"})
 
 	def test_read_failure_is_unavailable_not_false_empty_configuration(self):
 		original = frappe.get_doc

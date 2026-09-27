@@ -94,7 +94,7 @@ class TestAssignmentRulePermissions(IntegrationTestCase):
 		self.assertTrue(get_assignment_rule_access()["can_create"])
 
 	def test_native_copy_preserves_source_and_creates_distinct_child_rows(self):
-		before = self.lead_rule.as_dict()
+		before = self.lead_rule.reload().as_dict()
 		frappe.set_user(self.manager)
 		result = duplicate_assignment_rule(self.lead_rule.name, f"Copied {self.key}")
 		self.assertNotEqual(result.name, self.lead_rule.name)

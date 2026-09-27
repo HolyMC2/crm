@@ -30,7 +30,20 @@ def _fields(doctype, fields, *, parenttype=None, permission_type="read"):
 	if any(not meta.has_field(field) for field in fields):
 		raise SourceState("unavailable")
 	permitted = set(get_permitted_fields(doctype, parenttype=parenttype, permission_type=permission_type))
-	masked = {field.fieldname for field in meta.get_masked_fields()}
+	# Native scalar field lists exclude child tables. Their fields still require
+	# parent permission levels, followed by the child's own field checks below.
+	levels = set(meta.get_permlevel_access(permission_type, parenttype=parenttype))
+	if not meta.get_permissions(parenttype=parenttype) or frappe.share.get_shared(
+		parenttype or doctype, frappe.session.user, rights=[permission_type], limit=1
+	):
+		levels.add(0)
+	permitted.update(
+		field.fieldname
+		for field in meta.fields
+		if field.fieldtype in {"Table", "Table MultiSelect"}
+		and (frappe.session.user == "Administrator" or (field.permlevel or 0) in levels)
+	)
+	masked = {field.fieldname for field in meta.get_masked_fields(parenttype=parenttype)}
 	if not set(fields).issubset(permitted) or set(fields) & masked:
 		raise SourceState("denied")
 
