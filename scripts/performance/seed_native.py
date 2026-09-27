@@ -774,6 +774,32 @@ class Seed:
 					doc.save()
 		self.checkpoint()
 
+	def _verify_activity_distribution(self, expected_activity):
+		"""Check exact per-parent counts through the native grouped query API."""
+		f = self.f
+		for kind, dt in (
+			("task", "CRM Task"),
+			("comment", "Comment"),
+			("note", "FCRM Note"),
+			("call", "CRM Call Log"),
+		):
+			field = "reference_name" if kind == "comment" else "reference_docname"
+			filters = {"reference_doctype": "CRM Deal"}
+			if kind == "comment":
+				filters["comment_type"] = "Comment"
+			rows = f.get_all(
+				dt,
+				fields=[field, {"COUNT": "name", "as": "row_count"}],
+				filters=filters,
+				group_by=field,
+				order_by=None,
+				limit_page_length=0,
+			)
+			require(
+				{row[field]: row.row_count for row in rows} == dict(expected_activity[kind]),
+				"seed_activity_distribution",
+			)
+
 	def verify(self):
 		from seed_plan import expected_visible
 
@@ -830,27 +856,7 @@ class Seed:
 		expected_activity = {kind: Counter() for kind in ("task", "comment", "note", "call")}
 		for kind, _, parent in activity_schedule(self.scale):
 			expected_activity[kind][self.name(f"deal:{parent}")] += 1
-		for kind, dt in (
-			("task", "CRM Task"),
-			("comment", "Comment"),
-			("note", "FCRM Note"),
-			("call", "CRM Call Log"),
-		):
-			field = "reference_name" if kind == "comment" else "reference_docname"
-			filters = {"reference_doctype": "CRM Deal"}
-			if kind == "comment":
-				filters["comment_type"] = "Comment"
-			rows = f.get_all(
-				dt,
-				fields=[field, "count(name) as row_count"],
-				filters=filters,
-				group_by=field,
-				limit_page_length=0,
-			)
-			require(
-				{row[field]: row.row_count for row in rows} == dict(expected_activity[kind]),
-				"seed_activity_distribution",
-			)
+		self._verify_activity_distribution(expected_activity)
 		for key in ("a", "b", "private"):
 			stages = f.get_doc("CRM Pipeline", self.name("pipeline_" + key)).stages
 			require(

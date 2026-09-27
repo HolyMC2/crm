@@ -293,5 +293,78 @@ class TestSeedIdentityLookup(unittest.TestCase):
 		self.assertEqual(seed.records, {})
 
 
+class TestSeedActivityDistribution(unittest.TestCase):
+	"""Pure native-query adapter/postcondition tests, not database execution."""
+
+	def seed(self, distributions=None, *, error=None):
+		self.expected = {
+			"task": {"parent-a": 2, "parent-b": 1},
+			"comment": {"parent-a": 3},
+			"note": {"parent-b": 1},
+			"call": {},
+		}
+		self.calls = []
+		counts = copy.deepcopy(self.expected if distributions is None else distributions)
+		kinds = {"CRM Task": "task", "Comment": "comment", "FCRM Note": "note", "CRM Call Log": "call"}
+
+		class Row(dict):
+			@property
+			def row_count(self):
+				return self["row_count"]
+
+		def get_all(doctype, *, fields, filters, group_by, limit_page_length, order_by=None):
+			# Pinned988 rejects SQL function strings. The adapter's supported
+			# grouped form must retain scope, grouping and every result row.
+			kind = kinds[doctype]
+			field = "reference_name" if kind == "comment" else "reference_docname"
+			self.assertEqual(fields, [field, {"COUNT": "name", "as": "row_count"}])
+			self.assertEqual(group_by, field)
+			self.assertIsNone(order_by)
+			self.assertEqual(limit_page_length, 0)
+			self.assertEqual(
+				filters,
+				{
+					"reference_doctype": "CRM Deal",
+					**({"comment_type": "Comment"} if kind == "comment" else {}),
+				},
+			)
+			self.calls.append(kind)
+			if error is not None:
+				raise error
+			return [Row({field: parent, "row_count": n}) for parent, n in counts[kind].items()]
+
+		seed = object.__new__(Seed)
+		seed.f = SimpleNamespace(get_all=get_all)
+		return seed
+
+	def test_exact_four_kind_distribution_including_empty_kind(self):
+		seed = self.seed()
+		seed._verify_activity_distribution(self.expected)
+		self.assertEqual(self.calls, ["task", "comment", "note", "call"])
+
+	def test_missing_extra_and_wrong_parent_counts_are_rejected(self):
+		for kind in ("task", "comment", "note", "call"):
+			self.seed()
+			original = copy.deepcopy(self.expected)
+			mutations = {"extra": {**original[kind], "foreign-parent": 1}}
+			if original[kind]:
+				parent = next(iter(original[kind]))
+				mutations["missing"] = {k: v for k, v in original[kind].items() if k != parent}
+				mutations["wrong_count"] = {**original[kind], parent: original[kind][parent] + 1}
+			for case, values in mutations.items():
+				with self.subTest(kind=kind, case=case):
+					seed = self.seed({**original, kind: values})
+					with self.assertRaisesRegex(ContractError, "seed_activity_distribution"):
+						seed._verify_activity_distribution(self.expected)
+
+	def test_query_failure_propagates_without_partial_acceptance_or_retry(self):
+		error = RuntimeError("fixture query failure")
+		seed = self.seed(error=error)
+		with self.assertRaises(RuntimeError) as raised:
+			seed._verify_activity_distribution(self.expected)
+		self.assertIs(raised.exception, error)
+		self.assertEqual(self.calls, ["task"])
+
+
 if __name__ == "__main__":
 	unittest.main()
