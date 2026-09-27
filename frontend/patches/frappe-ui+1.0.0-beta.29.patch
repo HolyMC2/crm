@@ -202,3 +202,201 @@ diff --git a/node_modules/frappe-ui/frappe/DataImport/types.ts b/node_modules/fr
    hasNextPage: () => boolean
    next: () => Promise<void>
  }
+diff --git a/node_modules/frappe-ui/frappe/Onboarding/onboarding.js b/node_modules/frappe-ui/frappe/Onboarding/onboarding.js
+--- a/node_modules/frappe-ui/frappe/Onboarding/onboarding.js
++++ b/node_modules/frappe-ui/frappe/Onboarding/onboarding.js
+@@ -13,6 +13,8 @@
+ 
+   if (!user || user === 'Guest') return
+ 
++  const registryKey = JSON.stringify([appName, user])
++
+   const isOnboardingStepsCompleted = useStorage(
+     'isOnboardingStepsCompleted' + appName + user,
+     false,
+@@ -26,7 +28,7 @@
+   if (!onboardingSteps.value.length && !isOnboardingStepsCompleted.value) {
+     createResource({
+       url: 'frappe.onboarding.get_onboarding_status',
+-      cache: 'onboarding_status',
++      cache: ['onboarding_status', user],
+       auto: true,
+       onSuccess: (data) => {
+         onboardingStatus.value[user] = data
+@@ -36,31 +38,31 @@
+   }
+ 
+   const stepsCompleted = computed(
+-    () => onboardings[appName]?.filter((step) => step.completed).length || 0,
++    () => onboardings[registryKey]?.filter((step) => step.completed).length || 0,
+   )
+-  const totalSteps = computed(() => onboardings[appName]?.length || 0)
++  const totalSteps = computed(() => onboardings[registryKey]?.length || 0)
+ 
+   const completedPercentage = computed(() =>
+     Math.floor((stepsCompleted.value / totalSteps.value) * 100),
+   )
+ 
+   function skip(step, callback = null) {
+-    updateOnboardingStep(step, true, true, callback)
++    return updateOnboardingStep(step, true, true, callback)
+   }
+ 
+   function skipAll(callback = null) {
+-    updateAll(true, callback)
++    return updateAll(true, callback)
+   }
+ 
+   function reset(step, callback = null) {
+-    updateOnboardingStep(step, false, false, callback)
++    return updateOnboardingStep(step, false, false, callback)
+   }
+ 
+   function resetAll(callback = null) {
+-    updateAll(false, callback)
++    return updateAll(false, callback)
+   }
+ 
+-  function updateOnboardingStep(
++  async function updateOnboardingStep(
+     step,
+     value = true,
+     skipped = false,
+@@ -68,92 +70,77 @@
+   ) {
+     if (isOnboardingStepsCompleted.value) return
+ 
+-    if (!onboardingSteps.value.length) {
+-      if (!onboardingStatus.value[user]) {
+-        onboardingStatus.value[user] = {}
+-      }
+-      onboardingStatus.value[user][appName + '_onboarding_status'] =
+-        onboardings[appName].map((s) => {
+-          return { name: s.name, completed: false }
+-        })
+-    }
++    const nextSteps = copySteps()
++    const index = nextSteps.findIndex((s) => s.name === step)
++    if (index !== -1) nextSteps[index].completed = value
+ 
+-    let index = onboardingSteps.value.findIndex((s) => s.name === step)
+-    if (index !== -1) {
+-      onboardingSteps.value[index].completed = value
+-      onboardings[appName][index].completed = value
+-    }
+-
+-    updateUserOnboardingStatus(onboardingSteps.value)
+-
++    // Publish local completion and callbacks only after native persistence.
++    // Return the rejection so the owning app can retain and retry this action.
++    await updateUserOnboardingStatus(nextSteps)
++    if (!onboardingStatus.value[user]) onboardingStatus.value[user] = {}
++    onboardingStatus.value[user][appName + '_onboarding_status'] = nextSteps
++    const currentStep = onboardings[registryKey].find((s) => s.name === step)
++    if (currentStep) currentStep.completed = value
+     callback?.(step, skipped)
+-
+     minimize.value = false
+   }
+ 
+-  function updateAll(value, callback = null) {
++  async function updateAll(value, callback = null) {
+     if (isOnboardingStepsCompleted.value && value) return
+ 
+-    if (!onboardingSteps.value.length) {
+-      if (!onboardingStatus.value[user]) {
+-        onboardingStatus.value[user] = {}
+-      }
+-
+-      onboardingStatus.value[user][appName + '_onboarding_status'] =
+-        onboardings[appName].map((s) => {
+-          return { name: s.name, completed: value }
+-        })
+-    } else {
+-      onboardingSteps.value.forEach((step) => {
+-        step.completed = value
+-      })
+-    }
+-
+-    onboardings[appName].forEach((step) => {
++    const currentNames = new Set(onboardings[registryKey].map((step) => step.name))
++    const nextSteps = copySteps().map((step) =>
++      currentNames.has(step.name) ? { ...step, completed: value } : step,
++    )
++    await updateUserOnboardingStatus(nextSteps)
++    if (!onboardingStatus.value[user]) onboardingStatus.value[user] = {}
++    onboardingStatus.value[user][appName + '_onboarding_status'] = nextSteps
++    onboardings[registryKey].forEach((step) => {
+       step.completed = value
+     })
+-
+-    updateUserOnboardingStatus(onboardingSteps.value)
+-
+     callback?.(value)
+   }
+ 
+   function updateUserOnboardingStatus(steps) {
+-    call('frappe.onboarding.update_user_onboarding_status', {
++    return call('frappe.onboarding.update_user_onboarding_status', {
+       steps: JSON.stringify(steps),
+       appName,
+     })
+   }
+ 
++  function copySteps() {
++    // Keep historical, currently hidden steps while adding newly eligible ones.
++    const steps = onboardingSteps.value.map((step) => ({ ...step }))
++    const names = new Set(steps.map((step) => step.name))
++    for (const step of onboardings[registryKey]) {
++      if (!names.has(step.name)) {
++        steps.push({ name: step.name, completed: false })
++        names.add(step.name)
++      }
++    }
++    return steps
++  }
++
+   function syncStatus() {
+-    if (isOnboardingStepsCompleted.value) return
+-
+-    if (onboardingSteps.value.length) {
+-      let _steps = onboardingSteps.value
+-      _steps.forEach((step, index) => {
+-        const onboardingExists =
+-          onboardings[appName] && onboardings[appName][index]
+-        if (onboardingExists) {
+-          onboardings[appName][index].completed = step.completed
+-        }
+-      })
+-      isOnboardingStepsCompleted.value = _steps.every((step) => step.completed)
+-    } else {
+-      isOnboardingStepsCompleted.value = false
+-    }
++    const current = onboardings[registryKey]
++    if (!current) return
++    const saved = new Map(onboardingSteps.value.map((step) => [step.name, step]))
++    current.forEach((step) => {
++      step.completed = Boolean(saved.get(step.name)?.completed)
++    })
++    // A new eligible step must reopen a previously completed onboarding.
++    isOnboardingStepsCompleted.value = current.length > 0 && current.every((step) => step.completed)
+   }
+ 
+   function setUp(steps) {
++    // Re-registration replaces callbacks owned by a previous app instance.
++    onboardings[registryKey] = steps
++    syncStatus()
+     showHelpModal.value = !isOnboardingStepsCompleted.value
+-
+-    if (onboardings[appName]) return
+-
+-    onboardings[appName] = steps
+-    syncStatus()
+   }
+ 
+   return {
+-    steps: onboardings[appName],
++    steps: onboardings[registryKey],
+     stepsCompleted,
+     totalSteps,
+     completedPercentage,

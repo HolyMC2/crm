@@ -7,6 +7,7 @@ const fixture = vi.hoisted(() => ({
   resources: null,
   config: null,
   help: null,
+  intermediate: null,
   session: null,
   users: null,
   document: null,
@@ -49,6 +50,9 @@ vi.mock('frappe-ui', async () => {
 })
 vi.mock('frappe-ui/frappe', () => ({
   useOnboarding: (...args) => fixture.native.useOnboarding(...args),
+  get IntermediateStepModal() {
+    return fixture.intermediate
+  },
   get minimize() {
     return fixture.help.minimize
   },
@@ -185,6 +189,9 @@ beforeEach(async () => {
     await import('../../node_modules/frappe-ui/frappe/Onboarding/onboarding.js')
   fixture.help =
     await import('../../node_modules/frappe-ui/frappe/Help/help.js')
+  fixture.intermediate = (
+    await import('../../node_modules/frappe-ui/frappe/Onboarding/IntermediateStepModal.vue')
+  ).default
   ui = await import('frappe-ui')
   ui.setConfig('resourceFetcher', fixture.request)
   fixture.request.mockImplementation(async (options) => {
@@ -391,6 +398,41 @@ describe('shared CRM native onboarding owner', () => {
       ),
     ).toHaveLength(0)
   })
+  it('keeps a failed native POST pending and retries only onboarding after successful Lead creation', async () => {
+    const owner = await mountShell()
+    await owner.retry()
+    fixture.fetch.mockRejectedValueOnce(
+      new Error('Native onboarding save unavailable'),
+    )
+    const create = [...root.querySelectorAll('button')].find(
+      (b) => b.textContent === 'Create',
+    )
+    create.click()
+    await vi.waitFor(() =>
+      expect(fixture.router.currentRoute.value.name).toBe('Lead'),
+    )
+    await settle()
+    expect(owner.error.value?.message).toBe(
+      'Native onboarding save unavailable',
+    )
+    expect(root.querySelector('[role="alert"]')).toBeTruthy()
+    expect(localStorage.getItem('firstLead' + user)).toBeNull()
+    expect(
+      owner.steps.value.find((s) => s.name === 'create_first_lead').completed,
+    ).toBe(false)
+    expect(writes()).toHaveLength(1)
+    expect(await owner.retry()).toBe(true)
+    await settle()
+    expect(writes()).toHaveLength(2)
+    expect(writes()[0]).toEqual(writes()[1])
+    expect(localStorage.getItem('firstLead' + user)).toBe('LEAD-NATIVE-1')
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+    expect(
+      fixture.request.mock.calls.filter(
+        ([o]) => o.url === 'frappe.client.insert',
+      ),
+    ).toHaveLength(1)
+  })
   it('shares initialization across callers/navigation and does not reset native completion', async () => {
     const a = api.useCrmOnboarding(),
       b = api.useCrmOnboarding()
@@ -418,12 +460,12 @@ describe('shared CRM native onboarding owner', () => {
   })
   it('reuses a prior native cache and prevents extra native auto reloads', async () => {
     fixture.native.useOnboarding('frappecrm')
-    const status = ui.getCachedResource('onboarding_status')
+    const status = ui.getCachedResource(['onboarding_status', user])
     await settle()
     expect(status.auto).toBe(true)
     const owner = api.useCrmOnboarding()
     await owner.retry()
-    expect(ui.getCachedResource('onboarding_status')).toBe(status)
+    expect(ui.getCachedResource(['onboarding_status', user])).toBe(status)
     expect(status.auto).toBe(false)
     fixture.native.useOnboarding('frappecrm')
     fixture.native.useOnboarding('frappecrm')
@@ -530,6 +572,348 @@ describe('shared CRM native onboarding owner', () => {
     expect(await owner.updateOnboardingStep('create_first_lead')).toBe(false)
     expect(owner.error.value.message).toContain('session changed')
     expect(writes()).toHaveLength(0)
+  })
+  it('serializes pending native persistence and coalesces concurrent retry calls', async () => {
+    const owner = api.useCrmOnboarding()
+    await owner.retry()
+    const persisted = deferred()
+    fixture.fetch.mockReturnValueOnce(persisted.promise)
+    const firstCallback = vi.fn(),
+      secondCallback = vi.fn()
+    const first = owner.updateOnboardingStep(
+      'create_first_lead',
+      true,
+      false,
+      firstCallback,
+    )
+    const second = owner.skip('create_first_task', secondCallback)
+    const retry = owner.retry()
+    await settle()
+    expect(writes()).toHaveLength(1)
+    expect(firstCallback).not.toHaveBeenCalled()
+    expect(secondCallback).not.toHaveBeenCalled()
+    persisted.resolve({
+      ok: true,
+      status: 200,
+      json: async () => ({ message: null }),
+    })
+    expect(await first).toBe(true)
+    expect(await second).toBe(true)
+    expect(await retry).toBe(true)
+    expect(writes()).toHaveLength(2)
+    expect(firstCallback).toHaveBeenCalledTimes(1)
+    expect(secondCallback).toHaveBeenCalledTimes(1)
+    const saved = JSON.parse(writes()[1].steps)
+    expect(saved.find((s) => s.name === 'create_first_lead').completed).toBe(
+      true,
+    )
+    expect(saved.find((s) => s.name === 'create_first_task').completed).toBe(
+      true,
+    )
+  })
+  it.each([false, true])(
+    'renders and continues the native guidance modal on the active shell (%s mobile)',
+    async (mobile) => {
+      const owner = await mountShell(mobile)
+      await owner.retry()
+      fixture.router.addRoute({
+        path: '/crm/deals/:dealId',
+        name: 'Deal',
+        component: { render: () => h('div', 'Native deal detail') },
+      })
+      localStorage.setItem('firstLead' + user, 'LEAD-NATIVE-1')
+      localStorage.setItem('firstDeal' + user, 'DEAL-NATIVE-1')
+      for (const [step, title, label, route, id] of [
+        [
+          'convert_lead_to_deal',
+          'Convert lead to deal',
+          'Convert',
+          'Lead',
+          'LEAD-NATIVE-1',
+        ],
+        [
+          'change_deal_status',
+          'Change deal status',
+          'Change',
+          'Deal',
+          'DEAL-NATIVE-1',
+        ],
+      ]) {
+        await owner.steps.value.find((s) => s.name === step).onClick()
+        await vi.waitFor(() =>
+          expect(
+            [...document.body.querySelectorAll('[role="dialog"]')].some((el) =>
+              el.textContent.includes(title),
+            ),
+          ).toBe(true),
+        )
+        const dialogs = [
+          ...document.body.querySelectorAll('[role="dialog"]'),
+        ].filter((el) => el.textContent.includes(title))
+        expect(dialogs).toHaveLength(1)
+        const buttons = [...dialogs[0].querySelectorAll('button')].filter(
+          (b) => b.textContent === label,
+        )
+        expect(buttons).toHaveLength(1)
+        buttons[0].click()
+        await vi.waitFor(() =>
+          expect(fixture.router.currentRoute.value.name).toBe(route),
+        )
+        expect(
+          Object.values(fixture.router.currentRoute.value.params),
+        ).toContain(id)
+        expect(owner.showIntermediateModal.value).toBe(false)
+        await settle()
+      }
+    },
+  )
+  it.each(['skip', 'skipAll', 'reset', 'resetAll'])(
+    'awaits native %s persistence and retains its failure for explicit retry',
+    async (method) => {
+      const owner = api.useCrmOnboarding()
+      await owner.retry()
+      await owner.updateOnboardingStep('create_first_lead')
+      fixture.fetch.mockClear()
+      const before = owner.steps.value.map(({ name, completed }) => ({
+        name,
+        completed,
+      }))
+      fixture.fetch.mockRejectedValueOnce(new Error('Native step save failed'))
+      const callback = vi.fn()
+      const args = method.endsWith('All')
+        ? [callback]
+        : [
+            method === 'reset' ? 'create_first_lead' : 'create_first_task',
+            callback,
+          ]
+      expect(await owner[method](...args)).toBe(false)
+      expect(callback).not.toHaveBeenCalled()
+      expect(
+        owner.steps.value.map(({ name, completed }) => ({ name, completed })),
+      ).toEqual(before)
+      expect(await owner.retry()).toBe(true)
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(writes()).toHaveLength(2)
+      expect(writes()[0]).toEqual(writes()[1])
+    },
+  )
+  it('does not strand an action arriving as an empty retry settles', async () => {
+    const owner = api.useCrmOnboarding()
+    await owner.retry()
+    const empty = owner.retry()
+    await Promise.resolve()
+    const callback = vi.fn()
+    expect(
+      await owner.updateOnboardingStep(
+        'create_first_lead',
+        true,
+        false,
+        callback,
+      ),
+    ).toBe(true)
+    expect(await empty).toBe(true)
+    expect(callback).toHaveBeenCalledTimes(1)
+    expect(writes()).toHaveLength(1)
+  })
+  it('rechecks actor identity between queued persistence requests', async () => {
+    const owner = api.useCrmOnboarding()
+    await owner.retry()
+    const first = deferred()
+    fixture.fetch.mockReturnValueOnce(first.promise)
+    const saved = vi.fn(),
+      withheld = vi.fn()
+    const a = owner.updateOnboardingStep(
+      'create_first_lead',
+      true,
+      false,
+      saved,
+    )
+    const b = owner.skip('create_first_task', withheld)
+    await settle()
+    expect(writes()).toHaveLength(1)
+    fixture.session.user = 'other@example.invalid'
+    first.resolve({
+      ok: true,
+      status: 200,
+      json: async () => ({ message: null }),
+    })
+    expect(await a).toBe(false)
+    expect(await b).toBe(false)
+    expect(saved).toHaveBeenCalledTimes(1)
+    expect(withheld).not.toHaveBeenCalled()
+    expect(writes()).toHaveLength(1)
+    expect(owner.error.value.message).toContain('session changed')
+  })
+  it('preserves hidden manager history and matches a current seller step by name after POST', async () => {
+    const names = [
+      'setup_your_password',
+      'create_first_lead',
+      'invite_your_team',
+      'convert_lead_to_deal',
+      'create_first_task',
+      'create_first_note',
+      'add_first_comment',
+      'send_first_email',
+      'change_deal_status',
+    ]
+    fixture.request.mockResolvedValue({
+      frappecrm_onboarding_status: names.map((name) => ({
+        name,
+        completed: name === 'invite_your_team',
+      })),
+    })
+    const owner = api.useCrmOnboarding()
+    await owner.retry()
+    const callback = vi.fn()
+    expect(
+      await owner.updateOnboardingStep(
+        'change_deal_status',
+        true,
+        false,
+        callback,
+      ),
+    ).toBe(true)
+    expect(owner.error.value).toBeNull()
+    expect(callback).toHaveBeenCalledTimes(1)
+    expect(
+      owner.steps.value.find((s) => s.name === 'convert_lead_to_deal')
+        .completed,
+    ).toBe(false)
+    expect(
+      owner.steps.value.find((s) => s.name === 'change_deal_status').completed,
+    ).toBe(true)
+    expect(owner.steps.value.some((s) => s.name === 'invite_your_team')).toBe(
+      false,
+    )
+    const saved = JSON.parse(writes()[0].steps)
+    expect(saved).toHaveLength(9)
+    expect(saved.find((s) => s.name === 'invite_your_team').completed).toBe(
+      true,
+    )
+    expect(await owner.resetAll()).toBe(true)
+    const reset = JSON.parse(writes()[1].steps)
+    expect(reset).toHaveLength(9)
+    expect(reset.find((s) => s.name === 'invite_your_team').completed).toBe(
+      true,
+    )
+    expect(
+      reset
+        .filter((s) => s.name !== 'invite_your_team')
+        .every((s) => !s.completed),
+    ).toBe(true)
+  })
+  it('reopens saved seller completion when the current manager newly receives Invite', async () => {
+    const names = [
+      'setup_your_password',
+      'create_first_lead',
+      'convert_lead_to_deal',
+      'create_first_task',
+      'create_first_note',
+      'add_first_comment',
+      'send_first_email',
+      'change_deal_status',
+    ]
+    await fixture.users.promise
+    await settle()
+    fixture.users.setData([
+      [{ name: user, role: 'Sales Manager' }],
+      [{ name: user, role: 'Sales Manager' }],
+    ])
+    localStorage.setItem('isOnboardingStepsCompletedfrappecrm' + user, 'true')
+    fixture.request.mockResolvedValue({
+      frappecrm_onboarding_status: names.map((name) => ({
+        name,
+        completed: true,
+      })),
+    })
+    const owner = api.useCrmOnboarding()
+    await owner.retry()
+    expect(owner.isOnboardingStepsCompleted.value).toBe(false)
+    expect(owner.steps.value.filter((s) => s.completed)).toHaveLength(8)
+    expect(
+      owner.steps.value.find((s) => s.name === 'invite_your_team').completed,
+    ).toBe(false)
+    expect(await owner.updateOnboardingStep('invite_your_team')).toBe(true)
+    const saved = JSON.parse(writes()[0].steps)
+    expect(saved).toHaveLength(9)
+    expect(saved.every((s) => s.completed)).toBe(true)
+    expect(new Set(saved.map((s) => s.name)).size).toBe(9)
+  })
+  it('isolates native registry callbacks and persisted progress for actor replacement and revisit', async () => {
+    const secondUser = 'second@example.invalid'
+    const saved = {}
+    fixture.request.mockImplementation(async (o) => {
+      if (o.url === 'crm.api.session.get_users')
+        return [
+          [{ name: fixture.session.user, role: 'Sales User' }],
+          [{ name: fixture.session.user, role: 'Sales User' }],
+        ]
+      if (o.url === 'frappe.onboarding.get_onboarding_status')
+        return saved[fixture.session.user] || {}
+      throw Error(o.url)
+    })
+    fixture.fetch.mockImplementation(async (_url, options) => {
+      saved[fixture.session.user] = {
+        frappecrm_onboarding_status: JSON.parse(JSON.parse(options.body).steps),
+      }
+      return { ok: true, status: 200, json: async () => ({ message: null }) }
+    })
+    fixture.router.addRoute({
+      path: '/crm/leads/:leadId',
+      name: 'Lead',
+      component: { render: () => null },
+    })
+    localStorage.setItem('firstLead' + user, 'LEAD-A')
+    localStorage.setItem('firstLead' + secondUser, 'LEAD-B')
+    const first = api.useCrmOnboarding()
+    await first.retry()
+    await first.updateOnboardingStep('create_first_lead')
+    fixture.session.user = secondUser
+    document.cookie = 'user_id=' + secondUser
+    const second = api.useCrmOnboarding()
+    expect(await second.retry()).toBe(true)
+    expect(
+      second.steps.value.find((s) => s.name === 'create_first_lead').completed,
+    ).toBe(false)
+    const secondNative = fixture.native.useOnboarding('frappecrm')
+    await secondNative.steps
+      .find((s) => s.name === 'convert_lead_to_deal')
+      .onClick()
+    expect(second.showIntermediateModal.value).toBe(true)
+    expect(first.showIntermediateModal.value).toBe(false)
+    await second.currentStep.value.onClick()
+    await vi.waitFor(() =>
+      expect(fixture.router.currentRoute.value.params.leadId).toBe('LEAD-B'),
+    )
+    await second.updateOnboardingStep('create_first_task')
+    fixture.session.user = user
+    document.cookie = 'user_id=' + user
+    const returned = api.useCrmOnboarding()
+    expect(await returned.retry()).toBe(true)
+    const returnedNative = fixture.native.useOnboarding('frappecrm')
+    expect(returnedNative.steps).not.toBe(secondNative.steps)
+    expect(
+      returned.steps.value.find((s) => s.name === 'create_first_lead')
+        .completed,
+    ).toBe(true)
+    expect(
+      returned.steps.value.find((s) => s.name === 'create_first_task')
+        .completed,
+    ).toBe(false)
+    await returnedNative.steps
+      .find((s) => s.name === 'convert_lead_to_deal')
+      .onClick()
+    expect(returned.showIntermediateModal.value).toBe(true)
+    expect(first.showIntermediateModal.value).toBe(false)
+    await returned.currentStep.value.onClick()
+    await vi.waitFor(() =>
+      expect(fixture.router.currentRoute.value.params.leadId).toBe('LEAD-A'),
+    )
+    expect(
+      saved[secondUser].frappecrm_onboarding_status.find(
+        (s) => s.name === 'create_first_task',
+      ).completed,
+    ).toBe(true)
   })
   it('guest initialization performs no onboarding read and never registers privileged role actions', () => {
     fixture.session.user = null

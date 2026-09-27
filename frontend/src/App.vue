@@ -24,6 +24,19 @@
       />
     </Layout>
     <Settings v-if="session.isLoggedIn && showSettings" />
+    <IntermediateStepModal
+      v-if="session.isLoggedIn && onboarding"
+      v-model="onboarding.showIntermediateModal.value"
+      :currentStep="onboarding.currentStep.value"
+    >
+      <template #actions>
+        <Button
+          variant="solid"
+          :label="onboarding.currentStep.value.buttonLabel"
+          @click="onboarding.currentStep.value.onClick?.()"
+        />
+      </template>
+    </IntermediateStepModal>
     <Dialogs />
     <DoctypeModals />
     <EventNotificationPopup />
@@ -38,6 +51,7 @@ import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
 import { useCrmOnboarding } from '@/composables/onboarding'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
+import { IntermediateStepModal } from 'frappe-ui/frappe'
 import {
   computed,
   defineAsyncComponent,

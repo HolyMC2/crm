@@ -163,10 +163,6 @@
       :afterResetAll="() => capture('onboarding_steps_reset')"
       docsLink="https://docs.frappe.io/crm"
     />
-    <IntermediateStepModal
-      v-model="showIntermediateModal"
-      :currentStep="currentStep"
-    />
   </template>
 </template>
 
@@ -205,7 +201,6 @@ import {
   GettingStartedBanner,
   showHelpModal,
   minimize,
-  IntermediateStepModal,
   useTelemetry,
 } from 'frappe-ui/frappe'
 import { useStorage } from '@vueuse/core'
@@ -408,8 +403,7 @@ function toggleHelpModal() {
 
 // The active shell and legacy sidebar share the same native onboarding owner.
 const { isManager } = usersStore()
-const { isOnboardingStepsCompleted, showIntermediateModal, currentStep } =
-  useCrmOnboarding()
+const { isOnboardingStepsCompleted } = useCrmOnboarding()
 
 // help center
 const articles = ref([

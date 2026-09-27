@@ -28,16 +28,17 @@ export function useCrmOnboarding() {
   if (!session.isLoggedIn || !user || user === 'Guest') return null
   if (owner?.user === user) return owner
 
+  const replacingUser = Boolean(owner && owner.user !== user)
   const { users, isManager } = usersStore()
   const { capture } = useTelemetry()
   const { send } = useBroadcast()
   // Claim the canonical cache before native useOnboarding can launch an
   // unawaited auto fetch. The active App initializes before child layouts.
   const status =
-    getCachedResource('onboarding_status') ||
+    getCachedResource(['onboarding_status', user]) ||
     createResource({
       url: 'frappe.onboarding.get_onboarding_status',
-      cache: 'onboarding_status',
+      cache: ['onboarding_status', user],
       auto: false,
     })
   status.update({ auto: false })
@@ -48,6 +49,7 @@ export function useCrmOnboarding() {
   const loading = ref(false)
   const pending = []
   let initializing = null
+  let draining = null
 
   async function getFirstLead() {
     let firstLead = localStorage.getItem('firstLead' + user)
@@ -266,6 +268,7 @@ export function useCrmOnboarding() {
       // Never register guessed roles or overwrite saved progress with an empty
       // result when the status endpoint is unavailable.
       if (
+        replacingUser ||
         users.error ||
         (error.value &&
           !users.data?.allUsers?.some((row) => row.name === user && row.role))
@@ -327,22 +330,33 @@ export function useCrmOnboarding() {
   }
 
   async function retry() {
-    try {
-      await initialize()
-      assertSession()
-      while (pending.length) {
-        const action = pending[0]
-        // Keep a failed native action visible/retryable; never repeat the CRM
-        // business action that already succeeded (Lead/Deal/Task creation).
-        native[action.method](...action.args)
-        pending.shift()
+    if (draining) return draining
+    draining = (async () => {
+      try {
+        await initialize()
+        assertSession()
+        loading.value = true
+        while (pending.length) {
+          assertSession()
+          const action = pending[0]
+          // The pinned native helper returns its persistence promise. Keep a
+          // failed action queued; never repeat the successful CRM mutation.
+          await native[action.method](...action.args)
+          pending.shift()
+        }
+        error.value = null
+        return true
+      } catch (failure) {
+        error.value = failure
+        return false
+      } finally {
+        // Clear ownership before the drain promise settles, so a new action
+        // cannot join an already finished empty drain and remain stranded.
+        draining = null
+        loading.value = false
       }
-      error.value = null
-      return true
-    } catch (failure) {
-      error.value = failure
-      return false
-    }
+    })()
+    return draining
   }
 
   const api = {

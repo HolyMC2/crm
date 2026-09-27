@@ -108,6 +108,8 @@ const button = (label) =>
   )
 const click = async (label) => {
   expect(button(label), label).toBeTruthy()
+  // Vue's capture guard rejects events stamped in the listener's attachment turn.
+  await new Promise((resolve) => setTimeout(resolve, 1))
   button(label).click()
   await settle()
 }
@@ -174,7 +176,13 @@ describe('CRM repair panel (real component, API and field-control doubles)', () 
     await mount()
     expect(root.textContent).toContain('No se pudieron cargar')
     expect(root.textContent).not.toContain('No repair orders linked')
+    const callsBeforeRetry = api.call.mock.calls.length
     await click('Reintentar consulta')
+    expect(api.call).toHaveBeenCalledTimes(callsBeforeRetry + 1)
+    expect(api.call).toHaveBeenLastCalledWith(
+      'taller.repair.repair_orders.get_deal_repair_context',
+      { deal_name: 'DEAL-1' },
+    )
     expect(root.textContent).toContain('No repair orders linked')
   })
   it('gates creation/printing and renders zero with permitted currency plus a same-window CRM return', async () => {
