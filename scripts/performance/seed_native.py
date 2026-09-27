@@ -262,12 +262,13 @@ def provision_guard(receipt, sites):
 
 @contextmanager
 def actor(frappe, user):
+	# Performance seeding on an isolated site acts as each seeded role on purpose.
 	previous = frappe.session.user
-	frappe.set_user(user)
+	frappe.set_user(user)  # nosemgrep: frappe-setuser
 	try:
 		yield
 	finally:
-		frappe.set_user(previous)
+		frappe.set_user(previous)  # nosemgrep: frappe-setuser
 
 
 def projection(doc, fields):
@@ -1356,7 +1357,7 @@ def run(receipt_path, sites, output, scale="preflight", preflight=None):
 	lock = "crm-performance-seed:" + namespace(receipt["site"])
 	acquired = False
 	try:
-		frappe.set_user("Administrator")
+		frappe.set_user("Administrator")  # nosemgrep: frappe-setuser
 		require(frappe.db.sql("SELECT GET_LOCK(%s, 0)", (lock,))[0][0] == 1, "seed_locked")
 		acquired = True
 		seed = Seed(frappe, receipt, output, scale)

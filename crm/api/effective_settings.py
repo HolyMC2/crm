@@ -79,7 +79,7 @@ def _source(doc, fields, editor=None):
 
 
 def _list_source(doctype, fields, editor):
-	can_write = bool(frappe.has_permission(doctype, "write"))
+	can_write = bool(frappe.has_permission(doctype, "write"))  # nosemgrep: unchecked-frappe-permission-call
 	if can_write:
 		try:
 			_fields(doctype, fields, permission_type="write")

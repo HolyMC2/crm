@@ -24,12 +24,14 @@ def _actor(user):
 	previous = frappe.session.user
 	session, form_dict = dict(frappe.session), frappe.local.form_dict
 	if user != previous:
-		frappe.set_user(user)
+		# Security review: the follow-up runs as the deal's own enabled owner and the
+		# previous session, form and user are restored in the finally block.
+		frappe.set_user(user)  # nosemgrep: frappe-setuser
 	try:
 		yield
 	finally:
 		if user != previous:
-			frappe.set_user(previous)
+			frappe.set_user(previous)  # nosemgrep: frappe-setuser
 			frappe.session.clear()
 			frappe.session.update(session)
 			frappe.local.form_dict = form_dict
@@ -132,7 +134,7 @@ def snapshot(offer, *, company=None, conversation=None, executor=None):
 
 
 def _owner(deal, doc, fallback):
-	for owner in dict.fromkeys(filter(None, (deal.deal_owner, fallback))):
+	for owner in dict.fromkeys(owner for owner in (deal.deal_owner, fallback) if owner):
 		user = frappe.db.get_value("User", owner, ["enabled", "user_type"], as_dict=True)
 		if (
 			user

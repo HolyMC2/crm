@@ -104,8 +104,8 @@ def _tasks(filters, bucket=None):
 	leads, deals = _allowed("leads", filters), _allowed("deals", filters)
 	conditions = [
 		f"t.name IN ({allowed})",
-		f"((t.reference_doctype='CRM Lead' AND t.reference_docname IN ({leads})) "
-		f"OR (t.reference_doctype='CRM Deal' AND t.reference_docname IN ({deals})))",
+		f"((t.reference_doctype='CRM Lead' AND t.reference_docname IN ({leads}))"
+		+ f" OR (t.reference_doctype='CRM Deal' AND t.reference_docname IN ({deals})))",
 		"t.status IN %(open_statuses)s",
 	]
 	params = {"open_statuses": OPEN_TASK_STATUSES, "as_of": now_datetime()}

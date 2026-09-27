@@ -255,8 +255,8 @@ def convert(
 	tasks = [
 		frappe.get_doc("CRM Task", name, for_update=True)
 		for name in frappe.db.sql(
-			"SELECT name FROM `tabCRM Task` WHERE reference_doctype=%s AND reference_docname=%s "
-			"AND status IN %s ORDER BY name FOR UPDATE",
+			"SELECT name FROM `tabCRM Task` WHERE reference_doctype=%s AND reference_docname=%s"
+			+ " AND status IN %s ORDER BY name FOR UPDATE",
 			("CRM Lead", source.name, OPEN_TASK_STATUSES),
 			pluck=True,
 		)

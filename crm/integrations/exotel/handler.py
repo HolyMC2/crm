@@ -16,7 +16,8 @@ from crm.integrations.api import _get_contact_for_verified_provider, get_contact
 
 
 # Incoming Call
-@frappe.whitelist(allow_guest=True)
+# Security review: provider webhook; validate_request requires the configured verify token.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: guest-whitelisted-method
 def handle_request(**kwargs):
 	validate_request()
 	if not is_integration_enabled():

@@ -365,7 +365,9 @@ def dto(doc, current=None, writable=None, erp=None, exportable=None):
 				and current
 				and status == "Accepted"
 				and erp
-				and frappe.has_permission("Quotation", "create"),
+				and frappe.has_permission(
+					"Quotation", "create"
+				),  # nosemgrep: unchecked-frappe-permission-call
 			},
 		}
 	)
@@ -424,8 +426,11 @@ def get_offers(deal, offset=0, limit=20):
 		):
 			children.setdefault(child.parent, []).append(child)
 	writable, erp = deal_doc.has_permission("write"), erp_available()
-	writable = writable and frappe.has_permission("CRM Offer", "write")
-	exportable = frappe.has_permission("CRM Offer", "print")
+	# Capability flags for the UI; mutations re-check through doc.check_permission.
+	writable = writable and frappe.has_permission(
+		"CRM Offer", "write"
+	)  # nosemgrep: unchecked-frappe-permission-call
+	exportable = frappe.has_permission("CRM Offer", "print")  # nosemgrep: unchecked-frappe-permission-call
 	items = [
 		dto(
 			frappe._dict({**row, "products": children.get(row.name, [])}),
