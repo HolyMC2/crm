@@ -57,10 +57,18 @@ class TestOfferConcurrency(TestCase):
 		frappe.db.commit()  # nosemgrep: remove only this test's committed fixture
 
 	def race(self, writer_action, reader_action):
+		"""Retain an aborted request, then model one explicit caller retry.
+
+		MariaDB snapshot isolation can refuse a current locking read with 1020;
+		Frappe exposes that as QueryDeadlockError. The HTTP boundary rolls back,
+		and Offers retains the exact command for the user's Retry action. This
+		does not install or imply an automatic retry in the API or a scheduler.
+		"""
 		site, sites_path = frappe.local.site, frappe.local.sites_path
 		locked, snapshot = Event(), Event()
+		snapshot_isolation = bool(frappe.db.sql("SELECT @@innodb_snapshot_isolation")[0][0])
 
-		def run(writer):
+		def run(writer, *, retry=False):
 			frappe.init(site=site, sites_path=sites_path)
 			frappe.connect()
 			try:
@@ -72,22 +80,57 @@ class TestOfferConcurrency(TestCase):
 					if not snapshot.wait(15):
 						raise AssertionError("Reader did not establish its old snapshot")
 					result = writer_action()
-				else:
+				elif not retry:
 					if not locked.wait(15):
 						raise AssertionError("Writer did not acquire the deal fence")
 					frappe.db.sql("SELECT COUNT(*) FROM `tabCRM Offer` WHERE deal=%s", self.deal.name)
 					snapshot.set()
 					result = reader_action()  # waits for writer, retaining the old RR view
+				else:
+					result = reader_action()  # a new request using the unchanged command
 				frappe.db.commit()  # nosemgrep: emulate each isolated request's commit
-				return result
+				return result, {"outcome": "committed"}
+			except frappe.QueryDeadlockError as error:
+				# Never continue inside the aborted transaction. A second failure or
+				# a writer deadlock is unexpected and remains a failing test.
+				frappe.db.rollback()
+				if writer or retry:
+					raise
+				native_args = getattr(error.args[0], "args", ()) if error.args else ()
+				return None, {
+					"outcome": "aborted",
+					"error": type(error).__name__,
+					"errno": native_args[0] if native_args else None,
+				}
+			except Exception:
+				frappe.db.rollback()
+				raise
 			finally:
 				frappe.destroy()
 
 		with ThreadPoolExecutor(max_workers=2) as pool:
 			writer, reader = pool.submit(run, True), pool.submit(run, False)
-			results = writer.result(timeout=45), reader.result(timeout=45)
+			first, writer_attempt = writer.result(timeout=45)
+			second, reader_attempt = reader.result(timeout=45)
+			attempts = [reader_attempt]
+			self.assertEqual(writer_attempt, {"outcome": "committed"})
+			self.assertEqual(
+				reader_attempt,
+				{"outcome": "aborted", "error": "QueryDeadlockError", "errno": 1020}
+				if snapshot_isolation
+				else {"outcome": "committed"},
+			)
+			if reader_attempt["outcome"] == "aborted":
+				# Both original connections are closed and the writer is committed
+				# before the caller issues a single fresh request.
+				second, retry_attempt = pool.submit(run, False, retry=True).result(timeout=45)
+				self.assertEqual(retry_attempt, {"outcome": "committed"})
+				attempts.append(retry_attempt)
 		frappe.db.rollback()
-		return results
+		# Keep the rejected attempt visible in native evidence; never print SQL,
+		# document identifiers, payloads or arbitrary exception messages.
+		print(f"Offer race reader request outcomes: {attempts}")
+		return first, second
 
 	def test_waiting_retry_sees_newly_committed_offer_instead_of_duplicate_insert(self):
 		request = uuid4().hex

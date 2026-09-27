@@ -12,7 +12,7 @@ from urllib.parse import quote
 
 import frappe
 from frappe.model import get_permitted_fields
-from frappe.utils import add_to_date, cstr, now_datetime
+from frappe.utils import add_to_date, cstr, now_datetime, sanitize_html
 
 from crm.offers import service
 from crm.pipeline.constants import OPEN_TASK_STATUSES
@@ -41,9 +41,9 @@ def _deny():
 
 def _fields(doctype, names, actors, permission_type="read"):
 	meta = frappe.get_meta(doctype)
-	masked = {field.fieldname for field in meta.get_masked_fields()}
 	for actor in actors:
 		with _actor(actor):
+			masked = {field.fieldname for field in meta.get_masked_fields()}
 			permitted = set(get_permitted_fields(doctype, permission_type=permission_type))
 			if not set(names).issubset(permitted) or set(names) & masked:
 				_deny()
@@ -266,14 +266,17 @@ def reconcile(
 
 
 def _description(offer):
-	return (
+	# CRM Task.description is a native Text Editor. Compare its persisted HTML,
+	# including the framework's safe-link normalization, not the raw template.
+	return sanitize_html(
 		'<p><a href="/app/crm-offer/'
 		+ quote(offer, safe="")
 		+ '">'
 		+ escape(frappe._("Review unanswered offer revision {0}").format(offer))
 		+ "</a>. "
 		+ escape(frappe._("Contact requires the normal reviewed customer outbox."))
-		+ "</p>"
+		+ "</p>",
+		linkify=True,
 	)
 
 

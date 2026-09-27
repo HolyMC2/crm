@@ -43,6 +43,9 @@ class TestOfferFollowUp(OfferFixture, IntegrationTestCase):
 
 	def test_retry_and_new_run_keep_one_task_date_owner_and_native_next_activity(self):
 		first, replay = self.run_followup(), self.run_followup()
+		self.assertEqual(first["reason"], "task_created")
+		self.assertEqual(replay["reason"], "task_open")
+		self.assertTrue(replay["active"])
 		self.assertEqual(first["task"], replay["task"])
 		self.assertEqual(first["due_date"], replay["due_date"])
 		self.assertEqual(first["owner"], self.user)
@@ -149,11 +152,16 @@ class TestOfferFollowUp(OfferFixture, IntegrationTestCase):
 				self.run_followup(**changes)
 
 	def test_masked_offer_scope_blocks_instead_of_reading_hidden_value(self):
+		# The caller is Administrator; the executor must independently be allowed
+		# to read every obligation field. Warm its unmasked metadata first.
+		self.assertTrue(follow_up.snapshot(self.issued["name"], executor=self.user)["active"])
 		setter = make_property_setter("CRM Offer", "terms_hash", "mask", 1, "Check")
 		try:
 			frappe.clear_cache(doctype="CRM Offer")
 			with self.assertRaises(frappe.PermissionError):
-				self.run_followup()
+				self.run_followup(executor=self.user)
+			self.assertEqual(frappe.session.user, "Administrator")
+			self.assertFalse(frappe.db.exists("CRM Task", {"reference_docname": self.deal.name}))
 		finally:
 			frappe.delete_doc("Property Setter", setter.name)
 			frappe.clear_cache(doctype="CRM Offer")
@@ -200,7 +208,11 @@ class TestOfferFollowUp(OfferFixture, IntegrationTestCase):
 			)
 		).insert(ignore_permissions=True, set_name=account)
 		thread = conversations.get_or_create(
-			"Webchat", channel.name, uuid4().hex, reference_doctype="CRM Deal", reference_name=self.deal.name
+			"Webchat",
+			channel.name,
+			secrets.token_hex(32),
+			reference_doctype="CRM Deal",
+			reference_name=self.deal.name,
 		)
 		self.pin = follow_up.snapshot(self.issued["name"], conversation=thread.name)
 		conversations.apply_control(thread.name, "take", thread.generation, uuid4().hex)
@@ -226,14 +238,23 @@ class TestOfferFollowUp(OfferFixture, IntegrationTestCase):
 			)
 		).insert(ignore_permissions=True, set_name=account)
 		thread = conversations.get_or_create(
-			"Webchat", account, uuid4().hex, reference_doctype="CRM Deal", reference_name=self.other.name
+			"Webchat",
+			account,
+			secrets.token_hex(32),
+			reference_doctype="CRM Deal",
+			reference_name=self.other.name,
 		)
 		with self.assertRaises(frappe.PermissionError):
 			follow_up.snapshot(self.issued["name"], conversation=thread.name)
 
 
 class TestOfferFollowUpConcurrency(TestCase):
-	"""Two connections with stale read views; synthetic committed fixtures only."""
+	"""Manual restart after a rejected worker attempt, not automatic scheduling.
+
+	The shared race helper fully aborts/closes a stale request before one fresh
+	caller invocation. These tests prove recovery of the same pinned obligation;
+	deployment of an owning runtime's retry policy remains outside this module.
+	"""
 
 	race = concurrency.TestOfferConcurrency.race
 
@@ -262,6 +283,9 @@ class TestOfferFollowUpConcurrency(TestCase):
 
 	def test_competing_runs_reuse_one_committed_canonical_task(self):
 		first, second = self.race(self.create, self.create)
+		self.assertEqual(first["reason"], "task_created")
+		self.assertEqual(second["reason"], "task_open")
+		self.assertTrue(second["active"])
 		self.assertEqual(first["task"], second["task"])
 		self.assertEqual(frappe.db.count("CRM Task", {"reference_docname": self.deal.name}), 1)
 
