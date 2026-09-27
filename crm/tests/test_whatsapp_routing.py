@@ -10,7 +10,11 @@ import unittest
 import frappe
 from frappe.utils import add_days, now_datetime
 
-from crm.api.whatsapp_routing import POST_SALE_GRACE_DAYS, resolve_reference_for_number
+from crm.api.whatsapp_routing import (
+	POST_SALE_GRACE_DAYS,
+	resolve_inbound_reference,
+	resolve_reference_for_number,
+)
 
 _PHONE = "+5215559990042"
 
@@ -144,3 +148,77 @@ class TestWhatsAppRouting(unittest.TestCase):
 		deal.flags.ignore_permissions = True
 		deal.insert()
 		self.assertEqual(resolve_reference_for_number("5215559990088"), (deal.name, "CRM Deal"))
+
+
+class TestInboundAttributionLadder(unittest.TestCase):
+	"""System ladder for unreferenced inbounds: newest open deal wins, then the
+	post-sale window, then the lead; long-closed deals are never resurrected."""
+
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.phone = "+5215559990043"
+		self.contact = frappe.get_doc(
+			{
+				"doctype": "Contact",
+				"first_name": "Inbound Ladder Test",
+				"phone_nos": [{"phone": self.phone, "is_primary_mobile_no": 1}],
+			}
+		)
+		self.contact.flags.ignore_permissions = True
+		self.contact.insert()
+
+	def tearDown(self):
+		frappe.db.rollback()
+
+	def _deal(self, status_type="Open", modified=None):
+		return TestWhatsAppRouting._deal(self, status_type, modified)
+
+	def test_newest_open_deal_wins(self):
+		self._deal("Open", modified=add_days(now_datetime(), -10))
+		newest = self._deal("Open")
+		self.assertEqual(resolve_inbound_reference(self.phone), (newest, "CRM Deal"))
+
+	def test_open_deal_wins_over_newer_terminal(self):
+		open_deal = self._deal("Open", modified=add_days(now_datetime(), -3))
+		self._deal("Won")
+		self.assertEqual(resolve_inbound_reference(self.phone), (open_deal, "CRM Deal"))
+
+	def test_recent_terminal_within_grace(self):
+		won = self._deal("Won", modified=add_days(now_datetime(), -(POST_SALE_GRACE_DAYS - 2)))
+		self.assertEqual(resolve_inbound_reference(self.phone), (won, "CRM Deal"))
+
+	def test_old_terminal_is_orphan(self):
+		self._deal("Won", modified=add_days(now_datetime(), -(POST_SALE_GRACE_DAYS + 30)))
+		self.assertEqual(resolve_inbound_reference(self.phone), (None, None))
+
+	def test_unconverted_lead_is_the_fallback(self):
+		lead = frappe.get_doc(
+			{"doctype": "CRM Lead", "first_name": "Inbound lead", "mobile_no": "+5215559990077"}
+		)
+		lead.flags.ignore_permissions = True
+		lead.insert()
+		self.assertEqual(resolve_inbound_reference("+5215559990077"), (lead.name, "CRM Lead"))
+
+	def test_mx_prefix_variant_resolves_by_trailing_digits(self):
+		contact = frappe.get_doc(
+			{
+				"doctype": "Contact",
+				"first_name": "Inbound MX Prefix Test",
+				"phone_nos": [{"phone": "+52 5559990089", "is_primary_mobile_no": 1}],
+			}
+		)
+		contact.flags.ignore_permissions = True
+		contact.insert()
+		deal = frappe.get_doc(
+			{
+				"doctype": "CRM Deal",
+				"status": _status("Open"),
+				"contacts": [{"contact": contact.name, "is_primary": 1}],
+			}
+		)
+		deal.flags.ignore_permissions = True
+		deal.insert()
+		self.assertEqual(resolve_inbound_reference("5215559990089"), (deal.name, "CRM Deal"))
+
+	def test_unknown_number_is_orphan(self):
+		self.assertEqual(resolve_inbound_reference("+5215550000001"), (None, None))

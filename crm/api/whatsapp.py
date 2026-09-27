@@ -39,7 +39,11 @@ def validate_access(reference_doctype=None, reference_name=None, permtype="read"
 
 
 def validate(doc, method):
-	from crm.api.whatsapp_routing import resolve_reference_for_number, verified_receipt_reference
+	from crm.api.whatsapp_routing import (
+		resolve_inbound_reference,
+		resolve_reference_for_number,
+		verified_receipt_reference,
+	)
 
 	ref_type, ref_name = doc.get("reference_doctype"), doc.get("reference_name")
 	verified_name, verified_type = verified_receipt_reference(doc)
@@ -49,11 +53,20 @@ def validate(doc, method):
 		if (ref_name, ref_type) != (verified_name, verified_type):
 			frappe.get_doc(ref_type, ref_name).check_permission("read")
 		return
-	# Received messages use only their authenticated receipt's existing conversation.
-	# A generic document insert must not infer authority from its Incoming field.
 	if doc.get("type") == "Incoming":
 		if verified_type and verified_name:
 			doc.reference_doctype, doc.reference_name = verified_type, verified_name
+			return
+		# Catalog carts/orders bind only to their authenticated receipt's conversation.
+		if doc.get("content_type") == "order" or not doc.get("from"):
+			return
+		# Everything else auto-attaches to the customer's current work (product decision).
+		try:
+			name, doctype = resolve_inbound_reference(doc.get("from"))
+			if doctype and name:
+				doc.reference_doctype, doc.reference_name = doctype, name
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "CRM WhatsApp: failed to resolve contact from number")
 		return
 	phone_number = doc.get("to")
 	if phone_number:

@@ -1,8 +1,14 @@
 # Copyright (c) 2026, Grupo Doco and contributors
 # For license information, please see license.txt
-"""Actor-scoped attribution; ambiguous identities/parents remain for human review."""
+"""WhatsApp attribution.
+
+resolve_inbound_reference is the system ladder that auto-attaches provider
+inbounds to the customer's current work. resolve_reference_for_number is the
+actor-scoped worker lookup; ambiguous identities/parents stay for human review.
+"""
 
 import json
+import re
 
 import frappe
 from frappe.utils import add_days, get_datetime, now_datetime
@@ -11,6 +17,7 @@ from crm.integrations.api import (
 	_PHONE_CANDIDATE_LIMIT as _LINK_LIMIT,
 )
 from crm.integrations.api import (
+	_get_contact_for_verified_provider,
 	_phone_deals,
 	_phone_fields,
 	_phone_rows,
@@ -19,6 +26,63 @@ from crm.integrations.api import (
 
 POST_SALE_GRACE_DAYS = 14
 _TERMINAL_STATUS_TYPES = {"Won", "Lost", "Junk"}
+
+
+def resolve_inbound_reference(number: str):
+	"""Attribution ladder for an unreferenced inbound message. (docname, doctype) or (None, None).
+
+	1. The contact's newest-modified open deal. A missing or unknown stage type
+	   counts as open, so a misconfigured stage never orphans a live job.
+	2. Otherwise the newest terminal deal still in its post-sale window: an
+	   active Repair Order warranty, or touched within POST_SALE_GRACE_DAYS.
+	3. Otherwise the contact's lead; else the message stays an orphan for a
+	   human to place, instead of resurrecting a long-closed deal.
+	"""
+	contact = _get_contact_for_verified_provider(number)
+	lead = contact.get("lead")
+	contact_name = None if lead else contact.get("name")
+	if not contact_name and not lead:
+		# WhatsApp sends MX numbers as 521XXXXXXXXXX while contacts often store
+		# +52 XX...; fall back to the prefix-agnostic trailing ten digits.
+		contact_name = _contact_by_trailing_digits(number)
+	deals = []
+	if contact_name:
+		deals = frappe.db.sql(
+			"""SELECT cd.name, cd.modified, st.type AS status_type
+			FROM `tabCRM Deal` cd
+			JOIN `tabCRM Contacts` cc ON cc.parent = cd.name AND cc.parenttype = 'CRM Deal'
+			LEFT JOIN `tabCRM Deal Status` st ON st.name = cd.status
+			WHERE cc.contact = %s AND cc.is_primary = 1
+			ORDER BY cd.modified DESC""",
+			(contact_name,),
+			as_dict=True,
+		)
+	for deal in deals:
+		if deal.status_type not in _TERMINAL_STATUS_TYPES:
+			return deal.name, "CRM Deal"
+	grace_floor = add_days(now_datetime(), -POST_SALE_GRACE_DAYS)
+	for deal in deals:
+		if get_datetime(deal.modified) >= grace_floor or _deal_has_active_warranty(deal.name, trusted=True):
+			return deal.name, "CRM Deal"
+	if lead:
+		return lead, "CRM Lead"
+	return None, None
+
+
+def _contact_by_trailing_digits(number):
+	"""Newest contact whose phone (any row) shares the trailing ten digits."""
+	digits = re.sub(r"\D", "", number or "")[-10:]
+	if len(digits) < 10:
+		return None
+	rows = frappe.db.sql(
+		"""SELECT cp.parent FROM `tabContact Phone` cp
+		JOIN `tabContact` c ON c.name = cp.parent
+		WHERE cp.parenttype = 'Contact'
+		AND RIGHT(REGEXP_REPLACE(cp.phone, '[^0-9]', ''), 10) = %s
+		ORDER BY c.modified DESC LIMIT 1""",
+		(digits,),
+	)
+	return rows[0][0] if rows else None
 
 
 def resolve_reference_for_number(number: str):
@@ -53,10 +117,13 @@ def resolve_reference_for_number(number: str):
 	return (eligible[0].name, "CRM Deal") if len(eligible) == 1 else (None, None)
 
 
-def _deal_has_active_warranty(deal_name):
+def _deal_has_active_warranty(deal_name, *, trusted=False):
 	if "taller" not in frappe.get_installed_apps() or not (
-		"repair_orders" in _phone_fields("CRM Deal")
-		and "repair_order" in _phone_fields("CRM Deal Repair Order", parenttype="CRM Deal")
+		trusted
+		or (
+			"repair_orders" in _phone_fields("CRM Deal")
+			and "repair_order" in _phone_fields("CRM Deal Repair Order", parenttype="CRM Deal")
+		)
 	):
 		return False
 	links = frappe.get_all(
@@ -67,7 +134,9 @@ def _deal_has_active_warranty(deal_name):
 	)
 	if len(links) > _LINK_LIMIT:
 		return False
-	rows = _phone_rows("Repair Order", {row.repair_order for row in links}, ["name", "warranty_expires_on"])
+	rows = _phone_rows(
+		"Repair Order", {row.repair_order for row in links}, ["name", "warranty_expires_on"], trusted=trusted
+	)
 	return any(
 		row.get("warranty_expires_on")
 		and get_datetime(row.warranty_expires_on).date() >= now_datetime().date()

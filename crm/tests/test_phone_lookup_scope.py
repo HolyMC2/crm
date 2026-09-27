@@ -230,12 +230,20 @@ class TestPhoneLookupScope(IntegrationTestCase):
 					endpoint()
 				lookup.assert_not_called()
 
-	def test_unverified_incoming_and_fake_document_flags_do_not_route(self):
-		self.lead()
+	def test_unverified_incoming_auto_attaches_through_system_ladder(self):
+		lead = self.lead()
 		doc = frappe._dict(type="Incoming", **{"from": self.number}, flags={"meta_webhook_receipt": "fake"})
-		with patch.object(whatsapp_routing, "resolve_reference_for_number") as lookup:
+		with patch.object(whatsapp_routing, "resolve_reference_for_number") as worker_lookup:
 			whatsapp.validate(doc, None)
-			lookup.assert_not_called()
+			worker_lookup.assert_not_called()
+		self.assertEqual((doc.reference_doctype, doc.reference_name), ("CRM Lead", lead.name))
+
+	def test_incoming_catalog_order_binds_only_through_verified_receipt(self):
+		self.lead()
+		doc = frappe._dict(type="Incoming", content_type="order", **{"from": self.number})
+		with patch.object(whatsapp_routing, "resolve_inbound_reference") as ladder:
+			whatsapp.validate(doc, None)
+			ladder.assert_not_called()
 		self.assertFalse(doc.get("reference_name"))
 
 	def test_preset_reference_requires_actor_scope(self):

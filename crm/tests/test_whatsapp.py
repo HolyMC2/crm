@@ -47,12 +47,41 @@ class TestWhatsAppHooks(unittest.TestCase):
 		self.assertEqual(doc.reference_doctype, "CRM Lead")
 		self.assertEqual(doc.reference_name, "LEAD-0001")
 
+	def test_validate_attaches_unverified_inbound_through_ladder(self):
+		"""Without a verified receipt, an inbound still auto-attaches via the ladder."""
+		doc = self._doc()
+		with (
+			patch("crm.api.whatsapp_routing.verified_receipt_reference", return_value=(None, None)),
+			patch(
+				"crm.api.whatsapp_routing.resolve_inbound_reference",
+				return_value=("CRM-DEAL-OPEN", "CRM Deal"),
+			) as ladder,
+		):
+			validate(doc, None)
+
+		ladder.assert_called_once_with("+15551234567")
+		self.assertEqual((doc.reference_doctype, doc.reference_name), ("CRM Deal", "CRM-DEAL-OPEN"))
+
+	def test_validate_prefers_verified_receipt_over_ladder(self):
+		doc = self._doc()
+		with (
+			patch(
+				"crm.api.whatsapp_routing.verified_receipt_reference",
+				return_value=("LEAD-0001", "CRM Lead"),
+			),
+			patch("crm.api.whatsapp_routing.resolve_inbound_reference") as ladder,
+		):
+			validate(doc, None)
+
+		ladder.assert_not_called()
+		self.assertEqual(doc.reference_name, "LEAD-0001")
+
 	def test_validate_skips_reference_when_no_contact_found(self):
 		"""validate() leaves reference fields untouched when number is unknown"""
 		doc = self._doc(phone="+15559999999")
-		with patch(
-			"crm.api.whatsapp_routing.resolve_reference_for_number",
-			return_value=(None, None),
+		with (
+			patch("crm.api.whatsapp_routing.verified_receipt_reference", return_value=(None, None)),
+			patch("crm.api.whatsapp_routing.resolve_inbound_reference", return_value=(None, None)),
 		):
 			validate(doc, None)
 
