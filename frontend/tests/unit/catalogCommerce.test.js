@@ -91,12 +91,12 @@ async function flush() {
     await nextTick()
   }
 }
-async function mount(component, values) {
+async function mount(component, values, translate = globalThis.__) {
   const props = reactive(values),
     el = document.createElement('div')
   document.body.append(el)
   const app = createApp({ render: () => h(component, props) })
-  app.config.globalProperties.__ = globalThis.__
+  app.config.globalProperties.__ = translate
   app.mount(el)
   cleanups.push(() => {
     app.unmount()
@@ -211,6 +211,56 @@ describe('catalog context and conversation authority', () => {
 })
 
 describe('catalog native send', () => {
+  it('associates each translated format label with its own selector and preserves the chosen message payload', async () => {
+    api.call.mockImplementation(async (method) =>
+      method.endsWith('get_products')
+        ? {
+            items: [{ item_code: 'ITEM-A', item_name: 'Cable' }],
+            has_more: false,
+          }
+        : { name: 'intent-1', state: 'Queued' },
+    )
+    const pickerProps = {
+      conversation: conversation(),
+      context: context(),
+      eligible: true,
+    }
+    const Pair = {
+      render: () => h('div', [h(Picker, pickerProps), h(Picker, pickerProps)]),
+    }
+    const { el } = await mount(Pair, {}, (text) =>
+      text === 'Formato del mensaje' ? 'Message format' : globalThis.__(text),
+    )
+    const selects = [...el.querySelectorAll('select')]
+    expect(selects).toHaveLength(2)
+    for (const select of selects) {
+      expect(select.labels).toHaveLength(1)
+      expect(select.labels[0].textContent.trim()).toBe('Message format')
+      expect(select.id).toBeTruthy()
+      expect(select.labels[0].htmlFor).toBe(select.id)
+      expect(select.labels[0].control).toBe(select)
+    }
+    expect(new Set(selects.map((select) => select.id)).size).toBe(2)
+    selects[0].value = 'product'
+    selects[0].dispatchEvent(new Event('change', { bubbles: true }))
+    await flush()
+    const first = el.querySelector('form')
+    first.querySelector('input[type="checkbox"]').click()
+    await input(first.querySelector('textarea'), 'Producto solicitado')
+    first.dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    )
+    await flush()
+    expect(calls('queue_catalog')).toHaveLength(1)
+    expect(calls('queue_catalog')[0][1]).toMatchObject({
+      conversation: 'conv-1',
+      expected_generation: 3,
+      kind: 'product',
+      products: ['ITEM-A'],
+      body: 'Producto solicitado',
+    })
+    expect(selects[1].value).toBe('catalog_message')
+  })
   it('keeps the frozen UUID, generation and text across ambiguous responses', async () => {
     api.call
       .mockRejectedValueOnce(new TypeError('Lost response'))

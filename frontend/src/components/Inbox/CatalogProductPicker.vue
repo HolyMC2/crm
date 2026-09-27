@@ -6,9 +6,12 @@
   >
     <p v-if="error" role="alert">{{ error }}</p>
     <p v-if="notice" role="status">{{ notice }}</p>
-    <label class="block text-xs font-medium">
-      {{ __('Formato del mensaje') }}
+    <div class="text-xs font-medium">
+      <label :for="messageFormatId" class="block">
+        {{ __('Formato del mensaje') }}
+      </label>
       <select
+        :id="messageFormatId"
         v-model="kind"
         class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2"
         :disabled="locked"
@@ -21,7 +24,7 @@
           {{ option.label }}
         </option>
       </select>
-    </label>
+    </div>
     <template v-if="kind !== 'catalog_message'">
       <label class="block text-xs font-medium">
         {{ __('Buscar productos') }}
@@ -173,8 +176,10 @@
   </form>
 </template>
 <script setup>
-import { computed, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onUnmounted, reactive, ref, useId, watch } from 'vue'
 import { call } from 'frappe-ui'
+
+const messageFormatId = useId()
 const props = defineProps({
   conversation: { type: Object, required: true },
   context: { type: Object, required: true },
