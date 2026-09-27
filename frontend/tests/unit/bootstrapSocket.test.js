@@ -87,6 +87,7 @@ beforeEach(() => {
   fixture.roots.length = 0
   fixture.mountedSockets.length = 0
   vi.spyOn(window, 'location', 'get').mockReturnValue({
+    protocol: 'http:',
     hostname: 'crm-roadmap.localhost',
     port: '18771',
     reload: vi.fn(),
@@ -165,6 +166,48 @@ const printingScripts = () =>
   )
 
 describe('CRM socket bootstrap ownership', () => {
+  it.each([
+    [
+      'https:',
+      '18062',
+      18062,
+      'https://crm-roadmap.localhost:18062/crm-roadmap.localhost',
+    ],
+    ['https:', '', 9000, 'https://crm-roadmap.localhost/crm-roadmap.localhost'],
+    ['http:', '', 9000, 'http://crm-roadmap.localhost/crm-roadmap.localhost'],
+    [
+      'http:',
+      '5173',
+      9000,
+      'http://crm-roadmap.localhost:9000/crm-roadmap.localhost',
+    ],
+    [
+      'http:',
+      '5173',
+      undefined,
+      'http://crm-roadmap.localhost:9000/crm-roadmap.localhost',
+    ],
+  ])(
+    'uses the page protocol %s with page port %s and boot port %s',
+    async (protocol, port, socketPort, expected) => {
+      vi.spyOn(window, 'location', 'get').mockReturnValue({
+        protocol,
+        hostname: 'crm-roadmap.localhost',
+        port,
+      })
+      window.site_name = 'crm-roadmap.localhost'
+      window.socketio_port = socketPort
+      const { initSocket } = await import('@/socket')
+      const socket = initSocket()
+      expect(socket.url).toBe(expected)
+      expect(fixture.sockets).toEqual([socket])
+      expect(socket.options).toEqual({
+        withCredentials: true,
+        reconnectionDelayMax: 30000,
+      })
+    },
+  )
+
   it('starts only the boot-aware CRM socket in production, preserving plugin services', async () => {
     vi.stubEnv('DEV', false)
     window.site_name = 'crm-roadmap.localhost'
