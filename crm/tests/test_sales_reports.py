@@ -1,6 +1,7 @@
 """Native database proof for cohort definitions, scopes and report drill-downs."""
 
 import frappe
+from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, today
 
@@ -11,6 +12,8 @@ class TestSalesReports(IntegrationTestCase):
 	def setUp(self):
 		super().setUp()
 		frappe.set_user("Administrator")
+		frappe.db.savepoint("sales_report_fixture")
+		self.addCleanup(self.restore_fixture)
 		self.key = frappe.generate_hash(length=8)
 		self.actor = f"reports-{self.key}@example.invalid"
 		frappe.get_doc(
@@ -52,6 +55,41 @@ class TestSalesReports(IntegrationTestCase):
 	def tearDown(self):
 		frappe.set_user("Administrator")
 		super().tearDown()
+
+	def restore_fixture(self):
+		frappe.set_user("Administrator")
+		try:
+			frappe.db.rollback(save_point="sales_report_fixture")
+		finally:
+			for doctype in ("CRM Deal", "CRM Status Change Log"):
+				frappe.clear_cache(doctype=doctype)
+
+	def test_history_table_requires_current_parent_field_read_level(self):
+		self.deal()
+		frappe.set_user(self.actor)
+		self.assertEqual(get_report(self.filters)["summary"]["deals"], 1)
+		frappe.set_user("Administrator")
+		make_property_setter("CRM Deal", "status_change_log", "permlevel", 1, "Int")
+		frappe.clear_cache(doctype="CRM Deal")
+		frappe.set_user(self.actor)
+		with self.assertRaises(frappe.PermissionError):
+			get_report(self.filters)
+
+	def test_history_aggregate_cannot_reveal_restricted_child_fields(self):
+		self.deal()
+		for property_name, value, property_type in (("permlevel", 1, "Int"), ("mask", 1, "Check")):
+			with self.subTest(property=property_name):
+				frappe.set_user("Administrator")
+				make_property_setter(
+					"CRM Status Change Log", "from_date", property_name, value, property_type
+				)
+				frappe.clear_cache(doctype="CRM Status Change Log")
+				frappe.set_user(self.actor)
+				with self.assertRaises(frappe.PermissionError):
+					get_report(self.filters)
+				frappe.set_user("Administrator")
+				make_property_setter("CRM Status Change Log", "from_date", property_name, 0, property_type)
+				frappe.clear_cache(doctype="CRM Status Change Log")
 
 	def deal(self, kind="Open", owner=None):
 		doc = frappe.get_doc(

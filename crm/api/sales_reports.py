@@ -34,9 +34,18 @@ def _filters(value):
 	return {key: result.get(key, "") for key in sorted(FILTERS)}
 
 
-def _fields(doctype, fields):
-	permitted = set(get_permitted_fields(doctype, permission_type="read"))
-	masked = {f.fieldname for f in frappe.get_meta(doctype).get_masked_fields()}
+def _fields(doctype, fields, *, parenttype=None):
+	meta = frappe.get_meta(doctype)
+	permitted = set(get_permitted_fields(doctype, parenttype=parenttype, permission_type="read"))
+	# Native column permissions deliberately omit Table fields. A report still
+	# needs permission on the containing field before reading its child rows.
+	tables = [field for field in meta.get_table_fields() if field.fieldname in fields]
+	if tables:
+		levels = set(meta.get_permlevel_access("read", parenttype=parenttype))
+		if 0 not in levels and frappe.share.get_shared(parenttype or doctype, rights=["read"], limit=1):
+			levels.add(0)  # Same shared-record fallback as native field permissions.
+		permitted.update(field.fieldname for field in tables if (field.permlevel or 0) in levels)
+	masked = {f.fieldname for f in meta.get_masked_fields(parenttype=parenttype)}
 	if not set(fields).issubset(permitted) or set(fields) & masked:
 		frappe.throw(
 			_("You do not have permission to read the fields in this report."), frappe.PermissionError
@@ -123,6 +132,7 @@ def get_report(filters=None):
 		"CRM Deal",
 		["creation", "deal_owner", "source", "status", "pipeline", "sales_company", "status_change_log"],
 	)
+	_fields("CRM Status Change Log", ["from", "from_date", "to_date"], parenttype="CRM Deal")
 	_fields("CRM Task", ["assigned_to", "status", "due_date", "reference_doctype", "reference_docname"])
 	leads, deals = _allowed("leads", filters), _allowed("deals", filters)
 	tasks, params = _tasks(filters)
