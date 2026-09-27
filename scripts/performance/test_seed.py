@@ -9,10 +9,12 @@ import unittest
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 from contract import ContractError, checksum
 from seed_native import (
 	REQUIRED_APPS,
+	Seed,
 	atomic_json,
 	private_file,
 	provision_guard,
@@ -201,6 +203,94 @@ class TestSeed(unittest.TestCase):
 		):
 			with self.subTest(key=key), self.assertRaises(ContractError):
 				verify_preflight({**proof, key: value}, self.receipt)
+
+
+class TestSeedIdentityLookup(unittest.TestCase):
+	"""Adapter/recovery units with a strict DB double; not native SQL evidence."""
+
+	def seed(self, matches, *, recorded=None, stored=None, error=None):
+		self.events = []
+		events = self.events
+
+		class Database:
+			# This subset uses the exact pinned Database.get_values keyword names.
+			# No get_all/commit/rollback API: the lookup must retain its caller's
+			# transaction and cannot fall back to an unlocked query.
+			def get_values(self, doctype, filters, fieldname, *, pluck, limit, for_update):
+				events.append(("lookup", doctype, filters, fieldname, pluck, limit, for_update))
+				if error:
+					raise error
+				return matches
+
+		class Document(dict):
+			name = "existing"
+
+			def check_permission(self, permission_type):
+				events.append(("permission", permission_type))
+
+		self.doc = Document(stored or {"title": "Fixture"})
+
+		def get_doc(doctype, name):
+			events.append(("load", doctype, name))
+			return self.doc
+
+		seed = object.__new__(Seed)
+		seed.f = SimpleNamespace(db=Database(), get_doc=get_doc)
+		seed.records = {"row": recorded} if recorded else {}
+		seed.pending = 0
+		return seed
+
+	def ensure(self, seed):
+		def create():
+			self.events.append(("create",))
+			return self.doc
+
+		return seed.ensure("row", "CRM Task", {"title": "Fixture"}, {"title": "Fixture"}, create=create)
+
+	def test_adopts_current_committed_identity_without_another_insert(self):
+		seed = self.seed(["existing"])
+		self.assertIs(self.ensure(seed), self.doc)
+		self.assertEqual(
+			self.events,
+			[
+				("lookup", "CRM Task", {"title": "Fixture"}, "name", True, 2, True),
+				("load", "CRM Task", "existing"),
+				("permission", "read"),
+			],
+		)
+		self.assertEqual(seed.records["row"]["name"], "existing")
+
+	def test_current_absence_uses_declared_creator_without_committing(self):
+		seed = self.seed([])
+		self.assertIs(self.ensure(seed), self.doc)
+		self.assertEqual(self.events[0][-3:], (True, 2, True))
+		self.assertEqual(self.events[1:], [("create",)])
+		self.assertEqual(seed.pending, 1)
+
+	def test_ambiguous_missing_or_changed_identity_is_not_recreated(self):
+		cases = (
+			({"matches": ["existing", "duplicate"]}, "seed_duplicate_identity"),
+			({"matches": [], "recorded": {"name": "existing"}}, "seed_record_missing"),
+			({"matches": ["other"], "recorded": {"name": "existing"}}, "seed_identity_changed"),
+			({"matches": ["existing"], "stored": {"title": "Changed"}}, "seed_record_drift"),
+		)
+		for arguments, code in cases:
+			with self.subTest(code=code):
+				seed = self.seed(**arguments)
+				before = copy.deepcopy(seed.records)
+				with self.assertRaisesRegex(ContractError, code):
+					self.ensure(seed)
+				self.assertNotIn(("create",), self.events)
+				self.assertEqual(seed.records, before)
+
+	def test_database_failure_propagates_without_creation_or_transaction_retry(self):
+		error = RuntimeError("fixture database failure")
+		seed = self.seed([], error=error)
+		with self.assertRaises(RuntimeError) as raised:
+			self.ensure(seed)
+		self.assertIs(raised.exception, error)
+		self.assertEqual(len(self.events), 1)
+		self.assertEqual(seed.records, {})
 
 
 if __name__ == "__main__":

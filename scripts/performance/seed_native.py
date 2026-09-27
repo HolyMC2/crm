@@ -418,7 +418,9 @@ class Seed:
 	def ensure(self, key, doctype, identity, values, *, create=None):
 		self.last_key = key
 		f = self.f
-		matches = f.get_all(doctype, filters=identity, pluck="name", limit_page_length=2, for_update=True)
+		matches = f.db.get_values(
+			doctype, filters=identity, fieldname="name", pluck=True, limit=2, for_update=True
+		)
 		recorded = self.records.get(key)
 		existing = resume_name(recorded, matches)
 		if existing:
