@@ -10,7 +10,12 @@
     "serve": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "postinstall": "patch-package --error-on-fail && node scripts/verify-frappe-ui-patch.mjs",
+    "prebuild": "node scripts/verify-frappe-ui-patch.mjs",
+    "pretest": "node scripts/verify-frappe-ui-patch.mjs",
+    "pretest:run": "node scripts/verify-frappe-ui-patch.mjs",
+    "pretest:coverage": "node scripts/verify-frappe-ui-patch.mjs"
   },
   "dependencies": {
     "@tiptap/core": "^3.26.0",
@@ -29,7 +34,9 @@
     "leaflet.locatecontrol": "^0.89.0",
     "lodash": "^4.18.1",
     "mime": "^4.0.1",
+    "patch-package": "8.0.1",
     "pinia": "^2.0.33",
+    "postinstall-postinstall": "2.1.0",
     "qz-tray": "2.2.5",
     "socket.io-client": "^4.7.2",
     "sortablejs": "^1.15.0",

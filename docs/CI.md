@@ -1,5 +1,10 @@
 # CRM CI
 
+Frontend installs apply a version-specific import lifecycle patch to the pinned
+`frappe-ui` dependency. Frozen installs must run lifecycle scripts; build and test
+commands verify the patched source fingerprints before execution. See the
+[patch contract](../frontend/patches/README.md) for clean-install and upgrade checks.
+
 This fork ships inside `ghcr.io/holymc2/doco-bench`, published by Muelle's
 source-locked image pipeline. Its active `pyproject.toml` Bench constraint is
 `frappe >=16.0.0-dev,<=17.0.0-dev`; Frappe 15 is outside that declaration.

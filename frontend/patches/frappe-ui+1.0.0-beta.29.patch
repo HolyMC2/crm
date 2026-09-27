@@ -1,0 +1,204 @@
+diff --git a/node_modules/frappe-ui/frappe/DataImport/PreviewStep.vue b/node_modules/frappe-ui/frappe/DataImport/PreviewStep.vue
+--- a/node_modules/frappe-ui/frappe/DataImport/PreviewStep.vue
++++ b/node_modules/frappe-ui/frappe/DataImport/PreviewStep.vue
+@@ -14,12 +14,17 @@
+                 <Button 
+                     v-if="data.status != 'Success'" 
+                     :label="data.status != 'Pending' ? 'Retry' : 'Import'" 
+-                    variant="solid" @click="startImport" />
++                    variant="solid" :loading="starting" @click="startImport" />
+                 <Button v-else-if="listRoute" label="Done" @click="redirectToList()" />
+             </div>
+             <div class="leading-5 text-ink-gray-7">
+                 Verify the data before starting the import process
+             </div>
++        </div>
++
++        <div v-if="refreshError" role="alert" class="space-y-2 text-ink-red-6">
++            <p>Could not refresh this import. Refresh to check its current status before retrying the import.</p>
++            <Button label="Refresh import" @click="retryRefresh" />
+         </div>
+ 
+         <div v-if="mapping.length" class="space-y-2">
+@@ -166,7 +171,7 @@
+ </template>
+ <script setup lang="ts">
+ import { getPreviewData, getBadgeColor } from './dataImport'
+-import { computed, nextTick, onMounted, ref, watch } from 'vue';
++import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+ import type { DataImport, DataImports } from './types';
+ import Badge from '../../src/components/Badge/Badge.vue';
+ import Button from '../../src/components/Button/Button.vue';
+@@ -189,32 +194,91 @@
+     doctypeMap: Record<string, { title: string; listRoute?: string; pageRoute?: string }>
+ }>()
+ 
+-onMounted(async () => {
+-    let socket = initSocket();
+-    socket.on("data_import_refresh", (data: { data_import: string }) => {
+-        reloadPreviewData(data.data_import);
+-    })
+-
+-    if (!props.data?.name) return;
+-    preview.value = await getPreviewData(
+-        props.data.name, props.data.import_file, props.data.google_sheets_url
+-    );
+-    if (props.data.status != "Pending") {
+-        getImportLogs();
+-    }
++// Reuse the socket supplied by the host application, like native resources do.
++// Only the fallback connection belongs to this component.
++const app = getCurrentInstance()!.appContext.config.globalProperties;
++const refreshError = ref(false);
++const starting = ref(false);
++let socket: ReturnType<typeof initSocket> | undefined;
++let ownsSocket = false;
++let active = true;
++let generation = 0;
++let logRequest = 0;
++let refreshing: { name: string; generation: number; again: boolean; promise: Promise<void> } | null = null;
++const current = (name: string, version: number) => active && generation === version && props.data.name === name;
++
++async function loadPreview(name: string, version: number) {
++    try {
++        const data = await getPreviewData(name, props.data.import_file, props.data.google_sheets_url);
++        // The library helper reports transport errors and resolves undefined.
++        if (!data) throw new Error('Import preview is unavailable');
++        if (!current(name, version)) return;
++        preview.value = data;
++        if (props.data.status !== 'Pending') await getImportLogs(name, version);
++    } catch {
++        if (current(name, version)) refreshError.value = true;
++    }
++}
++
++function reloadPreviewData(name: string | undefined): Promise<void> {
++    if (!name || !active || name !== props.data.name) return Promise.resolve();
++    const version = generation;
++    if (refreshing?.name === name && refreshing.generation === version) {
++        refreshing.again = true;
++        return refreshing.promise;
++    }
++    const job = { name, generation: version, again: false, promise: Promise.resolve() };
++    refreshing = job;
++    job.promise = (async () => {
++        do {
++            job.again = false;
++            await props.dataImports.reload();
++            if (!current(name, version)) return;
++            const updated = props.dataImports.data?.find(row => row.name === name);
++            if (!updated) throw new Error('Import is no longer available');
++            emit('updateStep', 'preview', { ...updated });
++            const logsApplied = await getImportLogs(name, version);
++            if (logsApplied && current(name, version)) refreshError.value = false;
++        } while (job.again && current(name, version));
++    })().catch(() => {
++        if (current(name, version)) refreshError.value = true;
++    }).finally(() => {
++        if (refreshing === job) refreshing = null;
++    });
++    return job.promise;
++}
++
++const onImportRefresh = (data: { data_import?: string }) => { void reloadPreviewData(data?.data_import); };
++const onConnect = () => { void reloadPreviewData(props.data.name); };
++onMounted(() => {
++    ownsSocket = !app.$socket;
++    socket = app.$socket || initSocket();
++    socket!.on('data_import_refresh', onImportRefresh);
++    socket!.on('connect', onConnect);
+ });
+-
+-const reloadPreviewData = (dataImport: string) => {
+-    if (dataImport != props.data.name) return;
+-    nextTick(() => {
+-        props.dataImports.reload()
+-        nextTick(async () => {
+-            let updatedData = props.dataImports.data?.find(d => d.name === props.data.name
+-            )
+-            emit('updateStep', 'preview', { ...updatedData })
+-            getImportLogs()
+-        })
+-    })
++onBeforeUnmount(() => {
++    active = false;
++    generation++;
++    socket?.off('data_import_refresh', onImportRefresh);
++    socket?.off('connect', onConnect);
++    if (ownsSocket) socket?.disconnect();
++});
++
++watch([() => props.data.name, () => props.data.import_file, () => props.data.google_sheets_url], () => {
++    generation++;
++    preview.value = null;
++    importLogs.value = [];
++    filteredLogs.value = [];
++    refreshError.value = false;
++    if (props.data.name) void loadPreview(props.data.name, generation);
++}, { immediate: true });
++
++async function retryRefresh() {
++    const name = props.data.name, version = generation;
++    if (!name) return;
++    refreshError.value = false;
++    await loadPreview(name, version);
++    if (current(name, version) && !refreshError.value) await reloadPreviewData(name);
+ }
+ 
+ const previewColumns = computed(() => {
+@@ -271,19 +335,31 @@
+     return mappedColumnIndex;
+ }
+ 
+-const startImport = () => {
+-    call("frappe.core.doctype.data_import.data_import.form_start_import", {
+-        data_import: props.data.name
+-    })
+-}
+-
+-const getImportLogs = () => {
+-    call("frappe.core.doctype.data_import.data_import.get_import_logs", {
+-        data_import: props.data.name
+-    }).then((data: any) =>  {
++const startImport = async () => {
++    const name = props.data.name, version = generation;
++    if (!name || starting.value) return;
++    starting.value = true;
++    try {
++        await call("frappe.core.doctype.data_import.data_import.form_start_import", { data_import: name });
++        if (current(name, version)) await reloadPreviewData(name);
++    } catch {
++        if (current(name, version)) refreshError.value = true;
++    } finally {
++        if (active) starting.value = false;
++    }
++}
++
++async function getImportLogs(name: string, version: number) {
++    const request = ++logRequest;
++    try {
++        const data = await call("frappe.core.doctype.data_import.data_import.get_import_logs", { data_import: name });
++        if (!current(name, version) || request !== logRequest) return;
+         importLogs.value = data;
+-        filteredLogs.value = data;
+-    })
++        updateImportLogs();
++        return true;
++    } catch (error) {
++        if (current(name, version) && request === logRequest) throw error;
++    }
+ }
+ 
+ const updateImportLogs = () => {
+diff --git a/node_modules/frappe-ui/frappe/DataImport/types.ts b/node_modules/frappe-ui/frappe/DataImport/types.ts
+--- a/node_modules/frappe-ui/frappe/DataImport/types.ts
++++ b/node_modules/frappe-ui/frappe/DataImport/types.ts
+@@ -23,7 +23,7 @@
+   update: (args: { filters: any[] }) => void
+   insert: { submit: (params: DataImport, options: { validate?: () => boolean; onSuccess: (data: DataImport) => void; onError: (err: any) => void }) => void }
+   setValue: { submit: (params: DataImport, options: { onSuccess: (data: DataImport) => void; onError: (err: any) => void }) => void }
+-  reload: () => void
++  reload: () => Promise<unknown>
+   hasNextPage: () => boolean
+   next: () => Promise<void>
+ }

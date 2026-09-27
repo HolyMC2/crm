@@ -1,0 +1,10 @@
+{
+  "package": "frappe-ui",
+  "version": "1.0.0-beta.29",
+  "upstream_integrity": "sha512-Uovz5JUEQBOJ85CyKtjTADgk+SjXWknfF8U54xgQQ/j3QP2nZ96abjnugh2I2Y5u5KHBl+k8tbKJZ3xbTD8Q7w==",
+  "files": {
+    "frappe/DataImport/PreviewStep.vue": "f556ee33cc4876d859e06352a0db49620e9c7e1bee8a30ec4b5371963dcc7710",
+    "frappe/DataImport/types.ts": "b4a8186dcd32e099a888705532e8c5d9021820bdfa55a322ab7dcca23e5892a7",
+    "src/utils/socketio.ts": "81a569d3e0c8e4896b0264151c29569fd61518839af294e79e61e194f9790614"
+  }
+}
