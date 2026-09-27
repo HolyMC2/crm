@@ -132,7 +132,7 @@ def _count(scope, table):
 
 
 @frappe.whitelist()
-def get_report(filters=None):
+def get_report(filters: dict | str | None = None):
 	filters = _filters(filters)
 	_fields("CRM Lead", ["creation", "lead_owner", "source", "converted", "pipeline", "sales_company"])
 	_fields(
@@ -258,7 +258,12 @@ def _owner_row(owner):
 
 
 @frappe.whitelist()
-def get_records(filters=None, kind="deals", bucket=None, offset=0):
+def get_records(
+	filters: dict | str | None = None,
+	kind: str = "deals",
+	bucket: dict | str | None = None,
+	offset: int | str | None = 0,
+):
 	if (
 		kind not in KINDS
 		or isinstance(offset, bool)

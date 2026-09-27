@@ -99,7 +99,7 @@ def _candidates(lead):
 
 
 @frappe.whitelist()
-def get_conversion_context(lead):
+def get_conversion_context(lead: str):
 	doc = _lead(lead)
 	existing = _existing(doc)
 	candidates = _candidates(doc) if not existing else {"contacts": [], "organizations": []}

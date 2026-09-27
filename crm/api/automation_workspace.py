@@ -55,7 +55,9 @@ def _reference(doctype, name):
 
 
 @frappe.whitelist()
-def get_context(reference_doctype=None, reference_name=None, return_to=None):
+def get_context(
+	reference_doctype: str | None = None, reference_name: str | None = None, return_to: str | None = None
+):
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Sign in to open automations."), frappe.PermissionError)
 	return_to = _return_path(return_to)

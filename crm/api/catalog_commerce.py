@@ -73,7 +73,7 @@ def _conversation(name, *, write=False):
 
 
 @frappe.whitelist()
-def get_context(conversation):
+def get_context(conversation: str):
 	with control.conversation_fence(conversation):
 		doc = control._load(control._text(conversation, 140))
 		control._authorize(doc)
@@ -91,14 +91,21 @@ def get_context(conversation):
 
 
 @frappe.whitelist()
-def get_products(conversation, query="", offset=0):
+def get_products(conversation: str, query: str = "", offset: int | str | None = 0):
 	with control.conversation_fence(conversation):
 		return _require_adapter().get_products(_conversation(conversation), query=query, offset=offset)
 
 
 @frappe.whitelist(methods=["POST"])
 def queue_catalog(
-	conversation, expected_generation, request_id, kind, products=None, body="", header="", footer=""
+	conversation: str,
+	expected_generation: int | str,
+	request_id: str,
+	kind: str,
+	products: list | str | None = None,
+	body: str = "",
+	header: str = "",
+	footer: str = "",
 ):
 	from crm.api import outbox
 
@@ -163,19 +170,27 @@ def dispatch_reason(intent, account):
 
 
 @frappe.whitelist()
-def get_cart(name):
+def get_cart(name: str):
 	# The adapter derives/authorizes the conversation from the immutable receipt;
 	# caller-supplied conversation ids cannot lend access to another intake.
 	return _require_adapter().get_cart(name)
 
 
 @frappe.whitelist(methods=["POST"])
-def review_cart(name, customer, company, warehouse, deal=None):
+def review_cart(name: str, customer: str, company: str, warehouse: str, deal: str | None = None):
 	return _require_adapter().review_cart(name, customer, company, warehouse, deal=deal)
 
 
 @frappe.whitelist(methods=["POST"])
-def create_order(name, review_token, request_id, customer, company, warehouse, deal=None):
+def create_order(
+	name: str,
+	review_token: str,
+	request_id: str,
+	customer: str,
+	company: str,
+	warehouse: str,
+	deal: str | None = None,
+):
 	return _require_adapter().create_order(
 		name, review_token, request_id, customer, company, warehouse, deal=deal
 	)

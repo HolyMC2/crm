@@ -222,7 +222,7 @@ def _profiles(order):
 
 
 @frappe.whitelist()
-def get_context(sales_order=None, deal=None, cart=None):
+def get_context(sales_order: str | None = None, deal: str | None = None, cart: str | None = None):
 	if not _available():
 		return {"available": False, "reason_code": "erp_checkout_unavailable", "orders": [], "selected": None}
 	orders, has_more = _deal_orders(deal) if deal else ([], False)
@@ -303,13 +303,15 @@ def get_context(sales_order=None, deal=None, cart=None):
 
 
 @frappe.whitelist(methods=["POST"])
-def preview_checkout(sales_order, pos_profile, deal=None, cart=None):
+def preview_checkout(sales_order: str, pos_profile: str, deal: str | None = None, cart: str | None = None):
 	with _bound_order(sales_order, deal=deal, cart=cart, write=True):
 		return _owner().preview(sales_order, pos_profile)
 
 
 @frappe.whitelist(methods=["POST"])
-def queue_checkout(sales_order, pos_profile, review_hash, deal=None, cart=None):
+def queue_checkout(
+	sales_order: str, pos_profile: str, review_hash: str, deal: str | None = None, cart: str | None = None
+):
 	with _bound_order(sales_order, deal=deal, cart=cart, write=True):
 		return _owner().queue(sales_order, pos_profile, review_hash)
 
@@ -329,7 +331,7 @@ def _review_state(order, source, settings):
 
 
 @frappe.whitelist(methods=["POST"])
-def preview_payment_link(sales_order, deal=None, cart=None):
+def preview_payment_link(sales_order: str, deal: str | None = None, cart: str | None = None):
 	with _bound_order(sales_order, deal=deal, cart=cart, write=True) as order:
 		owner = _owner()
 		service, source = _payments()
@@ -371,7 +373,9 @@ def preview_payment_link(sales_order, deal=None, cart=None):
 
 
 @frappe.whitelist(methods=["POST"])
-def request_payment_link(sales_order, review_hash, request_id, deal=None, cart=None):
+def request_payment_link(
+	sales_order: str, review_hash: str, request_id: str, deal: str | None = None, cart: str | None = None
+):
 	with _bound_order(sales_order, deal=deal, cart=cart, write=True) as order:
 		owner = _owner()
 		service, source = _payments()
@@ -419,10 +423,10 @@ def _payment_action(action, name, sales_order, deal, cart):
 
 
 @frappe.whitelist(methods=["POST"])
-def refresh_payment(name, sales_order, deal=None, cart=None):
+def refresh_payment(name: str, sales_order: str, deal: str | None = None, cart: str | None = None):
 	return _payment_action("refresh", name, sales_order, deal, cart)
 
 
 @frappe.whitelist(methods=["POST"])
-def cancel_payment(name, sales_order, deal=None, cart=None):
+def cancel_payment(name: str, sales_order: str, deal: str | None = None, cart: str | None = None):
 	return _payment_action("cancel_link", name, sales_order, deal, cart)

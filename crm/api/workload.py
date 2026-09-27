@@ -355,7 +355,7 @@ def _owner_rows(filters, counts, capacity):
 
 
 @frappe.whitelist()
-def get_workload(filters=None, offset=0):
+def get_workload(filters: dict | str | None = None, offset: int | str | None = 0):
 	_manager()
 	filters, offset = _scope(filters), _offset(offset)
 	counts = {}
@@ -429,7 +429,13 @@ def get_workload(filters=None, offset=0):
 
 
 @frappe.whitelist()
-def get_work_items(filters=None, kind="deals", owner=None, overdue=False, offset=0):
+def get_work_items(
+	filters: dict | str | None = None,
+	kind: str = "deals",
+	owner: str | None = None,
+	overdue: bool | int | str | None = False,
+	offset: int | str | None = 0,
+):
 	_manager()
 	filters, offset = _scope(filters), _offset(offset)
 	source, params = _source(kind, filters, owner=owner, overdue=cint(overdue))
@@ -557,7 +563,7 @@ def _row_savepoint(point):
 
 
 @frappe.whitelist(methods=["POST"])
-def reassign_bulk(items, target, filters=None):
+def reassign_bulk(items: list | str, target: str, filters: dict | str | None = None):
 	_manager()
 	filters = _scope(filters)
 	items = frappe.parse_json(items) if isinstance(items, str) else items

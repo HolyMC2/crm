@@ -351,7 +351,7 @@ ASSIGNMENT_FIELDS = ["document_type", "disabled", "priority", "rule", "assign_co
 
 
 @frappe.whitelist()
-def get_effective_settings(pipeline=None, company=None):
+def get_effective_settings(pipeline: str | None = None, company: str | None = None):
 	frappe.only_for(["System Manager", "Sales Manager"])
 	for value in (pipeline, company):
 		if value is not None and (
