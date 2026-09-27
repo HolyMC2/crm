@@ -34,9 +34,10 @@ class TestCatalogOutbox(CatalogFixture, unittest.TestCase):
 			outbox.dispatch_intent(name)
 
 	def accepted(self, name):
-		def provider(intent_name, payload):
+		def provider(intent, payload):
+			self.assertEqual((intent.doctype, intent.name), (outbox.DOCTYPE, name))
 			outbox.require_dispatch(
-				intent_name, "WhatsApp", self.account.phone_id, self.peer, payload=payload
+				intent.name, "WhatsApp", self.account.phone_id, self.peer, payload=payload
 			)
 			return {"state": "Accepted", "provider_message_id": "wamid.catalog-" + uuid4().hex}
 
@@ -44,7 +45,7 @@ class TestCatalogOutbox(CatalogFixture, unittest.TestCase):
 			self.worker(name)
 		send.assert_called_once()
 		intent = outbox._load(name)
-		self.assertEqual(intent.state, "Accepted")
+		self.assertEqual(intent.state, "Accepted", intent.reason_code)
 		return intent
 
 	def assert_blocked_before_provider(self, name, reason):
