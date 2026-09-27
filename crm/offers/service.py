@@ -4,6 +4,8 @@ import json
 from html import escape
 
 import frappe
+from frappe import get_installed_apps
+from frappe.query_builder.functions import Max
 from frappe.utils import getdate, now_datetime, nowdate
 
 from crm.offers.contract import CHANNELS, INPUT_FIELDS, LINE_FIELDS, calculate, digest, terms_snapshot, text
@@ -302,7 +304,7 @@ def expire(name, modified):
 
 
 def erp_available():
-	if "erpnext" not in frappe.get_installed_apps():
+	if "erpnext" not in get_installed_apps():
 		return False
 	settings = frappe.get_doc("ERPNext CRM Settings")
 	return bool(settings.enabled and not settings.is_erpnext_in_different_site)
@@ -401,13 +403,15 @@ def get_offers(deal, offset=0, limit=20):
 		limit_page_length=limit,
 	)
 	# All records in a deal have the same inherited scope. No arbitrary caller filters.
+	Offer = frappe.qb.DocType("CRM Offer")
 	latest = {
 		r.root_offer: r.revision
-		for r in frappe.get_all(
-			"CRM Offer",
-			filters={"deal": deal},
-			fields=["root_offer", "max(revision) as revision"],
-			group_by="root_offer",
+		for r in (
+			frappe.qb.from_(Offer)
+			.select(Offer.root_offer, Max(Offer.revision).as_("revision"))
+			.where(Offer.deal == deal)
+			.groupby(Offer.root_offer)
+			.run(as_dict=True)
 		)
 	}
 	children = {}

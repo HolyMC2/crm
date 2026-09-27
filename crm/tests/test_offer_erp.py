@@ -34,6 +34,18 @@ class TestOfferERP(OfferFixture, IntegrationTestCase):
 				"chart_of_accounts": "Standard",
 			}
 		).insert()
+		# Native US company setup creates a default sales tax template. This
+		# scenario explicitly configures untaxed service prices in its own company;
+		# a separate test below restores that native tax to verify financial drift.
+		self.default_tax_templates = frappe.get_all(
+			"Sales Taxes and Charges Template",
+			filters={"company": self.company.name, "is_default": 1},
+			pluck="name",
+		)
+		for name in self.default_tax_templates:
+			template = frappe.get_doc("Sales Taxes and Charges Template", name)
+			template.is_default = 0
+			template.save()
 		self.price_list = frappe.get_doc(
 			{
 				"doctype": "Price List",
@@ -151,6 +163,20 @@ class TestOfferERP(OfferFixture, IntegrationTestCase):
 		)
 		self.assertEqual(frappe.db.get_value("Quotation", created["quotation"], "grand_total"), 125)
 		self.assertEqual(offers.get_offer(accepted["name"])["net_total"], 100)
+
+	def test_native_tax_template_is_included_in_reviewed_drift(self):
+		self.assertTrue(self.default_tax_templates, "Native US Company must create its tax fixture")
+		template = frappe.get_doc("Sales Taxes and Charges Template", self.default_tax_templates[0])
+		template.is_default = 1
+		template.save()
+		accepted = self.accepted()
+		preview = offers.preview_erp(accepted["name"])
+		self.assertEqual((preview["net_total"], preview["taxes"], preview["grand_total"]), (100, 6, 106))
+		self.assertEqual(preview["total_difference"], 6)
+		self.assertTrue(preview["financial_drift"])
+		with self.assertRaises(frappe.ValidationError):
+			offers.create_erp_quotation(accepted["name"], preview["review_hash"])
+		self.assertEqual(frappe.db.count("Quotation", {"crm_deal": self.deal.name}), 0)
 
 	def test_disabled_item_invalidates_preview(self):
 		accepted = self.accepted()

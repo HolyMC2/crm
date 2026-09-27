@@ -104,7 +104,9 @@ class TestOffers(OfferFixture, IntegrationTestCase):
 		super().tearDown()
 
 	def test_standalone_service_offer_never_requires_an_erp_import(self):
-		with patch("frappe.get_installed_apps", return_value=["frappe", "crm"]):
+		# Limit the optional-app simulation to the capability boundary. Replacing
+		# the framework's registry also breaks unrelated installed-app SQL hooks.
+		with patch.object(service, "get_installed_apps", return_value=["frappe", "crm"]):
 			result = self.accepted()
 			self.assertEqual(result["net_total"], 53.99)
 			self.assertEqual(result["status"], "Accepted")
