@@ -22,6 +22,18 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 	session = protocol.TestWebchat.session
 	conversation = protocol.TestWebchat.conversation
 
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		# Canonical schema setup owns DDL/commits, before any per-test savepoint.
+		# Fresh Doco installs may only carry Meta's Item publication flag.
+		from doco.docoutils import storefront_schema
+
+		if not storefront_schema.schema_ok():
+			result = storefront_schema.ensure(force=True, repair=True)
+			if result.get("failed") or not storefront_schema.schema_ok():
+				raise RuntimeError("Storefront schema setup is incomplete")
+
 	def setUp(self):
 		super().setUp()
 		self.enterContext(
@@ -67,6 +79,11 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 				**overrides,
 			},
 		)
+
+	def test_ordinary_profile_save_does_not_commit_the_order_transaction(self):
+		with patch.object(frappe.db, "commit", side_effect=AssertionError("Profile save committed")):
+			self.shop.save()
+		self.assertEqual(self.order.reload().storefront_profile, self.shop.name)
 
 	def staff(self, company=None):
 		"""Real channel-assigned Sales User; no permission result is mocked."""
