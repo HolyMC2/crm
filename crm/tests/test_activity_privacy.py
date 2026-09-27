@@ -16,6 +16,10 @@ from crm.tests.test_offers import OfferFixture
 class TestActivityPrivacy(OfferFixture, IntegrationTestCase):
 	def setUp(self):
 		super().setUp()
+		# Frappe rolls back at class cleanup, not between methods. In particular,
+		# a mask Property Setter must not affect the next method's positive control.
+		frappe.db.savepoint("activity_privacy_fixture")
+		self.addCleanup(self.restore_fixture)
 		self.enterContext(patch("frappe.enqueue"))
 		self.enterContext(patch("frappe.sendmail"))
 		self.enterContext(patch("frappe.publish_realtime"))
@@ -25,10 +29,10 @@ class TestActivityPrivacy(OfferFixture, IntegrationTestCase):
 		self.make_fixture()
 		self.enterContext(patch.dict(frappe.response, {}, clear=True))
 
-	def tearDown(self):
+	def restore_fixture(self):
 		frappe.set_user("Administrator")
 		try:
-			super().tearDown()
+			frappe.db.rollback(save_point="activity_privacy_fixture")
 		finally:
 			frappe.clear_cache(doctype="CRM Deal")
 			frappe.clear_cache(doctype="CRM Lead")
