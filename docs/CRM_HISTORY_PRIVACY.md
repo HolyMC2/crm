@@ -18,12 +18,15 @@ only currently readable, unmasked fields. Password values are excluded. Child
 fields inherit their owning parent's permission levels; a denied table cannot
 expose its row identities. Unknown or malformed data has no raw fallback.
 
-Historical Link titles remain opaque text. They are suppressed when their target
-title field is now protected. Dynamic Link values are suppressed because the
-current discriminator cannot establish an old target. Creation events retain a
-fixed source label instead of an arbitrary historical label or source-document
-URL. Audit attribution is HTML-encoded; impersonation links require current User
-record access.
+Historical Link and Dynamic Link values are omitted while their field-change
+event remains. Native Version data does not retain stable target IDs or the
+historical title field, so current display settings cannot authorize old text.
+This also covers renamed, replaced or removed title fields. Stored audit data is
+preserved for native administrative review. Useful, permissioned target details
+for future history require captured provenance; this projection does not guess
+identity from legacy labels. Creation events retain a fixed source label instead
+of an arbitrary historical label or source-document URL. Audit attribution is
+HTML-encoded; impersonation links require current User record access.
 
 Native query limits, order and outer Version metadata are preserved. Other
 DocTypes keep their existing behavior. Direct administrative access to stored

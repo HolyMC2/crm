@@ -150,13 +150,20 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 		self.lead.reload().job_title = "Current role"
 		self.lead.save(ignore_version=False)
 		self.protect("CRM Lead", "job_title")
+		stored = {row.name: row.data for row in self.stored(self.lead)}
 		frappe.set_user(self.user)
-		payload = frappe.get_doc("CRM Lead", self.lead.name).as_dict()
+		load.getdoc("CRM Lead", self.lead.name)
+		payload = json.loads(frappe.as_json(frappe.response.docs[0]))
 		payload["status"] = "Qualified"
+		frappe.response.clear()
+		frappe.response.docs = []
 		save.savedocs(frappe.as_json(payload), "Save")
 		self.assertEqual(frappe.db.get_value("CRM Lead", self.lead.name, "status"), "Qualified")
 		self.assertTrue(frappe.response.docinfo.versions)
 		self.assertNotIn(secret, frappe.as_json(frappe.response))
+		frappe.set_user("Administrator")
+		self.assertEqual(self.lead.reload().job_title, "Current role")
+		self.assertEqual({row.name: row.data for row in self.stored(self.lead) if row.name in stored}, stored)
 
 	def test_digest_uses_recipient_mask_while_session_is_administrator(self):
 		self.deal.expected_deal_value = 827364.12
@@ -280,6 +287,47 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 		self.assertEqual(
 			history._value(frappe._dict(fieldtype="Dynamic Link"), "PRIVATE-UNRESOLVABLE", self.user), ""
 		)
+
+	def test_native_legacy_link_titles_stay_private_after_display_metadata_changes(self):
+		secret = "HISTORICAL-TITLE-" + self.key
+		make_property_setter(
+			"CRM Organization", None, "title_field", "organization_name", "Data", for_doctype=True
+		)
+		make_property_setter(
+			"CRM Organization", None, "show_title_field_in_link", 1, "Check", for_doctype=True
+		)
+		frappe.clear_cache(doctype="CRM Organization")
+		organization = frappe.get_doc(
+			{"doctype": "CRM Organization", "organization_name": secret, "currency": "USD"}
+		).insert(set_name="public-org-" + self.key)
+		self.deal.organization = organization.name
+		self.deal.save(ignore_version=False)
+		self.deal.reload().organization = None
+		self.deal.probability = 67
+		self.deal.save(ignore_version=False)
+		stored = self.stored(self.deal)
+		self.assertIn(secret, frappe.as_json(stored))
+		self.protect("CRM Organization", "organization_name")
+		for display, title in ((0, "organization_name"), (1, "website")):
+			with self.subTest(display=display, title=title):
+				frappe.set_user("Administrator")
+				make_property_setter(
+					"CRM Organization", None, "show_title_field_in_link", display, "Check", for_doctype=True
+				)
+				make_property_setter("CRM Organization", None, "title_field", title, "Data", for_doctype=True)
+				frappe.clear_cache(doctype="CRM Organization")
+				frappe.set_user(self.user)
+				with patch.dict(frappe.response, {"docs": []}, clear=True):
+					load.getdoc("CRM Deal", self.deal.name)
+					self.assertNotIn(secret, frappe.as_json(frappe.response))
+				frappe.set_user("Administrator")
+				self.assertNotIn(
+					secret,
+					frappe.as_json(
+						document_follow.get_version("CRM Deal", self.deal.name, "Hourly", self.user)
+					),
+				)
+		self.assertEqual(self.stored(self.deal), stored)
 
 	def test_creation_stays_renderable_without_disclosing_arbitrary_source_link(self):
 		data = {

@@ -59,24 +59,12 @@ def _fields(doctype, user, *, parenttype=None):
 def _value(field, value, user):
 	if not _scalar(value):
 		return None
-	if field.fieldtype == "Dynamic Link":
-		# A current discriminator cannot identify an old target. Keep the event,
-		# but do not guess a historical doctype or construct a target URL.
+	if field.fieldtype in {"Link", "Dynamic Link"}:
+		# Native Versions may store a historical title instead of a target ID,
+		# without recording the former title field. Display/title metadata can
+		# later change or disappear. Current metadata cannot authorize that text.
+		# Keep the event, but never guess an old target or export its opaque title.
 		return ""
-	if field.fieldtype == "Link" and value not in (None, ""):
-		try:
-			target = frappe.get_meta(field.options)
-			title = target.get_title_field()
-			if (
-				target.show_title_field_in_link
-				and title != "name"
-				and title not in _fields(target.name, user)
-			):
-				return ""
-		except frappe.DoesNotExistError:
-			return ""
-	# Native Versions can contain Link titles rather than IDs. They remain opaque
-	# text; neither reverse lookup nor per-record permission guesses are sound.
 	return value
 
 
