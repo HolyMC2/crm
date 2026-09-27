@@ -112,7 +112,7 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # Name of the app being installed is passed as an argument
 
 # before_app_install = "crm.utils.before_app_install"
-# after_app_install = "crm.utils.after_app_install"
+after_app_install = "crm.api.whatsapp.after_app_install"
 
 # Integration Cleanup
 # -------------------

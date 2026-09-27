@@ -838,6 +838,13 @@ def get_from_name(message, *, read_scope=None):
 	)
 
 
+def after_app_install(app_name):
+	# CRM can precede the optional connector. Its own after_install handles the
+	# opposite order; both use the same tenant-customizable native role defaults.
+	if app_name == "frappe_whatsapp":
+		add_roles()
+
+
 def add_roles():
 	if "frappe_whatsapp" not in frappe.get_installed_apps():
 		return
@@ -849,6 +856,8 @@ def add_roles():
 			if frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": role}):
 				continue
 			add_permission(doctype, role, 0, "write")
+			if doctype == "WhatsApp Message":
+				update_permission_property(doctype, role, 0, "read", 1)
 			update_permission_property(doctype, role, 0, "create", 1)
 			update_permission_property(doctype, role, 0, "delete", 1)
 			update_permission_property(doctype, role, 0, "share", 1)

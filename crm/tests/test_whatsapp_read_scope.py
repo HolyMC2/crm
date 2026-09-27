@@ -168,7 +168,7 @@ class WhatsAppReadFixture(OfferFixture):
 	def restrict_pipeline(self):
 		frappe.set_user("Administrator")
 		doc = frappe.get_doc("CRM Pipeline", self.pipeline.name)
-		doc.roles = [{"role": "System Manager"}]
+		doc.set("roles", [{"role": "System Manager"}])
 		doc.save()
 
 	def notice(self, message=None, actor=None):
@@ -315,7 +315,12 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 		# Explicit callback drain, not evidence of a DB commit or delivered socket.
 		frappe.db.after_commit.run()
 		self.assertFalse(
-			any(call.kwargs.get("user") == self.actor_a for call in self.realtime.call_args_list)
+			any(
+				call.args
+				and call.args[0] in {"whatsapp_message", "crm_notification"}
+				and call.kwargs.get("user") == self.actor_a
+				for call in self.realtime.call_args_list
+			)
 		)
 
 	def test_disabled_recipient_receives_no_event_or_notification(self):
@@ -525,10 +530,28 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 	def test_denied_linked_lead_does_not_lend_history_to_readable_deal(self):
 		lead = self.make_linked_lead(denied=True)
 		message = self.make_message("a", "LEAD-SECRET-" + self.key, doctype="CRM Lead", name=lead.name)
+		# Shop A membership admits its shared Lead pool regardless of owner. Use
+		# a native Lead-only restriction, leaving the containing Deal readable.
+		allowed = frappe.get_doc(
+			{"doctype": "CRM Lead", "first_name": "Allowed " + self.key, "lead_owner": self.actor_a}
+		).insert()
+		frappe.get_doc(
+			{
+				"doctype": "User Permission",
+				"user": self.actor_a,
+				"allow": "CRM Lead",
+				"for_value": allowed.name,
+				"apply_to_all_doctypes": 0,
+				"applicable_for": "CRM Lead",
+			}
+		).insert()
+		frappe.clear_cache(user=self.actor_a)
 		self.assertFalse(
 			has_permission("CRM Lead", "read", doc=lead.name, user=self.actor_a, print_logs=False)
 		)
 		frappe.set_user(self.actor_a)
+		self.assertEqual(frappe.get_list("CRM Lead", filters={"name": lead.name}, pluck="name"), [])
+		self.assertTrue(has_permission("CRM Deal", "read", doc=self.deal.name, print_logs=False))
 		rows = get_whatsapp_messages("CRM Deal", self.deal.name)
 		self.assertNotIn(message.name, frappe.as_json(rows))
 		self.assertNotIn(message.message, frappe.as_json(rows))

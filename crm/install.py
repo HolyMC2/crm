@@ -17,6 +17,8 @@ def before_install():
 
 
 def after_install(force=False):
+	from crm.api.whatsapp import add_roles as add_whatsapp_roles
+
 	add_default_lead_statuses()
 	add_default_deal_statuses()
 	from crm.pipeline.services.migration import execute as create_default_pipeline
@@ -37,6 +39,7 @@ def after_install(force=False):
 	create_default_manager_dashboard(force)
 	create_assignment_rule_custom_fields()
 	add_assignment_rule_property_setters()
+	add_whatsapp_roles()
 	frappe.db.commit()
 
 
