@@ -133,6 +133,7 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
+	"WhatsApp Message": "crm.permissions.whatsapp_read.message_query_conditions",
 	"CRM Offer": "crm.offers.permissions.get_permission_query_conditions",
 	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_query",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.get_permission_query_conditions",
@@ -149,6 +150,7 @@ permission_query_conditions = {
 }
 
 has_permission = {
+	"WhatsApp Message": "crm.permissions.whatsapp_read.message_permission",
 	"CRM Offer": "crm.offers.permissions.has_permission",
 	"CRM Pipeline": "crm.pipeline.services.configuration.pipeline_permission",
 	"CRM Webchat Session": "crm.fcrm.doctype.crm_webchat_session.crm_webchat_session.has_permission",
@@ -165,6 +167,8 @@ has_permission = {
 }
 
 filter_shared_documents = {
+	"WhatsApp Message": "crm.permissions.whatsapp_read.filter_shared_messages",
+	"CRM Notification": "crm.fcrm.doctype.crm_notification.crm_notification.filter_shared_documents",
 	"CRM Offer": "crm.pipeline.services.configuration.deny_shared_documents",
 	"CRM Lead": "crm.pipeline.services.configuration.filter_shared_documents",
 	"CRM Deal": "crm.pipeline.services.configuration.filter_shared_documents",

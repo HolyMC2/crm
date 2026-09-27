@@ -42,3 +42,40 @@ def _deny():
 	# The response does not reveal whether the identity is a current principal,
 	# a disabled registration or historical private staff evidence.
 	frappe.throw("This identity is unavailable for customer conversations.", frappe.PermissionError)
+
+
+def customer_peer_condition(peer):
+	"""SQL counterpart of assert_customer_peer for transcript lists/counts.
+
+	Correlated NOT EXISTS avoids loading private identities or transcript IDs.
+	The caller separately validates the provider's numeric peer grammar.
+	"""
+	from frappe.query_builder.functions import Concat
+	from pypika.terms import Criterion, ExistsCriterion
+
+	conditions = []
+	if frappe.db.exists("DocType", "Asistente Canal"):
+		channel = frappe.qb.DocType("Asistente Canal")
+		conditions.append(
+			~ExistsCriterion(
+				frappe.qb.from_(channel)
+				.select(channel.name)
+				.where(
+					(channel.channel == "WhatsApp")
+					& (
+						(channel.external_id == peer)
+						| (channel.address == peer)
+						| (channel.address == Concat("wa:", peer))
+					)
+				)
+			)
+		)
+	for doctype in ("Books Assistant Chat", "Books Chat Log"):
+		if frappe.db.exists("DocType", doctype):
+			table = frappe.qb.DocType(doctype)
+			conditions.append(
+				~ExistsCriterion(
+					frappe.qb.from_(table).select(table.name).where(table.chat_id == Concat("wa:", peer))
+				)
+			)
+	return Criterion.all(conditions)

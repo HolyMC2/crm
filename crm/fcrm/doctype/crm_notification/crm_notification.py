@@ -27,32 +27,66 @@ class CRMNotification(Document):
 		type: DF.Literal["Mention", "Task", "Assignment", "WhatsApp"]
 	# end: auto-generated types
 
+	def validate(self):
+		if self.type == "WhatsApp":
+			from crm.permissions.whatsapp_read import ReadScope, notification_text
+
+			scope = ReadScope()
+			if not scope.notification(self, self.to_user):
+				frappe.throw("Not permitted to notify this recipient.", frappe.PermissionError)
+			# Canonical context, never a copied transcript or caller-provided HTML.
+			self.message = ""
+			self.notification_text = notification_text(scope.load_message(self.notification_type_doc))
+
 	def on_update(self):
 		if self.to_user:
-			frappe.publish_realtime("crm_notification", user=self.to_user)
+			from functools import partial
+
+			frappe.db.after_commit.add(partial(publish_notification, self.name))
+
+
+def publish_notification(name):
+	from crm.permissions.whatsapp_read import NOTIFICATION_FIELDS, ReadScope
+
+	row = frappe.db.get_value("CRM Notification", name, NOTIFICATION_FIELDS, as_dict=True)
+	if row and row.to_user and ReadScope().notification(row, row.to_user):
+		frappe.publish_realtime("crm_notification", user=row.to_user, room="user:" + row.to_user)
 
 
 def get_permission_query_conditions(user=None):
-	if not user:
-		user = frappe.session.user
+	from crm.permissions.whatsapp_read import notification_query
 
-	if user == "Administrator" or "System Manager" in frappe.get_roles(user):
-		return ""
-
-	return f"`tabCRM Notification`.`to_user` = {frappe.db.escape(user)}"
+	user = user or frappe.session.user
+	manager = user == "Administrator" or "System Manager" in frappe.get_roles(user)
+	base = "1=1" if manager else f"`tabCRM Notification`.`to_user` = {frappe.db.escape(user)}"
+	return f"({base}) AND `tabCRM Notification`.`name` IN ({notification_query(user).get_sql()})"
 
 
 def has_permission(doc, ptype, user):
-	if not user:
-		user = frappe.session.user
+	from crm.permissions.whatsapp_read import ReadScope
 
+	user = user or frappe.session.user
+	if not ReadScope().notification(doc, user):
+		return False
 	if user == "Administrator" or "System Manager" in frappe.get_roles(user):
 		return True
-
 	if ptype == "create" or not doc.to_user:
 		return True
-
 	return doc.to_user == user
+
+
+def filter_shared_documents(user, doctype, names):
+	"""Sharing cannot resurrect a revoked WhatsApp transcript/context copy."""
+	from crm.permissions.whatsapp_read import BATCH_SIZE, notification_query
+
+	query = notification_query(user)
+	notification = frappe.qb.DocType("CRM Notification")
+	allowed = []
+	for offset in range(0, len(names), BATCH_SIZE):
+		allowed.extend(
+			query.where(notification.name.isin(names[offset : offset + BATCH_SIZE])).run(pluck=True)
+		)
+	return allowed
 
 
 def notify_user(notification):
@@ -75,6 +109,15 @@ def notify_user(notification):
 		reference_doctype=notification.redirect_to_doctype,
 		reference_name=notification.redirect_to_docname,
 	)
+
+	if values.type == "WhatsApp":
+		from crm.permissions.whatsapp_read import ReadScope, notification_text
+
+		scope = ReadScope()
+		if not scope.notification(values, values.to_user):
+			return
+		values.message = ""
+		values.notification_text = notification_text(scope.load_message(values.notification_type_doc))
 
 	if frappe.db.exists("CRM Notification", values):
 		return

@@ -1,21 +1,24 @@
 import frappe
 from frappe.permissions import has_permission as has_document_permission
-from frappe.query_builder import Order
 
 
 @frappe.whitelist()
 def get_notifications():
-	Notification = frappe.qb.DocType("CRM Notification")
-	query = (
-		frappe.qb.from_(Notification)
-		.select("*")
-		.where(Notification.to_user == frappe.session.user)
-		.orderby("creation", order=Order.desc)
+	notifications = frappe.get_list(
+		"CRM Notification",
+		fields=["*"],
+		filters={"to_user": frappe.session.user},
+		order_by="creation desc",
+		limit_page_length=0,
 	)
-	notifications = query.run(as_dict=True)
 
+	from crm.permissions.whatsapp_read import ReadScope
+
+	scope = ReadScope()
 	_notifications = []
 	for notification in notifications:
+		if not scope.notification(notification, frappe.session.user):
+			continue
 		is_inquiry = notification.reference_doctype == "CRM Inquiry"
 		if is_inquiry and (
 			not notification.reference_name
@@ -71,7 +74,7 @@ def mark_as_read(doc: str | None = None):
 			{"comment": doc},
 			{"notification_type_doc": doc},
 		]
-	for n in frappe.get_all("CRM Notification", filters=filters, or_filters=or_filters):
+	for n in frappe.get_list("CRM Notification", filters=filters, or_filters=or_filters, limit_page_length=0):
 		d = frappe.get_doc("CRM Notification", n.name)
 		d.read = True
 		d.save()

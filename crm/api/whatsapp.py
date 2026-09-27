@@ -66,21 +66,12 @@ def validate(doc, method):
 
 
 def on_update(doc, method):
-	# after_commit so the frontend's refetch (triggered by this event) reads the
-	# COMMITTED row — without it the publish races the transaction and the UI shows
-	# stale data until a manual F5.
-	frappe.publish_realtime(
-		"whatsapp_message",
-		{
-			"reference_doctype": doc.reference_doctype,
-			"reference_name": doc.reference_name,
-			# The inbox's orphan catch (Inbox.vue onWaMessage) matches the OPEN
-			# "Sin asignar" thread by trailing digits — without a phone in the
-			# payload the open orphan thread never live-refreshes on new inbound.
-			"phone": doc.get("from") if doc.type == "Incoming" else doc.get("to"),
-		},
-		after_commit=True,
-	)
+	from functools import partial
+
+	from crm.permissions.whatsapp_read import publish_message
+
+	# Capture only the technical ID; authorization and binding are re-read after commit.
+	frappe.db.after_commit.add(partial(publish_message, doc.name))
 
 	notify_agent(doc)
 
@@ -107,7 +98,7 @@ def notify_agent(doc):
 					"owner": doc.owner,
 					"assigned_to": user,
 					"notification_type": "WhatsApp",
-					"message": doc.message,
+					"message": "",
 					"notification_text": notification_text,
 					"reference_doctype": "WhatsApp Message",
 					"reference_docname": doc.name,
@@ -161,30 +152,39 @@ def get_whatsapp_messages(reference_doctype: str, reference_name: str):
 		return []
 	if not frappe.db.exists("DocType", "WhatsApp Message"):
 		return []
-	messages = []
-	wa_fields = _wa_message_fields()
-
-	if reference_doctype == "CRM Deal":
-		lead = reference_doc.get("lead")
-		if lead:
-			validate_access("CRM Lead", lead)
-			messages = frappe.get_all(
-				"WhatsApp Message",
-				filters={
-					"reference_doctype": "CRM Lead",
-					"reference_name": lead,
-				},
-				fields=wa_fields,
-			)
-
-	messages += frappe.get_all(
-		"WhatsApp Message",
-		filters={
-			"reference_doctype": reference_doctype,
-			"reference_name": reference_name,
-		},
-		fields=wa_fields,
+	from crm.permissions.whatsapp_read import (
+		MESSAGE_FIELDS,
+		ReadScope,
+		readable_field,
+		require_reference,
+		rows,
 	)
+
+	require_reference(reference_doctype, reference_name)
+	scope = ReadScope()
+	references = [(reference_doctype, reference_name)]
+	if reference_doctype == "CRM Deal" and readable_field("CRM Deal", "lead"):
+		lead = reference_doc.get("lead")
+		if lead and scope.reference("CRM Lead", lead, frappe.session.user):
+			references.insert(0, ("CRM Lead", lead))
+	messages = []
+	for doctype, name in references:
+		allowed = []
+		for row in rows(
+			"WhatsApp Message",
+			[["reference_doctype", "=", doctype], ["reference_name", "=", name]],
+			MESSAGE_FIELDS,
+		):
+			if scope.message(row):
+				allowed.append(row.name)
+		for offset in range(0, len(allowed), 200):
+			messages.extend(
+				frappe.get_all(
+					"WhatsApp Message",
+					filters={"name": ["in", allowed[offset : offset + 200]]},
+					fields=_wa_message_fields(),
+				)
+			)
 
 	return enrich_whatsapp_messages(messages)
 
@@ -197,8 +197,34 @@ def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
 	identically — an unresolved Template row has `message=None`, so without this it
 	renders as an empty bubble. Reaction rows are folded into their target and dropped
 	from the returned list."""
-	# Filter messages to get only Template messages
-	template_messages = [message for message in messages if message["message_type"] == "Template"]
+	from frappe.model import get_permitted_fields
+
+	from crm.permissions.whatsapp_read import BATCH_SIZE, MESSAGE_FIELDS, ReadScope, readable_field
+
+	read_scope = ReadScope()
+	for offset in range(0, len(messages), BATCH_SIZE):
+		ids = [row["name"] for row in messages[offset : offset + BATCH_SIZE]]
+		if not ids:
+			continue
+		for row in frappe.db.get_values(
+			"WhatsApp Message", {"name": ["in", ids]}, MESSAGE_FIELDS, as_dict=True
+		):
+			read_scope.messages[row.name] = row
+	messages = [row for row in messages if read_scope.message(read_scope.load_message(row["name"]))]
+	# get_all callers include old optional-app brokers. Project their supplied
+	# rows using native field levels/masks before enrichment can derive labels.
+	permitted = set(get_permitted_fields("WhatsApp Message", permission_type="read"))
+	masked = {df.fieldname for df in frappe.get_meta("WhatsApp Message").get_masked_fields()}
+	for row in messages:
+		for field in tuple(row):
+			if field not in permitted or field in masked:
+				row[field] = None
+	body_readable = readable_field("WhatsApp Message", "message")
+	template_messages = [
+		message
+		for message in messages
+		if body_readable and message["message_type"] == "Template" and message.get("template")
+	]
 
 	# Iterate through template messages
 	for template_message in template_messages:
@@ -246,7 +272,9 @@ def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
 			reacted_message["reaction"] = reaction_message["message"]
 
 	for message in messages:
-		from_name = get_from_name(message) if message["from"] else _("You")
+		from_name = (
+			get_from_name(message, read_scope=read_scope) if message["type"] == "Incoming" else _("You")
+		)
 		message["from_name"] = from_name
 	# Filter messages to get only replies
 	reply_messages = [message for message in messages if message["is_reply"]]
@@ -263,7 +291,11 @@ def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
 		if replied_message:
 			# reply_to_from labels the REPLIED-TO sender — derive it from the
 			# replied-to message, not the replying one.
-			from_name = get_from_name(replied_message) if replied_message["from"] else _("You")
+			from_name = (
+				get_from_name(replied_message, read_scope=read_scope)
+				if replied_message["type"] == "Incoming"
+				else _("You")
+			)
 			message = replied_message["message"]
 			if replied_message["message_type"] == "Template":
 				message = replied_message["template"]
@@ -767,27 +799,43 @@ def parse_template_parameters(string, parameters):
 	return string
 
 
-def get_from_name(message):
-	ref_dt = message.get("reference_doctype")
-	ref_dn = message.get("reference_name")
-	if not ref_dt or not ref_dn or not frappe.db.exists(ref_dt, ref_dn):
-		# Orphan (unassigned) rows flow through the shared enricher since the
-		# inbox renders them with the real conversation view — there is no
-		# reference doc to name from, so fall back to the sender number.
-		return message.get("from") or ""
-	doc = frappe.get_doc(ref_dt, ref_dn)
-	from_name = ""
-	if message["reference_doctype"] == "CRM Deal":
-		if doc.get("contacts"):
-			for c in doc.get("contacts"):
-				if c.is_primary:
-					from_name = c.full_name or c.mobile_no
-					break
-		else:
-			from_name = doc.get("lead_name")
-	else:
-		from_name = " ".join(name for name in [doc.get("first_name"), doc.get("last_name")] if name)
-	return from_name
+def get_from_name(message, *, read_scope=None):
+	from crm.permissions.whatsapp_read import ReadScope, readable_field
+
+	read_scope = read_scope or ReadScope()
+	metadata = read_scope.load_message(message.get("name"))
+	if not read_scope.message(metadata):
+		return ""
+	fallback = (metadata.get("from") or "") if readable_field("WhatsApp Message", "from") else ""
+	ref_dt, ref_dn = metadata.reference_doctype, metadata.reference_name
+	if not ref_dt or not ref_dn:
+		return fallback
+	key = (ref_dt, ref_dn)
+	if key not in read_scope.records:
+		read_scope.records[key] = frappe.get_doc(ref_dt, ref_dn)
+	doc = read_scope.records[key]
+	if ref_dt == "CRM Deal":
+		from crm.fcrm.doctype.crm_deal.api import get_deal_contacts
+
+		if ref_dn not in read_scope.contacts:
+			read_scope.contacts[ref_dn] = get_deal_contacts(ref_dn)
+		for contact in read_scope.contacts[ref_dn]:
+			if not contact.get("is_primary"):
+				continue
+			for field in ("full_name", "mobile_no"):
+				if readable_field("CRM Contacts", field, parenttype=ref_dt) and contact.get(field):
+					return contact[field]
+		if not doc.get("contacts") and readable_field(ref_dt, "lead_name") and doc.get("lead_name"):
+			return doc.lead_name
+		return fallback
+	return (
+		" ".join(
+			doc.get(field)
+			for field in ("first_name", "last_name")
+			if readable_field(ref_dt, field) and doc.get(field)
+		)
+		or fallback
+	)
 
 
 def add_roles():

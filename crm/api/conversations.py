@@ -207,6 +207,28 @@ def _authorize(doc, user=None, write=False):
 	member = bool(department) and departments.is_member(roles, department)
 	if not roles.intersection(_channel_roles(doc.provider)) and not member:
 		_deny()
+	account = _authorize_account(doc, user, roles, write=write)
+	permission = "write" if write else "read"
+	if bool(doc.reference_doctype) != bool(doc.reference_name):
+		_deny()
+	if doc.reference_doctype:
+		if doc.reference_doctype not in REFERENCES:
+			_deny()
+		reference = frappe.get_doc(doc.reference_doctype, doc.reference_name, for_update=_locked())
+		if not has_document_permission(
+			doc.reference_doctype, permission, doc=reference, user=user, print_logs=False
+		):
+			# A technician need not read the sales Deal: their own department's
+			# linked record (e.g. the Repair Order) is the app-owned authority.
+			if not (member and _department_record(doc, user, department)):
+				_deny()
+	elif not has_document_permission("CRM Deal", "read", user=user, print_logs=False) and not member:
+		_deny()
+	return roles, account
+
+
+def _authorize_account(doc, user, roles, *, write=False):
+	"""Internal account scope shared with finite transcript SQL admission."""
 	account = _account(doc.provider, doc.account_id, active=write)
 	if doc.provider == "Webchat" and not roles.intersection({"System Manager", "Sales Manager"}):
 		# Public visitors never acquire a staff role. Channel operators have an
@@ -244,23 +266,7 @@ def _authorize(doc, user=None, write=False):
 			_deny()
 		if not unrestricted and (not account.shop or account.shop not in allowed):
 			_deny()
-	permission = "write" if write else "read"
-	if bool(doc.reference_doctype) != bool(doc.reference_name):
-		_deny()
-	if doc.reference_doctype:
-		if doc.reference_doctype not in REFERENCES:
-			_deny()
-		reference = frappe.get_doc(doc.reference_doctype, doc.reference_name, for_update=_locked())
-		if not has_document_permission(
-			doc.reference_doctype, permission, doc=reference, user=user, print_logs=False
-		):
-			# A technician need not read the sales Deal: their own department's
-			# linked record (e.g. the Repair Order) is the app-owned authority.
-			if not (member and _department_record(doc, user, department)):
-				_deny()
-	elif not has_document_permission("CRM Deal", "read", user=user, print_logs=False) and not member:
-		_deny()
-	return roles, account
+	return account
 
 
 def _department_record(doc, user, department):
