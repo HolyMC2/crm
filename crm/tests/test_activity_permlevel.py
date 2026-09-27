@@ -57,7 +57,7 @@ class TestActivityPermlevel(IntegrationTestCase):
 				"doctype": "CRM Lead",
 				"lead_owner": "rep@permlevel.test",
 				"first_name": "Permlevel",
-				"status": "New Lead",
+				"status": "New",
 			}
 		)
 		lead.flags.ignore_mandatory = True

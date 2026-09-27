@@ -49,7 +49,7 @@ class TestActivityBatchQueries(OfferFixture, IntegrationTestCase):
 			{
 				"doctype": "CRM Lead",
 				"first_name": "Same name",
-				"status": "New Lead",
+				"status": "New",
 				"lead_owner": self.user,
 			}
 		).insert(set_name=self.deal.name)

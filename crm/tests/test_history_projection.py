@@ -44,7 +44,7 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 				"doctype": "CRM Lead",
 				"first_name": "History fixture",
 				"lead_owner": self.user,
-				"status": "New Lead",
+				"status": "New",
 			}
 		).insert()
 		history.require_framework()

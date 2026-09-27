@@ -73,7 +73,7 @@ class TestActivityPrivacy(OfferFixture, IntegrationTestCase):
 			{
 				"doctype": "CRM Lead",
 				"first_name": "History",
-				"status": "New Lead",
+				"status": "New",
 				"lead_owner": self.user,
 			}
 		).insert()
@@ -186,7 +186,7 @@ class TestActivityPrivacy(OfferFixture, IntegrationTestCase):
 			{
 				"doctype": "CRM Lead",
 				"first_name": "Malformed history",
-				"status": "New Lead",
+				"status": "New",
 				"lead_owner": self.user,
 			}
 		).insert()
