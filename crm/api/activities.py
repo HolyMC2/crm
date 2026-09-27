@@ -4,10 +4,20 @@ import frappe
 from bs4 import BeautifulSoup
 from frappe import _
 from frappe.desk.form.load import get_docinfo
-from frappe.query_builder import JoinType
 from frappe.translate import get_translated_doctypes
 
-from crm.fcrm.doctype.crm_call_log.crm_call_log import parse_call_log
+from crm.fcrm.doctype.crm_call_log.crm_call_log import (
+	CALL_FIELDS,
+	REFERENCE_FIELDS,
+	call_linked_activities,
+	call_user_labels,
+	get_call_links,
+	get_permitted_docs,
+	parse_call_log,
+	readable_activity_fields,
+	readable_call_links,
+	unique_activities,
+)
 from crm.fcrm.doctype.crm_fields_layout.crm_fields_layout import get_permlevel_access
 
 ATTACHMENT_FIELDS = (
@@ -205,7 +215,13 @@ def get_deal_activities(name: str):
 	activities.sort(key=lambda x: x["creation"], reverse=True)
 	activities = handle_multiple_versions(activities)
 
-	return activities, calls, notes, tasks, attachments
+	return (
+		activities,
+		unique_activities(calls),
+		unique_activities(notes),
+		unique_activities(tasks),
+		attachments,
+	)
 
 
 def get_lead_activities(name: str):
@@ -344,7 +360,13 @@ def get_lead_activities(name: str):
 	activities.sort(key=lambda x: x["creation"], reverse=True)
 	activities = handle_multiple_versions(activities)
 
-	return activities, calls, notes, tasks, attachments
+	return (
+		activities,
+		unique_activities(calls),
+		unique_activities(notes),
+		unique_activities(tasks),
+		attachments,
+	)
 
 
 def get_readable_fields(doctype: str):
@@ -439,137 +461,72 @@ def parse_grouped_versions(versions: list):
 	return version
 
 
+def _check_activity_parent(doctype, name):
+	if doctype not in ("CRM Lead", "CRM Deal"):
+		frappe.throw(_("Unsupported activity document type"), frappe.ValidationError)
+	if not frappe.has_permission(doctype, "read", name):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+
 def get_linked_calls(doctype: str, name: str):
-	calls = frappe.db.get_all(
-		"CRM Call Log",
-		filters={"reference_doctype": doctype, "reference_docname": name},
-		fields=[
-			"name",
-			"caller",
-			"receiver",
-			"from",
-			"to",
-			"duration",
-			"start_time",
-			"end_time",
-			"status",
-			"type",
-			"recording_url",
-			"creation",
-			"note",
-		],
-	)
-
-	linked_calls = frappe.db.get_all(
-		"Dynamic Link",
-		filters={
-			"link_doctype": doctype,
-			"link_name": name,
-			"parenttype": "CRM Call Log",
-			"parentfield": "links",
-		},
-		pluck="parent",
-	)
-
-	notes = []
-	tasks = []
-
-	if linked_calls:
-		CallLog = frappe.qb.DocType("CRM Call Log")
+	_check_activity_parent(doctype, name)
+	empty = {"calls": [], "notes": [], "tasks": []}
+	if not frappe.has_permission("CRM Call Log", "read"):
+		return empty
+	allowed = readable_activity_fields("CRM Call Log")
+	# Direction is required by the existing timeline card. Do not mislabel a
+	# hidden direction as outgoing through that card's default branch.
+	if "type" not in allowed:
+		return empty
+	Call = frappe.qb.DocType("CRM Call Log")
+	relation = None
+	if REFERENCE_FIELDS.issubset(allowed):
+		relation = (Call.reference_doctype == doctype) & (Call.reference_docname == name)
+	if readable_call_links():
 		Link = frappe.qb.DocType("Dynamic Link")
-		query = (
-			frappe.qb.from_(CallLog)
-			.select(
-				CallLog.name,
-				CallLog.caller,
-				CallLog.receiver,
-				CallLog["from"],
-				CallLog.to,
-				CallLog.duration,
-				CallLog.start_time,
-				CallLog.end_time,
-				CallLog.status,
-				CallLog.type,
-				CallLog.recording_url,
-				CallLog.creation,
-				CallLog.note,
-				Link.link_doctype,
-				Link.link_name,
-			)
-			.join(Link, JoinType.inner)
-			.on(
-				(Link.parent == CallLog.name)
-				& (Link.parenttype == "CRM Call Log")
+		linked = (
+			frappe.qb.from_(Link)
+			.select(Link.parent)
+			.where(
+				(Link.parenttype == "CRM Call Log")
 				& (Link.parentfield == "links")
+				& (Link.link_doctype == doctype)
+				& (Link.link_name == name)
 			)
-			.where(CallLog.name.isin(linked_calls))
 		)
-		_calls = query.run(as_dict=True)
-
-		for call in _calls:
-			if call.get("link_doctype") == "FCRM Note":
-				notes.append(call.link_name)
-			elif call.get("link_doctype") == "CRM Task":
-				tasks.append(call.link_name)
-
-		_calls = [call for call in _calls if call.get("link_doctype") not in ["FCRM Note", "CRM Task"]]
-		if _calls:
-			calls = calls + _calls
-
-	if notes:
-		notes = frappe.db.get_all(
-			"FCRM Note",
-			filters={"name": ("in", notes)},
-			fields=["name", "title", "content", "owner", "modified"],
+		dynamic = Call.name.isin(linked)
+		relation = relation | dynamic if relation is not None else dynamic
+	if relation is None:
+		return empty
+	# Native list SQL includes hierarchy, User Permissions and shares. The
+	# membership subquery cannot multiply rows or serialize sibling identities.
+	calls = (
+		frappe.qb.get_query(
+			"CRM Call Log",
+			fields=[f for f in CALL_FIELDS if f in allowed and f not in REFERENCE_FIELDS],
+			ignore_permissions=False,
+			order_by="creation desc, name desc",
 		)
-
-	if tasks:
-		tasks = frappe.db.get_all(
-			"CRM Task",
-			filters={"name": ("in", tasks)},
-			fields=[
-				"name",
-				"title",
-				"description",
-				"assigned_to",
-				"due_date",
-				"priority",
-				"status",
-				"modified",
-			],
-		)
-
-	calls = [parse_call_log(call) for call in calls] if calls else []
-
+		.where(relation)
+		.run(as_dict=True)
+	)
+	links = get_call_links([call.name for call in calls], ["FCRM Note", "CRM Task"])
+	notes, tasks = call_linked_activities(calls, links)
+	labels = call_user_labels(calls)
+	# Complete history is still unpaged. This avoids per-call phone lookup SQL;
+	# detail retains canonical actor-scoped contact enrichment.
+	calls = [parse_call_log(call, user_labels=labels, resolve_contact=False) for call in calls]
 	return {"calls": calls, "notes": notes, "tasks": tasks}
 
 
 def get_linked_notes(doctype: str, name: str):
-	notes = frappe.db.get_all(
-		"FCRM Note",
-		filters={"reference_doctype": doctype, "reference_docname": name},
-		fields=["name", "title", "content", "owner", "modified", "creation"],
-	)
-	return notes or []
+	_check_activity_parent(doctype, name)
+	return get_permitted_docs("FCRM Note", filters={"reference_doctype": doctype, "reference_docname": name})
 
 
 def get_linked_tasks(doctype: str, name: str):
-	tasks = frappe.db.get_all(
-		"CRM Task",
-		filters={"reference_doctype": doctype, "reference_docname": name},
-		fields=[
-			"name",
-			"title",
-			"description",
-			"assigned_to",
-			"due_date",
-			"priority",
-			"status",
-			"modified",
-			"creation",
-		],
-	)
-	return tasks or []
+	_check_activity_parent(doctype, name)
+	return get_permitted_docs("CRM Task", filters={"reference_doctype": doctype, "reference_docname": name})
 
 
 def parse_attachment_log(html: str, type: str):

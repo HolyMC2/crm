@@ -60,6 +60,7 @@ class TestActivityBatchQueries(OfferFixture, IntegrationTestCase):
 			call_values = {
 				"doctype": "CRM Call Log",
 				"telephony_medium": "Manual",
+				"caller": self.user,
 				"type": "Outgoing",
 				"from": "+12025550100",
 				"to": "+12025550123",
