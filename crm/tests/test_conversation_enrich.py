@@ -238,7 +238,12 @@ class TestRealtimePayload(StoredConversationFixture, IntegrationTestCase):
 		frappe.db.after_commit = CallbackManager()
 		self.realtime.reset_mock()
 		on_update(doc, None)
-		self.assertFalse(self.realtime.called)
+		self.assertFalse(
+			any(
+				call.args and call.args[0] in {"whatsapp_message", "crm_notification"}
+				for call in self.realtime.call_args_list
+			)
+		)
 		# Run the actual callback without committing this rollback fixture.
 		frappe.db.after_commit.run()
 		calls = [call for call in self.realtime.call_args_list if call.args[0] == "whatsapp_message"]

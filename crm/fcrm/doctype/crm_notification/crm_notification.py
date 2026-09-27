@@ -46,9 +46,15 @@ class CRMNotification(Document):
 
 
 def publish_notification(name):
+	from pypika.terms import Function
+
 	from crm.permissions.whatsapp_read import NOTIFICATION_FIELDS, ReadScope
 
-	row = frappe.db.get_value("CRM Notification", name, NOTIFICATION_FIELDS, as_dict=True)
+	# Inspect legacy copies without loading their body before recipient checks.
+	# Frappe's native SELECT parser accepts typed terms, not SQL function strings.
+	notification = frappe.qb.DocType("CRM Notification")
+	fields = [*NOTIFICATION_FIELDS, Function("LENGTH", notification.message).as_("copied_body_length")]
+	row = frappe.db.get_value("CRM Notification", name, fields, as_dict=True)
 	if row and row.to_user and ReadScope().notification(row, row.to_user):
 		frappe.publish_realtime("crm_notification", user=row.to_user, room="user:" + row.to_user)
 
@@ -119,6 +125,7 @@ def notify_user(notification):
 		values.message = ""
 		values.notification_text = notification_text(scope.load_message(values.notification_type_doc))
 
-	if frappe.db.exists("CRM Notification", values):
+	# The one-dict overload removes doctype before building column filters.
+	if frappe.db.exists(values):
 		return
 	frappe.get_doc(values).insert(ignore_permissions=True)

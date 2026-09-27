@@ -30,7 +30,6 @@ NOTIFICATION_FIELDS = [
 	"notification_type_doc",
 	"reference_doctype",
 	"reference_name",
-	"length(message) as copied_body_length",
 ]
 IDENTITY = re.compile(r"[0-9]{1,40}\Z", re.ASCII)
 

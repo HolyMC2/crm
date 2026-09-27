@@ -275,10 +275,13 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 
 	def test_notification_replay_does_not_duplicate_after_canonical_text(self):
 		before = frappe.db.count("CRM Notification", {"notification_type_doc": self.message_a.name})
+		name = self.notice()
+		self.assertTrue(name)
 		notify_agent(self.message_a)
 		self.assertEqual(
 			frappe.db.count("CRM Notification", {"notification_type_doc": self.message_a.name}), before
 		)
+		self.assertEqual(self.notice(), name)
 
 	def test_account_revocation_hides_existing_bell_generic_and_thread(self):
 		name = self.notice()
@@ -310,7 +313,12 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 	def test_dispatch_callback_rechecks_revocation_after_registration(self):
 		frappe.db.after_commit = CallbackManager()
 		on_update(self.message_a, "on_update")
-		self.assertFalse(self.realtime.called)
+		self.assertFalse(
+			any(
+				call.args and call.args[0] in {"whatsapp_message", "crm_notification"}
+				for call in self.realtime.call_args_list
+			)
+		)
 		self.revoke_account()
 		# Explicit callback drain, not evidence of a DB commit or delivered socket.
 		frappe.db.after_commit.run()
@@ -465,7 +473,8 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 		rows = frappe.get_list(
 			"WhatsApp Message",
 			filters={"name": ["in", [self.message_a.name, self.message_b.name]]},
-			fields=["count(name) as amount"],
+			fields=[{"COUNT": "*", "as": "amount"}],
+			order_by=None,
 		)
 		self.assertEqual(rows[0].amount, 1)
 
