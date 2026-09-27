@@ -1,6 +1,7 @@
 """Native regression fixtures for commercial metrics, scopes and period boundaries."""
 
 import frappe
+from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.tests import IntegrationTestCase
 
 from crm.api.dashboard import (
@@ -8,6 +9,7 @@ from crm.api.dashboard import (
 	get_average_ongoing_deal_value,
 	get_average_won_deal_value,
 	get_chart,
+	get_deal_status_change_counts,
 	get_deals_by_salesperson,
 	get_deals_by_stage_axis,
 	get_deals_by_stage_donut,
@@ -102,6 +104,35 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.assertEqual(result["currency"], "USD")
 		return {row.status: row for row in result["stages"]}
 
+	def coassign_to_actor(self, deal):
+		"""Keep a non-owner assignment through the supported owner-edit lifecycle."""
+		owner = deal.deal_owner
+		assignment = frappe.get_doc(
+			{
+				"doctype": "ToDo",
+				"reference_type": "CRM Deal",
+				"reference_name": deal.name,
+				"allocated_to": self.user,
+				"description": "Metrics co-assignment",
+				"status": "Open",
+			}
+		).insert()
+		# ToDo.after_insert deliberately makes its assignee the current owner.
+		# A normal owner edit retains the other open assignments. Do not bypass
+		# either lifecycle with db_set, or accidentally test owner access instead.
+		deal.reload()
+		self.assertEqual(deal.deal_owner, self.user)
+		deal.deal_owner = owner
+		deal.save()
+		self.assertEqual(deal.reload().deal_owner, owner)
+		assignment.reload()
+		self.assertEqual((assignment.allocated_to, assignment.status), (self.user, "Open"))
+		self.assertFalse(
+			frappe.db.exists(
+				"DocShare", {"share_doctype": "CRM Deal", "share_name": deal.name, "user": self.user}
+			)
+		)
+
 	def test_heterogeneous_values_and_per_deal_probability_reconcile(self):
 		self.deal(expected=100, value=10, probability=80)
 		self.deal(expected=0, value=900, probability=20)
@@ -195,25 +226,24 @@ class TestSalesMetrics(IntegrationTestCase):
 		)
 
 	def test_assigned_deal_is_included_in_both_list_metrics_and_dashboard_chart(self):
-		self.deal(expected=100)
+		owned = self.deal(expected=100)
 		assigned = self.deal(expected=800, deal_owner="Administrator")
 		self.deal(expected=9000, deal_owner="Administrator")
-		frappe.get_doc(
-			{
-				"doctype": "ToDo",
-				"reference_type": "CRM Deal",
-				"reference_name": assigned.name,
-				"allocated_to": self.user,
-				"description": "Metrics assignment",
-				"status": "Open",
-			}
-		).insert()
+		self.coassign_to_actor(assigned)
 		frappe.set_user(self.user)
+		self.assertEqual(
+			set(frappe.get_list("CRM Deal", filters={"pipeline": self.pipeline.name}, pluck="name")),
+			{owned.name, assigned.name},
+		)
 		row = self.metrics()[self.statuses["Ongoing"]]
 		self.assertEqual(row.count, 2)
 		self.assertEqual(row.weighted_forecast, 450)
+		filtered = self.metrics(deal_owner="Administrator")[self.statuses["Ongoing"]]
+		self.assertEqual((filtered.count, filtered.weighted_forecast), (1, 400))
 		chart = get_chart("forecasted_revenue", "axis", "2040-02-01", "2040-02-29")
 		self.assertEqual(chart["data"][0]["forecasted"], 450)
+		chart = get_chart("forecasted_revenue", "axis", "2040-02-01", "2040-02-29", "Administrator")
+		self.assertEqual(chart["data"][0]["forecasted"], 400)
 
 	def test_owner_share_cannot_bypass_pipeline_restriction_in_metrics(self):
 		deal = self.deal(expected=9000)
@@ -383,16 +413,7 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.deal(expected=100)
 		assigned = self.deal(expected=800, deal_owner="Administrator")
 		self.deal(expected=99999, deal_owner="Administrator")
-		frappe.get_doc(
-			{
-				"doctype": "ToDo",
-				"reference_type": "CRM Deal",
-				"reference_name": assigned.name,
-				"allocated_to": self.user,
-				"description": "Dashboard assignment",
-				"status": "Open",
-			}
-		).insert()
+		self.coassign_to_actor(assigned)
 		frappe.set_user(self.user)
 		for chart_name in ("average_deal_value", "average_ongoing_deal_value"):
 			self.assertEqual(get_chart(chart_name, "number", "2040-02-01", "2040-02-29")["value"], 450)
@@ -406,6 +427,15 @@ class TestSalesMetrics(IntegrationTestCase):
 				),
 				2,
 			)
+			self.assertEqual(
+				sum(
+					row["count"]
+					for row in get_chart(chart_name, "axis", "2040-02-01", "2040-02-29", "Administrator")[
+						"data"
+					]
+				),
+				1,
+			)
 		self.assertEqual(
 			sum(
 				row.deals
@@ -413,3 +443,25 @@ class TestSalesMetrics(IntegrationTestCase):
 			),
 			2,
 		)
+
+	def test_history_counts_require_native_child_field_read_permission(self):
+		self.deal()
+		frappe.set_user(self.user)
+		self.assertEqual(
+			get_deal_status_change_counts("2040-02-01", "2040-02-29"),
+			[{"stage": self.statuses["Open"], "count": 1}],
+		)
+		for property_name, value, property_type in (("permlevel", 1, "Int"), ("mask", 1, "Check")):
+			with self.subTest(property=property_name):
+				frappe.set_user("Administrator")
+				frappe.db.savepoint("metrics_history_field")
+				try:
+					make_property_setter("CRM Status Change Log", "to", property_name, value, property_type)
+					frappe.clear_cache(doctype="CRM Status Change Log")
+					frappe.set_user(self.user)
+					with self.assertRaises(frappe.PermissionError):
+						get_deal_status_change_counts("2040-02-01", "2040-02-29")
+				finally:
+					frappe.set_user("Administrator")
+					frappe.db.rollback(save_point="metrics_history_field")
+					frappe.clear_cache(doctype="CRM Status Change Log")

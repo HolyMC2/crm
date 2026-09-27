@@ -1007,6 +1007,7 @@ def get_deal_status_change_counts(
 	from crm.pipeline.queries.stages import permitted_deals
 
 	_fields("CRM Deal", ["creation", "status", "deal_owner", "status_change_log"])
+	_fields("CRM Status Change Log", ["to"], parenttype="CRM Deal")
 	query = query.where(CRMDeal.name.isin(permitted_deals())).where(
 		(CRMStatusChangeLog.parenttype == "CRM Deal")
 		& (CRMStatusChangeLog.parentfield == "status_change_log")
