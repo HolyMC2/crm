@@ -374,6 +374,7 @@ class TestCounterCompanyPermissionSetup(unittest.TestCase):
 
 	def seed(self, *, custom=False):
 		self.role = "PERF Company Read abcdefabcdef"
+		self.manager_role = "PERF Manager Company Read abcdefabcdef"
 		baseline = {
 			**company_read_rule("Existing role"),
 			"name": "old-rule",
@@ -407,7 +408,7 @@ class TestCounterCompanyPermissionSetup(unittest.TestCase):
 
 			def insert(self):
 				case.assertEqual(self["doctype"], "Custom DocPerm")
-				self["name"] = "task-rule"
+				self["name"] = "task-rule-" + str(len(rows["Custom DocPerm"]))
 				rows["Custom DocPerm"].append(copy.deepcopy({k: v for k, v in self.items() if k in columns}))
 				events.append(("insert",))
 				return self
@@ -478,7 +479,7 @@ class TestCounterCompanyPermissionSetup(unittest.TestCase):
 		return seed
 
 	def setup_rule(self, seed):
-		seed._prepare_company_permission_plan(self.role)
+		seed._prepare_company_permission_plan(self.role, self.manager_role)
 		seed._ensure_counter_company_read(self.role)
 
 	def test_initial_setup_copies_native_defaults_and_declares_every_right(self):
@@ -562,7 +563,7 @@ class TestCounterCompanyPermissionSetup(unittest.TestCase):
 				else:
 					seed.pending = 1
 				with self.assertRaises(ContractError):
-					seed._prepare_company_permission_plan(self.role)
+					seed._prepare_company_permission_plan(self.role, self.manager_role)
 				self.assertEqual(self.events, [])
 
 	def access_seed(self, mode=None):
@@ -627,6 +628,172 @@ class TestCounterCompanyPermissionSetup(unittest.TestCase):
 				seed = self.access_seed(mode)
 				with self.assertRaises(ContractError):
 					seed._verify_counter_company_access()
+				self.assertEqual(seed.f.session.user, "Administrator")
+
+	def test_manager_rule_is_separate_read_only_and_preserves_all_prior_grants(self):
+		for custom in (False, True):
+			with self.subTest(custom=custom):
+				seed = self.seed(custom=custom)
+				self.rows["User Permission"] = [
+					{"user": "scoped", "allow": "Company", "for_value": "CompanyA"}
+				]
+				self.setup_rule(seed)
+				before = copy.deepcopy(self.rows)
+				seed._ensure_manager_company_read(self.manager_role)
+				self.assertEqual(self.rows["DocPerm"], before["DocPerm"])
+				self.assertEqual(self.rows["User Permission"], before["User Permission"])
+				self.assertEqual(
+					[r for r in self.rows["Custom DocPerm"] if r["role"] != self.manager_role],
+					before["Custom DocPerm"],
+				)
+				rule = next(r for r in self.rows["Custom DocPerm"] if r["role"] == self.manager_role)
+				self.assertEqual(
+					{k: rule[k] for k in company_read_rule(self.manager_role)},
+					company_read_rule(self.manager_role),
+				)
+				self.assertNotIn("parenttype", rule)
+				self.assertNotIn("parentfield", rule)
+				self.assertEqual(self.events.count(("native_copy",)), int(not custom))
+
+	def test_manager_completed_rule_reloads_without_second_insert(self):
+		seed = self.seed()
+		self.setup_rule(seed)
+		seed._ensure_manager_company_read(self.manager_role)
+		before = copy.deepcopy(self.rows)
+		seed.pending = 0
+		self.setup_rule(seed)
+		seed._ensure_manager_company_read(self.manager_role)
+		self.assertEqual(self.rows, before)
+		self.assertEqual(self.events.count(("insert",)), 2)
+
+	def test_manager_conflicting_missing_or_duplicate_rule_is_not_repaired(self):
+		for mode in ("export", "write", "mask", "if_owner", "permlevel", "duplicate", "missing"):
+			with self.subTest(mode=mode):
+				seed = self.seed()
+				self.setup_rule(seed)
+				seed._ensure_manager_company_read(self.manager_role)
+				row = next(r for r in self.rows["Custom DocPerm"] if r["role"] == self.manager_role)
+				if mode == "duplicate":
+					self.rows["Custom DocPerm"].append({**row, "name": "duplicate"})
+				elif mode == "missing":
+					self.rows["Custom DocPerm"].remove(row)
+				else:
+					row[mode] = 1
+				before = copy.deepcopy(self.rows)
+				with self.assertRaises(ContractError):
+					seed._ensure_manager_company_read(self.manager_role)
+				self.assertEqual(self.rows, before)
+
+	def test_unowned_manager_role_or_counter_role_alias_is_refused_before_writes(self):
+		for mode in ("unowned", "alias"):
+			with self.subTest(mode=mode):
+				seed = self.seed()
+				if mode == "unowned":
+					self.rows["Custom DocPerm"] = [
+						{**company_read_rule(self.manager_role), "name": "foreign"}
+					]
+				with self.assertRaises(ContractError):
+					seed._prepare_company_permission_plan(
+						self.role, self.role if mode == "alias" else self.manager_role
+					)
+				self.assertEqual(self.events, [])
+
+	def manager_access_seed(self, mode=None):
+		seed = self.seed()
+		self.setup_rule(seed)
+		seed._ensure_manager_company_read(self.manager_role)
+		seed.tag = "abcdefabcdef"
+		seed.records.update(
+			{
+				key: {"name": value}
+				for key, value in {
+					"manager_company_read_role": self.manager_role,
+					"company_a": "CompanyA",
+					"company_b": "CompanyB",
+				}.items()
+			}
+		)
+		f = seed.f
+		f.session = SimpleNamespace(user="Administrator")
+		f.set_user = lambda user: setattr(f.session, "user", user)
+		f.PermissionError = PermissionError
+		self.manager_validations = []
+		allowed = {
+			seed.user("manager_a"): ["CompanyA"],
+			seed.user("manager_b"): ["CompanyB"],
+			seed.user("broad_manager"): ["CompanyA", "CompanyB"],
+		}
+		case = self
+
+		class Company:
+			def __init__(self, name):
+				self.name = name
+
+			def check_permission(self, right):
+				case.assertEqual(right, "read")
+				case.assertIn(f.session.user, allowed)
+				if self.name not in allowed[f.session.user] and mode != "foreign_check":
+					raise PermissionError
+
+		f.get_doc = lambda doctype, name: Company(name)
+
+		def get_list(doctype, **kwargs):
+			self.assertEqual(doctype, "Company")
+			self.assertIn(f.session.user, allowed)
+			self.assertEqual(kwargs["filters"], {"name": ["in", ["CompanyA", "CompanyB"]]})
+			return ["CompanyA", "CompanyB"] if mode == "foreign_list" else allowed[f.session.user]
+
+		def has_permission(doctype, right, *, doc):
+			self.assertEqual(doctype, "Company")
+			self.assertIn(f.session.user, allowed)
+			if right == "read":
+				return (doc.name in allowed[f.session.user] and mode != "own_read") or mode == "foreign_read"
+			return right == "export" and mode == "export"
+
+		def validate_company(name):
+			self.assertIn(name, allowed[f.session.user])
+			self.manager_validations.append((f.session.user, name))
+			if mode == "owning_guard":
+				raise PermissionError
+
+		self.enterContext(
+			patch.dict(
+				"sys.modules",
+				{"crm.pipeline.services.configuration": SimpleNamespace(validate_company=validate_company)},
+			)
+		)
+		f.get_list = get_list
+		f.has_permission = has_permission
+		f.get_all = lambda *args, **kwargs: [
+			*allowed,
+			*([seed.user("counter")] if mode == "audience" else []),
+		]
+		return seed
+
+	def test_manager_scope_checks_each_real_actor_and_owning_guard_contract(self):
+		seed = self.manager_access_seed()
+		proof = seed._verify_manager_company_access()
+		self.assertEqual(seed.f.session.user, "Administrator")
+		self.assertEqual(len(self.manager_validations), 4)
+		self.assertEqual(proof["actors"]["manager_a"]["visible_companies"], ["a"])
+		self.assertEqual(proof["actors"]["manager_b"]["visible_companies"], ["b"])
+		self.assertEqual(proof["actors"]["broad_manager"]["visible_companies"], ["a", "b"])
+		self.assertTrue(proof["managers_only"])
+
+	def test_manager_unexpected_authority_or_audience_fails_and_restores_actor(self):
+		for mode in (
+			"foreign_list",
+			"foreign_read",
+			"foreign_check",
+			"own_read",
+			"export",
+			"audience",
+			"owning_guard",
+		):
+			with self.subTest(mode=mode):
+				seed = self.manager_access_seed(mode)
+				with self.assertRaises((ContractError, PermissionError)):
+					seed._verify_manager_company_access()
 				self.assertEqual(seed.f.session.user, "Administrator")
 
 

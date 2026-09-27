@@ -92,6 +92,7 @@ COMPANY_RIGHTS = (
 	"impersonate",
 )
 COMPANY_PERMISSION_FIELDS = ("role", "permlevel", "if_owner", *COMPANY_RIGHTS)
+MANAGER_ACTORS = ("manager_a", "manager_b", "broad_manager")
 
 
 def company_read_rule(role):
@@ -496,8 +497,9 @@ class Seed:
 		# Persist native datetimes as JSON, without discarding any existing row field.
 		return json.loads(self.f.as_json(rows))
 
-	def _prepare_company_permission_plan(self, role):
+	def _prepare_company_permission_plan(self, role, manager_role):
 		require(self.pending == 0, "seed_company_plan_pending_writes")
+		require(role != manager_role, "seed_company_roles_distinct")
 		# Pinned Frappe installs this Permission Type as native custom Check
 		# fields on both permission doctypes; it is absent from their base JSON.
 		require(
@@ -522,20 +524,27 @@ class Seed:
 			require(actual == expected, "seed_company_permission_schema")
 		if "company_permissions" not in self.journal:
 			custom = self._company_permission_rows("Custom DocPerm")
-			require(not any(row["role"] == role for row in custom), "seed_company_rule_unowned")
+			require(
+				not any(row["role"] in (role, manager_role) for row in custom), "seed_company_rule_unowned"
+			)
 			self.journal["company_permissions"] = {
 				"role": role,
+				"manager_role": manager_role,
 				"standard": self._company_permission_rows("DocPerm"),
 				"custom": custom,
 			}
 			# Before any master insert, the journal contains committed records only.
 			self.save()
 		require(self.journal["company_permissions"]["role"] == role, "seed_company_role_changed")
+		require(
+			self.journal["company_permissions"].get("manager_role") == manager_role,
+			"seed_manager_company_role_changed",
+		)
 
 	def _check_company_permission_baseline(self, rows):
 		plan = self.journal["company_permissions"]
 		require(self._company_permission_rows("DocPerm") == plan["standard"], "seed_company_defaults_changed")
-		others = [row for row in rows if row["role"] != plan["role"]]
+		others = [row for row in rows if row["role"] not in (plan["role"], plan["manager_role"])]
 		if plan["custom"]:
 			require(others == plan["custom"], "seed_company_existing_rules_changed")
 		else:
@@ -574,6 +583,26 @@ class Seed:
 		self._check_company_permission_baseline(rows)
 		rules = [row for row in rows if row["role"] == role]
 		require(len(rules) == 1, "seed_company_rule_count")
+		verify_fields(rules[0], values)
+
+	def _ensure_manager_company_read(self, role):
+		# The counter setup owns the one native default-copy operation. Managers
+		# receive a separate exact rule; the counter-only audience stays intact.
+		plan = self.journal["company_permissions"]
+		require(role == plan["manager_role"], "seed_manager_company_role_changed")
+		rows = self._company_permission_rows("Custom DocPerm")
+		self._check_company_permission_baseline(rows)
+		counter = [row for row in rows if row["role"] == plan["role"]]
+		require(len(counter) == 1, "seed_company_rule_count")
+		verify_fields(counter[0], company_read_rule(plan["role"]))
+		values = company_read_rule(role)
+		self.ensure(
+			"manager_company_read_rule", "Custom DocPerm", {"parent": "Company", "role": role}, values
+		)
+		rows = self._company_permission_rows("Custom DocPerm")
+		self._check_company_permission_baseline(rows)
+		rules = [row for row in rows if row["role"] == role]
+		require(len(rules) == 1, "seed_manager_company_rule_count")
 		verify_fields(rules[0], values)
 
 	def _verify_counter_company_access(self):
@@ -629,11 +658,78 @@ class Seed:
 			"counter_only": True,
 		}
 
+	def _verify_manager_company_access(self):
+		from crm.pipeline.services.configuration import validate_company
+
+		f = self.f
+		rows = self._company_permission_rows("Custom DocPerm")
+		self._check_company_permission_baseline(rows)
+		role = self.name("manager_company_read_role")
+		rules = [row for row in rows if row["role"] == role]
+		require(len(rules) == 1, "seed_manager_company_rule_count")
+		verify_fields(rules[0], company_read_rule(role))
+		companies = {key: self.name("company_" + key) for key in ("a", "b")}
+		proof = {}
+		for alias in MANAGER_ACTORS:
+			allowed, _pipelines = actor_scope(alias)
+			with actor(f, self.user(alias)):
+				visible = f.get_list(
+					"Company",
+					filters={"name": ["in", list(companies.values())]},
+					pluck="name",
+					order_by=None,
+					limit_page_length=0,
+				)
+				require(
+					sorted(visible) == sorted(companies[key] for key in allowed),
+					"seed_manager_company_list_scope",
+				)
+				for branch, name in companies.items():
+					doc = f.get_doc("Company", name)
+					require(
+						bool(f.has_permission("Company", "read", doc=doc)) == (branch in allowed),
+						"seed_manager_company_read_scope",
+					)
+					if branch in allowed:
+						doc.check_permission("read")
+						validate_company(name)
+					else:
+						try:
+							doc.check_permission("read")
+						except f.PermissionError:
+							pass
+						else:
+							raise ContractError("seed_manager_foreign_company")
+					for right in ("write", "create", "delete", "export"):
+						require(
+							not f.has_permission("Company", right, doc=doc),
+							"seed_manager_company_excess_rights",
+						)
+			proof[alias] = {
+				"visible_companies": list(allowed),
+				"read_and_list": True,
+				"foreign_company_denied": len(allowed) == 1,
+				"write_create_delete_export": False,
+			}
+		audience = f.get_all(
+			"Has Role",
+			filters={"parenttype": "User", "role": role},
+			pluck="parent",
+			order_by=None,
+			limit_page_length=0,
+		)
+		require(
+			sorted(audience) == sorted(self.user(alias) for alias in MANAGER_ACTORS),
+			"seed_manager_role_audience",
+		)
+		return {"role": role, "actors": proof, "managers_only": True}
+
 	def masters(self):
 		f = self.f
 		with actor(f, "Administrator"):
 			company_role = "PERF Company Read " + self.tag
-			self._prepare_company_permission_plan(company_role)
+			manager_company_role = "PERF Manager Company Read " + self.tag
+			self._prepare_company_permission_plan(company_role, manager_company_role)
 			self.ensure(
 				"company_read_role",
 				"Role",
@@ -641,16 +737,19 @@ class Seed:
 				{"role_name": company_role, "desk_access": 1},
 			)
 			self._ensure_counter_company_read(company_role)
+			self.ensure(
+				"manager_company_read_role",
+				"Role",
+				{"role_name": manager_company_role},
+				{"role_name": manager_company_role, "desk_access": 1},
+			)
+			self._ensure_manager_company_read(manager_company_role)
 			restricted = "PERF Private " + self.tag
 			self.ensure(
 				"private_role", "Role", {"role_name": restricted}, {"role_name": restricted, "desk_access": 1}
 			)
 			for alias in ACTORS:
-				roles = (
-					["Sales Manager"]
-					if alias in ("manager_a", "manager_b", "broad_manager")
-					else ["Sales User"]
-				)
+				roles = ["Sales Manager", manager_company_role] if alias in MANAGER_ACTORS else ["Sales User"]
 				if alias == "counter":
 					roles.extend(["Doco Repair Counter", company_role])
 				if alias in ("seller_11", "broad_manager"):
@@ -814,6 +913,7 @@ class Seed:
 							values,
 						)
 			self._verify_counter_company_access()
+			self._verify_manager_company_access()
 			self.checkpoint()
 
 	def deal_values(self, index):
@@ -1002,6 +1102,7 @@ class Seed:
 		f = self.f
 		self.runtime_guard()
 		counter_company = self._verify_counter_company_access()
+		manager_company = self._verify_manager_company_access()
 		expected_names = {self.name(f"deal:{i}") for i in range(self.sizes["deals"])}
 		require(
 			set(f.get_all("CRM Deal", pluck="name", limit_page_length=0)) == expected_names, "seed_deal_count"
@@ -1114,6 +1215,7 @@ class Seed:
 			"counts": {"deals": len(expected_names), **counts},
 			"scopes": scopes,
 			"counter_company_scope": counter_company,
+			"manager_company_scope": manager_company,
 			"generated": generated,
 			"native_controllers": True,
 			"perf_01_ready": False,
