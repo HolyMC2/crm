@@ -13,7 +13,7 @@ const fixture = vi.hoisted(() => ({
   router: { install: vi.fn() },
   translation: { install: vi.fn() },
   sprite: { install: vi.fn() },
-  telemetry: { install: vi.fn() },
+  startupTelemetry: vi.fn(),
   resources: { install: vi.fn() },
 }))
 
@@ -53,7 +53,9 @@ vi.mock('frappe-ui', async () => {
     getCachedListResource: fixture.cachedList,
   }
 })
-vi.mock('frappe-ui/frappe', () => ({ telemetryPlugin: fixture.telemetry }))
+vi.mock('@/utils/startupTelemetry', () => ({
+  installTelemetry: fixture.startupTelemetry,
+}))
 vi.mock('frappe-ui/icons', () => ({ spritePlugin: fixture.sprite }))
 vi.mock('@/router', () => ({ default: fixture.router }))
 vi.mock('@/translation', () => ({ default: fixture.translation }))
@@ -146,12 +148,8 @@ function expectCanonicalSocket() {
     fixture.request,
   )
   expect(fixture.pushNavigation).toHaveBeenCalledWith(fixture.router)
-  for (const plugin of [
-    fixture.router,
-    fixture.translation,
-    fixture.sprite,
-    fixture.telemetry,
-  ]) {
+  expect(fixture.startupTelemetry).toHaveBeenCalledWith(root.appContext.app)
+  for (const plugin of [fixture.router, fixture.translation, fixture.sprite]) {
     expect(plugin.install).toHaveBeenCalledOnce()
   }
   return socket

@@ -11,6 +11,7 @@ import { createDialog } from './utils/dialogs'
 import { initSocket } from './socket'
 import router from './router'
 import { listenForPushNavigation } from './utils/pushNavigate'
+import { installTelemetry } from './utils/startupTelemetry'
 import translationPlugin from './translation'
 import App from './App.vue'
 
@@ -33,7 +34,6 @@ import {
   FeatherIcon,
 } from 'frappe-ui'
 
-import { telemetryPlugin } from 'frappe-ui/frappe'
 // injects the lucide SVG sprite into the DOM so the IconPicker and lucide Icons
 // (used for view icons) can render from it
 import { spritePlugin } from 'frappe-ui/icons'
@@ -65,7 +65,7 @@ app.use(translationPlugin)
 for (let key in globalComponents) {
   app.component(key, globalComponents[key])
 }
-app.use(telemetryPlugin, { app_name: 'crm' })
+void installTelemetry(app)
 
 app.config.globalProperties.$dialog = createDialog
 
