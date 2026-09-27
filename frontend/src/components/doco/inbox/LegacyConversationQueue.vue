@@ -490,7 +490,8 @@
         <div
           class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-blue-9"
         >
-          <LucideFacebook class="h-3 w-3" /> {{ __('Comentarios') }}
+          <FacebookIcon aria-hidden="true" focusable="false" class="h-3 w-3" />
+          {{ __('Comentarios') }}
           <span
             class="rounded-full bg-surface-blue-1 px-1.5 text-[10px] text-ink-blue-9"
             >{{ commentGroups.length }}</span
@@ -587,8 +588,13 @@
                   : 'background: #1877f2'
               "
             >
-              <LucideInstagram v-if="g.channel === 'IG'" class="h-3.5 w-3.5" />
-              <LucideFacebook v-else class="h-3.5 w-3.5" />
+              <InstagramIcon v-if="g.channel === 'IG'" class="h-3.5 w-3.5" />
+              <FacebookIcon
+                v-else
+                aria-hidden="true"
+                focusable="false"
+                class="h-3.5 w-3.5"
+              />
             </span>
             <div class="min-w-0 flex-1">
               <div class="truncate text-[13px] font-semibold text-ink-gray-9">
@@ -916,8 +922,8 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import LucideX from '~icons/lucide/x'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
-import LucideFacebook from '~icons/lucide/facebook'
-import LucideInstagram from '~icons/lucide/instagram'
+import FacebookIcon from '@/components/Icons/FacebookIcon.vue'
+import InstagramIcon from '@/components/Icons/InstagramIcon.vue'
 import LucideArchive from '~icons/lucide/archive'
 import LucideCheckCheck from '~icons/lucide/check-check'
 import LucideChevronDown from '~icons/lucide/chevron-down'

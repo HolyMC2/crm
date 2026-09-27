@@ -24,6 +24,8 @@
             <component
               :is="link.icon"
               v-if="link.icon"
+              aria-hidden="true"
+              focusable="false"
               class="size-4 mr-2 text-ink-gray-7"
             />
             <span class="text-base text-ink-gray-8">
@@ -42,7 +44,7 @@
 <script setup>
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import LucideGlobe from '~icons/lucide/globe'
-import LucideGitHub from '~icons/lucide/github'
+import GitHubIcon from '@/components/Icons/GitHubIcon.vue'
 import LucideBug from '~icons/lucide/bug'
 import LucideBookOpen from '~icons/lucide/book-open'
 
@@ -57,7 +59,7 @@ let links = [
   {
     label: __('GitHub Repository'),
     url: 'https://github.com/HolyMC2/crm',
-    icon: LucideGitHub,
+    icon: GitHubIcon,
   },
   {
     label: __('Upstream Documentation'),

@@ -8,7 +8,7 @@
 <template>
   <!-- desktop: all three panes side-by-side (unchanged) -->
   <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
-    <ConversationQueue v-if="!queueCollapsed" />
+    <LegacyConversationQueue v-if="!queueCollapsed" />
     <button
       v-else
       class="flex w-7 flex-none items-center justify-center border-r border-outline-gray-1 text-ink-gray-4 hover:bg-surface-gray-2"
@@ -27,7 +27,7 @@
   <!-- mobile: one pane at a time. v-show (not v-if) keeps panes mounted so the
        thread scroll + composer survive drilling in/out, like a native app. -->
   <div v-else class="flex min-h-0 w-full flex-1 flex-col">
-    <ConversationQueue v-show="mobileView === 'list'" />
+    <LegacyConversationQueue v-show="mobileView === 'list'" />
     <!-- edge swipe-back = same history.back() as the ← buttons (pane pop) -->
     <div
       v-show="mobileView === 'thread'"
@@ -60,7 +60,7 @@ import { useRoute } from 'vue-router'
 import { globalStore } from '@/stores/global'
 import { isMobile } from '@/composables/breakpoint'
 import { swipeBackHandlers } from '@/composables/swipeBack'
-import ConversationQueue from '@/components/doco/inbox/ConversationQueue.vue'
+import LegacyConversationQueue from '@/components/doco/inbox/LegacyConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue'
 import CommentWorkspace from '@/components/doco/inbox/CommentWorkspace.vue'

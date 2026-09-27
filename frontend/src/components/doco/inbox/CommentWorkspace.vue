@@ -36,8 +36,13 @@
                 : 'background: #1877f2'
             "
           >
-            <LucideInstagram v-if="isIG" class="h-4.5 w-4.5" />
-            <LucideFacebook v-else class="h-4.5 w-4.5" />
+            <InstagramIcon v-if="isIG" class="h-4.5 w-4.5" />
+            <FacebookIcon
+              v-else
+              aria-hidden="true"
+              focusable="false"
+              class="h-4.5 w-4.5"
+            />
           </span>
           <div class="min-w-0 flex-1">
             <div class="truncate text-[14px] font-bold text-ink-gray-9">
@@ -299,8 +304,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast, createResource } from 'frappe-ui'
-import LucideFacebook from '~icons/lucide/facebook'
-import LucideInstagram from '~icons/lucide/instagram'
+import FacebookIcon from '@/components/Icons/FacebookIcon.vue'
+import InstagramIcon from '@/components/Icons/InstagramIcon.vue'
 import LucideSearch from '~icons/lucide/search'
 import { isMobile } from '@/composables/breakpoint'
 import FbPostCard from '@/components/doco/social/FbPostCard.vue'
