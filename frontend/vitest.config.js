@@ -22,6 +22,9 @@ export default defineConfig({
     environment: 'happy-dom',
     root: __dirname,
     setupFiles: ['./tests/setup.js'],
+    // Exercise the pinned resource client through Vite's resolution, as the
+    // browser build does; its source imports use extensionless TS/JS paths.
+    server: { deps: { inline: [/frappe-ui/] } },
     include: ['tests/**/*.test.js', 'src/**/*.test.js'],
     coverage: {
       provider: 'v8',

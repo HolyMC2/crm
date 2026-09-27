@@ -4,6 +4,7 @@
 // in a CDN cache (a 404 cached during a deploy/warm-up window).
 window.__CRM_BUILD__ = '2026-06-24a'
 import './index.css'
+import './utils/resourceConfig'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -40,7 +41,6 @@ import {
   Dialog,
   Alert,
   Badge,
-  setConfig,
   frappeRequest,
   FeatherIcon,
 } from 'frappe-ui'
@@ -66,7 +66,6 @@ let pinia = createPinia()
 
 let app = createApp(App)
 
-setConfig('resourceFetcher', frappeRequest)
 // CRM initializes its boot-aware socket below before mounting consumers.
 app.use(FrappeUI, { socketio: false })
 app.use(spritePlugin)
