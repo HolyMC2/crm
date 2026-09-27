@@ -800,7 +800,7 @@ def parse_template_parameters(string, parameters):
 
 
 def get_from_name(message, *, read_scope=None):
-	from crm.permissions.whatsapp_read import ReadScope, readable_field
+	from crm.permissions.whatsapp_read import ReadScope, readable_field, readable_reference_fields
 
 	read_scope = read_scope or ReadScope()
 	metadata = read_scope.load_message(message.get("name"))
@@ -808,7 +808,7 @@ def get_from_name(message, *, read_scope=None):
 		return ""
 	fallback = (metadata.get("from") or "") if readable_field("WhatsApp Message", "from") else ""
 	ref_dt, ref_dn = metadata.reference_doctype, metadata.reference_name
-	if not ref_dt or not ref_dn:
+	if not readable_reference_fields() or not ref_dt or not ref_dn:
 		return fallback
 	key = (ref_dt, ref_dn)
 	if key not in read_scope.records:

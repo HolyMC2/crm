@@ -745,3 +745,47 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 		self.assertTrue(condition)
 		self.assertNotIn("CRM Notification", [call.args[0] for call in batches.call_args_list])
 		self.assertIn(self.notice(), [row["name"] for row in get_notifications()])
+
+	def check_hidden_reference_projection(self, property_name, value, property_type):
+		from frappe.client import get
+		from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+		from crm.api.whatsapp import get_from_name
+
+		lead = self.make_linked_lead()
+		message = self.make_message("a", "Visible reference-masked body", doctype="CRM Lead", name=lead.name)
+		notification = self.notice(message)
+		self.assertTrue(notification)
+		frappe.set_user(self.actor_a)
+		self.assertEqual(get_from_name(message), lead.first_name)
+		self.assertIn(notification, [row["name"] for row in get_notifications()])
+		frappe.set_user("Administrator")
+		for field in ("reference_doctype", "reference_name"):
+			make_property_setter("WhatsApp Message", field, property_name, value, property_type)
+		frappe.clear_cache(doctype="WhatsApp Message")
+		frappe.set_user(self.actor_a)
+		self.assertFalse(scope.readable_reference_fields())
+		self.assertTrue(scope.can_read_message(message.name))
+		self.assertEqual(get_from_name(message), self.peer)
+		rows = get_whatsapp_messages("CRM Lead", lead.name)
+		self.assertIn(message.name, [row.name for row in rows])
+		serialized = frappe.as_json(rows)
+		self.assertNotIn(lead.first_name, serialized)
+		self.assertNotIn(lead.name, serialized)
+		self.assertNotIn(notification, [row["name"] for row in get_notifications()])
+		self.assertEqual(frappe.get_list("CRM Notification", filters={"name": notification}), [])
+		with self.assertRaises(frappe.PermissionError):
+			get("CRM Notification", notification)
+		# A subsequent event must not disclose the same hidden edge either.
+		self.realtime.reset_mock()
+		scope.publish_message(message.name)
+		publish_notification(notification)
+		self.assertFalse(
+			any(call.kwargs.get("user") == self.actor_a for call in self.realtime.call_args_list)
+		)
+
+	def test_masked_source_reference_edge_cannot_be_copied_into_label_or_notification(self):
+		self.check_hidden_reference_projection("mask", 1, "Check")
+
+	def test_higher_level_source_reference_edge_cannot_be_copied_into_label_or_notification(self):
+		self.check_hidden_reference_projection("permlevel", 1, "Int")

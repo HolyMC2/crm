@@ -81,6 +81,12 @@ def readable_field(doctype, fieldname, user=None, *, parenttype=None):
 	)
 
 
+def readable_reference_fields(user=None):
+	return all(
+		readable_field("WhatsApp Message", field, user) for field in ("reference_doctype", "reference_name")
+	)
+
+
 class ReadScope:
 	def __init__(self):
 		self.accounts = {}
@@ -176,7 +182,7 @@ class ReadScope:
 			return True
 		if not available():
 			return False
-		if row.get("notification_type_doctype") != "WhatsApp Message":
+		if row.get("notification_type_doctype") != "WhatsApp Message" or not readable_reference_fields(user):
 			return False
 		if (row.get("message") or row.get("copied_body_length")) and not readable_field(
 			"WhatsApp Message", "message", user
@@ -324,7 +330,7 @@ def notification_query(user=None):
 	notification = frappe.qb.DocType("CRM Notification")
 	non_whatsapp = Coalesce(notification.type, "") != "WhatsApp"
 	query = frappe.qb.from_(notification).select(notification.name)
-	if not available():
+	if not available() or not readable_reference_fields(user):
 		return query.where(non_whatsapp)
 	message = frappe.qb.DocType("WhatsApp Message")
 	source = (
