@@ -195,7 +195,11 @@ def create_lead_from_incoming_email(doc: Communication, method: str | None = Non
 	if doc.doctype != "Communication":
 		return
 
-	if doc.sent_or_received != "Received" and doc.communication_type != "Communication":
+	if (
+		doc.sent_or_received != "Received"
+		or doc.communication_type != "Communication"
+		or doc.communication_medium != "Email"
+	):
 		return
 
 	if doc.reference_doctype and doc.reference_name:

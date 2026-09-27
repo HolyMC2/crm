@@ -638,13 +638,8 @@ class TestCreateLeadFromIncomingEmail(IntegrationTestCase):
 		source = frappe.db.get_value("CRM Lead", {"email": "leadsource@example.com"}, "source")
 		self.assertEqual(source, "Email")
 
-	def test_lead_created_for_sent_communication_with_communication_type(self):
-		"""A sent communication with communication_type='Communication' should still create a lead.
-
-		The guard condition uses AND: both sent_or_received != 'Received' AND
-		communication_type != 'Communication' must be true to bail out. When the
-		type IS 'Communication', the second condition is false and the function proceeds.
-		"""
+	def test_lead_not_created_for_sent_email(self):
+		"""Outgoing correspondence is not an incoming prospect, regardless of its type."""
 		email_account = self._make_email_account()
 		doc = frappe.get_doc(
 			{
@@ -659,4 +654,29 @@ class TestCreateLeadFromIncomingEmail(IntegrationTestCase):
 		)
 		create_lead_from_incoming_email(doc)
 
-		self.assertTrue(frappe.db.exists("CRM Lead", {"email": "sentcomm@example.com"}))
+		self.assertFalse(frappe.db.exists("CRM Lead", {"email": "sentcomm@example.com"}))
+		self.assertFalse(doc.reference_name)
+
+	def test_lead_not_created_for_received_notification(self):
+		email_account = self._make_email_account()
+		doc = self._incoming_comm(
+			"received-notification@example.invalid",
+			email_account.name,
+			communication_type="Notification",
+		)
+		create_lead_from_incoming_email(doc)
+		self.assertFalse(frappe.db.exists("CRM Lead", {"email": doc.sender}))
+		self.assertFalse(doc.reference_name)
+
+	def test_lead_not_created_for_other_received_media(self):
+		email_account = self._make_email_account()
+		for medium in ("Phone", "SMS", "Chat"):
+			with self.subTest(medium=medium):
+				doc = self._incoming_comm(
+					f"received-{medium.lower()}@example.invalid",
+					email_account.name,
+					communication_medium=medium,
+				)
+				create_lead_from_incoming_email(doc)
+				self.assertFalse(frappe.db.exists("CRM Lead", {"email": doc.sender}))
+				self.assertFalse(doc.reference_name)
