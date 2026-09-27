@@ -610,6 +610,20 @@ def remove_assignments(doctype: str, name: str, assignees: str | list, ignore_pe
 
 @frappe.whitelist()
 def get_assigned_users(doctype: str, name: str | int, default_assigned_to: str | None = None):
+	"""Expose native assignment metadata only for a readable parent document."""
+	doc = frappe.get_doc(doctype, name)
+	doc.check_permission("read")
+	# Record hooks and query conditions are separate native authority boundaries.
+	# Singles have no ordinary document table/list query.
+	if not doc.meta.issingle and not frappe.get_list(
+		doctype, filters={"name": doc.name}, pluck="name", limit_page_length=1
+	):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+	return _assigned_users_for_document(doctype, doc.name, default_assigned_to)
+
+
+def _assigned_users_for_document(doctype, name, default_assigned_to=None):
+	"""Internal assignment routing; deliberately not a whitelisted read endpoint."""
 	assigned_users = frappe.get_all(
 		"ToDo",
 		fields=["allocated_to"],

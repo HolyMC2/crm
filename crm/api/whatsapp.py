@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.permissions import add_permission, update_permission_property
 
-from crm.api.doc import get_assigned_users
+from crm.api.doc import _assigned_users_for_document as get_assigned_users
 from crm.api.outbox_bridge import assert_send_account, person_reply
 from crm.fcrm.doctype.crm_notification.crm_notification import notify_user
 
