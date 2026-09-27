@@ -25,7 +25,9 @@ export async function installTelemetry(app) {
       return false
     }
 
-    app.use(telemetryPlugin, {
+    // This is the sole startup installer. Vue app.use does not await plugins;
+    // await the native installer so optional client failures remain contained.
+    await telemetryPlugin.install(app, {
       app_name: 'crm',
       enabled: true,
       host: config.host,

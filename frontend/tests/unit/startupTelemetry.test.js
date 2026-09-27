@@ -18,7 +18,7 @@ vi.mock('frappe-ui/frappe', async () => {
     await import('../../node_modules/frappe-ui/frappe/telemetry/index.ts')
   return { telemetryPlugin: actual.default, useTelemetry: actual.useTelemetry }
 })
-import { useTelemetry } from 'frappe-ui/frappe'
+import { telemetryPlugin, useTelemetry } from 'frappe-ui/frappe'
 import { installTelemetry } from '@/utils/startupTelemetry'
 
 const enabled = {
@@ -30,16 +30,19 @@ const enabled = {
   user: 'native-anonymized-user',
   team: 'native-team',
 }
-let app, use
+let app, install
 beforeEach(() => {
   useTelemetry().disable()
   vi.resetAllMocks()
   transport.loadPulseClient.mockResolvedValue(transport.client)
   transport.client.init.mockResolvedValue(true)
   app = createApp({ render: () => null })
-  use = vi.spyOn(app, 'use')
+  install = vi.spyOn(telemetryPlugin, 'install')
 })
-afterEach(() => useTelemetry().disable())
+afterEach(() => {
+  useTelemetry().disable()
+  vi.restoreAllMocks()
+})
 
 describe('native telemetry startup consent', () => {
   it.each([false, undefined, null, 0, 1, 'false', 'true'])(
@@ -47,7 +50,7 @@ describe('native telemetry startup consent', () => {
     async (consent) => {
       transport.call.mockResolvedValue({ ...enabled, enabled: consent })
       expect(await installTelemetry(app)).toBe(false)
-      expect(use).not.toHaveBeenCalled()
+      expect(install).not.toHaveBeenCalled()
       expect(transport.loadPulseClient).not.toHaveBeenCalled()
       expect(useTelemetry().isEnabled).toBe(false)
       useTelemetry().capture('must-not-send')
@@ -70,7 +73,7 @@ describe('native telemetry startup consent', () => {
     async (config) => {
       transport.call.mockResolvedValue(config)
       expect(await installTelemetry(app)).toBe(false)
-      expect(use).not.toHaveBeenCalled()
+      expect(install).not.toHaveBeenCalled()
       expect(transport.loadPulseClient).not.toHaveBeenCalled()
     },
   )
@@ -78,7 +81,7 @@ describe('native telemetry startup consent', () => {
   it('contains native request errors without affecting startup', async () => {
     transport.call.mockRejectedValue(new Error('Synthetic native outage'))
     await expect(installTelemetry(app)).resolves.toBe(false)
-    expect(use).not.toHaveBeenCalled()
+    expect(install).not.toHaveBeenCalled()
     expect(transport.loadPulseClient).not.toHaveBeenCalled()
     expect(useTelemetry().isEnabled).toBe(false)
   })
@@ -91,7 +94,7 @@ describe('native telemetry startup consent', () => {
       }),
     )
     const pending = installTelemetry(app)
-    expect(use).not.toHaveBeenCalled()
+    expect(install).not.toHaveBeenCalled()
     expect(transport.loadPulseClient).not.toHaveBeenCalled()
     resolveConfig({ enabled: false })
     expect(await pending).toBe(false)
@@ -104,6 +107,7 @@ describe('native telemetry startup consent', () => {
       'frappe.utils.telemetry.pulse.client.boot_config',
     )
     expect(transport.fetchBootConfig).not.toHaveBeenCalled()
+    expect(install).toHaveBeenCalledOnce()
     expect(transport.loadPulseClient).toHaveBeenCalledOnce()
     const options = transport.loadPulseClient.mock.calls[0][0]
     expect(options).toMatchObject({
@@ -118,7 +122,7 @@ describe('native telemetry startup consent', () => {
       team: enabled.team,
     })
     expect(transport.client.init).toHaveBeenCalledOnce()
-    await vi.waitFor(() => expect(useTelemetry().isEnabled).toBe(true))
+    expect(useTelemetry().isEnabled).toBe(true)
     useTelemetry().capture('synthetic-event', { action: 'test' })
     expect(transport.client.capture).toHaveBeenCalledWith(
       'synthetic-event',
@@ -134,6 +138,19 @@ describe('native telemetry startup consent', () => {
       user: null,
       team: null,
     })
-    await vi.waitFor(() => expect(useTelemetry().isEnabled).toBe(true))
+    expect(useTelemetry().isEnabled).toBe(true)
+  })
+
+  it('contains a rejected native client init without an unhandled startup error', async () => {
+    transport.call.mockResolvedValue(enabled)
+    transport.client.init.mockRejectedValue(
+      new Error('Synthetic client init failure'),
+    )
+    await expect(installTelemetry(app)).resolves.toBe(false)
+    expect(install).toHaveBeenCalledOnce()
+    expect(transport.client.init).toHaveBeenCalledOnce()
+    expect(useTelemetry().isEnabled).toBe(false)
+    useTelemetry().capture('must-not-send')
+    expect(transport.client.capture).not.toHaveBeenCalled()
   })
 })
