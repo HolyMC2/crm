@@ -67,10 +67,10 @@ class TestWhatsAppRouting(unittest.TestCase):
 		)
 		self.assertEqual(resolve_reference_for_number(_PHONE), (open_deal, "CRM Deal"))
 
-	def test_newest_open_wins_among_open(self):
+	def test_multiple_open_parents_remain_unresolved(self):
 		self._deal("Open", modified=add_days(now_datetime(), -10))
-		newest = self._deal("Open")
-		self.assertEqual(resolve_reference_for_number(_PHONE), (newest, "CRM Deal"))
+		self._deal("Open")
+		self.assertEqual(resolve_reference_for_number(_PHONE), (None, None))
 
 	def test_recent_terminal_within_grace(self):
 		won = self._deal("Won", modified=add_days(now_datetime(), -(POST_SALE_GRACE_DAYS - 2)))

@@ -3,7 +3,7 @@ import requests
 from frappe import _
 from frappe.integrations.utils import create_request_log
 
-from crm.integrations.api import get_contact_by_phone_number
+from crm.integrations.api import _get_contact_for_verified_provider, get_contact_by_phone_number
 
 # Endpoints for webhook
 
@@ -53,6 +53,7 @@ def handle_request(**kwargs):
 				medium=call_payload.get("To"),
 				status=get_call_log_status(call_payload),
 				agent=call_payload.get("AgentEmail"),
+				phone_lookup=_get_contact_for_verified_provider,
 			)
 	except Exception:
 		request_log.status = "Failed"
@@ -183,6 +184,8 @@ def create_call_log(
 	agent,
 	status="Ringing",
 	call_type="Incoming",
+	*,
+	phone_lookup=None,
 ):
 	call_log = frappe.new_doc("CRM Call Log")
 	call_log.id = call_id
@@ -200,15 +203,17 @@ def create_call_log(
 
 	# link call log with lead/deal
 	contact_number = from_number if call_type == "Incoming" else to_number
-	link(contact_number, call_log)
+	link(contact_number, call_log, phone_lookup=phone_lookup)
 
 	call_log.save(ignore_permissions=True)
 	frappe.db.commit()
 	return call_log
 
 
-def link(contact_number, call_log):
-	contact = get_contact_by_phone_number(contact_number)
+def link(contact_number, call_log, *, phone_lookup=None):
+	# Outgoing worker calls retain actor scope; only the verified webhook supplies
+	# the private resolver. No role, direction string or client flag confers trust.
+	contact = (phone_lookup or get_contact_by_phone_number)(contact_number)
 	if contact.get("name"):
 		doctype = "Contact"
 		docname = contact.get("name")

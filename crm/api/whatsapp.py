@@ -39,21 +39,28 @@ def validate_access(reference_doctype=None, reference_name=None, permtype="read"
 
 
 def validate(doc, method):
-	# Respect explicitly-threaded messages (inbox composer, taller's review
-	# queue): resolution is a FALLBACK for unreferenced messages (webhook
-	# inbounds), never an override — the old unconditional overwrite re-routed
-	# deliberately-threaded sends onto whatever deal the resolver picked.
-	if doc.get("reference_doctype") and doc.get("reference_name"):
+	from crm.api.whatsapp_routing import resolve_reference_for_number, verified_receipt_reference
+
+	ref_type, ref_name = doc.get("reference_doctype"), doc.get("reference_name")
+	verified_name, verified_type = verified_receipt_reference(doc)
+	if ref_type or ref_name:
+		if not ref_type or not ref_name:
+			frappe.throw(_("Select both a reference type and record."), frappe.ValidationError)
+		if (ref_name, ref_type) != (verified_name, verified_type):
+			frappe.get_doc(ref_type, ref_name).check_permission("read")
 		return
-	phone_number = doc.get("from") if doc.type == "Incoming" else doc.get("to")
+	# Received messages use only their authenticated receipt's existing conversation.
+	# A generic document insert must not infer authority from its Incoming field.
+	if doc.get("type") == "Incoming":
+		if verified_type and verified_name:
+			doc.reference_doctype, doc.reference_name = verified_type, verified_name
+		return
+	phone_number = doc.get("to")
 	if phone_number:
 		try:
-			from crm.api.whatsapp_routing import resolve_reference_for_number
-
 			name, doctype = resolve_reference_for_number(phone_number)
-			if doctype and name is not None:
-				doc.reference_doctype = doctype
-				doc.reference_name = name
+			if doctype and name:
+				doc.reference_doctype, doc.reference_name = doctype, name
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "CRM WhatsApp: failed to resolve contact from number")
 

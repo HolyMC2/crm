@@ -18,22 +18,28 @@ class TestWhatsAppHooks(unittest.TestCase):
 	# --- validate() ---
 
 	@staticmethod
-	def _doc(phone="+15551234567", ref_dt=None, ref_dn=None):
+	def _doc(phone="+15551234567", ref_dt=None, ref_dn=None, direction="Incoming"):
 		"""MagicMock whose .get() answers per-key — validate() now reads
 		reference_doctype/reference_name via .get() before the phone."""
 		doc = MagicMock()
-		doc.type = "Incoming"
-		values = {"from": phone, "to": phone, "reference_doctype": ref_dt, "reference_name": ref_dn}
+		doc.type = direction
+		values = {
+			"type": direction,
+			"from": phone,
+			"to": phone,
+			"reference_doctype": ref_dt,
+			"reference_name": ref_dn,
+		}
 		doc.get.side_effect = lambda k, *a: values.get(k)
 		doc.reference_doctype = ref_dt
 		doc.reference_name = ref_dn
 		return doc
 
-	def test_validate_sets_reference_when_contact_found(self):
-		"""validate() links the doc when the routing ladder resolves a match"""
+	def test_validate_sets_reference_from_verified_receipt(self):
+		"""Only the validated receipt/conversation seam may attribute an incoming row."""
 		doc = self._doc()
 		with patch(
-			"crm.api.whatsapp_routing.resolve_reference_for_number",
+			"crm.api.whatsapp_routing.verified_receipt_reference",
 			return_value=("LEAD-0001", "CRM Lead"),
 		):
 			validate(doc, None)
@@ -57,18 +63,23 @@ class TestWhatsAppHooks(unittest.TestCase):
 		"""An explicitly-threaded message (inbox composer, taller review queue)
 		must NOT be re-routed by the resolver."""
 		doc = self._doc(ref_dt="CRM Deal", ref_dn="CRM-DEAL-PRESET")
-		with patch(
-			"crm.api.whatsapp_routing.resolve_reference_for_number",
-			return_value=("CRM-DEAL-OTHER", "CRM Deal"),
-		) as mock_resolve:
+		with (
+			patch(
+				"crm.api.whatsapp_routing.resolve_reference_for_number",
+				return_value=("CRM-DEAL-OTHER", "CRM Deal"),
+			) as mock_resolve,
+			patch("frappe.get_doc") as load,
+		):
 			validate(doc, None)
+			load.assert_called_once_with("CRM Deal", "CRM-DEAL-PRESET")
+			load.return_value.check_permission.assert_called_once_with("read")
 
 		mock_resolve.assert_not_called()
 		self.assertEqual(doc.reference_name, "CRM-DEAL-PRESET")
 
 	def test_validate_logs_error_on_exception(self):
 		"""validate() catches lookup exceptions and logs them instead of raising"""
-		doc = self._doc(phone="invalid-number")
+		doc = self._doc(phone="invalid-number", direction="Outgoing")
 		with (
 			patch(
 				"crm.api.whatsapp_routing.resolve_reference_for_number",

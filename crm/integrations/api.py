@@ -1,11 +1,12 @@
 import ipaddress
+import re
 import socket
 from urllib.parse import urlparse, urlunparse
 
 import frappe
 import requests
 from frappe import _
-from frappe.query_builder import Order
+from frappe.model import get_permitted_fields
 from pypika.functions import Replace
 from werkzeug.wrappers import Response
 
@@ -157,12 +158,7 @@ def get_contact_lead_or_deal_from_number(number: str):
 @frappe.whitelist()
 def get_contact_by_phone_number(phone_number: str):
 	"""Get contact by phone number."""
-	number = parse_phone_number(phone_number)
-
-	if number.get("is_valid"):
-		return get_contact(number.get("national_number"), number.get("country"))
-	else:
-		return get_contact(phone_number, number.get("country"), exact_match=True)
+	return _lookup_phone_number(phone_number)
 
 
 def _resolve_validated_ip(hostname: str, port: int) -> str:
@@ -299,97 +295,181 @@ def get_recording_url(call_log_name: str):
 	return response
 
 
-def get_contact(phone_number: str, country: str = "IN", exact_match: bool = False):
-	if not phone_number:
+# Candidate ceilings protect lookup cost without ever treating a truncated set as unique.
+_PHONE_CANDIDATE_LIMIT = 100
+_TERMINAL_DEAL_TYPES = {"Won", "Lost", "Junk"}
+
+
+def _lookup_phone_number(phone_number, *, trusted=False):
+	if not isinstance(phone_number, str) or len(phone_number) > 64:
 		return {"mobile_no": phone_number}
+	number = parse_phone_number(_modern_mexican_number(phone_number))
+	result = _resolve_contact(
+		number.get("national_number") if number.get("is_valid") else phone_number,
+		number.get("country") or "IN",
+		exact_match=not number.get("is_valid"),
+		trusted=trusted,
+	)
+	return result if result.get("name") else {"mobile_no": phone_number}
 
-	cleaned_number = (
-		phone_number.strip()
-		.replace(" ", "")
-		.replace("-", "")
-		.replace("(", "")
-		.replace(")", "")
-		.replace("+", "")
+
+def _get_contact_for_verified_provider(phone_number):
+	"""Internal only: invoked after the provider's native signature/token verification.
+
+	Never whitelist this function or expose a trusted/ignore-permissions HTTP parameter.
+	It still refuses ambiguous identities and bounded candidate overflow.
+	"""
+	return _lookup_phone_number(phone_number, trusted=True)
+
+
+def get_contact(phone_number: str, country: str = "IN", exact_match: bool = False):
+	"""Resolve only identities visible to the current actor, including internal UI callers."""
+	return _resolve_contact(phone_number, country, exact_match=exact_match)
+
+
+def _modern_mexican_number(value):
+	# The historic WhatsApp 521 mobile prefix denotes the same Mexican subscriber.
+	digits = re.sub(r"[ +().\t-]", "", value or "")
+	return "+52" + digits[3:] if len(digits) == 13 and digits.startswith("521") else value
+
+
+def _same_phone(candidate, number, country, exact_match):
+	return are_same_phone_number(
+		_modern_mexican_number(candidate),
+		_modern_mexican_number(number),
+		country or "IN",
+		validate=not exact_match,
 	)
 
-	# Check if the number is associated with a contact.
-	# Search all of a contact's numbers (phone_nos child table) and not just the
-	# primary mobile_no, so calls from a secondary number still resolve.
-	Contact = frappe.qb.DocType("Contact")
-	ContactPhone = frappe.qb.DocType("Contact Phone")
-	normalized_phone = Replace(
-		Replace(Replace(Replace(Replace(ContactPhone.phone, " ", ""), "-", ""), "(", ""), ")", ""), "+", ""
-	)
 
-	query = (
-		frappe.qb.from_(ContactPhone)
-		.join(Contact)
-		.on(ContactPhone.parent == Contact.name)
-		.select(
-			Contact.name,
-			Contact.full_name,
-			Contact.image,
-			Contact.mobile_no,
-			ContactPhone.phone.as_("matched_phone"),
+def _phone_fields(doctype, *, parenttype=None):
+	"""Native scalar field permissions plus explicit table and masking checks."""
+	meta = frappe.get_meta(doctype)
+	allowed = set(get_permitted_fields(doctype, parenttype=parenttype, permission_type="read"))
+	levels = set(meta.get_permlevel_access("read", parenttype=parenttype))
+	# Tables are absent from get_permitted_fields (they have no scalar SQL column).
+	# Level zero still requires a permitted parent row before any value can escape.
+	for field in meta.fields:
+		if field.fieldtype in {"Table", "Table MultiSelect"} and (
+			not field.permlevel or field.permlevel in levels
+		):
+			allowed.add(field.fieldname)
+	return allowed - {field.fieldname for field in meta.get_masked_fields()}
+
+
+def _phone_rows(doctype, names, fields, *, trusted=False):
+	if not names:
+		return []
+	permitted = set(fields) if trusted else _phone_fields(doctype)
+	query = frappe.get_all if trusted else frappe.get_list
+	try:
+		rows = query(
+			doctype,
+			filters={"name": ["in", sorted(names)]},
+			fields=[field for field in fields if field in permitted],
+			limit_page_length=_PHONE_CANDIDATE_LIMIT + 1,
 		)
-		.where(ContactPhone.parenttype == "Contact")
-		.where(normalized_phone.like(f"%{cleaned_number}%"))
-		.orderby(Contact.modified, order=Order.desc)
-	)
-	contacts = query.run(as_dict=True)
+	except frappe.PermissionError:
+		return []
+	if trusted:
+		return rows
+	# Honor record hooks too; query conditions alone are not a replacement for them.
+	return [row for row in rows if frappe.has_permission(doctype, "read", doc=row.name)]
 
-	if len(contacts):
-		# Check if the contact is associated with a deal — OPEN deals first, then
-		# newest-modified. Ordering by modified alone misrouted inbound messages:
-		# any touch on an old closed deal (a Contact edit re-syncs every linked
-		# deal and bumps modified) made it "newest" and captured the customer's
-		# next reply. A deal whose status type is Won/Lost/Junk only wins when
-		# the customer has no open deal at all.
-		for contact in contacts:
-			if frappe.db.exists("CRM Contacts", {"contact": contact.name, "is_primary": 1}):
-				deal = frappe.db.sql(
-					"""SELECT cd.name FROM `tabCRM Deal` cd
-					   JOIN `tabCRM Contacts` cc ON cc.parent = cd.name
-					   LEFT JOIN `tabCRM Deal Status` st ON st.name = cd.status
-					   WHERE cc.contact = %s AND cc.is_primary = 1
-					   ORDER BY COALESCE(st.type IN ('Won', 'Lost', 'Junk'), 0) ASC,
-					            cd.modified DESC
-					   LIMIT 1""",
-					(contact.name,),
-					as_dict=False,
-				)
-				deal = deal[0][0] if deal else None
-				if deal and are_same_phone_number(
-					contact.matched_phone, phone_number, country, validate=not exact_match
-				):
-					contact["deal"] = deal
-					return contact
 
-	# Else, Check if the number is associated with a lead
-	Lead = frappe.qb.DocType("CRM Lead")
-	normalized_phone = Replace(
-		Replace(Replace(Replace(Replace(Lead.mobile_no, " ", ""), "-", ""), "(", ""), ")", ""), "+", ""
-	)
+def _normalized_phone(field):
+	for character in (" ", "-", "(", ")", "+", "."):
+		field = Replace(field, character, "")
+	return field
 
-	query = (
-		frappe.qb.from_(Lead)
-		.select(Lead.name, Lead.lead_name, Lead.image, Lead.mobile_no)
-		.where(Lead.converted == 0)
-		.where(normalized_phone.like(f"%{cleaned_number}%"))
-		.orderby("modified", order=Order.desc)
-	)
-	leads = query.run(as_dict=True)
 
-	if len(leads):
-		for lead in leads:
-			if are_same_phone_number(lead.mobile_no, phone_number, country, validate=not exact_match):
-				lead["lead"] = lead.name
-				lead["full_name"] = lead.lead_name
-				return lead
-
-	if len(contacts) and are_same_phone_number(
-		contacts[0].matched_phone, phone_number, country, validate=not exact_match
+def _resolve_contact(phone_number, country, *, exact_match=False, trusted=False):
+	fallback = {"mobile_no": phone_number}
+	if not isinstance(phone_number, str) or len(phone_number) > 64:
+		return fallback
+	cleaned = re.sub(r"[ +().\t-]", "", phone_number)
+	if not cleaned.isascii() or not cleaned.isdigit() or not (10 if exact_match else 7) <= len(cleaned) <= 15:
+		return fallback
+	contact_names, lead_names = set(), set()
+	if trusted or (
+		"phone_nos" in _phone_fields("Contact")
+		and "phone" in _phone_fields("Contact Phone", parenttype="Contact")
 	):
-		return contacts[0]
+		phone = frappe.qb.DocType("Contact Phone")
+		candidates = (
+			frappe.qb.from_(phone)
+			.select(phone.parent, phone.phone)
+			.where((phone.parenttype == "Contact") & (phone.parentfield == "phone_nos"))
+			.where(_normalized_phone(phone.phone).like(f"%{cleaned}%"))
+			.limit(_PHONE_CANDIDATE_LIMIT + 1)
+		).run(as_dict=True)
+		if len(candidates) > _PHONE_CANDIDATE_LIMIT:
+			return fallback
+		contact_names = {
+			row.parent for row in candidates if _same_phone(row.phone, phone_number, country, exact_match)
+		}
+	if trusted or "mobile_no" in _phone_fields("CRM Lead"):
+		lead = frappe.qb.DocType("CRM Lead")
+		candidates = (
+			frappe.qb.from_(lead)
+			.select(lead.name, lead.mobile_no)
+			.where(lead.converted == 0)
+			.where(_normalized_phone(lead.mobile_no).like(f"%{cleaned}%"))
+			.limit(_PHONE_CANDIDATE_LIMIT + 1)
+		).run(as_dict=True)
+		if len(candidates) > _PHONE_CANDIDATE_LIMIT:
+			return fallback
+		lead_names = {
+			row.name for row in candidates if _same_phone(row.mobile_no, phone_number, country, exact_match)
+		}
+	contacts = _phone_rows(
+		"Contact", contact_names, ["name", "full_name", "image", "mobile_no"], trusted=trusted
+	)
+	leads = _phone_rows("CRM Lead", lead_names, ["name", "lead_name", "image", "mobile_no"], trusted=trusted)
+	if len(contacts) + len(leads) != 1:
+		return fallback
+	if leads:
+		result = dict(leads[0])
+		result["lead"] = result["name"]
+		if "lead_name" in result:
+			result["full_name"] = result.pop("lead_name")
+		return result
+	result = dict(contacts[0])
+	deals = _phone_deals(result["name"], trusted=trusted)
+	if len(deals) == 1:
+		result["deal"] = deals[0].name
+	elif deals and (trusted or "status" in _phone_fields("CRM Deal")):
+		statuses = _phone_rows(
+			"CRM Deal Status",
+			{row.status for row in deals if row.get("status")},
+			["name", "type"],
+			trusted=trusted,
+		)
+		types = {row.name: row.get("type") for row in statuses}
+		opened = [
+			row
+			for row in deals
+			if types.get(row.get("status")) and types[row.status] not in _TERMINAL_DEAL_TYPES
+		]
+		if len(opened) == 1:
+			result["deal"] = opened[0].name
+	return result
 
-	return {"mobile_no": phone_number}
+
+def _phone_deals(contact, *, trusted=False):
+	if not trusted and not (
+		"contacts" in _phone_fields("CRM Deal")
+		and {"contact", "is_primary"}.issubset(_phone_fields("CRM Contacts", parenttype="CRM Deal"))
+	):
+		return []
+	links = frappe.get_all(
+		"CRM Contacts",
+		filters={"contact": contact, "is_primary": 1, "parenttype": "CRM Deal", "parentfield": "contacts"},
+		fields=["parent"],
+		limit_page_length=_PHONE_CANDIDATE_LIMIT + 1,
+	)
+	if len(links) > _PHONE_CANDIDATE_LIMIT:
+		return []
+	return _phone_rows(
+		"CRM Deal", {row.parent for row in links}, ["name", "status", "modified"], trusted=trusted
+	)
