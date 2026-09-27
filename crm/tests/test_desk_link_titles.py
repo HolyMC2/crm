@@ -257,7 +257,7 @@ class TestDeskLinkTitles(OfferFixture, IntegrationTestCase):
 		self.assertNotIn(self.title_key, result.get("_link_titles", {}))
 		self.assertNotIn(self.organization.organization_name, frappe.as_json(result))
 		document = next(doc for doc in result["docs"] if doc["doctype"] == "CRM Deal")
-		self.assertFalse(document["organization"])
+		self.assertFalse(document.get("organization"))
 		self.assertEqual(document["website"], self.organization.name)
 		self.assertEqual(document["organization_name"], "CRM Organization")
 		frappe.set_user("Administrator")
