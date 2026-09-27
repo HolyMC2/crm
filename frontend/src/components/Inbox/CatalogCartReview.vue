@@ -201,7 +201,7 @@
         <button
           v-if="review || pending"
           type="button"
-          class="min-h-11 rounded bg-surface-gray-7 px-4 py-2 text-ink-white focus-visible:ring-2 disabled:opacity-50"
+          class="min-h-11 rounded bg-surface-gray-10 px-4 py-2 text-ink-base focus-visible:ring-2 disabled:opacity-50"
           :disabled="
             creating || reviewing || blocked || (!pending && !canCreate)
           "
