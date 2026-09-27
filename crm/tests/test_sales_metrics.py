@@ -445,7 +445,35 @@ class TestSalesMetrics(IntegrationTestCase):
 		)
 
 	def test_history_counts_require_native_child_field_read_permission(self):
-		self.deal()
+		# Native insertion records an open interval with `from`, not a completed
+		# transition with `to`. Create the event through the owning controller;
+		# the general metrics helper's legacy db_set fixture has no such event.
+		deal = (
+			frappe.get_doc(
+				{
+					"doctype": "CRM Deal",
+					"pipeline": self.pipeline.name,
+					"status": self.statuses["Ongoing"],
+					"deal_owner": self.user,
+					"currency": "USD",
+					"expected_deal_value": 100,
+					"expected_closure_date": "2040-02-10",
+					"probability": 50,
+				}
+			)
+			.insert()
+			.reload()
+		)
+		self.assertFalse(any(row.to for row in deal.status_change_log))
+		deal.status = self.statuses["Open"]
+		deal.save()
+		# Date only the synthetic parent for this existing cohort-based query.
+		deal.db_set("creation", "2040-02-10 12:00:00", update_modified=False)
+		transitions = [row for row in deal.reload().status_change_log if row.to]
+		self.assertEqual(
+			[(row.get("from"), row.to) for row in transitions],
+			[(self.statuses["Ongoing"], self.statuses["Open"])],
+		)
 		frappe.set_user(self.user)
 		self.assertEqual(
 			get_deal_status_change_counts("2040-02-01", "2040-02-29"),

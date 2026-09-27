@@ -4,6 +4,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import frappe
+from frappe.desk.form.assign_to import remove as remove_assignment
 from frappe.tests import IntegrationTestCase
 
 from crm.api import activities
@@ -85,9 +86,30 @@ class TestActivityBatchQueries(OfferFixture, IntegrationTestCase):
 			activities.get_activities(self.deal.name), activities.get_activities(self.deal.name, "CRM Deal")
 		)
 		frappe.set_user("Administrator")
+		# Native owner changes intentionally preserve other assignees. Revoke
+		# this seller's assignment through the normal command before asserting
+		# denial; changing ownership alone is not a valid private-record fixture.
+		remove_assignment("CRM Lead", lead.name, self.user)
 		lead.reload()
 		lead.lead_owner = "Administrator"
 		lead.save()
+		self.assertFalse(
+			frappe.db.exists(
+				"ToDo",
+				{
+					"reference_type": "CRM Lead",
+					"reference_name": lead.name,
+					"allocated_to": self.user,
+					"status": ["!=", "Cancelled"],
+				},
+			)
+		)
+		self.assertFalse(
+			frappe.db.exists(
+				"DocShare", {"share_doctype": "CRM Lead", "share_name": lead.name, "user": self.user}
+			)
+		)
+		self.assertEqual(lead.reload().lead_owner, "Administrator")
 		frappe.set_user(self.user)
 		self.assertFalse(frappe.has_permission("CRM Lead", "read", lead.name))
 		with self.assertRaises(frappe.PermissionError):
