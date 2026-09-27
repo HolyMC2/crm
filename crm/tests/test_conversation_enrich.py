@@ -1,35 +1,35 @@
 # Copyright (c) 2026, Grupo Doco and contributors
 # For license information, please see license.txt
 
-"""FCRM conversation contract — CRM layer (crm.api.whatsapp).
+"""Stored conversation compatibility — CRM layer (crm.api.whatsapp).
 
 Covers the thread ENRICHER (template/reply/reaction resolution + from_name
 fallback), the realtime `whatsapp_message` publish payload, the outbound send
 path (`create_whatsapp_message` field/provenance contract + failure surfacing),
 and the `validate` resolver hook at real-insert level.
 
-Base class: plain `unittest.TestCase` with a per-test `frappe.db.rollback()`,
-matching the existing crm WhatsApp suites (test_whatsapp.py /
-test_whatsapp_routing.py). Those deliberately avoid IntegrationTestCase because
-its lazy test-record loader pulls ERPNext fixtures (_Test Product Bundle Item)
-that don't build on the doco sites.
-
-Meta HTTP is always mocked — the lab WhatsApp token is broken and a real send
-would hit live Meta. See the module-path note on `_MPR` below.
+Read/realtime fixtures use real stored messages, two accounts and native grants.
+The legacy send/resolver cases retain rollback isolation and fictional tokens.
+No live provider traffic is permitted; transport doubles prove only contracts.
 """
 
 import json
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+from uuid import uuid4
 
 import frappe
+from frappe.tests import IntegrationTestCase
+from frappe.utils import CallbackManager
 
 from crm.api.whatsapp import (
+	_wa_message_fields,
 	create_whatsapp_message,
 	enrich_whatsapp_messages,
 	get_from_name,
 	on_update,
 )
+from crm.tests.test_whatsapp_read_scope import WhatsAppReadFixture
 
 # Our frappe_whatsapp fork routes ALL Graph traffic through its `transport`
 # Message sends now use the bounded message HTTP adapter after the scope guard.
@@ -37,33 +37,34 @@ from crm.api.whatsapp import (
 _MPR = "frappe_whatsapp.transport._message_api"
 
 
-def _row(frm=None, **over) -> dict:
-	"""A raw WhatsApp Message thread row (the shape `_wa_message_fields` returns,
-	which is what `enrich_whatsapp_messages` consumes). Overridable per test.
-	`frm` maps to the `from` key (a Python keyword, unusable as a kwarg)."""
-	base = {
-		"name": frappe.generate_hash(length=8),
-		"type": "Incoming",
-		"to": None,
-		"from": frm,
-		"content_type": "text",
-		"message_type": "Manual",
-		"attach": None,
-		"template": None,
-		"use_template": 0,
-		"message_id": None,
-		"is_reply": 0,
-		"reply_to_message_id": None,
-		"creation": frappe.utils.now(),
-		"message": "",
-		"status": None,
-		"reference_doctype": None,
-		"reference_name": None,
-		"template_parameters": None,
-		"template_header_parameters": None,
-	}
-	base.update(over)
-	return base
+class StoredConversationFixture(WhatsAppReadFixture):
+	def stored_message(self, frm=None, **over):
+		from frappe.utils.password import set_encrypted_password
+
+		frappe.set_user("Administrator")
+		account = self.accounts["a"].name
+		set_encrypted_password("WhatsApp Account", account, "fictional-unused", "token")
+		doc = frappe.get_doc(
+			{
+				"doctype": "WhatsApp Message",
+				"type": "Incoming",
+				"from": frm or self.peer,
+				"to": self.peer,
+				"whatsapp_account": account,
+				"content_type": "text",
+				"message_type": "Manual",
+				"message_id": "wamid.enrichment." + uuid4().hex,
+				"message": "Fictional message",
+				**over,
+			}
+		).insert()
+		self.assertTrue(doc.is_demo)
+		frappe.set_user(self.actor_a)
+		return doc
+
+	def row(self, frm=None, **over):
+		doc = self.stored_message(frm, **over)
+		return frappe.db.get_value("WhatsApp Message", doc.name, _wa_message_fields(), as_dict=True)
 
 
 def _open_status() -> str:
@@ -74,35 +75,35 @@ def _open_status() -> str:
 	return name
 
 
-class TestEnrich(unittest.TestCase):
-	def setUp(self):
-		frappe.set_user("Administrator")
-
-	def tearDown(self):
-		frappe.db.rollback()
-
+class TestEnrich(StoredConversationFixture, IntegrationTestCase):
 	# --- from_name fallbacks (regression da65a951) ---
 
 	def test_orphan_message_falls_back_from_name_to_sender_number(self):
 		"""A reference-less orphan row must not crash and must name itself from the
 		sender number (there's no reference doc to name from)."""
-		row = _row(frm="5215559990123", message="hola", reference_doctype=None, reference_name=None)
+		row = self.row(frm="5215559990123", message="hola", reference_doctype=None, reference_name=None)
 		out = enrich_whatsapp_messages([row])
 		self.assertEqual(len(out), 1)
 		self.assertEqual(out[0]["from_name"], "5215559990123")
 
 	def test_deleted_reference_does_not_crash(self):
-		"""A row pointing at a since-deleted reference falls back to the number."""
-		row = _row(
+		"""A dangling legacy parent is excluded without revealing its sender."""
+		row = self.row(
 			frm="5215559990124",
 			reference_doctype="CRM Deal",
-			reference_name="CRM-DEAL-DOES-NOT-EXIST",
+			reference_name=self.deal.name,
 		)
+		# Simulate a retained historical row whose parent no longer exists.
+		frappe.db.set_value("WhatsApp Message", row.name, "reference_name", "CRM-DEAL-DOES-NOT-EXIST")
 		out = enrich_whatsapp_messages([row])
-		self.assertEqual(out[0]["from_name"], "5215559990124")
+		self.assertEqual(out, [])
+		self.assertEqual(get_from_name(row), "")
 
 	def test_get_from_name_direct_orphan(self):
-		self.assertEqual(get_from_name({"from": "521999", "reference_doctype": None}), "521999")
+		row = self.row(frm="5215559990125", reference_doctype=None, reference_name=None)
+		self.assertEqual(get_from_name(row), "5215559990125")
+		# Presentation data alone cannot supply a persisted account identity.
+		self.assertEqual(get_from_name({"from": "521999", "reference_doctype": None}), "")
 
 	# --- template resolution ---
 
@@ -124,7 +125,7 @@ class TestEnrich(unittest.TestCase):
 			)
 			tpl.db_insert()  # bypass validate/after_insert -> no Meta POST
 
-		row = _row(
+		row = self.row(
 			message_type="Template",
 			template=tpl_name,
 			use_template=1,
@@ -142,24 +143,23 @@ class TestEnrich(unittest.TestCase):
 	# --- reply resolution ---
 
 	def test_reply_message_resolves_reply_message(self):
-		original = _row(
-			name="wa-orig-reply",
+		original = self.row(
 			type="Incoming",
 			frm="5215551230777",
 			message="Mensaje original",
 			message_id="wamid.origreply",
 		)
-		reply = _row(
-			name="wa-reply",
+		reply = self.row(
 			type="Outgoing",
+			to=original["from"],
 			message="Es una respuesta",
 			is_reply=1,
 			reply_to_message_id="wamid.origreply",
 		)
 		out = enrich_whatsapp_messages([original, reply])
-		reply_out = next(m for m in out if m["name"] == "wa-reply")
+		reply_out = next(m for m in out if m["name"] == reply["name"])
 		self.assertEqual(reply_out["reply_message"], "Mensaje original")
-		self.assertEqual(reply_out["reply_to"], "wa-orig-reply")
+		self.assertEqual(reply_out["reply_to"], original["name"])
 		self.assertEqual(reply_out["reply_to_type"], "Incoming")
 		# reply_to_from labels the REPLIED-TO sender (audit L3 fix: derived from the
 		# replied-to row, not the replying one) — here the orphan original's number.
@@ -186,8 +186,8 @@ class TestEnrich(unittest.TestCase):
 			)
 			tpl.db_insert()
 
-		normal = _row(frm="5215551230999", message="mensaje normal")
-		corrupt = _row(
+		normal = self.row(frm="5215551230999", message="mensaje normal")
+		corrupt = self.row(
 			message_type="Template",
 			template=tpl_name,
 			use_template=1,
@@ -205,15 +205,13 @@ class TestEnrich(unittest.TestCase):
 	# --- reaction folding ---
 
 	def test_reaction_attaches_to_reacted_message_and_is_dropped(self):
-		original = _row(
-			name="wa-react-orig",
+		original = self.row(
 			type="Incoming",
 			frm="5215551230888",
 			message="Foto lista",
 			message_id="wamid.reactorig",
 		)
-		reaction = _row(
-			name="wa-react",
+		reaction = self.row(
 			type="Incoming",
 			frm="5215551230888",
 			content_type="reaction",
@@ -222,54 +220,45 @@ class TestEnrich(unittest.TestCase):
 		)
 		out = enrich_whatsapp_messages([original, reaction])
 		# reaction row is folded into its target and dropped from the list
-		self.assertEqual([m["name"] for m in out], ["wa-react-orig"])
+		self.assertEqual([m["name"] for m in out], [original["name"]])
 		self.assertEqual(out[0]["reaction"], "\U0001f44d")
 
 
-class TestRealtimePayload(unittest.TestCase):
-	"""on_update publishes `whatsapp_message` with reference + phone (2d6c6c64):
-	the inbox orphan catch needs `phone` to live-refresh the open Sin-asignar
-	thread, and the deal thread needs reference_doctype/reference_name."""
+class TestRealtimePayload(StoredConversationFixture, IntegrationTestCase):
+	"""The native stored binding keeps the legacy payload in explicit user rooms."""
 
-	def setUp(self):
-		frappe.set_user("Administrator")
-		self.published = []
-		self._orig = frappe.publish_realtime
-		frappe.publish_realtime = lambda *a, **k: self.published.append((a, k))
-
-	def tearDown(self):
-		frappe.publish_realtime = self._orig
-		frappe.db.rollback()
-
-	def _mock_doc(self, mtype, frm, to, ref_dt="CRM Deal", ref_dn="D-123"):
-		doc = MagicMock()
-		doc.type = mtype
-		doc.reference_doctype = ref_dt
-		doc.reference_name = ref_dn
-		doc.get.side_effect = lambda k, *a: {"from": frm, "to": to}.get(k)
-		return doc
-
-	def _wa_event(self):
-		for a, k in self.published:
-			if a and a[0] == "whatsapp_message":
-				return a[1], k
-		self.fail("no whatsapp_message event published")
+	def _wa_event(self, direction, frm, to):
+		doc = self.stored_message(
+			frm,
+			type=direction,
+			to=to,
+			reference_doctype="CRM Deal",
+			reference_name=self.deal.name,
+		)
+		frappe.db.after_commit = CallbackManager()
+		self.realtime.reset_mock()
+		on_update(doc, None)
+		self.assertFalse(self.realtime.called)
+		# Run the actual callback without committing this rollback fixture.
+		frappe.db.after_commit.run()
+		calls = [call for call in self.realtime.call_args_list if call.args[0] == "whatsapp_message"]
+		self.assertTrue(calls)
+		self.assertNotIn(self.actor_b, [call.kwargs["user"] for call in calls])
+		for call in calls:
+			self.assertEqual(call.kwargs["room"], "user:" + call.kwargs["user"])
+			self.assertNotIn("doctype", call.kwargs)
+			if call.kwargs["user"] == self.actor_a:
+				return call.args[1], call.kwargs
+		self.fail("no authorized recipient event published")
 
 	def test_incoming_payload_phone_is_from(self):
-		doc = self._mock_doc("Incoming", "5215551111111", "5215552222222")
-		with patch("crm.api.whatsapp.notify_agent"):
-			on_update(doc, None)
-		payload, kwargs = self._wa_event()
+		payload, _ = self._wa_event("Incoming", "5215551111111", "5215552222222")
 		self.assertEqual(payload["reference_doctype"], "CRM Deal")
-		self.assertEqual(payload["reference_name"], "D-123")
+		self.assertEqual(payload["reference_name"], self.deal.name)
 		self.assertEqual(payload["phone"], "5215551111111")
-		self.assertTrue(kwargs.get("after_commit"))
 
 	def test_outgoing_payload_phone_is_to(self):
-		doc = self._mock_doc("Outgoing", "5215551111111", "5215552222222")
-		with patch("crm.api.whatsapp.notify_agent"):
-			on_update(doc, None)
-		payload, _ = self._wa_event()
+		payload, _ = self._wa_event("Outgoing", "5215551111111", "5215552222222")
 		self.assertEqual(payload["phone"], "5215552222222")
 
 
@@ -347,9 +336,10 @@ class TestSendPath(unittest.TestCase):
 
 
 class TestValidateResolverIntegration(unittest.TestCase):
-	"""crm.api.whatsapp.validate at real-insert level: an UNREFERENCED inbound is
-	resolved to the contact's open deal; a PRESET reference is never overridden
-	(the deliberately-threaded send must survive the fallback resolver)."""
+	"""Unverified inbound text cannot infer authority from a matching phone.
+	An explicitly authorized preset reference survives the normal insert.
+	Verified receipt attribution is covered in test_phone_lookup_receipts.
+	"""
 
 	_PHONE = "+5215559990042"
 
@@ -393,12 +383,12 @@ class TestValidateResolverIntegration(unittest.TestCase):
 		doc.update(over)
 		return doc
 
-	def test_validate_resolves_open_deal_on_real_insert(self):
+	def test_unverified_incoming_does_not_resolve_open_deal_on_real_insert(self):
 		with patch(_MPR, return_value={"messages": [{"id": "wamid.mock"}]}):
 			doc = self._incoming()
 			doc.insert(ignore_permissions=True)
-		self.assertEqual(doc.reference_doctype, "CRM Deal")
-		self.assertEqual(doc.reference_name, self.deal.name)
+		self.assertFalse(doc.reference_doctype)
+		self.assertFalse(doc.reference_name)
 
 	def test_validate_respects_preset_reference(self):
 		other = frappe.get_doc({"doctype": "CRM Deal", "status": _open_status()})
