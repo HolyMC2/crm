@@ -309,12 +309,12 @@ def message_query_conditions(user=None):
 def message_permission(doc, ptype=None, user=None, permission_type=None):
 	# Native roles/controller/outbox still decide writes. A write response must
 	# not resurrect an existing unreadable transcript; creation remains native.
+	# Frappe treats any falsy has_permission result as a denial, so every
+	# non-denying outcome must be an explicit True.
 	kind = ptype or permission_type or "read"
 	if kind == "create":
-		return None
-	if not can_read_message(doc.name, user):
-		return False
-	return True if kind in {"read", "select"} else None
+		return True
+	return bool(can_read_message(doc.name, user))
 
 
 def filter_shared_messages(user, doctype, names):

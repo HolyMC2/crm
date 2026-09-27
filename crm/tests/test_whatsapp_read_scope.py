@@ -925,3 +925,20 @@ class TestWhatsAppReadScope(WhatsAppReadFixture, IntegrationTestCase):
 		users = self.projected_recipients()
 		self.assertNotIn(self.actor_a, users)
 		self.assertIn(self.actor_b, users)
+
+
+class TestWhatsAppMessagePermissionHook(IntegrationTestCase):
+	"""Frappe's has_controller_permissions denies on any falsy hook result."""
+
+	def test_readable_message_never_denies_native_write_or_create(self):
+		doc = frappe._dict(doctype="WhatsApp Message", name="readable")
+		with patch.object(scope, "can_read_message", return_value=True):
+			for ptype in ("read", "select", "write", "delete", "share", "email", "print", "create"):
+				self.assertIs(scope.message_permission(doc, ptype=ptype), True, ptype)
+
+	def test_unreadable_message_denies_every_existing_record_action(self):
+		doc = frappe._dict(doctype="WhatsApp Message", name="foreign")
+		with patch.object(scope, "can_read_message", return_value=False):
+			for ptype in ("read", "select", "write", "delete", "share"):
+				self.assertIs(scope.message_permission(doc, ptype=ptype), False, ptype)
+			self.assertIs(scope.message_permission(doc, ptype="create"), True)
