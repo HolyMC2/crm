@@ -4,6 +4,8 @@ Requires normal same-site ERP CRM custom fields to have been installed in the
 disposable site before the test transaction (enabling ERPNext CRM Settings).
 """
 
+from unittest.mock import patch
+
 import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_to_date, now_datetime
@@ -143,6 +145,27 @@ class TestOfferERP(OfferFixture, IntegrationTestCase):
 		self.assertIn(accepted["terms_hash"], quotation.terms)
 		self.assertEqual(frappe.db.count("Quotation", {"crm_deal": self.deal.name}), 1)
 		self.assertEqual(frappe.db.get_value("Item Price", self.price.name, "price_list_rate"), price_before)
+
+	def test_handoff_works_after_erpnext_removed_the_quotation_deal_field(self):
+		# ERPNext's remove_frappe_crm_custom_fields drops Quotation.crm_deal when its
+		# own CRM sync is off; the offer's erp_quotation link stays authoritative.
+		from frappe.model.meta import Meta
+
+		has_field = Meta.has_field
+
+		def without_quotation_deal(meta, fieldname):
+			return (
+				False if (meta.name, fieldname) == ("Quotation", "crm_deal") else has_field(meta, fieldname)
+			)
+
+		accepted = self.accepted()
+		with patch.object(Meta, "has_field", without_quotation_deal):
+			preview = offers.preview_erp(accepted["name"])
+			created = offers.create_erp_quotation(accepted["name"], preview["review_hash"])
+		self.assertEqual(
+			frappe.db.get_value("CRM Offer", accepted["name"], "erp_quotation"), created["quotation"]
+		)
+		self.assertFalse(frappe.db.get_value("Quotation", created["quotation"], "crm_deal"))
 
 	def test_current_price_change_invalidates_review_then_requires_drift_evidence(self):
 		accepted = self.accepted()

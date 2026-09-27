@@ -339,7 +339,11 @@ def get_erpnext_site_client(erpnext_crm_settings):
 
 
 def get_local_customer(crm_deal: str):
-	customer = frappe.db.exists("Customer", {"crm_deal": crm_deal})
+	# ERPNext deletes the empty Customer/Quotation crm_deal fields when its own
+	# CRM sync is off (patch remove_frappe_crm_custom_fields).
+	customer = frappe.db.has_column("Customer", "crm_deal") and frappe.db.exists(
+		"Customer", {"crm_deal": crm_deal}
+	)
 	if not customer:
 		customer = frappe.db.get_value("CRM Deal", crm_deal, "erpnext_customer")
 	return customer
@@ -550,17 +554,23 @@ def check_customer_for_quotation(quotation: str):
 	"""Create/fetch the Customer for the CRM Deal behind a quotation. Called when a
 	Sales Order form is opened from a CRM Deal quotation that has no customer yet.
 	"""
-	crm_deal = frappe.db.get_value("Quotation", quotation, "crm_deal")
+	crm_deal = _quotation_deal(quotation)
 	if not crm_deal:
 		return None
 	return check_customer_for_deal(crm_deal)
+
+
+def _quotation_deal(quotation):
+	if not frappe.db.has_column("Quotation", "crm_deal"):
+		return None
+	return frappe.db.get_value("Quotation", quotation, "crm_deal")
 
 
 def get_deal_from_sales_order(doc):
 	for item in doc.items:
 		quotation = item.get("prevdoc_docname")
 		if quotation:
-			crm_deal = frappe.db.get_value("Quotation", quotation, "crm_deal")
+			crm_deal = _quotation_deal(quotation)
 			if crm_deal:
 				return crm_deal
 	return None

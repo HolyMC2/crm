@@ -220,9 +220,11 @@ def _build(doc):
 		}
 	)
 	quotation.check_permission("create")
-	if not quotation.meta.has_field("crm_deal"):
-		service._fail("The native ERP quotation deal link is not installed. Finish ERPNext CRM setup first.")
-	quotation.crm_deal = doc.deal
+	# The offer's own erp_quotation is the authoritative link. ERPNext removes the
+	# optional Quotation.crm_deal back-link when its CRM sync is off; stamp it only
+	# where it still exists.
+	if quotation.meta.has_field("crm_deal"):
+		quotation.crm_deal = doc.deal
 	quotation.terms = (
 		"<p>CRM commercial offer "
 		+ escape(doc.name)
