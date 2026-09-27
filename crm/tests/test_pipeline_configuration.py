@@ -249,14 +249,24 @@ class TestPipelineConfiguration(IntegrationTestCase):
 				with self.assertRaisesRegex(RuntimeError, "permission filter failed"):
 					frappe.share.get_shared("CRM Deal", user)
 
-	def test_unsupported_framework_fails_before_request_and_configuration(self):
-		from crm.pipeline.services.configuration import check_request_compatibility
+	def test_unsupported_framework_fails_crm_request_and_configuration(self):
+		from crm.permissions import framework
 
-		with patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0):
+		with (
+			patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0),
+			patch.dict(frappe.local.form_dict, {"doctype": "CRM Deal"}, clear=True),
+		):
 			with self.assertRaises(frappe.PermissionError):
-				check_request_compatibility()
+				framework.check_request()
 			with self.assertRaises(frappe.PermissionError):
 				self.make_pipeline([self.open])
+
+	def test_unsupported_framework_still_seeds_pipelines_during_migrate(self):
+		with (
+			patch.object(frappe.share, "FILTER_SHARED_DOCUMENTS_VERSION", 0),
+			patch.object(frappe.flags, "in_migrate", True),
+		):
+			self.assertTrue(self.make_pipeline([self.open]).name)
 
 	def test_legacy_mapping_is_previewable_idempotent_and_preserves_history(self):
 		deal = self.deal(probability=0)

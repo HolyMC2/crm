@@ -3,7 +3,8 @@
 import frappe
 from frappe.utils import cint, flt
 
-from crm.pipeline.services.configuration import LEGACY_PIPELINE, require_shared_scope_support
+from crm.pipeline.services.configuration import LEGACY_PIPELINE
+from crm.permissions.framework import warn_if_missing
 
 
 def preview():
@@ -40,7 +41,7 @@ def preview():
 
 
 def execute():
-	require_shared_scope_support()
+	warn_if_missing("pipeline mapping")
 	before = preview()
 	if before["unmapped_statuses"]:
 		frappe.throw("Pipeline mapping needs review: deals reference missing stage IDs.")

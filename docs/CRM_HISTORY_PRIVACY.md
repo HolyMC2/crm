@@ -8,9 +8,12 @@ for another recipient.
 
 The supported Muelle Frappe base supplies `VERSION_HISTORY_FILTER_VERSION=1`,
 `LINK_TITLES_FILTER_VERSION=1` and their `filter_version_history` /
-`filter_link_titles` hooks. CRM checks both requirements before installation,
-migration, requests and background jobs. Install the compatible base before this
-CRM revision. The build helper pins all three upstream source files and records
+`filter_link_titles` hooks, plus `FILTER_SHARED_DOCUMENTS_VERSION=1` for pipeline
+share scope. When any of them is missing, CRM requests (the `/crm` app, `crm.*`
+methods and Desk/REST calls naming CRM Lead, CRM Deal or CRM Pipeline) and `crm.*`
+background jobs fail closed; every other request and job, installation and
+migration continue and log the missing capability (`crm.permissions.framework`).
+Install the compatible base with this CRM revision. The build helper pins all three upstream source files and records
 its modifications separately from the upstream source manifest. There is no
 runtime replacement of framework functions.
 

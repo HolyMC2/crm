@@ -20,13 +20,6 @@ def require_shared_scope_support():
 		)
 
 
-def check_request_compatibility():
-	# This hook is loaded only on sites with CRM installed. Requests must also
-	# fail closed if a site is rolled back onto an incompatible base image.
-	if installed():
-		require_shared_scope_support()
-
-
 def filter_shared_documents(user, doctype, names):
 	"""Sharing may grant ownership access, but never bypass pipeline/company scope."""
 	if doctype not in ("CRM Lead", "CRM Deal", "CRM Pipeline"):
@@ -251,7 +244,14 @@ def validate_record(doc):
 
 
 def validate_configuration(doc):
-	require_shared_scope_support()
+	if frappe.flags.in_install or frappe.flags.in_migrate or frappe.flags.in_patch:
+		# Seeding the compatibility pipeline must not abort install/migrate;
+		# CRM requests stay closed until the supported base is present.
+		from crm.permissions.framework import warn_if_missing
+
+		warn_if_missing("pipeline setup")
+	else:
+		require_shared_scope_support()
 	validate_company(doc.sales_company)
 	# Lock the singleton metadata row so concurrent defaults serialize in MariaDB.
 	frappe.db.sql("SELECT name FROM `tabDocType` WHERE name = 'CRM Pipeline' FOR UPDATE")

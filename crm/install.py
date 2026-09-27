@@ -10,12 +10,6 @@ from crm.fcrm.doctype.crm_dashboard.crm_dashboard import create_default_manager_
 from crm.fcrm.doctype.crm_products.crm_products import create_product_details_script
 
 
-def before_install():
-	from crm.pipeline.services.configuration import require_shared_scope_support
-
-	require_shared_scope_support()
-
-
 def after_install(force=False):
 	from crm.api.whatsapp import add_roles as add_whatsapp_roles
 
