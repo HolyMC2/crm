@@ -33,8 +33,9 @@ vi.mock('socket.io-client', () => ({
 }))
 vi.mock('frappe-ui', async () => {
   // Exercise the pinned plugin's real option defaults and socket initializer.
-  const { default: FrappeUI } =
-    await import('../../node_modules/frappe-ui/src/utils/plugin')
+  const { default: FrappeUI } = await import(
+    '../../node_modules/frappe-ui/src/utils/plugin'
+  )
   const component = { render: () => null }
   return {
     FrappeUI,

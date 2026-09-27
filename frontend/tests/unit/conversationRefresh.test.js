@@ -203,7 +203,9 @@ describe('conversation context link provenance', () => {
   it('labels a visitor-shared order as unverified while preserving ordinary link labels', async () => {
     links([proof, normal])
     const el = await mount()
-    const nav = el.querySelector('nav[aria-label="Registros de la conversación"]')
+    const nav = el.querySelector(
+      'nav[aria-label="Registros de la conversación"]',
+    )
     const order = nav.querySelector(`a[href="${proof.url}"]`)
     expect(order.textContent).toBe('Sales Order · SO-visitor-shared')
     expect(order.parentElement.textContent.replace(/\s+/g, ' ')).toContain(

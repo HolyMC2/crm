@@ -15,12 +15,15 @@ vi.mock('../../node_modules/frappe-ui/src/resources/local', () => ({
 }))
 vi.mock('frappe-ui', async () => {
   const config = await import('../../node_modules/frappe-ui/src/utils/config')
-  const request =
-    await import('../../node_modules/frappe-ui/src/utils/frappeRequest')
-  const documents =
-    await import('../../node_modules/frappe-ui/src/resources/documentResource.js')
-  const resources =
-    await import('../../node_modules/frappe-ui/src/resources/resources.js')
+  const request = await import(
+    '../../node_modules/frappe-ui/src/utils/frappeRequest'
+  )
+  const documents = await import(
+    '../../node_modules/frappe-ui/src/resources/documentResource.js'
+  )
+  const resources = await import(
+    '../../node_modules/frappe-ui/src/resources/resources.js'
+  )
   const component = { render: () => null }
   return {
     ...config,

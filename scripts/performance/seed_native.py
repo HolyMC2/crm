@@ -276,11 +276,11 @@ def projection(doc, fields):
 	for key, value in fields.items():
 		stored = doc.get(key)
 		if isinstance(value, list):
-			require(isinstance(stored, (list, tuple)) and len(stored) == len(value), "seed_child_drift")
+			require(isinstance(stored, list | tuple) and len(stored) == len(value), "seed_child_drift")
 			output[key] = [projection(row, expected) for row, expected in zip(stored, value, strict=True)]
 		elif value is None or value == "":
 			output[key] = stored or None
-		elif isinstance(value, (int, float)):
+		elif isinstance(value, int | float):
 			output[key] = stored
 		else:
 			output[key] = str(stored) if stored is not None else None

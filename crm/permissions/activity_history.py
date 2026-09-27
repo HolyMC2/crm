@@ -87,7 +87,7 @@ def _changes(changes, fields, user, *, pseudo=False):
 		return []
 	result = []
 	for change in changes:
-		if not isinstance(change, (list, tuple)) or len(change) != 3 or not isinstance(change[0], str):
+		if not isinstance(change, list | tuple) or len(change) != 3 or not isinstance(change[0], str):
 			continue
 		name, old, new = change
 		if not _scalar(old) or not _scalar(new):
@@ -114,7 +114,7 @@ def _rows(rows, fields, user, parenttype, cache):
 		return []
 	result = []
 	for entry in rows:
-		if not isinstance(entry, (list, tuple)) or len(entry) != 2 or not isinstance(entry[1], dict):
+		if not isinstance(entry, list | tuple) or len(entry) != 2 or not isinstance(entry[1], dict):
 			continue
 		table = _table(entry[0], fields, user, parenttype, cache)
 		if not table:
@@ -149,7 +149,7 @@ def _row_changes(rows, fields, user, parenttype, cache):
 	result = []
 	for row in rows:
 		if (
-			not isinstance(row, (list, tuple))
+			not isinstance(row, list | tuple)
 			or len(row) != 4
 			or type(row[1]) is not int
 			or row[1] < 0

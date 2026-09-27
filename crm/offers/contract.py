@@ -20,7 +20,7 @@ def text(value, label, limit, required=True):
 
 
 def number(value, label, low, high):
-	if isinstance(value, bool) or not isinstance(value, (str, int, float, Decimal)):
+	if isinstance(value, bool) or not isinstance(value, str | int | float | Decimal):
 		raise ValueError(f"Invalid {label}.")
 	try:
 		result = Decimal(str(value))

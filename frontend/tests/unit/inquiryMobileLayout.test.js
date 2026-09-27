@@ -7,8 +7,9 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 const api = vi.hoisted(() => ({ calls: [] }))
 vi.mock('frappe-ui', async () => {
   const dates = await import('../../node_modules/frappe-ui/src/utils/dayjs.ts')
-  const config =
-    await import('../../node_modules/frappe-ui/src/utils/config.ts')
+  const config = await import(
+    '../../node_modules/frappe-ui/src/utils/config.ts'
+  )
   return {
     dayjs: dates.dayjs,
     dayjsLocal: dates.dayjsLocal,

@@ -14,8 +14,9 @@ vi.mock('../../node_modules/frappe-ui/frappe/telemetry/pulse.ts', () => ({
   loadPulseClient: transport.loadPulseClient,
 }))
 vi.mock('frappe-ui/frappe', async () => {
-  const actual =
-    await import('../../node_modules/frappe-ui/frappe/telemetry/index.ts')
+  const actual = await import(
+    '../../node_modules/frappe-ui/frappe/telemetry/index.ts'
+  )
   return { telemetryPlugin: actual.default, useTelemetry: actual.useTelemetry }
 })
 import { telemetryPlugin, useTelemetry } from 'frappe-ui/frappe'

@@ -20,7 +20,7 @@ def _object(value, allowed):
 		return {}
 	if not isinstance(value, dict) or set(value) - allowed:
 		frappe.throw(_("Choose valid report filters."))
-	if any(not isinstance(v, (str, int, bool)) or len(str(v)) > 140 for v in value.values()):
+	if any(not isinstance(v, str | int | bool) or len(str(v)) > 140 for v in value.values()):
 		frappe.throw(_("Choose valid report filter values."))
 	return dict(value)
 

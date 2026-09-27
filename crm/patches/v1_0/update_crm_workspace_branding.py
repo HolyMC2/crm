@@ -4,9 +4,7 @@ import frappe
 
 
 def execute():
-	workspace = frappe.db.get_value(
-		"Workspace", "Frappe CRM", ["label", "title"], as_dict=True
-	)
+	workspace = frappe.db.get_value("Workspace", "Frappe CRM", ["label", "title"], as_dict=True)
 	if not workspace:
 		return
 	# The label must stay unique: ERPNext's own CRM Workspace owns "CRM".

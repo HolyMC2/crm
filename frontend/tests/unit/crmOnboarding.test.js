@@ -181,16 +181,22 @@ beforeEach(async () => {
     },
   })
   fixture.router = createRouter({ history: createMemoryHistory(), routes: [] })
-  fixture.resources =
-    await import('../../node_modules/frappe-ui/src/resources/resources.js')
-  fixture.config =
-    await import('../../node_modules/frappe-ui/src/utils/config.ts')
-  fixture.native =
-    await import('../../node_modules/frappe-ui/frappe/Onboarding/onboarding.js')
-  fixture.help =
-    await import('../../node_modules/frappe-ui/frappe/Help/help.js')
+  fixture.resources = await import(
+    '../../node_modules/frappe-ui/src/resources/resources.js'
+  )
+  fixture.config = await import(
+    '../../node_modules/frappe-ui/src/utils/config.ts'
+  )
+  fixture.native = await import(
+    '../../node_modules/frappe-ui/frappe/Onboarding/onboarding.js'
+  )
+  fixture.help = await import(
+    '../../node_modules/frappe-ui/frappe/Help/help.js'
+  )
   fixture.intermediate = (
-    await import('../../node_modules/frappe-ui/frappe/Onboarding/IntermediateStepModal.vue')
+    await import(
+      '../../node_modules/frappe-ui/frappe/Onboarding/IntermediateStepModal.vue'
+    )
   ).default
   ui = await import('frappe-ui')
   ui.setConfig('resourceFetcher', fixture.request)
@@ -229,8 +235,9 @@ afterEach(() => {
 
 async function mountShell(mobile = false) {
   fixture.mobile.value = mobile
-  const { default: LeadModal } =
-    await import('@/components/Modals/LeadModal.vue')
+  const { default: LeadModal } = await import(
+    '@/components/Modals/LeadModal.vue'
+  )
   const { default: App } = await import('@/App.vue')
   const page = defineComponent({
     setup: () => () => h(LeadModal, { modelValue: true }),

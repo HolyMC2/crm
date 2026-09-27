@@ -235,8 +235,9 @@ async function mountActivities(
   h.whatsapp.value = whatsapp
   // reset module so each instance gets this test's capability refs.
   vi.resetModules()
-  const { default: Activities } =
-    await import('@/components/Activities/Activities.vue')
+  const { default: Activities } = await import(
+    '@/components/Activities/Activities.vue'
+  )
   container = document.createElement('div')
   document.body.appendChild(container)
   app = createApp(Activities, {

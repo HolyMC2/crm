@@ -89,7 +89,7 @@ class Client:
 		except TimeoutError:
 			error = "timeout"
 		except URLError as exc:
-			error = "timeout" if isinstance(exc.reason, (TimeoutError, socket.timeout)) else "transport_error"
+			error = "timeout" if isinstance(exc.reason, TimeoutError | socket.timeout) else "transport_error"
 		except HTTPException:
 			error = "transport_error"
 		except (ValueError, UnicodeError):
