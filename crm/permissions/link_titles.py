@@ -92,9 +92,7 @@ def project(doc, titles, user):
 				# List conditions and per-record hooks are distinct native gates.
 				# Deduplicating references keeps a repeated child Link from
 				# repeating its target authority check.
-				if name in names and frappe.has_permission(
-					target_type, "read", doc=name, user=user, print_logs=False
-				):
+				if name in names and frappe.has_permission(target_type, "read", doc=name, user=user):
 					allowed.add(target_type + "::" + name)
 		except (frappe.PermissionError, frappe.DoesNotExistError):
 			continue

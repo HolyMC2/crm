@@ -160,15 +160,15 @@ def get_deal_activities(name: str):
 				if data.get("old_value"):
 					data["old_value"] = _(data["old_value"])
 
-		activity = {
-			"activity_type": activity_type,
-			"creation": version.creation,
-			"owner": version.owner,
-			"data": data,
-			"is_lead": False,
-			"options": field_option,
-		}
-		activities.append(activity)
+			activity = {
+				"activity_type": activity_type,
+				"creation": version.creation,
+				"owner": version.owner,
+				"data": data,
+				"is_lead": False,
+				"options": field_option,
+			}
+			activities.append(activity)
 
 	for comment in docinfo.comments:
 		activity = {
@@ -314,15 +314,15 @@ def get_lead_activities(name: str):
 				if data.get("old_value"):
 					data["old_value"] = _(data["old_value"])
 
-		activity = {
-			"activity_type": activity_type,
-			"creation": version.creation,
-			"owner": version.owner,
-			"data": data,
-			"is_lead": True,
-			"options": field_option,
-		}
-		activities.append(activity)
+			activity = {
+				"activity_type": activity_type,
+				"creation": version.creation,
+				"owner": version.owner,
+				"data": data,
+				"is_lead": True,
+				"options": field_option,
+			}
+			activities.append(activity)
 
 	for comment in docinfo.comments:
 		activity = {

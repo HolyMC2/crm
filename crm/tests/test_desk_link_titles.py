@@ -114,7 +114,7 @@ class TestDeskLinkTitles(OfferFixture, IntegrationTestCase):
 		frappe.db.value_cache.clear()
 		with patch.dict(frappe.response, {"docs": []}, clear=True):
 			load.getdoc("CRM Deal", self.deal.name)
-			return copy.deepcopy(frappe.parse_json(frappe.as_json(frappe.response)))
+			return copy.deepcopy(frappe.parse_json(frappe.as_json(dict(frappe.response))))
 
 	def protect_title(self, prop, value):
 		frappe.set_user("Administrator")

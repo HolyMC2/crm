@@ -139,7 +139,7 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 								for entry in json.loads(row.data).get("changed", [])
 							],
 						)
-						self.assertNotIn(str(old_values[0]), frappe.as_json(frappe.response))
+						self.assertNotIn(str(old_values[0]), frappe.as_json(dict(frappe.response)))
 				frappe.set_user("Administrator")
 				self.assertEqual(self.stored(doc), stored)
 
@@ -160,7 +160,7 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 		save.savedocs(frappe.as_json(payload), "Save")
 		self.assertEqual(frappe.db.get_value("CRM Lead", self.lead.name, "status"), "Qualified")
 		self.assertTrue(frappe.response.docinfo.versions)
-		self.assertNotIn(secret, frappe.as_json(frappe.response))
+		self.assertNotIn(secret, frappe.as_json(dict(frappe.response)))
 		frappe.set_user("Administrator")
 		self.assertEqual(self.lead.reload().job_title, "Current role")
 		self.assertEqual({row.name: row.data for row in self.stored(self.lead) if row.name in stored}, stored)
@@ -344,7 +344,7 @@ class TestHistoryProjection(OfferFixture, IntegrationTestCase):
 				frappe.set_user(self.user)
 				with patch.dict(frappe.response, {"docs": []}, clear=True):
 					load.getdoc("CRM Deal", self.deal.name)
-					self.assertNotIn(secret, frappe.as_json(frappe.response))
+					self.assertNotIn(secret, frappe.as_json(dict(frappe.response)))
 				frappe.set_user("Administrator")
 				self.assertNotIn(
 					secret,
