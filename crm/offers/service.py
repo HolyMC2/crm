@@ -43,7 +43,7 @@ def _field_access():
 		("CRM Products", LINE_FIELDS | {"amount", "discount_amount", "net_amount"}, "CRM Offer"),
 	):
 		permitted = set(get_permitted_fields(doctype, parenttype=parent, permission_type="read"))
-		masked = {field.fieldname for field in frappe.get_meta(doctype).get_masked_fields()}
+		masked = {field.fieldname for field in frappe.get_meta(doctype).get_masked_fields(parenttype=parent)}
 		if not wanted.issubset(permitted) or wanted & masked:
 			_fail("You do not have permission to read the complete offer terms.", frappe.PermissionError)
 
