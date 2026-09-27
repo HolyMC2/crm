@@ -310,6 +310,11 @@ def erp_available():
 	return bool(settings.enabled and not settings.is_erpnext_in_different_site)
 
 
+def _can(doctype, ptype):
+	# Capability flag for the UI; mutations re-check through doc.check_permission.
+	return bool(frappe.has_permission(doctype, ptype))  # nosemgrep: unchecked-frappe-permission-call
+
+
 def dto(doc, current=None, writable=None, erp=None, exportable=None):
 	current = _current(doc) if current is None else current
 	writable = doc.has_permission("write") if writable is None else writable
@@ -365,9 +370,7 @@ def dto(doc, current=None, writable=None, erp=None, exportable=None):
 				and current
 				and status == "Accepted"
 				and erp
-				and frappe.has_permission(
-					"Quotation", "create"
-				),  # nosemgrep: unchecked-frappe-permission-call
+				and _can("Quotation", "create"),
 			},
 		}
 	)
@@ -426,11 +429,8 @@ def get_offers(deal, offset=0, limit=20):
 		):
 			children.setdefault(child.parent, []).append(child)
 	writable, erp = deal_doc.has_permission("write"), erp_available()
-	# Capability flags for the UI; mutations re-check through doc.check_permission.
-	writable = writable and frappe.has_permission(
-		"CRM Offer", "write"
-	)  # nosemgrep: unchecked-frappe-permission-call
-	exportable = frappe.has_permission("CRM Offer", "print")  # nosemgrep: unchecked-frappe-permission-call
+	writable = writable and _can("CRM Offer", "write")
+	exportable = _can("CRM Offer", "print")
 	items = [
 		dto(
 			frappe._dict({**row, "products": children.get(row.name, [])}),
