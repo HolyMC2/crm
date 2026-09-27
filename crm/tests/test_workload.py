@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import frappe
 from frappe.tests import IntegrationTestCase, UnitTestCase
-from frappe.utils import add_days, now_datetime, today
+from frappe.utils import CallbackManager, add_days, now_datetime, today
 
 from crm.api.workload import get_work_items, get_workload, reassign_bulk
 
@@ -14,6 +14,20 @@ class TestWorkload(IntegrationTestCase):
 		super().setUp()
 		frappe.set_user("Administrator")
 		self.key = frappe.generate_hash(length=8)
+		self.fixture_users = []
+		self.point = "workload_fixture_" + self.key
+		frappe.db.savepoint(self.point)
+		self.callbacks = {
+			name: getattr(frappe.db, name)
+			for name in ("before_commit", "after_commit", "before_rollback", "after_rollback")
+		}
+		self.had_realtime_log = hasattr(frappe.local, "_realtime_log")
+		self.realtime_log = getattr(frappe.local, "_realtime_log", None)
+		if self.had_realtime_log:
+			del frappe.local._realtime_log
+		for name in self.callbacks:
+			setattr(frappe.db, name, CallbackManager())
+		self.addCleanup(self.restore_fixture)
 		frappe.db.set_single_value("FCRM Settings", "currency", "USD")
 		frappe.db.set_single_value("FCRM Settings", "workload_advisory_capacity", 1)
 		self.seller = self.user("seller")
@@ -40,8 +54,30 @@ class TestWorkload(IntegrationTestCase):
 		frappe.set_user("Administrator")
 		super().tearDown()
 
+	def restore_fixture(self):
+		frappe.set_user("Administrator")
+		try:
+			try:
+				frappe.db.before_rollback.run()
+			finally:
+				frappe.db.rollback(save_point=self.point)
+		finally:
+			try:
+				frappe.db.after_rollback.run()
+				frappe.clear_document_cache("FCRM Settings", "FCRM Settings")
+				for user in self.fixture_users:
+					frappe.clear_cache(user=user)
+			finally:
+				for name, callbacks in self.callbacks.items():
+					setattr(frappe.db, name, callbacks)
+				if hasattr(frappe.local, "_realtime_log"):
+					del frappe.local._realtime_log
+				if self.had_realtime_log:
+					frappe.local._realtime_log = self.realtime_log
+
 	def user(self, label, role="Sales User"):
 		name = f"workload-{label}-{self.key}@example.invalid"
+		self.fixture_users.append(name)
 		frappe.get_doc(
 			{
 				"doctype": "User",
@@ -83,17 +119,21 @@ class TestWorkload(IntegrationTestCase):
 		return doc
 
 	def task(self, parent, due=None, owner=None):
-		return frappe.get_doc(
-			{
-				"doctype": "CRM Task",
-				"title": "Follow up workload",
-				"status": "Todo",
-				"assigned_to": owner or self.seller,
-				"reference_doctype": "CRM Deal",
-				"reference_docname": parent.name,
-				"due_date": due,
-			}
-		).insert()
+		return (
+			frappe.get_doc(
+				{
+					"doctype": "CRM Task",
+					"title": "Follow up workload",
+					"status": "Todo",
+					"assigned_to": owner or self.seller,
+					"reference_doctype": "CRM Deal",
+					"reference_docname": parent.name,
+					"due_date": due,
+				}
+			)
+			.insert()
+			.reload()
+		)
 
 	def command(self, doc):
 		doc.reload()
@@ -105,10 +145,12 @@ class TestWorkload(IntegrationTestCase):
 			"owner": doc.get(field) or "",
 		}
 
-	def test_standalone_has_no_marketing_dependency_and_capacity_is_advisory(self):
+	def test_absent_marketing_capability_keeps_native_workload_and_advisory_capacity(self):
 		deal = self.deal()
 		self.deal(owner=self.target)
-		with patch("crm.api.workload.frappe.get_installed_apps", return_value=["frappe", "crm"]):
+		# Optional discovery double only; native hooks keep their actual app graph.
+		# A genuinely standalone site remains a separate acceptance cohort.
+		with patch("crm.api.workload.get_installed_apps", return_value=["frappe", "crm"]):
 			result = get_workload(self.filters)
 		self.assertEqual(result["capacity"]["marketing"], {"state": "absent"})
 		self.assertTrue(next(row for row in result["agents"] if row["user"] == self.target)["at_capacity"])
@@ -143,7 +185,7 @@ class TestWorkload(IntegrationTestCase):
 		self.assertEqual(result["summary"]["overdue_tasks"], 1)
 		self.assertEqual(result["summary"]["undated_tasks"], 1)
 		self.assertEqual(
-			get_work_items(self.filters, kind="tasks", overdue=True)["items"][0].name, overdue.name
+			get_work_items(self.filters, kind="tasks", overdue=True)["items"][0].name, str(overdue.name)
 		)
 
 	def test_nonmanager_cannot_read_or_reassign(self):
@@ -278,7 +320,7 @@ class TestWorkload(IntegrationTestCase):
 		settings.workload_advisory_capacity = -1
 		with self.assertRaises(frappe.ValidationError):
 			settings.save()
-		with patch("crm.api.workload.frappe.get_installed_apps", return_value=["frappe", "crm"]):
+		with patch("crm.api.workload.get_installed_apps", return_value=["frappe", "crm"]):
 			result = get_workload(self.filters)
 		self.assertTrue(all(row["shift"] == "unknown" for row in result["agents"]))
 
@@ -419,7 +461,7 @@ class TestWorkload(IntegrationTestCase):
 		meta_type = type(frappe.get_meta("User"))
 		original = meta_type.get_masked_fields
 
-		def masked(meta):
+		def masked(meta, *args, **kwargs):
 			return (
 				[
 					frappe._dict(fieldname="full_name"),
@@ -427,7 +469,7 @@ class TestWorkload(IntegrationTestCase):
 					frappe._dict(fieldname="user_type"),
 				]
 				if meta.name == "User"
-				else original(meta)
+				else original(meta, *args, **kwargs)
 			)
 
 		with patch.object(meta_type, "get_masked_fields", masked):
@@ -463,7 +505,7 @@ class TestWorkload(IntegrationTestCase):
 
 		with (
 			patch(
-				"crm.api.workload.frappe.get_installed_apps",
+				"crm.api.workload.get_installed_apps",
 				return_value=["frappe", "crm", "doco_marketing", "hrms"],
 			),
 			patch("crm.api.workload.frappe.get_doc", side_effect=doc),
@@ -483,11 +525,33 @@ class TestWorkload(IntegrationTestCase):
 				_optional_failure(error("Synthetic wrapped database failure"))
 
 		failure = frappe.db.OperationalError(1213, "Synthetic deadlock classification")
-		with patch("crm.api.workload.frappe.get_installed_apps", side_effect=failure):
+		with patch("crm.api.workload.get_installed_apps", side_effect=failure):
 			with self.assertRaises(frappe.db.OperationalError):
 				_capacity()
 			with self.assertRaises(frappe.db.OperationalError):
 				_shifts([self.seller])
+
+	def test_native_numeric_task_ids_round_trip_and_malformed_ids_are_rejected(self):
+		parent = self.deal(owner=self.target)
+		tasks = [self.task(parent), self.task(parent)]
+		rows = get_work_items(self.filters, kind="tasks")["items"]
+		self.assertEqual({row.name for row in rows}, {str(task.name) for task in tasks})
+		self.assertTrue(all(isinstance(row.name, str) for row in rows))
+		# The first is the real queue DTO; the second is the native Document's
+		# integer identity used by Desk/API callers. Both run the real controller.
+		commands = [
+			{key: str(rows[0][key]) for key in ("doctype", "name", "modified", "owner")},
+			self.command(next(task for task in tasks if str(task.name) != rows[0].name)),
+		]
+		self.assertIs(type(commands[1]["name"]), int)
+		result = reassign_bulk(commands, self.target, self.filters)
+		self.assertTrue(all(row["ok"] for row in result["results"]), result)
+		self.assertTrue(all(isinstance(row["name"], str) for row in result["results"]))
+		for task in tasks:
+			self.assertEqual(task.reload().assigned_to, self.target)
+		for invalid in (True, 0, -1, 1.5, [], {}):
+			with self.subTest(name=invalid), self.assertRaises(frappe.ValidationError):
+				reassign_bulk([{**commands[0], "name": invalid}], self.seller, self.filters)
 
 
 class TestWorkloadShiftEvidence(UnitTestCase):
@@ -525,7 +589,7 @@ class TestWorkloadShiftEvidence(UnitTestCase):
 			)
 
 		with (
-			patch("crm.api.workload.frappe.get_installed_apps", return_value=["frappe", "crm", "hrms"]),
+			patch("crm.api.workload.get_installed_apps", return_value=["frappe", "crm", "hrms"]),
 			patch("crm.api.workload.frappe.has_permission", return_value=True),
 			patch("crm.api.workload._fields"),
 			patch("crm.api.workload.frappe.get_list", side_effect=read),
@@ -559,7 +623,7 @@ class TestWorkloadShiftEvidence(UnitTestCase):
 		from crm.api.workload import _shifts
 
 		with (
-			patch("crm.api.workload.frappe.get_installed_apps", return_value=["frappe", "crm", "hrms"]),
+			patch("crm.api.workload.get_installed_apps", return_value=["frappe", "crm", "hrms"]),
 			patch("crm.api.workload.frappe.has_permission", return_value=True),
 			patch("crm.api.workload._fields"),
 			patch(

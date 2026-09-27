@@ -7,6 +7,7 @@ continue to read linked records through the owning app's native permissions.
 import json
 
 import frappe
+from frappe import get_installed_apps
 from frappe.utils import now_datetime
 
 from crm.api import automation_departments as departments
@@ -16,7 +17,7 @@ from crm.api import webchat
 
 def share(session, conversation, order_token):
 	control._assert_fence(conversation)
-	webchat._require("doco" in frappe.get_installed_apps(), "Storefront support is unavailable.")
+	webchat._require("doco" in get_installed_apps(), "Storefront support is unavailable.")
 	try:
 		from doco.docoutils.storefront.support_context import resolve_order
 	except ImportError:

@@ -487,12 +487,10 @@ class TestDashboard(IntegrationTestCase):
 		self.assertEqual(result_deals["value"], 0)
 
 	def test_invalid_date_order(self):
-		"""Test with end date before start date"""
-		# Swap dates - end before start
-		result = get_total_leads(self.to_date, self.from_date)
-
-		# Should still work (function handles it)
-		self.assertIsInstance(result["value"], (int, float))
+		"""An inverted period is rejected, not presented as a valid empty metric."""
+		for method in (get_total_leads, get_ongoing_deals):
+			with self.subTest(method=method.__name__), self.assertRaises(frappe.ValidationError):
+				method(self.to_date, self.from_date)
 
 	def test_nonexistent_user_filter(self):
 		"""Test filtering by non-existent user"""

@@ -172,9 +172,10 @@ class TestWebchat(unittest.TestCase):
 		)
 
 	def test_optional_commerce_absence_cannot_create_context_or_break_chat(self):
-		# On the standalone cohort these are the actual installed apps. The full
-		# graph also exercises the disabled capability branch without deleting apps.
-		with patch.object(frappe, "get_installed_apps", return_value=["frappe", "crm"]):
+		# Double only the adapter's optional capability discovery. The actual
+		# installed app graph and native hooks remain intact; standalone site
+		# acceptance is a separate cohort, not claimed by this full-graph test.
+		with patch("crm.api.webchat_commerce.get_installed_apps", return_value=["frappe", "crm"]):
 			self.failure(
 				417,
 				lambda: self.rpc(

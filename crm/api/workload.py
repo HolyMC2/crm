@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 
 import frappe
-from frappe import _
+from frappe import _, get_installed_apps
 from frappe.model import get_permitted_fields
 from frappe.utils import CallbackManager, add_days, cint, get_datetime, get_time, getdate, now_datetime
 
@@ -177,7 +177,7 @@ def _capacity():
 		"marketing": {"state": "absent"},
 	}
 	try:
-		if "doco_marketing" not in frappe.get_installed_apps():
+		if "doco_marketing" not in get_installed_apps():
 			return capacity
 		if not frappe.db.exists("DocType", "Marketing Settings"):
 			capacity["marketing"] = {"state": "unavailable"}
@@ -229,7 +229,7 @@ def _shifts(users):
 		"Shift Type": ["start_time", "end_time"],
 	}
 	try:
-		if not users or "hrms" not in frappe.get_installed_apps():
+		if not users or "hrms" not in get_installed_apps():
 			return unknown
 		for doctype, names in fields.items():
 			frappe.has_permission(doctype, "read", throw=True)
@@ -440,6 +440,7 @@ def get_work_items(filters=None, kind="deals", owner=None, overdue=False, offset
 	)
 	for row in rows:
 		row["doctype"] = doctype
+		row["name"] = str(row["name"])
 	return {
 		"items": rows,
 		"total": total,
@@ -556,6 +557,15 @@ def reassign_bulk(items, target, filters=None):
 		frappe.throw(_("Select between 1 and 25 records and a target owner."))
 	results = []
 	for index, item in enumerate(items):
+		# CRM Task uses native autoincrement names; Document/JSON callers may
+		# supply an integer even though queue IDs are serialized as strings.
+		if (
+			isinstance(item, dict)
+			and item.get("doctype") == "CRM Task"
+			and type(item.get("name")) is int
+			and item["name"] > 0
+		):
+			item = {**item, "name": str(item["name"])}
 		if (
 			not isinstance(item, dict)
 			or set(item) != {"doctype", "name", "modified", "owner"}
@@ -612,7 +622,7 @@ def reassign_bulk(items, target, filters=None):
 			results.append(
 				{
 					"doctype": doc.doctype,
-					"name": doc.name,
+					"name": str(doc.name),
 					"ok": True,
 					"modified": str(doc.modified),
 					"owner": target,
