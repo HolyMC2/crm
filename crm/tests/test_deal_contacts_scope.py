@@ -274,6 +274,12 @@ class TestDealContactsScope(OfferFixture, IntegrationTestCase):
 		)
 
 	def test_password_projection_is_excluded_even_for_administrator(self):
+		# A designated image field must remain Attach Image. Remove that native
+		# designation before exercising the Password projection boundary.
+		frappe.set_user("Administrator")
+		make_property_setter("Contact", None, "image_field", "", "Data", for_doctype=True)
+		frappe.clear_cache(doctype="Contact")
+		self.assertFalse(frappe.get_meta("Contact", cached=False).image_field)
 		self.protect("Contact", "image", "fieldtype", "Password")
 		self.assertEqual(self.read("Administrator"), [{**row, "image": None} for row in self.expected()])
 
