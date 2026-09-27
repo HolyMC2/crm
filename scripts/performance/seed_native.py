@@ -73,6 +73,47 @@ REQUIRED_APPS = {
 	"mercadopago_connector",
 	"scanner_kit",
 }
+COMPANY_RIGHTS = (
+	"read",
+	"write",
+	"create",
+	"delete",
+	"submit",
+	"cancel",
+	"amend",
+	"report",
+	"export",
+	"import",
+	"share",
+	"print",
+	"email",
+	"select",
+	"mask",
+	"impersonate",
+)
+COMPANY_PERMISSION_FIELDS = ("role", "permlevel", "if_owner", *COMPANY_RIGHTS)
+
+
+def company_read_rule(role):
+	return {
+		"parent": "Company",
+		"role": role,
+		"permlevel": 0,
+		"if_owner": 0,
+		**{right: int(right == "read") for right in COMPANY_RIGHTS},
+	}
+
+
+def permission_semantics(rows):
+	# All native permission values, including owner/mask/export semantics.
+	return sorted(
+		canonical(
+			{key: row.get(key) if key == "role" else row.get(key) or 0 for key in COMPANY_PERMISSION_FIELDS}
+		)
+		for row in rows
+	)
+
+
 BUSINESS = (
 	"CRM Deal",
 	"CRM Lead",
@@ -443,9 +484,163 @@ class Seed:
 	def user(self, alias):
 		return f"perf-{self.tag}-{alias}@example.invalid"
 
+	def _company_permission_rows(self, doctype):
+		rows = self.f.db.get_values(
+			doctype,
+			filters={"parent": "Company"},
+			fieldname="*",
+			as_dict=True,
+			order_by="name",
+			for_update=True,
+		)
+		# Persist native datetimes as JSON, without discarding any existing row field.
+		return json.loads(self.f.as_json(rows))
+
+	def _prepare_company_permission_plan(self, role):
+		require(self.pending == 0, "seed_company_plan_pending_writes")
+		# Pinned Frappe installs this Permission Type as native custom Check
+		# fields on both permission doctypes; it is absent from their base JSON.
+		require(
+			self.f.db.get_values(
+				"Permission Type",
+				filters={"name": "user_impersonate"},
+				fieldname=["doc_type", "perm_type"],
+				as_dict=True,
+				for_update=True,
+				limit=2,
+			)
+			== [{"doc_type": "User", "perm_type": "impersonate"}],
+			"seed_company_permission_type",
+		)
+		for doctype in ("DocPerm", "Custom DocPerm"):
+			actual = {
+				df.fieldname
+				for df in self.f.get_meta(doctype, cached=False).fields
+				if df.fieldtype not in ("Section Break", "Column Break", "Tab Break")
+			}
+			expected = set(COMPANY_PERMISSION_FIELDS) | ({"parent"} if doctype == "Custom DocPerm" else set())
+			require(actual == expected, "seed_company_permission_schema")
+		if "company_permissions" not in self.journal:
+			custom = self._company_permission_rows("Custom DocPerm")
+			require(not any(row["role"] == role for row in custom), "seed_company_rule_unowned")
+			self.journal["company_permissions"] = {
+				"role": role,
+				"standard": self._company_permission_rows("DocPerm"),
+				"custom": custom,
+			}
+			# Before any master insert, the journal contains committed records only.
+			self.save()
+		require(self.journal["company_permissions"]["role"] == role, "seed_company_role_changed")
+
+	def _check_company_permission_baseline(self, rows):
+		plan = self.journal["company_permissions"]
+		require(self._company_permission_rows("DocPerm") == plan["standard"], "seed_company_defaults_changed")
+		others = [row for row in rows if row["role"] != plan["role"]]
+		if plan["custom"]:
+			require(others == plan["custom"], "seed_company_existing_rules_changed")
+		else:
+			require(
+				permission_semantics(others) == permission_semantics(plan["standard"]),
+				"seed_company_copy_drift",
+			)
+
+	def _ensure_counter_company_read(self, role):
+		from frappe.permissions import setup_custom_perms
+
+		rows = self._company_permission_rows("Custom DocPerm")
+		plan = self.journal["company_permissions"]
+		if not rows:
+			require(
+				not plan["custom"] and "company_read_rule" not in self.records, "seed_company_rules_missing"
+			)
+			require(
+				self._company_permission_rows("DocPerm") == plan["standard"], "seed_company_defaults_changed"
+			)
+			setup_custom_perms("Company")
+			rows = self._company_permission_rows("Custom DocPerm")
+		elif not plan["custom"]:
+			# Native copy+our grant is one transaction. A persisted partial copy
+			# is not an owned completed operation and cannot be silently adopted.
+			require(any(row["role"] == role for row in rows), "seed_company_partial_setup")
+		self._check_company_permission_baseline(rows)
+		values = company_read_rule(role)
+		self.ensure(
+			"company_read_rule",
+			"Custom DocPerm",
+			{"parent": "Company", "role": role},
+			values,
+		)
+		rows = self._company_permission_rows("Custom DocPerm")
+		self._check_company_permission_baseline(rows)
+		rules = [row for row in rows if row["role"] == role]
+		require(len(rules) == 1, "seed_company_rule_count")
+		verify_fields(rules[0], values)
+
+	def _verify_counter_company_access(self):
+		f = self.f
+		rows = self._company_permission_rows("Custom DocPerm")
+		self._check_company_permission_baseline(rows)
+		role = self.name("company_read_role")
+		rules = [row for row in rows if row["role"] == role]
+		require(len(rules) == 1, "seed_company_rule_count")
+		verify_fields(rules[0], company_read_rule(role))
+		own, other = (self.name("company_" + key) for key in ("a", "b"))
+		with actor(f, self.user("counter")):
+			visible = f.get_list(
+				"Company",
+				filters={"name": ["in", [own, other]]},
+				pluck="name",
+				order_by=None,
+				limit_page_length=0,
+			)
+			require(visible == [own], "seed_counter_company_list_scope")
+			doc = f.get_doc("Company", own)
+			require(f.has_permission("Company", "read", doc=doc), "seed_counter_company_read")
+			doc.check_permission("read")
+			foreign = f.get_doc("Company", other)
+			require(not f.has_permission("Company", "read", doc=foreign), "seed_counter_foreign_company")
+			try:
+				foreign.check_permission("read")
+			except f.PermissionError:
+				pass
+			else:
+				raise ContractError("seed_counter_foreign_company")
+			for right in ("write", "create", "delete", "export"):
+				require(not f.has_permission("Company", right, doc=doc), "seed_counter_company_excess_rights")
+		role = self.name("company_read_role")
+		require(
+			f.get_all(
+				"Has Role",
+				filters={"parenttype": "User", "role": role},
+				pluck="parent",
+				order_by=None,
+				limit_page_length=0,
+			)
+			== [self.user("counter")],
+			"seed_counter_role_audience",
+		)
+		return {
+			"role": role,
+			"own_company": own,
+			"denied_company": other,
+			"own_read_and_list": True,
+			"foreign_read_and_list": False,
+			"write_create_delete_export": False,
+			"counter_only": True,
+		}
+
 	def masters(self):
 		f = self.f
 		with actor(f, "Administrator"):
+			company_role = "PERF Company Read " + self.tag
+			self._prepare_company_permission_plan(company_role)
+			self.ensure(
+				"company_read_role",
+				"Role",
+				{"role_name": company_role},
+				{"role_name": company_role, "desk_access": 1},
+			)
+			self._ensure_counter_company_read(company_role)
 			restricted = "PERF Private " + self.tag
 			self.ensure(
 				"private_role", "Role", {"role_name": restricted}, {"role_name": restricted, "desk_access": 1}
@@ -457,7 +652,7 @@ class Seed:
 					else ["Sales User"]
 				)
 				if alias == "counter":
-					roles.append("Doco Repair Counter")
+					roles.extend(["Doco Repair Counter", company_role])
 				if alias in ("seller_11", "broad_manager"):
 					roles.append(restricted)
 				self.ensure(
@@ -618,6 +813,7 @@ class Seed:
 							{k: values[k] for k in ("user", "allow", "for_value")},
 							values,
 						)
+			self._verify_counter_company_access()
 			self.checkpoint()
 
 	def deal_values(self, index):
@@ -805,6 +1001,7 @@ class Seed:
 
 		f = self.f
 		self.runtime_guard()
+		counter_company = self._verify_counter_company_access()
 		expected_names = {self.name(f"deal:{i}") for i in range(self.sizes["deals"])}
 		require(
 			set(f.get_all("CRM Deal", pluck="name", limit_page_length=0)) == expected_names, "seed_deal_count"
@@ -916,6 +1113,7 @@ class Seed:
 			"binding": self.binding,
 			"counts": {"deals": len(expected_names), **counts},
 			"scopes": scopes,
+			"counter_company_scope": counter_company,
 			"generated": generated,
 			"native_controllers": True,
 			"perf_01_ready": False,

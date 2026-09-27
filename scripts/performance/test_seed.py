@@ -10,12 +10,15 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from contract import ContractError, checksum
 from seed_native import (
+	COMPANY_RIGHTS,
 	REQUIRED_APPS,
 	Seed,
 	atomic_json,
+	company_read_rule,
 	private_file,
 	provision_guard,
 	resume_name,
@@ -364,6 +367,267 @@ class TestSeedActivityDistribution(unittest.TestCase):
 			seed._verify_activity_distribution(self.expected)
 		self.assertIs(raised.exception, error)
 		self.assertEqual(self.calls, ["task"])
+
+
+class TestCounterCompanyPermissionSetup(unittest.TestCase):
+	"""Native-port doubles only; real permission/CompanyB proof stays pending."""
+
+	def seed(self, *, custom=False):
+		self.role = "PERF Company Read abcdefabcdef"
+		baseline = {
+			**company_read_rule("Existing role"),
+			"name": "old-rule",
+			"modified": "original",
+			"if_owner": 1,
+			"export": 1,
+		}
+		self.rows = {
+			"DocPerm": [copy.deepcopy(baseline)],
+			"Custom DocPerm": [copy.deepcopy(baseline)] if custom else [],
+		}
+		self.events = []
+		self.permission_type = [{"doc_type": "User", "perm_type": "impersonate"}]
+		rows, events = self.rows, self.events
+		case = self
+		# Independent retained SQL columns, not inferred from the proposed rule.
+		columns = set(
+			"name creation modified modified_by owner docstatus idx role parent permlevel if_owner read write create delete submit cancel amend report export import share print email select mask impersonate _user_tags _comments _assign _liked_by".split()
+		)
+		self.rows["Custom DocPerm"] = [
+			{k: v for k, v in row.items() if k in columns} for row in self.rows["Custom DocPerm"]
+		]
+
+		class Document(dict):
+			@property
+			def name(self):
+				return self["name"]
+
+			def check_permission(self, permission_type):
+				events.append(("record_permission", permission_type))
+
+			def insert(self):
+				case.assertEqual(self["doctype"], "Custom DocPerm")
+				self["name"] = "task-rule"
+				rows["Custom DocPerm"].append(copy.deepcopy({k: v for k, v in self.items() if k in columns}))
+				events.append(("insert",))
+				return self
+
+		class Database:
+			def get_values(
+				self,
+				doctype,
+				filters,
+				fieldname,
+				*,
+				for_update,
+				as_dict=False,
+				order_by=None,
+				pluck=False,
+				limit=None,
+			):
+				case.assertTrue(for_update)
+				if doctype == "Permission Type":
+					case.assertEqual(filters, {"name": "user_impersonate"})
+					case.assertEqual(fieldname, ["doc_type", "perm_type"])
+					case.assertTrue(as_dict)
+					case.assertEqual(limit, 2)
+					return copy.deepcopy(case.permission_type)
+				result = [r for r in rows[doctype] if all(r.get(k) == v for k, v in filters.items())]
+				if fieldname == "name":
+					case.assertTrue(pluck)
+					case.assertEqual(limit, 2)
+					return [r["name"] for r in result][:limit]
+				case.assertEqual(fieldname, "*")
+				case.assertTrue(as_dict)
+				case.assertEqual(order_by, "name")
+				return copy.deepcopy(sorted(result, key=lambda r: r["name"]))
+
+		def get_doc(value, name=None):
+			return Document(
+				value if isinstance(value, dict) else next(r for r in rows[value] if r["name"] == name)
+			)
+
+		def get_meta(doctype, *, cached):
+			self.assertFalse(cached)
+			# Native988 base fields plus its canonical user_impersonate field.
+			fields = "role permlevel if_owner read write create delete submit cancel amend report export import share print email select mask impersonate".split()
+			if doctype == "Custom DocPerm":
+				fields.append("parent")
+			return SimpleNamespace(fields=[SimpleNamespace(fieldname=k, fieldtype="Data") for k in fields])
+
+		def setup_custom_perms(parent):
+			self.assertEqual(parent, "Company")
+			self.assertEqual(rows["Custom DocPerm"], [])
+			events.append(("native_copy",))
+			rows["Custom DocPerm"] = [
+				{**{k: copy.deepcopy(v) for k, v in r.items() if k in columns}, "name": "copied-" + r["name"]}
+				for r in rows["DocPerm"]
+			]
+
+		self.enterContext(
+			patch.dict(
+				"sys.modules", {"frappe.permissions": SimpleNamespace(setup_custom_perms=setup_custom_perms)}
+			)
+		)
+		seed = object.__new__(Seed)
+		seed.f = SimpleNamespace(db=Database(), get_doc=get_doc, get_meta=get_meta, as_json=json.dumps)
+		seed.records = {}
+		seed.journal = {"records": seed.records}
+		seed.pending = 0
+		seed.save = lambda: events.append(("journal", copy.deepcopy(seed.journal)))
+		return seed
+
+	def setup_rule(self, seed):
+		seed._prepare_company_permission_plan(self.role)
+		seed._ensure_counter_company_read(self.role)
+
+	def test_initial_setup_copies_native_defaults_and_declares_every_right(self):
+		seed = self.seed()
+		before = copy.deepcopy(self.rows["DocPerm"])
+		self.setup_rule(seed)
+		self.assertEqual(self.events[0][0], "journal")
+		self.assertIn(("native_copy",), self.events)
+		self.assertEqual(self.rows["DocPerm"], before)
+		rule = next(row for row in self.rows["Custom DocPerm"] if row["role"] == self.role)
+		self.assertEqual(
+			{right: rule[right] for right in COMPANY_RIGHTS},
+			{right: int(right == "read") for right in COMPANY_RIGHTS},
+		)
+		self.assertEqual((rule["permlevel"], rule["if_owner"]), (0, 0))
+		# In particular, native export default1 must not leak into our rule.
+		self.assertEqual(rule["export"], 0)
+		self.assertEqual(rule["impersonate"], 0)
+		self.assertNotIn("parenttype", rule)
+		self.assertNotIn("parentfield", rule)
+
+	def test_existing_custom_rows_are_preserved_without_copying_or_rewriting(self):
+		seed = self.seed(custom=True)
+		before = copy.deepcopy(self.rows["Custom DocPerm"])
+		self.setup_rule(seed)
+		self.assertNotIn(("native_copy",), self.events)
+		self.assertEqual([r for r in self.rows["Custom DocPerm"] if r["role"] != self.role], before)
+
+	def test_exact_completed_rule_is_reused_without_second_insert(self):
+		seed = self.seed()
+		self.setup_rule(seed)
+		before = copy.deepcopy(self.rows)
+		seed.pending = 0  # Model a completed outer checkpoint, not a SQL commit.
+		self.setup_rule(seed)
+		self.assertEqual(self.rows, before)
+		self.assertEqual(self.events.count(("insert",)), 1)
+		self.assertEqual(self.events.count(("native_copy",)), 1)
+
+	def test_changed_duplicate_or_missing_task_rule_is_not_repaired_on_resume(self):
+		for mode in ("export", "write", "if_owner", "permlevel", "duplicate", "missing"):
+			with self.subTest(mode=mode):
+				seed = self.seed()
+				self.setup_rule(seed)
+				row = next(r for r in self.rows["Custom DocPerm"] if r["role"] == self.role)
+				if mode == "duplicate":
+					self.rows["Custom DocPerm"].append({**row, "name": "duplicate"})
+				elif mode == "missing":
+					self.rows["Custom DocPerm"].remove(row)
+				else:
+					row[mode] = 1
+				before = copy.deepcopy(self.rows)
+				with self.assertRaises(ContractError):
+					seed._ensure_counter_company_read(self.role)
+				self.assertEqual(self.rows, before)
+
+	def test_full_existing_row_and_copied_semantic_drift_fail_closed(self):
+		for custom, target, field in (
+			(True, "Custom DocPerm", "modified"),
+			(False, "Custom DocPerm", "mask"),
+			(False, "DocPerm", "export"),
+		):
+			with self.subTest(custom=custom, target=target, field=field):
+				seed = self.seed(custom=custom)
+				self.setup_rule(seed)
+				self.rows[target][0][field] = "changed"
+				before = copy.deepcopy(self.rows)
+				with self.assertRaises(ContractError):
+					seed._ensure_counter_company_read(self.role)
+				self.assertEqual(self.rows, before)
+
+	def test_unknown_schema_unowned_rule_or_uncommitted_plan_is_rejected(self):
+		for mode in ("schema", "unowned", "pending", "permission_type"):
+			with self.subTest(mode=mode):
+				seed = self.seed()
+				if mode == "schema":
+					seed.f.get_meta = lambda *a, **k: SimpleNamespace(fields=[])
+				elif mode == "permission_type":
+					self.permission_type = [{"doc_type": "Company", "perm_type": "impersonate"}]
+				elif mode == "unowned":
+					self.rows["Custom DocPerm"] = [{**company_read_rule(self.role), "name": "foreign"}]
+				else:
+					seed.pending = 1
+				with self.assertRaises(ContractError):
+					seed._prepare_company_permission_plan(self.role)
+				self.assertEqual(self.events, [])
+
+	def access_seed(self, mode=None):
+		seed = self.seed()
+		self.setup_rule(seed)
+		seed.tag = "abcdefabcdef"
+		seed.records.update(
+			{
+				key: {"name": value}
+				for key, value in {
+					"company_read_role": self.role,
+					"company_a": "CompanyA",
+					"company_b": "CompanyB",
+				}.items()
+			}
+		)
+		f = seed.f
+		f.session = SimpleNamespace(user="Administrator")
+		f.set_user = lambda user: setattr(f.session, "user", user)
+		f.PermissionError = PermissionError
+		case = self
+
+		class Company:
+			def __init__(self, name):
+				self.name = name
+
+			def check_permission(self, right):
+				case.assertEqual(f.session.user, seed.user("counter"))
+				if self.name == "CompanyB" and mode != "foreign_check":
+					raise PermissionError
+
+		f.get_doc = lambda doctype, name: Company(name)
+
+		def get_list(doctype, **kwargs):
+			self.assertEqual(f.session.user, seed.user("counter"))
+			self.assertEqual(doctype, "Company")
+			self.assertEqual(kwargs["filters"], {"name": ["in", ["CompanyA", "CompanyB"]]})
+			return ["CompanyA", "CompanyB"] if mode == "foreign_list" else ["CompanyA"]
+
+		def has_permission(doctype, right, *, doc):
+			self.assertEqual(f.session.user, seed.user("counter"))
+			return (doc.name == "CompanyB" and mode == "foreign_read") or (
+				doc.name == "CompanyA"
+				and ((right == "read" and mode != "own_read") or (right == "export" and mode == "export"))
+			)
+
+		f.get_list = get_list
+		f.has_permission = has_permission
+		f.get_all = lambda *a, **k: (
+			[seed.user("counter"), "other"] if mode == "audience" else [seed.user("counter")]
+		)
+		return seed
+
+	def test_counter_access_postcondition_uses_actual_actor_and_restores_it(self):
+		seed = self.access_seed()
+		seed._verify_counter_company_access()
+		self.assertEqual(seed.f.session.user, "Administrator")
+
+	def test_unexpected_native_access_result_refuses_seed_and_restores_actor(self):
+		for mode in ("foreign_list", "foreign_read", "foreign_check", "own_read", "export", "audience"):
+			with self.subTest(mode=mode):
+				seed = self.access_seed(mode)
+				with self.assertRaises(ContractError):
+					seed._verify_counter_company_access()
+				self.assertEqual(seed.f.session.user, "Administrator")
 
 
 if __name__ == "__main__":
