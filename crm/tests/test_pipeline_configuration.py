@@ -281,6 +281,21 @@ class TestPipelineConfiguration(IntegrationTestCase):
 			self.assertEqual(deal.as_dict()[field], before[field])
 		self.assertEqual(execute()["before"]["records_to_map"], {"CRM Lead": 0, "CRM Deal": 0})
 
+	def test_legacy_mapping_holds_unknown_stage_ids_without_aborting(self):
+		deal = self.deal()
+		orphan = "Retired stage " + frappe.generate_hash(length=8)
+		frappe.db.set_value(
+			"CRM Deal", deal.name, {"pipeline": None, "status": orphan}, update_modified=False
+		)
+		mapped = self.deal()
+		frappe.db.set_value("CRM Deal", mapped.name, "pipeline", None, update_modified=False)
+		result = execute()
+		self.assertGreaterEqual(result["held_for_review"], 1)
+		self.assertIn(orphan, result["before"]["unmapped_statuses"])
+		self.assertEqual(frappe.db.get_value("CRM Deal", deal.name, ["pipeline", "status"]), (None, orphan))
+		self.assertEqual(frappe.db.get_value("CRM Deal", mapped.name, "pipeline"), LEGACY_PIPELINE)
+		self.assertTrue(frappe.db.exists("Error Log", {"method": "CRM pipeline mapping needs review"}))
+
 	def test_new_global_stage_is_added_only_to_compatibility_pipeline(self):
 		status = self.make_status("Ongoing", 55)
 		legacy = frappe.get_doc("CRM Pipeline", LEGACY_PIPELINE)

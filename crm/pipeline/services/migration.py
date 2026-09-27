@@ -3,8 +3,10 @@
 import frappe
 from frappe.utils import cint, flt
 
-from crm.pipeline.services.configuration import LEGACY_PIPELINE
 from crm.permissions.framework import warn_if_missing
+from crm.pipeline.services.configuration import LEGACY_PIPELINE
+
+KNOWN_STATUS = "status IN (SELECT name FROM `tabCRM Deal Status`)"
 
 
 def preview():
@@ -43,8 +45,21 @@ def preview():
 def execute():
 	warn_if_missing("pipeline mapping")
 	before = preview()
-	if before["unmapped_statuses"]:
-		frappe.throw("Pipeline mapping needs review: deals reference missing stage IDs.")
+	# Deals whose stage ID no longer exists keep an empty pipeline (still
+	# visible, unchanged) instead of aborting install/migrate; a manager picks
+	# a stage for them. Every other record is mapped.
+	held = frappe.db.sql(
+		f"SELECT COUNT(*) FROM `tabCRM Deal` WHERE (pipeline IS NULL OR pipeline = '') AND NOT ({KNOWN_STATUS} AND status IS NOT NULL)"
+	)[0][0]
+	if held:
+		frappe.log_error(
+			title="CRM pipeline mapping needs review",
+			message=(
+				f"{held} deal(s) reference stage IDs that are not CRM Deal Status records "
+				f"({', '.join(repr(status) for status in before['unmapped_statuses'])}). "
+				"They were left without a pipeline; choose a stage for them to map them."
+			),
+		)
 	frappe.db.sql("SELECT name FROM `tabDocType` WHERE name = 'CRM Pipeline' FOR UPDATE")
 	if not frappe.db.exists("CRM Pipeline", LEGACY_PIPELINE):
 		pipeline = frappe.get_doc(
@@ -68,11 +83,12 @@ def execute():
 		)
 		pipeline.insert(ignore_permissions=True, set_name=LEGACY_PIPELINE)
 	for doctype in ("CRM Lead", "CRM Deal"):
+		known = f" AND {KNOWN_STATUS}" if doctype == "CRM Deal" else ""
 		frappe.db.sql(
-			f"UPDATE `tab{doctype}` SET pipeline = %s WHERE pipeline IS NULL OR pipeline = ''",
+			f"UPDATE `tab{doctype}` SET pipeline = %s WHERE (pipeline IS NULL OR pipeline = ''){known}",
 			LEGACY_PIPELINE,
 		)
 	after = preview()
-	if any(after["records_to_map"].values()):
+	if after["records_to_map"] != {"CRM Lead": 0, "CRM Deal": held}:
 		frappe.throw("Pipeline mapping did not complete.")
-	return {"before": before, "after": after}
+	return {"before": before, "after": after, "held_for_review": held}
