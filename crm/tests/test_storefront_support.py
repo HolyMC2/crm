@@ -47,8 +47,9 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 		self.enterContext(patch("frappe.sendmail", side_effect=AssertionError("No mail")))
 		self.enterContext(patch("frappe.enqueue", side_effect=AssertionError("No queue")))
 		self.enterContext(patch.object(webchat, "_rate"))
-		# Enabling a profile schedules Doco's «Tienda» workspace rebuild. Isolate only
-		# this fixture step; the strict enqueue guard stays active for support actions.
+		# Enabling a profile schedules Doco's «Tienda» workspace rebuild and an edge
+		# cache purge. Isolate only this fixture step; the strict enqueue guard stays
+		# active for every support action.
 		with patch("frappe.enqueue") as fixture_jobs:
 			self.shop = frappe.get_doc(
 				{
@@ -60,7 +61,13 @@ class TestStorefrontSupport(OrderCheckoutFixture, IntegrationTestCase):
 				}
 			).insert()
 		for call in fixture_jobs.call_args_list:
-			self.assertEqual(call.args[0], "doco.patches.v0_0.create_storefront_workspace.execute")
+			self.assertIn(
+				call.args[0],
+				{
+					"doco.patches.v0_0.create_storefront_workspace.execute",
+					"doco.docoutils.storefront_cache.purge_edge",
+				},
+			)
 		self.channel = webchat.configure_channel(
 			label="Order support",
 			profile=self.shop.name,
