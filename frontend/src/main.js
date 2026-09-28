@@ -23,7 +23,7 @@ function loadPrintingRuntime() {
   ) {
     return
   }
-  const src = '/assets/doco/js/printing_runtime.js?v=20260812a'
+  const src = '/assets/doco/js/printing_runtime.js?v=20260926a'
   const url = new URL(src, document.baseURI).href
   if (Array.from(document.scripts).some((script) => script.src === url)) return
   const printRuntime = document.createElement('script')
