@@ -225,6 +225,13 @@ def validate_record(doc):
 			None,
 		)
 	stage = next((row for row in pipeline.stages if row.status == doc.status), None)
+	if not stage and pipeline.name == LEGACY_PIPELINE and doc.status:
+		# The compatibility pipeline mirrors every global stage, including ones a
+		# seed or manager created after it was built (add_legacy_status and the
+		# after_migrate sync persist them); explicit pipelines stay strict.
+		status = frappe.db.get_value("CRM Deal Status", doc.status, ["name", "probability"], as_dict=True)
+		if status:
+			stage = frappe._dict(status=status.name, probability=status.probability, archived=0)
 	if not stage:
 		frappe.throw(_("Stage {0} is not part of pipeline {1}.").format(doc.status, pipeline.pipeline_name))
 	# Only a manager's pipeline archive refuses new entry. A globally hidden
@@ -345,13 +352,26 @@ def validate_configuration(doc):
 
 def add_legacy_status(doc, method=None):
 	"""New optional-app/global statuses join only the compatibility pipeline."""
+	_join_legacy([doc])
+
+
+def sync_legacy_statuses():
+	"""after_migrate: persist statuses created outside after_insert (seeds, fixtures, SQL)."""
+	_join_legacy(
+		frappe.get_all("CRM Deal Status", fields=["name", "probability"], order_by="position asc, name asc")
+	)
+
+
+def _join_legacy(statuses):
 	if not installed() or not frappe.db.exists("CRM Pipeline", LEGACY_PIPELINE):
 		return
 	pipeline = frappe.get_doc("CRM Pipeline", LEGACY_PIPELINE)
-	if any(row.status == doc.name for row in pipeline.stages):
+	present = {row.status for row in pipeline.stages}
+	missing = [status for status in statuses if status.name not in present]
+	if not missing:
 		return
-	pipeline.append(
-		"stages",
-		{"status": doc.name, "probability": flt(doc.probability), "archived": 0},
-	)
+	for status in missing:
+		pipeline.append(
+			"stages", {"status": status.name, "probability": flt(status.probability), "archived": 0}
+		)
 	pipeline.save(ignore_permissions=True)

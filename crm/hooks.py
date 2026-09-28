@@ -369,6 +369,7 @@ filter_link_titles = {
 
 after_migrate = [
 	"crm.fcrm.doctype.fcrm_settings.fcrm_settings.after_migrate",
+	"crm.pipeline.services.configuration.sync_legacy_statuses",
 	"crm.api.whatsapp.add_roles",
 	"crm.install.add_default_scripts",
 	"crm.install.add_web_form_custom_fields",

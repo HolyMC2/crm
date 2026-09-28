@@ -144,6 +144,29 @@ class TestPipelineConfiguration(IntegrationTestCase):
 		frappe.db.set_value("CRM Deal Status", self.open, "hidden", 1)
 		self.assertNotEqual(self.deal().status, self.open)
 
+	def test_status_created_after_seeding_is_accepted_by_compatibility_pipeline(self):
+		# A seed can create a status without after_insert (e.g. SQL or fixtures).
+		name = "Late stage " + frappe.generate_hash(length=10)
+		frappe.db.sql(
+			"INSERT INTO `tabCRM Deal Status` (name, deal_status, type, probability, creation, modified)"
+			" VALUES (%s, %s, 'Open', 25, NOW(), NOW())",
+			(name, name),
+		)
+		legacy = frappe.get_doc("CRM Pipeline", LEGACY_PIPELINE)
+		self.assertNotIn(name, [row.status for row in legacy.stages])
+		deal = self.deal(LEGACY_PIPELINE, status=name)
+		self.assertEqual(deal.status, name)
+		deal.next_step = "Keep working"
+		deal.save()
+		# Explicit pipelines stay strict.
+		with self.assertRaises(frappe.ValidationError):
+			self.deal(self.a.name, status=name)
+		from crm.pipeline.services.configuration import sync_legacy_statuses
+
+		sync_legacy_statuses()
+		legacy.reload()
+		self.assertIn(name, [row.status for row in legacy.stages])
+
 	def test_hidden_status_joins_compatibility_pipeline_unarchived(self):
 		status = frappe.get_doc(
 			{
