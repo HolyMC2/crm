@@ -160,7 +160,7 @@ function expectCanonicalSocket() {
   return socket
 }
 
-const printRuntimeUrl = '/assets/doco/js/printing_runtime.js?v=20260812a'
+const printRuntimeUrl = '/assets/doco/js/printing_runtime.js?v=20260926a'
 const printingScripts = () =>
   document.querySelectorAll(
     'script[src*="/assets/doco/js/printing_runtime.js"]',
