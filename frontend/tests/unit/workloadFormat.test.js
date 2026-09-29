@@ -9,6 +9,17 @@ import {
   retainFailedSelection,
   safeWorkloadState,
   workItemHref,
+  riskLevel,
+  sortByRisk,
+  rankCandidates,
+  encodeWorkloadQuery,
+  decodeWorkloadQuery,
+  sameWorkloadQuery,
+  dueState,
+  ageDays,
+  formatSiteDate,
+  takeDueToday,
+  countByOwner,
 } from '@/utils/workloadFormat'
 
 describe('capPercent', () => {
@@ -45,17 +56,17 @@ describe('barToken', () => {
   it('neutral gray when no cap', () => {
     expect(barToken(4, 0)).toBe('bg-surface-gray-4')
   })
-  it('green under 75% of cap', () => {
-    expect(barToken(7, 10)).toBe('bg-surface-green-7') // 70%
-    expect(barToken(0, 10)).toBe('bg-surface-green-7')
+  it('calm neutral fill under 75% of cap', () => {
+    expect(barToken(7, 10)).toBe('bg-surface-gray-6') // 70%
+    expect(barToken(0, 10)).toBe('bg-surface-gray-6')
   })
   it('amber from 75% up to (not incl.) 100%', () => {
-    expect(barToken(8, 10)).toBe('bg-surface-amber-2') // 80%
-    expect(barToken(75, 100)).toBe('bg-surface-amber-2')
+    expect(barToken(8, 10)).toBe('bg-surface-amber-5') // 80%
+    expect(barToken(75, 100)).toBe('bg-surface-amber-5')
   })
   it('red at or over cap', () => {
-    expect(barToken(10, 10)).toBe('bg-surface-red-7') // 100%
-    expect(barToken(14, 10)).toBe('bg-surface-red-7') // 140%
+    expect(barToken(10, 10)).toBe('bg-surface-red-5') // 100%
+    expect(barToken(14, 10)).toBe('bg-surface-red-5') // 140%
   })
 })
 
@@ -142,7 +153,12 @@ describe('workload command and return continuity', () => {
         offset: 25,
         scroll: 172,
       }),
-    ).toMatchObject({ owner: '', overdue: true, offset: 25, scroll: 172 })
+    ).toMatchObject({
+      owner: '',
+      bucket: 'overdue',
+      offset: 25,
+      scroll: 172,
+    })
     expect(
       safeWorkloadState({
         owner: {},
@@ -159,5 +175,170 @@ describe('workload command and return continuity', () => {
     expect(workItemHref({ doctype: 'CRM Deal', name: 'deal?1' })).toBe(
       '/crm/deals/deal%3F1',
     )
+  })
+})
+
+describe('risk ordering', () => {
+  const agents = [
+    { user: 'calm', full_name: 'Calm', open_total: 2, overdue_tasks: 0 },
+    { user: 'near', full_name: 'Near', open_total: 8, overdue_tasks: 0 },
+    { user: 'late', full_name: 'Late', open_total: 3, overdue_tasks: 4 },
+    { user: 'over', full_name: 'Over', open_total: 12, overdue_tasks: 0 },
+    { user: 'late2', full_name: 'Late2', open_total: 1, overdue_tasks: 9 },
+  ]
+  it('labels one risk per person, most urgent first', () => {
+    expect(riskLevel(agents[3], 10)).toBe('over')
+    expect(riskLevel({ open_total: 12, overdue_tasks: 3 }, 10)).toBe('over')
+    expect(riskLevel(agents[2], 10)).toBe('behind')
+    expect(riskLevel(agents[1], 10)).toBe('near')
+    expect(riskLevel(agents[0], 10)).toBe('ok')
+    expect(riskLevel(agents[0], 0)).toBe('none')
+    expect(riskLevel(agents[2], 0)).toBe('behind')
+  })
+  it('surfaces problems first without mutating the source', () => {
+    const snapshot = agents.map((row) => row.user)
+    expect(sortByRisk(agents, 10).map((row) => row.user)).toEqual([
+      'over',
+      'late2',
+      'late',
+      'near',
+      'calm',
+    ])
+    expect(agents.map((row) => row.user)).toEqual(snapshot)
+    expect(sortByRisk(null, 10)).toEqual([])
+  })
+  it('ranks reassignment targets by lowest visible load, unknown load last', () => {
+    const ranked = rankCandidates(
+      [
+        { user: 'over', full_name: 'Over' },
+        { user: 'hidden', full_name: 'Hidden' },
+        { user: 'calm', full_name: 'Calm' },
+        { user: 'late2', full_name: 'Late2' },
+      ],
+      agents,
+    )
+    expect(ranked.map((row) => [row.user, row.load])).toEqual([
+      ['late2', 1],
+      ['calm', 2],
+      ['over', 12],
+      ['hidden', null],
+    ])
+  })
+})
+
+describe('URL queue state', () => {
+  it('writes only non-default keys and round-trips', () => {
+    expect(encodeWorkloadQuery({})).toEqual({})
+    const state = safeWorkloadState({
+      pipeline: 'Ventas',
+      company: 'Tienda A',
+      owner: 'ana@example.test',
+      kind: 'tasks',
+      bucket: 'today',
+      offset: 50,
+      agentOffset: 25,
+    })
+    const query = encodeWorkloadQuery(state)
+    expect(query).toEqual({
+      pipeline: 'Ventas',
+      company: 'Tienda A',
+      owner: 'ana@example.test',
+      kind: 'tasks',
+      bucket: 'today',
+      page: '3',
+      people: '2',
+    })
+    expect(decodeWorkloadQuery(query)).toEqual(state)
+  })
+  it('distinguishes unassigned from every owner', () => {
+    const unassigned = encodeWorkloadQuery({ owner: '' })
+    expect(unassigned).toEqual({ unassigned: '1' })
+    expect(decodeWorkloadQuery(unassigned).owner).toBe('')
+    expect(decodeWorkloadQuery({ kind: 'leads' }).owner).toBeNull()
+  })
+  it('returns null without workload keys so the session copy can restore', () => {
+    expect(decodeWorkloadQuery({})).toBeNull()
+    expect(decodeWorkloadQuery({ utm: 'x' })).toBeNull()
+    expect(decodeWorkloadQuery(null)).toBeNull()
+  })
+  it('rejects malformed values and keeps due buckets on tasks only', () => {
+    expect(
+      decodeWorkloadQuery({
+        kind: 'deals',
+        bucket: 'overdue',
+        page: '0',
+        people: '-3',
+        owner: ['a@example.test', 'b@example.test'],
+      }),
+    ).toMatchObject({
+      kind: 'deals',
+      bucket: 'all',
+      offset: 0,
+      agentOffset: 0,
+      owner: 'a@example.test',
+    })
+    expect(decodeWorkloadQuery({ bucket: 'weird', kind: 'tasks' }).bucket).toBe(
+      'all',
+    )
+    expect(decodeWorkloadQuery({ page: '2.5' }).offset).toBe(0)
+  })
+  it('reads the legacy stored overdue flag as the overdue bucket', () => {
+    expect(safeWorkloadState({ kind: 'tasks', overdue: true }).bucket).toBe(
+      'overdue',
+    )
+    expect(safeWorkloadState({ kind: 'deals', overdue: true }).bucket).toBe(
+      'all',
+    )
+  })
+  it('compares states by their URL form (scroll is not navigation)', () => {
+    expect(
+      sameWorkloadQuery({ kind: 'tasks', scroll: 10 }, { kind: 'tasks' }),
+    ).toBe(true)
+    expect(sameWorkloadQuery({ owner: '' }, { owner: null })).toBe(false)
+  })
+})
+
+describe('site-time buckets', () => {
+  const asOf = '2026-09-28 10:15:00.123456'
+  it('classifies due dates against the site timestamp like the server', () => {
+    expect(dueState('2026-09-28 09:00:00', asOf)).toBe('overdue')
+    expect(dueState('2026-09-27 23:00:00', asOf)).toBe('overdue')
+    expect(dueState('2026-09-28 18:00:00', asOf)).toBe('today')
+    expect(dueState('2026-09-29 08:00:00', asOf)).toBe('later')
+    expect(dueState(null, asOf)).toBe('none')
+    expect(dueState('2026-09-28 18:00:00', '')).toBe('none')
+  })
+  it('counts whole days without change', () => {
+    expect(ageDays('2026-09-20 23:59:00', asOf)).toBe(8)
+    expect(ageDays('2026-09-28 01:00:00', asOf)).toBe(0)
+    expect(ageDays('', asOf)).toBeNull()
+  })
+  it('formats with the site date format, time only when present', () => {
+    expect(formatSiteDate('2026-09-28 18:05:00', 'dd-mm-yyyy')).toBe(
+      '28-09-2026 18:05',
+    )
+    expect(formatSiteDate('2026-09-28 00:00:00', 'mm/dd/yyyy')).toBe(
+      '09/28/2026',
+    )
+    expect(formatSiteDate('2026-09-28', '')).toBe('2026-09-28')
+    expect(formatSiteDate(null, 'dd-mm-yyyy')).toBe('')
+  })
+  it('takes today rows after the overdue ones and stops at the first later row', () => {
+    const rows = [
+      { name: 'a', owner: 'ana', due_date: '2026-09-28 09:00:00' },
+      { name: 'b', owner: 'ana', due_date: '2026-09-28 12:00:00' },
+      { name: 'c', owner: '', due_date: '2026-09-28 17:00:00' },
+      { name: 'd', owner: 'ana', due_date: '2026-09-29 09:00:00' },
+      { name: 'e', owner: 'ana', due_date: '2026-09-28 20:00:00' },
+    ]
+    const taken = takeDueToday(rows, asOf)
+    expect(taken.items.map((row) => row.name)).toEqual(['b', 'c'])
+    expect(taken.done).toBe(true)
+    expect(takeDueToday(rows.slice(0, 3), asOf).done).toBe(false)
+    expect(takeDueToday([{ due_date: null }], asOf)).toEqual({
+      items: [],
+      done: true,
+    })
+    expect(countByOwner(taken.items)).toEqual({ ana: 1, '': 1 })
   })
 })
