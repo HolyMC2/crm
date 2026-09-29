@@ -23,6 +23,16 @@
   <div v-if="isMobile" class="px-3 pt-1.5 empty:hidden">
     <VerticalSlot slot-name="deals_list_header" />
   </div>
+  <!-- a report drilled into this list: the way back to it -->
+  <div v-if="drill" class="flex items-center px-5 pt-2">
+    <Button
+      variant="ghost"
+      size="sm"
+      iconLeft="arrow-left"
+      :label="__('Back to {0}', [__(drill.source.label)])"
+      @click="backToDrillSource"
+    />
+  </div>
   <ViewControls
     ref="viewControls"
     v-model="deals"
@@ -33,6 +43,7 @@
     :options="{
       allowedViews: ['list', 'group_by', 'kanban'],
       persistState: true,
+      routeFilters: parseDealListQuery,
     }"
   />
   <DealsListSummary
@@ -328,6 +339,7 @@ import DealsMobileList from '@/components/doco/deals/DealsMobileList.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { useDealListMetrics } from '@/composables/dealListMetrics'
 import { isVirtualKey } from '@/utils/listColumns'
+import { isBackToSource, parseDealListQuery } from '@/utils/listRouteQuery'
 import {
   dealRowRoute,
   filterValues,
@@ -380,6 +392,23 @@ const viewControls = ref(null)
 // DealsSearchBox) so they can drive ViewControls.updateSearch without
 // touching this file again on rebases.
 provide('dealsViewControls', viewControls)
+
+// ── drill-down from a report (?report=pipeline&status=…, utils/listRouteQuery) ──
+// ViewControls turns the query into filters; the page offers the way back. Pop
+// history when the report is the previous entry, so it keeps its own period and
+// pipeline; otherwise open it.
+const drill = computed(() => parseDealListQuery(route.query))
+function backToDrillSource() {
+  const target = router.resolve({ name: drill.value.source.name })
+  let back
+  try {
+    back = window.history.state?.back
+  } catch {
+    back = undefined
+  }
+  if (isBackToSource(back, target.path)) router.back()
+  else router.push(target)
+}
 
 // ── filters the page drives (pipeline, stage, phone sheet) ─────────────────────
 // They write the same `filters` the Filter button does, through ViewControls,

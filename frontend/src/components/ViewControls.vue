@@ -336,6 +336,7 @@ import {
   snapshotListState,
   writeListState,
 } from '@/utils/listViewState'
+import { initialListParams, withoutRouteQuery } from '@/utils/listRouteQuery'
 import { sessionStore } from '@/stores/session'
 import {
   Combobox,
@@ -366,6 +367,10 @@ const props = defineProps({
       // keep filters, search, sort, loaded pages and unsaved changes while the
       // worker opens a record and comes back (see saveListState)
       persistState: false,
+      // (query) => {key, filters, keys} | null: a drill-down query the page
+      // understands (e.g. utils/listRouteQuery parseDealListQuery). Its filters
+      // open as an unsaved change of the current view.
+      routeFilters: null,
     }),
   },
 })
@@ -544,10 +549,37 @@ function sessionStorageOrNull() {
     return null
   }
 }
-const restoredState = props.options?.persistState
+const storedState = props.options?.persistState
   ? readListState(sessionStorageOrNull(), stateKey())
   : null
-if (restoredState?.viewUpdated) viewUpdated.value = true
+
+// A drill-down query (only on pages that pass `routeFilters`). It wins over the
+// stored state, except when the worker comes back to this same history entry
+// from a record: vue-router's history.state.forward is set only then.
+const routeQuery = computed(
+  () => props.options?.routeFilters?.(route.query) || null,
+)
+function returningToEntry() {
+  try {
+    return !!window.history.state?.forward
+  } catch {
+    return false
+  }
+}
+function startParams() {
+  return initialListParams(getParams(), {
+    restored: storedState,
+    incoming: routeQuery.value,
+    returning: returningToEntry(),
+    restore: restoreListParams,
+  })
+}
+const start = startParams()
+const restoredState = start.state
+if (start.viewUpdated) viewUpdated.value = true
+// The filters the drill put on the list. reload() keeps them until the worker
+// edits the filters or cancels the change.
+let routeFilters = routeQuery.value ? start.params.filters : null
 
 function saveListState({ scrollTop = 0 } = {}) {
   if (!props.options?.persistState || !list.value?.params) return
@@ -557,13 +589,14 @@ function saveListState({ scrollTop = 0 } = {}) {
     snapshotListState(list.value.params, {
       scrollTop,
       viewUpdated: viewUpdated.value,
+      routeKey: routeQuery.value?.key || '',
     }),
   )
 }
 
 list.value = createResource({
   url: 'crm.api.doc.get_data',
-  params: restoreListParams(getParams(), restoredState),
+  params: startParams().params,
   cache: [props.doctype, route.query.view, route.params.viewType],
   auto: true,
   onSuccess(data) {
@@ -595,13 +628,16 @@ list.value = createResource({
 })
 
 // createResource leaves `params` null until a fetch passes them explicitly
-list.value.params = restoreListParams(getParams(), restoredState)
+list.value.params = startParams().params
 
 const isLoading = computed(() => list.value?.loading)
 
 function reload() {
   if (isLoading.value) return
-  list.value.params = getParams()
+  const params = getParams()
+  list.value.params = routeFilters
+    ? { ...params, filters: JSON.parse(JSON.stringify(routeFilters)) }
+    : params
   list.value.reload()
 }
 
@@ -919,6 +955,7 @@ function applyQuickFilter(filter, value) {
 }
 
 function updateFilter(filters) {
+  routeFilters = null
   viewUpdated.value = true
   if (!defaultParams.value) {
     defaultParams.value = getParams()
@@ -1342,6 +1379,12 @@ function fetchAndUpdateKanbanColumns(v) {
 }
 
 function cancelChanges() {
+  if (routeQuery.value) {
+    routeFilters = null
+    router.replace({
+      query: withoutRouteQuery(route.query, routeQuery.value.keys),
+    })
+  }
   reload()
   viewUpdated.value = false
 }
@@ -1474,6 +1517,19 @@ watch(
     reload()
   },
   { deep: true },
+)
+
+// a new drill into the mounted list, or the drill query gone from the URL
+// (not the navigation away from the list: its route has no drill either)
+const listRouteName = route.name
+watch(
+  () => routeQuery.value?.key || '',
+  (key, oldKey) => {
+    if (key === oldKey || route.name !== listRouteName) return
+    routeFilters = routeQuery.value?.filters || null
+    viewUpdated.value = !!routeFilters
+    reload()
+  },
 )
 
 watch([() => route, () => route.params.viewType], (value, old_value) => {

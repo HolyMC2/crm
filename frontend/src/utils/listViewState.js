@@ -27,7 +27,7 @@ function count(value) {
 /** A serialisable snapshot of the list params plus the page's own state. */
 export function snapshotListState(
   params = {},
-  { scrollTop = 0, viewUpdated = false, now = Date.now() } = {},
+  { scrollTop = 0, viewUpdated = false, routeKey = '', now = Date.now() } = {},
 ) {
   return {
     filters: plain(params.filters || {}),
@@ -38,6 +38,8 @@ export function snapshotListState(
     page_length_count: count(params.page_length_count),
     scrollTop: Math.max(0, Math.round(Number(scrollTop) || 0)),
     viewUpdated: !!viewUpdated,
+    // the drill query the list was opened with (see utils/listRouteQuery)
+    ...(routeKey ? { routeKey: String(routeKey) } : {}),
     savedAt: now,
   }
 }
