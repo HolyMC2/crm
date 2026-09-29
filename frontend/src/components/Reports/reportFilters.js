@@ -29,7 +29,9 @@ export function todayDate() {
     window.sysdefaults?.time_zone || window.frappe?.boot?.time_zone?.system
   if (timezone) {
     try {
-      const parts = new Intl.DateTimeFormat('en-CA', {
+      const parts = new Intl.DateTimeFormat(undefined, {
+        calendar: 'gregory',
+        numberingSystem: 'latn',
         timeZone: timezone,
         year: 'numeric',
         month: '2-digit',

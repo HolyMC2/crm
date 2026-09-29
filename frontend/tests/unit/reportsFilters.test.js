@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   periodRange,
+  todayDate,
   previousPeriod,
   periodDelta,
   readReportQuery,
@@ -239,5 +240,22 @@ describe('report URL filters', () => {
     ])
       expect(result).not.toHaveProperty(key)
     expect(query.owner).toBe('old@example.test')
+  })
+})
+
+describe('report date timezone', () => {
+  it('uses the site calendar at a UTC day boundary without a fixed locale', () => {
+    const original = window.sysdefaults
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-28T06:00:00Z'))
+    try {
+      window.sysdefaults = { ...original, time_zone: 'Pacific/Honolulu' }
+      expect(todayDate()).toBe('2026-09-27')
+      window.sysdefaults = { ...original, time_zone: 'Asia/Tokyo' }
+      expect(todayDate()).toBe('2026-09-28')
+    } finally {
+      window.sysdefaults = original
+      vi.useRealTimers()
+    }
   })
 })
