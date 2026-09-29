@@ -61,7 +61,11 @@ export const features = createResource({
 loadCapabilities().then(() => {
   if (hasApp(ADDON_APP)) features.fetch()
 })
-export const hasTaller = computed(() => !!features.data?.has_taller)
+// The addon's flag when it has loaded; otherwise crm's own installed-app list, so a
+// tenant with taller but without doco_marketing still reaches taller's Intake.
+export const hasTaller = computed(() =>
+  features.data ? !!features.data.has_taller : hasApp('taller'),
+)
 export const messengerEnabled = computed(
   () => !!features.data?.enable_messenger,
 )
