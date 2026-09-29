@@ -84,7 +84,7 @@ describe('workload recovery', () => {
       .mockResolvedValueOnce({ agents: [] })
     const el = await mount()
     expect(el.textContent).toContain('Revisa tu conexión')
-    expect(el.textContent).not.toContain('requiere permiso de gerente')
+    expect(el.textContent).not.toContain('requiere un rol de CRM')
     expect(el.textContent).not.toContain('Nadie en la rotación')
     el.querySelector('[role="alert"] button').click()
     await vi.waitFor(() =>
@@ -93,12 +93,12 @@ describe('workload recovery', () => {
     expect(el.querySelector('[role="alert"]')).toBeNull()
   })
 
-  it('shows a true manager denial and can recover after permissions change', async () => {
+  it('shows a true CRM role denial and can recover after permissions change', async () => {
     mocks.call
       .mockRejectedValueOnce({ exc_type: 'PermissionError', status: 403 })
       .mockResolvedValueOnce(workload)
     const el = await mount()
-    expect(el.textContent).toContain('requiere permiso de gerente')
+    expect(el.textContent).toContain('requiere un rol de CRM')
     el.querySelector('[role="alert"] button').click()
     await vi.waitFor(() => expect(el.textContent).toContain('Ana'))
     expect(el.querySelector('[role="alert"]')).toBeNull()
@@ -232,6 +232,7 @@ describe('workload recovery', () => {
           kind: 'tasks',
           owner: '',
           overdue: false,
+          due_today: false,
           offset: 25,
         },
       ),

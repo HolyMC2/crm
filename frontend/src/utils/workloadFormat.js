@@ -283,29 +283,3 @@ export function formatSiteDate(value, dateFormat) {
   const date = pattern.replace('yyyy', y).replace('mm', m).replace('dd', d)
   return hh && `${hh}:${mm}` !== '00:00' ? `${date} ${hh}:${mm}` : date
 }
-
-// ---- Due-today scan -------------------------------------------------------
-// get_work_items(kind='tasks') orders open tasks by due date (undated last).
-// Starting right after the overdue ones, rows are taken while they are due on
-// the site's current day. `done` is true once a later/undated row appears or
-// the list ends, i.e. the page holds the tail of today's tasks.
-export function takeDueToday(rows, asOf) {
-  const items = []
-  for (const row of rows || []) {
-    const state = dueState(row?.due_date, asOf)
-    if (state === 'overdue') continue
-    if (state !== 'today') return { items, done: true }
-    items.push(row)
-  }
-  return { items, done: false }
-}
-
-// Per-owner counts for the overview ('' = unassigned).
-export function countByOwner(rows) {
-  const counts = {}
-  for (const row of rows || []) {
-    const owner = row?.owner || ''
-    counts[owner] = (counts[owner] || 0) + 1
-  }
-  return counts
-}

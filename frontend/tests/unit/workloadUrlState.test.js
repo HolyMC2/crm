@@ -33,6 +33,7 @@ const workload = {
       open_total: 1,
       open_tasks: 0,
       overdue_tasks: 0,
+      due_today: 0,
     },
     {
       user: 'late@example.test',
@@ -40,13 +41,16 @@ const workload = {
       open_total: 2,
       open_tasks: 3,
       overdue_tasks: 2,
+      due_today: 1,
     },
   ],
   total_agents: 2,
   capacity: { cap: 10 },
   unassigned: {},
-  summary: { open_tasks: 3, overdue_tasks: 2 },
+  summary: { open_tasks: 3, overdue_tasks: 2, due_today: 1 },
   candidates: [],
+  scope: 'team',
+  can_reassign: true,
 }
 const itemCalls = () =>
   mocks.call.mock.calls
@@ -80,8 +84,8 @@ describe('workload URL state', () => {
   beforeEach(() => {
     mocks.call.mockImplementation(async (url, args) => {
       if (url.endsWith('get_workload')) return workload
-      // Due-today scan / queue: one task due later today for Late.
-      if (args.kind === 'tasks' && !args.overdue)
+      // Due-today queue: one task due later today for Late.
+      if (args.due_today)
         return {
           items: [
             {
@@ -101,24 +105,47 @@ describe('workload URL state', () => {
     })
   })
 
-  it('surfaces the person with overdue work first and counts due-today tasks', async () => {
+  it('surfaces the person with overdue work first and shows the server due-today counts', async () => {
     const el = await mount()
     const people = [...el.querySelectorAll('[data-person]')].map((row) =>
       row.getAttribute('data-person'),
     )
     expect(people).toEqual(['late@example.test', 'calm@example.test'])
-    // The scan starts right after the scope's overdue tasks.
-    await vi.waitFor(() =>
-      expect(itemCalls()).toContainEqual(
-        expect.objectContaining({ kind: 'tasks', owner: null, offset: 2 }),
-      ),
-    )
     const late = el.querySelector('[data-person="late@example.test"]')
-    await vi.waitFor(() =>
-      expect(
-        late.querySelector('[aria-label="Late: Vencen hoy 1"]'),
-      ).not.toBeNull(),
+    expect(
+      late.querySelector('[aria-label="Late: Vencen hoy 1"]'),
+    ).not.toBeNull()
+    const calm = el.querySelector('[data-person="calm@example.test"]')
+    expect(
+      calm.querySelector('[aria-label="Calm: Vencen hoy 0"]'),
+    ).not.toBeNull()
+    // No client-side scan: the only item request is the visible queue.
+    await vi.waitFor(() => expect(itemCalls()).toHaveLength(1))
+    expect(itemCalls()[0]).toMatchObject({ kind: 'deals', due_today: false })
+    expect(el.textContent).not.toContain('parcial')
+    expect(el.textContent).not.toContain('1+')
+  })
+
+  it('shows — and keeps the bucket closed when the server sends no due-today count', async () => {
+    const legacy = {
+      ...workload,
+      agents: workload.agents.map((agent) => {
+        const copy = { ...agent }
+        delete copy.due_today
+        return copy
+      }),
+      summary: { open_tasks: 3, overdue_tasks: 2 },
+    }
+    mocks.call.mockImplementation(async (url) =>
+      url.endsWith('get_workload')
+        ? legacy
+        : { items: [], total: 0, has_more: false },
     )
+    const el = await mount()
+    const stat = el.querySelector('[aria-label="Late: Vencen hoy —"]')
+    expect(stat).not.toBeNull()
+    expect(stat.disabled).toBe(true)
+    await vi.waitFor(() => expect(itemCalls()).toHaveLength(1))
   })
 
   it('opens a person bucket, writes it to the URL, and Back restores the previous queue', async () => {
@@ -131,6 +158,7 @@ describe('workload URL state', () => {
         kind: 'tasks',
         owner: 'late@example.test',
         overdue: true,
+        due_today: false,
         offset: 0,
       }),
     )
@@ -164,10 +192,69 @@ describe('workload URL state', () => {
     const calls = itemCalls().filter(
       (args) => args.owner === 'late@example.test',
     )
-    // Count this queue's overdue rows, then read from right after them.
-    expect(calls[0]).toMatchObject({ overdue: true, offset: 0 })
-    expect(calls[1]).toMatchObject({ overdue: false, offset: 2 })
-    expect(el.textContent).toContain('1 vencen hoy en esta página')
+    // One server-filtered request for the bucket; no scan past overdue rows.
+    expect(calls).toEqual([
+      {
+        filters: { pipeline: '', company: '' },
+        kind: 'tasks',
+        owner: 'late@example.test',
+        overdue: false,
+        due_today: true,
+        offset: 0,
+      },
+    ])
+    expect(el.textContent).toContain('1 registros en total')
     expect(mocks.navigations).toEqual([])
+  })
+})
+
+describe('workload for a person without the manager role', () => {
+  const own = {
+    ...workload,
+    agents: [
+      { ...workload.agents[1], user: 'me@example.test', full_name: 'Yo' },
+    ],
+    total_agents: 1,
+    candidates: [],
+    scope: 'self',
+    can_reassign: false,
+  }
+  const row = {
+    doctype: 'CRM Deal',
+    name: 'CRM-DEAL-1',
+    label: 'Mi deal',
+    owner: 'me@example.test',
+    status: 'Open',
+    modified: '2026-09-27 09:00:00',
+  }
+  beforeEach(() => {
+    mocks.call.mockImplementation(async (url) =>
+      url.endsWith('get_workload')
+        ? own
+        : { items: [row], total: 1, has_more: false },
+    )
+  })
+
+  it('shows only their own row and queue, without selection or reassignment', async () => {
+    mocks.route.query = { owner: 'late@example.test' }
+    const el = await mount()
+    await vi.waitFor(() => expect(el.textContent).toContain('Mi deal'))
+    expect(el.querySelector('h1').textContent).toContain('Tu carga de trabajo')
+    expect(
+      el.querySelector('[data-testid="self-view-note"]').textContent,
+    ).toContain('Reasignar registros a otra persona es tarea de un gerente')
+    expect(el.textContent).toContain('Tu resumen')
+    expect(el.textContent).not.toContain('Personas ·')
+    expect(
+      [...el.querySelectorAll('[data-person]')].map((r) => r.dataset.person),
+    ).toEqual(['me@example.test'])
+    expect(el.textContent).toContain('Cola · Yo')
+    expect(el.textContent).not.toContain('Todos los propietarios')
+    expect(el.querySelector('[data-row-check]')).toBeNull()
+    expect(el.querySelector('[role="checkbox"]')).toBeNull()
+    expect(el.textContent).not.toContain('Reasignar a')
+    expect(
+      mocks.call.mock.calls.some(([url]) => url.endsWith('reassign_bulk')),
+    ).toBe(false)
   })
 })

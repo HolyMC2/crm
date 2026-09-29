@@ -18,8 +18,6 @@ import {
   dueState,
   ageDays,
   formatSiteDate,
-  takeDueToday,
-  countByOwner,
 } from '@/utils/workloadFormat'
 
 describe('capPercent', () => {
@@ -322,23 +320,5 @@ describe('site-time buckets', () => {
     )
     expect(formatSiteDate('2026-09-28', '')).toBe('2026-09-28')
     expect(formatSiteDate(null, 'dd-mm-yyyy')).toBe('')
-  })
-  it('takes today rows after the overdue ones and stops at the first later row', () => {
-    const rows = [
-      { name: 'a', owner: 'ana', due_date: '2026-09-28 09:00:00' },
-      { name: 'b', owner: 'ana', due_date: '2026-09-28 12:00:00' },
-      { name: 'c', owner: '', due_date: '2026-09-28 17:00:00' },
-      { name: 'd', owner: 'ana', due_date: '2026-09-29 09:00:00' },
-      { name: 'e', owner: 'ana', due_date: '2026-09-28 20:00:00' },
-    ]
-    const taken = takeDueToday(rows, asOf)
-    expect(taken.items.map((row) => row.name)).toEqual(['b', 'c'])
-    expect(taken.done).toBe(true)
-    expect(takeDueToday(rows.slice(0, 3), asOf).done).toBe(false)
-    expect(takeDueToday([{ due_date: null }], asOf)).toEqual({
-      items: [],
-      done: true,
-    })
-    expect(countByOwner(taken.items)).toEqual({ ana: 1, '': 1 })
   })
 })

@@ -6,7 +6,9 @@
   >
     <header class="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div class="min-w-0">
-        <h1 class="text-xl font-semibold">{{ __('Carga de trabajo') }}</h1>
+        <h1 class="text-xl font-semibold">
+          {{ selfView ? __('Tu carga de trabajo') : __('Carga de trabajo') }}
+        </h1>
         <p v-if="data.as_of && !loading" class="text-xs text-ink-gray-5">
           {{ __('Consultado') }}: {{ asOfText }} · {{ data.timezone }}
           <span v-if="refreshing" role="status">
@@ -99,6 +101,17 @@
     </div>
 
     <template v-else>
+      <p
+        v-if="selfView"
+        class="mb-4 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
+        data-testid="self-view-note"
+      >
+        {{
+          __(
+            'Ves solo tus propios leads, deals y tareas. Reasignar registros a otra persona es tarea de un gerente (Sales Manager o System Manager).',
+          )
+        }}
+      </p>
       <section
         class="mb-5 grid grid-cols-2 gap-2 md:grid-cols-5"
         :aria-label="__('Resumen')"
@@ -114,7 +127,7 @@
               : 'border-outline-gray-2 bg-surface-base'
           "
           :aria-pressed="metric.active"
-          :disabled="moving"
+          :disabled="moving || metric.disabled"
           @click="openQueue(null, metric.bucket, metric.kind)"
         >
           <span class="text-xs text-ink-gray-6">{{ metric.label }}</span>
@@ -131,7 +144,7 @@
         :agents="agents"
         :unassigned="data.unassigned"
         :cap="cap"
-        :due-today="dueToday"
+        :self-view="selfView"
         :total-agents="data.total_agents || 0"
         :has-more="!!data.has_more"
         :agent-offset="state.agentOffset"
@@ -154,7 +167,7 @@
               {{ __('Cola') }} · {{ ownerLabel }}
             </h2>
             <button
-              v-if="state.owner !== null"
+              v-if="state.owner !== null && !selfView"
               type="button"
               class="rounded px-1.5 text-xs font-normal text-ink-gray-6 hover:bg-surface-gray-2"
               :disabled="moving"
@@ -273,6 +286,7 @@
           :error="convError ? errorMessage(convError, true) : ''"
           :loading="itemsLoading"
           :busy="moving"
+          :selectable="canReassign"
           @toggle="toggle"
           @toggle-all="toggleAll"
           @open-record="openRecord"
@@ -401,7 +415,7 @@
       </section>
 
       <WorkloadBulkBar
-        v-if="selected.length"
+        v-if="canReassign && selected.length"
         v-model="target"
         :count="selected.length"
         :candidates="rankedCandidates"
@@ -421,7 +435,6 @@ import WorkloadPeople from '@/components/Workload/WorkloadPeople.vue'
 import WorkloadQueue from '@/components/Workload/WorkloadQueue.vue'
 import WorkloadBulkBar from '@/components/Workload/WorkloadBulkBar.vue'
 import {
-  countByOwner,
   decodeWorkloadQuery,
   encodeWorkloadQuery,
   formatSiteDate,
@@ -429,15 +442,11 @@ import {
   retainFailedSelection,
   safeWorkloadState,
   sameWorkloadQuery,
-  takeDueToday,
   workItemHref,
   workItemKey,
 } from '@/utils/workloadFormat'
 import { workloadError } from '@/utils/workloadError'
 
-const PAGE = 25
-// Upper bound for the overview's due-today scan (pages of 25 tasks).
-const TODAY_SCAN_PAGES = 8
 const storageKey = 'crm.workload.queue.v2'
 
 const route = useRoute()
@@ -479,10 +488,8 @@ const selected = ref([])
 const results = ref([])
 const target = ref('')
 const moving = ref(false)
-const dueToday = ref({ state: 'idle', counts: {}, total: 0 })
 let loadId = 0
 let itemsId = 0
-let scanId = 0
 
 const kinds = [
   { value: 'leads', label: __('Leads') },
@@ -497,6 +504,9 @@ const buckets = [
 const dateFormat = window.sysdefaults?.date_format || ''
 
 const agents = computed(() => data.value.agents || [])
+// The server binds a non-manager to their own records; this only adapts the page.
+const selfView = computed(() => data.value.scope === 'self')
+const canReassign = computed(() => data.value.can_reassign !== false)
 const cap = computed(() => Number(data.value.capacity?.cap) || 0)
 const marketing = computed(() => data.value.capacity?.marketing || {})
 const companies = computed(
@@ -515,22 +525,20 @@ const rankedCandidates = computed(() =>
   rankCandidates(data.value.candidates, agents.value),
 )
 const ownerLabel = computed(() =>
-  state.value.owner === null
-    ? __('Todos')
-    : state.value.owner === ''
-      ? __('Sin asignar')
-      : ownerName(state.value.owner),
+  selfView.value
+    ? agents.value[0]?.full_name || __('Tus registros')
+    : state.value.owner === null
+      ? __('Todos')
+      : state.value.owner === ''
+        ? __('Sin asignar')
+        : ownerName(state.value.owner),
 )
 const metrics = computed(() => {
   const summary = data.value.summary || {}
   const { owner, kind, bucket } = state.value
   const all = owner === null
-  const today =
-    dueToday.value.state === 'ready' || dueToday.value.state === 'partial'
-      ? `${dueToday.value.total}${dueToday.value.state === 'partial' ? '+' : ''}`
-      : dueToday.value.state === 'loading'
-        ? '…'
-        : '—'
+  // Older servers do not send due_today: show — and keep the bucket closed.
+  const today = summary.due_today == null ? null : Number(summary.due_today)
   return [
     {
       key: 'leads',
@@ -564,20 +572,19 @@ const metrics = computed(() => {
     {
       key: 'today',
       label: __('Vencen hoy'),
-      value: today,
+      value: today == null ? '—' : today,
       kind: 'tasks',
       bucket: 'today',
-      tone: dueToday.value.total ? 'text-ink-amber-7' : '',
+      disabled: today == null,
+      tone: today ? 'text-ink-amber-7' : '',
     },
   ].map((metric) => ({
     ...metric,
     active: all && metric.kind === kind && metric.bucket === bucket,
   }))
 })
-const countText = computed(() =>
-  state.value.bucket === 'today'
-    ? `${queue.value.items?.length || 0} ${__('vencen hoy en esta página')}`
-    : `${queue.value.total || 0} ${__('registros en total')}`,
+const countText = computed(
+  () => `${queue.value.total || 0} ${__('registros en total')}`,
 )
 const emptyText = computed(() =>
   state.value.bucket === 'overdue'
@@ -610,7 +617,7 @@ function errorMessage(kind, conversations = false) {
           'No tienes permiso para consultar estas conversaciones. Contacta a tu administrador.',
         )
       : __(
-          'La carga de trabajo requiere permiso de gerente (Sales Manager o System Manager).',
+          'La carga de trabajo requiere un rol de CRM (Sales User, Sales Manager o System Manager).',
         )
   if (kind === 'session')
     return __('Tu sesión expiró. Vuelve a iniciar sesión y reintenta.')
@@ -649,7 +656,6 @@ async function load({ quiet = false } = {}) {
     if (id !== loadId) return
     data.value = value
     loadError.value = ''
-    scanDueToday()
   } catch (error) {
     if (id === loadId) loadError.value = workloadError(error)
   } finally {
@@ -660,72 +666,15 @@ async function load({ quiet = false } = {}) {
   }
 }
 
-// Due-today counts per person. get_work_items orders open tasks by due date,
-// so the rows right after the overdue ones (summary.overdue_tasks) are today's.
-async function scanDueToday() {
-  const id = ++scanId
-  const summary = data.value.summary || {}
-  if (!summary.open_tasks) {
-    dueToday.value = { state: 'ready', counts: {}, total: 0 }
-    return
-  }
-  dueToday.value = { state: 'loading', counts: {}, total: 0 }
-  const start = Number(summary.overdue_tasks) || 0
-  const rows = []
-  let done = false
-  try {
-    for (let page = 0; page < TODAY_SCAN_PAGES && !done; page++) {
-      const value = await call('crm.api.workload.get_work_items', {
-        filters: filters(),
-        kind: 'tasks',
-        owner: null,
-        overdue: false,
-        offset: start + page * PAGE,
-      })
-      if (id !== scanId) return
-      const taken = takeDueToday(value.items, data.value.as_of)
-      rows.push(...taken.items)
-      done = taken.done || !value.has_more
-    }
-    dueToday.value = {
-      state: done ? 'ready' : 'partial',
-      counts: countByOwner(rows),
-      total: rows.length,
-    }
-  } catch {
-    if (id === scanId) dueToday.value = { state: 'error', counts: {}, total: 0 }
-  }
-}
-
-async function fetchItems() {
-  const base = {
+function fetchItems() {
+  return call('crm.api.workload.get_work_items', {
     filters: filters(),
     kind: state.value.kind,
     owner: state.value.owner,
-  }
-  if (state.value.bucket !== 'today')
-    return call('crm.api.workload.get_work_items', {
-      ...base,
-      overdue: state.value.bucket === 'overdue',
-      offset: state.value.offset,
-    })
-  // Skip this queue's overdue tasks, then keep the rows due on the site's day.
-  const overdue = await call('crm.api.workload.get_work_items', {
-    ...base,
-    overdue: true,
-    offset: 0,
+    overdue: state.value.bucket === 'overdue',
+    due_today: state.value.bucket === 'today',
+    offset: state.value.offset,
   })
-  const value = await call('crm.api.workload.get_work_items', {
-    ...base,
-    overdue: false,
-    offset: (Number(overdue.total) || 0) + state.value.offset,
-  })
-  const taken = takeDueToday(value.items, data.value.as_of)
-  return {
-    items: taken.items,
-    total: null,
-    has_more: !taken.done && !!value.has_more,
-  }
 }
 
 async function loadItems() {
@@ -882,7 +831,6 @@ onBeforeUnmount(() => {
   remember()
   ++loadId
   ++itemsId
-  ++scanId
 })
 load().then(async () => {
   if (!loadError.value) {

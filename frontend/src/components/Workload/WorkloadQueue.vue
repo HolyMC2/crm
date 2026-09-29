@@ -36,7 +36,9 @@
         class="hidden gap-3 border-b border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-xs font-medium text-ink-gray-6 md:grid"
         :class="gridClass"
       >
+        <span v-if="!selectable" aria-hidden="true" />
         <button
+          v-else
           type="button"
           role="checkbox"
           class="flex size-5 items-center justify-center rounded border border-outline-gray-3 text-ink-gray-7"
@@ -63,7 +65,9 @@
           class="grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 px-3 py-2 md:items-center"
           :class="[gridClass, row.selected ? 'bg-surface-gray-2' : '']"
         >
+          <span v-if="!selectable" aria-hidden="true" />
           <input
+            v-else
             class="mt-1 size-5 md:mt-0"
             type="checkbox"
             data-row-check
@@ -129,6 +133,7 @@
         </li>
       </ul>
       <p
+        v-if="selectable"
         class="hidden border-t border-outline-gray-1 px-3 py-1.5 text-xs text-ink-gray-5 md:block"
       >
         {{
@@ -162,6 +167,8 @@ const props = defineProps({
   error: { type: String, default: '' },
   loading: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
+  // Off for people who cannot reassign: rows open, nothing is selected.
+  selectable: { type: Boolean, default: true },
 })
 defineEmits(['toggle', 'toggle-all', 'open-record', 'retry'])
 

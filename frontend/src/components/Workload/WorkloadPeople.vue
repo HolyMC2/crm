@@ -1,11 +1,18 @@
 <template>
   <section aria-labelledby="workload-people-title">
     <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-      <h2 id="workload-people-title" class="text-base font-semibold">
+      <h2
+        v-if="selfView"
+        id="workload-people-title"
+        class="text-base font-semibold"
+      >
+        {{ __('Tu resumen') }}
+      </h2>
+      <h2 v-else id="workload-people-title" class="text-base font-semibold">
         {{ __('Personas')
         }}<template v-if="!loading"> · {{ totalAgents }}</template>
       </h2>
-      <p class="text-xs text-ink-gray-5">
+      <p v-if="!selfView" class="text-xs text-ink-gray-5">
         {{ __('Primero quien está sobre capacidad o tiene tareas vencidas') }}
       </p>
     </div>
@@ -131,21 +138,6 @@
       </ul>
     </div>
 
-    <p
-      v-if="dueToday.state === 'partial' || dueToday.state === 'error'"
-      class="mt-2 text-xs text-ink-gray-5"
-    >
-      {{
-        dueToday.state === 'partial'
-          ? __(
-              '«Vencen hoy» es parcial: hay más tareas de hoy de las que revisamos.',
-            )
-          : __(
-              'No se pudo calcular «Vencen hoy». El resto de los conteos es exacto.',
-            )
-      }}
-    </p>
-
     <div v-if="agentOffset || hasMore" class="mt-2 flex gap-2">
       <button
         type="button"
@@ -180,7 +172,8 @@ const props = defineProps({
   agents: { type: Array, default: () => [] },
   unassigned: { type: Object, default: null },
   cap: { type: Number, default: 0 },
-  dueToday: { type: Object, default: () => ({ state: 'idle', counts: {} }) },
+  // Only the caller's own row (non-manager view).
+  selfView: { type: Boolean, default: false },
   totalAgents: { type: Number, default: 0 },
   hasMore: { type: Boolean, default: false },
   agentOffset: { type: Number, default: 0 },
@@ -201,6 +194,7 @@ const rows = computed(() => {
     label: agent.full_name || agent.user,
     open: Number(agent.open_total) || 0,
     overdue: Number(agent.overdue_tasks) || 0,
+    today: dueCount(agent),
     tasks: Number(agent.open_tasks) || 0,
     risk: riskLevel(agent, props.cap),
     shift: agent.shift,
@@ -217,6 +211,7 @@ const rows = computed(() => {
       label: __('Sin asignar'),
       open,
       overdue,
+      today: dueCount(u),
       tasks,
       risk: open || overdue ? 'unassigned' : 'none',
     })
@@ -252,12 +247,9 @@ function widthClass(load) {
   return WIDTHS[Math.round(barWidth(load, props.cap) / 5)]
 }
 
-function todayText(user) {
-  const state = props.dueToday.state
-  if (state === 'loading') return '…'
-  if (state !== 'ready' && state !== 'partial') return '—'
-  const count = props.dueToday.counts?.[user] || 0
-  return state === 'partial' && count ? `${count}+` : String(count)
+// Server count; null when an older server does not send it (shown as —).
+function dueCount(counts) {
+  return counts?.due_today == null ? null : Number(counts.due_today) || 0
 }
 
 function stats(row) {
@@ -279,12 +271,9 @@ function stats(row) {
     {
       key: 'today',
       label: __('Vencen hoy'),
-      text: todayText(row.user),
-      bucket: 'today',
-      tone:
-        props.dueToday.counts?.[row.user] > 0
-          ? 'text-ink-amber-7'
-          : 'text-ink-gray-5',
+      text: row.today == null ? '—' : String(row.today),
+      bucket: row.today == null ? null : 'today',
+      tone: row.today > 0 ? 'text-ink-amber-7' : 'text-ink-gray-5',
     },
     {
       key: 'tasks',
