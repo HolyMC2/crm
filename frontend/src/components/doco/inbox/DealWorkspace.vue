@@ -46,7 +46,7 @@
               ? 'border-outline-green-4 font-semibold text-ink-green-7'
               : 'border-transparent text-ink-gray-5'
           "
-          @click="selectTab(t.key)"
+          @click="activeTab = t.key"
         >
           {{ t.label }}
         </button>
@@ -185,7 +185,6 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { Tabs } from 'frappe-ui'
-import { canLeaveRepairWork } from '@/utils/repairNavigationGuard'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import LucideChevronDown from '~icons/lucide/chevron-down'
 import Activities from '@/components/Activities/Activities.vue'
@@ -217,11 +216,6 @@ import {
   pulseSalesDocs,
   salesDocsEnabled,
 } from '@/composables/inbox'
-
-function selectTab(tab) {
-  if (tab !== activeTab.value && !canLeaveRepairWork()) return
-  activeTab.value = tab
-}
 
 const activityTabIndex = ref(0)
 const threadSearch = ref(null)
