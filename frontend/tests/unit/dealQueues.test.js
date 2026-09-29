@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dealQueues, queueRoute } from '@/utils/dealQueues'
+import { dealQueues, queueKey, queueRoute } from '@/utils/dealQueues'
 
 const view = (name, key, extra = {}) => ({
   name,
@@ -11,6 +11,16 @@ const view = (name, key, extra = {}) => ({
 })
 
 describe('dealQueues', () => {
+  it('reads the server namespaced seed key (crm.deal_queue.<key>)', () => {
+    expect(queueKey('crm.deal_queue.vencidos')).toBe('vencidos')
+    expect(queueKey('todos')).toBe('todos')
+    const out = dealQueues([
+      view('40', 'crm.deal_queue.sin_seguimiento'),
+      view('36', 'crm.deal_queue.todos'),
+    ])
+    expect(out.map((v) => v.name)).toEqual(['36', '40'])
+  })
+
   it('orders seeded queues for the daily chain, whatever the server order', () => {
     const out = dealQueues([
       view('5', 'sin_seguimiento'),
