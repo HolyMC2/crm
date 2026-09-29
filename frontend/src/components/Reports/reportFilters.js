@@ -125,17 +125,90 @@ export function reportApiFilters(state) {
 }
 export function reportFilterQuery(query, state) {
   const result = { ...query }
-  for (const key of [
-    ...filterKeys,
-    'period',
-    'drill_kind',
-    'drill_bucket',
-    'drill_title',
-  ])
-    delete result[key]
+  for (const key of [...filterKeys, 'period', ...drillKeys]) delete result[key]
   return { ...result, period: state.preset, ...reportApiFilters(state) }
 }
+const drillKeys = [
+  'drill_kind',
+  'drill_bucket',
+  'drill_title',
+  'drill_doctype',
+  'drill_filters',
+  'drill_or_filters',
+]
+const drillOperators = [
+  '=',
+  '!=',
+  '>',
+  '<',
+  '>=',
+  '<=',
+  'in',
+  'not in',
+  'is',
+  'like',
+  'between',
+]
+const scalar = (value) => ['string', 'number', 'boolean'].includes(typeof value)
+function drillFilterList(value) {
+  if (value === undefined) return []
+  const filters = typeof value === 'string' ? JSON.parse(value) : value
+  if (!Array.isArray(filters) || filters.length > 20) throw new Error()
+  for (const filter of filters) {
+    if (
+      !Array.isArray(filter) ||
+      filter.length !== 3 ||
+      typeof filter[0] !== 'string' ||
+      !/^[a-z_][a-z0-9_]{0,63}$/.test(filter[0]) ||
+      !drillOperators.includes(filter[1]) ||
+      !(
+        scalar(filter[2]) ||
+        (Array.isArray(filter[2]) &&
+          filter[2].length <= 200 &&
+          filter[2].every(scalar))
+      )
+    )
+      throw new Error()
+  }
+  return filters
+}
+
+// Server drills ({doctype, filters, or_filters}) travel in the URL so Back and
+// copied links reopen the same records.
+export function reportDrillQuery({ drill, title }) {
+  const query = {
+    drill_doctype: drill.doctype,
+    drill_filters: JSON.stringify(drill.filters || []),
+    drill_title: title || drill.doctype,
+  }
+  if (drill.or_filters?.length)
+    query.drill_or_filters = JSON.stringify(drill.or_filters)
+  return query
+}
+
+function readDoctypeDrill(query) {
+  if (
+    typeof query.drill_doctype !== 'string' ||
+    !/^[A-Za-z][A-Za-z0-9 _-]{0,139}$/.test(query.drill_doctype)
+  )
+    return null
+  try {
+    return {
+      doctype: query.drill_doctype,
+      filters: drillFilterList(query.drill_filters || '[]'),
+      or_filters: drillFilterList(query.drill_or_filters),
+      title:
+        typeof query.drill_title === 'string'
+          ? query.drill_title
+          : __('Report records'),
+    }
+  } catch {
+    return null
+  }
+}
+
 export function readReportDrill(query) {
+  if (query.drill_doctype !== undefined) return readDoctypeDrill(query)
   if (!['leads', 'deals', 'tasks'].includes(query.drill_kind)) return null
   try {
     const bucket = JSON.parse(query.drill_bucket || '{}')

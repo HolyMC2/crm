@@ -8,6 +8,7 @@ import {
   reportFilterQuery,
   reportApiFilters,
   readReportDrill,
+  reportDrillQuery,
 } from '@/components/Reports/reportFilters'
 
 describe('report calendar periods', () => {
@@ -257,5 +258,55 @@ describe('report date timezone', () => {
       window.sysdefaults = original
       vi.useRealTimers()
     }
+  })
+})
+
+describe('server record drills', () => {
+  const drill = {
+    doctype: 'Marketing Send Log',
+    filters: [['status', '=', 'Sent']],
+    or_filters: [
+      ['creation', 'between', ['2026-09-01', '2026-09-28']],
+      ['sent_at', 'between', ['2026-09-01', '2026-09-28']],
+    ],
+  }
+  it('round-trips through the URL with its title', () => {
+    const query = reportDrillQuery({ drill, title: 'Enviados' })
+    expect(readReportDrill(query)).toEqual({ ...drill, title: 'Enviados' })
+  })
+  it('drops drill keys when the filters change', () => {
+    const query = reportFilterQuery(
+      { tab: 'marketing', ...reportDrillQuery({ drill, title: 'x' }) },
+      { preset: '30d', from_date: '2026-09-01', to_date: '2026-09-28' },
+    )
+    expect(Object.keys(query).some((key) => key.startsWith('drill_'))).toBe(
+      false,
+    )
+  })
+  it.each([
+    ['bad doctype', { drill_doctype: 'x;drop', drill_filters: '[]' }],
+    ['not json', { drill_doctype: 'CRM Deal', drill_filters: '{' }],
+    [
+      'unknown operator',
+      { drill_doctype: 'CRM Deal', drill_filters: '[["name","regexp","x"]]' },
+    ],
+    [
+      'unsafe field',
+      { drill_doctype: 'CRM Deal', drill_filters: '[["name`","=","x"]]' },
+    ],
+    [
+      'object value',
+      { drill_doctype: 'CRM Deal', drill_filters: '[["name","=",{"a":1}]]' },
+    ],
+    [
+      'bad or_filters',
+      {
+        drill_doctype: 'CRM Deal',
+        drill_filters: '[]',
+        drill_or_filters: '"x"',
+      },
+    ],
+  ])('rejects %s', (_label, query) => {
+    expect(readReportDrill(query)).toBeNull()
   })
 })

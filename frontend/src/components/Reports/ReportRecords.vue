@@ -37,7 +37,15 @@
         {{ __('Retry records') }}
       </button>
     </div>
-    <p class="break-words text-sm text-ink-gray-6">
+    <ul
+      v-if="drill"
+      class="flex flex-wrap gap-x-3 gap-y-1 break-words text-sm text-ink-gray-6"
+      :aria-label="__('Record filters')"
+    >
+      <li>{{ drill.doctype }}</li>
+      <li v-for="(text, index) in drillSummary" :key="index">{{ text }}</li>
+    </ul>
+    <p v-else class="break-words text-sm text-ink-gray-6">
       {{ __('Created {0} through {1}', [filters.from_date, filters.to_date])
       }}<span v-if="filters.owner">
         · {{ __('Owner: {0}', [filters.owner]) }}</span
@@ -62,8 +70,15 @@
         :key="row.name"
         class="min-w-0 rounded border border-outline-gray-2 p-3"
       >
+        <component
+          :is="genericLink(row).to ? RouterLink : 'a'"
+          v-if="drill"
+          v-bind="genericLink(row)"
+          class="inline-flex min-h-11 max-w-full items-center break-words font-medium underline"
+          >{{ row.lead_name || row.full_name || row.name }}</component
+        >
         <a
-          v-if="kind === 'tasks'"
+          v-else-if="kind === 'tasks'"
           :href="`/app/crm-task/${encodeURIComponent(row.name)}`"
           target="_blank"
           rel="noopener"
@@ -78,7 +93,14 @@
             row.lead_name || row.deal_name || row.title || row.name
           }}</RouterLink
         >
-        <p class="break-words text-sm text-ink-gray-6">
+        <p v-if="drill" class="break-words text-sm text-ink-gray-6">
+          {{
+            [row.name, row.status, row.lead_owner || row.deal_owner]
+              .filter(Boolean)
+              .join(' · ')
+          }}
+        </p>
+        <p v-else class="break-words text-sm text-ink-gray-6">
           {{ row.name }} · {{ row.status }} ·
           {{
             row.lead_owner ||
@@ -109,13 +131,16 @@
   </section>
 </template>
 <script setup>
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { call } from 'frappe-ui'
 const props = defineProps({
   filters: { type: Object, required: true },
-  bucket: { type: Object, required: true },
-  kind: { type: String, required: true },
+  bucket: { type: Object, default: () => ({}) },
+  kind: { type: String, default: '' },
+  // A server drill {doctype, filters, or_filters}: list exactly those records
+  // through the standard list API (viewer permissions apply).
+  drill: { type: Object, default: null },
   title: { type: String, default: '' },
   returnTo: { type: String, required: true },
 })
@@ -140,12 +165,14 @@ async function load(more = false) {
     heading.value?.scrollIntoView?.({ block: 'nearest' })
   }
   try {
-    const data = await call('crm.api.sales_reports.get_records', {
-      filters: { ...props.filters },
-      kind: props.kind,
-      bucket: { ...props.bucket },
-      offset: more ? nextOffset.value : 0,
-    })
+    const data = props.drill
+      ? await loadDrill(more)
+      : await call('crm.api.sales_reports.get_records', {
+          filters: { ...props.filters },
+          kind: props.kind,
+          bucket: { ...props.bucket },
+          offset: more ? nextOffset.value : 0,
+        })
     if (current !== epoch) return
     items.value = more ? [...items.value, ...data.items] : data.items
     total.value = data.total
@@ -163,6 +190,80 @@ async function load(more = false) {
     if (current === epoch) loading.value = false
   }
 }
+const PAGE = 20
+const drillFields = {
+  'CRM Lead': ['name', 'lead_name', 'status', 'lead_owner'],
+  'CRM Deal': ['name', 'status', 'deal_owner'],
+  Contact: ['name', 'full_name'],
+}
+async function loadDrill(more) {
+  const args = {
+    doctype: props.drill.doctype,
+    filters: props.drill.filters,
+    or_filters: props.drill.or_filters?.length ? props.drill.or_filters : [],
+  }
+  const offset = more ? nextOffset.value : 0
+  const [rows, count] = await Promise.all([
+    call('frappe.client.get_list', {
+      ...args,
+      fields: drillFields[args.doctype] || ['name'],
+      order_by: 'creation desc',
+      limit_start: offset,
+      limit_page_length: PAGE,
+    }),
+    more ? total.value : call('frappe.desk.reportview.get_count', args),
+  ])
+  return {
+    items: rows,
+    total: count,
+    has_more: offset + rows.length < count,
+    next_offset: offset + rows.length,
+  }
+}
+const spaRoutes = {
+  'CRM Lead': ['Lead', 'leadId'],
+  'CRM Deal': ['Deal', 'dealId'],
+  Contact: ['Contact', 'contactId'],
+}
+function genericLink(row) {
+  const spa = spaRoutes[props.drill.doctype]
+  if (spa)
+    return {
+      to: {
+        name: spa[0],
+        params: { [spa[1]]: row.name },
+        query: { returnTo: props.returnTo },
+      },
+    }
+  const slug = props.drill.doctype.toLowerCase().replace(/ /g, '-')
+  return {
+    href: `/app/${slug}/${encodeURIComponent(row.name)}`,
+    target: '_blank',
+    rel: 'noopener',
+  }
+}
+function filterText([field, operator, value]) {
+  if (Array.isArray(value))
+    value =
+      value.length > 3
+        ? __('{0} records', [value.length])
+        : value.join(', ') || '—'
+  return `${field} ${operator} ${value}`
+}
+const drillSummary = computed(() =>
+  props.drill
+    ? [
+        ...props.drill.filters.map(filterText),
+        ...(props.drill.or_filters?.length
+          ? [
+              __('any of: {0}', [
+                props.drill.or_filters.map(filterText).join(' · '),
+              ]),
+            ]
+          : []),
+      ]
+    : [],
+)
 function recordRoute(row) {
   return {
     name: props.kind === 'leads' ? 'Lead' : 'Deal',
@@ -187,7 +288,7 @@ function parentRoute(row) {
   }
 }
 watch(
-  () => [props.filters, props.kind, props.bucket],
+  () => [props.filters, props.kind, props.bucket, props.drill],
   () => load(),
   { immediate: true, deep: true },
 )

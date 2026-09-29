@@ -110,8 +110,9 @@
         v-if="drawer"
         :key="JSON.stringify(drawer)"
         :filters="filters"
-        :bucket="drawer.bucket"
-        :kind="drawer.kind"
+        :bucket="drawer.bucket || {}"
+        :kind="drawer.kind || ''"
+        :drill="drawer.doctype ? drawer : null"
         :title="drawer.title"
         :return-to="route.fullPath"
         @close="closeRecords"
@@ -153,6 +154,7 @@ import {
   reportApiFilters,
   reportFilterQuery,
   readReportDrill,
+  reportDrillQuery,
   validReportDate,
 } from '@/components/Reports/reportFilters'
 const MarketingReports = defineAsyncComponent(
@@ -220,7 +222,17 @@ function selectTab(tab) {
     : reportFilterQuery(route.query, draft)
   router.push({ query: { ...query, tab } })
 }
-function drill({ kind, bucket, title }) {
+function drill({ kind, bucket, title, drill: server }) {
+  if (server) {
+    // Marketing numbers: the server's exact {doctype, filters} for that count.
+    router.push({
+      query: {
+        ...reportFilterQuery(route.query, state.value),
+        ...reportDrillQuery({ drill: server, title }),
+      },
+    })
+    return
+  }
   router.push({
     query: {
       ...reportFilterQuery(route.query, state.value),
