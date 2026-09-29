@@ -314,7 +314,7 @@ function sendTest() {
             ? values[f.fieldname]
               ? 1
               : 0
-            : (values[f.fieldname] ?? ''),
+            : values[f.fieldname] ?? '',
         ]),
     ),
     consent: consent.value,

@@ -9,6 +9,8 @@ is won deals.
 """
 
 import frappe
+from frappe.query_builder import Case
+from frappe.query_builder.functions import Count, Max, Sum
 from frappe.utils import add_days, now_datetime
 
 FIELD = "crm_web_form"
@@ -36,18 +38,26 @@ def form_stats(forms: list[dict]) -> dict[str, dict]:
 	now = now_datetime()
 	d7, d30 = add_days(now, -7), add_days(now, -30)
 
+	def counted(condition):
+		return Sum(Case().when(condition, 1).else_(0))
+
 	for doctype in ("CRM Lead", "CRM Deal"):
 		names = [f["name"] for f in forms if f["document_type"] == doctype]
 		if not names or not _has_link(doctype):
 			continue
-		rows = frappe.db.sql(
-			f"""SELECT `{FIELD}` AS form, COUNT(*) AS total,
-				SUM(creation >= %(d7)s) AS d7, SUM(creation >= %(d30)s) AS d30,
-				MAX(creation) AS last
-			FROM `tab{doctype}` WHERE `{FIELD}` IN %(names)s GROUP BY `{FIELD}`""",
-			{"names": names, "d7": d7, "d30": d30},
-			as_dict=True,
-		)
+		t = frappe.qb.DocType(doctype)
+		rows = (
+			frappe.qb.from_(t)
+			.select(
+				t[FIELD].as_("form"),
+				Count("*").as_("total"),
+				counted(t.creation >= d7).as_("d7"),
+				counted(t.creation >= d30).as_("d30"),
+				Max(t.creation).as_("last"),
+			)
+			.where(t[FIELD].isin(names))
+			.groupby(t[FIELD])
+		).run(as_dict=True)
 		for r in rows:
 			out[r.form].update(
 				{
@@ -58,31 +68,38 @@ def form_stats(forms: list[dict]) -> dict[str, dict]:
 				}
 			)
 
+	deal = frappe.qb.DocType("CRM Deal")
+	status = frappe.qb.DocType("CRM Deal Status")
+	won = counted(status.type == "Won").as_("won")
+
 	lead_forms = [f["name"] for f in forms if f["document_type"] == "CRM Lead"]
 	if lead_forms and _has_link("CRM Lead"):
 		# deals that came out of a form's leads (conversion), and how many were won
-		for r in frappe.db.sql(
-			f"""SELECT l.`{FIELD}` AS form, COUNT(d.name) AS deals,
-				SUM(COALESCE(s.type, '') = 'Won') AS won
-			FROM `tabCRM Deal` d
-			JOIN `tabCRM Lead` l ON l.name = d.lead
-			LEFT JOIN `tabCRM Deal Status` s ON s.name = d.status
-			WHERE l.`{FIELD}` IN %(names)s GROUP BY l.`{FIELD}`""",
-			{"names": lead_forms},
-			as_dict=True,
-		):
+		lead = frappe.qb.DocType("CRM Lead")
+		rows = (
+			frappe.qb.from_(deal)
+			.join(lead)
+			.on(lead.name == deal.lead)
+			.left_join(status)
+			.on(status.name == deal.status)
+			.select(lead[FIELD].as_("form"), Count(deal.name).as_("deals"), won)
+			.where(lead[FIELD].isin(lead_forms))
+			.groupby(lead[FIELD])
+		).run(as_dict=True)
+		for r in rows:
 			out[r.form].update({"deals": int(r.deals or 0), "won": int(r.won or 0)})
 
 	deal_forms = [f["name"] for f in forms if f["document_type"] == "CRM Deal"]
 	if deal_forms and _has_link("CRM Deal"):
-		for r in frappe.db.sql(
-			f"""SELECT d.`{FIELD}` AS form, COUNT(*) AS deals,
-				SUM(COALESCE(s.type, '') = 'Won') AS won
-			FROM `tabCRM Deal` d LEFT JOIN `tabCRM Deal Status` s ON s.name = d.status
-			WHERE d.`{FIELD}` IN %(names)s GROUP BY d.`{FIELD}`""",
-			{"names": deal_forms},
-			as_dict=True,
-		):
+		rows = (
+			frappe.qb.from_(deal)
+			.left_join(status)
+			.on(status.name == deal.status)
+			.select(deal[FIELD].as_("form"), Count("*").as_("deals"), won)
+			.where(deal[FIELD].isin(deal_forms))
+			.groupby(deal[FIELD])
+		).run(as_dict=True)
+		for r in rows:
 			out[r.form].update({"deals": int(r.deals or 0), "won": int(r.won or 0)})
 	return out
 

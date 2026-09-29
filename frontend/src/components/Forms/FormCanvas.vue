@@ -136,8 +136,8 @@
                       :label="__('Add a question')"
                       icon-left="plus"
                       @click="
-                        (!pickerOpen && (b.expanded.value = null),
-                        setOpen(!pickerOpen))
+                        !pickerOpen && (b.expanded.value = null),
+                          setOpen(!pickerOpen)
                       "
                     />
                   </template>
