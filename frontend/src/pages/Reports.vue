@@ -56,6 +56,7 @@
           <Link
             v-model="draft.owner"
             doctype="User"
+            :hide-me="true"
             :label="__('Owner')"
             :placeholder="__('All owners')"
           />
@@ -121,11 +122,13 @@
           :overview-only="marketing"
           @drill="drill"
         />
-        <MarketingReports
-          v-if="marketing && addonAvailable"
-          :filters="filters"
-          @drill="drill"
-        />
+        <KeepAlive>
+          <MarketingReports
+            v-if="marketing && addonAvailable"
+            :filters="filters"
+            @drill="drill"
+          />
+        </KeepAlive>
       </div>
     </div>
   </div>
