@@ -32,6 +32,7 @@ class FCRMSettings(Document):
 		brand_logo: DF.Attach | None
 		brand_name: DF.Data | None
 		currency: DF.Link | None
+		deal_queue_seeds_done: DF.Code | None
 		default_calendar_view: DF.Literal["Daily", "Weekly", "Monthly"]
 		dropdown_items: DF.Table[CRMDropdownItem]
 		enable_forecasting: DF.Check

@@ -32,7 +32,9 @@
   "column_field",
   "title_field",
   "kanban_columns",
-  "kanban_fields"
+  "kanban_fields",
+  "crm_seed_key",
+  "legacy_view_state"
  ],
  "fields": [
   {
@@ -184,11 +186,30 @@
    "fieldname": "is_default",
    "fieldtype": "Check",
    "label": "Is Default"
+  },
+  {
+   "fieldname": "crm_seed_key",
+   "fieldtype": "Data",
+   "label": "Seed Key",
+   "read_only": 1,
+   "hidden": 1,
+   "no_copy": 1,
+   "description": "Stable identity of a view seeded by the app. Never the label."
+  },
+  {
+   "fieldname": "legacy_view_state",
+   "fieldtype": "Code",
+   "label": "Legacy View State",
+   "options": "JSON",
+   "read_only": 1,
+   "hidden": 1,
+   "no_copy": 1,
+   "description": "The view as it was before a format migration, kept for audit and rollback."
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-23 12:29:29.007129",
+ "modified": "2026-09-28 22:30:00.000000",
  "modified_by": "Administrator",
  "module": "FCRM",
  "name": "CRM View Settings",

@@ -38,7 +38,8 @@
   "dropdown_items_tab",
   "dropdown_items",
   "quick_replies",
-  "persona_captured"
+  "persona_captured",
+  "deal_queue_seeds_done"
  ],
  "fields": [
   {
@@ -250,12 +251,21 @@
    "default": "0",
    "description": "Allow explicitly enabled customer flows after ownership, account, consent and native outbox checks. Enabling this never resumes paused or historical runs.",
    "permlevel": 1
+  },
+  {
+   "fieldname": "deal_queue_seeds_done",
+   "fieldtype": "Code",
+   "label": "Seeded Deal Queues",
+   "options": "JSON",
+   "read_only": 1,
+   "hidden": 1,
+   "description": "Seed keys of the default deal queues already created once. A deleted queue is not recreated."
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-27 18:02:14.802197",
+ "modified": "2026-09-28 22:30:00.000000",
  "modified_by": "Administrator",
  "module": "FCRM",
  "name": "FCRM Settings",

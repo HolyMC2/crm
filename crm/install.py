@@ -34,6 +34,7 @@ def after_install(force=False):
 	create_assignment_rule_custom_fields()
 	add_assignment_rule_property_setters()
 	add_whatsapp_roles()
+	add_default_deal_queues()
 	frappe.db.commit()
 
 
@@ -650,3 +651,9 @@ def create_assignment_rule_custom_fields():
 		)
 
 		frappe.clear_cache(doctype="Assignment Rule")
+
+
+def add_default_deal_queues():
+	from crm.api.deal_queues import ensure_default_queues
+
+	ensure_default_queues()

@@ -19,6 +19,7 @@ class CRMViewSettings(Document):
 
 		column_field: DF.Data | None
 		columns: DF.Code | None
+		crm_seed_key: DF.Data | None
 		dt: DF.Link | None
 		filters: DF.Code | None
 		group_by_field: DF.Data | None
@@ -28,6 +29,7 @@ class CRMViewSettings(Document):
 		kanban_columns: DF.Code | None
 		kanban_fields: DF.Code | None
 		label: DF.Data | None
+		legacy_view_state: DF.Code | None
 		load_default_columns: DF.Check
 		name: DF.Int | None
 		order_by: DF.Code | None
