@@ -111,6 +111,13 @@
         {{ headerNote }}
       </div>
 
+      <div
+        v-if="missingVars.length"
+        class="mt-2 text-[11px] text-ink-amber-7"
+        data-template-missing
+      >
+        {{ __('Completa antes de enviar: {0}', [missingVars.join(', ')]) }}
+      </div>
       <div class="mt-3 flex justify-end gap-2">
         <Button :label="__('Cancelar')" @click="emit('cancel')" />
         <Button
@@ -118,6 +125,7 @@
           theme="green"
           :label="__('Enviar plantilla')"
           :loading="sending"
+          :disabled="missingVars.length > 0"
           @click="send"
         />
       </div>
@@ -212,14 +220,20 @@ async function saveMap() {
 }
 
 // Substitute the (possibly edited) values back into the body for a live preview.
-// Replace {{1}},{{2}}… by index so blank values collapse cleanly.
+// A slot without a value keeps its {{n}} so the gap stays visible.
 const renderedBody = computed(() => {
   let body = preview.data?.body || ''
   for (const v of vars.value) {
-    body = body.replaceAll(`{{${v.index}}}`, v.value ?? '')
+    if ((v.value ?? '').trim()) body = body.replaceAll(`{{${v.index}}}`, v.value)
   }
   return body
 })
+
+// Every {{n}} needs a real value from the record or the agent; the send stays
+// blocked until then (never a Meta sample value, never a blank).
+const missingVars = computed(() =>
+  vars.value.filter((v) => !(v.value ?? '').trim()).map((v) => v.placeholder),
+)
 
 const headerNote = computed(() => {
   const t = preview.data?.header_type
@@ -231,6 +245,7 @@ const headerNote = computed(() => {
 })
 
 function send() {
+  if (missingVars.value.length) return
   // {{1}},{{2}}… order preserved; null body_param when the template has no variables.
   const body_param = vars.value.length
     ? Object.fromEntries(

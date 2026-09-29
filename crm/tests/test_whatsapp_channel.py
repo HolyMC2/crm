@@ -4,6 +4,7 @@ The site's channel (mode, digits, link) belongs to ``frappe_whatsapp.channel``;
 these tests stand in for it so CRM's own rules are checked on any site.
 """
 
+import json
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -159,6 +160,18 @@ class TestManualChannel(unittest.TestCase):
 		self.assertEqual(preview["variables"][0]["value"], "")
 		self.assertEqual(len(preview["missing"]), 1)
 		self.assertNotIn("REP-2026-0001", preview["rendered"])
+
+	def test_composer_send_is_refused_while_a_variable_is_empty(self):
+		"""Checked in CRM itself, so it holds on any frappe_whatsapp version."""
+		from crm.api.whatsapp import _require_every_variable
+
+		tpl = self.template("Orden {{1}}, folio {{2}}.", sample_values="Juan,REP-2026-0001")
+		with self.assertRaises(frappe.ValidationError):
+			_require_every_variable(tpl, json.dumps({"1": "Ana", "2": " "}))
+		with self.assertRaises(frappe.ValidationError):
+			_require_every_variable(tpl, None)
+		_require_every_variable(tpl, json.dumps({"1": "Ana", "2": "RO-1"}))
+		_require_every_variable(self.template("Sin variables."), None)
 
 	def test_unapproved_template_is_not_offered(self):
 		lead = self.lead(mobile_no="55 1234 5678")

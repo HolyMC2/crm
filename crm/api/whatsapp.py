@@ -432,9 +432,26 @@ def send_whatsapp_template(
 		if not isinstance(body_param, dict):
 			frappe.throw(_("Template parameters must be a mapping."))
 		doc.body_param = json.dumps({str(k): ("" if v is None else str(v)) for k, v in body_param.items()})
+	_require_every_variable(template, doc.body_param)
 	with person_reply():
 		doc.insert(ignore_permissions=True)
 	return doc.name
+
+
+def _require_every_variable(template: str, body_param: str | None) -> None:
+	"""A human send fills every {{n}} with a real value. Checked here too, so the
+	composer is safe on a frappe_whatsapp that would otherwise fall back to Meta's
+	sample values (or send a blank) for a slot the agent left empty."""
+	import re
+
+	body = frappe.db.get_value("WhatsApp Templates", template, "template") or ""
+	slots = sorted({int(n) for n in re.findall(r"\{\{\s*(\d+)\s*\}\}", body)})
+	if not slots:
+		return
+	values = json.loads(body_param) if body_param else {}
+	empty = [f"{{{{{i}}}}}" for i in slots if not str(values.get(str(i)) or "").strip()]
+	if empty:
+		frappe.throw(_("Fill every template variable before sending: {0}.").format(", ".join(empty)))
 
 
 @frappe.whitelist()
