@@ -42,6 +42,11 @@ export function pipelineStageOptions(pipelines, pipelineName, statuses = []) {
         label: stage.name,
         type: stage.type,
         probability: stage.probability,
+        // the stage's status colour, else the tenant status row's
+        color:
+          stage.color ||
+          (statuses || []).find((s) => s.name === stage.name)?.color ||
+          '',
       }))
   }
   return (statuses || [])
@@ -51,6 +56,7 @@ export function pipelineStageOptions(pipelines, pipelineName, statuses = []) {
       label: status.name,
       type: status.type,
       probability: status.probability,
+      color: status.color || '',
     }))
 }
 

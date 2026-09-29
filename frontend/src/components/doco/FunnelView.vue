@@ -2,6 +2,8 @@
   Simple horizontal funnel for the doco list pages. `groups` is the ordered status
   list; `counts` is an aggregate map { value: { count, value? } }. Bars are scaled
   to the largest stage; the trailing column shows share of current records.
+  `g.color` is the status colour (name or the statuses store's text class); bars
+  and dots take theme token backgrounds from it (utils/statusColors).
 -->
 <template>
   <div class="scb min-h-0 flex-1 overflow-y-auto p-5">
@@ -12,14 +14,15 @@
         >
           <span
             class="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
-            :style="`background:${g.color || 'var(--surface-gray-4)'}`"
+            :class="funnelColorClasses(g.color).dot"
           />
           {{ g.label }}
         </div>
         <div class="h-7 flex-1 overflow-hidden rounded-md bg-surface-gray-1">
           <div
-            class="flex h-full items-center justify-end rounded-md px-2 text-[11px] font-semibold text-white transition-all"
-            :style="`width:${pct(g.value)}%;min-width:34px;background:${g.color || 'var(--surface-gray-4)'}`"
+            class="flex h-full min-w-[34px] items-center justify-end rounded-md px-2 text-[11px] font-semibold text-ink-gray-8 transition-all"
+            :class="funnelColorClasses(g.color).bar"
+            :style="{ width: `${pct(g.value)}%` }"
           >
             {{ countOf(g.value) }}
           </div>
@@ -44,6 +47,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { funnelColorClasses } from '@/utils/statusColors'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
