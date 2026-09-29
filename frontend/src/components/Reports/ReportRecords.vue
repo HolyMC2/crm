@@ -1,6 +1,6 @@
 <template>
   <section
-    class="rounded border border-outline-gray-2 bg-surface-base p-4 space-y-3"
+    class="min-w-0 rounded-lg border border-outline-gray-2 bg-surface-base p-4 space-y-3"
     aria-labelledby="report-records-heading"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -13,7 +13,7 @@
         {{ title }}
       </h2>
       <button class="report-button" @click="$emit('close')">
-        {{ __('Close records') }}
+        {{ __('Back to report') }}
       </button>
     </div>
     <p class="text-sm text-ink-gray-6">
@@ -23,19 +23,44 @@
         )
       }}
     </p>
-    <p v-if="loading" role="status">{{ __('Loading records…') }}</p>
+    <div v-if="loading" role="status" class="space-y-3">
+      <span class="sr-only">{{ __('Loading records…') }}</span>
+      <div
+        v-for="n in 3"
+        :key="n"
+        class="h-20 rounded bg-surface-gray-2 motion-safe:animate-pulse"
+      />
+    </div>
     <div v-if="error" role="alert">
       <p>{{ error }}</p>
       <button class="report-button" :disabled="loading" @click="load(false)">
         {{ __('Retry records') }}
       </button>
     </div>
+    <p class="break-words text-sm text-ink-gray-6">
+      {{ __('Created {0} through {1}', [filters.from_date, filters.to_date])
+      }}<span v-if="filters.owner">
+        · {{ __('Owner: {0}', [filters.owner]) }}</span
+      ><span v-if="filters.pipeline">
+        · {{ __('Pipeline: {0}', [filters.pipeline]) }}</span
+      ><span v-if="filters.company">
+        · {{ __('Company: {0}', [filters.company]) }}</span
+      >
+    </p>
     <p v-if="!loading && !error">{{ __('{0} matching records', [total]) }}</p>
+    <p
+      v-if="!loading && !error && !items.length"
+      class="py-6 text-sm text-ink-gray-6"
+    >
+      {{
+        __('No matching records. Return to the report to change the filters.')
+      }}
+    </p>
     <ul class="space-y-2">
       <li
         v-for="row in items"
         :key="row.name"
-        class="rounded border border-outline-gray-2 p-3"
+        class="min-w-0 rounded border border-outline-gray-2 p-3"
       >
         <a
           v-if="kind === 'tasks'"
@@ -107,7 +132,13 @@ async function load(more = false) {
   const current = ++epoch
   loading.value = true
   error.value = ''
-  if (!more) items.value = []
+  if (!more) {
+    items.value = []
+    hasMore.value = false
+    await nextTick()
+    heading.value?.focus()
+    heading.value?.scrollIntoView?.({ block: 'nearest' })
+  }
   try {
     const data = await call('crm.api.sales_reports.get_records', {
       filters: { ...props.filters },
@@ -120,10 +151,6 @@ async function load(more = false) {
     total.value = data.total
     hasMore.value = data.has_more
     nextOffset.value = data.next_offset
-    if (!more) {
-      await nextTick()
-      heading.value?.focus()
-    }
   } catch (err) {
     if (current === epoch)
       error.value =
@@ -168,3 +195,9 @@ onBeforeUnmount(() => {
   epoch++
 })
 </script>
+
+<style scoped>
+.report-button {
+  @apply min-h-11 max-w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-8 hover:bg-surface-gray-2 disabled:opacity-50;
+}
+</style>

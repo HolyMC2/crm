@@ -2,13 +2,34 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 const api = vi.hoisted(() => ({ call: vi.fn() }))
-vi.mock('frappe-ui', () => ({ call: (...args) => api.call(...args) }))
+vi.mock('frappe-ui', () => ({
+  call: (...args) => api.call(...args),
+  AxisChart: {
+    props: ['config', 'events'],
+    setup: (props) => () =>
+      h('button', {
+        'data-chart': 'axis',
+        onClick: () => props.events?.click({ dataIndex: 0 }),
+      }),
+  },
+}))
 vi.mock('@/utils/crmCapabilities', () => ({ addonAvailable: ref(false) }))
 vi.mock('@/components/Controls/Link.vue', () => ({
   default: {
-    props: { doctype: { type: String, default: '' } },
-    setup(props) {
-      return () => h('input', { 'data-doctype': props.doctype })
+    props: {
+      doctype: { type: String, default: '' },
+      modelValue: { type: String, default: '' },
+      label: { type: String, default: '' },
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit }) {
+      return () =>
+        h('input', {
+          'data-doctype': props.doctype,
+          'aria-label': props.label,
+          value: props.modelValue,
+          onInput: (event) => emit('update:modelValue', event.target.value),
+        })
     },
   },
 }))
@@ -76,7 +97,10 @@ beforeEach(() => {
   api.call.mockReset()
   addonAvailable.value = false
 })
-afterEach(() => cleanups.splice(0).forEach((fn) => fn()))
+afterEach(() => {
+  cleanups.splice(0).forEach((fn) => fn())
+  vi.useRealTimers()
+})
 async function flush() {
   for (let i = 0; i < 25; i++) {
     await Promise.resolve()
@@ -142,7 +166,7 @@ async function click(el, text) {
 describe('standalone sales reporting', () => {
   it('loads native metrics without any addon calls and states its denominators', async () => {
     const { el } = await mount()
-    expect(calls('get_report')).toHaveLength(1)
+    expect(calls('get_report')).toHaveLength(2)
     expect(el.querySelector('[data-doctype="CRM Pipeline"]')).toBeTruthy()
     expect(el.querySelector('[data-doctype="CRM Sales Pipeline"]')).toBeNull()
     expect(
@@ -164,6 +188,101 @@ describe('standalone sales reporting', () => {
         method.startsWith('crm.api.sales_reports.'),
       ),
     ).toBe(true)
+  })
+  it('does not reload sales when its active tab is recorded in the canonical URL', async () => {
+    addonAvailable.value = true
+    const { el, router } = await mount()
+    expect(router.currentRoute.value.query.from_date).toBeTruthy()
+    expect(router.currentRoute.value.query.to_date).toBeTruthy()
+    expect(calls('get_report')).toHaveLength(2)
+    const nav = el.querySelector('nav[aria-label="Report area"]')
+    await click(nav, 'Sales')
+    expect(router.currentRoute.value.query.tab).toBe('sales')
+    expect(calls('get_report')).toHaveLength(2)
+    router.back()
+    await flush()
+    expect(calls('get_report')).toHaveLength(2)
+  })
+  it('loads the equal-length prior creation cohort with the same scope', async () => {
+    await mount({
+      query:
+        '?from_date=2026-09-01&to_date=2026-09-26&owner=seller%40example.test&pipeline=Retail&company=Example',
+    })
+    expect(calls('get_report')).toHaveLength(2)
+    expect(calls('get_report')[1][1].filters).toMatchObject({
+      from_date: '2026-08-06',
+      to_date: '2026-08-31',
+      owner: 'seller@example.test',
+      pipeline: 'Retail',
+      company: 'Example',
+    })
+  })
+  it('keeps current results when comparison fails and retries only comparison', async () => {
+    let failComparison = true
+    const { el } = await mount({
+      query: '?from_date=2026-09-01&to_date=2026-09-26',
+      behavior: (method, args) =>
+        method.endsWith('get_report') &&
+        args.filters.from_date === '2026-08-06' &&
+        failComparison
+          ? Promise.reject(new Error('Comparison unavailable'))
+          : undefined,
+    })
+    expect(el.textContent).toContain('Current results are still shown')
+    expect(el.textContent).toContain('Lead conversion')
+    expect(el.querySelectorAll('[data-chart="axis"]')).toHaveLength(3)
+    failComparison = false
+    await click(el, 'Retry comparison')
+    expect(calls('get_report')).toHaveLength(3)
+    expect(calls('get_report')[2][1].filters.from_date).toBe('2026-08-06')
+    expect(el.textContent).not.toContain('Current results are still shown')
+  })
+  it.each([
+    [
+      'Where are deals waiting?',
+      'deals',
+      { pipeline: 'Retail', status: 'Qualified' },
+    ],
+    [
+      'Who needs follow-up help?',
+      'tasks',
+      { owner: '', task_state: 'overdue' },
+    ],
+    ['Which sources bring wins?', 'deals', { source: '', outcome: 'Won' }],
+  ])(
+    'drills from chart %s into its exact underlying bucket',
+    async (title, kind, bucket) => {
+      const { el, router } = await mount({
+        query: '?owner=seller%40example.test',
+      })
+      el.querySelector(
+        `section[aria-label="${title}"] [data-chart="axis"]`,
+      ).click()
+      await flush()
+      expect(calls('get_records')[0][1]).toMatchObject({
+        kind,
+        bucket,
+        filters: { owner: 'seller@example.test' },
+      })
+      expect(calls('get_report')).toHaveLength(2)
+      router.back()
+      await flush()
+      expect(el.querySelector('#report-records-heading')).toBeNull()
+      expect(calls('get_report')).toHaveLength(2)
+    },
+  )
+  it('closes the record drawer through Back to report while preserving applied scope', async () => {
+    const { el, router } = await mount({
+      query:
+        '?period=custom&from_date=2026-09-01&to_date=2026-09-26&owner=seller%40example.test&pipeline=Retail&company=Example',
+    })
+    const initialQuery = { ...router.currentRoute.value.query }
+    await click(el, 'Converted leads')
+    expect(el.querySelector('#report-records-heading')).toBeTruthy()
+    await click(el, 'Back to report')
+    expect(el.querySelector('#report-records-heading')).toBeNull()
+    expect(router.currentRoute.value.query).toEqual(initialQuery)
+    expect(calls('get_report')).toHaveLength(2)
   })
   it('distinguishes a denied report from an empty cohort and permits retry', async () => {
     let denied = true
@@ -322,5 +441,61 @@ describe('report return boundaries', () => {
       '/reports\n',
     ])
       expect(safeQueueReturn(value)).toBe('')
+  })
+})
+
+describe('shared report filters', () => {
+  async function setInput(el, selector, value) {
+    const input = el.querySelector(selector)
+    expect(input, selector).toBeTruthy()
+    input.value = value
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    await nextTick()
+  }
+
+  it('coalesces filter edits into one navigable change and removes the old drill', async () => {
+    vi.useFakeTimers()
+    const { el, router } = await mount({
+      query:
+        '?from_date=2026-09-01&to_date=2026-09-28&drill_kind=leads&drill_bucket=%7B%7D',
+    })
+    const initialCalls = calls('get_report').length
+    await setInput(el, '[data-doctype="User"]', 's')
+    await vi.advanceTimersByTimeAsync(200)
+    await setInput(el, '[data-doctype="User"]', 'seller@example.test')
+    await vi.advanceTimersByTimeAsync(349)
+    expect(router.currentRoute.value.query.owner).toBeUndefined()
+    expect(calls('get_report')).toHaveLength(initialCalls)
+    await vi.advanceTimersByTimeAsync(1)
+    await flush()
+    expect(router.currentRoute.value.query.owner).toBe('seller@example.test')
+    expect(router.currentRoute.value.query.drill_kind).toBeUndefined()
+    expect(calls('get_report')).toHaveLength(initialCalls + 2)
+    router.back()
+    await flush()
+    expect(router.currentRoute.value.query.owner).toBeUndefined()
+    expect(router.currentRoute.value.query.drill_kind).toBe('leads')
+    expect(el.querySelector('[data-doctype="User"]').value).toBe('')
+  })
+
+  it('cancels an unsaved filter edit when browser Back restores another cohort', async () => {
+    vi.useFakeTimers()
+    const { el, router } = await mount({ query: '?pipeline=Original' })
+    await setInput(el, '[data-doctype="CRM Pipeline"]', 'Retail')
+    await vi.advanceTimersByTimeAsync(350)
+    await flush()
+    expect(router.currentRoute.value.query.pipeline).toBe('Retail')
+    await setInput(el, '[data-doctype="CRM Pipeline"]', 'Unapplied')
+    router.back()
+    await flush()
+    expect(router.currentRoute.value.query.pipeline).toBe('Original')
+    expect(el.querySelector('[data-doctype="CRM Pipeline"]').value).toBe(
+      'Original',
+    )
+    const restoredCalls = calls('get_report').length
+    await vi.advanceTimersByTimeAsync(500)
+    await flush()
+    expect(router.currentRoute.value.query.pipeline).toBe('Original')
+    expect(calls('get_report')).toHaveLength(restoredCalls)
   })
 })
