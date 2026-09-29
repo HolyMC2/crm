@@ -128,6 +128,27 @@ describe('manual WhatsApp composer', () => {
     )
   })
 
+  it('holds the link until every {{n}} hole is filled by hand', async () => {
+    backend({
+      prepared: { text: 'Hola {{1}}, tu pedido', missing: ['Dato 1'] },
+    })
+    const { el } = await mount()
+    chip(el, 'bienvenida').click()
+    await vi.waitFor(() =>
+      expect(
+        el.querySelector('[data-testid="wa-manual-holes"]'),
+      ).not.toBeNull(),
+    )
+    expect(openLink(el)).toBeNull()
+    const area = el.querySelector('textarea')
+    area.value = 'Hola Ana, tu pedido'
+    area.dispatchEvent(new Event('input'))
+    await nextTick()
+    expect(openLink(el).getAttribute('href')).toBe(
+      'https://wa.me/525512345678?text=Hola%20Ana%2C%20tu%20pedido',
+    )
+  })
+
   it('offers no link when the record has no dialable number', async () => {
     backend({ phone: null })
     const { el } = await mount()

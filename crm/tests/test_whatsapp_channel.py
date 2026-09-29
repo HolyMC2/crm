@@ -60,7 +60,7 @@ class TestManualChannel(unittest.TestCase):
 		doc.db_insert()
 		return name
 
-	def template(self, body, field_names="", status="APPROVED"):
+	def template(self, body, field_names="", status="APPROVED", sample_values=""):
 		if not frappe.db.exists("DocType", "WhatsApp Templates"):
 			self.skipTest("frappe_whatsapp not installed")
 		name = "wa-channel-" + uuid4().hex[:10]
@@ -72,6 +72,7 @@ class TestManualChannel(unittest.TestCase):
 				"actual_name": name,
 				"template": body,
 				"field_names": field_names,
+				"sample_values": sample_values,
 				"status": status,
 				"for_doctype": "CRM Lead",
 			}
@@ -115,6 +116,23 @@ class TestManualChannel(unittest.TestCase):
 		tpl = self.template("Hola {{1}}, tu correo es {{2}}.", field_names="lead_name,email")
 		out = crm_channel.prepare_manual_message("CRM Lead", lead, template=tpl)
 		self.assertEqual(out["missing"], ["email"])
+
+	def test_sample_values_never_reach_a_customer(self):
+		"""No field mapping: frappe_whatsapp would send Meta's samples. The manual
+		message keeps the hole visible and asks the worker for it instead."""
+		lead = self.lead(mobile_no="55 1234 5678")
+		tpl = self.template("Hola {{1}}, tu pedido {{2}}.", sample_values="Marco,abc123")
+		out = crm_channel.prepare_manual_message("CRM Lead", lead, template=tpl)
+		self.assertEqual(out["text"], "Hola {{1}}, tu pedido {{2}}.")
+		self.assertNotIn("Marco", out["text"])
+		self.assertEqual(len(out["missing"]), 2)
+
+	def test_unmapped_placeholder_is_reported(self):
+		lead = self.lead(mobile_no="55 1234 5678")
+		tpl = self.template("Hola {{1}}, ver {{2}}.", field_names="lead_name")
+		out = crm_channel.prepare_manual_message("CRM Lead", lead, template=tpl)
+		self.assertEqual(out["text"], "Hola Fictional Uno, ver {{2}}.")
+		self.assertEqual(len(out["missing"]), 1)
 
 	def test_unapproved_template_is_not_offered(self):
 		lead = self.lead(mobile_no="55 1234 5678")

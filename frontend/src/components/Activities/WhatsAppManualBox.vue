@@ -68,6 +68,18 @@
       }}
     </p>
 
+    <p
+      v-if="hasHoles"
+      class="mt-1 text-xs text-ink-amber-3"
+      data-testid="wa-manual-holes"
+    >
+      {{
+        __(
+          'Completa los datos que siguen entre llaves para poder abrir WhatsApp.',
+        )
+      }}
+    </p>
+
     <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
       <span class="text-xs text-ink-gray-5">
         <template v-if="phone">{{ __('Para') }}: +{{ phone }}</template>
@@ -121,8 +133,10 @@ const record = () => ({
 
 // Built in the browser so the link is ready before the click: an await between
 // the click and window.open gets popup-blocked, a plain <a> does not.
+// A template hole still reading {{n}} would reach the customer as-is.
+const hasHoles = computed(() => /\{\{\d+\}\}/.test(text.value || ''))
 const url = computed(() => {
-  if (!phone.value) return ''
+  if (!phone.value || hasHoles.value) return ''
   const base = `https://wa.me/${phone.value}`
   return text.value ? `${base}?text=${encodeURIComponent(text.value)}` : base
 })
