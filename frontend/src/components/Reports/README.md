@@ -6,8 +6,8 @@ Delivery checklist:
 - [x] Sales comparison, focused charts and record return flow
 - [x] Split marketing panels and isolate endpoint failures
 - [x] Filter/date/delta tests and full test suite
-- [ ] Formatting, lint and heavy production build
-- [ ] Review scoped diff, remove dependency symlink, commit locally
+- [x] Formatting, lint and heavy production build
+- [x] Review scoped diff, remove dependency symlink, commit locally
 
 Design: tenant theme surfaces and ink, existing application typography, compact
 comparison tiles followed by three decision charts. Detailed tables and operational
@@ -40,5 +40,11 @@ Marketing endpoints have different supported scopes; each panel states exception
 - Unit coverage includes inclusive calendar periods, zero-baseline deltas,
   serialized query filters, debounce, browser history, exact chart buckets,
   malformed drill URLs, late-response guards and isolated marketing failures.
-- Browser checks use representative fixtures and the actual frappe-ui charts;
-  live tenant permissions and API reconciliation require an authenticated tenant.
+- `npx vitest run`: 106 files, 1,067 tests passed.
+- `npx prettier --check` and `npx eslint` on changed Vue/JS files: passed.
+- `heavy -- npm run build`: passed in 50.87 seconds; PWA verifier confirmed 199
+  JavaScript/CSS assets precached. Generated type-file whitespace was discarded.
+- Browser appearance is **unverified**. The fixture harness failed to load its
+  chart import, and the corrected optional rerun remained queued behind shared
+  work. It was cancelled to finish this bounded task. No authenticated tenant
+  checks were performed; phone overflow and dark-mode appearance need a visual pass.

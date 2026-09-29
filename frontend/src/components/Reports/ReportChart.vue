@@ -57,8 +57,27 @@ const config = computed(() => ({
     label: `${index + 1}. ${row.label}`,
     value: row.value,
   })),
-  xAxis: { key: 'label', type: 'category' },
-  yAxis: { yMin: 0 },
+  xAxis: {
+    key: 'label',
+    type: 'category',
+    echartOptions: {
+      inverse: true,
+      axisLine: { show: false },
+      axisLabel: {
+        width: 108,
+        overflow: 'truncate',
+        color: 'var(--ink-gray-7)',
+      },
+    },
+  },
+  yAxis: {
+    yMin: 0,
+    echartOptions: {
+      min: 0,
+      axisLabel: { color: 'var(--ink-gray-6)' },
+      splitLine: { lineStyle: { color: 'var(--outline-gray-2)' } },
+    },
+  },
   swapXY: true,
   series: [
     {
@@ -71,18 +90,6 @@ const config = computed(() => ({
   echartOptions: {
     animation: false,
     grid: { top: 8, bottom: 8, left: 0, right: 12, containLabel: true },
-    xAxis: {
-      axisLabel: { color: 'var(--ink-gray-6)' },
-      splitLine: { lineStyle: { color: 'var(--outline-gray-2)' } },
-    },
-    yAxis: {
-      inverse: true,
-      axisLabel: {
-        width: 108,
-        overflow: 'truncate',
-        color: 'var(--ink-gray-7)',
-      },
-    },
     tooltip: {
       renderMode: 'richText',
       backgroundColor: 'var(--surface-gray-2)',
