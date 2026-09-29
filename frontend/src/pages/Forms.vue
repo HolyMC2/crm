@@ -106,7 +106,12 @@
                 <span
                   v-for="c in chips(f)"
                   :key="c.key"
-                  class="inline-flex items-center gap-1 rounded-md bg-surface-gray-2 px-1.5 py-0.5 text-xs text-ink-gray-7"
+                  class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs"
+                  :class="
+                    c.warn
+                      ? 'bg-surface-amber-2 text-ink-amber-7'
+                      : 'bg-surface-gray-2 text-ink-gray-7'
+                  "
                 >
                   <component :is="c.icon" class="size-3" />
                   {{ c.label }}
@@ -214,6 +219,7 @@ import LucideUser from '~icons/lucide/user'
 import LucideMegaphone from '~icons/lucide/megaphone'
 import LucideBell from '~icons/lucide/bell'
 import LucideShieldCheck from '~icons/lucide/shield-check'
+import LucideTriangleAlert from '~icons/lucide/triangle-alert'
 import TemplateGrid from '@/components/Forms/TemplateGrid.vue'
 import MetaLeadForms from '@/components/Forms/channels/MetaLeadForms.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
@@ -259,6 +265,15 @@ function openNew(key) {
 function chips(f) {
   const a = f.after_submit || {}
   const out = []
+  if (f.incompatible_fields)
+    out.push({
+      key: 'outside',
+      icon: LucideTriangleAlert,
+      label: __('Made outside the builder: {0} fields to clean up', [
+        f.incompatible_fields,
+      ]),
+      warn: true,
+    })
   if (a.assign_to)
     out.push({
       key: 'owner',
@@ -358,7 +373,13 @@ function rowMenu(f) {
       icon: f.published ? 'eye-off' : 'eye',
       onClick: () => setPublished(f, !f.published),
     },
-    { label: __('Duplicate'), icon: 'copy', onClick: () => duplicate(f) },
+    {
+      label: f.incompatible_fields
+        ? __('Duplicate as a clean form')
+        : __('Duplicate'),
+      icon: 'copy',
+      onClick: () => duplicate(f),
+    },
     ...ConfirmDelete({
       isConfirmingDelete,
       onConfirmDelete: async () => {

@@ -8,26 +8,12 @@
         )
       "
     />
-    <div
-      class="flex items-center gap-0.5 self-start rounded-full bg-surface-gray-2 p-0.5"
-      role="group"
-      :aria-label="__('Confirm on WhatsApp')"
-    >
-      <button
-        v-for="m in modes"
-        :key="m.value"
-        class="rounded-full px-3 py-1 text-sm"
-        :class="
-          c.followup.mode === m.value
-            ? 'bg-surface-base text-ink-gray-9 shadow-sm'
-            : 'text-ink-gray-6'
-        "
-        :aria-pressed="c.followup.mode === m.value"
-        @click="c.change(c.followup, 'mode', m.value)"
-      >
-        {{ m.label }}
-      </button>
-    </div>
+    <SegmentedControl
+      :model-value="c.followup.mode"
+      :options="modes"
+      :label="__('Confirm on WhatsApp')"
+      @update:model-value="(v) => c.change(c.followup, 'mode', v)"
+    />
     <template v-if="c.followup.mode === 'template'">
       <FormControl
         type="select"
@@ -65,6 +51,7 @@
 </template>
 
 <script setup>
+import SegmentedControl from '../SegmentedControl.vue'
 import {
   ErrorMessage,
   FormControl,

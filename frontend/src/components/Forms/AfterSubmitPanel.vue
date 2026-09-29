@@ -63,7 +63,7 @@
         <label
           v-for="mode in assignModes"
           :key="mode.value"
-          class="flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5"
+          class="flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 focus-within:ring-2 focus-within:ring-outline-gray-4"
           :class="
             b.settings.assign_mode === mode.value
               ? 'border-outline-gray-4 bg-surface-gray-2'
@@ -72,11 +72,15 @@
         >
           <input
             type="radio"
-            class="mt-1 text-ink-gray-9 focus:ring-outline-gray-4"
+            class="sr-only"
             name="assign_mode"
             :value="mode.value"
             :checked="b.settings.assign_mode === mode.value"
             @change="setSetting('assign_mode', mode.value)"
+          />
+          <ChoiceRadio
+            class="mt-0.5"
+            :checked="b.settings.assign_mode === mode.value"
           />
           <div class="min-w-0">
             <div class="text-base text-ink-gray-9">{{ mode.label }}</div>
@@ -130,27 +134,13 @@
         :placeholder="__('Add a person')"
         @update:model-value="addWatcher"
       />
-      <div
+      <SegmentedControl
         v-if="b.settings.notify_users.length"
-        class="flex items-center gap-0.5 self-start rounded-full bg-surface-gray-2 p-0.5"
-        role="group"
-        :aria-label="__('How often')"
-      >
-        <button
-          v-for="m in notifyModes"
-          :key="m.value"
-          class="rounded-full px-3 py-1 text-sm"
-          :class="
-            b.settings.notify_mode === m.value
-              ? 'bg-surface-base text-ink-gray-9 shadow-sm'
-              : 'text-ink-gray-6'
-          "
-          :aria-pressed="b.settings.notify_mode === m.value"
-          @click="setSetting('notify_mode', m.value)"
-        >
-          {{ m.label }}
-        </button>
-      </div>
+        :model-value="b.settings.notify_mode"
+        :options="notifyModes"
+        :label="__('How often')"
+        @update:model-value="(v) => setSetting('notify_mode', v)"
+      />
     </section>
 
     <!-- follow-up campaign (doco_marketing) -->
@@ -247,6 +237,8 @@
 </template>
 
 <script setup>
+import SegmentedControl from './SegmentedControl.vue'
+import ChoiceRadio from './ChoiceRadio.vue'
 import { Combobox, ErrorMessage, FormControl, Switch } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import LucideInfo from '~icons/lucide/info'

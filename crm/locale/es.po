@@ -19,6 +19,27 @@ msgstr ""
 "Language: es_ES\n"
 
 # CRM forms (templates, builder, public page)
+msgid "This form was made outside the builder. Duplicate it as a clean form to edit it."
+msgstr "Este formulario se hizo fuera del constructor. Duplícalo como formulario limpio para editarlo."
+
+msgid "Made outside the form builder"
+msgstr "Hecho fuera del constructor de formularios"
+
+msgid "{0} of its fields can't be used on a public CRM form ({1}). To keep it safe, this form can't be saved or published here."
+msgstr "{0} de sus campos no se pueden usar en un formulario público del CRM ({1}). Para no romperlo, aquí no se puede guardar ni publicar."
+
+msgid "Duplicate as a clean form"
+msgstr "Duplicar como formulario limpio"
+
+msgid "Clean copy created as a draft"
+msgstr "Copia limpia creada como borrador"
+
+msgid "Made outside the builder: {0} fields to clean up"
+msgstr "Hecho fuera del constructor: {0} campos por limpiar"
+
+msgid "More tabs"
+msgstr "Más pestañas"
+
 msgid "Syncing leads"
 msgstr "Sincronizando leads"
 

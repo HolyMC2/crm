@@ -76,6 +76,8 @@ export function useFormBuilder(name) {
   // doctype-mandatory fields kept off the visible form; each carries the value
   // applied on submission so the record can still be created
   const hiddenFields = ref([])
+  // rows a CRM form can't collect (a Web Form built in Desk): read-only until copied clean
+  const incompatible = ref([])
   const sections = ref([])
   const expanded = ref(null)
 
@@ -436,6 +438,7 @@ export function useFormBuilder(name) {
         published: doc.published || 0,
       })
       savedPublished.value = !!form.published
+      incompatible.value = doc.incompatible_fields || []
       form.fields = (doc.fields || []).map((f) => ({
         name: f.name,
         fieldname: f.fieldname,
@@ -508,6 +511,14 @@ export function useFormBuilder(name) {
 
   async function save() {
     if (saving.value) return false
+    if (incompatible.value.length) {
+      toast.error(
+        __(
+          'This form was made outside the builder. Duplicate it as a clean form to edit it.',
+        ),
+      )
+      return false
+    }
     if (form.published && !publishable.value) {
       toast.error(__('Finish the checklist before this form can stay live.'))
       return false
@@ -553,6 +564,7 @@ export function useFormBuilder(name) {
     form,
     settings,
     hiddenFields,
+    incompatible,
     sections,
     expanded,
     config,

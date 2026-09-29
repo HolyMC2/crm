@@ -280,3 +280,45 @@ class TestFormWiring(IntegrationTestCase):
 		)
 		# no send is queued by enrollment itself
 		self.assertFalse(frappe.db.exists("Marketing Send Log", {"campaign": campaign.name}))
+
+	# ---- forms made outside the builder (Desk) ----
+
+	def test_desk_made_form_is_flagged_and_duplicates_clean(self):
+		desk = frappe.get_doc(
+			{
+				"doctype": "Web Form",
+				"title": "WF desk made",
+				"route": "wf-desk-made",
+				"doc_type": "CRM Deal",
+				"module": "FCRM",
+				"is_standard": 0,
+				"web_form_fields": [
+					{"fieldname": "first_name", "fieldtype": "Data", "label": "First Name"},
+					{
+						"fieldname": "contacts",
+						"fieldtype": "Table",
+						"label": "Contacts",
+						"options": "CRM Contacts",
+					},
+					{
+						"fieldname": "status",
+						"fieldtype": "Link",
+						"label": "Status",
+						"options": "CRM Deal Status",
+					},
+				],
+			}
+		).insert(ignore_permissions=True)
+		cfg = F.get_form_config(desk.name)
+		self.assertEqual(set(cfg["incompatible_fields"]), {"Contacts", "Status"})
+		row = next(f for f in F.list_forms() if f["name"] == desk.name)
+		self.assertEqual(row["incompatible_fields"], 2)
+
+		copy = F.get_form_config(F.duplicate_form(desk.name)["name"])
+		self.assertEqual(copy["incompatible_fields"], [])
+		self.assertEqual(
+			[f["fieldname"] for f in copy["fields"] if f["fieldtype"] not in F.LAYOUT_BREAKS], ["first_name"]
+		)
+		self.assertIn("status", {h["fieldname"] for h in copy["hidden_fields"]})
+		# the original stays exactly as it was
+		self.assertEqual(len(frappe.get_doc("Web Form", desk.name).web_form_fields), 3)

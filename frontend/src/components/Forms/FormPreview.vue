@@ -4,27 +4,11 @@
       <div class="text-sm font-medium text-ink-gray-7">
         {{ __('What visitors see') }}
       </div>
-      <div
-        class="flex items-center gap-0.5 rounded-full bg-surface-gray-2 p-0.5"
-        role="group"
-        :aria-label="__('Preview size')"
-      >
-        <button
-          v-for="d in devices"
-          :key="d.key"
-          class="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
-          :class="
-            device === d.key
-              ? 'bg-surface-base text-ink-gray-9 shadow-sm'
-              : 'text-ink-gray-6'
-          "
-          :aria-pressed="device === d.key"
-          @click="device = d.key"
-        >
-          <component :is="d.icon" class="size-3.5" />
-          {{ d.label }}
-        </button>
-      </div>
+      <SegmentedControl
+        v-model="device"
+        :options="devices"
+        :label="__('Preview size')"
+      />
     </div>
 
     <!-- the device: a phone outline around the page so it reads as "the public
@@ -210,6 +194,7 @@
 </template>
 
 <script setup>
+import SegmentedControl from './SegmentedControl.vue'
 import { Button, FormControl } from 'frappe-ui'
 import LucideCheck from '~icons/lucide/check'
 import LucideSmartphone from '~icons/lucide/smartphone'
@@ -228,8 +213,8 @@ const props = defineProps({
 const emit = defineEmits(['test'])
 
 const devices = [
-  { key: 'phone', label: __('Phone'), icon: LucideSmartphone },
-  { key: 'desktop', label: __('Desktop'), icon: LucideMonitor },
+  { value: 'phone', label: __('Phone'), icon: LucideSmartphone },
+  { value: 'desktop', label: __('Desktop'), icon: LucideMonitor },
 ]
 const device = ref('phone')
 const values = reactive({})

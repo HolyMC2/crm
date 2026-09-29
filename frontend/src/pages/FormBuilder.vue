@@ -37,9 +37,18 @@
         >
       </div>
       <div class="flex items-center gap-2">
+        <!-- in the toolbar, never floating over the inputs it previews -->
+        <Button
+          v-if="b.loaded.value && tab !== 'submissions'"
+          class="lg:hidden"
+          :label="__('Preview')"
+          @click="showSheet = true"
+        >
+          <template #prefix><LucideEye class="size-4" /></template>
+        </Button>
         <Button
           :label="__('Save')"
-          :disabled="!b.dirty.value"
+          :disabled="!b.dirty.value || b.incompatible.value.length > 0"
           :loading="b.saving.value && !publishing"
           @click="save"
         />
@@ -50,13 +59,20 @@
             </template>
           </Button>
         </Dropdown>
-        <Popover v-else placement="bottom-end">
+        <Popover
+          v-else-if="!b.incompatible.value.length"
+          placement="bottom-end"
+        >
           <template #target="{ togglePopover }">
             <button
               class="flex items-center gap-1.5 rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
               style="background: var(--brand)"
               :aria-label="__('Publish')"
-              @click="b.publishable.value ? publish() : togglePopover()"
+              @click="
+                b.publishable.value && !b.incompatible.value.length
+                  ? publish()
+                  : togglePopover()
+              "
             >
               <LucideLoaderCircle
                 v-if="publishing"
@@ -82,35 +98,53 @@
       </div>
     </div>
 
-    <!-- tabs -->
-    <div
-      class="flex flex-none gap-1 overflow-x-auto border-b border-outline-gray-1 px-3 sm:px-5"
-      role="tablist"
-    >
-      <button
-        v-for="t in tabs"
-        :key="t.key"
-        role="tab"
-        class="relative flex shrink-0 items-center gap-1.5 px-2.5 py-2.5 text-[13px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
-        :class="
-          tab === t.key
-            ? 'text-ink-gray-9'
-            : 'text-ink-gray-5 hover:text-ink-gray-8'
-        "
-        :aria-selected="tab === t.key"
-        @click="setTab(t.key)"
+    <!-- tabs: scroll sideways on a phone; a fade marks the side with more -->
+    <div class="relative flex-none border-b border-outline-gray-1">
+      <div
+        ref="tabStrip"
+        class="no-scrollbar flex gap-1 overflow-x-auto px-3 sm:px-5"
+        role="tablist"
+        @scroll="measureTabs"
       >
-        <component :is="t.icon" class="size-4" />
-        {{ t.label }}
-        <span
-          v-if="t.count"
-          class="rounded-full bg-surface-gray-2 px-1.5 text-[11px] text-ink-gray-7"
-          >{{ t.count }}</span
+        <button
+          v-for="t in tabs"
+          :key="t.key"
+          role="tab"
+          :data-tab="t.key"
+          class="relative flex shrink-0 items-center gap-1.5 px-2.5 py-2.5 text-[13px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-4"
+          :class="
+            tab === t.key
+              ? 'text-ink-gray-9'
+              : 'text-ink-gray-5 hover:text-ink-gray-8'
+          "
+          :aria-selected="tab === t.key"
+          @click="setTab(t.key)"
         >
-        <span
-          v-if="tab === t.key"
-          class="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-surface-gray-9"
-        />
+          <component :is="t.icon" class="size-4" />
+          {{ t.label }}
+          <span
+            v-if="t.count"
+            class="rounded-full bg-surface-gray-2 px-1.5 text-[11px] text-ink-gray-7"
+            >{{ t.count }}</span
+          >
+          <span
+            v-if="tab === t.key"
+            class="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-surface-gray-9"
+          />
+        </button>
+      </div>
+      <div
+        v-if="tabEdges.left"
+        class="tab-fade-left pointer-events-none absolute inset-y-0 left-0 w-8"
+        aria-hidden="true"
+      />
+      <button
+        v-if="tabEdges.right"
+        class="tab-fade-right absolute inset-y-0 right-0 flex w-10 items-center justify-end pr-1.5 text-ink-gray-6"
+        :aria-label="__('More tabs')"
+        @click="tabStrip?.scrollBy({ left: 160, behavior: 'smooth' })"
+      >
+        <LucideChevronRight class="size-4" />
       </button>
     </div>
 
@@ -122,7 +156,39 @@
       <div class="min-w-0 flex-1 overflow-y-auto">
         <div class="mx-auto flex max-w-2xl flex-col gap-5 p-4 sm:p-6">
           <div
-            v-if="!b.savedPublished.value && tab !== 'submissions'"
+            v-if="b.incompatible.value.length"
+            class="flex flex-col gap-2 rounded-lg border border-outline-amber-4 bg-surface-amber-1 p-3"
+            role="status"
+          >
+            <div
+              class="flex items-center gap-1.5 text-sm font-medium text-ink-gray-9"
+            >
+              <LucideTriangleAlert class="size-4 text-ink-amber-6" />
+              {{ __('Made outside the form builder') }}
+            </div>
+            <p class="text-p-sm text-ink-gray-7">
+              {{
+                __(
+                  "{0} of its fields can't be used on a public CRM form ({1}). To keep it safe, this form can't be saved or published here.",
+                  [b.incompatible.value.length, incompatibleSample],
+                )
+              }}
+            </p>
+            <Button
+              class="self-start"
+              variant="solid"
+              icon-left="copy"
+              :label="__('Duplicate as a clean form')"
+              :loading="duplicating"
+              @click="duplicateClean"
+            />
+          </div>
+          <div
+            v-if="
+              !b.savedPublished.value &&
+              tab !== 'submissions' &&
+              !b.incompatible.value.length
+            "
             class="rounded-lg border border-outline-gray-2 p-3"
           >
             <button
@@ -197,15 +263,7 @@
       </aside>
     </div>
 
-    <!-- narrow screens: the preview opens as a sheet -->
-    <button
-      v-if="b.loaded.value && tab !== 'submissions'"
-      class="fixed bottom-20 right-4 z-10 flex items-center gap-1.5 rounded-full bg-surface-gray-9 px-4 py-2.5 text-sm font-medium text-ink-white shadow-lg lg:hidden"
-      @click="showSheet = true"
-    >
-      <LucideEye class="size-4" />
-      {{ __('Preview') }}
-    </button>
+    <!-- narrow screens: the preview opens as a sheet (button in the toolbar) -->
     <Dialog v-model="showSheet" :options="{ title: __('Preview'), size: 'xl' }">
       <template #body-content>
         <div class="h-[70vh]">
@@ -239,8 +297,10 @@ import { useTelemetry } from 'frappe-ui/frappe'
 import { globalStore } from '@/stores/global'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideChevronDown from '~icons/lucide/chevron-down'
+import LucideChevronRight from '~icons/lucide/chevron-right'
 import LucideLoaderCircle from '~icons/lucide/loader-circle'
 import LucideEye from '~icons/lucide/eye'
+import LucideTriangleAlert from '~icons/lucide/triangle-alert'
 import LucideListChecks from '~icons/lucide/list-checks'
 import LucideMessageSquare from '~icons/lucide/message-square'
 import LucideWorkflow from '~icons/lucide/workflow'
@@ -261,7 +321,16 @@ import {
   useFormChannels,
 } from '@/components/Forms/channels/useFormChannels'
 import { addonAvailable } from '@/utils/crmCapabilities'
-import { computed, onBeforeUnmount, provide, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({ formId: { type: String, required: true } })
@@ -289,6 +358,31 @@ watch(
     if (TAB_KEYS.includes(t)) tab.value = t
   },
 )
+// tab strip overflow (phone): which edges have more tabs, and keep the active
+// tab in view when it changes
+const tabStrip = ref(null)
+const tabEdges = reactive({ left: false, right: false })
+function measureTabs() {
+  const el = tabStrip.value
+  if (!el) return
+  tabEdges.left = el.scrollLeft > 2
+  tabEdges.right = el.scrollLeft + el.clientWidth < el.scrollWidth - 2
+}
+function revealActiveTab() {
+  nextTick(() => {
+    tabStrip.value
+      ?.querySelector(`[data-tab="${tab.value}"]`)
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    measureTabs()
+  })
+}
+watch(tab, revealActiveTab)
+onMounted(() => {
+  revealActiveTab()
+  window.addEventListener('resize', measureTabs)
+})
+onBeforeUnmount(() => window.removeEventListener('resize', measureTabs))
+
 function setTab(key) {
   tab.value = key
   router.replace({ query: { ...route.query, tab: key } })
@@ -353,6 +447,27 @@ const liveMenu = computed(() => [
   },
 ])
 
+// a form made in Desk: keep the original untouched, continue on a clean copy
+const incompatibleSample = computed(() => {
+  const list = b.incompatible.value
+  return list.slice(0, 4).join(', ') + (list.length > 4 ? '…' : '')
+})
+const duplicating = ref(false)
+async function duplicateClean() {
+  duplicating.value = true
+  try {
+    const doc = await call('crm.api.form.duplicate_form', {
+      name: props.formId,
+    })
+    toast.success(__('Clean copy created as a draft'))
+    router.push({ name: 'Form', params: { formId: doc.name } })
+  } catch (e) {
+    toast.error(e?.messages?.[0] || __('Could not duplicate form'))
+  } finally {
+    duplicating.value = false
+  }
+}
+
 // a test uses what's saved: save first so the author tests what they see
 const testing = ref(false)
 const showReport = ref(false)
@@ -389,3 +504,19 @@ function beforeUnload(event) {
 window.addEventListener('beforeunload', beforeUnload)
 onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
 </script>
+
+<style scoped>
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* edge fades take the page surface token, so they match both themes */
+.tab-fade-left {
+  background: linear-gradient(to right, var(--surface-base), transparent);
+}
+.tab-fade-right {
+  background: linear-gradient(to left, var(--surface-base) 45%, transparent);
+}
+</style>

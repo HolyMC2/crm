@@ -303,3 +303,30 @@ test('close the drill campaign', async ({ page }) => {
     value: 'Completed',
   })
 })
+
+// FORMS_E2E_DESK_FORM=<name>: screenshots of a Web Form made in Desk (read-only
+// state + clean-copy action). The form itself is never changed.
+test('a form made outside the builder', async ({ page }) => {
+  test.skip(!process.env.FORMS_E2E_DESK_FORM, 'no Desk-made form given')
+  const name = process.env.FORMS_E2E_DESK_FORM
+  for (const theme of ['light', 'dark']) {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await useTheme(page, theme)
+    await login(page)
+    await page.goto('/crm/forms', { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(2000)
+    await page.evaluate(() =>
+      document
+        .querySelectorAll('.overflow-y-auto')
+        .forEach((el) => el.scrollTo(0, el.scrollHeight)),
+    )
+    await snap(page, `forms-list-desk-form-${theme}`)
+    await page.goto(`/crm/forms/${name}`, { waitUntil: 'domcontentloaded' })
+    await expect(
+      page.getByRole('button', {
+        name: /Duplicate as a clean form|Duplicar como formulario limpio/,
+      }),
+    ).toBeVisible({ timeout: 30_000 })
+    await snap(page, `builder-desk-form-desktop-${theme}`)
+  }
+})

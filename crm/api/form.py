@@ -378,6 +378,7 @@ def list_forms() -> list[dict]:
 	for f in forms:
 		settings = form_settings.of_form({"crm_form_settings": f.pop("crm_form_settings")})
 		f["stats"] = stats.get(f["name"])
+		f["incompatible_fields"] = len(incompatible_fields(frappe.get_doc("Web Form", f["name"])))
 		f["after_submit"] = {
 			"assign_to": settings["assign_to"] if settings["assign_mode"] == "user" else "",
 			"campaign": settings["campaign"],
@@ -424,9 +425,21 @@ def create_form(
 
 @frappe.whitelist()
 def duplicate_form(name: str) -> dict:
-	"""A draft copy of a form — fields, texts, hidden defaults and settings."""
+	"""A draft copy of a form — fields, texts, hidden defaults and settings. A form
+	built outside the CRM builder (e.g. in Desk) is copied clean: only the rows a
+	CRM form can collect are kept, and the record's required hidden values are
+	seeded again. The original is never changed."""
 	_check_manager()
 	config = get_form_config(name)
+	if config["incompatible_fields"]:
+		catalog = {f["fieldname"] for f in _mappable_fields(config["document_type"])}
+		config["fields"] = [
+			f for f in config["fields"] if f["fieldtype"] in LAYOUT_BREAKS or f["fieldname"] in catalog
+		]
+		kept = {f["fieldname"] for f in config["fields"]}
+		seeds = {h["fieldname"]: h for h in _seed_hidden_fields(config["document_type"])}
+		current = {h.get("fieldname"): h for h in config["hidden_fields"] if h.get("fieldname") in seeds}
+		config["hidden_fields"] = [current.get(fn, seed) for fn, seed in seeds.items() if fn not in kept]
 	config.pop("name", None)
 	config["title"] = _("{0} (copy)").format(config["title"])
 	config["route"] = unique_route(config["route"] + "-copy")
@@ -507,8 +520,21 @@ def get_form_config(name: str) -> dict:
 			for f in doc.web_form_fields
 		],
 		"hidden_fields": _load_hidden_fields(doc),
+		"incompatible_fields": incompatible_fields(doc),
 		"settings": form_settings.of_form(doc),
 	}
+
+
+def incompatible_fields(doc) -> list[str]:
+	"""Labels of rows a CRM form can't collect — typical of a Web Form made in Desk
+	("Get Fields" dumps tables, page breaks and system fields). Such a form can't
+	be saved from the builder until those rows go; the builder offers a clean copy."""
+	catalog = {f["fieldname"] for f in _mappable_fields(doc.doc_type)}
+	return [
+		f.label or f.fieldname
+		for f in doc.web_form_fields
+		if f.fieldtype not in LAYOUT_BREAKS and f.fieldname not in catalog
+	]
 
 
 def _load_hidden_fields(doc) -> list[dict]:
