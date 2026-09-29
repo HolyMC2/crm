@@ -345,7 +345,9 @@ def _refresh(name, *, title, activity_type, due, owner, owner_skipped, descripti
 
 def _same(field, current, wanted) -> bool:
 	if field == "due_date":
-		return (cstr(get_datetime(current)) if current else "") == (cstr(get_datetime(wanted)) if wanted else "")
+		return (cstr(get_datetime(current)) if current else "") == (
+			cstr(get_datetime(wanted)) if wanted else ""
+		)
 	return cstr(current) == cstr(wanted)
 
 

@@ -28,7 +28,14 @@ class TestFlowMessages(test_outbox.TestOutbox):
 				"category": "LEAD_GENERATION",
 				"screens": [{"screen_id": "SCREEN_A", "screen_title": "Quote", "terminal": 1}],
 				"fields": [
-					{"screen": "SCREEN_A", "field_name": "first_name", "field_type": "TextInput", "label": "Name", "required": 1, "enabled": 1}
+					{
+						"screen": "SCREEN_A",
+						"field_name": "first_name",
+						"field_type": "TextInput",
+						"label": "Name",
+						"required": 1,
+						"enabled": 1,
+					}
 				],
 			}
 		).insert(ignore_permissions=True)
@@ -38,7 +45,10 @@ class TestFlowMessages(test_outbox.TestOutbox):
 
 	def queue_flow(self, flow, request_id=None, body="Fill in the quote"):
 		return api.queue_flow_message(
-			self.doc.name, 2, request_id or uuid4().hex, {"flow": flow, "body": body, "token_prefix": "wf1.abc"}
+			self.doc.name,
+			2,
+			request_id or uuid4().hex,
+			{"flow": flow, "body": body, "token_prefix": "wf1.abc"},
 		)
 
 	def test_outbox_flow_freezes_one_interactive_flow_and_replays_exactly(self):

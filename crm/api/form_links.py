@@ -55,5 +55,7 @@ def link(conversation, doctype, docname, *, source, added_by=None):
 				"source": str(source)[:120],
 			}
 		)
-		control._write_metadata(doc, {"context_links": json.dumps(links, sort_keys=True, separators=(",", ":"))})
+		control._write_metadata(
+			doc, {"context_links": json.dumps(links, sort_keys=True, separators=(",", ":"))}
+		)
 		return True

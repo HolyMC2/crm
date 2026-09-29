@@ -594,9 +594,14 @@ class TestFollowUpSourceContract(FollowUpTestCase):
 		self.answer = {"adopt": ["due_date", "not_a_field"]}
 		self.person_edit(created["name"], due_date=add_to_date(get_datetime(), days=5))
 
-		self.assertEqual(follow_up.open_tasks(source_doctype="ToDo", source_name=source)[0]["human_fields"], [])
+		self.assertEqual(
+			follow_up.open_tasks(source_doctype="ToDo", source_name=source)[0]["human_fields"], []
+		)
 		refreshed = self.upsert(deal, source, occurrence="evt-1", days=9)
-		self.assertEqual(get_datetime(self.task(created["name"]).due_date).date(), add_to_date(get_datetime(), days=9).date())
+		self.assertEqual(
+			get_datetime(self.task(created["name"]).due_date).date(),
+			add_to_date(get_datetime(), days=9).date(),
+		)
 		self.assertFalse(refreshed["human_edited"])
 
 	def test_reassign_is_per_field(self):
@@ -617,7 +622,9 @@ class TestFollowUpSourceContract(FollowUpTestCase):
 		with patch.object(follow_up, "_source_handler", return_value=None):
 			self.person_edit(created["name"], title="Solo en CRM")
 		self.assertEqual(self.calls, [])
-		self.assertEqual(follow_up.open_tasks(source_doctype="ToDo", source_name=source)[0]["human_fields"], ["title"])
+		self.assertEqual(
+			follow_up.open_tasks(source_doctype="ToDo", source_name=source)[0]["human_fields"], ["title"]
+		)
 
 
 # The contract class borrows FollowUpTestCase's fixtures, not its tests: those

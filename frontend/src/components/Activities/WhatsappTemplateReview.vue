@@ -224,7 +224,8 @@ async function saveMap() {
 const renderedBody = computed(() => {
   let body = preview.data?.body || ''
   for (const v of vars.value) {
-    if ((v.value ?? '').trim()) body = body.replaceAll(`{{${v.index}}}`, v.value)
+    if ((v.value ?? '').trim())
+      body = body.replaceAll(`{{${v.index}}}`, v.value)
   }
   return body
 })
