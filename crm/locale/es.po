@@ -18,6 +18,946 @@ msgstr ""
 "X-Crowdin-File-ID: 97\n"
 "Language: es_ES\n"
 
+# CRM forms (templates, builder, public page)
+msgid "Published"
+msgstr "Publicado"
+
+msgid "Open link"
+msgstr "Abrir enlace"
+
+msgid "Click to rename"
+msgstr "Clic para renombrar"
+
+msgid "Required by the record"
+msgstr "El registro lo requiere"
+
+msgid "Guests can't see {0} records yet. Open to grant access."
+msgstr "Los visitantes aún no pueden ver registros de {0}. Abre para dar acceso."
+
+msgid "Edit field"
+msgstr "Editar campo"
+
+msgid "Required"
+msgstr "Obligatorio"
+
+msgid "This field is required by the record and can't be made optional. Remove it to move it to hidden fields."
+msgstr "El registro requiere este campo y no puede ser opcional. Quítalo para moverlo a los campos ocultos."
+
+msgid "Placeholder"
+msgstr "Texto de ejemplo"
+
+msgid "Optional"
+msgstr "Opcional"
+
+msgid "Helper text under the field (optional)"
+msgstr "Texto de ayuda bajo el campo (opcional)"
+
+msgid "Conditional logic"
+msgstr "Lógica condicional"
+
+msgid "Frappe expression referencing other fields as doc.<fieldname>, e.g. eval:doc.country == 'India'. Leave blank for no condition."
+msgstr "Expresión de Frappe que usa otros campos como doc.<campo>, p. ej. eval:doc.country == 'México'. Déjalo vacío para no poner condición."
+
+msgid "Visible if"
+msgstr "Visible si"
+
+msgid "Mandatory if"
+msgstr "Obligatorio si"
+
+msgid "Read-only if"
+msgstr "Solo lectura si"
+
+msgid "Guests can't see {0} records. Grant select access to list them publicly."
+msgstr "Los visitantes no pueden ver registros de {0}. Da acceso de selección para listarlos en público."
+
+msgid "Grant Access"
+msgstr "Dar acceso"
+
+msgid "Test submission"
+msgstr "Envío de prueba"
+
+msgid "A visitor would see this error too. Fix the form or the values, then send the test again."
+msgstr "Un visitante también vería este error. Corrige el formulario o los valores y vuelve a enviar la prueba."
+
+msgid "Everything above was undone. Nothing was saved and no message was sent."
+msgstr "Todo lo anterior se deshizo. No se guardó nada ni se envió ningún mensaje."
+
+msgid "A lead is created: {0}"
+msgstr "Se crea un lead: {0}"
+
+msgid "A deal is created: {0}"
+msgstr "Se crea un trato: {0}"
+
+msgid "Status: {0}"
+msgstr "Estado: {0}"
+
+msgid "Source: {0}"
+msgstr "Origen: {0}"
+
+msgid "Its timeline shows the form and the visitor’s message."
+msgstr "Su historial muestra el formulario y el mensaje del visitante."
+
+msgid "Assigned to {0}"
+msgstr "Asignado a {0}"
+
+msgid "Nobody is assigned yet"
+msgstr "Aún no se asigna a nadie"
+
+msgid "Chosen in this form’s settings."
+msgstr "Elegido en la configuración de este formulario."
+
+msgid "Chosen by your assignment rules."
+msgstr "Elegido por tus reglas de asignación."
+
+msgid "It waits in the unassigned list. Pick an owner under “After someone submits”."
+msgstr "Se queda en la lista sin asignar. Elige un responsable en «Cuando alguien envía»."
+
+msgid "Notified: {0}"
+msgstr "Se avisa a: {0}"
+
+msgid "No one is notified"
+msgstr "No se avisa a nadie"
+
+msgid "They get an in-app notification that opens the record."
+msgstr "Reciben una notificación en la app que abre el registro."
+
+msgid "People are not told about their own actions. In a real submission the assignee is notified."
+msgstr "Nadie recibe aviso de sus propias acciones. En un envío real se avisa al responsable."
+
+msgid "Follow-up started: {0}"
+msgstr "Seguimiento iniciado: {0}"
+
+msgid "No follow-up campaign"
+msgstr "Sin campaña de seguimiento"
+
+msgid "{0}: this contact opted out, so nothing will be sent."
+msgstr "{0}: este contacto se dio de baja, así que no se enviará nada."
+
+msgid "{0}: from this form. Messages follow the campaign’s steps."
+msgstr "{0}: desde este formulario. Los mensajes siguen los pasos de la campaña."
+
+msgid "{0}: starts for every new lead."
+msgstr "{0}: inicia con cada lead nuevo."
+
+msgid "Where it came from is recorded"
+msgstr "Se registra de dónde vino"
+
+msgid "Link tags: {0}"
+msgstr "Etiquetas del enlace: {0}"
+
+msgid "The test uses the tags source “test”."
+msgstr "La prueba usa la etiqueta de origen «test»."
+
+msgid "WhatsApp consent is logged with the text shown."
+msgstr "El consentimiento de WhatsApp se registra con el texto mostrado."
+
+msgid "Forms"
+msgstr "Formularios"
+
+msgid "Forms have their own page now: build a form from a template, choose who follows up, share its link or QR code, and see every submission."
+msgstr "Los formularios ahora tienen su propia página: crea uno desde una plantilla, elige quién da seguimiento, comparte su enlace o código QR y ve cada envío."
+
+msgid "Open Forms"
+msgstr "Abrir Formularios"
+
+msgid "Fields"
+msgstr "Campos"
+
+msgid "More fields"
+msgstr "Más campos"
+
+msgid "Guests can now select {0} records."
+msgstr "Los visitantes ya pueden elegir registros de {0}."
+
+msgid "Could not grant guest access."
+msgstr "No se pudo dar acceso a visitantes."
+
+msgid "A section can have up to {0} columns"
+msgstr "Una sección puede tener hasta {0} columnas"
+
+msgid "{0} is now hidden. Set the value it should get."
+msgstr "{0} ahora está oculto. Define el valor que debe recibir."
+
+msgid "Change what this form creates?"
+msgstr "¿Cambiar lo que crea este formulario?"
+
+msgid "Switching to {0} will remove {1} field(s) that don't exist on {0}."
+msgstr "Cambiar a {0} quitará {1} campo(s) que no existen en {0}."
+
+msgid "Switch and remove fields"
+msgstr "Cambiar y quitar campos"
+
+msgid "{0} field(s) removed. Not available on {1}."
+msgstr "Se quitaron {0} campo(s). No existen en {1}."
+
+msgid "Finish the checklist before this form can stay live."
+msgstr "Completa la lista antes de que este formulario pueda seguir publicado."
+
+msgid "Could not save"
+msgstr "No se pudo guardar"
+
+msgid "Form published"
+msgstr "Formulario publicado"
+
+msgid "Form unpublished"
+msgstr "Formulario despublicado"
+
+msgid "To do"
+msgstr "Pendiente"
+
+msgid "Recommended"
+msgstr "Recomendado"
+
+msgid "No submissions yet"
+msgstr "Aún no hay envíos"
+
+msgid "Share the link or QR code. Each submission shows up here and in your {0} list."
+msgstr "Comparte el enlace o el código QR. Cada envío aparece aquí y en tu lista de {0}."
+
+msgid "Publish the form and share its link. Each submission shows up here."
+msgstr "Publica el formulario y comparte su enlace. Cada envío aparece aquí."
+
+msgid "Share the form"
+msgstr "Compartir el formulario"
+
+msgid "from {0}"
+msgstr "desde {0}"
+
+msgid "unassigned"
+msgstr "sin asignar"
+
+msgid "Deal: {0}"
+msgstr "Trato: {0}"
+
+msgid "Load more"
+msgstr "Cargar más"
+
+msgid "Last 7 days"
+msgstr "Últimos 7 días"
+
+msgid "Last 30 days"
+msgstr "Últimos 30 días"
+
+msgid "became deals · {0} won"
+msgstr "se volvieron tratos · {0} ganados"
+
+msgid "became deals"
+msgstr "se volvieron tratos"
+
+msgid "won"
+msgstr "ganados"
+
+msgid "New form"
+msgstr "Nuevo formulario"
+
+msgid "Pick a starting point. Everything can be changed afterwards."
+msgstr "Elige un punto de partida. Todo se puede cambiar después."
+
+msgid "Web address"
+msgstr "Dirección web"
+
+msgid "If it’s taken, a number is added."
+msgstr "Si ya existe, se le agrega un número."
+
+msgid "Use lowercase letters, numbers and dashes."
+msgstr "Usa minúsculas, números y guiones."
+
+msgid "Each submission creates"
+msgstr "Cada envío crea"
+
+msgid "Language visitors see"
+msgstr "Idioma que ven los visitantes"
+
+msgid "Create form"
+msgstr "Crear formulario"
+
+msgid "Blank form"
+msgstr "Formulario en blanco"
+
+msgid "Could not create form"
+msgstr "No se pudo crear el formulario"
+
+msgid "Form title"
+msgstr "Título del formulario"
+
+msgid "Add a short line that tells people why to fill this in"
+msgstr "Agrega una línea corta que diga por qué llenarlo"
+
+msgid "{business} shows your business name: {0}"
+msgstr "{business} muestra el nombre de tu negocio: {0}"
+
+msgid "not set"
+msgstr "sin definir"
+
+msgid "Drag to reorder section"
+msgstr "Arrastra para reordenar la sección"
+
+msgid "Section title"
+msgstr "Título de la sección"
+
+msgid "Untitled section"
+msgstr "Sección sin título"
+
+msgid "Section options"
+msgstr "Opciones de la sección"
+
+msgid "Search fields…"
+msgstr "Buscar campos…"
+
+msgid "Add a question"
+msgstr "Agregar una pregunta"
+
+msgid "Add a section"
+msgstr "Agregar una sección"
+
+msgid "Filled in automatically"
+msgstr "Se llenan automáticamente"
+
+msgid "The record needs these, but visitors don't see them. Each new submission gets the value you pick here."
+msgstr "El registro los necesita, pero los visitantes no los ven. Cada envío nuevo recibe el valor que elijas aquí."
+
+msgid "Rename"
+msgstr "Renombrar"
+
+msgid "Remove section"
+msgstr "Quitar sección"
+
+msgid "Add a column"
+msgstr "Agregar una columna"
+
+msgid "Remove last column"
+msgstr "Quitar la última columna"
+
+msgid "What visitors see"
+msgstr "Lo que ven los visitantes"
+
+msgid "Preview size"
+msgstr "Tamaño de la vista previa"
+
+msgid "Thank you!"
+msgstr "¡Gracias!"
+
+msgid "Then visitors go to {0}"
+msgstr "Después los visitantes van a {0}"
+
+msgid "Fill it in again"
+msgstr "Llenarlo otra vez"
+
+msgid "Add a question and it shows up here."
+msgstr "Agrega una pregunta y aparecerá aquí."
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "Fill it in above, then send a test to see the record it creates. Nothing is saved."
+msgstr "Llénalo arriba y envía una prueba para ver el registro que crea. No se guarda nada."
+
+msgid "Send a test"
+msgstr "Enviar una prueba"
+
+msgid "Desktop"
+msgstr "Escritorio"
+
+msgid "Select…"
+msgstr "Selecciona…"
+
+msgid "Decide what happens the moment someone sends this form, so every submission reaches a person and a next step."
+msgstr "Decide qué pasa en cuanto alguien envía este formulario, para que cada envío llegue a una persona y tenga un siguiente paso."
+
+msgid "A lead is someone to qualify. A deal is a real sale opportunity from the start."
+msgstr "Un lead es alguien por calificar. Un trato es una oportunidad de venta real desde el inicio."
+
+msgid "Goes to your Leads list"
+msgstr "Va a tu lista de Leads"
+
+msgid "Goes straight to your Deals pipeline"
+msgstr "Va directo a tu embudo de Tratos"
+
+msgid "Starting status"
+msgstr "Estado inicial"
+
+msgid "Who follows up"
+msgstr "Quién da seguimiento"
+
+msgid "The owner is assigned and gets a notification."
+msgstr "Se asigna al responsable y recibe una notificación."
+
+msgid "Choose a person"
+msgstr "Elige a una persona"
+
+msgid "Assign to"
+msgstr "Asignar a"
+
+msgid "Choose who gets new submissions."
+msgstr "Elige quién recibe los envíos nuevos."
+
+msgid "Also tell"
+msgstr "Avisar también a"
+
+msgid "People who should hear about every submission, like a manager. They get an in-app notification."
+msgstr "Personas que deben enterarse de cada envío, como un gerente. Reciben una notificación en la app."
+
+msgid "Remove {0}"
+msgstr "Quitar a {0}"
+
+msgid "Add a person"
+msgstr "Agregar a una persona"
+
+msgid "How often"
+msgstr "Con qué frecuencia"
+
+msgid "Start a follow-up"
+msgstr "Iniciar un seguimiento"
+
+msgid "Enroll each new lead in a campaign. Messages go out on the campaign’s own schedule, and never to people who opted out."
+msgstr "Inscribe cada lead nuevo en una campaña. Los mensajes salen según el calendario de la campaña y nunca a quien se dio de baja."
+
+msgid "Follow-up campaign"
+msgstr "Campaña de seguimiento"
+
+msgid "No active campaigns yet."
+msgstr "Aún no hay campañas activas."
+
+msgid "Open Campaigns"
+msgstr "Abrir Campañas"
+
+msgid "See the campaign’s steps"
+msgstr "Ver los pasos de la campaña"
+
+msgid "Every new lead also joins: {0}"
+msgstr "Cada lead nuevo también entra a: {0}"
+
+msgid "Follow-up campaigns work with forms that create leads."
+msgstr "Las campañas de seguimiento funcionan con formularios que crean leads."
+
+msgid "Ask for WhatsApp consent"
+msgstr "Pedir consentimiento de WhatsApp"
+
+msgid "Adds an optional checkbox. When ticked, the consent is recorded with the exact text shown."
+msgstr "Agrega una casilla opcional. Si la marcan, el consentimiento se registra con el texto exacto mostrado."
+
+msgid "Checkbox text"
+msgstr "Texto de la casilla"
+
+msgid "Yes, send me offers and news from {business} on WhatsApp."
+msgstr "Sí, envíenme ofertas y novedades de {business} por WhatsApp."
+
+msgid "Add a phone or mobile field — the checkbox only shows on forms that ask for one."
+msgstr "Agrega un campo de teléfono o celular: la casilla solo aparece en formularios que lo piden."
+
+msgid "{0} active assignment rule(s) pick the owner."
+msgstr "{0} regla(s) de asignación activa(s) eligen al responsable."
+
+msgid "Auto-assign gives it to the least busy salesperson."
+msgstr "La asignación automática lo da al vendedor con menos carga."
+
+msgid "No rules are active, so submissions stay unassigned until someone picks them up."
+msgstr "No hay reglas activas, así que los envíos quedan sin asignar hasta que alguien los tome."
+
+msgid "Use my assignment rules"
+msgstr "Usar mis reglas de asignación"
+
+msgid "Always the same person"
+msgstr "Siempre la misma persona"
+
+msgid "Good for a form one person looks after."
+msgstr "Útil para un formulario que atiende una sola persona."
+
+msgid "Every submission"
+msgstr "Cada envío"
+
+msgid "Daily summary"
+msgstr "Resumen diario"
+
+msgid "No follow-up"
+msgstr "Sin seguimiento"
+
+msgid "{0} (not active)"
+msgstr "{0} (no activa)"
+
+msgid "Give the form a title"
+msgstr "Ponle un título al formulario"
+
+msgid "Choose a web address"
+msgstr "Elige una dirección web"
+
+msgid "Lowercase letters, numbers and dashes only."
+msgstr "Solo minúsculas, números y guiones."
+
+msgid "Add at least one field"
+msgstr "Agrega al menos un campo"
+
+msgid "Set a value for every hidden field"
+msgstr "Define un valor para cada campo oculto"
+
+msgid "Ask for a phone or email so you can reply"
+msgstr "Pide un teléfono o correo para poder responder"
+
+msgid "New submissions go to {0}"
+msgstr "Los envíos nuevos van a {0}"
+
+msgid "Assignment rules decide who follows up"
+msgstr "Las reglas de asignación deciden quién da seguimiento"
+
+msgid "Instagram bio"
+msgstr "Biografía de Instagram"
+
+msgid "Paste into your profile link."
+msgstr "Pégalo en el enlace de tu perfil."
+
+msgid "Posts, page button or ads."
+msgstr "Publicaciones, botón de la página o anuncios."
+
+msgid "WhatsApp status"
+msgstr "Estado de WhatsApp"
+
+msgid "Share in a status or a chat."
+msgstr "Compártelo en un estado o en un chat."
+
+msgid "Printed flyer / QR"
+msgstr "Volante impreso / QR"
+
+msgid "For posters, receipts and the counter."
+msgstr "Para carteles, tickets y el mostrador."
+
+msgid "Your website"
+msgstr "Tu sitio web"
+
+msgid "A button or link on your own site."
+msgstr "Un botón o enlace en tu propio sitio."
+
+msgid "The words around the questions. Use {business} for your business name."
+msgstr "Los textos alrededor de las preguntas. Usa {business} para el nombre de tu negocio."
+
+msgid "Button text"
+msgstr "Texto del botón"
+
+msgid "Thank-you message"
+msgstr "Mensaje de agradecimiento"
+
+msgid "Thanks! We got your message and will reply soon."
+msgstr "¡Gracias! Recibimos tu mensaje y te responderemos pronto."
+
+msgid "Then send visitors to (optional)"
+msgstr "Después enviar a los visitantes a (opcional)"
+
+msgid "After the thank-you message, visitors go to this page. Leave blank to stay on the message."
+msgstr "Después del agradecimiento, los visitantes van a esta página. Déjalo vacío para quedarse en el mensaje."
+
+msgid "Use a full address starting with https://"
+msgstr "Usa una dirección completa que empiece con https://"
+
+msgid "Changing it breaks links and QR codes you already shared."
+msgstr "Cambiarla rompe los enlaces y códigos QR que ya compartiste."
+
+msgid "The end of the link people open."
+msgstr "El final del enlace que abre la gente."
+
+msgid "Start with name, email and phone, and build from there."
+msgstr "Empieza con nombre, correo y teléfono, y ve construyendo."
+
+msgid "This form is a draft. The link only works for you until you publish it."
+msgstr "Este formulario es un borrador. El enlace solo te funciona a ti hasta que lo publiques."
+
+msgid "Anyone with it can fill in the form. No login needed."
+msgstr "Cualquiera con el enlace puede llenar el formulario. No necesita cuenta."
+
+msgid "Copy link"
+msgstr "Copiar enlace"
+
+msgid "Share on WhatsApp"
+msgstr "Compartir por WhatsApp"
+
+msgid "Share…"
+msgstr "Compartir…"
+
+msgid "Tagged for {0}."
+msgstr "Etiquetado para {0}."
+
+msgid "Use the plain link"
+msgstr "Usar el enlace simple"
+
+msgid "QR code for {0}"
+msgstr "Código QR para {0}"
+
+msgid "A link for each place you share it"
+msgstr "Un enlace para cada lugar donde lo compartes"
+
+msgid "Each link tags where the visitor came from, so every submission shows its source."
+msgstr "Cada enlace marca de dónde vino el visitante, así cada envío muestra su origen."
+
+msgid "Copy {0} link"
+msgstr "Copiar enlace de {0}"
+
+msgid "Show the QR code for {0}"
+msgstr "Mostrar el código QR de {0}"
+
+msgid "Put it on your website"
+msgstr "Ponlo en tu sitio web"
+
+msgid "Paste this code where the form should appear."
+msgstr "Pega este código donde debe aparecer el formulario."
+
+msgid "Embed code"
+msgstr "Código para insertar"
+
+msgid "Copy embed code"
+msgstr "Copiar código para insertar"
+
+msgid "Websites allowed to show it"
+msgstr "Sitios que pueden mostrarlo"
+
+msgid "Not a valid address, will be ignored: {0}"
+msgstr "No es una dirección válida, se ignorará: {0}"
+
+msgid "One per line. Browsers block the form on sites not listed here."
+msgstr "Uno por línea. Los navegadores bloquean el formulario en sitios que no estén aquí."
+
+msgid "the plain link"
+msgstr "el enlace simple"
+
+msgid "Could not make the QR code"
+msgstr "No se pudo generar el código QR"
+
+msgid "Collect leads from a link"
+msgstr "Consigue leads con un enlace"
+
+msgid "Make a form, share its link or QR code on Instagram, WhatsApp or a flyer, and every answer lands in your CRM with an owner and a next step."
+msgstr "Crea un formulario, comparte su enlace o código QR en Instagram, WhatsApp o un volante, y cada respuesta llega a tu CRM con un responsable y un siguiente paso."
+
+msgid "Draft"
+msgstr "Borrador"
+
+msgid "creates deals"
+msgstr "crea tratos"
+
+msgid "creates leads"
+msgstr "crea leads"
+
+msgid "7 days"
+msgstr "7 días"
+
+msgid "30 days"
+msgstr "30 días"
+
+msgid "Last submission {0}"
+msgstr "Último envío {0}"
+
+msgid "QR code"
+msgstr "Código QR"
+
+msgid "More actions for {0}"
+msgstr "Más acciones para {0}"
+
+msgid "{0} notified"
+msgstr "{0} con aviso"
+
+msgid "Follow-up"
+msgstr "Seguimiento"
+
+msgid "Asks consent"
+msgstr "Pide consentimiento"
+
+msgid "{0}% became deals, {1} won"
+msgstr "{0}% se volvieron tratos, {1} ganados"
+
+msgid "{0}% became deals"
+msgstr "{0}% se volvieron tratos"
+
+msgid "{0}% won"
+msgstr "{0}% ganados"
+
+msgid "Could not update form"
+msgstr "No se pudo actualizar el formulario"
+
+msgid "Copy created as a draft"
+msgstr "Copia creada como borrador"
+
+msgid "Could not duplicate form"
+msgstr "No se pudo duplicar el formulario"
+
+msgid "Submissions"
+msgstr "Envíos"
+
+msgid "Open public page"
+msgstr "Abrir página pública"
+
+msgid "Unpublish"
+msgstr "Despublicar"
+
+msgid "Publish"
+msgstr "Publicar"
+
+msgid "Form deleted"
+msgstr "Formulario eliminado"
+
+msgid "Untitled form"
+msgstr "Formulario sin título"
+
+msgid "Unsaved changes"
+msgstr "Cambios sin guardar"
+
+msgid "Before it goes live"
+msgstr "Antes de publicarlo"
+
+msgid "Ready to publish"
+msgstr "Listo para publicar"
+
+msgid "{0} of {1} steps done before publishing"
+msgstr "{0} de {1} pasos listos para publicar"
+
+msgid "Preview"
+msgstr "Vista previa"
+
+msgid "Messages"
+msgstr "Mensajes"
+
+msgid "After someone submits"
+msgstr "Cuando alguien envía"
+
+msgid "Share"
+msgstr "Compartir"
+
+msgid "Form saved"
+msgstr "Formulario guardado"
+
+msgid "Unpublish this form?"
+msgstr "¿Despublicar este formulario?"
+
+msgid "The link and QR code stop working until you publish it again."
+msgstr "El enlace y el código QR dejan de funcionar hasta que lo vuelvas a publicar."
+
+msgid "The test could not run"
+msgstr "No se pudo hacer la prueba"
+
+msgid "Leave without saving? Your changes will be lost."
+msgstr "¿Salir sin guardar? Perderás tus cambios."
+
+msgid "Return to work queue"
+msgstr "Volver a la cola de trabajo"
+
+msgid "Return to report"
+msgstr "Volver al reporte"
+
+msgid "Return to form submissions"
+msgstr "Volver a los envíos del formulario"
+
+msgid "Return to queue"
+msgstr "Volver a la cola"
+
+msgid "A QR code can only point at this form's own link."
+msgstr "Un código QR solo puede apuntar al enlace de este formulario."
+
+msgid "That link is too long for a QR code."
+msgstr "Ese enlace es demasiado largo para un código QR."
+
+msgid "Choose who new submissions are assigned to, or leave it to assignment rules."
+msgstr "Elige a quién se asignan los envíos nuevos, o déjalo a las reglas de asignación."
+
+msgid "Campaign {0} can't be used as a form follow-up."
+msgstr "La campaña {0} no se puede usar como seguimiento de un formulario."
+
+msgid "Follow-up campaigns are available for forms that create leads."
+msgstr "Las campañas de seguimiento están disponibles para formularios que crean leads."
+
+msgid "Write the consent text visitors agree to."
+msgstr "Escribe el texto de consentimiento que aceptan los visitantes."
+
+msgid "Unknown language: {0}"
+msgstr "Idioma desconocido: {0}"
+
+msgid "{0} isn't an active CRM user."
+msgstr "{0} no es un usuario activo del CRM."
+
+msgid "Submitted through the form «{0}»."
+msgstr "Enviado desde el formulario «{0}»."
+
+msgid "Campaign link: {0}"
+msgstr "Enlace de campaña: {0}"
+
+msgid "New submission on <span class=\"font-medium text-ink-gray-9\">{0}</span>: <span class=\"font-medium text-ink-gray-9\">{1}</span>"
+msgstr "Nuevo envío en <span class=\"font-medium text-ink-gray-9\">{0}</span>: <span class=\"font-medium text-ink-gray-9\">{1}</span>"
+
+msgid "Form «{0}»"
+msgstr "Formulario «{0}»"
+
+msgid "<span class=\"font-medium text-ink-gray-9\">{0}</span> received {1} new submission(s) yesterday"
+msgstr "<span class=\"font-medium text-ink-gray-9\">{0}</span> recibió {1} envío(s) nuevo(s) ayer"
+
+msgid "Fill in the required fields: {0}"
+msgstr "Llena los campos obligatorios: {0}"
+
+msgid "The record couldn't be created."
+msgstr "No se pudo crear el registro."
+
+msgid "Contact us"
+msgstr "Contáctanos"
+
+msgid "A simple way for visitors to reach you. Collects name, phone, email and a message."
+msgstr "Una forma sencilla de que te contacten. Pide nombre, teléfono, correo y un mensaje."
+
+msgid "Request a quote"
+msgstr "Pide una cotización"
+
+msgid "Visitors describe what they need so you can send a price. Adds company and details."
+msgstr "El visitante describe lo que necesita para que le mandes un precio. Incluye empresa y detalles."
+
+msgid "Book a visit"
+msgstr "Agenda una visita"
+
+msgid "Visitors ask for a day and time to come in. You confirm by message."
+msgstr "El visitante pide día y hora para venir. Tú confirmas por mensaje."
+
+msgid "Promo sign-up"
+msgstr "Registro a promociones"
+
+msgid "Grow your WhatsApp list for offers. Includes an opt-in checkbox so consent is recorded."
+msgstr "Haz crecer tu lista de WhatsApp para ofertas. Incluye una casilla de aceptación para registrar el consentimiento."
+
+msgid "Unknown form template: {0}"
+msgstr "Plantilla de formulario desconocida: {0}"
+
+msgid "Forms can only map to: {0}"
+msgstr "Los formularios solo pueden crear: {0}"
+
+msgid "{0} isn't a linkable field on a CRM form."
+msgstr "{0} no es un campo vinculable en un formulario del CRM."
+
+msgid "{0} (copy)"
+msgstr "{0} (copia)"
+
+msgid "Set a default value before publishing for: {0}"
+msgstr "Define un valor predeterminado antes de publicar para: {0}"
+
+msgid "Give the form a title before publishing."
+msgstr "Ponle un título al formulario antes de publicarlo."
+
+msgid "Give the form a web address before publishing."
+msgstr "Ponle una dirección web al formulario antes de publicarlo."
+
+msgid "Add at least one field before publishing."
+msgstr "Agrega al menos un campo antes de publicar."
+
+msgid "{0} can't be used as a layout break"
+msgstr "{0} no se puede usar como separador"
+
+msgid "{0} can't be collected by a form"
+msgstr "{0} no se puede pedir en un formulario"
+
+msgid "Unnamed field"
+msgstr "Campo sin nombre"
+
+msgid "{0} can't be set as a hidden field"
+msgstr "{0} no puede ser un campo oculto"
+
+msgid "Not a CRM form"
+msgstr "No es un formulario del CRM"
+
+msgid "Please fill in the required field: {0}"
+msgstr "Llena el campo obligatorio: {0}"
+
+msgid "Please fill in all required fields."
+msgstr "Llena todos los campos obligatorios."
+
+msgid "Submitting…"
+msgstr "Enviando…"
+
+msgid "Something went wrong. Please try again."
+msgstr "Algo salió mal. Inténtalo de nuevo."
+
+msgid "Sorry, we couldn't submit your response. Please try again."
+msgstr "No pudimos enviar tu respuesta. Inténtalo de nuevo."
+
+msgid "Your response has been recorded."
+msgstr "Tu respuesta quedó registrada."
+
+msgid "Test submission — no record was created. Publish the form to start collecting responses."
+msgstr "Envío de prueba: no se creó ningún registro. Publica el formulario para empezar a recibir respuestas."
+
+msgid "Redirecting in {0} seconds…"
+msgstr "Redirigiendo en {0} segundos…"
+
+msgid "Go now"
+msgstr "Ir ahora"
+
+msgid "Draft preview — only you can see this. Publish the form to make it public."
+msgstr "Vista previa del borrador: solo tú la ves. Publica el formulario para hacerlo público."
+
+msgid "Mobile"
+msgstr "Celular"
+
+msgid "Tell us what you need and {business} will get back to you shortly."
+msgstr "Cuéntanos qué necesitas y {business} te responderá muy pronto."
+
+msgid "Your details"
+msgstr "Tus datos"
+
+msgid "How can we help?"
+msgstr "¿En qué te podemos ayudar?"
+
+msgid "Tell {business} what you need and we'll send you a price."
+msgstr "Cuéntale a {business} qué necesitas y te enviamos un precio."
+
+msgid "Request quote"
+msgstr "Pedir cotización"
+
+msgid "Thanks! We'll prepare your quote and contact you soon."
+msgstr "¡Gracias! Preparamos tu cotización y te contactamos pronto."
+
+msgid "Company (optional)"
+msgstr "Empresa (opcional)"
+
+msgid "What you need"
+msgstr "Lo que necesitas"
+
+msgid "What would you like a quote for?"
+msgstr "¿De qué quieres la cotización?"
+
+msgid "Models, quantities, deadlines — any detail helps."
+msgstr "Modelos, cantidades, fechas: cualquier detalle ayuda."
+
+msgid "Choose when you'd like to come in and {business} will confirm by message."
+msgstr "Elige cuándo quieres venir y {business} te confirma por mensaje."
+
+msgid "Request visit"
+msgstr "Pedir visita"
+
+msgid "Thanks! We'll confirm your visit shortly."
+msgstr "¡Gracias! Te confirmamos tu visita en breve."
+
+msgid "Your visit"
+msgstr "Tu visita"
+
+msgid "When would you like to come in?"
+msgstr "¿Cuándo te gustaría venir?"
+
+msgid "e.g. Saturday morning"
+msgstr "p. ej. sábado en la mañana"
+
+msgid "Tell us a day and time that works for you — we'll confirm by message."
+msgstr "Dinos un día y hora que te acomoden; te confirmamos por mensaje."
+
+msgid "Get our offers"
+msgstr "Recibe nuestras ofertas"
+
+msgid "Join the {business} list and be the first to hear about offers and news."
+msgstr "Únete a la lista de {business} y entérate primero de ofertas y novedades."
+
+msgid "Sign me up"
+msgstr "Quiero registrarme"
+
+msgid "You're in! Watch your WhatsApp for our next offer."
+msgstr "¡Listo! Pronto te llega nuestra próxima oferta por WhatsApp."
+
+msgid "WhatsApp number"
+msgstr "Número de WhatsApp"
+
+msgid "Form Message"
+msgstr "Mensaje del formulario"
+
+msgid "Source Form"
+msgstr "Formulario de origen"
+
 #: frontend/src/components/ViewControls.vue:1176
 msgid " (New)"
 msgstr " (Nuevo)"

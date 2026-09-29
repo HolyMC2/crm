@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ lang or 'en' }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -166,6 +166,13 @@
         color: var(--ink-strong);               /* ink-gray-9 */
         font: 400 14px/1.5 "Inter", sans-serif; text-align: left;
       }
+      .brand { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
+      .brand img { width: 32px; height: 32px; border-radius: 8px; object-fit: contain; }
+      .brand span { font-size: 13px; font-weight: 600; color: var(--muted); }
+      body.embed .brand { display: none; }
+      .consent { display: flex; align-items: flex-start; gap: 9px; margin: 4px 0 18px; }
+      .consent input { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); }
+      .consent label { font-size: 13px; color: var(--muted); line-height: 1.45; }
       .draft-banner svg { flex-shrink: 0; width: 16px; height: 16px; margin-top: 1px; color: oklch(0.599 0.141 56.803); }
     </style>
   </head>
@@ -178,6 +185,12 @@
     {% endif %}
     <div class="card">
       <div id="form-view">
+        {% if brand_logo or business_name %}
+        <div class="brand">
+          {% if brand_logo %}<img src="{{ brand_logo }}" alt="" />{% endif %}
+          {% if business_name %}<span>{{ business_name }}</span>{% endif %}
+        </div>
+        {% endif %}
         <h1 class="title{% if not form_description %} title-only{% endif %}">{{ form_title }}</h1>
         {% if form_description %}<p class="subtitle">{{ form_description }}</p>{% endif %}
 
@@ -204,12 +217,12 @@
                   <textarea id="{{ f.fieldname }}" name="{{ f.fieldname }}" placeholder="{{ f.placeholder }}" {% if f.reqd %}required{% endif %}></textarea>
                   {% elif f.fieldtype == "Select" %}
                   <select id="{{ f.fieldname }}" name="{{ f.fieldname }}" {% if f.reqd %}required{% endif %}>
-                    <option value="">Select…</option>
+                    <option value="">{{ i18n.select }}</option>
                     {% for opt in f.options.split("\n") %}{% if opt %}<option value="{{ opt }}">{{ opt }}</option>{% endif %}{% endfor %}
                   </select>
                   {% elif f.fieldtype == "Link" %}
                   <select id="{{ f.fieldname }}" name="{{ f.fieldname }}" {% if f.reqd %}required{% endif %}>
-                    <option value="">{{ f.placeholder or "Select…" }}</option>
+                    <option value="">{{ f.placeholder or i18n.select }}</option>
                     {% for opt in link_options.get(f.fieldname, []) %}<option value="{{ opt.value }}">{{ opt.label }}</option>{% endfor %}
                   </select>
                   {% elif f.fieldtype in ("Int", "Float", "Currency", "Percent") %}
@@ -237,6 +250,13 @@
           </div>
           {% endfor %}
 
+          {% if consent_text %}
+          <div class="consent">
+            <input type="checkbox" id="crm-consent" name="crm_consent" />
+            <label for="crm-consent">{{ consent_text }}</label>
+          </div>
+          {% endif %}
+
           <div class="actions">
             <button type="reset" class="discard" id="discard-btn">{{ _("Discard") }}</button>
             <button type="submit" class="submit" id="submit-btn">{{ submit_label }}</button>
@@ -247,7 +267,7 @@
       <div class="success" id="success-view" style="display: none">
         <div class="check-ring">&#10003;</div>
         <h2 id="success-title">{{ success_message }}</h2>
-        <p id="success-note">Your response has been recorded.</p>
+        <p id="success-note">{{ i18n.recorded }}</p>
         <p class="redirect-note" id="redirect-note" style="display: none"></p>
       </div>
     </div>
@@ -261,6 +281,25 @@
         var DRAFT = {{ draft_preview | tojson }};
         var SUCCESS_URL = {{ success_url | tojson }};
         var EMBED = {{ embed | tojson }};
+        var I18N = {{ i18n | tojson }};
+        function t(key, arg) {
+          var s = I18N[key] || "";
+          return arg === undefined ? s : s.replace("{0}", arg);
+        }
+        // attribution: UTM tags on this page's own link (a shared/printed link
+        // carries them), plus where the visitor came from
+        var UTM = (function () {
+          var out = {};
+          try {
+            var q = new URLSearchParams(window.location.search);
+            ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach(function (k) {
+              var v = q.get(k);
+              if (v) out[k] = v.slice(0, 140);
+            });
+            if (document.referrer) out.page = document.referrer.slice(0, 500);
+          } catch (e) {}
+          return out;
+        })();
         var form = document.getElementById("web-form");
         var errBox = document.getElementById("form-error");
         var okBox = document.getElementById("form-ok");
@@ -457,13 +496,13 @@
         }
 
         function showError(msg) {
-          errBox.textContent = msg || "Something went wrong. Please try again.";
+          errBox.textContent = msg || t("error");
           errBox.style.display = "block";
           errBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
         // transient success acknowledgement used in embed mode (auto-hides)
         function showOk(msg) {
-          okBox.textContent = msg || "Your response has been recorded.";
+          okBox.textContent = msg || t("recorded");
           okBox.style.display = "block";
           okBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
           clearTimeout(showOk._t);
@@ -480,11 +519,10 @@
           var note = document.getElementById("redirect-note");
           var link = document.createElement("a");
           link.href = url;
-          link.textContent = "Go now";
+          link.textContent = t("go_now");
           var secs = 5;
           function render() {
-            note.textContent =
-              "Redirecting in " + secs + (secs === 1 ? " second" : " seconds") + "…";
+            note.textContent = t("redirect_in", secs) + " ";
             note.appendChild(link);
           }
           note.style.display = "block";
@@ -544,8 +582,8 @@
           if (missing.length) {
             showError(
               missing.length === 1
-                ? "Please fill in the required field: " + (missing[0].label || "")
-                : "Please fill in all required fields."
+                ? t("required_one", missing[0].label || "")
+                : t("required_all")
             );
             var first = document.getElementById(missing[0].fieldname);
             if (first && first.focus) first.focus();
@@ -554,16 +592,22 @@
 
           btn.disabled = true;
           var original = btn.textContent;
-          btn.textContent = "Submitting…";
+          btn.textContent = t("submitting");
 
           // Draft preview → dry-run (validate only, no record). Published → submit
           // through Frappe's built-in Web Form engine (validation + insert).
           var endpoint = DRAFT
             ? "/api/method/crm.api.form.test_submit_form"
             : "/api/method/frappe.website.doctype.web_form.web_form.accept";
+          var consentBox = document.getElementById("crm-consent");
           var payload = DRAFT
             ? { name: WEB_FORM, values: JSON.stringify(values) }
-            : { web_form: WEB_FORM, data: JSON.stringify(values) };
+            : {
+                web_form: WEB_FORM,
+                data: JSON.stringify(values),
+                crm_utm: JSON.stringify(UTM),
+                crm_consent: consentBox && consentBox.checked ? 1 : 0,
+              };
 
           fetch(endpoint, {
             method: "POST",
@@ -578,7 +622,7 @@
                 var m = res.data && res.data._server_messages;
                 var msg = "";
                 try { msg = m ? JSON.parse(JSON.parse(m)[0]).message : ""; } catch (e) {}
-                showError(msg || "Sorry, we couldn't submit your response. Please try again.");
+                showError(msg || t("submit_failed"));
                 btn.disabled = false;
                 btn.textContent = original;
                 return;
@@ -596,8 +640,7 @@
               document.getElementById("form-view").style.display = "none";
               document.getElementById("success-view").style.display = "block";
               if (DRAFT) {
-                document.getElementById("success-note").textContent =
-                  "Test submission — no record was created. Publish the form to start collecting responses.";
+                document.getElementById("success-note").textContent = t("test_note");
               } else if (SUCCESS_URL) {
                 // like the framework: show the success message, then redirect
                 // after a short countdown (with a manual fallback link)

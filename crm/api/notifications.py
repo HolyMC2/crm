@@ -54,6 +54,9 @@ def get_notifications():
 				"route_name": (
 					"Inquiries"
 					if is_inquiry
+					# a form's daily digest opens the form's submissions
+					else "Form"
+					if notification.reference_doctype == "Web Form"
 					else "Deal"
 					if notification.reference_doctype == "CRM Deal"
 					else "Lead"

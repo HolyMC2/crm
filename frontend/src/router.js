@@ -188,6 +188,19 @@ const routes = [
     meta: { navLabel: 'Campaigns', title: 'Campaign' },
   },
   {
+    path: '/forms',
+    name: 'Forms',
+    component: () => import('@/pages/Forms.vue'),
+    meta: { navLabel: 'Forms', title: 'Forms', managerOnly: true },
+  },
+  {
+    path: '/forms/:formId',
+    name: 'Form',
+    component: () => import('@/pages/FormBuilder.vue'),
+    props: true,
+    meta: { navLabel: 'Forms', title: 'Form', managerOnly: true },
+  },
+  {
     path: '/automations',
     name: 'Automations',
     component: () => import('@/pages/AutomationWorkspace.vue'),
@@ -289,7 +302,7 @@ router.beforeEach(async (to, from, next) => {
   router.previousRoute = from
 
   const { isLoggedIn, user } = sessionStore()
-  const { users, isCrmUser, isAdmin } = usersStore()
+  const { users, isCrmUser, isAdmin, isManager } = usersStore()
 
   if (isLoggedIn && !users.fetched) {
     try {
@@ -344,6 +357,9 @@ router.beforeEach(async (to, from, next) => {
     window.location.href = '/login?redirect-to=/crm'
   } else if (to.matched.length === 0) {
     next({ name: 'Invalid Page' })
+  } else if (to.meta?.managerOnly && !isManager() && user !== 'Administrator') {
+    // same gate as the server (Sales Manager / System Manager)
+    next({ name: 'Not Permitted' })
   } else if (gateRoute(to)) {
     // Addon-backed surface on a site without the addon: native fallback (the
     // upstream list / Deal page) or Home. See utils/crmCapabilities.js.

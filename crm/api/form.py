@@ -17,6 +17,12 @@ import frappe
 from frappe import _
 from frappe.utils.telemetry import capture
 
+from crm.forms import settings as form_settings
+from crm.forms import share as form_share
+from crm.forms import stats as form_stats
+from crm.forms import templates as form_templates
+from crm.forms import wiring as form_wiring
+
 ALLOWED_DOCTYPES = ("CRM Lead", "CRM Deal")
 FORM_SOURCE = "Web Form"
 FORM_MODULE = "FCRM"
@@ -73,6 +79,31 @@ DENIED_FIELDNAMES = (
 )
 
 LAYOUT_BREAKS = ("Section Break", "Column Break")
+
+# Fields the CRM or staff normally set (ownership, SLA, pipeline bookkeeping…). Still
+# collectible for an author who really wants them, but the builder files them under
+# "More fields" so the everyday picker only shows what a visitor would fill in.
+ADVANCED_FIELDNAMES = (
+	"lead_owner",
+	"deal_owner",
+	"source",
+	"sla",
+	"communication_status",
+	"lost_reason",
+	"lost_notes",
+	"snoozed_until",
+	"pipeline",
+	"probability",
+	"closed_date",
+	"exchange_rate",
+	"currency",
+	"lead",
+	"contact",
+	"sales_company",
+	"doco_shop",
+	"erpnext_customer",
+	"repair_order",
+)
 
 # Starting layout of a brand-new form, per target doctype: labelled sections,
 # each a list of columns, each column a list of fieldnames. A sensible
@@ -146,6 +177,7 @@ def _mappable_fields(document_type: str) -> list[dict]:
 				"options": df.options,
 				"reqd": df.reqd,
 				"default": df.default,
+				"advanced": 1 if df.fieldname in ADVANCED_FIELDNAMES else 0,
 			}
 		)
 	return fields
@@ -325,9 +357,10 @@ def grant_guest_link_access(doctype: str) -> dict:
 
 @frappe.whitelist()
 def list_forms() -> list[dict]:
-	"""CRM forms only (native Web Form records mapped to Lead/Deal)."""
+	"""CRM forms only (native Web Form records mapped to Lead/Deal), each with its
+	submission counts and a summary of what happens after someone submits."""
 	_check_manager()
-	return frappe.get_all(
+	forms = frappe.get_all(
 		"Web Form",
 		filters={"module": FORM_MODULE, "doc_type": ["in", ALLOWED_DOCTYPES]},
 		fields=[
@@ -336,10 +369,110 @@ def list_forms() -> list[dict]:
 			"route",
 			"doc_type as document_type",
 			"crm_published as published",
+			"crm_form_settings",
 			"modified",
 		],
 		order_by="modified desc",
 	)
+	stats = form_stats.form_stats(forms)
+	for f in forms:
+		settings = form_settings.of_form({"crm_form_settings": f.pop("crm_form_settings")})
+		f["stats"] = stats.get(f["name"])
+		f["after_submit"] = {
+			"assign_to": settings["assign_to"] if settings["assign_mode"] == "user" else "",
+			"campaign": settings["campaign"],
+			"notify": len(settings["notify_users"]),
+			"consent": settings["consent_enabled"],
+		}
+	return forms
+
+
+@frappe.whitelist()
+def get_form_templates() -> list[dict]:
+	"""Starter templates for the "New form" picker."""
+	_check_manager()
+	return form_templates.list_templates()
+
+
+@frappe.whitelist()
+def create_form(
+	template: str | None = None,
+	title: str | None = None,
+	route: str | None = None,
+	document_type: str = "CRM Lead",
+	language: str | None = None,
+) -> dict:
+	"""Create a form from a starter template (or blank). Only the title/route the
+	author typed override the template's; the route is made unique."""
+	_check_manager()
+	language = language or form_settings.default_language()
+	if template:
+		payload = form_templates.build(template, language)
+	else:
+		if document_type not in ALLOWED_DOCTYPES:
+			frappe.throw(_("Forms can only map to: {0}").format(", ".join(ALLOWED_DOCTYPES)))
+		payload = {
+			"title": _("Untitled form"),
+			"document_type": document_type,
+			"settings": {"language": language},
+		}
+	if title:
+		payload["title"] = title.strip()
+	payload["route"] = unique_route(route or payload["title"])
+	return save_form(name=None, form=payload)
+
+
+@frappe.whitelist()
+def duplicate_form(name: str) -> dict:
+	"""A draft copy of a form — fields, texts, hidden defaults and settings."""
+	_check_manager()
+	config = get_form_config(name)
+	config.pop("name", None)
+	config["title"] = _("{0} (copy)").format(config["title"])
+	config["route"] = unique_route(config["route"] + "-copy")
+	config["published"] = 0
+	return save_form(name=None, form=config)
+
+
+def unique_route(value: str) -> str:
+	import re
+
+	base = re.sub(r"[^a-z0-9]+", "-", (value or "").lower()).strip("-")[:80] or "form"
+	route, n = base, 1
+	while frappe.db.exists("Web Form", {"route": route}):
+		n += 1
+		route = f"{base}-{n}"
+	return route
+
+
+@frappe.whitelist()
+def get_form_options(document_type: str) -> dict:
+	"""What the "After someone submits" panel can offer on this site."""
+	_check_manager()
+	if document_type not in ALLOWED_DOCTYPES:
+		frappe.throw(_("Forms can only map to: {0}").format(", ".join(ALLOWED_DOCTYPES)))
+	return form_settings.options(document_type)
+
+
+@frappe.whitelist()
+def get_form_submissions(name: str, start: int = 0, page_length: int = 50) -> dict:
+	"""The records this form created, newest first."""
+	_check_manager()
+	doc = _get_crm_form(name)
+	return {
+		"document_type": doc.doc_type,
+		"rows": form_stats.submissions(
+			doc.name, doc.doc_type, int(start or 0), min(int(page_length or 50), 200)
+		),
+		"stats": form_stats.form_stats([{"name": doc.name, "document_type": doc.doc_type}])[doc.name],
+	}
+
+
+@frappe.whitelist()
+def get_form_qr(name: str, url: str) -> str:
+	"""SVG QR code for this form's public link (optionally with UTM tags)."""
+	_check_manager()
+	return form_share.qr_svg(_get_crm_form(name).route, url)
 
 
 @frappe.whitelist()
@@ -374,6 +507,7 @@ def get_form_config(name: str) -> dict:
 			for f in doc.web_form_fields
 		],
 		"hidden_fields": _load_hidden_fields(doc),
+		"settings": form_settings.of_form(doc),
 	}
 
 
@@ -392,6 +526,16 @@ def _assert_hidden_defaults_set(hidden: list[dict]):
 	]
 	if missing:
 		frappe.throw(_("Set a default value before publishing for: {0}").format(", ".join(missing)))
+
+
+def _assert_publishable(doc):
+	"""A live form needs a title, a web address and at least one field to fill."""
+	if not (doc.title or "").strip():
+		frappe.throw(_("Give the form a title before publishing."))
+	if not (doc.route or "").strip():
+		frappe.throw(_("Give the form a web address before publishing."))
+	if not any(f.fieldtype not in LAYOUT_BREAKS for f in doc.web_form_fields):
+		frappe.throw(_("Add at least one field before publishing."))
 
 
 def _validated_visible_fields(document_type: str, fields: list[dict]) -> list[dict]:
@@ -504,10 +648,33 @@ def save_form(name: str | None, form: dict | str) -> dict:
 	hidden = _validated_hidden_fields(form["document_type"], hidden or [])
 	if doc.crm_published:
 		_assert_hidden_defaults_set(hidden)
+		_assert_publishable(doc)
 	doc.crm_hidden_defaults = json.dumps(hidden) if hidden else ""
 
-	doc.save(ignore_permissions=True)
+	# only rewrite the settings when sent (a settings-less save keeps them)
+	if form.get("settings") is not None or not name:
+		current = form_settings.of_form(doc) if name else None
+		settings = form_settings.clean(form.get("settings") or {}, doc.doc_type, current)
+		if not settings["language"]:
+			settings["language"] = form_settings.default_language()
+		doc.crm_form_settings = json.dumps(settings)
+
+	if name:
+		doc.save(ignore_permissions=True)
+	else:
+		# Web Form names itself from the title, so a second "Contact us" would clash;
+		# name it after its (unique) route instead
+		doc.insert(ignore_permissions=True, set_name=_unique_name(doc.route or doc.title))
 	return {"name": doc.name, "route": doc.route}
+
+
+def _unique_name(value: str) -> str:
+	base = frappe.scrub(value or "form").replace("_", "-")[:120] or "form"
+	candidate, n = base, 1
+	while frappe.db.exists("Web Form", candidate):
+		n += 1
+		candidate = f"{base}-{n}"
+	return candidate
 
 
 def _get_crm_form(name: str):
@@ -526,6 +693,7 @@ def set_published(name: str, published: int) -> None:
 	doc = _get_crm_form(name)
 	if int(published):
 		_assert_hidden_defaults_set(_load_hidden_fields(doc))
+		_assert_publishable(doc)
 	doc.crm_published = 1 if int(published) else 0
 	doc.published = doc.crm_published  # mirror onto native flag (see save_form)
 	doc.save(ignore_permissions=True)
@@ -556,6 +724,19 @@ def test_submit_form(name: str, values: dict | str) -> dict:
 	return {"test": True}
 
 
+@frappe.whitelist(methods=["POST"])
+def run_test_submission(name: str, values: dict | str, consent: int = 0) -> dict:
+	"""Send a test submission through the real path (record, assignment,
+	notifications, follow-up, attribution), report what it did, then roll it all
+	back — nothing is saved or sent. Saved settings are what's tested."""
+	_check_manager()
+	if isinstance(values, str):
+		values = json.loads(values or "{}")
+	from crm.forms import test_run
+
+	return test_run.run(_get_crm_form(name), values or {}, consent=bool(int(consent or 0)))
+
+
 # Public form serving + submission run through the framework's own Web Form engine:
 # the CRM page (`www/crm_form.py`) renders the published form and posts to the
 # built-in `accept()`, which triggers `enrich_form_submission` below via the
@@ -576,6 +757,10 @@ def enrich_form_submission(doc):
 		return
 
 	_apply_hidden_defaults(doc)
+
+	form = form_wiring.submitting_form()
+	if form and form.module == FORM_MODULE and form.doc_type == doc.doctype:
+		form_wiring.stamp(doc, form)
 
 	# stamp the source so form records are identifiable/filterable
 	if doc.meta.has_field("source") and not doc.get("source"):
@@ -605,6 +790,17 @@ def enrich_form_submission(doc):
 		contact = create_contact(doc)
 		if contact:
 			doc.append("contacts", {"contact": contact, "is_primary": 1})
+
+
+def after_form_submission(doc):
+	"""Called from the CRM Lead/Deal `after_insert`: run the form's "after someone
+	submits" wiring (see crm.forms.wiring) for web-form submissions only."""
+	if not frappe.flags.get("in_web_form") or doc.doctype not in ALLOWED_DOCTYPES:
+		return
+	form = form_wiring.submitting_form()
+	if not form or form.module != FORM_MODULE or form.doc_type != doc.doctype:
+		return
+	form_wiring.apply(doc)
 
 
 def _apply_hidden_defaults(doc):

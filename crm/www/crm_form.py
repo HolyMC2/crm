@@ -4,8 +4,10 @@
 import re
 
 import frappe
+from frappe import _
 
 from crm.api.form import ALLOWED_DOCTYPES, guest_can_select
+from crm.forms import settings as form_settings
 
 no_cache = 1
 
@@ -36,6 +38,15 @@ def get_context(context):
 
 	doc = frappe.get_doc("Web Form", name)
 	set_embedding_headers(doc)
+	settings = form_settings.of_form(doc)
+	# visitors see the form in its own language, whatever the site default is
+	if settings["language"]:
+		frappe.local.lang = settings["language"]
+	business = form_settings.business_name()
+
+	def fill(text):
+		return form_settings.fill_business(text, business)
+
 	context.no_cache = 1
 	try:
 		context.csrf_token = frappe.sessions.get_csrf_token()
@@ -46,23 +57,29 @@ def get_context(context):
 	# flush inside the host page instead of showing our own card-on-gray-background
 	context.embed = frappe.form_dict.get("embed") in ("1", "true", "yes")
 	context.draft_preview = not doc.crm_published
-	context.form_title = doc.title
-	context.form_description = doc.introduction_text or ""
+	context.lang = frappe.local.lang
+	context.business_name = business
+	context.brand_logo = frappe.db.get_single_value("FCRM Settings", "brand_logo") or ""
+	context.form_title = fill(doc.title)
+	context.form_description = fill(doc.introduction_text or "")
 	context.form_route = doc.route
-	context.submit_label = doc.button_label or "Submit"
-	context.success_message = doc.success_message or "Thank you!"
+	context.submit_label = _(doc.button_label or "Submit")
+	context.success_message = fill(doc.success_message) or _("Thank you!")
 	context.success_url = doc.success_url or ""
 	context.fields = [
 		{
 			"fieldname": f.fieldname,
 			# breaks (Section/Column) keep an empty label when blank so unlabeled
-			# sections render no heading; only real fields fall back to fieldname
-			"label": f.label or ("" if f.fieldtype in ("Section Break", "Column Break") else f.fieldname),
+			# sections render no heading; only real fields fall back to fieldname.
+			# Labels still carrying the doctype's own English label get translated.
+			"label": fill(_(f.label))
+			if f.label
+			else ("" if f.fieldtype in ("Section Break", "Column Break") else f.fieldname),
 			"fieldtype": f.fieldtype,
 			"options": f.options or "",
 			"reqd": int(f.reqd or 0),
-			"placeholder": f.placeholder or "",
-			"description": f.description or "",
+			"placeholder": fill(f.placeholder or ""),
+			"description": fill(f.description or ""),
 			# conditional-logic expressions, evaluated client-side (see crm_form.html)
 			"depends_on": f.depends_on or "",
 			"mandatory_depends_on": f.mandatory_depends_on or "",
@@ -77,6 +94,25 @@ def get_context(context):
 		f["fieldname"]: _link_field_options(f["options"])
 		for f in context.fields
 		if f["fieldtype"] == "Link" and f["options"]
+	}
+	# optional WhatsApp opt-in, only on a form that asks for a phone to message
+	collects_phone = any(f["fieldname"] in ("mobile_no", "phone") for f in context.fields)
+	context.consent_text = (
+		fill(settings["consent_text"]) if settings["consent_enabled"] and collects_phone else ""
+	)
+	context.i18n = {
+		"select": _("Select…"),
+		"required_one": _("Please fill in the required field: {0}"),
+		"required_all": _("Please fill in all required fields."),
+		"submitting": _("Submitting…"),
+		"error": _("Something went wrong. Please try again."),
+		"submit_failed": _("Sorry, we couldn't submit your response. Please try again."),
+		"recorded": _("Your response has been recorded."),
+		"test_note": _(
+			"Test submission — no record was created. Publish the form to start collecting responses."
+		),
+		"redirect_in": _("Redirecting in {0} seconds…"),
+		"go_now": _("Go now"),
 	}
 	return context
 

@@ -279,6 +279,7 @@ import ChevronsLeftIcon from '~icons/lucide/chevrons-left'
 import ChevronsRightIcon from '~icons/lucide/chevrons-right'
 // shared with the mobile drawer so the two navs never drift (see navModel.js)
 import {
+  navItemAllowed,
   navItems,
   navItemsBottom,
   routeGroup,
@@ -295,7 +296,7 @@ import {
 const route = useRoute()
 const router = useRouter()
 const { logout } = sessionStore()
-const { getUser } = usersStore()
+const { getUser, isManager } = usersStore()
 const { toggle: toggleNotifications } = notificationsStore()
 const { brand } = getSettings()
 
@@ -334,8 +335,10 @@ function go(to) {
 // (Leads, Deals, Calls, Tasks) always show — the router picks the page.
 loadCapabilities()
 const visibleByPath = (items) =>
-  items.filter((item) =>
-    navItemVisible(router.resolve(item.to).name, addonAvailable.value),
+  items.filter(
+    (item) =>
+      navItemVisible(router.resolve(item.to).name, addonAvailable.value) &&
+      navItemAllowed(item, { isManager: isManager() }),
   )
 const visibleNavItems = computed(() => visibleByPath(navItems))
 const visibleNavItemsBottom = computed(() => visibleByPath(navItemsBottom))

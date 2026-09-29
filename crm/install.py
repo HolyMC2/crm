@@ -328,7 +328,8 @@ def add_email_account_custom_field():
 
 
 def add_web_form_custom_fields():
-	"""CRM's own fields on the native Web Form.
+	"""CRM's own fields on the native Web Form, and the link back from what a form
+	creates. Idempotent (runs after every migrate).
 
 	- `crm_published`: separate publish flag so CRM forms are served only by the
 	  CRM's own public page (and never rendered by the framework's web form page).
@@ -336,33 +337,70 @@ def add_web_form_custom_fields():
 	- `crm_hidden_defaults`: JSON of doctype-mandatory fields the author removed
 	  from the visible form, with the default value to apply on submission so the
 	  target record can still be created.
+	- `crm_form_settings`: JSON of the form's language and "after someone submits"
+	  wiring (see crm.forms.settings).
+	- `crm_web_form` on CRM Lead/Deal: the form that created the record (submission
+	  counts, the form's Submissions list).
+	- `crm_form_message` on CRM Lead/Deal: a free-text message a form can collect.
 	"""
-	meta = frappe.get_meta("Web Form")
-	if meta.has_field("crm_published") and meta.has_field("crm_hidden_defaults"):
-		return
-	click.secho("* Installing Custom Fields in Web Form")
-	create_custom_fields(
+	record_fields = [
 		{
-			"Web Form": [
-				{
-					"default": "0",
-					"fieldname": "crm_published",
-					"fieldtype": "Check",
-					"label": "CRM Published",
-					"insert_after": "published",
-					"hidden": 1,
-				},
-				{
-					"fieldname": "crm_hidden_defaults",
-					"fieldtype": "Long Text",
-					"label": "CRM Hidden Field Defaults",
-					"insert_after": "crm_published",
-					"hidden": 1,
-				},
-			]
-		}
-	)
-	frappe.clear_cache(doctype="Web Form")
+			"fieldname": "crm_web_form",
+			"fieldtype": "Link",
+			"options": "Web Form",
+			"label": "Source Form",
+			"insert_after": "source",
+			"read_only": 1,
+			"no_copy": 1,
+			"search_index": 1,
+		},
+		{
+			"fieldname": "crm_form_message",
+			"fieldtype": "Small Text",
+			"label": "Form Message",
+			"insert_after": "crm_web_form",
+			"no_copy": 1,
+		},
+	]
+	wanted = {
+		"Web Form": [
+			{
+				"default": "0",
+				"fieldname": "crm_published",
+				"fieldtype": "Check",
+				"label": "CRM Published",
+				"insert_after": "published",
+				"hidden": 1,
+			},
+			{
+				"fieldname": "crm_hidden_defaults",
+				"fieldtype": "Long Text",
+				"label": "CRM Hidden Field Defaults",
+				"insert_after": "crm_published",
+				"hidden": 1,
+			},
+			{
+				"fieldname": "crm_form_settings",
+				"fieldtype": "Long Text",
+				"label": "CRM Form Settings",
+				"insert_after": "crm_hidden_defaults",
+				"hidden": 1,
+			},
+		],
+		"CRM Lead": record_fields,
+		"CRM Deal": record_fields,
+	}
+	missing = {
+		doctype: fields
+		for doctype, fields in wanted.items()
+		if not all(frappe.get_meta(doctype).has_field(f["fieldname"]) for f in fields)
+	}
+	if not missing:
+		return
+	click.secho("* Installing CRM form custom fields")
+	create_custom_fields(missing)
+	for doctype in missing:
+		frappe.clear_cache(doctype=doctype)
 
 
 def add_default_industries():

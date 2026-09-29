@@ -109,6 +109,10 @@ class CRMLead(Document):
 			if self.lead_owner != frappe.session.user:
 				self.share_with_agent(self.lead_owner)
 			self.assign_agent(self.lead_owner)
+		# a web-form submission: run the form's "after someone submits" wiring
+		from crm.api.form import after_form_submission
+
+		after_form_submission(self)
 
 	def before_save(self):
 		self.apply_sla()

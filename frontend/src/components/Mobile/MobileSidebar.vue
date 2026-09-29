@@ -294,6 +294,7 @@ import SidebarLink from '@/components/SidebarLink.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
 import {
+  navItemAllowed,
   navItems,
   navItemsBottom,
   routeGroup,
@@ -328,7 +329,7 @@ const route = useRoute()
 const router = useRouter()
 const { getPinnedViews, getPublicViews } = viewsStore()
 const { logout } = sessionStore()
-const { getUser } = usersStore()
+const { getUser, isManager } = usersStore()
 const { brand } = getSettings()
 const { setTheme } = useTheme()
 
@@ -342,8 +343,10 @@ const initials = computed(() => {
 })
 
 const primaryItems = computed(() =>
-  [...navItems, ...navItemsBottom].filter((item) =>
-    navItemVisible(router.resolve(item.to).name, addonAvailable.value),
+  [...navItems, ...navItemsBottom].filter(
+    (item) =>
+      navItemVisible(router.resolve(item.to).name, addonAvailable.value) &&
+      navItemAllowed(item, { isManager: isManager() }),
   ),
 )
 const activeGroup = computed(() => routeGroup(route.path))

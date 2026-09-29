@@ -40,7 +40,10 @@ def clear_owner_on_unassign(doc):
 
 def notify_assigned_user(doc, is_cancelled=False):
 	_doc = frappe.get_doc(doc.reference_type, doc.reference_name)
-	owner = frappe.get_cached_value("User", frappe.session.user, "full_name")
+	from crm.forms.wiring import assignment_actor
+
+	# a public form submission assigns as Guest: credit the form, not "Guest"
+	owner = assignment_actor() or frappe.get_cached_value("User", frappe.session.user, "full_name")
 	notification_text = get_notification_text(owner, doc, _doc, is_cancelled)
 
 	message = (

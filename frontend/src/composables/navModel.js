@@ -9,6 +9,7 @@ import DealsIcon from '~icons/lucide/handshake'
 import InboxIcon from '~icons/lucide/messages-square'
 import ReviewQueueIcon from '~icons/lucide/clipboard-check'
 import CampaignsIcon from '~icons/lucide/megaphone'
+import FormsIcon from '~icons/lucide/clipboard-list'
 import SocialIcon from '~icons/lucide/images'
 import CalendarIcon from '~icons/lucide/calendar-days'
 import CallsIcon from '~icons/lucide/phone'
@@ -76,6 +77,16 @@ export const navItems = [
     label: 'Campaigns',
     to: '/campaigns',
     group: 'campaigns',
+  },
+  // Public lead-capture forms. Managers only, like the forms API; sits beside
+  // Campaigns because a form is where a campaign's traffic lands.
+  {
+    key: 'forms',
+    icon: FormsIcon,
+    label: 'Forms',
+    to: '/forms',
+    group: 'forms',
+    managerOnly: true,
   },
   {
     key: 'social',
@@ -156,6 +167,11 @@ export const navItemsBottom = [
   },
 ]
 
+// Role gate for nav entries (availability is navItemVisible's job).
+export function navItemAllowed(item, { isManager = false } = {}) {
+  return !item.managerOnly || isManager
+}
+
 // A route path lights exactly one nav group (handoff §4.1).
 export function routeGroup(path) {
   if (/^\/automations(\/|$)/.test(path)) return 'automations'
@@ -164,6 +180,7 @@ export function routeGroup(path) {
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'wa-queue'
   if (/^\/deals?(\/|$)/.test(path)) return 'deals'
   if (/^\/(campaigns|chatflows)(\/|$)/.test(path)) return 'campaigns'
+  if (/^\/forms(\/|$)/.test(path)) return 'forms'
   if (/^\/social(\/|$)/.test(path)) return 'social'
   if (/^\/calendar(\/|$)/.test(path)) return 'calendar'
   // Ordered before the /leads rule: /pipeline-analysis is its own nav entry now,

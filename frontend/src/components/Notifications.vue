@@ -197,6 +197,13 @@ onMounted(() => {
 function getRoute(notification) {
   const inquiryRoute = inquiryNotificationRoute(notification)
   if (inquiryRoute) return inquiryRoute
+  if (notification.route_name === 'Form') {
+    return {
+      name: 'Form',
+      params: { formId: notification.reference_name },
+      query: { tab: 'submissions' },
+    }
+  }
   let params = {
     leadId: notification.reference_name,
   }

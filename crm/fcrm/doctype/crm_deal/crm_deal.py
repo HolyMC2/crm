@@ -113,6 +113,10 @@ class CRMDeal(Document):
 			if self.deal_owner != frappe.session.user:
 				self.share_with_agent(self.deal_owner)
 			self.assign_agent(self.deal_owner)
+		# a web-form submission: run the form's "after someone submits" wiring
+		from crm.api.form import after_form_submission
+
+		after_form_submission(self)
 
 	def before_save(self):
 		self.apply_sla()
