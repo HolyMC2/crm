@@ -46,6 +46,7 @@
       routeFilters: parseDealListQuery,
     }"
   />
+  <DealQueueChips />
   <DealsListSummary
     v-if="deals.data"
     v-model:funnel="showFunnel"
@@ -335,6 +336,7 @@ import VerticalSlot from '@/components/doco/VerticalSlot.vue'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
 import DealsListSummary from '@/components/doco/deals/DealsListSummary.vue'
+import DealQueueChips from '@/components/doco/deals/DealQueueChips.vue'
 import DealsMobileList from '@/components/doco/deals/DealsMobileList.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { useDealListMetrics } from '@/composables/dealListMetrics'
