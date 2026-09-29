@@ -314,6 +314,7 @@ function loadForm(d) {
       channel: s.channel,
       wait_hours: s.wait_hours,
       template: s.template || '',
+      template_params: s.template_params || '',
       branch_condition: s.branch_condition || 'opened_previous',
       branch_value: s.branch_value,
       branch_to_step: s.branch_to_step,

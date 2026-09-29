@@ -150,6 +150,30 @@
               />
             </div>
             <div
+              v-if="s.step_type === 'send_whatsapp' && needsParams(s)"
+              class="mt-2 flex flex-col gap-1 text-[12px]"
+            >
+              <div class="flex items-center gap-2">
+                <span class="flex-none text-ink-gray-5">{{
+                  __('Variables')
+                }}</span>
+                <input
+                  v-model="s.template_params"
+                  class="dm-input flex-1 font-mono"
+                  :placeholder="paramsPlaceholder(s)"
+                  :disabled="frozen"
+                />
+              </div>
+              <div
+                class="text-[10.5px]"
+                :class="
+                  paramsNote(s).bad ? 'text-ink-red-7' : 'text-ink-gray-4'
+                "
+              >
+                {{ paramsNote(s).text }}
+              </div>
+            </div>
+            <div
               v-else-if="s.step_type === 'send_email'"
               class="flex items-center gap-2 text-[12px]"
             >
@@ -353,10 +377,11 @@
 
 <script setup>
 import { computed, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { createListResource } from 'frappe-ui'
+import { createListResource, createResource } from 'frappe-ui'
 import Sortable from 'sortablejs'
 import GripIcon from '~icons/lucide/grip-vertical'
 import Link from '@/components/Controls/Link.vue'
+import { paramsProblem, templateVarCount } from '@/utils/templateParams'
 
 const props = defineProps({
   kind: { type: String, required: true }, // 'campaign' | 'chatflow'
@@ -502,6 +527,50 @@ function tplParts(body) {
 const variablesHint = __('Las variables {0} se llenan al enviar', [
   '{' + '{n}' + '}',
 ])
+
+// ── campaign template variables (template_params) ───────────────────────────
+const templateVars = createResource({
+  url: 'doco_marketing.api.campaigns.template_variables',
+  auto: props.kind === 'campaign',
+})
+const varKeys = computed(() =>
+  (templateVars.data?.keys || []).map((k) => k.key),
+)
+function needsParams(s) {
+  // a mapping left on a zero-variable template still shows, so it can be cleared
+  const tpl = previewTpl(s)
+  return !!tpl && (templateVarCount(tpl.template) > 0 || !!s.template_params)
+}
+function paramsPlaceholder(s) {
+  const n = templateVarCount(previewTpl(s)?.template)
+  return varKeys.value.slice(0, n).join(',')
+}
+function paramsNote(s) {
+  const body = previewTpl(s)?.template
+  const problem = paramsProblem(body, s.template_params, varKeys.value)
+  const keys = __('Claves: {0}', [varKeys.value.join(', ')])
+  if (problem?.unknown)
+    return {
+      bad: true,
+      text: __('Claves desconocidas: {0}. {1}', [
+        problem.unknown.join(', '),
+        keys,
+      ]),
+    }
+  if (problem)
+    return {
+      bad: true,
+      text: __('La plantilla tiene {0} variable(s); mapeaste {1}. {2}', [
+        problem.need,
+        problem.have,
+        keys,
+      ]),
+    }
+  return {
+    bad: false,
+    text: __('Una clave por variable, en orden. {0}', [keys]),
+  }
+}
 
 const PreviewToggle = (p, { emit }) =>
   h(
