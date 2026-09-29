@@ -138,8 +138,8 @@ Fields: `user`, `scope` (Data, for example `email.to`, `email.subject`, `caption
 
 ## Checklist
 
-- [ ] Backend endpoints + DocType changes + tests (doco_marketing)
-- [ ] Frontend palette, send dialog, memory, template dialog + unit tests (crm)
-- [ ] Integration review against this contract (shapes, gating, security)
-- [ ] Lab: `lab push`, migrate, live check in a deal conversation (WhatsApp, email, Messenger)
+- [x] Backend endpoints + DocType changes + tests (doco_marketing c514f7e, 23 tests OK on doco-mirror)
+- [x] Frontend palette, send dialog, memory, template dialog + unit tests (crm 685f5ff90, 40 tests; full suite 1045 OK; build OK)
+- [x] Integration review against this contract (shapes, gating, security)
+- [ ] Lab: `lab push` + migrate DONE; catalog smoke OK; live browser check in a deal conversation (WhatsApp, email, Messenger)
 - [ ] Land both repos
