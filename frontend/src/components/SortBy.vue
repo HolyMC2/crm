@@ -161,6 +161,7 @@ import DragIcon from '@/components/Icons/DragIcon.vue'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { Combobox, createResource, Popover } from 'frappe-ui'
 import { computed, nextTick, onMounted } from 'vue'
+import { withoutVirtual } from '@/utils/listColumns'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -199,7 +200,11 @@ const sortValues = computed({
 })
 
 const allSortOptions = computed(() =>
-  (sortOptions.data || []).map((o) => ({ ...o, value: o.fieldname })),
+  // virtual `_v_*` columns are computed after the query: never sortable
+  withoutVirtual(sortOptions.data || []).map((o) => ({
+    ...o,
+    value: o.fieldname,
+  })),
 )
 
 const options = computed(() => {

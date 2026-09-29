@@ -327,6 +327,16 @@ import { getMeta } from '@/stores/meta'
 import { isEmoji } from '@/utils'
 import { GUARDED_STATUSES, guardStatusChange } from '@/utils/statusGuard'
 import { addonAvailable } from '@/utils/crmCapabilities'
+import { isVirtualKey } from '@/utils/listColumns'
+import { buildExportParams, downloadListExport } from '@/utils/listExport'
+import {
+  listStateKey,
+  readListState,
+  restoreListParams,
+  snapshotListState,
+  writeListState,
+} from '@/utils/listViewState'
+import { sessionStore } from '@/stores/session'
 import {
   Combobox,
   Tooltip,
@@ -353,6 +363,9 @@ const props = defineProps({
       hideColumnsButton: false,
       defaultViewName: '',
       allowedViews: ['list'],
+      // keep filters, search, sort, loaded pages and unsaved changes while the
+      // worker opens a record and comes back (see saveListState)
+      persistState: false,
     }),
   },
 })
@@ -513,9 +526,44 @@ function getParams() {
   }
 }
 
+// Back from a record: the list opens as it was left (same user, doctype and
+// view only). The page restores its own scroll from `restoredScrollTop`.
+const { user: sessionUser } = sessionStore()
+function stateKey() {
+  return listStateKey(
+    sessionUser,
+    props.doctype,
+    route.query.view || '',
+    route.params.viewType || 'list',
+  )
+}
+function sessionStorageOrNull() {
+  try {
+    return window.sessionStorage
+  } catch {
+    return null
+  }
+}
+const restoredState = props.options?.persistState
+  ? readListState(sessionStorageOrNull(), stateKey())
+  : null
+if (restoredState?.viewUpdated) viewUpdated.value = true
+
+function saveListState({ scrollTop = 0 } = {}) {
+  if (!props.options?.persistState || !list.value?.params) return
+  writeListState(
+    sessionStorageOrNull(),
+    stateKey(),
+    snapshotListState(list.value.params, {
+      scrollTop,
+      viewUpdated: viewUpdated.value,
+    }),
+  )
+}
+
 list.value = createResource({
   url: 'crm.api.doc.get_data',
-  params: getParams(),
+  params: restoreListParams(getParams(), restoredState),
   cache: [props.doctype, route.query.view, route.params.viewType],
   auto: true,
   onSuccess(data) {
@@ -540,12 +588,14 @@ list.value = createResource({
       rows: data.rows,
       page_length: params.page_length,
       page_length_count: params.page_length_count,
+      // the search box's or_filters must survive the next filter/sort change
+      ...(params.or_filters ? { or_filters: params.or_filters } : {}),
     }
   },
 })
 
 // createResource leaves `params` null until a fetch passes them explicitly
-list.value.params = getParams()
+list.value.params = restoreListParams(getParams(), restoredState)
 
 const isLoading = computed(() => list.value?.loading)
 
@@ -564,32 +614,38 @@ function updateSelections(selections) {
   selectedRows.value = Array.from(selections)
 }
 
+// Export the list as it is on screen: its columns (virtual ones included),
+// filters, search and order. export_list when the site has it, else Frappe's
+// report export with the native columns (see utils/listExport).
 async function exportRows() {
-  let fields = JSON.stringify(list.value.data.columns.map((f) => f.key))
-
-  let filters = JSON.stringify({
-    ...props.filters,
-    ...list.value.params.filters,
+  const params = buildExportParams({
+    doctype: props.doctype,
+    columns: list.value.data.columns,
+    defaultFilters: props.filters,
+    filters: list.value.params.filters,
+    orFilters: list.value.params.or_filters,
+    orderBy: list.value.params.order_by,
+    pageLength: list.value.params.page_length,
+    totalCount: list.value.data.total_count,
+    exportAll: export_all.value,
+    fileFormat: export_type.value,
+    selectedItems: selectedRows.value,
+    view: list.value.params.view?.custom_view_name || '',
   })
-
-  let order_by = list.value.params.order_by
-  let page_length = list.value.params.page_length
-  if (export_all.value) {
-    page_length = list.value.data.total_count
-  }
-
-  let url = `/api/method/frappe.desk.reportview.export_query?file_format_type=${export_type.value}&title=${props.doctype}&doctype=${props.doctype}&fields=${fields}&filters=${encodeURIComponent(filters)}&order_by=${order_by}&page_length=${page_length}&start=0&view=Report&with_comment_count=1`
-
-  // Add selected items parameter if rows are selected
-  if (selectedRows.value?.length && !export_all.value) {
-    url += `&selected_items=${JSON.stringify(selectedRows.value)}`
-  }
-
-  window.location.href = url
 
   showExportDialog.value = false
   export_all.value = false
   export_type.value = 'Excel'
+
+  try {
+    await downloadListExport(params)
+  } catch (e) {
+    toast.error(
+      e?.status === 403
+        ? __('You do not have permission to export these records')
+        : __('Export failed, please try again'),
+    )
+  }
 }
 
 let standardViews = []
@@ -1316,6 +1372,8 @@ function saveView() {
 function applyFilter({ event, idx, column, item, firstColumn }) {
   let restrictedFieldtypes = ['Datetime', 'Time']
   if (restrictedFieldtypes.includes(column.type) || idx === 0) return
+  // virtual `_v_*` values are computed after the query: nothing to filter on
+  if (isVirtualKey(column.key)) return
   if (idx === 1 && firstColumn.key == '_liked_by') return
 
   event.stopPropagation()
@@ -1392,6 +1450,9 @@ function likeDoc({ name, liked }) {
 }
 
 defineExpose({
+  updateFilter,
+  saveListState,
+  restoredScrollTop: restoredState?.scrollTop || 0,
   applyFilter,
   applyLikeFilter,
   likeDoc,

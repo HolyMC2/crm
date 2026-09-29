@@ -51,6 +51,14 @@ export const sessionStore = defineStore('crm-session', () => {
       } catch (e) {
         /* storage unavailable — nothing to purge */
       }
+      // list back-navigation state (utils/listViewState) holds the search box
+      try {
+        for (const k of Object.keys(sessionStorage)) {
+          if (k.startsWith('crm_list_state:')) sessionStorage.removeItem(k)
+        }
+      } catch {
+        /* storage unavailable — nothing to purge */
+      }
       user.value = null
       window.location.href = '/login?redirect-to=/crm'
     },

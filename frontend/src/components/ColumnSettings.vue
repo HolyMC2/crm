@@ -145,6 +145,8 @@ import DragIcon from '@/components/Icons/DragIcon.vue'
 import ReloadIcon from '@/components/Icons/ReloadIcon.vue'
 import { isTouchScreenDevice } from '@/utils'
 import { getMeta } from '@/stores/meta'
+import { useVirtualColumns } from '@/composables/virtualColumns'
+import { columnFromOption, mergeColumnOptions } from '@/utils/listColumns'
 import { Combobox, Popover } from 'frappe-ui'
 import Draggable from 'vuedraggable'
 import { computed, ref } from 'vue'
@@ -195,43 +197,22 @@ const rows = computed({
 })
 
 const { getFields } = getMeta(props.doctype)
+// server-computed `_v_*` columns; empty (native fields only) when the site
+// has no provider or no get_virtual_columns endpoint yet
+const virtualColumns = useVirtualColumns(props.doctype)
 
 const fields = computed(() => {
   const _fields = getFields({ withStandardFields: true }) || []
   if (!_fields.length) return []
 
-  let existingFields = []
-  if (columns.value.length) {
-    existingFields = columns.value.map((column) => column.key)
-  }
-
-  return _fields
-    .filter((field) => {
-      return (
-        !columns.value.find((column) => column.key === field.fieldname) &&
-        !existingFields.includes(field.fieldname)
-      )
-    })
-    .map((field) => ({ ...field, value: field.fieldname }))
+  const existingFields = (columns.value || []).map((column) => column.key)
+  const native = _fields.map((field) => ({ ...field, value: field.fieldname }))
+  return mergeColumnOptions(native, virtualColumns.value, existingFields)
 })
 
 function addColumn(c) {
   if (!c) return
-  let align = ['Float', 'Int', 'Percent', 'Currency', 'Duration'].includes(
-    c.fieldtype,
-  )
-    ? 'right'
-    : 'left'
-
-  let _column = {
-    label: c.label,
-    type: c.fieldtype,
-    key: c.fieldname,
-    options: c.options,
-    width: '10rem',
-    align,
-  }
-  columns.value.push(_column)
+  columns.value.push(columnFromOption(c))
   rows.value.push(c.value)
   apply(true)
 }

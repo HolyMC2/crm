@@ -22,6 +22,7 @@
 import DetailsIcon from '@/components/Icons/DetailsIcon.vue'
 import { Combobox, createResource } from 'frappe-ui'
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { withoutVirtual } from '@/utils/listColumns'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -69,6 +70,10 @@ const options = computed(() => {
         (option) => option.fieldname !== groupByValue.value.fieldname,
       )
     : groupByOptions.data
-  return data.map((option) => ({ ...option, value: option.fieldname }))
+  // virtual `_v_*` columns are computed after the query: never grouped on
+  return withoutVirtual(data).map((option) => ({
+    ...option,
+    value: option.fieldname,
+  }))
 })
 </script>

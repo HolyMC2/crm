@@ -173,6 +173,7 @@ import {
 } from 'frappe-ui'
 import { h, computed, onMounted } from 'vue'
 import { isMobileView } from '@/composables/settings'
+import { withoutVirtual } from '@/utils/listColumns'
 
 const typeCheck = ['Check']
 const typeLink = ['Link', 'Dynamic Link']
@@ -225,7 +226,8 @@ const filters = computed(() => {
 const idFieldDoctypes = ['CRM Lead', 'CRM Deal']
 
 const filterFieldOptions = computed(() => {
-  const fields = filterableFields.data || []
+  // virtual `_v_*` columns are computed after the query: never filterable
+  const fields = withoutVirtual(filterableFields.data || [])
   const markIdField = idFieldDoctypes.includes(props.doctype)
 
   return fields.map((field) => {
