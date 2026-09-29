@@ -38,6 +38,12 @@ test.describe.configure({ mode: 'serial' })
 
 test('set up a drill form and a wait-only campaign', async ({ page }) => {
   await login(page)
+  // FORMS_E2E_FORM=<name> reuses an existing drill form (screenshots only)
+  if (process.env.FORMS_E2E_FORM) {
+    state.form = process.env.FORMS_E2E_FORM
+    state.route = process.env.FORMS_E2E_FORM
+    return
+  }
   const me = env().user
   const campaign = await api(page, 'frappe.client.insert', {
     doc: {
@@ -93,7 +99,9 @@ for (const theme of ['light', 'dark']) {
     await expect(
       page.getByRole('heading', { name: /Forms|Formularios/ }).first(),
     ).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByText(`drill ${RUN}`).first()).toBeVisible()
+    await expect(
+      page.getByText(`/crm-form/${state.route}`).first(),
+    ).toBeVisible()
     await snap(page, `forms-list-desktop-${theme}`)
 
     await page
@@ -111,6 +119,16 @@ for (const theme of ['light', 'dark']) {
       })
       await page.waitForTimeout(tab === 'share' ? 2500 : 1500)
       await snap(page, `builder-${tab}-desktop-${theme}`)
+      if (tab === 'after' || tab === 'share') {
+        // the channel sections sit below the fold
+        await page.evaluate(() =>
+          document
+            .querySelectorAll('.overflow-y-auto')
+            .forEach((el) => el.scrollTo(0, el.scrollHeight)),
+        )
+        await page.waitForTimeout(500)
+        await snap(page, `builder-${tab}-bottom-desktop-${theme}`)
+      }
     }
   })
 
@@ -119,7 +137,9 @@ for (const theme of ['light', 'dark']) {
     await useTheme(page, theme)
     await login(page)
     await page.goto('/crm/forms', { waitUntil: 'domcontentloaded' })
-    await expect(page.getByText(`drill ${RUN}`).first()).toBeVisible({
+    await expect(
+      page.getByText(`/crm-form/${state.route}`).first(),
+    ).toBeVisible({
       timeout: 30_000,
     })
     const overflow = await page.evaluate(

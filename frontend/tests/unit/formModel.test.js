@@ -177,9 +177,10 @@ describe('navigation', () => {
   it('carries a return to the form submissions, and nothing foreign', () => {
     const back = '/forms/contact-us?tab=submissions'
     expect(safeQueueReturn(back)).toBe(back)
+    expect(safeQueueReturn('/forms')).toBe('/forms')
     for (const bad of [
-      '/forms',
       '/forms/',
+      '/formsx',
       '//evil.test/forms/x',
       '/forms/a/b',
       '/forms/a\\b',

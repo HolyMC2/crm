@@ -256,6 +256,11 @@ import TestRunDialog from '@/components/Forms/TestRunDialog.vue'
 import ReadinessList from '@/components/Forms/ReadinessList.vue'
 import { FORM_BUILDER, useFormBuilder } from '@/components/Forms/useFormBuilder'
 import { publicUrl } from '@/components/Forms/formModel'
+import {
+  FORM_CHANNELS,
+  useFormChannels,
+} from '@/components/Forms/channels/useFormChannels'
+import { addonAvailable } from '@/utils/crmCapabilities'
 import { computed, onBeforeUnmount, provide, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
@@ -267,6 +272,12 @@ const { capture } = useTelemetry()
 
 const b = useFormBuilder(props.formId)
 provide(FORM_BUILDER, b)
+// WhatsApp Flow, chat share, confirmations and email come from the optional
+// doco_marketing addon; without it those sections simply don't render
+provide(
+  FORM_CHANNELS,
+  addonAvailable.value ? useFormChannels(props.formId, b) : null,
+)
 
 const TAB_KEYS = ['questions', 'messages', 'after', 'share', 'submissions']
 const tab = ref(

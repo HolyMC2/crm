@@ -19,6 +19,189 @@ msgstr ""
 "Language: es_ES\n"
 
 # CRM forms (templates, builder, public page)
+msgid "Syncing leads"
+msgstr "Sincronizando leads"
+
+msgid "Send the link in a chat"
+msgstr "Envía el enlace en un chat"
+
+msgid "Ready-to-send messages with a tagged link, so chat submissions show where they came from. Save one as a quick reply to use it from the inbox."
+msgstr "Mensajes listos para enviar con un enlace etiquetado, así los envíos desde chats muestran de dónde vinieron. Guarda uno como respuesta rápida para usarlo desde la bandeja."
+
+msgid "Copy message"
+msgstr "Copiar mensaje"
+
+msgid "Save as quick reply"
+msgstr "Guardar como respuesta rápida"
+
+msgid "WhatsApp did not accept it"
+msgstr "WhatsApp no lo aceptó"
+
+msgid "WhatsApp Flow updated from the form"
+msgstr "Flow de WhatsApp actualizado desde el formulario"
+
+msgid "WhatsApp Flow published"
+msgstr "Flow de WhatsApp publicado"
+
+msgid "Saved as a quick reply in the inbox"
+msgstr "Guardado como respuesta rápida en la bandeja"
+
+msgid "Could not save the quick reply"
+msgstr "No se pudo guardar la respuesta rápida"
+
+msgid "Confirm on WhatsApp"
+msgstr "Confirmar por WhatsApp"
+
+msgid "Reply to the visitor with an approved WhatsApp template. Each message waits in Approvals until someone sends it, and goes only to people who ticked consent."
+msgstr "Responde al visitante con una plantilla de WhatsApp aprobada. Cada mensaje espera en Aprobaciones hasta que alguien lo envía, y solo va a quien marcó el consentimiento."
+
+msgid "Template"
+msgstr "Plantilla"
+
+msgid "Fill the variables with"
+msgstr "Llenar las variables con"
+
+msgid "With a template"
+msgstr "Con una plantilla"
+
+msgid "Choose a template"
+msgstr "Elige una plantilla"
+
+msgid "Available: {0}"
+msgstr "Disponibles: {0}"
+
+msgid "Unknown: {0}. {1}"
+msgstr "Desconocidas: {0}. {1}"
+
+msgid "The template has {0} variable(s); you filled {1}. {2}"
+msgstr "La plantilla tiene {0} variable(s); llenaste {1}. {2}"
+
+msgid "One per variable, in order, separated by commas. {0}"
+msgstr "Una por variable, en orden, separadas por comas. {0}"
+
+msgid "Fill it in inside WhatsApp"
+msgstr "Llenarlo dentro de WhatsApp"
+
+msgid "A WhatsApp Flow asks the same questions inside the chat. Replies become records exactly like web submissions."
+msgstr "Un Flow de WhatsApp hace las mismas preguntas dentro del chat. Las respuestas se vuelven registros igual que los envíos web."
+
+msgid "WhatsApp is turned off for this business."
+msgstr "WhatsApp está apagado para este negocio."
+
+msgid "WhatsApp is in manual mode (wa.me links). Flows need the WhatsApp Business API connected."
+msgstr "WhatsApp está en modo manual (enlaces wa.me). Los Flows necesitan la API de WhatsApp Business conectada."
+
+msgid "Build the Flow from this form, check it, then publish it to WhatsApp."
+msgstr "Crea el Flow desde este formulario, revísalo y publícalo en WhatsApp."
+
+msgid "The form changed since the Flow was built. Update it before publishing."
+msgstr "El formulario cambió desde que se creó el Flow. Actualízalo antes de publicar."
+
+msgid "Live on WhatsApp. Send it from any chat in the inbox; replies land in Submissions."
+msgstr "Publicado en WhatsApp. Envíalo desde cualquier chat de la bandeja; las respuestas llegan a Envíos."
+
+msgid "Questions WhatsApp can't ask"
+msgstr "Preguntas que WhatsApp no puede hacer"
+
+msgid "Required questions are missing in WhatsApp. Make them optional or remove them to publish."
+msgstr "Faltan preguntas obligatorias en WhatsApp. Hazlas opcionales o quítalas para publicar."
+
+msgid "Save the form first: the Flow is built from the saved form."
+msgstr "Guarda el formulario primero: el Flow se crea desde el formulario guardado."
+
+msgid "Update from the form"
+msgstr "Actualizar desde el formulario"
+
+msgid "Build WhatsApp Flow"
+msgstr "Crear Flow de WhatsApp"
+
+msgid "Publish to WhatsApp"
+msgstr "Publicar en WhatsApp"
+
+msgid "Check status"
+msgstr "Revisar estado"
+
+msgid "Preview in WhatsApp"
+msgstr "Vista previa en WhatsApp"
+
+msgid "Out of date"
+msgstr "Desactualizado"
+
+msgid "Publish the WhatsApp Flow?"
+msgstr "¿Publicar el Flow de WhatsApp?"
+
+msgid "The Flow is sent to WhatsApp (Meta) and becomes usable in chats. If you change the form later, update and publish the Flow again."
+msgstr "El Flow se envía a WhatsApp (Meta) y se puede usar en los chats. Si cambias el formulario después, actualiza y publica el Flow de nuevo."
+
+msgid "Emails go out from your own business address, never from the platform."
+msgstr "Los correos salen de la dirección de tu negocio, nunca de la plataforma."
+
+msgid "Connect your business email"
+msgstr "Conecta el correo de tu negocio"
+
+msgid "No business email account is connected yet."
+msgstr "Aún no hay una cuenta de correo del negocio conectada."
+
+msgid "Until then these emails are not sent; everything else still works."
+msgstr "Mientras tanto estos correos no se envían; todo lo demás sigue funcionando."
+
+msgid "Connect email"
+msgstr "Conectar correo"
+
+msgid "Sending from {0}."
+msgstr "Se envía desde {0}."
+
+msgid "Email the team"
+msgstr "Avisar al equipo por correo"
+
+msgid "The people under \"Also tell\" (or the owner) get each submission by email."
+msgstr "Las personas en «Avisar también a» (o el responsable) reciben cada envío por correo."
+
+msgid "Confirmation email to the visitor"
+msgstr "Correo de confirmación al visitante"
+
+msgid "Sent only when the visitor gave an email and ticked consent. Pick one of your email templates."
+msgstr "Se envía solo si el visitante dejó su correo y marcó el consentimiento. Elige una de tus plantillas de correo."
+
+msgid "Don't send"
+msgstr "No enviar"
+
+msgid "Lead forms on Facebook and Messenger"
+msgstr "Formularios de Facebook y Messenger"
+
+msgid "Forms people fill in inside Facebook ads and Messenger. Their answers arrive in the CRM too."
+msgstr "Formularios que la gente llena en anuncios de Facebook y en Messenger. Sus respuestas también llegan al CRM."
+
+msgid "Not syncing"
+msgstr "Sin sincronizar"
+
+msgid "Latest records"
+msgstr "Últimos registros"
+
+msgid "Open Inquiries"
+msgstr "Abrir Consultas"
+
+msgid "Lead syncing"
+msgstr "Sincronización de leads"
+
+msgid "Choose an approved template."
+msgstr "Elige una plantilla aprobada."
+
+msgid "This template is not approved by WhatsApp yet ({0})."
+msgstr "WhatsApp aún no aprueba esta plantilla ({0})."
+
+msgid "Turn on \"Ask for WhatsApp consent\": confirmations only go to people who tick it."
+msgstr "Activa «Pedir consentimiento de WhatsApp»: las confirmaciones solo van a quien lo marque."
+
+msgid "WhatsApp is not connected to the API, so confirmations wait until it is."
+msgstr "WhatsApp no está conectado a la API, así que las confirmaciones esperan hasta que lo esté."
+
+msgid "{0} via WhatsApp"
+msgstr "{0} por WhatsApp"
+
+msgid "Return to forms"
+msgstr "Volver a formularios"
+
 msgid "Published"
 msgstr "Publicado"
 

@@ -13,7 +13,9 @@
           ? __('Return to report')
           : target.startsWith('/forms/')
             ? __('Return to form submissions')
-            : __('Return to queue')
+            : target.startsWith('/forms')
+              ? __('Return to forms')
+              : __('Return to queue')
       }}</RouterLink
     >
   </nav>

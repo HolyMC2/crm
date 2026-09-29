@@ -238,6 +238,11 @@
         />
       </template>
     </section>
+    <!-- channel follow-ups (doco_marketing addon) -->
+    <template v-if="channels">
+      <ConfirmationSection />
+      <EmailSection />
+    </template>
   </div>
 </template>
 
@@ -249,9 +254,13 @@ import LucideX from '~icons/lucide/x'
 import { computed, h, inject } from 'vue'
 import { inputFields } from './formModel'
 import { FORM_BUILDER, targetOptions } from './useFormBuilder'
+import { FORM_CHANNELS } from './channels/useFormChannels'
+import ConfirmationSection from './channels/ConfirmationSection.vue'
+import EmailSection from './channels/EmailSection.vue'
 
 // the builder model, shared with the page and the other panels
 const b = inject(FORM_BUILDER)
+const channels = inject(FORM_CHANNELS, null)
 
 // small heading + one-line hint used by every block in the panel
 const PanelHeading = (p) =>

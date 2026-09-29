@@ -101,6 +101,12 @@
       </div>
     </section>
 
+    <!-- chat channels (doco_marketing addon) -->
+    <template v-if="chatChannels">
+      <WhatsAppFlowCard />
+      <ChatShareCard />
+    </template>
+
     <!-- per-channel links -->
     <section class="flex flex-col gap-3">
       <div>
@@ -203,6 +209,9 @@
 
 <script setup>
 import { FORM_BUILDER } from './useFormBuilder'
+import { FORM_CHANNELS } from './channels/useFormChannels'
+import WhatsAppFlowCard from './channels/WhatsAppFlowCard.vue'
+import ChatShareCard from './channels/ChatShareCard.vue'
 import {
   Button,
   FormControl,
@@ -229,6 +238,7 @@ import {
 
 // the builder model, shared with the page and the other panels
 const b = inject(FORM_BUILDER)
+const chatChannels = inject(FORM_CHANNELS, null)
 const { capture } = useTelemetry()
 
 const url = computed(() => publicUrl(window.location.origin, b.form.route))

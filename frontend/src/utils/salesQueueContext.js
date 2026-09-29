@@ -3,7 +3,7 @@
 export function safeQueueReturn(value) {
   return typeof value === 'string' &&
     value.length <= 2048 &&
-    /^(?:\/reports(?=[?#]|$)|\/forms\/[A-Za-z0-9%_.-]+(?=[?#]|$)|\/(?:leads|deals|tasks)(?:\/view(?:\/(?:list|kanban))?)?\/?(?:[?#]|$))/.test(
+    /^(?:\/reports(?=[?#]|$)|\/forms(?:\/[A-Za-z0-9%_.-]+)?(?=[?#]|$)|\/(?:leads|deals|tasks)(?:\/view(?:\/(?:list|kanban))?)?\/?(?:[?#]|$))/.test(
       value,
     ) &&
     !/[\\\r\n]/.test(value)

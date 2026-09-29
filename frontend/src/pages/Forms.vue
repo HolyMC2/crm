@@ -55,6 +55,11 @@
           </p>
         </div>
         <TemplateGrid :templates="templates.data || []" @pick="openNew" />
+        <MetaLeadForms
+          v-if="addonAvailable"
+          class="mt-4"
+          :rows="leadSources.data?.meta_lead_forms || []"
+        />
       </div>
 
       <div v-else class="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-5">
@@ -180,6 +185,12 @@
             </div>
           </div>
         </article>
+
+        <MetaLeadForms
+          v-if="addonAvailable"
+          class="mt-4"
+          :rows="leadSources.data?.meta_lead_forms || []"
+        />
       </div>
     </div>
   </div>
@@ -204,6 +215,9 @@ import LucideMegaphone from '~icons/lucide/megaphone'
 import LucideBell from '~icons/lucide/bell'
 import LucideShieldCheck from '~icons/lucide/shield-check'
 import TemplateGrid from '@/components/Forms/TemplateGrid.vue'
+import MetaLeadForms from '@/components/Forms/channels/MetaLeadForms.vue'
+import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
+import { addonAvailable } from '@/utils/crmCapabilities'
 import NewFormDialog from '@/components/Forms/NewFormDialog.vue'
 import { outcome, publicUrl } from '@/components/Forms/formModel'
 import { usersStore } from '@/stores/users'
@@ -222,6 +236,17 @@ const templates = createResource({
   auto: true,
 })
 const rows = computed(() => forms.data || [])
+
+// addon: Facebook/Messenger lead forms and per-channel submission counts
+const leadSources = createResource({
+  url: 'doco_marketing.api.form_channels.lead_sources',
+  auto: addonAvailable.value,
+})
+const byChannel = computed(() =>
+  Object.fromEntries(
+    (leadSources.data?.forms || []).map((f) => [f.name, f.by_channel || {}]),
+  ),
+)
 
 const showNew = ref(false)
 // null opens the picker; a key (or '' for blank) jumps to naming it
@@ -248,6 +273,13 @@ function chips(f) {
     })
   if (a.campaign)
     out.push({ key: 'campaign', icon: LucideMegaphone, label: __('Follow-up') })
+  const viaWhatsApp = byChannel.value[f.name]?.whatsapp
+  if (viaWhatsApp)
+    out.push({
+      key: 'whatsapp',
+      icon: WhatsAppIcon,
+      label: __('{0} via WhatsApp', [viaWhatsApp]),
+    })
   if (a.consent)
     out.push({
       key: 'consent',

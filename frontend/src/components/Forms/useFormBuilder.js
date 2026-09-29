@@ -83,6 +83,13 @@ export function useFormBuilder(name) {
     dirty.value = true
   }
 
+  // extra settings owned by other modules (e.g. the channel settings of the
+  // doco_marketing addon) save together with the form, after it
+  const savers = []
+  function registerSaver(fn) {
+    savers.push(fn)
+  }
+
   // ── field catalog ─────────────────────────────────────────────────────────
   const availableFields = createResource({
     url: 'crm.api.form.get_form_fields',
@@ -513,6 +520,7 @@ export function useFormBuilder(name) {
         form: payload(),
       })
       form.route = doc.route
+      for (const saver of savers) await saver()
       if (form.published && !savedPublished.value) {
         capture('form_published', { source: 'builder' })
       }
@@ -557,6 +565,7 @@ export function useFormBuilder(name) {
     checklist,
     publishable,
     markDirty,
+    registerSaver,
     isMandatory,
     ensureLinkMeta,
     grantGuestSelect,
