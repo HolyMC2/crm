@@ -25,7 +25,8 @@ def _resolve_deal(doc, keys):
 	contact = next((c.contact for c in doc.get("contacts") or [] if c.is_primary), None) or doc.get("contact")
 	row = {}
 	if contact:
-		row = frappe.db.get_value("Contact", contact, ["first_name", "last_name", "full_name"], as_dict=True) or {}
+		fields = ["first_name", "last_name", "full_name"]
+		row = frappe.db.get_value("Contact", contact, fields, as_dict=True) or {}
 	first, full = _names(row.get("first_name"), row.get("last_name"), row.get("full_name"))
 	if not full:
 		first, full = _names(doc.get("first_name"), doc.get("last_name"), doc.get("lead_name"))

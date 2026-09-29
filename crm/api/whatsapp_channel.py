@@ -19,7 +19,7 @@ import frappe
 from frappe import _
 from frappe.utils import escape_html
 
-from crm.api.whatsapp import validate_access
+from crm.api.whatsapp import get_template_preview, validate_access
 from crm.api.whatsapp_contacts import _digits
 
 try:
@@ -142,14 +142,12 @@ def prepare_manual_message(
 		if template not in {r.name for r in _manual_templates(reference_doctype)}:
 			frappe.throw(_("Plantilla no disponible para este registro."))
 		# The same resolution the Cloud API send uses (frappe_whatsapp's template
-		# contract), so both modes put the same values in the same slots. Only
-		# values read from THIS record go in; a slot it cannot fill stays visible
-		# as {{n}} and is reported — never a Meta sample value.
-		from frappe_whatsapp import template_vars
-
-		result = template_vars.resolve(template, frappe.get_doc(reference_doctype, reference_name))
-		missing = [m["label"] for m in result.missing]
-		text = result.text
+		# contract, via the composer preview), so both modes put the same values in
+		# the same slots. Only values read from THIS record go in; a slot it cannot
+		# fill stays visible as {{n}} and is reported — never a Meta sample value.
+		preview = get_template_preview(reference_doctype, reference_name, template)
+		missing = preview["missing"]
+		text = "\n\n".join(p for p in (preview["rendered"], preview["footer"]) if p)
 	text = re.sub(r"[ \t]{2,}", " ", text or "").strip()
 	digits = recipient(reference_doctype, reference_name, phone)
 	return {

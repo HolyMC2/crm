@@ -451,6 +451,8 @@ def get_template_preview(reference_doctype: str, reference_name: str, template: 
 	# template's shipped default) against the record exactly as the send will. A
 	# slot it cannot fill stays empty for the agent — Meta sample values are
 	# never offered as if they were the customer's data.
+	if template_vars is None:
+		return _preview_from_fields(tpl, reference_doctype, reference_name)
 	result = template_vars.resolve(template, frappe.get_doc(reference_doctype, reference_name))
 	variables = [
 		{
@@ -470,6 +472,37 @@ def get_template_preview(reference_doctype: str, reference_name: str, template: 
 		"language_code": tpl.get("language_code") or "",
 		"variables": variables,
 		"missing": [m["label"] for m in result.missing],
+	}
+
+
+def _preview_from_fields(tpl, reference_doctype: str, reference_name: str) -> dict:
+	"""Preview on a frappe_whatsapp without the template contract: only `field_names`
+	tokens that read this record fill a slot; the rest stay empty and are reported
+	(never Meta sample values)."""
+	import re
+
+	body = tpl.template or ""
+	tokens = [t.strip() for t in (tpl.get("field_names") or "").split(",") if t.strip()]
+	meta = frappe.get_meta(reference_doctype)
+	variables, missing = [], []
+	for i in sorted({int(n) for n in re.findall(r"\{\{\s*(\d+)\s*\}\}", body)}):
+		token = tokens[i - 1] if i - 1 < len(tokens) else ""
+		value = _resolve_dotted(reference_doctype, reference_name, token) if token else ""
+		df = meta.get_field(token.partition(".")[0]) if token else None
+		label = _(df.label) if df and df.label else (token or _("Variable {0}").format(i))
+		variables.append({"index": i, "field": token, "label": label, "value": value})
+		if not value:
+			missing.append(label)
+	filled = {str(v["index"]): v["value"] for v in variables if v["value"]}
+	return {
+		"name": tpl.name,
+		"body": body,
+		"rendered": re.sub(r"\{\{\s*(\d+)\s*\}\}", lambda m: filled.get(m.group(1), m.group(0)), body),
+		"footer": tpl.get("footer") or "",
+		"header_type": tpl.get("header_type") or "",
+		"language_code": tpl.get("language_code") or "",
+		"variables": variables,
+		"missing": missing,
 	}
 
 

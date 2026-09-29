@@ -136,6 +136,10 @@ class TestManualChannel(unittest.TestCase):
 
 	def test_composer_preview_and_manual_link_carry_the_same_values(self):
 		"""The composer (API send) and the manual box resolve through one contract."""
+		from crm.api.whatsapp import template_vars
+
+		if template_vars is None:
+			self.skipTest("frappe_whatsapp without the template contract")
 		from crm.api.whatsapp import get_template_preview
 
 		lead = self.lead(mobile_no="55 1234 5678")
