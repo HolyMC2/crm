@@ -3,29 +3,25 @@
     <p class="text-sm leading-relaxed text-ink-gray-6">
       {{
         __(
-          'Los canales usan el periodo y responsable seleccionados. Campañas, actividad social y desempeño usan solo el periodo. Marketing no admite filtros de pipeline o empresa.',
+          'Cada bloque usa el periodo, responsable y pipeline cuando sus datos tienen esa dimensión, y aclara los filtros que no aplican. Marketing no admite el filtro de empresa. Los números subrayados abren sus registros.',
         )
       }}
     </p>
     <div class="grid min-w-0 gap-4 xl:grid-cols-2">
       <ReportChart
-        :selectable="false"
         :title="__('¿De dónde llegan los leads?')"
-        :description="
-          __(
-            'Hasta 8 orígenes principales · periodo y responsable seleccionados',
-          )
-        "
+        :description="note(__('Hasta 8 orígenes principales'), source.meta)"
         :rows="channels"
         :value-label="__('Leads')"
         :loading="source.loading"
         :error="source.error"
+        @select="(row) => openDrill(row.drill, row.label)"
         @retry="source.reload"
       />
       <ReportChart
         :title="__('¿Qué campañas generan contactos?')"
         :description="
-          __('Hasta 8 campañas con más contactos · solo periodo seleccionado')
+          note(__('Hasta 8 campañas con más contactos'), attribution.meta)
         "
         :rows="campaigns"
         :value-label="__('Contactos')"
@@ -45,18 +41,26 @@
       <div class="mt-4 space-y-4">
         <ReportBlock
           :title="__('Origen de leads y tratos')"
+          :description="note('', source.meta)"
           :loading="source.loading"
           :error="source.error"
           :empty="!sources.length"
           @retry="source.reload"
         >
-          <MarketingTable :rows="sources" :columns="sourceColumns" />
+          <MarketingTable
+            :rows="sources"
+            :columns="sourceColumns"
+            @drill="forward"
+          />
         </ReportBlock>
         <ReportBlock
           :title="__('Atribución por campaña')"
           :description="
-            __(
-              'Contactos y tratos atribuidos por el servidor; los ingresos no descuentan inversión ni representan rentabilidad.',
+            note(
+              __(
+                'Contactos y tratos atribuidos por el servidor; los ingresos no descuentan inversión ni representan rentabilidad.',
+              ),
+              attribution.meta,
             )
           "
           :loading="attribution.loading"
@@ -69,13 +73,19 @@
             label-key="campaign"
             :columns="attributionColumns"
             :link="campaignLink"
+            :currency="attribution.meta?.currency"
+            @drill="forward"
           />
         </ReportBlock>
         <ReportBlock
           :title="__('Resultados por campaña')"
           :description="
-            __(
-              'Inscripciones, entregas y resultados en el periodo. Sin datos de inversión para calcular ROI.',
+            note(
+              __(
+                'Inscripciones, entregas y resultados en el periodo. Sin datos de inversión para calcular ROI.',
+              ),
+              roi.meta,
+              roiMetrics,
             )
           "
           :loading="roi.loading"
@@ -88,13 +98,16 @@
             label-key="campaign"
             :columns="roiColumns"
             :link="campaignLink"
+            :currency="roi.meta?.currency"
+            @drill="forward"
           />
         </ReportBlock>
         <ReportBlock
           :title="__('Origen social')"
           :description="
-            __(
-              'Leads, tratos e ingresos atribuidos al origen social · solo periodo seleccionado',
+            note(
+              __('Leads, tratos e ingresos atribuidos al origen social'),
+              social.meta,
             )
           "
           :loading="social.loading"
@@ -106,6 +119,8 @@
             :rows="social.data?.rows || []"
             label-key="origin"
             :columns="socialColumns"
+            :currency="social.data?.currency"
+            @drill="forward"
           />
           <p v-if="social.data?.total" class="mt-3 text-sm text-ink-gray-7">
             {{
@@ -115,7 +130,7 @@
                 social.data.total.won,
               ])
             }}
-            · {{ money(social.data.total.pesos, social.data.currency) }}
+            · {{ moneyText(social.data.total, 'pesos', social.data.currency) }}
           </p>
         </ReportBlock>
       </div>
@@ -128,37 +143,42 @@
       </summary>
       <div class="mt-4 grid gap-4 xl:grid-cols-2">
         <ReportChart
-          :selectable="false"
-          :title="__('Etapas de conversión')"
+          :title="__('Conversión de leads')"
           :description="
-            __(
-              'Conteos por etapa; mezcla cohortes de leads y tratos, no una tasa de conversión del mismo grupo.',
+            note(
+              __(
+                'Leads creados en el periodo y cuántos de ellos ya se convirtieron.',
+              ),
+              funnel.meta,
             )
           "
           :rows="funnelRows"
           :value-label="__('Registros')"
           :loading="funnel.loading"
           :error="funnel.error"
+          @select="(row) => openDrill(row.drill, row.label)"
           @retry="funnel.reload"
         />
         <ReportChart
-          :selectable="false"
           :title="__('Distribución de calificación')"
           :description="
-            __(
-              'Estado actual de las calificaciones; no responde al periodo ni al responsable.',
+            note(
+              __('Calificación actual de los leads sin convertir.'),
+              kpis.meta,
+              { score_distribution: __('Distribución de calificación') },
             )
           "
           :rows="grades"
           :value-label="__('Leads')"
           :loading="kpis.loading"
           :error="kpis.error"
+          @select="(row) => openDrill(row.drill, row.label)"
           @retry="kpis.reload"
         />
       </div>
     </details>
-    <MarketingScorecards :filters="filters" />
-    <MarketingOperations :filters="filters" />
+    <MarketingScorecards :filters="filters" @drill="forward" />
+    <MarketingOperations :filters="filters" @drill="forward" />
     <details
       class="rounded-xl border border-outline-gray-2 bg-surface-base p-4"
     >
@@ -173,34 +193,45 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { money } from '@/utils/numberFormat'
 import ReportBlock from './ReportBlock.vue'
 import ReportChart from './ReportChart.vue'
 import MarketingTable from './MarketingTable.vue'
 import MarketingScorecards from './MarketingScorecards.vue'
 import MarketingOperations from './MarketingOperations.vue'
 import MarketingReactivation from './MarketingReactivation.vue'
-import { sourceRows, useMarketingResource } from './MarketingData'
+import {
+  drillFor,
+  marketingFilters,
+  moneyText,
+  scopeNote,
+  sourceRows,
+  useMarketingResource,
+} from './MarketingData'
 const props = defineProps({ filters: { type: Object, required: true } })
+const emit = defineEmits(['drill'])
 const router = useRouter()
-const dates = () => ({
-  from_date: props.filters.from_date,
-  to_date: props.filters.to_date,
-})
-const scoped = () => ({ ...dates(), user: props.filters.owner || null })
-const resource = (method, params = dates) =>
-  useMarketingResource(`doco_marketing.api.reports.${method}`, params)
-const source = resource('get_lead_source_breakdown', scoped)
-const attribution = resource('get_campaign_attribution')
-const roi = resource('get_campaign_roi')
+const params = () => marketingFilters(props.filters)
+const resource = (method, options) =>
+  useMarketingResource(`doco_marketing.api.reports.${method}`, params, options)
+const source = resource('get_lead_source_breakdown')
+const attribution = resource('get_campaign_attribution', { list: true })
+const roi = resource('get_campaign_roi', { list: true })
 const social = resource('get_social_funnel')
-const funnel = resource('get_funnel_data', scoped)
-const kpis = resource('get_report_kpis', scoped)
+const funnel = resource('get_funnel_data', { list: true })
+const kpis = resource('get_report_kpis')
+const note = (text, meta, metrics) =>
+  [text, scopeNote(meta, metrics)].filter(Boolean).join(' ')
+function openDrill(drill, title) {
+  if (drill) emit('drill', { drill, title })
+}
+const forward = (payload) => emit('drill', payload)
 const sources = computed(() => sourceRows(source.data))
 const channels = computed(() =>
-  sources.value
-    .slice(0, 8)
-    .map((row) => ({ label: row.name, value: row.leads })),
+  sources.value.slice(0, 8).map((row) => ({
+    label: row.name,
+    value: row.leads,
+    drill: row.drills.leads,
+  })),
 )
 const campaigns = computed(() =>
   (attribution.data || [])
@@ -217,12 +248,14 @@ const funnelRows = computed(() =>
   (funnel.data || []).map((row) => ({
     label: __(row.stage),
     value: row.count,
+    drill: drillFor(row, 'value'),
   })),
 )
 const grades = computed(() =>
   Object.entries(kpis.data?.score_distribution || {}).map(([grade, count]) => ({
     label: grade === 'Ungraded' ? __('Sin calificación') : grade,
     value: count,
+    drill: kpis.data?.score_drills?.[grade] || null,
   })),
 )
 const campaignLink = (row) => `/campaigns/${encodeURIComponent(row.campaign)}`
@@ -248,6 +281,9 @@ const roiColumns = [
   { key: 'touched', label: __('Contactados') },
   ...attributionColumns.slice(1),
 ]
+const roiMetrics = Object.fromEntries(
+  roiColumns.map((column) => [column.key, column.label]),
+)
 const socialColumns = [
   ...sourceColumns,
   { key: 'won', label: __('Ganados') },

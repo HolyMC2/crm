@@ -7,7 +7,10 @@
       <ReportBlock
         :title="__('Salud de envíos')"
         :description="
-          __('Últimos 7 días; independiente del periodo y los demás filtros.')
+          note(
+            __('Envíos creados o enviados en el periodo seleccionado.'),
+            dispatch.meta,
+          )
         "
         :loading="dispatch.loading"
         :error="dispatch.error"
@@ -18,7 +21,15 @@
           <div v-for="row in statuses" :key="row.status">
             <dt class="text-ink-gray-6">{{ __(row.status) }}</dt>
             <dd class="mt-1 font-medium tabular-nums text-ink-gray-9">
-              {{ row.count }}
+              <button
+                v-if="row.drill && row.count"
+                type="button"
+                class="report-drill"
+                @click="open(row.drill, __(row.status))"
+              >
+                {{ row.count }}
+              </button>
+              <template v-else>{{ row.count }}</template>
             </dd>
           </div>
         </dl>
@@ -32,6 +43,7 @@
           :rows="deferred"
           label-key="reason"
           :columns="countColumns"
+          @drill="forward"
         />
         <h4
           v-if="dispatch.data?.top_reasons?.length"
@@ -40,16 +52,18 @@
           {{ __('Motivos de fallo u omisión') }}
         </h4>
         <MarketingTable
-          :rows="dispatch.data?.top_reasons || []"
+          :rows="reasons"
           label-key="reason"
           :columns="reasonColumns"
+          @drill="forward"
         />
       </ReportBlock>
       <ReportBlock
         :title="__('Resultados de automatizaciones')"
         :description="
-          __(
-            'Borradores, envíos y respuestas por flujo y paso · solo periodo seleccionado',
+          note(
+            __('Borradores, envíos y respuestas por flujo y paso.'),
+            flows.meta,
           )
         "
         :loading="flows.loading"
@@ -61,13 +75,17 @@
           :rows="flows.data || []"
           label-key="flow"
           :columns="flowColumns"
+          @drill="forward"
         />
       </ReportBlock>
       <ReportBlock
         :title="__('Tratos que necesitan atención')"
         :description="
-          __(
-            'Auditoría actual de tratos abiertos, filtrada por responsable; independiente del periodo, pipeline y empresa.',
+          note(
+            __(
+              'Estado actual de los tratos abiertos creados en el periodo; no admite filtro de empresa.',
+            ),
+            hygiene.meta,
           )
         "
         :loading="hygiene.loading"
@@ -76,11 +94,31 @@
         @retry="hygiene.reload"
       >
         <p class="mb-3 text-sm font-medium text-ink-gray-9">
-          {{ __('{0} tratos con pendientes', [hygiene.data?.count || 0]) }}
+          <button
+            v-if="hygiene.data?.drill"
+            type="button"
+            class="report-drill"
+            @click="open(hygiene.data.drill, __('Tratos con pendientes'))"
+          >
+            {{ __('{0} tratos con pendientes', [hygiene.data?.count || 0]) }}
+          </button>
+          <template v-else>
+            {{ __('{0} tratos con pendientes', [hygiene.data?.count || 0]) }}
+          </template>
         </p>
         <ul class="mb-4 flex flex-wrap gap-2 text-sm text-ink-gray-7">
           <li v-for="(count, issue) in hygiene.data?.summary" :key="issue">
-            {{ issueLabel(issue) }}: {{ count }}
+            <button
+              v-if="hygiene.data?.summary_drills?.[issue]"
+              type="button"
+              class="report-drill"
+              @click="
+                open(hygiene.data.summary_drills[issue], issueLabel(issue))
+              "
+            >
+              {{ issueLabel(issue) }}: {{ count }}
+            </button>
+            <template v-else>{{ issueLabel(issue) }}: {{ count }}</template>
           </li>
         </ul>
         <MarketingTable
@@ -98,33 +136,51 @@
 import { computed } from 'vue'
 import ReportBlock from './ReportBlock.vue'
 import MarketingTable from './MarketingTable.vue'
-import { useMarketingResource } from './MarketingData'
+import {
+  marketingFilters,
+  scopeNote,
+  useMarketingResource,
+} from './MarketingData'
 const props = defineProps({ filters: { type: Object, required: true } })
+const emit = defineEmits(['drill'])
+const forward = (payload) => emit('drill', payload)
+function open(drill, title) {
+  if (drill) emit('drill', { drill, title })
+}
+const note = (text, meta) => [text, scopeNote(meta)].filter(Boolean).join(' ')
+const params = () => marketingFilters(props.filters)
+// `days` only applies when the page sends no period (legacy callers).
 const dispatch = useMarketingResource(
   'doco_marketing.api.reports.dispatch_health',
-  () => ({ days: 7 }),
+  () => ({ days: 7, ...params() }),
 )
 const flows = useMarketingResource(
   'doco_marketing.api.reports.get_flow_analytics',
-  () => ({
-    from_date: props.filters.from_date,
-    to_date: props.filters.to_date,
-  }),
+  params,
+  { list: true },
 )
 const hygiene = useMarketingResource(
   'doco_marketing.api.reports.get_deal_hygiene',
-  () => ({ owner: props.filters.owner || null }),
+  params,
 )
 const statuses = computed(() =>
   Object.entries(dispatch.data?.by_status || {}).map(([status, count]) => ({
     status,
     count,
+    drill: dispatch.data?.by_status_drills?.[status] || null,
   })),
 )
 const deferred = computed(() =>
   Object.entries(dispatch.data?.deferred || {}).map(([reason, count]) => ({
     reason,
     count,
+    drills: { count: dispatch.data?.deferred_drills?.[reason] || null },
+  })),
+)
+const reasons = computed(() =>
+  (dispatch.data?.top_reasons || []).map((row) => ({
+    ...row,
+    drills: { count: row.drill || null },
   })),
 )
 const countColumns = [{ key: 'count', label: __('Cantidad') }]
@@ -166,3 +222,9 @@ const hygieneColumns = [
   },
 ]
 </script>
+
+<style scoped>
+.report-drill {
+  @apply min-h-11 rounded px-1 text-left tabular-nums underline underline-offset-4 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2;
+}
+</style>

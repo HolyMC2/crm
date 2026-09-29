@@ -46,7 +46,16 @@
                   : 'min-w-32 text-left'
               "
             >
-              {{ format(row, column) }}
+              <button
+                v-if="drillable(row, column)"
+                type="button"
+                class="report-drill"
+                :aria-label="drillLabel(row, column)"
+                @click="openDrill(row, column)"
+              >
+                {{ format(row, column) }}
+              </button>
+              <template v-else>{{ format(row, column) }}</template>
             </td>
           </tr>
         </tbody>
@@ -72,7 +81,16 @@
           <div v-for="column in columns" :key="column.key" class="min-w-0">
             <dt class="break-words text-ink-gray-6">{{ column.label }}</dt>
             <dd class="mt-1 break-words tabular-nums text-ink-gray-9">
-              {{ format(row, column) }}
+              <button
+                v-if="drillable(row, column)"
+                type="button"
+                class="report-drill"
+                :aria-label="drillLabel(row, column)"
+                @click="openDrill(row, column)"
+              >
+                {{ format(row, column) }}
+              </button>
+              <template v-else>{{ format(row, column) }}</template>
             </dd>
           </div>
         </dl>
@@ -82,8 +100,9 @@
 </template>
 
 <script setup>
-import { money } from '@/utils/numberFormat'
 import { fmtDuration } from '@/utils/agentMetricsFormat'
+import { drillFor, moneyText } from './MarketingData'
+const emit = defineEmits(['drill'])
 const props = defineProps({
   rows: { type: Array, default: () => [] },
   columns: { type: Array, default: () => [] },
@@ -102,9 +121,31 @@ function numeric(column) {
 function format(row, column) {
   const value = row[column.key]
   if (value == null) return __('Sin datos')
-  if (column.money) return money(value, row.currency || props.currency || null)
+  if (column.money) return moneyText(row, column.key, props.currency || null)
   if (column.duration) return fmtDuration(value)
   if (column.percent) return `${value}%`
   return column.format ? column.format(value) : value
 }
+// Counts the server can reproduce open their exact records.
+function drillable(row, column) {
+  return Number(row[column.key]) > 0 && Boolean(drillFor(row, column.key))
+}
+function drillTitle(row, column) {
+  return `${column.label} · ${row[props.labelKey] || __('Sin nombre')}`
+}
+function drillLabel(row, column) {
+  return __('Ver registros: {0}', [drillTitle(row, column)])
+}
+function openDrill(row, column) {
+  emit('drill', {
+    drill: drillFor(row, column.key),
+    title: drillTitle(row, column),
+  })
+}
 </script>
+
+<style scoped>
+.report-drill {
+  @apply min-h-11 rounded px-1 tabular-nums text-ink-gray-9 underline underline-offset-4 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2;
+}
+</style>

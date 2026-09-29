@@ -7,9 +7,7 @@
       <ReportBlock
         :title="__('Actividad por agente')"
         :description="
-          __(
-            'Mensajes, llamadas, reparaciones y tratos · solo periodo seleccionado',
-          )
+          note(__('Mensajes, llamadas, reparaciones y tratos.'), agentMetrics)
         "
         :loading="score.loading"
         :error="score.error"
@@ -21,13 +19,18 @@
           label-key="agent_name"
           :columns="agentColumns"
           :currency="score.data?.currency"
+          @drill="forward"
         />
       </ReportBlock>
       <ReportsAgents />
       <ReportBlock
         :title="__('Desempeño por sucursal')"
         :description="
-          __('Solo periodo seleccionado. Importes reportados por el servidor.')
+          note(
+            __(
+              'Tratos por fecha de creación; facturado y cobrado por fecha de factura, en la moneda de cada documento.',
+            ),
+          )
         "
         :loading="score.loading"
         :error="score.error"
@@ -39,14 +42,13 @@
           label-key="shop"
           :columns="shopColumns"
           :currency="score.data?.currency"
+          @drill="forward"
         />
       </ReportBlock>
       <ReportBlock
         :title="__('Desempeño por territorio')"
         :description="
-          __(
-            'Solo periodo seleccionado; territorio y sucursal son dimensiones distintas.',
-          )
+          note(__('Territorio y sucursal son dimensiones distintas.'))
         "
         :loading="score.loading"
         :error="score.error"
@@ -58,6 +60,7 @@
           label-key="territory"
           :columns="dealColumns"
           :currency="score.data?.currency"
+          @drill="forward"
         />
       </ReportBlock>
     </div>
@@ -68,15 +71,20 @@
 import ReportBlock from './ReportBlock.vue'
 import MarketingTable from './MarketingTable.vue'
 import ReportsAgents from '@/components/doco/ReportsAgents.vue'
-import { useMarketingResource } from './MarketingData'
+import {
+  marketingFilters,
+  scopeNote,
+  useMarketingResource,
+} from './MarketingData'
 const props = defineProps({ filters: { type: Object, required: true } })
+const emit = defineEmits(['drill'])
+const forward = (payload) => emit('drill', payload)
 const score = useMarketingResource(
   'doco_marketing.api.reports.get_agent_scorecard',
-  () => ({
-    from_date: props.filters.from_date,
-    to_date: props.filters.to_date,
-  }),
+  () => marketingFilters(props.filters),
 )
+const note = (text, metrics) =>
+  [text, scopeNote(score.meta, metrics)].filter(Boolean).join(' ')
 const dealColumns = [
   { key: 'deals', label: __('Tratos') },
   { key: 'won', label: __('Ganados') },
@@ -99,4 +107,7 @@ const shopColumns = [
   { key: 'invoiced', label: __('Facturado'), money: true },
   { key: 'paid', label: __('Cobrado'), money: true },
 ]
+const agentMetrics = Object.fromEntries(
+  agentColumns.map((column) => [column.key, column.label]),
+)
 </script>
