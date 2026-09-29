@@ -522,6 +522,10 @@ def get_form_config(name: str) -> dict:
 		"hidden_fields": _load_hidden_fields(doc),
 		"incompatible_fields": incompatible_fields(doc),
 		"settings": form_settings.of_form(doc),
+		# shown/prefilled when the author turns the WhatsApp opt-in on
+		"default_consent_text": form_settings.default_consent_text(
+			form_settings.of_form(doc)["language"] or None
+		),
 	}
 
 

@@ -38,6 +38,11 @@ DEFAULTS = {
 }
 
 
+def default_consent_text(lang: str | None = None) -> str:
+	"""The standard opt-in text in the form's language (visitors read it, not staff)."""
+	return _("Yes, send me offers and news from {business} on WhatsApp.", lang=lang or default_language())
+
+
 def marketing_installed() -> bool:
 	return MARKETING_APP in frappe.get_installed_apps()
 
@@ -124,13 +129,14 @@ def clean(settings: dict | str | None, document_type: str, current: dict | None 
 			if document_type != "CRM Lead":
 				frappe.throw(_("Follow-up campaigns are available for forms that create leads."))
 
+	if out["language"] and not frappe.db.exists("Language", out["language"]):
+		frappe.throw(_("Unknown language: {0}").format(out["language"]))
+
 	out["consent_enabled"] = 1 if out["consent_enabled"] else 0
 	out["consent_text"] = (out["consent_text"] or "").strip()[:500]
 	if out["consent_enabled"] and not out["consent_text"]:
-		frappe.throw(_("Write the consent text visitors agree to."))
-
-	if out["language"] and not frappe.db.exists("Language", out["language"]):
-		frappe.throw(_("Unknown language: {0}").format(out["language"]))
+		# no wording given: the standard text, in the language visitors see
+		out["consent_text"] = default_consent_text(out["language"])
 	out["template"] = (out["template"] or "")[:40]
 	return out
 

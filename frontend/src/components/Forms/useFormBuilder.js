@@ -78,6 +78,8 @@ export function useFormBuilder(name) {
   const hiddenFields = ref([])
   // rows a CRM form can't collect (a Web Form built in Desk): read-only until copied clean
   const incompatible = ref([])
+  // the standard WhatsApp opt-in text in the form's language (from the server)
+  const defaultConsentText = ref('')
   const sections = ref([])
   const expanded = ref(null)
 
@@ -439,6 +441,7 @@ export function useFormBuilder(name) {
       })
       savedPublished.value = !!form.published
       incompatible.value = doc.incompatible_fields || []
+      defaultConsentText.value = doc.default_consent_text || ''
       form.fields = (doc.fields || []).map((f) => ({
         name: f.name,
         fieldname: f.fieldname,
@@ -565,6 +568,7 @@ export function useFormBuilder(name) {
     settings,
     hiddenFields,
     incompatible,
+    defaultConsentText,
     sections,
     expanded,
     config,

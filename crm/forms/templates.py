@@ -180,7 +180,7 @@ def _spec(key: str, lang: str) -> dict:
 			],
 			"settings": {
 				"consent_enabled": 1,
-				"consent_text": t("Yes, send me offers and news from {business} on WhatsApp."),
+				"consent_text": form_settings.default_consent_text(lang),
 			},
 		},
 	}

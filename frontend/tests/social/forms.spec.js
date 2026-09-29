@@ -92,6 +92,7 @@ test('set up a drill form and a wait-only campaign', async ({ page }) => {
 
 for (const theme of ['light', 'dark']) {
   test(`forms list + builder, desktop ${theme}`, async ({ page }) => {
+    test.setTimeout(150_000) // five tabs on a busy lab
     await page.setViewportSize({ width: 1440, height: 900 })
     await useTheme(page, theme)
     await login(page)

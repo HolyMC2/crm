@@ -322,3 +322,17 @@ class TestFormWiring(IntegrationTestCase):
 		self.assertIn("status", {h["fieldname"] for h in copy["hidden_fields"]})
 		# the original stays exactly as it was
 		self.assertEqual(len(frappe.get_doc("Web Form", desk.name).web_form_fields), 3)
+
+	def test_consent_text_defaults_to_the_forms_language(self):
+		name = F.create_form(template="contact", route="wf-consent-lang")["name"]
+		cfg = F.get_form_config(name)
+		F.save_form(name, {**cfg, "settings": {"language": "es", "consent_enabled": 1, "consent_text": ""}})
+		es = F.get_form_config(name)
+		self.assertEqual(
+			es["settings"]["consent_text"],
+			frappe._("Yes, send me offers and news from {business} on WhatsApp.", lang="es"),
+		)
+		self.assertEqual(es["default_consent_text"], es["settings"]["consent_text"])
+		# a promo form created in Spanish starts with the Spanish opt-in text
+		promo = F.get_form_config(F.create_form(template="promo", route="wf-promo-es", language="es")["name"])
+		self.assertEqual(promo["settings"]["consent_text"], es["settings"]["consent_text"])

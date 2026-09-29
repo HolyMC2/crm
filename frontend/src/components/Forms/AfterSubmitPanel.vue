@@ -204,7 +204,7 @@
         <Switch
           :model-value="Boolean(b.settings.consent_enabled)"
           :aria-label="__('Ask for WhatsApp consent')"
-          @update:model-value="(v) => setSetting('consent_enabled', v ? 1 : 0)"
+          @update:model-value="toggleConsent"
         />
       </div>
       <template v-if="b.settings.consent_enabled">
@@ -213,9 +213,7 @@
           :rows="2"
           :label="__('Checkbox text')"
           :model-value="b.settings.consent_text"
-          :placeholder="
-            __('Yes, send me offers and news from {business} on WhatsApp.')
-          "
+          :placeholder="b.defaultConsentText.value"
           @update:model-value="(v) => setSetting('consent_text', v)"
         />
         <ErrorMessage
@@ -339,6 +337,13 @@ const collectsPhone = computed(() =>
 function setSetting(key, value) {
   b.settings[key] = value
   b.markDirty()
+}
+// turning the opt-in on starts from the standard text in the form's language
+// (visitors read it); the author can reword it
+function toggleConsent(on) {
+  setSetting('consent_enabled', on ? 1 : 0)
+  if (on && !b.settings.consent_text && b.defaultConsentText.value)
+    setSetting('consent_text', b.defaultConsentText.value)
 }
 function addWatcher(user) {
   if (!user || b.settings.notify_users.includes(user)) return
