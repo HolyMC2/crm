@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import frappe
 from frappe.tests import IntegrationTestCase, UnitTestCase
-from frappe.utils import CallbackManager, add_days, now_datetime, today
+from frappe.utils import CallbackManager, add_days, add_to_date, get_datetime, now_datetime, today
 
 from crm.api.workload import get_work_items, get_workload, reassign_bulk
 
@@ -188,10 +188,107 @@ class TestWorkload(IntegrationTestCase):
 			get_work_items(self.filters, kind="tasks", overdue=True)["items"][0].name, str(overdue.name)
 		)
 
-	def test_nonmanager_cannot_read_or_reassign(self):
-		doc = self.deal()
-		command = self.command(doc)
+	def test_due_today_uses_the_site_day_boundary_and_the_overdue_relation(self):
+		# A fixed site timestamp late in the site day: the next site day starts in 30 minutes.
+		as_of = get_datetime(f"{add_days(today(), 3)} 23:30:00")
+		parent = self.deal(kind="Lost")
+		self.task(parent, add_to_date(as_of, minutes=-1))  # overdue, not due today
+		late = self.task(parent, add_to_date(as_of, minutes=29))  # 23:59, due today
+		self.task(parent, add_to_date(as_of, minutes=30))  # 00:00 next site day
+		self.task(parent)  # undated
+		mine = self.task(parent, as_of, self.target)  # due exactly now, other owner
+		done = self.task(parent, add_to_date(as_of, minutes=10))
+		done.status = "Done"
+		done.save()
+		with patch("crm.api.workload.now_datetime", return_value=as_of):
+			result = get_workload(self.filters)
+			# The team directory on a shared site can span several pages of people.
+			rows, page = {}, result
+			while True:
+				rows.update({row["user"]: row for row in page["agents"]})
+				if not page["has_more"]:
+					break
+				page = get_workload(self.filters, page["next_offset"])
+			self.assertEqual(result["summary"]["due_today"], 2)
+			self.assertEqual(result["summary"]["overdue_tasks"], 1)
+			self.assertEqual(rows[self.seller]["due_today"], 1)
+			self.assertEqual(rows[self.target]["due_today"], 1)
+			self.assertEqual(rows[self.manager]["due_today"], 0)
+			queue = get_work_items(self.filters, kind="tasks", due_today=True)
+			self.assertEqual(queue["total"], 2)
+			self.assertCountEqual([row.name for row in queue["items"]], [str(late.name), str(mine.name)])
+			self.assertEqual(
+				[
+					row.name
+					for row in get_work_items(self.filters, kind="tasks", owner=self.seller, due_today=1)[
+						"items"
+					]
+				],
+				[str(late.name)],
+			)
+			with self.assertRaises(frappe.ValidationError):
+				get_work_items(self.filters, kind="tasks", overdue=True, due_today=True)
+
+	def test_due_today_follows_the_same_permission_and_scope_as_overdue(self):
+		as_of = get_datetime(f"{add_days(today(), 3)} 12:00:00")
+		visible = self.deal(owner=self.manager)
+		self.task(visible, add_to_date(as_of, hours=1), self.manager)
+		self.task(visible, add_to_date(as_of, hours=-1), self.manager)
+		hidden_pipeline = self.make_pipeline()
+		hidden = self.deal(owner=self.manager, pipeline=hidden_pipeline.name)
+		self.task(hidden, add_to_date(as_of, hours=1), self.manager)
+		self.task(hidden, add_to_date(as_of, hours=-1), self.manager)
+		hidden_pipeline.append("roles", {"role": "System Manager"})
+		hidden_pipeline.save()
+		frappe.set_user(self.manager)
+		with patch("crm.api.workload.now_datetime", return_value=as_of):
+			scopes = (
+				(self.filters, 1),
+				({"pipeline": hidden_pipeline.name}, 0),
+				({**self.filters, "company": f"Workload none {self.key}"}, 0),
+			)
+			for scope, expected in scopes:
+				summary = get_workload(scope)["summary"]
+				self.assertEqual(summary["due_today"], expected)
+				self.assertEqual(summary["overdue_tasks"], expected)
+				self.assertEqual(get_work_items(scope, kind="tasks", due_today=True)["total"], expected)
+
+	def test_seller_reads_only_their_own_row_and_queue_and_cannot_reassign(self):
+		as_of = get_datetime(f"{add_days(today(), 3)} 12:00:00")
+		own = self.deal()
+		other = self.deal(owner=self.target)
+		self.deal(owner="")
+		self.task(own, add_to_date(as_of, hours=1))
+		self.task(other, add_to_date(as_of, hours=1), self.target)
+		frappe.db.set_single_value("FCRM Settings", "workload_advisory_capacity", 0)
+		command = self.command(own)
 		frappe.set_user(self.seller)
+		with patch("crm.api.workload.now_datetime", return_value=as_of):
+			result = get_workload(self.filters)
+			self.assertEqual(result["scope"], "self")
+			self.assertFalse(result["can_reassign"])
+			self.assertEqual([row["user"] for row in result["agents"]], [self.seller])
+			self.assertEqual(result["total_agents"], 1)
+			self.assertEqual(result["candidates"], [])
+			self.assertEqual(result["unassigned"], {})
+			self.assertEqual(result["summary"]["open_deals"], 1)
+			self.assertEqual(result["summary"]["due_today"], 1)
+			for owner in (None, "", self.target, self.manager):
+				queue = get_work_items(self.filters, owner=owner)
+				self.assertEqual([row.name for row in queue["items"]], [own.name])
+				tasks = get_work_items(self.filters, kind="tasks", owner=owner, due_today=True)
+				self.assertEqual({row.owner for row in tasks["items"]}, {self.seller})
+		with self.assertRaises(frappe.PermissionError):
+			reassign_bulk([command], self.target, self.filters)
+		frappe.set_user("Administrator")
+		self.assertEqual(frappe.db.get_value("CRM Deal", own.name, "deal_owner"), self.seller)
+		frappe.set_user(self.manager)
+		self.assertEqual(get_workload(self.filters)["scope"], "team")
+
+	def test_user_without_a_crm_role_cannot_read_or_reassign(self):
+		command = self.command(self.deal())
+		outsider = self.user("outsider", "Website Manager")
+		frappe.set_user(outsider)
 		for action in (
 			lambda: get_workload(self.filters),
 			lambda: get_work_items(self.filters),

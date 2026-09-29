@@ -19,10 +19,19 @@ TYPES = {
 }
 OPEN = ("Open", "Ongoing", "On Hold")
 PAGE_SIZE = 25
+MANAGER_ROLES = ("System Manager", "Sales Manager")
+CRM_ROLES = (*MANAGER_ROLES, "Sales User")
+COUNT_KEYS = ("open_leads", "open_deals", "open_tasks", "overdue_tasks", "due_today", "undated_tasks")
 
 
 def _manager():
-	frappe.only_for(["System Manager", "Sales Manager"])
+	frappe.only_for(list(MANAGER_ROLES))
+
+
+def _viewer():
+	"""Managers read the team; any other CRM user reads only their own queue."""
+	frappe.only_for(list(CRM_ROLES))
+	return bool(set(MANAGER_ROLES) & set(frappe.get_roles()))
 
 
 def _fields(doctype, names, permission="read"):
@@ -68,12 +77,22 @@ def _allowed(kind, filters):
 	)
 
 
-def _source(kind, filters, *, owner=None, overdue=False, as_of=None):
+def _source(kind, filters, *, owner=None, overdue=False, due_today=False, as_of=None):
 	"""The same relation is consumed by counts and every drill-down page."""
 	if kind not in TYPES:
 		frappe.throw(_("Choose leads, deals or tasks."))
+	if overdue and due_today:
+		frappe.throw(_("Choose overdue or due today, not both."))
 	doctype, owner_field, _title = TYPES[kind]
-	params = {"open": OPEN, "task_open": OPEN_TASK_STATUSES, "as_of": as_of or now_datetime()}
+	as_of = as_of or now_datetime()
+	# now_datetime() is the site clock, so its date is the site-local "today".
+	# Due today = still ahead of the site timestamp but before the next site day.
+	params = {
+		"open": OPEN,
+		"task_open": OPEN_TASK_STATUSES,
+		"as_of": as_of,
+		"day_end": get_datetime(add_days(getdate(as_of), 1)),
+	}
 	if kind == "tasks":
 		_fields(
 			doctype,
@@ -95,6 +114,8 @@ def _source(kind, filters, *, owner=None, overdue=False, as_of=None):
 		join = ""
 		if overdue:
 			where += " AND d.due_date < %(as_of)s"
+		if due_today:
+			where += " AND d.due_date >= %(as_of)s AND d.due_date < %(day_end)s"
 	else:
 		allowed = _allowed(kind, filters)
 		join = f"JOIN `tab{doctype} Status` s ON s.name=d.status"
@@ -154,6 +175,16 @@ def _team_users():
 	for row in rows:
 		row.full_name = labels.get(row.user) or row.user
 	return rows
+
+
+def _self_user():
+	"""The caller's own row; no team directory is read for a non-manager."""
+	user = frappe.session.user
+	row = frappe.db.get_value(
+		"User", user, ["name as user", "enabled", "user_type", "full_name"], as_dict=True
+	) or frappe._dict(user=user, enabled=None, user_type=None, full_name=None)
+	row.full_name = row.full_name or user
+	return [row]
 
 
 def _optional_failure(exc):
@@ -317,8 +348,8 @@ def _shifts(users):
 		return {user: ("unknown", "HRMS shift evidence is temporarily unavailable.") for user in users}
 
 
-def _owner_rows(filters, counts, capacity):
-	rows = {row.user: {**row, "in_team": True} for row in _team_users()}
+def _owner_rows(filters, counts, capacity, directory):
+	rows = {row.user: {**row, "in_team": True} for row in directory}
 	# An existing owner remains visible even after disabling/removing their role.
 	# Their ID is already disclosed by a permitted record; do not expose a wider directory.
 	for user in counts:
@@ -329,7 +360,7 @@ def _owner_rows(filters, counts, capacity):
 	shifts = _shifts(list(rows))
 	for user, row in rows.items():
 		row.update(counts.get(user, {}))
-		for key in ("open_leads", "open_deals", "open_tasks", "overdue_tasks", "undated_tasks"):
+		for key in COUNT_KEYS:
 			row.setdefault(key, 0)
 		row["open_total"] = row["open_leads"] + row["open_deals"]
 		row["at_capacity"] = capacity["cap"] > 0 and row["open_total"] >= capacity["cap"]
@@ -356,15 +387,19 @@ def _owner_rows(filters, counts, capacity):
 
 @frappe.whitelist()
 def get_workload(filters: dict | str | None = None, offset: int | str | None = 0):
-	_manager()
+	manager = _viewer()
 	filters, offset = _scope(filters), _offset(offset)
+	# A non-manager's counts are bound to their own records on the server.
+	me = None if manager else frappe.session.user
 	counts = {}
 	as_of = now_datetime()
 	for kind in TYPES:
-		source, params = _source(kind, filters, as_of=as_of)
+		source, params = _source(kind, filters, owner=me, as_of=as_of)
 		owner = TYPES[kind][1]
 		extra = (
-			",SUM(d.due_date < %(as_of)s) AS overdue_tasks,SUM(d.due_date IS NULL) AS undated_tasks"
+			",SUM(d.due_date < %(as_of)s) AS overdue_tasks"
+			",SUM(d.due_date >= %(as_of)s AND d.due_date < %(day_end)s) AS due_today"
+			",SUM(d.due_date IS NULL) AS undated_tasks"
 			if kind == "tasks"
 			else ""
 		)
@@ -378,7 +413,7 @@ def get_workload(filters: dict | str | None = None, offset: int | str | None = 0
 				{key: int(value or 0) for key, value in row.items()}
 			)
 	capacity = _capacity()
-	rows = _owner_rows(filters, counts, capacity)
+	rows = _owner_rows(filters, counts, capacity, _team_users() if manager else _self_user())
 	from crm.pipeline.api import get_pipelines
 
 	pipelines = get_pipelines(include_archived=True)
@@ -399,18 +434,17 @@ def get_workload(filters: dict | str | None = None, offset: int | str | None = 0
 		"has_more": offset + PAGE_SIZE < len(rows),
 		"next_offset": offset + PAGE_SIZE,
 		"capacity": capacity,
+		"scope": "team" if manager else "self",
+		"can_reassign": manager,
 		"unassigned": counts.get("", {}),
-		"summary": {
-			key: sum(row.get(key, 0) for row in counts.values())
-			for key in ("open_leads", "open_deals", "open_tasks", "overdue_tasks", "undated_tasks")
-		},
+		"summary": {key: sum(row.get(key, 0) for row in counts.values()) for key in COUNT_KEYS},
 		"candidates": [
 			{
 				key: row[key]
 				for key in ("user", "full_name", "eligible", "reason", "at_capacity", "shift", "shift_reason")
 			}
 			for row in rows
-			if row["eligible"]
+			if manager and row["eligible"]
 		],
 		"pipelines": [
 			{
@@ -424,7 +458,7 @@ def get_workload(filters: dict | str | None = None, offset: int | str | None = 0
 		"as_of": str(as_of),
 		"companies": sorted(companies),
 		"timezone": frappe.utils.get_system_timezone(),
-		"definitions": "Current Open, Ongoing and On Hold records, excluding converted leads; archived pipeline history remains visible if still open. Task workload includes open tasks on any permitted parent in the selected scope. Only dated tasks before the site timestamp are overdue. Counts cover all pages and only records you can read.",
+		"definitions": "Current Open, Ongoing and On Hold records, excluding converted leads; archived pipeline history remains visible if still open. Task workload includes open tasks on any permitted parent in the selected scope. Only dated tasks before the site timestamp are overdue; due today means dated from the site timestamp until the end of the site's current day. Counts cover all pages and only records you can read.",
 	}
 
 
@@ -435,10 +469,13 @@ def get_work_items(
 	owner: str | None = None,
 	overdue: bool | int | str | None = False,
 	offset: int | str | None = 0,
+	due_today: bool | int | str | None = False,
 ):
-	_manager()
+	if not _viewer():
+		# Server-enforced: a non-manager's queue is always their own.
+		owner = frappe.session.user
 	filters, offset = _scope(filters), _offset(offset)
-	source, params = _source(kind, filters, owner=owner, overdue=cint(overdue))
+	source, params = _source(kind, filters, owner=owner, overdue=cint(overdue), due_today=cint(due_today))
 	doctype, owner_field, title = TYPES[kind]
 	extra = (
 		",d.due_date,d.reference_doctype,d.reference_docname"
