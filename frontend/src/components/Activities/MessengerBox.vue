@@ -15,7 +15,29 @@
     >
       {{ __('Responder · Messenger') }}
     </div>
-    <div class="flex items-end gap-2">
+    <div v-if="holes.length" class="mb-1.5">
+      <TemplateHoles
+        :holes="holes"
+        :template="holesTemplate"
+        :context="docname"
+        @fill="onHoleFill"
+        @dismiss="holes = []"
+      />
+    </div>
+    <div class="relative flex items-end gap-2">
+      <SlashCommandMenu
+        v-if="slashEnabled && slashOpen"
+        class="!left-0"
+        :items="slashItems"
+        :active-index="slashIndex"
+        :loading="catalogLoading"
+        :catalog="catalog"
+        :reference-doctype="doctype"
+        :reference-name="docname"
+        channel="messenger"
+        @hover="setSlashIndex"
+        @pick="(item) => slash.pick(item)"
+      />
       <div class="flex h-8 items-center gap-2">
         <FileUploader @success="(file) => uploadFile(file)">
           <template #default="{ openFileSelector }">
@@ -53,9 +75,16 @@
         ref="textareaRef"
         v-model="text"
         rows="1"
-        :placeholder="__('Escribe un mensaje…')"
+        :placeholder="
+          slashEnabled
+            ? __('Escribe un mensaje… (/ para comandos)')
+            : __('Escribe un mensaje…')
+        "
         class="min-h-[38px] flex-1 resize-none rounded-lg border border-outline-gray-2 px-3 py-2 text-[13px] text-ink-gray-8 dark:bg-surface-gray-2 dark:text-ink-gray-8"
-        @keydown.enter.exact.prevent="send"
+        @input="(e) => syncSlash(e.target)"
+        @click="(e) => syncSlash(e.target)"
+        @blur="slash.close()"
+        @keydown="onKeydown"
       />
       <button
         class="flex-none rounded-lg px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
@@ -93,15 +122,40 @@
         )
       }}
     </p>
+    <SendDocumentDialog
+      v-if="commandsEnabled"
+      v-model="docDialog.open"
+      :reference-doctype="doctype"
+      :reference-name="docname"
+      :doctype="docDialog.doctype"
+      channel="messenger"
+      :catalog="catalog"
+      @sent="() => emit('sent')"
+    />
+    <SaveTemplateDialog
+      v-if="commandsEnabled"
+      v-model="saveDialog.open"
+      :body="saveDialog.body"
+      @saved="() => loadCatalog({ fresh: true })"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { call, toast, FileUploader, Dropdown, FeatherIcon } from 'frappe-ui'
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import CannedReplyPicker from '@/components/doco/inbox/CannedReplyPicker.vue'
+import SlashCommandMenu from '@/components/Composer/SlashCommandMenu.vue'
+import SendDocumentDialog from '@/components/Composer/SendDocumentDialog.vue'
+import SaveTemplateDialog from '@/components/Composer/SaveTemplateDialog.vue'
+import TemplateHoles from '@/components/Composer/TemplateHoles.vue'
+import { useSlashMenu, stripSlash, fillHole } from '@/composables/slashCommands'
+import {
+  useComposerCommands,
+  renderTemplate,
+} from '@/composables/composerCommands'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -118,6 +172,123 @@ const busy = ref(false)
 const emoji = ref('')
 const fileType = ref('')
 const textareaRef = ref(null)
+
+// ── / command palette (same as WhatsAppBox, channel messenger) ────────────────
+// Messenger's canned replies double as the palette's local quick replies, so
+// they still show when the command catalog cannot be loaded.
+const cannedReplies = ref([])
+let cannedLoaded = false
+function loadCannedReplies() {
+  if (cannedLoaded) return
+  cannedLoaded = true
+  call('doco_marketing.api.inbox.get_canned_replies', { channel: 'Messenger' })
+    .then((rows) => {
+      cannedReplies.value = (rows || []).map((r) => ({
+        label: r.title,
+        text: r.body,
+      }))
+    })
+    .catch(() => {
+      cannedLoaded = false
+    })
+}
+const commands = useComposerCommands({
+  channel: 'messenger',
+  reference: () => ({ doctype: props.doctype, name: props.docname }),
+  quickReplies: () => cannedReplies.value,
+})
+const {
+  catalog,
+  catalogLoading,
+  loadCatalog,
+  docDialog,
+  saveDialog,
+  enabled: commandsEnabled,
+} = commands
+const slashEnabled = commandsEnabled
+const slash = useSlashMenu({
+  source: () => commands.items.value,
+  onPick: onSlashPick,
+})
+const { open: slashOpen, ranked: slashItems, activeIndex: slashIndex } = slash
+const setSlashIndex = (i) => (slashIndex.value = i)
+const holes = ref([])
+const holesTemplate = ref('')
+watch(text, (v) => {
+  if (!v) holes.value = []
+})
+
+function syncSlash(el) {
+  if (!slashEnabled.value || !el) return slash.close()
+  slash.update(el.value, el.selectionStart)
+  if (!slashOpen.value) return
+  loadCannedReplies()
+  if (!catalog.value && !catalogLoading.value) loadCatalog()
+}
+
+function onKeydown(e) {
+  if (slashOpen.value && slash.onKeydown(e)) return
+  if (slashOpen.value && catalogLoading.value && e.key === 'Enter') {
+    e.preventDefault()
+    return
+  }
+  if (
+    e.key === 'Enter' &&
+    !e.shiftKey &&
+    !e.ctrlKey &&
+    !e.altKey &&
+    !e.metaKey
+  ) {
+    e.preventDefault()
+    send()
+  }
+}
+
+function focusAt(caret) {
+  nextTick(() => {
+    textareaRef.value?.focus?.()
+    if (caret != null) textareaRef.value?.setSelectionRange?.(caret, caret)
+  })
+}
+
+async function onSlashPick(item, parsed) {
+  if (!item.available) {
+    toast.error(item.reason || __('No disponible en esta conversación'))
+    return
+  }
+  const rest = stripSlash(text.value, parsed)
+  const kind = item.payload?.kind
+  if (kind === 'templates') {
+    text.value = rest ? `/ ${rest}` : '/'
+    slash.update(text.value, 1)
+    slash.scope.value = 'templates'
+    focusAt(1)
+    return
+  }
+  slash.close()
+  text.value = rest
+  if (kind === 'catalog') {
+    text.value = ''
+    emit('catalog', rest)
+    return
+  }
+  if (kind === 'document') return commands.openDocument(item.payload.doctype)
+  if (kind === 'save_template') return commands.openSaveTemplate(rest)
+  let body = item.payload.text || item.payload.body || ''
+  if (item.type === 'template') {
+    const r = await renderTemplate(item.payload, props.doctype, props.docname)
+    body = r.text
+    holes.value = r.holes
+    holesTemplate.value = item.payload.id
+  }
+  onCanned(body)
+}
+
+function onHoleFill({ key, value }) {
+  text.value = fillHole(text.value, key, value)
+  holes.value = holes.value.filter((h) => h.key !== key)
+  focusAt()
+}
 
 function onEmoji() {
   text.value += emoji.value

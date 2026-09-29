@@ -55,6 +55,7 @@
       :placeholder="
         __('Hi John, \n\nCan you please provide more details on this...')
       "
+      @document-sent="onDocumentSent"
     />
   </div>
   <div
@@ -98,6 +99,8 @@ import { useStorage } from '@vueuse/core'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { call, createResource, toast } from 'frappe-ui'
 import { ref, watch, computed } from 'vue'
+import { addonAvailable } from '@/utils/crmCapabilities'
+import { remember } from '@/composables/fieldMemory'
 
 const props = defineProps({
   doctype: { type: String, default: 'CRM Lead' },
@@ -265,8 +268,28 @@ async function deleteAttachedFiles() {
   attachments.value = []
 }
 
+// A document sent from the / palette lands in this record's timeline.
+function onDocumentSent() {
+  reload.value = true
+  emit('scroll')
+}
+
+// What went out is offered again next time (composer field memory, addon only).
+function rememberSent(to, sentSubject) {
+  if (!addonAvailable.value) return
+  const context = doc.value?.name || ''
+  remember([
+    ...to.map((value) => ({ scope: 'email.to', value, context })),
+    ...(sentSubject && sentSubject !== subject.value
+      ? [{ scope: 'email.subject', value: sentSubject, context }]
+      : []),
+  ])
+}
+
 async function submitEmail() {
   if (emailEmpty.value) return
+  const sentTo = [...(newEmailEditor.value?.toEmails || [])]
+  const sentSubject = newEmailEditor.value?.subject || ''
   showEmailBox.value = false
   // toast.promise returns the toast id (not the promise), so await the send
   // itself — otherwise the reload below fires before the email is committed and
@@ -286,6 +309,7 @@ async function submitEmail() {
   attachments.value = []
   reload.value = true
   emit('scroll')
+  rememberSent(sentTo, sentSubject)
   capture('email_sent', { doctype: props.doctype })
   updateOnboardingStep('send_first_email')
 }

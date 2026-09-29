@@ -189,8 +189,34 @@
     </button>
   </div>
 
+  <!-- unresolved {{variables}} of the template just inserted -->
+  <div v-if="mode === 'reply' && holes.length" class="px-3 pt-2 sm:px-10">
+    <TemplateHoles
+      :holes="holes"
+      :template="holesTemplate"
+      :context="doc.name || ''"
+      @fill="onHoleFill"
+      @dismiss="holes = []"
+    />
+  </div>
+
   <!-- input row -->
-  <div class="flex items-end gap-2 px-3 py-2.5 sm:px-10" v-bind="$attrs">
+  <div
+    class="relative flex items-end gap-2 px-3 py-2.5 sm:px-10"
+    v-bind="$attrs"
+  >
+    <SlashCommandMenu
+      v-if="slashEnabled && slashOpen"
+      :items="slashItems"
+      :active-index="slashIndex"
+      :loading="catalogLoading"
+      :catalog="catalog"
+      :reference-doctype="doctype"
+      :reference-name="doc.name || ''"
+      channel="whatsapp"
+      @hover="setSlashIndex"
+      @pick="(item) => slash.pick(item)"
+    />
     <div
       v-if="mode === 'reply' && !recording"
       class="flex h-8 items-center gap-2"
@@ -291,8 +317,10 @@
       :rows="rows"
       :placeholder="placeholder"
       @focus="rows = isMobile ? 3 : 6"
-      @blur="rows = 1"
+      @blur="onBlur"
       @input="onTyping"
+      @click="onCaretMove"
+      @keydown="onSlashKeydown"
       @keydown.enter.stop="(e) => onEnter(e)"
     />
     <!-- Internal comment: mention-capable rich editor so @mentions notify
@@ -380,12 +408,39 @@
       </div>
     </template>
   </Dialog>
+
+  <!-- / palette follow-ups: document send + save as template -->
+  <SendDocumentDialog
+    v-if="commandsEnabled"
+    v-model="docDialog.open"
+    :reference-doctype="doctype"
+    :reference-name="doc.name || ''"
+    :doctype="docDialog.doctype"
+    channel="whatsapp"
+    :catalog="catalog"
+    @sent="onDocumentSent"
+  />
+  <SaveTemplateDialog
+    v-if="commandsEnabled"
+    v-model="saveDialog.open"
+    :body="saveDialog.body"
+    @saved="() => loadCatalog({ fresh: true })"
+  />
 </template>
 
 <script setup>
 import IconPicker from '@/components/IconPicker.vue'
 import SmileIcon from '@/components/Icons/SmileIcon.vue'
 import LucideMic from '~icons/lucide/mic'
+import SlashCommandMenu from '@/components/Composer/SlashCommandMenu.vue'
+import SendDocumentDialog from '@/components/Composer/SendDocumentDialog.vue'
+import SaveTemplateDialog from '@/components/Composer/SaveTemplateDialog.vue'
+import TemplateHoles from '@/components/Composer/TemplateHoles.vue'
+import { useSlashMenu, stripSlash, fillHole } from '@/composables/slashCommands'
+import {
+  useComposerCommands,
+  renderTemplate,
+} from '@/composables/composerCommands'
 import { sanitizeHTML } from '@/utils'
 import { useTelemetry } from 'frappe-ui/frappe'
 import {
@@ -505,7 +560,9 @@ const modes = [
 const placeholder = computed(() => {
   if (mode.value === 'note') return __('Private note — only your team sees it…')
   if (mode.value === 'comment') return __('Internal comment for your team…')
-  return __('Type your message here...')
+  return slashEnabled.value
+    ? __('Escribe tu mensaje… (/ para comandos)')
+    : __('Type your message here...')
 })
 
 const sendLabel = computed(() =>
@@ -544,7 +601,119 @@ function insertQuickReply(qr) {
 watch(content, (v) => {
   if (lastCanned.value && (v || '').trim() !== lastCanned.value.text.trim())
     lastCanned.value = null
+  if (!v) holes.value = []
 })
+
+// ── / command palette (doco_marketing addon only) ─────────────────────────────
+// `/` at the start of the message opens commands, templates and quick replies.
+// Without the addon (or outside reply mode) none of this renders and the
+// composer behaves exactly as before; `/cat` keeps working through maybeCatalog.
+const commands = useComposerCommands({
+  channel: 'whatsapp',
+  reference: () => ({ doctype: props.doctype, name: doc.value?.name }),
+  quickReplies: () => quickReplies.data || [],
+})
+const {
+  catalog,
+  catalogLoading,
+  loadCatalog,
+  docDialog,
+  saveDialog,
+  enabled: commandsEnabled,
+} = commands
+const slashEnabled = computed(
+  () => commandsEnabled.value && mode.value === 'reply' && !props.replyOnly,
+)
+const slash = useSlashMenu({
+  source: () => commands.items.value,
+  onPick: onSlashPick,
+})
+const { open: slashOpen, ranked: slashItems, activeIndex: slashIndex } = slash
+const setSlashIndex = (i) => (slashIndex.value = i)
+
+// Unresolved {{holes}} of the template last inserted.
+const holes = ref([])
+const holesTemplate = ref('')
+
+function syncSlash(el) {
+  if (!slashEnabled.value || !el) return slash.close()
+  slash.update(el.value, el.selectionStart)
+  if (slashOpen.value && !catalog.value && !catalogLoading.value) loadCatalog()
+}
+function onCaretMove(e) {
+  syncSlash(e?.target)
+}
+function onBlur() {
+  rows.value = 1
+  slash.close()
+}
+// Arrow/Tab/Escape while the palette is open; Enter goes through onEnter.
+function onSlashKeydown(e) {
+  if (e.key === 'Enter' || !slashOpen.value) return
+  slash.onKeydown(e)
+}
+
+function focusComposer(caret) {
+  nextTick(() => {
+    const el = textareaRef.value?.el
+    el?.focus()
+    if (caret != null) el?.setSelectionRange?.(caret, caret)
+  })
+}
+
+async function onSlashPick(item, parsed) {
+  if (!item.available) {
+    toast.error(item.reason || __('No disponible en esta conversación'))
+    return
+  }
+  const rest = stripSlash(content.value, parsed)
+  const kind = item.payload?.kind
+  if (kind === 'templates') {
+    content.value = rest ? `/ ${rest}` : '/'
+    slash.update(content.value, 1)
+    slash.scope.value = 'templates'
+    focusComposer(1)
+    return
+  }
+  slash.close()
+  content.value = rest
+  if (kind === 'catalog') {
+    content.value = ''
+    emit('catalog', rest)
+    return
+  }
+  if (kind === 'document') return commands.openDocument(item.payload.doctype)
+  if (kind === 'save_template') return commands.openSaveTemplate(rest)
+  if (item.type === 'meta') {
+    emit('pickTemplate', item.payload.id)
+    return
+  }
+  if (item.type === 'quick') return insertQuickReply(item.payload)
+  if (item.type === 'template') {
+    const r = await renderTemplate(item.payload, props.doctype, doc.value.name)
+    insertQuickReply({
+      label: item.payload.title || item.payload.id,
+      text: r.text,
+    })
+    holes.value = r.holes
+    holesTemplate.value = item.payload.id
+  }
+}
+
+// A filled hole keeps the canned attribution: the text is still the template.
+function onHoleFill({ key, value }) {
+  const next = fillHole(content.value, key, value)
+  if (lastCanned.value && content.value.trim() === lastCanned.value.text.trim())
+    lastCanned.value = { ...lastCanned.value, text: next }
+  content.value = next
+  holes.value = holes.value.filter((h) => h.key !== key)
+  focusComposer()
+}
+
+function onDocumentSent(res) {
+  if (res?.channel === 'whatsapp') whatsapp.value?.reload?.()
+  else emit('activity')
+}
 
 const showEditor = ref(false)
 const draft = ref([])
@@ -772,7 +941,8 @@ function useSuggestion(text) {
 
 // collision detection (spec 2.4): throttled 'está escribiendo' ping — only for
 // conversations (Deal/Lead) and only in reply mode (notes/comments are private)
-function onTyping() {
+function onTyping(e) {
+  syncSlash(e?.target)
   if (
     mode.value === 'reply' &&
     ['CRM Deal', 'CRM Lead'].includes(props.doctype)
@@ -781,6 +951,10 @@ function onTyping() {
 }
 
 function onEnter(event) {
+  if (slashOpen.value && slash.onKeydown(event)) return
+  // `/cot` + Enter before the catalog arrives must not send "/cot" to the customer.
+  if (slashOpen.value && catalogLoading.value && !event.shiftKey)
+    return event.preventDefault()
   if (event.shiftKey) return
   event.preventDefault()
   dispatchSend()
