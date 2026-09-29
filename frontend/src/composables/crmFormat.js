@@ -23,10 +23,27 @@ const AV_COLORS = [
   ['var(--surface-amber-1)', 'var(--ink-amber-9)'],
   ['var(--surface-red-1)', 'var(--ink-red-8)'],
 ]
-export function avatarColor(s) {
+// The same pairs as theme token classes, for templates that can take a class
+// instead of an inline style. Literal strings so Tailwind emits them; index i
+// here is AV_COLORS[i], so a name keeps its colour on either path.
+export const AVATAR_CLASSES = [
+  'bg-surface-violet-2 text-ink-violet-8',
+  'bg-surface-blue-1 text-ink-blue-9',
+  'bg-surface-green-2 text-ink-green-8',
+  'bg-surface-amber-1 text-ink-amber-9',
+  'bg-surface-red-1 text-ink-red-8',
+]
+function nameHash(s) {
   let h = 0
   for (const c of String(s || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return AV_COLORS[h % AV_COLORS.length]
+  return h
+}
+export function avatarColor(s) {
+  return AV_COLORS[nameHash(s) % AV_COLORS.length]
+}
+/** Deterministic avatar token classes for a name (see AVATAR_CLASSES). */
+export function avatarClass(s) {
+  return AVATAR_CLASSES[nameHash(s) % AVATAR_CLASSES.length]
 }
 export function initials(name) {
   const n = String(name || '').trim()

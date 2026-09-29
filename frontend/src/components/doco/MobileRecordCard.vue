@@ -20,7 +20,7 @@
   >
     <span
       class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-full text-[12.5px] font-semibold"
-      :style="`background:${avatarColor(title || '?')[0]};color:${avatarColor(title || '?')[1]}`"
+      :class="avatarClass(title || '?')"
       aria-hidden="true"
     >
       {{ initials(title || '?') }}
@@ -58,7 +58,7 @@
 
 <script setup>
 import { Dropdown } from 'frappe-ui'
-import { avatarColor, initials } from '@/composables/crmFormat'
+import { avatarClass, initials } from '@/composables/crmFormat'
 
 defineProps({
   title: { type: String, default: '' },
