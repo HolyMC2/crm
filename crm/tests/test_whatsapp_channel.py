@@ -115,7 +115,7 @@ class TestManualChannel(unittest.TestCase):
 		lead = self.lead(mobile_no="55 1234 5678")
 		tpl = self.template("Hola {{1}}, tu correo es {{2}}.", field_names="lead_name,email")
 		out = crm_channel.prepare_manual_message("CRM Lead", lead, template=tpl)
-		self.assertEqual(out["missing"], ["email"])
+		self.assertEqual(out["missing"], [frappe._(frappe.get_meta("CRM Lead").get_field("email").label)])
 
 	def test_sample_values_never_reach_a_customer(self):
 		"""No field mapping: frappe_whatsapp would send Meta's samples. The manual
@@ -133,6 +133,28 @@ class TestManualChannel(unittest.TestCase):
 		out = crm_channel.prepare_manual_message("CRM Lead", lead, template=tpl)
 		self.assertEqual(out["text"], "Hola Fictional Uno, ver {{2}}.")
 		self.assertEqual(len(out["missing"]), 1)
+
+	def test_composer_preview_and_manual_link_carry_the_same_values(self):
+		"""The composer (API send) and the manual box resolve through one contract."""
+		from crm.api.whatsapp import get_template_preview
+
+		lead = self.lead(mobile_no="55 1234 5678")
+		tpl = self.template("Hola {{1}} ({{2}}).", field_names="customer_first_name,customer_name")
+		preview = get_template_preview("CRM Lead", lead, tpl)
+		self.assertEqual([v["value"] for v in preview["variables"]], ["Fictional", "Fictional Uno"])
+		out = crm_channel.prepare_manual_message("CRM Lead", lead, template=tpl)
+		self.assertEqual(out["text"], preview["rendered"])
+		self.assertEqual(out["text"], "Hola Fictional (Fictional Uno).")
+
+	def test_composer_preview_never_prefills_meta_samples(self):
+		from crm.api.whatsapp import get_template_preview
+
+		lead = self.lead(mobile_no="55 1234 5678")
+		tpl = self.template("Orden {{1}} lista.", sample_values="REP-2026-0001")
+		preview = get_template_preview("CRM Lead", lead, tpl)
+		self.assertEqual(preview["variables"][0]["value"], "")
+		self.assertEqual(len(preview["missing"]), 1)
+		self.assertNotIn("REP-2026-0001", preview["rendered"])
 
 	def test_unapproved_template_is_not_offered(self):
 		lead = self.lead(mobile_no="55 1234 5678")

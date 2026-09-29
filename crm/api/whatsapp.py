@@ -8,6 +8,12 @@ from crm.api.doc import _assigned_users_for_document as get_assigned_users
 from crm.api.outbox_bridge import assert_send_account, person_reply
 from crm.fcrm.doctype.crm_notification.crm_notification import notify_user
 
+try:
+	# The one answer to «what fills {{n}} for this record», shared with the API send.
+	from frappe_whatsapp import template_vars
+except ImportError:  # a CRM without frappe_whatsapp has no templates to fill
+	template_vars = None
+
 # Marketing Manager added 2026-08-03: they hold _APPROVER_ROLES on the review
 # queues (manager-eyes policy) — approving an Inbox Auto Reply whatsapp draft
 # routes through inbox.send_message -> validate_access, which threw for a
@@ -441,40 +447,29 @@ def get_template_preview(reference_doctype: str, reference_name: str, template: 
 	tpl = frappe.get_doc("WhatsApp Templates", template)
 	body = tpl.template or ""
 
-	# frappe_whatsapp resolves placeholders from `field_names` (ref-doc fieldnames)
-	# when set, else falls back to the literal `sample_values`. Mirror that exactly so
-	# the preview defaults equal what an un-overridden send would transmit.
-	field_names = (tpl.get("field_names") or "").strip()
-	sample_values = (tpl.get("sample_values") or "").strip()
-	using_fields = bool(field_names)
-	raw = field_names or sample_values
-	tokens = [t.strip() for t in raw.split(",") if t.strip()] if raw else []
-
-	ref_doc = frappe.get_doc(reference_doctype, reference_name) if (tokens and using_fields) else None
-	variables = []
-	for i, tok in enumerate(tokens, start=1):
-		if using_fields:
-			try:
-				value = ref_doc.get_formatted(tok) if ref_doc else ""
-			except Exception:
-				value = ""
-			label = tok
-		else:
-			value = tok  # literal sample value
-			label = _("Variable {0}").format(i)
-		variables.append(
-			{"index": i, "field": tok if using_fields else "", "label": label, "value": value or ""}
-		)
-
-	rendered = parse_template_parameters(body, [v["value"] for v in variables]) if variables else body
+	# frappe_whatsapp's template contract resolves the mapping (field_names, or the
+	# template's shipped default) against the record exactly as the send will. A
+	# slot it cannot fill stays empty for the agent — Meta sample values are
+	# never offered as if they were the customer's data.
+	result = template_vars.resolve(template, frappe.get_doc(reference_doctype, reference_name))
+	variables = [
+		{
+			"index": i,
+			"field": result.tokens[i - 1] if i - 1 < len(result.tokens) else "",
+			"label": result.labels.get(str(i)) or _("Variable {0}").format(i),
+			"value": result.values.get(str(i), ""),
+		}
+		for i in template_vars.placeholders(body)
+	]
 	return {
 		"name": tpl.name,
 		"body": body,
-		"rendered": rendered,
+		"rendered": template_vars.render(body, result.values),
 		"footer": tpl.get("footer") or "",
 		"header_type": tpl.get("header_type") or "",
 		"language_code": tpl.get("language_code") or "",
 		"variables": variables,
+		"missing": [m["label"] for m in result.missing],
 	}
 
 
@@ -538,7 +533,12 @@ def get_template_field_options(reference_doctype: str):
 		return []
 	meta = frappe.get_meta(reference_doctype)
 	in_use = _tokens_in_use()
-	opts = []
+	# Values the apps compute for this record (first name, repair folio, tracking
+	# link…) — the same keys the automatic sends use.
+	opts = [
+		{"value": key, "label": label, "group": _("Automatic")}
+		for key, label in (template_vars.context_keys(reference_doctype) if template_vars else {}).items()
+	]
 	for df in meta.fields:
 		if (
 			df.fieldtype in _MAPPABLE_FIELDTYPES
@@ -592,6 +592,8 @@ def _token_allowed(reference_doctype: str, token: str) -> bool:
 		meta = frappe.get_meta(reference_doctype)
 	except Exception:
 		return False
+	if template_vars and token.partition(":")[0] in template_vars.context_keys(reference_doctype):
+		return True
 	if "." in token:
 		link_field, sub = token.split(".", 1)
 		df = meta.get_field(link_field)
@@ -617,6 +619,8 @@ def _resolve_dotted(reference_doctype: str, reference_name: str, token: str) -> 
 	if not _token_allowed(reference_doctype, token):
 		return ""
 	doc = frappe.get_doc(reference_doctype, reference_name)
+	if template_vars and token.partition(":")[0] in template_vars.context_keys(reference_doctype):
+		return template_vars.value_of(doc, token)
 	if "." in token:
 		link_field, sub = token.split(".", 1)
 		df = doc.meta.get_field(link_field)

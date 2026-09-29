@@ -19,7 +19,7 @@ import frappe
 from frappe import _
 from frappe.utils import escape_html
 
-from crm.api.whatsapp import get_template_preview, parse_template_parameters, validate_access
+from crm.api.whatsapp import validate_access
 from crm.api.whatsapp_contacts import _digits
 
 try:
@@ -141,25 +141,15 @@ def prepare_manual_message(
 	if template:
 		if template not in {r.name for r in _manual_templates(reference_doctype)}:
 			frappe.throw(_("Plantilla no disponible para este registro."))
-		preview = get_template_preview(reference_doctype, reference_name, template)
-		# Only values read from THIS record go into a manual message. A template
-		# without a field mapping falls back to Meta's sample values («Hola
-		# Marco», a demo link), which must never reach a real customer: those
-		# holes stay visible as {{n}} and are reported, like empty fields.
-		values, missing = [], []
-		for v in preview["variables"]:
-			if v["field"] and v["value"]:
-				values.append(v["value"])
-			else:
-				values.append("{{%d}}" % v["index"])
-				missing.append(v["label"] if v["field"] else _("Dato {0}").format(v["index"]))
-		body = parse_template_parameters(preview["body"], values) if values else preview["body"]
-		mapped = {v["index"] for v in preview["variables"]}
-		missing += [
-			_("Dato {0}").format(n)
-			for n in sorted({int(n) for n in re.findall(r"\{\{(\d+)\}\}", body)} - mapped)
-		]
-		text = "\n\n".join(p for p in (body, preview["footer"]) if p)
+		# The same resolution the Cloud API send uses (frappe_whatsapp's template
+		# contract), so both modes put the same values in the same slots. Only
+		# values read from THIS record go in; a slot it cannot fill stays visible
+		# as {{n}} and is reported — never a Meta sample value.
+		from frappe_whatsapp import template_vars
+
+		result = template_vars.resolve(template, frappe.get_doc(reference_doctype, reference_name))
+		missing = [m["label"] for m in result.missing]
+		text = result.text
 	text = re.sub(r"[ \t]{2,}", " ", text or "").strip()
 	digits = recipient(reference_doctype, reference_name, phone)
 	return {

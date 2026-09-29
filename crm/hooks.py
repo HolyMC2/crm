@@ -195,6 +195,13 @@ override_doctype_class = {
 # ---------------
 # Hook on document methods and events
 
+# WhatsApp template variables (frappe_whatsapp.template_vars): the customer's
+# names on a Deal / Lead, shared by the composer, the API send and wa.me links.
+whatsapp_template_context = {
+	"CRM Deal": ["crm.api.whatsapp_template_context.CRM_DEAL"],
+	"CRM Lead": ["crm.api.whatsapp_template_context.CRM_LEAD"],
+}
+
 doc_events = {
 	"CRM Deal Status": {"after_insert": "crm.pipeline.services.configuration.add_legacy_status"},
 	"Contact": {
