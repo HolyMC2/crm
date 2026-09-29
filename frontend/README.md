@@ -33,6 +33,23 @@ The development server is configured to proxy your frappe app (usually running o
 If you notice the browser URL is `/frontend`, this is the base URL where your frontend app will run in production.
 To change this, open `src/router.js` and change the base URL passed to `createWebHistory`.
 
+## Build memory
+
+`yarn build` puts a default Node heap of 4096 MB at the FRONT of `NODE_OPTIONS`. When the
+same V8 flag appears twice, the later one wins, so a heap the caller already set takes
+precedence:
+
+- muelle's image bake (`scripts/lib/build_assets.py`, 3072 MB) and Frappe's own
+  `bench build` value win over the default;
+- with nothing set (plain `yarn build`, devflow `heavy`, CI), the build gets 4096 MB. Under
+  any memory cap, Node's own default drops to about 2.2 GB, which is too small.
+- `CRM_BUILD_HEAP_MB` changes the default.
+
+Measured 2026-09-28: 2560 MB fails and 3072 MB builds. The bake's 3072 therefore has little
+headroom; raise it in muelle's bake when the bundle grows. Keep any heap below the build
+environment's memory cap, so the build fails with a clear heap error instead of pushing the
+machine into swap.
+
 ## Resources
 
 - [Vue 3](https://v3.vuejs.org/guide/introduction.html)

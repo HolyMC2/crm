@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/assets/crm/frontend/ && cp ../crm/public/frontend/index.html ../crm/www/crm.html && node scripts/verify-pwa-build.mjs",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=${CRM_BUILD_HEAP_MB:-4096} ${NODE_OPTIONS:-}\" vite build --base=/assets/crm/frontend/ && cp ../crm/public/frontend/index.html ../crm/www/crm.html && node scripts/verify-pwa-build.mjs",
     "copy-html-entry": "cp ../crm/public/frontend/index.html ../crm/www/crm.html",
     "serve": "vite preview",
     "test": "vitest",
