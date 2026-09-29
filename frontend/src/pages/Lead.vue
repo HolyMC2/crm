@@ -275,7 +275,7 @@ import { globalStore } from '@/stores/global'
 import { statusesStore } from '@/stores/statuses'
 import { getMeta } from '@/stores/meta'
 import { useDocument } from '@/data/document'
-import { whatsappEnabled } from '@/composables/whatsapp'
+import { whatsappTabEnabled } from '@/composables/whatsapp'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { callEnabled } from '@/composables/telephony'
 import {
@@ -469,7 +469,7 @@ const tabs = computed(() => {
       name: 'WhatsApp',
       label: __('WhatsApp'),
       icon: WhatsAppIcon,
-      condition: () => whatsappEnabled.value,
+      condition: () => whatsappTabEnabled.value,
     },
   ]
   return tabOptions.filter((tab) => (tab.condition ? tab.condition() : true))

@@ -644,6 +644,12 @@
       @failed="onWaFailed"
       @catalog="onWaCatalog"
     />
+    <WhatsAppManualBox
+      v-if="whatsappManual && title == 'WhatsApp'"
+      :doctype="doctype"
+      :docname="docname"
+      @logged="() => all_activities.reload()"
+    />
     <CatalogPicker v-if="addonAvailable && catalogOpen" @sent="onCatalogSent" />
   </div>
   <WhatsappTemplateSelectorModal
@@ -692,6 +698,7 @@ import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import EventArea from '@/components/Activities/EventArea.vue'
 import WhatsAppArea from '@/components/Activities/WhatsAppArea.vue'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
+import WhatsAppManualBox from '@/components/Activities/WhatsAppManualBox.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
 import MessengerBox from '@/components/Activities/MessengerBox.vue'
 import CatalogPicker from '@/components/doco/inbox/CatalogPicker.vue'
@@ -721,7 +728,7 @@ import { startCase } from '@/utils'
 import { globalStore } from '@/stores/global'
 import { usersStore } from '@/stores/users'
 import { useTimelinePreferences } from '@/composables/useTimelinePreferences'
-import { whatsappEnabled } from '@/composables/whatsapp'
+import { whatsappEnabled, whatsappManual } from '@/composables/whatsapp'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
@@ -1529,6 +1536,8 @@ const emptyText = computed(() => {
     text = 'No Tasks Found'
   } else if (title.value == 'Attachments') {
     text = 'No Attachments Found'
+  } else if (title.value == 'WhatsApp' && whatsappManual.value) {
+    text = 'WhatsApp desde tu dispositivo'
   } else if (title.value == 'WhatsApp') {
     text = 'No WhatsApp Messages Found'
   }
@@ -1555,6 +1564,9 @@ const emptyTextDescription = computed(() => {
   } else if (title.value == 'Attachments') {
     description =
       'No files have been attached yet. Upload files to see them here.'
+  } else if (title.value == 'WhatsApp' && whatsappManual.value) {
+    description =
+      'Cada vez que abres WhatsApp desde aquí queda registrado en Actividad, sin confirmar el envío.'
   } else if (title.value == 'WhatsApp') {
     description = 'Start a conversation now!'
   }

@@ -23,7 +23,9 @@
           @click="composerOpen = true"
         />
         <span class="text-[11.5px] text-ink-gray-5">{{
-          __('Abre WhatsApp con el mensaje escrito; tú tocas enviar.')
+          whatsappManual
+            ? __('Abre WhatsApp con el mensaje escrito; tú tocas enviar.')
+            : __('Abre SMS o llamada con el mensaje escrito.')
         }}</span>
       </div>
       <ChannelComposer
@@ -159,6 +161,7 @@
 import { computed, defineComponent, h, ref } from 'vue'
 import { Button, createResource } from 'frappe-ui'
 import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
+import { whatsappManual } from '@/composables/whatsapp'
 
 const props = defineProps({ docname: { type: String, required: true } })
 const composerOpen = ref(false)

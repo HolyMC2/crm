@@ -8,9 +8,13 @@ const h = vi.hoisted(() => ({
   handlers: {},
   addon: null,
   whatsapp: null,
+  manual: null,
 }))
 vi.mock('@/utils/crmCapabilities', () => ({ addonAvailable: h.addon }))
-vi.mock('@/composables/whatsapp', () => ({ whatsappEnabled: h.whatsapp }))
+vi.mock('@/composables/whatsapp', () => ({
+  whatsappEnabled: h.whatsapp,
+  whatsappManual: h.manual,
+}))
 vi.mock('@/composables/inbox', () => ({
   catalogOpen: false,
   openCatalog: () => {},
@@ -136,7 +140,10 @@ vi.mock('@/components/Activities/WhatsAppArea.vue', () => ({
   default: { inheritAttrs: false, template: '<span />' },
 }))
 vi.mock('@/components/Activities/WhatsAppBox.vue', () => ({
-  default: { inheritAttrs: false, template: '<span />' },
+  default: { inheritAttrs: false, template: '<span data-api-box />' },
+}))
+vi.mock('@/components/Activities/WhatsAppManualBox.vue', () => ({
+  default: { inheritAttrs: false, template: '<span data-manual-box />' },
 }))
 vi.mock('@/components/Activities/MessengerArea.vue', () => ({
   default: { inheritAttrs: false, template: '<span />' },
@@ -211,12 +218,14 @@ vi.mock('@/components/Activities/TimelineTimestamp.vue', () => ({
 let app, container, scope
 h.addon = ref(false)
 h.whatsapp = ref(false)
+h.manual = ref(false)
 beforeEach(() => {
   h.requests = []
   h.activityRows = []
   h.handlers = {}
   h.addon.value = false
   h.whatsapp.value = false
+  h.manual.value = false
   scope = effectScope()
 })
 afterEach(() => {
@@ -294,6 +303,22 @@ describe('native Activities with optional messaging', () => {
     expect(h.requests.map((r) => r.url)).toEqual([
       'crm.api.activities.get_activities',
     ])
+  })
+
+  it('manual WhatsApp shows only the wa.me composer and never loads API messages', async () => {
+    h.manual.value = true
+    await mountActivities(false, false, 'WhatsApp')
+    expect(container.querySelector('[data-manual-box]')).not.toBeNull()
+    expect(container.querySelector('[data-api-box]')).toBeNull()
+    expect(h.requests.some((r) => r.url.startsWith('crm.api.whatsapp.'))).toBe(
+      false,
+    )
+  })
+
+  it('API WhatsApp never shows the manual composer', async () => {
+    await mountActivities(false, true, 'WhatsApp')
+    expect(container.querySelector('[data-api-box]')).not.toBeNull()
+    expect(container.querySelector('[data-manual-box]')).toBeNull()
   })
 
   it('configured WhatsApp works without starting marketing resources', async () => {

@@ -60,6 +60,14 @@
       iconLeft="plus"
       @click="showFilesUploader = true"
     />
+    <!-- manual mode: templates live in the manual composer below; no API send here -->
+    <span
+      v-else-if="
+        title == 'WhatsApp' &&
+        whatsappManual &&
+        activeChannelTab !== 'messenger'
+      "
+    />
     <div
       v-else-if="title == 'WhatsApp' && activeChannelTab !== 'messenger'"
       class="flex gap-2 shrink-0"
@@ -93,7 +101,7 @@ import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import { globalStore } from '@/stores/global'
-import { whatsappEnabled } from '@/composables/whatsapp'
+import { whatsappManual, whatsappTabEnabled } from '@/composables/whatsapp'
 import { callEnabled } from '@/composables/telephony'
 import { Dropdown } from 'frappe-ui'
 import { computed, h } from 'vue'
@@ -164,7 +172,7 @@ const defaultActions = computed(() => {
       icon: h(WhatsAppIcon, { class: 'h-4 w-4' }),
       label: __('WhatsApp Message'),
       onClick: () => (tabIndex.value = getTabIndex('WhatsApp')),
-      condition: () => whatsappEnabled.value,
+      condition: () => whatsappTabEnabled.value,
     },
   ]
   return actions.filter((action) =>

@@ -35,13 +35,31 @@
             {{ __('Cliente') }}
           </span>
         </div>
-        <a
-          v-if="card.mobile_no"
-          :href="`tel:${card.mobile_no}`"
-          class="mt-0.5 block truncate font-mono text-[11.5px] text-ink-gray-6 hover:text-ink-gray-9"
-        >
-          ☎ {{ card.mobile_no }}
-        </a>
+        <div v-if="card.mobile_no" class="mt-0.5 flex items-center gap-2">
+          <a
+            :href="`tel:${card.mobile_no}`"
+            class="block truncate font-mono text-[11.5px] text-ink-gray-6 hover:text-ink-gray-9"
+          >
+            ☎ {{ card.mobile_no }}
+          </a>
+          <!-- manual mode only: opens the chat on this device (wa.me), nothing is sent -->
+          <a
+            v-if="waUrl"
+            :href="waUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-green-8 hover:bg-surface-green-3"
+            :title="
+              whatsappShopNumber
+                ? __('Envía desde el WhatsApp del negocio: {0}', [
+                    whatsappShopNumber,
+                  ])
+                : __('Abrir WhatsApp en este dispositivo')
+            "
+          >
+            {{ __('WhatsApp') }}
+          </a>
+        </div>
         <div v-if="form.email" class="truncate text-[11.5px] text-ink-gray-6">
           ✉ {{ form.email }}
         </div>
@@ -126,7 +144,8 @@
 <script setup>
 import { reactive, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Avatar, Button, Dialog, toast } from 'frappe-ui'
+import { Avatar, Button, Dialog, call, toast } from 'frappe-ui'
+import { whatsappShopNumber, whatsappManual } from '@/composables/whatsapp'
 import {
   contactCard,
   saveContactField,
@@ -145,6 +164,23 @@ const record = computed(() => card.value?.record || {})
 // Name fields persist to the canonical Contact when there is one, else the record.
 const nameRecord = computed(() => card.value?.name_record || record.value)
 const displayName = computed(() => card.value?.name_display || '')
+
+// Manual WhatsApp link for the record's recipient; the server picks the number
+// (mobile unless marked not-WhatsApp, site-country digits), and only in manual mode.
+const waUrl = ref('')
+watch(
+  () => [whatsappManual.value, record.value.doctype, record.value.name],
+  async ([manual, doctype, name]) => {
+    waUrl.value = ''
+    if (!manual || !['CRM Deal', 'CRM Lead'].includes(doctype) || !name) return
+    const channel = await call('crm.api.whatsapp_channel.get_record_channel', {
+      reference_doctype: doctype,
+      reference_name: name,
+    }).catch(() => null)
+    if (record.value.name === name) waUrl.value = channel?.url || ''
+  },
+  { immediate: true },
+)
 
 const form = reactive({})
 watch(

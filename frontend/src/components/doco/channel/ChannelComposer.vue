@@ -234,6 +234,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { Button, Dialog, call, toast } from 'frappe-ui'
+import { whatsappManual } from '@/composables/whatsapp'
 
 const MAX_PREFILL = 1000
 const OUTCOMES = [
@@ -253,7 +254,7 @@ const props = defineProps({
 })
 const show = defineModel({ type: Boolean, default: false })
 
-const channel = ref('whatsapp')
+const channel = ref(whatsappManual.value ? 'whatsapp' : 'sms')
 const template = ref('')
 const text = ref('')
 // the last untouched server render, so a hole edit can tell «still ours» from
@@ -268,11 +269,28 @@ const busy = ref(false)
 const error = ref('')
 const blockedUrl = ref('')
 
-const channelChoices = [
-  { value: 'whatsapp', label: '💬 WhatsApp' },
-  { value: 'sms', label: '✉ SMS' },
-  { value: 'call', label: '📞 Llamar' },
-]
+// WhatsApp deeplinks only in the site's manual WhatsApp mode: with a connected
+// account WhatsApp goes through the CRM composer, never both. The marketing
+// config says so itself (`whatsapp_deeplink`); an older doco_marketing without
+// that key falls back to the site channel mode.
+const whatsappDeeplink = computed(() =>
+  typeof config.value?.whatsapp_deeplink === 'boolean'
+    ? config.value.whatsapp_deeplink
+    : whatsappManual.value,
+)
+const channelChoices = computed(() =>
+  [
+    { value: 'whatsapp', label: '💬 WhatsApp' },
+    { value: 'sms', label: '✉ SMS' },
+    { value: 'call', label: '📞 Llamar' },
+  ].filter((c) => c.value !== 'whatsapp' || whatsappDeeplink.value),
+)
+// The config arrives after the dialog opens; never leave WhatsApp selected
+// once it is not offered.
+watch(channelChoices, (choices) => {
+  if (!choices.some((c) => c.value === channel.value))
+    channel.value = choices[0].value
+})
 const prefillSupported = computed(() =>
   ['whatsapp', 'sms'].includes(channel.value),
 )
@@ -294,6 +312,8 @@ function shortDate(value) {
 
 watch(show, async (open) => {
   if (!open) return
+  if (!channelChoices.value.some((c) => c.value === channel.value))
+    channel.value = channelChoices.value[0].value
   error.value = ''
   blockedUrl.value = ''
   manual.value = {}
