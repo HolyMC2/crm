@@ -10174,3 +10174,79 @@ msgstr "Campañas"
 
 msgid "Setup pending"
 msgstr "Configuración pendiente"
+
+#: crm/api/deal_queues.py
+msgid "Open deals"
+msgstr "Tratos abiertos"
+
+#: crm/api/deal_queues.py
+msgid "Overdue follow-ups"
+msgstr "Seguimientos vencidos"
+
+#: crm/api/deal_queues.py
+msgid "Follow-ups due today"
+msgstr "Seguimientos para hoy"
+
+#: crm/api/deal_queues.py
+msgid "Follow-ups without a date"
+msgstr "Seguimientos sin fecha"
+
+#: crm/api/deal_queues.py
+msgid "Deals without follow-up"
+msgstr "Tratos sin seguimiento"
+
+#: crm/api/list_columns_crm.py
+msgid "Next step"
+msgstr "Próximo paso"
+
+#: crm/api/list_columns_crm.py
+msgid "Weighted value"
+msgstr "Valor ponderado"
+
+#: crm/api/deal_queues.py
+msgid "Customer"
+msgstr "Cliente"
+
+#: crm/api/deal_queues.py
+msgid "Repair Order"
+msgstr "Orden de reparación"
+
+#: crm/api/deal_queues.py
+msgid "Repair Status"
+msgstr "Estado de reparación"
+
+#: crm/patches/v1_0/unpack_deal_list_views.py
+msgid "Repair Type"
+msgstr "Tipo de reparación"
+
+#: crm/api/deal_queues.py
+msgid "Deal Name"
+msgstr "Nombre del trato"
+
+#: crm/api/list_export.py
+msgid "Created By"
+msgstr "Creado por"
+
+#: crm/api/list_export.py
+msgid "Created On"
+msgstr "Creado el"
+
+#: crm/api/list_export.py
+msgid "Modified By"
+msgstr "Modificado por"
+
+#: crm/api/list_export.py
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: crm/api/list_export.py
+msgid "Select at least one column to export."
+msgstr "Selecciona al menos una columna para exportar."
+
+#: crm/api/list_export.py
+msgid "Unsupported export format: {0}"
+msgstr "Formato de exportación no admitido: {0}"
+
+#: crm/api/list_export.py
+msgid "You are not allowed to export {0}"
+msgstr "No tienes permiso para exportar {0}"

@@ -388,6 +388,10 @@ after_migrate = [
 	"crm.install.add_web_form_custom_fields",
 ]
 
+# Virtual list columns: {doctype: [provider modules]}; any app may add its own.
+# See crm.api.list_columns for the provider contract.
+crm_virtual_list_columns = {"CRM Deal": ["crm.api.list_columns_crm"]}
+
 standard_dropdown_items = [
 	{
 		"name1": "app_selector",

@@ -10,6 +10,14 @@ from frappe.model.document import get_controller
 from frappe.utils import make_filter_tuple
 from pypika import Criterion
 
+from crm.api.list_columns import (
+	enrich_rows,
+	is_virtual,
+	provider_columns,
+	split_virtual,
+	strip_virtual_order_by,
+)
+from crm.api.list_tokens import resolve_filter_tokens
 from crm.api.views import get_views
 from crm.fcrm.doctype.crm_form_script.crm_form_script import get_form_script
 from crm.utils import is_frappe_version
@@ -271,8 +279,9 @@ def get_data(
 	or_filters: dict | None = None,
 ):
 	custom_view = False
-	filters = frappe._dict(filters)
-	or_filters = frappe.parse_json(or_filters) if or_filters else None
+	# @me, @today(+/-N), @open_deal_statuses: resolved per request, stored as tokens
+	filters = frappe._dict(resolve_filter_tokens(frappe.parse_json(filters) or {}) or {})
+	or_filters = resolve_filter_tokens(frappe.parse_json(or_filters)) if or_filters else None
 	rows = frappe.parse_json(rows or "[]")
 	columns = frappe.parse_json(columns or "[]")
 	kanban_fields = frappe.parse_json(kanban_fields or "[]")
@@ -282,21 +291,13 @@ def get_data(
 	view_type = view.get("view_type") if view else None
 	group_by_field = view.get("group_by_field") if view else None
 
-	for key in filters:
-		value = filters[key]
-		if isinstance(value, list):
-			if "@me" in value:
-				value[value.index("@me")] = frappe.session.user
-			elif "%@me%" in value:
-				index = [i for i, v in enumerate(value) if v == "%@me%"]
-				for i in index:
-					value[i] = "%" + frappe.session.user + "%"
-		elif value == "@me":
-			filters[key] = frappe.session.user
-
 	if default_filters:
-		default_filters = frappe.parse_json(default_filters)
+		default_filters = resolve_filter_tokens(frappe.parse_json(default_filters))
 		filters.update(default_filters)
+
+	# Virtual (_v_*) keys never reach SQL: they are filled by providers after the query,
+	# and a sort on one falls back to the view's native default.
+	native_order_by = _native_order_by(doctype, order_by, custom_view_name)
 
 	is_default = True
 	data = []
@@ -357,18 +358,26 @@ def get_data(
 		if group_by_field and group_by_field not in rows:
 			rows.append(group_by_field)
 
+		live_virtual = _live_virtual_keys(doctype, rows, columns)
+		# a virtual column whose provider is not installed is hidden, not an empty column
+		columns = [c for c in columns if not is_virtual(c.get("key")) or c.get("key") in live_virtual]
+		sql_rows, virtual_rows = split_virtual(rows)
+		if virtual_rows and "name" not in sql_rows:
+			sql_rows.append("name")
+
 		data = (
 			frappe.get_list(
 				doctype,
-				fields=rows,
+				fields=sql_rows,
 				filters=filters,
 				or_filters=or_filters,
-				order_by=order_by,
+				order_by=native_order_by,
 				page_length=page_length,
 			)
 			or []
 		)
 		data = parse_list_data(data, doctype)
+		enrich_rows(doctype, data, set(virtual_rows) & live_virtual)
 
 	if view_type == "kanban":
 		if not rows:
@@ -402,6 +411,11 @@ def get_data(
 			if field not in rows:
 				rows.append(field)
 
+		live_virtual = _live_virtual_keys(doctype, rows)
+		sql_rows, virtual_rows = split_virtual(rows)
+		if virtual_rows and "name" not in sql_rows:
+			sql_rows.append("name")
+
 		for kc in kanban_columns:
 			# Start with base filters
 			column_filters = []
@@ -423,16 +437,17 @@ def get_data(
 
 				if order:
 					column_data = get_records_based_on_order(
-						doctype, rows, column_filters, page_length, order
+						doctype, sql_rows, column_filters, page_length, order
 					)
 				else:
 					column_data = frappe.get_list(
 						doctype,
-						fields=rows,
+						fields=sql_rows,
 						filters=column_filters,
-						order_by=order_by,
+						order_by=native_order_by,
 						page_length=page_length,
 					)
+				enrich_rows(doctype, column_data, set(virtual_rows) & live_virtual)
 
 				all_count = frappe.get_list(
 					doctype,
@@ -523,6 +538,16 @@ def get_data(
 					"options": get_options(field.get("fieldtype"), field.get("options")),
 				}
 
+		if isinstance(group_by_field, str) and is_virtual(group_by_field):
+			descriptor = _virtual_descriptor(doctype, group_by_field)
+			if descriptor and descriptor.get("groupable"):
+				group_by_field = {
+					"label": descriptor.get("label"),
+					"fieldname": group_by_field,
+					"fieldtype": "Data",
+					"options": get_options("Data", None),
+				}
+
 	return {
 		"data": data,
 		"columns": columns,
@@ -543,6 +568,45 @@ def get_data(
 		"list_script": get_form_script(doctype, "List"),
 		"view_type": view_type,
 	}
+
+
+def _native_order_by(doctype, order_by, view_name=None):
+	"""``order_by`` without virtual terms; the view's (or doctype's) default if none is left."""
+	if not order_by or not any(is_virtual(part.split()[0].strip("`")) for part in _order_terms(order_by)):
+		return order_by
+	native = strip_virtual_order_by(order_by)
+	if native:
+		return native
+	if view_name:
+		saved = strip_virtual_order_by(frappe.db.get_value("CRM View Settings", view_name, "order_by"))
+		if saved:
+			return saved
+	meta = frappe.get_meta(doctype)
+	return f"`tab{doctype}`.`{meta.sort_field or 'modified'}` {meta.sort_order or 'desc'}"
+
+
+def _order_terms(order_by):
+	return [part.strip() for part in str(order_by).split(",") if part.strip()]
+
+
+def _live_virtual_keys(doctype, *key_sources):
+	"""Virtual keys asked for by rows/columns that an installed provider actually offers."""
+	asked = set()
+	for source in key_sources:
+		for item in source or []:
+			key = item.get("key") if isinstance(item, dict) else item
+			if is_virtual(key):
+				asked.add(key)
+	if not asked:
+		return set()
+	return asked & {descriptor["key"] for _provider, descriptor in provider_columns(doctype)}
+
+
+def _virtual_descriptor(doctype, key):
+	for _provider, descriptor in provider_columns(doctype):
+		if descriptor["key"] == key:
+			return descriptor
+	return None
 
 
 def parse_list_data(data, doctype):
@@ -879,8 +943,5 @@ def aggregate_deal_metrics(
 
 	return {
 		"currency": frappe.db.get_single_value("FCRM Settings", "currency") or "USD",
-		"stages": deal_metrics(
-			frappe.parse_json(filters) if isinstance(filters, str) else filters,
-			frappe.parse_json(or_filters) if isinstance(or_filters, str) else or_filters,
-		),
+		"stages": deal_metrics(resolve_filter_tokens(filters), resolve_filter_tokens(or_filters)),
 	}
