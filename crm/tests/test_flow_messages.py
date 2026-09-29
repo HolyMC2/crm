@@ -18,19 +18,23 @@ from crm.tests import test_outbox
 
 class TestFlowMessages(test_outbox.TestOutbox):
 	def flow(self, status="Published", flow_id="123456789", account=None):
-		from frappe_whatsapp.flow_builder import sync_flow
-
+		# Plain WhatsApp Flow rows: only the doctype, not a companion builder, is required.
 		frappe.set_user("Administrator")
-		name = sync_flow(
+		doc = frappe.get_doc(
 			{
+				"doctype": "WhatsApp Flow",
 				"flow_name": "Flow " + uuid4().hex[:8],
-				"screens": [{"title": "Quote", "fields": [{"name": "first_name", "type": "TextInput", "label": "Name", "required": True}]}],
-			},
-			whatsapp_account=account or self.account.name,
-		)["flow"]
-		frappe.db.set_value("WhatsApp Flow", name, {"status": status, "flow_id": flow_id})
+				"whatsapp_account": account or self.account.name,
+				"category": "LEAD_GENERATION",
+				"screens": [{"screen_id": "SCREEN_A", "screen_title": "Quote", "terminal": 1}],
+				"fields": [
+					{"screen": "SCREEN_A", "field_name": "first_name", "field_type": "TextInput", "label": "Name", "required": 1, "enabled": 1}
+				],
+			}
+		).insert(ignore_permissions=True)
+		frappe.db.set_value("WhatsApp Flow", doc.name, {"status": status, "flow_id": flow_id})
 		frappe.set_user(self.users["one"])
-		return name
+		return doc.name
 
 	def queue_flow(self, flow, request_id=None, body="Fill in the quote"):
 		return api.queue_flow_message(
