@@ -21,10 +21,9 @@
           v-for="p in periods"
           :key="p.key"
           class="rounded-full px-3 py-1 text-[12px] font-medium"
-          :style="period === p.key ? 'color:#fff;background:#1c2230' : ''"
           :class="
             period === p.key
-              ? ''
+              ? 'bg-surface-gray-3 font-semibold text-ink-gray-9'
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           @click="setPeriod(p.key)"

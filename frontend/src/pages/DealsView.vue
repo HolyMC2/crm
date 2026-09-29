@@ -127,7 +127,7 @@
         >
           {{ count }}
         </span>
-        <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
+        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
         <div
           class="flex overflow-hidden rounded-lg border border-outline-gray-2"
         >
@@ -135,19 +135,19 @@
             v-for="(v, i) in views"
             :key="v.key"
             class="inline-flex items-center gap-1 px-[11px] py-[5px] text-[12px]"
-            :class="i ? 'border-l border-outline-gray-2' : ''"
-            :style="
+            :class="[
+              i ? 'border-l border-outline-gray-2' : '',
               v.key === view
-                ? 'background:#1c2230;color:#fff;font-weight:600'
-                : 'background:#fff;color:#5b6472'
-            "
+                ? 'bg-surface-gray-3 text-ink-gray-9 font-semibold'
+                : 'bg-surface-base text-ink-gray-6',
+            ]"
             :aria-pressed="v.key === view"
             @click="selectView(v)"
           >
             {{ v.label }}
           </button>
         </div>
-        <div class="mx-1 h-[18px] w-px" style="background: #e4e7ec" />
+        <div class="mx-1 h-[18px] w-px bg-outline-gray-2" />
         <FilterPopover
           :label="__('Stage')"
           :options="stageOptions"
