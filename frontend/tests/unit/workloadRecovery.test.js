@@ -1,18 +1,37 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, nextTick } from 'vue'
 import { workloadError } from '@/utils/workloadError'
-const mocks = vi.hoisted(() => ({ call: vi.fn(), leave: null }))
-vi.mock('frappe-ui', () => ({ call: mocks.call }))
-vi.mock('vue-router', () => ({
-  onBeforeRouteLeave: (callback) => {
-    mocks.leave = callback
-  },
+const mocks = vi.hoisted(() => ({
+  call: vi.fn(),
+  leave: null,
+  route: null,
+  navigations: [],
 }))
+vi.mock('frappe-ui', () => ({ call: mocks.call }))
+vi.mock('vue-router', async () => {
+  const { reactive } = await import('vue')
+  const route = reactive({ path: '/workload', query: {} })
+  mocks.route = route
+  const go = (method) => (location) => {
+    mocks.navigations.push([method, location.query])
+    route.query = { ...location.query }
+    return Promise.resolve()
+  }
+  return {
+    onBeforeRouteLeave: (callback) => {
+      mocks.leave = callback
+    },
+    useRoute: () => route,
+    useRouter: () => ({ push: go('push'), replace: go('replace') }),
+  }
+})
 import WorkloadView from '@/pages/WorkloadView.vue'
 const cleanups = []
 beforeEach(() => {
   mocks.call.mockReset()
   mocks.leave = null
+  mocks.navigations.length = 0
+  if (mocks.route) mocks.route.query = {}
   sessionStorage.clear()
 })
 afterEach(() => cleanups.splice(0).forEach((cleanup) => cleanup()))
@@ -148,6 +167,8 @@ describe('workload recovery', () => {
     el.querySelectorAll('input[type="checkbox"]').forEach((input) =>
       input.click(),
     )
+    // The reassignment bar appears once something is selected.
+    await nextTick()
     const target = [...el.querySelectorAll('select')].at(-1)
     target.value = 'target@example.test'
     target.dispatchEvent(new Event('change', { bubbles: true }))
@@ -297,6 +318,7 @@ describe('workload recovery', () => {
       expect(el.querySelector('input[type="checkbox"]')).not.toBeNull(),
     )
     el.querySelector('input[type="checkbox"]').click()
+    await nextTick()
     const target = [...el.querySelectorAll('select')].at(-1)
     target.value = 'target@example.test'
     target.dispatchEvent(new Event('change', { bubbles: true }))
