@@ -227,7 +227,12 @@ doc_events = {
 	},
 	"CRM Task": {
 		"after_insert": ["crm.pipeline.hooks.on_task_change"],
-		"on_update": ["crm.pipeline.hooks.on_task_change"],
+		"on_update": [
+			"crm.pipeline.hooks.on_task_change",
+			# A person's edit/closure of an automated follow-up goes to the app
+			# that owns its source (contract: CRM_FOLLOWUP_TASK_API §6).
+			"crm.pipeline.services.follow_up.route_person_change",
+		],
 		"on_trash": ["crm.pipeline.hooks.on_task_change"],
 	},
 	"Sales Order": {

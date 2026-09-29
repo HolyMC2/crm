@@ -185,3 +185,43 @@ before calling `upsert`, so a completed/canceled occurrence is not recreated.
 Taller now owns five disabled-by-default rules and explicit permission-scoped
 backfill. Marketing defers its legacy ready task when Taller's enabled rule owns
 it. See [Taller implementation and acceptance](../../taller/docs/GAP_CLOSURE_2026_09_15.md).
+
+## §6 Source contract: a person's edit or closure (2026-09-28)
+
+The source record stays canonical (taller: the Repair Order); the automated task
+is its work item. A person may still edit or close that task in CRM, so the
+service now tells those edits apart from its own writes and hands them to the
+source app, which validates them like any other edit of its record.
+
+- **Automation-origin marker.** Every CRM Task save the service makes (create,
+  refresh, reassign, close) carries `doc.flags.crm_follow_up_automation`. The
+  snapshot in `automation_values` is written after the save, so a document hook
+  must read the marker, never the snapshot, to know who saved.
+- **Routing.** `route_person_change` (CRM Task `on_update`) calls the handler a
+  source app registers under the `crm_follow_up_handlers` hook
+  (`{"<source doctype>": "dotted.path"}`) with `task` and
+  `changes = {field: (before, after)}` for `title`, `due_date`, `assigned_to`,
+  `activity_type` and `status`. It does nothing for automation saves, tasks
+  without a slot/source, or a source without a handler.
+- **Recursion guard.** While a source handles task X, another save of X in the
+  same request is not routed again (the source's own reconciliation refreshing
+  the task goes through the service anyway and carries the marker).
+- **Refusal.** A handler may raise; the person's CRM save then fails with that
+  message. Taller raises when the person may not write the order, or when the
+  new assignee cannot reach the order's laboratory.
+- **Field-level override.** A human edit no longer freezes the whole task.
+  `upsert`/`reassign` keep only the fields a person changed (`human_fields`) and
+  keep refreshing the rest. `open_tasks` and `upsert` return `human_fields`
+  alongside `human_edited`. Untracked fields (description, priority) still
+  follow only a task nobody touched.
+- **Adoption.** A handler returns `{"adopt": [fields]}` for values the source
+  took over (it now writes the same value itself); `adopt()` records them as
+  the automation's again, so later refreshes keep that field in step.
+- **Closure reconciliation.** Done/Canceled by a person is routed as a `status`
+  change. CRM never moves the source record: the source decides what a closure
+  means. Taller records «cerrada en CRM» on the order and keeps the wait visible
+  and actionable there, because closing a task proves neither a parts arrival
+  nor a customer's answer. The settled occurrence is never reopened; a new wait
+  revision opens a new task.
+
+Tests: `TestFollowUpSourceContract` in `crm/tests/test_pipeline_follow_up.py`.

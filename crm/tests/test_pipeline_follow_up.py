@@ -493,3 +493,135 @@ class FollowUpTestCase(IntegrationTestCase):
 				self.upsert(deal, source, occurrence="evt-1")
 
 		self.assertEqual(self.open_of(self.slot(source)), [])
+
+
+class TestFollowUpSourceContract(FollowUpTestCase):
+	"""The small contract between CRM and the app that owns a task's source:
+	automation-origin marker, recursion guard, field-level overrides and the
+	routing of a person's edit or closure (docs/CRM_FOLLOWUP_TASK_API §6)."""
+
+	def setUp(self):
+		super().setUp()
+		self.calls: list[dict] = []
+		self.answer: dict = {}
+		self.raise_with: Exception | None = None
+		self.on_call = None
+		self.enterContext(patch.object(follow_up, "_source_handler", side_effect=self._handler_for))
+
+	def _handler_for(self, source_doctype):
+		return self._handler if source_doctype == "ToDo" else None
+
+	def _handler(self, *, task, changes):
+		self.calls.append({"task": task.name, "changes": dict(changes)})
+		if self.on_call:
+			self.on_call(task)
+		if self.raise_with:
+			raise self.raise_with
+		return self.answer
+
+	def person_edit(self, name, **values):
+		doc = frappe.get_doc("CRM Task", name)
+		doc.update(values)
+		doc.save(ignore_permissions=True)
+		return doc
+
+	def test_the_automation_never_hears_its_own_writes(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1")
+		self.upsert(deal, source, occurrence="evt-1", title="Otro titulo", days=5)
+		follow_up.reassign(slot=self.slot(source), owner=self.make_user())
+		follow_up.complete(slot=self.slot(source))
+		self.assertEqual(self.calls, [])
+		self.assertEqual(self.task(created["name"]).status, "Done")
+
+	def test_a_person_edit_is_routed_with_its_changes(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1")
+		new_due = add_to_date(get_datetime(), days=6)
+		self.person_edit(created["name"], due_date=new_due)
+		self.assertEqual(len(self.calls), 1)
+		self.assertEqual(list(self.calls[0]["changes"]), ["due_date"])
+
+	def test_a_person_closure_is_routed_and_moves_nothing_else(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1")
+		self.person_edit(created["name"], status="Done")
+		self.assertEqual(self.calls[0]["changes"]["status"], ("Todo", "Done"))
+		# Settled is settled: the rule's next event opens a fresh task instead.
+		again = self.upsert(deal, source, occurrence="evt-1")
+		self.assertNotEqual(again["name"], created["name"])
+
+	def test_a_refusing_source_refuses_the_person_edit(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1")
+		self.raise_with = frappe.PermissionError("Sin permiso sobre la orden")
+		with self.assertRaises(frappe.PermissionError):
+			self.person_edit(created["name"], assigned_to=self.make_user())
+
+	def test_the_same_task_is_not_routed_again_while_its_source_handles_it(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1")
+
+		def save_again(task):
+			# A source that saves the task while handling it (not through the
+			# service, so without the automation marker) must not loop.
+			if len(self.calls) == 1:
+				self.person_edit(task.name, title="Retitulada por la fuente")
+
+		self.on_call = save_again
+		self.person_edit(created["name"], due_date=add_to_date(get_datetime(), days=4))
+		self.assertEqual(len(self.calls), 1)
+
+	def test_field_level_override_keeps_only_the_edited_field(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1", days=2)
+		self.person_edit(created["name"], title="Llamar por la tarde")
+
+		refreshed = self.upsert(deal, source, occurrence="evt-1", title="Confirmar cotizacion", days=7)
+
+		self.assertEqual(refreshed["action"], "updated")
+		self.assertEqual(refreshed["human_fields"], ["title"])
+		row = self.task(created["name"])
+		self.assertEqual(row.title, "Llamar por la tarde")
+		# The date nobody touched keeps following the rule.
+		self.assertEqual(get_datetime(row.due_date).date(), add_to_date(get_datetime(), days=7).date())
+		# And the title stays the person's on the next refresh too.
+		self.assertEqual(self.upsert(deal, source, occurrence="evt-1", days=7)["human_fields"], ["title"])
+
+	def test_an_adopted_field_follows_the_rule_again(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1", days=2)
+		self.answer = {"adopt": ["due_date", "not_a_field"]}
+		self.person_edit(created["name"], due_date=add_to_date(get_datetime(), days=5))
+
+		self.assertEqual(follow_up.open_tasks(source_doctype="ToDo", source_name=source)[0]["human_fields"], [])
+		refreshed = self.upsert(deal, source, occurrence="evt-1", days=9)
+		self.assertEqual(get_datetime(self.task(created["name"]).due_date).date(), add_to_date(get_datetime(), days=9).date())
+		self.assertFalse(refreshed["human_edited"])
+
+	def test_reassign_is_per_field(self):
+		deal, source = self.make_deal(), self.make_source()
+		owner, other = self.make_user(), self.make_user()
+		created = self.upsert(deal, source, occurrence="evt-1", owner=owner)
+		self.person_edit(created["name"], title="Retitulada")
+
+		moved = follow_up.reassign(slot=self.slot(source), owner=other)
+
+		self.assertEqual(moved["reassigned"], [created["name"]])
+		row = self.task(created["name"])
+		self.assertEqual((row.assigned_to, row.title), (other, "Retitulada"))
+
+	def test_a_task_without_a_source_handler_is_left_alone(self):
+		deal, source = self.make_deal(), self.make_source()
+		created = self.upsert(deal, source, occurrence="evt-1")
+		with patch.object(follow_up, "_source_handler", return_value=None):
+			self.person_edit(created["name"], title="Solo en CRM")
+		self.assertEqual(self.calls, [])
+		self.assertEqual(follow_up.open_tasks(source_doctype="ToDo", source_name=source)[0]["human_fields"], ["title"])
+
+
+# The contract class borrows FollowUpTestCase's fixtures, not its tests: those
+# already run once in their own class.
+for _name in [n for n in vars(FollowUpTestCase) if n.startswith("test_")]:
+	setattr(TestFollowUpSourceContract, _name, None)
+del _name

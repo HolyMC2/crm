@@ -40,6 +40,19 @@ MAX_DATA = 140
 
 LOCK_TIMEOUT = 5
 
+# Automation-origin marker: every CRM Task save this service makes carries it,
+# so a document hook can tell the automation's own writes from a person's.
+AUTOMATION_FLAG = "crm_follow_up_automation"
+
+# Source apps register `{source doctype: "dotted.path"}` under this hook. The
+# handler receives a PERSON's change of an automated task and validates it as
+# an edit of the source record (see `route_person_change`).
+SOURCE_HANDLERS_HOOK = "crm_follow_up_handlers"
+
+# Stored for a person-owned field whose automation value was never recorded;
+# it can never equal a real value, so the field keeps reading as the person's.
+_UNPROVEN = "\u0000unproven"
+
 
 def upsert(
 	*,
@@ -178,18 +191,22 @@ def open_tasks(*, source_doctype: str, source_name: str, for_update: bool = Fals
 	if for_update:
 		query = query.for_update()
 	rows = query.run(as_dict=True)
-	return [
-		{
-			"name": cstr(row.name),
-			"slot": row.automation_slot,
-			"occurrence": row.automation_occurrence,
-			"due_date": row.due_date,
-			"assigned_to": row.assigned_to,
-			"title": row.title,
-			"human_edited": _human_edited(row.name, row.automation_values, for_update=for_update),
-		}
-		for row in rows
-	]
+	out = []
+	for row in rows:
+		human = human_fields(row.name, row.automation_values, for_update=for_update)
+		out.append(
+			{
+				"name": cstr(row.name),
+				"slot": row.automation_slot,
+				"occurrence": row.automation_occurrence,
+				"due_date": row.due_date,
+				"assigned_to": row.assigned_to,
+				"title": row.title,
+				"human_edited": bool(human),
+				"human_fields": sorted(human),
+			}
+		)
+	return out
 
 
 def reassign(*, slot: str, owner: str) -> dict:
@@ -213,12 +230,13 @@ def reassign(*, slot: str, owner: str) -> dict:
 	with slot_lock(slot):
 		for row in _open_slot_tasks(slot):
 			doc = frappe.get_doc("CRM Task", row.name, for_update=True)
-			if _human_edited(doc.name, doc.automation_values, for_update=True):
+			human = human_fields(doc.name, doc.automation_values, for_update=True)
+			if "assigned_to" in human:
 				result["kept"].append(cstr(doc.name))
 				continue
 			_apply_owner(doc, usable, None)
-			doc.save(ignore_permissions=True)
-			_record_values(doc.name)
+			_save(doc)
+			_record_values(doc.name, keep=human, written=doc.automation_values)
 			result["reassigned"].append(cstr(doc.name))
 	return result
 
@@ -285,39 +303,55 @@ def _create(
 	)
 	# The authorisation gate is the write check on the reference record; the task
 	# row itself is the automation's, not the session user's.
+	doc.flags[AUTOMATION_FLAG] = True
 	doc.insert(ignore_permissions=True)
 	_record_values(doc.name)
 	return {"name": cstr(doc.name), "action": "created", "human_edited": False}
 
 
 def _refresh(name, *, title, activity_type, due, owner, owner_skipped, description, priority) -> dict:
+	"""Field-level override: a field a person changed stays theirs; every other
+	tracked field keeps following the rule. The task keeps its slot and
+	occurrence so the next event of the rule still finds it."""
 	doc = frappe.get_doc("CRM Task", name, for_update=True)
-	if _human_edited(doc.name, doc.automation_values, for_update=True):
-		# The person's title, date or assignee is the current truth. The task keeps
-		# its slot and occurrence so the next event of the rule still finds it.
-		return {"name": cstr(doc.name), "action": "reused", "human_edited": True}
+	written = doc.automation_values
+	human = human_fields(doc.name, written, for_update=True)
+	result = {"name": cstr(doc.name), "human_edited": bool(human), "human_fields": sorted(human)}
 
-	changes = {"title": title, "activity_type": activity_type, "due_date": due}
-	if not owner_skipped:
+	changes = {}
+	for field, value in (("title", title), ("activity_type", activity_type), ("due_date", due)):
+		if field not in human:
+			changes[field] = value
+	if not owner_skipped and "assigned_to" not in human:
 		changes["assigned_to"] = owner
-	if priority:
-		changes["priority"] = priority
-	if description is not None:
-		changes["description"] = description
-	if all(cstr(doc.get(field)) == cstr(value) for field, value in changes.items()):
-		return {"name": cstr(doc.name), "action": "reused", "human_edited": False}
+	if not human:
+		# Untracked fields follow only a task nobody touched, as before.
+		if priority:
+			changes["priority"] = priority
+		if description is not None:
+			changes["description"] = description
+	if all(_same(field, doc.get(field), value) for field, value in changes.items()):
+		return {**result, "action": "reused"}
 
-	doc.title = title
-	doc.activity_type = activity_type
-	doc.due_date = due
-	if priority:
-		doc.priority = priority
-	if description is not None:
-		doc.description = description
-	_apply_owner(doc, owner, owner_skipped)
+	for field, value in changes.items():
+		if field == "assigned_to":
+			_apply_owner(doc, value, None)
+		else:
+			doc.set(field, value)
+	_save(doc)
+	_record_values(doc.name, keep=human, written=written)
+	return {**result, "action": "updated"}
+
+
+def _same(field, current, wanted) -> bool:
+	if field == "due_date":
+		return (cstr(get_datetime(current)) if current else "") == (cstr(get_datetime(wanted)) if wanted else "")
+	return cstr(current) == cstr(wanted)
+
+
+def _save(doc) -> None:
+	doc.flags[AUTOMATION_FLAG] = True
 	doc.save(ignore_permissions=True)
-	_record_values(doc.name)
-	return {"name": cstr(doc.name), "action": "updated", "human_edited": False}
 
 
 def _close(name, outcome, note=None) -> None:
@@ -325,7 +359,7 @@ def _close(name, outcome, note=None) -> None:
 	doc.status = outcome
 	if note:
 		doc.description = _with_note(doc.description, note)
-	doc.save(ignore_permissions=True)
+	_save(doc)
 
 
 def _with_note(description, note) -> str:
@@ -350,18 +384,40 @@ def _apply_owner(doc, owner, owner_skipped) -> None:
 	doc.assigned_to = owner
 
 
-def _record_values(name) -> None:
+def _record_values(name, *, keep=frozenset(), written=None) -> None:
 	"""Store what the automation left on the row, read back from the row itself so
 	a later comparison sees the same shape the database returns.
+
+	`keep` are fields a person owns: their stored automation value is retained,
+	so they keep reading as the person's until the source adopts them.
 
 	Written straight to the column: it is derived data, the document hooks already
 	ran for the fields a user sees, and it must not read as user activity.
 	"""
-	frappe.db.set_value("CRM Task", name, "automation_values", _values_json(name), update_modified=False)
+	values = _values_of(name)
+	if keep:
+		stored = _stored(written) or {}
+		for field in keep:
+			values[field] = stored.get(field, _UNPROVEN)
+	frappe.db.set_value("CRM Task", name, "automation_values", _dumps(values), update_modified=False)
+
+
+def _dumps(values) -> str:
+	return json.dumps(values, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
 def _values_json(name) -> str:
-	return json.dumps(_values_of(name), ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+	return _dumps(_values_of(name))
+
+
+def _stored(written) -> dict | None:
+	if not written:
+		return None
+	try:
+		stored = json.loads(written)
+	except ValueError:
+		return None
+	return stored if isinstance(stored, dict) else None
 
 
 def _values_of(name, *, for_update=False) -> dict:
@@ -376,15 +432,88 @@ def _values_of(name, *, for_update=False) -> dict:
 	}
 
 
-def _human_edited(name, written, *, for_update=False) -> bool:
-	if not written:
+def human_fields(name, written, *, for_update=False) -> set[str]:
+	"""Tracked fields whose current value is not what the automation wrote."""
+	stored = _stored(written)
+	if stored is None:
 		# Values this service cannot prove it wrote are never overwritten.
-		return True
+		return set(TRACKED_FIELDS)
+	current = _values_of(name, for_update=for_update)
+	return {field for field in TRACKED_FIELDS if stored.get(field) != current.get(field)}
+
+
+def _human_edited(name, written, *, for_update=False) -> bool:
+	return bool(human_fields(name, written, for_update=for_update))
+
+
+def adopt(name, fields) -> list[str]:
+	"""The source accepted a person's value for `fields` (it now writes the same
+	value itself): record them as the automation's again, so later refreshes
+	keep that field in step. Unknown fields are ignored."""
+	fields = [field for field in (fields or ()) if field in TRACKED_FIELDS]
+	if not fields:
+		return []
+	stored = _stored(frappe.db.get_value("CRM Task", name, "automation_values")) or {}
+	current = _values_of(name)
+	for field in fields:
+		stored[field] = current.get(field)
+	frappe.db.set_value("CRM Task", name, "automation_values", _dumps(stored), update_modified=False)
+	return fields
+
+
+def route_person_change(doc, method=None) -> None:
+	"""CRM Task `on_update`: hand a PERSON's change of an automated task to the
+	app that owns its source record.
+
+	* The automation's own saves carry `AUTOMATION_FLAG` and are skipped, so a
+	  source reconciling the task never hears itself.
+	* Recursion guard: while a source handles task X, any further save of X in
+	  the same request (its reconciliation refreshing the task) is not routed.
+	* The handler validates the change like any edit of its record and may
+	  raise — the person's CRM save then fails with that message. It returns
+	  `{"adopt": [fields]}` for values it took over; those stop being overrides.
+	* Status changes to Done/Canceled are routed too, so the source can keep its
+	  own obligation visible; CRM never moves the source record by itself.
+	"""
+	if doc.flags.get(AUTOMATION_FLAG) or not doc.get("automation_slot"):
+		return
+	source = cstr(doc.get("automation_source_doctype"))
+	if not source:
+		return
+	before = doc.get_doc_before_save()
+	if before is None:
+		return
+	changes = {
+		field: (before.get(field), doc.get(field))
+		for field in (*TRACKED_FIELDS, "status")
+		if not _same(field, before.get(field), doc.get(field))
+	}
+	if not changes:
+		return
+	handler = _source_handler(source)
+	if handler is None:
+		return
+	# frappe.local is a werkzeug Local: attribute access only, no __dict__.
+	active = getattr(frappe.local, "crm_follow_up_routing", None)
+	if active is None:
+		active = frappe.local.crm_follow_up_routing = set()
+	if doc.name in active:
+		return
+	active.add(doc.name)
 	try:
-		stored = json.loads(written)
-	except ValueError:
-		return True
-	return stored != _values_of(name, for_update=for_update)
+		result = handler(task=doc, changes=changes) or {}
+	finally:
+		active.discard(doc.name)
+	adopt(doc.name, result.get("adopt"))
+
+
+def _source_handler(source_doctype):
+	hooks = frappe.get_hooks(SOURCE_HANDLERS_HOOK) or {}
+	paths = hooks.get(source_doctype) if isinstance(hooks, dict) else None
+	paths = paths or []
+	if isinstance(paths, str):
+		paths = [paths]
+	return frappe.get_attr(paths[-1]) if paths else None
 
 
 def _open_slot_tasks(slot) -> list:
