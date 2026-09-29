@@ -4507,6 +4507,27 @@ msgstr "Inactivo/Fuera"
 msgid "Less than"
 msgstr ""
 
+msgid "Forms can be sent only in WhatsApp conversations."
+msgstr "Los formularios solo se pueden enviar en conversaciones de WhatsApp."
+
+msgid "Invalid form message."
+msgstr "Mensaje de formulario no válido."
+
+msgid "Choose a WhatsApp Flow."
+msgstr "Elige un WhatsApp Flow."
+
+msgid "Publish this WhatsApp Flow on Meta before sending it."
+msgstr "Publica este WhatsApp Flow en Meta antes de enviarlo."
+
+msgid "This WhatsApp Flow belongs to another WhatsApp number."
+msgstr "Este WhatsApp Flow pertenece a otro número de WhatsApp."
+
+msgid "Enter a message of at most {0} characters."
+msgstr "Escribe un mensaje de máximo {0} caracteres."
+
+msgid "Open form"
+msgstr "Abrir formulario"
+
 #: frontend/src/components/Filter.vue:369
 msgid "Less than or equal to"
 msgstr ""

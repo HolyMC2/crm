@@ -287,6 +287,8 @@ def _summary(payload):
 			codes.extend(row["product_retailer_id"] for row in section.get("product_items", []))
 		label = _("Catalog") if content["type"] == "catalog_message" else _("Products")
 		return "{0}: {1}{2}".format(label, body, " · " + ", ".join(codes) if codes else "")
+	if kind == "interactive" and content.get("type") == "flow":
+		return "{0}: {1}".format(_("Form"), (content.get("body") or {}).get("text", ""))
 	return content.get("caption") or "[{0}]".format(kind)
 
 
@@ -483,6 +485,12 @@ def queue_catalog_message(conversation, expected_generation, request_id, payload
 	return _queue_human(conversation, expected_generation, request_id, payload, action="catalog_reply")
 
 
+@_pending_on_queue_contention
+def queue_flow_message(conversation, expected_generation, request_id, payload):
+	"""A person's reply carrying a Published WhatsApp Flow (crm.api.flow_messages)."""
+	return _queue_human(conversation, expected_generation, request_id, payload, action="flow_reply")
+
+
 def _queue_human(conversation, expected_generation, request_id, payload, *, action="manual_reply"):
 	actor = frappe.session.user
 	request_id = control._text(request_id, 140)
@@ -505,6 +513,10 @@ def _queue_human(conversation, expected_generation, request_id, payload, *, acti
 					frappe.throw(_("Reply request ID was already used for different content."))
 				return _projection(existing)
 			frozen, catalog_source = freeze(payload, current)
+		elif action == "flow_reply":
+			from crm.api.flow_messages import freeze as freeze_flow
+
+			frozen = freeze_flow({**payload, "request_id": request_id}, current)
 		else:
 			frozen = _payload(payload, current)
 		if frappe.db.get_value(DOCTYPE, name, "name", for_update=True):
