@@ -30,7 +30,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { activityState, activityLabel } from '@/utils/activityState'
+import { nextStepDisplay } from '@/utils/activityState'
 import LucideSquareCheck from '~icons/lucide/square-check'
 import LucidePhone from '~icons/lucide/phone'
 import LucideMessageCircle from '~icons/lucide/message-circle'
@@ -42,6 +42,11 @@ const props = defineProps({
   title: { type: String, default: '' },
   type: { type: String, default: '' },
   compact: { type: Boolean, default: false },
+  // the server's verdict (`_v_next_step.overdue`, site clock); null = not sent,
+  // the chip then works it out from `at` and the browser clock
+  overdue: { type: Boolean, default: null },
+  // site-calendar days from today to `at` (negative when late), with `overdue`
+  days: { type: Number, default: null },
   emptyLabel: { type: String, default: () => __('Sin actividad') },
 })
 
@@ -62,8 +67,11 @@ const ICONS = {
   Task: LucideSquareCheck,
 }
 
-const state = computed(() => activityState(props.at))
-const label = computed(() => activityLabel(props.at))
+const display = computed(() =>
+  nextStepDisplay(props.at, { overdue: props.overdue, days: props.days }),
+)
+const state = computed(() => display.value.state)
+const label = computed(() => display.value.label)
 const icon = computed(() => ICONS[props.type] || LucideSquareCheck)
 const tooltip = computed(() =>
   [props.title, props.type, props.at].filter(Boolean).join(' · '),

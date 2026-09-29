@@ -84,3 +84,45 @@ export function activityLabel(at, now = new Date()) {
   if (days <= 7) return __('En {0} d', [days])
   return `${d.getDate()} ${__(MONTHS_SHORT[d.getMonth()])}`
 }
+
+/**
+ * State + label for a next step that may carry the server's verdict.
+ *
+ * `overdue` (and `days`, the site-calendar day difference at - today, negative
+ * when late) come from the `_v_next_step` provider, computed on the server's
+ * clock in the site's timezone. When `overdue` is a boolean it decides the
+ * colour, so a browser with a wrong clock or zone cannot turn a chip red or
+ * green on its own. Without it (rows written in place, older sites) this falls
+ * back to the client computation above.
+ *
+ * @returns {{state: 'overdue'|'today'|'planned'|'none', label: string}}
+ */
+export function nextStepDisplay(at, { overdue, days, now = new Date() } = {}) {
+  if (typeof overdue !== 'boolean')
+    return { state: activityState(at, now), label: activityLabel(at, now) }
+  const d = parseNaive(at)
+  if (!d) return { state: 'none', label: '' }
+  const diff = Number.isInteger(days) ? days : dayDiff(d, now)
+
+  if (overdue) {
+    // the client's own reading of how late it is, when it agrees
+    if (d.getTime() < now.getTime() && diff === dayDiff(d, now))
+      return { state: 'overdue', label: activityLabel(at, now) }
+    return {
+      state: 'overdue',
+      label: diff <= -1 ? __('Vencida · {0} d', [-diff]) : __('Vencida'),
+    }
+  }
+
+  if (diff <= 0)
+    return {
+      state: 'today',
+      label: __('Hoy {0}:{1}', [pad(d.getHours()), pad(d.getMinutes())]),
+    }
+  if (diff === 1) return { state: 'planned', label: __('Mañana') }
+  if (diff <= 7) return { state: 'planned', label: __('En {0} d', [diff]) }
+  return {
+    state: 'planned',
+    label: `${d.getDate()} ${__(MONTHS_SHORT[d.getMonth()])}`,
+  }
+}

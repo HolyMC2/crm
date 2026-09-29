@@ -113,6 +113,9 @@ export function nextStepRow(row = {}, value) {
     next_activity_at: v.at || '',
     next_activity_title: v.title || '',
     next_activity_type: v.type || '',
+    // the provider's server-clock verdict; absent after an in-place update
+    next_activity_overdue: typeof v.overdue === 'boolean' ? v.overdue : null,
+    next_activity_days: Number.isInteger(v.days) ? v.days : null,
   }
 }
 

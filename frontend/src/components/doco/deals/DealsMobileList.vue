@@ -53,6 +53,8 @@
             :at="r._v_next_step.at || ''"
             :title="r._v_next_step.title || ''"
             :type="r._v_next_step.type || ''"
+            :overdue="r._v_next_step.overdue ?? null"
+            :days="r._v_next_step.days ?? null"
             :empty-label="__('Pending, no date')"
           />
         </div>

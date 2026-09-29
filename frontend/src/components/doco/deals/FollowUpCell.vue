@@ -30,6 +30,8 @@
         :at="row.next_activity_at || ''"
         :title="row.next_activity_title || ''"
         :type="row.next_activity_type || ''"
+        :overdue="row.next_activity_overdue ?? null"
+        :days="row.next_activity_days ?? null"
         :empty-label="
           row.next_activity_task
             ? __('Pendiente sin fecha')
