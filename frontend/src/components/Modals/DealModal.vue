@@ -1,5 +1,5 @@
 <template>
-  <Dialog :open="show" :size="'3xl'" @update:open="setShow">
+  <Dialog v-model:open="show" :size="'3xl'">
     <template #body>
       <div class="bg-surface-elevation-2 px-4 pb-6 pt-5 sm:px-6">
         <div class="mb-5 flex items-center justify-between">
@@ -21,7 +21,7 @@
               variant="ghost"
               class="w-7"
               icon="lucide-x"
-              @click="setShow(false)"
+              @click="show = false"
             />
           </div>
         </div>
@@ -77,27 +77,6 @@
               class="h-4 w-4 rounded border-outline-gray-3 text-green-600 focus:ring-0"
             />
             {{ __('El teléfono tiene WhatsApp') }}
-          </label>
-
-          <label
-            v-if="repairAvailable"
-            class="mt-5 flex items-start gap-2 border-t pt-5 text-sm text-ink-gray-7"
-          >
-            <input
-              v-model="continueRepair"
-              type="checkbox"
-              :disabled="isDealCreating"
-              class="mt-0.5 rounded"
-            />
-            <span
-              >{{
-                __('Continuar a la recepción de reparación después de guardar')
-              }}<small class="mt-1 block text-ink-gray-5">{{
-                __(
-                  'Primero guardamos el trato y su contacto. Después revisas el laboratorio y los datos del equipo antes de crear la reparación.',
-                )
-              }}</small></span
-            >
           </label>
 
           <!--
@@ -156,12 +135,22 @@
         </div>
       </div>
       <div class="px-4 pb-7 pt-4 sm:px-6">
-        <div class="flex flex-row-reverse gap-2">
+        <div class="flex flex-row-reverse flex-wrap items-center gap-2">
+          <!-- Repair tenants: one flow from the new deal into taller Intake. -->
           <Button
+            v-if="repairIntake"
             variant="solid"
+            :label="__('Crear y recibir equipo')"
+            :loading="isDealCreating && intakeRequested"
+            :disabled="isDealCreating"
+            @click="createDeal(true)"
+          />
+          <Button
+            :variant="repairIntake ? 'subtle' : 'solid'"
             :label="__('Create')"
-            :loading="isDealCreating"
-            @click="createDeal"
+            :loading="isDealCreating && !intakeRequested"
+            :disabled="isDealCreating"
+            @click="createDeal(false)"
           />
         </div>
       </div>
@@ -173,7 +162,8 @@
 import PipelineSelector from '@/components/Pipeline/PipelineSelector.vue'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FieldLayout from '@/components/FieldLayout/FieldLayout.vue'
-import { repairIntakeDestination } from '@/utils/repairOrders'
+import { goToTallerIntake, tallerIntakeHref } from '@/utils/repairOrders'
+import { hasTaller } from '@/composables/inbox'
 import Link from '@/components/Controls/Link.vue'
 import { usersStore } from '@/stores/users'
 import { getMeta } from '@/stores/meta'
@@ -184,8 +174,8 @@ import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Switch, FormControl, createResource, toast } from 'frappe-ui'
-import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
-import { useRouter, onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
+import { computed, ref, onMounted, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   defaults: { type: Object, default: () => ({}) },
@@ -208,6 +198,8 @@ const erpSyncAvailable = computed(() => hasApp('doco') && hasApp('erpnext'))
 const repairAvailable = computed(
   () => erpSyncAvailable.value && hasApp('taller'),
 )
+// Taller owns repair intake: offer «Crear y recibir equipo» only where it runs.
+const repairIntake = computed(() => repairAvailable.value && hasTaller.value)
 const hasWhatsAppField = computed(() =>
   doctypeMeta.value?.fields?.some(
     (field) => field.fieldname === 'mobile_is_whatsapp',
@@ -221,28 +213,7 @@ const isDealCreating = ref(false)
 const chooseExistingContact = ref(false)
 const chooseExistingOrganization = ref(false)
 
-const continueRepair = ref(false)
-const intakeHandoffPending = ref(false)
-function canLeaveIntakeHandoff() {
-  if (!intakeHandoffPending.value) return true
-  error.value = __(
-    'El trato y su contacto siguen guardándose. Espera el resultado para continuar a la recepción.',
-  )
-  return false
-}
-function setShow(value) {
-  if (!value && !canLeaveIntakeHandoff()) return
-  show.value = value
-}
-function beforeUnload(event) {
-  if (!intakeHandoffPending.value) return
-  event.preventDefault()
-  event.returnValue = ''
-}
-onBeforeRouteLeave(canLeaveIntakeHandoff)
-onBeforeRouteUpdate(canLeaveIntakeHandoff)
-window.addEventListener('beforeunload', beforeUnload)
-onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
+const intakeRequested = ref(false)
 
 // Doco customization: customer details for ERPNext sync.
 // Pre-filled from company defaults; passed to sync_deal_contacts_to_erpnext
@@ -295,8 +266,7 @@ watch(
 )
 
 // Doco customization: org-less workflow. Hide every organization-related
-// field + section so the Deal quick view stays focused on contact +
-// repair-order capture.
+// field + section so the Deal quick view stays focused on the contact.
 const HIDDEN_DEAL_FIELDS = [
   'website',
   'annual_revenue',
@@ -379,7 +349,7 @@ watch(dealStatuses, (options) => {
         }
 })
 
-async function createDeal() {
+async function createDeal(receiveDevice = false) {
   if (isDealCreating.value) return
   if (deal.doc.website && !deal.doc.website.startsWith('http')) {
     deal.doc.website = 'https://' + deal.doc.website
@@ -391,7 +361,8 @@ async function createDeal() {
     deal.doc['mobile_no'] = null
   } else deal.doc['contact'] = null
 
-  const repairRequested = repairAvailable.value && continueRepair.value
+  const repairRequested = repairIntake.value && receiveDevice === true
+  intakeRequested.value = repairRequested
 
   await triggerOnBeforeCreate?.()
 
@@ -425,16 +396,17 @@ async function createDeal() {
         return error.value
       }
       isDealCreating.value = true
-      intakeHandoffPending.value = repairRequested
     },
     onSuccess(name) {
       capture('deal_created')
+      const destination = { ...props.redirect, params: { dealId: name } }
       const finish = () => {
-        intakeHandoffPending.value = false
         isDealCreating.value = false
         show.value = false
-        router.push(
-          repairIntakeDestination(name, props.redirect, repairRequested),
+        if (!repairRequested) return router.push(destination)
+        // Same tab; taller's «Volver al trato» lands on the new deal.
+        goToTallerIntake(
+          tallerIntakeHref(name, router.resolve(destination).fullPath),
         )
       }
       // Keep the existing immediate route when intake was not requested.
@@ -444,8 +416,7 @@ async function createDeal() {
         return
       }
 
-      // The existing contact sync settles before opening explicit repair intake.
-      // No Repair Order is created in this background callback.
+      // Intake waits for the contact sync so taller prefills the ERP customer.
       const getVal = (v) => (v && typeof v === 'object' ? v.value : v)
       createResource({
         url: 'doco.docoutils.customers.sync_deal_contacts_to_erpnext',
@@ -473,7 +444,6 @@ async function createDeal() {
       })
     },
     onError(err) {
-      intakeHandoffPending.value = false
       isDealCreating.value = false
       if (!err.messages) {
         error.value = err.message
@@ -485,7 +455,6 @@ async function createDeal() {
 }
 
 function openQuickEntryModal() {
-  if (!canLeaveIntakeHandoff()) return
   showQuickEntryModal.value = true
   quickEntryProps.value = { doctype: 'CRM Deal' }
   nextTick(() => (show.value = false))

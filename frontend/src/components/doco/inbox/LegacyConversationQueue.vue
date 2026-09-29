@@ -1001,8 +1001,8 @@ import {
 
 const { getDealStatus } = statusesStore()
 
-// the doco DealModal — deal + repair-order intake fields (not the generic doctype
-// modal, which only creates a bare deal)
+// the doco DealModal — deal + customer sync, and «Crear y recibir equipo» into taller
+// Intake (not the generic doctype modal, which only creates a bare deal)
 const showDealModal = ref(false)
 function newDeal() {
   showDealModal.value = true

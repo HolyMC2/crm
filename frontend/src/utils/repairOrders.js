@@ -1,66 +1,3 @@
-// Intake state remains in memory: PINs, patterns and customer notes never enter storage.
-export function emptyRepair(defaults = {}) {
-  return {
-    device_model: null,
-    repair_to_be_done: null,
-    falla_reportada: '',
-    general_status: '',
-    client: defaults.client || null,
-    customer: defaults.customer || null,
-    laboratorio: defaults.laboratorio || null,
-    technician: null,
-    imei: null,
-    has_sim_tray: false,
-    is_wet: false,
-    turns_on: false,
-    broken_screen: false,
-    has_phone_case: false,
-    unlock_method: 'none',
-    phone_pin: '',
-    phone_pattern: '',
-    quote_amount: 0,
-    advance_amount: 0,
-  }
-}
-
-export function repairPayload(deal, draft) {
-  const value = (input) =>
-    input && typeof input === 'object' ? input.value : input
-  if (!value(draft.device_model)) throw new Error('Device Model is required')
-  if (!draft.falla_reportada?.trim())
-    throw new Error('Falla reportada is required when creating a Repair Order.')
-  const result = { deal_name: deal }
-  for (const key of [
-    'device_model',
-    'repair_to_be_done',
-    'client',
-    'customer',
-    'laboratorio',
-    'technician',
-    'imei',
-  ])
-    result[key] = value(draft[key]) || null
-  result.falla_reportada = draft.falla_reportada.trim()
-  result.general_status = draft.general_status || null
-  for (const key of [
-    'has_sim_tray',
-    'is_wet',
-    'turns_on',
-    'broken_screen',
-    'has_phone_case',
-  ])
-    result[key] = draft[key] ? 1 : 0
-  result.phone_pin = draft.unlock_method === 'pin' ? draft.phone_pin || '' : ''
-  result.phone_pattern =
-    draft.unlock_method === 'pattern' ? draft.phone_pattern || '' : ''
-  for (const key of ['quote_amount', 'advance_amount']) {
-    result[key] = Number(draft[key] ?? 0)
-    if (!Number.isFinite(result[key]) || result[key] < 0)
-      throw new Error('Repair amounts must be valid nonnegative numbers')
-  }
-  return result
-}
-
 export function repairMoney(value, currency) {
   if (value === null || value === undefined || value === '') return '—'
   const amount = Number(value)
@@ -120,12 +57,16 @@ export function repairError(error) {
   )
 }
 
-export function repairIntakeDestination(name, redirect, requested) {
-  if (!requested) return { ...redirect, params: { dealId: name } }
-  return {
-    name: 'Deal',
-    params: { dealId: name },
-    query: { ...redirect?.query, repair_intake: '1' },
-    hash: '#data',
-  }
+// Taller owns repair intake. The CRM hands the operator to /taller/intake with the
+// Deal and a CRM-only return path; taller prefills from the Deal server-side, links
+// the new Repair Order and offers «Volver al trato».
+export function tallerIntakeHref(deal, fullPath) {
+  if (typeof deal !== 'string' || !deal) return null
+  const back = repairReturnPath(deal, fullPath)
+  return `/taller/intake?deal=${encodeURIComponent(deal)}&return=${encodeURIComponent(back)}`
+}
+
+// Same tab (assign keeps the CRM page in history so Back returns to it).
+export function goToTallerIntake(href) {
+  if (href) window.location.assign(href)
 }

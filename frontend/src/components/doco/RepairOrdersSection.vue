@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-6 border-t pt-6" @click.capture="guardLink">
+  <div class="mt-6 border-t pt-6">
     <!-- Header -->
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <span class="text-base-semibold text-ink-gray-8">
@@ -11,166 +11,17 @@
           ({{ state.context.orders.length }})
         </span>
       </span>
-      <Button
-        v-if="state.context?.can_create || state.showForm || state.intent"
-        size="sm"
-        variant="subtle"
-        :icon="state.showForm ? 'x' : 'plus'"
-        :label="state.showForm ? __('Cancel') : __('Add Repair Order')"
-        :disabled="state.creating || state.resolving || !!state.intent"
-        @click="toggleForm"
-      />
+      <!-- Intake belongs to taller: same tab, Back and «Volver al trato» return here. -->
+      <a
+        v-if="intakeHref"
+        :href="intakeHref"
+        class="inline-flex h-7 items-center rounded bg-surface-gray-2 px-2 text-base text-ink-gray-8 hover:bg-surface-gray-3"
+        >{{ __('Nueva reparación') }}</a
+      >
     </div>
 
-    <div
-      v-for="pendingDeal in otherPending"
-      :key="pendingDeal.deal"
-      class="mb-3 rounded border p-3 text-sm"
-      role="alert"
-    >
-      <p>{{ __('Creación pendiente en el trato:') }} {{ pendingDeal.deal }}</p>
-      <p v-if="pendingDeal.createError" class="mt-1 text-ink-red-7">
-        {{ pendingDeal.createError }}
-      </p>
-      <Button
-        class="mt-2"
-        :loading="pendingDeal.creating || pendingDeal.resolving"
-        :disabled="pendingDeal.creating || pendingDeal.resolving"
-        :label="__('Reintentar misma solicitud')"
-        @click="retryPending(pendingDeal.deal)"
-      />
-      <Button
-        class="mt-2"
-        :label="__('Guardar referencia pendiente y permitir salir')"
-        :disabled="pendingDeal.creating || pendingDeal.resolving"
-        @click="saveForLater(pendingDeal)"
-      />
-    </div>
     <p
-      v-if="state.recoveryError"
-      role="alert"
-      class="mb-3 text-sm text-ink-red-7"
-    >
-      {{ state.recoveryError }}
-      <Button
-        v-if="!state.intent"
-        :label="__('Reintentar consulta')"
-        @click="refresh()"
-      />
-    </p>
-    <p v-if="state.notice" role="alert" class="mb-3 text-sm text-ink-orange-7">
-      {{ state.notice }}
-    </p>
-    <p
-      v-if="state.createdName"
-      role="status"
-      class="mb-3 text-sm text-ink-green-8"
-    >
-      {{ __('Reparación vinculada:') }}
-      <a :href="orderHref(state.createdName)" class="font-medium underline"
-        >{{ state.createdName }} · {{ __('Abrir en Taller') }}</a
-      >
-    </p>
-    <div
-      v-if="state.showForm"
-      class="mb-4 rounded-lg border bg-surface-gray-1 p-4"
-    >
-      <template v-if="state.context?.can_create || state.intent">
-        <p class="mb-3 text-sm text-ink-gray-6">
-          {{
-            currency
-              ? __('Moneda:') + ' ' + currency
-              : __(
-                  'Moneda no disponible. Confírmala en el laboratorio antes de crear.',
-                )
-          }}
-        </p>
-        <fieldset
-          v-if="!state.recoveryOnly"
-          :disabled="state.creating || state.resolving || !!state.intent"
-          :inert="state.creating || !!state.intent || undefined"
-        >
-          <label
-            v-if="state.context?.laboratorios?.length"
-            class="mb-3 block text-sm text-ink-gray-7"
-          >
-            {{ __('Laboratorio') }}
-            <select
-              v-model="state.draft.laboratorio"
-              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2"
-            >
-              <option :value="null">{{ __('Seleccionar laboratorio') }}</option>
-              <option
-                v-for="lab in state.context.laboratorios"
-                :key="lab.name"
-                :value="lab.name"
-              >
-                {{ lab.label }}
-              </option>
-            </select>
-          </label>
-          <RepairOrderInlineForm v-model="state.draft" :currency="currency" />
-        </fieldset>
-        <p
-          v-if="state.intent && !state.creating"
-          class="mt-3 text-sm text-ink-orange-7"
-        >
-          {{
-            __(
-              'Conservamos exactamente los datos enviados. Reintenta para confirmar el resultado sin crear otra reparación.',
-            )
-          }}
-        </p>
-        <div class="mt-3 flex flex-wrap justify-end gap-2">
-          <Button
-            :label="__('Cancel')"
-            :disabled="state.creating || state.resolving || !!state.intent"
-            @click="toggleForm"
-          />
-          <Button
-            v-if="!state.recoveryOnly"
-            :label="
-              state.intent ? __('Reintentar misma solicitud') : __('Create')
-            "
-            variant="solid"
-            :loading="state.creating"
-            :disabled="
-              state.creating ||
-              state.resolving ||
-              (!state.intent && !!state.recoveryError)
-            "
-            @click="create"
-          />
-        </div>
-        <div v-if="state.intent" class="mt-3 flex flex-wrap gap-2">
-          <Button
-            :label="__('Consultar resultado')"
-            :loading="state.resolving"
-            :disabled="state.creating || state.resolving"
-            @click="resolve()"
-          />
-          <Button
-            :label="__('Guardar referencia pendiente y permitir salir')"
-            :disabled="state.creating || state.resolving"
-            @click="saveForLater()"
-          />
-          <p class="w-full text-xs text-ink-gray-6">
-            {{
-              __(
-                'Solo se guarda el trato y la referencia de solicitud para tu usuario en esta pestaña. No se guardan datos del equipo, PIN ni importes. La reparación sigue pendiente de confirmar.',
-              )
-            }}
-          </p>
-        </div>
-        <ErrorMessage
-          v-if="state.createError"
-          class="mt-2"
-          :message="state.createError"
-        />
-      </template>
-    </div>
-    <p
-      v-if="state.context && !state.context.can_create"
+      v-if="hasTaller && state.context && !state.context.can_create"
       class="mb-3 text-sm text-ink-gray-6"
     >
       {{
@@ -179,7 +30,7 @@
       }}
     </p>
     <div
-      v-if="state.loading"
+      v-if="state.loading && !state.context"
       role="status"
       class="py-3 text-sm text-ink-gray-5"
     >
@@ -678,12 +529,16 @@
 </template>
 
 <script setup>
-import RepairOrderInlineForm from '@/components/Modals/RepairOrderInlineForm.vue'
-import { Badge, Button, ErrorMessage, createResource } from 'frappe-ui'
-import { h, onBeforeUnmount } from 'vue'
-import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from 'vue-router'
+import { Badge, Button, createResource } from 'frappe-ui'
+import { computed, h } from 'vue'
+import { useRoute } from 'vue-router'
+import { hasTaller } from '@/composables/inbox'
 import { useRepairOrders } from '@/composables/repairOrders'
-import { repairMoney as money, repairOrderHref } from '@/utils/repairOrders'
+import {
+  repairMoney as money,
+  repairOrderHref,
+  tallerIntakeHref,
+} from '@/utils/repairOrders'
 
 // Small inline helper for a label/value row. Stacked vertical layout —
 // label on top, value below, both full-width.
@@ -714,43 +569,16 @@ function formatDate(s) {
 
 const props = defineProps({
   docname: { type: String, required: true },
-  initiallyOpen: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['created'])
 const route = useRoute()
-const {
-  state,
-  dirty,
-  pending,
-  otherPending,
-  retryPending,
-  resolve,
-  saveForLater,
-  currency,
-  refresh,
-  toggleForm,
-  create,
-  canLeave,
-} = useRepairOrders(() => props.docname, {
-  initiallyOpen: props.initiallyOpen,
-  onCreated: (name) => emit('created', name),
-})
+const { state, refresh } = useRepairOrders(() => props.docname)
 const orderHref = (name) => repairOrderHref(name, props.docname, route.fullPath)
-function guardLink(event) {
-  const link = event.target.closest('a[href]')
-  if (link && link.target !== '_blank' && !canLeave()) event.preventDefault()
-}
-function beforeUnload(event) {
-  if (!dirty.value && !pending.value) return
-  event.preventDefault()
-  event.returnValue = ''
-}
-onBeforeRouteLeave(canLeave)
-onBeforeRouteUpdate(canLeave)
-window.addEventListener('beforeunload', beforeUnload)
-onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
-defineExpose({ canLeave })
+const intakeHref = computed(() =>
+  hasTaller.value && state.value.context?.can_create !== false
+    ? tallerIntakeHref(props.docname, route.fullPath)
+    : null,
+)
 
 const STATUS_THEMES = {
   Entregado: 'green',

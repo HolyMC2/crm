@@ -25,8 +25,8 @@ vi.mock('frappe-ui', () => ({
   }),
 }))
 vi.mock('@/composables/salesDocs', () => ({ reloadSalesSummary: vi.fn() }))
-vi.mock('@/components/doco/RepairOrdersSection.vue', () => ({
-  default: defineComponent({ render: () => h('div', 'Repair intake') }),
+vi.mock('vue-router', () => ({
+  useRoute: () => ({ fullPath: '/inbox?deal=D1&doctype=CRM+Deal' }),
 }))
 vi.mock('@/components/doco/inbox/WorkspaceItemPicker.vue', () => ({
   default: defineComponent({ render: () => null }),
@@ -173,13 +173,47 @@ describe('Inbox item workspace', () => {
     expect(call).not.toHaveBeenCalled()
   })
 
-  it('shows repair intake only on repair tenants', async () => {
+  it('hands repair intake to taller only on repair tenants that can write', async () => {
     call.mockResolvedValue(workspace())
     mount({ hasTaller: true })
     await settle()
-    button('Nueva reparación').click()
+    const link = [...root.querySelectorAll('a')].find((a) =>
+      a.textContent.includes('Nueva reparación'),
+    )
+    const url = new URL(link.href)
+    expect(url.pathname).toBe('/taller/intake')
+    expect(url.searchParams.get('deal')).toBe('D1')
+    expect(url.searchParams.get('return')).toMatch(/^\/crm\/inbox\?/)
+    expect(
+      new URL(url.searchParams.get('return'), url).searchParams.get('deal'),
+    ).toBe('D1')
+    expect(root.querySelector('[role="dialog"]')).toBeNull()
+    app.unmount()
+    root.remove()
+    call.mockResolvedValue({ ...workspace(), can_write: false })
+    mount({ hasTaller: true })
     await settle()
-    expect(root.textContent).toContain('Repair intake')
+    expect(root.textContent).not.toContain('Nueva reparación')
+  })
+
+  it('reloads the workspace when the operator returns from taller', async () => {
+    call.mockResolvedValue(workspace())
+    mount({ hasTaller: true })
+    await settle()
+    const reads = () =>
+      call.mock.calls.filter(([m]) => m.endsWith('get_workspace')).length
+    expect(reads()).toBe(1)
+    window.dispatchEvent(new Event('focus'))
+    await settle()
+    expect(reads()).toBe(2)
+    app.unmount()
+    root.remove()
+    call.mockClear()
+    mount({ hasTaller: false })
+    await settle()
+    window.dispatchEvent(new Event('focus'))
+    await settle()
+    expect(reads()).toBe(1)
   })
 
   it('does not let a late response paint a newly selected conversation', async () => {

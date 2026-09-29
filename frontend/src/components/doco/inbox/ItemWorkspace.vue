@@ -38,11 +38,11 @@
             icon="refresh-cw"
             :aria-label="__('Actualizar ventas')"
             @click="refresh"
-          /><Button
-            v-if="hasTaller"
-            :disabled="!data?.can_write"
-            @click="repairOpen = true"
-            >{{ __('Nueva reparación') }}</Button
+          /><a
+            v-if="intakeHref"
+            :href="intakeHref"
+            class="inline-flex h-7 items-center rounded bg-surface-gray-2 px-2 text-base text-ink-gray-8 hover:bg-surface-gray-3"
+            >{{ __('Nueva reparación') }}</a
           ><Button
             :disabled="!data?.can_write || busy"
             variant="solid"
@@ -454,18 +454,6 @@
       ></Dialog
     >
     <Dialog
-      :model-value="repairOpen"
-      :options="{ title: __('Reparaciones del trato'), size: '4xl' }"
-      @update:model-value="setRepairOpen"
-      ><template #body-content
-        ><RepairOrdersSection
-          v-if="repairOpen && hasTaller"
-          ref="repairSection"
-          :docname="deal"
-          initially-open
-          @created="refresh" /></template
-    ></Dialog>
-    <Dialog
       v-model="linkOpen"
       :options="{ title: __('Vincular documento existente'), size: '2xl' }"
       ><template #body-content
@@ -534,14 +522,10 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Button, Dialog, call } from 'frappe-ui'
 import { formatMoney } from '@/composables/crmFormat'
 import { reloadSalesSummary } from '@/composables/salesDocs'
-import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
+import { useReloadOnReturn } from '@/composables/reloadOnReturn'
+import { tallerIntakeHref } from '@/utils/repairOrders'
+import { useRoute } from 'vue-router'
 import WorkspaceItemPicker from './WorkspaceItemPicker.vue'
-
-const repairSection = ref(null)
-function setRepairOpen(open) {
-  if (!open && repairSection.value?.canLeave() === false) return
-  repairOpen.value = open
-}
 
 const props = defineProps({
   deal: String,
@@ -550,6 +534,12 @@ const props = defineProps({
   hasTaller: Boolean,
 })
 defineEmits(['catalog'])
+const route = useRoute()
+const intakeHref = computed(() =>
+  props.hasTaller && data.value?.can_write
+    ? tallerIntakeHref(props.deal, route.fullPath)
+    : null,
+)
 const data = ref(null),
   detail = ref(null),
   error = ref(''),
@@ -558,7 +548,6 @@ const loading = ref(false),
   detailLoading = ref(false),
   busy = ref(false)
 const pickerOpen = ref(false),
-  repairOpen = ref(false),
   orderConfirm = ref(false)
 const selectedKey = ref(''),
   scope = ref('customer'),
@@ -812,6 +801,8 @@ function linkDoc(doc) {
 }
 watch(selectedKey, loadDetail)
 watch(() => props.enabled, refresh, { immediate: true })
+// Repair Orders created in taller Intake appear here once the operator is back.
+useReloadOnReturn(() => props.hasTaller && refresh())
 onBeforeUnmount(() => {
   alive = false
   request++

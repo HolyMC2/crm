@@ -259,6 +259,7 @@ import { useDoctypeModal } from '@/composables/doctypeModal'
 import { hasTaller, salesDocsEnabled, reloadQueue } from '@/composables/inbox'
 import { reloadSalesSummary } from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
+import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import DealConversations from './DealConversations.vue'
 import SalesDocsSection from './SalesDocsSection.vue'
@@ -358,4 +359,6 @@ onMounted(refresh)
 watch(hasTaller, (enabled) => {
   if (enabled && record.data) repairs.fetch()
 })
+// Repair Orders received in taller Intake show up once the operator is back.
+useReloadOnReturn(() => hasTaller.value && repairs.fetch())
 </script>
