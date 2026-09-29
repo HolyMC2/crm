@@ -39,6 +39,8 @@ export const sessionStore = defineStore('crm-session', () => {
           if (
             k.startsWith('doco-inbox-queue-') ||
             k.startsWith('doco-wa-outbox-') ||
+            // composer field memory: recipients / subjects / captions typed before
+            k.startsWith('doco-composer-memory:') ||
             // saved views / column layouts — their search terms can hold customer
             // names/phones (audit 2026-07-26), same shared-terminal class
             k.startsWith('doco_leads_') ||
