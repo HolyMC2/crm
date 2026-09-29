@@ -32,17 +32,41 @@
     doctype="CRM Deal"
     :options="{
       allowedViews: ['list', 'group_by', 'kanban'],
+      persistState: true,
     }"
   />
+  <DealsListSummary
+    v-if="deals.data"
+    v-model:funnel="showFunnel"
+    :summary="metrics.summary.value"
+    :currency="metrics.currency.value"
+    :loading="metrics.loading.value"
+    :error="metrics.error.value"
+    :pipelines="pipelineList"
+    :pipeline="selectedPipeline"
+    :stage="selectedStage"
+    :stage-options="stageOptions"
+    :show-filters="isMobile"
+    :filter-count="sheetFilterCount"
+    @update:pipeline="setPipeline"
+    @update:stage="setStage"
+    @retry="metrics.reload()"
+    @open-filters="showFilterSheet = true"
+  />
+  <FunnelView
+    v-if="showFunnel && deals.data"
+    :groups="stageOptions"
+    :counts="metrics.summary.value.byStatus"
+  />
   <KanbanView
-    v-if="route.params.viewType == 'kanban'"
+    v-else-if="route.params.viewType == 'kanban'"
     v-model="deals"
     :options="{
-      getRoute: (row) => ({
-        name: 'Deal',
-        params: { dealId: row.name },
-        query: { view: route.query.view, viewType: route.params.viewType },
-      }),
+      getRoute: (row) =>
+        dealRowRoute(router.hasRoute, row.name, {
+          view: route.query.view,
+          viewType: route.params.viewType,
+        }),
       onNewClick: (column) => onNewClick(column),
     }"
     @update="(data) => viewControls.updateKanbanSettings(data)"
@@ -213,6 +237,16 @@
       </div>
     </template>
   </KanbanView>
+  <DealsMobileList
+    v-else-if="isMobile && deals.data && rawRows.length"
+    ref="mobileList"
+    :rows="rawRows"
+    :loading="deals.loading"
+    :has-more="deals.data.total_count > rawRows.length"
+    :menu-for="mobileMenu"
+    @open="openDeal"
+    @load-more="() => loadMore++"
+  />
   <DealsListView
     v-else-if="deals.data && rows.length"
     ref="dealsListView"
@@ -235,6 +269,7 @@
     @selectionsChanged="
       (selections) => viewControls.updateSelections(selections)
     "
+    @followUpSaved="onFollowUpSaved"
   />
   <EmptyState
     v-else-if="deals.data && !rows.length"
@@ -245,6 +280,14 @@
     v-if="showDealModal"
     v-model="showDealModal"
     :defaults="defaults"
+  />
+  <MobileFilterSheet
+    v-if="isMobile"
+    v-model="showFilterSheet"
+    :groups="sheetGroups"
+    :count="deals.data?.total_count ?? null"
+    @change="onSheetChange"
+    @clear="clearSheetFilters"
   />
 </template>
 
@@ -278,21 +321,48 @@ import { timestampCell } from '@/composables/useTimelinePreferences'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Avatar, Dropdown } from 'frappe-ui'
 import VerticalSlot from '@/components/doco/VerticalSlot.vue'
+import FunnelView from '@/components/doco/FunnelView.vue'
+import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
+import DealsListSummary from '@/components/doco/deals/DealsListSummary.vue'
+import DealsMobileList from '@/components/doco/deals/DealsMobileList.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { useRoute } from 'vue-router'
-import { ref, reactive, computed, h, provide } from 'vue'
+import { useDealListMetrics } from '@/composables/dealListMetrics'
+import { isVirtualKey } from '@/utils/listColumns'
+import {
+  dealRowRoute,
+  filterValues,
+  pipelineStageOptions,
+  selectedEquals,
+  withEqualsFilter,
+  withMultiFilter,
+  withPipelineFilter,
+} from '@/utils/dealsListSummary'
+import { createResource } from 'frappe-ui'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
+import {
+  ref,
+  reactive,
+  computed,
+  h,
+  provide,
+  watch,
+  nextTick,
+  onMounted,
+} from 'vue'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Deal')
 const { makeCall } = globalStore()
 const { getUser } = usersStore()
 const { getOrganization } = organizationsStore()
-const { getDealStatus } = statusesStore()
+const statusStore = statusesStore()
+const { getDealStatus } = statusStore
 const { updateOnboardingStep } = useCrmOnboarding()
 const { capture } = useTelemetry()
 const { showModal } = useDoctypeModal()
 
 const route = useRoute()
+const router = useRouter()
 
 const dealsListView = ref(null)
 const showDealModal = ref(false)
@@ -310,6 +380,173 @@ const viewControls = ref(null)
 // DealsSearchBox) so they can drive ViewControls.updateSearch without
 // touching this file again on rebases.
 provide('dealsViewControls', viewControls)
+
+// ── filters the page drives (pipeline, stage, phone sheet) ─────────────────────
+// They write the same `filters` the Filter button does, through ViewControls,
+// so saved views, totals and export all see them.
+const currentFilters = computed(() => deals.value?.params?.filters || {})
+function setFilters(filters) {
+  viewControls.value?.updateFilter(filters)
+}
+
+const pipelines = createResource({
+  url: 'crm.pipeline.api.get_pipelines',
+  params: { include_archived: true },
+  cache: ['crm-deal-list-pipelines'],
+  auto: true,
+})
+// a site without pipelines (or an error) simply has no pipeline selector
+const pipelineList = computed(() =>
+  Array.isArray(pipelines.data) ? pipelines.data : [],
+)
+const selectedPipeline = computed(() =>
+  selectedEquals(currentFilters.value, 'pipeline'),
+)
+const selectedStage = computed(() =>
+  selectedEquals(currentFilters.value, 'status'),
+)
+// read through the store: a destructured pinia computed would freeze
+const stageOptions = computed(() =>
+  pipelineStageOptions(
+    pipelineList.value,
+    selectedPipeline.value,
+    statusStore.visibleDealStatuses,
+  ),
+)
+function setPipeline(pipeline) {
+  const stages = pipelineStageOptions(
+    pipelineList.value,
+    pipeline,
+    statusStore.visibleDealStatuses,
+  ).map((s) => s.value)
+  setFilters(withPipelineFilter(currentFilters.value, pipeline, stages))
+}
+function setStage(stage) {
+  setFilters(withEqualsFilter(currentFilters.value, 'status', stage))
+}
+
+// ── totals + funnel ────────────────────────────────────────────────────────────
+const metrics = useDealListMetrics(
+  () =>
+    deals.value?.params
+      ? {
+          filters: currentFilters.value,
+          or_filters: deals.value.params.or_filters || {},
+        }
+      : null,
+  () => stageOptions.value,
+)
+// asked after each list load; the composable skips it when filters are unchanged
+watch(
+  () => deals.value?.data,
+  (data) => data && metrics.load(),
+)
+const showFunnel = ref(false)
+
+// ── phone: cards + filter sheet ─────────────────────────────────────────────────
+const showFilterSheet = ref(false)
+const mobileList = ref(null)
+const rawRows = computed(() => {
+  const data = deals.value?.data
+  if (!data || data.view_type === 'kanban' || !Array.isArray(data.data))
+    return []
+  return data.data
+})
+const ownerOptions = computed(() =>
+  (usersStore().crmUsers || [])
+    .filter((u) => u.enabled)
+    .map((u) => ({ value: u.name, label: u.full_name?.trim() || u.name })),
+)
+const sheetGroups = computed(() => [
+  ...(pipelineList.value.length
+    ? [
+        {
+          key: 'pipeline',
+          label: __('Sales pipeline'),
+          options: pipelineList.value.map((p) => ({
+            value: p.name,
+            label: p.pipeline_name || p.name,
+          })),
+          selected: filterValues(currentFilters.value, 'pipeline'),
+        },
+      ]
+    : []),
+  {
+    key: 'status',
+    label: __('Stage'),
+    options: stageOptions.value.map((s) => ({
+      value: s.value,
+      label: __(s.label),
+    })),
+    selected: filterValues(currentFilters.value, 'status'),
+  },
+  {
+    key: 'deal_owner',
+    label: __('Deal owner'),
+    options: ownerOptions.value,
+    selected: filterValues(currentFilters.value, 'deal_owner'),
+  },
+])
+const sheetFilterCount = computed(() =>
+  sheetGroups.value.reduce((n, g) => n + g.selected.length, 0),
+)
+function onSheetChange({ key, values }) {
+  setFilters(withMultiFilter(currentFilters.value, key, values))
+}
+function clearSheetFilters() {
+  let filters = currentFilters.value
+  for (const g of sheetGroups.value)
+    filters = withMultiFilter(filters, g.key, [])
+  setFilters(filters)
+}
+function openDeal(name) {
+  router.push(
+    dealRowRoute(router.hasRoute, name, {
+      view: route.query.view,
+      viewType: route.params.viewType,
+    }),
+  )
+}
+function mobileMenu(name) {
+  return [
+    { label: __('Open'), onClick: () => openDeal(name) },
+    ...actions(name),
+  ]
+}
+
+// ── follow-up written from a row ───────────────────────────────────────────────
+function onFollowUpSaved({ name, value }) {
+  const row = (deals.value?.data?.data || []).find((r) => r.name === name)
+  if (row) row._v_next_step = value
+}
+
+// ── back from a deal: same scroll position ───────────────────────────────────
+// ViewControls keeps filters, search, sort and loaded pages; the page keeps
+// where the worker was in the list.
+function scrollElement() {
+  if (isMobile.value) return mobileList.value?.scrollElement?.() || null
+  return dealsListView.value?.scrollElement?.() || null
+}
+onBeforeRouteLeave(() => {
+  viewControls.value?.saveListState({
+    scrollTop: scrollElement()?.scrollTop || 0,
+  })
+})
+let pendingScroll = null
+onMounted(() => {
+  pendingScroll = viewControls.value?.restoredScrollTop || null
+})
+watch(
+  () => [deals.value?.data, deals.value?.loading],
+  async ([data, loading]) => {
+    if (!pendingScroll || !data || loading) return
+    await nextTick()
+    const el = scrollElement()
+    if (!el) return
+    el.scrollTop = pendingScroll
+    pendingScroll = null
+  },
+)
 
 function getRow(name, field) {
   function getValue(value) {
@@ -404,6 +641,8 @@ function parseRows(rows, columns = []) {
     let _rows = {}
     deals.value.data.rows.forEach((row) => {
       _rows[row] = deal[row]
+      // provider-computed values arrive ready to show (or as {label, color})
+      if (isVirtualKey(row)) return
 
       let fieldType = columns?.find((col) => (col[key] || col.value) == row)?.[
         type

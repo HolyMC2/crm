@@ -48,3 +48,18 @@ export async function saveFollowUp(draft) {
   }
   return readNextActivity(draft.deal)
 }
+
+/**
+ * Mark the deal's follow-up task done, the way Deal 360 does.
+ * @param {{deal: string, task: string}} target
+ * @returns {Promise<object>} the deal's next-activity fields as the hooks left them
+ */
+export async function completeFollowUp({ deal, task }) {
+  await call('frappe.client.set_value', {
+    doctype: 'CRM Task',
+    name: task,
+    fieldname: 'status',
+    value: 'Done',
+  })
+  return readNextActivity(deal)
+}

@@ -1,14 +1,15 @@
 <template>
   <ListView
+    ref="listViewRef"
     :class="$attrs.class"
     :columns="columns"
     :rows="rows"
     :options="{
-      getRowRoute: (row) => ({
-        name: 'Deal',
-        params: { dealId: row.name },
-        query: { view: route.query.view, viewType: route.params.viewType },
-      }),
+      getRowRoute: (row) =>
+        dealRowRoute(router.hasRoute, row.name, {
+          view: route.query.view,
+          viewType: route.params.viewType,
+        }),
       selectable: options.selectable,
       showTooltip: options.showTooltip,
       resizeColumn: options.resizeColumn,
@@ -91,8 +92,36 @@
           </div>
         </template>
         <template #default="{ label }">
+          <!-- next step: schedule, reschedule or complete without leaving -->
           <div
-            v-if="
+            v-if="column.key === '_v_next_step'"
+            class="w-full min-w-0"
+            @click.stop.prevent
+          >
+            <FollowUpCell
+              :row="nextStepRow(row, item)"
+              :today="siteToday"
+              @saved="(activity) => onFollowUpSaved(row, activity)"
+            />
+          </div>
+          <template v-else-if="column.key === '_v_repair_status'">
+            <span
+              v-if="resolveChip(item)"
+              class="truncate rounded-md px-1.5 py-0.5 text-sm font-medium"
+              :class="resolveChip(item).class"
+            >
+              {{ resolveChip(item).label }}
+            </span>
+          </template>
+          <div
+            v-else-if="isVirtualKey(column.key)"
+            class="truncate text-base"
+            :title="virtualText(item)"
+          >
+            {{ virtualText(item) }}
+          </div>
+          <div
+            v-else-if="
               [
                 'modified',
                 'creation',
@@ -227,7 +256,15 @@ import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import RatingInput from '@/components/Controls/RatingInput.vue'
 import ListBulkActions from '@/components/ListBulkActions.vue'
 import ListRows from '@/components/ListViews/ListRows.vue'
+import FollowUpCell from '@/components/doco/deals/FollowUpCell.vue'
 import { isTranslatable, formatDuration } from '@/utils'
+import { isVirtualKey, resolveChip, virtualText } from '@/utils/listColumns'
+import {
+  dealRowRoute,
+  nextStepRow,
+  nextStepValue,
+} from '@/utils/dealsListSummary'
+import { reloadQueue } from '@/composables/inbox'
 import {
   Avatar,
   ListView,
@@ -238,10 +275,12 @@ import {
   ListFooter,
   Dropdown,
   Tooltip,
+  dayjs,
+  getConfig,
 } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { ref, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 defineProps({
   rows: { type: Array, required: true },
@@ -266,9 +305,34 @@ const emit = defineEmits([
   'applyLikeFilter',
   'likeDoc',
   'selectionsChanged',
+  'followUpSaved',
 ])
 
 const route = useRoute()
+const router = useRouter()
+
+// Today in the SITE's timezone: the follow-up shortcuts cut the day on the
+// same boundary as the server, never the browser's.
+function siteDay() {
+  const timezone =
+    getConfig('systemTimezone') ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  return dayjs().tz(timezone).format('YYYY-MM-DD')
+}
+const siteToday = ref(siteDay())
+
+// The cell's task write re-read the deal; the row takes what the hooks left
+// and the page refreshes its totals.
+function onFollowUpSaved(row, activity) {
+  siteToday.value = siteDay()
+  emit('followUpSaved', {
+    name: row.name,
+    value: nextStepValue(activity),
+    activity,
+  })
+  // the inbox work queue shows the same follow-up; a tenant without it is fine
+  reloadQueue()?.catch?.(() => {})
+}
 
 const pageLengthCount = defineModel({ type: Number })
 const list = defineModel('list', { type: Object })
@@ -303,8 +367,11 @@ watch(pageLengthCount, (val, old_value) => {
 })
 
 const listBulkActionsRef = ref(null)
+const listViewRef = ref(null)
 
 defineExpose({
+  // the list's own scroller (frappe-ui ListView root), for scroll restore
+  scrollElement: () => listViewRef.value?.$el || null,
   customListActions: computed(
     () => listBulkActionsRef.value?.customListActions,
   ),

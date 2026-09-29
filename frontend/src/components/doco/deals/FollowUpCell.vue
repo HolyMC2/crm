@@ -165,6 +165,15 @@
 
           <div class="mt-3 flex items-center justify-end gap-2">
             <button
+              v-if="row.next_activity_task"
+              type="button"
+              class="mr-auto rounded-lg bg-surface-green-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink-green-8 hover:bg-surface-green-3 disabled:opacity-60"
+              :disabled="saving"
+              @click="complete"
+            >
+              {{ __('Marcar como hecha') }}
+            </button>
+            <button
               type="button"
               class="rounded-lg px-2.5 py-1.5 text-[12px] text-ink-gray-6 hover:bg-surface-gray-2"
               @click="close"
@@ -196,7 +205,7 @@ import {
   followUpDraftError,
   followUpParts,
 } from '@/utils/dealFollowUp'
-import { saveFollowUp } from '@/utils/followUpService'
+import { completeFollowUp, saveFollowUp } from '@/utils/followUpService'
 
 const props = defineProps({
   // needs: name, deal_owner and the denormalised next_activity_* fields
@@ -316,6 +325,31 @@ async function submit() {
       e?.messages?.[0] ||
       __(
         'No se pudo guardar el seguimiento. Revisa tu permiso sobre la tarea y reintenta.',
+      )
+  } finally {
+    saving.value = false
+  }
+}
+
+// Done from the list: the hooks move `next_activity_*` to the next open task
+// (or clear it), and the row takes what they left.
+async function complete() {
+  if (saving.value || !props.row.next_activity_task) return
+  saving.value = true
+  error.value = ''
+  try {
+    const activity = await completeFollowUp({
+      deal: props.row.name,
+      task: props.row.next_activity_task,
+    })
+    emit('saved', activity)
+    toast.success(__('Seguimiento completado'))
+    close()
+  } catch (e) {
+    error.value =
+      e?.messages?.[0] ||
+      __(
+        'No se pudo completar el seguimiento. Reintenta o revisa tu permiso para editar la tarea.',
       )
   } finally {
     saving.value = false
