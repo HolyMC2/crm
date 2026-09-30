@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { createApp, defineComponent, h, nextTick, reactive, ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
@@ -165,7 +173,7 @@ const deferred = () => {
   return { promise, resolve, reject }
 }
 
-beforeEach(async () => {
+async function prepareNativeFixture() {
   vi.resetModules()
   vi.clearAllMocks()
   localStorage.clear()
@@ -224,7 +232,18 @@ beforeEach(async () => {
     transform: ([allUsers, crmUsers]) => ({ allUsers, crmUsers }),
   })
   api = await import('@/composables/onboarding')
-})
+}
+
+// vi.resetModules() re-evaluates the shell per test, but Vite transforms each
+// module once per worker. Pay that cold transform of the frappe-ui sources and
+// the App/LeadModal graph here, under its own budget, instead of inside the
+// first test's hook or test timeout (it overran both on a loaded runner).
+beforeAll(async () => {
+  await prepareNativeFixture()
+  await import('@/components/Modals/LeadModal.vue')
+  await import('@/App.vue')
+}, 60_000)
+beforeEach(prepareNativeFixture)
 afterEach(() => {
   app?.unmount()
   root?.remove()
