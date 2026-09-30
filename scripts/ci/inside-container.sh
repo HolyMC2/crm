@@ -33,7 +33,7 @@ bench set-config -g redis_queue redis://redis:6379/1
 bench set-config -g redis_socketio redis://redis:6379/2
 bench new-site "$site" --db-root-password integration-only --admin-password integration-only --no-mariadb-socket
 bench --site "$site" set-config mute_emails true
-for app in payments erpnext frappe_whatsapp crm doco scanner_kit posawesome doco_meta_catalog doco_marketing taller; do
+for app in payments erpnext frappe_whatsapp crm doco scanner_kit posawesome doco_meta_catalog doco_marketing taller mercado mercadopago_connector; do
   bench --site "$site" install-app "$app"
 done
 # CRM's fixture records are USD; no live FX service belongs in native CI.

@@ -29,7 +29,9 @@ logs, revision IDs, migration snapshots and coverage reports leave the container
 through `.ci-results`. Cleanup runs even if installation, migration or tests fail.
 
 The image includes the complete app graph: Payments, ERPNext, Frappe WhatsApp,
-CRM, Doco, Scanner Kit, POS Awesome, Doco Meta Catalog, Doco Marketing and Taller.
+CRM, Doco, Scanner Kit, POS Awesome, Doco Meta Catalog, Doco Marketing, Taller,
+Mercado and the Mercado Pago connector (CRM's commerce broker drives its native
+order payments).
 Payments owns Payment Gateway; Doco Marketing owns Social Shop. Email is muted
 before app setup. Native tests use USD fixtures without calling a live FX service.
 
