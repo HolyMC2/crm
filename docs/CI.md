@@ -16,7 +16,7 @@ Set repository variable `CRM_CI_IMAGE` to an approved immutable Muelle digest:
 `ghcr.io/holymc2/doco-bench@sha256:<64 hex characters>`. All native jobs use the
 same environment through `.github/actions/setup-native-environment/action.yml`.
 That action also owns the immutable `frappe_whatsapp` companion revision, currently
-`933fa2ca544ecf0857e37d6beb04bd052a602345`. Bump it with the release source lock.
+`11c88901cb3f0909292453ed70fdb364b8bb79ec`. Bump it with the release source lock.
 The runner checks the image's Frappe and installed Python dependencies against
 both tested CRM revisions; incompatible images fail rather than silently testing
 with stale dependencies. Update the approved image when requirements change.

@@ -595,7 +595,7 @@ function deltaText(key) {
     (!previousReport.value?.amounts_available ||
       previousReport.value?.currency !== report.value?.currency)
       ? null
-      : (previousReport.value?.summary[key] ?? null)
+      : previousReport.value?.summary[key] ?? null
   const delta = periodDelta(current, previous)
   if (delta.state === 'unavailable')
     return __('Previous period comparison unavailable')

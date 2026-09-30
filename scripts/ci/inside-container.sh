@@ -54,6 +54,13 @@ if [ "$mode" = migration ]; then
 fi
 
 bench --site "$site" set-config allow_tests true
+# Initialized-tenant setup, committed before run-tests takes its baseline. Like the
+# migration probe, the helper exists only in the disposable app copy.
+cp /candidate/scripts/ci/site-setup.py apps/crm/crm/_ci_setup.py
+for step in erp_fields native_fixture_graph storefront_schema; do
+  bench --site "$site" execute "crm._ci_setup.$step"
+done
+rm apps/crm/crm/_ci_setup.py
 if [ "${CRM_CI_COVERAGE:-false}" = true ]; then
   env/bin/python -m pip install --no-index --no-deps --require-hashes \
     --find-links /candidate/.ci-tools -r /candidate/scripts/ci/coverage-requirements.txt
