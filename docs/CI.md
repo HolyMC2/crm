@@ -87,11 +87,11 @@ not a claim about live tenant data preservation. Deleted Document contents are
 never copied into artifacts; only the row ID, deleted DocType and record name.
 
 The audited image is
-`ghcr.io/holymc2/doco-bench@sha256:0c78449c7e9ab01406b8c58f7459d071b50b67c23b61b89c0763a7abdb802171`,
-from [Muelle source lock f27125fe](https://github.com/HolyMC2/muelle/blob/f27125fe18958a1a7910399aa16ad07b44b0af1e/build/source-lock.json).
+`ghcr.io/holymc2/doco-bench@sha256:6ae759948de11c60f9950d2d3c8aef40026309d915e1fc63d8ae181e9d00f675`,
+from [Muelle source lock 64893b89](https://github.com/HolyMC2/muelle/blob/64893b89a4d394abf5372bf6cea2330c2c5e60f4/build/source-lock.json) (`v88`, which carries the Muelle framework scope patch).
 Its owning sources are
 [Frappe 012667b9](https://github.com/frappe/frappe/blob/012667b9c4e7f66d5e1ff5858d2e922331d4300a/frappe/model/sync.py),
-[Scanner Kit 0dc76fc8](https://github.com/HolyMC2/scanner_kit/blob/0dc76fc8fb1c168be45169211f9a8145aef797fb/scanner_kit/install.py)
+[Scanner Kit 0dc76fc8](https://github.com/HolyMC2/scanner_kit/blob/0dc76fc8fb1c168be45169211f9a8145aef797fb/scanner_kit/install.py),
 [Mercado Pago connector 535d408c](https://github.com/HolyMC2/mercadopago_connector/blob/535d408c5675154b5858d33b2bfcf6bf405678ae/mercadopago_connector/install.py)
 and [Mercado d34e88b1](https://github.com/HolyMC2/mercado/blob/d34e88b1d1d000f10927657600aa9580922fefab/mercado/desk.py).
 The probe checks source-file SHA-256 fingerprints and records the matching
