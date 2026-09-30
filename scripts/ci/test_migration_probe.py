@@ -154,7 +154,7 @@ class MetadataDeletionTests(unittest.TestCase):
 			with self.subTest(altered=altered), self.assertRaises(AssertionError):
 				self.probe._validate_item_groups(before, altered)
 
-	def test_exact_seven_cleanup_records_with_canonical_replacements_pass(self):
+	def test_exact_eight_cleanup_records_with_canonical_replacements_pass(self):
 		self.validate()
 
 	def test_no_deletions_pass(self):
@@ -228,6 +228,12 @@ class MetadataDeletionTests(unittest.TestCase):
 				"public": 1,
 				"is_hidden": 0,
 			},
+			("Workspace", self.probe._MP_WORKSPACE): {
+				"label": self.probe._MP_WORKSPACE,
+				"module": "MercadoPago Connector",
+				"public": 1,
+				"is_hidden": 0,
+			},
 			("Dashboard Chart", self.probe._CHART_NAME): {
 				"module": "Mercado",
 				"filters_json": [],
@@ -239,6 +245,9 @@ class MetadataDeletionTests(unittest.TestCase):
 			if "filters_json" in doc:
 				doc["filters_json"] = json.dumps(doc["filters_json"])
 		docs[("Workspace", "Escáner")].shortcuts = [Document(type="URL", url="/scan")]
+		docs[("Workspace", self.probe._MP_WORKSPACE)].number_cards = [
+			Document(number_card_name=name) for name in self.probe._MP_CARD_NAMES
+		]
 		docs[("Workspace", "Mercado")] = Document(
 			module="Mercado",
 			public=1,
@@ -258,6 +267,11 @@ class MetadataDeletionTests(unittest.TestCase):
 		):
 			state = self.probe._metadata_state()
 			self.probe._validate_deletions(self.rows, self.before, state)
+			workspace = docs[("Workspace", self.probe._MP_WORKSPACE)]
+			workspace.number_cards = workspace.number_cards[1:]
+			with self.assertRaisesRegex(AssertionError, "replacement"):
+				self.probe._validate_deletions(self.rows, self.before, self.probe._metadata_state())
+			workspace.number_cards = [Document(number_card_name=name) for name in self.probe._MP_CARD_NAMES]
 			identity = ("Number Card", self.probe._CARD_NAMES[0])
 			docs[identity]["filters_json"] = "[]"
 			with self.assertRaisesRegex(AssertionError, "replacement"):

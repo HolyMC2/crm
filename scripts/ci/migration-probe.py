@@ -20,8 +20,16 @@ _CARD_NAMES = (
 	"Mercado: Crédito · por conciliar",
 )
 _CHART_NAME = "Mercado: Cambios de precio por día"
+_MP_WORKSPACE = "MercadoPago"
+_MP_CARD_NAMES = (
+	"MercadoPago: Pendiente de Liquidar",
+	"MercadoPago: Sin Conciliar",
+	"MercadoPago: Comisiones MTD",
+	"MercadoPago: Discrepancias",
+)
 _REPLACEMENTS = (
 	("Workspace", "Escáner"),
+	("Workspace", _MP_WORKSPACE),
 	*(("Number Card", name) for name in _CARD_NAMES),
 	("Dashboard Chart", _CHART_NAME),
 )
@@ -39,6 +47,13 @@ _OWNER_SOURCES = {
 			"install.py": "bbb7c4acb8e0ef2cc354b49e0f4cbd4981a09ff5de45ab80245bed4dfef33abe",
 			"desk.py": "1acd6d4878028da7d301c28539cefe80397d93f3302a9629cbd05ecedd9e7cd4",
 			"fixtures/workspace.json": "342622a43d76afb245cf728488752f6149e5d612f9af21a92fd490741bbf0841",
+		},
+	},
+	"mercadopago_connector": {
+		"revision": "535d408c5675154b5858d33b2bfcf6bf405678ae",
+		"files": {
+			"hooks.py": "293f1de62e163ce014698b9014332a8d03b2739f85d1115bc317ff2778395b6b",
+			"install.py": "8cdf361d29d0030e9957c78a0658c2a85e8b78703c5a88d9c4592ae08dbe1193",
 		},
 	},
 	"mercado": {
@@ -67,6 +82,12 @@ def _metadata_contracts():
 		("Workspace", "Escáner"): {
 			"module": "Scanner Kit",
 			"app": "scanner_kit",
+			"public": 1,
+			"is_hidden": 0,
+		},
+		("Workspace", _MP_WORKSPACE): {
+			"label": _MP_WORKSPACE,
+			"module": "MercadoPago Connector",
 			"public": 1,
 			"is_hidden": 0,
 		},
@@ -114,8 +135,12 @@ def _metadata_state():
 		if "filters_json" in actual:
 			actual["filters_json"] = json.loads(actual["filters_json"] or "[]")
 		state[key] = actual == expected
-		if doctype == "Workspace":
+		if name == "Escáner":
 			state[key] = state[key] and any(row.type == "URL" and row.url == "/scan" for row in doc.shortcuts)
+		elif name == _MP_WORKSPACE:
+			state[key] = state[key] and set(_MP_CARD_NAMES).issubset(
+				{row.number_card_name for row in doc.number_cards}
+			)
 	workspace = frappe.get_doc("Workspace", "Mercado")
 	state["mercado_widget_links"] = (
 		workspace.module == "Mercado"

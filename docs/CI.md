@@ -60,12 +60,16 @@ fixture models an initialized ERP tenant and keeps the upgrade assertion intact.
 
 ## Audited migration metadata
 
-The synthetic migration fixture permits at most one deletion of each of seven
+The synthetic migration fixture permits at most one deletion of each of eight
 exact metadata identities, only with these owner and replacement checks:
 
 - Scanner Kit's `Escáner` Workspace is removed by native orphan synchronization
   because its source is a fixture. Scanner Kit's `after_migrate` hook restores it;
   module, app, visibility and the `/scan` shortcut must match before and after.
+- The Mercado Pago connector's `MercadoPago` Workspace is likewise created in code
+  and removed by orphan synchronization; the connector's `after_migrate`
+  recreates it. Label, module, visibility and its four `MercadoPago:` Number Card
+  links must match before and after.
 - Mercado's four named Number Cards and `Mercado: Cambios de precio por día`
   chart are deliberately deleted and recreated by `mercado.desk.ensure`.
   Every canonical query, filter, module and visibility field must match before
@@ -88,6 +92,7 @@ from [Muelle source lock f27125fe](https://github.com/HolyMC2/muelle/blob/f27125
 Its owning sources are
 [Frappe 012667b9](https://github.com/frappe/frappe/blob/012667b9c4e7f66d5e1ff5858d2e922331d4300a/frappe/model/sync.py),
 [Scanner Kit 0dc76fc8](https://github.com/HolyMC2/scanner_kit/blob/0dc76fc8fb1c168be45169211f9a8145aef797fb/scanner_kit/install.py)
+[Mercado Pago connector 535d408c](https://github.com/HolyMC2/mercadopago_connector/blob/535d408c5675154b5858d33b2bfcf6bf405678ae/mercadopago_connector/install.py)
 and [Mercado d34e88b1](https://github.com/HolyMC2/mercado/blob/d34e88b1d1d000f10927657600aa9580922fefab/mercado/desk.py).
 The probe checks source-file SHA-256 fingerprints and records the matching
 revision evidence in the baseline. An image update changing those files requires
