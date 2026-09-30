@@ -4,6 +4,7 @@ from frappe import _
 from frappe.integrations.utils import create_request_log
 
 from crm.integrations.api import _get_contact_for_verified_provider, get_contact_by_phone_number
+from crm.utils.realtime_scope import enabled_users, publish_to_users
 
 # Endpoints for webhook
 
@@ -39,7 +40,7 @@ def handle_request(**kwargs):
 
 		call_payload = kwargs
 
-		frappe.publish_realtime("exotel_call", call_payload)
+		publish_exotel_call(call_payload)
 		status = call_payload.get("Status")
 		if status == "free":
 			return
@@ -65,6 +66,28 @@ def handle_request(**kwargs):
 	finally:
 		request_log.save(ignore_permissions=True)
 		frappe.db.commit()
+
+
+def exotel_call_recipients(call_payload) -> list[str]:
+	"""Users handling this call: the Exotel agent, the call log's caller/receiver and
+	the telephony agent whose phone Exotel dialed. Never every desk user."""
+	candidates = [call_payload.get("AgentEmail")]
+	call_sid = call_payload.get("CallSid")
+	if call_sid:
+		call_log = frappe.db.get_value("CRM Call Log", call_sid, ["caller", "receiver"], as_dict=True)
+		if call_log:
+			candidates += [call_log.caller, call_log.receiver]
+	dialed = call_payload.get("DialWhomNumber")
+	if dialed:
+		candidates += frappe.get_all("CRM Telephony Agent", filters={"mobile_no": dialed}, pluck="user")
+	return enabled_users(candidates)
+
+
+def publish_exotel_call(call_payload, *, publish=None) -> list[str]:
+	"""Relay the provider's call state to the handling agents only (fails closed)."""
+	return publish_to_users(
+		"exotel_call", call_payload, exotel_call_recipients(call_payload), publish=publish
+	)
 
 
 # Outgoing Call

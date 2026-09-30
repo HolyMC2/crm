@@ -11,6 +11,8 @@ from frappe.frappeclient import FrappeClient
 from frappe.model.document import Document
 from frappe.utils import get_url_to_form, get_url_to_list
 
+from crm.utils.realtime_scope import enabled_users, publish_to_users
+
 
 def _is_erpnext_installed():
 	return "erpnext" in frappe.get_installed_apps()
@@ -639,9 +641,20 @@ def create_customer_from_deal(doc, erpnext_crm_settings):
 
 	if customer_name:
 		frappe.db.set_value("CRM Deal", doc.name, "erpnext_customer", customer_name)
-		frappe.publish_realtime("crm_customer_created")
+		publish_customer_created(doc.name, customer_name)
 
 	return customer_name
+
+
+def publish_customer_created(deal, customer, *, user=None, publish=None) -> list[str]:
+	"""Tell the user whose action created the customer, once the link is committed."""
+	return publish_to_users(
+		"crm_customer_created",
+		{"crm_deal": deal, "customer": customer},
+		enabled_users([user or frappe.session.user]),
+		after_commit=True,
+		publish=publish,
+	)
 
 
 @frappe.whitelist()

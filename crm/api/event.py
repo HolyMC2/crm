@@ -19,6 +19,8 @@ from datetime import datetime, timedelta
 import frappe
 from frappe.utils import add_to_date, now_datetime
 
+from crm.utils.realtime_scope import enabled_users, publish_to_users
+
 
 def trigger_offset_event_notifications():
 	"""Trigger event notifications for offset-based intervals (minutes)."""
@@ -367,6 +369,13 @@ def _format_time_remaining(before_value, interval):
 	return f"{before_value} {interval_label}"
 
 
-def _send_system_notification(notification):
-	"""Send system notification for an event"""
-	frappe.publish_realtime("event_notification", notification)
+def event_notification_recipients(notification) -> list[str]:
+	"""The event's owner and participants that are enabled users."""
+	return enabled_users([notification.get("owner"), *(notification.get("event_participants") or [])])
+
+
+def _send_system_notification(notification, *, publish=None):
+	"""Send system notification for an event to its owner and participants only."""
+	return publish_to_users(
+		"event_notification", notification, event_notification_recipients(notification), publish=publish
+	)
