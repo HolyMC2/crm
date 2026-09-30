@@ -53,27 +53,54 @@ def get_user_signature():
 
 
 def check_app_permission():
+	"""CRM access requires its own complete module inventory and native user scope.
+
+	Do not aggregate unrelated apps' cached inventories: a cached None in one
+	app used to crash this hook for every CRM user before roles were checked.
+	"""
 	if frappe.session.user == "Administrator":
 		return True
-
-	allowed_modules = []
-
-	if is_frappe_version("15"):
-		allowed_modules = frappe.config.get_modules_from_all_apps_for_user()
-	elif is_frappe_version("16", above=True):
-		from frappe.utils.modules import get_modules_from_all_apps_for_user
-
-		allowed_modules = get_modules_from_all_apps_for_user()
-
-	allowed_modules = [x["module_name"] for x in allowed_modules]
-	if "FCRM" not in allowed_modules:
+	if frappe.session.user == "Guest":
+		return False
+	if not any(role in ("System Manager", "Sales User", "Sales Manager") for role in frappe.get_roles()):
+		return False
+	if not (is_frappe_version("15") or is_frappe_version("16", above=True)):
 		return False
 
-	roles = frappe.get_roles()
-	if any(role in ["System Manager", "Sales User", "Sales Manager"] for role in roles):
-		return True
+	try:
+		if "crm" not in frappe.get_installed_apps():
+			return False
+		expected = set(frappe.get_module_list("crm"))
+		actual = set(frappe.get_all("Module Def", filters={"app_name": "crm"}, pluck="module_name"))
+		if "FCRM" not in expected or not expected <= actual:
+			_module_permission_incident()
+			return False
+		blocked = set(frappe.get_cached_doc("User", "Administrator").get_blocked_modules())
+		blocked.update(frappe.get_cached_doc("User", frappe.session.user).get_blocked_modules())
+	except Exception:
+		_module_permission_incident()
+		return False
 
-	return False
+	# Recovery resets the incident latch; Redis health never grants permissions.
+	try:
+		frappe.cache.delete(frappe.cache.make_key("crm:app_permission:inventory_unavailable"))
+	except Exception:
+		pass
+	return "FCRM" not in blocked
+
+
+def _module_permission_incident():
+	"""One health incident per unavailability episode, no user data or tracebacks."""
+	try:
+		key = frappe.cache.make_key("crm:app_permission:inventory_unavailable")
+		if frappe.cache.set(key, "1", nx=True):
+			frappe.log_error(
+				title="CRM module inventory unavailable",
+				message="CRM access denied. Verify installed CRM modules.txt and Module Def ownership, then migrate.",
+			)
+	except Exception:
+		# Cache/diagnostic failure must leave the permission hook fail-closed.
+		frappe.logger("crm").warning("CRM module inventory unavailable; access denied")
 
 
 @frappe.whitelist(allow_guest=True)
