@@ -58,13 +58,13 @@ fixture models an initialized ERP tenant and keeps the upgrade assertion intact.
 
 ## Audited migration metadata
 
-The synthetic migration fixture permits at most one deletion of each of nine
+The synthetic migration fixture permits at most one deletion of each of seven
 exact metadata identities, only with these owner and replacement checks:
 
 - Scanner Kit's `Escáner` Workspace is removed by native orphan synchronization
   because its source is a fixture. Scanner Kit's `after_migrate` hook restores it;
   module, app, visibility and the `/scan` shortcut must match before and after.
-- Mercado's six named Number Cards and `Mercado: Cambios de precio por día`
+- Mercado's four named Number Cards and `Mercado: Cambios de precio por día`
   chart are deliberately deleted and recreated by `mercado.desk.ensure`.
   Every canonical query, filter, module and visibility field must match before
   and after, and the Mercado Workspace must retain their widget links.
@@ -84,9 +84,9 @@ The audited image is
 `ghcr.io/holymc2/doco-bench@sha256:0c78449c7e9ab01406b8c58f7459d071b50b67c23b61b89c0763a7abdb802171`,
 from [Muelle source lock f27125fe](https://github.com/HolyMC2/muelle/blob/f27125fe18958a1a7910399aa16ad07b44b0af1e/build/source-lock.json).
 Its owning sources are
-[Frappe 988e54f3](https://github.com/frappe/frappe/blob/988e54f3c4c291e2077a83809663f123731abe76/frappe/model/sync.py),
-[Scanner Kit bae4f299](https://github.com/HolyMC2/scanner_kit/blob/bae4f2991116bf17dd33bf0f2bae877eefb46b94/scanner_kit/install.py)
-and [Mercado 02bfc46f](https://github.com/HolyMC2/mercado/blob/02bfc46fb2cef16f80c226edba51b92bc2dd8f8b/mercado/desk.py).
+[Frappe 012667b9](https://github.com/frappe/frappe/blob/012667b9c4e7f66d5e1ff5858d2e922331d4300a/frappe/model/sync.py),
+[Scanner Kit 0dc76fc8](https://github.com/HolyMC2/scanner_kit/blob/0dc76fc8fb1c168be45169211f9a8145aef797fb/scanner_kit/install.py)
+and [Mercado d34e88b1](https://github.com/HolyMC2/mercado/blob/d34e88b1d1d000f10927657600aa9580922fefab/mercado/desk.py).
 The probe checks source-file SHA-256 fingerprints and records the matching
 revision evidence in the baseline. An image update changing those files requires
 re-auditing this narrow metadata contract; a version label alone cannot waive it.

@@ -15,8 +15,6 @@ from frappe.model.base_document import get_controller
 # identities, never prefixes or permission to delete business records.
 _CARD_NAMES = (
 	"Mercado: Conteos activos",
-	"Mercado: Cortes de caja (mes)",
-	"Mercado: Cajas marcadas",
 	"Mercado: Tareas de catálogo abiertas",
 	"Mercado: Crédito · papelería pendiente",
 	"Mercado: Crédito · por conciliar",
@@ -31,23 +29,23 @@ _OLD_ICON = ("Desktop Icon", "Frappe Framework")
 _LEGACY_CREATION = "2000-01-01 00:00:00"
 _OWNER_SOURCES = {
 	"frappe": {
-		"revision": "988e54f3c4c291e2077a83809663f123731abe76",
+		"revision": "012667b9c4e7f66d5e1ff5858d2e922331d4300a",
 		"files": {"model/sync.py": "be2e542b91bc7b9d22e162ef89004f24a60454c13629350237a06407c280b69b"},
 	},
 	"scanner_kit": {
-		"revision": "bae4f2991116bf17dd33bf0f2bae877eefb46b94",
+		"revision": "0dc76fc8fb1c168be45169211f9a8145aef797fb",
 		"files": {
-			"hooks.py": "86534057a20fddd856d49f31777c5e42d6854ccec5076929cc3f964ebcc8a7fb",
+			"hooks.py": "73ae97e85da9d3b7888be0045db54e358aa9963d15523f01ac2da1e165d5e565",
 			"install.py": "bbb7c4acb8e0ef2cc354b49e0f4cbd4981a09ff5de45ab80245bed4dfef33abe",
-			"desk.py": "ca522a9bb617c1e71af99cdd09f78d4246472391a70b9a8ead2c4f869270b65e",
+			"desk.py": "1acd6d4878028da7d301c28539cefe80397d93f3302a9629cbd05ecedd9e7cd4",
 			"fixtures/workspace.json": "342622a43d76afb245cf728488752f6149e5d612f9af21a92fd490741bbf0841",
 		},
 	},
 	"mercado": {
-		"revision": "02bfc46fb2cef16f80c226edba51b92bc2dd8f8b",
+		"revision": "d34e88b1d1d000f10927657600aa9580922fefab",
 		"files": {
-			"hooks.py": "b878b6c26f502133ca17efc2b0a141e15b808fe9892df91dee7381a1c33c9d80",
-			"desk.py": "c22c80c527336e2c880fefb32a1bf534580f93b776a73994506b86d038964ef1",
+			"hooks.py": "49cc1d3b7adaf85f3621aee4b00642da1adf5384d7627bd38199b00adccabd84",
+			"desk.py": "d65dc68b05b13b10517a65041f77bbc76a786592b21bbcb50a9e2778ee885a72",
 		},
 	},
 }

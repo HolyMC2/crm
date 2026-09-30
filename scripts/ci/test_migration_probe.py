@@ -154,7 +154,7 @@ class MetadataDeletionTests(unittest.TestCase):
 			with self.subTest(altered=altered), self.assertRaises(AssertionError):
 				self.probe._validate_item_groups(before, altered)
 
-	def test_exact_nine_cleanup_records_with_canonical_replacements_pass(self):
+	def test_exact_seven_cleanup_records_with_canonical_replacements_pass(self):
 		self.validate()
 
 	def test_no_deletions_pass(self):

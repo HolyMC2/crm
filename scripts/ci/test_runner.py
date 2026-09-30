@@ -24,6 +24,7 @@ class NativeRunnerTests(unittest.TestCase):
 				(path / "crm/revision.txt").write_text(revision)
 				(path / "pyproject.toml").write_text("")
 			(candidate / "scripts/ci/migration-probe.py").write_text("")
+			(candidate / "scripts/ci/site-setup.py").write_text("")
 			python = bench / "env/bin/python"
 			python.write_text("#!/usr/bin/env bash\nexit 0\n")
 			python.chmod(0o755)
@@ -80,6 +81,20 @@ fi
 		self.assertIn("head|--site crm-integration.localhost run-tests --app crm --coverage", commands)
 		self.assertIn("coverage.xml", artifacts)
 		self.assertFalse(any("migrate" in command for command in commands))
+		stages = [
+			"head|--site crm-integration.localhost set-config allow_tests true",
+			"head|--site crm-integration.localhost execute crm._ci_setup.erp_fields",
+			"head|--site crm-integration.localhost execute crm._ci_setup.native_fixture_graph",
+			"head|--site crm-integration.localhost execute crm._ci_setup.storefront_schema",
+			"head|--site crm-integration.localhost run-tests --app crm --coverage",
+		]
+		positions = [commands.index(stage) for stage in stages]
+		self.assertEqual(positions, sorted(positions))
+
+	def test_site_setup_failure_never_starts_native_tests(self):
+		result, commands, _ = self.run_runner(failure="crm._ci_setup.native_fixture_graph")
+		self.assertEqual(result.returncode, 17)
+		self.assertFalse(any("run-tests" in command for command in commands))
 
 	def test_migration_installs_base_then_seeds_and_upgrades_candidate(self):
 		result, commands, artifacts = self.run_runner("migration")
