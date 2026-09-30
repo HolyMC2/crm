@@ -83,7 +83,7 @@ def check_app_permission():
 
 	# Recovery resets the incident latch; Redis health never grants permissions.
 	try:
-		frappe.cache.delete(frappe.cache.make_key("crm:app_permission:inventory_unavailable"))
+		frappe.cache.delete_value("crm:app_permission:inventory_unavailable")
 	except Exception:
 		pass
 	return "FCRM" not in blocked
@@ -92,8 +92,9 @@ def check_app_permission():
 def _module_permission_incident():
 	"""One health incident per unavailability episode, no user data or tracebacks."""
 	try:
-		key = frappe.cache.make_key("crm:app_permission:inventory_unavailable")
-		if frappe.cache.set(key, "1", nx=True):
+		key = "crm:app_permission:inventory_unavailable"
+		if not frappe.cache.get_value(key):
+			frappe.cache.set_value(key, 1)
 			frappe.log_error(
 				title="CRM module inventory unavailable",
 				message="CRM access denied. Verify installed CRM modules.txt and Module Def ownership, then migrate.",

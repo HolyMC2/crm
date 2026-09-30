@@ -27,7 +27,7 @@ class TestAppPermission(TestCase):
 		self.user.get_blocked_modules.return_value = []
 		self.users = self.enterContext(patch.object(frappe, "get_cached_doc", return_value=self.user))
 		self.cache = MagicMock()
-		self.cache.set.return_value = True
+		self.cache.get_value.return_value = None
 		self.enterContext(patch.object(frappe, "cache", self.cache))
 		self.incident = self.enterContext(patch.object(frappe, "log_error"))
 
@@ -57,7 +57,7 @@ class TestAppPermission(TestCase):
 
 	def test_none_inventory_fails_closed_and_logs_once(self):
 		self.modules.return_value = None
-		self.cache.set.side_effect = [True, False]
+		self.cache.get_value.side_effect = [None, 1]
 		self.assertFalse(api.check_app_permission())
 		self.assertFalse(api.check_app_permission())
 		self.assertEqual(self.incident.call_count, 1)
