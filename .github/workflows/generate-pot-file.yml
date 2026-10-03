@@ -1,8 +1,6 @@
 name: Regenerate POT file (translatable strings)
+# Upstream's weekly translation template refresh; this fork does not publish it. Manual only.
 on:
-  schedule:
-    # 9:30 UTC => 3 PM IST Sunday
-    - cron: "30 9 * * 0"
   workflow_dispatch:
 
 jobs:

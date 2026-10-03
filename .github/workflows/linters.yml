@@ -1,8 +1,9 @@
 name: Linters
 
+# No doco-dev push trigger or nightly schedule: devflow `land` dispatches this workflow on the lane
+# branch and requires it green on the exact sha it then fast-forwards doco-dev to; a push or
+# nightly run would re-test a proven sha. Run it by hand with workflow_dispatch.
 on:
-    push:
-        branches: [doco-dev]
     pull_request:
     workflow_dispatch:
         inputs:
