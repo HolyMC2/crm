@@ -136,10 +136,24 @@ describe('deal overview repair links', () => {
   it('returns to the Deal on screen, not the one the inbox URL first named', async () => {
     mocks.hasTaller.value = true
     // Entered with ?deal=DEAL-1, then DEAL-42 was selected in memory.
-    window.history.replaceState(null, '', '/crm/inbox?deal=DEAL-1&doctype=CRM%20Deal&stage=Abierto')
-    const ui = await mount({ deal_name: 'Ana' }, [{ name: 'RO-7', status: 'Recibido' }])
-    const href = new URL(ui.el.querySelector('a[href^="/taller/orders/RO-7"]').getAttribute('href'), 'https://x.invalid')
-    const back = new URL(href.searchParams.get('crm_return_to'), 'https://x.invalid')
+    window.history.replaceState(
+      null,
+      '',
+      '/crm/inbox?deal=DEAL-1&doctype=CRM%20Deal&stage=Abierto',
+    )
+    const ui = await mount({ deal_name: 'Ana' }, [
+      { name: 'RO-7', status: 'Recibido' },
+    ])
+    const href = new URL(
+      ui.el
+        .querySelector('a[href^="/taller/orders/RO-7"]')
+        .getAttribute('href'),
+      'https://x.invalid',
+    )
+    const back = new URL(
+      href.searchParams.get('crm_return_to'),
+      'https://x.invalid',
+    )
     expect(back.pathname).toBe('/crm/inbox')
     expect(back.searchParams.get('deal')).toBe('DEAL-42')
     expect(back.searchParams.get('stage')).toBe('Abierto')
