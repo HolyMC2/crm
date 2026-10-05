@@ -243,12 +243,24 @@ def whatsapp_recipient_reason(intent, account=None, require_window=True):
 			return "recipient_suppressed"
 	if not require_window:
 		return None
+	# One window predicate with every preview (frappe_whatsapp.window): authenticated,
+	# processed receipts to THIS business number, exact peer, provider timestamp.
+	# Discovery is a plain read; only the chosen receipt row is locked, so the
+	# provider HTTP attempt never holds unrelated inbound receipts.
+	try:
+		from frappe_whatsapp.window import evidence
+	except ImportError:  # an older transport: the same predicate, kept here until it ships
+		evidence = _legacy_evidence
+	if evidence(intent.account_id, account.app_id, intent.peer_id, lock=True):
+		return None
+	return "customer_window_unverified"
+
+
+def _legacy_evidence(phone_id, app_id, peer, *, lock=False):
+	"""frappe_whatsapp.window.evidence for a transport release without it."""
 	if not frappe.db.exists("DocType", "Meta Webhook Receipt"):
-		return "customer_window_unverified"
+		return None
 	now = int(time.time())
-	# Discover without locks, then revalidate ONE primary-key row with a current
-	# read. A JSON predicate FOR UPDATE over the whole ledger would otherwise
-	# hold unrelated inbound receipts through the provider HTTP attempt.
 	predicate = """provider='WhatsApp' AND account_id=%s AND app_id=%s
           AND event_type='message' AND state='Processed'
           AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.change.value.messages[0].from'))=%s
@@ -256,12 +268,11 @@ def whatsapp_recipient_reason(intent, account=None, require_window=True):
           AND CAST(JSON_UNQUOTE(JSON_EXTRACT(payload,'$.change.value.messages[0].timestamp')) AS UNSIGNED)>%s
           AND CAST(JSON_UNQUOTE(JSON_EXTRACT(payload,'$.change.value.messages[0].timestamp')) AS UNSIGNED)<=%s
     """
-	params = (intent.account_id, account.app_id, intent.peer_id, now - 86400, now)
+	params = (phone_id, app_id, peer, now - 86400, now)
 	candidate = frappe.db.sql(
 		"SELECT name FROM `tabMeta Webhook Receipt` WHERE " + predicate + " LIMIT 1", params
 	)
-	incoming = candidate and frappe.db.sql(
+	return candidate and frappe.db.sql(
 		"SELECT name FROM `tabMeta Webhook Receipt` WHERE name=%s AND " + predicate + " LIMIT 1 FOR UPDATE",
 		(candidate[0][0], *params),
 	)
-	return None if incoming else "customer_window_unverified"

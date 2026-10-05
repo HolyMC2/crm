@@ -108,6 +108,9 @@ def reason_message(code, owner=None):
 			"Se está enviando otro mensaje de esta conversación. Reintenta en unos segundos."
 		),
 		"transcript_not_retryable": _("Este envío ya no se puede repetir. Revisa su estado en el chat."),
+		"producer_authority_changed": _(
+			"Este envío ya no está autorizado por la app que lo preparó. Revísalo allí antes de enviarlo de nuevo."
+		),
 	}
 	return messages.get(code) or _("No se pudo enviar el mensaje.")
 
@@ -129,6 +132,61 @@ def governing_conversation(account, peer):
 	except frappe.ValidationError:
 		return None
 	return name if frappe.db.exists(control.DOCTYPE, name) else None
+
+
+def _peer_candidates(number):
+	try:
+		from frappe_whatsapp.window import peer_candidates
+	except ImportError:  # an older transport: exact digits only
+		digits = "".join(c for c in str(number or "") if c.isdigit())
+		return [digits] if digits else []
+	return peer_candidates(number)
+
+
+def governing_peers(account, number):
+	"""Every (conversation, exact peer) governing a send to `number`, in alias order.
+
+	Previews and producers resolve the recipient here, so the peer they use is
+	the one `queue_transcript` will match: international digits, with Mexico's
+	52/521 mobile alias as the only alternative spelling. Two alias spellings can
+	each have a conversation; the caller picks one by its own window evidence.
+	"""
+	found = []
+	for peer in _peer_candidates(number):
+		name = governing_conversation(account, peer)
+		if name:
+			found.append((name, peer))
+	return found
+
+
+def governing_peer(account, number):
+	"""The first (conversation, exact peer) of governing_peers, else (None, None)."""
+	found = governing_peers(account, number)
+	return found[0] if found else (None, None)
+
+
+def control_preview(name, actor):
+	"""What a person's send into this conversation would meet, without changing it.
+
+	Returns {"state", "owner", "owner_name", "action"} where action is None (the
+	send may proceed), "take" (unowned human conversation: the actor must take it
+	explicitly first) or the refusal code `queue_transcript` would raise.
+	"""
+	doc = control._load(name)
+	try:
+		control._authorize(doc, actor, write=True)
+	except frappe.PermissionError:
+		action = "authority_revoked"
+	else:
+		action = _control_refusal(doc, "Human", actor)
+	owner = doc.human_owner
+	return {
+		"state": doc.control_state,
+		"owner": owner,
+		"owner_name": owner and (frappe.db.get_value("User", owner, "full_name") or owner),
+		"action": action,
+		"generation": doc.generation,
+	}
 
 
 @contextmanager

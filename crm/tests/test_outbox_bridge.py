@@ -16,6 +16,22 @@ from crm.api import outbox as api
 from crm.api import outbox_bridge as bridge
 from crm.tests import test_outbox
 
+GUARD_CALLS = []
+
+
+def _needs_window(case):
+	"""The 52/521 alias and window predicate ship with frappe_whatsapp.window."""
+	try:
+		import frappe_whatsapp.window
+	except ImportError:
+		case.skipTest("frappe_whatsapp without window.py (older companion pin)")
+
+
+def refuse_transcript(intent):
+	"""A producer whose business authority was revoked after queueing."""
+	GUARD_CALLS.append(intent.transcript_message)
+	return "revoked"
+
 
 class TestOutboxBridge(test_outbox.TestOutbox):
 	@contextmanager
@@ -295,3 +311,99 @@ class TestOutboxBridge(test_outbox.TestOutbox):
 			with self.assertRaises(bridge.NativeSendRefused) as refused:
 				self.row()
 		self.assertEqual(refused.exception.reason_code, "conversation_busy")
+
+	def test_outbox_bridge_preview_and_dispatch_agree_on_the_mexican_alias(self):
+		_needs_window(self)
+		account = frappe.get_doc("WhatsApp Account", self.account.name)
+		national = self.peer[3:]
+		self.assertEqual(bridge.governing_peer(account, "52" + national), (self.doc.name, self.peer))
+		self.assertEqual(bridge.governing_peer(account, self.peer), (self.doc.name, self.peer))
+		# National input is the caller's to internationalize; never a ten-digit suffix match.
+		self.assertEqual(bridge.governing_peer(account, national), (None, None))
+		self.assertEqual(bridge.governing_peer(account, "1" + national), (None, None))
+
+	def test_outbox_window_evidence_is_per_account_app_and_exact_peer(self):
+		_needs_window(self)
+		from frappe_whatsapp import window
+
+		frappe.set_user("Administrator")
+		now = int(__import__("time").time())
+		account = frappe.db.get_value(
+			"WhatsApp Account", self.account.name, ["name", "phone_id", "app_id", "status"], as_dict=True
+		)
+		opened = window.is_open(account, "52" + self.peer[3:])
+		self.assertTrue(opened.open)
+		self.assertEqual(opened.peer, self.peer)
+		other_id = "97" + str(int(uuid4().hex[:12], 16))
+		other = frappe.get_doc(
+			{
+				"doctype": "WhatsApp Account",
+				"account_name": self.prefix + "-b-" + uuid4().hex[:6],
+				"phone_id": other_id,
+				"status": "Active",
+				"mode": "Live",
+				"app_id": "9800001",
+				"is_default_incoming": 0,
+				"is_default_outgoing": 0,
+			}
+		).insert()
+		self.assertEqual(window.is_open(other.name, self.peer).reason, "closed")
+		for label, kwargs in (
+			("other app", {"app": "1234567"}),
+			("future", {"timestamp": now + 120}),
+			("exactly 24 h", {"timestamp": now - window.WINDOW_SECONDS}),
+			("unprocessed", {"state": "Failed"}),
+		):
+			with self.subTest(label=label):
+				self.inbound(account=other_id, **kwargs)
+				self.assertFalse(window.is_open(other.name, self.peer, now=now).open)
+		self.inbound(account=other_id, timestamp=now - window.WINDOW_SECONDS + 60)
+		self.assertTrue(window.is_open(other.name, self.peer, now=now).open)
+
+	def test_outbox_bridge_control_preview_never_takes_the_conversation(self):
+		self.command("release", 2)
+		preview = bridge.control_preview(self.doc.name, self.users["one"])
+		self.assertEqual((preview["state"], preview["owner"], preview["action"]), ("Human", None, "take"))
+		self.assertIsNone(frappe.db.get_value("CRM Conversation", self.doc.name, "human_owner"))
+		self.command("take", 3)
+		self.assertIsNone(bridge.control_preview(self.doc.name, self.users["one"])["action"])
+		self.assertEqual(
+			bridge.control_preview(self.doc.name, self.users["two"])["action"], "conversation_owned"
+		)
+		if self.shop:
+			# Without the shop's User Permission the account is out of scope.
+			self.assertEqual(
+				bridge.control_preview(self.doc.name, self.users["outsider"])["action"],
+				"authority_revoked",
+			)
+
+	def test_outbox_bridge_producer_guard_rechecks_at_dispatch_and_retry(self):
+		with self.person():
+			row = self.row()
+		name = self.intent_for(row)
+		frappe.set_user("Administrator")
+		hooks = frappe.get_hooks
+
+		def get_hooks(hook=None, *args, **kwargs):
+			if hook == "crm_transcript_dispatch_guard":
+				return ["crm.tests.test_outbox_bridge.refuse_transcript"]
+			return hooks(hook, *args, **kwargs)
+
+		GUARD_CALLS.clear()
+		with patch.object(frappe, "get_hooks", side_effect=get_hooks):
+			doc, send = self.dispatch(name)
+		send.assert_not_called()
+		self.assertEqual((doc.state, doc.reason_code), ("Blocked", "producer_authority_changed"))
+		self.assertEqual(GUARD_CALLS, [row.name])
+		self.assertIn("ya no está autorizado", bridge.reason_message("producer_authority_changed"))
+
+	def test_outbox_bridge_two_alias_conversations_are_both_offered(self):
+		_needs_window(self)
+		account = frappe.get_doc("WhatsApp Account", self.account.name)
+		other = "52" + self.peer[3:]
+		from crm.api import conversations as control
+
+		second = control.get_or_create("WhatsApp", self.account_id, other)
+		self.assertEqual(
+			bridge.governing_peers(account, other), [(second.name, other), (self.doc.name, self.peer)]
+		)

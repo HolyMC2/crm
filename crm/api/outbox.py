@@ -616,6 +616,28 @@ def _worker_only():
 
 
 def _eligibility(doc):
+	return _base_eligibility(doc) or _transcript_guard(doc)
+
+
+def _transcript_guard(doc):
+	"""A transcript's producing app re-checks its business authority at every
+	dispatch and retry (e.g. Doco's owner-only document sends): a grant revoked,
+	a source cancelled or a recipient corrected after queueing stops the send.
+	A failing guard refuses; it never lets the send through."""
+	if not doc.get("transcript_message"):
+		return None
+	for path in frappe.get_hooks("crm_transcript_dispatch_guard") or []:
+		try:
+			refused = frappe.get_attr(path)(doc)
+		except Exception:
+			frappe.log_error(title="CRM transcript dispatch guard failed", message=frappe.get_traceback())
+			return "producer_authority_changed"
+		if refused:
+			return "producer_authority_changed"
+	return None
+
+
+def _base_eligibility(doc):
 	from crm.api.outbox_policy import automation_reason, manual_reply_reason
 
 	if doc.expires_at and get_datetime(doc.expires_at) <= now_datetime():

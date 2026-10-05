@@ -28,7 +28,7 @@ runs:
           uses: actions/checkout@v4
           with:
               repository: HolyMC2/frappe_whatsapp
-              ref: 11c88901cb3f0909292453ed70fdb364b8bb79ec
+              ref: b89a6f19074e971fcb221ac47dbdaa3c13f96221
               persist-credentials: false
               path: .ci-companions/frappe_whatsapp
         - uses: docker/login-action@v3
