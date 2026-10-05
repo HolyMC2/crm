@@ -1,9 +1,14 @@
-import js from '@eslint/js'
-import ts from 'typescript-eslint'
-import pluginVue from 'eslint-plugin-vue'
-import configPrettier from 'eslint-config-prettier'
-import vueParser from 'vue-eslint-parser'
-import globals from 'globals'
+import { createRequire } from 'node:module'
+
+// pre-commit supplies these packages through NODE_PATH when the worktree has no
+// application dependencies. CommonJS resolution supports that isolated hook.
+const require = createRequire(import.meta.url)
+const js = require('@eslint/js')
+const ts = require('typescript-eslint')
+const pluginVue = require('eslint-plugin-vue')
+const configPrettier = require('eslint-config-prettier')
+const vueParser = require('vue-eslint-parser')
+const globals = require('globals')
 
 export default [
   {

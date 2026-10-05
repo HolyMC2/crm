@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { createResource } from 'frappe-ui'
 import router from '@/router'
 import { ref, computed } from 'vue'
+import { safeIntendedRoute } from '@/utils/shellRoutes'
+import { purgeContact360Cache } from '@/utils/contactos'
 
 export const sessionStore = defineStore('crm-session', () => {
   function sessionUser() {
@@ -30,7 +32,7 @@ export const sessionStore = defineStore('crm-session', () => {
 
   const logout = createResource({
     url: 'logout',
-    onSuccess() {
+    async onSuccess() {
       // purge the inbox cold-start cache (customer names/phones/last messages) —
       // must not survive logout on a shared device. Keys are per-user namespaced
       // (doco-inbox-queue-*, see composables/inbox.js) — sweep them all.
@@ -54,13 +56,24 @@ export const sessionStore = defineStore('crm-session', () => {
       // list back-navigation state (utils/listViewState) holds the search box
       try {
         for (const k of Object.keys(sessionStorage)) {
-          if (k.startsWith('crm_list_state:')) sessionStorage.removeItem(k)
+          if (
+            k.startsWith('crm_list_state:') ||
+            k.startsWith('muelle:') ||
+            k.startsWith('contactos:') ||
+            k.startsWith('muelle_contactos')
+          )
+            sessionStorage.removeItem(k)
         }
       } catch {
         /* storage unavailable — nothing to purge */
       }
+      await purgeContact360Cache()
       user.value = null
-      window.location.href = '/login?redirect-to=/crm'
+      const intended = safeIntendedRoute(
+        window.location.pathname + window.location.search,
+      )
+      window.location.href =
+        '/login?redirect-to=' + encodeURIComponent(intended)
     },
   })
 

@@ -11,7 +11,11 @@
 -->
 <template>
   <section class="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base">
-    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-5">
+    <SectionAvailability
+      :availability="data?.availability"
+      @retry="resource.reload()"
+    />
+    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-6">
       {{ __('Cargando recargas…') }}
     </div>
     <div v-else-if="resource.error && !data" class="p-6 text-sm text-ink-red-7">
@@ -21,7 +25,7 @@
       </button>
     </div>
     <div
-      v-else-if="data"
+      v-else-if="data && data.availability?.available !== false"
       class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-6"
     >
       <div class="mb-5 grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -41,7 +45,7 @@
         />
       </div>
 
-      <p class="mb-5 text-xs text-ink-gray-5">
+      <p class="mb-5 text-xs text-ink-gray-6">
         {{
           __('{0} pagadas por este contacto · {1} hechas a su número', [
             data.summary.paid_by_contact,
@@ -71,7 +75,7 @@
                 size="sm"
               />
             </div>
-            <div class="mt-1 text-xs text-ink-gray-5">
+            <div class="mt-1 text-xs text-ink-gray-6">
               {{ row.carrier || __('Sin compañía') }} · {{ row.count }}
               {{ __('recargas') }} ·
               {{ money(row.amount, data.summary.currency) }}
@@ -89,7 +93,7 @@
         </h3>
         <div
           v-if="!data.recargas.length"
-          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-5"
+          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
         >
           {{ __('Sin recargas registradas.') }}
         </div>
@@ -100,7 +104,7 @@
         >
           <div class="min-w-[860px]">
             <div
-              class="grid grid-cols-[1.1fr_1fr_1.1fr_1fr_0.9fr_0.9fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
+              class="grid grid-cols-[1.1fr_1fr_1.1fr_1fr_0.9fr_0.9fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-6"
             >
               <span>{{ __('Número') }}</span
               ><span>{{ __('Compañía') }}</span
@@ -145,7 +149,7 @@
                   >{{ row.error_message }}</span
                 >
               </span>
-              <span class="text-ink-gray-5">{{ date(row.creation) }}</span>
+              <span class="text-ink-gray-6">{{ date(row.creation) }}</span>
               <span
                 class="text-right font-semibold tabular-nums"
                 :class="
@@ -188,7 +192,7 @@
           </MobileRecordCard>
         </div>
 
-        <p v-if="data.summary.truncated" class="mt-2 text-xs text-ink-gray-5">
+        <p v-if="data.summary.truncated" class="mt-2 text-xs text-ink-gray-6">
           {{
             __('Mostrando las {0} más recientes de {1}.', [
               data.recargas.length,
@@ -202,15 +206,21 @@
 </template>
 
 <script setup>
+import { formatMoney } from '@/utils/contactos'
+import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
 import { computed, defineComponent, h } from 'vue'
 import { Badge, createResource } from 'frappe-ui'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 
-const props = defineProps({ docname: { type: String, required: true } })
+const props = defineProps({
+  docname: { type: String, required: true },
+  selectedCustomer: { type: String, default: '' },
+})
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_saldo',
-  params: { contact: props.docname },
-  cache: ['contact360-saldo', props.docname],
+  params: { contact: props.docname, customer: props.selectedCustomer || null },
+  // No persistent cache: private amounts/records must never render for another
+  // selected account or user before the server re-authorizes them.
   auto: true,
 })
 const data = computed(() => resource.data || null)
@@ -239,10 +249,7 @@ function statusTheme(status) {
   return STATUS_THEMES[status] || 'gray'
 }
 function money(value, currency) {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: currency || 'MXN',
-  }).format(Number(value || 0))
+  return formatMoney(value, currency)
 }
 function date(value) {
   return value
@@ -267,13 +274,13 @@ const Metric = defineComponent({
       h('div', { class: tones[p.tone] || tones.gray }, [
         h(
           'div',
-          { class: 'text-[10px] font-bold uppercase tracking-wide opacity-70' },
+          { class: 'text-xs font-bold uppercase tracking-wide' },
           p.label,
         ),
         h(
           'div',
           { class: 'mt-1 truncate text-lg font-bold tabular-nums' },
-          String(p.value ?? 0),
+          String(p.value ?? '—'),
         ),
       ])
   },

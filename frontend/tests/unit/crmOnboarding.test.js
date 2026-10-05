@@ -128,6 +128,20 @@ vi.mock('@/components/Modals/DoctypeModals.vue', () => ({
 vi.mock('@/components/Modals/GlobalModals.vue', () => ({
   default: { render: () => null },
 }))
+// App.vue frames CRM routes in the Muelle shell; its chrome renders only on
+// Contactos routes, so a pass-through keeps these tests on the CRM runtime.
+vi.mock('@/components/shell/MuelleShell.vue', async () => {
+  const { h } = await import('vue')
+  return {
+    __esModule: true,
+    default: {
+      setup:
+        (_, { slots }) =>
+        () =>
+          h('div', slots.default?.()),
+    },
+  }
+})
 vi.mock('@/components/Layouts/DocoNavRail.vue', () => ({
   default: { render: () => h('nav', { 'data-native-layout': 'desktop' }) },
 }))
@@ -289,8 +303,11 @@ async function mountShell(mobile = false) {
     setup: (p) => () => h('span', p.message),
   })
   app.mount(root)
-  await vi.dynamicImportSettled()
-  await settle()
+  // App → MuelleShell → CrmRuntime → layout are nested async components.
+  for (let i = 0; i < 4; i++) {
+    await vi.dynamicImportSettled()
+    await settle()
+  }
   return api.useCrmOnboarding()
 }
 

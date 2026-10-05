@@ -1,6 +1,10 @@
 <template>
   <section class="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base">
-    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-5">
+    <SectionAvailability
+      :availability="data?.availability"
+      @retry="resource.reload()"
+    />
+    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-6">
       {{ __('Cargando reparaciones…') }}
     </div>
     <div v-else-if="resource.error && !data" class="p-6 text-sm text-ink-red-7">
@@ -10,7 +14,7 @@
       </button>
     </div>
     <div
-      v-else-if="data"
+      v-else-if="data && data.availability?.available !== false"
       class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-6"
     >
       <div class="mb-5 grid grid-cols-3 gap-2">
@@ -32,7 +36,7 @@
         </h3>
         <div
           v-if="!data.repairs.length"
-          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-5"
+          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
         >
           {{ __('Sin reparaciones registradas.') }}
         </div>
@@ -42,7 +46,7 @@
         >
           <div class="min-w-[920px]">
             <div
-              class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
+              class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-6"
             >
               <span>{{ __('Folio') }}</span
               ><span>{{ __('Equipo') }}</span
@@ -59,7 +63,7 @@
               target="_blank"
               class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] items-center gap-x-3 border-t border-outline-gray-1 px-3 py-2 text-sm hover:bg-surface-gray-1"
             >
-              <span class="truncate font-semibold text-ink-blue-link">{{
+              <span class="truncate font-semibold text-ink-blue-8">{{
                 row.name
               }}</span>
               <span class="truncate text-ink-gray-8">{{
@@ -77,7 +81,7 @@
               <span class="truncate text-ink-gray-6">{{
                 row.laboratorio || '—'
               }}</span>
-              <span class="text-ink-gray-5">{{ date(row.creation) }}</span>
+              <span class="text-ink-gray-6">{{ date(row.creation) }}</span>
               <span
                 class="text-right font-semibold tabular-nums text-ink-gray-8"
                 >{{ money(row.amount, data.summary.currency) }}</span
@@ -114,7 +118,7 @@
         <h3 class="mb-2 text-sm font-semibold text-ink-gray-9">
           {{ __('Garantías') }}
         </h3>
-        <div v-if="!data.warranties.length" class="text-sm text-ink-gray-5">
+        <div v-if="!data.warranties.length" class="text-sm text-ink-gray-6">
           {{ __('Sin garantías registradas.') }}
         </div>
         <div v-else class="grid gap-2 md:grid-cols-2">
@@ -135,7 +139,7 @@
                 size="sm"
               />
             </div>
-            <div class="mt-1 text-xs text-ink-gray-5">
+            <div class="mt-1 text-xs text-ink-gray-6">
               {{ warranty.repair_order }} · {{ __('vence') }}
               {{ date(warranty.expires_on) }}
             </div>
@@ -147,7 +151,7 @@
         <h3 class="mb-2 text-sm font-semibold text-ink-gray-9">
           {{ __('Equipos') }}
         </h3>
-        <div v-if="!data.devices.length" class="text-sm text-ink-gray-5">
+        <div v-if="!data.devices.length" class="text-sm text-ink-gray-6">
           {{ __('Sin equipos identificados.') }}
         </div>
         <div v-else class="grid gap-2 md:grid-cols-2">
@@ -170,7 +174,7 @@
                 >{{ serial.type }}: {{ serial.serial_no }}</code
               >
             </div>
-            <div class="mt-2 text-xs text-ink-gray-5">
+            <div class="mt-2 text-xs text-ink-gray-6">
               {{ __('Órdenes') }}: {{ device.repair_orders.join(', ') }}
             </div>
           </div>
@@ -181,15 +185,21 @@
 </template>
 
 <script setup>
+import { formatMoney } from '@/utils/contactos'
+import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
 import { computed, defineComponent, h } from 'vue'
 import { Badge, createResource } from 'frappe-ui'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 
-const props = defineProps({ docname: { type: String, required: true } })
+const props = defineProps({
+  docname: { type: String, required: true },
+  selectedCustomer: { type: String, default: '' },
+})
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_repairs',
-  params: { contact: props.docname },
-  cache: ['contact360-repairs', props.docname],
+  params: { contact: props.docname, customer: props.selectedCustomer || null },
+  // No persistent cache: private amounts/records must never render for another
+  // selected account or user before the server re-authorizes them.
   auto: true,
 })
 const data = computed(() => resource.data || null)
@@ -213,14 +223,14 @@ const Metric = defineComponent({
           h(
             'div',
             {
-              class: 'text-[10px] font-bold uppercase tracking-wide opacity-70',
+              class: 'text-xs font-bold uppercase tracking-wide',
             },
             p.label,
           ),
           h(
             'div',
             { class: 'mt-1 truncate text-lg font-bold tabular-nums' },
-            String(p.value ?? 0),
+            String(p.value ?? '—'),
           ),
         ],
       )
@@ -245,10 +255,7 @@ function statusTheme(status) {
   )
 }
 function money(value, currency) {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: currency || 'MXN',
-  }).format(Number(value || 0))
+  return formatMoney(value, currency)
 }
 function date(value) {
   return value

@@ -75,10 +75,10 @@ describe('channel composer WhatsApp rail', () => {
     expect(labels(await open({ tier: 2 }))).toEqual(['✉ SMS', '📞 Llamar'])
     cleanups.splice(0).forEach((fn) => fn())
     h.manual.value = true
-    expect(labels(await open({ tier: 0 }))).toEqual([
-      '💬 WhatsApp',
-      '✉ SMS',
-      '📞 Llamar',
-    ])
+    // The site mode composable is imported lazily for this older config only.
+    const el = await open({ tier: 0 })
+    await vi.waitFor(() =>
+      expect(labels(el)).toEqual(['💬 WhatsApp', '✉ SMS', '📞 Llamar']),
+    )
   })
 })

@@ -1,6 +1,10 @@
 <template>
   <section class="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base">
-    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-5">
+    <SectionAvailability
+      :availability="data?.availability"
+      @retry="resource.reload()"
+    />
+    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-6">
       {{ __('Cargando documentos…') }}
     </div>
     <div v-else-if="resource.error && !data" class="p-6 text-sm text-ink-red-7">
@@ -15,7 +19,7 @@
     >
       <div
         v-if="!groups.length"
-        class="py-12 text-center text-sm text-ink-gray-5"
+        class="py-12 text-center text-sm text-ink-gray-6"
       >
         {{ __('Sin documentos de venta todavía.') }}
       </div>
@@ -26,7 +30,7 @@
           </h3>
           <span
             v-if="trunc(group.key).is_truncated"
-            class="text-xs text-ink-gray-5"
+            class="text-xs text-ink-gray-6"
           >
             {{
               __('Mostrando las últimas {0} de {1}', [
@@ -42,7 +46,7 @@
         >
           <div class="min-w-[720px]">
             <div
-              class="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
+              class="grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-6"
             >
               <span>{{ __('Folio') }}</span
               ><span>{{ __('Fecha') }}</span
@@ -56,10 +60,10 @@
               class="grid w-full grid-cols-[1.4fr_1fr_1fr_1fr_1fr] items-center gap-x-3 border-t border-outline-gray-1 px-3 py-2 text-left text-sm hover:bg-surface-gray-1"
               @click="open(row, group.doctype)"
             >
-              <span class="truncate font-semibold text-ink-blue-link">{{
+              <span class="truncate font-semibold text-ink-blue-8">{{
                 row.name
               }}</span>
-              <span class="text-ink-gray-5">{{ date(row.date) }}</span>
+              <span class="text-ink-gray-6">{{ date(row.date) }}</span>
               <span
                 ><Badge
                   :label="status(row)"
@@ -70,7 +74,7 @@
                 class="text-right font-semibold tabular-nums text-ink-gray-8"
                 >{{ money(amount(row), row.currency) }}</span
               >
-              <span class="text-ink-gray-5">{{ row.currency || '—' }}</span>
+              <span class="text-ink-gray-6">{{ row.currency || '—' }}</span>
             </button>
           </div>
         </div>
@@ -113,7 +117,7 @@
               @click="printDoc"
             />
             <button
-              class="p-1 text-ink-gray-5 hover:text-ink-gray-9"
+              class="p-1 text-ink-gray-6 hover:text-ink-gray-9"
               :aria-label="__('Cerrar')"
               @click="viewerOpen = false"
             >
@@ -124,7 +128,7 @@
         <div class="h-[70vh] bg-surface-gray-1">
           <div
             v-if="viewer.loading"
-            class="py-10 text-center text-sm text-ink-gray-5"
+            class="py-10 text-center text-sm text-ink-gray-6"
           >
             {{ __('Cargando…') }}
           </div>
@@ -148,15 +152,20 @@
 </template>
 
 <script setup>
+import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
 import { computed, reactive, ref } from 'vue'
 import { Badge, Button, Dialog, call, createResource } from 'frappe-ui'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 
-const props = defineProps({ docname: { type: String, required: true } })
+const props = defineProps({
+  docname: { type: String, required: true },
+  selectedCustomer: { type: String, default: '' },
+})
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_documents',
-  params: { contact: props.docname },
-  cache: ['contact360-documents', props.docname],
+  params: { contact: props.docname, customer: props.selectedCustomer || null },
+  // No persistent cache: private amounts/records must never render for another
+  // selected account or user before the server re-authorizes them.
   auto: true,
 })
 const data = computed(() => resource.data || null)
@@ -206,7 +215,6 @@ const viewer = reactive({
 })
 async function open(row, fallbackDoctype) {
   const doctype = row.doctype || fallbackDoctype
-  if (doctype === 'Payment Entry') return
   viewerOpen.value = true
   Object.assign(viewer, {
     name: row.name,
@@ -218,6 +226,7 @@ async function open(row, fallbackDoctype) {
   try {
     const out = await call('doco_marketing.api.contact360.render_contact_doc', {
       contact: props.docname,
+      customer: props.selectedCustomer || null,
       doctype,
       name: row.name,
     })

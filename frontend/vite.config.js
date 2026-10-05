@@ -44,15 +44,26 @@ export default defineConfig(async ({ mode }) => {
         },
         manifest: {
           display: 'standalone',
-          name: 'CRM',
-          short_name: 'CRM',
+          name: 'Muelle',
+          short_name: 'Muelle',
           start_url: '/crm',
           scope: '/crm',
           lang: 'es',
           theme_color: '#0f6b78',
           background_color: '#ffffff',
-          description: 'Sales, customers and follow-up in one CRM',
+          description: 'Contactos y trabajo diario en Muelle',
           shortcuts: [
+            {
+              name: 'Contactos',
+              short_name: 'Contactos',
+              url: '/crm/contactos',
+              icons: [
+                {
+                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png?v=crm-1',
+                  sizes: '192x192',
+                },
+              ],
+            },
             {
               name: 'Inbox',
               url: '/crm/inbox',

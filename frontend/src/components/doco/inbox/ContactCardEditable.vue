@@ -1,335 +1,204 @@
-<!--
-  Compact contact/customer card for the inbox right pane. Shows the identity at a
-  glance (avatar + name + phone + email + device) and moves the full editable field
-  set — name/phone/email/org/device + the linked Customer's fiscal fields (RFC,
-  razón social, cumpleaños, dirección) — into an "Editar datos" popup so the panel
-  stays dense. Each field still live-saves to the exact doc the resolver named via
-  frappe.client.set_value (composable saveContactField); Nombre/Apellido persist to
-  the linked Contact (card.name_record), the canonical identity the Contactos list
-  also shows. Resolver: doco_marketing.api.inbox.get_contact_card.
--->
 <template>
-  <div v-if="card" class="flex-none border-b border-outline-gray-1 p-3.5">
-    <div
-      class="mb-2 text-[11px] font-bold uppercase tracking-[.08em] text-ink-gray-4"
-    >
-      {{ __('Contacto') }}
-    </div>
-
-    <!-- compact identity -->
-    <div class="flex items-start gap-2.5">
+  <section v-if="card" class="border-b border-outline-gray-1 p-4">
+    <div class="flex items-start gap-3">
       <Avatar
-        :label="card.contact_full_name || displayName"
+        :label="card.contact_full_name || card.name_display"
         :image="card.contact_image"
         size="lg"
       />
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-1.5">
-          <span class="truncate text-[13.5px] font-semibold text-ink-gray-9">
-            {{ card.contact_full_name || displayName || __('Sin nombre') }}
-          </span>
-          <span
-            v-if="card.customer"
-            class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[9px] font-semibold text-ink-green-8"
-          >
-            {{ __('Cliente') }}
-          </span>
-        </div>
-        <div v-if="card.mobile_no" class="mt-0.5 flex items-center gap-2">
-          <a
-            :href="`tel:${card.mobile_no}`"
-            class="block truncate font-mono text-[11.5px] text-ink-gray-6 hover:text-ink-gray-9"
-          >
-            ☎ {{ card.mobile_no }}
-          </a>
-          <!-- manual mode only: opens the chat on this device (wa.me), nothing is sent -->
-          <a
-            v-if="waUrl"
-            :href="waUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex-none rounded bg-surface-green-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-green-8 hover:bg-surface-green-3"
-            :title="
-              whatsappShopNumber
-                ? __('Envía desde el WhatsApp del negocio: {0}', [
-                    whatsappShopNumber,
-                  ])
-                : __('Abrir WhatsApp en este dispositivo')
-            "
-          >
-            {{ __('WhatsApp') }}
-          </a>
-        </div>
-        <div v-if="form.email" class="truncate text-[11.5px] text-ink-gray-6">
-          ✉ {{ form.email }}
-        </div>
-        <div
-          v-if="card.is_deal && form.device"
-          class="truncate text-[11px] text-ink-gray-5"
+        <h3 class="truncate text-sm font-semibold">
+          {{ card.contact_full_name || card.name_display || 'Sin nombre' }}
+        </h3>
+        <a
+          v-if="card.mobile_no"
+          :href="`tel:${card.mobile_no}`"
+          class="block truncate text-sm text-ink-gray-6"
+          >{{ card.mobile_no }}</a
         >
-          🔧 {{ form.device }}
-        </div>
+        <p v-if="card.email" class="truncate text-xs text-ink-gray-6">
+          {{ card.email }}
+        </p>
+        <a
+          v-if="waUrl"
+          :href="waUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-xs text-ink-green-8 underline"
+          :title="
+            whatsappShopNumber
+              ? `Abre el WhatsApp del negocio: ${whatsappShopNumber}`
+              : 'Abrir WhatsApp en este dispositivo'
+          "
+          >WhatsApp</a
+        >
       </div>
-      <div class="flex flex-none flex-col gap-0.5">
-        <Button
-          variant="ghost"
-          icon="edit-2"
-          class="!h-6 !w-6"
-          :tooltip="__('Editar datos')"
-          @click="editOpen = true"
-        />
-        <Button
-          v-if="card.contact"
-          variant="ghost"
-          icon="external-link"
-          class="!h-6 !w-6"
-          :tooltip="__('Ver contacto')"
-          @click="openContact"
-        />
-      </div>
+      <Button
+        icon="edit-2"
+        aria-label="Editar datos en Contactos"
+        variant="ghost"
+        @click="editIdentity"
+      />
+      <Button
+        v-if="identity"
+        icon="external-link"
+        aria-label="Abrir ficha de Contactos"
+        variant="ghost"
+        @click="openIdentity"
+      />
     </div>
-
-    <!-- edit popup: all contact + fiscal fields, each live-saved on change -->
-    <Dialog
+    <Button
+      v-if="card.customer"
+      class="mt-2"
+      label="Editar datos del cliente"
+      variant="ghost"
+      @click="editParty"
+    />
+    <label
+      v-if="['CRM Lead', 'CRM Deal'].includes(card.record?.doctype)"
+      class="mt-3 block text-xs text-ink-gray-6"
+      >Empresa del prospecto u oportunidad<input
+        v-model="organization"
+        :disabled="!card.can_write"
+        class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+        @change="saveQualification('organization', organization)"
+    /></label>
+    <label
+      v-if="card.is_deal && hasTaller"
+      class="mt-3 block text-xs text-ink-gray-6"
+      >Dispositivo<input
+        v-model="device"
+        :disabled="!card.can_write"
+        class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
+        @change="saveDevice"
+    /></label>
+    <p v-if="error" role="alert" class="mt-2 text-xs text-ink-red-7">
+      {{ error }}<Button label="Reintentar" @click="retryQualification" />
+    </p>
+    <IdentityEditor
+      v-if="editOpen"
       v-model="editOpen"
-      :options="{ title: __('Editar datos del cliente') }"
-    >
-      <template #body-content>
-        <div class="flex flex-col gap-2.5">
-          <label v-for="f in baseFields" :key="f.field" class="block">
-            <span class="text-[10.5px] font-medium text-ink-gray-5">{{
-              f.label
-            }}</span>
-            <input
-              v-model="form[f.field]"
-              :type="f.type || 'text'"
-              :disabled="!canWrite(f)"
-              :class="inputCls"
-              @change="save(f.doctype, f.name, f.target, form[f.field])"
-            />
-          </label>
-
-          <template v-if="card.customer">
-            <div
-              class="mt-1 text-[10px] font-bold uppercase tracking-wide text-ink-gray-4"
-            >
-              {{ __('Datos fiscales') }}
-            </div>
-            <label v-for="f in customerFields" :key="f.field" class="block">
-              <span class="text-[10.5px] font-medium text-ink-gray-5">{{
-                f.label
-              }}</span>
-              <input
-                v-model="form[f.field]"
-                :type="f.type || 'text'"
-                :disabled="!card.can_write"
-                :class="inputCls"
-                @change="save(f.doctype, f.name, f.target, form[f.field])"
-              />
-            </label>
-          </template>
-          <div v-else class="mt-1 text-[10.5px] leading-snug text-ink-gray-5">
-            {{
-              __(
-                'Crea un Cliente (desde Sin asignar) para capturar RFC, dirección y cumpleaños.',
-              )
-            }}
-          </div>
-        </div>
-      </template>
-    </Dialog>
-  </div>
+      :source="editingSource"
+      :defaults="editingSource?.name ? {} : identityDefaults"
+      @saved="refresh"
+    />
+  </section>
 </template>
-
 <script setup>
-import { reactive, computed, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Avatar, Button, Dialog, call, toast } from 'frappe-ui'
-import { whatsappShopNumber, whatsappManual } from '@/composables/whatsapp'
+import { Avatar, Button, call } from 'frappe-ui'
+import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
+import { sourceRoute } from '@/utils/shellRoutes'
+import { whatsappManual, whatsappShopNumber } from '@/composables/whatsapp'
 import {
   contactCard,
   saveContactField,
   reloadQueue,
   hasTaller,
 } from '@/composables/inbox'
-
-const router = useRouter()
-const editOpen = ref(false)
-
-const inputCls =
-  'w-full rounded-md border border-outline-gray-2 bg-surface-gray-2 px-2 py-1.5 text-[12.5px] text-ink-gray-8 hover:bg-surface-gray-3 focus:bg-surface-base focus:border-outline-gray-4 focus:outline-none focus:ring-0 disabled:opacity-60'
-
 const card = computed(() => contactCard.data)
-const record = computed(() => card.value?.record || {})
-// Name fields persist to the canonical Contact when there is one, else the record.
-const nameRecord = computed(() => card.value?.name_record || record.value)
-const displayName = computed(() => card.value?.name_display || '')
-
-// Manual WhatsApp link for the record's recipient; the server picks the number
-// (mobile unless marked not-WhatsApp, site-country digits), and only in manual mode.
-const waUrl = ref('')
+const identity = computed(() => {
+  const ref = card.value?.contact
+    ? { doctype: 'Contact', name: card.value.contact }
+    : card.value?.name_record || card.value?.record
+  return [
+    'Contact',
+    'CRM Lead',
+    'Lead',
+    'Customer',
+    'Supplier',
+    'CRM Organization',
+  ].includes(ref?.doctype)
+    ? ref
+    : null
+})
+// Seeds a new identity only; editing an existing one loads its full native
+// channels inside IdentityEditor.
+const identityDefaults = computed(() => ({
+  source: 'contact',
+  fields: {
+    first_name: card.value?.first_name || card.value?.name_display || '',
+    last_name: card.value?.last_name || '',
+  },
+  phones: card.value?.mobile_no
+    ? [{ phone: card.value.mobile_no, is_primary_phone: 1 }]
+    : [],
+  emails: card.value?.email
+    ? [{ email_id: card.value.email, is_primary: 1 }]
+    : [],
+}))
+const editOpen = ref(false),
+  editingSource = ref(null),
+  error = ref(''),
+  device = ref(''),
+  organization = ref(''),
+  pendingQualification = ref(null),
+  waUrl = ref('')
+const router = useRouter()
 watch(
-  () => [whatsappManual.value, record.value.doctype, record.value.name],
+  card,
+  (value) => {
+    device.value = value?.device || ''
+    organization.value = value?.organization || ''
+  },
+  { immediate: true },
+)
+watch(
+  () => [
+    whatsappManual.value,
+    card.value?.record?.doctype,
+    card.value?.record?.name,
+  ],
   async ([manual, doctype, name]) => {
     waUrl.value = ''
-    if (!manual || !['CRM Deal', 'CRM Lead'].includes(doctype) || !name) return
+    if (!manual || !['CRM Lead', 'CRM Deal'].includes(doctype) || !name) return
     const channel = await call('crm.api.whatsapp_channel.get_record_channel', {
       reference_doctype: doctype,
       reference_name: name,
     }).catch(() => null)
-    if (record.value.name === name) waUrl.value = channel?.url || ''
+    if (card.value?.record?.name === name) waUrl.value = channel?.url || ''
   },
   { immediate: true },
 )
-
-const form = reactive({})
-watch(
-  card,
-  (c) => {
-    Object.assign(form, {
-      first_name: c?.first_name ?? '',
-      last_name: c?.last_name ?? '',
-      mobile_no: c?.mobile_no ?? '',
-      email: c?.email ?? '',
-      organization: c?.organization ?? '',
-      device: c?.device ?? '',
-      rfc: c?.rfc ?? '',
-      legal_name: c?.legal_name ?? '',
-      birth_date: c?.birth_date ?? '',
-      address: c?.address ?? '',
-      city: c?.city ?? '',
-    })
-  },
-  { immediate: true },
-)
-
-const baseFields = computed(() => {
-  const rec = record.value
-  const nameRec = nameRecord.value
-  const f = [
-    {
-      field: 'first_name',
-      label: __('Nombre'),
-      doctype: nameRec.doctype,
-      name: nameRec.name,
-      target: 'first_name',
-    },
-    {
-      field: 'last_name',
-      label: __('Apellido'),
-      doctype: nameRec.doctype,
-      name: nameRec.name,
-      target: 'last_name',
-    },
-    {
-      field: 'mobile_no',
-      label: __('Teléfono'),
-      doctype: rec.doctype,
-      name: rec.name,
-      target: 'mobile_no',
-    },
-    {
-      field: 'email',
-      label: __('Email'),
-      doctype: rec.doctype,
-      name: rec.name,
-      target: 'email',
-    },
-    {
-      field: 'organization',
-      label: __('Empresa'),
-      doctype: rec.doctype,
-      name: rec.name,
-      target: 'organization',
-    },
-  ]
-  if (card.value?.is_deal && hasTaller.value)
-    f.push({
-      field: 'device',
-      label: __('Dispositivo'),
-      doctype: rec.doctype,
-      name: rec.name,
-      target: 'repair_device',
-    })
-  return f
-})
-
-const customerFields = computed(() => {
-  const cust = card.value?.customer
-  const addr = card.value?.address_name
-  const f = [
-    {
-      field: 'rfc',
-      label: __('RFC'),
-      doctype: 'Customer',
-      name: cust,
-      target: 'tax_id',
-    },
-    {
-      field: 'legal_name',
-      label: __('Razón social'),
-      doctype: 'Customer',
-      name: cust,
-      target: 'customer_name',
-    },
-    {
-      field: 'birth_date',
-      label: __('Cumpleaños'),
-      type: 'date',
-      doctype: 'Customer',
-      name: cust,
-      target: 'posa_birthday',
-    },
-  ]
-  if (addr) {
-    f.push({
-      field: 'address',
-      label: __('Dirección'),
-      doctype: 'Address',
-      name: addr,
-      target: 'address_line1',
-    })
-    f.push({
-      field: 'city',
-      label: __('Ciudad'),
-      doctype: 'Address',
-      name: addr,
-      target: 'city',
-    })
-  }
-  return f
-})
-
-// Name fields follow the Contact's write perm (name_record.can_write); the rest
-// follow the deal/lead's (card.can_write).
-function canWrite(f) {
-  if (
-    f.doctype === nameRecord.value.doctype &&
-    f.name === nameRecord.value.name
-  ) {
-    return card.value?.name_record?.can_write ?? card.value?.can_write
-  }
-  return card.value?.can_write
+function editIdentity() {
+  editingSource.value = identity.value
+  editOpen.value = true
 }
-
-function openContact() {
-  if (card.value?.contact)
-    router.push({ name: 'Contact', params: { contactId: card.value.contact } })
+function editParty() {
+  editingSource.value = { doctype: 'Customer', name: card.value.customer }
+  editOpen.value = true
 }
-
-async function save(doctype, name, fieldname, value) {
-  if (!doctype || !name) return
-  // A server ValidationError (bad email, owner-equal, etc.) was previously swallowed —
-  // the field silently reverted with no explanation. Surface it + reload so the revert
-  // is explained, not mysterious.
+function openIdentity() {
+  if (identity.value)
+    router.push(sourceRoute(identity.value.doctype, identity.value.name))
+}
+function refresh() {
+  contactCard.reload()
+  reloadQueue()
+}
+function saveDevice() {
+  return saveQualification('repair_device', device.value)
+}
+function retryQualification() {
+  if (pendingQualification.value)
+    return saveQualification(...pendingQualification.value)
+}
+async function saveQualification(field, value) {
+  error.value = ''
+  pendingQualification.value = [field, value]
   try {
-    await saveContactField(doctype, name, fieldname, value)
-  } catch (e) {
-    toast.error(
-      e?.messages?.[0] || e?.message || __('No se pudo guardar el cambio.'),
+    await saveContactField(
+      card.value.record.doctype,
+      card.value.record.name,
+      field,
+      value,
     )
-    contactCard.reload()
-    reloadQueue() // saveContactField threw before its own refresh — revert the queue row too
+    pendingQualification.value = null
+  } catch (err) {
+    error.value =
+      err.messages?.[0] ||
+      'No pudimos guardar los datos de esta oportunidad. Conservamos tu cambio; reintenta.'
   }
 }
 </script>

@@ -2,33 +2,40 @@
   <component
     :is="registry[component]"
     v-if="registry[component]"
+    :key="`${docname}:${selectedCustomer || ''}:${component}`"
     :docname="docname"
+    :selected-customer="selectedCustomer"
   />
+  <p v-else role="status" class="p-4">
+    Esta sección no está disponible. Pide al encargado que revise su
+    configuración.
+  </p>
 </template>
-
 <script setup>
-import ContactOverviewTab from '@/components/doco/contact/ContactOverviewTab.vue'
-import ContactDocumentsTab from '@/components/doco/contact/ContactDocumentsTab.vue'
-import ContactRepairsTab from '@/components/doco/contact/ContactRepairsTab.vue'
-import ContactConnectionsTab from '@/components/doco/contact/ContactConnectionsTab.vue'
-import ContactStorefrontTab from '@/components/doco/contact/ContactStorefrontTab.vue'
-import ContactSaldoTab from '@/components/doco/contact/ContactSaldoTab.vue'
-
-// Deliberately NOT VerticalSlot: the contact tabs are server-owned by
-// doco_marketing (see useContact360Tabs), not by the Doco Vertical registry —
-// the retail tenants have no vertical configured, and a vertical-driven list
-// renders nothing there.
+import { defineAsyncComponent } from 'vue'
 const registry = {
-  ContactOverviewTab,
-  ContactDocumentsTab,
-  ContactRepairsTab,
-  ContactConnectionsTab,
-  ContactStorefrontTab,
-  ContactSaldoTab,
+  ContactOverviewTab: defineAsyncComponent(
+    () => import('@/components/doco/contact/ContactOverviewTab.vue'),
+  ),
+  ContactDocumentsTab: defineAsyncComponent(
+    () => import('@/components/doco/contact/ContactDocumentsTab.vue'),
+  ),
+  ContactRepairsTab: defineAsyncComponent(
+    () => import('@/components/doco/contact/ContactRepairsTab.vue'),
+  ),
+  ContactConnectionsTab: defineAsyncComponent(
+    () => import('@/components/doco/contact/ContactConnectionsTab.vue'),
+  ),
+  ContactStorefrontTab: defineAsyncComponent(
+    () => import('@/components/doco/contact/ContactStorefrontTab.vue'),
+  ),
+  ContactSaldoTab: defineAsyncComponent(
+    () => import('@/components/doco/contact/ContactSaldoTab.vue'),
+  ),
 }
-
 defineProps({
   component: { type: String, required: true },
   docname: { type: String, required: true },
+  selectedCustomer: { type: String, default: '' },
 })
 </script>

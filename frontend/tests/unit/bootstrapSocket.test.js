@@ -91,6 +91,7 @@ beforeEach(() => {
     protocol: 'http:',
     hostname: 'crm-roadmap.localhost',
     port: '18771',
+    pathname: '/crm/inbox',
     reload: vi.fn(),
   })
   priorSite = window.site_name
@@ -236,8 +237,10 @@ describe('CRM socket bootstrap ownership', () => {
         }),
       )
       await import('@/main')
+      // The dev boot is path-aware: Contactos routes get the neutral boot.
       expect(fixture.request).toHaveBeenCalledWith({
-        url: '/api/method/crm.www.crm.get_context_for_dev',
+        url: '/api/method/crm.www.crm.get_shell_context_for_dev',
+        params: { path: '/crm/inbox' },
       })
       expect(fixture.sockets).toHaveLength(0)
       expect(fixture.roots).toHaveLength(0)
@@ -247,7 +250,8 @@ describe('CRM socket bootstrap ownership', () => {
         socketio_port: 18060,
         installed_apps: installedApps,
       })
-      await Promise.resolve()
+      // The guest fallback (.catch) adds promise hops before mounting.
+      for (let i = 0; i < 3; i++) await Promise.resolve()
       expectCanonicalSocket()
       expect(printingScripts()).toHaveLength(scripts)
     },

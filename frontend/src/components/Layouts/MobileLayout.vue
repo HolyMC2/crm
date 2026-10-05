@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen w-screen">
+  <div class="flex h-full w-full">
     <MobileSidebar />
     <!-- min-w-0 HERE is the real side-scroll fix: this column is the item of the
          horizontal shell row, so its auto minimum = the widest descendant's

@@ -1,6 +1,10 @@
 <template>
   <section class="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base">
-    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-5">
+    <SectionAvailability
+      :availability="data?.availability"
+      @retry="resource.reload()"
+    />
+    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-6">
       {{ __('Cargando conexiones…') }}
     </div>
     <div v-else-if="resource.error && !data" class="p-6 text-sm text-ink-red-7">
@@ -17,7 +21,7 @@
         <h3 class="mb-2 text-sm font-semibold text-ink-gray-9">
           {{ __('Documentos vinculados') }}
         </h3>
-        <div v-if="!data.linked_docs.length" class="text-sm text-ink-gray-5">
+        <div v-if="!data.linked_docs.length" class="text-sm text-ink-gray-6">
           {{ __('Sin documentos vinculados.') }}
         </div>
         <div v-else class="grid gap-3 lg:grid-cols-2">
@@ -38,13 +42,12 @@
               v-for="row in group.rows"
               :key="row.name"
               :href="href(group.doctype, row.name)"
-              target="_blank"
               class="flex items-center justify-between gap-3 border-t border-outline-gray-1 px-3 py-2 text-sm hover:bg-surface-gray-1"
             >
-              <span class="truncate font-medium text-ink-blue-link">{{
+              <span class="truncate font-medium text-ink-blue-8">{{
                 title(group.doctype, row)
               }}</span>
-              <span class="flex-none text-xs text-ink-gray-5">{{
+              <span class="flex-none text-xs text-ink-gray-6">{{
                 date(row.modified)
               }}</span>
             </a>
@@ -61,14 +64,13 @@
             <a
               v-if="data.people.organization"
               :href="href('CRM Organization', data.people.organization.name)"
-              target="_blank"
-              class="font-medium text-ink-blue-link"
+              class="font-medium text-ink-blue-8"
               >{{
                 data.people.organization.organization_name ||
                 data.people.organization.name
               }}</a
             >
-            <span v-else class="text-ink-gray-5">{{
+            <span v-else class="text-ink-gray-6">{{
               __('Sin organización')
             }}</span>
           </Panel>
@@ -78,13 +80,12 @@
                 v-for="row in data.people.customers"
                 :key="row.name"
                 :href="href('Customer', row.name)"
-                target="_blank"
                 class="rounded-full bg-surface-blue-1 px-2 py-1 text-xs font-semibold text-ink-blue-9"
                 >{{ row.customer_name || row.name }}</a
               >
               <span
                 v-if="!data.people.customers.length"
-                class="text-ink-gray-5"
+                class="text-ink-gray-6"
                 >{{ __('Sin Customer vinculado') }}</span
               >
             </div>
@@ -92,35 +93,41 @@
           <Panel :title="__('Otros contactos de la organización')">
             <div
               v-if="!data.people.sibling_contacts.length"
-              class="text-ink-gray-5"
+              class="text-ink-gray-6"
             >
               {{ __('Ninguno') }}
             </div>
             <a
               v-for="row in data.people.sibling_contacts"
               :key="row.name"
-              :href="`/contacts/${encodeURIComponent(row.name)}`"
-              class="block truncate py-1 font-medium text-ink-blue-link"
+              :href="sourceHref('Contact', row.name)"
+              class="block truncate py-1 font-medium text-ink-blue-8"
               >{{ row.full_name || row.name
               }}<span
                 v-if="row.mobile_no"
-                class="ml-2 font-normal text-ink-gray-5"
+                class="ml-2 font-normal text-ink-gray-6"
                 >{{ row.mobile_no }}</span
               ></a
             >
           </Panel>
           <Panel :title="__('Leads y tratos')">
+            <!-- CRM's own app gate decides Deal/Lead discovery; identity stays usable. -->
+            <SectionAvailability
+              v-if="data.people.crm_availability?.available === false"
+              :availability="data.people.crm_availability"
+              @retry="resource.reload()"
+            />
             <div
-              v-if="!data.people.leads.length && !data.people.deals.length"
-              class="text-ink-gray-5"
+              v-else-if="!data.people.leads.length && !data.people.deals.length"
+              class="text-ink-gray-6"
             >
               {{ __('Ninguno') }}
             </div>
             <a
               v-for="row in data.people.leads"
               :key="row.name"
-              :href="`/leads/${encodeURIComponent(row.name)}`"
-              class="flex items-center justify-between gap-2 py-1 text-ink-blue-link"
+              :href="href('CRM Lead', row.name)"
+              class="flex items-center justify-between gap-2 py-1 text-ink-blue-8"
               ><span class="truncate">{{ row.name_ || row.name }}</span
               ><Badge
                 v-if="row.status"
@@ -131,8 +138,8 @@
             <a
               v-for="row in data.people.deals"
               :key="row.name"
-              :href="`/deals/${encodeURIComponent(row.name)}`"
-              class="flex items-center justify-between gap-2 py-1 text-ink-blue-link"
+              :href="href('CRM Deal', row.name)"
+              class="flex items-center justify-between gap-2 py-1 text-ink-blue-8"
               ><span class="truncate">{{ row.name }}</span
               ><Badge
                 v-if="row.status"
@@ -150,7 +157,7 @@
         </h3>
         <div class="grid gap-3 lg:grid-cols-3">
           <Panel :title="__('Teléfonos')">
-            <div v-if="!data.identities.phones.length" class="text-ink-gray-5">
+            <div v-if="!data.identities.phones.length" class="text-ink-gray-6">
               {{ __('Ninguno') }}
             </div>
             <div
@@ -162,7 +169,7 @@
             </div>
           </Panel>
           <Panel :title="__('Correos')">
-            <div v-if="!data.identities.emails.length" class="text-ink-gray-5">
+            <div v-if="!data.identities.emails.length" class="text-ink-gray-6">
               {{ __('Ninguno') }}
             </div>
             <div
@@ -174,11 +181,18 @@
             </div>
           </Panel>
           <Panel :title="__('WhatsApp / Messenger / otros')">
+            <SectionAvailability
+              :availability="data.identities.channels_availability"
+              @retry="resource.reload()"
+            />
             <div
               v-if="!data.identities.channels.length"
-              class="text-ink-gray-5"
+              class="text-ink-gray-6"
             >
-              {{ __('Ninguna identidad registrada') }}
+              {{
+                data.identities.channels_availability?.message ||
+                __('Ninguna identidad registrada')
+              }}
             </div>
             <div
               v-for="row in data.identities.channels"
@@ -198,14 +212,20 @@
 </template>
 
 <script setup>
+import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
 import { computed, defineComponent, h } from 'vue'
 import { Badge, createResource } from 'frappe-ui'
+import { sourceHref, sourceSlugs } from '@/utils/shellRoutes'
 
-const props = defineProps({ docname: { type: String, required: true } })
+const props = defineProps({
+  docname: { type: String, required: true },
+  selectedCustomer: { type: String, default: '' },
+})
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_connections',
-  params: { contact: props.docname },
-  cache: ['contact360-connections', props.docname],
+  params: { contact: props.docname, customer: props.selectedCustomer || null },
+  // No persistent cache: private amounts/records must never render for another
+  // selected account or user before the server re-authorizes them.
   auto: true,
 })
 const data = computed(() => resource.data || null)
@@ -224,7 +244,7 @@ const Panel = defineComponent({
             'div',
             {
               class:
-                'mb-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5',
+                'mb-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-6',
             },
             p.title,
           ),
@@ -238,8 +258,9 @@ function slug(doctype) {
   return doctype.toLowerCase().replaceAll(' ', '-')
 }
 function href(doctype, name) {
-  if (doctype === 'CRM Deal') return `/deals/${encodeURIComponent(name)}`
-  if (doctype === 'CRM Lead') return `/leads/${encodeURIComponent(name)}`
+  if (sourceSlugs[doctype]) return sourceHref(doctype, name)
+  if (doctype === 'CRM Deal') return `/crm/deals/${encodeURIComponent(name)}`
+  if (doctype === 'CRM Lead') return `/crm/leads/${encodeURIComponent(name)}`
   if (doctype === 'CRM Organization')
     return `/organizations/${encodeURIComponent(name)}`
   return `/desk/${slug(doctype)}/${encodeURIComponent(name)}`

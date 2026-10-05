@@ -81,8 +81,16 @@ app.config.globalProperties.$dialog = createDialog
 
 let socket
 if (import.meta.env.DEV) {
-  frappeRequest({ url: '/api/method/crm.www.crm.get_context_for_dev' }).then(
-    (values) => {
+  // Signed-in users get the path-aware boot (Contactos is neutral); a guest
+  // falls back to the upstream guest boot, which leads to the login page.
+  frappeRequest({
+    url: '/api/method/crm.www.crm.get_shell_context_for_dev',
+    params: { path: window.location.pathname },
+  })
+    .catch(() =>
+      frappeRequest({ url: '/api/method/crm.www.crm.get_context_for_dev' }),
+    )
+    .then((values) => {
       for (let key in values) {
         window[key] = values[key]
       }
@@ -90,8 +98,7 @@ if (import.meta.env.DEV) {
       socket = initSocket()
       app.config.globalProperties.$socket = socket
       app.mount('#app')
-    },
-  )
+    })
 } else {
   loadPrintingRuntime()
   socket = initSocket()
@@ -129,6 +136,7 @@ if (!import.meta.env.DEV) {
   // defer — the next check (30-min tick / tab refocus / composer emptied on
   // send) applies it. One quiet toast tells them an update is pending.
   const hasDraftText = () => {
+    if (window.__MUELLE_HAS_DRAFT__) return true
     // textareas only: those hold real message/note drafts. Search/filter inputs
     // keep text for days and would defer the update forever.
     try {

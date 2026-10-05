@@ -80,6 +80,20 @@ vi.mock('@/components/Modals/GlobalModals.vue', () => ({
 vi.mock('@/components/Layouts/AppHeader.vue', () => ({
   default: { render: () => null },
 }))
+// App.vue frames CRM routes in the Muelle shell; its chrome renders only on
+// Contactos routes, so a pass-through keeps these tests on the CRM runtime.
+vi.mock('@/components/shell/MuelleShell.vue', async () => {
+  const { h } = await import('vue')
+  return {
+    __esModule: true,
+    default: {
+      setup:
+        (_, { slots }) =>
+        () =>
+          h('div', slots.default?.()),
+    },
+  }
+})
 vi.mock('@/components/Layouts/DocoNavRail.vue', () => ({
   default: { render: () => h('nav', { 'data-testid': 'desktop-rail' }) },
 }))
@@ -110,6 +124,13 @@ vi.mock('@/composables/installNudge', async () => {
 
 import App from '@/App.vue'
 import Inquiries from '@/pages/Inquiries.vue'
+// App loads the shell, CRM runtime and layouts lazily; load them up front so
+// the test measures rendering rather than cold imports under a busy suite.
+await Promise.all([
+  import('@/components/Layouts/CrmRuntime.vue'),
+  import('@/components/Layouts/DesktopLayout.vue'),
+  import('@/components/Layouts/MobileLayout.vue'),
+])
 
 let app, root
 const originalWidth = window.innerWidth
@@ -140,6 +161,8 @@ describe('native inquiry responsive layout rendering', () => {
     app = createApp(App)
     app.config.globalProperties.__ = globalThis.__
     app.use(router).mount(root)
+    // App → MuelleShell → CrmRuntime → layout are nested async components.
+    for (let i = 0; i < 4; i++) await vi.dynamicImportSettled()
 
     async function expectInquiryContent(layoutMarker) {
       await vi.waitFor(() => {

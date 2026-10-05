@@ -28,6 +28,13 @@ import DeskIcon from '~icons/lucide/layout-grid'
 
 export const navItems = [
   {
+    key: 'contactos',
+    icon: LeadsIcon,
+    label: 'Contactos',
+    to: '/contactos',
+    group: 'contactos',
+  },
+  {
     key: 'dashboard',
     icon: DashboardIcon,
     label: 'Dashboard',
@@ -174,6 +181,8 @@ export function navItemAllowed(item, { isManager = false } = {}) {
 
 // A route path lights exactly one nav group (handoff §4.1).
 export function routeGroup(path) {
+  if (/^\/(contactos|contacts|organizations)(\/|$)/.test(path))
+    return 'contactos'
   if (/^\/automations(\/|$)/.test(path)) return 'automations'
   if (/^\/inquiries(\/|$)/.test(path)) return 'inquiries'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'

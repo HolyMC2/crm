@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { call } from 'frappe-ui'
-import { usersStore } from '@/stores/users'
 import { sessionStore } from '@/stores/session'
-import { viewsStore } from '@/stores/views'
+import { loadShell, shellBoot } from '@/composables/muelleShell'
 import { loadCapabilities, gateRoute } from '@/utils/crmCapabilities'
+import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
 
 let personaChecked = false
 export const PERSONA_DONE_KEY = 'crm_persona_captured'
@@ -23,6 +23,19 @@ async function shouldCapturePersona() {
 }
 
 const routes = [
+  {
+    path: '/contactos',
+    name: 'Contactos',
+    component: () => import('@/pages/Contactos.vue'),
+    meta: { app: 'contactos', title: 'Contactos', stableKey: true },
+  },
+  {
+    path: '/contactos/:source/:name',
+    name: 'Contacto',
+    component: () => import('@/pages/Contacto.vue'),
+    props: true,
+    meta: { app: 'contactos', title: 'Contactos', stableKey: true },
+  },
   {
     path: '/',
     name: 'Home',
@@ -85,25 +98,23 @@ const routes = [
     alias: '/contacts',
     path: '/contacts/view/:viewType?',
     name: 'Contacts',
-    component: () => import('@/pages/Contacts.vue'),
+    redirect: (to) => legacyIdentityRoute(to, 'contact'),
   },
   {
     path: '/contacts/:contactId',
     name: 'Contact',
-    component: () => import(`@/pages/${handleMobileView('Contact')}.vue`),
-    props: true,
+    redirect: (to) => legacyIdentityRoute(to, 'contact'),
   },
   {
     alias: '/organizations',
     path: '/organizations/view/:viewType?',
     name: 'Organizations',
-    component: () => import('@/pages/Organizations.vue'),
+    redirect: (to) => legacyIdentityRoute(to, 'organization'),
   },
   {
     path: '/organizations/:organizationId',
     name: 'Organization',
-    component: () => import(`@/pages/${handleMobileView('Organization')}.vue`),
-    props: true,
+    redirect: (to) => legacyIdentityRoute(to, 'organization'),
   },
   {
     // FCRM redesign owns /call-logs (CallsView.vue); upstream list at /call-logs/view/.
@@ -285,6 +296,7 @@ const routes = [
   {
     path: '/not-permitted',
     name: 'Not Permitted',
+    meta: { app: 'contactos', title: 'Permisos' },
     component: () => import('@/pages/NotPermitted.vue'),
   },
 ]
@@ -302,6 +314,26 @@ router.beforeEach(async (to, from, next) => {
   router.previousRoute = from
 
   const { isLoggedIn, user } = sessionStore()
+  if (!isLoggedIn) {
+    window.location.href =
+      '/login?redirect-to=' +
+      encodeURIComponent(safeIntendedRoute('/crm' + to.fullPath))
+    return
+  }
+  if (to.meta.app === 'contactos') {
+    // Native identities are a separate capability; no sales stores/boot here.
+    return next()
+  }
+  if (window.muelle_module === 'contactos' || shellBoot.value) {
+    try {
+      const boot = await loadShell()
+      if (!boot.sales_access)
+        return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
+    } catch {
+      return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
+    }
+  }
+  const { usersStore } = await import('@/stores/users')
   const { users, isCrmUser, isAdmin, isManager } = usersStore()
 
   if (isLoggedIn && !users.fetched) {
@@ -381,6 +413,7 @@ router.beforeEach(async (to, from, next) => {
     ].includes(to.name) &&
     !to.query?.view
   ) {
+    const { viewsStore } = await import('@/stores/views')
     const { views, standardViews, getDefaultView } = viewsStore()
     await views.promise
 

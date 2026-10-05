@@ -10250,3 +10250,51 @@ msgstr "Formato de exportación no admitido: {0}"
 #: crm/api/list_export.py
 msgid "You are not allowed to export {0}"
 msgstr "No tienes permiso para exportar {0}"
+
+#: crm/api/contactos.py
+msgid "You do not have permission to open this app."
+msgstr "No tienes permiso para abrir esta aplicación."
+
+#: crm/api/contactos.py
+msgid "You do not have permission to open this app. Ask your manager for access."
+msgstr "No tienes permiso para abrir esta aplicación. Pide acceso al encargado."
+
+#: crm/api/contactos.py
+msgid "Contactos is not installed. Ask your manager to check the app."
+msgstr "Contactos no está instalado. Pide al encargado que revise la aplicación."
+
+#: crm/api/contactos.py
+msgid "You do not have permission to see Contactos. Ask your manager for access and try again."
+msgstr "No tienes permiso para ver Contactos. Pide acceso al encargado y reintenta."
+
+#: crm/api/contactos.py
+msgid "Ask for access to Contactos to recover this view."
+msgstr "Pide acceso a Contactos para recuperar esta vista."
+
+#: crm/api/contactos.py
+msgid "This view is private. Ask its owner to share it."
+msgstr "Esta vista es privada. Pide a su dueño que la comparta."
+
+#: crm/api/contactos.py
+msgid "You do not have permission to recover this view's filters."
+msgstr "No tienes permiso para recuperar los filtros de esta vista."
+
+#: crm/api/contactos.py
+msgid "You cannot apply some fields of this view. Ask for access or review its filters."
+msgstr "No puedes aplicar alguno de los campos de esta vista. Pide acceso o revisa sus filtros."
+
+#: crm/contactos_legacy.py
+msgid "This view belongs to another record type. Review its filters."
+msgstr "Esta vista pertenece a otro tipo de registro. Revisa sus filtros."
+
+#: crm/contactos_legacy.py
+msgid "This grouped view needs review. Open Edit filters to continue."
+msgstr "Esta vista agrupada necesita revisión. Abre Editar filtros para continuar."
+
+#: crm/contactos_legacy.py
+msgid "The saved filters could not be read. Review the previous view."
+msgstr "Los filtros guardados no se pudieron leer. Revisa la vista anterior."
+
+#: crm/contactos_legacy.py
+msgid "These filters need review before the list opens."
+msgstr "Estos filtros necesitan revisión antes de abrir la lista."

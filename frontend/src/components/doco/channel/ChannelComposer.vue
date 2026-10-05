@@ -232,9 +232,8 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { Button, Dialog, call, toast } from 'frappe-ui'
-import { whatsappManual } from '@/composables/whatsapp'
 
 const MAX_PREFILL = 1000
 const OUTCOMES = [
@@ -254,7 +253,7 @@ const props = defineProps({
 })
 const show = defineModel({ type: Boolean, default: false })
 
-const channel = ref(whatsappManual.value ? 'whatsapp' : 'sms')
+const channel = ref('sms')
 const template = ref('')
 const text = ref('')
 // the last untouched server render, so a hole edit can tell «still ours» from
@@ -273,10 +272,26 @@ const blockedUrl = ref('')
 // account WhatsApp goes through the CRM composer, never both. The marketing
 // config says so itself (`whatsapp_deeplink`); an older doco_marketing without
 // that key falls back to the site channel mode.
+// The site mode composable is imported only for that older config, so opening
+// the dialog from Contactos does not boot the sales WhatsApp resources.
+const siteManual = shallowRef(null)
+watch(config, (value) => {
+  if (
+    !value ||
+    typeof value.whatsapp_deeplink === 'boolean' ||
+    siteManual.value
+  )
+    return
+  import('@/composables/whatsapp')
+    .then((module) => {
+      siteManual.value = module.whatsappManual
+    })
+    .catch(() => {})
+})
 const whatsappDeeplink = computed(() =>
   typeof config.value?.whatsapp_deeplink === 'boolean'
     ? config.value.whatsapp_deeplink
-    : whatsappManual.value,
+    : !!siteManual.value?.value,
 )
 const channelChoices = computed(() =>
   [

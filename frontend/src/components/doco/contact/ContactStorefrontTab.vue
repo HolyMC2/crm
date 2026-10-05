@@ -11,7 +11,11 @@
 -->
 <template>
   <section class="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base">
-    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-5">
+    <SectionAvailability
+      :availability="data?.availability"
+      @retry="resource.reload()"
+    />
+    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-6">
       {{ __('Cargando pedidos…') }}
     </div>
     <div v-else-if="resource.error && !data" class="p-6 text-sm text-ink-red-7">
@@ -21,7 +25,7 @@
       </button>
     </div>
     <div
-      v-else-if="data"
+      v-else-if="data && data.availability?.available !== false"
       class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-6"
     >
       <div class="mb-5 grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -70,7 +74,7 @@
 
         <div
           v-if="!data.orders.length"
-          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-5"
+          class="rounded-xl border border-outline-gray-2 p-8 text-center text-sm text-ink-gray-6"
         >
           {{ __('Sin pedidos en la tienda en línea.') }}
         </div>
@@ -81,7 +85,7 @@
         >
           <div class="min-w-[900px]">
             <div
-              class="grid grid-cols-[1.2fr_1fr_1fr_1.1fr_0.9fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-5"
+              class="grid grid-cols-[1.2fr_1fr_1fr_1.1fr_0.9fr_1fr] gap-x-3 bg-surface-gray-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-ink-gray-6"
             >
               <span>{{ __('Pedido') }}</span
               ><span>{{ __('Entrega') }}</span
@@ -97,7 +101,7 @@
             >
               <span class="min-w-0">
                 <button
-                  class="block w-full truncate text-left font-semibold text-ink-blue-link"
+                  class="block w-full truncate text-left font-semibold text-ink-blue-8"
                   @click="openOrder(row)"
                 >
                   {{ row.name }}
@@ -120,7 +124,7 @@
               <span class="truncate text-ink-gray-6">{{
                 row.customer_name || row.customer || '—'
               }}</span>
-              <span class="text-ink-gray-5">{{ date(row.date) }}</span>
+              <span class="text-ink-gray-6">{{ date(row.date) }}</span>
               <span
                 class="text-right font-semibold tabular-nums text-ink-gray-8"
                 >{{ money(row.amount, row.currency) }}
@@ -159,7 +163,7 @@
           </MobileRecordCard>
         </div>
 
-        <p v-if="data.summary.truncated" class="mt-2 text-xs text-ink-gray-5">
+        <p v-if="data.summary.truncated" class="mt-2 text-xs text-ink-gray-6">
           {{
             __('Mostrando los {0} más recientes de {1}.', [
               data.orders.length,
@@ -169,6 +173,11 @@
         </p>
       </section>
 
+      <SectionAvailability
+        v-if="data.returns_availability"
+        :availability="data.returns_availability"
+        @retry="resource.reload()"
+      />
       <section v-if="data.returns.length">
         <h3 class="mb-2 text-sm font-semibold text-ink-gray-9">
           {{ __('Devoluciones') }}
@@ -189,7 +198,7 @@
                 size="sm"
               />
             </div>
-            <div class="mt-1 text-xs text-ink-gray-5">
+            <div class="mt-1 text-xs text-ink-gray-6">
               {{ reasonLabel(row.reason) }} · {{ date(row.creation) }}
             </div>
             <p v-if="row.message" class="mt-1.5 text-xs text-ink-gray-7">
@@ -203,15 +212,21 @@
 </template>
 
 <script setup>
+import { formatMoney } from '@/utils/contactos'
+import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
 import { computed, defineComponent, h } from 'vue'
 import { Badge, createResource } from 'frappe-ui'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 
-const props = defineProps({ docname: { type: String, required: true } })
+const props = defineProps({
+  docname: { type: String, required: true },
+  selectedCustomer: { type: String, default: '' },
+})
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_storefront',
-  params: { contact: props.docname },
-  cache: ['contact360-storefront', props.docname],
+  params: { contact: props.docname, customer: props.selectedCustomer || null },
+  // No persistent cache: private amounts/records must never render for another
+  // selected account or user before the server re-authorizes them.
   auto: true,
 })
 const data = computed(() => resource.data || null)
@@ -292,10 +307,7 @@ function openOrder(row) {
   window.open(url, '_blank', 'noopener')
 }
 function money(value, currency) {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: currency || 'MXN',
-  }).format(Number(value || 0))
+  return formatMoney(value, currency)
 }
 function date(value) {
   return value
@@ -320,13 +332,13 @@ const Metric = defineComponent({
       h('div', { class: tones[p.tone] || tones.gray }, [
         h(
           'div',
-          { class: 'text-[10px] font-bold uppercase tracking-wide opacity-70' },
+          { class: 'text-xs font-bold uppercase tracking-wide' },
           p.label,
         ),
         h(
           'div',
           { class: 'mt-1 truncate text-lg font-bold tabular-nums' },
-          String(p.value ?? 0),
+          String(p.value ?? '—'),
         ),
       ])
   },

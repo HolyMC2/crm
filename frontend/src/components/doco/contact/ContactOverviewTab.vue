@@ -1,6 +1,10 @@
 <template>
   <section class="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-base">
-    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-5">
+    <SectionAvailability
+      :availability="data?.availability"
+      @retry="resource.reload()"
+    />
+    <div v-if="resource.loading && !data" class="p-6 text-sm text-ink-gray-6">
       {{ __('Cargando resumen…') }}
     </div>
     <div v-else-if="resource.error && !data" class="p-6 text-sm text-ink-red-7">
@@ -22,14 +26,12 @@
           :label="__('Enviar mensaje')"
           @click="composerOpen = true"
         />
-        <span class="text-[11.5px] text-ink-gray-5">{{
-          whatsappManual
-            ? __('Abre WhatsApp con el mensaje escrito; tú tocas enviar.')
-            : __('Abre SMS o llamada con el mensaje escrito.')
+        <span class="text-xs text-ink-gray-6">{{
+          __('Elige un canal autorizado; tú confirmas el envío.')
         }}</span>
       </div>
       <ChannelComposer
-        v-if="data.contact?.mobile_no"
+        v-if="composerOpen && data.contact?.mobile_no"
         v-model="composerOpen"
         doctype="Contact"
         :docname="docname"
@@ -40,7 +42,7 @@
       <div v-for="rollup in rollups" :key="rollup.currency" class="mb-5">
         <div
           v-if="rollups.length > 1"
-          class="mb-2 text-xs font-semibold text-ink-gray-5"
+          class="mb-2 text-xs font-semibold text-ink-gray-6"
         >
           {{ rollup.currency }}
         </div>
@@ -70,30 +72,33 @@
       </div>
 
       <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <Tile :label="__('Tratos')" :value="String(data.counts.deals || 0)" />
+        <Tile
+          :label="__('Tratos')"
+          :value="String(data.counts.deals ?? __('No disponible'))"
+        />
         <Tile
           :label="__('Reparaciones')"
-          :value="String(data.counts.repairs || 0)"
+          :value="String(data.counts.repairs ?? __('No disponible'))"
         />
         <Tile
           :label="__('Garantías activas')"
-          :value="String(data.counts.active_warranties || 0)"
+          :value="String(data.counts.active_warranties ?? __('No disponible'))"
           :tone="data.counts.active_warranties > 0 ? 'green' : 'gray'"
         />
         <Tile
           :label="__('Facturas')"
-          :value="String(data.counts.invoices || 0)"
+          :value="String(data.counts.invoices ?? __('No disponible'))"
         />
         <Tile
           v-if="data.has_storefront"
           :label="__('Pedidos tienda')"
-          :value="String(data.counts.storefront_orders || 0)"
+          :value="String(data.counts.storefront_orders ?? __('No disponible'))"
           :tone="data.counts.open_storefront_orders > 0 ? 'amber' : 'gray'"
         />
         <Tile
           v-if="data.has_saldo"
           :label="__('Recargas')"
-          :value="String(data.counts.recargas || 0)"
+          :value="String(data.counts.recargas ?? __('No disponible'))"
         />
       </div>
 
@@ -140,14 +145,13 @@
             <a
               v-for="customer in data.customers"
               :key="customer.name"
-              :href="`/desk/customer/${encodeURIComponent(customer.name)}`"
-              target="_blank"
+              :href="sourceHref('Customer', customer.name)"
               class="rounded-full bg-surface-blue-1 px-2.5 py-1 text-xs font-semibold text-ink-blue-9"
               >{{ customer.customer_name || customer.name }}</a
             >
             <span
               v-if="!data.customers.length"
-              class="text-xs text-ink-gray-5"
+              class="text-xs text-ink-gray-6"
               >{{ __('Sin Customer vinculado') }}</span
             >
           </div>
@@ -158,17 +162,25 @@
 </template>
 
 <script setup>
+import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
 import { computed, defineComponent, h, ref } from 'vue'
 import { Button, createResource } from 'frappe-ui'
-import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
-import { whatsappManual } from '@/composables/whatsapp'
+import { sourceHref } from '@/utils/shellRoutes'
+import { defineAsyncComponent } from 'vue'
+const ChannelComposer = defineAsyncComponent(
+  () => import('@/components/doco/channel/ChannelComposer.vue'),
+)
 
-const props = defineProps({ docname: { type: String, required: true } })
+const props = defineProps({
+  docname: { type: String, required: true },
+  selectedCustomer: { type: String, default: '' },
+})
 const composerOpen = ref(false)
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_overview',
-  params: { contact: props.docname },
-  cache: ['contact360-overview', props.docname],
+  params: { contact: props.docname, customer: props.selectedCustomer || null },
+  // No persistent cache: private amounts/records must never render for another
+  // selected account or user before the server re-authorizes them.
   auto: true,
 })
 const data = computed(() => resource.data || null)
@@ -191,7 +203,7 @@ const Tile = defineComponent({
       h('div', { class: `rounded-xl p-3 ${tones[p.tone]}` }, [
         h(
           'div',
-          { class: 'text-[10px] font-bold uppercase tracking-wide opacity-70' },
+          { class: 'text-xs font-bold uppercase tracking-wide' },
           p.label,
         ),
         h(
@@ -207,7 +219,7 @@ const Row = defineComponent({
   setup(p) {
     return () =>
       h('div', { class: 'flex items-start justify-between gap-3' }, [
-        h('dt', { class: 'text-ink-gray-5' }, p.label),
+        h('dt', { class: 'text-ink-gray-6' }, p.label),
         h(
           'dd',
           { class: 'text-right font-medium text-ink-gray-8' },

@@ -1,6 +1,8 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and Contributors
 # GNU GPLv3 License. See license.txt
 
+from urllib.parse import quote
+
 import frappe
 from frappe import _, get_installed_apps
 from frappe.integrations.frappe_providers.frappecloud_billing import is_fc_site
@@ -13,14 +15,29 @@ no_cache = 1
 
 def get_context():
 	from crm.api import check_app_permission
+	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.contactos_routes import is_contactos_recovery_path
 
-	if not check_app_permission():
-		frappe.throw(_("You do not have permission to access CRM"), frappe.PermissionError)
-
-	frappe.db.commit()
+	path = frappe.local.request.environ.get("RAW_URI") or frappe.local.request.full_path.rstrip("?")
+	recovery = is_contactos_recovery_path(path)
+	neutral = recovery or is_contactos_path(path)
+	if frappe.session.user == "Guest":
+		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
+		raise frappe.Redirect
+	if not recovery and not (check_contactos_permission() if neutral else check_app_permission()):
+		if neutral or check_contactos_permission():
+			# An authenticated permission-recovery screen exposes no identity data;
+			# a Contactos worker opening a sales route gets its request/return actions
+			# instead of Frappe's dead-end «No permitido» page.
+			frappe.local.flags.redirect_location = "/crm/not-permitted?intended=" + quote(path[4:], safe="")
+			raise frappe.Redirect
+		frappe.throw(
+			_("You do not have permission to open this app. Ask your manager for access."),
+			frappe.PermissionError,
+		)
 	context = frappe._dict()
-	context.boot = get_boot()
-	if frappe.session.user != "Guest":
+	context.boot = get_boot(neutral=neutral)
+	if frappe.session.user != "Guest" and not neutral:
 		capture("active_site", "crm")
 	return context
 
@@ -32,20 +49,38 @@ def get_context_for_dev():
 	return get_boot()
 
 
-def get_boot():
+@frappe.whitelist(methods=["POST"])
+def get_shell_context_for_dev(path: str = "/crm"):
+	"""Path-aware development boot for signed-in users (Contactos gets the neutral boot)."""
+	if not frappe.conf.developer_mode:
+		frappe.throw(_("This method is only meant for developer mode"))
+	from crm.api import check_app_permission
+	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.contactos_routes import is_contactos_recovery_path
+
+	recovery = is_contactos_recovery_path(path)
+	neutral = recovery or is_contactos_path(path)
+	if not recovery and not (check_contactos_permission() if neutral else check_app_permission()):
+		frappe.throw(_("You do not have permission to open this app."), frappe.PermissionError)
+	return get_boot(neutral=neutral)
+
+
+def get_boot(neutral=False):
 	return frappe._dict(
 		{
 			"frappe_version": frappe.__version__,
 			"installed_apps": list(frappe.get_installed_apps()),
-			"default_route": get_default_route(),
+			"default_route": "/crm/contactos" if neutral else get_default_route(),
+			"muelle_module": "contactos" if neutral else "ventas",
 			"site_name": frappe.local.site,
+			"lang": frappe.local.lang,
 			"socketio_port": frappe.conf.socketio_port,
 			"read_only_mode": frappe.flags.read_only,
 			"csrf_token": frappe.sessions.get_csrf_token(),
 			"setup_complete": cint(frappe.get_system_settings("setup_complete")),
 			"sysdefaults": frappe.defaults.get_defaults(),
 			"is_demo_site": frappe.conf.get("is_demo_site"),
-			"demo_data_created": frappe.db.get_default("crm_demo_data_created") == "1",
+			"demo_data_created": False if neutral else frappe.db.get_default("crm_demo_data_created") == "1",
 			"is_fc_site": is_fc_site(),
 			"translated_doctypes": get_translated_doctypes(),
 			"translated_messages": get_messages_for_boot(),
