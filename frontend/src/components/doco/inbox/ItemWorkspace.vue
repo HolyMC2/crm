@@ -381,7 +381,7 @@
                   v-else
                   :href="
                     doc.doctype === 'Repair Order'
-                      ? `/taller/orders/${encodeURIComponent(doc.name)}`
+                      ? tallerOrderHref(doc.name)
                       : desk(doc.doctype, doc.name)
                   "
                   target="_blank"
@@ -523,7 +523,7 @@ import { Button, Dialog, call } from 'frappe-ui'
 import { formatMoney } from '@/composables/crmFormat'
 import { reloadSalesSummary } from '@/composables/salesDocs'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
-import { tallerIntakeHref } from '@/utils/repairOrders'
+import { tallerIntakeHref, tallerOrderHref } from '@/utils/repairOrders'
 import { useRoute } from 'vue-router'
 import WorkspaceItemPicker from './WorkspaceItemPicker.vue'
 

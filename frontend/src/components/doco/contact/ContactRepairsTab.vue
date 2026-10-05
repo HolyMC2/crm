@@ -59,8 +59,7 @@
             <a
               v-for="row in data.repairs"
               :key="row.name"
-              :href="`/taller/orders/${encodeURIComponent(row.name)}`"
-              target="_blank"
+              :href="orderHref(row.name)"
               class="grid grid-cols-[1.1fr_1.2fr_1.6fr_1fr_1fr_1fr_1fr] items-center gap-x-3 border-t border-outline-gray-1 px-3 py-2 text-sm hover:bg-surface-gray-1"
             >
               <span class="truncate font-semibold text-ink-blue-8">{{
@@ -125,8 +124,7 @@
           <a
             v-for="warranty in data.warranties"
             :key="warranty.repair_order"
-            :href="`/taller/orders/${encodeURIComponent(warranty.repair_order)}`"
-            target="_blank"
+            :href="orderHref(warranty.repair_order)"
             class="rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-3"
           >
             <div class="flex items-center justify-between gap-2">
@@ -186,6 +184,7 @@
 
 <script setup>
 import { formatMoney } from '@/utils/contactos'
+import { tallerOrderHref } from '@/utils/repairOrders'
 import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
 import { computed, defineComponent, h } from 'vue'
 import { Badge, createResource } from 'frappe-ui'
@@ -236,12 +235,10 @@ const Metric = defineComponent({
       )
   },
 })
+// Same tab: the Taller record offers «Volver a …» back to this contact.
+const orderHref = (name) => tallerOrderHref(name, props.docname)
 function openRepair(name) {
-  window.open(
-    `/taller/orders/${encodeURIComponent(name)}`,
-    '_blank',
-    'noopener',
-  )
+  window.location.assign(orderHref(name))
 }
 function statusTheme(status) {
   return (

@@ -205,11 +205,11 @@ import { Avatar, FeatherIcon, call as frappeCall, toast } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import {
   aboutLine,
-  deskHref,
   displayPhone,
   recordRoute,
   relativeAge,
 } from '@/utils/reviewCardFormat'
+import { tallerOrderHref } from '@/utils/repairOrders'
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -238,8 +238,9 @@ const refLink = computed(() =>
 const recordLink = computed(
   () => refLink.value || recordRoute('', '', ctx.value.contact),
 )
+// The Taller order record (Taller workers no longer open the native form).
 const repairHref = computed(() =>
-  deskHref('Repair Order', ctx.value.repair_order),
+  tallerOrderHref(ctx.value.repair_order, customerName.value),
 )
 const kindLabel = computed(
   () =>

@@ -5,6 +5,7 @@ import {
   repairOrderHref,
   repairReturnPath,
   tallerIntakeHref,
+  tallerOrderHref,
 } from '@/utils/repairOrders'
 vi.mock('frappe-ui', () => ({ call: vi.fn() }))
 import { call } from 'frappe-ui'
@@ -233,5 +234,37 @@ describe('repair display and return context', () => {
       '/deals/DEAL-1\n',
     ])
       expect(repairReturnPath('DEAL-1', invalid)).toBe('/crm/deals/DEAL-1')
+  })
+})
+
+describe('tallerOrderHref', () => {
+  const at = (pathname, search = '') => ({ pathname, search })
+  it('opens the Taller record with the way back to this CRM page', () => {
+    expect(
+      tallerOrderHref(
+        'RO 1',
+        'Ana López',
+        at('/crm/contactos/C-1', '?tab=repairs'),
+      ),
+    ).toBe(
+      '/taller/orders/RO%201?return_to=%2Fcrm%2Fcontactos%2FC-1%3Ftab%3Drepairs&return_label=Ana+L%C3%B3pez',
+    )
+  })
+  it('caps the label and omits an empty one', () => {
+    const href = tallerOrderHref('RO-1', 'x'.repeat(60), at('/crm/inbox'))
+    expect(
+      new URL(href, 'https://x.invalid').searchParams.get('return_label'),
+    ).toHaveLength(40)
+    expect(tallerOrderHref('RO-1', '', at('/crm/inbox'))).toBe(
+      '/taller/orders/RO-1?return_to=%2Fcrm%2Finbox',
+    )
+  })
+  it('never forwards a location outside the CRM', () => {
+    expect(tallerOrderHref('RO-1', 'A', at('/desk/contact/C-1'))).toBe(
+      '/taller/orders/RO-1',
+    )
+    expect(tallerOrderHref('RO-1', 'A', at('/crm/a\\b'))).toBe(
+      '/taller/orders/RO-1',
+    )
   })
 })

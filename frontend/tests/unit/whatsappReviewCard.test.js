@@ -94,7 +94,7 @@ describe('WhatsAppReviewCard', () => {
     })
     expect(text).toContain('+521 555 555 0000')
     expect(text).toContain('Quitar Virus · Realme C63')
-    const ro = el.querySelector('a[href="/app/repair-order/RO-00838"]')
+    const ro = el.querySelector('a[href="/taller/orders/RO-00838"]')
     expect(ro.textContent).toContain('Listo para Entregar')
     expect(text).toContain('Trato CRM-DEAL-2026-00968 · Aprobado')
     expect(text).toContain('Ana Vendedora')
@@ -113,7 +113,7 @@ describe('WhatsAppReviewCard', () => {
     expect(el.querySelector('[data-avatar]')).toBeNull()
     expect(el.textContent).not.toContain('Abrir trato')
     expect(el.textContent).toContain('Pendiente')
-    expect(el.querySelector('a[href="/app/repair-order/RO-00838"]')).toBeNull()
+    expect(el.querySelector('a[href="/taller/orders/RO-00838"]')).toBeNull()
     expect(
       [...el.querySelectorAll('button')].map((b) => b.textContent.trim()),
     ).toContain('Enviar')
@@ -142,7 +142,7 @@ describe('WhatsAppReviewCard', () => {
     })
     expect(el.querySelector('a[data-route]')).toBeNull()
     expect(
-      el.querySelector('a[href="/app/repair-order/RO-01041"]').textContent,
+      el.querySelector('a[href="/taller/orders/RO-01041"]').textContent,
     ).toContain('Entregado')
     expect(el.textContent).not.toContain('Trato ')
     expect(el.textContent).toContain('TWIP DEV')

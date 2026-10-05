@@ -184,7 +184,7 @@
               <li v-for="ro in repairs.data" :key="ro.name" class="py-3">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <a
-                    :href="`/taller/orders/${encodeURIComponent(ro.name)}`"
+                    :href="tallerOrderHref(ro.name, doc.deal_name)"
                     class="font-semibold text-ink-green-8 underline"
                     >{{ ro.device_model || ro.name }}</a
                   ><span
@@ -261,6 +261,7 @@ import { reloadSalesSummary } from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
+import { tallerOrderHref } from '@/utils/repairOrders'
 import DealConversations from './DealConversations.vue'
 import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 

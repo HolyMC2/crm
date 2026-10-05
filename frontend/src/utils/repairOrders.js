@@ -53,6 +53,24 @@ export function repairOrderHref(name, deal, fullPath) {
   return `/taller/orders/${encodeURIComponent(name)}?${query}`
 }
 
+// The one Taller order record, opened from a CRM summary (Contact, Deal overview,
+// inbox documents, message review). Taller shows «Volver a {label}» and returns
+// here; it validates the target again (return protocol, spec-muelle-shell §8.3).
+export function tallerOrderHref(name, label, here = window.location) {
+  const href = `/taller/orders/${encodeURIComponent(name)}`
+  const back = `${here.pathname}${here.search}`
+  if (
+    !back.startsWith('/crm/') ||
+    back.length > 2048 ||
+    [...back].some((char) => char === '\\' || char.charCodeAt(0) < 32)
+  )
+    return href
+  const query = new URLSearchParams({ return_to: back })
+  const text = typeof label === 'string' ? label.trim().slice(0, 40) : ''
+  if (text) query.set('return_label', text)
+  return `${href}?${query}`
+}
+
 export function repairError(error) {
   return (
     error?.messages?.join('\n') ||
