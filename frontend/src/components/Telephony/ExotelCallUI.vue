@@ -244,6 +244,8 @@ import CountUpTimer from '@/components/CountUpTimer.vue'
 import { globalStore } from '@/stores/global'
 import { sessionStore } from '@/stores/session'
 import { useDraggable, useWindowSize } from '@vueuse/core'
+import { callInProgress } from '@/utils/callSwapBlocker'
+import { registerSwapBlocker } from '@/vendor/muelle-shell/live-sync'
 import { TextEditor, Avatar, Button, createResource, toast } from 'frappe-ui'
 import { ref, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
@@ -431,8 +433,18 @@ function setup() {
   })
 }
 
+// A silent update must not drop the open call popup (note, task) mid-call.
+// Exotel rings the worker's phone, so the call itself survives an unmount;
+// the popup does not, and its state stops updating once the socket is off.
+const releaseSwap = registerSwapBlocker('exotel-call', () =>
+  callInProgress({
+    popup: showCallPopup.value,
+    minimized: showSmallCallPopup.value,
+  }),
+)
 onBeforeUnmount(() => {
   $socket.off('exotel_call')
+  releaseSwap()
 })
 
 const router = useRouter()

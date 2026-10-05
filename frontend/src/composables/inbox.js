@@ -27,7 +27,8 @@ export const queueCollapsed = ref(false) // hide the left queue pane for a wider
 // Forward nav sets mobileView directly (here / selectDeal); Inbox.vue mirrors each
 // drill-in as a history entry. Backward nav goes through mobileBack() → the browser
 // back stack, so the in-app ← buttons and the hardware/gesture back behave identically.
-export const mobileView = ref('list') // 'list' | 'thread' | 'context'
+import { mobileView } from './mobileView' // 'list' | 'thread' | 'context'
+export { mobileView }
 export function openContext() {
   mobileView.value = 'context'
 }

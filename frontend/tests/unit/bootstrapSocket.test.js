@@ -57,6 +57,7 @@ vi.mock('frappe-ui', async () => {
 vi.mock('@/utils/startupTelemetry', () => ({
   installTelemetry: fixture.startupTelemetry,
 }))
+vi.mock('@/utils/silentUpdate', () => ({ installSilentUpdate: () => null }))
 vi.mock('frappe-ui/icons', () => ({ spritePlugin: fixture.sprite }))
 vi.mock('@/router', () => ({ default: fixture.router }))
 vi.mock('@/translation', () => ({ default: fixture.translation }))
@@ -155,9 +156,11 @@ function expectCanonicalSocket() {
   )
   expect(fixture.pushNavigation).toHaveBeenCalledWith(fixture.router)
   expect(fixture.startupTelemetry).toHaveBeenCalledWith(root.appContext.app)
-  for (const plugin of [fixture.router, fixture.translation, fixture.sprite]) {
+  for (const plugin of [fixture.router, fixture.translation]) {
     expect(plugin.install).toHaveBeenCalledOnce()
   }
+  // The lucide sprite is deferred to idle / first Icon.vue use (first-load budget).
+  expect(fixture.sprite.install).not.toHaveBeenCalled()
   return socket
 }
 

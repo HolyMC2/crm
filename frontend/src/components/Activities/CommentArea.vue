@@ -86,6 +86,7 @@ import {
 } from '@/utils'
 import { sessionStore } from '@/stores/session'
 import { computed, ref } from 'vue'
+import { useEditSwapBlocker } from '@/utils/editSwapBlocker'
 
 const props = defineProps({
   activity: { type: Object, default: () => ({}) },
@@ -101,6 +102,11 @@ const editing = ref(false)
 const saving = ref(false)
 const editContent = ref('')
 const confirmingDelete = ref(false)
+// The edit lives only here: hold silent updates while it is unsaved.
+useEditSwapBlocker(
+  `comment-edit:${props.activity.name}`,
+  () => editing.value && editContent.value !== (props.activity.content || ''),
+)
 
 const menuOptions = computed(() => [
   {

@@ -10298,3 +10298,302 @@ msgstr "Los filtros guardados no se pudieron leer. Revisa la vista anterior."
 #: crm/contactos_legacy.py
 msgid "These filters need review before the list opens."
 msgstr "Estos filtros necesitan revisión antes de abrir la lista."
+
+#: frontend/src/components/shell
+msgid "Back to {0}"
+msgstr "Volver a {0}"
+
+#: frontend/src/components/shell
+msgid "Go back"
+msgstr "Volver"
+
+#: frontend/src/components/shell
+msgid "Try again"
+msgstr "Reintentar"
+
+#: frontend/src/components/shell
+msgid "Request access"
+msgstr "Pedir acceso"
+
+#: frontend/src/components/shell
+msgid "Copy request"
+msgstr "Copiar solicitud"
+
+#: frontend/src/components/shell
+msgid "Copy details for support"
+msgstr "Copiar detalles para soporte"
+
+#: frontend/src/components/shell
+msgid "Recheck permissions"
+msgstr "Reintentar permisos"
+
+#: frontend/src/components/shell
+msgid "We couldn't complete this."
+msgstr "No pudimos completar esto."
+
+#: frontend/src/components/shell
+msgid "Try again. If it keeps happening, copy the details for support."
+msgstr "Reintenta. Si sigue pasando, copia los detalles para soporte."
+
+#: frontend/src/components/shell
+msgid "{0} is not available for your role."
+msgstr "{0} no está disponible para tu puesto."
+
+#: frontend/src/components/shell
+msgid "Ask a manager for access, or go back to Hoy."
+msgstr "Pide acceso a un encargado o vuelve a Hoy."
+
+#: frontend/src/components/shell
+msgid "Not available for your role"
+msgstr "No disponible para tu puesto"
+
+#: frontend/src/components/shell
+msgid "Go to Hoy"
+msgstr "Ir a Hoy"
+
+#: frontend/src/components/shell
+msgid "Records"
+msgstr "Registros"
+
+#: frontend/src/components/shell
+msgid "Go to"
+msgstr "Ir a"
+
+#: frontend/src/components/shell
+msgid "Recent"
+msgstr "Recientes"
+
+#: frontend/src/components/shell
+msgid "Searching…"
+msgstr "Buscando…"
+
+#: frontend/src/components/shell
+msgid "See all in {0}"
+msgstr "Ver todos en {0}"
+
+#: frontend/src/components/shell
+msgid "Open the command palette"
+msgstr "Abrir la paleta de comandos"
+
+#: frontend/src/components/shell
+msgid "Focus the list search"
+msgstr "Buscar en la lista"
+
+#: frontend/src/components/shell
+msgid "Go to {0}"
+msgstr "Ir a {0}"
+
+#: frontend/src/components/shell
+msgid "Next row"
+msgstr "Siguiente fila"
+
+#: frontend/src/components/shell
+msgid "Previous row"
+msgstr "Fila anterior"
+
+#: frontend/src/components/shell
+msgid "Open record"
+msgstr "Abrir ficha"
+
+#: frontend/src/components/shell
+msgid "Open beside the list"
+msgstr "Abrir al lado"
+
+#: frontend/src/components/shell
+msgid "Toggle selection"
+msgstr "Seleccionar o quitar"
+
+#: frontend/src/components/shell
+msgid "Extend selection"
+msgstr "Extender selección"
+
+#: frontend/src/components/shell
+msgid "Select the visible page"
+msgstr "Seleccionar la página visible"
+
+#: frontend/src/components/shell
+msgid "Close the top layer"
+msgstr "Cerrar la capa superior"
+
+#: frontend/src/components/shell
+msgid "Show or hide the sidebar"
+msgstr "Mostrar u ocultar la barra lateral"
+
+#: frontend/src/components/shell
+msgid "Keyboard shortcuts"
+msgstr "Atajos de teclado"
+
+#: frontend/src/components/shell
+msgid "Account menu"
+msgstr "Menú de la cuenta"
+
+#: frontend/src/components/shell
+msgid "Administration"
+msgstr "Administración"
+
+#: frontend/src/components/shell
+msgid "Ask for access"
+msgstr "Pedir acceso"
+
+#: frontend/src/components/shell
+msgid "Bar saved."
+msgstr "Barra guardada."
+
+#: frontend/src/components/shell
+msgid "Choose the order of the bottom bar. Hoy always comes first when available."
+msgstr "Elige el orden de la barra inferior. Hoy siempre va primero cuando está disponible."
+
+#: frontend/src/components/shell
+msgid "Choose up to four sections for the bar."
+msgstr "Elige hasta cuatro secciones para la barra."
+
+#: frontend/src/components/shell
+msgid "close"
+msgstr "cerrar"
+
+#: frontend/src/components/shell
+msgid "Command palette"
+msgstr "Paleta de comandos"
+
+#: frontend/src/components/shell
+msgid "Customize bar"
+msgstr "Personalizar barra"
+
+#: frontend/src/components/shell
+msgid "Dark theme"
+msgstr "Tema oscuro"
+
+#: frontend/src/components/shell
+msgid "Install app"
+msgstr "Instalar app"
+
+#: frontend/src/components/shell
+msgid "Light theme"
+msgstr "Tema claro"
+
+#: frontend/src/components/shell
+msgid "Main navigation"
+msgstr "Navegación principal"
+
+#: frontend/src/components/shell
+msgid "Modules"
+msgstr "Módulos"
+
+#: frontend/src/components/shell
+msgid "More"
+msgstr "Más"
+
+#: frontend/src/components/shell
+msgid "move"
+msgstr "mover"
+
+#: frontend/src/components/shell
+msgid "Move down {0}"
+msgstr "Bajar {0}"
+
+#: frontend/src/components/shell
+msgid "Move up {0}"
+msgstr "Subir {0}"
+
+#: frontend/src/components/shell
+msgid "New contact"
+msgstr "Nuevo contacto"
+
+#: frontend/src/components/shell
+msgid "New contact «{0}»"
+msgstr "Nuevo contacto «{0}»"
+
+#: frontend/src/components/shell
+msgid "Nothing matches «{0}»."
+msgstr "Nada coincide con «{0}»."
+
+#: frontend/src/components/shell
+msgid "Offline — you see what was last loaded; your changes stay as a draft."
+msgstr "Sin conexión — ves lo último cargado; tus cambios quedan como borrador."
+
+#: frontend/src/components/shell
+msgid "open"
+msgstr "abrir"
+
+#: frontend/src/components/shell
+msgid "Opening Muelle…"
+msgstr "Abriendo Muelle…"
+
+#: frontend/src/components/shell
+msgid "Other apps"
+msgstr "Otras apps"
+
+#: frontend/src/components/shell
+msgid "Request copied. Share it with your manager."
+msgstr "Solicitud copiada. Compártela con tu encargado."
+
+#: frontend/src/components/shell
+msgid "Retry permissions"
+msgstr "Reintentar permisos"
+
+#: frontend/src/components/shell
+msgid "Save bar"
+msgstr "Guardar barra"
+
+#: frontend/src/components/shell
+msgid "Search (Ctrl K)"
+msgstr "Buscar (Ctrl K)"
+
+#: frontend/src/components/shell
+msgid "Search people, records, actions…"
+msgstr "Busca personas, registros, acciones…"
+
+#: frontend/src/components/shell
+msgid "Sign in to open Muelle."
+msgstr "Inicia sesión para abrir Muelle."
+
+#: frontend/src/components/shell
+msgid "Skip to content"
+msgstr "Ir al contenido"
+
+#: frontend/src/components/shell
+msgid "Ventas is not available for your role."
+msgstr "Ventas no está disponible para tu puesto."
+
+#: frontend/src/components/shell
+msgid "Ventas sections"
+msgstr "Secciones de Ventas"
+
+#: frontend/src/components/shell
+msgid "Ventas settings"
+msgstr "Ajustes de Ventas"
+
+#: frontend/src/components/shell
+msgid "We could not open Contactos"
+msgstr "No pudimos abrir Contactos"
+
+#: frontend/src/components/shell
+msgid "We could not save the bar. Try again."
+msgstr "No pudimos guardar la barra. Reintenta."
+
+#: frontend/src/components/shell
+msgid "I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data."
+msgstr "Necesito acceso a Contactos y permiso de lectura de los registros nativos para continuar. Revisa mis permisos de creación/edición si debo guardar datos."
+
+#: frontend/src/components/shell
+msgid "Notifications blocked"
+msgstr "Notificaciones bloqueadas"
+
+#: frontend/src/components/shell
+msgid "Push notifications"
+msgstr "Notificaciones push"
+
+#: frontend/src/components/shell/CommandPalette.vue
+msgctxt "Command palette hint"
+msgid "move"
+msgstr "mover"
+
+#: frontend/src/components/shell/CommandPalette.vue
+msgctxt "Command palette hint"
+msgid "open"
+msgstr "abrir"
+
+#: frontend/src/components/shell/CommandPalette.vue
+msgctxt "Command palette hint"
+msgid "close"
+msgstr "cerrar"

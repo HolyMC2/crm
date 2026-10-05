@@ -42,6 +42,7 @@ vi.mock('frappe-ui', async () => {
     FeatherIcon: component,
   }
 })
+vi.mock('@/utils/silentUpdate', () => ({ installSilentUpdate: () => null }))
 vi.mock('frappe-ui/icons', () => ({ spritePlugin: { install() {} } }))
 vi.mock('@/socket', () => ({ initSocket: () => ({}) }))
 vi.mock('@/router', () => ({ default: { install() {} } }))

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { call } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { loadShell, shellBoot } from '@/composables/muelleShell'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { loadCapabilities, gateRoute } from '@/utils/crmCapabilities'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
 
@@ -23,6 +24,8 @@ async function shouldCapturePersona() {
 }
 
 const routes = [
+  // Ventas module home in the Muelle shell (contracts basePath).
+  { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
   {
     path: '/contactos',
     name: 'Contactos',
@@ -327,7 +330,7 @@ router.beforeEach(async (to, from, next) => {
   if (window.muelle_module === 'contactos' || shellBoot.value) {
     try {
       const boot = await loadShell()
-      if (!boot.sales_access)
+      if (!moduleEnabled(boot, 'ventas'))
         return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
     } catch {
       return next({ name: 'Not Permitted', query: { intended: to.fullPath } })

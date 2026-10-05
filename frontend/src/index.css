@@ -1,4 +1,7 @@
 @import 'frappe-ui/style.css';
+/* Muelle design tokens (vendored @muelle/tokens): --muelle-* on :root and
+   [data-theme='dark']; the site palette overrides the accent at boot. */
+@import './vendor/muelle-shell/tokens/tokens.css';
 
 /* ── mobile touch feel ─────────────────────────────────────────────────────
    Kill the half-second gray tap flash + the double-tap-zoom click delay, and
@@ -13,11 +16,13 @@ html {
    hardcoded ~60 places. Overridden at boot from FCRM Settings.brand_color when set
    (stores/settings.js), so a tenant recolor is a backend field, not a rebuild. */
 :root {
-  --brand: #0f6b78;
-  --brand-soft-light: #e7f0f2;
-  --brand-soft-dark: #16292b;
-  --brand-soft: var(--brand-soft-light);
-  --brand-strong: #0c5660;
+  /* Aliases of the Muelle accent (site palette, default Gris); a tenant's
+     FCRM Settings.brand_color still overrides --brand for Ventas. */
+  --brand: var(--muelle-accent);
+  --brand-soft-light: var(--muelle-accent-soft);
+  --brand-soft-dark: var(--muelle-accent-soft);
+  --brand-soft: var(--muelle-accent-soft);
+  --brand-strong: var(--muelle-accent);
 }
 
 :root[data-theme='light'] {
@@ -25,7 +30,6 @@ html {
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --brand-soft: var(--brand-soft-dark);
 }
 body {
   overscroll-behavior-y: none;

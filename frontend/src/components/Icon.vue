@@ -22,6 +22,8 @@
 </template>
 <script setup>
 import { isEmoji } from '@/utils'
+import { ensureLucideSprite } from '@/utils/lucideSprite'
 
-defineProps({ icon: { type: [String, Object], required: true } })
+const props = defineProps({ icon: { type: [String, Object], required: true } })
+if (typeof props.icon === 'string' && !isEmoji(props.icon)) ensureLucideSprite()
 </script>

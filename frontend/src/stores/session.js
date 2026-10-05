@@ -46,7 +46,9 @@ export const sessionStore = defineStore('crm-session', () => {
             // saved views / column layouts — their search terms can hold customer
             // names/phones (audit 2026-07-26), same shared-terminal class
             k.startsWith('doco_leads_') ||
-            k.startsWith('doco_deals_')
+            k.startsWith('doco_deals_') ||
+            // command-palette recents (record titles) — shell, per user
+            k.startsWith('muelle:palette-recent:')
           )
             localStorage.removeItem(k)
         }

@@ -1,0 +1,430 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createApp, h, nextTick, ref } from 'vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
+
+const state = vi.hoisted(() => ({ call: vi.fn(), mobile: null }))
+vi.mock('frappe-ui', async () => {
+  const { h, ref } = await import('vue')
+  return {
+    call: (...args) => state.call(...args),
+    useTheme: () => ({ currentTheme: ref('light'), setTheme: vi.fn() }),
+    Button: {
+      props: ['label'],
+      setup: (props) => () => h('button', props.label),
+    },
+    createResource: () => ({ data: null, fetch: vi.fn() }),
+  }
+})
+vi.mock('@/composables/breakpoint', async () => {
+  const { ref } = await import('vue')
+  state.mobile = ref(false)
+  return { isMobile: state.mobile }
+})
+vi.mock('@/stores/session', () => ({
+  sessionStore: () => ({ logout: { submit: vi.fn() } }),
+}))
+vi.mock('@/composables/ventasNav', () => ({
+  useVentasNav: () => ({
+    primary: [],
+    secondary: [],
+    groupOf: () => '',
+    badgeFor: () => 0,
+  }),
+}))
+vi.mock('@/components/shell/VentasRailBell.vue', () => ({
+  __esModule: true,
+  default: { render: () => null },
+}))
+
+import MuelleShell from '@/components/shell/MuelleShell.vue'
+import {
+  hostedModules,
+  moduleKeyFor,
+  navSlots,
+  shellBoot,
+} from '@/composables/muelleShell'
+import {
+  createShellProviders,
+  loadRecent,
+  toRecentRef,
+} from '@/utils/shellPalette'
+import { showSettings } from '@/composables/settings'
+import { bootScope } from '@/vendor/muelle-shell/contracts'
+
+function boot(overrides = {}) {
+  return {
+    user: {
+      name: 'ana@example.test',
+      full_name: 'Ana López',
+      nav_role: 'vendedor',
+    },
+    modules: {
+      contactos: {
+        key: 'contactos',
+        enabled: true,
+        capabilities: { read: true, create: true },
+      },
+      ventas: { key: 'ventas', enabled: true, capabilities: { read: true } },
+    },
+    ...overrides,
+  }
+}
+
+let app, root, router
+async function mount(path) {
+  router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      {
+        path: '/contactos',
+        component: { render: () => h('p', 'Contactos page') },
+        meta: { app: 'contactos', title: 'Contactos' },
+      },
+      { path: '/deals', component: { render: () => h('p', 'Deals page') } },
+      { path: '/ventas', component: { render: () => null } },
+    ],
+  })
+  await router.push(path)
+  await router.isReady()
+  root = document.createElement('div')
+  document.body.append(root)
+  app = createApp({
+    render: () => h(MuelleShell, null, { default: () => h('p', 'page') }),
+  })
+  // Contextual strings render as «text|context» so tests can see the context.
+  app.config.globalProperties.__ = (text, args, context) =>
+    context ? `${text}|${context}` : text
+  app.use(router)
+  app.mount(root)
+  for (let i = 0; i < 6; i++) {
+    await Promise.resolve()
+    await nextTick()
+  }
+}
+beforeEach(() => {
+  globalThis.__ = (text, args) =>
+    args ? text.replace(/{(\d+)}/g, (_, i) => args[i]) : text
+  state.call.mockReset()
+  state.call.mockImplementation(async (method) => {
+    if (method === 'crm.api.shell.boot') return boot()
+    throw new Error(`unexpected ${method}`)
+  })
+  shellBoot.value = null
+})
+afterEach(() => {
+  app?.unmount()
+  root?.remove()
+})
+
+describe('module registry', () => {
+  it('maps routes to their module: Contactos by its routes, every CRM page to Ventas', () => {
+    expect(
+      moduleKeyFor({
+        path: '/contactos/contact/A',
+        meta: { app: 'contactos' },
+      }),
+    ).toBe('contactos')
+    expect(moduleKeyFor({ path: '/deals/view/list', meta: {} })).toBe('ventas')
+    expect(moduleKeyFor({ path: '/ventas', meta: {} })).toBe('ventas')
+    expect(hostedModules.map((m) => m.key)).toEqual(['contactos', 'ventas'])
+  })
+
+  it('bottom-nav slots follow the role, enabled modules and the saved order', () => {
+    shellBoot.value = boot()
+    expect(navSlots.value.map((m) => m.key)).toEqual(['contactos', 'ventas'])
+    shellBoot.value = boot({ mobile_slots: ['ventas', 'contactos'] })
+    expect(navSlots.value.map((m) => m.key)).toEqual(['ventas', 'contactos'])
+    shellBoot.value = boot({
+      modules: {
+        contactos: { key: 'contactos', enabled: true, capabilities: {} },
+      },
+    })
+    expect(navSlots.value.map((m) => m.key)).toEqual(['contactos'])
+  })
+})
+
+describe('one frame for every route', () => {
+  it('desktop: a rail with the enabled modules and no bottom nav', async () => {
+    state.mobile.value = false
+    await mount('/deals')
+    const rail = root.querySelector('nav[aria-label="Apps"]')
+    expect(rail).not.toBeNull()
+    expect(
+      [...rail.querySelectorAll('a')].map((a) => a.getAttribute('aria-label')),
+    ).toEqual(['Contactos', 'Ventas'])
+    expect(
+      rail.querySelector('[aria-current="page"]').getAttribute('aria-label'),
+    ).toBe('Ventas')
+    expect(root.querySelector('nav[aria-label="Main navigation"]')).toBeNull()
+  })
+
+  it('phone: one header and one bottom nav; Ventas pages get the header slot', async () => {
+    state.mobile.value = true
+    await mount('/deals')
+    expect(root.querySelector('nav[aria-label="Apps"]')).toBeNull()
+    expect(
+      root.querySelectorAll('nav[aria-label="Main navigation"]'),
+    ).toHaveLength(1)
+    expect(root.querySelectorAll('header')).toHaveLength(1)
+    expect(root.querySelector('#app-header')).not.toBeNull()
+  })
+
+  it('phone bottom nav is sticky so floating Desk launchers rise above it', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    const nav = root.querySelector('nav[aria-label="Main navigation"]')
+    expect(nav.classList).toContain('sticky')
+    expect(nav.classList).toContain('bottom-0')
+  })
+
+  it('phone Contactos shows its title instead of the Ventas header slot', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    expect(root.querySelector('#app-header')).toBeNull()
+    expect(root.querySelector('header h1').textContent).toContain('Contactos')
+  })
+
+  it('Ctrl+K opens the command palette and g c goes to Contactos', async () => {
+    state.mobile.value = false
+    await mount('/deals')
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }),
+    )
+    for (let i = 0; i < 20; i++) {
+      await Promise.resolve()
+      await nextTick()
+      if (document.querySelector('[aria-label="Command palette"]')) break
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    }
+    const palette = document.querySelector('[aria-label="Command palette"]')
+    expect(palette).not.toBeNull()
+    // Footer verbs carry a context: bare «open» resolves to «abierto» in ERPNext's catalog.
+    expect(palette.textContent).toContain('open|Command palette hint')
+    expect(palette.textContent).toContain('move|Command palette hint')
+    document.querySelector('[aria-label="Close"]').click()
+    await nextTick()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g' }))
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }))
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(router.currentRoute.value.path).toBe('/contactos')
+  })
+})
+
+describe('palette providers', () => {
+  it('offers «New contact» only with create rights and maps Contactos records', async () => {
+    const providers = createShellProviders({
+      boot: ref(boot()),
+      modules: ref(hostedModules),
+    })
+    const [actions, contactos, places] = providers
+    const query = { raw: 'ana', text: 'ana', scope: 'all', kind: 'text' }
+    expect((await actions.search(query)).map((i) => i.href)).toContain(
+      '/contactos?create=1',
+    )
+    const denied = createShellProviders({
+      boot: ref(
+        boot({
+          modules: {
+            contactos: {
+              key: 'contactos',
+              enabled: true,
+              capabilities: { create: false },
+            },
+          },
+        }),
+      ),
+      modules: ref(hostedModules),
+    })
+    expect(
+      (await denied[0].search(query)).some((i) => i.id === 'contactos.create'),
+    ).toBe(false)
+
+    globalThis.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        message: {
+          rows: [
+            {
+              source: 'contact',
+              name: 'Ana López',
+              title: 'Ana López',
+              kind: 'person',
+              fields: { mobile_no: '+52 669 123' },
+            },
+          ],
+        },
+      }),
+    }))
+    const rows = await contactos.search(query, new AbortController().signal)
+    expect(rows[0]).toMatchObject({
+      group: 'registros',
+      title: 'Ana López',
+      href: '/contactos/contact/Ana%20L%C3%B3pez',
+    })
+    const go = await places.search({
+      raw: 'prove',
+      text: 'prove',
+      scope: 'all',
+      kind: 'text',
+    })
+    expect(go.map((i) => i.href)).toContain('/contactos?segment=suppliers')
+  })
+})
+
+async function until(find) {
+  for (let i = 0; i < 40; i++) {
+    await Promise.resolve()
+    await nextTick()
+    const found = find()
+    if (found) return found
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  return find()
+}
+async function openPalette() {
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }),
+  )
+  const palette = await until(() =>
+    document.querySelector('[aria-label="Command palette"]'),
+  )
+  for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 10))
+  await nextTick()
+  return palette
+}
+const RECENT_KEY_PREFIX = 'muelle:palette-recent:'
+function storedRecent() {
+  const key = Object.keys(localStorage).find((k) =>
+    k.startsWith(RECENT_KEY_PREFIX),
+  )
+  return key ? JSON.parse(localStorage.getItem(key)) : null
+}
+function seedLegacyRecent(items) {
+  const key = `${RECENT_KEY_PREFIX}${bootScope(window.site_name || location.host, '')}`
+  localStorage.setItem(key, JSON.stringify(items))
+}
+const legacy = [
+  {
+    id: 'contact:Ana',
+    group: 'recientes',
+    title: 'Ana López',
+    subtitle: 'Persona · +52 669 123 4567',
+    href: '/contactos/contact/Ana',
+    ref: { doctype: 'Contact', name: 'Ana' },
+  },
+  {
+    id: 'contact:Jorge',
+    group: 'recientes',
+    title: 'Jorge López',
+    subtitle: 'Persona · jorge@example.com',
+    href: '/contactos/contact/Jorge',
+    ref: { doctype: 'Contact', name: 'Jorge' },
+  },
+]
+
+describe('palette recents never outlive read access', () => {
+  afterEach(() => localStorage.clear())
+
+  it('stores references only: no names, phones or emails', () => {
+    const ref = toRecentRef({
+      ...legacy[0],
+      group: 'registros',
+      record: { source: 'contact', name: 'Ana' },
+    })
+    expect(ref).toEqual({
+      id: 'contact:Ana',
+      href: '/contactos/contact/Ana',
+      record: { source: 'contact', name: 'Ana' },
+    })
+    seedLegacyRecent(legacy)
+    expect(JSON.stringify(loadRecent())).not.toMatch(/López|669|example/)
+  })
+
+  it('Contactos revoked: nothing cached is shown and the list is dropped', async () => {
+    seedLegacyRecent(legacy)
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot')
+        return boot({
+          modules: {
+            contactos: { key: 'contactos', enabled: false, capabilities: {} },
+            ventas: {
+              key: 'ventas',
+              enabled: true,
+              capabilities: { read: true },
+            },
+          },
+        })
+      throw new Error(`unexpected ${method}`)
+    })
+    state.mobile.value = false
+    await mount('/deals')
+    const palette = await openPalette()
+    expect(palette.textContent).not.toMatch(/López|669|example/)
+    expect(state.call).not.toHaveBeenCalledWith(
+      'crm.api.shell.resolve_recent',
+      expect.anything(),
+    )
+    expect(storedRecent()).toEqual([])
+  })
+
+  it('record revoked: only records the server still lets you read are shown', async () => {
+    seedLegacyRecent(legacy)
+    state.call.mockImplementation(async (method, args) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method === 'crm.api.shell.resolve_recent') {
+        expect(JSON.stringify(args)).not.toMatch(/López|669|example/)
+        return [{ source: 'contact', name: 'Jorge', title: 'Jorge L.' }]
+      }
+      throw new Error(`unexpected ${method}`)
+    })
+    state.mobile.value = false
+    await mount('/deals')
+    const palette = await openPalette()
+    await until(() => palette.textContent.includes('Jorge L.'))
+    expect(palette.textContent).toContain('Jorge L.')
+    expect(palette.textContent).not.toMatch(/Ana|669|jorge@example/)
+    expect(storedRecent().map((item) => item.record.name)).toEqual(['Jorge'])
+  })
+})
+
+describe('Ventas navigation on every screen', () => {
+  it('Ventas sections show from 640 px, where the shell switches to desktop', async () => {
+    const { default: VentasSidebar } = await import(
+      '@/components/shell/VentasSidebar.vue'
+    )
+    state.mobile.value = false
+    await mount('/deals')
+    const host = document.createElement('div')
+    document.body.append(host)
+    const sidebarApp = createApp({ render: () => h(VentasSidebar) })
+    sidebarApp.config.globalProperties.__ = (text) => text
+    sidebarApp.use(router)
+    sidebarApp.mount(host)
+    const el = host.querySelector('aside')
+    expect(el.classList).toContain('sm:flex')
+    expect(el.classList).not.toContain('md:flex')
+    sidebarApp.unmount()
+    host.remove()
+  })
+
+  it.each([
+    ['/contactos', '/ventas'],
+    ['/deals', '/deals'],
+  ])('Más offers Ventas settings from %s', async (start, landing) => {
+    showSettings.value = false
+    state.mobile.value = true
+    await mount(start)
+    root.querySelector('nav[aria-label="Main navigation"] button').click()
+    const button = await until(() =>
+      [...document.querySelectorAll('[aria-label="More"] button')].find((b) =>
+        b.textContent.includes('Ventas settings'),
+      ),
+    )
+    expect(button).toBeTruthy()
+    button.click()
+    await until(() => showSettings.value)
+    expect(showSettings.value).toBe(true)
+    expect(router.currentRoute.value.path).toBe(landing)
+    showSettings.value = false
+  })
+})

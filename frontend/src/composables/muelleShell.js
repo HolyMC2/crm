@@ -1,13 +1,36 @@
 import { computed, ref } from 'vue'
 import { call } from 'frappe-ui'
+import {
+  SHELL_MODULES,
+  bootScope,
+  mobileSlots,
+  moduleEnabled,
+  moduleForPath,
+  railModules,
+} from '@/vendor/muelle-shell/contracts'
 
+// One boot call (crm.api.shell.boot → ShellBoot) for every shell route; the
+// cache never crosses site or user.
 export const shellBoot = ref(null)
 export const shellError = ref('')
 export const shellLoading = ref(false)
 let pending
 let scope
+
+function currentScope() {
+  const cookieUser =
+    document.cookie
+      .split('; ')
+      .find((part) => part.startsWith('user_id='))
+      ?.slice(8) || ''
+  return bootScope(
+    window.site_name || location.host,
+    decodeURIComponent(cookieUser),
+  )
+}
+
 export function loadShell({ refresh = false } = {}) {
-  const key = `${window.site_name || location.host}:${document.cookie.split('; ').find((x) => x.startsWith('user_id=')) || ''}`
+  const key = currentScope()
   if (key !== scope) {
     shellBoot.value = null
     scope = key
@@ -16,7 +39,7 @@ export function loadShell({ refresh = false } = {}) {
   if (pending) return pending
   shellLoading.value = true
   shellError.value = ''
-  pending = call('crm.api.contactos.get_capabilities')
+  pending = call('crm.api.shell.boot')
     .then((data) => {
       if (scope === key) shellBoot.value = data
       return data
@@ -34,22 +57,54 @@ export function loadShell({ refresh = false } = {}) {
     })
   return pending
 }
-// Future modules register in this one shell; only delivered, authorized modules launch.
+
+// Modules this frontend hosts, in contracts order. Each adds its key here and
+// its routes in router.js; the boot decides whether it is enabled.
+const HOSTED = ['contactos', 'ventas']
+const ROUTE_HOME = { contactos: '/contactos', ventas: '/ventas' }
+
+export const hostedModules = SHELL_MODULES.filter((meta) =>
+  HOSTED.includes(meta.key),
+).map((meta) => ({ ...meta, to: ROUTE_HOME[meta.key] || meta.basePath }))
+
 export const shellModules = computed(() =>
-  [
-    {
-      key: 'contactos',
-      label: 'Contactos',
-      icon: 'users',
-      to: '/contactos',
-      enabled: Boolean(shellBoot.value?.capabilities?.directory),
-    },
-    {
-      key: 'ventas',
-      label: 'Ventas',
-      icon: 'briefcase',
-      to: '/',
-      enabled: Boolean(shellBoot.value?.sales_access),
-    },
-  ].filter((module) => module.enabled),
+  railModules(hostedModules, (module) =>
+    moduleEnabled(shellBoot.value, module.key),
+  ),
 )
+
+/** The module owning a route: Contactos by its routes, every other CRM page is Ventas. */
+export function moduleKeyFor(route) {
+  if (route?.meta?.app) return route.meta.app
+  return moduleForPath(route?.path || '', hostedModules)?.key || 'ventas'
+}
+
+export const navSlots = computed(() => {
+  const enabled = shellModules.value.map((module) => module.key)
+  return mobileSlots(
+    shellBoot.value?.user?.nav_role,
+    enabled,
+    shellBoot.value?.mobile_slots,
+  )
+    .map((key) => shellModules.value.find((module) => module.key === key))
+    .filter(Boolean)
+})
+
+export async function saveNavSlots(keys) {
+  const saved = await call('crm.api.shell.save_mobile_slots', {
+    slots: JSON.stringify(keys),
+  })
+  if (shellBoot.value)
+    shellBoot.value = { ...shellBoot.value, mobile_slots: saved }
+  return saved
+}
+
+// The settings modal lives in the Ventas runtime: enter Ventas first when the
+// worker opens it from another module (desktop account menu or phone Más).
+export async function openSalesSettings(router) {
+  if (moduleKeyFor(router.currentRoute.value) !== 'ventas')
+    await router.push('/ventas')
+  // Lazy: a static import pulls the settings chunk into the entry bundle.
+  const { showSettings } = await import('@/composables/settings')
+  showSettings.value = true
+}

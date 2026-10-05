@@ -49,7 +49,6 @@ import { useCrmOnboarding } from '@/composables/onboarding'
 import { setConfig, useTheme } from 'frappe-ui'
 import { IntermediateStepModal } from 'frappe-ui/frappe'
 import {
-  computed,
   defineAsyncComponent,
   nextTick,
   onMounted,
@@ -61,7 +60,6 @@ import { useRoute } from 'vue-router'
 import { syncBrandFavicon } from '@/stores/settings'
 import { prefetchHotChunks } from '@/utils/prefetch'
 import { initTelemetry } from '@/composables/telemetry'
-import { isMobile } from '@/composables/breakpoint'
 import { showSettings } from '@/composables/settings'
 const Settings = defineAsyncComponent(
   () => import('@/components/Settings/Settings.vue'),
@@ -91,15 +89,11 @@ watch(
 const { setTheme } = useTheme()
 setTheme(localStorage.getItem('theme') || 'light')
 
-const MobileLayout = defineAsyncComponent(
-  () => import('@/components/Layouts/MobileLayout.vue'),
+// The Muelle shell owns the rail / phone nav; Ventas adds its sidebar and
+// page header (DocoNavRail, MobileTabBar and the drawer are retired).
+const Layout = defineAsyncComponent(
+  () => import('@/components/shell/VentasFrame.vue'),
 )
-const DesktopLayout = defineAsyncComponent(
-  () => import('@/components/Layouts/DesktopLayout.vue'),
-)
-// Reactive breakpoint (audit LOW-3): window.innerWidth alone froze the choice at
-// boot — rotating a tablet across 640px never swapped layouts until a route change.
-const Layout = computed(() => (isMobile.value ? MobileLayout : DesktopLayout))
 
 setConfig('systemTimezone', window.timezone?.system || null)
 setConfig('localTimezone', window.timezone?.user || null)

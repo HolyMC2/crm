@@ -94,20 +94,22 @@ vi.mock('@/components/shell/MuelleShell.vue', async () => {
     },
   }
 })
-vi.mock('@/components/Layouts/DocoNavRail.vue', () => ({
+// Ventas frame markers: its desktop sections sidebar and its phone strip
+// (the shell's rail and bottom nav are mocked with MuelleShell above).
+vi.mock('@/components/shell/VentasSidebar.vue', () => ({
   default: { render: () => h('nav', { 'data-testid': 'desktop-rail' }) },
 }))
 vi.mock('@/components/Mobile/MobileSidebar.vue', () => ({
   default: { render: () => null },
 }))
-vi.mock('@/components/Mobile/MobileAppHeader.vue', () => ({
-  default: { render: () => h('header', { 'data-testid': 'mobile-header' }) },
-}))
 vi.mock('@/components/Mobile/MobileTabBar.vue', () => ({
   default: { render: () => h('nav', { 'data-testid': 'mobile-tabs' }) },
 }))
-vi.mock('@/components/Mobile/OutboxStrip.vue', () => ({
+vi.mock('@/components/Telephony/CallUI.vue', () => ({
   default: { render: () => null },
+}))
+vi.mock('@/components/Mobile/OutboxStrip.vue', () => ({
+  default: { render: () => h('header', { 'data-testid': 'mobile-header' }) },
 }))
 vi.mock('@/components/Controls/Link.vue', () => ({
   default: { render: () => null },
@@ -128,8 +130,7 @@ import Inquiries from '@/pages/Inquiries.vue'
 // the test measures rendering rather than cold imports under a busy suite.
 await Promise.all([
   import('@/components/Layouts/CrmRuntime.vue'),
-  import('@/components/Layouts/DesktopLayout.vue'),
-  import('@/components/Layouts/MobileLayout.vue'),
+  import('@/components/shell/VentasFrame.vue'),
 ])
 
 let app, root
@@ -184,7 +185,6 @@ describe('native inquiry responsive layout rendering', () => {
     await expectInquiryContent('desktop-rail')
     resize(390)
     await expectInquiryContent('mobile-header')
-    expect(root.querySelector('[data-testid="mobile-tabs"]')).not.toBeNull()
     expect(
       root.querySelector('.page-in [data-testid="inquiries-page"]'),
     ).not.toBeNull()

@@ -181,7 +181,8 @@ import { Device } from '@twilio/voice-sdk'
 import { useDraggable, useWindowSize } from '@vueuse/core'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Avatar, call, createResource } from 'frappe-ui'
-import { ref, watch } from 'vue'
+import { registerCallSwapBlocker } from '@/utils/callSwapBlocker'
+import { onBeforeUnmount, ref, watch } from 'vue'
 
 const { capture } = useTelemetry()
 const { updateOnboardingStep } = useCrmOnboarding()
@@ -198,6 +199,16 @@ let muted = ref(false)
 let callPopup = ref(null)
 let counterUp = ref(null)
 let callStatus = ref('')
+// A silent update must not reload over a ringing, live or minimized call;
+// the blocker outlives this component while the call does.
+const releaseSwap = registerCallSwapBlocker('twilio-call', () => ({
+  call: _call,
+  onCall: onCall.value,
+  calling: calling.value,
+  popup: showCallPopup.value,
+  minimized: showSmallCallWindow.value,
+}))
+onBeforeUnmount(releaseSwap)
 
 const phoneNumber = ref('')
 

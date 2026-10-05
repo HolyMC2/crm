@@ -7,25 +7,24 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development'
-  // Deploy-staleness guard: every build gets a unique id, baked into the bundle
-  // (__BUILD_ID__) AND emitted as build.json next to it. Long-lived tabs compare
-  // the two (main.js) and self-reload after a deploy — no reliance on the SW.
-  const BUILD_ID = String(Date.now())
+  // Silent update: version.json names the entry chunk of this build; open
+  // tabs compare it with the entry they booted from (@muelle/live-sync bundle
+  // watcher in main.js) and move to a new build at a safe moment.
   const config = {
-    define: {
-      __BUILD_ID__: JSON.stringify(BUILD_ID),
-    },
     plugins: [
       vue(),
       vueJsx(),
       {
-        name: 'emit-build-id',
+        name: 'emit-version-json',
         apply: 'build',
-        generateBundle() {
+        generateBundle(_, bundle) {
+          const entry = Object.values(bundle).find(
+            (chunk) => chunk.type === 'chunk' && chunk.isEntry,
+          )
           this.emitFile({
             type: 'asset',
-            fileName: 'build.json',
-            source: JSON.stringify({ id: BUILD_ID }),
+            fileName: 'version.json',
+            source: JSON.stringify({ entry: entry?.fileName || null }),
           })
         },
       },
@@ -117,6 +116,12 @@ export default defineConfig(async ({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
+        // Single-component entry points, so form/dialog widgets that the
+        // first screen does not need can load lazily (src/utils/lazyGlobals.js).
+        'frappe-ui-components': path.resolve(
+          __dirname,
+          'node_modules/frappe-ui/src/components',
+        ),
       },
       // the editor packages must resolve to one copy each: tiptap imports
       // `@tiptap/pm/model` while prosemirror-state/transform/tables import bare

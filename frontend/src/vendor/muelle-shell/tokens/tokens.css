@@ -1,0 +1,109 @@
+/* Vendored from muelle/workspace/packages/tokens@0.1.0 (b144ac6b7530). DO NOT EDIT:
+   change the package, then run its scripts/vendor.mjs against this directory. */
+/* @muelle/tokens — generated from frappe-ui 1.0.0-beta.29 and the #171717 palette. DO NOT EDIT: run `pnpm run build:css`. */
+:root {
+  color-scheme: light;
+  --muelle-surface-base: #ffffff;
+  --muelle-surface-gray-1: #f8f8f8;
+  --muelle-surface-gray-2: #f3f3f3;
+  --muelle-surface-gray-3: #ededed;
+  --muelle-surface-gray-4: #e2e2e2;
+  --muelle-surface-gray-7: #7c7c7c;
+  --muelle-ink-base: #ffffff;
+  --muelle-ink-gray-4: #999999;
+  --muelle-ink-gray-5: #7c7c7c;
+  --muelle-ink-gray-6: #525252;
+  --muelle-ink-gray-7: #383838;
+  --muelle-ink-gray-8: #171717;
+  --muelle-ink-gray-9: #0f0f0f;
+  --muelle-outline-gray-1: #ededed;
+  --muelle-outline-gray-2: #e2e2e2;
+  --muelle-outline-gray-3: #c7c7c7;
+  --muelle-outline-gray-4: #999999;
+  --muelle-status-gray-bg: #f3f3f3;
+  --muelle-status-gray-ink: #525252;
+  --muelle-status-blue-bg: #e6f4ff;
+  --muelle-status-blue-ink: #005cad;
+  --muelle-status-orange-bg: #fff4d3;
+  --muelle-status-orange-ink: #91400d;
+  --muelle-status-red-bg: #ffe7e7;
+  --muelle-status-red-ink: #b41d1d;
+  --muelle-status-green-bg: #e4faeb;
+  --muelle-status-green-ink: #14804d;
+  --muelle-accent: #171717;
+  --muelle-accent-ink: #ffffff;
+  --muelle-accent-soft: #e8e8e8;
+  --muelle-accent-soft-ink: #171717;
+  --muelle-font: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --muelle-text-xs: 12px;
+  --muelle-text-sm: 13px;
+  --muelle-text-base: 14px;
+  --muelle-text-md: 15px;
+  --muelle-text-lg: 16px;
+  --muelle-text-xl: 17px;
+  --muelle-text-2xl: 18px;
+  --muelle-text-3xl: 20px;
+  --muelle-text-4xl: 24px;
+  --muelle-weight-regular: 420;
+  --muelle-weight-medium: 500;
+  --muelle-weight-semibold: 600;
+  --muelle-weight-bold: 700;
+  --muelle-weight-black: 800;
+  --muelle-radius: 8px;
+  --muelle-radius-lg: 12px;
+  --muelle-radius-xl: 16px;
+  --muelle-radius-full: 9999px;
+  --muelle-touch-min: 44px;
+  --muelle-focus-ring: 2px solid var(--muelle-accent);
+  --muelle-focus-offset: 2px;
+  --m-fast: 120ms;
+  --m-fast-ease: cubic-bezier(0.2,0,0,1);
+  --m-base: 180ms;
+  --m-base-ease: cubic-bezier(0.2,0,0,1);
+  --m-sheet-in: 260ms;
+  --m-sheet-in-ease: cubic-bezier(0.05,0.7,0.1,1);
+  --m-out: 140ms;
+  --m-out-ease: cubic-bezier(0.3,0,0.8,0.15);
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --muelle-surface-base: #171717;
+  --muelle-surface-gray-1: #1f1f1f;
+  --muelle-surface-gray-2: #292929;
+  --muelle-surface-gray-3: #383838;
+  --muelle-surface-gray-4: #424242;
+  --muelle-surface-gray-7: #999999;
+  --muelle-ink-base: #171717;
+  --muelle-ink-gray-4: #7a7a7a;
+  --muelle-ink-gray-5: #7a7a7a;
+  --muelle-ink-gray-6: #999999;
+  --muelle-ink-gray-7: #afafaf;
+  --muelle-ink-gray-8: #d9d9d9;
+  --muelle-ink-gray-9: #f8f8f8;
+  --muelle-outline-gray-1: #242424;
+  --muelle-outline-gray-2: #383838;
+  --muelle-outline-gray-3: #424242;
+  --muelle-outline-gray-4: #575757;
+  --muelle-status-gray-bg: #292929;
+  --muelle-status-gray-ink: #999999;
+  --muelle-status-blue-bg: #0a2e5c;
+  --muelle-status-blue-ink: #76bef9;
+  --muelle-status-orange-bg: #452608;
+  --muelle-status-orange-ink: #e9a144;
+  --muelle-status-red-bg: #592222;
+  --muelle-status-red-ink: #ff7575;
+  --muelle-status-green-bg: #0e3521;
+  --muelle-status-green-ink: #7dc5a2;
+  --muelle-accent: #ededed;
+  --muelle-accent-ink: #16222a;
+  --muelle-accent-soft: #3e3e3e;
+  --muelle-accent-soft-ink: #ededed;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --m-fast: 80ms;
+    --m-base: 80ms;
+    --m-sheet-in: 80ms;
+    --m-out: 80ms;
+  }
+}

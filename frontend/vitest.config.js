@@ -44,6 +44,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'frappe-ui-components': path.resolve(
+        __dirname,
+        'node_modules/frappe-ui/src/components',
+      ),
     },
   },
 })

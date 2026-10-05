@@ -12,7 +12,13 @@ const globals = require('globals')
 
 export default [
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/public/dist/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/public/dist/**',
+      // byte-checked vendored packages (scripts/verify-vendor.mjs)
+      'src/vendor/muelle-shell/**',
+    ],
   },
   js.configs.recommended,
   ...ts.configs.recommended,

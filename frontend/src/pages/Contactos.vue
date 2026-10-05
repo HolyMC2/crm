@@ -629,6 +629,14 @@ async function fetchRows(restore = false) {
     if (own === generation) loading.value = false
   }
 }
+// Palette «New contact» and the PWA shortcut open the create dialog.
+watch(
+  () => route.query.create,
+  (value) => {
+    if (value) newIdentity.value = true
+  },
+  { immediate: true },
+)
 function remember() {
   if (scroller.value) state.scrollTop = scroller.value.scrollTop
   saveContactState(storage, scope, 'list', state)

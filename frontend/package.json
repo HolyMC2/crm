@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "NODE_OPTIONS=\"--max-old-space-size=${CRM_BUILD_HEAP_MB:-4096} ${NODE_OPTIONS:-}\" vite build --base=/assets/crm/frontend/ && cp ../crm/public/frontend/index.html ../crm/www/crm.html && node scripts/verify-pwa-build.mjs",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=${CRM_BUILD_HEAP_MB:-4096} ${NODE_OPTIONS:-}\" vite build --base=/assets/crm/frontend/ && cp ../crm/public/frontend/index.html ../crm/www/crm.html && node scripts/verify-pwa-build.mjs && node scripts/verify-bundle-budget.mjs",
     "copy-html-entry": "cp ../crm/public/frontend/index.html ../crm/www/crm.html",
     "serve": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "postinstall": "patch-package --error-on-fail && node scripts/verify-frappe-ui-patch.mjs",
-    "prebuild": "node scripts/verify-frappe-ui-patch.mjs",
+    "prebuild": "node scripts/verify-frappe-ui-patch.mjs && node scripts/verify-vendor.mjs",
     "pretest": "node scripts/verify-frappe-ui-patch.mjs",
     "pretest:run": "node scripts/verify-frappe-ui-patch.mjs",
     "pretest:coverage": "node scripts/verify-frappe-ui-patch.mjs"
