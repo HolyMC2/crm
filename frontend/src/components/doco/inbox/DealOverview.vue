@@ -184,7 +184,7 @@
               <li v-for="ro in repairs.data" :key="ro.name" class="py-3">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <a
-                    :href="tallerOrderHref(ro.name, doc.deal_name)"
+                    :href="orderHref(ro.name)"
                     class="font-semibold text-ink-green-8 underline"
                     >{{ ro.device_model || ro.name }}</a
                   ><span
@@ -261,12 +261,19 @@ import { reloadSalesSummary } from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
-import { tallerOrderHref } from '@/utils/repairOrders'
+import { repairOrderHref } from '@/utils/repairOrders'
 import DealConversations from './DealConversations.vue'
 import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 
 const props = defineProps({ name: { type: String, required: true } })
 defineEmits(['navigate'])
+// Bound to this Deal: the inbox URL can still name a Deal selected earlier.
+const orderHref = (name) =>
+  repairOrderHref(
+    name,
+    props.name,
+    `${window.location.pathname}${window.location.search}`,
+  )
 const { getUser } = usersStore(),
   stages = statusesStore(),
   { showModal } = useDoctypeModal()

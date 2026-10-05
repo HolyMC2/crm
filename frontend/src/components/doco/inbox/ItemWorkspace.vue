@@ -384,8 +384,8 @@
                       ? tallerOrderHref(doc.name)
                       : desk(doc.doctype, doc.name)
                   "
-                  target="_blank"
-                  rel="noopener"
+                  :target="doc.doctype === 'Repair Order' ? undefined : '_blank'"
+                  :rel="doc.doctype === 'Repair Order' ? undefined : 'noopener'"
                   class="text-sm font-medium text-ink-blue-link hover:underline"
                   >{{ doc.name }} ↗</a
                 >

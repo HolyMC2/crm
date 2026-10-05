@@ -85,6 +85,21 @@ afterEach(() => {
 })
 
 describe('Inbox item workspace', () => {
+  it('opens a repair in the same tab and other records in a new one', async () => {
+    call.mockImplementation(async (method) =>
+      method.endsWith('get_workspace')
+        ? workspace([doc('Repair Order', 'RO-7'), doc('Payment Entry', 'PE-1')])
+        : null,
+    )
+    mount()
+    await settle()
+    const link = (name) =>
+      [...root.querySelectorAll('a')].find((a) => a.textContent.includes(name))
+    expect(link('RO-7').getAttribute('href')).toMatch(/^\/taller\/orders\/RO-7/)
+    expect(link('RO-7').hasAttribute('target')).toBe(false)
+    expect(link('PE-1').getAttribute('target')).toBe('_blank')
+  })
+
   it('shows persisted ERP lines, not a chat search grid', async () => {
     call.mockImplementation(async (method) =>
       method.endsWith('get_workspace')

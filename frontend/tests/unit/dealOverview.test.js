@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   modal: vi.fn(),
   resources: [],
   reload: vi.fn(),
+  hasTaller: { value: false },
 }))
 vi.mock('frappe-ui', () => ({
   call: mocks.call,
@@ -21,7 +22,7 @@ vi.mock('@/composables/doctypeModal', () => ({
   useDoctypeModal: () => ({ showModal: mocks.modal }),
 }))
 vi.mock('@/composables/inbox', () => ({
-  hasTaller: { value: false },
+  hasTaller: mocks.hasTaller,
   salesDocsEnabled: { value: false },
   reloadQueue: mocks.reload,
 }))
@@ -42,13 +43,13 @@ afterEach(() => {
   cleanup.splice(0).forEach((fn) => fn())
   vi.clearAllMocks()
 })
-async function mount(doc = {}) {
+async function mount(doc = {}, repairs = []) {
   const record = reactive({
     data: { deal_owner: 'ana@example.invalid', ...doc },
     fetch: vi.fn(),
     loading: false,
   })
-  mocks.resources = [record, reactive({ data: [], fetch: vi.fn() })]
+  mocks.resources = [record, reactive({ data: repairs, fetch: vi.fn() })]
   const el = document.createElement('div')
   document.body.appendChild(el)
   const app = createApp(DealOverview, { name: 'DEAL-42' })
@@ -124,5 +125,24 @@ describe('deal overview follow-up workflow', () => {
     )
     expect(mocks.reload).not.toHaveBeenCalled()
     expect(ui.el.textContent).toContain('Confirmar presupuesto')
+  })
+})
+
+describe('deal overview repair links', () => {
+  afterEach(() => {
+    mocks.hasTaller.value = false
+    window.history.replaceState(null, '', '/')
+  })
+  it('returns to the Deal on screen, not the one the inbox URL first named', async () => {
+    mocks.hasTaller.value = true
+    // Entered with ?deal=DEAL-1, then DEAL-42 was selected in memory.
+    window.history.replaceState(null, '', '/crm/inbox?deal=DEAL-1&doctype=CRM%20Deal&stage=Abierto')
+    const ui = await mount({ deal_name: 'Ana' }, [{ name: 'RO-7', status: 'Recibido' }])
+    const href = new URL(ui.el.querySelector('a[href^="/taller/orders/RO-7"]').getAttribute('href'), 'https://x.invalid')
+    const back = new URL(href.searchParams.get('crm_return_to'), 'https://x.invalid')
+    expect(back.pathname).toBe('/crm/inbox')
+    expect(back.searchParams.get('deal')).toBe('DEAL-42')
+    expect(back.searchParams.get('stage')).toBe('Abierto')
+    expect(href.searchParams.has('return_to')).toBe(false)
   })
 })
