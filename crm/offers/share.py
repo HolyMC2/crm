@@ -106,6 +106,11 @@ def resolve(token):
 # Rate limiting (atomic, fail-closed) ------------------------------------------
 
 
+def _user_agent():
+	request = getattr(frappe.local, "request", None)
+	return ((request and request.headers.get("User-Agent")) or "")[:300]
+
+
 def client_ip():
 	return getattr(frappe.local, "request_ip", None) or "unknown"
 
@@ -270,7 +275,7 @@ def decide(token, decision, terms_hash, signer_name="", note=""):
 			"name": signer_name,
 			"note": note,
 			"ip": client_ip(),
-			"user_agent": (frappe.get_request_header("User-Agent") or "")[:300],
+			"user_agent": _user_agent(),
 			"terms_hash": doc.terms_hash,
 			"at": str(now_datetime()),
 		},
