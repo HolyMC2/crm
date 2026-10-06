@@ -1,0 +1,351 @@
+{#- Frappe's Jinja does not autoescape; every value on this public page must be escaped. #}
+{% autoescape true %}
+<!doctype html>
+<html lang="{{ lang or 'en' }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    {#- Generic unfurl: a forwarded link must not broadcast amounts, names or titles. #}
+    <title>{{ i18n.offer }}{% if offer.seller_company %} · {{ offer.seller_company }}{% endif %}</title>
+    <meta property="og:title" content="{{ i18n.offer }}" />
+    <meta property="og:description" content="" />
+    <style>
+      :root {
+        --ink-strong: oklch(0.168 0 0);
+        --ink: oklch(0.205 0 0);
+        --muted: oklch(0.586 0 0);
+        --border: oklch(0.913 0 0);
+        --bg: oklch(0.964 0 0);
+        --card: oklch(1 0 0);
+        --field: oklch(0.964 0 0);
+        --accent: oklch(0.205 0 0);
+        --accent-ink: oklch(1 0 0);
+        --danger: oklch(0.507 0.165 25.286);
+        --warn-bg: oklch(0.973 0.05 95);
+        --warn-ink: oklch(0.42 0.09 75);
+        --ok-bg: oklch(0.965 0.03 155.987);
+        --ok-ink: oklch(0.4 0.09 155);
+        --mine: oklch(0.955 0.012 230);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink-strong: oklch(0.97 0 0);
+          --ink: oklch(0.9 0 0);
+          --muted: oklch(0.68 0 0);
+          --border: oklch(0.32 0 0);
+          --bg: oklch(0.18 0 0);
+          --card: oklch(0.22 0 0);
+          --field: oklch(0.27 0 0);
+          --accent: oklch(0.95 0 0);
+          --accent-ink: oklch(0.18 0 0);
+          --warn-bg: oklch(0.32 0.05 85);
+          --warn-ink: oklch(0.92 0.06 90);
+          --ok-bg: oklch(0.3 0.04 155);
+          --ok-ink: oklch(0.9 0.06 155);
+          --mine: oklch(0.28 0.02 230);
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+        background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased;
+        padding: 32px 16px 48px; line-height: 1.45;
+      }
+      .wrap { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
+      @media (max-width: 820px) { .wrap { grid-template-columns: 1fr; } body { padding-top: 16px; } }
+      .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+      aside.card { position: sticky; top: 16px; }
+      @media (max-width: 820px) { aside.card { position: static; } }
+      .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-weight: 600; color: var(--ink-strong); }
+      .brand img { max-height: 32px; max-width: 120px; }
+      .big { font-size: 30px; font-weight: 700; color: var(--ink-strong); letter-spacing: -0.02em; margin: 0 0 4px; overflow-wrap: anywhere; }
+      .muted { color: var(--muted); font-size: 13px; }
+      .stack > * + * { margin-top: 10px; }
+      button, .btn {
+        font: inherit; font-size: 14px; font-weight: 500; border-radius: 8px; padding: 9px 14px; cursor: pointer;
+        border: 1px solid var(--border); background: var(--card); color: var(--ink); width: 100%; text-align: center; text-decoration: none; display: inline-block;
+      }
+      button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+      button:disabled { opacity: 0.6; cursor: default; }
+      .banner { border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+      .banner.warn { background: var(--warn-bg); color: var(--warn-ink); }
+      .banner.ok { background: var(--ok-bg); color: var(--ok-ink); }
+      .banner a { color: inherit; font-weight: 600; }
+      h1 { font-size: 26px; margin: 0; color: var(--ink-strong); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+      h2 { font-size: 17px; margin: 28px 0 10px; color: var(--ink-strong); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+      .head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+      .chip { font-size: 12px; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; color: var(--muted); white-space: nowrap; }
+      .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 18px; }
+      .meta div span { display: block; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th { text-align: left; font-weight: 500; color: var(--muted); font-size: 13px; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+      td { padding: 12px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      td.n, th.n { text-align: right; white-space: nowrap; }
+      td .was { text-decoration: line-through; color: var(--muted); font-size: 12px; display: block; }
+      @media (max-width: 560px) {
+        thead { display: none; }
+        tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        td { border: 0; padding: 0; }
+        td.desc { grid-column: 1 / -1; font-weight: 500; }
+        td.qty::before { content: attr(data-label) " "; color: var(--muted); }
+        td.rate, td.disc { color: var(--muted); font-size: 13px; }
+        td.amount { grid-column: 2; grid-row: 2; }
+      }
+      .totals { margin-left: auto; max-width: 360px; margin-top: 12px; }
+      .totals div { display: flex; justify-content: space-between; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+      .totals .grand { font-weight: 700; color: var(--ink-strong); }
+      .terms { white-space: pre-wrap; font-size: 14px; }
+      .msg { display: flex; flex-direction: column; margin-top: 12px; }
+      .msg .bubble { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 85%; }
+      .msg.mine { align-items: flex-end; }
+      .msg.mine .bubble { background: var(--mine); }
+      .msg .who { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+      textarea, input[type="text"] {
+        width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: var(--field);
+        border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+      }
+      textarea { min-height: 80px; resize: vertical; }
+      label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+      .row { display: flex; gap: 8px; margin-top: 12px; }
+      .row button { width: auto; }
+      .error { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 1em; }
+      dialog { border: 1px solid var(--border); border-radius: 14px; padding: 22px; max-width: 440px; width: calc(100% - 32px); background: var(--card); color: var(--ink); }
+      dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+      dialog h3 { margin: 0 0 4px; color: var(--ink-strong); }
+      .nojs-hide { display: none; }
+      @media print {
+        body { background: #fff; padding: 0; }
+        .wrap { display: block; }
+        .card { border: 0; padding: 0; }
+        aside .actions, .no-print, dialog { display: none !important; }
+        aside.card { position: static; margin-bottom: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <aside class="card">
+        <div class="brand">
+          {% if offer.seller_logo %}<img src="{{ offer.seller_logo }}" alt="" />{% endif %}
+          <span>{{ offer.seller_company }}</span>
+        </div>
+        <p class="big">{{ total }}</p>
+        <p class="muted">{{ i18n.valid_until }} {{ valid_until }}</p>
+        <div class="stack actions nojs-hide" id="actions">
+          {% if offer.can_decide %}
+          <button class="primary" type="button" data-open="accept-dialog">{{ i18n.accept }}</button>
+          <button type="button" data-open="decline-dialog">{{ i18n.decline }}</button>
+          {% endif %}
+          <button type="button" id="print-btn">{{ i18n.print }}</button>
+        </div>
+        {% if offer.seller_contact %}
+        <div style="margin-top: 22px">
+          <span class="muted">{{ i18n.your_contact }}</span>
+          <div>{{ offer.seller_contact }}</div>
+        </div>
+        {% endif %}
+      </aside>
+
+      <main class="card">
+        {% if offer.decision == "Accepted" %}
+        <div class="banner ok">{{ i18n.accepted }} {{ i18n.accepted_by }}</div>
+        {% elif offer.decision == "Rejected" %}
+        <div class="banner warn">{{ i18n.rejected }}</div>
+        {% elif offer.status == "Expired" %}
+        <div class="banner warn">{{ i18n.expired }}</div>
+        {% elif offer.status == "Superseded" %}
+        <div class="banner warn">
+          {{ i18n.superseded }}
+          {% if offer.newer_url %}<a href="{{ offer.newer_url }}">{{ i18n.see_newer }}</a>{% else %}{{ i18n.contact_us }}{% endif %}
+        </div>
+        {% endif %}
+
+        <div class="head">
+          <div>
+            <span class="muted">{{ i18n.offer }} · {{ i18n.revision }}</span>
+            <h1>{{ offer.title }}</h1>
+          </div>
+        </div>
+        <div class="meta">
+          {% if offer.customer_name %}
+          <div><span class="muted">{{ i18n.prepared_for }}</span><span>{{ offer.customer_name }}</span></div>
+          {% endif %}
+          <div><span class="muted">{{ i18n.valid_until }}</span><span>{{ valid_until }}</span></div>
+        </div>
+
+        <h2>{{ i18n.description }}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.description }}</th>
+              <th class="n">{{ i18n.quantity }}</th>
+              <th class="n">{{ i18n.unit_price }}</th>
+              <th class="n">{{ i18n.discount }}</th>
+              <th class="n">{{ i18n.amount }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td class="desc">{{ row.name }}</td>
+              <td class="n qty" data-label="{{ i18n.quantity }}">{{ row.qty }}</td>
+              <td class="n rate">{{ row.rate }}</td>
+              <td class="n disc">{{ row.discount }}</td>
+              <td class="n amount">{% if row.list_amount %}<span class="was">{{ row.list_amount }}</span>{% endif %}{{ row.amount }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="totals">
+          {% if gross_total %}<div><span>{{ i18n.subtotal }}</span><span>{{ gross_total }}</span></div>{% endif %}
+          <div class="grand"><span>{{ i18n.total }}</span><span>{{ total }}</span></div>
+        </div>
+        <p class="muted">{{ i18n.tax_note }}</p>
+
+        {% if offer.terms %}
+        <h2>{{ i18n.terms }}</h2>
+        <div class="terms">{{ offer.terms }}</div>
+        {% endif %}
+
+        <h2 class="no-print">{{ i18n.history }}</h2>
+        <div class="no-print" id="messages">
+          {% for m in messages %}
+          <div class="msg{% if m.from_customer %} mine{% endif %}">
+            <span class="who">{% if m.from_customer %}{{ i18n.you }}{% else %}{{ m.author or offer.seller_company }}{% endif %} · {{ m.at }}</span>
+            <div class="bubble">{{ m.message }}</div>
+          </div>
+          {% else %}
+          <p class="muted">{{ i18n.no_messages }}</p>
+          {% endfor %}
+          <form id="message-form" class="nojs-hide" style="margin-top: 16px">
+            <textarea id="message" maxlength="2000" placeholder="{{ i18n.write }}" required></textarea>
+            <div class="row"><button class="primary" type="submit">{{ i18n.send }}</button></div>
+            <div class="error" id="message-error" role="alert"></div>
+          </form>
+        </div>
+      </main>
+    </div>
+
+    {% if offer.can_decide %}
+    <dialog id="accept-dialog">
+      <form method="dialog" id="accept-form">
+        <h3>{{ i18n.accept }}</h3>
+        <p class="muted">{{ offer.title }} · {{ total }}</p>
+        <label for="signer">{{ i18n.sign_label }}</label>
+        <input type="text" id="signer" maxlength="140" autocomplete="name" required />
+        <label for="accept-note">{{ i18n.note_label }}</label>
+        <textarea id="accept-note" maxlength="2000"></textarea>
+        <div class="error" id="accept-error" role="alert"></div>
+        <div class="row">
+          <button class="primary" type="submit">{{ i18n.confirm_accept }}</button>
+          <button type="button" data-close>{{ i18n.cancel }}</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="decline-dialog">
+      <form method="dialog" id="decline-form">
+        <h3>{{ i18n.decline }}</h3>
+        <label for="decline-note">{{ i18n.decline_reason }}</label>
+        <textarea id="decline-note" maxlength="2000"></textarea>
+        <div class="error" id="decline-error" role="alert"></div>
+        <div class="row">
+          <button class="primary" type="submit">{{ i18n.confirm_decline }}</button>
+          <button type="button" data-close>{{ i18n.cancel }}</button>
+        </div>
+      </form>
+    </dialog>
+    {% endif %}
+
+    <script>
+      (function () {
+        var TOKEN = {{ token | tojson }};
+        var TERMS = {{ offer.terms_hash | tojson }};
+        var CSRF = {{ csrf_token | tojson }};
+        var ERROR = {{ i18n.error | tojson }};
+        var BASE = "/api/method/crm.api.offers.";
+
+        Array.prototype.forEach.call(document.querySelectorAll(".nojs-hide"), function (el) {
+          el.classList.remove("nojs-hide");
+        });
+
+        function post(method, body) {
+          var data = new URLSearchParams(Object.assign({ token: TOKEN }, body));
+          return fetch(BASE + method, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "X-Frappe-CSRF-Token": CSRF, Accept: "application/json" },
+            body: data,
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (json) {
+              if (r.ok) return json;
+              var msg = ERROR;
+              try {
+                var list = JSON.parse(json._server_messages || "[]");
+                if (list.length) msg = JSON.parse(list[0]).message || msg;
+              } catch (e) {}
+              throw new Error(msg);
+            });
+          });
+        }
+
+        function submitting(form, errorEl, method, body) {
+          var buttons = form.querySelectorAll("button");
+          Array.prototype.forEach.call(buttons, function (b) { b.disabled = true; });
+          errorEl.textContent = "";
+          return post(method, body)
+            .then(function () { window.location.reload(); })
+            .catch(function (e) {
+              errorEl.textContent = e.message;
+              Array.prototype.forEach.call(buttons, function (b) { b.disabled = false; });
+            });
+        }
+
+        document.getElementById("print-btn").addEventListener("click", function () { window.print(); });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-open]"), function (b) {
+          b.addEventListener("click", function () { document.getElementById(b.dataset.open).showModal(); });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function (b) {
+          b.addEventListener("click", function () { b.closest("dialog").close(); });
+        });
+
+        var accept = document.getElementById("accept-form");
+        if (accept) {
+          accept.addEventListener("submit", function (ev) {
+            ev.preventDefault();
+            submitting(accept, document.getElementById("accept-error"), "customer_decide", {
+              decision: "Accepted",
+              terms_hash: TERMS,
+              signer_name: document.getElementById("signer").value,
+              note: document.getElementById("accept-note").value,
+            });
+          });
+        }
+        var decline = document.getElementById("decline-form");
+        if (decline) {
+          decline.addEventListener("submit", function (ev) {
+            ev.preventDefault();
+            submitting(decline, document.getElementById("decline-error"), "customer_decide", {
+              decision: "Rejected",
+              terms_hash: TERMS,
+              note: document.getElementById("decline-note").value,
+            });
+          });
+        }
+        var messageForm = document.getElementById("message-form");
+        messageForm.addEventListener("submit", function (ev) {
+          ev.preventDefault();
+          submitting(messageForm, document.getElementById("message-error"), "customer_message", {
+            message: document.getElementById("message").value,
+          });
+        });
+
+        // Counted here, not on page load: link previews don't run scripts.
+        post("customer_viewed", {}).catch(function () {});
+      })();
+    </script>
+  </body>
+</html>
+{% endautoescape %}

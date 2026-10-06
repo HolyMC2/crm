@@ -63,3 +63,46 @@ def create_erp_quotation(name: str, review_hash: str, review_note: str = ""):
 	from crm.integrations.erpnext.offers import create_erp_quotation
 
 	return create_erp_quotation(name, review_hash, review_note)
+
+
+@frappe.whitelist()
+def get_share_state(name: str):
+	from crm.offers import share
+
+	return share.link_state(name)
+
+
+@frappe.whitelist(methods=["POST"])
+def share_link(name: str, rotate: bool = False):
+	from crm.offers import share
+
+	return share.share(name, frappe.utils.sbool(rotate))
+
+
+@frappe.whitelist(methods=["POST"])
+def reply_to_customer(name: str, message: str):
+	from crm.offers import share
+
+	return share.reply(name, message)
+
+
+# Customer page actions: the token is the capability; see crm.offers.share.
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def customer_decide(token: str, decision: str, terms_hash: str, signer_name: str = "", note: str = ""):
+	from crm.offers import share
+
+	return share.decide(token, decision, terms_hash, signer_name, note)
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def customer_message(token: str, message: str):
+	from crm.offers import share
+
+	return share.post_message(token, message)
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def customer_viewed(token: str):
+	from crm.offers import share
+
+	return share.record_view(token)

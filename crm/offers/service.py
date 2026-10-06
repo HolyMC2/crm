@@ -270,12 +270,18 @@ def record_decision(name, decision, channel, evidence, modified):
 	):
 		return dto(doc)
 	_stale(doc, modified)
+	return dto(decide(doc, decision, channel, evidence, frappe.session.user))
+
+
+def decide(doc, decision, channel, evidence, actor, ignore_permissions=False):
+	"""Record a customer decision on a locked offer; the one path for staff and online decisions."""
 	_applicable(doc)
 	if effective_status(doc) != "Issued":
 		_fail("Only a current, unexpired issued offer can receive a customer decision.")
-	doc.status, doc.decision_by, doc.decision_at = decision, frappe.session.user, now_datetime()
+	doc.status, doc.decision_by, doc.decision_at = decision, actor, now_datetime()
 	doc.decision_channel, doc.decision_evidence = channel, evidence
-	return dto(_save(doc))
+	doc.flags.ignore_permissions = ignore_permissions
+	return _save(doc)
 
 
 def revise(name, request_id):

@@ -197,7 +197,7 @@
    "fieldtype": "Select",
    "label": "Decision Channel",
    "read_only": 1,
-   "options": "\nEmail\nPhone\nWhatsApp\nIn Person\nOther"
+   "options": "\nEmail\nPhone\nWhatsApp\nIn Person\nOther\nOnline"
   },
   {
    "fieldname": "decision_evidence",
@@ -346,5 +346,6 @@
  ],
  "actions": [],
  "links": [],
- "states": []
+ "states": [],
+ "modified": "2026-10-05 21:00:00.000000"
 }

@@ -1,0 +1,82 @@
+{
+ "doctype": "DocType",
+ "name": "CRM Offer Message",
+ "module": "FCRM",
+ "engine": "InnoDB",
+ "autoname": "hash",
+ "allow_rename": 0,
+ "description": "Messages exchanged on an offer's customer page. Written only by crm.offers.share.",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "field_order": [
+  "offer",
+  "deal",
+  "direction",
+  "author",
+  "message",
+  "client_ip"
+ ],
+ "fields": [
+  {
+   "fieldname": "offer",
+   "fieldtype": "Link",
+   "label": "Offer",
+   "read_only": 1,
+   "options": "CRM Offer",
+   "reqd": 1,
+   "search_index": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "deal",
+   "fieldtype": "Link",
+   "label": "Deal",
+   "read_only": 1,
+   "options": "CRM Deal",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "direction",
+   "fieldtype": "Select",
+   "label": "Direction",
+   "read_only": 1,
+   "options": "Customer\nSeller",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "author",
+   "fieldtype": "Link",
+   "label": "Seller",
+   "read_only": 1,
+   "options": "User"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "label": "Message",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "client_ip",
+   "fieldtype": "Data",
+   "label": "Client IP",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "modified": "2026-10-05 21:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": []
+}

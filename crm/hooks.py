@@ -71,6 +71,7 @@ doctype_js = {
 website_route_rules = [
 	{"from_route": "/crm/<path:app_path>", "to_route": "crm"},
 	{"from_route": "/crm-form/<route>", "to_route": "crm_form"},
+	{"from_route": "/o/<token>", "to_route": "crm_offer"},
 ]
 
 # Generators
@@ -170,6 +171,8 @@ filter_shared_documents = {
 	"WhatsApp Message": "crm.permissions.whatsapp_read.filter_shared_messages",
 	"CRM Notification": "crm.fcrm.doctype.crm_notification.crm_notification.filter_shared_documents",
 	"CRM Offer": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Offer Link": "crm.pipeline.services.configuration.deny_shared_documents",
+	"CRM Offer Message": "crm.pipeline.services.configuration.deny_shared_documents",
 	"CRM Lead": "crm.pipeline.services.configuration.filter_shared_documents",
 	"CRM Deal": "crm.pipeline.services.configuration.filter_shared_documents",
 	"CRM Pipeline": "crm.pipeline.services.configuration.filter_shared_documents",
