@@ -109,3 +109,21 @@ refusal, revised-offer banner, accept happy path + terms-hash mismatch + double 
 reject, message creates deal timeline entry + notification, rate limit trips and fails closed when cache
 raises, XSS escaped, view throttling, seller endpoints permission-checked, works with erpnext absent
 (`erp_available()` False path).
+
+## As built (2026-10-05)
+
+- `crm/offers/share.py` owns tokens, the exposure contract (`PUBLIC_KEYS`), guest actions and
+  seller link actions; `crm/www/crm_offer.{py,html}` is the page (route `/o/<token>`);
+  endpoints in `crm/api/offers.py` (`customer_*` are guest, `share_link`/`get_share_state`/
+  `reply_to_customer` are seller).
+- Link and view state: **CRM Offer Link** (one per revision; sha256 lookup + Password copy).
+  Messages: **CRM Offer Message**. Both writable only through `share.py` (`guard_write`).
+  Customer activity never saves the CRM Offer, so the seller's stale-check stays meaningful.
+- Online decisions go through `service.decide` (shared with `record_decision`) with
+  `decision_by = "Guest"`, channel `Online`, JSON evidence (typed name, note, IP, user agent,
+  terms hash). Staff cannot pick `Online`.
+- Views are counted by the page's script POST (`customer_viewed`), so link unfurlers don't count.
+- Frappe's Jinja does not autoescape: the template wraps itself in `{% autoescape true %}`.
+- `CRMOffer.has_permission` now honours a server-set `ignore_permissions` (as Frappe's base does).
+- Taxes are not on CRM Offers; the page says amounts are pre-tax proposal amounts. Payment
+  (Payment Request / Mercado Pago) is not wired: out of scope for this lane.
