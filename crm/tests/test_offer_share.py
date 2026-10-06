@@ -6,6 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, nowdate
+from werkzeug.datastructures import Headers
 
 from crm.api import offers
 from crm.offers import service, share
@@ -148,9 +149,8 @@ class TestOfferShare(OfferFixture, IntegrationTestCase):
 		from crm.www import crm_offer
 
 		context = frappe._dict()
-		frappe.local.response_headers = (
-			frappe.local.response_headers or __import__("werkzeug.datastructures").datastructures.Headers()
-		)
+		# Outside a request, frappe.local has no response headers unless an earlier test made them.
+		frappe.local.response_headers = getattr(frappe.local, "response_headers", None) or Headers()
 		crm_offer.get_context(context)
 		return context
 
