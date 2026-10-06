@@ -12,7 +12,8 @@ ENTRY = re.compile(r'^(?:msgctxt "(?P<ctx>(?:[^"\\]|\\.)*)"\n)?msgid "(?P<id>(?:
 
 def duplicates(path):
 	seen, dupes = {}, []
-	text = open(path, encoding="utf-8").read()
+	with open(path, encoding="utf-8") as catalog:
+		text = catalog.read()
 	for match in ENTRY.finditer(text):
 		key = (match["ctx"], match["id"])
 		if not key[1]:
