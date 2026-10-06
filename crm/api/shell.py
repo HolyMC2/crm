@@ -10,7 +10,20 @@ import frappe
 from frappe import _
 
 MOBILE_SLOTS_DEFAULT = "muelle_mobile_slots"
-MODULE_KEYS = ("hoy", "pendientes", "agenda", "contactos", "ventas", "compras", "archivos", "avisos")
+MODULE_KEYS = (
+	"hoy",
+	"pendientes",
+	"agenda",
+	"contactos",
+	"ventas",
+	"cobranza",
+	"compras",
+	"gastos",
+	"productos",
+	"garantias",
+	"archivos",
+	"avisos",
+)
 # Doco puesto → phone bottom-nav class (contracts registry NavRole).
 NAV_ROLES = {"Cajero": "vendedor", "Técnico": "recepcion", "Encargado": "dueno", "Dueño": "dueno"}
 

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.1.0 (af7f823620cb). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.2.0 (cd63cbd0639f). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // One keyboard map for every Muelle SPA (spec §3.3, §8.2). ⌘K / Ctrl+K is the
 // global palette everywhere. Shortcuts never fire while typing unless they

@@ -1,6 +1,8 @@
 """One shell boot for every Muelle route; providers never grant access."""
 
+import re
 import sys
+from pathlib import Path
 from unittest import TestCase, skipIf
 from unittest.mock import patch
 
@@ -76,6 +78,13 @@ class TestShellBoot(TestCase):
 		)
 		self.assertEqual(saved, ["ventas", "contactos", "hoy", "agenda"])
 		self.assertEqual(shell.boot()["mobile_slots"], saved)
+
+	def test_module_keys_follow_the_contracts_registry(self):
+		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
+		if not registry.exists():
+			self.skipTest("frontend sources are not in this checkout")
+		catalog = registry.read_text().split("export const SHELL_MODULES", 1)[1].split("])", 1)[0]
+		self.assertEqual(tuple(re.findall(r"key: '([a-z]+)'", catalog)), shell.MODULE_KEYS)
 
 	def _skip_without_purchasing(self):
 		if "doco" not in frappe.get_installed_apps():
