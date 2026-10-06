@@ -10,6 +10,9 @@ class CRMOffer(Document):
 	def has_permission(self, permtype="read", *, debug=False, user=None):
 		from crm.offers.permissions import has_permission
 
+		# Same contract as Document.has_permission: a server-set ignore flag skips scope checks.
+		if self.flags.ignore_permissions:
+			return True
 		return super().has_permission(permtype, debug=debug, user=user) and has_permission(
 			self, permtype, user
 		)

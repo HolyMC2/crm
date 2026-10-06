@@ -115,26 +115,34 @@ class TestOfferShare(OfferFixture, IntegrationTestCase):
 		self.assertEqual(view["net_total"], issued["net_total"])
 
 	def test_customer_page_escapes_seller_and_customer_text(self):
+		# Frappe sanitizes stored HTML; this proves the page itself escapes, whatever reaches it.
 		payload = "<script>alert(1)</script><img src=x onerror=alert(2)>"
-		_issued, state = self.shared(
-			title=payload,
-			terms=payload,
-			products=[{"product_name": payload, "qty": 1, "rate": 10, "discount_percentage": 0}],
-		)
+		_issued, state = self.shared()
 		token = token_of(state)
-		self.as_guest()
-		share.post_message(token, payload)
-		frappe.set_user("Administrator")
+		real = share.public_view
+
+		def hostile(link):
+			view = real(link)
+			view.update(title=payload, terms=payload, customer_name=payload, seller_company=payload)
+			view["products"][0]["product_name"] = payload
+			view["messages"] = [
+				{"from_customer": True, "author": "", "message": payload, "at": "2026-10-05 10:00:00"}
+			]
+			return view
+
 		frappe.local.form_dict = frappe._dict(token=token)
-		html = frappe.get_template("crm/www/crm_offer.html").render(self.page_context(token))
+		with patch.object(share, "public_view", hostile):
+			html = frappe.get_template("crm/www/crm_offer.html").render(self.page_context(token))
 		self.assertNotIn("<script>alert(1)</script>", html)
 		self.assertNotIn("<img src=x", html)
-		self.assertIn("&lt;script&gt;", html)
-		comment = frappe.get_all(
+		self.assertIn("&lt;script&gt;alert(1)", html)
+		self.as_guest()
+		share.post_message(token, "a < b & <b>bold</b>")
+		frappe.set_user("Administrator")
+		comments = frappe.get_all(
 			"Comment", filters={"reference_name": self.deal.name, "comment_type": "Info"}, pluck="content"
 		)
-		self.assertTrue(comment)
-		self.assertFalse(any("<script>" in c for c in comment))
+		self.assertTrue(any("&lt;b&gt;bold" in c for c in comments))
 
 	def page_context(self, token):
 		from crm.www import crm_offer
