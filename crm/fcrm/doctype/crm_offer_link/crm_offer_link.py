@@ -11,4 +11,6 @@ class CRMOfferLink(Document):
 
 	def on_trash(self):
 		if not self.flags.get("crm_offer_share"):
-			frappe.throw(_("Use the offer actions to change customer links and messages."), frappe.PermissionError)
+			frappe.throw(
+				_("Use the offer actions to change customer links and messages."), frappe.PermissionError
+			)

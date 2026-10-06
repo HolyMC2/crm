@@ -51,9 +51,7 @@ def get_context(context):
 	context.gross_total = money(view["total"]) if view["total"] != view["net_total"] else ""
 	context.valid_until = format_date(view["valid_until"])
 	context.decided_at = format_datetime(view["decided_at"]) if view["decided_at"] else ""
-	context.messages = [
-		{**m, "at": format_datetime(m["at"])} for m in view["messages"]
-	]
+	context.messages = [{**m, "at": format_datetime(m["at"])} for m in view["messages"]]
 	context.i18n = {
 		"offer": _("Offer"),
 		"revision": _("Revision {0}").format(view["revision"]),
@@ -87,7 +85,9 @@ def get_context(context):
 		"see_newer": _("See the current offer"),
 		"contact_us": _("Send us a message below and we will send you the current offer."),
 		"accepted": _("You accepted this offer on {0}.").format(context.decided_at),
-		"accepted_by": _("Signed as «{0}».").format(view["decided_by_name"]) if view["decided_by_name"] else "",
+		"accepted_by": _("Signed as «{0}».").format(view["decided_by_name"])
+		if view["decided_by_name"]
+		else "",
 		"rejected": _("You declined this offer on {0}.").format(context.decided_at),
 		"error": _("Something went wrong. Reload the page and try again."),
 		"no_messages": _("Questions about this offer? Write to us here."),

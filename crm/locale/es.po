@@ -13033,3 +13033,186 @@ msgstr "Se guarda como tu tarea de Ventas: la ficha conserva a su responsable."
 #: crm/api/shell.py
 msgid "Ask your manager for permission to read your pendientes, then retry."
 msgstr "Pide al encargado permiso para leer tus pendientes y reintenta."
+# CRM offer customer link
+msgid "Offer"
+msgstr "Oferta"
+
+msgid "Revision {0}"
+msgstr "Revisión {0}"
+
+msgid "Valid until"
+msgstr "Válida hasta"
+
+msgid "Prepared for"
+msgstr "Preparada para"
+
+msgid "Your contact"
+msgstr "Su contacto"
+
+msgid "Unit price"
+msgstr "Precio unitario"
+
+msgid "Disc."
+msgstr "Desc."
+
+msgid "Before discounts"
+msgstr "Antes de descuentos"
+
+msgid "Proposal amounts. Taxes, if any, are calculated on the final quotation or invoice."
+msgstr "Importes de la propuesta. Los impuestos, si aplican, se calculan en la cotización o factura final."
+
+msgid "Terms and conditions"
+msgstr "Términos y condiciones"
+
+msgid "Write a message…"
+msgstr "Escriba un mensaje…"
+
+msgid "Accept offer"
+msgstr "Aceptar oferta"
+
+msgid "Decline"
+msgstr "Rechazar"
+
+msgid "Type your full name to accept"
+msgstr "Escriba su nombre completo para aceptar"
+
+msgid "Accept and sign"
+msgstr "Aceptar y firmar"
+
+msgid "Decline offer"
+msgstr "Rechazar oferta"
+
+msgid "Tell us why (optional)"
+msgstr "Cuéntenos por qué (opcional)"
+
+msgid "This offer has expired. Send us a message to receive a new one."
+msgstr "¡Esta oferta ya venció! Envíenos un mensaje para recibir una nueva."
+
+msgid "This offer was replaced by a newer version."
+msgstr "Esta oferta fue reemplazada por una versión más reciente."
+
+msgid "See the current offer"
+msgstr "Ver la oferta vigente"
+
+msgid "Send us a message below and we will send you the current offer."
+msgstr "Envíenos un mensaje abajo y le enviaremos la oferta vigente."
+
+msgid "You accepted this offer on {0}."
+msgstr "Usted aceptó esta oferta el {0}."
+
+msgid "Signed as «{0}»."
+msgstr "Firmada como «{0}»."
+
+msgid "You declined this offer on {0}."
+msgstr "Usted rechazó esta oferta el {0}."
+
+msgid "Something went wrong. Reload the page and try again."
+msgstr "Algo salió mal. Recargue la página e intente de nuevo."
+
+msgid "Questions about this offer? Write to us here."
+msgstr "¿Dudas sobre esta oferta? Escríbanos aquí."
+
+msgid "Online"
+msgstr "En línea"
+
+msgid "Customer link"
+msgstr "Enlace para el cliente"
+
+msgid "Opened {0} times · last {1}"
+msgstr "Abierta {0} veces · última {1}"
+
+msgid "Not opened yet"
+msgstr "Aún no la abre"
+
+msgid "Send the customer a private link to read this offer, accept or decline it, and write to you. Only people with the link can open it."
+msgstr "Envía al cliente un enlace privado para leer esta oferta, aceptarla o rechazarla y escribirte. Solo quien tenga el enlace puede abrirla."
+
+msgid "Create customer link"
+msgstr "Crear enlace para el cliente"
+
+msgid "Send by WhatsApp"
+msgstr "Enviar por WhatsApp"
+
+msgid "Send by email"
+msgstr "Enviar por correo"
+
+msgid "Open customer view"
+msgstr "Ver como cliente"
+
+msgid "Replace link"
+msgstr "Reemplazar enlace"
+
+msgid "Accepted online, signed as «{0}»."
+msgstr "Aceptada en línea, firmada como «{0}»."
+
+msgid "Declined online."
+msgstr "Rechazada en línea."
+
+msgid "Next: review and create the ERP quotation."
+msgstr "Siguiente: revisar y crear la cotización."
+
+msgid "Messages with the customer"
+msgstr "Mensajes con el cliente"
+
+msgid "No messages yet."
+msgstr "Aún no hay mensajes."
+
+msgid "Reply to the customer on their offer page…"
+msgstr "Responde al cliente en su página de la oferta…"
+
+msgid "Send reply"
+msgstr "Enviar respuesta"
+
+msgid "Unable to update the customer link."
+msgstr "No se pudo actualizar el enlace del cliente."
+
+msgid "Copy the link from the box above."
+msgstr "Copia el enlace del cuadro de arriba."
+
+msgid "Replace the link? The link you already sent will stop working; send the customer the new one."
+msgstr "¿Reemplazar el enlace? El que ya enviaste dejará de funcionar; envía al cliente el nuevo."
+
+msgid "Here is your offer «{0}»: {1}"
+msgstr "Aquí está su oferta «{0}»: {1}"
+
+msgid "the customer on their offer page"
+msgstr "el cliente en su página de la oferta"
+
+msgid "Too many attempts. Wait a few minutes and try again."
+msgstr "Demasiados intentos. Espere unos minutos e intente de nuevo."
+
+msgid "Choose to accept or decline the offer."
+msgstr "Elija aceptar o rechazar la oferta."
+
+msgid "Type your full name to accept, and keep notes under 2000 characters."
+msgstr "Escriba su nombre completo para aceptar y mantenga las notas en menos de 2000 caracteres."
+
+msgid "This offer changed after you opened it. Reload the page to review the current terms."
+msgstr "Esta oferta cambió después de que la abrió. Recargue la página para revisar los términos vigentes."
+
+msgid "This offer can no longer be accepted or declined here. Send us a message for a new one."
+msgstr "Esta oferta ya no se puede aceptar ni rechazar aquí. Envíenos un mensaje para recibir una nueva."
+
+msgid "Customer accepted the offer online as «{0}»."
+msgstr "El cliente aceptó la oferta en línea como «{0}»."
+
+msgid "Customer declined the offer online."
+msgstr "El cliente rechazó la oferta en línea."
+
+msgid "Customer message on offer «{0}»:"
+msgstr "Mensaje del cliente en la oferta «{0}»:"
+
+msgid "Write a message of up to 2000 characters."
+msgstr "Escriba un mensaje de hasta 2000 caracteres."
+
+msgid "Customer opened the offer «{0}»."
+msgstr "El cliente abrió la oferta «{0}»."
+
+msgid "This link is not valid."
+msgstr "Este enlace no es válido."
+
+msgid "Issue the offer before sharing it with the customer."
+msgstr "Emite la oferta antes de compartirla con el cliente."
+
+msgid "Use the offer actions to change customer links and messages."
+msgstr "Usa las acciones de la oferta para cambiar enlaces y mensajes del cliente."

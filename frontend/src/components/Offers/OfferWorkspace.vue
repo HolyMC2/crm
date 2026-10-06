@@ -165,7 +165,11 @@
             >
               {{ __('Recorded actor: {0}', [state.selected.decision_by]) }}
             </span>
-            <span class="block">{{ state.selected.decision_evidence }}</span>
+            <span
+              v-if="state.selected.decision_channel !== 'Online'"
+              class="block"
+              >{{ state.selected.decision_evidence }}</span
+            >
           </p>
           <p v-if="state.selected.is_current === false" class="text-sm">
             {{
@@ -445,6 +449,7 @@
 import { computed, ref, useId, watch } from 'vue'
 import { call } from 'frappe-ui'
 import OfferDraft from './OfferDraft.vue'
+import OfferShare from './OfferShare.vue'
 import { draftValues } from './offerState'
 import { offerDecisionTime } from './offerPresentation'
 import { usersStore } from '@/stores/users'
@@ -456,6 +461,8 @@ const state = props.state
 const users = usersStore()
 const decisionActor = computed(() => {
   const actor = state.selected?.decision_by
+  if (state.selected?.decision_channel === 'Online')
+    return __('the customer on their offer page')
   // Read the existing permissioned directory only. getUser() would resolve
   // unknown identities over RPC and synthesize a name from an email address.
   const known = users.allUsers?.find((user) => user.name === actor)

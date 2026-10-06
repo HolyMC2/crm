@@ -58,9 +58,7 @@ PUBLIC_KEYS = frozenset(
 		"can_decide",
 	}
 )
-PUBLIC_LINE_KEYS = frozenset(
-	{"product_name", "qty", "rate", "discount_percentage", "amount", "net_amount"}
-)
+PUBLIC_LINE_KEYS = frozenset({"product_name", "qty", "rate", "discount_percentage", "amount", "net_amount"})
 
 
 def _fail(message, exception=frappe.ValidationError):
@@ -95,7 +93,9 @@ def resolve(token):
 	if not isinstance(token, str) or not 20 <= len(token) <= 128 or not token.isascii():
 		return None
 	wanted = _hash(token)
-	row = frappe.db.get_value("CRM Offer Link", {"token_hash": wanted}, ["name", "token_hash", "offer"], as_dict=True)
+	row = frappe.db.get_value(
+		"CRM Offer Link", {"token_hash": wanted}, ["name", "token_hash", "offer"], as_dict=True
+	)
 	if not row or not hmac.compare_digest(row.token_hash, wanted):
 		return None
 	if frappe.db.get_value("CRM Offer", row.offer, "status") in (None, "Draft"):
@@ -320,7 +320,10 @@ def record_view(token):
 	link = resolve(token)
 	if not link:
 		raise frappe.DoesNotExistError(_("This link is not valid."))
-	if frappe.session.user != "Guest" and frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User":
+	if (
+		frappe.session.user != "Guest"
+		and frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+	):
 		return {"counted": False}
 	try:
 		fresh = frappe.cache().set(
