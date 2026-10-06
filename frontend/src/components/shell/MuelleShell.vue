@@ -35,14 +35,7 @@
         >
           <span class="lucide-search size-5" aria-hidden="true" />
         </button>
-        <button
-          v-if="ventasEnabled"
-          class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
-          :aria-label="__('Notifications')"
-          @click="router.push('/notifications')"
-        >
-          <span class="lucide-bell size-5" aria-hidden="true" />
-        </button>
+        <AvisosBell v-if="avisosEnabled" :active="activeKey === 'avisos'" />
       </header>
       <div
         v-if="!online"
@@ -71,7 +64,7 @@
           {{ __('We could not open {0}', [blockedLabel]) }}
         </h1>
         <p class="text-sm text-ink-gray-7">
-          {{ blocked }}
+          {{ blocked.reason || blockedFallback }}
         </p>
         <div class="flex flex-wrap gap-2">
           <Button :label="__('Retry permissions')" @click="reload" />
@@ -118,7 +111,6 @@ import { Button } from 'frappe-ui'
 import { isMobile } from '@/composables/breakpoint'
 import { mobileView } from '@/composables/mobileView'
 import {
-  isNeutralModule,
   loadShell,
   moduleKeyFor,
   navSlots,
@@ -129,6 +121,7 @@ import {
 } from '@/composables/muelleShell'
 import { useShellKeyboard } from '@/composables/shellKeyboard'
 import { applyShellAppearance } from '@/utils/shellAppearance'
+import { moduleRefusal } from '@/utils/shellRoutes'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
@@ -136,6 +129,9 @@ import ShellBottomNav from './ShellBottomNav.vue'
 const MoreSheet = defineAsyncComponent(() => import('./MoreSheet.vue'))
 const CommandPalette = defineAsyncComponent(
   () => import('./CommandPalette.vue'),
+)
+const AvisosBell = defineAsyncComponent(
+  () => import('@/components/avisos/AvisosBell.vue'),
 )
 
 const route = useRoute(),
@@ -150,23 +146,21 @@ const activeModule = computed(() =>
   shellModules.value.find((module) => module.key === activeKey.value),
 )
 const ventasEnabled = computed(() => moduleEnabled(shellBoot.value, 'ventas'))
-// The refusal answers for the module the route belongs to, never another one;
-// Ventas routes are refused by the router into the not-permitted screen.
+const avisosEnabled = computed(() => moduleEnabled(shellBoot.value, 'avisos'))
+// The refusal answers for the module the route belongs to, never another one.
+const blocked = computed(() =>
+  moduleRefusal(route, activeKey.value, {
+    boot: shellBoot.value,
+    error: shellError.value,
+  }),
+)
 const blockedLabel = computed(() => moduleMeta(activeKey.value)?.label || '')
-const blocked = computed(() => {
-  if (!isNeutralModule(activeKey.value) || route.name === 'Not Permitted')
-    return ''
-  if (shellError.value) return shellError.value
-  if (!shellBoot.value || moduleEnabled(shellBoot.value, activeKey.value))
-    return ''
-  return (
-    shellBoot.value.modules?.[activeKey.value]?.reason ||
-    __(
-      'You do not have permission to see {0}. Ask your manager for access and try again.',
-      [blockedLabel.value],
-    )
-  )
-})
+const blockedFallback = computed(() =>
+  __(
+    'You do not have permission to see {0}. Ask your manager for access and try again.',
+    [blockedLabel.value],
+  ),
+)
 
 // Drill-down panes (inbox thread, deal 360) own the phone screen; the
 // on-screen keyboard also hides the bar.
@@ -190,9 +184,13 @@ async function copyRequest() {
       ? __(
           'I need access to Compras: read permission for Purchase Order so I can follow purchases.',
         )
-      : __(
-          'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
-        )
+      : activeKey.value === 'avisos'
+        ? __(
+            'I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change.',
+          )
+        : __(
+            'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
+          )
   try {
     await navigator.clipboard.writeText(text)
     copied.value = __('Request copied. Share it with your manager.')

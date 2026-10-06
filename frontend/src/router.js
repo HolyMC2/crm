@@ -74,9 +74,16 @@ const routes = [
     name: 'Home',
   },
   {
+    path: '/avisos',
+    name: 'Avisos',
+    component: () => import('@/pages/Avisos.vue'),
+    meta: { app: 'avisos', title: 'Avisos', stableKey: true },
+  },
+  {
+    // The CRM notifications page merged into Avisos; old links keep working.
     path: '/notifications',
     name: 'Notifications',
-    component: () => import('@/pages/MobileNotification.vue'),
+    redirect: () => ({ path: '/avisos' }),
   },
   {
     path: '/dashboard',
@@ -329,7 +336,7 @@ const routes = [
   {
     path: '/not-permitted',
     name: 'Not Permitted',
-    meta: { app: 'contactos', title: 'Permisos' },
+    meta: { app: 'contactos', title: 'Permisos', recovery: true },
     component: () => import('@/pages/NotPermitted.vue'),
   },
 ]

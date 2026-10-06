@@ -11500,3 +11500,251 @@ msgstr "Proveedor nuevo: se aplicaron su moneda, impuestos y dirección. Revisa 
 #: frontend/src/pages/CompraOrden.vue
 msgid "These request rows were removed by someone else and were not added back: {0}. Prepare them again from their request if they are still needed."
 msgstr "Otra persona quitó estos renglones de solicitud y no se volvieron a agregar: {0}. Prepáralos de nuevo desde su solicitud si todavía hacen falta."
+
+#: crm/avisos/stream.py
+msgid "Sign in to see your avisos."
+msgstr "Inicia sesión para ver tus avisos."
+
+#: crm/avisos/stream.py
+msgid "Mentions and assignments cannot be muted. Mark them as read when you have handled them."
+msgstr "Las menciones y asignaciones no se pueden silenciar. Márcalas como leídas cuando las atiendas."
+
+#: crm/avisos/stream.py
+msgid "{0} mentioned you"
+msgstr "{0} te mencionó"
+
+#: crm/avisos/stream.py
+msgid "New notification"
+msgstr "Nuevo aviso"
+
+#: crm/avisos/stream.py
+msgid "This aviso has no linked record. Mark it as read when you have handled it."
+msgstr "Este aviso no tiene un registro vinculado. Márcalo como leído cuando lo atiendas."
+
+#: crm/avisos/stream.py
+msgid "{0} {1} no longer exists. Mark the aviso as read."
+msgstr "{0} {1} ya no existe. Marca el aviso como leído."
+
+#: crm/avisos/stream.py
+msgid "You no longer have access to {0} {1}. Ask your manager if you still need it."
+msgstr "Ya no tienes acceso a {0} {1}. Pídeselo al encargado si aún lo necesitas."
+
+#: crm/avisos/stream.py
+msgid "Your avisos changed in another window. Refresh and try again."
+msgstr "Tus avisos cambiaron en otra ventana. Actualiza y vuelve a intentarlo."
+
+#: crm/avisos/stream.py
+msgid "Choose which avisos to mark as read."
+msgstr "Elige qué avisos marcar como leídos."
+
+#: crm/api/avisos.py
+msgid "Avisos is available to staff accounts only. Ask your manager to check your user."
+msgstr "Avisos solo está disponible para cuentas del personal. Pide al encargado que revise tu usuario."
+
+#: frontend/src/composables/useAvisos.js
+msgid "For you"
+msgstr "Para ti"
+
+#: frontend/src/composables/useAvisos.js
+msgid "Alerts"
+msgstr "Alertas"
+
+#: frontend/src/composables/useAvisos.js
+msgid "Avisos"
+msgstr "Avisos"
+
+#: frontend/src/composables/useAvisos.js
+msgid "Notify me"
+msgstr "Avisarme"
+
+#: frontend/src/composables/useAvisos.js
+msgid "List only"
+msgstr "Solo en la lista"
+
+#: frontend/src/composables/useAvisos.js
+msgid "To review"
+msgstr "Por atender"
+
+#: frontend/src/composables/useAvisos.js
+msgid "History"
+msgstr "Historial"
+
+#: frontend/src/composables/useAvisos.js
+msgid "Muted"
+msgstr "Silenciados"
+
+#: frontend/src/composables/useAvisos.js
+msgid "We could not load your avisos. Check your connection and try again."
+msgstr "No pudimos cargar tus avisos. Revisa tu conexión y vuelve a intentarlo."
+
+#: frontend/src/composables/useAvisos.js
+msgid "Aviso marked as read."
+msgstr "Aviso marcado como leído."
+
+#: frontend/src/composables/useAvisos.js
+msgid "Avisos marked as read."
+msgstr "Avisos marcados como leídos."
+
+#: frontend/src/composables/useAvisos.js
+msgid "Nothing left to mark as read."
+msgstr "No queda nada por marcar como leído."
+
+#: frontend/src/composables/useAvisos.js
+msgid "Restored as unread."
+msgstr "Se restauró como no leído."
+
+#: frontend/src/composables/useAvisos.js
+msgid "Muted. Find it under Muted to turn it back on."
+msgstr "Silenciado. Encuéntralo en Silenciados para reactivarlo."
+
+#: frontend/src/composables/useAvisos.js
+msgid "Unmuted. New avisos of this kind will show again."
+msgstr "Reactivado. Los nuevos avisos de este tipo volverán a aparecer."
+
+#: frontend/src/components/avisos
+msgid "See all avisos"
+msgstr "Ver todos los avisos"
+
+#: frontend/src/components/avisos
+msgid "Kind of aviso"
+msgstr "Tipo de aviso"
+
+#: frontend/src/components/avisos
+msgid "Undo"
+msgstr "Deshacer"
+
+#: frontend/src/components/avisos
+msgid "Loading avisos…"
+msgstr "Cargando avisos…"
+
+#: frontend/src/components/avisos
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/components/avisos
+msgid "You're all caught up"
+msgstr "Estás al día"
+
+#: frontend/src/components/avisos
+msgid "New avisos for you will show up here."
+msgstr "Aquí aparecerán tus nuevos avisos."
+
+#: frontend/src/components/avisos
+msgid "See all {0} avisos"
+msgstr "Ver los {0} avisos"
+
+#: frontend/src/components/avisos
+msgid "Aviso preferences"
+msgstr "Preferencias de avisos"
+
+#: frontend/src/components/avisos
+msgid "Choose what counts on the bell. «List only» keeps avisos here without the red count; «Hide» moves them to Muted."
+msgstr "Elige qué cuenta en la campana. «Solo en la lista» los deja aquí sin el número rojo; «Ocultar» los manda a Silenciados."
+
+#: frontend/src/components/avisos
+msgid "Preference for {0}"
+msgstr "Preferencia para {0}"
+
+#: frontend/src/components/avisos
+msgid "Mentions and assignments always stay in your list. Email delivery is set in your Desk notification settings."
+msgstr "Las menciones y asignaciones siempre quedan en tu lista. El envío por correo se configura en tus ajustes de notificaciones del Escritorio."
+
+#: frontend/src/components/avisos
+msgid "Unread"
+msgstr "Sin leer"
+
+#: frontend/src/components/avisos
+msgid "Mark as read"
+msgstr "Marcar como leído"
+
+#: frontend/src/components/avisos
+msgid "Mark as read: {0}"
+msgstr "Marcar como leído: {0}"
+
+#: frontend/src/components/avisos
+msgid "More actions: {0}"
+msgstr "Más acciones: {0}"
+
+#: frontend/src/components/avisos
+msgid "Unmute this kind"
+msgstr "Reactivar este tipo"
+
+#: frontend/src/components/avisos
+msgid "Mute this kind"
+msgstr "Silenciar este tipo"
+
+#: frontend/src/components/avisos
+msgid "Avisos, {0} to review"
+msgstr "Avisos, {0} por atender"
+
+#: frontend/src/components/avisos
+msgid "Avisos, nothing new"
+msgstr "Avisos, nada nuevo"
+
+#: frontend/src/pages/Avisos.vue
+msgid "Avisos is not available"
+msgstr "Avisos no está disponible"
+
+#: frontend/src/pages/Avisos.vue
+msgid "Search avisos"
+msgstr "Buscar avisos"
+
+#: frontend/src/pages/Avisos.vue
+msgid "Showing the most recent avisos. Mark these as read to see older ones."
+msgstr "Se muestran los avisos más recientes. Márcalos como leídos para ver los anteriores."
+
+#: frontend/src/pages/Avisos.vue
+msgid "Muted kinds"
+msgstr "Tipos silenciados"
+
+#: frontend/src/pages/Avisos.vue
+msgid "Unmute"
+msgstr "Reactivar"
+
+#: frontend/src/pages/Avisos.vue
+msgid "See history"
+msgstr "Ver historial"
+
+#: frontend/src/pages/Avisos.vue
+msgid "Avisos you read in the last 30 days."
+msgstr "Avisos que leíste en los últimos 30 días."
+
+#: frontend/src/pages/Avisos.vue
+msgid "Hidden from the bell. Unmute a kind to see it again."
+msgstr "Ocultos de la campana. Reactiva un tipo para volver a verlo."
+
+#: frontend/src/pages/Avisos.vue
+msgid "{0} to review, grouped by record."
+msgstr "{0} por atender, agrupados por registro."
+
+#: frontend/src/pages/Avisos.vue
+msgid "Nothing waiting for you."
+msgstr "Nada pendiente para ti."
+
+#: frontend/src/pages/Avisos.vue
+msgid "Nothing muted"
+msgstr "Nada silenciado"
+
+#: frontend/src/pages/Avisos.vue
+msgid "Use «Mute this kind» on a repeating alert to quiet it."
+msgstr "Usa «Silenciar este tipo» en una alerta repetida para callarla."
+
+#: frontend/src/pages/Avisos.vue
+msgid "No history yet"
+msgstr "Aún no hay historial"
+
+#: frontend/src/pages/Avisos.vue
+msgid "Avisos you mark as read stay here for 30 days."
+msgstr "Los avisos que marques como leídos quedan aquí 30 días."
+
+#: frontend/src/pages/Avisos.vue
+msgid "Aviso handled."
+msgstr "Aviso atendido."
+
+#: frontend/src/components/Notifications.vue
+msgid "Event reminders"
+msgstr "Recordatorios de eventos"
+
+#: frontend/src/components/shell/MuelleShell.vue
+msgid "I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change."
+msgstr "Necesito que mi usuario de Muelle sea usuario del sistema (personal) y esté activo para ver mis Avisos; quiero retomarlos después del ajuste."

@@ -3,7 +3,6 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 const fixture = vi.hoisted(() => ({
   roots: [],
   settings: null,
-  notifications: null,
 }))
 
 // Keep the pinned document/resource/config/request implementation. Only browser
@@ -54,9 +53,10 @@ vi.mock('@/App.vue', async () => {
   // These real stores eagerly start requests while main's dependencies load,
   // before the body of main.js can configure the resource adapter.
   const { getSettings } = await import('@/stores/settings')
-  const { notifications } = await import('@/stores/notifications')
+  // Avisos replaced the eager CRM notification preload; importing the store
+  // must not fetch anything.
+  await import('@/stores/notifications')
   fixture.settings = getSettings()
-  fixture.notifications = notifications
   const { getCurrentInstance, h } = await import('vue')
   return {
     default: {
@@ -112,16 +112,12 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-it('uses native RPC and unwraps eager settings/notifications before mounting a deep link', async () => {
+it('uses native RPC and unwraps eager settings before mounting a deep link', async () => {
   window.location.href =
     'http://crm-roadmap.localhost:18060/crm/deals/fixture-deal'
   await import('@/main')
-  await Promise.all([
-    fixture.settings._settings.get.promise,
-    fixture.notifications.promise,
-  ])
+  await fixture.settings._settings.get.promise
   expect(requests.map(({ url }) => url.pathname).sort()).toEqual([
-    '/api/method/crm.api.notifications.get_notifications',
     '/api/method/frappe.client.get',
   ])
   const settings = requests.find(({ url }) =>
@@ -135,7 +131,4 @@ it('uses native RPC and unwraps eager settings/notifications before mounting a d
   }
   expect(fixture.settings.settings.value.name).toBe('FCRM Settings')
   expect(fixture.settings.brand.name).toBe('Tenant Sales')
-  expect(fixture.notifications.data).toEqual([
-    { name: 'fixture-notification', read: 0 },
-  ])
 })

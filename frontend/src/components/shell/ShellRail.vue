@@ -17,7 +17,7 @@
       <span class="lucide-search size-[18px]" aria-hidden="true" />
     </button>
     <RouterLink
-      v-for="module in modules"
+      v-for="module in apps"
       :key="module.key"
       :to="module.to"
       :title="module.label"
@@ -33,23 +33,34 @@
       <span :class="[module.icon, 'size-[18px]']" aria-hidden="true" />
     </RouterLink>
     <div class="mt-auto" />
-    <!-- Ventas notifications: bell + panel beside the rail, loaded with Ventas. -->
-    <VentasRailBell v-if="ventas" />
+    <!-- Avisos is pinned at the bottom: the bell and its slide-over. -->
+    <AvisosBell
+      v-if="avisos"
+      rail
+      :ventas="ventas"
+      :active="active === 'avisos'"
+    />
     <UserMenu :ventas="ventas" />
   </nav>
 </template>
 <script setup>
-import { defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import UserMenu from './UserMenu.vue'
 
-defineProps({
+const props = defineProps({
   modules: { type: Array, default: () => [] },
   active: { type: String, default: '' },
   ventas: Boolean,
 })
 defineEmits(['palette'])
 
-const VentasRailBell = defineAsyncComponent(
-  () => import('./VentasRailBell.vue'),
+const AvisosBell = defineAsyncComponent(
+  () => import('@/components/avisos/AvisosBell.vue'),
+)
+const apps = computed(() =>
+  props.modules.filter((module) => module.key !== 'avisos'),
+)
+const avisos = computed(() =>
+  props.modules.some((module) => module.key === 'avisos'),
 )
 </script>

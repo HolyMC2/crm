@@ -1,3 +1,4 @@
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 // Shared shell navigation: native sources stay explicit and URLs stay local.
 export const sourceSlugs = Object.freeze({
   Contact: 'contact',
@@ -50,4 +51,34 @@ export function legacyIdentityRoute(to, source) {
   if (name)
     return { name: 'Contacto', params: { source, name }, query, hash: to.hash }
   return { name: 'Contactos', query, hash: to.hash }
+}
+// The not-permitted screen answers for the module the worker was refused, so
+// its copy, retry check and return target never ask for unrelated access.
+const RECOVERY_MODULES = {
+  avisos: 'avisos',
+  notifications: 'avisos',
+  compras: 'compras',
+  contactos: 'contactos',
+  contacts: 'contactos',
+  organizations: 'contactos',
+}
+export function recoveryModule(intended) {
+  const head = String(intended || '')
+    .split(/[?#]/)[0]
+    .split('/')[1]
+  return RECOVERY_MODULES[head] || 'ventas'
+}
+export function recoveryReady(module, boot) {
+  return moduleEnabled(boot, module)
+}
+/**
+ * Whether the shell refuses the module a route belongs to, and the provider's
+ * reason. The not-permitted screen answers for itself; Ventas routes are
+ * refused by the router into that screen.
+ */
+export function moduleRefusal(route, key, { boot, error }) {
+  if (route?.meta?.recovery || key === 'ventas') return null
+  if (error) return { reason: error }
+  if (!boot || moduleEnabled(boot, key)) return null
+  return { reason: boot.modules?.[key]?.reason || '' }
 }

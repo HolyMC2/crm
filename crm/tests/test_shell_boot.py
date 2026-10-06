@@ -102,6 +102,40 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["compras"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def test_avisos_provider_reports_staff_access_and_grouped_badge(self):
+		data = shell.boot()
+		avisos = data["modules"]["avisos"]
+		self.assertTrue(avisos["enabled"])
+		self.assertTrue(avisos["capabilities"]["read"])
+		self.assertEqual(set(avisos["badge"]), {"count", "capped"})
+
+	def test_avisos_alone_opens_the_shell_without_contactos_or_ventas(self):
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+		):
+			data = shell.boot()
+		self.assertTrue(data["modules"]["avisos"]["enabled"])
+		self.assertFalse(data["sales_access"])
+
+	def test_refused_avisos_carries_its_own_reason(self):
+		with patch("crm.avisos.stream.is_enabled", return_value=False):
+			data = shell.boot()
+		avisos = data["modules"]["avisos"]
+		self.assertFalse(avisos["enabled"])
+		self.assertTrue(avisos["reason"])
+		self.assertIsNone(avisos["badge"])
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_avisos_provider_permission_error_leaves_the_module_absent(self):
+		with patch("crm.api.avisos.get_capabilities", side_effect=frappe.PermissionError):
+			data = shell.boot()
+		self.assertNotIn("avisos", data["modules"])
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):

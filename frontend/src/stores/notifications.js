@@ -1,44 +1,27 @@
 import { defineStore } from 'pinia'
-import { createResource } from 'frappe-ui'
-import { computed, ref } from 'vue'
-import { formatCompactNumber } from '@/utils/numberFormat.js'
+import { computed } from 'vue'
+import {
+  avisosBadge,
+  avisosPanelOpen,
+  badgeLabel,
+} from '@/composables/useAvisos'
 
-export const visible = ref(false)
+// The CRM bell and drawer are Avisos now: the panel shows grouped avisos
+// and the count is unread groups (never every raw row loaded at startup).
+// One slide-over: the shell bell and Ventas reminders open the same panel.
+export const visible = avisosPanelOpen
 
-export const notifications = createResource({
-  url: 'crm.api.notifications.get_notifications',
-  initialData: [],
-  auto: true,
-})
-
-export const unreadNotificationsCount = computed(() => {
-  const count = notifications.data?.filter((n) => !n.read).length || 0
-  return count ? formatCompactNumber(count) : 0
-})
+export const unreadNotificationsCount = computed(
+  () => badgeLabel(avisosBadge.value) || 0,
+)
 
 export const notificationsStore = defineStore('crm-notifications', () => {
-  const mark_as_read = createResource({
-    url: 'crm.api.notifications.mark_as_read',
-    onSuccess: () => {
-      mark_as_read.params = {}
-      notifications.reload()
-    },
-  })
-
   function toggle() {
     visible.value = !visible.value
   }
 
-  function mark_doc_as_read(doc) {
-    mark_as_read.params = { doc: doc }
-    mark_as_read.reload()
-    toggle()
-  }
-
   return {
     unreadNotificationsCount,
-    mark_as_read,
-    mark_doc_as_read,
     toggle,
   }
 })

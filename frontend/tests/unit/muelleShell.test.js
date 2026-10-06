@@ -31,7 +31,7 @@ vi.mock('@/composables/ventasNav', () => ({
     badgeFor: () => 0,
   }),
 }))
-vi.mock('@/components/shell/VentasRailBell.vue', () => ({
+vi.mock('@/components/Notifications.vue', () => ({
   __esModule: true,
   default: { render: () => null },
 }))
@@ -66,6 +66,12 @@ function boot(overrides = {}) {
         capabilities: { read: true, create: true },
       },
       ventas: { key: 'ventas', enabled: true, capabilities: { read: true } },
+      avisos: {
+        key: 'avisos',
+        enabled: true,
+        capabilities: { read: true },
+        badge: { count: 3, capped: false },
+      },
     },
     ...overrides,
   }
@@ -88,6 +94,16 @@ async function mount(path) {
       },
       { path: '/deals', component: { render: () => h('p', 'Deals page') } },
       { path: '/ventas', component: { render: () => null } },
+      {
+        path: '/avisos',
+        component: { render: () => h('p', 'Avisos page') },
+        meta: { app: 'avisos', title: 'Avisos' },
+      },
+      {
+        path: '/not-permitted',
+        component: { render: () => h('p', 'Recovery page') },
+        meta: { app: 'contactos', title: 'Permisos', recovery: true },
+      },
     ],
   })
   await router.push(path)
@@ -98,8 +114,12 @@ async function mount(path) {
     render: () => h(MuelleShell, null, { default: () => h('p', 'page') }),
   })
   // Contextual strings render as «text|context» so tests can see the context.
-  app.config.globalProperties.__ = (text, args, context) =>
-    context ? `${text}|${context}` : text
+  app.config.globalProperties.__ = (text, args, context) => {
+    const out = args
+      ? text.replace(/{(\d+)}/g, (_, i) => args[i] ?? `{${i}}`)
+      : text
+    return context ? `${out}|${context}` : out
+  }
   app.use(router)
   app.mount(root)
   for (let i = 0; i < 6; i++) {
@@ -132,10 +152,14 @@ describe('module registry', () => {
     ).toBe('contactos')
     expect(moduleKeyFor({ path: '/deals/view/list', meta: {} })).toBe('ventas')
     expect(moduleKeyFor({ path: '/ventas', meta: {} })).toBe('ventas')
+    expect(moduleKeyFor({ path: '/avisos', meta: { app: 'avisos' } })).toBe(
+      'avisos',
+    )
     expect(hostedModules.map((m) => m.key)).toEqual([
       'contactos',
       'ventas',
       'compras',
+      'avisos',
     ])
   })
 
@@ -545,5 +569,112 @@ describe('Ventas navigation on every screen', () => {
     expect(showSettings.value).toBe(true)
     expect(router.currentRoute.value.path).toBe(landing)
     showSettings.value = false
+  })
+})
+
+const avisosOnly = {
+  modules: {
+    contactos: {
+      key: 'contactos',
+      enabled: false,
+      reason: 'Sin Contactos',
+      capabilities: {},
+    },
+    ventas: { key: 'ventas', enabled: false, capabilities: {} },
+    avisos: {
+      key: 'avisos',
+      enabled: true,
+      capabilities: { read: true },
+      badge: { count: 2, capped: false },
+    },
+  },
+}
+
+describe('Avisos in the shell', () => {
+  it('desktop: the bell is pinned at the bottom of the rail with the grouped count', async () => {
+    state.mobile.value = false
+    await mount('/deals')
+    const rail = root.querySelector('nav[aria-label="Apps"]')
+    expect(
+      [...rail.querySelectorAll('a')].map((a) => a.getAttribute('aria-label')),
+    ).toEqual(['Contactos', 'Ventas'])
+    const bell = await until(() =>
+      rail.querySelector('button[aria-label^="Avisos"]'),
+    )
+    expect(bell.getAttribute('aria-label')).toBe('Avisos, 3 to review')
+    expect(bell.textContent).toContain('3')
+  })
+
+  it('no bell when the boot refuses Avisos', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot')
+        return boot({
+          modules: {
+            ventas: { key: 'ventas', enabled: true, capabilities: {} },
+            avisos: { key: 'avisos', enabled: false, capabilities: {} },
+          },
+        })
+      throw new Error(`unexpected ${method}`)
+    })
+    state.mobile.value = false
+    await mount('/deals')
+    await until(() => false)
+    expect(root.querySelector('button[aria-label^="Avisos"]')).toBeNull()
+  })
+
+  it('phone: a worker without Contactos or Ventas gets the header bell and the Avisos page', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot(avisosOnly)
+      throw new Error(`unexpected ${method}`)
+    })
+    state.mobile.value = true
+    await mount('/avisos')
+    expect(root.textContent).toContain('page')
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+    const bell = await until(() =>
+      root.querySelector('header button[aria-label^="Avisos"]'),
+    )
+    expect(bell.getAttribute('aria-label')).toBe('Avisos, 2 to review')
+    const nav = root.querySelector('nav[aria-label="Main navigation"]')
+    expect(nav.textContent).not.toContain('Avisos')
+    await router.push('/contactos')
+    bell.click()
+    await until(() => router.currentRoute.value.path === '/avisos')
+    expect(router.currentRoute.value.path).toBe('/avisos')
+  })
+
+  it('a refused Avisos route shows the Avisos refusal, never the Contactos one', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot')
+        return boot({
+          modules: {
+            contactos: { key: 'contactos', enabled: true, capabilities: {} },
+            avisos: {
+              key: 'avisos',
+              enabled: false,
+              reason: 'Solo personal',
+              capabilities: {},
+            },
+          },
+        })
+      throw new Error(`unexpected ${method}`)
+    })
+    state.mobile.value = false
+    await mount('/avisos')
+    const alert = root.querySelector('[role="alert"]')
+    expect(alert.textContent).toContain('We could not open Avisos')
+    expect(alert.textContent).toContain('Solo personal')
+    expect(alert.textContent).not.toContain('Contactos')
+  })
+
+  it('the recovery screen is never replaced by a module refusal', async () => {
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot(avisosOnly)
+      throw new Error(`unexpected ${method}`)
+    })
+    state.mobile.value = false
+    await mount('/not-permitted?intended=/avisos')
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+    expect(root.textContent).toContain('page')
   })
 })

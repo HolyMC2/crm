@@ -81,9 +81,24 @@ def _compras():
 	}
 
 
+def _avisos():
+	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
+	from crm.api.avisos import get_capabilities
+
+	answer = get_capabilities()
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "avisos",
+		"enabled": enabled,
+		"reason": answer.get("reason"),
+		"capabilities": {"read": enabled},
+		"badge": answer.get("badge"),
+	}
+
+
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [_contactos, _ventas, _compras]
+	providers = [_contactos, _ventas, _compras, _avisos]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))
 	return providers
