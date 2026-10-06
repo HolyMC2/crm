@@ -12,7 +12,8 @@ ENTRY = re.compile(r'^(?:msgctxt "(?P<ctx>(?:[^"\\]|\\.)*)"\n)?msgid "(?P<id>(?:
 
 def duplicates(path):
 	seen, dupes = {}, []
-	with open(path, encoding="utf-8") as catalog:
+	# Paths come from pre-commit's staged file list, not from a request.
+	with open(path, encoding="utf-8") as catalog:  # nosemgrep: frappe-security-file-traversal
 		text = catalog.read()
 	for match in ENTRY.finditer(text):
 		key = (match["ctx"], match["id"])
