@@ -26,6 +26,11 @@ const COMPRAS_PLACES = [
   ['por-recibir', 'Por recibir'],
   ['historial', 'Historial'],
 ]
+const ARCHIVOS_PLACES = [
+  ['', 'Por clasificar'],
+  ['ayuda', 'Requieren ayuda'],
+  ['archivo', 'Archivo'],
+]
 const VENTAS_PLACES = [
   ['/inbox', 'Inbox', 'lucide-messages-square'],
   ['/leads', 'Leads', 'lucide-users'],
@@ -112,6 +117,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Compras › ${label}`,
             icon: 'lucide-shopping-cart',
             href: `/compras?segment=${segment}`,
+          })
+      if (moduleEnabled(boot.value, 'archivos'))
+        for (const [view, label] of ARCHIVOS_PLACES)
+          items.push({
+            id: `archivos.${view || 'por_clasificar'}`,
+            group: 'ir_a',
+            title: `Archivos › ${label}`,
+            icon: 'lucide-folder',
+            href: view ? `/archivos?view=${view}` : '/archivos',
           })
       if (moduleEnabled(boot.value, 'ventas'))
         for (const [path, label, icon] of VENTAS_PLACES)

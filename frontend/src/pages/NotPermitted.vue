@@ -7,7 +7,7 @@
     <div class="flex flex-wrap gap-2">
       <Button
         v-if="
-          !['avisos', 'compras'].includes(module) ||
+          !['archivos', 'avisos', 'compras'].includes(module) ||
           moduleEnabled(shellBoot, 'contactos')
         "
         label="Volver a Contactos"
@@ -37,6 +37,14 @@ const route = useRoute(),
   message = ref(''),
   loading = ref(false)
 const COPY = {
+  archivos: {
+    explain:
+      'Para abrir Archivos necesitas acceso a los documentos de tu empresa. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito acceso a Archivos en Muelle (documentos de mi empresa) para recibir y clasificar comprobantes; quiero retomar el documento que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Archivos. Comparte la solicitud y reintenta después del ajuste.',
+  },
   avisos: {
     explain:
       'Avisos es para cuentas del personal. Pide al encargado que convierta tu usuario en usuario del sistema y que esté activo; después toca Reintentar permisos.',

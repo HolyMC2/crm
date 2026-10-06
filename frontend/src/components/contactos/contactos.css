@@ -569,6 +569,9 @@
   flex-wrap: wrap;
   margin: 10px 0;
 }
+.c-archivos-panel {
+  margin: 0 28px 28px;
+}
 .c-provider-section {
   margin: 0 28px 28px;
   border: 1px solid var(--c-line);
@@ -779,7 +782,8 @@
   .c-values {
     gap: 10px 12px;
   }
-  .c-provider-section {
+  .c-provider-section,
+  .c-archivos-panel {
     margin: 0 16px 20px;
   }
   .c-provider-recovery {

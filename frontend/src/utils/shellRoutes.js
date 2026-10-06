@@ -55,6 +55,7 @@ export function legacyIdentityRoute(to, source) {
 // The not-permitted screen answers for the module the worker was refused, so
 // its copy, retry check and return target never ask for unrelated access.
 const RECOVERY_MODULES = {
+  archivos: 'archivos',
   avisos: 'avisos',
   notifications: 'avisos',
   compras: 'compras',

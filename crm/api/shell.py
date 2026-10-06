@@ -96,9 +96,36 @@ def _avisos():
 	}
 
 
+def _archivos():
+	try:
+		# Doco owns the evidence queue; an older doco leaves the module off, not the shell down.
+		from doco.docoutils.documents.bandeja import boot as bandeja_boot
+	except ImportError:
+		bandeja_boot = None
+	if "doco" not in frappe.get_installed_apps() or bandeja_boot is None:
+		return {
+			"key": "archivos",
+			"enabled": False,
+			"reason": _("Archivos is not installed. Ask your manager to check the app."),
+			"capabilities": {},
+		}
+
+	answer = bandeja_boot() or {}
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "archivos",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason")
+		or _("Ask your manager for access to your company's documents, then retry."),
+		"capabilities": {"read": enabled, "create": enabled},
+	}
+
+
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [_contactos, _ventas, _compras, _avisos]
+	providers = [_contactos, _ventas, _compras, _avisos, _archivos]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))
 	return providers

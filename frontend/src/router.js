@@ -70,6 +70,12 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
   },
   {
+    path: '/archivos',
+    name: 'Archivos',
+    component: () => import('@/pages/Archivos.vue'),
+    meta: { app: 'archivos', title: 'Archivos', stableKey: true },
+  },
+  {
     path: '/',
     name: 'Home',
   },

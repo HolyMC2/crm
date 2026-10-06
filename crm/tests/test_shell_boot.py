@@ -136,6 +136,54 @@ class TestShellBoot(TestCase):
 		self.assertNotIn("avisos", data["modules"])
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_bandeja(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Archivos (doco) is not installed")
+		try:
+			import doco.docoutils.documents.bandeja
+		except ImportError:
+			self.skipTest("This doco has no Archivos service")
+
+	def test_archivos_provider_reports_evidence_access(self):
+		self._skip_without_bandeja()
+		archivos = shell.boot()["modules"]["archivos"]
+		self.assertTrue(archivos["enabled"])
+		self.assertIsNone(archivos["reason"])
+		self.assertEqual(archivos["capabilities"], {"read": True, "create": True})
+
+	def test_archivos_refusal_carries_its_own_reason_and_leaves_others(self):
+		self._skip_without_bandeja()
+		answer = {"enabled": False, "reason": "Tu puesto no tiene acceso a Archivos."}
+		with patch("doco.docoutils.documents.bandeja.boot", return_value=answer):
+			data = shell.boot()
+		archivos = data["modules"]["archivos"]
+		self.assertFalse(archivos["enabled"])
+		self.assertEqual(archivos["reason"], answer["reason"])
+		self.assertEqual(archivos["capabilities"], {"read": False, "create": False})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_archivos_alone_opens_the_shell_without_contactos_or_ventas(self):
+		self._skip_without_bandeja()
+
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+		):
+			data = shell.boot()
+		self.assertTrue(data["modules"]["archivos"]["enabled"])
+		self.assertFalse(data["sales_access"])
+
+	def test_older_doco_without_archivos_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.docoutils.documents.bandeja": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["archivos"]["enabled"])
+		self.assertTrue(data["modules"]["archivos"]["reason"])
+		self.assertEqual(data["modules"]["archivos"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):

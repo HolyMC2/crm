@@ -10062,7 +10062,6 @@ msgstr ""
 msgid "⚠️ No row found for idx: {0} in parent field: {1}"
 msgstr ""
 
-
 #: frontend/src/components/PatternPad.vue:62
 msgid "Draw pattern"
 msgstr "Dibuja el patrón"
@@ -11748,3 +11747,590 @@ msgstr "Recordatorios de eventos"
 #: frontend/src/components/shell/MuelleShell.vue
 msgid "I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change."
 msgstr "Necesito que mi usuario de Muelle sea usuario del sistema (personal) y esté activo para ver mis Avisos; quiero retomarlos después del ajuste."
+# Archivos (Bandeja de comprobantes)
+#: frontend/src/pages/Archivos.vue
+msgid "Assign review"
+msgstr "Asignar revisión"
+
+#: frontend/src/pages/Archivos.vue
+msgid "The person you choose can classify, link or file this document until the review is done. You keep it as its receiver."
+msgstr "La persona que elijas podrá clasificar, vincular o archivar este documento hasta terminar la revisión. Tú sigues siendo quien lo recibió."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Share with {0} so someone else can review it"
+msgstr "Compartir con {0} para que otra persona lo revise"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Search a person"
+msgstr "Buscar a una persona"
+
+#: frontend/src/pages/Archivos.vue
+msgid "People"
+msgstr "Personas"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Nobody with access to {0} matches. Ask your manager to give them access."
+msgstr "Nadie con acceso a {0} coincide. Pide al encargado que le dé acceso."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Files on this record"
+msgstr "Archivos de este registro"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Add file"
+msgstr "Agregar archivo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Attachment"
+msgstr "Adjunto"
+
+#: frontend/src/pages/Archivos.vue
+msgid "No files yet. Add the invoice, receipt or contract so anyone can find it from here."
+msgstr "Aún no hay archivos. Agrega la factura, el comprobante o el contrato para que cualquiera lo encuentre desde aquí."
+
+#: frontend/src/pages/Archivos.vue
+msgid "No files yet."
+msgstr "Aún no hay archivos."
+
+#: frontend/src/pages/Archivos.vue
+msgid "This kind of record does not take receipts from Archivos yet; attach files from its form and they appear here."
+msgstr "Este tipo de registro aún no recibe comprobantes desde Archivos; adjunta los archivos desde su ficha y aparecerán aquí."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Receive a file"
+msgstr "Recibir un archivo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Take photo"
+msgstr "Tomar foto"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Choose file"
+msgstr "Elegir archivo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Who can see it"
+msgstr "Quién puede verlo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Only me (I can share it later)"
+msgstr "Solo yo (puedo compartirlo después)"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Everyone in {0}"
+msgstr "Todos en {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Receive for {0}"
+msgstr "Recibir para {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Receive file"
+msgstr "Recibir archivo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Back to the list"
+msgstr "Volver a la lista"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Document"
+msgstr "Documento"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Received by {0}"
+msgstr "Recibido por {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "you"
+msgstr "ti"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Original"
+msgstr "Original"
+
+#: frontend/src/pages/Archivos.vue
+msgid "No preview for this file. Open the original to check it."
+msgstr "No hay vista previa de este archivo. Abre el original para revisarlo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Open original"
+msgstr "Abrir original"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Link to this record"
+msgstr "Vincular a este registro"
+
+#: frontend/src/pages/Archivos.vue
+msgid "View in Bancos"
+msgstr "Ver en Bancos"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Import in Bancos"
+msgstr "Importar en Bancos"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Bank statement import is part of Contador. You can file this statement now and import it once your plan includes Bancos."
+msgstr "La importación de estados de cuenta es parte de Contador. Puedes archivar este estado de cuenta ahora e importarlo cuando tu plan incluya Bancos."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Suggested records"
+msgstr "Registros sugeridos"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Looking for matches…"
+msgstr "Buscando coincidencias…"
+
+#: frontend/src/pages/Archivos.vue
+msgid "No matches yet. Fill in who issued it and its date, or search the record below."
+msgstr "Aún no hay coincidencias. Escribe quién lo emitió y su fecha, o busca el registro abajo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Search another record"
+msgstr "Buscar otro registro"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Record type"
+msgstr "Tipo de registro"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Folio, name or reference"
+msgstr "Folio, nombre o referencia"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Nothing in {0} matches. Check the folio or create the record first."
+msgstr "Nada en {0} coincide. Revisa el folio o crea primero el registro."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Create purchase invoice"
+msgstr "Crear factura de compra"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Linked to"
+msgstr "Vinculado a"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Unsaved changes recovered"
+msgstr "Cambios sin guardar recuperados"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Document date"
+msgstr "Fecha del documento"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Issued by or for"
+msgstr "Emitido por o para"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Supplier, customer or bank"
+msgstr "Proveedor, cliente o banco"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Notes or tags"
+msgstr "Notas o etiquetas"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Current version"
+msgstr "Versión actual"
+
+#: frontend/src/pages/Archivos.vue
+msgid "yours: {0}"
+msgstr "la tuya: {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Keep my changes"
+msgstr "Conservar mis cambios"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Use current version"
+msgstr "Usar la versión actual"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Save details"
+msgstr "Guardar datos"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Discard changes"
+msgstr "Descartar cambios"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Review"
+msgstr "Revisión"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Review assigned to {0} by {1}"
+msgstr "Revisión asignada a {0} por {1}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Reassign review"
+msgstr "Reasignar revisión"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Return review"
+msgstr "Devolver revisión"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Remove review"
+msgstr "Quitar revisión"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Problems"
+msgstr "Problemas"
+
+#: frontend/src/pages/Archivos.vue
+msgid "What went wrong"
+msgstr "Qué falló"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Processing failed."
+msgstr "El procesamiento falló."
+
+#: frontend/src/pages/Archivos.vue
+msgid "File without linking"
+msgstr "Archivar sin vincular"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Back to review"
+msgstr "Volver a revisar"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Link this document?"
+msgstr "¿Vincular este documento?"
+
+#: frontend/src/pages/Archivos.vue
+msgid "«{0}» will be linked to {1} {2}. Anyone who opens that record will find it."
+msgstr "«{0}» se vinculará a {1} {2}. Quien abra ese registro lo encontrará."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Only the person who received it"
+msgstr "Solo quien lo recibió"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Issuer RFC {0}"
+msgstr "RFC del emisor {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Fiscal folio {0}"
+msgstr "Folio fiscal {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Linked. You can link it to another record too, or go to the next one."
+msgstr "Vinculado. También puedes vincularlo a otro registro o pasar al siguiente."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Bancos imports the statement and continues the reconciliation; it returns you here."
+msgstr "Bancos importa el estado de cuenta y continúa la conciliación; después te regresa aquí."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Confirm which operation this proves. Nothing is linked until you confirm."
+msgstr "Confirma qué operación comprueba. No se vincula nada hasta que confirmes."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Ask {0} to review it"
+msgstr "Pedir revisión a {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Assign the review to me"
+msgstr "Asignarme la revisión"
+
+#: frontend/src/pages/Archivos.vue
+msgid "{0} received this document. Only they or the person assigned to review it can classify or link it."
+msgstr "{0} recibió este documento. Solo esa persona o quien tenga asignada su revisión puede clasificarlo o vincularlo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Link to {0}"
+msgstr "Vincular a {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "This document changed while you were reviewing it. Check it and confirm again."
+msgstr "Este documento cambió mientras lo revisabas. Revísalo y confirma de nuevo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "I need access in Archivos to continue: {0}. Please check my user permissions."
+msgstr "Necesito acceso en Archivos para continuar: {0}. Por favor revisa los permisos de mi usuario."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Done."
+msgstr "Listo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "We could not finish. Try again in a moment."
+msgstr "No pudimos terminar. Reintenta en un momento."
+
+#: frontend/src/pages/Archivos.vue
+msgid "We could not open Archivos"
+msgstr "No pudimos abrir Archivos"
+
+#: frontend/src/pages/Archivos.vue
+msgid "We could not check your permissions. Try again or ask your manager for access."
+msgstr "No pudimos revisar tus permisos. Reintenta o pide acceso al encargado."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Archivos needs read access to at least one company and its documents."
+msgstr "Archivos necesita acceso de lectura a al menos una empresa y a sus documentos."
+
+#: frontend/src/pages/Archivos.vue
+msgid "I need access to Archivos in Muelle (documents of my company) to receive and classify receipts."
+msgstr "Necesito acceso a Archivos en Muelle (documentos de mi empresa) para recibir y clasificar comprobantes."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Document archive connection"
+msgstr "Conexión con el archivo documental"
+
+#: frontend/src/pages/Archivos.vue
+msgid "the previous record"
+msgstr "el registro anterior"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Receive invoices, receipts and contracts; link them to an operation and keep working."
+msgstr "Recibe facturas, comprobantes y contratos; asígnalos a una operación y continúa el trabajo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Receive"
+msgstr "Recibir"
+
+#: frontend/src/pages/Archivos.vue
+msgid "For {0}"
+msgstr "Para {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Checking the record…"
+msgstr "Revisando el registro…"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Search title, issuer, tag or text"
+msgstr "Buscar título, emisor, etiqueta o texto"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Search files"
+msgstr "Buscar archivos"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Clear search"
+msgstr "Limpiar búsqueda"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Only you can see it"
+msgstr "Solo tú puedes verlo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Yours to review"
+msgstr "Te toca revisar"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Choose a file from the list to see the original and link it."
+msgstr "Elige un archivo de la lista para ver el original y vincularlo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "No file matches «{0}»"
+msgstr "Ningún archivo coincide con «{0}»"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Try the issuer, a tag or part of the text."
+msgstr "Prueba con el emisor, una etiqueta o parte del texto."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Nothing needs help"
+msgstr "Nada requiere ayuda"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Files that could not be processed show up here with what to do."
+msgstr "Aquí aparecen los archivos que no se pudieron procesar, con lo que hay que hacer."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Nothing filed yet"
+msgstr "Aún no hay nada en el archivo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Linked and filed documents stay here, searchable."
+msgstr "Los documentos vinculados y archivados se quedan aquí y puedes buscarlos."
+
+#: frontend/src/pages/Archivos.vue
+msgid "All classified"
+msgstr "Todo clasificado"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Nothing to classify"
+msgstr "Nada por clasificar"
+
+#: frontend/src/pages/Archivos.vue
+msgid "When you receive an invoice, receipt or contract it shows up here until you link it to its operation."
+msgstr "Cuando recibas una factura, comprobante o contrato aparecerá aquí hasta que lo vincules a su operación."
+
+#: frontend/src/pages/Archivos.vue
+msgid "This kind of record does not take receipts from Archivos yet. You can still receive the file and link it to a supported record."
+msgstr "Este tipo de registro aún no recibe comprobantes desde Archivos. Puedes recibir el archivo y vincularlo a un registro compatible."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Receive without a record"
+msgstr "Recibir sin registro"
+
+#: frontend/src/pages/Archivos.vue
+msgid "File received"
+msgstr "Archivo recibido"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Linked. Returning to {0}"
+msgstr "Vinculado. Regresando a {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Linked"
+msgstr "Vinculado"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Filed"
+msgstr "Archivo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "No connection. Your changes stay on screen; reconnect and try again."
+msgstr "Sin conexión. Tus cambios siguen en pantalla; vuelve a conectarte y reintenta."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Choose a file or take a photo."
+msgstr "Elige un archivo o toma una foto."
+
+#: frontend/src/pages/Archivos.vue
+msgid "This file is larger than {0} MB. Send a lighter photo or PDF."
+msgstr "Este archivo pesa más de {0} MB. Envía una foto o un PDF más ligero."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Send a PDF, a JPG or PNG photo, or a CSV, XML or TXT file."
+msgstr "Envía un PDF, una foto JPG o PNG, o un archivo CSV, XML o TXT."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Your session ended. Sign in again to continue here."
+msgstr "Tu sesión terminó. Inicia sesión otra vez para continuar aquí."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Sign in"
+msgstr "Iniciar sesión"
+
+#: frontend/src/pages/Archivos.vue
+msgid "You do not have permission for this. Ask your manager for access."
+msgstr "No tienes permiso para esto. Pide acceso al encargado."
+
+#: frontend/src/pages/Archivos.vue
+msgid "No type yet"
+msgstr "Sin tipo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Invoice"
+msgstr "Factura"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Receipt"
+msgstr "Comprobante"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Bank statement"
+msgstr "Estado de cuenta"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Contract"
+msgstr "Contrato"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Delivery paperwork"
+msgstr "Papelería de entrega"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Repair paperwork"
+msgstr "Papelería de reparación"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Purchase invoice"
+msgstr "Factura de compra"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Sales invoice"
+msgstr "Factura de venta"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Delivery note"
+msgstr "Nota de entrega"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Expense claim"
+msgstr "Gasto de empleado"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Payment"
+msgstr "Pago"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Journal entry"
+msgstr "Póliza"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Repair order"
+msgstr "Orden de reparación"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Supplier"
+msgstr "Proveedor"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Bank import"
+msgstr "Importación bancaria"
+
+#: frontend/src/pages/Archivos.vue
+msgid "To classify"
+msgstr "Por clasificar"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Processing"
+msgstr "Procesando"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Needs help"
+msgstr "Requiere ayuda"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Archived"
+msgstr "Archivado"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Need help"
+msgstr "Requieren ayuda"
+
+#: crm/api/archivos.py
+msgid "Archivos is not installed. Ask your manager to check the app."
+msgstr "Archivos no está instalado. Pide al encargado que revise la aplicación."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Filed without linking"
+msgstr "Archivado sin vincular"
+
+#: frontend/src/components/archivos/ArchivoDetail.vue
+msgid "Link document"
+msgstr "Vincular"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Remove record"
+msgstr "Quitar registro"
+
+msgid "Ask your manager for access to your company's documents, then retry."
+msgstr "Pide a tu encargado acceso a los documentos de tu empresa y vuelve a intentarlo."
+
+msgid "File received. Send the next one when ready."
+msgstr "Archivo recibido. Envía el siguiente cuando esté listo."
+
+msgid "Verify delivery"
+msgstr "Verificar entrega"
+
+msgid "Verify"
+msgstr "Verificar"
+
+msgid "Document number in the archive"
+msgstr "Número del documento en el archivo"
+
+msgid "The archive may already have this file. Check it there and enter its document number; it is not sent again."
+msgstr "Puede que el archivo ya tenga este documento. Búscalo ahí e indica su número; no se vuelve a enviar."
+
+msgid "Send to the archive for OCR"
+msgstr "Enviar al archivo para OCR"
+
+msgid "Prepare purchase draft"
+msgstr "Preparar compra en borrador"
+
+msgid "From an ERP or mail attachment"
+msgstr "Desde un adjunto del ERP o del correo"

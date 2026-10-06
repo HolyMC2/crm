@@ -92,6 +92,11 @@ async function mount(path) {
         component: { render: () => h('p', 'Compras page') },
         meta: { app: 'compras', title: 'Compras' },
       },
+      {
+        path: '/archivos',
+        component: { render: () => h('p', 'Archivos page') },
+        meta: { app: 'archivos', title: 'Archivos' },
+      },
       { path: '/deals', component: { render: () => h('p', 'Deals page') } },
       { path: '/ventas', component: { render: () => null } },
       {
@@ -159,8 +164,12 @@ describe('module registry', () => {
       'contactos',
       'ventas',
       'compras',
+      'archivos',
       'avisos',
     ])
+    expect(moduleKeyFor({ path: '/archivos', meta: { app: 'archivos' } })).toBe(
+      'archivos',
+    )
   })
 
   it('Compras is its own module and boots without the sales runtime', () => {
@@ -170,6 +179,56 @@ describe('module registry', () => {
     expect(hostedModules.find((m) => m.key === 'compras')?.to).toBe('/compras')
     expect(isNeutralModule('compras')).toBe(true)
     expect(isNeutralModule('ventas')).toBe(false)
+  })
+
+  it('Archivos refused: the shell answers for Archivos with its own reason', async () => {
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          archivos: {
+            key: 'archivos',
+            enabled: false,
+            reason: 'Tu puesto no tiene acceso a Archivos.',
+            capabilities: {},
+          },
+        },
+      }),
+    )
+    await mount('/archivos')
+    const alert = await until(() => document.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('We could not open')
+    expect(alert.textContent).toContain('Tu puesto no tiene acceso a Archivos.')
+    expect(alert.textContent).not.toContain('Contactos')
+    expect(document.body.textContent).not.toContain('Archivos page')
+  })
+
+  it('Archivos enabled: its page renders and its rail entry shows', async () => {
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          archivos: {
+            key: 'archivos',
+            enabled: true,
+            capabilities: { read: true, create: true },
+          },
+        },
+      }),
+    )
+    await mount('/archivos')
+    expect(await until(() => document.querySelector('[role="alert"]'))).toBe(
+      null,
+    )
+    expect(document.body.textContent).toContain('page')
+    expect(
+      document.querySelector(
+        'a[href$="/archivos"], [data-module="archivos"]',
+      ) ||
+        [...document.querySelectorAll('nav *')].find((n) =>
+          n.textContent?.trim().startsWith('Archivos'),
+        ),
+    ).toBeTruthy()
   })
 
   it('bottom-nav slots follow the role, enabled modules and the saved order', () => {
@@ -411,6 +470,27 @@ describe('palette providers', () => {
       kind: 'text',
     })
     expect(go.map((i) => i.href)).toContain('/contactos?segment=suppliers')
+    expect(go.map((i) => i.href)).not.toContain('/archivos?view=ayuda')
+  })
+
+  it('Archivos places appear only while the module is enabled', async () => {
+    const enabled = boot({
+      modules: {
+        ...boot().modules,
+        archivos: { key: 'archivos', enabled: true, capabilities: {} },
+      },
+    })
+    const places = createShellProviders({
+      boot: ref(enabled),
+      modules: ref([]),
+    }).find((p) => p.key === 'ir_a')
+    const go = await places.search({
+      raw: 'ayuda',
+      text: 'ayuda',
+      scope: 'all',
+      kind: 'text',
+    })
+    expect(go.map((i) => i.href)).toEqual(['/archivos?view=ayuda'])
   })
 })
 

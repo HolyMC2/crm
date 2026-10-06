@@ -15,9 +15,11 @@ no_cache = 1
 
 def get_context():
 	from crm.api import check_app_permission
+	from crm.api.archivos import check_archivos_permission
 	from crm.api.avisos import check_avisos_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
@@ -26,7 +28,8 @@ def get_context():
 	recovery = is_contactos_recovery_path(path)
 	compras = is_compras_path(path)
 	avisos = is_avisos_path(path)
-	neutral = recovery or compras or avisos or is_contactos_path(path)
+	archivos = is_archivos_path(path)
+	neutral = recovery or compras or avisos or archivos or is_contactos_path(path)
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
 		raise frappe.Redirect
@@ -39,6 +42,13 @@ def get_context():
 		)
 	elif avisos:
 		allowed = check_avisos_permission()
+	elif archivos:
+		# A work account without Archivos still gets its guard page (reason, Pedir acceso,
+		# Reintentar) from the shell; the boot carries no evidence.
+		allowed = (
+			check_archivos_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
 	else:
 		allowed = check_contactos_permission() if neutral else check_app_permission()
 	if not recovery and not allowed:
@@ -53,7 +63,7 @@ def get_context():
 			frappe.PermissionError,
 		)
 	context = frappe._dict()
-	module = "compras" if compras else "avisos" if avisos else "contactos"
+	module = "compras" if compras else "avisos" if avisos else "archivos" if archivos else "contactos"
 	context.boot = get_boot(neutral=neutral, module=module)
 	if frappe.session.user != "Guest" and not neutral:
 		capture("active_site", "crm")
@@ -74,12 +84,15 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		frappe.throw(_("This method is only meant for developer mode"))
 	from crm.api import check_app_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
 
 	if is_compras_path(path):
 		return get_boot(neutral=True, module="compras")
+	if is_archivos_path(path):
+		return get_boot(neutral=True, module="archivos")
 	if is_avisos_path(path):
 		from crm.api.avisos import check_avisos_permission
 

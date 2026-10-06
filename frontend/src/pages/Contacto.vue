@@ -469,6 +469,14 @@
           </p>
         </section>
       </div>
+      <ArchivosRegistroPanel
+        v-if="archivosDoctype && nativeRoute.name"
+        class="c-archivos-panel"
+        :doctype="archivosDoctype"
+        :name="nativeRoute.name"
+        :return-to="'/crm' + route.fullPath"
+        :return-label="record.title || record.name"
+      />
       <section
         v-if="contactName && contactTabs.length"
         class="c-provider-section"
@@ -630,6 +638,9 @@ import TagEditor from '@/components/contactos/TagEditor.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
 import ContactTabPanel from '@/components/doco/contact/ContactTabPanel.vue'
 import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
+import { ArchivosRegistroPanel } from '@/components/archivos'
+import { shellBoot } from '@/composables/muelleShell'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
   contactosApi,
   useContactosBootstrap,
@@ -647,6 +658,7 @@ import {
   sourceRef,
   sourceLabel,
   identityTypeLabel,
+  SOURCE_TYPES,
 } from '@/utils/contactos'
 const route = useRoute(),
   router = useRouter()
@@ -790,6 +802,13 @@ const nativeRoute = computed(() => ({
     route.params.name || route.query.name || route.params.contactId || '',
   ),
 }))
+// Files on this record come from Archivos when the worker has it; unsupported
+// doctypes still list their native attachments there.
+const archivosDoctype = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos')
+    ? SOURCE_TYPES[nativeRoute.value.source] || ''
+    : '',
+)
 const {
   draft: noteDraft,
   id: noteId,
