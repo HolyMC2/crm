@@ -4,8 +4,9 @@ const api = vi.hoisted(() => ({ call: vi.fn(), leave: null, update: null }))
 vi.mock('frappe-ui', async () => {
   // Keep the real pinned timezone parser/config; only the RPC transport is stubbed.
   const dates = await import('../../node_modules/frappe-ui/src/utils/dayjs.ts')
-  const config =
-    await import('../../node_modules/frappe-ui/src/utils/config.ts')
+  const config = await import(
+    '../../node_modules/frappe-ui/src/utils/config.ts'
+  )
   return { ...dates, ...config, call: (...args) => api.call(...args) }
 })
 vi.mock('@/stores/users', () => ({ usersStore: () => knownUsers }))
