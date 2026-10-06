@@ -331,9 +331,11 @@ def record_view(token):
 	):
 		return {"counted": False}
 	try:
-		fresh = frappe.cache().set(
-			_key("viewed", link.token_hash[:32], _hash(client_ip())[:16]), 1, ex=VIEW_WINDOW, nx=True
-		)
+		cache = frappe.cache()
+		seen = _key("viewed", link.token_hash[:32], _hash(client_ip())[:16])
+		fresh = cache.incrby(seen, 1) == 1
+		if fresh:
+			cache.expire(seen, VIEW_WINDOW)
 	except Exception:
 		fresh = False
 	if not fresh:

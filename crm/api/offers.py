@@ -86,22 +86,23 @@ def reply_to_customer(name: str, message: str):
 	return share.reply(name, message)
 
 
-# Customer page actions: the token is the capability; see crm.offers.share.
-@frappe.whitelist(allow_guest=True, methods=["POST"])
+# Customer page actions: the token is the capability; see crm.offers.share and
+# docs/OFFER_SHARE_LINK.md "Security contract" (rate limits, state guards, exposure test).
+@frappe.whitelist(allow_guest=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 def customer_decide(token: str, decision: str, terms_hash: str, signer_name: str = "", note: str = ""):
 	from crm.offers import share
 
 	return share.decide(token, decision, terms_hash, signer_name, note)
 
 
-@frappe.whitelist(allow_guest=True, methods=["POST"])
+@frappe.whitelist(allow_guest=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 def customer_message(token: str, message: str):
 	from crm.offers import share
 
 	return share.post_message(token, message)
 
 
-@frappe.whitelist(allow_guest=True, methods=["POST"])
+@frappe.whitelist(allow_guest=True, methods=["POST"])  # nosemgrep: guest-whitelisted-method
 def customer_viewed(token: str):
 	from crm.offers import share
 
