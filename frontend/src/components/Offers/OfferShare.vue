@@ -37,7 +37,7 @@
     <template v-else>
       <div class="flex min-w-0 flex-wrap gap-2">
         <input
-          class="offer-input min-w-0 flex-1"
+          class="offer-input w-full basis-full"
           :value="share.url"
           readonly
           :aria-label="__('Customer link')"

@@ -4,9 +4,8 @@ const api = vi.hoisted(() => ({ call: vi.fn(), leave: null, update: null }))
 vi.mock('frappe-ui', async () => {
   // Keep the real pinned timezone parser/config; only the RPC transport is stubbed.
   const dates = await import('../../node_modules/frappe-ui/src/utils/dayjs.ts')
-  const config = await import(
-    '../../node_modules/frappe-ui/src/utils/config.ts'
-  )
+  const config =
+    await import('../../node_modules/frappe-ui/src/utils/config.ts')
   return { ...dates, ...config, call: (...args) => api.call(...args) }
 })
 vi.mock('@/stores/users', () => ({ usersStore: () => knownUsers }))
@@ -104,6 +103,8 @@ async function mount(offer = draftOffer(), behavior, options = {}) {
         erp_available: false,
       })
     if (method.endsWith('get_offer')) return Promise.resolve(offer)
+    if (method.endsWith('get_share_state'))
+      return Promise.resolve({ url: '', view_count: 0, messages: [] })
     return Promise.resolve(offer)
   })
   const el = document.createElement('div')
@@ -595,7 +596,12 @@ describe('offer presentation and decision provenance', () => {
     const decision = el.querySelector('[data-offer-decision]')
     expect(decision.textContent).toContain('Decision recorded by Ana García')
     expect(decision.title).toContain('seller@example.test')
-    expect(api.call.mock.calls.map(([name]) => name)).toEqual([
+    // The customer-link panel loads its own state; no user directory lookup happens.
+    const offerCalls = () =>
+      api.call.mock.calls
+        .map(([name]) => name)
+        .filter((name) => !name.endsWith('get_share_state'))
+    expect(offerCalls()).toEqual([
       'crm.api.offers.get_offers',
       'crm.api.offers.get_offer',
     ])
@@ -609,7 +615,34 @@ describe('offer presentation and decision provenance', () => {
     ]
     await nextTick()
     expect(decision.textContent).not.toContain('Unrelated actor')
-    expect(api.call).toHaveBeenCalledTimes(2)
+    expect(offerCalls()).toHaveLength(2)
+  })
+  it('shows the customer-link panel on issued offers and online decisions without raw evidence', async () => {
+    const offer = acceptedOffer({
+      decision_channel: 'Online',
+      decision_by: 'Guest',
+      decision_evidence: '{"ip": "203.0.113.9", "name": "María"}',
+    })
+    const { el } = await mount(offer, (method) =>
+      method.endsWith('get_share_state')
+        ? Promise.resolve({
+            url: 'https://site.test/o/token',
+            view_count: 2,
+            last_viewed_at: '2026-10-05 10:00:00',
+            online_decision: { name: 'María', note: '' },
+            messages: [],
+          })
+        : undefined,
+    )
+    await click(el, 'Proposal A')
+    const panel = el.querySelector('[aria-label="Customer link"]')
+    expect(panel).toBeTruthy()
+    expect(
+      panel.querySelector('[data-offer-online-decision]').textContent,
+    ).toContain('María')
+    const decision = el.querySelector('[data-offer-decision]')
+    expect(decision.textContent).toContain('the customer on their offer page')
+    expect(decision.textContent).not.toContain('203.0.113.9')
   })
   it.each([null, 'not/a-site-zone'])(
     'labels unverified site timezone %s without assuming browser time',
