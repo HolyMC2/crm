@@ -10,7 +10,7 @@ def execute():
 				{
 					"fieldname": "erpnext_customer",
 					"fieldtype": "Data",
-					"label": "Customer in ERPNext",
+					"label": "Customer",
 					"insert_after": "lead_name",
 				}
 			]

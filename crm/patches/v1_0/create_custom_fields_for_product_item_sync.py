@@ -11,7 +11,7 @@ def execute():
 			{
 				"fieldname": "erpnext_item_code",
 				"fieldtype": "Data",
-				"label": "Item Code in ERPNext",
+				"label": "Item Code",
 				"read_only": 1,
 				"insert_after": "product_code",
 			}

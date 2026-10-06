@@ -155,7 +155,7 @@ def get_deal_whatsapp_contacts(doctype: str, name: str):
 	exist, which left the Deal conversation without its number switcher.
 	"""
 	if doctype not in ("CRM Deal", "CRM Lead"):
-		frappe.throw(_("Unsupported doctype"), frappe.PermissionError)
+		frappe.throw(_("This kind of record cannot be used here."), frappe.PermissionError)
 	validate_access(doctype, name)
 	from crm.api.whatsapp_contacts import list_numbers
 
@@ -768,7 +768,7 @@ def get_quick_replies():
 
 
 @frappe.whitelist()
-def save_quick_replies(quick_replies):
+def save_quick_replies(quick_replies: str | list):
 	"""Replace the team quick-reply list. Editable by any WhatsApp-enabled CRM role."""
 	if not set(frappe.get_roles()).intersection(ALLOWED_WHATSAPP_ROLES):
 		frappe.throw(_("Not permitted to edit quick replies."), frappe.PermissionError)
@@ -777,7 +777,7 @@ def save_quick_replies(quick_replies):
 		try:
 			quick_replies = json.loads(quick_replies)
 		except (ValueError, TypeError):
-			frappe.throw(_("Invalid quick replies payload."))
+			frappe.throw(_("The quick replies could not be read. Try again."))
 
 	cleaned = []
 	for item in quick_replies if isinstance(quick_replies, list) else []:

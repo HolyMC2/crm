@@ -17,7 +17,7 @@
    "fieldname": "dt",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "DocType",
+   "label": "Document Type",
    "options": "DocType",
    "reqd": 1
   },
@@ -38,6 +38,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "hidden": 1,
    "fieldname": "json",
    "fieldtype": "JSON",
    "label": "JSON"

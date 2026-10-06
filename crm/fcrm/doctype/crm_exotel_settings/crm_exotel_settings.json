@@ -82,7 +82,8 @@
    "depends_on": "enabled",
    "fieldname": "webhook_verify_token",
    "fieldtype": "Data",
-   "label": "Webhook Verify Token",
+   "description": "The same token you enter in Exotel for call notifications.",
+   "label": "Verify Token",
    "mandatory_depends_on": "enabled"
   },
   {

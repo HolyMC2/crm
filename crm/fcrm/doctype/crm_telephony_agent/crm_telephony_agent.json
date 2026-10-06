@@ -98,14 +98,14 @@
    "fieldname": "sip_username",
    "fieldtype": "Data",
    "label": "SIP Username",
-   "description": "Username on the Twilio SIP Domain (e.g. 'marco'). No @ or special chars."
+   "description": "Phone extension username (no @ or symbols)."
   },
   {
    "depends_on": "eval:doc.call_receiving_device=='SIP Phone'",
    "fieldname": "sip_password",
    "fieldtype": "Password",
    "label": "SIP Password",
-   "description": "Password for the SIP credential, paired with sip_username on the Twilio Credential List."
+   "description": "Password of the phone extension."
   }
  ],
  "index_web_pages_for_search": 1,

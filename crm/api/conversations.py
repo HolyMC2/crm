@@ -1128,7 +1128,11 @@ def handoff_bot(
 			_deny()
 		if department:
 			if not frappe.db.has_column(DOCTYPE, "department"):
-				frappe.throw(_("Run the CRM migration before routing conversations to departments."))
+				frappe.throw(
+					_(
+						"Sending conversations to a team is not set up on this system yet. Ask support to finish setting it up."
+					)
+				)
 			doc.department, doc.routed_at = department, now_datetime()
 		if owner:
 			_authorize(doc, owner, write=True)
@@ -1235,7 +1239,11 @@ def apply_control(
 
 def _require_metadata():
 	if not all(frappe.db.has_column(DOCTYPE, field) for field in METADATA_FIELDS):
-		frappe.throw(_("Run the CRM migration before routing conversations to departments."))
+		frappe.throw(
+			_(
+				"Sending conversations to a team is not set up on this system yet. Ask support to finish setting it up."
+			)
+		)
 
 
 def _write_metadata(doc, values):

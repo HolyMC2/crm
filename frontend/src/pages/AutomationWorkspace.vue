@@ -26,7 +26,7 @@
                   'The automation workspace is not installed on this site. You can continue managing sales and next steps in CRM.',
                 )
               : __(
-                  'The automation workspace needs its site migration before it can open. Ask your administrator to complete setup.',
+                  'Automations are still being set up on this system. Ask your administrator or support to finish the setup.',
                 )
           }}
         </p>

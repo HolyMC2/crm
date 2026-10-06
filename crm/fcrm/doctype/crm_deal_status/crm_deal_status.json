@@ -33,7 +33,7 @@
   },
   {
    "default": "0",
-   "description": "Excluded from pickers, boards, funnels and analytics. Deals already on this status still render.",
+   "description": "Hidden from lists, boards and reports. Deals already in this status still show.",
    "fieldname": "hidden",
    "fieldtype": "Check",
    "in_list_view": 1,

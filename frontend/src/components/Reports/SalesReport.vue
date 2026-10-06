@@ -58,7 +58,7 @@
       >
         {{
           __(
-            'Compared with records created {0} through {1}, also measured in their current state. This is not a historical snapshot.',
+            'Compared with records created {0} through {1}, as they are now (not as they were then).',
             [comparisonFilters.from_date, comparisonFilters.to_date],
           )
         }}

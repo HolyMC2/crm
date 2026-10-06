@@ -78,7 +78,7 @@ def _identifier(value, label):
 def _hash(value, label, required=False):
 	value = _text(value, label, 64, required=required)
 	if value and not re.fullmatch(r"[0-9a-f]{64}", value):
-		frappe.throw(_("{0} must be a SHA-256 digest.").format(label))
+		frappe.throw(_("{0} is not a valid reference.").format(label))
 	return value
 
 

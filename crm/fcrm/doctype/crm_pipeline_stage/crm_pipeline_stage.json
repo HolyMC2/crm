@@ -46,13 +46,13 @@
    "fieldname": "required_fields",
    "label": "Required deal fields",
    "fieldtype": "Small Text",
-   "description": "Comma-separated field names, e.g. expected_deal_value, expected_closure_date."
+   "description": "Fields a deal must have filled in before it can enter this stage."
   },
   {
    "fieldname": "allowed_from",
    "label": "Allowed previous stages",
    "fieldtype": "Small Text",
-   "description": "One exact stage ID per line. Empty permits all previous stages. Applies when entering this stage."
+   "description": "Stages a deal can come from, one per line. Blank allows any earlier stage."
   },
   {
    "fieldname": "transition_roles",

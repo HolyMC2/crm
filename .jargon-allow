@@ -1,0 +1,17 @@
+# User-visible text check (jargon_guard.py): accepted exceptions, each with its reason.
+
+# Stored option codes (list/group_by/kanban); records are written by the list view
+# switcher, never edited by hand, and es.po translates each code.
+crm/fcrm/doctype/crm_view_settings/crm_view_settings.json
+# Stored option code unlinked_orphan written by the product reconcile job; es.po
+# translates it as «Sin ligar». Renaming it would need a data migration.
+crm/fcrm/doctype/crm_product_sync_issue/crm_product_sync_issue.json
+
+# Email template example: {{ lead_name }} and {{ grand_total }} are the placeholders
+# the user types into a template.
+msg::<p>Dear {{ lead_name }},</p>\n\n<p>This is a reminder for the payment of {{ grand_total }}.</p>\n\n<p>Thanks,</p>\n<p>Frappé</p>
+# Frappe Cloud login only shows on sites hosted on Frappe Cloud (window.is_fc_site).
+msg::Login to Frappe Cloud?
+msg::Are you sure you want to login to your Frappe Cloud dashboard?
+# Frappe Mail is the name of an email provider the admin picks, like Gmail.
+msg::Frappe Mail Site

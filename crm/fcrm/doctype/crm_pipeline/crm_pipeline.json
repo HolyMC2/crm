@@ -53,7 +53,7 @@
    "options": "Stage\nManual\nLegacy",
    "default": "Stage",
    "reqd": 1,
-   "description": "Stage: use each stage probability. Manual: preserve explicit deal probability. Legacy: preserve historical probabilities."
+   "description": "Stage: each stage sets the deal's probability. Manual: keep the probability typed on each deal. Legacy: keep the probabilities deals already had."
   },
   {
    "fieldname": "stages",

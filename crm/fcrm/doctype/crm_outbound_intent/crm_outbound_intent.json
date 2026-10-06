@@ -38,6 +38,7 @@
  ],
  "fields": [
   {
+   "hidden": 1,
    "fieldname": "action_key",
    "fieldtype": "Data",
    "label": "Action Key",
@@ -47,6 +48,7 @@
    "length": 64
   },
   {
+   "hidden": 1,
    "fieldname": "payload_hash",
    "fieldtype": "Data",
    "label": "Payload Hash",
@@ -119,7 +121,7 @@
   {
    "fieldname": "source_doctype",
    "fieldtype": "Data",
-   "label": "Source Doctype",
+   "label": "Source Document Type",
    "read_only": 1
   },
   {

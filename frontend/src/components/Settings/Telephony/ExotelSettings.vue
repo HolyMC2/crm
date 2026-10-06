@@ -64,7 +64,7 @@
             />
             <FormControl
               v-model="exotel.doc.webhook_verify_token"
-              :label="__('Webhook Verify Token')"
+              :label="__('Verify Token')"
               type="text"
               placeholder="my_secure_token_123"
               required

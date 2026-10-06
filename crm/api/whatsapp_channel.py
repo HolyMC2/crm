@@ -76,7 +76,7 @@ def recipient(doctype, name, phone=""):
 
 def _record(reference_doctype, reference_name):
 	if reference_doctype not in RECORD_DOCTYPES:
-		frappe.throw(_("Unsupported doctype"), frappe.PermissionError)
+		frappe.throw(_("This kind of record cannot be used here."), frappe.PermissionError)
 	return validate_access(reference_doctype, reference_name)
 
 

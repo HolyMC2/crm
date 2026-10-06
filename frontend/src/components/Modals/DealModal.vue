@@ -88,7 +88,7 @@
             <p class="mb-3 text-sm font-semibold text-ink-gray-8">
               {{ __('Customer Details') }}
               <span class="ml-1 text-xs font-normal text-ink-gray-5">
-                {{ __('(for ERPNext sync)') }}
+                {{ __('(for the customer record)') }}
               </span>
             </p>
             <div class="grid grid-cols-2 gap-4">

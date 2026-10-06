@@ -57,7 +57,7 @@
         class="mt-4 rounded-[12px] border border-outline-gray-2 bg-surface-base p-4"
       >
         <div class="mb-3 text-[13px] font-bold text-ink-gray-9">
-          {{ __('Registro de webhooks') }}
+          {{ __('Actividad de la tienda en línea') }}
         </div>
         <div
           v-if="!logs.length"
@@ -65,7 +65,7 @@
         >
           {{
             __(
-              'El puente storefront→CRM es por eventos (Sales Order on_submit); sin registro manual.',
+              'Los pedidos de la tienda en línea llegan solos al CRM al confirmarse; no hay que capturarlos.',
             )
           }}
         </div>

@@ -106,10 +106,10 @@
    "collapsible": 1,
    "fieldname": "automation_section",
    "fieldtype": "Section Break",
-   "label": "Automation"
+   "label": "System Details"
   },
   {
-   "description": "Logical slot <source doctype>:<source name>:<rule>. At most one open task per slot. Maintained by crm.pipeline.services.follow_up; empty on a task a person created.",
+   "hidden": 1,
    "fieldname": "automation_slot",
    "fieldtype": "Data",
    "label": "Automation Slot",
@@ -118,7 +118,7 @@
    "search_index": 1
   },
   {
-   "description": "Immutable id of the event that asked for this task. The same occurrence reuses it; a new one supersedes it.",
+   "hidden": 1,
    "fieldname": "automation_occurrence",
    "fieldtype": "Data",
    "label": "Automation Occurrence",
@@ -126,7 +126,7 @@
    "read_only": 1
   },
   {
-   "description": "Where the event came from, kept even when the CRM reference is a shared deal.",
+   "description": "Kind of record that created this task automatically.",
    "fieldname": "automation_source_doctype",
    "fieldtype": "Link",
    "label": "Automation Source Document Type",
@@ -143,7 +143,7 @@
    "read_only": 1
   },
   {
-   "description": "Title, due date, assignee and activity type as the automation last wrote them. A difference against the fields above means a person edited the task, and the automation then stops overwriting it.",
+   "hidden": 1,
    "fieldname": "automation_values",
    "fieldtype": "Small Text",
    "label": "Automation Values",

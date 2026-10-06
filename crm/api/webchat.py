@@ -122,7 +122,11 @@ def _origin(value):
 		_require(port is None or 1 <= port <= 65535)
 		return "https://" + host + (":" + str(port) if port and port != 443 else "")
 	except (ValueError, AttributeError, UnicodeError):
-		raise frappe.ValidationError("A canonical HTTPS public origin is required.") from None
+		raise frappe.ValidationError(
+			frappe._(
+				"Enter the website address as https:// plus the domain only, for example https://yourshop.com."
+			)
+		) from None
 
 
 def _no_store():

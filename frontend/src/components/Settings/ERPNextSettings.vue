@@ -1,12 +1,12 @@
 <template>
   <SettingsLayoutBase
-    :title="__('ERPNext Settings')"
-    :description="__('Manage ERPNext integration settings')"
+    :title="__('Inventory & Billing')"
+    :description="__('Connect sales with products, customers and quotations')"
   >
     <template #title>
       <div class="flex gap-2 items-center">
         <h2 class="flex text-2xl-semibold leading-none h-5">
-          {{ __('ERPNext Settings') }}
+          {{ __('Inventory & Billing') }}
         </h2>
         <Tooltip text="View documentation">
           <a href="https://docs.frappe.io/crm/erpnext" target="_blank">
@@ -69,7 +69,7 @@
               required
               :description="
                 __(
-                  'ERPNext is not installed on this site either install it or enter the URL of your ERPNext site to connect',
+                  'Inventory is not installed on this site. Enter the address of the site that has it.',
                 )
               "
               autocomplete="off"
@@ -152,7 +152,7 @@
                     {{ __('Company Name') }}
                   </div>
                   <div class="text-p-sm text-ink-gray-5 truncate">
-                    {{ __('Select your ERPNext company to connect with') }}
+                    {{ __('Company your sales belong to') }}
                   </div>
                 </div>
                 <div class="w-48">
@@ -218,7 +218,7 @@
                   <div class="text-p-sm text-ink-gray-5">
                     {{
                       __(
-                        'ERPNext Items always sync into CRM Products. Turn this on to also sync CRM Product changes back to ERPNext Items.',
+                        'Inventory items always appear as CRM products. Turn this on to also send CRM product changes back to inventory.',
                       )
                     }}
                   </div>
@@ -246,11 +246,9 @@
                     {{
                       erpnextCRMSettingsResource.doc.sync_products
                         ? __(
-                            'Run a manual bi-directional sync between ERPNext Items and CRM Products.',
+                            'Sync inventory items and CRM products now, in both directions.',
                           )
-                        : __(
-                            'Run a manual synchronization to pull the latest Items from ERPNext.',
-                          )
+                        : __('Bring the latest items from inventory now.')
                     }}
                   </div>
                 </div>
@@ -272,7 +270,7 @@
                   <div class="text-p-sm text-ink-gray-5 truncate">
                     {{
                       __(
-                        'Create customer in ERPNext when the deal status is changed',
+                        'Create the customer record when a deal reaches the status below',
                       )
                     }}
                   </div>
@@ -300,11 +298,7 @@
                       {{ __('Deal Status') }}
                     </div>
                     <div class="text-p-sm text-ink-gray-5">
-                      {{
-                        __(
-                          'Select the deal status to trigger the auto customer creation in ERPNext',
-                        )
-                      }}
+                      {{ __('Deal status that creates the customer record') }}
                     </div>
                   </div>
                   <Link
@@ -433,12 +427,12 @@
             <ERPNextIcon class="size-7.5 text-ink-gray-5" />
             <div class="flex flex-col items-center gap-1.5 text-center">
               <span class="text-lg-medium text-ink-gray-8">
-                {{ __('Connect ERPNext to CRM') }}
+                {{ __('Connect sales with inventory and billing') }}
               </span>
               <span class="text-center text-p-base text-ink-gray-6">
                 {{
                   __(
-                    'Enable the integration to create quotations and more in ERPNext.',
+                    'Turn this on to create quotations and customers from your deals.',
                   )
                 }}
               </span>
@@ -533,7 +527,7 @@ const productSyncSections = computed(() => {
   const data = productSyncStatus.data || {}
   return [
     getProductSyncSection('products', 'Products', 'No CRM Products'),
-    getProductSyncSection('items', 'Items', 'No synced ERPNext Items'),
+    getProductSyncSection('items', 'Items', 'No synced inventory items'),
     getProductSyncSection('failed', 'Failed Logs', 'No failed syncs'),
   ].map((section) => ({
     ...section,
@@ -661,7 +655,7 @@ const saveSettings = async () => {
 const toggleEnable = (value) => {
   if (value) {
     $dialog({
-      title: __('Disable ERPNext Integration'),
+      title: __('Turn off inventory and billing link'),
       message: __(
         'Create quotation button on deal page and auto customer creation on deal status change will be disabled. Are you sure?',
       ),

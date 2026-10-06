@@ -47,7 +47,7 @@
    "fieldtype": "Int",
    "label": "Advisory Workload Capacity",
    "default": "0",
-   "description": "Open leads plus deals per owner shown in CRM Workload. 0 means unset. Advisory only: this does not change native Assignment Rules or optional Marketing routing."
+   "description": "Suggested number of open leads and deals per person, shown in Workload. 0 = not set. It does not change how leads are assigned."
   },
   {
    "fieldname": "restore_defaults",
@@ -249,7 +249,7 @@
    "fieldtype": "Check",
    "label": "Enable Conversation Automation",
    "default": "0",
-   "description": "Allow explicitly enabled customer flows after ownership, account, consent and native outbox checks. Enabling this never resumes paused or historical runs.",
+   "description": "Allow automatic replies that were turned on one by one. Turning this on never restarts paused conversations.",
    "permlevel": 1
   },
   {

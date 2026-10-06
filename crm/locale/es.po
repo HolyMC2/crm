@@ -259,8 +259,8 @@ msgstr "Texto de ayuda bajo el campo (opcional)"
 msgid "Conditional logic"
 msgstr "Lógica condicional"
 
-msgid "Frappe expression referencing other fields as doc.<fieldname>, e.g. eval:doc.country == 'India'. Leave blank for no condition."
-msgstr "Expresión de Frappe que usa otros campos como doc.<campo>, p. ej. eval:doc.country == 'México'. Déjalo vacío para no poner condición."
+msgid "Show this field only when a rule is met, using other fields as doc.<fieldname>, e.g. eval:doc.country == 'Mexico'. Leave blank to always show it."
+msgstr "Muestra este campo solo cuando se cumple una regla, usando otros campos como doc.<campo>, p. ej. eval:doc.country == 'México'. Déjalo vacío para mostrarlo siempre."
 
 msgid "Visible if"
 msgstr "Visible si"
@@ -2769,11 +2769,6 @@ msgstr ""
 msgid "Company Name"
 msgstr "Nombre de compañía"
 
-#. Label of the erpnext_company (Data) field in DocType 'ERPNext CRM Settings'
-#: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.json
-msgid "Company in ERPNext site"
-msgstr ""
-
 #: frontend/src/components/Settings/ERPNextSettings.vue:517
 msgid "Company name is required"
 msgstr ""
@@ -3084,8 +3079,8 @@ msgid "Create an Event"
 msgstr ""
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:217
-msgid "Create customer in ERPNext when the deal status is changed"
-msgstr ""
+msgid "Create the customer record when a deal reaches the status below"
+msgstr "Crea el registro del cliente cuando un trato llega al estado de abajo"
 
 #. Label of the create_customer_on_status_change (Check) field in DocType
 #. 'ERPNext CRM Settings'
@@ -3096,8 +3091,8 @@ msgstr ""
 #: crm/fcrm/doctype/crm_product/crm_product.js:12
 #: crm/fcrm/doctype/crm_product/crm_product_list.js:10
 #: frontend/src/composables/document.js:29
-msgid "Create products as Items in ERPNext"
-msgstr ""
+msgid "Create the product in Inventory › Items and it will appear here."
+msgstr "Crea el producto en Inventario › Artículos y aparecerá aquí."
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:435
 msgid "Create quotation button on deal page and auto customer creation on deal status change will be disabled. Are you sure?"
@@ -3601,8 +3596,8 @@ msgid "Disable"
 msgstr "Desactivar"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:434
-msgid "Disable ERPNext Integration"
-msgstr ""
+msgid "Turn off inventory and billing link"
+msgstr "Apagar la conexión con inventario y facturación"
 
 #: frontend/src/components/Settings/Hierarchy/Hierarchy.vue:310
 msgid "Disable Sales Hierarchy"
@@ -3651,18 +3646,9 @@ msgstr ""
 msgid "Display format for dates across the system"
 msgstr ""
 
-#. Label of the dt (Link) field in DocType 'CRM Form Script'
-#. Label of the dt (Link) field in DocType 'CRM Global Settings'
-#. Label of the dt (Link) field in DocType 'CRM View Settings'
-#: crm/fcrm/doctype/crm_form_script/crm_form_script.json
-#: crm/fcrm/doctype/crm_global_settings/crm_global_settings.json
-#: crm/fcrm/doctype/crm_view_settings/crm_view_settings.json
-msgid "DocType"
-msgstr "DocType"
-
 #: crm/api/doc.py:803
-msgid "Doctype is required"
-msgstr ""
+msgid "Document type is required"
+msgstr "El tipo de documento es obligatorio"
 
 #: frontend/src/pages/MobileLead.vue:204
 msgid "Document Not Found"
@@ -3794,45 +3780,45 @@ msgstr ""
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:3
 #: frontend/src/components/Settings/ERPNextSettings.vue:9
-msgid "ERPNext Settings"
-msgstr "Configuración de ERPNext"
+msgid "Inventory & Billing"
+msgstr "Inventario y facturación"
 
 #. Label of the section_break_oubd (Section Break) field in DocType 'ERPNext
 #. CRM Settings'
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.json
-msgid "ERPNext Site API's"
-msgstr ""
+msgid "Inventory site access"
+msgstr "Acceso al sitio de inventario"
 
 #. Label of the erpnext_site_url (Data) field in DocType 'ERPNext CRM Settings'
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.json
-msgid "ERPNext Site URL"
-msgstr ""
+msgid "Inventory Site URL"
+msgstr "URL del sitio de inventario"
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.py:161
-msgid "ERPNext custom fields not created"
-msgstr ""
+msgid "Inventory fields not created"
+msgstr "No se crearon los campos de inventario"
 
 #: crm/fcrm/doctype/crm_product/crm_product.py:42
-msgid "ERPNext integration is active. Create an Item in ERPNext and it will appear in CRM Product automatically."
-msgstr ""
+msgid "Products come from inventory. Create the item in Inventory › Items and it will appear here automatically."
+msgstr "Los productos vienen del inventario. Crea el artículo en Inventario › Artículos y aparecerá aquí en automático."
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.py:220
-msgid "ERPNext integration must be enabled on the same site"
-msgstr ""
+msgid "Turn on the inventory and billing link on this site first."
+msgstr "Primero activa la conexión con inventario y facturación en este sitio."
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.py:70
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.py:87
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.py:523
-msgid "ERPNext is not installed in the current site"
-msgstr ""
+msgid "Inventory is not installed on this site."
+msgstr "El inventario no está instalado en este sitio."
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:71
-msgid "ERPNext is not installed on this site either install it or enter the URL of your ERPNext site to connect"
-msgstr ""
+msgid "Inventory is not installed on this site. Enter the address of the site that has it."
+msgstr "El inventario no está instalado en este sitio. Escribe la dirección del sitio que lo tiene."
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.py:27
-msgid "ERPNext is not integrated with the CRM"
-msgstr ""
+msgid "The inventory and billing link is turned off. Turn it on in CRM Settings › Inventory & Billing."
+msgstr "La conexión con inventario y facturación está apagada. Actívala en Configuración del CRM › Inventario y facturación."
 
 #: frontend/src/components/Activities/CommentArea.vue:94
 #: frontend/src/components/FieldLayout/Field.vue:110
@@ -5299,8 +5285,8 @@ msgstr "Es por defecto"
 #. Label of the is_erpnext_in_different_site (Check) field in DocType 'ERPNext
 #. CRM Settings'
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.json
-msgid "Is ERPNext installed on a different site?"
-msgstr ""
+msgid "Is inventory on a different site?"
+msgstr "¿El inventario está en otro sitio?"
 
 #. Label of the is_group (Check) field in DocType 'CRM Sales Hierarchy'
 #. Label of the is_group (Check) field in DocType 'CRM Territory'
@@ -5342,11 +5328,6 @@ msgstr ""
 #: crm/api/doc.py:810
 msgid "Items must be a list"
 msgstr ""
-
-#. Label of the json (JSON) field in DocType 'CRM Global Settings'
-#: crm/fcrm/doctype/crm_global_settings/crm_global_settings.json
-msgid "JSON"
-msgstr "JSON"
 
 #. Label of the job_title (Data) field in DocType 'CRM Deal'
 #. Label of the job_title (Data) field in DocType 'CRM Lead'
@@ -5873,8 +5854,8 @@ msgid "Manage CRM users by adding or inviting them, and assign roles to control 
 msgstr ""
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:4
-msgid "Manage ERPNext integration settings"
-msgstr ""
+msgid "Connect sales with products, customers and quotations"
+msgstr "Conecta las ventas con productos, clientes y cotizaciones"
 
 #: frontend/src/components/Settings/Profile/ProfileSettings.vue:100
 msgid "Manage your account emails and email signature for communication."
@@ -6565,8 +6546,8 @@ msgstr ""
 #. Label of the notification_type_doctype (Link) field in DocType 'CRM
 #. Notification'
 #: crm/fcrm/doctype/crm_notification/crm_notification.json
-msgid "Notification Type Doctype"
-msgstr ""
+msgid "Notification Type Document Type"
+msgstr "Tipo de documento de la notificación"
 
 #: frontend/src/components/Layouts/AppSidebar.vue:13
 #: frontend/src/components/Mobile/MobileSidebar.vue:23
@@ -7284,11 +7265,6 @@ msgstr ""
 msgid "Reference Doc"
 msgstr ""
 
-#. Label of the reference_doctype (Link) field in DocType 'CRM Notification'
-#: crm/fcrm/doctype/crm_notification/crm_notification.json
-msgid "Reference Doctype"
-msgstr "Referencia a 'DocType'"
-
 #. Label of the reference_doctype (Link) field in DocType 'CRM Call Log'
 #. Label of the reference_doctype (Link) field in DocType 'CRM Task'
 #. Label of the reference_doctype (Link) field in DocType 'FCRM Note'
@@ -7964,8 +7940,8 @@ msgid "Select the assignees for {0}."
 msgstr ""
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:245
-msgid "Select the deal status to trigger the auto customer creation in ERPNext"
-msgstr ""
+msgid "Deal status that creates the customer record"
+msgstr "Estado del trato que crea el registro del cliente"
 
 #: frontend/src/components/Settings/CalendarSettings.vue:38
 msgid "Select the default view for your calendar. This will be the initial view when you open the calendar"
@@ -7976,8 +7952,8 @@ msgid "Select whether to display time with or without seconds"
 msgstr ""
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:133
-msgid "Select your ERPNext company to connect with"
-msgstr ""
+msgid "Company your sales belong to"
+msgstr "Empresa a la que pertenecen tus ventas"
 
 #: frontend/src/components/FieldLayout/Field.vue:574
 msgid "Select {0}"
@@ -8230,8 +8206,8 @@ msgstr "Firma"
 #. Description of the 'Condition' (Code) field in DocType 'CRM Service Level
 #. Agreement'
 #: crm/fcrm/doctype/crm_service_level_agreement/crm_service_level_agreement.json
-msgid "Simple Python Expression, Example: doc.status == 'Open' and doc.lead_source == 'Ads'"
-msgstr ""
+msgid "Advanced: a rule written as a formula, for example doc.status == 'Open'. Leave it blank and use the conditions in CRM Settings › SLA instead."
+msgstr "Avanzado: una regla escrita como fórmula, por ejemplo doc.status == 'Open'. Déjalo vacío y usa mejor las condiciones en Configuración del CRM › SLA."
 
 #: frontend/src/components/AssignTo.vue:83
 msgid "Since you removed {0} from the assignee, the {0} has also been removed."
@@ -9160,8 +9136,8 @@ msgid "Uploading {0}%"
 msgstr "Subiendo {0}%"
 
 #: crm/fcrm/doctype/crm_product/crm_product.py:45
-msgid "Use ERPNext to Create Products"
-msgstr ""
+msgid "Create products in Inventory"
+msgstr "Crea los productos en Inventario"
 
 #. Label of the user (Link) field in DocType 'CRM Dashboard'
 #. Label of the user (Link) field in DocType 'CRM Sales Hierarchy'
@@ -9282,11 +9258,6 @@ msgstr "Formulario Web"
 
 #. Label of the webhook_verify_token (Data) field in DocType 'CRM Exotel
 #. Settings'
-#: crm/fcrm/doctype/crm_exotel_settings/crm_exotel_settings.json
-#: frontend/src/components/Settings/Telephony/ExotelSettings.vue:67
-msgid "Webhook Verify Token"
-msgstr ""
-
 #. Label of the website (Data) field in DocType 'CRM Deal'
 #. Label of the website (Data) field in DocType 'CRM Lead'
 #. Label of the website (Data) field in DocType 'CRM Organization'
@@ -9683,7 +9654,7 @@ msgstr "verde"
 #. Option for the 'Type' (Select) field in DocType 'CRM View Settings'
 #: crm/fcrm/doctype/crm_view_settings/crm_view_settings.json
 msgid "group_by"
-msgstr ""
+msgstr "Agrupada"
 
 #: frontend/src/components/Activities/CallArea.vue:16
 msgid "has made a call"
@@ -9787,7 +9758,7 @@ msgstr "justo ahora"
 #. Option for the 'Type' (Select) field in DocType 'CRM View Settings'
 #: crm/fcrm/doctype/crm_view_settings/crm_view_settings.json
 msgid "kanban"
-msgstr "kanban"
+msgstr "Tablero"
 
 #: crm/api/doc.py:47 crm/api/doc.py:157 crm/api/doc.py:483
 msgid "label"
@@ -9905,7 +9876,7 @@ msgstr ""
 #. Option for the 'Kind' (Select) field in DocType 'CRM Product Sync Issue'
 #: crm/fcrm/doctype/crm_product_sync_issue/crm_product_sync_issue.json
 msgid "unlinked_orphan"
-msgstr ""
+msgstr "Sin ligar"
 
 #: crm/api/activities.py:106 crm/api/activities.py:247
 msgid "value"
@@ -10113,12 +10084,12 @@ msgid "SIP Password"
 msgstr "Contraseña SIP"
 
 #: crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json
-msgid "Username on the Twilio SIP Domain (e.g. 'marco'). No @ or special chars."
-msgstr "Usuario en el dominio SIP de Twilio (ej. 'marco'). Sin @ ni caracteres especiales."
+msgid "Phone extension username (no @ or symbols)."
+msgstr "Usuario de la extensión (sin @ ni símbolos)."
 
 #: crm/fcrm/doctype/crm_telephony_agent/crm_telephony_agent.json
-msgid "Password for the SIP credential, paired with sip_username on the Twilio Credential List."
-msgstr "Contraseña del credential SIP, emparejada con sip_username en la Credential List de Twilio."
+msgid "Password of the phone extension."
+msgstr "Contraseña de la extensión."
 
 #: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
 msgid "SIP Phone (Beta)"
@@ -10137,8 +10108,8 @@ msgid "Twilio SIP Domain"
 msgstr "Dominio SIP de Twilio"
 
 #: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
-msgid "e.g. docomexico.sip.twilio.com. Configured on the Twilio Console (Voice → SIP → Domains)."
-msgstr "ej. docomexico.sip.twilio.com. Se configura en la consola de Twilio (Voice → SIP → Domains)."
+msgid "The SIP domain set up in your Twilio account (Voice › SIP › Domains)."
+msgstr "El dominio SIP configurado en tu cuenta de Twilio (Voice › SIP › Domains)."
 
 # --- doco additions (FCRM redesign UI, 2026-07-25) ---
 
@@ -10597,3 +10568,188 @@ msgstr "abrir"
 msgctxt "Command palette hint"
 msgid "close"
 msgstr "cerrar"
+
+# --- shop wording for CRM settings, fields and messages (2026-10-06) ---
+
+msgid "Inventory items always appear as CRM products. Turn this on to also send CRM product changes back to inventory."
+msgstr "Los artículos del inventario siempre aparecen como productos del CRM. Actívalo para enviar también al inventario los cambios de productos del CRM."
+
+msgid "Sync inventory items and CRM products now, in both directions."
+msgstr "Sincroniza ahora los artículos del inventario y los productos del CRM, en ambos sentidos."
+
+msgid "Bring the latest items from inventory now."
+msgstr "Trae ahora los artículos más recientes del inventario."
+
+msgid "Connect sales with inventory and billing"
+msgstr "Conecta las ventas con inventario y facturación"
+
+msgid "Turn this on to create quotations and customers from your deals."
+msgstr "Actívalo para crear cotizaciones y clientes desde tus tratos."
+
+msgid "No synced inventory items"
+msgstr "No hay artículos del inventario sincronizados"
+
+msgid "(for the customer record)"
+msgstr "(para el registro del cliente)"
+
+msgid "Team if no one is assigned"
+msgstr "Equipo si nadie está asignado"
+
+msgid "Source Document Type"
+msgstr "Tipo de documento de origen"
+
+msgid "Open in full system"
+msgstr "Abrir en el sistema completo"
+
+msgid "Manage stage names and outcomes in the full system"
+msgstr "Administra los nombres de etapa y los resultados en el sistema completo"
+
+msgid "Stage: each stage sets the deal's probability. Manual: keep the probability typed on each deal. Legacy: keep the probabilities deals already had."
+msgstr "Fase: cada etapa define la probabilidad del trato. Manual: se respeta la probabilidad escrita en cada trato. Conservar anteriores: se mantienen las probabilidades que ya tenían los tratos."
+
+msgid "Legacy"
+msgstr "Conservar anteriores"
+
+msgid "By stage"
+msgstr "Por etapa"
+
+msgid "Keep previous"
+msgstr "Conservar anteriores"
+
+msgid "By stage uses each stage's probability. Manual keeps the probability typed on each deal. Keep previous keeps the values deals already had and uses the stage value for new deals without one. Won is 100%; Lost is 0%."
+msgstr "Por etapa usa la probabilidad de cada etapa. Manual respeta la probabilidad escrita en cada trato. Conservar anteriores mantiene los valores que ya tenían los tratos y usa el de la etapa en tratos nuevos que no tengan uno. Ganado es 100 %; Perdido es 0 %."
+
+msgid "Fields a deal must have filled in before it can enter this stage."
+msgstr "Campos que el trato debe tener llenos para entrar a esta etapa."
+
+msgid "Stages a deal can come from, one per line. Blank allows any earlier stage."
+msgstr "Etapas desde las que puede llegar un trato, una por renglón. Vacío permite cualquier etapa anterior."
+
+msgid "System Details"
+msgstr "Detalles del sistema"
+
+msgid "Kind of record that created this task automatically."
+msgstr "Tipo de registro que creó esta tarea en automático."
+
+msgid "Due date of the next open task."
+msgstr "Fecha de la siguiente tarea abierta."
+
+msgid "Team that handles this conversation."
+msgstr "Equipo que atiende esta conversación."
+
+msgid "Proposal amount, without taxes. It is not an invoice or a payment."
+msgstr "Monto de la propuesta, sin impuestos. No es factura ni pago."
+
+msgid "Hidden from lists, boards and reports. Deals already in this status still show."
+msgstr "Se oculta de listas, tableros y reportes. Los tratos que ya lo tienen se siguen viendo."
+
+msgid "Suggested number of open leads and deals per person, shown in Workload. 0 = not set. It does not change how leads are assigned."
+msgstr "Número sugerido de prospectos y tratos abiertos por persona, en Carga de trabajo. 0 = sin definir. No cambia cómo se asignan."
+
+msgid "Allow automatic replies that were turned on one by one. Turning this on never restarts paused conversations."
+msgstr "Permite respuestas automáticas activadas una por una. Activarlo nunca reanuda conversaciones pausadas."
+
+msgid "Automatic replies for one customer account. Publishing turns them on; pausing stops them right away."
+msgstr "Respuestas automáticas para una cuenta de clientes. Publicar las activa; pausar las detiene de inmediato."
+
+msgid "Do not start automatically if a person or bot answered within these minutes."
+msgstr "No iniciar en automático si una persona o bot respondió en estos minutos."
+
+msgid "Automation that sent this message."
+msgstr "Automatización que envió este mensaje."
+
+msgid "Item Code"
+msgstr "Código de artículo"
+
+msgid "Company"
+msgstr "Empresa"
+
+msgid "Automatic replies are not set up on this system yet. Ask support to finish setting them up."
+msgstr "Las respuestas automáticas aún no están configuradas en tu sistema. Pide a soporte que termine la configuración."
+
+msgid "Sending conversations to a team is not set up on this system yet. Ask support to finish setting it up."
+msgstr "Enviar conversaciones a un equipo aún no está configurado en tu sistema. Pide a soporte que termine la configuración."
+
+msgid "The inquiry has too much data. Shorten it and try again."
+msgstr "La consulta trae demasiados datos. Acórtala e intenta de nuevo."
+
+msgid "{0} could not be read. Try again."
+msgstr "No se pudo leer {0}. Intenta de nuevo."
+
+msgid "This kind of record cannot be used here."
+msgstr "Este tipo de registro no se puede usar aquí."
+
+msgid "The quick replies could not be read. Try again."
+msgstr "No se pudieron leer las respuestas rápidas. Intenta de nuevo."
+
+msgid "The inquiry owner is filled in automatically and cannot be changed here."
+msgstr "El responsable de la consulta se asigna solo; no se edita aquí."
+
+msgid "These details are filled in automatically and cannot be changed here."
+msgstr "Estos datos se llenan solos; no se editan aquí."
+
+msgid "{0} is not a valid reference."
+msgstr "{0} no es una referencia válida."
+
+msgid "This system is missing an update that sales pipelines need. Ask support to update it."
+msgstr "A tu sistema le falta una actualización que necesitan los embudos de venta. Pide a soporte que lo actualice."
+
+msgid "A follow-up needs both the kind of record and the record it comes from."
+msgstr "Un seguimiento necesita el tipo de registro y el registro del que viene."
+
+msgid "Automatic follow-up tasks are not set up on this system yet. Ask support to finish setting them up."
+msgstr "Las tareas de seguimiento automáticas aún no están configuradas en tu sistema. Pide a soporte que termine la configuración."
+
+msgid "Enter the website address as https:// plus the domain only, for example https://yourshop.com."
+msgstr "Escribe la dirección del sitio web como https:// más el dominio, por ejemplo https://tutienda.com."
+
+msgid "Cannot delete: item {0} is used in a quotation. Remove it from the quotation or delete the item in Inventory first."
+msgstr "No se puede borrar: el artículo {0} está en una cotización. Quítalo de la cotización o borra primero el artículo en Inventario."
+
+msgid "Could not add the CRM fields on {0} automatically. On that site, turn on the CRM data sync option in its CRM Settings, or ask support to check the error log."
+msgstr "No se pudieron agregar los campos del CRM en {0} en automático. En ese sitio, activa la opción de sincronizar datos del CRM en su configuración del CRM, o pide a soporte que revise el registro de errores."
+
+msgid "Inventory is not installed on this site. The offer is still available."
+msgstr "El inventario no está instalado en este sitio. La oferta sigue disponible."
+
+msgid "Turn on the inventory and billing link in CRM Settings before creating the quotation."
+msgstr "Activa la conexión con inventario y facturación en la configuración del CRM antes de crear la cotización."
+
+msgid "Automations are still being set up on this system. Ask your administrator or support to finish the setup."
+msgstr "Las automatizaciones aún se están preparando en tu sistema. Pide a tu administrador o a soporte que termine la configuración."
+
+msgid "Compared with records created {0} through {1}, as they are now (not as they were then)."
+msgstr "Comparado con los registros creados del {0} al {1}, según su estado actual (no como estaban entonces)."
+
+msgid "The quotation cannot be created yet. Review the company, customer and products in the full system."
+msgstr "Aún no se puede crear la cotización. Revisa la empresa, el cliente y los productos en el sistema completo."
+
+msgid "Full system"
+msgstr "Sistema completo"
+
+msgid "This summary is incomplete. Open the settings screen for the full details, or try again."
+msgstr "Este resumen está incompleto. Abre la pantalla de configuración para ver todos los detalles, o intenta de nuevo."
+
+msgid "Each stage sets the deal's probability when the deal is saved. Won is always 100% and Lost 0%."
+msgstr "Cada etapa define la probabilidad del trato al guardarlo. Ganado siempre es 100 % y Perdido 0 %."
+
+msgid "The saved action could not be cleared. Check the order before continuing."
+msgstr "No se pudo borrar la acción guardada. Revisa el pedido antes de continuar."
+
+msgid "A saved order action could not be read. Check the order before starting another payment."
+msgstr "No se pudo leer una acción guardada del pedido. Revisa el pedido antes de iniciar otro cobro."
+
+msgid "A saved order action needs review. Check the order before continuing."
+msgstr "Una acción guardada del pedido necesita revisión. Revisa el pedido antes de continuar."
+
+msgid "Orders cannot be reached right now. Try again or check the order."
+msgstr "No se pueden consultar los pedidos en este momento. Intenta de nuevo o revisa el pedido."
+
+msgid "No sales orders you can see are linked to this deal. Continue an accepted offer from its quotation, or review a received cart."
+msgstr "Este trato no tiene órdenes de venta que puedas ver. Continúa una oferta aceptada desde su cotización o revisa un carrito recibido."
+
+msgid "Verify Token"
+msgstr "Token de verificación"
+
+msgid "The same token you enter in Exotel for call notifications."
+msgstr "El mismo token que escribes en Exotel para los avisos de llamadas."

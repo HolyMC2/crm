@@ -40,9 +40,9 @@ class CRMProduct(Document):
 		if should_push_to_erpnext():
 			frappe.throw(
 				_(
-					"ERPNext integration is active. Create an Item in ERPNext and it will appear in CRM Product automatically."
+					"Products come from inventory. Create the item in Inventory › Items and it will appear here automatically."
 				),
-				title=_("Use ERPNext to Create Products"),
+				title=_("Create products in Inventory"),
 			)
 
 	def validate(self):
@@ -79,8 +79,8 @@ class CRMProduct(Document):
 		):
 			frappe.throw(
 				_(
-					"Cannot delete: linked ERPNext Item {0} is referenced by a Quotation. "
-					"Remove the reference or delete the Item in ERPNext first."
+					"Cannot delete: item {0} is used in a quotation. "
+					"Remove it from the quotation or delete the item in Inventory first."
 				).format(self.erpnext_item_code)
 			)
 

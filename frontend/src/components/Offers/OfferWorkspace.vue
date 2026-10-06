@@ -126,7 +126,7 @@
               :href="deskUrl"
               target="_blank"
               rel="noopener"
-              >{{ __('Open in Desk') }}</a
+              >{{ __('Open in full system') }}</a
             >
           </div>
           <p>
@@ -698,7 +698,7 @@ async function reviewErp() {
     if (!result.available)
       throw new Error(
         __(
-          'ERP quotation is unavailable. Review the company, customer and product setup in Desk.',
+          'The quotation cannot be created yet. Review the company, customer and products in the full system.',
         ),
       )
     if (

@@ -126,7 +126,9 @@
           class="rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-gray-8 disabled:opacity-50"
           :disabled="busy || !detail.lines.length"
           :title="
-            __('Crea la orden de venta (borrador) — facturación en Desk/POS')
+            __(
+              'Crea la orden de venta (borrador); se cobra y factura en la caja',
+            )
           "
           @click="accept"
         >

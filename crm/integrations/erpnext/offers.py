@@ -91,10 +91,10 @@ def _accepted(name):
 
 def _build(doc):
 	if "erpnext" not in frappe.get_installed_apps():
-		service._fail("ERPNext is not installed. The commercial offer remains available.")
+		service._fail("Inventory is not installed on this site. The offer is still available.")
 	settings = _single("ERPNext CRM Settings")
 	if not int(settings.enabled or 0) or int(settings.is_erpnext_in_different_site or 0):
-		service._fail("Configure the same-site ERPNext integration before quotation handoff.")
+		service._fail("Turn on the inventory and billing link in CRM Settings before creating the quotation.")
 	if not frappe.has_permission("Quotation", "create") or not frappe.has_permission("Quotation", "read"):
 		service._fail("Quotation create and read permissions are required.", frappe.PermissionError)
 	stock_settings = _single("Stock Settings")

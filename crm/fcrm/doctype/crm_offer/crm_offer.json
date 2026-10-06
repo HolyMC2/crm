@@ -150,7 +150,7 @@
    "read_only": 1,
    "options": "currency",
    "in_list_view": 1,
-   "description": "Proposal amount only. Taxes are not calculated here. This is not an invoice, inventory reservation or payment receipt."
+   "description": "Proposal amount, without taxes. It is not an invoice or a payment."
   },
   {
    "fieldname": "terms",

@@ -122,7 +122,7 @@ function checkedCommand(command, salesOrder) {
   )
     throw new Error(
       __(
-        'A saved order action needs review. Check its canonical order before continuing.',
+        'A saved order action needs review. Check the order before continuing.',
       ),
     )
   return Object.freeze({
@@ -180,7 +180,7 @@ export function commerceError(error) {
   return (
     error?.messages?.[0] ||
     error?.message ||
-    __('The order service is unavailable. Retry or check the canonical order.')
+    __('Orders cannot be reached right now. Try again or check the order.')
   )
 }
 export function knownRefusal(error) {

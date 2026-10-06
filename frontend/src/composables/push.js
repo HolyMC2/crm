@@ -107,7 +107,7 @@ export async function enablePush() {
       pushState.value = 'off'
       toast.error(
         __(
-          'No se pudo iniciar el service worker — recarga la página e intenta de nuevo',
+          'No se pudieron activar las notificaciones. Recarga la página e intenta de nuevo.',
         ),
       )
       return

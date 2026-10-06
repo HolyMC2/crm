@@ -279,7 +279,9 @@ def review(doc):
 	flow = {}
 	adapter = _adapter()
 	if not adapter:
-		reasons.append(_("Install the Chatflow automation adapter (doco_marketing) and its hooks."))
+		reasons.append(
+			_("Automatic replies are not set up on this system yet. Ask support to finish setting them up.")
+		)
 	else:
 		try:
 			flow = adapter.policy_flow(doc.flow, doc.provider, profile.name if profile else None) or {}

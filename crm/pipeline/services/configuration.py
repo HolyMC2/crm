@@ -13,9 +13,7 @@ def require_shared_scope_support():
 
 	if getattr(share, "FILTER_SHARED_DOCUMENTS_VERSION", 0) != 1:
 		frappe.throw(
-			_(
-				"CRM requires the shared-document scope framework hook (version 1). Ask an administrator to install the supported base image."
-			),
+			_("This system is missing an update that sales pipelines need. Ask support to update it."),
 			frappe.PermissionError,
 		)
 

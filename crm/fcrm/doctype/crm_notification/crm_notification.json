@@ -81,7 +81,7 @@
   {
    "fieldname": "reference_doctype",
    "fieldtype": "Link",
-   "label": "Reference Doctype",
+   "label": "Reference Document Type",
    "options": "DocType"
   },
   {
@@ -95,7 +95,7 @@
   {
    "fieldname": "notification_type_doctype",
    "fieldtype": "Link",
-   "label": "Notification Type Doctype",
+   "label": "Notification Type Document Type",
    "options": "DocType"
   },
   {

@@ -18,6 +18,7 @@
  ],
  "fields": [
   {
+   "hidden": 1,
    "fieldname": "message_key",
    "fieldtype": "Data",
    "label": "Message Key",

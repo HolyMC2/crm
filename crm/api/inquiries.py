@@ -109,19 +109,19 @@ def _text(value, label, maximum, required=False, multiline=False):
 def _mapping(value, allowed, label):
 	if isinstance(value, str):
 		if len(value.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-			frappe.throw(_("The inquiry payload is too large."))
+			frappe.throw(_("The inquiry has too much data. Shorten it and try again."))
 		try:
 			value = json.loads(value)
 		except (TypeError, ValueError):
-			frappe.throw(_("{0} must be a JSON object.").format(label))
+			frappe.throw(_("{0} could not be read. Try again.").format(label))
 	if not isinstance(value, dict) or set(value) - allowed:
 		frappe.throw(_("{0} contains unsupported fields or is not an object.").format(label))
 	try:
 		size = len(json.dumps(value, ensure_ascii=False).encode("utf-8"))
 	except (TypeError, ValueError):
-		frappe.throw(_("{0} must contain JSON values.").format(label))
+		frappe.throw(_("{0} could not be read. Try again.").format(label))
 	if size > MAX_PAYLOAD_BYTES:
-		frappe.throw(_("The inquiry payload is too large."))
+		frappe.throw(_("The inquiry has too much data. Shorten it and try again."))
 	return value
 
 

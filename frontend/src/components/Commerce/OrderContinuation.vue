@@ -717,7 +717,7 @@ async function execute() {
         discardReview()
       } catch {
         state.error = __(
-          'The saved action could not be cleared. Check its canonical order before continuing.',
+          'The saved action could not be cleared. Check the order before continuing.',
         )
       }
     }
@@ -765,7 +765,7 @@ watch(
       state.pending = restoreCommand(state.actor, props.salesOrder)
     } catch {
       state.storageError = __(
-        'A saved order action could not be read. Check its canonical order before starting another payment.',
+        'A saved order action could not be read. Check the order before starting another payment.',
       )
       return
     }

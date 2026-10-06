@@ -28,6 +28,7 @@
    "reqd": 1
   },
   {
+   "hidden": 1,
    "fieldname": "command_key",
    "fieldtype": "Data",
    "label": "Command Key",
@@ -37,6 +38,7 @@
    "reqd": 1
   },
   {
+   "hidden": 1,
    "fieldname": "input_hash",
    "fieldtype": "Data",
    "label": "Input Hash",
@@ -87,6 +89,7 @@
    "reqd": 1
   },
   {
+   "hidden": 1,
    "fieldname": "previous_json",
    "fieldtype": "Code",
    "label": "Previous Json",
@@ -95,6 +98,7 @@
    "reqd": 1
   },
   {
+   "hidden": 1,
    "fieldname": "result_json",
    "fieldtype": "Code",
    "label": "Result Json",

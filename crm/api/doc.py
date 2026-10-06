@@ -894,7 +894,7 @@ def delete_bulk_docs(doctype: str, items: str | list, delete_linked: bool = Fals
 	from frappe.desk.reportview import delete_bulk
 
 	if not doctype:
-		frappe.throw(_("Doctype is required"))
+		frappe.throw(_("Document type is required"))
 
 	if not items:
 		frappe.throw(_("Items are required"))

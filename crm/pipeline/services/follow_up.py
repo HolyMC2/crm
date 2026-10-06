@@ -552,7 +552,7 @@ def _source(source_doctype, source_name):
 	if not source_doctype and not source_name:
 		return None, None
 	if not source_doctype or not source_name:
-		frappe.throw(_("A follow-up source needs both its doctype and its name."))
+		frappe.throw(_("A follow-up needs both the kind of record and the record it comes from."))
 	if not frappe.db.exists("DocType", source_doctype) or not frappe.db.exists(source_doctype, source_name):
 		frappe.throw(
 			_("{0} {1} does not exist.").format(source_doctype, cstr(source_name)), frappe.DoesNotExistError
@@ -608,4 +608,8 @@ def _required_text(value, label, limit=MAX_DATA) -> str:
 def _require_migration() -> None:
 	"""A bind-mounted deploy can run this code before its migration adds the columns."""
 	if not frappe.db.has_column("CRM Task", "automation_slot"):
-		frappe.throw(_("CRM Task has no automation fields yet; migrate the site."))
+		frappe.throw(
+			_(
+				"Automatic follow-up tasks are not set up on this system yet. Ask support to finish setting them up."
+			)
+		)

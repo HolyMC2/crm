@@ -20,7 +20,7 @@ def execute():
 				{
 					"fieldname": "doco_provenance_section",
 					"fieldtype": "Section Break",
-					"label": "Provenance",
+					"label": "System Details",
 					"insert_after": "reference_name",
 					"collapsible": 1,
 				},
@@ -46,7 +46,7 @@ def execute():
 					"fieldname": "doco_automation_source",
 					"fieldtype": "Data",
 					"label": "Automation Source",
-					"description": "e.g. taller.tracker_notify:Recibido",
+					"description": "Automation that sent this message.",
 					"insert_after": "doco_actor_user",
 					"read_only": 1,
 				},

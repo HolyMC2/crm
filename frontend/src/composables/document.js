@@ -29,7 +29,9 @@ export async function createDocument(doctype, obj, close, callback) {
   if (!doctype) return
   if (doctype === 'CRM Product' && (await shouldCreateProductInERPNext())) {
     close?.()
-    toast.info(__('Create products as Items in ERPNext'))
+    toast.info(
+      __('Create the product in Inventory › Items and it will appear here.'),
+    )
     window.open('/app/item/new', '_blank')
     return
   }

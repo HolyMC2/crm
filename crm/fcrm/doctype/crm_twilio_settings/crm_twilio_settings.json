@@ -139,7 +139,7 @@
    "fieldname": "sip_domain",
    "fieldtype": "Data",
    "label": "Twilio SIP Domain",
-   "description": "e.g. docomexico.sip.twilio.com. Configured on the Twilio Console (Voice → SIP → Domains)."
+   "description": "The SIP domain set up in your Twilio account (Voice › SIP › Domains)."
   }
  ],
  "index_web_pages_for_search": 1,

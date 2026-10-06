@@ -120,7 +120,7 @@
           <Tooltip
             :text="
               __(
-                'Frappe expression referencing other fields as doc.<fieldname>, e.g. eval:doc.country == \'India\'. Leave blank for no condition.',
+                'Show this field only when a rule is met, using other fields as doc.<fieldname>, e.g. eval:doc.country == \'Mexico\'. Leave blank to always show it.',
               )
             "
           >

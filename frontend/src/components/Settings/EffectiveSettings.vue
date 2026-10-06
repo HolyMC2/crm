@@ -355,7 +355,7 @@
         >
           {{
             __(
-              'This policy summary is incomplete or limited. Open the canonical editor for permitted details and retry failed reads.',
+              'This summary is incomplete. Open the settings screen for the full details, or try again.',
             )
           }}
         </p>
@@ -541,7 +541,7 @@ function policyText(policy) {
   return (
     {
       Stage: __(
-        'Stage probability applies when the deal is validated. Won and Lost outcomes use their canonical closing probabilities.',
+        "Each stage sets the deal's probability when the deal is saved. Won is always 100% and Lost 0%.",
       ),
       Manual: __(
         'Explicit deal probabilities are preserved. A missing probability takes the configured stage value.',

@@ -562,7 +562,9 @@ describe('reviewed native order continuation (synthetic API fixtures)', () => {
         return Promise.reject({})
       },
     })
-    expect(outage.el.textContent).toContain('service is unavailable')
+    expect(outage.el.textContent).toContain(
+      'Orders cannot be reached right now',
+    )
     expect(button(outage.el, 'Review payment link')).toBeUndefined()
   })
   it('honors submit permission and conversation ownership blockers', async () => {

@@ -474,7 +474,7 @@
    "label": "Next Activity"
   },
   {
-   "description": "Due date of the earliest open CRM Task on this record. Maintained by crm.pipeline.",
+   "description": "Due date of the next open task.",
    "fieldname": "next_activity_at",
    "fieldtype": "Datetime",
    "label": "Next Activity At",

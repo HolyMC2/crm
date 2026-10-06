@@ -114,14 +114,17 @@ class CRMInquiry(Document):
 		if not _eligible(frappe.session.user):
 			frappe.throw(_("An enabled CRM user is required."), frappe.PermissionError)
 		if self.owner and self.owner != frappe.session.user:
-			frappe.throw(_("Inquiry ownership is set by the server."), frappe.PermissionError)
+			frappe.throw(
+				_("The inquiry owner is filled in automatically and cannot be changed here."),
+				frappe.PermissionError,
+			)
 		self.owner = frappe.session.user
 		self.assigned_to = self.assigned_to or frappe.session.user
 		capture = _service_flag(self, "inquiry_capture")
 		if capture:
 			self.capture_key, self.capture_payload_hash, self.capture_context = capture[1:]
 		elif self.capture_key or self.capture_payload_hash or self.get("capture_context"):
-			frappe.throw(_("Capture receipts are set by the server."))
+			frappe.throw(_("These details are filled in automatically and cannot be changed here."))
 		else:
 			self.capture_key = _digest([self.owner, "desk", uuid4().hex])
 			self.capture_payload_hash = _digest(

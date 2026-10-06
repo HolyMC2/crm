@@ -5,7 +5,7 @@
  "engine": "InnoDB",
  "autoname": "hash",
  "allow_rename": 0,
- "description": "Explicit, published inbound automation for one exact customer account. Publishing pins the bot route and the published Chatflow revision; pausing revokes outstanding bot grants immediately.",
+ "description": "Automatic replies for one customer account. Publishing turns them on; pausing stops them right away.",
  "field_order": [
   "title",
   "provider",
@@ -75,6 +75,7 @@
    "reqd": 1
   },
   {
+   "hidden": 1,
    "fieldname": "flow_hash",
    "fieldtype": "Data",
    "label": "Published Flow Hash",
@@ -84,7 +85,7 @@
   {
    "fieldname": "department",
    "fieldtype": "Select",
-   "label": "Fallback Department",
+   "label": "Team if no one is assigned",
    "read_only": 1,
    "options": "\nmarketing\nsales\nsupport\nfinance\nwarehouse\ntechnicians"
   },
@@ -94,7 +95,7 @@
    "label": "Cooldown (minutes)",
    "read_only": 1,
    "default": "1440",
-   "description": "No automatic start while a person or bot handled this conversation within this window."
+   "description": "Do not start automatically if a person or bot answered within these minutes."
   },
   {
    "fieldname": "section_publication",
@@ -126,6 +127,7 @@
    "read_only": 1
   },
   {
+   "hidden": 1,
    "fieldname": "published_hash",
    "fieldtype": "Data",
    "label": "Published Hash",

@@ -26,7 +26,7 @@
     <p v-else-if="context && !context.orders.length" class="mt-3">
       {{
         __(
-          'No permitted sales orders are linked to this deal. Continue an accepted offer in its canonical ERP quotation, or review a received cart.',
+          'No sales orders you can see are linked to this deal. Continue an accepted offer from its quotation, or review a received cart.',
         )
       }}
     </p>

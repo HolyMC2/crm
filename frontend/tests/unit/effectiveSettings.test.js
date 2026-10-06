@@ -300,7 +300,7 @@ describe('effective configuration (synthetic permissioned DTOs)', () => {
     data.sections.assignment.items[0].weekdays = []
     const { el } = await mount(data)
     expect(el.textContent).toContain('pipeline list is limited')
-    expect(el.textContent).toContain('policy summary is incomplete')
+    expect(el.textContent).toContain('This summary is incomplete')
     expect(el.textContent).toContain('first 100 dates')
     expect(el.textContent).toContain('assignment summary is incomplete')
     expect(el.textContent).toContain('No weekday restriction')

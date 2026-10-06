@@ -17,7 +17,7 @@
       }}
     </p>
     <a href="/app/crm-deal-status" class="text-sm underline">{{
-      __('Manage stage definitions and outcomes in Desk')
+      __('Manage stage names and outcomes in the full system')
     }}</a>
     <div class="flex flex-wrap gap-2">
       <Button
@@ -66,7 +66,11 @@
           v-model="draft.probability_policy"
           type="select"
           :label="__('Probability policy')"
-          :options="['Stage', 'Manual', 'Legacy']"
+          :options="[
+            { label: __('By stage'), value: 'Stage' },
+            { label: __('Manual'), value: 'Manual' },
+            { label: __('Keep previous'), value: 'Legacy' },
+          ]"
         />
         <FormControl
           v-model="draft.is_default"
@@ -82,7 +86,7 @@
       <p class="text-sm text-ink-gray-6">
         {{
           __(
-            'Stage uses the configured probability. Manual preserves explicit deal probabilities. Legacy preserves historical values and uses stage defaults for new records without a positive probability. Won is 100%; Lost is 0%.',
+            "By stage uses each stage's probability. Manual keeps the probability typed on each deal. Keep previous keeps the values deals already had and uses the stage value for new deals without one. Won is 100%; Lost is 0%.",
           )
         }}
       </p>
@@ -237,7 +241,7 @@
           v-if="draft.name"
           class="self-center text-sm underline"
           :href="`/app/crm-pipeline/${encodeURIComponent(draft.name)}`"
-          >{{ __('Open in Desk') }}</a
+          >{{ __('Open in full system') }}</a
         >
       </div>
     </fieldset>
