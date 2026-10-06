@@ -13,11 +13,12 @@ export const whatsappManual = computed(() => whatsappMode.value === 'manual')
 export const whatsappTabEnabled = computed(() => whatsappMode.value !== 'off')
 export const isWhatsappInstalled = ref(false)
 
-createResource({
+// Asked only once frappe_whatsapp is known to be installed: on sites without it the
+// method does not exist and every page load would log a failed request.
+const channel = createResource({
   url: 'frappe_whatsapp.channel.get_channel',
   method: 'GET',
   cache: 'WhatsApp Channel',
-  auto: true,
   onSuccess: (data) => {
     whatsappMode.value = data?.mode || 'off'
     whatsappShopNumber.value = data?.shop_number || ''
@@ -40,5 +41,7 @@ createResource({
   auto: true,
   onSuccess: (data) => {
     isWhatsappInstalled.value = Boolean(data)
+    if (isWhatsappInstalled.value) channel.fetch()
+    else whatsappMode.value = 'off'
   },
 })

@@ -304,6 +304,20 @@ class TestOfferShare(OfferFixture, IntegrationTestCase):
 		self.assertEqual([m["message"] for m in view["messages"]], ["¿Incluye instalación?", "Sí, incluida."])
 		self.assertNotIn("margin", json.dumps(view))
 
+	def test_repeated_identical_messages_each_notify_the_seller(self):
+		_issued, state = self.shared()
+		self.as_guest()
+		share.post_message(token_of(state), "¿Sigue disponible?")
+		share.post_message(token_of(state), "¿Sigue disponible?")
+		frappe.set_user("Administrator")
+		self.assertEqual(
+			frappe.db.count(
+				"CRM Notification",
+				{"to_user": self.user, "notification_type_doctype": "CRM Offer Message"},
+			),
+			2,
+		)
+
 	def test_views_are_throttled_per_ip_and_skip_staff(self):
 		issued, state = self.shared()
 		token = token_of(state)

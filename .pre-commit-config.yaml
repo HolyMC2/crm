@@ -43,6 +43,11 @@ repos:
 
     - repo: local
       hooks:
+          - id: po-duplicates
+            name: no duplicate translations
+            entry: python3 scripts/ci/check_po_duplicates.py
+            language: system
+            files: ^crm/locale/.*\.po$
           - id: eslint
             name: eslint
             entry: bash -c 'cd frontend && eslint --fix src/**/*.{js,ts,vue}'

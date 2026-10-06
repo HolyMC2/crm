@@ -1,0 +1,3 @@
+# Every lane appends translations to the end of the catalog; keep both sides
+# instead of conflicting. scripts/ci/check_po_duplicates.py rejects duplicates.
+crm/locale/*.po merge=union

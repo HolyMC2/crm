@@ -17,10 +17,26 @@ async function load() {
 describe('site WhatsApp channel mode', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('reads the one channel from frappe_whatsapp with a GET', async () => {
+  it('reads the one channel from frappe_whatsapp with a GET once it is installed', async () => {
     await load()
     const channel = h.resources['frappe_whatsapp.channel.get_channel']
-    expect(channel.options).toMatchObject({ method: 'GET', auto: true })
+    expect(channel.options).toMatchObject({ method: 'GET' })
+    expect(channel.options.auto).toBeFalsy()
+    h.resources['crm.api.whatsapp.is_whatsapp_installed'].options.onSuccess(
+      true,
+    )
+    expect(channel.fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('never calls the channel method on a site without frappe_whatsapp', async () => {
+    const wa = await load()
+    h.resources['crm.api.whatsapp.is_whatsapp_installed'].options.onSuccess(
+      false,
+    )
+    expect(
+      h.resources['frappe_whatsapp.channel.get_channel'].fetch,
+    ).not.toHaveBeenCalled()
+    expect(wa.whatsappTabEnabled.value).toBe(false)
   })
 
   it('manual mode exposes only the manual action and the shop number', async () => {

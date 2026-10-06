@@ -312,7 +312,7 @@ def post_message(token, message):
 		message = text(message, "message", MESSAGE_LIMIT)
 	except ValueError:
 		_fail("Write a message of up to 2000 characters.")
-	_persist(
+	posted = _persist(
 		frappe.get_doc(
 			{
 				"doctype": "CRM Offer Message",
@@ -327,7 +327,8 @@ def post_message(token, message):
 	summary = _("Customer message on offer «{0}»:").format(escape_html(doc.title))
 	summary += f"<blockquote>{escape_html(message)}</blockquote>"
 	_timeline(doc, summary)
-	_notify(doc, summary)
+	# notify_user drops exact duplicates; each message is its own notification.
+	_notify(doc, summary, source=("CRM Offer Message", posted.name))
 	return public_view(link)
 
 
@@ -374,7 +375,8 @@ def _timeline(doc, content):
 	).insert(ignore_permissions=True)
 
 
-def _notify(doc, summary):
+def _notify(doc, summary, source=None):
+	source_doctype, source_name = source or ("CRM Offer", doc.name)
 	from crm.fcrm.doctype.crm_notification.crm_notification import notify_user
 
 	owner = frappe.db.get_value("CRM Deal", doc.deal, "deal_owner")
@@ -388,8 +390,8 @@ def _notify(doc, summary):
 				"notification_type": "Form",
 				"message": "",
 				"notification_text": f'<div class="mb-2 leading-5 text-ink-gray-5">{summary}</div>',
-				"reference_doctype": "CRM Offer",
-				"reference_docname": doc.name,
+				"reference_doctype": source_doctype,
+				"reference_docname": source_name,
 				"redirect_to_doctype": "CRM Deal",
 				"redirect_to_docname": doc.deal,
 			}
