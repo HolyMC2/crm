@@ -183,7 +183,11 @@ class CRMLead(Document):
 					# the agent is already set as an assignee
 					return
 
-		assign({"assign_to": [agent], "doctype": "CRM Lead", "name": self.name}, ignore_permissions=True)
+		from crm.owner_assignment import owner_assignment
+
+		# Ownership, not a to-do: Pendientes leaves these assignment ToDos out.
+		with owner_assignment():
+			assign({"assign_to": [agent], "doctype": "CRM Lead", "name": self.name}, ignore_permissions=True)
 
 	def share_with_agent(self, agent):
 		if not agent:

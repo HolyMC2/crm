@@ -106,6 +106,11 @@ async function mount(path) {
         meta: { app: 'avisos', title: 'Avisos' },
       },
       {
+        path: '/pendientes',
+        component: { render: () => h('p', 'Pendientes page') },
+        meta: { app: 'pendientes', title: 'Pendientes' },
+      },
+      {
         path: '/not-permitted',
         component: { render: () => h('p', 'Recovery page') },
         meta: { app: 'contactos', title: 'Permisos', recovery: true },
@@ -161,7 +166,11 @@ describe('module registry', () => {
     expect(moduleKeyFor({ path: '/avisos', meta: { app: 'avisos' } })).toBe(
       'avisos',
     )
+    expect(
+      moduleKeyFor({ path: '/pendientes', meta: { app: 'pendientes' } }),
+    ).toBe('pendientes')
     expect(hostedModules.map((m) => m.key)).toEqual([
+      'pendientes',
       'contactos',
       'ventas',
       'compras',
@@ -200,7 +209,8 @@ describe('module registry', () => {
     const alert = await until(() => document.querySelector('[role="alert"]'))
     expect(alert.textContent).toContain('We could not open')
     expect(alert.textContent).toContain('Tu puesto no tiene acceso a Archivos.')
-    expect(alert.textContent).not.toContain('Contactos')
+    // The reason never asks for Contactos; «Go to Contactos» is only where to keep working.
+    expect(alert.querySelector('p').textContent).not.toContain('Contactos')
     expect(document.body.textContent).not.toContain('Archivos page')
   })
 
@@ -360,7 +370,8 @@ describe('Compras in the shell', () => {
     // The test `__` leaves {0} unformatted; the label is the active module's.
     expect(alert.textContent).toContain('We could not open')
     expect(alert.textContent).toContain('Sin permiso de órdenes de compra.')
-    expect(alert.textContent).not.toContain('Contactos')
+    // The reason never asks for Contactos; «Go to Contactos» is only where to keep working.
+    expect(alert.querySelector('p').textContent).not.toContain('Contactos')
   })
 
   it('a refused Contactos does not block Compras', async () => {
@@ -803,7 +814,8 @@ describe('Avisos in the shell', () => {
     const alert = root.querySelector('[role="alert"]')
     expect(alert.textContent).toContain('We could not open Avisos')
     expect(alert.textContent).toContain('Solo personal')
-    expect(alert.textContent).not.toContain('Contactos')
+    // The reason never asks for Contactos; «Go to Contactos» is only where to keep working.
+    expect(alert.querySelector('p').textContent).not.toContain('Contactos')
   })
 
   it('the recovery screen is never replaced by a module refusal', async () => {
@@ -815,5 +827,74 @@ describe('Avisos in the shell', () => {
     await mount('/not-permitted?intended=/avisos')
     expect(root.querySelector('[role="alert"]')).toBeNull()
     expect(root.textContent).toContain('page')
+  })
+})
+
+describe('Pendientes in the shell', () => {
+  const answer = (modules) =>
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot({ modules })
+      throw new Error(`unexpected ${method}`)
+    })
+  const refusedPendientes = {
+    key: 'pendientes',
+    enabled: false,
+    reason: 'Pide permiso para leer tus pendientes.',
+    capabilities: {},
+  }
+
+  it('a refused Pendientes route shows its own refusal and the first module the worker has', async () => {
+    answer({
+      pendientes: refusedPendientes,
+      contactos: { key: 'contactos', enabled: true, capabilities: {} },
+      ventas: { key: 'ventas', enabled: true, capabilities: {} },
+    })
+    state.mobile.value = false
+    await mount('/pendientes')
+    const alert = await until(() => root.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('We could not open Pendientes')
+    expect(alert.textContent).toContain(refusedPendientes.reason)
+    expect(alert.textContent).not.toContain('Contactos page')
+    const go = [...alert.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Go to Contactos',
+    )
+    expect(go).toBeTruthy()
+    go.click()
+    await until(() => router.currentRoute.value.path === '/contactos')
+    expect(router.currentRoute.value.path).toBe('/contactos')
+  })
+
+  it('a Contactos refusal never blocks the Pendientes queue', async () => {
+    answer({
+      pendientes: { key: 'pendientes', enabled: true, capabilities: {} },
+      contactos: {
+        key: 'contactos',
+        enabled: false,
+        reason: 'Sin Contactos',
+        capabilities: {},
+      },
+      ventas: { key: 'ventas', enabled: false, capabilities: {} },
+    })
+    state.mobile.value = false
+    await mount('/pendientes')
+    await until(() => shellBoot.value)
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+    expect(root.textContent).toContain('page')
+    const rail = root.querySelector('nav[aria-label="Apps"]')
+    expect(
+      [...rail.querySelectorAll('a')].map((a) => a.getAttribute('aria-label')),
+    ).toEqual(['Pendientes'])
+  })
+
+  it('the recovery screen answers for itself, not for the module it is filed under', async () => {
+    answer({
+      pendientes: { key: 'pendientes', enabled: true, capabilities: {} },
+      contactos: { key: 'contactos', enabled: false, capabilities: {} },
+      ventas: { key: 'ventas', enabled: false, capabilities: {} },
+    })
+    state.mobile.value = false
+    await mount('/not-permitted?intended=%2Fdeals')
+    await until(() => shellBoot.value)
+    expect(root.querySelector('[role="alert"]')).toBeNull()
   })
 })

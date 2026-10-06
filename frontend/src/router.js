@@ -15,6 +15,7 @@ import {
 } from '@/utils/crmCapabilities'
 import { legacyDealRedirect, legacyVentasRoute } from '@/utils/ventasRoutes'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
+import { legacyTasksRoute } from '@/composables/usePendientesRoutes'
 
 let personaChecked = false
 export const PERSONA_DONE_KEY = 'crm_persona_captured'
@@ -48,6 +49,19 @@ const routes = [
     component: () => import('@/pages/Contacto.vue'),
     props: true,
     meta: { app: 'contactos', title: 'Contactos', stableKey: true },
+  },
+  {
+    path: '/pendientes',
+    name: 'Pendientes',
+    component: () => import('@/pages/Pendientes.vue'),
+    meta: { app: 'pendientes', title: 'Pendientes', stableKey: true },
+  },
+  {
+    path: '/pendientes/:source/:name',
+    name: 'Pendiente',
+    component: () => import('@/pages/Pendiente.vue'),
+    props: true,
+    meta: { app: 'pendientes', title: 'Pendientes', stableKey: true },
   },
   {
     path: '/compras',
@@ -141,10 +155,10 @@ const routes = [
     component: () => import('@/pages/Notes.vue'),
   },
   {
-    // FCRM redesign owns /tasks (TasksView.vue); upstream list at /tasks/view/.
+    // Both CRM task lists merged into Pendientes; old links keep their scope.
     path: '/tasks/view/:viewType?',
     name: 'Tasks',
-    component: () => import('@/pages/Tasks.vue'),
+    redirect: legacyTasksRoute,
   },
   {
     alias: '/contacts',
@@ -289,8 +303,7 @@ const routes = [
   {
     path: '/tasks',
     name: 'Tasks List',
-    component: () => import('@/pages/TasksView.vue'),
-    meta: { navLabel: 'Tasks', title: 'Tasks' },
+    redirect: legacyTasksRoute,
   },
   {
     path: '/call-logs',

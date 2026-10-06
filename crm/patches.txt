@@ -38,3 +38,4 @@ crm.patches.v1_0.create_default_pipeline
 crm.patches.v1_0.update_crm_workspace_branding # 27-09-2026
 crm.patches.v1_0.unpack_deal_list_views
 crm.patches.v1_0.plain_custom_field_texts
+crm.patches.v1_0.mark_crm_owner_assignment_todos # 05-10-2026

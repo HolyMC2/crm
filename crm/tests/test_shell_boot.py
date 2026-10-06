@@ -214,6 +214,63 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["archivos"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_pendientes(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Pendientes (doco) is not installed")
+		try:
+			import doco.pendientes.api
+		except ImportError:
+			self.skipTest("This doco has no Pendientes service")
+
+	def test_pendientes_provider_reports_queue_access_and_context(self):
+		self._skip_without_pendientes()
+		pendientes = shell.boot()["modules"]["pendientes"]
+		self.assertTrue(pendientes["enabled"])
+		self.assertIsNone(pendientes["reason"])
+		self.assertTrue(pendientes["capabilities"]["read"])
+		self.assertEqual(pendientes["user"], "Administrator")
+		self.assertTrue(pendientes["today"])
+		self.assertIn("ToDo", pendientes["sources"])
+
+	def test_refused_pendientes_carries_its_own_reason_and_no_actions(self):
+		self._skip_without_pendientes()
+		answer = {
+			"enabled": False,
+			"reason": "Pide permiso para leer tus pendientes.",
+			"capabilities": {"create": True, "create_crm": True, "team": True},
+		}
+		with patch("doco.pendientes.api.bootstrap", return_value=answer):
+			data = shell.boot()
+		pendientes = data["modules"]["pendientes"]
+		self.assertFalse(pendientes["enabled"])
+		self.assertEqual(pendientes["reason"], answer["reason"])
+		self.assertFalse(any(pendientes["capabilities"].values()))
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_pendientes_alone_opens_the_shell_and_is_the_first_module(self):
+		self._skip_without_pendientes()
+
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+		):
+			data = shell.boot()
+			first = shell.first_module()
+		self.assertTrue(data["modules"]["pendientes"]["enabled"])
+		self.assertFalse(data["sales_access"])
+		self.assertEqual(first, "pendientes")
+
+	def test_older_doco_without_pendientes_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.pendientes.api": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["pendientes"]["enabled"])
+		self.assertTrue(data["modules"]["pendientes"]["reason"])
+		self.assertEqual(data["modules"]["pendientes"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):

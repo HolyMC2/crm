@@ -20,19 +20,23 @@ export function sourceHref(doctype, name) {
     ? `/crm/contactos/${source}/${encodeURIComponent(name)}`
     : '/crm/contactos'
 }
-export function safeIntendedRoute(value) {
-  if (typeof value !== 'string' || /[\\\r\n]/.test(value))
-    return '/crm/contactos'
+/**
+ * A local /crm URL to resume, or `fallback` for anything else. Callers that
+ * know the boot pass the first module the worker can open; without one, /crm
+ * lets the server land the worker on their first module.
+ */
+export function safeIntendedRoute(value, fallback = '/crm') {
+  if (typeof value !== 'string' || /[\\\r\n]/.test(value)) return fallback
   try {
     const url = new URL(value, 'https://muelle.invalid')
     if (
       url.origin !== 'https://muelle.invalid' ||
       !/^\/crm(?:\/|$)/.test(url.pathname)
     )
-      return '/crm/contactos'
+      return fallback
     return url.pathname + url.search + url.hash
   } catch {
-    return '/crm/contactos'
+    return fallback
   }
 }
 export function legacyIdentityRoute(to, source) {
@@ -52,9 +56,12 @@ export function legacyIdentityRoute(to, source) {
     return { name: 'Contacto', params: { source, name }, query, hash: to.hash }
   return { name: 'Contactos', query, hash: to.hash }
 }
+
 // The not-permitted screen answers for the module the worker was refused, so
 // its copy, retry check and return target never ask for unrelated access.
 const RECOVERY_MODULES = {
+  pendientes: 'pendientes',
+  tasks: 'pendientes',
   archivos: 'archivos',
   avisos: 'avisos',
   notifications: 'avisos',

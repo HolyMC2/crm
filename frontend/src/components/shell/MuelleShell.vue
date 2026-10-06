@@ -69,6 +69,11 @@
         <div class="flex flex-wrap gap-2">
           <Button :label="__('Retry permissions')" @click="reload" />
           <Button :label="__('Ask for access')" @click="copyRequest" />
+          <Button
+            v-if="landing"
+            :label="__('Go to {0}', [landing.label])"
+            @click="router.push(landing.to)"
+          />
           <Button :label="__('Back')" @click="router.back()" />
         </div>
         <p v-if="copied" role="status" class="text-sm">{{ copied }}</p>
@@ -111,6 +116,7 @@ import { Button } from 'frappe-ui'
 import { isMobile } from '@/composables/breakpoint'
 import { mobileView } from '@/composables/mobileView'
 import {
+  firstModuleRoute,
   loadShell,
   moduleKeyFor,
   navSlots,
@@ -161,6 +167,10 @@ const blockedFallback = computed(() =>
     [blockedLabel.value],
   ),
 )
+// Meanwhile the worker keeps working in the first module they do have.
+const landing = computed(() =>
+  firstModuleRoute(shellBoot.value, activeKey.value),
+)
 
 // Drill-down panes (inbox thread, deal 360) own the phone screen; the
 // on-screen keyboard also hides the bar.
@@ -183,21 +193,25 @@ function reload() {
 }
 async function copyRequest() {
   const text =
-    activeKey.value === 'compras'
+    activeKey.value === 'pendientes'
       ? __(
-          'I need access to Compras: read permission for Purchase Order so I can follow purchases.',
+          'I need access to Pendientes: permission to read my ToDo (and Sales tasks, if I sell). Please review my user.',
         )
-      : activeKey.value === 'archivos'
+      : activeKey.value === 'compras'
         ? __(
-            'I need access to Archivos in Muelle (documents of my company) to receive and classify receipts.',
+            'I need access to Compras: read permission for Purchase Order so I can follow purchases.',
           )
-        : activeKey.value === 'avisos'
+        : activeKey.value === 'archivos'
           ? __(
-              'I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change.',
+              'I need access to Archivos in Muelle (documents of my company) to receive and classify receipts.',
             )
-          : __(
-              'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
-            )
+          : activeKey.value === 'avisos'
+            ? __(
+                'I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change.',
+              )
+            : __(
+                'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
+              )
   try {
     await navigator.clipboard.writeText(text)
     copied.value = __('Request copied. Share it with your manager.')

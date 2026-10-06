@@ -123,9 +123,73 @@ def _archivos():
 	}
 
 
+def _pendientes():
+	try:
+		# A doco older than Pendientes (crm updated first) leaves the module off, not the shell down.
+		from doco.pendientes.api import bootstrap
+	except ImportError:
+		bootstrap = None
+	if "doco" not in frappe.get_installed_apps() or bootstrap is None:
+		return {
+			"key": "pendientes",
+			"enabled": False,
+			"reason": _("Pendientes is not installed. Ask your manager to check the app."),
+			"capabilities": {},
+		}
+
+	answer = bootstrap() or {}
+	enabled = bool(answer.get("enabled"))
+	capabilities = answer.get("capabilities") or {}
+	return {
+		"key": "pendientes",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason")
+		or _("Ask your manager for permission to read your pendientes, then retry."),
+		"capabilities": {
+			"read": enabled,
+			"create": enabled and bool(capabilities.get("create")),
+			"create_crm": enabled and bool(capabilities.get("create_crm")),
+			"team": enabled and bool(capabilities.get("team")),
+		},
+		# The queue's own context: whose work, the site's today and which sources it reads.
+		"user": answer.get("user"),
+		"full_name": answer.get("full_name"),
+		"today": answer.get("today"),
+		"sources": answer.get("sources") or {},
+	}
+
+
+def _hosted():
+	"""Providers of the modules whose screens live in this SPA under /crm/<key>, besides Ventas."""
+	return {
+		"pendientes": _pendientes,
+		"contactos": _contactos,
+		"compras": _compras,
+		"archivos": _archivos,
+		"avisos": _avisos,
+	}
+
+
+def first_module():
+	"""The first module (contracts order) this worker can open without Ventas, or None."""
+	hosted = _hosted()
+	for key in MODULE_KEYS:
+		provider = hosted.get(key)
+		if not provider:
+			continue
+		try:
+			if provider().get("enabled"):
+				return key
+		except frappe.PermissionError:
+			continue
+	return None
+
+
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [_contactos, _ventas, _compras, _avisos, _archivos]
+	providers = [_contactos, _ventas, _pendientes, _compras, _avisos, _archivos]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))
 	return providers

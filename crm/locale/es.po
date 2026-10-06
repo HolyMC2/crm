@@ -12750,3 +12750,286 @@ msgstr "Ya está corregido: reintentar"
 #: frontend/src/components/ventas
 msgid "Please correct {0} {1} so I can continue in Ventas. ERPNext says: {2} Record: {3}."
 msgstr "Por favor corrige {0} {1} para que pueda continuar en Ventas. ERPNext dice: {2} Registro: {3}."
+# Pendientes (Muelle shell module)
+msgid "Done and schedule next"
+msgstr "Hecho y programar siguiente"
+
+msgid "Mark done"
+msgstr "Marcar hecho"
+
+msgid "On {0}"
+msgstr "En {0}"
+
+msgid "Outcome (optional)"
+msgstr "Resultado (opcional)"
+
+msgid "What happened? It is saved on the record."
+msgstr "¿Qué pasó? Se guarda en la ficha."
+
+msgid "Schedule the next pendiente on this record"
+msgstr "Programar el siguiente pendiente en esta ficha"
+
+msgid "Next pendiente"
+msgstr "Siguiente pendiente"
+
+msgid "What comes next?"
+msgstr "¿Qué sigue?"
+
+msgid "Call to confirm, send the invoice…"
+msgstr "Llamar para confirmar, enviar la factura…"
+
+msgid "Load current version"
+msgstr "Cargar la versión actual"
+
+msgid "Done and schedule"
+msgstr "Hecho y programar"
+
+msgid "Write what comes next to schedule it."
+msgstr "Escribe qué sigue para programarlo."
+
+msgid "Due"
+msgstr "Vence"
+
+msgid "Quick dates"
+msgstr "Fechas rápidas"
+
+msgid "Mark done: {0}"
+msgstr "Marcar hecho: {0}"
+
+msgid "Reschedule: {0}"
+msgstr "Reprogramar: {0}"
+
+msgid "New pendiente"
+msgstr "Nuevo pendiente"
+
+msgid "What needs to happen?"
+msgstr "¿Qué hay que hacer?"
+
+msgid "Call to confirm, send the quote…"
+msgstr "Llamar para confirmar, enviar la cotización…"
+
+msgid "Save pendiente"
+msgstr "Guardar pendiente"
+
+msgid "Back to Pendientes"
+msgstr "Volver a Pendientes"
+
+msgid "Loading pendiente…"
+msgstr "Cargando pendiente…"
+
+msgid "Reschedule"
+msgstr "Reprogramar"
+
+msgid "Reopen"
+msgstr "Reabrir"
+
+msgid "This pendiente was cancelled. Reopen it to work on it again."
+msgstr "Este pendiente se canceló. Reábrelo para retomarlo."
+
+msgid "No date"
+msgstr "Sin fecha"
+
+msgid "Assigned to"
+msgstr "Asignado a"
+
+msgid "Record"
+msgstr "Ficha"
+
+msgid "Not linked to a record"
+msgstr "Sin ficha vinculada"
+
+msgid "Next on {0}"
+msgstr "Lo siguiente en {0}"
+
+msgid "Nothing else is planned on this record."
+msgstr "No hay nada más planeado en esta ficha."
+
+msgid "Add next pendiente"
+msgstr "Añadir siguiente pendiente"
+
+msgid "Overdue"
+msgstr "Vencidos"
+
+msgid "Unknown pendiente link"
+msgstr "Enlace de pendiente desconocido"
+
+msgid "Open it again from your list."
+msgstr "Ábrelo de nuevo desde tu lista."
+
+msgid "Pendiente completed"
+msgstr "Pendiente completado"
+
+msgid "Pendiente reopened"
+msgstr "Pendiente reabierto"
+
+msgid "Moved to {0}"
+msgstr "Movido al {0}"
+
+msgid "Done. Next pendiente scheduled."
+msgstr "Hecho. Siguiente pendiente programado."
+
+msgid "Pendientes is not available"
+msgstr "Pendientes no está disponible"
+
+msgid "Search pendientes"
+msgstr "Buscar pendientes"
+
+msgid "All sources"
+msgstr "Todos los orígenes"
+
+msgid "Pendientes"
+msgstr "Pendientes"
+
+msgid "Sales tasks"
+msgstr "Tareas de Ventas"
+
+msgid "Any priority"
+msgstr "Cualquier prioridad"
+
+msgid "Remove date range"
+msgstr "Quitar rango de fechas"
+
+msgid "Loading pendientes…"
+msgstr "Cargando pendientes…"
+
+msgid "You are up to date"
+msgstr "Estás al día"
+
+msgid "Nothing is due. Plan the next follow-up so it does not slip."
+msgstr "No tienes nada por vencer. Planea el siguiente seguimiento para que no se pase."
+
+msgid "See all"
+msgstr "Ver todos"
+
+msgid "Open sales tasks of everyone you can see"
+msgstr "Tareas de Ventas abiertas de todo el equipo que puedes ver"
+
+msgid "Closed and cancelled work, newest first"
+msgstr "Trabajo cerrado y cancelado, lo más reciente primero"
+
+msgid "Your follow-ups from Contactos, Ventas and Desk in one queue"
+msgstr "Tus seguimientos de Contactos, Ventas y Desk en una sola cola"
+
+msgid "Nothing overdue."
+msgstr "Nada vencido."
+
+msgid "Nothing else due today."
+msgstr "Nada más vence hoy."
+
+msgid "Nothing planned yet."
+msgstr "Nada planeado todavía."
+
+msgid "Everything has a date."
+msgstr "Todo tiene fecha."
+
+msgid "The sales team has no open tasks you can see."
+msgstr "El equipo de ventas no tiene tareas abiertas que puedas ver."
+
+msgid "Nothing completed yet."
+msgstr "Nada completado todavía."
+
+msgid "No pendientes with these filters."
+msgstr "No hay pendientes con estos filtros."
+
+msgid "Pendiente saved"
+msgstr "Pendiente guardado"
+
+msgid "Ask your manager for permission to read your pendientes."
+msgstr "Pide al encargado permiso para leer tus pendientes."
+
+msgid "I need access to Pendientes: permission to read my ToDo (and Sales tasks, if I sell). Please review my user."
+msgstr "Necesito acceso a Pendientes: permiso para leer mis pendientes (ToDo) y las tareas de Ventas si vendo. Revisa mi usuario, por favor."
+
+msgid "My pendientes"
+msgstr "Mis pendientes"
+
+msgid "Upcoming"
+msgstr "Próximos"
+
+msgid "Sales team"
+msgstr "Equipo de ventas"
+
+msgid "In 3 days"
+msgstr "En 3 días"
+
+msgid "Next week"
+msgstr "Próxima semana"
+
+msgid "Overdue · yesterday"
+msgstr "Vencido · ayer"
+
+msgid "Overdue · {0} days"
+msgstr "Vencido · hace {0} días"
+
+msgid "In {0} days"
+msgstr "En {0} días"
+
+msgid "Sales"
+msgstr "Ventas"
+
+msgid "Pendiente"
+msgstr "Pendiente"
+
+msgid "This pendiente changed"
+msgstr "Este pendiente cambió"
+
+msgid "Someone else saved it first. Load the current version and retry."
+msgstr "Alguien más lo guardó primero. Carga la versión actual y reintenta."
+
+msgid "You cannot do this yet"
+msgstr "Todavía no puedes hacer esto"
+
+msgid "Ask your manager for access, then retry."
+msgstr "Pide acceso al encargado y luego reintenta."
+
+msgid "Your session ended"
+msgstr "Tu sesión terminó"
+
+msgid "Sign in again; your text stays here."
+msgstr "Vuelve a iniciar sesión; tu texto se queda aquí."
+
+msgid "No connection"
+msgstr "Sin conexión"
+
+msgid "Reconnect and tap Retry; your text stays here."
+msgstr "Vuelve a conectarte y toca Reintentar; tu texto se queda aquí."
+
+msgid "Try again."
+msgstr "Inténtalo de nuevo."
+
+msgid "Pendientes is not installed. Ask your manager to check the app."
+msgstr "Pendientes no está instalado. Pide al encargado que revise la app."
+
+msgid "Call"
+msgstr "Llamada"
+
+msgid "Meeting"
+msgstr "Reunión"
+
+msgid "Completed work"
+msgstr "Hechos"
+
+msgid "You (assignee)"
+msgstr "Tú"
+
+msgid "Task source"
+msgstr "Origen"
+
+msgid "Late"
+msgstr "Atrasado"
+
+msgid "Instructions"
+msgstr "Instrucciones"
+
+msgid "Edit task"
+msgstr "Editar tarea"
+
+msgid "New sales task"
+msgstr "Nueva tarea de Ventas"
+
+msgid "Saved as your sales task: the record keeps its owner."
+msgstr "Se guarda como tu tarea de Ventas: la ficha conserva a su responsable."
+
+#: crm/api/shell.py
+msgid "Ask your manager for permission to read your pendientes, then retry."
+msgstr "Pide al encargado permiso para leer tus pendientes y reintenta."

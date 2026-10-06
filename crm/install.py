@@ -35,6 +35,9 @@ def after_install(force=False):
 	add_assignment_rule_property_setters()
 	add_whatsapp_roles()
 	add_default_deal_queues()
+	from crm.owner_assignment import ensure_field as add_todo_owner_assignment_field
+
+	add_todo_owner_assignment_field()
 	frappe.db.commit()
 
 

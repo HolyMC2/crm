@@ -14,26 +14,42 @@ no_cache = 1
 
 
 def get_context():
+	path = frappe.local.request.environ.get("RAW_URI") or frappe.local.request.full_path.rstrip("?")
+	neutral, module = _gate(path)
+	context = frappe._dict()
+	context.boot = get_boot(neutral=neutral, module=module)
+	if frappe.session.user != "Guest" and not neutral:
+		capture("active_site", "crm")
+	return context
+
+
+def _gate(path):
+	"""Which boot this path gets, or a redirect to where this worker can continue."""
 	from crm.api import check_app_permission
 	from crm.api.archivos import check_archivos_permission
 	from crm.api.avisos import check_avisos_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.api.pendientes import check_pendientes_permission
+	from crm.api.shell import first_module
 	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.pendientes_routes import is_pendientes_path, is_shell_root
 
-	path = frappe.local.request.environ.get("RAW_URI") or frappe.local.request.full_path.rstrip("?")
 	recovery = is_contactos_recovery_path(path)
+	pendientes = is_pendientes_path(path)
 	compras = is_compras_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
-	neutral = recovery or compras or avisos or archivos or is_contactos_path(path)
+	neutral = recovery or pendientes or compras or avisos or archivos or is_contactos_path(path)
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
 		raise frappe.Redirect
-	if compras:
+	if pendientes:
+		allowed = check_pendientes_permission()
+	elif compras:
 		# A work account without Compras still gets its guard page (reason, Pedir
 		# acceso, Reintentar) from the shell; the boot carries no purchase data.
 		allowed = (
@@ -52,22 +68,31 @@ def get_context():
 	else:
 		allowed = check_contactos_permission() if neutral else check_app_permission()
 	if not recovery and not allowed:
-		if neutral or check_contactos_permission():
-			# An authenticated permission-recovery screen exposes no identity data;
-			# a Contactos worker opening a sales route gets its request/return actions
-			# instead of Frappe's dead-end «No permitido» page.
+		landing = first_module()
+		if landing and is_shell_root(path):
+			# The installed app (and a bare /crm) opens the first module this worker
+			# has; sales access stays a separate grant.
+			frappe.local.flags.redirect_location = f"/crm/{landing}"
+			raise frappe.Redirect
+		if neutral or landing:
+			# An authenticated permission-recovery screen exposes no module data; a
+			# worker refused one module gets its request/return actions instead of
+			# Frappe's dead-end «No permitido» page.
 			frappe.local.flags.redirect_location = "/crm/not-permitted?intended=" + quote(path[4:], safe="")
 			raise frappe.Redirect
 		frappe.throw(
 			_("You do not have permission to open this app. Ask your manager for access."),
 			frappe.PermissionError,
 		)
-	context = frappe._dict()
-	module = "compras" if compras else "avisos" if avisos else "archivos" if archivos else "contactos"
-	context.boot = get_boot(neutral=neutral, module=module)
-	if frappe.session.user != "Guest" and not neutral:
-		capture("active_site", "crm")
-	return context
+	for key, matched in (
+		("pendientes", pendientes),
+		("compras", compras),
+		("avisos", avisos),
+		("archivos", archivos),
+	):
+		if matched:
+			return neutral, key
+	return neutral, "contactos"
 
 
 @frappe.whitelist(methods=["POST"], allow_guest=True)
@@ -88,7 +113,14 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.avisos_routes import is_avisos_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.pendientes_routes import is_pendientes_path
 
+	if is_pendientes_path(path):
+		from crm.api.pendientes import check_pendientes_permission
+
+		if not check_pendientes_permission():
+			frappe.throw(_("You do not have permission to open this app."), frappe.PermissionError)
+		return get_boot(neutral=True, module="pendientes")
 	if is_compras_path(path):
 		return get_boot(neutral=True, module="compras")
 	if is_archivos_path(path):

@@ -27,7 +27,11 @@ describe('Muelle shell source routes', () => {
       '/crm\\evil',
       'https://evil.invalid/crm/contactos',
     ])
-      expect(safeIntendedRoute(route)).toBe('/crm/contactos')
+      expect(safeIntendedRoute(route)).toBe('/crm')
+    // A caller that knows the boot resumes in the worker's first module.
+    expect(safeIntendedRoute('//evil.invalid/crm', '/crm/pendientes')).toBe(
+      '/crm/pendientes',
+    )
     expect(safeIntendedRoute('/crm/contactos?segment=people#notes')).toBe(
       '/crm/contactos?segment=people#notes',
     )

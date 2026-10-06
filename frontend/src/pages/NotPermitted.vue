@@ -3,16 +3,13 @@
     <h1 class="text-xl font-semibold">
       No tienes permiso para abrir esta sección
     </h1>
-    <p class="text-sm text-ink-gray-7">{{ copy.explain }}</p>
+    <p class="text-sm text-ink-gray-7">{{ copy.reason }}</p>
     <div class="flex flex-wrap gap-2">
       <Button
-        v-if="
-          !['archivos', 'avisos', 'compras'].includes(module) ||
-          moduleEnabled(shellBoot, 'contactos')
-        "
-        label="Volver a Contactos"
+        v-if="landing"
+        :label="`Ir a ${landing.label}`"
         variant="solid"
-        @click="router.push('/contactos')"
+        @click="router.push(landing.to)"
       /><Button label="Pedir acceso" @click="requestAccess" /><Button
         label="Reintentar permisos"
         :loading="loading"
@@ -23,10 +20,14 @@
   </section>
 </template>
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { loadShell, shellBoot } from '@/composables/muelleShell'
-import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { Button } from 'frappe-ui'
+import {
+  firstModuleRoute,
+  loadShell,
+  shellBoot,
+} from '@/composables/muelleShell'
 import {
   recoveryModule,
   recoveryReady,
@@ -38,7 +39,7 @@ const route = useRoute(),
   loading = ref(false)
 const COPY = {
   archivos: {
-    explain:
+    reason:
       'Para abrir Archivos necesitas acceso a los documentos de tu empresa. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
     request:
       'Necesito acceso a Archivos en Muelle (documentos de mi empresa) para recibir y clasificar comprobantes; quiero retomar el documento que intentaba abrir.',
@@ -46,7 +47,7 @@ const COPY = {
       'Todavía falta acceso a Archivos. Comparte la solicitud y reintenta después del ajuste.',
   },
   avisos: {
-    explain:
+    reason:
       'Avisos es para cuentas del personal. Pide al encargado que convierta tu usuario en usuario del sistema y que esté activo; después toca Reintentar permisos.',
     request:
       'Necesito que mi usuario de Muelle sea usuario del sistema (personal) y esté activo para ver mis Avisos; quiero retomarlos después del ajuste.',
@@ -54,7 +55,7 @@ const COPY = {
       'Tu usuario todavía no es de personal. Comparte la solicitud y reintenta después del ajuste.',
   },
   compras: {
-    explain:
+    reason:
       'Para abrir Compras necesitas permiso de lectura de órdenes de compra. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
     request:
       'Necesito permiso de lectura de órdenes de compra para abrir Compras en Muelle; quiero retomar la compra que intentaba abrir.',
@@ -62,24 +63,34 @@ const COPY = {
       'Todavía falta acceso a Compras. Comparte la solicitud y reintenta después del ajuste.',
   },
   contactos: {
-    explain:
+    reason:
       'Para abrir Contactos necesitas permiso de lectura de un origen nativo y acceso a su módulo. Pide al encargado que revise tu usuario.',
     request:
       'Necesito permiso de lectura para abrir Contactos en Muelle. Revisa los registros nativos que debo consultar y sus módulos; quiero retomar la ficha que intentaba abrir.',
     missing:
       'Todavía falta acceso a los datos de Contactos. Comparte la solicitud y reintenta después del ajuste.',
   },
+  pendientes: {
+    reason:
+      'Para abrir Pendientes necesitas permiso de lectura de tus pendientes (ToDo) o de las tareas de Ventas. No hace falta acceso a Ventas.',
+    request:
+      'Necesito permiso para leer mis pendientes (ToDo) en Muelle. Revisa mi usuario; quiero retomar la lista que intentaba abrir.',
+    missing:
+      'Todavía falta permiso para leer tus pendientes. Comparte la solicitud y reintenta después del ajuste.',
+  },
   ventas: {
-    explain:
-      'Para ver oportunidades y prospectos de ventas necesitas acceso al módulo Ventas. Tu acceso a Contactos se conserva.',
+    reason:
+      'Para ver oportunidades y prospectos de ventas necesitas acceso al módulo Ventas. Tu acceso a los demás módulos se conserva.',
     request:
       'Necesito permiso para abrir Ventas en Muelle. Revisa mi rol de ventas y el acceso al módulo; quiero retomar la sección que intentaba abrir.',
     missing:
-      'Todavía falta acceso a Ventas. Puedes continuar en Contactos o compartir la solicitud.',
+      'Todavía falta acceso a Ventas. Puedes continuar en otro módulo o compartir la solicitud.',
   },
 }
-const module = computed(() => recoveryModule(route.query.intended)),
-  copy = computed(() => COPY[module.value])
+const module = computed(() => recoveryModule(route.query.intended))
+const copy = computed(() => COPY[module.value])
+// Where this worker can keep working now: another module they do have.
+const landing = computed(() => firstModuleRoute(shellBoot.value, module.value))
 async function requestAccess() {
   const text = copy.value.request
   try {
@@ -95,8 +106,10 @@ async function retry() {
     const data = await loadShell({ refresh: true })
     if (recoveryReady(module.value, data))
       router.replace(
-        safeIntendedRoute('/crm' + (route.query.intended || '/')).slice(4) ||
-          '/',
+        safeIntendedRoute(
+          '/crm' + (route.query.intended || '/'),
+          '/crm' + (firstModuleRoute(data)?.to || '/'),
+        ).slice(4) || '/',
       )
     else message.value = copy.value.missing
   } catch (error) {
@@ -107,4 +120,5 @@ async function retry() {
     loading.value = false
   }
 }
+onMounted(() => loadShell().catch(() => null))
 </script>

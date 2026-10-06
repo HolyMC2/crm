@@ -60,7 +60,14 @@ export function loadShell({ refresh = false } = {}) {
 
 // Modules this frontend hosts, in contracts order. Each adds its key here and
 // its routes in router.js; the boot decides whether it is enabled.
-const HOSTED = ['contactos', 'ventas', 'compras', 'archivos', 'avisos']
+const HOSTED = [
+  'pendientes',
+  'contactos',
+  'ventas',
+  'compras',
+  'archivos',
+  'avisos',
+]
 const ROUTE_HOME = { contactos: '/contactos', ventas: '/ventas' }
 
 export const hostedModules = SHELL_MODULES.filter((meta) =>
@@ -79,6 +86,17 @@ export const shellModules = computed(() =>
  */
 export function isNeutralModule(key) {
   return key !== 'ventas' && SHELL_MODULES.some((meta) => meta.key === key)
+}
+
+/**
+ * Where a worker keeps working: the first hosted module (contracts order) the
+ * boot enables, other than `except`; null when there is none.
+ */
+export function firstModuleRoute(boot, except = null) {
+  const module = hostedModules.find(
+    (meta) => meta.key !== except && moduleEnabled(boot, meta.key),
+  )
+  return module ? { key: module.key, label: module.label, to: module.to } : null
 }
 
 /** The module owning a route: its meta.app or path, every other CRM page is Ventas. */
