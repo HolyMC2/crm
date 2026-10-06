@@ -231,7 +231,7 @@
               v-if="salesDocsEnabled"
               class="rounded-lg border border-outline-gray-2 bg-surface-base"
             >
-              <SalesDocsSection :deal="name" />
+              <DealCommercialDocs :deal="name" payment-link />
             </div>
             <p v-else class="text-sm text-ink-gray-5">
               {{
@@ -262,7 +262,7 @@ import { formatMoney } from '@/composables/crmFormat'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import DealConversations from './DealConversations.vue'
-import SalesDocsSection from './SalesDocsSection.vue'
+import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 
 const props = defineProps({ name: { type: String, required: true } })
 defineEmits(['navigate'])

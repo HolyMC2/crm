@@ -172,7 +172,10 @@ function onViewport() {
 const navVisible = computed(
   () =>
     !keyboardOpen.value &&
-    !(/^\/(inbox|deal\/)/.test(route.path) && mobileView.value !== 'list'),
+    !(
+      /^\/(inbox|(ventas\/)?deal\/)/.test(route.path) &&
+      mobileView.value !== 'list'
+    ),
 )
 
 function reload() {

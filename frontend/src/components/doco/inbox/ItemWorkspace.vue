@@ -304,21 +304,21 @@
               @click="invoice"
               >{{ __('Crear factura · borrador') }}</Button
             >
-            <a
-              :href="desk(selectedDoc.doctype, selectedDoc.name)"
-              target="_blank"
-              rel="noopener"
-              class="px-2 py-1 text-sm text-ink-blue-link hover:underline"
-              >{{ __('Abrir en ERP') }} ↗</a
-            >
-            <span
+            <Button
               v-if="
                 selectedDoc.doctype === 'Sales Order' &&
-                selectedDoc.docstatus === 0
+                selectedDoc.docstatus === 0 &&
+                data.can_write
               "
-              class="text-xs text-ink-gray-5"
-              >{{ __('Confirma la orden en ERP para facturar.') }}</span
+              variant="solid"
+              :disabled="busy"
+              @click="confirmOrder"
+              >{{ __('Confirm order') }}</Button
             >
+            <!-- the next steps (issue, collect, return) live in the shared panel -->
+            <Button variant="subtle" @click="$emit('documents')">{{
+              __('See documents and next steps')
+            }}</Button>
           </div>
         </section>
 
@@ -533,7 +533,7 @@ const props = defineProps({
   enabled: Boolean,
   hasTaller: Boolean,
 })
-defineEmits(['catalog'])
+defineEmits(['catalog', 'documents'])
 const route = useRoute()
 const intakeHref = computed(() =>
   props.hasTaller && data.value?.can_write
@@ -752,6 +752,21 @@ function createOrder() {
       orderConfirm.value = false
       selectedKey.value = `Sales Order:${out.sales_order}`
       notice.value = __('Orden de venta disponible:') + ' ' + out.sales_order
+    },
+  )
+}
+function confirmOrder() {
+  const order = selectedDoc.value
+  return mutate(
+    () =>
+      quoteApi('confirm_sales_order', {
+        sales_order: order.name,
+        modified: order.modified || null,
+      }),
+    () => {
+      notice.value = __('Order {0} confirmed. Next: create the invoice.', [
+        order.name,
+      ])
     },
   )
 }

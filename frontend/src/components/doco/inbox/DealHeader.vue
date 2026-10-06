@@ -501,7 +501,7 @@ const responsible = computed(() => {
 const grade = computed(() => row.value.score_grade)
 const score = computed(() => row.value.lead_score ?? '')
 
-// 💰 saldo chip (ERP_INTEGRATION_SPEC P1.3): shares the SalesDocsSection resource —
+// 💰 saldo chip (ERP_INTEGRATION_SPEC P1.3): shares the commercial panel's resource —
 // one fetch per deal feeds panel + chip. Deal-only; flag can resolve after mount.
 watch(
   [activeDeal, salesDocsEnabled],

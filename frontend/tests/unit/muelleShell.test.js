@@ -47,6 +47,7 @@ import {
 import {
   createShellProviders,
   loadRecent,
+  resolveRecent,
   toRecentRef,
 } from '@/utils/shellPalette'
 import { showSettings } from '@/composables/settings'
@@ -491,6 +492,64 @@ describe('palette providers', () => {
       kind: 'text',
     })
     expect(go.map((i) => i.href)).toEqual(['/archivos?view=ayuda'])
+  })
+})
+
+describe('Ventas deals in the palette', () => {
+  const query = { raw: 'acme', text: 'acme', scope: 'all', kind: 'text' }
+  afterEach(() => state.call.mockReset())
+
+  it('finds deals and opens the one deal record', async () => {
+    state.call.mockResolvedValue([
+      { name: 'CRM-DEAL-1', organization: 'Acme', status: 'Qualification' },
+    ])
+    const ventas = createShellProviders({
+      boot: ref(boot()),
+      modules: ref(hostedModules),
+    }).find((provider) => provider.key === 'ventas')
+    const rows = await ventas.search(query, new AbortController().signal)
+    expect(state.call).toHaveBeenCalledWith(
+      'frappe.client.get_list',
+      expect.objectContaining({ doctype: 'CRM Deal' }),
+    )
+    expect(rows[0]).toMatchObject({
+      group: 'registros',
+      title: 'Acme',
+      href: '/ventas/deal/CRM-DEAL-1',
+      record: { source: 'deal', name: 'CRM-DEAL-1' },
+    })
+    expect(toRecentRef(rows[0])).toEqual({
+      id: 'deal:CRM-DEAL-1',
+      href: '/ventas/deal/CRM-DEAL-1',
+      record: { source: 'deal', name: 'CRM-DEAL-1' },
+    })
+  })
+
+  it('Ventas refused: no deal search and deal recents are dropped', async () => {
+    const off = boot({
+      modules: {
+        contactos: { key: 'contactos', enabled: true, capabilities: {} },
+        ventas: { key: 'ventas', enabled: false, capabilities: {} },
+      },
+    })
+    const ventas = createShellProviders({
+      boot: ref(off),
+      modules: ref(hostedModules),
+    }).find((provider) => provider.key === 'ventas')
+    expect(await ventas.search(query, new AbortController().signal)).toEqual([])
+    const deal = {
+      id: 'deal:D-1',
+      href: '/ventas/deal/D-1',
+      record: { source: 'deal', name: 'D-1' },
+    }
+    expect(await resolveRecent([deal], off)).toEqual([])
+    expect(state.call).not.toHaveBeenCalled()
+    state.call.mockResolvedValue([
+      { source: 'deal', name: 'D-1', title: 'Acme' },
+    ])
+    expect(await resolveRecent([deal], boot())).toEqual([
+      { ...deal, group: 'recientes', title: 'Acme', icon: 'lucide-history' },
+    ])
   })
 })
 

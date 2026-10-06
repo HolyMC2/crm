@@ -3,7 +3,7 @@ import { identityTypeLabel } from '@/utils/contactos'
 import { call } from 'frappe-ui'
 import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
 
-// Palette providers for the shell (spec §1.4). Each answers on its own and is
+// Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
 const match = (text, ...values) =>
   !text ||
@@ -165,7 +165,38 @@ export function createShellProviders({ boot, modules }) {
       }))
     },
   }
-  return [actions, contactos, places]
+  const ventas = {
+    key: 'ventas',
+    label: 'Ventas',
+    scopes: ['documents'],
+    async search(query, signal) {
+      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'ventas'))
+        return []
+      const like = `%${query.text}%`
+      const rows = await call('frappe.client.get_list', {
+        doctype: 'CRM Deal',
+        fields: ['name', 'organization', 'lead_name', 'status'],
+        or_filters: [
+          ['name', 'like', like],
+          ['organization', 'like', like],
+          ['lead_name', 'like', like],
+        ],
+        order_by: 'modified desc',
+        limit_page_length: 5,
+      })
+      if (signal.aborted) return []
+      return (rows || []).map((row) => ({
+        id: `deal:${row.name}`,
+        group: 'registros',
+        title: row.organization || row.lead_name || row.name,
+        subtitle: [row.name, row.status].filter(Boolean).join(' · '),
+        icon: 'lucide-handshake',
+        href: `/ventas/deal/${encodeURIComponent(row.name)}`,
+        record: { source: 'deal', name: row.name },
+      }))
+    },
+  }
+  return [actions, contactos, places, ventas]
 }
 
 function recentKey() {
@@ -207,8 +238,12 @@ export function loadRecent() {
     return []
   }
 }
+// Deals belong to Ventas; every other source is a Contactos record.
+const recentModule = (ref) =>
+  ref.record.source === 'deal' ? 'ventas' : 'contactos'
 export async function resolveRecent(refs, boot) {
-  if (!refs.length || !moduleEnabled(boot, 'contactos')) return []
+  refs = refs.filter((ref) => moduleEnabled(boot, recentModule(ref)))
+  if (!refs.length) return []
   let rows
   try {
     rows = await call('crm.api.shell.resolve_recent', {

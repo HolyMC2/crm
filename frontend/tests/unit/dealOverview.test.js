@@ -32,7 +32,7 @@ vi.mock('@/components/doco/NextActivityChip.vue', () => ({
 vi.mock('@/components/doco/inbox/DealConversations.vue', () => ({
   default: { template: '<div />' },
 }))
-vi.mock('@/components/doco/inbox/SalesDocsSection.vue', () => ({
+vi.mock('@/components/ventas/DealCommercialDocs.vue', () => ({
   default: { template: '<div />' },
 }))
 import DealOverview from '@/components/doco/inbox/DealOverview.vue'

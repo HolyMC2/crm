@@ -4,7 +4,7 @@
   Leads.vue left untouched for rebase-cleanliness); data via createListResource.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+  <div class="relative flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- ── mobile toolbar (see DealsView for the why) ─────────────────────── -->
     <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
       <div class="flex items-center gap-2 px-3.5 pb-1.5 pt-2.5">
@@ -229,7 +229,7 @@
     <div
       v-if="view === 'list' && isMobile"
       ref="queueScroller"
-      class="scb min-h-0 flex-1 overflow-y-auto"
+      class="scb min-h-0 flex-1 overflow-y-auto pb-20"
     >
       <div
         v-if="leads.loading && !rows.length"
@@ -546,20 +546,12 @@
       :counts="groupCounts"
     />
 
-    <!-- mobile: create sits under the thumb, clear of the tab bar -->
-    <button
+    <!-- phone: create sits under the thumb, clear of the nav and dock -->
+    <ListCreateFab
       v-if="isMobile"
-      class="press fixed right-4 z-[200] flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white"
-      style="
-        background: var(--brand);
-        bottom: calc(env(safe-area-inset-bottom) + 68px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
-      "
-      :aria-label="__('New Lead')"
-      @click="showLeadModal = true"
-    >
-      +
-    </button>
+      :label="__('New Lead')"
+      @create="showLeadModal = true"
+    />
 
     <MobileFilterSheet
       v-if="isMobile"
@@ -612,8 +604,9 @@
 </template>
 
 <script setup>
+import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { isMobile } from '@/composables/breakpoint'
 import {
   Dropdown,
@@ -646,6 +639,7 @@ import {
 } from '@/composables/crmFormat'
 
 const router = useRouter()
+const route = useRoute()
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
 // contact is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
@@ -754,9 +748,12 @@ const sort = ref(
 )
 const selectedRows = ref(listValues('selected'))
 const view = ref(
-  ['list', 'board', 'funnel'].includes(remembered.view)
-    ? remembered.view
-    : 'list',
+  // a legacy /leads/view/kanban link (router redirect) lands on its layout
+  ['list', 'board', 'funnel'].includes(route.query.layout)
+    ? route.query.layout
+    : ['list', 'board', 'funnel'].includes(remembered.view)
+      ? remembered.view
+      : 'list',
 )
 const queueScroller = ref(null)
 onBeforeUnmount(() => {

@@ -25,7 +25,11 @@ export function repairReturnPath(deal, fullPath) {
   try {
     const url = new URL(publicPath, 'https://crm.invalid')
     if (url.origin !== 'https://crm.invalid') return fallback
-    const boundPaths = [fallback, `/crm/deal/${encodeURIComponent(deal)}`]
+    const boundPaths = [
+      fallback,
+      `/crm/deal/${encodeURIComponent(deal)}`,
+      `/crm/ventas/deal/${encodeURIComponent(deal)}`,
+    ]
     if (url.pathname === '/crm/inbox') {
       // This producer runs only inside a mounted Deal repair panel. The legacy
       // queue keeps its actual selection in memory, so pin that verified context

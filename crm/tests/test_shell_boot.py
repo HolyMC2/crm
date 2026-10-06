@@ -40,6 +40,36 @@ class TestShellBoot(TestCase):
 		self.assertTrue(data["modules"]["contactos"]["reason"])
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _contactos_on(self):
+		return {"key": "contactos", "enabled": True, "reason": None, "capabilities": {"read": True}}
+
+	def test_ventas_enabled_for_a_crm_user(self):
+		ventas = shell.boot()["modules"]["ventas"]
+		self.assertEqual(
+			ventas, {"key": "ventas", "enabled": True, "reason": None, "capabilities": {"read": True}}
+		)
+
+	def test_ventas_refused_keeps_its_own_reason_and_the_other_modules(self):
+		with (
+			patch("crm.api.check_app_permission", return_value=False),
+			patch.object(shell, "_contactos", self._contactos_on),
+		):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["ventas"]["enabled"])
+		self.assertTrue(data["modules"]["ventas"]["reason"])
+		self.assertEqual(data["modules"]["ventas"]["capabilities"], {"read": False})
+		self.assertFalse(data["sales_access"])
+		self.assertTrue(data["modules"]["contactos"]["enabled"])
+
+	def test_ventas_absent_when_its_provider_refuses(self):
+		with (
+			patch("crm.api.check_app_permission", side_effect=frappe.PermissionError),
+			patch.object(shell, "_contactos", self._contactos_on),
+		):
+			data = shell.boot()
+		self.assertNotIn("ventas", data["modules"])
+		self.assertFalse(data["sales_access"])
+
 	def test_saved_bar_keeps_known_modules_once_and_at_most_four(self):
 		saved = shell.save_mobile_slots(
 			'["ventas", "bogus", "contactos", "ventas", "hoy", "agenda", "compras"]'
@@ -260,3 +290,46 @@ class TestRecentResolution(TestCase):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):
 			shell.resolve_recent(self._records())
+
+
+@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+class TestRecentDeals(TestCase):
+	"""Ventas deals in the palette recents follow the same read checks as Contactos records."""
+
+	def setUp(self):
+		from crm.tests.test_next_activity import open_deal_status
+
+		self.previous = frappe.session.user
+		frappe.set_user("Administrator")
+		deal = frappe.get_doc(
+			{
+				"doctype": "CRM Deal",
+				"status": open_deal_status(),
+				"deal_owner": "Administrator",
+				"lead_name": "Recent Deal",
+				"expected_deal_value": 100,
+				"expected_closure_date": frappe.utils.add_to_date(frappe.utils.nowdate(), days=30),
+			}
+		)
+		deal.flags.ignore_permissions = True
+		deal.insert()
+		self.deal = deal.name
+
+	def tearDown(self):
+		frappe.set_user(self.previous)
+		frappe.db.rollback()
+
+	def _records(self):
+		return [{"source": "deal", "name": self.deal}, {"source": "deal", "name": "does-not-exist"}]
+
+	def test_readable_deal_comes_back_with_its_title(self):
+		rows = shell.resolve_recent(self._records())
+		self.assertEqual(rows, [{"source": "deal", "name": self.deal, "title": "Recent Deal"}])
+
+	def test_ventas_refused_drops_deals(self):
+		with patch("crm.api.check_app_permission", return_value=False):
+			self.assertEqual(shell.resolve_recent(self._records()), [])
+
+	def test_record_level_revocation_drops_the_deal(self):
+		with patch("frappe.model.document.Document.has_permission", return_value=False):
+			self.assertEqual(shell.resolve_recent(self._records()), [])

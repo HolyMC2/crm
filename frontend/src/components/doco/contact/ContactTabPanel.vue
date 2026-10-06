@@ -17,8 +17,9 @@ const registry = {
   ContactOverviewTab: defineAsyncComponent(
     () => import('@/components/doco/contact/ContactOverviewTab.vue'),
   ),
+  // Ventas' shared commercial panel (contact scope); the section key is stored config.
   ContactDocumentsTab: defineAsyncComponent(
-    () => import('@/components/doco/contact/ContactDocumentsTab.vue'),
+    () => import('@/components/ventas/ContactCommercialDocs.vue'),
   ),
   ContactRepairsTab: defineAsyncComponent(
     () => import('@/components/doco/contact/ContactRepairsTab.vue'),

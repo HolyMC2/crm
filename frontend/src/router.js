@@ -7,7 +7,13 @@ import {
   shellBoot,
 } from '@/composables/muelleShell'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
-import { loadCapabilities, gateRoute } from '@/utils/crmCapabilities'
+import {
+  ADDON_APP,
+  gateRoute,
+  hasApp,
+  loadCapabilities,
+} from '@/utils/crmCapabilities'
+import { legacyDealRedirect, legacyVentasRoute } from '@/utils/ventasRoutes'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
 
 let personaChecked = false
@@ -219,11 +225,22 @@ const routes = [
     meta: { navLabel: 'Deals', title: 'Deals' },
   },
   {
-    path: '/deal/:dealId',
+    // Ventas: the one deal record. /deal/:id and legacy /deals/:id land here.
+    path: '/ventas/deal/:dealId',
     name: 'Deal 360',
     component: () => import('@/pages/Deal360.vue'),
     props: true,
-    meta: { navLabel: 'Inbox', title: 'Deal 360°' },
+    // stableKey: ?tab= changes must not remount the record (path still does).
+    meta: {
+      navLabel: 'Deals',
+      title: 'Deal 360°',
+      app: 'ventas',
+      stableKey: true,
+    },
+  },
+  {
+    path: '/deal/:dealId',
+    redirect: legacyDealRedirect,
   },
   {
     path: '/pipeline-analysis',
@@ -442,6 +459,11 @@ router.beforeEach(async (to, from, next) => {
     // Addon-backed surface on a site without the addon: native fallback (the
     // upstream list / Deal page) or Home. See utils/crmCapabilities.js.
     next(gateRoute(to))
+  } else if (legacyVentasRoute(to, hasApp(ADDON_APP), from)) {
+    // One list family and one deal record: legacy lists/Deal page redirect
+    // when the redesigned surfaces exist on this site (classic lists stay
+    // reachable on explicit intent — see ventasRoutes).
+    next(legacyVentasRoute(to, hasApp(ADDON_APP), from))
   } else if (['Deal', 'Lead'].includes(to.name) && !to.hash) {
     let storageKey = to.name === 'Deal' ? 'lastDealTab' : 'lastLeadTab'
     const activeTab = localStorage.getItem(storageKey) || 'activity'

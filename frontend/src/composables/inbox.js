@@ -7,6 +7,7 @@ import { createResource, call, toast } from 'frappe-ui'
 import { guardStatusChange } from '@/utils/statusGuard'
 import { userScopedKey } from '@/utils/storageKeys'
 import { ADDON_APP, hasApp, loadCapabilities } from '@/utils/crmCapabilities'
+import { installNetworkRecovery } from '@/utils/networkRecovery'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
@@ -42,6 +43,16 @@ export function pulseSalesDocs() {
 export function mobileBack() {
   window.history.back()
 }
+
+// A lost connection shows one retry notice instead of uncaught page errors
+// from the many background reads below (utils/networkRecovery).
+installNetworkRecovery({
+  notify: (retry) =>
+    toast.error(__('Connection lost. Your work is kept.'), {
+      action: { label: __('Retry'), onClick: retry },
+      duration: 8000,
+    }),
+})
 
 // ── resources ────────────────────────────────────────────────────────────────
 export const queue = createResource({

@@ -12,9 +12,9 @@
       aria-label="Navegación del trato"
     >
       <RouterLink
-        :to="{ name: 'Deals List' }"
+        :to="back.to"
         class="rounded px-1 py-1 font-medium text-ink-gray-6 hover:text-ink-gray-9"
-        >← {{ __('Volver a tratos') }}</RouterLink
+        >← {{ back.label }}</RouterLink
       >
       <button
         class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-ink-gray-7 hover:bg-surface-gray-2"
@@ -52,8 +52,9 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch, ref } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { computed, onMounted, onUnmounted, watch, ref } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { dealReturnLink, dealTab } from '@/utils/ventasRoutes'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import { isMobile } from '@/composables/breakpoint'
@@ -70,14 +71,19 @@ import { globalStore } from '@/stores/global'
 
 const props = defineProps({ dealId: { type: String, default: '' } })
 const route = useRoute()
+const router = useRouter()
 const showContext = ref(false)
+
+// Shell return protocol (§8.3) and the CRM queue/report/form returnTo: a
+// caller that sent either gets its own back.
+const back = computed(() => dealReturnLink(route.query))
 
 // (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
 // /deal/B remounts this component — onMounted covers every entry.)
 function focus() {
   const id = props.dealId || route.params.dealId
   if (id) selectDeal(String(id))
-  activeTab.value = 'overview'
+  activeTab.value = dealTab(route.query.tab) || 'overview'
   // standalone page starts on the thread pane; DealHeader's ← (mobileBack →
   // history.back) then leaves the page, which is correct here (no queue pane).
   mobileView.value = 'thread'
@@ -116,6 +122,11 @@ function onPopState(e) {
     mobileView.value = target
   }
 }
+// URL is state: the section survives reloads, shares and POS round trips.
+watch(activeTab, (tab) => {
+  if (dealTab(tab) && route.query.tab !== tab)
+    router.replace({ query: { ...route.query, tab } })
+})
 const { $socket } = globalStore()
 onMounted(() => {
   paneEpoch = Date.now()

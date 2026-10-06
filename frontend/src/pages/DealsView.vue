@@ -6,7 +6,7 @@
   Deals.vue untouched for rebase-cleanliness. Data via createListResource.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+  <div class="relative flex min-h-0 w-full flex-1 flex-col bg-surface-base">
     <!-- ── mobile toolbar ──────────────────────────────────────────────────
          The desktop bar wrapped into three rows at 390px and pushed Export /
          New Deal off-screen. Phone shape: title + overflow menu, a full-width
@@ -325,7 +325,7 @@
     <!-- ── mobile list: cards, not a squeezed table ──────────────────────── -->
     <div
       v-if="view === 'list' && isMobile"
-      class="scb min-h-0 flex-1 overflow-y-auto"
+      class="scb min-h-0 flex-1 overflow-y-auto pb-20"
     >
       <div
         v-if="deals.loading && !rows.length"
@@ -775,20 +775,12 @@
       :counts="groupCounts"
     />
 
-    <!-- mobile: create sits under the thumb, clear of the tab bar -->
-    <button
+    <!-- phone: create sits under the thumb, clear of the nav and dock -->
+    <ListCreateFab
       v-if="isMobile"
-      class="press fixed right-4 z-[200] flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white"
-      style="
-        background: var(--brand);
-        bottom: calc(env(safe-area-inset-bottom) + 68px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
-      "
-      :aria-label="__('New Deal')"
-      @click="showDealModal = true"
-    >
-      +
-    </button>
+      :label="__('New Deal')"
+      @create="showDealModal = true"
+    />
 
     <MobileFilterSheet
       v-if="isMobile"
@@ -808,6 +800,7 @@
 </template>
 
 <script setup>
+import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -888,6 +881,9 @@ if (route.query.report === 'pipeline') {
   })
   hadRemembered = true
 }
+// A legacy /deals/view/kanban link (router redirect) lands on its layout.
+if (['list', 'board', 'funnel'].includes(route.query.layout))
+  remembered = { ...remembered, view: route.query.layout }
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────
 // trato (contact) is fixed (1fr); checkbox + row-menu are structural. The rest toggle.
@@ -1420,7 +1416,8 @@ watch(viewName, (name) => {
 const viewMenu = computed(() => [
   {
     label: '↗ ' + __('Vista clásica (todos los filtros)'),
-    onClick: () => router.push('/deals/view'),
+    onClick: () =>
+      router.push({ path: '/deals/view', query: { classic: '1' } }),
   },
 ])
 
@@ -1666,15 +1663,11 @@ function toggleRow(name) {
     : [...selectedRows.value, name]
 }
 function openDeal(name) {
-  router.push(`/deal/${name}`)
+  router.push({ name: 'Deal 360', params: { dealId: name } })
 }
 function rowMenu(r) {
   return [
     { label: __('Abrir'), onClick: () => openDeal(r.name) },
-    {
-      label: __('Vista clásica'),
-      onClick: () => router.push(`/deals/${r.name}`),
-    },
     { label: __('Eliminar'), onClick: () => deleteDeal(r.name) },
   ]
 }

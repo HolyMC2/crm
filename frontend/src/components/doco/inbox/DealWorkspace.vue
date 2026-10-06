@@ -156,6 +156,7 @@
           :enabled="salesDocsEnabled"
           :has-taller="hasTaller"
           @catalog="onIntentCatalogo"
+          @documents="activeTab = 'overview'"
         />
       </div>
 

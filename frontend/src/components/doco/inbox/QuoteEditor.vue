@@ -3,7 +3,6 @@
   for a deal quotation inside the 💰 Documentos panel. Deliberately small:
   qty + discount + remove on drafts; submit («Emitir»), «Cliente aceptó» → SO
   draft, and «Enviar por WhatsApp» (PDF document into the conversation).
-  Complex editing stays in Desk.
 -->
 <template>
   <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-2">
@@ -125,11 +124,7 @@
         <button
           class="rounded-lg border border-outline-gray-2 bg-surface-base px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-gray-8 disabled:opacity-50"
           :disabled="busy || !detail.lines.length"
-          :title="
-            __(
-              'Crea la orden de venta (borrador); se cobra y factura en la caja',
-            )
-          "
+          :title="__('Crea la orden de venta (borrador)')"
           @click="accept"
         >
           🤝 {{ __('Cliente aceptó') }}

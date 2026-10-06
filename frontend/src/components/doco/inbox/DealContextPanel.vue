@@ -59,7 +59,9 @@
           class="text-[11px] text-ink-blue-link"
           @click="
             $router.push(
-              isDeal ? `/deal/${activeDeal}` : `/leads/${activeDeal}`,
+              isDeal
+                ? { name: 'Deal 360', params: { dealId: activeDeal } }
+                : `/leads/${activeDeal}`,
             )
           "
         >
@@ -268,11 +270,13 @@
       </div>
     </div>
 
-    <!-- 💰 Documentos (ERP_INTEGRATION_SPEC P1): the deal's money docs + rollup,
-         neutral (doco crm_deal joins) and flag-gated per tenant -->
-    <SalesDocsSection
+    <!-- Ventas: the shared commercial documents panel (same one as Deal 360
+         Resumen and the Contactos ficha), flag-gated per tenant -->
+    <DealCommercialDocs
       v-if="isDeal && salesDocsEnabled && activeDeal"
       :deal="activeDeal"
+      compact
+      payment-link
     />
 
     <!-- score (doco-specific; not in the upstream sidepanel) -->
@@ -411,7 +415,7 @@ import LucideChevronLeft from '~icons/lucide/chevron-left'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
-import SalesDocsSection from '@/components/doco/inbox/SalesDocsSection.vue'
+import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 import DuplicateBanner from '@/components/doco/inbox/DuplicateBanner.vue'
 import CoachingPanel from '@/components/doco/inbox/CoachingPanel.vue'
 
@@ -453,9 +457,9 @@ const { crmUsers, isManager } = usersStore()
 const { makeCall } = globalStore()
 
 const route = useRoute()
-// On the standalone Deal 360° page (/deal/:id) the top action opens the inbox
-// conversation instead of re-opening 360°.
-const onDeal360 = computed(() => /^\/deal\//.test(route.path))
+// On the standalone Deal 360° page (/ventas/deal/:id) the top action opens the
+// inbox conversation instead of re-opening 360°.
+const onDeal360 = computed(() => route.name === 'Deal 360')
 
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 

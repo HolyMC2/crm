@@ -7,23 +7,14 @@
     <RouterLink
       :to="target"
       class="inline-flex min-h-11 items-center rounded px-2 text-sm underline focus-visible:ring-2"
-      >←
-      {{
-        target.startsWith('/reports')
-          ? __('Return to report')
-          : target.startsWith('/forms/')
-            ? __('Return to form submissions')
-            : target.startsWith('/forms')
-              ? __('Return to forms')
-              : __('Return to queue')
-      }}</RouterLink
+      >← {{ queueReturnLabel(target) }}</RouterLink
     >
   </nav>
 </template>
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { safeQueueReturn } from '@/utils/salesQueueContext'
+import { queueReturnLabel, safeQueueReturn } from '@/utils/salesQueueContext'
 const route = useRoute()
 const target = computed(() => safeQueueReturn(route.query.returnTo))
 </script>

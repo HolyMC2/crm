@@ -10,6 +10,13 @@ export function safeQueueReturn(value) {
     ? value
     : ''
 }
+/** What the back link says for a safeQueueReturn destination. */
+export function queueReturnLabel(target) {
+  if (target.startsWith('/reports')) return __('Return to report')
+  if (target.startsWith('/forms/')) return __('Return to form submissions')
+  if (target.startsWith('/forms')) return __('Return to forms')
+  return __('Return to queue')
+}
 export function conversionQueueReturn(route) {
   const carried = safeQueueReturn(route?.query?.returnTo)
   if (carried) return carried

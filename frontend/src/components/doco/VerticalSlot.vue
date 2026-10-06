@@ -28,7 +28,7 @@ import {
   verticalUnavailable,
 } from '@/utils/verticalSections'
 import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
-import DealDocumentsSection from '@/components/doco/DealDocumentsSection.vue'
+import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 import DealsSearchBox from '@/components/doco/DealsSearchBox.vue'
 import ProviderWorkspace from '@/components/doco/ProviderWorkspace.vue'
 
@@ -36,7 +36,8 @@ defineOptions({ inheritAttrs: false })
 
 const registry = {
   RepairOrdersSection,
-  DealDocumentsSection,
+  // stored vertical config keeps its key; Ventas' shared panel renders it
+  DealDocumentsSection: DealCommercialDocs,
   DealsSearchBox,
   ProviderWorkspace,
 }

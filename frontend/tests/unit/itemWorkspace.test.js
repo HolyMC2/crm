@@ -148,16 +148,26 @@ describe('Inbox item workspace', () => {
     expect(root.querySelector('[role=dialog]')).toBeNull()
   })
 
-  it('does not allow a draft sales order to create an invoice', async () => {
+  it('confirms a draft sales order here before it can be invoiced', async () => {
+    const modified = '2026-10-05 09:00:00.000001'
     call.mockImplementation(async (method) =>
       method.endsWith('get_workspace')
-        ? workspace([doc('Sales Order', 'SO1')])
-        : { lines: [], name: 'SO1', doctype: 'Sales Order', docstatus: 0 },
+        ? workspace([doc('Sales Order', 'SO1', { modified })])
+        : method.endsWith('confirm_sales_order')
+          ? { sales_order: 'SO1', already: false }
+          : { lines: [], name: 'SO1', doctype: 'Sales Order', docstatus: 0 },
     )
     mount()
     await settle()
     expect(button('Crear factura').disabled).toBe(true)
-    expect(root.textContent).toContain('Confirma la orden en ERP')
+    // no hand-off to Desk: the next step is right here
+    expect(root.textContent).not.toContain('ERP')
+    button('Confirm order').click()
+    await settle()
+    expect(call).toHaveBeenCalledWith(
+      'doco_marketing.api.sales_docs.confirm_sales_order',
+      expect.objectContaining({ deal: 'D1', sales_order: 'SO1', modified }),
+    )
   })
 
   it('keeps financial APIs out of leads and disabled tenants', async () => {

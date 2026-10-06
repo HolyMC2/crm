@@ -238,7 +238,7 @@ RECENT_LIMIT = 8
 
 @frappe.whitelist(methods=["POST"])
 def resolve_recent(records: str | list):
-	"""Titles for the palette's recent Contactos records the user may still read.
+	"""Titles for the palette's recent Contactos records and Ventas deals the user may still read.
 
 	The browser keeps only {source, name}; anything no longer readable (module or
 	record revoked, deleted, unknown source) is left out, so the palette drops it.
@@ -249,20 +249,32 @@ def resolve_recent(records: str | list):
 		records = json.loads(records or "[]")
 	if not isinstance(records, list):
 		return []
-	try:
-		enabled = _contactos()["enabled"]
-	except frappe.PermissionError:
-		enabled = False
-	if not enabled:
+	enabled = {}
+	for provider in (_contactos, _ventas):
+		try:
+			enabled[provider.__name__] = provider()["enabled"]
+		except frappe.PermissionError:
+			enabled[provider.__name__] = False
+	if not any(enabled.values()):
 		return []
-	from doco.contactos import access
+	access = None
+	if enabled["_contactos"]:
+		from doco.contactos import access
 
 	rows = []
 	for record in records[:RECENT_LIMIT]:
 		source = record.get("source") if isinstance(record, dict) else None
 		name = record.get("name") if isinstance(record, dict) else None
-		doctype = access.SOURCES.get(source) if isinstance(source, str) else None
-		if not doctype or not isinstance(name, str) or not access.available(doctype):
+		if not isinstance(source, str) or not isinstance(name, str):
+			continue
+		if source == "deal":
+			if enabled["_ventas"]:
+				row = _recent_deal(name)
+				if row:
+					rows.append(row)
+			continue
+		doctype = access.SOURCES.get(source) if access else None
+		if not doctype or not access.available(doctype):
 			continue
 		if not frappe.db.exists(doctype, name):
 			continue
@@ -271,3 +283,14 @@ def resolve_recent(records: str | list):
 			continue
 		rows.append({"source": source, "name": name, "title": access.title(doc)})
 	return rows
+
+
+def _recent_deal(name):
+	if not frappe.db.exists("CRM Deal", name):
+		return None
+	doc = frappe.get_doc("CRM Deal", name)
+	if not doc.has_permission("read"):
+		return None
+	person = " ".join(part for part in (doc.get("first_name"), doc.get("last_name")) if part)
+	title = doc.get("organization") or doc.get("lead_name") or person or name
+	return {"source": "deal", "name": name, "title": title}

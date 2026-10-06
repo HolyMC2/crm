@@ -18,6 +18,351 @@ msgstr ""
 "X-Crowdin-File-ID: 97\n"
 "Language: es_ES\n"
 
+# Ventas (commercial documents panel, deal record)
+#: frontend/src/composables/inbox.js
+msgid "Connection lost. Your work is kept."
+msgstr "Se perdió la conexión. Tu trabajo sigue aquí."
+
+#: frontend/src/pages/DealsView.vue
+msgid "Sales pipeline"
+msgstr "Embudo de ventas"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Sales pipelines"
+msgstr "Embudos de ventas"
+
+#: frontend/src/pages/DealsView.vue
+msgid "All pipelines"
+msgstr "Todos los embudos"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Pipelines could not load"
+msgstr "No se pudieron cargar los embudos"
+
+#: frontend/src/pages/DealsView.vue
+msgid "New Deal"
+msgstr "Nuevo trato"
+
+#: frontend/src/pages/DealsView.vue
+msgid "New Lead"
+msgstr "Nuevo prospecto"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Missing exchange rate"
+msgstr "Falta el tipo de cambio"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Created"
+msgstr "Creado"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Conversion review"
+msgstr "Revisión de conversión"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Converted: {0}"
+msgstr "Convertidos: {0}"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Identity review required"
+msgstr "Hay que revisar la identidad"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Review and convert"
+msgstr "Revisar y convertir"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Total value"
+msgstr "Valor total"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Weighted"
+msgstr "Ponderado"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Funnel"
+msgstr "Embudo"
+
+#: frontend/src/pages/DealsView.vue
+msgid "All stages"
+msgstr "Todas las etapas"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Automations"
+msgstr "Automatizaciones"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Sales automations"
+msgstr "Automatizaciones de ventas"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Open the automation workspace for reviewed publication, account policies and run history."
+msgstr "Abre Automatizaciones para publicar con revisión, ver políticas de la cuenta e historial de ejecuciones."
+
+#: frontend/src/pages/DealsView.vue
+msgid "Pending, no date"
+msgstr "Pendiente sin fecha"
+
+#: frontend/src/components/ventas
+msgid "Quotations"
+msgstr "Cotizaciones"
+
+#: frontend/src/components/ventas
+msgid "Sales orders"
+msgstr "Órdenes de venta"
+
+#: frontend/src/components/ventas
+msgid "Invoices"
+msgstr "Facturas"
+
+#: frontend/src/components/ventas
+msgid "Credit notes"
+msgstr "Notas de crédito"
+
+#: frontend/src/components/ventas
+msgid "Payments"
+msgstr "Pagos"
+
+#: frontend/src/components/ventas
+msgid "Orders"
+msgstr "Órdenes"
+
+#: frontend/src/components/ventas
+msgid "Balance due"
+msgstr "Saldo"
+
+#: frontend/src/components/ventas
+msgid "View"
+msgstr "Ver"
+
+#: frontend/src/components/ventas
+msgid "Edit and send"
+msgstr "Editar y enviar"
+
+#: frontend/src/components/ventas
+msgid "You can read this deal but not change it."
+msgstr "Puedes ver este trato, pero no cambiarlo."
+
+#: frontend/src/components/ventas
+msgid "Customer accepted: create order"
+msgstr "El cliente aceptó: crear orden"
+
+#: frontend/src/components/ventas
+msgid "Send again"
+msgstr "Enviar de nuevo"
+
+#: frontend/src/components/ventas
+msgid "Confirm order"
+msgstr "Confirmar orden"
+
+#: frontend/src/components/ventas
+msgid "Your role cannot confirm sales orders."
+msgstr "Tu puesto no puede confirmar órdenes de venta."
+
+#: frontend/src/components/ventas
+msgid "Create invoice"
+msgstr "Crear factura"
+
+#: frontend/src/components/ventas
+msgid "Your role cannot create invoices."
+msgstr "Tu puesto no puede crear facturas."
+
+#: frontend/src/components/ventas
+msgid "Issue invoice"
+msgstr "Emitir factura"
+
+#: frontend/src/components/ventas
+msgid "Your role cannot issue invoices."
+msgstr "Tu puesto no puede emitir facturas."
+
+#: frontend/src/components/ventas
+msgid "Collect at the register"
+msgstr "Cobrar en caja"
+
+#: frontend/src/components/ventas
+msgid "The register (POS) is not installed on this site. Record the payment with your accountant."
+msgstr "La caja (POS) no está instalada en esta tienda. Registra el pago con tu contador."
+
+#: frontend/src/components/ventas
+msgid "Copy invoice number"
+msgstr "Copiar folio"
+
+#: frontend/src/components/ventas
+msgid "Send payment link"
+msgstr "Enviar enlace de pago"
+
+#: frontend/src/components/ventas
+msgid "Return at the register"
+msgstr "Devolver en caja"
+
+#: frontend/src/components/ventas
+msgid "Refund"
+msgstr "Reembolso"
+
+#: frontend/src/components/ventas
+msgid "Received"
+msgstr "Recibido"
+
+#: frontend/src/components/ventas
+msgid "Cancelled"
+msgstr "Cancelado"
+
+#: frontend/src/components/ventas
+msgid "Issued"
+msgstr "Emitido"
+
+#: frontend/src/components/ventas
+msgid "Please give me permission to \"{0}\" in Ventas. Document: {1} {2}. Record: {3}."
+msgstr "Necesito permiso para «{0}» en Ventas. Documento: {1} {2}. Registro: {3}."
+
+#: frontend/src/components/ventas
+msgid "Sales documents"
+msgstr "Documentos de venta"
+
+#: frontend/src/components/ventas
+msgid "Refresh documents"
+msgstr "Actualizar documentos"
+
+#: frontend/src/components/ventas
+msgid "Loading documents…"
+msgstr "Cargando documentos…"
+
+#: frontend/src/components/ventas
+msgid "Try loading again"
+msgstr "Volver a cargar"
+
+#: frontend/src/components/ventas
+msgid "Several currencies"
+msgstr "Varias monedas"
+
+#: frontend/src/components/ventas
+msgid "Paid of invoiced"
+msgstr "Pagado de lo facturado"
+
+#: frontend/src/components/ventas
+msgid "No sales documents yet."
+msgstr "Todavía no hay documentos de venta."
+
+#: frontend/src/components/ventas
+msgid "Add items to quote"
+msgstr "Agregar artículos para cotizar"
+
+#: frontend/src/components/ventas
+msgid "Showing the latest {0} of {1}"
+msgstr "Mostrando los últimos {0} de {1}"
+
+#: frontend/src/components/ventas
+msgid "POS"
+msgstr "POS"
+
+#: frontend/src/components/ventas
+msgid "Due {0}"
+msgstr "Debe {0}"
+
+#: frontend/src/components/ventas
+msgid "Copied"
+msgstr "Copiado"
+
+#: frontend/src/components/ventas
+msgid "Print"
+msgstr "Imprimir"
+
+#: frontend/src/components/ventas
+msgid "Loading document…"
+msgstr "Cargando documento…"
+
+#: frontend/src/components/ventas
+msgid "Deal {0}"
+msgstr "Trato {0}"
+
+#: frontend/src/components/ventas
+msgid "Contact {0}"
+msgstr "Contacto {0}"
+
+#: frontend/src/components/ventas
+msgid "Order {0} already existed."
+msgstr "La orden {0} ya existía."
+
+#: frontend/src/components/ventas
+msgid "Order {0} created as a draft. Confirm it next."
+msgstr "Orden {0} creada en borrador. Ahora confírmala."
+
+#: frontend/src/components/ventas
+msgid "Order {0} confirmed. Next: create the invoice."
+msgstr "Orden {0} confirmada. Sigue: crear la factura."
+
+#: frontend/src/components/ventas
+msgid "Draft invoice {0} ready. Review and issue it."
+msgstr "Factura {0} lista en borrador. Revísala y emítela."
+
+#: frontend/src/components/ventas
+msgid "Invoice {0} issued."
+msgstr "Factura {0} emitida."
+
+#: frontend/src/components/ventas
+msgid "Payment link ready in the message box. Edit it and send it."
+msgstr "El enlace de pago está en el cuadro de mensaje. Edítalo y envíalo."
+
+#: frontend/src/components/ventas
+msgid "This document changed. Review the current version."
+msgstr "Este documento cambió. Revisa la versión actual."
+
+#: frontend/src/components/ventas
+msgid "See current version"
+msgstr "Ver la versión actual"
+
+#: frontend/src/components/ventas
+msgid "Your role cannot do this."
+msgstr "Tu puesto no puede hacer esto."
+
+#: frontend/src/components/ventas
+msgid "No connection. Nothing was changed."
+msgstr "Sin conexión. No se cambió nada."
+
+#: frontend/src/components/ventas
+msgid "ERPNext stopped this step."
+msgstr "El sistema detuvo este paso."
+
+#: frontend/src/components/ventas
+msgid "View document"
+msgstr "Ver documento"
+
+#: frontend/src/components/ventas
+msgid "This document could not be shown."
+msgstr "No se pudo mostrar este documento."
+
+#: frontend/src/components/ventas
+msgid "Printing is blocked here. Open the print dialog again."
+msgstr "La impresión está bloqueada aquí. Abre de nuevo el diálogo de impresión."
+
+#: frontend/src/components/ventas
+msgid "The documents could not be loaded."
+msgstr "No se pudieron cargar los documentos."
+
+#: frontend/src/components/ventas
+msgid "Sales documents are turned off for this shop. Ask your manager to turn them on in the sales settings."
+msgstr "Los documentos de venta están desactivados en esta tienda. Pide a tu encargado que los active en la configuración de ventas."
+
+#: frontend/src/components/ventas
+msgid "You can pay securely at this link:\n{0}\n\n*{1}* · {2}"
+msgstr "Hola 👋 puede realizar su pago seguro en este enlace:\n{0}\n\n*{1}* · {2}"
+
+#: frontend/src/components/ventas
+msgid "Return to {0}"
+msgstr "Volver a {0}"
+
+#: frontend/src/components/ventas
+msgid "previous page"
+msgstr "la página anterior"
+
+#: frontend/src/components/ventas
+msgid "Back to deals"
+msgstr "Volver a tratos"
+
+#: frontend/src/components/ventas
+msgid "See documents and next steps"
+msgstr "Ver documentos y siguientes pasos"
+
 # CRM forms (templates, builder, public page)
 msgid "This form was made outside the builder. Duplicate it as a clean form to edit it."
 msgstr "Este formulario se hizo fuera del constructor. Duplícalo como formulario limpio para editarlo."
@@ -12334,3 +12679,74 @@ msgstr "Preparar compra en borrador"
 
 msgid "From an ERP or mail attachment"
 msgstr "Desde un adjunto del ERP o del correo"
+#: frontend/src/components/ventas
+msgid "Resume order"
+msgstr "Reanudar pedido"
+
+#: frontend/src/components/ventas
+msgid "This order is on hold, so it cannot be invoiced yet."
+msgstr "Este pedido está en espera, por eso todavía no se puede facturar."
+
+#: frontend/src/components/ventas
+msgid "This order is closed, so it cannot be invoiced yet."
+msgstr "Este pedido está cerrado, por eso todavía no se puede facturar."
+
+#: frontend/src/components/ventas
+msgid "This order is {0}. Your role cannot resume orders: ask a sales manager."
+msgstr "Este pedido está en estado {0}. Tu puesto no puede reanudar pedidos: pídeselo a un gerente de ventas."
+
+#: frontend/src/components/ventas
+msgid "This invoice also includes sales from other deals. Ask whoever handles them to issue it."
+msgstr "Esta factura también incluye ventas de otros tratos. Pide a quien los lleva que la emita."
+
+#: frontend/src/components/ventas
+msgid "At the register open Cobranza, search {0} and choose invoice {1}. Come back here afterwards: the balance updates by itself."
+msgstr "En la caja abre Cobranza, busca a {0} y elige la factura {1}. Después vuelve aquí: el saldo se actualiza solo."
+
+#: frontend/src/components/ventas
+msgid "At the register open Cobranza and choose invoice {0}. Come back here afterwards: the balance updates by itself."
+msgstr "En la caja abre Cobranza y elige la factura {0}. Después vuelve aquí: el saldo se actualiza solo."
+
+#: frontend/src/components/ventas
+msgid "Copy invoice number and open the register"
+msgstr "Copiar folio y abrir la caja"
+
+#: frontend/src/components/ventas
+msgid "Why does it continue? It stays on the order's timeline."
+msgstr "¿Por qué continúa? Queda en el historial del pedido."
+
+#: frontend/src/components/ventas
+msgid "Resume"
+msgstr "Reanudar"
+
+#: frontend/src/components/ventas
+msgid "Order {0} resumed. Next: create the invoice."
+msgstr "Pedido {0} reanudado. Siguiente: crear la factura."
+
+#: frontend/src/components/ventas
+msgid "Correct the document"
+msgstr "Corregir el documento"
+
+#: frontend/src/components/ventas
+msgid "Correct the order"
+msgstr "Corregir el pedido"
+
+#: frontend/src/components/ventas
+msgid "Correct the invoice"
+msgstr "Corregir la factura"
+
+#: frontend/src/components/ventas
+msgid "Correct the quotation"
+msgstr "Corregir la cotización"
+
+#: frontend/src/components/ventas
+msgid "Ask for the correction"
+msgstr "Pedir la corrección"
+
+#: frontend/src/components/ventas
+msgid "Corrected: try again"
+msgstr "Ya está corregido: reintentar"
+
+#: frontend/src/components/ventas
+msgid "Please correct {0} {1} so I can continue in Ventas. ERPNext says: {2} Record: {3}."
+msgstr "Por favor corrige {0} {1} para que pueda continuar en Ventas. ERPNext dice: {2} Registro: {3}."

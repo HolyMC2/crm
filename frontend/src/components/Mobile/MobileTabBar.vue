@@ -120,7 +120,9 @@ function onTab(t) {
 // Drill-down panes: the inbox + deal 360° set mobileView to thread/context;
 // there the conversation owns the whole screen (WhatsApp-style) and back is ←.
 const inDrillDown = computed(
-  () => /^\/(inbox|deal\/)/.test(route.path) && mobileView.value !== 'list',
+  () =>
+    /^\/(inbox|(ventas\/)?deal\/)/.test(route.path) &&
+    mobileView.value !== 'list',
 )
 // On-screen keyboard: visualViewport shrinks well below the layout viewport.
 const keyboardOpen = ref(false)
