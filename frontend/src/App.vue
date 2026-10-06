@@ -12,6 +12,7 @@ import { useRoute } from 'vue-router'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { Dialogs } from '@/utils/dialogs'
+import { isNeutralModule } from '@/composables/muelleShell'
 const MuelleShell = defineAsyncComponent(
   () => import('@/components/shell/MuelleShell.vue'),
 )
@@ -24,8 +25,8 @@ const route = useRoute()
 // Keep the hard-refresh boot neutral until the router resolves its first match.
 const neutral = computed(
   () =>
-    route.meta.app === 'contactos' ||
-    (!route.matched.length && window.muelle_module === 'contactos'),
+    isNeutralModule(route.meta.app) ||
+    (!route.matched.length && isNeutralModule(window.muelle_module)),
 )
 const { setTheme } = useTheme()
 setTheme(localStorage.getItem('theme') || 'light')

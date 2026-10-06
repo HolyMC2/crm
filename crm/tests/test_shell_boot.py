@@ -47,6 +47,61 @@ class TestShellBoot(TestCase):
 		self.assertEqual(saved, ["ventas", "contactos", "hoy", "agenda"])
 		self.assertEqual(shell.boot()["mobile_slots"], saved)
 
+	def _skip_without_purchasing(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Compras (doco) is not installed")
+		try:
+			import doco.workspaces.purchasing
+		except ImportError:
+			self.skipTest("This doco has no purchasing service")
+
+	def test_compras_provider_reports_purchase_order_access(self):
+		self._skip_without_purchasing()
+		compras = shell.boot()["modules"]["compras"]
+		self.assertTrue(compras["enabled"])
+		self.assertIsNone(compras["reason"])
+		self.assertEqual(compras["capabilities"], {"read": True, "create": True})
+
+	def test_compras_needs_purchase_order_read_and_carries_its_own_reason(self):
+		self._skip_without_purchasing()
+		answer = {"enabled": True, "capabilities": {"orders": False, "requests": True, "create": False}}
+		with patch("doco.workspaces.purchasing.bootstrap", return_value=answer):
+			data = shell.boot()
+		compras = data["modules"]["compras"]
+		self.assertFalse(compras["enabled"])
+		self.assertTrue(compras["reason"])
+		self.assertFalse(compras["capabilities"]["create"])
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_compras_create_follows_purchase_order_create(self):
+		self._skip_without_purchasing()
+		answer = {"enabled": True, "capabilities": {"orders": True, "create": False}}
+		with patch("doco.workspaces.purchasing.bootstrap", return_value=answer):
+			compras = shell.boot()["modules"]["compras"]
+		self.assertEqual(compras["capabilities"], {"read": True, "create": False})
+
+	def test_compras_alone_opens_the_shell_without_contactos_or_ventas(self):
+		self._skip_without_purchasing()
+
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+		):
+			data = shell.boot()
+		self.assertTrue(data["modules"]["compras"]["enabled"])
+		self.assertFalse(data["sales_access"])
+
+	def test_older_doco_without_purchasing_turns_compras_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.workspaces.purchasing": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["compras"]["enabled"])
+		self.assertTrue(data["modules"]["compras"]["reason"])
+		self.assertEqual(data["modules"]["compras"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):

@@ -39,6 +39,7 @@ vi.mock('@/components/shell/VentasRailBell.vue', () => ({
 import MuelleShell from '@/components/shell/MuelleShell.vue'
 import {
   hostedModules,
+  isNeutralModule,
   moduleKeyFor,
   navSlots,
   shellBoot,
@@ -79,6 +80,11 @@ async function mount(path) {
         path: '/contactos',
         component: { render: () => h('p', 'Contactos page') },
         meta: { app: 'contactos', title: 'Contactos' },
+      },
+      {
+        path: '/compras',
+        component: { render: () => h('p', 'Compras page') },
+        meta: { app: 'compras', title: 'Compras' },
       },
       { path: '/deals', component: { render: () => h('p', 'Deals page') } },
       { path: '/ventas', component: { render: () => null } },
@@ -126,7 +132,20 @@ describe('module registry', () => {
     ).toBe('contactos')
     expect(moduleKeyFor({ path: '/deals/view/list', meta: {} })).toBe('ventas')
     expect(moduleKeyFor({ path: '/ventas', meta: {} })).toBe('ventas')
-    expect(hostedModules.map((m) => m.key)).toEqual(['contactos', 'ventas'])
+    expect(hostedModules.map((m) => m.key)).toEqual([
+      'contactos',
+      'ventas',
+      'compras',
+    ])
+  })
+
+  it('Compras is its own module and boots without the sales runtime', () => {
+    expect(moduleKeyFor({ path: '/compras/orden/PO-1', meta: {} })).toBe(
+      'compras',
+    )
+    expect(hostedModules.find((m) => m.key === 'compras')?.to).toBe('/compras')
+    expect(isNeutralModule('compras')).toBe(true)
+    expect(isNeutralModule('ventas')).toBe(false)
   })
 
   it('bottom-nav slots follow the role, enabled modules and the saved order', () => {
@@ -207,6 +226,106 @@ describe('one frame for every route', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }))
     await new Promise((resolve) => setTimeout(resolve, 10))
     expect(router.currentRoute.value.path).toBe('/contactos')
+  })
+})
+
+const COMPRAS_ON = {
+  key: 'compras',
+  enabled: true,
+  capabilities: { read: true, create: true },
+}
+
+describe('Compras in the shell', () => {
+  it('a purchasing worker without Contactos or Ventas gets only Compras, unblocked', async () => {
+    state.mobile.value = false
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          contactos: { key: 'contactos', enabled: false, capabilities: {} },
+          ventas: { key: 'ventas', enabled: false, capabilities: {} },
+          compras: COMPRAS_ON,
+        },
+      }),
+    )
+    await mount('/compras')
+    const rail = root.querySelector('nav[aria-label="Apps"]')
+    expect(
+      [...rail.querySelectorAll('a')].map((a) => a.getAttribute('aria-label')),
+    ).toEqual(['Compras'])
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+    expect(root.textContent).toContain('page')
+  })
+
+  it('a refused Compras shows its own reason, never the Contactos one', async () => {
+    state.mobile.value = false
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          compras: {
+            key: 'compras',
+            enabled: false,
+            reason: 'Sin permiso de órdenes de compra.',
+            capabilities: {},
+          },
+        },
+      }),
+    )
+    await mount('/compras')
+    const alert = root.querySelector('[role="alert"]')
+    // The test `__` leaves {0} unformatted; the label is the active module's.
+    expect(alert.textContent).toContain('We could not open')
+    expect(alert.textContent).toContain('Sin permiso de órdenes de compra.')
+    expect(alert.textContent).not.toContain('Contactos')
+  })
+
+  it('a refused Contactos does not block Compras', async () => {
+    state.mobile.value = false
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          contactos: { key: 'contactos', enabled: false, capabilities: {} },
+          compras: COMPRAS_ON,
+        },
+      }),
+    )
+    await mount('/compras')
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+  })
+
+  it('«New purchase» and Compras places follow the boot', async () => {
+    const query = {
+      raw: 'purchase',
+      text: 'purchase',
+      scope: 'all',
+      kind: 'text',
+    }
+    const withCreate = createShellProviders({
+      boot: ref(boot({ modules: { compras: COMPRAS_ON } })),
+      modules: ref(hostedModules),
+    })
+    expect((await withCreate[0].search(query)).map((i) => i.href)).toContain(
+      '/compras/nueva',
+    )
+    const places = withCreate.find((p) => p.key === 'ir_a')
+    const segment = { ...query, raw: 'recibir', text: 'recibir' }
+    expect((await places.search(segment)).map((i) => i.href)).toContain(
+      '/compras?segment=por-recibir',
+    )
+    const readOnly = createShellProviders({
+      boot: ref(
+        boot({
+          modules: {
+            compras: { ...COMPRAS_ON, capabilities: { read: true } },
+          },
+        }),
+      ),
+      modules: ref(hostedModules),
+    })
+    expect(
+      (await readOnly[0].search(query)).some((i) => i.id === 'compras.create'),
+    ).toBe(false)
   })
 })
 

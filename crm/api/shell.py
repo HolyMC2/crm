@@ -53,9 +53,37 @@ def _contactos():
 	}
 
 
+def _compras():
+	try:
+		# Doco owns purchasing; an older doco leaves the module off, not the shell down.
+		from doco.workspaces.purchasing import bootstrap
+	except ImportError:
+		bootstrap = None
+	if "doco" not in frappe.get_installed_apps() or bootstrap is None:
+		return {
+			"key": "compras",
+			"enabled": False,
+			"reason": _("Compras is not installed. Ask your manager to check the app."),
+			"capabilities": {},
+		}
+
+	answer = bootstrap() or {}
+	capabilities = answer.get("capabilities") or {}
+	enabled = bool(capabilities.get("orders"))
+	return {
+		"key": "compras",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason")
+		or _("Ask your manager for permission to read purchase orders, then retry."),
+		"capabilities": {"read": enabled, "create": enabled and bool(capabilities.get("create"))},
+	}
+
+
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [_contactos, _ventas]
+	providers = [_contactos, _ventas, _compras]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))
 	return providers

@@ -1,7 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { call } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
-import { loadShell, shellBoot } from '@/composables/muelleShell'
+import {
+  isNeutralModule,
+  loadShell,
+  shellBoot,
+} from '@/composables/muelleShell'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { loadCapabilities, gateRoute } from '@/utils/crmCapabilities'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
@@ -38,6 +42,32 @@ const routes = [
     component: () => import('@/pages/Contacto.vue'),
     props: true,
     meta: { app: 'contactos', title: 'Contactos', stableKey: true },
+  },
+  {
+    path: '/compras',
+    name: 'Compras',
+    component: () => import('@/pages/Compras.vue'),
+    meta: { app: 'compras', title: 'Compras', stableKey: true },
+  },
+  {
+    path: '/compras/nueva',
+    name: 'CompraNueva',
+    component: () => import('@/pages/CompraOrden.vue'),
+    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+  },
+  {
+    path: '/compras/orden/:name',
+    name: 'CompraOrden',
+    component: () => import('@/pages/CompraOrden.vue'),
+    props: true,
+    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+  },
+  {
+    path: '/compras/solicitud/:name',
+    name: 'CompraSolicitud',
+    component: () => import('@/pages/CompraSolicitud.vue'),
+    props: true,
+    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
   },
   {
     path: '/',
@@ -323,11 +353,11 @@ router.beforeEach(async (to, from, next) => {
       encodeURIComponent(safeIntendedRoute('/crm' + to.fullPath))
     return
   }
-  if (to.meta.app === 'contactos') {
-    // Native identities are a separate capability; no sales stores/boot here.
+  if (isNeutralModule(to.meta.app)) {
+    // Shell modules are separate capabilities; no sales stores/boot here.
     return next()
   }
-  if (window.muelle_module === 'contactos' || shellBoot.value) {
+  if (isNeutralModule(window.muelle_module) || shellBoot.value) {
     try {
       const boot = await loadShell()
       if (!moduleEnabled(boot, 'ventas'))

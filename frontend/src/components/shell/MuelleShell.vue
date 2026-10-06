@@ -63,12 +63,12 @@
         {{ __('Opening Muelle…') }}
       </div>
       <section
-        v-else-if="neutral && blocked"
+        v-else-if="blocked"
         role="alert"
         class="mx-auto w-full max-w-xl space-y-4 p-6"
       >
         <h1 class="text-xl font-semibold">
-          {{ __('We could not open Contactos') }}
+          {{ __('We could not open {0}', [blockedLabel]) }}
         </h1>
         <p class="text-sm text-ink-gray-7">
           {{ blocked }}
@@ -118,6 +118,7 @@ import { Button } from 'frappe-ui'
 import { isMobile } from '@/composables/breakpoint'
 import { mobileView } from '@/composables/mobileView'
 import {
+  isNeutralModule,
   loadShell,
   moduleKeyFor,
   navSlots,
@@ -128,7 +129,7 @@ import {
 } from '@/composables/muelleShell'
 import { useShellKeyboard } from '@/composables/shellKeyboard'
 import { applyShellAppearance } from '@/utils/shellAppearance'
-import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
 
@@ -148,18 +149,24 @@ const activeKey = computed(() => moduleKeyFor(route))
 const activeModule = computed(() =>
   shellModules.value.find((module) => module.key === activeKey.value),
 )
-const neutral = computed(() => activeKey.value === 'contactos')
 const ventasEnabled = computed(() => moduleEnabled(shellBoot.value, 'ventas'))
-const blocked = computed(
-  () =>
-    shellError.value ||
-    (shellBoot.value && !moduleEnabled(shellBoot.value, 'contactos')
-      ? shellBoot.value.modules?.contactos?.reason ||
-        __(
-          'You do not have permission to see Contactos. Ask your manager for access and try again.',
-        )
-      : ''),
-)
+// The refusal answers for the module the route belongs to, never another one;
+// Ventas routes are refused by the router into the not-permitted screen.
+const blockedLabel = computed(() => moduleMeta(activeKey.value)?.label || '')
+const blocked = computed(() => {
+  if (!isNeutralModule(activeKey.value) || route.name === 'Not Permitted')
+    return ''
+  if (shellError.value) return shellError.value
+  if (!shellBoot.value || moduleEnabled(shellBoot.value, activeKey.value))
+    return ''
+  return (
+    shellBoot.value.modules?.[activeKey.value]?.reason ||
+    __(
+      'You do not have permission to see {0}. Ask your manager for access and try again.',
+      [blockedLabel.value],
+    )
+  )
+})
 
 // Drill-down panes (inbox thread, deal 360) own the phone screen; the
 // on-screen keyboard also hides the bar.
@@ -178,9 +185,14 @@ function reload() {
   loadShell({ refresh: true }).catch(() => {})
 }
 async function copyRequest() {
-  const text = __(
-    'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
-  )
+  const text =
+    activeKey.value === 'compras'
+      ? __(
+          'I need access to Compras: read permission for Purchase Order so I can follow purchases.',
+        )
+      : __(
+          'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
+        )
   try {
     await navigator.clipboard.writeText(text)
     copied.value = __('Request copied. Share it with your manager.')

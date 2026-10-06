@@ -21,6 +21,11 @@ const CONTACTOS_PLACES = [
   ['followups', 'Mis seguimientos'],
   ['addresses', 'Direcciones'],
 ]
+const COMPRAS_PLACES = [
+  ['por-comprar', 'Por comprar'],
+  ['por-recibir', 'Por recibir'],
+  ['historial', 'Historial'],
+]
 const VENTAS_PLACES = [
   ['/inbox', 'Inbox', 'lucide-messages-square'],
   ['/leads', 'Leads', 'lucide-users'],
@@ -46,6 +51,14 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-user-plus',
           href: '/contactos?create=1',
           shortcut: 'c',
+        })
+      if (can(boot.value, 'compras', 'create'))
+        items.push({
+          id: 'compras.create',
+          group: 'acciones',
+          title: __('New purchase'),
+          icon: 'lucide-shopping-cart',
+          href: '/compras/nueva',
         })
       items.push(
         {
@@ -90,6 +103,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Contactos › ${label}`,
             icon: 'lucide-users',
             href: `/contactos?segment=${segment}`,
+          })
+      if (moduleEnabled(boot.value, 'compras'))
+        for (const [segment, label] of COMPRAS_PLACES)
+          items.push({
+            id: `compras.${segment}`,
+            group: 'ir_a',
+            title: `Compras › ${label}`,
+            icon: 'lucide-shopping-cart',
+            href: `/compras?segment=${segment}`,
           })
       if (moduleEnabled(boot.value, 'ventas'))
         for (const [path, label, icon] of VENTAS_PLACES)

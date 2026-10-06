@@ -15,16 +15,28 @@ no_cache = 1
 
 def get_context():
 	from crm.api import check_app_permission
+	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
 
 	path = frappe.local.request.environ.get("RAW_URI") or frappe.local.request.full_path.rstrip("?")
 	recovery = is_contactos_recovery_path(path)
-	neutral = recovery or is_contactos_path(path)
+	compras = is_compras_path(path)
+	neutral = recovery or compras or is_contactos_path(path)
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
 		raise frappe.Redirect
-	if not recovery and not (check_contactos_permission() if neutral else check_app_permission()):
+	if compras:
+		# A work account without Compras still gets its guard page (reason, Pedir
+		# acceso, Reintentar) from the shell; the boot carries no purchase data.
+		allowed = (
+			check_compras_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
+	else:
+		allowed = check_contactos_permission() if neutral else check_app_permission()
+	if not recovery and not allowed:
 		if neutral or check_contactos_permission():
 			# An authenticated permission-recovery screen exposes no identity data;
 			# a Contactos worker opening a sales route gets its request/return actions
@@ -36,7 +48,7 @@ def get_context():
 			frappe.PermissionError,
 		)
 	context = frappe._dict()
-	context.boot = get_boot(neutral=neutral)
+	context.boot = get_boot(neutral=neutral, module="compras" if compras else "contactos")
 	if frappe.session.user != "Guest" and not neutral:
 		capture("active_site", "crm")
 	return context
@@ -56,8 +68,11 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		frappe.throw(_("This method is only meant for developer mode"))
 	from crm.api import check_app_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
 
+	if is_compras_path(path):
+		return get_boot(neutral=True, module="compras")
 	recovery = is_contactos_recovery_path(path)
 	neutral = recovery or is_contactos_path(path)
 	if not recovery and not (check_contactos_permission() if neutral else check_app_permission()):
@@ -65,13 +80,13 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	return get_boot(neutral=neutral)
 
 
-def get_boot(neutral=False):
+def get_boot(neutral=False, module="contactos"):
 	return frappe._dict(
 		{
 			"frappe_version": frappe.__version__,
 			"installed_apps": list(frappe.get_installed_apps()),
-			"default_route": "/crm/contactos" if neutral else get_default_route(),
-			"muelle_module": "contactos" if neutral else "ventas",
+			"default_route": f"/crm/{module}" if neutral else get_default_route(),
+			"muelle_module": module if neutral else "ventas",
 			"site_name": frappe.local.site,
 			"lang": frappe.local.lang,
 			"socketio_port": frappe.conf.socketio_port,

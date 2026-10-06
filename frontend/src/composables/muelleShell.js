@@ -60,7 +60,7 @@ export function loadShell({ refresh = false } = {}) {
 
 // Modules this frontend hosts, in contracts order. Each adds its key here and
 // its routes in router.js; the boot decides whether it is enabled.
-const HOSTED = ['contactos', 'ventas']
+const HOSTED = ['contactos', 'ventas', 'compras']
 const ROUTE_HOME = { contactos: '/contactos', ventas: '/ventas' }
 
 export const hostedModules = SHELL_MODULES.filter((meta) =>
@@ -73,7 +73,15 @@ export const shellModules = computed(() =>
   ),
 )
 
-/** The module owning a route: Contactos by its routes, every other CRM page is Ventas. */
+/**
+ * Shell modules other than Ventas boot without the CRM runtime (sales stores,
+ * Ventas chrome): their routes carry meta.app, a hard refresh window.muelle_module.
+ */
+export function isNeutralModule(key) {
+  return key !== 'ventas' && SHELL_MODULES.some((meta) => meta.key === key)
+}
+
+/** The module owning a route: its meta.app or path, every other CRM page is Ventas. */
 export function moduleKeyFor(route) {
   if (route?.meta?.app) return route.meta.app
   return moduleForPath(route?.path || '', hostedModules)?.key || 'ventas'
