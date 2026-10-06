@@ -25,7 +25,9 @@ def get_context():
 
 def _gate(path):
 	"""Which boot this path gets, or a redirect to where this worker can continue."""
+	from crm.agenda_routes import is_agenda_path
 	from crm.api import check_app_permission
+	from crm.api.agenda import check_agenda_permission
 	from crm.api.archivos import check_archivos_permission
 	from crm.api.avisos import check_avisos_permission
 	from crm.api.compras import check_compras_permission
@@ -40,15 +42,23 @@ def _gate(path):
 
 	recovery = is_contactos_recovery_path(path)
 	pendientes = is_pendientes_path(path)
+	agenda = is_agenda_path(path)
 	compras = is_compras_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
-	neutral = recovery or pendientes or compras or avisos or archivos or is_contactos_path(path)
+	neutral = recovery or pendientes or agenda or compras or avisos or archivos or is_contactos_path(path)
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
 		raise frappe.Redirect
 	if pendientes:
 		allowed = check_pendientes_permission()
+	elif agenda:
+		# Work accounts without Event access still get the shell's guard page (reason,
+		# Pedir acceso, Reintentar); the boot itself carries no agenda data.
+		allowed = (
+			check_agenda_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
 	elif compras:
 		# A work account without Compras still gets its guard page (reason, Pedir
 		# acceso, Reintentar) from the shell; the boot carries no purchase data.
@@ -86,6 +96,7 @@ def _gate(path):
 		)
 	for key, matched in (
 		("pendientes", pendientes),
+		("agenda", agenda),
 		("compras", compras),
 		("avisos", avisos),
 		("archivos", archivos),
@@ -107,6 +118,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	"""Path-aware development boot for signed-in users (Contactos gets the neutral boot)."""
 	if not frappe.conf.developer_mode:
 		frappe.throw(_("This method is only meant for developer mode"))
+	from crm.agenda_routes import is_agenda_path
 	from crm.api import check_app_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
 	from crm.archivos_routes import is_archivos_path
@@ -121,6 +133,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		if not check_pendientes_permission():
 			frappe.throw(_("You do not have permission to open this app."), frappe.PermissionError)
 		return get_boot(neutral=True, module="pendientes")
+	if is_agenda_path(path):
+		return get_boot(neutral=True, module="agenda")
 	if is_compras_path(path):
 		return get_boot(neutral=True, module="compras")
 	if is_archivos_path(path):

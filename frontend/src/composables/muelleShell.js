@@ -62,6 +62,7 @@ export function loadShell({ refresh = false } = {}) {
 // its routes in router.js; the boot decides whether it is enabled.
 const HOSTED = [
   'pendientes',
+  'agenda',
   'contactos',
   'ventas',
   'compras',

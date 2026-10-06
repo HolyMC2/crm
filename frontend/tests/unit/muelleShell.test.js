@@ -98,6 +98,11 @@ async function mount(path) {
         component: { render: () => h('p', 'Archivos page') },
         meta: { app: 'archivos', title: 'Archivos' },
       },
+      {
+        path: '/agenda',
+        component: { render: () => h('p', 'Agenda page') },
+        meta: { app: 'agenda', title: 'Agenda' },
+      },
       { path: '/deals', component: { render: () => h('p', 'Deals page') } },
       { path: '/ventas', component: { render: () => null } },
       {
@@ -171,6 +176,7 @@ describe('module registry', () => {
     ).toBe('pendientes')
     expect(hostedModules.map((m) => m.key)).toEqual([
       'pendientes',
+      'agenda',
       'contactos',
       'ventas',
       'compras',
@@ -189,6 +195,28 @@ describe('module registry', () => {
     expect(hostedModules.find((m) => m.key === 'compras')?.to).toBe('/compras')
     expect(isNeutralModule('compras')).toBe(true)
     expect(isNeutralModule('ventas')).toBe(false)
+  })
+
+  it('Agenda refused: the shell answers for the Agenda with its own reason', async () => {
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          agenda: {
+            key: 'agenda',
+            enabled: false,
+            reason: 'Tu cuenta no puede abrir la Agenda.',
+            capabilities: {},
+          },
+        },
+      }),
+    )
+    await mount('/agenda')
+    const alert = await until(() => document.querySelector('[role="alert"]'))
+    expect(alert.textContent).toContain('We could not open Agenda')
+    expect(alert.textContent).toContain('Tu cuenta no puede abrir la Agenda.')
+    expect(alert.querySelector('p').textContent).not.toContain('Contactos')
+    expect(document.body.textContent).not.toContain('Agenda page')
   })
 
   it('Archivos refused: the shell answers for Archivos with its own reason', async () => {

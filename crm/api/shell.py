@@ -161,10 +161,30 @@ def _pendientes():
 	}
 
 
+def _agenda():
+	# Doco owns the calendar sources; crm.api.agenda answers which ones this worker may open.
+	from crm.api.agenda import get_capabilities
+
+	answer = get_capabilities()
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "agenda",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Ask your manager for permission to read events, then retry."),
+		"capabilities": {
+			"read": enabled,
+			"create": enabled and any(row.get("canCreate") for row in answer.get("sources") or []),
+		},
+	}
+
+
 def _hosted():
 	"""Providers of the modules whose screens live in this SPA under /crm/<key>, besides Ventas."""
 	return {
 		"pendientes": _pendientes,
+		"agenda": _agenda,
 		"contactos": _contactos,
 		"compras": _compras,
 		"archivos": _archivos,
@@ -189,7 +209,7 @@ def first_module():
 
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [_contactos, _ventas, _pendientes, _compras, _avisos, _archivos]
+	providers = [_contactos, _ventas, _pendientes, _agenda, _compras, _avisos, _archivos]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))
 	return providers

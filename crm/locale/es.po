@@ -13216,3 +13216,399 @@ msgstr "Usa las acciones de la oferta para cambiar enlaces y mensajes del client
 
 msgid "You are signed in as staff. Record the customer's decision or reply from the offer."
 msgstr "Iniciaste sesión como personal. Registra la decisión del cliente o responde desde la oferta."
+
+# --- Agenda ---
+
+# Agenda (Muelle shell, lane agenda-20261005)
+msgid "Agenda"
+msgstr "Agenda"
+
+msgid "Calendars"
+msgstr "Calendarios"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Next"
+msgstr "Siguiente"
+
+msgid "New event"
+msgstr "Nueva cita"
+
+msgid "We could not open the Agenda"
+msgstr "No pudimos abrir la Agenda"
+
+msgid "Calendar: {0}"
+msgstr "Calendario: {0}"
+
+msgid "This is taking longer than usual."
+msgstr "Está tardando más de lo normal."
+
+msgid "All day"
+msgstr "Todo el día"
+
+msgid "Event details"
+msgstr "Detalle de la cita"
+
+msgid "Discard your changes?"
+msgstr "¿Descartar cambios?"
+
+msgid "Keep editing"
+msgstr "Seguir editando"
+
+msgid "My agenda"
+msgstr "Mi agenda"
+
+msgid "Shifts"
+msgstr "Turnos"
+
+msgid "Times in {0}, the business time zone."
+msgstr "Horarios en {0}, la zona horaria del negocio."
+
+msgid "previous screen"
+msgstr "la pantalla anterior"
+
+msgid "«{0}» to {1}"
+msgstr "«{0}» a {1}"
+
+msgid "This event is no longer in the agenda."
+msgstr "Esta cita ya no está en la agenda."
+
+msgid "I need access to the Agenda (Event read and create) to schedule my work. Please review my permissions."
+msgstr "Necesito acceso a la Agenda (ver y crear citas) para organizar mi trabajo. Revisa mis permisos, por favor."
+
+msgid "Marked as done"
+msgstr "Marcada como hecha"
+
+msgid "Event cancelled"
+msgstr "Cita cancelada"
+
+msgid "Event reopened"
+msgstr "Cita reabierta"
+
+msgid "Edit event"
+msgstr "Editar cita"
+
+msgid "Propose another time"
+msgstr "Proponer otro horario"
+
+msgid "Changes saved"
+msgstr "Cambios guardados"
+
+msgid "Event saved"
+msgstr "Cita guardada"
+
+msgid "We could not reach the server. Check your connection and try again."
+msgstr "No pudimos conectar con el servidor. Revisa tu conexión y reintenta."
+
+msgid "Estimated from the rotation; it is confirmed when the schedule is published."
+msgstr "Estimado por el rol de turnos; se confirma cuando se publica el horario."
+
+msgid "Shifts are planned in Asistencia. Ask your manager for changes."
+msgstr "Los turnos se planean en Asistencia. Pide cambios a tu encargado."
+
+msgid "Open Turnos"
+msgstr "Abrir Turnos"
+
+msgid "Place"
+msgstr "Lugar"
+
+msgid "With"
+msgstr "Con"
+
+msgid "Reminder"
+msgstr "Recordatorio"
+
+msgid "Mark as done"
+msgstr "Marcar como hecha"
+
+msgid "Cancel series"
+msgstr "Cancelar serie"
+
+msgid "Cancel event"
+msgstr "Cancelar cita"
+
+msgid "Only {0} can change this event."
+msgstr "Solo {0} puede cambiar esta cita."
+
+msgid "Ask the organizer"
+msgstr "Pedir cambio al organizador"
+
+msgid "Cancel every date of «{0}»?"
+msgstr "¿Cancelar todas las fechas de «{0}»?"
+
+msgid "Cancel «{0}»?"
+msgstr "¿Cancelar «{0}»?"
+
+msgid "Keep it"
+msgstr "Conservarla"
+
+msgid "Estimated shift"
+msgstr "Turno estimado"
+
+msgid "Shift"
+msgstr "Turno"
+
+msgid "{0} {1} before"
+msgstr "{0} {1} antes"
+
+msgid "Only {0} can change this event. Propose a new time and we will let them know."
+msgstr "Solo {0} puede cambiar esta cita. Propón otro horario y le avisamos."
+
+msgid "Call, visit, delivery…"
+msgstr "Llamada, visita, entrega…"
+
+msgid "Until"
+msgstr "Hasta"
+
+msgid "Starts"
+msgstr "Empieza"
+
+msgid "Ends"
+msgstr "Termina"
+
+msgid "Times in {0}"
+msgstr "Horario de {0}"
+
+msgid "With whom"
+msgstr "Con quién"
+
+msgid "Search coworkers or contacts"
+msgstr "Busca compañeros o contactos"
+
+msgid "People found"
+msgstr "Personas encontradas"
+
+msgid "Coworker"
+msgstr "Compañero"
+
+msgid "More options"
+msgstr "Más opciones"
+
+msgid "Repeat"
+msgstr "Repetir"
+
+msgid "Repeat until (optional)"
+msgstr "Repetir hasta (opcional)"
+
+msgid "Visible to the whole team"
+msgstr "Visible para todo el equipo"
+
+msgid "Message (optional)"
+msgstr "Mensaje (opcional)"
+
+msgid "No reminder"
+msgstr "Sin recordatorio"
+
+msgid "10 minutes before"
+msgstr "10 minutos antes"
+
+msgid "30 minutes before"
+msgstr "30 minutos antes"
+
+msgid "1 hour before"
+msgstr "1 hora antes"
+
+msgid "1 day before"
+msgstr "1 día antes"
+
+msgid "Does not repeat"
+msgstr "No se repite"
+
+msgid "Every day"
+msgstr "Cada día"
+
+msgid "Every week"
+msgstr "Cada semana"
+
+msgid "Every month"
+msgstr "Cada mes"
+
+msgid "Every year"
+msgstr "Cada año"
+
+msgid "Send proposal"
+msgstr "Enviar propuesta"
+
+msgid "Save event"
+msgstr "Guardar cita"
+
+msgid "Write a title for the event."
+msgstr "Escribe un título para la cita."
+
+msgid "Choose a valid date and time."
+msgstr "Elige una fecha y hora válidas."
+
+msgid "The end must be after the start."
+msgstr "El final debe ser después del inicio."
+
+msgid "Check before saving"
+msgstr "Revisa antes de guardar"
+
+msgid "We could not save this change"
+msgstr "No pudimos guardar este cambio"
+
+msgid "Move the whole series"
+msgstr "Mover toda la serie"
+
+msgid "Open event"
+msgstr "Abrir cita"
+
+msgid "Edit series"
+msgstr "Editar serie"
+
+msgid "Schedule anyway"
+msgstr "Agendar de todos modos"
+
+msgid "Choose another time"
+msgstr "Elegir otra hora"
+
+msgid "Open the event form"
+msgstr "Abrir el formulario de la cita"
+
+msgid "Refresh agenda"
+msgstr "Actualizar agenda"
+
+msgid "View one day"
+msgstr "Ver un día"
+
+msgid "Now"
+msgstr "Ahora"
+
+msgid "Nothing scheduled"
+msgstr "Sin citas"
+
+msgid "Schedule"
+msgstr "Agendar"
+
+msgid "Organizer: {0}"
+msgstr "Organiza: {0}"
+
+msgid "Your account cannot open the Agenda. Ask your manager for access."
+msgstr "Tu cuenta no puede abrir la Agenda. Pide acceso a tu encargado."
+
+msgid "Agenda is not installed. Ask your manager to check the app."
+msgstr "La Agenda no está instalada. Pide a tu encargado que revise la app."
+
+msgid "Scheduled"
+msgstr "Programada"
+
+msgid "Estimated"
+msgstr "Estimado"
+
+msgid "{title}, {time}, {resource}, {status}"
+msgstr "{title}, {time}, {resource}, {status}"
+
+msgid "Create event for {resource} at {time}"
+msgstr "Crear cita en {resource} a las {time}"
+
+msgid "Choose a resource for {date} at {time}"
+msgstr "Elige un calendario para el {date} a las {time}"
+
+msgid "{start} – {end} · {minutes} min"
+msgstr "{start} – {end} · {minutes} min"
+
+msgid "Continued"
+msgstr "Continúa"
+
+msgid "{count} events"
+msgstr "{count} citas"
+
+msgid "The calendar date or time zone is invalid."
+msgstr "La fecha o la zona horaria del calendario no es válida."
+
+msgid "No resources to display."
+msgstr "No hay calendarios para mostrar."
+
+msgid "{count} events could not be displayed because their times are invalid."
+msgstr "{count} citas no se pueden mostrar porque sus horarios no son válidos."
+
+msgid "Drag to select a time range. Shift + Arrow keys extend it; Enter books; Escape cancels."
+msgstr "Arrastra para elegir un horario. Mayús + flechas lo amplían; Intro agenda; Esc cancela."
+
+msgid "Tap a time to book, then adjust the duration."
+msgstr "Toca una hora para agendar y luego ajusta la duración."
+
+msgid "Days of the week"
+msgstr "Días de la semana"
+
+msgid "No time slots in this range."
+msgstr "No hay horarios en este rango."
+
+msgid "Week time slots"
+msgstr "Horarios de la semana"
+
+msgid "Time"
+msgstr "Hora"
+
+msgid "Open {date}"
+msgstr "Abrir {date}"
+
+msgid "No events in this time range."
+msgstr "No hay citas en este horario."
+
+msgid "No events in this time range. Select a time to create one."
+msgstr "No hay citas en este horario. Elige una hora para crear una."
+
+msgid "Calendar time slots"
+msgstr "Horarios del calendario"
+
+msgid "Read only"
+msgstr "Solo lectura"
+
+msgid "No schedule"
+msgstr "Sin horario"
+
+msgid "{title}, {time}, {status}"
+msgstr "{title}, {time}, {status}"
+
+msgid "Resource calendar"
+msgstr "Calendario por recurso"
+
+msgid "Events continue from a previous day."
+msgstr "Hay citas que continúan del día anterior."
+
+msgid "No events on this day."
+msgstr "No hay citas este día."
+
+msgid "Book on this day"
+msgstr "Agendar este día"
+
+msgid "Open day"
+msgstr "Abrir día"
+
+msgid "{count} more events"
+msgstr "{count} citas más"
+
+msgid "Open {date}: {count} events"
+msgstr "Abrir {date}: {count} citas"
+
+msgid "Month calendar"
+msgstr "Calendario del mes"
+
+msgid "events"
+msgstr "citas"
+
+msgid "On these days"
+msgstr "Estos días"
+
+msgid "Keep: {0}"
+msgstr "Conservar: {0}"
+
+msgid "Choose at least one day for the repetition."
+msgstr "Elige al menos un día para la repetición."
+
+msgid "Loading the event…"
+msgstr "Cargando la cita…"
+
+msgid "We need the full event before editing it, so nothing is overwritten."
+msgstr "Necesitamos la cita completa antes de editarla, así no se sobrescribe nada."
+
+msgid "This event changed. Refresh the agenda."
+msgstr "Esta cita cambió. Actualiza la agenda."
+
+msgid "Ask your manager for permission to read events, then retry."
+msgstr "Pide al encargado permiso para leer eventos y vuelve a intentarlo."
+
+msgid "I need access to the Agenda in Muelle: read permission for Event as a staff account, so I can see and schedule my appointments."
+msgstr "Necesito acceso a la Agenda en Muelle: permiso de lectura de eventos con una cuenta de personal, para ver y agendar mis citas."

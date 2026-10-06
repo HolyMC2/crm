@@ -38,6 +38,12 @@ const routes = [
   // Ventas module home in the Muelle shell (contracts basePath).
   { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
   {
+    path: '/agenda',
+    name: 'Agenda',
+    component: () => import('@/pages/Agenda.vue'),
+    meta: { app: 'agenda', title: 'Agenda', stableKey: true },
+  },
+  {
     path: '/contactos',
     name: 'Contactos',
     component: () => import('@/pages/Contactos.vue'),
@@ -189,9 +195,18 @@ const routes = [
     component: () => import('@/pages/CallLogs.vue'),
   },
   {
+    // Retired CRM Calendar: Event notifications and bookmarks land in the Agenda.
     path: '/calendar',
     name: 'Calendar',
-    component: () => import('@/pages/Calendar.vue'),
+    redirect: (to) => ({
+      path: '/agenda',
+      query: {
+        ...(typeof to.query.date === 'string' ? { date: to.query.date } : {}),
+        ...(typeof to.query.eventId === 'string'
+          ? { event: `Event:${to.query.eventId}`, view: 'day' }
+          : {}),
+      },
+    }),
   },
   {
     path: '/data-import',

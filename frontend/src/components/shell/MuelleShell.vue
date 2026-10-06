@@ -193,25 +193,29 @@ function reload() {
 }
 async function copyRequest() {
   const text =
-    activeKey.value === 'pendientes'
+    activeKey.value === 'agenda'
       ? __(
-          'I need access to Pendientes: permission to read my ToDo (and Sales tasks, if I sell). Please review my user.',
+          'I need access to the Agenda in Muelle: read permission for Event as a staff account, so I can see and schedule my appointments.',
         )
-      : activeKey.value === 'compras'
+      : activeKey.value === 'pendientes'
         ? __(
-            'I need access to Compras: read permission for Purchase Order so I can follow purchases.',
+            'I need access to Pendientes: permission to read my ToDo (and Sales tasks, if I sell). Please review my user.',
           )
-        : activeKey.value === 'archivos'
+        : activeKey.value === 'compras'
           ? __(
-              'I need access to Archivos in Muelle (documents of my company) to receive and classify receipts.',
+              'I need access to Compras: read permission for Purchase Order so I can follow purchases.',
             )
-          : activeKey.value === 'avisos'
+          : activeKey.value === 'archivos'
             ? __(
-                'I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change.',
+                'I need access to Archivos in Muelle (documents of my company) to receive and classify receipts.',
               )
-            : __(
-                'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
-              )
+            : activeKey.value === 'avisos'
+              ? __(
+                  'I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change.',
+                )
+              : __(
+                  'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
+                )
   try {
     await navigator.clipboard.writeText(text)
     copied.value = __('Request copied. Share it with your manager.')

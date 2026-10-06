@@ -271,6 +271,52 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["pendientes"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_agenda(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Agenda (doco) is not installed")
+		try:
+			import doco.agenda.api
+		except ImportError:
+			self.skipTest("This doco has no Agenda service")
+
+	def test_agenda_provider_reports_event_access(self):
+		self._skip_without_agenda()
+		from crm.api.agenda import get_capabilities
+
+		# Which sources open depends on the site's setup; the provider mirrors the answer.
+		expected = get_capabilities()
+		agenda = shell.boot()["modules"]["agenda"]
+		self.assertEqual(agenda["enabled"], bool(expected["enabled"]))
+		self.assertEqual(agenda["capabilities"]["read"], agenda["enabled"])
+		if agenda["enabled"]:
+			self.assertIsNone(agenda["reason"])
+		else:
+			self.assertTrue(agenda["reason"])
+
+	def test_refused_agenda_carries_its_own_reason_and_leaves_others(self):
+		answer = {"enabled": False, "reason": "Tu cuenta no puede abrir la Agenda.", "sources": []}
+		with patch("crm.api.agenda.get_capabilities", return_value=answer):
+			data = shell.boot()
+		agenda = data["modules"]["agenda"]
+		self.assertFalse(agenda["enabled"])
+		self.assertEqual(agenda["reason"], answer["reason"])
+		self.assertEqual(agenda["capabilities"], {"read": False, "create": False})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_agenda_create_follows_a_source_that_can_create(self):
+		answer = {"enabled": True, "sources": [{"key": "events", "enabled": True, "canCreate": False}]}
+		with patch("crm.api.agenda.get_capabilities", return_value=answer):
+			agenda = shell.boot()["modules"]["agenda"]
+		self.assertEqual(agenda["capabilities"], {"read": True, "create": False})
+
+	def test_older_doco_without_agenda_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.agenda.api": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["agenda"]["enabled"])
+		self.assertTrue(data["modules"]["agenda"]["reason"])
+		self.assertEqual(data["modules"]["agenda"]["capabilities"], {"read": False, "create": False})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):

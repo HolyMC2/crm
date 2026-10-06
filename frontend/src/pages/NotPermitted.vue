@@ -38,6 +38,14 @@ const route = useRoute(),
   message = ref(''),
   loading = ref(false)
 const COPY = {
+  agenda: {
+    reason:
+      'Para abrir la Agenda necesitas una cuenta de personal con permiso de lectura de eventos. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de eventos (cuenta de personal) para abrir la Agenda en Muelle; quiero retomar la cita que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a la Agenda. Comparte la solicitud y reintenta después del ajuste.',
+  },
   archivos: {
     reason:
       'Para abrir Archivos necesitas acceso a los documentos de tu empresa. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',

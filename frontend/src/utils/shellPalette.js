@@ -21,6 +21,11 @@ const CONTACTOS_PLACES = [
   ['followups', 'Mis seguimientos'],
   ['addresses', 'Direcciones'],
 ]
+const AGENDA_PLACES = [
+  ['day', 'Día'],
+  ['week', 'Semana'],
+  ['list', 'Lista'],
+]
 const COMPRAS_PLACES = [
   ['por-comprar', 'Por comprar'],
   ['por-recibir', 'Por recibir'],
@@ -108,6 +113,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Contactos › ${label}`,
             icon: 'lucide-users',
             href: `/contactos?segment=${segment}`,
+          })
+      if (moduleEnabled(boot.value, 'agenda'))
+        for (const [view, label] of AGENDA_PLACES)
+          items.push({
+            id: `agenda.${view}`,
+            group: 'ir_a',
+            title: `Agenda › ${label}`,
+            icon: 'lucide-calendar-days',
+            href: `/agenda?view=${view}`,
           })
       if (moduleEnabled(boot.value, 'compras'))
         for (const [segment, label] of COMPRAS_PLACES)

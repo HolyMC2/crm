@@ -62,6 +62,8 @@ export function legacyIdentityRoute(to, source) {
 const RECOVERY_MODULES = {
   pendientes: 'pendientes',
   tasks: 'pendientes',
+  agenda: 'agenda',
+  calendar: 'agenda',
   archivos: 'archivos',
   avisos: 'avisos',
   notifications: 'avisos',

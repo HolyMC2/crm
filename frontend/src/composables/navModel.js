@@ -105,8 +105,8 @@ export const navItems = [
   {
     key: 'calendar',
     icon: CalendarIcon,
-    label: 'Calendario',
-    to: '/calendar',
+    label: 'Agenda',
+    to: '/agenda',
     group: 'calendar',
   },
   {
@@ -191,7 +191,7 @@ export function routeGroup(path) {
   if (/^\/(campaigns|chatflows)(\/|$)/.test(path)) return 'campaigns'
   if (/^\/forms(\/|$)/.test(path)) return 'forms'
   if (/^\/social(\/|$)/.test(path)) return 'social'
-  if (/^\/calendar(\/|$)/.test(path)) return 'calendar'
+  if (/^\/(calendar|agenda)(\/|$)/.test(path)) return 'calendar'
   // Ordered before the /leads rule: /pipeline-analysis is its own nav entry now,
   // and the broader pattern below would otherwise swallow it back into 'leads'.
   if (/^\/pipeline-analysis(\/|$)/.test(path)) return 'funnel'

@@ -1597,7 +1597,7 @@ const views = [
   { key: 'list', label: __('Lista') },
   { key: 'board', label: __('Tablero') },
   { key: 'funnel', label: __('Embudo') },
-  { key: 'cal', label: __('Calendario'), to: '/calendar' },
+  { key: 'cal', label: __('Agenda'), to: '/agenda' },
 ]
 function label(r) {
   return r.deal_name || r.organization || r.lead_name || r.name

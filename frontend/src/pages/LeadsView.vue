@@ -1095,7 +1095,7 @@ const views = [
   { key: 'list', label: '≡ List' },
   { key: 'board', label: '⊞ Board' },
   { key: 'funnel', label: '∿ Funnel' },
-  { key: 'cal', label: '📅 Cal', to: '/calendar' },
+  { key: 'cal', label: '📅 Cal', to: '/agenda' },
 ]
 function label(r) {
   return (
