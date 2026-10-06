@@ -13091,9 +13091,6 @@ msgstr "¡Esta oferta ya venció! Envíenos un mensaje para recibir una nueva."
 msgid "This offer was replaced by a newer version."
 msgstr "Esta oferta fue reemplazada por una versión más reciente."
 
-msgid "See the current offer"
-msgstr "Ver la oferta vigente"
-
 msgid "Send us a message below and we will send you the current offer."
 msgstr "Envíenos un mensaje abajo y le enviaremos la oferta vigente."
 
@@ -13216,3 +13213,6 @@ msgstr "Emite la oferta antes de compartirla con el cliente."
 
 msgid "Use the offer actions to change customer links and messages."
 msgstr "Usa las acciones de la oferta para cambiar enlaces y mensajes del cliente."
+
+msgid "You are signed in as staff. Record the customer's decision or reply from the offer."
+msgstr "Iniciaste sesión como personal. Registra la decisión del cliente o responde desde la oferta."

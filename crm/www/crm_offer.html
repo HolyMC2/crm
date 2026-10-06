@@ -159,7 +159,7 @@
         {% elif offer.status == "Superseded" %}
         <div class="banner warn">
           {{ i18n.superseded }}
-          {% if offer.newer_url %}<a href="{{ offer.newer_url }}">{{ i18n.see_newer }}</a>{% else %}{{ i18n.contact_us }}{% endif %}
+          {{ i18n.contact_us }}
         </div>
         {% endif %}
 

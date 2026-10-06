@@ -82,7 +82,6 @@ def get_context(context):
 		"cancel": _("Cancel"),
 		"expired": _("This offer has expired. Send us a message to receive a new one."),
 		"superseded": _("This offer was replaced by a newer version."),
-		"see_newer": _("See the current offer"),
 		"contact_us": _("Send us a message below and we will send you the current offer."),
 		"accepted": _("You accepted this offer on {0}.").format(context.decided_at),
 		"accepted_by": _("Signed as «{0}».").format(view["decided_by_name"])

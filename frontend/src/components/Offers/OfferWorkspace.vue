@@ -245,6 +245,11 @@
             >{{ __('Open ERP quotation') }} ·
             {{ state.selected.erp_quotation }}</a
           >
+          <OfferShare
+            v-if="state.selected.status !== 'Draft'"
+            :offer="state.selected"
+            :writable="!!caps.can_revise && !locked"
+          />
         </template>
         <p v-if="state.reviewRequired" role="alert">
           {{

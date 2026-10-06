@@ -236,27 +236,48 @@ class TestOfferShare(OfferFixture, IntegrationTestCase):
 		share.decide(old_token, "Rejected", issued["terms_hash"], note="Change qty")
 		frappe.set_user("Administrator")
 		revision = offers.revise(issued["name"], self.key)
-		view = share.public_view(share.resolve(old_token))
-		self.assertEqual(view["newer_url"], "")
 		new = offers.issue(revision["name"], str(revision["modified"]))
 		new_state = offers.share_link(new["name"])
 		# The rejected revision keeps its decision; an issued-but-superseded one links forward.
 		self.assertEqual(share.public_view(share.resolve(old_token))["decision"], "Rejected")
 		self.assertEqual(share.public_view(share.resolve(token_of(new_state)))["status"], "Issued")
 
-	def test_superseded_issued_revision_shows_newer_link(self):
+	def test_superseded_revision_never_reveals_the_newer_revisions_link(self):
 		issued, state = self.shared()
 		revision = offers.revise(issued["name"], self.key)
 		new = offers.issue(revision["name"], str(revision["modified"]))
+		new_token = token_of(offers.share_link(new["name"]))
 		view = share.public_view(share.resolve(token_of(state)))
 		self.assertEqual(view["status"], "Superseded")
-		self.assertEqual(view["newer_url"], "")
-		new_state = offers.share_link(new["name"])
-		view = share.public_view(share.resolve(token_of(state)))
-		self.assertEqual(view["newer_url"], new_state["url"])
+		self.assertFalse(view["can_decide"])
+		# A leaked old link must not hand out the current revision's capability.
+		self.assertNotIn(new_token, json.dumps(view, default=str))
 		self.as_guest()
 		with self.assertRaises(frappe.ValidationError):
 			share.decide(token_of(state), "Accepted", issued["terms_hash"], signer_name="Old page")
+
+	def test_staff_cannot_act_as_the_customer(self):
+		issued, state = self.shared()
+		token = token_of(state)
+		with self.assertRaises(frappe.PermissionError):
+			share.decide(token, "Accepted", issued["terms_hash"], signer_name="Forged")
+		with self.assertRaises(frappe.PermissionError):
+			share.post_message(token, "Forged message")
+		self.assertEqual(frappe.db.get_value("CRM Offer", issued["name"], "status"), "Issued")
+
+	def test_read_only_staff_see_activity_but_not_the_link(self):
+		from frappe.model.document import Document
+
+		issued, state = self.shared()
+		real = Document.has_permission
+
+		def read_only(doc, permtype="read", *args, **kwargs):
+			return False if permtype == "write" else real(doc, permtype, *args, **kwargs)
+
+		with patch.object(Document, "has_permission", read_only):
+			seen = offers.get_share_state(issued["name"])
+		self.assertEqual(seen["url"], "")
+		self.assertEqual(offers.get_share_state(issued["name"])["url"], state["url"])
 
 	# Messages and views ---------------------------------------------------------
 

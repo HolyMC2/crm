@@ -53,7 +53,6 @@ PUBLIC_KEYS = frozenset(
 		"decision",
 		"decided_at",
 		"decided_by_name",
-		"newer_url",
 		"messages",
 		"can_decide",
 	}
@@ -88,17 +87,25 @@ def url_for(token):
 # Token resolution --------------------------------------------------------------
 
 
-def resolve(token):
-	"""The CRM Offer Link for a customer token, or None. Never raises on garbage."""
+def resolve(token, lock=False):
+	"""The CRM Offer Link for a customer token, or None. Never raises on garbage.
+
+	With lock=True the link row is read with a locking read, so callers can go on to lock
+	deal → offer without a consistent read first (MariaDB snapshot isolation, error 1020).
+	"""
 	if not isinstance(token, str) or not 20 <= len(token) <= 128 or not token.isascii():
 		return None
 	wanted = _hash(token)
 	row = frappe.db.get_value(
-		"CRM Offer Link", {"token_hash": wanted}, ["name", "token_hash", "offer"], as_dict=True
+		"CRM Offer Link",
+		{"token_hash": wanted},
+		["name", "token_hash", "offer", "deal"],
+		as_dict=True,
+		for_update=lock,
 	)
 	if not row or not hmac.compare_digest(row.token_hash, wanted):
 		return None
-	if frappe.db.get_value("CRM Offer", row.offer, "status") in (None, "Draft"):
+	if not lock and frappe.db.get_value("CRM Offer", row.offer, "status") in (None, "Draft"):
 		return None
 	return row
 
@@ -126,7 +133,8 @@ def _limited(bucket, key):
 	try:
 		cache = frappe.cache()
 		count = cache.incrby(cache_key, 1)
-		if count == 1:
+		# A worker dying between INCRBY and EXPIRE leaves no TTL; heal it on the next hit.
+		if count == 1 or cache.ttl(cache_key) < 0:
 			cache.expire(cache_key, window)
 		return count > limit
 	except Exception:
@@ -153,29 +161,12 @@ def _customer_name(deal):
 	return values.get("organization") or values.get("lead_name") or ""
 
 
-def _newer_url(doc):
-	latest = frappe.get_all(
-		"CRM Offer",
-		filters={"root_offer": doc.root_offer, "revision": [">", doc.revision], "status": ["!=", "Draft"]},
-		fields=["name"],
-		order_by="revision desc",
-		limit=1,
-	)
-	if not latest:
-		return ""
-	link = frappe.db.get_value("CRM Offer Link", {"offer": latest[0].name}, "name")
-	if not link:
-		return ""
-	token = frappe.get_doc("CRM Offer Link", link).get_password("token", raise_exception=False)
-	return url_for(token) if token else ""
-
-
 def _messages(offer):
 	rows = frappe.get_all(
 		"CRM Offer Message",
 		filters={"offer": offer},
 		fields=["direction", "author", "message", "creation"],
-		order_by="creation asc",
+		order_by="creation desc",
 		limit=200,
 	)
 	return [
@@ -185,7 +176,7 @@ def _messages(offer):
 			"message": row.message,
 			"at": str(row.creation),
 		}
-		for row in rows
+		for row in reversed(rows)
 	]
 
 
@@ -193,7 +184,9 @@ def public_view(link):
 	"""Everything the customer page may show, built only from the issued snapshot."""
 	doc = frappe.get_doc("CRM Offer", link.offer)
 	frozen = json.loads(doc.issued_snapshot)
-	status = service.effective_status(doc)
+	# Plain read: page loads must not take locks that contend with seller revisions.
+	newer = frappe.db.exists("CRM Offer", {"root_offer": doc.root_offer, "revision": [">", doc.revision]})
+	status = service.effective_status(doc, current=not newer)
 	lines = calculate(frozen["products"], frozen["currency_precision"])["products"]
 	view = {
 		"title": frozen["title"],
@@ -208,18 +201,22 @@ def public_view(link):
 		"terms": frozen.get("terms") or "",
 		"terms_hash": doc.terms_hash,
 		"seller_company": frozen.get("sales_company") or _business_name(),
-		"seller_logo": frappe.db.get_single_value("FCRM Settings", "brand_logo") or "",
+		"seller_logo": _public_logo(),
 		"seller_contact": _full_name(doc.issued_by),
 		"customer_name": _customer_name(doc.deal),
 		"issued_at": str(doc.issued_at or ""),
 		"decision": doc.status if doc.status in ("Accepted", "Rejected") else "",
 		"decided_at": str(doc.decision_at or "") if doc.status in ("Accepted", "Rejected") else "",
 		"decided_by_name": _evidence(doc).get("name", "") if doc.decision_channel == ONLINE else "",
-		"newer_url": _newer_url(doc) if status == "Superseded" else "",
 		"messages": _messages(doc.name),
 		"can_decide": status == "Issued",
 	}
 	return view
+
+
+def _public_logo():
+	logo = frappe.db.get_single_value("FCRM Settings", "brand_logo") or ""
+	return "" if logo.startswith("/private/") else logo
 
 
 def _business_name():
@@ -239,14 +236,29 @@ def _evidence(doc):
 # Guest actions -------------------------------------------------------------------
 
 
+def _staff_session():
+	return (
+		frappe.session.user != "Guest"
+		and frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+	)
+
+
 def _locked(token):
-	"""Resolve the token and lock deal → offer in the service's lock order."""
-	link = resolve(token)
+	"""Lock link → deal → offer (the seller's share() takes the same order) before any plain read."""
+	if _staff_session():
+		# Staff record decisions and replies from the offer itself, under their own name.
+		_fail(
+			"You are signed in as staff. Record the customer's decision or reply from the offer.",
+			frappe.PermissionError,
+		)
+	link = resolve(token, lock=True)
 	if not link:
 		raise frappe.DoesNotExistError(_("This link is not valid."))
-	deal = frappe.db.get_value("CRM Offer", link.offer, "deal")
-	frappe.db.get_value("CRM Deal", deal, "name", for_update=True)
-	return link, frappe.get_doc("CRM Offer", link.offer, for_update=True)
+	frappe.db.get_value("CRM Deal", link.deal, "name", for_update=True)
+	doc = frappe.get_doc("CRM Offer", link.offer, for_update=True)
+	if doc.status == "Draft":
+		raise frappe.DoesNotExistError(_("This link is not valid."))
+	return link, doc
 
 
 def _guard_writes(token):
@@ -322,25 +334,22 @@ def post_message(token, message):
 def record_view(token):
 	"""Counted by the page's script (link unfurlers don't run it), at most once per window per IP."""
 	_throttle(("view-ip", client_ip()))
-	link = resolve(token)
-	if not link:
-		raise frappe.DoesNotExistError(_("This link is not valid."))
-	if (
-		frappe.session.user != "Guest"
-		and frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
-	):
+	if _staff_session():
 		return {"counted": False}
+	link = resolve(token, lock=True)
+	if not link or frappe.db.get_value("CRM Offer", link.offer, "status") in (None, "Draft"):
+		raise frappe.DoesNotExistError(_("This link is not valid."))
 	try:
 		cache = frappe.cache()
 		seen = _key("viewed", link.token_hash[:32], _hash(client_ip())[:16])
 		fresh = cache.incrby(seen, 1) == 1
-		if fresh:
+		if fresh or cache.ttl(seen) < 0:
 			cache.expire(seen, VIEW_WINDOW)
 	except Exception:
 		fresh = False
 	if not fresh:
 		return {"counted": False}
-	doc = frappe.get_doc("CRM Offer Link", link.name, for_update=True)
+	doc = frappe.get_doc("CRM Offer Link", link.name)
 	first = not doc.view_count
 	now = now_datetime()
 	doc.view_count = (doc.view_count or 0) + 1
@@ -397,7 +406,8 @@ def _seller_offer(name, write=False):
 	return doc
 
 
-def _link_state(doc, link=None):
+def _link_state(doc, link=None, writable=None):
+	writable = doc.has_permission("write") if writable is None else writable
 	link = link or frappe.db.get_value(
 		"CRM Offer Link",
 		{"offer": doc.name},
@@ -405,7 +415,9 @@ def _link_state(doc, link=None):
 		as_dict=True,
 	)
 	url = ""
-	if link:
+	# The URL is the customer's capability: whoever holds it can decide. Read-only staff
+	# see activity but never the link, so they cannot sign in the customer's name.
+	if link and writable:
 		token = frappe.get_doc("CRM Offer Link", link.name).get_password("token", raise_exception=False)
 		url = url_for(token) if token else ""
 	evidence = _evidence(doc) if doc.decision_channel == ONLINE else {}
@@ -427,8 +439,9 @@ def link_state(name):
 
 
 def share(name, rotate=False):
+	# Same lock order as the customer actions: link → deal → offer.
+	existing = frappe.db.get_value("CRM Offer Link", {"offer": name}, "name", for_update=True)
 	doc = _seller_offer(name, write=True)
-	existing = frappe.db.get_value("CRM Offer Link", {"offer": doc.name}, "name", for_update=True)
 	if existing and not rotate:
 		return _link_state(doc)
 	token = secrets.token_urlsafe(32)

@@ -135,7 +135,7 @@
   </section>
 </template>
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { call } from 'frappe-ui'
 import { offerDecisionTime } from './offerPresentation'
 
@@ -236,4 +236,10 @@ watch(
   load,
   { immediate: true },
 )
+// Customer views and messages don't change the offer; pick them up when the seller returns.
+function onFocus() {
+  if (!busy.value && !loading.value) load()
+}
+window.addEventListener('focus', onFocus)
+onBeforeUnmount(() => window.removeEventListener('focus', onFocus))
 </script>
