@@ -26,6 +26,12 @@ const AGENDA_PLACES = [
   ['week', 'Semana'],
   ['list', 'Lista'],
 ]
+const COBRANZA_PLACES = [
+  ['vencidas', 'Vencidas'],
+  ['hoy', 'Vence pronto'],
+  ['promesas', 'Promesas'],
+  ['todas', 'Todas'],
+]
 const GASTOS_PLACES = [
   ['segment=por-pagar', 'Por pagar'],
   ['segment=por-pagar&chip=vencidas', 'Vencidas'],
@@ -127,6 +133,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Agenda › ${label}`,
             icon: 'lucide-calendar-days',
             href: `/agenda?view=${view}`,
+          })
+      if (moduleEnabled(boot.value, 'cobranza'))
+        for (const [segment, label] of COBRANZA_PLACES)
+          items.push({
+            id: `cobranza.${segment}`,
+            group: 'ir_a',
+            title: `Cobranza › ${label}`,
+            icon: 'lucide-hand-coins',
+            href: `/cobranza?segment=${segment}`,
           })
       if (moduleEnabled(boot.value, 'compras'))
         for (const [segment, label] of COMPRAS_PLACES)

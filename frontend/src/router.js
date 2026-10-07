@@ -70,6 +70,19 @@ const routes = [
     meta: { app: 'pendientes', title: 'Pendientes', stableKey: true },
   },
   {
+    path: '/cobranza',
+    name: 'Cobranza',
+    component: () => import('@/pages/Cobranza.vue'),
+    meta: { app: 'cobranza', title: 'Cobranza', stableKey: true },
+  },
+  {
+    path: '/cobranza/cliente/:customer',
+    name: 'CobranzaCliente',
+    component: () => import('@/pages/CobranzaCliente.vue'),
+    props: true,
+    meta: { app: 'cobranza', title: 'Cobranza', listParent: 'Cobranza' },
+  },
+  {
     path: '/compras',
     name: 'Compras',
     component: () => import('@/pages/Compras.vue'),

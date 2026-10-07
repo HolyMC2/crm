@@ -30,6 +30,7 @@ def _gate(path):
 	from crm.api.agenda import check_agenda_permission
 	from crm.api.archivos import check_archivos_permission
 	from crm.api.avisos import check_avisos_permission
+	from crm.api.cobranza import check_cobranza_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
 	from crm.api.gastos import check_gastos_permission
@@ -37,6 +38,7 @@ def _gate(path):
 	from crm.api.shell import first_module
 	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
+	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
 	from crm.gastos_routes import is_gastos_path
@@ -45,12 +47,21 @@ def _gate(path):
 	recovery = is_contactos_recovery_path(path)
 	pendientes = is_pendientes_path(path)
 	agenda = is_agenda_path(path)
+	cobranza = is_cobranza_path(path)
 	compras = is_compras_path(path)
 	gastos = is_gastos_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
 	neutral = (
-		recovery or pendientes or agenda or compras or gastos or avisos or archivos or is_contactos_path(path)
+		recovery
+		or pendientes
+		or agenda
+		or cobranza
+		or compras
+		or gastos
+		or avisos
+		or archivos
+		or is_contactos_path(path)
 	)
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
@@ -62,6 +73,13 @@ def _gate(path):
 		# Pedir acceso, Reintentar); the boot itself carries no agenda data.
 		allowed = (
 			check_agenda_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
+	elif cobranza:
+		# A work account without Cobranza still gets its guard page (reason, Pedir
+		# acceso, Reintentar) from the shell; the boot carries no receivables data.
+		allowed = (
+			check_cobranza_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
 	elif compras:
@@ -109,6 +127,7 @@ def _gate(path):
 	for key, matched in (
 		("pendientes", pendientes),
 		("agenda", agenda),
+		("cobranza", cobranza),
 		("compras", compras),
 		("gastos", gastos),
 		("avisos", avisos),
@@ -136,6 +155,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
 	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
+	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
 	from crm.gastos_routes import is_gastos_path
@@ -149,6 +169,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="pendientes")
 	if is_agenda_path(path):
 		return get_boot(neutral=True, module="agenda")
+	if is_cobranza_path(path):
+		return get_boot(neutral=True, module="cobranza")
 	if is_compras_path(path):
 		return get_boot(neutral=True, module="compras")
 	if is_gastos_path(path):

@@ -62,6 +62,14 @@ const COPY = {
     missing:
       'Tu usuario todavía no es de personal. Comparte la solicitud y reintenta después del ajuste.',
   },
+  cobranza: {
+    reason:
+      'Para abrir Cobranza necesitas permiso de lectura de facturas de venta. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de facturas de venta para abrir Cobranza en Muelle; quiero retomar el cliente que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Cobranza. Comparte la solicitud y reintenta después del ajuste.',
+  },
   compras: {
     reason:
       'Para abrir Compras necesitas permiso de lectura de órdenes de compra. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',

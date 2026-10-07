@@ -184,6 +184,7 @@ describe('module registry', () => {
       'agenda',
       'contactos',
       'ventas',
+      'cobranza',
       'compras',
       'gastos',
       'archivos',
@@ -192,6 +193,16 @@ describe('module registry', () => {
     expect(moduleKeyFor({ path: '/archivos', meta: { app: 'archivos' } })).toBe(
       'archivos',
     )
+  })
+
+  it('Cobranza is its own module and boots without the sales runtime', () => {
+    expect(moduleKeyFor({ path: '/cobranza/cliente/Ana', meta: {} })).toBe(
+      'cobranza',
+    )
+    expect(hostedModules.find((m) => m.key === 'cobranza')?.to).toBe(
+      '/cobranza',
+    )
+    expect(isNeutralModule('cobranza')).toBe(true)
   })
 
   it('Compras is its own module and boots without the sales runtime', () => {

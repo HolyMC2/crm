@@ -14022,3 +14022,458 @@ msgstr "Las cuentas en otra moneda ({0}) todavía no pueden pagar esta factura a
 #: frontend/src/components/gastos/PayDialog.vue
 msgid "exchange rate"
 msgstr "tipo de cambio"
+# Cobranza (Muelle shell /crm/cobranza)
+#: frontend/src/pages/Cobranza.vue
+msgid "Cobranza is not available"
+msgstr "Cobranza no está disponible"
+
+#: frontend/src/pages/Cobranza.vue
+msgctxt "Cobranza"
+msgid "Back"
+msgstr "Volver"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Totals"
+msgstr "Totales"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "To collect"
+msgstr "Por cobrar"
+
+#: frontend/src/pages/Cobranza.vue
+msgctxt "Cobranza"
+msgid "Overdue"
+msgstr "Vencido"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Collected today"
+msgstr "Cobrado hoy"
+
+#: frontend/src/pages/Cobranza.vue
+msgctxt "Cobranza"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "All companies"
+msgstr "Todas las empresas"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Search customer or invoice"
+msgstr "Buscar cliente o factura"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Showing the most recent invoices only. Search a customer to see all of theirs."
+msgstr "Solo se muestran las facturas más recientes. Busca un cliente para ver todas las suyas."
+
+#: frontend/src/pages/Cobranza.vue
+msgctxt "Cobranza"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Loading what customers owe…"
+msgstr "Cargando lo que deben los clientes…"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "1 invoice"
+msgstr "1 factura"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "{0} invoices"
+msgstr "{0} facturas"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "{0} overdue"
+msgstr "{0} vencido"
+
+#: frontend/src/pages/Cobranza.vue
+msgctxt "Cobranza"
+msgid "Load more"
+msgstr "Cargar más"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Other collection documents"
+msgstr "Otros documentos de cobranza"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Receivables report"
+msgstr "Reporte de cuentas por cobrar"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "All reminder letters"
+msgstr "Todos los recordatorios de pago"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Ask your manager for permission to read sales invoices."
+msgstr "Pide al encargado permiso para consultar facturas de venta."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Customers with invoices past their due date."
+msgstr "Clientes con facturas vencidas."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Invoices due today or in the next 7 days."
+msgstr "Facturas que vencen hoy o en los próximos 7 días."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Customers who promised to pay; broken promises first."
+msgstr "Clientes que prometieron pagar; primero las promesas vencidas."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Everything customers owe, largest balance first."
+msgstr "Todo lo que deben los clientes, primero los saldos más grandes."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "No customers match"
+msgstr "Ningún cliente coincide"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Nothing to collect here"
+msgstr "Nada por cobrar aquí"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Try another customer name or invoice number."
+msgstr "Prueba con otro nombre de cliente o número de factura."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "When a customer promises a payment date, it shows up here."
+msgstr "Cuando un cliente promete una fecha de pago, aparece aquí."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Customers with a pending balance show up here."
+msgstr "Aquí aparecen los clientes con saldo pendiente."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "I need access to Cobranza: read permission for Sales Invoice so I can follow what customers owe."
+msgstr "Necesito acceso a Cobranza: permiso para consultar facturas de venta y dar seguimiento a lo que deben los clientes."
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Back to Cobranza"
+msgstr "Volver a Cobranza"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Loading the customer’s balance…"
+msgstr "Cargando el saldo del cliente…"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Next customer"
+msgstr "Siguiente cliente"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "No mobile number"
+msgstr "Sin celular"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Does not accept messages"
+msgstr "No acepta mensajes"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Credit limit {0}"
+msgstr "Límite de crédito {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Store credit {0}"
+msgstr "Saldo a favor {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "This customer owes nothing right now."
+msgstr "Este cliente no debe nada por ahora."
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "{0} sent"
+msgstr "{0} enviado"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "of {0}"
+msgstr "de {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Record promise"
+msgstr "Registrar promesa"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Invoice {0}"
+msgstr "Factura {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Promised date"
+msgstr "Fecha prometida"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Promised amount"
+msgstr "Monto prometido"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Save promise"
+msgstr "Guardar promesa"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Log call"
+msgstr "Anotar llamada"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "How did it go?"
+msgstr "¿Cómo te fue?"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Save call"
+msgstr "Guardar llamada"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Answered"
+msgstr "Contestó"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "No answer"
+msgstr "No contestó"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Left a message"
+msgstr "Dejé mensaje"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Visit"
+msgstr "Visita"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Cobranza"
+msgstr "Cobranza"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Payment {0} · {1}"
+msgstr "Pago {0} · {1}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "{0} ({1}) · {2}"
+msgstr "{0} ({1}) · {2}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "{0} ({1})"
+msgstr "{0} ({1})"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Promise closed · invoice {0}"
+msgstr "Promesa cerrada · factura {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Promise · invoice {0}"
+msgstr "Promesa · factura {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Call · invoice {0}"
+msgstr "Llamada · factura {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "You cannot open this customer"
+msgstr "No puedes abrir este cliente"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "I need permission to send payment reminders in Cobranza (create and submit Dunning) for invoice {0}."
+msgstr "Necesito permiso para enviar recordatorios de pago en Cobranza (crear y confirmar Dunning) para la factura {0}."
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Reminder levels ready"
+msgstr "Niveles de recordatorio listos"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Promise saved"
+msgstr "Promesa guardada"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Call saved"
+msgstr "Llamada guardada"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Copied. Share it with your manager."
+msgstr "Copiado. Compártelo con tu encargado."
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "No more customers in this list"
+msgstr "No hay más clientes en esta lista"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Payment recorded ({0}). The balance below is up to date."
+msgstr "Pago registrado ({0}). El saldo de abajo ya está actualizado."
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Send reminder by WhatsApp"
+msgstr "Enviar recordatorio por WhatsApp"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Reminder {0} for {1}"
+msgstr "Recordatorio {0} para {1}"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Preparing the preview…"
+msgstr "Preparando la vista previa…"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "PDF"
+msgstr "PDF"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Customer number"
+msgstr "Número del cliente"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "WhatsApp account"
+msgstr "Cuenta de WhatsApp"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Approved template (the customer has not written in 24 hours)"
+msgstr "Plantilla aprobada (el cliente no ha escrito en 24 horas)"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Customer mobile"
+msgstr "Celular del cliente"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "WhatsApp: {0}"
+msgstr "WhatsApp: {0}"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Last send: {0} to {1}"
+msgstr "Último envío: {0} a {1}"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "Request sent. The owner sees it in their pending list."
+msgstr "Solicitud enviada. El dueño la ve en sus pendientes."
+
+#: frontend/src/composables/useCobranza.js
+msgid "No connection. Reconnect and check again."
+msgstr "Sin conexión. Vuelve a conectarte y revisa de nuevo."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Overdue 1 day"
+msgstr "Vencida hace 1 día"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Not due yet"
+msgstr "Aún no vence"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Promise broken"
+msgstr "Promesa vencida"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Promise partly kept: {0}"
+msgstr "Promesa cumplida en parte: {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Promise kept"
+msgstr "Promesa cumplida"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Promises {0} on {1}"
+msgstr "Promete {0} el {1}"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Promises to pay on {0}"
+msgstr "Promete pagar el {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Not sent yet"
+msgstr "Aún no se envía"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Send reminder"
+msgstr "Enviar recordatorio"
+
+#: frontend/src/composables/useCobranza.js
+msgid "You need permission to send payment reminders. Ask your manager."
+msgstr "Necesitas permiso para enviar recordatorios de pago. Pídeselo a tu encargado."
+
+#: frontend/src/composables/useCobranza.js
+msgid "The reminder levels for this company are not set up yet."
+msgstr "Los niveles de recordatorio de esta empresa aún no están listos."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Set up reminder levels"
+msgstr "Preparar niveles de cobranza"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Send reminder again"
+msgstr "Reenviar recordatorio"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "No connection"
+msgstr "Sin conexión"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Someone else is working on this invoice"
+msgstr "Otra persona está trabajando en esta factura"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "Not allowed"
+msgstr "No permitido"
+
+#: crm/api/cobranza.py
+msgid "Cobranza is not installed. Ask your manager to check the app."
+msgstr "Cobranza no está instalada. Pide a tu encargado que revise la aplicación."
+
+#: crm/api/shell.py
+msgid "Ask your manager for permission to read sales invoices, then retry."
+msgstr "Pide al encargado permiso para consultar facturas de venta y vuelve a intentarlo."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Ask the owner to send it"
+msgstr "Pedir al dueño que lo envíe"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Download PDF"
+msgstr "Descargar PDF"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Share from my phone"
+msgstr "Compartir desde mi teléfono"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Set up sending"
+msgstr "Configurar envíos"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Add or fix phone"
+msgstr "Agregar o corregir celular"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Open the conversation"
+msgstr "Abrir la conversación"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Review preview"
+msgstr "Revisar vista previa"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Review number"
+msgstr "Revisar número"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Prepare a new send"
+msgstr "Preparar un envío nuevo"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Retry send"
+msgstr "Reintentar envío"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Send again anyway"
+msgstr "Enviar de nuevo de todos modos"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "Due soon"
+msgstr "Vence pronto"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "Promises"
+msgstr "Promesas"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "All"
+msgstr "Todas"

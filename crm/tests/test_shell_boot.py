@@ -141,6 +141,53 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["compras"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_receivables(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Cobranza (doco) is not installed")
+		try:
+			import doco.workspaces.receivables
+		except ImportError:
+			self.skipTest("This doco has no receivables service")
+
+	def test_cobranza_provider_reports_invoice_access_and_reminders(self):
+		self._skip_without_receivables()
+		cobranza = shell.boot()["modules"]["cobranza"]
+		self.assertTrue(cobranza["enabled"])
+		self.assertIsNone(cobranza["reason"])
+		self.assertEqual(cobranza["capabilities"], {"read": True, "create": True})
+
+	def test_refused_cobranza_carries_its_own_reason_and_leaves_others(self):
+		self._skip_without_receivables()
+		answer = {"enabled": False, "reason": "Pide permiso", "capabilities": {}}
+		with patch("doco.workspaces.receivables.bootstrap", return_value=answer):
+			data = shell.boot()
+		cobranza = data["modules"]["cobranza"]
+		self.assertEqual((cobranza["enabled"], cobranza["reason"]), (False, "Pide permiso"))
+		self.assertEqual(cobranza["capabilities"], {"read": False, "create": False})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_cobranza_alone_opens_the_shell_without_contactos_or_ventas(self):
+		self._skip_without_receivables()
+
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+		):
+			data = shell.boot()
+		self.assertTrue(data["modules"]["cobranza"]["enabled"])
+		self.assertFalse(data["sales_access"])
+
+	def test_older_doco_without_receivables_turns_cobranza_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.workspaces.receivables": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["cobranza"]["enabled"])
+		self.assertTrue(data["modules"]["cobranza"]["reason"])
+		self.assertEqual(data["modules"]["cobranza"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_avisos_provider_reports_staff_access_and_grouped_badge(self):
 		data = shell.boot()
 		avisos = data["modules"]["avisos"]
@@ -227,6 +274,7 @@ class TestShellBoot(TestCase):
 			patch.object(shell, "_ventas", off("ventas")),
 			patch.object(shell, "_pendientes", off("pendientes")),
 			patch.object(shell, "_agenda", off("agenda")),
+			patch.object(shell, "_cobranza", off("cobranza")),
 			patch.object(shell, "_compras", off("compras")),
 		):
 			data = shell.boot()

@@ -3,6 +3,8 @@
 // ficha, legacy vertical slot). Pure: the panel renders it, the server re-checks
 // every action it offers.
 
+import { posCollectHref } from '@/utils/posHandoff'
+
 export const SALES_DOCTYPES = Object.freeze([
   'Quotation',
   'Sales Order',
@@ -152,19 +154,8 @@ export function safeReturnPath(path) {
   return path
 }
 
-/** POS Cobranza with the invoice preselected as a hint (POS re-authorizes). */
-export function posCollectHref(row, { returnTo, returnLabel } = {}) {
-  const params = new URLSearchParams()
-  if (row.customer) params.set('customer', row.customer)
-  params.set('invoice', row.name)
-  const back = safeReturnPath(returnTo)
-  if (back) {
-    params.set('return_to', back)
-    if (returnLabel)
-      params.set('return_label', String(returnLabel).slice(0, 40))
-  }
-  return `/posapp/payments?${params.toString()}`
-}
+// POS Cobranza with the invoice preselected: one shared link builder (Cobranza uses it too).
+export { posCollectHref }
 
 /** POS «Devolver venta» deep link (posawesome returnFlowContext contract). */
 export function posReturnHref(row) {

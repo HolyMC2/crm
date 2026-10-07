@@ -67,6 +67,7 @@ const RECOVERY_MODULES = {
   archivos: 'archivos',
   avisos: 'avisos',
   notifications: 'avisos',
+  cobranza: 'cobranza',
   compras: 'compras',
   gastos: 'gastos',
   contactos: 'contactos',

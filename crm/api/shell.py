@@ -125,6 +125,32 @@ def _gastos():
 	}
 
 
+def _cobranza():
+	from crm.api.cobranza import _bootstrap
+
+	# Doco owns receivables; an older doco (or none) leaves the module off, not the shell down.
+	bootstrap = _bootstrap() if "doco" in frappe.get_installed_apps() else None
+	if bootstrap is None:
+		return {
+			"key": "cobranza",
+			"enabled": False,
+			"reason": _("Cobranza is not installed. Ask your manager to check the app."),
+			"capabilities": {},
+		}
+
+	answer = bootstrap() or {}
+	enabled = bool(answer.get("enabled"))
+	capabilities = answer.get("capabilities") or {}
+	return {
+		"key": "cobranza",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Ask your manager for permission to read sales invoices, then retry."),
+		"capabilities": {"read": enabled, "create": enabled and bool(capabilities.get("remind"))},
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -230,6 +256,7 @@ def _hosted():
 		"pendientes": _pendientes,
 		"agenda": _agenda,
 		"contactos": _contactos,
+		"cobranza": _cobranza,
 		"compras": _compras,
 		"gastos": _gastos,
 		"archivos": _archivos,
@@ -254,7 +281,7 @@ def first_module():
 
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [_contactos, _ventas, _pendientes, _agenda, _compras, _gastos, _avisos, _archivos]
+	providers = [_contactos, _ventas, _pendientes, _agenda, _cobranza, _compras, _gastos, _avisos, _archivos]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))
 	return providers
