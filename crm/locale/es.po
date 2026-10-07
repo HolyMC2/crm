@@ -14477,3 +14477,500 @@ msgstr "Promesas"
 msgctxt "Cobranza"
 msgid "All"
 msgstr "Todas"
+#: frontend/src/pages/Garantias.vue
+msgid "Garantías is not available"
+msgstr "Garantías no está disponible"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Back"
+msgstr "Volver"
+
+#: frontend/src/pages/Garantias.vue
+msgid "New case"
+msgstr "Nuevo caso"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Search customer, serial or document"
+msgstr "Busca cliente, número de serie o documento"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Kind"
+msgstr "Tipo"
+
+#: frontend/src/pages/Garantias.vue
+msgid "All kinds"
+msgstr "Todos los tipos"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Assigned to me"
+msgstr "Asignados a mí"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Loading cases…"
+msgstr "Cargando casos…"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Load more"
+msgstr "Cargar más"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Ask your manager for access to warranty and return cases."
+msgstr "Pide al encargado acceso a los casos de garantía y devolución."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Cases nobody has reviewed yet, oldest first."
+msgstr "Casos que nadie ha revisado, los más antiguos primero."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Cases being repaired or decided."
+msgstr "Casos en reparación o por decidir."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Products sent to the supplier."
+msgstr "Productos enviados al proveedor."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Resolved and cancelled cases."
+msgstr "Casos resueltos y cancelados."
+
+#: frontend/src/pages/Garantias.vue
+msgid "No cases match"
+msgstr "Ningún caso coincide"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Nothing here"
+msgstr "Nada por aquí"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Try another customer, serial number or document."
+msgstr "Prueba con otro cliente, número de serie o documento."
+
+#: frontend/src/pages/Garantias.vue
+msgid "When a customer comes back with a product, open a case here or from Taller."
+msgstr "Cuando un cliente regrese con un producto, abre un caso aquí o desde Taller."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Cases move here as they progress."
+msgstr "Los casos llegan aquí conforme avanzan."
+
+#: frontend/src/pages/Garantias.vue
+msgid "I need access to Garantías: read permission for Warranty Claim in my company so I can follow warranty and return cases."
+msgstr "Necesito acceso a Garantías: permiso de lectura de casos de garantía en mi empresa, para dar seguimiento a garantías y devoluciones."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Back to Garantías"
+msgstr "Volver a Garantías"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Loading case…"
+msgstr "Cargando caso…"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Assign to someone who can"
+msgstr "Asignar a alguien que pueda"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Repair in Taller"
+msgstr "Reparar en Taller"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Open repair order {0}"
+msgstr "Abrir la orden {0}"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Assign"
+msgstr "Asignar"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Notify the customer"
+msgstr "Avisar al cliente"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Receive it in Taller"
+msgstr "Recíbelo en Taller"
+
+#: frontend/src/pages/Garantias.vue
+msgid "What the customer reports"
+msgstr "Lo que reporta el cliente"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Proof of purchase"
+msgstr "Comprobante"
+
+#: frontend/src/pages/Garantias.vue
+msgid "You cannot open this document."
+msgstr "No puedes abrir este documento."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Open in Taller"
+msgstr "Abrir en Taller"
+
+#: frontend/src/pages/Garantias.vue
+msgid "No sale or repair order linked."
+msgstr "No hay venta ni orden de Taller enlazada."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Warranty"
+msgstr "Garantía"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Covered until {0}"
+msgstr "Cubierto hasta el {0}"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Expired on {0}"
+msgstr "Venció el {0}"
+
+#: frontend/src/pages/Garantias.vue
+msgid "No warranty date on record. Check the sale or the order."
+msgstr "No hay fecha de garantía registrada. Revisa la venta o la orden."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Outcome"
+msgstr "Resultado"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Resolved by {0}"
+msgstr "Resuelto por {0}"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Assigned to"
+msgstr "Asignado a"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Nobody yet"
+msgstr "Nadie todavía"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Last WhatsApp notice: {0}"
+msgstr "Último aviso por WhatsApp: {0}"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "History"
+msgstr "Historial"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Add a note for the team"
+msgstr "Agrega una nota para el equipo"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Save note"
+msgstr "Guardar nota"
+
+#: frontend/src/pages/Garantias.vue
+msgid "No history yet."
+msgstr "Todavía no hay historial."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Charge"
+msgstr "Cobro"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Under warranty (no charge)"
+msgstr "En garantía (sin cobro)"
+
+#: frontend/src/pages/Garantias.vue
+msgid "With charge"
+msgstr "Con cargo"
+
+#: frontend/src/pages/Garantias.vue
+msgid "The repair warranty expired, so this visit is charged. The original history stays."
+msgstr "La garantía de la reparación venció, así que esta visita tiene cargo. El historial original se conserva."
+
+#: frontend/src/pages/Garantias.vue
+msgid "What to repair"
+msgstr "Qué hay que reparar"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Close"
+msgstr "Cerrar"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Receive in Taller"
+msgstr "Recibir en Taller"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Why (the customer sees this on the case sheet)"
+msgstr "Por qué (el cliente lo ve en la hoja del caso)"
+
+#: frontend/src/pages/Garantias.vue
+msgid "The case closes with {0} as its outcome."
+msgstr "El caso se cierra con {0} como resultado."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Nothing is linked as the outcome yet. Write what was done, or repair it in Taller first."
+msgstr "Todavía no hay un resultado enlazado. Escribe qué se hizo o primero repáralo en Taller."
+
+#: frontend/src/pages/Garantias.vue
+msgid "The case closes without a repair or refund. Say why."
+msgstr "El caso se cierra sin reparación ni reembolso. Explica por qué."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Use this when the case was opened by mistake."
+msgstr "Úsalo cuando el caso se abrió por error."
+
+#: frontend/src/pages/Garantias.vue
+msgid "The case goes back to review."
+msgstr "El caso regresa a revisión."
+
+#: frontend/src/pages/Garantias.vue
+msgid "The case moves to review."
+msgstr "El caso pasa a revisión."
+
+#: frontend/src/pages/Garantias.vue
+msgid "You cannot open this case"
+msgstr "No puedes abrir este caso"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Could not open the case"
+msgstr "No se pudo abrir el caso"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Received in Taller as {0}"
+msgstr "Recibido en Taller como {0}"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Case {0} resolved"
+msgstr "Caso {0} resuelto"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Case {0} cancelled"
+msgstr "Caso {0} cancelado"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "What happened"
+msgstr "Qué pasó"
+
+#: frontend/src/pages/Garantias.vue
+msgid "About {0} {1}. The customer comes from it."
+msgstr "Sobre {0} {1}. El cliente se toma de ahí."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Customer"
+msgstr "Cliente"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Search by name or phone"
+msgstr "Busca por nombre o teléfono"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Serial number (optional)"
+msgstr "Número de serie (opcional)"
+
+#: frontend/src/pages/Garantias.vue
+msgid "IMEI or serial on the product"
+msgstr "IMEI o número de serie del producto"
+
+#: frontend/src/pages/Garantias.vue
+msgid "E.g. the screen turns off after a few minutes"
+msgstr "Ej. la pantalla se apaga a los pocos minutos"
+
+#: frontend/src/pages/Garantias.vue
+msgid "{0} already has an open case: {1}."
+msgstr "{0} ya tiene un caso abierto: {1}."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Open that case"
+msgstr "Abrir ese caso"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Open another case anyway"
+msgstr "Abrir otro caso de todos modos"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Open case"
+msgstr "Abrir caso"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Missing information"
+msgstr "Falta información"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Choose the customer and describe what they report."
+msgstr "Elige al cliente y describe lo que reporta."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Who works this case"
+msgstr "Quién atiende este caso"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Remove"
+msgstr "Quitar"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Nobody is assigned yet."
+msgstr "Nadie está asignado todavía."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Assign to"
+msgstr "Asignar a"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Nobody else can work this case. Ask your manager for access."
+msgstr "Nadie más puede atender este caso. Pide acceso al encargado."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Only people with access to Garantías in this company appear."
+msgstr "Solo aparecen personas con acceso a Garantías en esta empresa."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Done"
+msgstr "Listo"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Checking how to reach the customer…"
+msgstr "Revisando cómo contactar al cliente…"
+
+#: frontend/src/pages/Garantias.vue
+msgid "WhatsApp with the case sheet ({0}) as a PDF."
+msgstr "WhatsApp con la hoja del caso ({0}) en PDF."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Number"
+msgstr "Número"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Send from"
+msgstr "Enviar desde"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Message"
+msgstr "Mensaje"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Send from my phone"
+msgstr "Enviar desde mi teléfono"
+
+#: frontend/src/pages/Garantias.vue
+msgid "The owner sets this up in WhatsApp settings."
+msgstr "El dueño lo configura en los ajustes de WhatsApp."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Sent to the queue: {0}."
+msgstr "Enviado a la cola: {0}."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Overdue by {0} h"
+msgstr "Vencido hace {0} h"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Due in {0} h"
+msgstr "Vence en {0} h"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Due {0}"
+msgstr "Vence el {0}"
+
+#: frontend/src/pages/Garantias.vue
+msgid "New warranty case"
+msgstr "Nuevo caso de garantía"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Garantías is not installed. Ask your manager to check the app."
+msgstr "Garantías no está instalado. Pide al encargado que revise la app."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Ask your manager for permission to read warranty claims, then retry."
+msgstr "Pide al encargado permiso para leer casos de garantía y vuelve a intentarlo."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "New"
+msgstr "Nuevas"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "In review"
+msgstr "En revisión"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "With supplier"
+msgstr "Con proveedor"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Closed"
+msgstr "Cerradas"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Return"
+msgstr "Devolución"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Back for repair"
+msgstr "Reingreso"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Resolved"
+msgstr "Resuelta"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Cancelled"
+msgstr "Cancelada"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Start review"
+msgstr "Revisar"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Mark resolved"
+msgstr "Resolver"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Does not apply"
+msgstr "No procede"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Cancel case"
+msgstr "Cancelar caso"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Reopen"
+msgstr "Reabrir"

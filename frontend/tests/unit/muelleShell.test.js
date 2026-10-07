@@ -187,6 +187,7 @@ describe('module registry', () => {
       'cobranza',
       'compras',
       'gastos',
+      'garantias',
       'archivos',
       'avisos',
     ])

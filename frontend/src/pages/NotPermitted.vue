@@ -94,6 +94,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a los datos de Contactos. Comparte la solicitud y reintenta después del ajuste.',
   },
+  garantias: {
+    reason:
+      'Para abrir Garantías necesitas permiso de lectura de casos de garantía en tu empresa. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de casos de garantía (Warranty Claim) en mi empresa para abrir Garantías en Muelle; quiero retomar el caso que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Garantías. Comparte la solicitud y reintenta después del ajuste.',
+  },
   pendientes: {
     reason:
       'Para abrir Pendientes necesitas permiso de lectura de tus pendientes (ToDo) o de las tareas de Ventas. No hace falta acceso a Ventas.',

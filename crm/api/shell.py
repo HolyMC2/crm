@@ -151,6 +151,29 @@ def _cobranza():
 	}
 
 
+def _garantias():
+	from crm.api.garantias import get_capabilities
+
+	answer = get_capabilities() or {}
+	capabilities = answer.get("capabilities") or {}
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "garantias",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason")
+		or _("Ask your manager for permission to read warranty claims, then retry."),
+		"capabilities": {
+			"read": enabled,
+			"create": enabled and bool(capabilities.get("create")),
+			"repair": enabled and bool(capabilities.get("repair")),
+		}
+		if enabled
+		else {},
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -259,6 +282,7 @@ def _hosted():
 		"cobranza": _cobranza,
 		"compras": _compras,
 		"gastos": _gastos,
+		"garantias": _garantias,
 		"archivos": _archivos,
 		"avisos": _avisos,
 	}
@@ -281,7 +305,18 @@ def first_module():
 
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
-	providers = [_contactos, _ventas, _pendientes, _agenda, _cobranza, _compras, _gastos, _avisos, _archivos]
+	providers = [
+		_contactos,
+		_ventas,
+		_pendientes,
+		_agenda,
+		_cobranza,
+		_compras,
+		_gastos,
+		_garantias,
+		_avisos,
+		_archivos,
+	]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))
 	return providers

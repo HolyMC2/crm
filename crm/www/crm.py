@@ -33,6 +33,7 @@ def _gate(path):
 	from crm.api.cobranza import check_cobranza_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.api.garantias import check_garantias_permission
 	from crm.api.gastos import check_gastos_permission
 	from crm.api.pendientes import check_pendientes_permission
 	from crm.api.shell import first_module
@@ -41,6 +42,7 @@ def _gate(path):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
 	from crm.pendientes_routes import is_pendientes_path, is_shell_root
 
@@ -50,6 +52,7 @@ def _gate(path):
 	cobranza = is_cobranza_path(path)
 	compras = is_compras_path(path)
 	gastos = is_gastos_path(path)
+	garantias = is_garantias_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
 	neutral = (
@@ -59,6 +62,7 @@ def _gate(path):
 		or cobranza
 		or compras
 		or gastos
+		or garantias
 		or avisos
 		or archivos
 		or is_contactos_path(path)
@@ -96,6 +100,13 @@ def _gate(path):
 			check_gastos_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
+	elif garantias:
+		# A work account without Garantías still gets its guard page (reason, Pedir
+		# acceso, Reintentar) from the shell; the boot carries no claim data.
+		allowed = (
+			check_garantias_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
 	elif avisos:
 		allowed = check_avisos_permission()
 	elif archivos:
@@ -130,6 +141,7 @@ def _gate(path):
 		("cobranza", cobranza),
 		("compras", compras),
 		("gastos", gastos),
+		("garantias", garantias),
 		("avisos", avisos),
 		("archivos", archivos),
 	):
@@ -158,6 +170,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
 	from crm.pendientes_routes import is_pendientes_path
 
@@ -175,6 +188,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="compras")
 	if is_gastos_path(path):
 		return get_boot(neutral=True, module="gastos")
+	if is_garantias_path(path):
+		return get_boot(neutral=True, module="garantias")
 	if is_archivos_path(path):
 		return get_boot(neutral=True, module="archivos")
 	if is_avisos_path(path):

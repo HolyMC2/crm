@@ -70,6 +70,7 @@ const RECOVERY_MODULES = {
   cobranza: 'cobranza',
   compras: 'compras',
   gastos: 'gastos',
+  garantias: 'garantias',
   contactos: 'contactos',
   contacts: 'contactos',
   organizations: 'contactos',

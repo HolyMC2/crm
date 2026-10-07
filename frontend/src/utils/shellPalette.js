@@ -42,6 +42,12 @@ const COMPRAS_PLACES = [
   ['por-recibir', 'Por recibir'],
   ['historial', 'Historial'],
 ]
+const GARANTIAS_PLACES = [
+  ['nuevas', 'Nuevas'],
+  ['en-revision', 'En revisión'],
+  ['con-proveedor', 'Con proveedor'],
+  ['cerradas', 'Cerradas'],
+]
 const ARCHIVOS_PLACES = [
   ['', 'Por clasificar'],
   ['ayuda', 'Requieren ayuda'],
@@ -80,6 +86,14 @@ export function createShellProviders({ boot, modules }) {
           title: __('New purchase'),
           icon: 'lucide-shopping-cart',
           href: '/compras/nueva',
+        })
+      if (can(boot.value, 'garantias', 'create'))
+        items.push({
+          id: 'garantias.create',
+          group: 'acciones',
+          title: __('New warranty case'),
+          icon: 'lucide-shield-check',
+          href: '/garantias?create=1',
         })
       items.push(
         {
@@ -160,6 +174,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Gastos › ${label}`,
             icon: 'lucide-receipt',
             href: `/gastos?${query}`,
+          })
+      if (moduleEnabled(boot.value, 'garantias'))
+        for (const [segment, label] of GARANTIAS_PLACES)
+          items.push({
+            id: `garantias.${segment}`,
+            group: 'ir_a',
+            title: `Garantías › ${label}`,
+            icon: 'lucide-shield-check',
+            href: `/garantias?segment=${segment}`,
           })
       if (moduleEnabled(boot.value, 'archivos'))
         for (const [view, label] of ARCHIVOS_PLACES)

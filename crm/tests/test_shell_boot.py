@@ -434,6 +434,55 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["agenda"]["capabilities"], {"read": False, "create": False})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_garantias(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Garantías (doco) is not installed")
+		try:
+			import doco.garantias.service
+		except ImportError:
+			self.skipTest("This doco has no Garantías service")
+
+	def test_garantias_provider_reports_claim_access(self):
+		self._skip_without_garantias()
+		garantias = shell.boot()["modules"]["garantias"]
+		self.assertTrue(garantias["enabled"])
+		self.assertIsNone(garantias["reason"])
+		self.assertTrue(garantias["capabilities"]["read"])
+		self.assertTrue(garantias["capabilities"]["create"])
+
+	def test_garantias_refusal_carries_its_own_reason_and_leaves_ventas(self):
+		self._skip_without_garantias()
+		answer = {"enabled": False, "reason": "Sin acceso a casos", "capabilities": {}}
+		with patch("doco.garantias.service.bootstrap", return_value=answer):
+			data = shell.boot()
+		garantias = data["modules"]["garantias"]
+		self.assertFalse(garantias["enabled"])
+		self.assertEqual(garantias["reason"], "Sin acceso a casos")
+		self.assertEqual(garantias["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_garantias_alone_opens_the_shell(self):
+		self._skip_without_garantias()
+
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+		):
+			data = shell.boot()
+		self.assertTrue(data["modules"]["garantias"]["enabled"])
+		self.assertFalse(data["sales_access"])
+
+	def test_older_doco_without_garantias_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.garantias.service": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["garantias"]["enabled"])
+		self.assertTrue(data["modules"]["garantias"]["reason"])
+		self.assertEqual(data["modules"]["garantias"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):
