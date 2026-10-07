@@ -72,6 +72,29 @@
         </div>
 
         <div
+          v-if="unit.mismatch"
+          role="status"
+          class="mb-4 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+        >
+          {{
+            __(
+              'This link is for the price per {0}. Here prices change per {1} only; the price per {0} is set by whoever maintains prices.',
+              [unit.requested, unit.stock],
+            )
+          }}
+          <span class="mt-2 flex flex-wrap gap-2">
+            <Button
+              v-if="action('price')?.enabled"
+              :label="__('Change the price per {0}', [unit.stock])"
+              @click="openPrice"
+            />
+            <Button
+              :label="__('Ask for the price per {0}', [unit.requested])"
+              @click="askUnitPrice"
+            />
+          </span>
+        </div>
+        <div
           v-if="notice"
           role="status"
           class="mb-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
@@ -371,6 +394,7 @@
       :item="product.name"
       :rows="data.prices.rows"
       :focus="focusList"
+      :requested-unit="unit.mismatch ? unit.requested : ''"
       @saved="priceSaved"
       @refresh="load"
       @request="(proposal) => askPrice(proposal)"
@@ -391,6 +415,7 @@
       :reason="request.reason"
       :price-list="request.priceList"
       :proposed-rate="request.proposed"
+      :preset-note="request.note"
       @sent="requested"
     />
     <CountDialog
@@ -418,6 +443,7 @@ import {
   notifyPriceOpener,
   parseDone,
   plain,
+  priceUnit,
   problemOf,
   productosApi,
   productosBoot,
@@ -447,9 +473,13 @@ const request = reactive({
   reason: '',
   priceList: '',
   proposed: '',
+  note: '',
 })
 
 const product = computed(() => data.value?.item || {})
+// A link from a line in another unit (`uom=Caja`) never opens the stock-unit
+// price by itself: the worker chooses it, or asks for the other unit's price.
+const unit = computed(() => priceUnit(route.query, data.value?.item))
 const back = computed(() => backTarget(route.query))
 const backLabel = computed(() =>
   back.value.href
@@ -574,6 +604,19 @@ function ask(kind, reason = '', proposal = {}) {
       proposal.price_list ||
       (kind === 'price' ? data.value?.prices?.default_price_list || '' : ''),
     proposed: proposal.proposed_rate || '',
+    note: proposal.note || '',
+  })
+}
+function openPrice() {
+  focusList.value =
+    typeof route.query.lista === 'string' ? route.query.lista : ''
+  priceOpen.value = true
+}
+function askUnitPrice() {
+  const list = typeof route.query.lista === 'string' ? route.query.lista : ''
+  ask('price', action('price')?.reason, {
+    price_list: list,
+    note: __('Price per {0}, please.', [unit.value.requested]),
   })
 }
 function askPrice(proposal) {
@@ -628,7 +671,10 @@ function openRequested() {
     if (key === 'price')
       focusList.value =
         typeof route.query.lista === 'string' ? route.query.lista : ''
-    if (entry.enabled && key === 'price') priceOpen.value = true
+    if (key === 'price' && unit.value.mismatch) {
+      // The banner above offers the stock-unit price or a request.
+      if (!entry.enabled) askUnitPrice()
+    } else if (entry.enabled && key === 'price') priceOpen.value = true
     else if (!entry.enabled && entry.resolve?.request === 'price')
       ask('price', entry.reason, { price_list: focusList.value })
     else run(entry)

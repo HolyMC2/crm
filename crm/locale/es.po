@@ -16255,10 +16255,6 @@ msgid "Minimum {0}"
 msgstr "Mínimo {0}"
 
 #: frontend/src/pages/Producto.vue
-msgid "New price ({0})"
-msgstr "Precio nuevo ({0})"
-
-#: frontend/src/pages/Producto.vue
 msgid "New price saved in {0}."
 msgstr "Nuevo precio guardado en {0}."
 
@@ -16269,10 +16265,6 @@ msgstr "Todavía no hay movimientos en tus tiendas."
 #: frontend/src/pages/Producto.vue
 msgid "No open purchases of this product."
 msgstr "No hay compras abiertas de este producto."
-
-#: frontend/src/pages/Producto.vue
-msgid "No price yet"
-msgstr "Todavía sin precio"
 
 #: frontend/src/pages/Producto.vue
 msgid "No products match"
@@ -16389,10 +16381,6 @@ msgstr "Busca nombre, código o código de barras"
 #: frontend/src/pages/Producto.vue
 msgid "Someone else changed this product"
 msgstr "Alguien más cambió este producto"
-
-#: frontend/src/pages/Producto.vue
-msgid "Someone else changed this product. Yours are kept:"
-msgstr "Alguien más cambió este producto. Tus cambios se conservan:"
 
 #: frontend/src/pages/Producto.vue
 msgid "Still on hand, but below the store minimum."
@@ -16621,3 +16609,73 @@ msgstr "Existencias"
 msgctxt "Productos"
 msgid "Store"
 msgstr "Tienda"
+
+#: frontend/src/pages/Producto.vue
+msgid "Someone else changed this product. Their changes stay; yours go on top:"
+msgstr "Alguien más cambió este producto. Sus cambios se quedan; los tuyos van encima:"
+
+#: frontend/src/pages/Producto.vue
+msgid "{0}: now «{1}» (kept)"
+msgstr "{0}: ahora «{1}» (se queda)"
+
+#: frontend/src/pages/Producto.vue
+msgid "Keep mine"
+msgstr "Dejar el mío"
+
+#: frontend/src/pages/Producto.vue
+msgid "Use theirs"
+msgstr "Usar el suyo"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Status"
+msgstr "Estado"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Active"
+msgstr "Activo"
+
+#: frontend/src/pages/Producto.vue
+msgid "No price yet per {0}"
+msgstr "Todavía sin precio por {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "New price per {0} ({1})"
+msgstr "Precio nuevo por {0} ({1})"
+
+#: frontend/src/pages/Producto.vue
+msgid "First price: {0} per {1}"
+msgstr "Primer precio: {0} por {1}"
+
+#: frontend/src/pages/Producto.vue
+msgid "{0} → {1} ({2}%)"
+msgstr "{0} → {1} ({2}%)"
+
+#: frontend/src/pages/Producto.vue
+msgid "You came from a {0} line. These prices are per {1}; the price per {0} is not changed here."
+msgstr "Vienes de una línea en {0}. Estos precios son por {1}; el precio por {0} no se cambia aquí."
+
+#: frontend/src/pages/Producto.vue
+msgid "This link is for the price per {0}. Here prices change per {1} only; the price per {0} is set by whoever maintains prices."
+msgstr "Este enlace es para el precio por {0}. Aquí los precios se cambian solo por {1}; el precio por {0} lo pone quien mantiene los precios."
+
+#: frontend/src/pages/Producto.vue
+msgid "Change the price per {0}"
+msgstr "Cambiar el precio por {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask for the price per {0}"
+msgstr "Pedir el precio por {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Price per {0}, please."
+msgstr "Precio por {0}, por favor."
+
+#: frontend/src/pages/Producto.vue
+msgid "{0} {1} = {2} {3}"
+msgstr "{0} {1} = {2} {3}"
+
+#: frontend/src/pages/Producto.vue
+msgid "{0} {1}, rounded up to {2} {3} ({4} {5})"
+msgstr "{0} {1}, redondeado a {2} {3} ({4} {5})"

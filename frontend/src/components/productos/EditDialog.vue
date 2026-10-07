@@ -63,17 +63,49 @@
           class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
         >
           <p class="font-medium">
-            {{ __('Someone else changed this product. Yours are kept:') }}
+            {{
+              __(
+                'Someone else changed this product. Their changes stay; yours go on top:',
+              )
+            }}
           </p>
-          <ul class="mt-1 list-disc pl-5">
+          <ul class="mt-1 space-y-2">
             <li v-for="line in compare" :key="line.field">
-              {{
-                __('{0}: now «{1}», yours «{2}»', [
-                  line.label,
-                  line.current,
-                  line.mine,
-                ])
-              }}
+              <template v-if="line.conflict">
+                {{
+                  __('{0}: now «{1}», yours «{2}»', [
+                    labelOf(line.field),
+                    shown(line.field, line.current),
+                    shown(line.field, line.mine),
+                  ])
+                }}
+                <span class="mt-1 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    :variant="
+                      choice[line.field] === 'theirs' ? 'subtle' : 'solid'
+                    "
+                    :label="__('Keep mine')"
+                    @click="choose(line, 'mine')"
+                  />
+                  <Button
+                    size="sm"
+                    :variant="
+                      choice[line.field] === 'theirs' ? 'solid' : 'subtle'
+                    "
+                    :label="__('Use theirs')"
+                    @click="choose(line, 'theirs')"
+                  />
+                </span>
+              </template>
+              <template v-else>
+                {{
+                  __('{0}: now «{1}» (kept)', [
+                    labelOf(line.field),
+                    shown(line.field, line.current),
+                  ])
+                }}
+              </template>
             </li>
           </ul>
         </div>
@@ -112,7 +144,9 @@
         <Button
           variant="solid"
           :label="
-            compare.length ? __('Save mine') : __('Save', null, 'Productos')
+            compare.some((line) => line.conflict)
+              ? __('Save mine')
+              : __('Save', null, 'Productos')
           "
           :loading="saving"
           :disabled="!changed || !form.item_name.trim()"
@@ -131,11 +165,12 @@ import {
   outcomeUnknown,
   problemOf,
   productosApi,
+  rebaseEdit,
   requestId,
 } from '@/composables/useProductos'
 
-// «Editar datos»: the native Item save as this worker; a newer version is
-// compared field by field and the worker's input is kept.
+// «Editar datos»: the native Item save as this worker. Over a newer version
+// only the worker's own edits are re-applied; everyone else's stay.
 const props = defineProps({
   item: { type: Object, required: true },
 })
@@ -147,6 +182,8 @@ const saving = ref(false)
 const problem = ref(null)
 const waitingRefresh = ref(false)
 const compare = ref([])
+const choice = reactive({})
+let mineBeforeRefresh = {}
 let rid = null
 let sentPayload = ''
 
@@ -171,34 +208,56 @@ watch(open, (value) => {
   base.value = { ...props.item }
   problem.value = null
   compare.value = []
+  for (const key of Object.keys(choice)) delete choice[key]
   rid = null
 })
-// After «Actualizar y comparar» the newer version arrives: show what differs
-// from the worker's input, keep the input, save on top of the new version.
+// After «Actualizar y comparar» the newer version arrives: it becomes the
+// base, the worker's own edits go on top and a field both changed is shown
+// with keep/discard. Untouched fields and barcode rows keep the new values.
 watch(
   () => props.item,
   (current) => {
     if (!waitingRefresh.value) return
     waitingRefresh.value = false
-    const labels = {
-      item_name: __('Name', null, 'Productos'),
-      item_group: __('Group', null, 'Productos'),
-      brand: __('Brand', null, 'Productos'),
-      description: __('Description', null, 'Productos'),
-    }
-    compare.value = Object.keys(labels)
-      .filter((field) => (current[field] || '') !== (form[field] || ''))
-      .map((field) => ({
-        field,
-        label: labels[field],
-        current: current[field] || '—',
-        mine: form[field] || '—',
-      }))
+    const rebased = rebaseEdit(base.value, form, current)
+    mineBeforeRefresh = Object.fromEntries(
+      rebased.changes
+        .filter((line) => line.conflict)
+        .map((line) => [line.field, form[line.field]]),
+    )
+    Object.assign(form, rebased.form)
+    compare.value = rebased.changes
+    for (const key of Object.keys(choice)) delete choice[key]
     base.value = { ...current }
     problem.value = null
     rid = null
   },
 )
+const LABELS = {
+  item_name: () => __('Name', null, 'Productos'),
+  item_group: () => __('Group', null, 'Productos'),
+  brand: () => __('Brand', null, 'Productos'),
+  description: () => __('Description', null, 'Productos'),
+  disabled: () => __('Status', null, 'Productos'),
+  barcodes: () => __('Barcodes', null, 'Productos'),
+}
+function labelOf(field) {
+  return LABELS[field]?.() || field
+}
+function shown(field, value) {
+  if (field === 'disabled')
+    return value
+      ? __('Disabled', null, 'Productos')
+      : __('Active', null, 'Productos')
+  return value || '—'
+}
+function choose(line, side) {
+  choice[line.field] = side
+  const value =
+    side === 'theirs' ? props.item[line.field] : mineBeforeRefresh[line.field]
+  form[line.field] =
+    line.field === 'disabled' ? Boolean(Number(value || 0)) : value || ''
+}
 
 function refresh() {
   waitingRefresh.value = true

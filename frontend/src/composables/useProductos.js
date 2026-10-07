@@ -248,6 +248,88 @@ export function editPayload(original, form) {
   return data
 }
 
+function editValue(record, field) {
+  if (field === 'disabled') return Number(record?.[field] || 0) ? 1 : 0
+  return String(record?.[field] || '').trim()
+}
+function barcodeRows(list) {
+  return (list || [])
+    .map((row) => ({
+      barcode: String(row.barcode || '').trim(),
+      barcode_type: row.barcode_type || '',
+    }))
+    .filter((row) => row.barcode)
+}
+
+/** «Actualizar y comparar»: the newer version is the base and only the
+ *  worker's own edits (against the version they opened) go on top of it.
+ *  Barcodes merge by code, so a row someone else added is never dropped.
+ *  `changes` lists what someone else changed; `conflict` marks a field both
+ *  changed, kept as the worker's until they choose theirs. */
+export function rebaseEdit(before, form, latest) {
+  const next = {}
+  const changes = []
+  for (const field of EDIT_FIELDS) {
+    const mine = editValue(form, field) !== editValue(before, field)
+    const theirs = editValue(latest, field) !== editValue(before, field)
+    const value = mine ? form[field] : latest[field]
+    next[field] =
+      field === 'disabled' ? Boolean(Number(value || 0)) : value || ''
+    if (theirs)
+      changes.push({
+        field,
+        current: editValue(latest, field),
+        mine: mine ? editValue(form, field) : null,
+        conflict: mine && editValue(form, field) !== editValue(latest, field),
+      })
+  }
+  const old = barcodeRows(before.barcodes)
+  const wanted = barcodeRows(form.barcodes)
+  const now = barcodeRows(latest.barcodes)
+  const oldCodes = new Map(old.map((row) => [row.barcode, row]))
+  const wantedCodes = new Map(wanted.map((row) => [row.barcode, row]))
+  const removed = new Set(
+    old.filter((r) => !wantedCodes.has(r.barcode)).map((r) => r.barcode),
+  )
+  const merged = now
+    .filter((row) => !removed.has(row.barcode))
+    .map((row) => {
+      const own = wantedCodes.get(row.barcode)
+      const was = oldCodes.get(row.barcode)
+      return own && was && own.barcode_type !== was.barcode_type
+        ? { ...row, barcode_type: own.barcode_type }
+        : { ...row }
+    })
+  for (const row of wanted)
+    if (
+      !oldCodes.has(row.barcode) &&
+      !merged.some((r) => r.barcode === row.barcode)
+    )
+      merged.push({ ...row })
+  next.barcodes = merged
+  if (JSON.stringify(old) !== JSON.stringify(now))
+    changes.push({
+      field: 'barcodes',
+      current: now.map((row) => row.barcode).join(', '),
+      mine: null,
+      conflict: false,
+    })
+  return { form: next, changes }
+}
+
+/** The unit a price link asks for (`uom=`, e.g. from a «Caja» line). Prices
+ *  here change per stock unit only, so another unit never auto-opens them. */
+export function priceUnit(query, item) {
+  const stock = item?.stock_uom || ''
+  const requested =
+    typeof query?.uom === 'string' ? query.uom.trim().slice(0, 140) : ''
+  return {
+    requested,
+    stock,
+    mismatch: Boolean(requested && stock && requested !== stock),
+  }
+}
+
 /** `done=Purchase Order:<name>` from a hand-off we started (Compras). */
 export function parseDone(value) {
   if (typeof value !== 'string') return null

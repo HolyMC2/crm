@@ -9,6 +9,20 @@
             )
           }}
         </p>
+        <p
+          v-if="
+            requestedUnit && rows.some((row) => unitOf(row) !== requestedUnit)
+          "
+          role="status"
+          class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+        >
+          {{
+            __(
+              'You came from a {0} line. These prices are per {1}; the price per {0} is not changed here.',
+              [requestedUnit, unitOf(rows[0])],
+            )
+          }}
+        </p>
         <div
           v-for="row in rows"
           :key="row.price_list"
@@ -21,10 +35,10 @@
             <span class="text-sm tabular-nums text-ink-gray-7">
               {{
                 row.rate === null || row.rate === undefined
-                  ? __('No price yet')
+                  ? __('No price yet per {0}', [unitOf(row)])
                   : __('Now {0} per {1}', [
                       money(row.rate, row.currency),
-                      row.uom || row.stock_uom,
+                      unitOf(row),
                     ])
               }}
             </span>
@@ -41,7 +55,12 @@
               inputmode="decimal"
               min="0"
               step="0.01"
-              :label="__('New price ({0})', [row.currency || 'MXN'])"
+              :label="
+                __('New price per {0} ({1})', [
+                  unitOf(row),
+                  row.currency || 'MXN',
+                ])
+              "
             />
             <p
               v-if="checks[row.price_list]?.changed"
@@ -49,8 +68,9 @@
             >
               {{
                 checks[row.price_list].first
-                  ? __('First price: {0}', [
+                  ? __('First price: {0} per {1}', [
                       money(drafts[row.price_list], row.currency),
+                      unitOf(row),
                     ])
                   : __('{0} → {1} ({2}%)', [
                       money(row.rate, row.currency),
@@ -149,6 +169,8 @@ const props = defineProps({
   item: { type: String, required: true },
   rows: { type: Array, default: () => [] },
   focus: { type: String, default: '' },
+  // The unit the link that opened Productos asked for (`uom=`), if any.
+  requestedUnit: { type: String, default: '' },
 })
 const emit = defineEmits(['saved', 'refresh', 'request'])
 const open = defineModel({ type: Boolean, default: false })
@@ -174,6 +196,9 @@ const ready = computed(
     !missingAcks(props.rows, drafts, acknowledged).length,
 )
 
+function unitOf(row) {
+  return row?.uom || row?.stock_uom || ''
+}
 function unitList(row) {
   return (row.impact || []).map((unit) => unit.uom).join(', ')
 }

@@ -327,6 +327,16 @@
                       · {{ __('serial/batch: reviewed on receipt') }}</template
                     >
                   </p>
+                  <p
+                    v-if="
+                      row.note &&
+                      Number(row.qty) === row.note_for?.qty &&
+                      row.uom === row.note_for?.uom
+                    "
+                    class="text-xs text-ink-gray-6"
+                  >
+                    {{ row.note }}
+                  </p>
                 </div>
                 <FormControl
                   v-model="row.qty"
@@ -640,6 +650,7 @@ import {
   parseDone,
   pendingSave,
   prefillFromQuery,
+  prefillLine,
   problemOf,
   reapplyRows,
   returnWithDone,
@@ -1200,7 +1211,11 @@ onMounted(async () => {
         const option = options.find((row) => row.value === prefill.item)
         if (!option || form.items.length) return
         addItem(option)
-        form.items[0].qty = prefill.qty
+        // Productos sends the stock-unit quantity; the line says both units.
+        if (Number(route.query.qty) > 0) {
+          const line = prefillLine(option, prefill.qty)
+          Object.assign(form.items[0], line, { note_for: line })
+        }
       })
       .catch(() => {})
   await handleDone()

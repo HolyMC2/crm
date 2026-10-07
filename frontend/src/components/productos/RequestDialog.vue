@@ -93,6 +93,7 @@ const props = defineProps({
   reason: { type: String, default: '' },
   priceList: { type: String, default: '' },
   proposedRate: { type: [String, Number], default: '' },
+  presetNote: { type: String, default: '' },
 })
 const emit = defineEmits(['sent'])
 const open = defineModel({ type: Boolean, default: false })
@@ -124,7 +125,7 @@ watch(open, async (value) => {
   if (!value) return
   options.value = null
   assignee.value = ''
-  note.value = ''
+  note.value = props.presetNote
   proposed.value = props.proposedRate ? String(props.proposedRate) : ''
   problem.value = ''
   sent.value = ''

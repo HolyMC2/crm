@@ -3,6 +3,7 @@ import { isNeutralModule } from '../../src/composables/muelleShell.js'
 import { recoveryModule } from '../../src/utils/shellRoutes.js'
 import {
   prefillFromQuery,
+  prefillLine,
   returnWithDone,
 } from '../../src/composables/useCompras.js'
 import {
@@ -16,8 +17,10 @@ import {
   priceCheck,
   pricePayload,
   problemOf,
+  priceUnit,
   productRoute,
   purchaseRoute,
+  rebaseEdit,
   requestedAction,
   scannerItemUrl,
   stockLabel,
@@ -144,6 +147,138 @@ describe('Editar datos', () => {
         { barcode: '750', barcode_type: '' },
         { barcode: '751', barcode_type: '' },
       ],
+    })
+  })
+})
+
+describe('Editar datos after «Refresh and compare»', () => {
+  const before = {
+    item_name: 'Cable',
+    item_group: 'Accesorios',
+    brand: '',
+    description: 'USB',
+    disabled: 0,
+    barcodes: [{ barcode: '750', barcode_type: '' }],
+    modified: 'v1',
+  }
+  // Another user added a barcode and disabled the product meanwhile.
+  const latest = {
+    ...before,
+    disabled: 1,
+    barcodes: [
+      { barcode: '750', barcode_type: '' },
+      { barcode: '760', barcode_type: 'EAN' },
+    ],
+    modified: 'v2',
+  }
+  it('saves my edit on top of the newer version; their barcode and status survive', () => {
+    const mine = {
+      ...before,
+      disabled: false,
+      description: 'USB-C',
+      barcodes: before.barcodes.map((row) => ({ ...row })),
+    }
+    const { form, changes } = rebaseEdit(before, mine, latest)
+    expect(
+      editPayload(latest, { ...form, disabled: form.disabled ? 1 : 0 }),
+    ).toEqual({ description: 'USB-C' })
+    expect(form.disabled).toBe(true)
+    expect(form.barcodes.map((row) => row.barcode)).toEqual(['750', '760'])
+    expect(changes.map((line) => [line.field, line.conflict])).toEqual([
+      ['disabled', false],
+      ['barcodes', false],
+    ])
+  })
+  it('keeps my barcode additions and removals, never drops theirs', () => {
+    const mine = {
+      ...before,
+      barcodes: [{ barcode: '751', barcode_type: '' }],
+    }
+    const { form } = rebaseEdit(before, mine, latest)
+    expect(form.barcodes.map((row) => row.barcode)).toEqual(['760', '751'])
+  })
+  it('a field we both changed is a conflict: mine by default, theirs on request', () => {
+    const mine = { ...before, item_name: 'Cable corto' }
+    const theirs = { ...before, item_name: 'Cable largo', modified: 'v2' }
+    const { form, changes } = rebaseEdit(before, mine, theirs)
+    expect(form.item_name).toBe('Cable corto')
+    expect(changes).toEqual([
+      {
+        field: 'item_name',
+        current: 'Cable largo',
+        mine: 'Cable corto',
+        conflict: true,
+      },
+    ])
+    // Their name only changed: it is not mine to send.
+    const untouched = rebaseEdit(before, { ...before }, theirs)
+    expect(untouched.form.item_name).toBe('Cable largo')
+    expect(editPayload(theirs, untouched.form)).toEqual({})
+  })
+})
+
+describe('price unit from a link', () => {
+  const item = { stock_uom: 'Pza' }
+  it('an alternate source unit never auto-opens a stock-unit editor', () => {
+    expect(priceUnit({ uom: 'Caja' }, item)).toEqual({
+      requested: 'Caja',
+      stock: 'Pza',
+      mismatch: true,
+    })
+    expect(priceUnit({ uom: 'Pza' }, item).mismatch).toBe(false)
+    expect(priceUnit({}, item)).toEqual({
+      requested: '',
+      stock: 'Pza',
+      mismatch: false,
+    })
+    expect(priceUnit({ uom: ['Caja'] }, item).mismatch).toBe(false)
+  })
+})
+
+describe('«Pedir» quantity and unit', () => {
+  const option = {
+    value: 'SKU 1',
+    stock_uom: 'Pza',
+    uom: 'Caja',
+    uoms: [
+      { uom: 'Pza', factor: 1 },
+      { uom: 'Caja', factor: 12 },
+    ],
+  }
+  it('converts the stock quantity to whole purchase units', () => {
+    expect(prefillLine(option, 24)).toEqual({
+      uom: 'Caja',
+      qty: 2,
+      uoms: option.uoms,
+      note: '24 Pza = 2 Caja',
+    })
+    expect(prefillLine(option, 30)).toMatchObject({
+      uom: 'Caja',
+      qty: 3,
+      note: '30 Pza, rounded up to 3 Caja (36 Pza)',
+    })
+  })
+  it('stays in the stock unit when the purchase unit has no conversion', () => {
+    const bare = { ...option, uoms: [{ uom: 'Pza', factor: 1 }] }
+    expect(prefillLine(bare, 24)).toEqual({
+      uom: 'Pza',
+      qty: 24,
+      uoms: bare.uoms,
+      note: '',
+    })
+    const none = { ...option, uoms: [{ uom: 'Caja', factor: 0 }] }
+    expect(prefillLine(none, 24)).toMatchObject({
+      uom: 'Pza',
+      qty: 24,
+      uoms: [
+        { uom: 'Caja', factor: 0 },
+        { uom: 'Pza', factor: 1 },
+      ],
+    })
+    expect(prefillLine({ ...option, uom: 'Pza' }, 24)).toMatchObject({
+      uom: 'Pza',
+      qty: 24,
+      note: '',
     })
   })
 })

@@ -208,6 +208,45 @@ export function prefillFromQuery(query) {
   }
 }
 
+/** «Pedir» carries a quantity in the stock unit. The line uses the purchase
+ *  unit when the Item converts it (rounded up to whole units), otherwise the
+ *  stock unit; `note` says both. */
+export function prefillLine(option, stockQty) {
+  const stock = option.stock_uom || option.uom
+  const purchase = option.uom || stock
+  const amount = Number(stockQty)
+  const uoms = option.uoms || []
+  const factor = Number(uoms.find((row) => row.uom === purchase)?.factor)
+  if (purchase === stock) return { uom: stock, qty: amount, uoms, note: '' }
+  if (Number.isFinite(factor) && factor > 0) {
+    const units = Math.ceil(amount / factor - 1e-9)
+    const exact = Math.abs(units * factor - amount) < 1e-9
+    return {
+      uom: purchase,
+      qty: units,
+      uoms,
+      note: exact
+        ? tr('{0} {1} = {2} {3}', [qty(amount), stock, qty(units), purchase])
+        : tr('{0} {1}, rounded up to {2} {3} ({4} {5})', [
+            qty(amount),
+            stock,
+            qty(units),
+            purchase,
+            qty(units * factor),
+            stock,
+          ]),
+    }
+  }
+  return {
+    uom: stock,
+    qty: amount,
+    uoms: uoms.some((row) => row.uom === stock)
+      ? uoms
+      : [...uoms, { uom: stock, factor: 1 }],
+    note: '',
+  }
+}
+
 /** The way back to the module that started this purchase, saying what was saved. */
 export function returnWithDone(target, doctype, name) {
   if (!target || !name) return target
