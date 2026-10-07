@@ -13612,3 +13612,413 @@ msgstr "Pide al encargado permiso para leer eventos y vuelve a intentarlo."
 
 msgid "I need access to the Agenda in Muelle: read permission for Event as a staff account, so I can see and schedule my appointments."
 msgstr "Necesito acceso a la Agenda en Muelle: permiso de lectura de eventos con una cuenta de personal, para ver y agendar mis citas."
+
+# Gastos (supplier bills to register and pay)
+msgid "Ask for a review of this bill"
+msgstr "Pedir revisión de esta factura"
+
+msgid "Ask for approval"
+msgstr "Pedir aprobación"
+
+msgid "Ask someone to pay this bill"
+msgstr "Pedir que paguen esta factura"
+
+msgid "Ask someone to register this bill"
+msgstr "Pedir que registren esta factura"
+
+msgctxt "Gastos"
+msgid "Close"
+msgstr "Cerrar"
+
+msgid "E.g. the landlord asks for it before Friday"
+msgstr "Ej. el arrendador la pide antes del viernes"
+
+msgid "Nobody here can do it yet. The request goes to the administrators with this bill attached."
+msgstr "Todavía nadie aquí puede hacerlo. La solicitud llega a los administradores con esta factura adjunta."
+
+msgid "{0} already has this bill in their pending list."
+msgstr "{0} ya tiene esta factura en sus pendientes."
+
+msgid "See this order’s bills in Gastos"
+msgstr "Ver las facturas de esta orden en Gastos"
+
+msgid "The supplier bill is pending. Bills are registered and paid in Gastos."
+msgstr "Falta la factura del proveedor. Las facturas se registran y pagan en Gastos."
+
+msgid "Bill pending · Gastos"
+msgstr "Factura pendiente · Gastos"
+
+msgid "Back to Gastos"
+msgstr "Volver a Gastos"
+
+msgid "Bill details"
+msgstr "Datos de la factura"
+
+msgid "Bill paid"
+msgstr "Factura pagada"
+
+msgid "Bill registered. It is now in To pay."
+msgstr "Factura registrada. Ya está en Por pagar."
+
+msgctxt "Gastos"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Draft: review supplier, amounts and taxes, then register it so it can be paid."
+msgstr "Borrador: revisa proveedor, importes e impuestos y regístrala para poder pagarla."
+
+msgid "From purchase orders"
+msgstr "De las órdenes de compra"
+
+msgctxt "Gastos"
+msgid "Gastos"
+msgstr "Gastos"
+
+msgctxt "Gastos"
+msgid "Items"
+msgstr "Partidas"
+
+msgid "Link the CFDI in Contador"
+msgstr "Ligar el CFDI en Contador"
+
+msgid "Loading bill…"
+msgstr "Cargando la factura…"
+
+msgid "No payments yet."
+msgstr "Todavía no hay pagos."
+
+msgid "Open the full bill form"
+msgstr "Abrir el formulario completo de la factura"
+
+msgctxt "Gastos"
+msgid "Pay"
+msgstr "Pagar"
+
+msgctxt "Gastos"
+msgid "Payment"
+msgstr "Pago"
+
+msgctxt "Gastos"
+msgid "Payments"
+msgstr "Pagos"
+
+msgctxt "Gastos"
+msgid "Register"
+msgstr "Registrar"
+
+msgid "Register this bill?"
+msgstr "¿Registrar esta factura?"
+
+msgctxt "Gastos"
+msgid "Retry"
+msgstr "Reintentar"
+
+msgid "Review and register"
+msgstr "Revisar y registrar"
+
+msgid "See in bank"
+msgstr "Ver en banco"
+
+msgid "This bill is cancelled."
+msgstr "Esta factura está cancelada."
+
+msgid "This company needs a bank or cash account to pay from."
+msgstr "Esta empresa necesita una cuenta de banco o caja para pagar."
+
+msgid "With XML"
+msgstr "Con XML"
+
+msgid "Without XML"
+msgstr "Sin XML"
+
+msgid "Your accountant matches payments with the bank statement in Contador."
+msgstr "Tu contador concilia los pagos con el estado de cuenta en Contador."
+
+msgid "dated {0}"
+msgstr "con fecha {0}"
+
+msgid "{0} more lines"
+msgstr "{0} partidas más"
+
+msgid "{0} owed"
+msgstr "{0} pendiente"
+
+msgid "Waiting on: {0}"
+msgstr "Esperando a: {0}"
+
+msgid "Payment saved. {0} still owed."
+msgstr "Pago guardado. Faltan {0}."
+
+msgid "{0} for {1}. Once registered it is owed to the supplier and can be paid; changing it later means cancelling it."
+msgstr "{0} por {1}. Al registrarla queda como deuda con el proveedor y se puede pagar; cambiarla después implica cancelarla."
+
+msgid "Ask your manager for permission to read supplier bills."
+msgstr "Pide al encargado permiso para consultar facturas de proveedor."
+
+msgid "Ask your manager for permission to read supplier bills, then retry."
+msgstr "Pide al encargado permiso para consultar facturas de proveedor y vuelve a intentarlo."
+
+msgid "Gastos is not installed. Ask your manager to check the app."
+msgstr "Gastos no está instalado. Pide al encargado que revise la aplicación."
+
+msgctxt "Gastos"
+msgid "Back"
+msgstr "Volver"
+
+msgid "Back to the order"
+msgstr "Volver a la orden"
+
+msgid "Bills of order {0}"
+msgstr "Facturas de la orden {0}"
+
+msgid "Draft and registered bills linked to this order."
+msgstr "Facturas en borrador y registradas de esta orden."
+
+msgid "Draft bills from a supplier CFDI or a purchase order wait here until someone registers them."
+msgstr "Las facturas en borrador de un CFDI o de una orden de compra esperan aquí hasta que alguien las registre."
+
+msgid "Draft bills to review and register before paying them."
+msgstr "Facturas en borrador por revisar y registrar antes de pagarlas."
+
+msgid "Every registered bill is paid."
+msgstr "Todas las facturas registradas están pagadas."
+
+msgid "Filter by due date"
+msgstr "Filtrar por vencimiento"
+
+msgid "Gastos is not available"
+msgstr "Gastos no está disponible"
+
+msgid "I need access to Gastos: read permission for Purchase Invoice so I can follow supplier bills and payments."
+msgstr "Necesito acceso a Gastos: permiso de lectura de facturas de proveedor para dar seguimiento a facturas y pagos."
+
+msgctxt "Gastos"
+msgid "List"
+msgstr "Lista"
+
+msgctxt "Gastos"
+msgid "Load more"
+msgstr "Cargar más"
+
+msgid "Loading bills…"
+msgstr "Cargando facturas…"
+
+msgid "No bills in this filter. Try All."
+msgstr "No hay facturas en este filtro. Prueba con Todas."
+
+msgid "No bills match"
+msgstr "Ninguna factura coincide"
+
+msgctxt "Gastos"
+msgid "Nothing here"
+msgstr "No hay nada aquí"
+
+msgid "Open the full order form to bill it"
+msgstr "Abrir el formulario completo de la orden para facturarla"
+
+msgid "Registered bills with a balance, soonest due first."
+msgstr "Facturas registradas con saldo, primero las que vencen antes."
+
+msgid "Registered bills with a balance, soonest due first. Owed: {0}"
+msgstr "Facturas registradas con saldo, primero las que vencen antes. Se debe: {0}"
+
+msgid "Search supplier, bill or invoice number"
+msgstr "Buscar proveedor, factura o folio"
+
+msgid "See all bills"
+msgstr "Ver todas las facturas"
+
+msgid "Showing only the bills of this purchase order."
+msgstr "Solo se muestran las facturas de esta orden de compra."
+
+msgid "This order has no bill yet"
+msgstr "Esta orden todavía no tiene factura"
+
+msgid "Try another supplier or bill number."
+msgstr "Prueba con otro proveedor o folio."
+
+msgid "Upload supplier CFDI (XML)"
+msgstr "Subir CFDI del proveedor (XML)"
+
+msgid "When the supplier bill for this order is registered it appears here."
+msgstr "Cuando se registre la factura del proveedor de esta orden aparecerá aquí."
+
+msgid "A payment of this bill was sent and we did not hear back. Check result asks about that same payment; it never pays twice."
+msgstr "Se envió un pago de esta factura y no recibimos respuesta. «Comprobar resultado» pregunta por ese mismo pago; nunca paga dos veces."
+
+msgid "Amount ({0})"
+msgstr "Importe ({0})"
+
+msgid "Bank"
+msgstr "Banco"
+
+msgctxt "Gastos"
+msgid "Cash"
+msgstr "Caja"
+
+msgid "Choose an account"
+msgstr "Elige una cuenta"
+
+msgid "Loading accounts…"
+msgstr "Cargando cuentas…"
+
+msgid "Missing: {0}"
+msgstr "Falta: {0}"
+
+msgid "Pay from"
+msgstr "Pagar desde"
+
+msgid "Pay {0}"
+msgstr "Pagar a {0}"
+
+msgid "Payment date"
+msgstr "Fecha de pago"
+
+msgid "Reference (optional)"
+msgstr "Referencia (opcional)"
+
+msgid "That is more than what is owed on this bill."
+msgstr "Es más de lo que se debe de esta factura."
+
+msgid "This company has no bank or cash account to pay from yet. Ask for it to be set up; this bill stays here."
+msgstr "Esta empresa todavía no tiene una cuenta de banco o caja para pagar. Pide que la configuren; esta factura se queda aquí."
+
+msgid "Transfer or check number"
+msgstr "Número de transferencia o cheque"
+
+msgid "Owed: {0}"
+msgstr "Se debe: {0}"
+
+msgid "account"
+msgstr "cuenta"
+
+msgid "amount"
+msgstr "importe"
+
+msgid "transfer or check number"
+msgstr "número de transferencia o cheque"
+
+msgid "payment date"
+msgstr "fecha de pago"
+
+msgctxt "Gastos"
+msgid "Cancelled"
+msgstr "Cancelada"
+
+msgctxt "Gastos"
+msgid "Draft"
+msgstr "Borrador"
+
+msgid "Due in {0} days"
+msgstr "Vence en {0} días"
+
+msgid "Due today"
+msgstr "Vence hoy"
+
+msgid "Due tomorrow"
+msgstr "Vence mañana"
+
+msgctxt "Gastos"
+msgid "No connection"
+msgstr "Sin conexión"
+
+msgctxt "Gastos"
+msgid "Not allowed"
+msgstr "No permitido"
+
+msgid "Nothing paid of {0}"
+msgstr "Nada pagado de {0}"
+
+msgctxt "Gastos"
+msgid "Overdue"
+msgstr "Vencida"
+
+msgid "Overdue since yesterday"
+msgstr "Vencida desde ayer"
+
+msgid "Overdue {0} days"
+msgstr "Vencida hace {0} días"
+
+msgctxt "Gastos"
+msgid "Paid"
+msgstr "Pagada"
+
+msgid "Paid {0} of {1}"
+msgstr "Pagado {0} de {1}"
+
+msgid "Paid in full · {0}"
+msgstr "Pagada completa · {0}"
+
+msgctxt "Gastos"
+msgid "Partly paid"
+msgstr "Pago parcial"
+
+msgid "Reconciled"
+msgstr "Conciliado"
+
+msgid "Someone else changed this bill"
+msgstr "Otra persona cambió esta factura"
+
+msgctxt "Gastos"
+msgid "To pay"
+msgstr "Por pagar"
+
+msgctxt "Gastos"
+msgid "To register"
+msgstr "Por registrar"
+
+msgctxt "Gastos"
+msgid "All"
+msgstr "Todas"
+
+msgctxt "Gastos"
+msgid "This week"
+msgstr "Esta semana"
+
+msgid "Waiting for the bank movement"
+msgstr "Esperando movimiento del banco"
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgctxt "Gastos"
+msgid "On hold"
+msgstr "Retenida"
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "Release hold"
+msgstr "Liberar retención"
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "Hold released. You can pay this bill now."
+msgstr "Retención liberada. Ya puedes pagar esta factura."
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "This bill is set to be paid by {0}, so it is paid from {1}."
+msgstr "Esta factura tiene forma de pago {0}, así que se paga desde {1}."
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "Exchange rate ({0} to {1})"
+msgstr "Tipo de cambio ({0} a {1})"
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "Open exchange rates"
+msgstr "Abrir Tipos de cambio"
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "You can also type the rate your bank used."
+msgstr "También puedes escribir el tipo de cambio que usó tu banco."
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "Rate on file for {0}: {1}. Change it if your bank used another."
+msgstr "Tipo de cambio registrado para el {0}: {1}. Cámbialo si tu banco usó otro."
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "{0} leaves the account."
+msgstr "Salen {0} de la cuenta."
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "Accounts in another currency ({0}) cannot pay this bill here yet; use one in {1}."
+msgstr "Las cuentas en otra moneda ({0}) todavía no pueden pagar esta factura aquí; usa una en {1}."
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "exchange rate"
+msgstr "tipo de cambio"

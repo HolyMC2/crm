@@ -70,6 +70,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Compras. Comparte la solicitud y reintenta después del ajuste.',
   },
+  gastos: {
+    reason:
+      'Para abrir Gastos necesitas permiso de lectura de facturas de proveedor. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de facturas de proveedor para abrir Gastos en Muelle; quiero retomar la factura que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Gastos. Comparte la solicitud y reintenta después del ajuste.',
+  },
   contactos: {
     reason:
       'Para abrir Contactos necesitas permiso de lectura de un origen nativo y acceso a su módulo. Pide al encargado que revise tu usuario.',

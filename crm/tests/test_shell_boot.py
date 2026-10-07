@@ -183,6 +183,66 @@ class TestShellBoot(TestCase):
 		except ImportError:
 			self.skipTest("This doco has no Archivos service")
 
+	def _skip_without_payables(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Gastos (doco) is not installed")
+		try:
+			import doco.workspaces.payables
+		except ImportError:
+			self.skipTest("This doco has no Gastos service")
+
+	def test_gastos_provider_reports_bill_access(self):
+		self._skip_without_payables()
+		gastos = shell.boot()["modules"]["gastos"]
+		self.assertTrue(gastos["enabled"])
+		self.assertIsNone(gastos["reason"])
+		self.assertEqual(gastos["capabilities"], {"read": True, "submit": True, "pay": True})
+
+	def test_gastos_refusal_carries_its_own_reason_and_leaves_others(self):
+		self._skip_without_payables()
+		answer = {"enabled": False, "reason": "Pide permiso para consultar facturas de proveedor."}
+		with patch("doco.workspaces.payables.bootstrap", return_value=answer):
+			data = shell.boot()
+		gastos = data["modules"]["gastos"]
+		self.assertFalse(gastos["enabled"])
+		self.assertEqual(gastos["reason"], answer["reason"])
+		self.assertEqual(gastos["capabilities"], {"read": False, "submit": False, "pay": False})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_gastos_pay_follows_the_service_capability(self):
+		self._skip_without_payables()
+		answer = {"enabled": True, "capabilities": {"read": True, "submit": True, "pay": False}}
+		with patch("doco.workspaces.payables.bootstrap", return_value=answer):
+			gastos = shell.boot()["modules"]["gastos"]
+		self.assertEqual(gastos["capabilities"], {"read": True, "submit": True, "pay": False})
+
+	def test_gastos_alone_opens_the_shell_and_is_a_landing(self):
+		self._skip_without_payables()
+
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+			patch.object(shell, "_pendientes", off("pendientes")),
+			patch.object(shell, "_agenda", off("agenda")),
+			patch.object(shell, "_compras", off("compras")),
+		):
+			data = shell.boot()
+			landing = shell.first_module()
+		self.assertTrue(data["modules"]["gastos"]["enabled"])
+		self.assertFalse(data["sales_access"])
+		self.assertEqual(landing, "gastos")
+
+	def test_older_doco_without_payables_turns_gastos_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.workspaces.payables": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["gastos"]["enabled"])
+		self.assertTrue(data["modules"]["gastos"]["reason"])
+		self.assertEqual(data["modules"]["gastos"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_archivos_provider_reports_evidence_access(self):
 		self._skip_without_bandeja()
 		archivos = shell.boot()["modules"]["archivos"]

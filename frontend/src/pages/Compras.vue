@@ -97,10 +97,14 @@
           />
         </div>
         <ul v-else class="divide-y divide-outline-gray-1">
-          <li v-for="row in rows" :key="`${row.doctype}:${row.name}`">
+          <li
+            v-for="row in rows"
+            :key="`${row.doctype}:${row.name}`"
+            class="flex items-stretch"
+          >
             <RouterLink
               :to="{ ...recordRoute(row), query: { list: listPath } }"
-              class="flex min-h-14 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+              class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
             >
               <FeatherIcon
                 :name="row.kind === 'solicitud' ? 'clipboard' : 'shopping-cart'"
@@ -132,15 +136,6 @@
                     theme="orange"
                     :label="__('Receipt in progress')"
                   />
-                  <Badge
-                    v-if="
-                      segment === 'historial' &&
-                      Number(row.docstatus) === 1 &&
-                      Number(row.per_billed || 0) < 100
-                    "
-                    theme="gray"
-                    :label="__('Billing pending (Finanzas)')"
-                  />
                 </span>
               </span>
               <span
@@ -149,6 +144,18 @@
                 >{{ money(row.grand_total, row.currency) }}</span
               >
             </RouterLink>
+            <!-- Supplier bills of a received order are registered and paid in Gastos. -->
+            <RouterLink
+              v-if="
+                gastosOn &&
+                segment === 'historial' &&
+                Number(row.docstatus) === 1 &&
+                Number(row.per_billed || 0) < 100
+              "
+              :to="orderBillsRoute(row.name)"
+              class="flex min-h-14 shrink-0 items-center px-3 text-sm text-ink-blue-link underline sm:px-4"
+              >{{ __('Bill pending · Gastos') }}</RouterLink
+            >
           </li>
         </ul>
         <div v-if="hasMore" class="px-4 py-4 sm:px-6">
@@ -184,6 +191,9 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import { shellBoot } from '@/composables/muelleShell'
+import { orderBillsRoute } from '@/composables/useGastos'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
   SEGMENTS,
   comprasApi,
@@ -210,6 +220,7 @@ const scroller = ref(null)
 const segment = computed(() => normalizeSegment(route.query.segment))
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const listPath = computed(() => route.fullPath)
+const gastosOn = computed(() => moduleEnabled(shellBoot.value, 'gastos'))
 let ticket = 0
 let searchTimer = 0
 

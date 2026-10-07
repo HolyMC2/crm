@@ -66,6 +66,7 @@ const HOSTED = [
   'contactos',
   'ventas',
   'compras',
+  'gastos',
   'archivos',
   'avisos',
 ]

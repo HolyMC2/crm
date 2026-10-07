@@ -503,13 +503,19 @@
               {{
                 doc.billing_pending
                   ? __(
-                      'Billing pending (Finanzas). Invoices and payments are handled there.',
+                      'The supplier bill is pending. Bills are registered and paid in Gastos.',
                     )
                   : Number(doc.docstatus) === 1
                     ? __('Billed.', null, 'Compras')
                     : __('Billing starts after the purchase is confirmed.')
               }}
             </p>
+            <RouterLink
+              v-if="gastosOn && Number(doc.docstatus) === 1"
+              class="mt-1 inline-block min-h-11 py-2 text-sm text-ink-blue-link underline sm:min-h-0 sm:py-0"
+              :to="orderBillsRoute(doc.name)"
+              >{{ __('See this order’s bills in Gastos') }}</RouterLink
+            >
             <template v-if="data.requests?.length">
               <h2 class="mb-1 mt-3 text-base font-semibold">
                 {{ __('From requests') }}
@@ -614,6 +620,9 @@ import {
 } from 'frappe-ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
+import { shellBoot } from '@/composables/muelleShell'
+import { orderBillsRoute } from '@/composables/useGastos'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
   MISSING_LABELS,
   clearDraft,
@@ -645,6 +654,7 @@ const route = useRoute()
 const router = useRouter()
 const boot = comprasBoot
 const isNew = computed(() => !props.name)
+const gastosOn = computed(() => moduleEnabled(shellBoot.value, 'gastos'))
 const data = ref({})
 const rows = ref([])
 const loading = ref(false)

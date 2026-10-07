@@ -32,21 +32,26 @@ def _gate(path):
 	from crm.api.avisos import check_avisos_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.api.gastos import check_gastos_permission
 	from crm.api.pendientes import check_pendientes_permission
 	from crm.api.shell import first_module
 	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.gastos_routes import is_gastos_path
 	from crm.pendientes_routes import is_pendientes_path, is_shell_root
 
 	recovery = is_contactos_recovery_path(path)
 	pendientes = is_pendientes_path(path)
 	agenda = is_agenda_path(path)
 	compras = is_compras_path(path)
+	gastos = is_gastos_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
-	neutral = recovery or pendientes or agenda or compras or avisos or archivos or is_contactos_path(path)
+	neutral = (
+		recovery or pendientes or agenda or compras or gastos or avisos or archivos or is_contactos_path(path)
+	)
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
 		raise frappe.Redirect
@@ -64,6 +69,13 @@ def _gate(path):
 		# acceso, Reintentar) from the shell; the boot carries no purchase data.
 		allowed = (
 			check_compras_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
+	elif gastos:
+		# A work account without Gastos still gets its guard page (reason, Pedir
+		# acceso, Reintentar) from the shell; the boot carries no bill data.
+		allowed = (
+			check_gastos_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
 	elif avisos:
@@ -98,6 +110,7 @@ def _gate(path):
 		("pendientes", pendientes),
 		("agenda", agenda),
 		("compras", compras),
+		("gastos", gastos),
 		("avisos", avisos),
 		("archivos", archivos),
 	):
@@ -125,6 +138,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.avisos_routes import is_avisos_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.gastos_routes import is_gastos_path
 	from crm.pendientes_routes import is_pendientes_path
 
 	if is_pendientes_path(path):
@@ -137,6 +151,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="agenda")
 	if is_compras_path(path):
 		return get_boot(neutral=True, module="compras")
+	if is_gastos_path(path):
+		return get_boot(neutral=True, module="gastos")
 	if is_archivos_path(path):
 		return get_boot(neutral=True, module="archivos")
 	if is_avisos_path(path):

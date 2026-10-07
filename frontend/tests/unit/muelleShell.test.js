@@ -94,6 +94,11 @@ async function mount(path) {
         meta: { app: 'compras', title: 'Compras' },
       },
       {
+        path: '/gastos',
+        component: { render: () => h('p', 'Gastos page') },
+        meta: { app: 'gastos', title: 'Gastos' },
+      },
+      {
         path: '/archivos',
         component: { render: () => h('p', 'Archivos page') },
         meta: { app: 'archivos', title: 'Archivos' },
@@ -180,6 +185,7 @@ describe('module registry', () => {
       'contactos',
       'ventas',
       'compras',
+      'gastos',
       'archivos',
       'avisos',
     ])
@@ -448,6 +454,91 @@ describe('Compras in the shell', () => {
     })
     expect(
       (await readOnly[0].search(query)).some((i) => i.id === 'compras.create'),
+    ).toBe(false)
+  })
+})
+
+const GASTOS_ON = {
+  key: 'gastos',
+  enabled: true,
+  capabilities: { read: true, submit: true, pay: false },
+}
+
+describe('Gastos in the shell', () => {
+  it('is its own module and boots without the sales runtime', () => {
+    expect(moduleKeyFor({ path: '/gastos/factura/PI-1', meta: {} })).toBe(
+      'gastos',
+    )
+    expect(hostedModules.find((m) => m.key === 'gastos')?.to).toBe('/gastos')
+    expect(isNeutralModule('gastos')).toBe(true)
+  })
+
+  it('a worker with only Gastos gets only Gastos, unblocked', async () => {
+    state.mobile.value = false
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          contactos: { key: 'contactos', enabled: false, capabilities: {} },
+          ventas: { key: 'ventas', enabled: false, capabilities: {} },
+          gastos: GASTOS_ON,
+        },
+      }),
+    )
+    await mount('/gastos')
+    const rail = root.querySelector('nav[aria-label="Apps"]')
+    expect(
+      [...rail.querySelectorAll('a')].map((a) => a.getAttribute('aria-label')),
+    ).toEqual(['Gastos'])
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+    expect(root.textContent).toContain('page')
+  })
+
+  it('a refused Gastos shows its own reason, never another module’s', async () => {
+    state.mobile.value = false
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          gastos: {
+            key: 'gastos',
+            enabled: false,
+            reason: 'Sin permiso de facturas de proveedor.',
+            capabilities: {},
+          },
+        },
+      }),
+    )
+    await mount('/gastos')
+    const alert = root.querySelector('[role="alert"]')
+    expect(alert.textContent).toContain('We could not open')
+    expect(alert.textContent).toContain('Sin permiso de facturas de proveedor.')
+    expect(alert.querySelector('p').textContent).not.toContain('Contactos')
+  })
+
+  it('Gastos places follow the boot', async () => {
+    const query = {
+      raw: 'vencidas',
+      text: 'vencidas',
+      scope: 'all',
+      kind: 'text',
+    }
+    const on = createShellProviders({
+      boot: ref(boot({ modules: { gastos: GASTOS_ON } })),
+      modules: ref(hostedModules),
+    })
+    const places = on.find((p) => p.key === 'ir_a')
+    expect((await places.search(query)).map((i) => i.href)).toContain(
+      '/gastos?segment=por-pagar&chip=vencidas',
+    )
+    const off = createShellProviders({
+      boot: ref(
+        boot({ modules: { gastos: { ...GASTOS_ON, enabled: false } } }),
+      ),
+      modules: ref(hostedModules),
+    })
+    const offPlaces = off.find((p) => p.key === 'ir_a')
+    expect(
+      (await offPlaces.search(query)).some((i) => i.id.startsWith('gastos.')),
     ).toBe(false)
   })
 })

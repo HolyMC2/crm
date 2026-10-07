@@ -26,6 +26,11 @@ const AGENDA_PLACES = [
   ['week', 'Semana'],
   ['list', 'Lista'],
 ]
+const GASTOS_PLACES = [
+  ['segment=por-pagar', 'Por pagar'],
+  ['segment=por-pagar&chip=vencidas', 'Vencidas'],
+  ['segment=por-registrar', 'Por registrar'],
+]
 const COMPRAS_PLACES = [
   ['por-comprar', 'Por comprar'],
   ['por-recibir', 'Por recibir'],
@@ -131,6 +136,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Compras › ${label}`,
             icon: 'lucide-shopping-cart',
             href: `/compras?segment=${segment}`,
+          })
+      if (moduleEnabled(boot.value, 'gastos'))
+        for (const [query, label] of GASTOS_PLACES)
+          items.push({
+            id: `gastos.${query}`,
+            group: 'ir_a',
+            title: `Gastos › ${label}`,
+            icon: 'lucide-receipt',
+            href: `/gastos?${query}`,
           })
       if (moduleEnabled(boot.value, 'archivos'))
         for (const [view, label] of ARCHIVOS_PLACES)

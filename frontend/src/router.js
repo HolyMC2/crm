@@ -96,6 +96,19 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
   },
   {
+    path: '/gastos',
+    name: 'Gastos',
+    component: () => import('@/pages/Gastos.vue'),
+    meta: { app: 'gastos', title: 'Gastos', stableKey: true },
+  },
+  {
+    path: '/gastos/factura/:name',
+    name: 'GastoFactura',
+    component: () => import('@/pages/GastoFactura.vue'),
+    props: true,
+    meta: { app: 'gastos', title: 'Gastos', listParent: 'Gastos' },
+  },
+  {
     path: '/archivos',
     name: 'Archivos',
     component: () => import('@/pages/Archivos.vue'),
