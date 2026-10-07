@@ -118,6 +118,14 @@ const COPY = {
     missing:
       'Todavía falta permiso para leer tus pendientes. Comparte la solicitud y reintenta después del ajuste.',
   },
+  productos: {
+    reason:
+      'Para abrir Productos necesitas permiso de lectura de artículos. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de artículos para abrir Productos en Muelle; quiero retomar el producto que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Productos. Comparte la solicitud y reintenta después del ajuste.',
+  },
   ventas: {
     reason:
       'Para ver oportunidades y prospectos de ventas necesitas acceso al módulo Ventas. Tu acceso a los demás módulos se conserva.',

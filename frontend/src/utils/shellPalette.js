@@ -37,6 +37,13 @@ const GASTOS_PLACES = [
   ['segment=por-pagar&chip=vencidas', 'Vencidas'],
   ['segment=por-registrar', 'Por registrar'],
 ]
+const PRODUCTOS_PLACES = [
+  ['todos', 'Todos'],
+  ['sin-precio', 'Sin precio'],
+  ['precio-revisar', 'Precio por revisar'],
+  ['faltan', 'Faltan'],
+  ['bajo-minimo', 'Bajo mínimo'],
+]
 const COMPRAS_PLACES = [
   ['por-comprar', 'Por comprar'],
   ['por-recibir', 'Por recibir'],
@@ -174,6 +181,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Gastos › ${label}`,
             icon: 'lucide-receipt',
             href: `/gastos?${query}`,
+          })
+      if (moduleEnabled(boot.value, 'productos'))
+        for (const [view, label] of PRODUCTOS_PLACES)
+          items.push({
+            id: `productos.${view}`,
+            group: 'ir_a',
+            title: `Productos › ${label}`,
+            icon: 'lucide-package',
+            href: view === 'todos' ? '/productos' : `/productos?vista=${view}`,
           })
       if (moduleEnabled(boot.value, 'garantias'))
         for (const [segment, label] of GARANTIAS_PLACES)

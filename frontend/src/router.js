@@ -139,6 +139,19 @@ const routes = [
     meta: { app: 'gastos', title: 'Gastos', listParent: 'Gastos' },
   },
   {
+    path: '/productos',
+    name: 'Productos',
+    component: () => import('@/pages/Productos.vue'),
+    meta: { app: 'productos', title: 'Productos', stableKey: true },
+  },
+  {
+    path: '/productos/:item',
+    name: 'Producto',
+    component: () => import('@/pages/Producto.vue'),
+    props: true,
+    meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
+  },
+  {
     path: '/garantias',
     name: 'Garantias',
     component: () => import('@/pages/Garantias.vue'),

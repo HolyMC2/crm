@@ -102,6 +102,11 @@ async function mount(path) {
         meta: { app: 'gastos', title: 'Gastos' },
       },
       {
+        path: '/productos',
+        component: { render: () => h('p', 'Productos page') },
+        meta: { app: 'productos', title: 'Productos' },
+      },
+      {
         path: '/archivos',
         component: { render: () => h('p', 'Archivos page') },
         meta: { app: 'archivos', title: 'Archivos' },
@@ -195,6 +200,7 @@ describe('module registry', () => {
       'cobranza',
       'compras',
       'gastos',
+      'productos',
       'garantias',
       'archivos',
       'avisos',
@@ -619,6 +625,85 @@ describe('Gastos in the shell', () => {
     const offPlaces = off.find((p) => p.key === 'ir_a')
     expect(
       (await offPlaces.search(query)).some((i) => i.id.startsWith('gastos.')),
+    ).toBe(false)
+  })
+})
+
+const PRODUCTOS_ON = {
+  key: 'productos',
+  enabled: true,
+  capabilities: { read: true, edit: false },
+}
+
+describe('Productos in the shell', () => {
+  it('a stock worker without Contactos or Ventas gets only Productos, unblocked', async () => {
+    state.mobile.value = false
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          contactos: { key: 'contactos', enabled: false, capabilities: {} },
+          ventas: { key: 'ventas', enabled: false, capabilities: {} },
+          productos: PRODUCTOS_ON,
+        },
+      }),
+    )
+    await mount('/productos')
+    const rail = root.querySelector('nav[aria-label="Apps"]')
+    expect(
+      [...rail.querySelectorAll('a')].map((a) => a.getAttribute('aria-label')),
+    ).toEqual(['Productos'])
+    expect(root.querySelector('[role="alert"]')).toBeNull()
+  })
+
+  it('a refused Productos shows its own reason', async () => {
+    state.mobile.value = false
+    state.call.mockImplementation(async () =>
+      boot({
+        modules: {
+          ...boot().modules,
+          productos: {
+            key: 'productos',
+            enabled: false,
+            reason: 'Pide permiso para consultar artículos.',
+            capabilities: {},
+          },
+        },
+      }),
+    )
+    await mount('/productos')
+    const alert = root.querySelector('[role="alert"]')
+    expect(alert.textContent).toContain(
+      'Pide permiso para consultar artículos.',
+    )
+    expect(alert.querySelector('p').textContent).not.toContain('Contactos')
+  })
+
+  it('Productos is hosted, neutral, and its lists are palette places', async () => {
+    expect(moduleKeyFor({ path: '/productos/SKU-1', meta: {} })).toBe(
+      'productos',
+    )
+    expect(hostedModules.find((m) => m.key === 'productos')?.to).toBe(
+      '/productos',
+    )
+    expect(isNeutralModule('productos')).toBe(true)
+    const providers = createShellProviders({
+      boot: ref(boot({ modules: { productos: PRODUCTOS_ON } })),
+      modules: ref(hostedModules),
+    })
+    const places = providers.find((p) => p.key === 'ir_a')
+    const query = { raw: 'precio', text: 'precio', scope: 'all', kind: 'text' }
+    expect((await places.search(query)).map((i) => i.href)).toContain(
+      '/productos?vista=sin-precio',
+    )
+    const off = createShellProviders({
+      boot: ref(boot()),
+      modules: ref(hostedModules),
+    })
+    const offPlaces = off.find((p) => p.key === 'ir_a')
+    expect(
+      (await offPlaces.search(query)).some((i) =>
+        i.id.startsWith('productos.'),
+      ),
     ).toBe(false)
   })
 })

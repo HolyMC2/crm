@@ -69,6 +69,7 @@ const HOSTED = [
   'cobranza',
   'compras',
   'gastos',
+  'productos',
   'garantias',
   'archivos',
   'avisos',

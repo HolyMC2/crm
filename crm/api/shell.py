@@ -189,6 +189,33 @@ def _garantias():
 	}
 
 
+def _productos():
+	try:
+		# Doco owns the product services; an older doco leaves the module off, not the shell down.
+		from doco.workspaces.products import bootstrap
+	except ImportError:
+		bootstrap = None
+	if "doco" not in frappe.get_installed_apps() or bootstrap is None:
+		return {
+			"key": "productos",
+			"enabled": False,
+			"reason": _("Productos is not installed. Ask your manager to check the app."),
+			"capabilities": {},
+		}
+
+	answer = bootstrap() or {}
+	enabled = bool(answer.get("enabled"))
+	capabilities = answer.get("capabilities") or {}
+	return {
+		"key": "productos",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Ask your manager for permission to read items, then retry."),
+		"capabilities": {"read": enabled, "edit": enabled and bool(capabilities.get("edit"))},
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -298,6 +325,7 @@ def _hosted():
 		"cobranza": _cobranza,
 		"compras": _compras,
 		"gastos": _gastos,
+		"productos": _productos,
 		"garantias": _garantias,
 		"archivos": _archivos,
 		"avisos": _avisos,
@@ -330,6 +358,7 @@ def _providers():
 		_cobranza,
 		_compras,
 		_gastos,
+		_productos,
 		_garantias,
 		_avisos,
 		_archivos,

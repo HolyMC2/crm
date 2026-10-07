@@ -639,8 +639,10 @@ import {
   outcomeUnknown,
   parseDone,
   pendingSave,
+  prefillFromQuery,
   problemOf,
   reapplyRows,
+  returnWithDone,
   qty,
   requestId,
   safeReturn,
@@ -682,7 +684,7 @@ const blankForm = () => ({
   supplier_label: '',
   company: boot.value?.default_company || '',
   schedule_date: '',
-  set_warehouse: '',
+  set_warehouse: prefillFromQuery(route.query).warehouse,
   items: [],
 })
 const form = reactive(blankForm())
@@ -1126,7 +1128,10 @@ function reapply() {
 }
 
 function goBack() {
-  if (returnTo.value) return window.location.assign(returnTo.value)
+  if (returnTo.value)
+    return window.location.assign(
+      returnWithDone(returnTo.value, 'Purchase Order', doc.value.name),
+    )
   const list = typeof route.query.list === 'string' ? route.query.list : ''
   if (list.startsWith('/compras')) return router.push(list)
   router.push({ name: 'Compras' })
@@ -1187,6 +1192,17 @@ onMounted(async () => {
       if (!form.company && rows.length === 1) form.company = rows[0].value
     })
     .catch(() => {})
+  // «Pedir» from Productos: start with that product, store and quantity.
+  const prefill = prefillFromQuery(route.query)
+  if (isNew.value && prefill.item && !form.items.length)
+    comprasApi('items', { search: prefill.item })
+      .then((options) => {
+        const option = options.find((row) => row.value === prefill.item)
+        if (!option || form.items.length) return
+        addItem(option)
+        form.items[0].qty = prefill.qty
+      })
+      .catch(() => {})
   await handleDone()
   await load()
 })

@@ -16114,3 +16114,510 @@ msgstr "Desde las {0}"
 #: frontend/src/components/agenda/AgendaSchedule.vue
 msgid "Until {0}"
 msgstr "Hasta las {0}"
+#: frontend/src/pages/Producto.vue
+msgid "= {0}"
+msgstr "= {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Add barcode"
+msgstr "Agregar código de barras"
+
+#: frontend/src/pages/Producto.vue
+msgid "All my stores"
+msgstr "Todas mis tiendas"
+
+#: frontend/src/pages/Producto.vue
+msgid "Already asked: {0} has it in their pendientes."
+msgstr "Ya se pidió: {0} lo tiene en sus pendientes."
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask for a count"
+msgstr "Pedir conteo"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask for a price change"
+msgstr "Pedir cambio de precio"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask for a product change"
+msgstr "Pedir cambio del producto"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask for price setup"
+msgstr "Pedir configuración de precios"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask for the change"
+msgstr "Pedir el cambio"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask for the count"
+msgstr "Pedir el conteo"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask your manager for permission to read items, then retry."
+msgstr "Pide al encargado permiso para consultar artículos y vuelve a intentarlo."
+
+#: frontend/src/pages/Producto.vue
+msgid "Asked of {0}."
+msgstr "Pedido a {0}."
+
+#: frontend/src/pages/Producto.vue
+msgid "Back to Productos"
+msgstr "Volver a Productos"
+
+#: frontend/src/pages/Producto.vue
+msgid "Barcode {0}"
+msgstr "Código de barras {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Bins: {0}"
+msgstr "Cajones: {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Change price"
+msgstr "Cambiar precio"
+
+#: frontend/src/pages/Producto.vue
+msgid "Choose a store"
+msgstr "Elige una tienda"
+
+#: frontend/src/pages/Producto.vue
+msgid "Confirm price"
+msgstr "Confirmar precio"
+
+#: frontend/src/pages/Producto.vue
+msgid "Count asked of {0}"
+msgstr "Conteo pedido a {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Count asked of {0}."
+msgstr "Conteo pedido a {0}."
+
+#: frontend/src/pages/Producto.vue
+msgid "Count asked of {0}. The stock changes after the review."
+msgstr "Conteo pedido a {0}. La existencia cambia después de la revisión."
+
+#: frontend/src/pages/Producto.vue
+msgid "Disabled: not sold or bought any more"
+msgstr "Desactivado: ya no se vende ni se compra"
+
+#: frontend/src/pages/Producto.vue
+msgid "E.g. check the back shelf too"
+msgstr "Ej. revisa también el anaquel de atrás"
+
+#: frontend/src/pages/Producto.vue
+msgid "E.g. the name should include the brand"
+msgstr "Ej. el nombre debe llevar la marca"
+
+#: frontend/src/pages/Producto.vue
+msgid "E.g. the supplier raised the cost"
+msgstr "Ej. el proveedor subió el costo"
+
+#: frontend/src/pages/Producto.vue
+msgid "Edit product details"
+msgstr "Editar datos del producto"
+
+#: frontend/src/pages/Producto.vue
+msgid "Every active product, newest changes first."
+msgstr "Todos los productos activos, los cambiados más recientemente primero."
+
+#: frontend/src/pages/Producto.vue
+msgid "For sale but without a price in the store list."
+msgstr "A la venta, pero sin precio en la lista de la tienda."
+
+#: frontend/src/pages/Producto.vue
+msgid "From {0}: {1}"
+msgstr "Desde {0}: {1}"
+
+#: frontend/src/pages/Producto.vue
+msgid "I need access to Productos: read permission for Item so I can see prices and stock."
+msgstr "Necesito acceso a Productos: permiso de lectura de artículos para ver precios y existencias."
+
+#: frontend/src/pages/Producto.vue
+msgid "Inventario"
+msgstr "Inventario"
+
+#: frontend/src/pages/Producto.vue
+msgid "Loading products…"
+msgstr "Cargando productos…"
+
+#: frontend/src/pages/Producto.vue
+msgid "Loading product…"
+msgstr "Cargando producto…"
+
+#: frontend/src/pages/Producto.vue
+msgid "Looking for who can count…"
+msgstr "Buscando quién puede contar…"
+
+#: frontend/src/pages/Producto.vue
+msgid "Minimum {0}"
+msgstr "Mínimo {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "New price ({0})"
+msgstr "Precio nuevo ({0})"
+
+#: frontend/src/pages/Producto.vue
+msgid "New price saved in {0}."
+msgstr "Nuevo precio guardado en {0}."
+
+#: frontend/src/pages/Producto.vue
+msgid "No movements in your stores yet."
+msgstr "Todavía no hay movimientos en tus tiendas."
+
+#: frontend/src/pages/Producto.vue
+msgid "No open purchases of this product."
+msgstr "No hay compras abiertas de este producto."
+
+#: frontend/src/pages/Producto.vue
+msgid "No price yet"
+msgstr "Todavía sin precio"
+
+#: frontend/src/pages/Producto.vue
+msgid "No products match"
+msgstr "Ningún producto coincide"
+
+#: frontend/src/pages/Producto.vue
+msgid "No sales of this product yet."
+msgstr "Todavía no hay ventas de este producto."
+
+#: frontend/src/pages/Producto.vue
+msgid "No stock"
+msgstr "Sin existencia"
+
+#: frontend/src/pages/Producto.vue
+msgid "No stock in your stores."
+msgstr "Sin existencias en tus tiendas."
+
+#: frontend/src/pages/Producto.vue
+msgid "Nobody can count in this store yet. Ask your manager to give a counter access to it in Escáner."
+msgstr "Todavía nadie puede contar en esta tienda. Pide al encargado que dé acceso a alguien en el Escáner."
+
+#: frontend/src/pages/Producto.vue
+msgid "Nobody here can do it yet. The request goes to the administrators with this product attached."
+msgstr "Todavía nadie aquí puede hacerlo. La solicitud va a los administradores con este producto."
+
+#: frontend/src/pages/Producto.vue
+msgid "Not available"
+msgstr "No disponible"
+
+#: frontend/src/pages/Producto.vue
+msgid "Nothing to do in this list right now."
+msgstr "Nada pendiente en esta lista por ahora."
+
+#: frontend/src/pages/Producto.vue
+msgid "Now {0} per {1}"
+msgstr "Ahora {0} por {1}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Open in Compras"
+msgstr "Abrir en Compras"
+
+#: frontend/src/pages/Producto.vue
+msgid "Open purchases"
+msgstr "Compras abiertas"
+
+#: frontend/src/pages/Producto.vue
+msgid "Price saved"
+msgstr "Precio guardado"
+
+#: frontend/src/pages/Producto.vue
+msgid "Prices with dates, units or packs that need a decision."
+msgstr "Precios con fechas, unidades o empaques que necesitan una decisión."
+
+#: frontend/src/pages/Producto.vue
+msgid "Product saved"
+msgstr "Producto guardado"
+
+#: frontend/src/pages/Producto.vue
+msgid "Product summary"
+msgstr "Resumen del producto"
+
+#: frontend/src/pages/Producto.vue
+msgid "Productos is not available"
+msgstr "Productos no está disponible"
+
+#: frontend/src/pages/Producto.vue
+msgid "Productos is not installed. Ask your manager to check the app."
+msgstr "Productos no está instalado. Pide al encargado que revise la app."
+
+#: frontend/src/pages/Producto.vue
+msgid "Products appear here once they are created."
+msgstr "Los productos aparecen aquí cuando se dan de alta."
+
+#: frontend/src/pages/Producto.vue
+msgid "Products with a minimum and nothing on hand in a store."
+msgstr "Productos con mínimo y sin existencia en una tienda."
+
+#: frontend/src/pages/Producto.vue
+msgid "Projected {0}"
+msgstr "Proyectado {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Proposed price"
+msgstr "Precio propuesto"
+
+#: frontend/src/pages/Producto.vue
+msgid "Proposed price in {0}"
+msgstr "Precio propuesto en {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Purchase {0} saved."
+msgstr "Compra {0} guardada."
+
+#: frontend/src/pages/Producto.vue
+msgid "Recent sales"
+msgstr "Ventas recientes"
+
+#: frontend/src/pages/Producto.vue
+msgid "Remove barcode {0}"
+msgstr "Quitar código de barras {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Reserved {0}"
+msgstr "Apartado {0}"
+
+#: frontend/src/pages/Producto.vue
+msgid "Save mine"
+msgstr "Guardar el mío"
+
+#: frontend/src/pages/Producto.vue
+msgid "Search name, code or barcode"
+msgstr "Busca nombre, código o código de barras"
+
+#: frontend/src/pages/Producto.vue
+msgid "Someone else changed this product"
+msgstr "Alguien más cambió este producto"
+
+#: frontend/src/pages/Producto.vue
+msgid "Someone else changed this product. Yours are kept:"
+msgstr "Alguien más cambió este producto. Tus cambios se conservan:"
+
+#: frontend/src/pages/Producto.vue
+msgid "Still on hand, but below the store minimum."
+msgstr "Todavía hay, pero por debajo del mínimo de la tienda."
+
+#: frontend/src/pages/Producto.vue
+msgid "Stock is corrected by counting it. The person counts in Escáner and the difference is reviewed before the stock changes."
+msgstr "La existencia se corrige contando. La persona cuenta en el Escáner y la diferencia se revisa antes de cambiar la existencia."
+
+#: frontend/src/pages/Producto.vue
+msgid "This change is {0}% or more of the current price. I reviewed it."
+msgstr "Este cambio es de {0}% o más del precio actual. Ya lo revisé."
+
+#: frontend/src/pages/Producto.vue
+msgid "This price also applies to the other units of the product ({0}). I reviewed them."
+msgstr "Este precio también aplica a las otras unidades del producto ({0}). Ya las revisé."
+
+#: frontend/src/pages/Producto.vue
+msgid "Try another name, code or barcode."
+msgstr "Prueba con otro nombre, código o código de barras."
+
+#: frontend/src/pages/Producto.vue
+msgid "We could not open this product"
+msgstr "No pudimos abrir este producto"
+
+#: frontend/src/pages/Producto.vue
+msgid "We do not know if it was saved"
+msgstr "No sabemos si se guardó"
+
+#: frontend/src/pages/Producto.vue
+msgid "Who counts"
+msgstr "Quién cuenta"
+
+#: frontend/src/pages/Producto.vue
+msgid "Write the new price for each list. Review old and new before confirming; the change is recorded with your name."
+msgstr "Escribe el precio nuevo de cada lista. Revisa el anterior y el nuevo antes de confirmar; el cambio queda registrado con tu nombre."
+
+#: frontend/src/pages/Producto.vue
+msgid "You cannot change this list."
+msgstr "No puedes cambiar esta lista."
+
+#: frontend/src/pages/Producto.vue
+msgid "You cannot open this product"
+msgstr "No puedes abrir este producto"
+
+#: frontend/src/pages/Producto.vue
+msgid "You cannot see prices. Ask your manager for access."
+msgstr "No puedes ver precios. Pide acceso al encargado."
+
+#: frontend/src/pages/Producto.vue
+msgid "You cannot see purchases."
+msgstr "No puedes ver las compras."
+
+#: frontend/src/pages/Producto.vue
+msgid "You cannot see sales invoices."
+msgstr "No puedes ver las facturas de venta."
+
+#: frontend/src/pages/Producto.vue
+msgid "You cannot see stock movements."
+msgstr "No puedes ver los movimientos de inventario."
+
+#: frontend/src/pages/Producto.vue
+msgid "You cannot see stock. Ask your manager for access."
+msgstr "No puedes ver existencias. Pide acceso al encargado."
+
+#: frontend/src/pages/Producto.vue
+msgid "{0} (has a count today)"
+msgstr "{0} (tiene conteo hoy)"
+
+#: frontend/src/pages/Producto.vue
+msgid "{0} in {1} stores"
+msgstr "{0} en {1} tiendas"
+
+#: frontend/src/pages/Producto.vue
+msgid "{0} more store(s) have this product but are outside your access."
+msgstr "{0} tienda(s) más tienen este producto, pero están fuera de tu acceso."
+
+#: frontend/src/pages/Producto.vue
+msgid "{0} on hand in {1} · minimum {2}"
+msgstr "{0} en existencia en {1} · mínimo {2}"
+
+#: frontend/src/pages/Producto.vue
+msgid "{0}: now «{1}», yours «{2}»"
+msgstr "{0}: ahora «{1}», el tuyo «{2}»"
+
+#: frontend/src/pages/Producto.vue
+msgid "{0}: {1}"
+msgstr "{0}: {1}"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "All products"
+msgstr "Todos"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Back"
+msgstr "Volver"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Barcodes"
+msgstr "Códigos de barras"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Below minimum"
+msgstr "Bajo mínimo"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Brand"
+msgstr "Marca"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Close"
+msgstr "Cerrar"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Description"
+msgstr "Descripción"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Disabled"
+msgstr "Desactivado"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Group"
+msgstr "Grupo"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Load more"
+msgstr "Cargar más"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Movements"
+msgstr "Movimientos"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Name"
+msgstr "Nombre"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "No price"
+msgstr "Sin precio"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Not allowed"
+msgstr "Sin permiso"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "On hand"
+msgstr "Existencia"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Out of stock"
+msgstr "Faltan"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Price"
+msgstr "Precio"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Price to review"
+msgstr "Precio por revisar"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Prices"
+msgstr "Precios"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Productos"
+msgstr "Productos"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Purchase request"
+msgstr "Solicitud de compra"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Return"
+msgstr "Devolución"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Save"
+msgstr "Guardar"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Stock"
+msgstr "Existencias"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Store"
+msgstr "Tienda"

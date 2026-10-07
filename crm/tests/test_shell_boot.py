@@ -332,6 +332,61 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["archivos"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_products(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Productos (doco) is not installed")
+		try:
+			import doco.workspaces.products
+		except ImportError:
+			self.skipTest("This doco has no products service")
+
+	def test_productos_provider_reports_item_access(self):
+		self._skip_without_products()
+		productos = shell.boot()["modules"]["productos"]
+		self.assertTrue(productos["enabled"])
+		self.assertIsNone(productos["reason"])
+		self.assertEqual(productos["capabilities"], {"read": True, "edit": True})
+
+	def test_productos_refusal_carries_its_own_reason_and_leaves_others(self):
+		self._skip_without_products()
+		answer = {"enabled": False, "reason": "Pide permiso para consultar artículos.", "capabilities": {}}
+		with patch("doco.workspaces.products.bootstrap", return_value=answer):
+			data = shell.boot()
+		productos = data["modules"]["productos"]
+		self.assertFalse(productos["enabled"])
+		self.assertEqual(productos["reason"], answer["reason"])
+		self.assertEqual(productos["capabilities"], {"read": False, "edit": False})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_productos_edit_follows_item_write(self):
+		self._skip_without_products()
+		answer = {"enabled": True, "capabilities": {"read": True, "edit": False}}
+		with patch("doco.workspaces.products.bootstrap", return_value=answer):
+			productos = shell.boot()["modules"]["productos"]
+		self.assertEqual(productos["capabilities"], {"read": True, "edit": False})
+
+	def test_productos_alone_opens_the_shell_without_contactos_or_ventas(self):
+		self._skip_without_products()
+
+		def off(key):
+			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
+
+		with (
+			patch.object(shell, "_contactos", off("contactos")),
+			patch.object(shell, "_ventas", off("ventas")),
+		):
+			data = shell.boot()
+		self.assertTrue(data["modules"]["productos"]["enabled"])
+		self.assertFalse(data["sales_access"])
+
+	def test_older_doco_without_products_turns_productos_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.workspaces.products": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["productos"]["enabled"])
+		self.assertTrue(data["modules"]["productos"]["reason"])
+		self.assertEqual(data["modules"]["productos"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def _skip_without_pendientes(self):
 		if "doco" not in frappe.get_installed_apps():
 			self.skipTest("Pendientes (doco) is not installed")

@@ -65,6 +65,7 @@ describe('Permission recovery follows the module the worker meant to open', () =
     expect(recoveryModule('/notifications')).toBe('avisos')
     expect(recoveryModule('/avisos?view=history')).toBe('avisos')
     expect(recoveryModule('/compras/orden/PO-1')).toBe('compras')
+    expect(recoveryModule('/productos/SKU-1?accion=precio')).toBe('productos')
     expect(recoveryModule('/cobranza?segment=vencidas')).toBe('cobranza')
     expect(recoveryModule('/cobranza/cliente/Ana?company=X')).toBe('cobranza')
     expect(recoveryModule('/archivos?view=ayuda')).toBe('archivos')

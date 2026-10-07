@@ -1,5 +1,9 @@
 import { ref } from 'vue'
 import { callError, errorKind } from '@/utils/contactos'
+import {
+  RETURN_PREFIXES as SHELL_RETURN_PREFIXES,
+  completeReturn,
+} from '@/vendor/muelle-shell/contracts'
 
 // Compras: prepare a purchase, receive what arrived (Escáner), come back to
 // the same order. Native Material Request / Purchase Order / Purchase Receipt
@@ -187,6 +191,34 @@ export function safeReturn(value) {
   if (!RETURN_PREFIXES.some((prefix) => url.pathname.startsWith(prefix)))
     return null
   return url.pathname + url.search + url.hash
+}
+
+/** A new purchase opened from another module (Productos «Pedir»): the
+ *  product, destination store and quantity it carries, validated. */
+export function prefillFromQuery(query) {
+  const text = (value) =>
+    typeof value === 'string' && value.trim() && value.length <= 140
+      ? value.trim()
+      : ''
+  const amount = Number(query?.qty)
+  return {
+    item: text(query?.item),
+    warehouse: text(query?.warehouse),
+    qty: Number.isFinite(amount) && amount > 0 && amount <= 1e6 ? amount : 1,
+  }
+}
+
+/** The way back to the module that started this purchase, saying what was saved. */
+export function returnWithDone(target, doctype, name) {
+  if (!target || !name) return target
+  try {
+    return completeReturn(target, { doctype, name }, [
+      ...SHELL_RETURN_PREFIXES,
+      '/app/',
+    ])
+  } catch {
+    return target
+  }
 }
 
 /** `done=<doctype>:<name>` from a hand-off we started (Escáner receipt). */
