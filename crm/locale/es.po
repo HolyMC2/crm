@@ -15661,3 +15661,15 @@ msgstr "Compra de la que salió"
 #: frontend/src/pages/Garantia.vue
 msgid "Supplier credited it"
 msgstr "El proveedor acreditó"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Return review from register {0}: {1}"
+msgstr "Revisión de devolución de la caja {0}: {1}"
+
+#: frontend/src/pages/Garantia.vue
+msgid "{0} line(s) requested"
+msgstr "{0} renglón(es) solicitados"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Needs fiscal review"
+msgstr "Requiere revisión fiscal"
