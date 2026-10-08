@@ -251,6 +251,27 @@
             <p v-else class="text-sm text-ink-gray-6">
               {{ __('No sale or repair order linked.') }}
             </p>
+            <div
+              v-if="claim.return_review"
+              class="mt-2 border-t border-outline-gray-1 pt-2 text-sm text-ink-gray-7"
+            >
+              <p>
+                {{
+                  __('Return review from register {0}: {1}', [
+                    claim.return_review.pos_profile,
+                    claim.return_review.reason,
+                  ])
+                }}
+              </p>
+              <p>
+                {{ __('{0} line(s) requested', [claim.return_review.lines]) }}
+              </p>
+              <Badge
+                v-if="claim.return_review.needs_fiscal_review"
+                theme="orange"
+                :label="__('Needs fiscal review')"
+              />
+            </div>
           </section>
 
           <section class="rounded-lg border border-outline-gray-2 p-4">
