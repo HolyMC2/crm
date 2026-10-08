@@ -599,3 +599,57 @@ export function formatMoney(value, currency, lang) {
 export function accessLost(error) {
   return error?.unavailable === true || errorKind(error) === 'permission'
 }
+
+/**
+ * In-memory read cache (never browser storage): a bounded LRU of responses
+ * plus one shared in-flight request per key, so a remount, a back navigation
+ * or a second panel reuses the answer instead of asking the server again.
+ * `fresh` skips the shared request (a read that must follow a write).
+ */
+export function createReadCache({ max = 30, now = () => Date.now() } = {}) {
+  const entries = new Map()
+  const inflight = new Map()
+  let generation = 0
+  function get(key) {
+    const hit = entries.get(key)
+    if (!hit) return null
+    entries.delete(key)
+    entries.set(key, hit)
+    return hit
+  }
+  function set(key, value) {
+    entries.delete(key)
+    entries.set(key, { value, at: now() })
+    while (entries.size > max) entries.delete(entries.keys().next().value)
+  }
+  function load(key, fetcher, { fresh = false } = {}) {
+    if (!fresh && inflight.has(key)) return inflight.get(key)
+    const own = generation
+    const promise = Promise.resolve()
+      .then(fetcher)
+      .then((value) => {
+        // A clear() (scope change or write) while in flight must not resurrect it.
+        if (own === generation) set(key, value)
+        return value
+      })
+      .finally(() => {
+        if (inflight.get(key) === promise) inflight.delete(key)
+      })
+    inflight.set(key, promise)
+    return promise
+  }
+  function clear() {
+    generation++
+    entries.clear()
+    inflight.clear()
+  }
+  return {
+    get,
+    set,
+    load,
+    clear,
+    get size() {
+      return entries.size
+    },
+  }
+}

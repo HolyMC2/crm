@@ -209,6 +209,8 @@
           }"
           :style="gridStyle"
           @click="openRow(row)"
+          @pointerenter="hoverRow(row, $event)"
+          @pointerleave="hoverRow(null)"
         >
           <span class="c-row-identity"
             ><span class="c-avatar" :class="{ company: row.kind === 'company' }"
@@ -416,6 +418,9 @@ import NativeLinkField from '@/components/contactos/NativeLinkField.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
 import {
   contactosApi,
+  contactosReadKey,
+  contactosReads,
+  prefetchRecord,
   useContactosBootstrap,
   useContactosDraft,
 } from '@/composables/useContactos'
@@ -479,6 +484,7 @@ const {
   error: bootError,
   capabilities,
   reload: reloadBoot,
+  ensure: ensureBoot,
 } = useContactosBootstrap()
 const rows = ref([]),
   error = ref(null),
@@ -590,36 +596,20 @@ async function fetchRows(restore = false) {
     return
   }
   const own = ++generation
-  loading.value = true
   error.value = null
+  const [method, args] = listRequest()
+  const key = contactosReadKey(method, args)
+  const hit = contactosReads.get(key)
+  // A page seen before (back from a record, segment switch) renders at once;
+  // the server answer then replaces its rows without moving the scroll.
+  loading.value = !hit
   try {
-    const result =
-      state.segment === 'followups'
-        ? await contactosApi('list_followups', {
-            status: state.taskStatus,
-            cursor: state.cursor,
-          })
-        : await contactosApi('search', {
-            q: state.q,
-            filters: filters(),
-            cursor: state.cursor,
-            segment:
-              names[state.segment] || hydratedSegment.value === state.segment
-                ? null
-                : state.segment,
-          })
+    if (hit) await showRows(hit.value, restore)
+    const result = await contactosReads.load(key, () =>
+      contactosApi(method, args),
+    )
     if (own !== generation) return
-    if (result.available === false)
-      throw new Error(
-        result.reason ||
-          'No tienes permiso para leer tus seguimientos. Pide acceso al responsable.',
-      )
-    rows.value = result.rows || []
-    hasMore.value = !!result.has_more
-    nextCursor.value = result.next_cursor
-    partial.value = !!result.partial
-    await nextTick()
-    if (scroller.value) scroller.value.scrollTop = restore ? state.scrollTop : 0
+    await showRows(result, restore && !hit, !!hit)
   } catch (e) {
     if (own === generation) {
       rows.value = []
@@ -628,6 +618,39 @@ async function fetchRows(restore = false) {
   } finally {
     if (own === generation) loading.value = false
   }
+}
+function listRequest() {
+  if (state.segment === 'followups')
+    return [
+      'list_followups',
+      { status: state.taskStatus, cursor: state.cursor },
+    ]
+  return [
+    'search',
+    {
+      q: state.q,
+      filters: filters(),
+      cursor: state.cursor,
+      segment:
+        names[state.segment] || hydratedSegment.value === state.segment
+          ? null
+          : state.segment,
+    },
+  ]
+}
+async function showRows(result, restore, keepScroll = false) {
+  if (result.available === false)
+    throw new Error(
+      result.reason ||
+        'No tienes permiso para leer tus seguimientos. Pide acceso al responsable.',
+    )
+  rows.value = result.rows || []
+  hasMore.value = !!result.has_more
+  nextCursor.value = result.next_cursor
+  partial.value = !!result.partial
+  if (keepScroll) return
+  await nextTick()
+  if (scroller.value) scroller.value.scrollTop = restore ? state.scrollTop : 0
 }
 // Palette «New contact» and the PWA shortcut open the create dialog.
 watch(
@@ -703,6 +726,13 @@ function discardLegacy() {
   resetPage()
   router.replace({ name: 'Contactos' })
   fetchRows()
+}
+// Desktop only: resting on a row for 150 ms loads its record ahead of the click.
+let hoverTimer
+function hoverRow(row, event) {
+  clearTimeout(hoverTimer)
+  if (!row || event?.pointerType !== 'mouse') return
+  hoverTimer = setTimeout(() => prefetchRecord(row), 150)
 }
 function openRow(row) {
   state.selected = row.source + ':' + row.name
@@ -830,6 +860,8 @@ function shortcut(event) {
     searchControl.value?.$el?.querySelector('input')?.focus()
   }
 }
+// Typing waits for a pause; a segment, filter or status choice loads at once
+// (a page seen before then renders from memory without any wait).
 watch(
   () => [
     state.q,
@@ -837,17 +869,24 @@ watch(
     state.segment,
     state.taskStatus,
   ],
-  () => {
+  ([q], [previousQ]) => {
     resetPage()
     clearTimeout(debounce)
     generation++
-    debounce = setTimeout(() => fetchRows(), 200)
+    if (q !== previousQ) debounce = setTimeout(() => fetchRows(), 200)
+    else fetchRows()
   },
 )
 watch(() => [state.columns, state.density], remember, { deep: true })
 onMounted(async () => {
   document.addEventListener('keydown', shortcut)
-  await reloadBoot()
+  // A built-in segment needs nothing from the boot: its rows load meanwhile.
+  const early =
+    names[state.segment] && !route.query.view && !legacyBlocked.value
+      ? JSON.stringify(listRequest())
+      : null
+  if (early) fetchRows(true)
+  await ensureBoot()
   if (route.query.view && route.query.legacy_view) {
     try {
       const legacy = await call('crm.api.contactos.get_legacy_view', {
@@ -900,10 +939,11 @@ onMounted(async () => {
       'relations',
     ]),
   ]
-  await fetchRows(true)
+  if (early !== JSON.stringify(listRequest())) await fetchRows(true)
 })
 onBeforeUnmount(() => {
   clearTimeout(debounce)
+  clearTimeout(hoverTimer)
   generation++
   remember()
   document.removeEventListener('keydown', shortcut)

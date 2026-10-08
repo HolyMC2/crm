@@ -643,6 +643,7 @@ import { shellBoot } from '@/composables/muelleShell'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
   contactosApi,
+  readRecord,
   useContactosBootstrap,
   useContactosDraft,
 } from '@/composables/useContactos'
@@ -687,6 +688,7 @@ const {
   error: bootError,
   capabilities,
   reload: reloadBoot,
+  ensure: ensureBoot,
 } = useContactosBootstrap()
 const { contactTabs, sections } = useContact360Tabs()
 const activeTab = ref('')
@@ -838,13 +840,16 @@ const sectionStyle = (key) => ({
 })
 let generation = 0,
   taskGeneration = 0
-async function reload() {
+async function reload({ freshBoot = false } = {}) {
   const own = ++generation
   loading.value = true
   error.value = null
   try {
-    await reloadBoot()
-    const result = await contactosApi('get_record', nativeRoute.value)
+    // The record does not depend on the boot: both are asked for at once.
+    const [result] = await Promise.all([
+      readRecord(nativeRoute.value, { fresh: freshBoot }),
+      freshBoot ? reloadBoot() : ensureBoot(),
+    ])
     if (own !== generation) return
     record.value = result
     openTasks.value = result.followups?.rows || []
@@ -854,7 +859,15 @@ async function reload() {
       !customers.value.some((c) => c.name === selectedCustomer.value)
     )
       selectedCustomer.value = ''
-    await loadTasks()
+    // get_record already carries this record's open follow-ups page.
+    if (taskStatus.value === 'Open' && result.followups) {
+      taskGeneration++
+      try {
+        applyTasks(result.followups, false)
+      } catch (e) {
+        taskFailed(e)
+      }
+    } else await loadTasks()
   } catch (e) {
     if (own === generation) {
       error.value = e
@@ -879,27 +892,31 @@ async function loadTasks(more = false) {
       cursor: more ? taskCursor.value : null,
     })
     if (own !== taskGeneration) return
-    if (result.available === false)
-      throw Object.assign(
-        new Error(
-          result.reason ||
-            'No tienes permiso para leer tus seguimientos. Pide acceso al responsable.',
-        ),
-        { unavailable: true },
-      )
-    followups.value = mergeTaskPage(followups.value, result.rows || [], more)
-    taskCursor.value = result.next_cursor
-    taskMore.value = !!result.has_more
-    taskError.value = null
-    if (taskStatus.value === 'Open') openTasks.value = followups.value
+    applyTasks(result, more)
   } catch (e) {
-    if (own === taskGeneration) {
-      taskError.value = e
-      followups.value = []
-      // Lost access must not leave a protected task on the next-action card.
-      if (accessLost(e)) openTasks.value = []
-    }
+    if (own === taskGeneration) taskFailed(e)
   }
+}
+function applyTasks(result, more) {
+  if (result.available === false)
+    throw Object.assign(
+      new Error(
+        result.reason ||
+          'No tienes permiso para leer tus seguimientos. Pide acceso al responsable.',
+      ),
+      { unavailable: true },
+    )
+  followups.value = mergeTaskPage(followups.value, result.rows || [], more)
+  taskCursor.value = result.next_cursor
+  taskMore.value = !!result.has_more
+  taskError.value = null
+  if (taskStatus.value === 'Open') openTasks.value = followups.value
+}
+function taskFailed(e) {
+  taskError.value = e
+  followups.value = []
+  // Lost access must not leave a protected task on the next-action card.
+  if (accessLost(e)) openTasks.value = []
 }
 // After a follow-up is created, reprogrammed or completed the current list and
 // the next-action card are replaced, never appended (an event payload is not a
@@ -929,7 +946,7 @@ const addressGuardNote = ref('')
 async function runAddressGuard(action) {
   if (action.kind === 'call' && action.target?.endsWith('.get_editor_meta'))
     return editAddress()
-  if (action.kind === 'retry') return reload()
+  if (action.kind === 'retry') return reload({ freshBoot: true })
   const text = `Solicito acceso para consultar las direcciones vinculadas de ${record.value?.title || record.value?.name} en Contactos.`
   try {
     await navigator.clipboard.writeText(text)

@@ -2,6 +2,7 @@ import { computed, ref, toValue, watch } from 'vue'
 import {
   callError,
   contactScope,
+  createReadCache,
   contactStorage,
   enterContactScope,
   loadContactState,
@@ -32,8 +33,54 @@ export async function contactosApi(method, args = {}) {
   } catch {
     data = {}
   }
-  if (response.ok) return data.message
+  if (response.ok) {
+    // Any write can change list rows or the record; reads re-ask the server.
+    if (!READS.has(method)) contactosReads.clear()
+    return data.message
+  }
   throw callError(path, response.status, data)
+}
+const READS = new Set([
+  'bootstrap',
+  'search',
+  'get_record',
+  'get_editor_meta',
+  'candidates',
+  'list_followups',
+  'get_followup',
+  'list_segments',
+  'lookup',
+])
+// Responses live in memory only, per site and user (never browser storage).
+export const contactosReads = createReadCache({ max: 40 })
+let readsScope = null
+/** Cache key for a read, scoped to the current site and user. */
+export function contactosReadKey(method, args = {}) {
+  const scope = contactScope()
+  if (scope !== readsScope) {
+    contactosReads.clear()
+    readsScope = scope
+  }
+  return `${scope}|${method}|${JSON.stringify(args)}`
+}
+const BOOT_FRESH_MS = 60_000
+const RECORD_FRESH_MS = 15_000
+/**
+ * A record DTO: one shared request with a hover prefetch, and a copy under
+ * 15 s old is used as is (writes clear the cache; versions still guard saves).
+ */
+export function readRecord(ref, { fresh = false } = {}) {
+  const args = { source: ref.source, name: ref.name }
+  const key = contactosReadKey('get_record', args)
+  const hit = contactosReads.get(key)
+  if (!fresh && hit && Date.now() - hit.at < RECORD_FRESH_MS)
+    return Promise.resolve(hit.value)
+  return contactosReads.load(key, () => contactosApi('get_record', args), {
+    fresh,
+  })
+}
+export function prefetchRecord(ref) {
+  readRecord(ref).catch(() => {})
 }
 export function useContactosDraft(key, defaults = {}) {
   const scope = contactScope()
@@ -115,25 +162,40 @@ export function useContactosDraft(key, defaults = {}) {
   return { draft, id, clear, acceptInitial, restored: !!saved }
 }
 export function useContactosBootstrap() {
-  const boot = ref(null),
+  const cached = contactosReads.get(contactosReadKey('bootstrap'))
+  const boot = ref(cached?.value ?? null),
     error = ref(null),
     loading = ref(false)
-  async function reload() {
+  // Always asks the server (after saving a segment, configuration or retry).
+  async function reload({ fresh = true } = {}) {
     loading.value = true
     error.value = null
     try {
-      boot.value = await contactosApi('bootstrap')
+      boot.value = await contactosReads.load(
+        contactosReadKey('bootstrap'),
+        () => contactosApi('bootstrap'),
+        { fresh },
+      )
     } catch (e) {
       error.value = e
     } finally {
       loading.value = false
     }
   }
+  // Opening a page: a cached boot renders at once and revalidates in the
+  // background once it is a minute old; only the first visit waits for it.
+  async function ensure() {
+    const hit = contactosReads.get(contactosReadKey('bootstrap'))
+    if (!hit) return reload({ fresh: false })
+    boot.value = hit.value
+    if (Date.now() - hit.at > BOOT_FRESH_MS) reload({ fresh: false })
+  }
   return {
     boot,
     error,
     loading,
     reload,
+    ensure,
     capabilities: computed(() => boot.value?.capabilities || {}),
   }
 }

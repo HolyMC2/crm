@@ -253,8 +253,11 @@ watch(
   (palette) => applyShellAppearance(palette),
   { immediate: true },
 )
+// Ask for the boot during setup: from onMounted the routed page would already
+// have mounted (children mount first), fired its requests, then unmounted for
+// «Opening Muelle…» and mounted again.
+reload()
 onMounted(() => {
-  reload()
   window.visualViewport?.addEventListener('resize', onViewport)
 })
 onBeforeUnmount(() =>
