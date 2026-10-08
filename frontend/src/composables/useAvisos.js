@@ -92,21 +92,42 @@ export function badgeLabel(badge) {
   return count > 99 || (badge?.capped && count >= 99) ? '99+' : String(count)
 }
 
-/** One line under the title: «×3 · Trato DEAL-0042 · hace 5 minutos». */
+/**
+ * One line under the title: «3 avisos iguales · Trato DEAL-0042 · el más
+ * reciente hace 5 minutos». A group shows its newest aviso; the count says how
+ * many identical ones it folds.
+ */
 export function metaLine(group, { lang, timezone, now } = {}) {
   const parts = []
-  if (group.count > 1) parts.push(`×${group.count}`)
+  if (group.count > 1) parts.push(t('{0} identical avisos', [group.count]))
   const record = group.target?.label || group.docname
-  if (record) parts.push(record)
+  if (record && !group.title?.includes(record)) parts.push(record)
   if (group.from_name && group.category === 'direct')
     parts.push(group.from_name)
-  parts.push(formatMoment(group.latest, { lang, timezone, now }))
+  const moment = formatMoment(group.latest, { lang, timezone, now })
+  parts.push(group.count > 1 ? t('newest {0}', [moment]) : moment)
   return parts.filter(Boolean).join(' · ')
 }
 
+/** «Resolver en …» under a row, or nothing when the aviso has nowhere to go. */
+export function actionLabel(group) {
+  const target = group?.target || {}
+  if (!target.route && !target.href && !target.desk) return ''
+  return target.action || t('Open')
+}
+
+function withReturn(url, returnTo, returnLabel = '') {
+  if (returnTo && returnTo.startsWith('/crm/')) {
+    url.searchParams.set('return_to', returnTo)
+    url.searchParams.set('return_label', returnLabel || t('Avisos'))
+  }
+  return url
+}
+
 /**
- * Where «Open» goes: an SPA route this build knows (with return_to back to
- * the caller), else the Desk form, else nothing (the reason is shown).
+ * Where «Open» goes: an SPA route this build knows, else the sibling app that
+ * settles it (Taller, Contador…), both with return_to back to the caller; else
+ * the Desk view, else nothing (the reason is shown).
  */
 export function openTarget(group, router, returnTo = '', returnLabel = '') {
   const target = group?.target || {}
@@ -117,12 +138,17 @@ export function openTarget(group, router, returnTo = '', returnLabel = '') {
       resolved.matched.length &&
       !resolved.matched.some((record) => record.path === '/:invalidpath')
     if (known) {
-      if (returnTo && returnTo.startsWith('/crm/')) {
-        url.searchParams.set('return_to', returnTo)
-        url.searchParams.set('return_label', returnLabel || t('Avisos'))
-      }
+      withReturn(url, returnTo, returnLabel)
       return { kind: 'route', to: url.pathname + url.search + url.hash }
     }
+  }
+  if (typeof target.href === 'string' && /^\/(?!\/)[^\\]*$/.test(target.href)) {
+    const url = withReturn(
+      new URL(target.href, 'https://muelle.invalid'),
+      returnTo,
+      returnLabel,
+    )
+    return { kind: 'app', href: url.pathname + url.search + url.hash }
   }
   if (target.desk) return { kind: 'desk', href: target.desk }
   return { kind: 'none', reason: target.reason || '' }
@@ -272,7 +298,7 @@ export function useAvisosActions(
       onNavigate?.()
       await router.push(where.to)
     } else {
-      // Desk is a full page load: keep the read mark from being cut off.
+      // Desk and sibling apps are a full page load: keep the read mark from being cut off.
       await marking
       onNavigate?.()
       globalThis.window?.location.assign(where.href)

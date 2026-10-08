@@ -7,13 +7,13 @@ row names. Read flags are idempotent, so a replayed POST is a no-op.
 """
 
 import json
-from urllib.parse import quote
+import re
 
 import frappe
 from frappe import _
 from frappe.utils import add_days, cint, get_datetime, now_datetime
 
-from crm.avisos import kinds
+from crm.avisos import kinds, resolve
 
 PREFS_DEFAULT = "muelle_avisos_prefs"
 UNREAD_LIMIT = 1000
@@ -24,20 +24,11 @@ SCAN_LIMIT = 20000
 SCAN_BATCH = 500
 PAGE = 50
 VIEWS = ("inbox", "history", "muted")
-# Records whose worker page lives in this SPA (router base /crm). Others open in Desk.
-SPA_TARGETS = {
-	"Customer": "/contactos/customer/{}",
-	"Supplier": "/contactos/supplier/{}",
-	"Contact": "/contactos/contact/{}",
-	"CRM Organization": "/contactos/organization/{}",
-	"CRM Lead": "/leads/{}",
-	"CRM Deal": "/deals/{}",
-	"ToDo": "/pendientes/todo/{}",
-	"CRM Task": "/pendientes/crm-task/{}",
-	"Web Form": "/forms/{}?tab=submissions",
-	"CRM Inquiry": "/inquiries?name={}",
-}
-SALES_ONLY = frozenset(("CRM Deal", "CRM Inquiry", "Web Form"))
+# Native direct notices whose text the stream rewrites in the reader's language.
+_ASSIGNED = re.compile(r"assigned (?:a new task |a |you)|te asignó|asignó", re.I)
+_MENTIONED = re.compile(r"mentioned you|te mencionó", re.I)
+_SHARED = re.compile(r"shared .* with you|compartió", re.I)
+_GENERIC_ASSIGNMENT = re.compile(r"assigned an? \S+(?: \S+)? \S+ to you$")
 
 
 def _user():
@@ -178,6 +169,7 @@ def _native_rows(user, read, since=None, limit=UNREAD_LIMIT, lock=False, names=N
 				"name": row.name,
 				"type": row.type or "Alert",
 				"title": kinds.plain(row.title or row.subject, 240),
+				"raw_title": kinds.plain(row.title or row.subject),
 				"body": kinds.plain(row.description or row.email_content, 280),
 				"doctype": row.document_type,
 				"docname": row.document_name,
@@ -231,7 +223,7 @@ def _crm_rows(user, read, since=None, limit=UNREAD_LIMIT, lock=False, names=None
 	def accept(row):
 		if not scope.notification(row, user):
 			return False
-		return row.reference_doctype != "CRM Inquiry" or _readable("CRM Inquiry", row.reference_name)
+		return row.reference_doctype != "CRM Inquiry" or resolve._readable("CRM Inquiry", row.reference_name)
 
 	found, capped = _scan(query, note, accept, limit, kinds.CRM_DIRECT)
 	rows = []
@@ -239,17 +231,22 @@ def _crm_rows(user, read, since=None, limit=UNREAD_LIMIT, lock=False, names=None
 		title = kinds.plain(row.notification_text, 240)
 		if not title and row.type == "Mention":
 			title = _("{0} mentioned you").format(_full_name(row.from_user))
+		doctype, docname, hash = row.reference_doctype, row.reference_name, _crm_hash(row)
+		if hash == "#tasks" and row.notification_type_doc:
+			# The assignment is the task, not the deal it hangs on: open the task itself.
+			doctype, docname, hash = "CRM Task", row.notification_type_doc, ""
 		rows.append(
 			{
 				"source": "crm",
 				"name": row.name,
 				"type": row.type,
 				"title": title or _("New notification"),
+				"raw_title": title,
 				"body": "" if row.type == "WhatsApp" else kinds.plain(row.message, 280),
-				"doctype": row.reference_doctype,
-				"docname": row.reference_name,
+				"doctype": doctype,
+				"docname": docname,
 				"link": None,
-				"hash": _crm_hash(row),
+				"hash": hash,
 				"from_user": row.from_user,
 				"read": cint(row.read),
 				"creation": row.creation,
@@ -277,16 +274,6 @@ def _local_link(value):
 
 def _full_name(user):
 	return frappe.utils.get_fullname(user) if user else ""
-
-
-def _readable(doctype, name):
-	try:
-		return bool(
-			name and frappe.db.exists(doctype, name) and frappe.has_permission(doctype, "read", doc=name)
-		)
-	except Exception:
-		frappe.clear_last_message()
-		return False
 
 
 def _rows(user, view):
@@ -319,6 +306,7 @@ def group_rows(rows, prefs):
 				"source": row["source"],
 				"type": row["type"],
 				"title": row["title"],
+				"raw_title": row.get("raw_title") or row["title"],
 				"body": row["body"],
 				"doctype": row.get("doctype"),
 				"docname": row.get("docname"),
@@ -340,6 +328,7 @@ def group_rows(rows, prefs):
 			group.update(
 				latest=row["creation"],
 				title=row["title"],
+				raw_title=row.get("raw_title") or row["title"],
 				body=row["body"],
 				from_user=row.get("from_user"),
 				hash=row.get("hash") or group["hash"],
@@ -370,86 +359,40 @@ def badge_count(groups):
 	return sum(1 for group in groups if group["unread"] and group["visibility"] == "badge")
 
 
-# ── targets ──────────────────────────────────────────────────────────────────
+# ── targets and worker text ──────────────────────────────────────────────────
 
 
-def _desk_url(doctype, name):
-	return f"/app/{frappe.scrub(doctype).replace('_', '-')}/{quote(str(name), safe='')}"
+def _direct_title(group, out):
+	"""«Ana assigned a CRM Task 418 to you» → «Ana te asignó «Avisar equipo listo»» in the reader's language."""
+	label = out["target"].get("label")
+	who = out["from_name"]
+	if not (label and who and group["category"] == "direct" and group.get("doctype")):
+		return None
+	text = group.get("raw_title") or group["title"]
+	if "removed" in text or "quitó" in text:
+		return None
+	if group["type"] in ("Assignment", "Task") and _ASSIGNED.search(text):
+		return _("{0} assigned you «{1}»").format(who, label)
+	if group["type"] == "Mention" and _MENTIONED.search(text):
+		return _("{0} mentioned you in «{1}»").format(who, label)
+	if group["type"] == "Share" and _SHARED.search(text):
+		return _("{0} shared «{1}» with you").format(who, label)
+	return None
 
 
-def target(group, sales=None):
-	"""Where «Abrir» goes, re-authorized now; a reason instead of a dead link."""
-	doctype, name, link = group.get("doctype"), group.get("docname"), group.get("link")
-	if not (doctype and name):
-		if link:
-			if link.startswith("/crm/"):
-				return {"route": link[4:], "desk": None, "reason": None, "label": None}
-			return {"route": None, "desk": link, "reason": None, "label": None}
-		return {
-			"route": None,
-			"desk": None,
-			"reason": _("This aviso has no linked record. Mark it as read when you have handled it."),
-			"label": None,
-		}
-	try:
-		exists = frappe.db.exists(doctype, name)
-	except Exception:
-		frappe.clear_last_message()
-		exists = False
-	if not exists:
-		return {
-			"route": None,
-			"desk": None,
-			"reason": _("{0} {1} no longer exists. Mark the aviso as read.").format(_(doctype), name),
-			"label": None,
-		}
-	if not _readable(doctype, name):
-		return {
-			"route": None,
-			"desk": None,
-			"reason": _(
-				"You no longer have access to {0} {1}. Ask your manager if you still need it."
-			).format(_(doctype), name),
-			"label": None,
-		}
-	label = _record_label(doctype, name)
-	pattern = SPA_TARGETS.get(doctype)
-	if doctype in SALES_ONLY and not sales:
-		pattern = None
-	if doctype == "CRM Lead" and not sales:
-		pattern = "/contactos/crm-lead/{}"
-	route = pattern.format(quote(str(name), safe="")) + group.get("hash", "") if pattern else None
-	return {"route": route, "desk": _desk_url(doctype, name), "reason": None, "label": label}
-
-
-def _record_label(doctype, name):
-	"""The record's title only when its field is readable and unmasked for the caller."""
-	from crm.permissions.whatsapp_read import readable_field
-
-	try:
-		field = frappe.get_meta(doctype).get_title_field()
-		if field and field != "name" and readable_field(doctype, field):
-			return frappe.db.get_value(doctype, name, field) or name
-	except Exception:
-		frappe.clear_last_message()
-	return name
-
-
-def _sales_access():
-	from crm.api import check_app_permission
-
-	try:
-		return bool(check_app_permission())
-	except Exception:
-		frappe.clear_last_message()
-		return False
-
-
-def _public(group, sales):
-	out = {key: value for key, value in group.items() if key != "rows"}
+def _public(group, access):
+	out = {key: value for key, value in group.items() if key not in ("rows", "raw_title")}
 	out["latest"] = str(group["latest"])
 	out["from_name"] = _full_name(group.get("from_user")) if group.get("from_user") else ""
-	out["target"] = target(group, sales)
+	out["target"] = resolve.target(group, access)
+	out["title"] = _direct_title(group, out) or kinds.display(group["title"], 240) or _("New notification")
+	body = kinds.display(group["body"], 280)
+	if body.startswith(out["title"]):
+		# Producers that repeat the subject as the first line of the body.
+		body = body[len(out["title"]) :].strip()
+	if body == out["title"] or _GENERIC_ASSIGNMENT.search(body) or body == out["target"].get("label"):
+		body = ""
+	out["body"] = body
 	return out
 
 
@@ -474,8 +417,8 @@ def stream(view="inbox", category="all", q="", start=0, limit=PAGE):
 		if group["unread"] and group["visibility"] != "off":
 			counts[group["category"]] += 1
 	visible = [g for g in groups if _in_view(g, view) and _matches(g, category, q)]
-	sales = _sales_access()
-	page = [_public(group, sales) for group in visible[start : start + limit]]
+	access = resolve.Access()
+	page = [_public(group, access) for group in visible[start : start + limit]]
 	muted = [
 		{"kind": key, "category": kinds.key_category(key), "label": kinds.kind_label(key)}
 		for key in prefs["muted"]

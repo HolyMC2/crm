@@ -23,7 +23,7 @@
           @click="activate(group)"
         >
           <span
-            class="block truncate text-base"
+            class="line-clamp-2 text-base"
             :class="
               group.unread
                 ? 'font-semibold text-ink-gray-9'
@@ -31,17 +31,25 @@
             "
             >{{ group.title }}</span
           >
-          <span class="block truncate text-sm text-ink-gray-6">
+          <span class="line-clamp-2 text-sm text-ink-gray-6">
             {{ metaLine(group, moment) }}
-            <template v-if="group.target?.desk && !group.target?.route">
-              · {{ __('Desk') }}
-            </template>
           </span>
           <span
             v-if="expanded === group.key || (compact ? false : group.body)"
-            class="mt-1 line-clamp-3 block text-sm text-ink-gray-7"
+            class="mt-1 line-clamp-3 text-sm text-ink-gray-7"
             >{{ group.body }}</span
           >
+          <span
+            v-if="actionLabel(group)"
+            class="mt-1 flex items-center gap-1 text-sm font-medium text-ink-blue-link"
+          >
+            {{ actionLabel(group) }}
+            <FeatherIcon
+              name="chevron-right"
+              class="size-3.5"
+              aria-hidden="true"
+            />
+          </span>
         </button>
         <Button
           v-if="group.unread"
@@ -82,7 +90,7 @@
 <script setup>
 import { ref } from 'vue'
 import { Dropdown, FeatherIcon } from 'frappe-ui'
-import { categoryMeta, metaLine } from '@/composables/useAvisos'
+import { actionLabel, categoryMeta, metaLine } from '@/composables/useAvisos'
 
 defineProps({
   groups: { type: Array, default: () => [] },
@@ -97,7 +105,7 @@ const moment = {
 }
 
 function needsReason(group) {
-  return !group.target?.route && !group.target?.desk
+  return !actionLabel(group)
 }
 
 // A group with nowhere to go explains why instead of opening a dead link.

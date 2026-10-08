@@ -910,6 +910,12 @@ if (route.query.report === 'pipeline') {
   })
   hadRemembered = true
 }
+// An Avisos digest opens exactly the deals it names (?report=avisos&deal=…).
+if (route.query.report === 'avisos') {
+  const deal = route.query.deal
+  remembered = dealListState({ deals: Array.isArray(deal) ? deal : [deal] })
+  hadRemembered = true
+}
 // A legacy /deals/view/kanban link (router redirect) lands on its layout.
 if (['list', 'board', 'funnel'].includes(route.query.layout))
   remembered = { ...remembered, view: route.query.layout }
@@ -1057,6 +1063,7 @@ const scopedStages = computed(() =>
 const statusF = ref(remembered.status)
 const sourceF = ref(remembered.source)
 const ownerF = ref(remembered.owner)
+const dealsF = ref(remembered.deals)
 const search = ref(remembered.search)
 const sort = ref(remembered.sort)
 const selectedRows = ref([])
@@ -1075,6 +1082,7 @@ const listContext = computed(() => ({
   status: statusF.value,
   source: sourceF.value,
   owner: ownerF.value,
+  deals: dealsF.value,
   search: search.value,
   sort: sort.value,
   view: view.value,
@@ -1278,6 +1286,7 @@ function buildFilters() {
   if (statusF.value.length) f.push(['status', 'in', statusF.value])
   if (sourceF.value.length) f.push(['source', 'in', sourceF.value])
   if (ownerF.value.length) f.push(['deal_owner', 'in', ownerF.value])
+  if (dealsF.value.length) f.push(['name', 'in', dealsF.value])
   return f
 }
 function searchOrFilters() {
@@ -1415,6 +1424,7 @@ function applyViewContext(context = {}) {
   statusF.value = [...state.status]
   sourceF.value = [...state.source]
   ownerF.value = [...state.owner]
+  dealsF.value = [...state.deals]
   search.value = state.search
   sort.value = { ...state.sort }
   view.value = state.view
@@ -1587,12 +1597,22 @@ const chips = computed(() => {
     out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
   for (const v of ownerF.value)
     out.push({ key: `ow:${v}`, type: 'owner', value: v, label: ownerName(v) })
+  if (dealsF.value.length)
+    out.push({
+      key: 'avisos-deals',
+      type: 'deals',
+      label: __('{0} deals named by an aviso', [dealsF.value.length]),
+    })
   return out
 })
 function removeChip(c) {
   if (c.type === 'period') {
     createdFrom.value = ''
     createdTo.value = ''
+    return
+  }
+  if (c.type === 'deals') {
+    dealsF.value = []
     return
   }
   const ref_ = { status: statusF, source: sourceF, owner: ownerF }[c.type]
@@ -1605,6 +1625,7 @@ function clearAll() {
   statusF.value = []
   sourceF.value = []
   ownerF.value = []
+  dealsF.value = []
 }
 watch(
   [
@@ -1612,6 +1633,7 @@ watch(
     statusF,
     sourceF,
     ownerF,
+    dealsF,
     followUp,
     createdFrom,
     createdTo,

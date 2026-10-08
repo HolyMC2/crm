@@ -19,28 +19,31 @@
     </section>
     <template v-else>
       <header
-        class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
+        class="flex flex-col gap-3 px-4 pb-2 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:px-6 sm:pt-6"
       >
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
+        <!-- On a phone the title gets its own row: it never shares it with the actions. -->
+        <div class="min-w-0 sm:flex-1">
+          <h1 class="text-xl font-semibold text-ink-gray-9 sm:truncate">
             {{ heading }}
           </h1>
           <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         </div>
-        <Button
-          v-if="state.view === 'inbox' && data?.groups?.length"
-          icon-left="check-circle"
-          :label="__('Mark all as read')"
-          class="min-h-11 sm:min-h-8"
-          :disabled="actions.busy.value"
-          @click="actions.readAll(state.category, 'inbox')"
-        />
-        <Button
-          icon-left="sliders"
-          :label="__('Preferences')"
-          class="min-h-11 sm:min-h-8"
-          @click="prefsOpen = true"
-        />
+        <div class="flex flex-wrap gap-2">
+          <Button
+            v-if="state.view === 'inbox' && data?.groups?.length"
+            icon-left="check-circle"
+            :label="__('Mark all as read')"
+            class="min-h-11 sm:min-h-8"
+            :disabled="actions.busy.value"
+            @click="actions.readAll(state.category, 'inbox')"
+          />
+          <Button
+            icon-left="sliders"
+            :label="__('Preferences')"
+            class="min-h-11 sm:min-h-8"
+            @click="prefsOpen = true"
+          />
+        </div>
       </header>
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
@@ -206,7 +209,9 @@ const subtitle = computed(() => {
   if (state.value.view === 'muted')
     return __('Hidden from the bell. Unmute a kind to see it again.')
   return data.value.total
-    ? __('{0} to review, grouped by record.', [data.value.total])
+    ? __('{0} to review. Identical avisos are grouped, newest first.', [
+        data.value.total,
+      ])
     : __('Nothing waiting for you.')
 })
 const empty = computed(() =>

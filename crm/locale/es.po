@@ -7478,7 +7478,7 @@ msgstr "Posición"
 #: frontend/src/components/Settings/PreferencesSettings.vue:4
 #: frontend/src/components/Settings/Settings.vue:112
 msgid "Preferences"
-msgstr ""
+msgstr "Preferencias"
 
 #: frontend/src/components/Settings/PreferencesSettings.vue:115
 msgid "Preferences Updated Successfully"
@@ -15547,3 +15547,90 @@ msgstr "{0} pendientes vencidos"
 #: frontend/src/pages/Hoy.vue
 msgid "1 due today"
 msgstr "1 vence hoy"
+#: frontend/src/composables/useAvisos.js
+msgid "{0} identical avisos"
+msgstr "{0} avisos iguales"
+
+#: frontend/src/composables/useAvisos.js
+msgid "newest {0}"
+msgstr "el más reciente {0}"
+
+#: frontend/src/pages/Avisos.vue
+msgid "{0} to review. Identical avisos are grouped, newest first."
+msgstr "{0} por atender. Los avisos iguales se agrupan; el más reciente va primero."
+
+#: crm/avisos/resolve.py
+msgid "Open in {0}"
+msgstr "Abrir en {0}"
+
+#: crm/avisos/resolve.py
+msgid "Issue the global invoice"
+msgstr "Emitir la factura global"
+
+#: crm/avisos/resolve.py
+msgid "Review fiscal pending items"
+msgstr "Revisar pendientes fiscales"
+
+#: crm/avisos/resolve.py
+msgid "Review the fiscal calendar"
+msgstr "Revisar el calendario fiscal"
+
+#: crm/avisos/resolve.py
+msgid "Review compliance"
+msgstr "Revisar cumplimiento"
+
+#: crm/avisos/resolve.py
+msgid "Open the tax return"
+msgstr "Abrir la declaración"
+
+#: crm/avisos/resolve.py
+msgid "Review credentials"
+msgstr "Revisar credenciales"
+
+#: crm/avisos/resolve.py
+msgid "Review the tax regime"
+msgstr "Revisar el régimen fiscal"
+
+#: crm/avisos/resolve.py
+msgid "Review the month close"
+msgstr "Revisar el cierre del mes"
+
+#: crm/avisos/resolve.py
+msgid "Review platform sales"
+msgstr "Revisar ventas por plataformas"
+
+#: crm/avisos/resolve.py
+msgid "Review invoices against SAT"
+msgstr "Revisar CFDI contra el SAT"
+
+#: crm/avisos/resolve.py
+msgid "Review deals with pending items"
+msgstr "Revisar tratos con pendientes"
+
+#: crm/avisos/resolve.py
+msgid "Review the affected deals"
+msgstr "Revisar los tratos afectados"
+
+#: crm/avisos/resolve.py
+msgid "See the shifts"
+msgstr "Ver los turnos"
+
+#: crm/avisos/resolve.py
+msgid "This aviso is settled in {0}, which your role cannot open. Let your manager know, then mark it as read."
+msgstr "Este aviso se atiende en {0}, que tu rol no puede abrir. Avísale a tu encargado y márcalo como leído."
+
+#: crm/avisos/stream.py
+msgid "{0} assigned you «{1}»"
+msgstr "{0} te asignó «{1}»"
+
+#: crm/avisos/stream.py
+msgid "{0} mentioned you in «{1}»"
+msgstr "{0} te mencionó en «{1}»"
+
+#: crm/avisos/stream.py
+msgid "{0} shared «{1}» with you"
+msgstr "{0} compartió contigo «{1}»"
+
+#: frontend/src/pages/DealsView.vue
+msgid "{0} deals named by an aviso"
+msgstr "{0} tratos que nombra un aviso"

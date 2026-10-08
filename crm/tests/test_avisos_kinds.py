@@ -105,3 +105,92 @@ class TestAvisosPaths(TestCase):
 		):
 			with self.subTest(path=path):
 				self.assertFalse(is_avisos_path(path))
+
+
+# Subjects seen on doco prod and doco-mirror (2026-10-08), one per producer that
+# writes a Notification Log without a record, and the tool that settles each.
+RECORDLESS_NOTICES = {
+	"⏰ Factura global 2026-08 NO emitida: 422 venta(s) público general ($157,091.00) "
+	"[PEND-GLOBAL Grupo Doco 2026-09-16]": "contador_global",
+	"📅 Opinión de cumplimiento (propia y de proveedores clave) — vence HOY (2026-10-05) "
+	"[CAL opinion_32d 2026-10-05 T-0 Grupo Doco]": "contador_obligaciones",
+	"DOF 2026-08-28: 3 aviso(s) fiscal(es) relevantes [DOF-DIGEST 2026-08-28 n3]": "contador_obligaciones",
+	"⚙ DOF: cambia un dato del motor fiscal o una regla": "contador_obligaciones",
+	"⚠ Buzón tributario sin verificar — Grupo Doco [C0 Grupo Doco buzon-sin-verificar 2026-09-13]": (
+		"contador_cartera"
+	),
+	"⚠ Opinión de cumplimiento sin verificar (propia) — Grupo Doco "
+	"[C0 Grupo Doco opinion-sin-verificar 2026-09-13]": "contador_cartera",
+	"⚠ 2 proveedor(es) clave sin opinión verificada — Grupo Doco "
+	"[C0 Grupo Doco proveedores-sin-opinion 2026-08]": "contador_cartera",
+	"⚠ Periodo vencido sin declarar: Grupo Doco [CSD Grupo Doco 2026-09-27]": "contador_declaracion",
+	"Recordatorio día 15: la declaración de Grupo Doco 2026-07 aún no está pagada.": "contador_declaracion",
+	"Recordatorio vence hoy 2026-08-18: la declaración de Grupo Doco 2026-07 aún no está pagada.": (
+		"contador_declaracion"
+	),
+	"⚖ Conciliación 2026-08 Grupo Doco: revisar libros vs SAT": "contador_cfdis",
+	"REP pendientes 2026-09 [PEND-REP Grupo Doco 2026-10-01]": "contador_pendientes",
+	"Vigencias [VIGENCIA 2026-W40]": "contador_credenciales",
+	"Tope RESICO [RESICO-CLIFF Grupo Doco 2026 80]": "contador_regimen",
+	"Deriva del cierre [DERIVA Grupo Doco 2026-08 IVA]": "contador_cierre",
+	"Plataformas [PLAT-17 Grupo Doco 2026-10-01]": "contador_plataforma",
+	"Cancelación pendiente [CANCELPEND 0000-AAAA 2026-10-01]": "contador_cfdis",
+	"Higiene CRM: 39 trato(s) con pendientes — Casa Matriz: 39": "ventas_hygiene",
+	"Higiene CRM: 4 de tus tratos con pendientes — sin propietario: 4": "ventas_hygiene",
+	"💱 Valor de trato desfasado en 38 tratos — Casa Matriz: 38. Revisar: CRM-DEAL-2026-00248, "
+	"CRM-DEAL-2026-00390 (+30 más). El valor se corrige al guardar el trato.": "ventas_drift",
+	"💱 Valor desfasado en 12 de tus tratos: CRM-DEAL-2026-00390. El valor se corrige al guardar el trato.": (
+		"ventas_drift"
+	),
+	"6 every-tick job(s) run without failure logging": "desk_dark_jobs",
+	"412 errors in 15 min": "desk_error_log",
+	"2 scheduled job type(s) failing every run": "desk_failed_jobs",
+	"30 scheduled job failures in 60 min": "desk_failed_jobs",
+	"Scheduler last logged 45 min ago": "desk_job_log",
+	"marcoantonioponcevaldez@gmail.com just impersonated as you. They will be able to see": (
+		"desk_impersonation"
+	),
+}
+
+
+class TestAvisosNotices(TestCase):
+	def test_every_recordless_producer_maps_to_its_tool(self):
+		for subject, key in RECORDLESS_NOTICES.items():
+			with self.subTest(subject=subject):
+				self.assertEqual(kinds.notice(subject), key)
+
+	def test_record_notices_keep_their_record(self):
+		for subject in (
+			"Anticipo pendiente de facturar — RO-00202",
+			"Nuevo pedido de tienda SAL-ORD-2026-00024 — total 950",
+			"Mañana: Jennifer 14-22, Andrés descansa",
+			"Se te asignó una tarea de conteo en Almacén: SCT-202608-4984",
+		):
+			with self.subTest(subject=subject):
+				self.assertIsNone(kinds.notice(subject))
+
+	def test_worker_text_drops_internal_tags_and_the_mail_hold_note(self):
+		self.assertEqual(
+			kinds.display(
+				"📅 Opinión de cumplimiento — vence HOY (2026-10-05) [CAL opinion_32d 2026-10-05 T-0 Grupo Doco]"
+			),
+			"📅 Opinión de cumplimiento — vence HOY (2026-10-05)",
+		)
+		self.assertEqual(
+			kinds.display(
+				"Avisar equipo listo<p>La notificación está disponible aquí. Su copia por correo no se envió: "
+				'el correo de Muelle está reservado. <a href="/app/email-account">Conectar</a></p>'
+			),
+			"Avisar equipo listo",
+		)
+		# Brackets that are content stay.
+		for text in ("Batería [iPhone 12] lista", "Nota [NUEVO]", "Pedido [A]"):
+			self.assertEqual(kinds.display(text), text)
+
+	def test_a_drift_digest_lists_its_deals_once_in_order(self):
+		self.assertEqual(
+			kinds.deal_names(
+				"Revisar: CRM-DEAL-2026-00248, CRM-DEAL-2026-00390, CRM-DEAL-2026-00248 (+30 más)"
+			),
+			["CRM-DEAL-2026-00248", "CRM-DEAL-2026-00390"],
+		)

@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 vi.mock('frappe-ui', () => ({ call: vi.fn() }))
 
 const {
+  actionLabel,
   activeEntry,
   avisosQuery,
   avisosState,
@@ -140,6 +141,80 @@ describe('Avisos rows', () => {
         now: Date.UTC(2026, 9, 5, 10, 5),
       },
     )
-    expect(line).toBe('×3 · Juan Pérez · 5 minutes ago')
+    expect(line).toBe('3 identical avisos · Juan Pérez · newest 5 minutes ago')
+  })
+
+  it('does not repeat a record the title already names', () => {
+    const line = metaLine(
+      {
+        count: 1,
+        category: 'direct',
+        title: 'Ana assigned you «Avisar equipo listo»',
+        target: { label: 'Avisar equipo listo' },
+        latest: '2026-10-05 10:00:00',
+      },
+      {
+        lang: 'en',
+        timezone: { system: 'UTC' },
+        now: Date.UTC(2026, 9, 5, 10, 5),
+      },
+    )
+    expect(line).toBe('5 minutes ago')
+  })
+
+  it('names the action that resolves the aviso, or none for a dead end', () => {
+    expect(
+      actionLabel({
+        target: {
+          href: '/contador/global',
+          action: 'Issue the global invoice',
+        },
+      }),
+    ).toBe('Issue the global invoice')
+    expect(actionLabel({ target: { desk: '/app/error-log' } })).toBe('Open')
+    expect(actionLabel({ target: { reason: 'Ask your manager' } })).toBe('')
+  })
+})
+
+describe('Avisos sibling-app targets', () => {
+  it('opens Taller or Contador with return_to back to Avisos', () => {
+    const where = openTarget(
+      {
+        target: { href: '/taller/orders/RO-1', desk: '/app/repair-order/RO-1' },
+      },
+      router,
+      '/crm/avisos?category=direct',
+    )
+    expect(where.kind).toBe('app')
+    const url = new URL(where.href, 'https://x.invalid')
+    expect(url.pathname).toBe('/taller/orders/RO-1')
+    expect(url.searchParams.get('return_to')).toBe(
+      '/crm/avisos?category=direct',
+    )
+  })
+
+  it('refuses an href that leaves the site', () => {
+    for (const href of [
+      '//evil.invalid/x',
+      'https://evil.invalid',
+      '/\\evil',
+    ]) {
+      expect(
+        openTarget(
+          { target: { href, desk: '/app/x/1' } },
+          router,
+          '/crm/avisos',
+        ),
+      ).toEqual({ kind: 'desk', href: '/app/x/1' })
+    }
+  })
+
+  it('prefers a route this build knows over the sibling app', () => {
+    const where = openTarget(
+      { target: { route: '/deals/D-1', href: '/taller/orders/RO-1' } },
+      router,
+      '',
+    )
+    expect(where).toEqual({ kind: 'route', to: '/deals/D-1' })
   })
 })

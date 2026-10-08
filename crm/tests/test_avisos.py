@@ -231,7 +231,10 @@ class TestAvisos(IntegrationTestCase):
 		frappe.set_user(ANA)
 		direct = self.group(api.get_stream(), "direct")
 		self.assertEqual(direct[0]["source"], "crm")
-		self.assertEqual(direct[0]["title"], "Beto te mencionó")
+		# Re-worded in the reader's language around the record's title.
+		self.assertEqual(
+			direct[0]["title"], f"{frappe.utils.get_fullname(BETO)} mentioned you in «Llamar a Juan»"
+		)
 		result = api.mark_read(keys=[direct[0]["key"]])
 		self.assertEqual(result["crm"], [note.name])
 		self.assertEqual(frappe.db.get_value("CRM Notification", note.name, "read"), 1)

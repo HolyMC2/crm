@@ -6,6 +6,7 @@ describe('deal list return context', () => {
       status: ['Aprobado'],
       source: [],
       owner: ['sales@example.invalid'],
+      deals: [],
       followUp: 'today',
       search: 'pantalla',
       view: 'board',
@@ -28,6 +29,7 @@ describe('deal list return context', () => {
       status: [],
       source: [],
       owner: ['sales'],
+      deals: [],
       followUp: 'all',
       search: '',
       view: 'list',
@@ -54,6 +56,13 @@ describe('deal list return context', () => {
     expect(
       dealListState({ createdFrom: ['2040-02-01'], createdTo: 'invalid' }),
     ).not.toHaveProperty('createdTo')
+  })
+  it('keeps the deals an aviso names, at most 50', () => {
+    const many = Array.from({ length: 60 }, (_, i) => `CRM-DEAL-2026-${i}`)
+    expect(dealListState({ deals: ['CRM-DEAL-2026-00248', 7] }).deals).toEqual([
+      'CRM-DEAL-2026-00248',
+    ])
+    expect(dealListState({ deals: many }).deals).toHaveLength(50)
   })
   it('drops a grouping the list no longer offers', () => {
     expect(dealListState({ groupBy: 'currency' }).groupBy).toBe('none')

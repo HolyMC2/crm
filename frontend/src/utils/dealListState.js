@@ -29,6 +29,8 @@ export function dealListState(raw = {}) {
     status: list('status'),
     source: list('source'),
     owner: list('owner'),
+    // Deals an Avisos digest names («Valor de trato desfasado … Revisar: …»).
+    deals: list('deals').slice(0, 50),
     followUp: FOLLOW_UP_QUEUES.some((q) => q.key === raw?.followUp)
       ? raw.followUp
       : 'all',

@@ -23,6 +23,36 @@ _SPACE = re.compile(r"\s+")
 # The stable part of an alert title ends where its variable detail starts.
 _DETAIL = re.compile(r"\s*(?::|\s—\s|\s-\s|\.\s)")
 KEY_SEPARATOR = "|"
+# A producer's dedupe tag at the end of a subject: «[CAL opinion_32d 2026-10-05 T-0 Grupo Doco]».
+_INTERNAL_TAG = re.compile(r"\s*\[[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*\s[^\]]+\]")
+# doco's mail-hold note appended to a notification whose email copy was held back.
+_MAIL_HOLD = re.compile(r"\s*La notificación está disponible aquí\. Su copia por correo no se envió.*$", re.S)
+_DEAL_NAME = re.compile(r"\bCRM-DEAL-\d{4}-\d+\b")
+
+# Notices that name the tool settling them by a stable subject tag or prefix
+# (aggregates and scheduler alarms carry no record). First match wins.
+NOTICES = (
+	(re.compile(r"\[PEND-GLOBAL |^\W*Factura global\b"), "contador_global"),
+	(re.compile(r"\[PEND-(?:REP|100K) "), "contador_pendientes"),
+	(re.compile(r"\[CAL |\[DOF(?:-DIGEST)? |^\W*DOF\b"), "contador_obligaciones"),
+	(re.compile(r"\[C0 "), "contador_cartera"),
+	(
+		re.compile(r"\[CSD |\[PAGO-SAT|Periodo vencido sin declarar|la declaración de .+ no está pagada"),
+		"contador_declaracion",
+	),
+	(re.compile(r"\[VIGENCIA "), "contador_credenciales"),
+	(re.compile(r"\[RESICO-CLIFF "), "contador_regimen"),
+	(re.compile(r"\[DERIVA "), "contador_cierre"),
+	(re.compile(r"\[PLAT-"), "contador_plataforma"),
+	(re.compile(r"\[CANCELPEND |^\W*Conciliación \d{4}-\d{2} .*libros vs SAT"), "contador_cfdis"),
+	(re.compile(r"^\W*Higiene CRM:"), "ventas_hygiene"),
+	(re.compile(r"^\W*Valor (?:de trato )?desfasado"), "ventas_drift"),
+	(re.compile(r"every-tick job\(s\) run without failure logging"), "desk_dark_jobs"),
+	(re.compile(r"^\d+ errors in \d+ min"), "desk_error_log"),
+	(re.compile(r"scheduled job type\(s\) failing every run|scheduled job failures in"), "desk_failed_jobs"),
+	(re.compile(r"^Scheduler last logged"), "desk_job_log"),
+	(re.compile(r"just impersonated as you"), "desk_impersonation"),
+)
 
 
 def plain(value, limit=None):
@@ -32,6 +62,33 @@ def plain(value, limit=None):
 	if limit and len(text) > limit:
 		return text[: limit - 1].rstrip() + "…"
 	return text
+
+
+def display(value, limit=None):
+	"""Worker-facing text: producer dedupe tags and doco's mail-hold note removed."""
+	text = _MAIL_HOLD.sub("", plain(value))
+	text = _INTERNAL_TAG.sub("", text).strip()
+	if limit and len(text) > limit:
+		return text[: limit - 1].rstrip() + "…"
+	return text
+
+
+def notice(title, body=None):
+	"""The tool key a recordless notice is settled in, or None."""
+	text = plain(title)
+	for pattern, key in NOTICES:
+		if pattern.search(text):
+			return key
+	return None
+
+
+def deal_names(text):
+	"""Deal names a digest lists, in order, without repeats."""
+	names = []
+	for name in _DEAL_NAME.findall(plain(text)):
+		if name not in names:
+			names.append(name)
+	return names
 
 
 def fold(title):
