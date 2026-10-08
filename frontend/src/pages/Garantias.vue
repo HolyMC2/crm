@@ -199,8 +199,10 @@ import { Badge, Button, FeatherIcon, FormControl } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import NewClaimDialog from '@/components/garantias/NewClaimDialog.vue'
 import {
+  CREATE_KEYS,
   KINDS,
   SEGMENTS,
+  createPrefill,
   dueLabel,
   dueTheme,
   garantiasApi,
@@ -210,6 +212,7 @@ import {
   normalizeSegment,
   problemOf,
   recordRoute,
+  safeReturn,
   segmentLabel,
   stateLabel,
   stateTheme,
@@ -319,21 +322,28 @@ function openCreate(values = {}) {
   prefill.value = values
   creating.value = true
 }
+// A hand-off (Taller order, POS sale) brings its way back; the new case keeps it.
+let handoffReturn = null
 function onCreated(name) {
-  router.push({ ...recordRoute(name), query: { list: route.fullPath } })
+  const query = handoffReturn ? { ...handoffReturn } : { list: route.fullPath }
+  handoffReturn = null
+  router.push({ ...recordRoute(name), query })
 }
 function createFromQuery() {
   if (route.query.create !== '1' || !boot.value?.capabilities?.create) return
-  const values = {}
-  for (const key of [
-    'against_doctype',
-    'against_name',
-    'claim_kind',
-    'serial_no',
-  ])
-    if (typeof route.query[key] === 'string') values[key] = route.query[key]
+  const values = createPrefill(route.query)
+  const back = safeReturn(route.query.return_to)
+  handoffReturn = back
+    ? {
+        return_to: back,
+        ...(typeof route.query.return_label === 'string'
+          ? { return_label: route.query.return_label.slice(0, 40) }
+          : {}),
+      }
+    : null
   const query = { ...route.query }
-  for (const key of ['create', ...Object.keys(values)]) delete query[key]
+  for (const key of ['create', 'return_to', 'return_label', ...CREATE_KEYS])
+    delete query[key]
   router.replace({ query })
   openCreate(values)
 }

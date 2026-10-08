@@ -5,9 +5,13 @@ import {
   moduleKeyFor,
 } from '../../src/composables/muelleShell.js'
 import {
+  createPrefill,
   dueLabel,
   dueTheme,
   kindLabel,
+  liveOutcome,
+  remedyLabel,
+  sourceOptions,
   normalizeSegment,
   primaryAction,
   recordRoute,
@@ -102,5 +106,106 @@ describe('record', () => {
         transitions: [{ action: 'Revisar' }, { action: 'Cancelar' }],
       }),
     ).toEqual({ kind: 'transition', action: 'Revisar' })
+  })
+})
+
+describe('fix: picker, hand-off and remedies', () => {
+  it('a cancelled visit is no outcome, so the case does not offer to resolve with it', () => {
+    const claim = {
+      can_write: true,
+      repair: { available: true },
+      outcome: { name: 'RO-2', void: true },
+      transitions: [{ action: 'Resolver' }],
+    }
+    expect(liveOutcome(claim)).toBeNull()
+    expect(primaryAction(claim)).toEqual({ kind: 'repair' })
+    expect(primaryAction({ ...claim, repair: { available: false } })).toBeNull()
+  })
+  it('does not offer to resolve with an unrepaired visit without a reason', () => {
+    expect(
+      primaryAction({
+        can_write: true,
+        repair: { available: false },
+        outcome: { name: 'RO-3' },
+        transitions: [{ action: 'Resolver', needs_details: true }],
+      }),
+    ).toBeNull()
+  })
+  it('asks for the purchase before anything else when the case has none', () => {
+    expect(
+      primaryAction({
+        can_write: true,
+        can_pick_source: true,
+        against: null,
+        repair: { available: false, pick_source: true },
+        transitions: [{ action: 'Revisar' }],
+      }),
+    ).toEqual({ kind: 'pick_source' })
+  })
+  it('turns sales lines and delivered orders into picker choices', () => {
+    const options = sourceOptions({
+      sales: [
+        {
+          doctype: 'POS Invoice',
+          name: 'PINV-1',
+          date: '2026-10-01',
+          items: [
+            {
+              row: 'r1',
+              item_code: 'CARG',
+              item_name: 'Cargador',
+              serial_no: ['SN1'],
+              batch_no: [],
+            },
+            {
+              row: 'r2',
+              item_code: 'FUN',
+              item_name: 'Funda',
+              serial_no: [],
+              batch_no: ['B1'],
+            },
+          ],
+        },
+      ],
+      orders: [
+        {
+          name: 'RO-1',
+          title: 'iPhone 12',
+          date: '2026-09-30',
+          serial_no: ['IMEI1', 'IMEI2'],
+        },
+      ],
+    })
+    expect(
+      options.map((o) => [
+        o.against_doctype,
+        o.against_name,
+        o.against_row,
+        o.serial_no,
+        o.batch_no,
+      ]),
+    ).toEqual([
+      ['POS Invoice', 'PINV-1', 'r1', 'SN1', ''],
+      ['POS Invoice', 'PINV-1', 'r2', '', 'B1'],
+      ['Repair Order', 'RO-1', '', '', ''],
+    ])
+    expect(options[2].serials).toEqual(['IMEI1', 'IMEI2'])
+    expect(options[0].hint).toContain('PINV-1')
+  })
+  it('reads a Taller or POS hand-off and ignores anything else', () => {
+    expect(
+      createPrefill({
+        create: '1',
+        against_doctype: 'Repair Order',
+        against_name: 'RO-9',
+        return_to: '/taller/orders/RO-9',
+        evil: 'x',
+        serial_no: ['a', 'b'],
+      }),
+    ).toEqual({ against_doctype: 'Repair Order', against_name: 'RO-9' })
+  })
+  it('labels the remedy under way', () => {
+    expect(remedyLabel('Reembolso')).toBe('Refund at the register')
+    expect(remedyLabel('Otro')).toBe('Otro')
   })
 })

@@ -14974,3 +14974,206 @@ msgstr "Cancelar caso"
 msgctxt "Garantías"
 msgid "Reopen"
 msgstr "Reabrir"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgid "Choose another purchase"
+msgstr "Elegir otra compra"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgid "Which purchase or repair is it about?"
+msgstr "¿De qué compra o reparación se trata?"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgid "Looking up purchases…"
+msgstr "Buscando compras…"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgid "Taller order"
+msgstr "Orden de Taller"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgctxt "Garantías"
+msgid "Sale"
+msgstr "Venta"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgid "No receipt at hand (link it later)"
+msgstr "Sin comprobante a la mano (enlázalo después)"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgid "No recent sales or delivered orders for this customer. Open the case anyway and link the purchase later."
+msgstr "Este cliente no tiene ventas recientes ni órdenes entregadas. Abre el caso de todos modos y enlaza la compra después."
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgctxt "Garantías"
+msgid "Serial number"
+msgstr "Número de serie"
+
+#: frontend/src/components/garantias/NewClaimDialog.vue
+msgid "Not sure"
+msgstr "No sé"
+
+#: frontend/src/components/garantias/SourceDialog.vue
+msgid "Choose purchase"
+msgstr "Elegir compra"
+
+#: frontend/src/components/garantias/SourceDialog.vue
+msgid "The sale or delivered Taller order this case is about. It decides how the case is solved."
+msgstr "La venta o la orden de Taller entregada de la que trata el caso. De ella depende cómo se resuelve."
+
+#: frontend/src/components/garantias/SourceDialog.vue
+msgid "No recent sales or delivered orders for this customer. Search by the sale or order number."
+msgstr "Este cliente no tiene ventas recientes ni órdenes entregadas. Busca por el número de venta u orden."
+
+#: frontend/src/components/garantias/SourceDialog.vue
+msgid "Sale or order number"
+msgstr "Número de venta u orden"
+
+#: frontend/src/components/garantias/SourceDialog.vue
+msgid "E.g. ACC-PSINV-2026-00012"
+msgstr "Ej. ACC-PSINV-2026-00012"
+
+#: frontend/src/components/garantias/SourceDialog.vue
+msgctxt "Garantías"
+msgid "Search"
+msgstr "Buscar"
+
+#: frontend/src/components/garantias/SourceDialog.vue
+msgid "Use this purchase"
+msgstr "Usar esta compra"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Link return {0}"
+msgstr "Enlazar devolución {0}"
+
+#: frontend/src/pages/Garantia.vue
+msgctxt "Garantías"
+msgid "Exchange"
+msgstr "Cambio"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Refund at the register"
+msgstr "Reembolso en caja"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "Refund at the register"
+msgstr "Reembolso en caja"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "Repair"
+msgstr "Reparación"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "With the supplier"
+msgstr "Con el proveedor"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "Send to supplier"
+msgstr "Enviar a proveedor"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "Supplier answered"
+msgstr "Respuesta del proveedor"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Link outcome"
+msgstr "Enlazar resultado"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Cancelled, does not count"
+msgstr "Cancelada, no cuenta"
+
+#: frontend/src/pages/Garantia.vue
+msgctxt "Garantías"
+msgid "Supplier"
+msgstr "Proveedor"
+
+#: frontend/src/pages/Garantia.vue
+msgid "in {0}"
+msgstr "en {0}"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Parts in RMA report"
+msgstr "Reporte de piezas en RMA"
+
+#: frontend/src/pages/Garantia.vue
+msgid "No suppliers match"
+msgstr "Ningún proveedor coincide"
+
+#: frontend/src/pages/Garantia.vue
+msgid "One {0} leaves stock for the customer and the case is resolved. The sale stays as it was; send the defective unit to the supplier from this case if it can be claimed."
+msgstr "Sale del almacén un {0} para el cliente y el caso se resuelve. La venta queda igual; si la pieza defectuosa se puede reclamar, envíala al proveedor desde este caso."
+
+#: frontend/src/pages/Garantia.vue
+msgid "From warehouse"
+msgstr "Del almacén"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Serial number of the new unit"
+msgstr "Número de serie del producto nuevo"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Batch of the new unit"
+msgstr "Lote del producto nuevo"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Give the exchange"
+msgstr "Entregar el cambio"
+
+#: frontend/src/pages/Garantia.vue
+msgid "The Taller order, return or stock entry that solved this case, so the case closes with it."
+msgstr "La orden de Taller, devolución o movimiento de almacén que resolvió el caso, para cerrarlo con ella."
+
+#: frontend/src/pages/Garantia.vue
+msgid "Kind of document"
+msgstr "Tipo de documento"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Sales Invoice"
+msgstr "Factura de venta"
+
+#: frontend/src/pages/Garantia.vue
+msgid "POS Invoice"
+msgstr "Ticket de caja"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Stock Entry"
+msgstr "Movimiento de almacén"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Document number"
+msgstr "Número de documento"
+
+#: frontend/src/pages/Garantia.vue
+msgctxt "Garantías"
+msgid "Link"
+msgstr "Enlazar"
+
+#: frontend/src/pages/Garantia.vue
+msgid "What goes to the supplier and why"
+msgstr "Qué se envía al proveedor y por qué"
+
+#: frontend/src/pages/Garantia.vue
+msgid "What the supplier answered"
+msgstr "Qué respondió el proveedor"
+
+#: frontend/src/pages/Garantia.vue
+msgid "The case waits for the supplier."
+msgstr "El caso espera al proveedor."
+
+#: frontend/src/pages/Garantia.vue
+msgid "The case goes back to review: then refund it at the register or resolve it."
+msgstr "El caso vuelve a revisión: después reembólsalo en caja o resuélvelo."
+
+#: frontend/src/pages/Garantia.vue
+msgid "Exchange given: {0}"
+msgstr "Cambio entregado: {0}"
+
+#: frontend/src/pages/Garantia.vue
+msgid "{0} linked as the outcome"
+msgstr "{0} quedó como resultado"

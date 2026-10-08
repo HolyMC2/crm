@@ -41,6 +41,11 @@
               />
               <Badge theme="gray" :label="kindLabel(claim.kind)" />
               <Badge
+                v-if="claim.remedy && !closed"
+                theme="blue"
+                :label="remedyLabel(claim.remedy)"
+              />
+              <Badge
                 v-if="claim.sla?.due && !closed"
                 :theme="dueTheme(claim.sla.due)"
                 :label="dueLabel(claim.sla.due)"
@@ -112,6 +117,14 @@
             @click="openTaller(claim.repair.open)"
           />
           <Button
+            v-else-if="primary?.kind === 'pick_source'"
+            variant="solid"
+            icon-left="shopping-bag"
+            :label="__('Choose purchase')"
+            class="min-h-11 sm:min-h-8"
+            @click="picking = true"
+          />
+          <Button
             v-for="t in transitionButtons"
             :key="t.action + t.next_state"
             :variant="primary?.action === t.action ? 'solid' : 'subtle'"
@@ -133,23 +146,39 @@
             @click="notifying = true"
           />
         </div>
-        <p
-          v-if="
-            claim.can_write &&
-            !claim.repair?.available &&
-            claim.repair?.reason &&
-            !closed
-          "
-          class="-mt-4 mb-6 text-sm text-ink-gray-6"
+        <div
+          v-if="claim.can_write && !closed && (hints.length || linkable)"
+          class="-mt-4 mb-6 space-y-1 text-sm text-ink-gray-6"
         >
-          {{ claim.repair.reason }}
-          <a
-            v-if="claim.repair.intake"
-            class="text-ink-blue-link underline"
-            :href="tallerIntakeUrl(claim.name)"
-            >{{ __('Receive it in Taller') }}</a
+          <p v-for="hint in hints" :key="hint">{{ hint }}</p>
+          <p
+            v-if="claim.repair?.intake || claim.repair?.pick_source || linkable"
+            class="flex flex-wrap gap-3"
           >
-        </p>
+            <a
+              v-if="claim.repair?.intake"
+              class="text-ink-blue-link underline"
+              :href="tallerIntakeUrl(claim.name)"
+              >{{ __('Receive it in Taller') }}</a
+            >
+            <button
+              v-if="linkable"
+              class="text-ink-blue-link underline"
+              @click="outcomeLinking = true"
+            >
+              {{ __('Link outcome') }}
+            </button>
+            <button
+              v-if="
+                claim.repair?.pick_source && primary?.kind !== 'pick_source'
+              "
+              class="text-ink-blue-link underline"
+              @click="picking = true"
+            >
+              {{ __('Choose purchase') }}
+            </button>
+          </p>
+        </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
           <section
@@ -235,6 +264,22 @@
               <span v-if="claim.outcome.status" class="text-sm text-ink-gray-6">
                 · {{ claim.outcome.status }}</span
               >
+              <span
+                v-if="claim.outcome.technical_outcome"
+                class="text-sm text-ink-gray-6"
+              >
+                · {{ claim.outcome.technical_outcome }}</span
+              >
+              <Badge
+                v-if="claim.outcome.is_return"
+                theme="gray"
+                :label="__('Return', null, 'Garantías')"
+              />
+              <Badge
+                v-if="claim.outcome.void"
+                theme="red"
+                :label="__('Cancelled, does not count')"
+              />
             </p>
             <p
               v-if="claim.resolution_details"
@@ -260,6 +305,36 @@
             <p v-if="claim.last_send" class="mt-2 text-sm text-ink-gray-6">
               {{ __('Last WhatsApp notice: {0}', [claim.last_send.label]) }}
             </p>
+          </section>
+
+          <section
+            v-if="showSupplier"
+            class="rounded-lg border border-outline-gray-2 p-4 sm:col-span-2"
+          >
+            <h2 class="mb-1 text-sm font-semibold text-ink-gray-8">
+              {{ __('Supplier', null, 'Garantías') }}
+            </h2>
+            <p v-if="claim.supplier.supplier" class="text-base text-ink-gray-9">
+              {{ claim.supplier.supplier }}
+            </p>
+            <ul v-if="claim.supplier.rma_parts.length" class="mt-1 text-sm">
+              <li
+                v-for="part in claim.supplier.rma_parts"
+                :key="part.stock_entry || part.item_name"
+              >
+                {{ part.item_name }} × {{ part.qty }} ·
+                {{ __('in {0}', [part.warehouse]) }} · {{ part.repair_order }}
+              </li>
+            </ul>
+            <p v-if="claim.supplier.hint" class="mt-1 text-sm text-ink-gray-6">
+              {{ claim.supplier.hint }}
+            </p>
+            <a
+              v-if="claim.supplier.rma_report"
+              class="mt-1 inline-block min-h-11 py-2 text-sm text-ink-blue-link underline"
+              :href="`/app/query-report/${encodeURIComponent(claim.supplier.rma_report)}`"
+              >{{ __('Parts in RMA report') }}</a
+            >
           </section>
 
           <section
@@ -325,6 +400,9 @@
               { label: __('With charge'), value: 'Paid' },
             ]"
           />
+          <p v-if="claim?.repair?.note" class="text-sm text-ink-gray-6">
+            {{ claim.repair.note }}
+          </p>
           <p
             v-if="!claim?.repair?.warranty_eligible"
             class="text-sm text-ink-gray-6"
@@ -369,14 +447,20 @@
       <template #body-content>
         <div class="space-y-4">
           <p class="text-sm text-ink-gray-7">{{ transitionHint }}</p>
+          <ComprasPicker
+            v-if="pending?.action === 'Enviar a proveedor'"
+            v-model="supplier"
+            :display="supplierLabel"
+            :label="__('Supplier', null, 'Garantías')"
+            :placeholder="__('Search supplier')"
+            :empty-text="__('No suppliers match')"
+            :load="searchSuppliers"
+            @pick="(option) => (supplierLabel = option.label)"
+          />
           <FormControl
             v-model="details"
             type="textarea"
-            :label="
-              needsDetails
-                ? __('Why (the customer sees this on the case sheet)')
-                : __('Note (optional)')
-            "
+            :label="detailsLabel"
           />
           <p
             v-if="transitionProblem"
@@ -405,6 +489,60 @@
       </template>
     </Dialog>
 
+    <Dialog v-model="outcomeLinking" :options="{ title: __('Link outcome') }">
+      <template #body-content>
+        <div class="space-y-4">
+          <p class="text-sm text-ink-gray-7">
+            {{
+              __(
+                'The Taller order, return or stock entry that solved this case, so the case closes with it.',
+              )
+            }}
+          </p>
+          <FormControl
+            v-model="outcomeForm.doctype"
+            type="select"
+            :label="__('Kind of document')"
+            :options="[
+              { label: __('Repair Order'), value: 'Repair Order' },
+              { label: __('Sales Invoice'), value: 'Sales Invoice' },
+              { label: __('POS Invoice'), value: 'POS Invoice' },
+              { label: __('Stock Entry'), value: 'Stock Entry' },
+            ]"
+          />
+          <FormControl
+            v-model="outcomeForm.name"
+            :label="__('Document number')"
+          />
+          <p v-if="outcomeProblem" role="alert" class="text-sm text-ink-red-7">
+            <strong>{{ outcomeProblem.title }}.</strong>
+            {{ outcomeProblem.detail }}
+          </p>
+        </div>
+      </template>
+      <template #actions>
+        <div class="flex flex-wrap justify-end gap-2">
+          <Button
+            :label="__('Close', null, 'Garantías')"
+            @click="outcomeLinking = false"
+          />
+          <Button
+            variant="solid"
+            :label="__('Link', null, 'Garantías')"
+            :disabled="!outcomeForm.name.trim()"
+            :loading="busy"
+            @click="linkOutcome(outcomeForm.doctype, outcomeForm.name.trim())"
+          />
+        </div>
+      </template>
+    </Dialog>
+
+    <SourceDialog
+      v-if="claim"
+      v-model="picking"
+      :claim="claim"
+      @changed="(view) => (claim = view)"
+    />
     <AssignDialog
       v-if="claim"
       v-model="assigning"
@@ -434,6 +572,8 @@ import {
 } from 'frappe-ui'
 import AssignDialog from '@/components/garantias/AssignDialog.vue'
 import NoticeDialog from '@/components/garantias/NoticeDialog.vue'
+import SourceDialog from '@/components/garantias/SourceDialog.vue'
+import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { money } from '@/composables/useCompras'
 import {
   actionLabel,
@@ -442,10 +582,12 @@ import {
   garantiasApi,
   garantiasBoot,
   kindLabel,
+  liveOutcome,
   loadGarantiasBoot,
   outcomeUnknown,
   primaryAction,
   problemOf,
+  remedyLabel,
   requestId,
   safeReturn,
   stateLabel,
@@ -473,7 +615,45 @@ const pending = ref(null)
 const details = ref('')
 const note = ref('')
 const savingNote = ref(false)
+const picking = ref(false)
+const supplier = ref('')
+const supplierLabel = ref('')
+const outcomeLinking = ref(false)
+const outcomeProblem = ref(null)
+const outcomeForm = reactive({ doctype: 'Repair Order', name: '' })
 let repairKey = requestId()
+
+const hints = computed(() => {
+  const c = claim.value
+  if (!c) return []
+  return [
+    !c.repair?.available && !c.repair?.hidden ? c.repair?.reason : null,
+    c.actions_note,
+  ].filter(Boolean)
+})
+// A case about a purchase, open and without an outcome: link the order, return or stock entry that solved it.
+const linkable = computed(() =>
+  Boolean(claim.value?.can_pick_source && claim.value?.against),
+)
+const showSupplier = computed(
+  () =>
+    claim.value &&
+    (claim.value.state === 'Con proveedor' ||
+      claim.value.supplier?.supplier ||
+      claim.value.supplier?.rma_parts?.length),
+)
+const detailsLabel = computed(() => {
+  switch (pending.value?.action) {
+    case 'Enviar a proveedor':
+      return __('What goes to the supplier and why')
+    case 'Respuesta del proveedor':
+      return __('What the supplier answered')
+    default:
+      return needsDetails.value
+        ? __('Why (the customer sees this on the case sheet)')
+        : __('Note (optional)')
+  }
+})
 
 const returnTo = computed(() => safeReturn(route.query.return_to))
 const backLabel = computed(() =>
@@ -499,12 +679,22 @@ const transitionButtons = computed(() => {
 const needsDetails = computed(
   () =>
     pending.value?.action === 'Sin procede' ||
-    (pending.value?.next_state === 'Resuelta' && !claim.value?.outcome),
+    pending.value?.needs_note ||
+    pending.value?.needs_details ||
+    (pending.value?.next_state === 'Resuelta' && !liveOutcome(claim.value)),
 )
 const transitionHint = computed(() => {
   switch (pending.value?.action) {
+    case 'Enviar a proveedor':
+      return (
+        claim.value?.supplier?.hint || __('The case waits for the supplier.')
+      )
+    case 'Respuesta del proveedor':
+      return __(
+        'The case goes back to review: then refund it at the register or resolve it.',
+      )
     case 'Resolver':
-      return claim.value?.outcome
+      return liveOutcome(claim.value)
         ? __('The case closes with {0} as its outcome.', [
             claim.value.outcome.name,
           ])
@@ -583,8 +773,44 @@ async function repair() {
 function startTransition(transition) {
   pending.value = transition
   details.value = ''
+  supplier.value = claim.value?.supplier?.supplier || ''
+  supplierLabel.value = supplier.value
   transitionProblem.value = null
   transitioning.value = true
+}
+
+async function searchSuppliers(text) {
+  const rows = await call('frappe.desk.search.search_link', {
+    doctype: 'Supplier',
+    txt: text || '',
+    page_length: 10,
+  })
+  return (rows || []).map((row) => ({
+    value: row.value,
+    label: row.label || row.description || row.value,
+    hint: row.label ? row.description : '',
+  }))
+}
+
+async function linkOutcome(doctype, name) {
+  busy.value = true
+  outcomeProblem.value = null
+  problem.value = null
+  try {
+    claim.value = await garantiasApi('link_outcome', {
+      name: claim.value.name,
+      outcome_doctype: doctype,
+      outcome_name: name,
+      modified: claim.value.modified,
+    })
+    outcomeLinking.value = false
+    toast.success(__('{0} linked as the outcome', [name]))
+  } catch (error) {
+    if (outcomeLinking.value) outcomeProblem.value = problemOf(error)
+    else problem.value = problemOf(error)
+  } finally {
+    busy.value = false
+  }
 }
 async function applyTransition() {
   busy.value = true
@@ -595,6 +821,10 @@ async function applyTransition() {
       action: pending.value.action,
       resolution_details: details.value.trim() || null,
       modified: claim.value.modified,
+      supplier:
+        pending.value.action === 'Enviar a proveedor'
+          ? supplier.value || null
+          : null,
     })
     claim.value = view
     transitioning.value = false

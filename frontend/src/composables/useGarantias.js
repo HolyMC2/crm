@@ -92,6 +92,23 @@ const ACTIONS = {
   'Sin procede': 'Does not apply',
   Cancelar: 'Cancel case',
   Reabrir: 'Reopen',
+  'Enviar a proveedor': 'Send to supplier',
+  'Respuesta del proveedor': 'Supplier answered',
+}
+// Actions whose dialog asks for a note (what goes to the supplier, what it answered).
+export const NOTE_ACTIONS = Object.freeze([
+  'Enviar a proveedor',
+  'Respuesta del proveedor',
+])
+
+const REMEDIES = {
+  Reparación: 'Repair',
+  Cambio: 'Exchange',
+  Reembolso: 'Refund at the register',
+  Proveedor: 'With the supplier',
+}
+export function remedyLabel(value) {
+  return REMEDIES[value] ? tr(REMEDIES[value], null, CTX) : value || ''
 }
 export function actionLabel(action) {
   return ACTIONS[action] ? tr(ACTIONS[action], null, CTX) : action
@@ -134,6 +151,11 @@ export function tallerIntakeUrl(claim) {
   })
 }
 
+/** The claim's outcome unless it was cancelled (a cancelled visit resolves nothing). */
+export function liveOutcome(claim) {
+  return claim?.outcome && !claim.outcome.void ? claim.outcome : null
+}
+
 /** What the record's one primary next action is, given its state. */
 export function primaryAction(claim) {
   if (!claim || !claim.can_write) return null
@@ -141,9 +163,69 @@ export function primaryAction(claim) {
   if (claim.repair?.available) return { kind: 'repair' }
   const transitions = claim.transitions || []
   const resolve = transitions.find((t) => t.action === 'Resolver')
-  if (resolve && claim.outcome)
+  // An unrepaired delivered visit is an outcome that still needs a written reason.
+  if (resolve && liveOutcome(claim) && !resolve.needs_details)
     return { kind: 'transition', action: 'Resolver' }
+  if (claim.can_pick_source && !claim.against) return { kind: 'pick_source' }
   const review = transitions.find((t) => t.action === 'Revisar')
   if (review) return { kind: 'transition', action: 'Revisar' }
   return null
+}
+
+/**
+ * The picker's choices from `sources`: one per sold line (with the serial or batch
+ * that left with it) and one per delivered Taller order.
+ */
+export function sourceOptions(found) {
+  const options = []
+  for (const sale of found?.sales || []) {
+    for (const line of sale.items || []) {
+      options.push({
+        key: `${sale.doctype}:${sale.name}:${line.row}`,
+        against_doctype: sale.doctype,
+        against_name: sale.name,
+        against_row: line.row,
+        serial_no: line.serial_no?.length === 1 ? line.serial_no[0] : '',
+        serials: line.serial_no || [],
+        batch_no: line.batch_no?.length === 1 ? line.batch_no[0] : '',
+        label: line.item_name || line.item_code,
+        hint: [sale.name, sale.date, ...(line.serial_no || []).slice(0, 2)]
+          .filter(Boolean)
+          .join(' · '),
+        kind: 'sale',
+      })
+    }
+  }
+  for (const order of found?.orders || []) {
+    options.push({
+      key: `Repair Order:${order.name}`,
+      against_doctype: 'Repair Order',
+      against_name: order.name,
+      against_row: '',
+      serial_no: order.serial_no?.length === 1 ? order.serial_no[0] : '',
+      serials: order.serial_no || [],
+      batch_no: '',
+      label: order.title || order.name,
+      hint: [order.name, order.date, ...(order.serial_no || []).slice(0, 1)]
+        .filter(Boolean)
+        .join(' · '),
+      kind: 'order',
+    })
+  }
+  return options
+}
+
+/** Hand-off query a Taller order or POS sale opens «Nuevo caso» with. */
+export const CREATE_KEYS = Object.freeze([
+  'against_doctype',
+  'against_name',
+  'against_row',
+  'claim_kind',
+  'serial_no',
+])
+export function createPrefill(query) {
+  const values = {}
+  for (const key of CREATE_KEYS)
+    if (typeof query?.[key] === 'string' && query[key]) values[key] = query[key]
+  return values
 }
