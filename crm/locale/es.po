@@ -15197,3 +15197,10 @@ msgstr "{0}, 1 cita"
 #: frontend/src/components/agenda/AgendaMonth.vue
 msgid "{0}, {1} events"
 msgstr "{0}, {1} citas"
+#: frontend/src/components/archivos/ArchivosRegistroPanel.vue
+msgid "Linked receipts did not load. The attachments below are complete."
+msgstr "No se cargaron los comprobantes vinculados. Los adjuntos de abajo están completos."
+
+#: frontend/src/components/archivos/ArchivosRegistroPanel.vue
+msgid "We could not load this record's files. Try again in a moment."
+msgstr "No pudimos cargar los archivos de este registro. Inténtalo de nuevo en un momento."

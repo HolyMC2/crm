@@ -25,6 +25,9 @@
       <ArchivoGuard :state="failure" @action="load" />
     </div>
     <template v-else-if="data">
+      <div v-if="data.evidence_unavailable" class="px-4 pb-3">
+        <ArchivoGuard :state="partialProblem" @action="load" />
+      </div>
       <ul
         v-if="total"
         class="divide-y divide-outline-gray-1 border-t border-outline-gray-1"
@@ -140,6 +143,26 @@ const here = computed(
       ? window.location.pathname + window.location.search
       : ''),
 )
+const partialProblem = computed(() => ({
+  code: 'partial',
+  message: __(
+    'Linked receipts did not load. The attachments below are complete.',
+  ),
+  actions: [{ label: __('Try again'), kind: 'retry' }],
+}))
+// A server guard, session or permission answer keeps its own text; anything
+// else is an unexpected server exception, never shown raw to the worker.
+function panelProblem(error) {
+  const found = problem(error)
+  if (found.code !== 'error') return found
+  return {
+    code: 'error',
+    message: __(
+      "We could not load this record's files. Try again in a moment.",
+    ),
+    actions: [{ label: __('Try again'), kind: 'retry' }],
+  }
+}
 const total = computed(
   () => (data.value?.evidence?.length || 0) + (data.value?.files?.length || 0),
 )
@@ -159,7 +182,7 @@ async function load() {
       reference_name: props.name,
     })
   } catch (error) {
-    failure.value = problem(error)
+    failure.value = panelProblem(error)
   } finally {
     loading.value = false
   }

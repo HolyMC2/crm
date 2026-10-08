@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   archivosHref,
   bankHandoffUrl,
@@ -260,6 +263,86 @@ describe('«Archivos de este registro» panel', () => {
       reference_doctype: 'Supplier',
       reference_name: 'ACME',
     })
+  })
+  it('never shows a raw server exception and keeps a retry', async () => {
+    respond(
+      {
+        exc_type: 'DoesNotExistError',
+        _server_messages: JSON.stringify([
+          JSON.stringify({ message: 'DocType WooCommerce Server not found' }),
+        ]),
+      },
+      false,
+      404,
+    )
+    await mount({ doctype: 'Contact', name: 'Ana' })
+    expect(root.textContent).not.toContain('WooCommerce')
+    expect(root.textContent).toContain("We could not load this record's files")
+    const retry = [...root.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('Try again'),
+    )
+    expect(retry).toBeTruthy()
+    respond({ supported: false, evidence: [], files: [] })
+    retry.click()
+    for (let i = 0; i < 8; i++) {
+      await Promise.resolve()
+      await nextTick()
+    }
+    expect(root.textContent).toContain('No files yet.')
+  })
+  it('keeps a server guard message, such as a missing record', async () => {
+    respond(
+      {
+        exc_type: 'DoesNotExistError',
+        guard: {
+          code: 'record_missing',
+          message: 'No encontramos este registro.',
+          actions: [{ label: 'Reintentar', kind: 'retry' }],
+        },
+      },
+      false,
+      404,
+    )
+    await mount({ doctype: 'Contact', name: 'Ana' })
+    expect(root.textContent).toContain('No encontramos este registro.')
+  })
+  it('lists the attachments even when linked receipts did not load', async () => {
+    respond({
+      supported: true,
+      evidence: [],
+      evidence_unavailable: true,
+      files: [
+        {
+          name: 'F1',
+          file_name: 'ine.jpg',
+          file_url: '/private/files/ine.jpg',
+          file_size: 10,
+          owner_label: 'Ana',
+        },
+      ],
+    })
+    await mount({ doctype: 'Customer', name: 'Ana' })
+    expect(root.textContent).toContain('ine.jpg')
+    expect(root.textContent).toContain('Linked receipts did not load')
+    expect(root.querySelectorAll('button').length).toBeGreaterThan(0)
+  })
+  it('has an es catalog entry for every string the panel shows', () => {
+    const here = dirname(fileURLToPath(import.meta.url))
+    const source = readFileSync(
+      resolve(here, '../../src/components/archivos/ArchivosRegistroPanel.vue'),
+      'utf8',
+    )
+    const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
+    const catalog = new Map()
+    for (const m of po.matchAll(
+      /^msgid "((?:[^"\\]|\\.)*)"\nmsgstr "((?:[^"\\]|\\.)*)"/gm,
+    ))
+      catalog.set(m[1], m[2])
+    const strings = [...source.matchAll(/__\(\s*(['"])((?:(?!\1).)+)\1/gs)].map(
+      (m) => m[2],
+    )
+    expect(strings.length).toBeGreaterThan(5)
+    for (const text of strings) expect(catalog.get(text), text).toBeTruthy()
   })
   it('explains a refusal and offers to retry instead of an empty panel', async () => {
     respond(
