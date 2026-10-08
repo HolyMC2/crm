@@ -15204,3 +15204,254 @@ msgstr "No se cargaron los comprobantes vinculados. Los adjuntos de abajo están
 #: frontend/src/components/archivos/ArchivosRegistroPanel.vue
 msgid "We could not load this record's files. Try again in a moment."
 msgstr "No pudimos cargar los archivos de este registro. Inténtalo de nuevo en un momento."
+#: frontend/src/composables/useHoy.js
+msgid "Good morning"
+msgstr "Buenos días"
+
+#: frontend/src/composables/useHoy.js
+msgid "Good afternoon"
+msgstr "Buenas tardes"
+
+#: frontend/src/composables/useHoy.js
+msgid "Good evening"
+msgstr "Buenas noches"
+
+#: frontend/src/composables/useHoy.js
+msgid "Note on a contact"
+msgstr "Nota en un contacto"
+
+#: frontend/src/composables/useHoy.js
+msgid "Contact changes"
+msgstr "Cambios en un contacto"
+
+#: frontend/src/composables/useHoy.js
+msgid "New purchase order"
+msgstr "Nueva orden de compra"
+
+#: frontend/src/composables/useHoy.js
+msgid "Purchase order {0}"
+msgstr "Orden de compra {0}"
+
+#: frontend/src/composables/useHoy.js
+msgid "Register open"
+msgstr "Caja abierta"
+
+#: frontend/src/composables/useHoy.js
+msgid "Open since {0}"
+msgstr "Abierta desde las {0}"
+
+#: frontend/src/composables/useHoy.js
+msgid "Go to the register"
+msgstr "Ir a la caja"
+
+#: frontend/src/composables/useHoy.js
+msgid "My repair orders"
+msgstr "Mis órdenes de taller"
+
+#: frontend/src/composables/useHoy.js
+msgid "{0} in progress"
+msgstr "{0} en curso"
+
+#: frontend/src/composables/useHoy.js
+msgid "Open Taller"
+msgstr "Abrir Taller"
+
+#: frontend/src/composables/useHoy.js
+msgid "Promised {0}"
+msgstr "Prometida {0}"
+
+#: frontend/src/composables/useHoy.js
+msgid "Clinic reception"
+msgstr "Recepción de la clínica"
+
+#: frontend/src/composables/useHoy.js
+msgid "{0} waiting · {1} appointments still today"
+msgstr "{0} en espera · {1} citas pendientes hoy"
+
+#: frontend/src/composables/useHoy.js
+msgid "Open reception"
+msgstr "Abrir recepción"
+
+#: frontend/src/composables/useHoy.js
+msgid "{0} to handle"
+msgstr "{0} por atender"
+
+#: frontend/src/composables/useHoy.js
+msgid "Unsaved drafts"
+msgstr "Borradores sin guardar"
+
+#: frontend/src/composables/useHoy.js
+msgid "{0} kept in this tab"
+msgstr "{0} guardados en esta pestaña"
+
+#: frontend/src/composables/useHoy.js
+msgid "Pick up where you left off"
+msgstr "Sigue donde te quedaste"
+
+#: frontend/src/composables/useHoy.js
+msgid "Schedule an event"
+msgstr "Agendar evento"
+
+#: frontend/src/composables/useHoy.js
+msgid "Collect what is due"
+msgstr "Cobrar lo vencido"
+
+#: frontend/src/composables/useHoy.js
+msgid "Bills to pay"
+msgstr "Facturas por pagar"
+
+#: frontend/src/composables/useHoy.js
+msgid "Sort documents"
+msgstr "Clasificar documentos"
+
+#: frontend/src/composables/useHoy.js
+msgid "Automatic (by your puesto)"
+msgstr "Automático (según tu puesto)"
+
+#: frontend/src/pages/Hoy.vue
+msgid "We could not load your day."
+msgstr "No pudimos cargar tu día."
+
+#: frontend/src/pages/Hoy.vue
+msgid "For now"
+msgstr "Para ahora"
+
+#: frontend/src/pages/Hoy.vue
+msgid "More pendientes due — open Pendientes"
+msgstr "Hay más pendientes por vencer: abre Pendientes"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Today’s agenda"
+msgstr "Agenda de hoy"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Open Agenda"
+msgstr "Abrir Agenda"
+
+#: frontend/src/pages/Hoy.vue
+msgid "1 earlier today"
+msgstr "1 más temprano hoy"
+
+#: frontend/src/pages/Hoy.vue
+msgid "{0} earlier today"
+msgstr "{0} más temprano hoy"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Continue"
+msgstr "Continuar"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Choose"
+msgstr "Elegir"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Avisos that need you"
+msgstr "Avisos que piden acción"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Shortcuts"
+msgstr "Accesos"
+
+#: frontend/src/pages/Hoy.vue
+msgid "No quick actions for your puesto yet."
+msgstr "Todavía no hay accesos rápidos para tu puesto."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Open Muelle on"
+msgstr "Abrir Muelle en"
+
+#: frontend/src/pages/Hoy.vue
+msgid "{0} due today"
+msgstr "{0} vencen hoy"
+
+#: frontend/src/pages/Hoy.vue
+msgid "1 event ahead"
+msgstr "1 evento por delante"
+
+#: frontend/src/pages/Hoy.vue
+msgid "{0} events ahead"
+msgstr "{0} eventos por delante"
+
+#: frontend/src/pages/Hoy.vue
+msgid "This section could not load."
+msgstr "Esta sección no se pudo cargar."
+
+#: frontend/src/pages/Hoy.vue
+msgid "{0} is not available for your puesto."
+msgstr "{0} no está disponible para tu puesto."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Nothing overdue or due today. You are up to date."
+msgstr "Nada vencido ni para hoy. Vas al día."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Your agenda for today is done."
+msgstr "Tu agenda de hoy ya terminó."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Nothing on your agenda for today."
+msgstr "No tienes nada en la agenda de hoy."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Nothing in progress in other apps."
+msgstr "No tienes trabajo en curso en otras apps."
+
+#: frontend/src/pages/Hoy.vue
+msgid "No avisos waiting for you."
+msgstr "No tienes avisos pendientes."
+
+#: frontend/src/pages/Hoy.vue
+msgid "You are offline. Reconnect and retry."
+msgstr "No tienes conexión. Vuelve a conectarte y reintenta."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Check your connection and retry."
+msgstr "Revisa tu conexión y reintenta."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Hoy could not refresh. {0}"
+msgstr "Hoy no se pudo actualizar. {0}"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Saved. Back on Hoy."
+msgstr "Guardado. Volviste a Hoy."
+
+#: frontend/src/pages/Hoy.vue
+msgid "That did not go through. Refresh and retry."
+msgstr "No se pudo completar. Actualiza y reintenta."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Muelle will open on {0}."
+msgstr "Muelle abrirá en {0}."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Muelle will open where your puesto works."
+msgstr "Muelle abrirá donde trabaja tu puesto."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Could not save your choice. Retry."
+msgstr "No pudimos guardar tu elección. Reintenta."
+
+#: frontend/src/components/hoy/HoyTask.vue
+msgid "Reschedule {0}"
+msgstr "Reprogramar {0}"
+
+#: crm/api/hoy.py
+msgid "Hoy is available to staff accounts only. Ask your manager to check your user."
+msgstr "Hoy está disponible solo para cuentas del equipo. Pide a tu encargado que revise tu usuario."
+
+#: crm/api/hoy.py
+msgid "Choose a section you can open."
+msgstr "Elige una sección que puedas abrir."
+
+#: frontend/src/pages/Hoy.vue
+msgid "1 overdue pendiente"
+msgstr "1 pendiente vencido"
+
+#: frontend/src/pages/Hoy.vue
+msgid "{0} overdue pendientes"
+msgstr "{0} pendientes vencidos"
+
+#: frontend/src/pages/Hoy.vue
+msgid "1 due today"
+msgstr "1 vence hoy"

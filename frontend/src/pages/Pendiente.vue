@@ -7,9 +7,7 @@
         :to="backTarget"
         class="inline-flex min-h-11 items-center gap-1 rounded-lg text-sm text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
       >
-        <FeatherIcon name="arrow-left" class="h-4 w-4" />{{
-          __('Back to Pendientes')
-        }}
+        <FeatherIcon name="arrow-left" class="h-4 w-4" />{{ backLabel }}
       </RouterLink>
       <div
         v-if="loading && !row"
@@ -28,10 +26,7 @@
         </p>
         <div class="flex flex-wrap gap-2">
           <Button :label="__('Retry')" @click="load" />
-          <Button
-            :label="__('Back to Pendientes')"
-            @click="router.push(backTarget)"
-          />
+          <Button :label="backLabel" @click="router.push(backTarget)" />
         </div>
       </section>
       <template v-else-if="row">
@@ -247,6 +242,7 @@ import CreateDialog from '@/components/pendientes/CreateDialog.vue'
 import { loadShell, shellBoot } from '@/composables/muelleShell'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { formatDay } from '@/utils/contactos'
+import { safeIntendedRoute } from '@/utils/shellRoutes'
 import {
   canCreateOn,
   datePresets,
@@ -295,12 +291,30 @@ const reference = computed(() => referenceTarget(row.value))
 const referenceName = computed(
   () => row.value?.reference_label || row.value?.reference_name || '',
 )
-const backTarget = computed(() => ({
-  name: 'Pendientes',
-  query: Object.fromEntries(
-    new URLSearchParams(String(route.query.list || '')),
-  ),
-}))
+// Opened from another shell page (Hoy) with the return protocol: back goes there.
+const returnTo = computed(() => {
+  const value = route.query.return_to
+  return typeof value === 'string' && value.startsWith('/crm/')
+    ? safeIntendedRoute(value, '')
+    : ''
+})
+const backTarget = computed(() =>
+  returnTo.value
+    ? returnTo.value.replace(/^\/crm/, '')
+    : {
+        name: 'Pendientes',
+        query: Object.fromEntries(
+          new URLSearchParams(String(route.query.list || '')),
+        ),
+      },
+)
+const backLabel = computed(() =>
+  returnTo.value
+    ? __('Back to {0}', [
+        String(route.query.return_label || 'Hoy').slice(0, 40),
+      ])
+    : __('Back to Pendientes'),
+)
 const statusText = computed(() =>
   row.value.cancelled
     ? __('Cancelled')

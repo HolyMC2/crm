@@ -53,6 +53,17 @@ export default defineConfig(async ({ mode }) => {
           description: 'Contactos y trabajo diario en Muelle',
           shortcuts: [
             {
+              name: 'Hoy',
+              short_name: 'Hoy',
+              url: '/crm/hoy',
+              icons: [
+                {
+                  src: '/assets/crm/manifest/manifest-icon-192.maskable.png?v=crm-1',
+                  sizes: '192x192',
+                },
+              ],
+            },
+            {
               name: 'Contactos',
               short_name: 'Contactos',
               url: '/crm/contactos',

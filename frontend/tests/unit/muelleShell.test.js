@@ -180,6 +180,7 @@ describe('module registry', () => {
       moduleKeyFor({ path: '/pendientes', meta: { app: 'pendientes' } }),
     ).toBe('pendientes')
     expect(hostedModules.map((m) => m.key)).toEqual([
+      'hoy',
       'pendientes',
       'agenda',
       'contactos',
@@ -191,6 +192,7 @@ describe('module registry', () => {
       'archivos',
       'avisos',
     ])
+    expect(moduleKeyFor({ path: '/hoy', meta: { app: 'hoy' } })).toBe('hoy')
     expect(moduleKeyFor({ path: '/archivos', meta: { app: 'archivos' } })).toBe(
       'archivos',
     )

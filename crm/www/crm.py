@@ -35,6 +35,7 @@ def _gate(path):
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
 	from crm.api.garantias import check_garantias_permission
 	from crm.api.gastos import check_gastos_permission
+	from crm.api.hoy import check_hoy_permission, root_landing
 	from crm.api.pendientes import check_pendientes_permission
 	from crm.api.shell import first_module
 	from crm.archivos_routes import is_archivos_path
@@ -44,9 +45,11 @@ def _gate(path):
 	from crm.contactos_routes import is_contactos_recovery_path
 	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
+	from crm.hoy_routes import is_hoy_path
 	from crm.pendientes_routes import is_pendientes_path, is_shell_root
 
 	recovery = is_contactos_recovery_path(path)
+	hoy = is_hoy_path(path)
 	pendientes = is_pendientes_path(path)
 	agenda = is_agenda_path(path)
 	cobranza = is_cobranza_path(path)
@@ -57,6 +60,7 @@ def _gate(path):
 	archivos = is_archivos_path(path)
 	neutral = (
 		recovery
+		or hoy
 		or pendientes
 		or agenda
 		or cobranza
@@ -70,7 +74,16 @@ def _gate(path):
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=" + quote(path, safe="")
 		raise frappe.Redirect
-	if pendientes:
+	if is_shell_root(path):
+		# The installed app (and a bare /crm) opens the worker's own choice, the
+		# app their puesto works in, or Hoy; the Ventas root stays for a Ventas choice.
+		landing = root_landing()
+		if landing:
+			frappe.local.flags.redirect_location = landing
+			raise frappe.Redirect
+	if hoy:
+		allowed = check_hoy_permission()
+	elif pendientes:
 		allowed = check_pendientes_permission()
 	elif agenda:
 		# Work accounts without Event access still get the shell's guard page (reason,
@@ -136,6 +149,7 @@ def _gate(path):
 			frappe.PermissionError,
 		)
 	for key, matched in (
+		("hoy", hoy),
 		("pendientes", pendientes),
 		("agenda", agenda),
 		("cobranza", cobranza),
@@ -172,8 +186,15 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.contactos_routes import is_contactos_recovery_path
 	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
+	from crm.hoy_routes import is_hoy_path
 	from crm.pendientes_routes import is_pendientes_path
 
+	if is_hoy_path(path):
+		from crm.api.hoy import check_hoy_permission
+
+		if not check_hoy_permission():
+			frappe.throw(_("You do not have permission to open this app."), frappe.PermissionError)
+		return get_boot(neutral=True, module="hoy")
 	if is_pendientes_path(path):
 		from crm.api.pendientes import check_pendientes_permission
 

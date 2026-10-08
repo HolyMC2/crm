@@ -16,6 +16,7 @@ import {
 import { legacyDealRedirect, legacyVentasRoute } from '@/utils/ventasRoutes'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
 import { legacyTasksRoute } from '@/composables/usePendientesRoutes'
+import { prefetchHoy } from '@/utils/hoyPrefetch'
 
 let personaChecked = false
 export const PERSONA_DONE_KEY = 'crm_persona_captured'
@@ -37,6 +38,16 @@ async function shouldCapturePersona() {
 const routes = [
   // Ventas module home in the Muelle shell (contracts basePath).
   { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
+  {
+    path: '/hoy',
+    name: 'Hoy',
+    component: () => import('@/pages/Hoy.vue'),
+    meta: { app: 'hoy', title: 'Hoy', stableKey: true },
+    // The landing page's one read starts with the shell boot, not after it.
+    beforeEnter: () => {
+      prefetchHoy()
+    },
+  },
   {
     path: '/agenda',
     name: 'Agenda',

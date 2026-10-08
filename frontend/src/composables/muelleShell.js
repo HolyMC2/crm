@@ -61,6 +61,7 @@ export function loadShell({ refresh = false } = {}) {
 // Modules this frontend hosts, in contracts order. Each adds its key here and
 // its routes in router.js; the boot decides whether it is enabled.
 const HOSTED = [
+  'hoy',
   'pendientes',
   'agenda',
   'contactos',

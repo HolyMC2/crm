@@ -28,6 +28,21 @@ MODULE_KEYS = (
 NAV_ROLES = {"Cajero": "vendedor", "Técnico": "recepcion", "Encargado": "dueno", "Dueño": "dueno"}
 
 
+def _hoy():
+	# Every staff account's home; each Hoy section re-checks its own source.
+	from crm.api.hoy import check_hoy_permission
+
+	enabled = check_hoy_permission()
+	return {
+		"key": "hoy",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else _("Hoy is available to staff accounts only. Ask your manager to check your user."),
+		"capabilities": {"read": enabled},
+	}
+
+
 def _ventas():
 	from crm.api import check_app_permission
 
@@ -276,6 +291,7 @@ def _agenda():
 def _hosted():
 	"""Providers of the modules whose screens live in this SPA under /crm/<key>, besides Ventas."""
 	return {
+		"hoy": _hoy,
 		"pendientes": _pendientes,
 		"agenda": _agenda,
 		"contactos": _contactos,
@@ -306,6 +322,7 @@ def first_module():
 def _providers():
 	"""Built-in providers plus `muelle_shell_modules` hooks from other apps."""
 	providers = [
+		_hoy,
 		_contactos,
 		_ventas,
 		_pendientes,

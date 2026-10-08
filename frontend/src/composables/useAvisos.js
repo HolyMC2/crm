@@ -108,7 +108,7 @@ export function metaLine(group, { lang, timezone, now } = {}) {
  * Where «Open» goes: an SPA route this build knows (with return_to back to
  * the caller), else the Desk form, else nothing (the reason is shown).
  */
-export function openTarget(group, router, returnTo = '') {
+export function openTarget(group, router, returnTo = '', returnLabel = '') {
   const target = group?.target || {}
   if (target.route && router) {
     const url = new URL(target.route, 'https://muelle.invalid')
@@ -119,7 +119,7 @@ export function openTarget(group, router, returnTo = '') {
     if (known) {
       if (returnTo && returnTo.startsWith('/crm/')) {
         url.searchParams.set('return_to', returnTo)
-        url.searchParams.set('return_label', t('Avisos'))
+        url.searchParams.set('return_label', returnLabel || t('Avisos'))
       }
       return { kind: 'route', to: url.pathname + url.search + url.hash }
     }
@@ -245,7 +245,7 @@ export async function savePreferences(categories) {
  */
 export function useAvisosActions(
   router,
-  { returnTo = () => '', onNavigate } = {},
+  { returnTo = () => '', returnLabel = '', onNavigate } = {},
 ) {
   const status = ref(null)
   const busy = ref(false)
@@ -263,7 +263,7 @@ export function useAvisosActions(
   }
 
   async function open(group) {
-    const where = openTarget(group, router, returnTo())
+    const where = openTarget(group, router, returnTo(), returnLabel)
     if (where.kind === 'none') return where
     const marking = group.unread
       ? markRead({ keys: [group.key] }).catch(() => null)

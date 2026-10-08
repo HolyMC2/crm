@@ -102,6 +102,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Garantías. Comparte la solicitud y reintenta después del ajuste.',
   },
+  hoy: {
+    reason:
+      'Hoy es la página de inicio de las cuentas del equipo. Tu usuario todavía no es una cuenta del equipo activa.',
+    request:
+      'Necesito abrir Hoy en Muelle: revisa que mi usuario sea una cuenta del equipo activa. Quiero retomar mi día.',
+    missing:
+      'Tu usuario todavía no es una cuenta del equipo activa. Comparte la solicitud y reintenta después del ajuste.',
+  },
   pendientes: {
     reason:
       'Para abrir Pendientes necesitas permiso de lectura de tus pendientes (ToDo) o de las tareas de Ventas. No hace falta acceso a Ventas.',

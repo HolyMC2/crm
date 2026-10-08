@@ -270,6 +270,7 @@ class TestShellBoot(TestCase):
 			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
 
 		with (
+			patch.object(shell, "_hoy", off("hoy")),
 			patch.object(shell, "_contactos", off("contactos")),
 			patch.object(shell, "_ventas", off("ventas")),
 			patch.object(shell, "_pendientes", off("pendientes")),
@@ -371,6 +372,7 @@ class TestShellBoot(TestCase):
 			return lambda: {"key": key, "enabled": False, "reason": "off", "capabilities": {}}
 
 		with (
+			patch.object(shell, "_hoy", off("hoy")),
 			patch.object(shell, "_contactos", off("contactos")),
 			patch.object(shell, "_ventas", off("ventas")),
 		):
