@@ -37,46 +37,48 @@
     <div class="agenda-page flex min-h-0 flex-1">
       <div class="flex min-w-0 flex-1 flex-col">
         <header
-          class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3 sm:px-6"
+          class="flex flex-col gap-2 border-b border-outline-gray-1 px-4 py-2.5 sm:flex-row sm:items-center sm:px-6 sm:py-3"
         >
-          <component
-            :is="returnRoute ? RouterLink : 'a'"
-            v-if="returnTo"
-            v-bind="returnRoute ? { to: returnRoute } : { href: returnTo }"
-            class="mr-1 inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-            ><span class="lucide-arrow-left h-4 w-4" aria-hidden="true" />{{
-              __('Back to {0}', [returnLabel])
-            }}</component
-          >
-          <h1
-            class="min-w-0 flex-1 truncate text-xl font-semibold text-ink-gray-9 sm:text-2xl"
-          >
-            {{ rangeTitle }}
-          </h1>
-          <div class="flex items-center gap-1">
-            <Button
-              class="min-h-11 min-w-11"
-              variant="ghost"
-              icon="chevron-left"
-              :aria-label="__('Previous')"
-              @click="go(-1)"
-            />
-            <Button
-              class="min-h-11"
-              variant="subtle"
-              :label="__('Today')"
-              @click="setDate(todayDate)"
-            />
-            <Button
-              class="min-h-11 min-w-11"
-              variant="ghost"
-              icon="chevron-right"
-              :aria-label="__('Next')"
-              @click="go(1)"
-            />
+          <div class="flex min-w-0 items-center gap-2 sm:flex-1">
+            <component
+              :is="returnRoute ? RouterLink : 'a'"
+              v-if="returnTo"
+              v-bind="returnRoute ? { to: returnRoute } : { href: returnTo }"
+              class="mr-1 inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
+              ><span class="lucide-arrow-left h-4 w-4" aria-hidden="true" />{{
+                __('Back to {0}', [returnLabel])
+              }}</component
+            >
+            <h1
+              class="min-w-0 flex-1 truncate text-lg font-semibold text-ink-gray-9 first-letter:uppercase sm:text-2xl"
+            >
+              {{ rangeTitle }}
+            </h1>
+            <div class="flex shrink-0 items-center gap-1">
+              <Button
+                class="min-h-11 min-w-11"
+                variant="ghost"
+                icon="chevron-left"
+                :aria-label="__('Previous')"
+                @click="go(-1)"
+              />
+              <Button
+                class="min-h-11"
+                variant="subtle"
+                :label="__('Today')"
+                @click="setDate(todayDate)"
+              />
+              <Button
+                class="min-h-11 min-w-11"
+                variant="ghost"
+                icon="chevron-right"
+                :aria-label="__('Next')"
+                @click="go(1)"
+              />
+            </div>
           </div>
           <div
-            class="flex rounded-lg bg-surface-gray-2 p-0.5 sm:hidden"
+            class="grid grid-cols-4 rounded-lg bg-surface-gray-2 p-0.5 sm:hidden"
             role="group"
             :aria-label="__('View')"
           >
@@ -84,7 +86,7 @@
               v-for="entry in viewEntries"
               :key="entry.value"
               type="button"
-              class="min-h-10 rounded-md px-3 text-sm"
+              class="min-h-10 rounded-md px-2 text-sm"
               :class="
                 state.view === entry.value
                   ? 'bg-surface-white font-semibold text-ink-gray-9 shadow-sm'
@@ -180,7 +182,7 @@
             </button>
           </p>
           <div
-            v-if="state.view !== 'list' && allDayRows.length"
+            v-if="['day', 'week'].includes(state.view) && allDayRows.length"
             class="flex flex-wrap items-center gap-1.5"
             :aria-label="__('All day')"
           >
@@ -226,6 +228,39 @@
               @select="select"
               @create="openCreateOn"
             />
+            <template v-else-if="state.view === 'month'">
+              <AgendaMonth
+                :events="visibleEvents"
+                :date="state.date"
+                :today="todayDate"
+                :time-zone="timeZone"
+                :locale="locale"
+                :hour12="hour12"
+                :week-starts-on="firstWeekday"
+                :compact="phone"
+                :selected="state.event"
+                :can-create="canCreate"
+                @select="select"
+                @create="openCreateOn"
+                @pick="setDate"
+                @open-day="(date) => setState({ date, view: 'day' })"
+              />
+              <AgendaList
+                v-if="phone"
+                class="mt-4"
+                :events="visibleEvents"
+                :range="pickedDay"
+                :time-zone="timeZone"
+                :locale="locale"
+                :hour12="hour12"
+                :today="todayDate"
+                :now="now"
+                :selected="state.event"
+                :can-create="canCreate"
+                @select="select"
+                @create="openCreateOn"
+              />
+            </template>
             <AgendaCalendar
               v-else
               :view="state.view"
@@ -239,6 +274,7 @@
               :start-hour="hours.start"
               :end-hour="hours.end"
               :slot-minutes="SLOT_MINUTES"
+              :week-starts-on="firstWeekday"
               :disabled="busy"
               :translate="translate"
               @select="select"
@@ -374,6 +410,7 @@ import AgendaEventForm from '@/components/agenda/AgendaEventForm.vue'
 import AgendaEventPanel from '@/components/agenda/AgendaEventPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import AgendaList from '@/components/agenda/AgendaList.vue'
+import AgendaMonth from '@/components/agenda/AgendaMonth.vue'
 import { useAgendaDrag } from '@/components/agenda/agendaDrag'
 import { AgendaCalendar } from '@/vendor/muelle-calendar/vue'
 import { isMobile } from '@/composables/breakpoint'
@@ -404,6 +441,7 @@ import {
   usesHour12,
   visibleHours,
   wallToInstant,
+  weekStartsOn,
 } from '@/composables/useAgenda'
 
 const SLOT_MINUTES = 30
@@ -413,6 +451,7 @@ const phone = isMobile
 const locale = agendaLocale()
 const hour12 = usesHour12(locale)
 const translate = (source) => __(source)
+const firstWeekday = weekStartsOn()
 
 const caps = ref(null)
 const capsError = ref('')
@@ -442,11 +481,18 @@ const state = computed(() =>
   parseState(route.query, { phone: phone.value, timeZone: timeZone.value }),
 )
 const todayDate = computed(() => today(timeZone.value))
-const range = computed(() => rangeFor(state.value, timeZone.value))
+const range = computed(() =>
+  rangeFor(state.value, timeZone.value, firstWeekday),
+)
+// Phone month: the tapped day's agenda below the grid, from the month already loaded.
+const pickedDay = computed(() =>
+  rangeFor({ view: 'day', date: state.value.date }, timeZone.value),
+)
 const viewEntries = computed(() => [
   { value: 'list', label: __('List'), icon: 'list' },
   { value: 'day', label: __('Day'), icon: 'calendar' },
   { value: 'week', label: __('Week'), icon: 'columns' },
+  { value: 'month', label: __('Month'), icon: 'grid' },
 ])
 const SOURCE_LABELS = {
   Event: () => __('My agenda'),
@@ -525,12 +571,16 @@ const rangeTitle = computed(() => {
     )
   if (state.value.view === 'day')
     return civil(state.value.date, {
-      weekday: 'long',
+      weekday: phone.value ? 'short' : 'long',
       day: 'numeric',
-      month: 'long',
+      month: phone.value ? 'short' : 'long',
     })
+  if (state.value.view === 'month')
+    return civil(state.value.date, { month: 'long', year: 'numeric' })
   const dates = range.value.dates
-  return `${civil(dates[0], { day: 'numeric', month: 'short' })} – ${civil(dates[dates.length - 1], { day: 'numeric', month: 'short', year: 'numeric' })}`
+  const last = { day: 'numeric', month: 'short' }
+  if (!phone.value) last.year = 'numeric'
+  return `${civil(dates[0], { day: 'numeric', month: 'short' })} – ${civil(dates[dates.length - 1], last)}`
 })
 
 const returnTo = computed(() => safeReturn(route.query.return_to))
@@ -603,10 +653,14 @@ async function load() {
     }
   }
 }
-// Range and calendar changes reload; the first load belongs to boot().
+// Range and calendar changes reload; the first load belongs to boot(). The key is a
+// string so picking a day or an event inside the loaded range does not refetch.
 watch(
-  () => [range.value.start, range.value.end, activeSources.value.join(',')],
-  (_now, before) => caps.value && before[2] !== '' && load(),
+  () =>
+    [range.value.start, range.value.end, activeSources.value.join(',')].join(
+      '|',
+    ),
+  (_now, before) => caps.value && !before.endsWith('|') && load(),
 )
 
 // --- selection and panel --------------------------------------------------------------
@@ -810,8 +864,10 @@ function panelGuardAction(id) {
   if (id === 'edit' || id === 'pick_time') return openEdit(selectedEvent.value)
   return commonAction(id, selectedEvent.value)
 }
+// A month too full to draw steps down to its week; a week to its day.
+const shorterView = () => setView(state.value.view === 'month' ? 'week' : 'day')
 function problemAction(id) {
-  if (id === 'shorter_range') return setView('day')
+  if (id === 'shorter_range') return shorterView()
   return load()
 }
 function commonAction(id, event) {
@@ -825,7 +881,7 @@ function commonAction(id, event) {
   }
   if (id === 'open_turnos') return openTurnos()
   if (id === 'request_access') return copyAccessRequest()
-  if (id === 'shorter_range') return setView('day')
+  if (id === 'shorter_range') return shorterView()
   return load()
 }
 function openTurnos() {
@@ -1138,6 +1194,7 @@ function onKey(event) {
     t: () => setDate(todayDate.value),
     d: () => setView('day'),
     w: () => setView('week'),
+    m: () => setView('month'),
     l: () => setView('list'),
     j: () => go(1),
     k: () => go(-1),
@@ -1157,6 +1214,8 @@ onMounted(async () => {
   window.addEventListener('keydown', onKey)
   clock = setInterval(() => (now.value = Date.now()), 60 * 1000)
   document.title = `${__('Agenda')} · Muelle`
+  // The view is always in the URL, so a shared or reloaded link opens the same view.
+  if (!route.query.view) setState({})
   await boot()
   openFromQuery()
 })

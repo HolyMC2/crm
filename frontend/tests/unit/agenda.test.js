@@ -6,8 +6,10 @@ import {
   constraintActions,
   instantToWall,
   isWarningOnly,
+  moveToDateTimes,
   parseEventKey,
   parseState,
+  rangeFor,
   recordLink,
   rescheduleTimes,
   safeReturn,
@@ -17,6 +19,7 @@ import {
   toCalendarEvent,
   visibleHours,
   wallToInstant,
+  weekStartsOn,
 } from '@/composables/useAgenda'
 import { dropSlot } from '@/components/agenda/agendaDrag'
 
@@ -30,7 +33,7 @@ describe('URL state', () => {
 
   it('rejects unknown views and malformed dates', () => {
     const state = parseState(
-      { view: 'month', date: '2026-13-99x', cal: 'Event,Turno' },
+      { view: 'year', date: '2026-13-99x', cal: 'Event,Turno' },
       { phone: false, timeZone: MX },
     )
     expect(state.view).toBe('week')
@@ -67,6 +70,40 @@ describe('URL state', () => {
   it('steps one week in the list and week views, one day in the day view', () => {
     expect(step({ view: 'list', date: '2026-10-05' }, 1)).toBe('2026-10-12')
     expect(step({ view: 'day', date: '2026-10-05' }, -1)).toBe('2026-10-04')
+  })
+
+  it('keeps the month view in the URL and steps whole months, clamping the day', () => {
+    expect(
+      parseState({ view: 'month' }, { phone: true, timeZone: MX }).view,
+    ).toBe('month')
+    expect(step({ view: 'month', date: '2026-10-31' }, 1)).toBe('2026-11-30')
+    expect(step({ view: 'month', date: '2026-10-08' }, -1)).toBe('2026-09-08')
+  })
+
+  it('starts the list at its date (today by default), never at past days', () => {
+    const range = rangeFor({ view: 'list', date: '2026-10-08' }, MX)
+    expect(range.dates[0]).toBe('2026-10-08')
+    expect(range.dates).toHaveLength(7)
+    expect(range.start).toBe('2026-10-08T06:00:00.000Z')
+    expect(range.end).toBe('2026-10-15T06:00:00.000Z')
+  })
+
+  it('fetches one six-week range per month from the site week start', () => {
+    const monday = rangeFor({ view: 'month', date: '2026-10-08' }, MX, 1)
+    expect(monday.dates[0]).toBe('2026-09-28')
+    expect(monday.dates).toHaveLength(42)
+    const sunday = rangeFor({ view: 'month', date: '2026-10-08' }, MX, 0)
+    expect(sunday.dates[0]).toBe('2026-09-27')
+    expect(rangeFor({ view: 'week', date: '2026-10-08' }, MX, 0).dates[0]).toBe(
+      '2026-10-04',
+    )
+  })
+
+  it('reads the first weekday from boot sysdefaults, Monday when unset', () => {
+    expect(weekStartsOn({ first_day_of_the_week: 'Sunday' })).toBe(0)
+    expect(weekStartsOn({ first_day_of_the_week: 'Saturday' })).toBe(6)
+    expect(weekStartsOn({})).toBe(1)
+    expect(weekStartsOn(undefined)).toBe(1)
   })
 
   it('parses event keys whose ids contain colons or occurrence dates', () => {
@@ -181,6 +218,25 @@ describe('calendar shaping', () => {
     delete column.dataset.date
     expect(dropSlot([slot], '2026-10-05').date).toBe('2026-10-05')
     expect(dropSlot([chip], '2026-10-05')).toBeNull()
+  })
+
+  it('drops on a month day and keeps the wall time and duration', () => {
+    const day = document.createElement('div')
+    day.dataset.agendaDate = '2026-10-20'
+    const chip = document.createElement('button')
+    expect(dropSlot([chip, day], '2026-10-05')).toMatchObject({
+      date: '2026-10-20',
+      month: true,
+    })
+    const event = {
+      start: '2026-10-07T16:00:00Z',
+      end: '2026-10-07T17:30:00Z',
+    }
+    expect(moveToDateTimes(event, '2026-10-20', MX)).toEqual({
+      start: '2026-10-20T16:00:00.000Z',
+      end: '2026-10-20T17:30:00.000Z',
+    })
+    expect(moveToDateTimes(event, '2026-10-07', MX)).toBeNull()
   })
 })
 

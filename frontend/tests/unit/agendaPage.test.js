@@ -425,4 +425,89 @@ describe('Agenda page', () => {
     )
     expect(crm.getAttribute('href')).toBe('/crm/deals/D-1')
   })
+
+  // --- month view (10-08) ------------------------------------------------------------
+
+  it('draws the month from one query and drags a chip to another day', async () => {
+    await mountAt('/agenda?view=month&date=2026-10-07')
+    const queries = calls.filter(([m]) => m.endsWith('.query'))
+    expect(queries).toHaveLength(1)
+    // Monday 28 Sep to Sunday 8 Nov in the business zone.
+    expect(queries[0][1].start).toBe('2026-09-28T06:00:00.000Z')
+    expect(queries[0][1].end).toBe('2026-11-09T06:00:00.000Z')
+    const chip = root.querySelector('.agenda-month [data-event-id="EV-1"]')
+    expect(chip).not.toBeNull()
+    let moved = null
+    const base = handler
+    handler = (method, args) => {
+      if (method.endsWith('.move')) {
+        moved = args
+        return event('EV-1', args.start, args.end)
+      }
+      return base(method, args)
+    }
+    const target = root.querySelector('[data-agenda-date="2026-10-21"]')
+    document.elementsFromPoint = () => [target]
+    chip.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        clientX: 10,
+        clientY: 10,
+        pointerType: 'mouse',
+      }),
+    )
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { clientX: 80, clientY: 120 }),
+    )
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { clientX: 80, clientY: 120 }),
+    )
+    await flush()
+    expect(moved).toMatchObject({
+      name: 'EV-1',
+      start: '2026-10-21T16:00:00.000Z',
+      end: '2026-10-21T17:00:00.000Z',
+      scope: 'single',
+      confirm: 0,
+    })
+  })
+
+  it('creates on the clicked month day and opens a day from its number', async () => {
+    const router = await mountAt('/agenda?view=month&date=2026-10-07')
+    const day = root.querySelector('[data-agenda-date="2026-10-15"]')
+    day.querySelector('button[aria-label^="Schedule on"]').click()
+    await flush()
+    expect(titleInput()).not.toBeNull()
+    root
+      .querySelector(
+        '[data-agenda-date="2026-10-16"] button[aria-label^="Open"]',
+      )
+      .click()
+    await flush()
+    expect(router.currentRoute.value.query).toMatchObject({
+      view: 'day',
+      date: '2026-10-16',
+    })
+  })
+
+  it('on a phone shows the tapped day below the month and a second tap schedules', async () => {
+    window.innerWidth = 390
+    window.dispatchEvent(new Event('resize'))
+    const router = await mountAt('/agenda?view=month&date=2026-10-01')
+    expect(root.querySelector('.agenda-month [data-event-id]')).toBeNull()
+    expect(root.textContent).toContain('Nothing scheduled')
+    const days = [...root.querySelectorAll('.agenda-month [data-day]')]
+    const seventh = days.find((el) =>
+      el.getAttribute('aria-label')?.endsWith('1 event'),
+    )
+    seventh.click()
+    await flush()
+    expect(router.currentRoute.value.query.date).toBe('2026-10-07')
+    expect(root.textContent).toContain('Cita EV-1')
+    expect(calls.filter(([m]) => m.endsWith('.query'))).toHaveLength(1)
+    seventh.click()
+    await flush()
+    expect(titleInput()).not.toBeNull()
+  })
 })

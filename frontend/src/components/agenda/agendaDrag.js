@@ -1,14 +1,20 @@
 // Desktop drag-to-reschedule over the vendored calendar without changing it: events carry
 // data-event-id, slots data-mc-slot-index, week columns data-date (day view uses the page
-// date). Touch keeps native scrolling; phones reschedule from the event panel instead.
+// date). Month days (AgendaMonth) carry data-agenda-date and keep the event's time.
+// Touch keeps native scrolling; phones reschedule from the event panel instead.
 import { onBeforeUnmount, onMounted } from 'vue'
-import { rescheduleTimes } from '@/composables/useAgenda'
+import { moveToDateTimes, rescheduleTimes } from '@/composables/useAgenda'
+
+const DRAGGABLE = '.mc-calendar [data-event-id], .agenda-month [data-event-id]'
 
 const THRESHOLD = 6
 
 export function dropSlot(elements, fallbackDate) {
   const slot = elements.find((el) => el.matches?.('[data-mc-slot-index]'))
-  if (!slot) return null
+  if (!slot) {
+    const day = elements.find((el) => el.matches?.('[data-agenda-date]'))
+    return day ? { date: day.dataset.agendaDate, slot: day, month: true } : null
+  }
   const column = slot.closest('[data-mc-selection-column]')
   const date = column?.dataset?.date || fallbackDate
   const index = Number(slot.dataset.mcSlotIndex)
@@ -37,7 +43,7 @@ export function useAgendaDrag(rootRef, { find, options, onDrop }) {
   }
   const down = (event) => {
     if (event.button !== 0 || event.pointerType === 'touch') return
-    const button = event.target.closest?.('.mc-calendar [data-event-id]')
+    const button = event.target.closest?.(DRAGGABLE)
     if (!button || !rootRef.value?.contains(button)) return
     const calendarEvent = find(
       button.dataset.eventId,
@@ -100,12 +106,9 @@ export function useAgendaDrag(rootRef, { find, options, onDrop }) {
       0,
     )
     if (!target) return
-    const times = rescheduleTimes(
-      current.event,
-      target.date,
-      target.index,
-      options(),
-    )
+    const times = target.month
+      ? moveToDateTimes(current.event, target.date, options().timeZone)
+      : rescheduleTimes(current.event, target.date, target.index, options())
     if (times && times.start !== current.event.start)
       onDrop(current.event, times)
   }

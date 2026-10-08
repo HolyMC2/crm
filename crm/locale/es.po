@@ -13476,7 +13476,7 @@ msgid "Now"
 msgstr "Ahora"
 
 msgid "Nothing scheduled"
-msgstr "Sin citas"
+msgstr "Nada programado"
 
 msgid "Schedule"
 msgstr "Agendar"
@@ -15177,3 +15177,23 @@ msgstr "Cambio entregado: {0}"
 #: frontend/src/pages/Garantia.vue
 msgid "{0} linked as the outcome"
 msgstr "{0} quedó como resultado"
+
+#: frontend/src/components/agenda/AgendaMonth.vue
+msgid "+{0} more"
+msgstr "+{0} más"
+
+#: frontend/src/components/agenda/AgendaMonth.vue
+msgid "Schedule on {0}"
+msgstr "Agendar el {0}"
+
+#: frontend/src/components/agenda/AgendaMonth.vue
+msgid "{0}, nothing scheduled"
+msgstr "{0}, nada programado"
+
+#: frontend/src/components/agenda/AgendaMonth.vue
+msgid "{0}, 1 event"
+msgstr "{0}, 1 cita"
+
+#: frontend/src/components/agenda/AgendaMonth.vue
+msgid "{0}, {1} events"
+msgstr "{0}, {1} citas"

@@ -3,13 +3,16 @@
 import { call } from 'frappe-ui'
 import {
   calendarRange,
+  dayBounds,
   daySlots,
   localDate,
   navigateCalendar,
+  shiftCalendarDate,
 } from '@/vendor/muelle-calendar/core'
 
 export const API = 'doco.agenda.api'
-export const VIEWS = ['list', 'day', 'week']
+export const VIEWS = ['list', 'day', 'week', 'month']
+export const LIST_DAYS = 7
 export const CALENDAR_RESOURCE = 'agenda'
 export const DEFAULT_CALENDARS = ['Event']
 const DAY = /^\d{4}-\d{2}-\d{2}$/
@@ -29,11 +32,27 @@ export function usesHour12(locale) {
   }
 }
 
+// The site's first weekday (System Settings «First Day of the Week», in boot sysdefaults);
+// Monday when the site has not chosen one.
+const WEEKDAYS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+]
+export function weekStartsOn(sysdefaults = window.sysdefaults) {
+  const index = WEEKDAYS.indexOf(sysdefaults?.first_day_of_the_week)
+  return index < 0 ? 1 : index
+}
+
 export function today(timeZone) {
   return localDate(new Date().toISOString(), timeZone)
 }
 
-// URL is state: ?view=list|day|week&date=YYYY-MM-DD&event=Source:id&cal=Event,Turno
+// URL is state: ?view=list|day|week|month&date=YYYY-MM-DD&event=Source:id&cal=Event,Turno
 export function parseState(query, { phone, timeZone }) {
   const view = VIEWS.includes(query.view) ? query.view : phone ? 'list' : 'week'
   const date =
@@ -61,21 +80,27 @@ export function stateQuery(state, query = {}) {
   return next
 }
 
-export function rangeFor(state, timeZone) {
-  // The list shows the same Monday–Sunday range as the week.
-  return calendarRange(
-    state.date,
-    state.view === 'list' ? 'week' : state.view,
-    timeZone,
-  )
+export function rangeFor(state, timeZone, firstWeekday = 1) {
+  // The list runs forward from its date (today by default), never from past empty days.
+  if (state.view === 'list') {
+    const dates = Array.from({ length: LIST_DAYS }, (_, index) =>
+      shiftCalendarDate(state.date, index),
+    )
+    return {
+      start: dayBounds(dates[0], timeZone).start,
+      end: dayBounds(dates[dates.length - 1], timeZone).end,
+      startDate: dates[0],
+      endDate: shiftCalendarDate(state.date, LIST_DAYS),
+      dates,
+    }
+  }
+  return calendarRange(state.date, state.view, timeZone, firstWeekday)
 }
 
 export function step(state, direction) {
-  return navigateCalendar(
-    state.date,
-    state.view === 'list' ? 'week' : state.view,
-    direction,
-  )
+  if (state.view === 'list')
+    return shiftCalendarDate(state.date, direction * LIST_DAYS)
+  return navigateCalendar(state.date, state.view, direction)
 }
 
 export function eventKey(event) {
@@ -154,6 +179,19 @@ export function rescheduleTimes(event, date, slotIndex, options) {
   return {
     start: start.toISOString(),
     end: new Date(slot.start + duration).toISOString(),
+  }
+}
+
+// Month drag-to-reschedule: same wall-clock time on the dropped day, same duration.
+export function moveToDateTimes(event, date, timeZone) {
+  const wall = instantToWall(event.start, timeZone)
+  if (wall.date === date) return null
+  const start = wallToInstant(date, wall.time, timeZone)
+  if (!start) return null
+  const duration = Date.parse(event.end) - Date.parse(event.start)
+  return {
+    start,
+    end: new Date(Date.parse(start) + duration).toISOString(),
   }
 }
 
