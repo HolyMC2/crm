@@ -15634,3 +15634,30 @@ msgstr "{0} compartió contigo «{1}»"
 #: frontend/src/pages/DealsView.vue
 msgid "{0} deals named by an aviso"
 msgstr "{0} tratos que nombra un aviso"
+#: frontend/src/pages/Garantia.vue
+msgid "In the RMA warehouse {0} ({1})."
+msgstr "En el almacén RMA {0} ({1})."
+
+#: frontend/src/pages/Garantia.vue
+msgid "Move to RMA"
+msgstr "Mover a RMA"
+
+#: frontend/src/pages/Garantia.vue
+msgid "From {0} to {1}"
+msgstr "De {0} a {1}"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Moved to RMA: {0}"
+msgstr "Movido a RMA: {0}"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Returned to the supplier: {0}"
+msgstr "Devuelto al proveedor: {0}"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Purchase it came from"
+msgstr "Compra de la que salió"
+
+#: frontend/src/pages/Garantia.vue
+msgid "Supplier credited it"
+msgstr "El proveedor acreditó"
