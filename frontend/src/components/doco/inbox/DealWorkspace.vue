@@ -59,27 +59,33 @@
         @navigate="activeTab = $event"
       />
       <template v-else-if="activeTab === 'conversation'">
-        <!-- 🧠 resumen AI del hilo (P2 S3 / spec 5.2) — hides itself when AI is off -->
-        <ThreadSummary />
+        <!-- Phone: the 🧠 chip and the linked-conversations line share ONE row so
+             the thread keeps the screen (an open summary takes the full row). -->
+        <div
+          class="flex flex-none flex-wrap items-center max-sm:border-b max-sm:border-outline-gray-1 max-sm:[&>*]:border-b-0 max-sm:[&>nav]:min-w-0 max-sm:[&>nav]:flex-1 sm:block"
+        >
+          <!-- 🧠 resumen AI del hilo (P2 S3 / spec 5.2) — hides itself when AI is off -->
+          <ThreadSummary />
 
-        <!-- 💡 intent → action chips (P2 S10 / spec 5.3) — ≤1 one-tap chip; hides itself
+          <!-- 💡 intent → action chips (P2 S10 / spec 5.3) — ≤1 one-tap chip; hides itself
              when AI is off / confidence < 0.6. Chips NEVER send / NEVER auto-charge. -->
-        <IntentChips
-          :doctype="activeDealDoctype"
-          :name="activeDeal"
-          @catalogo="onIntentCatalogo"
-          @cobrar="onIntentCobrar"
-          @factura="onIntentFactura"
-          @taller="onIntentTaller"
-        />
+          <IntentChips
+            :doctype="activeDealDoctype"
+            :name="activeDeal"
+            @catalogo="onIntentCatalogo"
+            @cobrar="onIntentCobrar"
+            @factura="onIntentFactura"
+            @taller="onIntentTaller"
+          />
 
-        <!-- the record's native conversation threads, one line; hidden when none -->
-        <DealConversations
-          :key="activeDealDoctype + activeDeal"
-          compact
-          :doctype="activeDealDoctype"
-          :name="activeDeal"
-        />
+          <!-- the record's native conversation threads, one line; hidden when none -->
+          <DealConversations
+            :key="activeDealDoctype + activeDeal"
+            compact
+            :doctype="activeDealDoctype"
+            :name="activeDeal"
+          />
+        </div>
 
         <!-- Conversación = the real WhatsApp (WhatsAppArea + WhatsAppBox): private notes,
              templates, quick replies, catálogo, attachments and voice notes. The doco

@@ -166,8 +166,21 @@
           </button>
         </div>
         <button
-          v-if="ventas"
+          v-if="helpAvailable"
           class="mt-2 flex min-h-11 w-full items-center gap-2.5 text-left"
+          data-testid="more-help"
+          @click="openHelp"
+        >
+          <span
+            class="lucide-circle-help size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          {{ __('Help') }}
+        </button>
+        <button
+          v-if="ventas"
+          class="flex min-h-11 w-full items-center gap-2.5 text-left"
+          :class="helpAvailable ? '' : 'mt-2'"
           @click="openSettings"
         >
           <span
@@ -281,6 +294,13 @@ async function saveOrder() {
 }
 function close() {
   emit('update:modelValue', false)
+}
+// «Ayuda» comes from doco's support launcher when the site has it; on phone
+// the shell hides the floating pill and offers it here.
+const helpAvailable = typeof window.docoSupport?.openHelp === 'function'
+function openHelp() {
+  close()
+  window.docoSupport.openHelp()
 }
 const router = useRouter()
 function openSettings() {

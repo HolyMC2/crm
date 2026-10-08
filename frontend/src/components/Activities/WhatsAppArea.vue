@@ -33,15 +33,16 @@
         </div>
       </div>
 
-      <!-- pinned notes, kept on top of the conversation -->
+      <!-- pinned notes, kept on top of the conversation. Phone: one line per
+           note (title only); tapping it opens the full note. -->
       <div
         v-if="pinnedNotes.length"
-        class="mx-3 mb-3 flex flex-col gap-2 sm:mx-10"
+        class="mx-3 mb-2 flex flex-col gap-1.5 sm:mx-10 sm:mb-3 sm:gap-2"
       >
         <div
           v-for="note in pinnedNotes"
           :key="note.name"
-          class="flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-2 dark:border-amber-900/40"
+          class="flex items-start gap-2 rounded-md border border-amber-200 bg-surface-amber-1 px-3 py-1.5 dark:border-amber-900/40 sm:py-2"
         >
           <FeatherIcon
             name="bookmark"
@@ -56,12 +57,12 @@
             </div>
             <div
               v-if="note.content"
-              class="prose-f line-clamp-2 text-xs text-ink-gray-6"
+              class="prose-f line-clamp-2 text-xs text-ink-gray-6 max-sm:hidden"
               v-html="sanitizeHTML(note.content)"
             />
             <div
               v-if="note.modified || note.creation"
-              class="mt-0.5 text-2xs text-ink-gray-5"
+              class="mt-0.5 text-2xs text-ink-gray-5 max-sm:hidden"
               :title="formatTimestampFull(note.modified || note.creation)"
             >
               {{ formatDateTime(note.modified || note.creation) }}

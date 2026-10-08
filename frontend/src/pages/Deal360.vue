@@ -7,9 +7,12 @@
 -->
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+    <!-- Phone: DealHeader's ‹ is the one back (it follows return_to too) and
+         «Datos y contacto» lives in its ⋯ menu and on the identity tap. -->
     <nav
+      v-if="!isMobile"
       class="flex flex-none items-center justify-between gap-3 border-b border-outline-gray-1 px-4 py-2 text-sm"
-      aria-label="Navegación del trato"
+      :aria-label="__('Navegación del trato')"
     >
       <RouterLink
         :to="back.to"
@@ -52,7 +55,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, watch, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, watch, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { dealReturnLink, dealTab } from '@/utils/ventasRoutes'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
@@ -77,6 +80,9 @@ const showContext = ref(false)
 // Shell return protocol (§8.3) and the CRM queue/report/form returnTo: a
 // caller that sent either gets its own back.
 const back = computed(() => dealReturnLink(route.query))
+// The phone header's ‹ leaves the record the same way: to the caller's
+// return_to/returnTo when present, otherwise back to the deals list.
+provide('dealBack', back)
 
 // (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
 // /deal/B remounts this component — onMounted covers every entry.)

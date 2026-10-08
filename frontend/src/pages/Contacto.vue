@@ -2,7 +2,7 @@
   <ContactosLayout :segments="segments" @select="goList">
     <header class="c-record-heading">
       <Button
-        label="Volver a la lista"
+        :label="backLabel"
         icon-left="arrow-left"
         variant="ghost"
         @click="back"
@@ -640,6 +640,7 @@ import ContactTabPanel from '@/components/doco/contact/ContactTabPanel.vue'
 import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import { shellBoot } from '@/composables/muelleShell'
+import { safeReturnPath } from '@/utils/ventasDocs'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
   contactosApi,
@@ -1073,8 +1074,19 @@ function openRelated(ref) {
 function goList(segment) {
   router.push({ name: 'Contactos', query: { segment } })
 }
+// The record's one back: to the caller's return_to when it sent one.
+const returnPath = computed(() =>
+  safeReturnPath(String(route.query.return_to || '')),
+)
+const backLabel = computed(() =>
+  returnPath.value
+    ? `Volver a ${String(route.query.return_label || '').slice(0, 40) || 'la página anterior'}`
+    : 'Volver a la lista',
+)
 function back() {
-  router.push({ name: 'Contactos' })
+  if (returnPath.value)
+    router.push(returnPath.value.replace(/^\/crm/, '') || '/')
+  else router.push({ name: 'Contactos' })
 }
 function plainText(value) {
   return String(value || '').replace(/<[^>]*>/g, '')

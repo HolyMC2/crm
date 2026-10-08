@@ -7,7 +7,9 @@
     class="flex flex-none items-center gap-2 overflow-x-auto border-b border-outline-gray-1 px-4 py-1.5 text-xs"
     :aria-label="__('Conversaciones vinculadas')"
   >
-    <span class="flex-none text-ink-gray-5">{{ __('Conversaciones') }}:</span>
+    <span class="hidden flex-none text-ink-gray-5 sm:inline"
+      >{{ __('Conversaciones') }}:</span
+    >
     <component
       :is="item.name ? RouterLink : 'button'"
       v-for="item in items"

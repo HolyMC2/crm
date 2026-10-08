@@ -49,6 +49,15 @@
       {{ m.icon }} {{ __(m.label)
       }}{{ m.value === 'reply' ? ` · ${channelLabel}` : '' }}
     </button>
+    <!-- phone: the templates toggle rides on this same line -->
+    <button
+      v-if="isMobile && mode === 'reply' && !quickBarOpen"
+      type="button"
+      class="flex-none whitespace-nowrap rounded-full bg-surface-gray-2 px-2.5 py-1 text-xs-medium text-ink-gray-7"
+      @click="quickBarOpen = true"
+    >
+      ⚡ {{ __('Plantillas y respuestas') }} ▾
+    </button>
     <span class="ml-auto hidden text-xs text-ink-gray-4 sm:inline">
       {{
         mode === 'comment' ? __('Ctrl/⌘+Enter to send') : __('Enter to send')
@@ -58,7 +67,10 @@
 
   <!-- quick replies + templates (reply mode only). Collapsed on mobile to reclaim
        vertical space — one toggle expands/hides the whole chip set. -->
-  <div v-if="mode === 'reply'" class="px-3 pt-2 sm:px-10">
+  <div
+    v-if="mode === 'reply' && (!isMobile || quickBarOpen || replyOnly)"
+    class="px-3 pt-2 sm:px-10"
+  >
     <button
       v-if="isMobile && !quickBarOpen"
       type="button"

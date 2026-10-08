@@ -18,6 +18,98 @@ msgstr ""
 "X-Crowdin-File-ID: 97\n"
 "Language: es_ES\n"
 
+#: frontend/src/pages/DealsView.vue
+msgid "Totals unavailable · Retry"
+msgstr "Totales no disponibles · Reintentar"
+
+#: frontend/src/components/Activities
+msgid "Shared with your whole team. Click a chip to drop its text into the reply box."
+msgstr "Compartidas con todo tu equipo. Toca una para poner su texto en la respuesta."
+
+#: frontend/src/components/Activities
+msgid "Quick replies saved"
+msgstr "Respuestas rápidas guardadas"
+
+#: frontend/src/components/Activities
+msgid "Quick replies"
+msgstr "Respuestas rápidas"
+
+#: frontend/src/components/Activities
+msgid "Private note — only your team sees it…"
+msgstr "Nota privada: solo la ve tu equipo…"
+
+#: frontend/src/components/Activities
+msgid "Note added"
+msgstr "Nota añadida"
+
+#: frontend/src/components/Activities
+msgid "Message text…"
+msgstr "Texto del mensaje…"
+
+#: frontend/src/components/Activities
+msgid "Internal comment for your team…"
+msgstr "Comentario interno para tu equipo…"
+
+#: frontend/src/components/Activities
+msgid "Failed to save quick replies"
+msgstr "No se pudieron guardar las respuestas rápidas"
+
+#: frontend/src/components/Activities
+msgid "Failed to add note"
+msgstr "No se pudo añadir la nota"
+
+#: frontend/src/components/Activities
+msgid "Failed to add comment"
+msgstr "No se pudo añadir el comentario"
+
+#: frontend/src/components/Activities
+msgid "Enter to send"
+msgstr "Enter para enviar"
+
+#: frontend/src/components/Activities
+msgid "Edit quick replies"
+msgstr "Editar respuestas rápidas"
+
+#: frontend/src/components/Activities
+msgid "Ctrl/⌘+Enter to send"
+msgstr "Ctrl/⌘+Enter para enviar"
+
+#: frontend/src/components/Activities
+msgid "Comment added"
+msgstr "Comentario añadido"
+
+#: frontend/src/components/Activities
+msgid "Add quick reply"
+msgstr "Añadir respuesta rápida"
+
+#: frontend/src/components/Activities
+msgid "Unpin"
+msgstr "Desfijar"
+
+#: frontend/src/components/Activities
+msgid "Sent by"
+msgstr "Enviado por"
+
+#: frontend/src/components/Activities
+msgid "more notes"
+msgstr "notas más"
+
+#: frontend/src/components/Activities
+msgid "Conversation"
+msgstr "Conversación"
+
+#: frontend/src/components/Activities
+msgid "Bot"
+msgstr "Bot"
+
+#: frontend/src/components/Activities
+msgid "Automatic message"
+msgstr "Mensaje automático"
+
+#: frontend/src/components/Activities
+msgid "Auto"
+msgstr "Auto"
+
 # Ventas (commercial documents panel, deal record)
 #: frontend/src/composables/inbox.js
 msgid "Connection lost. Your work is kept."
@@ -4806,7 +4898,7 @@ msgstr ""
 
 #: frontend/src/components/Activities/WhatsAppArea.vue:247
 msgid "Failed to add reaction to the message"
-msgstr ""
+msgstr "No se pudo reaccionar al mensaje"
 
 #: crm/integrations/twilio/api.py:154
 msgid "Failed to capture Twilio recording"
@@ -4867,7 +4959,7 @@ msgstr ""
 
 #: frontend/src/components/Activities/WhatsAppBox.vue:144
 msgid "Failed to send WhatsApp message"
-msgstr ""
+msgstr "No se pudo enviar el mensaje de WhatsApp"
 
 #: frontend/src/components/Activities/Activities.vue:604
 msgid "Failed to send WhatsApp template"
@@ -9310,7 +9402,7 @@ msgstr ""
 
 #: frontend/src/components/Activities/WhatsAppBox.vue:101
 msgid "Type your message here..."
-msgstr ""
+msgstr "Escribe tu mensaje..."
 
 #: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.py:117
 msgid "Unable to connect to Twilio account to fetch applications."
@@ -9458,7 +9550,7 @@ msgstr ""
 
 #: frontend/src/components/Activities/WhatsAppBox.vue:152
 msgid "Upload Document"
-msgstr ""
+msgstr "Subir documento"
 
 #: frontend/src/components/Activities/WhatsAppBox.vue:160
 #: frontend/src/pages/Contact.vue:48 frontend/src/pages/Lead.vue:93
@@ -9474,7 +9566,7 @@ msgstr ""
 
 #: frontend/src/components/Activities/WhatsAppBox.vue:168
 msgid "Upload Video"
-msgstr ""
+msgstr "Subir video"
 
 #: frontend/src/components/Controls/ImageUploader.vue:12
 msgid "Uploading {0}%"

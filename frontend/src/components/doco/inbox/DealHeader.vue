@@ -1,20 +1,25 @@
 <!-- Inbox center top: deal header (identity/score/SLA/stage/call) + next-action bar. §5.1 -->
 <template>
-  <div class="flex-none border-b border-outline-gray-1 px-4 py-[11px]">
-    <div class="flex flex-wrap items-center gap-3 sm:flex-nowrap">
-      <!-- mobile: back to the conversation list (← pops the history stack) -->
+  <div
+    class="flex-none border-b border-outline-gray-1 px-3 py-1.5 sm:px-4 sm:py-[11px]"
+  >
+    <!-- Phone: ONE row — ‹ back, identity, call and a ⋯ menu for the rest. -->
+    <div class="flex flex-nowrap items-center gap-2 sm:gap-3">
+      <!-- mobile: the screen's one back. On the deal record it follows the
+           caller's return_to; in the Inbox it pops the history stack. -->
       <button
         v-if="isMobile"
-        class="-ml-1.5 flex h-9 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
-        :aria-label="__('Volver a la bandeja')"
-        @click="mobileBack"
+        class="-ml-1.5 flex h-10 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
+        :aria-label="dealBack ? dealBack.label : __('Volver a la bandeja')"
+        data-testid="deal-header-back"
+        @click="goBack"
       >
         <LucideChevronLeft class="h-6 w-6" />
       </button>
       <!-- identity: on mobile this whole block opens the customer/deal data pane
            (view 4), exactly like tapping the contact name in WhatsApp. -->
       <span
-        class="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-full text-sm-semibold"
+        class="flex size-8 flex-none items-center justify-center rounded-full text-sm-semibold sm:size-[38px]"
         :class="isMobile ? 'cursor-pointer' : ''"
         :style="`background:${avatarColor(name)[0]};color:${avatarColor(name)[1]}`"
         @click="isMobile && openContext()"
@@ -29,14 +34,10 @@
         @click="isMobile && openContext()"
         @keydown.enter="isMobile && openContext()"
       >
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex min-w-0 items-center gap-2 sm:flex-wrap">
           <span class="truncate text-base-bold text-ink-gray-9">{{
             name || '—'
           }}</span>
-          <LucideChevronRight
-            v-if="isMobile"
-            class="h-4 w-4 flex-none text-ink-gray-4"
-          />
           <ScoreExplainPopover
             v-if="grade"
             :doctype="activeDealDoctype"
@@ -51,7 +52,7 @@
         </div>
         <!-- meta row wraps on narrow screens (was clipping the WA/saldo chips) -->
         <div
-          class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12px] text-ink-gray-6"
+          class="mt-0.5 flex items-center gap-x-2.5 gap-y-1 overflow-hidden text-[12px] text-ink-gray-6 sm:flex-wrap"
         >
           <span
             v-if="row.device"
@@ -105,9 +106,7 @@
           </span>
         </div>
       </div>
-      <div
-        class="flex w-full flex-none items-center justify-end gap-1.5 sm:w-auto sm:gap-2.5"
-      >
+      <div class="flex flex-none items-center justify-end gap-1.5 sm:gap-2.5">
         <div
           v-if="responsible && !isMobile"
           class="flex items-center gap-1.5"
@@ -159,6 +158,7 @@
         </Dropdown>
         <!-- 🏷 etiquetas (spec 2.2) -->
         <button
+          v-if="!isMobile"
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
           :class="
             (row.tags || []).length
@@ -172,7 +172,7 @@
           <LucideTag class="h-4 w-4" />
         </button>
         <!-- 💤 snooze/recordar (spec 2.1) -->
-        <Dropdown :options="snoozeOptions">
+        <Dropdown v-if="!isMobile" :options="snoozeOptions">
           <button
             class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
             :class="
@@ -191,8 +191,15 @@
           </button>
         </Dropdown>
         <!-- 📅 cadencia de seguimiento (spec 4.2) — self-hides for non-deals -->
-        <CadencePicker :doctype="activeDealDoctype" :name="activeDeal" />
+        <!-- phone: no trigger chip; the ⋯ menu opens its dialog -->
+        <CadencePicker
+          ref="cadence"
+          :doctype="activeDealDoctype"
+          :name="activeDeal"
+          :hide-trigger="isMobile"
+        />
         <button
+          v-if="!isMobile"
           class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3"
           :title="__('Bitácora — historial en todos los canales')"
           :aria-label="__('Bitácora')"
@@ -209,6 +216,18 @@
         >
           <LucidePhone class="h-4 w-4" />
         </button>
+        <Dropdown v-if="isMobile" :options="mobileMenu" placement="right">
+          <button
+            class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
+            :class="
+              isSnoozed || (row.tags || []).length ? 'text-ink-violet-8' : ''
+            "
+            :aria-label="__('Más opciones')"
+            data-testid="deal-header-more"
+          >
+            <LucideEllipsis class="h-5 w-5" />
+          </button>
+        </Dropdown>
       </div>
     </div>
 
@@ -351,7 +370,8 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Button,
   Dialog,
@@ -366,7 +386,7 @@ import LucideScrollText from '~icons/lucide/scroll-text'
 import LucideAlarmClock from '~icons/lucide/alarm-clock'
 import LucideTag from '~icons/lucide/tag'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
-import LucideChevronRight from '~icons/lucide/chevron-right'
+import LucideEllipsis from '~icons/lucide/ellipsis'
 import CadencePicker from '@/components/doco/inbox/CadencePicker.vue'
 import StageStepper from '@/components/doco/StageStepper.vue'
 import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
@@ -408,6 +428,15 @@ const statusStore = statusesStore()
 const { getDealStatus, getLeadStatus } = statusStore
 
 const composerOpen = ref(false)
+const router = useRouter()
+// Deal 360 provides where its record returns to; the Inbox does not.
+const dealBackRef = inject('dealBack', null)
+const dealBack = computed(() => dealBackRef?.value || null)
+function goBack() {
+  if (dealBack.value) router.push(dealBack.value.to)
+  else mobileBack()
+}
+const cadence = ref(null)
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 
 // rich row from the inbox queue when present; otherwise (360° / deep-linked deal not
@@ -733,6 +762,32 @@ const snoozeOptions = computed(() => {
   )
   return o
 })
+// Phone ⋯ menu: everything the desktop header shows as icon buttons.
+const mobileMenu = computed(() => [
+  {
+    group: __('Trato'),
+    items: [
+      { label: __('Datos y contacto'), onClick: openContext },
+      {
+        label: (row.value.tags || []).length
+          ? __('Etiquetas ({0})', [row.value.tags.length])
+          : __('Etiquetas'),
+        onClick: openTags,
+      },
+      isDeal.value && {
+        label: __('Cadencia de seguimiento'),
+        onClick: () => cadence.value?.open(),
+      },
+      { label: __('Bitácora'), onClick: openLedger },
+    ].filter(Boolean),
+  },
+  {
+    group: isSnoozed.value
+      ? __('Pospuesta — reaparece sola')
+      : __('Posponer conversación'),
+    items: snoozeOptions.value,
+  },
+])
 
 // next action: earliest open task on this deal
 const tasks = createListResource({

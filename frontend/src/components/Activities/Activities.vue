@@ -726,6 +726,7 @@ import FilesUploader from '@/components/FilesUploader/FilesUploader.vue'
 import TimelineTimestamp from '@/components/Activities/TimelineTimestamp.vue'
 import { startCase } from '@/utils'
 import { globalStore } from '@/stores/global'
+import { isMobile } from '@/composables/breakpoint'
 import { usersStore } from '@/stores/users'
 import { useTimelinePreferences } from '@/composables/useTimelinePreferences'
 import { whatsappEnabled, whatsappManual } from '@/composables/whatsapp'
@@ -956,7 +957,8 @@ const unpinnedNotes = useStorage(
   `wa-unpinned-notes-${props.doctype}-${props.docname}`,
   [],
 )
-const PINNED_NOTES_LIMIT = 3
+// Phone: one pinned line keeps the thread on screen; «+N» opens the rest.
+const pinnedLimit = computed(() => (isMobile.value ? 1 : 3))
 
 const visibleNotes = computed(() => {
   const notes = all_activities.data?.notes || []
@@ -966,10 +968,10 @@ const visibleNotes = computed(() => {
 })
 
 const pinnedNotes = computed(() =>
-  visibleNotes.value.slice(0, PINNED_NOTES_LIMIT),
+  visibleNotes.value.slice(0, pinnedLimit.value),
 )
 const moreNotes = computed(() =>
-  Math.max(0, visibleNotes.value.length - PINNED_NOTES_LIMIT),
+  Math.max(0, visibleNotes.value.length - pinnedLimit.value),
 )
 
 function unpinNote(note) {

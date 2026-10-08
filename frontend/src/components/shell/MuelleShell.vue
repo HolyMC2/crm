@@ -15,9 +15,14 @@
       @palette="paletteOpen = true"
     />
     <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+      <!-- One compact row on phone. It slides away while the worker scrolls
+           down and comes back on the first scroll up; drill-down records
+           (deal, inbox thread) bring their own identity row instead. -->
       <header
-        v-if="phone"
-        class="flex min-h-[52px] shrink-0 items-center gap-1 border-b border-outline-gray-1 pl-3 pr-1 pt-[env(safe-area-inset-top)]"
+        v-if="phone && !drillDown"
+        data-testid="shell-header"
+        class="z-10 flex min-h-12 shrink-0 items-center gap-1 border-b border-outline-gray-1 bg-surface-base pl-3 pr-1 pt-[env(safe-area-inset-top)] transition-[margin] duration-200"
+        :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
       >
         <!-- Ventas pages teleport their own header (breadcrumbs + actions) here. -->
         <div
@@ -82,6 +87,7 @@
         v-else
         id="muelle-content"
         class="flex min-h-0 min-w-0 flex-1 overflow-hidden"
+        @scroll.capture.passive="onContentScroll"
       >
         <slot />
       </main>
@@ -179,13 +185,33 @@ function onViewport() {
   const vv = window.visualViewport
   keyboardOpen.value = vv ? vv.height < window.innerHeight * 0.75 : false
 }
-const navVisible = computed(
+const drillDown = computed(
   () =>
-    !keyboardOpen.value &&
-    !(
-      /^\/(inbox|(ventas\/)?deal\/)/.test(route.path) &&
-      mobileView.value !== 'list'
-    ),
+    /^\/(inbox|(ventas\/)?deal\/)/.test(route.path) &&
+    mobileView.value !== 'list',
+)
+const navVisible = computed(() => !keyboardOpen.value && !drillDown.value)
+
+// Phone header hides on scroll down and returns on scroll up. Only vertical
+// scrolls of the page's own scrollers count (chip rows scroll sideways).
+const HEADER_HEIGHT = 48
+const headerHeight = HEADER_HEIGHT
+const headerHidden = ref(false)
+const lastScroll = new WeakMap()
+function onContentScroll(event) {
+  const el = event.target
+  if (!phone.value || !(el instanceof Element)) return
+  const top = el.scrollTop
+  const previous = lastScroll.get(el) ?? 0
+  lastScroll.set(el, top)
+  if (top === previous) return
+  if (top <= HEADER_HEIGHT) headerHidden.value = false
+  else if (top - previous > 6) headerHidden.value = true
+  else if (previous - top > 6) headerHidden.value = false
+}
+watch(
+  () => route.path,
+  () => (headerHidden.value = false),
 )
 
 function reload() {
@@ -264,3 +290,13 @@ onBeforeUnmount(() =>
   window.visualViewport?.removeEventListener('resize', onViewport),
 )
 </script>
+<style>
+/* doco injects a floating «Ayuda» launcher (support_workflow.js) whose dragged
+   position persists per browser; on phone it covered the header title. The
+   shell offers «Ayuda» in the Más sheet instead. */
+@media (max-width: 639px) {
+  #muelle-support-workflow {
+    display: none !important;
+  }
+}
+</style>

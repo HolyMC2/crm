@@ -12,26 +12,29 @@
          New Deal off-screen. Phone shape: title + overflow menu, a full-width
          search, then ONE scrollable pill row (vistas + Filtros). Creating a
          deal moves to the FAB, where a thumb reaches it. -->
-    <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
-      <div class="flex items-center gap-2 px-3.5 pb-1.5 pt-2.5">
-        <span class="text-[16px] font-bold text-ink-gray-9">{{
-          __('Tratos')
-        }}</span>
+    <!-- Phone: title, count and ⋯ ride in the shell's one header row. -->
+    <LayoutHeader v-if="isMobile">
+      <div class="flex h-12 min-w-0 items-center gap-2">
+        <h1 class="truncate text-lg font-semibold text-ink-gray-9">
+          {{ __('Tratos') }}
+        </h1>
         <span
-          class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6"
+          class="flex-none rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6"
           >{{ count }}</span
         >
         <div class="flex-1" />
         <Dropdown :options="mobileMenu">
           <button
-            class="press flex h-9 w-9 items-center justify-center rounded-full text-[16px] text-ink-gray-5"
+            class="press flex size-11 items-center justify-center rounded-lg text-[16px] text-ink-gray-5"
             :aria-label="__('Más opciones')"
           >
             ⋯
           </button>
         </Dropdown>
       </div>
-      <div class="px-3.5 pb-2">
+    </LayoutHeader>
+    <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
+      <div class="px-3.5 pb-2 pt-2">
         <div
           class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
         >
@@ -81,10 +84,35 @@
           {{ __('Filtros')
           }}<span v-if="chips.length"> · {{ chips.length }}</span>
         </button>
+        <!-- pipeline as one more pill; hidden when the site has a single one -->
+        <select
+          v-if="pipelineF || (pipelines.data || []).length > 1"
+          v-model="pipelineF"
+          :aria-label="__('Sales pipeline')"
+          class="press h-[30px] flex-none rounded-full border-0 bg-surface-gray-2 py-0 pl-3 pr-7 text-[12px] font-semibold text-ink-gray-7"
+        >
+          <option value="">{{ __('All pipelines') }}</option>
+          <option
+            v-for="pipeline in pipelines.data || []"
+            :key="pipeline.name"
+            :value="pipeline.name"
+          >
+            {{ pipeline.pipeline_name
+            }}{{ pipeline.archived ? ' · ' + __('Archived') : '' }}
+          </option>
+        </select>
       </div>
+      <p
+        v-if="pipelines.error"
+        role="alert"
+        class="px-3.5 pb-2 text-sm text-ink-red-5"
+      >
+        {{ __('Pipelines could not load') }}
+      </p>
     </div>
 
     <div
+      v-if="!isMobile"
       class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-2"
     >
       <label for="deal-pipeline" class="text-sm text-ink-gray-6">{{
@@ -801,6 +829,7 @@
 
 <script setup>
 import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
+import LayoutHeader from '@/components/LayoutHeader.vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {

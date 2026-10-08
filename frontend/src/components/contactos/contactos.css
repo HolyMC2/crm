@@ -581,17 +581,36 @@
   display: flex;
   flex-direction: column;
 }
+/* The record's sections flow with the page. The page column is a flex
+   scroller, so an overflow-hidden section would shrink to a short box and the
+   tab panel would scroll inside it; neither may shrink, and the panels' own
+   full-height scrollers (built for the Contact 360 page) open up here. */
+.c-provider-section,
+.c-archivos-panel {
+  flex-shrink: 0;
+}
+.c-provider-section > section,
+.c-provider-section > section > .overflow-y-auto {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+}
+/* One row of tabs that scrolls sideways instead of wrapping into two. */
 .c-provider-tabs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 5px;
   padding: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: var(--c-soft);
   border-bottom: 1px solid var(--c-line);
 }
 .c-provider-tabs button {
+  flex: none;
   padding: 7px 10px;
   font-size: 12px;
+  white-space: nowrap;
   border-radius: 5px;
 }
 .c-provider-tabs button.active {
@@ -785,6 +804,9 @@
   .c-provider-section,
   .c-archivos-panel {
     margin: 0 16px 20px;
+  }
+  .c-provider-tabs {
+    padding: 8px;
   }
   .c-provider-recovery {
     margin: 0 16px 20px;

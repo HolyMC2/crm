@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const state = vi.hoisted(() => ({ call: vi.fn(), mobile: null }))
 vi.mock('frappe-ui', async () => {
@@ -37,6 +39,7 @@ vi.mock('@/components/Notifications.vue', () => ({
 }))
 
 import MuelleShell from '@/components/shell/MuelleShell.vue'
+import { mobileView } from '@/composables/mobileView'
 import {
   hostedModules,
   isNeutralModule,
@@ -110,6 +113,10 @@ async function mount(path) {
       },
       { path: '/deals', component: { render: () => h('p', 'Deals page') } },
       { path: '/ventas', component: { render: () => null } },
+      {
+        path: '/ventas/deal/:dealId',
+        component: { render: () => h('p', 'Deal') },
+      },
       {
         path: '/avisos',
         component: { render: () => h('p', 'Avisos page') },
@@ -343,6 +350,56 @@ describe('one frame for every route', () => {
     await mount('/contactos')
     expect(root.querySelector('#app-header')).toBeNull()
     expect(root.querySelector('header h1').textContent).toContain('Contactos')
+  })
+
+  it('phone header slides away on scroll down and returns on scroll up', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    const header = () => root.querySelector('[data-testid="shell-header"]')
+    const scroller = document.createElement('div')
+    root.querySelector('#muelle-content').append(scroller)
+    const scrollTo = async (top) => {
+      Object.defineProperty(scroller, 'scrollTop', {
+        value: top,
+        configurable: true,
+      })
+      scroller.dispatchEvent(new Event('scroll'))
+      await nextTick()
+    }
+    await scrollTo(200)
+    await scrollTo(400)
+    expect(header().style.marginTop).toBe('-48px')
+    await scrollTo(380)
+    expect(header().style.marginTop).toBe('')
+    await scrollTo(600)
+    expect(header().style.marginTop).toBe('-48px')
+    // near the top the header always shows
+    await scrollTo(20)
+    expect(header().style.marginTop).toBe('')
+  })
+
+  it('phone deal record owns the top: no shell header, no bottom nav', async () => {
+    state.mobile.value = true
+    mobileView.value = 'thread'
+    await mount('/ventas/deal/CRM-DEAL-1')
+    expect(root.querySelector('[data-testid="shell-header"]')).toBeNull()
+    expect(root.querySelector('nav[aria-label="Main navigation"]')).toBeNull()
+    mobileView.value = 'list'
+  })
+
+  it('phone hides doco’s floating «Ayuda» pill; the Más sheet offers it', () => {
+    const source = readFileSync(
+      resolve(__dirname, '../../src/components/shell/MuelleShell.vue'),
+      'utf8',
+    )
+    expect(source).toMatch(
+      /@media \(max-width: 639px\)[\s\S]*#muelle-support-workflow[\s\S]*display: none !important/,
+    )
+    const sheet = readFileSync(
+      resolve(__dirname, '../../src/components/shell/MoreSheet.vue'),
+      'utf8',
+    )
+    expect(sheet).toContain('window.docoSupport.openHelp()')
   })
 
   it('Ctrl+K opens the command palette and g c goes to Contactos', async () => {

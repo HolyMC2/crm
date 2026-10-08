@@ -12,6 +12,7 @@
   <div
     v-if="!hidden"
     class="flex-none border-b border-outline-gray-1 px-3 py-1.5"
+    :class="expanded ? 'basis-full' : ''"
   >
     <!-- collapsed chip -->
     <button

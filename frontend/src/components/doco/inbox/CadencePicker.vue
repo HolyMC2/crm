@@ -12,6 +12,7 @@
 <template>
   <template v-if="isDeal">
     <button
+      v-if="!hideTrigger"
       class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-outline-gray-2"
       :class="
         active
@@ -116,6 +117,8 @@ const props = defineProps({
   // cadences are 1:1 on a CRM Deal; the chip self-hides for leads/other refs.
   doctype: { type: String, default: '' },
   name: { type: String, default: '' },
+  // the phone deal header opens the dialog from its ⋯ menu (open() below)
+  hideTrigger: Boolean,
 })
 
 const isDeal = computed(() => props.doctype === 'CRM Deal' && !!props.name)
@@ -166,6 +169,7 @@ function openDialog() {
   show.value = true
   if (!active.value) loadList()
 }
+defineExpose({ open: openDialog })
 
 async function start(campaign) {
   if (busy.value) return
