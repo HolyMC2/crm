@@ -124,6 +124,28 @@
             class="min-h-11 sm:min-h-8"
             @click="picking = true"
           />
+          <!-- Sales shape: a refund already made is linked, else the POS «Devolver venta» does it. -->
+          <Button
+            v-for="ret in claim.remedies?.refund?.returns || []"
+            :key="ret.name"
+            :variant="primary?.kind === 'link_return' ? 'solid' : 'subtle'"
+            icon-left="link"
+            :label="__('Link return {0}', [ret.name])"
+            class="min-h-11 sm:min-h-8"
+            :loading="busy"
+            @click="linkOutcome(ret.doctype, ret.name)"
+          />
+          <Button
+            v-if="
+              claim.remedies?.refund?.available &&
+              !claim.remedies.refund.returns.length
+            "
+            icon-left="corner-up-left"
+            :label="__('Refund at the register')"
+            class="min-h-11 sm:min-h-8"
+            :loading="busy"
+            @click="startRefund"
+          />
           <Button
             v-for="t in transitionButtons"
             :key="t.action + t.next_state"
@@ -335,6 +357,80 @@
               :href="`/app/query-report/${encodeURIComponent(claim.supplier.rma_report)}`"
               >{{ __('Parts in RMA report') }}</a
             >
+            <template v-if="claim.remedies?.rma">
+              <p
+                v-if="claim.remedies.rma.moved"
+                class="mt-2 text-sm text-ink-gray-8"
+              >
+                {{
+                  __('In the RMA warehouse {0} ({1}).', [
+                    claim.remedies.rma.warehouse,
+                    claim.remedies.rma.moved,
+                  ])
+                }}
+              </p>
+              <div
+                v-else-if="claim.remedies.rma.available"
+                class="mt-2 flex flex-wrap items-center gap-2"
+              >
+                <Button
+                  icon-left="truck"
+                  :label="__('Move to RMA')"
+                  :loading="busy"
+                  @click="moveToRma"
+                />
+                <span class="text-sm text-ink-gray-6">{{
+                  __('From {0} to {1}', [
+                    claim.remedies.rma.from,
+                    claim.remedies.rma.to,
+                  ])
+                }}</span>
+              </div>
+              <p v-else class="mt-2 text-sm text-ink-gray-6">
+                {{ claim.remedies.rma.reason }}
+              </p>
+            </template>
+            <template v-if="claim.remedies?.supplier_return">
+              <p
+                v-if="claim.remedies.supplier_return.done"
+                class="mt-2 text-sm text-ink-gray-8"
+              >
+                {{
+                  __('Returned to the supplier: {0}', [
+                    claim.remedies.supplier_return.done,
+                  ])
+                }}
+              </p>
+              <div
+                v-else-if="claim.remedies.supplier_return.available"
+                class="mt-2 flex flex-wrap items-end gap-2"
+              >
+                <FormControl
+                  v-model="purchaseReceipt"
+                  type="select"
+                  class="min-w-56"
+                  :label="__('Purchase it came from')"
+                  :options="
+                    claim.remedies.supplier_return.purchases.map((p) => ({
+                      label: [p.name, p.supplier_name, p.date]
+                        .filter(Boolean)
+                        .join(' · '),
+                      value: p.name,
+                    }))
+                  "
+                />
+                <Button
+                  icon-left="check"
+                  :label="__('Supplier credited it')"
+                  :disabled="!purchaseReceipt"
+                  :loading="busy"
+                  @click="supplierReturn"
+                />
+              </div>
+              <p v-else class="mt-2 text-sm text-ink-gray-6">
+                {{ claim.remedies.supplier_return.reason }}
+              </p>
+            </template>
           </section>
 
           <section
@@ -640,7 +736,8 @@ const showSupplier = computed(
     claim.value &&
     (claim.value.state === 'Con proveedor' ||
       claim.value.supplier?.supplier ||
-      claim.value.supplier?.rma_parts?.length),
+      claim.value.supplier?.rma_parts?.length ||
+      claim.value.remedies?.rma?.moved),
 )
 const detailsLabel = computed(() => {
   switch (pending.value?.action) {
@@ -790,6 +887,68 @@ async function searchSuppliers(text) {
     label: row.label || row.description || row.value,
     hint: row.label ? row.description : '',
   }))
+}
+
+/** «Reembolso en caja»: the POS «Devolver venta» moves the money and links its return back here. */
+async function startRefund() {
+  busy.value = true
+  problem.value = null
+  try {
+    const out = await garantiasApi('doco.garantias.sales.start_refund', {
+      name: claim.value.name,
+      modified: claim.value.modified,
+    })
+    claim.value = out.claim
+    window.location.assign(out.url)
+  } catch (error) {
+    problem.value = problemOf(error)
+  } finally {
+    busy.value = false
+  }
+}
+
+const purchaseReceipt = ref('')
+watch(
+  () => claim.value?.remedies?.supplier_return?.purchases,
+  (rows) => {
+    if (rows?.length && !rows.some((r) => r.name === purchaseReceipt.value))
+      purchaseReceipt.value = rows[0].name
+  },
+)
+/** «El proveedor acreditó»: a native purchase return of the RMA unit; the case resolves. */
+async function supplierReturn() {
+  busy.value = true
+  problem.value = null
+  try {
+    const out = await garantiasApi('doco.garantias.sales.supplier_return', {
+      name: claim.value.name,
+      purchase_receipt: purchaseReceipt.value,
+      modified: claim.value.modified,
+    })
+    claim.value = out.claim
+    toast.success(__('Returned to the supplier: {0}', [out.purchase_return]))
+  } catch (error) {
+    problem.value = problemOf(error)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function moveToRma() {
+  busy.value = true
+  problem.value = null
+  try {
+    const out = await garantiasApi('doco.garantias.sales.move_to_rma', {
+      name: claim.value.name,
+      modified: claim.value.modified,
+    })
+    claim.value = out.claim
+    toast.success(__('Moved to RMA: {0}', [out.stock_entry]))
+  } catch (error) {
+    problem.value = problemOf(error)
+  } finally {
+    busy.value = false
+  }
 }
 
 async function linkOutcome(doctype, name) {

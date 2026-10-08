@@ -166,6 +166,8 @@ export function primaryAction(claim) {
   // An unrepaired delivered visit is an outcome that still needs a written reason.
   if (resolve && liveOutcome(claim) && !resolve.needs_details)
     return { kind: 'transition', action: 'Resolver' }
+  // A refund already made at the register: link it instead of refunding twice.
+  if (claim.remedies?.refund?.returns?.length) return { kind: 'link_return' }
   if (claim.can_pick_source && !claim.against) return { kind: 'pick_source' }
   const review = transitions.find((t) => t.action === 'Revisar')
   if (review) return { kind: 'transition', action: 'Revisar' }

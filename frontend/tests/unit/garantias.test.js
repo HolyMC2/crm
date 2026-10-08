@@ -142,6 +142,17 @@ describe('fix: picker, hand-off and remedies', () => {
       }),
     ).toEqual({ kind: 'pick_source' })
   })
+  it('links a refund already made instead of refunding twice', () => {
+    expect(
+      primaryAction({
+        can_write: true,
+        against: { name: 'SINV-1' },
+        repair: { hidden: true },
+        remedies: { refund: { returns: [{ name: 'SINV-RET-1' }] } },
+        transitions: [{ action: 'Revisar' }],
+      }),
+    ).toEqual({ kind: 'link_return' })
+  })
   it('turns sales lines and delivered orders into picker choices', () => {
     const options = sourceOptions({
       sales: [
