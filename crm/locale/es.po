@@ -15634,3 +15634,327 @@ msgstr "{0} compartió contigo «{1}»"
 #: frontend/src/pages/DealsView.vue
 msgid "{0} deals named by an aviso"
 msgstr "{0} tratos que nombra un aviso"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Loading your settings…"
+msgstr "Cargando tu configuración…"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "To take appointments online:"
+msgstr "Para recibir citas en línea:"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Days and hours"
+msgstr "Días y horarios"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Opens"
+msgstr "Abre"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Closes"
+msgstr "Cierra"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Add hours"
+msgstr "Agregar horario"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Same hours Monday to Saturday"
+msgstr "Mismo horario de lunes a sábado"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Minutes per appointment"
+msgstr "Minutos por cita"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Appointments at the same time"
+msgstr "Citas a la misma hora"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Days ahead customers can book"
+msgstr "Días con que pueden agendar"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Rest days and holidays"
+msgstr "Días de descanso y festivos"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Choose your rest days"
+msgstr "Elige tus días de descanso"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Use {0}"
+msgstr "Usar {0}"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Create your rest days first."
+msgstr "Primero crea tus días de descanso."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "New list of rest days"
+msgstr "Nueva lista de días de descanso"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Your online shop"
+msgstr "Tu tienda en línea"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Show «Book» on {0}"
+msgstr "Mostrar «Agendar» en {0}"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Your booking link: {0}"
+msgstr "Tu enlace para agendar: {0}"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "WhatsApp messages"
+msgstr "Mensajes de WhatsApp"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Send the confirmation, the day-before reminder and the cancellation notice by themselves"
+msgstr "Enviar solos la confirmación, el recordatorio del día anterior y el aviso de cancelación"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Only with your approved templates. Off: each one waits in Avisos for you to send it."
+msgstr "Solo con tus plantillas aprobadas. Apagado: cada uno espera en Avisos a que tú lo envíes."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Booking form inside WhatsApp"
+msgstr "Formulario para agendar dentro de WhatsApp"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Ready: «Send booking link» in the chat sends it."
+msgstr "Listo: «Enviar formulario para agendar» en el chat lo envía."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Created. Publish it on WhatsApp from its page so customers can use it."
+msgstr "Creado. Publícalo en WhatsApp desde su página para que tus clientes lo usen."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Open the form to publish it"
+msgstr "Abrir el formulario para publicarlo"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Customers choose a service and a free time without leaving the chat."
+msgstr "El cliente elige un servicio y una hora libre sin salir del chat."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Connect your WhatsApp number to use it. Meanwhile the chat sends your booking link."
+msgstr "Conecta tu número de WhatsApp para usarlo. Mientras, el chat envía tu enlace para agendar."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Create the booking form"
+msgstr "Crear el formulario para agendar"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Add at least one row of hours, opening before closing."
+msgstr "Agrega al menos un horario, con apertura antes del cierre."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Confirmation"
+msgstr "Confirmación"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Cancellation"
+msgstr "Cancelación"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Appointment settings saved"
+msgstr "Configuración de citas guardada"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Loading free times…"
+msgstr "Cargando horas libres…"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Online appointments need a little setup first."
+msgstr "Primero hay que configurar un poco las citas en línea."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Set up appointments"
+msgstr "Configurar citas"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "No contact found. Add them in Contactos first."
+msgstr "No encontramos el contacto. Primero agrégalo en Contactos."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Open Contactos"
+msgstr "Abrir Contactos"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Service"
+msgstr "Servicio"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "No service yet"
+msgstr "Sin servicio todavía"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "No free times in the coming days."
+msgstr "No hay horas libres en los próximos días."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "What did they tell you?"
+msgstr "¿Qué te dijo?"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Book appointment"
+msgstr "Agendar cita"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Choose the customer."
+msgstr "Elige al cliente."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Choose a free time."
+msgstr "Elige una hora libre."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Appointment"
+msgstr "Cita"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Folio"
+msgstr "Folio"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Booked through"
+msgstr "Agendada por"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Attends"
+msgstr "Atiende"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Remind on WhatsApp"
+msgstr "Recordar por WhatsApp"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Offer {0} another time."
+msgstr "Ofrécele a {0} otra hora."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Rebook on WhatsApp"
+msgstr "Reagendar por WhatsApp"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Choose a new time"
+msgstr "Elige una nueva hora"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Keep the time"
+msgstr "Dejar la hora"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Receive device"
+msgstr "Recibir equipo"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Arrived"
+msgstr "Llegó"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Did not come"
+msgstr "No vino"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Cancel appointment"
+msgstr "Cancelar cita"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Ask your manager for access to change appointments."
+msgstr "Pide a tu encargado acceso para cambiar citas."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Cancel the appointment of {0}?"
+msgstr "¿Cancelar la cita de {0}?"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Appointments"
+msgstr "Citas"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Sending…"
+msgstr "Enviando…"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Send booking form"
+msgstr "Enviar formulario para agendar"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Send booking link"
+msgstr "Enviar enlace para agendar"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "To send the booking link you need control of this conversation."
+msgstr "Para enviar el enlace para agendar necesitas tener el control de esta conversación."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "the chat"
+msgstr "el chat"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Saved. Check its status in Sends."
+msgstr "Guardado. Revisa su estado en Envíos."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "It was not sent. Try again."
+msgstr "No se envió. Intenta de nuevo."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "New appointment"
+msgstr "Nueva cita"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Online appointments settings"
+msgstr "Configuración de citas en línea"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Online appointments"
+msgstr "Citas en línea"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Appointment booked for {0}"
+msgstr "Cita agendada para {0}"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Marked as arrived"
+msgstr "Marcada como llegó"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Marked as did not come"
+msgstr "Marcada como no vino"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Appointment cancelled"
+msgstr "Cita cancelada"
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "You cannot book appointments. Ask your manager for access."
+msgstr "No puedes agendar citas. Pide acceso a tu encargado."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Online appointments are not available on this site yet."
+msgstr "Las citas en línea todavía no están disponibles en este sitio."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Device received. The appointment is marked as attended."
+msgstr "Equipo recibido. La cita quedó como atendida."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Online appointments are not set up yet. The owner sets them up in Agenda."
+msgstr "Las citas en línea aún no están configuradas. El dueño las configura en Agenda."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Online appointments are not installed on this site."
+msgstr "Las citas en línea no están instaladas en este sitio."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Choose the day and time that suit you."
+msgstr "Elige el día y la hora que te queden mejor."
+
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
+msgid "Add your shop's web address to its storefront profile so customers can open the booking page."
+msgstr "Agrega la dirección web de tu tienda en su perfil de tienda en línea para que el cliente pueda abrir la página para agendar."
