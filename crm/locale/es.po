@@ -15655,6 +15655,22 @@ msgid "Returned to the supplier: {0}"
 msgstr "Devuelto al proveedor: {0}"
 
 #: frontend/src/pages/Garantia.vue
+msgid "Draft debit note {0}: accounting reviews and submits it; the case resolves when it is submitted."
+msgstr "Nota de débito en borrador {0}: contabilidad la revisa y la registra; el caso se resuelve al registrarla."
+
+#: frontend/src/pages/Garantia.vue
+msgid "Debit note {0} submitted."
+msgstr "Nota de débito {0} registrada."
+
+#: frontend/src/pages/Garantia.vue
+msgid "Already invoiced: a draft debit note is prepared on invoice {0} for accounting."
+msgstr "Ya facturada: se prepara una nota de débito en borrador sobre la factura {0} para contabilidad."
+
+#: frontend/src/pages/Garantia.vue
+msgid "Draft debit note {0} prepared."
+msgstr "Nota de débito en borrador {0} preparada."
+
+#: frontend/src/pages/Garantia.vue
 msgid "Purchase it came from"
 msgstr "Compra de la que salió"
 
