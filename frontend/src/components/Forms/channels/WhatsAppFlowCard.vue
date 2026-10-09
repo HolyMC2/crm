@@ -49,7 +49,7 @@
       </p>
       <p
         v-else-if="view.step === 'outdated'"
-        class="text-p-sm text-ink-amber-7"
+        class="text-p-sm text-ink-amber-9"
       >
         {{
           __(
@@ -77,13 +77,13 @@
         </div>
         <ul class="mt-1 flex flex-col gap-0.5 text-ink-gray-6">
           <li v-for="u in view.unsupported" :key="u.fieldname">
-            <span :class="u.required ? 'text-ink-red-6' : ''">{{
+            <span :class="u.required ? 'text-ink-red-7' : ''">{{
               u.label
             }}</span>
             — {{ u.reason }}
           </li>
         </ul>
-        <p v-if="view.blocking.length" class="mt-1.5 text-ink-red-6">
+        <p v-if="view.blocking.length" class="mt-1.5 text-ink-red-7">
           {{
             __(
               'Required questions are missing in WhatsApp. Make them optional or remove them to publish.',
@@ -171,7 +171,7 @@ const statusClass = computed(() =>
   view.value.step === 'published'
     ? 'bg-surface-green-2 text-ink-green-7'
     : view.value.step === 'outdated'
-      ? 'bg-surface-amber-2 text-ink-amber-7'
+      ? 'bg-surface-amber-2 text-ink-amber-9'
       : 'bg-surface-gray-2 text-ink-gray-6',
 )
 

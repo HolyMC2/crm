@@ -3,7 +3,7 @@
     <template v-for="field in visibleFields" :key="field.fieldname">
       <NativeLinkField
         v-if="field.fieldtype === 'Link'"
-        :label="`${field.label || field.fieldname}${field.reqd ? ' *' : ''}`"
+        :label="`${__(field.label || field.fieldname)}${field.reqd ? ' *' : ''}`"
         :doctype="field.options"
         :model-value="modelValue[field.fieldname] || ''"
         :disabled="disabled || !!field.read_only"
@@ -12,7 +12,7 @@
       <FormControl
         v-else-if="field.fieldtype === 'Check'"
         type="checkbox"
-        :label="field.label"
+        :label="__(field.label)"
         :model-value="!!modelValue[field.fieldname]"
         :disabled="disabled || !!field.read_only"
         @update:model-value="set(field, $event ? 1 : 0)"
@@ -20,7 +20,7 @@
       <FormControl
         v-else
         :type="inputType(field)"
-        :label="`${field.label || field.fieldname}${field.reqd ? ' *' : ''}`"
+        :label="`${__(field.label || field.fieldname)}${field.reqd ? ' *' : ''}`"
         :options="
           field.fieldtype === 'Select' ? fieldOptions(field) : undefined
         "

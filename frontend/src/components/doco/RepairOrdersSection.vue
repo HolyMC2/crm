@@ -76,7 +76,7 @@
             <!-- Purchase-side ETA (ERP spec P3): what «Esperando Pieza» is waiting ON -->
             <span
               v-if="waitingPo(ro)"
-              class="break-all rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-7"
+              class="break-all rounded bg-surface-amber-1 px-1.5 py-px text-[10.5px] font-semibold text-ink-amber-9"
               :title="__('Pieza en camino — Purchase Order vinculado')"
             >
               🧩 {{ waitingPo(ro).purchase_order
@@ -228,13 +228,13 @@
               </span>
               <span
                 v-if="ro.broken_screen"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-7"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-9"
               >
                 {{ __('Broken screen ⚠') }}
               </span>
               <span
                 v-if="ro.is_wet"
-                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-7"
+                class="inline-flex items-center rounded-full bg-surface-amber-1 px-2 py-0.5 text-xs-medium text-ink-amber-9"
               >
                 {{ __('Wet ⚠') }}
               </span>
@@ -341,7 +341,7 @@
                   >
                   <span
                     v-if="p.purchase_order && p.po_status"
-                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-7"
+                    class="ml-1.5 rounded bg-surface-amber-1 px-1 py-px text-[10px] font-semibold text-ink-amber-9"
                     :title="`${p.purchase_order} · ${p.po_status}`"
                   >
                     🧩

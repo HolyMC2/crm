@@ -43,7 +43,7 @@
             >
             <span
               v-if="row.priority === 'High'"
-              class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-ink-amber-7"
+              class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-ink-amber-9"
               >{{ priorityLabel(row.priority) }}</span
             >
           </div>
@@ -155,7 +155,7 @@
             <dt class="text-sm text-ink-gray-6">{{ __('Due') }}</dt>
             <dd
               class="text-base"
-              :class="row.group === 'overdue' ? 'text-ink-red-6' : ''"
+              :class="row.group === 'overdue' ? 'text-ink-red-7' : ''"
             >
               {{ row.date ? formatDay(row.date) : __('No date') }} ·
               {{ dueText(row, today) }}

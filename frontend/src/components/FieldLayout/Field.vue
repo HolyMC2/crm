@@ -86,7 +86,7 @@
         "
       >
         {{ __(field.label) }}
-        <span v-if="field.mandatory" class="text-ink-red-6">*</span>
+        <span v-if="field.mandatory" class="text-ink-red-7">*</span>
       </label>
     </div>
     <div

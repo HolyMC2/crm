@@ -559,7 +559,7 @@ const modes = [
     value: 'note',
     icon: '✐',
     label: 'Private note',
-    activeClass: 'bg-surface-amber-2 text-ink-amber-7',
+    activeClass: 'bg-surface-amber-2 text-ink-amber-9',
   },
   {
     value: 'comment',

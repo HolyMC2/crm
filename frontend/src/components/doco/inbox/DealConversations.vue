@@ -26,7 +26,7 @@
       {{ item.provider }} · {{ item.display_name || item.peer_id }}
       {{ opening === itemKey(item) ? __('Abriendo…') : '→' }}
     </component>
-    <span v-if="error" role="alert" class="flex-none text-ink-red-6">{{
+    <span v-if="error" role="alert" class="flex-none text-ink-red-7">{{
       error
     }}</span>
   </nav>
@@ -47,7 +47,7 @@
         }}
       </p>
     </div>
-    <p v-if="error" role="alert" class="text-sm text-ink-red-6">{{ error }}</p>
+    <p v-if="error" role="alert" class="text-sm text-ink-red-7">{{ error }}</p>
     <p v-if="loading" role="status" class="text-sm text-ink-gray-5">
       {{ __('Cargando conversaciones…') }}
     </p>

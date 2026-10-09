@@ -85,7 +85,11 @@
             class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold"
             :class="dirChip(r)"
           >
-            {{ r.type === 'Outgoing' ? '↑ Out' : '↓ In' }}
+            {{
+              r.type === 'Outgoing'
+                ? '↑ ' + __('Outgoing')
+                : '↓ ' + __('Incoming')
+            }}
           </span>
         </div>
         <div class="min-w-0">

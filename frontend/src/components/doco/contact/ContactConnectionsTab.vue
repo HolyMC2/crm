@@ -86,7 +86,7 @@
               <span
                 v-if="!data.people.customers.length"
                 class="text-ink-gray-6"
-                >{{ __('Sin Customer vinculado') }}</span
+                >{{ __('No linked customer') }}</span
               >
             </div>
           </Panel>
@@ -110,7 +110,7 @@
               ></a
             >
           </Panel>
-          <Panel :title="__('Leads y tratos')">
+          <Panel :title="__('Prospectos y tratos')">
             <!-- CRM's own app gate decides Deal/Lead discovery; identity stays usable. -->
             <SectionAvailability
               v-if="data.people.crm_availability?.available === false"

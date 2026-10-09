@@ -126,7 +126,7 @@
           </div>
           <div
             v-else-if="ledger.error && !messages.length"
-            class="py-8 text-center text-[12px] text-ink-red-6"
+            class="py-8 text-center text-[12px] text-ink-red-7"
           >
             {{ __('No se pudo cargar el historial.') }}
             <button

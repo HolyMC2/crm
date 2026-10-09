@@ -142,7 +142,7 @@
             <span>{{ text.length }} / {{ MAX_PREFILL }}</span>
             <span
               v-if="text.length > MAX_PREFILL"
-              class="font-semibold text-ink-red-6"
+              class="font-semibold text-ink-red-7"
               >{{ __('Se recortará') }}</span
             >
           </div>
@@ -158,7 +158,7 @@
           }}
         </p>
 
-        <p v-if="error" class="text-[12px] font-medium text-ink-red-6">
+        <p v-if="error" class="text-[12px] font-medium text-ink-red-7">
           {{ error }}
         </p>
         <p v-if="blockedUrl" class="text-[12px] text-ink-gray-6">

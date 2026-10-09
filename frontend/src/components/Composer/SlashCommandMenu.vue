@@ -111,7 +111,7 @@
       </div>
       <p
         v-if="!active.available"
-        class="rounded-md bg-surface-amber-1 p-2 text-xs text-ink-amber-7"
+        class="rounded-md bg-surface-amber-1 p-2 text-xs text-ink-amber-9"
       >
         {{ active.reason || __('No disponible en esta conversación.') }}
       </p>
@@ -152,7 +152,7 @@
         <p
           v-for="(w, i) in docPreview?.warnings || []"
           :key="i"
-          class="mt-1 text-xs text-ink-amber-7"
+          class="mt-1 text-xs text-ink-amber-9"
         >
           ⚠ {{ w }}
         </p>

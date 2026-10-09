@@ -20,7 +20,7 @@
         </button>
         <span class="text-ink-gray-4">/</span>
         <span class="text-[15px] font-bold text-ink-gray-9">{{
-          __('Reglas de Score')
+          __('Reglas de puntaje')
         }}</span>
       </div>
       <button

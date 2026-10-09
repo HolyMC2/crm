@@ -13,8 +13,8 @@
     class="rounded-[10px] border border-amber-200 bg-surface-amber-1 p-2 dark:border-amber-900/40"
   >
     <div class="mb-1.5 flex items-center gap-1.5 px-1">
-      <FeatherIcon name="clock" class="size-3.5 text-ink-amber-7" />
-      <span class="text-2xs-semibold uppercase tracking-wide text-ink-amber-7">
+      <FeatherIcon name="clock" class="size-3.5 text-ink-amber-9" />
+      <span class="text-2xs-semibold uppercase tracking-wide text-ink-amber-9">
         {{ rows.length }}
         {{
           rows.length === 1

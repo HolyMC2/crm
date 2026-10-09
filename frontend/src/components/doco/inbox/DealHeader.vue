@@ -86,7 +86,7 @@
             class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
             :class="
               waWindow.open
-                ? 'bg-surface-amber-1 text-ink-amber-7'
+                ? 'bg-surface-amber-1 text-ink-amber-9'
                 : 'bg-surface-red-1 text-ink-red-8'
             "
             :title="
@@ -329,7 +329,7 @@
       class="mt-[11px] flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-[13px] py-[9px]"
     >
       <span
-        class="flex-none text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-amber-7"
+        class="flex-none text-[9.5px] font-bold uppercase tracking-[.08em] text-ink-amber-9"
       >
         ⏱ {{ __('Próxima acción') }}
       </span>

@@ -155,7 +155,7 @@
               :id="`pendientes-${group}`"
               class="sticky top-0 z-10 flex items-center gap-2 border-b border-outline-gray-1 bg-surface-base px-4 py-2 text-sm font-semibold sm:px-6"
               :class="
-                group === 'overdue' ? 'text-ink-red-6' : 'text-ink-gray-8'
+                group === 'overdue' ? 'text-ink-red-7' : 'text-ink-gray-8'
               "
             >
               {{ segmentLabel(group) }}

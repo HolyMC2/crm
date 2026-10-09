@@ -10,7 +10,7 @@
     class="mx-3 mb-2 rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-2.5 sm:mx-10"
   >
     <div
-      class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-amber-7"
+      class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-amber-9"
     >
       ⏳ {{ __('Acuse automático por aprobar') }}
     </div>

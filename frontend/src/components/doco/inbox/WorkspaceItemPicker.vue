@@ -21,7 +21,7 @@
       <p
         v-if="error || saveError"
         role="alert"
-        class="mb-3 text-sm text-ink-red-6"
+        class="mb-3 text-sm text-ink-red-7"
       >
         {{ error || saveError }}
       </p>
@@ -94,7 +94,7 @@
           )
         }}
       </p>
-      <p v-if="invalid" role="alert" class="mt-2 text-sm text-ink-red-6">
+      <p v-if="invalid" role="alert" class="mt-2 text-sm text-ink-red-7">
         {{ __('Selecciona hasta 30 artículos, con cantidades entre 0 y 999.') }}
       </p>
       <div class="mt-4 flex items-center justify-between gap-3">

@@ -93,7 +93,7 @@ describe('statusDot / pillarChip', () => {
       'bg-surface-blue-2 text-ink-blue-9 dark:text-ink-blue-8',
     )
     expect(pillarChip('Temporada')).toBe(
-      'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200',
+      'bg-surface-amber-2 text-ink-amber-9 dark:bg-amber-300/20 dark:text-amber-200',
     )
     expect(pillarChip('')).toBe('bg-surface-gray-2 text-ink-gray-6')
     expect(pillarChip('Weird')).toBe('bg-surface-gray-2 text-ink-gray-6')

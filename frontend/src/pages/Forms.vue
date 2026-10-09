@@ -109,7 +109,7 @@
                   class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs"
                   :class="
                     c.warn
-                      ? 'bg-surface-amber-2 text-ink-amber-7'
+                      ? 'bg-surface-amber-2 text-ink-amber-9'
                       : 'bg-surface-gray-2 text-ink-gray-7'
                   "
                 >

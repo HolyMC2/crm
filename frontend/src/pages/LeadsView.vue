@@ -32,7 +32,7 @@
           <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
           <input
             :value="search"
-            :aria-label="__('Buscar leads')"
+            :aria-label="__('Buscar prospectos')"
             :placeholder="__('Buscar nombre, teléfono…')"
             class="w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
             @input="onSearch($event.target.value)"
@@ -139,8 +139,8 @@
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
             :value="search"
-            :aria-label="__('Buscar leads')"
-            :placeholder="__('Buscar leads…')"
+            :aria-label="__('Buscar prospectos')"
+            :placeholder="__('Buscar prospectos…')"
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
             @input="onSearch($event.target.value)"
           />
@@ -241,7 +241,7 @@
         v-else-if="!rows.length"
         class="py-10 text-center text-xs text-ink-gray-4"
       >
-        {{ __('Sin leads') }}
+        {{ __('Sin prospectos') }}
       </div>
       <MobileRecordCard
         v-for="r in rows"
@@ -356,7 +356,7 @@
           v-else-if="!rows.length"
           class="py-10 text-center text-xs text-ink-gray-4"
         >
-          {{ __('Sin leads') }}
+          {{ __('Sin prospectos') }}
         </div>
 
         <div
@@ -915,7 +915,7 @@ async function onBoardChange(row, status) {
       value: status,
     })
     row.status = status
-    toast.success(__('Stage actualizado'))
+    toast.success(__('Etapa actualizada'))
     loadCounts()
   } catch (e) {
     toast.error(e.messages?.[0] || __('No se pudo cambiar el stage'))
@@ -963,7 +963,7 @@ function saveCurrentView() {
   inputDialog({
     title: __('Guardar vista'),
     message: __('Nombre de la vista'),
-    placeholder: __('Ej. Leads calientes'),
+    placeholder: __('Ej. Prospectos calientes'),
     confirmLabel: __('Guardar'),
     theme: 'green',
     required: true,
@@ -1092,10 +1092,10 @@ function clearAll() {
 
 // ── view helpers ─────────────────────────────────────────────────────────────
 const views = [
-  { key: 'list', label: '≡ List' },
-  { key: 'board', label: '⊞ Board' },
-  { key: 'funnel', label: '∿ Funnel' },
-  { key: 'cal', label: '📅 Cal', to: '/agenda' },
+  { key: 'list', label: '≡ ' + __('List') },
+  { key: 'board', label: '⊞ ' + __('Board') },
+  { key: 'funnel', label: '∿ ' + __('Funnel') },
+  { key: 'cal', label: '📅 ' + __('Agenda'), to: '/agenda' },
 ]
 function label(r) {
   return (
@@ -1230,8 +1230,8 @@ function onConversionFailed(error) {
 
 function deleteLead(name) {
   confirmDialog({
-    title: __('Eliminar lead'),
-    message: __('¿Eliminar este lead?'),
+    title: __('Eliminar prospecto'),
+    message: __('¿Eliminar este prospecto?'),
     confirmLabel: __('Eliminar'),
     onConfirm: async () => {
       await frappeCall('frappe.client.delete', { doctype: 'CRM Lead', name })
@@ -1242,8 +1242,8 @@ function deleteLead(name) {
 }
 function bulkDelete() {
   confirmDialog({
-    title: __('Eliminar leads'),
-    message: __('¿Eliminar {0} leads?', [selectedRows.value.length]),
+    title: __('Eliminar prospectos'),
+    message: __('¿Eliminar {0} prospectos?', [selectedRows.value.length]),
     confirmLabel: __('Eliminar'),
     onConfirm: async () => {
       const results = await Promise.allSettled(

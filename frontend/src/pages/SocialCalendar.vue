@@ -153,7 +153,7 @@
       class="flex flex-none flex-wrap items-center gap-1.5 border-b border-outline-gray-1 bg-surface-amber-1 px-4 py-2 dark:bg-amber-300/10"
       role="status"
     >
-      <span class="text-[11.5px] font-bold text-ink-amber-7 dark:text-amber-200"
+      <span class="text-[11.5px] font-bold text-ink-amber-9 dark:text-amber-200"
         >⏳ {{ __('Por aprobar') }} ({{ pendingPosts.length }}):</span
       >
       <button
@@ -164,7 +164,7 @@
       >
         {{ p.title || p.name }}
       </button>
-      <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-7"
+      <span v-if="pendingPosts.length > 6" class="text-[11px] text-ink-amber-9"
         >+{{ pendingPosts.length - 6 }}</span
       >
     </div>
@@ -456,7 +456,7 @@
                   v-if="
                     ['Noticia', 'Testimonio'].includes(composeForm.post_kind)
                   "
-                  class="text-ink-red-6"
+                  class="text-ink-red-7"
                   >*</span
                 >
               </div>

@@ -65,7 +65,7 @@
         </div>
         <div
           v-else-if="catalogResults.error"
-          class="py-10 text-center text-[12px] text-ink-red-6"
+          class="py-10 text-center text-[12px] text-ink-red-7"
         >
           {{ __('No se pudo buscar.') }}
           <button

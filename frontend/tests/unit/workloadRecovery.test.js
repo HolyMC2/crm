@@ -254,7 +254,7 @@ describe('workload recovery', () => {
       'Cargando el alcance seleccionado',
     )
     expect(el.textContent).not.toContain('Sin límite orientativo')
-    expect(el.textContent).not.toContain('Leads abiertos')
+    expect(el.textContent).not.toContain('Prospectos abiertos')
     resolve({ agents: [] })
   })
 

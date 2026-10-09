@@ -42,7 +42,7 @@
         <!-- 24h-window guard: free-form WhatsApp won't deliver outside Meta's window -->
         <div
           v-if="waBlocked"
-          class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-7"
+          class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-9"
         >
           ⚠
           <span class="font-semibold">{{

@@ -219,9 +219,9 @@ const rows = computed(() => {
       due,
       dueTone:
         state === 'overdue'
-          ? 'text-ink-red-6'
+          ? 'text-ink-red-7'
           : state === 'today'
-            ? 'text-ink-amber-7'
+            ? 'text-ink-amber-9'
             : 'text-ink-gray-6',
       age,
       ageText: age == null ? '' : __('{0} d', [age]),

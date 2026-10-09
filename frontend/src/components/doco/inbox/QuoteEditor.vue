@@ -27,7 +27,7 @@
     <div v-if="loading" class="py-2 text-[11.5px] text-ink-gray-5">
       {{ __('Cargando…') }}
     </div>
-    <div v-else-if="error" class="py-2 text-[11.5px] text-ink-red-6">
+    <div v-else-if="error" class="py-2 text-[11.5px] text-ink-red-7">
       {{ error }}
     </div>
 
@@ -82,7 +82,7 @@
               >× {{ money(l.rate) }}</span
             >
             <button
-              class="ml-auto text-[11px] text-ink-red-6 hover:text-ink-red-7"
+              class="ml-auto text-[11px] text-ink-red-7 hover:text-ink-red-7"
               :disabled="busy"
               :title="__('Quitar línea')"
               @click="dropLine(l)"

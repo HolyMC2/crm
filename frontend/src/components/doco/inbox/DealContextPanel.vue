@@ -65,7 +65,7 @@
             )
           "
         >
-          {{ isDeal ? __('Abrir 360°') : __('Abrir Lead') }} →
+          {{ isDeal ? __('Abrir 360°') : __('Open lead') }} →
         </button>
       </div>
       <button
@@ -192,7 +192,7 @@
               → {{ __('Marcar completado') }}
             </button>
             <button
-              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-7 hover:bg-surface-amber-1"
+              class="rounded-md px-2 py-1.5 text-left text-[11.5px] font-medium text-ink-amber-9 hover:bg-surface-amber-1"
               @click="macroPago"
             >
               → {{ __('Recordatorio de pago')

@@ -255,7 +255,7 @@ const openLabel = computed(
   () =>
     ({
       'Deal 360': __('Abrir trato'),
-      Lead: __('Abrir lead'),
+      Lead: __('Abrir prospecto'),
       Contact: __('Abrir contacto'),
     })[recordLink.value?.name] || __('Abrir'),
 )
@@ -344,7 +344,7 @@ const statusChip = computed(() => {
     {
       Pendiente: {
         label: __('Pendiente'),
-        cls: 'bg-surface-amber-1 text-ink-amber-7',
+        cls: 'bg-surface-amber-1 text-ink-amber-9',
       },
       Enviado: {
         label: __('Enviado'),

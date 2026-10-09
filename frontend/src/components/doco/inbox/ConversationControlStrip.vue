@@ -86,7 +86,7 @@ const toneClass = computed(
     ({
       green: 'bg-surface-green-1 text-ink-green-8',
       blue: 'bg-surface-blue-1 text-ink-blue-9',
-      amber: 'bg-surface-amber-1 text-ink-amber-7',
+      amber: 'bg-surface-amber-1 text-ink-amber-9',
       gray: 'bg-surface-gray-2 text-ink-gray-7',
     })[view.value?.tone] || 'bg-surface-gray-2 text-ink-gray-7',
 )

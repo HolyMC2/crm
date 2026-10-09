@@ -42,13 +42,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { addonAvailable, navItemVisible } from '@/utils/crmCapabilities'
 import { useRoute, useRouter } from 'vue-router'
 import { createResource } from 'frappe-ui'
 import { routeGroup } from '@/composables/navModel'
 import { mobileView } from '@/composables/inbox'
 import { mobileSidebarOpened } from '@/composables/settings'
+import { keyboardOpen, watchKeyboard } from '@/composables/keyboard'
 import InboxIcon from '~icons/lucide/messages-square'
 import LeadsIcon from '~icons/lucide/users'
 import DealsIcon from '~icons/lucide/handshake'
@@ -124,17 +125,8 @@ const inDrillDown = computed(
     /^\/(inbox|(ventas\/)?deal\/)/.test(route.path) &&
     mobileView.value !== 'list',
 )
-// On-screen keyboard: visualViewport shrinks well below the layout viewport.
-const keyboardOpen = ref(false)
-let vv = null
-function onVvResize() {
-  keyboardOpen.value = vv ? vv.height < window.innerHeight * 0.75 : false
-}
-onMounted(() => {
-  vv = window.visualViewport
-  vv?.addEventListener('resize', onVvResize)
-})
-onBeforeUnmount(() => vv?.removeEventListener('resize', onVvResize))
+// On-screen keyboard (shared measurement, see composables/keyboard).
+onMounted(watchKeyboard)
 
 const visible = computed(() => !inDrillDown.value && !keyboardOpen.value)
 

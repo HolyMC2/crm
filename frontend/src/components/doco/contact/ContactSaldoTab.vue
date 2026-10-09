@@ -144,7 +144,7 @@
                 />
                 <span
                   v-if="row.error_message"
-                  class="mt-0.5 block truncate text-[11px] text-ink-red-6"
+                  class="mt-0.5 block truncate text-[11px] text-ink-red-7"
                   :title="row.error_message"
                   >{{ row.error_message }}</span
                 >

@@ -294,7 +294,7 @@ const emptyBody = computed(() =>
 
 function toneClass(tone) {
   return (
-    { red: 'text-ink-red-7', orange: 'text-ink-amber-7' }[tone] ||
+    { red: 'text-ink-red-7', orange: 'text-ink-amber-9' }[tone] ||
     'text-ink-gray-6'
   )
 }
