@@ -6,7 +6,7 @@ from frappe.tests import IntegrationTestCase
 from frappe.utils import add_to_date, now_datetime
 
 from crm.api import avisos as api
-from crm.avisos import stream
+from crm.avisos import resolve, stream
 
 ANA = "avisos-ana@example.invalid"
 BETO = "avisos-beto@example.invalid"
@@ -205,7 +205,11 @@ class TestAvisos(IntegrationTestCase):
 		log(ANA, "Con enlace", "Alert", link="/app/scheduled-job-log")
 		frappe.set_user(ANA)
 		targets = {g["title"]: g["target"] for g in api.get_stream()["groups"]}
-		self.assertEqual(targets["Tuyo"]["route"], f"/pendientes/todo/{self.todo.name}")
+		# The Pendientes page when that module is on for the reader (doco installed), else Desk.
+		pendientes = resolve.Access().module("pendientes")
+		self.assertEqual(
+			targets["Tuyo"]["route"], f"/pendientes/todo/{self.todo.name}" if pendientes else None
+		)
 		self.assertEqual(targets["Tuyo"]["desk"], f"/app/todo/{self.todo.name}")
 		for title in ("De Beto", "Borrado", "Sin registro"):
 			with self.subTest(title=title):
@@ -281,7 +285,7 @@ class TestAvisos(IntegrationTestCase):
 		data = api.get_stream()
 		target = self.group(data, "direct")[0]["target"]
 		self.assertEqual(target["label"], organization.name)
-		self.assertTrue(target["route"])
+		self.assertTrue(target["route"] or target["desk"])
 		self.assertNotIn(organization.organization_name, frappe.as_json(data))
 
 	def test_masked_title_field_is_not_disclosed_as_the_record_label(self):
