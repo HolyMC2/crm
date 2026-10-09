@@ -212,6 +212,11 @@ export function constraintActions(constraint) {
     not_found: ['refresh'],
     too_many_events: ['shorter_range'],
     invalid_range: ['pick_time'],
+    // Citas en línea (doco.citas)
+    slot_taken: ['pick_time'],
+    native: ['pick_time'],
+    cita: ['refresh'],
+    closed: ['refresh'],
   }
   return byCode[constraint?.code] || ['retry']
 }

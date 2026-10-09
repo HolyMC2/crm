@@ -66,6 +66,18 @@
           @click="emit('reload')"
         />
       </p>
+      <AgendaCitaPanel
+        v-else-if="detail?.cita"
+        :cita="detail.cita"
+        :time-zone="timeZone"
+        :locale="locale"
+        :hour12="hour12"
+        :busy="busy"
+        :return-to="returnTo"
+        @action="(id) => emit('cita-action', id)"
+        @move="(slot) => emit('cita-move', slot)"
+        @message="(purpose) => emit('cita-message', purpose)"
+      />
       <dl
         v-else-if="detail"
         class="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 text-base"
@@ -131,6 +143,7 @@
       </dl>
 
       <div
+        v-if="event.kind !== 'cita'"
         class="sticky bottom-0 flex flex-wrap gap-2 bg-surface-white pb-[env(safe-area-inset-bottom)] pt-2"
       >
         <template v-if="event.canEdit">
@@ -217,6 +230,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { Badge, Button } from 'frappe-ui'
+import AgendaCitaPanel from '@/components/agenda/AgendaCitaPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import { recordLink } from '@/composables/useAgenda'
 
@@ -230,6 +244,7 @@ const props = defineProps({
   hour12: { type: Boolean, default: true },
   busy: { type: Boolean, default: false },
   constraints: { type: Array, default: () => [] },
+  returnTo: { type: String, default: '' },
 })
 const emit = defineEmits([
   'close',
@@ -241,6 +256,9 @@ const emit = defineEmits([
   'dismiss-guard',
   'open-turnos',
   'reload',
+  'cita-action',
+  'cita-move',
+  'cita-message',
 ])
 const confirmCancel = ref(false)
 watch(
@@ -278,6 +296,10 @@ const badge = computed(() => {
     return { theme: 'green', label: __('Done') }
   if (props.event.status === 'Cancelled')
     return { theme: 'gray', label: __('Cancelled') }
+  if (props.event.status === 'Missed')
+    return { theme: 'orange', label: __('Did not come') }
+  if (props.event.kind === 'cita')
+    return { theme: 'blue', label: __('Appointment') }
   return null
 })
 const referenceLink = computed(() =>
