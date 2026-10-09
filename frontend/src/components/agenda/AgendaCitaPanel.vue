@@ -110,7 +110,11 @@
         </option>
       </select>
       <p v-if="!days.length" class="mt-2 text-sm text-ink-gray-7">
-        {{ loadingSlots ? __('Loading free times…') : __('No free times in the coming days.') }}
+        {{
+          loadingSlots
+            ? __('Loading free times…')
+            : __('No free times in the coming days.')
+        }}
       </p>
       <div class="mt-2 flex flex-wrap gap-2">
         <Button
@@ -207,7 +211,12 @@
 import { computed, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import { recordLink } from '@/composables/useAgenda'
-import { citaOptions, receiveUrl, slotsOn, telHref } from '@/composables/useCitas'
+import {
+  citaOptions,
+  receiveUrl,
+  slotsOn,
+  telHref,
+} from '@/composables/useCitas'
 
 const props = defineProps({
   cita: { type: Object, required: true },
@@ -234,7 +243,9 @@ watch(
 )
 
 const open = computed(() => ['scheduled', 'past'].includes(props.cita.state))
-const actionIds = computed(() => (props.cita.actions || []).map((row) => row.id))
+const actionIds = computed(() =>
+  (props.cita.actions || []).map((row) => row.id),
+)
 const whatsapp = computed(() => props.cita.whatsapp || null)
 const partyLink = computed(() =>
   props.cita.party?.name

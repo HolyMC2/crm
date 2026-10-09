@@ -28,7 +28,10 @@ def _contact(doc):
 	"""The chat's linked Contact, else the one Contact whose mobile ends like the peer's."""
 	for row in frappe.parse_json(doc.get("context_links") or "[]") or []:
 		if row.get("doctype") == "Contact" and frappe.has_permission("Contact", "read", doc=row.get("name")):
-			return {"name": row["name"], "label": frappe.db.get_value("Contact", row["name"], "full_name") or row["name"]}
+			return {
+				"name": row["name"],
+				"label": frappe.db.get_value("Contact", row["name"], "full_name") or row["name"],
+			}
 	tail = "".join(ch for ch in str(doc.peer_id or "") if ch.isdigit())[-10:]
 	if len(tail) < 7:
 		return None
@@ -50,7 +53,10 @@ def booking_context(conversation: str):
 		if not engine or doc.provider != "WhatsApp":
 			return {"available": False}
 		if engine.problems():
-			return {"available": False, "reason": _("Online appointments are not set up yet. The owner sets them up in Agenda.")}
+			return {
+				"available": False,
+				"reason": _("Online appointments are not set up yet. The owner sets them up in Agenda."),
+			}
 		flow = engine.flows.flow_state()
 		return {
 			"available": True,
@@ -89,5 +95,9 @@ def send_booking_link(conversation: str, expected_generation: int | str, request
 		)
 	url = engine.messages.booking_url()
 	if not url:
-		frappe.throw(_("Add your shop's web address to its storefront profile so customers can open the booking page."))
-	return outbox.queue_message(conversation, expected_generation, request_id, {"type": "text", "text": f"{text} {url}"})
+		frappe.throw(
+			_("Add your shop's web address to its storefront profile so customers can open the booking page.")
+		)
+	return outbox.queue_message(
+		conversation, expected_generation, request_id, {"type": "text", "text": f"{text} {url}"}
+	)

@@ -24,7 +24,12 @@
           :label="__('Set up appointments')"
           @click="emit('open-settings')"
         />
-        <Button class="min-h-11" variant="subtle" :label="__('Try again')" @click="load" />
+        <Button
+          class="min-h-11"
+          variant="subtle"
+          :label="__('Try again')"
+          @click="load"
+        />
       </div>
     </div>
     <template v-else>
@@ -33,9 +38,10 @@
           __('Customer')
         }}</label>
         <div v-if="person" class="mt-1 flex items-center gap-2">
-          <span class="min-h-11 flex-1 content-center text-base text-ink-gray-9">{{
-            person.label
-          }}</span>
+          <span
+            class="min-h-11 flex-1 content-center text-base text-ink-gray-9"
+            >{{ person.label }}</span
+          >
           <Button
             class="min-h-11"
             variant="ghost"
@@ -53,7 +59,10 @@
             :placeholder="__('Search by name or phone')"
             @input="search"
           />
-          <ul v-if="matches.length" class="mt-1 rounded border border-outline-gray-2">
+          <ul
+            v-if="matches.length"
+            class="mt-1 rounded border border-outline-gray-2"
+          >
             <li v-for="row in matches" :key="row.name">
               <button
                 type="button"
@@ -65,9 +74,14 @@
               </button>
             </li>
           </ul>
-          <p v-else-if="query.length >= 2 && !searching" class="mt-1 text-sm text-ink-gray-6">
+          <p
+            v-else-if="query.length >= 2 && !searching"
+            class="mt-1 text-sm text-ink-gray-6"
+          >
             {{ __('No contact found. Add them in Contactos first.') }}
-            <RouterLink class="underline" to="/contactos">{{ __('Open Contactos') }}</RouterLink>
+            <RouterLink class="underline" to="/contactos">{{
+              __('Open Contactos')
+            }}</RouterLink>
           </p>
         </template>
       </div>
@@ -81,17 +95,23 @@
           class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
         >
           <option value="">{{ __('No service yet') }}</option>
-          <option v-for="row in services" :key="row.id" :value="row.id">{{ row.label }}</option>
+          <option v-for="row in services" :key="row.id" :value="row.id">
+            {{ row.label }}
+          </option>
         </select>
       </div>
       <div>
-        <label class="block text-sm text-ink-gray-7" :for="ids.day">{{ __('Day') }}</label>
+        <label class="block text-sm text-ink-gray-7" :for="ids.day">{{
+          __('Day')
+        }}</label>
         <select
           :id="ids.day"
           v-model="day"
           class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
         >
-          <option v-for="row in days" :key="row.date" :value="row.date">{{ dayLabel(row.date) }}</option>
+          <option v-for="row in days" :key="row.date" :value="row.date">
+            {{ dayLabel(row.date) }}
+          </option>
         </select>
         <p v-if="!days.length" class="mt-1 text-sm text-ink-gray-7">
           {{ __('No free times in the coming days.') }}
@@ -195,7 +215,9 @@ const day = ref('')
 const start = ref('')
 const notes = ref(props.initial.notes || '')
 
-const dirty = computed(() => Boolean(start.value || notes.value || service.value))
+const dirty = computed(() =>
+  Boolean(start.value || notes.value || service.value),
+)
 const missing = computed(() => {
   if (!person.value) return __('Choose the customer.')
   if (!start.value) return __('Choose a free time.')
@@ -230,7 +252,9 @@ function search() {
     try {
       const data = await searchPeople(text)
       if (query.value.trim() !== text) return
-      matches.value = (data.people || []).filter((row) => row.doctype === 'Contact')
+      matches.value = (data.people || []).filter(
+        (row) => row.doctype === 'Contact',
+      )
     } finally {
       searching.value = false
     }
@@ -248,7 +272,9 @@ function submit() {
     service: service.value || undefined,
     start: start.value,
     notes: notes.value.trim(),
-    ...(props.initial.conversation ? { conversation: props.initial.conversation } : {}),
+    ...(props.initial.conversation
+      ? { conversation: props.initial.conversation }
+      : {}),
   })
 }
 function guard(id) {

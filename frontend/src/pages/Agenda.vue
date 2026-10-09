@@ -882,7 +882,8 @@ async function runCitaAction(id) {
   busy.value = true
   try {
     const result = await citaAction(cita, id)
-    if (result?.constraints) return (panelConstraints.value = result.constraints)
+    if (result?.constraints)
+      return (panelConstraints.value = result.constraints)
     panelConstraints.value = []
     detail.value = { ...detail.value, cita: result }
     await load()
@@ -955,9 +956,9 @@ async function openCitaFromQuery() {
       const cita = await getCita(query.cita)
       if (cita?.event) {
         const date = cita.start
-          ? new Intl.DateTimeFormat('en-CA', { timeZone: timeZone.value }).format(
-              new Date(cita.start),
-            )
+          ? new Intl.DateTimeFormat('en-CA', {
+              timeZone: timeZone.value,
+            }).format(new Date(cita.start))
           : state.value.date
         router.replace({
           query: stateQuery(

@@ -73,7 +73,10 @@ class TestFlowMessages(test_outbox.TestOutbox):
 		flow = self.flow()
 		data = {"slots": [{"id": "2026-10-09T16:00:00Z", "title": "Jue 9 oct 10:00"}]}
 		result = api.queue_flow_message(
-			self.doc.name, 2, uuid4().hex, {"flow": flow, "body": "Agenda", "token_prefix": "cita", "data": data}
+			self.doc.name,
+			2,
+			uuid4().hex,
+			{"flow": flow, "body": "Agenda", "token_prefix": "cita", "data": data},
 		)
 		parameters = json.loads(api._load(result["name"]).payload)["interactive"]["action"]["parameters"]
 		self.assertEqual(parameters["flow_action_payload"], {"screen": "SCREEN_A", "data": data})

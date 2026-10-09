@@ -25,30 +25,45 @@ const events = [
 describe('the «Citas» calendar', () => {
   it('asks the Event source once, whichever of the two is on', () => {
     expect(querySourceKeys([CITAS_CALENDAR])).toEqual(['Event'])
-    expect(querySourceKeys(['Event', CITAS_CALENDAR, 'Turno'])).toEqual(['Event', 'Turno'])
+    expect(querySourceKeys(['Event', CITAS_CALENDAR, 'Turno'])).toEqual([
+      'Event',
+      'Turno',
+    ])
   })
 
   it('shows only citas when it is the only Event calendar on', () => {
-    expect(visibleFor(events, [CITAS_CALENDAR]).map((e) => e.id)).toEqual(['EV-2'])
-    expect(visibleFor(events, ['Event']).map((e) => e.id)).toEqual(['EV-1', 'EV-2'])
-    expect(visibleFor(events, ['Turno', CITAS_CALENDAR]).map((e) => e.id)).toEqual(['EV-2', 'T-1'])
+    expect(visibleFor(events, [CITAS_CALENDAR]).map((e) => e.id)).toEqual([
+      'EV-2',
+    ])
+    expect(visibleFor(events, ['Event']).map((e) => e.id)).toEqual([
+      'EV-1',
+      'EV-2',
+    ])
+    expect(
+      visibleFor(events, ['Turno', CITAS_CALENDAR]).map((e) => e.id),
+    ).toEqual(['EV-2', 'T-1'])
   })
 })
 
 describe('«Recibir equipo» hand-off', () => {
   it('opens Taller Intake with the cita and a safe way back', () => {
-    const url = receiveUrl({ name: 'APMT-Ana-0001' }, '/crm/agenda?view=day&event=Event:EV-2')
+    const url = receiveUrl(
+      { name: 'APMT-Ana-0001' },
+      '/crm/agenda?view=day&event=Event:EV-2',
+    )
     const parsed = new URL(url, 'https://shop.example')
     expect(parsed.pathname).toBe('/taller/intake')
     expect(parsed.searchParams.get('cita')).toBe('APMT-Ana-0001')
-    expect(parsed.searchParams.get('return')).toBe('/crm/agenda?view=day&event=Event:EV-2')
+    expect(parsed.searchParams.get('return')).toBe(
+      '/crm/agenda?view=day&event=Event:EV-2',
+    )
   })
 
   it('never returns to a foreign address', () => {
     const url = receiveUrl({ name: 'A' }, 'https://evil.example/x')
-    expect(new URL(url, 'https://shop.example').searchParams.get('return')).toBe(
-      '/crm/agenda?view=list&cal=citas',
-    )
+    expect(
+      new URL(url, 'https://shop.example').searchParams.get('return'),
+    ).toBe('/crm/agenda?view=list&cal=citas')
   })
 
   it('reads Taller’s return marker', () => {
@@ -60,7 +75,10 @@ describe('«Recibir equipo» hand-off', () => {
 
 describe('cita actions', () => {
   it('send the version the panel showed', async () => {
-    await citaAction({ name: 'APMT-1', version: '2026-10-08 10:00:00' }, 'no_show')
+    await citaAction(
+      { name: 'APMT-1', version: '2026-10-08 10:00:00' },
+      'no_show',
+    )
     expect(call).toHaveBeenCalledWith('doco.citas.api.no_show', {
       name: 'APMT-1',
       version: '2026-10-08 10:00:00',
@@ -91,9 +109,15 @@ describe('helpers', () => {
   })
 
   it('accepts only hours that open before they close', () => {
-    expect(validHours([{ day: 'Monday', from: '09:00', to: '18:00' }])).toBe(true)
-    expect(validHours([{ day: 'Monday', from: '18:00', to: '09:00' }])).toBe(false)
-    expect(validHours([{ day: 'Lunes', from: '09:00', to: '18:00' }])).toBe(false)
+    expect(validHours([{ day: 'Monday', from: '09:00', to: '18:00' }])).toBe(
+      true,
+    )
+    expect(validHours([{ day: 'Monday', from: '18:00', to: '09:00' }])).toBe(
+      false,
+    )
+    expect(validHours([{ day: 'Lunes', from: '09:00', to: '18:00' }])).toBe(
+      false,
+    )
     expect(validHours([])).toBe(false)
   })
 })

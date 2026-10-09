@@ -12,7 +12,13 @@
       :disabled="busy || blocked"
       @click="send"
     >
-      {{ busy ? __('Sending…') : context.flow ? __('Send booking form') : __('Send booking link') }}
+      {{
+        busy
+          ? __('Sending…')
+          : context.flow
+            ? __('Send booking form')
+            : __('Send booking link')
+      }}
     </button>
     <RouterLink
       v-if="context.canBook"
@@ -21,7 +27,9 @@
       >{{ __('Book appointment') }}</RouterLink
     >
     <p v-if="!canSend" class="w-full text-xs text-ink-gray-5">
-      {{ __('To send the booking link you need control of this conversation.') }}
+      {{
+        __('To send the booking link you need control of this conversation.')
+      }}
     </p>
     <p v-if="notice" role="status" class="w-full text-xs">{{ notice }}</p>
     <p v-if="error" role="alert" class="w-full text-xs">{{ error }}</p>
@@ -55,7 +63,10 @@ const bookRoute = computed(() => ({
     new_cita: '1',
     conversation: props.conversation.name,
     ...(context.value?.contact
-      ? { contact: context.value.contact.name, contact_label: context.value.contact.label }
+      ? {
+          contact: context.value.contact.name,
+          contact_label: context.value.contact.label,
+        }
       : {}),
     return_to: `${window.location.pathname}${window.location.search}`,
     return_label: __('the chat'),
@@ -88,7 +99,8 @@ async function send() {
     notice.value = __('Saved. Check its status in Sends.')
     emit('queued', result)
   } catch (e) {
-    error.value = e?.messages?.[0] || e?.message || __('It was not sent. Try again.')
+    error.value =
+      e?.messages?.[0] || e?.message || __('It was not sent. Try again.')
   } finally {
     busy.value = false
   }
