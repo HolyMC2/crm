@@ -92,7 +92,7 @@
         </div>
       </fieldset>
 
-      <div class="grid gap-3 sm:grid-cols-3">
+      <div class="grid gap-3 sm:grid-cols-2">
         <label class="text-sm text-ink-gray-7">
           {{ __('Minutes per appointment') }}
           <input
@@ -101,16 +101,6 @@
             min="10"
             max="480"
             step="5"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
-          />
-        </label>
-        <label class="text-sm text-ink-gray-7">
-          {{ __('Appointments at the same time') }}
-          <input
-            v-model.number="form.capacity"
-            type="number"
-            min="1"
-            max="50"
             class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
           />
         </label>
@@ -125,6 +115,34 @@
           />
         </label>
       </div>
+
+      <fieldset>
+        <legend class="text-base font-semibold text-ink-gray-9">
+          {{ __('Who takes appointments') }}
+        </legend>
+        <p class="mt-1 text-sm text-ink-gray-6">
+          {{
+            __(
+              'Each person can attend one appointment at a time, so {0} can be booked at the same time.',
+              [form.agents.length || 1],
+            )
+          }}
+        </p>
+        <div class="mt-2 grid gap-1 sm:grid-cols-2">
+          <label
+            v-for="row in settings.users"
+            :key="row.user"
+            class="flex min-h-11 items-center gap-2.5 text-base text-ink-gray-8"
+          >
+            <input
+              v-model="form.agents"
+              type="checkbox"
+              class="h-4 w-4 rounded"
+              :value="row.user"
+            />{{ row.name }}
+          </label>
+        </div>
+      </fieldset>
 
       <label class="text-sm text-ink-gray-7">
         {{ __('Rest days and holidays') }}
@@ -318,7 +336,6 @@ function fill(data) {
   form.value = {
     version: data.version,
     durationMinutes: data.durationMinutes,
-    capacity: data.capacity || 1,
     daysAhead: data.daysAhead || 14,
     holidayList: data.holidayList || data.suggestedHolidayList || '',
     hours: data.hours.map((row) => ({ ...row })),

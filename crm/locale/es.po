@@ -15958,3 +15958,11 @@ msgstr "Elige el día y la hora que te queden mejor."
 #: frontend/src/components/agenda/AgendaCitaPanel.vue
 msgid "Add your shop's web address to its storefront profile so customers can open the booking page."
 msgstr "Agrega la dirección web de tu tienda en su perfil de tienda en línea para que el cliente pueda abrir la página para agendar."
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Who takes appointments"
+msgstr "Quién atiende citas"
+
+#: frontend/src/components/agenda/AgendaCitasSettings.vue
+msgid "Each person can attend one appointment at a time, so {0} can be booked at the same time."
+msgstr "Cada persona atiende una cita a la vez, así que se pueden agendar {0} a la misma hora."
