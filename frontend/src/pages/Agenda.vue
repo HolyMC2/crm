@@ -98,6 +98,25 @@
               {{ entry.label }}
             </button>
           </div>
+          <div v-if="citas.available" class="flex items-center gap-2">
+            <Button
+              v-if="citas.canBook"
+              class="min-h-11 flex-1 sm:flex-none"
+              variant="subtle"
+              icon-left="calendar-plus"
+              :label="__('New appointment')"
+              @click="openCitaForm()"
+            />
+            <Button
+              v-if="citas.canSetUp"
+              class="min-h-11 min-w-11"
+              variant="ghost"
+              icon="settings"
+              :aria-label="__('Online appointments settings')"
+              :title="__('Online appointments settings')"
+              @click="citaSettingsOpen = true"
+            />
+          </div>
           <Button
             v-if="canCreate"
             class="hidden min-h-11 sm:inline-flex"
@@ -399,6 +418,50 @@
         </div>
       </template>
     </component>
+
+    <component
+      :is="phone ? BottomSheet : Dialog"
+      v-if="citaForm"
+      v-bind="sheetProps(__('New appointment'))"
+    >
+      <template #[formSlot]>
+        <div :class="phone ? 'px-5 pb-4' : ''">
+          <h2 v-if="phone" class="pb-3 text-xl font-semibold">
+            {{ __('New appointment') }}
+          </h2>
+          <AgendaCitaForm
+            :key="citaForm.key"
+            :initial="citaForm.initial"
+            :time-zone="timeZone"
+            :locale="locale"
+            :hour12="hour12"
+            :busy="busy"
+            :constraints="citaForm.constraints"
+            @save="saveCita"
+            @close="citaForm = null"
+            @dismiss-guard="citaForm.constraints = []"
+            @open-settings="(citaForm = null), (citaSettingsOpen = true)"
+          />
+        </div>
+      </template>
+    </component>
+    <component
+      :is="phone ? BottomSheet : Dialog"
+      v-if="citaSettingsOpen"
+      v-bind="sheetProps(__('Online appointments'))"
+    >
+      <template #[formSlot]>
+        <div :class="phone ? 'px-5 pb-4' : ''">
+          <h2 v-if="phone" class="pb-3 text-xl font-semibold">
+            {{ __('Online appointments') }}
+          </h2>
+          <AgendaCitasSettings
+            @close="citaSettingsOpen = false"
+            @saved="refreshCitas"
+          />
+        </div>
+      </template>
+    </component>
   </ModuleLayout>
 </template>
 <script setup>
@@ -406,6 +469,8 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BottomSheet, Button, Dialog, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import AgendaCitaForm from '@/components/agenda/AgendaCitaForm.vue'
+import AgendaCitasSettings from '@/components/agenda/AgendaCitasSettings.vue'
 import AgendaEventForm from '@/components/agenda/AgendaEventForm.vue'
 import AgendaEventPanel from '@/components/agenda/AgendaEventPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
@@ -443,6 +508,16 @@ import {
   wallToInstant,
   weekStartsOn,
 } from '@/composables/useAgenda'
+import {
+  CITAS_CALENDAR,
+  bookCita,
+  citaAction,
+  citaMessageLink,
+  doneCita,
+  getCita,
+  querySourceKeys,
+  visibleFor,
+} from '@/composables/useCitas'
 
 const SLOT_MINUTES = 30
 const route = useRoute()
@@ -497,6 +572,7 @@ const viewEntries = computed(() => [
 const SOURCE_LABELS = {
   Event: () => __('My agenda'),
   Turno: () => __('Shifts'),
+  [CITAS_CALENDAR]: () => __('Appointments'),
 }
 const sourceLabel = (key) => SOURCE_LABELS[key]?.() || key
 const enabledSources = computed(
@@ -509,16 +585,22 @@ const blockedSources = computed(
     ) || [],
 )
 const firstReason = computed(() => blockedSources.value[0]?.reason || '')
-const calendarOptions = computed(() =>
-  enabledSources.value
+const citas = computed(() => caps.value?.citas || {})
+const calendarOptions = computed(() => {
+  const rows = enabledSources.value
     .filter((row) => row.key in SOURCE_LABELS)
-    .map((row) => ({ key: row.key, label: sourceLabel(row.key) })),
-)
-const activeSources = computed(() =>
+    .map((row) => ({ key: row.key, label: sourceLabel(row.key) }))
+  // Citas are Event rows: their own toggle shows only them.
+  if (citas.value.available && rows.some((row) => row.key === 'Event'))
+    rows.push({ key: CITAS_CALENDAR, label: sourceLabel(CITAS_CALENDAR) })
+  return rows
+})
+const activeCalendars = computed(() =>
   calendarOptions.value
     .map((row) => row.key)
     .filter((key) => state.value.calendars.includes(key)),
 )
+const activeSources = computed(() => querySourceKeys(activeCalendars.value))
 const canCreate = computed(() =>
   Boolean(enabledSources.value.find((row) => row.key === 'Event')?.canCreate),
 )
@@ -530,7 +612,7 @@ const zoneNote = computed(() => {
 })
 
 const visibleEvents = computed(() =>
-  events.value.filter((event) => activeSources.value.includes(event.source)),
+  visibleFor(events.value, activeCalendars.value),
 )
 const split = computed(() => splitAllDay(visibleEvents.value))
 const calendarEvents = computed(() => split.value.timed.map(toCalendarEvent))
@@ -727,6 +809,7 @@ const panelProps = computed(() => ({
   locale,
   hour12,
   busy: busy.value,
+  returnTo: agendaPath(),
   constraints: panelConstraints.value.length
     ? panelConstraints.value
     : moveGuard.value && eventKey(moveGuard.value.event) === state.value.event
@@ -747,6 +830,142 @@ const panelHandlers = {
   },
   'open-turnos': openTurnos,
   reload: syncSelection,
+  'cita-action': (id) => runCitaAction(id),
+  'cita-move': (slot) => doMove(selectedEvent.value, slot),
+  'cita-message': (purpose) => openCitaMessage(purpose),
+}
+
+// --- citas (doco.citas) ---------------------------------------------------------------
+const citaForm = ref(null)
+const citaSettingsOpen = ref(false)
+let citaFormKey = 0
+function agendaPath() {
+  const url = new URL(window.location.href)
+  url.searchParams.delete('done')
+  return `${url.pathname}${url.search}`
+}
+function sheetProps(title) {
+  return phone.value
+    ? { open: true, dismissible: false, title: '' }
+    : { open: true, title, size: 'xl', dismissible: false }
+}
+function openCitaForm(initial = {}) {
+  citaForm.value = reactive({
+    key: ++citaFormKey,
+    initial,
+    constraints: [],
+    requestId: requestId(),
+  })
+}
+async function saveCita(payload) {
+  const current = citaForm.value
+  if (!current) return
+  busy.value = true
+  try {
+    const result = await bookCita({ ...payload, requestId: current.requestId })
+    if (result?.constraints) return (current.constraints = result.constraints)
+    citaForm.value = null
+    await load()
+    if (result.event) setState({ event: `Event:${result.event}` })
+    toast.success(__('Appointment booked for {0}', [result.customer]))
+  } catch (error) {
+    current.constraints = [
+      { code: 'unavailable', message: errorText(error), severity: 'block' },
+    ]
+  } finally {
+    busy.value = false
+  }
+}
+async function runCitaAction(id) {
+  const cita = detail.value?.cita
+  if (!cita) return
+  busy.value = true
+  try {
+    const result = await citaAction(cita, id)
+    if (result?.constraints) return (panelConstraints.value = result.constraints)
+    panelConstraints.value = []
+    detail.value = { ...detail.value, cita: result }
+    await load()
+    const messages = {
+      arrived: __('Marked as arrived'),
+      no_show: __('Marked as did not come'),
+      cancel: __('Appointment cancelled'),
+    }
+    toast.success(messages[id])
+  } catch (error) {
+    panelConstraints.value = [
+      { code: 'unavailable', message: errorText(error), severity: 'block' },
+    ]
+  } finally {
+    busy.value = false
+  }
+}
+async function openCitaMessage(purpose) {
+  const cita = detail.value?.cita
+  if (!cita) return
+  try {
+    const link = await citaMessageLink(cita.name, purpose)
+    if (link?.constraints) return (panelConstraints.value = link.constraints)
+    if (link?.url) window.open(link.url, '_blank', 'noopener')
+    else if (link?.reason) toast.error(link.reason)
+  } catch (error) {
+    toast.error(errorText(error))
+  }
+}
+async function refreshCitas() {
+  caps.value = await loadCapabilities()
+  await load()
+}
+// Context from other screens: ?new_cita=1&contact=&contact_label=&conversation=,
+// ?cita=<Appointment> (the Desk list/form) and Taller's return ?done=Appointment:<name>.
+async function openCitaFromQuery() {
+  const query = route.query
+  const rest = { ...query }
+  if (query.new_cita === '1' && citas.value.canBook) {
+    openCitaForm({
+      contact:
+        typeof query.contact === 'string'
+          ? {
+              name: query.contact,
+              label: String(query.contact_label || query.contact).slice(0, 140),
+            }
+          : null,
+      conversation:
+        typeof query.conversation === 'string' ? query.conversation : '',
+    })
+    for (const key of ['new_cita', 'contact', 'contact_label', 'conversation'])
+      delete rest[key]
+  }
+  const done = doneCita(query)
+  if (done) {
+    delete rest.done
+    toast.success(__('Device received. The appointment is marked as attended.'))
+    await load()
+  }
+  if (typeof query.cita === 'string' && query.cita) {
+    delete rest.cita
+    try {
+      const cita = await getCita(query.cita)
+      if (cita?.event) {
+        const date = cita.start
+          ? new Intl.DateTimeFormat('en-CA', { timeZone: timeZone.value }).format(
+              new Date(cita.start),
+            )
+          : state.value.date
+        router.replace({
+          query: stateQuery(
+            { ...state.value, date, event: `Event:${cita.event}` },
+            rest,
+          ),
+        })
+        return
+      }
+    } catch (error) {
+      toast.error(errorText(error))
+    }
+  }
+  if (Object.keys(rest).length !== Object.keys(query).length)
+    router.replace({ query: rest })
 }
 
 // --- moving ---------------------------------------------------------------------------
@@ -1185,7 +1404,15 @@ function openFromQuery() {
 
 // --- keyboard (shell §3.3): never while typing ------------------------------------------
 function onKey(event) {
-  if (event.metaKey || event.ctrlKey || event.altKey || form.value) return
+  if (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    form.value ||
+    citaForm.value ||
+    citaSettingsOpen.value
+  )
+    return
   const target = event.target
   if (target?.closest?.('input, textarea, select, [contenteditable="true"]'))
     return
@@ -1218,6 +1445,7 @@ onMounted(async () => {
   if (!route.query.view) setState({})
   await boot()
   openFromQuery()
+  await openCitaFromQuery()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
