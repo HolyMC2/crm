@@ -428,8 +428,23 @@
                   ])
                 }}
               </p>
+              <p
+                v-if="claim.remedies.supplier_return.debit_note"
+                class="mt-2 text-sm text-ink-gray-8"
+              >
+                {{
+                  claim.remedies.supplier_return.debit_note.draft
+                    ? __(
+                        'Draft debit note {0}: accounting reviews and submits it; the case resolves when it is submitted.',
+                        [claim.remedies.supplier_return.debit_note.name],
+                      )
+                    : __('Debit note {0} submitted.', [
+                        claim.remedies.supplier_return.debit_note.name,
+                      ])
+                }}
+              </p>
               <div
-                v-else-if="claim.remedies.supplier_return.available"
+                v-if="claim.remedies.supplier_return.available"
                 class="mt-2 flex flex-wrap items-end gap-2"
               >
                 <FormControl
@@ -453,36 +468,24 @@
                   :loading="busy"
                   @click="supplierReturn"
                 />
-              </div>
-              <p v-else class="mt-2 text-sm text-ink-gray-6">
-                {{ claim.remedies.supplier_return.reason }}
-                <a
-                  v-if="claim.remedies.supplier_return.next"
-                  class="inline-block min-h-11 py-2 text-ink-blue-link underline"
-                  :href="claim.remedies.supplier_return.next.url"
-                  >{{ claim.remedies.supplier_return.next.label }}</a
+                <p
+                  v-if="selectedPurchase?.debit_against"
+                  class="basis-full text-sm text-ink-gray-6"
                 >
-              </p>
-              <ul
-                v-if="
-                  claim.remedies.supplier_return.available &&
-                  claim.remedies.supplier_return.billed?.length
-                "
+                  {{
+                    __(
+                      'Already invoiced: a draft debit note is prepared on invoice {0} for accounting.',
+                      [selectedPurchase.debit_against],
+                    )
+                  }}
+                </p>
+              </div>
+              <p
+                v-else-if="claim.remedies.supplier_return.reason"
                 class="mt-2 text-sm text-ink-gray-6"
               >
-                <li
-                  v-for="row in claim.remedies.supplier_return.billed"
-                  :key="row.name"
-                >
-                  {{ row.reason }}
-                  <a
-                    v-if="row.next"
-                    class="inline-block min-h-11 py-2 text-ink-blue-link underline"
-                    :href="row.next.url"
-                    >{{ row.next.label }}</a
-                  >
-                </li>
-              </ul>
+                {{ claim.remedies.supplier_return.reason }}
+              </p>
             </template>
           </section>
 
@@ -961,6 +964,11 @@ async function startRefund() {
 }
 
 const purchaseReceipt = ref('')
+const selectedPurchase = computed(() =>
+  claim.value?.remedies?.supplier_return?.purchases?.find(
+    (p) => p.name === purchaseReceipt.value,
+  ),
+)
 watch(
   () => claim.value?.remedies?.supplier_return?.purchases,
   (rows) => {
@@ -979,7 +987,11 @@ async function supplierReturn() {
       modified: claim.value.modified,
     })
     claim.value = out.claim
-    toast.success(__('Returned to the supplier: {0}', [out.purchase_return]))
+    toast.success(
+      out.debit_note
+        ? __('Draft debit note {0} prepared.', [out.debit_note])
+        : __('Returned to the supplier: {0}', [out.purchase_return]),
+    )
   } catch (error) {
     problem.value = problemOf(error)
   } finally {
