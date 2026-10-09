@@ -24,14 +24,18 @@
         class="z-10 flex min-h-12 shrink-0 items-center gap-1 border-b border-outline-gray-1 bg-surface-base pl-3 pr-1 pt-[env(safe-area-inset-top)] transition-[margin] duration-200"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
       >
-        <!-- Ventas pages teleport their own header (breadcrumbs + actions) here. -->
+        <!-- Ventas pages may teleport their own header (breadcrumbs + actions)
+             here; while none arrives the route's title stands in for it. -->
         <div
           v-if="activeKey === 'ventas'"
           id="app-header"
-          class="min-w-0 flex-1"
+          class="min-w-0 flex-1 [&:not(:has(*))]:hidden"
         />
-        <h1 v-else class="min-w-0 flex-1 truncate text-lg font-semibold">
-          {{ route.meta.title || activeModule?.label || 'Muelle' }}
+        <h1
+          data-testid="shell-title"
+          class="min-w-0 flex-1 truncate text-lg font-semibold [#app-header:has(*)+&]:hidden"
+        >
+          {{ headerTitle }}
         </h1>
         <button
           class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
@@ -108,18 +112,12 @@
   </div>
 </template>
 <script setup>
-import {
-  computed,
-  defineAsyncComponent,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useOnline } from '@vueuse/core'
 import { Button } from 'frappe-ui'
 import { isMobile } from '@/composables/breakpoint'
+import { keyboardOpen, watchKeyboard } from '@/composables/keyboard'
 import { mobileView } from '@/composables/mobileView'
 import {
   firstModuleRoute,
@@ -134,6 +132,7 @@ import {
 import { useShellKeyboard } from '@/composables/shellKeyboard'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
+import { shellTitle } from '@/utils/shellTitle'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
@@ -180,11 +179,6 @@ const landing = computed(() =>
 
 // Drill-down panes (inbox thread, deal 360) own the phone screen; the
 // on-screen keyboard also hides the bar.
-const keyboardOpen = ref(false)
-function onViewport() {
-  const vv = window.visualViewport
-  keyboardOpen.value = vv ? vv.height < window.innerHeight * 0.75 : false
-}
 const drillDown = computed(
   () =>
     /^\/(inbox|(ventas\/)?deal\/)/.test(route.path) &&
@@ -267,10 +261,12 @@ useShellKeyboard({
   modules: shellModules,
   router,
 })
+// Every route names itself through meta.title (English source, es-MX catalog).
+const headerTitle = computed(() => shellTitle(route, activeModule.value))
 watch(
-  () => [activeModule.value?.label, route.meta.title],
-  ([module, title]) => {
-    document.title = [title || module, 'Muelle'].filter(Boolean).join(' · ')
+  headerTitle,
+  (title) => {
+    document.title = [title, 'Muelle'].filter(Boolean).join(' · ')
   },
   { immediate: true },
 )
@@ -283,12 +279,7 @@ watch(
 // have mounted (children mount first), fired its requests, then unmounted for
 // «Opening Muelle…» and mounted again.
 reload()
-onMounted(() => {
-  window.visualViewport?.addEventListener('resize', onViewport)
-})
-onBeforeUnmount(() =>
-  window.visualViewport?.removeEventListener('resize', onViewport),
-)
+onMounted(watchKeyboard)
 </script>
 <style>
 /* doco injects a floating «Ayuda» launcher (support_workflow.js) whose dragged

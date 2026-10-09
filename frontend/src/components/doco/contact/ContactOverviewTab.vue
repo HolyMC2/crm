@@ -152,7 +152,7 @@
             <span
               v-if="!data.customers.length"
               class="text-xs text-ink-gray-6"
-              >{{ __('Sin Customer vinculado') }}</span
+              >{{ __('No linked customer') }}</span
             >
           </div>
         </div>
@@ -197,7 +197,7 @@ const Tile = defineComponent({
       gray: 'bg-surface-gray-1 text-ink-gray-9',
       red: 'bg-surface-red-1 text-ink-red-8',
       green: 'bg-surface-green-2 text-ink-green-8',
-      amber: 'bg-surface-amber-1 text-ink-amber-7',
+      amber: 'bg-surface-amber-1 text-ink-amber-9',
     }
     return () =>
       h('div', { class: `rounded-xl p-3 ${tones[p.tone]}` }, [

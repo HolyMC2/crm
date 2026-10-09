@@ -15,7 +15,7 @@
     </div>
     <div
       v-else-if="autoAcks.error && !rows.length"
-      class="px-2 py-6 text-center text-xs text-ink-red-6"
+      class="px-2 py-6 text-center text-xs text-ink-red-7"
     >
       {{ __('No se pudo cargar la lista.') }}
       <button
@@ -83,7 +83,7 @@
           </div>
         </button>
         <span
-          class="flex-none text-[10px] font-semibold text-ink-amber-7"
+          class="flex-none text-[10px] font-semibold text-ink-amber-9"
           :title="__('Esperando desde el entrante')"
         >
           {{ timeAgo(r.last_inbound_at || r.creation) }}

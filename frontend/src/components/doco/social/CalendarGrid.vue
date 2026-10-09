@@ -113,7 +113,7 @@
         <div
           v-for="rib in seasonByDay[day.key] || []"
           :key="rib.name"
-          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200"
+          class="mb-0.5 truncate rounded-sm bg-surface-amber-1 px-1 text-[8.5px] font-semibold leading-tight text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200"
           :title="rib.label"
         >
           {{ rib.isStart ? rib.label : rib.emoji }}

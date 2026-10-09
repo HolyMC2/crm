@@ -317,7 +317,7 @@
             {{ __('Cómo se calcula') }} · {{ __('Capacidad orientativa') }}:
             {{
               cap
-                ? `${cap} ${__('leads + deals abiertos por persona')}`
+                ? `${cap} ${__('prospectos + tratos abiertos por persona')}`
                 : __('Sin límite orientativo configurado (0)')
             }}
           </summary>
@@ -344,7 +344,7 @@
             <p>
               {{
                 __(
-                  'Las tareas sin fecha no se consideran vencidas. Cambiar el propietario de un lead o deal conserva los responsables de sus tareas; reasigna esas tareas por separado si hace falta.',
+                  'Las tareas sin fecha no se consideran vencidas. Cambiar el responsable de un prospecto o trato conserva los responsables de sus tareas; reasigna esas tareas por separado si hace falta.',
                 )
               }}
             </p>
@@ -542,14 +542,14 @@ const metrics = computed(() => {
   return [
     {
       key: 'leads',
-      label: __('Leads abiertos'),
+      label: __('Prospectos abiertos'),
       value: summary.open_leads || 0,
       kind: 'leads',
       bucket: 'all',
     },
     {
       key: 'deals',
-      label: __('Deals abiertos'),
+      label: __('Tratos abiertos'),
       value: summary.open_deals || 0,
       kind: 'deals',
       bucket: 'all',
@@ -567,7 +567,7 @@ const metrics = computed(() => {
       value: summary.overdue_tasks || 0,
       kind: 'tasks',
       bucket: 'overdue',
-      tone: summary.overdue_tasks ? 'text-ink-red-6' : '',
+      tone: summary.overdue_tasks ? 'text-ink-red-7' : '',
     },
     {
       key: 'today',
@@ -576,7 +576,7 @@ const metrics = computed(() => {
       kind: 'tasks',
       bucket: 'today',
       disabled: today == null,
-      tone: today ? 'text-ink-amber-7' : '',
+      tone: today ? 'text-ink-amber-9' : '',
     },
   ].map((metric) => ({
     ...metric,

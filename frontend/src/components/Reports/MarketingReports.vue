@@ -9,7 +9,7 @@
     </p>
     <div class="grid min-w-0 gap-4 xl:grid-cols-2">
       <ReportChart
-        :title="__('¿De dónde llegan los leads?')"
+        :title="__('¿De dónde llegan los prospectos?')"
         :description="note(__('Hasta 8 orígenes principales'), source.meta)"
         :rows="channels"
         :value-label="__('Leads')"
@@ -40,7 +40,7 @@
       </summary>
       <div class="mt-4 space-y-4">
         <ReportBlock
-          :title="__('Origen de leads y tratos')"
+          :title="__('Origen de prospectos y tratos')"
           :description="note('', source.meta)"
           :loading="source.loading"
           :error="source.error"
@@ -106,7 +106,7 @@
           :title="__('Origen social')"
           :description="
             note(
-              __('Leads, tratos e ingresos atribuidos al origen social'),
+              __('Prospectos, tratos e ingresos atribuidos al origen social'),
               social.meta,
             )
           "
@@ -124,7 +124,7 @@
           />
           <p v-if="social.data?.total" class="mt-3 text-sm text-ink-gray-7">
             {{
-              __('Total social: {0} leads · {1} tratos · {2} ganados', [
+              __('Total social: {0} prospectos · {1} tratos · {2} ganados', [
                 social.data.total.leads,
                 social.data.total.deals,
                 social.data.total.won,
@@ -139,11 +139,11 @@
       class="rounded-xl border border-outline-gray-2 bg-surface-base p-4"
     >
       <summary class="cursor-pointer text-base font-medium text-ink-gray-9">
-        {{ __('Conversión y calidad de leads') }}
+        {{ __('Conversión y calidad de prospectos') }}
       </summary>
       <div class="mt-4 grid gap-4 xl:grid-cols-2">
         <ReportChart
-          :title="__('Conversión de leads')"
+          :title="__('Conversión de prospectos')"
           :description="
             note(
               __(
@@ -163,7 +163,7 @@
           :title="__('Distribución de calificación')"
           :description="
             note(
-              __('Calificación actual de los leads sin convertir.'),
+              __('Calificación actual de los prospectos sin convertir.'),
               kpis.meta,
               { score_distribution: __('Distribución de calificación') },
             )

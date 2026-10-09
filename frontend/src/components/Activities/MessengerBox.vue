@@ -107,7 +107,7 @@
     </p>
     <p
       v-else-if="window24h && !window24h.open"
-      class="mt-1 text-[10px] font-medium text-ink-amber-7 dark:text-ink-amber-6"
+      class="mt-1 text-[10px] font-medium text-ink-amber-9 dark:text-ink-amber-6"
     >
       {{
         __(

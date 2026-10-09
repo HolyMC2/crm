@@ -43,7 +43,7 @@
     </div>
     <div
       v-else-if="preview.error"
-      class="py-3 text-center text-xs text-ink-red-6"
+      class="py-3 text-center text-xs text-ink-red-7"
     >
       {{ __('No se pudo cargar la plantilla') }}
     </div>
@@ -107,13 +107,13 @@
         {{ __('Esta plantilla no tiene variables — se envía tal cual.') }}
       </div>
 
-      <div v-if="headerNote" class="mt-2 text-[11px] text-ink-amber-7">
+      <div v-if="headerNote" class="mt-2 text-[11px] text-ink-amber-9">
         {{ headerNote }}
       </div>
 
       <div
         v-if="missingVars.length"
-        class="mt-2 text-[11px] text-ink-amber-7"
+        class="mt-2 text-[11px] text-ink-amber-9"
         data-template-missing
       >
         {{ __('Completa antes de enviar: {0}', [missingVars.join(', ')]) }}

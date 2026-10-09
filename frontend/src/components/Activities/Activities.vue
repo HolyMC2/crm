@@ -104,12 +104,12 @@
         >
           <FeatherIcon
             name="slash"
-            class="mt-0.5 size-4 shrink-0 text-ink-red-6"
+            class="mt-0.5 size-4 shrink-0 text-ink-red-7"
           />
           <div
             class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6"
           >
-            <span class="font-semibold text-ink-red-6">{{
+            <span class="font-semibold text-ink-red-7">{{
               __('Este número no tiene WhatsApp.')
             }}</span>
             {{ __('Marcado como sin WhatsApp al crear el trato.') }}
@@ -121,7 +121,7 @@
         >
           <FeatherIcon
             name="alert-triangle"
-            class="mt-0.5 size-4 shrink-0 text-ink-amber-7"
+            class="mt-0.5 size-4 shrink-0 text-ink-amber-9"
           />
           <div
             class="text-xs leading-snug text-ink-gray-7 dark:text-ink-gray-6"
@@ -183,7 +183,7 @@
           class="mx-3 mb-1.5 sm:mx-10"
         >
           <button
-            class="inline-flex items-center gap-1.5 rounded-full bg-surface-amber-1 px-2.5 py-1 text-[11px] font-semibold text-ink-amber-7 hover:bg-surface-amber-2"
+            class="inline-flex items-center gap-1.5 rounded-full bg-surface-amber-1 px-2.5 py-1 text-[11px] font-semibold text-ink-amber-9 hover:bg-surface-amber-2"
             @click="onWaCatalog(catalogSuggest.data.query)"
           >
             💡

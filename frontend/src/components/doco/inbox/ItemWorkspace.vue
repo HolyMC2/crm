@@ -55,7 +55,7 @@
       <div
         v-if="error"
         role="alert"
-        class="mx-5 mt-4 rounded border border-outline-red-2 p-3 text-sm text-ink-red-6"
+        class="mx-5 mt-4 rounded border border-outline-red-2 p-3 text-sm text-ink-red-7"
       >
         {{ error }}
       </div>
@@ -102,7 +102,7 @@
                   class="mt-1 text-lg font-semibold tabular-nums"
                   :class="
                     metric.key === 'outstanding' && g.outstanding > 0
-                      ? 'text-ink-red-6'
+                      ? 'text-ink-red-7'
                       : 'text-ink-gray-9'
                   "
                 >
@@ -133,7 +133,7 @@
           </p>
           <p
             v-if="scope === 'customer' && data.customer_history_restricted"
-            class="mt-1 text-xs text-ink-amber-7"
+            class="mt-1 text-xs text-ink-amber-9"
           >
             {{
               __(
@@ -446,7 +446,7 @@
           <Button :disabled="busy" @click="orderConfirm = false">{{
             __('Cancelar')
           }}</Button>
-          <p v-if="error" role="alert" class="text-sm text-ink-red-6">
+          <p v-if="error" role="alert" class="text-sm text-ink-red-7">
             {{ error }}
           </p>
           <Button variant="solid" :loading="busy" @click="createOrder">{{
@@ -484,7 +484,7 @@
             __('Buscar')
           }}</Button>
         </form>
-        <p v-if="linkError" role="alert" class="mb-3 text-sm text-ink-red-6">
+        <p v-if="linkError" role="alert" class="mb-3 text-sm text-ink-red-7">
           {{ linkError }}
         </p>
         <div class="max-h-80 overflow-auto divide-y divide-outline-gray-1">

@@ -101,7 +101,7 @@
               <p
                 v-if="options.exchange_rate.missing"
                 role="alert"
-                class="text-sm text-ink-amber-7"
+                class="text-sm text-ink-amber-9"
               >
                 {{ options.exchange_rate.missing }}
                 <a
@@ -153,7 +153,7 @@
             </p>
             <p
               v-if="Number(form.amount) > Number(options.outstanding_amount)"
-              class="text-sm text-ink-amber-7"
+              class="text-sm text-ink-amber-9"
             >
               {{ __('That is more than what is owed on this bill.') }}
             </p>

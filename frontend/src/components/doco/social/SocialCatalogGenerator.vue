@@ -157,7 +157,7 @@
         >
       </button>
     </template>
-    <p v-if="error" role="alert" class="text-sm text-ink-red-6">{{ error }}</p>
+    <p v-if="error" role="alert" class="text-sm text-ink-red-7">{{ error }}</p>
   </div>
 </template>
 

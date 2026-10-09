@@ -25,7 +25,7 @@
         </div>
         <div
           v-else-if="!cat"
-          class="rounded-md bg-surface-amber-1 p-3 text-sm text-ink-amber-7"
+          class="rounded-md bg-surface-amber-1 p-3 text-sm text-ink-amber-9"
         >
           {{
             __(
@@ -231,7 +231,7 @@
           <!-- warnings -->
           <div
             v-if="windowClosed"
-            class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-7"
+            class="rounded-md border border-outline-amber-4 bg-surface-amber-1 p-2.5 text-[12px] leading-snug text-ink-amber-9"
           >
             ⚠
             <span class="font-semibold">{{
@@ -246,7 +246,7 @@
           <p
             v-for="(w, i) in otherWarnings"
             :key="i"
-            class="text-[12px] text-ink-amber-7"
+            class="text-[12px] text-ink-amber-9"
           >
             ⚠ {{ w }}
           </p>

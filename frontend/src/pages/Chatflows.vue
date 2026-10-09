@@ -124,7 +124,7 @@
             >
             <span
               v-if="f.auto_send"
-              class="flex-none rounded bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-semibold text-ink-amber-7"
+              class="flex-none rounded bg-surface-amber-1 px-1.5 py-[1px] text-[10px] font-semibold text-ink-amber-9"
               >AUTO</span
             >
           </div>
@@ -197,7 +197,7 @@
               class="rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold"
               :class="
                 form.enabled
-                  ? 'border-outline-amber-4 bg-surface-amber-1 text-ink-amber-7'
+                  ? 'border-outline-amber-4 bg-surface-amber-1 text-ink-amber-9'
                   : 'border-outline-green-4 bg-surface-green-2 text-ink-green-8'
               "
               @click="toggleEnabled"
@@ -259,7 +259,7 @@
                 :true-value="1"
                 :false-value="0"
               />
-              {{ __('Crear lead para números nuevos') }}
+              {{ __('Crear prospecto para números nuevos') }}
             </label>
             <label
               v-if="
@@ -274,7 +274,7 @@
                 :true-value="1"
                 :false-value="0"
               />
-              {{ __('Responder sin crear lead') }}
+              {{ __('Responder sin crear prospecto') }}
             </label>
             <label
               v-if="form.enabled"

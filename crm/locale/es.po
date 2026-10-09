@@ -478,7 +478,7 @@ msgid "More tabs"
 msgstr "Más pestañas"
 
 msgid "Syncing leads"
-msgstr "Sincronizando leads"
+msgstr "Sincronizando prospectos"
 
 msgid "Send the link in a chat"
 msgstr "Envía el enlace en un chat"
@@ -640,7 +640,7 @@ msgid "Open Inquiries"
 msgstr "Abrir Consultas"
 
 msgid "Lead syncing"
-msgstr "Sincronización de leads"
+msgstr "Sincronización de prospectos"
 
 msgid "Choose an approved template."
 msgstr "Elige una plantilla aprobada."
@@ -724,7 +724,7 @@ msgid "Everything above was undone. Nothing was saved and no message was sent."
 msgstr "Todo lo anterior se deshizo. No se guardó nada ni se envió ningún mensaje."
 
 msgid "A lead is created: {0}"
-msgstr "Se crea un lead: {0}"
+msgstr "Se crea un prospecto: {0}"
 
 msgid "A deal is created: {0}"
 msgstr "Se crea un trato: {0}"
@@ -778,7 +778,7 @@ msgid "{0}: from this form. Messages follow the campaign’s steps."
 msgstr "{0}: desde este formulario. Los mensajes siguen los pasos de la campaña."
 
 msgid "{0}: starts for every new lead."
-msgstr "{0}: inicia con cada lead nuevo."
+msgstr "{0}: inicia con cada prospecto nuevo."
 
 msgid "Where it came from is recorded"
 msgstr "Se registra de dónde vino"
@@ -1006,10 +1006,10 @@ msgid "Decide what happens the moment someone sends this form, so every submissi
 msgstr "Decide qué pasa en cuanto alguien envía este formulario, para que cada envío llegue a una persona y tenga un siguiente paso."
 
 msgid "A lead is someone to qualify. A deal is a real sale opportunity from the start."
-msgstr "Un lead es alguien por calificar. Un trato es una oportunidad de venta real desde el inicio."
+msgstr "Un prospecto es alguien por calificar. Un trato es una oportunidad de venta real desde el inicio."
 
 msgid "Goes to your Leads list"
-msgstr "Va a tu lista de Leads"
+msgstr "Va a tu lista de prospectos"
 
 msgid "Goes straight to your Deals pipeline"
 msgstr "Va directo a tu embudo de Tratos"
@@ -1051,7 +1051,7 @@ msgid "Start a follow-up"
 msgstr "Iniciar un seguimiento"
 
 msgid "Enroll each new lead in a campaign. Messages go out on the campaign’s own schedule, and never to people who opted out."
-msgstr "Inscribe cada lead nuevo en una campaña. Los mensajes salen según el calendario de la campaña y nunca a quien se dio de baja."
+msgstr "Inscribe cada prospecto nuevo en una campaña. Los mensajes salen según el calendario de la campaña y nunca a quien se dio de baja."
 
 msgid "Follow-up campaign"
 msgstr "Campaña de seguimiento"
@@ -1066,10 +1066,10 @@ msgid "See the campaign’s steps"
 msgstr "Ver los pasos de la campaña"
 
 msgid "Every new lead also joins: {0}"
-msgstr "Cada lead nuevo también entra a: {0}"
+msgstr "Cada prospecto nuevo también entra a: {0}"
 
 msgid "Follow-up campaigns work with forms that create leads."
-msgstr "Las campañas de seguimiento funcionan con formularios que crean leads."
+msgstr "Las campañas de seguimiento funcionan con formularios que crean prospectos."
 
 msgid "Ask for WhatsApp consent"
 msgstr "Pedir consentimiento de WhatsApp"
@@ -1261,7 +1261,7 @@ msgid "Could not make the QR code"
 msgstr "No se pudo generar el código QR"
 
 msgid "Collect leads from a link"
-msgstr "Consigue leads con un enlace"
+msgstr "Consigue prospectos con un enlace"
 
 msgid "Make a form, share its link or QR code on Instagram, WhatsApp or a flyer, and every answer lands in your CRM with an owner and a next step."
 msgstr "Crea un formulario, comparte su enlace o código QR en Instagram, WhatsApp o un volante, y cada respuesta llega a tu CRM con un responsable y un siguiente paso."
@@ -1273,7 +1273,7 @@ msgid "creates deals"
 msgstr "crea tratos"
 
 msgid "creates leads"
-msgstr "crea leads"
+msgstr "crea prospectos"
 
 msgid "7 days"
 msgstr "7 días"
@@ -1399,7 +1399,7 @@ msgid "Campaign {0} can't be used as a form follow-up."
 msgstr "La campaña {0} no se puede usar como seguimiento de un formulario."
 
 msgid "Follow-up campaigns are available for forms that create leads."
-msgstr "Las campañas de seguimiento están disponibles para formularios que crean leads."
+msgstr "Las campañas de seguimiento están disponibles para formularios que crean prospectos."
 
 msgid "Write the consent text visitors agree to."
 msgstr "Escribe el texto de consentimiento que aceptan los visitantes."
@@ -1737,11 +1737,11 @@ msgstr "@John, ¿Puedes comprobar esto por favor?"
 
 #: crm/fcrm/doctype/crm_lead/crm_lead.py:125
 msgid "A Lead requires either a person's name or an organization's name"
-msgstr "Un cliente potencial requiere el nombre de una persona o el nombre de una organización"
+msgstr "Un prospecto requiere el nombre de una persona o el nombre de una organización"
 
 #: crm/lead_syncing/doctype/lead_sync_source/lead_sync_source.py:49
 msgid "A lead sync source is already enabled for this Facebook Lead Form!"
-msgstr "¡Ya se ha habilitado una fuente de sincronización de clientes potenciales para este formulario de clientes potenciales de Facebook!"
+msgstr "¡Ya está activa una fuente de sincronización de prospectos para este formulario de prospectos de Facebook!"
 
 #: crm/templates/emails/helpdesk_invitation.html:5
 msgid "A new account has been created for you at {0}"
@@ -1969,7 +1969,7 @@ msgstr "Añadir filtro"
 
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:430
 msgid "Add Lead or Deal"
-msgstr "Añadir Cliente Potencial o Acuerdo"
+msgstr "Añadir prospecto o trato"
 
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:377
 #: frontend/src/components/Modals/EventModal.vue:166
@@ -2101,7 +2101,7 @@ msgstr "Añadir, editar y administrar plantillas de correo electrónico para var
 
 #: frontend/src/components/Settings/LeadSyncing/LeadSyncSources.vue:12
 msgid "Add, edit, and manage sources for automatic lead syncing to your CRM"
-msgstr "Añada, edite y gestione fuentes para la sincronización automática de clientes potenciales con su CRM"
+msgstr "Agrega, edita y administra fuentes para sincronizar prospectos automáticamente"
 
 #. Label of the address (Link) field in DocType 'CRM Organization'
 #: crm/fcrm/doctype/crm_organization/crm_organization.json
@@ -2205,7 +2205,7 @@ msgstr ""
 
 #: frontend/src/components/Settings/LeadSyncing/FailureLogs.vue:69
 msgid "Any failed lead syncs will show up here"
-msgstr "Cualquier sincronización fallida de clientes potenciales se mostrará aquí"
+msgstr "Cualquier sincronización fallida de prospectos se mostrará aquí"
 
 #. Label of the app_name (Data) field in DocType 'CRM Twilio Settings'
 #: crm/fcrm/doctype/crm_twilio_settings/crm_twilio_settings.json
@@ -2294,7 +2294,7 @@ msgstr ""
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.js:9
 msgid "Are you sure you want to reset 'Create Quotation from CRM Deal' Form Script?"
-msgstr "¿Está seguro de que desea restablecer el script del formulario 'Crear presupuesto a partir de Acuerdo CRM'?"
+msgstr "¿Seguro que quieres restablecer el script del formulario 'Crear cotización a partir de trato'?"
 
 #: frontend/src/components/Settings/DashboardSettings.vue:236
 msgid "Are you sure you want to set the currency as {0}? This cannot be changed later."
@@ -2459,7 +2459,7 @@ msgstr ""
 
 #: frontend/src/components/Settings/DashboardSettings.vue:49
 msgid "Auto Update Expected Deal Value"
-msgstr "Actualización automática del valor esperado del acuerdo"
+msgstr "Actualización automática del valor esperado del trato"
 
 #. Label of the auto_update_expected_deal_value (Check) field in DocType 'FCRM
 #. Settings'
@@ -2501,7 +2501,7 @@ msgstr ""
 #: crm/fcrm/doctype/fcrm_settings/fcrm_settings.json
 #: frontend/src/components/Settings/DashboardSettings.vue:53
 msgid "Automatically update \"Expected Deal Value\" based on the total value of associated products in a deal"
-msgstr "Actualizar automáticamente el \"Valor esperado de la oferta\" basado en el valor total de los productos asociados en un acuerdo"
+msgstr "Actualizar automáticamente el \"Valor esperado del trato\" con el total de los productos del trato"
 
 #: frontend/src/components/Settings/Settings.vue:190
 msgid "Automation & Rules"
@@ -2509,23 +2509,23 @@ msgstr "Automatización y Reglas"
 
 #: crm/api/dashboard.py:252
 msgid "Average deal value of non won/lost deals"
-msgstr "Valor promedio de Acuerdos perdidos"
+msgstr "Valor promedio de tratos perdidos"
 
 #: crm/api/dashboard.py:419
 msgid "Average deal value of ongoing & won deals"
-msgstr "Valor promedio de Acuerdos en curso & Acuerdos ganados"
+msgstr "Valor promedio de tratos en curso y ganados"
 
 #: crm/api/dashboard.py:365
 msgid "Average deal value of won deals"
-msgstr "Valor promedio de Acuerdos ganados"
+msgstr "Valor promedio de tratos ganados"
 
 #: crm/api/dashboard.py:546
 msgid "Average time taken from deal creation to deal closure"
-msgstr "Tiempo medio transcurrido desde la creación del acuerdo hasta su cierre"
+msgstr "Tiempo promedio desde que se crea el trato hasta su cierre"
 
 #: crm/api/dashboard.py:483
 msgid "Average time taken from lead creation to deal closure"
-msgstr "Tiempo medio transcurrido desde la creación del cliente potencial hasta el cierre del Acuerdo"
+msgstr "Tiempo promedio desde que se crea el prospecto hasta el cierre del trato"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:77
 msgid "Avg Deal Value"
@@ -2553,19 +2553,19 @@ msgstr "Valor medio de las operaciones"
 
 #: crm/api/dashboard.py:251
 msgid "Avg. ongoing deal value"
-msgstr ""
+msgstr "Valor prom. de tratos en curso"
 
 #: crm/api/dashboard.py:545
 msgid "Avg. time to close a deal"
-msgstr ""
+msgstr "Tiempo prom. para cerrar un trato"
 
 #: crm/api/dashboard.py:482
 msgid "Avg. time to close a lead"
-msgstr ""
+msgstr "Tiempo prom. para cerrar un prospecto"
 
 #: crm/api/dashboard.py:364
 msgid "Avg. won deal value"
-msgstr ""
+msgstr "Valor prom. de tratos ganados"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:22
 #: frontend/src/components/Dashboard/AddChartModal.vue:66
@@ -2676,12 +2676,12 @@ msgstr "Tablero CRM"
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 msgid "CRM Deal"
-msgstr "Acuerdo CRM"
+msgstr "Trato"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_deal_status/crm_deal_status.json
 msgid "CRM Deal Status"
-msgstr "Estado del Acuerdo de CRM"
+msgstr "Estado del trato"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_dropdown_item/crm_dropdown_item.json
@@ -2731,7 +2731,7 @@ msgstr ""
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 msgid "CRM Lead"
-msgstr "CRM Cliente Potencial"
+msgstr "Prospecto"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/crm_lead_source/crm_lead_source.json
@@ -2981,7 +2981,7 @@ msgstr ""
 
 #: frontend/src/pages/PersonaForm.vue:90
 msgid "Capturing leads"
-msgstr "Captación de clientes potenciales"
+msgstr "Captación de prospectos"
 
 #. Label of the category (Data) field in DocType 'Facebook Page'
 #: crm/lead_syncing/doctype/facebook_page/facebook_page.json
@@ -3016,7 +3016,7 @@ msgstr "Cambiar Estado"
 #: frontend/src/components/Layouts/AppSidebar.vue:510
 #: frontend/src/components/Layouts/AppSidebar.vue:519
 msgid "Change deal status"
-msgstr "Cambiar el estado del Acuerdo"
+msgstr "Cambiar el estado del trato"
 
 #: frontend/src/components/Settings/PreferencesSettings.vue:60
 msgid "Change language of the application."
@@ -3188,7 +3188,7 @@ msgstr "Comentarios"
 
 #: crm/api/dashboard.py:938
 msgid "Common reasons for losing deals"
-msgstr ""
+msgstr "Motivos frecuentes de tratos perdidos"
 
 #. Label of the communication_status (Link) field in DocType 'CRM Deal'
 #. Label of the communication_status (Link) field in DocType 'CRM Lead'
@@ -3485,7 +3485,7 @@ msgstr ""
 #: frontend/src/components/Modals/CallLogDetailModal.vue:155
 #: frontend/src/components/Modals/LeadModal.vue:8
 msgid "Create Lead"
-msgstr "Crear cliente potencial"
+msgstr "Crear prospecto"
 
 #: frontend/src/components/Settings/emailConfig.js:58
 msgid "Create Lead from Incoming Emails"
@@ -3592,7 +3592,7 @@ msgstr ""
 
 #: frontend/src/pages/Dashboard.vue:228
 msgid "Custom Range"
-msgstr ""
+msgstr "Rango personalizado"
 
 #: frontend/src/components/Layouts/AppSidebar.vue:622
 msgid "Custom Statuses"
@@ -3691,7 +3691,7 @@ msgstr "Día"
 #: frontend/src/components/Telephony/ExotelCallUI.vue:200
 #: frontend/src/pages/Tasks.vue:132
 msgid "Deal"
-msgstr ""
+msgstr "Trato"
 
 #. Label of the deal_owner (Link) field in DocType 'CRM Deal'
 #: crm/fcrm/doctype/crm_deal/crm_deal.json frontend/src/pages/Contact.vue:541
@@ -3699,7 +3699,7 @@ msgstr ""
 #: frontend/src/pages/MobileOrganization.vue:483
 #: frontend/src/pages/Organization.vue:513
 msgid "Deal Owner"
-msgstr ""
+msgstr "Responsable del trato"
 
 #. Label of the deal_status (Link) field in DocType 'ERPNext CRM Settings'
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.json
@@ -3719,7 +3719,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:1023
 msgid "Deal generation channel analysis"
-msgstr ""
+msgstr "Análisis de canales de tratos"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:522
 msgid "Deal status is required"
@@ -3727,7 +3727,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:1078 crm/api/dashboard.py:1141
 msgid "Deal value"
-msgstr ""
+msgstr "Valor del trato"
 
 #. Label of a shortcut in the Frappe CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
@@ -3735,7 +3735,7 @@ msgstr ""
 #: frontend/src/pages/MobileDeal.vue:391
 #: frontend/src/pages/MobileOrganization.vue:343
 msgid "Deals"
-msgstr ""
+msgstr "Tratos"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:93
 msgid "Deals by Ongoing & Won Stage"
@@ -3763,19 +3763,19 @@ msgstr ""
 
 #: crm/api/dashboard.py:1130
 msgid "Deals by salesperson"
-msgstr ""
+msgstr "Tratos por vendedor"
 
 #: crm/api/dashboard.py:1022
 msgid "Deals by source"
-msgstr ""
+msgstr "Tratos por origen"
 
 #: crm/api/dashboard.py:895
 msgid "Deals by stage"
-msgstr ""
+msgstr "Tratos por etapa"
 
 #: crm/api/dashboard.py:1067
 msgid "Deals by territory"
-msgstr ""
+msgstr "Tratos por territorio"
 
 #: frontend/src/components/Settings/EmailTemplate/EditEmailTemplate.vue:111
 #: frontend/src/components/Settings/EmailTemplate/NewEmailTemplate.vue:111
@@ -5609,7 +5609,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:88
 msgid "Invalid chart name"
-msgstr ""
+msgstr "Nombre de gráfica no válido"
 
 #: crm/fcrm/doctype/crm_exotel_settings/crm_exotel_settings.py:42
 msgid "Invalid credentials"
@@ -5959,7 +5959,7 @@ msgstr "Diseño"
 #: frontend/src/components/Telephony/ExotelCallUI.vue:200
 #: frontend/src/pages/Tasks.vue:133
 msgid "Lead"
-msgstr "Iniciativa"
+msgstr "Prospecto"
 
 #. Label of the lead_data (Code) field in DocType 'Failed Lead Sync Log'
 #: crm/lead_syncing/doctype/failed_lead_sync_log/failed_lead_sync_log.json
@@ -5970,21 +5970,21 @@ msgstr ""
 #. Label of the lead_details_tab (Tab Break) field in DocType 'CRM Deal'
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 msgid "Lead Details"
-msgstr "Detalle de Iniciativas"
+msgstr "Detalle de prospectos"
 
 #. Label of the lead_name (Data) field in DocType 'CRM Deal'
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 msgid "Lead Name"
-msgstr "Nombre de la iniciativa"
+msgstr "Nombre del prospecto"
 
 #. Label of the lead_owner (Link) field in DocType 'CRM Lead'
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 msgid "Lead Owner"
-msgstr "Propietario de la iniciativa"
+msgstr "Responsable del prospecto"
 
 #: crm/fcrm/doctype/crm_lead/crm_lead.py:142
 msgid "Lead Owner cannot be same as the Lead Email Address"
-msgstr "El propietario del cliente potencial no puede ser el mismo que la dirección de correo electrónico del cliente potencial"
+msgstr "El responsable del prospecto no puede ser el mismo correo que el del prospecto"
 
 #. Label of a shortcut in the Frappe CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
@@ -6020,7 +6020,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:985
 msgid "Lead generation channel analysis"
-msgstr ""
+msgstr "Análisis de canales de prospectos"
 
 #: crm/lead_syncing/doctype/lead_sync_source/lead_sync_source.js:8
 msgid "Lead sync initiated."
@@ -6039,7 +6039,7 @@ msgstr ""
 #: frontend/src/pages/InvalidPage.vue:9 frontend/src/pages/Lead.vue:369
 #: frontend/src/pages/MobileLead.vue:239
 msgid "Leads"
-msgstr "Clientes potenciales"
+msgstr "Prospectos"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:102
 msgid "Leads by Source"
@@ -6047,7 +6047,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:984
 msgid "Leads by source"
-msgstr ""
+msgstr "Prospectos por origen"
 
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue:158
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue:238
@@ -6240,7 +6240,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:937
 msgid "Lost deal reasons"
-msgstr ""
+msgstr "Motivos de tratos perdidos"
 
 #. Option for the 'Priority' (Select) field in DocType 'CRM Task'
 #: crm/fcrm/doctype/crm_task/crm_task.json
@@ -6268,7 +6268,7 @@ msgstr ""
 #: frontend/src/pages/Lead.vue:127 frontend/src/pages/Leads.vue:537
 #: frontend/src/pages/MobileContact.vue:73
 msgid "Make a Call"
-msgstr ""
+msgstr "Llamar"
 
 #: frontend/src/components/Activities/AttachmentArea.vue:98
 msgid "Make attachment {0}"
@@ -6764,7 +6764,7 @@ msgstr ""
 #: frontend/src/pages/Deals.vue:105 frontend/src/pages/Leads.vue:121
 #: frontend/src/pages/Tasks.vue:71
 msgid "No Title"
-msgstr ""
+msgstr "Sin título"
 
 #: frontend/src/components/Modals/AddExistingUserModal.vue:39
 msgid "No Users Found"
@@ -6956,7 +6956,7 @@ msgstr "Notas"
 
 #: frontend/src/pages/Notes.vue:23
 msgid "Notes View"
-msgstr ""
+msgstr "Vista de notas"
 
 #: frontend/src/components/Activities/EmailArea.vue:15
 #: frontend/src/components/Calendar/EventNotifications.vue:22
@@ -7010,7 +7010,7 @@ msgstr "Formato de Número"
 
 #: crm/api/dashboard.py:1075 crm/api/dashboard.py:1138
 msgid "Number of deals"
-msgstr ""
+msgstr "Número de tratos"
 
 #: crm/api/dashboard.py:1131
 msgid "Number of deals and total value per salesperson"
@@ -7068,7 +7068,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:189
 msgid "Ongoing deals"
-msgstr ""
+msgstr "Tratos en curso"
 
 #: crm/api/user.py:62 crm/api/user.py:95
 msgid "Only System Managers can assign the Sales Manager role"
@@ -7241,7 +7241,7 @@ msgstr "Propietario"
 
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:146
 msgid "Owner: {0}"
-msgstr ""
+msgstr "Responsable: {0}"
 
 #. Label of the page (Link) field in DocType 'Facebook Lead Form'
 #: crm/lead_syncing/doctype/facebook_lead_form/facebook_lead_form.json
@@ -7885,7 +7885,7 @@ msgstr ""
 #: frontend/src/components/ColumnSettings.vue:86
 #: frontend/src/pages/Dashboard.vue:28
 msgid "Reset to Default"
-msgstr ""
+msgstr "Restablecer predeterminado"
 
 #. Label of the responded_on (Datetime) field in DocType 'CRM Rolling Response
 #. Time'
@@ -8206,7 +8206,7 @@ msgstr "Usuario de Ventas"
 
 #: crm/api/dashboard.py:638
 msgid "Sales trend"
-msgstr ""
+msgstr "Tendencia de ventas"
 
 #: frontend/src/pages/PersonaForm.vue:61
 msgid "Salesforce"
@@ -8214,7 +8214,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:1133
 msgid "Salesperson"
-msgstr ""
+msgstr "Vendedor"
 
 #. Label of the salutation (Link) field in DocType 'CRM Deal'
 #. Label of the salutation (Link) field in DocType 'CRM Lead'
@@ -8337,7 +8337,7 @@ msgstr ""
 
 #: frontend/src/pages/Dashboard.vue:50
 msgid "Select Range"
-msgstr ""
+msgstr "Elegir rango"
 
 #: frontend/src/components/Settings/LeadSyncing/LeadSyncSourceForm.vue:57
 msgid "Select Source Type"
@@ -8410,7 +8410,7 @@ msgstr ""
 
 #: frontend/src/components/Activities/ActivityHeader.vue:61
 msgid "Send Template"
-msgstr ""
+msgstr "Enviar plantilla"
 
 #: frontend/src/pages/Deal.vue:92 frontend/src/pages/Lead.vue:140
 msgid "Send an Email"
@@ -8706,7 +8706,7 @@ msgstr ""
 #: frontend/src/components/SortBy.vue:10 frontend/src/components/SortBy.vue:24
 #: frontend/src/components/SortBy.vue:226
 msgid "Sort"
-msgstr ""
+msgstr "Ordenar"
 
 #. Label of the source (Link) field in DocType 'CRM Deal'
 #. Label of the source (Link) field in DocType 'CRM Lead'
@@ -9291,11 +9291,11 @@ msgstr ""
 
 #: crm/api/dashboard.py:130
 msgid "Total leads"
-msgstr ""
+msgstr "Prospectos totales"
 
 #: crm/api/dashboard.py:131
 msgid "Total number of leads"
-msgstr ""
+msgstr "Número total de prospectos"
 
 #: crm/api/dashboard.py:190
 msgid "Total number of non won/lost deals"
@@ -9303,7 +9303,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:307
 msgid "Total number of won deals based on its closure date"
-msgstr ""
+msgstr "Número total de tratos ganados según su fecha de cierre"
 
 #. Label of the traceback (Code) field in DocType 'Failed Lead Sync Log'
 #: crm/lead_syncing/doctype/failed_lead_sync_log/failed_lead_sync_log.json
@@ -9791,7 +9791,7 @@ msgstr ""
 #: crm/fcrm/doctype/crm_lead_status/crm_lead_status.json
 #: frontend/src/components/Settings/ERPNextSettings.vue:254
 msgid "Won"
-msgstr ""
+msgstr "Ganado"
 
 #: frontend/src/components/Dashboard/AddChartModal.vue:75
 msgid "Won Deals"
@@ -9799,7 +9799,7 @@ msgstr ""
 
 #: crm/api/dashboard.py:306
 msgid "Won deals"
-msgstr ""
+msgstr "Tratos ganados"
 
 #: frontend/src/components/Settings/Sla/SlaHolidays.vue:5
 msgid "Work Schedule & Holidays"
@@ -9916,7 +9916,7 @@ msgstr ""
 
 #: frontend/src/components/Settings/LeadSyncing/leadSyncSourceConfig.js:8
 msgid "You will need a Meta developer account and an access token to sync leads from Facebook. Read more"
-msgstr "Necesitará una cuenta de desarrollador Meta y un token de acceso para sincronizar clientes potenciales desde Facebook. Leer más"
+msgstr "Necesitarás una cuenta de desarrollador de Meta y un token de acceso para sincronizar prospectos desde Facebook. Leer más"
 
 #: crm/api/todo.py:110
 msgid "Your assignment on task {0} has been removed by {1}"
@@ -9997,11 +9997,11 @@ msgstr ""
 
 #: crm/api/activities.py:50
 msgid "created this deal"
-msgstr ""
+msgstr "creó este trato"
 
 #: crm/api/activities.py:202
 msgid "created this lead"
-msgstr ""
+msgstr "creó este prospecto"
 
 #. Option for the 'Color' (Select) field in DocType 'CRM Deal Status'
 #. Option for the 'Color' (Select) field in DocType 'CRM Lead Status'
@@ -10204,7 +10204,7 @@ msgstr "etiqueta"
 #: frontend/src/components/Settings/AssignmentRules/AssigneeRules.vue:134
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue:379
 msgid "leads"
-msgstr "clientes potenciales"
+msgstr "prospectos"
 
 #. Option for the 'Type' (Select) field in DocType 'CRM View Settings'
 #: crm/fcrm/doctype/crm_view_settings/crm_view_settings.json
@@ -15634,3 +15634,643 @@ msgstr "{0} compartió contigo «{1}»"
 #: frontend/src/pages/DealsView.vue
 msgid "{0} deals named by an aviso"
 msgstr "{0} tratos que nombra un aviso"
+
+#: frontend/src/router.js
+msgid "Welcome"
+msgstr "Bienvenida"
+
+#: frontend/src/router.js
+msgid "Page not found"
+msgstr "Página no encontrada"
+
+#: frontend/src/router.js
+msgid "Pipeline Analysis"
+msgstr "Análisis del embudo"
+
+#: frontend/src/router.js
+msgid "Campaign"
+msgstr "Campaña"
+
+#: frontend/src/router.js
+msgid "Chatflows"
+msgstr "Flujos de chat"
+
+#: frontend/src/router.js
+msgid "Deal 360°"
+msgstr "Trato"
+
+#: frontend/src/components/doco/contact/ContactOverviewTab.vue
+msgid "No linked customer"
+msgstr "Sin cliente vinculado"
+
+#: frontend/src/components/doco/inbox/DealContextPanel.vue
+msgid "Open lead"
+msgstr "Abrir prospecto"
+
+#: frontend/src/components/Reports/MarketingReactivation.vue
+msgid "Cold leads (no activity)"
+msgstr "Prospectos fríos (sin actividad)"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Results, bottlenecks and the next conversation."
+msgstr "Resultados, cuellos de botella y la siguiente conversación."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Report area"
+msgstr "Área del reporte"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "All owners"
+msgstr "Todos los responsables"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Sales company"
+msgstr "Empresa de ventas"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Created from"
+msgstr "Creados desde"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Created through"
+msgstr "Creados hasta"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Choose valid dates with the start on or before the end."
+msgstr "Elige fechas válidas: el inicio debe ser igual o anterior al final."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Custom range"
+msgstr "Rango personalizado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Loading report…"
+msgstr "Cargando reporte…"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Retry report"
+msgstr "Reintentar reporte"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No records match this period. Try another period or fewer filters."
+msgstr "Ningún registro coincide con este periodo. Prueba otro periodo o menos filtros."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No matching groups for this metric in the selected period."
+msgstr "No hay grupos para esta métrica en el periodo elegido."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "View records by group"
+msgstr "Ver registros por grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "View chart values"
+msgstr "Ver valores de la gráfica"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Report records"
+msgstr "Registros del reporte"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Back to report"
+msgstr "Volver al reporte"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "These records use the report’s applied filters and your current permissions."
+msgstr "Estos registros usan los filtros del reporte y tus permisos actuales."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Loading records…"
+msgstr "Cargando registros…"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Retry records"
+msgstr "Reintentar registros"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Record filters"
+msgstr "Filtros de registros"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Created {0} through {1}"
+msgstr "Creados del {0} al {1}"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Pipeline: {0}"
+msgstr "Embudo: {0}"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Company: {0}"
+msgstr "Empresa: {0}"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "{0} matching records"
+msgstr "{0} registros coinciden"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No matching records. Return to the report to change the filters."
+msgstr "Ningún registro coincide. Vuelve al reporte para cambiar los filtros."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Unassigned"
+msgstr "Sin asignar"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No due date"
+msgstr "Sin fecha límite"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open related record"
+msgstr "Abrir registro relacionado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Load more records"
+msgstr "Cargar más registros"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "You do not have permission to view these report records."
+msgstr "No tienes permiso para ver estos registros del reporte."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Unable to load records. Retry without changing the report filters."
+msgstr "No se pudieron cargar los registros. Reintenta sin cambiar los filtros del reporte."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "{0} records"
+msgstr "{0} registros"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "any of: {0}"
+msgstr "cualquiera de: {0}"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Sales at a glance"
+msgstr "Ventas de un vistazo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Records created in this period, measured in their current state."
+msgstr "Registros creados en este periodo, según su estado actual."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "View records"
+msgstr "Ver registros"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No leads or deals were created in this period with these filters."
+msgstr "No se crearon prospectos ni tratos en este periodo con estos filtros."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Created {0} through {1}; current state as of {2} ({3})."
+msgstr "Creados del {0} al {1}; estado actual al {2} ({3})."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Previous period unavailable. Current results are still shown."
+msgstr "El periodo anterior no está disponible. Los resultados actuales se siguen mostrando."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Retry comparison"
+msgstr "Reintentar comparación"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Amounts are unavailable for your permissions."
+msgstr "Tus permisos no incluyen los montos."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Only the first 500 groups are shown. Narrow the filters to review every group; summary counts include the full permitted cohort."
+msgstr "Solo se muestran los primeros 500 grupos. Acota los filtros para revisar cada grupo; los totales incluyen todo el grupo permitido."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Where are deals waiting?"
+msgstr "¿Dónde esperan los tratos?"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Up to eight oldest open stages by average days. Current occupancy, not a sequential funnel; incomplete history is approximate."
+msgstr "Hasta ocho etapas abiertas con más días en promedio. Ocupación actual, no un embudo secuencial; el historial incompleto es aproximado."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Average days"
+msgstr "Días promedio"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Who needs follow-up help?"
+msgstr "¿Quién necesita ayuda con el seguimiento?"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Up to eight assignees with the most overdue open tasks on leads and deals created in this period. Task dates do not define this cohort."
+msgstr "Hasta ocho responsables con más tareas abiertas vencidas en prospectos y tratos creados en este periodo. Las fechas de las tareas no definen este grupo."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Overdue tasks"
+msgstr "Tareas vencidas"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Which sources bring wins?"
+msgstr "¿Qué orígenes traen ventas ganadas?"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Up to eight sources with the most won deals. Current recorded source, not distinct customers or campaign attribution."
+msgstr "Hasta ocho orígenes con más tratos ganados. Origen registrado actual; no son clientes distintos ni atribución de campañas."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Conversion and forecast"
+msgstr "Conversión y pronóstico"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Converted leads"
+msgstr "Prospectos convertidos"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Lead conversion"
+msgstr "Conversión de prospectos"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Converted leads / leads in this cohort"
+msgstr "Prospectos convertidos / prospectos de este grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Lost deals"
+msgstr "Tratos perdidos"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Closed win rate — review cohort deals"
+msgstr "Tasa de cierre ganado — revisar los tratos del grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Closed win rate"
+msgstr "Tasa de cierre ganado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Won / (Won + Lost) deals"
+msgstr "Tratos ganados / (ganados + perdidos)"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Review cohort deals"
+msgstr "Revisar los tratos del grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Deal values do not establish offered, accepted, invoiced or paid amounts."
+msgstr "Los valores de los tratos no son montos ofrecidos, aceptados, facturados ni cobrados."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open expected value — review cohort deals"
+msgstr "Valor esperado abierto — revisar los tratos del grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open expected value"
+msgstr "Valor esperado abierto"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Weighted forecast — review cohort deals"
+msgstr "Pronóstico ponderado — revisar los tratos del grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Weighted forecast"
+msgstr "Pronóstico ponderado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Exchange rate exclusions — review cohort deals"
+msgstr "Excluidos por tipo de cambio — revisar los tratos del grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "{0} deals have no usable exchange rate and are excluded from amounts."
+msgstr "{0} tratos no tienen un tipo de cambio utilizable y quedan fuera de los montos."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Explore all sources, stages and owners"
+msgstr "Explorar todos los orígenes, etapas y responsables"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Sources"
+msgstr "Orígenes"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current recorded source. This is not campaign attribution."
+msgstr "Origen registrado actual. No es atribución de campañas."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No source groups match these filters."
+msgstr "Ningún origen coincide con estos filtros."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Unknown source"
+msgstr "Origen desconocido"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current stage and aging"
+msgstr "Etapa actual y antigüedad"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current occupancy, not a sequential funnel. Age uses the current logged stage; incomplete history is approximate."
+msgstr "Ocupación actual, no un embudo secuencial. La antigüedad usa la etapa registrada actual; el historial incompleto es aproximado."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No stages match these filters."
+msgstr "Ninguna etapa coincide con estos filtros."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No pipeline"
+msgstr "Sin embudo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Average days in stage"
+msgstr "Días promedio en la etapa"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Approximate records"
+msgstr "Registros aproximados"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Review this stage cohort"
+msgstr "Revisar el grupo de esta etapa"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Owner workload"
+msgstr "Carga por responsable"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open tasks on permitted leads and deals in this creation cohort, grouped by the current task assignee. Task dates do not define this cohort."
+msgstr "Tareas abiertas en prospectos y tratos permitidos de este grupo, agrupadas por el responsable actual de la tarea. Las fechas de las tareas no definen este grupo."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No owner groups match these filters."
+msgstr "Ningún responsable coincide con estos filtros."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Owner leads"
+msgstr "Prospectos del responsable"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Owner deals"
+msgstr "Tratos del responsable"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open tasks"
+msgstr "Tareas abiertas"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Undated tasks"
+msgstr "Tareas sin fecha"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Report definitions"
+msgstr "Definiciones del reporte"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Won deal value"
+msgstr "Valor de tratos ganados"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Unknown stage"
+msgstr "Etapa desconocida"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Comparing previous period…"
+msgstr "Comparando con el periodo anterior…"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Previous period comparison unavailable"
+msgstr "Comparación con el periodo anterior no disponible"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "New · previous period was zero"
+msgstr "Nuevo · el periodo anterior fue cero"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No change from previous period"
+msgstr "Sin cambio respecto al periodo anterior"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "{0}% vs previous period"
+msgstr "{0}% vs periodo anterior"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "You do not have permission to read these report fields."
+msgstr "No tienes permiso para leer estos campos del reporte."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Unable to load the sales report. Retry; no empty or zero result has been assumed."
+msgstr "No se pudo cargar el reporte de ventas. Reintenta; no se supuso ningún resultado vacío ni en cero."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Configure follow-up, review approvals, inspect results and pause work from the automation workspace."
+msgstr "Configura seguimientos, revisa aprobaciones, consulta resultados y pausa el trabajo desde el espacio de automatizaciones."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Checking access…"
+msgstr "Revisando acceso…"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "The automation workspace is not installed on this site. You can continue managing sales and next steps in CRM."
+msgstr "El espacio de automatizaciones no está instalado en este sitio. Puedes seguir gestionando ventas y siguientes pasos en Ventas."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Choose a sales recipe or an existing workflow."
+msgstr "Elige una receta de ventas o un flujo existente."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Review its scope, responsible person, conditions and expected actions. Simulate it with fictional data."
+msgstr "Revisa su alcance, responsable, condiciones y acciones esperadas. Simúlalo con datos ficticios."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Publish the reviewed version, start work explicitly, and inspect its result in Pending or Activity."
+msgstr "Publica la versión revisada, inicia el trabajo de forma explícita y revisa el resultado en Pendientes o Actividad."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Opening the workspace does not start a workflow, activate a bot or send a message."
+msgstr "Abrir el espacio no inicia ningún flujo, no activa bots ni envía mensajes."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open sales automation workspace"
+msgstr "Abrir el espacio de automatizaciones de ventas"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Existing customer flows and their active runs remain available in the same workspace. Review their account and publication state before activation."
+msgstr "Los flujos de clientes existentes y sus ejecuciones activas siguen en el mismo espacio. Revisa su cuenta y estado de publicación antes de activarlos."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "The automation response is incomplete. Try again."
+msgstr "La respuesta de automatizaciones está incompleta. Intenta de nuevo."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "The automation service is unavailable. Try again."
+msgstr "El servicio de automatizaciones no está disponible. Intenta de nuevo."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Board"
+msgstr "Tablero"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Email Address"
+msgstr "Correo electrónico"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Active Open, Ongoing and On Hold deals created in the selected period; historical stages remain in stage charts."
+msgstr "Tratos abiertos, en curso y en pausa creados en el periodo elegido; las etapas históricas siguen en las gráficas por etapa."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open expected amount per active open deal created in the selected period; includes zero amounts."
+msgstr "Monto esperado abierto por trato abierto creado en el periodo elegido; incluye montos en cero."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Won commercial amount per deal closed in the selected period; not invoiced or collected."
+msgstr "Monto comercial ganado por trato cerrado en el periodo elegido; no facturado ni cobrado."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Average ongoing & won commercial amount for active open and won deals created in the selected period; not invoiced or collected."
+msgstr "Monto comercial promedio de tratos abiertos y ganados creados en el periodo elegido; no facturado ni cobrado."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Leads and deals created per day; won deals show their current outcome"
+msgstr "Prospectos y tratos creados por día; los tratos ganados muestran su resultado actual"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open forecast and won value"
+msgstr "Pronóstico abierto y valor ganado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open weighted forecast uses expected closure date; won commercial amount uses actual closure date. Neither proves invoicing or collection."
+msgstr "El pronóstico ponderado usa la fecha de cierre esperada; el monto ganado usa la fecha de cierre real. Ninguno comprueba facturación ni cobro."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open weighted forecast and won deal value; not invoiced or collected amounts"
+msgstr "Pronóstico ponderado abierto y valor de tratos ganados; no son montos facturados ni cobrados"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current converted state of leads created in the selected period"
+msgstr "Estado de conversión actual de los prospectos creados en el periodo elegido"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current stage of deals created in the selected period, including lost and historical stages"
+msgstr "Etapa actual de los tratos creados en el periodo elegido, incluidas las perdidas e históricas"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Recorded commercial amount includes lost and historical deals; it is not forecast, invoiced or collected revenue."
+msgstr "El monto comercial registrado incluye tratos perdidos e históricos; no es pronóstico ni ingreso facturado o cobrado."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Deals created in the selected period"
+msgstr "Tratos creados en el periodo elegido"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Recorded commercial amount"
+msgstr "Monto comercial registrado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Your permissions do not allow this metric. Other permitted metrics remain available."
+msgstr "Tus permisos no incluyen esta métrica. Las demás métricas permitidas siguen disponibles."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Start date must be before end date."
+msgstr "La fecha de inicio debe ser anterior a la final."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Excluded {0} deals with missing exchange rates."
+msgstr "Se excluyeron {0} tratos sin tipo de cambio."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Previous period excludes {0} deals with missing exchange rates."
+msgstr "El periodo anterior excluye {0} tratos sin tipo de cambio."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "No amounts can be converted to the base currency."
+msgstr "Ningún monto se puede convertir a la moneda base."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Total repair orders"
+msgstr "Órdenes de reparación totales"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Repairs are not installed on this site."
+msgstr "Reparaciones no está instalado en este sitio."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Total number of repair orders"
+msgstr "Número total de órdenes de reparación"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "State"
+msgstr "Estado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Historical"
+msgstr "Histórico"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Unclassified"
+msgstr "Sin clasificar"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Leads and deals created within the selected site dates; current state as of this report."
+msgstr "Prospectos y tratos creados entre las fechas elegidas; estado actual al momento del reporte."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Converted visible leads / all visible leads in the lead creation cohort."
+msgstr "Prospectos visibles convertidos / todos los prospectos visibles del grupo por fecha de creación."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current Won deals / current Won plus Lost deals in the deal creation cohort."
+msgstr "Tratos ganados / tratos ganados más perdidos del grupo por fecha de creación."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current occupancy, not a claim that records passed through preceding stages."
+msgstr "Ocupación actual; no indica que los registros pasaron por las etapas anteriores."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Time in the current logged stage; missing or ambiguous history is approximate."
+msgstr "Tiempo en la etapa registrada actual; el historial faltante o ambiguo es aproximado."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Open permitted tasks on permitted cohort records, grouped by current task assignee. Overdue means due before the site timestamp."
+msgstr "Tareas abiertas permitidas en registros permitidos del grupo, agrupadas por el responsable actual de la tarea. Vencida significa con fecha anterior a la hora actual."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Commercial deal values in base currency. They do not establish invoiced, paid or delivered amounts."
+msgstr "Valores comerciales de los tratos en moneda base. No son montos facturados, cobrados ni entregados."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current recorded source; blank source is Unknown. It is not campaign attribution."
+msgstr "Origen registrado actual; sin origen cuenta como Desconocido. No es atribución de campañas."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "cohort"
+msgstr "Grupo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "conversion"
+msgstr "Conversión"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "closed_win"
+msgstr "Cierre ganado"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "stages"
+msgstr "Etapas"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "age"
+msgstr "Antigüedad"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "workload"
+msgstr "Carga de trabajo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "amounts"
+msgstr "Montos"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "source"
+msgstr "Origen"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Native Assignment Rules keep their configured conditions, priority, users and weekdays. Their engine evaluates each record; this manual queue does not predict or change automatic routing."
+msgstr "Las reglas de asignación conservan sus condiciones, prioridad, usuarios y días configurados. Ellas evalúan cada registro; esta cola manual no predice ni cambia la asignación automática."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Marketing uses its existing automatic routing pool and legacy load calculation. Capacity and shifts are soft preferences: if no candidate qualifies, routing can fall back to the pool. Visible CRM counts below are not that router's private load."
+msgstr "Marketing usa su grupo de asignación automática y su propio cálculo de carga. La capacidad y los turnos son preferencias: si nadie califica, la asignación puede volver al grupo. Los conteos de abajo no son la carga interna de esa asignación."
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Current Open, Ongoing and On Hold records, excluding converted leads; archived pipeline history remains visible if still open. Task workload includes open tasks on any permitted parent in the selected scope. Only dated tasks before the site timestamp are overdue; due today means dated from the site timestamp until the end of the site's current day. Counts cover all pages and only records you can read."
+msgstr "Registros abiertos, en curso y en pausa, sin prospectos convertidos; el historial de embudos archivados sigue visible si está abierto. La carga de tareas incluye tareas abiertas en cualquier registro permitido del alcance elegido. Solo las tareas con fecha anterior a la hora actual están vencidas; vencen hoy las que tienen fecha desde ahora hasta el final del día. Los conteos cubren todas las páginas y solo los registros que puedes leer."

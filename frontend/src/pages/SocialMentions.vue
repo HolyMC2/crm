@@ -156,7 +156,7 @@
             }}</span>
             <span
               v-if="row.rating"
-              class="text-[12px] tracking-tight text-ink-amber-7"
+              class="text-[12px] tracking-tight text-ink-amber-9"
               :title="`${row.rating}/5`"
               >{{ '★'.repeat(row.rating) }}</span
             >

@@ -41,6 +41,6 @@ const tone = computed(() => {
   const n = rounded.value
   if (!n || props.good === 'none') return 'text-ink-gray-5'
   const better = props.good === 'up' ? n > 0 : n < 0
-  return better ? 'text-ink-green-6' : 'text-ink-red-6'
+  return better ? 'text-ink-green-6' : 'text-ink-red-7'
 })
 </script>

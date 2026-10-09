@@ -75,7 +75,7 @@
         </div>
         <div
           v-else-if="error"
-          class="px-4 py-10 text-center text-[12px] text-ink-red-6"
+          class="px-4 py-10 text-center text-[12px] text-ink-red-7"
         >
           {{ __('No se pudo buscar.') }}
           <button class="ml-1 font-semibold underline" @click="runNow">

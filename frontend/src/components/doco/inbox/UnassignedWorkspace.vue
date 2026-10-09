@@ -36,7 +36,7 @@
       </span>
       <span
         v-else
-        class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-7"
+        class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-9"
       >
         <LucideMessageCircleQuestion class="h-5 w-5" />
       </span>
@@ -73,7 +73,7 @@
         <div
           v-else
           class="text-[11px] font-medium"
-          :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-7'"
+          :class="isArchived ? 'text-ink-gray-5' : 'text-ink-amber-9'"
         >
           {{
             isArchived
@@ -90,7 +90,7 @@
         class="ml-auto flex flex-none items-center gap-1 rounded-md border border-outline-gray-2 px-2 py-1.5 text-[11.5px] font-semibold text-ink-gray-6 hover:bg-surface-gray-2 disabled:opacity-50"
         :disabled="busy"
         :aria-label="__('Archivar')"
-        :title="__('Archivar sin crear lead/trato — seguirá disponible')"
+        :title="__('Archivar sin crear prospecto/trato — seguirá disponible')"
         @click="onArchive"
       >
         <LucideArchive class="h-3.5 w-3.5" />
@@ -131,7 +131,7 @@
           </div>
           <div
             v-else-if="unassignedThread.error && !messages.length"
-            class="py-8 text-center text-xs text-ink-red-6"
+            class="py-8 text-center text-xs text-ink-red-7"
           >
             {{ __('No se pudo cargar la conversación.') }}
             <button
@@ -464,7 +464,7 @@
 
           <input
             v-model="linkQuery"
-            :placeholder="__('Buscar contacto, Lead o Trato…')"
+            :placeholder="__('Buscar contacto, Prospecto o Trato…')"
             :class="inputCls"
             @input="onSearch"
           />

@@ -92,7 +92,7 @@
         <!-- approval hint: an AI/pending draft only publishes once approved; unapproved → auto-cancel at slot -->
         <div
           v-if="isPending"
-          class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-7 dark:bg-amber-300/10 dark:text-amber-200"
+          class="mb-3 flex items-start gap-2 rounded-md bg-surface-amber-1 px-2.5 py-2 text-[11.5px] text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200"
         >
           <span class="flex-none">⏳</span>
           <span>{{
@@ -156,7 +156,7 @@
         <!-- IG publishing rides Meta's App Review; those channels Skip harmlessly until it clears -->
         <p
           v-if="hasIg"
-          class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-7 dark:bg-amber-300/10 dark:text-amber-200"
+          class="mb-3 flex items-start gap-1.5 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[10.5px] text-ink-amber-9 dark:bg-amber-300/10 dark:text-amber-200"
         >
           <span class="flex-none">ℹ️</span>
           <span>{{
@@ -221,7 +221,7 @@
         <MediaEditor v-model:media="form.media" :can-cancel="canCancel" />
         <p
           v-if="form.source === 'AI Auto' && !form.media.length"
-          class="mb-3 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[11px] text-ink-amber-7"
+          class="mb-3 rounded-md bg-surface-amber-1 px-2 py-1.5 text-[11px] text-ink-amber-9"
         >
           {{
             __(

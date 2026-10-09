@@ -704,7 +704,7 @@
         <div class="flex flex-none flex-col items-end leading-tight">
           <button
             v-if="metricsError"
-            class="text-[10px] text-ink-red-6"
+            class="text-[10px] text-ink-red-7"
             @click="loadCounts"
           >
             {{ __('Totals unavailable · Retry') }}
@@ -1364,7 +1364,7 @@ async function onBoardChange(row, status) {
       value: status,
     })
     row.status = status
-    toast.success(__('Stage actualizado'))
+    toast.success(__('Etapa actualizada'))
     loadCounts()
   } catch (e) {
     toast.error(e.messages?.[0] || __('No se pudo cambiar el stage'))

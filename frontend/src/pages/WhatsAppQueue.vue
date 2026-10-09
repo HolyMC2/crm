@@ -18,7 +18,7 @@
         }}</span>
         <span
           v-if="pendingCount"
-          class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-[11px] font-semibold text-ink-amber-7"
+          class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-[11px] font-semibold text-ink-amber-9"
           >{{ pendingCount }} {{ __('pendientes') }}</span
         >
       </div>
@@ -54,7 +54,7 @@
                 ? 'bg-surface-base/20'
                 : f.value === 'Fallido'
                   ? 'bg-surface-red-1 text-ink-red-8'
-                  : 'bg-surface-amber-1 text-ink-amber-7'
+                  : 'bg-surface-amber-1 text-ink-amber-9'
             "
             >{{ badgeCount(f.value) }}</span
           >

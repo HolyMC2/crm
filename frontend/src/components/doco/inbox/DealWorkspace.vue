@@ -264,6 +264,11 @@ const showJump = ref(false)
 const jumpBottom = ref(88)
 let scrollEl = null
 
+// Whether the reader is at the newest messages; measured on scroll, BEFORE a
+// resize, because a shrinking list (keyboard, a growing composer, the reply
+// bar) moves the tail out of view by exactly the height it lost.
+let atTail = true
+let resizeObserver = null
 function onScroll() {
   if (!scrollEl) return
   const composer = scrollEl.nextElementSibling // Activities' composer wrapper <div>
@@ -271,12 +276,19 @@ function onScroll() {
   const distFromBottom =
     scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
   showJump.value = distFromBottom > 240
+  atTail = distFromBottom < 120
+}
+function onListResize() {
+  if (scrollEl && atTail) scrollEl.scrollTop = scrollEl.scrollHeight
 }
 function jumpToBottom() {
   scrollEl?.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' })
 }
 function detachScroll() {
   if (scrollEl) scrollEl.removeEventListener('scroll', onScroll)
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  atTail = true
   scrollEl = null
   showJump.value = false
 }
@@ -287,6 +299,10 @@ function bindScroll() {
     scrollEl = convoRef.value?.querySelector('.overflow-y-auto') || null
     if (!scrollEl) return
     scrollEl.addEventListener('scroll', onScroll, { passive: true })
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(onListResize)
+      resizeObserver.observe(scrollEl)
+    }
     setTimeout(onScroll, 400) // after the thread renders + auto-scrolls to bottom
   })
 }
@@ -295,25 +311,9 @@ onMounted(bindScroll)
 onBeforeUnmount(detachScroll)
 
 // ── keyboard-aware thread ─────────────────────────────────────────────────────
-// When the on-screen keyboard opens (visualViewport shrinks) the thread viewport
-// loses ~40% height; if the user was reading the tail, keep it pinned to the
-// newest messages so the composer never covers what they were answering.
-let _vvH = window.visualViewport?.height || 0
-function onVvResize() {
-  const vv = window.visualViewport
-  if (!vv) return
-  const shrunk = vv.height < _vvH - 80
-  _vvH = vv.height
-  if (!shrunk || !scrollEl) return
-  const dist =
-    scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
-  if (dist < 300)
-    setTimeout(() => scrollEl?.scrollTo({ top: scrollEl.scrollHeight }), 60)
-}
-onMounted(() => window.visualViewport?.addEventListener('resize', onVvResize))
-onBeforeUnmount(() =>
-  window.visualViewport?.removeEventListener('resize', onVvResize),
-)
+// When the on-screen keyboard opens the list loses ~40% of its height; a reader
+// at the newest messages stays there (onListResize), so the composer never
+// covers what they were answering.
 
 const tabs = [
   { key: 'overview', label: __('Resumen') },
@@ -368,5 +368,15 @@ const convoTabs = [{ name: 'WhatsApp', label: 'WhatsApp', icon: WhatsAppIcon }]
   .doco-convo :deep(.activity-header) {
     display: none;
   }
+  /* Pinned notes keep clear of the 🔎 button floating at the top right. */
+  .doco-convo :deep(.wa-pins) {
+    margin-right: 3.25rem;
+  }
+}
+
+/* The sticky pinned notes sit at the top of the scroller; its edge fade would
+   wash them out, so the conversation scrolls without it. */
+.doco-convo :deep(.overflow-y-auto) {
+  mask-image: none !important;
 }
 </style>

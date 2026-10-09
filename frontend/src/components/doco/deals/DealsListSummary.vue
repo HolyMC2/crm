@@ -40,7 +40,7 @@
       <button
         v-if="error"
         type="button"
-        class="text-ink-red-6 underline-offset-2 hover:underline"
+        class="text-ink-red-7 underline-offset-2 hover:underline"
         @click="emit('retry')"
       >
         {{ __('Totals unavailable · Retry') }}
@@ -65,7 +65,7 @@
             loading ? '…' : formatMoney(summary.weighted)
           }}</span>
         </span>
-        <span v-if="summary.missingFx" class="text-xs text-ink-amber-7">
+        <span v-if="summary.missingFx" class="text-xs text-ink-amber-9">
           {{ __('Missing exchange rate') }}: {{ summary.missingFx }}
         </span>
       </template>

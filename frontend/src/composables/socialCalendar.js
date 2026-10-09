@@ -58,12 +58,12 @@ export const PILLARS = [
   {
     kind: 'Temporada',
     emoji: '🎉',
-    chip: 'bg-surface-amber-2 text-ink-amber-7 dark:bg-amber-300/20 dark:text-amber-200',
+    chip: 'bg-surface-amber-2 text-ink-amber-9 dark:bg-amber-300/20 dark:text-amber-200',
   },
   {
     kind: 'Noticia',
     emoji: '📣',
-    chip: 'bg-surface-red-2 text-ink-red-6 dark:text-ink-red-8',
+    chip: 'bg-surface-red-2 text-ink-red-7 dark:text-ink-red-8',
   },
   {
     kind: 'Testimonio',
@@ -131,12 +131,12 @@ export function chip(status) {
     {
       Draft: 'bg-surface-gray-2 text-ink-gray-6',
       'Pending Approval':
-        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+        'bg-surface-amber-1 text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200',
       Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
       Publishing: 'bg-surface-blue-2 text-ink-blue-9',
       Published: 'bg-surface-green-2 text-ink-green-8',
       'Partially Published':
-        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+        'bg-surface-amber-1 text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200',
       Failed: 'bg-surface-red-1 text-ink-red-8',
       Cancelado: 'bg-surface-gray-2 text-ink-gray-4 line-through',
     }[status] || 'bg-surface-gray-2 text-ink-gray-6'

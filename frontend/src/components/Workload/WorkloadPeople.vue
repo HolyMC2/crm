@@ -266,14 +266,14 @@ function stats(row) {
       label: __('Vencidas'),
       text: String(row.overdue),
       bucket: 'overdue',
-      tone: row.overdue ? 'text-ink-red-6' : 'text-ink-gray-5',
+      tone: row.overdue ? 'text-ink-red-7' : 'text-ink-gray-5',
     },
     {
       key: 'today',
       label: __('Vencen hoy'),
       text: row.today == null ? '—' : String(row.today),
       bucket: row.today == null ? null : 'today',
-      tone: row.today > 0 ? 'text-ink-amber-7' : 'text-ink-gray-5',
+      tone: row.today > 0 ? 'text-ink-amber-9' : 'text-ink-gray-5',
     },
     {
       key: 'tasks',

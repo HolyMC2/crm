@@ -45,7 +45,7 @@
         >
         <span
           v-if="row.priority === 'High'"
-          class="rounded bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-7"
+          class="rounded bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-9"
           >{{ priorityLabel(row.priority) }}</span
         >
         <span
@@ -96,9 +96,9 @@ const to = computed(() => pendienteRoute(props.row, props.query))
 const actionable = computed(() => props.row.mine && !props.row.cancelled)
 const dueClass = computed(() =>
   props.row.group === 'overdue'
-    ? 'font-medium text-ink-red-6'
+    ? 'font-medium text-ink-red-7'
     : props.row.group === 'today'
-      ? 'font-medium text-ink-amber-7'
+      ? 'font-medium text-ink-amber-9'
       : '',
 )
 const menu = computed(() => [

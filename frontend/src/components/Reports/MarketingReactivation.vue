@@ -19,7 +19,7 @@
             class="mt-1 block min-h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-ink-gray-9"
           >
             <option value="cold_leads">
-              {{ __('Leads fríos (sin actividad)') }}
+              {{ __('Cold leads (no activity)') }}
             </option>
             <option value="dormant_customers">
               {{ __('Clientes inactivos (con compra previa)') }}

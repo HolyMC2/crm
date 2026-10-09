@@ -37,7 +37,7 @@
            note (title only); tapping it opens the full note. -->
       <div
         v-if="pinnedNotes.length"
-        class="mx-3 mb-2 flex flex-col gap-1.5 sm:mx-10 sm:mb-3 sm:gap-2"
+        class="wa-pins mx-3 mb-2 flex flex-col gap-1.5 sm:mx-10 sm:mb-3 sm:gap-2"
       >
         <div
           v-for="note in pinnedNotes"
@@ -46,27 +46,33 @@
         >
           <FeatherIcon
             name="bookmark"
-            class="mt-0.5 size-4 shrink-0 text-ink-amber-7"
+            class="mt-0.5 size-4 shrink-0 text-ink-amber-9"
           />
           <div
             class="min-w-0 flex-1 cursor-pointer"
             @click="emit('openNote', note)"
           >
-            <div class="truncate text-sm font-semibold text-ink-gray-8">
-              {{ note.title }}
+            <!-- One title row (date at its end) and one line of content keep
+                 three pins to about a quarter of the thread on desktop. -->
+            <div class="flex items-baseline gap-2">
+              <div
+                class="min-w-0 flex-1 truncate text-sm font-semibold text-ink-gray-8"
+              >
+                {{ note.title }}
+              </div>
+              <div
+                v-if="note.modified || note.creation"
+                class="shrink-0 text-2xs text-ink-gray-5 max-sm:hidden"
+                :title="formatTimestampFull(note.modified || note.creation)"
+              >
+                {{ formatDateTime(note.modified || note.creation) }}
+              </div>
             </div>
             <div
               v-if="note.content"
-              class="prose-f line-clamp-2 text-xs text-ink-gray-6 max-sm:hidden"
+              class="prose-f line-clamp-1 text-xs text-ink-gray-6 max-sm:hidden"
               v-html="sanitizeHTML(note.content)"
             />
-            <div
-              v-if="note.modified || note.creation"
-              class="mt-0.5 text-2xs text-ink-gray-5 max-sm:hidden"
-              :title="formatTimestampFull(note.modified || note.creation)"
-            >
-              {{ formatDateTime(note.modified || note.creation) }}
-            </div>
           </div>
           <button
             type="button"

@@ -143,7 +143,7 @@
             :class="
               available(row)
                 ? 'bg-surface-green-2 text-ink-green-8'
-                : 'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200'
+                : 'bg-surface-amber-1 text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200'
             "
           >
             {{
@@ -206,10 +206,10 @@ function chip(status) {
     {
       Published: 'bg-surface-green-2 text-ink-green-8',
       'Partially Published':
-        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+        'bg-surface-amber-1 text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200',
       Scheduled: 'bg-surface-blue-2 text-ink-blue-9',
       'Pending Approval':
-        'bg-surface-amber-1 text-ink-amber-7 dark:bg-amber-300/15 dark:text-amber-200',
+        'bg-surface-amber-1 text-ink-amber-9 dark:bg-amber-300/15 dark:text-amber-200',
       Draft: 'bg-surface-gray-2 text-ink-gray-6',
     }[status] || 'bg-surface-gray-2 text-ink-gray-6'
   )

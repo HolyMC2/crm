@@ -93,7 +93,7 @@
           <template v-else>
             <p
               v-if="decayed"
-              class="mb-2 rounded-lg bg-surface-amber-1 px-2.5 py-1.5 text-[11.5px] text-ink-amber-7"
+              class="mb-2 rounded-lg bg-surface-amber-1 px-2.5 py-1.5 text-[11.5px] text-ink-amber-9"
             >
               {{
                 __('Incluye ajuste por inactividad (las reglas suman {0}).', [
@@ -123,7 +123,7 @@
                   :class="
                     c.points >= 0
                       ? 'bg-surface-green-2 text-ink-green-8'
-                      : 'bg-surface-red-1 text-ink-red-6'
+                      : 'bg-surface-red-1 text-ink-red-7'
                   "
                   >{{ signed(c.points) }}</span
                 >
@@ -159,7 +159,7 @@
                   <span
                     class="tabular-nums font-semibold"
                     :class="
-                      h.delta >= 0 ? 'text-ink-green-7' : 'text-ink-red-6'
+                      h.delta >= 0 ? 'text-ink-green-7' : 'text-ink-red-7'
                     "
                     >{{ signed(h.delta) }}</span
                   >

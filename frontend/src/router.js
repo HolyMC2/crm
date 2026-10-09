@@ -171,6 +171,7 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/pages/Dashboard.vue'),
+    meta: { title: 'Dashboard' },
   },
   {
     path: '/inquiries',
@@ -184,12 +185,14 @@ const routes = [
     path: '/leads/view/:viewType?',
     name: 'Leads',
     component: () => import('@/pages/Leads.vue'),
+    meta: { title: 'Leads' },
   },
   {
     path: '/leads/:leadId',
     name: 'Lead',
     component: () => import(`@/pages/${handleMobileView('Lead')}.vue`),
     props: true,
+    meta: { title: 'Lead' },
   },
   {
     // FCRM redesign owns /deals (DealsView.vue); upstream list stays reachable
@@ -197,18 +200,21 @@ const routes = [
     path: '/deals/view/:viewType?',
     name: 'Deals',
     component: () => import('@/pages/Deals.vue'),
+    meta: { title: 'Deals' },
   },
   {
     path: '/deals/:dealId',
     name: 'Deal',
     component: () => import(`@/pages/${handleMobileView('Deal')}.vue`),
     props: true,
+    meta: { title: 'Deal' },
   },
   {
     alias: '/notes',
     path: '/notes/view/:viewType?',
     name: 'Notes',
     component: () => import('@/pages/Notes.vue'),
+    meta: { title: 'Notes' },
   },
   {
     // Both CRM task lists merged into Pendientes; old links keep their scope.
@@ -243,6 +249,7 @@ const routes = [
     path: '/call-logs/view/:viewType?',
     name: 'Call Logs',
     component: () => import('@/pages/CallLogs.vue'),
+    meta: { title: 'Calls' },
   },
   {
     // Retired CRM Calendar: Event notifications and bookmarks land in the Agenda.
@@ -262,23 +269,27 @@ const routes = [
     path: '/data-import',
     name: 'DataImportList',
     component: () => import('@/pages/DataImport.vue'),
+    meta: { title: 'Data Import' },
   },
   {
     path: '/data-import/doctype/:doctype',
     name: 'NewDataImport',
     component: () => import('@/pages/DataImport.vue'),
     props: true,
+    meta: { title: 'Data Import' },
   },
   {
     path: '/data-import/:importName',
     name: 'DataImport',
     component: () => import('@/pages/DataImport.vue'),
     props: true,
+    meta: { title: 'Data Import' },
   },
   {
     path: '/welcome',
     name: 'Welcome',
     component: () => import('@/pages/Welcome.vue'),
+    meta: { title: 'Welcome' },
   },
   // ── FCRM redesign surfaces (handoff §4.1). Placeholder component until each
   //    phase ships its real page; meta drives the nav-rail label + back label.
@@ -428,11 +439,13 @@ const routes = [
     path: '/onboarding',
     name: 'Onboarding',
     component: () => import('@/pages/PersonaForm.vue'),
+    meta: { title: 'Welcome' },
   },
   {
     path: '/:invalidpath',
     name: 'Invalid Page',
     component: () => import('@/pages/InvalidPage.vue'),
+    meta: { title: 'Page not found' },
   },
   {
     path: '/not-permitted',

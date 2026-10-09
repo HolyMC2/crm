@@ -24,7 +24,7 @@
 
     <div
       v-if="frozen"
-      class="mb-3 max-w-[520px] rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-7"
+      class="mb-3 max-w-[520px] rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-9"
     >
       {{ frozenHint }}
     </div>
@@ -95,7 +95,7 @@
 
             <span
               v-if="kind === 'chatflow' && Number(s.wait_hours) > 0"
-              class="flex-none rounded-full bg-surface-amber-1 px-2 py-[2px] text-[10.5px] font-semibold text-ink-amber-7"
+              class="flex-none rounded-full bg-surface-amber-1 px-2 py-[2px] text-[10.5px] font-semibold text-ink-amber-9"
             >
               ⏳ {{ s.wait_hours }}h
             </span>
@@ -338,7 +338,7 @@
                 >
                   <span
                     v-if="k % 2 === 1"
-                    class="mx-[1px] rounded bg-surface-amber-1 px-1 font-mono text-[11px] font-semibold text-ink-amber-7"
+                    class="mx-[1px] rounded bg-surface-amber-1 px-1 font-mono text-[11px] font-semibold text-ink-amber-9"
                     >{{ part }}</span
                   >
                   <span v-else>{{ part }}</span>
@@ -359,7 +359,7 @@
                 v-if="
                   previewTpl(s).status && previewTpl(s).status !== 'APPROVED'
                 "
-                class="rounded bg-surface-amber-1 px-1.5 py-[1px] font-semibold text-ink-amber-7"
+                class="rounded bg-surface-amber-1 px-1.5 py-[1px] font-semibold text-ink-amber-9"
               >
                 {{ previewTpl(s).status }}
               </span>

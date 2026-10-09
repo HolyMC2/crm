@@ -47,7 +47,7 @@
         </button>
         <button
           v-if="form.status === 'Active'"
-          class="rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-7"
+          class="rounded-lg border border-outline-amber-4 bg-surface-amber-1 px-3 py-1.5 text-[12.5px] font-semibold text-ink-amber-9"
           @click="changeStatus('Paused')"
         >
           ⏸ {{ __('Pausar') }}
@@ -421,7 +421,7 @@ function typeLabel(t) {
 }
 const STATUS_CHIP = {
   Active: 'text-ink-green-8 bg-surface-green-2',
-  Paused: 'text-ink-amber-7 bg-surface-amber-1',
+  Paused: 'text-ink-amber-9 bg-surface-amber-1',
   Draft: 'text-ink-gray-6 bg-surface-gray-2',
   Completed: 'text-ink-blue-9 bg-surface-blue-1',
 }
@@ -433,7 +433,7 @@ function enrStatusChip(s) {
     Active: 'text-ink-green-8 bg-surface-green-2',
     Completed: 'text-ink-blue-9 bg-surface-blue-1',
     Suppressed: 'text-ink-red-8 bg-surface-red-1',
-    Paused: 'text-ink-amber-7 bg-surface-amber-1',
+    Paused: 'text-ink-amber-9 bg-surface-amber-1',
   }
   return map[s] || 'text-ink-gray-6 bg-surface-gray-2'
 }

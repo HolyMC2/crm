@@ -112,6 +112,11 @@ async function mount(path) {
         meta: { app: 'agenda', title: 'Agenda' },
       },
       { path: '/deals', component: { render: () => h('p', 'Deals page') } },
+      {
+        path: '/reports',
+        component: { render: () => h('p', 'Reports page') },
+        meta: { title: 'Reports' },
+      },
       { path: '/ventas', component: { render: () => null } },
       {
         path: '/ventas/deal/:dealId',
@@ -350,6 +355,38 @@ describe('one frame for every route', () => {
     await mount('/contactos')
     expect(root.querySelector('#app-header')).toBeNull()
     expect(root.querySelector('header h1').textContent).toContain('Contactos')
+  })
+
+  it('phone Ventas page without its own header shows the route title', async () => {
+    state.mobile.value = true
+    await mount('/reports')
+    const slot = root.querySelector('#app-header')
+    const title = root.querySelector('[data-testid="shell-title"]')
+    expect(slot.children).toHaveLength(0)
+    expect(title.textContent.trim()).toBe('Reports')
+    // a teleported page header covers the title (CSS :has on the slot)
+    expect(slot.className).toContain('[&:not(:has(*))]:hidden')
+    expect(title.className).toContain('[#app-header:has(*)+&]:hidden')
+    expect(document.title).toBe('Reports · Muelle')
+  })
+
+  it('every routed page names itself for the phone header', () => {
+    const source = readFileSync(
+      resolve(__dirname, '../../src/router.js'),
+      'utf8',
+    )
+    const block = source.slice(
+      source.indexOf('const routes = ['),
+      source.indexOf('\n]\n', source.indexOf('const routes = [')),
+    )
+    const pages = block
+      .split('\n  {\n')
+      .filter((route) => /\n    component:/.test(route))
+    expect(pages.length).toBeGreaterThan(30)
+    const untitled = pages
+      .filter((route) => !/\btitle: '/.test(route))
+      .map((route) => route.match(/path: '([^']+)'/)?.[1])
+    expect(untitled).toEqual([])
   })
 
   it('phone header slides away on scroll down and returns on scroll up', async () => {

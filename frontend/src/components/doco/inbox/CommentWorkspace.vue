@@ -122,7 +122,7 @@
           </div>
           <div
             v-else-if="threadError && !threadComments.length"
-            class="py-6 text-center text-[12px] text-ink-red-6"
+            class="py-6 text-center text-[12px] text-ink-red-7"
           >
             {{ __('No se pudieron cargar los comentarios.') }}
             <button
@@ -211,7 +211,7 @@
                 :disabled="busy"
                 @click="onConvert(cm)"
               >
-                {{ __('Crear Lead') }}
+                {{ __('Create Lead') }}
               </button>
               <button
                 v-else
@@ -492,7 +492,7 @@ async function onConvert(cm) {
     await fetchThread(true)
     toast.success(__('Lead creado') + ': ' + lead)
   } catch (e) {
-    toast.error(e?.messages?.[0] || __('No se pudo crear el lead'))
+    toast.error(e?.messages?.[0] || __('No se pudo crear el prospecto'))
   } finally {
     busy.value = false
   }

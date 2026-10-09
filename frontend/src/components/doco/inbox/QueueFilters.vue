@@ -369,7 +369,7 @@ const sections = computed(() => [
   },
   {
     key: 'lead',
-    label: __('Estado del lead'),
+    label: __('Estado del prospecto'),
     selected: queueLeadStatus.value,
     groups: groupByType(opts.value.lead_statuses),
     toggle: (v) =>
@@ -415,7 +415,7 @@ const chips = computed(() => {
       key: 'ls',
       label:
         queueLeadState.value === 'open'
-          ? __('Leads abiertos')
+          ? __('Prospectos abiertos')
           : __('Leads cerrados'),
       remove: () => setQueueFilters({ lead_state: '' }),
     })

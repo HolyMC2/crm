@@ -42,7 +42,7 @@
     <!-- non-manager: server refused → banner (the server gate is the real guard) -->
     <div
       v-if="restricted"
-      class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-7"
+      class="rounded-[10px] border border-outline-amber-4 bg-surface-amber-1 px-3 py-2 text-[12px] text-ink-amber-9"
     >
       {{ __('El backtest de score requiere permiso de gerente.') }}
     </div>
@@ -62,7 +62,7 @@
         >
           <template v-if="liftLabel">
             <div class="text-[12.5px] leading-snug text-ink-gray-8">
-              {{ __('Los leads A cierran') }}
+              {{ __('Los prospectos A cierran') }}
               <span class="font-bold text-ink-gray-9">{{ liftLabel }}</span>
               {{ __('más que los D') }}
             </div>
@@ -77,7 +77,7 @@
           class="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[.06em] text-ink-gray-4"
         >
           <span>{{ __('Cierre por grado') }}</span>
-          <span>{{ __('ganados/leads') }}</span>
+          <span>{{ __('ganados/prospectos') }}</span>
         </div>
         <div
           v-for="row in rows"
@@ -114,7 +114,7 @@
           class="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-ink-gray-5"
         >
           <span v-if="overall.avg_score_converted != null">
-            {{ __('Score prom. ganados') }}:
+            {{ __('Puntaje prom. ganados') }}:
             <span class="font-semibold text-ink-gray-8">{{
               overall.avg_score_converted
             }}</span>
@@ -169,7 +169,7 @@
       </template>
 
       <div v-else class="py-4 text-center text-xs text-ink-gray-4">
-        {{ __('Sin leads en el periodo') }}
+        {{ __('Sin prospectos en el periodo') }}
       </div>
     </template>
   </section>

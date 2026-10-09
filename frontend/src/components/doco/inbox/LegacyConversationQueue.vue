@@ -60,7 +60,7 @@
             class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
             :class="
               unattendedTotal
-                ? 'text-ink-amber-7 bg-surface-amber-2'
+                ? 'text-ink-amber-9 bg-surface-amber-2'
                 : 'text-ink-green-8 bg-surface-green-2'
             "
             :title="
@@ -207,11 +207,11 @@
         class="mb-1.5"
       >
         <div
-          class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-7"
+          class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-9"
         >
           ⚠ {{ __('Sin asignar') }}
           <span
-            class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-7"
+            class="rounded-full bg-surface-amber-1 px-1.5 text-[10px] text-ink-amber-9"
             >{{ visibleUnassigned.length }}</span
           >
         </div>
@@ -246,7 +246,7 @@
         >
           <div class="mb-1 flex items-center gap-2">
             <span
-              class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-7"
+              class="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-surface-amber-1 text-ink-amber-9"
             >
               <LucideMessageCircleQuestion class="h-4 w-4" />
             </span>
@@ -547,7 +547,7 @@
             commentPosts.error &&
             !commentGroups.length
           "
-          class="px-2 py-6 text-center text-xs text-ink-red-6"
+          class="px-2 py-6 text-center text-xs text-ink-red-7"
         >
           {{ __('No se pudieron cargar los comentarios.') }}
           <button
@@ -663,7 +663,7 @@
         </div>
         <div
           v-else-if="listError && !rows.length && !visibleUnassigned.length"
-          class="px-2 py-6 text-center text-xs text-ink-red-6"
+          class="px-2 py-6 text-center text-xs text-ink-red-7"
         >
           {{ __('No se pudo cargar la bandeja.') }}
           <button
@@ -791,7 +791,7 @@
             it is not a read receipt. -->
               <span
                 v-if="r.unread"
-                class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold text-ink-amber-7 bg-surface-amber-1"
+                class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold text-ink-amber-9 bg-surface-amber-1"
                 :title="
                   __(
                     'El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes o al completar el trato.',
@@ -880,7 +880,7 @@
                the sales-docs flag is on and the deal owes something) -->
               <span
                 v-if="r.saldo"
-                class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-7 bg-surface-amber-1"
+                class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-amber-9 bg-surface-amber-1"
                 :title="__('Saldo pendiente en facturas del trato')"
               >
                 💰 {{ formatMoney(r.saldo) }}
