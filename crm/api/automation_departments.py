@@ -23,7 +23,7 @@ DEPARTMENTS = {
 		"customer": True,
 		"members": ("Sales User", "Sales Manager"),
 		"managers": ("Sales Manager",),
-		"records": ("CRM Inquiry", "CRM Lead", "CRM Deal", "Quotation", "Sales Order"),
+		"records": ("CRM Inquiry", "CRM Lead", "CRM Deal", "Quotation", "Sales Order", "Appointment"),
 	},
 	"support": {
 		"label": "Support",
@@ -58,7 +58,7 @@ DEPARTMENTS = {
 		"customer": True,
 		"members": ("Doco Repair Technician", "Doco Repair Manager", "Doco Repair Counter"),
 		"managers": ("Doco Repair Manager",),
-		"records": ("Repair Order", "Repair Checkin Request"),
+		"records": ("Repair Order", "Repair Checkin Request", "Appointment"),
 	},
 }
 ADMIN = "System Manager"
