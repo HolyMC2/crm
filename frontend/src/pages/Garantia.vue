@@ -409,6 +409,12 @@
               </div>
               <p v-else class="mt-2 text-sm text-ink-gray-6">
                 {{ claim.remedies.rma.reason }}
+                <a
+                  v-if="claim.remedies.rma.next"
+                  class="inline-block min-h-11 py-2 text-ink-blue-link underline"
+                  :href="claim.remedies.rma.next.url"
+                  >{{ claim.remedies.rma.next.label }}</a
+                >
               </p>
             </template>
             <template v-if="claim.remedies?.supplier_return">
@@ -450,7 +456,33 @@
               </div>
               <p v-else class="mt-2 text-sm text-ink-gray-6">
                 {{ claim.remedies.supplier_return.reason }}
+                <a
+                  v-if="claim.remedies.supplier_return.next"
+                  class="inline-block min-h-11 py-2 text-ink-blue-link underline"
+                  :href="claim.remedies.supplier_return.next.url"
+                  >{{ claim.remedies.supplier_return.next.label }}</a
+                >
               </p>
+              <ul
+                v-if="
+                  claim.remedies.supplier_return.available &&
+                  claim.remedies.supplier_return.billed?.length
+                "
+                class="mt-2 text-sm text-ink-gray-6"
+              >
+                <li
+                  v-for="row in claim.remedies.supplier_return.billed"
+                  :key="row.name"
+                >
+                  {{ row.reason }}
+                  <a
+                    v-if="row.next"
+                    class="inline-block min-h-11 py-2 text-ink-blue-link underline"
+                    :href="row.next.url"
+                    >{{ row.next.label }}</a
+                  >
+                </li>
+              </ul>
             </template>
           </section>
 
