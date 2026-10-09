@@ -166,6 +166,12 @@
             @queued="queued"
             @refresh="workspace.loadHistory()"
           />
+          <CitaBooking
+            :conversation="state.conversation"
+            :actor="session.user"
+            :blocked="!!state.pending || outboxPending || commercePending"
+            @queued="queued"
+          />
           <ConversationComposer
             :conversation="state.conversation"
             :actor="session.user"
@@ -207,6 +213,7 @@ import ConversationControls from './ConversationControls.vue'
 import ConversationComposer from './ConversationComposer.vue'
 import ConversationOutbox from './ConversationOutbox.vue'
 import CatalogCommerce from './CatalogCommerce.vue'
+import CitaBooking from './CitaBooking.vue'
 import MessengerArea from '@/components/Activities/MessengerArea.vue'
 const NATIVE_PROVIDERS = ['WhatsApp', 'Webchat', 'Messenger', 'Instagram']
 const session = sessionStore(),

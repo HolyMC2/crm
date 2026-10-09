@@ -79,6 +79,14 @@
           class="c-action-link"
           ><FeatherIcon name="mail" class="h-4 w-4" />Correo</a
         >
+        <RouterLink
+          v-if="record.source === 'contact'"
+          :to="citaRoute"
+          class="c-action-link"
+          ><FeatherIcon name="calendar" class="h-4 w-4" />{{
+            __('Book appointment')
+          }}</RouterLink
+        >
       </div>
       <div v-if="refs.length > 1" class="c-source-chooser">
         <FormControl
@@ -704,6 +712,17 @@ const segments = computed(
   () => boot.value?.segments?.rows || boot.value?.segments || [],
 )
 const refs = computed(() => record.value?.refs || [])
+// «Agendar cita»: Agenda's staff booking with this contact, back here afterwards.
+const citaRoute = computed(() => ({
+  path: '/agenda',
+  query: {
+    new_cita: '1',
+    contact: record.value?.name,
+    contact_label: record.value?.title || record.value?.name,
+    return_to: `${window.location.pathname}${window.location.search}`,
+    return_label: record.value?.title || record.value?.name,
+  },
+}))
 const selectedSource = computed(
   () =>
     refs.value.find((r) => `${r.doctype}:${r.name}` === selectedKey.value) ||

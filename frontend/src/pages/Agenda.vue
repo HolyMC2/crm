@@ -839,10 +839,10 @@ const panelHandlers = {
 const citaForm = ref(null)
 const citaSettingsOpen = ref(false)
 let citaFormKey = 0
+// Where Taller sends the worker back after «Recibir equipo» (this view, this cita).
 function agendaPath() {
-  const url = new URL(window.location.href)
-  url.searchParams.delete('done')
-  return `${url.pathname}${url.search}`
+  const { done: _done, ...query } = route.query
+  return `/crm${router.resolve({ path: route.path, query }).fullPath}`
 }
 function sheetProps(title) {
   return phone.value
@@ -921,7 +921,14 @@ async function refreshCitas() {
 async function openCitaFromQuery() {
   const query = route.query
   const rest = { ...query }
-  if (query.new_cita === '1' && citas.value.canBook) {
+  if (query.new_cita === '1' && !citas.value.canBook) {
+    delete rest.new_cita
+    toast.error(
+      citas.value.available
+        ? __('You cannot book appointments. Ask your manager for access.')
+        : __('Online appointments are not available on this site yet.'),
+    )
+  } else if (query.new_cita === '1') {
     openCitaForm({
       contact:
         typeof query.contact === 'string'

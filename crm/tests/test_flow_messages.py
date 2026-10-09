@@ -69,6 +69,19 @@ class TestFlowMessages(test_outbox.TestOutbox):
 		with self.assertRaises(frappe.ValidationError):
 			self.queue_flow(flow, request_id=request, body="Different")
 
+	def test_outbox_flow_carries_the_choices_its_send_lists(self):
+		flow = self.flow()
+		data = {"slots": [{"id": "2026-10-09T16:00:00Z", "title": "Jue 9 oct 10:00"}]}
+		result = api.queue_flow_message(
+			self.doc.name, 2, uuid4().hex, {"flow": flow, "body": "Agenda", "token_prefix": "cita", "data": data}
+		)
+		parameters = json.loads(api._load(result["name"]).payload)["interactive"]["action"]["parameters"]
+		self.assertEqual(parameters["flow_action_payload"], {"screen": "SCREEN_A", "data": data})
+		with self.assertRaises(frappe.ValidationError):
+			api.queue_flow_message(
+				self.doc.name, 2, uuid4().hex, {"flow": flow, "body": "Agenda", "data": ["not", "a", "dict"]}
+			)
+
 	def test_outbox_flow_evidence_only_after_provider_acceptance(self):
 		flow = self.flow()
 		name = self.queue_flow(flow)["name"]

@@ -14,6 +14,8 @@ from frappe import _
 BODY_LIMIT = 1024
 CTA_LIMIT = 30
 TOKEN_PREFIX_MAX = 120
+# The choices a flow lists from its send (`${data.key}` fields, e.g. free times).
+DATA_LIMIT = 16384
 
 
 def flow_token(prefix, conversation, request_id):
@@ -30,10 +32,10 @@ def _first_screen(flow):
 
 
 def freeze(payload, conversation):
-	"""payload = {"flow": WhatsApp Flow name, "body": text, "token_prefix": str}."""
+	"""payload = {"flow": WhatsApp Flow name, "body": text, "token_prefix": str, "data": {key: [{id, title}]}}."""
 	if conversation.provider != "WhatsApp":
 		frappe.throw(_("Forms can be sent only in WhatsApp conversations."))
-	if not isinstance(payload, dict) or set(payload) - {"flow", "body", "token_prefix", "request_id"}:
+	if not isinstance(payload, dict) or set(payload) - {"flow", "body", "token_prefix", "request_id", "data"}:
 		frappe.throw(_("Invalid form message."))
 	name = payload.get("flow")
 	if not isinstance(name, str) or not frappe.db.exists("WhatsApp Flow", name):
@@ -46,6 +48,14 @@ def freeze(payload, conversation):
 	body = payload.get("body")
 	if not isinstance(body, str) or not body.strip() or len(body) > BODY_LIMIT:
 		frappe.throw(_("Enter a message of at most {0} characters.").format(BODY_LIMIT))
+	data = payload.get("data")
+	if data is not None and (
+		not isinstance(data, dict) or len(frappe.as_json(data, indent=None)) > DATA_LIMIT
+	):
+		frappe.throw(_("Invalid form message."))
+	action_payload = {"screen": _first_screen(flow)}
+	if data:
+		action_payload["data"] = data
 	prefix = payload.get("token_prefix") or ""
 	if not isinstance(prefix, str) or len(prefix) > TOKEN_PREFIX_MAX or any(c.isspace() for c in prefix):
 		frappe.throw(_("Invalid form message."))
@@ -64,7 +74,7 @@ def freeze(payload, conversation):
 					"flow_id": str(flow.flow_id),
 					"flow_cta": (flow.flow_cta or _("Open form"))[:CTA_LIMIT],
 					"flow_action": "navigate",
-					"flow_action_payload": {"screen": _first_screen(flow)},
+					"flow_action_payload": action_payload,
 					"flow_token": flow_token(prefix, conversation.name, payload.get("request_id") or ""),
 				},
 			},
