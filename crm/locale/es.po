@@ -11081,7 +11081,7 @@ msgid "Month view"
 msgstr "Vista de mes"
 
 #: frontend/src/composables/useAgenda.js
-msgid "List view"
+msgid "Agenda list view"
 msgstr "Vista de lista"
 
 #: frontend/src/composables/useAgenda.js

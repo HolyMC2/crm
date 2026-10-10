@@ -17,8 +17,8 @@
       <div
         class="flex items-center gap-2 border-b border-outline-gray-1 py-2 pl-5 pr-2"
       >
-        <h2 :id="`${uid}-title`" class="min-w-0 flex-1 text-lg font-semibold">
-          {{ __('Keyboard shortcuts') }}
+        <h2 :id="`${uid}-title`" class="min-w-0 flex-1 text-base font-semibold">
+          {{ shellT('Keyboard shortcuts') }}
         </h2>
         <button
           class="flex size-11 flex-none items-center justify-center rounded-lg text-sm text-ink-gray-6 hover:bg-surface-gray-2"
@@ -170,7 +170,6 @@ onBeforeUnmount(() => {
 <style scoped>
 .kbd-card {
   width: calc(100% - 48px);
-  max-width: 1120px;
   margin-top: 24px;
   max-height: calc(100dvh - 48px);
 }

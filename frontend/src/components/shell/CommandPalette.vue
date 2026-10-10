@@ -113,7 +113,7 @@
               >
             </span>
             <kbd
-              v-if="item.shortcut"
+              v-if="answered.has(item.shortcut)"
               class="hidden flex-none rounded border border-outline-gray-2 px-1.5 font-sans text-xs text-ink-gray-6 sm:inline"
               >{{ keyLabel(item.shortcut) }}</kbd
             >
@@ -172,6 +172,7 @@ import {
   ariaKeys,
   keyLabel,
   openShortcutSheet,
+  shellKeymap,
   shellT,
 } from '@/composables/shellKeyboard'
 
@@ -206,7 +207,7 @@ const providers = createShellProviders({
 const activeMode = computed(() =>
   PALETTE_MODES.includes(props.mode) ? props.mode : 'all',
 )
-// «Todo» carries a context: the catalog's bare «All» is «Todos».
+// «Todo»: the catalog's bare «All» is «Todos» (contract copy for es, else a context).
 const chips = computed(() =>
   PALETTE_MODES.map((value) => ({
     mode: value,
@@ -217,6 +218,16 @@ const chips = computed(() =>
     key: keyLabel(PALETTE_MODE_KEYS[value]),
     aria: ariaKeys(PALETTE_MODE_KEYS[value]),
   })),
+)
+// A row shows its key only when the shell answers it everywhere (go-to, Alt+H);
+// «c» on «Nuevo contacto» has no global handler yet.
+const answered = computed(
+  () =>
+    new Set(
+      shellKeymap(shellModules.value)
+        .filter((shortcut) => shortcut.context === 'global')
+        .flatMap((shortcut) => shortcut.keys),
+    ),
 )
 const placeholder = computed(() =>
   shellT(PALETTE_MODE_COPY[activeMode.value].placeholder),
