@@ -24,6 +24,9 @@
             <option value="dormant_customers">
               {{ __('Clientes inactivos (con compra previa)') }}
             </option>
+            <option value="inactive_members">
+              {{ __('Members without buying (points program)') }}
+            </option>
           </select>
         </label>
         <label class="min-w-0 text-sm text-ink-gray-7"
@@ -118,6 +121,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { call } from 'frappe-ui'
 import ReportBlock from './ReportBlock.vue'
 import { marketingError, useMarketingResource } from './MarketingData'
@@ -125,8 +129,18 @@ const templates = useMarketingResource(
   'doco_marketing.api.reactivation.get_templates',
   () => ({}),
 )
-const segment = ref('cold_leads')
-const days = ref(45)
+// `?segment=inactive_members` arrives from Contactos «Puntos y saldo».
+const SEGMENT_DAYS = {
+  cold_leads: 45,
+  dormant_customers: 45,
+  inactive_members: 60,
+}
+const asked = useRoute()?.query?.segment
+const segment = ref(SEGMENT_DAYS[asked] ? asked : 'cold_leads')
+const days = ref(SEGMENT_DAYS[segment.value])
+watch(segment, (value) => {
+  days.value = SEGMENT_DAYS[value] || days.value
+})
 const template = ref('')
 const preview = ref(null)
 const busy = ref(false)

@@ -696,7 +696,8 @@ const {
   ensure: ensureBoot,
 } = useContactosBootstrap()
 const { contactTabs, sections } = useContact360Tabs()
-const activeTab = ref('')
+// `?tab=` lands a hand-off return (POS «Vender en caja») on the tab it left from.
+const activeTab = ref(String(route.query.tab || ''))
 watch(contactTabs, (tabs) => {
   if (!tabs.some((t) => t.name === activeTab.value))
     activeTab.value = tabs[0]?.name || ''

@@ -16734,3 +16734,162 @@ msgstr "{0} renglón(es) solicitados"
 #: frontend/src/pages/Garantia.vue
 msgid "Needs fiscal review"
 msgstr "Requiere revisión fiscal"
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Loading points and balance…"
+msgstr "Cargando puntos y saldo…"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Points and balance could not be loaded."
+msgstr "No se pudieron cargar los puntos y el saldo."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "This contact is not linked to a customer yet. Points and monedero belong to a customer: sell to them once at the register, or link a customer from «Conexiones»."
+msgstr "Este contacto todavía no está ligado a un cliente. Los puntos y el monedero son del cliente: véndele una vez en caja o liga un cliente desde «Conexiones»."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Open customer"
+msgstr "Abrir cliente"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "There is no points program in {0}."
+msgstr "No hay programa de puntos en {0}."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Create program"
+msgstr "Crear programa"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "You can change these on the program afterwards."
+msgstr "Puedes cambiarlo después en el programa."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Expense account for redeemed points"
+msgstr "Cuenta de gasto para los puntos canjeados"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Ask whoever keeps the accounts to create it; then come back here to enroll this customer."
+msgstr "Pide a quien lleva la contabilidad que lo cree; luego regresa aquí para inscribir a este cliente."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Not enrolled in {0}."
+msgstr "No está inscrito en {0}."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Enroll"
+msgstr "Inscribir"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Ask a manager to enroll this customer."
+msgstr "Pide a tu encargado que inscriba a este cliente."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Points"
+msgstr "Puntos"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Monedero"
+msgstr "Monedero"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Next expiry"
+msgstr "Próximo vencimiento"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Last purchase"
+msgstr "Última compra"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Sell at the register"
+msgstr "Vender en caja"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Add to monedero"
+msgstr "Abonar al monedero"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Adjust points"
+msgstr "Ajustar puntos"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Points to add (use a minus sign to take away)"
+msgstr "Puntos a sumar (usa el signo menos para quitar)"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Save adjustment"
+msgstr "Guardar ajuste"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Movements"
+msgstr "Movimientos"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "pts"
+msgstr "pts"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Showing the {0} most recent."
+msgstr "Mostrando los {0} más recientes."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Gift cards used"
+msgstr "Tarjetas de regalo usadas"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Deposit"
+msgstr "Depósito"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Paid with monedero"
+msgstr "Pagó con monedero"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Points earned"
+msgstr "Puntos ganados"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Points redeemed"
+msgstr "Puntos canjeados"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Refund to monedero"
+msgstr "Devolución al monedero"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Points adjusted"
+msgstr "Ajuste de puntos"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "{0} % back"
+msgstr "{0} % de regreso"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "1 point for every {0} spent, each point worth {1}, points last {2} days."
+msgstr "1 punto por cada {0} de compra, cada punto vale {1} y los puntos duran {2} días."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Contactos"
+msgstr "Contactos"
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "That did not go through. Try again."
+msgstr "No se pudo completar. Inténtalo de nuevo."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Enrolled. Their next purchase earns points."
+msgstr "Inscrito. Su próxima compra ya acumula puntos."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Points adjusted."
+msgstr "Puntos ajustados."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Program created. You can enroll customers now."
+msgstr "Programa creado. Ya puedes inscribir clientes."
+
+#: frontend/src/components/doco/contact/ContactLoyaltyTab.vue
+msgid "Members without buying: prepare messages"
+msgstr "Miembros sin comprar: preparar mensajes"
+
+#: frontend/src/components/Reports/MarketingReactivation.vue
+msgid "Members without buying (points program)"
+msgstr "Miembros sin comprar (programa de puntos)"

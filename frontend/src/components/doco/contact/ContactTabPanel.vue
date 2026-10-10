@@ -33,6 +33,9 @@ const registry = {
   ContactSaldoTab: defineAsyncComponent(
     () => import('@/components/doco/contact/ContactSaldoTab.vue'),
   ),
+  ContactLoyaltyTab: defineAsyncComponent(
+    () => import('@/components/doco/contact/ContactLoyaltyTab.vue'),
+  ),
 }
 defineProps({
   component: { type: String, required: true },

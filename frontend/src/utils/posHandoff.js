@@ -22,3 +22,22 @@ export function posCollectHref(row, { returnTo, returnLabel } = {}) {
   }
   return `/posapp/payments?${params.toString()}`
 }
+
+// «Vender en caja» / «Abonar al monedero» from a Contactos record: the register
+// opens on this customer (sale, or the Cliente view for a deposit) and comes
+// back to the record with `done=<doctype>:<name>` after a sale.
+export function posSaleHref(
+  customer,
+  { intent = 'sale', returnTo, returnLabel } = {},
+) {
+  const params = new URLSearchParams()
+  params.set('customer', customer)
+  if (intent === 'deposit') params.set('intent', 'deposit')
+  const back = safeReturn(returnTo, ['/crm/contactos/'])
+  if (back) {
+    params.set('return_to', back)
+    const label = sanitizeReturnLabel(returnLabel)
+    if (label) params.set('return_label', label)
+  }
+  return `/posapp/pos?${params.toString()}`
+}
