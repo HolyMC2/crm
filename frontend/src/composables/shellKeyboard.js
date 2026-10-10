@@ -467,6 +467,14 @@ export function useShellKeyboard({
     } else if (hit.id === 'create' && shellCreate.value) {
       event.preventDefault()
       shellCreate.value.run()
+    } else if (
+      hit.id === 'close' &&
+      typing &&
+      event.target.closest?.('[data-list-search]')
+    ) {
+      // Esc in a list search hands the keyboard back to the list (j/k next).
+      event.preventDefault()
+      event.target.blur()
     }
   }
   onMounted(() => window.addEventListener('keydown', onKeydown))

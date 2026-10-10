@@ -123,7 +123,11 @@ describe('every page context: the sheet lists exactly the keys it answers', () =
         content.querySelector('#elsewhere').focus()
         press({ key: 'K', ctrlKey: true, shiftKey: true })
         expect(document.activeElement.matches('[data-list-search]')).toBe(true)
-        document.activeElement.blur()
+        if (ids.includes('close'))
+          spies.close.mockImplementationOnce(() => false)
+        // Esc in the search hands the keyboard back to the list.
+        press({ key: 'Escape' })
+        expect(document.activeElement).toBe(document.body)
       }
       if (ids.includes('row.next')) {
         press({ key: 'j' }, document.body)
@@ -164,6 +168,7 @@ describe('every page context: the sheet lists exactly the keys it answers', () =
         expect(spies.edit).toHaveBeenCalledTimes(1)
       }
       if (ids.includes('close')) {
+        spies.close.mockClear()
         press({ key: 'Escape' }, document.body)
         expect(spies.close).toHaveBeenCalledTimes(1)
       }
