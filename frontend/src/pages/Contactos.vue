@@ -537,7 +537,7 @@ import {
 import { call } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
-import { useListKeys } from '@/composables/pageKeys'
+import { focusSearch, useListKeys } from '@/composables/pageKeys'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import NativeLinkField from '@/components/contactos/NativeLinkField.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
@@ -656,7 +656,7 @@ const { id } = useContactosDraft('list-operations')
 // Keyboard standard: / and Ctrl+Shift+K search, j/k rows, Enter opens, c new.
 useListKeys({
   page: 'contactos',
-  search: () => state.segment !== 'followups' && focusSearchControl(),
+  search: () => focusSearch(),
   rows: true,
   open: true,
   create: () => {
@@ -667,12 +667,6 @@ useListKeys({
     create: () => !!capabilities.value?.create,
   },
 })
-function focusSearchControl() {
-  const input = searchControl.value?.$el?.querySelector?.('input')
-  if (!input) return false
-  input.focus()
-  input.select?.()
-}
 const segments = computed(
   () => boot.value?.segments?.rows || boot.value?.segments || [],
 )

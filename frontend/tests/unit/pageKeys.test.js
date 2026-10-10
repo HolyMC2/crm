@@ -296,8 +296,7 @@ describe('every shell page is wired to its PAGE_KEYS row', () => {
       if (ids.includes('row.next')) expect(code).toContain('data-key-row')
       if (ids.includes('select.toggle'))
         expect(code).toContain('data-row-check')
-      if (ids.includes('search') && page !== 'contactos')
-        expect(code).toContain('data-list-search')
+      if (ids.includes('search')) expect(code).toContain('data-list-search')
       // No page keeps a keydown listener of its own for these keys.
       expect(code).not.toMatch(/addEventListener\('keydown'/)
     })
