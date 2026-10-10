@@ -414,9 +414,11 @@ import AgendaMonth from '@/components/agenda/AgendaMonth.vue'
 import { useAgendaDrag } from '@/components/agenda/agendaDrag'
 import { AgendaCalendar } from '@/vendor/muelle-calendar/vue'
 import { isMobile } from '@/composables/breakpoint'
+import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import {
   CALENDAR_RESOURCE,
   agendaLocale,
+  agendaShortcuts,
   createEvent,
   errorText,
   eventDetail,
@@ -1184,6 +1186,10 @@ function openFromQuery() {
 }
 
 // --- keyboard (shell §3.3): never while typing ------------------------------------------
+// The Alt+H sheet lists these under «En esta página»; keep it in step with onKey.
+registerPageShortcuts(null, () =>
+  agendaShortcuts({ canCreate: canCreate.value }),
+)
 function onKey(event) {
   if (event.metaKey || event.ctrlKey || event.altKey || form.value) return
   const target = event.target

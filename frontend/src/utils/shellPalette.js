@@ -97,6 +97,14 @@ export function createShellProviders({ boot, modules }) {
         })
       items.push(
         {
+          id: 'shortcuts',
+          group: 'acciones',
+          title: __('View keyboard shortcuts'),
+          icon: 'lucide-keyboard',
+          action: 'shortcuts',
+          shortcut: 'alt+h',
+        },
+        {
           id: 'theme.light',
           group: 'acciones',
           title: __('Light theme'),

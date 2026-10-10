@@ -10,8 +10,10 @@
     >
     <button
       class="flex size-10 items-center justify-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2"
-      :aria-label="__('Search (Ctrl K)')"
-      :title="__('Search (Ctrl K)')"
+      :aria-label="__('Search')"
+      :title="searchHint"
+      :aria-keyshortcuts="searchKeys"
+      data-testid="rail-search"
       @click="$emit('palette')"
     >
       <span class="lucide-search size-[18px]" aria-hidden="true" />
@@ -45,6 +47,7 @@
 </template>
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'
+import { searchEntryHint } from '@/composables/shellKeyboard'
 import UserMenu from './UserMenu.vue'
 
 const props = defineProps({
@@ -54,6 +57,8 @@ const props = defineProps({
 })
 defineEmits(['palette'])
 
+// «Buscar o ir a… (Ctrl+K) · Buscar registros (Ctrl+G)», ⌘ on Apple.
+const { label: searchHint, aria: searchKeys } = searchEntryHint()
 const AvisosBell = defineAsyncComponent(
   () => import('@/components/avisos/AvisosBell.vue'),
 )

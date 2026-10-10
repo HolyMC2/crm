@@ -54,6 +54,15 @@ import {
   toRecentRef,
 } from '@/utils/shellPalette'
 import { showSettings } from '@/composables/settings'
+import {
+  closeShortcutSheet,
+  keyLabel,
+  pageShortcuts,
+  registerPageShortcuts,
+  searchEntryHint,
+  shellCheatSheet,
+} from '@/composables/shellKeyboard'
+import { agendaShortcuts } from '@/composables/useAgenda'
 import { bootScope } from '@/vendor/muelle-shell/contracts'
 
 function boot(overrides = {}) {
@@ -416,9 +425,12 @@ describe('one frame for every route', () => {
     }
     const palette = document.querySelector('[aria-label="Command palette"]')
     expect(palette).not.toBeNull()
-    // Footer verbs carry a context: bare «open» resolves to «abierto» in ERPNext's catalog.
-    expect(palette.textContent).toContain('open|Command palette hint')
-    expect(palette.textContent).toContain('move|Command palette hint')
+    // The standard's footer is one reviewed es-MX line, not bare verbs.
+    expect(
+      palette
+        .querySelector('[data-testid="palette-footer"]')
+        .textContent.trim(),
+    ).toBe('↑↓ moverse · ↵ abrir · Esc cerrar')
     document.querySelector('[aria-label="Close"]').click()
     await nextTick()
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g' }))
@@ -872,9 +884,8 @@ describe('palette recents never outlive read access', () => {
 
 describe('Ventas navigation on every screen', () => {
   it('Ventas sections show from 640 px, where the shell switches to desktop', async () => {
-    const { default: VentasSidebar } = await import(
-      '@/components/shell/VentasSidebar.vue'
-    )
+    const { default: VentasSidebar } =
+      await import('@/components/shell/VentasSidebar.vue')
     state.mobile.value = false
     await mount('/deals')
     const host = document.createElement('div')
@@ -1086,5 +1097,330 @@ describe('Pendientes in the shell', () => {
     await mount('/not-permitted?intended=%2Fdeals')
     await until(() => shellBoot.value)
     expect(root.querySelector('[role="alert"]')).toBeNull()
+  })
+})
+
+describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
+  const press = (init, target = window) =>
+    target.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        bubbles: true,
+        cancelable: true,
+        ...init,
+      }),
+    )
+  const palette = () => document.querySelector('[aria-label="Command palette"]')
+  const sheet = () => document.querySelector('[data-shell-layer="shortcuts"]')
+  const tabs = () =>
+    [...sheet().querySelectorAll('[role="tab"]')].map((tab) => [
+      tab.dataset.section,
+      tab.getAttribute('aria-selected'),
+    ])
+  const panelText = () =>
+    sheet().querySelector('[role="tabpanel"]:not([hidden])').textContent
+  async function settle() {
+    for (let i = 0; i < 6; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      await nextTick()
+    }
+  }
+  const mine = () =>
+    hostedModules.filter((m) => ['contactos', 'ventas'].includes(m.key))
+  beforeEach(() => {
+    state.mobile.value = false
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({ message: { rows: [] } }),
+      })),
+    )
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      return []
+    })
+  })
+  afterEach(() => {
+    closeShortcutSheet()
+    vi.unstubAllGlobals()
+  })
+
+  it('Ctrl+G opens the palette in records mode: placeholder, chips, groups and footer', async () => {
+    await mount('/deals')
+    press({ key: 'g', ctrlKey: true })
+    const dialog = await until(palette)
+    await settle()
+    expect(dialog.dataset.mode).toBe('records')
+    const input = dialog.querySelector('input')
+    expect(input.placeholder).toBe('Buscar registros…')
+    expect(input.getAttribute('role')).toBe('combobox')
+    expect(document.activeElement).toBe(input)
+    expect(
+      [...dialog.querySelectorAll('[data-palette-mode]')].map((chip) => [
+        chip.textContent.replace(/\s+/g, ' ').trim(),
+        chip.getAttribute('aria-pressed'),
+      ]),
+    ).toEqual([
+      ['Todo Ctrl+K', 'false'],
+      ['Registros Ctrl+G', 'true'],
+    ])
+    // Records only: no Acciones and no Ir a, even for an empty input.
+    expect(dialog.textContent).not.toContain('Actions')
+    expect(dialog.textContent).not.toContain('New contact')
+    expect(
+      dialog.querySelector('[data-testid="palette-footer"]').textContent.trim(),
+    ).toBe('↑↓ moverse · ↵ abrir · Esc cerrar')
+  })
+
+  it('K and G switch modes in the one open dialog, keep the text, and the same key refocuses', async () => {
+    await mount('/deals')
+    press({ key: 'k', ctrlKey: true })
+    await until(palette)
+    await settle()
+    const input = palette().querySelector('input')
+    expect(palette().dataset.mode).toBe('all')
+    expect(input.placeholder).toBe('Buscar o ir a…')
+    expect(palette().textContent).toContain('Actions')
+    input.value = 'ana'
+    input.dispatchEvent(new Event('input'))
+    // Ctrl+G fires while typing in the palette's own input.
+    press({ key: 'g', ctrlKey: true }, input)
+    await settle()
+    expect(
+      document.querySelectorAll('[aria-label="Command palette"]'),
+    ).toHaveLength(1)
+    expect(palette().dataset.mode).toBe('records')
+    expect(palette().querySelector('input')).toBe(input)
+    expect(input.value).toBe('ana')
+    expect(input.placeholder).toBe('Buscar registros…')
+    press({ key: 'k', ctrlKey: true }, input)
+    await settle()
+    expect(palette().dataset.mode).toBe('all')
+    expect(input.value).toBe('ana')
+    // Pressing the open mode's key again brings the focus back to the input.
+    input.blur()
+    expect(document.activeElement).not.toBe(input)
+    press({ key: 'k', ctrlKey: true })
+    await settle()
+    expect(document.activeElement).toBe(input)
+    // The chips switch too, with the text kept.
+    palette().querySelector('[data-palette-mode="records"]').click()
+    await settle()
+    expect(palette().dataset.mode).toBe('records')
+    expect(input.value).toBe('ana')
+    expect(document.activeElement).toBe(input)
+  })
+
+  it('the rail search names both keys; no hard-coded «Ctrl K»', async () => {
+    await mount('/deals')
+    const search = root.querySelector('[data-testid="rail-search"]')
+    expect(search.getAttribute('title')).toBe(
+      'Buscar o ir a… (Ctrl+K) · Buscar registros (Ctrl+G)',
+    )
+    expect(search.getAttribute('aria-keyshortcuts')).toBe('Control+K Control+G')
+    const rail = readFileSync(
+      resolve(__dirname, '../../src/components/shell/ShellRail.vue'),
+      'utf8',
+    )
+    expect(rail).not.toContain('Ctrl K')
+  })
+
+  it('Alt+H opens the sheet even while typing; Esc closes it and returns the focus', async () => {
+    await mount('/deals')
+    const field = document.createElement('input')
+    root.append(field)
+    field.focus()
+    // `?` types a question mark inside a field.
+    press({ key: '?', shiftKey: true }, field)
+    await settle()
+    expect(sheet()).toBeNull()
+    press({ key: 'h', code: 'KeyH', altKey: true }, field)
+    const dialog = await until(sheet)
+    await settle()
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+    expect(dialog.textContent).toContain('Keyboard shortcuts')
+    expect(document.activeElement.getAttribute('role')).toBe('tab')
+    press({ key: 'Escape' }, document.activeElement)
+    await settle()
+    expect(sheet()).toBeNull()
+    expect(document.activeElement).toBe(field)
+  })
+
+  it('`?` opens the sheet only outside text fields; ⌥H on a Mac (˙) opens it too', async () => {
+    await mount('/deals')
+    press({ key: '?', shiftKey: true }, document.body)
+    expect(await until(sheet)).not.toBeNull()
+    closeShortcutSheet()
+    await settle()
+    expect(sheet()).toBeNull()
+    // macOS types ⌥H as «˙»; the physical key decides.
+    press({ key: '˙', code: 'KeyH', altKey: true }, document.body)
+    expect(await until(sheet)).not.toBeNull()
+  })
+
+  it('the sheet: Atajos rápidos first, ARIA tabs with arrows/Home/End, go-to only for my modules', async () => {
+    await mount('/deals')
+    press({ key: 'h', code: 'KeyH', altKey: true })
+    await until(sheet)
+    await settle()
+    expect(sheet().querySelector('[role="tablist"]')).not.toBeNull()
+    expect(tabs()).toEqual([
+      ['quick', 'true'],
+      ['app', 'false'],
+    ])
+    const quick = panelText()
+    for (const text of [
+      'Ver los atajos de teclado',
+      'Buscar o ir a…',
+      'Buscar registros',
+      'Cerrar la capa superior',
+    ])
+      expect(quick).toContain(text)
+    press({ key: 'ArrowDown' }, document.activeElement)
+    await settle()
+    expect(tabs()).toEqual([
+      ['quick', 'false'],
+      ['app', 'true'],
+    ])
+    expect(document.activeElement.dataset.section).toBe('app')
+    const app = panelText()
+    expect(app).toContain('Ir a Contactos')
+    expect(app).toContain('Ir a Ventas')
+    // Only keys the shell implements: no module the worker lacks, no «c» or «[».
+    expect(app).not.toContain('Ir a Agenda')
+    expect(app).not.toContain('Crear')
+    expect(app).not.toContain('barra lateral')
+    press({ key: 'Home' }, document.activeElement)
+    await settle()
+    expect(tabs()[0]).toEqual(['quick', 'true'])
+    press({ key: 'End' }, document.activeElement)
+    await settle()
+    expect(tabs()[1]).toEqual(['app', 'true'])
+  })
+
+  it('«En esta página» lists the keys the page registered, and goes with the page', async () => {
+    const canCreate = ref(true)
+    const remove = registerPageShortcuts(null, () =>
+      agendaShortcuts({ canCreate: canCreate.value }),
+    )
+    const page = () =>
+      shellCheatSheet({ modules: mine() }).find((s) => s.id === 'page')
+    expect(page().title).toBe('En esta página')
+    expect(page().rows.map((row) => row.keys.join())).toEqual([
+      'C',
+      'T',
+      'D',
+      'W',
+      'M',
+      'L',
+      'J',
+      'K',
+    ])
+    canCreate.value = false
+    expect(page().rows.map((row) => row.keys.join())).not.toContain('C')
+    await mount('/agenda')
+    press({ key: 'h', code: 'KeyH', altKey: true })
+    await until(sheet)
+    await settle()
+    expect(tabs().map(([id]) => id)).toEqual(['quick', 'page', 'app'])
+    remove()
+    expect(pageShortcuts.value.extra).toEqual([])
+    expect(
+      shellCheatSheet({ modules: mine() }).map((section) => section.id),
+    ).toEqual(['quick', 'app'])
+    // A list page that declares the list context gets the list search row.
+    const removeList = registerPageShortcuts('list')
+    const [quick] = shellCheatSheet({ modules: mine() })
+    expect(quick.rows.find((row) => row.id === 'search').keys).toEqual([
+      '/',
+      'Ctrl+Shift+K',
+    ])
+    removeList()
+  })
+
+  it('labels follow the platform: ⌘/⌥ on Apple, Ctrl/Alt elsewhere', () => {
+    const keysOf = (apple) =>
+      shellCheatSheet({ modules: mine(), apple })[0].rows.map((r) => r.keys)
+    expect(keysOf(true)).toEqual([['⌥H', '?'], ['⌘K'], ['⌘G'], ['Esc']])
+    expect(keysOf(false)).toEqual([
+      ['Alt+H', '?'],
+      ['Ctrl+K'],
+      ['Ctrl+G'],
+      ['Esc'],
+    ])
+    expect(searchEntryHint(true).label).toBe(
+      'Buscar o ir a… (⌘K) · Buscar registros (⌘G)',
+    )
+    expect(searchEntryHint(true).aria).toBe('Meta+K Meta+G')
+    expect(keyLabel('alt+h', true)).toBe('⌥H')
+    expect(keyLabel('alt+h', false)).toBe('Alt+H')
+  })
+
+  it('entry points: the account menu, the Más sheet and the palette action open the sheet', async () => {
+    await mount('/deals')
+    root.querySelector('[aria-label="Account menu"]').click()
+    await settle()
+    const item = document.querySelector('[data-testid="menu-shortcuts"]')
+    expect(item.textContent).toContain('Keyboard shortcuts')
+    expect(item.querySelector('kbd').textContent).toBe('Alt+H')
+    item.click()
+    expect(await until(sheet)).not.toBeNull()
+    press({ key: 'Escape' }, document.activeElement)
+    await settle()
+    expect(sheet()).toBeNull()
+    expect(document.activeElement.getAttribute('aria-label')).toBe(
+      'Account menu',
+    )
+    const more = readFileSync(
+      resolve(__dirname, '../../src/components/shell/MoreSheet.vue'),
+      'utf8',
+    )
+    expect(more).toContain('data-testid="more-shortcuts"')
+    expect(more).toContain("keyLabel('alt+h')")
+    // «Ver atajos de teclado» in the palette's Acciones.
+    const [actions] = createShellProviders({
+      boot: ref(boot()),
+      modules: ref(hostedModules),
+    })
+    const found = await actions.search({
+      raw: 'keyboard',
+      text: 'keyboard',
+      scope: 'all',
+      kind: 'text',
+    })
+    expect(found).toContainEqual(
+      expect.objectContaining({
+        id: 'shortcuts',
+        action: 'shortcuts',
+        shortcut: 'alt+h',
+      }),
+    )
+    press({ key: 'k', ctrlKey: true })
+    await until(palette)
+    await settle()
+    const input = palette().querySelector('input')
+    input.value = 'keyboard'
+    input.dispatchEvent(new Event('input'))
+    const option = await until(() =>
+      [...palette().querySelectorAll('[role="option"]')].find((o) =>
+        o.textContent.includes('View keyboard shortcuts'),
+      ),
+    )
+    expect(option.textContent).toContain('Alt+H')
+    option.click()
+    expect(await until(sheet)).not.toBeNull()
+    await settle()
+    expect(palette()).toBeNull()
+  })
+
+  it('the classic CRM sidebar Help offers the sheet with its key', () => {
+    const sidebar = readFileSync(
+      resolve(__dirname, '../../src/components/Layouts/AppSidebar.vue'),
+      'utf8',
+    )
+    expect(sidebar).toMatch(
+      /:label="__\('Keyboard shortcuts'\)"[\s\S]*openShortcutSheet[\s\S]*keyLabel\('alt\+h'\)/,
+    )
   })
 })

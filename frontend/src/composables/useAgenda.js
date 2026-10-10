@@ -17,6 +17,24 @@ export const CALENDAR_RESOURCE = 'agenda'
 export const DEFAULT_CALENDARS = ['Event']
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
+/**
+ * Agenda's own keys for the Alt+H sheet («En esta página»): exactly the ones
+ * the page's key handler answers outside text fields. «Nueva cita» only for
+ * a worker who may create.
+ */
+export function agendaShortcuts({ canCreate = false } = {}) {
+  return [
+    canCreate && { id: 'agenda.create', keys: ['c'], description: 'New event' },
+    { id: 'agenda.today', keys: ['t'], description: 'Go to today' },
+    { id: 'agenda.day', keys: ['d'], description: 'Day view' },
+    { id: 'agenda.week', keys: ['w'], description: 'Week view' },
+    { id: 'agenda.month', keys: ['m'], description: 'Month view' },
+    { id: 'agenda.list', keys: ['l'], description: 'List view' },
+    { id: 'agenda.next', keys: ['j'], description: 'Next period' },
+    { id: 'agenda.prev', keys: ['k'], description: 'Previous period' },
+  ].filter(Boolean)
+}
+
 export function agendaLocale() {
   return window.lang || document.documentElement.lang || undefined
 }

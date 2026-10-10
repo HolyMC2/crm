@@ -16,6 +16,7 @@ vi.mock('frappe-ui', async (importOriginal) => ({
 }))
 
 import Agenda from '@/pages/Agenda.vue'
+import { pageShortcuts } from '@/composables/shellKeyboard'
 
 const TZ = 'America/Mexico_City'
 const event = (id, start, end, extra = {}) => ({
@@ -105,6 +106,30 @@ afterEach(() => {
 })
 
 describe('Agenda page', () => {
+  it('declares its t/d/w/m/l/j/k/c keys for the Alt+H sheet while it is open', async () => {
+    const router = await mountAt('/agenda?view=week&date=2026-10-07')
+    expect(pageShortcuts.value.contexts).toEqual([])
+    expect(pageShortcuts.value.extra.map((s) => [s.id, s.keys.join()])).toEqual(
+      [
+        ['agenda.create', 'c'],
+        ['agenda.today', 't'],
+        ['agenda.day', 'd'],
+        ['agenda.week', 'w'],
+        ['agenda.month', 'm'],
+        ['agenda.list', 'l'],
+        ['agenda.next', 'j'],
+        ['agenda.prev', 'k'],
+      ],
+    )
+    // Declared keys are the ones the page answers: «d» opens the day view.
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))
+    await flush()
+    expect(router.currentRoute.value.query.view).toBe('day')
+    app.unmount()
+    app = null
+    expect(pageShortcuts.value.extra).toEqual([])
+  })
+
   it('loads only the selected calendars for the URL week', async () => {
     await mountAt('/agenda?view=week&date=2026-10-07')
     expect(methods()).toContain('get_capabilities')

@@ -12,7 +12,7 @@
       :modules="shellModules"
       :active="activeKey"
       :ventas="ventasEnabled"
-      @palette="paletteOpen = true"
+      @palette="openPalette('all')"
     />
     <div class="flex min-h-0 min-w-0 flex-1 flex-col">
       <!-- One compact row on phone. It slides away while the worker scrolls
@@ -36,7 +36,9 @@
         <button
           class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
           :aria-label="__('Search')"
-          @click="paletteOpen = true"
+          :title="searchHint"
+          :aria-keyshortcuts="searchKeys"
+          @click="openPalette('all')"
         >
           <span class="lucide-search size-5" aria-hidden="true" />
         </button>
@@ -104,7 +106,13 @@
       :modules="shellModules"
       :boot="shellBoot"
     />
-    <CommandPalette v-if="paletteOpen" v-model="paletteOpen" />
+    <CommandPalette
+      v-if="paletteOpen"
+      v-model="paletteOpen"
+      v-model:mode="paletteMode"
+      :focus-key="paletteFocus"
+    />
+    <ShortcutSheet v-if="shortcutSheet.open" />
   </div>
 </template>
 <script setup>
@@ -131,7 +139,12 @@ import {
   shellLoading,
   shellModules,
 } from '@/composables/muelleShell'
-import { useShellKeyboard } from '@/composables/shellKeyboard'
+import {
+  openShortcutSheet,
+  searchEntryHint,
+  shortcutSheet,
+  useShellKeyboard,
+} from '@/composables/shellKeyboard'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
@@ -142,6 +155,7 @@ const MoreSheet = defineAsyncComponent(() => import('./MoreSheet.vue'))
 const CommandPalette = defineAsyncComponent(
   () => import('./CommandPalette.vue'),
 )
+const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
 const AvisosBell = defineAsyncComponent(
   () => import('@/components/avisos/AvisosBell.vue'),
 )
@@ -151,6 +165,8 @@ const route = useRoute(),
 const online = useOnline()
 const phone = isMobile
 const paletteOpen = ref(false),
+  paletteMode = ref('all'),
+  paletteFocus = ref(0),
   moreOpen = ref(false),
   copied = ref('')
 const activeKey = computed(() => moduleKeyFor(route))
@@ -262,11 +278,19 @@ async function copyRequest() {
   }
 }
 
-useShellKeyboard({
-  openPalette: () => (paletteOpen.value = true),
-  modules: shellModules,
-  router,
-})
+// ⌘K / ⌘G open the palette in that mode; in an open palette they switch the
+// mode (the text stays) and the same key again refocuses the input.
+function openPalette(mode) {
+  paletteMode.value = mode
+  if (paletteOpen.value) paletteFocus.value += 1
+  else paletteOpen.value = true
+}
+function openHelp() {
+  paletteOpen.value = false
+  openShortcutSheet()
+}
+const { label: searchHint, aria: searchKeys } = searchEntryHint()
+useShellKeyboard({ openPalette, openHelp, modules: shellModules, router })
 watch(
   () => [activeModule.value?.label, route.meta.title],
   ([module, title]) => {
