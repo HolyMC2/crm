@@ -1,5 +1,6 @@
 <template>
   <article
+    data-key-row
     class="group flex min-h-14 items-center gap-2 px-4 py-1.5 sm:px-5"
     :class="row.status === 'Closed' ? 'opacity-70' : ''"
   >
@@ -28,6 +29,8 @@
       </span>
     </button>
     <RouterLink
+      data-row-link
+      data-row-focus
       :to="to"
       class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     >

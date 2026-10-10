@@ -56,6 +56,7 @@
         />
         <FormControl
           v-model="search"
+          data-list-search
           class="min-w-0 flex-1 sm:max-w-xs [&_input]:min-h-11 sm:[&_input]:min-h-0"
           type="search"
           :placeholder="__('Search avisos')"
@@ -167,6 +168,7 @@ import { useDebounceFn } from '@vueuse/core'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AvisosList from '@/components/avisos/AvisosList.vue'
 import AvisosPrefs from '@/components/avisos/AvisosPrefs.vue'
+import { useListKeys } from '@/composables/pageKeys'
 import {
   activeEntry,
   avisosQuery,
@@ -193,6 +195,8 @@ const loading = ref(false)
 const loadError = ref('')
 const guard = ref('')
 const prefsOpen = ref(false)
+// Keyboard standard: search, j/k avisos, Enter opens where it is settled.
+useListKeys({ page: 'avisos', search: true, rows: true, open: true })
 
 const actions = useAvisosActions(router, {
   returnTo: () => '/crm' + route.fullPath,

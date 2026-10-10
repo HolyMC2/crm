@@ -1,5 +1,6 @@
 <template>
   <section
+    ref="root"
     class="flex min-h-0 min-w-0 flex-col border-r border-outline-gray-1"
     aria-label="Conversaciones de clientes"
   >
@@ -42,6 +43,10 @@
         v-for="thread in threads"
         :key="thread.peer_id"
         type="button"
+        data-key-row
+        :data-row-current="
+          (selected === thread.name && thread.name) || undefined
+        "
         :disabled="disabled"
         class="block w-full min-w-0 border-b border-outline-gray-1 p-3 text-left hover:bg-surface-gray-2 [overflow-wrap:anywhere]"
         :class="
@@ -75,6 +80,9 @@
   </section>
 </template>
 <script setup>
+import { ref } from 'vue'
+import { useListKeys } from '@/composables/pageKeys'
+
 const props = defineProps({
   accounts: { type: Array, default: () => [] },
   account: { type: Object, default: null },
@@ -85,6 +93,9 @@ const props = defineProps({
   more: Boolean,
 })
 const emit = defineEmits(['account', 'select', 'more'])
+// Keyboard standard: j/k walk the threads, Enter opens one.
+const root = ref(null)
+useListKeys({ page: 'inbox-conversations', root, rows: true, open: true })
 const accountKey = (a) => (a ? `${a.provider}:${a.account_id}` : '')
 function selectAccount(event) {
   emit(

@@ -63,6 +63,7 @@
         />
         <FormControl
           v-model="search"
+          data-list-search
           class="min-w-0 flex-1 sm:max-w-xs [&_input]:min-h-11 sm:[&_input]:min-h-0"
           type="search"
           :placeholder="__('Search pendientes')"
@@ -266,6 +267,7 @@ import {
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import { useListKeys } from '@/composables/pageKeys'
 import PendienteRow from '@/components/pendientes/PendienteRow.vue'
 import ApprovalList from '@/components/pendientes/ApprovalList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
@@ -346,6 +348,23 @@ const completeOpen = ref(false),
   createOpen = ref(false),
   createReference = ref(null),
   nativeEditor = ref(false)
+// Keyboard standard: search, j/k rows, Enter opens, c creates (a pendiente,
+// or a sales task for a seller without pendientes).
+useListKeys({
+  page: 'pendientes',
+  search: true,
+  rows: true,
+  open: true,
+  create: () =>
+    boot.value?.capabilities?.create ? openCreate() : newSalesTask(),
+  when: {
+    create: () =>
+      Boolean(
+        boot.value?.capabilities?.create ||
+        boot.value?.capabilities?.create_crm,
+      ),
+  },
+})
 // Records return to exactly this list (segment, search and filters).
 const returnQuery = computed(() => ({
   list: new URLSearchParams(toQuery(state.value)).toString(),

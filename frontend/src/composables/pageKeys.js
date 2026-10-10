@@ -26,6 +26,10 @@ const SELECT = ['select.toggle', 'select.range', 'select.page']
  * sheet of the keyboard standard. useListKeys/useFormKeys refuse, in
  * development and tests, a page whose handlers differ from its row here, so
  * this table, the Alt+H sheet and the handlers cannot drift apart.
+ * Cobranza, Compras, Gastos and Garantías are power lists (usePowerList /
+ * useCobranza): they answer their list keys themselves and declare them with
+ * registerPageShortcuts('list'), so they have no row here; «c» there is the
+ * shell's create target of the module.
  */
 export const PAGE_KEYS = Object.freeze({
   hoy: ROWS,
@@ -33,10 +37,6 @@ export const PAGE_KEYS = Object.freeze({
   ventas: [...LIST, ...SELECT, 'create'],
   deal: ['edit', 'close'],
   pendientes: [...LIST, 'create'],
-  cobranza: LIST,
-  compras: [...LIST, 'create'],
-  gastos: LIST,
-  garantias: [...LIST, 'create'],
   archivos: [...LIST, 'create', 'close'],
   avisos: LIST,
   workload: [...ROWS, ...SELECT],

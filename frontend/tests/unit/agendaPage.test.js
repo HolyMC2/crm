@@ -2,7 +2,7 @@
 // drag-to-select (quick create) and drag-to-reschedule, soft-conflict recovery, the month
 // grid, calendars and colors, and the create form's warning override.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, nextTick } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 const calls = []
@@ -18,7 +18,7 @@ vi.mock('frappe-ui', async (importOriginal) => ({
 
 import Agenda from '@/pages/Agenda.vue'
 import { resetAgendaPrefsForTests } from '@/composables/useAgendaPrefs'
-import { pageShortcuts } from '@/composables/shellKeyboard'
+import { pageShortcuts, useShellKeyboard } from '@/composables/shellKeyboard'
 
 const TZ = 'America/Mexico_City'
 const event = (id, start, end, extra = {}) => ({
@@ -49,7 +49,7 @@ const last = (name) => calls.filter(([m]) => m.endsWith(`.${name}`)).at(-1)?.[1]
 
 let app
 let root
-async function mountAt(path) {
+async function mountAt(path, { shell = false } = {}) {
   const router = createRouter({
     history: createMemoryHistory('/crm'),
     routes: [{ path: '/agenda', component: Agenda }],
@@ -58,7 +58,20 @@ async function mountAt(path) {
   await router.isReady()
   root = document.createElement('div')
   document.body.appendChild(root)
-  app = createApp(Agenda)
+  // `shell`: the shell's keyboard listener too, as inside MuelleShell.
+  app = shell
+    ? createApp({
+        setup() {
+          useShellKeyboard({
+            openPalette() {},
+            openHelp() {},
+            modules: ref([]),
+            router,
+          })
+          return () => h(Agenda)
+        },
+      })
+    : createApp(Agenda)
   app.use(router)
   app.config.globalProperties.__ = window.__
   app.mount(root)
@@ -161,6 +174,27 @@ describe('Agenda page', () => {
     app.unmount()
     app = null
     expect(pageShortcuts.value.extra).toEqual([])
+  })
+
+  it('«c» inside the shell opens the event form once, without the shell’s ?create=1', async () => {
+    const router = await mountAt('/agenda?view=week&date=2026-10-07', {
+      shell: true,
+    })
+    expect(pageShortcuts.value.ids).toEqual(['create'])
+    const event = new KeyboardEvent('keydown', {
+      key: 'c',
+      bubbles: true,
+      cancelable: true,
+    })
+    document.body.dispatchEvent(event)
+    await flush()
+    expect(event.defaultPrevented).toBe(true)
+    expect(
+      document.body.querySelectorAll(
+        'input[placeholder="Call, visit, delivery…"]',
+      ),
+    ).toHaveLength(1)
+    expect(router.currentRoute.value.query.create).toBeUndefined()
   })
 
   it('names the business time zone in words when the worker is in another zone', async () => {

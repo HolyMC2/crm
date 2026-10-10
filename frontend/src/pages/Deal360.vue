@@ -30,7 +30,7 @@
     <!-- desktop: workspace + docked context panel -->
     <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
       <DealWorkspace />
-      <DealContextPanel v-if="activeDeal && showContext" />
+      <DealContextPanel v-if="activeDeal && showContext" data-deal-context />
     </div>
 
     <!-- mobile: one pane at a time (v-show keeps the thread mounted, like Inbox) -->
@@ -48,20 +48,30 @@
         class="flex min-h-0 flex-1 flex-col"
         v-on="swipeBackHandlers"
       >
-        <DealContextPanel v-if="activeDeal" />
+        <DealContextPanel v-if="activeDeal" data-deal-context />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, provide, watch, ref } from 'vue'
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  provide,
+  watch,
+  ref,
+} from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { dealReturnLink, dealTab } from '@/utils/ventasRoutes'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { swipeBackHandlers } from '@/composables/swipeBack'
+import { useFormKeys } from '@/composables/pageKeys'
+import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 import {
   activeDeal,
   selectDeal,
@@ -83,6 +93,38 @@ const back = computed(() => dealReturnLink(route.query))
 // The phone header's ‹ leaves the record the same way: to the caller's
 // return_to/returnTo when present, otherwise back to the deals list.
 provide('dealBack', back)
+
+// Keyboard standard on the record: «e» opens «Datos y contacto» (the editable
+// fields; each saves on change, so there is no separate Ctrl+Enter save) with
+// the focus on its first field, Esc closes the panel again.
+async function editDeal() {
+  if (isMobile.value) openContext()
+  else showContext.value = true
+  await nextTick()
+  document
+    .querySelector(
+      '[data-deal-context] input:not([type="hidden"]):not([disabled]), [data-deal-context] textarea, [data-deal-context] select',
+    )
+    ?.focus()
+}
+useFormKeys({
+  page: 'deal',
+  edit: editDeal,
+  close: () => {
+    if (isMobile.value ? mobileView.value !== 'context' : !showContext.value)
+      return false
+    // Esc in a field first leaves the field (its change saves); the next Esc
+    // closes the panel.
+    const field = document.activeElement
+    if (field?.closest?.('[data-deal-context]') && isTypingTarget(field)) {
+      field.blur()
+      return
+    }
+    if (isMobile.value) history.back()
+    else showContext.value = false
+  },
+  when: { edit: () => Boolean(activeDeal.value) },
+})
 
 // (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
 // /deal/B remounts this component — onMounted covers every entry.)

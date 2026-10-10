@@ -1,5 +1,6 @@
 <template>
   <article
+    data-key-row
     class="group flex min-h-14 items-start gap-3 border-b border-outline-gray-1 px-4 py-2.5 sm:px-6"
   >
     <button
@@ -28,6 +29,8 @@
     <span v-else class="h-6 w-6 shrink-0" aria-hidden="true" />
     <RouterLink
       :to="to"
+      data-row-link
+      data-row-focus
       class="-my-2.5 min-w-0 flex-1 rounded-lg py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     >
       <p

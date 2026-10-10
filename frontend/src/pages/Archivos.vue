@@ -197,6 +197,7 @@
             />
             <FormControl
               v-model="q"
+              data-list-search
               class="[&_input]:min-h-11 sm:[&_input]:min-h-0"
               type="text"
               :placeholder="__('Search title, issuer, tag or text')"
@@ -276,9 +277,11 @@
               <li v-for="row in rows" :key="row.name">
                 <button
                   type="button"
+                  data-key-row
                   class="flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-outline-gray-4"
                   :class="row.name === documentName ? 'bg-surface-gray-2' : ''"
                   :aria-current="row.name === documentName ? 'true' : undefined"
+                  :data-row-current="row.name === documentName || undefined"
                   @click="open(row.name)"
                 >
                   <span
@@ -381,6 +384,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import { useListKeys } from '@/composables/pageKeys'
 import ArchivoDetail from '@/components/archivos/ArchivoDetail.vue'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import ArchivoUpload from '@/components/archivos/ArchivoUpload.vue'
@@ -418,6 +422,21 @@ const locale =
 // URL is state: view, search, company, open document, record target and return.
 const view = computed(() => normalizeView(route.query.view))
 const documentName = computed(() => String(route.query.document || ''))
+// Keyboard standard: search, j/k documents, Enter opens it beside the list,
+// c receives a document, Esc closes the open document.
+useListKeys({
+  page: 'archivos',
+  search: true,
+  rows: true,
+  open: true,
+  create: () => {
+    uploadOpen.value = true
+  },
+  close: () => {
+    if (!documentName.value) return false
+    closeDocument()
+  },
+})
 const target = computed(() => parseTarget(String(route.query.target || '')))
 const returnTo = computed(() => safeReturn(String(route.query.return_to || '')))
 const returnLabel = computed(() =>

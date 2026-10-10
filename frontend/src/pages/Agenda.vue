@@ -115,7 +115,7 @@
             role="menuitemradio"
             :aria-checked="state.view === entry.value"
             class="ag-viewmenu__item"
-            @click="(viewMenu = false), setView(entry.value)"
+            @click="((viewMenu = false), setView(entry.value))"
           >
             <span>{{ entry.label }}</span>
             <kbd>{{ entry.key.toUpperCase() }}</kbd>
@@ -500,7 +500,7 @@
               v-if="citas.available && citas.canBook"
               type="button"
               class="ag-drawer__item"
-              @click="(drawer = false), openCitaForm()"
+              @click="((drawer = false), openCitaForm())"
             >
               <span class="lucide-calendar-plus h-5 w-5" aria-hidden="true" />
               {{ __('New appointment') }}
@@ -509,7 +509,7 @@
               v-if="citas.available && citas.canSetUp"
               type="button"
               class="ag-drawer__item"
-              @click="(drawer = false), (citaSettingsOpen = true)"
+              @click="((drawer = false), (citaSettingsOpen = true))"
             >
               <span class="lucide-calendar-cog h-5 w-5" aria-hidden="true" />
               {{ __('Online appointments') }}
@@ -737,7 +737,7 @@
             @save="saveCita"
             @close="citaForm = null"
             @dismiss-guard="citaForm.constraints = []"
-            @open-settings="(citaForm = null), (citaSettingsOpen = true)"
+            @open-settings="((citaForm = null), (citaSettingsOpen = true))"
           />
         </div>
       </template>
@@ -801,7 +801,7 @@ import {
 } from '@/components/agenda/agendaGrid'
 import { useSwipeNav } from '@/components/agenda/agendaSwipe'
 import { isMobile } from '@/composables/breakpoint'
-import { registerPageShortcuts } from '@/composables/shellKeyboard'
+import { registerPageKeys } from '@/composables/shellKeyboard'
 import { DENSITIES, useAgendaPrefs } from '@/composables/useAgendaPrefs'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
@@ -2596,11 +2596,22 @@ const sidebarHandlers = {
 
 // --- keyboard: never while typing ---------------------------------------------------------
 // The Alt+H sheet lists these under «En esta página»; keep it in step with onKey.
-registerPageShortcuts(null, () =>
-  agendaShortcuts({ canCreate: canCreate.value }),
-)
+// «c» is the shell's create key: the shell's listener asks this page first, so
+// it opens this page's event form (never the shell's ?create=1 on top of a form).
+registerPageKeys({
+  extra: () => agendaShortcuts({ canCreate: canCreate.value }),
+  keys: () =>
+    canCreate.value
+      ? {
+          create: () => {
+            if (!form.value) openCreate()
+          },
+        }
+      : {},
+})
 function onKey(event) {
   if (
+    event.defaultPrevented ||
     event.metaKey ||
     event.ctrlKey ||
     event.altKey ||

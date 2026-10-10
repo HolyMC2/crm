@@ -99,6 +99,7 @@
         <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
         <input
           ref="searchEl"
+          data-list-search
           :value="queueSearch"
           :aria-label="__('Buscar en la bandeja')"
           @input="onSearchInput($event.target.value)"
@@ -247,6 +248,7 @@
         <button
           v-for="u in visibleUnassigned"
           :key="orphanKey(u)"
+          data-key-row
           role="option"
           :aria-selected="
             activeUnassigned ===
@@ -599,6 +601,7 @@
         <button
           v-for="g in commentGroups"
           :key="g.post_id || g.latest_name"
+          data-key-row
           role="option"
           :aria-selected="activeCommentPost === (g.post_id || g.latest_name)"
           :tabindex="rovingKey === commentKey(g) ? 0 : -1"
@@ -737,6 +740,12 @@
             ✓ {{ __('Resolved') }}
           </div>
           <div
+            data-key-row
+            :data-row-current="
+              (activeDeal === r.name &&
+                activeDealDoctype === (r.ref_doctype || 'CRM Deal')) ||
+              undefined
+            "
             role="option"
             :aria-selected="
               activeDeal === r.name &&
@@ -991,6 +1000,7 @@ import {
 import { isMobile } from '@/composables/breakpoint'
 import { formatMoney } from '@/composables/crmFormat'
 import DealModal from '@/components/Modals/DealModal.vue'
+import { useListKeys } from '@/composables/pageKeys'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
 import GlobalSearch from '@/components/doco/inbox/GlobalSearch.vue'
 import QueueFilters from '@/components/doco/inbox/QueueFilters.vue'
@@ -1368,23 +1378,18 @@ onBeforeUnmount(() => {
   _io?.disconnect()
 })
 
-// ── "/" focuses search (Slack/Gmail convention) ──────────────────────────────
-// Global while the inbox is mounted; ignored when the user is already typing
-// somewhere (input/textarea/contenteditable) so message drafts keep their "/".
+// ── keyboard standard (through the shell's listener) ─────────────────────────
+// «/» and Ctrl+Shift+K focus the queue search (never while typing a draft),
+// j/k walk the conversations (the listbox keeps ↑↓/Home/End/Enter itself),
+// Enter opens, c starts a new deal.
 const searchEl = ref(null)
-function onGlobalKeydown(e) {
-  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return
-  const t = e.target
-  if (
-    t &&
-    (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
-  )
-    return
-  e.preventDefault()
-  searchEl.value?.focus()
-}
-onMounted(() => document.addEventListener('keydown', onGlobalKeydown))
-onBeforeUnmount(() => document.removeEventListener('keydown', onGlobalKeydown))
+useListKeys({
+  page: 'inbox',
+  search: true,
+  rows: true,
+  open: true,
+  create: () => newDeal(),
+})
 
 // Web Push (desktop surface — same flow as MobileSidebar)
 onMounted(refreshPushState)

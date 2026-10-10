@@ -29,8 +29,8 @@
 
     <div
       v-else
+      ref="listEl"
       class="overflow-hidden rounded-lg border border-outline-gray-2"
-      @keydown="onKeydown"
     >
       <div
         class="hidden gap-3 border-b border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-xs font-medium text-ink-gray-6 md:grid"
@@ -41,6 +41,7 @@
           v-else
           type="button"
           role="checkbox"
+          data-select-page
           class="flex size-5 items-center justify-center rounded border border-outline-gray-3 text-ink-gray-7"
           :aria-checked="allState"
           :aria-label="__('Seleccionar todos los de esta página')"
@@ -62,6 +63,7 @@
         <li
           v-for="row in rows"
           :key="row.key"
+          data-key-row
           class="grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 px-3 py-2 md:items-center"
           :class="[gridClass, row.selected ? 'bg-surface-gray-2' : '']"
         >
@@ -71,6 +73,7 @@
             class="mt-1 size-5 md:mt-0"
             type="checkbox"
             data-row-check
+            data-row-focus
             :aria-label="__('Seleccionar') + ' ' + row.title"
             :checked="row.selected"
             :disabled="busy"
@@ -80,6 +83,7 @@
             <a
               :href="row.href"
               data-row-link
+              :data-row-focus="selectable ? undefined : ''"
               class="block truncate text-sm font-medium text-ink-gray-9 hover:underline"
               @click="$emit('open-record', $event)"
               >{{ row.title }}</a
@@ -147,7 +151,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useListKeys } from '@/composables/pageKeys'
 import {
   ageDays,
   dueState,
@@ -235,24 +240,22 @@ const allState = computed(() => {
   return selected === rows.value.length ? 'true' : 'mixed'
 })
 
-// Arrow keys / j k move between row checkboxes; X toggles; Enter opens.
-function onKeydown(event) {
-  const checks = [...event.currentTarget.querySelectorAll('[data-row-check]')]
-  const index = checks.indexOf(document.activeElement)
-  if (index < 0) return
-  const key = event.key
-  if (key === 'ArrowDown' || key === 'j' || key === 'ArrowUp' || key === 'k') {
-    event.preventDefault()
-    const step = key === 'ArrowDown' || key === 'j' ? 1 : -1
-    checks[Math.min(checks.length - 1, Math.max(0, index + step))]?.focus()
-  } else if (key === 'x' || key === 'X') {
-    event.preventDefault()
-    checks[index].click()
-  } else if (key === 'Enter') {
-    event.preventDefault()
-    checks[index].closest('li')?.querySelector('[data-row-link]')?.click()
-  }
-}
+// Keyboard standard (through the shell's listener): j/k and ↑↓ move between
+// the rows' checkboxes, x toggles, Shift+X extends, Ctrl+A selects the page,
+// Enter opens the record. Inside this list it answers before the page.
+const listEl = ref(null)
+useListKeys({
+  page: 'workload',
+  root: listEl,
+  rows: true,
+  open: true,
+  select: true,
+  when: {
+    'select.toggle': () => props.selectable,
+    'select.range': () => props.selectable,
+    'select.page': () => props.selectable,
+  },
+})
 </script>
 
 <style scoped>

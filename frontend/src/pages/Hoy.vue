@@ -176,6 +176,7 @@
             <li v-for="event in plan.rows" :key="event.source + event.id">
               <RouterLink
                 :to="eventLink(event, today, agenda?.sources)"
+                data-key-row
                 class="flex min-h-12 items-center gap-3 px-4 py-1.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-link sm:px-5"
               >
                 <span
@@ -269,6 +270,7 @@
                   <component
                     :is="row.to ? RouterLink : row.href ? 'a' : 'span'"
                     :to="row.to"
+                    :data-key-row="row.to || row.href ? '' : undefined"
                     :href="row.to ? undefined : row.href || undefined"
                     class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
                   >
@@ -429,6 +431,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import HoySection from '@/components/hoy/HoySection.vue'
 import HoyTask from '@/components/hoy/HoyTask.vue'
+import { useListKeys } from '@/composables/pageKeys'
 import AvisosList from '@/components/avisos/AvisosList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import { isMobile } from '@/composables/breakpoint'
@@ -472,6 +475,10 @@ import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 
 const route = useRoute()
 const router = useRouter()
+// Keyboard standard: j/k walk every row of the day (pendientes, agenda,
+// continuar, avisos) in reading order and Enter opens it. Hoy has no list
+// search, selection or create of its own.
+useListKeys({ page: 'hoy', rows: true, open: true })
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const phone = isMobile
 const locale = globalThis.window?.lang || undefined

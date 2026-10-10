@@ -40,6 +40,7 @@
         v-if="state.segment !== 'followups'"
         ref="searchControl"
         v-model="state.q"
+        data-list-search
         class="c-search"
         type="text"
         placeholder="Buscar nombre, teléfono, correo o RFC"
@@ -251,7 +252,12 @@
             @click="state.taskStatus = 'Cancelled'"
           />
         </div>
-        <article v-for="task in rows" :key="task.name" class="c-task-row">
+        <article
+          v-for="task in rows"
+          :key="task.name"
+          data-key-row
+          class="c-task-row"
+        >
           <div>
             <span
               class="c-due"
@@ -265,7 +271,11 @@
             </p>
           </div>
           <div class="c-actions">
-            <Button label="Abrir registro" @click="openTask(task)" /><Button
+            <Button
+              label="Abrir registro"
+              data-row-link
+              @click="openTask(task)"
+            /><Button
               v-if="task.status === 'Open'"
               label="Hecho y siguiente"
               @click="completeTask(task)"
@@ -284,6 +294,10 @@
         <button
           v-for="row in rows"
           :key="row.source + ':' + row.name"
+          data-key-row
+          :data-row-current="
+            state.selected === row.source + ':' + row.name || undefined
+          "
           class="c-contact-row"
           :class="{
             compact: state.density === 'compact',
@@ -523,6 +537,7 @@ import {
 import { call } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
+import { useListKeys } from '@/composables/pageKeys'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import NativeLinkField from '@/components/contactos/NativeLinkField.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
@@ -638,6 +653,26 @@ const rows = ref([]),
   sectionOrder = ref([]),
   configurationCountry = ref('')
 const { id } = useContactosDraft('list-operations')
+// Keyboard standard: / and Ctrl+Shift+K search, j/k rows, Enter opens, c new.
+useListKeys({
+  page: 'contactos',
+  search: () => state.segment !== 'followups' && focusSearchControl(),
+  rows: true,
+  open: true,
+  create: () => {
+    newIdentity.value = true
+  },
+  when: {
+    search: () => state.segment !== 'followups',
+    create: () => !!capabilities.value?.create,
+  },
+})
+function focusSearchControl() {
+  const input = searchControl.value?.$el?.querySelector?.('input')
+  if (!input) return false
+  input.focus()
+  input.select?.()
+}
 const segments = computed(
   () => boot.value?.segments?.rows || boot.value?.segments || [],
 )
@@ -1091,19 +1126,6 @@ function roleLabel(row) {
 function plainText(value) {
   return String(value || '').replace(/<[^>]*>/g, '')
 }
-function shortcut(event) {
-  if (
-    event.key === '/' &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.target.closest(
-      'input,textarea,select,[contenteditable],[role="dialog"]',
-    )
-  ) {
-    event.preventDefault()
-    searchControl.value?.$el?.querySelector('input')?.focus()
-  }
-}
 // Typing waits for a pause; a segment, filter or status choice loads at once
 // (a page seen before then renders from memory without any wait).
 watch(
@@ -1123,7 +1145,6 @@ watch(
 )
 watch(() => [state.columns, state.density], remember, { deep: true })
 onMounted(async () => {
-  document.addEventListener('keydown', shortcut)
   // A built-in segment needs nothing from the boot: its rows load meanwhile.
   const early =
     names[state.segment] && !route.query.view && !legacyBlocked.value
@@ -1188,6 +1209,5 @@ onBeforeUnmount(() => {
   clearTimeout(hoverTimer)
   generation++
   remember()
-  document.removeEventListener('keydown', shortcut)
 })
 </script>

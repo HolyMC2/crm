@@ -1,6 +1,6 @@
 <template>
   <ul class="divide-y divide-outline-gray-1" :aria-label="label">
-    <li v-for="group in groups" :key="group.key" class="relative">
+    <li v-for="group in groups" :key="group.key" data-key-row class="relative">
       <div
         class="flex min-h-16 items-start gap-3 px-4 py-2.5"
         :class="group.unread ? '' : 'opacity-80'"
@@ -16,6 +16,8 @@
           aria-hidden="true"
         />
         <button
+          data-row-link
+          data-row-focus
           class="min-w-0 flex-1 rounded text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           :aria-expanded="
             expanded === group.key || needsReason(group) ? 'true' : undefined

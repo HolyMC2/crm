@@ -1368,9 +1368,8 @@ describe('palette recents never outlive read access', () => {
 
 describe('Ventas navigation on every screen', () => {
   it('Ventas sections show from 640 px, where the shell switches to desktop', async () => {
-    const { default: VentasSidebar } = await import(
-      '@/components/shell/VentasSidebar.vue'
-    )
+    const { default: VentasSidebar } =
+      await import('@/components/shell/VentasSidebar.vue')
     state.mobile.value = false
     await mount('/deals')
     const host = document.createElement('div')
@@ -1934,13 +1933,17 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     expect(
       shellCheatSheet({ modules: mine() }).map((section) => section.id),
     ).toEqual(['quick', 'app'])
-    // Declaring the list context alone lists nothing: only answered keys count.
+    // A power list answers the list context with its own listener: its rows
+    // are listed (the shell never calls them).
     const removeContext = registerPageShortcuts('list')
     expect(
       shellCheatSheet({ modules: mine() })[0].rows.map((row) => row.id),
-    ).not.toContain('search')
+    ).toContain('search')
     removeContext()
-    // A list page that answers the search gets the list search row.
+    expect(
+      shellCheatSheet({ modules: mine() })[0].rows.map((row) => row.id),
+    ).not.toContain('search')
+    // A list page that answers the search through the shell gets the row too.
     const removeList = registerPageKeys({ keys: { search: () => {} } })
     const [quick] = shellCheatSheet({ modules: mine() })
     expect(quick.rows.find((row) => row.id === 'search').keys).toEqual([

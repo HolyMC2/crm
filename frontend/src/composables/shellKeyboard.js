@@ -118,6 +118,8 @@ const PAGE_IDS = new Set(
  * - `root`: element (or ref) of the page's area; when the focus is inside it,
  *   this page answers before the others.
  * - `enabled`: getter; while false the page answers nothing (its own form open).
+ * - `answers`: KEYMAP ids the page answers with its own listener (the power
+ *   lists' j/k/x…): listed like `keys`, never called by the shell.
  * Called in setup, it lasts until the component unmounts; it also returns the
  * function that removes it.
  */
@@ -126,6 +128,7 @@ export function registerPageKeys({
   extra = [],
   root = null,
   enabled = null,
+  answers = [],
 } = {}) {
   // `keys` may be a getter: a record whose edit right arrives later lists «e»
   // from then on.
@@ -136,19 +139,26 @@ export function registerPageKeys({
       if (typeof handler === 'function' && PAGE_IDS.has(id)) own[id] = handler
     return own
   }
+  const answered = () => [
+    ...new Set([
+      ...Object.keys(handlers()),
+      ...answers.filter((id) => PAGE_IDS.has(id)),
+    ]),
+  ]
   const entry = {
     id: ++nextId,
     contexts: () => {
-      const own = handlers()
+      const own = new Set(answered())
       return [
         ...new Set(
-          KEYMAP.filter((s) => own[s.id] && s.context !== 'global').map(
+          KEYMAP.filter((s) => own.has(s.id) && s.context !== 'global').map(
             (s) => s.context,
           ),
         ),
       ]
     },
     handlers,
+    answered,
     root,
     enabled: () => (typeof enabled === 'function' ? enabled() : true) !== false,
     extra: () =>
@@ -165,12 +175,16 @@ export function registerPageKeys({
 }
 
 /**
- * Keys a page lists and answers itself, Agenda's t/d/w/m/l (H3a API, kept):
- * `extra` as in registerPageKeys. `context` is ignored: the list/form rows now
- * appear only for the keys a page answers (registerPageKeys `keys`).
+ * Keys a page lists and answers with its own listener (H3a API, kept): the
+ * power lists declare the «list» context (every KEYMAP list row), record pages
+ * and Agenda `null` with only their own keys. `extra` as in registerPageKeys.
  */
 export function registerPageShortcuts(context, extra = []) {
-  return registerPageKeys({ extra })
+  const contexts = new Set(
+    [context].flat().filter((value) => value && value !== 'global'),
+  )
+  const answers = KEYMAP.filter((s) => contexts.has(s.context)).map((s) => s.id)
+  return registerPageKeys({ extra, answers })
 }
 
 const rootOf = (page) => {
@@ -191,7 +205,7 @@ export const pageShortcuts = computed(() => {
   const live = activePages()
   return {
     contexts: [...new Set(live.flatMap((page) => page.contexts()))],
-    ids: [...new Set(live.flatMap((page) => Object.keys(page.handlers())))],
+    ids: [...new Set(live.flatMap((page) => page.answered()))],
     extra: live.flatMap((page) =>
       // The sheet gets the declaration only, not the page's run/aliases.
       page.extra().map((shortcut) => ({

@@ -41,6 +41,7 @@
           <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
           <input
             :value="search"
+            data-list-search
             :aria-label="__('Buscar tratos')"
             :placeholder="__('Buscar cliente, equipo…')"
             class="h-full w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
@@ -202,6 +203,7 @@
           <LucideSearch class="h-3.5 w-3.5 text-ink-gray-4" />
           <input
             :value="search"
+            data-list-search
             :aria-label="__('Buscar tratos')"
             :placeholder="__('Buscar tratos…')"
             class="w-[140px] border-0 bg-transparent text-[12px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
@@ -437,6 +439,7 @@
             <input
               v-if="!isMobile"
               type="checkbox"
+              data-select-page
               class="cb-token"
               :checked="allSelected"
               :aria-label="__('Seleccionar todo')"
@@ -527,14 +530,16 @@
               :key="r.name"
               role="button"
               tabindex="0"
+              data-key-row
+              :data-row-current="r.name === lastOpened || undefined"
               class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
               :style="`grid-template-columns:${GRID};min-height:50px`"
               @click="openDeal(r.name)"
-              @keydown.enter="openDeal(r.name)"
             >
               <input
                 v-if="!isMobile"
                 type="checkbox"
+                data-row-check
                 class="cb-token"
                 :checked="selectedRows.includes(r.name)"
                 :aria-label="__('Seleccionar') + ' ' + label(r)"
@@ -858,6 +863,7 @@ import FollowUpCell from '@/components/doco/deals/FollowUpCell.vue'
 import DealGroupHeader from '@/components/doco/deals/DealGroupHeader.vue'
 import SavedViewPicker from '@/components/doco/deals/SavedViewPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
+import { useListKeys } from '@/composables/pageKeys'
 import { hasTaller, reloadQueue } from '@/composables/inbox'
 import {
   avatarColor,
@@ -1079,6 +1085,31 @@ const search = ref(remembered.search)
 const sort = ref(remembered.sort)
 const selectedRows = ref([])
 const view = ref(remembered.view)
+// The deal the worker opened last: back on the list, j/k start there.
+const lastOpened = ref(sessionStorage.getItem('muelle.ventas.lastDeal') || '')
+watch(lastOpened, (name) =>
+  sessionStorage.setItem('muelle.ventas.lastDeal', name),
+)
+// Keyboard standard on the desktop list: search, j/k, Enter opens the deal,
+// x / Shift+X / Ctrl+A select, c new deal. Board and funnel have no rows to walk.
+useListKeys({
+  page: 'ventas',
+  search: true,
+  rows: true,
+  open: true,
+  select: true,
+  create: () => {
+    showDealModal.value = true
+  },
+  when: {
+    'row.next': () => view.value === 'list' && !isMobile.value,
+    'row.prev': () => view.value === 'list' && !isMobile.value,
+    'row.open': () => view.value === 'list' && !isMobile.value,
+    'select.toggle': () => view.value === 'list' && !isMobile.value,
+    'select.range': () => view.value === 'list' && !isMobile.value,
+    'select.page': () => view.value === 'list' && !isMobile.value,
+  },
+})
 const groupBy = ref(remembered.groupBy)
 const viewName = ref(remembered.viewName)
 const collapsed = ref({})
@@ -1729,6 +1760,7 @@ function toggleRow(name) {
     : [...selectedRows.value, name]
 }
 function openDeal(name) {
+  lastOpened.value = name
   router.push({ name: 'Deal 360', params: { dealId: name } })
 }
 function rowMenu(r) {
