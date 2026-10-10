@@ -213,11 +213,13 @@
                     {{ card.detail }}
                   </p>
                 </div>
-                <a
-                  v-if="card.href && card.action"
-                  :href="card.href"
+                <component
+                  :is="card.to ? RouterLink : 'a'"
+                  v-if="(card.to || card.href) && card.action"
+                  :to="card.to"
+                  :href="card.to ? undefined : card.href"
                   class="flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
-                  >{{ card.action }}</a
+                  >{{ card.action }}</component
                 >
               </div>
               <ul v-if="card.rows.length" class="mt-1 space-y-1 pl-8">
@@ -227,7 +229,7 @@
                   class="flex min-h-11 flex-wrap items-center gap-2"
                 >
                   <component
-                    :is="row.to ? 'RouterLink' : row.href ? 'a' : 'span'"
+                    :is="row.to ? RouterLink : row.href ? 'a' : 'span'"
                     :to="row.to"
                     :href="row.to ? undefined : row.href || undefined"
                     class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
@@ -383,7 +385,7 @@ import {
   ref,
   watch,
 } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import HoySection from '@/components/hoy/HoySection.vue'
 import HoyTask from '@/components/hoy/HoyTask.vue'

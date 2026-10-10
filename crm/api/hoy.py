@@ -14,9 +14,9 @@ LANDING_DEFAULT = "muelle_landing"
 AVISOS_LIMIT = 3
 
 
-def check_hoy_permission() -> bool:
+def check_hoy_permission(user: str | None = None) -> bool:
 	"""Hoy is every staff account's home; each section re-checks its own source."""
-	return avisos.is_enabled()
+	return avisos.is_enabled(user)
 
 
 def _require():

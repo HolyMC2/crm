@@ -55,6 +55,25 @@ export function shellLink(path) {
   return withReturn(path)
 }
 
+const SHELL_BASE = '/crm'
+/**
+ * A source's link with the return to Hoy: a router location when it is a page
+ * of this app (`/crm/…`, no reload), else a page URL in its own app.
+ */
+export function sourceLink(url) {
+  if (!url) return { href: '' }
+  if (url === SHELL_BASE || url.startsWith(`${SHELL_BASE}/`))
+    return { to: withReturn(url.slice(SHELL_BASE.length) || '/') }
+  return { href: withReturn(url) }
+}
+
+// The owning app's icon for its Hoy source; any other source shows the inbox.
+const SOURCE_ICONS = {
+  'doco.compras': 'lucide-shopping-cart',
+  'doco.gastos': 'lucide-receipt',
+  'abordo.primeros_pasos': 'lucide-check-check',
+}
+
 export function greeting(now = new Date(), timeZone) {
   let hour = now.getHours()
   try {
@@ -286,17 +305,17 @@ export function continuarCards(
   for (const source of (continuar?.sources || []).filter((s) => s.count > 0))
     cards.push({
       key: source.key,
-      icon: 'lucide-inbox',
+      icon: SOURCE_ICONS[source.key] || 'lucide-inbox',
       title: source.label,
-      detail: t('{0} to handle', [source.count]),
-      href: source.url ? withReturn(source.url) : '',
+      detail: source.detail || t('{0} to handle', [source.count]),
+      ...sourceLink(source.url),
       action: source.url ? t('See all') : '',
       rows: (source.rows || []).map((row) => ({
         key: row.name,
         name: row.name,
         title: row.title || row.name,
         detail: row.detail,
-        href: row.url ? withReturn(row.url) : '',
+        ...sourceLink(row.url),
         modified: row.modified,
         group: row.group,
       })),

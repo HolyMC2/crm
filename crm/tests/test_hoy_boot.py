@@ -91,6 +91,13 @@ class TestHoyBoot(TestCase):
 			with self.assertRaises(frappe.PermissionError):
 				hoy.page()
 
+	def test_the_gate_answers_for_another_user_before_their_session(self):
+		# Doco's sign-in landing asks while the session is still Guest.
+		frappe.set_user("Guest")
+		self.assertTrue(hoy.check_hoy_permission("Administrator"))
+		self.assertFalse(hoy.check_hoy_permission())
+		self.assertFalse(hoy.check_hoy_permission("Guest"))
+
 	def test_landing_choice_keeps_only_sections_the_worker_has(self):
 		self.assertEqual(hoy.save_landing("ventas"), {"landing": "ventas"})
 		self.assertEqual(hoy.saved_landing(), "ventas")

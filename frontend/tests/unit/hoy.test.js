@@ -12,6 +12,7 @@ import {
   accesos,
   agendaPlan,
   continuarCards,
+  sourceLink,
   dayTitle,
   dueMore,
   dueRows,
@@ -182,6 +183,83 @@ describe('continuarCards', () => {
   it('draws nothing for sources the server did not report', () => {
     expect(continuarCards({ items: [], sources: [] })).toEqual([])
     expect(continuarCards(null)).toEqual([])
+  })
+
+  it('opens what Desk Hoy showed (purchases, bills, first steps) inside Muelle and comes back', () => {
+    const [compras, gastos, pasos] = continuarCards({
+      items: [],
+      sources: [
+        {
+          key: 'doco.compras',
+          label: 'Compras por continuar',
+          count: 3,
+          url: '/crm/compras',
+          rows: [
+            {
+              name: 'PUR-ORD-1',
+              title: 'Proveedor A',
+              detail: 'Por recibir · Proveedor A',
+              url: '/crm/compras/orden/PUR-ORD-1',
+            },
+            {
+              name: 'PUR-SQTN-1',
+              title: 'Cotización',
+              url: '/app/supplier-quotation/PUR-SQTN-1',
+            },
+          ],
+        },
+        {
+          key: 'doco.gastos',
+          label: 'Facturas de proveedor',
+          count: 1,
+          url: '/crm/gastos',
+          rows: [],
+        },
+        {
+          key: 'abordo.primeros_pasos',
+          label: 'Primeros pasos',
+          detail: '2 de 5 listos',
+          count: 3,
+          url: '/app/primeros-pasos',
+          rows: [{ name: 'negocio', title: 'Completa', url: null }],
+          action: {
+            label: 'Ocultar',
+            method: 'abordo.primeros_pasos.hoy.hide',
+          },
+        },
+      ],
+    })
+    // Pages of this app open in the router, with the return to Hoy.
+    expect(compras.to).toBe(withReturn('/compras'))
+    expect(compras.href).toBeUndefined()
+    expect(compras.rows[0].to).toBe(withReturn('/compras/orden/PUR-ORD-1'))
+    // A stage still on its native form opens there, and also comes back.
+    expect(compras.rows[1].href).toBe(
+      withReturn('/app/supplier-quotation/PUR-SQTN-1'),
+    )
+    expect(compras.rows[1].to).toBeUndefined()
+    expect(compras.icon).toBe('lucide-shopping-cart')
+    expect(gastos.icon).toBe('lucide-receipt')
+    // The provider's own summary replaces the count line.
+    expect(pasos.detail).toBe('2 de 5 listos')
+    expect(compras.detail).toBe('3 to handle')
+    // A step that waits on an earlier one has no link, only its reason.
+    expect(pasos.rows[0].href).toBe('')
+    expect(pasos.source.action.method).toBe('abordo.primeros_pasos.hoy.hide')
+  })
+})
+
+describe('sourceLink', () => {
+  it('routes /crm pages in the app and other apps by URL', () => {
+    expect(sourceLink('/crm')).toEqual({ to: withReturn('/') })
+    expect(sourceLink('/crm/gastos/factura/X')).toEqual({
+      to: withReturn('/gastos/factura/X'),
+    })
+    expect(sourceLink('/crmx/a')).toEqual({ href: withReturn('/crmx/a') })
+    expect(sourceLink('/taller/orders/RO-1')).toEqual({
+      href: withReturn('/taller/orders/RO-1'),
+    })
+    expect(sourceLink('')).toEqual({ href: '' })
   })
 })
 
