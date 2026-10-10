@@ -19,6 +19,18 @@ _OWNER_FIELDS = {
 _SHOP_FIELD = "doco_shop"
 
 
+# Doco's read-only assistant service role (doco reader_access.enable()). The
+# assistant states a figure only from rows that both its service user and the
+# person asking can read, so reading every Lead and Deal never widens what a
+# person sees. Writes, creates and assignment keep the hierarchy/pipeline scope.
+ASSISTANT_READER_ROLE = "Doco Copilot Reader"
+_READ_TYPES = frozenset({"read", "select"})
+
+
+def _reads_every_record(user: str | None, ptype: str | None = "read") -> bool:
+	return ptype in _READ_TYPES and ASSISTANT_READER_ROLE in frappe.get_roles(user or frappe.session.user)
+
+
 def hierarchy_enabled() -> bool:
 	return bool(frappe.db.get_single_value("FCRM Settings", "enable_sales_hierarchy"))
 
@@ -111,6 +123,8 @@ def get_deal_permission_query_conditions(user=None):
 def _scoped_record_query(user, doctype):
 	from crm.pipeline.services.configuration import record_query
 
+	if _reads_every_record(user):
+		return ""
 	cond = _permission_query_conditions(user, doctype)
 	hierarchy = cond.get_sql(with_namespace=True, quote_char="`", secondary_quote_char="'") if cond else ""
 	pipeline = record_query(doctype, user)
@@ -158,6 +172,8 @@ def has_deal_permission(doc, ptype, user):
 def _scoped_record_permission(doc, ptype, user, doctype):
 	from crm.pipeline.services.configuration import can_access_pipeline, record_company_allowed
 
+	if _reads_every_record(user, ptype):
+		return True
 	if not can_access_pipeline(doc.get("pipeline"), user) or not record_company_allowed(
 		doc.get("sales_company"), user
 	):

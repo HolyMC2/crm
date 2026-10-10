@@ -183,6 +183,31 @@ class TestOrgHierarchy(IntegrationTestCase):
 				self.assertIn(f"`tab{doctype}`.", cond)
 
 	# ------------------------------------------------------------------
+	# Assistant read-only role
+	# ------------------------------------------------------------------
+
+	def test_assistant_reader_reads_every_lead_and_deal_but_never_writes(self):
+		from crm.permissions.org_hierarchy import ASSISTANT_READER_ROLE
+
+		if not frappe.db.exists("Role", ASSISTANT_READER_ROLE):
+			frappe.get_doc({"doctype": "Role", "role_name": ASSISTANT_READER_ROLE, "desk_access": 0}).insert(
+				ignore_permissions=True
+			)
+		reader = make_user("assistant-reader@hier.test", roles=["Sales User", ASSISTANT_READER_ROLE])
+		lead, deal = make_lead("rep1@hier.test"), make_deal("rep2@hier.test")
+		self.assertFalse(get_lead_permission_query_conditions(reader.name))
+		self.assertFalse(get_deal_permission_query_conditions(reader.name))
+		self.assertTrue(has_lead_permission(lead, "read", reader.name))
+		self.assertTrue(has_deal_permission(deal, "read", reader.name))
+		for ptype in ("write", "delete", "share", "submit"):
+			with self.subTest(ptype=ptype):
+				self.assertFalse(has_lead_permission(lead, ptype, reader.name))
+				self.assertFalse(has_deal_permission(deal, ptype, reader.name))
+		# Call logs and every other user keep the hierarchy scope.
+		self.assertTrue(get_call_log_permission_query_conditions(reader.name))
+		self.assertFalse(has_lead_permission(lead, "read", "outsider@hier.test"))
+
+	# ------------------------------------------------------------------
 	# Hierarchy disabled
 	# ------------------------------------------------------------------
 
