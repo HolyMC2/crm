@@ -188,7 +188,7 @@
             class="lucide-keyboard size-4 text-ink-gray-6"
             aria-hidden="true"
           />
-          <span class="flex-1">{{ __('Keyboard shortcuts') }}</span>
+          <span class="flex-1">{{ shellT('Keyboard shortcuts') }}</span>
           <kbd
             class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
             >{{ keyLabel('alt+h') }}</kbd
@@ -255,6 +255,7 @@ import {
   ariaKeys,
   keyLabel,
   openShortcutSheet,
+  shellT,
 } from '@/composables/shellKeyboard'
 
 const props = defineProps({

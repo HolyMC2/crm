@@ -29,7 +29,7 @@ export function agendaShortcuts({ canCreate = false } = {}) {
     { id: 'agenda.day', keys: ['d'], description: 'Day view' },
     { id: 'agenda.week', keys: ['w'], description: 'Week view' },
     { id: 'agenda.month', keys: ['m'], description: 'Month view' },
-    { id: 'agenda.list', keys: ['l'], description: 'List view' },
+    { id: 'agenda.list', keys: ['l'], description: 'Agenda list view' },
     { id: 'agenda.next', keys: ['j'], description: 'Next period' },
     { id: 'agenda.prev', keys: ['k'], description: 'Previous period' },
   ].filter(Boolean)

@@ -9,6 +9,7 @@ import {
 } from 'vue'
 import {
   KEYMAP,
+  SHELL_MESSAGES_ES_MX,
   cheatSheet,
   createShortcutMatcher,
   esMx,
@@ -53,12 +54,18 @@ export function ariaKeys(combo, apple = appleKeys) {
 }
 
 /**
- * The app catalog first (`__`), then the contracts' es-MX copy, so a shared
- * string never reaches a worker in English while its catalog entry is missing.
- * With a `context`, only the contextual entry counts: the catalog's bare
- * «All» is «Todos», the palette chip is «Todo».
+ * Keyboard-standard copy for a Spanish worker is the contracts' reviewed es-MX
+ * (the README is the source of truth, and other apps' catalogs translate the
+ * same English differently: Frappe's «Show keyboard shortcuts» is «Mostrar
+ * atajos de teclado», the standard says «Ver los atajos de teclado»). Any other
+ * string, or another language: the app catalog (`__`), then the contracts'
+ * copy, so a shared string never reaches a worker in English while its catalog
+ * entry is missing. With a `context`, only the contextual catalog entry counts.
  */
 export function shellT(source, replace = [], context = null) {
+  const lang = typeof window !== 'undefined' ? window.lang : null
+  if (/^es\b/i.test(lang || '') && source in SHELL_MESSAGES_ES_MX)
+    return esMx(source, replace)
   const tr =
     typeof window !== 'undefined' && typeof window.__ === 'function'
       ? window.__

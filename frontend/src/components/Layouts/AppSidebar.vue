@@ -135,7 +135,7 @@
             </template>
           </SidebarItem>
           <SidebarItem
-            :label="__('Keyboard shortcuts')"
+            :label="shellT('Keyboard shortcuts')"
             data-testid="sidebar-shortcuts"
             @click="(event) => openShortcutSheet(event?.currentTarget)"
           >
@@ -225,7 +225,11 @@ import { useDemoData } from '@/composables/demoData'
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCrmOnboarding } from '@/composables/onboarding'
-import { keyLabel, openShortcutSheet } from '@/composables/shellKeyboard'
+import {
+  keyLabel,
+  openShortcutSheet,
+  shellT,
+} from '@/composables/shellKeyboard'
 
 const props = defineProps({
   mobile: { type: Boolean, default: false },

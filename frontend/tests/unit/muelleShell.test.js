@@ -61,6 +61,7 @@ import {
   registerPageShortcuts,
   searchEntryHint,
   shellCheatSheet,
+  shellT,
 } from '@/composables/shellKeyboard'
 import { agendaShortcuts } from '@/composables/useAgenda'
 import { bootScope } from '@/vendor/muelle-shell/contracts'
@@ -1239,7 +1240,9 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     const dialog = await until(sheet)
     await settle()
     expect(dialog.getAttribute('aria-modal')).toBe('true')
-    expect(dialog.textContent).toContain('Keyboard shortcuts')
+    expect(dialog.querySelector('h2').textContent.trim()).toBe(
+      'Atajos de teclado',
+    )
     expect(document.activeElement.getAttribute('role')).toBe('tab')
     press({ key: 'Escape' }, document.activeElement)
     await settle()
@@ -1339,6 +1342,31 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     removeList()
   })
 
+  it('a Spanish worker reads the standard copy even where another catalog differs', () => {
+    const catalog = {
+      'Show keyboard shortcuts': 'Mostrar atajos de teclado',
+      'Keyboard shortcuts': 'Atajos del teclado',
+      'Day view': 'Vista de día',
+    }
+    globalThis.__ = (text) => catalog[text] || text
+    window.lang = 'es-MX'
+    try {
+      expect(shellT('Show keyboard shortcuts')).toBe(
+        'Ver los atajos de teclado',
+      )
+      expect(shellT('Keyboard shortcuts')).toBe('Atajos de teclado')
+      expect(shellT('All', [], 'Palette mode')).toBe('Todo')
+      // Strings outside the standard keep the app catalog.
+      expect(shellT('Day view')).toBe('Vista de día')
+      window.lang = 'en'
+      expect(shellT('Show keyboard shortcuts')).toBe(
+        'Mostrar atajos de teclado',
+      )
+    } finally {
+      delete window.lang
+    }
+  })
+
   it('labels follow the platform: ⌘/⌥ on Apple, Ctrl/Alt elsewhere', () => {
     const keysOf = (apple) =>
       shellCheatSheet({ modules: mine(), apple })[0].rows.map((r) => r.keys)
@@ -1362,7 +1390,7 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     root.querySelector('[aria-label="Account menu"]').click()
     await settle()
     const item = document.querySelector('[data-testid="menu-shortcuts"]')
-    expect(item.textContent).toContain('Keyboard shortcuts')
+    expect(item.textContent).toContain('Atajos de teclado')
     expect(item.querySelector('kbd').textContent).toBe('Alt+H')
     item.click()
     expect(await until(sheet)).not.toBeNull()
@@ -1404,10 +1432,15 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     input.dispatchEvent(new Event('input'))
     const option = await until(() =>
       [...palette().querySelectorAll('[role="option"]')].find((o) =>
-        o.textContent.includes('View keyboard shortcuts'),
+        o.textContent.includes('Ver atajos de teclado'),
       ),
     )
     expect(option.textContent).toContain('Alt+H')
+    // A row shows only a key the shell answers: «c» has no global handler yet.
+    const create = [...palette().querySelectorAll('[role="option"]')].find(
+      (o) => o.textContent.includes('New contact'),
+    )
+    expect(create.querySelector('kbd')).toBeNull()
     option.click()
     expect(await until(sheet)).not.toBeNull()
     await settle()
@@ -1420,7 +1453,7 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
       'utf8',
     )
     expect(sidebar).toMatch(
-      /:label="__\('Keyboard shortcuts'\)"[\s\S]*openShortcutSheet[\s\S]*keyLabel\('alt\+h'\)/,
+      /:label="shellT\('Keyboard shortcuts'\)"[\s\S]*openShortcutSheet[\s\S]*keyLabel\('alt\+h'\)/,
     )
   })
 })

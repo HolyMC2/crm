@@ -2,6 +2,7 @@ import { contactosApi } from '@/composables/useContactos'
 import { identityTypeLabel } from '@/utils/contactos'
 import { call } from 'frappe-ui'
 import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
+import { shellT } from '@/composables/shellKeyboard'
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -99,7 +100,9 @@ export function createShellProviders({ boot, modules }) {
         {
           id: 'shortcuts',
           group: 'acciones',
-          title: __('View keyboard shortcuts'),
+          title: shellT('View keyboard shortcuts'),
+          // Found by either language's words, and by the key itself.
+          keywords: 'keyboard shortcuts atajos teclado alt+h',
           icon: 'lucide-keyboard',
           action: 'shortcuts',
           shortcut: 'alt+h',
@@ -123,7 +126,7 @@ export function createShellProviders({ boot, modules }) {
       )
       return query.kind === 'empty'
         ? items.slice(0, 1)
-        : items.filter((item) => match(query.text, item.title))
+        : items.filter((item) => match(query.text, item.title, item.keywords))
     },
   }
   const places = {
