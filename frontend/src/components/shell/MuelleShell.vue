@@ -132,7 +132,14 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useOnline } from '@vueuse/core'
 import { Button } from 'frappe-ui'
@@ -152,10 +159,12 @@ import {
 import {
   openShortcutSheet,
   searchEntryHint,
+  shellCreate,
   shortcutSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
 import { scanPickHref, toggleRail } from '@/composables/shellRail'
+import { createTargetFor } from '@/utils/shellCreate'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
 import { shellTitle } from '@/utils/shellTitle'
@@ -347,6 +356,19 @@ useShellKeyboard({
 })
 // Every route names itself through meta.title (English source, es-MX catalog).
 const headerTitle = computed(() => shellTitle(route, activeModule.value))
+// «c» creates in the module the worker is in: the palette's create action for
+// it. A page with its own create (a dialog on the list) answers first.
+watch(
+  () => createTargetFor(shellBoot.value, activeKey.value),
+  (target) => {
+    shellCreate.value = target && {
+      id: target.id,
+      run: () => router.push(target.href),
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => (shellCreate.value = null))
 watch(
   headerTitle,
   (title) => {

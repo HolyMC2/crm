@@ -275,3 +275,11 @@ input[type='checkbox'].rounded {
 .menu-content {
   z-index: 101;
 }
+
+/* Keyboard standard: the row j/k moved to is always visible, whatever the
+   page's own row styling (pageKeys.js focuses it programmatically). */
+[data-key-row]:focus-visible,
+[data-key-row] [data-row-focus]:focus-visible {
+  outline: 2px solid var(--outline-gray-5, #7c7c7c);
+  outline-offset: -2px;
+}

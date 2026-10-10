@@ -114,7 +114,7 @@
               >
             </span>
             <kbd
-              v-if="answered.has(item.shortcut)"
+              v-if="keyShown(item)"
               class="hidden flex-none rounded border border-outline-gray-2 px-1.5 font-sans text-xs text-ink-gray-6 sm:inline"
               >{{ keyLabel(item.shortcut) }}</kbd
             >
@@ -185,6 +185,7 @@ import {
   ariaKeys,
   keyLabel,
   openShortcutSheet,
+  shellCreate,
   shellKeymap,
   shellT,
   useShellLayer,
@@ -235,7 +236,7 @@ const chips = computed(() =>
   })),
 )
 // A row shows its key only when the shell answers it everywhere (go-to, Alt+H);
-// «c» on «Nuevo contacto» has no global handler yet.
+// «c» only on the create action of the module the worker is in (what «c» runs).
 const answered = computed(
   () =>
     new Set(
@@ -244,6 +245,10 @@ const answered = computed(
         .flatMap((shortcut) => shortcut.keys),
     ),
 )
+function keyShown(item) {
+  if (item.shortcut === 'c') return shellCreate.value?.id === item.id
+  return answered.value.has(item.shortcut)
+}
 const placeholder = computed(() =>
   shellT(PALETTE_MODE_COPY[activeMode.value].placeholder),
 )

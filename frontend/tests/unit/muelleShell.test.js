@@ -74,6 +74,7 @@ import {
   closeShortcutSheet,
   keyLabel,
   pageShortcuts,
+  registerPageKeys,
   registerPageShortcuts,
   searchEntryHint,
   shellCheatSheet,
@@ -1933,8 +1934,14 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     expect(
       shellCheatSheet({ modules: mine() }).map((section) => section.id),
     ).toEqual(['quick', 'app'])
-    // A list page that declares the list context gets the list search row.
-    const removeList = registerPageShortcuts('list')
+    // Declaring the list context alone lists nothing: only answered keys count.
+    const removeContext = registerPageShortcuts('list')
+    expect(
+      shellCheatSheet({ modules: mine() })[0].rows.map((row) => row.id),
+    ).not.toContain('search')
+    removeContext()
+    // A list page that answers the search gets the list search row.
+    const removeList = registerPageKeys({ keys: { search: () => {} } })
     const [quick] = shellCheatSheet({ modules: mine() })
     expect(quick.rows.find((row) => row.id === 'search').keys).toEqual([
       '/',
@@ -2056,5 +2063,95 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     expect(sidebar).toMatch(
       /:label="shellT\('Keyboard shortcuts'\)"[\s\S]*openShortcutSheet[\s\S]*keyLabel\('alt\+h'\)/,
     )
+  })
+})
+
+describe('shell-level keys: c creates in this module, Esc closes the page layer', () => {
+  const press = (init, target = document.body) =>
+    target.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        bubbles: true,
+        cancelable: true,
+        ...init,
+      }),
+    )
+  async function settle() {
+    for (let i = 0; i < 6; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      await nextTick()
+    }
+  }
+  const appRows = () =>
+    shellCheatSheet({ modules: hostedModules })
+      .flatMap((section) => section.rows)
+      .map((row) => row.id)
+  beforeEach(() => {
+    state.mobile.value = false
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      return []
+    })
+  })
+
+  it('«c» runs the palette’s create action of the current module, and only there', async () => {
+    await mount('/contactos')
+    await settle()
+    expect(appRows()).toContain('create')
+    press({ key: 'c' })
+    await settle()
+    expect(router.currentRoute.value.fullPath).toBe('/contactos?create=1')
+    // While typing, «c» is a letter.
+    const field = document.createElement('input')
+    root.append(field)
+    await router.push('/contactos')
+    press({ key: 'c' }, field)
+    await settle()
+    expect(router.currentRoute.value.fullPath).toBe('/contactos')
+    field.remove()
+    // The palette shows [C] on «New contact» here, the same action «c» runs.
+    press({ key: 'k', ctrlKey: true })
+    const dialog = await until(() =>
+      document.querySelector('[aria-label="Command palette"]'),
+    )
+    const input = dialog.querySelector('input')
+    input.value = 'contact'
+    input.dispatchEvent(new Event('input'))
+    const option = await until(() =>
+      [...dialog.querySelectorAll('[role="option"]')].find((o) =>
+        o.textContent.includes('New contact'),
+      ),
+    )
+    expect(option.querySelector('kbd').textContent).toBe('C')
+  })
+
+  it('a module without a create action neither lists nor answers «c»', async () => {
+    await mount('/avisos')
+    await settle()
+    expect(appRows()).not.toContain('create')
+    press({ key: 'c' })
+    await settle()
+    expect(router.currentRoute.value.fullPath).toBe('/avisos')
+  })
+
+  it('the page’s own create and Esc win; nothing runs under a foreign dialog', async () => {
+    await mount('/contactos')
+    await settle()
+    const create = vi.fn()
+    const close = vi.fn()
+    const remove = registerPageKeys({ keys: { create, close } })
+    press({ key: 'c' })
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(router.currentRoute.value.fullPath).toBe('/contactos')
+    press({ key: 'Escape' })
+    expect(close).toHaveBeenCalledTimes(1)
+    const dialog = document.createElement('div')
+    dialog.setAttribute('aria-modal', 'true')
+    document.body.append(dialog)
+    press({ key: 'Escape' })
+    press({ key: 'c' })
+    expect(close).toHaveBeenCalledTimes(1)
+    expect(create).toHaveBeenCalledTimes(1)
+    dialog.remove()
+    remove()
   })
 })

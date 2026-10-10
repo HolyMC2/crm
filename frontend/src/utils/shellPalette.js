@@ -4,6 +4,7 @@ import { call } from 'frappe-ui'
 import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
+import { createTargets } from '@/utils/shellCreate'
 // Manual de la tienda: one self-contained provider (articles, categories, «Nuevo artículo»).
 import { createManualProvider } from '@/utils/manualPalette'
 
@@ -123,41 +124,15 @@ export function createShellProviders({ boot, modules }) {
     scopes: ['actions'],
     async search(query) {
       const items = []
-      if (can(boot.value, 'contactos', 'create'))
+      for (const target of createTargets(boot.value))
         items.push({
-          id: 'contactos.create',
+          id: target.id,
           group: 'acciones',
-          title: query.text
-            ? __('New contact «{0}»', [query.text])
-            : __('New contact'),
-          icon: 'lucide-user-plus',
-          href: '/contactos?create=1',
+          title: target.title(query.text),
+          ...(target.keywords ? { keywords: target.keywords } : {}),
+          icon: target.icon,
+          href: target.href,
           shortcut: 'c',
-        })
-      if (can(boot.value, 'compras', 'create'))
-        items.push({
-          id: 'compras.create',
-          group: 'acciones',
-          title: __('New purchase'),
-          icon: 'lucide-shopping-cart',
-          href: '/compras/nueva',
-        })
-      if (can(boot.value, 'gastos', 'claim'))
-        items.push({
-          id: 'gastos.claim',
-          group: 'acciones',
-          title: __('File an expense'),
-          keywords: 'gasto ticket reembolso registrar expense receipt',
-          icon: 'lucide-receipt',
-          href: '/gastos?segment=empleados&chip=mios&nuevo=1',
-        })
-      if (can(boot.value, 'garantias', 'create'))
-        items.push({
-          id: 'garantias.create',
-          group: 'acciones',
-          title: __('New warranty case'),
-          icon: 'lucide-shield-check',
-          href: '/garantias?create=1',
         })
       if (installedSiblings().some((app) => app.key === 'scan'))
         items.push({

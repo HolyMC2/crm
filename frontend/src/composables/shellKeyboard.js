@@ -17,13 +17,15 @@ import {
   format,
   formatCombo,
   isTypingTarget,
+  normalizeCombo,
 } from '@/vendor/muelle-shell/contracts'
 
 // Global shell shortcuts from the shared keymap (Muelle keyboard standard, see
 // the shell-contracts README): ⌘K / Ctrl+K «Buscar o ir a…», ⌘G / Ctrl+G
 // «Buscar registros», Alt+H (and `?` outside fields) the cheat sheet, `g` +
-// letter goes to a module. Pages keep their own list/form keys and declare them
-// with registerPageShortcuts() so the sheet lists only keys that work.
+// letter goes to a module, `c` creates in this module, `[` the rail, Esc the
+// page's top layer. Pages answer their list/form keys through registerPageKeys()
+// (usually via useListKeys/useFormKeys), so the sheet lists only keys that work.
 
 export const appleKeys = /Mac|iPhone|iPad/.test(
   (typeof navigator !== 'undefined' &&
@@ -95,24 +97,63 @@ export function searchEntryHint(apple = appleKeys) {
 const pages = shallowRef([])
 let nextId = 0
 
+// KEYMAP rows a page may answer: the list/form keys, plus `create` (its own
+// create beats the shell's module target) and `close` (Esc closes its panel).
+const PAGE_IDS = new Set(
+  KEYMAP.filter((s) => s.context !== 'global')
+    .map((s) => s.id)
+    .concat(['create', 'close']),
+)
+
 /**
- * A page declares the keys it implements: `context` ('list' | 'form', or an
- * array; null for neither) turns on that context's KEYMAP rows, and `extra`
- * (Shortcut[], or a getter for keys that depend on state) adds the page's own
- * keys to «En esta página». Called in setup, it lasts until the page unmounts;
- * it also returns the function that removes it.
+ * A page declares the keys it answers, and the shell's one keyboard listener
+ * calls them (contracts matcher: same typing rules, same `g` sequences).
+ * - `keys`: KEYMAP id → handler(event), or a getter of that map. Only these rows of the list/form
+ *   contexts appear in «En esta página», so the sheet lists exactly what works.
+ *   A handler returns `false` when it did nothing (the key then keeps its
+ *   native meaning).
+ * - `extra`: the page's own keys (Shortcut[] with `run(event)`, or a getter
+ *   for keys that depend on state); `aliases` match without being listed. A
+ *   page key claiming a global key (Agenda's «c») replaces that global row.
+ * - `root`: element (or ref) of the page's area; when the focus is inside it,
+ *   this page answers before the others.
+ * - `enabled`: getter; while false the page answers nothing (its own form open).
+ * Called in setup, it lasts until the component unmounts; it also returns the
+ * function that removes it.
  */
-export function registerPageShortcuts(context, extra = []) {
-  const contexts = [context]
-    .flat()
-    .filter((value) => value && value !== 'global')
-  const fallback = contexts[0] || 'global'
+export function registerPageKeys({
+  keys = {},
+  extra = [],
+  root = null,
+  enabled = null,
+} = {}) {
+  // `keys` may be a getter: a record whose edit right arrives later lists «e»
+  // from then on.
+  const handlers = () => {
+    const own = {}
+    const map = typeof keys === 'function' ? keys() : unref(keys) || {}
+    for (const [id, handler] of Object.entries(map))
+      if (typeof handler === 'function' && PAGE_IDS.has(id)) own[id] = handler
+    return own
+  }
   const entry = {
     id: ++nextId,
-    contexts,
+    contexts: () => {
+      const own = handlers()
+      return [
+        ...new Set(
+          KEYMAP.filter((s) => own[s.id] && s.context !== 'global').map(
+            (s) => s.context,
+          ),
+        ),
+      ]
+    },
+    handlers,
+    root,
+    enabled: () => (typeof enabled === 'function' ? enabled() : true) !== false,
     extra: () =>
-      (typeof extra === 'function' ? extra() : unref(extra) || []).map(
-        (shortcut) => ({ context: fallback, ...shortcut }),
+      (typeof extra === 'function' ? extra() : unref(extra) || []).filter(
+        Boolean,
       ),
   }
   pages.value = [...pages.value, entry]
@@ -123,15 +164,56 @@ export function registerPageShortcuts(context, extra = []) {
   return remove
 }
 
-/** What the mounted pages declared: their contexts and their own keys. */
-export const pageShortcuts = computed(() => ({
-  contexts: [...new Set(pages.value.flatMap((page) => page.contexts))],
-  extra: pages.value.flatMap((page) => page.extra()),
-}))
+/**
+ * Keys a page lists and answers itself, Agenda's t/d/w/m/l (H3a API, kept):
+ * `extra` as in registerPageKeys. `context` is ignored: the list/form rows now
+ * appear only for the keys a page answers (registerPageKeys `keys`).
+ */
+export function registerPageShortcuts(context, extra = []) {
+  return registerPageKeys({ extra })
+}
 
-// Global keys the shell itself answers; `create` has no shell action yet, so
-// the sheet leaves it out. `[` shows or hides the app names in the desktop
-// rail. Go-to keys count only for the modules this worker has.
+const rootOf = (page) => {
+  const el = unref(page.root)
+  return el?.$el ?? el ?? null
+}
+
+/** Mounted, enabled pages; the one holding the focus first, then in mount order. */
+function activePages(focused = null) {
+  const live = pages.value.filter((page) => page.enabled())
+  if (!focused) return live
+  const inside = live.filter((page) => rootOf(page)?.contains?.(focused))
+  return [...inside, ...live.filter((page) => !inside.includes(page))]
+}
+
+/** What the mounted pages declared: contexts, answered ids and their own keys. */
+export const pageShortcuts = computed(() => {
+  const live = activePages()
+  return {
+    contexts: [...new Set(live.flatMap((page) => page.contexts()))],
+    ids: [...new Set(live.flatMap((page) => Object.keys(page.handlers())))],
+    extra: live.flatMap((page) =>
+      // The sheet gets the declaration only, not the page's run/aliases.
+      page.extra().map((shortcut) => ({
+        context: 'global',
+        id: shortcut.id,
+        keys: shortcut.keys,
+        description: shortcut.description,
+        ...(shortcut.context ? { context: shortcut.context } : {}),
+        ...(shortcut.module ? { module: shortcut.module } : {}),
+      })),
+    ),
+  }
+})
+
+// --- shell-level keys: create in this module ---------------------------------
+
+/** Set by the shell: the current module's create action (the palette's), or null. */
+export const shellCreate = shallowRef(null)
+
+// Global keys the shell itself answers. Go-to keys count only for the
+// modules this worker has; `create` only where this module (or the page) has
+// a create action. `[` shows or hides the app names in the desktop rail.
 const SHELL_GLOBAL_IDS = new Set([
   'help',
   'palette',
@@ -140,26 +222,34 @@ const SHELL_GLOBAL_IDS = new Set([
   'sidebar',
 ])
 
-/** KEYMAP reduced to the keys that work here (list/form rows need a page). */
-export function shellKeymap(modules = []) {
+/** KEYMAP reduced to the keys that work here. */
+export function shellKeymap(
+  modules = [],
+  page = { ids: [], extra: [] },
+  shell = { create: Boolean(shellCreate.value) },
+) {
   const reachable = new Set(modules.map((module) => module.key))
-  return KEYMAP.filter((shortcut) =>
-    shortcut.context !== 'global'
-      ? true
-      : shortcut.module
-        ? reachable.has(shortcut.module)
-        : SHELL_GLOBAL_IDS.has(shortcut.id),
-  )
+  const answered = new Set(page.ids || [])
+  // A page's own key for a global combo («c» = «Nuevo evento») replaces it.
+  const claimed = new Set((page.extra || []).flatMap((s) => s.keys))
+  return KEYMAP.filter((shortcut) => {
+    if (shortcut.context !== 'global') return answered.has(shortcut.id)
+    if (shortcut.module) return reachable.has(shortcut.module)
+    if (shortcut.keys.every((key) => claimed.has(key))) return false
+    if (shortcut.id === 'create') return answered.has('create') || shell.create
+    return SHELL_GLOBAL_IDS.has(shortcut.id)
+  })
 }
 
 /** The Alt+H sheet sections for the current page (contracts `cheatSheet()`). */
 export function shellCheatSheet({
   modules = [],
   page = pageShortcuts.value,
+  shell,
   apple = appleKeys,
   t = shellT,
 } = {}) {
-  return cheatSheet(shellKeymap(modules), {
+  return cheatSheet(shellKeymap(modules, page, shell), {
     contexts: page.contexts,
     extra: page.extra,
     apple,
@@ -281,6 +371,28 @@ export function useShellLayer(root, { open = () => true, onKeydown } = {}) {
   onBeforeUnmount(stop)
 }
 
+/** The page key (extra) an event presses: bare keys only, never while typing. */
+function pageKeyFor(event, live, apple) {
+  const combo = normalizeCombo(event, apple)
+  for (const page of live)
+    for (const shortcut of page.extra())
+      if (
+        typeof shortcut.run === 'function' &&
+        [...shortcut.keys, ...(shortcut.aliases || [])].includes(combo)
+      )
+        return shortcut
+  return null
+}
+
+/** Run `id` on the first page that answers it; true when one did. */
+function runPageKey(id, event, live) {
+  for (const page of live) {
+    const handler = page.handlers()[id]
+    if (handler && handler(event) !== false) return true
+  }
+  return false
+}
+
 export function useShellKeyboard({
   openPalette,
   openHelp,
@@ -291,14 +403,20 @@ export function useShellKeyboard({
   const matcher = createShortcutMatcher()
   function onKeydown(event) {
     if (event.defaultPrevented) return
+    const typing = isTypingTarget(event.target)
+    const live = activePages(
+      typeof document !== 'undefined' ? document.activeElement : null,
+    )
     const hit = matcher.match(event, {
       apple: appleKeys,
-      typing: isTypingTarget(event.target),
+      typing,
+      contexts: [...new Set(live.flatMap((page) => page.contexts()))],
     })
     const modals = [...document.querySelectorAll('[aria-modal="true"]')]
-    if (modals.length && event.key !== 'Escape') {
-      // A dialog or sheet owns the keyboard, except the search keys, and help
-      // while only the shell's own layers (palette, sheet) are open.
+    if (modals.length) {
+      // A dialog or sheet owns the keyboard (Esc included: it closes itself),
+      // except the search keys, and help while only the shell's own layers
+      // (palette, sheet) are open.
       const own = modals.every((modal) => modal.matches(SHELL_LAYER))
       const passes =
         hit &&
@@ -306,6 +424,14 @@ export function useShellKeyboard({
           hit.id === 'records' ||
           (hit.id === 'help' && own))
       if (!passes) return
+    }
+    // The page's own keys (Agenda t/d/w…), unless they finish a `g` sequence.
+    if (!typing && !hit?.module) {
+      const own = pageKeyFor(event, live, appleKeys)
+      if (own) {
+        if (own.run(event) !== false) event.preventDefault()
+        return
+      }
     }
     if (!hit) return
     if (hit.id === 'palette' || hit.id === 'records') {
@@ -322,6 +448,11 @@ export function useShellKeyboard({
       if (!module) return
       event.preventDefault()
       router.push(module.to)
+    } else if (runPageKey(hit.id, event, live)) {
+      event.preventDefault()
+    } else if (hit.id === 'create' && shellCreate.value) {
+      event.preventDefault()
+      shellCreate.value.run()
     }
   }
   onMounted(() => window.addEventListener('keydown', onKeydown))
