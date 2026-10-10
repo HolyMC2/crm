@@ -118,6 +118,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Garantías. Comparte la solicitud y reintenta después del ajuste.',
   },
+  equipo: {
+    reason:
+      'Equipo es para el dueño y los encargados. Tus turnos, tu asistencia y tus vacaciones están en Asistencia.',
+    request:
+      'Necesito abrir Equipo en Muelle: mi puesto debe ser Dueño o Encargado. Quiero retomar la persona que intentaba abrir.',
+    missing:
+      'Tu puesto todavía no es Dueño ni Encargado. Comparte la solicitud y reintenta después del ajuste.',
+  },
   hoy: {
     reason:
       'Hoy es la página de inicio de las cuentas del equipo. Tu usuario todavía no es una cuenta del equipo activa.',

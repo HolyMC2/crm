@@ -20025,3 +20025,396 @@ msgstr "Por cobrar"
 msgctxt "Resultados"
 msgid "Repairs"
 msgstr "Reparaciones"
+#: frontend/src/pages/Equipo.vue
+msgid "Equipo is not available"
+msgstr "Equipo no está disponible"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Open Asistencia"
+msgstr "Abrir Asistencia"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Statutory vacations"
+msgstr "Vacaciones de ley"
+
+#: frontend/src/pages/Equipo.vue
+msgctxt "Equipo"
+msgid "Add a person"
+msgstr "Dar de alta"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Shifts, attendance and vacations need the staff module (HRMS), which this system does not have."
+msgstr "Turnos, asistencia y vacaciones necesitan el módulo de personal (HRMS), que este sistema no tiene."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Ask to turn it on"
+msgstr "Pedir que lo activen"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Continue with people and puestos"
+msgstr "Seguir con altas y puestos"
+
+#: frontend/src/pages/Equipo.vue
+msgctxt "Equipo"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/pages/Equipo.vue
+msgctxt "Equipo"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Loading the team…"
+msgstr "Cargando el equipo…"
+
+#: frontend/src/pages/Equipo.vue
+msgctxt "Equipo"
+msgid "See everyone"
+msgstr "Ver a todo el equipo"
+
+#: frontend/src/pages/Equipo.vue
+msgctxt "Equipo"
+msgid "Suspended"
+msgstr "Suspendido"
+
+#: frontend/src/pages/Equipo.vue
+msgid "No employee record"
+msgstr "Sin ficha de empleado"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Assign shift"
+msgstr "Asignar turno"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Equipo is for the owner and managers. Your shifts and vacations are in Asistencia."
+msgstr "Equipo es para el dueño y los encargados. Tus turnos y tus vacaciones están en Asistencia."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Who has a shift today and whether they have arrived."
+msgstr "Quién tiene turno hoy y si ya llegó."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Vacation requests you decide, earliest first."
+msgstr "Solicitudes de vacaciones que te toca decidir, las más próximas primero."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Active people without a shift this week."
+msgstr "Personas activas sin turno esta semana."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Everyone who works here, with their puesto."
+msgstr "Todas las personas que trabajan aquí, con su puesto."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Nobody has a shift today"
+msgstr "Nadie tiene turno hoy"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Nothing to review"
+msgstr "Nada por revisar"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Everyone has a schedule"
+msgstr "Todos tienen horario"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Nobody here yet"
+msgstr "Todavía no hay nadie"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Assign shifts from a person, or check «No schedule»."
+msgstr "Asigna turnos desde la persona o revisa «Sin horario»."
+
+#: frontend/src/pages/Equipo.vue
+msgid "When someone asks for vacations in Asistencia, it shows up here."
+msgstr "Cuando alguien pida vacaciones en Asistencia, aparece aquí."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Every active person has a shift or a rotation this week."
+msgstr "Cada persona activa tiene turno o rotación esta semana."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Add the first person of the team to start."
+msgstr "Da de alta a la primera persona del equipo para empezar."
+
+#: frontend/src/pages/Equipo.vue
+msgid "In at {0}"
+msgstr "Entró a las {0}"
+
+#: frontend/src/pages/Equipo.vue
+msgid "{0} days"
+msgstr "{0} días"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Person added. They appear in the team list."
+msgstr "Persona dada de alta. Ya aparece en el equipo."
+
+#: frontend/src/pages/Equipo.vue
+msgid "Shift assigned to {0}."
+msgstr "Turno asignado a {0}."
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Back to Equipo"
+msgstr "Volver a Equipo"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Loading person…"
+msgstr "Cargando persona…"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "No access"
+msgstr "Sin acceso"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Access and puesto"
+msgstr "Acceso y puesto"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Open in Asistencia"
+msgstr "Abrir en Asistencia"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Vacation request: {0}"
+msgstr "Solicitud de vacaciones: {0}"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Approve"
+msgstr "Aprobar"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Reject"
+msgstr "Rechazar"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Why it is not approved (they will see it)"
+msgstr "Por qué no se aprueba (lo va a ver)"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Reject request"
+msgstr "Rechazar solicitud"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "Vacations"
+msgstr "Vacaciones"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "No vacation days assigned for this year."
+msgstr "No tiene días de vacaciones asignados este año."
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "{0} years of service · next anniversary {1}: {2} days"
+msgstr "{0} años de antigüedad · próximo aniversario {1}: {2} días"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "{0} days carried from last year, until {1}"
+msgstr "{0} días que pasaron del año anterior, hasta el {1}"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Assign statutory days"
+msgstr "Asignar días de ley"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Choose which leave type counts as vacation in Statutory vacations."
+msgstr "Elige en Vacaciones de ley qué tipo de permiso cuenta como vacaciones."
+
+#: frontend/src/pages/EquipoPersona.vue
+msgctxt "Equipo"
+msgid "This week"
+msgstr "Esta semana"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "Vacation requests"
+msgstr "Solicitudes de vacaciones"
+
+#: frontend/src/pages/EquipoPersona.vue
+msgid "No vacation requests yet. They ask from Asistencia."
+msgstr "Todavía no hay solicitudes de vacaciones. Se piden en Asistencia."
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Vacation days by law for each year of service ({0}). Each person gets this year’s days; nothing is assigned backwards."
+msgstr "Días de vacaciones de ley por cada año de antigüedad ({0}). Cada persona recibe los días de este año; no se asigna nada hacia atrás."
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgctxt "Equipo"
+msgid "Loading…"
+msgstr "Cargando…"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgctxt "Equipo"
+msgid "Company"
+msgstr "Empresa"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Paid leave type used for vacations"
+msgstr "Tipo de permiso con goce de sueldo para vacaciones"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Save leave type"
+msgstr "Guardar tipo de permiso"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Assign the new days automatically on each anniversary"
+msgstr "Asignar los días nuevos automáticamente en cada aniversario"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Unused days carry over and expire this many days after their year starts"
+msgstr "Los días sin tomar pasan al año siguiente y vencen estos días después de que empieza su año"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "We suggest {0} days (six months to take them plus one year). Confirm it with your accountant."
+msgstr "Sugerimos {0} días (seis meses para tomarlos más un año). Confírmalo con tu contador."
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgctxt "Equipo"
+msgid "Save"
+msgstr "Guardar"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Who gets days this year"
+msgstr "Quién recibe días este año"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Assign ({0})"
+msgstr "Asignar ({0})"
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "No active people in this company."
+msgstr "No hay personas activas en esta empresa."
+
+#: frontend/src/pages/EquipoVacaciones.vue
+msgid "Add start date"
+msgstr "Agregar fecha de ingreso"
+
+#: frontend/src/composables/useEquipo.js
+msgid "{0} days left · until {1}"
+msgstr "Le quedan {0} días · vencen el {1}"
+
+#: crm/api/equipo.py
+msgid "Equipo is not installed. Ask your manager to check the app."
+msgstr "Equipo no está instalado. Pide al encargado que revise la app."
+
+#: crm/api/shell.py
+msgid "Equipo is for the owner and managers of the shop."
+msgstr "Equipo es para el dueño y los encargados del negocio."
+
+#: frontend/src/components/shell/MuelleShell.vue
+msgid "I need access to Equipo: my puesto must be Dueño or Encargado so I can follow the team, its shifts and vacations."
+msgstr "Necesito acceso a Equipo: mi puesto debe ser Dueño o Encargado para seguir al equipo, sus turnos y sus vacaciones."
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Working today"
+msgstr "Hoy trabajan"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "To review"
+msgstr "Por revisar"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "No schedule"
+msgstr "Sin horario"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Everyone"
+msgstr "Todo el equipo"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "In"
+msgstr "Dentro"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Late"
+msgstr "Retardo"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Not in yet"
+msgstr "Sin entrada"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Expected"
+msgstr "Por llegar"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Left"
+msgstr "Ya salió"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Away with leave"
+msgstr "Ausente con permiso"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Works"
+msgstr "Trabaja"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Day off"
+msgstr "Descansa"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Ready"
+msgstr "Lista"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Assigned"
+msgstr "Asignado"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Assigned by hand"
+msgstr "Asignado a mano"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Other policy"
+msgstr "Otra política"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "First year"
+msgstr "Primer año"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "No start date"
+msgstr "Sin fecha de ingreso"
+
+#: frontend/src/composables/useEquipo.js
+msgctxt "Equipo"
+msgid "Not accepted"
+msgstr "No aceptado"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Your user permission limited to your own employee record will be removed. Continue?"
+msgstr "Se quitará el permiso de usuario que te limita a tu propia ficha de empleado. ¿Continuar?"
+
+#: frontend/src/pages/Equipo.vue
+msgid "Yes, remove the limit"
+msgstr "Sí, quitar el límite"

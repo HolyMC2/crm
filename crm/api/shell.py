@@ -267,6 +267,32 @@ def _resultados():
 	}
 
 
+def _equipo():
+	from crm.api.equipo import get_capabilities
+
+	answer = get_capabilities() or {}
+	capabilities = answer.get("capabilities") or {}
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "equipo",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Equipo is for the owner and managers of the shop."),
+		"capabilities": {
+			"read": enabled,
+			"hr": enabled and bool(capabilities.get("hr")),
+			"create": enabled and bool(capabilities.get("hire")),
+			"configure": enabled and bool(capabilities.get("configure")),
+		}
+		if enabled
+		else {},
+		# Without HRMS the module stays on; this says why its HR queues are absent.
+		"hr_reason": answer.get("hr_reason") if enabled else None,
+		"badge": answer.get("badge") if enabled else None,
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -383,6 +409,7 @@ def _hosted():
 		"resultados": _resultados,
 		"garantias": _garantias,
 		"encuestas": _encuestas,
+		"equipo": _equipo,
 		"archivos": _archivos,
 		"avisos": _avisos,
 	}
@@ -418,6 +445,7 @@ def _providers():
 		_resultados,
 		_garantias,
 		_encuestas,
+		_equipo,
 		_avisos,
 		_archivos,
 	]

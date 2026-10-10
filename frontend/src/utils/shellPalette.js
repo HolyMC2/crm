@@ -68,6 +68,12 @@ const RESULTADOS_PLACES = [
   ['', 'Mes'],
   ['periodo=mes&compara=anio', 'Mes vs año pasado'],
 ]
+const EQUIPO_PLACES = [
+  ['hoy', 'Hoy trabajan'],
+  ['por-revisar', 'Por revisar'],
+  ['sin-horario', 'Sin horario'],
+  ['todos', 'Todo el equipo'],
+]
 const ARCHIVOS_PLACES = [
   ['', 'Por clasificar'],
   ['ayuda', 'Requieren ayuda'],
@@ -251,6 +257,16 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-smile',
             href: `/encuestas?view=${view}`,
           })
+      if (moduleEnabled(boot.value, 'equipo'))
+        for (const [segment, label] of EQUIPO_PLACES)
+          if (segment === 'todos' || can(boot.value, 'equipo', 'hr'))
+            items.push({
+              id: `equipo.${segment}`,
+              group: 'ir_a',
+              title: `Equipo › ${label}`,
+              icon: 'lucide-id-card',
+              href: `/equipo?segment=${segment}`,
+            })
       if (moduleEnabled(boot.value, 'archivos'))
         for (const [view, label] of ARCHIVOS_PLACES)
           items.push({

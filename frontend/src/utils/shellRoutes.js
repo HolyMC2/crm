@@ -75,6 +75,7 @@ const RECOVERY_MODULES = {
   garantias: 'garantias',
   productos: 'productos',
   encuestas: 'encuestas',
+  equipo: 'equipo',
   contactos: 'contactos',
   contacts: 'contactos',
   organizations: 'contactos',

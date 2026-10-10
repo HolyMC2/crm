@@ -73,6 +73,7 @@ const HOSTED = [
   'productos',
   'garantias',
   'encuestas',
+  'equipo',
   'archivos',
   'avisos',
 ]

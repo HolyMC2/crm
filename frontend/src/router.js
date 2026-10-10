@@ -208,6 +208,25 @@ const routes = [
     meta: { app: 'encuestas', title: 'Encuestas', listParent: 'Encuestas' },
   },
   {
+    path: '/equipo',
+    name: 'Equipo',
+    component: () => import('@/pages/Equipo.vue'),
+    meta: { app: 'equipo', title: 'Equipo', stableKey: true },
+  },
+  {
+    path: '/equipo/persona/:employee',
+    name: 'EquipoPersona',
+    component: () => import('@/pages/EquipoPersona.vue'),
+    props: true,
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
+    path: '/equipo/vacaciones',
+    name: 'EquipoVacaciones',
+    component: () => import('@/pages/EquipoVacaciones.vue'),
+    meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
+  },
+  {
     path: '/archivos',
     name: 'Archivos',
     component: () => import('@/pages/Archivos.vue'),

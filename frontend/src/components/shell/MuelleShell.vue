@@ -279,17 +279,21 @@ async function copyRequest() {
                     ? __(
                         'I need access to Garantías: read permission for Warranty Claim in my company so I can follow warranty and return cases.',
                       )
-                    : activeKey.value === 'archivos'
+                    : activeKey.value === 'equipo'
                       ? __(
-                          'I need access to Archivos in Muelle (documents of my company) to receive and classify receipts.',
+                          'I need access to Equipo: my puesto must be Dueño or Encargado so I can follow the team, its shifts and vacations.',
                         )
-                      : activeKey.value === 'avisos'
+                      : activeKey.value === 'archivos'
                         ? __(
-                            'I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change.',
+                            'I need access to Archivos in Muelle (documents of my company) to receive and classify receipts.',
                           )
-                        : __(
-                            'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
-                          )
+                        : activeKey.value === 'avisos'
+                          ? __(
+                              'I need my Muelle user to be an active staff (System User) account to see my Avisos; I want to resume them after the change.',
+                            )
+                          : __(
+                              'I need access to Contactos and read permission on the native records to continue. Please check my create/edit permissions if I need to save data.',
+                            )
   try {
     await navigator.clipboard.writeText(text)
     copied.value = __('Request copied. Share it with your manager.')

@@ -628,6 +628,53 @@ class TestShellBoot(TestCase):
 		self.assertFalse(data["modules"]["encuestas"]["enabled"])
 		self.assertTrue(data["modules"]["encuestas"]["reason"])
 		self.assertEqual(data["modules"]["encuestas"]["capabilities"], {})
+
+	def _skip_without_equipo(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Equipo (doco) is not installed")
+		try:
+			import doco.erp_experience.equipo_team
+		except ImportError:
+			self.skipTest("This doco has no Equipo queues")
+
+	def test_equipo_provider_reports_team_access(self):
+		self._skip_without_equipo()
+		equipo = shell.boot()["modules"]["equipo"]
+		self.assertTrue(equipo["enabled"])
+		self.assertIsNone(equipo["reason"])
+		self.assertTrue(equipo["capabilities"]["read"])
+
+	def test_equipo_refusal_carries_its_own_reason_and_leaves_ventas(self):
+		self._skip_without_equipo()
+		answer = {"enabled": False, "reason": "Solo dueño y encargados", "capabilities": {}}
+		with patch("doco.erp_experience.equipo_team.shell_module", return_value=answer):
+			data = shell.boot()
+		equipo = data["modules"]["equipo"]
+		self.assertFalse(equipo["enabled"])
+		self.assertEqual(equipo["reason"], "Solo dueño y encargados")
+		self.assertEqual(equipo["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_equipo_without_hrms_stays_on_and_says_why(self):
+		self._skip_without_equipo()
+		answer = {
+			"enabled": True,
+			"reason": None,
+			"capabilities": {"read": True, "hr": False, "hire": False, "configure": False},
+			"hr_reason": "Sin módulo de personal",
+		}
+		with patch("doco.erp_experience.equipo_team.shell_module", return_value=answer):
+			equipo = shell.boot()["modules"]["equipo"]
+		self.assertTrue(equipo["enabled"])
+		self.assertFalse(equipo["capabilities"]["hr"])
+		self.assertEqual(equipo["hr_reason"], "Sin módulo de personal")
+
+	def test_older_doco_without_equipo_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.erp_experience.equipo_team": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["equipo"]["enabled"])
+		self.assertTrue(data["modules"]["equipo"]["reason"])
+		self.assertEqual(data["modules"]["equipo"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
 	def test_guest_cannot_boot(self):
