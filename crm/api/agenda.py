@@ -54,6 +54,24 @@ def get_capabilities() -> dict:
 		"user": frappe.session.user,
 		"user_time_zone": frappe.db.get_value("User", frappe.session.user, "time_zone") or "",
 		"sources": rows,
+		"citas": _citas(),
+	}
+
+
+def _citas() -> dict:
+	"""Citas en línea (doco.citas): the «Citas» calendar, «New appointment» and the owner's settings."""
+	try:
+		from doco.citas import schema
+		from doco.citas.service import problems_cached
+	except ImportError:
+		return {"available": False}
+	if not schema.installed() or not frappe.has_permission(schema.DOCTYPE, "read"):
+		return {"available": False}
+	return {
+		"available": True,
+		"ready": not problems_cached(),
+		"canBook": bool(frappe.has_permission(schema.DOCTYPE, "create")),
+		"canSetUp": bool(frappe.has_permission(schema.SETTINGS, "write")),
 	}
 
 
