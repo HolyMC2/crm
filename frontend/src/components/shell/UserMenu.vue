@@ -62,6 +62,23 @@
         </div>
         <div class="border-t border-outline-gray-1 py-1">
           <button
+            role="menuitem"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm hover:bg-surface-gray-2"
+            data-testid="menu-shortcuts"
+            :aria-keyshortcuts="ariaKeys('alt+h')"
+            @click="showShortcuts"
+          >
+            <span
+              class="lucide-keyboard size-4 text-ink-gray-6"
+              aria-hidden="true"
+            />
+            <span class="flex-1">{{ __('Keyboard shortcuts') }}</span>
+            <kbd
+              class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
+              >{{ keyLabel('alt+h') }}</kbd
+            >
+          </button>
+          <button
             v-if="ventas"
             role="menuitem"
             class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm hover:bg-surface-gray-2"
@@ -119,6 +136,11 @@ import { sessionStore } from '@/stores/session'
 import { openSalesSettings, shellBoot } from '@/composables/muelleShell'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
+import {
+  ariaKeys,
+  keyLabel,
+  openShortcutSheet,
+} from '@/composables/shellKeyboard'
 
 defineProps({ ventas: Boolean })
 const router = useRouter()
@@ -140,6 +162,11 @@ function close() {
 function openSettings() {
   open.value = false
   openSalesSettings(router)
+}
+// Esc in the sheet returns to the account button, the menu is gone by then.
+function showShortcuts() {
+  open.value = false
+  openShortcutSheet(trigger.value)
 }
 function install() {
   open.value = false

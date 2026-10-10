@@ -178,9 +178,25 @@
           {{ __('Help') }}
         </button>
         <button
-          v-if="ventas"
           class="flex min-h-11 w-full items-center gap-2.5 text-left"
           :class="helpAvailable ? '' : 'mt-2'"
+          data-testid="more-shortcuts"
+          :aria-keyshortcuts="ariaKeys('alt+h')"
+          @click="showShortcuts"
+        >
+          <span
+            class="lucide-keyboard size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="flex-1">{{ __('Keyboard shortcuts') }}</span>
+          <kbd
+            class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
+            >{{ keyLabel('alt+h') }}</kbd
+          >
+        </button>
+        <button
+          v-if="ventas"
+          class="flex min-h-11 w-full items-center gap-2.5 text-left"
           @click="openSettings"
         >
           <span
@@ -235,6 +251,11 @@ import {
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { SIBLING_APPS, moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import {
+  ariaKeys,
+  keyLabel,
+  openShortcutSheet,
+} from '@/composables/shellKeyboard'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -301,6 +322,10 @@ const helpAvailable = typeof window.docoSupport?.openHelp === 'function'
 function openHelp() {
   close()
   window.docoSupport.openHelp()
+}
+function showShortcuts() {
+  close()
+  openShortcutSheet()
 }
 const router = useRouter()
 function openSettings() {

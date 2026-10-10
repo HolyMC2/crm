@@ -11013,6 +11013,85 @@ msgctxt "Command palette hint"
 msgid "close"
 msgstr "cerrar"
 
+# --- keyboard standard: search modes, Alt+H sheet (lane shell-keys-20261010) ---
+
+#: frontend/src/components/shell
+msgid "Search or go to…"
+msgstr "Buscar o ir a…"
+
+#: frontend/src/components/shell
+msgid "Search records"
+msgstr "Buscar registros"
+
+#: frontend/src/components/shell
+msgid "Search records…"
+msgstr "Buscar registros…"
+
+#: frontend/src/components/shell
+msgctxt "Palette mode"
+msgid "All"
+msgstr "Todo"
+
+#: frontend/src/components/shell
+msgid "↑↓ to move · ↵ to open · Esc to close"
+msgstr "↑↓ moverse · ↵ abrir · Esc cerrar"
+
+#: frontend/src/components/shell
+msgid "Show keyboard shortcuts"
+msgstr "Ver los atajos de teclado"
+
+#: frontend/src/components/shell
+msgid "View keyboard shortcuts"
+msgstr "Ver atajos de teclado"
+
+#: frontend/src/components/shell
+msgid "Save or submit the form"
+msgstr "Guardar o enviar el formulario"
+
+#: frontend/src/components/shell
+msgid "Quick shortcuts"
+msgstr "Atajos rápidos"
+
+#: frontend/src/components/shell
+msgid "On this page"
+msgstr "En esta página"
+
+#: frontend/src/components/shell
+msgid "Across {0}"
+msgstr "En todo {0}"
+
+#: frontend/src/components/shell
+msgid "Keyboard shortcut sections"
+msgstr "Secciones de atajos"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Go to today"
+msgstr "Ir a hoy"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Day view"
+msgstr "Vista de día"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Week view"
+msgstr "Vista de semana"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Month view"
+msgstr "Vista de mes"
+
+#: frontend/src/composables/useAgenda.js
+msgid "List view"
+msgstr "Vista de lista"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Next period"
+msgstr "Periodo siguiente"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Previous period"
+msgstr "Periodo anterior"
+
 # --- shop wording for CRM settings, fields and messages (2026-10-06) ---
 
 msgid "Inventory items always appear as CRM products. Turn this on to also send CRM product changes back to inventory."

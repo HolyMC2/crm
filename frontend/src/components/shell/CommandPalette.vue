@@ -1,8 +1,13 @@
 <template>
+  <!-- One search dialog, two modes (Muelle keyboard standard): ⌘K / Ctrl+K
+       «Buscar o ir a…» and ⌘G / Ctrl+G «Buscar registros». The other key or
+       chip switches modes here and keeps the typed text. -->
   <div
     class="fixed inset-0 z-50 flex justify-center sm:items-start sm:pt-[12vh]"
     role="dialog"
     aria-modal="true"
+    data-shell-layer="palette"
+    :data-mode="activeMode"
     :aria-label="__('Command palette')"
     @keydown="onKeydown"
   >
@@ -11,8 +16,33 @@
       class="relative flex h-full w-full flex-col bg-surface-base sm:h-auto sm:max-h-[70vh] sm:w-[640px] sm:rounded-xl sm:shadow-2xl"
     >
       <div
-        class="flex items-center gap-2 border-b border-outline-gray-1 px-4 pt-[env(safe-area-inset-top)]"
+        class="flex items-center gap-1.5 px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:pt-2"
+        role="group"
+        :aria-label="__('Search')"
       >
+        <button
+          v-for="chip in chips"
+          :key="chip.mode"
+          type="button"
+          class="flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm"
+          :class="
+            chip.mode === activeMode
+              ? 'bg-surface-gray-3 font-semibold text-ink-gray-9'
+              : 'text-ink-gray-7 hover:bg-surface-gray-2'
+          "
+          :aria-pressed="chip.mode === activeMode"
+          :aria-keyshortcuts="chip.aria"
+          :data-palette-mode="chip.mode"
+          @click="setMode(chip.mode)"
+        >
+          {{ chip.label }}
+          <kbd
+            class="hidden rounded border border-outline-gray-2 px-1 font-sans text-xs font-normal text-ink-gray-6 sm:inline"
+            >{{ chip.key }}</kbd
+          >
+        </button>
+      </div>
+      <div class="flex items-center gap-2 border-b border-outline-gray-1 px-4">
         <span
           class="lucide-search size-5 flex-none text-ink-gray-6"
           aria-hidden="true"
@@ -24,7 +54,8 @@
           enterkeyhint="search"
           autocomplete="off"
           class="min-h-14 min-w-0 flex-1 border-0 bg-transparent text-base text-ink-gray-9 placeholder-ink-gray-5 focus:ring-0"
-          :placeholder="__('Search people, records, actions…')"
+          :placeholder="placeholder"
+          :aria-label="placeholder"
           role="combobox"
           aria-autocomplete="list"
           :aria-expanded="flat.length > 0"
@@ -81,6 +112,11 @@
                 >{{ item.subtitle }}</span
               >
             </span>
+            <kbd
+              v-if="item.shortcut"
+              class="hidden flex-none rounded border border-outline-gray-2 px-1.5 font-sans text-xs text-ink-gray-6 sm:inline"
+              >{{ keyLabel(item.shortcut) }}</kbd
+            >
           </button>
         </template>
         <p
@@ -98,12 +134,10 @@
         </p>
       </div>
       <div
-        class="hidden gap-4 border-t border-outline-gray-1 px-4 py-2 text-xs text-ink-gray-6 sm:flex"
+        class="hidden border-t border-outline-gray-1 px-4 py-2 text-xs text-ink-gray-6 sm:block"
+        data-testid="palette-footer"
       >
-        <!-- Bare verbs collide with other apps' catalogs («open» → «abierto»). -->
-        <span>↑↓ {{ __('move', null, 'Command palette hint') }}</span
-        ><span>↵ {{ __('open', null, 'Command palette hint') }}</span
-        ><span>esc {{ __('close', null, 'Command palette hint') }}</span>
+        {{ shellT(PALETTE_FOOTER) }}
       </div>
     </div>
   </div>
@@ -113,7 +147,11 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   PALETTE_DEBOUNCE_MS,
+  PALETTE_FOOTER,
   PALETTE_GROUP_LABELS,
+  PALETTE_MODES,
+  PALETTE_MODE_COPY,
+  PALETTE_MODE_KEYS,
   federatedSearch,
   groupPaletteItems,
   parsePaletteQuery,
@@ -130,9 +168,21 @@ import {
   toRecentRef,
 } from '@/utils/shellPalette'
 import { useShellTheme } from '@/composables/shellTheme'
+import {
+  ariaKeys,
+  keyLabel,
+  openShortcutSheet,
+  shellT,
+} from '@/composables/shellKeyboard'
 
-defineProps({ modelValue: Boolean })
-const emit = defineEmits(['update:modelValue'])
+const props = defineProps({
+  modelValue: Boolean,
+  /** 'all' (⌘K «Buscar o ir a…») or 'records' (⌘G «Buscar registros»). */
+  mode: { type: String, default: 'all' },
+  /** Bumped when the open dialog's key is pressed again: refocus the input. */
+  focusKey: { type: Number, default: 0 },
+})
+const emit = defineEmits(['update:modelValue', 'update:mode'])
 const router = useRouter()
 const { setTheme } = useShellTheme()
 const input = ref(null)
@@ -153,21 +203,43 @@ const providers = createShellProviders({
   boot: shellBoot,
   modules: shellModules,
 })
+const activeMode = computed(() =>
+  PALETTE_MODES.includes(props.mode) ? props.mode : 'all',
+)
+// «Todo» carries a context: the catalog's bare «All» is «Todos».
+const chips = computed(() =>
+  PALETTE_MODES.map((value) => ({
+    mode: value,
+    label:
+      value === 'all'
+        ? shellT(PALETTE_MODE_COPY[value].chip, [], 'Palette mode')
+        : shellT(PALETTE_MODE_COPY[value].chip),
+    key: keyLabel(PALETTE_MODE_KEYS[value]),
+    aria: ariaKeys(PALETTE_MODE_KEYS[value]),
+  })),
+)
+const placeholder = computed(() =>
+  shellT(PALETTE_MODE_COPY[activeMode.value].placeholder),
+)
 const query = computed(() => parsePaletteQuery(raw.value))
+// Records mode shows Registros, plus Recientes while the input is empty.
 const sections = computed(() =>
   query.value.kind === 'empty'
-    ? groupPaletteItems([
-        ...states.value,
-        { key: 'recent', label: '', status: 'done', items: recent.value },
-      ])
-    : groupPaletteItems(states.value),
+    ? groupPaletteItems(
+        [
+          ...states.value,
+          { key: 'recent', label: '', status: 'done', items: recent.value },
+        ],
+        activeMode.value,
+      )
+    : groupPaletteItems(states.value, activeMode.value),
 )
 const flat = computed(() => sections.value.flatMap((section) => section.items))
 
 let timer = null
 let controller = null
 watch(
-  raw,
+  [raw, activeMode],
   () => {
     clearTimeout(timer)
     controller?.abort()
@@ -182,7 +254,13 @@ async function run() {
   controller = new AbortController()
   const signal = controller.signal
   searching.value = true
-  await federatedSearch(providersFor(providers, query.value), query.value, {
+  const answering = providersFor(
+    providers,
+    query.value,
+    'contactos',
+    activeMode.value,
+  )
+  await federatedSearch(answering, query.value, {
     signal,
     onUpdate(next) {
       states.value = next
@@ -198,6 +276,13 @@ async function run() {
 function close() {
   emit('update:modelValue', false)
 }
+function focusInput() {
+  nextTick(() => input.value?.focus())
+}
+function setMode(next) {
+  if (next !== activeMode.value) emit('update:mode', next)
+  focusInput()
+}
 function choose(item) {
   if (!item) return
   const reference = toRecentRef(item)
@@ -208,6 +293,8 @@ function choose(item) {
   if (item.action === 'theme') setTheme(item.args?.theme)
   const href = item.href && safeReturn(`/crm${item.href}`, ['/crm/'])
   close()
+  // The sheet returns the focus to whatever had it before the palette opened.
+  if (item.action === 'shortcuts') openShortcutSheet(previousFocus)
   if (href) router.push(href.replace(/^\/crm/, ''))
 }
 function onKeydown(event) {
@@ -226,7 +313,8 @@ function onKeydown(event) {
   }
 }
 const previousFocus = document.activeElement
-onMounted(() => nextTick(() => input.value?.focus()))
+watch(() => props.focusKey, focusInput)
+onMounted(focusInput)
 onBeforeUnmount(() => {
   controller?.abort()
   clearTimeout(timer)

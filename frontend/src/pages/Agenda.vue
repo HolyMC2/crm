@@ -711,6 +711,7 @@ import {
 } from '@/components/agenda/agendaGrid'
 import { useSwipeNav } from '@/components/agenda/agendaSwipe'
 import { isMobile } from '@/composables/breakpoint'
+import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { DENSITIES, useAgendaPrefs } from '@/composables/useAgendaPrefs'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
@@ -724,6 +725,7 @@ import {
   PER_RESOURCE,
   TASKS,
   agendaLocale,
+  agendaShortcuts,
   calendarKey,
   calendarLabel,
   completeTask,
@@ -2341,6 +2343,10 @@ const sidebarHandlers = {
 }
 
 // --- keyboard: never while typing ---------------------------------------------------------
+// The Alt+H sheet lists these under «En esta página»; keep it in step with onKey.
+registerPageShortcuts(null, () =>
+  agendaShortcuts({ canCreate: canCreate.value }),
+)
 function onKey(event) {
   if (
     event.metaKey ||

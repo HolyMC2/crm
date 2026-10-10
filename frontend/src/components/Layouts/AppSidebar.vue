@@ -135,6 +135,22 @@
             </template>
           </SidebarItem>
           <SidebarItem
+            :label="__('Keyboard shortcuts')"
+            data-testid="sidebar-shortcuts"
+            @click="(event) => openShortcutSheet(event?.currentTarget)"
+          >
+            <template #prefix>
+              <KeyboardIcon class="size-4 text-ink-gray-7" />
+            </template>
+            <template #suffix>
+              <kbd
+                v-if="!isCollapsed"
+                class="mr-2 rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
+                >{{ keyLabel('alt+h') }}</kbd
+              >
+            </template>
+          </SidebarItem>
+          <SidebarItem
             :label="isCollapsed ? __('Expand') : __('Collapse')"
             @click="isSidebarCollapsed = !isSidebarCollapsed"
           >
@@ -168,6 +184,7 @@
 
 <script setup>
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
+import KeyboardIcon from '~icons/lucide/keyboard'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import CollapsibleSection from '@/components/CollapsibleSection.vue'
@@ -208,6 +225,7 @@ import { useDemoData } from '@/composables/demoData'
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCrmOnboarding } from '@/composables/onboarding'
+import { keyLabel, openShortcutSheet } from '@/composables/shellKeyboard'
 
 const props = defineProps({
   mobile: { type: Boolean, default: false },
