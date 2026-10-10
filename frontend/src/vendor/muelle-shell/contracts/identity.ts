@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.2.0 (cd63cbd0639f). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.4.0 (72b40436d0d0). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Identity picker contract (spec §8.2, spec-contactos §7). Each SPA renders its
 // own picker UI against `doco.contactos` search/candidates/create; the DTOs are

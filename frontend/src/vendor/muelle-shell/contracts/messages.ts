@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.2.0 (cd63cbd0639f). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.4.0 (72b40436d0d0). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Source strings are English (spec §4.8); workers see the reviewed es-MX
 // catalog. Apps pass their own `__` so their catalogs stay authoritative, and
@@ -50,6 +50,18 @@ export const SHELL_MESSAGES_ES_MX: Readonly<Record<string, string>> = Object.fre
   'Close the top layer': 'Cerrar la capa superior',
   'Show or hide the sidebar': 'Mostrar u ocultar la barra lateral',
   'Keyboard shortcuts': 'Atajos de teclado',
+  // Keyboard standard (0.4.0): universal rows, search dialog modes, cheat sheet.
+  'Show keyboard shortcuts': 'Ver los atajos de teclado',
+  'View keyboard shortcuts': 'Ver atajos de teclado',
+  'Search or go to…': 'Buscar o ir a…',
+  'Search records': 'Buscar registros',
+  'Search records…': 'Buscar registros…',
+  'Save or submit the form': 'Guardar o enviar el formulario',
+  All: 'Todo',
+  '↑↓ to move · ↵ to open · Esc to close': '↑↓ moverse · ↵ abrir · Esc cerrar',
+  'Quick shortcuts': 'Atajos rápidos',
+  'On this page': 'En esta página',
+  'Across {0}': 'En todo {0}',
 })
 
 /** es-MX lookup with English fallback, for tests and for apps without a catalog. */

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.2.0 (cd63cbd0639f). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.4.0 (72b40436d0d0). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Command palette contract (spec §1.4). Providers search independently; one
 // slow or failing provider never blocks another. Clínica and Taller implement
@@ -40,6 +40,45 @@ export interface PaletteItem {
 }
 
 export type PaletteScope = 'all' | 'actions' | 'people' | 'documents' | 'refacciones'
+
+/**
+ * One search dialog, two modes (keyboard standard): ⌘K / Ctrl+K «Buscar o ir a…»
+ * (`all`: actions, records, go to, recent) and ⌘G / Ctrl+G «Buscar registros»
+ * (`records`: people and documents only). Pressing the other key, or clicking
+ * the other chip, switches modes in the open dialog and keeps the typed text.
+ */
+export type PaletteMode = 'all' | 'records'
+
+export const PALETTE_MODES: readonly PaletteMode[] = Object.freeze(['all', 'records'])
+
+/** The key that opens each mode (normalized combos, see `formatCombo` for the chip label). */
+export const PALETTE_MODE_KEYS: Readonly<Record<PaletteMode, string>> = Object.freeze({
+  all: 'mod+k',
+  records: 'mod+g',
+})
+
+/** Scopes a records-mode search reaches. */
+export const PALETTE_RECORD_SCOPES: readonly PaletteScope[] = Object.freeze(['people', 'documents'])
+
+/** Groups each mode shows; the shell adds Recientes to `records` only while the input is empty. */
+export const PALETTE_MODE_GROUPS: Readonly<Record<PaletteMode, readonly PaletteGroup[]>> = Object.freeze({
+  all: PALETTE_GROUPS,
+  records: Object.freeze(['registros', 'recientes'] as PaletteGroup[]),
+})
+
+/** English sources for `__()`; es-MX in SHELL_MESSAGES_ES_MX. */
+export const PALETTE_MODE_COPY: Readonly<Record<PaletteMode, { chip: string; placeholder: string }>> = Object.freeze({
+  all: Object.freeze({ chip: 'All', placeholder: 'Search or go to…' }),
+  records: Object.freeze({ chip: 'Records', placeholder: 'Search records…' }),
+})
+
+/** Footer hint of both modes; es-MX «↑↓ moverse · ↵ abrir · Esc cerrar». */
+export const PALETTE_FOOTER = '↑↓ to move · ↵ to open · Esc to close'
+
+/** The mode a key opens or switches to, or `null` for any other combo. */
+export function paletteModeForCombo(combo: string): PaletteMode | null {
+  return PALETTE_MODES.find((mode) => PALETTE_MODE_KEYS[mode] === combo) ?? null
+}
 
 export interface PaletteProvider {
   key: string
@@ -88,14 +127,23 @@ export function parsePaletteQuery(raw: string): PaletteQuery {
   return { raw, scope, text, kind }
 }
 
-/** Providers that answer a query, in the order their results should appear. */
+/**
+ * Providers that answer a query, in the order their results should appear. In
+ * `records` mode only providers declaring the people or documents scope answer,
+ * and a prefix can narrow that further but never widen it (`>` and `%` find nothing).
+ */
 export function providersFor(
   providers: readonly PaletteProvider[],
   query: PaletteQuery,
   firstForIdentity = 'contactos',
+  mode: PaletteMode = 'all',
 ): PaletteProvider[] {
   // An unprefixed query reaches every provider; a prefix only those declaring its scope.
-  const scoped = query.scope === 'all' ? providers.slice() : providers.filter((p) => p.scopes?.includes(query.scope))
+  let scoped = query.scope === 'all' ? providers.slice() : providers.filter((p) => p.scopes?.includes(query.scope))
+  if (mode === 'records') {
+    const allowed = query.scope === 'all' ? PALETTE_RECORD_SCOPES : PALETTE_RECORD_SCOPES.filter((s) => s === query.scope)
+    scoped = scoped.filter((p) => p.scopes?.some((s) => allowed.includes(s)))
+  }
   if (query.kind !== 'phone' && query.kind !== 'rfc') return scoped
   return scoped.slice().sort((a, b) => Number(b.key === firstForIdentity) - Number(a.key === firstForIdentity))
 }
@@ -163,9 +211,12 @@ export async function federatedSearch(
   return states
 }
 
-/** Flatten provider states into display groups, in group order then provider order. */
-export function groupPaletteItems(states: readonly ProviderState[]): Array<{ group: PaletteGroup; items: PaletteItem[] }> {
-  return PALETTE_GROUPS.map((group) => ({
+/** Flatten provider states into display groups, in group order then provider order; `mode` keeps only its groups. */
+export function groupPaletteItems(
+  states: readonly ProviderState[],
+  mode: PaletteMode = 'all',
+): Array<{ group: PaletteGroup; items: PaletteItem[] }> {
+  return PALETTE_MODE_GROUPS[mode].map((group) => ({
     group,
     items: states.flatMap((s) => s.items.filter((item) => item.group === group)),
   })).filter((g) => g.items.length > 0)

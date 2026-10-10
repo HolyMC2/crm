@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.2.0 (cd63cbd0639f). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.4.0 (72b40436d0d0). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -16,6 +16,7 @@ export type ShellModuleKey =
   | 'gastos'
   | 'productos'
   | 'garantias'
+  | 'equipo'
   | 'avisos'
 
 export type LucideIcon = `lucide-${string}`
@@ -31,7 +32,7 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Productos, Garantías, Archivos; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Productos, Garantías, Equipo, Archivos; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
@@ -43,6 +44,7 @@ export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'gastos', label: 'Gastos', icon: 'lucide-receipt', basePath: '/gastos', go: 'e' },
   { key: 'productos', label: 'Productos', icon: 'lucide-package', basePath: '/productos', go: 'i' },
   { key: 'garantias', label: 'Garantías', icon: 'lucide-shield-check', basePath: '/garantias', go: 'r' },
+  { key: 'equipo', label: 'Equipo', icon: 'lucide-id-card', basePath: '/equipo', go: 'q' },
   { key: 'archivos', label: 'Archivos', icon: 'lucide-folder', basePath: '/archivos', go: 'f' },
   { key: 'avisos', label: 'Avisos', icon: 'lucide-bell', basePath: '/avisos', go: '' },
 ] as const satisfies readonly ShellModuleMeta[])

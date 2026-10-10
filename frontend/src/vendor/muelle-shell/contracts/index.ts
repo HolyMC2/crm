@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.2.0 (cd63cbd0639f). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.4.0 (72b40436d0d0). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 export {
   RETURN_PREFIXES,
@@ -74,6 +74,13 @@ export {
   PALETTE_PER_GROUP,
   PALETTE_RECENT_LIMIT,
   PALETTE_PREFIXES,
+  PALETTE_MODES,
+  PALETTE_MODE_KEYS,
+  PALETTE_MODE_GROUPS,
+  PALETTE_MODE_COPY,
+  PALETTE_RECORD_SCOPES,
+  PALETTE_FOOTER,
+  paletteModeForCombo,
   parsePaletteQuery,
   providersFor,
   federatedSearch,
@@ -82,6 +89,7 @@ export {
   type FederatedSearchOptions,
   type PaletteGroup,
   type PaletteItem,
+  type PaletteMode,
   type PaletteProvider,
   type PaletteQuery,
   type PaletteScope,
@@ -99,16 +107,23 @@ export {
 } from './identity'
 export {
   KEYMAP,
+  UNIVERSAL_SHORTCUT_IDS,
   RESERVED_COMBOS,
   SEQUENCE_TIMEOUT_MS,
   normalizeCombo,
   isTypingTarget,
   createShortcutMatcher,
   formatCombo,
+  cheatSheet,
+  type CheatSheetOptions,
+  type CheatSheetRow,
+  type CheatSheetSection,
+  type CheatSheetSectionId,
   type EditableLike,
   type KeyEventLike,
   type MatchOptions,
   type Shortcut,
   type ShortcutContext,
+  type UniversalShortcutId,
 } from './keyboard'
 export { SHELL_MESSAGES_ES_MX, format, esMx, type Translate } from './messages'
