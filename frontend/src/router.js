@@ -159,6 +159,29 @@ const routes = [
     meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
   },
   {
+    path: '/resultados',
+    name: 'Resultados',
+    component: () => import('@/pages/Resultados.vue'),
+    meta: { app: 'resultados', title: 'Resultados', stableKey: true },
+  },
+  {
+    path: '/resultados/documentos',
+    name: 'ResultadosDocumentos',
+    component: () => import('@/pages/ResultadosDocumentos.vue'),
+    meta: { app: 'resultados', title: 'Resultados', listParent: 'Resultados' },
+  },
+  {
+    path: '/resultados/documento/:doctype/:name',
+    name: 'ResultadosDocumento',
+    component: () => import('@/pages/ResultadosDocumento.vue'),
+    props: true,
+    meta: {
+      app: 'resultados',
+      title: 'Resultados',
+      listParent: 'ResultadosDocumentos',
+    },
+  },
+  {
     path: '/garantias',
     name: 'Garantias',
     component: () => import('@/pages/Garantias.vue'),

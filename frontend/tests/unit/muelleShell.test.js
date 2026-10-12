@@ -215,6 +215,7 @@ describe('module registry', () => {
       'cobranza',
       'compras',
       'gastos',
+      'resultados',
       'productos',
       'garantias',
       'encuestas',

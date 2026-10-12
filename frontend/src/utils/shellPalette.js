@@ -62,6 +62,12 @@ const ENCUESTAS_PLACES = [
   ['seguimiento', 'En seguimiento'],
   ['todas', 'Todas las respuestas'],
 ]
+const RESULTADOS_PLACES = [
+  ['periodo=hoy', 'Hoy'],
+  ['periodo=semana', 'Semana'],
+  ['', 'Mes'],
+  ['periodo=mes&compara=anio', 'Mes vs año pasado'],
+]
 const ARCHIVOS_PLACES = [
   ['', 'Por clasificar'],
   ['ayuda', 'Requieren ayuda'],
@@ -217,6 +223,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Productos › ${label}`,
             icon: 'lucide-package',
             href: view === 'todos' ? '/productos' : `/productos?vista=${view}`,
+          })
+      if (moduleEnabled(boot.value, 'resultados'))
+        for (const [query, label] of RESULTADOS_PLACES)
+          items.push({
+            id: `resultados.${query || 'mes'}`,
+            group: 'ir_a',
+            title: `Resultados › ${label}`,
+            icon: 'lucide-chart-column',
+            href: query ? `/resultados?${query}` : '/resultados',
           })
       if (moduleEnabled(boot.value, 'garantias'))
         for (const [segment, label] of GARANTIAS_PLACES)

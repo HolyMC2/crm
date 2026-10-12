@@ -635,6 +635,60 @@ class TestShellBoot(TestCase):
 		with self.assertRaises(frappe.AuthenticationError):
 			shell.boot()
 
+	def _skip_without_resultados(self):
+		apps = frappe.get_installed_apps()
+		if "mercado" not in apps and "taller" not in apps:
+			self.skipTest("Resultados cards come from Mercado or Taller")
+
+	def test_resultados_enabled_when_a_card_is_readable(self):
+		self._skip_without_resultados()
+		module = shell.boot()["modules"]["resultados"]
+		self.assertTrue(module["enabled"])
+		self.assertIsNone(module["reason"])
+		self.assertEqual(module["capabilities"], {"read": True})
+
+	def test_resultados_refused_carries_the_cards_reason(self):
+		from crm.api import resultados
+
+		self._skip_without_resultados()
+		answer = {"enabled": False, "reason": "Pide acceso a las ventas de tu tienda."}
+		with patch.object(resultados, "get_capabilities", return_value=answer):
+			data = shell.boot()
+		module = data["modules"]["resultados"]
+		self.assertFalse(module["enabled"])
+		self.assertEqual(module["reason"], answer["reason"])
+		self.assertEqual(module["capabilities"], {"read": False})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_resultados_absent_without_mercado_and_taller(self):
+		from crm.api import resultados
+
+		with patch.object(resultados, "_providers", return_value=[]):
+			data = shell.boot()
+			landing = shell.first_module()
+		self.assertNotIn("resultados", data["modules"])
+		self.assertNotEqual(landing, "resultados")
+
+	def test_resultados_boot_check_reads_no_numbers(self):
+		from crm.api import resultados
+
+		self._skip_without_resultados()
+		calls = []
+		real = frappe.get_attr
+
+		cards = set(frappe.get_hooks("muelle_resultados_cards") or [])
+
+		def spy(path, *args, **kwargs):
+			fn = real(path, *args, **kwargs)
+			if path not in cards:
+				return fn
+			return lambda ctx: calls.append(ctx) or fn(ctx)
+
+		with patch.object(frappe, "get_attr", side_effect=spy):
+			resultados.get_capabilities()
+		self.assertTrue(calls)
+		self.assertTrue(all(ctx.get("check") for ctx in calls))
+
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
 class TestRecentResolution(TestCase):

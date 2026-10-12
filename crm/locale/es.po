@@ -19813,3 +19813,215 @@ msgstr "No se entregó"
 #: frontend/src/composables/useCobranza.js
 msgid "access to the sales invoices of this company"
 msgstr "acceso a las facturas de venta de esta empresa"
+#. Resultados
+#: frontend/src/pages/Resultados.vue
+msgid "Refreshing"
+msgstr "Actualizando"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Results"
+msgstr "Resultados"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Compare with"
+msgstr "Comparar con"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Company and shop"
+msgstr "Empresa y tienda"
+
+#: frontend/src/pages/Resultados.vue
+msgid "All shops"
+msgstr "Todas las tiendas"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Numbers for the period"
+msgstr "Números del periodo"
+
+#: frontend/src/pages/Resultados.vue
+msgid "No numbers for you here yet"
+msgstr "Todavía no hay números para ti"
+
+#: frontend/src/pages/Resultados.vue
+msgid "The numbers you may see appear here once your manager gives you access."
+msgstr "Los números que puedes ver aparecen aquí cuando tu encargado te da acceso."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Updated {0}"
+msgstr "Actualizado {0}"
+
+#: frontend/src/pages/Resultados.vue
+msgid "{0} · compared with {1}"
+msgstr "{0} · comparado con {1}"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Search customer or document"
+msgstr "Buscar cliente o documento"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Showing the latest 500 documents. Pick a shorter period or one shop to see the rest."
+msgstr "Se muestran los 500 documentos más recientes. Elige un periodo más corto o una tienda para ver el resto."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Nothing in this list"
+msgstr "No hay nada en esta lista"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Try another customer or document number."
+msgstr "Prueba con otro cliente o número de documento."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Pick another period or list."
+msgstr "Elige otro periodo u otra lista."
+
+#: frontend/src/pages/Resultados.vue
+msgid "{0} purchases"
+msgstr "{0} compras"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Sale in Ventas"
+msgstr "Venta en Ventas"
+
+#: frontend/src/pages/Resultados.vue
+msgid "I need access to «{0}» in Muelle Resultados. The screen says: {1}"
+msgstr "Necesito acceso a «{0}» en Resultados de Muelle. La pantalla dice: {1}"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Open the sale in Ventas"
+msgstr "Abrir la venta en Ventas"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Open the customer"
+msgstr "Abrir el cliente"
+
+#: frontend/src/pages/Resultados.vue
+msgid "This is a return of {0}."
+msgstr "Es una devolución de {0}."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Lines"
+msgstr "Partidas"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Cash count"
+msgstr "Conteo de caja"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Expected {0} · counted {1}"
+msgstr "Esperado {0} · contado {1}"
+
+#: frontend/src/pages/Resultados.vue
+msgid "The supervisor reviews and recounts at the register."
+msgstr "El supervisor revisa y vuelve a contar en la caja."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Reprints and returns are made at the register."
+msgstr "Las reimpresiones y devoluciones se hacen en la caja."
+
+#: frontend/src/pages/Resultados.vue
+msgid "See documents"
+msgstr "Ver documentos"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Nothing to show for this period yet."
+msgstr "Todavía no hay nada que mostrar en este periodo."
+
+#: frontend/src/pages/Resultados.vue
+msgid "I need access to Resultados in Muelle: read permission for the sales, cash or repair numbers of my shop."
+msgstr "Necesito acceso a Resultados en Muelle: permiso para ver las ventas, el efectivo o las reparaciones de mi tienda."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Business results"
+msgstr "Resultados del negocio"
+
+#: frontend/src/pages/Resultados.vue
+msgid "You do not have access to this card."
+msgstr "No tienes acceso a esta tarjeta."
+
+#: frontend/src/pages/Resultados.vue
+msgid "We could not load this card. Retry in a moment."
+msgstr "No pudimos cargar esta tarjeta. Reintenta en un momento."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Resultados shows sales, cash and repair numbers to the managers who follow them. Ask your manager for access."
+msgstr "Resultados muestra las ventas, el efectivo y las reparaciones a los encargados que las siguen. Pídele acceso a tu encargado."
+
+#: frontend/src/pages/Resultados.vue
+msgid "These documents are not available on this site. Ask your manager to check the apps."
+msgstr "Estos documentos no están disponibles en este sitio. Pídele a tu encargado que revise las aplicaciones."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Ask your manager for access to the business results, then retry."
+msgstr "Pídele a tu encargado acceso a los resultados del negocio y reintenta."
+
+#: frontend/src/pages/Resultados.vue
+msgid "vs previous period"
+msgstr "vs periodo anterior"
+
+#: frontend/src/pages/Resultados.vue
+msgid "vs last year"
+msgstr "vs año pasado"
+
+#: frontend/src/pages/Resultados.vue
+msgid "No comparison"
+msgstr "Sin comparar"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Today"
+msgstr "Hoy"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "This week"
+msgstr "Semana"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "This month"
+msgstr "Mes"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Sales"
+msgstr "Ventas"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Cancelled"
+msgstr "Canceladas"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Returns"
+msgstr "Devoluciones"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Cash closings"
+msgstr "Cortes de caja"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Customers"
+msgstr "Clientes"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Margin"
+msgstr "Margen"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Cash"
+msgstr "Efectivo"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "To collect"
+msgstr "Por cobrar"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Repairs"
+msgstr "Reparaciones"

@@ -249,6 +249,24 @@ def _encuestas():
 	}
 
 
+def _resultados():
+	# Mercado and Taller own the numbers; without either the module is absent.
+	from crm.api.resultados import get_capabilities
+
+	answer = get_capabilities()
+	if answer is None:
+		return None
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "resultados",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Ask your manager for access to the business results, then retry."),
+		"capabilities": {"read": enabled},
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -362,6 +380,7 @@ def _hosted():
 		"compras": _compras,
 		"gastos": _gastos,
 		"productos": _productos,
+		"resultados": _resultados,
 		"garantias": _garantias,
 		"encuestas": _encuestas,
 		"archivos": _archivos,
@@ -377,7 +396,7 @@ def first_module():
 		if not provider:
 			continue
 		try:
-			if provider().get("enabled"):
+			if (provider() or {}).get("enabled"):
 				return key
 		except frappe.PermissionError:
 			continue
@@ -396,6 +415,7 @@ def _providers():
 		_compras,
 		_gastos,
 		_productos,
+		_resultados,
 		_garantias,
 		_encuestas,
 		_avisos,

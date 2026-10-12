@@ -86,6 +86,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a Gastos. Comparte la solicitud y reintenta después del ajuste.',
   },
+  resultados: {
+    reason:
+      'Resultados muestra las ventas, el efectivo y las reparaciones a quien las sigue (encargados de ventas o de contabilidad, encargado del taller). Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito ver Resultados en Muelle: permiso de lectura de las ventas, cortes de caja o reparaciones de mi tienda. Quiero retomar los números que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Resultados. Comparte la solicitud y reintenta después del ajuste.',
+  },
   contactos: {
     reason:
       'Para abrir Contactos necesitas permiso de lectura de un origen nativo y acceso a su módulo. Pide al encargado que revise tu usuario.',

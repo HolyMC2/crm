@@ -71,6 +71,7 @@ const RECOVERY_MODULES = {
   cobranza: 'cobranza',
   compras: 'compras',
   gastos: 'gastos',
+  resultados: 'resultados',
   garantias: 'garantias',
   productos: 'productos',
   encuestas: 'encuestas',

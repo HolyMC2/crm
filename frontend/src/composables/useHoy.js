@@ -400,6 +400,14 @@ export function accesos(boot) {
     'lucide-shield-check',
     '/garantias?create=1',
   )
+  // The owner's numbers live in Resultados; Hoy itself shows no money.
+  add(
+    'resultados',
+    'read',
+    t('Business results'),
+    'lucide-chart-column',
+    '/resultados',
+  )
   add(
     'cobranza',
     'read',

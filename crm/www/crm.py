@@ -39,6 +39,7 @@ def _gate(path):
 	from crm.api.hoy import check_hoy_permission, root_landing
 	from crm.api.pendientes import check_pendientes_permission
 	from crm.api.productos import check_productos_permission
+	from crm.api.resultados import check_resultados_permission
 	from crm.api.shell import first_module
 	from crm.archivos_routes import is_archivos_path
 	from crm.avisos_routes import is_avisos_path
@@ -51,6 +52,7 @@ def _gate(path):
 	from crm.hoy_routes import is_hoy_path
 	from crm.pendientes_routes import is_pendientes_path, is_shell_root
 	from crm.productos_routes import is_productos_path
+	from crm.resultados_routes import is_resultados_path
 
 	recovery = is_contactos_recovery_path(path)
 	hoy = is_hoy_path(path)
@@ -59,6 +61,7 @@ def _gate(path):
 	cobranza = is_cobranza_path(path)
 	compras = is_compras_path(path)
 	gastos = is_gastos_path(path)
+	resultados = is_resultados_path(path)
 	garantias = is_garantias_path(path)
 	productos = is_productos_path(path)
 	encuestas = is_encuestas_path(path)
@@ -72,6 +75,7 @@ def _gate(path):
 		or cobranza
 		or compras
 		or gastos
+		or resultados
 		or garantias
 		or productos
 		or encuestas
@@ -119,6 +123,13 @@ def _gate(path):
 		# acceso, Reintentar) from the shell; the boot carries no bill data.
 		allowed = (
 			check_gastos_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
+	elif resultados:
+		# A work account without Resultados still gets its guard page (reason, Pedir
+		# acceso, Reintentar) from the shell; the boot carries no numbers.
+		allowed = (
+			check_resultados_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
 	elif garantias:
@@ -177,6 +188,7 @@ def _gate(path):
 		("cobranza", cobranza),
 		("compras", compras),
 		("gastos", gastos),
+		("resultados", resultados),
 		("garantias", garantias),
 		("productos", productos),
 		("encuestas", encuestas),
@@ -214,6 +226,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.hoy_routes import is_hoy_path
 	from crm.pendientes_routes import is_pendientes_path
 	from crm.productos_routes import is_productos_path
+	from crm.resultados_routes import is_resultados_path
 
 	if is_hoy_path(path):
 		from crm.api.hoy import check_hoy_permission
@@ -235,6 +248,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="compras")
 	if is_gastos_path(path):
 		return get_boot(neutral=True, module="gastos")
+	if is_resultados_path(path):
+		return get_boot(neutral=True, module="resultados")
 	if is_garantias_path(path):
 		return get_boot(neutral=True, module="garantias")
 	if is_productos_path(path):
