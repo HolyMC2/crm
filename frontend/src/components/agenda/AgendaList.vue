@@ -7,7 +7,7 @@
     >
       <h2
         :id="`agenda-day-${group.date}`"
-        class="sticky top-0 z-[1] flex items-baseline gap-2 bg-surface-white py-2 text-lg font-semibold text-ink-gray-9"
+        class="sticky top-0 z-[1] flex items-baseline gap-2 bg-surface-base py-2 text-lg font-semibold text-ink-gray-9"
       >
         <span>{{ dayTitle(group.date) }}</span>
         <span class="text-sm font-normal text-ink-gray-6">{{
@@ -24,12 +24,26 @@
             class="flex min-h-16 w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4"
             :class="isShift(event) ? 'bg-surface-gray-1' : ''"
             :aria-current="selected === key(event) ? 'true' : undefined"
-            @click="emit('select', event)"
+            :data-event-id="event.id"
+            @click="
+              emit(
+                'select',
+                event,
+                $event.currentTarget.getBoundingClientRect(),
+              )
+            "
           >
+            <span
+              class="mt-1.5 h-3 w-3 shrink-0 rounded-full"
+              :class="event.kind === 'task' ? 'ring-2 ring-inset' : ''"
+              :style="dotStyle(event)"
+              aria-hidden="true"
+            />
             <span
               class="w-20 shrink-0 pt-0.5 text-sm tabular-nums text-ink-gray-7"
             >
-              <template v-if="event.allDay">{{ __('All day') }}</template>
+              <template v-if="event.kind === 'task'">{{ __('Task') }}</template>
+              <template v-else-if="event.allDay">{{ __('All day') }}</template>
               <template v-else>
                 {{ time(event.start) }}<br /><span class="text-ink-gray-5">{{
                   time(event.end)
@@ -94,9 +108,16 @@ const props = defineProps({
   now: { type: Number, required: true },
   selected: { type: String, default: '' },
   canCreate: { type: Boolean, default: false },
+  colorOf: { type: Function, default: null },
 })
 const emit = defineEmits(['select', 'create'])
 const key = eventKey
+function dotStyle(event) {
+  const color = props.colorOf?.(event) || '#039be5'
+  return event.kind === 'task'
+    ? { '--tw-ring-color': color, background: 'transparent' }
+    : { background: color }
+}
 const groups = computed(() =>
   groupAgendaEvents(props.events, props.range, props.timeZone).map((group) => ({
     ...group,

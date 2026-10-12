@@ -67,6 +67,9 @@
           icon-left="check-circle"
           @click="editFollowup(nextTask)"
         />
+        <RouterLink v-if="agendaLink" :to="agendaLink" class="c-action-link"
+          ><FeatherIcon name="calendar" class="h-4 w-4" />Agendar</RouterLink
+        >
         <a
           v-if="phone"
           :href="`tel:${phone.replace(/[^+\d]/g, '')}`"
@@ -628,7 +631,7 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import AddressEditor from '@/components/contactos/AddressEditor.vue'
@@ -640,6 +643,7 @@ import ContactTabPanel from '@/components/doco/contact/ContactTabPanel.vue'
 import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import { shellBoot } from '@/composables/muelleShell'
+import { agendaCreateRoute } from '@/composables/useAgenda'
 import { safeReturnPath } from '@/utils/ventasDocs'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
@@ -805,6 +809,23 @@ const nativeRoute = computed(() => ({
     route.params.name || route.query.name || route.params.contactId || '',
   ),
 }))
+// «Agendar»: a new Agenda event linked to this record, the contact invited, back here after.
+const agendaLink = computed(() => {
+  const doctype = SOURCE_TYPES[nativeRoute.value.source]
+  if (!record.value || !doctype || !moduleEnabled(shellBoot.value, 'agenda'))
+    return ''
+  const label = record.value.title || record.value.name
+  const here = `/crm/contactos/${encodeURIComponent(nativeRoute.value.source)}/${encodeURIComponent(nativeRoute.value.name)}`
+  return agendaCreateRoute({
+    reference: { doctype, name: nativeRoute.value.name, label },
+    attendee:
+      doctype === 'Contact'
+        ? { doctype: 'Contact', name: nativeRoute.value.name, label }
+        : null,
+    returnTo: here,
+    returnLabel: label,
+  })
+})
 // Files on this record come from Archivos when the worker has it; unsupported
 // doctypes still list their native attachments there.
 const archivosDoctype = computed(() =>

@@ -15634,3 +15634,423 @@ msgstr "{0} compartió contigo «{1}»"
 #: frontend/src/pages/DealsView.vue
 msgid "{0} deals named by an aviso"
 msgstr "{0} tratos que nombra un aviso"
+
+#: frontend/src/pages/Agenda.vue
+msgid "{0} more"
+msgstr "{0} más"
+
+#: frontend/src/pages/Agenda.vue
+msgid "{0} events"
+msgstr "{0} eventos"
+
+#: frontend/src/pages/Agenda.vue
+msgid "(No title)"
+msgstr "(Sin título)"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Open the full record"
+msgstr "Abrir el registro completo"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Event color"
+msgstr "Color del evento"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Open task"
+msgstr "Abrir pendiente"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Calendar color"
+msgstr "Color del calendario"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Event"
+msgstr "Evento"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Add a calendar"
+msgstr "Añadir un calendario"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Options for {0}"
+msgstr "Opciones de {0}"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Display this only"
+msgstr "Mostrar solo este"
+
+#: frontend/src/pages/Agenda.vue
+msgid "My calendars"
+msgstr "Mis calendarios"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Other calendars"
+msgstr "Otros calendarios"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Google Calendar connected"
+msgstr "Google Calendar conectado"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Connect Google, Outlook or Apple"
+msgstr "Conectar Google u Outlook"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Sync, subscribe and settings"
+msgstr "Sincronizar y ajustes"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Two-way sync or a subscription link"
+msgstr "Sincroniza o suscríbete"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Add a task"
+msgstr "Añade un pendiente"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Add title"
+msgstr "Añade un título"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Add location"
+msgstr "Añade una ubicación"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Add guests, reminders and notes"
+msgstr "Añade invitados, recordatorios y notas"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Write what needs doing."
+msgstr "Escribe qué hay que hacer."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Show less"
+msgstr "Mostrar menos"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Show all"
+msgstr "Mostrar todo"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Choose a date"
+msgstr "Elige una fecha"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Previous month"
+msgstr "Mes anterior"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Next month"
+msgstr "Mes siguiente"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Agenda settings"
+msgstr "Configuración de la agenda"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Sections"
+msgstr "Secciones"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Open the Agenda in"
+msgstr "Abrir la agenda en"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Start of the week"
+msgstr "Inicio de la semana"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Hour height"
+msgstr "Altura de cada hora"
+
+#: frontend/src/pages/Agenda.vue
+msgid "The day opens at"
+msgstr "El día abre a las"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Default event length"
+msgstr "Duración predeterminada"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Show weekends"
+msgstr "Mostrar fines de semana"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Show finished events and tasks"
+msgstr "Mostrar eventos y pendientes terminados"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Show cancelled events"
+msgstr "Mostrar eventos cancelados"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Dim past events"
+msgstr "Atenuar eventos pasados"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Restore defaults"
+msgstr "Restablecer valores predeterminados"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Pick a color for each calendar. Each event can also have its own color."
+msgstr "Elige un color para cada calendario. Cada evento también puede tener su propio color."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Color for {0}"
+msgstr "Color de {0}"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Sync now"
+msgstr "Sincronizar ahora"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Save my new events in Google too"
+msgstr "Guardar también mis eventos nuevos en Google"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Disconnect"
+msgstr "Desconectar"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Finish connecting"
+msgstr "Terminar de conectar"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Connect with Google"
+msgstr "Conectar con Google"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Set up Google for this business"
+msgstr "Configurar Google para este negocio"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Subscribe from Outlook, Apple or any calendar"
+msgstr "Suscríbete desde Outlook, Apple o cualquier calendario"
+
+#: frontend/src/pages/Agenda.vue
+msgid "A private link that keeps your Agenda on your phone or computer. Anyone with the link can see your events, so keep it to yourself."
+msgstr "Un enlace privado que mantiene tu agenda en tu teléfono o computadora. Quien tenga el enlace puede ver tus eventos, así que no lo compartas."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Subscription link"
+msgstr "Enlace de suscripción"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Copy"
+msgstr "Copiar"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Open in Apple Calendar"
+msgstr "Abrir en Calendario de Apple"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Add to Outlook"
+msgstr "Añadir a Outlook"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Add to Google"
+msgstr "Añadir a Google"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Reset link"
+msgstr "Restablecer enlace"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Create my link"
+msgstr "Crear mi enlace"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Sync and subscribe"
+msgstr "Sincronizar y suscribirse"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Automatic"
+msgstr "Automático"
+
+#: frontend/src/pages/Agenda.vue
+msgid "4 days"
+msgstr "4 días"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Business setting"
+msgstr "Configuración del negocio"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Compact"
+msgstr "Compacta"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Comfortable"
+msgstr "Cómoda"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Spacious"
+msgstr "Amplia"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Checking the connection…"
+msgstr "Revisando la conexión…"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Google is not set up for this business yet. Ask your manager to enable it."
+msgstr "Google aún no está configurado para este negocio. Pide a tu gerente que lo active."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Your Google events show here and your Agenda goes to Google. Changes go both ways."
+msgstr "Tus eventos de Google aparecen aquí y tu agenda va a Google. Los cambios van en ambos sentidos."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Almost there: allow access in Google to finish."
+msgstr "Ya casi: permite el acceso en Google para terminar."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Sign in with Google once and your calendars stay in sync both ways."
+msgstr "Inicia sesión con Google una vez y tus calendarios se mantienen sincronizados en ambos sentidos."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Link copied"
+msgstr "Enlace copiado"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Tomato"
+msgstr "Tomate"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Flamingo"
+msgstr "Flamenco"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Tangerine"
+msgstr "Mandarina"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Banana"
+msgstr "Plátano"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Sage"
+msgstr "Salvia"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Basil"
+msgstr "Albahaca"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Peacock"
+msgstr "Pavo real"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Blueberry"
+msgstr "Arándano"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Lavender"
+msgstr "Lavanda"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Grape"
+msgstr "Uva"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Graphite"
+msgstr "Grafito"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Cocoa"
+msgstr "Cacao"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Pumpkin"
+msgstr "Calabaza"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Avocado"
+msgstr "Aguacate"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Eucalyptus"
+msgstr "Eucalipto"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Cobalt"
+msgstr "Cobalto"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Main menu"
+msgstr "Menú principal"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Loading"
+msgstr "Cargando"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Show finished"
+msgstr "Mostrar terminados"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Agenda settings restored"
+msgstr "Configuración de la agenda restablecida"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Task moved"
+msgstr "Pendiente movido"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Task reopened"
+msgstr "Pendiente reabierto"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Task saved"
+msgstr "Pendiente guardado"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Sync is not available on this site yet."
+msgstr "La sincronización aún no está disponible en este sitio."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Google did not answer. Try again."
+msgstr "Google no respondió. Inténtalo de nuevo."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Google Calendar synced"
+msgstr "Google Calendar sincronizado"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Google Calendar disconnected"
+msgstr "Google Calendar desconectado"
+
+#: frontend/src/pages/Agenda.vue
+msgid "New link ready. The old one no longer works."
+msgstr "Nuevo enlace listo. El anterior ya no funciona."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Google did not grant access. Try connecting again and allow calendar access."
+msgstr "Google no dio acceso. Vuelve a conectar y permite el acceso al calendario."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Appointments"
+msgstr "Citas"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Absences"
+msgstr "Ausencias"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Patient appointments"
+msgstr "Citas de pacientes"
+
+#: frontend/src/pages/Agenda.vue
+msgid "See in Agenda"
+msgstr "Ver en la agenda"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Schedule view"
+msgstr "Programación"
+
+#: frontend/src/components/agenda/AgendaSearch.vue
+msgid "Search events"
+msgstr "Buscar eventos"
+
+#: frontend/src/components/agenda/AgendaSearch.vue
+msgid "No events found"
+msgstr "No encontramos eventos"

@@ -130,6 +130,53 @@
         :label="__('Place')"
         autocomplete="off"
       />
+      <div>
+        <span class="mb-1.5 block text-xs text-ink-gray-5">{{
+          __('Color')
+        }}</span>
+        <div
+          class="flex flex-wrap items-center gap-2"
+          role="radiogroup"
+          :aria-label="__('Color')"
+        >
+          <button
+            type="button"
+            class="grid h-7 w-7 place-items-center rounded-full ring-2 ring-outline-gray-2 ring-offset-2"
+            role="radio"
+            :aria-checked="!form.color"
+            :aria-label="__('Calendar color')"
+            :title="__('Calendar color')"
+            :style="{ background: calendarColor }"
+            @click="form.color = ''"
+          >
+            <span
+              v-if="!form.color"
+              class="lucide-check h-3.5 w-3.5"
+              :style="{ color: textOn(calendarColor) }"
+              aria-hidden="true"
+            />
+          </button>
+          <button
+            v-for="swatch in PALETTE.slice(0, 11)"
+            :key="swatch.id"
+            type="button"
+            class="grid h-7 w-7 place-items-center rounded-full"
+            role="radio"
+            :aria-checked="form.color === swatch.hex"
+            :aria-label="__(swatch.name)"
+            :title="__(swatch.name)"
+            :style="{ background: swatch.hex }"
+            @click="form.color = swatch.hex"
+          >
+            <span
+              v-if="form.color === swatch.hex"
+              class="lucide-check h-3.5 w-3.5"
+              :style="{ color: textOn(swatch.hex) }"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </div>
 
       <div
         v-if="form.reference"
@@ -228,7 +275,7 @@
     />
 
     <div
-      class="sticky bottom-0 -mx-1 flex justify-end gap-2 bg-surface-white px-1 pb-[env(safe-area-inset-bottom)] pt-2"
+      class="sticky bottom-0 -mx-1 flex justify-end gap-2 bg-surface-elevation-2 px-1 pb-[env(safe-area-inset-bottom)] pt-2"
     >
       <Button
         class="min-h-11"
@@ -250,6 +297,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { Button, FormControl, debounce } from 'frappe-ui'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
+import { PALETTE, normalizeHex, textOn } from '@/components/agenda/agendaColors'
 import {
   agendaLocale,
   errorText,
@@ -267,6 +315,7 @@ const props = defineProps({
   organizerName: { type: String, default: '' },
   busy: { type: Boolean, default: false },
   constraints: { type: Array, default: () => [] },
+  calendarColor: { type: String, default: '#039be5' },
 })
 const emit = defineEmits(['save', 'close', 'guard-action', 'dismiss-guard'])
 const proposal = computed(() => props.mode === 'propose')
@@ -383,6 +432,7 @@ function initialForm() {
         ? [WEEKDAYS[(new Date(`${start.date}T12:00:00Z`).getUTCDay() + 6) % 7]]
         : [],
     public: props.initial.visibility === 'public',
+    color: normalizeHex(props.initial.color) || '',
     note: '',
   }
 }
@@ -396,6 +446,7 @@ const daysField = ref(null)
 const initialReminder = form.reminder
 const initialAttendees = attendeeSignature(form.attendees)
 const initialRepeat = repeatSignature()
+const initialColor = form.color
 
 function attendeeSignature(rows) {
   return rows.map(personKey).sort().join('|')
@@ -593,6 +644,10 @@ function emitSave(start, end) {
       ? { doctype: form.reference.doctype, name: form.reference.name }
       : null,
     visibility: form.public ? 'public' : 'private',
+    // Color is sent only when chosen, so a site without event colors keeps saving.
+    ...((editing ? form.color !== initialColor : Boolean(form.color))
+      ? { color: form.color }
+      : {}),
     // Repetition is sent only when chosen here, so series set up elsewhere keep their days.
     ...(repeatChanged
       ? {
