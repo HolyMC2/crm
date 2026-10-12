@@ -1319,7 +1319,8 @@ function prefetch() {
   clearTimeout(prefetchTimer)
   prefetchTimer = setTimeout(() => {
     for (const direction of [1, -1]) {
-      if (state.value.view === 'list' && phone.value && direction < 0) continue
+      // The phone list grows in place instead of paging.
+      if (state.value.view === 'list' && phone.value) continue
       const target = rangeFor(
         { ...state.value, date: step(state.value, direction) },
         timeZone.value,
@@ -2636,6 +2637,7 @@ onBeforeUnmount(() => {
 }
 /* --- phone: app bar, date dropdown, views, «+», drawer (a native calendar's layout) --- */
 .ag-ptop {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -2646,6 +2648,15 @@ onBeforeUnmount(() => {
 .is-phone .ag-iconbtn {
   width: 44px;
   height: 44px;
+}
+/* Search opens over the whole app bar, as on a native calendar. */
+.ag-ptop .ag-search.is-open {
+  position: absolute;
+  inset: 6px 8px;
+  z-index: 20;
+  width: auto;
+  height: auto;
+  background: var(--surface-gray-2);
 }
 .ag-ptitle {
   display: inline-flex;
