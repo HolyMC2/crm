@@ -381,6 +381,13 @@ export function accesos(boot) {
     '/cobranza?segment=vencidas',
   )
   add(
+    'encuestas',
+    'follow_up',
+    t('Unhappy customers'),
+    'lucide-smile',
+    '/encuestas?view=atender',
+  )
+  add(
     'gastos',
     'read',
     t('Bills to pay'),

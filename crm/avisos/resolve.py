@@ -36,6 +36,7 @@ SHELL_RECORDS = {
 	"Material Request": ("compras", "/compras/solicitud/{}"),
 	"Purchase Invoice": ("gastos", "/gastos/factura/{}"),
 	"Warranty Claim": ("garantias", "/garantias/{}"),
+	"Quality Feedback": ("encuestas", "/encuestas/{}"),
 	"Item": ("productos", "/productos/{}"),
 }
 # Records whose worker screen is a sibling SPA on the same site: doctype → (app, path).
@@ -56,6 +57,7 @@ MODULE_LABELS = {
 	"gastos": "Gastos",
 	"productos": "Productos",
 	"garantias": "Garantías",
+	"encuestas": "Encuestas",
 }
 APP_LABELS = {"taller": "Taller", "scanner_kit": "Escáner", "erpnext_mexico_compliance": "Contador"}
 FISCAL_APP = "erpnext_mexico_compliance"

@@ -202,6 +202,7 @@ describe('module registry', () => {
       'gastos',
       'productos',
       'garantias',
+      'encuestas',
       'archivos',
       'avisos',
     ])

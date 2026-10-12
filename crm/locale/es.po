@@ -16893,3 +16893,384 @@ msgstr "Miembros sin comprar: preparar mensajes"
 #: frontend/src/components/Reports/MarketingReactivation.vue
 msgid "Members without buying (points program)"
 msgstr "Miembros sin comprar (programa de puntos)"
+#: frontend/src/pages/Encuestas.vue
+msgid "Encuestas is not available"
+msgstr "Encuestas no está disponible"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Back"
+msgstr "Volver"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Survey settings"
+msgstr "Ajustes de la encuesta"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Turn on the survey"
+msgstr "Encender la encuesta"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Copy request for the owner"
+msgstr "Copiar solicitud para el dueño"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Would they recommend you?"
+msgstr "¿Te recomendarían?"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Recommendation"
+msgstr "Recomendación"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Still few answers"
+msgstr "Aún son pocas respuestas"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "% happy minus % unhappy"
+msgstr "% contentos menos % inconformes"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Search customer, sale or comment"
+msgstr "Buscar cliente, venta o comentario"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Period"
+msgstr "Periodo"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Answer"
+msgstr "Respuesta"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Every answer"
+msgstr "Todas las respuestas"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Mine"
+msgstr "Míos"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Retry"
+msgstr "Reintentar"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Loading answers…"
+msgstr "Cargando respuestas…"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "See all answers"
+msgstr "Ver todas las respuestas"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Load more"
+msgstr "Cargar más"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Ask the owner for access to what customers answered."
+msgstr "Pide al dueño acceso a lo que contestaron los clientes."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Customers who answered 0 to 6, longest waiting first. Call them before they go elsewhere."
+msgstr "Clientes que calificaron de 0 a 6; primero los que llevan más tiempo esperando. Búscalos antes de que se vayan con otro."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Someone is already talking to these customers."
+msgstr "Alguien ya está hablando con estos clientes."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Every answer, newest first."
+msgstr "Todas las respuestas, primero las más recientes."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "No answers match"
+msgstr "Ninguna respuesta coincide"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Nobody is waiting"
+msgstr "Nadie está esperando"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Nothing here"
+msgstr "No hay nada aquí"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Try another customer, sale or word."
+msgstr "Prueba con otro cliente, venta o palabra."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Unhappy customers show up here as soon as they answer."
+msgstr "Los clientes inconformes aparecen aquí en cuanto contestan."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Answers arrive a few days after each sale, once customers reply."
+msgstr "Las respuestas llegan unos días después de cada venta, cuando los clientes contestan."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "I need access to Encuestas: read permission for Quality Feedback in my company so I can follow up on unhappy customers."
+msgstr "Necesito acceso a Encuestas: permiso de lectura de las respuestas de clientes (Quality Feedback) en mi empresa para dar seguimiento a los clientes inconformes."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Please turn on the survey in Encuestas (Muelle) so customers are asked after they buy: {0}"
+msgstr "Por favor enciende la encuesta en Encuestas (Muelle) para que se les pregunte a los clientes después de comprar: {0}"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Back to Encuestas"
+msgstr "Volver a Encuestas"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Loading answer…"
+msgstr "Cargando respuesta…"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "What they said"
+msgstr "Lo que dijo"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "They gave a score without a comment."
+msgstr "Calificó sin dejar comentario."
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Close follow-up"
+msgstr "Cerrar seguimiento"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Message on WhatsApp"
+msgstr "Escribir por WhatsApp"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Call"
+msgstr "Llamar"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Open a warranty case"
+msgstr "Abrir caso de garantía"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "This sale has no phone. Open the customer to find another way to reach them."
+msgstr "Esta venta no tiene teléfono. Abre al cliente para buscar otra forma de contactarlo."
+
+#: frontend/src/pages/Encuesta.vue
+msgid "The phone looks incomplete; call or open the customer."
+msgstr "El teléfono parece incompleto; llama o abre al cliente."
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Customer and sale"
+msgstr "Cliente y venta"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Customer"
+msgstr "Cliente"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Phone"
+msgstr "Teléfono"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Sale"
+msgstr "Venta"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Answered"
+msgstr "Contestó"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Done"
+msgstr "Hecho"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "In progress"
+msgstr "En seguimiento"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "What did you do?"
+msgstr "¿Qué hiciste?"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "E.g. called her, refunded the difference, she was happy."
+msgstr "Ej. le llamé, le devolvimos la diferencia y quedó contenta."
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Reopen and take it"
+msgstr "Reabrir y encargarme"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "I'll take it"
+msgstr "Me encargo"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "You cannot open this answer"
+msgstr "No puedes abrir esta respuesta"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Could not open the answer"
+msgstr "No se pudo abrir la respuesta"
+
+#: frontend/src/pages/Encuesta.vue
+msgid "It is yours now. It also shows in your Pendientes."
+msgstr "Ahora es tuyo. También aparece en tus Pendientes."
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Follow-up closed."
+msgstr "Seguimiento cerrado."
+
+#: frontend/src/pages/Encuesta.vue
+msgid "Follow-up closed. Nobody else is waiting."
+msgstr "Seguimiento cerrado. Nadie más está esperando."
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Ask customers after they buy"
+msgstr "Preguntar a los clientes después de comprar"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "A few days after a sale with a phone, Muelle prepares one WhatsApp asking from 0 to 10 whether they would recommend you, and to rate what they bought. Someone approves each message before it goes out."
+msgstr "Unos días después de cada venta con teléfono, Muelle prepara un WhatsApp que pregunta del 0 al 10 si te recomendarían y pide calificar lo que compraron. Alguien aprueba cada mensaje antes de que salga."
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgctxt "Encuestas"
+msgid "Loading…"
+msgstr "Cargando…"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Ask after every sale"
+msgstr "Preguntar después de cada venta"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "WhatsApp template"
+msgstr "Plantilla de WhatsApp"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "You have no WhatsApp template approved by Meta yet. Create one with a name, the product and the link, wait for approval, then come back."
+msgstr "Todavía no tienes una plantilla de WhatsApp aprobada por Meta. Crea una con el nombre, el producto y el enlace, espera la aprobación y vuelve aquí."
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Create a template"
+msgstr "Crear una plantilla"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Ask after (days)"
+msgstr "Preguntar después de (días)"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Stop asking after (days)"
+msgstr "Dejar de preguntar después de (días)"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgctxt "Encuestas"
+msgid "Save"
+msgstr "Guardar"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "{0} of 10"
+msgstr "{0} de 10"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Last 12 months"
+msgstr "Últimos 12 meses"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Last {0} days"
+msgstr "Últimos {0} días"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Followed up"
+msgstr "Atendido"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Nobody yet"
+msgstr "Sin asignar"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "To follow up"
+msgstr "Por atender"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "All answers"
+msgstr "Todas las respuestas"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Unhappy (0–6)"
+msgstr "Inconformes (0–6)"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Neutral (7–8)"
+msgstr "Neutrales (7–8)"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Happy (9–10)"
+msgstr "Contentos (9–10)"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Hi {0}, thanks for answering our survey. We would like to fix what went wrong — do you have a minute?"
+msgstr "Hola {0}, gracias por contestar nuestra encuesta. Queremos arreglar lo que salió mal, ¿tienes un minuto?"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Hi, thanks for answering our survey. We would like to fix what went wrong — do you have a minute?"
+msgstr "Hola, gracias por contestar nuestra encuesta. Queremos arreglar lo que salió mal, ¿tienes un minuto?"
+
+#: frontend/src/composables/useHoy.js
+msgid "Unhappy customers"
+msgstr "Clientes por atender"
+
+#: crm/api/shell.py
+msgid "Ask the owner for access to what customers answered, then retry."
+msgstr "Pide al dueño acceso a lo que contestaron los clientes y vuelve a intentar."
+
+#: crm/api/encuestas.py
+msgid "Encuestas is not installed. Ask your manager to check the app."
+msgstr "Encuestas no está instalada. Pide a tu encargado que revise la aplicación."
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Unhappy"
+msgstr "Inconformes"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Neutral"
+msgstr "Neutrales"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Happy"
+msgstr "Contentos"

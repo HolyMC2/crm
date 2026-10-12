@@ -218,7 +218,24 @@ watch(
 function reload() {
   loadShell({ refresh: true }).catch(() => {})
 }
+// Access requests of the newer modules; the chain in copyRequest answers for the rest.
+const MODULE_REQUESTS = {
+  encuestas: () =>
+    __(
+      'I need access to Encuestas: read permission for Quality Feedback in my company so I can follow up on unhappy customers.',
+    ),
+}
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    copied.value = __('Request copied. Share it with your manager.')
+  } catch {
+    copied.value = text
+  }
+}
 async function copyRequest() {
+  const own = MODULE_REQUESTS[activeKey.value]
+  if (own) return copyText(own())
   const text =
     activeKey.value === 'agenda'
       ? __(

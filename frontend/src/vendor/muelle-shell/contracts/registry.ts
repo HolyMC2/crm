@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.2.0 (cd63cbd0639f). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.6.0 (b8f7ed28223d). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -14,8 +14,11 @@ export type ShellModuleKey =
   | 'ventas'
   | 'cobranza'
   | 'gastos'
+  | 'resultados'
   | 'productos'
   | 'garantias'
+  | 'encuestas'
+  | 'equipo'
   | 'avisos'
 
 export type LucideIcon = `lucide-${string}`
@@ -31,7 +34,7 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Productos, Garantías, Archivos; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Productos, Garantías, Encuestas, Equipo, Archivos; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
@@ -41,8 +44,11 @@ export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'cobranza', label: 'Cobranza', icon: 'lucide-hand-coins', basePath: '/cobranza', go: 'b' },
   { key: 'compras', label: 'Compras', icon: 'lucide-shopping-cart', basePath: '/compras', go: 'o' },
   { key: 'gastos', label: 'Gastos', icon: 'lucide-receipt', basePath: '/gastos', go: 'e' },
+  { key: 'resultados', label: 'Resultados', icon: 'lucide-chart-column', basePath: '/resultados', go: 'n' },
   { key: 'productos', label: 'Productos', icon: 'lucide-package', basePath: '/productos', go: 'i' },
   { key: 'garantias', label: 'Garantías', icon: 'lucide-shield-check', basePath: '/garantias', go: 'r' },
+  { key: 'encuestas', label: 'Encuestas', icon: 'lucide-smile', basePath: '/encuestas', go: 'u' },
+  { key: 'equipo', label: 'Equipo', icon: 'lucide-id-card', basePath: '/equipo', go: 'q' },
   { key: 'archivos', label: 'Archivos', icon: 'lucide-folder', basePath: '/archivos', go: 'f' },
   { key: 'avisos', label: 'Avisos', icon: 'lucide-bell', basePath: '/avisos', go: '' },
 ] as const satisfies readonly ShellModuleMeta[])

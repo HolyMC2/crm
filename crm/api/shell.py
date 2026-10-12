@@ -19,8 +19,11 @@ MODULE_KEYS = (
 	"cobranza",
 	"compras",
 	"gastos",
+	"resultados",
 	"productos",
 	"garantias",
+	"encuestas",
+	"equipo",
 	"archivos",
 	"avisos",
 )
@@ -216,6 +219,28 @@ def _productos():
 	}
 
 
+def _encuestas():
+	from crm.api.encuestas import get_capabilities
+
+	answer = get_capabilities() or {}
+	capabilities = answer.get("capabilities") or {}
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "encuestas",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Ask the owner for access to what customers answered, then retry."),
+		"capabilities": {
+			"read": enabled,
+			"follow_up": enabled and bool(capabilities.get("follow_up")),
+			"setup": enabled and bool(capabilities.get("setup")),
+		}
+		if enabled
+		else {},
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -327,6 +352,7 @@ def _hosted():
 		"gastos": _gastos,
 		"productos": _productos,
 		"garantias": _garantias,
+		"encuestas": _encuestas,
 		"archivos": _archivos,
 		"avisos": _avisos,
 	}
@@ -360,6 +386,7 @@ def _providers():
 		_gastos,
 		_productos,
 		_garantias,
+		_encuestas,
 		_avisos,
 		_archivos,
 	]

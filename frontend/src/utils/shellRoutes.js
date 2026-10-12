@@ -73,6 +73,7 @@ const RECOVERY_MODULES = {
   gastos: 'gastos',
   garantias: 'garantias',
   productos: 'productos',
+  encuestas: 'encuestas',
   contactos: 'contactos',
   contacts: 'contactos',
   organizations: 'contactos',

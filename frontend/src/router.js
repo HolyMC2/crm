@@ -165,6 +165,19 @@ const routes = [
     meta: { app: 'garantias', title: 'Garantías', listParent: 'Garantias' },
   },
   {
+    path: '/encuestas',
+    name: 'Encuestas',
+    component: () => import('@/pages/Encuestas.vue'),
+    meta: { app: 'encuestas', title: 'Encuestas', stableKey: true },
+  },
+  {
+    path: '/encuestas/:name',
+    name: 'Encuesta',
+    component: () => import('@/pages/Encuesta.vue'),
+    props: true,
+    meta: { app: 'encuestas', title: 'Encuestas', listParent: 'Encuestas' },
+  },
+  {
     path: '/archivos',
     name: 'Archivos',
     component: () => import('@/pages/Archivos.vue'),

@@ -540,6 +540,42 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["garantias"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_encuestas(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Encuestas (doco) is not installed")
+		try:
+			import doco.encuestas.service
+		except ImportError:
+			self.skipTest("This doco has no Encuestas service")
+
+	def test_encuestas_provider_reports_answer_access(self):
+		self._skip_without_encuestas()
+		encuestas = shell.boot()["modules"]["encuestas"]
+		self.assertTrue(encuestas["enabled"])
+		self.assertIsNone(encuestas["reason"])
+		self.assertTrue(encuestas["capabilities"]["read"])
+		self.assertTrue(encuestas["capabilities"]["follow_up"])
+		self.assertTrue(encuestas["capabilities"]["setup"])
+
+	def test_encuestas_refusal_carries_its_own_reason_and_leaves_ventas(self):
+		self._skip_without_encuestas()
+		answer = {"enabled": False, "reason": "Sin acceso a respuestas", "capabilities": {}}
+		with patch("doco.encuestas.service.bootstrap", return_value=answer):
+			data = shell.boot()
+		encuestas = data["modules"]["encuestas"]
+		self.assertFalse(encuestas["enabled"])
+		self.assertEqual(encuestas["reason"], "Sin acceso a respuestas")
+		self.assertEqual(encuestas["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_older_doco_without_encuestas_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.encuestas.service": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["encuestas"]["enabled"])
+		self.assertTrue(data["modules"]["encuestas"]["reason"])
+		self.assertEqual(data["modules"]["encuestas"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):

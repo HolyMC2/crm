@@ -33,6 +33,7 @@ def _gate(path):
 	from crm.api.cobranza import check_cobranza_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.api.encuestas import check_encuestas_permission
 	from crm.api.garantias import check_garantias_permission
 	from crm.api.gastos import check_gastos_permission
 	from crm.api.hoy import check_hoy_permission, root_landing
@@ -44,6 +45,7 @@ def _gate(path):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.encuestas_routes import is_encuestas_path
 	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
 	from crm.hoy_routes import is_hoy_path
@@ -59,6 +61,7 @@ def _gate(path):
 	gastos = is_gastos_path(path)
 	garantias = is_garantias_path(path)
 	productos = is_productos_path(path)
+	encuestas = is_encuestas_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
 	neutral = (
@@ -71,6 +74,7 @@ def _gate(path):
 		or gastos
 		or garantias
 		or productos
+		or encuestas
 		or avisos
 		or archivos
 		or is_contactos_path(path)
@@ -131,6 +135,13 @@ def _gate(path):
 			check_productos_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
+	elif encuestas:
+		# A work account without Encuestas still gets its guard page (reason, Pedir
+		# acceso, Reintentar) from the shell; the boot carries no customer answers.
+		allowed = (
+			check_encuestas_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
 	elif avisos:
 		allowed = check_avisos_permission()
 	elif archivos:
@@ -168,6 +179,7 @@ def _gate(path):
 		("gastos", gastos),
 		("garantias", garantias),
 		("productos", productos),
+		("encuestas", encuestas),
 		("avisos", avisos),
 		("archivos", archivos),
 	):
@@ -196,6 +208,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.encuestas_routes import is_encuestas_path
 	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
 	from crm.hoy_routes import is_hoy_path
@@ -226,6 +239,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="garantias")
 	if is_productos_path(path):
 		return get_boot(neutral=True, module="productos")
+	if is_encuestas_path(path):
+		return get_boot(neutral=True, module="encuestas")
 	if is_archivos_path(path):
 		return get_boot(neutral=True, module="archivos")
 	if is_avisos_path(path):

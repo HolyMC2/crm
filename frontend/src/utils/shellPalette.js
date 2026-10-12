@@ -55,6 +55,11 @@ const GARANTIAS_PLACES = [
   ['con-proveedor', 'Con proveedor'],
   ['cerradas', 'Cerradas'],
 ]
+const ENCUESTAS_PLACES = [
+  ['atender', 'Por atender'],
+  ['seguimiento', 'En seguimiento'],
+  ['todas', 'Todas las respuestas'],
+]
 const ARCHIVOS_PLACES = [
   ['', 'Por clasificar'],
   ['ayuda', 'Requieren ayuda'],
@@ -199,6 +204,15 @@ export function createShellProviders({ boot, modules }) {
             title: `Garantías › ${label}`,
             icon: 'lucide-shield-check',
             href: `/garantias?segment=${segment}`,
+          })
+      if (moduleEnabled(boot.value, 'encuestas'))
+        for (const [view, label] of ENCUESTAS_PLACES)
+          items.push({
+            id: `encuestas.${view}`,
+            group: 'ir_a',
+            title: `Encuestas › ${label}`,
+            icon: 'lucide-smile',
+            href: `/encuestas?view=${view}`,
           })
       if (moduleEnabled(boot.value, 'archivos'))
         for (const [view, label] of ARCHIVOS_PLACES)

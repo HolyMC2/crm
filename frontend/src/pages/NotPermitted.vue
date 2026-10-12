@@ -94,6 +94,14 @@ const COPY = {
     missing:
       'Todavía falta acceso a los datos de Contactos. Comparte la solicitud y reintenta después del ajuste.',
   },
+  encuestas: {
+    reason:
+      'Para abrir Encuestas necesitas permiso de lectura de las respuestas de clientes en tu empresa. Pide al dueño que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de las respuestas de clientes (Quality Feedback) en mi empresa para abrir Encuestas en Muelle; quiero retomar la respuesta que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Encuestas. Comparte la solicitud y reintenta después del ajuste.',
+  },
   garantias: {
     reason:
       'Para abrir Garantías necesitas permiso de lectura de casos de garantía en tu empresa. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
