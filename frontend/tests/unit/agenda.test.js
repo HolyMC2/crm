@@ -30,16 +30,32 @@ describe('URL state', () => {
     expect(parseState({}, { phone: false, timeZone: MX }).view).toBe('week')
   })
 
-  it("opens in the worker's chosen view; a phone shows a day instead of a week", () => {
+  it("opens in the worker's chosen view; a phone shows 3 days instead of 4", () => {
     const options = { timeZone: MX, defaultView: 'month' }
     expect(parseState({}, { ...options, phone: false }).view).toBe('month')
     expect(
       parseState({}, { ...options, defaultView: 'week', phone: true }).view,
-    ).toBe('day')
+    ).toBe('week')
+    expect(
+      parseState({}, { ...options, defaultView: '4day', phone: true }).view,
+    ).toBe('3day')
     expect(
       parseState({ view: '4day' }, { ...options, phone: false }).view,
     ).toBe('4day')
     expect(parseState({}, { phone: false, timeZone: MX }).calendars).toBeNull()
+  })
+
+  it('pages three days at a time in the 3-day view and grows the list', () => {
+    const state = { view: '3day', date: '2026-10-05' }
+    expect(rangeFor(state, MX).dates).toEqual([
+      '2026-10-05',
+      '2026-10-06',
+      '2026-10-07',
+    ])
+    expect(step(state, 1)).toBe('2026-10-08')
+    const list = { view: 'list', date: '2026-10-05' }
+    expect(rangeFor(list, MX, 1, 14).dates).toHaveLength(14)
+    expect(rangeFor(list, MX, 1, 99).dates).toHaveLength(42)
   })
 
   it('pages four days at a time in the 4-day view', () => {

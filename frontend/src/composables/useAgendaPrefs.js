@@ -23,14 +23,18 @@ export const DEFAULT_PREFS = Object.freeze({
   dimPast: true,
   defaultDuration: 60,
   colors: {},
-  // Team calendars start hidden; the worker turns them on from the sidebar.
+  // Team calendars start hidden; the worker turns them on from the sidebar. Taller shows:
+  // a technician sees their own work there (a manager, the whole bench).
   hidden: ['Turno', 'Ausencias', 'Patient Appointment'],
   seen: [],
   sidebar: true,
   syncGoogle: true,
   updatedAt: 0,
 })
-const VIEWS = ['', 'day', '4day', 'week', 'month', 'list']
+const VIEWS = ['', 'day', '3day', '4day', 'week', 'month', 'list']
+// Every doctor and technician is a calendar of their own: room for a large clinic or shop.
+const MAX_CALENDARS = 250
+const MAX_KEY = 200
 
 /** Keep only known keys with valid values, so a stored blob can never break the page. */
 export function cleanPrefs(raw) {
@@ -67,9 +71,12 @@ export function cleanPrefs(raw) {
   if ([15, 30, 45, 60, 90, 120].includes(value.defaultDuration))
     prefs.defaultDuration = value.defaultDuration
   if (value.colors && typeof value.colors === 'object')
-    for (const [key, hex] of Object.entries(value.colors).slice(0, 50)) {
+    for (const [key, hex] of Object.entries(value.colors).slice(
+      0,
+      MAX_CALENDARS,
+    )) {
       const color = normalizeHex(hex)
-      if (color && typeof key === 'string' && key.length <= 80)
+      if (color && typeof key === 'string' && key.length <= MAX_KEY)
         prefs.colors[key] = color
     }
   for (const key of ['hidden', 'seen'])
@@ -77,10 +84,10 @@ export function cleanPrefs(raw) {
       prefs[key] = [
         ...new Set(
           value[key].filter(
-            (row) => typeof row === 'string' && row.length <= 80,
+            (row) => typeof row === 'string' && row.length <= MAX_KEY,
           ),
         ),
-      ].slice(0, 50)
+      ].slice(0, MAX_CALENDARS)
   if (Number.isFinite(value.updatedAt)) prefs.updatedAt = value.updatedAt
   return prefs
 }
@@ -156,6 +163,15 @@ export function useAgendaPrefs() {
     prefs.colors = { ...prefs.colors, [key]: color }
     if (!color) delete prefs.colors[key]
   }
+  /** Hide or show many calendars in one change (one save). */
+  function setHidden(changes) {
+    const hidden = new Set(prefs.hidden)
+    for (const [key, hide] of changes) {
+      if (hide) hidden.add(key)
+      else hidden.delete(key)
+    }
+    prefs.hidden = [...hidden]
+  }
   function toggleHidden(key, hide) {
     const hidden = new Set(prefs.hidden)
     const next = hide ?? !hidden.has(key)
@@ -170,7 +186,15 @@ export function useAgendaPrefs() {
     Object.assign(prefs, cleanPrefs({}), { updatedAt: Date.now() })
   }
 
-  shared = { prefs, loadRemote, setColor, toggleHidden, remember, reset }
+  shared = {
+    prefs,
+    loadRemote,
+    setColor,
+    toggleHidden,
+    setHidden,
+    remember,
+    reset,
+  }
   return shared
 }
 

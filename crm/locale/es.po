@@ -16054,3 +16054,63 @@ msgstr "Buscar eventos"
 #: frontend/src/components/agenda/AgendaSearch.vue
 msgid "No events found"
 msgstr "No encontramos eventos"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Doctors"
+msgstr "Doctores"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Technicians"
+msgstr "Técnicos"
+
+#: frontend/src/composables/useAgenda.js
+msgid "Workshop"
+msgstr "Taller"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Unassigned"
+msgstr "Sin asignar"
+
+#: frontend/src/components/agenda/AgendaSidebar.vue
+msgid "Show all of {0}"
+msgstr "Mostrar todo: {0}"
+
+#: frontend/src/pages/Agenda.vue
+msgid "3 days"
+msgstr "3 días"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Agenda menu"
+msgstr "Menú de la agenda"
+
+#: frontend/src/pages/Agenda.vue
+msgid "Agenda updated"
+msgstr "Agenda actualizada"
+
+#: frontend/src/components/agenda/AgendaMonthStrip.vue
+msgid "Choose a month"
+msgstr "Elige un mes"
+
+#: frontend/src/components/agenda/AgendaSchedule.vue
+msgid "Earlier days"
+msgstr "Días anteriores"
+
+#: frontend/src/components/agenda/AgendaSchedule.vue
+msgid "Show more days"
+msgstr "Ver más días"
+
+#: frontend/src/components/agenda/AgendaSchedule.vue
+msgid "Next days"
+msgstr "Siguientes días"
+
+#: frontend/src/components/agenda/AgendaSchedule.vue
+msgid "Nothing planned today. Tap to schedule."
+msgstr "Nada planeado para hoy. Toca para agendar."
+
+#: frontend/src/components/agenda/AgendaSchedule.vue
+msgid "From {0}"
+msgstr "Desde las {0}"
+
+#: frontend/src/components/agenda/AgendaSchedule.vue
+msgid "Until {0}"
+msgstr "Hasta las {0}"

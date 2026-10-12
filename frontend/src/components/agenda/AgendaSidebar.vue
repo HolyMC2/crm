@@ -1,6 +1,6 @@
 <template>
   <nav class="ag-side" :aria-label="__('Agenda')">
-    <div class="ag-side__create">
+    <div v-if="!compact" class="ag-side__create">
       <button
         v-if="canCreate"
         type="button"
@@ -46,6 +46,7 @@
     </div>
 
     <AgendaMiniMonth
+      v-if="!compact"
       class="mt-4"
       :selected="selected"
       :today="today"
@@ -63,7 +64,32 @@
         :aria-expanded="!collapsed[group.key]"
         @click="collapsed[group.key] = !collapsed[group.key]"
       >
-        <span class="flex-1 text-left">{{ group.label }}</span>
+        <span
+          v-if="group.people"
+          class="ag-side__check ag-side__groupcheck"
+          role="checkbox"
+          tabindex="0"
+          :aria-checked="groupState(group)"
+          :aria-label="__('Show all of {0}', [group.label])"
+          :style="groupCheckStyle(group)"
+          @click.stop="emit('toggle-group', group.key)"
+          @keydown.space.prevent.stop="emit('toggle-group', group.key)"
+          @keydown.enter.prevent.stop="emit('toggle-group', group.key)"
+        >
+          <span
+            v-if="groupState(group) !== 'false'"
+            :class="
+              groupState(group) === 'true' ? 'lucide-check' : 'lucide-minus'
+            "
+            class="h-3.5 w-3.5"
+            :style="{ color: textOn(groupColor(group)) }"
+            aria-hidden="true"
+          />
+        </span>
+        <span class="flex-1 truncate text-left">{{ group.label }}</span>
+        <span v-if="group.people" class="ag-side__count">{{
+          groupCount(group)
+        }}</span>
         <span
           v-if="group.key === 'other'"
           class="ag-side__iconbtn"
@@ -81,7 +107,11 @@
           aria-hidden="true"
         />
       </button>
-      <ul v-if="!collapsed[group.key]" class="ag-side__list">
+      <ul
+        v-if="!collapsed[group.key]"
+        class="ag-side__list"
+        :class="{ 'is-people': group.people }"
+      >
         <li
           v-for="calendar in group.rows"
           :key="calendar.key"
@@ -115,9 +145,14 @@
             </span>
             <span
               class="truncate"
-              :class="calendar.blocked ? 'text-ink-gray-5' : ''"
+              :class="
+                calendar.blocked || calendar.inactive ? 'text-ink-gray-5' : ''
+              "
               >{{ calendar.label }}</span
             >
+            <span v-if="calendar.mine" class="ag-side__you">{{
+              __('You')
+            }}</span>
           </label>
           <button
             v-if="!calendar.blocked"
@@ -195,6 +230,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import AgendaMiniMonth from '@/components/agenda/AgendaMiniMonth.vue'
 import { PALETTE, textOn } from '@/components/agenda/agendaColors'
+import { PER_RESOURCE } from '@/composables/useAgenda'
 
 const props = defineProps({
   calendars: { type: Array, default: () => [] },
@@ -207,6 +243,8 @@ const props = defineProps({
   canCreate: { type: Boolean, default: false },
   canCreateTask: { type: Boolean, default: false },
   sync: { type: Object, default: null },
+  // Phone drawer: views, dates and Create live elsewhere; only the calendars show.
+  compact: { type: Boolean, default: false },
 })
 const emit = defineEmits([
   'create',
@@ -215,25 +253,61 @@ const emit = defineEmits([
   'only',
   'color',
   'settings',
+  'toggle-group',
 ])
 
 const createMenu = ref(false)
 const menu = ref('')
-const collapsed = reactive({ mine: false, other: false })
-const groups = computed(() =>
-  [
-    {
-      key: 'mine',
-      label: __('My calendars'),
-      rows: props.calendars.filter((row) => row.group === 'mine'),
-    },
-    {
-      key: 'other',
-      label: __('Other calendars'),
-      rows: props.calendars.filter((row) => row.group !== 'mine'),
-    },
-  ].filter((group) => group.rows.length || group.key === 'other'),
-)
+const collapsed = reactive({})
+// My calendars, then one group per doctor/technician source (each person a calendar),
+// then the rest.
+const groups = computed(() => {
+  const mine = props.calendars.filter((row) => row.group === 'mine')
+  const people = []
+  for (const row of props.calendars) {
+    if (!PER_RESOURCE[row.group]) continue
+    let group = people.find((entry) => entry.key === row.group)
+    if (!group) {
+      group = {
+        key: row.group,
+        label: PER_RESOURCE[row.group].group(),
+        rows: [],
+        people: true,
+      }
+      people.push(group)
+    }
+    group.rows.push(row)
+  }
+  const other = props.calendars.filter(
+    (row) => row.group !== 'mine' && !PER_RESOURCE[row.group],
+  )
+  return [
+    ...(mine.length
+      ? [{ key: 'mine', label: __('My calendars'), rows: mine }]
+      : []),
+    ...people,
+    { key: 'other', label: __('Other calendars'), rows: other },
+  ]
+})
+function groupState(group) {
+  const shown = group.rows.filter((row) => row.visible && !row.blocked).length
+  if (!shown) return 'false'
+  return shown === group.rows.length ? 'true' : 'mixed'
+}
+const groupColor = (group) =>
+  group.rows.find((row) => row.visible)?.color ||
+  group.rows[0]?.color ||
+  '#616161'
+function groupCheckStyle(group) {
+  const color = groupColor(group)
+  return groupState(group) === 'false'
+    ? { borderColor: 'var(--ink-gray-5)' }
+    : { background: color, borderColor: color }
+}
+function groupCount(group) {
+  const shown = group.rows.filter((row) => row.visible).length
+  return group.rows.length > 1 ? `${shown}/${group.rows.length}` : ''
+}
 const syncTitle = computed(() => {
   const google = props.sync?.google
   if (google?.connected && google?.authorized)
@@ -394,6 +468,27 @@ onBeforeUnmount(() => window.removeEventListener('pointerdown', outside, true))
   color: var(--ink-gray-8);
   cursor: pointer;
 }
+.ag-side__groupcheck {
+  margin-right: 8px;
+  cursor: pointer;
+}
+.ag-side__count {
+  margin-right: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-gray-6);
+}
+.ag-side__you {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-gray-2);
+  font-size: 11px;
+  color: var(--ink-gray-7);
+}
+.ag-side__list.is-people .ag-side__label {
+  padding-left: 22px;
+}
 .ag-side__check {
   display: grid;
   place-items: center;
@@ -403,7 +498,28 @@ onBeforeUnmount(() => window.removeEventListener('pointerdown', outside, true))
   border: 2px solid;
   border-radius: 3px;
 }
-.ag-side__label:focus-within .ag-side__check {
+.ag-side__label:focus-within .ag-side__groupcheck {
+  margin-right: 8px;
+  cursor: pointer;
+}
+.ag-side__count {
+  margin-right: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-gray-6);
+}
+.ag-side__you {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-gray-2);
+  font-size: 11px;
+  color: var(--ink-gray-7);
+}
+.ag-side__list.is-people .ag-side__label {
+  padding-left: 22px;
+}
+.ag-side__check {
   outline: 2px solid var(--ag-accent);
   outline-offset: 2px;
 }

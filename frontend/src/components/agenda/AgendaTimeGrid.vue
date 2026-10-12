@@ -576,7 +576,9 @@ function begin(state, event) {
   window.addEventListener('keydown', onKey)
 }
 function cancel() {
+  clearTimeout(gesture.value?.hold)
   gesture.value = null
+  window.removeEventListener('touchmove', holdScroll, { capture: true })
   window.removeEventListener('pointermove', onMove)
   window.removeEventListener('pointerup', onUp)
   window.removeEventListener('pointercancel', cancel)
@@ -612,15 +614,45 @@ function onAllDayDown(event) {
   const index = dayIndexAt(event.clientX)
   begin({ type: 'allday', from: index, to: index }, event)
 }
+// Touch: hold an event to lift it (a short buzz), then drag it to another time or day,
+// as in a native calendar. Moving before the hold is a scroll, as always.
+const HOLD_MS = 380
+function holdScroll(event) {
+  if (!gesture.value?.active) return
+  // While an event is lifted the page neither scrolls nor pages to another range.
+  event.stopPropagation()
+  if (event.cancelable) event.preventDefault()
+}
 function onEventDown(event, item, date) {
-  if (
-    event.button !== 0 ||
-    event.pointerType === 'touch' ||
-    !item.event.draggable
-  )
-    return
+  if (event.button !== 0 || !item.event.draggable) return
   const pointer = minutesAt(event.clientY)
   const start = item.before ? 0 : item.start
+  if (event.pointerType === 'touch') {
+    begin(
+      {
+        type: 'move',
+        item,
+        date,
+        origin: date,
+        offset: pointer - start,
+        start: item.start,
+        end: item.end,
+      },
+      event,
+    )
+    const g = gesture.value
+    g.hold = setTimeout(() => {
+      if (gesture.value !== g) return
+      g.active = true
+      g.lifted = true
+      globalThis.navigator?.vibrate?.(12)
+      window.addEventListener('touchmove', holdScroll, {
+        passive: false,
+        capture: true,
+      })
+    }, HOLD_MS)
+    return
+  }
   begin(
     {
       type: 'move',
@@ -1012,6 +1044,20 @@ defineExpose({ scrollToStart, rectOf })
 }
 .ag-ghost.is-move {
   opacity: 0.92;
+  animation: ag-lift 0.16s ease-out;
+}
+@keyframes ag-lift {
+  from {
+    transform: scale(0.96);
+    opacity: 0.6;
+  }
+}
+.ag-event {
+  -webkit-touch-callout: none;
+  transition: filter 0.12s;
+}
+.ag-event:active {
+  filter: brightness(0.93);
 }
 .ag-event.is-draggable {
   cursor: grab;

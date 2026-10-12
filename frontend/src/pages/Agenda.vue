@@ -1,7 +1,7 @@
 <template>
   <div class="agenda-app" :class="{ 'is-phone': phone }">
     <!-- top bar: ☰ · Agenda · Today ‹ › · title ……… settings · view -->
-    <header class="ag-top">
+    <header v-if="!phone" class="ag-top">
       <button
         type="button"
         class="ag-iconbtn"
@@ -133,22 +133,85 @@
         </div>
       </div>
     </header>
-    <div
-      v-if="phone"
-      class="ag-phoneviews"
-      role="group"
-      :aria-label="__('View')"
-    >
+    <!-- phone app bar: ☰ · month ▾ ……… search · today -->
+    <header v-else class="ag-ptop">
+      <component
+        :is="returnRoute ? RouterLink : 'a'"
+        v-if="returnTo"
+        v-bind="returnRoute ? { to: returnRoute } : { href: returnTo }"
+        class="ag-iconbtn"
+        :aria-label="__('Back to {0}', [returnLabel])"
+        ><span class="lucide-arrow-left h-5 w-5" aria-hidden="true"
+      /></component>
       <button
-        v-for="entry in phoneViews"
-        :key="entry.value"
+        v-else
         type="button"
-        :aria-pressed="state.view === entry.value"
-        @click="setView(entry.value)"
+        class="ag-iconbtn"
+        :aria-label="__('Main menu')"
+        :aria-expanded="drawer"
+        @click="drawer = true"
       >
-        {{ entry.label }}
+        <span class="lucide-menu h-6 w-6" aria-hidden="true" />
       </button>
-    </div>
+      <button
+        type="button"
+        class="ag-ptitle"
+        :aria-expanded="picker"
+        :aria-label="__('Choose a date')"
+        @click="picker = !picker"
+      >
+        <span class="truncate">{{ phoneTitle }}</span>
+        <span
+          class="lucide-chevron-down ag-ptitle__caret h-5 w-5"
+          :class="{ 'is-open': picker }"
+          aria-hidden="true"
+        />
+      </button>
+      <span
+        v-if="loading && !showSkeleton"
+        class="ag-spinner"
+        role="status"
+        :aria-label="__('Loading')"
+      />
+      <AgendaSearch
+        class="ml-auto"
+        :locale="locale"
+        :fallback-color="calendarColors.Event"
+        @pick="openFound"
+      />
+      <button
+        type="button"
+        class="ag-todaybtn"
+        :aria-label="__('Today')"
+        :title="todayLong"
+        @click="goToday"
+      >
+        <span class="lucide-calendar h-6 w-6" aria-hidden="true" />
+        <span class="ag-todaybtn__num">{{ Number(todayDate.slice(8)) }}</span>
+      </button>
+    </header>
+    <Transition name="ag-drop">
+      <div v-if="phone && picker" class="ag-picker" data-no-swipe>
+        <AgendaMonthStrip
+          v-if="state.view === 'month'"
+          :selected="state.date"
+          :today="todayDate"
+          :locale="locale"
+          @pick="pickMonth"
+        />
+        <AgendaMiniMonth
+          v-else
+          class="ag-picker__mini"
+          :selected="state.date"
+          :today="todayDate"
+          :range="sidebarProps.range"
+          :busy-dates="busyDates"
+          :week-starts-on="firstWeekday"
+          :locale="locale"
+          @pick="pickDate"
+        />
+      </div>
+    </Transition>
 
     <div class="ag-main">
       <aside v-if="!phone && prefs.sidebar" class="ag-sidebar">
@@ -211,42 +274,18 @@
         </div>
 
         <div ref="calendarRoot" class="ag-canvas" :class="`is-${state.view}`">
-          <div v-if="showSkeleton" class="space-y-3 p-4" aria-hidden="true">
-            <div
-              v-for="n in 6"
-              :key="n"
-              class="h-14 animate-pulse rounded-lg bg-surface-gray-1"
-            />
-          </div>
-          <template v-else-if="timeZone">
-            <AgendaTimeGrid
-              v-if="gridView"
-              :dates="gridDates"
-              :events="visibleEvents"
-              :color-of="colorOf"
-              :time-zone="timeZone"
-              :locale="locale"
-              :hour12="hour12"
-              :today="todayDate"
-              :now="now"
-              :hour-height="hourHeight"
-              :scroll-hour="prefs.dayStartHour"
-              :can-create="canCreate"
-              :create-color="createColor"
-              :default-duration="prefs.defaultDuration"
-              :draft="draftShown"
-              :selected-key="state.event"
-              :dim-past="prefs.dimPast"
-              @select="select"
-              @create="startCreate"
-              @move="(event, times) => doMove(event, times)"
-              @resize="(event, times) => doMove(event, times)"
-              @move-days="moveDays"
-              @open-day="(date) => setState({ date, view: 'day' })"
-            />
-            <template v-else-if="state.view === 'month'">
-              <AgendaMonthGrid
-                :date="state.date"
+          <div :key="state.view" class="ag-viewin">
+            <div v-if="showSkeleton" class="space-y-3 p-4" aria-hidden="true">
+              <div
+                v-for="n in 6"
+                :key="n"
+                class="h-14 animate-pulse rounded-lg bg-surface-gray-1"
+              />
+            </div>
+            <template v-else-if="timeZone">
+              <AgendaTimeGrid
+                v-if="gridView"
+                :dates="gridDates"
                 :events="visibleEvents"
                 :color-of="colorOf"
                 :time-zone="timeZone"
@@ -254,26 +293,74 @@
                 :hour12="hour12"
                 :today="todayDate"
                 :now="now"
-                :week-starts-on="firstWeekday"
-                :show-weekends="prefs.showWeekends"
-                :compact="phone"
+                :hour-height="hourHeight"
+                :scroll-hour="prefs.dayStartHour"
                 :can-create="canCreate"
                 :create-color="createColor"
+                :default-duration="prefs.defaultDuration"
                 :draft="draftShown"
                 :selected-key="state.event"
                 :dim-past="prefs.dimPast"
                 @select="select"
                 @create="startCreate"
-                @create-day="createOnDay"
+                @move="(event, times) => doMove(event, times)"
+                @resize="(event, times) => doMove(event, times)"
                 @move-days="moveDays"
-                @pick="setDate"
                 @open-day="(date) => setState({ date, view: 'day' })"
               />
-              <AgendaList
-                v-if="phone"
-                class="mt-4 px-4"
+              <template v-else-if="state.view === 'month'">
+                <AgendaMonthGrid
+                  :date="state.date"
+                  :events="visibleEvents"
+                  :color-of="colorOf"
+                  :time-zone="timeZone"
+                  :locale="locale"
+                  :hour12="hour12"
+                  :today="todayDate"
+                  :now="now"
+                  :week-starts-on="firstWeekday"
+                  :show-weekends="prefs.showWeekends"
+                  :compact="phone"
+                  :can-create="canCreate"
+                  :create-color="createColor"
+                  :draft="draftShown"
+                  :selected-key="state.event"
+                  :dim-past="prefs.dimPast"
+                  @select="select"
+                  @create="startCreate"
+                  @create-day="createOnDay"
+                  @move-days="moveDays"
+                  @pick="setDate"
+                  @open-day="(date) => setState({ date, view: 'day' })"
+                />
+              </template>
+              <AgendaSchedule
+                v-else-if="phone"
                 :events="visibleEvents"
-                :range="pickedDay"
+                :range="range"
+                :time-zone="timeZone"
+                :locale="locale"
+                :hour12="hour12"
+                :today="todayDate"
+                :now="now"
+                :selected="state.event"
+                :can-create="canCreate"
+                :color-of="colorOf"
+                :week-starts-on="firstWeekday"
+                :full="listDays >= LIST_MAX_DAYS"
+                :dim-past="prefs.dimPast"
+                @select="select"
+                @create="(date) => createOnDay(date)"
+                @open-day="(date) => setState({ date, view: 'day' })"
+                @more="moreDays"
+                @later="laterDays"
+                @earlier="earlierDays"
+              />
+              <AgendaList
+                v-else
+                class="ag-schedule"
+                :events="visibleEvents"
+                :range="range"
                 :time-zone="timeZone"
                 :locale="locale"
                 :hour12="hour12"
@@ -286,52 +373,117 @@
                 @create="(date) => createOnDay(date)"
               />
             </template>
-            <AgendaList
-              v-else
-              class="ag-schedule"
-              :events="visibleEvents"
-              :range="range"
-              :time-zone="timeZone"
-              :locale="locale"
-              :hour12="hour12"
-              :today="todayDate"
-              :now="now"
-              :selected="state.event"
-              :can-create="canCreate"
-              :color-of="colorOf"
-              @select="select"
-              @create="(date) => createOnDay(date)"
-            />
-          </template>
+          </div>
         </div>
       </section>
     </div>
 
-    <button
-      v-if="canCreate && phone"
-      type="button"
-      class="ag-fab"
-      :aria-label="__('New event')"
-      @click="openCreate()"
-    >
-      <span class="lucide-plus h-7 w-7" aria-hidden="true" />
-    </button>
-
-    <!-- phone: calendars drawer -->
-    <Teleport to="body">
-      <div
-        v-if="phone && drawer"
-        class="ag-drawer"
-        @click.self="drawer = false"
-      >
-        <div
-          class="ag-drawer__panel ag-vars"
-          role="dialog"
-          :aria-label="__('Calendars')"
+    <!-- phone: «+» (a small menu when tasks can be created too) -->
+    <template v-if="canCreate && phone">
+      <Transition name="ag-fade">
+        <div v-if="fabOpen" class="ag-fabscrim" @click="fabOpen = false" />
+      </Transition>
+      <div class="ag-dial" :class="{ 'is-open': fabOpen }">
+        <Transition name="ag-dial">
+          <div v-if="fabOpen" class="ag-dial__items" role="menu">
+            <button
+              v-if="tasksEnabled"
+              type="button"
+              role="menuitem"
+              class="ag-dial__item"
+              @click="fabCreate('task')"
+            >
+              <span class="ag-dial__label">{{ __('Task') }}</span>
+              <span class="ag-dial__icon">
+                <span class="lucide-circle-check h-5 w-5" aria-hidden="true" />
+              </span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              class="ag-dial__item"
+              @click="fabCreate('event')"
+            >
+              <span class="ag-dial__label">{{ __('Event') }}</span>
+              <span class="ag-dial__icon">
+                <span class="lucide-calendar-plus h-5 w-5" aria-hidden="true" />
+              </span>
+            </button>
+          </div>
+        </Transition>
+        <button
+          type="button"
+          class="ag-fab"
+          :class="{ 'is-open': fabOpen }"
+          :aria-label="fabOpen ? __('Close') : __('New event')"
+          :aria-expanded="tasksEnabled ? fabOpen : undefined"
+          @click="fabPress"
         >
-          <AgendaSidebar v-bind="sidebarProps" v-on="sidebarHandlers" />
-        </div>
+          <span class="lucide-plus h-7 w-7" aria-hidden="true" />
+        </button>
       </div>
+    </template>
+
+    <!-- phone: the menu drawer (views, refresh, calendars, settings) -->
+    <Teleport to="body">
+      <Transition name="ag-drawer" :duration="240">
+        <div
+          v-if="phone && drawer"
+          class="ag-drawer"
+          @click.self="drawer = false"
+        >
+          <div
+            ref="drawerPanel"
+            class="ag-drawer__panel ag-vars"
+            role="dialog"
+            :aria-label="__('Agenda menu')"
+            @touchstart.passive="drawerStart"
+            @touchmove.passive="drawerMove"
+            @touchend="drawerEnd"
+            @touchcancel="drawerEnd"
+          >
+            <div class="ag-drawer__brand">
+              <span class="ag-drawer__logo" aria-hidden="true">{{
+                Number(todayDate.slice(8))
+              }}</span>
+              {{ __('Agenda') }}
+            </div>
+            <nav class="ag-drawer__views" :aria-label="__('View')">
+              <button
+                v-for="entry in phoneViews"
+                :key="entry.value"
+                type="button"
+                class="ag-drawer__item"
+                :aria-current="state.view === entry.value ? 'page' : undefined"
+                @click="pickPhoneView(entry.value)"
+              >
+                <span :class="entry.icon" class="h-5 w-5" aria-hidden="true" />
+                {{ entry.label }}
+              </button>
+            </nav>
+            <hr class="ag-drawer__rule" />
+            <button type="button" class="ag-drawer__item" @click="refresh">
+              <span class="lucide-refresh-cw h-5 w-5" aria-hidden="true" />
+              {{ __('Refresh') }}
+            </button>
+            <hr class="ag-drawer__rule" />
+            <AgendaSidebar
+              v-bind="sidebarProps"
+              compact
+              v-on="sidebarHandlers"
+            />
+            <hr class="ag-drawer__rule" />
+            <button
+              type="button"
+              class="ag-drawer__item"
+              @click="openSettings('general')"
+            >
+              <span class="lucide-settings h-5 w-5" aria-hidden="true" />
+              {{ __('Agenda settings') }}
+            </button>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
 
     <!-- desktop: quick create beside the selection -->
@@ -362,6 +514,33 @@
         />
       </div>
     </AgendaPopover>
+
+    <!-- phone: quick create (a task) in a sheet -->
+    <BottomSheet
+      v-if="phone"
+      :open="Boolean(quick)"
+      :title="''"
+      @update:open="(value) => !value && closeQuick()"
+    >
+      <div v-if="quick" class="ag-vars px-5 pb-6">
+        <AgendaQuickCreate
+          :key="quick.key"
+          :draft="quick.draft"
+          :time-zone="timeZone"
+          :calendar-color="calendarColors.Event"
+          :can-create-task="tasksEnabled"
+          :context="quick.context"
+          :busy="busy"
+          :constraints="quick.constraints"
+          @change="(draft) => (quick.draft = { ...quick.draft, ...draft })"
+          @save="saveQuick"
+          @more="quickMore"
+          @close="closeQuick"
+          @guard-action="quickGuardAction"
+          @dismiss-guard="quick.constraints = []"
+        />
+      </div>
+    </BottomSheet>
 
     <!-- event details: a card beside the chip (desktop), a sheet (phone) -->
     <AgendaPopover
@@ -511,9 +690,12 @@ import AgendaEventForm from '@/components/agenda/AgendaEventForm.vue'
 import AgendaEventPanel from '@/components/agenda/AgendaEventPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import AgendaList from '@/components/agenda/AgendaList.vue'
+import AgendaMiniMonth from '@/components/agenda/AgendaMiniMonth.vue'
 import AgendaMonthGrid from '@/components/agenda/AgendaMonthGrid.vue'
+import AgendaMonthStrip from '@/components/agenda/AgendaMonthStrip.vue'
 import AgendaPopover from '@/components/agenda/AgendaPopover.vue'
 import AgendaQuickCreate from '@/components/agenda/AgendaQuickCreate.vue'
+import AgendaSchedule from '@/components/agenda/AgendaSchedule.vue'
 import AgendaSearch from '@/components/agenda/AgendaSearch.vue'
 import AgendaSettings from '@/components/agenda/AgendaSettings.vue'
 import AgendaSidebar from '@/components/agenda/AgendaSidebar.vue'
@@ -527,6 +709,7 @@ import {
   wallInstant,
   wallParts,
 } from '@/components/agenda/agendaGrid'
+import { useSwipeNav } from '@/components/agenda/agendaSwipe'
 import { isMobile } from '@/composables/breakpoint'
 import { DENSITIES, useAgendaPrefs } from '@/composables/useAgendaPrefs'
 import { hoyLive } from '@/composables/useHoy'
@@ -535,7 +718,10 @@ import { shiftCalendarDate } from '@/vendor/muelle-calendar/core'
 import {
   CITAS,
   GOOGLE_RETURN_KEY,
+  LIST_DAYS,
+  LIST_MAX_DAYS,
   MY_CALENDARS,
+  PER_RESOURCE,
   TASKS,
   agendaLocale,
   calendarKey,
@@ -559,7 +745,9 @@ import {
   queryTasks,
   querySources,
   rangeFor,
+  readResourceCache,
   reopenTask,
+  resourceCalendarKey,
   requestChange,
   requestId,
   rescheduleTask,
@@ -567,6 +755,7 @@ import {
   setStatus,
   shareLink,
   sourcesFor,
+  splitCalendarKey,
   stateQuery,
   step,
   syncGoogle,
@@ -578,6 +767,7 @@ import {
   usesHour12,
   wallToInstant,
   weekStartsOn,
+  writeResourceCache,
 } from '@/composables/useAgenda'
 
 const route = useRoute()
@@ -591,6 +781,7 @@ const {
   loadRemote,
   setColor: setPrefColor,
   toggleHidden,
+  setHidden,
   remember,
   reset,
 } = useAgendaPrefs()
@@ -623,6 +814,13 @@ const syncBusy = ref('')
 const syncError = ref('')
 const tasksEnabled = ref(false)
 const cache = createRangeCache()
+// Doctors and technicians per source (each one a calendar), remembered on this device.
+const resources = ref(readResourceCache())
+// Phone: the date dropdown under the title, the Create menu and how far the list reaches.
+const picker = ref(false)
+const fabOpen = ref(false)
+const PHONE_LIST_DAYS = 14
+const listDays = ref(phone.value ? PHONE_LIST_DAYS : LIST_DAYS)
 
 const timeZone = computed(
   () =>
@@ -639,13 +837,10 @@ const state = computed(() =>
 )
 const todayDate = computed(() => today(timeZone.value))
 const range = computed(() =>
-  rangeFor(state.value, timeZone.value, firstWeekday.value),
-)
-const pickedDay = computed(() =>
-  rangeFor({ view: 'day', date: state.value.date }, timeZone.value),
+  rangeFor(state.value, timeZone.value, firstWeekday.value, listDays.value),
 )
 const gridView = computed(() =>
-  ['day', '4day', 'week'].includes(state.value.view),
+  ['day', '3day', '4day', 'week'].includes(state.value.view),
 )
 const isWeekend = (date) =>
   [0, 6].includes(new Date(`${date}T12:00:00Z`).getUTCDay())
@@ -665,39 +860,76 @@ const viewEntries = computed(() => [
   { value: 'list', label: __('Schedule view'), key: 'a' },
   { value: '4day', label: __('4 days'), key: 'x' },
 ])
+// The phone drawer's views, as a native calendar lists them.
 const phoneViews = computed(() => [
-  { value: 'list', label: __('Schedule view') },
-  { value: 'day', label: __('Day') },
-  { value: '4day', label: __('4 days') },
-  { value: 'month', label: __('Month') },
+  { value: 'list', label: __('Schedule view'), icon: 'lucide-rows-3' },
+  { value: 'day', label: __('Day'), icon: 'lucide-square' },
+  { value: '3day', label: __('3 days'), icon: 'lucide-columns-3' },
+  { value: 'week', label: __('Week'), icon: 'lucide-columns-4' },
+  { value: 'month', label: __('Month'), icon: 'lucide-layout-grid' },
 ])
 const currentViewLabel = computed(
   () =>
-    viewEntries.value.find((entry) => entry.value === state.value.view)
-      ?.label || '',
+    [...viewEntries.value, ...phoneViews.value].find(
+      (entry) => entry.value === state.value.view,
+    )?.label || '',
 )
 
 // --- calendars: sources + citas + tasks, with the worker's colors and visibility --------
 const enabledSources = computed(
   () => caps.value?.sources?.filter((row) => row.enabled) || [],
 )
+const sessionUser = () =>
+  decodeURIComponent(
+    document.cookie
+      .split('; ')
+      .find((part) => part.startsWith('user_id='))
+      ?.slice(8) || '',
+  )
 const calendars = computed(() => {
   const rows = []
+  const hidden = new Set(prefs.hidden)
+  const linked = state.value.calendars
+  const me = sessionUser()
+  const shown = (key, parent) =>
+    linked
+      ? linked.includes(key) || Boolean(parent && linked.includes(parent))
+      : !hidden.has(key) && !(parent && hidden.has(parent))
   const add = (key, extra = {}) => {
     const index = rows.length
     rows.push({
       key,
-      label: calendarLabel(key, extra.label),
+      label: extra.title || calendarLabel(key, extra.label),
       color: prefs.colors[key] || defaultCalendarColor(key, index),
-      visible: state.value.calendars
-        ? state.value.calendars.includes(key)
-        : !prefs.hidden.includes(key),
-      group: MY_CALENDARS.includes(key) ? 'mine' : 'other',
+      visible: shown(key, extra.parent),
+      group: extra.group || (MY_CALENDARS.includes(key) ? 'mine' : 'other'),
+      parent: extra.parent || '',
       blocked: Boolean(extra.blocked),
       reason: extra.reason || '',
+      inactive: Boolean(extra.inactive),
+      mine: Boolean(extra.mine),
     })
   }
   for (const source of caps.value?.sources || []) {
+    if (PER_RESOURCE[source.key]) {
+      // Role calendars (Clínica, Taller) only list for the people who work there.
+      if (!source.enabled) continue
+      const people = resources.value[source.key] || []
+      if (!people.length) {
+        add(source.key, { label: source.label, group: source.key })
+        continue
+      }
+      for (const person of people)
+        add(resourceCalendarKey(source.key, person.id), {
+          title:
+            person.id === '__unassigned__' ? __('Unassigned') : person.title,
+          group: source.key,
+          parent: source.key,
+          inactive: person.active === false,
+          mine: Boolean(me && person.id === me),
+        })
+      continue
+    }
     if (!source.enabled && !source.reason) continue
     add(source.key, {
       label: source.label,
@@ -731,22 +963,46 @@ const createColor = computed(() => {
     ? calendarColors.value[TASKS] || '#3f51b5'
     : calendarColors.value.Event || '#039be5'
 })
-const colorOf = (event) =>
-  eventColor(event, calendarColors.value[calendarKey(event)])
+function colorOf(event) {
+  const key = calendarKey(event)
+  const color = calendarColors.value[key] || defaultCalendarColor(key)
+  // A doctor's or technician's calendar color names the person: it wins over the
+  // appointment type's color (an event's own color still wins).
+  return PER_RESOURCE[event.source]
+    ? eventColor({ color: event.color }, color)
+    : eventColor(event, color)
+}
+const calendarName = (event) => {
+  const key = calendarKey(event)
+  return (
+    calendars.value.find((row) => row.key === key)?.label || calendarLabel(key)
+  )
+}
 const zoneNote = computed(() => {
   const own = caps.value?.user_time_zone
   return own && own !== timeZone.value
     ? __('Times in {0}, the business time zone.', [timeZone.value])
     : ''
 })
-const visibleEvents = computed(() =>
-  events.value.filter((event) => {
-    if (!visibleCalendars.value.includes(calendarKey(event))) return false
+const knownCalendars = computed(
+  () => new Set(calendars.value.map((row) => row.key)),
+)
+const visibleEvents = computed(() => {
+  const visible = new Set(visibleCalendars.value)
+  return events.value.filter((event) => {
+    const key = calendarKey(event)
+    // Someone new on a doctor's/technician's source (not listed yet) shows with it.
+    const shown =
+      visible.has(key) ||
+      (!knownCalendars.value.has(key) &&
+        PER_RESOURCE[event.source] &&
+        neededSources.value.includes(event.source))
+    if (!shown) return false
     if (!prefs.showDone && event.status === 'Done') return false
     if (!prefs.showCancelled && event.status === 'Cancelled') return false
     return true
-  }),
-)
+  })
+})
 const busyDates = computed(() => {
   const dates = new Set()
   for (const event of visibleEvents.value) {
@@ -817,6 +1073,18 @@ const rangeTitle = computed(() => {
   )
 })
 
+// Phone: the month (and the year when it is not this one), as a native calendar titles it.
+const phoneTitle = computed(() => {
+  const date = gridView.value ? gridDates.value[0] : state.value.date
+  const thisYear = date.slice(0, 4) === todayDate.value.slice(0, 4)
+  return capital(
+    civil(
+      date,
+      thisYear ? { month: 'long' } : { month: 'long', year: 'numeric' },
+    ),
+  )
+})
+
 const returnTo = computed(() => safeReturn(route.query.return_to))
 const returnLabel = computed(() =>
   String(route.query.return_label || __('previous screen')).slice(0, 40),
@@ -830,20 +1098,83 @@ function setState(patch) {
   const next = { ...state.value, ...patch }
   router.replace({ query: stateQuery(next, route.query) })
 }
-const setView = (view) => setState({ view })
-const setDate = (date) => setState({ date })
-const go = (direction) => setState({ date: step(state.value, direction) })
+function setView(view) {
+  picker.value = false
+  if (phone.value && view === 'list') listDays.value = PHONE_LIST_DAYS
+  setState({ view })
+}
+// Phone paging: a swipe on the calendar (not the list) moves a range, following the finger.
+const swipe = useSwipeNav(calendarRoot, {
+  onNavigate: (direction) => setState({ date: step(state.value, direction) }),
+  enabled: () =>
+    phone.value &&
+    state.value.view !== 'list' &&
+    !form.value &&
+    !selectedEvent.value &&
+    !drawer.value,
+})
+function setDate(date) {
+  const before = state.value.date
+  setState({ date })
+  if (phone.value && date !== before) swipe.enter(date > before ? 1 : -1)
+}
+function go(direction) {
+  setState({ date: step(state.value, direction) })
+  if (phone.value) swipe.enter(direction)
+}
+function goToday() {
+  picker.value = false
+  if (state.value.view === 'list')
+    listDays.value = phone.value ? PHONE_LIST_DAYS : LIST_DAYS
+  setDate(todayDate.value)
+}
+function pickMonth(month) {
+  setDate(
+    month === todayDate.value.slice(0, 7) ? todayDate.value : `${month}-01`,
+  )
+}
+function pickDate(date) {
+  picker.value = false
+  setDate(date)
+}
+// A deep link's calendar filter becomes the worker's own choice once they change it.
+function adoptLinkedFilter() {
+  if (!state.value.calendars) return
+  const changes = calendars.value.map((row) => [row.key, !row.visible])
+  for (const row of calendars.value)
+    if (row.parent) changes.push([row.parent, false])
+  setHidden(changes)
+  setState({ calendars: null })
+}
 function toggleCalendar(key) {
-  // A deep link's calendar filter becomes the worker's own choice once they change it.
-  if (state.value.calendars) {
-    for (const row of calendars.value)
-      toggleHidden(row.key, !state.value.calendars.includes(row.key))
-    setState({ calendars: null })
+  adoptLinkedFilter()
+  const row = calendars.value.find((entry) => entry.key === key)
+  // Turning one person on while their whole group was off: just that person.
+  if (row?.parent && prefs.hidden.includes(row.parent)) {
+    const changes = [[row.parent, false]]
+    for (const other of calendars.value)
+      if (other.parent === row.parent)
+        changes.push([other.key, other.key !== key])
+    return setHidden(changes)
   }
   toggleHidden(key)
 }
+/** A group's box: everyone off when anyone shows, else everyone on. */
+function toggleGroup(group) {
+  adoptLinkedFilter()
+  const rows = calendars.value.filter((row) => row.group === group)
+  const anyShown = rows.some((row) => row.visible)
+  const changes = rows.map((row) => [row.key, anyShown])
+  changes.push([group, anyShown])
+  setHidden(changes)
+}
 function onlyCalendar(key) {
-  for (const row of calendars.value) toggleHidden(row.key, row.key !== key)
+  const changes = calendars.value.map((row) => [row.key, row.key !== key])
+  const parent =
+    splitCalendarKey(key).resource !== null ? splitCalendarKey(key).source : ''
+  for (const row of calendars.value)
+    if (row.parent) changes.push([row.parent, row.parent !== parent])
+  setHidden(changes)
   if (state.value.calendars) setState({ calendars: null })
 }
 const setColor = (key, hex) => setPrefColor(key, hex)
@@ -897,10 +1228,31 @@ async function fetchRange(target, { store = true } = {}) {
       tasks = []
     }
   }
+  learnResources(parts)
   return {
     events: [...parts.flatMap((part) => part.events), ...tasks],
     problems: parts.flatMap((part) => part.problems),
   }
+}
+// The people each per-resource source returned: they become (or stay) calendars.
+function learnResources(parts) {
+  let changed = false
+  const next = { ...resources.value }
+  for (const part of parts)
+    for (const [source, rows] of Object.entries(part.resources || {})) {
+      if (!PER_RESOURCE[source]) continue
+      const clean = rows.slice(0, 100).map((row) => ({
+        id: String(row.id),
+        title: String(row.title || row.id),
+        active: row.active !== false,
+      }))
+      if (JSON.stringify(clean) === JSON.stringify(next[source] || [])) continue
+      next[source] = clean
+      changed = true
+    }
+  if (!changed) return
+  resources.value = next
+  writeResourceCache(next)
 }
 function fromCache(target) {
   const keys = [...neededSources.value, ...(wantTasks.value ? [TASKS] : [])]
@@ -967,10 +1319,12 @@ function prefetch() {
   clearTimeout(prefetchTimer)
   prefetchTimer = setTimeout(() => {
     for (const direction of [1, -1]) {
+      if (state.value.view === 'list' && phone.value && direction < 0) continue
       const target = rangeFor(
         { ...state.value, date: step(state.value, direction) },
         timeZone.value,
         firstWeekday.value,
+        listDays.value,
       )
       if (!fromCache(target)) fetchRange(target).catch(() => {})
     }
@@ -979,12 +1333,87 @@ function prefetch() {
 function invalidate() {
   cache.clear()
 }
+// Phone schedule: reaching the end loads two more weeks (up to six), then pages on.
+function moreDays() {
+  if (listDays.value >= LIST_MAX_DAYS) return
+  listDays.value = Math.min(LIST_MAX_DAYS, listDays.value + PHONE_LIST_DAYS)
+  load({ quiet: true })
+}
+function laterDays() {
+  const date = shiftCalendarDate(state.value.date, listDays.value)
+  listDays.value = PHONE_LIST_DAYS
+  setState({ date })
+  calendarRoot.value?.scrollTo?.({ top: 0 })
+}
+function earlierDays() {
+  setState({ date: shiftCalendarDate(state.value.date, -LIST_DAYS) })
+  calendarRoot.value?.scrollTo?.({ top: 0 })
+}
+async function refresh() {
+  drawer.value = false
+  invalidate()
+  await load()
+  toast.success(__('Agenda updated'))
+}
+// Phone «+»: straight to a new event, or a small menu when tasks can be created too.
+function fabPress() {
+  if (!tasksEnabled.value) return openCreate()
+  fabOpen.value = !fabOpen.value
+}
+function fabCreate(kind) {
+  fabOpen.value = false
+  sidebarHandlers.create(kind)
+}
+// The phone drawer follows a leftward swipe and closes past a third of its width.
+const drawerPanel = ref(null)
+let drawerTouch = null
+function drawerStart(event) {
+  const point = event.touches[0]
+  drawerTouch = { x: point.clientX, y: point.clientY, dx: 0, axis: '' }
+}
+function drawerMove(event) {
+  if (!drawerTouch) return
+  const point = event.touches[0]
+  const dx = point.clientX - drawerTouch.x
+  const dy = point.clientY - drawerTouch.y
+  if (!drawerTouch.axis) {
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return
+    drawerTouch.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+  }
+  if (drawerTouch.axis !== 'x') return
+  drawerTouch.dx = Math.min(0, dx)
+  if (drawerPanel.value) {
+    drawerPanel.value.style.transition = 'none'
+    drawerPanel.value.style.transform = `translateX(${drawerTouch.dx}px)`
+  }
+}
+function drawerEnd() {
+  const current = drawerTouch
+  drawerTouch = null
+  const panel = drawerPanel.value
+  if (!current || !panel) return
+  panel.style.transition = ''
+  panel.style.transform = ''
+  if (current.axis === 'x' && current.dx < -panel.clientWidth / 3)
+    drawer.value = false
+}
+function pickPhoneView(view) {
+  drawer.value = false
+  setView(view)
+}
 // Range and calendar changes reload (once: boot's own load already covers its key).
 watch(loadKey, (key) => caps.value && key !== loadedKey && load())
 // Someone (or another tab) changed an event, a task or a shift: refresh quietly.
 useLiveWatch(
   hoyLive(socket),
-  ['Event', 'ToDo', 'CRM Task', 'Shift Assignment'],
+  [
+    'Event',
+    'ToDo',
+    'CRM Task',
+    'Shift Assignment',
+    'Patient Appointment',
+    'Repair Order',
+  ],
   () => {
     invalidate()
     return load({ quiet: true })
@@ -1056,9 +1485,7 @@ const panelProps = computed(() => ({
   hour12,
   busy: busy.value,
   color: selectedEvent.value ? colorOf(selectedEvent.value) : '',
-  calendar: selectedEvent.value
-    ? calendarLabel(calendarKey(selectedEvent.value))
-    : '',
+  calendar: selectedEvent.value ? calendarName(selectedEvent.value) : '',
   constraints: panelConstraints.value.length
     ? panelConstraints.value
     : moveGuard.value && eventKey(moveGuard.value.event) === state.value.event
@@ -1855,6 +2282,7 @@ const sidebarHandlers = {
     setDate(date)
   },
   toggle: toggleCalendar,
+  'toggle-group': toggleGroup,
   only: onlyCalendar,
   color: setColor,
   settings: openSettings,
@@ -1889,7 +2317,15 @@ function onKey(event) {
     ArrowRight: () => go(1),
     ArrowLeft: () => go(-1),
     Escape: () =>
-      quick.value ? closeQuick() : state.value.event && closePanel(),
+      fabOpen.value
+        ? (fabOpen.value = false)
+        : drawer.value
+          ? (drawer.value = false)
+          : picker.value
+            ? (picker.value = false)
+            : quick.value
+              ? closeQuick()
+              : state.value.event && closePanel(),
   }
   const action = actions[event.key]
   if (action) {
@@ -2096,27 +2532,6 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: var(--ink-gray-5);
 }
-.ag-phoneviews {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
-  margin: 6px 8px;
-  padding: 2px;
-  border-radius: 10px;
-  background: var(--surface-gray-2);
-}
-.ag-phoneviews button {
-  min-height: 36px;
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--ink-gray-7);
-}
-.ag-phoneviews button[aria-pressed='true'] {
-  background: var(--surface-base);
-  color: var(--ink-gray-9);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-}
 .ag-main {
   display: flex;
   flex: 1 1 auto;
@@ -2168,11 +2583,158 @@ onBeforeUnmount(() => {
 .is-phone .ag-canvas.is-list {
   padding: 4px 12px 96px;
 }
-.ag-fab {
+/* --- phone: app bar, date dropdown, views, «+», drawer (a native calendar's layout) --- */
+.ag-ptop {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 4px 6px 4px 4px;
+  padding-top: max(4px, env(safe-area-inset-top));
+}
+.is-phone .ag-iconbtn {
+  width: 44px;
+  height: 44px;
+}
+.ag-ptitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px 0 10px;
+  border-radius: 999px;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink-gray-9);
+}
+.ag-ptitle:active {
+  background: var(--surface-gray-2);
+}
+.ag-ptitle__caret {
+  flex: none;
+  color: var(--ink-gray-7);
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ag-ptitle__caret.is-open {
+  transform: rotate(180deg);
+}
+.ag-todaybtn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  color: var(--ink-gray-7);
+}
+.ag-todaybtn:active {
+  background: var(--surface-gray-2);
+}
+.ag-todaybtn__num {
+  position: absolute;
+  top: 17px;
+  left: 0;
+  right: 0;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--ink-gray-8);
+}
+.ag-picker {
+  overflow: hidden;
+  border-bottom: 1px solid var(--outline-gray-1);
+}
+.ag-picker__mini {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 0 12px 8px;
+}
+.ag-drop-enter-active,
+.ag-drop-leave-active {
+  transition:
+    max-height 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.2s;
+  max-height: 340px;
+}
+.ag-drop-enter-from,
+.ag-drop-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+.ag-viewin {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  animation: ag-viewin 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes ag-viewin {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+.is-phone .ag-canvas {
+  will-change: transform;
+}
+.is-phone .ag-canvas.is-list {
+  padding: 0;
+}
+.ag-dial {
   position: fixed;
   right: 16px;
   bottom: calc(4.5rem + env(safe-area-inset-bottom));
-  z-index: 30;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+}
+.ag-dial__items {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  padding-right: 4px;
+}
+.ag-dial__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ag-dial__label {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--surface-elevation-2, var(--surface-base));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-gray-9);
+}
+.ag-dial__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--surface-elevation-2, var(--surface-base));
+  color: var(--ag-accent-ink);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.ag-dial-enter-active,
+.ag-dial-leave-active {
+  transition:
+    opacity 0.18s,
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ag-dial-enter-from,
+.ag-dial-leave-to {
+  opacity: 0;
+  transform: translateY(16px) scale(0.92);
+}
+.ag-fab {
   display: grid;
   place-items: center;
   width: 56px;
@@ -2180,21 +2742,123 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   background: var(--ag-select-strong);
   color: var(--ag-accent-ink);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    0 6px 16px -4px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.15s,
+    border-radius 0.2s;
+}
+.ag-fab:active {
+  transform: scale(0.94);
+}
+.ag-fab .lucide-plus {
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ag-fab.is-open .lucide-plus {
+  transform: rotate(45deg);
+}
+.ag-fabscrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background: rgba(0, 0, 0, 0.32);
+}
+.ag-fade-enter-active,
+.ag-fade-leave-active {
+  transition: opacity 0.2s;
+}
+.ag-fade-enter-from,
+.ag-fade-leave-to {
+  opacity: 0;
 }
 .ag-drawer {
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
 }
 .ag-drawer__panel {
   position: absolute;
   inset: 0 auto 0 0;
   width: min(320px, 86vw);
   overflow-y: auto;
-  padding-top: 12px;
+  overscroll-behavior: contain;
+  padding: max(12px, env(safe-area-inset-top)) 0
+    calc(16px + env(safe-area-inset-bottom));
+  border-radius: 0 16px 16px 0;
   background: var(--surface-base);
   box-shadow: 0 0 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ag-drawer-enter-active,
+.ag-drawer-leave-active {
+  transition: background-color 0.24s;
+}
+.ag-drawer-enter-from,
+.ag-drawer-leave-to {
+  background-color: rgba(0, 0, 0, 0);
+}
+.ag-drawer-enter-from .ag-drawer__panel,
+.ag-drawer-leave-to .ag-drawer__panel {
+  transform: translateX(-100%);
+}
+.ag-drawer__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 24px 12px;
+  font-size: 22px;
+  color: var(--ink-gray-9);
+}
+.ag-drawer__logo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: var(--ag-accent);
+  color: var(--ag-on-accent);
+  font-size: 15px;
+  font-weight: 600;
+}
+.ag-drawer__views {
+  display: flex;
+  flex-direction: column;
+}
+.ag-drawer__item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: calc(100% - 12px);
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 0 999px 999px 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-gray-8);
+  text-align: left;
+}
+.ag-drawer__item:active {
+  background: var(--surface-gray-2);
+}
+.ag-drawer__item[aria-current='page'] {
+  background: var(--ag-select-strong);
+  color: var(--ag-accent-ink);
+}
+.ag-drawer__rule {
+  margin: 8px 0;
+  border-color: var(--outline-gray-1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ag-viewin,
+  .ag-drawer__panel,
+  .ag-drop-enter-active,
+  .ag-drop-leave-active,
+  .ag-dial-enter-active,
+  .ag-dial-leave-active {
+    animation: none;
+    transition: none;
+  }
 }
 </style>

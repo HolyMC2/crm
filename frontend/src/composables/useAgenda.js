@@ -11,7 +11,10 @@ import {
 } from '@/vendor/muelle-calendar/core'
 
 export const API = 'doco.agenda.api'
-export const VIEWS = ['list', 'day', '4day', 'week', 'month']
+export const VIEWS = ['list', 'day', '3day', '4day', 'week', 'month']
+// Views a phone offers (Google Calendar's set); 4 days stays on wider screens.
+export const PHONE_VIEWS = ['list', 'day', '3day', 'week', 'month']
+export const LIST_MAX_DAYS = 42
 export const LIST_DAYS = 7
 export const CALENDAR_RESOURCE = 'agenda'
 export const DEFAULT_CALENDARS = ['Event']
@@ -52,13 +55,13 @@ export function today(timeZone) {
   return localDate(new Date().toISOString(), timeZone)
 }
 
-// URL is state: ?view=list|day|4day|week|month&date=YYYY-MM-DD&event=Source:id&cal=Event,Turno
+// URL is state: ?view=list|day|3day|4day|week|month&date=YYYY-MM-DD&event=Source:id&cal=Event,Turno
 // `cal` is an optional deep-link filter; without it the worker's own calendar choice applies.
 export function parseState(query, { phone, timeZone, defaultView = '' }) {
   const fallback =
     defaultView && VIEWS.includes(defaultView)
-      ? phone && ['week', '4day'].includes(defaultView)
-        ? 'day'
+      ? phone && defaultView === '4day'
+        ? '3day'
         : defaultView
       : phone
         ? 'list'
@@ -89,39 +92,38 @@ export function stateQuery(state, query = {}) {
   return next
 }
 
-export function rangeFor(state, timeZone, firstWeekday = 1) {
+export function rangeFor(
+  state,
+  timeZone,
+  firstWeekday = 1,
+  listDays = LIST_DAYS,
+) {
   // The list runs forward from its date (today by default), never from past empty days.
-  if (state.view === 'list') {
-    const dates = Array.from({ length: LIST_DAYS }, (_, index) =>
+  const days =
+    state.view === 'list'
+      ? Math.max(1, Math.min(LIST_MAX_DAYS, listDays))
+      : DAY_SPANS[state.view]
+  if (days) {
+    const dates = Array.from({ length: days }, (_, index) =>
       shiftCalendarDate(state.date, index),
     )
     return {
       start: dayBounds(dates[0], timeZone).start,
       end: dayBounds(dates[dates.length - 1], timeZone).end,
       startDate: dates[0],
-      endDate: shiftCalendarDate(state.date, LIST_DAYS),
-      dates,
-    }
-  }
-  if (state.view === '4day') {
-    const dates = Array.from({ length: 4 }, (_, index) =>
-      shiftCalendarDate(state.date, index),
-    )
-    return {
-      start: dayBounds(dates[0], timeZone).start,
-      end: dayBounds(dates[3], timeZone).end,
-      startDate: dates[0],
-      endDate: shiftCalendarDate(state.date, 4),
+      endDate: shiftCalendarDate(state.date, days),
       dates,
     }
   }
   return calendarRange(state.date, state.view, timeZone, firstWeekday)
 }
+const DAY_SPANS = { '3day': 3, '4day': 4 }
 
 export function step(state, direction) {
   if (state.view === 'list')
     return shiftCalendarDate(state.date, direction * LIST_DAYS)
-  if (state.view === '4day') return shiftCalendarDate(state.date, direction * 4)
+  if (DAY_SPANS[state.view])
+    return shiftCalendarDate(state.date, direction * DAY_SPANS[state.view])
   return navigateCalendar(state.date, state.view, direction)
 }
 
@@ -268,6 +270,7 @@ export async function querySources(keys, range) {
   )
   const events = []
   const problems = []
+  const resources = {}
   let timeZone = null
   for (const { source, data, error } of results) {
     if (error || data?.constraints) {
@@ -283,8 +286,9 @@ export async function querySources(keys, range) {
     }
     timeZone = timeZone || data.timeZone
     events.push(...data.events)
+    if (Array.isArray(data.resources)) resources[source] = data.resources
   }
-  return { events, problems, timeZone }
+  return { events, problems, timeZone, resources }
 }
 
 export const createEvent = (source, payload) =>
@@ -474,9 +478,34 @@ export const searchPeople = (q) => call('crm.api.agenda.search_people', { q })
 export const TASKS = 'tasks'
 export const CITAS = 'Event:cita'
 
+// Sources whose people each get their own calendar: every doctor (Clínica) and every
+// technician (Taller) shows, hides and colors on their own. Key: «Source/resource id».
+export const PER_RESOURCE = Object.freeze({
+  'Patient Appointment': { group: () => __('Doctors') },
+  Taller: { group: () => __('Technicians') },
+})
+const SEP = '/'
+
+export function resourceCalendarKey(source, resourceId) {
+  return `${source}${SEP}${resourceId ?? ''}`
+}
+
+/** «Patient Appointment/HLC-PRAC-1» → { source, resource }; other keys → { source: key }. */
+export function splitCalendarKey(key) {
+  const text = String(key || '')
+  const index = text.indexOf(SEP)
+  if (index > 0 && PER_RESOURCE[text.slice(0, index)])
+    return { source: text.slice(0, index), resource: text.slice(index + 1) }
+  return { source: text, resource: null }
+}
+
 export function calendarKey(event) {
   if (event?.kind === 'task') return TASKS
   if (event?.source === 'Event' && event.kind === 'cita') return CITAS
+  if (PER_RESOURCE[event?.source]) {
+    const ids = event.sourceResourceIds || event.resourceIds || []
+    return resourceCalendarKey(event.source, ids[0])
+  }
   return event?.source || 'Event'
 }
 
@@ -487,6 +516,7 @@ const CALENDAR_LABELS = {
   Turno: () => __('Shifts'),
   Ausencias: () => __('Absences'),
   'Patient Appointment': () => __('Patient appointments'),
+  Taller: () => __('Workshop'),
 }
 export function calendarLabel(key, fallback = '') {
   return CALENDAR_LABELS[key]?.() || (fallback ? __(fallback) : key)
@@ -499,10 +529,50 @@ export function sourcesFor(calendars, available) {
   const wanted = new Set()
   for (const key of calendars) {
     if (key === TASKS) continue
-    const source = key === CITAS ? 'Event' : key
+    const source = key === CITAS ? 'Event' : splitCalendarKey(key).source
     if (available.includes(source)) wanted.add(source)
   }
   return [...wanted]
+}
+
+// The people of each per-resource source, remembered on this device so the drawer lists
+// every doctor and technician at once, before their calendars load.
+function resourcesStorageKey() {
+  const user = decodeURIComponent(
+    globalThis.document?.cookie
+      ?.split('; ')
+      .find((part) => part.startsWith('user_id='))
+      ?.slice(8) || '',
+  )
+  return `muelle.agenda.resources:${user || 'me'}`
+}
+export function readResourceCache() {
+  try {
+    const value = JSON.parse(
+      localStorage.getItem(resourcesStorageKey()) || '{}',
+    )
+    const clean = {}
+    for (const source of Object.keys(PER_RESOURCE))
+      if (Array.isArray(value?.[source]))
+        clean[source] = value[source]
+          .filter((row) => row && typeof row.id === 'string')
+          .slice(0, 100)
+          .map((row) => ({
+            id: row.id,
+            title: String(row.title || row.id).slice(0, 140),
+            active: row.active !== false,
+          }))
+    return clean
+  } catch {
+    return {}
+  }
+}
+export function writeResourceCache(value) {
+  try {
+    localStorage.setItem(resourcesStorageKey(), JSON.stringify(value))
+  } catch {
+    // Private mode or full storage: the calendars still list after the first load.
+  }
 }
 
 // --- tasks (Pendientes) on the calendar ----------------------------------------------------

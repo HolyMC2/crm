@@ -229,11 +229,16 @@ describe('Agenda page', () => {
     window.dispatchEvent(new Event('resize'))
     const router = await mountAt('/agenda?date=2026-10-07')
     expect(root.textContent).toContain('Cita EV-1')
-    expect(root.textContent).toContain('Nothing scheduled')
+    // The phone schedule: the date on the left, each event a pill with its time.
+    const day = root.querySelector('.ag-sch__day[data-day="2026-10-07"]')
+    expect(day.querySelector('.ag-sch__num').textContent.trim()).toBe('7')
+    expect(root.querySelector('.ag-sch__day[data-day="2026-10-08"]')).toBeNull()
     expect(root.querySelector('.mc-calendar')).toBeNull()
-    const row = [...root.querySelectorAll('button')].find((b) =>
-      b.textContent.includes('Cita EV-1'),
-    )
+    // Two weeks load at once on a phone.
+    expect(
+      Date.parse(last('query').end) - Date.parse(last('query').start),
+    ).toBe(14 * 86400000)
+    const row = root.querySelector('.ag-sch__pill[data-event-id="EV-1"]')
     row.click()
     await flush()
     expect(router.currentRoute.value.query.event).toBe('Event:EV-1')
@@ -516,24 +521,159 @@ describe('Agenda page', () => {
     })
   })
 
-  it('on a phone shows the tapped day below the month and a second tap schedules', async () => {
+  it('on a phone fills the month with colored chips and a tapped day opens it', async () => {
     window.innerWidth = 390
     window.dispatchEvent(new Event('resize'))
     const router = await mountAt('/agenda?view=month&date=2026-10-01')
-    expect(root.querySelector('.ag-month__item')).toBeNull()
-    expect(root.textContent).toContain('Nothing scheduled')
-    const days = [...root.querySelectorAll('.ag-month [data-day]')]
-    const seventh = days.find((el) =>
-      el.getAttribute('aria-label')?.endsWith('1 events'),
+    const chip = root.querySelector('.ag-month__chip')
+    expect(chip.textContent).toContain('Cita EV-1')
+    expect(chip.style.background).toMatch(/#039be5|rgb\(3, 155, 229\)/)
+    root.querySelector('.ag-month [data-day="2026-10-07"]').click()
+    await flush()
+    expect(router.currentRoute.value.query).toMatchObject({
+      view: 'day',
+      date: '2026-10-07',
+    })
+  })
+
+  it('on a phone the drawer lists the views and the title opens a month strip', async () => {
+    window.innerWidth = 390
+    window.dispatchEvent(new Event('resize'))
+    const router = await mountAt('/agenda?view=month&date=2026-10-07')
+    expect(root.querySelector('.ag-ptitle').textContent).toContain('October')
+    root.querySelector('.ag-ptitle').click()
+    await flush()
+    const months = [...root.querySelectorAll('.ag-strip__month')]
+    months.find((b) => b.dataset.month === '2026-12').click()
+    await flush()
+    expect(router.currentRoute.value.query.date).toBe('2026-12-01')
+    root.querySelector('button[aria-label="Main menu"]').click()
+    await flush()
+    const views = [...document.body.querySelectorAll('.ag-drawer__item')]
+    expect(views.map((b) => b.textContent.trim())).toEqual(
+      expect.arrayContaining([
+        'Schedule view',
+        'Day',
+        '3 days',
+        'Week',
+        'Month',
+      ]),
     )
-    seventh.click()
+    views.find((b) => b.textContent.trim() === '3 days').click()
     await flush()
-    expect(router.currentRoute.value.query.date).toBe('2026-10-07')
-    expect(root.textContent).toContain('Cita EV-1')
-    expect(calls.filter(([m]) => m.endsWith('.query'))).toHaveLength(1)
-    seventh.click()
+    expect(router.currentRoute.value.query.view).toBe('3day')
+    expect(root.querySelectorAll('.ag-tg__dayhead')).toHaveLength(3)
+    // The drawer slides away (its leave transition) once a view is picked.
+    await new Promise((resolve) => setTimeout(resolve, 320))
+    expect(document.body.querySelector('.ag-drawer')).toBeNull()
+  })
+
+  it('gives every doctor and technician their own calendar to filter by', async () => {
+    const base = handler
+    handler = (method, args) => {
+      if (method === 'crm.api.agenda.get_capabilities')
+        return {
+          enabled: true,
+          user_time_zone: TZ,
+          sources: [
+            { key: 'Event', enabled: true, timeZone: TZ, canCreate: true },
+            { key: 'Patient Appointment', enabled: true, timeZone: TZ },
+            { key: 'Taller', enabled: true, timeZone: TZ, label: 'Taller' },
+          ],
+        }
+      if (method.endsWith('.query') && args.source === 'Patient Appointment')
+        return {
+          timeZone: TZ,
+          resources: [
+            { id: 'DR-1', title: 'Dra. Ruiz', timeZone: TZ },
+            { id: 'DR-2', title: 'Dr. Soto', timeZone: TZ },
+          ],
+          events: [
+            {
+              ...event('PA-1', '2026-10-07T15:00:00Z', '2026-10-07T15:30:00Z'),
+              source: 'Patient Appointment',
+              title: 'Consulta Luis',
+              resourceIds: ['DR-1'],
+              appointmentTypeColor: '#d50000',
+            },
+            {
+              ...event('PA-2', '2026-10-08T15:00:00Z', '2026-10-08T15:30:00Z'),
+              source: 'Patient Appointment',
+              title: 'Consulta Eva',
+              resourceIds: ['DR-2'],
+            },
+          ],
+        }
+      if (method.endsWith('.query') && args.source === 'Taller')
+        return {
+          timeZone: TZ,
+          resources: [
+            { id: 'beto@example.test', title: 'Beto', timeZone: TZ },
+            { id: '__unassigned__', title: 'Sin asignar', timeZone: TZ },
+          ],
+          events: [
+            {
+              ...event('RO-9', '2026-10-09T18:00:00Z', '2026-10-09T18:30:00Z'),
+              source: 'Taller',
+              title: 'RO-9 · iPhone 13',
+              resourceIds: ['beto@example.test'],
+              kind: 'taller',
+            },
+          ],
+        }
+      return base(method, args)
+    }
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    // Doctors start hidden (a team calendar); the workshop shows.
+    expect(
+      calls.some(([m, a]) => m.endsWith('.query') && a.source === 'Taller'),
+    ).toBe(true)
+    expect(
+      calls.some(
+        ([m, a]) => m.endsWith('.query') && a.source === 'Patient Appointment',
+      ),
+    ).toBe(false)
+    const side = () => root.querySelector('.ag-sidebar')
+    expect(side().textContent).toContain('Technicians')
+    expect(side().textContent).toContain('Beto')
+    expect(side().textContent).toContain('Unassigned')
+    expect(root.querySelector('[data-event-id="RO-9"]')).not.toBeNull()
+
+    // Turn the doctors on: each doctor is a calendar with their own color.
+    const groupBox = [...side().querySelectorAll('.ag-side__groupcheck')].find(
+      (el) => el.getAttribute('aria-label').includes('Doctors'),
+    )
+    groupBox.click()
     await flush()
-    expect(titleInput()).not.toBeNull()
+    expect(side().textContent).toContain('Dra. Ruiz')
+    expect(side().textContent).toContain('Dr. Soto')
+    const ruiz = root.querySelector('.ag-event[data-event-id="PA-1"]')
+    const soto = root.querySelector('.ag-event[data-event-id="PA-2"]')
+    expect(ruiz).not.toBeNull()
+    expect(soto).not.toBeNull()
+    // The doctor's color, not the appointment type's, names whose visit it is.
+    expect(ruiz.style.background).not.toMatch(/#d50000|rgb\(213, 0, 0\)/)
+    expect(ruiz.style.background).not.toBe(soto.style.background)
+
+    // Hide one doctor: their visits leave, the other's stay, nothing reloads.
+    const queries = calls.filter(([m]) => m.endsWith('.query')).length
+    const sotoBox = [...side().querySelectorAll('.ag-side__label')]
+      .find((el) => el.textContent.includes('Dr. Soto'))
+      .querySelector('input')
+    sotoBox.dispatchEvent(new Event('change'))
+    await flush()
+    expect(root.querySelector('[data-event-id="PA-2"]')).toBeNull()
+    expect(root.querySelector('[data-event-id="PA-1"]')).not.toBeNull()
+    expect(calls.filter(([m]) => m.endsWith('.query')).length).toBe(queries)
+
+    // The doctors stay listed after a reload, before their calendars answer.
+    app.unmount()
+    root.remove()
+    resetAgendaPrefsForTests()
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    expect(root.querySelector('.ag-sidebar').textContent).toContain('Dr. Soto')
+    expect(root.querySelector('[data-event-id="PA-2"]')).toBeNull()
+    expect(root.querySelector('[data-event-id="PA-1"]')).not.toBeNull()
   })
 
   // --- calendar-style interactions (10-12) ------------------------------------------

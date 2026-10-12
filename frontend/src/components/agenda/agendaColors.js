@@ -37,6 +37,7 @@ export const CALENDAR_DEFAULTS = Object.freeze({
   Turno: '#616161',
   Ausencias: '#f6bf26',
   'Patient Appointment': '#8e24aa',
+  Taller: '#ef6c00',
 })
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
@@ -51,8 +52,21 @@ export function normalizeHex(value) {
   return text
 }
 
+// A person's calendar (a doctor, a technician: «Source/id») keeps the same color however
+// many colleagues join or leave: it is picked from the id, not the list position.
+function stableIndex(text) {
+  let hash = 2166136261
+  for (const char of String(text)) {
+    hash ^= char.codePointAt(0)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0) % PALETTE.length
+}
+
 export function defaultCalendarColor(key, index = 0) {
-  return CALENDAR_DEFAULTS[key] || PALETTE[(index * 5 + 3) % PALETTE.length].hex
+  if (CALENDAR_DEFAULTS[key]) return CALENDAR_DEFAULTS[key]
+  if (String(key).includes('/')) return PALETTE[stableIndex(key)].hex
+  return PALETTE[(index * 5 + 3) % PALETTE.length].hex
 }
 
 function channels(hex) {

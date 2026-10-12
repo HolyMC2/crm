@@ -250,3 +250,41 @@ describe('colors and calendars', () => {
     expect(cache.get(cache.key('Event', r(3))).value).toEqual([3])
   })
 })
+
+describe('phone swipe paging', () => {
+  it('commits a long or quick horizontal swipe, springs back a short one', async () => {
+    const { swipeOutcome, swipeAxis } = await import(
+      '@/components/agenda/agendaSwipe'
+    )
+    expect(swipeOutcome(-120, 400, 390)).toBe(1)
+    expect(swipeOutcome(120, 400, 390)).toBe(-1)
+    expect(swipeOutcome(-50, 400, 390)).toBe(0)
+    expect(swipeOutcome(-50, 60, 390)).toBe(1)
+    expect(swipeAxis(4, 3)).toBe('')
+    expect(swipeAxis(30, 5)).toBe('x')
+    expect(swipeAxis(12, 30)).toBe('y')
+  })
+
+  it('keys a doctor or technician calendar by source and person', async () => {
+    const { calendarKey, splitCalendarKey, sourcesFor } = await import(
+      '@/composables/useAgenda'
+    )
+    expect(
+      calendarKey({ source: 'Patient Appointment', resourceIds: ['DR-1'] }),
+    ).toBe('Patient Appointment/DR-1')
+    expect(
+      calendarKey({ source: 'Taller', resourceIds: ['beto@example.test'] }),
+    ).toBe('Taller/beto@example.test')
+    expect(splitCalendarKey('Taller/beto@example.test')).toEqual({
+      source: 'Taller',
+      resource: 'beto@example.test',
+    })
+    expect(splitCalendarKey('Event:cita').resource).toBeNull()
+    expect(
+      sourcesFor(
+        ['Patient Appointment/DR-1', 'Taller/x', 'Event'],
+        ['Event', 'Patient Appointment', 'Taller'],
+      ),
+    ).toEqual(['Patient Appointment', 'Taller', 'Event'])
+  })
+})

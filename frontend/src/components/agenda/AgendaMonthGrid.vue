@@ -32,7 +32,6 @@
           :class="{
             'is-outside': cell.slice(0, 7) !== month,
             'is-today': cell === today,
-            'is-picked': compact && cell === date_,
             'is-selecting': selecting(cell),
           }"
           :style="{
@@ -43,7 +42,7 @@
           :data-day="cell"
           role="gridcell"
           :aria-label="dayLabel(cell, week)"
-          @click="compact && pick(cell)"
+          @click="compact && emit('open-day', cell)"
         >
           <button
             type="button"
@@ -51,7 +50,7 @@
             :aria-label="
               compact ? dayLabel(cell, week) : __('Open {0}', [longDate(cell)])
             "
-            @click.stop="compact ? pick(cell) : emit('open-day', cell)"
+            @click.stop="emit('open-day', cell)"
           >
             <span
               v-if="
@@ -65,7 +64,7 @@
             v-if="!compact && week.hidden[index]"
             type="button"
             class="ag-month__more"
-            :style="{ top: `${NUM + week.cut * LANE}px` }"
+            :style="{ top: `${num + week.cut * lane}px` }"
             @click.stop="openMore($event, cell)"
           >
             {{ __('{0} more', [week.hidden[index]]) }}
@@ -121,7 +120,7 @@
             :style="{
               left: `calc(${(ghost.from / columns) * 100}% + 2px)`,
               width: `calc(${((ghost.to - ghost.from + 1) / columns) * 100}% - 4px)`,
-              top: `${NUM}px`,
+              top: `${num}px`,
               background: ghost.color,
               color: textOn(ghost.color),
             }"
@@ -129,31 +128,26 @@
             {{ ghost.label }}
           </div>
         </template>
-        <div v-else class="ag-month__dots" aria-hidden="true">
-          <template v-for="(cell, index) in week.dates" :key="`d-${cell}`">
+        <div v-else class="ag-month__chips" aria-hidden="true">
+          <span
+            v-for="item in week.items"
+            :key="`c-${item.event.source}:${item.event.id}`"
+            class="ag-month__chip"
+            :class="itemClasses(item)"
+            :style="chipStyle(item)"
+            >{{ item.event.title }}</span
+          >
+          <template v-for="(count, index) in week.hidden" :key="`h-${index}`">
             <span
-              class="ag-month__dotcell"
+              v-if="count"
+              class="ag-month__chipmore"
               :style="{
-                left: `${(index / columns) * 100}%`,
-                width: `${100 / columns}%`,
+                left: `calc(${(index / columns) * 100}% + 2px)`,
+                width: `calc(${100 / columns}% - 4px)`,
+                top: `${num + week.cut * lane}px`,
               }"
+              >+{{ count }}</span
             >
-              <span
-                v-for="event in week.byDay[index].slice(0, 3)"
-                :key="`${event.source}:${event.id}`"
-                class="ag-month__pill"
-                :style="{
-                  background: colorOf(event),
-                  color: textOn(colorOf(event)),
-                }"
-                >{{ event.title }}</span
-              >
-              <span
-                v-if="week.byDay[index].length > 3"
-                class="ag-month__pillmore"
-                >+{{ week.byDay[index].length - 3 }}</span
-              >
-            </span>
           </template>
         </div>
       </div>
@@ -260,14 +254,16 @@ const emit = defineEmits([
   'pick',
 ])
 
+// Desktop chips are 20px lanes under a 28px day number; a phone fits more, smaller ones.
 const NUM = 28
 const LANE = 22
+const num = computed(() => (props.compact ? 26 : NUM))
+const lane = computed(() => (props.compact ? 17 : LANE))
 const root = ref(null)
 const height = ref(720)
 const gesture = ref(null)
 const more = ref(null)
 const moreCard = ref(null)
-const date_ = computed(() => props.date)
 const month = computed(() => props.date.slice(0, 7))
 const key = (event) => `${event.source}:${event.id}`
 
@@ -316,8 +312,12 @@ function spanOf(event) {
   return eventDates(event, props.timeZone)
 }
 const model = computed(() => {
-  const weekH = Math.max(80, (height.value - 28) / weeks.value.length)
-  const capacity = Math.max(1, Math.floor((weekH - NUM - 2) / LANE))
+  const head = props.compact ? 24 : 28
+  const weekH = Math.max(
+    props.compact ? 56 : 80,
+    (height.value - head) / weeks.value.length,
+  )
+  const capacity = Math.max(1, Math.floor((weekH - num.value - 2) / lane.value))
   return weeks.value.map((all) => {
     const dates = all.filter(visibleDay)
     const first = dates[0]
@@ -432,9 +432,28 @@ function itemStyle(item) {
   return {
     left: `calc(${(item.from / n) * 100}% + 2px)`,
     width: `calc(${((item.to - item.from + 1) / n) * 100}% - 4px)`,
-    top: `${NUM + item.lane * LANE}px`,
+    top: `${num.value + item.lane * lane.value}px`,
     opacity: dragging ? 0.35 : undefined,
     ...(item.bar ? paint(item.event) : {}),
+  }
+}
+// Phone chips: every event filled with its color, like a native calendar's month.
+function chipStyle(item) {
+  const n = columns.value
+  const color = props.colorOf(item.event)
+  const base =
+    item.event.kind === 'task' || item.event.status === 'Cancelled'
+      ? {
+          background: 'transparent',
+          color: 'var(--ink-gray-8)',
+          boxShadow: `inset 0 0 0 1px ${color}`,
+        }
+      : { background: color, color: textOn(color) }
+  return {
+    left: `calc(${(item.from / n) * 100}% + 1px)`,
+    width: `calc(${((item.to - item.from + 1) / n) * 100}% - 2px)`,
+    top: `${num.value + item.lane * lane.value}px`,
+    ...base,
   }
 }
 function itemClasses(item) {
@@ -610,7 +629,7 @@ function selecting(date) {
   return date >= from && date <= to
 }
 
-// --- «N more» card and phone picking -----------------------------------------------------
+// --- «N more» card -----------------------------------------------------
 function openMore(event, date) {
   const box = event.currentTarget
     .closest('[data-agenda-date]')
@@ -624,11 +643,6 @@ function openMore(event, date) {
     date,
     style: { left: `${left}px`, top: `${top}px`, width: `${width}px` },
   }
-}
-function pick(date) {
-  if (date === props.date && props.canCreate)
-    emit('create-day', date, cellRect(date))
-  else emit('pick', date)
 }
 function outside(event) {
   if (more.value && moreCard.value && !moreCard.value.contains(event.target))
@@ -660,7 +674,37 @@ onBeforeUnmount(() => {
 }
 .ag-month.is-compact {
   min-height: 0;
-  height: auto;
+  height: 100%;
+}
+.is-compact .ag-month__weekdays,
+.is-compact .ag-month__weeks {
+  border-left: 0;
+}
+.is-compact .ag-month__weekday {
+  padding: 4px 0 2px;
+  border-right: 0;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.is-compact .ag-month__day {
+  border-right: 0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.is-compact .ag-month__day:active {
+  background: var(--surface-gray-2);
+}
+.is-compact .ag-month__day.is-outside {
+  background: transparent;
+}
+.is-compact .ag-month__num {
+  margin-top: 2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  font-size: 12px;
+  line-height: 22px;
 }
 .ag-month__weekdays {
   display: grid;
@@ -691,9 +735,8 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--outline-gray-1);
 }
 .is-compact .ag-month__week {
-  flex: none;
-  min-height: 0;
-  height: 64px;
+  min-height: 56px;
+  border-bottom-color: var(--outline-gray-1);
 }
 .ag-month__day {
   position: absolute;
@@ -709,9 +752,6 @@ onBeforeUnmount(() => {
 }
 .ag-month__day.is-selecting {
   background: var(--ag-select-tint);
-}
-.ag-month__day.is-picked {
-  background: var(--surface-gray-2);
 }
 .ag-month__num {
   display: block;
@@ -827,35 +867,46 @@ onBeforeUnmount(() => {
   pointer-events: none;
   box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.35);
 }
-.ag-month__dots {
+.ag-month__chips {
   position: absolute;
-  inset: 30px 0 0;
+  inset: 0;
   pointer-events: none;
 }
-.ag-month__dotcell {
+.ag-month__chip {
   position: absolute;
-  top: 0;
-  bottom: 2px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 0 2px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 3px;
   overflow: hidden;
-}
-.ag-month__pill {
-  display: block;
-  height: 9px;
-  padding: 0 2px;
-  border-radius: 2px;
-  font-size: 7px;
-  line-height: 9px;
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 15px;
   white-space: nowrap;
-  overflow: hidden;
+  text-overflow: clip;
 }
-.ag-month__pillmore {
-  font-size: 9px;
-  line-height: 9px;
-  color: var(--ink-gray-6);
+.ag-month__chip.is-past {
+  opacity: 0.6;
+}
+.ag-month__chip.is-done,
+.ag-month__chip.is-cancelled {
+  text-decoration: line-through;
+}
+.ag-month__chip.is-before {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.ag-month__chip.is-after {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.ag-month__chipmore {
+  position: absolute;
+  height: 15px;
+  padding: 0 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--ink-gray-7);
 }
 .ag-month__card {
   position: absolute;
