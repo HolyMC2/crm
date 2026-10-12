@@ -1,5 +1,6 @@
-// Agenda page walk with a mocked doco.agenda transport: week view, event panel, desktop
-// drag-to-reschedule, soft-conflict recovery and the create form's warning override.
+// Agenda page walk with a mocked doco.agenda transport: week view, event card, desktop
+// drag-to-select (quick create) and drag-to-reschedule, soft-conflict recovery, the month
+// grid, calendars and colors, and the create form's warning override.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -16,6 +17,7 @@ vi.mock('frappe-ui', async (importOriginal) => ({
 }))
 
 import Agenda from '@/pages/Agenda.vue'
+import { resetAgendaPrefsForTests } from '@/composables/useAgendaPrefs'
 
 const TZ = 'America/Mexico_City'
 const event = (id, start, end, extra = {}) => ({
@@ -63,8 +65,37 @@ async function mountAt(path) {
   return router
 }
 
+// Grid geometry: a 700px-wide week (100px a day) with 48px hours from the top.
+const realRect = Element.prototype.getBoundingClientRect
+function grid() {
+  Element.prototype.getBoundingClientRect = function () {
+    return {
+      left: 0,
+      top: 0,
+      right: 700,
+      bottom: 1152,
+      width: 700,
+      height: 1152,
+      x: 0,
+      y: 0,
+    }
+  }
+}
+const pointer = (type, x, y, target = window) =>
+  target.dispatchEvent(
+    new PointerEvent(type, {
+      bubbles: true,
+      button: 0,
+      clientX: x,
+      clientY: y,
+      pointerType: 'mouse',
+    }),
+  )
+
 beforeEach(() => {
   calls.length = 0
+  localStorage.clear()
+  resetAgendaPrefsForTests()
   window.__ = (text, values) =>
     String(text).replace(/{(\d+)}/g, (match, i) => values?.[i] ?? match)
   window.timezone = { system: TZ }
@@ -102,6 +133,8 @@ beforeEach(() => {
 afterEach(() => {
   app?.unmount()
   root?.remove()
+  Element.prototype.getBoundingClientRect = realRect
+  document.body.innerHTML = ''
 })
 
 describe('Agenda page', () => {
@@ -122,7 +155,10 @@ describe('Agenda page', () => {
     await flush()
     expect(router.currentRoute.value.query.event).toBe('Event:EV-1')
     expect(last('detail')).toEqual({ source: 'Event', name: 'EV-1' })
-    expect(root.textContent).toContain('Reschedule')
+    expect(document.body.textContent).toContain('Reschedule')
+    expect(
+      document.body.querySelector('button[aria-label="Copy link"]'),
+    ).not.toBeNull()
   })
 
   it('drags to a slot, offers «Schedule anyway» on a warning and resends with confirm', async () => {
@@ -146,30 +182,17 @@ describe('Agenda page', () => {
       }
       return base(method, args)
     }
-    const chip = root.querySelector('[data-event-id="EV-1"]')
-    const column = root.querySelector(
-      '[data-mc-selection-column][data-date="2026-10-08"]',
-    )
-    const slot = column.querySelector('[data-mc-slot-index="6"]')
-    document.elementsFromPoint = () => [slot, column]
-    chip.dispatchEvent(
-      new PointerEvent('pointerdown', {
-        bubbles: true,
-        button: 0,
-        clientX: 10,
-        clientY: 10,
-        pointerType: 'mouse',
-      }),
-    )
-    window.dispatchEvent(
-      new PointerEvent('pointermove', { clientX: 60, clientY: 90 }),
-    )
-    window.dispatchEvent(
-      new PointerEvent('pointerup', { clientX: 60, clientY: 90 }),
-    )
+    grid()
+    const chip = root.querySelector('.ag-event[data-event-id="EV-1"]')
+    // 10:00 on Wednesday (y = 10 h × 48 px) to 10:00 on Thursday (x = day 4 of 7).
+    pointer('pointerdown', 250, 480, chip)
+    pointer('pointermove', 350, 480)
+    await nextTick()
+    expect(root.querySelector('.ag-ghost.is-move')).not.toBeNull()
+    pointer('pointerup', 350, 480)
     await flush()
     const first = last('move')
-    // Slot 6 from 7:00 is 10:00 local (16:00Z) on Thursday; one hour long.
+    // 10:00 local (16:00Z) on Thursday; one hour long.
     expect(first).toMatchObject({
       source: 'Event',
       name: 'EV-1',
@@ -179,7 +202,7 @@ describe('Agenda page', () => {
       confirm: 0,
     })
     expect(root.textContent).toContain('Ya tienes «Visita»')
-    const confirm = [...root.querySelectorAll('button')].find((b) =>
+    const confirm = [...document.body.querySelectorAll('button')].find((b) =>
       b.textContent.includes('Schedule anyway'),
     )
     confirm.click()
@@ -249,7 +272,9 @@ describe('Agenda page', () => {
   }
   const buttonNamed = (label) =>
     [...document.body.querySelectorAll('button')].find(
-      (b) => b.textContent.trim() === label,
+      (b) =>
+        b.textContent.trim() === label ||
+        b.getAttribute('aria-label') === label,
     )
   const titleInput = () =>
     document.body.querySelector('input[placeholder="Call, visit, delivery…"]')
@@ -327,10 +352,14 @@ describe('Agenda page', () => {
       query: { ...router.currentRoute.value.query, event: '' },
     })
     await flush()
-    expect(root.querySelector('[aria-label="Event details"]')).toBeNull()
+    expect(
+      document.body.querySelector('[aria-label="Event details"]'),
+    ).toBeNull()
     pending['EV-1'](DETAIL)
     await flush()
-    expect(root.querySelector('[aria-label="Event details"]')).toBeNull()
+    expect(
+      document.body.querySelector('[aria-label="Event details"]'),
+    ).toBeNull()
   })
 
   it('keeps several reminders unless the worker picks another one', async () => {
@@ -435,7 +464,7 @@ describe('Agenda page', () => {
     // Monday 28 Sep to Sunday 8 Nov in the business zone.
     expect(queries[0][1].start).toBe('2026-09-28T06:00:00.000Z')
     expect(queries[0][1].end).toBe('2026-11-09T06:00:00.000Z')
-    const chip = root.querySelector('.agenda-month [data-event-id="EV-1"]')
+    const chip = root.querySelector('.ag-month__item[data-event-id="EV-1"]')
     expect(chip).not.toBeNull()
     let moved = null
     const base = handler
@@ -446,23 +475,15 @@ describe('Agenda page', () => {
       }
       return base(method, args)
     }
-    const target = root.querySelector('[data-agenda-date="2026-10-21"]')
-    document.elementsFromPoint = () => [target]
-    chip.dispatchEvent(
-      new PointerEvent('pointerdown', {
-        bubbles: true,
-        button: 0,
-        clientX: 10,
-        clientY: 10,
-        pointerType: 'mouse',
-      }),
-    )
-    window.dispatchEvent(
-      new PointerEvent('pointermove', { clientX: 80, clientY: 120 }),
-    )
-    window.dispatchEvent(
-      new PointerEvent('pointerup', { clientX: 80, clientY: 120 }),
-    )
+    const cell = (date) => root.querySelector(`[data-agenda-date="${date}"]`)
+    document.elementsFromPoint = (x) => [
+      cell(x < 50 ? '2026-10-07' : '2026-10-21'),
+    ]
+    pointer('pointerdown', 10, 10, chip)
+    pointer('pointermove', 80, 120)
+    await nextTick()
+    expect(root.querySelector('.ag-month__ghost')).not.toBeNull()
+    pointer('pointerup', 80, 120)
     await flush()
     expect(moved).toMatchObject({
       name: 'EV-1',
@@ -476,9 +497,13 @@ describe('Agenda page', () => {
   it('creates on the clicked month day and opens a day from its number', async () => {
     const router = await mountAt('/agenda?view=month&date=2026-10-07')
     const day = root.querySelector('[data-agenda-date="2026-10-15"]')
-    day.querySelector('button[aria-label^="Schedule on"]').click()
+    document.elementsFromPoint = () => [day]
+    pointer('pointerdown', 10, 10, day)
+    pointer('pointerup', 10, 10)
     await flush()
-    expect(titleInput()).not.toBeNull()
+    expect(
+      document.body.querySelector('input[placeholder="Add title"]'),
+    ).not.toBeNull()
     root
       .querySelector(
         '[data-agenda-date="2026-10-16"] button[aria-label^="Open"]',
@@ -495,11 +520,11 @@ describe('Agenda page', () => {
     window.innerWidth = 390
     window.dispatchEvent(new Event('resize'))
     const router = await mountAt('/agenda?view=month&date=2026-10-01')
-    expect(root.querySelector('.agenda-month [data-event-id]')).toBeNull()
+    expect(root.querySelector('.ag-month__item')).toBeNull()
     expect(root.textContent).toContain('Nothing scheduled')
-    const days = [...root.querySelectorAll('.agenda-month [data-day]')]
+    const days = [...root.querySelectorAll('.ag-month [data-day]')]
     const seventh = days.find((el) =>
-      el.getAttribute('aria-label')?.endsWith('1 event'),
+      el.getAttribute('aria-label')?.endsWith('1 events'),
     )
     seventh.click()
     await flush()
@@ -509,5 +534,161 @@ describe('Agenda page', () => {
     seventh.click()
     await flush()
     expect(titleInput()).not.toBeNull()
+  })
+
+  // --- calendar-style interactions (10-12) ------------------------------------------
+
+  it('drag-selects a time range, draws it in the calendar color and saves from the quick card', async () => {
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    grid()
+    const column = root.querySelector('.ag-tg__col[data-date="2026-10-08"]')
+    pointer('pointerdown', 350, 14 * 48 + 5, column)
+    pointer('pointermove', 350, 15 * 48)
+    pointer('pointermove', 350, 16 * 48 - 2)
+    await nextTick()
+    const ghost = root.querySelector('.ag-ghost')
+    expect(ghost).not.toBeNull()
+    expect(ghost.style.background).toMatch(/#039be5|rgb\(3, 155, 229\)/)
+    expect(ghost.textContent).toContain('2 h')
+    pointer('pointerup', 350, 16 * 48 - 2)
+    await flush()
+    // The range stays drawn while the quick card is open.
+    expect(root.querySelector('.ag-ghost')).not.toBeNull()
+    const title = document.body.querySelector('input[placeholder="Add title"]')
+    title.value = 'Entrega Ana'
+    title.dispatchEvent(new Event('input', { bubbles: true }))
+    document.body.querySelector('[aria-label="Tomato"]').click()
+    await flush()
+    document.body
+      .querySelector('form.ag-qc')
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await flush()
+    const payload = JSON.parse(last('create').payload)
+    expect(payload).toMatchObject({
+      title: 'Entrega Ana',
+      start: '2026-10-08T20:00:00.000Z',
+      end: '2026-10-08T22:00:00.000Z',
+      allDay: false,
+      color: '#d50000',
+    })
+  })
+
+  it('a click on an empty slot opens the quick card with the default length', async () => {
+    await mountAt('/agenda?view=day&date=2026-10-07')
+    grid()
+    const column = root.querySelector('.ag-tg__col[data-date="2026-10-07"]')
+    pointer('pointerdown', 50, 9 * 48 + 2, column)
+    pointer('pointerup', 50, 9 * 48 + 2)
+    await flush()
+    const inputs = [
+      ...document.body.querySelectorAll('.ag-qc input[type="time"]'),
+    ]
+    expect(inputs.map((input) => input.value)).toEqual(['09:00', '10:00'])
+  })
+
+  it('colors events by calendar and shows another calendar when it is turned on', async () => {
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    expect(
+      calls.filter(([m, a]) => m.endsWith('.query') && a.source === 'Turno'),
+    ).toHaveLength(0)
+    const chip = root.querySelector('.ag-event[data-event-id="EV-1"]')
+    expect(chip.style.background).toMatch(/#039be5|rgb\(3, 155, 229\)/)
+    const turnos = [...root.querySelectorAll('.ag-side__label')].find((label) =>
+      label.textContent.includes('Shifts'),
+    )
+    turnos.querySelector('input').dispatchEvent(new Event('change'))
+    await flush()
+    expect(
+      calls.filter(([m, a]) => m.endsWith('.query') && a.source === 'Turno'),
+    ).toHaveLength(1)
+    expect(
+      JSON.parse(localStorage.getItem('muelle.agenda.prefs:me')).hidden,
+    ).not.toContain('Turno')
+  })
+
+  it('shows my pendientes as tasks and marks one done from its card', async () => {
+    const base = handler
+    handler = (method, args) => {
+      if (method === 'doco.pendientes.api.bootstrap') return { enabled: true }
+      if (method === 'doco.pendientes.api.queue')
+        return args.segment === 'mine'
+          ? {
+              sections: {
+                today: {
+                  rows: [
+                    {
+                      doctype: 'ToDo',
+                      name: 'TD-1',
+                      date: '2026-10-08',
+                      description: 'Llamar a Ana',
+                      status: 'Open',
+                      modified: 'm1',
+                    },
+                  ],
+                },
+              },
+            }
+          : { rows: [] }
+      if (method === 'doco.pendientes.api.complete')
+        return { doctype: 'ToDo', name: 'TD-1' }
+      return base(method, args)
+    }
+    await mountAt('/agenda?view=week&date=2026-10-07')
+    const bar = root.querySelector('.ag-bar[data-event-id="ToDo:TD-1"]')
+    expect(bar.textContent).toContain('Llamar a Ana')
+    bar.click()
+    await flush()
+    buttonNamed('Mark as done').click()
+    await flush()
+    expect(last('complete')).toMatchObject({
+      doctype: 'ToDo',
+      name: 'TD-1',
+      modified: 'm1',
+    })
+  })
+
+  it('switches views from the menu and keyboard, and keeps them in the URL', async () => {
+    const router = await mountAt('/agenda?view=week&date=2026-10-07')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }))
+    await flush()
+    expect(router.currentRoute.value.query.view).toBe('month')
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }))
+    await flush()
+    expect(router.currentRoute.value.query.view).toBe('4day')
+    expect(root.querySelectorAll('.ag-tg__col')).toHaveLength(4)
+  })
+
+  it('finds an event by title on any date and opens it on its day', async () => {
+    const base = handler
+    handler = (method, args) => {
+      if (method === 'frappe.client.get_list')
+        return [
+          {
+            name: 'EV-9',
+            subject: 'Congreso dental',
+            starts_on: '2026-11-20 09:00:00',
+            color: '#8e24aa',
+          },
+        ]
+      return base(method, args)
+    }
+    const router = await mountAt('/agenda?view=week&date=2026-10-07')
+    root.querySelector('button[aria-label="Search events"]').click()
+    await flush()
+    const input = root.querySelector('input[aria-label="Search events"]')
+    input.value = 'congreso'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flush()
+    expect(last('get_list')).toMatchObject({
+      doctype: 'Event',
+      filters: [['subject', 'like', '%congreso%']],
+    })
+    ;[...root.querySelectorAll('.ag-search__row')][0].click()
+    await flush()
+    expect(router.currentRoute.value.query).toMatchObject({
+      date: '2026-11-20',
+      event: 'Event:EV-9',
+    })
   })
 })

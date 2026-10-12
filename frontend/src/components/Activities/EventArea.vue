@@ -30,7 +30,13 @@
             </span>
             <span>{{ 'has created an event' }}</span>
           </div>
-          <div class="ml-auto whitespace-nowrap">
+          <div class="ml-auto flex items-center gap-3 whitespace-nowrap">
+            <RouterLink
+              class="text-sm text-ink-gray-6 underline-offset-2 hover:text-ink-gray-9 hover:underline"
+              :to="agendaRoute(event)"
+              @click.stop
+              >{{ __('See in Agenda') }}</RouterLink
+            >
             <TimelineTimestamp :date="event.creation" />
           </div>
         </div>
@@ -85,11 +91,26 @@ import MultipleAvatar from '@/components/MultipleAvatar.vue'
 import { useEvent, showEventModal, activeEvent } from '@/composables/event'
 import TimelineTimestamp from '@/components/Activities/TimelineTimestamp.vue'
 import { Avatar } from 'frappe-ui'
+import { RouterLink } from 'vue-router'
 
 const props = defineProps({
   doctype: { type: String, default: '' },
   docname: { type: String, default: '' },
 })
+
+// The same event in the Agenda, on its day (its card opens there).
+function agendaRoute(event) {
+  const date = String(event.starts_on || '').slice(0, 10)
+  const series = event.repeat_this_event ? `@${date}` : ''
+  return {
+    path: '/agenda',
+    query: {
+      view: 'week',
+      ...(date ? { date } : {}),
+      event: `Event:${event.name}${series}`,
+    },
+  }
+}
 
 function showEvent(e = {}) {
   showEventModal.value = true

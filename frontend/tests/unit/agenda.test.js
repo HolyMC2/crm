@@ -21,7 +21,6 @@ import {
   wallToInstant,
   weekStartsOn,
 } from '@/composables/useAgenda'
-import { dropSlot } from '@/components/agenda/agendaDrag'
 
 const MX = 'America/Mexico_City'
 
@@ -29,6 +28,30 @@ describe('URL state', () => {
   it('defaults to the agenda list on phones and the week on desktop', () => {
     expect(parseState({}, { phone: true, timeZone: MX }).view).toBe('list')
     expect(parseState({}, { phone: false, timeZone: MX }).view).toBe('week')
+  })
+
+  it("opens in the worker's chosen view; a phone shows a day instead of a week", () => {
+    const options = { timeZone: MX, defaultView: 'month' }
+    expect(parseState({}, { ...options, phone: false }).view).toBe('month')
+    expect(
+      parseState({}, { ...options, defaultView: 'week', phone: true }).view,
+    ).toBe('day')
+    expect(
+      parseState({ view: '4day' }, { ...options, phone: false }).view,
+    ).toBe('4day')
+    expect(parseState({}, { phone: false, timeZone: MX }).calendars).toBeNull()
+  })
+
+  it('pages four days at a time in the 4-day view', () => {
+    const state = { view: '4day', date: '2026-10-05' }
+    expect(rangeFor(state, MX).dates).toEqual([
+      '2026-10-05',
+      '2026-10-06',
+      '2026-10-07',
+      '2026-10-08',
+    ])
+    expect(step(state, 1)).toBe('2026-10-09')
+    expect(step(state, -1)).toBe('2026-10-01')
   })
 
   it('rejects unknown views and malformed dates', () => {
@@ -47,7 +70,7 @@ describe('URL state', () => {
         view: 'day',
         date: '2026-10-05',
         event: 'Event:EV-1',
-        calendars: ['Event'],
+        calendars: null,
       },
       { return_to: '/crm/contactos' },
     )
@@ -203,31 +226,7 @@ describe('calendar shaping', () => {
     ).toBeNull()
   })
 
-  it('finds the drop slot under the pointer and its column date', () => {
-    const column = document.createElement('div')
-    column.setAttribute('data-mc-selection-column', '')
-    column.dataset.date = '2026-10-08'
-    const slot = document.createElement('button')
-    slot.dataset.mcSlotIndex = '3'
-    column.appendChild(slot)
-    const chip = document.createElement('button')
-    expect(dropSlot([chip, slot, column], '2026-10-05')).toMatchObject({
-      date: '2026-10-08',
-      index: 3,
-    })
-    delete column.dataset.date
-    expect(dropSlot([slot], '2026-10-05').date).toBe('2026-10-05')
-    expect(dropSlot([chip], '2026-10-05')).toBeNull()
-  })
-
-  it('drops on a month day and keeps the wall time and duration', () => {
-    const day = document.createElement('div')
-    day.dataset.agendaDate = '2026-10-20'
-    const chip = document.createElement('button')
-    expect(dropSlot([chip, day], '2026-10-05')).toMatchObject({
-      date: '2026-10-20',
-      month: true,
-    })
+  it('a month move keeps the wall time and duration', () => {
     const event = {
       start: '2026-10-07T16:00:00Z',
       end: '2026-10-07T17:30:00Z',
@@ -285,13 +284,16 @@ describe('return protocol and record links', () => {
       expect(safeReturn(bad)).toBe('')
   })
 
-  it('links shell-owned records in the shell and others to the native form', () => {
+  it('links shell-owned records in the shell, Taller orders in Taller, others to Desk', () => {
     expect(recordLink('Contact', 'Ana P')).toEqual({
       to: '/contactos/contact/Ana%20P',
     })
     expect(recordLink('CRM Deal', 'D-1')).toEqual({ to: '/deals/D-1' })
     expect(recordLink('Repair Order', 'RO-1')).toEqual({
-      href: '/app/repair-order/RO-1',
+      href: '/taller/orders/RO-1',
+    })
+    expect(recordLink('Sales Invoice', 'SINV-1')).toEqual({
+      href: '/app/sales-invoice/SINV-1',
     })
   })
 })

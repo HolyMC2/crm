@@ -11,7 +11,7 @@ import {
 } from '@/vendor/muelle-calendar/core'
 
 export const API = 'doco.agenda.api'
-export const VIEWS = ['list', 'day', 'week', 'month']
+export const VIEWS = ['list', 'day', '4day', 'week', 'month']
 export const LIST_DAYS = 7
 export const CALENDAR_RESOURCE = 'agenda'
 export const DEFAULT_CALENDARS = ['Event']
@@ -52,9 +52,18 @@ export function today(timeZone) {
   return localDate(new Date().toISOString(), timeZone)
 }
 
-// URL is state: ?view=list|day|week|month&date=YYYY-MM-DD&event=Source:id&cal=Event,Turno
-export function parseState(query, { phone, timeZone }) {
-  const view = VIEWS.includes(query.view) ? query.view : phone ? 'list' : 'week'
+// URL is state: ?view=list|day|4day|week|month&date=YYYY-MM-DD&event=Source:id&cal=Event,Turno
+// `cal` is an optional deep-link filter; without it the worker's own calendar choice applies.
+export function parseState(query, { phone, timeZone, defaultView = '' }) {
+  const fallback =
+    defaultView && VIEWS.includes(defaultView)
+      ? phone && ['week', '4day'].includes(defaultView)
+        ? 'day'
+        : defaultView
+      : phone
+        ? 'list'
+        : 'week'
+  const view = VIEWS.includes(query.view) ? query.view : fallback
   const date =
     typeof query.date === 'string' && DAY.test(query.date)
       ? query.date
@@ -66,7 +75,7 @@ export function parseState(query, { phone, timeZone }) {
     view,
     date,
     event: typeof query.event === 'string' ? query.event : '',
-    calendars: cal.length ? cal : DEFAULT_CALENDARS,
+    calendars: cal.length ? cal : null,
   }
 }
 
@@ -74,8 +83,8 @@ export function stateQuery(state, query = {}) {
   const next = { ...query, view: state.view, date: state.date }
   if (state.event) next.event = state.event
   else delete next.event
-  const cal = state.calendars.join(',')
-  if (cal && cal !== DEFAULT_CALENDARS.join(',')) next.cal = cal
+  const cal = (state.calendars || []).join(',')
+  if (cal) next.cal = cal
   else delete next.cal
   return next
 }
@@ -94,12 +103,25 @@ export function rangeFor(state, timeZone, firstWeekday = 1) {
       dates,
     }
   }
+  if (state.view === '4day') {
+    const dates = Array.from({ length: 4 }, (_, index) =>
+      shiftCalendarDate(state.date, index),
+    )
+    return {
+      start: dayBounds(dates[0], timeZone).start,
+      end: dayBounds(dates[3], timeZone).end,
+      startDate: dates[0],
+      endDate: shiftCalendarDate(state.date, 4),
+      dates,
+    }
+  }
   return calendarRange(state.date, state.view, timeZone, firstWeekday)
 }
 
 export function step(state, direction) {
   if (state.view === 'list')
     return shiftCalendarDate(state.date, direction * LIST_DAYS)
+  if (state.view === '4day') return shiftCalendarDate(state.date, direction * 4)
   return navigateCalendar(state.date, state.view, direction)
 }
 
@@ -431,11 +453,232 @@ const RECORD_ROUTES = {
 }
 
 // In-shell route when the owner lives in the shell, else the native form (new tab).
+// Records owned by a sibling app open in that app.
+const APP_ROUTES = {
+  'Repair Order': (name) => `/taller/orders/${encodeURIComponent(name)}`,
+}
+
 export function recordLink(doctype, name) {
   const route = RECORD_ROUTES[doctype]
   if (route) return { to: route(name) }
+  if (APP_ROUTES[doctype]) return { href: APP_ROUTES[doctype](name) }
   const slug = String(doctype).toLowerCase().replace(/ /g, '-')
   return { href: `/app/${slug}/${encodeURIComponent(name)}` }
 }
 
 export const searchPeople = (q) => call('crm.api.agenda.search_people', { q })
+
+// --- calendars ---------------------------------------------------------------------------
+// A calendar is what the worker shows, hides and colors. Sources map to calendars one to
+// one, except citas (Event rows of kind «cita») and pendientes (tasks from Pendientes).
+export const TASKS = 'tasks'
+export const CITAS = 'Event:cita'
+
+export function calendarKey(event) {
+  if (event?.kind === 'task') return TASKS
+  if (event?.source === 'Event' && event.kind === 'cita') return CITAS
+  return event?.source || 'Event'
+}
+
+const CALENDAR_LABELS = {
+  Event: () => __('My agenda'),
+  [CITAS]: () => __('Appointments'),
+  [TASKS]: () => __('Tasks'),
+  Turno: () => __('Shifts'),
+  Ausencias: () => __('Absences'),
+  'Patient Appointment': () => __('Patient appointments'),
+}
+export function calendarLabel(key, fallback = '') {
+  return CALENDAR_LABELS[key]?.() || (fallback ? __(fallback) : key)
+}
+// «My calendars» are the worker's own; the rest are team or business calendars.
+export const MY_CALENDARS = ['Event', CITAS, TASKS]
+
+/** Which loaded sources a set of visible calendars needs. */
+export function sourcesFor(calendars, available) {
+  const wanted = new Set()
+  for (const key of calendars) {
+    if (key === TASKS) continue
+    const source = key === CITAS ? 'Event' : key
+    if (available.includes(source)) wanted.add(source)
+  }
+  return [...wanted]
+}
+
+// --- tasks (Pendientes) on the calendar ----------------------------------------------------
+const TASK_SLUGS = { ToDo: 'todo', 'CRM Task': 'crm-task' }
+
+export function taskToEvent(row, timeZone) {
+  const start = wallToInstant(row.date, '00:00', timeZone)
+  const next = shiftCalendarDate(row.date, 1)
+  const done = row.status === 'Closed'
+  return {
+    id: `${row.doctype}:${row.name}`,
+    source: TASKS,
+    kind: 'task',
+    title: row.description || __('Task'),
+    date: row.date,
+    start,
+    end: wallToInstant(next, '00:00', timeZone),
+    allDay: true,
+    status: row.cancelled ? 'Cancelled' : done ? 'Done' : 'Scheduled',
+    draggable: !done,
+    canEdit: true,
+    version: row.modified,
+    task: row,
+    referenceDoctype: row.reference_type || undefined,
+    referenceName: row.reference_name ? String(row.reference_name) : undefined,
+    referenceLabel: row.reference_label || undefined,
+    timeZone,
+    resourceIds: [],
+    actions: [],
+  }
+}
+
+export function taskRoute(event) {
+  const row = event.task || {}
+  return `/pendientes/${TASK_SLUGS[row.doctype] || 'todo'}/${encodeURIComponent(String(row.name))}`
+}
+
+const PENDIENTES = 'doco.pendientes.api'
+export async function queryTasks(range, timeZone, { done = true } = {}) {
+  const args = {
+    date_from: range.startDate,
+    date_to: shiftCalendarDate(range.endDate, -1),
+    page_length: 100,
+  }
+  const [open, closed] = await Promise.all([
+    call(`${PENDIENTES}.queue`, { ...args, segment: 'mine' }),
+    done
+      ? call(`${PENDIENTES}.queue`, { ...args, segment: 'done' }).catch(() => ({
+          rows: [],
+        }))
+      : Promise.resolve({ rows: [] }),
+  ])
+  const rows = []
+  for (const section of Object.values(open?.sections || {}))
+    rows.push(...(section.rows || []))
+  rows.push(...(closed?.rows || []).filter((row) => row.mine !== false))
+  const seen = new Set()
+  return rows
+    .filter(
+      (row) =>
+        row.date && row.date >= args.date_from && row.date <= args.date_to,
+    )
+    .filter((row) => {
+      const id = `${row.doctype}:${row.name}`
+      if (seen.has(id)) return false
+      seen.add(id)
+      return true
+    })
+    .map((row) => taskToEvent(row, timeZone))
+}
+
+export const tasksAvailable = () =>
+  call(`${PENDIENTES}.bootstrap`)
+    .then((data) => Boolean(data?.enabled))
+    .catch(() => false)
+
+export const completeTask = (event) =>
+  call(`${PENDIENTES}.complete`, {
+    doctype: event.task.doctype,
+    name: event.task.name,
+    modified: event.task.modified,
+    request_id: requestId(),
+  })
+export const reopenTask = (event) =>
+  call(`${PENDIENTES}.reopen`, {
+    doctype: event.task.doctype,
+    name: event.task.name,
+    modified: event.task.modified,
+    request_id: requestId(),
+  })
+export const rescheduleTask = (event, date) =>
+  call(`${PENDIENTES}.reschedule`, {
+    doctype: event.task.doctype,
+    name: event.task.name,
+    modified: event.task.modified,
+    date,
+    request_id: requestId(),
+  })
+export const createTask = ({ title, date, reference }) =>
+  call(`${PENDIENTES}.create`, {
+    description: title,
+    date,
+    request_id: requestId(),
+    priority: 'Medium',
+    reference_type: reference?.doctype || null,
+    reference_name: reference?.name || null,
+  })
+
+// --- sync: Google Calendar and the subscription link ---------------------------------------
+const SYNC = 'doco.agenda.sync'
+export const syncStatus = () => call(`${SYNC}.status`)
+export const connectGoogle = () => call(`${SYNC}.connect_google`)
+export const disconnectGoogle = () => call(`${SYNC}.disconnect_google`)
+export const syncGoogle = () => call(`${SYNC}.sync_google`)
+export const icsSubscription = (rotate = 0) =>
+  call('doco.agenda.ics.subscription', { rotate })
+export const GOOGLE_RETURN_KEY = 'muelle_agenda_google_return'
+
+// --- range cache: a range seen once draws at once, then refreshes quietly ---------------
+export function createRangeCache(limit = 24) {
+  const entries = new Map()
+  return {
+    key: (source, range) => `${source}|${range.start}|${range.end}`,
+    get(key) {
+      return entries.get(key)
+    },
+    set(key, value) {
+      entries.delete(key)
+      entries.set(key, { value, at: Date.now() })
+      while (entries.size > limit) entries.delete(entries.keys().next().value)
+    },
+    clear() {
+      entries.clear()
+    },
+  }
+}
+
+/** A link anyone signed in can open to land on this event (or view and date). */
+export function shareLink(state, event) {
+  const url = new URL('/crm/agenda', window.location.origin)
+  url.searchParams.set('view', state.view)
+  url.searchParams.set('date', state.date)
+  if (event) url.searchParams.set('event', eventKey(event))
+  return url.toString()
+}
+
+/**
+ * «Agendar» from any record: opens the Agenda's new-event form with the record linked,
+ * the person invited (a Contact or coworker) and a way back to the record.
+ */
+export function agendaCreateRoute({
+  reference,
+  attendee,
+  title,
+  returnTo,
+  returnLabel,
+} = {}) {
+  const query = new URLSearchParams({ view: 'week', create: '1' })
+  if (reference?.doctype && reference?.name) {
+    query.set('ref_doctype', reference.doctype)
+    query.set('ref_name', String(reference.name))
+    if (reference.label)
+      query.set('ref_label', String(reference.label).slice(0, 140))
+  }
+  if (
+    attendee &&
+    ['Contact', 'User'].includes(attendee.doctype) &&
+    attendee.name
+  ) {
+    query.set('attendee_doctype', attendee.doctype)
+    query.set('attendee_name', String(attendee.name))
+    if (attendee.label)
+      query.set('attendee_label', String(attendee.label).slice(0, 140))
+  }
+  if (title) query.set('title', String(title).slice(0, 140))
+  if (returnTo) query.set('return_to', returnTo)
+  if (returnLabel) query.set('return_label', String(returnLabel).slice(0, 40))
+  return `/agenda?${query.toString()}`
+}

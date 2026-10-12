@@ -1,136 +1,163 @@
 <template>
-  <ModuleLayout
-    :title="__('Agenda')"
-    :entries="viewEntries"
-    :active-key="state.view"
-    @select="setView"
-  >
-    <template #sidebar>
-      <fieldset v-if="calendarOptions.length > 1" class="px-3 pt-7">
-        <legend class="pb-3 text-xs text-ink-gray-6">
-          {{ __('Calendars') }}
-        </legend>
-        <label
-          v-for="option in calendarOptions"
-          :key="option.key"
-          class="flex min-h-11 items-center gap-2.5 text-sm text-ink-gray-8"
-        >
-          <input
-            type="checkbox"
-            class="h-4 w-4 rounded"
-            :checked="state.calendars.includes(option.key)"
-            @change="toggleCalendar(option.key)"
-          />{{ option.label }}
-        </label>
-      </fieldset>
-      <ul
-        v-if="blockedSources.length"
-        class="space-y-2 px-3 pt-4 text-xs text-ink-gray-6"
+  <div class="agenda-app" :class="{ 'is-phone': phone }">
+    <!-- top bar: ☰ · Agenda · Today ‹ › · title ……… settings · view -->
+    <header class="ag-top">
+      <button
+        type="button"
+        class="ag-iconbtn"
+        :aria-label="__('Main menu')"
+        :aria-expanded="phone ? drawer : prefs.sidebar"
+        @click="phone ? (drawer = true) : (prefs.sidebar = !prefs.sidebar)"
       >
-        <li v-for="row in blockedSources" :key="row.key">
-          <strong class="text-ink-gray-7">{{ sourceLabel(row.key) }}:</strong>
-          {{ row.reason }}
-        </li>
-      </ul>
-    </template>
-
-    <div class="agenda-page flex min-h-0 flex-1">
-      <div class="flex min-w-0 flex-1 flex-col">
-        <header
-          class="flex flex-col gap-2 border-b border-outline-gray-1 px-4 py-2.5 sm:flex-row sm:items-center sm:px-6 sm:py-3"
+        <span class="lucide-menu h-5 w-5" aria-hidden="true" />
+      </button>
+      <component
+        :is="returnRoute ? RouterLink : 'a'"
+        v-if="returnTo"
+        v-bind="returnRoute ? { to: returnRoute } : { href: returnTo }"
+        class="ag-back"
+        ><span class="lucide-arrow-left h-4 w-4" aria-hidden="true" /><span
+          class="truncate"
+          >{{ __('Back to {0}', [returnLabel]) }}</span
+        ></component
+      >
+      <span v-else-if="!phone" class="ag-brand">
+        <span class="ag-brand__icon" aria-hidden="true">{{
+          Number(todayDate.slice(8))
+        }}</span>
+        {{ __('Agenda') }}
+      </span>
+      <button
+        type="button"
+        class="ag-today"
+        :title="todayLong"
+        @click="setDate(todayDate)"
+      >
+        {{ __('Today') }}
+      </button>
+      <div class="flex items-center">
+        <button
+          type="button"
+          class="ag-iconbtn"
+          :aria-label="__('Previous')"
+          @click="go(-1)"
         >
-          <div class="flex min-w-0 items-center gap-2 sm:flex-1">
-            <component
-              :is="returnRoute ? RouterLink : 'a'"
-              v-if="returnTo"
-              v-bind="returnRoute ? { to: returnRoute } : { href: returnTo }"
-              class="mr-1 inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-              ><span class="lucide-arrow-left h-4 w-4" aria-hidden="true" />{{
-                __('Back to {0}', [returnLabel])
-              }}</component
-            >
-            <h1
-              class="min-w-0 flex-1 truncate text-lg font-semibold text-ink-gray-9 first-letter:uppercase sm:text-2xl"
-            >
-              {{ rangeTitle }}
-            </h1>
-            <div class="flex shrink-0 items-center gap-1">
-              <Button
-                class="min-h-11 min-w-11"
-                variant="ghost"
-                icon="chevron-left"
-                :aria-label="__('Previous')"
-                @click="go(-1)"
-              />
-              <Button
-                class="min-h-11"
-                variant="subtle"
-                :label="__('Today')"
-                @click="setDate(todayDate)"
-              />
-              <Button
-                class="min-h-11 min-w-11"
-                variant="ghost"
-                icon="chevron-right"
-                :aria-label="__('Next')"
-                @click="go(1)"
-              />
-            </div>
-          </div>
-          <div
-            class="grid grid-cols-4 rounded-lg bg-surface-gray-2 p-0.5 sm:hidden"
-            role="group"
-            :aria-label="__('View')"
+          <span class="lucide-chevron-left h-5 w-5" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          class="ag-iconbtn"
+          :aria-label="__('Next')"
+          @click="go(1)"
+        >
+          <span class="lucide-chevron-right h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+      <h1 class="ag-title">{{ rangeTitle }}</h1>
+      <span
+        v-if="loading && !showSkeleton"
+        class="ag-spinner"
+        role="status"
+        :aria-label="__('Loading')"
+      />
+      <AgendaSearch
+        class="ml-auto"
+        :locale="locale"
+        :fallback-color="calendarColors.Event"
+        @pick="openFound"
+      />
+      <button
+        type="button"
+        class="ag-iconbtn"
+        :aria-label="__('Agenda settings')"
+        :title="__('Agenda settings')"
+        @click="openSettings('general')"
+      >
+        <span class="lucide-settings h-5 w-5" aria-hidden="true" />
+      </button>
+      <div v-if="!phone" class="relative">
+        <button
+          type="button"
+          class="ag-viewbtn"
+          :aria-expanded="viewMenu"
+          aria-haspopup="menu"
+          @click="viewMenu = !viewMenu"
+        >
+          {{ currentViewLabel }}
+          <span class="lucide-chevron-down h-4 w-4" aria-hidden="true" />
+        </button>
+        <div v-if="viewMenu" class="ag-viewmenu" role="menu">
+          <button
+            v-for="entry in viewEntries"
+            :key="entry.value"
+            type="button"
+            role="menuitemradio"
+            :aria-checked="state.view === entry.value"
+            class="ag-viewmenu__item"
+            @click="((viewMenu = false), setView(entry.value))"
           >
-            <button
-              v-for="entry in viewEntries"
-              :key="entry.value"
-              type="button"
-              class="min-h-10 rounded-md px-2 text-sm"
-              :class="
-                state.view === entry.value
-                  ? 'bg-surface-white font-semibold text-ink-gray-9 shadow-sm'
-                  : 'text-ink-gray-7'
-              "
-              :aria-pressed="state.view === entry.value"
-              @click="setView(entry.value)"
+            <span>{{ entry.label }}</span>
+            <kbd>{{ entry.key.toUpperCase() }}</kbd>
+          </button>
+          <hr class="my-1 border-outline-gray-1" />
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            :aria-checked="prefs.showWeekends"
+            class="ag-viewmenu__item"
+            @click="prefs.showWeekends = !prefs.showWeekends"
+          >
+            <span class="flex items-center gap-2"
+              ><span
+                :class="prefs.showWeekends ? 'lucide-check' : ''"
+                class="inline-block h-4 w-4"
+                aria-hidden="true"
+              />{{ __('Show weekends') }}</span
             >
-              {{ entry.label }}
-            </button>
-          </div>
-          <Button
-            v-if="canCreate"
-            class="hidden min-h-11 sm:inline-flex"
-            variant="solid"
-            icon-left="plus"
-            :label="__('New event')"
-            @click="openCreate()"
-          />
-        </header>
+          </button>
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            :aria-checked="prefs.showDone"
+            class="ag-viewmenu__item"
+            @click="prefs.showDone = !prefs.showDone"
+          >
+            <span class="flex items-center gap-2"
+              ><span
+                :class="prefs.showDone ? 'lucide-check' : ''"
+                class="inline-block h-4 w-4"
+                aria-hidden="true"
+              />{{ __('Show finished') }}</span
+            >
+          </button>
+        </div>
+      </div>
+    </header>
+    <div
+      v-if="phone"
+      class="ag-phoneviews"
+      role="group"
+      :aria-label="__('View')"
+    >
+      <button
+        v-for="entry in phoneViews"
+        :key="entry.value"
+        type="button"
+        :aria-pressed="state.view === entry.value"
+        @click="setView(entry.value)"
+      >
+        {{ entry.label }}
+      </button>
+    </div>
 
-        <div class="flex flex-col gap-2 px-4 pt-3 sm:px-6">
+    <div class="ag-main">
+      <aside v-if="!phone && prefs.sidebar" class="ag-sidebar">
+        <AgendaSidebar v-bind="sidebarProps" v-on="sidebarHandlers" />
+      </aside>
+
+      <section class="ag-view" :aria-busy="loading">
+        <div v-if="notices" class="ag-notices">
           <p v-if="zoneNote" class="text-sm text-ink-gray-6">{{ zoneNote }}</p>
-          <div
-            v-if="calendarOptions.length > 1"
-            class="flex gap-2 overflow-x-auto sm:hidden"
-            :aria-label="__('Calendars')"
-          >
-            <button
-              v-for="option in calendarOptions"
-              :key="option.key"
-              type="button"
-              class="min-h-10 shrink-0 rounded-full border px-3 text-sm"
-              :class="
-                state.calendars.includes(option.key)
-                  ? 'border-outline-gray-4 bg-surface-gray-2 font-medium text-ink-gray-9'
-                  : 'border-outline-gray-2 text-ink-gray-6'
-              "
-              :aria-pressed="state.calendars.includes(option.key)"
-              @click="toggleCalendar(option.key)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
           <section
             v-if="capsError || (caps && !caps.enabled)"
             role="alert"
@@ -163,7 +190,7 @@
             v-for="problem in problems"
             :key="problem.source"
             :constraints="[problem.constraint]"
-            :hint="__('Calendar: {0}', [sourceLabel(problem.source)])"
+            :hint="__('Calendar: {0}', [calendarLabel(problem.source)])"
             @action="(id) => problemAction(id)"
             @dismiss="problems = problems.filter((row) => row !== problem)"
           />
@@ -177,36 +204,14 @@
           />
           <p v-if="slow" role="status" class="text-sm text-ink-gray-6">
             {{ __('This is taking longer than usual.') }}
-            <button type="button" class="min-h-11 underline" @click="load">
+            <button type="button" class="min-h-11 underline" @click="load()">
               {{ __('Try again') }}
             </button>
           </p>
-          <div
-            v-if="['day', 'week'].includes(state.view) && allDayRows.length"
-            class="flex flex-wrap items-center gap-1.5"
-            :aria-label="__('All day')"
-          >
-            <span class="text-xs text-ink-gray-6">{{ __('All day') }}</span>
-            <button
-              v-for="row in allDayRows"
-              :key="row.key"
-              type="button"
-              class="min-h-9 max-w-full truncate rounded-md border border-outline-gray-2 bg-surface-gray-1 px-2 text-sm text-ink-gray-8 hover:bg-surface-gray-2"
-              @click="select(row.event)"
-            >
-              <span v-if="state.view === 'week'" class="text-ink-gray-5"
-                >{{ row.day }} · </span
-              >{{ row.event.title }}
-            </button>
-          </div>
         </div>
 
-        <div
-          ref="calendarRoot"
-          class="agenda-cal min-h-0 flex-1 overflow-auto px-4 pb-6 pt-3 sm:px-6"
-          :aria-busy="loading"
-        >
-          <div v-if="showSkeleton" class="space-y-3" aria-hidden="true">
+        <div ref="calendarRoot" class="ag-canvas" :class="`is-${state.view}`">
+          <div v-if="showSkeleton" class="space-y-3 p-4" aria-hidden="true">
             <div
               v-for="n in 6"
               :key="n"
@@ -214,40 +219,59 @@
             />
           </div>
           <template v-else-if="timeZone">
-            <AgendaList
-              v-if="state.view === 'list'"
+            <AgendaTimeGrid
+              v-if="gridView"
+              :dates="gridDates"
               :events="visibleEvents"
-              :range="range"
+              :color-of="colorOf"
               :time-zone="timeZone"
               :locale="locale"
               :hour12="hour12"
               :today="todayDate"
               :now="now"
-              :selected="state.event"
+              :hour-height="hourHeight"
+              :scroll-hour="prefs.dayStartHour"
               :can-create="canCreate"
+              :create-color="createColor"
+              :default-duration="prefs.defaultDuration"
+              :draft="draftShown"
+              :selected-key="state.event"
+              :dim-past="prefs.dimPast"
               @select="select"
-              @create="openCreateOn"
+              @create="startCreate"
+              @move="(event, times) => doMove(event, times)"
+              @resize="(event, times) => doMove(event, times)"
+              @move-days="moveDays"
+              @open-day="(date) => setState({ date, view: 'day' })"
             />
             <template v-else-if="state.view === 'month'">
-              <AgendaMonth
-                :events="visibleEvents"
+              <AgendaMonthGrid
                 :date="state.date"
-                :today="todayDate"
+                :events="visibleEvents"
+                :color-of="colorOf"
                 :time-zone="timeZone"
                 :locale="locale"
                 :hour12="hour12"
+                :today="todayDate"
+                :now="now"
                 :week-starts-on="firstWeekday"
+                :show-weekends="prefs.showWeekends"
                 :compact="phone"
-                :selected="state.event"
                 :can-create="canCreate"
+                :create-color="createColor"
+                :draft="draftShown"
+                :selected-key="state.event"
+                :dim-past="prefs.dimPast"
                 @select="select"
-                @create="openCreateOn"
+                @create="startCreate"
+                @create-day="createOnDay"
+                @move-days="moveDays"
                 @pick="setDate"
                 @open-day="(date) => setState({ date, view: 'day' })"
               />
               <AgendaList
                 v-if="phone"
-                class="mt-4"
+                class="mt-4 px-4"
                 :events="visibleEvents"
                 :range="pickedDay"
                 :time-zone="timeZone"
@@ -257,59 +281,112 @@
                 :now="now"
                 :selected="state.event"
                 :can-create="canCreate"
+                :color-of="colorOf"
                 @select="select"
-                @create="openCreateOn"
+                @create="(date) => createOnDay(date)"
               />
             </template>
-            <AgendaCalendar
+            <AgendaList
               v-else
-              :view="state.view"
-              :events="calendarEvents"
-              :resources="calendarResources"
-              :date="state.date"
+              class="ag-schedule"
+              :events="visibleEvents"
+              :range="range"
               :time-zone="timeZone"
               :locale="locale"
               :hour12="hour12"
-              :show-summary="false"
-              :start-hour="hours.start"
-              :end-hour="hours.end"
-              :slot-minutes="SLOT_MINUTES"
-              :week-starts-on="firstWeekday"
-              :disabled="busy"
-              :translate="translate"
+              :today="todayDate"
+              :now="now"
+              :selected="state.event"
+              :can-create="canCreate"
+              :color-of="colorOf"
               @select="select"
-              @create="openCreateSlot"
-              @create-range="openCreateSlot"
-              @choose-date="(date) => setState({ date, view: 'day' })"
+              @create="(date) => createOnDay(date)"
             />
           </template>
         </div>
-        <Button
-          v-if="canCreate"
-          class="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 z-20 h-14 w-14 rounded-full shadow-lg sm:hidden"
-          variant="solid"
-          icon="plus"
-          :aria-label="__('New event')"
-          @click="openCreate()"
-        />
-      </div>
-
-      <aside
-        v-if="selectedEvent && !phone"
-        class="w-[380px] shrink-0 overflow-y-auto border-l border-outline-gray-1 p-5"
-        :aria-label="__('Event details')"
-      >
-        <AgendaEventPanel v-bind="panelProps" v-on="panelHandlers" />
-      </aside>
+      </section>
     </div>
 
+    <button
+      v-if="canCreate && phone"
+      type="button"
+      class="ag-fab"
+      :aria-label="__('New event')"
+      @click="openCreate()"
+    >
+      <span class="lucide-plus h-7 w-7" aria-hidden="true" />
+    </button>
+
+    <!-- phone: calendars drawer -->
+    <Teleport to="body">
+      <div
+        v-if="phone && drawer"
+        class="ag-drawer"
+        @click.self="drawer = false"
+      >
+        <div
+          class="ag-drawer__panel ag-vars"
+          role="dialog"
+          :aria-label="__('Calendars')"
+        >
+          <AgendaSidebar v-bind="sidebarProps" v-on="sidebarHandlers" />
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- desktop: quick create beside the selection -->
+    <AgendaPopover
+      v-if="quick && !phone"
+      :anchor="quick.rect"
+      :width="448"
+      :label="__('New event')"
+      keep-open-on=".ag-tg__col, .ag-tg__alldayarea, .ag-month__week"
+      @close="closeQuick"
+    >
+      <div class="ag-vars">
+        <AgendaQuickCreate
+          :key="quick.key"
+          :draft="quick.draft"
+          :time-zone="timeZone"
+          :calendar-color="calendarColors.Event"
+          :can-create-task="tasksEnabled"
+          :context="quick.context"
+          :busy="busy"
+          :constraints="quick.constraints"
+          @change="(draft) => (quick.draft = { ...quick.draft, ...draft })"
+          @save="saveQuick"
+          @more="quickMore"
+          @close="closeQuick"
+          @guard-action="quickGuardAction"
+          @dismiss-guard="quick.constraints = []"
+        />
+      </div>
+    </AgendaPopover>
+
+    <!-- event details: a card beside the chip (desktop), a sheet (phone) -->
+    <AgendaPopover
+      v-if="selectedEvent && !phone"
+      :anchor="anchorRect"
+      :width="448"
+      :label="__('Event details')"
+      keep-open-on=".ag-event, .ag-bar, .ag-month__item, .ag-schedule button, [role='dialog'], .toast, [data-sonner-toaster]"
+      @close="closePanel"
+    >
+      <div class="ag-vars p-5 pt-3" :aria-label="__('Event details')">
+        <AgendaEventPanel v-bind="panelProps" v-on="panelHandlers" />
+      </div>
+    </AgendaPopover>
     <BottomSheet
       v-if="phone"
       :open="Boolean(selectedEvent)"
       :title="''"
       @update:open="(value) => !value && closePanel()"
     >
-      <div v-if="selectedEvent" class="px-5 pb-6">
+      <div
+        v-if="selectedEvent"
+        class="ag-vars px-5 pb-6"
+        :aria-label="__('Event details')"
+      >
         <AgendaEventPanel v-bind="panelProps" v-on="panelHandlers" />
       </div>
     </BottomSheet>
@@ -369,6 +446,7 @@
             :organizer-name="form.event?.organizerName || ''"
             :busy="busy"
             :constraints="form.constraints"
+            :calendar-color="calendarColors.Event"
             @save="saveForm"
             @close="closeForm"
             @guard-action="formGuardAction"
@@ -399,59 +477,124 @@
         </div>
       </template>
     </component>
-  </ModuleLayout>
+
+    <AgendaSettings
+      v-if="settings"
+      :calendars="calendars"
+      :sync="sync"
+      :initial="settings"
+      :busy="syncBusy"
+      :error="syncError"
+      :locale="locale"
+      @close="settings = ''"
+      @toggle="toggleCalendar"
+      @color="setColor"
+      @reset="resetPrefs"
+      @google="googleAction"
+      @ics="icsAction"
+    />
+  </div>
 </template>
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BottomSheet, Button, Dialog, toast } from 'frappe-ui'
-import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AgendaEventForm from '@/components/agenda/AgendaEventForm.vue'
 import AgendaEventPanel from '@/components/agenda/AgendaEventPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import AgendaList from '@/components/agenda/AgendaList.vue'
-import AgendaMonth from '@/components/agenda/AgendaMonth.vue'
-import { useAgendaDrag } from '@/components/agenda/agendaDrag'
-import { AgendaCalendar } from '@/vendor/muelle-calendar/vue'
-import { isMobile } from '@/composables/breakpoint'
+import AgendaMonthGrid from '@/components/agenda/AgendaMonthGrid.vue'
+import AgendaPopover from '@/components/agenda/AgendaPopover.vue'
+import AgendaQuickCreate from '@/components/agenda/AgendaQuickCreate.vue'
+import AgendaSearch from '@/components/agenda/AgendaSearch.vue'
+import AgendaSettings from '@/components/agenda/AgendaSettings.vue'
+import AgendaSidebar from '@/components/agenda/AgendaSidebar.vue'
+import AgendaTimeGrid from '@/components/agenda/AgendaTimeGrid.vue'
 import {
-  CALENDAR_RESOURCE,
+  defaultCalendarColor,
+  eventColor,
+} from '@/components/agenda/agendaColors'
+import {
+  eventDates,
+  wallInstant,
+  wallParts,
+} from '@/components/agenda/agendaGrid'
+import { isMobile } from '@/composables/breakpoint'
+import { DENSITIES, useAgendaPrefs } from '@/composables/useAgendaPrefs'
+import { hoyLive } from '@/composables/useHoy'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import { shiftCalendarDate } from '@/vendor/muelle-calendar/core'
+import {
+  CITAS,
+  GOOGLE_RETURN_KEY,
+  MY_CALENDARS,
+  TASKS,
   agendaLocale,
+  calendarKey,
+  calendarLabel,
+  completeTask,
+  connectGoogle,
   createEvent,
+  createRangeCache,
+  createTask,
+  disconnectGoogle,
   errorText,
   eventDetail,
   eventKey,
   formatWhen,
+  icsSubscription,
   loadCapabilities,
   moveEvent,
+  moveToDateTimes,
   parseEventKey,
   parseState,
+  queryTasks,
   querySources,
   rangeFor,
+  reopenTask,
   requestChange,
   requestId,
+  rescheduleTask,
   safeReturn,
   setStatus,
-  splitAllDay,
+  shareLink,
+  sourcesFor,
   stateQuery,
   step,
-  toCalendarEvent,
+  syncGoogle,
+  syncStatus,
+  tasksAvailable,
+  taskRoute,
   today,
   updateEvent,
   usesHour12,
-  visibleHours,
   wallToInstant,
   weekStartsOn,
 } from '@/composables/useAgenda'
 
-const SLOT_MINUTES = 30
 const route = useRoute()
 const router = useRouter()
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const phone = isMobile
 const locale = agendaLocale()
 const hour12 = usesHour12(locale)
-const translate = (source) => __(source)
-const firstWeekday = weekStartsOn()
+const {
+  prefs,
+  loadRemote,
+  setColor: setPrefColor,
+  toggleHidden,
+  remember,
+  reset,
+} = useAgendaPrefs()
+const firstWeekday = computed(() => prefs.weekStart ?? weekStartsOn())
 
 const caps = ref(null)
 const capsError = ref('')
@@ -469,7 +612,17 @@ const detailLoading = ref(false)
 const detailError = ref('')
 const panelConstraints = ref([])
 const form = ref(null)
+const quick = ref(null)
 const calendarRoot = ref(null)
+const anchorRect = ref(null)
+const drawer = ref(false)
+const viewMenu = ref(false)
+const settings = ref('')
+const sync = ref(null)
+const syncBusy = ref('')
+const syncError = ref('')
+const tasksEnabled = ref(false)
+const cache = createRangeCache()
 
 const timeZone = computed(
   () =>
@@ -478,116 +631,196 @@ const timeZone = computed(
     Intl.DateTimeFormat().resolvedOptions().timeZone,
 )
 const state = computed(() =>
-  parseState(route.query, { phone: phone.value, timeZone: timeZone.value }),
+  parseState(route.query, {
+    phone: phone.value,
+    timeZone: timeZone.value,
+    defaultView: prefs.view,
+  }),
 )
 const todayDate = computed(() => today(timeZone.value))
 const range = computed(() =>
-  rangeFor(state.value, timeZone.value, firstWeekday),
+  rangeFor(state.value, timeZone.value, firstWeekday.value),
 )
-// Phone month: the tapped day's agenda below the grid, from the month already loaded.
 const pickedDay = computed(() =>
   rangeFor({ view: 'day', date: state.value.date }, timeZone.value),
 )
+const gridView = computed(() =>
+  ['day', '4day', 'week'].includes(state.value.view),
+)
+const isWeekend = (date) =>
+  [0, 6].includes(new Date(`${date}T12:00:00Z`).getUTCDay())
+const gridDates = computed(() => {
+  const dates = range.value.dates
+  if (state.value.view !== 'week' || prefs.showWeekends) return dates
+  const work = dates.filter((date) => !isWeekend(date))
+  return work.length ? work : dates
+})
+const hourHeight = computed(
+  () => DENSITIES[prefs.density] || DENSITIES.comfortable,
+)
 const viewEntries = computed(() => [
-  { value: 'list', label: __('List'), icon: 'list' },
-  { value: 'day', label: __('Day'), icon: 'calendar' },
-  { value: 'week', label: __('Week'), icon: 'columns' },
-  { value: 'month', label: __('Month'), icon: 'grid' },
+  { value: 'day', label: __('Day'), key: 'd' },
+  { value: 'week', label: __('Week'), key: 'w' },
+  { value: 'month', label: __('Month'), key: 'm' },
+  { value: 'list', label: __('Schedule view'), key: 'a' },
+  { value: '4day', label: __('4 days'), key: 'x' },
 ])
-const SOURCE_LABELS = {
-  Event: () => __('My agenda'),
-  Turno: () => __('Shifts'),
-}
-const sourceLabel = (key) => SOURCE_LABELS[key]?.() || key
+const phoneViews = computed(() => [
+  { value: 'list', label: __('Schedule view') },
+  { value: 'day', label: __('Day') },
+  { value: '4day', label: __('4 days') },
+  { value: 'month', label: __('Month') },
+])
+const currentViewLabel = computed(
+  () =>
+    viewEntries.value.find((entry) => entry.value === state.value.view)
+      ?.label || '',
+)
+
+// --- calendars: sources + citas + tasks, with the worker's colors and visibility --------
 const enabledSources = computed(
   () => caps.value?.sources?.filter((row) => row.enabled) || [],
 )
-const blockedSources = computed(
-  () =>
-    caps.value?.sources?.filter(
-      (row) => !row.enabled && row.reason && row.key in SOURCE_LABELS,
-    ) || [],
+const calendars = computed(() => {
+  const rows = []
+  const add = (key, extra = {}) => {
+    const index = rows.length
+    rows.push({
+      key,
+      label: calendarLabel(key, extra.label),
+      color: prefs.colors[key] || defaultCalendarColor(key, index),
+      visible: state.value.calendars
+        ? state.value.calendars.includes(key)
+        : !prefs.hidden.includes(key),
+      group: MY_CALENDARS.includes(key) ? 'mine' : 'other',
+      blocked: Boolean(extra.blocked),
+      reason: extra.reason || '',
+    })
+  }
+  for (const source of caps.value?.sources || []) {
+    if (!source.enabled && !source.reason) continue
+    add(source.key, {
+      label: source.label,
+      blocked: !source.enabled,
+      reason: source.reason,
+    })
+    if (source.key === 'Event' && source.enabled && prefs.seen.includes(CITAS))
+      add(CITAS)
+  }
+  if (tasksEnabled.value) add(TASKS)
+  return rows
+})
+const calendarColors = computed(() =>
+  Object.fromEntries(calendars.value.map((row) => [row.key, row.color])),
 )
-const firstReason = computed(() => blockedSources.value[0]?.reason || '')
-const calendarOptions = computed(() =>
-  enabledSources.value
-    .filter((row) => row.key in SOURCE_LABELS)
-    .map((row) => ({ key: row.key, label: sourceLabel(row.key) })),
+const visibleCalendars = computed(() =>
+  calendars.value
+    .filter((row) => row.visible && !row.blocked)
+    .map((row) => row.key),
 )
-const activeSources = computed(() =>
-  calendarOptions.value
-    .map((row) => row.key)
-    .filter((key) => state.value.calendars.includes(key)),
+const firstReason = computed(
+  () => calendars.value.find((row) => row.blocked)?.reason || '',
 )
 const canCreate = computed(() =>
   Boolean(enabledSources.value.find((row) => row.key === 'Event')?.canCreate),
 )
+const createColor = computed(() => {
+  const own = quick.value?.draft?.color
+  if (own) return own
+  return quick.value?.draft?.kind === 'task'
+    ? calendarColors.value[TASKS] || '#3f51b5'
+    : calendarColors.value.Event || '#039be5'
+})
+const colorOf = (event) =>
+  eventColor(event, calendarColors.value[calendarKey(event)])
 const zoneNote = computed(() => {
   const own = caps.value?.user_time_zone
   return own && own !== timeZone.value
     ? __('Times in {0}, the business time zone.', [timeZone.value])
     : ''
 })
-
 const visibleEvents = computed(() =>
-  events.value.filter((event) => activeSources.value.includes(event.source)),
+  events.value.filter((event) => {
+    if (!visibleCalendars.value.includes(calendarKey(event))) return false
+    if (!prefs.showDone && event.status === 'Done') return false
+    if (!prefs.showCancelled && event.status === 'Cancelled') return false
+    return true
+  }),
 )
-const split = computed(() => splitAllDay(visibleEvents.value))
-const calendarEvents = computed(() => split.value.timed.map(toCalendarEvent))
-const calendarResources = computed(() => [
-  { id: CALENDAR_RESOURCE, title: __('Agenda'), timeZone: timeZone.value },
-])
-const hours = computed(() => visibleHours(split.value.timed, timeZone.value))
-const allDayRows = computed(() => {
-  const dates = new Set(
-    state.value.view === 'day' ? [state.value.date] : range.value.dates,
-  )
-  const dayLabel = new Intl.DateTimeFormat(locale, {
-    timeZone: timeZone.value,
-    weekday: 'short',
-  })
-  const rows = []
-  for (const event of split.value.allDay) {
-    const first = new Intl.DateTimeFormat('en-CA', {
-      timeZone: timeZone.value,
-    }).format(new Date(event.start))
-    const lastInstant = new Date(Date.parse(event.end) - 1)
-    const last = new Intl.DateTimeFormat('en-CA', {
-      timeZone: timeZone.value,
-    }).format(lastInstant)
-    if ([...dates].some((date) => date >= first && date <= last))
-      rows.push({
-        key: eventKey(event),
-        event,
-        day: dayLabel.format(new Date(event.start)),
-      })
+const busyDates = computed(() => {
+  const dates = new Set()
+  for (const event of visibleEvents.value) {
+    if (event.kind === 'task') dates.add(event.date)
+    else {
+      const span = eventDates(event, timeZone.value)
+      for (
+        let date = span.first;
+        date <= span.last && dates.size < 400;
+        date = shiftCalendarDate(date, 1)
+      )
+        dates.add(date)
+    }
   }
-  return rows
+  return [...dates]
 })
+const notices = computed(
+  () =>
+    zoneNote.value ||
+    capsError.value ||
+    (caps.value && !caps.value.enabled) ||
+    problems.value.length ||
+    (moveGuard.value && !panelOpen.value) ||
+    slow.value,
+)
+
+// --- titles -------------------------------------------------------------------------------
+const civil = (date, options) =>
+  new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(
+    new Date(`${date}T12:00:00Z`),
+  )
+const capital = (text) => text.charAt(0).toUpperCase() + text.slice(1)
+const todayLong = computed(() =>
+  civil(todayDate.value, { weekday: 'long', day: 'numeric', month: 'long' }),
+)
 const rangeTitle = computed(() => {
-  const civil = (date, options) =>
-    new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(
-      new Date(`${date}T12:00:00Z`),
+  const view = state.value.view
+  if (view === 'day')
+    return capital(
+      civil(
+        state.value.date,
+        phone.value
+          ? { weekday: 'short', day: 'numeric', month: 'short' }
+          : { day: 'numeric', month: 'long', year: 'numeric' },
+      ),
     )
-  if (state.value.view === 'day')
-    return civil(state.value.date, {
-      weekday: phone.value ? 'short' : 'long',
-      day: 'numeric',
-      month: phone.value ? 'short' : 'long',
-    })
-  if (state.value.view === 'month')
-    return civil(state.value.date, { month: 'long', year: 'numeric' })
-  const dates = range.value.dates
-  const last = { day: 'numeric', month: 'short' }
-  if (!phone.value) last.year = 'numeric'
-  return `${civil(dates[0], { day: 'numeric', month: 'short' })} – ${civil(dates[dates.length - 1], last)}`
+  if (view === 'month')
+    return capital(civil(state.value.date, { month: 'long', year: 'numeric' }))
+  const dates = view === 'list' ? range.value.dates : gridDates.value
+  const first = dates[0]
+  const last = dates[dates.length - 1]
+  if (first.slice(0, 7) === last.slice(0, 7))
+    return capital(
+      civil(first, { month: phone.value ? 'short' : 'long', year: 'numeric' }),
+    )
+  if (first.slice(0, 4) === last.slice(0, 4))
+    return capital(
+      `${civil(first, { month: 'short' })} – ${civil(last, { month: 'short', year: 'numeric' })}`.replace(
+        /\./g,
+        '',
+      ),
+    )
+  return capital(
+    `${civil(first, { month: 'short', year: 'numeric' })} – ${civil(last, { month: 'short', year: 'numeric' })}`.replace(
+      /\./g,
+      '',
+    ),
+  )
 })
 
 const returnTo = computed(() => safeReturn(route.query.return_to))
 const returnLabel = computed(() =>
   String(route.query.return_label || __('previous screen')).slice(0, 40),
 )
-// CRM targets stay in this router; sibling apps (Taller, Clínica, POS…) are other pages.
 const returnRoute = computed(() =>
   returnTo.value.startsWith('/crm/') ? returnTo.value.slice(4) : '',
 )
@@ -601,17 +834,30 @@ const setView = (view) => setState({ view })
 const setDate = (date) => setState({ date })
 const go = (direction) => setState({ date: step(state.value, direction) })
 function toggleCalendar(key) {
-  const current = state.value.calendars
-  const next = current.includes(key)
-    ? current.filter((row) => row !== key)
-    : [...current, key]
-  setState({ calendars: next.length ? next : ['Event'] })
+  // A deep link's calendar filter becomes the worker's own choice once they change it.
+  if (state.value.calendars) {
+    for (const row of calendars.value)
+      toggleHidden(row.key, !state.value.calendars.includes(row.key))
+    setState({ calendars: null })
+  }
+  toggleHidden(key)
+}
+function onlyCalendar(key) {
+  for (const row of calendars.value) toggleHidden(row.key, row.key !== key)
+  if (state.value.calendars) setState({ calendars: null })
+}
+const setColor = (key, hex) => setPrefColor(key, hex)
+function resetPrefs() {
+  reset()
+  toast.success(__('Agenda settings restored'))
 }
 
-// --- loading --------------------------------------------------------------------------
+// --- loading ------------------------------------------------------------------------------
 async function boot() {
   capsError.value = ''
   copied.value = ''
+  loadRemote()
+  tasksAvailable().then((value) => (tasksEnabled.value = value))
   try {
     caps.value = await loadCapabilities()
   } catch (error) {
@@ -619,30 +865,92 @@ async function boot() {
     return
   }
   await load()
+  refreshSync()
+}
+
+const neededSources = computed(() =>
+  sourcesFor(
+    visibleCalendars.value,
+    enabledSources.value.map((row) => row.key),
+  ),
+)
+const wantTasks = computed(
+  () => tasksEnabled.value && visibleCalendars.value.includes(TASKS),
+)
+
+async function fetchRange(target, { store = true } = {}) {
+  const sources = neededSources.value
+  const parts = await Promise.all(
+    sources.map(async (source) => {
+      const result = await querySources([source], target)
+      if (store && !result.problems.length)
+        cache.set(cache.key(source, target), result.events)
+      return result
+    }),
+  )
+  let tasks = []
+  if (wantTasks.value) {
+    try {
+      tasks = await queryTasks(target, timeZone.value)
+      if (store) cache.set(cache.key(TASKS, target), tasks)
+    } catch {
+      tasks = []
+    }
+  }
+  return {
+    events: [...parts.flatMap((part) => part.events), ...tasks],
+    problems: parts.flatMap((part) => part.problems),
+  }
+}
+function fromCache(target) {
+  const keys = [...neededSources.value, ...(wantTasks.value ? [TASKS] : [])]
+  const rows = []
+  for (const key of keys) {
+    const hit = cache.get(cache.key(key, target))
+    if (!hit) return null
+    rows.push(...hit.value)
+  }
+  return rows
 }
 
 let sequence = 0
-async function load() {
-  if (!activeSources.value.length) {
-    events.value = []
-    return
-  }
+let loadedKey = ''
+const loadKey = computed(() =>
+  [
+    range.value.start,
+    range.value.end,
+    neededSources.value.join(','),
+    wantTasks.value,
+  ].join('|'),
+)
+async function load({ quiet = false } = {}) {
+  if (!caps.value?.enabled) return
+  loadedKey = loadKey.value
+  const target = range.value
   const request = ++sequence
+  const cached = fromCache(target)
+  if (cached) {
+    events.value = cached
+    syncSelection()
+  }
   loading.value = true
   slow.value = false
   const skeleton = setTimeout(() => {
-    if (request === sequence && !events.value.length) showSkeleton.value = true
-  }, 150)
+    if (request === sequence && !cached && !quiet) showSkeleton.value = true
+  }, 250)
   const lag = setTimeout(
     () => request === sequence && (slow.value = true),
     8000,
   )
   try {
-    const result = await querySources(activeSources.value, range.value)
+    const result = await fetchRange(target)
     if (request !== sequence) return
     events.value = result.events
     problems.value = result.problems
+    if (result.events.some((event) => calendarKey(event) === CITAS))
+      remember(CITAS)
     syncSelection()
+    prefetch()
   } finally {
     clearTimeout(skeleton)
     clearTimeout(lag)
@@ -653,30 +961,51 @@ async function load() {
     }
   }
 }
-// Range and calendar changes reload; the first load belongs to boot(). The key is a
-// string so picking a day or an event inside the loaded range does not refetch.
-watch(
-  () =>
-    [range.value.start, range.value.end, activeSources.value.join(',')].join(
-      '|',
-    ),
-  (_now, before) => caps.value && !before.endsWith('|') && load(),
+// The next and previous ranges load in the background, so paging feels instant.
+let prefetchTimer
+function prefetch() {
+  clearTimeout(prefetchTimer)
+  prefetchTimer = setTimeout(() => {
+    for (const direction of [1, -1]) {
+      const target = rangeFor(
+        { ...state.value, date: step(state.value, direction) },
+        timeZone.value,
+        firstWeekday.value,
+      )
+      if (!fromCache(target)) fetchRange(target).catch(() => {})
+    }
+  }, 400)
+}
+function invalidate() {
+  cache.clear()
+}
+// Range and calendar changes reload (once: boot's own load already covers its key).
+watch(loadKey, (key) => caps.value && key !== loadedKey && load())
+// Someone (or another tab) changed an event, a task or a shift: refresh quietly.
+useLiveWatch(
+  hoyLive(socket),
+  ['Event', 'ToDo', 'CRM Task', 'Shift Assignment'],
+  () => {
+    invalidate()
+    return load({ quiet: true })
+  },
 )
 
 // --- selection and panel --------------------------------------------------------------
 const selectedEvent = ref(null)
 const panelOpen = computed(() => Boolean(selectedEvent.value))
-function select(event) {
+function select(event, rect = null) {
+  closeQuick()
+  anchorRect.value = rect
   setState({ event: eventKey(event) })
 }
 function closePanel() {
-  setState({ event: '' })
+  if (state.value.event) setState({ event: '' })
 }
 let detailRequest = 0
 async function syncSelection() {
   const key = state.value.event
   if (!key) {
-    // A detail still on its way must not reopen the closed panel.
     detailRequest++
     detailLoading.value = false
     selectedEvent.value = null
@@ -708,7 +1037,6 @@ async function syncSelection() {
       return
     }
     detail.value = data
-    // Deep links outside the loaded range still open their panel.
     if (!selectedEvent.value) selectedEvent.value = data
   } catch (error) {
     if (request === detailRequest) detailError.value = errorText(error)
@@ -727,6 +1055,10 @@ const panelProps = computed(() => ({
   locale,
   hour12,
   busy: busy.value,
+  color: selectedEvent.value ? colorOf(selectedEvent.value) : '',
+  calendar: selectedEvent.value
+    ? calendarLabel(calendarKey(selectedEvent.value))
+    : '',
   constraints: panelConstraints.value.length
     ? panelConstraints.value
     : moveGuard.value && eventKey(moveGuard.value.event) === state.value.event
@@ -747,6 +1079,33 @@ const panelHandlers = {
   },
   'open-turnos': openTurnos,
   reload: syncSelection,
+  'copy-link': copyLink,
+  color: (hex) => recolor(selectedEvent.value, hex),
+  'task-done': () => taskStatus(selectedEvent.value, 'complete'),
+  'task-reopen': () => taskStatus(selectedEvent.value, 'reopen'),
+  'open-task': () =>
+    selectedEvent.value && router.push(taskRoute(selectedEvent.value)),
+  'open-native': () => commonAction('open_native', selectedEvent.value),
+}
+// A search result: jump to its day and open its card.
+function openFound(row) {
+  const date = String(row.starts_on || '').slice(0, 10)
+  const occurrence = row.repeat_this_event ? `@${date}` : ''
+  anchorRect.value = null
+  setState({
+    ...(date ? { date } : {}),
+    view: state.value.view === 'list' ? 'list' : state.value.view,
+    event: `Event:${row.name}${occurrence}`,
+  })
+}
+async function copyLink() {
+  const link = shareLink(state.value, selectedEvent.value)
+  try {
+    await navigator.clipboard.writeText(link)
+    toast.success(__('Link copied'))
+  } catch {
+    toast.info(link)
+  }
 }
 
 // --- moving ---------------------------------------------------------------------------
@@ -772,14 +1131,21 @@ async function doMove(
   patchLocal(event, times)
   busy.value = true
   try {
-    const result = await moveEvent(event, times, { scope, confirm })
+    const result = event.allDay
+      ? await updateEvent(
+          event,
+          { start: times.start, end: times.end, allDay: true },
+          confirm,
+        )
+      : await moveEvent(event, times, { scope, confirm })
     if (result?.constraints) {
       patchLocal(event, previous)
       moveGuard.value = { event, times, scope, constraints: result.constraints }
       return
     }
     moveGuard.value = null
-    await load()
+    invalidate()
+    await load({ quiet: true })
     if (
       state.value.event === eventKey(event) &&
       eventKey(result) !== eventKey(event)
@@ -817,20 +1183,94 @@ async function doMove(
     busy.value = false
   }
 }
-useAgendaDrag(calendarRoot, {
-  find: (id, source) =>
-    events.value.find(
-      (event) => event.id === id && (!source || event.source === source),
-    ),
-  options: () => ({
-    timeZone: timeZone.value,
-    slotMinutes: SLOT_MINUTES,
-    startHour: hours.value.start,
-    endHour: hours.value.end,
-    date: state.value.date,
-  }),
-  onDrop: (event, times) => doMove(event, times),
-})
+async function moveDays(event, delta) {
+  if (event.kind === 'task')
+    return moveTask(event, shiftCalendarDate(event.date, delta))
+  if (event.allDay) {
+    const span = eventDates(event, timeZone.value)
+    return doMove(event, {
+      start: wallInstant(
+        shiftCalendarDate(span.first, delta),
+        0,
+        timeZone.value,
+      ),
+      end: wallInstant(
+        shiftCalendarDate(span.last, delta),
+        1440,
+        timeZone.value,
+      ),
+    })
+  }
+  const target = shiftCalendarDate(
+    wallParts(event.start, timeZone.value).date,
+    delta,
+  )
+  const times = moveToDateTimes(event, target, timeZone.value)
+  if (times) return doMove(event, times)
+}
+async function moveTask(event, date, { undo = false } = {}) {
+  const before = event.date
+  busy.value = true
+  try {
+    await rescheduleTask(event, date)
+    invalidate()
+    await load({ quiet: true })
+    if (!undo)
+      toast.success(__('Task moved'), {
+        action: {
+          label: __('Undo'),
+          onClick: () => {
+            const fresh = events.value.find((row) => row.id === event.id)
+            if (fresh) moveTask(fresh, before, { undo: true })
+          },
+        },
+        duration: 8000,
+      })
+  } catch (error) {
+    toast.error(errorText(error))
+  } finally {
+    busy.value = false
+  }
+}
+async function taskStatus(event, action) {
+  if (!event) return
+  busy.value = true
+  try {
+    if (action === 'complete') await completeTask(event)
+    else await reopenTask(event)
+    invalidate()
+    await load({ quiet: true })
+    toast.success(
+      action === 'complete' ? __('Marked as done') : __('Task reopened'),
+    )
+  } catch (error) {
+    toast.error(errorText(error))
+  } finally {
+    busy.value = false
+  }
+}
+async function recolor(event, hex) {
+  if (!event || event.kind === 'task' || event.source !== 'Event') return
+  busy.value = true
+  try {
+    const result = await updateEvent(event, { color: hex || '' })
+    if (result?.constraints) {
+      panelConstraints.value = result.constraints
+      return
+    }
+    invalidate()
+    await load({ quiet: true })
+    if (eventKey(result) !== state.value.event)
+      setState({ event: eventKey(result) })
+    else syncSelection()
+  } catch (error) {
+    panelConstraints.value = [
+      { code: 'unavailable', message: errorText(error), severity: 'block' },
+    ]
+  } finally {
+    busy.value = false
+  }
+}
 
 async function guardAction(id) {
   const guard = moveGuard.value
@@ -840,6 +1280,7 @@ async function guardAction(id) {
   if (id === 'move_series')
     return doMove(guard.event, guard.times, { scope: 'series' })
   if (id === 'retry') {
+    invalidate()
     await load()
     const fresh = events.value.find(
       (event) => eventKey(event) === eventKey(guard.event),
@@ -864,7 +1305,6 @@ function panelGuardAction(id) {
   if (id === 'edit' || id === 'pick_time') return openEdit(selectedEvent.value)
   return commonAction(id, selectedEvent.value)
 }
-// A month too full to draw steps down to its week; a week to its day.
 const shorterView = () => setView(state.value.view === 'month' ? 'week' : 'day')
 function problemAction(id) {
   if (id === 'shorter_range') return shorterView()
@@ -910,7 +1350,8 @@ async function changeStatus(event, action) {
     }
     panelConstraints.value = []
     if (action === 'cancel') closePanel()
-    await load()
+    invalidate()
+    await load({ quiet: true })
     const messages = {
       complete: __('Marked as done'),
       cancel: __('Event cancelled'),
@@ -937,7 +1378,117 @@ async function changeStatus(event, action) {
   }
 }
 
-// --- create / edit / propose ----------------------------------------------------------
+// --- quick create (desktop): the dragged range stays drawn while the card is open -------
+let quickKey = 0
+const draftShown = computed(() => quick.value?.draft || null)
+function startCreate(slot) {
+  if (!canCreate.value) return
+  closePanel()
+  if (phone.value)
+    return openCreate({ start: slot.start, end: slot.end, allDay: slot.allDay })
+  quick.value = reactive({
+    key: ++quickKey,
+    rect: slot.rect,
+    draft: {
+      start: slot.start,
+      end: slot.end,
+      allDay: slot.allDay,
+      kind: 'event',
+    },
+    context: null,
+    constraints: [],
+    requestId: requestId(),
+    last: null,
+  })
+}
+function createOnDay(date, rect = null) {
+  const start =
+    date === todayDate.value
+      ? nextHalfHour()
+      : wallToInstant(date, '09:00', timeZone.value)
+  const end = new Date(
+    Date.parse(start) + prefs.defaultDuration * 60000,
+  ).toISOString()
+  startCreate({ start, end, allDay: false, rect })
+}
+function closeQuick() {
+  quick.value = null
+}
+async function saveQuick(payload, confirm = 0) {
+  const current = quick.value
+  if (!current) return
+  current.last = payload
+  busy.value = true
+  try {
+    if (payload.kind === 'task') {
+      await createTask({
+        title: payload.title,
+        date: payload.date,
+        reference: current.context?.reference,
+      })
+      quick.value = null
+      invalidate()
+      await load({ quiet: true })
+      toast.success(__('Task saved'))
+      return
+    }
+    const result = await createEvent('Event', {
+      title: payload.title,
+      start: payload.start,
+      end: payload.end,
+      allDay: payload.allDay,
+      location: payload.location,
+      attendees: [],
+      reminders: [{ type: 'Notification', before: 10, interval: 'minutes' }],
+      ...(payload.color ? { color: payload.color } : {}),
+      ...(sync.value?.google?.connected && !prefs.syncGoogle
+        ? { syncGoogle: false }
+        : {}),
+      requestId: current.requestId,
+      confirm,
+    })
+    if (result?.constraints) {
+      current.constraints = result.constraints
+      return
+    }
+    quick.value = null
+    invalidate()
+    await load({ quiet: true })
+    toast.success(__('Event saved'), {
+      action: { label: __('Open'), onClick: () => select(result) },
+      duration: 6000,
+    })
+  } catch (error) {
+    current.constraints = [
+      { code: 'unavailable', message: errorText(error), severity: 'block' },
+    ]
+  } finally {
+    busy.value = false
+  }
+}
+function quickGuardAction(id) {
+  const current = quick.value
+  if (!current) return
+  if (id === 'confirm') return saveQuick(current.last, 1)
+  if (id === 'pick_time') return (current.constraints = [])
+  if (id === 'retry') return saveQuick(current.last)
+  return commonAction(id, null)
+}
+function quickMore(payload) {
+  const current = quick.value
+  quick.value = null
+  openCreate({
+    title: payload.title,
+    start: payload.start,
+    end: payload.end,
+    allDay: payload.allDay,
+    location: payload.location,
+    color: payload.color,
+    ...(current?.context || {}),
+  })
+}
+
+// --- full form: create / edit / propose ----------------------------------------------
 let formKey = 0
 function nextHalfHour() {
   const ms = 30 * 60 * 1000
@@ -958,9 +1509,11 @@ function openForm(mode, initial, event = null) {
   })
 }
 function openCreate(extra = {}) {
+  closeQuick()
   const start = extra.start || nextHalfHour()
   const end =
-    extra.end || new Date(Date.parse(start) + 3600 * 1000).toISOString()
+    extra.end ||
+    new Date(Date.parse(start) + prefs.defaultDuration * 60000).toISOString()
   openForm('create', {
     title: '',
     attendees: [],
@@ -970,25 +1523,6 @@ function openCreate(extra = {}) {
     end,
   })
 }
-function openCreateSlot(slot) {
-  if (!canCreate.value) return
-  // A single tapped slot becomes a one-hour event; a dragged range keeps its length.
-  const span = Date.parse(slot.end) - Date.parse(slot.start)
-  const end =
-    span <= SLOT_MINUTES * 60 * 1000
-      ? new Date(Date.parse(slot.start) + 3600 * 1000).toISOString()
-      : slot.end
-  openCreate({ start: slot.start, end })
-}
-function openCreateOn(date) {
-  const start =
-    date === todayDate.value
-      ? nextHalfHour()
-      : wallToInstant(date, '09:00', timeZone.value)
-  openCreate({ start })
-}
-// Editing starts from the full detail of this exact event: a calendar row lacks notes,
-// people, reminders, link and visibility, and saving from it would erase them.
 function openEdit(event, { times } = {}) {
   if (!event) return
   openForm('edit', null, event)
@@ -1016,7 +1550,6 @@ async function loadEditForm(current) {
   }
   if (form.value !== current) return
   const times = current.times
-  // The version the form saves against is the one its values were read at.
   current.event = { ...event, version: base.version || event.version }
   current.initial = {
     title: base.title,
@@ -1032,6 +1565,7 @@ async function loadEditForm(current) {
     repeatTill: base.repeat?.till || '',
     repeatDays: base.repeat?.days || [],
     visibility: base.visibility || 'private',
+    color: base.color || '',
   }
 }
 function openPropose(event, times) {
@@ -1078,11 +1612,18 @@ async function saveForm(payload, confirm = 0) {
       toast.success(result.message)
       return
     }
+    const body = { ...payload }
+    if (
+      current.mode === 'create' &&
+      sync.value?.google?.connected &&
+      !prefs.syncGoogle
+    )
+      body.syncGoogle = false
     result =
       current.mode === 'edit'
-        ? await updateEvent(current.event, payload, confirm)
+        ? await updateEvent(current.event, body, confirm)
         : await createEvent('Event', {
-            ...payload,
+            ...body,
             requestId: current.requestId,
             confirm,
           })
@@ -1091,7 +1632,8 @@ async function saveForm(payload, confirm = 0) {
       return
     }
     form.value = null
-    await load()
+    invalidate()
+    await load({ quiet: true })
     const done = `Event:${(result.seriesId || result.id).split('@')[0]}`
     if (current.mode === 'create' && returnTo.value) {
       const url = new URL(returnTo.value, window.location.origin)
@@ -1101,6 +1643,7 @@ async function saveForm(payload, confirm = 0) {
       else window.location.assign(target)
       return
     }
+    anchorRect.value = null
     setState({ event: eventKey(result) })
     toast.success(
       current.mode === 'edit' ? __('Changes saved') : __('Event saved'),
@@ -1119,6 +1662,7 @@ async function formGuardAction(id) {
   if (id === 'confirm') return saveForm(current.lastPayload, 1)
   if (id === 'pick_time') return (current.constraints = [])
   if (id === 'retry' && current.mode === 'edit') {
+    invalidate()
     await load()
     const fresh = events.value.find(
       (event) => eventKey(event) === eventKey(current.event),
@@ -1183,9 +1727,149 @@ function openFromQuery() {
   router.replace({ query: rest })
 }
 
-// --- keyboard (shell §3.3): never while typing ------------------------------------------
+// --- settings and sync --------------------------------------------------------------------
+function openSettings(section) {
+  drawer.value = false
+  settings.value = section || 'general'
+  if (section === 'sync') refreshSync()
+}
+async function refreshSync() {
+  try {
+    sync.value = await syncStatus()
+  } catch {
+    sync.value = {
+      google: {
+        available: false,
+        reason: __('Sync is not available on this site yet.'),
+      },
+      ics: null,
+    }
+  }
+}
+async function googleAction(action) {
+  syncBusy.value = action
+  syncError.value = ''
+  try {
+    if (action === 'connect') {
+      const result = await connectGoogle()
+      if (result?.constraints) throw new Error(result.constraints[0].message)
+      if (!result?.url) throw new Error(__('Google did not answer. Try again.'))
+      localStorage.setItem(
+        GOOGLE_RETURN_KEY,
+        `/crm/agenda?${new URLSearchParams(stateQuery(state.value, {})).toString()}`,
+      )
+      window.location.assign(result.url)
+      return
+    }
+    if (action === 'sync') {
+      const result = await syncGoogle()
+      if (result?.constraints) throw new Error(result.constraints[0].message)
+      invalidate()
+      await load({ quiet: true })
+      toast.success(result?.message || __('Google Calendar synced'))
+    }
+    if (action === 'disconnect') {
+      const result = await disconnectGoogle()
+      toast.success(result?.message || __('Google Calendar disconnected'))
+    }
+    await refreshSync()
+  } catch (error) {
+    syncError.value = errorText(error)
+    if (!settings.value) toast.error(syncError.value)
+  } finally {
+    syncBusy.value = ''
+  }
+}
+async function icsAction(action) {
+  syncBusy.value = action === 'rotate' ? 'rotate' : 'ics'
+  syncError.value = ''
+  try {
+    const result = await icsSubscription(action === 'rotate' ? 1 : 0)
+    sync.value = { ...(sync.value || {}), ics: result }
+    if (action === 'rotate')
+      toast.success(__('New link ready. The old one no longer works.'))
+  } catch (error) {
+    syncError.value = errorText(error)
+  } finally {
+    syncBusy.value = ''
+  }
+}
+function googleReturn() {
+  const outcome = route.query.google
+  if (!['connected', 'error'].includes(outcome)) return
+  const rest = { ...route.query }
+  delete rest.google
+  router.replace({ query: rest })
+  if (outcome === 'error') {
+    openSettings('sync')
+    syncError.value = __(
+      'Google did not grant access. Try connecting again and allow calendar access.',
+    )
+    return
+  }
+  toast.success(__('Google Calendar connected'))
+  googleAction('sync')
+}
+
+const sidebarProps = computed(() => ({
+  calendars: calendars.value,
+  selected: state.value.date,
+  today: todayDate.value,
+  range: gridView.value
+    ? gridDates.value
+    : state.value.view === 'list'
+      ? range.value.dates
+      : null,
+  busyDates: busyDates.value,
+  weekStartsOn: firstWeekday.value,
+  locale,
+  canCreate: canCreate.value,
+  canCreateTask: tasksEnabled.value,
+  sync: sync.value,
+}))
+const sidebarHandlers = {
+  create: (kind) => {
+    drawer.value = false
+    if (kind === 'task') {
+      const date = state.value.date
+      quick.value = reactive({
+        key: ++quickKey,
+        rect: null,
+        draft: {
+          start: wallInstant(date, 0, timeZone.value),
+          end: wallInstant(date, 1440, timeZone.value),
+          allDay: true,
+          kind: 'task',
+        },
+        context: null,
+        constraints: [],
+        requestId: requestId(),
+        last: null,
+      })
+      return
+    }
+    openCreate()
+  },
+  pick: (date) => {
+    drawer.value = false
+    setDate(date)
+  },
+  toggle: toggleCalendar,
+  only: onlyCalendar,
+  color: setColor,
+  settings: openSettings,
+}
+
+// --- keyboard: never while typing ---------------------------------------------------------
 function onKey(event) {
-  if (event.metaKey || event.ctrlKey || event.altKey || form.value) return
+  if (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    form.value ||
+    settings.value
+  )
+    return
   const target = event.target
   if (target?.closest?.('input, textarea, select, [contenteditable="true"]'))
     return
@@ -1195,12 +1879,17 @@ function onKey(event) {
     d: () => setView('day'),
     w: () => setView('week'),
     m: () => setView('month'),
+    a: () => setView('list'),
     l: () => setView('list'),
+    x: () => setView('4day'),
     j: () => go(1),
     k: () => go(-1),
+    n: () => go(1),
+    p: () => go(-1),
     ArrowRight: () => go(1),
     ArrowLeft: () => go(-1),
-    Escape: () => state.value.event && closePanel(),
+    Escape: () =>
+      quick.value ? closeQuick() : state.value.event && closePanel(),
   }
   const action = actions[event.key]
   if (action) {
@@ -1208,47 +1897,304 @@ function onKey(event) {
     action()
   }
 }
+function outsideViewMenu(event) {
+  if (viewMenu.value && !event.target.closest?.('.ag-viewmenu, .ag-viewbtn'))
+    viewMenu.value = false
+}
 
 let clock
 onMounted(async () => {
   window.addEventListener('keydown', onKey)
+  window.addEventListener('pointerdown', outsideViewMenu, true)
   clock = setInterval(() => (now.value = Date.now()), 60 * 1000)
   document.title = `${__('Agenda')} · Muelle`
   // The view is always in the URL, so a shared or reloaded link opens the same view.
   if (!route.query.view) setState({})
   await boot()
   openFromQuery()
+  googleReturn()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
+  window.removeEventListener('pointerdown', outsideViewMenu, true)
   clearInterval(clock)
+  clearTimeout(prefetchTimer)
 })
 </script>
+<style>
+.agenda-app,
+.ag-vars {
+  --ag-accent: #1a73e8;
+  --ag-on-accent: #ffffff;
+  --ag-accent-ink: #0b57d0;
+  --ag-select-tint: rgba(26, 115, 232, 0.12);
+  --ag-select-strong: #d3e3fd;
+  --ag-today-tint: transparent;
+}
+[data-theme='dark'] .agenda-app,
+[data-theme='dark'] .ag-vars {
+  --ag-accent: #a8c7fa;
+  --ag-on-accent: #062e6f;
+  --ag-accent-ink: #d3e3fd;
+  --ag-select-tint: rgba(168, 199, 250, 0.14);
+  --ag-select-strong: #004a77;
+}
+</style>
 <style scoped>
-/* The shared calendar takes frappe-ui tokens so it follows the theme and palette. */
-.agenda-cal :deep(.mc-calendar) {
-  --mc-accent: var(--text-ink-blue-3);
-  --mc-surface: var(--surface-white);
-  --mc-panel: var(--surface-gray-1);
-  --mc-border: var(--outline-gray-2);
-  --mc-muted: var(--text-ink-gray-6);
-  --mc-text: var(--text-ink-gray-9);
-  --mc-event-surface: var(--surface-blue-1);
-  --mc-event-border: var(--outline-blue-1);
-  --mc-event-text: var(--text-ink-gray-9);
-  --mc-hover: var(--surface-gray-2);
+.agenda-app {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: var(--surface-base);
+  color: var(--ink-gray-9);
 }
-.agenda-cal :deep(.agenda-dragging) {
-  opacity: 0.5;
-  cursor: grabbing;
+.ag-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 8px 16px 8px 8px;
+  border-bottom: 1px solid var(--outline-gray-1);
 }
-.agenda-cal :deep(.agenda-drop-target) {
-  background: var(--surface-blue-2);
-  outline: 2px solid var(--outline-blue-1);
+.is-phone .ag-top {
+  min-height: 56px;
+  gap: 4px;
+  padding: 4px 8px;
 }
-@media (pointer: fine) {
-  .agenda-cal :deep(.mc-calendar [data-event-id]) {
-    cursor: grab;
+.ag-iconbtn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--ink-gray-7);
+}
+.ag-iconbtn:hover {
+  background: var(--surface-gray-2);
+}
+.ag-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 28px;
+  font-size: 22px;
+  color: var(--ink-gray-8);
+}
+.ag-brand__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: var(--ag-accent);
+  color: var(--ag-on-accent);
+  font-size: 15px;
+  font-weight: 600;
+}
+.ag-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  min-height: 40px;
+  margin-right: 8px;
+  font-size: 14px;
+  color: var(--ink-gray-7);
+}
+.ag-today {
+  flex: none;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--outline-gray-3);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-gray-8);
+}
+.ag-today:hover {
+  background: var(--surface-gray-2);
+}
+.ag-title {
+  min-width: 0;
+  margin-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink-gray-9);
+}
+.is-phone .ag-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+.ag-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--outline-gray-2);
+  border-top-color: var(--ag-accent);
+  border-radius: 999px;
+  animation: ag-spin 0.8s linear infinite;
+}
+@keyframes ag-spin {
+  to {
+    transform: rotate(360deg);
   }
+}
+.ag-viewbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px 0 16px;
+  border: 1px solid var(--outline-gray-3);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-gray-8);
+}
+.ag-viewbtn:hover {
+  background: var(--surface-gray-2);
+}
+.ag-viewmenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 60;
+  min-width: 220px;
+  padding: 6px 0;
+  border-radius: 10px;
+  background: var(--surface-elevation-2, var(--surface-base));
+  box-shadow:
+    0 10px 30px -6px rgba(0, 0, 0, 0.35),
+    0 0 0 1px var(--outline-gray-1);
+}
+.ag-viewmenu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: var(--ink-gray-8);
+}
+.ag-viewmenu__item:hover {
+  background: var(--surface-gray-2);
+}
+.ag-viewmenu__item[aria-checked='true'][role='menuitemradio'] {
+  background: var(--ag-select-tint);
+  color: var(--ag-accent-ink);
+  font-weight: 600;
+}
+.ag-viewmenu__item kbd {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--ink-gray-5);
+}
+.ag-phoneviews {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  margin: 6px 8px;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--surface-gray-2);
+}
+.ag-phoneviews button {
+  min-height: 36px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink-gray-7);
+}
+.ag-phoneviews button[aria-pressed='true'] {
+  background: var(--surface-base);
+  color: var(--ink-gray-9);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.ag-main {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.ag-sidebar {
+  flex: 0 0 256px;
+  overflow-y: auto;
+  padding-top: 8px;
+}
+.ag-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 12px 12px 0;
+  border-radius: 16px;
+  background: var(--surface-base);
+  box-shadow: 0 0 0 1px var(--outline-gray-1);
+  overflow: hidden;
+  /* Grid layers (events, the now line, drags) stay under dialogs and menus. */
+  isolation: isolate;
+}
+.is-phone .ag-view {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.ag-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px 0;
+}
+.ag-canvas {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.ag-canvas.is-list,
+.ag-canvas.is-month {
+  overflow-y: auto;
+}
+.ag-canvas.is-list {
+  padding: 8px 24px 24px;
+}
+.is-phone .ag-canvas.is-list {
+  padding: 4px 12px 96px;
+}
+.ag-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--ag-select-strong);
+  color: var(--ag-accent-ink);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+.ag-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, 0.35);
+}
+.ag-drawer__panel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(320px, 86vw);
+  overflow-y: auto;
+  padding-top: 12px;
+  background: var(--surface-base);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.3);
 }
 </style>
