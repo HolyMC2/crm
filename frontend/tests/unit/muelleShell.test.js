@@ -109,7 +109,7 @@ async function mount(path) {
       {
         path: '/agenda',
         component: { render: () => h('p', 'Agenda page') },
-        meta: { app: 'agenda', title: 'Agenda' },
+        meta: { app: 'agenda', title: 'Agenda', ownPhoneHeader: true },
       },
       { path: '/deals', component: { render: () => h('p', 'Deals page') } },
       { path: '/ventas', component: { render: () => null } },
@@ -376,6 +376,15 @@ describe('one frame for every route', () => {
     // near the top the header always shows
     await scrollTo(20)
     expect(header().style.marginTop).toBe('')
+  })
+
+  it('phone Agenda brings its own calendar app bar and keeps the bottom nav', async () => {
+    state.mobile.value = true
+    await mount('/agenda')
+    expect(root.querySelector('[data-testid="shell-header"]')).toBeNull()
+    expect(
+      root.querySelector('nav[aria-label="Main navigation"]'),
+    ).not.toBeNull()
   })
 
   it('phone deal record owns the top: no shell header, no bottom nav', async () => {

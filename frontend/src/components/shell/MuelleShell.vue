@@ -17,9 +17,10 @@
     <div class="flex min-h-0 min-w-0 flex-1 flex-col">
       <!-- One compact row on phone. It slides away while the worker scrolls
            down and comes back on the first scroll up; drill-down records
-           (deal, inbox thread) bring their own identity row instead. -->
+           (deal, inbox thread) bring their own identity row instead, and pages
+           with `meta.ownPhoneHeader` (the Agenda's calendar app bar) their own. -->
       <header
-        v-if="phone && !drillDown"
+        v-if="phone && !drillDown && !route.meta.ownPhoneHeader"
         data-testid="shell-header"
         class="z-10 flex min-h-12 shrink-0 items-center gap-1 border-b border-outline-gray-1 bg-surface-base pl-3 pr-1 pt-[env(safe-area-inset-top)] transition-[margin] duration-200"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"

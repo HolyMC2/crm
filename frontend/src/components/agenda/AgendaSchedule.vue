@@ -145,7 +145,6 @@ const civil = (date) => new Date(`${date}T12:00:00Z`)
 const weekdayFmt = computed(() => fmt({ weekday: 'short' }))
 const monthFmt = computed(() => fmt({ month: 'long', year: 'numeric' }))
 const shortFmt = computed(() => fmt({ day: 'numeric', month: 'short' }))
-const dayFmt = computed(() => fmt({ day: 'numeric' }))
 const longFmt = computed(() =>
   fmt({ weekday: 'long', day: 'numeric', month: 'long' }),
 )
@@ -174,10 +173,9 @@ function weekStart(date) {
 }
 function weekLabel(first) {
   const last = shift(first, 6)
-  if (first.slice(0, 7) === last.slice(0, 7))
-    return clean(
-      `${dayFmt.value.format(civil(first))} – ${shortFmt.value.format(civil(last))}`,
-    )
+  // «12–18 oct», «28 sept – 4 oct»: the locale's own range format.
+  if (shortFmt.value.formatRange)
+    return clean(shortFmt.value.formatRange(civil(first), civil(last)))
   return clean(
     `${shortFmt.value.format(civil(first))} – ${shortFmt.value.format(civil(last))}`,
   )

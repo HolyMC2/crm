@@ -498,28 +498,8 @@ onBeforeUnmount(() => window.removeEventListener('pointerdown', outside, true))
   border: 2px solid;
   border-radius: 3px;
 }
-.ag-side__label:focus-within .ag-side__groupcheck {
-  margin-right: 8px;
-  cursor: pointer;
-}
-.ag-side__count {
-  margin-right: 4px;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--ink-gray-6);
-}
-.ag-side__you {
-  flex: none;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--surface-gray-2);
-  font-size: 11px;
-  color: var(--ink-gray-7);
-}
-.ag-side__list.is-people .ag-side__label {
-  padding-left: 22px;
-}
-.ag-side__check {
+.ag-side__label:focus-within .ag-side__check,
+.ag-side__groupcheck:focus-visible {
   outline: 2px solid var(--ag-accent);
   outline-offset: 2px;
 }

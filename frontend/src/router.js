@@ -52,7 +52,13 @@ const routes = [
     path: '/agenda',
     name: 'Agenda',
     component: () => import('@/pages/Agenda.vue'),
-    meta: { app: 'agenda', title: 'Agenda', stableKey: true },
+    // On a phone the Agenda brings its own calendar app bar (☰ · month · search · today).
+    meta: {
+      app: 'agenda',
+      title: 'Agenda',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/contactos',
