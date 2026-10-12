@@ -666,6 +666,26 @@ describe('Agenda page', () => {
     expect(root.querySelector('[data-event-id="PA-1"]')).not.toBeNull()
     expect(calls.filter(([m]) => m.endsWith('.query')).length).toBe(queries)
 
+    // Hand Dra. Ruiz's visit to Dr. Soto from its card.
+    root.querySelector('.ag-event[data-event-id="PA-1"]').click()
+    await flush()
+    const select = document.body.querySelector(
+      'select[aria-label="Assigned to"]',
+    )
+    expect([...select.options].map((o) => o.textContent.trim())).toEqual([
+      'Dra. Ruiz',
+      'Dr. Soto',
+    ])
+    select.value = 'DR-2'
+    select.dispatchEvent(new Event('change'))
+    await flush()
+    expect(last('move')).toMatchObject({
+      source: 'Patient Appointment',
+      name: 'PA-1',
+      resource_ids: JSON.stringify(['DR-2']),
+      start: '2026-10-07T15:00:00Z',
+    })
+
     // The doctors stay listed after a reload, before their calendars answer.
     app.unmount()
     root.remove()

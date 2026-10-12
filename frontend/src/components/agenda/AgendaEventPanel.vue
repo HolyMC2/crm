@@ -110,6 +110,25 @@
       </button>
     </div>
 
+    <!-- a doctor's or technician's event: hand it to another person -->
+    <label
+      v-if="people.length > 1 && event.status !== 'Cancelled'"
+      class="flex items-center gap-3 pl-[30px] text-sm text-ink-gray-7"
+    >
+      <span class="shrink-0">{{ __('Assigned to') }}</span>
+      <select
+        class="ag-panel__people min-h-9 min-w-0 flex-1 rounded border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-9"
+        :value="assignee"
+        :disabled="busy"
+        :aria-label="__('Assigned to')"
+        @change="emit('reassign', $event.target.value)"
+      >
+        <option v-for="person in people" :key="person.id" :value="person.id">
+          {{ person.label }}
+        </option>
+      </select>
+    </label>
+
     <template v-if="task">
       <p
         v-if="event.referenceLabel || event.referenceName"
@@ -352,6 +371,8 @@ const props = defineProps({
   constraints: { type: Array, default: () => [] },
   color: { type: String, default: '#039be5' },
   calendar: { type: String, default: '' },
+  // People this event may be handed to (doctors, technicians), when the worker may.
+  people: { type: Array, default: () => [] },
 })
 const emit = defineEmits([
   'copy-link',
@@ -369,8 +390,13 @@ const emit = defineEmits([
   'dismiss-guard',
   'open-turnos',
   'reload',
+  'reassign',
 ])
 const confirmCancel = ref(false)
+const assignee = computed(
+  () =>
+    (props.event.sourceResourceIds || props.event.resourceIds || [])[0] || '',
+)
 const task = computed(() => props.event.kind === 'task')
 const swatches = computed(() => [
   {

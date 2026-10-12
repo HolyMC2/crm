@@ -1486,6 +1486,7 @@ const panelProps = computed(() => ({
   busy: busy.value,
   color: selectedEvent.value ? colorOf(selectedEvent.value) : '',
   calendar: selectedEvent.value ? calendarName(selectedEvent.value) : '',
+  people: reassignable(selectedEvent.value),
   constraints: panelConstraints.value.length
     ? panelConstraints.value
     : moveGuard.value && eventKey(moveGuard.value.event) === state.value.event
@@ -1513,6 +1514,56 @@ const panelHandlers = {
   'open-task': () =>
     selectedEvent.value && router.push(taskRoute(selectedEvent.value)),
   'open-native': () => commonAction('open_native', selectedEvent.value),
+  reassign: (id) => reassign(selectedEvent.value, id),
+}
+// Who an event can go to: the other doctors of the clinic, or (for a workshop manager,
+// who also sees «Sin asignar») the other technicians. The server still decides.
+function reassignable(event) {
+  if (!event || !PER_RESOURCE[event.source] || !event.draggable) return []
+  const people = (resources.value[event.source] || []).filter(
+    (row) => row.active !== false,
+  )
+  if (
+    event.source === 'Taller' &&
+    !people.some((row) => row.id === '__unassigned__')
+  )
+    return []
+  return people.map((row) => ({
+    id: row.id,
+    label: row.id === '__unassigned__' ? __('Unassigned') : row.title,
+  }))
+}
+async function reassign(event, id) {
+  const current = (event?.sourceResourceIds || event?.resourceIds || [])[0]
+  if (!event || !id || id === current) return
+  busy.value = true
+  panelConstraints.value = []
+  try {
+    const result = await moveEvent(
+      { ...event, sourceResourceIds: [id], resourceIds: [id] },
+      { start: event.start, end: event.end },
+    )
+    if (result?.constraints) {
+      panelConstraints.value = result.constraints
+      return
+    }
+    invalidate()
+    await load({ quiet: true })
+    const name = reassignable(event).find((row) => row.id === id)?.label || id
+    toast.success(__('Assigned to {0}', [name]), {
+      action: {
+        label: __('Undo'),
+        onClick: () => reassign({ ...result, source: event.source }, current),
+      },
+      duration: 8000,
+    })
+  } catch (error) {
+    panelConstraints.value = [
+      { code: 'unavailable', message: errorText(error), severity: 'block' },
+    ]
+  } finally {
+    busy.value = false
+  }
 }
 // A search result: jump to its day and open its card.
 function openFound(row) {
