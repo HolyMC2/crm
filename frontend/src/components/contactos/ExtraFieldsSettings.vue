@@ -42,18 +42,15 @@
             <Button
               :label="__('Rename')"
               data-act="rename"
-              @click="start(field, 'rename')"
-            /><Button
+              @click="start(field, 'rename')" /><Button
               v-if="field.kind === 'list' && field.state === 'active'"
               :label="__('Add option')"
               data-act="add-option"
-              @click="start(field, 'add_option')"
-            /><Button
+              @click="start(field, 'add_option')" /><Button
               v-if="field.state === 'active'"
               :label="__('Retire')"
               data-act="retire"
-              @click="start(field, 'retire')"
-            /><Button
+              @click="start(field, 'retire')" /><Button
               v-if="field.state === 'retired'"
               :label="__('Reactivate')"
               data-act="reactivate"
@@ -100,7 +97,9 @@
             />
             <div class="c-actions">
               <Button
-                :label="active.action === 'rename' ? __('Rename') : __('Add option')"
+                :label="
+                  active.action === 'rename' ? __('Rename') : __('Add option')
+                "
                 variant="solid"
                 :disabled="!String(active.value || '').trim()"
                 :loading="busy === field.fieldname"
@@ -125,7 +124,9 @@
       :label="__('Add field')"
       icon-left="plus"
       data-act="add-field"
-      :disabled="(capabilities.used ?? fields.length) >= (capabilities.limit ?? 15)"
+      :disabled="
+        (capabilities.used ?? fields.length) >= (capabilities.limit ?? 15)
+      "
       @click="adding = true"
     />
   </div>

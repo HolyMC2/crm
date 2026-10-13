@@ -10,7 +10,9 @@
       {{
         record?.name
           ? __('Write which detail you need and we will ask the owner.')
-          : __('Write which detail you need and copy the request for the owner.')
+          : __(
+              'Write which detail you need and copy the request for the owner.',
+            )
       }}
     </p>
     <FormControl
@@ -53,7 +55,9 @@
       data-input="options"
     />
     <p class="c-muted">
-      {{ __('Everyone who can see clientes sees this detail. It is not printed.') }}
+      {{
+        __('Everyone who can see clientes sees this detail. It is not printed.')
+      }}
     </p>
     <div v-if="guard" class="c-recovery" role="alert" :data-guard="guard.code">
       <strong>{{ guard.message }}</strong>
@@ -90,10 +94,7 @@
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import {
-  personalizarApi,
-  useContactosDraft,
-} from '@/composables/useContactos'
+import { personalizarApi, useContactosDraft } from '@/composables/useContactos'
 import { errorGuard } from '@/utils/contactos'
 import {
   LABEL_MAX,
@@ -122,7 +123,9 @@ const emit = defineEmits([
 ])
 const kinds = extraKinds()
 const mode = ref(props.initialMode === 'request' ? 'request' : 'define')
-const reason = ref(props.reasonText || __('Only the owner adds or retires fields.'))
+const reason = ref(
+  props.reasonText || __('Only the owner adds or retires fields.'),
+)
 const EMPTY = { label: '', kind: 'text', options: '' }
 const { draft, id, clear } = useContactosDraft('extra-field:new', EMPTY)
 const saving = ref(false),

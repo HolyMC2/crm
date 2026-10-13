@@ -57,7 +57,7 @@ const props = defineProps({
   onReload: Function,
   // A host that handles the guard's own actions (Quitar filtro, Reactivar…)
   // shows them instead of the generic recovery, for the guard codes it lists.
-  onAction: Function,
+  onAction: { type: Function, default: null },
   guardCodes: { type: Array, default: null },
 })
 defineEmits(['retry'])

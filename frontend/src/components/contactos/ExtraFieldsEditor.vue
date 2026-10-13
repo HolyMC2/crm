@@ -41,7 +41,9 @@ const open = computed({
 })
 const current = ref(props.mode)
 const title = computed(() =>
-  current.value === 'request' ? __('Ask the owner for a field') : __('Add field'),
+  current.value === 'request'
+    ? __('Ask the owner for a field')
+    : __('Add field'),
 )
 function finish(event, value) {
   emit(event, value)

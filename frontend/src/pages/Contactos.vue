@@ -733,7 +733,9 @@ const extraFilterFields = computed(() =>
     : boot.value?.extra_fields || [],
 )
 const extraFilterField = computed(() =>
-  extraFilterFields.value.find((field) => field.fieldname === extraFilter.field),
+  extraFilterFields.value.find(
+    (field) => field.fieldname === extraFilter.field,
+  ),
 )
 const extraFilterClauses = computed(() =>
   extraClauses(extraFilterField.value, extraFilter),

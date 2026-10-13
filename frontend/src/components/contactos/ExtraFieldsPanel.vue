@@ -156,7 +156,13 @@ const props = defineProps({
   record: { type: Object, required: true },
   capabilities: { type: Object, default: () => ({}) },
 })
-const emit = defineEmits(['saved', 'defined', 'reload', 'open-section', 'open-fields'])
+const emit = defineEmits([
+  'saved',
+  'defined',
+  'reload',
+  'open-section',
+  'open-fields',
+])
 const fields = computed(() => extraFields(props.record.editor_meta?.fields))
 const fieldCaps = computed(() => props.capabilities.fields || {})
 const define = computed(() => !!fieldCaps.value.define)
@@ -195,7 +201,13 @@ function edit(field, value) {
   editing.value = field.fieldname
   const current = props.record.fields?.[field.fieldname]
   draft.value =
-    value !== undefined ? value : field.kind === 'check' ? (current ? 1 : 0) : (current ?? '')
+    value !== undefined
+      ? value
+      : field.kind === 'check'
+        ? current
+          ? 1
+          : 0
+        : (current ?? '')
   error.value = null
   latest.value = null
   notice.value = ''

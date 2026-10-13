@@ -12,7 +12,11 @@ vi.mock('frappe-ui', async () => {
         (props, { slots }) =>
         () =>
           props.modelValue
-            ? h('div', { 'data-dialog': props.options?.title }, slots['body-content']?.())
+            ? h(
+                'div',
+                { 'data-dialog': props.options?.title },
+                slots['body-content']?.(),
+              )
             : null,
     },
     Button: {
@@ -243,12 +247,12 @@ describe('extra field helpers', () => {
     expect(extraClauses(number, { from: '10', to: '' })).toEqual([
       ['pz_visitas_5e6f', '>=', 10],
     ])
-    expect(extraClauses(date, { from: '2026-01-01', to: '2026-02-01' })).toEqual(
-      [
-        ['pz_cliente_desde_7a8b', '>=', '2026-01-01'],
-        ['pz_cliente_desde_7a8b', '<=', '2026-02-01'],
-      ],
-    )
+    expect(
+      extraClauses(date, { from: '2026-01-01', to: '2026-02-01' }),
+    ).toEqual([
+      ['pz_cliente_desde_7a8b', '>=', '2026-01-01'],
+      ['pz_cliente_desde_7a8b', '<=', '2026-02-01'],
+    ])
     expect(extraClauses(text, { value: ' 50%_off ' })).toEqual([
       ['pz_nota_9c0d', 'like', '%50\\%\\_off%'],
     ])
@@ -325,7 +329,10 @@ describe('«Más datos» on a cliente', () => {
     expect(q('[data-act="add-field"]')).toBeNull()
     expect(q('[data-act="ask-owner"]')).not.toBeNull()
     await click('[data-field="pz_nota_9c0d"] [data-act="edit-extra"]')
-    await type('[data-field="pz_nota_9c0d"] [data-input="value"]', 'Le gusta azul')
+    await type(
+      '[data-field="pz_nota_9c0d"] [data-input="value"]',
+      'Le gusta azul',
+    )
     await click('[data-act="save-extra"]')
     expect(saved).toEqual({
       source: 'customer',
@@ -473,7 +480,9 @@ describe('adding a field: guards keep the draft and offer the way out', () => {
       'Solo el dueño agrega o retira campos.',
     )
     expect(q('[data-input="label"]').value).toBe('¿Cómo nos conociste?')
-    expect(q('[data-act="submit-extra-field"]').textContent).toBe('Ask the owner')
+    expect(q('[data-act="submit-extra-field"]').textContent).toBe(
+      'Ask the owner',
+    )
     await click('[data-act="submit-extra-field"]')
     expect(calls('request_field')[0][1]).toMatchObject({
       record_type: 'clientes',
@@ -504,7 +513,9 @@ describe('adding a field: guards keep the draft and offer the way out', () => {
     await type('[data-input="label"]', 'Mayoreo')
     await click('[data-kind="check"]')
     await click('[data-act="submit-extra-field"]')
-    expect(q('[data-guard="busy"]').textContent).toContain('Clientes está ocupado')
+    expect(q('[data-guard="busy"]').textContent).toContain(
+      'Clientes está ocupado',
+    )
     await click('[data-guard-action="retry"]')
     const ids = calls('define_field').map(([, args]) => args.request_id)
     expect(ids).toHaveLength(2)
@@ -519,7 +530,11 @@ describe('adding a field: guards keep the draft and offer the way out', () => {
           code: 'exists',
           message: 'Ya existe un campo llamado «Talla».',
           actions: [
-            { label: 'Usar ese campo', kind: 'use_field', target: 'pz_talla_1' },
+            {
+              label: 'Usar ese campo',
+              kind: 'use_field',
+              target: 'pz_talla_1',
+            },
           ],
           retry_context: {},
         })
@@ -535,7 +550,9 @@ describe('adding a field: guards keep the draft and offer the way out', () => {
   it('with nobody to ask, the request is copied', async () => {
     await mount(ExtraFieldForm, { initialMode: 'request' })
     await type('[data-input="label"]', 'Talla')
-    expect(q('[data-act="submit-extra-field"]').textContent).toBe('Copy request')
+    expect(q('[data-act="submit-extra-field"]').textContent).toBe(
+      'Copy request',
+    )
     await click('[data-act="submit-extra-field"]')
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       'Please add the extra field «Talla · Text» for clientes.',
