@@ -111,7 +111,7 @@
                meta row, so the header's action cluster never squeezes the name -->
           <span
             v-if="due"
-            class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
+            class="order-first flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold sm:order-none"
             :class="CHIP_CLASS[due.tone]"
             data-testid="header-due-chip"
           >
