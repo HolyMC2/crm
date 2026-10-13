@@ -8,6 +8,7 @@ import { guardStatusChange } from '@/utils/statusGuard'
 import { userScopedKey } from '@/utils/storageKeys'
 import { ADDON_APP, hasApp, loadCapabilities } from '@/utils/crmCapabilities'
 import { installNetworkRecovery } from '@/utils/networkRecovery'
+import { REPLY_TAB, nextReplyRow } from '@/utils/atencion'
 
 // ── shared UI state ──────────────────────────────────────────────────────────
 export const activeDeal = ref(null) // selected record name (CRM Deal OR CRM Lead)
@@ -150,22 +151,33 @@ export const channelCounts = createResource({
   url: 'doco_marketing.api.inbox.get_channel_counts',
   auto: false,
 })
-// Speed-to-lead "Vencidos": {count, conversations} for threads awaiting a reply past
-// the SLA threshold (most-overdue first, all channels, Deals+Leads). Same refresh
-// cadence as channelCounts — a reply/inbound changes who's overdue.
-export const overdue = createResource({
-  url: 'doco_marketing.api.inbox.get_overdue_conversations',
+// «Por responder»: {count, overdue, mine, conversations} — every Deal/Lead conversation
+// in this user's scope still owed an answer, most overdue first, then soonest due
+// (doco_marketing's response clock, the one the escalation and the nav badge use).
+// Same refresh cadence as channelCounts — a reply/inbound changes who is owed.
+export const replyQueue = createResource({
+  url: 'doco_marketing.api.inbox.get_reply_queue',
   auto: false,
 })
+export const replyMine = ref(false) // «Míos» chip on Por responder
+// The open conversation came from Por responder: «Resolver y siguiente» opens the next one.
+export const fromReplyQueue = ref(false)
+export function reloadReplyQueue() {
+  return replyQueue.submit({ limit: 100, mine: replyMine.value ? 1 : 0 })
+}
+export function setReplyMine(value) {
+  replyMine.value = !!value
+  return reloadReplyQueue()
+}
 // Single "cosas sin atender" total across all four inbox surfaces: WhatsApp + Messenger
-// orphans (Sin asignar) + overdue conversations (Vencidos) + new FB comments. The buckets
-// are disjoint (orphans have no Lead/Deal so are never overdue; comments are a separate
-// doctype), so they sum cleanly — derived from resources initInbox already fetches, no
-// extra round-trip; it tracks them live as each refreshes.
+// orphans (Sin asignar) + overdue conversations (Por responder, past due) + new FB
+// comments. The buckets are disjoint (orphans have no Lead/Deal so are never overdue;
+// comments are a separate doctype), so they sum cleanly — derived from resources
+// initInbox already fetches, no extra round-trip; it tracks them live as each refreshes.
 export const unattendedTotal = computed(
   () =>
     (unassigned.data?.length || 0) +
-    (overdue.data?.count || 0) +
+    (replyQueue.data?.overdue || 0) +
     (commentCounts.data?.new || 0),
 )
 // "Por aprobar": review-gated auto-acuses (#22). Drafts the sweep made for unanswered
@@ -444,9 +456,6 @@ export const commentSearch = ref('') // Comentarios search (commenter name / tex
 export const contactCard = createResource({
   url: 'doco_marketing.api.inbox.get_contact_card',
 })
-export const sla = createResource({
-  url: 'doco_marketing.api.inbox.get_sla_status',
-})
 
 // ── Catalog send (/cat picker) ─────────────────────────────────────────────────
 // Search in-stock items from a conversation and send a selection as media messages.
@@ -506,7 +515,7 @@ export function initInbox(opts = {}) {
   reloadComments()
   commentCounts.fetch()
   channelCounts.fetch()
-  overdue.fetch()
+  reloadReplyQueue()
   autoAckCount.fetch() // "por aprobar" badge — count only on init; the list loads on tab open
   snoozedCount.fetch() // «Pospuestas» chip
   conversationTags.fetch() // 🏷 filter chips
@@ -622,7 +631,6 @@ export function resetInbox() {
   thread.data = null
   unassignedThread.data = null
   contactCard.data = null
-  sla.data = null
 }
 
 export function reloadUnassigned() {
@@ -811,14 +819,21 @@ export function setQueueChannel(ch) {
   reloadQueue()
 }
 
-export function selectDeal(name, doctype = 'CRM Deal') {
+export function selectDeal(name, doctype = 'CRM Deal', opts = {}) {
   activeUnassigned.value = null // leaving the triage view
   activeCommentPost.value = null
   mobileView.value = 'thread' // mobile: advance the stack to the conversation
-  if (activeDeal.value === name && activeDealDoctype.value === doctype) return
+  // Opened from «Por responder»: the worker is there to answer, so the conversation
+  // shows first and «Resolver y siguiente» walks the queue.
+  fromReplyQueue.value = !!opts.fromReplyQueue
+  if (activeDeal.value === name && activeDealDoctype.value === doctype) {
+    if (opts.fromReplyQueue) activeTab.value = 'conversation'
+    return
+  }
   activeDeal.value = name
   activeDealDoctype.value = doctype
-  activeTab.value = doctype === 'CRM Deal' ? 'overview' : 'conversation'
+  activeTab.value =
+    doctype === 'CRM Deal' && !opts.fromReplyQueue ? 'overview' : 'conversation'
   loadThread()
   loadContactCard()
   loadAutoAckForConvo(doctype, name) // surface any pending auto-ack to approve in context
@@ -831,9 +846,6 @@ export function selectDeal(name, doctype = 'CRM Deal') {
     r.reactivated = false // ⏰ chip clears on open, same read receipt
   }
   markRead(doctype, name)
-  // SLA is a CRM Deal concept; leads have none.
-  if (doctype === 'CRM Deal') sla.submit({ reference_name: name })
-  else sla.data = null
 }
 
 export async function markRead(doctype, name) {
@@ -848,23 +860,78 @@ export async function markRead(doctype, name) {
   }
 }
 
-// Manually close the amber "Responder" (needs-reply) chip without replying. The
-// backend also auto-closes it when the deal reaches a terminal status (Won/Lost).
-// A later inbound message re-raises it. Optimistic: drop the chip now, persist async.
+// «Resolver sin preguntar» (the chip's × and the row swipe): close the reply flag without
+// replying and without asking the customer anything. A later inbound message re-raises
+// it. Optimistic: drop the chip now, persist async, revert if the server refuses.
 export async function clearResponder(doctype, name) {
   if (!doctype || !name) return
-  const r = queueRows.value.find(
-    (x) => x.name === name && (x.ref_doctype || 'CRM Deal') === doctype,
-  )
-  if (r) r.unread = false
-  try {
-    await call('doco_marketing.api.inbox.clear_responder', {
-      reference_doctype: doctype,
-      reference_name: name,
-    })
-  } catch (e) {
-    reloadQueue() // revert the optimistic clear if the server rejected it
+  const same = (x) =>
+    x.name === name && (x.ref_doctype || 'CRM Deal') === doctype
+  // The row in the recency list and in «Por responder» (when loaded) both lose the chip.
+  const rows = [
+    queueRows.value.find(same),
+    (replyQueue.data?.conversations || []).find(same),
+  ].filter(Boolean)
+  const before = rows.map((r) => ({
+    unread: r.unread,
+    waiting_secs: r.waiting_secs,
+  }))
+  for (const r of rows) {
+    r.unread = false
+    r.waiting_secs = null
   }
+  try {
+    await resolveConversation(doctype, name, { ask: false })
+  } catch (e) {
+    rows.forEach((r, i) => Object.assign(r, before[i]))
+    reloadQueue() // revert the optimistic clear if the server rejected it
+    toast.error(e?.messages?.[0] || __('Could not resolve the conversation.'))
+  }
+}
+
+// ── «Resolver» (Atención a clientes) ───────────────────────────────────────────
+/** What «Resolver» will do here: ask «¿Cómo te atendimos?», or why not and the way out. */
+export function resolvePreview(doctype, name) {
+  return call('doco_marketing.api.inbox.resolve_preview', {
+    reference_doctype: doctype,
+    reference_name: name,
+  })
+}
+/** Close the reply flag; with ask, stage the question for a manager to approve. */
+export async function resolveConversation(doctype, name, opts = {}) {
+  const out = await call('doco_marketing.api.inbox.resolve', {
+    reference_doctype: doctype,
+    reference_name: name,
+    ask: opts.ask ? 1 : 0,
+    request_id: opts.requestId || undefined,
+  })
+  // The queue, the tab count and the header badge all read the same flag.
+  reloadReplyQueue()
+  scheduleQueueReload()
+  return out
+}
+/**
+ * After resolving, «Siguiente»: the next conversation still owed an answer, or back to
+ * «Por responder» when nobody else is waiting. Returns the row opened (or null).
+ */
+export async function openNextToAnswer(doctype, name) {
+  try {
+    await reloadReplyQueue()
+  } catch {
+    // The list below is the last one loaded; the next open re-checks on the server.
+  }
+  const next = nextReplyRow(replyQueue.data?.conversations || [], doctype, name)
+  if (next) {
+    selectDeal(next.name, next.ref_doctype || 'CRM Deal', {
+      fromReplyQueue: true,
+    })
+    return next
+  }
+  fromReplyQueue.value = false
+  activeDeal.value = null
+  setInboxTab(REPLY_TAB)
+  mobileView.value = 'list'
+  return null
 }
 
 export function loadContactCard() {
@@ -1129,7 +1196,7 @@ export function catchUpInbox() {
   if (activeDeal.value) loadThread()
   else if (activeUnassigned.value) reloadUnassignedThread()
   channelCounts.reload()
-  overdue.reload()
+  reloadReplyQueue()
   autoAckCount.reload()
   commentCounts.reload()
 }
@@ -1139,7 +1206,7 @@ export function onThreadUpdate(payload) {
   if (payload?.deal && payload.deal === activeDeal.value) loadThread()
   scheduleQueueReload() // debounced merge — bursts + the whatsapp_message reload coalesce
   channelCounts.reload() // a new message may flip a conversation's last_channel
-  overdue.reload() // ...and a reply/inbound changes who's overdue
+  reloadReplyQueue() // ...and a reply/inbound changes who is owed an answer
   autoAckCount.reload() // a reply may resolve a pending draft; an inbound may add one
   // ...and while the review list is on screen it must drop rows the server just
   // auto-discarded (deal Completado / repair Entregado close-out), not only the badge.
@@ -1171,7 +1238,7 @@ export function clearCommentSearch() {
 export function setInboxTab(tab) {
   inboxTab.value = tab
   setQueueChannel(tab === 'whatsapp' || tab === 'messenger' ? tab : null)
-  if (tab === 'vencidos') overdue.fetch() // refresh the Vencidos list on open
+  if (tab === REPLY_TAB) reloadReplyQueue() // refresh «Por responder» on open
   if (tab === 'aprobar') reloadAutoAcks() // refresh the drafts list on open
   if (tab === 'snoozed') snoozedCount.fetch() // refresh the chip on open
   // (setQueueChannel below always reloadQueue()s — the snoozed param reads inboxTab)

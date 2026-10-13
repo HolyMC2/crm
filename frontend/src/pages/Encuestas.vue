@@ -40,7 +40,27 @@
           class="min-h-11 sm:min-h-8"
           @click="setupOpen = true"
         />
+        <Button
+          v-if="boot?.capabilities?.setup"
+          icon-left="message-circle"
+          :label="__('“How did we do?” settings')"
+          class="min-h-11 sm:min-h-8"
+          data-testid="encuestas-service-settings"
+          @click="serviceSetupOpen = true"
+        />
       </header>
+      <div
+        v-if="backTo"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-green-2 px-3 py-2 text-sm text-ink-green-8 sm:mx-6"
+        role="status"
+      >
+        <span class="min-w-0 flex-1">{{ __('Saved.') }}</span>
+        <Button
+          :label="__('Back to {0}', [backTo.label])"
+          class="min-h-11 sm:min-h-8"
+          @click="goBackTo"
+        />
+      </div>
 
       <div
         v-if="notice"
@@ -62,6 +82,26 @@
           @click="copyOwnerRequest"
         />
       </div>
+      <div
+        v-if="serviceNotice"
+        role="status"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
+        data-testid="encuestas-service-notice"
+      >
+        <span class="min-w-0 flex-1">{{ serviceNotice.reason }}</span>
+        <Button
+          v-if="serviceNotice.action === 'setup'"
+          :label="__('Turn on “How did we do?”')"
+          class="min-h-11 sm:min-h-8"
+          @click="serviceSetupOpen = true"
+        />
+        <Button
+          v-else
+          :label="__('Copy request for the owner')"
+          class="min-h-11 sm:min-h-8"
+          @click="copyServiceRequest"
+        />
+      </div>
       <p
         v-if="copied"
         role="status"
@@ -71,7 +111,7 @@
       </p>
 
       <section
-        class="mx-4 mb-3 grid grid-cols-3 gap-2 sm:mx-6 sm:grid-cols-4"
+        class="mx-4 mb-3 grid grid-cols-3 gap-2 sm:mx-6 sm:grid-cols-5"
         :aria-label="__('Would they recommend you?')"
       >
         <div
@@ -89,6 +129,25 @@
               summary?.few && summary?.answers
                 ? __('Still few answers')
                 : __('% happy minus % unhappy')
+            }}
+          </p>
+        </div>
+        <!-- «¿Cómo te atendimos?»: the share of 4–5 answers after a resolved conversation -->
+        <div
+          class="col-span-3 rounded-lg border border-outline-gray-2 p-3 sm:col-span-1"
+        >
+          <p class="text-sm text-ink-gray-6">{{ __('Satisfaction') }}</p>
+          <p
+            class="text-3xl font-semibold text-ink-gray-9"
+            data-testid="encuestas-satisfaction"
+          >
+            {{ satisfactionText(summary) }}
+          </p>
+          <p class="text-xs text-ink-gray-6">
+            {{
+              summary?.satisfaction?.few && summary?.satisfaction?.answers
+                ? __('Still few answers')
+                : __('happy with the attention (4–5)')
             }}
           </p>
         </div>
@@ -150,6 +209,29 @@
           ]"
           @update:model-value="(value) => update({ bucket: value })"
         />
+        <div
+          v-if="view === 'todas'"
+          class="flex gap-1.5 overflow-x-auto"
+          role="group"
+          :aria-label="__('Question', null, 'Encuestas')"
+        >
+          <button
+            v-for="k in kindChips"
+            :key="k.value || 'all'"
+            type="button"
+            class="min-h-11 flex-none rounded-full px-3 text-sm sm:min-h-8"
+            :class="
+              kind === k.value
+                ? 'bg-surface-gray-7 text-ink-white'
+                : 'bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
+            "
+            :aria-pressed="kind === k.value"
+            :data-testid="`encuestas-kind-${k.value || 'all'}`"
+            @click="update({ kind: k.value })"
+          >
+            {{ k.label }}
+          </button>
+        </div>
         <label
           v-if="view === 'seguimiento'"
           class="flex min-h-11 items-center gap-2 text-sm text-ink-gray-8"
@@ -175,11 +257,8 @@
           @click="load()"
         />
       </div>
-      <div
-        ref="scroller"
-        class="min-h-0 flex-1 overflow-y-auto pb-6"
-        @scroll.passive="rememberScroll"
-      >
+      <!-- The list scrolls with the page (one scroller: the module's own). -->
+      <div ref="scroller" class="pb-6">
         <div
           v-if="loading && !rows.length"
           role="status"
@@ -209,7 +288,8 @@
               <span
                 class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
                 :class="SCORE_CLASS[row.bucket]"
-                :aria-label="scoreLabel(row.score)"
+                :aria-label="scoreLabel(row.score, row.scale)"
+                :title="scoreLabel(row.score, row.scale)"
                 >{{ row.score }}</span
               >
               <span class="min-w-0 flex-1">
@@ -218,7 +298,14 @@
                 </span>
                 <span class="block truncate text-sm text-ink-gray-6">
                   {{
-                    [row.sale, when(row.creation)].filter(Boolean).join(' · ')
+                    [
+                      row.kind === 'service'
+                        ? scoreLabel(row.score, row.scale)
+                        : row.sale,
+                      when(row.creation),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
                   }}
                 </span>
                 <span
@@ -228,8 +315,14 @@
                 >
                 <span class="mt-1 flex flex-wrap gap-1">
                   <Badge
+                    v-if="row.kind === 'service'"
+                    theme="blue"
+                    :label="kindLabel('service')"
+                    data-testid="encuestas-kind-chip"
+                  />
+                  <Badge
                     :theme="bucketTheme(row.bucket)"
-                    :label="bucketLabel(row.bucket)"
+                    :label="bucketLabel(row.bucket, row.kind)"
                   />
                   <Badge
                     v-if="row.bucket === 'detractor' || row.follow_up_status"
@@ -252,16 +345,22 @@
       </div>
     </template>
     <SetupDialog v-model="setupOpen" @saved="onSetupSaved" />
+    <SetupDialog
+      v-model="serviceSetupOpen"
+      kind="service"
+      @saved="onServiceSetupSaved"
+    />
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import SetupDialog from '@/components/encuestas/SetupDialog.vue'
 import {
   BUCKETS,
+  KINDS,
   PERIODS,
   VIEWS,
   askNotice,
@@ -272,15 +371,20 @@ import {
   encuestasBoot,
   followUpLabel,
   followUpTheme,
+  kindLabel,
   loadEncuestasBoot,
   normalizeBucket,
+  normalizeKind,
   normalizePeriod,
   normalizeView,
   periodLabel,
   problemOf,
   recommendationText,
   recordRoute,
+  safeReturn,
+  satisfactionText,
   scoreLabel,
+  serviceAskNotice,
   viewLabel,
 } from '@/composables/useEncuestas'
 
@@ -304,8 +408,10 @@ const copied = ref('')
 const scroller = ref(null)
 const summary = ref(null)
 const setupOpen = ref(false)
+const serviceSetupOpen = ref(false)
 const view = computed(() => normalizeView(route.query.view))
 const bucket = computed(() => normalizeBucket(route.query.bucket))
+const kind = computed(() => normalizeKind(route.query.kind))
 const period = computed(() => normalizePeriod(route.query.periodo))
 const mine = computed(() => route.query.mine === '1')
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
@@ -313,6 +419,23 @@ const listPath = computed(() => route.fullPath)
 const notice = computed(() =>
   askNotice(boot.value?.ask, boot.value?.capabilities),
 )
+const serviceNotice = computed(() =>
+  serviceAskNotice(boot.value?.service_ask, boot.value?.capabilities),
+)
+// «Todas»: every answer, or one question (after buying / after a conversation).
+const kindChips = computed(() => [
+  { value: '', label: __('All', null, 'Encuestas') },
+  ...KINDS.map((k) => ({ value: k.value, label: kindLabel(k.value) })),
+])
+// Arrived from Conversaciones' «Configurar» (?setup=service&return_to=…): after
+// saving, the way back to the conversation the worker was resolving.
+const backTo = ref(null)
+function goBackTo() {
+  const to = backTo.value?.to
+  if (!to) return
+  if (to.startsWith('/crm/')) router.push(to.replace(/^\/crm(?=\/)/, ''))
+  else window.location.assign(to)
+}
 let ticket = 0
 let searchTimer = 0
 
@@ -338,7 +461,7 @@ const subtitle = computed(
   () =>
     ({
       atender: __(
-        'Customers who answered 0 to 6, longest waiting first. Call them before they go elsewhere.',
+        'Customers who answered 0 to 6 after buying, or 1 to 2 about how we treated them, longest waiting first. Call them before they go elsewhere.',
       ),
       seguimiento: __('Someone is already talking to these customers.'),
       todas: __('Every answer, newest first.'),
@@ -377,6 +500,7 @@ async function load(more = false) {
     const page = await encuestasApi('queue', {
       view: view.value,
       bucket_name: bucket.value || null,
+      kind: view.value === 'todas' ? kind.value || null : null,
       mine: mine.value ? 1 : 0,
       q: search.value.trim(),
       start: more ? rows.value.length : 0,
@@ -408,13 +532,24 @@ function update(query) {
   router.replace({ query: next })
 }
 function selectView(value) {
-  update({ view: normalizeView(value), bucket: '', mine: '' })
+  update({ view: normalizeView(value), bucket: '', mine: '', kind: '' })
 }
 
 const scrollKey = () => `muelle:encuestas:scroll:${route.fullPath}`
+// The page's one scroller is the module's content area around this list.
+let pageScroller = null
+function findPageScroller() {
+  let el = scroller.value?.parentElement
+  while (el) {
+    const overflow = getComputedStyle(el).overflowY
+    if (overflow === 'auto' || overflow === 'scroll') return el
+    el = el.parentElement
+  }
+  return null
+}
 function rememberScroll() {
   try {
-    sessionStorage.setItem(scrollKey(), String(scroller.value?.scrollTop || 0))
+    sessionStorage.setItem(scrollKey(), String(pageScroller?.scrollTop || 0))
   } catch {
     /* convenience only */
   }
@@ -423,15 +558,44 @@ function restoreScroll() {
   nextTick(() => {
     try {
       const top = Number(sessionStorage.getItem(scrollKey()) || 0)
-      if (scroller.value && top) scroller.value.scrollTop = top
+      if (pageScroller && top) pageScroller.scrollTop = top
     } catch {
       /* convenience only */
     }
   })
 }
+watch(scroller, (el) => {
+  pageScroller?.removeEventListener('scroll', rememberScroll)
+  pageScroller = el ? findPageScroller() : null
+  pageScroller?.addEventListener('scroll', rememberScroll, { passive: true })
+})
+onBeforeUnmount(() =>
+  pageScroller?.removeEventListener('scroll', rememberScroll),
+)
 
 async function onSetupSaved() {
   await loadEncuestasBoot({ refresh: true })
+}
+async function onServiceSetupSaved() {
+  await loadEncuestasBoot({ refresh: true })
+  const to = safeReturn(route.query.return_to)
+  if (to)
+    backTo.value = {
+      to,
+      label:
+        typeof route.query.return_label === 'string'
+          ? route.query.return_label.slice(0, 40)
+          : __('previous screen'),
+    }
+  if (route.query.setup) update({ setup: '' })
+}
+function copyServiceRequest() {
+  return copyText(
+    __(
+      'Please turn on “How did we do?” in Encuestas (Muelle) so customers are asked after we resolve their conversation: {0}',
+      [serviceNotice.value?.reason || ''],
+    ),
+  )
 }
 async function retryBoot() {
   await loadEncuestasBoot({ refresh: true })
@@ -469,7 +633,13 @@ watch(search, (value) => {
   searchTimer = window.setTimeout(() => update({ q: value.trim() }), 250)
 })
 watch(
-  () => [route.query.view, route.query.q, route.query.bucket, route.query.mine],
+  () => [
+    route.query.view,
+    route.query.q,
+    route.query.bucket,
+    route.query.mine,
+    route.query.kind,
+  ],
   () => {
     if (route.name === 'Encuestas' && boot.value?.enabled) load()
   },
@@ -485,5 +655,8 @@ onMounted(async () => {
   if (!boot.value?.enabled) return
   load()
   loadSummary()
+  // Conversaciones' «Configurar» opens the «¿Cómo te atendimos?» settings directly.
+  if (route.query.setup === 'service' && boot.value?.capabilities?.setup)
+    serviceSetupOpen.value = true
 })
 </script>

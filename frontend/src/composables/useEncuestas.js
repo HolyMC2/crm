@@ -99,8 +99,56 @@ export function bucketOf(score) {
   if (value >= 7) return 'passive'
   return 'detractor'
 }
-export function bucketLabel(value) {
+export function bucketLabel(value, kind = 'sale') {
+  if (kind === 'service')
+    return tr(
+      SERVICE_BUCKETS.find((b) => b.value === value)?.label || '',
+      null,
+      CTX,
+    )
   return tr(BUCKETS.find((b) => b.value === value)?.label || '', null, CTX)
+}
+
+// «¿Cómo te atendimos?» (1–5), asked after a conversation is resolved in Conversaciones.
+export const SERVICE_BUCKETS = Object.freeze([
+  { value: 'detractor', label: 'Unhappy (1–2)', theme: 'red' },
+  { value: 'passive', label: 'Neutral (3)', theme: 'orange' },
+  { value: 'promoter', label: 'Happy (4–5)', theme: 'green' },
+])
+// The two questions: after buying (0–10) and after a resolved conversation (1–5).
+export const KINDS = Object.freeze([
+  { value: 'sale', label: 'Purchase' },
+  { value: 'service', label: 'Service' },
+])
+export function normalizeKind(value) {
+  return KINDS.some((k) => k.value === value) ? value : ''
+}
+export function kindLabel(kind) {
+  return tr(KINDS.find((k) => k.value === kind)?.label || '', null, CTX)
+}
+/** «Satisfacción»: the share of 4–5 answers; «—» before the first answer. */
+export function satisfactionText(summary) {
+  const value = summary?.satisfaction?.value
+  return value === null || value === undefined ? '—' : `${value} %`
+}
+/** Conversaciones on the resolved conversation, coming back to this answer. */
+export function conversationHref(record) {
+  const link = record?.conversation_link
+  if (!link?.name || !link?.doctype || !record?.name) return null
+  const params = new URLSearchParams({ deal: link.name, doctype: link.doctype })
+  return inApp(
+    withReturn(`/crm/inbox?${params.toString()}`, answerReturn(record.name)),
+  )
+}
+/** The service question is off or not ready: the notice and the step that resolves it. */
+export function serviceAskNotice(ask, capabilities = {}) {
+  if (!ask || ask.state === 'on') return null
+  const canSetup = Boolean(capabilities.setup)
+  return {
+    state: ask.state,
+    reason: ask.reason || '',
+    action: ask.state === 'no_app' || !canSetup ? 'request' : 'setup',
+  }
 }
 /** The group's name alone, for a card that shows its range on another line. */
 export function bucketName(value) {
@@ -109,8 +157,10 @@ export function bucketName(value) {
 export function bucketTheme(value) {
   return BUCKETS.find((b) => b.value === value)?.theme || 'gray'
 }
-export function scoreLabel(score) {
-  return tr('{0} of 10', [Number(score)], CTX)
+export function scoreLabel(score, scale = 10) {
+  return Number(scale) === 5
+    ? tr('{0} of 5', [Number(score)], CTX)
+    : tr('{0} of 10', [Number(score)], CTX)
 }
 
 export const PERIODS = Object.freeze([30, 90, 365])

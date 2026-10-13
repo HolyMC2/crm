@@ -18551,3 +18551,212 @@ msgstr "Revisada"
 #: frontend/src/pages/CompraOrden.vue
 msgid "Review answered. We told who asked."
 msgstr "Revisión contestada. Le avisamos a quien la pidió."
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "To answer"
+msgstr "Por responder"
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Nobody overdue"
+msgstr "Ninguna respuesta vencida"
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Mine"
+msgstr "Míos"
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Most overdue first"
+msgstr "Las más vencidas primero"
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Nobody is waiting for your answer."
+msgstr "Nadie espera tu respuesta."
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Nobody is waiting for an answer."
+msgstr "Nadie espera respuesta."
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Resolved"
+msgstr "Resuelta"
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "The customer is waiting for your answer. It clears when you reply or resolve the conversation."
+msgstr "El cliente espera tu respuesta. Se quita cuando respondes o resuelves la conversación."
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+#: frontend/src/utils/atencion.js
+msgid "Resolve without asking"
+msgstr "Resolver sin preguntar"
+
+#: frontend/src/utils/atencion.js
+msgid "{0} min"
+msgstr "{0} min"
+
+#: frontend/src/utils/atencion.js
+msgid "Overdue by {0}"
+msgstr "Venció hace {0}"
+
+#: frontend/src/utils/atencion.js
+msgid "Due in {0}"
+msgstr "Vence en {0}"
+
+#: frontend/src/utils/atencion.js
+msgid "Waiting {0}"
+msgstr "Esperando {0}"
+
+#: frontend/src/utils/atencion.js
+msgid "Resolve and next"
+msgstr "Resolver y siguiente"
+
+#: frontend/src/utils/atencion.js
+msgid "Resolve without asking and next"
+msgstr "Resolver sin preguntar y siguiente"
+
+#: frontend/src/utils/atencion.js
+msgid "Resolve and go back"
+msgstr "Resolver y volver"
+
+#: frontend/src/utils/atencion.js
+msgid "Resolve without asking and go back"
+msgstr "Resolver sin preguntar y volver"
+
+#: frontend/src/utils/atencion.js
+msgid "Resolve"
+msgstr "Resolver"
+
+#: frontend/src/composables/inbox.js
+msgid "Could not resolve the conversation."
+msgstr "No se pudo resolver la conversación."
+
+#: frontend/src/components/doco/inbox/ResolveSheet.vue
+msgid "Is it resolved?"
+msgstr "¿Ya quedó resuelto?"
+
+#: frontend/src/components/doco/inbox/ResolveSheet.vue
+msgid "Checking…"
+msgstr "Revisando…"
+
+#: frontend/src/components/doco/inbox/ResolveSheet.vue
+msgid "Something went wrong. Try again."
+msgstr "Algo salió mal. Inténtalo de nuevo."
+
+#: frontend/src/components/doco/inbox/ResolveSheet.vue
+msgid "Request copied. Share it with the owner."
+msgstr "Solicitud copiada. Compártela con el dueño."
+
+#: frontend/src/components/doco/inbox/ResolveSheet.vue
+msgid "Done. Checking again…"
+msgstr "Listo. Revisando de nuevo…"
+
+#: frontend/src/components/doco/inbox/DealHeader.vue
+msgid "Resolved. We will ask how we did once a manager approves the message."
+msgstr "Resuelta. Le preguntaremos cómo lo atendimos cuando el encargado apruebe el mensaje."
+
+#: frontend/src/components/doco/inbox/DealHeader.vue
+msgid "Conversation resolved."
+msgstr "Conversación resuelta."
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Unhappy (1–2)"
+msgstr "Inconformes (1–2)"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Neutral (3)"
+msgstr "Neutrales (3)"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Happy (4–5)"
+msgstr "Contentos (4–5)"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Purchase"
+msgstr "Compra"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "Service"
+msgstr "Atención"
+
+#: frontend/src/composables/useEncuestas.js
+msgctxt "Encuestas"
+msgid "{0} of 5"
+msgstr "{0} de 5"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "“How did we do?” settings"
+msgstr "Ajustes de «¿Cómo te atendimos?»"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Saved."
+msgstr "Guardado."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Turn on “How did we do?”"
+msgstr "Encender «¿Cómo te atendimos?»"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Satisfaction"
+msgstr "Satisfacción"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "happy with the attention (4–5)"
+msgstr "contentos con la atención (4–5)"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Question"
+msgstr "Pregunta"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "All"
+msgstr "Todas"
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Please turn on “How did we do?” in Encuestas (Muelle) so customers are asked after we resolve their conversation: {0}"
+msgstr "Por favor enciende «¿Cómo te atendimos?» en Encuestas (Muelle) para preguntar a los clientes al resolver su conversación: {0}"
+
+#: frontend/src/pages/Encuesta.vue
+msgctxt "Encuestas"
+msgid "Conversation"
+msgstr "Conversación"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Ask how we did after resolving a conversation"
+msgstr "Preguntar «¿Cómo te atendimos?» al resolver una conversación"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "When someone resolves a WhatsApp conversation with a registered customer, Muelle prepares one WhatsApp asking «How did we do?» from 1 to 5. A manager approves each message before it goes out."
+msgstr "Cuando alguien resuelve una conversación de WhatsApp con un cliente registrado, Muelle prepara un WhatsApp que pregunta «¿Cómo te atendimos?» del 1 al 5. El encargado aprueba cada mensaje antes de enviarlo."
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Ask after resolving a conversation"
+msgstr "Preguntar al resolver una conversación"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "You have no approved WhatsApp template with two variables (the first name and the link) yet. Create one, wait for Meta to approve it, then come back. For example:"
+msgstr "Todavía no tienes una plantilla de WhatsApp aprobada con dos variables (el nombre y la liga). Créala, espera a que Meta la apruebe y regresa. Por ejemplo:"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Set up the template"
+msgstr "Configurar plantilla"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Ask the same number at most every (days)"
+msgstr "Preguntar al mismo número como máximo cada (días)"
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Counts the question after a sale too, so nobody gets two in a short time. 0 = no limit."
+msgstr "También cuenta la pregunta después de una venta, para que nadie reciba dos en poco tiempo. 0 = sin límite."
+
+#: frontend/src/pages/Encuestas.vue
+msgid "Customers who answered 0 to 6 after buying, or 1 to 2 about how we treated them, longest waiting first. Call them before they go elsewhere."
+msgstr "Clientes que contestaron de 0 a 6 después de comprar, o 1 o 2 sobre cómo los atendimos; primero quien lleva más esperando. Llámales antes de que se vayan a otro lado."
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Showing the {0} most urgent."
+msgstr "Se muestran las {0} más urgentes."

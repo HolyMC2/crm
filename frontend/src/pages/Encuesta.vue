@@ -33,7 +33,9 @@
           <span
             class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-2xl font-semibold"
             :class="SCORE_CLASS[answer.bucket]"
-            :aria-label="scoreLabel(answer.score)"
+            :aria-label="scoreLabel(answer.score, answer.scale)"
+            :title="scoreLabel(answer.score, answer.scale)"
+            data-testid="encuesta-score"
             >{{ answer.score }}</span
           >
           <div class="min-w-0 flex-1">
@@ -41,8 +43,13 @@
               class="flex flex-wrap items-center gap-1 text-sm text-ink-gray-6"
             >
               <Badge
+                v-if="answer.kind === 'service'"
+                theme="blue"
+                :label="kindLabel('service')"
+              />
+              <Badge
                 :theme="bucketTheme(answer.bucket)"
-                :label="bucketLabel(answer.bucket)"
+                :label="bucketLabel(answer.bucket, answer.kind)"
               />
               <Badge
                 :theme="followUpTheme(answer.follow_up_status)"
@@ -54,7 +61,16 @@
               {{ answer.customer_name }}
             </h1>
             <p class="mt-1 text-sm text-ink-gray-6">
-              {{ [answer.sale, answer.company].filter(Boolean).join(' · ') }}
+              {{
+                [
+                  answer.kind === 'service'
+                    ? scoreLabel(answer.score, answer.scale)
+                    : answer.sale,
+                  answer.company,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              }}
             </p>
           </div>
         </header>
@@ -146,6 +162,16 @@
             <FeatherIcon name="shield" class="h-4 w-4" />
             {{ __('Open a warranty case') }}
           </RouterLink>
+          <!-- «¿Cómo te atendimos?»: the conversation it was about, back here after -->
+          <RouterLink
+            v-if="conversationLink"
+            :to="conversationLink"
+            class="inline-flex min-h-11 items-center gap-1 rounded bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-8"
+            data-testid="encuesta-open-conversation"
+          >
+            <FeatherIcon name="message-square" class="h-4 w-4" />
+            {{ __('Open the conversation') }}
+          </RouterLink>
         </section>
         <p
           v-if="!answer.phone"
@@ -190,7 +216,13 @@
               </dt>
               <dd>{{ answer.phone || '—' }}</dd>
             </div>
-            <div>
+            <div v-if="answer.kind === 'service'">
+              <dt class="text-ink-gray-6">
+                {{ __('Conversation', null, 'Encuestas') }}
+              </dt>
+              <dd>{{ answer.conversation || '—' }}</dd>
+            </div>
+            <div v-else>
               <dt class="text-ink-gray-6">
                 {{ __('Sale', null, 'Encuestas') }}
               </dt>
@@ -287,6 +319,7 @@ import { whatsappMode } from '@/composables/whatsapp'
 import {
   bucketLabel,
   bucketTheme,
+  conversationHref,
   customerHref,
   encuestasApi,
   encuestasBoot,
@@ -294,6 +327,7 @@ import {
   followUpTheme,
   garantiaHref,
   greeting,
+  kindLabel,
   loadEncuestasBoot,
   problemOf,
   recordRoute,
@@ -359,6 +393,8 @@ const garantiaLink = computed(() =>
     ? garantiaHref(answer.value)
     : null,
 )
+// The server offers it only to a reader of that deal or lead; Conversaciones checks again.
+const conversationLink = computed(() => conversationHref(answer.value))
 
 function when(value, withTime = false) {
   if (!value) return ''

@@ -133,6 +133,8 @@
               : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
           "
           :aria-pressed="inboxTab === t.id"
+          :title="t.title || undefined"
+          :data-testid="`inbox-tab-${t.id}`"
           @click="setInboxTab(t.id)"
         >
           <span
@@ -145,6 +147,28 @@
             t.count
           }}</span>
         </button>
+      </div>
+      <!-- «Por responder»: everyone's conversations, or only mine (deal/lead owner) -->
+      <div v-if="replying" class="mt-2 flex items-center gap-1.5">
+        <button
+          class="press inline-flex min-h-8 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+          :class="
+            replyMine
+              ? 'bg-surface-green-2 text-ink-green-8'
+              : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
+          "
+          :aria-pressed="replyMine"
+          data-testid="reply-mine"
+          @click="setReplyMine(!replyMine)"
+        >
+          {{ __('Mine') }}
+          <span v-if="replyQueue.data" class="text-[10px] opacity-70">{{
+            replyQueue.data.mine
+          }}</span>
+        </button>
+        <span class="text-[11px] text-ink-gray-5">{{
+          __('Most overdue first')
+        }}</span>
       </div>
       <!-- record filters: estado del trato / lead / reparación + rango de fechas.
            Only on the conversation-list tabs — Vencidos, Comentarios and Por
@@ -304,6 +328,7 @@
           inboxTab !== 'comments' &&
           inboxTab !== 'aprobar' &&
           inboxTab !== 'snoozed' &&
+          !replying &&
           !queueTag &&
           !queueFilterCount
         "
@@ -383,6 +408,7 @@
           inboxTab !== 'comments' &&
           inboxTab !== 'aprobar' &&
           inboxTab !== 'snoozed' &&
+          !replying &&
           !queueTag &&
           !queueFilterCount
         "
@@ -680,6 +706,18 @@
           </button>
         </div>
         <div
+          v-else-if="!rows.length && !visibleUnassigned.length && replying"
+          class="px-2 py-6 text-center text-xs text-ink-gray-5"
+          role="status"
+          data-testid="reply-empty"
+        >
+          {{
+            replyMine
+              ? __('Nobody is waiting for your answer.')
+              : __('Nobody is waiting for an answer.')
+          }}
+        </div>
+        <div
           v-else-if="!rows.length && !visibleUnassigned.length"
           class="px-2 py-6 text-center text-xs text-ink-gray-4"
         >
@@ -690,13 +728,13 @@
           :key="(r.ref_doctype || 'CRM Deal') + ':' + r.name"
           class="cv-row relative"
         >
-          <!-- swipe-left action underlay (mobile, unread rows): «marcar respondido» -->
+          <!-- swipe-left action underlay (mobile, rows owed an answer): «Resolver sin preguntar» -->
           <div
             v-if="swipeKey === convKey(r)"
             class="absolute inset-y-0 right-0 mb-1 flex w-[132px] items-center justify-end rounded-r-[11px] bg-surface-green-2 pr-4 text-[11px] font-bold text-ink-green-8"
             aria-hidden="true"
           >
-            ✓ {{ __('Respondido') }}
+            ✓ {{ __('Resolved') }}
           </div>
           <div
             role="option"
@@ -790,31 +828,26 @@
               >
                 {{ __('Lead') }}
               </span>
-              <!-- "needs reply": last message was inbound (backend r.unread =
-            direction=="in"). Labeled amber chip, distinct from the WhatsApp-green
-            channel dot, so it reads as an action ("responder"), not decoration.
-            Clears when you reply (last direction flips to outbound), not on open —
-            it is not a read receipt. -->
+              <!-- The one due chip («Venció hace 25 min» red · «Vence en 12 min» amber ·
+            «Esperando 3 h» with no limit set): the customer is waiting for our answer.
+            It clears when you reply (last direction flips to outbound) or resolve,
+            not on open — it is not a read receipt. The × resolves it without asking. -->
               <span
-                v-if="r.unread"
-                class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold text-ink-amber-9 bg-surface-amber-1"
+                v-if="dueChip(r)"
+                class="inline-flex items-center gap-0.5 rounded py-px pl-1.5 pr-0.5 text-[9.5px] font-semibold"
+                :class="CHIP_CLASS[dueChip(r).tone]"
                 :title="
                   __(
-                    'El cliente escribió por última vez — falta tu respuesta. Desaparece cuando respondes o al completar el trato.',
+                    'The customer is waiting for your answer. It clears when you reply or resolve the conversation.',
                   )
                 "
+                data-testid="due-chip"
               >
-                ↩ {{ __('Responder')
-                }}<span
-                  v-if="r.waiting_secs != null"
-                  class="font-bold opacity-80"
-                >
-                  · {{ formatWaiting(r.waiting_secs) }}</span
-                >
+                {{ dueChip(r).text }}
                 <button
-                  class="ml-0.5 flex h-3 w-3 items-center justify-center rounded-full leading-none hover:bg-surface-amber-2"
-                  :aria-label="__('Marcar como respondido')"
-                  :title="__('Marcar como respondido')"
+                  class="ml-0.5 flex h-3 w-3 items-center justify-center rounded-full leading-none hover:bg-surface-gray-3"
+                  :aria-label="__('Resolve without asking')"
+                  :title="__('Resolve without asking')"
                   @click.stop="
                     clearResponder(r.ref_doctype || 'CRM Deal', r.name)
                   "
@@ -876,12 +909,6 @@
                   >+{{ r.repair_count - 1 }}</span
                 >
               </span>
-              <span
-                v-if="r.sla_overdue"
-                class="rounded px-1.5 py-px text-[9.5px] font-semibold text-ink-red-8 bg-surface-red-1"
-              >
-                {{ __('SLA vencido') }}
-              </span>
               <!-- 💰 outstanding on the deal's invoices (backend sends it only when
                the sales-docs flag is on and the deal owes something) -->
               <span
@@ -894,6 +921,13 @@
             </div>
           </div>
         </div>
+        <!-- «Por responder» lists the most urgent first; say so when there are more -->
+        <p
+          v-if="replying && (replyQueue.data?.count || 0) > rows.length"
+          class="px-2 py-3 text-center text-[11px] text-ink-gray-5"
+        >
+          {{ __('Showing the {0} most urgent.', [rows.length]) }}
+        </p>
         <!-- infinite-scroll: the observer loads the next page as this nears the viewport -->
         <div
           v-if="paginatable && queueHasMore"
@@ -936,9 +970,17 @@ import LucideChevronDown from '~icons/lucide/chevron-down'
 import LucideVolume2 from '~icons/lucide/volume-2'
 import LucideVolumeX from '~icons/lucide/volume-x'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import { useRoute } from 'vue-router'
 import { statusesStore } from '@/stores/statuses'
 import { recordStageLabel } from '@/utils/stageLabel'
 import { soundEnabled, toggleSound } from '@/composables/notificationSound'
+import {
+  CHIP_CLASS,
+  REPLY_TAB,
+  dueChip,
+  tabFromQuery,
+  urlWithTab,
+} from '@/utils/atencion'
 import {
   pushState,
   pushBusy,
@@ -964,7 +1006,9 @@ import {
   commentPosts,
   commentCounts,
   channelCounts,
-  overdue,
+  replyQueue,
+  replyMine,
+  setReplyMine,
   unattendedTotal,
   autoAckCount,
   queueRows,
@@ -998,6 +1042,7 @@ import {
   setCommentStatus,
   onSearchInput,
   reloadQueue,
+  reloadReplyQueue,
   reloadUnassigned,
   clearResponder,
   avatarColor,
@@ -1023,19 +1068,39 @@ function onGlobalSearchOpen(refDoctype, refName) {
   selectDeal(refName, refDoctype || 'CRM Deal')
 }
 
-// Vencidos tab swaps the row source to the server-ranked overdue list (most-overdue
-// first, across all conversations — an overdue thread buried by recency is the point);
-// every other tab shows the normal recency queue.
+// «Por responder» swaps the row source to the server-ranked reply queue (most overdue
+// first, then soonest due, across all conversations — a thread buried by recency is the
+// point); every other tab shows the normal recency queue.
+const replying = computed(() => inboxTab.value === REPLY_TAB)
 const rows = computed(() =>
-  inboxTab.value === 'vencidos'
-    ? overdue.data?.conversations || []
-    : queueRows.value,
+  replying.value ? replyQueue.data?.conversations || [] : queueRows.value,
 )
 // Record filters ride the queue query, so they're offered only on the tabs that
-// render that query (Vencidos/Comentarios/Por aprobar have their own endpoints).
+// render that query (Por responder/Comentarios/Por aprobar have their own endpoints).
 const filterableTab = computed(() =>
   ['all', 'whatsapp', 'messenger', 'snoozed'].includes(inboxTab.value),
 )
+
+// «Por responder» lives in the URL (?tab=por-responder: Hoy's card, a reload and a
+// return_to land back on it). The address bar is updated in place — a router
+// navigation would remount the inbox on phones and lose the open conversation.
+const route = useRoute()
+onMounted(() => {
+  if (tabFromQuery(route.query) && inboxTab.value !== REPLY_TAB)
+    setInboxTab(REPLY_TAB)
+})
+watch(inboxTab, (tab) => {
+  if (typeof window === 'undefined' || route.name !== 'Inbox') return
+  const here = window.location.pathname + window.location.search
+  const next = urlWithTab(here, tab) + window.location.hash
+  if (next !== here + window.location.hash)
+    window.history.replaceState(window.history.state, '', next)
+})
+function openRow(r) {
+  selectDeal(r.name, r.ref_doctype || 'CRM Deal', {
+    fromReplyQueue: replying.value,
+  })
+}
 
 function fmtSnooze(ts) {
   try {
@@ -1064,7 +1129,7 @@ function onRowClick(r) {
     _swMoved = false
     return
   }
-  selectDeal(r.name, r.ref_doctype || 'CRM Deal')
+  openRow(r)
 }
 function rowSwipeStyle(r) {
   if (swipeKey.value !== convKey(r)) return ''
@@ -1073,7 +1138,7 @@ function rowSwipeStyle(r) {
 }
 function rowTouchStart(r, e) {
   _swMoved = false
-  if (!isMobile.value || !r.unread) return
+  if (!isMobile.value || !dueChip(r)) return
   const t = e.touches[0]
   _sw = { key: convKey(r), x: t.clientX, y: t.clientY, active: false }
 }
@@ -1157,10 +1222,10 @@ async function ptrEnd() {
 }
 // A failed list load must not read as an empty inbox — surface the resource error + retry.
 const listError = computed(() =>
-  inboxTab.value === 'vencidos' ? overdue.error : queue.error,
+  replying.value ? replyQueue.error : queue.error,
 )
 function retryList() {
-  if (inboxTab.value === 'vencidos') overdue.fetch()
+  if (replying.value) reloadReplyQueue()
   else reloadQueue()
 }
 const unassignedRows = computed(() => unassigned.data || [])
@@ -1168,12 +1233,12 @@ const unassignedRows = computed(() => unassigned.data || [])
 const commentGroups = computed(() => commentPosts.data || [])
 
 // Orphans visible in the current tab: both on Todos, channel-scoped on WhatsApp/Messenger,
-// none on Vencidos (orphans have no record → no response SLA).
+// none on Por responder (orphans have no record → no response clock).
 // The queue search applies here too (client-side — the orphan list is small and
 // already loaded): searching a customer must not leave unrelated pinned orphans
 // shouting above the filtered results.
 const visibleUnassigned = computed(() => {
-  if (inboxTab.value === 'vencidos' || inboxTab.value === 'aprobar') return []
+  if (replying.value || inboxTab.value === 'aprobar') return []
   let rows = unassignedRows.value
   if (inboxTab.value === 'whatsapp')
     rows = rows.filter((u) => u.last_channel !== 'messenger')
@@ -1328,15 +1393,6 @@ function togglePush() {
   else enablePush() // user gesture — permission prompt allowed here
 }
 
-// Compact "time waited" for the response-SLA chip: 45s / 12m / 3h / 5d.
-function formatWaiting(secs) {
-  const s = Number(secs) || 0
-  if (s < 60) return `${s}s`
-  if (s < 3600) return `${Math.floor(s / 60)}m`
-  if (s < 86400) return `${Math.floor(s / 3600)}h`
-  return `${Math.floor(s / 86400)}d`
-}
-
 // Pretty-print a raw WhatsApp number (e.g. 5216691530561 / 526691530561) as
 // +52 669 153 0561 — strip the country code + the MX mobile "1", group the rest.
 function formatPhone(raw) {
@@ -1388,11 +1444,15 @@ const inboxTabs = computed(() => [
     dot: '#1877f2',
     count: commentCounts.data?.new ?? null,
   },
+  // «Por responder»: everyone still owed an answer; the dot turns red when one is overdue.
   {
-    id: 'vencidos',
-    label: __('Vencidos'),
-    dot: '#dc2626',
-    count: overdue.data?.count || null,
+    id: REPLY_TAB,
+    label: __('To answer'),
+    dot: replyQueue.data?.overdue ? '#dc2626' : '#f59e0b',
+    count: replyQueue.data?.count ?? null,
+    title: replyQueue.data?.overdue
+      ? __('{0} overdue', [replyQueue.data.overdue])
+      : __('Nobody overdue'),
   },
   // 💤 Pospuestas: snoozed conversations waiting for their wake time (hidden at 0)
   ...((snoozedCount.data || 0) > 0

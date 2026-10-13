@@ -10,7 +10,7 @@
       <button
         v-if="isMobile"
         class="-ml-3 flex size-11 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
-        :aria-label="dealBack ? dealBack.label : __('Volver a la bandeja')"
+        :aria-label="backLabel"
         data-testid="deal-header-back"
         @click="goBack"
       >
@@ -104,6 +104,15 @@
           >
             💰 {{ __('Saldo') }} {{ saldoChip }}
           </span>
+          <!-- phone: the conversation's one due chip rides the meta row -->
+          <span
+            v-if="due && isMobile"
+            class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
+            :class="CHIP_CLASS[due.tone]"
+            data-testid="header-due-chip"
+          >
+            {{ due.text }}
+          </span>
         </div>
       </div>
       <div class="flex flex-none items-center justify-end gap-1.5 sm:gap-2.5">
@@ -123,21 +132,35 @@
           }}</span>
         </div>
         <div
-          v-if="responsible && slaLabel && !isMobile"
+          v-if="responsible && due && !isMobile"
           class="h-[30px] w-px bg-outline-gray-2"
         />
-        <div v-if="slaLabel && !isMobile" class="text-right">
-          <div class="text-[10px] text-ink-gray-5">
-            {{ __('1ª respuesta SLA') }}
-          </div>
-          <div
-            class="text-[13px] font-bold"
-            :class="slaOverdue ? 'text-ink-red-7' : 'text-ink-green-7'"
-          >
-            {{ slaLabel }}
-          </div>
-        </div>
+        <!-- the same due chip as the queue row (the inbox's response clock) -->
+        <span
+          v-if="due && !isMobile"
+          class="whitespace-nowrap rounded px-2 py-1 text-[12px] font-semibold"
+          :class="CHIP_CLASS[due.tone]"
+          data-testid="header-due-chip"
+        >
+          {{ due.text }}
+        </span>
         <div v-if="!isMobile" class="h-[30px] w-px bg-outline-gray-2" />
+        <!-- «Resolver»: primary once we answered last; the sheet says what happens next -->
+        <button
+          v-if="canResolve && !isMobile"
+          class="press flex h-[34px] items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-semibold"
+          :class="
+            due
+              ? 'border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
+              : 'text-white'
+          "
+          :style="due ? '' : 'background: var(--brand)'"
+          data-testid="header-resolve"
+          @click="resolveOpen = true"
+        >
+          <LucideCheckCheck class="h-4 w-4" />
+          {{ headerResolveLabel(nextMode) }}
+        </button>
         <!-- Desktop LEAD stage control: the plain dropdown — CRM Lead Status has
              no probability and no Won/Lost outcome pair to step through. A deal
              gets the stepper on its own row below this cluster: in here, seven
@@ -366,12 +389,21 @@
       :phone="row.mobile_no"
       :contact-name="row.lead_name || row.first_name || ''"
     />
+    <ResolveSheet
+      v-if="canResolve"
+      v-model="resolveOpen"
+      :doctype="activeDealDoctype"
+      :name="activeDeal"
+      :next="nextMode"
+      @resolved="onResolved"
+      @reply="focusReply"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, inject, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, inject, nextTick, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   Button,
   Dialog,
@@ -387,7 +419,16 @@ import LucideAlarmClock from '~icons/lucide/alarm-clock'
 import LucideTag from '~icons/lucide/tag'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucideCheckCheck from '~icons/lucide/check-check'
 import CadencePicker from '@/components/doco/inbox/CadencePicker.vue'
+import ResolveSheet from '@/components/doco/inbox/ResolveSheet.vue'
+import { safeReturn } from '@/composables/useCompras'
+import {
+  CHIP_CLASS,
+  dueChip,
+  goToReturn,
+  headerResolveLabel,
+} from '@/utils/atencion'
 import StageStepper from '@/components/doco/StageStepper.vue'
 import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
 import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
@@ -400,8 +441,11 @@ import { DEAL_STATUS, LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
 import {
   activeDeal,
   activeDealDoctype,
+  activeTab,
   queueRows,
-  sla,
+  replyQueue,
+  fromReplyQueue,
+  openNextToAnswer,
   requestStage,
   openContext,
   openLedger,
@@ -435,8 +479,20 @@ const dealBackRef = inject('dealBack', null)
 const dealBack = computed(() => dealBackRef?.value || null)
 function goBack() {
   if (dealBack.value) router.push(dealBack.value.to)
+  // Opened from another screen (Hoy, an Encuestas answer): the one back returns there.
+  else if (returnTo.value) goToReturn(router, returnTo.value)
   else mobileBack()
 }
+const backLabel = computed(() => {
+  if (dealBack.value) return dealBack.value.label
+  if (returnTo.value)
+    return __('Back to {0}', [
+      typeof route.query.return_label === 'string' && route.query.return_label
+        ? route.query.return_label.slice(0, 40)
+        : __('previous screen'),
+    ])
+  return __('Volver a la bandeja')
+})
 const cadence = ref(null)
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 
@@ -612,20 +668,53 @@ const waWindow = computed(() => {
     : { open: false }
 })
 
-// SLA
-const slaSecs = computed(() => sla.data?.first_response_seconds_left)
-const slaOverdue = computed(
-  () => sla.data?.sla_status === 'Failed' || (slaSecs.value ?? 0) < 0,
+// ── Atención: the one due chip and «Resolver» ─────────────────────────────────
+// The chip reads the inbox's response clock from the conversation's row (the reply
+// queue when it is there, else the loaded queue page): no second clock on screen.
+const route = useRoute()
+const replyRow = computed(
+  () =>
+    (replyQueue.data?.conversations || []).find(
+      (r) =>
+        r.name === activeDeal.value &&
+        (r.ref_doctype || 'CRM Deal') === activeDealDoctype.value,
+    ) || null,
 )
-const slaLabel = computed(() => {
-  const s = slaSecs.value
-  if (s === undefined || s === null) return sla.data?.sla_status || ''
-  const abs = Math.abs(s)
-  const h = Math.floor(abs / 3600)
-  const m = Math.floor((abs % 3600) / 60)
-  const t = h ? `${h}h` : `${m}m`
-  return s < 0 ? `vencido +${t}` : `${t} restantes`
-})
+const due = computed(() => dueChip(replyRow.value || queueRow.value))
+const canResolve = computed(
+  () =>
+    !!activeDeal.value &&
+    ['CRM Deal', 'CRM Lead'].includes(activeDealDoctype.value),
+)
+const returnTo = computed(() =>
+  route.name === 'Inbox' ? safeReturn(route.query.return_to) : null,
+)
+const nextMode = computed(() =>
+  fromReplyQueue.value ? 'queue' : returnTo.value ? 'return' : null,
+)
+const resolveOpen = ref(false)
+function onResolved(out) {
+  toast.success(
+    out?.asked
+      ? __(
+          'Resolved. We will ask how we did once a manager approves the message.',
+        )
+      : __('Conversation resolved.'),
+  )
+  if (nextMode.value === 'queue')
+    openNextToAnswer(activeDealDoctype.value, activeDeal.value)
+  else if (nextMode.value === 'return') goToReturn(router, returnTo.value)
+}
+// «Responder» from the sheet: the conversation tab, with the cursor in the composer.
+function focusReply() {
+  activeTab.value = 'conversation'
+  nextTick(() =>
+    window.setTimeout(
+      () => document.querySelector('.doco-convo textarea')?.focus(),
+      150,
+    ),
+  )
+}
 
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)
@@ -765,6 +854,19 @@ const snoozeOptions = computed(() => {
 })
 // Phone ⋯ menu: everything the desktop header shows as icon buttons.
 const mobileMenu = computed(() => [
+  ...(canResolve.value
+    ? [
+        {
+          group: __('Conversation'),
+          items: [
+            {
+              label: headerResolveLabel(nextMode.value),
+              onClick: () => (resolveOpen.value = true),
+            },
+          ],
+        },
+      ]
+    : []),
   {
     group: __('Trato'),
     items: [

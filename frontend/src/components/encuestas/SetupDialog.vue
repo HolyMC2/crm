@@ -1,15 +1,24 @@
 <template>
   <Dialog
     v-model="open"
-    :options="{ title: __('Ask customers after they buy'), size: 'lg' }"
+    :options="{
+      title: service
+        ? __('Ask how we did after resolving a conversation')
+        : __('Ask customers after they buy'),
+      size: 'lg',
+    }"
   >
     <template #body-content>
-      <div class="space-y-4">
+      <div class="space-y-4" :data-testid="`encuestas-setup-${kind}`">
         <p class="text-sm text-ink-gray-7">
           {{
-            __(
-              'A few days after a sale with a phone, Muelle prepares one WhatsApp asking from 0 to 10 whether they would recommend you, and to rate what they bought. Someone approves each message before it goes out.',
-            )
+            service
+              ? __(
+                  'When someone resolves a WhatsApp conversation with a registered customer, Muelle prepares one WhatsApp asking «How did we do?» from 1 to 5. A manager approves each message before it goes out.',
+                )
+              : __(
+                  'A few days after a sale with a phone, Muelle prepares one WhatsApp asking from 0 to 10 whether they would recommend you, and to rate what they bought. Someone approves each message before it goes out.',
+                )
           }}
         </p>
         <div v-if="loading" role="status" class="text-sm text-ink-gray-6">
@@ -18,7 +27,11 @@
         <template v-else>
           <label class="flex min-h-11 items-center gap-2 text-base">
             <input v-model="form.enabled" type="checkbox" class="rounded" />
-            {{ __('Ask after every sale') }}
+            {{
+              service
+                ? __('Ask after resolving a conversation')
+                : __('Ask after every sale')
+            }}
           </label>
           <FormControl
             v-model="form.template"
@@ -27,25 +40,53 @@
             :options="templateOptions"
             :disabled="!templates.length"
           />
-          <p
+          <div
             v-if="!templates.length"
             role="status"
-            class="rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8"
+            class="space-y-2 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8"
           >
-            {{
-              __(
-                'You have no WhatsApp template approved by Meta yet. Create one with a name, the product and the link, wait for approval, then come back.',
-              )
-            }}
+            <p v-if="service">
+              {{
+                __(
+                  'You have no approved WhatsApp template with two variables (the first name and the link) yet. Create one, wait for Meta to approve it, then come back. For example:',
+                )
+              }}
+            </p>
+            <p v-else>
+              {{
+                __(
+                  'You have no WhatsApp template approved by Meta yet. Create one with a name, the product and the link, wait for approval, then come back.',
+                )
+              }}
+            </p>
+            <p
+              v-if="service"
+              class="rounded bg-surface-white px-2 py-1 font-mono text-xs text-ink-gray-8"
+            >
+              {{ SUGGESTED_TEXT }}
+            </p>
             <a
               href="/app/whatsapp-templates/new"
-              class="ml-1 underline"
+              class="inline-flex min-h-11 items-center underline sm:min-h-0"
               target="_blank"
               rel="noopener"
-              >{{ __('Create a template') }}</a
+              >{{
+                service ? __('Set up the template') : __('Create a template')
+              }}</a
             >
-          </p>
-          <div class="grid grid-cols-2 gap-3">
+          </div>
+          <FormControl
+            v-if="service"
+            v-model="form.cooldown_days"
+            type="number"
+            :label="__('Ask the same number at most every (days)')"
+            :description="
+              __(
+                'Counts the question after a sale too, so nobody gets two in a short time. 0 = no limit.',
+              )
+            "
+          />
+          <div v-else class="grid grid-cols-2 gap-3">
             <FormControl
               v-model="form.min_days"
               type="number"
@@ -90,8 +131,17 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Button, Dialog, FormControl } from 'frappe-ui'
 import { encuestasApi, problemOf } from '@/composables/useEncuestas'
 
+// What the owner can paste into Meta's template form: first name and the link.
+const SUGGESTED_TEXT =
+  '{{1}}, ¿cómo te atendimos? Califícanos en un toque: {{2}}'
+
 const open = defineModel({ type: Boolean, default: false })
+const props = defineProps({
+  // 'sale': after buying (0–10); 'service': «¿Cómo te atendimos?» after a conversation
+  kind: { type: String, default: 'sale' },
+})
 const emit = defineEmits(['saved'])
+const service = computed(() => props.kind === 'service')
 const loading = ref(false)
 const saving = ref(false)
 const problem = ref(null)
@@ -101,6 +151,7 @@ const form = reactive({
   template: '',
   min_days: 2,
   max_days: 14,
+  cooldown_days: 30,
 })
 
 const templateOptions = computed(() => [
@@ -115,7 +166,9 @@ async function load() {
   loading.value = true
   problem.value = null
   try {
-    const data = await encuestasApi('setup_options')
+    const data = await encuestasApi('setup_options', {
+      kind: service.value ? 'service' : null,
+    })
     templates.value = data.templates || []
     const ask = data.ask || {}
     form.enabled = ask.state === 'off' ? true : Boolean(ask.enabled)
@@ -124,6 +177,7 @@ async function load() {
       : templates.value[0]?.name || ''
     form.min_days = ask.min_days ?? 2
     form.max_days = ask.max_days ?? 14
+    form.cooldown_days = ask.cooldown_days ?? 30
   } catch (error) {
     problem.value = problemOf(error)
   } finally {
@@ -135,12 +189,23 @@ async function save() {
   saving.value = true
   problem.value = null
   try {
-    const ask = await encuestasApi('save_setup', {
-      enabled: form.enabled ? 1 : 0,
-      template: form.template || null,
-      min_days: Number(form.min_days),
-      max_days: Number(form.max_days),
-    })
+    // Each question saves only its own settings.
+    const ask = await encuestasApi(
+      'save_setup',
+      service.value
+        ? {
+            kind: 'service',
+            enabled: form.enabled ? 1 : 0,
+            template: form.template || null,
+            cooldown_days: Number(form.cooldown_days),
+          }
+        : {
+            enabled: form.enabled ? 1 : 0,
+            template: form.template || null,
+            min_days: Number(form.min_days),
+            max_days: Number(form.max_days),
+          },
+    )
     emit('saved', ask)
     open.value = false
   } catch (error) {
