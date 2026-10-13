@@ -455,9 +455,9 @@ def get_average_time_to_close_a_lead(
 		"title": _("Avg. time to close a lead"),
 		"tooltip": _("Average time taken from lead creation to deal closure"),
 		"value": current_avg_lead,
-		"suffix": " days",
+		"suffix": " " + _("days"),
 		"delta": delta_lead,
-		"deltaSuffix": " days",
+		"deltaSuffix": " " + _("days"),
 		"negativeIsBetter": True,
 	}
 
@@ -515,9 +515,9 @@ def get_average_time_to_close_a_deal(
 		"title": _("Avg. time to close a deal"),
 		"tooltip": _("Average time taken from deal creation to deal closure"),
 		"value": current_avg_deal,
-		"suffix": " days",
+		"suffix": " " + _("days"),
 		"delta": delta_deal,
-		"deltaSuffix": " days",
+		"deltaSuffix": " " + _("days"),
 		"negativeIsBetter": True,
 	}
 
@@ -618,10 +618,16 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 		"yAxis": {
 			"title": _("Count"),
 		},
+		# `name` is the data key; the legend and tooltip read echartOptions.name.
 		"series": [
-			{"name": "leads", "type": "line", "showDataPoints": True},
-			{"name": "deals", "type": "line", "showDataPoints": True},
-			{"name": "won_deals", "type": "line", "showDataPoints": True},
+			{"name": "leads", "type": "line", "showDataPoints": True, "echartOptions": {"name": _("Leads")}},
+			{"name": "deals", "type": "line", "showDataPoints": True, "echartOptions": {"name": _("Deals")}},
+			{
+				"name": "won_deals",
+				"type": "line",
+				"showDataPoints": True,
+				"echartOptions": {"name": _("Won deals")},
+			},
 		],
 	}
 
@@ -682,8 +688,18 @@ def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = N
 		"yAxis": {"title": _("Deal value") + f" ({get_base_currency_symbol()})"},
 		# Keep stored dashboard series keys compatible; `actual` means won value.
 		"series": [
-			{"name": "forecasted", "type": "line", "showDataPoints": True},
-			{"name": "actual", "type": "line", "showDataPoints": True},
+			{
+				"name": "forecasted",
+				"type": "line",
+				"showDataPoints": True,
+				"echartOptions": {"name": _("Open forecast")},
+			},
+			{
+				"name": "actual",
+				"type": "line",
+				"showDataPoints": True,
+				"echartOptions": {"name": _("Won value")},
+			},
 		],
 	}
 

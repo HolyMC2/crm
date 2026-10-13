@@ -38,6 +38,15 @@ msgstr "La etapa {0} no es parte del embudo {1}."
 msgid "You do not have permission to read deal amounts."
 msgstr "No tienes permiso para ver los montos de los tratos."
 
+#. Dashboard «Open forecast and won value» chart: legend of each line
+#: crm/api/dashboard.py
+msgid "Open forecast"
+msgstr "Pronóstico abierto"
+
+#: crm/api/dashboard.py
+msgid "Won value"
+msgstr "Valor ganado"
+
 #. Standard CRM Deal Status names (crm/install.py), shown through
 #. utils/stageLabel.js; a renamed or custom stage is shown as written
 #: frontend/src/utils/stageLabel.js
@@ -10108,7 +10117,7 @@ msgstr ""
 #: frontend/src/components/Settings/CalendarSettings.vue:120
 #: frontend/src/components/Settings/CalendarSettings.vue:209
 msgid "days"
-msgstr "dias"
+msgstr "días"
 
 #: frontend/src/components/Calendar/EventNotifications.vue:175
 #: frontend/src/components/Calendar/EventNotifications.vue:194
