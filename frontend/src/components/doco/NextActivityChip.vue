@@ -31,6 +31,8 @@
 <script setup>
 import { computed } from 'vue'
 import { nextStepDisplay } from '@/utils/activityState'
+import { formatDay } from '@/utils/contactos'
+import { FOLLOW_UP_ACTIVITY_TYPES, followUpParts } from '@/utils/dealFollowUp'
 import LucideSquareCheck from '~icons/lucide/square-check'
 import LucidePhone from '~icons/lucide/phone'
 import LucideMessageCircle from '~icons/lucide/message-circle'
@@ -73,7 +75,17 @@ const display = computed(() =>
 const state = computed(() => display.value.state)
 const label = computed(() => display.value.label)
 const icon = computed(() => ICONS[props.type] || LucideSquareCheck)
-const tooltip = computed(() =>
-  [props.title, props.type, props.at].filter(Boolean).join(' · '),
-)
+// Hover text in words: what, which kind, when. A date-only follow-up sits at
+// midnight and shows no hour; the hour is the site's, like the chip's «Hoy 15:00».
+const tooltip = computed(() => {
+  const kind = FOLLOW_UP_ACTIVITY_TYPES.find((t) => t.value === props.type)
+  const { date, time } = followUpParts(props.at)
+  return [
+    props.title,
+    kind ? __(kind.label) : props.type && __(props.type),
+    date ? [formatDay(date), time].filter(Boolean).join(', ') : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+})
 </script>
