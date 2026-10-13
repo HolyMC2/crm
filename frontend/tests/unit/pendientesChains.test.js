@@ -338,7 +338,8 @@ describe('Pendientes list cutover', () => {
         scrollHeight: { get: () => box.content },
         scrollTop: {
           get: () => top,
-          set: (v) => (top = Math.min(Math.max(0, v), box.content - box.height)),
+          set: (v) =>
+            (top = Math.min(Math.max(0, v), box.content - box.height)),
         },
       })
       return el

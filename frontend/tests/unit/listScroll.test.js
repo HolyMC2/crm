@@ -9,14 +9,23 @@ import {
 
 // A scroller the way the browser treats it: scrollTop is clamped to
 // scrollHeight - clientHeight, and rows sit at fixed offsets in the content.
-function fakeScroller({ height = 400, content = 400, top = 0, rows = [] } = {}) {
+function fakeScroller({
+  height = 400,
+  content = 400,
+  top = 0,
+  rows = [],
+} = {}) {
   const listeners = {}
   const el = {
     clientHeight: height,
     scrollHeight: content,
     _top: top,
     boxTop: 100,
-    rows: rows.map(([key, offset, rowHeight = 56]) => ({ key, offset, rowHeight })),
+    rows: rows.map(([key, offset, rowHeight = 56]) => ({
+      key,
+      offset,
+      rowHeight,
+    })),
     get scrollTop() {
       return this._top
     },
