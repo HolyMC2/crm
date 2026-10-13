@@ -35,9 +35,11 @@
         @keydown.enter="isMobile && openContext()"
       >
         <div class="flex min-w-0 items-center gap-2 sm:flex-wrap">
-          <span class="truncate text-base-bold text-ink-gray-9">{{
-            name || '—'
-          }}</span>
+          <span
+            class="truncate text-base-bold text-ink-gray-9"
+            data-testid="deal-header-name"
+            >{{ name || '—' }}</span
+          >
           <ScoreExplainPopover
             v-if="grade"
             :doctype="activeDealDoctype"
@@ -477,15 +479,18 @@ const router = useRouter()
 // Deal 360 provides where its record returns to; the Inbox does not.
 const dealBackRef = inject('dealBack', null)
 const dealBack = computed(() => dealBackRef?.value || null)
+// This conversation is the one another screen sent the worker to (Hoy's row, an
+// Encuestas answer): its one back returns there. A conversation picked from the list
+// goes back to the list, which carries the way back itself.
+const backToCaller = computed(() => !!returnTo.value && !!route.query.deal)
 function goBack() {
   if (dealBack.value) router.push(dealBack.value.to)
-  // Opened from another screen (Hoy, an Encuestas answer): the one back returns there.
-  else if (returnTo.value) goToReturn(router, returnTo.value)
+  else if (backToCaller.value) goToReturn(router, returnTo.value)
   else mobileBack()
 }
 const backLabel = computed(() => {
   if (dealBack.value) return dealBack.value.label
-  if (returnTo.value)
+  if (backToCaller.value)
     return __('Back to {0}', [
       typeof route.query.return_label === 'string' && route.query.return_label
         ? route.query.return_label.slice(0, 40)

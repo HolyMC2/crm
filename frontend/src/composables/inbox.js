@@ -568,6 +568,8 @@ function persistInbox() {
         unassignedChannel: activeUnassignedChannel.value,
         view: mobileView.value,
         tab: activeTab.value,
+        // back from a «Resolver» hand-off: still walking «Por responder»
+        fromReplyQueue: fromReplyQueue.value,
       }),
     )
   } catch (e) {
@@ -576,7 +578,14 @@ function persistInbox() {
 }
 // snapshot on every selection/pane/tab change
 watch(
-  [activeDeal, activeDealDoctype, activeUnassigned, mobileView, activeTab],
+  [
+    activeDeal,
+    activeDealDoctype,
+    activeUnassigned,
+    mobileView,
+    activeTab,
+    fromReplyQueue,
+  ],
   persistInbox,
 )
 
@@ -607,7 +616,7 @@ function restoreInbox() {
           return
         }
         activeDeal.value = null // force selectDeal to re-load (it early-returns on same id)
-        selectDeal(s.deal, doctype)
+        selectDeal(s.deal, doctype, { fromReplyQueue: !!s.fromReplyQueue })
         if (s.tab) activeTab.value = s.tab
         if (s.view) mobileView.value = s.view // restore the pane (e.g. context) they were on
       })
