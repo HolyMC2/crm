@@ -517,7 +517,9 @@ describe('A purchase to review (review F4)', () => {
     expect(call.todo).toBe('TODO-9')
     expect(call.request_id).toBeTruthy()
     expect(calls.some(([m]) => m === 'confirm_order')).toBe(false)
-    expect(settled).toHaveBeenCalledWith(expect.objectContaining({ todo: 'TODO-9' }))
+    expect(settled).toHaveBeenCalledWith(
+      expect.objectContaining({ todo: 'TODO-9' }),
+    )
     expect(root.querySelector('[data-approval-ask]')).toBeNull()
   })
   it('a refused answer stays on screen with the reason, and the ask with it', async () => {
@@ -525,7 +527,9 @@ describe('A purchase to review (review F4)', () => {
     find('Reviewed').click()
     await flush()
     expect(settled).not.toHaveBeenCalled()
-    expect(root.querySelector('[data-approval-ask] [role="alert"]')).not.toBeNull()
+    expect(
+      root.querySelector('[data-approval-ask] [role="alert"]'),
+    ).not.toBeNull()
     expect(find('Reviewed')).toBeDefined()
   })
   it('an ask to confirm has no «Revisada»: confirming is the answer', async () => {
