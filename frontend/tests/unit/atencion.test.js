@@ -252,6 +252,24 @@ describe('Resolver through the inbox composable', () => {
     expect(inbox.mobileView.value).toBe('list')
   })
 
+  it('remembers the queue walk, so a hand-off (Contactos) comes back to «Resolver y siguiente»', async () => {
+    const { nextTick } = await import('vue')
+    inbox.selectDeal('D-7', 'CRM Deal', { fromReplyQueue: true })
+    await nextTick()
+    const saved = JSON.parse(sessionStorage.getItem('doco_inbox_state'))
+    expect(saved).toMatchObject({
+      deal: 'D-7',
+      doctype: 'CRM Deal',
+      tab: 'conversation',
+      fromReplyQueue: true,
+    })
+    inbox.selectDeal('D-8', 'CRM Deal')
+    await nextTick()
+    expect(
+      JSON.parse(sessionStorage.getItem('doco_inbox_state')).fromReplyQueue,
+    ).toBe(false)
+  })
+
   it('«Míos» narrows Por responder on the server', async () => {
     await inbox.setReplyMine(true)
     expect(frappe.__resources[REPLY_URL].lastParams).toMatchObject({ mine: 1 })
