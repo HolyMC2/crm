@@ -31,6 +31,37 @@ html {
 :root[data-theme='dark'] {
   color-scheme: dark;
 }
+
+/* Text contrast at the token source (WCAG AA: 4.5:1 for text). frappe-ui
+   1.0.0-beta.29 ships these inks below AA on every page surface they are used
+   on, so they are re-pointed here once, to steps of the same palette:
+   - ink-gray-5, secondary text: 4.18:1 on white, 3.85:1 on dark gray-1
+     → the gray-6 ink (7.8:1 light, 6.3:1 dark).
+   - ink-blue-link, links: 3.37:1 light, 3.48:1 dark → blue 800 / dark blue 200.
+   - ink-blue-8 and ink-amber-8, chip and notice text in light mode: 4.17:1 and
+     3.55:1 on their tinted chips → blue 800 / amber 800, the shell's own status
+     inks (--muelle-status-blue-ink, --muelle-status-orange-ink). Dark mode
+     already passes and keeps frappe-ui's values. */
+:root,
+:root[data-theme='dark'] {
+  --ink-gray-5: var(--ink-gray-6);
+}
+:root:not([data-theme='dark']) {
+  --ink-blue-link: var(--blue-800);
+  --ink-blue-8: var(--blue-800);
+  --ink-amber-8: var(--amber-800);
+}
+:root[data-theme='dark'] {
+  --ink-blue-link: var(--dark-blue-200);
+}
+/* frappe-ui toasts are an inverted surface (surface-gray-9): the link ink of
+   their actions flips with it (8.2:1 light, 8.8:1 dark). */
+[data-sonner-toast] {
+  --ink-blue-link: var(--blue-300);
+}
+:root[data-theme='dark'] [data-sonner-toast] {
+  --ink-blue-link: var(--dark-blue-800);
+}
 body {
   overscroll-behavior-y: none;
 }
