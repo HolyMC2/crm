@@ -230,6 +230,7 @@ import {
   versionOf,
   writableFields,
 } from '@/utils/contactos'
+import { coreFields } from '@/utils/extraFields'
 import ConflictPanel from './ConflictPanel.vue'
 import MetaFields from './MetaFields.vue'
 import RecoveryMessage from './RecoveryMessage.vue'
@@ -256,6 +257,9 @@ const meta = ref(null),
   conflict = ref(null),
   latest = ref(null)
 const editing = computed(() => !!props.source?.name)
+// «Datos» edits the record's own fields; the shop's extra ones live in «Más datos».
+const withoutExtra = (value) =>
+  value ? { ...value, fields: coreFields(value.fields) } : value
 const phoneWritable = computed(() =>
   meta.value?.fields?.some((f) => f.fieldname === 'phone_nos' && !f.read_only),
 )
@@ -373,9 +377,11 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    meta.value = await contactosApi('get_editor_meta', {
-      source: draft.value.source,
-    })
+    meta.value = withoutExtra(
+      await contactosApi('get_editor_meta', {
+        source: draft.value.source,
+      }),
+    )
     if (editing.value) {
       const record = await contactosApi('get_record', sourceRef(props.source))
       latest.value = record
@@ -411,7 +417,9 @@ async function loadParty(value) {
   draft.value.party_source = value
   if (value) {
     try {
-      partyMeta.value = await contactosApi('get_editor_meta', { source: value })
+      partyMeta.value = withoutExtra(
+        await contactosApi('get_editor_meta', { source: value }),
+      )
     } catch (e) {
       error.value = e
     }

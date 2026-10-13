@@ -240,7 +240,27 @@
             variant="ghost"
             @click="roleOpen = true"
           />
+          <RouterLink
+            v-if="customerExtraLink"
+            :to="customerExtraLink"
+            class="c-action-link c-extra-account-link"
+            data-act="open-account-extra"
+            ><FeatherIcon name="list" class="h-4 w-4" />{{
+              __('Extra details are on the client account · Open')
+            }}</RouterLink
+          >
         </section>
+        <ExtraFieldsPanel
+          v-if="showExtra"
+          :style="sectionStyle('extra')"
+          :record="record"
+          :capabilities="capabilities"
+          @saved="applySaved"
+          @defined="reload({ freshBoot: true })"
+          @reload="reload({ freshBoot: true })"
+          @open-section="openSection"
+          @open-fields="openFieldSettings"
+        />
         <section
           class="c-record-section c-followup-section"
           :style="sectionStyle('followups')"
@@ -647,6 +667,7 @@ import FollowupEditor from '@/components/contactos/FollowupEditor.vue'
 import RelationEditor from '@/components/contactos/RelationEditor.vue'
 import TagEditor from '@/components/contactos/TagEditor.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
+import ExtraFieldsPanel from '@/components/contactos/ExtraFieldsPanel.vue'
 import ContactTabPanel from '@/components/doco/contact/ContactTabPanel.vue'
 import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'
 import { ArchivosRegistroPanel } from '@/components/archivos'
@@ -674,6 +695,7 @@ import {
   identityTypeLabel,
   SOURCE_TYPES,
 } from '@/utils/contactos'
+import { coreFields, extraFields, sectionPosition } from '@/utils/extraFields'
 const route = useRoute(),
   router = useRouter()
 const record = ref(null),
@@ -785,8 +807,9 @@ const contactName = computed(() =>
       ? record.value.name
       : '',
 )
+// «Datos» shows the record's own fields; the shop's extra ones live in «Más datos».
 const displayFields = computed(() =>
-  (record.value?.editor_meta?.fields || []).filter(
+  coreFields(record.value?.editor_meta?.fields).filter(
     (f) =>
       ![
         'Table',
@@ -874,12 +897,45 @@ const relationLabels = {
   representative: 'Representante',
   crm_deal: 'Oportunidad comercial',
 }
+// Sections a saved order does not list yet («Más datos» for older orders) go last.
 const sectionStyle = (key) => ({
-  order: Math.max(
-    0,
-    (boot.value?.configuration?.section_order || []).indexOf(key),
-  ),
+  order: sectionPosition(boot.value?.configuration?.section_order, key),
 })
+// «Más datos» on clientes: whenever the shop has extra fields, and for whoever
+// can add one (the owner) or ask for one (a manager).
+const showExtra = computed(
+  () =>
+    record.value?.source === 'customer' &&
+    (extraFields(record.value?.editor_meta?.fields).length > 0 ||
+      !!capabilities.value.fields?.define ||
+      !!capabilities.value.manager),
+)
+// A person whose client account holds the extra details: open it, and come back.
+const customerExtraLink = computed(() => {
+  if (record.value?.source !== 'contact' || !selectedCustomer.value) return null
+  if (!(boot.value?.extra_fields || []).length) return null
+  const here = `/crm/contactos/contact/${encodeURIComponent(record.value.name)}`
+  return {
+    name: 'Contacto',
+    params: { source: 'customer', name: selectedCustomer.value },
+    query: {
+      return_to: here,
+      return_label: record.value.title || record.value.name,
+    },
+  }
+})
+/** A save from «Más datos» updates the record in place (no reload, same scroll). */
+function applySaved(result) {
+  if (!result?.name || result.name !== record.value?.name) return reload()
+  record.value = result
+  openTasks.value = result.followups?.rows || openTasks.value
+}
+function openSection(key) {
+  if (key === 'identity' && record.value?.capabilities?.write) editIdentity()
+}
+function openFieldSettings() {
+  router.push({ name: 'Contactos', query: { customize: 'fields' } })
+}
 let generation = 0,
   taskGeneration = 0
 async function reload({ freshBoot = false } = {}) {

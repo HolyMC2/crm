@@ -122,6 +122,76 @@
         type="checkbox"
         label="Deshabilitados"
       />
+      <div
+        v-if="extraFilterFields.length"
+        class="c-extra-filter"
+        data-filter="extra"
+      >
+        <FormControl
+          v-model="extraFilter.field"
+          type="select"
+          :label="__('More details')"
+          :options="[
+            { label: __('Choose a detail'), value: '' },
+            ...extraFilterFields.map((field) => ({
+              label: field.label,
+              value: field.fieldname,
+            })),
+          ]"
+          data-input="extra-field"
+        />
+        <template v-if="extraFilterField">
+          <FormControl
+            v-if="extraFilterField.kind === 'list'"
+            v-model="extraFilter.value"
+            type="select"
+            :label="__('Is')"
+            :options="[
+              { label: __('Choose an option'), value: '' },
+              ...extraFilterField.options.map((option) => ({
+                label: option,
+                value: option,
+              })),
+            ]"
+            data-input="extra-value"
+          />
+          <FormControl
+            v-else-if="extraFilterField.kind === 'check'"
+            v-model="extraFilter.value"
+            type="select"
+            :label="__('Is')"
+            :options="[
+              { label: __('Choose'), value: '' },
+              { label: __('Yes'), value: '1' },
+              { label: __('No'), value: '0' },
+            ]"
+            data-input="extra-value"
+          />
+          <FormControl
+            v-else-if="extraFilterField.kind === 'text'"
+            v-model="extraFilter.value"
+            :label="__('Contains')"
+            data-input="extra-value"
+          />
+          <template v-else
+            ><FormControl
+              v-model="extraFilter.from"
+              :type="extraFilterField.kind === 'date' ? 'date' : 'number'"
+              :label="__('From')"
+              data-input="extra-from" /><FormControl
+              v-model="extraFilter.to"
+              :type="extraFilterField.kind === 'date' ? 'date' : 'number'"
+              :label="__('Up to')"
+              data-input="extra-to"
+          /></template>
+          <Button
+            :label="__('Add filter')"
+            :disabled="!extraFilterClauses.length"
+            data-act="add-extra-filter"
+            @click="addExtraFilter"
+          />
+        </template>
+      </div>
       <Button label="Limpiar filtros" @click="clearFilters" />
       <Button
         v-if="legacyReview"
@@ -137,7 +207,8 @@
       <button
         v-for="chip in activeFilters"
         :key="chip.key"
-        @click="delete state.filters[chip.key]"
+        :data-chip="chip.key"
+        @click="removeChip(chip)"
       >
         {{ chip.label }} <span aria-hidden="true">×</span></button
       ><Button label="Limpiar" variant="ghost" @click="clearFilters" />
@@ -158,6 +229,8 @@
     <RecoveryMessage
       :error="error || bootError"
       action="ver el directorio de Contactos"
+      :on-action="runListGuard"
+      :guard-codes="['field_retired']"
       @retry="retry"
     />
     <div v-if="loading" class="c-loading" role="status">Buscando…</div>
@@ -406,6 +479,29 @@
               @retry="saveConfiguration" /><Button
               label="Guardar configuración de tienda"
               @click="saveConfiguration" /></template
+          ><ExtraFieldsSettings
+            v-if="capabilities.fields?.define"
+            @changed="reloadBoot"
+          /><template v-else-if="capabilities.manager"
+            ><h3>{{ __('Client fields') }}</h3>
+            <p class="c-muted" data-hint="fields-owner-only">
+              {{
+                capabilities.fields?.reason ||
+                __('Only the owner adds or retires fields.')
+              }}
+              {{
+                __(
+                  'From a cliente, «Add field» sends them the request; from here you can copy it.',
+                )
+              }}
+            </p>
+            <Button
+              :label="__('Copy request')"
+              data-act="copy-fields-request"
+              @click="copyFieldsRequest"
+            /><span v-if="fieldsRequestCopied" role="status">{{
+              __('Request copied. Send it to the owner.')
+            }}</span></template
           ><Button
             label="Listo"
             variant="solid"
@@ -430,14 +526,22 @@ import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import NativeLinkField from '@/components/contactos/NativeLinkField.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
+import ExtraFieldsSettings from '@/components/contactos/ExtraFieldsSettings.vue'
 import {
   contactosApi,
   contactosReadKey,
   contactosReads,
+  personalizarApi,
   prefetchRecord,
   useContactosBootstrap,
   useContactosDraft,
 } from '@/composables/useContactos'
+import {
+  clauseLabel,
+  extraClauses,
+  isExtraClause,
+  requestText,
+} from '@/utils/extraFields'
 import {
   contactScope,
   contactStorage,
@@ -575,6 +679,7 @@ const sectionLabels = {
   connections: 'Conexiones',
   storefront: 'Tienda',
   saldo: 'Saldo',
+  extra: __('More details'),
 }
 const gridStyle = computed(() => ({
   gridTemplateColumns: [
@@ -587,22 +692,122 @@ const gridStyle = computed(() => ({
 const activeFilters = computed(() =>
   Object.entries(state.filters)
     .filter(([, value]) => !!value)
-    .map(([key, value]) => ({
-      key,
-      label:
-        key === 'source'
-          ? `Origen: ${sourceLabel(value)}`
-          : key === 'native_filters'
-            ? `Filtros de origen: ${value.length}`
-            : ({
-                kind: 'Tipo',
-                role: 'Rol',
-                tags: 'Etiqueta',
-                missing_phone: 'Sin teléfono',
-                disabled: 'Deshabilitados',
-              }[key] || key) + (typeof value === 'string' ? `: ${value}` : ''),
-    })),
+    .flatMap(([key, value]) => {
+      if (key !== 'native_filters')
+        return [
+          {
+            key,
+            label:
+              key === 'source'
+                ? `Origen: ${sourceLabel(value)}`
+                : ({
+                    kind: 'Tipo',
+                    role: 'Rol',
+                    tags: 'Etiqueta',
+                    missing_phone: 'Sin teléfono',
+                    disabled: 'Deshabilitados',
+                  }[key] || key) +
+                  (typeof value === 'string' ? `: ${value}` : ''),
+          },
+        ]
+      // «Más datos» clauses read like the record («Talla: M»), one chip each.
+      const clauses = Array.isArray(value) ? value : []
+      const others = clauses.filter((clause) => !isExtraClause(clause))
+      return [
+        ...clauses.filter(isExtraClause).map((clause) => ({
+          key: `native:${JSON.stringify(clause)}`,
+          clause,
+          label: clauseLabel(clause, boot.value?.extra_fields),
+        })),
+        ...(others.length
+          ? [{ key, label: `Filtros de origen: ${others.length}` }]
+          : []),
+      ]
+    }),
 )
+// «Más datos» filter row: the clientes' extra fields this person may read.
+const extraFilter = reactive({ field: '', value: '', from: '', to: '' })
+const extraFilterFields = computed(() =>
+  ['suppliers', 'addresses', 'followups'].includes(state.segment)
+    ? []
+    : boot.value?.extra_fields || [],
+)
+const extraFilterField = computed(() =>
+  extraFilterFields.value.find((field) => field.fieldname === extraFilter.field),
+)
+const extraFilterClauses = computed(() =>
+  extraClauses(extraFilterField.value, extraFilter),
+)
+watch(
+  () => extraFilter.field,
+  () => Object.assign(extraFilter, { value: '', from: '', to: '' }),
+)
+function addExtraFilter() {
+  const clauses = extraFilterClauses.value
+  if (!clauses.length) return
+  const kept = (state.filters.native_filters || []).filter(
+    (clause) => clause[0] !== extraFilter.field,
+  )
+  // Contactos filters a source's own fields: these live on Clientes.
+  state.filters = {
+    ...state.filters,
+    source: 'customer',
+    native_filters: [...kept, ...clauses],
+  }
+  Object.assign(extraFilter, { field: '', value: '', from: '', to: '' })
+}
+function removeClauses(test) {
+  const remaining = (state.filters.native_filters || []).filter(
+    (clause) => !test(clause),
+  )
+  const next = { ...state.filters }
+  if (remaining.length) next.native_filters = remaining
+  else {
+    delete next.native_filters
+    if (next.source === 'customer') delete next.source
+  }
+  state.filters = next
+}
+function removeChip(chip) {
+  if (chip.clause) return removeClauses((clause) => clause === chip.clause)
+  if (chip.key === 'native_filters')
+    return removeClauses((clause) => !isExtraClause(clause))
+  const next = { ...state.filters }
+  delete next[chip.key]
+  state.filters = next
+}
+/** A segment on a retired extra field: «Quitar filtro» or (the owner) «Reactivar». */
+async function runListGuard(action) {
+  if (action.kind === 'remove_filter') {
+    removeClauses((clause) => clause[0] === action.target)
+    return
+  }
+  if (action.kind === 'reactivate') {
+    try {
+      await personalizarApi('change_field', {
+        record_type: 'clientes',
+        fieldname: action.target,
+        change: { action: 'reactivate' },
+        modified: action.modified,
+      })
+      await reloadBoot()
+      await fetchRows()
+    } catch (e) {
+      error.value = e
+    }
+    return
+  }
+  await retry()
+}
+const fieldsRequestCopied = ref(false)
+async function copyFieldsRequest() {
+  try {
+    await navigator.clipboard.writeText(requestText())
+    fieldsRequestCopied.value = true
+  } catch {
+    fieldsRequestCopied.value = false
+  }
+}
 let generation = 0,
   debounce
 function filters() {
@@ -972,6 +1177,10 @@ onMounted(async () => {
       'relations',
     ]),
   ]
+  // An order saved before «Más datos» existed shows it last, ready to move.
+  if (!sectionOrder.value.includes('extra')) sectionOrder.value.push('extra')
+  // «Ver campos» from a cliente opens Personalizar on its client fields.
+  if (route.query.customize === 'fields') customize.value = true
   if (early !== JSON.stringify(listRequest())) await fetchRows(true)
 })
 onBeforeUnmount(() => {

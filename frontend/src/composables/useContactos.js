@@ -13,7 +13,7 @@ import {
 
 // Same request as frappe-ui's call, but a refusal keeps the server's GuardDTO
 // (`guard`) so editors recover by its stable code, never by message text.
-export async function contactosApi(method, args = {}) {
+async function postMethod(path, args) {
   const headers = {
     Accept: 'application/json',
     'Content-Type': 'application/json; charset=utf-8',
@@ -21,7 +21,6 @@ export async function contactosApi(method, args = {}) {
   }
   if (window.csrf_token && window.csrf_token !== '{{ csrf_token }}')
     headers['X-Frappe-CSRF-Token'] = window.csrf_token
-  const path = `doco.contactos.api.${method}`
   const response = await fetch(`/api/method/${path}`, {
     method: 'POST',
     headers,
@@ -33,12 +32,20 @@ export async function contactosApi(method, args = {}) {
   } catch {
     data = {}
   }
-  if (response.ok) {
-    // Any write can change list rows or the record; reads re-ask the server.
-    if (!READS.has(method)) contactosReads.clear()
-    return data.message
-  }
+  if (response.ok) return data.message
   throw callError(path, response.status, data)
+}
+export async function contactosApi(method, args = {}) {
+  const message = await postMethod(`doco.contactos.api.${method}`, args)
+  // Any write can change list rows or the record; reads re-ask the server.
+  if (!READS.has(method)) contactosReads.clear()
+  return message
+}
+/** «Personalizar» (the shop's extra fields): a change also refreshes Contactos' reads. */
+export async function personalizarApi(method, args = {}) {
+  const message = await postMethod(`doco.personalizar.api.${method}`, args)
+  if (method !== 'list_fields') contactosReads.clear()
+  return message
 }
 const READS = new Set([
   'bootstrap',

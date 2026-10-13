@@ -18764,3 +18764,256 @@ msgstr "Se muestran las {0} más urgentes."
 #: frontend/src/components/encuestas/SetupDialog.vue
 msgid "Each number gets at most one question every {0} days, counting «How did we do?» too."
 msgstr "Cada número recibe como máximo una pregunta cada {0} días, contando también «¿Cómo te atendimos?»."
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Add field"
+msgstr "Añadir campo"
+
+#: frontend/src/pages/Contactos.vue
+msgid "Add filter"
+msgstr "Agregar filtro"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Add option"
+msgstr "Agregar opción"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Add the details your shop needs, like how they found you."
+msgstr "Agrega los datos que tu tienda necesita, como la forma en que te conocieron."
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Adjusted elsewhere"
+msgstr "Ajustado aparte"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Ask support"
+msgstr "Pedir a soporte"
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Ask the owner"
+msgstr "Pedírselo al dueño"
+
+#: frontend/src/components/contactos/ExtraFieldsEditor.vue
+msgid "Ask the owner for a field"
+msgstr "Pedirle un campo al dueño"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Changed elsewhere; only support can change it now."
+msgstr "Se cambió por otro lado; ahora solo soporte puede cambiarlo."
+
+#: frontend/src/pages/Contactos.vue
+msgid "Choose a detail"
+msgstr "Elige un dato"
+
+#: frontend/src/pages/Contactos.vue
+msgid "Choose an option"
+msgstr "Elige una opción"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Client fields"
+msgstr "Campos de clientes"
+
+#: frontend/src/pages/Contactos.vue
+msgid "Contains"
+msgstr "Contiene"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Edit {0}"
+msgstr "Editar {0}"
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Everyone who can see clientes sees this detail. It is not printed."
+msgstr "Todos los que ven clientes ven este dato. No se imprime."
+
+#: frontend/src/pages/Contacto.vue
+msgid "Extra details are on the client account · Open"
+msgstr "Datos extra en la cuenta de cliente · Abrir"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Field added. Fill it on each cliente in «More details»."
+msgstr "Campo agregado. Llénalo en cada cliente, en «Más datos»."
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "For example: Facebook"
+msgstr "Por ejemplo: Facebook"
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "For example: How did you find us?"
+msgstr "Por ejemplo: ¿Cómo nos conociste?"
+
+#: frontend/src/pages/Contactos.vue
+msgid "From a cliente, «Add field» sends them the request; from here you can copy it."
+msgstr "Desde un cliente, «Añadir campo» le manda la solicitud; desde aquí puedes copiarla."
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Keep the current one"
+msgstr "Dejar el actual"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Loading fields…"
+msgstr "Cargando campos…"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Missing a detail? Ask the owner"
+msgstr "¿Falta un dato? Pídeselo al dueño"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+#: frontend/src/pages/Contactos.vue
+msgid "More details"
+msgstr "Más datos"
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Name of the detail"
+msgstr "Nombre del dato"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "New name"
+msgstr "Nombre nuevo"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "New option"
+msgstr "Opción nueva"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "No cliente has a value yet. The field stops showing until you reactivate it."
+msgstr "Ningún cliente tiene dato todavía. El campo deja de mostrarse hasta que lo reactives."
+
+#: frontend/src/utils/extraFields.js
+msgid "No data"
+msgstr "Sin dato"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Now it says: {0}. Yours: {1}."
+msgstr "Ahora dice: {0}. El tuyo: {1}."
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Only the owner adds or retires fields."
+msgstr "Solo el dueño agrega o retira campos."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Option added to «{0}»."
+msgstr "Se agregó la opción a «{0}»."
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Options, one per line"
+msgstr "Opciones, una por renglón"
+
+#: frontend/src/utils/extraFields.js
+msgid "Please add the extra details we need for clientes, from Contactos (Personalize)."
+msgstr "Por favor agrega los datos extra que necesitamos en clientes, desde Contactos (Personalizar)."
+
+#: frontend/src/utils/extraFields.js
+msgid "Please add the extra field «{0}» for clientes."
+msgstr "Por favor agrega el campo extra «{0}» para clientes."
+
+#: frontend/src/utils/extraFields.js
+msgid "Please add the extra field «{0}» for clientes. I need it for {1}."
+msgstr "Por favor agrega el campo extra «{0}» para clientes. Lo necesito para {1}."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Please review the extra client field «{0}»: it was changed outside the shop screens and can no longer be edited there."
+msgstr "Por favor revisa el campo extra de clientes «{0}»: se cambió fuera de las pantallas de la tienda y ya no se puede editar ahí."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Reactivate"
+msgstr "Reactivar"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Renamed to «{0}»."
+msgstr "Ahora se llama «{0}»."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Request copied. Send it to support."
+msgstr "Solicitud copiada. Mándasela a soporte."
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Request copied. Send it to the owner."
+msgstr "Solicitud copiada. Mándasela al dueño."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Retire"
+msgstr "Retirar"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "Retired"
+msgstr "Retirado"
+
+#: frontend/src/utils/extraFields.js
+msgid "Retired field"
+msgstr "Campo retirado"
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Save field"
+msgstr "Guardar campo"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Saved."
+msgstr "Guardado."
+
+#: frontend/src/utils/extraFields.js
+msgid "Text"
+msgstr "Texto"
+
+#: frontend/src/pages/Contactos.vue
+msgid "Up to"
+msgstr "Hasta"
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "We asked {0}. They will see it in their to-do list."
+msgstr "Se lo pedimos a {0}. Lo verá en sus pendientes."
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Write which detail you need and copy the request for the owner."
+msgstr "Escribe qué dato necesitas y copia la solicitud para el dueño."
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "Write which detail you need and we will ask the owner."
+msgstr "Escribe qué dato necesitas y se lo pedimos al dueño."
+
+#: frontend/src/utils/extraFields.js
+msgid "Yes/No"
+msgstr "Sí/No"
+
+#: frontend/src/components/contactos/ExtraFieldsPanel.vue
+msgid "Your shop has no extra details for clientes yet."
+msgstr "Tu tienda todavía no tiene datos extra para clientes."
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "{0} already has it in their to-do list."
+msgstr "{0} ya lo tiene en sus pendientes."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "{0} clientes have a value; it is kept. The field stops showing until you reactivate it."
+msgstr "{0} clientes tienen dato; se guarda. El campo deja de mostrarse hasta que lo reactives."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "{0} clientes with a value"
+msgstr "{0} clientes con dato"
+
+#: frontend/src/utils/extraFields.js
+msgid "{0} contains «{1}»"
+msgstr "{0} contiene «{1}»"
+
+#: frontend/src/utils/extraFields.js
+msgid "{0} from {1}"
+msgstr "{0} desde {1}"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "{0} of {1} fields used. Retiring a field keeps its data, and you can reactivate it."
+msgstr "{0} de {1} campos usados. Retirar un campo guarda sus datos y puedes reactivarlo."
+
+#: frontend/src/utils/extraFields.js
+msgid "{0} up to {1}"
+msgstr "{0} hasta {1}"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "«{0}» is active again."
+msgstr "«{0}» está activo otra vez."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "«{0}» retired. Its data stays."
+msgstr "«{0}» retirado. Sus datos se guardan."
+
+#: frontend/src/utils/extraFields.js
+msgctxt "Extra field value"
+msgid "Yes"
+msgstr "Sí"
