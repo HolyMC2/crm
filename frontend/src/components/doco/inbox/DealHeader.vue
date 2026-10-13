@@ -48,9 +48,10 @@
             :grade="grade"
             variant="header"
           />
-          <span class="hidden text-[11.5px] text-ink-gray-5 sm:inline">{{
-            activeDeal
-          }}</span>
+          <span
+            class="hidden whitespace-nowrap text-[11.5px] text-ink-gray-5 sm:inline"
+            >{{ activeDeal }}</span
+          >
         </div>
         <!-- meta row wraps on narrow screens (was clipping the WA/saldo chips) -->
         <div
@@ -106,9 +107,10 @@
           >
             💰 {{ __('Saldo') }} {{ saldoChip }}
           </span>
-          <!-- phone: the conversation's one due chip rides the meta row -->
+          <!-- the conversation's one due chip (the queue row's, same clock) rides the
+               meta row, so the header's action cluster never squeezes the name -->
           <span
-            v-if="due && isMobile"
+            v-if="due"
             class="flex-none whitespace-nowrap rounded px-1.5 py-px text-[10.5px] font-semibold"
             :class="CHIP_CLASS[due.tone]"
             data-testid="header-due-chip"
@@ -133,35 +135,30 @@
             responsible.name.split(' ')[0]
           }}</span>
         </div>
-        <div
-          v-if="responsible && due && !isMobile"
-          class="h-[30px] w-px bg-outline-gray-2"
-        />
-        <!-- the same due chip as the queue row (the inbox's response clock) -->
-        <span
-          v-if="due && !isMobile"
-          class="whitespace-nowrap rounded px-2 py-1 text-[12px] font-semibold"
-          :class="CHIP_CLASS[due.tone]"
-          data-testid="header-due-chip"
-        >
-          {{ due.text }}
-        </span>
         <div v-if="!isMobile" class="h-[30px] w-px bg-outline-gray-2" />
-        <!-- «Resolver»: primary once we answered last; the sheet says what happens next -->
+        <!-- «Resolver»: primary once we answered last; the sheet says what happens next.
+             Short label beside the other actions (the name keeps its room in the
+             three-pane layout); the full «Resolver y siguiente» on wide screens and
+             in the sheet's confirm button. -->
         <button
           v-if="canResolve && !isMobile"
-          class="press flex h-[34px] items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-semibold"
+          class="press flex h-[34px] flex-none items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[12.5px] font-semibold"
           :class="
             due
               ? 'border border-outline-gray-2 bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
               : 'text-white'
           "
           :style="due ? '' : 'background: var(--brand)'"
+          :title="headerResolveLabel(nextMode)"
+          :aria-label="headerResolveLabel(nextMode)"
           data-testid="header-resolve"
           @click="resolveOpen = true"
         >
           <LucideCheckCheck class="h-4 w-4" />
-          {{ headerResolveLabel(nextMode) }}
+          <span class="2xl:hidden">{{ headerResolveLabel(null) }}</span>
+          <span class="hidden 2xl:inline">{{
+            headerResolveLabel(nextMode)
+          }}</span>
         </button>
         <!-- Desktop LEAD stage control: the plain dropdown — CRM Lead Status has
              no probability and no Won/Lost outcome pair to step through. A deal
