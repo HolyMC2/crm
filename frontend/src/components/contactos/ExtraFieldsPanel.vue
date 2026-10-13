@@ -200,7 +200,7 @@ function edit(field, value) {
         ? current
           ? 1
           : 0
-        : (current ?? '')
+        : current ?? ''
   error.value = null
   latest.value = null
   notice.value = ''
