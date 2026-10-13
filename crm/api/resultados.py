@@ -45,7 +45,9 @@ def query(periodo=None, compara=None, empresa=None, tienda=None):
 
 
 def generation():
-	return int(frappe.cache.get(frappe.cache.make_key(GEN_KEY)) or 0)
+	# Site-scoped by make_key; the same key the tests bump with cache.incr.
+	raw = frappe.cache.get(frappe.cache.make_key(GEN_KEY))  # nosemgrep: frappe-cache-breaks-multitenancy
+	return int(raw or 0)
 
 
 def cache_key(user, card, q, gen):
@@ -125,7 +127,13 @@ def _scope(ctx):
 
 
 @frappe.whitelist(methods=["GET", "POST"])
-def board(periodo=None, compara=None, empresa=None, tienda=None, card=None):
+def board(
+	periodo: str | None = None,
+	compara: str | None = None,
+	empresa: str | None = None,
+	tienda: str | None = None,
+	card: str | None = None,
+):
 	"""Every card the caller may see for the query, in board order. `card`
 	reloads one card (its retry). A card the caller may not see is absent or
 	blocked with its reason; it is never a zero."""
@@ -175,7 +183,13 @@ def _delegate(hook, *args):
 
 
 @frappe.whitelist(methods=["GET", "POST"])
-def documents(tipo=None, periodo=None, compara=None, empresa=None, tienda=None):
+def documents(
+	tipo: str | None = None,
+	periodo: str | None = None,
+	compara: str | None = None,
+	empresa: str | None = None,
+	tienda: str | None = None,
+):
 	"""The records behind a card for the same query (Mercado's lens), limited
 	to what the caller may read."""
 	_require_user()
@@ -186,7 +200,7 @@ def documents(tipo=None, periodo=None, compara=None, empresa=None, tienda=None):
 
 
 @frappe.whitelist(methods=["GET", "POST"])
-def document(doctype, name):
+def document(doctype: str, name: str):
 	"""One ticket or cash closing of the lens; the document's own read
 	permission decides."""
 	_require_user()
