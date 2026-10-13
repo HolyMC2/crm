@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.6.0 (b8f7ed28223d). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.7.0 (66136f0b6ebf). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Command palette contract (spec §1.4). Providers search independently; one
 // slow or failing provider never blocks another. Clínica and Taller implement
@@ -39,7 +39,7 @@ export interface PaletteItem {
   source?: string
 }
 
-export type PaletteScope = 'all' | 'actions' | 'people' | 'documents' | 'refacciones'
+export type PaletteScope = 'all' | 'actions' | 'people' | 'documents' | 'refacciones' | 'assistant'
 
 /**
  * One search dialog, two modes (keyboard standard): ⌘K / Ctrl+K «Buscar o ir a…»
@@ -94,12 +94,18 @@ export const PALETTE_SLOW_MS = 400
 export const PALETTE_PER_GROUP = 5
 export const PALETTE_RECENT_LIMIT = 8
 
-/** `>` actions, `@` people and companies, `#` documents by number, `%` Taller refacciones. */
+/**
+ * `>` actions, `@` people and companies, `#` documents by number, `%` Taller
+ * refacciones, `?` a question for the assistant (0.7.0). `?` is free as a
+ * prefix: the cheat-sheet key only fires outside text fields, so inside the
+ * palette input it is plain text.
+ */
 export const PALETTE_PREFIXES: Readonly<Record<string, PaletteScope>> = Object.freeze({
   '>': 'actions',
   '@': 'people',
   '#': 'documents',
   '%': 'refacciones',
+  '?': 'assistant',
 })
 
 export interface PaletteQuery {

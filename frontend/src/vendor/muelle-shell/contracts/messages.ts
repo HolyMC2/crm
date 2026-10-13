@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.6.0 (b8f7ed28223d). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.7.0 (66136f0b6ebf). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Source strings are English (spec §4.8); workers see the reviewed es-MX
 // catalog. Apps pass their own `__` so their catalogs stay authoritative, and
@@ -59,6 +59,12 @@ export const SHELL_MESSAGES_ES_MX: Readonly<Record<string, string>> = Object.fre
   'Save or submit the form': 'Guardar o enviar el formulario',
   All: 'Todo',
   '↑↓ to move · ↵ to open · Esc to close': '↑↓ moverse · ↵ abrir · Esc cerrar',
+  // The assistant inside the shell (0.7.0): the ⌘J key, the palette action and
+  // the `?` prefix all say the same thing a worker already reads in the bubble.
+  'Ask the assistant': 'Preguntar al asistente',
+  'Ask the assistant…': 'Preguntar al asistente…',
+  'Ask the assistant: {0}': 'Preguntar al asistente: {0}',
+  Assistant: 'Asistente',
   'Quick shortcuts': 'Atajos rápidos',
   'On this page': 'En esta página',
   'Across {0}': 'En todo {0}',
