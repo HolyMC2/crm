@@ -19457,3 +19457,11 @@ msgstr "{0}: {1} descontado"
 
 msgid "{0}: {1} to discount"
 msgstr "{0}: {1} por descontar"
+
+msgctxt "Gastos de empleados"
+msgid "Paid"
+msgstr "Pagado"
+
+msgctxt "Gastos de empleados"
+msgid "Cancelled"
+msgstr "Cancelado"

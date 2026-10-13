@@ -19,6 +19,8 @@ const SERVICE = 'doco.workspaces.claims'
 export const CLAIM = 'Expense Claim'
 // Translation context shared with the bills screens.
 export const CTX = 'Gastos'
+// States of an employee's expense: «gasto» is masculine where a bill («factura») is not.
+export const CLAIM_CTX = 'Gastos de empleados'
 
 export { money, outcomeUnknown, requestId }
 
@@ -104,7 +106,7 @@ export function stateLabel(row) {
         money(owedTotal(row), row.currency),
       ])
     case 'paid':
-      return tr('Paid', null, CTX)
+      return tr('Paid', null, CLAIM_CTX)
     case 'by_advance':
       return row.mine
         ? tr('Discounted from your advance')
@@ -112,7 +114,7 @@ export function stateLabel(row) {
     case 'rejected':
       return tr('Rejected', null, CTX)
     case 'cancelled':
-      return tr('Cancelled', null, CTX)
+      return tr('Cancelled', null, CLAIM_CTX)
     default:
       return ''
   }

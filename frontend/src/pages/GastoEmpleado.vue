@@ -38,16 +38,18 @@
       </div>
 
       <template v-else-if="loaded">
-        <header class="mb-4 flex flex-wrap items-start gap-3">
+        <!-- A header whose height does not depend on the state: the next-step block
+             below keeps its place on screen when a decision changes the badge or amount. -->
+        <header class="mb-4 flex items-start gap-3">
           <div class="min-w-0 flex-1">
-            <p class="text-sm text-ink-gray-6">
-              {{ doc.name }}
+            <p class="truncate text-sm text-ink-gray-6">{{ doc.name }}</p>
+            <div class="mt-1 flex">
               <Badge
-                class="ml-1"
+                class="max-w-full"
                 :theme="stateTheme(doc)"
                 :label="stateLabel(doc)"
               />
-            </p>
+            </div>
             <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
               {{ doc.employee_name }}
             </h1>
@@ -59,7 +61,7 @@
               }}
             </p>
           </div>
-          <div class="flex flex-col items-end gap-1">
+          <div class="flex w-36 shrink-0 flex-col items-end gap-1 text-right">
             <span class="text-xl font-semibold tabular-nums text-ink-gray-9">{{
               money(doc.total, doc.currency)
             }}</span>
@@ -570,8 +572,11 @@ async function approve() {
       modified: doc.value.modified,
       reason: '',
     })
-    if (!result.ok) refusal.value = result
-    else await decided(result)
+    if (!result.ok) {
+      refusal.value = result
+      // Decided meanwhile: the record shows where it stands now, under the reason.
+      if (result.code === 'already_decided') await load()
+    } else await decided(result)
   } catch (error) {
     problem.value = claimProblem(error)
   } finally {

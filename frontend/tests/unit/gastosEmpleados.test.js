@@ -101,6 +101,19 @@ describe('claim states in shop words', () => {
       String(text).replace(/{(\d+)}/g, (match, i) => values?.[i] ?? match)
   })
   const row = (extra) => ({ currency: 'MXN', total: 300, advance: 0, ...extra })
+  it("a claim is «Pagado», never the bills' «Pagada»: its own translation context", () => {
+    const seen = []
+    window.__ = (text, values, context) => {
+      seen.push([text, context])
+      return text
+    }
+    stateLabel(row({ state: 'paid' }))
+    stateLabel(row({ state: 'cancelled' }))
+    expect(seen).toEqual([
+      ['Paid', 'Gastos de empleados'],
+      ['Cancelled', 'Gastos de empleados'],
+    ])
+  })
   it('names who decides, what is still owed and how it was settled', () => {
     expect(stateLabel(row({ state: 'to_approve', approver_name: 'Ana' }))).toBe(
       'To approve · Ana',
@@ -470,6 +483,38 @@ describe('the claim record', () => {
     expect(next).toContain('Expense approved')
     expect(next).toContain('Ask for it to be reimbursed')
     expect(buttons()).toContain('Back to Pendientes')
+  })
+
+  it('a late decider gets who decided and the record as it stands now', async () => {
+    answers.get_capabilities.claims = claimsOn({
+      decide: true,
+      chips: ['mios', 'por-aprobar'],
+    })
+    answers.claim = record({}, [{ key: 'decide', allowed: true }])
+    answers.decide = {
+      ok: false,
+      code: 'already_decided',
+      message: 'Ana López already approved it.',
+      actions: [{ key: 'next', label: 'Next' }],
+    }
+    await mountAt('/gastos/gasto/HR-EXP-1')
+    const before = calls.filter(([m]) => m === 'claim').length
+    answers.claim = record(
+      { state: 'to_reimburse', docstatus: 1, outstanding: 300 },
+      [
+        {
+          key: 'reimburse',
+          allowed: false,
+          reason: 'Ask',
+          fallback: 'reimburse',
+        },
+      ],
+    )
+    await click('Approve')
+    expect(root.textContent).toContain('Ana López already approved it.')
+    expect(calls.filter(([m]) => m === 'claim').length).toBe(before + 1)
+    expect(buttons()).not.toContain('Approve')
+    expect(root.textContent).toContain('Approved · to reimburse')
   })
 
   it('the employee waits on her approver: no decision buttons', async () => {
