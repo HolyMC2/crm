@@ -20,26 +20,30 @@ vi.mock('frappe-ui', async () => {
     Button: {
       props: ['label', 'variant', 'loading', 'disabled'],
       emits: ['click'],
-      setup: (props, { emit, attrs }) => () =>
-        h(
-          'button',
-          {
-            'data-testid': attrs['data-testid'],
-            disabled: props.disabled,
-            onClick: () => emit('click'),
-          },
-          props.label,
-        ),
+      setup:
+        (props, { emit, attrs }) =>
+        () =>
+          h(
+            'button',
+            {
+              'data-testid': attrs['data-testid'],
+              disabled: props.disabled,
+              onClick: () => emit('click'),
+            },
+            props.label,
+          ),
     },
     Dialog: {
       props: ['modelValue', 'options'],
-      setup: (props, { slots }) => () =>
-        props.modelValue
-          ? h('div', { role: 'dialog' }, [
-              slots['body-content']?.(),
-              slots.actions?.(),
-            ])
-          : null,
+      setup:
+        (props, { slots }) =>
+        () =>
+          props.modelValue
+            ? h('div', { role: 'dialog' }, [
+                slots['body-content']?.(),
+                slots.actions?.(),
+              ])
+            : null,
     },
   }
 })
@@ -111,7 +115,9 @@ describe('Resolver sheet', () => {
       requestId: expect.any(String),
       seen: '2026-10-13 10:50:00.123456',
     })
-    expect(events).toEqual([['resolved', { ok: true, cleared: true, asked: true }]])
+    expect(events).toEqual([
+      ['resolved', { ok: true, cleared: true, asked: true }],
+    ])
     expect(open.value).toBe(false)
   })
 
@@ -129,7 +135,11 @@ describe('Resolver sheet', () => {
         code: 'new_message',
         message: 'The customer wrote again while you were resolving.',
         actions: [
-          { label: 'See the new message', kind: 'call', target: 'show_message' },
+          {
+            label: 'See the new message',
+            kind: 'call',
+            target: 'show_message',
+          },
         ],
       },
       seen: '2026-10-13 10:55:00',

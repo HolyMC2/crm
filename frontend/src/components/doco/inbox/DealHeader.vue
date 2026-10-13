@@ -703,7 +703,12 @@ const resolveOpen = ref(false)
 watch(
   () => [route.query[RESOLVE_PARAM], route.query.deal, activeDeal.value],
   ([flag, deal, active]) => {
-    if (flag !== '1' || !canResolve.value || !active || (deal && deal !== active))
+    if (
+      flag !== '1' ||
+      !canResolve.value ||
+      !active ||
+      (deal && deal !== active)
+    )
       return
     resolveOpen.value = true
     const query = { ...route.query }

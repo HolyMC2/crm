@@ -495,7 +495,9 @@ describe('IdentityEditor opened from another screen (Registrar cliente)', () => 
     const CUSTOMER_META = {
       doctype: 'Customer',
       can_create: true,
-      fields: [{ fieldname: 'customer_name', label: 'Cliente', fieldtype: 'Data' }],
+      fields: [
+        { fieldname: 'customer_name', label: 'Cliente', fieldtype: 'Data' },
+      ],
     }
     api({
       get_editor_meta: ({ source }) =>
@@ -525,7 +527,11 @@ describe('IdentityEditor opened from another screen (Registrar cliente)', () => 
       first_name: 'María',
       last_name: 'López',
       phone_nos: [
-        { phone: '5216691000103', is_primary_mobile_no: 1, is_primary_phone: 1 },
+        {
+          phone: '5216691000103',
+          is_primary_mobile_no: 1,
+          is_primary_phone: 1,
+        },
       ],
     })
     expect(payload.party).toEqual({

@@ -41,7 +41,9 @@ export function identityPrefill(query = {}) {
   const first = text(query.first_name)
   const last = text(query.last_name)
   const phone = text(query.phone, 40)
-  const party = ['customer', 'supplier'].includes(query.party) ? query.party : ''
+  const party = ['customer', 'supplier'].includes(query.party)
+    ? query.party
+    : ''
   const name = [first, last].filter(Boolean).join(' ')
   const fields = {}
   if (first) fields.first_name = first

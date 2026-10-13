@@ -290,7 +290,9 @@ const { draft, id, clear, acceptInitial, restored } = useContactosDraft(
     phones: editing.value ? [] : props.defaults.phones || [],
     emails: editing.value ? [] : props.defaults.emails || [],
     party_source: props.defaults.party_source || '',
-    party_fields: editing.value ? {} : { ...(props.defaults.party_fields || {}) },
+    party_fields: editing.value
+      ? {}
+      : { ...(props.defaults.party_fields || {}) },
     with_address: false,
     address_fields: {},
     candidate_decision: props.defaults.candidate_decision || '',

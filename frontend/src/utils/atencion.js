@@ -138,7 +138,9 @@ export function resolveRefused(out) {
 export const THREAD_RELOAD = 'doco:thread-reload'
 export function reloadThread(doctype, name) {
   if (typeof window === 'undefined') return
-  window.dispatchEvent(new CustomEvent(THREAD_RELOAD, { detail: { doctype, name } }))
+  window.dispatchEvent(
+    new CustomEvent(THREAD_RELOAD, { detail: { doctype, name } }),
+  )
 }
 
 /** The header button's label: «Resolver y siguiente» when the worker came from Por responder. */

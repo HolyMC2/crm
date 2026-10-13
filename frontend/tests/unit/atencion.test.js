@@ -196,7 +196,11 @@ describe('«Registrar cliente» comes back to «Resolver»', () => {
       source: 'contact',
       fields: { first_name: 'María', last_name: 'López' },
       phones: [
-        { phone: '5216691000103', is_primary_mobile_no: 1, is_primary_phone: 1 },
+        {
+          phone: '5216691000103',
+          is_primary_mobile_no: 1,
+          is_primary_phone: 1,
+        },
       ],
       party_source: 'customer',
       party_fields: { customer_name: 'María López' },
@@ -207,8 +211,7 @@ describe('«Registrar cliente» comes back to «Resolver»', () => {
   })
 
   it('Contactos and the conversation header are wired to it', () => {
-    const src = (file) =>
-      readFileSync(resolve(here, '../../src', file), 'utf8')
+    const src = (file) => readFileSync(resolve(here, '../../src', file), 'utf8')
     const contactos = src('pages/Contactos.vue')
     expect(contactos).toContain(':defaults="createDefaults"')
     expect(contactos).toContain('goToReturn(router, returnTo.value)')
