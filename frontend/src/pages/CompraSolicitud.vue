@@ -4,7 +4,7 @@
       <nav class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          @click="goBack"
+          @click="goBack()"
         >
           <FeatherIcon name="arrow-left" class="h-4 w-4" />
           {{ backLabel }}
@@ -15,7 +15,7 @@
         <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
         <div class="flex flex-wrap gap-2">
           <Button :label="__('Retry', null, 'Compras')" @click="load" />
-          <Button :label="__('Back to Compras')" @click="goBack" />
+          <Button :label="__('Back to Compras')" @click="goBack()" />
         </div>
       </section>
       <div v-else-if="!data.document" role="status" class="py-10 text-sm">
@@ -52,7 +52,7 @@
         <ApprovalAsk
           doctype="Material Request"
           :name="props.name"
-          @declined="goBack"
+          @declined="goBack(true)"
         />
 
         <div
@@ -295,10 +295,13 @@ async function prepare() {
   }
 }
 
-function goBack() {
+// `done`: something was answered here (shell return protocol); a plain back has none.
+function goBack(done = false) {
   if (returnTo.value) {
-    // Back with the request it was about, so the list it came from can say so.
-    const target = returnWithDone(returnTo.value, 'Material Request', props.name)
+    const target = done
+      ? returnWithDone(returnTo.value, 'Material Request', props.name)
+      : returnTo.value
+    // Pendientes lives in this SPA: no reload of the shell.
     return target.startsWith('/crm/pendientes')
       ? router.push(target.slice(4))
       : window.location.assign(target)
