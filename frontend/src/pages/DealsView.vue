@@ -36,7 +36,7 @@
     <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
       <div class="px-3.5 pb-2 pt-2">
         <div
-          class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
+          class="flex h-11 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
         >
           <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
           <input
@@ -60,7 +60,7 @@
         <button
           v-for="v in views"
           :key="v.key"
-          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          class="press inline-flex min-h-11 flex-none items-center whitespace-nowrap rounded-full px-3 text-[12px] font-semibold"
           :class="
             v.key === view
               ? 'bg-surface-gray-10 text-ink-base'
@@ -73,7 +73,7 @@
         </button>
         <span class="my-1 w-px flex-none bg-outline-gray-2" />
         <button
-          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          class="press inline-flex min-h-11 flex-none items-center whitespace-nowrap rounded-full px-3 text-[12px] font-semibold"
           :class="
             chips.length
               ? 'bg-surface-green-2 text-ink-green-8'
@@ -89,7 +89,7 @@
           v-if="pipelineF || (pipelines.data || []).length > 1"
           v-model="pipelineF"
           :aria-label="__('Sales pipeline')"
-          class="press h-[30px] flex-none rounded-full border-0 bg-surface-gray-2 py-0 pl-3 pr-7 text-[12px] font-semibold text-ink-gray-7"
+          class="press h-11 flex-none rounded-full border-0 bg-surface-gray-2 py-0 pl-3 pr-7 text-[12px] font-semibold text-ink-gray-7"
         >
           <option value="">{{ __('All pipelines') }}</option>
           <option
@@ -271,7 +271,7 @@
           v-for="q in followUpQueues"
           :key="q.key"
           :aria-pressed="followUp === q.key"
-          class="flex-none whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-medium"
+          class="min-h-11 flex-none whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-medium sm:min-h-0"
           :class="
             followUp === q.key
               ? 'border-outline-green-3 bg-surface-green-2 text-ink-green-9'

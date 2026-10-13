@@ -62,7 +62,7 @@
     <Dropdown v-if="row.status === 'Open'" :options="menu" placement="right">
       <Button
         variant="ghost"
-        class="min-h-11 shrink-0 sm:min-h-8"
+        class="min-h-11 min-w-11 shrink-0 sm:min-h-8 sm:min-w-0"
         :disabled="busy"
         :aria-label="__('Reschedule {0}', [row.description])"
       >

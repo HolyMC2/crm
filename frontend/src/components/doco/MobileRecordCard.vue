@@ -4,7 +4,7 @@
   The desktop table can't shrink into a phone: at 390px it kept two columns and
   dropped the customer, the phone and the repair — the columns the shop actually
   reads. A card gives every row four legible lines instead, at a 64px+ touch
-  target, with the row menu on its own 40px hit area so tapping "open" never
+  target, with the row menu on its own 44px hit area so tapping "open" never
   fires the menu by accident.
 
   Layout is fixed on purpose (title / subtitle / chips / time); callers fill the
@@ -46,7 +46,7 @@
 
     <Dropdown :options="menu" @click.stop>
       <button
-        class="-mr-1 flex h-10 w-8 flex-none items-center justify-center text-[15px] leading-none text-ink-gray-5"
+        class="-mr-2.5 flex size-11 flex-none items-center justify-center text-[15px] leading-none text-ink-gray-5"
         :aria-label="__('Más acciones')"
         @click.stop
       >

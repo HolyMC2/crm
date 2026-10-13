@@ -27,7 +27,7 @@
       </div>
       <div class="px-3.5 pb-2">
         <div
-          class="flex h-10 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
+          class="flex h-11 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
         >
           <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
           <input
@@ -51,7 +51,7 @@
         <button
           v-for="v in views"
           :key="v.key"
-          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          class="press inline-flex min-h-11 flex-none items-center whitespace-nowrap rounded-full px-3 text-[12px] font-semibold"
           :class="
             v.key === view
               ? 'bg-surface-gray-10 text-ink-base'
@@ -64,7 +64,7 @@
         </button>
         <span class="my-1 w-px flex-none bg-outline-gray-2" />
         <button
-          class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
+          class="press inline-flex min-h-11 flex-none items-center whitespace-nowrap rounded-full px-3 text-[12px] font-semibold"
           :class="
             chips.length
               ? 'bg-surface-green-2 text-ink-green-8'

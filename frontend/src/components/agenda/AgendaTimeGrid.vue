@@ -153,15 +153,21 @@
               @pointerdown.stop="onEventDown($event, item, date)"
               @click.stop="clickEvent($event, item.event)"
             >
-              <span class="ag-event__title">{{ item.event.title }}</span>
-              <span v-if="item.end - item.start >= 45" class="ag-event__time">{{
-                timeRange(item)
-              }}</span>
-              <span
-                v-if="item.end - item.start >= 75 && item.event.location"
-                class="ag-event__time"
-                >{{ item.event.location }}</span
-              >
+              <!-- The body clips the text to the event's box, so on a phone the
+                   button itself can take taps on a 44 px area around it. -->
+              <span class="ag-event__body">
+                <span class="ag-event__title">{{ item.event.title }}</span>
+                <span
+                  v-if="item.end - item.start >= 45"
+                  class="ag-event__time"
+                  >{{ timeRange(item) }}</span
+                >
+                <span
+                  v-if="item.end - item.start >= 75 && item.event.location"
+                  class="ag-event__time"
+                  >{{ item.event.location }}</span
+                >
+              </span>
               <span
                 v-if="isResizable(item)"
                 class="ag-event__handle"
@@ -1076,6 +1082,28 @@ defineExpose({ scrollToStart, rectOf })
   -webkit-touch-callout: none;
   transition: filter 0.12s;
 }
+.ag-event__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+/* Phone: a timed event is drawn at its duration (a 30-minute event is 22 px
+   tall, a week column 38 px wide) but takes taps on at least 44 × 44 px
+   centred on it. The area is the button's own ::before, so a tap there opens
+   or drags the event; the resize handle comes later in the tree and stays on
+   top of it. */
+.is-compact .ag-event {
+  overflow: visible;
+}
+.is-compact .ag-event::before {
+  content: '';
+  position: absolute;
+  inset: min(0px, calc(50% - 22px));
+}
 .ag-event:active {
   filter: brightness(0.93);
 }
@@ -1088,6 +1116,11 @@ defineExpose({ scrollToStart, rectOf })
   align-items: center;
   padding-top: 0;
   padding-bottom: 0;
+}
+.ag-event.is-short .ag-event__body {
+  flex-direction: row;
+  gap: 4px;
+  align-items: center;
 }
 .ag-event__title {
   max-width: 100%;

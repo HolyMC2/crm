@@ -179,13 +179,13 @@
           >
             <a
               v-if="claim.repair?.intake"
-              class="text-ink-blue-link underline"
+              class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
               :href="tallerIntakeUrl(claim.name)"
               >{{ __('Receive it in Taller') }}</a
             >
             <button
               v-if="linkable"
-              class="text-ink-blue-link underline"
+              class="min-h-11 text-ink-blue-link underline sm:min-h-0"
               @click="outcomeLinking = true"
             >
               {{ __('Link outcome') }}
@@ -194,7 +194,7 @@
               v-if="
                 claim.repair?.pick_source && primary?.kind !== 'pick_source'
               "
-              class="text-ink-blue-link underline"
+              class="min-h-11 text-ink-blue-link underline sm:min-h-0"
               @click="picking = true"
             >
               {{ __('Choose purchase') }}
