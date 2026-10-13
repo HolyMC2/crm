@@ -13,6 +13,7 @@ vi.mock('frappe-ui', async (importOriginal) => ({
   toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
 }))
 
+import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import ApprovalList from '@/components/pendientes/ApprovalList.vue'
 import GastoFactura from '@/pages/GastoFactura.vue'
 import { gastosBoot } from '@/composables/useGastos'
@@ -472,6 +473,65 @@ describe('A bill opened from Por aprobar', () => {
       segment: 'approve',
       done: 'Purchase Invoice:PI-1',
     })
+  })
+})
+
+describe('A purchase to review (review F4)', () => {
+  const review = {
+    todo: 'TODO-9',
+    kind: 'compras.review',
+    requested_by_name: 'Ana',
+    requested_at: '2026-10-13 09:00:00',
+    text: 'Revisar la compra PO-1',
+    note: 'No llegó completa',
+  }
+  async function banner(asks) {
+    answers.asks = { asks }
+    const settled = vi.fn()
+    root = document.createElement('div')
+    document.body.appendChild(root)
+    app = createApp(ApprovalAsk, {
+      doctype: 'Purchase Order',
+      name: 'PO-1',
+      settleKinds: ['compras.review'],
+      settleLabel: 'Reviewed',
+      onSettled: settled,
+    })
+    app.config.globalProperties.__ = window.__
+    app.mount(root)
+    await flush()
+    return settled
+  }
+  const find = (text) =>
+    [...root.querySelectorAll('button')].find(
+      (b) => b.textContent.trim() === text,
+    )
+
+  it('«Revisada» answers the review without confirming the purchase', async () => {
+    answers.settle = { todo: 'TODO-9', status: 'Closed' }
+    const settled = await banner([review])
+    expect(root.textContent).toContain('Ana asked you: Revisar la compra PO-1')
+    find('Reviewed').click()
+    await flush()
+    const call = calls.find(([m]) => m === 'settle')[1]
+    expect(call.todo).toBe('TODO-9')
+    expect(call.request_id).toBeTruthy()
+    expect(calls.some(([m]) => m === 'confirm_order')).toBe(false)
+    expect(settled).toHaveBeenCalledWith(expect.objectContaining({ todo: 'TODO-9' }))
+    expect(root.querySelector('[data-approval-ask]')).toBeNull()
+  })
+  it('a refused answer stays on screen with the reason, and the ask with it', async () => {
+    const settled = await banner([review])
+    find('Reviewed').click()
+    await flush()
+    expect(settled).not.toHaveBeenCalled()
+    expect(root.querySelector('[data-approval-ask] [role="alert"]')).not.toBeNull()
+    expect(find('Reviewed')).toBeDefined()
+  })
+  it('an ask to confirm has no «Revisada»: confirming is the answer', async () => {
+    await banner([{ ...review, kind: 'compras.confirm' }])
+    expect(find('Reviewed')).toBeUndefined()
+    expect(find("Don't approve")).toBeDefined()
   })
 })
 

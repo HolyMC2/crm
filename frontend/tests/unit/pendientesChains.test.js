@@ -86,6 +86,9 @@ vi.mock('@/components/shell/ModuleLayout.vue', () => ({
 vi.mock('@/components/pendientes/PendienteRow.vue', () => ({
   default: { render: () => null },
 }))
+vi.mock('@/components/pendientes/DeclineDialog.vue', () => ({
+  default: { render: () => null },
+}))
 
 import { firstModuleRoute, shellBoot } from '@/composables/muelleShell'
 import Pendiente from '@/pages/Pendiente.vue'
@@ -379,6 +382,122 @@ describe('Pendientes list cutover', () => {
       expect(list().scrollTop).toBe(120)
     } finally {
       raf.mockRestore()
+      sessionStorage.clear()
+    }
+  })
+
+  it('back from an owner screen into «Por aprobar»: the same place first, then the next row', async () => {
+    // Review F5: the approval lists load their own rows, so the list's own
+    // `loaded` never let them save their place, and the focus alone scrolled
+    // the next row «nearest». They save and restore through listScroll too,
+    // and the focus waits for the restore.
+    const frames = []
+    const raf = vi
+      .spyOn(globalThis, 'requestAnimationFrame')
+      .mockImplementation((fn) => frames.push(fn))
+    let clock = 1000
+    const now = vi.spyOn(Date, 'now').mockImplementation(() => clock)
+    const step = () => {
+      clock += 50
+      frames.splice(0).forEach((fn) => fn())
+    }
+    const box = { height: 447, content: 447 }
+    const layout = (el) => {
+      let top = 0
+      Object.defineProperties(el, {
+        clientHeight: { get: () => box.height },
+        scrollHeight: { get: () => box.content },
+        scrollTop: {
+          get: () => top,
+          set: (v) =>
+            (top = Math.min(Math.max(0, v), box.content - box.height)),
+        },
+      })
+      return el
+    }
+    const list = () => root.querySelector('.overflow-y-auto')
+    const row = (n) => ({
+      doctype: 'Purchase Invoice',
+      name: `PI-${n}`,
+      title: `Factura ${n}`,
+      detail: 'Pagar',
+      requested_by_name: 'Ana',
+      requested_at: '2026-10-13 09:00:00',
+      url: `/crm/gastos/factura/PI-${n}`,
+      state: 'pending',
+      guard: null,
+      ask: `TODO-${n}`,
+      settle: false,
+      kind: 'gastos',
+      kind_label: 'Facturas',
+    })
+    const page = (rows) => ({
+      view: 'decide',
+      kinds: [{ key: 'gastos', label: 'Facturas', count: rows.length }],
+      rows,
+      has_more: false,
+      count: { value: rows.length, capped: false },
+    })
+    const answers = {
+      counts: {
+        approve: { value: 8, capped: false },
+        waiting: { value: 0, capped: false },
+      },
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url) => {
+        const answer = answers[String(url).split('.').pop()]
+        const message = typeof answer === 'function' ? await answer() : answer
+        return { ok: true, status: 200, json: async () => ({ message }) }
+      }),
+    )
+    const focusedAt = []
+    const focus = vi
+      .spyOn(HTMLElement.prototype, 'focus')
+      .mockImplementation(function () {
+        focusedAt.push([this.dataset.row, list().scrollTop])
+      })
+    const rows = [1, 2, 3, 4, 5, 6, 7, 8].map(row)
+    try {
+      shellBoot.value.modules.pendientes.capabilities.approve = true
+      state.route.query = { segment: 'approve' }
+      answers.queue = page(rows)
+      mount(Pendientes)
+      await flush()
+      box.content = 900
+      layout(list()).scrollTop = 300
+      list().dispatchEvent(new Event('scroll'))
+      sessionStorage.setItem(
+        'muelle:aprobaciones:opened',
+        JSON.stringify({ key: 'Purchase Invoice:PI-4', index: 3, title: 'x' }),
+      )
+      state.leave?.() // opening the bill saves the place
+      app.unmount()
+      root.remove()
+
+      // Paid: back with done; the rows arrive after the page mounted.
+      const response = deferred()
+      answers.queue = () => response.promise
+      state.route.query = { segment: 'approve', done: 'Purchase Invoice:PI-4' }
+      box.content = 447
+      mount(Pendientes)
+      await flush()
+      layout(list())
+      response.resolve(page(rows.filter((r) => r.name !== 'PI-4')))
+      await flush()
+      box.content = 850
+      for (let i = 0; i < 12; i++) {
+        step()
+        await flush()
+      }
+      expect(list().scrollTop).toBe(300)
+      expect(focusedAt).toEqual([['Purchase Invoice:PI-5', 300]])
+    } finally {
+      raf.mockRestore()
+      now.mockRestore()
+      focus.mockRestore()
+      vi.unstubAllGlobals()
       sessionStorage.clear()
     }
   })
