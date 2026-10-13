@@ -18395,3 +18395,121 @@ msgstr "Quién atiende citas"
 #: frontend/src/components/agenda/AgendaCitasSettings.vue
 msgid "Each person can attend one appointment at a time, so {0} can be booked at the same time."
 msgstr "Cada persona atiende una cita a la vez, así que se pueden agendar {0} a la misma hora."
+
+#: frontend/src/composables/usePendientes.js
+#: frontend/src/composables/useAprobaciones.js
+msgid "To approve"
+msgstr "Por aprobar"
+
+#: frontend/src/composables/usePendientes.js
+#: frontend/src/composables/useAprobaciones.js
+msgid "Waiting for an answer"
+msgstr "Esperando respuesta"
+
+#: frontend/src/composables/useAprobaciones.js
+msgid "Waiting for {0}"
+msgstr "Esperando a {0}"
+
+#: frontend/src/composables/useAprobaciones.js
+msgid "Asked by {0}"
+msgstr "Pide {0}"
+
+#: frontend/src/composables/useAprobaciones.js
+#: frontend/src/components/pendientes/DeclineDialog.vue
+#: frontend/src/components/pendientes/ApprovalAsk.vue
+msgid "Don't approve"
+msgstr "No aprobar"
+
+#: frontend/src/components/pendientes/DeclineDialog.vue
+msgid "Why not? The person who asked will read it."
+msgstr "¿Por qué no? Lo leerá quien lo pidió."
+
+#: frontend/src/components/pendientes/DeclineDialog.vue
+msgid "Write why, so they know what to change."
+msgstr "Escribe por qué, para que sepa qué cambiar."
+
+#: frontend/src/components/pendientes/ApprovalAsk.vue
+msgid "Asked of you"
+msgstr "Te lo pidieron"
+
+#: frontend/src/components/pendientes/ApprovalAsk.vue
+msgid "{0} asked you: {1}"
+msgstr "{0} te pidió: {1}"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Kind of request"
+msgstr "Tipo de solicitud"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "We could not check {0}. The rest of the list is up to date."
+msgstr "No pudimos revisar {0}. El resto de la lista está al día."
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Loading…"
+msgstr "Cargando…"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Already settled"
+msgstr "Ya resuelto"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Nothing matches these filters."
+msgstr "Nada coincide con estos filtros."
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Clear filters"
+msgstr "Quitar filtros"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "You are not waiting for any answer"
+msgstr "No esperas ninguna respuesta"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "When you ask someone to approve something, it shows here until they answer."
+msgstr "Cuando pidas a alguien que apruebe algo, aparecerá aquí hasta que te conteste."
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "You have nothing to approve"
+msgstr "No tienes nada por aprobar"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "When someone asks you to decide something, it shows here."
+msgstr "Cuando alguien te pida decidir algo, aparecerá aquí."
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "See what you asked for"
+msgstr "Ver lo que pediste"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Done: {0}"
+msgstr "Listo: {0}"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Removed from your list: {0}"
+msgstr "Quitado de tu lista: {0}"
+
+#: frontend/src/components/pendientes/ApprovalList.vue
+msgid "Not approved: {0}. We told who asked."
+msgstr "No aprobado: {0}. Le avisamos a quien lo pidió."
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Everything waiting for your OK, oldest first"
+msgstr "Todo lo que espera tu visto bueno, lo más antiguo primero"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "What you asked for and is still waiting for an answer"
+msgstr "Lo que pediste y sigue esperando respuesta"
+
+#: frontend/src/pages/Pendiente.vue
+msgid "This is decided in {0}."
+msgstr "Esto se decide en {0}."
+
+#: frontend/src/pages/Pendiente.vue
+msgid "Open it there to decide; it also waits for you in Pendientes, in To approve."
+msgstr "Ábrelo ahí para decidir; también te espera en Pendientes, en Por aprobar."
+
+#: frontend/src/pages/WhatsAppQueue.vue
+#: frontend/src/composables/navModel.js
+#: frontend/src/router.js
+msgid "Messages to review"
+msgstr "Mensajes por revisar"

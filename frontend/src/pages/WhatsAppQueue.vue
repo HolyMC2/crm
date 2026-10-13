@@ -1,8 +1,10 @@
 <!--
-  Aprobaciones WhatsApp — the supervised WhatsApp Send Review queue, in the SPA so it
+  Mensajes por revisar — the supervised WhatsApp Send Review queue, in the SPA so it
   no longer lives only in Desk. Auto rows (orden_recibida) self-send and show as
   Enviado; supervised rows (e.g. "ya está listo") wait here as Pendiente for a human
   to approve. Data + actions: doco_marketing.api.review_queue.*
+  Pendientes «Por aprobar» lists the waiting messages as one row that opens this
+  page with `return_to`; back goes there with `done` once something was decided.
 -->
 <template>
   <div
@@ -10,11 +12,19 @@
   >
     <!-- toolbar -->
     <div
-      class="flex h-[52px] flex-none items-center justify-between border-b border-outline-gray-1 bg-surface-base px-5"
+      class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-1.5"
     >
-      <div class="flex items-center gap-2">
-        <span class="text-[15px] font-bold text-ink-gray-9">{{
-          __('Aprobaciones WhatsApp')
+      <div class="flex min-w-0 items-center gap-2">
+        <button
+          v-if="back"
+          class="flex min-h-11 items-center gap-1 rounded-lg pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
+          @click="goBack"
+        >
+          <FeatherIcon name="arrow-left" class="h-4 w-4" />
+          {{ __('Back to {0}', [back.label]) }}
+        </button>
+        <span class="truncate text-[15px] font-bold text-ink-gray-9">{{
+          __('Messages to review')
         }}</span>
         <span
           v-if="pendingCount"
@@ -87,8 +97,10 @@
 
 <script setup>
 import WhatsAppReviewCard from '@/components/doco/WhatsAppReviewCard.vue'
-import { createResource } from 'frappe-ui'
+import { createResource, FeatherIcon } from 'frappe-ui'
 import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 
 const filters = [
   { label: 'Pendiente', value: 'Pendiente' },
@@ -97,10 +109,16 @@ const filters = [
   { label: 'Cancelado', value: 'Cancelado' },
   { label: 'Todos', value: 'Todos' },
 ]
+const route = useRoute()
+const router = useRouter()
 const status = ref('Pendiente')
 const currentLabel = computed(
   () => filters.find((f) => f.value === status.value)?.label || status.value,
 )
+// Opened from Pendientes «Por aprobar» (or Hoy): the way back, validated.
+const back = computed(() => ownerReturn(route.query))
+// Something was sent or cancelled here: the list re-reads and says so.
+const acted = ref(false)
 
 const queue = createResource({
   url: 'doco_marketing.api.review_queue.get_queue',
@@ -123,7 +141,18 @@ function badgeCount(filterValue) {
 watch(status, () => queue.reload())
 
 function onChanged() {
+  acted.value = true
   queue.reload()
   pendingRes.reload()
+}
+
+function goBack() {
+  if (!back.value) return
+  goTo(
+    router,
+    acted.value
+      ? completeTo(back.value.to, 'WhatsApp Send Review', 'Pendiente')
+      : back.value.to,
+  )
 }
 </script>

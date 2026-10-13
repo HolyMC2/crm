@@ -33,22 +33,24 @@
           </h1>
           <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         </div>
-        <Button
-          v-if="boot?.capabilities?.create_crm"
-          :variant="boot?.capabilities?.create ? 'subtle' : 'solid'"
-          icon-left="briefcase"
-          :label="__('New sales task')"
-          class="min-h-11 sm:min-h-8"
-          @click="newSalesTask"
-        />
-        <Button
-          v-if="boot?.capabilities?.create"
-          variant="solid"
-          icon-left="plus"
-          :label="__('New pendiente')"
-          class="min-h-11 sm:min-h-8"
-          @click="openCreate()"
-        />
+        <template v-if="!approvals">
+          <Button
+            v-if="boot?.capabilities?.create_crm"
+            :variant="boot?.capabilities?.create ? 'subtle' : 'solid'"
+            icon-left="briefcase"
+            :label="__('New sales task')"
+            class="min-h-11 sm:min-h-8"
+            @click="newSalesTask"
+          />
+          <Button
+            v-if="boot?.capabilities?.create"
+            variant="solid"
+            icon-left="plus"
+            :label="__('New pendiente')"
+            class="min-h-11 sm:min-h-8"
+            @click="openCreate()"
+          />
+        </template>
       </header>
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
@@ -67,7 +69,7 @@
           :aria-label="__('Search pendientes')"
         />
         <FormControl
-          v-if="boot?.sources?.['CRM Task'] && state.segment !== 'team'"
+          v-if="boot?.sources?.['CRM Task'] && state.segment !== 'team' && !approvals"
           class="h-11 sm:h-auto"
           type="select"
           :aria-label="__('Task source')"
@@ -80,6 +82,7 @@
           @update:model-value="(value) => update({ source: value })"
         />
         <FormControl
+          v-if="!approvals"
           class="h-11 sm:h-auto"
           type="select"
           :aria-label="__('Priority')"
@@ -114,8 +117,15 @@
         class="min-h-0 flex-1 overflow-y-auto pb-6"
         @scroll.passive="rememberScroll"
       >
+        <!-- «Por aprobar» / «Esperando respuesta»: the owners' rows (useAprobaciones). -->
+        <ApprovalList
+          v-if="approvals"
+          :state="state"
+          @loaded="restoreScroll"
+          @segment="selectSegment"
+        />
         <div
-          v-if="loading && !loaded"
+          v-else-if="loading && !loaded"
           role="status"
           class="px-6 py-8 text-sm text-ink-gray-6"
         >
@@ -252,6 +262,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import PendienteRow from '@/components/pendientes/PendienteRow.vue'
+import ApprovalList from '@/components/pendientes/ApprovalList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import CreateDialog from '@/components/pendientes/CreateDialog.vue'
 import { loadShell, shellBoot } from '@/composables/muelleShell'
@@ -270,6 +281,7 @@ import {
   GROUPS,
   canCreateOn,
   countText,
+  isApprovalSegment,
   parseQuery,
   pendienteError,
   pendienteRoute,
@@ -292,8 +304,18 @@ const state = computed(() => parseQuery(route.query))
 const boot = computed(() => shellBoot.value?.modules?.pendientes || null)
 const today = computed(() => boot.value?.today || '')
 const entries = computed(() =>
-  segmentEntries({ team: Boolean(boot.value?.capabilities?.team) }),
+  segmentEntries({
+    team: Boolean(boot.value?.capabilities?.team),
+    // A link to either list always opens it; the pills follow the capability.
+    approve:
+      Boolean(boot.value?.capabilities?.approve) ||
+      state.value.segment === 'approve',
+    waiting:
+      Boolean(boot.value?.capabilities?.waiting) ||
+      state.value.segment === 'waiting',
+  }),
 )
+const approvals = computed(() => isApprovalSegment(state.value.segment))
 const guard = ref(''),
   copied = ref(''),
   problem = ref(null),
@@ -320,14 +342,15 @@ const allClear = computed(
     !state.value.q &&
     GROUPS.every((group) => !sections[group]?.rows?.length),
 )
-const subtitle = computed(() =>
-  state.value.segment === 'team'
-    ? __('Open sales tasks of everyone you can see')
-    : state.value.segment === 'done'
-      ? __('Closed and cancelled work, newest first')
-      : __(
-          'Your follow-ups from Contactos, Ventas and other records in one list',
-        ),
+const subtitle = computed(
+  () =>
+    ({
+      team: __('Open sales tasks of everyone you can see'),
+      done: __('Closed and cancelled work, newest first'),
+      approve: __('Everything waiting for your OK, oldest first'),
+      waiting: __('What you asked for and is still waiting for an answer'),
+    })[state.value.segment] ||
+    __('Your follow-ups from Contactos, Ventas and other records in one list'),
 )
 const rangeLabel = computed(() =>
   [state.value.from, state.value.to]
@@ -368,7 +391,8 @@ watch(search, (value) => {
 
 let generation = 0
 async function load(start = 0) {
-  if (guard.value) return
+  // Approval lists load their own rows (ApprovalList).
+  if (guard.value || approvals.value) return
   const current = ++generation
   loading.value = true
   problem.value = null

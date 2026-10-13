@@ -66,7 +66,8 @@ export const navItems = [
   {
     key: 'wa-queue',
     icon: ReviewQueueIcon,
-    label: 'Aprobaciones',
+    // «Aprobaciones» is Pendientes › Por aprobar; this is WhatsApp's own queue.
+    label: 'Messages to review',
     to: '/whatsapp-queue',
     group: 'wa-queue',
     badge: 'pending',

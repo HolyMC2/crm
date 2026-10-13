@@ -4,10 +4,12 @@
       <nav class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
-          @click="goBack"
+          @click="goBack()"
         >
           <FeatherIcon name="arrow-left" class="h-4 w-4" />
-          {{ __('Gastos', null, 'Gastos') }}
+          {{
+            back ? __('Back to {0}', [back.label]) : __('Gastos', null, 'Gastos')
+          }}
         </button>
       </nav>
 
@@ -20,7 +22,10 @@
         <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
         <div class="flex flex-wrap gap-2">
           <Button :label="__('Retry', null, 'Gastos')" @click="load" />
-          <Button :label="__('Back to Gastos')" @click="goBack" />
+          <Button
+            :label="back ? __('Back to {0}', [back.label]) : __('Back to Gastos')"
+            @click="goBack()"
+          />
         </div>
       </section>
 
@@ -63,6 +68,24 @@
             >
           </div>
         </header>
+
+        <!-- What was asked of me on this bill (Pendientes «Por aprobar»). -->
+        <ApprovalAsk
+          ref="askBanner"
+          doctype="Purchase Invoice"
+          :name="props.name"
+          @declined="decided"
+        >
+          <template #primary>
+            <Button
+              v-if="primaryAction"
+              variant="solid"
+              class="min-h-11"
+              :label="primaryAction.label"
+              @click="primaryAction.run"
+            />
+          </template>
+        </ApprovalAsk>
 
         <div
           v-if="notice"
@@ -357,6 +380,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, Dialog, FeatherIcon, toast } from 'frappe-ui'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
+import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
+import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import {
   bankLabel,
   bankUrl,
@@ -412,6 +437,23 @@ const listPath = computed(() =>
     ? route.query.list
     : '',
 )
+// Opened from another list (Pendientes «Por aprobar», Hoy): back goes there,
+// and a decision taken here goes back with `done=Purchase Invoice:<name>`.
+const back = computed(() => ownerReturn(route.query))
+const askBanner = ref(null)
+// The bill's own decision, repeated in the phone bar of the ask banner.
+const primaryAction = computed(() => {
+  const allowed = (key) =>
+    actions.value.some((action) => action.key === key && action.allowed)
+  if (allowed('pay'))
+    return { label: __('Pay', null, 'Gastos'), run: () => (payOpen.value = true) }
+  if (allowed('submit'))
+    return {
+      label: __('Review and register'),
+      run: () => (reviewOpen.value = true),
+    }
+  return null
+})
 
 async function load() {
   loading.value = true
@@ -452,6 +494,7 @@ async function submitBill() {
     submitRequest = null
     reviewOpen.value = false
     toast.success(__('Bill registered. It is now in To pay.'))
+    if (back.value) return decided()
     await load()
   } catch (error) {
     if (!outcomeUnknown(error)) submitRequest = null
@@ -492,6 +535,8 @@ async function paid(result) {
     return load()
   }
   toast.success(__('Bill paid'))
+  // From «Por aprobar»: the list shows it settled and moves on to the next request.
+  if (back.value) return decided()
   const next = await nextBill()
   if (next)
     return router.replace({
@@ -523,9 +568,23 @@ async function nextBill() {
   }
 }
 
-function goBack() {
+function goBack(done = false) {
+  if (back.value)
+    return goTo(
+      router,
+      done
+        ? completeTo(back.value.to, 'Purchase Invoice', props.name)
+        : back.value.to,
+    )
   if (listPath.value) return router.push(listPath.value)
   router.push({ name: 'Gastos' })
+}
+// A decision on this bill (paid, registered, not approved): back to the list it
+// came from with `done`; without one, the bill shows its new state.
+function decided() {
+  if (back.value) return goBack(true)
+  askBanner.value?.reload()
+  return load()
 }
 
 watch(

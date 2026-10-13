@@ -447,7 +447,7 @@ const routes = [
     path: '/whatsapp-queue',
     name: 'WhatsApp Queue',
     component: () => import('@/pages/WhatsAppQueue.vue'),
-    meta: { navLabel: 'Aprobaciones', title: 'Aprobaciones WhatsApp' },
+    meta: { navLabel: 'Messages to review', title: 'Messages to review' },
   },
   {
     path: '/social',

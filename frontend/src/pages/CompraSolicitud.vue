@@ -49,6 +49,12 @@
           </p>
         </header>
 
+        <ApprovalAsk
+          doctype="Material Request"
+          :name="props.name"
+          @declined="goBack"
+        />
+
         <div
           v-if="problem"
           role="alert"
@@ -213,9 +219,11 @@ import {
   progressLabel,
   qty,
   requestId,
+  returnWithDone,
   safeReturn,
   statusLabel,
 } from '@/composables/useCompras'
+import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
@@ -288,7 +296,13 @@ async function prepare() {
 }
 
 function goBack() {
-  if (returnTo.value) return window.location.assign(returnTo.value)
+  if (returnTo.value) {
+    // Back with the request it was about, so the list it came from can say so.
+    const target = returnWithDone(returnTo.value, 'Material Request', props.name)
+    return target.startsWith('/crm/pendientes')
+      ? router.push(target.slice(4))
+      : window.location.assign(target)
+  }
   const list = typeof route.query.list === 'string' ? route.query.list : ''
   if (list.startsWith('/compras')) return router.push(list)
   router.push({ name: 'Compras' })

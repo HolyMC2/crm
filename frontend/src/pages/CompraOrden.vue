@@ -69,6 +69,25 @@
           </div>
         </header>
 
+        <!-- What was asked of me on this purchase (Pendientes «Por aprobar»). -->
+        <ApprovalAsk
+          v-if="!isNew && doc.name"
+          doctype="Purchase Order"
+          :name="doc.name"
+          @declined="goBack"
+        >
+          <template #primary>
+            <Button
+              v-if="primary?.allowed && primary.key === 'confirm' && !editing"
+              variant="solid"
+              class="min-h-11"
+              :label="primary.label"
+              :loading="busy"
+              @click="runAction(primary)"
+            />
+          </template>
+        </ApprovalAsk>
+
         <!-- Done from Escáner: the receipt we handed off came back confirmed. -->
         <div
           v-if="doneNotice"
@@ -633,6 +652,7 @@ import {
 } from 'frappe-ui'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
+import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import { shellBoot } from '@/composables/muelleShell'
 import { orderBillsRoute } from '@/composables/useGastos'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
@@ -747,6 +767,9 @@ const summaryLine = computed(() => {
       ])
 })
 const returnTo = computed(() => safeReturn(route.query.return_to))
+const fromApprovals = computed(() =>
+  /^\/crm\/pendientes(\?|$)/.test(returnTo.value || ''),
+)
 const backLabel = computed(() =>
   returnTo.value
     ? __('Back to {0}', [
@@ -1022,6 +1045,8 @@ async function confirm() {
         ? __('This purchase was already confirmed')
         : __('Purchase confirmed. It now waits in To receive.'),
     )
+    // Opened from Pendientes «Por aprobar»: the decision is taken; back to the list.
+    if (fromApprovals.value) return goBack()
     await load()
   } catch {
     reviewOpen.value = false
@@ -1143,6 +1168,11 @@ function reapply() {
 }
 
 function goBack() {
+  // Pendientes is in this SPA: back without reloading the shell.
+  if (fromApprovals.value)
+    return router.push(
+      returnWithDone(returnTo.value, 'Purchase Order', doc.value.name).slice(4),
+    )
   if (returnTo.value)
     return window.location.assign(
       returnWithDone(returnTo.value, 'Purchase Order', doc.value.name),

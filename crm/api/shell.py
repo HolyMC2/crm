@@ -312,6 +312,9 @@ def _pendientes():
 			"create": enabled and bool(capabilities.get("create")),
 			"create_crm": enabled and bool(capabilities.get("create_crm")),
 			"team": enabled and bool(capabilities.get("team")),
+			# «Por aprobar» / «Esperando respuesta»: only where some owner says they apply.
+			"approve": enabled and bool(capabilities.get("approve")),
+			"waiting": enabled and bool(capabilities.get("waiting")),
 		},
 		# The queue's own context: whose work, the site's today and which sources it reads.
 		"user": answer.get("user"),

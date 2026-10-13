@@ -11,8 +11,12 @@ const t = (text, replace) =>
       : text
 
 export const GROUPS = Object.freeze(['overdue', 'today', 'upcoming', 'undated'])
+// «Por aprobar» and «Esperando respuesta»: decisions owned by other modules,
+// listed here and decided on their owner's screen (useAprobaciones).
+export const APPROVAL_SEGMENTS = Object.freeze(['approve', 'waiting'])
 export const SEGMENTS = Object.freeze([
   'mine',
+  ...APPROVAL_SEGMENTS,
   'overdue',
   'today',
   'upcoming',
@@ -28,6 +32,8 @@ export const SOURCE_SLUGS = Object.freeze({
 export function segmentLabel(segment) {
   return {
     mine: t('My pendientes'),
+    approve: t('To approve'),
+    waiting: t('Waiting for an answer'),
     overdue: t('Overdue'),
     today: t('Today'),
     upcoming: t('Upcoming'),
@@ -37,9 +43,16 @@ export function segmentLabel(segment) {
   }[segment]
 }
 
-export function segmentEntries({ team = false } = {}) {
+/** The lists this worker has: «Por aprobar» only for possible deciders (server capability). */
+export function segmentEntries({
+  team = false,
+  approve = false,
+  waiting = false,
+} = {}) {
   const icons = {
     mine: 'check-square',
+    approve: 'check-circle',
+    waiting: 'clock',
     overdue: 'alert-circle',
     today: 'sun',
     upcoming: 'calendar',
@@ -47,7 +60,8 @@ export function segmentEntries({ team = false } = {}) {
     team: 'users',
     done: 'check',
   }
-  return SEGMENTS.filter((segment) => segment !== 'team' || team).map(
+  const shown = { team, approve, waiting }
+  return SEGMENTS.filter((segment) => shown[segment] ?? true).map(
     (segment) => ({
       value: segment,
       label: segmentLabel(segment),
@@ -56,13 +70,24 @@ export function segmentEntries({ team = false } = {}) {
   )
 }
 
+export function isApprovalSegment(segment) {
+  return APPROVAL_SEGMENTS.includes(segment)
+}
+
 const DAY = /^\d{4}-\d{2}-\d{2}$/
+// An approval kind chip («gastos», «ausencias»…), as the server names them.
+const KIND = /^[a-z][a-z0-9_.-]{0,39}$/
 const text = (value) => (typeof value === 'string' ? value.trim() : '')
 
 /** URL is state: unknown or malformed values fall back to the defaults. */
 export function parseQuery(query = {}) {
+  const segment = SEGMENTS.includes(query.segment) ? query.segment : 'mine'
+  const kind =
+    isApprovalSegment(segment) && KIND.test(text(query.kind))
+      ? text(query.kind)
+      : ''
   return {
-    segment: SEGMENTS.includes(query.segment) ? query.segment : 'mine',
+    segment,
     q: text(query.q).slice(0, 140),
     source: ['ToDo', 'CRM Task'].includes(query.source) ? query.source : 'all',
     priority: ['Low', 'Medium', 'High'].includes(query.priority)
@@ -70,12 +95,14 @@ export function parseQuery(query = {}) {
       : '',
     from: DAY.test(query.from || '') ? query.from : '',
     to: DAY.test(query.to || '') ? query.to : '',
+    ...(kind ? { kind } : {}),
   }
 }
 
 export function toQuery(state) {
   const query = {}
   if (state.segment && state.segment !== 'mine') query.segment = state.segment
+  if (state.kind && isApprovalSegment(state.segment)) query.kind = state.kind
   if (state.q) query.q = state.q
   if (state.source && state.source !== 'all') query.source = state.source
   if (state.priority) query.priority = state.priority
@@ -132,6 +159,13 @@ function deskSlug(doctype) {
   return doctype.toLowerCase().replace(/ /g, '-')
 }
 
+// Records whose worker screen is another shell module (as Avisos opens them).
+const MODULE_RECORDS = Object.freeze({
+  'Purchase Invoice': 'GastoFactura',
+  'Purchase Order': 'CompraOrden',
+  'Material Request': 'CompraSolicitud',
+})
+
 /** Where the linked record opens: its owning module, else the Desk form. */
 export function referenceTarget(row) {
   const doctype = row?.reference_type
@@ -146,6 +180,14 @@ export function referenceTarget(row) {
     }
   if (doctype === 'CRM Deal')
     return { to: { name: 'Deal 360', params: { dealId: String(name) } } }
+  if (MODULE_RECORDS[doctype])
+    return {
+      to: { name: MODULE_RECORDS[doctype], params: { name: String(name) } },
+    }
+  if (doctype === 'Leave Application')
+    return {
+      href: `/app/asistencia?v=ausencias&request=${encodeURIComponent(String(name))}`,
+    }
   return {
     href: `/app/${deskSlug(doctype)}/${encodeURIComponent(String(name))}`,
   }

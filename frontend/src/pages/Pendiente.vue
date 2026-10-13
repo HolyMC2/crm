@@ -10,12 +10,47 @@
         <FeatherIcon name="arrow-left" class="h-4 w-4" />{{ backLabel }}
       </RouterLink>
       <div
-        v-if="loading && !row"
+        v-if="loading && !row && !approval"
         role="status"
         class="py-8 text-sm text-ink-gray-6"
       >
         {{ __('Loading pendiente…') }}
       </div>
+      <!-- An ask for a decision: it is decided on its owner's screen, never ticked here. -->
+      <section
+        v-else-if="approval"
+        role="status"
+        class="mt-4 space-y-3 rounded-lg bg-surface-gray-1 p-4"
+      >
+        <p class="text-base font-medium text-ink-gray-9">
+          {{ __('This is decided in {0}.', [approval.where]) }}
+        </p>
+        <p class="text-sm text-ink-gray-7">
+          {{
+            __(
+              'Open it there to decide; it also waits for you in Pendientes, in To approve.',
+            )
+          }}
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <Button
+            v-if="approvalOpen"
+            variant="solid"
+            class="min-h-11 sm:min-h-8"
+            :label="__('Open')"
+            @click="openApproval"
+          />
+          <Button
+            class="min-h-11 sm:min-h-8"
+            :label="
+              approval.list?.includes('segment=waiting')
+                ? __('Waiting for an answer')
+                : __('To approve')
+            "
+            @click="router.push(approval.list.replace(/^\/crm/, ''))"
+          />
+        </div>
+      </section>
       <section
         v-else-if="problem && !row"
         role="alert"
@@ -243,10 +278,12 @@ import { loadShell, shellBoot } from '@/composables/muelleShell'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { formatDay } from '@/utils/contactos'
 import { safeIntendedRoute } from '@/utils/shellRoutes'
+import { approvalTarget } from '@/composables/useAprobaciones'
 import {
   canCreateOn,
   datePresets,
   dueText,
+  parseQuery,
   pendienteError,
   pendienteRoute,
   pendientesApi,
@@ -270,6 +307,7 @@ const props = defineProps({
 const route = useRoute(),
   router = useRouter()
 const row = ref(null),
+  approval = ref(null),
   loading = ref(false),
   saving = ref(false),
   problem = ref(null),
@@ -345,6 +383,7 @@ let generation = 0
 async function load() {
   const current = ++generation
   if (row.value && !showing(row.value)) row.value = null
+  approval.value = null
   if (!doctype.value) {
     row.value = null
     problem.value = {
@@ -367,6 +406,12 @@ async function load() {
       router.replace(pendienteRoute(response.redirect, route.query))
       return
     }
+    if (response.approval) {
+      row.value = null
+      approval.value = response.approval
+      return
+    }
+    approval.value = null
     row.value = response
   } catch (error) {
     if (current === generation) problem.value = pendienteError(error)
@@ -440,6 +485,24 @@ function editTask() {
 }
 function openReference() {
   const target = reference.value
+  if (target?.to) router.push(target.to)
+  else if (target?.href) window.location.assign(target.href)
+}
+// The owner screen of an ask, with the way back to the approval list.
+const approvalOpen = computed(() =>
+  approval.value?.url
+    ? approvalTarget(
+        { url: approval.value.url },
+        parseQuery(
+          Object.fromEntries(
+            new URL(approval.value.list, 'https://muelle.invalid').searchParams,
+          ),
+        ),
+      )
+    : null,
+)
+function openApproval() {
+  const target = approvalOpen.value
   if (target?.to) router.push(target.to)
   else if (target?.href) window.location.assign(target.href)
 }

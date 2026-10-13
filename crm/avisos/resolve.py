@@ -46,6 +46,8 @@ SIBLING_RECORDS = {
 }
 # Records settled from a tool rather than their own page.
 TOOL_RECORDS = {"Linea de Captura": "contador_declaracion"}
+# Records whose decide screen is a Desk page of their owning app: doctype → (where, path).
+DESK_RECORDS = {"Leave Application": ("Asistencia", "/app/asistencia?v=ausencias&request={}")}
 
 MODULE_LABELS = {
 	"pendientes": "Pendientes",
@@ -300,6 +302,15 @@ def record_target(group, access):
 		target = _sibling(doctype, name, access, label)
 		if target:
 			return target
+	if doctype in DESK_RECORDS:
+		# A vacation request is reviewed in Asistencia → Vacaciones, not on the HRMS form.
+		where, pattern = DESK_RECORDS[doctype]
+		return _target(
+			desk=pattern.format(quote(str(name), safe="")),
+			label=label,
+			where=where,
+			action=_open_in(where),
+		)
 	shell = SHELL_RECORDS.get(doctype)
 	if doctype == "CRM Lead" and not access.module("ventas"):
 		shell = ("contactos", "/contactos/crm-lead/{}")
