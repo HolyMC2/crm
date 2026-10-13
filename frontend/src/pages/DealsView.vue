@@ -36,7 +36,7 @@
     <div v-if="isMobile" class="flex-none border-b border-outline-gray-1">
       <div class="px-3.5 pb-2 pt-2">
         <div
-          class="flex h-11 items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
+          class="flex h-[46px] items-center gap-2 rounded-[10px] border border-outline-gray-2 px-3 focus-within:border-outline-gray-4"
         >
           <LucideSearch class="h-4 w-4 flex-none text-ink-gray-4" />
           <input
