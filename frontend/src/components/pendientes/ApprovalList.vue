@@ -2,7 +2,7 @@
   <div ref="root" class="pb-2" data-approval-list>
     <!-- Kinds: one deliberate horizontal chip row (it scrolls on its own at 390 px). -->
     <div
-      v-if="answer.kinds.length > 1 || state.kind"
+      v-if="chips.length > 2 || state.kind"
       class="flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6"
       role="group"
       :aria-label="__('Kind of request')"
@@ -223,8 +223,11 @@ const chips = computed(() => [
     count: countText(answer.count),
     active: !props.state.kind,
   },
+  // Kinds with something waiting (or the one picked); empty ones stay out of the way.
   ...answer.kinds
-    .filter((kind) => !kind.failed)
+    .filter(
+      (kind) => !kind.failed && (kind.count > 0 || props.state.kind === kind.key),
+    )
     .map((kind) => ({
       key: kind.key,
       label: kind.label,
