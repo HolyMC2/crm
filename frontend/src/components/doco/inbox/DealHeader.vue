@@ -425,6 +425,7 @@ import ResolveSheet from '@/components/doco/inbox/ResolveSheet.vue'
 import { safeReturn } from '@/composables/useCompras'
 import {
   CHIP_CLASS,
+  RESOLVE_PARAM,
   dueChip,
   goToReturn,
   headerResolveLabel,
@@ -697,6 +698,20 @@ const nextMode = computed(() =>
   fromReplyQueue.value ? 'queue' : returnTo.value ? 'return' : null,
 )
 const resolveOpen = ref(false)
+// Back from a guard's screen (Contactos «Registrar cliente», Encuestas setup) with
+// ?resolve=1: the sheet opens again on this conversation and checks once more.
+watch(
+  () => [route.query[RESOLVE_PARAM], route.query.deal, activeDeal.value],
+  ([flag, deal, active]) => {
+    if (flag !== '1' || !canResolve.value || !active || (deal && deal !== active))
+      return
+    resolveOpen.value = true
+    const query = { ...route.query }
+    delete query[RESOLVE_PARAM]
+    router.replace({ query })
+  },
+  { immediate: true },
+)
 function onResolved(out) {
   toast.success(
     out?.asked

@@ -276,7 +276,7 @@ const fieldLabels = computed(() => ({
 // record always starts from its complete native data, so a partial context can
 // never replace its channel tables.
 const { draft, id, clear, acceptInitial, restored } = useContactosDraft(
-  `identity:${props.source?.doctype || props.source?.source || 'new'}:${props.source?.name || 'new'}`,
+  `identity:${props.source?.doctype || props.source?.source || 'new'}:${props.source?.name || props.defaults.draft_key || 'new'}`,
   {
     source: sourceSlug(
       props.source?.doctype ||
@@ -290,7 +290,7 @@ const { draft, id, clear, acceptInitial, restored } = useContactosDraft(
     phones: editing.value ? [] : props.defaults.phones || [],
     emails: editing.value ? [] : props.defaults.emails || [],
     party_source: props.defaults.party_source || '',
-    party_fields: {},
+    party_fields: editing.value ? {} : { ...(props.defaults.party_fields || {}) },
     with_address: false,
     address_fields: {},
     candidate_decision: props.defaults.candidate_decision || '',

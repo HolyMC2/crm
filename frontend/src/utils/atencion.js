@@ -89,6 +89,21 @@ export function guardRoute(target, returnTo, returnLabel) {
   return url.pathname + url.search
 }
 
+/** The URL param that reopens «Resolver» on a conversation (back from a guard's screen). */
+export const RESOLVE_PARAM = 'resolve'
+
+/**
+ * Where a guard's screen (Contactos, Encuestas setup) sends the worker back: this
+ * conversation, with the «Resolver» sheet open again so it checks once more.
+ */
+export function resolveReturn(href, doctype, name) {
+  const url = new URL(href, 'https://muelle.invalid')
+  url.searchParams.set('deal', name)
+  url.searchParams.set('doctype', doctype)
+  url.searchParams.set(RESOLVE_PARAM, '1')
+  return url.pathname + url.search
+}
+
 /**
  * Go back to a caller's return_to (already checked with safeReturn): inside this SPA
  * (router base /crm) through the router, any other Muelle app by a page load.

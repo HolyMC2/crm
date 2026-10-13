@@ -17,6 +17,15 @@
         <h1>{{ title }}</h1>
         <p>Personas, empresas y tu siguiente acción</p>
       </div>
+      <!-- Opened from another screen (return_to): the way back, saved or not. -->
+      <Button
+        v-if="returnTo"
+        :label="`Volver a ${returnLabel}`"
+        icon-left="arrow-left"
+        variant="ghost"
+        data-testid="contactos-return"
+        @click="goToReturn(router, returnTo)"
+      />
       <Button
         v-if="capabilities.create"
         label="Nuevo"
@@ -303,7 +312,12 @@
         />
       </div>
     </footer>
-    <IdentityEditor v-if="newIdentity" v-model="newIdentity" @saved="created" />
+    <IdentityEditor
+      v-if="newIdentity"
+      v-model="newIdentity"
+      :defaults="createDefaults"
+      @saved="created"
+    />
     <Dialog v-model="segmentOpen" :options="{ title: 'Guardar segmento' }"
       ><template #body-content
         ><div class="c-editor">
@@ -437,12 +451,26 @@ import {
   sourceLabel,
   legacyFilters,
   identityTypeLabel,
+  identityPrefill,
   segmentScope,
   saveSegmentScope,
 } from '@/utils/contactos'
+import { safeReturn } from '@/composables/useCompras'
+import { goToReturn } from '@/utils/atencion'
 const route = useRoute(),
   router = useRouter(),
   scope = contactScope()
+// Another screen asked for a new contact (?create=1): its name, number and role filled in,
+// and its way back (return_to) once saved.
+const createDefaults = computed(() =>
+  route.query.create ? identityPrefill(route.query) : {},
+)
+const returnTo = computed(() => safeReturn(route.query.return_to))
+const returnLabel = computed(() =>
+  typeof route.query.return_label === 'string' && route.query.return_label
+    ? route.query.return_label.slice(0, 40)
+    : 'la pantalla anterior',
+)
 const storage = contactStorage()
 enterContactScope(storage, scope)
 const saved = loadContactState(storage, scope, 'list')
@@ -761,6 +789,11 @@ async function retry() {
   await fetchRows(true)
 }
 async function created(result) {
+  // Created for another screen: back there, which checks again with the new record.
+  if (returnTo.value) {
+    goToReturn(router, returnTo.value)
+    return
+  }
   await fetchRows()
   if (result.source && result.name) router.push(contactoRoute(result))
   else if (result.refs?.[0]) router.push(contactoRoute(result.refs[0]))

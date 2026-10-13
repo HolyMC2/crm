@@ -72,6 +72,7 @@ import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import FollowupEditor from '@/components/contactos/FollowupEditor.vue'
 import TagEditor from '@/components/contactos/TagEditor.vue'
 import AddressEditor from '@/components/contactos/AddressEditor.vue'
+import { identityPrefill } from '@/utils/contactos'
 
 const CONTACT_META = {
   doctype: 'Contact',
@@ -486,5 +487,50 @@ describe('review round 2', () => {
     expect(
       root.querySelector('[data-label="Qué necesitas hacer *"]').value,
     ).toBe('')
+  })
+})
+
+describe('IdentityEditor opened from another screen (Registrar cliente)', () => {
+  it('creates the person with the conversation name, number and the customer role', async () => {
+    const CUSTOMER_META = {
+      doctype: 'Customer',
+      can_create: true,
+      fields: [{ fieldname: 'customer_name', label: 'Cliente', fieldtype: 'Data' }],
+    }
+    api({
+      get_editor_meta: ({ source }) =>
+        source === 'customer'
+          ? CUSTOMER_META
+          : { ...CONTACT_META, can_create: true },
+      candidates: () => ({ rows: [] }),
+      create_identity: () => [{ doctype: 'Contact', name: 'CONT-9' }],
+    })
+    await mount(IdentityEditor, {
+      defaults: identityPrefill({
+        create: '1',
+        first_name: 'María',
+        last_name: 'López',
+        phone: '5216691000103',
+        party: 'customer',
+      }),
+    })
+    expect(root.querySelector('[data-field="first_name"]').value).toBe('María')
+    expect(root.querySelector('[data-field="customer_name"]').value).toBe(
+      'María López',
+    )
+    await click('Revisar y crear')
+    const [[, { payload }]] = calls('create_identity')
+    expect(payload.source).toBe('contact')
+    expect(payload.fields).toMatchObject({
+      first_name: 'María',
+      last_name: 'López',
+      phone_nos: [
+        { phone: '5216691000103', is_primary_mobile_no: 1, is_primary_phone: 1 },
+      ],
+    })
+    expect(payload.party).toEqual({
+      source: 'customer',
+      fields: { customer_name: 'María López' },
+    })
   })
 })

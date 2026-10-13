@@ -13,6 +13,7 @@ import {
   headerResolveLabel,
   nextReplyRow,
   resolveLabel,
+  resolveReturn,
   span,
   tabFromQuery,
   urlWithTab,
@@ -28,6 +29,7 @@ import {
   scoreLabel,
   serviceAskNotice,
 } from '../../src/composables/useEncuestas.js'
+import { identityPrefill } from '../../src/utils/contactos.js'
 
 // frappe-ui mock for the inbox composable: resources by url, a swappable `call`.
 vi.mock('frappe-ui', () => {
@@ -158,6 +160,61 @@ describe('Por responder in the URL and the next conversation', () => {
       })
     }
     expect(goToReturn(router, null)).toBe(false)
+  })
+})
+
+describe('«Registrar cliente» comes back to «Resolver»', () => {
+  it('returns to the conversation with the sheet open again', () => {
+    const back = resolveReturn(
+      'https://x.test/crm/inbox?tab=por-responder&deal=OLD',
+      'CRM Lead',
+      'CRM-LEAD-1',
+    )
+    expect(back).toBe(
+      '/crm/inbox?tab=por-responder&deal=CRM-LEAD-1&doctype=CRM+Lead&resolve=1',
+    )
+    const to = guardRoute(
+      '/contactos?create=1&party=customer&first_name=Mar%C3%ADa&phone=5216691000103',
+      back,
+      'Conversaciones',
+    )
+    const query = new URL(to, 'https://x.test').searchParams
+    expect(query.get('return_to')).toBe(back)
+    expect(query.get('first_name')).toBe('María')
+  })
+
+  it('fills Contactos «Nuevo contacto» with the name, the number and the role', () => {
+    expect(
+      identityPrefill({
+        create: '1',
+        first_name: ' María ',
+        last_name: 'López',
+        phone: '5216691000103',
+        party: 'customer',
+      }),
+    ).toMatchObject({
+      source: 'contact',
+      fields: { first_name: 'María', last_name: 'López' },
+      phones: [
+        { phone: '5216691000103', is_primary_mobile_no: 1, is_primary_phone: 1 },
+      ],
+      party_source: 'customer',
+      party_fields: { customer_name: 'María López' },
+    })
+    const bare = identityPrefill({ create: '1', party: 'admin', phone: ['x'] })
+    expect(bare).toMatchObject({ fields: {}, phones: [], party_source: '' })
+    expect(bare.draft_key).toBe('')
+  })
+
+  it('Contactos and the conversation header are wired to it', () => {
+    const src = (file) =>
+      readFileSync(resolve(here, '../../src', file), 'utf8')
+    const contactos = src('pages/Contactos.vue')
+    expect(contactos).toContain(':defaults="createDefaults"')
+    expect(contactos).toContain('goToReturn(router, returnTo.value)')
+    expect(src('components/doco/inbox/DealHeader.vue')).toContain(
+      'route.query[RESOLVE_PARAM]',
+    )
   })
 })
 

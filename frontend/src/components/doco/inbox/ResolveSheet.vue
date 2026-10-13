@@ -89,7 +89,12 @@ import { useRouter } from 'vue-router'
 import { Button, Dialog, FeatherIcon, call } from 'frappe-ui'
 import { requestId } from '@/composables/useCompras'
 import { resolvePreview, resolveConversation } from '@/composables/inbox'
-import { guardRoute, resolveLabel, resolveRefused } from '@/utils/atencion'
+import {
+  guardRoute,
+  resolveLabel,
+  resolveRefused,
+  resolveReturn,
+} from '@/utils/atencion'
 
 const open = defineModel({ type: Boolean, default: false })
 const props = defineProps({
@@ -134,12 +139,10 @@ async function load() {
   }
 }
 
-// The way back from a guard's screen: this conversation, in «Por responder» when we came from it.
+// The way back from a guard's screen: this conversation, in «Por responder» when we came
+// from it, with this sheet open again so it checks once more (resolveReturn).
 function here() {
-  const url = new URL(window.location.href)
-  url.searchParams.set('deal', props.name)
-  url.searchParams.set('doctype', props.doctype)
-  return url.pathname + url.search
+  return resolveReturn(window.location.href, props.doctype, props.name)
 }
 
 async function run(action) {

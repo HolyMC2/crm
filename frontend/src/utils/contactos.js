@@ -27,6 +27,39 @@ export function contactoRoute(value) {
   const ref = sourceRef(value)
   return { name: 'Contacto', params: { source: ref.source, name: ref.name } }
 }
+
+/**
+ * «Nuevo contacto» opened from another screen (`?create=1&first_name=&last_name=&phone=
+ * &party=customer`): the person's name and number filled in, and the commercial role
+ * asked for. Only creation is seeded; the worker reviews it before «Revisar y crear».
+ */
+export function identityPrefill(query = {}) {
+  const text = (value, max = 140) =>
+    typeof value === 'string' && value.trim() && value.length <= max
+      ? value.trim()
+      : ''
+  const first = text(query.first_name)
+  const last = text(query.last_name)
+  const phone = text(query.phone, 40)
+  const party = ['customer', 'supplier'].includes(query.party) ? query.party : ''
+  const name = [first, last].filter(Boolean).join(' ')
+  const fields = {}
+  if (first) fields.first_name = first
+  if (last) fields.last_name = last
+  const partyName = party === 'customer' ? 'customer_name' : 'supplier_name'
+  return {
+    source: 'contact',
+    fields,
+    phones: phone
+      ? [{ phone, is_primary_mobile_no: 1, is_primary_phone: 1 }]
+      : [],
+    emails: [],
+    party_source: party,
+    party_fields: party && name ? { [partyName]: name } : {},
+    // Its own draft: a half-written «Nuevo contacto» elsewhere is not mixed in.
+    draft_key: phone || name ? `prefill:${phone}:${name}` : '',
+  }
+}
 export function contactScope(
   boot = typeof window !== 'undefined' ? window : {},
 ) {
