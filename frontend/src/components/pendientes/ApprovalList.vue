@@ -86,6 +86,7 @@
         v-for="row in rows"
         :key="rowKey(row)"
         :data-row="`${row.doctype}:${row.name}`"
+        :data-scroll-key="rowKey(row)"
         tabindex="-1"
         class="border-b border-outline-gray-1 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
         :class="row.state === 'resolved' ? 'bg-surface-gray-1' : ''"
@@ -174,7 +175,7 @@
   </div>
 </template>
 <script setup>
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, toast } from 'frappe-ui'
 import DeclineDialog from '@/components/pendientes/DeclineDialog.vue'
@@ -199,6 +200,9 @@ import {
 // says «Listo» and moves the focus to the next row.
 const props = defineProps({
   state: { type: Object, required: true },
+  // The page's scroll restore (utils/listScroll, through Pendientes): resolves
+  // once the list is back at the saved place; the focus moves only after it.
+  restore: { type: Function, default: null },
 })
 const emit = defineEmits(['loaded', 'segment'])
 const route = useRoute(),
@@ -302,7 +306,9 @@ function opened() {
   }
 }
 
-let generation = 0
+let generation = 0,
+  gone = false
+onBeforeUnmount(() => (gone = true))
 async function load(start = 0) {
   const current = ++generation
   loading.value = true
@@ -319,7 +325,15 @@ async function load(start = 0) {
     hasMore.value = Boolean(page.has_more)
     loaded.value = true
     emit('loaded')
-    if (!start) await afterReturn()
+    if (!start) {
+      const focus = afterReturn()
+      // The same place first (rendered rows, notice in place, page settled),
+      // then the focus: never a jump to «nearest» instead of the saved place.
+      await nextTick()
+      await props.restore?.()
+      if (current !== generation || gone) return
+      if (focus !== null) focusRow(focus)
+    }
   } catch (error) {
     if (current === generation) problem.value = approvalError(error)
   } finally {
@@ -341,28 +355,24 @@ function focusRow(index) {
 }
 
 // Back from an owner screen with `done=<doctype>:<name>`: a settled row has left
-// («Listo», focus on the next); one still waiting keeps the focus.
-async function afterReturn() {
+// («Listo», focus on the next); one still waiting keeps the focus. Said before
+// the page restores its place, so the notice is already there; returns the row
+// index to focus once the place is back (null: nothing came back).
+function afterReturn() {
   const done = doneOf(route.query)
-  if (!done) return
+  if (!done) return null
   const key = `${done.doctype}:${done.name}`
   const before = opened()
   const index = rows.value.findIndex(
     (row) => `${row.doctype}:${row.name}` === key,
-  )
-  await nextTick()
-  // After the page restored its scroll position (two frames).
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      if (index >= 0) focusRow(index)
-      else focusRow(before?.key === key ? before.index : 0)
-    }),
   )
   if (index < 0)
     notice.value = __('Done: {0}', [
       before?.key === key && before.title ? before.title : done.name,
     ])
   router.replace({ name: 'Pendientes', query: withoutDoneQuery(route.query) })
+  if (index >= 0) return index
+  return before?.key === key ? before.index : 0
 }
 
 async function call(row, method, args) {

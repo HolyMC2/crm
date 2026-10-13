@@ -125,6 +125,7 @@
         <ApprovalList
           v-if="approvals"
           :state="state"
+          :restore="restoreScroll"
           @loaded="approvalLoaded"
           @segment="selectSegment"
         />
@@ -436,12 +437,18 @@ async function load(start = 0) {
 const scrollKey = () => `muelle:pendientes:scroll:${returnQuery.value.list}`
 let stopRestore = null
 let leaving = false
+// «Por aprobar» / «Esperando respuesta» load their own rows (ApprovalList): they
+// are on screen once it says so, not when this page's own list has loaded.
+const approvalReady = ref(false)
 function rememberScroll() {
   // Not mid-restore (clamped in-between positions), nor while the rows are off
   // screen: a collapsed list would save the top and lose the place.
-  if (leaving || stopRestore || !loaded.value || !scroller.value) return
+  const ready = approvals.value ? approvalReady.value : loaded.value
+  if (leaving || stopRestore || !ready || !scroller.value) return
   writeScroll(sessionStore(), scrollKey(), captureScroll(scroller.value))
 }
+// Resolves once the list holds the place again (or there is none to restore),
+// so the approval list moves its focus only after it (ApprovalList `restore`).
 async function restoreScroll() {
   const saved = readScroll(sessionStore(), scrollKey())
   if (!saved?.top) return
@@ -449,11 +456,20 @@ async function restoreScroll() {
   const el = scroller.value
   if (!el) return
   stopRestore?.()
-  stopRestore = settleScroll(el, () => scrollTarget(el, saved), {
-    onDone: () => {
-      stopRestore = null
-      rememberScroll()
-    },
+  await new Promise((resolve) => {
+    let stop = null,
+      finished = false
+    stop = settleScroll(el, () => scrollTarget(el, saved), {
+      onDone: () => {
+        finished = true
+        if (stopRestore === stop) stopRestore = null
+        rememberScroll()
+        resolve()
+      },
+    })
+    // Without frames (no rAF) nothing settles: nothing to wait for.
+    if (finished || !globalThis.requestAnimationFrame) return resolve()
+    stopRestore = stop
   })
 }
 onBeforeRouteLeave(() => {
@@ -651,8 +667,10 @@ async function loadApprovalCounts() {
     approvalCounts.value = null
   }
 }
+// The approval list has its rows on screen (it restores the place itself through
+// `restore` before moving the focus); from now on scrolling saves the place.
 function approvalLoaded() {
-  restoreScroll()
+  approvalReady.value = true
   loadApprovalCounts()
 }
 async function retryBoot() {
@@ -686,6 +704,11 @@ watch(
     rows.value = []
     if (boot.value?.enabled) load()
   },
+)
+// Another approval list (segment, kind, search): its rows are not on screen yet.
+watch(
+  () => [state.value.segment, state.value.kind, state.value.q],
+  () => (approvalReady.value = false),
 )
 onMounted(start)
 function reloadAfterConflict() {
