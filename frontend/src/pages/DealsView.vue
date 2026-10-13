@@ -48,7 +48,7 @@
           />
           <button
             v-if="search"
-            class="press flex-none text-[13px] text-ink-gray-4"
+            class="press flex-none text-[13px] text-ink-gray-5"
             :aria-label="__('Limpiar')"
             @click="onSearch('')"
           >
@@ -357,13 +357,13 @@
     >
       <div
         v-if="deals.loading && !rows.length"
-        class="py-10 text-center text-xs text-ink-gray-4"
+        class="py-10 text-center text-xs text-ink-gray-5"
       >
         {{ __('Cargando…') }}
       </div>
       <div
         v-else-if="!rows.length && !deals.error"
-        class="py-10 text-center text-xs text-ink-gray-4"
+        class="py-10 text-center text-xs text-ink-gray-5"
       >
         {{ __('Sin tratos') }}
       </div>
@@ -431,7 +431,7 @@
         <div :style="isMobile ? '' : `min-width:${MIN_W}px`">
           <!-- table header -->
           <div
-            class="sticky top-0 z-[5] grid items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+            class="sticky top-0 z-[5] grid items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-5"
             :style="`grid-template-columns:${GRID};height:34px`"
           >
             <input
@@ -500,13 +500,13 @@
           <!-- rows -->
           <div
             v-if="deals.loading && !rows.length"
-            class="py-10 text-center text-xs text-ink-gray-4"
+            class="py-10 text-center text-xs text-ink-gray-5"
           >
             {{ __('Cargando…') }}
           </div>
           <div
             v-else-if="!rows.length && !deals.error"
-            class="py-10 text-center text-xs text-ink-gray-4"
+            class="py-10 text-center text-xs text-ink-gray-5"
           >
             {{ __('Sin tratos') }}
           </div>
@@ -555,7 +555,7 @@
                   </div>
                   <!-- second line = the customer, so the identity is visible even with the
                  Cliente column hidden (and on phones, where only 2 columns fit) -->
-                  <div class="truncate text-[11px] text-ink-gray-4">
+                  <div class="truncate text-[11px] text-ink-gray-5">
                     {{ customerOf(r) || formatPhone(phoneOf(r)) }}
                   </div>
                 </div>
@@ -604,7 +604,7 @@
                   </span>
                   <span
                     v-if="extra(r).repair_count > 1"
-                    class="flex-none text-[10px] text-ink-gray-4"
+                    class="flex-none text-[10px] text-ink-gray-5"
                     >+{{ extra(r).repair_count - 1 }}</span
                   >
                 </div>
@@ -666,7 +666,7 @@
               </div>
               <Dropdown :options="rowMenu(r)" @click.stop>
                 <button
-                  class="text-[14px] text-ink-gray-4"
+                  class="text-[14px] text-ink-gray-5"
                   :aria-label="__('Más acciones')"
                   @click.stop
                 >
@@ -724,7 +724,7 @@
           </span>
           <span
             v-if="columnWeighted(group)"
-            class="text-[10px] text-ink-gray-4"
+            class="text-[10px] text-ink-gray-5"
           >
             {{ __('pond.') }} {{ formatMXN(columnWeighted(group)) }}
           </span>
@@ -745,7 +745,7 @@
             }}</span>
           </div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
-            <span class="min-w-0 flex-1 truncate text-[11px] text-ink-gray-4">
+            <span class="min-w-0 flex-1 truncate text-[11px] text-ink-gray-5">
               {{ deviceOf(row) || formatPhone(phoneOf(row)) }}
             </span>
             <span
@@ -786,7 +786,7 @@
                 {{ initials(ownerName(row.deal_owner)) }}
               </span>
               <span
-                class="text-[10px] text-ink-gray-4"
+                class="text-[10px] text-ink-gray-5"
                 :title="__('Antigüedad')"
                 >{{ timeAgo(row.creation) }}</span
               >

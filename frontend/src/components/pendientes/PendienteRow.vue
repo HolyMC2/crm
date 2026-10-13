@@ -28,7 +28,7 @@
     <span v-else class="h-6 w-6 shrink-0" aria-hidden="true" />
     <RouterLink
       :to="to"
-      class="min-w-0 flex-1 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+      class="-my-2.5 min-w-0 flex-1 rounded-lg py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     >
       <p
         class="line-clamp-2 text-base text-ink-gray-9"

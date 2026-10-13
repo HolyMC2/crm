@@ -29,7 +29,7 @@
     </button>
     <RouterLink
       :to="to"
-      class="min-w-0 flex-1 rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+      class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     >
       <p
         class="truncate text-base text-ink-gray-9"

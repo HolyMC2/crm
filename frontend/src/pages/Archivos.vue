@@ -99,6 +99,7 @@
             </div>
             <div class="grid gap-2 sm:hidden">
               <FormControl
+                class="min-h-11"
                 type="select"
                 :aria-label="__('List')"
                 :model-value="view"
@@ -110,6 +111,7 @@
             </div>
             <FormControl
               v-if="boot.companies.length > 1"
+              class="min-h-11 sm:min-h-0"
               type="select"
               :aria-label="__('Company')"
               :model-value="company"
@@ -160,6 +162,7 @@
             />
             <FormControl
               v-model="q"
+              class="[&_input]:min-h-11 sm:[&_input]:min-h-0"
               type="text"
               :placeholder="__('Search title, issuer, tag or text')"
               :aria-label="__('Search files')"

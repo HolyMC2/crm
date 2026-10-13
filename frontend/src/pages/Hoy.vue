@@ -141,7 +141,7 @@
                 class="flex min-h-12 items-center gap-3 px-4 py-1.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-link sm:px-5"
               >
                 <span
-                  class="w-16 shrink-0 text-sm tabular-nums text-ink-gray-7"
+                  class="w-20 shrink-0 whitespace-nowrap text-sm tabular-nums text-ink-gray-7"
                 >
                   {{
                     event.allDay
@@ -230,7 +230,7 @@
                     :is="row.to ? 'RouterLink' : row.href ? 'a' : 'span'"
                     :to="row.to"
                     :href="row.to ? undefined : row.href || undefined"
-                    class="min-w-0 flex-1 rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+                    class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
                   >
                     <span class="block truncate text-sm text-ink-gray-9">{{
                       row.title

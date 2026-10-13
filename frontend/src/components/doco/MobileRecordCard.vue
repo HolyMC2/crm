@@ -32,7 +32,7 @@
           class="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink-gray-9"
           >{{ title || '—' }}</span
         >
-        <span v-if="time" class="flex-none text-[11px] text-ink-gray-4">{{
+        <span v-if="time" class="flex-none text-[11px] text-ink-gray-5">{{
           time
         }}</span>
       </div>
@@ -46,7 +46,7 @@
 
     <Dropdown :options="menu" @click.stop>
       <button
-        class="-mr-1 flex h-10 w-8 flex-none items-center justify-center text-[15px] leading-none text-ink-gray-4"
+        class="-mr-1 flex h-10 w-8 flex-none items-center justify-center text-[15px] leading-none text-ink-gray-5"
         :aria-label="__('Más acciones')"
         @click.stop
       >

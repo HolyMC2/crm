@@ -66,7 +66,7 @@
       </dl>
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
-          class="w-full sm:hidden"
+          class="min-h-11 w-full sm:hidden"
           type="select"
           :aria-label="__('List', null, CTX)"
           :model-value="segment"
@@ -75,7 +75,7 @@
         />
         <FormControl
           v-if="companies.length > 1"
-          class="w-full sm:w-56"
+          class="min-h-11 w-full sm:min-h-0 sm:w-56"
           type="select"
           :aria-label="__('Company')"
           :model-value="company"
@@ -87,7 +87,7 @@
         />
         <FormControl
           v-model="search"
-          class="min-w-0 flex-1 sm:max-w-xs"
+          class="min-w-0 flex-1 sm:max-w-xs [&_input]:min-h-11 sm:[&_input]:min-h-0"
           type="search"
           :placeholder="__('Search customer or invoice')"
           :aria-label="__('Search customer or invoice')"

@@ -51,7 +51,7 @@
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
           v-if="!po"
-          class="w-full sm:hidden"
+          class="min-h-11 w-full sm:hidden"
           type="select"
           :aria-label="__('List', null, 'Gastos')"
           :model-value="segment"
@@ -76,7 +76,7 @@
         </div>
         <FormControl
           v-model="search"
-          class="min-w-0 flex-1 sm:max-w-xs"
+          class="w-full min-w-0 sm:w-auto sm:max-w-xs sm:flex-1 [&_input]:min-h-11 sm:[&_input]:min-h-0"
           type="search"
           :placeholder="__('Search supplier, bill or invoice number')"
           :aria-label="__('Search supplier, bill or invoice number')"
