@@ -659,7 +659,7 @@ import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import { shellBoot } from '@/composables/muelleShell'
 import { orderBillsRoute } from '@/composables/useGastos'
-import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { can } from '@/vendor/muelle-shell/contracts'
 import { formatDay } from '@/utils/contactos'
 import {
   MISSING_LABELS,
@@ -695,7 +695,8 @@ const route = useRoute()
 const router = useRouter()
 const boot = comprasBoot
 const isNew = computed(() => !props.name)
-const gastosOn = computed(() => moduleEnabled(shellBoot.value, 'gastos'))
+// Supplier bills of this order: for bill readers (an employee filing expenses has Gastos too).
+const gastosOn = computed(() => can(shellBoot.value, 'gastos', 'read'))
 const data = ref({})
 const rows = ref([])
 const loading = ref(false)

@@ -366,6 +366,14 @@ export function accesos(boot) {
     'lucide-shopping-cart',
     withReturn('/compras/nueva'),
   )
+  // An employee's own expense: the receipt photo, sent for approval (Gastos «De empleados»).
+  add(
+    'gastos',
+    'claim',
+    t('File an expense'),
+    'lucide-receipt',
+    '/gastos?segment=empleados&chip=mios&nuevo=1',
+  )
   add(
     'garantias',
     'create',

@@ -161,6 +161,7 @@ function deskSlug(doctype) {
 
 // Records whose worker screen is another shell module (as Avisos opens them).
 const MODULE_RECORDS = Object.freeze({
+  'Expense Claim': 'GastoEmpleado',
   'Purchase Invoice': 'GastoFactura',
   'Purchase Order': 'CompraOrden',
   'Material Request': 'CompraSolicitud',

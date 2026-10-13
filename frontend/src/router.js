@@ -139,6 +139,13 @@ const routes = [
     meta: { app: 'gastos', title: 'Gastos', listParent: 'Gastos' },
   },
   {
+    path: '/gastos/gasto/:name',
+    name: 'GastoEmpleado',
+    component: () => import('@/pages/GastoEmpleado.vue'),
+    props: true,
+    meta: { app: 'gastos', title: 'Gastos', listParent: 'Gastos' },
+  },
+  {
     path: '/productos',
     name: 'Productos',
     component: () => import('@/pages/Productos.vue'),

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { comprasApi, money, outcomeUnknown, requestId } from './useCompras'
+import { claimsSegmentShown, defaultSegment } from './useGastosEmpleados'
 import { errorKind } from '@/utils/contactos'
 
 // Gastos: what the shop owes its suppliers, registered and paid from the bank.
@@ -45,7 +46,10 @@ export function loadGastosBoot({ refresh = false } = {}) {
 export const SEGMENTS = Object.freeze([
   { value: 'por-pagar', label: 'To pay', icon: 'credit-card' },
   { value: 'por-registrar', label: 'To register', icon: 'file-text' },
+  // Employees' expenses: their own claims, approvals, reimbursements, advances.
+  { value: 'empleados', label: 'From employees', icon: 'users' },
 ])
+const BILL_SEGMENTS = ['por-pagar', 'por-registrar']
 export const CHIPS = Object.freeze([
   { value: '', label: 'All' },
   { value: 'vencidas', label: 'Overdue' },
@@ -58,8 +62,18 @@ export function segmentLabel(value) {
     CTX,
   )
 }
-export function normalizeSegment(value) {
-  return SEGMENTS.some((s) => s.value === value) ? value : 'por-pagar'
+/** The segments this worker sees: bills for bill readers, «De empleados»
+ *  where claims work (or its guard explains why they do not). */
+export function visibleSegments(boot) {
+  const bills = !boot || Boolean(boot.capabilities?.read)
+  return SEGMENTS.filter((s) =>
+    BILL_SEGMENTS.includes(s.value) ? bills : claimsSegmentShown(boot),
+  )
+}
+export function normalizeSegment(value, boot) {
+  return visibleSegments(boot).some((s) => s.value === value)
+    ? value
+    : defaultSegment(boot)
 }
 export function normalizeChip(segment, value) {
   return segment === 'por-pagar' && CHIPS.some((c) => c.value === value)

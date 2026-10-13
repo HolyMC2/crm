@@ -35,6 +35,7 @@ SHELL_RECORDS = {
 	"Purchase Order": ("compras", "/compras/orden/{}"),
 	"Material Request": ("compras", "/compras/solicitud/{}"),
 	"Purchase Invoice": ("gastos", "/gastos/factura/{}"),
+	"Expense Claim": ("gastos", "/gastos/gasto/{}"),
 	"Warranty Claim": ("garantias", "/garantias/{}"),
 	"Quality Feedback": ("encuestas", "/encuestas/{}"),
 	"Item": ("productos", "/productos/{}"),

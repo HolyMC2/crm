@@ -128,7 +128,11 @@ def _gastos():
 
 	answer = bootstrap() or {}
 	capabilities = answer.get("capabilities") or {}
-	enabled = bool(answer.get("enabled") and capabilities.get("read"))
+	# Employees' expenses («De empleados»): a claim-only employee opens Gastos too.
+	claims = answer.get("claims") or {}
+	bills = bool(answer.get("enabled") and capabilities.get("read"))
+	expenses = bool(answer.get("enabled") and claims.get("enabled"))
+	enabled = bills or expenses
 	return {
 		"key": "gastos",
 		"enabled": enabled,
@@ -136,9 +140,13 @@ def _gastos():
 		if enabled
 		else answer.get("reason") or _("Ask your manager for permission to read supplier bills, then retry."),
 		"capabilities": {
-			"read": enabled,
-			"submit": enabled and bool(capabilities.get("submit")),
-			"pay": enabled and bool(capabilities.get("pay")),
+			"read": bills,
+			"submit": bills and bool(capabilities.get("submit")),
+			"pay": bills and bool(capabilities.get("pay")),
+			"claims": expenses,
+			"claim": expenses and bool(claims.get("file")),
+			"decide": expenses and bool(claims.get("decide")),
+			"reimburse": expenses and bool(claims.get("reimburse")),
 		},
 	}
 

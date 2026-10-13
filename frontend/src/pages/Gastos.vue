@@ -23,6 +23,18 @@
         {{ copied }}
       </p>
     </section>
+    <template v-else-if="segment === 'empleados'">
+      <div v-if="entries.length > 1" class="px-4 pt-3 sm:hidden">
+        <FormControl
+          type="select"
+          :aria-label="__('List', null, 'Gastos')"
+          :model-value="segment"
+          :options="entries.map((e) => ({ label: e.label, value: e.value }))"
+          @update:model-value="selectSegment"
+        />
+      </div>
+      <ClaimsQueue :boot="boot" @segment="selectSegment" />
+    </template>
     <template v-else>
       <header
         class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
@@ -195,10 +207,10 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FeatherIcon, FormControl } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import ClaimsQueue from '@/components/gastos/ClaimsQueue.vue'
 import {
   CHIPS,
   CTX,
-  SEGMENTS,
   dueLabel,
   gastosApi,
   gastosBoot,
@@ -210,6 +222,7 @@ import {
   problemOf,
   segmentLabel,
   statusLabel,
+  visibleSegments,
 } from '@/composables/useGastos'
 
 const route = useRoute()
@@ -222,7 +235,10 @@ const loading = ref(false)
 const problem = ref(null)
 const copied = ref('')
 const scroller = ref(null)
-const segment = computed(() => normalizeSegment(route.query.segment))
+const segment = computed(() =>
+  normalizeSegment(route.query.segment, boot.value),
+)
+const billSegment = computed(() => segment.value !== 'empleados')
 const chip = computed(() => normalizeChip(segment.value, route.query.chip))
 const po = computed(() =>
   typeof route.query.po === 'string' ? route.query.po : '',
@@ -234,7 +250,7 @@ let searchTimer = 0
 
 const capped = (n) => (counts.value?.capped && n >= 500 ? '500+' : String(n))
 const entries = computed(() =>
-  SEGMENTS.map((s) => ({
+  visibleSegments(boot.value).map((s) => ({
     ...s,
     label:
       counts.value && counts.value[s.value] !== undefined
@@ -290,6 +306,8 @@ const emptyBody = computed(() => {
 })
 
 async function load(more = false) {
+  // «De empleados» loads its own queue (ClaimsQueue).
+  if (!billSegment.value) return
   const mine = ++ticket
   loading.value = true
   problem.value = null
@@ -320,7 +338,13 @@ function update(query) {
   router.replace({ query: next })
 }
 function selectSegment(value) {
-  update({ segment: normalizeSegment(value), chip: '', po: '' })
+  update({
+    segment: normalizeSegment(value, boot.value),
+    chip: '',
+    po: '',
+    scope: '',
+    employee: '',
+  })
 }
 function clearOrder() {
   update({ po: '' })

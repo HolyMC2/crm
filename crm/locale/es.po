@@ -19025,3 +19025,435 @@ msgstr "1 cliente con dato"
 #: frontend/src/components/contactos/ExtraFieldForm.vue
 msgid "{0} already has another to-do on this cliente, so the request could not be added there. Copy it and send it."
 msgstr "{0} ya tiene otro pendiente en este cliente, así que la solicitud no se pudo añadir ahí. Cópiala y mándasela."
+# Gastos «De empleados» (employee expenses: photo → approve → reimburse or discount the advance)
+
+msgid "A decision on this expense was sent and we did not hear back. Trying again checks that same decision."
+msgstr "Se envió una decisión sobre este gasto y no tuvimos respuesta. Si vuelves a intentar, se revisa esa misma decisión."
+
+msgid "A reimbursement of this expense was sent and we did not hear back. Check result asks about that same payment; it never pays twice."
+msgstr "Se envió un reembolso de este gasto y no tuvimos respuesta. «Comprobar resultado» pregunta por ese mismo pago; nunca se paga dos veces."
+
+msgctxt "Gastos"
+msgid "Advance"
+msgstr "Adelanto"
+
+msgid "Advance of {0}"
+msgstr "Adelanto de {0}"
+
+msgid "Advance to {0}"
+msgstr "Adelanto a {0}"
+
+msgctxt "Gastos"
+msgid "Advances"
+msgstr "Adelantos"
+
+msgid "Advances from the register and the expenses that discount them."
+msgstr "Adelantos que dio la caja y los gastos que los descuentan."
+
+msgid "Advances given at the register appear here until expenses use them up."
+msgstr "Los adelantos que da la caja aparecen aquí hasta que los gastos los terminan de descontar."
+
+msgid "Amount you approve ({0})"
+msgstr "Monto que apruebas ({0})"
+
+msgctxt "Gastos"
+msgid "Approve"
+msgstr "Aprobar"
+
+msgid "Approve less"
+msgstr "Aprobar menos"
+
+msgid "Approve {0}"
+msgstr "Aprobar {0}"
+
+msgid "Approved expenses still owed to the team."
+msgstr "Gastos aprobados que todavía se le deben al equipo."
+
+msgid "Approved expenses still owed to the team: {0}"
+msgstr "Gastos aprobados que todavía se le deben al equipo: {0}"
+
+msgid "Approved expenses waiting for their money appear here."
+msgstr "Aquí aparecen los gastos aprobados que esperan su dinero."
+
+msgid "Approved · to reimburse"
+msgstr "Aprobado · por reembolsar"
+
+msgid "Approved. {0} is still owed."
+msgstr "Aprobado. Todavía se deben {0}."
+
+msgid "Approver: {0}"
+msgstr "Lo aprueba: {0}"
+
+msgid "Ask for a correction"
+msgstr "Pedir corrección"
+
+msgid "Ask for it to be approved"
+msgstr "Pedir que lo aprueben"
+
+msgid "Ask for it to be reimbursed"
+msgstr "Pedir que lo reembolsen"
+
+msgid "Ask for it to be set up"
+msgstr "Pedir que lo configuren"
+
+msgid "Ask someone else"
+msgstr "Pedir a otra persona"
+
+msgid "Ask someone to approve this expense"
+msgstr "Pedir a alguien que apruebe este gasto"
+
+msgid "Ask someone to reimburse this expense"
+msgstr "Pedir a alguien que reembolse este gasto"
+
+msgid "Ask the accountant to correct it"
+msgstr "Pedir al contador que lo corrija"
+
+msgid "Ask the accountant to correct this expense"
+msgstr "Pedir al contador que corrija este gasto"
+
+msgid "Asked for {0}"
+msgstr "Se pidieron {0}"
+
+msgctxt "Gastos"
+msgid "Asked of you"
+msgstr "Asignados a ti"
+
+msgctxt "Gastos"
+msgid "Cash register"
+msgstr "Caja"
+
+msgctxt "Gastos"
+msgid "Cashier"
+msgstr "Cajero"
+
+msgid "Change who approves it"
+msgstr "Cambiar quién lo aprueba"
+
+msgid "Choose a type"
+msgstr "Elige un tipo"
+
+msgid "Continue with bills"
+msgstr "Seguir con facturas"
+
+msgctxt "Gastos"
+msgid "Date"
+msgstr "Fecha"
+
+msgid "Discounted from the advance"
+msgstr "Descontado del adelanto"
+
+msgid "Discounted from the advance · {0} left"
+msgstr "Se descuenta del adelanto · quedan {0}"
+
+msgid "Discounted from your advance"
+msgstr "Descontado de tu adelanto"
+
+msgid "Discounted from your advance · {0} left"
+msgstr "Se descuenta de tu adelanto · quedan {0}"
+
+msgid "Draft: add the receipt photo and send it for approval."
+msgstr "Borrador: agrega la foto del ticket y envíalo a aprobar."
+
+msgid "E.g. taxi to the bank with the deposit"
+msgstr "Ej. taxi al banco con el depósito"
+
+msgid "E.g. the photo cannot be read"
+msgstr "Ej. la foto no se lee"
+
+msgid "E.g. the receipt is missing"
+msgstr "Ej. falta el ticket"
+
+msgid "E.g. the receipt says 250"
+msgstr "Ej. el ticket dice 250"
+
+msgctxt "Gastos"
+msgid "Edit"
+msgstr "Editar"
+
+msgctxt "Gastos"
+msgid "Everyone"
+msgstr "Todos"
+
+msgid "Expense from the register"
+msgstr "Gasto de la caja"
+
+msgid "Expense saved."
+msgstr "Gasto guardado."
+
+msgid "Expense saved. Send it for approval when you have the photo."
+msgstr "Gasto guardado. Envíalo a aprobar cuando tengas la foto."
+
+msgid "Expenses and advances the register gives appear here during the week."
+msgstr "Aquí aparecen durante la semana los gastos y adelantos que da la caja."
+
+msgid "Expenses waiting for a decision, oldest first."
+msgstr "Gastos que esperan una decisión, los más antiguos primero."
+
+msgid "File an expense"
+msgstr "Registrar gasto"
+
+msgctxt "Gastos"
+msgid "From employees"
+msgstr "De empleados"
+
+msgid "It came back for a correction: fix it and send it again."
+msgstr "Regresó para corregirlo: corrígelo y envíalo otra vez."
+
+msgid "Lists of employee expenses"
+msgstr "Listas de gastos de empleados"
+
+msgid "Loading expenses…"
+msgstr "Cargando gastos…"
+
+msgid "Loading expense…"
+msgstr "Cargando gasto…"
+
+msgctxt "Gastos"
+msgid "Loading…"
+msgstr "Cargando…"
+
+msgctxt "Gastos"
+msgid "Mine"
+msgstr "Míos"
+
+msgid "New expense"
+msgstr "Nuevo gasto"
+
+msgctxt "Gastos"
+msgid "Next"
+msgstr "Siguiente"
+
+msgid "No advances to discount"
+msgstr "No hay adelantos por descontar"
+
+msgid "No expenses match"
+msgstr "Ningún gasto coincide"
+
+msgid "No photo yet."
+msgstr "Todavía no tiene foto."
+
+msgid "Nobody here can do it yet. The request goes to the administrators with this expense attached."
+msgstr "Todavía nadie aquí puede hacerlo. La solicitud llega a los administradores con este gasto."
+
+msgid "Nothing from the register this week"
+msgstr "Esta semana la caja no ha dado nada"
+
+msgid "Nothing to approve"
+msgstr "Nada por aprobar"
+
+msgid "Nothing to reimburse"
+msgstr "Nada por reembolsar"
+
+msgid "Only {0}"
+msgstr "Solo {0}"
+
+msgid "Open the full expense form"
+msgstr "Abrir el formulario completo del gasto"
+
+msgid "Owed to {0}: {1}"
+msgstr "Se le debe a {0}: {1}"
+
+msgid "Paid in full."
+msgstr "Pagado completo."
+
+msgid "Part was reimbursed. {0} is still owed."
+msgstr "Se reembolsó una parte. Todavía se deben {0}."
+
+msgid "Receipt photo"
+msgstr "Foto del ticket"
+
+msgid "Receipt photos"
+msgstr "Fotos del ticket"
+
+msgid "Receipt photos on this expense: {0}"
+msgstr "Fotos del ticket en este gasto: {0}"
+
+msgctxt "Gastos"
+msgid "Reimburse"
+msgstr "Reembolsar"
+
+msgid "Reimburse now"
+msgstr "Reembolsar ahora"
+
+msgid "Reimburse {0}"
+msgstr "Reembolsar a {0}"
+
+msgid "Reimbursed {0} of {1}"
+msgstr "Reembolsado {0} de {1}"
+
+msgctxt "Gastos"
+msgid "Reimbursements"
+msgstr "Reembolsos"
+
+msgctxt "Gastos"
+msgid "Reject"
+msgstr "Rechazar"
+
+msgid "Reject the expense"
+msgstr "Rechazar el gasto"
+
+msgctxt "Gastos"
+msgid "Rejected"
+msgstr "Rechazado"
+
+msgid "Rejected: nothing is booked or paid."
+msgstr "Rechazado: no se registra ni se paga nada."
+
+msgctxt "Gastos"
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Saving…"
+msgstr "Guardando…"
+
+msgid "Search person or expense"
+msgstr "Buscar persona o gasto"
+
+msgid "See everyone"
+msgstr "Ver a todos"
+
+msgid "Send for approval"
+msgstr "Enviar a aprobar"
+
+msgid "Sent for approval"
+msgstr "Enviado a aprobar"
+
+msgid "Settled with the advance: nothing is owed."
+msgstr "Se cubrió con el adelanto: no se debe nada."
+
+msgid "Someone else changed this expense"
+msgstr "Otro usuario cambió este gasto"
+
+msgid "Take the photo of the receipt to send it."
+msgstr "Toma la foto del ticket para enviarlo."
+
+msgid "Take the receipt photo"
+msgstr "Tomar foto del ticket"
+
+msgid "That is more than what is owed on this expense."
+msgstr "Es más de lo que se debe de este gasto."
+
+msgid "This company has no bank or cash account to pay from yet, outside the cash registers. Ask for it to be set up; the expense stays approved."
+msgstr "Esta empresa todavía no tiene una cuenta de banco o de efectivo para pagar, fuera de las cajas. Pide que la den de alta; el gasto sigue aprobado."
+
+msgid "This expense is cancelled."
+msgstr "Este gasto está cancelado."
+
+msgid "To approve"
+msgstr "Por aprobar"
+
+msgctxt "Gastos"
+msgid "To approve"
+msgstr "Por aprobar"
+
+msgid "To approve · {0}"
+msgstr "Por aprobar · {0}"
+
+msgid "To correct"
+msgstr "Por corregir"
+
+msgctxt "Gastos"
+msgid "To reimburse"
+msgstr "Por reembolsar"
+
+msgid "Try another name or expense."
+msgstr "Prueba con otro nombre o gasto."
+
+msgid "Type of expense"
+msgstr "Tipo de gasto"
+
+msgid "Uploading the photo…"
+msgstr "Subiendo la foto…"
+
+msgid "Waiting for {0} to decide."
+msgstr "Esperando a que {0} decida."
+
+msgid "We did not hear back about the expense you sent. Sending again checks that same expense; it is never filed twice."
+msgstr "No tuvimos respuesta del gasto que enviaste. Si lo envías otra vez se revisa ese mismo gasto; nunca se registra dos veces."
+
+msgid "What needs to be corrected"
+msgstr "Qué hay que corregir"
+
+msgid "What the register gave out this week: expenses and advances."
+msgstr "Lo que dio la caja esta semana: gastos y adelantos."
+
+msgid "What was spent"
+msgstr "Qué se gastó"
+
+msgid "What you spent for the shop: send the receipt photo and follow it."
+msgstr "Lo que gastaste para la tienda: envía la foto del ticket y síguelo."
+
+msgid "When someone sends an expense to you, it appears here."
+msgstr "Cuando alguien te envíe un gasto, aparece aquí."
+
+msgid "When you pay for something for the shop, take the photo of the receipt and send it for approval."
+msgstr "Cuando pagues algo para la tienda, toma la foto del ticket y envíalo a aprobar."
+
+msgid "Who approves it"
+msgstr "Quién lo aprueba"
+
+msgid "Whose approvals"
+msgstr "De quién son las aprobaciones"
+
+msgid "Why you approve less"
+msgstr "Por qué apruebas menos"
+
+msgid "Why you reject it"
+msgstr "Por qué lo rechazas"
+
+msgid "Write the amount you approve."
+msgstr "Escribe el monto que apruebas."
+
+msgid "Write the reason."
+msgstr "Escribe el motivo."
+
+msgid "You have an advance of {0} to settle: it is discounted from this expense when approved."
+msgstr "Tienes un adelanto de {0} por descontar: se descuenta de este gasto cuando lo aprueben."
+
+msgid "You have no expenses yet"
+msgstr "Todavía no tienes gastos"
+
+msgid "Your expense"
+msgstr "Tu gasto"
+
+msgid "Zoom {0}"
+msgstr "Ampliar {0}"
+
+msgid "approved {0}"
+msgstr "aprobado {0}"
+
+msgid "date"
+msgstr "fecha"
+
+msgid "receipt photo"
+msgstr "foto del ticket"
+
+msgid "type of expense"
+msgstr "tipo de gasto"
+
+msgid "who approves it"
+msgstr "quién lo aprueba"
+
+msgid "{0} (needs setup)"
+msgstr "{0} (falta configurarlo)"
+
+msgid "{0} already has this expense in their pending list."
+msgstr "{0} ya tiene este gasto en sus pendientes."
+
+msgid "{0} asked for {1}."
+msgstr "{0} pidió {1}."
+
+msgid "{0} asks for {1}: approve it, approve less, reject it or ask for a correction."
+msgstr "{0} pide {1}: apruébalo, aprueba menos, recházalo o pide una corrección."
+
+msgid "{0} left"
+msgstr "quedan {0}"
+
+msgid "{0} · cash register"
+msgstr "{0} · caja"
+
+msgid "{0}: {1} discounted"
+msgstr "{0}: {1} descontado"
+
+msgid "{0}: {1} to discount"
+msgstr "{0}: {1} por descontar"

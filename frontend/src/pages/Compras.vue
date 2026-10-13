@@ -193,7 +193,7 @@ import { Badge, Button, FeatherIcon, FormControl } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { shellBoot } from '@/composables/muelleShell'
 import { orderBillsRoute } from '@/composables/useGastos'
-import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { can } from '@/vendor/muelle-shell/contracts'
 import {
   SEGMENTS,
   comprasApi,
@@ -220,7 +220,8 @@ const scroller = ref(null)
 const segment = computed(() => normalizeSegment(route.query.segment))
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const listPath = computed(() => route.fullPath)
-const gastosOn = computed(() => moduleEnabled(shellBoot.value, 'gastos'))
+// Supplier bills of this order: for bill readers (an employee filing expenses has Gastos too).
+const gastosOn = computed(() => can(shellBoot.value, 'gastos', 'read'))
 let ticket = 0
 let searchTimer = 0
 

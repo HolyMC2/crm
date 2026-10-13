@@ -34,9 +34,10 @@ const COBRANZA_PLACES = [
   ['todas', 'Todas'],
 ]
 const GASTOS_PLACES = [
-  ['segment=por-pagar', 'Por pagar'],
-  ['segment=por-pagar&chip=vencidas', 'Vencidas'],
-  ['segment=por-registrar', 'Por registrar'],
+  ['segment=por-pagar', 'Por pagar', 'read'],
+  ['segment=por-pagar&chip=vencidas', 'Vencidas', 'read'],
+  ['segment=por-registrar', 'Por registrar', 'read'],
+  ['segment=empleados', 'De empleados', 'claims'],
 ]
 const PRODUCTOS_PLACES = [
   ['todos', 'Todos'],
@@ -99,6 +100,15 @@ export function createShellProviders({ boot, modules }) {
           title: __('New purchase'),
           icon: 'lucide-shopping-cart',
           href: '/compras/nueva',
+        })
+      if (can(boot.value, 'gastos', 'claim'))
+        items.push({
+          id: 'gastos.claim',
+          group: 'acciones',
+          title: __('File an expense'),
+          keywords: 'gasto ticket reembolso registrar expense receipt',
+          icon: 'lucide-receipt',
+          href: '/gastos?segment=empleados&chip=mios&nuevo=1',
         })
       if (can(boot.value, 'garantias', 'create'))
         items.push({
@@ -190,14 +200,15 @@ export function createShellProviders({ boot, modules }) {
             href: `/compras?segment=${segment}`,
           })
       if (moduleEnabled(boot.value, 'gastos'))
-        for (const [query, label] of GASTOS_PLACES)
-          items.push({
-            id: `gastos.${query}`,
-            group: 'ir_a',
-            title: `Gastos › ${label}`,
-            icon: 'lucide-receipt',
-            href: `/gastos?${query}`,
-          })
+        for (const [query, label, need] of GASTOS_PLACES)
+          if (can(boot.value, 'gastos', need))
+            items.push({
+              id: `gastos.${query}`,
+              group: 'ir_a',
+              title: `Gastos › ${label}`,
+              icon: 'lucide-receipt',
+              href: `/gastos?${query}`,
+            })
       if (moduleEnabled(boot.value, 'productos'))
         for (const [view, label] of PRODUCTOS_PLACES)
           items.push({

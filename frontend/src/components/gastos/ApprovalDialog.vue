@@ -22,9 +22,13 @@
           />
           <p v-else class="rounded-lg bg-surface-gray-2 p-3 text-sm">
             {{
-              __(
-                'Nobody here can do it yet. The request goes to the administrators with this bill attached.',
-              )
+              claim
+                ? __(
+                    'Nobody here can do it yet. The request goes to the administrators with this expense attached.',
+                  )
+                : __(
+                    'Nobody here can do it yet. The request goes to the administrators with this bill attached.',
+                  )
             }}
           </p>
           <FormControl
@@ -68,6 +72,8 @@ const props = defineProps({
   name: { type: String, required: true },
   action: { type: String, default: '' },
   reason: { type: String, default: '' },
+  // A supplier bill by default; «De empleados» asks about an Expense Claim.
+  doctype: { type: String, default: 'Purchase Invoice' },
 })
 const emit = defineEmits(['sent'])
 const open = defineModel({ type: Boolean, default: false })
@@ -80,13 +86,19 @@ const problem = ref('')
 const sent = ref('')
 let rid = requestId()
 
-const title = computed(
-  () =>
-    ({
-      pay: __('Ask someone to pay this bill'),
-      submit: __('Ask someone to register this bill'),
-      review: __('Ask for a review of this bill'),
-    })[props.action] || __('Ask for approval'),
+const claim = computed(() => props.doctype === 'Expense Claim')
+const title = computed(() =>
+  claim.value
+    ? {
+        decide: __('Ask someone to approve this expense'),
+        reimburse: __('Ask someone to reimburse this expense'),
+        review: __('Ask the accountant to correct this expense'),
+      }[props.action] || __('Ask for approval')
+    : {
+        pay: __('Ask someone to pay this bill'),
+        submit: __('Ask someone to register this bill'),
+        review: __('Ask for a review of this bill'),
+      }[props.action] || __('Ask for approval'),
 )
 
 watch(open, async (value) => {
@@ -102,6 +114,7 @@ watch(open, async (value) => {
     options.value = await gastosApi('approval_options', {
       name: props.name,
       action: props.action,
+      doctype: props.doctype,
     })
   } catch (error) {
     problem.value = problemOf(error).detail
@@ -119,12 +132,17 @@ async function send() {
       action: props.action,
       assignee: assignee.value,
       note: note.value,
+      doctype: props.doctype,
     })
     sent.value = result.created
       ? __('Request sent to {0}.', [result.assigned.join(', ')])
-      : __('{0} already has this bill in their pending list.', [
-          result.assigned.join(', '),
-        ])
+      : claim.value
+        ? __('{0} already has this expense in their pending list.', [
+            result.assigned.join(', '),
+          ])
+        : __('{0} already has this bill in their pending list.', [
+            result.assigned.join(', '),
+          ])
     emit('sent', result)
   } catch (error) {
     // Same request id on retry: a lost answer is not a second request.
