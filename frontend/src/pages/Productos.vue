@@ -51,7 +51,7 @@
       </div>
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
-          class="min-h-11 w-full sm:hidden"
+          class="h-11 w-full sm:hidden"
           type="select"
           :aria-label="__('List', null, 'Productos')"
           :model-value="view"
@@ -67,7 +67,7 @@
         />
         <FormControl
           v-if="storeOptions.length > 2"
-          class="min-h-11 w-full sm:min-h-0 sm:w-56"
+          class="h-11 w-full sm:h-auto sm:w-56"
           type="select"
           :aria-label="__('Store', null, 'Productos')"
           :model-value="store"

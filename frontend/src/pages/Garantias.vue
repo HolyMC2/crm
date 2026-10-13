@@ -51,7 +51,7 @@
       </p>
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
-          class="min-h-11 w-full sm:hidden"
+          class="h-11 w-full sm:hidden"
           type="select"
           :aria-label="__('List', null, 'Garantías')"
           :model-value="segment"
@@ -67,7 +67,7 @@
         />
         <FormControl
           type="select"
-          class="min-h-11 w-40 sm:min-h-0"
+          class="h-11 w-40 sm:h-auto"
           :aria-label="__('Kind', null, 'Garantías')"
           :model-value="kind"
           :options="[

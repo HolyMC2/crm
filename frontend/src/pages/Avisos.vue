@@ -47,7 +47,7 @@
       </header>
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
-          class="min-h-11 w-full sm:hidden"
+          class="h-11 w-full sm:hidden"
           type="select"
           :aria-label="__('List')"
           :model-value="activeEntry(state)"

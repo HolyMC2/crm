@@ -99,7 +99,7 @@
             </div>
             <div class="grid gap-2 sm:hidden">
               <FormControl
-                class="min-h-11"
+                class="h-11"
                 type="select"
                 :aria-label="__('List')"
                 :model-value="view"
@@ -111,7 +111,7 @@
             </div>
             <FormControl
               v-if="boot.companies.length > 1"
-              class="min-h-11 sm:min-h-0"
+              class="h-11 sm:h-auto"
               type="select"
               :aria-label="__('Company')"
               :model-value="company"

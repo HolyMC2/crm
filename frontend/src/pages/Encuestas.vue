@@ -111,7 +111,7 @@
 
       <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <FormControl
-          class="min-h-11 w-full sm:hidden"
+          class="h-11 w-full sm:hidden"
           type="select"
           :aria-label="__('List', null, 'Encuestas')"
           :model-value="view"
@@ -127,7 +127,7 @@
         />
         <FormControl
           type="select"
-          class="min-h-11 w-40 sm:min-h-0"
+          class="h-11 w-40 sm:h-auto"
           :aria-label="__('Period', null, 'Encuestas')"
           :model-value="String(period)"
           :options="
@@ -138,7 +138,7 @@
         <FormControl
           v-if="view === 'todas'"
           type="select"
-          class="min-h-11 w-44 sm:min-h-0"
+          class="h-11 w-44 sm:h-auto"
           :aria-label="__('Answer', null, 'Encuestas')"
           :model-value="bucket"
           :options="[
