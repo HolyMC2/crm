@@ -17411,10 +17411,6 @@ msgid "No matching records. Return to the report to change the filters."
 msgstr "Ningún registro coincide. Vuelve al reporte para cambiar los filtros."
 
 #: frontend/src/components/Reports/SalesReport.vue
-msgid "Unassigned"
-msgstr "Sin asignar"
-
-#: frontend/src/components/Reports/SalesReport.vue
 msgid "No due date"
 msgstr "Sin fecha límite"
 
