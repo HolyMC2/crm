@@ -1015,7 +1015,7 @@
   background: var(--c-active);
   font-weight: 600;
 }
-.c-extra-filter {
+.c-filter-panel > .c-extra-filter {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -1081,6 +1081,9 @@
   .c-extra-kind {
     min-height: 44px;
   }
+  .c-filter-panel > .c-extra-filter {
+    width: 100%;
+  }
   .c-extra-filter > div {
     width: calc(50% - 6px);
     min-width: 0;
@@ -1096,6 +1099,11 @@
     margin: 0;
     max-width: 100%;
     border-radius: 16px 16px 0 0;
+  }
+  /* The sheet's own close button is a 44px target too. */
+  .dialog-content:has(.c-sheet) button {
+    min-height: 44px;
+    min-width: 44px;
   }
   .dialog-content[data-state='open']:has(.c-sheet) {
     animation: sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
