@@ -140,6 +140,9 @@
   overflow: auto;
   flex: 1;
   min-height: 120px;
+  /* Keeps the sticky column header (z-index 1) inside the list: Personalizar and
+     the other Contactos dialogs (no z-index of their own) paint above it. */
+  isolation: isolate;
 }
 .c-list-head,
 .c-contact-row {
