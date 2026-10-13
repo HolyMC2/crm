@@ -219,7 +219,7 @@
             >
               <p>{{ actionsOf(inv).primary.blocked }}</p>
               <Button
-                class="mt-2"
+                class="mt-2 min-h-11 sm:min-h-8"
                 :label="actionsOf(inv).primary.resolve.label"
                 :loading="busy === `${inv.name}:resolve`"
                 @click="resolve(inv, actionsOf(inv).primary.resolve)"

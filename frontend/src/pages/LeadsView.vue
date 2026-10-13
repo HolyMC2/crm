@@ -34,7 +34,7 @@
             :value="search"
             :aria-label="__('Buscar prospectos')"
             :placeholder="__('Buscar nombre, teléfono…')"
-            class="w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+            class="h-full w-full border-0 bg-transparent text-[14px] text-ink-gray-9 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
             @input="onSearch($event.target.value)"
           />
           <button
