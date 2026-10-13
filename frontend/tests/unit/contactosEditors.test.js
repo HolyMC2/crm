@@ -497,6 +497,7 @@ describe('IdentityEditor opened from another screen (Registrar cliente)', () => 
       can_create: true,
       fields: [
         { fieldname: 'customer_name', label: 'Cliente', fieldtype: 'Data' },
+        { fieldname: 'customer_type', label: 'Tipo', fieldtype: 'Select' },
       ],
     }
     api({
@@ -536,7 +537,7 @@ describe('IdentityEditor opened from another screen (Registrar cliente)', () => 
     })
     expect(payload.party).toEqual({
       source: 'customer',
-      fields: { customer_name: 'María López' },
+      fields: { customer_name: 'María López', customer_type: 'Individual' },
     })
   })
 })

@@ -203,7 +203,10 @@ describe('«Registrar cliente» comes back to «Resolver»', () => {
         },
       ],
       party_source: 'customer',
-      party_fields: { customer_name: 'María López' },
+      party_fields: {
+        customer_name: 'María López',
+        customer_type: 'Individual',
+      },
     })
     const bare = identityPrefill({ create: '1', party: 'admin', phone: ['x'] })
     expect(bare).toMatchObject({ fields: {}, phones: [], party_source: '' })

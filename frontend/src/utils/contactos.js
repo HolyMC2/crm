@@ -49,6 +49,9 @@ export function identityPrefill(query = {}) {
   if (first) fields.first_name = first
   if (last) fields.last_name = last
   const partyName = party === 'customer' ? 'customer_name' : 'supplier_name'
+  const partyFields = party && name ? { [partyName]: name } : {}
+  // The person of a conversation: a customer of type Individual (not ERPNext's Company default).
+  if (party === 'customer') partyFields.customer_type = 'Individual'
   return {
     source: 'contact',
     fields,
@@ -57,7 +60,7 @@ export function identityPrefill(query = {}) {
       : [],
     emails: [],
     party_source: party,
-    party_fields: party && name ? { [partyName]: name } : {},
+    party_fields: partyFields,
     // Its own draft: a half-written «Nuevo contacto» elsewhere is not mixed in.
     draft_key: phone || name ? `prefill:${phone}:${name}` : '',
   }
