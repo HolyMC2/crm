@@ -322,6 +322,7 @@
                 :draft="draftShown"
                 :selected-key="state.event"
                 :dim-past="prefs.dimPast"
+                :compact="phone"
                 @select="select"
                 @create="startCreate"
                 @move="(event, times) => doMove(event, times)"

@@ -1,7 +1,7 @@
 <template>
   <div
     class="ag-tg"
-    :class="{ 'is-dragging': Boolean(gesture?.active) }"
+    :class="{ 'is-dragging': Boolean(gesture?.active), 'is-compact': compact }"
     :style="{ '--ag-hour': `${hourHeight}px`, '--ag-cols': dates.length }"
   >
     <!-- day headings -->
@@ -232,6 +232,8 @@ const props = defineProps({
   draft: { type: Object, default: null },
   selectedKey: { type: String, default: '' },
   dimPast: { type: Boolean, default: true },
+  // Phone: all-day bars become 44 px tap targets (taller lanes).
+  compact: { type: Boolean, default: false },
 })
 const emit = defineEmits([
   'select',
@@ -250,6 +252,8 @@ const expanded = ref(false)
 const gesture = ref(null)
 const maxLanes = 3
 const LANE = 24
+const COMPACT_LANE = 46
+const lane = computed(() => (props.compact ? COMPACT_LANE : LANE))
 const STEP = 15
 const MOVE_THRESHOLD = 4
 
@@ -350,7 +354,7 @@ const alldayHeight = computed(() => {
     !expanded.value && barModel.value.lanes > maxLanes
       ? maxLanes
       : shownLanes.value
-  return Math.max(1, lanes) * LANE + 6
+  return Math.max(1, lanes) * lane.value + 6
 })
 function hiddenCount(index) {
   if (expanded.value || barModel.value.lanes <= maxLanes) return 0
@@ -432,7 +436,7 @@ function barStyle(bar) {
   return {
     left: `calc(${(bar.from / n) * 100}% + 2px)`,
     width: `calc(${((bar.to - bar.from + 1) / n) * 100}% - 4px)`,
-    top: `${bar.lane * LANE + 2}px`,
+    top: `${bar.lane * lane.value + 2}px`,
     opacity: dragging ? 0.35 : undefined,
     ...base,
     ...(bar.event.kind === 'task'
@@ -802,9 +806,9 @@ function barRect(from, to) {
     left: box.left + from * width,
     right: box.left + (to + 1) * width,
     top: box.top,
-    bottom: box.top + LANE,
+    bottom: box.top + lane.value,
     width: (to - from + 1) * width,
-    height: LANE,
+    height: lane.value,
   }
 }
 function clickEvent(dom, event) {
@@ -959,6 +963,22 @@ defineExpose({ scrollToStart, rectOf })
 }
 .ag-bar.is-task {
   color: var(--ink-gray-8);
+}
+/* Phone: 44 px all-day bars in 46 px lanes; «N more» and the expand toggle
+   take the same height. */
+.is-compact .ag-bar {
+  height: 44px;
+}
+.is-compact .ag-tg__more {
+  left: 2px;
+  right: 2px;
+  height: 44px;
+  text-align: left;
+  padding: 0 4px;
+}
+.is-compact .ag-tg__expand {
+  width: 44px;
+  height: 44px;
 }
 .ag-bar.is-task .lucide-circle,
 .ag-bar.is-task .lucide-circle-check {

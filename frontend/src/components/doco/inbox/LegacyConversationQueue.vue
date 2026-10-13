@@ -15,7 +15,7 @@
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="text-ink-gray-4 hover:text-ink-gray-9"
+            class="flex size-11 items-center justify-center text-ink-gray-4 hover:text-ink-gray-9 sm:size-auto"
             :title="__('Buscar mensajes')"
             :aria-label="__('Buscar mensajes')"
             @click="showGlobalSearch = true"
@@ -23,6 +23,7 @@
             <LucideSearch class="h-4 w-4" />
           </button>
           <button
+            class="flex size-11 items-center justify-center sm:size-auto"
             :class="soundEnabled ? 'text-ink-green-7' : 'text-ink-gray-4'"
             :title="
               soundEnabled
@@ -40,6 +41,7 @@
                couldn't subscribe at all. Hidden when unsupported/unconfigured. -->
           <button
             v-if="!['unsupported', 'unconfigured'].includes(pushState)"
+            class="flex size-11 items-center justify-center sm:size-auto"
             :class="pushState === 'on' ? 'text-ink-green-7' : 'text-ink-gray-4'"
             :disabled="pushBusy || pushState === 'denied'"
             :title="
@@ -73,7 +75,7 @@
             {{ unattendedTotal }}
           </span>
           <button
-            class="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-white"
+            class="min-h-11 rounded-lg px-2.5 py-1 text-[12px] font-semibold text-white sm:min-h-0"
             style="background: var(--brand)"
             :aria-label="__('New Deal')"
             @click="newDeal"
@@ -108,7 +110,7 @@
         />
         <button
           v-if="queueSearch"
-          class="flex h-4 w-4 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7"
+          class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
           :aria-label="__('Limpiar búsqueda')"
           :title="__('Limpiar búsqueda')"
           @click="clearQueueSearch"
@@ -116,12 +118,15 @@
           <LucideX class="h-3 w-3" />
         </button>
       </div>
-      <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios -->
-      <div class="flex flex-wrap gap-1.5">
+      <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios.
+           Phone: one sideways row of 44 px chips, so the header does not grow. -->
+      <div
+        class="flex gap-1.5 overflow-x-auto sm:flex-wrap sm:overflow-visible"
+      >
         <button
           v-for="t in inboxTabs"
           :key="t.id"
-          class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+          class="inline-flex min-h-11 flex-none items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold sm:min-h-0"
           :class="
             inboxTab === t.id
               ? 'bg-surface-green-2 text-ink-green-8'
@@ -533,7 +538,7 @@
           />
           <button
             v-if="commentSearch"
-            class="flex h-4 w-4 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7"
+            class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
             :aria-label="__('Limpiar búsqueda')"
             :title="__('Limpiar búsqueda')"
             @click="clearCommentSearch"

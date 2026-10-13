@@ -2,11 +2,12 @@
   <div class="flex min-h-0 min-w-0 flex-1 flex-col">
     <nav
       v-if="addonAvailable"
-      class="flex flex-none gap-4 border-b border-outline-gray-1 px-4 py-3 text-sm"
+      class="flex flex-none gap-4 border-b border-outline-gray-1 px-4 text-sm sm:py-3"
       aria-label="Espacios de bandeja"
     >
       <button
         type="button"
+        class="min-h-11 sm:min-h-0"
         :aria-pressed="!legacy"
         :disabled="pending"
         :class="!legacy ? 'font-semibold underline' : ''"
@@ -16,6 +17,7 @@
       </button>
       <button
         type="button"
+        class="min-h-11 sm:min-h-0"
         :aria-pressed="legacy"
         :disabled="pending"
         :class="legacy ? 'font-semibold underline' : ''"

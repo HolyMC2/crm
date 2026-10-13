@@ -22,7 +22,7 @@
   <div class="relative">
     <div class="flex items-center gap-1.5">
       <button
-        class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+        class="inline-flex min-h-11 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold sm:min-h-0"
         :class="
           queueFilterCount
             ? 'bg-surface-green-2 text-ink-green-8'
@@ -40,7 +40,7 @@
       </button>
       <button
         v-if="queueFilterCount"
-        class="text-[10.5px] text-ink-gray-5 underline hover:text-ink-gray-8"
+        class="min-h-11 px-1 text-[10.5px] text-ink-gray-5 underline hover:text-ink-gray-8 sm:min-h-0 sm:px-0"
         @click="clearQueueFilters"
       >
         {{ __('Limpiar') }}
@@ -48,7 +48,7 @@
     </div>
 
     <!-- active filters, so a narrowed queue can never look like an empty inbox -->
-    <div v-if="chips.length" class="mt-1.5 flex flex-wrap gap-1">
+    <div v-if="chips.length" class="mt-3 flex flex-wrap gap-1 sm:mt-1.5">
       <span
         v-for="c in chips"
         :key="c.key"
@@ -56,7 +56,7 @@
       >
         {{ c.label }}
         <button
-          class="text-[11px] leading-none"
+          class="-mx-3 -my-3.5 flex size-11 items-center justify-center text-[11px] leading-none sm:m-0 sm:size-auto"
           :aria-label="__('Quitar filtro') + ' ' + c.label"
           @click="c.remove()"
         >

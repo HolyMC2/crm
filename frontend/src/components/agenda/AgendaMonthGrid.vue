@@ -706,6 +706,13 @@ onBeforeUnmount(() => {
   font-size: 12px;
   line-height: 22px;
 }
+/* Phone: the day number is the day's button; its hit area is the whole day
+   cell (about 50 x 56 px), not only the 22 px number. */
+.is-compact .ag-month__num::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
 .ag-month__weekdays {
   display: grid;
   grid-template-columns: repeat(var(--ag-cols), minmax(0, 1fr));

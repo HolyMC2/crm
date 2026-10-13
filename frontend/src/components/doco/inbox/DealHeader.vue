@@ -9,7 +9,7 @@
            caller's return_to; in the Inbox it pops the history stack. -->
       <button
         v-if="isMobile"
-        class="-ml-1.5 flex h-10 w-7 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
+        class="-ml-3 flex size-11 flex-none items-center justify-center text-ink-gray-6 hover:text-ink-gray-9"
         :aria-label="dealBack ? dealBack.label : __('Volver a la bandeja')"
         data-testid="deal-header-back"
         @click="goBack"
@@ -27,7 +27,7 @@
         {{ initials(name) }}
       </span>
       <div
-        class="min-w-0 flex-1"
+        class="flex min-w-0 flex-1 flex-col justify-center self-stretch"
         :class="isMobile ? 'cursor-pointer' : ''"
         :role="isMobile ? 'button' : undefined"
         :tabindex="isMobile ? 0 : undefined"
@@ -208,7 +208,7 @@
           <LucideScrollText class="h-4 w-4" />
         </button>
         <button
-          class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg text-[15px] text-white"
+          class="press flex size-11 items-center justify-center rounded-lg text-[15px] text-white sm:size-[34px]"
           style="background: var(--brand)"
           :title="__('Llamar')"
           :aria-label="__('Llamar')"
@@ -218,7 +218,7 @@
         </button>
         <Dropdown v-if="isMobile" :options="mobileMenu" placement="right">
           <button
-            class="press flex h-[34px] w-[34px] items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
+            class="press flex size-11 items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
             :class="
               isSnoozed || (row.tags || []).length ? 'text-ink-violet-8' : ''
             "
