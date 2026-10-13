@@ -13142,8 +13142,8 @@ msgstr "Tareas de Ventas abiertas de todo el equipo que puedes ver"
 msgid "Closed and cancelled work, newest first"
 msgstr "Trabajo cerrado y cancelado, lo más reciente primero"
 
-msgid "Your follow-ups from Contactos, Ventas and Desk in one queue"
-msgstr "Tus seguimientos de Contactos, Ventas y Desk en una sola cola"
+msgid "Your follow-ups from Contactos, Ventas and other records in one list"
+msgstr "Tus seguimientos de Contactos, Ventas y otros registros en una sola lista"
 
 msgid "Nothing overdue."
 msgstr "Nada vencido."

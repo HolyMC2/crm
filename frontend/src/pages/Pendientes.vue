@@ -325,7 +325,9 @@ const subtitle = computed(() =>
     ? __('Open sales tasks of everyone you can see')
     : state.value.segment === 'done'
       ? __('Closed and cancelled work, newest first')
-      : __('Your follow-ups from Contactos, Ventas and Desk in one queue'),
+      : __(
+          'Your follow-ups from Contactos, Ventas and other records in one list',
+        ),
 )
 const rangeLabel = computed(() =>
   [state.value.from, state.value.to]
