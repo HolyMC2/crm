@@ -226,7 +226,8 @@ const chips = computed(() => [
   // Kinds with something waiting (or the one picked); empty ones stay out of the way.
   ...answer.kinds
     .filter(
-      (kind) => !kind.failed && (kind.count > 0 || props.state.kind === kind.key),
+      (kind) =>
+        !kind.failed && (kind.count > 0 || props.state.kind === kind.key),
     )
     .map((kind) => ({
       key: kind.key,
@@ -307,7 +308,10 @@ async function load(start = 0) {
   loading.value = true
   problem.value = null
   try {
-    const page = await aprobacionesApi('queue', approvalArgs(props.state, start))
+    const page = await aprobacionesApi(
+      'queue',
+      approvalArgs(props.state, start),
+    )
     if (current !== generation) return
     answer.kinds = page.kinds || []
     answer.count = page.count || null

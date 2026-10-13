@@ -69,7 +69,11 @@
           :aria-label="__('Search pendientes')"
         />
         <FormControl
-          v-if="boot?.sources?.['CRM Task'] && state.segment !== 'team' && !approvals"
+          v-if="
+            boot?.sources?.['CRM Task'] &&
+            state.segment !== 'team' &&
+            !approvals
+          "
           class="h-11 sm:h-auto"
           type="select"
           :aria-label="__('Task source')"

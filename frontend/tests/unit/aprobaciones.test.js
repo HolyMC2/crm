@@ -47,7 +47,9 @@ describe('Aprobaciones URL state', () => {
     })
     expect(parseQuery({ segment: 'waiting' }).segment).toBe('waiting')
     // A kind means nothing outside the approval lists, and junk is dropped.
-    expect(parseQuery({ segment: 'today', kind: 'gastos' }).kind).toBeUndefined()
+    expect(
+      parseQuery({ segment: 'today', kind: 'gastos' }).kind,
+    ).toBeUndefined()
     expect(
       parseQuery({ segment: 'approve', kind: '<script>' }).kind,
     ).toBeUndefined()
@@ -95,10 +97,12 @@ describe('Into the owner screen and back', () => {
       { url: '/app/asistencia?v=ausencias&request=HR-LAP-1' },
       state,
     )
-    expect(desk.href).toMatch(/^\/app\/asistencia\?v=ausencias&request=HR-LAP-1&/)
-    expect(new URL(desk.href, 'https://x.invalid').searchParams.get('return_to')).toBe(
-      listPath(state),
+    expect(desk.href).toMatch(
+      /^\/app\/asistencia\?v=ausencias&request=HR-LAP-1&/,
     )
+    expect(
+      new URL(desk.href, 'https://x.invalid').searchParams.get('return_to'),
+    ).toBe(listPath(state))
   })
   it('never opens an unsafe or missing target', () => {
     for (const url of [
@@ -128,7 +132,10 @@ describe('Into the owner screen and back', () => {
   })
   it('reads the way back only inside Muelle, with a short label', () => {
     expect(
-      ownerReturn({ return_to: '/crm/pendientes?segment=approve', return_label: 'Por aprobar' }),
+      ownerReturn({
+        return_to: '/crm/pendientes?segment=approve',
+        return_label: 'Por aprobar',
+      }),
     ).toEqual({ to: '/crm/pendientes?segment=approve', label: 'Por aprobar' })
     expect(ownerReturn({ return_to: '/crm/hoy' }).label).toBe('Hoy')
     expect(ownerReturn({ return_to: '//evil.invalid/crm/' })).toBeNull()
@@ -181,7 +188,11 @@ async function mount(path, component, routes = []) {
         props: true,
       },
       { path: '/gastos', name: 'Gastos', component: { template: '<div />' } },
-      { path: '/compras/orden/:name', name: 'CompraOrden', component: { template: '<div />' } },
+      {
+        path: '/compras/orden/:name',
+        name: 'CompraOrden',
+        component: { template: '<div />' },
+      },
       ...routes,
     ],
   })
@@ -242,7 +253,10 @@ const bill = {
   kind_label: 'Facturas',
 }
 
-function page(rows, kinds = [{ key: 'gastos', label: 'Facturas', count: rows.length }]) {
+function page(
+  rows,
+  kinds = [{ key: 'gastos', label: 'Facturas', count: rows.length }],
+) {
   return {
     view: 'decide',
     kinds,
@@ -284,7 +298,11 @@ describe('Por aprobar list', () => {
   it('back from a decided bill: «Listo», the next row and no `done` left in the URL', async () => {
     sessionStorage.setItem(
       'muelle:aprobaciones:opened',
-      JSON.stringify({ key: 'Purchase Invoice:PI-1', index: 0, title: bill.title }),
+      JSON.stringify({
+        key: 'Purchase Invoice:PI-1',
+        index: 0,
+        title: bill.title,
+      }),
     )
     answers.queue = page([{ ...bill, name: 'PI-2', title: 'Luz · F-2' }])
     const router = await mount(
@@ -417,7 +435,9 @@ describe('A bill opened from Por aprobar', () => {
     )
     backButton.click()
     await flush()
-    expect(router.currentRoute.value.fullPath).toBe('/pendientes?segment=approve')
+    expect(router.currentRoute.value.fullPath).toBe(
+      '/pendientes?segment=approve',
+    )
   })
   it('«No aprobar» needs a reason, then goes back with done', async () => {
     answers.decline = { todo: 'TODO-1', status: 'Cancelled' }
@@ -460,9 +480,11 @@ describe('es-MX catalog', () => {
     const here = dirname(fileURLToPath(import.meta.url))
     const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
     const catalog = new Set(
-      [...po.matchAll(/^msgid "((?:[^"\\]|\\.)*)"\nmsgstr "(?:[^"\\]|\\.)+"/gm)].map(
-        (m) => m[1],
-      ),
+      [
+        ...po.matchAll(
+          /^msgid "((?:[^"\\]|\\.)*)"\nmsgstr "(?:[^"\\]|\\.)+"/gm,
+        ),
+      ].map((m) => m[1]),
     )
     const files = [
       '../../src/components/pendientes/ApprovalList.vue',

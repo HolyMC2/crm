@@ -8,7 +8,9 @@
         >
           <FeatherIcon name="arrow-left" class="h-4 w-4" />
           {{
-            back ? __('Back to {0}', [back.label]) : __('Gastos', null, 'Gastos')
+            back
+              ? __('Back to {0}', [back.label])
+              : __('Gastos', null, 'Gastos')
           }}
         </button>
       </nav>
@@ -23,7 +25,9 @@
         <div class="flex flex-wrap gap-2">
           <Button :label="__('Retry', null, 'Gastos')" @click="load" />
           <Button
-            :label="back ? __('Back to {0}', [back.label]) : __('Back to Gastos')"
+            :label="
+              back ? __('Back to {0}', [back.label]) : __('Back to Gastos')
+            "
             @click="goBack()"
           />
         </div>
@@ -446,7 +450,10 @@ const primaryAction = computed(() => {
   const allowed = (key) =>
     actions.value.some((action) => action.key === key && action.allowed)
   if (allowed('pay'))
-    return { label: __('Pay', null, 'Gastos'), run: () => (payOpen.value = true) }
+    return {
+      label: __('Pay', null, 'Gastos'),
+      run: () => (payOpen.value = true),
+    }
   if (allowed('submit'))
     return {
       label: __('Review and register'),
