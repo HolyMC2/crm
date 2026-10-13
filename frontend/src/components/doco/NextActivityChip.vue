@@ -11,7 +11,7 @@
   phone rows, where the line is already full.
 -->
 <template>
-  <span v-if="state === 'none'" class="truncate text-[11px] text-ink-gray-4">{{
+  <span v-if="state === 'none'" class="truncate text-[11px] text-ink-gray-5">{{
     emptyLabel
   }}</span>
   <span

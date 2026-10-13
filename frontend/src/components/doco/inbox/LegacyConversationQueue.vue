@@ -15,7 +15,7 @@
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="flex size-11 items-center justify-center text-ink-gray-4 hover:text-ink-gray-9 sm:size-auto"
+            class="flex size-11 items-center justify-center text-ink-gray-5 hover:text-ink-gray-9 sm:size-auto"
             :title="__('Buscar mensajes')"
             :aria-label="__('Buscar mensajes')"
             @click="showGlobalSearch = true"
@@ -24,7 +24,7 @@
           </button>
           <button
             class="flex size-11 items-center justify-center sm:size-auto"
-            :class="soundEnabled ? 'text-ink-green-7' : 'text-ink-gray-4'"
+            :class="soundEnabled ? 'text-ink-green-7' : 'text-ink-gray-5'"
             :title="
               soundEnabled
                 ? __('Sonido de notificación activado')
@@ -42,7 +42,7 @@
           <button
             v-if="!['unsupported', 'unconfigured'].includes(pushState)"
             class="flex size-11 items-center justify-center sm:size-auto"
-            :class="pushState === 'on' ? 'text-ink-green-7' : 'text-ink-gray-4'"
+            :class="pushState === 'on' ? 'text-ink-green-7' : 'text-ink-gray-5'"
             :disabled="pushBusy || pushState === 'denied'"
             :title="
               pushState === 'denied'
@@ -84,7 +84,7 @@
           </button>
           <button
             v-if="!isMobile"
-            class="text-[13px] text-ink-gray-4 hover:text-ink-gray-9"
+            class="text-[13px] text-ink-gray-5 hover:text-ink-gray-9"
             :aria-label="__('Ocultar bandeja')"
             :title="__('Ocultar bandeja')"
             @click="queueCollapsed = true"
@@ -110,7 +110,7 @@
         />
         <button
           v-if="queueSearch"
-          class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
+          class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
           :aria-label="__('Limpiar búsqueda')"
           :title="__('Limpiar búsqueda')"
           @click="clearQueueSearch"
@@ -539,7 +539,7 @@
           />
           <button
             v-if="commentSearch"
-            class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-4 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
+            class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
             :aria-label="__('Limpiar búsqueda')"
             :title="__('Limpiar búsqueda')"
             @click="clearCommentSearch"

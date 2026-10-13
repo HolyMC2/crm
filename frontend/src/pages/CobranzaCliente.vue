@@ -153,8 +153,10 @@
                 <p
                   class="flex flex-wrap items-baseline gap-x-1 font-medium text-ink-gray-9"
                 >
+                  <!-- A link reads as one: link ink + underline (not the
+                       heading's ink), and a 44 px tap height on phones. -->
                   <a
-                    class="hover:underline"
+                    class="inline-flex min-h-11 items-center text-ink-blue-link underline underline-offset-2 sm:min-h-0"
                     :href="`/app/sales-invoice/${encodeURIComponent(inv.name)}`"
                     >{{ inv.name }}</a
                   >

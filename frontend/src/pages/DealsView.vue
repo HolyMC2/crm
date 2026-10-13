@@ -608,7 +608,7 @@
                     >+{{ extra(r).repair_count - 1 }}</span
                   >
                 </div>
-                <span v-else class="text-[12px] text-ink-gray-4">—</span>
+                <span v-else class="text-[12px] text-ink-gray-5">—</span>
               </div>
               <div
                 v-if="col('value')"

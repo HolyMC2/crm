@@ -182,7 +182,7 @@
       <div class="text-sm-medium text-ink-gray-6">
         {{ __('Selecciona una conversación') }}
       </div>
-      <div class="text-xs">
+      <div class="text-xs text-ink-gray-5">
         {{ __('Elige un equipo de la bandeja para ver el hilo') }}
       </div>
     </div>
