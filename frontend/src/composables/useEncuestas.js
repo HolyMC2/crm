@@ -154,6 +154,29 @@ export function serviceAskNotice(ask, capabilities = {}) {
 export function bucketName(value) {
   return tr(BUCKETS.find((b) => b.value === value)?.name || '', null, CTX)
 }
+/**
+ * Where a recommendation card leads: its 0–10 group in «Todas», on the after-sale
+ * question only (the card counts 0–10 answers; a 1–5 attention answer is not one).
+ */
+export function cardQuery(bucket) {
+  return { view: 'todas', bucket: normalizeBucket(bucket), kind: 'sale' }
+}
+/**
+ * The «Answer» filter's choices for the question picked: its own ranges after a sale
+ * (0–10) or after a conversation (1–5); plain group names when both are listed.
+ */
+export function answerOptions(kind) {
+  return [
+    { label: tr('Every answer'), value: '' },
+    ...BUCKETS.map((b) => ({
+      value: b.value,
+      label:
+        kind === 'sale' || kind === 'service'
+          ? bucketLabel(b.value, kind)
+          : bucketName(b.value),
+    })),
+  ]
+}
 export function bucketTheme(value) {
   return BUCKETS.find((b) => b.value === value)?.theme || 'gray'
 }

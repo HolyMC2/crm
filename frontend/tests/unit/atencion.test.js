@@ -18,7 +18,9 @@ import {
   urlWithTab,
 } from '../../src/utils/atencion.js'
 import {
+  answerOptions,
   bucketLabel,
+  cardQuery,
   conversationHref,
   kindLabel,
   normalizeKind,
@@ -284,6 +286,44 @@ describe('Resolver through the inbox composable', () => {
 })
 
 describe('Encuestas: «¿Cómo te atendimos?» next to the recommendation', () => {
+  it('a recommendation card opens its 0–10 group on the after-sale question only', () => {
+    expect(cardQuery('detractor')).toEqual({
+      view: 'todas',
+      bucket: 'detractor',
+      kind: 'sale',
+    })
+    expect(cardQuery('nope').bucket).toBe('')
+    const page = readFileSync(
+      resolve(here, '../../src/pages/Encuestas.vue'),
+      'utf8',
+    )
+    expect(page).toContain('@click="update(cardQuery(b.value))"')
+    expect(page).toContain(':options="answerOptions(kind)"')
+  })
+
+  it('the answer filter names the groups of the question picked', () => {
+    const labels = (kind) => answerOptions(kind).map((o) => o.label)
+    expect(labels('sale')).toEqual([
+      'Every answer',
+      'Unhappy (0–6)',
+      'Neutral (7–8)',
+      'Happy (9–10)',
+    ])
+    expect(labels('service')).toEqual([
+      'Every answer',
+      'Unhappy (1–2)',
+      'Neutral (3)',
+      'Happy (4–5)',
+    ])
+    expect(labels('')).toEqual(['Every answer', 'Unhappy', 'Neutral', 'Happy'])
+    expect(answerOptions('').map((o) => o.value)).toEqual([
+      '',
+      'detractor',
+      'passive',
+      'promoter',
+    ])
+  })
+
   it('reads a service answer as «2 of 5» in its own groups', () => {
     expect(scoreLabel(2, 5)).toBe('2 of 5')
     expect(scoreLabel(7)).toBe('7 of 10')

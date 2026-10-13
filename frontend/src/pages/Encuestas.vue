@@ -156,7 +156,8 @@
           :key="b.value"
           type="button"
           class="min-h-11 rounded-lg border border-outline-gray-2 p-3 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
-          @click="update({ view: 'todas', bucket: b.value })"
+          :data-testid="`encuestas-card-${b.value}`"
+          @click="update(cardQuery(b.value))"
         >
           <p class="text-sm text-ink-gray-6">
             {{ bucketName(b.value) }}
@@ -200,13 +201,8 @@
           class="h-11 w-44 sm:h-auto"
           :aria-label="__('Answer', null, 'Encuestas')"
           :model-value="bucket"
-          :options="[
-            { label: __('Every answer'), value: '' },
-            ...BUCKETS.map((b) => ({
-              label: bucketLabel(b.value),
-              value: b.value,
-            })),
-          ]"
+          :options="answerOptions(kind)"
+          data-testid="encuestas-answer-filter"
           @update:model-value="(value) => update({ bucket: value })"
         />
         <div
@@ -363,10 +359,12 @@ import {
   KINDS,
   PERIODS,
   VIEWS,
+  answerOptions,
   askNotice,
   bucketLabel,
   bucketName,
   bucketTheme,
+  cardQuery,
   encuestasApi,
   encuestasBoot,
   followUpLabel,
