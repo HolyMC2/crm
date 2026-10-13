@@ -8,7 +8,9 @@
         icon-left="plus"
         variant="ghost"
         data-act="add-field"
-        @click="openEditor(define ? 'define' : 'request')"
+        @click="
+          openEditor(define || fieldCaps.ask_support ? 'define' : 'request')
+        "
       />
     </div>
     <p v-if="!fields.length" class="c-muted" data-empty="extra">
@@ -200,7 +202,7 @@ function edit(field, value) {
         ? current
           ? 1
           : 0
-        : current ?? ''
+        : (current ?? '')
   error.value = null
   latest.value = null
   notice.value = ''
