@@ -121,7 +121,7 @@
         <ApprovalList
           v-if="approvals"
           :state="state"
-          @loaded="restoreScroll"
+          @loaded="approvalLoaded"
           @segment="selectSegment"
         />
         <div
@@ -266,6 +266,10 @@ import ApprovalList from '@/components/pendientes/ApprovalList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import CreateDialog from '@/components/pendientes/CreateDialog.vue'
 import { loadShell, shellBoot } from '@/composables/muelleShell'
+import {
+  aprobacionesApi,
+  countText as approvalCountText,
+} from '@/composables/useAprobaciones'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { safeIntendedRoute } from '@/utils/shellRoutes'
 import { formatDay } from '@/utils/contactos'
@@ -303,6 +307,7 @@ const route = useRoute(),
 const state = computed(() => parseQuery(route.query))
 const boot = computed(() => shellBoot.value?.modules?.pendientes || null)
 const today = computed(() => boot.value?.today || '')
+const approvalCounts = ref(null)
 const entries = computed(() =>
   segmentEntries({
     team: Boolean(boot.value?.capabilities?.team),
@@ -313,6 +318,10 @@ const entries = computed(() =>
     waiting:
       Boolean(boot.value?.capabilities?.waiting) ||
       state.value.segment === 'waiting',
+  }).map((entry) => {
+    // «Por aprobar · 4»: what waits on me (capped counts read «99+»).
+    const count = approvalCountText(approvalCounts.value?.[entry.value])
+    return count ? { ...entry, label: `${entry.label} · ${count}` } : entry
   }),
 )
 const approvals = computed(() => isApprovalSegment(state.value.segment))
@@ -626,6 +635,21 @@ async function start() {
   }
   if (await handoffs()) return
   load()
+  loadApprovalCounts()
+}
+// The pills' counts, re-read whenever an approval list reloads (after a decision).
+async function loadApprovalCounts() {
+  const capabilities = boot.value?.capabilities || {}
+  if (!capabilities.approve && !capabilities.waiting) return
+  try {
+    approvalCounts.value = await aprobacionesApi('counts')
+  } catch {
+    approvalCounts.value = null
+  }
+}
+function approvalLoaded() {
+  restoreScroll()
+  loadApprovalCounts()
 }
 async function retryBoot() {
   await loadShell({ refresh: true }).catch(() => {})
