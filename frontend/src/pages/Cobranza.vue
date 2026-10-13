@@ -39,28 +39,30 @@
         class="grid grid-cols-3 gap-2 px-4 pb-3 sm:max-w-xl sm:px-6"
         :aria-label="__('Totals')"
       >
-        <div class="rounded-lg bg-surface-gray-1 p-2">
-          <dt class="text-xs text-ink-gray-6">{{ __('To collect') }}</dt>
-          <dd class="font-semibold tabular-nums">
-            {{ money(stats.outstanding, stats.currency) }}
-          </dd>
-        </div>
-        <div class="rounded-lg bg-surface-gray-1 p-2">
-          <dt class="text-xs text-ink-gray-6">
-            {{ __('Overdue', null, CTX) }}
-          </dt>
-          <dd class="font-semibold tabular-nums text-ink-red-7">
-            {{ money(stats.overdue, stats.currency) }}
-          </dd>
-        </div>
-        <div class="rounded-lg bg-surface-gray-1 p-2">
-          <dt class="text-xs text-ink-gray-6">{{ __('Collected today') }}</dt>
-          <dd class="font-semibold tabular-nums">
+        <!-- Totals in the company currency (one line per company currency);
+             the part owed in another currency is named in its own. -->
+        <div
+          v-for="card in statCards"
+          :key="card.key"
+          class="rounded-lg bg-surface-gray-1 p-2"
+        >
+          <dt class="text-xs text-ink-gray-6">{{ card.label }}</dt>
+          <dd
+            v-for="total in totals"
+            :key="`${card.key}:${total.currency}`"
+            class="font-semibold tabular-nums"
+            :class="card.key === 'overdue' ? 'text-ink-red-7' : ''"
+          >
             {{
-              stats.collected_today === null
+              total[card.key] === null || total[card.key] === undefined
                 ? '—'
-                : money(stats.collected_today, stats.currency)
+                : money(total[card.key], total.currency)
             }}
+            <span
+              v-if="foreignNote(total.foreign, card.key)"
+              class="block text-xs font-normal text-ink-gray-6"
+              >{{ foreignNote(total.foreign, card.key) }}</span
+            >
           </dd>
         </div>
       </dl>
@@ -128,7 +130,10 @@
           <p class="mt-1 text-sm">{{ emptyBody }}</p>
         </div>
         <ul v-else class="divide-y divide-outline-gray-1">
-          <li v-for="row in rows" :key="`${row.customer}:${row.company}`">
+          <li
+            v-for="row in rows"
+            :key="`${row.customer}:${row.company}:${row.currency}`"
+          >
             <RouterLink
               :to="{
                 name: 'CobranzaCliente',
@@ -172,6 +177,16 @@
                 <span
                   class="block text-sm font-medium tabular-nums text-ink-gray-9"
                   >{{ money(row.outstanding, row.currency) }}</span
+                >
+                <span
+                  v-if="
+                    isForeign(row.currency, row.company_currency) &&
+                    row.base_outstanding !== undefined
+                  "
+                  class="block text-xs tabular-nums text-ink-gray-6"
+                  >{{
+                    approxMoney(row.base_outstanding, row.company_currency)
+                  }}</span
                 >
                 <span
                   v-if="
@@ -224,8 +239,11 @@ import {
   SEGMENTS,
   agingLabel,
   agingTone,
+  approxMoney,
   cobranzaApi,
   cobranzaBoot,
+  foreignNote,
+  isForeign,
   loadCobranzaBoot,
   money,
   normalizeSegment,
@@ -233,6 +251,7 @@ import {
   promiseChip,
   reminderChip,
   segmentLabel,
+  statTotals,
 } from '@/composables/useCobranza'
 
 const route = useRoute()
@@ -254,6 +273,12 @@ const company = computed(() =>
 const companies = computed(() => boot.value?.companies || [])
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const listPath = computed(() => route.fullPath)
+const totals = computed(() => statTotals(stats.value))
+const statCards = computed(() => [
+  { key: 'outstanding', label: __('To collect') },
+  { key: 'overdue', label: __('Overdue', null, CTX) },
+  { key: 'collected_today', label: __('Collected today') },
+])
 let ticket = 0
 let searchTimer = 0
 

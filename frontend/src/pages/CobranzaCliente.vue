@@ -78,6 +78,15 @@
               {{ money(data.outstanding, data.currency) }}
             </p>
             <p
+              v-if="
+                isForeign(data.currency, data.company_currency) &&
+                data.base_outstanding !== undefined
+              "
+              class="text-sm tabular-nums text-ink-gray-6"
+            >
+              {{ approxMoney(data.base_outstanding, data.company_currency) }}
+            </p>
+            <p
               v-if="data.overdue_amount > 0"
               class="text-sm tabular-nums text-ink-red-7"
             >
@@ -85,10 +94,14 @@
                 __('{0} overdue', [money(data.overdue_amount, data.currency)])
               }}
             </p>
+            <!-- ERPNext sets and checks credit limits in the company currency. -->
             <p v-if="data.credit.limit" class="text-xs text-ink-gray-6">
               {{
                 __('Credit limit {0}', [
-                  money(data.credit.limit, data.currency),
+                  money(
+                    data.credit.limit,
+                    data.company_currency || data.currency,
+                  ),
                 ])
               }}
             </p>
@@ -136,14 +149,19 @@
           >
             <div class="flex flex-wrap items-start gap-2">
               <div class="min-w-0 flex-1">
-                <p class="font-medium text-ink-gray-9">
+                <!-- Folio and date wrap as two units: the date moves to the next line. -->
+                <p
+                  class="flex flex-wrap items-baseline gap-x-1 font-medium text-ink-gray-9"
+                >
                   <a
                     class="hover:underline"
                     :href="`/app/sales-invoice/${encodeURIComponent(inv.name)}`"
                     >{{ inv.name }}</a
                   >
-                  <span class="ml-1 text-sm font-normal text-ink-gray-6">
-                    · {{ inv.posting_date }}</span
+                  <span
+                    class="whitespace-nowrap text-sm font-normal text-ink-gray-6"
+                  >
+                    · {{ formatDay(inv.posting_date) }}</span
                   >
                 </p>
                 <p class="text-sm" :class="toneClass(agingTone(inv))">
@@ -151,9 +169,9 @@
                 </p>
                 <div class="mt-1 flex flex-wrap gap-1">
                   <Badge
-                    v-if="promiseChip(inv.promise, data.currency)"
-                    :theme="promiseChip(inv.promise, data.currency).theme"
-                    :label="promiseChip(inv.promise, data.currency).label"
+                    v-if="promiseChip(inv.promise, owedIn(inv))"
+                    :theme="promiseChip(inv.promise, owedIn(inv)).theme"
+                    :label="promiseChip(inv.promise, owedIn(inv)).label"
                   />
                   <Badge
                     v-if="inv.current_dunning"
@@ -164,13 +182,22 @@
               </div>
               <div class="text-right">
                 <p class="font-semibold tabular-nums">
-                  {{ money(inv.outstanding, data.currency) }}
+                  {{ money(inv.outstanding, owedIn(inv)) }}
+                </p>
+                <p
+                  v-if="
+                    isForeign(owedIn(inv), data.company_currency) &&
+                    inv.base_outstanding !== undefined
+                  "
+                  class="text-xs tabular-nums text-ink-gray-6"
+                >
+                  {{ approxMoney(inv.base_outstanding, data.company_currency) }}
                 </p>
                 <p
                   v-if="inv.outstanding < inv.total"
                   class="text-xs text-ink-gray-6"
                 >
-                  {{ __('of {0}', [money(inv.total, data.currency)]) }}
+                  {{ __('of {0}', [money(inv.total, owedIn(inv))]) }}
                 </p>
               </div>
             </div>
@@ -179,8 +206,8 @@
               class="mt-2 space-y-0.5 text-xs text-ink-gray-6"
             >
               <li v-for="row in inv.schedule" :key="row.due_date">
-                {{ __('Due {0}', [row.due_date]) }} ·
-                {{ money(row.outstanding, data.currency) }}
+                {{ __('Due {0}', [formatDay(row.due_date)], CTX) }} ·
+                {{ money(row.outstanding, owedIn(inv)) }}
               </li>
             </ul>
 
@@ -232,7 +259,7 @@
               <span class="min-w-0 flex-1">
                 <span class="text-ink-gray-9">{{ eventTitle(event) }}</span>
                 <span class="block text-xs text-ink-gray-6">
-                  {{ event.date }}
+                  {{ formatDay(event.date) }}
                   <template v-if="event.detail"> · {{ event.detail }}</template>
                 </span>
               </span>
@@ -342,11 +369,15 @@ import {
   CTX,
   agingLabel,
   agingTone,
+  approxMoney,
   cobranzaApi,
   cobranzaBoot,
+  formatDay,
   invoiceAction,
+  isForeign,
   loadCobranzaBoot,
   money,
+  moneyWithBase,
   nextCustomer,
   outcomeUnknown,
   parsePaymentDone,
@@ -432,8 +463,18 @@ function toneClass(tone) {
   )
 }
 
+/** The currency an invoice is owed in (its receivable's); older servers: the record's. */
+function owedIn(inv) {
+  return inv.currency || data.value?.currency
+}
+
 function eventTitle(event) {
-  const amount = money(event.amount, data.value?.currency)
+  const amount = moneyWithBase(
+    event.amount,
+    event.currency || data.value?.currency,
+    event.base_amount,
+    data.value?.company_currency,
+  )
   return (
     {
       payment: __('Payment {0} · {1}', [event.name, amount]),

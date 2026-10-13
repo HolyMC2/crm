@@ -14545,6 +14545,17 @@ msgid "Promises to pay on {0}"
 msgstr "Promete pagar el {0}"
 
 #: frontend/src/composables/useCobranza.js
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Due {0}"
+msgstr "Vence el {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "includes {0}"
+msgstr "incluye {0}"
+
+#: frontend/src/composables/useCobranza.js
 msgid "Not sent yet"
 msgstr "Aún no se envía"
 

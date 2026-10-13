@@ -2,15 +2,22 @@ import { describe, expect, it } from 'vitest'
 import {
   agingLabel,
   agingTone,
+  approxMoney,
+  foreignNote,
   invoiceAction,
+  isForeign,
+  money,
+  moneyWithBase,
   nextCustomer,
   normalizeSegment,
   parsePaymentDone,
   promiseChip,
   reminderChip,
   secondaryActions,
+  statTotals,
   withDueSoon,
 } from '@/composables/useCobranza'
+import { formatDay } from '@/utils/contactos'
 import { posCollectHref } from '@/utils/posHandoff'
 
 const CAPS = { remind: true, promise: true, collect: true, setup: false }
@@ -120,7 +127,7 @@ describe('Cobranza queue chips', () => {
     expect(
       promiseChip({ state: 'open', amount: 500, date: '2026-10-09' }, 'MXN')
         .label,
-    ).toContain('2026-10-09')
+    ).toBe(`Promises ${money(500, 'MXN')} on ${formatDay('2026-10-09')}`)
     expect(promiseChip(null)).toBeNull()
     expect(
       reminderChip({
@@ -128,10 +135,27 @@ describe('Cobranza queue chips', () => {
         date: '2026-10-02',
         delivery: { state: 'read', label: 'Leído' },
       }),
-    ).toEqual({ label: 'Segundo aviso · 2026-10-02 · Leído', theme: 'green' })
+    ).toEqual({
+      label: `Segundo aviso · ${formatDay('2026-10-02')} · Leído`,
+      theme: 'green',
+    })
     expect(reminderChip({ label: 'Aviso final', date: 'x' }).label).toContain(
       'Not sent yet',
     )
+  })
+
+  it('dates read like the rest of the shell, never as ISO', () => {
+    const due = agingLabel(
+      { oldest_overdue_days: 0, next_due: '2026-10-09' },
+      '2026-10-06',
+    )
+    expect(due).toBe(`Due ${formatDay('2026-10-09')}`)
+    for (const label of [
+      due,
+      promiseChip({ state: 'open', date: '2026-10-09' }).label,
+      reminderChip({ label: 'Segundo aviso', date: '2026-10-02' }).label,
+    ])
+      expect(label).not.toMatch(/\d{4}-\d{2}-\d{2}/)
   })
 
   it('due soon is within a week and never for overdue invoices', () => {
@@ -149,6 +173,82 @@ describe('Cobranza queue chips', () => {
   it('segments fall back to Vencidas', () => {
     expect(normalizeSegment('promesas')).toBe('promesas')
     expect(normalizeSegment('x')).toBe('vencidas')
+  })
+})
+
+describe('Cobranza money in more than one currency', () => {
+  it('a foreign-currency amount also shows its company-currency value', () => {
+    expect(isForeign('USD', 'MXN')).toBe(true)
+    expect(isForeign('MXN', 'MXN')).toBe(false)
+    expect(isForeign('USD', undefined)).toBe(false)
+    // No-break spaces keep an amount and its peso value together when they wrap.
+    expect(moneyWithBase(300, 'USD', 5550, 'MXN')).toBe(
+      `${money(300, 'USD')}\u00a0≈\u00a0${money(5550, 'MXN')}`,
+    )
+    expect(moneyWithBase(1838, 'MXN', 1838, 'MXN')).toBe(money(1838, 'MXN'))
+    // A server that sends no company-currency value: the own amount alone.
+    expect(moneyWithBase(300, 'USD', undefined, 'MXN')).toBe(money(300, 'USD'))
+    expect(approxMoney(5550, 'MXN')).toBe(`≈\u00a0${money(5550, 'MXN')}`)
+  })
+
+  it('totals: one per company currency with its foreign part, never two currencies added', () => {
+    const usd = { currency: 'USD', outstanding: 300, overdue: 300 }
+    const stats = {
+      currency: 'MXN',
+      outstanding: 11755,
+      overdue: 11406,
+      collected_today: 0,
+      foreign: [{ ...usd, collected_today: 0 }],
+      totals: [
+        {
+          currency: 'MXN',
+          outstanding: 11755,
+          overdue: 11406,
+          collected_today: 0,
+          foreign: [{ ...usd, collected_today: 0 }],
+        },
+        {
+          currency: 'USD',
+          outstanding: 40,
+          overdue: 0,
+          collected_today: null,
+          foreign: [],
+        },
+      ],
+    }
+    expect(statTotals(stats).map((t) => t.currency)).toEqual(['MXN', 'USD'])
+    expect(foreignNote(stats.totals[0].foreign, 'outstanding')).toBe(
+      `includes ${money(300, 'USD')}`,
+    )
+    expect(foreignNote(stats.totals[0].foreign, 'collected_today')).toBe('')
+    expect(
+      foreignNote(
+        [
+          { currency: 'EUR', overdue: 10 },
+          { currency: 'USD', overdue: 300 },
+        ],
+        'overdue',
+      ),
+    ).toBe(`includes ${money(10, 'EUR')} · ${money(300, 'USD')}`)
+    expect(foreignNote(undefined, 'overdue')).toBe('')
+    // A server without per-currency totals: its one flat figure.
+    expect(
+      statTotals({
+        currency: 'MXN',
+        outstanding: 5,
+        overdue: 0,
+        collected_today: null,
+      }),
+    ).toEqual([
+      {
+        currency: 'MXN',
+        outstanding: 5,
+        overdue: 0,
+        collected_today: null,
+        foreign: [],
+      },
+    ])
+    expect(statTotals(null)).toEqual([])
   })
 })
 

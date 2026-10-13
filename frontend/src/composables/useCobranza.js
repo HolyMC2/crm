@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { callError, errorKind } from '@/utils/contactos'
+import { callError, errorKind, formatDay } from '@/utils/contactos'
 import {
   comprasApi,
   money,
@@ -26,7 +26,52 @@ const SERVICE = 'doco.workspaces.receivables'
 export const SEND_API = 'doco.docoutils.document_send.api'
 // Translation context: short generic words stay Cobranza-only in the catalog.
 export const CTX = 'Cobranza'
-export { money, requestId, outcomeUnknown }
+export { formatDay, money, requestId, outcomeUnknown }
+
+// Money: every amount is shown in its own currency. A debt in another currency
+// than the company's also shows what it is worth in the company's (the books'
+// value, sent by the server as base_*), and totals are in the company currency.
+// Two currencies are never added up or shown with each other's symbol.
+
+export function isForeign(currency, companyCurrency) {
+  return Boolean(currency && companyCurrency && currency !== companyCurrency)
+}
+
+// No-break spaces: an amount and its company-currency value wrap as one unit.
+const NBSP = '\u00a0'
+
+/** «≈ $5,550.00»: a foreign amount's value in the company currency. */
+export function approxMoney(base, companyCurrency) {
+  return `≈${NBSP}${money(base, companyCurrency)}`
+}
+
+/** «USD 300.00 ≈ $5,550.00» in another currency; «$1,838.00» in the company's. */
+export function moneyWithBase(amount, currency, base, companyCurrency) {
+  const own = money(amount, currency)
+  if (
+    !isForeign(currency, companyCurrency) ||
+    base === null ||
+    base === undefined
+  )
+    return own
+  return `${own}${NBSP}${approxMoney(base, companyCurrency)}`
+}
+
+/** The list totals: one per company currency (a server without them: its flat figure). */
+export function statTotals(stats) {
+  if (!stats) return []
+  if (Array.isArray(stats.totals) && stats.totals.length) return stats.totals
+  const { currency, outstanding, overdue, collected_today } = stats
+  return [{ currency, outstanding, overdue, collected_today, foreign: [] }]
+}
+
+/** «incluye USD 300.00» under a company-currency total: its part owed in other currencies. */
+export function foreignNote(foreign, key) {
+  const parts = (foreign || [])
+    .filter((part) => Number(part[key]) > 0)
+    .map((part) => money(part[key], part.currency))
+  return parts.length ? tr('includes {0}', [parts.join(' · ')], CTX) : ''
+}
 
 /** POST to the Cobranza service; a refusal keeps the server's message and type. */
 export function cobranzaApi(method, args = {}) {
@@ -114,7 +159,7 @@ export function normalizeSegment(value) {
   return SEGMENTS.some((s) => s.value === value) ? value : 'vencidas'
 }
 
-/** «Vencida hace 12 días», «Vence hoy», «Vence el 2026-10-09». */
+/** «Vencida hace 12 días», «Vence hoy», «Vence el vie, 9 oct». */
 export function agingLabel(row, today) {
   const days = Number(row.oldest_overdue_days ?? row.overdue_days ?? 0)
   if (days === 1) return tr('Overdue 1 day')
@@ -122,7 +167,7 @@ export function agingLabel(row, today) {
   const next = row.next_due
   if (!next) return tr('Not due yet')
   if (next === today) return tr('Due today')
-  return tr('Due {0}', [next])
+  return tr('Due {0}', [formatDay(next)], CTX)
 }
 
 export function agingTone(row) {
@@ -132,10 +177,11 @@ export function agingTone(row) {
   return 'gray'
 }
 
-/** The promise chip: «Promete $500 el 2026-10-09», «Promesa vencida»… */
+/** The promise chip: «Promete $500 el vie, 9 oct», «Promesa vencida»… */
 export function promiseChip(promise, currency) {
   if (!promise) return null
   const amount = promise.amount ? money(promise.amount, currency) : ''
+  const date = formatDay(promise.date)
   if (promise.state === 'broken')
     return { label: tr('Promise broken'), theme: 'red' }
   if (promise.state === 'partial')
@@ -147,8 +193,8 @@ export function promiseChip(promise, currency) {
     return { label: tr('Promise kept'), theme: 'green' }
   return {
     label: amount
-      ? tr('Promises {0} on {1}', [amount, promise.date])
-      : tr('Promises to pay on {0}', [promise.date]),
+      ? tr('Promises {0} on {1}', [amount, date])
+      : tr('Promises to pay on {0}', [date]),
     theme: 'blue',
   }
 }
@@ -167,10 +213,10 @@ const DELIVERY_THEMES = {
   unknown: 'orange',
 }
 
-/** «Segundo aviso · 2026-10-02 · Entregado». */
+/** «Segundo aviso · vie, 2 oct · Entregado». */
 export function reminderChip(reminder) {
   if (!reminder) return null
-  const parts = [reminder.label || tr('Reminder'), reminder.date]
+  const parts = [reminder.label || tr('Reminder'), formatDay(reminder.date)]
   if (reminder.delivery?.label) parts.push(reminder.delivery.label)
   else parts.push(tr('Not sent yet'))
   return {
