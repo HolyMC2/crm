@@ -49,7 +49,8 @@
                 [
                   doc.company,
                   doc.set_warehouse && __('to {0}', [doc.set_warehouse]),
-                  doc.schedule_date && __('delivery {0}', [doc.schedule_date]),
+                  doc.schedule_date &&
+                    __('delivery {0}', [formatDay(doc.schedule_date)]),
                 ]
                   .filter(Boolean)
                   .join(' · ')
@@ -501,7 +502,7 @@
                     ? __('confirmed', null, 'Compras')
                     : __('draft, not stock yet')
                 }}
-                · {{ receipt.posting_date }}
+                · {{ formatDay(receipt.posting_date) }}
               </li>
             </ul>
           </div>
@@ -549,7 +550,9 @@
             <ul class="space-y-1 text-sm">
               <li v-for="task in data.followups.rows" :key="task.name">
                 {{ task.description }}
-                <span class="text-ink-gray-5">· {{ task.date }}</span>
+                <span class="text-ink-gray-5"
+                  >· {{ formatDay(task.date) }}</span
+                >
               </li>
             </ul>
           </div>
@@ -572,7 +575,7 @@
           <dt class="text-ink-gray-5">
             {{ __('Delivery date', null, 'Compras') }}
           </dt>
-          <dd>{{ doc.schedule_date }}</dd>
+          <dd>{{ formatDay(doc.schedule_date) }}</dd>
           <dt class="text-ink-gray-5">{{ __('Items', null, 'Compras') }}</dt>
           <dd>{{ data.rows_scope?.total }}</dd>
           <dt class="text-ink-gray-5">{{ __('Total', null, 'Compras') }}</dt>
@@ -633,6 +636,7 @@ import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import { shellBoot } from '@/composables/muelleShell'
 import { orderBillsRoute } from '@/composables/useGastos'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { formatDay } from '@/utils/contactos'
 import {
   MISSING_LABELS,
   clearDraft,
