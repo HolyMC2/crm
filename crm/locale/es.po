@@ -16107,6 +16107,7 @@ msgid "Google did not grant access. Try connecting again and allow calendar acce
 msgstr "Google no dio acceso. Vuelve a conectar y permite el acceso al calendario."
 
 #: frontend/src/pages/Agenda.vue
+#: frontend/src/components/agenda/AgendaCitaPanel.vue
 msgid "Appointments"
 msgstr "Citas"
 
@@ -18223,10 +18224,6 @@ msgstr "Pide a tu encargado acceso para cambiar citas."
 #: frontend/src/components/agenda/AgendaCitaPanel.vue
 msgid "Cancel the appointment of {0}?"
 msgstr "¿Cancelar la cita de {0}?"
-
-#: frontend/src/components/agenda/AgendaCitaPanel.vue
-msgid "Appointments"
-msgstr "Citas"
 
 #: frontend/src/components/agenda/AgendaCitaPanel.vue
 msgid "Sending…"
