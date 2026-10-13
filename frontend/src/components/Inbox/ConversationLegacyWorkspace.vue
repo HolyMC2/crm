@@ -223,10 +223,13 @@ onMounted(() => {
   // (audit H1). ?doctype=CRM Lead opens leads correctly (was hardcoded Deal).
   const deepLink = route.query.deal
   initInbox({ skipRestore: !!deepLink })
+  // Back from a «Resolver» hand-off (Contactos, Encuestas) on «Por responder»: the
+  // conversation reopens with «Resolver y siguiente», as the worker left it.
   if (deepLink)
     selectDeal(
       String(deepLink),
       route.query.doctype === 'CRM Lead' ? 'CRM Lead' : 'CRM Deal',
+      { fromReplyQueue: route.query.tab === 'por-responder' },
     )
   // The inbox is a long-lived tab: a push click while it is already open changes
   // only the query (pushNavigate → router.push), so the mount-time deep link above
