@@ -306,17 +306,16 @@ describe('extra field helpers', () => {
   it('offers «Más datos» in the order a manager saves only when the server knows it', () => {
     const fields = { fields: { define: false, limit: 15 } }
     // An order saved before «Más datos» shows it last, ready to move.
-    expect(sectionOrderFor({ section_order: ['identity', 'notes'] }, fields)).toEqual(
-      ['identity', 'notes', 'extra'],
-    )
+    expect(
+      sectionOrderFor({ section_order: ['identity', 'notes'] }, fields),
+    ).toEqual(['identity', 'notes', 'extra'])
     expect(
       sectionOrderFor({ section_order: ['extra', 'identity'] }, fields),
     ).toEqual(['extra', 'identity'])
     // A Contactos server without extra fields (older doco) would refuse «extra» on save.
-    expect(sectionOrderFor({ section_order: ['identity', 'notes'] }, {})).toEqual([
-      'identity',
-      'notes',
-    ])
+    expect(
+      sectionOrderFor({ section_order: ['identity', 'notes'] }, {}),
+    ).toEqual(['identity', 'notes'])
     expect(sectionOrderFor(undefined, undefined)).toEqual([
       'identity',
       'followups',

@@ -143,6 +143,26 @@ export function sectionPosition(order, key) {
   return index < 0 ? list.length + 1 : index
 }
 
+const DEFAULT_SECTION_ORDER = [
+  'identity',
+  'followups',
+  'notes',
+  'addresses',
+  'relations',
+]
+
+/**
+ * The section order the Personalizar dialog edits and saves. «Más datos» joins
+ * an order saved before it existed (last, ready to move) only when the server
+ * has extra fields (`capabilities.fields`): an older Contactos server refuses
+ * a section it does not know when the order is saved.
+ */
+export function sectionOrderFor(configuration, capabilities) {
+  const order = [...(configuration?.section_order || DEFAULT_SECTION_ORDER)]
+  if (capabilities?.fields && !order.includes('extra')) order.push('extra')
+  return order
+}
+
 /**
  * A person's record whose client account holds the shop's extra details: open
  * that account, and its «Volver» brings the worker back to this person.

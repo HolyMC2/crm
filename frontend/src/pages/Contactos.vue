@@ -541,6 +541,7 @@ import {
   extraClauses,
   isExtraClause,
   requestText,
+  sectionOrderFor,
 } from '@/utils/extraFields'
 import {
   contactScope,
@@ -1173,17 +1174,11 @@ onMounted(async () => {
     }
   }
   configurationCountry.value = boot.value?.configuration?.country || ''
-  sectionOrder.value = [
-    ...(boot.value?.configuration?.section_order || [
-      'identity',
-      'followups',
-      'notes',
-      'addresses',
-      'relations',
-    ]),
-  ]
   // An order saved before «Más datos» existed shows it last, ready to move.
-  if (!sectionOrder.value.includes('extra')) sectionOrder.value.push('extra')
+  sectionOrder.value = sectionOrderFor(
+    boot.value?.configuration,
+    boot.value?.capabilities,
+  )
   // «Ver campos» from a cliente opens Personalizar on its client fields.
   if (route.query.customize === 'fields') customize.value = true
   if (early !== JSON.stringify(listRequest())) await fetchRows(true)
