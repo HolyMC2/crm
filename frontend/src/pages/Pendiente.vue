@@ -37,7 +37,7 @@
             v-if="approvalOpen"
             variant="solid"
             class="min-h-11 sm:min-h-8"
-            :label="__('Open')"
+            :label="__('Open in {0}', [approval.where])"
             @click="openApproval"
           />
           <Button
