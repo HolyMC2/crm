@@ -10,8 +10,9 @@ through Frappe's assign_to without this context and stays an ordinary ToDo.
 from contextlib import contextmanager
 
 import frappe
+from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
-from frappe.utils import strip_html
+from frappe.utils import escape_html, strip_html
 
 FIELD = "crm_owner_assignment"
 OWNER_FIELDS = {"CRM Lead": "lead_owner", "CRM Deal": "deal_owner"}
@@ -25,6 +26,19 @@ def owner_assignment():
 		yield
 	finally:
 		frappe.flags.crm_owner_assignment = previous
+
+
+def description(doc):
+	"""The text of the owner's ToDo: the record itself, in shop words.
+
+	Frappe's default text names the raw DocType («Assignment for CRM Deal
+	CRM-DEAL-2026-00009») while the ToDo list already shows the type, so this
+	names the deal or lead: «Trato: Laura (CRM-DEAL-2026-00009)».
+	"""
+	title = doc.get(doc.meta.title_field) if doc.meta.title_field else None
+	label = f"{title} ({doc.name})" if title and title != doc.name else doc.name
+	text = _("Lead: {0}") if doc.doctype == "CRM Lead" else _("Deal: {0}")
+	return text.format(escape_html(label))
 
 
 def mark(doc, method=None):

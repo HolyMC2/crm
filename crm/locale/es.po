@@ -929,6 +929,10 @@ msgstr "sin asignar"
 msgid "Deal: {0}"
 msgstr "Trato: {0}"
 
+#. The text of a lead owner's automatic to-do (crm/owner_assignment.py)
+msgid "Lead: {0}"
+msgstr "Prospecto: {0}"
+
 msgid "Load more"
 msgstr "Cargar más"
 
