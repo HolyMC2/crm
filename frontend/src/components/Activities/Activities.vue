@@ -731,6 +731,7 @@ import { usersStore } from '@/stores/users'
 import { useTimelinePreferences } from '@/composables/useTimelinePreferences'
 import { whatsappEnabled, whatsappManual } from '@/composables/whatsapp'
 import { addonAvailable } from '@/utils/crmCapabilities'
+import { THREAD_RELOAD } from '@/utils/atencion'
 import { useDocument } from '@/data/document'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Button, Tooltip, createResource, toast } from 'frappe-ui'
@@ -1344,6 +1345,16 @@ function onWhatsappRealtime(data) {
   }
 }
 
+// «Ver el mensaje nuevo» (Resolver refused because the customer wrote meanwhile): load
+// the newest messages even when the realtime event was missed, and scroll to them.
+function onThreadReload(event) {
+  const { doctype, name } = event?.detail || {}
+  if (doctype !== props.doctype || name !== props.docname) return
+  if (whatsappEnabled.value) whatsappMessages.reload()
+  if (addonAvailable.value && unifiedThread.value) unifiedMessages.reload()
+  if (addonAvailable.value) messengerThread.reload()
+}
+
 onBeforeUnmount(() => {
   $socket.off('whatsapp_message', onWhatsappRealtime)
   $socket.off('whatsapp_status', onWhatsappRealtime)
@@ -1351,9 +1362,11 @@ onBeforeUnmount(() => {
   $socket.off('doco_marketing:thread_update', onMessengerRealtime)
   $socket.off('docinfo_update', handleDocinfoUpdate)
   $socket.emit('doc_unsubscribe', props.doctype, props.docname)
+  window.removeEventListener(THREAD_RELOAD, onThreadReload)
 })
 
 onMounted(() => {
+  window.addEventListener(THREAD_RELOAD, onThreadReload)
   $socket.on('whatsapp_message', onWhatsappRealtime)
   // delivery-receipt updates (sent→delivered→read) so the ✓/✓✓ refresh live
   $socket.on('whatsapp_status', onWhatsappRealtime)

@@ -33,8 +33,13 @@
               v-for="action in notice.actions"
               :key="action.label"
               :label="action.label"
+              :variant="refused ? 'solid' : undefined"
               :loading="busy === action.label"
               class="min-h-11 sm:min-h-8"
+              :data-testid="
+                'resolve-action-' +
+                (action.kind === 'call' ? action.target : action.kind)
+              "
               @click="run(action)"
             />
           </div>
@@ -63,7 +68,9 @@
           class="min-h-11 sm:min-h-8"
           @click="open = false"
         />
+        <!-- After a refusal the way forward is the notice's own action (read the new message). -->
         <Button
+          v-if="!refused"
           variant="solid"
           :label="resolveLabel({ ask: Boolean(preview?.ask), next })"
           :loading="busy === 'resolve'"
@@ -82,7 +89,7 @@ import { useRouter } from 'vue-router'
 import { Button, Dialog, FeatherIcon, call } from 'frappe-ui'
 import { requestId } from '@/composables/useCompras'
 import { resolvePreview, resolveConversation } from '@/composables/inbox'
-import { guardRoute, resolveLabel } from '@/utils/atencion'
+import { guardRoute, resolveLabel, resolveRefused } from '@/utils/atencion'
 
 const open = defineModel({ type: Boolean, default: false })
 const props = defineProps({
@@ -91,7 +98,7 @@ const props = defineProps({
   // 'queue' = «Resolver y siguiente», 'return' = back to where the worker came from
   next: { type: String, default: null },
 })
-const emit = defineEmits(['resolved', 'reply'])
+const emit = defineEmits(['resolved', 'reply', 'show-message'])
 const router = useRouter()
 
 const loading = ref(false)
@@ -99,6 +106,8 @@ const busy = ref('')
 const preview = ref(null)
 const problem = ref('')
 const status = ref('')
+// The server refused because the customer wrote something this sheet did not show.
+const refused = ref(false)
 // One id per opening: a double tap on «Resolver» stages one question.
 let request = requestId()
 
@@ -141,6 +150,11 @@ async function run(action) {
     emit('reply')
     return
   }
+  if (action.kind === 'call' && action.target === 'show_message') {
+    open.value = false
+    emit('show-message')
+    return
+  }
   if (action.kind === 'route') {
     const to = guardRoute(action.target, here(), 'Conversaciones')
     if (to) {
@@ -179,7 +193,16 @@ async function confirm() {
     const out = await resolveConversation(props.doctype, props.name, {
       ask: Boolean(preview.value?.ask),
       requestId: request,
+      seen: preview.value?.seen,
     })
+    if (resolveRefused(out)) {
+      // Nothing was resolved: the conversation stays in «Por responder» and the sheet
+      // stays here with why and the way to the new message (never «Siguiente»).
+      refused.value = true
+      preview.value = { ask: false, notice: out.notice, seen: out.seen }
+      request = requestId()
+      return
+    }
     open.value = false
     emit('resolved', out)
   } catch (error) {
@@ -194,6 +217,7 @@ watch(open, (value) => {
   if (!value) return
   request = requestId()
   status.value = ''
+  refused.value = false
   preview.value = null
   load()
 })

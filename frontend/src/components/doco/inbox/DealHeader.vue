@@ -396,6 +396,7 @@
       :next="nextMode"
       @resolved="onResolved"
       @reply="focusReply"
+      @show-message="showNewMessage"
     />
   </div>
 </template>
@@ -427,6 +428,7 @@ import {
   dueChip,
   goToReturn,
   headerResolveLabel,
+  reloadThread,
 } from '@/utils/atencion'
 import StageStepper from '@/components/doco/StageStepper.vue'
 import ChannelComposer from '@/components/doco/channel/ChannelComposer.vue'
@@ -706,6 +708,13 @@ function onResolved(out) {
   if (nextMode.value === 'queue')
     openNextToAnswer(activeDealDoctype.value, activeDeal.value)
   else if (nextMode.value === 'return') goToReturn(router, returnTo.value)
+}
+// «Ver el mensaje nuevo»: «Resolver» was refused because the customer wrote meanwhile.
+// The conversation tab with its thread reloaded to the newest message; the reply flag
+// was not cleared, so it stays in «Por responder».
+function showNewMessage() {
+  activeTab.value = 'conversation'
+  nextTick(() => reloadThread(activeDealDoctype.value, activeDeal.value))
 }
 // «Responder» from the sheet: the conversation tab, with the cursor in the composer.
 function focusReply() {

@@ -198,6 +198,21 @@ describe('Resolver through the inbox composable', () => {
     expect(frappe.__resources[REPLY_URL].submit).toHaveBeenCalled()
   })
 
+  it('sends back the newest message the sheet judged, so a newer one refuses', async () => {
+    frappe.__callState.behavior = async () => ({ ok: false, cleared: false })
+    const out = await inbox.resolveConversation('CRM Lead', 'L-1', {
+      ask: false,
+      requestId: 'req-87654321',
+      seen: '2026-10-13 10:50:00.123456',
+    })
+    expect(out.ok).toBe(false)
+    const [, args] = frappe.__callState.calls.find(([m]) =>
+      m.endsWith('.resolve'),
+    )
+    expect(args.seen).toBe('2026-10-13 10:50:00.123456')
+    expect(args.ask).toBe(0)
+  })
+
   it('«Resolver sin preguntar» on the chip asks nothing and puts the chip back if refused', async () => {
     const queue =
       frappe.__resources['doco_marketing.api.inbox.get_conversation_queue']

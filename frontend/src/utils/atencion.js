@@ -111,6 +111,21 @@ export function resolveLabel({ ask = false, next = null } = {}) {
   return ask ? tr('Resolve') : tr('Resolve without asking')
 }
 
+/**
+ * «Resolver» was refused: the customer wrote something the sheet did not show. Nothing
+ * was resolved, so the sheet stays (no «Siguiente») and leads to the new message.
+ */
+export function resolveRefused(out) {
+  return Boolean(out) && out.ok === false
+}
+
+/** Ask the open conversation's thread to load its newest messages (and scroll to them). */
+export const THREAD_RELOAD = 'doco:thread-reload'
+export function reloadThread(doctype, name) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(THREAD_RELOAD, { detail: { doctype, name } }))
+}
+
 /** The header button's label: «Resolver y siguiente» when the worker came from Por responder. */
 export function headerResolveLabel(next) {
   return next === 'queue' ? tr('Resolve and next') : tr('Resolve')

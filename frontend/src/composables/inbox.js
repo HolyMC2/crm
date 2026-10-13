@@ -906,13 +906,18 @@ export function resolvePreview(doctype, name) {
     reference_name: name,
   })
 }
-/** Close the reply flag; with ask, stage the question for a manager to approve. */
+/**
+ * Close the reply flag; with ask, stage the question for a manager to approve.
+ * `seen` (the preview's newest message) makes the server refuse ({ ok: false }) when the
+ * customer wrote something newer meanwhile: nothing is resolved then.
+ */
 export async function resolveConversation(doctype, name, opts = {}) {
   const out = await call('doco_marketing.api.inbox.resolve', {
     reference_doctype: doctype,
     reference_name: name,
     ask: opts.ask ? 1 : 0,
     request_id: opts.requestId || undefined,
+    seen: opts.seen || undefined,
   })
   // The queue, the tab count and the header badge all read the same flag.
   reloadReplyQueue()
