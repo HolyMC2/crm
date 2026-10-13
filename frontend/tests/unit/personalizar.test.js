@@ -56,6 +56,7 @@ import { Button, Dialog, FormControl } from 'frappe-ui'
 import ExtraFieldsPanel from '@/components/contactos/ExtraFieldsPanel.vue'
 import ExtraFieldForm from '@/components/contactos/ExtraFieldForm.vue'
 import {
+  accountExtraRoute,
   clauseLabel,
   coreFields,
   extraClauses,
@@ -296,6 +297,23 @@ describe('extra field helpers', () => {
     expect(sectionPosition(order, 'notes')).toBe(2)
     expect(sectionPosition(order, 'extra')).toBe(4)
     expect(sectionPosition(undefined, 'extra')).toBe(1)
+  })
+
+  it('a person opens their client account extra details and comes back', () => {
+    const person = { source: 'contact', name: 'CONT-7', title: 'Laura Pérez' }
+    expect(accountExtraRoute(person, 'Laura Pérez', 2)).toEqual({
+      name: 'Contacto',
+      params: { source: 'customer', name: 'Laura Pérez' },
+      query: {
+        return_to: '/crm/contactos/contact/CONT-7',
+        return_label: 'Laura Pérez',
+      },
+    })
+    expect(accountExtraRoute(person, 'Laura Pérez', 0)).toBeNull()
+    expect(accountExtraRoute(person, '', 2)).toBeNull()
+    expect(
+      accountExtraRoute({ source: 'customer', name: 'Laura Pérez' }, 'x', 2),
+    ).toBeNull()
   })
 
   it('builds a request the owner can read', () => {

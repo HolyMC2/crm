@@ -695,7 +695,12 @@ import {
   identityTypeLabel,
   SOURCE_TYPES,
 } from '@/utils/contactos'
-import { coreFields, extraFields, sectionPosition } from '@/utils/extraFields'
+import {
+  accountExtraRoute,
+  coreFields,
+  extraFields,
+  sectionPosition,
+} from '@/utils/extraFields'
 const route = useRoute(),
   router = useRouter()
 const record = ref(null),
@@ -911,19 +916,13 @@ const showExtra = computed(
       !!capabilities.value.manager),
 )
 // A person whose client account holds the extra details: open it, and come back.
-const customerExtraLink = computed(() => {
-  if (record.value?.source !== 'contact' || !selectedCustomer.value) return null
-  if (!(boot.value?.extra_fields || []).length) return null
-  const here = `/crm/contactos/contact/${encodeURIComponent(record.value.name)}`
-  return {
-    name: 'Contacto',
-    params: { source: 'customer', name: selectedCustomer.value },
-    query: {
-      return_to: here,
-      return_label: record.value.title || record.value.name,
-    },
-  }
-})
+const customerExtraLink = computed(() =>
+  accountExtraRoute(
+    record.value,
+    selectedCustomer.value,
+    (boot.value?.extra_fields || []).length,
+  ),
+)
 /** A save from «Más datos» updates the record in place (no reload, same scroll). */
 function applySaved(result) {
   if (!result?.name || result.name !== record.value?.name) return reload()

@@ -143,6 +143,23 @@ export function sectionPosition(order, key) {
   return index < 0 ? list.length + 1 : index
 }
 
+/**
+ * A person's record whose client account holds the shop's extra details: open
+ * that account, and its «Volver» brings the worker back to this person.
+ */
+export function accountExtraRoute(record, customer, extraFieldCount) {
+  if (record?.source !== 'contact' || !record?.name || !customer) return null
+  if (!extraFieldCount) return null
+  return {
+    name: 'Contacto',
+    params: { source: 'customer', name: customer },
+    query: {
+      return_to: `/crm/contactos/contact/${encodeURIComponent(record.name)}`,
+      return_label: record.title || record.name,
+    },
+  }
+}
+
 /** Text the person can paste to the owner when nobody can be asked from here. */
 export function requestText({ label, kind, record } = {}) {
   if (!label)
