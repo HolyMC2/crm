@@ -16,6 +16,9 @@
         {{ formatMoment(ask.requested_at) }}
       </p>
     </div>
+    <p v-if="problem" role="alert" class="mt-2 text-sm text-ink-red-7">
+      <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+    </p>
     <!-- On a phone the answer stays at thumb reach: a bar above the shell's
          bottom nav (the record's own decision first); inline from sm up. -->
     <div
@@ -26,6 +29,15 @@
         class="min-h-11 sm:min-h-8"
         :label="__(`Don't approve`)"
         @click="selected = asks[0]"
+      />
+      <!-- An ask the screen has no decision for (a review): answered here. -->
+      <Button
+        v-if="settleable"
+        class="min-h-11 sm:min-h-8"
+        variant="solid"
+        :label="settleLabel || __('Done')"
+        :loading="settling"
+        @click="settle(settleable)"
       />
       <span class="contents sm:hidden"><slot name="primary" /></span>
     </div>
@@ -39,25 +51,41 @@
   </section>
 </template>
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import DeclineDialog from '@/components/pendientes/DeclineDialog.vue'
-import { aprobacionesApi } from '@/composables/useAprobaciones'
+import {
+  approvalError,
+  aprobacionesApi,
+  requestId,
+} from '@/composables/useAprobaciones'
 import { formatMoment } from '@/utils/contactos'
 
 // What was asked of me on this record (Pendientes «Por aprobar»): read from the
 // server for the record on screen, never from a ToDo id in the URL. Deciding
 // stays the screen's own action (slot `primary` repeats it in the phone bar);
-// «No aprobar» answers with a reason.
+// «No aprobar» answers with a reason. Asks of `settleKinds` (a purchase review)
+// have no decision on the screen: «Revisada» answers them and tells who asked.
 const props = defineProps({
   doctype: { type: String, required: true },
   name: { type: String, required: true },
+  settleKinds: { type: Array, default: () => [] },
+  settleLabel: { type: String, default: '' },
 })
-const emit = defineEmits(['declined'])
+const emit = defineEmits(['declined', 'settled'])
 const asks = ref([]),
-  selected = ref(null)
+  selected = ref(null),
+  settling = ref(false),
+  problem = ref(null)
+// One id per answer until it lands: a lost response is not a second answer.
+let settleRequest = null
+
+const settleable = computed(() =>
+  asks.value.find((ask) => props.settleKinds.includes(ask.kind)),
+)
 
 async function load() {
+  problem.value = null
   if (!props.name) {
     asks.value = []
     return
@@ -77,6 +105,25 @@ function declined(answer) {
   asks.value = asks.value.filter((ask) => ask.todo !== answer?.todo)
   selected.value = null
   emit('declined', answer)
+}
+async function settle(ask) {
+  settling.value = true
+  problem.value = null
+  if (settleRequest?.todo !== ask.todo)
+    settleRequest = { todo: ask.todo, id: requestId() }
+  try {
+    const answer = await aprobacionesApi('settle', {
+      todo: ask.todo,
+      request_id: settleRequest.id,
+    })
+    settleRequest = null
+    asks.value = asks.value.filter((item) => item.todo !== ask.todo)
+    emit('settled', { ...ask, ...(answer || {}) })
+  } catch (error) {
+    problem.value = approvalError(error)
+  } finally {
+    settling.value = false
+  }
 }
 
 watch(() => [props.doctype, props.name], load, { immediate: true })

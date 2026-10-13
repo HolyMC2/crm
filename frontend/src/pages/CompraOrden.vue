@@ -75,7 +75,10 @@
           v-if="!isNew && doc.name && !editing"
           doctype="Purchase Order"
           :name="doc.name"
+          :settle-kinds="['compras.review']"
+          :settle-label="__('Reviewed', null, 'Compras')"
           @declined="goBack"
+          @settled="reviewed"
         >
           <template #primary>
             <Button
@@ -1166,6 +1169,13 @@ function reapply() {
     return
   }
   save()
+}
+
+// «Revisada»: the review asked of me is answered without confirming anything;
+// who asked hears it. From another list, back there with `done`.
+function reviewed() {
+  toast.success(__('Review answered. We told who asked.'))
+  if (returnTo.value) return goBack()
 }
 
 function goBack() {

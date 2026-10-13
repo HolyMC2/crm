@@ -18513,3 +18513,12 @@ msgstr "Ábrelo ahí para decidir; también te espera en Pendientes, en Por apro
 #: frontend/src/router.js
 msgid "Messages to review"
 msgstr "Mensajes por revisar"
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "Reviewed"
+msgstr "Revisada"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Review answered. We told who asked."
+msgstr "Revisión contestada. Le avisamos a quien la pidió."
