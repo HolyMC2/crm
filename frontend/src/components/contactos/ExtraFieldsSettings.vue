@@ -66,14 +66,18 @@
           <template v-if="active.action === 'retire'">
             <p>
               {{
-                field.used
+                field.used > 1
                   ? __(
                       '{0} clientes have a value; it is kept. The field stops showing until you reactivate it.',
                       [field.used],
                     )
-                  : __(
-                      'No cliente has a value yet. The field stops showing until you reactivate it.',
-                    )
+                  : field.used === 1
+                    ? __(
+                        'One cliente has a value; it is kept. The field stops showing until you reactivate it.',
+                      )
+                    : __(
+                        'No cliente has a value yet. The field stops showing until you reactivate it.',
+                      )
               }}
             </p>
             <div class="c-actions">
@@ -157,7 +161,11 @@ function summary(field) {
   if (field.kind === 'list' && field.options?.length)
     parts.push(field.options.join(', '))
   if (field.used != null)
-    parts.push(__('{0} clientes with a value', [field.used]))
+    parts.push(
+      field.used === 1
+        ? __('One cliente with a value')
+        : __('{0} clientes with a value', [field.used]),
+    )
   return parts.join(' · ')
 }
 async function load() {

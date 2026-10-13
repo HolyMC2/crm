@@ -19017,3 +19017,11 @@ msgstr "«{0}» retirado. Sus datos se guardan."
 msgctxt "Extra field value"
 msgid "Yes"
 msgstr "Sí"
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "One cliente has a value; it is kept. The field stops showing until you reactivate it."
+msgstr "Un cliente tiene dato; se guarda. El campo deja de mostrarse hasta que lo reactives."
+
+#: frontend/src/components/contactos/ExtraFieldsSettings.vue
+msgid "One cliente with a value"
+msgstr "1 cliente con dato"
