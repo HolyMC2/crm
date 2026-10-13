@@ -94,7 +94,7 @@
               <button
                 class="flex items-center gap-1 rounded bg-surface-gray-2 px-2 py-1 text-[11.5px] font-semibold text-ink-gray-8 hover:bg-surface-gray-3"
               >
-                {{ row.status || '—' }} ⌄
+                {{ stageLabel(row.status) || '—' }} ⌄
               </button>
             </Dropdown>
           </div>
@@ -226,7 +226,7 @@
           <span class="flex-none text-ink-gray-5">{{ __('Estado') }}</span>
           <span
             class="rounded bg-surface-gray-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-gray-7"
-            >{{ dealSummary.status || '—' }}</span
+            >{{ stageLabel(dealSummary.status) || '—' }}</span
           >
         </div>
         <div
@@ -411,6 +411,7 @@ import { usersStore } from '@/stores/users'
 import { parseAssignees } from '@/utils'
 import { guardStatusChange } from '@/utils/statusGuard'
 import { repairReadyStage } from '@/utils/repairReadyStage'
+import { stageLabel } from '@/utils/stageLabel'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
@@ -670,7 +671,7 @@ const statusOpts = computed(() =>
   )
     .filter((s) => !Number(s.hidden || 0))
     .map((s) => ({
-      label: s.name,
+      label: stageLabel(s.name),
       onClick: () => changeStatus(s.name, s.type),
     })),
 )

@@ -28,7 +28,7 @@
           class="inline-flex items-center gap-1 rounded-md bg-surface-gray-2 px-1.5 py-[2px] text-xs font-medium text-ink-gray-7"
         >
           <IndicatorIcon :class="statusColor(r.status)" />
-          {{ __(r.status) }}
+          {{ stageLabel(r.status) }}
         </span>
         <span
           v-if="resolveChip(r._v_repair_status)"
@@ -81,6 +81,7 @@ import { timeAgo, formatPhone } from '@/composables/crmFormat'
 import { resolveChip, virtualText } from '@/utils/listColumns'
 import { money } from '@/utils/numberFormat'
 import { statusesStore } from '@/stores/statuses'
+import { stageLabel } from '@/utils/stageLabel'
 
 defineProps({
   rows: { type: Array, default: () => [] },

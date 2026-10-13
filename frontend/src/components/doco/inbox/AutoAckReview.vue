@@ -78,7 +78,7 @@
               class="flex-none rounded px-1 py-px text-[9.5px] font-semibold"
               :style="statusChip(r)"
             >
-              {{ r.status }}
+              {{ recordStageLabel(r.status, r.reference_doctype) }}
             </span>
           </div>
         </button>
@@ -135,6 +135,7 @@ import {
 import { formatPhone } from '@/composables/crmFormat'
 import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
+import { recordStageLabel } from '@/utils/stageLabel'
 
 const { isManager } = usersStore()
 const { getDealStatus, getLeadStatus } = statusesStore()

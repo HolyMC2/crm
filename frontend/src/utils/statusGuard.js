@@ -1,4 +1,5 @@
 import { createDialog } from '@/utils/dialogs'
+import { stageLabel } from '@/utils/stageLabel'
 
 // Statuses whose ENTRY can auto-send WhatsApp to the customer (taller tracker
 // "entregado" template; doco_marketing campaign stage_entered enrollments).
@@ -46,7 +47,7 @@ export function guardStatusChange(status, onConfirm, { onSilent } = {}) {
       close()
     }
     createDialog({
-      title: __('¿Cambiar estado a «{0}»?', [status]),
+      title: __('¿Cambiar estado a «{0}»?', [stageLabel(status)]),
       message: __(
         'Este estado puede enviar un WhatsApp automático al cliente. Verifica que sea la conversación correcta. Para órdenes viejas/atrasadas usa «Cambiar SIN avisar» — el cliente no recibirá ningún mensaje.',
       ),

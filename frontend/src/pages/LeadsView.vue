@@ -258,7 +258,7 @@
             class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
             :style="statusChip(r.status)"
           >
-            {{ r.status }}
+            {{ stageLabel(r.status, LEAD_STATUS) }}
           </span>
           <span
             v-if="r.score_grade"
@@ -433,7 +433,7 @@
               class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
               :style="statusChip(r.status)"
             >
-              {{ r.status }}
+              {{ stageLabel(r.status, LEAD_STATUS) }}
             </span>
           </div>
           <div
@@ -622,6 +622,7 @@ import LeadModal from '@/components/Modals/LeadModal.vue'
 import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import { userScopedKey } from '@/utils/storageKeys'
+import { LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
 import ScoreExplainPopover from '@/components/doco/ScoreExplainPopover.vue'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
@@ -1048,7 +1049,7 @@ onMounted(applyFilters)
 const stageOptions = computed(() =>
   statusStore.visibleLeadStatuses.map((s) => ({
     value: s.name,
-    label: s.name,
+    label: stageLabel(s.name, LEAD_STATUS),
     color: s.color,
     type: s.type,
   })),
@@ -1073,7 +1074,12 @@ const sourceOptions = computed(() =>
 const chips = computed(() => {
   const out = []
   for (const v of statusF.value)
-    out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
+    out.push({
+      key: `st:${v}`,
+      type: 'status',
+      value: v,
+      label: stageLabel(v, LEAD_STATUS),
+    })
   for (const v of gradeF.value)
     out.push({ key: `gr:${v}`, type: 'grade', value: v, label: `Score ${v}` })
   for (const v of sourceF.value)

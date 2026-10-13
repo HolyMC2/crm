@@ -169,6 +169,7 @@ import { usersStore } from '@/stores/users'
 import { getMeta } from '@/stores/meta'
 import { hasApp } from '@/utils/crmCapabilities'
 import { statusesStore } from '@/stores/statuses'
+import { stageLabel } from '@/utils/stageLabel'
 import { isMobileView } from '@/composables/settings'
 import { showQuickEntryModal, quickEntryProps } from '@/composables/modals'
 import { useDocument } from '@/data/document'
@@ -337,7 +338,7 @@ const dealStatuses = computed(() =>
   deal.doc.pipeline
     ? pipelineStages.value
         .filter((stage) => !stage.archived)
-        .map((stage) => ({ label: stage.name, value: stage.name }))
+        .map((stage) => ({ label: stageLabel(stage.name), value: stage.name }))
     : statusOptions('deal'),
 )
 watch(dealStatuses, (options) => {

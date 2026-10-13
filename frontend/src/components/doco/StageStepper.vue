@@ -25,7 +25,7 @@
       class="flex-none rounded-md border border-dashed border-outline-gray-3 px-2 py-[5px] text-[11.5px] font-medium text-ink-gray-5"
       :title="__('Etapa fuera del embudo activo')"
     >
-      {{ current }}
+      {{ stageLabel(current) }}
     </span>
 
     <div
@@ -45,7 +45,7 @@
           :aria-current="s.state === 'current' ? 'step' : undefined"
           @click="pick(s)"
         >
-          {{ s.name }}
+          {{ stageLabel(s.name) }}
         </button>
       </Tooltip>
     </div>
@@ -75,6 +75,7 @@
 import { computed } from 'vue'
 import { Button, Dropdown, Tooltip } from 'frappe-ui'
 import { stageInk, stageSurface, stepperModel } from '@/utils/stagePartition'
+import { stageLabel } from '@/utils/stageLabel'
 
 const props = defineProps({
   // Visible deal statuses, already hidden-filtered and position-ordered.
@@ -91,16 +92,20 @@ const wonStatus = computed(() => model.value.won[0] || null)
 // reads «Perdido · Cancelado» instead of an inert button.
 const lostLabel = computed(() =>
   model.value.outcome === 'lost'
-    ? `${__('Perdido')} · ${props.current}`
+    ? `${__('Perdido')} · ${stageLabel(props.current)}`
     : __('Perdido'),
 )
 const lostOptions = computed(() =>
-  model.value.lost.map((s) => ({ label: s.name, onClick: () => pick(s) })),
+  model.value.lost.map((s) => ({
+    label: stageLabel(s.name),
+    onClick: () => pick(s),
+  })),
 )
 
 function stageHint(s) {
   const p = s?.probability
-  return p || p === 0 ? `${s.name} · ${p}%` : s?.name || ''
+  const name = stageLabel(s?.name)
+  return p || p === 0 ? `${name} · ${p}%` : name
 }
 
 function segmentStyle(s) {

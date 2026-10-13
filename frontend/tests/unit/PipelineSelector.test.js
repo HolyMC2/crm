@@ -117,3 +117,28 @@ describe('pipeline selector UI', () => {
     expect(change).not.toHaveBeenCalled()
   })
 })
+
+describe('pipeline selector copy', () => {
+  it('has a Spanish line for every message the picker shows', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const source = readFileSync(
+      resolve(__dirname, '../../src/components/Pipeline/PipelineSelector.vue'),
+      'utf8',
+    )
+    const po = readFileSync(
+      resolve(__dirname, '../../../crm/locale/es.po'),
+      'utf8',
+    )
+    const catalog = new Map()
+    for (const m of po.matchAll(
+      /^(msgctxt .*\n)?msgid "((?:[^"\\]|\\.)*)"\nmsgstr "((?:[^"\\]|\\.)*)"/gm,
+    ))
+      if (!m[1]) catalog.set(m[2], m[3])
+    const strings = [...source.matchAll(/__\(\s*(['"])((?:(?!\1).)+)\1/gs)].map(
+      (m) => m[2],
+    )
+    expect(strings).toContain('Deal probability is editable')
+    for (const text of strings) expect(catalog.get(text), text).toBeTruthy()
+  })
+})

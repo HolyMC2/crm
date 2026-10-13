@@ -18,6 +18,65 @@ msgstr ""
 "X-Crowdin-File-ID: 97\n"
 "Language: es_ES\n"
 
+#. Standard CRM Deal Status names (crm/install.py), shown through
+#. utils/stageLabel.js; a renamed or custom stage is shown as written
+#: frontend/src/utils/stageLabel.js
+msgid "Qualification"
+msgstr "Calificación"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Demo/Making"
+msgstr "Demostración"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Proposal/Quotation"
+msgstr "Propuesta/Cotización"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Negotiation"
+msgstr "Negociación"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Ready to Close"
+msgstr "Listo para cerrar"
+
+#. Standard CRM Lead Status names (crm/install.py)
+#: frontend/src/utils/stageLabel.js
+msgid "Contacted"
+msgstr "Contactado"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Nurture"
+msgstr "En seguimiento"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Qualified"
+msgstr "Calificado"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Unqualified"
+msgstr "No calificado"
+
+#: frontend/src/utils/stageLabel.js
+msgid "Junk"
+msgstr "Descartado"
+
+#: frontend/src/components/Pipeline/PipelineSelector.vue
+msgid "Probability follows the stage"
+msgstr "La probabilidad la marca la etapa"
+
+#: frontend/src/components/Pipeline/PipelineSelector.vue
+msgid "Deal probability is editable"
+msgstr "La probabilidad del trato se puede editar"
+
+#: frontend/src/components/Pipeline/PipelineSelector.vue
+msgid "Select a pipeline"
+msgstr "Elige un embudo"
+
+#: frontend/src/components/Pipeline/PipelineSelector.vue
+msgid "Pipelines could not load. Retry before choosing a pipeline."
+msgstr "No se pudieron cargar los embudos. Reintenta antes de elegir uno."
+
 #: frontend/src/pages/DealsView.vue
 msgid "Totals unavailable · Retry"
 msgstr "Totales no disponibles · Reintentar"

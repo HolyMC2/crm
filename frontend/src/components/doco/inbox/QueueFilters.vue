@@ -238,6 +238,7 @@ import {
   setQueueFilters,
   clearQueueFilters,
 } from '@/composables/inbox'
+import { DEAL_STATUS, LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
 
 const open = ref(false)
 const expanded = ref('') // which drill-down section is open (one at a time)
@@ -342,12 +343,16 @@ function setPeriod(days) {
 // ── drill-down sections ──────────────────────────────────────────────────────
 // Statuses grouped by the doctype's own `type`, so the hand-pick list reads
 // "Abiertos / Ganados / Perdidos" instead of one 22-item scroll.
-function groupByType(list) {
+function groupByType(list, doctype) {
   const open_ = [],
     won = [],
     lost = []
   for (const s of list || []) {
-    const o = { value: s.name, label: s.name, color: s.color }
+    const o = {
+      value: s.name,
+      label: stageLabel(s.name, doctype),
+      color: s.color,
+    }
     if (s.type === 'Won') won.push(o)
     else if (closedTypes.value.includes(s.type)) lost.push(o)
     else open_.push(o)
@@ -363,7 +368,7 @@ const sections = computed(() => [
     key: 'deal',
     label: __('Estado del trato'),
     selected: queueDealStatus.value,
-    groups: groupByType(opts.value.deal_statuses),
+    groups: groupByType(opts.value.deal_statuses, DEAL_STATUS),
     toggle: (v) =>
       setQueueFilters({ deal_status: toggleIn(queueDealStatus.value, v) }),
   },
@@ -371,7 +376,7 @@ const sections = computed(() => [
     key: 'lead',
     label: __('Estado del prospecto'),
     selected: queueLeadStatus.value,
-    groups: groupByType(opts.value.lead_statuses),
+    groups: groupByType(opts.value.lead_statuses, LEAD_STATUS),
     toggle: (v) =>
       setQueueFilters({ lead_status: toggleIn(queueLeadStatus.value, v) }),
   },
@@ -422,14 +427,14 @@ const chips = computed(() => {
   for (const v of queueDealStatus.value)
     out.push({
       key: `d:${v}`,
-      label: v,
+      label: stageLabel(v, DEAL_STATUS),
       remove: () =>
         setQueueFilters({ deal_status: toggleIn(queueDealStatus.value, v) }),
     })
   for (const v of queueLeadStatus.value)
     out.push({
       key: `l:${v}`,
-      label: v,
+      label: stageLabel(v, LEAD_STATUS),
       remove: () =>
         setQueueFilters({ lead_status: toggleIn(queueLeadStatus.value, v) }),
     })

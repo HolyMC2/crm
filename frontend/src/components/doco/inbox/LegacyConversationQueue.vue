@@ -357,7 +357,8 @@
                   {{ c.contact_name || formatPhone(c.mobile_no) }}
                 </div>
                 <div class="truncate text-[11px] text-ink-gray-5">
-                  {{ c.status || '—' }} · {{ __('por') }}
+                  {{ recordStageLabel(c.status, c.ref_doctype) || '—' }} ·
+                  {{ __('por') }}
                   {{ (c.cleared_by || '').split('@')[0] }}
                 </div>
               </div>
@@ -857,7 +858,7 @@
                   class="h-1.5 w-1.5 flex-none rounded-full"
                   :style="`background:${statusColor(r.status)}`"
                 />
-                {{ r.status }}
+                {{ recordStageLabel(r.status, r.ref_doctype) }}
               </span>
               <!-- 🔧 newest repair order: folio + ITS status. The deal status above says
                where the sale stands; this says where the device stands — the pair the
@@ -936,6 +937,7 @@ import LucideVolume2 from '~icons/lucide/volume-2'
 import LucideVolumeX from '~icons/lucide/volume-x'
 import LucideRefreshCw from '~icons/lucide/refresh-cw'
 import { statusesStore } from '@/stores/statuses'
+import { recordStageLabel } from '@/utils/stageLabel'
 import { soundEnabled, toggleSound } from '@/composables/notificationSound'
 import {
   pushState,

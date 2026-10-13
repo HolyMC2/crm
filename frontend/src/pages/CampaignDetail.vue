@@ -128,7 +128,7 @@
               :key="s.name"
               :value="s.name"
             >
-              {{ s.name }}
+              {{ stageLabel(s.name) }}
             </option>
           </select>
         </Field>
@@ -263,6 +263,7 @@ import {
 import { avatarColor, initials, timeAgo } from '@/composables/crmFormat'
 import StepCardList from '@/components/doco/flows/StepCardList.vue'
 import { cadenceToggleLocked } from '@/utils/cadenceScaffold'
+import { stageLabel } from '@/utils/stageLabel'
 
 const props = defineProps({ campaignId: { type: String, required: true } })
 const TYPES = ['whatsapp', 'email', 'sms', 'automation']

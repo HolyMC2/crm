@@ -128,6 +128,25 @@ describe('deal overview follow-up workflow', () => {
   })
 })
 
+describe('deal overview stage', () => {
+  const identity = globalThis.__
+  afterEach(() => {
+    globalThis.__ = identity
+    delete window.translated_doctypes
+  })
+  it('names a standard stage in Spanish and a tenant stage as written', async () => {
+    window.translated_doctypes = ['CRM Deal Status']
+    globalThis.__ = (text) =>
+      ({ 'Proposal/Quotation': 'Propuesta/Cotización' })[text] || text
+    let ui = await mount({ status: 'Proposal/Quotation' })
+    expect(ui.el.textContent).toContain('Propuesta/Cotización')
+    expect(ui.el.textContent).not.toContain('Proposal/Quotation')
+    cleanup.splice(0).forEach((fn) => fn())
+    ui = await mount({ status: 'Esperando Recepción' })
+    expect(ui.el.textContent).toContain('Esperando Recepción')
+  })
+})
+
 describe('deal overview repair links', () => {
   afterEach(() => {
     mocks.hasTaller.value = false

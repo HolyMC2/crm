@@ -382,7 +382,7 @@
             class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
             :style="statusChip(r.status)"
           >
-            {{ r.status }}
+            {{ stageLabel(r.status) }}
           </span>
           <span
             v-if="extra(r).repair_status"
@@ -637,7 +637,7 @@
                   class="rounded-md px-2 py-[3px] text-[11.5px] font-semibold"
                   :style="statusChip(r.status)"
                 >
-                  {{ r.status }}
+                  {{ stageLabel(r.status) }}
                 </span>
               </div>
               <div
@@ -875,6 +875,7 @@ import {
 } from '@/utils/pipelineMath'
 
 import { followUpFilters, FOLLOW_UP_QUEUES } from '@/utils/dealFollowUp'
+import { stageLabel } from '@/utils/stageLabel'
 import {
   DEAL_GROUP_BYS,
   groupByLabel,
@@ -1505,7 +1506,11 @@ const renderGroups = computed(() => {
         ? extra(r).repair_status || ''
         : r[groupBy.value] || '',
     labelOf: (value) =>
-      groupBy.value === 'deal_owner' ? ownerName(value) : value,
+      groupBy.value === 'deal_owner'
+        ? ownerName(value)
+        : groupBy.value === 'status'
+          ? stageLabel(value)
+          : value,
   })
 })
 function groupColor(key) {
@@ -1558,7 +1563,7 @@ applyFilters()
 const stageOptions = computed(() =>
   scopedStages.value.map((s) => ({
     value: s.name,
-    label: s.name,
+    label: stageLabel(s.name),
     color: getDealStatus(s.name)?.color || s.color,
     probability: s.probability,
     type: s.type,
@@ -1592,7 +1597,7 @@ const chips = computed(() => {
       label: `${__('Created')}: ${createdFrom.value || '…'} → ${createdTo.value || '…'}`,
     })
   for (const v of statusF.value)
-    out.push({ key: `st:${v}`, type: 'status', value: v, label: v })
+    out.push({ key: `st:${v}`, type: 'status', value: v, label: stageLabel(v) })
   for (const v of sourceF.value)
     out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
   for (const v of ownerF.value)

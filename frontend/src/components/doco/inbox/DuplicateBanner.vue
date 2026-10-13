@@ -36,7 +36,7 @@
             <span class="min-w-0 truncate text-[12px] text-ink-gray-8">
               {{ d.title
               }}<span v-if="d.status" class="text-ink-gray-5">
-                ({{ d.status }})</span
+                ({{ recordStageLabel(d.status, d.doctype) }})</span
               >
             </span>
             <div class="flex flex-none items-center gap-1.5">
@@ -101,6 +101,7 @@
 import { computed, ref, watch } from 'vue'
 import { createResource, Dialog, Button, call, toast } from 'frappe-ui'
 import { formatMovedCounts } from '@/utils/mergeSummary'
+import { recordStageLabel } from '@/utils/stageLabel'
 
 const props = defineProps({
   // 'CRM Deal' | 'CRM Lead' — the record whose phone we check; also the merge SURVIVOR.

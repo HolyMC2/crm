@@ -449,7 +449,10 @@
 
           <!-- Deal status echo -->
           <div v-if="ro.deal_status" class="px-4 py-3">
-            <Row :label="__('Deal status')" :value="ro.deal_status" />
+            <Row
+              :label="__('Deal status')"
+              :value="stageLabel(ro.deal_status)"
+            />
           </div>
 
           <!-- Last communication mirror -->
@@ -534,6 +537,7 @@ import { computed, h } from 'vue'
 import { useRoute } from 'vue-router'
 import { hasTaller } from '@/composables/inbox'
 import { useRepairOrders } from '@/composables/repairOrders'
+import { stageLabel } from '@/utils/stageLabel'
 import {
   repairMoney as money,
   repairOrderHref,

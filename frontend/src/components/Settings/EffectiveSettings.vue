@@ -162,7 +162,7 @@
               :key="stage.status"
               class="break-words rounded border border-outline-gray-2 p-2"
             >
-              {{ stage.status }} · {{ __(stage.type) }} ·
+              {{ stageLabel(stage.status) }} · {{ __(stage.type) }} ·
               {{ stage.probability }}%
               <span v-if="stage.archived">· {{ __('Archived') }}</span
               ><span v-if="stage.has_entry_requirements">
@@ -504,6 +504,7 @@ import {
 } from 'vue'
 import { call } from 'frappe-ui'
 import { activeSettingsPage } from '@/composables/settings'
+import { stageLabel } from '@/utils/stageLabel'
 const result = ref(null),
   loading = ref(false),
   error = ref(''),

@@ -356,7 +356,8 @@
           >
             <div class="min-w-0">
               <h3 class="font-medium break-words">
-                {{ row.pipeline || __('No pipeline') }} · {{ row.status }}
+                {{ row.pipeline || __('No pipeline') }} ·
+                {{ stageLabel(row.status) }}
               </h3>
               <button
                 class="report-button text-left"
@@ -480,6 +481,7 @@ import { money as formatMoney } from '@/utils/numberFormat'
 import ReportBlock from './ReportBlock.vue'
 import ReportChart from './ReportChart.vue'
 import { periodDelta, previousPeriod } from './reportFilters'
+import { stageLabel } from '@/utils/stageLabel'
 
 const props = defineProps({
   filters: { type: Object, default: () => ({}) },

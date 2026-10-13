@@ -153,7 +153,7 @@
               class="h-2 w-2 rounded-full"
               :style="`background:${stageColor}`"
             />
-            {{ row.status || __('Estado') }} ⌄
+            {{ stageLabel(row.status, LEAD_STATUS) || __('Estado') }} ⌄
           </button>
         </Dropdown>
         <!-- 🏷 etiquetas (spec 2.2) -->
@@ -396,6 +396,7 @@ import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { isMobile } from '@/composables/breakpoint'
+import { DEAL_STATUS, LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
 import {
   activeDeal,
   activeDealDoctype,
@@ -566,7 +567,7 @@ const visibleStages = computed(
 // Lead stage dropdown (deals use the stepper above; same requestStage path).
 const stageOptions = computed(() =>
   visibleStages.value.map((s) => ({
-    label: s.name,
+    label: stageLabel(s.name, isDeal.value ? DEAL_STATUS : LEAD_STATUS),
     onClick: () => requestStage(s.name, s.type),
   })),
 )

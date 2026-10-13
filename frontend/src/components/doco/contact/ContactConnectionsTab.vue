@@ -131,7 +131,7 @@
               ><span class="truncate">{{ row.name_ || row.name }}</span
               ><Badge
                 v-if="row.status"
-                :label="row.status"
+                :label="stageLabel(row.status, LEAD_STATUS)"
                 theme="gray"
                 size="sm"
             /></a>
@@ -143,7 +143,7 @@
               ><span class="truncate">{{ row.name }}</span
               ><Badge
                 v-if="row.status"
-                :label="row.status"
+                :label="stageLabel(row.status)"
                 theme="gray"
                 size="sm"
             /></a>
@@ -216,6 +216,7 @@ import SectionAvailability from '@/components/doco/contact/SectionAvailability.v
 import { computed, defineComponent, h } from 'vue'
 import { Badge, createResource } from 'frappe-ui'
 import { sourceHref, sourceSlugs } from '@/utils/shellRoutes'
+import { LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
 
 const props = defineProps({
   docname: { type: String, required: true },

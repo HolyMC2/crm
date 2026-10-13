@@ -1,5 +1,6 @@
 // Totals strip and pipeline quick filter of the Deals list.
 import { stageValue, weightedTotal } from './pipelineMath'
+import { stageLabel } from './stageLabel'
 
 function number(value) {
   const n = Number(value)
@@ -39,7 +40,7 @@ export function pipelineStageOptions(pipelines, pipelineName, statuses = []) {
       .filter((stage) => !stage.archived)
       .map((stage) => ({
         value: stage.name,
-        label: stage.name,
+        label: stageLabel(stage.name),
         type: stage.type,
         probability: stage.probability,
         // the stage's status colour, else the tenant status row's
@@ -53,7 +54,7 @@ export function pipelineStageOptions(pipelines, pipelineName, statuses = []) {
     .filter((status) => !status.hidden)
     .map((status) => ({
       value: status.name,
-      label: status.name,
+      label: stageLabel(status.name),
       type: status.type,
       probability: status.probability,
       color: status.color || '',

@@ -145,7 +145,7 @@
             :options="[
               { label: __('Select stage'), value: '' },
               ...(editor.data?.stages || []).map((s) => ({
-                label: s.name,
+                label: stageLabel(s.name),
                 value: s.name,
               })),
             ]"
@@ -198,7 +198,7 @@
                   :key="other.status"
                   :value="other.status"
                 >
-                  {{ other.status }}
+                  {{ stageLabel(other.status) }}
                 </option>
               </select>
             </label>
@@ -284,6 +284,7 @@ import {
 } from '@/composables/settingsSession'
 import { Button, FormControl, createResource, call, toast } from 'frappe-ui'
 import Link from '@/components/Controls/Link.vue'
+import { stageLabel } from '@/utils/stageLabel'
 const draft = ref(null)
 const error = ref('')
 const saving = ref(false)

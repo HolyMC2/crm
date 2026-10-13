@@ -134,7 +134,7 @@
           <div>
             <dt class="text-sm text-ink-gray-5">{{ __('Etapa comercial') }}</dt>
             <dd class="mt-1 text-base font-semibold text-ink-gray-9">
-              {{ doc.status || '—' }}
+              {{ stageLabel(doc.status) || '—' }}
             </dd>
             <p class="mt-1 text-xs text-ink-gray-5">
               {{ __('El avance del taller se muestra por orden.') }}
@@ -262,6 +262,7 @@ import { formatMoney } from '@/composables/crmFormat'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import { repairOrderHref } from '@/utils/repairOrders'
+import { stageLabel } from '@/utils/stageLabel'
 import DealConversations from './DealConversations.vue'
 import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 
