@@ -70,8 +70,9 @@
         </header>
 
         <!-- What was asked of me on this purchase (Pendientes «Por aprobar»). -->
+        <!-- Hidden while editing: the save bar owns the phone's bottom edge then. -->
         <ApprovalAsk
-          v-if="!isNew && doc.name"
+          v-if="!isNew && doc.name && !editing"
           doctype="Purchase Order"
           :name="doc.name"
           @declined="goBack"
