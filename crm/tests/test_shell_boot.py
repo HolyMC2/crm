@@ -243,7 +243,10 @@ class TestShellBoot(TestCase):
 		gastos = shell.boot()["modules"]["gastos"]
 		self.assertTrue(gastos["enabled"])
 		self.assertIsNone(gastos["reason"])
-		self.assertEqual(gastos["capabilities"], {"read": True, "submit": True, "pay": True})
+		self.assertEqual(
+			{key: gastos["capabilities"][key] for key in ("read", "submit", "pay")},
+			{"read": True, "submit": True, "pay": True},
+		)
 
 	def test_gastos_refusal_carries_its_own_reason_and_leaves_others(self):
 		self._skip_without_payables()
@@ -253,7 +256,7 @@ class TestShellBoot(TestCase):
 		gastos = data["modules"]["gastos"]
 		self.assertFalse(gastos["enabled"])
 		self.assertEqual(gastos["reason"], answer["reason"])
-		self.assertEqual(gastos["capabilities"], {"read": False, "submit": False, "pay": False})
+		self.assertEqual(gastos["capabilities"], self._gastos_caps())
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
 	def test_gastos_pay_follows_the_service_capability(self):
@@ -261,7 +264,58 @@ class TestShellBoot(TestCase):
 		answer = {"enabled": True, "capabilities": {"read": True, "submit": True, "pay": False}}
 		with patch("doco.workspaces.payables.bootstrap", return_value=answer):
 			gastos = shell.boot()["modules"]["gastos"]
-		self.assertEqual(gastos["capabilities"], {"read": True, "submit": True, "pay": False})
+		self.assertEqual(gastos["capabilities"], self._gastos_caps(read=True, submit=True))
+
+	@staticmethod
+	def _gastos_caps(**on):
+		keys = ("read", "submit", "pay", "claims", "claim", "decide", "reimburse")
+		return {key: bool(on.get(key)) for key in keys}
+
+	def test_gastos_opens_for_an_employee_who_only_files_expenses(self):
+		self._skip_without_payables()
+		answer = {
+			"enabled": True,
+			"capabilities": {"read": False, "submit": False, "pay": False},
+			"claims": {"enabled": True, "file": True, "decide": False, "reimburse": False},
+		}
+		with patch("doco.workspaces.payables.bootstrap", return_value=answer):
+			gastos = shell.boot()["modules"]["gastos"]
+		self.assertTrue(gastos["enabled"])
+		# No supplier bills for her: Hoy's «Facturas por pagar» and the bill links stay off.
+		self.assertEqual(gastos["capabilities"], self._gastos_caps(claims=True, claim=True))
+
+	def test_gastos_without_hrms_keeps_bills_and_says_why_for_claim_only(self):
+		self._skip_without_payables()
+		reason = "Los gastos de empleados usan el módulo de personal, que este sistema no tiene."
+		bills = {
+			"enabled": True,
+			"capabilities": {"read": True, "submit": True, "pay": True},
+			"claims": {"enabled": False, "code": "no_hrms", "reason": reason},
+		}
+		with patch("doco.workspaces.payables.bootstrap", return_value=bills):
+			gastos = shell.boot()["modules"]["gastos"]
+		self.assertTrue(gastos["enabled"])
+		self.assertEqual(gastos["capabilities"], self._gastos_caps(read=True, submit=True, pay=True))
+		claim_only = {
+			"enabled": False,
+			"reason": reason,
+			"capabilities": {"read": False},
+			"claims": {"enabled": False, "code": "no_hrms", "reason": reason},
+		}
+		with patch("doco.workspaces.payables.bootstrap", return_value=claim_only):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["gastos"]["enabled"])
+		self.assertEqual(data["modules"]["gastos"]["reason"], reason)
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_gastos_nobody_gets_the_bill_reason(self):
+		self._skip_without_payables()
+		answer = {"enabled": False, "capabilities": {}, "claims": {"enabled": False, "code": None}}
+		with patch("doco.workspaces.payables.bootstrap", return_value=answer):
+			gastos = shell.boot()["modules"]["gastos"]
+		self.assertFalse(gastos["enabled"])
+		self.assertTrue(gastos["reason"])
+		self.assertEqual(gastos["capabilities"], self._gastos_caps())
 
 	def test_gastos_alone_opens_the_shell_and_is_a_landing(self):
 		self._skip_without_payables()

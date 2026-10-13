@@ -25,6 +25,9 @@ class TestGastosPaths(TestCase):
 			"/crm/gastos?po=PUR-ORD-2026-00001",
 			"/crm/gastos/factura/ACC-PINV-2026-00001",
 			"/crm/gastos/factura/ACC-PINV-2026-00001?list=%2Fgastos%3Fchip%3Dvencidas",
+			"/crm/gastos?segment=empleados&chip=por-aprobar",
+			"/crm/gastos/gasto/HR-EXP-2026-00001",
+			"/crm/gastos/gasto/HR-EXP-2026-00001?return_to=%2Fcrm%2Fpendientes",
 		):
 			with self.subTest(path=path):
 				self.assertTrue(is_gastos_path(path))
@@ -36,6 +39,8 @@ class TestGastosPaths(TestCase):
 			"/crm/gastos-otra",
 			"/crm/gastos/pago/ACC-PAY-1",
 			"/crm/gastos/factura/1/extra",
+			"/crm/gastos/gasto/1/extra",
+			"/crm/gastos/gasto/",
 			"//evil.invalid/crm/gastos",
 			"https://evil.invalid/crm/gastos",
 			"/crm/gastos\\evil",

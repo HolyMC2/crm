@@ -230,3 +230,32 @@ class TestAvisosResolve(IntegrationTestCase):
 			query = parse_qs(urlsplit(target["route"]).query)
 			self.assertEqual(query["date"], ["2026-10-09"])
 			self.assertEqual(query["event"], [f"Event:{event.name}"])
+
+	def test_an_expense_claim_opens_in_gastos_for_whoever_reads_it(self):
+		# «Ana aprobó tu gasto», «Te reembolsamos…»: the employee's claim record in Gastos.
+		group = {
+			"doctype": "Expense Claim",
+			"docname": "HR-EXP-2026-00001",
+			"title": "Ana aprobó tu gasto de $300.00",
+		}
+		gastos = {"on": True}
+		with (
+			patch.object(resolve.frappe.db, "exists", return_value=True),
+			patch.object(resolve, "_readable", return_value=True),
+			patch.object(resolve, "record_label", return_value="HR-EXP-2026-00001"),
+			patch.object(
+				resolve.Access,
+				"module",
+				autospec=True,
+				side_effect=lambda _access, key: key == "gastos" and gastos["on"],
+			),
+		):
+			target = resolve.target(group, resolve.Access())
+			self.assertEqual(target["route"], "/gastos/gasto/HR-EXP-2026-00001")
+			self.assertEqual(target["where"], "Gastos")
+			self.assertEqual(target["desk"], "/app/expense-claim/HR-EXP-2026-00001")
+			gastos["on"] = False
+			target = resolve.target(group, resolve.Access())
+			# Without Gastos the claim's own form is the way to settle it.
+			self.assertIsNone(target["route"])
+			self.assertEqual(target["desk"], "/app/expense-claim/HR-EXP-2026-00001")
