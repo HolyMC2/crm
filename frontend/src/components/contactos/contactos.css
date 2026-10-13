@@ -1030,6 +1030,8 @@
 }
 .c-extra-filter > div {
   min-width: 150px;
+  /* Detail and value side by side (FormControl renders selects full width). */
+  flex: 0 1 260px;
 }
 .c-extra-settings {
   display: flex;
