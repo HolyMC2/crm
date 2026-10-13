@@ -828,10 +828,22 @@ export function setQueueChannel(ch) {
   reloadQueue()
 }
 
+// «Resolver» to open again on a conversation when the worker comes back from a guard's
+// screen (Contactos «Registrar cliente», Encuestas setup: ?resolve=1). It stays until the
+// sheet closes, so a header rebuilt while the inbox settles still opens it.
+export const resolveRequest = ref(null)
+export function resolveRequested(doctype, name) {
+  const asked = resolveRequest.value
+  return !!asked && !!name && asked.name === name && asked.doctype === doctype
+}
+
 export function selectDeal(name, doctype = 'CRM Deal', opts = {}) {
   activeUnassigned.value = null // leaving the triage view
   activeCommentPost.value = null
   mobileView.value = 'thread' // mobile: advance the stack to the conversation
+  if (opts.resolve) resolveRequest.value = { doctype, name }
+  else if (resolveRequest.value && !resolveRequested(doctype, name))
+    resolveRequest.value = null
   // Opened from «Por responder»: the worker is there to answer, so the conversation
   // shows first and «Resolver y siguiente» walks the queue.
   fromReplyQueue.value = !!opts.fromReplyQueue

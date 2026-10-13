@@ -68,6 +68,7 @@ import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import LedgerModal from '@/components/doco/inbox/LedgerModal.vue'
 import PostCallSheet from '@/components/doco/inbox/PostCallSheet.vue'
 import { shouldPingWa, shouldPingMessenger } from '@/utils/pingLogic'
+import { RESOLVE_PARAM, withoutParam } from '@/utils/atencion'
 import {
   activeDeal,
   activeDealDoctype,
@@ -224,13 +225,25 @@ onMounted(() => {
   const deepLink = route.query.deal
   initInbox({ skipRestore: !!deepLink })
   // Back from a «Resolver» hand-off (Contactos, Encuestas) on «Por responder»: the
-  // conversation reopens with «Resolver y siguiente», as the worker left it.
-  if (deepLink)
+  // conversation reopens with «Resolver y siguiente», as the worker left it, and with
+  // ?resolve=1 the sheet opens again to check once more (the flag leaves the URL here,
+  // so a reload does not reopen it).
+  if (deepLink) {
     selectDeal(
       String(deepLink),
       route.query.doctype === 'CRM Lead' ? 'CRM Lead' : 'CRM Deal',
-      { fromReplyQueue: route.query.tab === 'por-responder' },
+      {
+        fromReplyQueue: route.query.tab === 'por-responder',
+        resolve: route.query[RESOLVE_PARAM] === '1',
+      },
     )
+    if (route.query[RESOLVE_PARAM])
+      history.replaceState(
+        history.state,
+        '',
+        withoutParam(window.location.href, RESOLVE_PARAM),
+      )
+  }
   // The inbox is a long-lived tab: a push click while it is already open changes
   // only the query (pushNavigate → router.push), so the mount-time deep link above
   // never re-runs. Follow query changes the same way.

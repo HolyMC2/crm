@@ -104,6 +104,13 @@ export function resolveReturn(href, doctype, name) {
   return url.pathname + url.search
 }
 
+/** The same URL (path, query, hash) without one query param. */
+export function withoutParam(href, param) {
+  const url = new URL(href, 'https://muelle.invalid')
+  url.searchParams.delete(param)
+  return url.pathname + url.search + url.hash
+}
+
 /**
  * Go back to a caller's return_to (already checked with safeReturn): inside this SPA
  * (router base /crm) through the router, any other Muelle app by a page load.

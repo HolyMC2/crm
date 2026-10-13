@@ -425,7 +425,6 @@ import ResolveSheet from '@/components/doco/inbox/ResolveSheet.vue'
 import { safeReturn } from '@/composables/useCompras'
 import {
   CHIP_CLASS,
-  RESOLVE_PARAM,
   dueChip,
   goToReturn,
   headerResolveLabel,
@@ -448,6 +447,8 @@ import {
   replyQueue,
   fromReplyQueue,
   openNextToAnswer,
+  resolveRequest,
+  resolveRequested,
   requestStage,
   openContext,
   openLedger,
@@ -698,25 +699,24 @@ const nextMode = computed(() =>
   fromReplyQueue.value ? 'queue' : returnTo.value ? 'return' : null,
 )
 const resolveOpen = ref(false)
-// Back from a guard's screen (Contactos «Registrar cliente», Encuestas setup) with
-// ?resolve=1: the sheet opens again on this conversation and checks once more.
+// Back from a guard's screen (Contactos «Registrar cliente», Encuestas setup, ?resolve=1):
+// the sheet opens again on this conversation and checks once more. The request lives in
+// the inbox state until the sheet closes, so a header rebuilt meanwhile opens it again.
 watch(
-  () => [route.query[RESOLVE_PARAM], route.query.deal, activeDeal.value],
-  ([flag, deal, active]) => {
+  () => [resolveRequest.value, activeDeal.value, activeDealDoctype.value],
+  () => {
     if (
-      flag !== '1' ||
-      !canResolve.value ||
-      !active ||
-      (deal && deal !== active)
+      canResolve.value &&
+      resolveRequested(activeDealDoctype.value, activeDeal.value)
     )
-      return
-    resolveOpen.value = true
-    const query = { ...route.query }
-    delete query[RESOLVE_PARAM]
-    router.replace({ query })
+      resolveOpen.value = true
   },
   { immediate: true },
 )
+watch(resolveOpen, (value) => {
+  if (!value && resolveRequested(activeDealDoctype.value, activeDeal.value))
+    resolveRequest.value = null
+})
 function onResolved(out) {
   toast.success(
     out?.asked

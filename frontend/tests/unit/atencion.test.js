@@ -14,6 +14,7 @@ import {
   nextReplyRow,
   resolveLabel,
   resolveReturn,
+  withoutParam,
   span,
   tabFromQuery,
   urlWithTab,
@@ -218,9 +219,21 @@ describe('«Registrar cliente» comes back to «Resolver»', () => {
     const contactos = src('pages/Contactos.vue')
     expect(contactos).toContain(':defaults="createDefaults"')
     expect(contactos).toContain('goToReturn(router, returnTo.value)')
-    expect(src('components/doco/inbox/DealHeader.vue')).toContain(
-      'route.query[RESOLVE_PARAM]',
+    expect(src('components/Inbox/ConversationLegacyWorkspace.vue')).toContain(
+      'resolve: route.query[RESOLVE_PARAM]',
     )
+    expect(src('components/doco/inbox/DealHeader.vue')).toContain(
+      'resolveRequested(activeDealDoctype.value, activeDeal.value)',
+    )
+  })
+
+  it('drops the reopen flag from the address once it is taken', () => {
+    expect(
+      withoutParam(
+        'https://x.test/crm/inbox?tab=por-responder&deal=L-1&resolve=1#c',
+        'resolve',
+      ),
+    ).toBe('/crm/inbox?tab=por-responder&deal=L-1#c')
   })
 })
 
@@ -348,6 +361,18 @@ describe('Resolver through the inbox composable', () => {
     expect(
       JSON.parse(sessionStorage.getItem('doco_inbox_state')).fromReplyQueue,
     ).toBe(false)
+  })
+
+  it('back with ?resolve=1, «Resolver» stays asked for until its sheet closes', async () => {
+    inbox.selectDeal('L-1', 'CRM Lead', { fromReplyQueue: true, resolve: true })
+    expect(inbox.resolveRequested('CRM Lead', 'L-1')).toBe(true)
+    expect(inbox.resolveRequested('CRM Deal', 'L-1')).toBe(false)
+    // the same conversation chosen again (a header rebuilt, a deep link) keeps it
+    inbox.selectDeal('L-1', 'CRM Lead', { fromReplyQueue: true })
+    expect(inbox.resolveRequested('CRM Lead', 'L-1')).toBe(true)
+    // another conversation drops it: it never opens somewhere else later
+    inbox.selectDeal('D-2', 'CRM Deal')
+    expect(inbox.resolveRequest.value).toBeNull()
   })
 
   it('«Míos» narrows Por responder on the server', async () => {
