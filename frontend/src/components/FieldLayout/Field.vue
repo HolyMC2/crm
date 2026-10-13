@@ -332,6 +332,7 @@ import { getMeta } from '@/stores/meta'
 import {
   parseLinkFilters,
   applyStateFieldOptions,
+  translateSelectOptions,
 } from '@/utils/fieldTransforms'
 import { usersStore } from '@/stores/users'
 import { useDocument } from '@/data/document'
@@ -487,6 +488,9 @@ const field = computed(() => {
     if (field.options[0].value !== '' && !field.reqd) {
       field.options.unshift({ label: '', value: '' })
     }
+  }
+  if (field.fieldtype == 'Select') {
+    field.options = translateSelectOptions(field.options)
   }
 
   if (field.fieldtype === 'Link' && field.options === 'User') {

@@ -497,7 +497,8 @@ const kinds = [
   { value: 'tasks', label: __('Tareas') },
 ]
 const buckets = [
-  { value: 'all', label: __('Todo') },
+  // «Todo» (everything); the context keeps it apart from the task status
+  { value: 'all', label: __('All', null, 'Workload') },
   { value: 'overdue', label: __('Vencidas') },
   { value: 'today', label: __('Vencen hoy') },
 ]

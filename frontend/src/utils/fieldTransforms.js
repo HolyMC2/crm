@@ -72,6 +72,28 @@ export function processField(rawField, options = {}) {
 }
 
 /**
+ * Select options in the worker's language, values unchanged.
+ *
+ * Options are the doctype's English words (CRM Task status «Todo», «Backlog»);
+ * Desk shows them through the catalog and so do these forms. An option with no
+ * catalog entry (a tenant's own wording) reads as written. A string of options
+ * (not yet split) is returned as is.
+ *
+ * @param {Array|string} options - [{label, value}] or plain option strings
+ * @returns {Array|string} options with translated labels (fresh objects)
+ */
+export function translateSelectOptions(options) {
+  if (!Array.isArray(options)) return options
+  const t = typeof globalThis.__ === 'function' ? globalThis.__ : (s) => s
+  return options.map((option) => {
+    if (typeof option === 'string')
+      return option ? { label: t(option), value: option } : option
+    if (option?.label) return { ...option, label: t(String(option.label)) }
+    return option
+  })
+}
+
+/**
  * Turn the Address `state` field into a country-driven Autocomplete.
  *
  * When a regional app (e.g. India Compliance) is installed, the CRM boot exposes a
