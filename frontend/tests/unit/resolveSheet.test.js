@@ -63,9 +63,9 @@ beforeEach(() => {
   inbox.resolveConversation.mockReset()
 })
 
-async function mount(events) {
+async function mount(events, { startOpen = false } = {}) {
   // Closed first, as in the header: opening is what loads the preview.
-  const open = ref(false)
+  const open = ref(startOpen)
   const el = document.createElement('div')
   document.body.append(el)
   const app = createApp({
@@ -119,6 +119,17 @@ describe('Resolver sheet', () => {
       ['resolved', { ok: true, cleared: true, asked: true }],
     ])
     expect(open.value).toBe(false)
+  })
+
+  it('opened from the URL (back from Contactos), it checks again at once', async () => {
+    inbox.resolvePreview.mockResolvedValue({
+      ask: true,
+      notice: { code: 'ask', message: 'We will ask', actions: [] },
+      seen: '2026-10-13 10:50:00',
+    })
+    const { el } = await mount([], { startOpen: true })
+    expect(inbox.resolvePreview).toHaveBeenCalledWith('CRM Deal', 'D-1')
+    expect(testid(el, 'resolve-notice').textContent).toContain('We will ask')
   })
 
   it('stays open on a refusal, never moves on, and leads to the new message', async () => {

@@ -216,12 +216,18 @@ async function confirm() {
   }
 }
 
-watch(open, (value) => {
-  if (!value) return
-  request = requestId()
-  status.value = ''
-  refused.value = false
-  preview.value = null
-  load()
-})
+// Immediate: the header may open the sheet before it mounts (back from Contactos/Encuestas
+// with ?resolve=1), and an already-open sheet must check too.
+watch(
+  open,
+  (value) => {
+    if (!value) return
+    request = requestId()
+    status.value = ''
+    refused.value = false
+    preview.value = null
+    load()
+  },
+  { immediate: true },
+)
 </script>
