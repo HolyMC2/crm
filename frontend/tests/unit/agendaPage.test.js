@@ -163,6 +163,22 @@ describe('Agenda page', () => {
     expect(pageShortcuts.value.extra).toEqual([])
   })
 
+  it('names the business time zone in words when the worker is in another zone', async () => {
+    const business = handler
+    handler = (method, args) => {
+      const answer = business(method, args)
+      return method === 'crm.api.agenda.get_capabilities'
+        ? { ...answer, user_time_zone: 'Europe/Madrid' }
+        : answer
+    }
+    await mountAt('/agenda?view=day&date=2026-10-07')
+    const note = [...root.querySelectorAll('p')].find((p) =>
+      p.textContent.includes('business time zone'),
+    )
+    expect(note.textContent).not.toContain(TZ)
+    expect(note.textContent).toMatch(/business time zone: \S/)
+  })
+
   it('loads only the selected calendars for the URL week', async () => {
     await mountAt('/agenda?view=week&date=2026-10-07')
     expect(methods()).toContain('get_capabilities')

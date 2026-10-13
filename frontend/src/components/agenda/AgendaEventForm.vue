@@ -55,7 +55,7 @@
       </template>
     </div>
     <p class="-mt-2 text-sm text-ink-gray-6">
-      {{ __('Times in {0}', [timeZone]) }}
+      {{ __('Time zone: {0}', [zoneName(timeZone)]) }}
     </p>
     <p v-if="localError" role="alert" class="-mt-2 text-sm text-ink-red-4">
       {{ localError }}
@@ -304,6 +304,7 @@ import {
   instantToWall,
   searchPeople,
   wallToInstant,
+  zoneName,
 } from '@/composables/useAgenda'
 
 const props = defineProps({

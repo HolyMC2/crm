@@ -42,6 +42,25 @@ export function agendaLocale() {
   return window.lang || document.documentElement.lang || undefined
 }
 
+// The business time zone in the reader's words («hora estándar central»), never
+// its zone id. The generic name first, so a zone with daylight saving reads the
+// same all year; then the long name; a platform without a name for the zone gets
+// the city from the id («Mexico City»).
+export function zoneName(timeZone, locale = agendaLocale(), at = new Date()) {
+  if (!timeZone) return ''
+  for (const timeZoneName of ['longGeneric', 'long']) {
+    try {
+      const name = new Intl.DateTimeFormat(locale, { timeZone, timeZoneName })
+        .formatToParts(at)
+        .find((part) => part.type === 'timeZoneName')?.value
+      if (name && !/^(GMT|UTC)([+\-\u2212]|$)/.test(name)) return name
+    } catch {
+      // this engine has no such style, or does not know the zone
+    }
+  }
+  return String(timeZone).split('/').pop().replace(/_/g, ' ')
+}
+
 export function usesHour12(locale) {
   try {
     return Boolean(

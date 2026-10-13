@@ -13497,8 +13497,8 @@ msgstr "Mi agenda"
 msgid "Shifts"
 msgstr "Turnos"
 
-msgid "Times in {0}, the business time zone."
-msgstr "Horarios en {0}, la zona horaria del negocio."
+msgid "Times shown in the business time zone: {0}."
+msgstr "Las horas se muestran en la zona horaria del negocio: {0}."
 
 msgid "previous screen"
 msgstr "la pantalla anterior"
@@ -13602,8 +13602,8 @@ msgstr "Empieza"
 msgid "Ends"
 msgstr "Termina"
 
-msgid "Times in {0}"
-msgstr "Horario de {0}"
+msgid "Time zone: {0}"
+msgstr "Zona horaria: {0}"
 
 msgid "With whom"
 msgstr "Con quién"

@@ -856,6 +856,7 @@ import {
   wallToInstant,
   weekStartsOn,
   writeResourceCache,
+  zoneName,
 } from '@/composables/useAgenda'
 // The «Citas» calendar itself is mainline's (useAgenda's CITAS key and calendarKey);
 // this lane only adds the booking, the panel actions and the owner's settings.
@@ -1080,7 +1081,9 @@ const calendarName = (event) => {
 const zoneNote = computed(() => {
   const own = caps.value?.user_time_zone
   return own && own !== timeZone.value
-    ? __('Times in {0}, the business time zone.', [timeZone.value])
+    ? __('Times shown in the business time zone: {0}.', [
+        zoneName(timeZone.value, locale),
+      ])
     : ''
 })
 const knownCalendars = computed(

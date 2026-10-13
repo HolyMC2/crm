@@ -20,6 +20,7 @@ import {
   visibleHours,
   wallToInstant,
   weekStartsOn,
+  zoneName,
 } from '@/composables/useAgenda'
 
 const MX = 'America/Mexico_City'
@@ -177,6 +178,30 @@ describe('business time zone', () => {
 
   it('rejects malformed wall times', () => {
     expect(wallToInstant('2026-10-05', '9:00', MX)).toBeNull()
+  })
+
+  it('names the business zone in words, never by its zone id', () => {
+    const at = new Date('2026-10-13T12:00:00Z')
+    const spanish = zoneName(MX, 'es-MX', at)
+    expect(spanish).toMatch(/^hora /)
+    expect(spanish).not.toMatch(/America|_|\/|GMT/)
+    expect(zoneName(MX, 'en', at)).toMatch(/Central/)
+    // the generic name: a zone with daylight saving reads the same all year
+    expect(zoneName('America/Tijuana', 'es-MX', at)).toBe(
+      zoneName('America/Tijuana', 'es-MX', new Date('2026-01-13T12:00:00Z')),
+    )
+    expect(zoneName('', 'es-MX')).toBe('')
+  })
+
+  it('falls back to the city of the zone when the platform has no name', () => {
+    const spy = vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(() => {
+      throw new RangeError('no zone names')
+    })
+    try {
+      expect(zoneName(MX, 'es-MX')).toBe('Mexico City')
+    } finally {
+      spy.mockRestore()
+    }
   })
 })
 
