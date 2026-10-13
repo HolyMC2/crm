@@ -68,6 +68,7 @@ import {
   extraPayloadValue,
   isExtraClause,
   requestText,
+  sectionOrderFor,
   sectionPosition,
 } from '@/utils/extraFields'
 
@@ -302,6 +303,33 @@ describe('extra field helpers', () => {
     expect(sectionPosition(undefined, 'extra')).toBe(1)
   })
 
+  it('offers «Más datos» in the order a manager saves only when the server knows it', () => {
+    const fields = { fields: { define: false, limit: 15 } }
+    // An order saved before «Más datos» shows it last, ready to move.
+    expect(sectionOrderFor({ section_order: ['identity', 'notes'] }, fields)).toEqual(
+      ['identity', 'notes', 'extra'],
+    )
+    expect(
+      sectionOrderFor({ section_order: ['extra', 'identity'] }, fields),
+    ).toEqual(['extra', 'identity'])
+    // A Contactos server without extra fields (older doco) would refuse «extra» on save.
+    expect(sectionOrderFor({ section_order: ['identity', 'notes'] }, {})).toEqual([
+      'identity',
+      'notes',
+    ])
+    expect(sectionOrderFor(undefined, undefined)).toEqual([
+      'identity',
+      'followups',
+      'notes',
+      'addresses',
+      'relations',
+    ])
+    // The saved order is never changed in place.
+    const saved = { section_order: ['identity'] }
+    sectionOrderFor(saved, fields)
+    expect(saved.section_order).toEqual(['identity'])
+  })
+
   it('a person opens their client account extra details and comes back', () => {
     const person = { source: 'contact', name: 'CONT-7', title: 'Laura Pérez' }
     expect(accountExtraRoute(person, 'Laura Pérez', 2)).toEqual({
@@ -415,6 +443,52 @@ describe('«Más datos» on a cliente', () => {
       fields: { pz_visitas_5e6f: 20 },
       baseline: { pz_visitas_5e6f: 15 },
     })
+  })
+
+  it('a field the owner is still adding keeps the typed value and «Reintentar» sends the same request', async () => {
+    const attempts = []
+    api({
+      save_record: (args) => {
+        attempts.push(args)
+        if (attempts.length === 1)
+          throw new Refusal(
+            {
+              code: 'field_not_ready',
+              message:
+                'Un campo que el dueño está agregando a clientes aún no está listo.',
+              actions: [{ label: 'Reintentar', kind: 'retry' }],
+              retry_context: { doctype: 'Customer' },
+            },
+            'FieldNotReadyError',
+          )
+        return record({ pz_nota_9c0d: 'Le gusta azul' }, 'v2')
+      },
+    })
+    await mount(ExtraFieldsPanel, {
+      record: record(),
+      capabilities: { fields: { define: false }, manager: false },
+    })
+    await click('[data-field="pz_nota_9c0d"] [data-act="edit-extra"]')
+    await type(
+      '[data-field="pz_nota_9c0d"] [data-input="value"] input',
+      'Le gusta azul',
+    )
+    await click('[data-act="save-extra"]')
+    const alert = q('[role="alert"]')
+    expect(alert.textContent).toContain('aún no está listo')
+    expect(
+      q('[data-field="pz_nota_9c0d"] [data-input="value"] input').value,
+    ).toBe('Le gusta azul')
+    const retry = [...alert.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('Reintentar'),
+    )
+    retry.click()
+    await settle()
+    expect(attempts).toHaveLength(2)
+    expect(attempts[1].request_id).toBe(attempts[0].request_id)
+    expect(attempts[1].payload).toEqual(attempts[0].payload)
+    expect(events.find(([name]) => name === 'saved')[1].modified).toBe('v2')
+    expect(q('[data-editing]')).toBeNull()
   })
 
   it('the owner adds a field and comes back to it open, ready to fill', async () => {
