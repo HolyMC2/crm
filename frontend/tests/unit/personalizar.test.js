@@ -28,6 +28,8 @@ vi.mock('frappe-ui', async () => {
           h(
             'button',
             {
+              // frappe-ui renders type="button": no form submit on click.
+              type: 'button',
               ...attrs,
               disabled: !!props.disabled,
               onClick: () => emit('click'),
@@ -545,6 +547,32 @@ describe('adding a field: guards keep the draft and offer the way out', () => {
       label: '¿Cómo nos conociste?',
     })
     expect(root.textContent).toContain('We asked Ana.')
+  })
+
+  it('an owner with another to-do on the cliente gets the request copied instead', async () => {
+    api({
+      request_field: () => ({
+        asked: [],
+        already: [],
+        unreachable: [{ user: 'ana@example.test', full_name: 'Ana' }],
+      }),
+    })
+    await mount(ExtraFieldForm, {
+      initialMode: 'request',
+      record: { name: 'Ana López', title: 'Ana López' },
+    })
+    await type('[data-input="label"]', 'Talla')
+    await click('[data-act="submit-extra-field"]')
+    expect(root.textContent).toContain(
+      'Ana already has another to-do on this cliente',
+    )
+    // The draft stays so it can be copied.
+    expect(q('[data-input="label"]').value).toBe('Talla')
+    await click('[data-act="copy-extra-request"]')
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      'Please add the extra field «Talla · Text» for clientes. I need it for Ana López.',
+    )
+    expect(q('[data-act="copy-extra-request"]')).toBeNull()
   })
 
   it('«Reintentar» after a busy table sends the same request', async () => {

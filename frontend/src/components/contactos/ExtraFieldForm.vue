@@ -82,6 +82,12 @@
     <div class="c-actions c-editor-footer">
       <Button :label="__('Cancel')" @click="$emit('cancel')" />
       <Button
+        v-if="offerCopy"
+        :label="__('Copy request')"
+        data-act="copy-extra-request"
+        @click="copyRequest"
+      />
+      <Button
         variant="solid"
         :label="primaryLabel"
         :loading="saving"
@@ -131,7 +137,8 @@ const { draft, id, clear } = useContactosDraft('extra-field:new', EMPTY)
 const saving = ref(false),
   error = ref(null),
   guard = ref(null),
-  done = ref('')
+  done = ref(''),
+  offerCopy = ref(false)
 watch(mode, (value) => emit('mode', value), { immediate: true })
 // Changing what was typed drops the answer to the previous attempt.
 watch(
@@ -210,13 +217,30 @@ async function ask() {
       label: label.value,
       kind: draft.value.kind,
     })
-    const names = [...(result.asked || []), ...(result.already || [])]
-      .map((person) => person.full_name || person.user)
-      .join(', ')
-    reset()
-    done.value = result.asked?.length
-      ? __('We asked {0}. They will see it in their to-do list.', [names])
-      : __('{0} already has it in their to-do list.', [names])
+    const names = (people) =>
+      (people || []).map((person) => person.full_name || person.user).join(', ')
+    const parts = []
+    if (result.asked?.length)
+      parts.push(
+        __('We asked {0}. They will see it in their to-do list.', [
+          names(result.asked),
+        ]),
+      )
+    if (result.already?.length)
+      parts.push(
+        __('{0} already has it in their to-do list.', [names(result.already)]),
+      )
+    if (result.unreachable?.length) {
+      // One open to-do per person and cliente: keep the draft so it can be copied.
+      parts.push(
+        __(
+          '{0} already has another to-do on this cliente, so the request could not be added there. Copy it and send it.',
+          [names(result.unreachable)],
+        ),
+      )
+      offerCopy.value = true
+    } else reset()
+    done.value = parts.join(' ')
     emit('requested', done.value)
   } catch (e) {
     refused(e)
@@ -231,6 +255,10 @@ async function copyRequest() {
   try {
     await navigator.clipboard.writeText(text)
     done.value = __('Request copied. Send it to the owner.')
+    if (offerCopy.value) {
+      offerCopy.value = false
+      reset()
+    }
   } catch {
     done.value = text
   }

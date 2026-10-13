@@ -19025,3 +19025,7 @@ msgstr "Un cliente tiene dato; se guarda. El campo deja de mostrarse hasta que l
 #: frontend/src/components/contactos/ExtraFieldsSettings.vue
 msgid "One cliente with a value"
 msgstr "1 cliente con dato"
+
+#: frontend/src/components/contactos/ExtraFieldForm.vue
+msgid "{0} already has another to-do on this cliente, so the request could not be added there. Copy it and send it."
+msgstr "{0} ya tiene otro pendiente en este cliente, así que la solicitud no se pudo añadir ahí. Cópiala y mándasela."

@@ -727,10 +727,13 @@ const activeFilters = computed(() =>
 )
 // «Más datos» filter row: the clientes' extra fields this person may read.
 const extraFilter = reactive({ field: '', value: '', from: '', to: '' })
+// Only on lists of clientes (or any list not already scoped to another source),
+// and only fields of a kind the row can filter.
 const extraFilterFields = computed(() =>
-  ['suppliers', 'addresses', 'followups'].includes(state.segment)
+  ['suppliers', 'addresses', 'followups'].includes(state.segment) ||
+  (state.filters.source && state.filters.source !== 'customer')
     ? []
-    : boot.value?.extra_fields || [],
+    : (boot.value?.extra_fields || []).filter((field) => field.kind),
 )
 const extraFilterField = computed(() =>
   extraFilterFields.value.find(
