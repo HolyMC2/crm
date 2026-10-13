@@ -7,12 +7,20 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   DEAL_STATUS,
   LEAD_STATUS,
+  STANDARD_PIPELINES,
+  pipelineLabel,
   recordStageLabel,
   stageLabel,
 } from '@/utils/stageLabel'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const CATALOG = { Qualification: 'Calificación', New: 'Nuevo', Won: 'Ganado' }
+const CATALOG = {
+  Qualification: 'Calificación',
+  New: 'Nuevo',
+  Won: 'Ganado',
+  'Existing sales (compatibility)': 'Ventas generales',
+  Repairs: 'Reparaciones',
+}
 const identity = globalThis.__
 
 beforeEach(() => {
@@ -44,6 +52,52 @@ describe('stageLabel', () => {
     expect(recordStageLabel('New', 'CRM Lead')).toBe('Nuevo')
     expect(recordStageLabel('Won', 'CRM Deal')).toBe('Won')
     expect(recordStageLabel('Won')).toBe('Won')
+  })
+})
+
+// A pipeline name is data too (CRM Pipeline.pipeline_name, editable). Only the
+// name CRM itself creates (the pipeline migration's «Existing sales
+// (compatibility)») is drawn through the catalog; what a manager typed reads
+// exactly as typed, even when it matches a catalog word.
+describe('pipelineLabel', () => {
+  it('shows the pipeline CRM creates in the worker language', () => {
+    expect(
+      pipelineLabel({
+        name: 'legacy-sales',
+        pipeline_name: 'Existing sales (compatibility)',
+      }),
+    ).toBe('Ventas generales')
+    expect(pipelineLabel('Existing sales (compatibility)')).toBe(
+      'Ventas generales',
+    )
+  })
+  it('keeps a renamed or custom pipeline as typed', () => {
+    expect(
+      pipelineLabel({ name: 'legacy-sales', pipeline_name: 'Mostrador' }),
+    ).toBe('Mostrador')
+    expect(pipelineLabel({ name: 'p1', pipeline_name: 'Repairs' })).toBe(
+      'Repairs',
+    )
+  })
+  it('falls back to the record name, and to nothing', () => {
+    expect(pipelineLabel({ name: 'p-123' })).toBe('p-123')
+    expect(pipelineLabel(null)).toBe('')
+    expect(pipelineLabel('')).toBe('')
+  })
+  it('has a Spanish name for every pipeline CRM creates', () => {
+    const migration = readFileSync(
+      resolve(here, '../../../crm/pipeline/services/configuration.py'),
+      'utf8',
+    )
+    const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
+    for (const name of STANDARD_PIPELINES) {
+      expect(migration, name).toContain(`"${name}"`)
+      expect(po, name).toMatch(
+        new RegExp(
+          `\\nmsgid "${name.replace(/[()]/g, '\\$&')}"\\nmsgstr "[^"]+"`,
+        ),
+      )
+    }
   })
 })
 

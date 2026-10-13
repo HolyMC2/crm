@@ -97,7 +97,7 @@
             :key="pipeline.name"
             :value="pipeline.name"
           >
-            {{ pipeline.pipeline_name
+            {{ pipelineLabel(pipeline)
             }}{{ pipeline.archived ? ' · ' + __('Archived') : '' }}
           </option>
         </select>
@@ -129,7 +129,7 @@
           :key="pipeline.name"
           :value="pipeline.name"
         >
-          {{ pipeline.pipeline_name
+          {{ pipelineLabel(pipeline)
           }}{{ pipeline.archived ? ' · ' + __('Archived') : '' }}
         </option>
       </select>
@@ -875,7 +875,7 @@ import {
 } from '@/utils/pipelineMath'
 
 import { followUpFilters, FOLLOW_UP_QUEUES } from '@/utils/dealFollowUp'
-import { stageLabel } from '@/utils/stageLabel'
+import { pipelineLabel, stageLabel } from '@/utils/stageLabel'
 import {
   DEAL_GROUP_BYS,
   groupByLabel,

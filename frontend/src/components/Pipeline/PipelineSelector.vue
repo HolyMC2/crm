@@ -29,6 +29,7 @@ import { computed, watch } from 'vue'
 import { createResource, FormControl } from 'frappe-ui'
 import { pipelineSelection } from '@/utils/pipelineConfiguration'
 import { guardStatusChange } from '@/utils/statusGuard'
+import { pipelineLabel } from '@/utils/stageLabel'
 
 const props = defineProps({
   doc: { type: Object, required: true },
@@ -49,7 +50,7 @@ const options = computed(() => [
   ...(pipelines.data || [])
     .filter((p) => !p.archived || p.name === props.doc.pipeline)
     .map((p) => ({
-      label: p.pipeline_name + (p.archived ? ` · ${__('Archived')}` : ''),
+      label: pipelineLabel(p) + (p.archived ? ` · ${__('Archived')}` : ''),
       value: p.name,
       disabled: Boolean(p.archived),
     })),

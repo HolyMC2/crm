@@ -27,3 +27,22 @@ export function recordStageLabel(name, referenceDoctype) {
     referenceDoctype === 'CRM Lead' ? LEAD_STATUS : DEAL_STATUS,
   )
 }
+
+// What a pipeline (CRM Pipeline) reads as on screen.
+//
+// Its name is DATA as well: pipeline_name is a field a manager edits. CRM's
+// pipeline migration creates one pipeline with an English name (server twin:
+// crm/pipeline/labels.py); that exact name carries a catalog entry and is drawn
+// in the worker's language. Any other name, including the migrated pipeline
+// once a manager renames it, reads exactly as typed. The record keeps its
+// stored name for filters, writes and the settings form.
+export const STANDARD_PIPELINES = ['Existing sales (compatibility)']
+
+export function pipelineLabel(pipeline) {
+  const name =
+    typeof pipeline === 'string'
+      ? pipeline
+      : pipeline?.pipeline_name || pipeline?.name || ''
+  if (!name || !STANDARD_PIPELINES.includes(name)) return name
+  return typeof globalThis.__ === 'function' ? globalThis.__(name) : name
+}

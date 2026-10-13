@@ -39,7 +39,7 @@
               :key="item.name"
               :value="item.name"
             >
-              {{ item.pipeline_name || item.name
+              {{ pipelineLabel(item)
               }}{{ item.archived ? ' · ' + __('Archivado') : '' }}
             </option>
           </select>
@@ -252,6 +252,7 @@ import {
   periodRange,
   previousRange,
 } from '@/utils/pipelineMath'
+import { pipelineLabel } from '@/utils/stageLabel'
 
 const route = useRoute()
 const router = useRouter()

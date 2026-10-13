@@ -175,6 +175,7 @@ def pipeline_funnel(from_date=None, to_date=None, filters=None):
 		query = query.select(deal.pipeline).groupby(deal.pipeline)
 	counts = query.run(as_dict=True)
 	count_map = {(row.get("pipeline") or "", row.status): int(row.count) for row in counts}
+	pipeline_names = {}
 	if has_pipelines:
 		from crm.pipeline.api import get_pipelines
 
@@ -184,6 +185,7 @@ def pipeline_funnel(from_date=None, to_date=None, filters=None):
 			configs = [row for row in configs if row.name == selected]
 		elif isinstance(selected, list) and len(selected) == 2 and selected[0] == "in":
 			configs = [row for row in configs if row.name in selected[1]]
+		pipeline_names = {config.name: config.pipeline_name for config in configs}
 		statuses = [
 			frappe._dict(
 				{
@@ -201,14 +203,20 @@ def pipeline_funnel(from_date=None, to_date=None, filters=None):
 		if frappe.db.has_column("CRM Deal Status", "hidden"):
 			fields.append("hidden")
 		statuses = frappe.get_all("CRM Deal Status", fields=fields, order_by="position asc, name asc")
+	from crm.pipeline.labels import pipeline_label, stage_label, translates
+
+	# "stage" and "pipeline_name" are what the funnel and the dashboard draw: the
+	# standard names in the worker's language. "status" and "pipeline" stay the
+	# stored identities for drill-down and for matching one period with another.
+	translated = translates("CRM Deal Status")
 	stages, historical = [], []
 	for row in statuses:
 		pipeline = row.get("pipeline") or ""
 		entry = {
-			"stage": row.name,
+			"stage": stage_label(row.name, translated=translated),
 			"status": row.name,
 			"pipeline": pipeline,
-			"pipeline_name": row.get("pipeline_name"),
+			"pipeline_name": pipeline_label(row.get("pipeline_name")) or None,
 			"type": row.type,
 			"position": row.position,
 			"probability": row.probability,
@@ -224,6 +232,7 @@ def pipeline_funnel(from_date=None, to_date=None, filters=None):
 			"stage": name or _("Missing stage"),
 			"status": name or "",
 			"pipeline": pipeline,
+			"pipeline_name": pipeline_label(pipeline_names.get(pipeline)) or None,
 			"type": "Unknown",
 			"count": count,
 		}

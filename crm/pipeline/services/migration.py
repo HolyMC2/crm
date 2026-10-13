@@ -5,7 +5,7 @@ from frappe import _
 from frappe.utils import cint, flt
 
 from crm.permissions.framework import warn_if_missing
-from crm.pipeline.services.configuration import LEGACY_PIPELINE
+from crm.pipeline.services.configuration import LEGACY_PIPELINE, LEGACY_PIPELINE_NAME
 
 KNOWN_STATUS = "status IN (SELECT name FROM `tabCRM Deal Status`)"
 
@@ -69,7 +69,7 @@ def execute():
 		pipeline = frappe.get_doc(
 			{
 				"doctype": "CRM Pipeline",
-				"pipeline_name": "Existing sales (compatibility)",
+				"pipeline_name": LEGACY_PIPELINE_NAME,
 				"probability_policy": "Legacy",
 				"is_default": 0
 				if any(

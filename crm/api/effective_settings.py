@@ -11,6 +11,7 @@ from frappe import _
 from frappe.model import get_permitted_fields
 from frappe.utils import get_system_timezone
 
+from crm.pipeline.labels import pipeline_label
 from crm.pipeline.services.configuration import (
 	can_access_pipeline,
 	default_pipeline,
@@ -153,7 +154,9 @@ def _choices(company):
 	for row in rows[:100]:
 		doc = _doc("CRM Pipeline", row.name, ["pipeline_name", "sales_company", "archived"])
 		if can_access_pipeline(doc.name):
-			items.append({"name": doc.name, "label": doc.pipeline_name, "company": doc.sales_company})
+			items.append(
+				{"name": doc.name, "label": pipeline_label(doc.pipeline_name), "company": doc.sales_company}
+			)
 	return {
 		"state": "configured" if items else "not_configured",
 		"pipelines": items,
@@ -219,7 +222,7 @@ def _pipeline(name, company):
 			return {
 				"state": "configured",
 				"name": default_doc.name,
-				"label": default_doc.pipeline_name,
+				"label": pipeline_label(default_doc.pipeline_name),
 				"company": default_doc.sales_company,
 				"reason": "explicit_default" if default_doc.is_default else "only_pipeline",
 			}
@@ -230,7 +233,7 @@ def _pipeline(name, company):
 		"source": _source(doc, fields, "Sales pipelines"),
 		"values": {
 			"name": doc.name,
-			"label": doc.pipeline_name,
+			"label": pipeline_label(doc.pipeline_name),
 			"company": doc.sales_company,
 			"currency": doc.currency,
 			"probability_policy": doc.probability_policy,

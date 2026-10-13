@@ -98,6 +98,7 @@
 import { computed } from 'vue'
 import { FormControl } from 'frappe-ui'
 import { money } from '@/utils/numberFormat'
+import { pipelineLabel } from '@/utils/stageLabel'
 
 const props = defineProps({
   summary: { type: Object, required: true },
@@ -125,8 +126,8 @@ const pipelineOptions = computed(() => [
   { label: __('All pipelines'), value: '' },
   ...props.pipelines.map((p) => ({
     label: p.archived
-      ? `${p.pipeline_name || p.name} · ${__('Archived')}`
-      : p.pipeline_name || p.name,
+      ? `${pipelineLabel(p)} · ${__('Archived')}`
+      : pipelineLabel(p),
     value: p.name,
   })),
 ])

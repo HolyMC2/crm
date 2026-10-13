@@ -24,7 +24,7 @@
         v-for="pipeline in pipelines.data || []"
         :key="pipeline.name"
         :label="
-          pipeline.pipeline_name +
+          pipelineLabel(pipeline) +
           (pipeline.archived ? ' · ' + __('Archived') : '')
         "
         :variant="draft?.name === pipeline.name ? 'solid' : 'subtle'"
@@ -284,7 +284,7 @@ import {
 } from '@/composables/settingsSession'
 import { Button, FormControl, createResource, call, toast } from 'frappe-ui'
 import Link from '@/components/Controls/Link.vue'
-import { stageLabel } from '@/utils/stageLabel'
+import { pipelineLabel, stageLabel } from '@/utils/stageLabel'
 const draft = ref(null)
 const error = ref('')
 const saving = ref(false)

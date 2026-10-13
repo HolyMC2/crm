@@ -5,6 +5,9 @@ from frappe import _
 from frappe.utils import cint, flt
 
 LEGACY_PIPELINE = "legacy-sales"
+# The name the pipeline migration gives that pipeline. It is data a manager may
+# rename; this exact name is drawn through the catalog (crm/pipeline/labels.py).
+LEGACY_PIPELINE_NAME = "Existing sales (compatibility)"
 
 
 def require_shared_scope_support():
@@ -231,7 +234,13 @@ def validate_record(doc):
 		if status:
 			stage = frappe._dict(status=status.name, probability=status.probability, archived=0)
 	if not stage:
-		frappe.throw(_("Stage {0} is not part of pipeline {1}.").format(doc.status, pipeline.pipeline_name))
+		from crm.pipeline.labels import pipeline_label, stage_label
+
+		frappe.throw(
+			_("Stage {0} is not part of pipeline {1}.").format(
+				stage_label(doc.status), pipeline_label(pipeline.pipeline_name)
+			)
+		)
 	# Only a manager's pipeline archive refuses new entry. A globally hidden
 	# status (e.g. the inactive language alias) stays out of pickers and the
 	# default stage, but server-side callers that still write it keep working.

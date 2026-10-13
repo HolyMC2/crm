@@ -18,6 +18,26 @@ msgstr ""
 "X-Crowdin-File-ID: 97\n"
 "Language: es_ES\n"
 
+#. The pipeline CRM's pipeline migration creates (LEGACY_PIPELINE_NAME in
+#. crm/pipeline/services/configuration.py), shown through pipelineLabel and
+#. crm/pipeline/labels.py; once a manager renames it, it shows as written
+#: crm/pipeline/labels.py frontend/src/utils/stageLabel.js
+msgid "Existing sales (compatibility)"
+msgstr "Ventas generales"
+
+#. Funnel and dashboard row for deals whose stage is empty
+#: crm/pipeline/queries/stages.py
+msgid "Missing stage"
+msgstr "Sin etapa"
+
+#: crm/pipeline/services/configuration.py
+msgid "Stage {0} is not part of pipeline {1}."
+msgstr "La etapa {0} no es parte del embudo {1}."
+
+#: crm/pipeline/queries/stages.py
+msgid "You do not have permission to read deal amounts."
+msgstr "No tienes permiso para ver los montos de los tratos."
+
 #. Standard CRM Deal Status names (crm/install.py), shown through
 #. utils/stageLabel.js; a renamed or custom stage is shown as written
 #: frontend/src/utils/stageLabel.js

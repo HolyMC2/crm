@@ -363,6 +363,7 @@ import {
   nextTick,
   onMounted,
 } from 'vue'
+import { pipelineLabel } from '@/utils/stageLabel'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Deal')
@@ -496,7 +497,7 @@ const sheetGroups = computed(() => [
           label: __('Sales pipeline'),
           options: pipelineList.value.map((p) => ({
             value: p.name,
-            label: p.pipeline_name || p.name,
+            label: pipelineLabel(p),
           })),
           selected: filterValues(currentFilters.value, 'pipeline'),
         },

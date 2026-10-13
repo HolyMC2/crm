@@ -9,6 +9,7 @@ from frappe.utils import CallbackManager, add_days, cint, get_datetime, get_time
 
 from crm.permissions.org_hierarchy import _in_hierarchy, _team_mem_query, hierarchy_enabled
 from crm.pipeline.constants import OPEN_TASK_STATUSES
+from crm.pipeline.labels import pipeline_label
 from crm.pipeline.services.configuration import can_access_pipeline, record_company_allowed
 from crm.utils.query import subquery_sql
 
@@ -449,7 +450,7 @@ def get_workload(filters: dict | str | None = None, offset: int | str | None = 0
 		"pipelines": [
 			{
 				"name": p["name"],
-				"label": p.get("pipeline_name") or p["name"],
+				"label": pipeline_label(p.get("pipeline_name")) or p["name"],
 				"company": p.get("sales_company") or "",
 			}
 			for p in pipelines
