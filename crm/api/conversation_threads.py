@@ -450,7 +450,14 @@ def _display_names(provider, peers):
 def _template_text(message_name, row):
 	"""Body of a template send: the supervised queue keeps the exact rendered
 	preview (wins when present); else the template body with its stored
-	parameters substituted; else the template's name."""
+	parameters substituted; else the template's name. Either passes the apps'
+	display redactors (crm.api.whatsapp.redact_for_display)."""
+	from crm.api.whatsapp import redact_for_display
+
+	return redact_for_display(_template_body(message_name, row))
+
+
+def _template_body(message_name, row):
 	if frappe.db.exists("DocType", "WhatsApp Send Review"):
 		preview = frappe.db.get_value("WhatsApp Send Review", {"wa_message": message_name}, "preview")
 		if preview:

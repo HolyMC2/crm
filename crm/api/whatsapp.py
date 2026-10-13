@@ -238,6 +238,9 @@ def enrich_whatsapp_messages(messages: list[dict]) -> list[dict]:
 		for field in tuple(row):
 			if field not in permitted or field in masked:
 				row[field] = None
+		# A sent template's values pass the apps' display redactors before anything renders them.
+		if row.get("template_parameters"):
+			row["template_parameters"] = redact_for_display(row["template_parameters"])
 	body_readable = readable_field("WhatsApp Message", "message")
 	template_messages = [
 		message
@@ -864,6 +867,17 @@ def parse_template_parameters(string, parameters):
 		string = string.replace(placeholder, str(parameter))
 
 	return string
+
+
+def redact_for_display(text):
+	"""A sent template's text as staff screens show it: each app's display redactor
+	(hook `whatsapp_display_redactors`, dotted paths of text -> text) hides what must not
+	reach them, e.g. the token of a customer's survey link, which answers for the customer."""
+	if not text or not isinstance(text, str):
+		return text
+	for path in frappe.get_hooks("whatsapp_display_redactors") or []:
+		text = frappe.get_attr(path)(text)
+	return text
 
 
 def get_from_name(message, *, read_scope=None):
