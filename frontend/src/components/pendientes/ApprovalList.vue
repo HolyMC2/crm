@@ -326,13 +326,16 @@ async function load(start = 0) {
     loaded.value = true
     emit('loaded')
     if (!start) {
-      const focus = afterReturn()
-      // The same place first (rendered rows, notice in place, page settled),
-      // then the focus: never a jump to «nearest» instead of the saved place.
+      const back = afterReturn()
+      // The same place first (rendered rows, page settled), then «Listo» and the
+      // focus: never a jump to «nearest» instead of the saved place. The notice
+      // goes in above rows already in place, which the browser keeps where they
+      // are (scroll anchoring).
       await nextTick()
       await props.restore?.()
-      if (current !== generation || gone) return
-      if (focus !== null) focusRow(focus)
+      if (current !== generation || gone || !back) return
+      if (back.notice) notice.value = back.notice
+      focusRow(back.index)
     }
   } catch (error) {
     if (current === generation) problem.value = approvalError(error)
@@ -355,9 +358,9 @@ function focusRow(index) {
 }
 
 // Back from an owner screen with `done=<doctype>:<name>`: a settled row has left
-// («Listo», focus on the next); one still waiting keeps the focus. Said before
-// the page restores its place, so the notice is already there; returns the row
-// index to focus once the place is back (null: nothing came back).
+// («Listo», focus on the next); one still waiting keeps the focus. Consumes
+// `done` and answers {index to focus, notice} for after the place is back
+// (null: nothing came back).
 function afterReturn() {
   const done = doneOf(route.query)
   if (!done) return null
@@ -366,13 +369,14 @@ function afterReturn() {
   const index = rows.value.findIndex(
     (row) => `${row.doctype}:${row.name}` === key,
   )
-  if (index < 0)
-    notice.value = __('Done: {0}', [
-      before?.key === key && before.title ? before.title : done.name,
-    ])
   router.replace({ name: 'Pendientes', query: withoutDoneQuery(route.query) })
-  if (index >= 0) return index
-  return before?.key === key ? before.index : 0
+  if (index >= 0) return { index, notice: '' }
+  return {
+    index: before?.key === key ? before.index : 0,
+    notice: __('Done: {0}', [
+      before?.key === key && before.title ? before.title : done.name,
+    ]),
+  }
 }
 
 async function call(row, method, args) {
