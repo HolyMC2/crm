@@ -98,6 +98,19 @@
               :label="__('Stop asking after (days)')"
             />
           </div>
+          <!-- The interval is shared with «¿Cómo te atendimos?» and set in its sheet. -->
+          <p
+            v-if="!service && Number(form.cooldown_days) > 0"
+            class="text-sm text-ink-gray-6"
+            data-testid="encuestas-setup-interval"
+          >
+            {{
+              __(
+                'Each number gets at most one question every {0} days, counting «How did we do?» too.',
+                [form.cooldown_days],
+              )
+            }}
+          </p>
           <p
             v-if="problem"
             role="alert"

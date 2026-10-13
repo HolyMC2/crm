@@ -18760,3 +18760,7 @@ msgstr "Clientes que contestaron de 0 a 6 después de comprar, o 1 o 2 sobre có
 #: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
 msgid "Showing the {0} most urgent."
 msgstr "Se muestran las {0} más urgentes."
+
+#: frontend/src/components/encuestas/SetupDialog.vue
+msgid "Each number gets at most one question every {0} days, counting «How did we do?» too."
+msgstr "Cada número recibe como máximo una pregunta cada {0} días, contando también «¿Cómo te atendimos?»."

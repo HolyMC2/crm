@@ -399,6 +399,7 @@ describe('every new word has its es-MX entry', () => {
       'Ask how we did after resolving a conversation',
       'Set up the template',
       'Satisfaction',
+      'Each number gets at most one question every {0} days, counting «How did we do?» too.',
     ])
       expect(catalog.get(`\u0004${text}`), text).toBeTruthy()
     for (const text of ['Service', 'Purchase', '{0} of 5', 'Unhappy (1–2)'])
