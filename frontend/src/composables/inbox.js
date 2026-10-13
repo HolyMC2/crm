@@ -163,7 +163,7 @@ export const replyMine = ref(false) // «Míos» chip on Por responder
 // The open conversation came from Por responder: «Resolver y siguiente» opens the next one.
 export const fromReplyQueue = ref(false)
 export function reloadReplyQueue() {
-  return replyQueue.submit({ limit: 100, mine: replyMine.value ? 1 : 0 })
+  return replyQueue.submit({ limit: 50, mine: replyMine.value ? 1 : 0 })
 }
 export function setReplyMine(value) {
   replyMine.value = !!value
