@@ -14,6 +14,7 @@
         variant="solid"
         icon-left="lucide-camera"
         class="min-h-11 sm:min-h-8"
+        data-testid="claim-new"
         :label="__('New expense')"
         @click="update({ nuevo: '1' })"
       />

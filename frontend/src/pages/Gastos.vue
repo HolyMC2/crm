@@ -23,6 +23,13 @@
         {{ copied }}
       </p>
     </section>
+    <div
+      v-else-if="!boot"
+      role="status"
+      class="px-6 py-8 text-sm text-ink-gray-6"
+    >
+      {{ __('Loading…', null, 'Gastos') }}
+    </div>
     <template v-else-if="segment === 'empleados'">
       <div v-if="entries.length > 1" class="px-4 pt-3 sm:hidden">
         <FormControl

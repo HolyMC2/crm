@@ -50,6 +50,7 @@
             <FormControl
               v-model="form.account"
               type="select"
+              data-field="account"
               :label="__('Pay from')"
               :options="accountOptions"
             />
@@ -71,6 +72,7 @@
             <FormControl
               v-model="form.reference_no"
               type="text"
+              data-field="reference_no"
               :label="
                 account?.type === 'Bank'
                   ? __('Transfer or check number')
@@ -117,6 +119,7 @@
           v-if="options && !options.refusal && !options.needs_setup"
           variant="solid"
           :loading="busy"
+          data-testid="reimburse-confirm"
           :label="
             resumed ? __('Check result') : __('Reimburse', null, 'Gastos')
           "

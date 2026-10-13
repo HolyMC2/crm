@@ -8,6 +8,7 @@
         <component
           :is="back.route ? 'RouterLink' : 'a'"
           v-bind="back.route ? { to: back.route } : { href: back.href }"
+          data-testid="claim-back"
           class="inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
         >
           <FeatherIcon name="arrow-left" class="h-4 w-4" />
@@ -97,6 +98,7 @@
                 <Button
                   v-else-if="action.key === 'ask_reimburse'"
                   class="min-h-11 sm:min-h-8"
+                  data-testid="claim-ask-reimburse"
                   :label="__('Ask for it to be reimbursed')"
                   @click="ask('reimburse')"
                 />
@@ -105,6 +107,7 @@
                 v-if="nextName"
                 variant="solid"
                 class="min-h-11 sm:min-h-8"
+                data-testid="claim-next-button"
                 :label="__('Next', null, 'Gastos')"
                 @click="openNext"
               />
@@ -152,11 +155,13 @@
                     variant="solid"
                     class="min-h-11 sm:min-h-8"
                     :loading="busy"
+                    data-testid="claim-approve"
                     :label="__('Approve', null, 'Gastos')"
                     @click="approve"
                   />
                   <Button
                     class="min-h-11 sm:min-h-8"
+                    data-testid="claim-approve-less"
                     :label="__('Approve less')"
                     @click="openDecide('less')"
                   />
@@ -177,6 +182,7 @@
                   <Button
                     variant="solid"
                     class="min-h-11 sm:min-h-8"
+                    data-testid="claim-reimburse"
                     :label="__('Reimburse', null, 'Gastos')"
                     @click="reimburseOpen = true"
                   />

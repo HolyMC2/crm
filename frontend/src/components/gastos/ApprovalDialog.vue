@@ -11,6 +11,7 @@
             v-if="options.candidates.length"
             v-model="assignee"
             type="select"
+            data-field="assignee"
             :label="__('Who should do it')"
             :options="[
               { label: __('Choose a person'), value: '' },
@@ -52,6 +53,7 @@
         <Button
           v-if="!sent"
           variant="solid"
+          data-testid="approval-send"
           :label="__('Send request')"
           :loading="sending"
           :disabled="!options || (options.candidates.length && !assignee)"

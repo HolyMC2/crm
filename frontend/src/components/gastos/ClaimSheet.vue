@@ -171,6 +171,7 @@
               <FormControl
                 v-model="form.description"
                 type="text"
+                data-field="description"
                 :label="__('Note (optional)')"
                 :placeholder="__('E.g. taxi to the bank with the deposit')"
               />
@@ -237,6 +238,7 @@
           >
           <Button
             class="min-h-11 sm:min-h-8"
+            data-testid="claim-save"
             :label="__('Save', null, 'Gastos')"
             :disabled="busy"
             @click="submit(false)"
@@ -246,6 +248,7 @@
             class="min-h-11 sm:min-h-8"
             :loading="busy"
             :disabled="Boolean(options.guard)"
+            data-testid="claim-send"
             :label="__('Send for approval')"
             @click="submit(true)"
           />

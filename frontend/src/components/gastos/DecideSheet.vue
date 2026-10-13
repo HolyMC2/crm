@@ -55,6 +55,7 @@
             v-if="mode === 'less'"
             v-model="amount"
             type="number"
+            data-field="amount"
             inputmode="decimal"
             :label="__('Amount you approve ({0})', [claim.currency])"
             :min="0"
@@ -63,6 +64,7 @@
           <FormControl
             v-model="reason"
             type="textarea"
+            data-field="reason"
             :label="reasonLabel"
             :placeholder="reasonHint"
           />
@@ -103,6 +105,7 @@
             class="min-h-11 sm:min-h-8"
             :theme="mode === 'reject' ? 'red' : 'gray'"
             :loading="busy"
+            data-testid="decide-confirm"
             :label="confirmLabel"
             @click="decide"
           />
