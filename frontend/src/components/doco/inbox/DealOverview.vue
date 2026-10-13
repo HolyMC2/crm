@@ -14,7 +14,7 @@
           </p>
         </div>
         <button
-          class="rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm hover:bg-surface-gray-2"
+          class="min-h-11 rounded-lg border border-outline-gray-2 bg-surface-base px-3 py-2 text-sm hover:bg-surface-gray-2 sm:min-h-0"
           :disabled="record.loading"
           @click="refresh"
         >
@@ -77,14 +77,14 @@
             <div class="flex flex-wrap gap-2">
               <button
                 v-if="doc.next_activity_task"
-                class="rounded-lg bg-surface-green-3 px-3 py-2 text-sm font-semibold text-ink-green-9 hover:bg-surface-green-2 disabled:opacity-50"
+                class="min-h-11 rounded-lg bg-surface-green-3 px-3 py-2 text-sm font-semibold text-ink-green-9 hover:bg-surface-green-2 disabled:opacity-50 sm:min-h-0"
                 :disabled="finishing"
                 @click="completeTask"
               >
                 {{ finishing ? __('Guardando…') : __('Marcar como hecha') }}
               </button>
               <button
-                class="rounded-lg bg-surface-gray-10 px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-gray-9"
+                class="min-h-11 rounded-lg bg-surface-gray-10 px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-gray-9 sm:min-h-0"
                 :disabled="finishing"
                 @click="schedule"
               >
