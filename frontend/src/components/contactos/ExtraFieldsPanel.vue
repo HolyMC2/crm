@@ -30,29 +30,14 @@
           class="c-extra-edit"
           data-editing="1"
         >
-          <FormControl
-            v-if="field.kind === 'list'"
-            v-model="draft"
-            type="select"
-            :label="field.label"
-            :options="listOptions(field)"
+          <!-- Contactos' one meta renderer; a Lista keeps a «Sin dato» choice. -->
+          <MetaFields
+            class="c-extra-input"
+            :model-value="{ [field.fieldname]: draft }"
+            :fields="[editorField(field)]"
+            :disabled="saving"
             data-input="value"
-          />
-          <FormControl
-            v-else-if="field.kind === 'check'"
-            :model-value="!!draft"
-            type="checkbox"
-            :label="`${field.label}: ${__('Yes')}`"
-            data-input="value"
-            @update:model-value="draft = $event ? 1 : 0"
-          />
-          <FormControl
-            v-else
-            v-model="draft"
-            :type="inputType(field)"
-            :label="field.label"
-            :maxlength="field.kind === 'text' ? 140 : undefined"
-            data-input="value"
+            @update:model-value="draft = $event[field.fieldname]"
           />
           <div v-if="latest" class="c-inset" data-compare="extra">
             <p>
@@ -148,6 +133,7 @@ import {
   extraPayloadValue,
 } from '@/utils/extraFields'
 import ExtraFieldsEditor from './ExtraFieldsEditor.vue'
+import MetaFields from './MetaFields.vue'
 import RecoveryMessage from './RecoveryMessage.vue'
 
 // «Más datos» on a cliente: the shop's extra fields, filled in place through
@@ -190,12 +176,19 @@ const isEmpty = (field) => {
 }
 const writable = (field) =>
   !field.read_only && !!props.record.capabilities?.write
-const inputType = (field) =>
-  field.kind === 'number' ? 'number' : field.kind === 'date' ? 'date' : 'text'
-const listOptions = (field) => [
-  { label: __('No data'), value: '' },
-  ...extraOptions(field).map((value) => ({ label: value, value })),
-]
+/** The field as MetaFields renders it: never required, a Lista with an empty choice. */
+const editorField = (field) => ({
+  ...field,
+  reqd: 0,
+  read_only: 0,
+  options:
+    field.kind === 'list'
+      ? [
+          { label: __('No data'), value: '' },
+          ...extraOptions(field).map((value) => ({ label: value, value })),
+        ]
+      : field.options,
+})
 
 function edit(field, value) {
   editing.value = field.fieldname
@@ -207,7 +200,7 @@ function edit(field, value) {
         ? current
           ? 1
           : 0
-        : current ?? ''
+        : (current ?? '')
   error.value = null
   latest.value = null
   notice.value = ''

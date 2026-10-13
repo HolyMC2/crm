@@ -978,6 +978,9 @@
 .c-extra-edit .c-recovery {
   margin: 0;
 }
+.c-extra-edit .c-extra-input {
+  grid-template-columns: minmax(0, 1fr);
+}
 .c-extra-ask {
   margin-top: 12px;
   font-size: 12px;

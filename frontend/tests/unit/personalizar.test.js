@@ -55,6 +55,7 @@ vi.mock('frappe-ui', async () => {
 import { Button, Dialog, FormControl } from 'frappe-ui'
 import ExtraFieldsPanel from '@/components/contactos/ExtraFieldsPanel.vue'
 import ExtraFieldForm from '@/components/contactos/ExtraFieldForm.vue'
+import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
 import {
   accountExtraRoute,
   clauseLabel,
@@ -348,7 +349,7 @@ describe('«Más datos» on a cliente', () => {
     expect(q('[data-act="ask-owner"]')).not.toBeNull()
     await click('[data-field="pz_nota_9c0d"] [data-act="edit-extra"]')
     await type(
-      '[data-field="pz_nota_9c0d"] [data-input="value"]',
+      '[data-field="pz_nota_9c0d"] [data-input="value"] input',
       'Le gusta azul',
     )
     await click('[data-act="save-extra"]')
@@ -388,7 +389,10 @@ describe('«Más datos» on a cliente', () => {
       capabilities: { fields: { define: true } },
     })
     await click('[data-field="pz_visitas_5e6f"] [data-act="edit-extra"]')
-    await type('[data-field="pz_visitas_5e6f"] [data-input="value"]', '20')
+    await type(
+      '[data-field="pz_visitas_5e6f"] [data-input="value"] input',
+      '20',
+    )
     await click('[data-act="save-extra"]')
     const compare = [...root.querySelectorAll('button')].find((b) =>
       b.textContent.includes('Comparar cambios'),
@@ -396,9 +400,9 @@ describe('«Más datos» on a cliente', () => {
     compare.click()
     await settle()
     expect(q('[data-compare="extra"]').textContent).toContain('15')
-    expect(q('[data-field="pz_visitas_5e6f"] [data-input="value"]').value).toBe(
-      '20',
-    )
+    expect(
+      q('[data-field="pz_visitas_5e6f"] [data-input="value"] input').value,
+    ).toBe('20')
     const keep = [...root.querySelectorAll('button')].find((b) =>
       b.textContent.includes('Keep mine'),
     )
@@ -466,6 +470,39 @@ describe('«Más datos» on a cliente', () => {
     }
     await settle()
     expect(q('[data-field="pz_talla_aa11"] [data-editing]')).not.toBeNull()
+  })
+})
+
+describe('a list refusal with its own way out', () => {
+  it('shows the guard actions to a host that handles them, and only those codes', async () => {
+    const actions = []
+    const guard = {
+      code: 'field_retired',
+      message: 'El campo «Talla» está retirado.',
+      actions: [
+        { label: 'Quitar filtro', kind: 'remove_filter', target: 'pz_talla_1' },
+        { label: 'Reactivar', kind: 'reactivate', target: 'pz_talla_1' },
+      ],
+      retry_context: {},
+    }
+    await mount(RecoveryMessage, {
+      error: { guard },
+      guardCodes: ['field_retired'],
+      onAction: (action) => actions.push(action.kind),
+    })
+    expect(root.textContent).toContain('El campo «Talla» está retirado.')
+    await click('[data-guard-action="remove_filter"]')
+    expect(actions).toEqual(['remove_filter'])
+    unmount()
+    // Any other refusal keeps the generic recovery and its own buttons.
+    await mount(RecoveryMessage, {
+      error: { guard: { ...guard, code: 'conflict' } },
+      guardCodes: ['field_retired'],
+      onAction: () => actions.push('wrong'),
+    })
+    expect(q('[data-guard-action]')).toBeNull()
+    expect(root.querySelectorAll('button').length).toBeGreaterThan(0)
+    expect(actions).toEqual(['remove_filter'])
   })
 })
 
