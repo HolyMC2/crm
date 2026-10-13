@@ -174,6 +174,32 @@ class TestAvisosResolve(IntegrationTestCase):
 				self.assertNotIn("RO-00202", frappe.as_json(target))
 				self.assertTrue(target["route"] or target["desk"])
 
+	def test_a_vacation_request_opens_its_review_in_asistencia(self):
+		# Frappe's Assignment notice names the Leave Application; its decide screen is
+		# Asistencia → Vacaciones, never the raw HRMS form.
+		group = {
+			"doctype": "Leave Application",
+			"docname": "HR-LAP-2026-00001",
+			"title": "Ana te asignó «Revisar vacaciones»",
+			"category": "direct",
+		}
+		with (
+			patch.object(resolve, "_readable", return_value=True),
+			patch.object(resolve, "record_label", return_value="Ana López"),
+			patch.object(resolve.frappe.db, "exists", return_value=True),
+		):
+			target = resolve.target(group, resolve.Access())
+		self.assertEqual(target["desk"], "/app/asistencia?v=ausencias&request=HR-LAP-2026-00001")
+		self.assertEqual(target["where"], "Asistencia")
+		self.assertTrue(target["action"])
+		with (
+			patch.object(resolve, "_readable", return_value=False),
+			patch.object(resolve.frappe.db, "exists", return_value=True),
+		):
+			refused = resolve.target(group, resolve.Access())
+		self.assertFalse(opens(refused))
+		self.assertTrue(refused["reason"])
+
 	def test_unmapped_records_open_their_desk_form_and_unreadable_ones_explain(self):
 		todo = frappe.get_doc(
 			{"doctype": "ToDo", "description": "De Beto", "allocated_to": BETO, "owner": BETO}
