@@ -153,7 +153,7 @@
                 {{ __('Trabajo de reparación') }}
               </h3>
               <button
-                class="text-sm font-medium text-ink-green-8 underline"
+                class="-my-2.5 min-h-11 text-sm font-medium text-ink-green-8 underline sm:my-0 sm:min-h-0"
                 @click="$emit('navigate', 'repair')"
               >
                 {{ __('Gestionar reparaciones') }}
@@ -221,7 +221,7 @@
                 {{ __('Documentos y cobros') }}
               </h3>
               <button
-                class="text-sm font-medium text-ink-green-8 underline"
+                class="-my-2.5 min-h-11 text-sm font-medium text-ink-green-8 underline sm:my-0 sm:min-h-0"
                 @click="$emit('navigate', 'items')"
               >
                 {{ __('Preparar cotización') }}
