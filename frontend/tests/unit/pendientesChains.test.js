@@ -15,6 +15,7 @@ vi.mock('vue-router', async () => {
   return {
     useRoute: () => state.route,
     useRouter: () => state.router,
+    onBeforeRouteLeave: (guard) => (state.leave = guard),
   }
 })
 vi.mock('frappe-ui', async () => {
@@ -317,6 +318,68 @@ describe('Pendientes list cutover', () => {
     mount(Pendientes)
     await flush()
     expect(root.querySelector('[data-create]').dataset.create).toBe('CRM Deal')
+  })
+
+  it('returns to the same place after back, once the list has its height', async () => {
+    // P1 (polish walk 2026-10-13): the position was written once, one frame
+    // after the data arrived, while the list was still shorter than when the
+    // worker left; the browser clamped it (98 instead of 120, or 0).
+    const frames = []
+    const raf = vi
+      .spyOn(globalThis, 'requestAnimationFrame')
+      .mockImplementation((fn) => frames.push(fn))
+    const step = () => frames.splice(0).forEach((fn) => fn())
+    // happy-dom has no layout: give the list a height and clamp like a browser
+    const box = { height: 447, content: 447 }
+    const layout = (el) => {
+      let top = 0
+      Object.defineProperties(el, {
+        clientHeight: { get: () => box.height },
+        scrollHeight: { get: () => box.content },
+        scrollTop: {
+          get: () => top,
+          set: (v) => (top = Math.min(Math.max(0, v), box.content - box.height)),
+        },
+      })
+      return el
+    }
+    const list = () => root.querySelector('.overflow-y-auto')
+    const queue = {
+      sections: {
+        overdue: { rows: [item('1')], count: 1 },
+        today: { rows: [item('2'), item('3')], count: 2 },
+      },
+    }
+    try {
+      state.api.mockResolvedValue(queue)
+      mount(Pendientes)
+      await flush()
+      box.content = 567
+      layout(list()).scrollTop = 120
+      list().dispatchEvent(new Event('scroll'))
+      state.leave?.() // opening a record saves the place
+      app.unmount()
+      root.remove()
+
+      // back: the page mounts again and the rows arrive afterwards
+      const response = deferred()
+      state.api.mockReturnValue(response.promise)
+      box.content = 447
+      mount(Pendientes)
+      await flush()
+      layout(list())
+      response.resolve(queue)
+      await flush()
+      box.content = 545 // sections rendered, the last rows still laying out
+      step()
+      expect(list().scrollTop).toBe(98)
+      box.content = 567
+      step()
+      expect(list().scrollTop).toBe(120)
+    } finally {
+      raf.mockRestore()
+      sessionStorage.clear()
+    }
   })
 })
 

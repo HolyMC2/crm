@@ -176,6 +176,7 @@
             <PendienteRow
               v-for="row in sections[group]?.rows || []"
               :key="row.doctype + row.name"
+              :data-scroll-key="row.doctype + row.name"
               :row="row"
               :today="today"
               :query="returnQuery"
@@ -199,6 +200,7 @@
           <PendienteRow
             v-for="row in rows"
             :key="row.doctype + row.name"
+            :data-scroll-key="row.doctype + row.name"
             :row="row"
             :today="today"
             :query="returnQuery"
@@ -239,12 +241,14 @@
 import {
   computed,
   defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
   onMounted,
   reactive,
   ref,
   watch,
 } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import PendienteRow from '@/components/pendientes/PendienteRow.vue'
@@ -254,6 +258,14 @@ import { loadShell, shellBoot } from '@/composables/muelleShell'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { safeIntendedRoute } from '@/utils/shellRoutes'
 import { formatDay } from '@/utils/contactos'
+import {
+  captureScroll,
+  readScroll,
+  scrollTarget,
+  sessionStore,
+  settleScroll,
+  writeScroll,
+} from '@/utils/listScroll'
 import {
   GROUPS,
   canCreateOn,
@@ -368,7 +380,7 @@ async function load(start = 0) {
       hasMore.value = response.has_more
     }
     loaded.value = true
-    restoreScroll()
+    if (!start) restoreScroll()
   } catch (error) {
     if (current === generation) problem.value = pendienteError(error)
   } finally {
@@ -376,23 +388,44 @@ async function load(start = 0) {
   }
 }
 
-const scrollKey = () => `muelle:pendientes:scroll:${route.fullPath}`
+// Back from a record (phone back gesture, browser back or «Back to
+// Pendientes») returns to the same row. The position is saved when leaving and
+// while scrolling, and restored only once the sections have rendered and the
+// phone header has settled (utils/listScroll).
+// Keyed by the list's normalized state, so «Back to Pendientes» (rebuilt from
+// the record's `list` query) and browser back find the same entry.
+const scrollKey = () => `muelle:pendientes:scroll:${returnQuery.value.list}`
+let stopRestore = null
+let leaving = false
 function rememberScroll() {
-  try {
-    sessionStorage.setItem(scrollKey(), String(scroller.value?.scrollTop || 0))
-  } catch {
-    /* private storage */
-  }
+  // Not mid-restore (clamped in-between positions), nor while the rows are off
+  // screen: a collapsed list would save the top and lose the place.
+  if (leaving || stopRestore || !loaded.value || !scroller.value) return
+  writeScroll(sessionStore(), scrollKey(), captureScroll(scroller.value))
 }
-function restoreScroll() {
-  try {
-    const top = Number(sessionStorage.getItem(scrollKey()) || 0)
-    if (top && scroller.value)
-      requestAnimationFrame(() => (scroller.value.scrollTop = top))
-  } catch {
-    /* private storage */
-  }
+async function restoreScroll() {
+  const saved = readScroll(sessionStore(), scrollKey())
+  if (!saved?.top) return
+  await nextTick()
+  const el = scroller.value
+  if (!el) return
+  stopRestore?.()
+  stopRestore = settleScroll(el, () => scrollTarget(el, saved), {
+    onDone: () => {
+      stopRestore = null
+      rememberScroll()
+    },
+  })
 }
+onBeforeRouteLeave(() => {
+  stopRestore?.()
+  rememberScroll()
+})
+onBeforeUnmount(() => {
+  // the route has already changed here: never save under the next page's key
+  leaving = true
+  stopRestore?.()
+})
 
 function replaceRow(updated) {
   const key = updated.doctype + updated.name
