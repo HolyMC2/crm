@@ -54,7 +54,7 @@
           class="press flex-none whitespace-nowrap rounded-full px-3 py-[6px] text-[12px] font-semibold"
           :class="
             v.key === view
-              ? 'bg-surface-gray-7 text-white'
+              ? 'bg-surface-gray-10 text-ink-base'
               : 'bg-surface-gray-2 text-ink-gray-7'
           "
           :aria-pressed="v.key === view"

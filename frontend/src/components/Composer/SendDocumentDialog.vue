@@ -47,7 +47,7 @@
               class="rounded-full px-2.5 py-1 text-[12px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               :class="
                 dt === c.doctype
-                  ? 'bg-surface-gray-7 text-ink-white'
+                  ? 'bg-surface-gray-10 text-ink-base'
                   : 'bg-surface-gray-2 text-ink-gray-6 hover:bg-surface-gray-3'
               "
               :disabled="c.available === false"

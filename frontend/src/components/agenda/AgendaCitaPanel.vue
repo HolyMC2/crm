@@ -141,7 +141,7 @@
     >
       <a
         v-if="actionIds.includes('receive')"
-        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-surface-gray-7 px-4 text-base font-medium text-ink-white hover:bg-surface-gray-6 sm:flex-none"
+        class="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-surface-gray-10 px-4 text-base font-medium text-ink-base hover:bg-surface-gray-9 sm:flex-none"
         :href="receiveUrl(cita, returnTo)"
         >{{ __('Receive device') }}</a
       >

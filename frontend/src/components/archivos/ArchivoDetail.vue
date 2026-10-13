@@ -124,7 +124,7 @@
               <a
                 v-if="boot.banking_enabled"
                 :href="bankUrl"
-                class="inline-flex min-h-11 items-center gap-2 rounded bg-surface-gray-7 px-4 text-base font-medium text-ink-base sm:min-h-8"
+                class="inline-flex min-h-11 items-center gap-2 rounded bg-surface-gray-10 px-4 text-base font-medium text-ink-base sm:min-h-8"
                 >{{
                   hasBankImport ? __('View in Bancos') : __('Import in Bancos')
                 }}</a

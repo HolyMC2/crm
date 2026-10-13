@@ -106,7 +106,7 @@
       </label>
       <button
         type="submit"
-        class="rounded bg-surface-gray-7 px-3 py-2 text-sm text-ink-white"
+        class="rounded bg-surface-gray-10 px-3 py-2 text-sm text-ink-base"
         :disabled="busy || !action"
       >
         {{ busy ? 'Aplicando…' : 'Aplicar cambio' }}

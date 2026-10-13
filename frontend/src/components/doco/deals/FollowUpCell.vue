@@ -184,7 +184,7 @@
             </button>
             <button
               type="button"
-              class="rounded-lg bg-surface-gray-7 px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
+              class="rounded-lg bg-surface-gray-10 px-3 py-1.5 text-[12px] font-semibold text-ink-base disabled:opacity-60"
               :disabled="saving"
               @click="submit"
             >

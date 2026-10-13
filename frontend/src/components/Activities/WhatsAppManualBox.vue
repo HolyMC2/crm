@@ -92,7 +92,7 @@
         :href="url"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center gap-1.5 rounded bg-surface-gray-7 px-3 py-1.5 text-sm font-medium text-ink-white hover:bg-surface-gray-6"
+        class="inline-flex items-center gap-1.5 rounded bg-surface-gray-10 px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-gray-9"
         data-testid="wa-manual-open"
         @click="logOpen"
       >

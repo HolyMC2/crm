@@ -71,7 +71,7 @@
         <button
           type="button"
           :disabled="busy || !template || !preview?.staged || !validDays"
-          class="min-h-11 rounded-lg bg-surface-gray-7 px-3 text-sm text-ink-white disabled:opacity-50"
+          class="min-h-11 rounded-lg bg-surface-gray-10 px-3 text-sm text-ink-base disabled:opacity-50"
           @click="stageAudience"
         >
           {{ __('Enviar {0} a revisión', [preview?.staged || 0]) }}

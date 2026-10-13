@@ -84,7 +84,7 @@
                 {{ finishing ? __('Guardando…') : __('Marcar como hecha') }}
               </button>
               <button
-                class="rounded-lg bg-surface-gray-7 px-3 py-2 text-sm font-semibold text-white hover:bg-surface-gray-6"
+                class="rounded-lg bg-surface-gray-10 px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-gray-9"
                 :disabled="finishing"
                 @click="schedule"
               >

@@ -201,7 +201,7 @@
           <a
             v-if="row.actions?.sell"
             :href="saleHref(row, 'sale')"
-            class="inline-flex min-h-[36px] items-center rounded bg-surface-gray-7 px-3 text-sm font-semibold text-ink-white"
+            class="inline-flex min-h-[36px] items-center rounded bg-surface-gray-10 px-3 text-sm font-semibold text-ink-base"
             data-testid="loyalty-sell"
             >{{ __('Sell at the register') }}</a
           >

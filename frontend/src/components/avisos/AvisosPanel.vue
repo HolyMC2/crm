@@ -55,7 +55,7 @@
             class="min-h-9 shrink-0 rounded-full px-3 text-sm"
             :class="
               category === chip.value
-                ? 'bg-surface-gray-7 text-ink-white'
+                ? 'bg-surface-gray-10 text-ink-base'
                 : 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
             "
             @click="category = chip.value"
