@@ -299,7 +299,7 @@ describe('Cobranza list as a power app', () => {
       '[data-row-key="Importadora:Tienda:MXN"]',
     )
     expect(focused.getAttribute('aria-selected')).toBe('false')
-    expect(focused.className).toContain('inset_3px')
+    expect(focused.className).toContain('bg-surface-gray-2')
     press('Enter')
     await flush()
     expect(state.router.push).toHaveBeenCalledWith({
@@ -431,7 +431,7 @@ describe('Cobranza list as a power app', () => {
     expect(state.route.query).toEqual({ cliente: 'Laura' })
     expect(
       root.querySelector('[data-row-key="Laura:Tienda:MXN"]').className,
-    ).toContain('inset_3px')
+    ).toContain('bg-surface-gray-2')
   })
 
   it('lists its keys in the Alt+H sheet', async () => {

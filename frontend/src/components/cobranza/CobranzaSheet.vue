@@ -7,17 +7,16 @@
     :title="''"
     @update:open="(value) => $emit('update:modelValue', value)"
   >
-    <div class="flex min-h-full flex-col px-5 pb-6" :data-cobranza-sheet="kind">
+    <div class="px-5 pb-6" :data-cobranza-sheet="kind">
       <h2 class="pb-1 text-xl font-semibold text-ink-gray-9">{{ title }}</h2>
       <p v-if="subtitle" class="pb-3 text-sm text-ink-gray-6">
         {{ subtitle }}
       </p>
-      <div class="flex-1 space-y-3 text-base">
+      <div class="space-y-3 text-base">
         <slot />
       </div>
-      <div
-        class="sticky bottom-0 -mx-5 mt-4 flex flex-col-reverse gap-2 border-t border-outline-gray-1 bg-surface-base px-5 pt-3 [&_button]:min-h-12 [&_button]:w-full"
-      >
+      <!-- The actions full width under the form, 44 px each (their own min-h-11). -->
+      <div class="mt-4 grid gap-2 border-t border-outline-gray-1 pt-3">
         <slot name="actions" />
       </div>
     </div>

@@ -184,16 +184,19 @@
     <template #actions>
       <Button
         v-if="caps.collect && ctx?.can_pay"
+        class="min-h-11 sm:min-h-8"
         variant="ghost"
         :label="__('Collect at the register instead')"
         @click="collect"
       />
       <Button
+        class="min-h-11 sm:min-h-8"
         :label="__('Cancel')"
         @click="$emit('update:modelValue', false)"
       />
       <Button
         v-if="ctx?.can_pay"
+        class="min-h-11 sm:min-h-8"
         variant="solid"
         :label="
           Number(form.amount) > 0

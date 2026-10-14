@@ -39,10 +39,12 @@
     </p>
     <template #actions>
       <Button
+        class="min-h-11 sm:min-h-8"
         :label="__('Cancel')"
         @click="$emit('update:modelValue', false)"
       />
       <Button
+        class="min-h-11 sm:min-h-8"
         variant="solid"
         :label="__('Save promise')"
         :loading="saving"

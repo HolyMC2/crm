@@ -34,96 +34,121 @@
            Agenda's: the list as its title (tap: choose another), search, select. -->
       <header
         v-if="phone"
-        class="sticky top-0 z-20 flex min-h-14 items-center gap-1 border-b border-outline-gray-1 bg-surface-base px-1 pt-[env(safe-area-inset-top)]"
+        class="sticky top-0 z-20 border-b border-outline-gray-1 bg-surface-base pt-[env(safe-area-inset-top)]"
         data-cobranza-appbar
       >
-        <template v-if="selecting">
-          <button
-            type="button"
-            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-            :aria-label="__('Clear selection')"
-            @click="clearSelection"
-          >
-            <FeatherIcon name="x" class="h-6 w-6" />
-          </button>
-          <p class="min-w-0 flex-1 truncate text-lg font-semibold">
-            {{ __('{0} selected', [selected.size]) }}
-          </p>
-          <button
-            type="button"
-            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-            :aria-label="__('Select the visible page')"
-            @click="selectAll"
-          >
-            <FeatherIcon name="check-square" class="h-6 w-6" />
-          </button>
-        </template>
-        <template v-else-if="searchOpen">
-          <button
-            type="button"
-            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-            :aria-label="__('Close search')"
-            @click="closeSearch"
-          >
-            <FeatherIcon name="arrow-left" class="h-6 w-6" />
-          </button>
-          <input
-            ref="phoneSearch"
-            v-model="search"
-            type="search"
-            enterkeyhint="search"
-            class="h-11 min-w-0 flex-1 rounded-lg border-0 bg-surface-gray-2 px-3 text-base"
-            :placeholder="__('Search customer or invoice')"
-            :aria-label="__('Search customer or invoice')"
-            data-cobranza-search
-          />
-        </template>
-        <template v-else>
-          <button
-            type="button"
-            class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-lg px-3 text-left"
-            :aria-label="__('Choose a list')"
-            :aria-expanded="segmentSheet"
-            data-cobranza-title
-            @click="segmentSheet = true"
-          >
-            <span class="truncate text-lg font-semibold">{{
-              segmentLabel(state.segment)
-            }}</span>
-            <span
-              v-if="counts[state.segment] !== undefined"
-              class="shrink-0 text-base text-ink-gray-6"
-              >({{ counts[state.segment] }})</span
+        <div class="flex min-h-14 items-center gap-1 px-1">
+          <template v-if="selecting">
+            <button
+              type="button"
+              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+              :aria-label="__('Clear selection')"
+              @click="clearSelection"
             >
-            <FeatherIcon
-              name="chevron-down"
-              class="h-5 w-5 shrink-0 text-ink-gray-6"
+              <FeatherIcon name="x" class="h-6 w-6" />
+            </button>
+            <p class="min-w-0 flex-1 truncate text-lg font-semibold">
+              {{ __('{0} selected', [selected.size]) }}
+            </p>
+            <button
+              type="button"
+              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+              :aria-label="__('Select the visible page')"
+              @click="selectAll"
+            >
+              <FeatherIcon name="check-square" class="h-6 w-6" />
+            </button>
+          </template>
+          <template v-else-if="searchOpen">
+            <button
+              type="button"
+              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+              :aria-label="__('Close search')"
+              @click="closeSearch"
+            >
+              <FeatherIcon name="arrow-left" class="h-6 w-6" />
+            </button>
+            <input
+              ref="phoneSearch"
+              v-model="search"
+              type="search"
+              enterkeyhint="search"
+              class="h-11 min-w-0 flex-1 rounded-lg border-0 bg-surface-gray-2 px-3 text-base"
+              :placeholder="__('Search customer or invoice')"
+              :aria-label="__('Search customer or invoice')"
+              data-cobranza-search
             />
-          </button>
-          <span
-            v-if="loading && rows.length"
-            class="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-outline-gray-2 border-t-ink-gray-7"
-            role="status"
-            :aria-label="__('Loading')"
-          />
-          <button
-            type="button"
-            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-            :aria-label="__('Search customer or invoice')"
-            @click="openSearch"
-          >
-            <FeatherIcon name="search" class="h-6 w-6" />
-          </button>
-          <button
-            v-if="rows.length"
-            type="button"
-            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-            :aria-label="__('Select customers')"
-            @click="selecting = true"
-          >
-            <FeatherIcon name="check-square" class="h-6 w-6" />
-          </button>
-        </template>
+          </template>
+          <template v-else>
+            <button
+              type="button"
+              class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-lg px-3 text-left"
+              :aria-label="__('Choose a list')"
+              :aria-expanded="segmentSheet"
+              data-cobranza-title
+              @click="segmentSheet = true"
+            >
+              <span class="truncate text-lg font-semibold">{{
+                segmentLabel(state.segment)
+              }}</span>
+              <span
+                v-if="counts[state.segment] !== undefined"
+                class="shrink-0 text-base text-ink-gray-6"
+                >({{ counts[state.segment] }})</span
+              >
+              <FeatherIcon
+                name="chevron-down"
+                class="h-5 w-5 shrink-0 text-ink-gray-6"
+              />
+            </button>
+            <FeatherIcon
+              v-if="loading && rows.length"
+              name="loader"
+              class="h-5 w-5 shrink-0 animate-spin text-ink-gray-6"
+              role="status"
+              :aria-label="__('Loading')"
+            />
+            <button
+              type="button"
+              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+              :aria-label="__('Search customer or invoice')"
+              @click="openSearch"
+            >
+              <FeatherIcon name="search" class="h-6 w-6" />
+            </button>
+            <button
+              v-if="rows.length"
+              type="button"
+              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+              :aria-label="__('Select customers')"
+              @click="selecting = true"
+            >
+              <FeatherIcon name="check-square" class="h-6 w-6" />
+            </button>
+          </template>
+        </div>
+        <!-- What is owed, always in sight while the list scrolls. -->
+        <div
+          v-if="split.length"
+          class="flex flex-wrap gap-x-4 border-t border-outline-gray-1 px-4 py-2 text-sm"
+          :aria-label="__('Totals')"
+          data-cobranza-summary
+        >
+          <template v-for="part in split" :key="part.currency">
+            <span
+              >{{ __('Overdue', null, CTX) }}
+              <strong class="tabular-nums text-ink-red-7">{{
+                money(part.overdue, part.currency)
+              }}</strong></span
+            >
+            <span
+              >{{ __('Not due yet') }}
+              <strong class="tabular-nums">{{
+                money(part.upcoming, part.currency)
+              }}</strong></span
+            >
+          </template>
+        </div>
       </header>
       <header
         v-else
@@ -148,29 +173,6 @@
           {{ __('Shortcuts') }}
         </button>
       </header>
-
-      <!-- Phone: what is owed, always in sight while the list scrolls. -->
-      <div
-        v-if="phone && split.length"
-        class="sticky top-14 z-10 flex flex-wrap gap-x-4 gap-y-0.5 border-b border-outline-gray-1 bg-surface-base px-4 py-2 text-sm"
-        :aria-label="__('Totals')"
-        data-cobranza-summary
-      >
-        <template v-for="part in split" :key="part.currency">
-          <span
-            >{{ __('Overdue', null, CTX) }}
-            <strong class="tabular-nums text-ink-red-7">{{
-              money(part.overdue, part.currency)
-            }}</strong></span
-          >
-          <span
-            >{{ __('Not due yet') }}
-            <strong class="tabular-nums">{{
-              money(part.upcoming, part.currency)
-            }}</strong></span
-          >
-        </template>
-      </div>
 
       <section
         v-if="auto"
@@ -282,7 +284,7 @@
           class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
           :class="
             state.edad === chip.value
-              ? 'border-ink-gray-9 bg-surface-gray-9 text-ink-white'
+              ? 'border-outline-gray-4 bg-surface-gray-9 text-ink-white'
               : 'border-outline-gray-2 text-ink-gray-8 hover:bg-surface-gray-2'
           "
           :aria-pressed="state.edad === chip.value"
@@ -358,29 +360,27 @@
             :data-row-key="rowKey(row)"
             class="group relative"
             :class="[
-              focusKey === rowKey(row)
-                ? 'bg-surface-gray-1 shadow-[inset_3px_0_0_var(--ink-gray-9)]'
-                : '',
+              focusKey === rowKey(row) ? 'bg-surface-gray-2' : '',
               selected.has(rowKey(row)) ? 'bg-surface-blue-1' : '',
             ]"
           >
             <div class="flex items-start">
               <label
                 v-if="!phone || selecting"
-                class="flex min-h-14 shrink-0 cursor-pointer items-center pl-4 pr-1 sm:pl-5"
+                class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
                 :aria-label="__('Select {0}', [row.customer_name])"
               >
                 <input
                   type="checkbox"
-                  class="h-5 w-5 rounded sm:h-4 sm:w-4"
+                  class="h-5 w-5 rounded"
                   :checked="selected.has(rowKey(row))"
                   @change="toggleRow(row)"
                 />
               </label>
               <a
                 :href="customerHref(row.customer, customerRoute(row).query)"
-                class="flex min-h-14 min-w-0 flex-1 items-start gap-3 py-3 pr-4 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:pr-6"
-                :class="!phone || selecting ? 'pl-2' : 'pl-4'"
+                class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+                :class="!phone || selecting ? 'pl-2' : ''"
                 @click="onRowClick($event, row)"
               >
                 <span class="min-w-0 flex-1">
@@ -459,7 +459,7 @@
             <!-- Desktop: the row's actions on hover or keyboard focus (same keys as the sheet). -->
             <div
               v-if="!phone && row.target"
-              class="absolute right-40 top-2 hidden gap-1 rounded-lg bg-surface-base p-1 shadow group-hover:flex"
+              class="absolute right-2 top-2 hidden gap-1 rounded-lg bg-surface-base p-1 shadow group-hover:flex"
               :class="focusKey === rowKey(row) ? '!flex' : ''"
               data-row-actions
             >
@@ -548,7 +548,7 @@
       <!-- The selection's actions: at the thumb on a phone, under the list on a desk. -->
       <div
         v-if="selected.size"
-        class="sticky bottom-0 z-20 flex flex-wrap items-center gap-2 border-t border-outline-gray-2 bg-surface-base px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] sm:px-6"
+        class="sticky bottom-0 z-20 flex flex-wrap items-center gap-2 border-t border-outline-gray-2 bg-surface-base px-4 py-3 shadow-lg sm:px-6"
         role="region"
         :aria-label="__('Selected customers')"
         data-cobranza-bulkbar

@@ -83,8 +83,13 @@
     </template>
     <template #actions>
       <template v-if="!result">
-        <Button :label="__('Cancel')" @click="close(false)" />
         <Button
+          class="min-h-11 sm:min-h-8"
+          :label="__('Cancel')"
+          @click="close(false)"
+        />
+        <Button
+          class="min-h-11 sm:min-h-8"
           variant="solid"
           :label="__('Send to {0} customers', [chosen.length])"
           :loading="sending"
@@ -93,6 +98,7 @@
       </template>
       <Button
         v-else
+        class="min-h-11 sm:min-h-8"
         variant="solid"
         :label="__('Done')"
         @click="close(false)"

@@ -49,10 +49,7 @@
       </button>
     </header>
 
-    <div
-      class="mx-auto w-full max-w-4xl px-4 pt-4 sm:px-6 sm:pb-10"
-      :class="phone ? 'pb-32' : 'pb-28'"
-    >
+    <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
       <nav v-if="!phone" class="mb-3 flex items-center gap-2">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
@@ -194,7 +191,7 @@
           <!-- ERPNext sets and checks credit limits in the company currency. -->
           <p
             v-if="data.credit.limit || data.credit.store_credit"
-            class="w-full text-xs text-ink-gray-6 sm:w-auto sm:text-right"
+            class="w-full text-xs text-ink-gray-6 sm:w-auto"
           >
             <template v-if="data.credit.limit">{{
               __('Credit limit {0}', [
@@ -326,10 +323,10 @@
           <li
             v-for="inv in invoices"
             :key="inv.name"
-            class="scroll-mt-20 rounded-lg border p-3"
+            class="rounded-lg border p-3"
             :class="
               focusName === inv.name
-                ? 'border-ink-gray-8 ring-1 ring-ink-gray-8'
+                ? 'border-outline-gray-4 ring-1 ring-outline-gray-4'
                 : 'border-outline-gray-2'
             "
             :data-invoice="inv.name"
@@ -470,7 +467,7 @@
     <!-- Phone: the focused invoice's actions at the thumb. -->
     <div
       v-if="phone && data && focused"
-      class="sticky bottom-0 z-20 mt-auto border-t border-outline-gray-2 bg-surface-base px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]"
+      class="sticky bottom-0 z-20 mt-auto border-t border-outline-gray-2 bg-surface-base px-3 pb-2 pt-2 shadow-lg"
       data-cobranza-actionbar
     >
       <p class="mb-1 truncate text-xs text-ink-gray-6">

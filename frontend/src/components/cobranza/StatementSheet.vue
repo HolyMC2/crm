@@ -49,15 +49,21 @@
       {{ __('Ready: {0}', [ready.name]) }}
     </p>
     <template #actions>
-      <Button :label="__('Close')" @click="$emit('update:modelValue', false)" />
+      <Button
+        class="min-h-11 sm:min-h-8"
+        :label="__('Close')"
+        @click="$emit('update:modelValue', false)"
+      />
       <Button
         v-if="canShare"
+        class="min-h-11 sm:min-h-8"
         :label="__('Share from my phone')"
         :loading="busy === 'share'"
         :disabled="!valid"
         @click="get('share')"
       />
       <Button
+        class="min-h-11 sm:min-h-8"
         variant="solid"
         :label="__('Download PDF')"
         :loading="busy === 'download'"

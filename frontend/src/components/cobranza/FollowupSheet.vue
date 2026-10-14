@@ -68,6 +68,7 @@
     <template #actions>
       <Button
         v-if="followup"
+        class="min-h-11 sm:min-h-8"
         variant="ghost"
         theme="red"
         :label="__('End follow-up')"
@@ -75,10 +76,12 @@
         @click="save(true)"
       />
       <Button
+        class="min-h-11 sm:min-h-8"
         :label="__('Cancel')"
         @click="$emit('update:modelValue', false)"
       />
       <Button
+        class="min-h-11 sm:min-h-8"
         variant="solid"
         :label="__('Save', null, CTX)"
         :loading="saving === 'save'"
