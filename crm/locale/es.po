@@ -22558,7 +22558,7 @@ msgstr "Ver el artículo"
 
 #: frontend/src (Manual de la tienda)
 msgid "See the whole manual"
-msgstr "Ver todo el manual"
+msgstr "Ver todo el manual de la tienda"
 
 #: frontend/src (Manual de la tienda)
 msgid "Show more"
