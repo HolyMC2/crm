@@ -177,6 +177,23 @@
           class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
           <strong>{{ saveError.title }}.</strong> {{ saveError.detail }}
+          <!-- Refused by the server: the draft stays; ask for access or collect at the register. -->
+          <div
+            v-if="saveError.kind === 'permission'"
+            class="mt-2 flex flex-wrap gap-2"
+          >
+            <Button
+              class="min-h-11 sm:min-h-8"
+              :label="__('Copy access request')"
+              @click="copyRequest"
+            />
+            <Button
+              v-if="caps.collect"
+              class="min-h-11 sm:min-h-8"
+              :label="__('Collect at the register')"
+              @click="collect"
+            />
+          </div>
         </div>
       </template>
     </template>
