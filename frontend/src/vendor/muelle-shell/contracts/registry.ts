@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.6.0 (b8f7ed28223d). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.7.0 (c69210f5c8f2). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -19,6 +19,7 @@ export type ShellModuleKey =
   | 'garantias'
   | 'encuestas'
   | 'equipo'
+  | 'manual'
   | 'avisos'
 
 export type LucideIcon = `lucide-${string}`
@@ -34,7 +35,7 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Productos, Garantías, Encuestas, Equipo, Archivos; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
@@ -50,6 +51,7 @@ export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'encuestas', label: 'Encuestas', icon: 'lucide-smile', basePath: '/encuestas', go: 'u' },
   { key: 'equipo', label: 'Equipo', icon: 'lucide-id-card', basePath: '/equipo', go: 'q' },
   { key: 'archivos', label: 'Archivos', icon: 'lucide-folder', basePath: '/archivos', go: 'f' },
+  { key: 'manual', label: 'Manual de la tienda', icon: 'lucide-book-open', basePath: '/manual', go: 'm' },
   { key: 'avisos', label: 'Avisos', icon: 'lucide-bell', basePath: '/avisos', go: '' },
 ] as const satisfies readonly ShellModuleMeta[])
 
