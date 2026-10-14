@@ -181,6 +181,15 @@ export function referenceTarget(row) {
     }
   if (doctype === 'CRM Deal')
     return { to: { name: 'Deal 360', params: { dealId: String(name) } } }
+  // An employee's expense (a correction or reimburse ask) comes back to Pendientes.
+  if (doctype === 'Expense Claim')
+    return {
+      to: {
+        name: MODULE_RECORDS[doctype],
+        params: { name: String(name) },
+        query: { return_to: '/crm/pendientes', return_label: 'Pendientes' },
+      },
+    }
   if (MODULE_RECORDS[doctype])
     return {
       to: { name: MODULE_RECORDS[doctype], params: { name: String(name) } },
