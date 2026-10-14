@@ -2,7 +2,7 @@
   <ModuleLayout
     title="Cobranza"
     :entries="entries"
-    :active-key="segment"
+    :active-key="state.segment"
     @select="selectSegment"
   >
     <section
@@ -23,20 +23,158 @@
         {{ copied }}
       </p>
     </section>
-    <template v-else>
+    <div
+      v-else
+      ref="scroller"
+      class="min-h-0 flex-1 overflow-y-auto"
+      data-cobranza-scroller
+      @scroll.passive="rememberScroll"
+    >
+      <!-- Phone: Cobranza's own app bar (route meta.ownPhoneHeader), like the
+           Agenda's: the list as its title (tap: choose another), search, select. -->
       <header
+        v-if="phone"
+        class="sticky top-0 z-20 flex min-h-14 items-center gap-1 border-b border-outline-gray-1 bg-surface-base px-1 pt-[env(safe-area-inset-top)]"
+        data-cobranza-appbar
+      >
+        <template v-if="selecting">
+          <button
+            type="button"
+            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+            :aria-label="__('Clear selection')"
+            @click="clearSelection"
+          >
+            <FeatherIcon name="x" class="h-6 w-6" />
+          </button>
+          <p class="min-w-0 flex-1 truncate text-lg font-semibold">
+            {{ __('{0} selected', [selected.size]) }}
+          </p>
+          <button
+            type="button"
+            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+            :aria-label="__('Select the visible page')"
+            @click="selectAll"
+          >
+            <FeatherIcon name="check-square" class="h-6 w-6" />
+          </button>
+        </template>
+        <template v-else-if="searchOpen">
+          <button
+            type="button"
+            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+            :aria-label="__('Close search')"
+            @click="closeSearch"
+          >
+            <FeatherIcon name="arrow-left" class="h-6 w-6" />
+          </button>
+          <input
+            ref="phoneSearch"
+            v-model="search"
+            type="search"
+            enterkeyhint="search"
+            class="h-11 min-w-0 flex-1 rounded-lg border-0 bg-surface-gray-2 px-3 text-base"
+            :placeholder="__('Search customer or invoice')"
+            :aria-label="__('Search customer or invoice')"
+            data-cobranza-search
+          />
+        </template>
+        <template v-else>
+          <button
+            type="button"
+            class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-lg px-3 text-left"
+            :aria-label="__('Choose a list')"
+            :aria-expanded="segmentSheet"
+            data-cobranza-title
+            @click="segmentSheet = true"
+          >
+            <span class="truncate text-lg font-semibold">{{
+              segmentLabel(state.segment)
+            }}</span>
+            <span
+              v-if="counts[state.segment] !== undefined"
+              class="shrink-0 text-base text-ink-gray-6"
+              >({{ counts[state.segment] }})</span
+            >
+            <FeatherIcon
+              name="chevron-down"
+              class="h-5 w-5 shrink-0 text-ink-gray-6"
+            />
+          </button>
+          <span
+            v-if="loading && rows.length"
+            class="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-outline-gray-2 border-t-ink-gray-7"
+            role="status"
+            :aria-label="__('Loading')"
+          />
+          <button
+            type="button"
+            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+            :aria-label="__('Search customer or invoice')"
+            @click="openSearch"
+          >
+            <FeatherIcon name="search" class="h-6 w-6" />
+          </button>
+          <button
+            v-if="rows.length"
+            type="button"
+            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+            :aria-label="__('Select customers')"
+            @click="selecting = true"
+          >
+            <FeatherIcon name="check-square" class="h-6 w-6" />
+          </button>
+        </template>
+      </header>
+      <header
+        v-else
         class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
       >
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{ segmentLabel(segment) }}
+            {{ segmentLabel(state.segment) }}
           </h1>
           <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         </div>
+        <button
+          type="button"
+          class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
+          :title="__('Keyboard shortcuts')"
+          @click="openShortcutSheet()"
+        >
+          <kbd
+            class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
+            >?</kbd
+          >
+          {{ __('Shortcuts') }}
+        </button>
       </header>
+
+      <!-- Phone: what is owed, always in sight while the list scrolls. -->
+      <div
+        v-if="phone && split.length"
+        class="sticky top-14 z-10 flex flex-wrap gap-x-4 gap-y-0.5 border-b border-outline-gray-1 bg-surface-base px-4 py-2 text-sm"
+        :aria-label="__('Totals')"
+        data-cobranza-summary
+      >
+        <template v-for="part in split" :key="part.currency">
+          <span
+            >{{ __('Overdue', null, CTX) }}
+            <strong class="tabular-nums text-ink-red-7">{{
+              money(part.overdue, part.currency)
+            }}</strong></span
+          >
+          <span
+            >{{ __('Not due yet') }}
+            <strong class="tabular-nums">{{
+              money(part.upcoming, part.currency)
+            }}</strong></span
+          >
+        </template>
+      </div>
+
       <section
         v-if="auto"
-        class="mx-4 mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-outline-gray-2 p-3 sm:mx-6 sm:max-w-3xl"
+        class="mx-4 my-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-outline-gray-2 p-3 sm:mx-6 sm:mt-0 sm:max-w-3xl"
         :aria-label="__('Automatic payment reminders')"
         data-auto-card
       >
@@ -73,7 +211,7 @@
         />
       </section>
       <dl
-        v-if="stats"
+        v-if="stats && !phone"
         class="grid grid-cols-3 gap-2 px-4 pb-3 sm:max-w-xl sm:px-6"
         :aria-label="__('Totals')"
       >
@@ -104,34 +242,60 @@
           </dd>
         </div>
       </dl>
-      <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
-        <FormControl
-          class="h-11 w-full sm:hidden"
-          type="select"
-          :aria-label="__('List', null, CTX)"
-          :model-value="segment"
-          :options="entries.map((e) => ({ label: e.label, value: e.value }))"
-          @update:model-value="selectSegment"
-        />
+      <div
+        class="flex flex-wrap items-center gap-2 px-4 pb-2 pt-2 sm:px-6 sm:pt-0"
+      >
         <FormControl
           v-if="companies.length > 1"
           class="h-11 w-full sm:h-auto sm:w-56"
           type="select"
           :aria-label="__('Company')"
-          :model-value="company"
+          :model-value="state.company"
           :options="[
             { label: __('All companies'), value: '' },
             ...companies.map((c) => ({ label: c, value: c })),
           ]"
-          @update:model-value="(value) => update({ company: value })"
+          @update:model-value="(value) => navigate({ company: value })"
         />
         <FormControl
+          v-if="!phone"
           v-model="search"
-          class="min-w-0 flex-1 sm:max-w-xs [&_input]:min-h-11 sm:[&_input]:min-h-0"
+          class="min-w-0 flex-1 sm:max-w-xs"
           type="search"
           :placeholder="__('Search customer or invoice')"
           :aria-label="__('Search customer or invoice')"
+          :aria-keyshortcuts="'/'"
+          data-cobranza-search
         />
+      </div>
+      <!-- Aging chips: the customer's oldest overdue invoice, as in the receivables report. -->
+      <div
+        class="flex gap-2 overflow-x-auto px-4 pb-3 sm:flex-wrap sm:px-6"
+        role="group"
+        :aria-label="__('Days overdue')"
+        data-cobranza-aging
+      >
+        <button
+          v-for="chip in agingChips"
+          :key="chip.value || 'all'"
+          type="button"
+          class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
+          :class="
+            state.edad === chip.value
+              ? 'border-ink-gray-9 bg-surface-gray-9 text-ink-white'
+              : 'border-outline-gray-2 text-ink-gray-8 hover:bg-surface-gray-2'
+          "
+          :aria-pressed="state.edad === chip.value"
+          @click="navigate({ edad: chip.value })"
+        >
+          {{ chip.label }}
+          <span
+            v-if="chip.count !== undefined"
+            class="tabular-nums"
+            :class="state.edad === chip.value ? '' : 'text-ink-gray-6'"
+            >{{ chip.count }}</span
+          >
+        </button>
       </div>
       <p
         v-if="capped"
@@ -150,7 +314,11 @@
         class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
       >
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-        <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load()" />
+        <Button
+          class="ml-2"
+          :label="__('Retry', null, CTX)"
+          @click="load({ quiet: true })"
+        />
       </div>
       <div class="pb-6">
         <div
@@ -166,87 +334,153 @@
         >
           <p class="text-lg font-semibold">{{ emptyTitle }}</p>
           <p class="mt-1 text-sm">{{ emptyBody }}</p>
+          <Button
+            v-if="state.edad"
+            class="mt-3 min-h-11 sm:min-h-8"
+            :label="__('Show every age')"
+            @click="navigate({ edad: '' })"
+          />
         </div>
-        <ul v-else class="divide-y divide-outline-gray-1">
+        <ul
+          v-else
+          class="divide-y divide-outline-gray-1"
+          role="listbox"
+          :aria-label="segmentLabel(state.segment)"
+          :aria-multiselectable="true"
+          :aria-activedescendant="focusKey ? domId(focusKey) : undefined"
+        >
           <li
             v-for="row in rows"
-            :key="`${row.customer}:${row.company}:${row.currency}`"
+            :id="domId(rowKey(row))"
+            :key="rowKey(row)"
+            role="option"
+            :aria-selected="selected.has(rowKey(row))"
+            :data-row-key="rowKey(row)"
+            class="group relative"
+            :class="[
+              focusKey === rowKey(row)
+                ? 'bg-surface-gray-1 shadow-[inset_3px_0_0_var(--ink-gray-9)]'
+                : '',
+              selected.has(rowKey(row)) ? 'bg-surface-blue-1' : '',
+            ]"
           >
-            <RouterLink
-              :to="{
-                name: 'CobranzaCliente',
-                params: { customer: row.customer },
-                query: { company: row.company, list: listPath },
-              }"
-              class="flex min-h-14 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
-            >
-              <span class="min-w-0 flex-1">
-                <span class="block truncate font-medium text-ink-gray-9">
-                  {{ row.customer_name }}
+            <div class="flex items-start">
+              <label
+                v-if="!phone || selecting"
+                class="flex min-h-14 shrink-0 cursor-pointer items-center pl-4 pr-1 sm:pl-5"
+                :aria-label="__('Select {0}', [row.customer_name])"
+              >
+                <input
+                  type="checkbox"
+                  class="h-5 w-5 rounded sm:h-4 sm:w-4"
+                  :checked="selected.has(rowKey(row))"
+                  @change="toggleRow(row)"
+                />
+              </label>
+              <RouterLink
+                :to="customerRoute(row)"
+                class="flex min-h-14 min-w-0 flex-1 items-start gap-3 py-3 pr-4 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:pr-6"
+                :class="!phone || selecting ? 'pl-2' : 'pl-4'"
+                @click="onRowClick($event, row)"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-medium text-ink-gray-9">
+                    {{ row.customer_name }}
+                  </span>
+                  <span class="block truncate text-sm text-ink-gray-6">
+                    <span :class="toneClass(agingTone(row))">{{
+                      agingLabel(row, today)
+                    }}</span>
+                    ·
+                    {{
+                      row.invoices === 1
+                        ? __('1 invoice')
+                        : __('{0} invoices', [row.invoices])
+                    }}
+                    <template v-if="companies.length > 1">
+                      · {{ row.company }}</template
+                    >
+                  </span>
+                  <span class="mt-1 flex flex-wrap gap-1">
+                    <Badge
+                      v-if="followupChip(row.followup, today)"
+                      :theme="followupChip(row.followup, today).theme"
+                      :label="followupChip(row.followup, today).label"
+                      data-followup-chip
+                    />
+                    <Badge
+                      v-if="promiseChip(row.promise, row.currency)"
+                      :theme="promiseChip(row.promise, row.currency).theme"
+                      :label="promiseChip(row.promise, row.currency).label"
+                    />
+                    <Badge
+                      v-if="reminderChip(row.last_reminder)"
+                      :theme="reminderChip(row.last_reminder).theme"
+                      :label="reminderChip(row.last_reminder).label"
+                    />
+                    <Badge
+                      v-if="autoChip(row.auto, today)"
+                      :theme="autoChip(row.auto, today).theme"
+                      :label="autoChip(row.auto, today).label"
+                      data-auto-chip
+                    />
+                  </span>
                 </span>
-                <span class="block truncate text-sm text-ink-gray-6">
-                  <span :class="toneClass(agingTone(row))">{{
-                    agingLabel(row, today)
-                  }}</span>
-                  ·
-                  {{
-                    row.invoices === 1
-                      ? __('1 invoice')
-                      : __('{0} invoices', [row.invoices])
-                  }}
-                  <template v-if="companies.length > 1">
-                    · {{ row.company }}</template
+                <span class="shrink-0 text-right">
+                  <span
+                    class="block text-sm font-medium tabular-nums text-ink-gray-9"
+                    >{{ money(row.outstanding, row.currency) }}</span
+                  >
+                  <span
+                    v-if="
+                      isForeign(row.currency, row.company_currency) &&
+                      row.base_outstanding !== undefined
+                    "
+                    class="block text-xs tabular-nums text-ink-gray-6"
+                    >{{
+                      approxMoney(row.base_outstanding, row.company_currency)
+                    }}</span
+                  >
+                  <span
+                    v-if="
+                      row.overdue_amount > 0 &&
+                      row.overdue_amount < row.outstanding
+                    "
+                    class="block text-xs tabular-nums text-ink-red-7"
+                    >{{
+                      __('{0} overdue', [
+                        money(row.overdue_amount, row.currency),
+                      ])
+                    }}</span
                   >
                 </span>
-                <span class="mt-1 flex flex-wrap gap-1">
-                  <Badge
-                    v-if="promiseChip(row.promise, row.currency)"
-                    :theme="promiseChip(row.promise, row.currency).theme"
-                    :label="promiseChip(row.promise, row.currency).label"
-                  />
-                  <Badge
-                    v-if="reminderChip(row.last_reminder)"
-                    :theme="reminderChip(row.last_reminder).theme"
-                    :label="reminderChip(row.last_reminder).label"
-                  />
-                  <Badge
-                    v-if="autoChip(row.auto, today)"
-                    :theme="autoChip(row.auto, today).theme"
-                    :label="autoChip(row.auto, today).label"
-                    data-auto-chip
-                  />
-                </span>
-              </span>
-              <span class="shrink-0 text-right">
-                <span
-                  class="block text-sm font-medium tabular-nums text-ink-gray-9"
-                  >{{ money(row.outstanding, row.currency) }}</span
-                >
-                <span
-                  v-if="
-                    isForeign(row.currency, row.company_currency) &&
-                    row.base_outstanding !== undefined
-                  "
-                  class="block text-xs tabular-nums text-ink-gray-6"
-                  >{{
-                    approxMoney(row.base_outstanding, row.company_currency)
-                  }}</span
-                >
-                <span
-                  v-if="
-                    row.overdue_amount > 0 &&
-                    row.overdue_amount < row.outstanding
-                  "
-                  class="block text-xs tabular-nums text-ink-red-7"
-                  >{{
-                    __('{0} overdue', [money(row.overdue_amount, row.currency)])
-                  }}</span
-                >
-              </span>
-            </RouterLink>
+              </RouterLink>
+            </div>
+            <!-- Desktop: the row's actions on hover or keyboard focus (same keys as the sheet). -->
+            <div
+              v-if="!phone && row.target"
+              class="absolute right-40 top-2 hidden gap-1 rounded-lg bg-surface-base p-1 shadow group-hover:flex"
+              :class="focusKey === rowKey(row) ? '!flex' : ''"
+              data-row-actions
+            >
+              <Button
+                v-for="action in rowActions"
+                :key="action.key"
+                size="sm"
+                variant="ghost"
+                :title="`${action.label} (${action.hint})`"
+                :aria-label="action.label"
+                :aria-keyshortcuts="action.hint"
+                @click="runRow(action.key, row)"
+              >
+                <template #icon>
+                  <FeatherIcon :name="action.icon" class="h-4 w-4" />
+                </template>
+              </Button>
+            </div>
             <!-- «Recordatorios de hoy»: what the automatic reminders leave to a person. -->
             <div
-              v-if="segment === 'recordar' && row.auto?.manual"
+              v-if="state.segment === 'recordar' && row.auto?.manual"
               class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
             >
               <p class="w-full text-sm text-ink-gray-7">
@@ -291,7 +525,7 @@
             :label="__('Load more', null, CTX)"
             :loading="loading"
             class="min-h-11 w-full sm:w-auto"
-            @click="load(true)"
+            @click="load({ more: true })"
           />
         </div>
         <nav
@@ -310,7 +544,74 @@
           >
         </nav>
       </div>
-    </template>
+
+      <!-- The selection's actions: at the thumb on a phone, under the list on a desk. -->
+      <div
+        v-if="selected.size"
+        class="sticky bottom-0 z-20 flex flex-wrap items-center gap-2 border-t border-outline-gray-2 bg-surface-base px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] sm:px-6"
+        role="region"
+        :aria-label="__('Selected customers')"
+        data-cobranza-bulkbar
+      >
+        <p class="min-w-0 flex-1 text-sm font-medium">
+          {{ __('{0} selected', [selected.size]) }}
+        </p>
+        <Button
+          v-if="caps.remind"
+          variant="solid"
+          class="min-h-12 sm:min-h-8"
+          :label="__('Send reminder')"
+          @click="bulkOpen = true"
+        >
+          <template #prefix
+            ><FeatherIcon name="send" class="h-4 w-4"
+          /></template>
+        </Button>
+        <Button
+          v-else
+          class="min-h-12 sm:min-h-8"
+          :label="__('Copy access request')"
+          @click="copyBulkRequest"
+        />
+        <Button
+          variant="ghost"
+          class="min-h-12 sm:min-h-8"
+          :label="__('Clear selection')"
+          @click="clearSelection"
+        />
+      </div>
+    </div>
+
+    <!-- Phone: the lists, in a sheet from the app bar's title. -->
+    <BottomSheet
+      v-if="phone"
+      :open="segmentSheet"
+      :title="''"
+      @update:open="(value) => (segmentSheet = value)"
+    >
+      <nav class="px-3 pb-6" :aria-label="__('Choose a list')">
+        <button
+          v-for="entry in entries"
+          :key="entry.value"
+          type="button"
+          class="flex min-h-14 w-full items-center gap-3 rounded-xl px-4 text-left text-base"
+          :class="
+            state.segment === entry.value
+              ? 'bg-surface-gray-2 font-semibold'
+              : 'hover:bg-surface-gray-1'
+          "
+          :aria-current="state.segment === entry.value ? 'page' : undefined"
+          @click="selectSegment(entry.value)"
+        >
+          <FeatherIcon :name="entry.icon" class="h-5 w-5 text-ink-gray-6" />
+          <span class="flex-1">{{ segmentLabel(entry.value) }}</span>
+          <span class="tabular-nums text-ink-gray-6">{{
+            counts[entry.value] ?? ''
+          }}</span>
+        </button>
+      </nav>
+    </BottomSheet>
+
     <AutoSetupSheet
       v-model="setupOpen"
       :company="setupCompany"
@@ -321,50 +622,150 @@
       doctype="Dunning"
       :name="sendName"
       :customer-name="sendRow?.customer_name || ''"
-      manual-done
+      :manual-done="sendManual"
       :confirming="confirming"
-      @sent="load()"
+      @sent="load({ quiet: true })"
       @manual-sent="confirmManual"
+    />
+    <PromiseSheet
+      v-model="promiseOpen"
+      :invoice="sheetRow?.target ? targetInvoice(sheetRow) : null"
+      :today="today"
+      @saved="(result) => saved(undoer.promiseSaved, result)"
+    />
+    <CallSheet
+      v-model="callOpen"
+      :invoice="sheetRow?.target ? targetInvoice(sheetRow) : null"
+      @saved="(result) => saved(undoer.callSaved, result)"
+    />
+    <PaymentSheet
+      v-model="payOpen"
+      :customer="sheetRow?.customer || ''"
+      :company="sheetRow?.company || ''"
+      :customer-name="sheetRow?.customer_name || ''"
+      :caps="caps"
+      @saved="(result) => saved(undoer.paymentSaved, result)"
+      @collect="(invoice) => collectAtRegister(sheetRow, invoice)"
+    />
+    <FollowupSheet
+      v-model="followupOpen"
+      :customer="sheetRow?.customer || ''"
+      :customer-name="sheetRow?.customer_name || ''"
+      :followup="sheetRow?.followup || null"
+      :today="today"
+      :focus="followupFocus"
+      @saved="followupSaved"
+    />
+    <BulkRemindSheet
+      v-model="bulkOpen"
+      :rows="selectedRows"
+      @done="onBulkDone"
+      @open="openBulkResult"
     />
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import {
+  Badge,
+  BottomSheet,
+  Button,
+  FeatherIcon,
+  FormControl,
+  toast,
+} from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AutoSetupSheet from '@/components/cobranza/AutoSetupSheet.vue'
+import BulkRemindSheet from '@/components/cobranza/BulkRemindSheet.vue'
+import CallSheet from '@/components/cobranza/CallSheet.vue'
 import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
+import FollowupSheet from '@/components/cobranza/FollowupSheet.vue'
+import PaymentSheet from '@/components/cobranza/PaymentSheet.vue'
+import PromiseSheet from '@/components/cobranza/PromiseSheet.vue'
+import { isMobile } from '@/composables/breakpoint'
 import {
+  appleKeys,
+  openShortcutSheet,
+  registerPageShortcuts,
+} from '@/composables/shellKeyboard'
+import { hoyLive } from '@/composables/useHoy'
+import {
+  AGING,
   AUTO_ACTION_LABELS,
   AUTO_API,
   CTX,
+  QUEUE_KEYS,
   SEGMENTS,
-  autoChip,
+  agingChipLabel,
   agingLabel,
   agingTone,
   approxMoney,
+  autoChip,
   cobranzaApi,
   cobranzaBoot,
+  customerHref,
+  cssValue,
+  followupChip,
   foreignNote,
   isForeign,
+  keyAction,
+  listHref,
+  listMemoryKey,
   loadCobranzaBoot,
   money,
+  moveFocus,
   normalizeSegment,
   outcomeUnknown,
+  owedSplit,
   problemOf,
   promiseChip,
+  queueQuery,
+  queueShortcuts,
+  queueState,
+  rangeKeys,
   reminderChip,
   requestId,
+  rowForCustomer,
+  rowKey,
   segmentLabel,
   statTotals,
 } from '@/composables/useCobranza'
+import { useCobranzaUndo } from '@/composables/useCobranzaActions'
+import { posCollectHref } from '@/utils/posHandoff'
+import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+
+const PAGE = 30
+// The server's page limit: a list restored after a visit reloads at most this many.
+const MAX_PAGE = 100
+// Doctypes whose changes may change this list (Cobranza's own writes also announce the invoice).
+const LIVE_DOCTYPES = [
+  'Sales Invoice',
+  'Payment Entry',
+  'Dunning',
+  'ToDo',
+  'Comment',
+]
 
 const route = useRoute()
 const router = useRouter()
+const phone = isMobile
 const boot = cobranzaBoot
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
+const scroller = ref(null)
+const phoneSearch = ref(null)
 const rows = ref([])
 const counts = ref({})
+const agingCounts = ref({})
 const stats = ref(null)
 const capped = ref(false)
 const hasMore = ref(false)
@@ -372,14 +773,14 @@ const loading = ref(false)
 const problem = ref(null)
 const copied = ref('')
 const today = ref('')
-const segment = computed(() => normalizeSegment(route.query.segment))
-const company = computed(() =>
-  typeof route.query.company === 'string' ? route.query.company : '',
-)
+// The URL is the state: list, search, company, aging chip and focused customer.
+const state = computed(() => queueState(route.query))
 const companies = computed(() => boot.value?.companies || [])
-const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
-const listPath = computed(() => route.fullPath)
+const search = ref(state.value.q)
+const searchOpen = ref(Boolean(state.value.q))
+const segmentSheet = ref(false)
 const totals = computed(() => statTotals(stats.value))
+const split = computed(() => owedSplit(totals.value))
 const statCards = computed(() => [
   { key: 'outstanding', label: __('To collect') },
   { key: 'overdue', label: __('Overdue', null, CTX) },
@@ -388,6 +789,20 @@ const statCards = computed(() => [
 let ticket = 0
 let searchTimer = 0
 
+// ── focus and selection ───────────────────────────────────────────────────
+const focusKey = ref('')
+const selected = ref(new Set())
+const anchor = ref('')
+const selecting = ref(false)
+const keys = computed(() => rows.value.map(rowKey))
+const selectedRows = computed(() =>
+  rows.value.filter((row) => selected.value.has(rowKey(row))),
+)
+const domId = (key) =>
+  `cobranza-row-${Array.from(key)
+    .map((c) => c.charCodeAt(0).toString(36))
+    .join('')}`
+
 // ── Recordatorios automáticos ─────────────────────────────────────────────
 const auto = ref(null)
 const setupOpen = ref(false)
@@ -395,6 +810,7 @@ const setupCompany = ref('')
 const sendOpen = ref(false)
 const sendName = ref('')
 const sendRow = ref(null)
+const sendManual = ref(false)
 const busyRow = ref('')
 const confirming = ref(false)
 // One request id per pending action: a retry after a lost answer reuses it.
@@ -402,7 +818,10 @@ const pending = {}
 const caps = computed(() => boot.value?.capabilities || {})
 const autoCompany = computed(
   () =>
-    company.value || boot.value?.default_company || companies.value[0] || '',
+    state.value.company ||
+    boot.value?.default_company ||
+    companies.value[0] ||
+    '',
 )
 const autoCard = computed(() => {
   const a = auto.value
@@ -477,11 +896,7 @@ function openSetup(target) {
 function onSetupSaved() {
   // Only the parts that changed, in place: the card and the rows' states.
   loadAuto()
-  load()
-}
-
-function rowKey(row) {
-  return `${row.customer}:${row.company}:${row.currency}`
+  load({ quiet: true })
 }
 
 async function shareRow(row) {
@@ -497,6 +912,7 @@ async function shareRow(row) {
     delete pending[key]
     sendRow.value = row
     sendName.value = result.dunning
+    sendManual.value = true
     sendOpen.value = true
   } catch (error) {
     if (!outcomeUnknown(error)) delete pending[key]
@@ -508,20 +924,21 @@ async function shareRow(row) {
 
 async function confirmManual() {
   const row = sendRow.value
-  if (!row) return
-  const key = `sent:${row.auto.invoice}`
+  const invoice = row?.auto?.invoice || row?.target?.invoice
+  if (!invoice) return
+  const key = `sent:${invoice}`
   pending[key] = pending[key] || requestId()
   confirming.value = true
   try {
     await cobranzaApi('log_call', {
       request_id: pending[key],
-      invoice: row.auto.invoice,
+      invoice,
       outcome: 'whatsapp',
     })
     delete pending[key]
     sendOpen.value = false
     toast.success(__('Saved: you sent the reminder from your phone'))
-    load()
+    load({ quiet: true })
   } catch (error) {
     if (!outcomeUnknown(error)) delete pending[key]
     problem.value = problemOf(error)
@@ -530,16 +947,35 @@ async function confirmManual() {
   }
 }
 
-function openRow(row, action = '') {
-  router.push({
+/** The record's route; going back lands on this row of this list. */
+function customerRoute(row, extra = {}) {
+  return {
     name: 'CobranzaCliente',
     params: { customer: row.customer },
     query: {
       company: row.company,
-      list: listPath.value,
-      ...(action ? { accion: action, factura: row.auto?.invoice } : {}),
+      list: listHref(queueQuery(route.query, { cliente: row.customer })),
+      ...extra,
     },
-  })
+  }
+}
+
+function openRow(row, action = '', invoice = '') {
+  focusRow(row)
+  router.push(
+    customerRoute(
+      row,
+      action
+        ? { accion: action, factura: invoice || row.auto?.invoice || '' }
+        : {},
+    ),
+  )
+}
+
+function onRowClick(event, row) {
+  // The link opens the record; the focus moves first so going back lands here.
+  if (event.metaKey || event.ctrlKey || event.shiftKey) return
+  focusRow(row)
 }
 
 async function copyText(text) {
@@ -554,7 +990,14 @@ function copyRemindRequest(row) {
   return copyText(
     __(
       'I need permission to send payment reminders in Cobranza (create and submit Dunning) for invoice {0}.',
-      [row.auto.invoice],
+      [row.auto?.invoice || row.target?.invoice || ''],
+    ),
+  )
+}
+function copyBulkRequest() {
+  return copyText(
+    __(
+      'I need permission to send payment reminders in Cobranza (create and submit Dunning).',
     ),
   )
 }
@@ -585,6 +1028,14 @@ const entries = computed(() =>
         : segmentLabel(s.value),
   })),
 )
+const agingChips = computed(() => [
+  { value: '', label: __('Any age') },
+  ...AGING.map((chip) => ({
+    value: chip.value,
+    label: agingChipLabel(chip.value),
+    count: agingCounts.value[chip.value],
+  })),
+])
 const guard = computed(() =>
   boot.value && !boot.value.enabled
     ? boot.value.reason ||
@@ -597,25 +1048,64 @@ const subtitle = computed(
       vencidas: __('Customers with invoices past their due date.'),
       hoy: __('Invoices due today or in the next 7 days.'),
       promesas: __('Customers who promised to pay; broken promises first.'),
+      mios: __('Customers you collect from; the follow-ups due first.'),
       todas: __('Everything customers owe, largest balance first.'),
       recordar: __(
         'Reminders due today that you send yourself: from your phone, or after a review.',
       ),
-    })[segment.value],
+    })[state.value.segment],
 )
 const emptyTitle = computed(() =>
-  search.value ? __('No customers match') : __('Nothing to collect here'),
+  state.value.q ? __('No customers match') : __('Nothing to collect here'),
 )
 const emptyBody = computed(() =>
-  search.value
+  state.value.q
     ? __('Try another customer name or invoice number.')
-    : segment.value === 'promesas'
+    : state.value.segment === 'promesas'
       ? __('When a customer promises a payment date, it shows up here.')
-      : segment.value === 'recordar'
+      : state.value.segment === 'mios'
         ? __(
-            'When an automatic reminder cannot go out by itself, it waits here for you.',
+            'Assign yourself as collector of a customer (key A) and they show up here.',
           )
-        : __('Customers with a pending balance show up here.'),
+        : state.value.segment === 'recordar'
+          ? __(
+              'When an automatic reminder cannot go out by itself, it waits here for you.',
+            )
+          : __('Customers with a pending balance show up here.'),
+)
+const rowActions = computed(() =>
+  [
+    caps.value.remind && {
+      key: 'remind',
+      label: __('Send reminder'),
+      icon: 'send',
+      hint: 'R',
+    },
+    caps.value.promise && {
+      key: 'promise',
+      label: __('Record promise'),
+      icon: 'calendar',
+      hint: 'P',
+    },
+    caps.value.call && {
+      key: 'call',
+      label: __('Log call'),
+      icon: 'phone',
+      hint: 'L',
+    },
+    caps.value.pay && {
+      key: 'pay',
+      label: __('Register payment'),
+      icon: 'dollar-sign',
+      hint: '$',
+    },
+    caps.value.assign && {
+      key: 'followup',
+      label: __('Schedule follow-up'),
+      icon: 'user-check',
+      hint: 'S',
+    },
+  ].filter(Boolean),
 )
 
 function toneClass(tone) {
@@ -625,25 +1115,74 @@ function toneClass(tone) {
   )
 }
 
-async function load(more = false) {
+// ── loading, scroll memory ─────────────────────────────────────────────────
+
+function memory() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem(listMemoryKey(route.query)) || 'null',
+    )
+  } catch {
+    return null
+  }
+}
+function rememberScroll() {
+  try {
+    sessionStorage.setItem(
+      listMemoryKey(route.query),
+      JSON.stringify({
+        top: scroller.value?.scrollTop || 0,
+        count: rows.value.length,
+      }),
+    )
+  } catch {
+    /* convenience only */
+  }
+}
+
+/**
+ * Load the list. `more`: the next page. `quiet` (live refresh, after an action):
+ * the rows already shown are reloaded in place, keeping focus, selection and
+ * scroll. `restore`: the first load after coming back: as many rows as were
+ * loaded before, then the remembered scroll position.
+ */
+async function load({ more = false, quiet = false, restore = false } = {}) {
   const mine = ++ticket
+  const remembered = restore ? memory() : null
+  const length = more
+    ? PAGE
+    : Math.min(
+        Math.max(
+          PAGE,
+          quiet ? rows.value.length : 0,
+          Number(remembered?.count) || 0,
+        ),
+        MAX_PAGE,
+      )
   loading.value = true
-  problem.value = null
+  if (!quiet) problem.value = null
   try {
     const page = await cobranzaApi('get_queue', {
-      segment: segment.value,
-      company: company.value,
-      search: search.value.trim(),
+      segment: state.value.segment,
+      company: state.value.company,
+      search: state.value.q.trim(),
+      aging: state.value.edad,
       start: more ? rows.value.length : 0,
-      page_length: 30,
+      page_length: length,
     })
     if (mine !== ticket) return
     rows.value = more ? [...rows.value, ...page.rows] : page.rows
     hasMore.value = page.has_more
     counts.value = page.counts || {}
+    agingCounts.value = page.aging_counts || {}
     stats.value = page.stats
     capped.value = page.capped
     today.value = page.today
+    problem.value = null
+    syncFocus()
+    pruneSelection()
+    if (remembered) restoreScroll(remembered.top)
+    else if (!quiet && !more && restore) revealFocus()
   } catch (error) {
     if (mine === ticket) problem.value = problemOf(error)
   } finally {
@@ -651,13 +1190,55 @@ async function load(more = false) {
   }
 }
 
-function update(query) {
-  const next = { ...route.query, ...query }
-  for (const key of Object.keys(next)) if (!next[key]) delete next[key]
-  router.replace({ query: next })
+function restoreScroll(top) {
+  nextTick(() => {
+    if (scroller.value && top) scroller.value.scrollTop = top
+    revealFocus()
+  })
+}
+
+/** The focused row follows the URL's `cliente` (back from a record lands on it). */
+function syncFocus() {
+  const row = rowForCustomer(rows.value, state.value.cliente)
+  if (row) focusKey.value = rowKey(row)
+  else if (!keys.value.includes(focusKey.value)) focusKey.value = ''
+}
+
+function pruneSelection() {
+  const present = new Set(keys.value)
+  const kept = [...selected.value].filter((key) => present.has(key))
+  if (kept.length !== selected.value.size) selected.value = new Set(kept)
+}
+
+function revealFocus() {
+  nextTick(() => {
+    if (!focusKey.value || !scroller.value) return
+    const el = scroller.value.querySelector(
+      `[data-row-key="${cssValue(focusKey.value)}"]`,
+    )
+    el?.scrollIntoView?.({ block: 'nearest' })
+  })
+}
+
+function focusRow(row) {
+  if (!row) return
+  focusKey.value = rowKey(row)
+  if (state.value.cliente !== row.customer)
+    router.replace({
+      query: queueQuery(route.query, { cliente: row.customer }),
+    })
+  rememberScroll()
+}
+
+/** Filters push a history entry (back undoes them); the search replaces. */
+function navigate(patch, { replace = false } = {}) {
+  const query = queueQuery(route.query, { ...patch, cliente: '' })
+  return replace ? router.replace({ query }) : router.push({ query })
 }
 function selectSegment(value) {
-  update({ segment: normalizeSegment(value) })
+  segmentSheet.value = false
+  clearSelection()
+  navigate({ segment: normalizeSegment(value) })
 }
 
 async function retryBoot() {
@@ -676,15 +1257,250 @@ async function copyRequest() {
   }
 }
 
+// ── selection ─────────────────────────────────────────────────────────────
+
+function toggleRow(row) {
+  const key = rowKey(row)
+  const next = new Set(selected.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  selected.value = next
+  anchor.value = key
+  focusKey.value = key
+}
+function extendSelection() {
+  if (!focusKey.value) return
+  const next = new Set(selected.value)
+  for (const key of rangeKeys(
+    keys.value,
+    anchor.value || focusKey.value,
+    focusKey.value,
+  ))
+    next.add(key)
+  selected.value = next
+}
+function selectAll() {
+  selected.value = new Set(keys.value)
+}
+function clearSelection() {
+  selected.value = new Set()
+  selecting.value = false
+}
+
+// ── actions on a row (keyboard, hover buttons) ───────────────────────────────
+
+const sheetRow = ref(null)
+const promiseOpen = ref(false)
+const callOpen = ref(false)
+const payOpen = ref(false)
+const followupOpen = ref(false)
+const followupFocus = ref('followup')
+const bulkOpen = ref(false)
+const undoer = useCobranzaUndo({ reload: () => load({ quiet: true }) })
+
+function targetInvoice(row) {
+  return {
+    name: row.target.invoice,
+    outstanding: row.target.outstanding,
+    currency: row.target.currency,
+  }
+}
+
+async function remindRow(row) {
+  const invoice = row.target?.invoice
+  if (!invoice) return
+  const key = `remind:${invoice}`
+  pending[key] = pending[key] || requestId()
+  busyRow.value = rowKey(row)
+  problem.value = null
+  try {
+    const result = await cobranzaApi('send_reminder_prepare', {
+      request_id: pending[key],
+      invoice,
+    })
+    delete pending[key]
+    sendRow.value = row
+    sendName.value = result.dunning
+    sendManual.value = false
+    sendOpen.value = true
+  } catch (error) {
+    if (!outcomeUnknown(error)) delete pending[key]
+    problem.value = problemOf(error)
+  } finally {
+    busyRow.value = ''
+  }
+}
+
+function runRow(action, row) {
+  if (!row) return
+  focusRow(row)
+  sheetRow.value = row
+  if (action === 'remind') {
+    if (!caps.value.remind)
+      return toast.error(
+        __('You need permission to send payment reminders. Ask your manager.'),
+      )
+    return remindRow(row)
+  }
+  if (action === 'promise') promiseOpen.value = true
+  else if (action === 'call') callOpen.value = true
+  else if (action === 'pay') payOpen.value = true
+  else if (action === 'assign' || action === 'followup') {
+    followupFocus.value = action
+    followupOpen.value = true
+  }
+}
+
+function saved(after, result) {
+  after(result)
+  load({ quiet: true })
+}
+
+function followupSaved(result) {
+  const view = result.followup
+  undoer.followupSaved(
+    result,
+    view
+      ? __('Follow-up saved: {0}', [view.full_name || view.user])
+      : __('Follow-up ended'),
+  )
+  load({ quiet: true })
+}
+
+function onBulkDone() {
+  clearSelection()
+  load({ quiet: true })
+}
+
+function openBulkResult(item) {
+  bulkOpen.value = false
+  const row = rows.value.find(
+    (r) => r.customer === item.customer && r.company === item.company,
+  ) || { customer: item.customer, company: item.company }
+  openRow(row, 'recordar', item.invoice)
+}
+
+/** «Cobrar en caja» from the list: the register returns to the customer's record. */
+function collectAtRegister(row, invoice) {
+  if (!row || !invoice) return
+  const back = customerHref(row.customer, customerRoute(row).query)
+  window.location.assign(
+    posCollectHref(
+      { name: invoice, customer: row.customer },
+      { returnTo: back, returnLabel: 'Cobranza' },
+    ),
+  )
+}
+
+// ── keyboard: never while typing, never under a sheet ───────────────────────
+// The Alt+H sheet lists these (the list keys come from the shared keymap).
+registerPageShortcuts('list', () => queueShortcuts(caps.value))
+
+function searchInput() {
+  return document.querySelector(
+    '[data-cobranza-search] input, input[data-cobranza-search]',
+  )
+}
+function focusSearch() {
+  if (phone.value) return openSearch()
+  searchInput()?.focus()
+}
+
+function onKey(event) {
+  if (event.defaultPrevented || guard.value) return
+  if (document.querySelector('[aria-modal="true"], [role="dialog"]')) return
+  const action = keyAction(event, QUEUE_KEYS, { apple: appleKeys })
+  if (!action) return
+  if (isTypingTarget(event.target)) {
+    if (action === 'escape' && event.target === searchInput()) {
+      event.preventDefault()
+      event.target.blur()
+    }
+    return
+  }
+  if (
+    action === 'open' &&
+    event.target?.closest?.('a, button, [role="button"]')
+  )
+    return
+  const row = rows.value.find((r) => rowKey(r) === focusKey.value)
+  const handlers = {
+    next: () => moveTo(1),
+    prev: () => moveTo(-1),
+    open: () => row && openRow(row),
+    toggle: () => row && toggleRow(row),
+    range: () => extendSelection(),
+    all: () => selectAll(),
+    search: () => focusSearch(),
+    escape: () =>
+      selected.value.size ? clearSelection() : (focusKey.value = ''),
+    remind: () =>
+      selected.value.size && caps.value.remind
+        ? (bulkOpen.value = true)
+        : runRow('remind', row),
+    promise: () => runRow('promise', row),
+    call: () => runRow('call', row),
+    pay: () => runRow('pay', row),
+    assign: () => runRow('assign', row),
+    followup: () => runRow('followup', row),
+  }
+  const handler = handlers[action]
+  if (!handler) return
+  event.preventDefault()
+  handler()
+}
+
+function moveTo(delta) {
+  const key = moveFocus(keys.value, focusKey.value, delta)
+  const row = rows.value.find((r) => rowKey(r) === key)
+  if (!row) return
+  focusRow(row)
+  revealFocus()
+}
+
+// ── phone search ──────────────────────────────────────────────────────────
+
+function openSearch() {
+  searchOpen.value = true
+  nextTick(() => phoneSearch.value?.focus())
+}
+function closeSearch() {
+  searchOpen.value = false
+  if (search.value) search.value = ''
+}
+
+// ── live: someone (or another tab) changed an invoice, payment, letter, to-do ──
+useLiveWatch(hoyLive(socket), LIVE_DOCTYPES, () => load({ quiet: true }), {
+  // get_queue reads every open invoice: a busy register must not storm it.
+  minIntervalMs: 10000,
+})
+
 watch(search, (value) => {
   window.clearTimeout(searchTimer)
-  searchTimer = window.setTimeout(() => update({ q: value.trim() }), 250)
+  searchTimer = window.setTimeout(() => {
+    if (value.trim() !== state.value.q)
+      navigate({ q: value.trim() }, { replace: true })
+  }, 250)
 })
+// Only the filters reload the list; the focused customer (`cliente`) does not.
 watch(
-  () => [route.query.segment, route.query.q, route.query.company],
-  () => {
-    if (route.name === 'Cobranza' && boot.value?.enabled) load()
+  [
+    () => state.value.segment,
+    () => state.value.q,
+    () => state.value.company,
+    () => state.value.edad,
+  ],
+  (now, before) => {
+    if (route.name !== 'Cobranza' || !boot.value?.enabled) return
+    // Back/forward: the search box follows the URL.
+    if (now[1] !== before?.[1] && search.value.trim() !== now[1])
+      search.value = now[1]
+    load({ restore: true })
   },
+)
+watch(
+  () => state.value.cliente,
+  () => syncFocus(),
 )
 watch(autoCompany, () => {
   if (route.name === 'Cobranza' && boot.value?.enabled) loadAuto()
@@ -696,11 +1512,16 @@ watch(
   },
 )
 onMounted(async () => {
+  window.addEventListener('keydown', onKey)
   await loadCobranzaBoot()
   if (boot.value?.enabled) {
-    load()
+    load({ restore: true })
     loadAuto()
     openFromNotice()
   }
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  window.clearTimeout(searchTimer)
 })
 </script>

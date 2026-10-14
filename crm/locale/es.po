@@ -20227,6 +20227,367 @@ msgstr "No se entregó"
 #: frontend/src/composables/useCobranza.js
 msgid "access to the sales invoices of this company"
 msgstr "acceso a las facturas de venta de esta empresa"
+
+# Cobranza power worklist: keyboard, aging, follow-up, bulk reminders, «Registrar pago».
+#: frontend/src/composables/useCobranza.js
+msgid "Send payment reminder"
+msgstr "Enviar recordatorio de pago"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Record promise to pay"
+msgstr "Registrar promesa de pago"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Assign collector"
+msgstr "Asignar cobrador"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Schedule follow-up"
+msgstr "Programar seguimiento"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Register payment"
+msgstr "Registrar pago"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Next invoice"
+msgstr "Siguiente factura"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Previous invoice"
+msgstr "Factura anterior"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "My customers"
+msgstr "Mis clientes"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "0–30 days"
+msgstr "0–30 días"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "31–60 days"
+msgstr "31–60 días"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "61–90 days"
+msgstr "61–90 días"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "Over 90 days"
+msgstr "Más de 90 días"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "you"
+msgstr "tú"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Collector: {0}"
+msgstr "Cobrador: {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Follow up {0}"
+msgstr "Seguimiento {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "Today"
+msgstr "Hoy"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "Tomorrow"
+msgstr "Mañana"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Next Monday"
+msgstr "Próximo lunes"
+
+#: frontend/src/composables/useCobranza.js
+msgid "No mode of payment has an account in {0} yet. Accounting sets it up in Modes of payment."
+msgstr "Ninguna forma de pago tiene cuenta en {0} todavía. Contabilidad la configura en Formas de pago."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Choose at least one invoice."
+msgstr "Elige al menos una factura."
+
+#: frontend/src/composables/useCobranza.js
+msgid "These invoices are owed in different accounts (for example pesos and dollars). Register one payment for each."
+msgstr "Estas facturas se deben en cuentas distintas (por ejemplo pesos y dólares). Registra un pago por cada una."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Write how much they paid."
+msgstr "Escribe cuánto pagó."
+
+#: frontend/src/composables/useCobranza.js
+msgid "The payment is more than the chosen invoices owe ({0}). Choose more invoices or lower the amount."
+msgstr "El pago es mayor que lo que deben las facturas elegidas ({0}). Elige más facturas o baja el monto."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Choose how they paid."
+msgstr "Elige cómo pagó."
+
+#: frontend/src/composables/useCobranza.js
+msgid "For a bank payment write the reference: the transfer or deposit number."
+msgstr "Para un pago al banco escribe la referencia: el folio de la transferencia o del depósito."
+
+#: frontend/src/composables/useCobranza.js
+msgid "The payment date cannot be in the future."
+msgstr "La fecha del pago no puede ser futura."
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "{0} sent"
+msgstr "{0} enviados"
+
+#: frontend/src/composables/useCobranza.js
+msgid "{0} already sent"
+msgstr "{0} ya enviados"
+
+#: frontend/src/composables/useCobranza.js
+msgid "{0} to resolve"
+msgstr "{0} por resolver"
+
+#: frontend/src/composables/useCobranza.js
+msgid "{0} skipped"
+msgstr "{0} omitidos"
+
+#: frontend/src/composables/useCobranzaActions.js
+msgid "Promise removed"
+msgstr "Promesa quitada"
+
+#: frontend/src/composables/useCobranzaActions.js
+msgid "Call note removed"
+msgstr "Nota de llamada quitada"
+
+#: frontend/src/composables/useCobranzaActions.js
+msgid "Payment {0} registered"
+msgstr "Pago {0} registrado"
+
+#: frontend/src/composables/useCobranzaActions.js
+msgid "Payment {0} cancelled"
+msgstr "Pago {0} cancelado"
+
+#: frontend/src/composables/useCobranzaActions.js
+msgid "Follow-up put back"
+msgstr "Seguimiento restaurado"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Clear selection"
+msgstr "Quitar selección"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "{0} selected"
+msgstr "{0} seleccionados"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Close search"
+msgstr "Cerrar búsqueda"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Choose a list"
+msgstr "Elegir lista"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Select customers"
+msgstr "Seleccionar clientes"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Days overdue"
+msgstr "Días vencidos"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Any age"
+msgstr "Cualquier antigüedad"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Show every age"
+msgstr "Ver todas las antigüedades"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Selected customers"
+msgstr "Clientes seleccionados"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "I need permission to send payment reminders in Cobranza (create and submit Dunning)."
+msgstr "Necesito permiso para enviar recordatorios de pago en Cobranza (crear y confirmar Dunning)."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Customers you collect from; the follow-ups due first."
+msgstr "Los clientes que tú cobras; primero los seguimientos que ya tocan."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Assign yourself as collector of a customer (key A) and they show up here."
+msgstr "Asígnate como cobrador de un cliente (tecla A) y aparece aquí."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Follow-up saved: {0}"
+msgstr "Seguimiento guardado: {0}"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Follow-up ended"
+msgstr "Seguimiento terminado"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Change follow-up"
+msgstr "Cambiar seguimiento"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Register"
+msgstr "Caja"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Payment"
+msgstr "Pago"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Promise"
+msgstr "Promesa"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Call"
+msgstr "Llamada"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Reminder"
+msgstr "Recordatorio"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "To register payments you need permission to create and submit payments (Payment Entry). Ask your accountant."
+msgstr "Para registrar pagos necesitas permiso para crear y confirmar pagos (Payment Entry). Pídeselo a tu contador."
+
+#: frontend/src/components/cobranza/PromiseSheet.vue
+msgid "Invoice {0} · owes {1}"
+msgstr "Factura {0} · debe {1}"
+
+#: frontend/src/components/cobranza/FollowupSheet.vue
+msgid "Collector"
+msgstr "Cobrador"
+
+#: frontend/src/components/cobranza/FollowupSheet.vue
+msgid "Next follow-up"
+msgstr "Siguiente seguimiento"
+
+#: frontend/src/components/cobranza/FollowupSheet.vue
+msgid "It shows in their Pendientes and Agenda on that day, and the customer joins their «My customers»."
+msgstr "Aparece en sus Pendientes y en su Agenda ese día, y el cliente entra a sus «Mis clientes»."
+
+#: frontend/src/components/cobranza/FollowupSheet.vue
+msgid "End follow-up"
+msgstr "Terminar seguimiento"
+
+#: frontend/src/components/cobranza/FollowupSheet.vue
+msgctxt "Cobranza"
+msgid "Save"
+msgstr "Guardar"
+
+#: frontend/src/components/cobranza/FollowupSheet.vue
+msgid "Nobody"
+msgstr "Nadie"
+
+#: frontend/src/components/cobranza/FollowupSheet.vue
+msgid "{0} (me)"
+msgstr "{0} (yo)"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Loading what this customer owes…"
+msgstr "Cargando lo que debe este cliente…"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Invoices this payment settles"
+msgstr "Facturas que abona este pago"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "paid in full"
+msgstr "queda pagada"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "{0} applied"
+msgstr "se abonan {0}"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Amount received ({0})"
+msgstr "Monto recibido ({0})"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "How did they pay?"
+msgstr "¿Cómo pagó?"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Exchange rate (1 {0} = ? {1})"
+msgstr "Tipo de cambio (1 {0} = ? {1})"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Transfer or deposit reference"
+msgstr "Referencia de la transferencia o del depósito"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Reference date"
+msgstr "Fecha de la referencia"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Open modes of payment"
+msgstr "Abrir formas de pago"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Collect at the register instead"
+msgstr "Mejor cobrar en caja"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "Register {0}"
+msgstr "Registrar {0}"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "{0} (no account)"
+msgstr "{0} (sin cuenta)"
+
+#: frontend/src/components/cobranza/PaymentSheet.vue
+msgid "I need permission to register customer payments in Cobranza (create and submit Payment Entry) for {0}."
+msgstr "Necesito permiso para registrar pagos de clientes en Cobranza (crear y confirmar Payment Entry) en {0}."
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgid "Send payment reminders"
+msgstr "Enviar recordatorios de pago"
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgid "Each overdue invoice of these customers gets the reminder of the level it reached, by WhatsApp in your name. Those that cannot go out say why and how to resolve them."
+msgstr "Cada factura vencida de estos clientes recibe el recordatorio del nivel que alcanzó, por WhatsApp a tu nombre. Los que no puedan salir dicen por qué y cómo resolverlo."
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgid "1 overdue invoice"
+msgstr "1 factura vencida"
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgid "{0} overdue invoices"
+msgstr "{0} facturas vencidas"
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgid "Nothing was overdue."
+msgstr "No había nada vencido."
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgctxt "Cobranza"
+msgid "Sent"
+msgstr "Enviado"
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgid "Send to {0} customers"
+msgstr "Enviar a {0} clientes"
+
+#: frontend/src/components/cobranza/BulkRemindSheet.vue
+msgid "{0} customers"
+msgstr "{0} clientes"
 #. Resultados
 #: frontend/src/pages/Resultados.vue
 msgid "Refreshing"

@@ -6,6 +6,7 @@ import {
   outcomeUnknown,
   requestId,
 } from '@/composables/useCompras'
+import { normalizeCombo } from '@/vendor/muelle-shell/contracts'
 
 // Cobranza: what each customer owes us → their record → one next action
 // (reminder letter, promise, call, collect at the register) → paid → next
@@ -146,6 +147,8 @@ export const SEGMENTS = Object.freeze([
   { value: 'vencidas', label: 'Overdue', icon: 'alert-circle' },
   { value: 'hoy', label: 'Due soon', icon: 'clock' },
   { value: 'promesas', label: 'Promises', icon: 'calendar' },
+  // The customers the worker is the collector of (a ToDo on the Customer).
+  { value: 'mios', label: 'My customers', icon: 'user' },
   { value: 'todas', label: 'All', icon: 'list' },
   // The automatic reminders a person sends today (from their phone, or after a review).
   { value: 'recordar', label: "Today's reminders", icon: 'send' },
@@ -273,22 +276,26 @@ export function invoiceAction(inv, { caps = {}, ladderReady = true } = {}) {
 }
 
 function collect(caps) {
-  return caps.collect
-    ? { key: 'collect', label: tr('Collect at the register') }
-    : {
-        key: 'collect',
-        label: tr('Collect at the register'),
-        blocked: tr(
-          'The register (POS) is not installed on this site. Record the payment with your accountant.',
-        ),
-        resolve: { key: 'copy_folio', label: tr('Copy invoice number') },
-      }
+  if (caps.collect)
+    return { key: 'collect', label: tr('Collect at the register') }
+  // No register on this site: the payment is registered here (a Payment Entry).
+  if (caps.pay) return { key: 'pay', label: tr('Register payment') }
+  return {
+    key: 'collect',
+    label: tr('Collect at the register'),
+    blocked: tr(
+      'The register (POS) is not installed on this site. Record the payment with your accountant.',
+    ),
+    resolve: { key: 'copy_folio', label: tr('Copy invoice number') },
+  }
 }
 
 /** Secondary actions for an invoice, never repeating the primary one. */
 export function secondaryActions(inv, primary, caps = {}) {
   const keys = []
   if (caps.collect && primary.key !== 'collect') keys.push('collect')
+  // «Registrar pago» (transfer, deposit, cash outside the register) beside «Cobrar en caja».
+  if (caps.pay && primary.key !== 'pay') keys.push('pay')
   if (caps.promise && primary.key !== 'promise') keys.push('promise')
   if (primary.key !== 'call') keys.push('call')
   if (
@@ -299,6 +306,7 @@ export function secondaryActions(inv, primary, caps = {}) {
     keys.push(inv.current_dunning ? 'resend' : 'remind')
   const labels = {
     collect: tr('Collect at the register'),
+    pay: tr('Register payment'),
     promise: tr('Record promise'),
     call: tr('Log call'),
     remind: tr('Send reminder'),
@@ -553,4 +561,356 @@ export function setupProblem(setup, form) {
       action: null,
     }
   return null
+}
+
+// ── Power worklist: URL state, keyboard, selection, follow-up, payment ─────
+// Agenda-style: the URL is the list's state (filters, aging chip, focused
+// customer), the keyboard works the list, and every action can be undone or
+// explains what blocks it. The server re-checks everything.
+
+export const ACTIONS = 'doco.workspaces.receivables_actions'
+
+/** Aging chips: days of the customer's oldest overdue invoice. */
+export const AGING = Object.freeze([
+  { value: '0-30', label: '0–30 days' },
+  { value: '31-60', label: '31–60 days' },
+  { value: '61-90', label: '61–90 days' },
+  { value: '90+', label: 'Over 90 days' },
+])
+export function normalizeAging(value) {
+  return AGING.some((a) => a.value === value) ? value : ''
+}
+export function agingChipLabel(value) {
+  const chip = AGING.find((a) => a.value === value)
+  return chip ? tr(chip.label, null, CTX) : ''
+}
+
+const text = (value) => (typeof value === 'string' ? value : '')
+
+/** The queue's state, read from the URL (the URL is the state). */
+export function queueState(query = {}) {
+  return {
+    segment: normalizeSegment(query.segment),
+    q: text(query.q),
+    company: text(query.company),
+    edad: normalizeAging(query.edad),
+    cliente: text(query.cliente),
+  }
+}
+
+/** A query for `patch` over the current one; empty values leave the URL. */
+export function queueQuery(query = {}, patch = {}) {
+  const next = { ...query, ...patch }
+  for (const key of Object.keys(next))
+    if (next[key] === '' || next[key] === null || next[key] === undefined)
+      delete next[key]
+  return next
+}
+
+/** `/cobranza?…` for a query (the record keeps it to go back to the same place). */
+export function listHref(query = {}) {
+  const parts = Object.entries(queueQuery(query))
+    .filter(([, value]) => typeof value === 'string')
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
+    )
+  return parts.length ? `/cobranza?${parts.join('&')}` : '/cobranza'
+}
+
+/** The record's path under the shell (`/crm/cobranza/cliente/…`), for the register's return. */
+export function customerHref(customer, query = {}) {
+  const parts = Object.entries(queueQuery(query)).map(
+    ([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
+  )
+  const path = `/crm/cobranza/cliente/${encodeURIComponent(customer)}`
+  return parts.length ? `${path}?${parts.join('&')}` : path
+}
+
+/** Scroll memory is per list (its filters), never per focused customer. */
+export function listMemoryKey(query = {}) {
+  const s = queueState(query)
+  return `muelle:cobranza:list:${s.segment}|${s.edad}|${s.company}|${s.q}`
+}
+
+/** A value inside a CSS attribute selector (`[data-row-key="…"]`). */
+export function cssValue(value) {
+  if (typeof CSS !== 'undefined' && CSS.escape) return CSS.escape(value)
+  return String(value).replace(/["\\]/g, '\\$&')
+}
+
+export function rowKey(row) {
+  return `${row.customer}:${row.company}:${row.currency}`
+}
+
+/** The row a `cliente` in the URL points at (its first company when several). */
+export function rowForCustomer(rows, customer) {
+  return customer
+    ? (rows || []).find((row) => row.customer === customer) || null
+    : null
+}
+
+/** j / k: the key `delta` rows away from `key`, clamped; no focus yet: the first. */
+export function moveFocus(keys, key, delta) {
+  if (!keys.length) return ''
+  const index = keys.indexOf(key)
+  if (index < 0) return keys[0]
+  return keys[Math.min(Math.max(index + delta, 0), keys.length - 1)]
+}
+
+/** Shift+X: every key from the anchor to the focus (either direction). */
+export function rangeKeys(keys, anchor, focus) {
+  const a = keys.indexOf(anchor)
+  const b = keys.indexOf(focus)
+  if (b < 0) return []
+  if (a < 0) return [focus]
+  return keys.slice(Math.min(a, b), Math.max(a, b) + 1)
+}
+
+/** A key event as the page's action, or null (the shared normalized combos). */
+export function keyAction(event, map, { apple = false } = {}) {
+  if (!event || event.isComposing) return null
+  return map[normalizeCombo(event, apple)] || null
+}
+
+export const QUEUE_KEYS = Object.freeze({
+  j: 'next',
+  arrowdown: 'next',
+  k: 'prev',
+  arrowup: 'prev',
+  enter: 'open',
+  x: 'toggle',
+  'shift+x': 'range',
+  'mod+a': 'all',
+  '/': 'search',
+  escape: 'escape',
+  r: 'remind',
+  p: 'promise',
+  l: 'call',
+  $: 'pay',
+  a: 'assign',
+  s: 'followup',
+})
+
+export const RECORD_KEYS = Object.freeze({
+  j: 'next',
+  arrowdown: 'next',
+  k: 'prev',
+  arrowup: 'prev',
+  r: 'remind',
+  p: 'promise',
+  l: 'call',
+  $: 'pay',
+  a: 'assign',
+  s: 'followup',
+  n: 'next_customer',
+  escape: 'back',
+})
+
+/**
+ * The queue's own keys for the Alt+H sheet («En esta página»): exactly those
+ * the page answers outside text fields (the list keys come from the shared
+ * keymap). Only the actions this worker may do.
+ */
+export function queueShortcuts(caps = {}) {
+  return [
+    caps.remind && {
+      id: 'cobranza.remind',
+      keys: ['r'],
+      description: 'Send payment reminder',
+    },
+    caps.promise && {
+      id: 'cobranza.promise',
+      keys: ['p'],
+      description: 'Record promise to pay',
+    },
+    caps.call && { id: 'cobranza.call', keys: ['l'], description: 'Log call' },
+    caps.pay && {
+      id: 'cobranza.pay',
+      keys: ['$'],
+      description: 'Register payment',
+    },
+    caps.assign && {
+      id: 'cobranza.assign',
+      keys: ['a'],
+      description: 'Assign collector',
+    },
+    caps.assign && {
+      id: 'cobranza.followup',
+      keys: ['s'],
+      description: 'Schedule follow-up',
+    },
+  ].filter(Boolean)
+}
+
+/** The customer record's keys (invoices are its list). */
+export function recordShortcuts(caps = {}) {
+  return [
+    {
+      id: 'cobranza.invoice.next',
+      keys: ['j', 'arrowdown'],
+      description: 'Next invoice',
+    },
+    {
+      id: 'cobranza.invoice.prev',
+      keys: ['k', 'arrowup'],
+      description: 'Previous invoice',
+    },
+    ...queueShortcuts(caps),
+    {
+      id: 'cobranza.next_customer',
+      keys: ['n'],
+      description: 'Next customer',
+    },
+    {
+      id: 'cobranza.back',
+      keys: ['escape'],
+      description: 'Back to the list',
+    },
+  ]
+}
+
+/** «Seguimiento hoy · Ana»: the row's collector and next follow-up. */
+export function followupChip(followup, today) {
+  if (!followup) return null
+  const who = followup.mine ? '' : followup.full_name || followup.user || ''
+  if (!followup.date)
+    return {
+      label: tr('Collector: {0}', [who || tr('you', null, CTX)]),
+      theme: 'gray',
+    }
+  const day =
+    followup.date === today ? tr('today', null, CTX) : formatDay(followup.date)
+  const label = tr('Follow up {0}', [day])
+  return {
+    label: who ? `${label} · ${who}` : label,
+    theme:
+      followup.date < today
+        ? 'red'
+        : followup.date === today
+          ? 'orange'
+          : 'blue',
+  }
+}
+
+/** ISO day `days` after `today` (site dates, no time zone shift). */
+export function addDays(today, days) {
+  const date = new Date(`${today}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
+/** Quick follow-up days: today, tomorrow, in 3 days, next Monday. */
+export function followupPresets(today) {
+  if (!today) return []
+  const weekday = new Date(`${today}T00:00:00Z`).getUTCDay()
+  const monday = addDays(today, (8 - weekday) % 7 || 7)
+  return [
+    { label: tr('Today', null, CTX), value: today },
+    { label: tr('Tomorrow', null, CTX), value: addDays(today, 1) },
+    { label: tr('In 3 days'), value: addDays(today, 3) },
+    { label: tr('Next Monday'), value: monday },
+  ]
+}
+
+// ── «Registrar pago» ───────────────────────────────────────────────────────
+
+const cents = (value) => Math.round(Number(value || 0) * 100)
+
+/**
+ * What a payment of `amount` settles: the chosen invoices in the order given
+ * (oldest due first), each up to what it owes. `left` is what no invoice took.
+ */
+export function allocatePayment(invoices, amount) {
+  let rest = cents(amount)
+  const rows = []
+  for (const inv of invoices || []) {
+    if (rest <= 0) break
+    const take = Math.min(rest, cents(inv.outstanding))
+    if (take <= 0) continue
+    rows.push({ invoice: inv.name, amount: take / 100 })
+    rest -= take
+  }
+  return { rows, left: Math.max(rest, 0) / 100 }
+}
+
+/**
+ * Why «Registrar pago» cannot be saved yet, with its way out ({text, action}),
+ * or null. ctx: the server's payment_context; form: {invoices (names), amount,
+ * mode, reference, date}.
+ */
+export function paymentProblem(ctx, form) {
+  if (!ctx) return null
+  if (!ctx.can_pay) return { text: ctx.problem || '', action: 'copy_request' }
+  const usable = (ctx.modes || []).filter((m) => m.account)
+  if (!usable.length)
+    return {
+      text: tr(
+        'No mode of payment has an account in {0} yet. Accounting sets it up in Modes of payment.',
+        [ctx.company],
+      ),
+      action: ctx.can_setup_modes ? 'setup_modes' : 'copy_request',
+    }
+  const chosen = (ctx.invoices || []).filter((inv) =>
+    (form.invoices || []).includes(inv.name),
+  )
+  if (!chosen.length)
+    return { text: tr('Choose at least one invoice.'), action: null }
+  if (new Set(chosen.map((inv) => inv.account)).size > 1)
+    return {
+      text: tr(
+        'These invoices are owed in different accounts (for example pesos and dollars). Register one payment for each.',
+      ),
+      action: null,
+    }
+  if (!(Number(form.amount) > 0))
+    return { text: tr('Write how much they paid.'), action: null }
+  const owed = chosen.reduce((sum, inv) => sum + cents(inv.outstanding), 0)
+  if (cents(form.amount) > owed)
+    return {
+      text: tr(
+        'The payment is more than the chosen invoices owe ({0}). Choose more invoices or lower the amount.',
+        [money(owed / 100, chosen[0].currency)],
+      ),
+      action: null,
+    }
+  const mode = usable.find((m) => m.name === form.mode)
+  if (!mode) return { text: tr('Choose how they paid.'), action: null }
+  if (mode.needs_reference && !String(form.reference || '').trim())
+    return {
+      text: tr(
+        'For a bank payment write the reference: the transfer or deposit number.',
+      ),
+      action: null,
+    }
+  if (form.date && ctx.today && form.date > ctx.today)
+    return {
+      text: tr('The payment date cannot be in the future.'),
+      action: null,
+    }
+  return null
+}
+
+/** «3 enviados · 1 ya enviado · 2 por resolver». */
+export function bulkSummary(summary = {}) {
+  const parts = []
+  if (summary.sent) parts.push(tr('{0} sent', [summary.sent], CTX))
+  if (summary.already) parts.push(tr('{0} already sent', [summary.already]))
+  if (summary.blocked) parts.push(tr('{0} to resolve', [summary.blocked]))
+  if (summary.skipped) parts.push(tr('{0} skipped', [summary.skipped]))
+  return parts.join(' · ')
+}
+
+/** The phone's sticky summary: overdue and not yet due, per company currency. */
+export function owedSplit(totals) {
+  return (totals || []).map((total) => ({
+    currency: total.currency,
+    overdue: Number(total.overdue || 0),
+    upcoming: Math.max(
+      Math.round(
+        (Number(total.outstanding || 0) - Number(total.overdue || 0)) * 100,
+      ) / 100,
+      0,
+    ),
+  }))
 }

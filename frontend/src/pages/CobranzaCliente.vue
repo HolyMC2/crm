@@ -1,14 +1,80 @@
 <template>
-  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-    <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+  <div
+    ref="scroller"
+    class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+    data-cobranza-record
+  >
+    <!-- Phone: the record's own app bar (route meta.ownPhoneHeader): back to
+         the same place in the list, who this is, the next customer. -->
+    <header
+      v-if="phone"
+      class="sticky top-0 z-20 flex min-h-14 items-center gap-1 border-b border-outline-gray-1 bg-surface-base px-1 pt-[env(safe-area-inset-top)]"
+      data-cobranza-appbar
+    >
+      <button
+        type="button"
+        class="flex size-12 shrink-0 items-center justify-center rounded-full text-ink-gray-7"
+        :aria-label="backLabel"
+        @click="goBack"
+      >
+        <FeatherIcon name="arrow-left" class="h-6 w-6" />
+      </button>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-lg font-semibold leading-tight">
+          {{ data?.customer_name || __('Cobranza', null, CTX) }}
+        </p>
+        <p
+          v-if="data"
+          class="truncate text-xs tabular-nums"
+          :class="
+            data.overdue_amount > 0 ? 'text-ink-red-7' : 'text-ink-gray-6'
+          "
+        >
+          {{ money(data.outstanding, data.currency) }}
+          <template v-if="data.overdue_amount > 0">
+            ·
+            {{ __('{0} overdue', [money(data.overdue_amount, data.currency)]) }}
+          </template>
+        </p>
+      </div>
+      <button
+        v-if="data && !returnTo"
+        type="button"
+        class="flex size-12 shrink-0 items-center justify-center rounded-full text-ink-gray-7"
+        :aria-label="__('Next customer')"
+        :disabled="findingNext"
+        @click="goNext"
+      >
+        <FeatherIcon name="skip-forward" class="h-6 w-6" />
+      </button>
+    </header>
+
+    <div
+      class="mx-auto w-full max-w-4xl px-4 pt-4 sm:px-6 sm:pb-10"
+      :class="phone ? 'pb-32' : 'pb-28'"
+    >
+      <nav v-if="!phone" class="mb-3 flex items-center gap-2">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
+          :aria-keyshortcuts="'Escape'"
           @click="goBack"
         >
           <FeatherIcon name="arrow-left" class="h-4 w-4" />
           {{ backLabel }}
         </button>
+        <span class="flex-1" />
+        <Button
+          v-if="data && !returnTo"
+          variant="ghost"
+          :label="__('Next customer')"
+          :loading="findingNext"
+          :aria-keyshortcuts="'N'"
+          @click="goNext"
+        >
+          <template #suffix
+            ><FeatherIcon name="arrow-right" class="h-4 w-4"
+          /></template>
+        </Button>
       </nav>
 
       <section
@@ -45,23 +111,41 @@
           <div v-if="data.outstanding <= 0" class="flex flex-wrap gap-2">
             <Button
               variant="solid"
+              class="min-h-11 sm:min-h-8"
               :label="__('Next customer')"
               :loading="findingNext"
               @click="goNext"
             />
-            <Button :label="__('Back to Cobranza')" @click="goBack" />
+            <Button
+              class="min-h-11 sm:min-h-8"
+              :label="__('Back to Cobranza')"
+              @click="goBack"
+            />
           </div>
         </div>
 
         <header class="mb-4 flex flex-wrap items-start gap-3">
           <div class="min-w-0 flex-1">
-            <h1 class="text-xl font-semibold text-ink-gray-9">
+            <h1
+              class="text-xl font-semibold text-ink-gray-9"
+              :class="phone ? 'sr-only' : ''"
+            >
               {{ data.customer_name }}
             </h1>
             <p class="text-sm text-ink-gray-6">
               {{ data.company }}
               <template v-if="data.phones.length">
-                · {{ data.phones.map((p) => p.display).join(', ') }}</template
+                ·
+                <a
+                  v-for="(p, index) in data.phones"
+                  :key="p.display"
+                  class="text-ink-blue-link underline"
+                  :href="`tel:${p.display.replace(/[^\d+]/g, '')}`"
+                  >{{ p.display
+                  }}<template v-if="index < data.phones.length - 1"
+                    >,
+                  </template></a
+                ></template
               >
               <template v-else> · {{ __('No mobile number') }}</template>
             </p>
@@ -77,9 +161,15 @@
                 :label="autoChip(data.auto, data.today).label"
                 data-auto-chip
               />
+              <Badge
+                v-if="followupChip(data.followup, data.today)"
+                :theme="followupChip(data.followup, data.today).theme"
+                :label="followupChip(data.followup, data.today).label"
+                data-followup-chip
+              />
             </div>
           </div>
-          <div class="text-right">
+          <div class="text-right" :class="phone ? 'hidden' : ''">
             <p class="text-2xl font-semibold tabular-nums text-ink-gray-9">
               {{ money(data.outstanding, data.currency) }}
             </p>
@@ -100,26 +190,58 @@
                 __('{0} overdue', [money(data.overdue_amount, data.currency)])
               }}
             </p>
-            <!-- ERPNext sets and checks credit limits in the company currency. -->
-            <p v-if="data.credit.limit" class="text-xs text-ink-gray-6">
-              {{
-                __('Credit limit {0}', [
-                  money(
-                    data.credit.limit,
-                    data.company_currency || data.currency,
-                  ),
-                ])
-              }}
-            </p>
-            <p v-if="data.credit.store_credit" class="text-xs text-ink-gray-6">
-              {{
-                __('Store credit {0}', [
-                  money(data.credit.store_credit, data.currency),
-                ])
-              }}
-            </p>
           </div>
+          <!-- ERPNext sets and checks credit limits in the company currency. -->
+          <p
+            v-if="data.credit.limit || data.credit.store_credit"
+            class="w-full text-xs text-ink-gray-6 sm:w-auto sm:text-right"
+          >
+            <template v-if="data.credit.limit">{{
+              __('Credit limit {0}', [
+                money(
+                  data.credit.limit,
+                  data.company_currency || data.currency,
+                ),
+              ])
+            }}</template>
+            <template v-if="data.credit.limit && data.credit.store_credit">
+              ·
+            </template>
+            <template v-if="data.credit.store_credit">{{
+              __('Store credit {0}', [
+                money(data.credit.store_credit, data.currency),
+              ])
+            }}</template>
+          </p>
         </header>
+
+        <!-- The customer's next steps: payment for any invoices, collector, follow-up. -->
+        <div class="mb-4 flex flex-wrap gap-2" data-record-actions>
+          <Button
+            v-if="caps.pay && invoices.length"
+            class="min-h-11 sm:min-h-8"
+            :label="__('Register payment')"
+            :aria-keyshortcuts="'$'"
+            @click="openPayment('')"
+          >
+            <template #prefix
+              ><FeatherIcon name="dollar-sign" class="h-4 w-4"
+            /></template>
+          </Button>
+          <Button
+            v-if="caps.assign"
+            class="min-h-11 sm:min-h-8"
+            :label="
+              data.followup ? __('Change follow-up') : __('Schedule follow-up')
+            "
+            :aria-keyshortcuts="'S'"
+            @click="openFollowup('followup')"
+          >
+            <template #prefix
+              ><FeatherIcon name="user-check" class="h-4 w-4"
+            /></template>
+          </Button>
+        </div>
 
         <!-- Recordatorios automáticos: what happens next, and the way to resume. -->
         <div
@@ -190,11 +312,19 @@
           {{ __('This customer owes nothing right now.') }}
         </p>
 
-        <ul class="space-y-3">
+        <ul class="space-y-3" :aria-label="__('Invoices')">
           <li
             v-for="inv in invoices"
             :key="inv.name"
-            class="rounded-lg border border-outline-gray-2 p-3"
+            class="scroll-mt-20 rounded-lg border p-3"
+            :class="
+              focusName === inv.name
+                ? 'border-ink-gray-8 ring-1 ring-ink-gray-8'
+                : 'border-outline-gray-2'
+            "
+            :data-invoice="inv.name"
+            :aria-current="focusName === inv.name ? 'true' : undefined"
+            @click="focusInvoice(inv)"
           >
             <div class="flex flex-wrap items-start gap-2">
               <div class="min-w-0 flex-1">
@@ -281,7 +411,7 @@
                 class="min-h-11 sm:min-h-8"
                 :label="actionsOf(inv).primary.label"
                 :loading="busy === `${inv.name}:${actionsOf(inv).primary.key}`"
-                @click="run(inv, actionsOf(inv).primary)"
+                @click.stop="run(inv, actionsOf(inv).primary)"
               />
               <Button
                 v-for="action in actionsOf(inv).secondary"
@@ -289,7 +419,7 @@
                 class="min-h-11 sm:min-h-8"
                 :label="action.label"
                 :loading="busy === `${inv.name}:${action.key}`"
-                @click="run(inv, action)"
+                @click.stop="run(inv, action)"
               />
             </div>
           </li>
@@ -327,81 +457,64 @@
       </template>
     </div>
 
-    <Dialog v-model="promiseOpen" :options="{ title: __('Record promise') }">
-      <template #body-content>
-        <div class="space-y-3">
-          <p class="text-sm text-ink-gray-6">
-            {{ __('Invoice {0}', [target?.name]) }}
-          </p>
-          <FormControl
-            v-model="promiseForm.date"
-            type="date"
-            :label="__('Promised date')"
-          />
-          <FormControl
-            v-model="promiseForm.amount"
-            type="number"
-            :label="__('Promised amount')"
-          />
-          <FormControl
-            v-model="promiseForm.note"
-            type="textarea"
-            :label="__('Note (optional)')"
-          />
-          <p v-if="dialogProblem" role="alert" class="text-sm text-ink-red-7">
-            {{ dialogProblem.detail }}
-          </p>
-        </div>
-      </template>
-      <template #actions>
-        <div class="flex justify-end gap-2">
-          <Button :label="__('Cancel')" @click="promiseOpen = false" />
-          <Button
-            variant="solid"
-            :label="__('Save promise')"
-            :loading="saving"
-            :disabled="!promiseForm.date || !(Number(promiseForm.amount) > 0)"
-            @click="savePromise"
-          />
-        </div>
-      </template>
-    </Dialog>
+    <!-- Phone: the focused invoice's actions at the thumb. -->
+    <div
+      v-if="phone && data && focused"
+      class="sticky bottom-0 z-20 mt-auto border-t border-outline-gray-2 bg-surface-base px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]"
+      data-cobranza-actionbar
+    >
+      <p class="mb-1 truncate text-xs text-ink-gray-6">
+        {{ focused.name }} · {{ money(focused.outstanding, owedIn(focused)) }}
+      </p>
+      <div class="grid grid-cols-4 gap-2">
+        <button
+          v-for="action in phoneActions"
+          :key="action.key"
+          type="button"
+          class="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium"
+          :class="
+            action.primary
+              ? 'bg-surface-gray-9 text-ink-white'
+              : 'bg-surface-gray-2 text-ink-gray-8'
+          "
+          @click="run(focused, action)"
+        >
+          <FeatherIcon :name="action.icon" class="h-5 w-5" />
+          <span class="truncate">{{ action.short }}</span>
+        </button>
+      </div>
+    </div>
 
-    <Dialog v-model="callOpen" :options="{ title: __('Log call') }">
-      <template #body-content>
-        <div class="space-y-3">
-          <p class="text-sm text-ink-gray-6">
-            {{ __('Invoice {0}', [target?.name]) }}
-          </p>
-          <FormControl
-            v-model="callForm.outcome"
-            type="select"
-            :label="__('How did it go?')"
-            :options="CALL_OUTCOMES"
-          />
-          <FormControl
-            v-model="callForm.note"
-            type="textarea"
-            :label="__('Note (optional)')"
-          />
-          <p v-if="dialogProblem" role="alert" class="text-sm text-ink-red-7">
-            {{ dialogProblem.detail }}
-          </p>
-        </div>
-      </template>
-      <template #actions>
-        <div class="flex justify-end gap-2">
-          <Button :label="__('Cancel')" @click="callOpen = false" />
-          <Button
-            variant="solid"
-            :label="__('Save call')"
-            :loading="saving"
-            @click="saveCall"
-          />
-        </div>
-      </template>
-    </Dialog>
-
+    <PromiseSheet
+      v-model="promiseOpen"
+      :invoice="target ? sheetInvoice(target) : null"
+      :today="data?.today || ''"
+      @saved="(result) => saved(undoer.promiseSaved, result)"
+    />
+    <CallSheet
+      v-model="callOpen"
+      :invoice="target ? sheetInvoice(target) : null"
+      @saved="(result) => saved(undoer.callSaved, result)"
+    />
+    <PaymentSheet
+      v-model="payOpen"
+      :customer="data?.customer || customer"
+      :company="data?.company || ''"
+      :customer-name="data?.customer_name || ''"
+      :invoice="payInvoice"
+      :caps="caps"
+      @saved="(result) => saved(undoer.paymentSaved, result)"
+      @collect="collectInvoice"
+    />
+    <FollowupSheet
+      v-model="followupOpen"
+      :customer="data?.customer || customer"
+      :customer-name="data?.customer_name || ''"
+      :followup="data?.followup || null"
+      :today="data?.today || ''"
+      :focus="followupFocus"
+      @saved="followupSaved"
+    />
     <CobranzaSendSheet
       v-model="sendOpen"
       doctype="Dunning"
@@ -415,20 +528,29 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import {
-  Badge,
-  Button,
-  Dialog,
-  FeatherIcon,
-  FormControl,
-  toast,
-} from 'frappe-ui'
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import CallSheet from '@/components/cobranza/CallSheet.vue'
 import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
+import FollowupSheet from '@/components/cobranza/FollowupSheet.vue'
+import PaymentSheet from '@/components/cobranza/PaymentSheet.vue'
+import PromiseSheet from '@/components/cobranza/PromiseSheet.vue'
+import { isMobile } from '@/composables/breakpoint'
+import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
+import { hoyLive } from '@/composables/useHoy'
 import {
   AUTO_API,
   CTX,
+  RECORD_KEYS,
   agingLabel,
   agingTone,
   approxMoney,
@@ -437,35 +559,53 @@ import {
   autoLine,
   cobranzaApi,
   cobranzaBoot,
+  cssValue,
+  followupChip,
   formatDay,
   invoiceAction,
   isForeign,
+  keyAction,
+  listHref,
   loadCobranzaBoot,
   money,
   moneyWithBase,
+  moveFocus,
   nextCustomer,
-  outcomeUnknown,
   parsePaymentDone,
   problemOf,
   promiseChip,
-  requestId,
+  queueQuery,
+  recordShortcuts,
   secondaryActions,
   withDueSoon,
 } from '@/composables/useCobranza'
+import { useCobranzaUndo } from '@/composables/useCobranzaActions'
 import { posCollectHref } from '@/utils/posHandoff'
 import {
+  isTypingTarget,
   safeReturn,
   sanitizeReturnLabel,
 } from '@/vendor/muelle-shell/contracts'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+
+const LIVE_DOCTYPES = [
+  'Sales Invoice',
+  'Payment Entry',
+  'Dunning',
+  'ToDo',
+  'Comment',
+]
 
 const props = defineProps({ customer: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
+const phone = isMobile
 const boot = cobranzaBoot
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
+const scroller = ref(null)
 const data = ref(null)
 const guard = ref(null)
 const problem = ref(null)
-const dialogProblem = ref(null)
 const busy = ref('')
 const saving = ref(false)
 const copied = ref('')
@@ -474,14 +614,16 @@ const findingNext = ref(false)
 const target = ref(null)
 const promiseOpen = ref(false)
 const callOpen = ref(false)
+const payOpen = ref(false)
+const payInvoice = ref('')
+const followupOpen = ref(false)
+const followupFocus = ref('followup')
 const sendOpen = ref(false)
 const sendName = ref('')
 // The send sheet offers «I sent it» for a reminder sent from the worker's phone.
 const sendManual = ref(false)
-const promiseForm = reactive({ date: '', amount: '', note: '' })
-const callForm = reactive({ outcome: 'answered', note: '' })
-// One request id per pending action: a retry after a lost answer reuses it.
-const pending = {}
+const undoer = useCobranzaUndo({ reload: () => load() })
+const call = undoer.call
 
 const EVENT_ICONS = {
   payment: 'dollar-sign',
@@ -491,13 +633,6 @@ const EVENT_ICONS = {
   auto_stop: 'pause-circle',
   auto_resume: 'play-circle',
 }
-const CALL_OUTCOMES = [
-  { label: __('Answered'), value: 'answered' },
-  { label: __('No answer'), value: 'no_answer' },
-  { label: __('Left a message'), value: 'message' },
-  { label: __('Visit'), value: 'visit' },
-  { label: __('I wrote to them on WhatsApp'), value: 'whatsapp' },
-]
 const requestText = __(
   'I need access to Cobranza: read permission for Sales Invoice so I can follow what customers owe.',
 )
@@ -505,6 +640,7 @@ const requestText = __(
 const company = computed(() =>
   typeof route.query.company === 'string' ? route.query.company : '',
 )
+const caps = computed(() => data.value?.capabilities || {})
 const returnTo = computed(() => safeReturn(route.query.return_to))
 const backLabel = computed(() =>
   returnTo.value
@@ -516,20 +652,61 @@ const backLabel = computed(() =>
 const invoices = computed(() =>
   withDueSoon(data.value?.invoices || [], data.value?.today || ''),
 )
+// The invoice the keyboard and the phone's action bar act on (in the URL).
+const focusName = computed(() => {
+  const name =
+    typeof route.query.factura === 'string' ? route.query.factura : ''
+  return invoices.value.some((inv) => inv.name === name)
+    ? name
+    : invoices.value[0]?.name || ''
+})
+const focused = computed(() =>
+  invoices.value.find((inv) => inv.name === focusName.value),
+)
 // The invoice the automatic reminders left to a person (Recordatorios de hoy).
 const manualInvoice = computed(() =>
   data.value?.auto?.manual
     ? invoices.value.find((inv) => inv.name === data.value.auto.invoice)
     : null,
 )
+const ICONS = {
+  collect: 'shopping-bag',
+  pay: 'dollar-sign',
+  promise: 'calendar',
+  call: 'phone',
+  remind: 'send',
+  resend: 'send',
+}
+const SHORT = {
+  collect: () => __('Register', null, CTX),
+  pay: () => __('Payment', null, CTX),
+  promise: () => __('Promise', null, CTX),
+  call: () => __('Call', null, CTX),
+  remind: () => __('Reminder', null, CTX),
+  resend: () => __('Reminder', null, CTX),
+}
+// Four big buttons: the primary action first, then the others the worker may do.
+const phoneActions = computed(() => {
+  const inv = focused.value
+  if (!inv) return []
+  const { primary, secondary } = actionsOf(inv)
+  const all = [
+    ...(primary.blocked ? [] : [{ ...primary, primary: true }]),
+    ...secondary,
+  ]
+  return all.slice(0, 4).map((action) => ({
+    ...action,
+    icon: ICONS[action.key] || 'circle',
+    short: SHORT[action.key]?.() || action.label,
+  }))
+})
 
 function actionsOf(inv) {
-  const caps = data.value?.capabilities || {}
   const primary = invoiceAction(inv, {
-    caps,
+    caps: caps.value,
     ladderReady: data.value?.ladder_ready,
   })
-  return { primary, secondary: secondaryActions(inv, primary, caps) }
+  return { primary, secondary: secondaryActions(inv, primary, caps.value) }
 }
 
 function toneClass(tone) {
@@ -542,6 +719,10 @@ function toneClass(tone) {
 /** The currency an invoice is owed in (its receivable's); older servers: the record's. */
 function owedIn(inv) {
   return inv.currency || data.value?.currency
+}
+
+function sheetInvoice(inv) {
+  return { name: inv.name, outstanding: inv.outstanding, currency: owedIn(inv) }
 }
 
 function eventTitle(event) {
@@ -578,14 +759,18 @@ function eventTitle(event) {
   )
 }
 
+let ticket = 0
 async function load() {
+  const mine = ++ticket
   problem.value = null
   try {
-    data.value = await cobranzaApi('get_customer', {
+    const record = await cobranzaApi('get_customer', {
       customer: props.customer,
       company: company.value,
     })
+    if (mine === ticket) data.value = record
   } catch (error) {
+    if (mine !== ticket) return
     const found = problemOf(error)
     if (!data.value && found.kind === 'permission')
       guard.value = {
@@ -596,54 +781,45 @@ async function load() {
   }
 }
 
-async function call(key, method, args) {
-  pending[key] = pending[key] || requestId()
-  try {
-    const result = await cobranzaApi(method, {
-      request_id: pending[key],
-      ...args,
-    })
-    delete pending[key]
-    return result
-  } catch (error) {
-    if (!outcomeUnknown(error)) delete pending[key]
-    throw error
-  }
+function focusInvoice(inv, { reveal = false } = {}) {
+  if (!inv) return
+  if (route.query.factura !== inv.name)
+    router.replace({ query: { ...route.query, factura: inv.name } })
+  if (reveal)
+    nextTick(() =>
+      scroller.value
+        ?.querySelector(`[data-invoice="${cssValue(inv.name)}"]`)
+        ?.scrollIntoView?.({ block: 'nearest' }),
+    )
 }
 
 async function run(inv, action, manual = false) {
+  if (!inv) return
+  focusInvoice(inv)
   target.value = inv
-  dialogProblem.value = null
   sendManual.value = manual
   if (action.key === 'promise') {
-    const soon = new Date(`${data.value.today}T00:00:00Z`)
-    soon.setUTCDate(soon.getUTCDate() + 3)
-    Object.assign(promiseForm, {
-      date: soon.toISOString().slice(0, 10),
-      amount: String(inv.outstanding),
-      note: '',
-    })
     promiseOpen.value = true
     return
   }
   if (action.key === 'call') {
-    Object.assign(callForm, { outcome: 'answered', note: '' })
     callOpen.value = true
     return
   }
-  if (action.key === 'collect') {
-    const back = withoutDone(`/crm${route.fullPath}`)
-    window.location.assign(
-      posCollectHref(
-        { name: inv.name, customer: data.value.customer },
-        { returnTo: back, returnLabel: 'Cobranza' },
-      ),
-    )
-    return
-  }
+  if (action.key === 'pay') return openPayment(inv.name)
+  if (action.key === 'collect') return collectInvoice(inv.name)
   // «Send again» also asks the server: after a payment it prepares a fresh
   // letter with today's balance instead of resending the old amount.
   if (action.key === 'remind' || action.key === 'resend') {
+    if (!caps.value.remind) {
+      problem.value = {
+        title: __('Not allowed', null, CTX),
+        detail: __(
+          'You need permission to send payment reminders. Ask your manager.',
+        ),
+      }
+      return
+    }
     busy.value = `${inv.name}:remind`
     problem.value = null
     try {
@@ -659,6 +835,55 @@ async function run(inv, action, manual = false) {
       busy.value = ''
     }
   }
+}
+
+function openPayment(invoice) {
+  if (!caps.value.pay && !caps.value.collect) {
+    problem.value = {
+      title: __('Not allowed', null, CTX),
+      detail: __(
+        'To register payments you need permission to create and submit payments (Payment Entry). Ask your accountant.',
+      ),
+    }
+    return
+  }
+  if (!caps.value.pay) return collectInvoice(invoice || focusName.value)
+  payInvoice.value = invoice || ''
+  payOpen.value = true
+}
+
+function openFollowup(focus) {
+  followupFocus.value = focus
+  followupOpen.value = true
+}
+
+/** «Cobrar en caja»: the register comes back here with `done=Payment Entry:<name>`. */
+function collectInvoice(invoice) {
+  const name = invoice || focusName.value
+  if (!name || !data.value) return
+  const back = withoutDone(`/crm${route.fullPath}`)
+  window.location.assign(
+    posCollectHref(
+      { name, customer: data.value.customer },
+      { returnTo: back, returnLabel: 'Cobranza' },
+    ),
+  )
+}
+
+function saved(after, result) {
+  after(result)
+  load()
+}
+
+function followupSaved(result) {
+  const view = result.followup
+  undoer.followupSaved(
+    result,
+    view
+      ? __('Follow-up saved: {0}', [view.full_name || view.user])
+      : __('Follow-up ended'),
+  )
+  load()
 }
 
 async function resumeReminders() {
@@ -696,16 +921,26 @@ async function confirmManual() {
   }
 }
 
-/** Cobranza's «Recordatorios de hoy» → «Log call» opens the call note of that invoice. */
+/**
+ * Cobranza's list hands over an action: «Log call» (llamar), a promise
+ * (promesa), a reminder (recordar), a payment (pagar). The invoice stays
+ * focused; only the one-shot action leaves the URL.
+ */
 function handleAction() {
-  const invoice = route.query.factura
-  if (route.query.accion !== 'llamar' || typeof invoice !== 'string') return
-  const inv = invoices.value.find((row) => row.name === invoice)
+  const action = route.query.accion
+  if (typeof action !== 'string' || !action) return
+  const inv = focused.value
   const query = { ...route.query }
   delete query.accion
-  delete query.factura
   router.replace({ query })
-  if (inv) run(inv, { key: 'call' })
+  if (!inv) return
+  const keys = {
+    llamar: 'call',
+    promesa: 'promise',
+    recordar: inv.current_dunning ? 'resend' : 'remind',
+    pagar: 'pay',
+  }
+  if (keys[action]) run(inv, { key: keys[action] })
 }
 
 function withoutDone(path) {
@@ -737,45 +972,6 @@ async function resolve(inv, action) {
   }
 }
 
-async function savePromise() {
-  saving.value = true
-  dialogProblem.value = null
-  try {
-    await call(`promise:${target.value.name}`, 'add_promise', {
-      invoice: target.value.name,
-      date: promiseForm.date,
-      amount: promiseForm.amount,
-      note: promiseForm.note,
-    })
-    promiseOpen.value = false
-    toast.success(__('Promise saved'))
-    await load()
-  } catch (error) {
-    dialogProblem.value = problemOf(error)
-  } finally {
-    saving.value = false
-  }
-}
-
-async function saveCall() {
-  saving.value = true
-  dialogProblem.value = null
-  try {
-    await call(`call:${target.value.name}`, 'log_call', {
-      invoice: target.value.name,
-      outcome: callForm.outcome,
-      note: callForm.note,
-    })
-    callOpen.value = false
-    toast.success(__('Call saved'))
-    await load()
-  } catch (error) {
-    dialogProblem.value = problemOf(error)
-  } finally {
-    saving.value = false
-  }
-}
-
 async function copy(text) {
   try {
     await navigator.clipboard.writeText(text)
@@ -791,6 +987,13 @@ function listPath() {
   return list.startsWith('/cobranza') ? list : '/cobranza'
 }
 
+/** The list path with another customer focused (going back lands on them). */
+function listFocusing(customer) {
+  const list = new URL(listPath(), 'https://muelle.invalid')
+  const query = Object.fromEntries(list.searchParams.entries())
+  return listHref(queueQuery(query, { cliente: customer }))
+}
+
 function goBack() {
   if (returnTo.value) return window.location.assign(returnTo.value)
   router.push(listPath())
@@ -804,6 +1007,7 @@ async function goNext() {
       segment: list.searchParams.get('segment') || 'vencidas',
       company: list.searchParams.get('company') || '',
       search: list.searchParams.get('q') || '',
+      aging: list.searchParams.get('edad') || '',
       page_length: 5,
     })
     const next = nextCustomer(page.rows, props.customer)
@@ -814,7 +1018,7 @@ async function goNext() {
     router.push({
       name: 'CobranzaCliente',
       params: { customer: next.customer },
-      query: { company: next.company, list: listPath() },
+      query: { company: next.company, list: listFocusing(next.customer) },
     })
   } catch (error) {
     problem.value = problemOf(error)
@@ -850,8 +1054,65 @@ async function start() {
   }
   handleDone()
   await load()
+  if (route.query.factura) focusInvoice(focused.value, { reveal: true })
   handleAction()
 }
+
+// ── keyboard: never while typing, never under a sheet ───────────────────────
+registerPageShortcuts(null, () => recordShortcuts(caps.value))
+
+function onKey(event) {
+  if (event.defaultPrevented || guard.value || !data.value) return
+  if (document.querySelector('[aria-modal="true"], [role="dialog"]')) return
+  const action = keyAction(event, RECORD_KEYS, { apple: appleKeys })
+  if (!action || isTypingTarget(event.target)) return
+  const inv = focused.value
+  const handlers = {
+    next: () => moveInvoice(1),
+    prev: () => moveInvoice(-1),
+    remind: () =>
+      inv && run(inv, { key: inv.current_dunning ? 'resend' : 'remind' }),
+    promise: () => inv && caps.value.promise && run(inv, { key: 'promise' }),
+    call: () => inv && run(inv, { key: 'call' }),
+    pay: () => invoices.value.length && openPayment(inv?.name || ''),
+    assign: () => caps.value.assign && openFollowup('assign'),
+    followup: () => caps.value.assign && openFollowup('followup'),
+    next_customer: () => !returnTo.value && goNext(),
+    back: () => goBack(),
+  }
+  const handler = handlers[action]
+  if (!handler) return
+  event.preventDefault()
+  handler()
+}
+
+function moveInvoice(delta) {
+  const names = invoices.value.map((inv) => inv.name)
+  const name = moveFocus(names, focusName.value, delta)
+  focusInvoice(
+    invoices.value.find((inv) => inv.name === name),
+    { reveal: true },
+  )
+}
+
+// ── live: this customer's invoices, payments, letters, to-dos and notes ──────
+const known = computed(() => {
+  const names = new Set()
+  for (const inv of data.value?.invoices || []) {
+    names.add(inv.name)
+    if (inv.current_dunning) names.add(inv.current_dunning)
+    if (inv.promise?.todo) names.add(inv.promise.todo)
+  }
+  for (const event of data.value?.timeline || []) names.add(event.name)
+  if (data.value?.followup?.todo) names.add(data.value.followup.todo)
+  return names
+})
+useLiveWatch(hoyLive(socket), LIVE_DOCTYPES, (batch) => {
+  // Payments and Cobranza's own writes announce the invoice; anything else
+  // shows up with the hub's periodic reconciliation.
+  if (batch.full || batch.names.some((name) => known.value.has(name)))
+    return load()
+})
 
 watch(
   () => [props.customer, company.value],
@@ -861,8 +1122,18 @@ watch(
     start()
   },
 )
+watch(
+  () => route.query.accion,
+  (action) => action && data.value && handleAction(),
+)
 function switchCompany(value) {
-  router.replace({ query: { ...route.query, company: value } })
+  const query = { ...route.query, company: value }
+  delete query.factura
+  router.replace({ query })
 }
-onMounted(start)
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  start()
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>

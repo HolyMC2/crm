@@ -91,14 +91,26 @@ const routes = [
     path: '/cobranza',
     name: 'Cobranza',
     component: () => import('@/pages/Cobranza.vue'),
-    meta: { app: 'cobranza', title: 'Cobranza', stableKey: true },
+    // On a phone Cobranza brings its own app bar (list · search · select), like the Agenda.
+    meta: {
+      app: 'cobranza',
+      title: 'Cobranza',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/cobranza/cliente/:customer',
     name: 'CobranzaCliente',
     component: () => import('@/pages/CobranzaCliente.vue'),
     props: true,
-    meta: { app: 'cobranza', title: 'Cobranza', listParent: 'Cobranza' },
+    // Its phone app bar: back to the same row of the list · customer · next customer.
+    meta: {
+      app: 'cobranza',
+      title: 'Cobranza',
+      listParent: 'Cobranza',
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/compras',

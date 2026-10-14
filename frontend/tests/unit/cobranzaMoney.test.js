@@ -28,6 +28,7 @@ vi.mock('frappe-ui', async () => {
   return {
     Badge: labelled('span'),
     Button: labelled('button'),
+    BottomSheet: { render: () => null },
     Dialog: { render: () => null },
     FeatherIcon: { render: () => null },
     FormControl: { render: () => null },
