@@ -54,7 +54,12 @@ import {
   toRecentRef,
 } from '@/utils/shellPalette'
 import { showSettings } from '@/composables/settings'
-import { RAIL_SAVE_DELAY_MS, resetRailForTests } from '@/composables/shellRail'
+import {
+  RAIL_SAVE_DELAY_MS,
+  resetRailForTests,
+  scanPickHref,
+  scanPickTarget,
+} from '@/composables/shellRail'
 import {
   closeShortcutSheet,
   keyLabel,
@@ -434,7 +439,8 @@ describe('one frame for every route', () => {
       const scan = rail.querySelector('[data-sibling="scan"]')
       expect(scan.textContent).toContain('Escáner')
       const href = new URL(scan.getAttribute('href'), 'https://x.test')
-      expect(href.pathname).toBe('/scan/')
+      // Escáner's home alias: /scan/ would redirect out of its offline scope.
+      expect(href.pathname).toBe('/scan/inicio')
       expect(href.searchParams.get('return_to')).toBe('/crm/contactos')
       expect(href.searchParams.get('return_label')).toBe('Contactos')
       // Collapsed, they wait behind one «Otras apps» button beside the rail.
@@ -464,6 +470,56 @@ describe('one frame for every route', () => {
     } finally {
       delete window.installed_apps
     }
+  })
+
+  it('phone header «Escanear» opens Escáner’s picker with the way back, only where installed', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    expect(root.querySelector('[data-testid="shell-scan"]')).toBeNull()
+    app.unmount()
+    root.remove()
+    window.installed_apps = ['crm', 'scanner_kit']
+    try {
+      await mount('/contactos?segment=people')
+      const scan = root.querySelector('[data-testid="shell-scan"]')
+      expect(scan.getAttribute('aria-label')).toBe('Scan a code')
+      const url = new URL(scan.getAttribute('href'), 'https://x.test')
+      expect(url.pathname).toBe('/scan/pick')
+      expect(url.searchParams.get('want')).toBe('item')
+      expect(url.searchParams.get('return_to')).toBe(
+        '/crm/contactos?segment=people&escaneo=1',
+      )
+      expect(url.searchParams.get('return_label')).toBe('Contactos')
+    } finally {
+      delete window.installed_apps
+    }
+  })
+
+  it('a scan picked in Escáner opens the artículo in Productos, with the way back', () => {
+    const route = (query) => ({ path: '/cobranza', query, hash: '' })
+    expect(scanPickTarget(route({ segment: 'vencidas' }))).toBeNull()
+    expect(
+      scanPickTarget(
+        route({ segment: 'vencidas', escaneo: '1', done: 'Item:SKU 1' }),
+        { productos: true, label: 'Cobranza' },
+      ),
+    ).toEqual({
+      path: '/productos/SKU%201',
+      query: {
+        return_to: '/crm/cobranza?segment=vencidas',
+        return_label: 'Cobranza',
+      },
+    })
+    // Without Productos (or a cancelled scan) the worker stays, minus the marker.
+    expect(
+      scanPickTarget(
+        route({ segment: 'vencidas', escaneo: '1', done: 'Item:X' }),
+      ),
+    ).toEqual({ path: '/cobranza', query: { segment: 'vencidas' }, hash: '' })
+    expect(
+      scanPickTarget(route({ escaneo: '1' }), { productos: true }),
+    ).toEqual({ path: '/cobranza', query: {}, hash: '' })
+    expect(scanPickHref('/hoy', 'Hoy', ['crm'])).toBeNull()
   })
 
   it('phone: one header and one bottom nav; Ventas pages get the header slot', async () => {

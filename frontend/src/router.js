@@ -4,10 +4,12 @@ import { sessionStore } from '@/stores/session'
 import {
   isNeutralModule,
   loadShell,
+  moduleKeyFor,
   shellBoot,
   shellBootStale,
 } from '@/composables/muelleShell'
-import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { SCAN_PICK_PARAM, scanPickTarget } from '@/composables/shellRail'
+import { SHELL_MODULES, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
   ADDON_APP,
   gateRoute,
@@ -567,6 +569,18 @@ router.beforeEach(async (to, from, next) => {
       '/login?redirect-to=' +
       encodeURIComponent(safeIntendedRoute('/crm' + to.fullPath))
     return
+  }
+  // Back from Escáner's «Escanear» picker: the scanned artículo opens in
+  // Productos before any page reads `done` as its own.
+  if (to.query[SCAN_PICK_PARAM] !== undefined) {
+    const boot = shellBoot.value || (await loadShell().catch(() => null))
+    const from = moduleKeyFor(to)
+    return next(
+      scanPickTarget(to, {
+        productos: moduleEnabled(boot, 'productos'),
+        label: SHELL_MODULES.find((module) => module.key === from)?.label,
+      }),
+    )
   }
   if (isNeutralModule(to.meta.app)) {
     // Shell modules are separate capabilities; no sales stores/boot here.

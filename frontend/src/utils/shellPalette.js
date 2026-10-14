@@ -88,7 +88,7 @@ const ARCHIVOS_PLACES = [
 // Escáner (scanner_kit) places a worker jumps to from anywhere in the shell;
 // they open in Escáner with «Volver a …» back to the page they left.
 const ESCANER_PLACES = [
-  ['/scan/', 'Inicio', 'lucide-scan-barcode', 'escaner scanner inicio'],
+  ['/scan/inicio', 'Inicio', 'lucide-scan-barcode', 'escaner scanner inicio'],
   ['/scan/items', 'Artículos', 'lucide-package-search', 'buscar articulo item'],
   ['/scan/bins', 'Cajones', 'lucide-layout-grid', 'cajon ubicacion bin'],
   ['/scan/bins/move', 'Mover de cajón', 'lucide-move', 'mover cajon traspaso'],
@@ -323,7 +323,7 @@ export function createShellProviders({ boot, modules }) {
           items.push({
             id: `escaner.${path}`,
             group: 'ir_a',
-            title: path === '/scan/' ? 'Escáner' : `Escáner › ${label}`,
+            title: path === '/scan/inicio' ? 'Escáner' : `Escáner › ${label}`,
             keywords,
             icon,
             external: path,

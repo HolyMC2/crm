@@ -5,6 +5,8 @@ import { userScopedKey } from '@/utils/storageKeys'
 import {
   SIBLING_APPS,
   defaultReturnLabel,
+  readDone,
+  safeReturn,
   withReturn,
 } from '@/vendor/muelle-shell/contracts'
 
@@ -111,6 +113,11 @@ export function sortSiblings(apps) {
   )
 }
 
+// Where a sibling's home opens when it is not its bare root: Frappe answers
+// /scan/ with a redirect to /scan, outside Escáner's service-worker scope, so
+// the home goes through its /scan/inicio alias (instant and offline-ready).
+const SIBLING_HOME = Object.freeze({ '/scan/': '/scan/inicio' })
+
 /**
  * The sibling's entry with the shell's return protocol: it can offer «Volver a
  * {label}» back to the page the worker left. `fullPath` is the router path
@@ -118,12 +125,70 @@ export function sortSiblings(apps) {
  */
 export function siblingHref(app, fullPath, label) {
   const back = `/crm${fullPath && fullPath !== '/' ? fullPath : '/'}`
+  const entry = SIBLING_HOME[app.path] || app.path
   try {
-    return withReturn(app.path, {
+    return withReturn(entry, {
       to: back,
       label: label || defaultReturnLabel(back),
     })
   } catch {
-    return app.path
+    return entry
   }
+}
+
+// --- «Escanear»: Escáner as the shell's scanner ---------------------------------
+
+/** Marks a return that carries a scan, so no page takes it for its own `done`. */
+export const SCAN_PICK_PARAM = 'escaneo'
+
+/**
+ * Escáner's picker (/scan/pick) for the page the worker is on: it opens the
+ * camera (or a wedge scanner), resolves the code and comes back here with
+ * `done=Item:<code>`. `null` where Escáner is not installed.
+ */
+export function scanPickHref(fullPath, label, apps) {
+  if (!installedSiblings(apps).some((app) => app.key === 'scan')) return null
+  const [path, query = ''] = (fullPath || '/').split('?')
+  const params = new URLSearchParams(query)
+  params.delete('done')
+  params.set(SCAN_PICK_PARAM, '1')
+  const back = `/crm${path === '/' ? '/' : path}?${params}`
+  try {
+    return withReturn('/scan/pick?want=item', {
+      to: back,
+      label: label || defaultReturnLabel(back),
+    })
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Where a scan picked in Escáner leads: an artículo opens its Productos record
+ * (when the worker has Productos) with «Volver a {label}» to the page they
+ * scanned from; otherwise they stay on that page. Either way the scan marker
+ * and `done` leave the URL. `null` when the route carries no scan.
+ */
+export function scanPickTarget(route, { productos = false, label = '' } = {}) {
+  const query = route?.query || {}
+  if (query[SCAN_PICK_PARAM] === undefined) return null
+  const done = readDone(new URLSearchParams({ done: String(query.done || '') }))
+  const rest = { ...query }
+  delete rest[SCAN_PICK_PARAM]
+  delete rest.done
+  if (done?.doctype === 'Item' && productos) {
+    const search = new URLSearchParams(
+      Object.entries(rest).flatMap(([key, value]) =>
+        [value].flat().map((one) => [key, String(one ?? '')]),
+      ),
+    ).toString()
+    const back = `/crm${route.path}${search ? `?${search}` : ''}`
+    return {
+      path: `/productos/${encodeURIComponent(done.name)}`,
+      query: safeReturn(back)
+        ? { return_to: back, return_label: label || defaultReturnLabel(back) }
+        : {},
+    }
+  }
+  return { path: route.path, query: rest, hash: route.hash }
 }

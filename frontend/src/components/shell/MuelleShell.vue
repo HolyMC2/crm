@@ -38,6 +38,17 @@
         >
           {{ headerTitle }}
         </h1>
+        <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
+        <a
+          v-if="scanHref"
+          :href="scanHref"
+          class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
+          :aria-label="__('Scan a code')"
+          :title="__('Scan a code')"
+          data-testid="shell-scan"
+        >
+          <span class="lucide-scan-barcode size-5" aria-hidden="true" />
+        </a>
         <button
           class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
           :aria-label="__('Search')"
@@ -144,7 +155,7 @@ import {
   shortcutSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
-import { toggleRail } from '@/composables/shellRail'
+import { scanPickHref, toggleRail } from '@/composables/shellRail'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
 import { shellTitle } from '@/utils/shellTitle'
@@ -315,6 +326,9 @@ function openHelp() {
   openShortcutSheet()
 }
 const { label: searchHint, aria: searchKeys } = searchEntryHint()
+const scanHref = computed(() =>
+  scanPickHref(route.fullPath, activeModule.value?.label),
+)
 // `[` shows or hides the app names of the desktop rail (phone has no rail).
 function toggleSidebar() {
   if (phone.value) return false

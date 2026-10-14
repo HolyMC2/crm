@@ -10930,6 +10930,10 @@ msgstr "Expandir barra lateral"
 msgid "Icons only"
 msgstr "Solo íconos"
 
+#: frontend/src/components/shell/MuelleShell.vue
+msgid "Scan a code"
+msgstr "Escanear un código"
+
 #: frontend/src/components/shell/ShellRail.vue
 msgid "Show app names"
 msgstr "Mostrar nombres"
