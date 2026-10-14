@@ -88,8 +88,11 @@
               :label="__('Approved template')"
               :options="templateOptions"
             />
+            <!-- The reason shows once: here, unless it is what blocks saving below. -->
             <p
-              v-if="chosenTemplate?.problem"
+              v-if="
+                chosenTemplate?.problem && blocker?.action !== 'choose_template'
+              "
               role="status"
               class="rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-gray-8"
             >
