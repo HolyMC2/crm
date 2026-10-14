@@ -2,14 +2,20 @@
   <div class="relative">
     <button
       ref="trigger"
-      class="mt-1 flex size-10 items-center justify-center rounded-full"
+      class="mt-1 flex items-center"
+      :class="
+        expanded
+          ? 'h-11 w-full gap-2.5 rounded-lg px-1.5 text-left hover:bg-surface-gray-2'
+          : 'size-10 justify-center rounded-full'
+      "
       :aria-label="__('Account menu')"
       :aria-expanded="open"
       aria-haspopup="menu"
+      data-testid="rail-account"
       @click="open = !open"
     >
       <span
-        class="flex size-8 items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-xs font-semibold text-ink-gray-8"
+        class="flex size-8 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-xs font-semibold text-ink-gray-8"
       >
         <img
           v-if="user.image"
@@ -19,12 +25,23 @@
         />
         <span v-else>{{ initials }}</span>
       </span>
+      <span v-if="expanded" class="min-w-0 flex-1" aria-hidden="true">
+        <span class="block truncate text-sm font-medium text-ink-gray-9">{{
+          user.full_name || user.name
+        }}</span>
+        <span
+          v-if="user.puesto"
+          class="block truncate text-xs text-ink-gray-6"
+          >{{ user.puesto }}</span
+        >
+      </span>
     </button>
     <template v-if="open">
       <div class="fixed inset-0 z-40" @click="open = false" />
       <div
         role="menu"
-        class="fixed bottom-3 left-[60px] z-50 w-64 rounded-xl border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
+        class="fixed bottom-3 z-50 w-64 rounded-xl border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
+        :style="{ left: `${railWidth + 4}px` }"
         @keydown.esc="close"
       >
         <div class="border-b border-outline-gray-1 px-3.5 pb-2.5 pt-1.5">
@@ -136,6 +153,7 @@ import { sessionStore } from '@/stores/session'
 import { openSalesSettings, shellBoot } from '@/composables/muelleShell'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
+import { railWidth } from '@/composables/shellRail'
 import {
   ariaKeys,
   keyLabel,
@@ -143,7 +161,7 @@ import {
   shellT,
 } from '@/composables/shellKeyboard'
 
-defineProps({ ventas: Boolean })
+defineProps({ ventas: Boolean, expanded: Boolean })
 const router = useRouter()
 const session = sessionStore()
 const { theme, setTheme } = useShellTheme()

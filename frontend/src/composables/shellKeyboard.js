@@ -128,10 +128,16 @@ export const pageShortcuts = computed(() => ({
   extra: pages.value.flatMap((page) => page.extra()),
 }))
 
-// Global keys the shell itself answers; `create` and `sidebar` have no shell
-// action yet, so the sheet leaves them out. Go-to keys count only for the
-// modules this worker has.
-const SHELL_GLOBAL_IDS = new Set(['help', 'palette', 'records', 'close'])
+// Global keys the shell itself answers; `create` has no shell action yet, so
+// the sheet leaves it out. `[` shows or hides the app names in the desktop
+// rail. Go-to keys count only for the modules this worker has.
+const SHELL_GLOBAL_IDS = new Set([
+  'help',
+  'palette',
+  'records',
+  'close',
+  'sidebar',
+])
 
 /** KEYMAP reduced to the keys that work here (list/form rows need a page). */
 export function shellKeymap(modules = []) {
@@ -191,7 +197,13 @@ export function closeShortcutSheet() {
 // through (as before); the sheet never opens on top of a foreign dialog.
 const SHELL_LAYER = '[data-shell-layer]'
 
-export function useShellKeyboard({ openPalette, openHelp, modules, router }) {
+export function useShellKeyboard({
+  openPalette,
+  openHelp,
+  modules,
+  router,
+  toggleSidebar,
+}) {
   const matcher = createShortcutMatcher()
   function onKeydown(event) {
     if (event.defaultPrevented) return
@@ -218,6 +230,9 @@ export function useShellKeyboard({ openPalette, openHelp, modules, router }) {
     } else if (hit.id === 'help') {
       event.preventDefault()
       openHelp()
+    } else if (hit.id === 'sidebar') {
+      if (!toggleSidebar || toggleSidebar() === false) return
+      event.preventDefault()
     } else if (hit.module) {
       const module = modules.value.find((m) => m.key === hit.module)
       if (!module) return

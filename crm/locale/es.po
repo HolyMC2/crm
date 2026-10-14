@@ -10918,6 +10918,18 @@ msgstr "Cerrar la capa superior"
 msgid "Show or hide the sidebar"
 msgstr "Mostrar u ocultar la barra lateral"
 
+#: frontend/src/components/shell/ShellRail.vue
+msgid "Collapse sidebar"
+msgstr "Contraer barra lateral"
+
+#: frontend/src/components/shell/ShellRail.vue
+msgid "Expand sidebar"
+msgstr "Expandir barra lateral"
+
+#: crm/api/shell.py
+msgid "Choose whether the sidebar shows the app names or only their icons."
+msgstr "Elige si la barra lateral muestra el nombre de las apps o solo sus íconos."
+
 #: frontend/src/components/shell
 msgid "Keyboard shortcuts"
 msgstr "Atajos de teclado"

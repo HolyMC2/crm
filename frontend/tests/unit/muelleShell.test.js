@@ -55,6 +55,10 @@ import {
 } from '@/utils/shellPalette'
 import { showSettings } from '@/composables/settings'
 import {
+  RAIL_SAVE_DELAY_MS,
+  resetRailForTests,
+} from '@/composables/shellRail'
+import {
   closeShortcutSheet,
   keyLabel,
   pageShortcuts,
@@ -348,6 +352,88 @@ describe('one frame for every route', () => {
       rail.querySelector('[aria-current="page"]').getAttribute('aria-label'),
     ).toBe('Ventas')
     expect(root.querySelector('nav[aria-label="Main navigation"]')).toBeNull()
+  })
+
+  it('desktop rail: names while learning, icons once collapsed; the choice is kept', async () => {
+    state.mobile.value = false
+    localStorage.clear()
+    resetRailForTests('expanded')
+    await mount('/contactos')
+    const rail = () => root.querySelector('nav[aria-label="Apps"]')
+    const toggle = () => rail().querySelector('[data-testid="rail-toggle"]')
+    expect(rail().dataset.rail).toBe('expanded')
+    expect(rail().style.width).toBe('216px')
+    const contactos = rail().querySelector('[data-module="contactos"]')
+    expect(contactos.textContent.trim()).toBe('Contactos')
+    expect(contactos.getAttribute('title')).toBeNull()
+    expect(toggle().getAttribute('aria-expanded')).toBe('true')
+    expect(toggle().getAttribute('aria-label')).toBe('Collapse sidebar')
+
+    toggle().click()
+    await nextTick()
+    expect(rail().dataset.rail).toBe('collapsed')
+    expect(rail().style.width).toBe('56px')
+    const icon = rail().querySelector('[data-module="contactos"]')
+    expect(icon.textContent.trim()).toBe('')
+    // Collapsed, the name stays reachable: tooltip and accessible name.
+    expect(icon.getAttribute('title')).toBe('Contactos')
+    expect(icon.getAttribute('aria-label')).toBe('Contactos')
+    expect(toggle().getAttribute('aria-expanded')).toBe('false')
+    expect(localStorage.getItem('muelle.rail:guest')).toBe('collapsed')
+    // Saved for the worker's other devices, once, after the toggle settles.
+    await new Promise((resolve) => setTimeout(resolve, RAIL_SAVE_DELAY_MS + 50))
+    expect(
+      state.call.mock.calls.filter(([method]) => method === 'crm.api.shell.save_rail'),
+    ).toEqual([['crm.api.shell.save_rail', { state: 'collapsed' }]])
+  })
+
+  it('desktop rail: the saved width follows the worker from the boot; «[» toggles it', async () => {
+    state.mobile.value = false
+    localStorage.clear()
+    resetRailForTests('expanded')
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot({ rail: 'collapsed' })
+      if (method === 'crm.api.shell.save_rail') return 'expanded'
+      throw new Error(`unexpected ${method}`)
+    })
+    await mount('/contactos')
+    const rail = () => root.querySelector('nav[aria-label="Apps"]')
+    expect(await until(() => rail()?.dataset.rail === 'collapsed')).toBe(true)
+    const press = (target) =>
+      target.dispatchEvent(
+        new KeyboardEvent('keydown', { key: '[', bubbles: true, cancelable: true }),
+      )
+    press(document.body)
+    await nextTick()
+    expect(rail().dataset.rail).toBe('expanded')
+    // Not while typing: «[» is a character in a field.
+    const field = document.createElement('input')
+    root.append(field)
+    field.focus()
+    press(field)
+    await nextTick()
+    expect(rail().dataset.rail).toBe('expanded')
+  })
+
+  it('desktop rail: installed sibling apps open with the way back to this page', async () => {
+    state.mobile.value = false
+    resetRailForTests('expanded')
+    window.installed_apps = ['frappe', 'crm', 'scanner_kit', 'posawesome']
+    try {
+      await mount('/contactos')
+      const rail = root.querySelector('nav[aria-label="Apps"]')
+      expect(
+        [...rail.querySelectorAll('[data-sibling]')].map((a) => a.dataset.sibling),
+      ).toEqual(['pos', 'scan'])
+      const scan = rail.querySelector('[data-sibling="scan"]')
+      expect(scan.textContent).toContain('Escáner')
+      const href = new URL(scan.getAttribute('href'), 'https://x.test')
+      expect(href.pathname).toBe('/scan/')
+      expect(href.searchParams.get('return_to')).toBe('/crm/contactos')
+      expect(href.searchParams.get('return_label')).toBe('Contactos')
+    } finally {
+      delete window.installed_apps
+    }
   })
 
   it('phone: one header and one bottom nav; Ventas pages get the header slot', async () => {
@@ -1425,10 +1511,11 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     const app = panelText()
     expect(app).toContain('Ir a Contactos')
     expect(app).toContain('Ir a Ventas')
-    // Only keys the shell implements: no module the worker lacks, no «c» or «[».
+    // Only keys the shell implements: no module the worker lacks, no «c»;
+    // «[» shows or hides the app names of the rail.
     expect(app).not.toContain('Ir a Agenda')
     expect(app).not.toContain('Crear')
-    expect(app).not.toContain('barra lateral')
+    expect(app).toContain('Mostrar u ocultar la barra lateral')
     press({ key: 'Home' }, document.activeElement)
     await settle()
     expect(tabs()[0]).toEqual(['quick', 'true'])

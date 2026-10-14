@@ -81,7 +81,8 @@
           <a
             v-for="app in siblings"
             :key="app.key"
-            :href="app.path"
+            :href="app.href"
+            :data-sibling="app.key"
             class="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-gray-1 text-sm"
           >
             <span :class="[app.icon, 'size-5']" aria-hidden="true" />
@@ -242,15 +243,17 @@
 import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
+  moduleKeyFor,
   navSlots,
   openSalesSettings,
   saveNavSlots,
 } from '@/composables/muelleShell'
+import { installedSiblings, siblingHref } from '@/composables/shellRail'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
-import { SIBLING_APPS, moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
   ariaKeys,
   keyLabel,
@@ -280,17 +283,18 @@ const initials = computed(() => {
     .split(/\s+/)
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?'
 })
-const SIBLING_APP_NAMES = {
-  pos: 'posawesome',
-  taller: 'taller',
-  clinica: 'clinica',
-  mercado: 'mercado',
-  scan: 'scanner_kit',
-}
+// Sibling SPAs open with the way back to the page the worker left.
+const route = useRoute()
 const siblings = computed(() =>
-  SIBLING_APPS.filter((app) =>
-    (window.installed_apps || []).includes(SIBLING_APP_NAMES[app.key]),
-  ),
+  installedSiblings().map((app) => ({
+    ...app,
+    href: siblingHref(
+      app,
+      route.fullPath,
+      props.modules.find((module) => module.key === moduleKeyFor(route))
+        ?.label,
+    ),
+  })),
 )
 const order = ref(
   [

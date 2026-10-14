@@ -144,6 +144,7 @@ import {
   shortcutSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
+import { toggleRail } from '@/composables/shellRail'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
 import { shellTitle } from '@/utils/shellTitle'
@@ -314,7 +315,18 @@ function openHelp() {
   openShortcutSheet()
 }
 const { label: searchHint, aria: searchKeys } = searchEntryHint()
-useShellKeyboard({ openPalette, openHelp, modules: shellModules, router })
+// `[` shows or hides the app names of the desktop rail (phone has no rail).
+function toggleSidebar() {
+  if (phone.value) return false
+  toggleRail()
+}
+useShellKeyboard({
+  openPalette,
+  openHelp,
+  modules: shellModules,
+  router,
+  toggleSidebar,
+})
 // Every route names itself through meta.title (English source, es-MX catalog).
 const headerTitle = computed(() => shellTitle(route, activeModule.value))
 watch(

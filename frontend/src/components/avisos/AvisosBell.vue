@@ -10,20 +10,30 @@
       <AvisosPanel v-else v-model:open="avisosPanelOpen" />
     </div>
     <button
-      class="relative flex flex-none items-center justify-center rounded-lg hover:bg-surface-gray-2"
-      :class="rail ? 'size-10 text-ink-gray-6' : 'size-11 text-ink-gray-7'"
+      class="relative flex flex-none items-center rounded-lg hover:bg-surface-gray-2"
+      :class="
+        rail && expanded
+          ? 'h-9 w-full gap-3 px-2.5 text-sm text-ink-gray-7'
+          : rail
+            ? 'size-10 justify-center text-ink-gray-6'
+            : 'size-11 justify-center text-ink-gray-7'
+      "
       :aria-label="ariaLabel"
-      :title="rail ? __('Avisos') : undefined"
+      :title="rail && !expanded ? __('Avisos') : undefined"
       :aria-current="active ? 'page' : undefined"
       @click="open"
     >
       <span
-        :class="['lucide-bell', rail ? 'size-[18px]' : 'size-5']"
+        :class="['lucide-bell flex-none', rail ? 'size-[18px]' : 'size-5']"
         aria-hidden="true"
       />
+      <span v-if="rail && expanded" class="flex-1 truncate text-left" aria-hidden="true">{{
+        __('Avisos')
+      }}</span>
       <span
         v-if="label"
-        class="pointer-events-none absolute right-0.5 top-0.5 min-w-4 rounded-full bg-surface-red-7 px-1 text-center text-[10px] font-semibold leading-4 text-ink-red-1"
+        class="pointer-events-none min-w-4 rounded-full bg-surface-red-7 px-1 text-center text-[10px] font-semibold leading-4 text-ink-red-1"
+        :class="rail && expanded ? '' : 'absolute right-0.5 top-0.5'"
         aria-hidden="true"
         >{{ label }}</span
       >
@@ -52,6 +62,8 @@ import {
 // slide-over, phone header bell that opens the /avisos page.
 const props = defineProps({
   rail: Boolean,
+  /** Rail shown with names (shellRail): the bell reads «Avisos» and its count inline. */
+  expanded: Boolean,
   ventas: Boolean,
   active: Boolean,
 })

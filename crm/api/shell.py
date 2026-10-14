@@ -10,6 +10,9 @@ import frappe
 from frappe import _
 
 MOBILE_SLOTS_DEFAULT = "muelle_mobile_slots"
+# Desktop rail width: «expanded» shows each app's name, «collapsed» only icons.
+RAIL_DEFAULT = "muelle_rail"
+RAIL_STATES = ("expanded", "collapsed")
 MODULE_KEYS = (
 	"hoy",
 	"pendientes",
@@ -496,6 +499,11 @@ def _saved_slots():
 	return [key for key in slots if key in MODULE_KEYS] if isinstance(slots, list) else None
 
 
+def _saved_rail():
+	value = frappe.defaults.get_user_default(RAIL_DEFAULT)
+	return value if value in RAIL_STATES else None
+
+
 @frappe.whitelist()
 def boot():
 	"""ShellBoot for the signed-in user: identity, locale, palette and module capabilities."""
@@ -532,6 +540,7 @@ def boot():
 		"currency": frappe.defaults.get_global_default("currency"),
 		"palette": _palette(),
 		"mobile_slots": _saved_slots(),
+		"rail": _saved_rail(),
 		"modules": modules,
 		# Compatibility for the Contactos pages and NotPermitted (one release).
 		"sales_access": bool(modules.get("ventas", {}).get("enabled")),
@@ -554,6 +563,17 @@ def save_mobile_slots(slots: str | list):
 			clean.append(key)
 	frappe.defaults.set_user_default(MOBILE_SLOTS_DEFAULT, json.dumps(clean[:4]))
 	return clean[:4]
+
+
+@frappe.whitelist(methods=["POST"])
+def save_rail(state: str):
+	"""The user's own desktop rail width: «expanded» (names) or «collapsed» (icons)."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Sign in to open Muelle."), frappe.AuthenticationError)
+	if state not in RAIL_STATES:
+		frappe.throw(_("Choose whether the sidebar shows the app names or only their icons."))
+	frappe.defaults.set_user_default(RAIL_DEFAULT, state)
+	return state
 
 
 RECENT_LIMIT = 8

@@ -24,6 +24,7 @@ class TestShellBoot(TestCase):
 
 	def tearDown(self):
 		frappe.defaults.clear_user_default(shell.MOBILE_SLOTS_DEFAULT)
+		frappe.defaults.clear_user_default(shell.RAIL_DEFAULT)
 		frappe.set_user(self.previous)
 
 	def test_boot_reports_identity_and_module_capabilities(self):
@@ -78,6 +79,16 @@ class TestShellBoot(TestCase):
 		)
 		self.assertEqual(saved, ["ventas", "contactos", "hoy", "agenda"])
 		self.assertEqual(shell.boot()["mobile_slots"], saved)
+
+	def test_rail_width_follows_the_user_and_refuses_unknown_states(self):
+		self.assertIsNone(shell.boot()["rail"])
+		self.assertEqual(shell.save_rail("collapsed"), "collapsed")
+		self.assertEqual(shell.boot()["rail"], "collapsed")
+		self.assertEqual(shell.save_rail("expanded"), "expanded")
+		self.assertEqual(shell.boot()["rail"], "expanded")
+		with self.assertRaises(frappe.ValidationError):
+			shell.save_rail("wide")
+		self.assertEqual(shell.boot()["rail"], "expanded")
 
 	def test_module_keys_follow_the_contracts_registry(self):
 		registry = Path(__file__).parents[2] / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
