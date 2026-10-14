@@ -272,7 +272,7 @@ const comparable = (form) =>
     FIELDS.map((field) =>
       field === 'audience'
         ? [...(form?.[field] || [])].sort()
-        : (form?.[field] ?? ''),
+        : form?.[field] ?? '',
     ),
   )
 export function isDirty(form, base) {
