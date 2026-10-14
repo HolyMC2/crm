@@ -66,7 +66,7 @@
       <header
         class="flex flex-wrap items-start gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
       >
-        <div class="min-w-0 flex-1">
+        <div class="w-full min-w-0 sm:w-auto sm:flex-1">
           <a
             v-if="back"
             :href="'#'"
@@ -376,6 +376,7 @@ import {
   manualApi,
   manualBoot,
   metaLine,
+  parse,
   problemOf,
   requestText,
   resolveLugar,
@@ -393,7 +394,8 @@ const router = useRouter()
 const boot = manualBoot
 const caps = computed(() => boot.value?.capabilities || {})
 const lang = locale()
-const now = Date.now()
+// The site's clock from the last answer, so «hace 3 días» never mixes time zones.
+const now = ref(Date.now())
 const rows = ref([])
 const counts = ref({})
 const categories = ref([])
@@ -501,6 +503,7 @@ async function load({ more = false } = {}) {
     hasMore.value = Boolean(page.has_more)
     categories.value = page.categories || []
     counts.value = page.counts || {}
+    if (!Number.isNaN(parse(page.now))) now.value = parse(page.now)
     ready.value = true
   } catch (error) {
     if (current === ticket) problem.value = problemOf(error)

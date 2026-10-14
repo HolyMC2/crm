@@ -93,7 +93,7 @@ export function listQuery(state = {}) {
 }
 
 const DAY = 24 * 60 * 60 * 1000
-const parse = (value) =>
+export const parse = (value) =>
   value ? Date.parse(String(value).replace(' ', 'T').slice(0, 19)) : NaN
 
 export function locale() {
@@ -123,7 +123,8 @@ export function backTarget(query = {}) {
 export function ago(value, now = Date.now(), lang = locale()) {
   const at = parse(value)
   if (Number.isNaN(at)) return ''
-  const minutes = Math.round((now - at) / 60000)
+  // Never «dentro de…»: a clock a little ahead still reads as just now.
+  const minutes = Math.max(0, Math.round((now - at) / 60000))
   const format = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' })
   if (Math.abs(minutes) < 60) return format.format(-minutes, 'minute')
   const hours = Math.round(minutes / 60)
