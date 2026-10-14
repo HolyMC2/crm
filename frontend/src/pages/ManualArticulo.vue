@@ -189,7 +189,7 @@
         <!-- Sanitized by doco on save and in the answer, and again here (articleHtml). -->
         <!-- eslint-disable vue/no-v-html -->
         <div
-          class="prose prose-sm max-w-none text-ink-gray-8 sm:prose-base [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md"
+          class="manual-body prose prose-sm max-w-none text-ink-gray-8"
           data-testid="manual-article-body"
           v-html="body"
         />
@@ -387,3 +387,11 @@ watch(
 )
 onMounted(load)
 </script>
+<style scoped>
+/* Photos fit the phone; scoped so the global stylesheet stays within budget. */
+.manual-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+}
+</style>

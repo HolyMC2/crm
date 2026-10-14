@@ -111,7 +111,7 @@
           type="search"
           enterkeyhint="search"
           :placeholder="__('Search the shop manual')"
-          class="form-input min-h-11 w-full rounded-lg border-outline-gray-2 bg-surface-gray-1 text-base text-ink-gray-9 sm:min-h-9 sm:text-sm"
+          class="form-input min-h-11 w-full rounded-lg border-outline-gray-2 bg-surface-gray-1 text-base text-ink-gray-9 sm:min-h-8 sm:text-sm"
           data-testid="manual-search"
         />
       </div>

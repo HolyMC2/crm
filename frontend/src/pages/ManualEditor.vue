@@ -172,7 +172,7 @@
               "
               :upload-function="upload"
               :fixed-menu="menu"
-              editor-class="prose-sm max-w-none min-h-[12rem] px-3 py-2 text-ink-gray-8 focus:outline-none [&_img]:max-w-full"
+              editor-class="manual-editor prose-sm max-w-none px-3 py-2 text-ink-gray-8 focus:outline-none"
               @change="(value) => (form.body = value)"
             />
           </div>
@@ -581,3 +581,13 @@ onBeforeUnmount(() => {
   clearTimeout(draftTimer)
 })
 </script>
+<style scoped>
+/* Scoped so the global stylesheet stays within budget. */
+:deep(.manual-editor) {
+  min-height: 12rem;
+}
+:deep(.manual-editor img) {
+  max-width: 100%;
+  height: auto;
+}
+</style>

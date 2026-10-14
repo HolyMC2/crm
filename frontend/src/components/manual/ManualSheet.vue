@@ -13,7 +13,7 @@
         aria-modal="true"
         :aria-label="title"
         tabindex="-1"
-        class="flex max-h-[85dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-2xl bg-surface-modal p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl focus:outline-none sm:max-w-lg sm:rounded-2xl"
+        class="flex max-h-[92dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-2xl bg-surface-modal p-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-xl focus:outline-none sm:max-w-lg sm:rounded-2xl"
         data-testid="manual-sheet"
         @keydown.esc="emit('close')"
       >
