@@ -301,7 +301,7 @@ def _manual():
 	# Doco owns the articles; every worker reads the published ones for their puesto.
 	from crm.api.manual import get_capabilities
 
-	answer = get_capabilities() or {}
+	answer = get_capabilities(full=False) or {}
 	capabilities = answer.get("capabilities") or {}
 	enabled = bool(answer.get("enabled"))
 	return {

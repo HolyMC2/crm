@@ -17,12 +17,14 @@ def check_manual_permission() -> bool:
 	if frappe.session.user == "Guest" or "doco" not in frappe.get_installed_apps():
 		return False
 	bootstrap = _bootstrap()
-	return bool(bootstrap and bootstrap().get("enabled"))
+	return bool(bootstrap and bootstrap(full=False).get("enabled"))
 
 
 @frappe.whitelist()
-def get_capabilities() -> dict:
-	"""Manual de la tienda capability for the shell; the doco service re-checks every request."""
+def get_capabilities(full: bool = True) -> dict:
+	"""Manual de la tienda capability for the shell; the doco service re-checks every request.
+
+	The shell boot asks without the editor's setup data (`full=False`); the module asks with it."""
 	bootstrap = _bootstrap() if "doco" in frappe.get_installed_apps() else None
 	if bootstrap is None:
 		return {
@@ -30,4 +32,4 @@ def get_capabilities() -> dict:
 			"reason": _("The shop manual is not installed. Ask your manager to check the app."),
 			"capabilities": {},
 		}
-	return bootstrap()
+	return bootstrap(full=bool(full))
