@@ -66,3 +66,26 @@ class TestManualPaths(TestCase):
 		self.assertFalse(answer["enabled"])
 		self.assertTrue(answer["reason"])
 		self.assertEqual(answer["capabilities"], {})
+
+	@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+	def test_before_migrate_the_manual_is_off_with_a_reason_and_the_shell_boots(self):
+		"""Review F4: between a code deploy and `migrate` the DocType does not exist yet."""
+		from crm.api import manual, shell
+
+		def missing(full=True):
+			raise frappe.DoesNotExistError("DocType Shop Manual Article not found")
+
+		with (
+			patch.object(frappe, "session", frappe._dict(user="clerk@example.invalid")),
+			patch.object(frappe, "get_installed_apps", return_value=["frappe", "crm", "doco"]),
+			patch.object(manual, "_bootstrap", return_value=missing),
+		):
+			self.assertFalse(check_manual_permission())
+			answer = get_capabilities()
+			self.assertFalse(answer["enabled"])
+			self.assertTrue(answer["reason"])
+			self.assertEqual(answer["capabilities"], {})
+			dto = shell._manual()
+		self.assertEqual(dto["key"], "manual")
+		self.assertFalse(dto["enabled"])
+		self.assertTrue(dto["reason"])

@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import {
   hostedModules,
@@ -6,17 +8,23 @@ import {
 } from '../../src/composables/muelleShell.js'
 import {
   backTarget,
+  companyField,
   createDraftStore,
   draftKey,
   draftNotice,
+  historyLine,
   isDirty,
   listQuery,
   listState,
+  lugarOf,
   memoryBackend,
   metaLine,
+  newArticleCompany,
   placeActionUrl,
   placeAvailability,
   resolveLugar,
+  saveLabel,
+  savedNotice,
   statusBadge,
   vistasFor,
 } from '../../src/composables/useManual.js'
@@ -312,6 +320,157 @@ describe('article body in the browser', () => {
     expect(html).not.toMatch(/onerror|<script|alert\(2\)|javascript:|url\(/i)
     expect(html).toMatch(
       /<a href="https:\/\/example.com" target="_blank" rel="noopener noreferrer">/,
+    )
+  })
+
+  it('drops the review payloads: no redress classes, no same-origin /api/ requests', async () => {
+    const { articleHtml } = await import('../../src/utils/manualHtml.js')
+    const html = articleHtml(
+      '<a href="https://evil.example/login" class="fixed inset-0 z-50 opacity-0">seis</a>' +
+        '<img src="/api/method/frappe.desk.form.assign_to.add?doctype=ToDo&name=x">' +
+        '<img src="/API/method/logout"><img src="/./api/method/logout">' +
+        '<img src="/%61pi/method/logout"><img src="//evil.example/x.png">' +
+        '<img src="https://evil.example/pixel.png"><img src="/app/x.png">' +
+        '<a href="/api/method/logout">ocho</a>' +
+        '<a href="' +
+        location.origin +
+        '/api/method/logout">nueve</a>' +
+        '<p id="navbar" style="position:fixed;inset:0;z-index:50;text-align:center">siete</p>' +
+        '<img src="/private/files/mostrador.png?fid=abc"><img src="/files/logo.png">' +
+        '<a href="/crm/garantias">diez</a>',
+    )
+    expect(html).not.toMatch(
+      /class=|id=|position|z-index|\/api\/|%61pi|evil\.example\/(x|pixel)|\/app\/x/i,
+    )
+    expect(html).toContain('text-align')
+    expect(html).toContain('href="https://evil.example/login"')
+    expect(html).toContain('src="/private/files/mostrador.png?fid=abc"')
+    expect(html).toContain('src="/files/logo.png"')
+    expect(html).toContain('href="/crm/garantias"')
+  })
+})
+
+describe('review fix round 1 helpers', () => {
+  it('?lugar= sends only a key the catalog knows (F2)', () => {
+    const places = [{ key: 'garantias.nueva', action: 'Abrir garantía' }]
+    expect(lugarOf({ lugar: 'garantias.nueva' }, places)).toMatchObject({
+      key: 'garantias.nueva',
+      send: 'garantias.nueva',
+      unknown: false,
+    })
+    const moved = lugarOf({ lugar: 'caja.movida' }, places)
+    expect(moved).toMatchObject({ key: 'caja.movida', send: '', unknown: true })
+    expect(moved.place).toBeNull()
+    expect(lugarOf({}, places)).toMatchObject({
+      key: '',
+      send: '',
+      unknown: false,
+    })
+  })
+
+  it('a retired article saves as «Guardar cambios», not a draft (F7)', () => {
+    expect(saveLabel('Borrador')).toBe('Save draft')
+    expect(saveLabel('Publicado')).toBe('Save changes')
+    expect(saveLabel('Retirado')).toBe('Save changes')
+    expect(savedNotice('Publicado')).toBe('Changes published.')
+    expect(savedNotice('Retirado')).toBe('Changes saved.')
+    expect(savedNotice('Borrador')).toBe('Draft saved.')
+  })
+
+  it('history names only the labelled fields (HIST-1)', () => {
+    expect(
+      historyLine({
+        fields: ['audience', 'body', 'plain_text', 'template_key'],
+      }),
+    ).toBe('Changed: Who reads it, Article')
+    expect(historyLine({ fields: [], created: true })).toBe(
+      'Created the article',
+    )
+    expect(historyLine({ fields: ['plain_text'] })).not.toMatch(/plain_text/)
+  })
+
+  it('the editor always says which company the article is for (SCOPE-1)', () => {
+    // A restricted editor with one company: no picker, «Para: A».
+    const one = { companies: [], company_required: true, default_company: 'A' }
+    expect(companyField(one, '')).toEqual({ options: null, label: 'A' })
+    expect(newArticleCompany(one)).toBe('A')
+    // An owner of two companies may still write for both.
+    const owner = { companies: ['A', 'B'], company_required: false }
+    expect(companyField(owner, '').options.map((o) => o.value)).toEqual([
+      '',
+      'A',
+      'B',
+    ])
+    expect(newArticleCompany(owner)).toBe('')
+    // A restricted editor of two (of three) companies picks one of them.
+    const two = { companies: ['A', 'B'], company_required: true }
+    expect(companyField(two, 'A').options.map((o) => o.value)).toEqual([
+      'A',
+      'B',
+    ])
+    // A single-company owner reads the shop's name.
+    expect(companyField({ companies: [], company: 'Tienda' }, '')).toEqual({
+      options: null,
+      label: 'Tienda',
+    })
+  })
+
+  it('the palette never asks for the editor counts (F3)', async () => {
+    const api = vi.fn().mockResolvedValue({ rows: [], categories: [] })
+    const provider = createManualProvider({
+      boot: { value: boot({ manual: on({ read: true, write: true }) }) },
+      api,
+    })
+    await provider.search(
+      { kind: 'text', text: 'caja', scope: 'all' },
+      new AbortController().signal,
+    )
+    expect(api).toHaveBeenCalledWith(
+      'list_articles',
+      expect.objectContaining({ q: 'caja', palette: 1 }),
+    )
+  })
+})
+
+describe('shop words in the catalog (COPY-1, design §2)', () => {
+  it('every Spanish row of the manual says «manual de la tienda», never «manual» alone', () => {
+    const root = path.resolve(__dirname, '../..')
+    const sources = [
+      'src/pages/Manual.vue',
+      'src/pages/ManualArticulo.vue',
+      'src/pages/ManualEditor.vue',
+      'src/composables/useManual.js',
+      'src/utils/manualPalette.js',
+      ...fs
+        .readdirSync(path.join(root, 'src/components/manual'))
+        .map((file) => `src/components/manual/${file}`),
+    ]
+    const used = new Set()
+    const call = /(?:__|\btr)\(\s*(['"`])((?:(?!\1)[^\\]|\\.)*)\1/g
+    for (const file of sources)
+      for (const match of fs
+        .readFileSync(path.join(root, file), 'utf8')
+        .matchAll(call))
+        used.add(match[2].replace(/\\'/g, "'"))
+    const po = fs.readFileSync(path.join(root, '../crm/locale/es.po'), 'utf8')
+    const rows = new Map()
+    for (const block of po.split(/\n\n+/)) {
+      const id = /^msgid "((?:[^"\\]|\\.)*)"/m.exec(block)
+      const str = /^msgstr "((?:[^"\\]|\\.)*)"/m.exec(block)
+      if (id && str) rows.set(id[1], str[1])
+    }
+    const bare = [...used]
+      .filter((id) => rows.has(id))
+      .map((id) => [id, rows.get(id)])
+      // «manual de la tienda», «manual de tu tienda» or «Tu tienda … su manual» (design §2).
+      .filter(
+        ([, es]) =>
+          /\bmanual\b/i.test(es) &&
+          !/manual de (la|tu) tienda|tienda\b.*\bsu manual\b/i.test(es),
+      )
+    expect(bare).toEqual([])
+    expect(rows.get('See all in the shop manual: «{0}»')).toBe(
+      'Ver todo en el manual de la tienda: «{0}»',
     )
   })
 })
