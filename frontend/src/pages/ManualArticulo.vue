@@ -220,10 +220,12 @@
     <!-- The step itself: sticky at the bottom of this page's own scroller. -->
     <div
       v-if="article?.place"
-      class="sticky bottom-0 mt-auto border-t border-outline-gray-2 bg-surface-base px-4 py-3 sm:px-6"
+      class="sticky bottom-0 mt-auto border-t border-outline-gray-2 bg-surface-base py-3"
       data-testid="manual-place"
     >
-      <div class="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2">
+      <div
+        class="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-4 sm:px-6"
+      >
         <template v-if="place.available">
           <Button
             variant="solid"
@@ -264,6 +266,7 @@ import { shellBoot } from '@/composables/muelleShell'
 import {
   CTX,
   TITLE,
+  backTarget,
   copyText,
   locale,
   manualApi,
@@ -276,7 +279,6 @@ import {
   updatedLine,
 } from '@/composables/useManual'
 import { articleHtml } from '@/utils/manualHtml'
-import { readReturn } from '@/vendor/muelle-shell/contracts'
 
 const HistorySheet = defineAsyncComponent(
   () => import('@/components/manual/HistorySheet.vue'),
@@ -295,7 +297,7 @@ const busy = ref('')
 const confirmRetire = ref(false)
 const historyOpen = ref(false)
 
-const back = computed(() => readReturn(new URLSearchParams(route.query)))
+const back = computed(() => backTarget(route.query))
 const backLabel = computed(() =>
   back.value ? __('Back to {0}', [back.value.label], CTX) : TITLE,
 )
@@ -385,7 +387,16 @@ watch(
     }
   },
 )
-onMounted(load)
+onMounted(() => {
+  if (route.query.publicado === '1') {
+    // Published from the editor: say it once, keep the URL clean.
+    notice.value = { text: __('Published. Your team can read it now.') }
+    const query = { ...route.query }
+    delete query.publicado
+    router.replace({ query })
+  }
+  load()
+})
 </script>
 <style scoped>
 /* Photos fit the phone; scoped so the global stylesheet stays within budget. */

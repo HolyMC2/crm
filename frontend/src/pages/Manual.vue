@@ -367,6 +367,7 @@ import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
   CTX,
   TITLE,
+  backTarget,
   copyText,
   listQuery,
   listState,
@@ -382,7 +383,6 @@ import {
   vistaLabel,
   vistasFor,
 } from '@/composables/useManual'
-import { readReturn } from '@/vendor/muelle-shell/contracts'
 
 const TemplatesSheet = defineAsyncComponent(
   () => import('@/components/manual/TemplatesSheet.vue'),
@@ -410,7 +410,7 @@ let ticket = 0
 
 const state = computed(() => listState(route.query, Boolean(caps.value.write)))
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
-const back = computed(() => readReturn(new URLSearchParams(route.query)))
+const back = computed(() => backTarget(route.query))
 const lugar = computed(() =>
   typeof route.query.lugar === 'string' ? route.query.lugar.slice(0, 60) : '',
 )

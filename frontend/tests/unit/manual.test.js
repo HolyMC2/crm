@@ -5,6 +5,7 @@ import {
   moduleKeyFor,
 } from '../../src/composables/muelleShell.js'
 import {
+  backTarget,
   createDraftStore,
   draftKey,
   draftNotice,
@@ -312,5 +313,18 @@ describe('article body in the browser', () => {
     expect(html).toMatch(
       /<a href="https:\/\/example.com" target="_blank" rel="noopener noreferrer">/,
     )
+  })
+})
+
+describe('the way back', () => {
+  it('names the shell module when the caller sent no label', () => {
+    expect(backTarget({ return_to: '/crm/garantias' })).toMatchObject({
+      to: '/crm/garantias',
+      label: 'Garantías',
+    })
+    expect(
+      backTarget({ return_to: '/crm/hoy', return_label: 'Mi día' }).label,
+    ).toBe('Mi día')
+    expect(backTarget({ return_to: 'https://evil.invalid/' })).toBeNull()
   })
 })

@@ -491,7 +491,11 @@ async function publish() {
     adopt(article)
     saved.value = __('Published. Your team can read it now.')
     leaving = true
-    router.push({ name: 'ManualArticulo', params: { name: article.name } })
+    router.push({
+      name: 'ManualArticulo',
+      params: { name: article.name },
+      query: { publicado: '1' },
+    })
   } catch (error) {
     const p = problemOf(error)
     if (p.kind === 'conflict') conflict.value = true

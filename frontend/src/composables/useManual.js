@@ -1,9 +1,11 @@
 import { ref } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
+import { shellBoot } from '@/composables/muelleShell'
 import {
   SHELL_MODULES,
   can,
   moduleEnabled,
+  readReturn,
   safeReturn,
   withReturn,
 } from '@/vendor/muelle-shell/contracts'
@@ -95,9 +97,26 @@ const parse = (value) =>
   value ? Date.parse(String(value).replace(' ', 'T').slice(0, 19)) : NaN
 
 export function locale() {
+  const boot = shellBoot.value?.locale
+  if (boot) return String(boot).replace('_', '-')
   if (typeof document !== 'undefined' && document.documentElement?.lang)
     return document.documentElement.lang
   return 'es-MX'
+}
+
+/** The page's way back; without a caller label, the shell module's own name (Garantías). */
+export function backTarget(query = {}) {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(query))
+    if (typeof value === 'string') params.append(key, value)
+  const back = readReturn(params)
+  if (!back || params.get('return_label')) return back
+  const path = back.to.split(/[?#]/)[0]
+  const module = SHELL_MODULES.find(
+    (m) =>
+      path === `/crm${m.basePath}` || path.startsWith(`/crm${m.basePath}/`),
+  )
+  return module ? { ...back, label: module.label } : back
 }
 
 /** «hace 3 días», in the person's language. */
@@ -252,7 +271,7 @@ const comparable = (form) =>
     FIELDS.map((field) =>
       field === 'audience'
         ? [...(form?.[field] || [])].sort()
-        : form?.[field] ?? '',
+        : (form?.[field] ?? ''),
     ),
   )
 export function isDirty(form, base) {
