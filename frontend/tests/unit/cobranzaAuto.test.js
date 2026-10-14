@@ -9,6 +9,7 @@ import {
   AUTO_MISSING,
   SEGMENTS,
   autoChip,
+  autoConversationRoute,
   autoLine,
   normalizeSegment,
   ownerRequest,
@@ -49,6 +50,12 @@ describe('Cobranza automatic state chips', () => {
       'Stopped: someone is in the chat',
       'orange',
     ],
+    [
+      auto('manual', { code: 'conversation_paused' }),
+      'Paused by a teammate',
+      'orange',
+    ],
+    [auto('manual', { code: 'undelivered' }), 'Not delivered', 'red'],
     [auto('manual', { code: 'no_conversation' }), 'You send it', 'orange'],
     [auto('manual', { code: 'channel_manual' }), 'You send it', 'orange'],
     [auto('review_usd'), 'Review: invoice in USD', 'orange'],
@@ -75,6 +82,22 @@ describe('Cobranza automatic state chips', () => {
       autoLine(auto('paused', { reason: 'La cuenta no está activa.' }), TODAY),
     ).toBe('La cuenta no está activa.')
     expect(autoLine(auto('done'), TODAY)).toMatch(/Call or visit/)
+  })
+})
+
+describe('After the customer replied', () => {
+  it('«Open the conversation» opens that thread in the Inbox', () => {
+    expect(
+      autoConversationRoute(auto('replied', { conversation: 'CONV-7' })),
+    ).toEqual({
+      name: 'Inbox',
+      query: { workspace: 'conversations', conversation: 'CONV-7' },
+    })
+    // No thread known (an older reply): the Inbox's conversations.
+    expect(autoConversationRoute(auto('replied'))).toEqual({
+      name: 'Inbox',
+      query: { workspace: 'conversations' },
+    })
   })
 })
 
@@ -117,6 +140,10 @@ describe('Switch-on sheet guards', () => {
   })
 
   it('names the missing rights and offers the request for the owner', () => {
+    const access = setupProblem({ ...READY, missing: ['company_access'] }, FORM)
+    expect(access.action).toBe('copy_request')
+    expect(access.text).toContain(AUTO_MISSING.company_access)
+    expect(AUTO_MISSING.company_access).toMatch(/sales invoices/)
     const problem = setupProblem(
       { ...READY, missing: ['route_write', 'reminder_permission'] },
       FORM,
@@ -203,6 +230,9 @@ describe('Spanish for the automatic reminders', () => {
     'Review: invoice in USD',
     'I sent it',
     'Resume reminders',
+    'Paused by a teammate',
+    'Not delivered',
+    'Open the conversation',
   ])('%s', (text) => {
     expect(catalog.has(text)).toBe(true)
   })
