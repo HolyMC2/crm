@@ -208,6 +208,13 @@
           :label="state ? __('Done') : __('Cancel')"
           @click="$emit('update:modelValue', false)"
         />
+        <!-- Sent from the worker's own phone: «Ya lo envié» records it (a call note). -->
+        <Button
+          v-if="manualDone && !state"
+          :label="__('I sent it')"
+          :loading="confirming"
+          @click="$emit('manual-sent')"
+        />
         <Button
           v-if="!state"
           variant="solid"
@@ -241,8 +248,11 @@ const props = defineProps({
   doctype: { type: String, default: 'Dunning' },
   name: { type: String, default: '' },
   customerName: { type: String, default: '' },
+  // Offer «I sent it» for a reminder the worker sends from their own phone.
+  manualDone: { type: Boolean, default: false },
+  confirming: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue', 'sent'])
+const emit = defineEmits(['update:modelValue', 'sent', 'manual-sent'])
 
 const context = ref(null)
 const loading = ref(false)

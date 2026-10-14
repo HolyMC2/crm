@@ -19468,3 +19468,330 @@ msgstr "Tu decisión «{0}» se envió y no supimos la respuesta. Comprueba el r
 
 msgid "An earlier decision on this expense is still unconfirmed."
 msgstr "Una decisión anterior sobre este gasto sigue sin confirmarse."
+
+# Cobranza «Recordatorios automáticos».
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "today"
+msgstr "hoy"
+
+#: frontend/src/composables/useCobranza.js
+msgctxt "Cobranza"
+msgid "Today's reminders"
+msgstr "Recordatorios de hoy"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Next reminder {0}"
+msgstr "Próximo recordatorio {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Paused: promise until {0}"
+msgstr "Pausado: promesa hasta el {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Stopped: they replied"
+msgstr "Detenido: respondió"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Stopped: someone is in the chat"
+msgstr "Detenido: alguien atiende el chat"
+
+#: frontend/src/composables/useCobranza.js
+msgid "You send it"
+msgstr "Lo envías tú"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Review: invoice in USD"
+msgstr "Revisar: factura en USD"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Reminders paused"
+msgstr "Recordatorios en pausa"
+
+#: frontend/src/composables/useCobranza.js
+msgid "All three reminders sent"
+msgstr "Ya se enviaron los 3 avisos"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Next automatic reminder: {0} ({1})."
+msgstr "Próximo recordatorio automático: {0} ({1})."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Next automatic reminder: {0}."
+msgstr "Próximo recordatorio automático: {0}."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Paused until {0}: the customer promised to pay."
+msgstr "En pausa hasta el {0}: el cliente prometió pagar."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Stopped: the customer replied on WhatsApp on {0}."
+msgstr "Detenidos: el cliente respondió por WhatsApp el {0}."
+
+#: frontend/src/composables/useCobranza.js
+msgid "The customer asked not to get WhatsApp messages: call them instead."
+msgstr "El cliente pidió no recibir mensajes por WhatsApp: mejor llámale."
+
+#: frontend/src/composables/useCobranza.js
+msgid "You send this one: {0}"
+msgstr "Este lo envías tú: {0}"
+
+#: frontend/src/composables/useCobranza.js
+msgid "The three reminders went out. Call or visit the customer."
+msgstr "Ya salieron los 3 avisos. Llama o visita al cliente."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Please switch on automatic payment reminders in Cobranza for {0}, or give me: {1}."
+msgstr "Por favor enciende los recordatorios de pago automáticos en Cobranza para {0}, o dame: {1}."
+
+#: frontend/src/composables/useCobranza.js
+msgid "To switch them on you need: {0}."
+msgstr "Para encenderlos te falta: {0}."
+
+#: frontend/src/composables/useCobranza.js
+msgid "The reminder levels of this company are not set up yet."
+msgstr "Los niveles de recordatorio de esta empresa todavía no están preparados."
+
+#: frontend/src/composables/useCobranza.js
+msgid "WhatsApp is turned off for the business."
+msgstr "WhatsApp está apagado en el negocio."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Choose the WhatsApp account they go out from."
+msgstr "Elige la cuenta de WhatsApp desde la que salen."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Choose an approved template: most customers have not written in the last 24 hours."
+msgstr "Elige una plantilla aprobada: la mayoría de los clientes no te ha escrito en las últimas 24 horas."
+
+#: frontend/src/composables/useCobranza.js
+msgid "Choose another template."
+msgstr "Elige otra plantilla."
+
+#: frontend/src/composables/useCobranza.js
+msgid "The sending window must start before it ends."
+msgstr "El horario de envío debe empezar antes de terminar."
+
+#: frontend/src/composables/useCobranza.js
+msgid "permission to change how the business sends WhatsApp documents"
+msgstr "permiso para cambiar cómo el negocio envía documentos por WhatsApp"
+
+#: frontend/src/composables/useCobranza.js
+msgid "sending documents by WhatsApp turned on for the business"
+msgstr "que el negocio tenga encendido el envío de documentos por WhatsApp"
+
+#: frontend/src/composables/useCobranza.js
+msgid "permission to send documents from that WhatsApp account"
+msgstr "autorización para enviar documentos desde esa cuenta de WhatsApp"
+
+#: frontend/src/composables/useCobranza.js
+msgid "permission to confirm payment reminders"
+msgstr "permiso para confirmar recordatorios de pago"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Switch on with my account"
+msgstr "Encender con mi cuenta"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Choose another template"
+msgstr "Elegir otra plantilla"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Review the account"
+msgstr "Revisar cuenta"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Open WhatsApp settings"
+msgstr "Abrir ajustes de WhatsApp"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Automatic payment reminders"
+msgstr "Recordatorios de pago automáticos"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Loading the reminder settings…"
+msgstr "Cargando los ajustes de recordatorios…"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "What goes out"
+msgstr "Qué se envía"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Day {0} overdue · {1}"
+msgstr "Día {0} de vencida · {1}"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "With the letter as a PDF. No fees and no interest. At most one reminder per customer every {0} days; none after they reply, promise to pay or pay."
+msgstr "Con la carta en PDF. Sin cargos ni intereses. Como máximo un recordatorio por cliente cada {0} días; ninguno después de que responda, prometa pagar o pague."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Your business sends WhatsApp from its phone: each day the due reminders wait in Cobranza, ready to send from your phone."
+msgstr "Tu negocio envía WhatsApp desde su teléfono: cada día los recordatorios que tocan esperan en Cobranza, listos para enviarlos desde tu teléfono."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Approved template"
+msgstr "Plantilla aprobada"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Send from"
+msgstr "Enviar desde"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Send until"
+msgstr "Enviar hasta"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Monday to Saturday, in the business hours you set here."
+msgstr "De lunes a sábado, en el horario que pongas aquí."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "They go out in your name ({0})."
+msgstr "Se envían a tu nombre ({0})."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Today they go out in the name of {0}; saving makes it you."
+msgstr "Hoy se envían a nombre de {0}; al guardar quedan a tu nombre."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Today 1 reminder would go out."
+msgstr "Hoy saldría 1 recordatorio."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Today {0} reminders would go out."
+msgstr "Hoy saldrían {0} recordatorios."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Open document sending settings"
+msgstr "Abrir ajustes de envío de documentos"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Switch off"
+msgstr "Apagar"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Switch on automatic reminders"
+msgstr "Encender recordatorios automáticos"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "{0} · {1}"
+msgstr "{0} · {1}"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Paused: {0}"
+msgstr "En pausa: {0}"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "On: they go out in the name of {0}."
+msgstr "Encendidos: se envían a nombre de {0}."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Off. Switch them on and every overdue invoice gets its reminder on day 1, 7 and 15 without anyone pressing «Send»."
+msgstr "Apagados. Enciéndelos y cada factura vencida recibe su recordatorio el día 1, 7 y 15 sin que nadie pulse «Enviar»."
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "rejected"
+msgstr "rechazada"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "cannot be used"
+msgstr "no se puede usar"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "in review"
+msgstr "en revisión"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Automatic reminders are on"
+msgstr "Los recordatorios automáticos están encendidos"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Automatic reminders are off"
+msgstr "Los recordatorios automáticos están apagados"
+
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
+msgid "Request copied. Share it with the owner."
+msgstr "Solicitud copiada. Compártela con el dueño."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Prepare and send"
+msgstr "Preparar y enviar"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Review invoice"
+msgstr "Revisar factura"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "WhatsApp is turned off"
+msgstr "WhatsApp está apagado"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Automatic reminders need WhatsApp turned on for the business."
+msgstr "Los recordatorios automáticos necesitan WhatsApp encendido en el negocio."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Automatic reminders: paused"
+msgstr "Recordatorios automáticos: en pausa"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Automatic reminders: on"
+msgstr "Recordatorios automáticos: encendidos"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Your business sends WhatsApp from its phone: the due ones wait in this list for you."
+msgstr "Tu negocio envía WhatsApp desde su teléfono: los que tocan te esperan en esta lista."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "In the name of {0} · Monday to Saturday {1}–{2}"
+msgstr "A nombre de {0} · lunes a sábado {1}–{2}"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Automatic reminders: off"
+msgstr "Recordatorios automáticos: apagados"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Switch them on and every overdue invoice gets its reminder on day 1, 7 and 15."
+msgstr "Enciéndelos y cada factura vencida recibe su recordatorio el día 1, 7 y 15."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Saved: you sent the reminder from your phone"
+msgstr "Guardado: enviaste el recordatorio desde tu teléfono"
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Please turn on WhatsApp for the business so Cobranza can send payment reminders."
+msgstr "Por favor enciende WhatsApp en el negocio para que Cobranza pueda enviar recordatorios de pago."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "Reminders due today that you send yourself: from your phone, or after a review."
+msgstr "Recordatorios de hoy que envías tú: desde tu teléfono o después de revisarlos."
+
+#: frontend/src/pages/Cobranza.vue
+msgid "When an automatic reminder cannot go out by itself, it waits here for you."
+msgstr "Cuando un recordatorio automático no puede salir solo, te espera aquí."
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Resume reminders"
+msgstr "Reanudar recordatorios"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "automatic"
+msgstr "automático"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "I wrote to them on WhatsApp"
+msgstr "Le escribí por WhatsApp"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Automatic reminder · {0} ({1}) · {2}"
+msgstr "Recordatorio automático · {0} ({1}) · {2}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Automatic reminders stopped: the customer replied"
+msgstr "Recordatorios automáticos detenidos: el cliente respondió"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Automatic reminders resumed"
+msgstr "Recordatorios automáticos reanudados"
+
+#: frontend/src/components/cobranza/CobranzaSendSheet.vue
+msgid "I sent it"
+msgstr "Ya lo envié"

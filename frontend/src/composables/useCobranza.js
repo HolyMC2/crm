@@ -147,6 +147,8 @@ export const SEGMENTS = Object.freeze([
   { value: 'hoy', label: 'Due soon', icon: 'clock' },
   { value: 'promesas', label: 'Promises', icon: 'calendar' },
   { value: 'todas', label: 'All', icon: 'list' },
+  // The automatic reminders a person sends today (from their phone, or after a review).
+  { value: 'recordar', label: "Today's reminders", icon: 'send' },
 ])
 export function segmentLabel(value) {
   return tr(
@@ -318,8 +320,8 @@ export function withDueSoon(invoices, today, days = 7) {
     ...inv,
     due_soon: Boolean(
       inv.next_due &&
-        Number(inv.overdue_days || 0) === 0 &&
-        inv.next_due <= edge,
+      Number(inv.overdue_days || 0) === 0 &&
+      inv.next_due <= edge,
     ),
   }))
 }
@@ -381,4 +383,160 @@ export const SEND_ACTION_LABELS = {
   new_send: 'Prepare a new send',
   retry: 'Retry send',
   confirm_duplicate: 'Send again anyway',
+}
+
+// ── Recordatorios automáticos ──────────────────────────────────────────────
+// The owner switches them on per company; the server sends each invoice's next
+// ladder letter in that owner's name and reports every customer's automatic
+// state (`auto`) from evidence. These helpers only word it.
+
+export const AUTO_API = 'doco.cobranza.automatic'
+
+/** The chip on a queue row or the record (null while the reminders are off). */
+export function autoChip(auto, today) {
+  if (!auto) return null
+  const day = (date) =>
+    date && date === today ? tr('today', null, CTX) : formatDay(date)
+  switch (auto.state) {
+    case 'next':
+      return { label: tr('Next reminder {0}', [day(auto.date)]), theme: 'blue' }
+    case 'promise':
+      return {
+        label: tr('Paused: promise until {0}', [formatDay(auto.date)]),
+        theme: 'gray',
+      }
+    case 'replied':
+      return { label: tr('Stopped: they replied'), theme: 'orange' }
+    case 'opted_out':
+      return { label: tr('Does not accept messages'), theme: 'red' }
+    case 'manual':
+      if (auto.code === 'suppressed')
+        return { label: tr('Does not accept messages'), theme: 'red' }
+      if (auto.code === 'conversation_owned')
+        return { label: tr('Stopped: someone is in the chat'), theme: 'orange' }
+      return { label: tr('You send it'), theme: 'orange' }
+    case 'review_usd':
+      return { label: tr('Review: invoice in USD'), theme: 'orange' }
+    case 'paused':
+      return { label: tr('Reminders paused'), theme: 'orange' }
+    case 'done':
+      return { label: tr('All three reminders sent'), theme: 'gray' }
+    default:
+      return null
+  }
+}
+
+/** One sentence for the record header: what the automatic reminders do next. */
+export function autoLine(auto, today) {
+  if (!auto) return ''
+  const day = (date) =>
+    date && date === today ? tr('today', null, CTX) : formatDay(date)
+  switch (auto.state) {
+    case 'next':
+      return auto.level_label
+        ? tr('Next automatic reminder: {0} ({1}).', [
+            day(auto.date),
+            auto.level_label,
+          ])
+        : tr('Next automatic reminder: {0}.', [day(auto.date)])
+    case 'promise':
+      return tr('Paused until {0}: the customer promised to pay.', [
+        formatDay(auto.date),
+      ])
+    case 'replied':
+      return tr('Stopped: the customer replied on WhatsApp on {0}.', [
+        formatDay(auto.date),
+      ])
+    case 'opted_out':
+      return tr(
+        'The customer asked not to get WhatsApp messages: call them instead.',
+      )
+    case 'manual':
+      return tr('You send this one: {0}', [auto.reason || ''])
+    case 'review_usd':
+    case 'paused':
+      return auto.reason || ''
+    case 'done':
+      return tr('The three reminders went out. Call or visit the customer.')
+    default:
+      return ''
+  }
+}
+
+/** English source of what switching them on may need (the catalog translates). */
+export const AUTO_MISSING = {
+  route_write: 'permission to change how the business sends WhatsApp documents',
+  documents_off: 'sending documents by WhatsApp turned on for the business',
+  sender_grant: 'permission to send documents from that WhatsApp account',
+  reminder_permission: 'permission to confirm payment reminders',
+}
+
+export const AUTO_ACTION_LABELS = {
+  switch_on: 'Switch on with my account',
+  choose_template: 'Choose another template',
+  review_account: 'Review the account',
+  whatsapp_settings: 'Open WhatsApp settings',
+  setup_ladder: 'Set up reminder levels',
+}
+
+/** The text a worker copies for the owner when they may not switch it on. */
+export function ownerRequest(missing, company) {
+  const needs = (missing || []).map((code) => tr(AUTO_MISSING[code] || code))
+  return tr(
+    'Please switch on automatic payment reminders in Cobranza for {0}, or give me: {1}.',
+    [company || '', needs.join('; ')],
+  )
+}
+
+/**
+ * Why «Encender» cannot be saved yet, and its way out ({text, action}), or null.
+ * setup: the server's get_setup; form: {account, template, from, to}.
+ */
+export function setupProblem(setup, form) {
+  if (!setup) return null
+  if (setup.missing?.length)
+    return {
+      text: tr('To switch them on you need: {0}.', [
+        setup.missing.map((code) => tr(AUTO_MISSING[code] || code)).join('; '),
+      ]),
+      action: 'copy_request',
+    }
+  if (!setup.ladder_ready)
+    return {
+      text: tr('The reminder levels of this company are not set up yet.'),
+      action: setup.can_setup_ladder ? 'setup_ladder' : 'copy_request',
+    }
+  if (setup.mode === 'off')
+    return {
+      text: tr('WhatsApp is turned off for the business.'),
+      action: setup.can_configure ? 'whatsapp_settings' : 'copy_request',
+    }
+  if (!form?.account)
+    return {
+      text: tr('Choose the WhatsApp account they go out from.'),
+      action: null,
+    }
+  if (setup.mode === 'api') {
+    const template = (setup.templates || []).find(
+      (t) => t.name === form.template,
+    )
+    if (!template)
+      return {
+        text: tr(
+          'Choose an approved template: most customers have not written in the last 24 hours.',
+        ),
+        action: 'choose_template',
+      }
+    if (template.problem)
+      return {
+        text: `${template.reason || ''} ${tr('Choose another template.')}`.trim(),
+        action: 'choose_template',
+      }
+  }
+  if (!form.from || !form.to || form.from >= form.to)
+    return {
+      text: tr('The sending window must start before it ends.'),
+      action: null,
+    }
+  return null
 }

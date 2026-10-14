@@ -71,6 +71,12 @@
                 theme="red"
                 :label="__('Does not accept messages')"
               />
+              <Badge
+                v-if="autoChip(data.auto, data.today)"
+                :theme="autoChip(data.auto, data.today).theme"
+                :label="autoChip(data.auto, data.today).label"
+                data-auto-chip
+              />
             </div>
           </div>
           <div class="text-right">
@@ -114,6 +120,48 @@
             </p>
           </div>
         </header>
+
+        <!-- Recordatorios automáticos: what happens next, and the way to resume. -->
+        <div
+          v-if="autoLine(data.auto, data.today)"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
+          data-auto-line
+        >
+          <FeatherIcon name="send" class="h-4 w-4 shrink-0 text-ink-gray-6" />
+          <p class="min-w-0 flex-1">{{ autoLine(data.auto, data.today) }}</p>
+          <template v-if="data.auto.state === 'replied'">
+            <Button
+              v-if="data.capabilities.remind"
+              class="min-h-11 sm:min-h-8"
+              :label="__('Resume reminders')"
+              :loading="busy === 'resume'"
+              @click="resumeReminders"
+            />
+            <a
+              class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
+              href="/crm/inbox"
+              >{{ __('Open the conversation') }}</a
+            >
+          </template>
+          <Button
+            v-else-if="
+              data.auto.manual &&
+              data.auto.actions.includes('share') &&
+              manualInvoice
+            "
+            variant="solid"
+            class="min-h-11 sm:min-h-8"
+            :label="__('Prepare and send')"
+            :loading="busy === `${manualInvoice.name}:remind`"
+            @click="run(manualInvoice, { key: 'remind' }, true)"
+          />
+          <Button
+            v-else-if="data.auto.manual && manualInvoice"
+            class="min-h-11 sm:min-h-8"
+            :label="__('Log call')"
+            @click="run(manualInvoice, { key: 'call' })"
+          />
+        </div>
 
         <FormControl
           v-if="data.companies.length > 1"
@@ -260,6 +308,13 @@
               />
               <span class="min-w-0 flex-1">
                 <span class="text-ink-gray-9">{{ eventTitle(event) }}</span>
+                <Badge
+                  v-if="event.automatic"
+                  class="ml-1"
+                  theme="blue"
+                  :label="__('automatic')"
+                  data-auto-badge
+                />
                 <span class="block text-xs text-ink-gray-6">
                   {{ formatDay(event.date) }}
                   <template v-if="event.detail"> · {{ event.detail }}</template>
@@ -351,7 +406,10 @@
       doctype="Dunning"
       :name="sendName"
       :customer-name="data?.customer_name || ''"
+      :manual-done="sendManual"
+      :confirming="saving"
       @sent="load"
+      @manual-sent="confirmManual"
     />
   </div>
 </template>
@@ -368,10 +426,13 @@ import {
 } from 'frappe-ui'
 import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
 import {
+  AUTO_API,
   CTX,
   agingLabel,
   agingTone,
   approxMoney,
+  autoChip,
+  autoLine,
   cobranzaApi,
   cobranzaBoot,
   formatDay,
@@ -413,6 +474,8 @@ const promiseOpen = ref(false)
 const callOpen = ref(false)
 const sendOpen = ref(false)
 const sendName = ref('')
+// The send sheet offers «I sent it» for a reminder sent from the worker's phone.
+const sendManual = ref(false)
 const promiseForm = reactive({ date: '', amount: '', note: '' })
 const callForm = reactive({ outcome: 'answered', note: '' })
 // One request id per pending action: a retry after a lost answer reuses it.
@@ -423,12 +486,15 @@ const EVENT_ICONS = {
   reminder: 'send',
   promise: 'calendar',
   call: 'phone',
+  auto_stop: 'pause-circle',
+  auto_resume: 'play-circle',
 }
 const CALL_OUTCOMES = [
   { label: __('Answered'), value: 'answered' },
   { label: __('No answer'), value: 'no_answer' },
   { label: __('Left a message'), value: 'message' },
   { label: __('Visit'), value: 'visit' },
+  { label: __('I wrote to them on WhatsApp'), value: 'whatsapp' },
 ]
 const requestText = __(
   'I need access to Cobranza: read permission for Sales Invoice so I can follow what customers owe.',
@@ -447,6 +513,12 @@ const backLabel = computed(() =>
 )
 const invoices = computed(() =>
   withDueSoon(data.value?.invoices || [], data.value?.today || ''),
+)
+// The invoice the automatic reminders left to a person (Recordatorios de hoy).
+const manualInvoice = computed(() =>
+  data.value?.auto?.manual
+    ? invoices.value.find((inv) => inv.name === data.value.auto.invoice)
+    : null,
 )
 
 function actionsOf(inv) {
@@ -480,14 +552,26 @@ function eventTitle(event) {
   return (
     {
       payment: __('Payment {0} · {1}', [event.name, amount]),
-      reminder: event.delivery?.label
-        ? __('{0} ({1}) · {2}', [event.label, event.name, event.delivery.label])
-        : __('{0} ({1})', [event.label, event.name]),
+      reminder: event.automatic
+        ? __('Automatic reminder · {0} ({1}) · {2}', [
+            event.label,
+            event.name,
+            event.delivery?.label || '',
+          ])
+        : event.delivery?.label
+          ? __('{0} ({1}) · {2}', [
+              event.label,
+              event.name,
+              event.delivery.label,
+            ])
+          : __('{0} ({1})', [event.label, event.name]),
       promise:
         event.status === 'Closed'
           ? __('Promise closed · invoice {0}', [event.invoice])
           : __('Promise · invoice {0}', [event.invoice]),
       call: __('Call · invoice {0}', [event.invoice]),
+      auto_stop: __('Automatic reminders stopped: the customer replied'),
+      auto_resume: __('Automatic reminders resumed'),
     }[event.kind] || event.name
   )
 }
@@ -525,9 +609,10 @@ async function call(key, method, args) {
   }
 }
 
-async function run(inv, action) {
+async function run(inv, action, manual = false) {
   target.value = inv
   dialogProblem.value = null
+  sendManual.value = manual
   if (action.key === 'promise') {
     const soon = new Date(`${data.value.today}T00:00:00Z`)
     soon.setUTCDate(soon.getUTCDate() + 3)
@@ -572,6 +657,53 @@ async function run(inv, action) {
       busy.value = ''
     }
   }
+}
+
+async function resumeReminders() {
+  busy.value = 'resume'
+  problem.value = null
+  try {
+    await call(`resume:${props.customer}`, `${AUTO_API}.resume`, {
+      customer: props.customer,
+      company: data.value.company,
+    })
+    toast.success(__('Automatic reminders resumed'))
+    await load()
+  } catch (error) {
+    problem.value = problemOf(error)
+  } finally {
+    busy.value = ''
+  }
+}
+
+async function confirmManual() {
+  if (!target.value) return
+  saving.value = true
+  try {
+    await call(`sent:${target.value.name}`, 'log_call', {
+      invoice: target.value.name,
+      outcome: 'whatsapp',
+    })
+    sendOpen.value = false
+    toast.success(__('Saved: you sent the reminder from your phone'))
+    await load()
+  } catch (error) {
+    problem.value = problemOf(error)
+  } finally {
+    saving.value = false
+  }
+}
+
+/** Cobranza's «Recordatorios de hoy» → «Log call» opens the call note of that invoice. */
+function handleAction() {
+  const invoice = route.query.factura
+  if (route.query.accion !== 'llamar' || typeof invoice !== 'string') return
+  const inv = invoices.value.find((row) => row.name === invoice)
+  const query = { ...route.query }
+  delete query.accion
+  delete query.factura
+  router.replace({ query })
+  if (inv) run(inv, { key: 'call' })
 }
 
 function withoutDone(path) {
@@ -716,6 +848,7 @@ async function start() {
   }
   handleDone()
   await load()
+  handleAction()
 }
 
 watch(

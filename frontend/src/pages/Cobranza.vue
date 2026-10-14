@@ -34,6 +34,44 @@
           <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         </div>
       </header>
+      <section
+        v-if="auto"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-outline-gray-2 p-3 sm:mx-6 sm:max-w-3xl"
+        :aria-label="__('Automatic payment reminders')"
+        data-auto-card
+      >
+        <FeatherIcon
+          :name="auto.paused ? 'pause-circle' : 'send'"
+          class="h-4 w-4 shrink-0 text-ink-gray-6"
+        />
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium text-ink-gray-9">
+            {{ autoCard.title }}
+          </p>
+          <p v-if="autoCard.detail" class="text-sm text-ink-gray-6">
+            {{ autoCard.detail }}
+          </p>
+        </div>
+        <a
+          v-if="autoCard.href"
+          class="inline-flex min-h-11 items-center text-sm text-ink-blue-link underline sm:min-h-0"
+          :href="autoCard.href"
+          >{{ autoCard.button }}</a
+        >
+        <Button
+          v-else-if="autoCard.copy"
+          class="min-h-11 sm:min-h-8"
+          :label="autoCard.button"
+          @click="copyWhatsappRequest"
+        />
+        <Button
+          v-else
+          :variant="autoCard.solid ? 'solid' : 'subtle'"
+          class="min-h-11 sm:min-h-8"
+          :label="autoCard.button"
+          @click="openSetup(autoCompany)"
+        />
+      </section>
       <dl
         v-if="stats"
         class="grid grid-cols-3 gap-2 px-4 pb-3 sm:max-w-xl sm:px-6"
@@ -114,7 +152,7 @@
         <strong>{{ problem.title }}.</strong> {{ problem.detail }}
         <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load()" />
       </div>
-      <div class="min-h-0 flex-1 overflow-y-auto pb-6">
+      <div class="pb-6">
         <div
           v-if="loading && !rows.length"
           role="status"
@@ -171,6 +209,12 @@
                     :theme="reminderChip(row.last_reminder).theme"
                     :label="reminderChip(row.last_reminder).label"
                   />
+                  <Badge
+                    v-if="autoChip(row.auto, today)"
+                    :theme="autoChip(row.auto, today).theme"
+                    :label="autoChip(row.auto, today).label"
+                    data-auto-chip
+                  />
                 </span>
               </span>
               <span class="shrink-0 text-right">
@@ -200,6 +244,46 @@
                 >
               </span>
             </RouterLink>
+            <!-- «Recordatorios de hoy»: what the automatic reminders leave to a person. -->
+            <div
+              v-if="segment === 'recordar' && row.auto?.manual"
+              class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
+            >
+              <p class="w-full text-sm text-ink-gray-7">
+                <template v-if="row.auto.level_label"
+                  >{{ row.auto.level_label }} ·
+                </template>
+                {{ row.auto.reason }}
+              </p>
+              <template v-if="row.auto.actions.includes('share')">
+                <Button
+                  v-if="caps.remind"
+                  variant="solid"
+                  class="min-h-11 sm:min-h-8"
+                  :label="__('Prepare and send')"
+                  :loading="busyRow === rowKey(row)"
+                  @click="shareRow(row)"
+                />
+                <Button
+                  v-else
+                  class="min-h-11 sm:min-h-8"
+                  :label="__('Copy access request')"
+                  @click="copyRemindRequest(row)"
+                />
+              </template>
+              <Button
+                v-if="row.auto.actions.includes('open')"
+                class="min-h-11 sm:min-h-8"
+                :label="__('Review invoice')"
+                @click="openRow(row)"
+              />
+              <Button
+                v-if="row.auto.actions.includes('call')"
+                class="min-h-11 sm:min-h-8"
+                :label="__('Log call')"
+                @click="openRow(row, 'llamar')"
+              />
+            </div>
           </li>
         </ul>
         <div v-if="hasMore" class="px-4 py-4 sm:px-6">
@@ -227,16 +311,36 @@
         </nav>
       </div>
     </template>
+    <AutoSetupSheet
+      v-model="setupOpen"
+      :company="setupCompany"
+      @saved="onSetupSaved"
+    />
+    <CobranzaSendSheet
+      v-model="sendOpen"
+      doctype="Dunning"
+      :name="sendName"
+      :customer-name="sendRow?.customer_name || ''"
+      manual-done
+      :confirming="confirming"
+      @sent="load()"
+      @manual-sent="confirmManual"
+    />
   </ModuleLayout>
 </template>
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FormControl } from 'frappe-ui'
+import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import AutoSetupSheet from '@/components/cobranza/AutoSetupSheet.vue'
+import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
 import {
+  AUTO_ACTION_LABELS,
+  AUTO_API,
   CTX,
   SEGMENTS,
+  autoChip,
   agingLabel,
   agingTone,
   approxMoney,
@@ -247,9 +351,11 @@ import {
   loadCobranzaBoot,
   money,
   normalizeSegment,
+  outcomeUnknown,
   problemOf,
   promiseChip,
   reminderChip,
+  requestId,
   segmentLabel,
   statTotals,
 } from '@/composables/useCobranza'
@@ -282,6 +388,194 @@ const statCards = computed(() => [
 let ticket = 0
 let searchTimer = 0
 
+// ── Recordatorios automáticos ─────────────────────────────────────────────
+const auto = ref(null)
+const setupOpen = ref(false)
+const setupCompany = ref('')
+const sendOpen = ref(false)
+const sendName = ref('')
+const sendRow = ref(null)
+const busyRow = ref('')
+const confirming = ref(false)
+// One request id per pending action: a retry after a lost answer reuses it.
+const pending = {}
+const caps = computed(() => boot.value?.capabilities || {})
+const autoCompany = computed(
+  () =>
+    company.value || boot.value?.default_company || companies.value[0] || '',
+)
+const autoCard = computed(() => {
+  const a = auto.value
+  if (!a) return {}
+  const where = companies.value.length > 1 ? ` · ${a.company}` : ''
+  if (a.mode === 'off')
+    return {
+      title: __('WhatsApp is turned off') + where,
+      detail: __(
+        'Automatic reminders need WhatsApp turned on for the business.',
+      ),
+      button: a.can_configure
+        ? __(AUTO_ACTION_LABELS.whatsapp_settings)
+        : __('Copy request for the owner'),
+      href: a.can_configure ? '/app/whatsapp-settings' : '',
+      copy: !a.can_configure,
+    }
+  if (a.paused)
+    return {
+      title: __('Automatic reminders: paused') + where,
+      detail: a.paused.reason,
+      button: __(AUTO_ACTION_LABELS[a.paused.action] || 'Settings'),
+      solid: true,
+    }
+  if (a.enabled)
+    return {
+      title: __('Automatic reminders: on') + where,
+      detail:
+        a.mode === 'manual'
+          ? __(
+              'Your business sends WhatsApp from its phone: the due ones wait in this list for you.',
+            )
+          : __('In the name of {0} · Monday to Saturday {1}–{2}', [
+              a.sender?.full_name || '',
+              a.window.from,
+              a.window.to,
+            ]),
+      button: __('Settings'),
+    }
+  return {
+    title: __('Automatic reminders: off') + where,
+    detail: __(
+      'Switch them on and every overdue invoice gets its reminder on day 1, 7 and 15.',
+    ),
+    button: __('Switch on automatic reminders'),
+    solid: true,
+  }
+})
+
+async function loadAuto() {
+  const target = autoCompany.value
+  if (!target) {
+    auto.value = null
+    return
+  }
+  try {
+    const data = await cobranzaApi(`${AUTO_API}.get_setup`, {
+      company: target,
+    })
+    if (target === autoCompany.value) auto.value = data
+  } catch {
+    // The lists work without it; the card simply stays hidden.
+    auto.value = null
+  }
+}
+
+function openSetup(target) {
+  setupCompany.value = target || autoCompany.value
+  setupOpen.value = true
+}
+
+function onSetupSaved() {
+  // Only the parts that changed, in place: the card and the rows' states.
+  loadAuto()
+  load()
+}
+
+function rowKey(row) {
+  return `${row.customer}:${row.company}:${row.currency}`
+}
+
+async function shareRow(row) {
+  const key = `remind:${row.auto.invoice}`
+  pending[key] = pending[key] || requestId()
+  busyRow.value = rowKey(row)
+  problem.value = null
+  try {
+    const result = await cobranzaApi('send_reminder_prepare', {
+      request_id: pending[key],
+      invoice: row.auto.invoice,
+    })
+    delete pending[key]
+    sendRow.value = row
+    sendName.value = result.dunning
+    sendOpen.value = true
+  } catch (error) {
+    if (!outcomeUnknown(error)) delete pending[key]
+    problem.value = problemOf(error)
+  } finally {
+    busyRow.value = ''
+  }
+}
+
+async function confirmManual() {
+  const row = sendRow.value
+  if (!row) return
+  const key = `sent:${row.auto.invoice}`
+  pending[key] = pending[key] || requestId()
+  confirming.value = true
+  try {
+    await cobranzaApi('log_call', {
+      request_id: pending[key],
+      invoice: row.auto.invoice,
+      outcome: 'whatsapp',
+    })
+    delete pending[key]
+    sendOpen.value = false
+    toast.success(__('Saved: you sent the reminder from your phone'))
+    load()
+  } catch (error) {
+    if (!outcomeUnknown(error)) delete pending[key]
+    problem.value = problemOf(error)
+  } finally {
+    confirming.value = false
+  }
+}
+
+function openRow(row, action = '') {
+  router.push({
+    name: 'CobranzaCliente',
+    params: { customer: row.customer },
+    query: {
+      company: row.company,
+      list: listPath.value,
+      ...(action ? { accion: action, factura: row.auto?.invoice } : {}),
+    },
+  })
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.success(__('Request copied. Share it with your manager.'))
+  } catch {
+    toast.success(text)
+  }
+}
+function copyRemindRequest(row) {
+  return copyText(
+    __(
+      'I need permission to send payment reminders in Cobranza (create and submit Dunning) for invoice {0}.',
+      [row.auto.invoice],
+    ),
+  )
+}
+function copyWhatsappRequest() {
+  return copyText(
+    __(
+      'Please turn on WhatsApp for the business so Cobranza can send payment reminders.',
+    ),
+  )
+}
+
+function openFromNotice() {
+  // Avisos opens /crm/cobranza?ajustes=<company> to fix paused reminders.
+  const target = route.query.ajustes
+  if (typeof target !== 'string' || !target) return
+  openSetup(target)
+  const query = { ...route.query }
+  delete query.ajustes
+  router.replace({ query })
+}
+
 const entries = computed(() =>
   SEGMENTS.map((s) => ({
     ...s,
@@ -304,6 +598,9 @@ const subtitle = computed(
       hoy: __('Invoices due today or in the next 7 days.'),
       promesas: __('Customers who promised to pay; broken promises first.'),
       todas: __('Everything customers owe, largest balance first.'),
+      recordar: __(
+        'Reminders due today that you send yourself: from your phone, or after a review.',
+      ),
     })[segment.value],
 )
 const emptyTitle = computed(() =>
@@ -314,7 +611,11 @@ const emptyBody = computed(() =>
     ? __('Try another customer name or invoice number.')
     : segment.value === 'promesas'
       ? __('When a customer promises a payment date, it shows up here.')
-      : __('Customers with a pending balance show up here.'),
+      : segment.value === 'recordar'
+        ? __(
+            'When an automatic reminder cannot go out by itself, it waits here for you.',
+          )
+        : __('Customers with a pending balance show up here.'),
 )
 
 function toneClass(tone) {
@@ -385,8 +686,21 @@ watch(
     if (route.name === 'Cobranza' && boot.value?.enabled) load()
   },
 )
+watch(autoCompany, () => {
+  if (route.name === 'Cobranza' && boot.value?.enabled) loadAuto()
+})
+watch(
+  () => route.query.ajustes,
+  () => {
+    if (route.name === 'Cobranza' && boot.value?.enabled) openFromNotice()
+  },
+)
 onMounted(async () => {
   await loadCobranzaBoot()
-  if (boot.value?.enabled) load()
+  if (boot.value?.enabled) {
+    load()
+    loadAuto()
+    openFromNotice()
+  }
 })
 </script>
