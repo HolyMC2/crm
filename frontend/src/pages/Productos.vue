@@ -124,10 +124,13 @@
           :options="storeOptions"
           @update:model-value="selectStore"
         />
-        <template v-if="inventory">
+        <div
+          v-if="inventory"
+          class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"
+        >
           <FormControl
             v-if="view === 'sin-contar'"
-            class="h-11 w-full sm:h-auto sm:w-44"
+            class="h-11 sm:h-auto sm:w-44"
             type="select"
             :aria-label="__('Not counted in')"
             :model-value="String(state.days)"
@@ -136,7 +139,7 @@
           />
           <FormControl
             v-if="view !== 'conteos-abiertos' && filterOptions.groups.length"
-            class="h-11 w-full sm:h-auto sm:w-48"
+            class="h-11 sm:h-auto sm:w-48"
             type="select"
             :aria-label="__('Group', null, 'Productos')"
             :model-value="state.group"
@@ -145,14 +148,14 @@
           />
           <FormControl
             v-if="view !== 'conteos-abiertos' && filterOptions.brands.length"
-            class="h-11 w-full sm:h-auto sm:w-44"
+            class="h-11 sm:h-auto sm:w-44"
             type="select"
             :aria-label="__('Brand', null, 'Productos')"
             :model-value="state.brand"
             :options="brandOptions"
             @update:model-value="(value) => update({ marca: value, sel: '' })"
           />
-        </template>
+        </div>
       </div>
       <div
         v-if="notice"
@@ -295,26 +298,6 @@
                 >
                   {{ line.text }}
                 </p>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <template v-for="action in actionsOf(row)" :key="action.key">
-                    <a
-                      v-if="action.href && !action.disabled"
-                      :href="action.href"
-                      :target="action.external ? '_blank' : undefined"
-                      :rel="action.external ? 'noopener' : undefined"
-                      class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-7"
-                      @click="leaveFor(row)"
-                      >{{ action.label }}</a
-                    >
-                    <Button
-                      v-else
-                      class="min-h-11 sm:min-h-7"
-                      :label="action.label"
-                      :title="action.reason || undefined"
-                      @click="runAction(row, action)"
-                    />
-                  </template>
-                </div>
               </div>
               <span
                 class="shrink-0 text-right text-sm font-medium tabular-nums"
@@ -324,6 +307,34 @@
               >
                 {{ rowFigure(row) }}
               </span>
+            </div>
+            <div
+              v-if="actionsOf(row).length"
+              class="flex flex-wrap gap-2 px-4 pb-3 sm:px-6"
+            >
+              <div
+                class="flex flex-wrap gap-2"
+                :class="selectable(row) ? 'ml-12' : ''"
+              >
+                <template v-for="action in actionsOf(row)" :key="action.key">
+                  <a
+                    v-if="action.href && !action.disabled"
+                    :href="action.href"
+                    :target="action.external ? '_blank' : undefined"
+                    :rel="action.external ? 'noopener' : undefined"
+                    class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-7"
+                    @click="leaveFor(row)"
+                    >{{ action.label }}</a
+                  >
+                  <Button
+                    v-else
+                    class="min-h-11 sm:min-h-7"
+                    :label="action.label"
+                    :title="action.reason || undefined"
+                    @click="runAction(row, action)"
+                  />
+                </template>
+              </div>
             </div>
           </li>
         </ul>
