@@ -28,7 +28,10 @@ import {
 
 const boot = (modules = {}) => ({ modules })
 const on = (capabilities = { read: true }) => ({ enabled: true, capabilities })
-const article = { name: 'a1b2c3', title: 'Política de garantías y devoluciones' }
+const article = {
+  name: 'a1b2c3',
+  title: 'Política de garantías y devoluciones',
+}
 
 describe('Manual de la tienda boot', () => {
   it('is its own module and boots without the sales runtime', () => {
@@ -126,8 +129,15 @@ describe('the place action', () => {
 
 describe('list URL state', () => {
   it('restores q, categoria and vista and drops defaults', () => {
-    const state = listState({ q: 'garant', categoria: 'Caja', vista: 'borradores' }, true)
-    expect(state).toEqual({ q: 'garant', categoria: 'Caja', vista: 'borradores' })
+    const state = listState(
+      { q: 'garant', categoria: 'Caja', vista: 'borradores' },
+      true,
+    )
+    expect(state).toEqual({
+      q: 'garant',
+      categoria: 'Caja',
+      vista: 'borradores',
+    })
     expect(listQuery(state)).toEqual({
       q: 'garant',
       categoria: 'Caja',
@@ -152,10 +162,8 @@ describe('list URL state', () => {
     const now = Date.parse('2026-10-14T12:00:00')
     expect(
       metaLine({ category: 'Caja', modified: '2026-10-11 12:00:00' }, now),
-    ).toBe('Caja · actualizado hace 3 días')
-    expect(
-      statusBadge({ status: 'Borrador' }, true)?.label,
-    ).toBe('Borrador')
+    ).toBe('Caja · updated hace 3 días')
+    expect(statusBadge({ status: 'Borrador' }, true)?.label).toBe('Borrador')
     expect(statusBadge({ status: 'Borrador' }, false)).toBeNull()
     expect(
       statusBadge(
@@ -163,7 +171,7 @@ describe('list URL state', () => {
         false,
         now,
       )?.label,
-    ).toBe('Nuevo')
+    ).toBe('New')
     expect(
       statusBadge(
         { status: 'Publicado', published_on: '2026-09-01 09:00:00' },
@@ -200,7 +208,11 @@ describe('editor drafts', () => {
     await store.save(key, { ...base, title: 'A medias' }, base.modified)
     const stored = await store.load(key)
     expect(stored.form.title).toBe('A medias')
-    const notice = draftNotice(stored, { modified: undefined }, stored.at + 12 * 60000)
+    const notice = draftNotice(
+      stored,
+      { modified: undefined },
+      stored.at + 12 * 60000,
+    )
     expect(notice).toMatch(/12/)
     await store.clear(key)
     expect(await store.load(key)).toBeNull()
@@ -211,7 +223,11 @@ describe('editor drafts', () => {
     await store.save('k', { title: 'x' }, '2026-10-01 10:00:00')
     const stored = await store.load('k')
     expect(
-      draftNotice(stored, { modified: '2026-10-02 10:00:00' }, stored.at + 60000),
+      draftNotice(
+        stored,
+        { modified: '2026-10-02 10:00:00' },
+        stored.at + 60000,
+      ),
     ).toMatch(/older|anterior/i)
   })
 })
@@ -279,5 +295,22 @@ describe('palette', () => {
         new AbortController().signal,
       ),
     ).toEqual([])
+  })
+})
+
+describe('article body in the browser', () => {
+  it('cleans the served body once more before rendering', async () => {
+    const { articleHtml } = await import('../../src/utils/manualHtml.js')
+    const html = articleHtml(
+      '<p>Cuenta</p><img src="x" onerror="alert(1)"><script>alert(2)</script>' +
+        '<a href="javascript:alert(3)">tres</a>' +
+        '<p style="background-image:url(https://evil.invalid/t.png)">cuatro</p>' +
+        '<a href="https://example.com" target="_blank">cinco</a>',
+    )
+    expect(html).toContain('Cuenta')
+    expect(html).not.toMatch(/onerror|<script|alert\(2\)|javascript:|url\(/i)
+    expect(html).toMatch(
+      /<a href="https:\/\/example.com" target="_blank" rel="noopener noreferrer">/,
+    )
   })
 })

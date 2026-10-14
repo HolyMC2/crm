@@ -430,7 +430,21 @@ export function accesos(boot) {
     '/gastos?segment=por-pagar',
   )
   add('archivos', 'read', t('Sort documents'), 'lucide-folder', '/archivos')
-  return items.slice(0, ACCESOS_LIMIT)
+  // Manual de la tienda keeps the last slot: editors always, readers once
+  // something is published for them (one permitted count in the provider).
+  const manual =
+    moduleEnabled(boot, 'manual') &&
+    (can(boot, 'manual', 'write') || can(boot, 'manual', 'published'))
+  if (!manual) return items.slice(0, ACCESOS_LIMIT)
+  return [
+    ...items.slice(0, ACCESOS_LIMIT - 1),
+    {
+      key: 'manual.read',
+      label: 'Manual de la tienda',
+      icon: 'lucide-book-open',
+      to: '/manual',
+    },
+  ]
 }
 
 /** Where Muelle opens: automatic (puesto policy), Hoy, or another module the worker has. */

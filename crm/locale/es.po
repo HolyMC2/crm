@@ -22267,3 +22267,534 @@ msgstr "Inventariable, con lote"
 #: frontend/src/pages/Productos.vue
 msgid "Stocked"
 msgstr "Inventariable"
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "All"
+msgstr "Todas"
+
+#: frontend/src (Manual de la tienda)
+msgid "Article"
+msgstr "Artículo"
+
+#: frontend/src (Manual de la tienda)
+msgid "Articles for «{0}»"
+msgstr "Artículos para «{0}»"
+
+#: frontend/src (Manual de la tienda)
+msgid "Back to the article"
+msgstr "Volver al artículo"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Back to {0}"
+msgstr "Volver a {0}"
+
+#: frontend/src (Manual de la tienda)
+msgid "Caja, Taller, Garantías…"
+msgstr "Caja, Taller, Garantías…"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: frontend/src (Manual de la tienda)
+msgid "Categories"
+msgstr "Categorías"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Category"
+msgstr "Categoría"
+
+#: frontend/src (Manual de la tienda)
+msgid "Changed: {0}"
+msgstr "Cambió: {0}"
+
+#: frontend/src (Manual de la tienda)
+msgid "Changes published."
+msgstr "Cambios publicados."
+
+#: frontend/src (Manual de la tienda)
+msgid "Choose at least one template."
+msgstr "Elige al menos una plantilla."
+
+#: frontend/src (Manual de la tienda)
+msgid "Clear the search"
+msgstr "Borrar la búsqueda"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Close"
+msgstr "Cerrar"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Company"
+msgstr "Empresa"
+
+#: frontend/src (Manual de la tienda)
+msgid "Copy request for the manager"
+msgstr "Copiar solicitud para el encargado"
+
+#: frontend/src (Manual de la tienda)
+msgid "Create {0} drafts"
+msgstr "Crear {0} borradores"
+
+#: frontend/src (Manual de la tienda)
+msgid "Created the article"
+msgstr "Creó el artículo"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Discard"
+msgstr "Descartar"
+
+#: frontend/src (Manual de la tienda)
+msgid "Draft saved with your photo."
+msgstr "Borrador guardado con tu foto."
+
+#: frontend/src (Manual de la tienda)
+msgid "Draft saved."
+msgstr "Borrador guardado."
+
+#: frontend/src (Manual de la tienda)
+msgid "Each save keeps the previous text in the history."
+msgstr "Cada vez que guardas, el texto anterior queda en el historial."
+
+#: frontend/src (Manual de la tienda)
+msgid "Each template becomes a draft only you and the managers see. Rewrite it in your words and publish it when it is ready."
+msgstr "Cada plantilla se vuelve un borrador que solo ven tú y los encargados. Escríbelo con tus palabras y publícalo cuando esté listo."
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Edit"
+msgstr "Editar"
+
+#: frontend/src (Manual de la tienda)
+msgid "Edit the article"
+msgstr "Editar el artículo"
+
+#: frontend/src (Manual de la tienda)
+msgid "Every company"
+msgstr "Todas las empresas"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Everyone"
+msgstr "Todos"
+
+#: frontend/src (Manual de la tienda)
+msgid "For example: Closing the register"
+msgstr "Por ejemplo: Cierre de caja"
+
+#: frontend/src (Manual de la tienda)
+msgid "Go to the shop manual"
+msgstr "Ir al manual de la tienda"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "History"
+msgstr "Historial"
+
+#: frontend/src (Manual de la tienda)
+msgid "History of «{0}»"
+msgstr "Historial de «{0}»"
+
+#: frontend/src (Manual de la tienda)
+msgid "How things are done in your shop"
+msgstr "Cómo se hacen las cosas en tu tienda"
+
+#: frontend/src (Manual de la tienda)
+msgid "I cannot open an article of the shop manual in Muelle. Can you check whether it is for my puesto?"
+msgstr "No puedo abrir un artículo del manual de la tienda en Muelle. ¿Puedes revisar si es para mi puesto?"
+
+#: frontend/src (Manual de la tienda)
+msgid "I need access to {0} in Muelle to do what the shop manual says ({1})."
+msgstr "Necesito acceso a {0} en Muelle para hacer lo que dice el manual de la tienda ({1})."
+
+#: frontend/src (Manual de la tienda)
+msgid "I would like to add or change an article of the shop manual in Muelle (Manual de la tienda). Can you write it or give me access?"
+msgstr "Quiero agregar o cambiar un artículo del manual de la tienda en Muelle. ¿Puedes escribirlo o darme acceso?"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "List"
+msgstr "Lista"
+
+#: frontend/src (Manual de la tienda)
+msgid "Loading the article…"
+msgstr "Cargando el artículo…"
+
+#: frontend/src (Manual de la tienda)
+msgid "Loading the shop manual…"
+msgstr "Cargando el manual de la tienda…"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "New"
+msgstr "Nuevo"
+
+#: frontend/src (Manual de la tienda)
+msgid "New article"
+msgstr "Nuevo artículo"
+
+#: frontend/src (Manual de la tienda)
+msgid "New article in the shop manual"
+msgstr "Nuevo artículo en el manual de la tienda"
+
+#: frontend/src (Manual de la tienda)
+msgid "No articles in this category"
+msgstr "No hay artículos en esta categoría"
+
+#: frontend/src (Manual de la tienda)
+msgid "No articles match «{0}»"
+msgstr "No hay artículos con «{0}»"
+
+#: frontend/src (Manual de la tienda)
+msgid "No changes recorded yet."
+msgstr "Todavía no hay cambios registrados."
+
+#: frontend/src (Manual de la tienda)
+msgid "No drafts"
+msgstr "No hay borradores"
+
+#: frontend/src (Manual de la tienda)
+msgid "Nothing published yet. Your drafts are under «Drafts»."
+msgstr "Todavía no hay nada publicado. Tus borradores están en «Borradores»."
+
+#: frontend/src (Manual de la tienda)
+msgid "Nothing retired"
+msgstr "No hay artículos retirados"
+
+#: frontend/src (Manual de la tienda)
+msgid "Nowhere in particular"
+msgstr "Ningún lugar en especial"
+
+#: frontend/src (Manual de la tienda)
+msgid "One line the team reads in the list"
+msgstr "Una línea que el equipo lee en la lista"
+
+#: frontend/src (Manual de la tienda)
+msgid "Only the owner or the manager write the shop manual"
+msgstr "Solo el dueño o el encargado escriben el manual de la tienda"
+
+#: frontend/src (Manual de la tienda)
+msgid "Only the owner or the manager write the shop manual."
+msgstr "Solo el dueño o el encargado escriben el manual de la tienda."
+
+#: frontend/src (Manual de la tienda)
+msgid "Only the owner or the manager write the shop manual. Copy the request for the owner."
+msgstr "Solo el dueño o el encargado escriben el manual de la tienda. Copia la solicitud para el dueño."
+
+#: frontend/src (Manual de la tienda)
+msgid "Only these puestos see it. Owners and managers always see every article."
+msgstr "Solo lo ven estos puestos. El dueño y los encargados siempre ven todos los artículos."
+
+#: frontend/src (Manual de la tienda)
+msgid "Open Help"
+msgstr "Abrir Ayuda"
+
+#: frontend/src (Manual de la tienda)
+msgid "Opening, closing the register, warranties: your team reads it on the phone or at the counter, with the button to do it right there."
+msgstr "Apertura, cierre de caja, garantías: tu equipo lo lee en el celular o en el mostrador, con el botón para hacerlo ahí mismo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Optional: the Muelle screen where this step is done."
+msgstr "Opcional: la pantalla de Muelle donde se hace este paso."
+
+#: frontend/src (Manual de la tienda)
+msgid "Please publish our shop manual in Muelle (Manual de la tienda) so the team can read how things are done here."
+msgstr "Por favor publica el manual de la tienda en Muelle para que el equipo lea cómo se hacen las cosas aquí."
+
+#: frontend/src (Manual de la tienda)
+msgid "Please write the shop manual article for «{0}» in Muelle (Manual de la tienda)."
+msgstr "Por favor escribe en Muelle el artículo del manual de la tienda para «{0}»."
+
+#: frontend/src (Manual de la tienda)
+msgid "Publish again"
+msgstr "Volver a publicar"
+
+#: frontend/src (Manual de la tienda)
+msgid "Published again."
+msgstr "Publicado de nuevo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Published. Your team can read it now."
+msgstr "Publicado. Tu equipo ya puede leerlo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Questions about how to use Muelle?"
+msgstr "¿Dudas sobre cómo usar Muelle?"
+
+#: frontend/src (Manual de la tienda)
+msgid "Recover"
+msgstr "Recuperar"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: frontend/src (Manual de la tienda)
+msgid "Retired. Your team no longer sees it; it stays under «Retired»."
+msgstr "Retirado. Tu equipo ya no lo ve; queda en «Retirados»."
+
+#: frontend/src (Manual de la tienda)
+msgid "Save draft"
+msgstr "Guardar borrador"
+
+#: frontend/src (Manual de la tienda)
+msgid "Search the shop manual"
+msgstr "Buscar en el manual de la tienda"
+
+#: frontend/src (Manual de la tienda)
+msgid "See all in the shop manual: «{0}»"
+msgstr "Ver todos en el manual: «{0}»"
+
+#: frontend/src (Manual de la tienda)
+msgid "See the article"
+msgstr "Ver el artículo"
+
+#: frontend/src (Manual de la tienda)
+msgid "See the whole manual"
+msgstr "Ver todo el manual"
+
+#: frontend/src (Manual de la tienda)
+msgid "Show more"
+msgstr "Ver más"
+
+#: frontend/src (Manual de la tienda)
+msgid "Someone else changed this article"
+msgstr "Alguien más cambió este artículo"
+
+#: frontend/src (Manual de la tienda)
+msgid "Start with templates"
+msgstr "Empezar con plantillas"
+
+#: frontend/src (Manual de la tienda)
+msgid "The article shows the button «{0}»."
+msgstr "El artículo muestra el botón «{0}»."
+
+#: frontend/src (Manual de la tienda)
+msgid "The shop manual is for the team's accounts. Ask the owner or the manager to check your user."
+msgstr "El manual de la tienda es para las cuentas del equipo. Pide al dueño o al encargado que revise tu usuario."
+
+#: frontend/src (Manual de la tienda)
+msgid "The shop manual is not available"
+msgstr "El manual de la tienda no está disponible"
+
+#: frontend/src (Manual de la tienda)
+msgid "The whole team sees it."
+msgstr "Lo ve todo el equipo."
+
+#: frontend/src (Manual de la tienda)
+msgid "This article is not in your shop manual"
+msgstr "Este artículo no está en el manual de tu tienda"
+
+#: frontend/src (Manual de la tienda)
+msgid "Those templates are already in your drafts."
+msgstr "Esas plantillas ya están en tus borradores."
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Title"
+msgstr "Título"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Updated {0}"
+msgstr "Actualizado el {0}"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Updated {0} by {1}"
+msgstr "Actualizado el {0} por {1}"
+
+#: frontend/src (Manual de la tienda)
+msgid "Use the current version"
+msgstr "Usar la versión actual"
+
+#: frontend/src (Manual de la tienda)
+msgid "What it is for"
+msgstr "Para qué sirve"
+
+#: frontend/src (Manual de la tienda)
+msgid "What you wrote stays here and in your draft. Choose how to continue."
+msgstr "Lo que escribiste sigue aquí y en tu borrador. Elige cómo seguir."
+
+#: frontend/src (Manual de la tienda)
+msgid "When the owner or the manager publish an article for your puesto, it shows up here."
+msgstr "Cuando el dueño o el encargado publiquen un artículo para tu puesto, aparece aquí."
+
+#: frontend/src (Manual de la tienda)
+msgid "Where it is done"
+msgstr "Dónde se hace"
+
+#: frontend/src (Manual de la tienda)
+msgid "Who reads it"
+msgstr "Quién lo lee"
+
+#: frontend/src (Manual de la tienda)
+msgid "Write a title and the article before publishing it."
+msgstr "Escribe el título y el artículo antes de publicarlo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Write a title to publish it."
+msgstr "Escribe un título para publicarlo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Write a title to save the article."
+msgstr "Escribe un título para guardar el artículo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Write an article"
+msgstr "Escribir artículo"
+
+#: frontend/src (Manual de la tienda)
+msgid "Write how things are done in your shop"
+msgstr "Escribe cómo se hacen las cosas en tu tienda"
+
+#: frontend/src (Manual de la tienda)
+msgid "Write it now"
+msgstr "Escribirlo ahora"
+
+#: frontend/src (Manual de la tienda)
+msgid "Write the article to publish it."
+msgstr "Escribe el artículo para publicarlo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Write the steps as you would explain them at the counter."
+msgstr "Escribe los pasos como los explicarías en el mostrador."
+
+#: frontend/src (Manual de la tienda)
+msgid "Write the title first: the photo is saved with the article."
+msgstr "Escribe primero el título: la foto se guarda con el artículo."
+
+#: frontend/src (Manual de la tienda)
+msgid "Yes, retire it"
+msgstr "Sí, retirarlo"
+
+#: frontend/src (Manual de la tienda)
+msgid "You have an unsaved draft from {0} min ago, made on an older version of the article."
+msgstr "Tienes un borrador sin guardar de hace {0} min, hecho sobre una versión anterior del artículo."
+
+#: frontend/src (Manual de la tienda)
+msgid "You have an unsaved draft from {0} min ago."
+msgstr "Tienes un borrador sin guardar de hace {0} min."
+
+#: frontend/src (Manual de la tienda)
+msgid "You have unsaved changes. They stay as a draft on this device. Leave anyway?"
+msgstr "Tienes cambios sin guardar. Quedan como borrador en este equipo. ¿Salir de todos modos?"
+
+#: frontend/src (Manual de la tienda)
+msgid "Your shop does not have an article for «{0}» yet."
+msgstr "Tu tienda aún no tiene un artículo para «{0}»."
+
+#: frontend/src (Manual de la tienda)
+msgid "Your shop has not published its manual yet"
+msgstr "Tu tienda todavía no publica su manual"
+
+#: frontend/src (Manual de la tienda)
+msgid "Your team will not see it any more. You can publish it again."
+msgstr "Tu equipo ya no lo verá. Puedes volver a publicarlo."
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "updated {0}"
+msgstr "actualizado {0}"
+
+#: frontend/src (Manual de la tienda)
+msgid "{0} drafts ready. Review them and publish the ones you want."
+msgstr "{0} borradores listos. Revísalos y publica los que quieras."
+
+#: frontend/src (Manual de la tienda)
+msgid "{0} is not installed in this system."
+msgstr "{0} no está instalada en este sistema."
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Published"
+msgstr "Publicados"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Drafts"
+msgstr "Borradores"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Retired"
+msgstr "Retirados"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Cashiers"
+msgstr "Cajeros"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Technicians"
+msgstr "Técnicos"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Managers"
+msgstr "Encargados"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Owners"
+msgstr "Dueños"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Borrador"
+msgstr "Borrador"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Retirado"
+msgstr "Retirado"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "What it is for"
+msgstr "Para qué sirve"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Article"
+msgstr "Artículo"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Status"
+msgstr "Estado"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Published on"
+msgstr "Publicado el"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Where it is done"
+msgstr "Dónde se hace"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "Who reads it"
+msgstr "Quién lo lee"
+
+#: frontend/src (Manual de la tienda)
+msgid "I need to read the shop manual in Muelle (Manual de la tienda): please check that my user is an active team account."
+msgstr "Necesito leer el manual de la tienda en Muelle: revisa que mi usuario sea una cuenta del equipo activa."
+
+#: frontend/src (Manual de la tienda)
+msgid "The shop manual is not installed. Ask your manager to check the app."
+msgstr "El manual de la tienda no está instalado. Pide a tu encargado que revise la app."
+
+#: frontend/src (Manual de la tienda)
+msgid "Ask the owner or the manager to check your user, then retry."
+msgstr "Pide al dueño o al encargado que revise tu usuario y vuelve a intentar."

@@ -338,9 +338,14 @@ describe('accesos', () => {
 
   it('keeps one slot for the shop manual once there is something to read', () => {
     const all = Object.fromEntries(
-      ['pendientes', 'agenda', 'contactos', 'compras', 'garantias', 'cobranza'].map(
-        (key) => [key, on({ read: true, create: true })],
-      ),
+      [
+        'pendientes',
+        'agenda',
+        'contactos',
+        'compras',
+        'garantias',
+        'cobranza',
+      ].map((key) => [key, on({ read: true, create: true })]),
     )
     const reader = accesos(
       boot({ ...all, manual: on({ read: true, published: true }) }),

@@ -28,6 +28,7 @@ MODULE_KEYS = (
 	"encuestas",
 	"equipo",
 	"archivos",
+	"manual",
 	"avisos",
 )
 # Doco puesto → phone bottom-nav class (contracts registry NavRole).
@@ -296,6 +297,30 @@ def _equipo():
 	}
 
 
+def _manual():
+	# Doco owns the articles; every worker reads the published ones for their puesto.
+	from crm.api.manual import get_capabilities
+
+	answer = get_capabilities() or {}
+	capabilities = answer.get("capabilities") or {}
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "manual",
+		"enabled": enabled,
+		"reason": None
+		if enabled
+		else answer.get("reason") or _("Ask the owner or the manager to check your user, then retry."),
+		"capabilities": {
+			"read": enabled,
+			"write": enabled and bool(capabilities.get("write")),
+			# Hoy › Accesos shows the manual to a reader once something is published.
+			"published": enabled and bool(capabilities.get("published")),
+		}
+		if enabled
+		else {},
+	}
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -414,6 +439,7 @@ def _hosted():
 		"encuestas": _encuestas,
 		"equipo": _equipo,
 		"archivos": _archivos,
+		"manual": _manual,
 		"avisos": _avisos,
 	}
 
@@ -451,6 +477,7 @@ def _providers():
 		_equipo,
 		_avisos,
 		_archivos,
+		_manual,
 	]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))

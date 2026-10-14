@@ -242,6 +242,10 @@ function reload() {
 }
 // Access requests of the newer modules; the chain in copyRequest answers for the rest.
 const MODULE_REQUESTS = {
+  manual: () =>
+    __(
+      'I need to read the shop manual in Muelle (Manual de la tienda): please check that my user is an active team account.',
+    ),
   encuestas: () =>
     __(
       'I need access to Encuestas: read permission for Quality Feedback in my company so I can follow up on unhappy customers.',

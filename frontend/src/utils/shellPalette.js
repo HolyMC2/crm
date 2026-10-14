@@ -4,6 +4,8 @@ import { call } from 'frappe-ui'
 import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
+// Manual de la tienda: one self-contained provider (articles, categories, «Nuevo artículo»).
+import { createManualProvider } from '@/utils/manualPalette'
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -408,7 +410,8 @@ export function createShellProviders({ boot, modules }) {
       }))
     },
   }
-  return [actions, contactos, places, ventas]
+  const manual = createManualProvider({ boot })
+  return [actions, contactos, places, ventas, manual]
 }
 
 function recentKey() {

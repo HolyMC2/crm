@@ -149,6 +149,7 @@ const HOSTED = [
   'encuestas',
   'equipo',
   'archivos',
+  'manual',
   'avisos',
 ]
 const ROUTE_HOME = { contactos: '/contactos', ventas: '/ventas' }

@@ -38,6 +38,7 @@ def _gate(path):
 	from crm.api.garantias import check_garantias_permission
 	from crm.api.gastos import check_gastos_permission
 	from crm.api.hoy import check_hoy_permission, root_landing
+	from crm.api.manual import check_manual_permission
 	from crm.api.pendientes import check_pendientes_permission
 	from crm.api.productos import check_productos_permission
 	from crm.api.resultados import check_resultados_permission
@@ -52,6 +53,7 @@ def _gate(path):
 	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
 	from crm.hoy_routes import is_hoy_path
+	from crm.manual_routes import is_manual_path
 	from crm.pendientes_routes import is_pendientes_path, is_shell_root
 	from crm.productos_routes import is_productos_path
 	from crm.resultados_routes import is_resultados_path
@@ -68,6 +70,7 @@ def _gate(path):
 	productos = is_productos_path(path)
 	encuestas = is_encuestas_path(path)
 	equipo = is_equipo_path(path)
+	manual = is_manual_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
 	neutral = (
@@ -83,6 +86,7 @@ def _gate(path):
 		or productos
 		or encuestas
 		or equipo
+		or manual
 		or avisos
 		or archivos
 		or is_contactos_path(path)
@@ -164,6 +168,13 @@ def _gate(path):
 			check_equipo_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
+	elif manual:
+		# A work account the manual refuses still gets its guard page (reason, Pedir
+		# acceso, Reintentar) from the shell; the boot carries no article.
+		allowed = (
+			check_manual_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
 	elif avisos:
 		allowed = check_avisos_permission()
 	elif archivos:
@@ -204,6 +215,7 @@ def _gate(path):
 		("productos", productos),
 		("encuestas", encuestas),
 		("equipo", equipo),
+		("manual", manual),
 		("avisos", avisos),
 		("archivos", archivos),
 	):
@@ -237,6 +249,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.garantias_routes import is_garantias_path
 	from crm.gastos_routes import is_gastos_path
 	from crm.hoy_routes import is_hoy_path
+	from crm.manual_routes import is_manual_path
 	from crm.pendientes_routes import is_pendientes_path
 	from crm.productos_routes import is_productos_path
 	from crm.resultados_routes import is_resultados_path
@@ -273,6 +286,8 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="equipo")
 	if is_archivos_path(path):
 		return get_boot(neutral=True, module="archivos")
+	if is_manual_path(path):
+		return get_boot(neutral=True, module="manual")
 	if is_avisos_path(path):
 		from crm.api.avisos import check_avisos_permission
 

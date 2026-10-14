@@ -260,6 +260,34 @@ const routes = [
     meta: { app: 'equipo', title: 'Equipo', listParent: 'Equipo' },
   },
   {
+    path: '/manual',
+    name: 'Manual',
+    component: () => import('@/pages/Manual.vue'),
+    meta: { app: 'manual', title: 'Manual de la tienda', stableKey: true },
+  },
+  {
+    // One editor instance for a new article and its later edits: the first save
+    // moves the URL to /editar without rebuilding the page.
+    path: '/manual/nuevo',
+    name: 'ManualNuevo',
+    component: () => import('@/pages/ManualEditor.vue'),
+    meta: { app: 'manual', title: 'Manual de la tienda', listParent: 'Manual' },
+  },
+  {
+    path: '/manual/:name/editar',
+    name: 'ManualEditar',
+    component: () => import('@/pages/ManualEditor.vue'),
+    props: true,
+    meta: { app: 'manual', title: 'Manual de la tienda', listParent: 'Manual' },
+  },
+  {
+    path: '/manual/:name',
+    name: 'ManualArticulo',
+    component: () => import('@/pages/ManualArticulo.vue'),
+    props: true,
+    meta: { app: 'manual', title: 'Manual de la tienda', listParent: 'Manual' },
+  },
+  {
     path: '/archivos',
     name: 'Archivos',
     component: () => import('@/pages/Archivos.vue'),

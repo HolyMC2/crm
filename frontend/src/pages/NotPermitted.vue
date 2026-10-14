@@ -126,6 +126,14 @@ const COPY = {
     missing:
       'Tu puesto todavía no es Dueño ni Encargado. Comparte la solicitud y reintenta después del ajuste.',
   },
+  manual: {
+    reason:
+      'El manual de la tienda es para las cuentas del equipo. Pide al dueño o al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito leer el manual de la tienda en Muelle: revisa que mi usuario sea una cuenta del equipo activa. Quiero retomar el artículo que intentaba abrir.',
+    missing:
+      'Todavía falta acceso al manual de la tienda. Comparte la solicitud y reintenta después del ajuste.',
+  },
   hoy: {
     reason:
       'Hoy es la página de inicio de las cuentas del equipo. Tu usuario todavía no es una cuenta del equipo activa.',
