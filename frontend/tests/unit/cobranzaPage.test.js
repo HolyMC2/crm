@@ -100,6 +100,7 @@ vi.mock('@/components/cobranza/CallSheet.vue', () => sheet('call'))
 vi.mock('@/components/cobranza/PaymentSheet.vue', () => sheet('payment'))
 vi.mock('@/components/cobranza/FollowupSheet.vue', () => sheet('followup'))
 vi.mock('@/components/cobranza/BulkRemindSheet.vue', () => sheet('bulk'))
+vi.mock('@/components/cobranza/StatementSheet.vue', () => sheet('statement'))
 const CAPS = {
   read: true,
   remind: true,
@@ -491,6 +492,24 @@ describe('Cobranza record as a power app', () => {
         list: '/cobranza?segment=todas&cliente=Siguiente',
       },
     })
+  })
+
+  it('offers ERPNext’s statement of account to who may read it', async () => {
+    state.api.mockImplementation(async (method) =>
+      method.endsWith('get_customer')
+        ? { ...RECORD, capabilities: { ...CAPS, statement: true } }
+        : null,
+    )
+    mount(CobranzaCliente, { customer: 'Laura' })
+    await flush()
+    const open = [
+      ...root.querySelectorAll('[data-record-actions] button'),
+    ].find((b) => b.textContent === 'Statement of account')
+    open.click()
+    await flush()
+    expect(
+      root.querySelector('[data-sheet="statement"]').dataset.customer,
+    ).toBe('Laura')
   })
 
   it('a phone gets the focused invoice’s actions at the thumb', async () => {

@@ -20588,6 +20588,30 @@ msgstr "Enviar a {0} clientes"
 #: frontend/src/components/cobranza/BulkRemindSheet.vue
 msgid "{0} customers"
 msgstr "{0} clientes"
+
+#: frontend/src/components/cobranza/StatementSheet.vue
+msgid "Statement of account"
+msgstr "Estado de cuenta"
+
+#: frontend/src/components/cobranza/StatementSheet.vue
+msgid "Every invoice and payment of the period with the balance, and what is still owed by age (ERPNext’s statement of accounts)."
+msgstr "Cada factura y pago del periodo con el saldo, y lo que aún se debe por antigüedad (el estado de cuenta de ERPNext)."
+
+#: frontend/src/components/cobranza/StatementSheet.vue
+msgid "Ready: {0}"
+msgstr "Listo: {0}"
+
+#: frontend/src/components/cobranza/StatementSheet.vue
+msgid "This month"
+msgstr "Este mes"
+
+#: frontend/src/components/cobranza/StatementSheet.vue
+msgid "Last 3 months"
+msgstr "Últimos 3 meses"
+
+#: frontend/src/components/cobranza/StatementSheet.vue
+msgid "This year"
+msgstr "Este año"
 #. Resultados
 #: frontend/src/pages/Resultados.vue
 msgid "Refreshing"

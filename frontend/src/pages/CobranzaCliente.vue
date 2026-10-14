@@ -241,6 +241,16 @@
               ><FeatherIcon name="user-check" class="h-4 w-4"
             /></template>
           </Button>
+          <Button
+            v-if="caps.statement"
+            class="min-h-11 sm:min-h-8"
+            :label="__('Statement of account')"
+            @click="statementOpen = true"
+          >
+            <template #prefix
+              ><FeatherIcon name="file-text" class="h-4 w-4"
+            /></template>
+          </Button>
         </div>
 
         <!-- Recordatorios automáticos: what happens next, and the way to resume. -->
@@ -515,6 +525,13 @@
       :focus="followupFocus"
       @saved="followupSaved"
     />
+    <StatementSheet
+      v-model="statementOpen"
+      :customer="data?.customer || customer"
+      :company="data?.company || ''"
+      :customer-name="data?.customer_name || ''"
+      :today="data?.today || ''"
+    />
     <CobranzaSendSheet
       v-model="sendOpen"
       doctype="Dunning"
@@ -544,6 +561,7 @@ import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
 import FollowupSheet from '@/components/cobranza/FollowupSheet.vue'
 import PaymentSheet from '@/components/cobranza/PaymentSheet.vue'
 import PromiseSheet from '@/components/cobranza/PromiseSheet.vue'
+import StatementSheet from '@/components/cobranza/StatementSheet.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
@@ -618,6 +636,7 @@ const payOpen = ref(false)
 const payInvoice = ref('')
 const followupOpen = ref(false)
 const followupFocus = ref('followup')
+const statementOpen = ref(false)
 const sendOpen = ref(false)
 const sendName = ref('')
 // The send sheet offers «I sent it» for a reminder sent from the worker's phone.
