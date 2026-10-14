@@ -335,6 +335,30 @@ describe('accesos', () => {
     expect(accesos(boot(all))).toHaveLength(ACCESOS_LIMIT)
     expect(accesos(null)).toEqual([])
   })
+
+  it('keeps one slot for the shop manual once there is something to read', () => {
+    const all = Object.fromEntries(
+      ['pendientes', 'agenda', 'contactos', 'compras', 'garantias', 'cobranza'].map(
+        (key) => [key, on({ read: true, create: true })],
+      ),
+    )
+    const reader = accesos(
+      boot({ ...all, manual: on({ read: true, published: true }) }),
+    )
+    expect(reader).toHaveLength(ACCESOS_LIMIT)
+    expect(reader.at(-1)).toMatchObject({ key: 'manual.read', to: '/manual' })
+    // Nothing published yet: a reader gets no tile, an editor always does.
+    expect(
+      accesos(boot({ ...all, manual: on({ read: true, published: false }) }))
+        .map((item) => item.key)
+        .includes('manual.read'),
+    ).toBe(false)
+    expect(
+      accesos(boot({ manual: on({ read: true, write: true }) })).map(
+        (item) => item.key,
+      ),
+    ).toEqual(['manual.read'])
+  })
 })
 
 describe('where Muelle opens', () => {

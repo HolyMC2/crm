@@ -688,6 +688,42 @@ class TestShellBoot(TestCase):
 		self.assertEqual(data["modules"]["equipo"]["capabilities"], {})
 		self.assertTrue(data["modules"]["ventas"]["enabled"])
 
+	def _skip_without_manual(self):
+		if "doco" not in frappe.get_installed_apps():
+			self.skipTest("Manual de la tienda (doco) is not installed")
+		try:
+			import doco.manual.service
+		except ImportError:
+			self.skipTest("This doco has no shop manual")
+
+	def test_manual_provider_reports_reader_and_editor_access(self):
+		self._skip_without_manual()
+		manual = shell.boot()["modules"]["manual"]
+		self.assertTrue(manual["enabled"])
+		self.assertIsNone(manual["reason"])
+		self.assertTrue(manual["capabilities"]["read"])
+		# Administrator writes the manual (System Manager by DocPerm).
+		self.assertTrue(manual["capabilities"]["write"])
+
+	def test_manual_refusal_carries_its_own_reason_and_leaves_ventas(self):
+		self._skip_without_manual()
+		answer = {"enabled": False, "reason": "Solo cuentas del equipo", "capabilities": {}}
+		with patch("doco.manual.service.bootstrap", return_value=answer):
+			data = shell.boot()
+		manual = data["modules"]["manual"]
+		self.assertFalse(manual["enabled"])
+		self.assertEqual(manual["reason"], "Solo cuentas del equipo")
+		self.assertEqual(manual["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_older_doco_without_the_manual_turns_it_off_not_the_shell(self):
+		with patch.dict(sys.modules, {"doco.manual.service": None}):
+			data = shell.boot()
+		self.assertFalse(data["modules"]["manual"]["enabled"])
+		self.assertTrue(data["modules"]["manual"]["reason"])
+		self.assertEqual(data["modules"]["manual"]["capabilities"], {})
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
 	def test_guest_cannot_boot(self):
 		frappe.set_user("Guest")
 		with self.assertRaises(frappe.AuthenticationError):
