@@ -469,6 +469,13 @@ export function autoLine(auto, today) {
   }
 }
 
+/** «Open the conversation» after a reply: that thread in the Inbox (the server names it). */
+export function autoConversationRoute(auto) {
+  const query = { workspace: 'conversations' }
+  if (auto?.conversation) query.conversation = auto.conversation
+  return { name: 'Inbox', query }
+}
+
 /** English source of what switching them on may need (the catalog translates). */
 export const AUTO_MISSING = {
   route_write: 'permission to change how the business sends WhatsApp documents',

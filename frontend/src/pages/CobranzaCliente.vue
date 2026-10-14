@@ -137,10 +137,11 @@
               :loading="busy === 'resume'"
               @click="resumeReminders"
             />
-            <a
+            <RouterLink
               class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
-              href="/crm/inbox"
-              >{{ __('Open the conversation') }}</a
+              :to="autoConversationRoute(data.auto)"
+              data-auto-conversation
+              >{{ __('Open the conversation') }}</RouterLink
             >
           </template>
           <Button
@@ -432,6 +433,7 @@ import {
   agingTone,
   approxMoney,
   autoChip,
+  autoConversationRoute,
   autoLine,
   cobranzaApi,
   cobranzaBoot,
