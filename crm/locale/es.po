@@ -18690,7 +18690,7 @@ msgstr "{0} de 5"
 msgid "“How did we do?” settings"
 msgstr "Ajustes de «¿Cómo te atendimos?»"
 
-#: frontend/src/pages/Encuestas.vue
+#: frontend/src/pages/Encuestas.vue frontend/src/components/contactos/ExtraFieldsPanel.vue
 msgid "Saved."
 msgstr "Guardado."
 
@@ -18944,10 +18944,6 @@ msgstr "Campo retirado"
 #: frontend/src/components/contactos/ExtraFieldForm.vue
 msgid "Save field"
 msgstr "Guardar campo"
-
-#: frontend/src/components/contactos/ExtraFieldsPanel.vue
-msgid "Saved."
-msgstr "Guardado."
 
 #: frontend/src/utils/extraFields.js
 msgid "Text"
