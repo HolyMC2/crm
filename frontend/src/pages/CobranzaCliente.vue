@@ -481,7 +481,7 @@
           class="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium"
           :class="
             action.primary
-              ? 'bg-surface-gray-9 text-ink-white'
+              ? 'bg-surface-gray-10 text-ink-base'
               : 'bg-surface-gray-2 text-ink-gray-8'
           "
           @click="run(focused, action)"

@@ -589,7 +589,7 @@ describe('Cobranza record as a power app', () => {
     expect(bar.textContent).toContain('SINV-1')
     const buttons = [...bar.querySelectorAll('button')]
     expect(buttons.length).toBe(4)
-    expect(buttons[0].className).toContain('bg-surface-gray-9')
+    expect(buttons[0].className).toContain('bg-surface-gray-10')
   })
 })
 

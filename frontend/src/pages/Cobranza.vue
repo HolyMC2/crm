@@ -204,14 +204,14 @@
         >
         <Button
           v-else-if="autoCard.copy"
-          class="min-h-11 sm:min-h-8"
+          class="min-h-11 w-full sm:min-h-8 sm:w-auto"
           :label="autoCard.button"
           @click="copyWhatsappRequest"
         />
         <Button
           v-else
           :variant="autoCard.solid ? 'solid' : 'subtle'"
-          class="min-h-11 sm:min-h-8"
+          class="min-h-11 w-full sm:min-h-8 sm:w-auto"
           :label="autoCard.button"
           @click="openSetup(autoCompany)"
         />
@@ -288,7 +288,7 @@
           class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
           :class="
             state.edad === chip.value
-              ? 'border-outline-gray-4 bg-surface-gray-9 text-ink-white'
+              ? 'border-outline-gray-4 bg-surface-gray-10 text-ink-base'
               : 'border-outline-gray-2 text-ink-gray-8 hover:bg-surface-gray-2'
           "
           :aria-pressed="state.edad === chip.value"
