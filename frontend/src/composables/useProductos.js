@@ -2,7 +2,9 @@ import { ref } from 'vue'
 import { errorKind } from '@/utils/contactos'
 import {
   RETURN_PREFIXES,
+  readDone,
   safeReturn as contractReturn,
+  withReturn,
 } from '@/vendor/muelle-shell/contracts'
 import {
   comprasApi,
@@ -72,7 +74,40 @@ export const VIEWS = Object.freeze([
   { value: 'precio-revisar', label: 'Price to review', icon: 'alert-triangle' },
   { value: 'faltan', label: 'Out of stock', icon: 'alert-octagon' },
   { value: 'bajo-minimo', label: 'Below minimum', icon: 'trending-down' },
+  // «Inventario»: where the stock is wrong, and who fixes it.
+  { value: 'sin-cajon', label: 'No bin', icon: 'inbox', inventory: true },
+  { value: 'sin-contar', label: 'Not counted', icon: 'clock', inventory: true },
+  {
+    value: 'negativo',
+    label: 'Negative stock',
+    icon: 'minus-circle',
+    inventory: true,
+  },
+  {
+    value: 'por-revisar',
+    label: 'Differences to review',
+    icon: 'git-pull-request',
+    inventory: true,
+  },
+  {
+    value: 'conteos-abiertos',
+    label: 'Open counts',
+    icon: 'clipboard',
+    inventory: true,
+  },
 ])
+export const INVENTORY_VIEWS = Object.freeze(
+  VIEWS.filter((v) => v.inventory).map((v) => v.value),
+)
+/** Lists over (product, store) rows: select, count, file, move. */
+export const STOCK_VIEWS = Object.freeze([
+  'sin-cajon',
+  'sin-contar',
+  'negativo',
+])
+export function isInventoryView(value) {
+  return INVENTORY_VIEWS.includes(value)
+}
 export function viewLabel(value) {
   return tr(
     VIEWS.find((v) => v.value === value)?.label || 'All products',
@@ -359,13 +394,322 @@ export function purchaseRoute(item, { warehouse, qty: amount } = {}) {
   return { name: 'CompraNueva', query }
 }
 
-/** Escáner's product page (cajón, mover), with the way back here. */
-export function scannerItemUrl(item) {
-  const query = new URLSearchParams({
-    return_to: recordPath(item),
-    return_label: 'Productos',
-  })
-  return `/scan/item/${encodeURIComponent(item)}?${query}`
+/** Escáner's product page (cajón, mover, contar), with the way back: this
+ *  product by default, or `back` (a list position). `warehouse` and `action`
+ *  are routing hints; Escáner re-checks everything. */
+export function scannerItemUrl(item, { back, warehouse, action } = {}) {
+  const hints = new URLSearchParams()
+  if (warehouse) hints.set('warehouse', warehouse)
+  if (action) hints.set('accion', action)
+  const href = `/scan/item/${encodeURIComponent(item)}${String(hints) ? `?${hints}` : ''}`
+  return withReturn(href, back || { to: recordPath(item), label: 'Productos' })
+}
+
+/** Escáner's mover with the product, the cajón it leaves and its store. */
+export function scannerMoveUrl({ item, from, warehouse }, back) {
+  const query = new URLSearchParams()
+  if (item) query.set('item', item)
+  if (from) query.set('from', from)
+  if (warehouse) query.set('warehouse', warehouse)
+  return withReturn(
+    `/scan/bins/move${String(query) ? `?${query}` : ''}`,
+    back || { to: recordPath(item), label: 'Productos' },
+  )
+}
+
+/** Escáner's review of a count task, on the row with the difference. */
+export function conteoReviewUrl({ task, warehouse, row }, back) {
+  const query = new URLSearchParams()
+  if (warehouse) query.set('wh', warehouse)
+  if (row) query.set('row', row)
+  return withReturn(
+    `/scan/conteo/revision/${encodeURIComponent(task)}${String(query) ? `?${query}` : ''}`,
+    back || { to: '/crm/productos?vista=por-revisar', label: 'Productos' },
+  )
+}
+
+/** ERPNext owns stock documents: a draft reconciliation opens in Desk. */
+export function deskReconciliationUrl(name) {
+  return name
+    ? `/app/stock-reconciliation/${encodeURIComponent(name)}`
+    : '/app/stock-reconciliation/new'
+}
+
+// ── Inventario lists: URL state, selection and the way back ────────────────
+
+export const DAY_CHOICES = Object.freeze([30, 60, 90, 180, 365])
+export const DEFAULT_DAYS = 90
+export function normalizeDays(value) {
+  const days = Number(value)
+  return DAY_CHOICES.includes(days) ? days : DEFAULT_DAYS
+}
+
+/** The list's state from its URL: view, store, filters, selection, focus. */
+export function listState(query = {}) {
+  const text = (key) => (typeof query[key] === 'string' ? query[key] : '')
+  const store = text('tienda')
+  return {
+    view: normalizeView(query.vista),
+    store,
+    search: text('q'),
+    days: normalizeDays(query.dias),
+    group: text('grupo'),
+    brand: text('marca'),
+    selected: decodeSelection(text('sel'), store),
+    focus: decodeKey(text('fila'), store),
+  }
+}
+
+// A row key is `item|warehouse`; with a store chosen only the item travels.
+function encodeKey(key, store) {
+  return store && key.endsWith(`|${store}`)
+    ? key.slice(0, -(store.length + 1))
+    : key
+}
+function decodeKey(value, store) {
+  if (!value) return ''
+  return value.includes('|') || !store ? value : `${value}|${store}`
+}
+export function encodeSelection(keys, store) {
+  return keys.map((key) => encodeKey(key, store)).join('~')
+}
+export function decodeSelection(value, store) {
+  if (!value) return []
+  return [
+    ...new Set(
+      value
+        .split('~')
+        .filter(Boolean)
+        .map((part) => decodeKey(part, store)),
+    ),
+  ].slice(0, 100)
+}
+/** Selections longer than this stay in the tab (sessionStorage), not the URL. */
+export const SELECTION_URL_MAX = 1500
+
+/** The Muelle path of a route's fullPath (router base `/crm`). */
+export function shellPath(fullPath) {
+  const path = String(fullPath || '/productos')
+  return path.startsWith('/crm/')
+    ? path
+    : `/crm${path.startsWith('/') ? '' : '/'}${path}`
+}
+
+/** This list, focused on `row` and without a consumed `done`: where Escáner
+ *  and the record come back to. */
+export function listReturn(fullPath, row, store = '') {
+  const url = new URL(shellPath(fullPath), 'https://muelle.invalid')
+  url.searchParams.delete('done')
+  if (row?.key) url.searchParams.set('fila', encodeKey(row.key, store))
+  return { to: url.pathname + url.search, label: 'Productos' }
+}
+
+/** The scroll position key of a list: its state without focus or done. */
+export function scrollKey(fullPath) {
+  const url = new URL(shellPath(fullPath), 'https://muelle.invalid')
+  for (const key of ['fila', 'done', 'sel']) url.searchParams.delete(key)
+  return `muelle:productos:scroll:${url.pathname}${url.search}`
+}
+
+/** Selected rows grouped by store: one count request per store. */
+export function selectionGroups(rows) {
+  const groups = new Map()
+  for (const row of rows) {
+    if (!row?.warehouse) continue
+    const group = groups.get(row.warehouse) || {
+      warehouse: row.warehouse,
+      label: row.warehouse_label || row.warehouse,
+      items: [],
+    }
+    if (!group.items.some((item) => item.name === row.name))
+      group.items.push({ name: row.name, title: row.title || row.name })
+    groups.set(row.warehouse, group)
+  }
+  return [...groups.values()].sort((a, b) => b.items.length - a.items.length)
+}
+
+/** Rows a count can be asked for: products in a store. */
+export function selectable(row) {
+  return Boolean(
+    row && ['stock', 'conteo'].includes(row.kind) && row.name && row.warehouse,
+  )
+}
+
+// What came back from Escáner (`done=<doctype>:<name>`), said plainly.
+const DONE_TEXT = {
+  'Taller Item Ubicacion': 'Bin assigned ({0}).',
+  'Taller Bin Movement': 'Move saved ({0}).',
+  'Mercado Cycle Count Task':
+    'Count sent ({0}). The stock changes after the review.',
+  'Scan Count': 'Count saved ({0}).',
+  'Stock Reconciliation': 'Stock adjustment {0} saved.',
+}
+/** `{doctype, name, text}` of a hand-off that finished, or null. */
+export function escanerDone(value) {
+  if (typeof value !== 'string') return null
+  const done = readDone(new URLSearchParams({ done: value }))
+  if (!done) return null
+  const text = DONE_TEXT[done.doctype]
+  return {
+    ...done,
+    text: text
+      ? tr(text, [done.name])
+      : tr('{0} {1} saved.', [done.doctype, done.name]),
+  }
+}
+
+/** «hace 3 días» style age of a date (YYYY-MM-DD…) against `today`. */
+export function daysSince(value, today) {
+  if (!value || !today) return null
+  const start = Date.parse(String(value).slice(0, 10))
+  const end = Date.parse(String(today).slice(0, 10))
+  if (Number.isNaN(start) || Number.isNaN(end)) return null
+  return Math.round((end - start) / 86400000)
+}
+
+const SOURCE_TEXT = {
+  conteo: 'cycle count',
+  cajon: 'bin count',
+  ajuste: 'stock adjustment',
+}
+/** «Counted 12 days ago (bin count)» / «Never counted». */
+export function lastCountedLabel(last, today) {
+  if (!last?.date) return tr('Never counted')
+  const days = daysSince(last.date, today)
+  const how = tr(SOURCE_TEXT[last.source] || last.source || '')
+  if (days === 0) return tr('Counted today ({0})', [how])
+  return tr('Counted {0} days ago ({1})', [days, how])
+}
+
+/** «Count asked of Ana · 2026-10-14» for the first open request on a row. */
+export function requestedLabel(requested) {
+  const first = (requested || [])[0]
+  if (!first) return ''
+  const more = requested.length > 1 ? ` (+${requested.length - 1})` : ''
+  return (
+    tr('Count asked of {0} · {1}', [
+      first.assigned_to_name || first.assigned_to,
+      first.assigned_date || '',
+    ]) + more
+  )
+}
+
+/** The header chips: share of stock without a bin / a recent count, and the
+ *  other queues' sizes. */
+export function healthChips(summary) {
+  const views = summary?.views || {}
+  const chips = []
+  const pct = (view) =>
+    views[view]?.pct !== undefined && views[view]?.pct !== null
+      ? `${Number(views[view].pct).toLocaleString(undefined, { maximumFractionDigits: 1 })} %`
+      : ''
+  if (views['sin-cajon'])
+    chips.push({
+      view: 'sin-cajon',
+      text: tr('{0} without a bin', [pct('sin-cajon')]),
+    })
+  if (views['sin-contar'])
+    chips.push({
+      view: 'sin-contar',
+      text: tr('{0} not counted in {1} days', [
+        pct('sin-contar'),
+        summary.days,
+      ]),
+    })
+  for (const [view, text] of [
+    ['negativo', '{0} negative'],
+    ['por-revisar', '{0} to review'],
+    ['conteos-abiertos', '{0} open counts'],
+  ])
+    if (views[view])
+      chips.push({
+        view,
+        text: tr(text, [
+          `${views[view].count.toLocaleString()}${views[view].more ? '+' : ''}`,
+        ]),
+      })
+  return chips
+}
+
+/** The row's actions: Escáner flows (with the way back to this row), the
+ *  review that already exists, or a dialog of this page. */
+export function rowActions(row, { back, caps = {} } = {}) {
+  const scanner = Boolean(caps.scanner)
+  const actions = []
+  if (row.kind === 'stock') {
+    const cajon = row.cajones?.[0]
+    if (row.can_request_count)
+      actions.push({ key: 'count', label: tr('Ask for a count of…') })
+    else actions.push({ key: 'ask', label: tr('Ask the manager for a count') })
+    if (scanner && !row.cajones?.length && row.actual_qty > 0)
+      actions.push({
+        key: 'assign',
+        label: tr('Assign bin'),
+        href: scannerItemUrl(row.name, {
+          back,
+          warehouse: row.warehouse,
+          action: 'asignar',
+        }),
+      })
+    if (scanner && cajon)
+      actions.push({
+        key: 'move',
+        label: tr('Move'),
+        href: scannerMoveUrl(
+          { item: row.name, from: cajon.ubicacion, warehouse: row.warehouse },
+          back,
+        ),
+      })
+    if (scanner)
+      actions.push({
+        key: 'count-now',
+        label: tr('Count now'),
+        href: scannerItemUrl(row.name, {
+          back,
+          warehouse: row.warehouse,
+          action: 'contar',
+        }),
+      })
+  } else if (row.kind === 'conteo') {
+    if (row.can_review && scanner)
+      actions.push({
+        key: 'review',
+        label: tr('Review difference'),
+        href: conteoReviewUrl(
+          { task: row.task, warehouse: row.warehouse, row: row.row },
+          back,
+        ),
+      })
+    else
+      actions.push({
+        key: 'review',
+        label: tr('Review difference'),
+        disabled: true,
+        reason: tr(
+          'Differences are reviewed by whoever manages counts in {0}; the reviewer cannot be the counter.',
+          [row.warehouse_label || row.warehouse],
+        ),
+      })
+  } else if (row.kind === 'reconciliation') {
+    actions.push({
+      key: 'desk',
+      label: tr('Open in Desk'),
+      href: deskReconciliationUrl(row.name),
+      external: true,
+    })
+  } else if (row.kind === 'task') {
+    if (scanner)
+      actions.push({
+        key: 'open-task',
+        label: tr('See in Escáner'),
+        href: conteoReviewUrl(
+          { task: row.task, warehouse: row.warehouse },
+          back,
+        ),
+      })
+    if (row.can_manage) actions.push({ key: 'reassign', label: tr('Reassign') })
+  }
+  return actions
 }
 
 /** Where «Back» goes: an allowed return_to, the list it came from, or Productos. */

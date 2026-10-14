@@ -185,11 +185,132 @@
                   }}
                 </span>
                 <span
+                  v-else-if="data.inventory?.scanner"
+                  class="block text-sm text-ink-amber-7"
+                  >{{ __('Not filed in a bin here') }}</span
+                >
+                <span
+                  class="block text-sm"
+                  :class="
+                    row.last_counted ? 'text-ink-gray-6' : 'text-ink-amber-7'
+                  "
+                  >{{ lastCountedLabel(row.last_counted, boot?.today) }}</span
+                >
+                <span
                   v-for="pending in row.counts_pending"
                   :key="pending.task"
                   class="block text-sm text-ink-blue-7"
-                  >{{ __('Count asked of {0}', [pending.assigned_to]) }}</span
+                  >{{
+                    pending.assigned_date
+                      ? __('Count asked of {0} · {1}', [
+                          pending.assigned_to,
+                          pending.assigned_date,
+                        ])
+                      : __('Count asked of {0}', [pending.assigned_to])
+                  }}</span
                 >
+                <span
+                  v-if="data.inventory?.scanner && row.warehouse"
+                  class="mt-2 flex flex-wrap gap-2"
+                >
+                  <template v-if="data.inventory.scanner_user">
+                    <a
+                      :href="countNowUrl(row)"
+                      class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                      >{{ __('Count now') }}</a
+                    >
+                    <a
+                      v-if="row.cajones.length"
+                      :href="moveUrl(row)"
+                      class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                      >{{ __('Move to another bin') }}</a
+                    >
+                    <a
+                      v-else
+                      :href="assignUrl(row)"
+                      class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
+                      >{{ __('Assign bin') }}</a
+                    >
+                  </template>
+                  <Button
+                    class="min-h-11 sm:min-h-7"
+                    :label="
+                      row.can_request_count
+                        ? __('Ask for a count')
+                        : __('Ask the manager for a count')
+                    "
+                    @click="askCount(row)"
+                  />
+                </span>
+                <span
+                  v-if="row.negative"
+                  role="note"
+                  class="mt-2 block space-y-1 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-8"
+                >
+                  <span class="block font-medium">{{
+                    __(
+                      'The system says {0} here: more left than was recorded coming in.',
+                      [qty(row.actual_qty)],
+                    )
+                  }}</span>
+                  <span class="block">{{
+                    __(
+                      'Usually goods arrived without their receipt, or were sold from another store. The latest outgoing movements:',
+                    )
+                  }}</span>
+                  <span
+                    v-for="out in row.explain?.outs || []"
+                    :key="`${out.voucher_no}:${out.posting_time}`"
+                    class="block text-ink-gray-8"
+                    >{{
+                      __('{0} {1} · {2} · {3} → {4}', [
+                        out.voucher_type,
+                        out.voucher_no,
+                        out.posting_date,
+                        qty(out.actual_qty),
+                        qty(out.qty_after_transaction),
+                      ])
+                    }}</span
+                  >
+                  <span v-if="row.explain?.fix === 'receive'" class="block">
+                    {{
+                      __(
+                        '{0} are on order for this store: receiving them fixes it.',
+                        [qty(row.explain.incoming)],
+                      )
+                    }}
+                    <RouterLink
+                      :to="{
+                        name: 'Compras',
+                        query: { segment: 'por-recibir' },
+                      }"
+                      class="underline"
+                      >{{ __('Purchases to receive') }}</RouterLink
+                    >
+                  </span>
+                  <span v-else class="block">{{
+                    __(
+                      'Fastest fix: count it. The difference is reviewed and adjusted with a stock reconciliation.',
+                    )
+                  }}</span>
+                  <span v-if="data.inventory?.stock_adjust" class="block">
+                    {{
+                      __('If it is already counted, you may adjust it in Desk:')
+                    }}
+                    <a
+                      :href="deskReconciliationUrl()"
+                      target="_blank"
+                      rel="noopener"
+                      class="underline"
+                      >{{ __('New stock reconciliation') }}</a
+                    >
+                  </span>
+                  <span v-else class="block text-ink-gray-7">{{
+                    __(
+                      'Setting the stock directly needs the Stock Reconciliation permission (stock manager); counting it does not.',
+                    )
+                  }}</span>
+                </span>
               </span>
               <Badge
                 v-if="row.state === 'faltan'"
@@ -213,6 +334,21 @@
                 [data.stock.hidden],
               )
             }}
+          </p>
+          <p
+            v-if="data.inventory?.scanner && !data.inventory.scanner_user"
+            class="mt-2 text-sm text-ink-gray-6"
+          >
+            {{
+              __(
+                'Counting, filing and moving happen in Escáner, which needs the scanner user role. Ask your manager for it.',
+              )
+            }}
+            <Button
+              class="ml-1"
+              :label="__('Copy access request')"
+              @click="copyScannerRequest"
+            />
           </p>
         </section>
 
@@ -421,8 +557,7 @@
     <CountDialog
       v-if="data"
       v-model="countOpen"
-      :item="product.name"
-      :stores="data.stock.rows"
+      :groups="countGroups"
       :store="countStore"
       @sent="counted"
     />
@@ -438,6 +573,9 @@ import RequestDialog from '@/components/productos/RequestDialog.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import {
   backTarget,
+  deskReconciliationUrl,
+  escanerDone,
+  lastCountedLabel,
   loadProductosBoot,
   money,
   notifyPriceOpener,
@@ -451,6 +589,8 @@ import {
   qty,
   requestedAction,
   scannerItemUrl,
+  scannerMoveUrl,
+  shellPath,
 } from '@/composables/useProductos'
 
 const props = defineProps({ item: { type: String, required: true } })
@@ -501,6 +641,65 @@ const orderedActions = computed(() =>
     (a, b) => Number(b.primary) - Number(a.primary),
   ),
 )
+// «Pedir conteo»: one product, any of its readable stores.
+const countGroups = computed(() =>
+  (data.value?.stock?.rows || []).map((row) => ({
+    warehouse: row.warehouse,
+    label: row.label || row.warehouse,
+    items: [
+      {
+        name: product.value.name,
+        title: product.value.item_name || product.value.name,
+      },
+    ],
+  })),
+)
+// Escáner comes back to this product (and its list), never to a stale `done`.
+const recordBack = computed(() => {
+  const url = new URL(shellPath(route.fullPath), 'https://muelle.invalid')
+  url.searchParams.delete('done')
+  url.searchParams.delete('accion')
+  return { to: `${url.pathname}${url.search}`, label: 'Productos' }
+})
+function countNowUrl(row) {
+  return scannerItemUrl(product.value.name, {
+    back: recordBack.value,
+    warehouse: row.warehouse,
+    action: 'contar',
+  })
+}
+function assignUrl(row) {
+  return scannerItemUrl(product.value.name, {
+    back: recordBack.value,
+    warehouse: row.warehouse,
+    action: 'asignar',
+  })
+}
+function moveUrl(row) {
+  return scannerMoveUrl(
+    {
+      item: product.value.name,
+      from: row.cajones[0]?.ubicacion,
+      warehouse: row.warehouse,
+    },
+    recordBack.value,
+  )
+}
+function askCount(row) {
+  countStore.value = row.warehouse
+  countOpen.value = true
+}
+async function copyScannerRequest() {
+  const text = __(
+    'I need the scanner user role to count, file and move products in Escáner.',
+  )
+  try {
+    await navigator.clipboard.writeText(text)
+    notice.value = { text: __('Request copied. Share it with your manager.') }
+  } catch {
+    notice.value = { text }
+  }
+}
 const tiles = computed(() => {
   const d = data.value
   if (!d) return []
@@ -592,7 +791,9 @@ function run(entry) {
     countStore.value = ''
     countOpen.value = true
   } else if (entry.key === 'scanner')
-    window.location.assign(scannerItemUrl(product.value.name))
+    window.location.assign(
+      scannerItemUrl(product.value.name, { back: recordBack.value }),
+    )
 }
 function ask(kind, reason = '', proposal = {}) {
   const fallback = action(kind === 'data' ? 'edit' : 'price')
@@ -644,9 +845,12 @@ function requested(result) {
 }
 async function counted(result) {
   notice.value = {
-    text: __('Count asked of {0}. The stock changes after the review.', [
-      result.assigned_to_name,
-    ]),
+    text:
+      result.kind === 'ask'
+        ? __('Asked of {0}.', [result.assigned.join(', ')])
+        : __('Count asked of {0}. The stock changes after the review.', [
+            result.assigned_to_name,
+          ]),
   }
   await load()
 }
@@ -685,6 +889,16 @@ function openRequested() {
 }
 function handleDone() {
   const done = parseDone(route.query.done)
+  const scanned = done ? null : escanerDone(route.query.done)
+  if (scanned) {
+    // Back from Escáner: say what changed; the record reloads right after.
+    toast.success(scanned.text)
+    notice.value = { text: scanned.text }
+    const query = { ...route.query }
+    delete query.done
+    router.replace({ query })
+    return
+  }
   if (!done) return
   notice.value = {
     text:

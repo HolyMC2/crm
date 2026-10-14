@@ -16888,6 +16888,380 @@ msgstr "Pedir el precio por {0}"
 msgid "Price per {0}, please."
 msgstr "Precio por {0}, por favor."
 
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Inventory"
+msgstr "Inventario"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "No bin"
+msgstr "Sin cajón"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Not counted"
+msgstr "Sin contar"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Negative stock"
+msgstr "Existencia negativa"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Differences to review"
+msgstr "Diferencias por revisar"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Open counts"
+msgstr "Conteos abiertos"
+
+#: frontend/src/pages/Productos.vue
+msgid "Inventory health"
+msgstr "Salud del inventario"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} products with stock · this week {1} counted, {2} filed"
+msgstr "{0} productos con existencia · esta semana {1} contados, {2} acomodados en cajón"
+
+#: frontend/src/pages/Productos.vue
+msgid "Week of {0}: {1} counted, {2} filed"
+msgstr "Semana del {0}: {1} contados, {2} acomodados"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} without a bin"
+msgstr "{0} sin cajón"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} not counted in {1} days"
+msgstr "{0} sin contar en {1} días"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} negative"
+msgstr "{0} negativos"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} to review"
+msgstr "{0} por revisar"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} open counts"
+msgstr "{0} conteos abiertos"
+
+#: frontend/src/pages/Productos.vue
+msgid "Not counted in"
+msgstr "Sin contar en"
+
+#: frontend/src/pages/Productos.vue
+msgid "Not counted in {0} days"
+msgstr "Sin contar en {0} días"
+
+#: frontend/src/pages/Productos.vue
+msgid "All groups"
+msgstr "Todos los grupos"
+
+#: frontend/src/pages/Productos.vue
+msgid "All brands"
+msgstr "Todas las marcas"
+
+#: frontend/src/pages/Productos.vue
+msgid "On hand but not filed in a bin of that store; biggest value first."
+msgstr "Con existencia pero sin cajón en esa tienda; primero lo de más valor."
+
+#: frontend/src/pages/Productos.vue
+msgid "On hand and not counted in {0} days (cycle count, bin count or stock adjustment); biggest value first."
+msgstr "Con existencia y sin contar en {0} días (conteo cíclico, conteo de cajón o ajuste de inventario); primero lo de más valor."
+
+#: frontend/src/pages/Productos.vue
+msgid "The system says less than zero: something left without being recorded coming in."
+msgstr "El sistema marca menos de cero: salió mercancía que nunca se registró de entrada."
+
+#: frontend/src/pages/Productos.vue
+msgid "Counts with a difference waiting for review, and draft stock adjustments."
+msgstr "Conteos con diferencia que esperan revisión, y ajustes de inventario en borrador."
+
+#: frontend/src/pages/Productos.vue
+msgid "Counts asked of someone and not sent yet, oldest first."
+msgstr "Conteos pedidos a alguien que todavía no se envían; primero los más viejos."
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} selected"
+msgstr "{0} seleccionados"
+
+#: frontend/src/pages/Productos.vue
+msgid "Up to 100 products at a time."
+msgstr "Hasta 100 productos a la vez."
+
+#: frontend/src/pages/Productos.vue
+msgid "Ask for a count of…"
+msgstr "Pedir conteo a…"
+
+#: frontend/src/pages/Productos.vue
+msgid "Ask the manager for a count"
+msgstr "Pedir conteo al encargado"
+
+#: frontend/src/pages/Productos.vue
+msgid "Clear selection"
+msgstr "Quitar la selección"
+
+#: frontend/src/pages/Productos.vue
+msgid "Stock reconciliation {0}"
+msgstr "Conciliación de inventario {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Value {0}"
+msgstr "Valor {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} on order"
+msgstr "{0} por recibir"
+
+#: frontend/src/pages/Productos.vue
+msgid "Expected {0} · counted {1} · {2}"
+msgstr "Esperado {0} · contado {1} · {2}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Counted by {0} · {1}"
+msgstr "Contó {0} · {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} products · {1}"
+msgstr "{0} productos · {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Draft by {0} · {1}"
+msgstr "Borrador de {0} · {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} of {1} counted · asked {2} days ago ({3})"
+msgstr "{0} de {1} contados · pedido hace {2} días ({3})"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} products · to count on {1}"
+msgstr "{0} productos · para contar el {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} of {1} counted · for today"
+msgstr "{0} de {1} contados · para hoy"
+
+#: frontend/src/pages/Productos.vue
+msgid "Recount"
+msgstr "Reconteo"
+
+#: frontend/src/pages/Productos.vue
+msgid "Count reassigned to {0}."
+msgstr "Conteo reasignado a {0}."
+
+#: frontend/src/pages/Productos.vue
+msgid "Count of {0} product(s) asked of {1}."
+msgstr "Conteo de {0} producto(s) pedido a {1}."
+
+#: frontend/src/pages/Productos.vue
+msgid "Count of {0} product(s) asked of {1} for today."
+msgstr "Conteo de {0} producto(s) pedido a {1} para hoy."
+
+#: frontend/src/pages/Productos.vue
+msgid "Count of {0} product(s) asked of {1} for {2}."
+msgstr "Conteo de {0} producto(s) pedido a {1} para el {2}."
+
+#: frontend/src/pages/Productos.vue
+msgid "I need access in Productos: {0}"
+msgstr "Necesito acceso en Productos: {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Not filed in a bin here"
+msgstr "Sin cajón en esta tienda"
+
+#: frontend/src/pages/Productos.vue
+msgid "Count asked of {0} · {1}"
+msgstr "Conteo pedido a {0} · {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Count now"
+msgstr "Contar ahora"
+
+#: frontend/src/pages/Productos.vue
+msgid "Move to another bin"
+msgstr "Mover de cajón"
+
+#: frontend/src/pages/Productos.vue
+msgid "Assign bin"
+msgstr "Asignar cajón"
+
+#: frontend/src/pages/Productos.vue
+msgid "Move"
+msgstr "Mover"
+
+#: frontend/src/pages/Productos.vue
+msgid "Review difference"
+msgstr "Revisar diferencia"
+
+#: frontend/src/pages/Productos.vue
+msgid "Differences are reviewed by whoever manages counts in {0}; the reviewer cannot be the counter."
+msgstr "Las diferencias las revisa quien administra el conteo en {0}; quien revisa no puede ser quien contó."
+
+#: frontend/src/pages/Productos.vue
+msgid "Open in Desk"
+msgstr "Abrir en el escritorio"
+
+#: frontend/src/pages/Productos.vue
+msgid "See in Escáner"
+msgstr "Ver en Escáner"
+
+#: frontend/src/pages/Productos.vue
+msgid "Reassign"
+msgstr "Reasignar"
+
+#: frontend/src/pages/Productos.vue
+msgid "The system says {0} here: more left than was recorded coming in."
+msgstr "El sistema marca {0} aquí: salió más de lo que se registró de entrada."
+
+#: frontend/src/pages/Productos.vue
+msgid "Usually goods arrived without their receipt, or were sold from another store. The latest outgoing movements:"
+msgstr "Suele pasar cuando llegó mercancía sin registrar su recepción, o se vendió desde otra tienda. Las últimas salidas:"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} {1} · {2} · {3} → {4}"
+msgstr "{0} {1} · {2} · {3} → {4}"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} are on order for this store: receiving them fixes it."
+msgstr "Hay {0} por recibir en esta tienda: registrar la recepción lo corrige."
+
+#: frontend/src/pages/Productos.vue
+msgid "Purchases to receive"
+msgstr "Compras por recibir"
+
+#: frontend/src/pages/Productos.vue
+msgid "Fastest fix: count it. The difference is reviewed and adjusted with a stock reconciliation."
+msgstr "Lo más rápido: contarlo. La diferencia se revisa y se ajusta con una conciliación de inventario."
+
+#: frontend/src/pages/Productos.vue
+msgid "If it is already counted, you may adjust it in Desk:"
+msgstr "Si ya está contado, puedes ajustarlo en el escritorio:"
+
+#: frontend/src/pages/Productos.vue
+msgid "New stock reconciliation"
+msgstr "Nueva conciliación de inventario"
+
+#: frontend/src/pages/Productos.vue
+msgid "Setting the stock directly needs the Stock Reconciliation permission (stock manager); counting it does not."
+msgstr "Corregir la existencia directamente requiere el permiso de Conciliación de inventario (encargado de almacén); contarla no."
+
+#: frontend/src/pages/Productos.vue
+msgid "Counting, filing and moving happen in Escáner, which needs the scanner user role. Ask your manager for it."
+msgstr "Contar, acomodar y mover se hace en el Escáner, que requiere el rol de usuario del escáner. Pídeselo al encargado."
+
+#: frontend/src/pages/Productos.vue
+msgid "I need the scanner user role to count, file and move products in Escáner."
+msgstr "Necesito el rol de usuario del escáner para contar, acomodar y mover productos en el Escáner."
+
+#: frontend/src/pages/Productos.vue
+msgid "Never counted"
+msgstr "Nunca contado"
+
+#: frontend/src/pages/Productos.vue
+msgid "Counted today ({0})"
+msgstr "Contado hoy ({0})"
+
+#: frontend/src/pages/Productos.vue
+msgid "Counted {0} days ago ({1})"
+msgstr "Contado hace {0} días ({1})"
+
+#: frontend/src/pages/Productos.vue
+msgid "cycle count"
+msgstr "conteo cíclico"
+
+#: frontend/src/pages/Productos.vue
+msgid "bin count"
+msgstr "conteo de cajón"
+
+#: frontend/src/pages/Productos.vue
+msgid "stock adjustment"
+msgstr "ajuste de inventario"
+
+#: frontend/src/pages/Productos.vue
+msgid "Bin assigned ({0})."
+msgstr "Cajón asignado ({0})."
+
+#: frontend/src/pages/Productos.vue
+msgid "Move saved ({0})."
+msgstr "Movimiento guardado ({0})."
+
+#: frontend/src/pages/Productos.vue
+msgid "Count sent ({0}). The stock changes after the review."
+msgstr "Conteo enviado ({0}). La existencia cambia después de la revisión."
+
+#: frontend/src/pages/Productos.vue
+msgid "Count saved ({0})."
+msgstr "Conteo guardado ({0})."
+
+#: frontend/src/pages/Productos.vue
+msgid "Stock adjustment {0} saved."
+msgstr "Ajuste de inventario {0} guardado."
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} {1} saved."
+msgstr "{0} {1} guardado."
+
+#: frontend/src/pages/Productos.vue
+msgid "The count stays the same; another person counts it in Escáner."
+msgstr "El conteo sigue igual; otra persona lo cuenta en el Escáner."
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} ({1} products)"
+msgstr "{0} ({1} productos)"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} in {1}"
+msgstr "{0} en {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} products in {1}"
+msgstr "{0} productos en {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "One store at a time: the products of the other stores stay selected."
+msgstr "Una tienda a la vez: los productos de las otras tiendas siguen seleccionados."
+
+#: frontend/src/pages/Productos.vue
+msgid "Who assigns counts there"
+msgstr "Quién asigna los conteos ahí"
+
+#: frontend/src/pages/Productos.vue
+msgid "Nobody manages counts in this store yet: the request goes to the administrators."
+msgstr "Nadie administra el conteo en esta tienda todavía: el pedido va a los administradores."
+
+#: frontend/src/pages/Productos.vue
+msgid "E.g. we sold more than we had"
+msgstr "Ej. vendimos más de lo que había"
+
+#: frontend/src/pages/Productos.vue
+msgid "Count on"
+msgstr "Contar el día"
+
+#: frontend/src/pages/Productos.vue
+msgid "Reassign the count"
+msgstr "Reasignar el conteo"
+
+#: frontend/src/pages/Productos.vue
+msgid "Send the request"
+msgstr "Enviar el pedido"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} (has a count today; counted the last difference of {1})"
+msgstr "{0} (tiene conteo hoy; contó la última diferencia de {1})"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} (counted the last difference of {1})"
+msgstr "{0} (contó la última diferencia de {1})"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} already had a request for this store; your list was added to it."
+msgstr "{0} ya tenía un pedido de esta tienda; tu lista se agregó."
+
 #: frontend/src/pages/Producto.vue
 msgid "{0} {1} = {2} {3}"
 msgstr "{0} {1} = {2} {3}"

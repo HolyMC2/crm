@@ -46,6 +46,11 @@ const PRODUCTOS_PLACES = [
   ['precio-revisar', 'Precio por revisar'],
   ['faltan', 'Faltan'],
   ['bajo-minimo', 'Bajo mínimo'],
+  ['sin-cajon', 'Sin cajón'],
+  ['sin-contar', 'Sin contar'],
+  ['negativo', 'Existencia negativa'],
+  ['por-revisar', 'Diferencias por revisar'],
+  ['conteos-abiertos', 'Conteos abiertos'],
 ]
 const COMPRAS_PLACES = [
   ['por-comprar', 'Por comprar'],
