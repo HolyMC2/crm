@@ -10926,6 +10926,14 @@ msgstr "Contraer barra lateral"
 msgid "Expand sidebar"
 msgstr "Expandir barra lateral"
 
+#: frontend/src/components/shell/ShellRail.vue
+msgid "Icons only"
+msgstr "Solo íconos"
+
+#: frontend/src/components/shell/ShellRail.vue
+msgid "Show app names"
+msgstr "Mostrar nombres"
+
 #: frontend/src/utils/shellPalette.js
 msgid "Find «{0}» in Escáner"
 msgstr "Buscar «{0}» en Escáner"

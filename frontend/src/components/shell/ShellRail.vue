@@ -44,8 +44,8 @@
       </template>
     </button>
     <div
-      class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none]"
-      :class="expanded ? 'items-stretch' : 'items-center'"
+      class="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden [scrollbar-width:none] hover:[scrollbar-width:thin]"
+      :class="expanded ? 'items-stretch gap-px' : 'items-center gap-1'"
     >
       <RouterLink
         v-for="module in apps"
@@ -71,42 +71,85 @@
           module.label
         }}</span>
       </RouterLink>
-      <template v-if="siblings.length">
+      <template v-if="siblings.length && expanded">
         <div
-          v-if="expanded"
           class="flex-none px-2.5 pb-0.5 pt-3 text-xs font-medium text-ink-gray-5"
         >
           {{ __('Other apps') }}
         </div>
-        <hr
-          v-else
-          class="my-1.5 w-6 flex-none border-outline-gray-2"
-          aria-hidden="true"
-        />
         <a
           v-for="app in siblings"
           :key="app.key"
           :href="siblingLinks[app.key]"
-          :title="expanded ? undefined : app.label"
           :aria-label="app.label"
           :data-sibling="app.key"
           class="flex flex-none items-center rounded-lg text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8"
-          :class="ROW[expanded ? 'wide' : 'icon']"
+          :class="ROW.wide"
         >
           <span
             :class="[app.icon, 'size-[18px] flex-none']"
             aria-hidden="true"
           />
-          <template v-if="expanded">
-            <span class="flex-1 truncate" aria-hidden="true">{{
-              app.label
-            }}</span>
+          <span class="flex-1 truncate" aria-hidden="true">{{
+            app.label
+          }}</span>
+          <span
+            class="lucide-arrow-up-right size-3.5 flex-none text-ink-gray-4"
+            aria-hidden="true"
+          />
+        </a>
+      </template>
+    </div>
+    <!-- Collapsed, the sibling apps wait behind one button. -->
+    <div v-if="siblings.length && !expanded" class="flex-none">
+      <button
+        ref="appsButton"
+        class="flex items-center justify-center rounded-lg"
+        :class="[
+          ROW.icon,
+          appsOpen
+            ? 'bg-surface-gray-3 text-ink-gray-9'
+            : 'text-ink-gray-6 hover:bg-surface-gray-2 hover:text-ink-gray-8',
+        ]"
+        :aria-label="__('Other apps')"
+        :title="__('Other apps')"
+        :aria-expanded="appsOpen"
+        aria-haspopup="menu"
+        data-testid="rail-apps"
+        @click="toggleApps"
+      >
+        <span class="lucide-layout-grid size-[18px]" aria-hidden="true" />
+      </button>
+      <template v-if="appsOpen">
+        <div class="fixed inset-0 z-40" @click="appsOpen = false" />
+        <div
+          role="menu"
+          class="fixed z-50 w-56 rounded-xl border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
+          :style="appsMenuStyle"
+          @keydown.esc="closeApps"
+        >
+          <div class="px-3.5 pb-1 pt-1.5 text-xs font-medium text-ink-gray-5">
+            {{ __('Other apps') }}
+          </div>
+          <a
+            v-for="app in siblings"
+            :key="app.key"
+            role="menuitem"
+            :href="siblingLinks[app.key]"
+            :data-sibling="app.key"
+            class="flex items-center gap-2.5 px-3.5 py-2 text-sm hover:bg-surface-gray-2"
+          >
             <span
-              class="lucide-arrow-up-right size-3.5 flex-none text-ink-gray-4"
+              :class="[app.icon, 'size-4 text-ink-gray-6']"
               aria-hidden="true"
             />
-          </template>
-        </a>
+            <span class="flex-1">{{ app.label }}</span>
+            <span
+              class="lucide-arrow-up-right size-3.5 text-ink-gray-4"
+              aria-hidden="true"
+            />
+          </a>
+        </div>
       </template>
     </div>
     <button
@@ -114,7 +157,7 @@
       :class="ROW[expanded ? 'wide' : 'icon']"
       :aria-label="toggleLabel"
       :aria-expanded="expanded"
-      :title="`${toggleLabel} (${sidebarKey})`"
+      :title="`${expanded ? toggleLabel : __('Show app names')} (${sidebarKey})`"
       aria-keyshortcuts="["
       data-testid="rail-toggle"
       @click="toggleRail"
@@ -128,7 +171,7 @@
       />
       <template v-if="expanded">
         <span class="flex-1 truncate text-left" aria-hidden="true">{{
-          toggleLabel
+          __('Icons only')
         }}</span>
         <kbd
           class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-5"
@@ -149,7 +192,7 @@
   </nav>
 </template>
 <script setup>
-import { computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { keyLabel, searchEntryHint } from '@/composables/shellKeyboard'
 import {
@@ -157,6 +200,7 @@ import {
   railExpanded,
   railWidth,
   siblingHref,
+  sortSiblings,
   toggleRail,
 } from '@/composables/shellRail'
 import UserMenu from './UserMenu.vue'
@@ -168,10 +212,11 @@ const props = defineProps({
 })
 defineEmits(['palette'])
 
-// One row shape per width: an icon tile, or a full-width row with the name.
+// One row shape per width: an icon tile, or a full-width row with the name
+// (32 px rows keep every module and the other apps on a 900 px screen).
 const ROW = Object.freeze({
   icon: 'size-10 justify-center',
-  wide: 'h-9 w-full gap-3 px-2.5 text-sm',
+  wide: 'h-8 w-full gap-3 px-2.5 text-sm',
 })
 // «Buscar o ir a… (Ctrl+K) · Buscar registros (Ctrl+G)», ⌘ on Apple.
 const { label: searchHint, aria: searchKeys } = searchEntryHint()
@@ -193,7 +238,7 @@ const avisos = computed(() =>
 )
 // Sibling SPAs (Escáner, POS, Taller…) open with the way back to this page:
 // «Volver a Productos» in Escáner returns to the record the worker left.
-const siblings = installedSiblings()
+const siblings = sortSiblings(installedSiblings())
 const siblingLinks = computed(() => {
   const label = props.modules.find((module) => module.key === props.active)
     ?.label
@@ -201,4 +246,20 @@ const siblingLinks = computed(() => {
     siblings.map((app) => [app.key, siblingHref(app, route.fullPath, label)]),
   )
 })
+
+// Collapsed: one «Otras apps» button opens them beside the rail.
+const appsOpen = ref(false)
+const appsButton = ref(null)
+const appsMenuStyle = ref({})
+function toggleApps() {
+  if (appsOpen.value) return closeApps()
+  const box = appsButton.value?.getBoundingClientRect()
+  const top = Math.max(8, Math.min((box?.top ?? 8) - 8, window.innerHeight - 260))
+  appsMenuStyle.value = { left: `${railWidth.value + 4}px`, top: `${top}px` }
+  appsOpen.value = true
+}
+function closeApps() {
+  appsOpen.value = false
+  nextTick(() => appsButton.value?.focus())
+}
 </script>

@@ -422,15 +422,30 @@ describe('one frame for every route', () => {
     try {
       await mount('/contactos')
       const rail = root.querySelector('nav[aria-label="Apps"]')
+      // Escáner first: the stock tool the shell opens most.
       expect(
         [...rail.querySelectorAll('[data-sibling]')].map((a) => a.dataset.sibling),
-      ).toEqual(['pos', 'scan'])
+      ).toEqual(['scan', 'pos'])
       const scan = rail.querySelector('[data-sibling="scan"]')
       expect(scan.textContent).toContain('Escáner')
       const href = new URL(scan.getAttribute('href'), 'https://x.test')
       expect(href.pathname).toBe('/scan/')
       expect(href.searchParams.get('return_to')).toBe('/crm/contactos')
       expect(href.searchParams.get('return_label')).toBe('Contactos')
+      // Collapsed, they wait behind one «Otras apps» button beside the rail.
+      rail.querySelector('[data-testid="rail-toggle"]').click()
+      await nextTick()
+      expect(rail.querySelector('[data-sibling]')).toBeNull()
+      const apps = rail.querySelector('[data-testid="rail-apps"]')
+      expect(apps.getAttribute('aria-expanded')).toBe('false')
+      apps.click()
+      await nextTick()
+      expect(apps.getAttribute('aria-expanded')).toBe('true')
+      const menu = rail.querySelector('[role="menu"]')
+      expect(
+        [...menu.querySelectorAll('[data-sibling]')].map((a) => a.textContent.trim()),
+      ).toEqual(['Escáner', 'POS'])
+      expect(menu.style.left).toBe('60px')
     } finally {
       delete window.installed_apps
     }

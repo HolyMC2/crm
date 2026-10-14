@@ -250,7 +250,11 @@ import {
   openSalesSettings,
   saveNavSlots,
 } from '@/composables/muelleShell'
-import { installedSiblings, siblingHref } from '@/composables/shellRail'
+import {
+  installedSiblings,
+  siblingHref,
+  sortSiblings,
+} from '@/composables/shellRail'
 import { installApp, installAvailable } from '@/composables/shellInstall'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
@@ -286,7 +290,7 @@ const initials = computed(() => {
 // Sibling SPAs open with the way back to the page the worker left.
 const route = useRoute()
 const siblings = computed(() =>
-  installedSiblings().map((app) => ({
+  sortSiblings(installedSiblings()).map((app) => ({
     ...app,
     href: siblingHref(
       app,

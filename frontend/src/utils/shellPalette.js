@@ -3,7 +3,7 @@ import { identityTypeLabel } from '@/utils/contactos'
 import { call } from 'frappe-ui'
 import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
-import { installedSiblings } from '@/composables/shellRail'
+import { installedSiblings, sortSiblings } from '@/composables/shellRail'
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -306,7 +306,7 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-folder',
             href: view ? `/archivos?view=${view}` : '/archivos',
           })
-      const siblings = installedSiblings()
+      const siblings = sortSiblings(installedSiblings())
       for (const app of siblings)
         if (app.key !== 'scan')
           items.push({

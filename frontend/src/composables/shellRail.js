@@ -101,6 +101,16 @@ export function installedSiblings(apps = globalThis.window?.installed_apps) {
   )
 }
 
+// Escáner first: the phone stock tool every shop opens from the shell.
+const SIBLING_ORDER = ['scan', 'pos', 'taller', 'clinica', 'mercado']
+
+/** Installed sibling apps in the shell's order (Escáner first). */
+export function sortSiblings(apps) {
+  return [...apps].sort(
+    (a, b) => SIBLING_ORDER.indexOf(a.key) - SIBLING_ORDER.indexOf(b.key),
+  )
+}
+
 /**
  * The sibling's entry with the shell's return protocol: it can offer «Volver a
  * {label}» back to the page the worker left. `fullPath` is the router path
