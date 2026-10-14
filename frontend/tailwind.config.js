@@ -1,4 +1,5 @@
 import frappeUIPreset from 'frappe-ui/tailwind'
+import { withLeanLucide } from './tailwind/lucideIcons.js'
 
 // Mirrors `colors` in src/utils/index.js (CRM status colour choices).
 const colors = [
@@ -18,7 +19,8 @@ const colors = [
 ]
 
 export default {
-  presets: [frappeUIPreset],
+  // Lucide mask icons at a fifth of frappe-ui's bytes (tailwind/lucideIcons.js).
+  presets: [withLeanLucide(frappeUIPreset)],
   content: [
     './index.html',
     './src/**/*.{vue,js,ts,jsx,tsx}',
