@@ -414,6 +414,9 @@ export function autoChip(auto, today) {
         return { label: tr('Does not accept messages'), theme: 'red' }
       if (auto.code === 'conversation_owned')
         return { label: tr('Stopped: someone is in the chat'), theme: 'orange' }
+      // A teammate paused the chat on purpose: the reminder waits for a person.
+      if (auto.code === 'conversation_paused')
+        return { label: tr('Paused by a teammate'), theme: 'orange' }
       return { label: tr('You send it'), theme: 'orange' }
     case 'review_usd':
       return { label: tr('Review: invoice in USD'), theme: 'orange' }

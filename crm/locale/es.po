@@ -19803,3 +19803,8 @@ msgstr "Cuando abra el horario de envío, sale 1 recordatorio."
 #: frontend/src/components/cobranza/AutoSetupSheet.vue
 msgid "When the sending window opens, {0} reminders go out."
 msgstr "Cuando abra el horario de envío, salen {0} recordatorios."
+
+# Cobranza «Recordatorios automáticos»: fix round.
+#: frontend/src/composables/useCobranza.js
+msgid "Paused by a teammate"
+msgstr "En pausa por un compañero"
