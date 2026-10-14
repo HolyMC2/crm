@@ -152,6 +152,34 @@
                     @click="sheetOpen = true"
                   />
                 </template>
+                <template
+                  v-else-if="
+                    action.key === 'decide' && action.allowed && pendingDecide
+                  "
+                >
+                  <!-- A decision sent without an answer: it is checked, never replaced by another. -->
+                  <div
+                    class="w-full space-y-2 rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+                    role="status"
+                    data-testid="claim-pending-decision"
+                  >
+                    <p>
+                      {{
+                        __(
+                          'Your decision «{0}» was sent and we did not hear back. Check its result before deciding anything else; it is never done twice.',
+                          [decisionLabel(pendingDecide.data)],
+                        )
+                      }}
+                    </p>
+                    <Button
+                      variant="solid"
+                      class="min-h-11 sm:min-h-8"
+                      :loading="busy"
+                      :label="__('Check result')"
+                      @click="checkPending"
+                    />
+                  </div>
+                </template>
                 <template v-else-if="action.key === 'decide' && action.allowed">
                   <Button
                     variant="solid"
@@ -444,10 +472,13 @@ import {
   claimBack,
   claimProblem,
   claimsApi,
+  forgetOperation,
   money,
   nextClaim,
   owedTotal,
+  pendingOperation,
   runOnce,
+  sameDecision,
   stateLabel,
   stateTheme,
 } from '@/composables/useGastosEmpleados'
@@ -470,6 +501,8 @@ const decideOpen = ref(false)
 const decideMode = ref('less')
 const reimburseOpen = ref(false)
 const approval = reactive({ open: false, action: '', reason: '' })
+const decideKey = computed(() => `decide:${props.name}`)
+const pendingDecide = ref(null)
 
 const doc = computed(() => data.value.document || {})
 const actions = computed(() => data.value.actions || [])
@@ -527,6 +560,7 @@ async function load() {
     // In place: the same nodes stay, only what changed is redrawn.
     data.value = await claimsApi('claim', { name: props.name })
     loaded.value = true
+    syncPending()
   } catch (error) {
     const p = claimProblem(error)
     if (!loaded.value || p.kind === 'permission') guard.value = p
@@ -560,17 +594,52 @@ function onAction(action) {
   else if (action.key === 'take_photo') sheetOpen.value = true
 }
 
+// A decision sent without an answer stays the one shown until it is checked;
+// once the record can no longer be decided here, it is over.
+function syncPending() {
+  const pending = pendingOperation(decideKey.value)
+  if (pending && !actions.value.some((a) => a.key === 'decide' && a.allowed)) {
+    forgetOperation(decideKey.value)
+    pendingDecide.value = null
+    return
+  }
+  pendingDecide.value = pending
+}
+watch(decideOpen, (value) => {
+  if (!value) syncPending()
+})
+
+function decisionLabel(data) {
+  if (data?.decision === 'approve')
+    return data.sanctioned != null
+      ? __('Approve less')
+      : __('Approve', null, 'Gastos')
+  if (data?.decision === 'reject') return __('Reject', null, 'Gastos')
+  if (data?.decision === 'return') return __('Ask for a correction')
+  return data?.decision || ''
+}
+
 // «Aprobar» is one tap; the other decisions ask for an amount or a reason.
-async function approve() {
+function approve() {
+  const data = {
+    name: props.name,
+    decision: 'approve',
+    modified: doc.value.modified,
+    reason: '',
+  }
+  return submitDecision(data, sameDecision(data))
+}
+// «Comprobar resultado»: the pending decision itself, with its request id.
+function checkPending() {
+  return submitDecision(pendingDecide.value?.data)
+}
+async function submitDecision(data, same) {
   busy.value = true
   problem.value = null
   refusal.value = null
   try {
-    const result = await runOnce(claimsApi, 'decide', `decide:${props.name}`, {
-      name: props.name,
-      decision: 'approve',
-      modified: doc.value.modified,
-      reason: '',
+    const result = await runOnce(claimsApi, 'decide', decideKey.value, data, {
+      same,
     })
     if (!result.ok) {
       refusal.value = result
@@ -578,9 +647,10 @@ async function approve() {
       if (result.code === 'already_decided') await load()
     } else await decided(result)
   } catch (error) {
-    problem.value = claimProblem(error)
+    if (!error?.pendingOther) problem.value = claimProblem(error)
   } finally {
     busy.value = false
+    syncPending()
   }
 }
 

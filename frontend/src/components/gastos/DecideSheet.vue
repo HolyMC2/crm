@@ -124,6 +124,7 @@ import {
   money,
   pendingOperation,
   runOnce,
+  sameDecision,
 } from '@/composables/useGastosEmpleados'
 
 // «Aprobar menos», «Rechazar» and «Pedir corrección» (a reason is required);
@@ -227,7 +228,10 @@ async function decide() {
       reason: String(reason.value).trim(),
     }
     if (props.mode === 'less') data.sanctioned = Number(amount.value)
-    const result = await runOnce(claimsApi, 'decide', key.value, data)
+    // A different decision still unconfirmed is never sent under this one.
+    const result = await runOnce(claimsApi, 'decide', key.value, data, {
+      same: sameDecision(data),
+    })
     resumed.value = false
     if (!result.ok) {
       refusal.value = result

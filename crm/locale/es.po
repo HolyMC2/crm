@@ -19465,3 +19465,9 @@ msgstr "Pagado"
 msgctxt "Gastos de empleados"
 msgid "Cancelled"
 msgstr "Cancelado"
+
+msgid "Your decision «{0}» was sent and we did not hear back. Check its result before deciding anything else; it is never done twice."
+msgstr "Tu decisión «{0}» se envió y no supimos la respuesta. Comprueba el resultado antes de decidir otra cosa; nunca se hace dos veces."
+
+msgid "An earlier decision on this expense is still unconfirmed."
+msgstr "Una decisión anterior sobre este gasto sigue sin confirmarse."

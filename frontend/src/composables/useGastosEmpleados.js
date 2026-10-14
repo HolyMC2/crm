@@ -260,11 +260,30 @@ export function forgetOperation(key) {
   }
 }
 
+/** Whether a pending decision is the same kind as the one asked for now:
+ *  approve, approve less, reject or return (a retry of «Aprobar menos» with
+ *  another amount still checks the one that was sent). */
+export function sameDecision(data) {
+  return (pending) =>
+    pending?.decision === data?.decision &&
+    (pending?.sanctioned != null) === (data?.sanctioned != null)
+}
+
 /** One call per operation until the server answers. An unknown outcome keeps
  *  the request id and payload, so the retry replays instead of acting again;
- *  any answer (done or refused) ends it. */
-export async function runOnce(api, method, key, data) {
-  const operation = pendingOperation(key) || { request_id: requestId(), data }
+ *  any answer (done or refused) ends it. With `same`, a pending operation that
+ *  is a different one (a «Reject» under an «Approve») is never replayed under
+ *  it: the call fails with `pendingOther` so the screen shows that one. */
+export async function runOnce(api, method, key, data, { same } = {}) {
+  const pending = pendingOperation(key)
+  if (pending && same && !same(pending.data))
+    throw Object.assign(
+      new Error(
+        tr('An earlier decision on this expense is still unconfirmed.'),
+      ),
+      { pendingOther: pending },
+    )
+  const operation = pending || { request_id: requestId(), data }
   remember(key, operation)
   try {
     const result = await api(method, {
