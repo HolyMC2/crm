@@ -326,4 +326,16 @@ describe('Productos › Inventario', () => {
       `IPN2|${W}`,
     )
   })
+
+  it('an updated product from the mover is said, and done never stays', async () => {
+    const router = await mountAt(
+      `/productos?vista=sin-cajon&tienda=${encodeURIComponent(W)}&done=${encodeURIComponent('Item:IPN3')}`,
+    )
+    expect(toast.success).toHaveBeenCalledWith('Product IPN3 updated.')
+    expect(router.currentRoute.value.query).toEqual({
+      vista: 'sin-cajon',
+      tienda: W,
+    })
+    expect(last('counts').fresh).toBe(1)
+  })
 })

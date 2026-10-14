@@ -458,6 +458,7 @@ import {
   selectionGroups,
   stockLabel,
   viewLabel,
+  withoutDone,
 } from '@/composables/useProductos'
 
 const PAGE = 30
@@ -1067,10 +1068,17 @@ function openRow(row) {
 // ── return from a hand-off: `done=<doctype>:<name>` ──────────────────────
 async function handleDone() {
   const done = escanerDone(route.query.done)
-  if (!done) return false
+  if (!done) {
+    // Not ours to say (or malformed): never leave it in the URL to replay.
+    if (route.query.done) await router.replace(withoutDone(route.fullPath))
+    return false
+  }
   toast.success(done.text)
   notice.value = done.text
-  await update({ done: '' })
+  // An updated product: its row is the one to look at.
+  if (done.doctype === 'Item' && !state.value.focus)
+    focusKey.value = rows.value.find((row) => row.name === done.name)?.key || ''
+  await router.replace(withoutDone(route.fullPath))
   return true
 }
 

@@ -165,7 +165,12 @@ describe('Escáner links carry the way back', () => {
       name: 'TIU-9',
       text: 'Bin assigned (TIU-9).',
     })
-    expect(escanerDone('Scan Task:SCT-1').text).toBe('Scan Task SCT-1 saved.')
+    expect(escanerDone('Item:IPN 1').text).toBe('Product IPN 1 updated.')
+    expect(escanerDone('Scan Task:SCT-1').text).toBe('Task SCT-1 done.')
+    expect(escanerDone('Purchase Receipt:MAT-PRE-1').text).toBe(
+      'Receipt MAT-PRE-1 saved.',
+    )
+    expect(escanerDone('Serial No:SN-1').text).toBe('Serial No SN-1 saved.')
     expect(escanerDone('sin-dos-puntos')).toBeNull()
     expect(escanerDone(undefined)).toBeNull()
   })

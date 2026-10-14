@@ -591,6 +591,7 @@ import {
   scannerItemUrl,
   scannerMoveUrl,
   shellPath,
+  withoutDone,
 } from '@/composables/useProductos'
 
 const props = defineProps({ item: { type: String, required: true } })
@@ -894,12 +895,13 @@ function handleDone() {
     // Back from Escáner: say what changed; the record reloads right after.
     toast.success(scanned.text)
     notice.value = { text: scanned.text }
-    const query = { ...route.query }
-    delete query.done
-    router.replace({ query })
+    router.replace(withoutDone(route.fullPath))
     return
   }
-  if (!done) return
+  if (!done) {
+    if (route.query.done) router.replace(withoutDone(route.fullPath))
+    return
+  }
   notice.value = {
     text:
       done.doctype === 'Purchase Order'
@@ -911,9 +913,7 @@ function handleDone() {
         : { name: 'CompraSolicitud', params: { name: done.name } },
     link: __('Open in Compras'),
   }
-  const query = { ...route.query }
-  delete query.done
-  router.replace({ query })
+  router.replace(withoutDone(route.fullPath))
 }
 
 watch(

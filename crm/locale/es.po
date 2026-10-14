@@ -17203,6 +17203,18 @@ msgid "Stock adjustment {0} saved."
 msgstr "Ajuste de inventario {0} guardado."
 
 #: frontend/src/pages/Productos.vue
+msgid "Product {0} updated."
+msgstr "Artículo {0} actualizado."
+
+#: frontend/src/pages/Productos.vue
+msgid "Receipt {0} saved."
+msgstr "Recepción {0} guardada."
+
+#: frontend/src/pages/Productos.vue
+msgid "Task {0} done."
+msgstr "Tarea {0} terminada."
+
+#: frontend/src/pages/Productos.vue
 msgid "{0} {1} saved."
 msgstr "{0} {1} guardado."
 

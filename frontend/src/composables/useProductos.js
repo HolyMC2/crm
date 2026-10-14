@@ -5,7 +5,10 @@ import {
   readDone,
   safeReturn as contractReturn,
   withReturn,
+  withoutDone,
 } from '@/vendor/muelle-shell/contracts'
+
+export { withoutDone }
 import {
   comprasApi,
   outcomeUnknown,
@@ -537,12 +540,15 @@ export function selectable(row) {
 
 // What came back from Escáner (`done=<doctype>:<name>`), said plainly.
 const DONE_TEXT = {
+  Item: 'Product {0} updated.',
   'Taller Item Ubicacion': 'Bin assigned ({0}).',
   'Taller Bin Movement': 'Move saved ({0}).',
   'Mercado Cycle Count Task':
     'Count sent ({0}). The stock changes after the review.',
   'Scan Count': 'Count saved ({0}).',
   'Stock Reconciliation': 'Stock adjustment {0} saved.',
+  'Purchase Receipt': 'Receipt {0} saved.',
+  'Scan Task': 'Task {0} done.',
 }
 /** `{doctype, name, text}` of a hand-off that finished, or null. */
 export function escanerDone(value) {
