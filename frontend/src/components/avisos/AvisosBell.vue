@@ -27,9 +27,12 @@
         :class="['lucide-bell flex-none', rail ? 'size-[18px]' : 'size-5']"
         aria-hidden="true"
       />
-      <span v-if="rail && expanded" class="flex-1 truncate text-left" aria-hidden="true">{{
-        __('Avisos')
-      }}</span>
+      <span
+        v-if="rail && expanded"
+        class="flex-1 truncate text-left"
+        aria-hidden="true"
+        >{{ __('Avisos') }}</span
+      >
       <span
         v-if="label"
         class="pointer-events-none min-w-4 rounded-full bg-surface-red-7 px-1 text-center text-[10px] font-semibold leading-4 text-ink-red-1"
