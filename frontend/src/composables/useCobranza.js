@@ -320,8 +320,8 @@ export function withDueSoon(invoices, today, days = 7) {
     ...inv,
     due_soon: Boolean(
       inv.next_due &&
-      Number(inv.overdue_days || 0) === 0 &&
-      inv.next_due <= edge,
+        Number(inv.overdue_days || 0) === 0 &&
+        inv.next_due <= edge,
     ),
   }))
 }
