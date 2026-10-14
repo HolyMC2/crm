@@ -147,16 +147,18 @@
           maxlength="280"
         />
         <AudienceChips v-model="form.audience" />
+        <!-- Who it reaches, always said (review SCOPE-1): a blank company is every company. -->
         <FormControl
-          v-if="companies.length > 1"
+          v-if="company.options"
           v-model="form.company"
           type="select"
           :label="__('Company', null, CTX)"
-          :options="[
-            { label: __('Every company'), value: '' },
-            ...companies.map((company) => ({ label: company, value: company })),
-          ]"
+          :options="company.options"
+          data-testid="manual-company"
         />
+        <p v-else class="text-sm text-ink-gray-7" data-testid="manual-company">
+          {{ __('For: {0}', [company.label], CTX) }}
+        </p>
         <PlacePicker v-model="form.place" :places="boot?.places || []" />
 
         <div>
@@ -187,10 +189,11 @@
 
         <div class="space-y-2 border-t border-outline-gray-1 pt-4">
           <div class="flex flex-wrap gap-2" data-testid="manual-editor-actions">
+            <!-- Published or retired: «Guardar cambios» (review F7); a draft saves as a draft. -->
             <Button
-              v-if="status === 'Publicado'"
+              v-if="status !== 'Borrador'"
               variant="solid"
-              :label="__('Save changes')"
+              :label="saveLabel(status)"
               :loading="busy === 'save'"
               class="min-h-11 sm:min-h-8"
               data-testid="manual-save"
@@ -198,14 +201,13 @@
             />
             <template v-else>
               <Button
-                :label="__('Save draft')"
+                :label="saveLabel(status)"
                 :loading="busy === 'save'"
                 class="min-h-11 sm:min-h-8"
                 data-testid="manual-save"
                 @click="save()"
               />
               <Button
-                v-if="status !== 'Retirado'"
                 variant="solid"
                 :label="__('Publish')"
                 :loading="busy === 'publish'"
@@ -294,6 +296,10 @@ import {
   publishBlocker,
   requestId,
   requestText,
+  companyField,
+  newArticleCompany,
+  saveLabel,
+  savedNotice,
 } from '@/composables/useManual'
 
 const HistorySheet = defineAsyncComponent(
@@ -327,7 +333,7 @@ const historyOpen = ref(false)
 let pendingRequest = null
 let leaving = false
 
-const companies = computed(() => boot.value?.companies || [])
+const company = computed(() => companyField(boot.value || {}, form.company))
 const dirty = computed(() => loaded.value && isDirty(form, base.value))
 const menu = [
   'Paragraph',
@@ -378,9 +384,11 @@ async function load() {
         name: currentName.value,
       })
       if (!article.can_edit) {
-        refusal.value = __(
-          'Only the owner or the manager write the shop manual. Copy the request for the owner.',
-        )
+        refusal.value =
+          article.edit_reason ||
+          __(
+            'Only the owner or the manager write the shop manual. Copy the request for the owner.',
+          )
         return
       }
       adopt(article)
@@ -392,6 +400,7 @@ async function load() {
         place: (boot.value.places || []).some((p) => p.key === lugar)
           ? lugar
           : '',
+        company: newArticleCompany(boot.value),
       })
       base.value = prefill
       Object.assign(form, prefill)
@@ -458,11 +467,7 @@ async function save({ quiet = false } = {}) {
     conflict.value = false
     await drafts.clear(oldKey)
     await drafts.clear(key())
-    if (!quiet)
-      saved.value =
-        article.status === 'Publicado'
-          ? __('Changes published.')
-          : __('Draft saved.')
+    if (!quiet) saved.value = savedNotice(article.status)
     if (wasNew)
       router.replace({ name: 'ManualEditar', params: { name: article.name } })
     return true

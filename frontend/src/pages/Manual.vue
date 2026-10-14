@@ -147,7 +147,23 @@
       </div>
 
       <div
-        v-if="lugarPlace"
+        v-if="lugarInfo.unknown"
+        role="status"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
+        data-testid="manual-lugar-unknown"
+      >
+        <span class="min-w-0 flex-1">{{
+          __('That screen is no longer in the list.')
+        }}</span>
+        <Button
+          variant="solid"
+          :label="__('See the whole manual')"
+          class="min-h-11 sm:min-h-8"
+          @click="clearLugar"
+        />
+      </div>
+      <div
+        v-else-if="lugarPlace"
         role="status"
         class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
         data-testid="manual-lugar"
@@ -354,6 +370,7 @@
     <TemplatesSheet
       v-if="templatesOpen"
       :templates="boot?.templates || []"
+      :boot="boot || {}"
       @close="templatesOpen = false"
       @done="templatesDone"
     />
@@ -373,6 +390,7 @@ import {
   listState,
   loadManualBoot,
   locale,
+  lugarOf,
   manualApi,
   manualBoot,
   metaLine,
@@ -413,14 +431,9 @@ let ticket = 0
 const state = computed(() => listState(route.query, Boolean(caps.value.write)))
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const back = computed(() => backTarget(route.query))
-const lugar = computed(() =>
-  typeof route.query.lugar === 'string' ? route.query.lugar.slice(0, 60) : '',
-)
-const lugarPlace = computed(
-  () =>
-    lugar.value &&
-    (boot.value?.places || []).find((place) => place.key === lugar.value),
-)
+// A moved or unknown key never reaches the server: it explains and offers the whole manual.
+const lugarInfo = computed(() => lugarOf(route.query, boot.value?.places || []))
+const lugarPlace = computed(() => lugarInfo.value.place)
 const guard = computed(() =>
   boot.value && !boot.value.enabled
     ? boot.value.reason ||
@@ -446,7 +459,7 @@ const emptyManual = computed(
     ready.value &&
     !state.value.q &&
     !state.value.categoria &&
-    !lugar.value &&
+    !lugarInfo.value.send &&
     state.value.vista === 'publicados' &&
     (caps.value.write
       ? !Object.values(counts.value).some(Boolean)
@@ -480,11 +493,11 @@ async function load({ more = false } = {}) {
   try {
     const page = await manualApi('list_articles', {
       ...state.value,
-      lugar: lugar.value,
+      lugar: lugarInfo.value.send,
       start: more ? rows.value.length : 0,
     })
     if (current !== ticket) return
-    if (lugar.value && !more) {
+    if (lugarInfo.value.send && !more) {
       const found = resolveLugar(page.rows || [])
       lugarEmpty.value = found.kind === 'none'
       if (found.kind === 'one') {

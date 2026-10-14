@@ -22359,8 +22359,8 @@ msgid "Draft saved."
 msgstr "Borrador guardado."
 
 #: frontend/src (Manual de la tienda)
-msgid "Each save keeps the previous text in the history."
-msgstr "Cada vez que guardas, el texto anterior queda en el historial."
+msgid "Here you see the last 10 changes. Each save keeps the previous text in the history."
+msgstr "Aquí ves los últimos 10 cambios. Cada vez que guardas, el texto anterior queda en el historial."
 
 #: frontend/src (Manual de la tienda)
 msgid "Each template becomes a draft only you and the managers see. Rewrite it in your words and publish it when it is ready."
@@ -22550,7 +22550,28 @@ msgstr "Buscar en el manual de la tienda"
 
 #: frontend/src (Manual de la tienda)
 msgid "See all in the shop manual: «{0}»"
-msgstr "Ver todos en el manual: «{0}»"
+msgstr "Ver todo en el manual de la tienda: «{0}»"
+
+#: frontend/src (Manual de la tienda)
+msgid "The shop manual is still being set up on this system. Try again in a few minutes or ask your administrator."
+msgstr "El manual de la tienda todavía se está preparando en este sistema. Intenta de nuevo en unos minutos o pregunta a tu administrador."
+
+#: frontend/src (Manual de la tienda)
+msgid "That screen is no longer in the list."
+msgstr "Esa pantalla ya no está en la lista."
+
+#: frontend/src (Manual de la tienda)
+msgid "Changes saved."
+msgstr "Cambios guardados."
+
+#: frontend/src (Manual de la tienda)
+msgid "Saved"
+msgstr "Guardado"
+
+#: frontend/src (Manual de la tienda)
+msgctxt "Manual"
+msgid "For: {0}"
+msgstr "Para: {0}"
 
 #: frontend/src (Manual de la tienda)
 msgid "See the article"

@@ -7,6 +7,23 @@
         )
       }}
     </p>
+    <!-- Which company the drafts are for (review SCOPE-1). -->
+    <FormControl
+      v-if="field.options"
+      v-model="company"
+      type="select"
+      class="mb-3"
+      :label="__('Company', null, 'Manual')"
+      :options="field.options"
+      data-testid="manual-templates-company"
+    />
+    <p
+      v-else
+      class="mb-3 text-sm text-ink-gray-7"
+      data-testid="manual-templates-company"
+    >
+      {{ __('For: {0}', [field.label], 'Manual') }}
+    </p>
     <ul class="space-y-2" data-testid="manual-templates-list">
       <li v-for="template in templates" :key="template.key">
         <label
@@ -55,19 +72,26 @@
   </ManualSheet>
 </template>
 <script setup>
-import { ref } from 'vue'
-import { Button } from 'frappe-ui'
+import { computed, ref } from 'vue'
+import { Button, FormControl } from 'frappe-ui'
 import ManualSheet from '@/components/manual/ManualSheet.vue'
 import {
+  companyField,
   manualApi,
+  newArticleCompany,
   outcomeUnknown,
   problemOf,
   requestId,
 } from '@/composables/useManual'
 
-const props = defineProps({ templates: { type: Array, default: () => [] } })
+const props = defineProps({
+  templates: { type: Array, default: () => [] },
+  boot: { type: Object, default: () => ({}) },
+})
 const emit = defineEmits(['close', 'done'])
 const chosen = ref(props.templates.map((template) => template.key))
+const company = ref(newArticleCompany(props.boot))
+const field = computed(() => companyField(props.boot, company.value))
 const busy = ref(false)
 const problem = ref(null)
 let pending = null
@@ -81,6 +105,7 @@ async function create() {
     const result = await manualApi('use_templates', {
       request_id: pending,
       keys: chosen.value,
+      company: company.value || null,
     })
     pending = null
     emit('done', result)

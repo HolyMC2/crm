@@ -43,9 +43,11 @@ export function createManualProvider({ boot, api = manualApi }) {
         })
       let page
       try {
+        // Every keystroke: rows and categories only, never the editor counts.
         page = await api('list_articles', {
           q: query.text,
           limit: PER_GROUP + 1,
+          palette: 1,
         })
       } catch {
         return items

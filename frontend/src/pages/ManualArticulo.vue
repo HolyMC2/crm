@@ -199,7 +199,10 @@
           v-if="!article.can_edit"
           class="mt-8 border-t border-outline-gray-1 pt-4 text-sm text-ink-gray-6"
         >
-          {{ __('Only the owner or the manager write the shop manual.') }}
+          {{
+            article.edit_reason ||
+            __('Only the owner or the manager write the shop manual.')
+          }}
           <button
             class="ml-1 min-h-11 font-medium text-ink-gray-8 underline sm:min-h-0"
             @click="copy(requestText('write'))"

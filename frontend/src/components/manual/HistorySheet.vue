@@ -12,43 +12,28 @@
         <p class="font-medium text-ink-gray-9">
           {{ row.who }} · {{ when(row.when) }}
         </p>
-        <p class="text-ink-gray-7">
-          {{
-            row.fields?.length
-              ? __('Changed: {0}', [row.fields.map(fieldLabel).join(', ')])
-              : __('Created the article')
-          }}
-        </p>
+        <p class="text-ink-gray-7">{{ historyLine(row) }}</p>
       </li>
     </ol>
+    <!-- Frappe keeps every Version row; the form reads the newest 10 (review F6). -->
     <p class="mt-4 text-xs text-ink-gray-6">
-      {{ __('Each save keeps the previous text in the history.') }}
+      {{
+        __(
+          'Here you see the last 10 changes. Each save keeps the previous text in the history.',
+        )
+      }}
     </p>
   </ManualSheet>
 </template>
 <script setup>
 import ManualSheet from '@/components/manual/ManualSheet.vue'
-import { locale } from '@/composables/useManual'
+import { historyLine, locale } from '@/composables/useManual'
 
 defineProps({
   history: { type: Array, default: () => [] },
   title: { type: String, default: '' },
 })
 const emit = defineEmits(['close'])
-const LABELS = {
-  title: 'Title',
-  category: 'Category',
-  summary: 'What it is for',
-  body: 'Article',
-  status: 'Status',
-  published_on: 'Published on',
-  company: 'Company',
-  place: 'Where it is done',
-  audience: 'Who reads it',
-}
-function fieldLabel(field) {
-  return LABELS[field] ? __(LABELS[field], null, 'Manual') : field
-}
 function when(value) {
   const at = Date.parse(
     String(value || '')

@@ -220,6 +220,15 @@ export function placeActionUrl(place, article) {
   }
 }
 
+/** `?lugar=<key>`: the catalog's place, and the key to send only when the catalog knows it.
+ *  A moved or unknown key never reaches the server (it would refuse every retry). */
+export function lugarOf(query = {}, places = []) {
+  const key =
+    typeof query.lugar === 'string' ? query.lugar.trim().slice(0, 60) : ''
+  const place = (key && places.find((p) => p.key === key)) || null
+  return { key, place, send: place ? key : '', unknown: Boolean(key && !place) }
+}
+
 /** `/manual?lugar=…`: no article, exactly one (open it) or several (filtered list). */
 export function resolveLugar(rows = []) {
   if (!rows.length) return { kind: 'none' }
@@ -288,6 +297,66 @@ export function publishBlocker(form) {
   if (!form.title?.trim()) return tr('Write a title to publish it.')
   if (!body) return tr('Write the article to publish it.')
   return ''
+}
+
+/** A draft saves as a draft; a published or retired article saves its changes. */
+export function saveLabel(status) {
+  return tr(
+    status === 'Publicado' || status === 'Retirado'
+      ? 'Save changes'
+      : 'Save draft',
+  )
+}
+export function savedNotice(status) {
+  if (status === 'Publicado') return tr('Changes published.')
+  if (status === 'Retirado') return tr('Changes saved.')
+  return tr('Draft saved.')
+}
+
+/** «Para: …»: a picker when the person writes for several companies, else one line.
+ *  «Todas las empresas» only for someone who works with every company. */
+export function companyField(boot = {}, company = '') {
+  const companies = boot?.companies || []
+  if (companies.length > 1)
+    return {
+      options: [
+        ...(boot.company_required
+          ? []
+          : [{ label: tr('Every company'), value: '' }]),
+        ...companies.map((name) => ({ label: name, value: name })),
+      ],
+      label: '',
+    }
+  return {
+    options: null,
+    label:
+      company || boot?.default_company || boot?.company || tr('Every company'),
+  }
+}
+/** A new article's company: the restricted person's own, else blank (every company). */
+export function newArticleCompany(boot = {}) {
+  return (boot?.company_required && boot?.default_company) || ''
+}
+
+// «Historial»: the fields a person edits, with their words; nothing hidden.
+export const HISTORY_LABELS = Object.freeze({
+  title: 'Title',
+  category: 'Category',
+  summary: 'What it is for',
+  body: 'Article',
+  status: 'Status',
+  published_on: 'Published on',
+  company: 'Company',
+  place: 'Where it is done',
+  audience: 'Who reads it',
+})
+export function historyLine(row = {}) {
+  const fields = (row.fields || []).filter((field) => HISTORY_LABELS[field])
+  if (fields.length)
+    return tr('Changed: {0}', [
+      fields.map((field) => tr(HISTORY_LABELS[field], null, CTX)).join(', '),
+    ])
+  return row.created ? tr('Created the article') : tr('Saved')
 }
 
 export const AUDIENCE = Object.freeze([
