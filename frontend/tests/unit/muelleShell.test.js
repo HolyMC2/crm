@@ -927,6 +927,70 @@ describe('palette providers', () => {
     })
     expect(go.map((i) => i.href)).toEqual(['/archivos?view=ayuda'])
   })
+
+  it('Escáner places and «Find in Escáner» appear only where scanner_kit is installed', async () => {
+    const query = (text) => ({ raw: text, text, scope: 'all', kind: 'text' })
+    const providers = () =>
+      createShellProviders({ boot: ref(boot()), modules: ref([]) })
+    const search = (key, text) =>
+      providers()
+        .find((p) => p.key === key)
+        .search(query(text))
+    expect(await search('ir_a', 'conteo')).toEqual([])
+    window.installed_apps = ['crm', 'scanner_kit']
+    try {
+      const go = await search('ir_a', 'conteo')
+      expect(go.map((i) => [i.title, i.external])).toEqual([
+        ['Escáner › Conteo del día', '/scan/conteo'],
+        ['Escáner › Revisión de conteo', '/scan/conteo/revision'],
+      ])
+      // Found by the worker's words, not only the title.
+      expect(
+        (await search('ir_a', 'cajon')).map((i) => i.external),
+      ).toContain('/scan/bins/move')
+      const find = (await search('acciones', 'funda roja')).find(
+        (i) => i.id === 'escaner.search',
+      )
+      expect(find.external).toBe('/scan/items?q=funda%20roja')
+    } finally {
+      delete window.installed_apps
+    }
+  })
+
+  it('choosing an Escáner place opens it with the way back to this page', async () => {
+    window.installed_apps = ['crm', 'scanner_kit']
+    const assign = vi.fn()
+    const location = window.location
+    delete window.location
+    window.location = { ...location, assign }
+    try {
+      state.mobile.value = false
+      await mount('/contactos')
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }),
+      )
+      const input = await until(() =>
+        document.querySelector('[aria-label="Command palette"] input'),
+      )
+      input.value = 'cajones'
+      input.dispatchEvent(new Event('input'))
+      const option = await until(() =>
+        [...document.querySelectorAll('[role="option"]')].find((o) =>
+          o.textContent.includes('Escáner › Cajones'),
+        ),
+      )
+      option.click()
+      await nextTick()
+      expect(assign).toHaveBeenCalledTimes(1)
+      const url = new URL(assign.mock.calls[0][0], 'https://x.test')
+      expect(url.pathname).toBe('/scan/bins')
+      expect(url.searchParams.get('return_to')).toBe('/crm/contactos')
+      expect(url.searchParams.get('return_label')).toBe('Contactos')
+    } finally {
+      window.location = location
+      delete window.installed_apps
+    }
+  })
 })
 
 describe('Ventas deals in the palette', () => {

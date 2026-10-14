@@ -10926,6 +10926,14 @@ msgstr "Contraer barra lateral"
 msgid "Expand sidebar"
 msgstr "Expandir barra lateral"
 
+#: frontend/src/utils/shellPalette.js
+msgid "Find «{0}» in Escáner"
+msgstr "Buscar «{0}» en Escáner"
+
+#: frontend/src/components/shell/CommandPalette.vue
+msgid "Opens in another app"
+msgstr "Se abre en otra app"
+
 #: crm/api/shell.py
 msgid "Choose whether the sidebar shows the app names or only their icons."
 msgstr "Elige si la barra lateral muestra el nombre de las apps o solo sus íconos."

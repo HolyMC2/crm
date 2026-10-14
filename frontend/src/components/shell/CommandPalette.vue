@@ -117,6 +117,12 @@
               class="hidden flex-none rounded border border-outline-gray-2 px-1.5 font-sans text-xs text-ink-gray-6 sm:inline"
               >{{ keyLabel(item.shortcut) }}</kbd
             >
+            <span
+              v-if="item.external"
+              class="lucide-arrow-up-right size-3.5 flex-none text-ink-gray-5"
+              :title="__('Opens in another app')"
+              aria-hidden="true"
+            />
           </button>
         </template>
         <p
@@ -156,10 +162,16 @@ import {
   groupPaletteItems,
   parsePaletteQuery,
   providersFor,
+  SHELL_MODULES,
   pushRecent,
   safeReturn,
 } from '@/vendor/muelle-shell/contracts'
-import { shellBoot, shellModules } from '@/composables/muelleShell'
+import {
+  moduleKeyFor,
+  shellBoot,
+  shellModules,
+} from '@/composables/muelleShell'
+import { siblingHref } from '@/composables/shellRail'
 import {
   createShellProviders,
   loadRecent,
@@ -303,10 +315,22 @@ function choose(item) {
   }
   if (item.action === 'theme') setTheme(item.args?.theme)
   const href = item.href && safeReturn(`/crm${item.href}`, ['/crm/'])
+  // Sibling apps (Escáner, POS…) open with «Volver a …» back to this page.
+  const external = item.external && siblingTarget(item.external)
   close()
   // The sheet returns the focus to whatever had it before the palette opened.
   if (item.action === 'shortcuts') openShortcutSheet(previousFocus)
   if (href) router.push(href.replace(/^\/crm/, ''))
+  else if (external) window.location.assign(external)
+}
+function siblingTarget(path) {
+  if (!safeReturn(path)) return null
+  const current = router.currentRoute.value
+  return siblingHref({ path }, current.fullPath, moduleLabelFor(current))
+}
+function moduleLabelFor(route) {
+  const key = moduleKeyFor(route)
+  return SHELL_MODULES.find((module) => module.key === key)?.label
 }
 function onKeydown(event) {
   if (event.key === 'Escape') {

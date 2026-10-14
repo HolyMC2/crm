@@ -3,6 +3,7 @@ import { identityTypeLabel } from '@/utils/contactos'
 import { call } from 'frappe-ui'
 import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
+import { installedSiblings } from '@/composables/shellRail'
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -79,6 +80,23 @@ const ARCHIVOS_PLACES = [
   ['ayuda', 'Requieren ayuda'],
   ['archivo', 'Archivo'],
 ]
+// Escáner (scanner_kit) places a worker jumps to from anywhere in the shell;
+// they open in Escáner with «Volver a …» back to the page they left.
+const ESCANER_PLACES = [
+  ['/scan/', 'Inicio', 'lucide-scan-barcode', 'escaner scanner inicio'],
+  ['/scan/items', 'Artículos', 'lucide-package-search', 'buscar articulo item'],
+  ['/scan/bins', 'Cajones', 'lucide-layout-grid', 'cajon ubicacion bin'],
+  ['/scan/bins/move', 'Mover de cajón', 'lucide-move', 'mover cajon traspaso'],
+  ['/scan/conteo', 'Conteo del día', 'lucide-list-checks', 'contar inventario'],
+  [
+    '/scan/conteo/revision',
+    'Revisión de conteo',
+    'lucide-clipboard-check',
+    'diferencias revisar ajuste inventario',
+  ],
+  ['/scan/inbound', 'Recepción', 'lucide-package-open', 'recibir mercancia'],
+  ['/scan/tasks', 'Tareas', 'lucide-square-check-big', 'tareas escaneo'],
+]
 const VENTAS_PLACES = [
   ['/inbox', 'Inbox', 'lucide-messages-square'],
   ['/leads', 'Leads', 'lucide-users'],
@@ -129,6 +147,18 @@ export function createShellProviders({ boot, modules }) {
           title: __('New warranty case'),
           icon: 'lucide-shield-check',
           href: '/garantias?create=1',
+        })
+      if (
+        query.text &&
+        installedSiblings().some((app) => app.key === 'scan')
+      )
+        items.push({
+          id: 'escaner.search',
+          group: 'acciones',
+          title: __('Find «{0}» in Escáner', [query.text]),
+          keywords: `${query.text} escaner existencia cajon stock`,
+          icon: 'lucide-scan-barcode',
+          external: `/scan/items?q=${encodeURIComponent(query.text)}`,
         })
       items.push(
         {
@@ -276,6 +306,26 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-folder',
             href: view ? `/archivos?view=${view}` : '/archivos',
           })
+      const siblings = installedSiblings()
+      for (const app of siblings)
+        if (app.key !== 'scan')
+          items.push({
+            id: `app.${app.key}`,
+            group: 'ir_a',
+            title: app.label,
+            icon: app.icon,
+            external: app.path,
+          })
+      if (siblings.some((app) => app.key === 'scan'))
+        for (const [path, label, icon, keywords] of ESCANER_PLACES)
+          items.push({
+            id: `escaner.${path}`,
+            group: 'ir_a',
+            title: path === '/scan/' ? 'Escáner' : `Escáner › ${label}`,
+            keywords,
+            icon,
+            external: path,
+          })
       if (moduleEnabled(boot.value, 'ventas'))
         for (const [path, label, icon] of VENTAS_PLACES)
           items.push({
@@ -286,7 +336,9 @@ export function createShellProviders({ boot, modules }) {
             href: path,
           })
       if (query.kind === 'empty') return []
-      return items.filter((item) => match(query.text, item.title))
+      return items.filter((item) =>
+        match(query.text, item.title, item.keywords),
+      )
     },
   }
   const contactos = {
