@@ -4,7 +4,7 @@
     :options="{ title: __('Automatic payment reminders'), size: 'xl' }"
   >
     <template #body-content>
-      <div class="space-y-4 text-base" data-auto-setup>
+      <div class="auto-setup space-y-4 text-base" data-auto-setup>
         <p class="text-sm text-ink-gray-6">{{ company }}</p>
         <div v-if="loading && !setup" role="status" class="text-sm">
           {{ __('Loading the reminder settings…') }}
@@ -139,11 +139,7 @@
             </template>
           </p>
           <p class="text-sm font-medium text-ink-gray-9">
-            {{
-              setup.today_count === 1
-                ? __('Today 1 reminder would go out.')
-                : __('Today {0} reminders would go out.', [setup.today_count])
-            }}
+            {{ countText }}
           </p>
 
           <div
@@ -262,6 +258,20 @@ const templateOptions = computed(() => [
 const chosenTemplate = computed(() =>
   (setup.value?.templates || []).find((t) => t.name === form.template),
 )
+// «Hoy saldrían N»: outside the sending window they go out when it opens.
+const countText = computed(() => {
+  const s = setup.value
+  if (!s) return ''
+  if (s.window_open === false && s.enabled)
+    return s.today_count === 1
+      ? __('When the sending window opens, 1 reminder goes out.')
+      : __('When the sending window opens, {0} reminders go out.', [
+          s.today_count,
+        ])
+  return s.today_count === 1
+    ? __('Today 1 reminder would go out.')
+    : __('Today {0} reminders would go out.', [s.today_count])
+})
 const statusText = computed(() => {
   const s = setup.value
   if (!s) return ''
@@ -383,3 +393,14 @@ watch(
   { immediate: true },
 )
 </script>
+<style scoped>
+/* 44 px targets for the pickers on a phone; the desktop keeps frappe-ui's size. */
+.auto-setup :deep([role='combobox']) {
+  min-height: 44px;
+}
+@media (min-width: 640px) {
+  .auto-setup :deep([role='combobox']) {
+    min-height: 28px;
+  }
+}
+</style>
