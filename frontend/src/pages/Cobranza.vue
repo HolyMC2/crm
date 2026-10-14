@@ -48,7 +48,11 @@
               <FeatherIcon name="x" class="h-6 w-6" />
             </button>
             <p class="min-w-0 flex-1 truncate text-lg font-semibold">
-              {{ __('{0} selected', [selected.size]) }}
+              {{
+                selected.size === 1
+                  ? __('1 selected')
+                  : __('{0} selected', [selected.size])
+              }}
             </p>
             <button
               type="button"
@@ -163,14 +167,14 @@
         <button
           type="button"
           class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
-          :title="__('Keyboard shortcuts')"
+          :aria-keyshortcuts="'Alt+H'"
           @click="openShortcutSheet()"
         >
           <kbd
             class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
             >?</kbd
           >
-          {{ __('Shortcuts') }}
+          {{ __('Keyboard shortcuts') }}
         </button>
       </header>
 
@@ -345,7 +349,9 @@
         </div>
         <ul
           v-else
-          class="divide-y divide-outline-gray-1"
+          ref="listbox"
+          tabindex="0"
+          class="divide-y divide-outline-gray-1 focus:outline-none"
           role="listbox"
           :aria-label="segmentLabel(state.segment)"
           :aria-multiselectable="true"
@@ -457,10 +463,10 @@
               </a>
             </div>
             <!-- Desktop: the row's actions on hover or keyboard focus (same keys as the sheet). -->
+            <!-- The focused row's actions, each with its key (desktop; a phone opens the record). -->
             <div
-              v-if="!phone && row.target"
-              class="absolute right-2 top-2 hidden gap-1 rounded-lg bg-surface-base p-1 shadow group-hover:flex"
-              :class="focusKey === rowKey(row) ? '!flex' : ''"
+              v-if="!phone && row.target && focusKey === rowKey(row)"
+              class="flex flex-wrap justify-end gap-1 px-4 pb-2"
               data-row-actions
             >
               <Button
@@ -468,12 +474,11 @@
                 :key="action.key"
                 size="sm"
                 variant="ghost"
-                :title="`${action.label} (${action.hint})`"
-                :aria-label="action.label"
+                :label="`${action.label} · ${action.hint}`"
                 :aria-keyshortcuts="action.hint"
                 @click="runRow(action.key, row)"
               >
-                <template #icon>
+                <template #prefix>
                   <FeatherIcon :name="action.icon" class="h-4 w-4" />
                 </template>
               </Button>
@@ -554,7 +559,11 @@
         data-cobranza-bulkbar
       >
         <p class="min-w-0 flex-1 text-sm font-medium">
-          {{ __('{0} selected', [selected.size]) }}
+          {{
+            selected.size === 1
+              ? __('1 selected')
+              : __('{0} selected', [selected.size])
+          }}
         </p>
         <Button
           v-if="caps.remind"
@@ -762,6 +771,7 @@ const phone = isMobile
 const boot = cobranzaBoot
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const scroller = ref(null)
+const listbox = ref(null)
 const phoneSearch = ref(null)
 const rows = ref([])
 const counts = ref({})
@@ -1458,6 +1468,9 @@ function moveTo(delta) {
   const key = moveFocus(keys.value, focusKey.value, delta)
   const row = rows.value.find((r) => rowKey(r) === key)
   if (!row) return
+  // The keyboard's place is the list (aria-activedescendant): Enter opens the
+  // focused row even after a click on a chip or a button left focus there.
+  listbox.value?.focus?.({ preventScroll: true })
   focusRow(row)
   revealFocus()
 }

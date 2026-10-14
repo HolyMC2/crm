@@ -390,6 +390,29 @@ describe('Cobranza list as a power app', () => {
     )
   })
 
+  it('after a click on a chip, j takes the keyboard back to the list and Enter opens the row', async () => {
+    mount(Cobranza)
+    await flush()
+    const chip = root.querySelector('[data-cobranza-aging] button')
+    chip.focus()
+    press('j', {}, chip)
+    await flush()
+    expect(document.activeElement.getAttribute('role')).toBe('listbox')
+    press('Enter', {}, document.activeElement)
+    await flush()
+    expect(state.router.push.mock.calls.at(-1)[0].params).toEqual({
+      customer: 'Laura',
+    })
+    // On a focused button, Enter stays the button's.
+    state.router.push.mockClear()
+    chip.focus()
+    press('Enter', {}, chip)
+    await flush()
+    expect(state.router.push).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'CobranzaCliente' }),
+    )
+  })
+
   it('aging chips push a history entry; the list reloads from the URL', async () => {
     mount(Cobranza)
     await flush()

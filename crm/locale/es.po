@@ -20387,6 +20387,10 @@ msgid "{0} selected"
 msgstr "{0} seleccionados"
 
 #: frontend/src/pages/Cobranza.vue
+msgid "1 selected"
+msgstr "1 seleccionado"
+
+#: frontend/src/pages/Cobranza.vue
 msgid "Close search"
 msgstr "Cerrar búsqueda"
 
