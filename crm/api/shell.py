@@ -313,7 +313,7 @@ def _manual():
 		"capabilities": {
 			"read": enabled,
 			"write": enabled and bool(capabilities.get("write")),
-			# Hoy › Accesos shows the manual to a reader once something is published.
+			# Hoy «Accesos» shows the manual to a reader once something is published.
 			"published": enabled and bool(capabilities.get("published")),
 		}
 		if enabled
