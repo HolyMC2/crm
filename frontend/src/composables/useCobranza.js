@@ -417,6 +417,9 @@ export function autoChip(auto, today) {
       // A teammate paused the chat on purpose: the reminder waits for a person.
       if (auto.code === 'conversation_paused')
         return { label: tr('Paused by a teammate'), theme: 'orange' }
+      // WhatsApp did not deliver the last reminder: a person sends it or calls.
+      if (auto.code === 'undelivered')
+        return { label: tr('Not delivered'), theme: 'red' }
       return { label: tr('You send it'), theme: 'orange' }
     case 'review_usd':
       return { label: tr('Review: invoice in USD'), theme: 'orange' }

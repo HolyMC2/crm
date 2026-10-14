@@ -19808,3 +19808,7 @@ msgstr "Cuando abra el horario de envío, salen {0} recordatorios."
 #: frontend/src/composables/useCobranza.js
 msgid "Paused by a teammate"
 msgstr "En pausa por un compañero"
+
+#: frontend/src/composables/useCobranza.js
+msgid "Not delivered"
+msgstr "No se entregó"
