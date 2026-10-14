@@ -118,6 +118,17 @@
           <p v-if="!totals.length" class="text-sm text-ink-gray-5">
             {{ __('Sin facturas confirmadas en este alcance.') }}
           </p>
+          <p
+            v-if="scope === 'deal' && repairAdvance > 0"
+            class="mt-1 text-sm text-ink-gray-6"
+          >
+            {{
+              __(
+                'Anticipo recibido en reparaciones de este trato: {0}. Un anticipo no es una factura.',
+                [money(repairAdvance, repairCurrency)],
+              )
+            }}
+          </p>
           <p class="mt-3 text-xs text-ink-gray-5">
             {{
               __(
@@ -397,6 +408,27 @@
                     · {{ doc.device_model }}</span
                   >
                 </div>
+                <div
+                  v-if="
+                    doc.doctype === 'Repair Order' &&
+                    (Number(doc.quote_amount) || Number(doc.advance_amount))
+                  "
+                  class="mt-0.5 text-xs tabular-nums text-ink-gray-6"
+                >
+                  <span v-if="Number(doc.quote_amount)"
+                    >{{ __('Cotización') }}
+                    {{ money(doc.quote_amount, doc.ro_currency) }}</span
+                  ><span
+                    v-if="
+                      Number(doc.quote_amount) && Number(doc.advance_amount)
+                    "
+                  >
+                    · </span
+                  ><span v-if="Number(doc.advance_amount)"
+                    >{{ __('Anticipo recibido') }}
+                    {{ money(doc.advance_amount, doc.ro_currency) }}</span
+                  >
+                </div>
               </div>
               <span
                 class="rounded bg-surface-gray-2 px-2 py-1 text-xs text-ink-gray-6"
@@ -552,7 +584,9 @@ const loading = ref(false),
 const pickerOpen = ref(false),
   orderConfirm = ref(false)
 const selectedKey = ref(''),
-  scope = ref('customer'),
+  // A deal's summary counts the deal's own documents; the customer's whole
+  // history (other deals' invoices) is an explicit opt-in, never the default.
+  scope = ref('deal'),
   typeFilter = ref(''),
   oldest = ref(false),
   historyLimit = ref(30)
@@ -618,6 +652,15 @@ const totals = computed(
     (scope.value === 'customer'
       ? data.value?.customer_totals
       : data.value?.totals) || [],
+)
+const repairOrders = computed(
+  () => data.value?.documents.filter((d) => d.doctype === 'Repair Order') || [],
+)
+const repairAdvance = computed(() =>
+  repairOrders.value.reduce((sum, d) => sum + Number(d.advance_amount || 0), 0),
+)
+const repairCurrency = computed(
+  () => repairOrders.value.find((d) => d.ro_currency)?.ro_currency,
 )
 const salesDocuments = computed(
   () => data.value?.documents.filter(isSale) || [],
