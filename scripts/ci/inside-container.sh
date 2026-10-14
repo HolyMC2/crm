@@ -27,6 +27,18 @@ for companion in /candidate/.ci-companions/*/; do
   echo "companion overlay: $app"
 done
 shopt -u nullglob
+# The image's compiled catalogs (sites/assets/locale/*/LC_MESSAGES/<app>.mo) belong to the
+# image's app copies; recompile them from the overlaid sources so the candidate's own
+# es.po entries are the ones the site translates with.
+compile_catalogs() {
+  bench compile-po-to-mo --app crm --force
+  for companion in /candidate/.ci-companions/*/; do
+    app="$(basename "$companion")"
+    test -d "apps/$app/$app/locale" || continue
+    bench compile-po-to-mo --app "$app" --force
+  done
+}
+compile_catalogs
 bench set-config -g db_host database
 bench set-config -g redis_cache redis://redis:6379/0
 bench set-config -g redis_queue redis://redis:6379/1
@@ -46,6 +58,7 @@ if [ "$mode" = migration ]; then
   bench --site "$site" execute crm._ci_migration.seed
   cp "sites/$site/private/crm-ci-migration.json" /results/migration-baseline.json
   copy_crm /candidate
+  compile_catalogs
   cp /candidate/scripts/ci/migration-probe.py apps/crm/crm/_ci_migration.py
   bench --site "$site" execute crm._ci_migration.guard
   bench --site "$site" migrate 2>&1 | tee /results/migrate.log
