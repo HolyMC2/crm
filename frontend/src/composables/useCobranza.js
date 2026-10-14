@@ -475,6 +475,7 @@ export const AUTO_MISSING = {
   documents_off: 'sending documents by WhatsApp turned on for the business',
   sender_grant: 'permission to send documents from that WhatsApp account',
   reminder_permission: 'permission to confirm payment reminders',
+  company_access: 'access to the sales invoices of this company',
 }
 
 export const AUTO_ACTION_LABELS = {

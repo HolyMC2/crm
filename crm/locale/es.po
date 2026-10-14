@@ -19812,3 +19812,7 @@ msgstr "En pausa por un compañero"
 #: frontend/src/composables/useCobranza.js
 msgid "Not delivered"
 msgstr "No se entregó"
+
+#: frontend/src/composables/useCobranza.js
+msgid "access to the sales invoices of this company"
+msgstr "acceso a las facturas de venta de esta empresa"
