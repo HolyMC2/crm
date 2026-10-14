@@ -83,7 +83,7 @@
               v-for="week in summary.trend"
               :key="week.week"
               class="w-2 rounded-sm bg-surface-gray-5"
-              :class="week.week === 0 ? 'bg-ink-gray-7' : ''"
+              :class="week.week === 0 ? 'bg-surface-gray-7' : ''"
               :style="{ height: `${trendHeight(week.counted)}px` }"
             />
           </div>
@@ -127,7 +127,7 @@
         <template v-if="inventory">
           <FormControl
             v-if="view === 'sin-contar'"
-            class="h-11 w-[48%] sm:h-auto sm:w-44"
+            class="h-11 w-full sm:h-auto sm:w-44"
             type="select"
             :aria-label="__('Not counted in')"
             :model-value="String(state.days)"
@@ -136,7 +136,7 @@
           />
           <FormControl
             v-if="view !== 'conteos-abiertos' && filterOptions.groups.length"
-            class="h-11 w-[48%] sm:h-auto sm:w-48"
+            class="h-11 w-full sm:h-auto sm:w-48"
             type="select"
             :aria-label="__('Group', null, 'Productos')"
             :model-value="state.group"
@@ -145,7 +145,7 @@
           />
           <FormControl
             v-if="view !== 'conteos-abiertos' && filterOptions.brands.length"
-            class="h-11 w-[48%] sm:h-auto sm:w-40"
+            class="h-11 w-full sm:h-auto sm:w-44"
             type="select"
             :aria-label="__('Brand', null, 'Productos')"
             :model-value="state.brand"
@@ -244,7 +244,7 @@
             :aria-current="focusKey === row.key ? 'true' : undefined"
             :class="
               focusKey === row.key
-                ? 'bg-surface-gray-1 shadow-[inset_3px_0_0_0_var(--ink-gray-7,#374151)]'
+                ? 'bg-surface-gray-2 ring-1 ring-inset ring-outline-gray-4'
                 : ''
             "
           >
