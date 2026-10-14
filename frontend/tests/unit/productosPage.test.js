@@ -338,4 +338,39 @@ describe('Productos › Inventario', () => {
     })
     expect(last('counts').fresh).toBe(1)
   })
+
+  it('a quiet refresh racing the first load keeps the returned row focused', async () => {
+    const { hoyLive } = await import('@/composables/useHoy')
+    const hub = hoyLive(null)
+    const original = answers.queue
+    let release
+    const gate = new Promise((resolve) => (release = resolve))
+    // The first page answers late; the live hub resyncs meanwhile.
+    answers.queue = (args) => original(args)
+    const fetch = globalThis.fetch
+    let first = true
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url, init) => {
+        if (first && String(url).endsWith('.queue')) {
+          first = false
+          await gate
+        }
+        return fetch(url, init)
+      }),
+    )
+    const pending = mountAt(
+      `/productos?vista=sin-cajon&tienda=${encodeURIComponent(W)}&fila=IPN3`,
+    )
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    hub.resync(false)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    release()
+    await pending
+    await flush()
+    expect(root.querySelector('[aria-current="true"]')?.dataset.key).toBe(
+      `IPN3|${W}`,
+    )
+    answers.queue = original
+  })
 })

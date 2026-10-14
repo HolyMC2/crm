@@ -856,10 +856,15 @@ function filterArgs() {
       }
     : {}
 }
+let restorePending = false
 async function load({ more = false, quiet = false } = {}) {
+  // A quiet refresh (live sync, after a dialog) never cancels a load the
+  // worker is waiting for; that load brings fresh rows anyway.
+  if (quiet && loading.value) return
   const mine = ++ticket
   if (!quiet) loading.value = true
   if (!quiet) problem.value = null
+  if (!more && !quiet) restorePending = true
   try {
     const page = await productosApi('queue', {
       view: view.value,
@@ -876,7 +881,11 @@ async function load({ more = false, quiet = false } = {}) {
     rows.value = more ? [...rows.value, ...page.rows] : page.rows
     for (const row of page.rows) if (row.key) known.set(row.key, row)
     hasMore.value = page.has_more
-    if (!more && !quiet) restorePosition()
+    // The list position (focused row or scroll) comes back once per list load.
+    if (!more && restorePending) {
+      restorePending = false
+      restorePosition()
+    }
   } catch (error) {
     if (mine !== ticket) return
     problem.value = problemOf(error)
