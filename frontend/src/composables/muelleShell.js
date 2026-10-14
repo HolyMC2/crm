@@ -14,8 +14,58 @@ import {
 export const shellBoot = ref(null)
 export const shellError = ref('')
 export const shellLoading = ref(false)
+/** True while the shell runs on the last boot this browser saw for this user. */
+export const shellBootStale = ref(false)
 let pending
 let scope
+
+// The last boot per site+user, so a reload paints the worker's modules at
+// once and the page starts its own requests without waiting for the boot;
+// the fresh boot replaces it a moment later. Capabilities only steer the UI:
+// every module API rechecks permissions, and a refusal from the server drops
+// the copy. Swept on logout (stores/session.js, prefix «muelle:boot:»).
+export const BOOT_CACHE_PREFIX = 'muelle:boot:'
+export const BOOT_CACHE_MAX_AGE_MS = 7 * 24 * 3600 * 1000
+function readCachedBoot(key) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(BOOT_CACHE_PREFIX + key))
+    if (
+      saved?.boot?.modules &&
+      typeof saved.at === 'number' &&
+      Date.now() - saved.at < BOOT_CACHE_MAX_AGE_MS
+    )
+      return saved.boot
+  } catch {
+    // Unreadable or private mode: boot from the server only.
+  }
+  return null
+}
+function writeCachedBoot(key, boot) {
+  try {
+    localStorage.setItem(
+      BOOT_CACHE_PREFIX + key,
+      JSON.stringify({ at: Date.now(), boot }),
+    )
+  } catch {
+    // Full storage: the next reload simply waits for the boot.
+  }
+}
+function dropCachedBoot(key) {
+  try {
+    localStorage.removeItem(BOOT_CACHE_PREFIX + key)
+  } catch {
+    // Nothing to drop.
+  }
+}
+/** The server answered and refused (signed out, no permission): not a blip. */
+function refused(error) {
+  return (
+    [401, 403].includes(error?.status) ||
+    /PermissionError|AuthenticationError|SessionExpired/.test(
+      error?.exc_type || '',
+    )
+  )
+}
 
 function currentScope() {
   const cookieUser =
@@ -32,19 +82,33 @@ function currentScope() {
 export function loadShell({ refresh = false } = {}) {
   const key = currentScope()
   if (key !== scope) {
-    shellBoot.value = null
+    shellBoot.value = readCachedBoot(key)
+    shellBootStale.value = !!shellBoot.value
     scope = key
   }
-  if (shellBoot.value && !refresh) return Promise.resolve(shellBoot.value)
+  if (shellBoot.value && !refresh && !shellBootStale.value)
+    return Promise.resolve(shellBoot.value)
   if (pending) return pending
   shellLoading.value = true
   shellError.value = ''
   pending = call('crm.api.shell.boot')
     .then((data) => {
-      if (scope === key) shellBoot.value = data
+      if (scope === key) {
+        shellBoot.value = data
+        shellBootStale.value = false
+        writeCachedBoot(key, data)
+      }
       return data
     })
     .catch((error) => {
+      if (scope === key && refused(error)) {
+        dropCachedBoot(key)
+        shellBoot.value = null
+        shellBootStale.value = false
+      } else if (scope === key && shellBoot.value) {
+        // Offline or a server hiccup: keep working on the saved boot.
+        return shellBoot.value
+      }
       shellError.value =
         error.messages?.[0] ||
         error.message ||
@@ -56,6 +120,16 @@ export function loadShell({ refresh = false } = {}) {
       shellLoading.value = false
     })
   return pending
+}
+
+/** Tests: forget the scope, the in-flight call and the boot in memory. */
+export function resetShellForTests() {
+  scope = undefined
+  pending = null
+  shellBoot.value = null
+  shellBootStale.value = false
+  shellError.value = ''
+  shellLoading.value = false
 }
 
 // Modules this frontend hosts, in contracts order. Each adds its key here and

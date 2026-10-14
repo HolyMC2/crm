@@ -5,6 +5,7 @@ import {
   isNeutralModule,
   loadShell,
   shellBoot,
+  shellBootStale,
 } from '@/composables/muelleShell'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
@@ -561,7 +562,9 @@ router.beforeEach(async (to, from, next) => {
   }
   if (isNeutralModule(window.muelle_module) || shellBoot.value) {
     try {
-      const boot = await loadShell()
+      // The saved boot answers at once; the shell refreshes it meanwhile and
+      // every Ventas API rechecks the permission anyway.
+      const boot = shellBootStale.value ? shellBoot.value : await loadShell()
       if (!moduleEnabled(boot, 'ventas'))
         return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
     } catch {

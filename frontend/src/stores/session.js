@@ -48,7 +48,9 @@ export const sessionStore = defineStore('crm-session', () => {
             k.startsWith('doco_leads_') ||
             k.startsWith('doco_deals_') ||
             // command-palette recents (record titles) — shell, per user
-            k.startsWith('muelle:palette-recent:')
+            k.startsWith('muelle:palette-recent:') ||
+            // the last shell boot (name, puesto, modules) — shell, per user
+            k.startsWith('muelle:boot:')
           )
             localStorage.removeItem(k)
         }
