@@ -1,10 +1,13 @@
 <template>
-  <Dialog
+  <!-- A bottom sheet on a phone, a dialog on wider screens (CobranzaSheet). -->
+  <CobranzaSheet
     :model-value="modelValue"
-    :options="{ title: __('Send reminder by WhatsApp'), size: 'xl' }"
+    kind="send"
+    size="xl"
+    :title="__('Send reminder by WhatsApp')"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <template #body-content>
+    <template #default>
       <div class="space-y-4 text-base">
         <p class="text-sm text-ink-gray-6">
           {{ __('Reminder {0} for {1}', [name, customerName || '']) }}
@@ -203,33 +206,35 @@
       </div>
     </template>
     <template #actions>
-      <div class="flex flex-wrap justify-end gap-2">
-        <Button
-          :label="state ? __('Done') : __('Cancel')"
-          @click="$emit('update:modelValue', false)"
-        />
-        <!-- Sent from the worker's own phone: «Ya lo envié» records it (a call note). -->
-        <Button
-          v-if="manualDone && !state"
-          :label="__('I sent it')"
-          :loading="confirming"
-          @click="$emit('manual-sent')"
-        />
-        <Button
-          v-if="!state"
-          variant="solid"
-          :label="__('Send')"
-          :loading="sending"
-          :disabled="!context?.ready"
-          @click="send(false)"
-        />
-      </div>
+      <Button
+        class="min-h-11 sm:min-h-8"
+        :label="state ? __('Done') : __('Cancel')"
+        @click="$emit('update:modelValue', false)"
+      />
+      <!-- Sent from the worker's own phone: «Ya lo envié» records it (a call note). -->
+      <Button
+        v-if="manualDone && !state"
+        class="min-h-11 sm:min-h-8"
+        :label="__('I sent it')"
+        :loading="confirming"
+        @click="$emit('manual-sent')"
+      />
+      <Button
+        v-if="!state"
+        class="min-h-11 sm:min-h-8"
+        variant="solid"
+        :label="__('Send')"
+        :loading="sending"
+        :disabled="!context?.ready"
+        @click="send(false)"
+      />
     </template>
-  </Dialog>
+  </CobranzaSheet>
 </template>
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { Button, Dialog, FormControl } from 'frappe-ui'
+import { Button, FormControl } from 'frappe-ui'
+import CobranzaSheet from '@/components/cobranza/CobranzaSheet.vue'
 import {
   CTX,
   SEND_ACTION_LABELS,

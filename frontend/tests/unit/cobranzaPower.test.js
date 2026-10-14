@@ -304,3 +304,48 @@ describe('Cobranza summaries', () => {
     ).toEqual([{ currency: 'MXN', overdue: 1000.1, upcoming: 500.2 }])
   })
 })
+
+describe('Spanish for the power worklist', async () => {
+  const { readFileSync } = await import('node:fs')
+  const { dirname, resolve } = await import('node:path')
+  const { fileURLToPath } = await import('node:url')
+  const here = dirname(fileURLToPath(import.meta.url))
+  const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
+  const catalog = new Set()
+  for (const m of po.matchAll(
+    /^(?:msgctxt "((?:[^"\\]|\\.)*)"\n)?msgid "((?:[^"\\]|\\.)*)"\nmsgstr "((?:[^"\\]|\\.)+)"/gm,
+  ))
+    catalog.add(`${m[1] || ''}\u0004${m[2].replace(/\\"/g, '"')}`)
+  const files = [
+    'pages/Cobranza.vue',
+    'pages/CobranzaCliente.vue',
+    'components/cobranza/CobranzaSheet.vue',
+    'components/cobranza/PromiseSheet.vue',
+    'components/cobranza/CallSheet.vue',
+    'components/cobranza/FollowupSheet.vue',
+    'components/cobranza/PaymentSheet.vue',
+    'components/cobranza/BulkRemindSheet.vue',
+    'components/cobranza/StatementSheet.vue',
+    'composables/useCobranzaActions.js',
+  ]
+  const strings = new Set()
+  for (const file of files) {
+    const source = readFileSync(resolve(here, '../../src', file), 'utf8')
+    for (const m of source.matchAll(
+      /\b(?:__|tr)\(\s*'((?:[^'\\]|\\.)*)'\s*(?:,\s*(?:\[[^\]]*\]|null)\s*,\s*(CTX))?/g,
+    ))
+      strings.add(`${m[2] ? 'Cobranza' : ''}\u0004${m[1].replace(/\\'/g, "'")}`)
+  }
+  const all = {
+    remind: true,
+    promise: true,
+    call: true,
+    pay: true,
+    assign: true,
+  }
+  for (const s of [...queueShortcuts(all), ...recordShortcuts(all)])
+    strings.add(`\u0004${s.description}`)
+  it.each([...strings].map((s) => s.replace('\u0004', ' | ')))('%s', (text) => {
+    expect(catalog.has(text.replace(' | ', '\u0004'))).toBe(true)
+  })
+})
