@@ -30,6 +30,7 @@ import {
   reimburseMissing,
   rowAmount,
   runOnce,
+  sameDecision,
   stateLabel,
 } from '@/composables/useGastosEmpleados'
 import { referenceTarget } from '@/composables/usePendientes'
@@ -265,6 +266,23 @@ describe('what blocks a step', () => {
       amount: 100,
     })
     expect(pendingOperation('reimburse:HR-EXP-1')).toBeNull()
+  })
+
+  it('a different pending decision is never replayed as this one', async () => {
+    sessionStorage.clear()
+    const lost = Object.assign(new Error('x'), { offline: true })
+    const api = vi.fn().mockRejectedValueOnce(lost)
+    const reject = { name: 'HR-EXP-1', decision: 'reject', reason: 'No' }
+    await expect(
+      runOnce(api, 'decide', 'decide:HR-EXP-1', reject),
+    ).rejects.toBe(lost)
+    const approve = { name: 'HR-EXP-1', decision: 'approve', reason: '' }
+    const error = await runOnce(api, 'decide', 'decide:HR-EXP-1', approve, {
+      same: sameDecision(approve),
+    }).catch((e) => e)
+    expect(error.pendingOther.data).toEqual(reject)
+    expect(api).toHaveBeenCalledTimes(1)
+    expect(pendingOperation('decide:HR-EXP-1').data).toEqual(reject)
   })
 })
 
@@ -515,6 +533,42 @@ describe('the claim record', () => {
     expect(calls.filter(([m]) => m === 'claim').length).toBe(before + 1)
     expect(buttons()).not.toContain('Approve')
     expect(root.textContent).toContain('Approved · to reimburse')
+  })
+
+  it('an unconfirmed «Reject» shows itself with «Check result», never «Approve»', async () => {
+    answers.get_capabilities.claims = claimsOn({
+      decide: true,
+      chips: ['mios', 'por-aprobar'],
+    })
+    sessionStorage.setItem(
+      'muelle:gastos:claim:decide:HR-EXP-1',
+      JSON.stringify({
+        request_id: 'rid-reject',
+        data: {
+          name: 'HR-EXP-1',
+          decision: 'reject',
+          modified: '2026-10-13 10:00:00',
+          reason: 'Sin ticket',
+        },
+      }),
+    )
+    answers.claim = record({}, [{ key: 'decide', allowed: true }])
+    answers.decide = {
+      ok: true,
+      code: 'rejected',
+      message: 'Expense rejected',
+      state: 'rejected',
+      actions: [],
+    }
+    await mountAt('/gastos/gasto/HR-EXP-1')
+    expect(buttons()).not.toContain('Approve')
+    expect(buttons()).not.toContain('Reject')
+    const pending = root.querySelector('[data-testid="claim-pending-decision"]')
+    expect(pending.textContent).toContain('Reject')
+    await click('Check result')
+    const sent = calls.find(([m]) => m === 'decide')[1]
+    expect(sent).toMatchObject({ request_id: 'rid-reject', decision: 'reject' })
+    expect(root.textContent).toContain('Expense rejected')
   })
 
   it('the employee waits on her approver: no decision buttons', async () => {
