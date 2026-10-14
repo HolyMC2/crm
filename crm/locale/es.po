@@ -19339,9 +19339,6 @@ msgstr "Esta empresa todavía no tiene una cuenta de banco o de efectivo para pa
 msgid "This expense is cancelled."
 msgstr "Este gasto está cancelado."
 
-msgid "To approve"
-msgstr "Por aprobar"
-
 msgctxt "Gastos"
 msgid "To approve"
 msgstr "Por aprobar"
