@@ -18641,6 +18641,7 @@ msgid "Something went wrong. Try again."
 msgstr "Algo salió mal. Inténtalo de nuevo."
 
 #: frontend/src/components/doco/inbox/ResolveSheet.vue
+#: frontend/src/components/cobranza/AutoSetupSheet.vue
 msgid "Request copied. Share it with the owner."
 msgstr "Solicitud copiada. Compártela con el dueño."
 
@@ -19707,10 +19708,6 @@ msgstr "Los recordatorios automáticos están encendidos"
 #: frontend/src/components/cobranza/AutoSetupSheet.vue
 msgid "Automatic reminders are off"
 msgstr "Los recordatorios automáticos están apagados"
-
-#: frontend/src/components/cobranza/AutoSetupSheet.vue
-msgid "Request copied. Share it with the owner."
-msgstr "Solicitud copiada. Compártela con el dueño."
 
 #: frontend/src/pages/Cobranza.vue
 msgid "Prepare and send"
