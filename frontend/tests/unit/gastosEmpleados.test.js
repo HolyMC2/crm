@@ -630,4 +630,49 @@ describe('the claim record', () => {
     expect(dialog.textContent).toContain('That cash belongs to a register.')
     expect(dialog.textContent).toContain('Owed to Juana Pérez')
   })
+
+  it('paid in part meanwhile: says what is owed now and «Refresh» keeps the dialog', async () => {
+    answers.claim = record(
+      { state: 'to_reimburse', docstatus: 1, outstanding: 300 },
+      [{ key: 'reimburse', allowed: true }],
+    )
+    const options = (outstanding) => ({
+      name: 'HR-EXP-1',
+      outstanding,
+      currency: 'MXN',
+      today: '2026-10-13',
+      accounts: [
+        { account: 'Caja - D', label: 'Caja', type: 'Cash', currency: 'MXN' },
+      ],
+      other_currency: [],
+      held_by_pos: [],
+      refusal: null,
+      can_pay: true,
+      needs_setup: false,
+    })
+    answers.reimburse_options = options(300)
+    answers.reimburse = {
+      ok: false,
+      code: 'over_outstanding',
+      message: 'Only $200.00 is owed on this expense now.',
+      outstanding: 200,
+      actions: [{ key: 'refresh', label: 'Refresh' }],
+    }
+    await mountAt('/gastos/gasto/HR-EXP-1')
+    await click('Reimburse')
+    document.body.querySelector('[data-testid="reimburse-confirm"]').click()
+    await flush()
+    const dialog = () =>
+      document.body.querySelector('[data-testid="reimburse-dialog"]')
+    expect(dialog().textContent).toContain('Only $200.00 is owed')
+    answers.reimburse_options = options(200)
+    await click('Refresh')
+    expect(dialog()).toBeTruthy()
+    expect(dialog().textContent).not.toContain('Only $200.00 is owed')
+    expect(
+      dialog().querySelector(
+        '[data-field="amount"] input, input[type="number"]',
+      ).value,
+    ).toBe('200')
+  })
 })

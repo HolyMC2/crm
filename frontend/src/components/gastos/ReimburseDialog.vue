@@ -256,7 +256,21 @@ async function reimburse() {
   }
 }
 
+// Paid in part meanwhile: the dialog stays, what is owed now replaces the amount;
+// the account, reference and date typed stay.
+async function refreshOwed() {
+  refusal.value = null
+  problem.value = null
+  try {
+    options.value = await claimsApi('reimburse_options', { name: props.name })
+    form.amount = options.value.outstanding
+  } catch (error) {
+    problem.value = claimProblem(error)
+  }
+}
+
 function handOff(action) {
+  if (action.key === 'refresh') return refreshOwed()
   open.value = false
   emit('ask', action)
 }
