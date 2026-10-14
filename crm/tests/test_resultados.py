@@ -75,11 +75,16 @@ class TestResultadosBoard(TestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.has_mercado = "mercado" in frappe.get_installed_apps()
-		if cls.has_mercado:
+		# The fixtures live in Mercado's own test module. An older Mercado (the
+		# pinned CI image carries one) has the app installed but not that module,
+		# so ask the import, not the app list.
+		try:
 			from mercado.tests.test_resultados_cards import ensure_resultados_fixtures
-
-			ensure_resultados_fixtures()
+		except ImportError:
+			cls.has_mercado = False
+			return
+		cls.has_mercado = True
+		ensure_resultados_fixtures()
 
 	def setUp(self):
 		self.previous = frappe.session.user

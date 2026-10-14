@@ -97,10 +97,14 @@ def landing_choices():
 		if key == "hoy" or key == "avisos" or not provider:
 			continue
 		try:
-			if provider().get("enabled"):
-				keys.append(key)
+			answer = provider()
 		except frappe.PermissionError:
 			continue
+		# A module whose owning app is absent answers nothing at all (Resultados
+		# without Mercado or Taller): it is not a choice, and it must not keep the
+		# worker from choosing where Muelle opens.
+		if answer and answer.get("enabled"):
+			keys.append(key)
 	return keys
 
 

@@ -636,8 +636,12 @@ class TestShellBoot(TestCase):
 			shell.boot()
 
 	def _skip_without_resultados(self):
-		apps = frappe.get_installed_apps()
-		if "mercado" not in apps and "taller" not in apps:
+		from crm.api import resultados
+
+		# Ask for the cards themselves, not for the app: the pinned CI image has
+		# an older Mercado installed that registers no Resultados card yet, and
+		# then the module is legitimately absent from boot.
+		if not resultados._providers():
 			self.skipTest("Resultados cards come from Mercado or Taller")
 
 	def test_resultados_enabled_when_a_card_is_readable(self):
