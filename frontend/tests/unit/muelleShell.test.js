@@ -54,10 +54,7 @@ import {
   toRecentRef,
 } from '@/utils/shellPalette'
 import { showSettings } from '@/composables/settings'
-import {
-  RAIL_SAVE_DELAY_MS,
-  resetRailForTests,
-} from '@/composables/shellRail'
+import { RAIL_SAVE_DELAY_MS, resetRailForTests } from '@/composables/shellRail'
 import {
   closeShortcutSheet,
   keyLabel,
@@ -383,7 +380,9 @@ describe('one frame for every route', () => {
     // Saved for the worker's other devices, once, after the toggle settles.
     await new Promise((resolve) => setTimeout(resolve, RAIL_SAVE_DELAY_MS + 50))
     expect(
-      state.call.mock.calls.filter(([method]) => method === 'crm.api.shell.save_rail'),
+      state.call.mock.calls.filter(
+        ([method]) => method === 'crm.api.shell.save_rail',
+      ),
     ).toEqual([['crm.api.shell.save_rail', { state: 'collapsed' }]])
   })
 
@@ -401,7 +400,11 @@ describe('one frame for every route', () => {
     expect(await until(() => rail()?.dataset.rail === 'collapsed')).toBe(true)
     const press = (target) =>
       target.dispatchEvent(
-        new KeyboardEvent('keydown', { key: '[', bubbles: true, cancelable: true }),
+        new KeyboardEvent('keydown', {
+          key: '[',
+          bubbles: true,
+          cancelable: true,
+        }),
       )
     press(document.body)
     await nextTick()
@@ -424,7 +427,9 @@ describe('one frame for every route', () => {
       const rail = root.querySelector('nav[aria-label="Apps"]')
       // Escáner first: the stock tool the shell opens most.
       expect(
-        [...rail.querySelectorAll('[data-sibling]')].map((a) => a.dataset.sibling),
+        [...rail.querySelectorAll('[data-sibling]')].map(
+          (a) => a.dataset.sibling,
+        ),
       ).toEqual(['scan', 'pos'])
       const scan = rail.querySelector('[data-sibling="scan"]')
       expect(scan.textContent).toContain('Escáner')
@@ -443,9 +448,19 @@ describe('one frame for every route', () => {
       expect(apps.getAttribute('aria-expanded')).toBe('true')
       const menu = rail.querySelector('[role="menu"]')
       expect(
-        [...menu.querySelectorAll('[data-sibling]')].map((a) => a.textContent.trim()),
+        [...menu.querySelectorAll('[data-sibling]')].map((a) =>
+          a.textContent.trim(),
+        ),
       ).toEqual(['Escáner', 'POS'])
       expect(menu.style.left).toBe('60px')
+      // The first app takes the focus; Esc from anywhere closes the menu.
+      expect(document.activeElement?.dataset.sibling).toBe('scan')
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+      )
+      await nextTick()
+      expect(rail.querySelector('[role="menu"]')).toBeNull()
+      expect(apps.getAttribute('aria-expanded')).toBe('false')
     } finally {
       delete window.installed_apps
     }
@@ -960,9 +975,9 @@ describe('palette providers', () => {
         ['Escáner › Revisión de conteo', '/scan/conteo/revision'],
       ])
       // Found by the worker's words, not only the title.
-      expect(
-        (await search('ir_a', 'cajon')).map((i) => i.external),
-      ).toContain('/scan/bins/move')
+      expect((await search('ir_a', 'cajon')).map((i) => i.external)).toContain(
+        '/scan/bins/move',
+      )
       const find = (await search('acciones', 'funda roja')).find(
         (i) => i.id === 'escaner.search',
       )
@@ -1184,9 +1199,8 @@ describe('palette recents never outlive read access', () => {
 
 describe('Ventas navigation on every screen', () => {
   it('Ventas sections show from 640 px, where the shell switches to desktop', async () => {
-    const { default: VentasSidebar } = await import(
-      '@/components/shell/VentasSidebar.vue'
-    )
+    const { default: VentasSidebar } =
+      await import('@/components/shell/VentasSidebar.vue')
     state.mobile.value = false
     await mount('/deals')
     const host = document.createElement('div')

@@ -123,10 +123,10 @@
       <template v-if="appsOpen">
         <div class="fixed inset-0 z-40" @click="appsOpen = false" />
         <div
+          ref="appsMenu"
           role="menu"
           class="fixed z-50 w-56 rounded-xl border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
           :style="appsMenuStyle"
-          @keydown.esc="closeApps"
         >
           <div class="px-3.5 pb-1 pt-1.5 text-xs font-medium text-ink-gray-5">
             {{ __('Other apps') }}
@@ -192,7 +192,14 @@
   </nav>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, nextTick, ref } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute } from 'vue-router'
 import { keyLabel, searchEntryHint } from '@/composables/shellKeyboard'
 import {
@@ -240,26 +247,50 @@ const avisos = computed(() =>
 // «Volver a Productos» in Escáner returns to the record the worker left.
 const siblings = sortSiblings(installedSiblings())
 const siblingLinks = computed(() => {
-  const label = props.modules.find((module) => module.key === props.active)
-    ?.label
+  const label = props.modules.find(
+    (module) => module.key === props.active,
+  )?.label
   return Object.fromEntries(
     siblings.map((app) => [app.key, siblingHref(app, route.fullPath, label)]),
   )
 })
 
-// Collapsed: one «Otras apps» button opens them beside the rail.
+// Collapsed: one «Otras apps» button opens them beside the rail. The first
+// app takes the focus; Esc (from anywhere) or another page closes the menu.
 const appsOpen = ref(false)
 const appsButton = ref(null)
+const appsMenu = ref(null)
 const appsMenuStyle = ref({})
 function toggleApps() {
   if (appsOpen.value) return closeApps()
   const box = appsButton.value?.getBoundingClientRect()
-  const top = Math.max(8, Math.min((box?.top ?? 8) - 8, window.innerHeight - 260))
+  const top = Math.max(
+    8,
+    Math.min((box?.top ?? 8) - 8, window.innerHeight - 260),
+  )
   appsMenuStyle.value = { left: `${railWidth.value + 4}px`, top: `${top}px` }
   appsOpen.value = true
+  nextTick(() => appsMenu.value?.querySelector('a')?.focus())
 }
 function closeApps() {
   appsOpen.value = false
   nextTick(() => appsButton.value?.focus())
 }
+function onAppsKey(event) {
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  closeApps()
+}
+watch(appsOpen, (open) =>
+  open
+    ? window.addEventListener('keydown', onAppsKey, true)
+    : window.removeEventListener('keydown', onAppsKey, true),
+)
+watch(
+  () => route.fullPath,
+  () => (appsOpen.value = false),
+)
+watch(railExpanded, () => (appsOpen.value = false))
+onBeforeUnmount(() => window.removeEventListener('keydown', onAppsKey, true))
 </script>

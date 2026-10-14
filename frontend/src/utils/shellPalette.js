@@ -148,10 +148,7 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-shield-check',
           href: '/garantias?create=1',
         })
-      if (
-        query.text &&
-        installedSiblings().some((app) => app.key === 'scan')
-      )
+      if (query.text && installedSiblings().some((app) => app.key === 'scan'))
         items.push({
           id: 'escaner.search',
           group: 'acciones',

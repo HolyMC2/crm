@@ -69,8 +69,8 @@
         </div>
       </section>
 
-      <VentasSections v-if="ventas" @navigate="close" />
-
+      <!-- Escáner and the other apps right under the modules: on a phone
+           they are the stock tools, not an afterthought below Ventas. -->
       <section v-if="siblings.length" class="px-4 pt-5">
         <h2
           class="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
@@ -90,6 +90,8 @@
           </a>
         </div>
       </section>
+
+      <VentasSections v-if="ventas" @navigate="close" />
 
       <section class="px-4 pt-5">
         <button
@@ -295,8 +297,7 @@ const siblings = computed(() =>
     href: siblingHref(
       app,
       route.fullPath,
-      props.modules.find((module) => module.key === moduleKeyFor(route))
-        ?.label,
+      props.modules.find((module) => module.key === moduleKeyFor(route))?.label,
     ),
   })),
 )
