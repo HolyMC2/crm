@@ -16,7 +16,7 @@
         }}
       </p>
       <ul class="max-h-60 space-y-1 overflow-y-auto text-sm">
-        <li v-for="row in rows" :key="`${row.customer}:${row.company}`">
+        <li v-for="row in chosen" :key="`${row.customer}:${row.company}`">
           {{ row.customer_name }}
           <span class="text-ink-gray-6"
             >·
@@ -86,7 +86,7 @@
         <Button :label="__('Cancel')" @click="close(false)" />
         <Button
           variant="solid"
-          :label="__('Send to {0} customers', [rows.length])"
+          :label="__('Send to {0} customers', [chosen.length])"
           :loading="sending"
           @click="send"
         />
@@ -137,20 +137,24 @@ const TONES = {
   blocked: 'text-ink-amber-9',
   skipped: 'text-ink-gray-6',
 }
+// The customers as they were when the sheet opened (the list may reload meanwhile).
+const chosen = ref([])
 const subtitle = computed(() =>
-  props.rows.length === 1
-    ? props.rows[0].customer_name
-    : __('{0} customers', [props.rows.length]),
+  chosen.value.length === 1
+    ? chosen.value[0].customer_name
+    : __('{0} customers', [chosen.value.length]),
 )
 
 watch(
   () => props.modelValue,
   (open) => {
     if (open) {
+      chosen.value = [...props.rows]
       result.value = null
       problem.value = null
     }
   },
+  { immediate: true },
 )
 
 async function send() {
@@ -158,7 +162,7 @@ async function send() {
   problem.value = null
   try {
     result.value = await call('bulk', `${ACTIONS}.bulk_remind`, {
-      rows: props.rows.map((row) => ({
+      rows: chosen.value.map((row) => ({
         customer: row.customer,
         company: row.company,
       })),

@@ -377,8 +377,8 @@
                   @change="toggleRow(row)"
                 />
               </label>
-              <RouterLink
-                :to="customerRoute(row)"
+              <a
+                :href="customerHref(row.customer, customerRoute(row).query)"
                 class="flex min-h-14 min-w-0 flex-1 items-start gap-3 py-3 pr-4 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:pr-6"
                 :class="!phone || selecting ? 'pl-2' : 'pl-4'"
                 @click="onRowClick($event, row)"
@@ -454,7 +454,7 @@
                     }}</span
                   >
                 </span>
-              </RouterLink>
+              </a>
             </div>
             <!-- Desktop: the row's actions on hover or keyboard focus (same keys as the sheet). -->
             <div
@@ -960,8 +960,9 @@ function customerRoute(row, extra = {}) {
   }
 }
 
-function openRow(row, action = '', invoice = '') {
-  focusRow(row)
+async function openRow(row, action = '', invoice = '') {
+  // The list's history entry keeps this row first, so «back» lands on it.
+  await focusRow(row)
   router.push(
     customerRoute(
       row,
@@ -973,9 +974,10 @@ function openRow(row, action = '', invoice = '') {
 }
 
 function onRowClick(event, row) {
-  // The link opens the record; the focus moves first so going back lands here.
-  if (event.metaKey || event.ctrlKey || event.shiftKey) return
-  focusRow(row)
+  // A new tab keeps the link; here the focus moves first so going back lands on the row.
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.button) return
+  event.preventDefault()
+  openRow(row)
 }
 
 async function copyText(text) {
@@ -1221,13 +1223,15 @@ function revealFocus() {
 }
 
 function focusRow(row) {
-  if (!row) return
+  if (!row) return Promise.resolve()
   focusKey.value = rowKey(row)
-  if (state.value.cliente !== row.customer)
+  rememberScroll()
+  if (state.value.cliente === row.customer) return Promise.resolve()
+  return Promise.resolve(
     router.replace({
       query: queueQuery(route.query, { cliente: row.customer }),
-    })
-  rememberScroll()
+    }),
+  ).catch(() => {})
 }
 
 /** Filters push a history entry (back undoes them); the search replaces. */

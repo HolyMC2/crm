@@ -1013,8 +1013,23 @@ function listFocusing(customer) {
   return listHref(queueQuery(query, { cliente: customer }))
 }
 
+/** Two shell paths with the same path and query (encoding and order aside). */
+function samePath(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false
+  const parse = (value) => {
+    const url = new URL(value, 'https://muelle.invalid')
+    return `${url.pathname}?${[...url.searchParams.entries()]
+      .map(([k, v]) => `${k}=${v}`)
+      .sort()
+      .join('&')}`
+  }
+  return parse(a) === parse(b)
+}
+
 function goBack() {
   if (returnTo.value) return window.location.assign(returnTo.value)
+  // Came from that list: a real «back» (forward still works, the list restores its place).
+  if (samePath(window.history.state?.back, listPath())) return router.back()
   router.push(listPath())
 }
 

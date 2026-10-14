@@ -301,10 +301,34 @@ describe('Cobranza list as a power app', () => {
     expect(focused.getAttribute('aria-selected')).toBe('false')
     expect(focused.className).toContain('inset_3px')
     press('Enter')
+    await flush()
     expect(state.router.push).toHaveBeenCalledWith({
       name: 'CobranzaCliente',
       params: { customer: 'Importadora' },
       query: { company: 'Tienda', list: '/cobranza?cliente=Importadora' },
+    })
+  })
+
+  it('a click focuses the row before opening it; a new-tab click keeps the link', async () => {
+    mount(Cobranza)
+    await flush()
+    const link = root.querySelector('[data-row-key="Importadora:Tienda:MXN"] a')
+    expect(link.getAttribute('href')).toBe(
+      '/crm/cobranza/cliente/Importadora?company=Tienda&list=%2Fcobranza%3Fcliente%3DImportadora',
+    )
+    const newTab = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: true,
+    })
+    link.dispatchEvent(newTab)
+    expect(newTab.defaultPrevented).toBe(false)
+    expect(state.router.push).not.toHaveBeenCalled()
+    link.click()
+    await flush()
+    expect(state.route.query).toEqual({ cliente: 'Importadora' })
+    expect(state.router.push.mock.calls[0][0].params).toEqual({
+      customer: 'Importadora',
     })
   })
 
@@ -476,6 +500,28 @@ describe('Cobranza record as a power app', () => {
       'SINV-2',
     )
     expect(state.route.query).toEqual({ company: 'Tienda', factura: 'SINV-2' })
+  })
+
+  it('back from a record opened from the list is a real history back', async () => {
+    state.route.query = {
+      company: 'Tienda',
+      list: '/cobranza?cliente=Laura&segment=todas',
+    }
+    window.history.replaceState(
+      { back: '/cobranza?segment=todas&cliente=Laura' },
+      '',
+    )
+    mount(CobranzaCliente, { customer: 'Laura' })
+    await flush()
+    press('Escape')
+    expect(state.router.back).toHaveBeenCalled()
+    expect(state.router.push).not.toHaveBeenCalled()
+    window.history.replaceState({}, '')
+    state.router.back.mockClear()
+    press('Escape')
+    expect(state.router.push).toHaveBeenCalledWith(
+      '/cobranza?cliente=Laura&segment=todas',
+    )
   })
 
   it('n opens the next customer and going back lands on them', async () => {
