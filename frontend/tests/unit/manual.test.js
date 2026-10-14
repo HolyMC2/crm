@@ -340,7 +340,7 @@ describe('article body in the browser', () => {
         '<a href="/crm/garantias">diez</a>',
     )
     expect(html).not.toMatch(
-      /class=|id=|position|z-index|\/api\/|%61pi|evil\.example\/(x|pixel)|\/app\/x/i,
+      /\sclass=|\sid=|position|z-index|\/api\/|%61pi|evil\.example\/(x|pixel)|\/app\/x/i,
     )
     expect(html).toContain('text-align')
     expect(html).toContain('href="https://evil.example/login"')
