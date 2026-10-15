@@ -228,7 +228,10 @@
               <dd v-if="hasRate(defaultPrice)" class="text-xs text-ink-gray-6">
                 {{ __('per {0}', [defaultPrice.uom || product.stock_uom]) }}
                 <template v-if="defaultAge.text">
-                  · {{ __('updated {0}', [defaultAge.text]) }}</template
+                  ·
+                  {{
+                    __('updated {0}', [defaultAge.text.toLocaleLowerCase()])
+                  }}</template
                 >
               </dd>
             </a>
