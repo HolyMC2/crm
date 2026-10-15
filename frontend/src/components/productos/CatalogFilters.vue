@@ -146,6 +146,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { FeatherIcon } from 'frappe-ui'
+import { groupFacets } from '@/composables/useProductos'
 
 // «Todos» as a catalogue: what is on hand, what has a photo and which group,
 // each choice with how many products it leaves (the other filters applied).
@@ -206,10 +207,12 @@ const photoOptions = computed(() => [
     count: count(props.facets?.photo?.sin),
   },
 ])
-const groups = computed(() => props.facets?.groups || [])
+// ERPNext's root group is not one to pick: «Todos los grupos» counts it.
+const facetGroups = computed(() => props.facets?.groups || [])
+const groups = computed(() => groupFacets(facetGroups.value))
 const allGroups = computed(() =>
-  groups.value.length
-    ? groups.value.reduce((sum, g) => sum + g.count, 0).toLocaleString()
+  facetGroups.value.length
+    ? facetGroups.value.reduce((sum, g) => sum + g.count, 0).toLocaleString()
     : '',
 )
 const matching = computed(() => {

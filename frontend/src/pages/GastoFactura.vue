@@ -215,7 +215,11 @@
                 </span>
                 <span class="block text-ink-gray-6">
                   {{
-                    [p.reference_no, p.mode_of_payment, p.name]
+                    [
+                      p.reference_no,
+                      modeOfPaymentLabel(p.mode_of_payment),
+                      p.name,
+                    ]
                       .filter(Boolean)
                       .join(' · ')
                   }}
@@ -417,6 +421,7 @@ import {
 } from '@/composables/useGastos'
 import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import { keyAction } from '@/utils/powerList'
 
 const props = defineProps({ name: { type: String, required: true } })

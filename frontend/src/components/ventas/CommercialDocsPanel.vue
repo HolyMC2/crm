@@ -166,7 +166,7 @@
                     formatDay(row.date)
                   }}</span>
                   <span v-if="row.modeOfPayment" class="text-xs text-ink-gray-6"
-                    >· {{ row.modeOfPayment }}</span
+                    >· {{ modeOfPaymentLabel(row.modeOfPayment) }}</span
                   >
                 </div>
               </div>
@@ -387,6 +387,7 @@ import { Badge, Button, Dialog, toast } from 'frappe-ui'
 import { formatMoney } from '@/composables/crmFormat'
 import { useReloadOnReturn } from '@/composables/reloadOnReturn'
 import { formatDay } from '@/utils/contactos'
+import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import {
   accessRequestText,
   nextActions,

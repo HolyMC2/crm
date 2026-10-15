@@ -1386,6 +1386,7 @@ import {
   documentLink,
   escanerDone,
   groupRoute,
+  isRootGroup,
   lastCountedLabel,
   ledgerReportUrl,
   loadProductosBoot,
@@ -1573,10 +1574,12 @@ async function copyScannerRequest() {
 const photoBroken = ref(false)
 const photoSaving = ref(false)
 const kind = computed(() => productKind(product.value))
+// ERPNext's root group names no group: an item filed there shows none.
 const groupPath = computed(() =>
-  product.value.item_group_path?.length
+  (product.value.item_group_path?.length
     ? product.value.item_group_path
-    : [product.value.item_group].filter(Boolean),
+    : [product.value.item_group]
+  ).filter((group) => group && !isRootGroup(group)),
 )
 const hasRate = (row) => row && row.rate !== null && row.rate !== undefined
 const defaultPrice = computed(() => {
@@ -1693,7 +1696,7 @@ const facts = computed(() => {
     { label: __('Code'), value: item.name },
     { label: __('Kind'), value: kind.value?.text || '' },
     { label: __('Unit'), value: item.stock_uom },
-    {
+    groupPath.value.length > 0 && {
       label: __('Group', null, 'Productos'),
       value: groupPath.value.join(' › '),
     },

@@ -153,6 +153,7 @@
           v-model="form.company"
           type="select"
           :label="__('Company', null, CTX)"
+          :placeholder="__('Choose a company')"
           :options="company.options"
           data-testid="manual-company"
         />

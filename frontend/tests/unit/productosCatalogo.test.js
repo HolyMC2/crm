@@ -5,6 +5,9 @@ import {
   activeFilters,
   catalogArgs,
   catalogChoice,
+  groupFacets,
+  groupLabel,
+  groupOf,
   groupRoute,
   initials,
   listState,
@@ -53,6 +56,24 @@ describe('catálogo filters', () => {
       ['existencias', 'Without stock', { existencias: '' }],
     ])
     expect(activeFilters({})).toEqual([])
+  })
+
+  it('ERPNext’s root item group names no group; as a filter it is «Todos los grupos»', () => {
+    expect(groupOf({ item_group: 'All Item Groups' })).toBe('')
+    expect(groupOf({ item_group: 'Todos los grupos de artículos' })).toBe('')
+    expect(groupOf({ item_group: 'Fundas' })).toBe('Fundas')
+    expect(groupOf({})).toBe('')
+    expect(
+      groupFacets([
+        { value: 'All Item Groups', count: 12 },
+        { value: 'Fundas', count: 3 },
+      ]),
+    ).toEqual([{ value: 'Fundas', count: 3 }])
+    expect(groupLabel('All Item Groups')).toBe('All groups')
+    expect(groupLabel('Fundas')).toBe('Fundas')
+    expect(activeFilters({ group: 'All Item Groups' })[0].label).toBe(
+      'All groups',
+    )
   })
 
   it('opens Todos on a group from the product page', () => {

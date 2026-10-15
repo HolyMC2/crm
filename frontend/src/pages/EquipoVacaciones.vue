@@ -86,6 +86,7 @@
               type="select"
               class="sm:max-w-xs"
               :label="__('Paid leave type used for vacations')"
+              :placeholder="__('Choose an option')"
               :options="leaveTypes.map((t) => ({ label: t, value: t }))"
             />
             <Button

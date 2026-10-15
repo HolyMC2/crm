@@ -191,6 +191,7 @@
                 <FormControl
                   v-model="manual.doctype"
                   type="select"
+                  :placeholder="__('Choose an option')"
                   :options="linkTypeOptions"
                   :aria-label="__('Record type')"
                 />
@@ -300,6 +301,7 @@
                 v-model="form.document_kind"
                 :label="__('Type')"
                 type="select"
+                :placeholder="__('Choose a type')"
                 :options="kindOptions"
                 :disabled="!doc.can_edit"
               />

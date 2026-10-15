@@ -818,6 +818,28 @@ export function catalogChoice(value) {
   return CATALOG_CHOICES.includes(value) ? value : ''
 }
 
+// ERPNext's root item group holds every item (the service filters a group with
+// its sub-groups), so an item filed there has no group of its own.
+const ROOT_ITEM_GROUPS = new Set([
+  'All Item Groups',
+  'Todos los grupos de artículos',
+])
+export function isRootGroup(value) {
+  return ROOT_ITEM_GROUPS.has(String(value || '').trim())
+}
+/** The group a row names: none for an item in ERPNext's root group. */
+export function groupOf(row) {
+  return isRootGroup(row?.item_group) ? '' : row?.item_group || ''
+}
+/** Group facets to pick from: the root is «Todos los grupos» already. */
+export function groupFacets(groups = []) {
+  return (groups || []).filter((group) => !isRootGroup(group.value))
+}
+/** A chosen group's name; the root reads «Todos los grupos». */
+export function groupLabel(value) {
+  return isRootGroup(value) ? tr('All groups') : value
+}
+
 /** The «Todos» filters for the service, from the list state. */
 export function catalogArgs(state) {
   return {
@@ -831,7 +853,11 @@ export function catalogArgs(state) {
 export function activeFilters(state) {
   const chips = []
   if (state?.group)
-    chips.push({ key: 'grupo', label: state.group, query: { grupo: '' } })
+    chips.push({
+      key: 'grupo',
+      label: groupLabel(state.group),
+      query: { grupo: '' },
+    })
   if (state?.stock)
     chips.push({
       key: 'existencias',

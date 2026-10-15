@@ -250,6 +250,7 @@
                       type="select"
                       class="w-40"
                       :aria-label="`${card.source.action.field_label || card.source.action.label}: ${row.title}`"
+                      :placeholder="`${card.source.action.field_label || __('Choose')}…`"
                       :options="[
                         {
                           label: `${card.source.action.field_label || __('Choose')}…`,

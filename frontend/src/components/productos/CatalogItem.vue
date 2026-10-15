@@ -26,7 +26,7 @@
         >
         <span class="mt-0.5 block truncate text-xs text-ink-gray-6">
           <span class="font-mono">{{ row.name }}</span>
-          <template v-if="row.item_group"> · {{ row.item_group }}</template>
+          <template v-if="groupOf(row)"> · {{ groupOf(row) }}</template>
         </span>
         <span
           v-if="detail"
@@ -69,9 +69,7 @@
       }}</span>
       <span class="block truncate text-xs text-ink-gray-6">
         <span class="font-mono">{{ row.name }}</span>
-        <span v-if="row.item_group" class="lg:hidden">
-          · {{ row.item_group }}</span
-        >
+        <span v-if="groupOf(row)" class="lg:hidden"> · {{ groupOf(row) }}</span>
       </span>
       <span v-if="detail" class="block truncate text-xs text-ink-gray-7">{{
         detail
@@ -91,7 +89,7 @@
       </span>
     </span>
     <span class="hidden truncate text-sm text-ink-gray-7 lg:block">{{
-      row.item_group
+      groupOf(row)
     }}</span>
     <span class="hidden flex-wrap gap-1 lg:flex">
       <StockPill v-if="badge" :badge="badge" />
@@ -110,7 +108,12 @@
 import { computed, h } from 'vue'
 import { Badge } from 'frappe-ui'
 import ProductThumb from '@/components/productos/ProductThumb.vue'
-import { money, stockBadge, variantsLabel } from '@/composables/useProductos'
+import {
+  groupOf,
+  money,
+  stockBadge,
+  variantsLabel,
+} from '@/composables/useProductos'
 
 // One product of a Productos list: photo or initials, name, code and group,
 // its stock in words and its price (or «Sin precio»).

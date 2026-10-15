@@ -77,6 +77,7 @@
             :model-value="form.account"
             type="select"
             :label="__('WhatsApp account')"
+            :placeholder="__('Choose an account')"
             :options="accountOptions"
             @update:model-value="chooseAccount"
           />

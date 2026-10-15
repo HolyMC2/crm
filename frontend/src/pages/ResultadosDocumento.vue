@@ -87,7 +87,9 @@
               class="flex gap-3 px-3 py-2 text-sm"
             >
               <span class="min-w-0 flex-1 truncate">{{
-                item.item_name || item.item_code || item.mode_of_payment
+                item.item_name ||
+                item.item_code ||
+                modeOfPaymentLabel(item.mode_of_payment)
               }}</span>
               <span
                 v-if="item.qty !== undefined"
@@ -120,7 +122,7 @@
               class="flex gap-3 px-3 py-2 text-sm"
             >
               <span class="min-w-0 flex-1 truncate">{{
-                p.mode_of_payment
+                modeOfPaymentLabel(p.mode_of_payment)
               }}</span>
               <span class="tabular-nums">{{
                 money(
@@ -147,7 +149,9 @@
               :key="i"
               class="grid grid-cols-[1fr_auto] gap-x-3 px-3 py-2 text-sm"
             >
-              <span class="truncate">{{ r.mode_of_payment }}</span>
+              <span class="truncate">{{
+                modeOfPaymentLabel(r.mode_of_payment)
+              }}</span>
               <span
                 class="tabular-nums"
                 :class="r.difference ? 'text-ink-red-7' : ''"
@@ -188,6 +192,7 @@ import {
   resultadosApi,
   routerPath,
 } from '@/composables/useResultados'
+import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import { readReturn, withReturn } from '@/vendor/muelle-shell/contracts'
 
 const props = defineProps({

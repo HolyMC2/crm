@@ -319,7 +319,9 @@
           class="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-outline-gray-2 bg-surface-white px-4 py-2 sm:px-6"
         >
           <span class="text-sm font-medium" role="status">{{
-            __('{0} selected', [selected.size])
+            selected.size === 1
+              ? __('1 selected')
+              : __('{0} selected', [selected.size])
           }}</span>
           <Button
             variant="solid"
@@ -431,7 +433,7 @@
                     row.title
                   }}</span>
                   <span class="block truncate text-sm text-ink-gray-6">{{
-                    [row.name, row.item_group, row.warehouse_label]
+                    [row.name, groupOf(row), row.warehouse_label]
                       .filter(Boolean)
                       .join(' · ')
                   }}</span>
@@ -619,6 +621,8 @@ import {
   daysSince,
   encodeSelection,
   escanerDone,
+  groupFacets,
+  groupOf,
   healthChips,
   isInventoryView,
   lastCountedLabel,
@@ -778,7 +782,7 @@ const dayOptions = computed(() =>
 )
 const groupOptions = computed(() => [
   { label: __('All groups'), value: '' },
-  ...filterOptions.value.groups.map((g) => ({
+  ...groupFacets(filterOptions.value.groups).map((g) => ({
     label: `${g.value} (${g.count.toLocaleString()})`,
     value: g.value,
   })),

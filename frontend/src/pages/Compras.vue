@@ -238,10 +238,18 @@
                         : __('Supplier not visible'))
                     }}
                   </span>
-                  <span class="block truncate text-sm text-ink-gray-6">
-                    {{ row.name }} · {{ statusLabel(row) }}
-                    <template v-if="row.due_date">
-                      · {{ __('Delivery {0}', [row.due_date]) }}</template
+                  <!-- The delivery date never gets cut off: its own line on
+                       a phone, and on a wide row the number truncates first. -->
+                  <span
+                    class="flex flex-col text-sm text-ink-gray-6 sm:flex-row"
+                  >
+                    <span class="min-w-0 truncate"
+                      >{{ row.name }} · {{ statusLabel(row) }}</span
+                    >
+                    <span v-if="row.due_date" class="shrink-0 whitespace-nowrap"
+                      ><span class="hidden sm:inline" aria-hidden="true"
+                        >&nbsp;·&nbsp;</span
+                      >{{ __('Delivery {0}', [row.due_date]) }}</span
                     >
                   </span>
                   <span

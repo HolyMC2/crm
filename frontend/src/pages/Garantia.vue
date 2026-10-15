@@ -452,6 +452,7 @@
                   type="select"
                   class="min-w-56"
                   :label="__('Purchase it came from')"
+                  :placeholder="__('Choose an option')"
                   :options="
                     claim.remedies.supplier_return.purchases.map((p) => ({
                       label: [p.name, p.supplier_name, p.date]

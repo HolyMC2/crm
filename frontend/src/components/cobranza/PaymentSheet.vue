@@ -105,6 +105,7 @@
           v-model="form.mode"
           type="select"
           :label="__('How did they pay?')"
+          :placeholder="__('Choose an option')"
           :options="modeOptions"
         />
         <p v-if="modeNote" class="text-xs text-ink-gray-6">{{ modeNote }}</p>
@@ -242,6 +243,7 @@ import {
   problemOf,
 } from '@/composables/useCobranza'
 import { createRequests } from '@/composables/useCobranzaActions'
+import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 
 // «Registrar pago»: a submitted ERPNext Payment Entry against the customer's
 // invoices (bank transfer, deposit, cash received outside the register). Cash
@@ -290,9 +292,13 @@ const mode = computed(() =>
   (ctx.value?.modes || []).find((m) => m.name === form.mode),
 )
 const needsReference = computed(() => Boolean(mode.value?.needs_reference))
+// ERPNext's seeded modes read in Spanish («Cash» → «Efectivo»); the value
+// stays the record name.
 const modeOptions = computed(() =>
   (ctx.value?.modes || []).map((m) => ({
-    label: m.account ? m.name : __('{0} (no account)', [m.name]),
+    label: m.account
+      ? modeOfPaymentLabel(m.name)
+      : __('{0} (no account)', [modeOfPaymentLabel(m.name)]),
     value: m.name,
     disabled: !m.account,
   })),

@@ -14,6 +14,7 @@
       type="select"
       class="mb-3"
       :label="__('Company', null, 'Manual')"
+      :placeholder="__('Choose a company')"
       :options="field.options"
       data-testid="manual-templates-company"
     />

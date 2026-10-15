@@ -214,6 +214,52 @@ describe('«Registrar pago»', () => {
     ])
   })
 
+  it('ERPNext’s seeded modes read in Spanish; the record name is what is sent', async () => {
+    const catalog = {
+      'Cash:Mode of Payment': 'Efectivo',
+      'Wire Transfer:Mode of Payment': 'Transferencia',
+      'Credit Card:Mode of Payment': 'Tarjeta de crédito',
+    }
+    window.__ = (text, values, context) =>
+      String((context && catalog[`${text}:${context}`]) || text).replace(
+        /{(\d+)}/g,
+        (m, i) => values?.[i] ?? m,
+      )
+    state.api.mockImplementation(async (method) =>
+      method.endsWith('payment_context')
+        ? {
+            ...CONTEXT,
+            modes: [
+              { name: 'Cash', account: 'Caja', needs_reference: false },
+              {
+                name: 'Wire Transfer',
+                account: 'Banco',
+                needs_reference: true,
+              },
+              { name: 'Credit Card', account: null, problem: 'Sin cuenta' },
+              { name: 'Vales Doco', account: 'Caja', needs_reference: false },
+            ],
+            default_mode: 'Cash',
+          }
+        : { payment_entry: 'PE-2', can_cancel: true },
+    )
+    mount(PaymentSheet, { customer: 'Laura', company: 'Tienda' })
+    await flush()
+    const mode = input('How did they pay?')
+    expect(
+      [...mode.querySelectorAll('option')].map((o) => [o.value, o.textContent]),
+    ).toEqual([
+      ['Cash', 'Efectivo'],
+      ['Wire Transfer', 'Transferencia'],
+      ['Credit Card', 'Tarjeta de crédito (no account)'],
+      ['Vales Doco', 'Vales Doco'],
+    ])
+    button('Register').click()
+    await flush()
+    const [, args] = state.api.mock.calls.at(-1)
+    expect(args.mode_of_payment).toBe('Cash')
+  })
+
   it('a bank payment asks for its reference before it can be saved', async () => {
     state.api.mockResolvedValue(CONTEXT)
     mount(PaymentSheet, {

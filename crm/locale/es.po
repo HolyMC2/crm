@@ -21219,6 +21219,36 @@ msgstr "Registrar {0}"
 msgid "{0} (no account)"
 msgstr "{0} (sin cuenta)"
 
+#: frontend/src/utils/modeOfPayment.js
+msgctxt "Mode of Payment"
+msgid "Cash"
+msgstr "Efectivo"
+
+#: frontend/src/utils/modeOfPayment.js
+msgctxt "Mode of Payment"
+msgid "Cheque"
+msgstr "Cheque"
+
+#: frontend/src/utils/modeOfPayment.js
+msgctxt "Mode of Payment"
+msgid "Bank Draft"
+msgstr "Giro bancario"
+
+#: frontend/src/utils/modeOfPayment.js
+msgctxt "Mode of Payment"
+msgid "Wire Transfer"
+msgstr "Transferencia"
+
+#: frontend/src/utils/modeOfPayment.js
+msgctxt "Mode of Payment"
+msgid "Credit Card"
+msgstr "Tarjeta de crédito"
+
+#: frontend/src/utils/modeOfPayment.js
+msgctxt "Mode of Payment"
+msgid "Debit Card"
+msgstr "Tarjeta de débito"
+
 #: frontend/src/components/cobranza/PaymentSheet.vue
 msgid "I need permission to register customer payments in Cobranza (create and submit Payment Entry) for {0}."
 msgstr "Necesito permiso para registrar pagos de clientes en Cobranza (crear y confirmar Payment Entry) en {0}."
