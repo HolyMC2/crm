@@ -190,11 +190,18 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import {
+  ref,
+  computed,
+  watch,
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+  defineAsyncComponent,
+} from 'vue'
 import { Tabs } from 'frappe-ui'
 import LucideMessagesSquare from '~icons/lucide/messages-square'
 import LucideChevronDown from '~icons/lucide/chevron-down'
-import Activities from '@/components/Activities/Activities.vue'
 import ActivityIcon from '@/components/Icons/ActivityIcon.vue'
 import EmailIcon from '@/components/Icons/EmailIcon.vue'
 import CommentIcon from '@/components/Icons/CommentIcon.vue'
@@ -223,6 +230,12 @@ import {
   pulseSalesDocs,
   salesDocsEnabled,
 } from '@/composables/inbox'
+
+// The timeline (composer, editor, every activity kind) loads with the first
+// open conversation, not with the inbox list (bundle budget, SPEC §4).
+const Activities = defineAsyncComponent(
+  () => import('@/components/Activities/Activities.vue'),
+)
 
 const activityTabIndex = ref(0)
 const threadSearch = ref(null)

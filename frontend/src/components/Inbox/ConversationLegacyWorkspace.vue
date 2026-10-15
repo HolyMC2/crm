@@ -55,16 +55,13 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { globalStore } from '@/stores/global'
 import { isMobile } from '@/composables/breakpoint'
 import { swipeBackHandlers } from '@/composables/swipeBack'
 import LegacyConversationQueue from '@/components/doco/inbox/LegacyConversationQueue.vue'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
-import UnassignedWorkspace from '@/components/doco/inbox/UnassignedWorkspace.vue'
-import CommentWorkspace from '@/components/doco/inbox/CommentWorkspace.vue'
-import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import LedgerModal from '@/components/doco/inbox/LedgerModal.vue'
 import PostCallSheet from '@/components/doco/inbox/PostCallSheet.vue'
 import { shouldPingWa, shouldPingMessenger } from '@/utils/pingLogic'
@@ -92,6 +89,18 @@ import {
   catchUpInbox,
 } from '@/composables/inbox'
 import { playPing } from '@/composables/notificationSound'
+
+// Panes shown only for an open conversation load with it, not with the list
+// (bundle budget, SPEC §4).
+const UnassignedWorkspace = defineAsyncComponent(
+  () => import('@/components/doco/inbox/UnassignedWorkspace.vue'),
+)
+const CommentWorkspace = defineAsyncComponent(
+  () => import('@/components/doco/inbox/CommentWorkspace.vue'),
+)
+const DealContextPanel = defineAsyncComponent(
+  () => import('@/components/doco/inbox/DealContextPanel.vue'),
+)
 
 const { $socket } = globalStore()
 
@@ -189,7 +198,8 @@ watch(
 )
 function onPopState(e) {
   if (!isMobile.value) return
-  const depth = e.state?.inboxEpoch === paneEpoch ? e.state?.inboxDepth ?? 0 : 0
+  const depth =
+    e.state?.inboxEpoch === paneEpoch ? (e.state?.inboxDepth ?? 0) : 0
   const target = FROM_DEPTH[Math.min(2, Math.max(0, depth))]
   if (target !== mobileView.value) {
     suppressPush = true // this is a back-walk, don't re-push
