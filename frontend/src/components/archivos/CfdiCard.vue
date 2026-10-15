@@ -61,7 +61,9 @@
     <!-- CFDI XML: the human card -->
     <template v-else-if="card">
       <header class="space-y-2 rounded-lg border border-outline-gray-2 p-4">
-        <div class="flex flex-wrap items-start gap-x-3 gap-y-1">
+        <div
+          class="flex flex-col gap-x-3 gap-y-1 sm:flex-row sm:flex-wrap sm:items-start"
+        >
           <div class="min-w-0 flex-1">
             <h3 class="text-base font-semibold text-ink-gray-9">
               {{ card.tipo_label || __('Fiscal invoice') }}
@@ -73,7 +75,7 @@
               {{ fiscalDate(card.date) }}
             </p>
           </div>
-          <div class="text-right">
+          <div class="sm:text-right">
             <p
               class="text-2xl font-semibold tabular-nums text-ink-gray-9"
               :aria-label="__('Total {0}', [money(card.total, card.moneda)])"
@@ -240,7 +242,10 @@
           @click="showAll = !showAll"
         />
         <p
-          v-if="(card.conceptos_count || 0) > card.conceptos.length"
+          v-if="
+            (card.conceptos_count || 0) > card.conceptos.length &&
+            (showAll || card.conceptos.length <= CONCEPTOS_SHOWN)
+          "
           class="text-sm text-ink-gray-6"
         >
           {{
@@ -470,11 +475,11 @@
               :href="recordLink(row.doctype, row.name)"
               class="min-w-0 flex-1 text-base text-ink-gray-9 underline-offset-2 hover:underline"
             >
-              <span class="block truncate"
+              <span class="block break-words"
                 >{{ doctypeLabel(row.doctype) }}
                 {{ row.title || row.name }}</span
               >
-              <span class="block truncate text-sm text-ink-gray-6">{{
+              <span class="block break-words text-sm text-ink-gray-6">{{
                 [row.reason, row.subtitle].filter(Boolean).join(' · ')
               }}</span>
             </a>
