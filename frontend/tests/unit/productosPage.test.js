@@ -481,4 +481,65 @@ describe('Productos › catálogo', () => {
     )
     expect(root.querySelector('ul.grid')).toBeTruthy()
   })
+
+  it('a template says its variants, a search names itself, and opens with it', async () => {
+    localStorage.clear()
+    const original = answers.queue
+    answers.queue = (args) =>
+      args.view === 'todos'
+        ? {
+            rows: [
+              {
+                name: 'IPN109',
+                title: 'Silicone Case',
+                item_group: 'Fundas',
+                uom: 'Pza',
+                image: null,
+                stock_item: true,
+                stock: { qty: 7, projected: 7, stores: 1 },
+                price: { rate: 99, currency: 'MXN', from: true },
+                variants: { count: 1011, matching: args.search ? 3 : null },
+              },
+            ],
+            total: 1,
+            has_more: false,
+            view: 'todos',
+          }
+        : original(args)
+    await mountAt('/productos?q=a04')
+    const text = root.textContent
+    expect(text).toContain('Results for “a04”')
+    expect(text).toContain('3 of 1011 variants')
+    expect(text).toContain('from')
+    const link = [...root.querySelectorAll('a')].find((a) =>
+      a.textContent.includes('Silicone Case'),
+    )
+    expect(link.getAttribute('href')).toContain('vq=a04')
+    answers.queue = original
+  })
+
+  it('a live change refreshes the catalogue in place, without reordering', async () => {
+    localStorage.clear()
+    const { hoyLive } = await import('@/composables/useHoy')
+    const hub = hoyLive(null)
+    await mountAt('/productos')
+    const original = answers.queue
+    // The server now ranks Recarga first and Funda has a new price.
+    answers.queue = (args) => {
+      const page = original(args)
+      if (args.view !== 'todos') return page
+      const [funda, recarga] = page.rows
+      return {
+        ...page,
+        rows: [recarga, { ...funda, price: { ...funda.price, rate: 150 } }],
+      }
+    }
+    hub.resync(false)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await flush()
+    const text = root.textContent
+    expect(text.indexOf('Funda roja')).toBeLessThan(text.indexOf('Recarga 130'))
+    expect(text).toMatch(/150/)
+    answers.queue = original
+  })
 })

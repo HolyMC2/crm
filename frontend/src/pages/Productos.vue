@@ -1129,7 +1129,7 @@ async function load({ more = false, quiet = false } = {}) {
     })
     if (mine !== ticket) return
     reason.value = page.reason || ''
-    if (quiet && !more && !inventory.value && rows.value.length) {
+    if (quiet && !more && view.value === 'todos' && rows.value.length) {
       // In place: the worker's place in the catalogue never jumps.
       const fresh = new Map(page.rows.map((row) => [legacyKey(row), row]))
       rows.value = rows.value.map((row) => fresh.get(legacyKey(row)) || row)
