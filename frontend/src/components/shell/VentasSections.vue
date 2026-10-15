@@ -3,35 +3,50 @@
     <h2
       class="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
     >
-      Ventas
+      {{ __('Ventas') }}
     </h2>
-    <nav class="grid grid-cols-2 gap-1" :aria-label="__('Ventas sections')">
-      <RouterLink
-        v-for="item in [...primary, ...secondary]"
-        :key="item.key"
-        :to="item.to"
-        class="flex min-h-11 items-center gap-2.5 rounded-lg px-2.5 text-sm"
-        :class="
-          groupOf(route.path) === item.group
-            ? 'bg-surface-gray-3 font-semibold'
-            : 'bg-surface-gray-1'
-        "
-        :aria-current="groupOf(route.path) === item.group ? 'page' : undefined"
-        @click="$emit('navigate')"
+    <template v-for="section in sections" :key="section.key">
+      <h3
+        v-if="section.label && section.items.length"
+        class="pb-1.5 pt-3 text-xs font-medium text-ink-gray-5"
       >
-        <component
-          :is="item.icon"
-          class="size-4 flex-none"
-          aria-hidden="true"
-        />
-        <span class="min-w-0 flex-1 truncate">{{ __(item.label) }}</span>
-        <span
-          v-if="item.badge && badgeFor(item.badge)"
-          class="rounded-full bg-surface-gray-3 px-1.5 text-xs font-semibold"
-          >{{ badgeFor(item.badge) }}</span
+        {{ __(section.label) }}
+      </h3>
+      <nav
+        v-if="section.items.length"
+        class="grid grid-cols-2 gap-1"
+        :aria-label="section.label ? __(section.label) : __('Ventas sections')"
+        :data-ventas-nav="section.key"
+      >
+        <RouterLink
+          v-for="item in section.items"
+          :key="item.key"
+          :to="item.to"
+          class="flex min-h-11 items-center gap-2.5 rounded-lg px-2.5 text-sm"
+          :class="
+            groupOf(route.path) === item.group
+              ? 'bg-surface-gray-3 font-semibold'
+              : 'bg-surface-gray-1'
+          "
+          :aria-current="
+            groupOf(route.path) === item.group ? 'page' : undefined
+          "
+          @click="$emit('navigate')"
         >
-      </RouterLink>
-    </nav>
+          <component
+            :is="item.icon"
+            class="size-4 flex-none"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1 truncate">{{ __(item.label) }}</span>
+          <span
+            v-if="item.badge && badgeFor(item.badge)"
+            class="rounded-full bg-surface-gray-3 px-1.5 text-xs font-semibold"
+            >{{ badgeFor(item.badge) }}</span
+          >
+        </RouterLink>
+      </nav>
+    </template>
     <!-- Web Push for conversations (was in the phone drawer); hidden when the
          browser or site cannot do it. -->
     <button
@@ -67,7 +82,7 @@
   </section>
 </template>
 <script setup>
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useVentasNav } from '@/composables/ventasNav'
 import {
@@ -81,7 +96,14 @@ import { addonAvailable } from '@/utils/crmCapabilities'
 
 defineEmits(['navigate'])
 const route = useRoute()
-const { primary, secondary, groupOf, badgeFor } = useVentasNav()
+const { primary, more, settings, groupOf, badgeFor } = useVentasNav()
+// Phone «Más»: the daily lists first, then «Más» and «Configuración» (managers).
+const sections = computed(() => [
+  { key: 'daily', label: '', items: primary.value },
+  // The sheet itself is «Más», so this heading says «Otras listas».
+  { key: 'more', label: 'Other lists', items: more.value },
+  { key: 'settings', label: 'Settings', items: settings.value },
+])
 watch(addonAvailable, (available) => available && refreshPushState(), {
   immediate: true,
 })

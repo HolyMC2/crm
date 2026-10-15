@@ -23524,3 +23524,18 @@ msgstr "Tratos sin seguimiento"
 #: frontend/src/pages/Hoy.vue
 msgid "Every open deal of yours has a next step."
 msgstr "Todos tus tratos abiertos tienen seguimiento."
+#: frontend/src/composables/ventasNav.js
+msgid "Conversations"
+msgstr "Conversaciones"
+
+#: frontend/src/components/shell/VentasSections.vue
+msgid "Other lists"
+msgstr "Otras listas"
+
+#: frontend/src/composables/navModel.js
+msgid "Social"
+msgstr "Redes sociales"
+
+#: frontend/src/components/shell/VentasSidebar.vue
+msgid "Ventas"
+msgstr "Ventas"

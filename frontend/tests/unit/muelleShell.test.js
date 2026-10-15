@@ -25,14 +25,23 @@ vi.mock('@/composables/breakpoint', async () => {
 vi.mock('@/stores/session', () => ({
   sessionStore: () => ({ logout: { submit: vi.fn() } }),
 }))
-vi.mock('@/composables/ventasNav', () => ({
-  useVentasNav: () => ({
-    primary: [],
-    secondary: [],
-    groupOf: () => '',
-    badgeFor: () => 0,
-  }),
-}))
+vi.mock('@/composables/ventasNav', async () => {
+  const { ref } = await import('vue')
+  return {
+    useVentasNav: () => ({
+      primary: ref([]),
+      more: ref([]),
+      settings: ref([]),
+      secondary: ref([]),
+      groupOf: () => '',
+      badgeFor: () => 0,
+      sectionBadge: () => 0,
+      isOpen: () => false,
+      canClose: () => true,
+      toggle: () => {},
+    }),
+  }
+})
 vi.mock('@/components/Notifications.vue', () => ({
   __esModule: true,
   default: { render: () => null },
@@ -1326,9 +1335,8 @@ describe('palette recents never outlive read access', () => {
 
 describe('Ventas navigation on every screen', () => {
   it('Ventas sections show from 640 px, where the shell switches to desktop', async () => {
-    const { default: VentasSidebar } = await import(
-      '@/components/shell/VentasSidebar.vue'
-    )
+    const { default: VentasSidebar } =
+      await import('@/components/shell/VentasSidebar.vue')
     state.mobile.value = false
     await mount('/deals')
     const host = document.createElement('div')

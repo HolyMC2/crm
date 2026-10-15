@@ -104,12 +104,16 @@ const ESCANER_PLACES = [
   ['/scan/inbound', 'Recepción', 'lucide-package-open', 'recibir mercancia'],
   ['/scan/tasks', 'Tareas', 'lucide-square-check-big', 'tareas escaneo'],
 ]
+// The Ventas daily lists first, then the «Más» lists people jump to by name
+// (composables/ventasNav.js VENTAS_SECTIONS). Agenda is its own module.
 const VENTAS_PLACES = [
-  ['/inbox', 'Inbox', 'lucide-messages-square'],
-  ['/leads', 'Leads', 'lucide-users'],
   ['/deals', 'Deals', 'lucide-handshake'],
-  ['/tasks', 'Tasks', 'lucide-square-check-big'],
-  ['/calendar', 'Calendar', 'lucide-calendar-days'],
+  ['/leads', 'Leads', 'lucide-users'],
+  ['/inbox', 'Conversations', 'lucide-messages-square'],
+  ['/inquiries', 'Consultas', 'lucide-message-square-plus'],
+  ['/dashboard', 'Dashboard', 'lucide-layout-dashboard'],
+  ['/reports', 'Reports', 'lucide-bar-chart-3'],
+  ['/call-logs', 'Calls', 'lucide-phone'],
 ]
 
 export function createShellProviders({ boot, modules }) {
