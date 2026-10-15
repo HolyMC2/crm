@@ -461,6 +461,15 @@
             </li>
           </ol>
         </section>
+
+        <ArchivosRegistroPanel
+          v-if="archivosEnabled"
+          class="mt-4"
+          doctype="Customer"
+          :name="props.customer"
+          :return-to="`/crm${route.fullPath}`"
+          :return-label="data.customer_name || props.customer"
+        />
       </template>
     </div>
 
@@ -553,6 +562,7 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { ArchivosRegistroPanel } from '@/components/archivos'
 import CallSheet from '@/components/cobranza/CallSheet.vue'
 import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
 import FollowupSheet from '@/components/cobranza/FollowupSheet.vue'
@@ -560,6 +570,7 @@ import PaymentSheet from '@/components/cobranza/PaymentSheet.vue'
 import PromiseSheet from '@/components/cobranza/PromiseSheet.vue'
 import StatementSheet from '@/components/cobranza/StatementSheet.vue'
 import { isMobile } from '@/composables/breakpoint'
+import { shellBoot } from '@/composables/muelleShell'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import {
@@ -598,6 +609,7 @@ import { useCobranzaUndo } from '@/composables/useCobranzaActions'
 import { posCollectHref } from '@/utils/posHandoff'
 import {
   isTypingTarget,
+  moduleEnabled,
   safeReturn,
   sanitizeReturnLabel,
 } from '@/vendor/muelle-shell/contracts'
@@ -616,6 +628,8 @@ const route = useRoute()
 const router = useRouter()
 const phone = isMobile
 const boot = cobranzaBoot
+// Files on this record come from Archivos when the worker has it.
+const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const scroller = ref(null)
 const data = ref(null)

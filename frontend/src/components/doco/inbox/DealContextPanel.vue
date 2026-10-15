@@ -391,6 +391,15 @@
         />
       </div>
     </div>
+
+    <ArchivosRegistroPanel
+      v-if="isDeal && activeDeal && archivosEnabled"
+      class="m-3.5"
+      doctype="CRM Deal"
+      :name="activeDeal"
+      :return-to="`/crm${route.fullPath}`"
+      :return-label="name || activeDeal"
+    />
   </div>
 </template>
 
@@ -414,11 +423,14 @@ import { repairReadyStage } from '@/utils/repairReadyStage'
 import { stageLabel } from '@/utils/stageLabel'
 import LucideChevronLeft from '~icons/lucide/chevron-left'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
+import { ArchivosRegistroPanel } from '@/components/archivos'
 import DealContactsSection from '@/components/doco/inbox/DealContactsSection.vue'
 import ContactCardEditable from '@/components/doco/inbox/ContactCardEditable.vue'
 import DealCommercialDocs from '@/components/ventas/DealCommercialDocs.vue'
 import DuplicateBanner from '@/components/doco/inbox/DuplicateBanner.vue'
 import CoachingPanel from '@/components/doco/inbox/CoachingPanel.vue'
+import { shellBoot } from '@/composables/muelleShell'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 
 // ⚠ duplicate banner → jump to the other open record (detect+navigate only)
 // NB selectDeal arg order: (name, doctype)
@@ -463,6 +475,8 @@ const route = useRoute()
 const onDeal360 = computed(() => route.name === 'Deal 360')
 
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
+// Files on this record come from Archivos when the worker has it.
+const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
 
 // effective row: the rich inbox queue row when present; else (Deal 360° / deep link,
 // deal not in the queue) a direct deal+lead fetch — same fallback as DealHeader, so

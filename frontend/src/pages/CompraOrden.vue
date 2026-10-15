@@ -674,6 +674,15 @@
       </template>
     </Dialog>
 
+    <ArchivosRegistroPanel
+      v-if="!isNew && doc.name && archivosEnabled"
+      class="mt-4"
+      doctype="Purchase Order"
+      :name="doc.name"
+      :return-to="`/crm${route.fullPath}`"
+      :return-label="__('Compras', null, 'Compras')"
+    />
+
     <HandoffDialog
       v-if="!isNew"
       v-model="handoff.open"
@@ -705,13 +714,14 @@ import {
   FormControl,
   toast,
 } from 'frappe-ui'
+import { ArchivosRegistroPanel } from '@/components/archivos'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import { shellBoot } from '@/composables/muelleShell'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
-import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
+import { isTypingTarget, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import { keyAction } from '@/utils/powerList'
 import { orderBillsRoute } from '@/composables/useGastos'
@@ -756,6 +766,8 @@ const boot = comprasBoot
 const isNew = computed(() => !props.name)
 // Supplier bills of this order: for bill readers (an employee filing expenses has Gastos too).
 const gastosOn = computed(() => can(shellBoot.value, 'gastos', 'read'))
+// Files on this record come from Archivos when the worker has it.
+const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
 const data = ref({})
 const rows = ref([])
 const loading = ref(false)

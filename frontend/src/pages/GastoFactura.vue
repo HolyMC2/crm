@@ -324,6 +324,15 @@
             </ul>
           </section>
         </div>
+
+        <ArchivosRegistroPanel
+          v-if="doc.name && archivosEnabled"
+          class="mt-4"
+          doctype="Purchase Invoice"
+          :name="doc.name"
+          :return-to="`/crm${route.fullPath}`"
+          :return-label="__('Gastos', null, 'Gastos')"
+        />
       </template>
     </div>
 
@@ -394,9 +403,11 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, Dialog, FeatherIcon, toast } from 'frappe-ui'
+import { ArchivosRegistroPanel } from '@/components/archivos'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
+import { shellBoot } from '@/composables/muelleShell'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
@@ -419,7 +430,7 @@ import {
   requestId,
   statusLabel,
 } from '@/composables/useGastos'
-import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
+import { isTypingTarget, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import { keyAction } from '@/utils/powerList'
@@ -428,6 +439,8 @@ const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
 const router = useRouter()
 const boot = gastosBoot
+// Files on this record come from Archivos when the worker has it.
+const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
 const data = ref({})
 const loading = ref(false)
 const loaded = ref(false)
