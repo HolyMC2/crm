@@ -173,6 +173,25 @@ class TestConversationThreads(IntegrationTestCase):
 		items = api.list_for_reference("CRM Inquiry", inquiry)["items"]
 		self.assertEqual([(i["name"], i["materialized"]) for i in items], [(opened["name"], True)])
 
+	def test_converted_deal_lists_the_lead_conversations(self):
+		# CRM-S3.4: conversion keeps history; a thread linked to the lead shows on its deal.
+		frappe.set_user("Administrator")
+		lead, deal = "lead-" + uuid4().hex[:12], "deal-" + uuid4().hex[:12]
+		frappe.get_doc({"doctype": "CRM Lead", "name": lead, "first_name": "Fictional"}).db_insert()
+		frappe.get_doc({"doctype": "CRM Deal", "name": deal, "lead": lead}).db_insert()
+		thread = control.get_or_create(
+			"WhatsApp", self.account_id, self.peer, reference_doctype="CRM Lead", reference_name=lead
+		)
+		self.message(
+			"Hola, cotización", peer="5215550198767", reference_doctype="CRM Lead", reference_name=lead
+		)
+		items = api.list_for_reference("CRM Deal", deal)["items"]
+		self.assertIn(thread.name, [i["name"] for i in items])
+		self.assertIn("5215550198767", [i["peer_id"] for i in items])
+		other = "deal-" + uuid4().hex[:12]
+		frappe.get_doc({"doctype": "CRM Deal", "name": other}).db_insert()
+		self.assertEqual(api.list_for_reference("CRM Deal", other)["items"], [])
+
 	def test_reference_list_denies_unreadable_and_non_crm_records(self):
 		with self.assertRaises(frappe.PermissionError):
 			api.list_for_reference("Patient", "private-chart")

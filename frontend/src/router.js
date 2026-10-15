@@ -341,6 +341,13 @@ const routes = [
     meta: { title: 'Dashboard' },
   },
   {
+    // CRM-S3.4 (D4): leads and inquiries in one capture list.
+    path: '/prospectos',
+    name: 'Prospectos',
+    component: () => import('@/pages/Prospectos.vue'),
+    meta: { navLabel: 'Prospectos', title: 'Prospectos' },
+  },
+  {
     path: '/inquiries',
     name: 'Inquiries',
     component: () => import('@/pages/Inquiries.vue'),

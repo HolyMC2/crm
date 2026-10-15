@@ -255,7 +255,7 @@ def _first_visible(scope, peer):
 	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""SELECT m.name,m.reference_doctype,m.reference_name,
         {scope.timestamp} AS timestamp FROM {scope.table} m
-        WHERE {scope.where} AND {scope.peer_match} AND ({' OR '.join(clauses)})
+        WHERE {scope.where} AND {scope.peer_match} AND ({" OR ".join(clauses)})
         ORDER BY {scope.timestamp} DESC,m.name DESC LIMIT 1{control._for_update()}""",
 		[*scope.args, peer, *args],
 		as_dict=True,
@@ -504,9 +504,14 @@ def list_for_reference(doctype: str, name: str, cursor: str | None = None):
 	after = _cursor(cursor, context) or ""
 	if not isinstance(after, str) or (after and not re.fullmatch(r"[0-9a-f]{64}", after)):
 		frappe.throw("Invalid page cursor.")
+	references = [(doctype, name), *_converted_from(doctype, name)]
 	rows = frappe.get_all(
 		control.DOCTYPE,
-		filters={"reference_doctype": doctype, "reference_name": name, "name": [">", after]},
+		filters={
+			"reference_doctype": ["in", sorted({dt for dt, _ in references})],
+			"reference_name": ["in", sorted({ref for _, ref in references})],
+			"name": [">", after],
+		},
 		fields=["name"],
 		order_by="name asc",
 		limit=SCAN + 1,
@@ -515,14 +520,28 @@ def list_for_reference(doctype: str, name: str, cursor: str | None = None):
 	for row in rows[:SCAN]:
 		doc = control._load(row.name)
 		# Check the row again: a concurrent relink must not leak it.
-		if doc.reference_doctype != doctype or doc.reference_name != name:
+		if (doc.reference_doctype, doc.reference_name) not in references:
 			continue
 		if _permitted(lambda: control._authorize(doc)):
 			items.append(_reference_item(doc.provider, doc.account_id, doc.peer_id, doc))
 			seen.add(doc.name)
 	if not after:
-		items.extend(_implied_threads(doctype, name, seen))
+		for ref_doctype, ref_name in references:
+			items.extend(_implied_threads(ref_doctype, ref_name, seen))
 	return {"items": items, "next_cursor": _next(rows[SCAN - 1].name, context) if len(rows) > SCAN else None}
+
+
+def _converted_from(doctype, name):
+	"""The lead a deal was converted from, when the user may read it (CRM-S3.4).
+
+	Conversion keeps the lead's conversations on the lead; the deal lists them too,
+	like its activity timeline and WhatsApp tab already show the lead's history."""
+	if doctype != "CRM Deal" or "CRM Lead" not in REFS:
+		return []
+	lead = frappe.db.get_value("CRM Deal", name, "lead")
+	if not lead or not _source_allowed({"reference_doctype": "CRM Lead", "reference_name": lead}):
+		return []
+	return [("CRM Lead", lead)]
 
 
 def _reference_item(provider, account_id, peer, doc=None):
