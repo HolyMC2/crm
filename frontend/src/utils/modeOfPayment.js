@@ -1,8 +1,10 @@
-// ERPNext seeds these Modes of Payment with English names. The record keeps
-// its name (it is the value sent back to the server); the worker reads it in
-// their language. A mode the business created itself shows as it was named.
+// ERPNext seeds these Modes of Payment with English names («Check» on a US
+// setup, «Cheque» elsewhere). The record keeps its name (it is the value sent
+// back to the server); the worker reads it in their language. A mode the
+// business created itself shows as it was named.
 export const SEEDED_MODES = Object.freeze([
   'Cash',
+  'Check',
   'Cheque',
   'Bank Draft',
   'Wire Transfer',

@@ -21226,6 +21226,11 @@ msgstr "Efectivo"
 
 #: frontend/src/utils/modeOfPayment.js
 msgctxt "Mode of Payment"
+msgid "Check"
+msgstr "Cheque"
+
+#: frontend/src/utils/modeOfPayment.js
+msgctxt "Mode of Payment"
 msgid "Cheque"
 msgstr "Cheque"
 

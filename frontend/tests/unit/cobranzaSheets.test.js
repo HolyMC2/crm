@@ -219,6 +219,7 @@ describe('«Registrar pago»', () => {
       'Cash:Mode of Payment': 'Efectivo',
       'Wire Transfer:Mode of Payment': 'Transferencia',
       'Credit Card:Mode of Payment': 'Tarjeta de crédito',
+      'Check:Mode of Payment': 'Cheque',
     }
     window.__ = (text, values, context) =>
       String((context && catalog[`${text}:${context}`]) || text).replace(
@@ -237,6 +238,7 @@ describe('«Registrar pago»', () => {
                 needs_reference: true,
               },
               { name: 'Credit Card', account: null, problem: 'Sin cuenta' },
+              { name: 'Check', account: null, problem: 'Sin cuenta' },
               { name: 'Vales Doco', account: 'Caja', needs_reference: false },
             ],
             default_mode: 'Cash',
@@ -252,6 +254,7 @@ describe('«Registrar pago»', () => {
       ['Cash', 'Efectivo'],
       ['Wire Transfer', 'Transferencia'],
       ['Credit Card', 'Tarjeta de crédito (no account)'],
+      ['Check', 'Cheque (no account)'],
       ['Vales Doco', 'Vales Doco'],
     ])
     button('Register').click()
