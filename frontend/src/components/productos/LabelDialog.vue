@@ -7,7 +7,7 @@
             {{ __('Size', null, CTX) }}
             <select
               v-model="size"
-              class="h-11 rounded-md border border-outline-gray-2 bg-surface-white px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+              class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
             >
               <option v-for="entry in SIZES" :key="entry.id" :value="entry.id">
                 {{ entry.label }}
@@ -25,7 +25,7 @@
               min="1"
               max="200"
               inputmode="numeric"
-              class="h-11 w-24 rounded-md border border-outline-gray-2 bg-surface-white px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+              class="h-11 w-24 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
             />
           </label>
         </div>

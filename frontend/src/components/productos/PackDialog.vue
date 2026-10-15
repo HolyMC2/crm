@@ -38,7 +38,7 @@
             {{ __('Products per image', null, CTX) }}
             <select
               v-model.number="perPage"
-              class="h-11 rounded-md border border-outline-gray-2 bg-surface-white px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+              class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
             >
               <option v-for="n in PER_PAGE" :key="n" :value="n">{{ n }}</option>
             </select>

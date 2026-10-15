@@ -1,7 +1,7 @@
 <template>
   <section
     id="fotos"
-    class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+    class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
   >
     <header
       class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -95,7 +95,7 @@
           />
           <span
             v-if="photo.principal"
-            class="absolute left-1.5 top-1.5 rounded-full bg-surface-white px-2 py-0.5 text-xs font-medium text-ink-gray-8 shadow-sm ring-1 ring-outline-gray-2"
+            class="absolute left-1.5 top-1.5 rounded-full bg-surface-base px-2 py-0.5 text-xs font-medium text-ink-gray-8 shadow-sm ring-1 ring-outline-gray-2"
             >{{ __('Main', null, CTX) }}</span
           >
         </a>
