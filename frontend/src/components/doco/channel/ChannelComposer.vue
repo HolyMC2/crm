@@ -83,7 +83,7 @@
           </label>
           <select
             v-model="template"
-            class="w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1.5 text-[13px] text-ink-gray-8"
+            class="w-full rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1.5 text-[13px] text-ink-gray-8"
             @change="loadTemplate"
           >
             <option value="">{{ __('Mensaje libre (sin plantilla)') }}</option>
@@ -116,7 +116,7 @@
               <input
                 v-model="manual[String(hole.index)]"
                 type="text"
-                class="w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-[13px] text-ink-gray-8"
+                class="w-full rounded-md border border-outline-gray-2 bg-surface-base px-2 py-1 text-[13px] text-ink-gray-8"
                 :placeholder="hole.sample || __('Escribe el valor')"
                 @change="loadTemplate"
               />
@@ -133,7 +133,7 @@
           <textarea
             v-model="text"
             rows="6"
-            class="mt-2 w-full rounded-md border border-outline-gray-2 bg-surface-white px-2.5 py-2 text-[13px] leading-relaxed text-ink-gray-8"
+            class="mt-2 w-full rounded-md border border-outline-gray-2 bg-surface-base px-2.5 py-2 text-[13px] leading-relaxed text-ink-gray-8"
             :placeholder="__('Escribe el mensaje…')"
           />
           <div

@@ -270,7 +270,7 @@
                 v-model="asking.text"
                 data-testid="action-reason"
                 maxlength="500"
-                class="min-h-11 rounded border border-outline-gray-2 bg-surface-white px-2 text-sm sm:min-h-7"
+                class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-sm sm:min-h-7"
               />
               <div class="flex flex-wrap gap-1.5">
                 <Button

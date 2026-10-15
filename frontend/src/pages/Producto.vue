@@ -18,7 +18,7 @@
       <section
         v-if="guard"
         role="alert"
-        class="mx-auto max-w-xl space-y-4 rounded-xl border border-outline-gray-2 bg-surface-white p-6"
+        class="mx-auto max-w-xl space-y-4 rounded-xl border border-outline-gray-2 bg-surface-base p-6"
       >
         <h1 class="text-xl font-semibold">{{ guard.title }}</h1>
         <p class="text-base text-ink-gray-7">{{ guard.detail }}</p>
@@ -35,7 +35,7 @@
         class="space-y-4"
       >
         <div
-          class="flex gap-5 rounded-xl border border-outline-gray-2 bg-surface-white p-5"
+          class="flex gap-5 rounded-xl border border-outline-gray-2 bg-surface-base p-5"
         >
           <div class="h-32 w-32 animate-pulse rounded-xl bg-surface-gray-2" />
           <div class="flex-1 space-y-3 pt-2">
@@ -53,7 +53,7 @@
       <template v-else-if="data">
         <!-- Hero: photo, where it lives, what it is, what to do next. -->
         <header
-          class="grid gap-4 rounded-xl border border-outline-gray-2 bg-surface-white p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 sm:p-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]"
+          class="grid gap-4 rounded-xl border border-outline-gray-2 bg-surface-base p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 sm:p-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]"
         >
           <div class="flex flex-col items-center gap-2 sm:items-start">
             <img
@@ -391,7 +391,7 @@
             />
             <section
               id="precios"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -541,7 +541,7 @@
             <section
               v-if="!isTemplate"
               id="existencias"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -837,7 +837,7 @@
             <section
               v-if="!isTemplate"
               id="movimientos"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -950,7 +950,7 @@
 
             <section
               id="historial"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1053,7 +1053,7 @@
           <aside class="min-w-0 space-y-4 lg:space-y-5">
             <section
               v-if="data.cost"
-              class="rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="rounded-xl border border-outline-gray-2 bg-surface-base"
               :aria-label="__('Cost and margin')"
             >
               <header
@@ -1074,7 +1074,7 @@
                 <div
                   v-for="figure in costFigures"
                   :key="figure.label"
-                  class="bg-surface-white px-4 py-3"
+                  class="bg-surface-base px-4 py-3"
                 >
                   <dt class="text-xs text-ink-gray-6">{{ figure.label }}</dt>
                   <dd
@@ -1089,7 +1089,7 @@
             </section>
 
             <section
-              class="rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1125,7 +1125,7 @@
             </section>
 
             <section
-              class="rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1183,7 +1183,7 @@
             </section>
 
             <section
-              class="rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header class="border-b border-outline-gray-1 px-4 py-3">
                 <h2 class="text-base font-semibold text-ink-gray-9">
@@ -1208,7 +1208,7 @@
 
             <section
               id="compras"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -1268,7 +1268,7 @@
 
             <section
               id="ventas"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"

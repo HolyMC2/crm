@@ -55,7 +55,7 @@
             v-model="query"
             type="search"
             autocomplete="off"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-3 text-base"
+            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-3 text-base"
             :placeholder="__('Search by name or phone')"
             @input="search"
           />
@@ -92,7 +92,7 @@
         <select
           :id="ids.service"
           v-model="service"
-          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
           <option value="">{{ __('No service yet') }}</option>
           <option v-for="row in services" :key="row.id" :value="row.id">
@@ -107,7 +107,7 @@
         <select
           :id="ids.day"
           v-model="day"
-          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
           <option v-for="row in days" :key="row.date" :value="row.date">
             {{ dayLabel(row.date) }}
@@ -146,7 +146,7 @@
           v-model="notes"
           rows="3"
           maxlength="600"
-          class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-white px-3 py-2 text-base"
+          class="mt-1 w-full rounded border border-outline-gray-2 bg-surface-base px-3 py-2 text-base"
         />
       </div>
       <AgendaGuard

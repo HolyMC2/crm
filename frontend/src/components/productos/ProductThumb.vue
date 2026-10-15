@@ -2,7 +2,7 @@
   <span
     class="relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg"
     :class="[
-      image && !broken ? 'bg-surface-white ring-1 ring-outline-gray-1' : tone,
+      image && !broken ? 'bg-surface-base ring-1 ring-outline-gray-1' : tone,
     ]"
     aria-hidden="true"
   >

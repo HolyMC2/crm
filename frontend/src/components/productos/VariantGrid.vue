@@ -1,7 +1,7 @@
 <template>
   <section
     id="variantes"
-    class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+    class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
   >
     <header
       class="flex flex-wrap items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
@@ -35,7 +35,7 @@
         <input
           v-model="search"
           type="search"
-          class="h-11 rounded-md border border-outline-gray-2 bg-surface-white px-3 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+          class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
           :placeholder="__('Name, code or barcode', null, 'Productos')"
         />
       </label>
@@ -47,7 +47,7 @@
         <span class="text-ink-gray-6">{{ facet.attribute }}</span>
         <select
           :value="chosen[facet.attribute] || ''"
-          class="h-11 rounded-md border border-outline-gray-2 bg-surface-white px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
+          class="h-11 rounded-md border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9 sm:h-8 sm:text-sm"
           @change="choose(facet.attribute, $event.target.value)"
         >
           <option value="">{{ __('All', null, 'Productos') }}</option>

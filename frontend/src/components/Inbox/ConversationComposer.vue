@@ -12,7 +12,7 @@
           v-model="body"
           rows="3"
           required
-          class="mt-2 block w-full min-w-0 resize-y rounded border border-outline-gray-2 bg-surface-white p-2 text-sm"
+          class="mt-2 block w-full min-w-0 resize-y rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
           :disabled="busy || !!pending || blocked"
           :aria-invalid="!pending && !!problem"
           :aria-describedby="`${id}-rules`"

@@ -47,7 +47,7 @@
         >
           <select
             v-model="row.day"
-            class="min-h-11 rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+            class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
             :aria-label="__('Day')"
           >
             <option v-for="day in WEEKDAYS" :key="day" :value="day">
@@ -57,13 +57,13 @@
           <input
             v-model="row.from"
             type="time"
-            class="min-h-11 rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+            class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
             :aria-label="__('Opens')"
           />
           <input
             v-model="row.to"
             type="time"
-            class="min-h-11 rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+            class="min-h-11 rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
             :aria-label="__('Closes')"
           />
           <Button
@@ -101,7 +101,7 @@
             min="10"
             max="480"
             step="5"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
           />
         </label>
         <label class="text-sm text-ink-gray-7">
@@ -111,7 +111,7 @@
             type="number"
             min="1"
             max="90"
-            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+            class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
           />
         </label>
       </div>
@@ -148,7 +148,7 @@
         {{ __('Rest days and holidays') }}
         <select
           v-model="form.holidayList"
-          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+          class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
         >
           <option value="">{{ __('Choose your rest days') }}</option>
           <option

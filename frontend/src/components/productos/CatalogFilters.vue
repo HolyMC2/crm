@@ -83,7 +83,7 @@
         v-if="groups.length > SHOWN"
         v-model="groupSearch"
         type="search"
-        class="mb-1 w-full rounded-md border border-outline-gray-2 bg-surface-white px-2 text-sm text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0"
+        class="mb-1 w-full rounded-md border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0"
         :class="touch ? 'h-11' : 'h-8'"
         :placeholder="__('Search group')"
         :aria-label="__('Search group')"

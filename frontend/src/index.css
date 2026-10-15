@@ -150,6 +150,46 @@ a,
   transform: rotate(45deg);
 }
 
+/* Native form controls follow the theme. @tailwindcss/forms paints every bare
+   checkbox, radio, input, select and textarea #fff (and a #fff focus-ring
+   offset), so in dark mode they render as white blocks and white circles.
+   These rules re-point that base paint to the semantic surface; they keep the
+   plugin's zero-ish specificity, so any utility class (bg-surface-gray-2,
+   .fld, .cb-token, frappe-ui controls) still wins, and the plugin's :checked
+   fill still applies. In light mode --surface-base is white, so nothing moves. */
+input:where(
+    :not([type]),
+    [type='text'],
+    [type='email'],
+    [type='url'],
+    [type='password'],
+    [type='number'],
+    [type='date'],
+    [type='datetime-local'],
+    [type='month'],
+    [type='search'],
+    [type='tel'],
+    [type='time'],
+    [type='week'],
+    [type='checkbox'],
+    [type='radio']
+  ),
+select,
+textarea {
+  background-color: var(--surface-base);
+}
+input:where([type='checkbox'], [type='radio']) {
+  border-color: var(--outline-gray-4);
+}
+input:where([type='checkbox'], [type='radio']):focus {
+  --tw-ring-offset-color: var(--surface-base);
+}
+/* `rounded` is 8px in the espresso radius scale, which turns a 16-20px
+   checkbox into a circle that reads as a radio button. */
+input[type='checkbox'].rounded {
+  border-radius: var(--radius-1);
+}
+
 /* poor-man's list virtualization: browser skips layout/paint of offscreen rows
    (590-conversation queues on a phone). Estimated height keeps scrollbar sane. */
 .cv-row {

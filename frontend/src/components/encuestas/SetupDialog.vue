@@ -61,7 +61,7 @@
             </p>
             <p
               v-if="service"
-              class="rounded bg-surface-white px-2 py-1 font-mono text-xs text-ink-gray-8"
+              class="rounded bg-surface-base px-2 py-1 font-mono text-xs text-ink-gray-8"
             >
               {{ SUGGESTED_TEXT }}
             </p>

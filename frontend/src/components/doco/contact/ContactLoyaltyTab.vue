@@ -114,7 +114,7 @@
                 {{ __('Expense account for redeemed points') }}
                 <select
                   v-model="setup.expense_account"
-                  class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-white p-2 text-sm"
+                  class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
                 >
                   <option
                     v-for="acc in setup.expense_accounts"
@@ -232,7 +232,7 @@
               v-model.number="adjustForm.points"
               type="number"
               step="1"
-              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-white p-2 text-sm"
+              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
             />
           </label>
           <label class="block text-xs font-semibold text-ink-gray-7">
@@ -240,7 +240,7 @@
             <input
               v-model="adjustForm.reason"
               maxlength="140"
-              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-white p-2 text-sm"
+              class="mt-1 block w-full rounded border border-outline-gray-2 bg-surface-base p-2 text-sm"
             />
           </label>
           <div class="flex flex-wrap gap-2">

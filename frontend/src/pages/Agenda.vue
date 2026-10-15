@@ -615,6 +615,7 @@
       :is="phone ? BottomSheet : Dialog"
       v-if="form"
       v-bind="formContainerProps"
+      @update:open="(open) => !open && closeForm(eventFormRef?.dirty)"
     >
       <template #[formSlot]>
         <div :class="phone ? 'px-5 pb-4' : ''">
@@ -659,6 +660,7 @@
           </div>
           <AgendaEventForm
             v-else
+            ref="eventFormRef"
             :key="form.key"
             :initial="form.initial"
             :mode="form.mode"
@@ -717,6 +719,7 @@
       :is="phone ? BottomSheet : Dialog"
       v-if="citaForm"
       v-bind="sheetProps(__('New appointment'))"
+      @update:open="(open) => !open && (citaForm = null)"
     >
       <template #[formSlot]>
         <div :class="phone ? 'px-5 pb-4' : ''">
@@ -743,6 +746,7 @@
       :is="phone ? BottomSheet : Dialog"
       v-if="citaSettingsOpen"
       v-bind="sheetProps(__('Online appointments'))"
+      @update:open="(open) => !open && (citaSettingsOpen = false)"
     >
       <template #[formSlot]>
         <div :class="phone ? 'px-5 pb-4' : ''">
@@ -2314,6 +2318,9 @@ const formTitle = computed(() =>
       : __('New event'),
 )
 const formSlot = computed(() => (phone.value ? 'default' : 'body-content'))
+// The dialog header's X emits update:open(false); each container wires it to
+// the same close path as its in-form Close/Cancel button.
+const eventFormRef = ref(null)
 const formContainerProps = computed(() =>
   phone.value
     ? { open: true, dismissible: false, title: '' }

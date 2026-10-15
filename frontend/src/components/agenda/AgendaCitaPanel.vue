@@ -103,7 +103,7 @@
       <select
         :id="dayId"
         v-model="day"
-        class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-base"
+        class="mt-1 min-h-11 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-base text-ink-gray-9"
       >
         <option v-for="row in days" :key="row.date" :value="row.date">
           {{ dayLabel(row.date) }}
@@ -137,7 +137,7 @@
 
     <div
       v-if="open && actionIds.length"
-      class="sticky bottom-0 flex flex-wrap gap-2 bg-surface-white pb-[env(safe-area-inset-bottom)] pt-2"
+      class="sticky bottom-0 flex flex-wrap gap-2 bg-surface-base pb-[env(safe-area-inset-bottom)] pt-2"
     >
       <a
         v-if="actionIds.includes('receive')"

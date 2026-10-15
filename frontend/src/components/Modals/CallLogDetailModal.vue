@@ -435,10 +435,10 @@ watch(
 }
 
 audio::-webkit-media-controls-panel {
-  background-color: rgb(237, 237, 237) !important;
+  background-color: var(--surface-gray-2) !important;
 }
 
 .audio-control::-webkit-media-controls-panel {
-  background-color: white;
+  background-color: var(--surface-base);
 }
 </style>

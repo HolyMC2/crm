@@ -161,7 +161,7 @@
             ref="searchBox"
             v-model="search"
             type="search"
-            class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-white pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0 sm:h-10 sm:text-sm"
+            class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0 sm:h-10 sm:text-sm"
             :placeholder="__('Search name, code or barcode')"
             :aria-label="__('Search name, code or barcode')"
           />
@@ -186,7 +186,7 @@
           {{ __('Filters', null, 'Productos') }}
           <span
             v-if="filterChips.length"
-            class="rounded-full bg-surface-gray-7 px-1.5 text-xs text-ink-white"
+            class="rounded-full bg-surface-gray-9 px-1.5 text-xs text-ink-base"
             >{{ filterChips.length }}</span
           >
         </button>
@@ -203,7 +203,7 @@
             class="flex h-full items-center gap-1.5 rounded-md px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
             :class="
               layout === option.value
-                ? 'bg-surface-white font-medium text-ink-gray-9 shadow-sm'
+                ? 'bg-surface-base font-medium text-ink-gray-9 shadow-sm'
                 : 'text-ink-gray-6 hover:text-ink-gray-8'
             "
             :aria-pressed="layout === option.value"
@@ -347,7 +347,7 @@
       >
         <div
           v-if="selected.size"
-          class="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-outline-gray-2 bg-surface-white px-4 py-2 sm:px-6"
+          class="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-outline-gray-2 bg-surface-base px-4 py-2 sm:px-6"
         >
           <span class="text-sm font-medium" role="status">{{
             selected.size === 1
@@ -551,7 +551,7 @@
         </ul>
         <div v-else>
           <div
-            class="sticky top-0 z-[1] hidden grid-cols-[2.5rem_minmax(0,1fr)_12rem_9rem_8rem] gap-x-3 border-b border-outline-gray-2 bg-surface-white px-6 py-2 text-xs font-medium uppercase tracking-wide text-ink-gray-5 lg:grid"
+            class="sticky top-0 z-[1] hidden grid-cols-[2.5rem_minmax(0,1fr)_12rem_9rem_8rem] gap-x-3 border-b border-outline-gray-2 bg-surface-base px-6 py-2 text-xs font-medium uppercase tracking-wide text-ink-gray-5 lg:grid"
             aria-hidden="true"
           >
             <span />

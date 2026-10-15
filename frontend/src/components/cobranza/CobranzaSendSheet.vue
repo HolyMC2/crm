@@ -46,7 +46,7 @@
               <dd>
                 <select
                   v-model="selection.recipient"
-                  class="min-h-9 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-sm"
+                  class="min-h-9 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-sm"
                   :aria-label="__('Customer number')"
                   @change="load"
                 >
@@ -65,7 +65,7 @@
               <dd>
                 <select
                   v-model="selection.account"
-                  class="min-h-9 w-full rounded border border-outline-gray-2 bg-surface-white px-2 text-sm"
+                  class="min-h-9 w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-sm"
                   :aria-label="__('WhatsApp account')"
                   @change="load"
                 >

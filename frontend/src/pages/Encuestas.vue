@@ -218,7 +218,7 @@
             class="min-h-11 flex-none rounded-full px-3 text-sm sm:min-h-8"
             :class="
               kind === k.value
-                ? 'bg-surface-gray-7 text-ink-white'
+                ? 'bg-surface-gray-9 text-ink-base'
                 : 'bg-surface-gray-2 text-ink-gray-8 hover:bg-surface-gray-3'
             "
             :aria-pressed="kind === k.value"

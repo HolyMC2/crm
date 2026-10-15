@@ -3,7 +3,7 @@
   <RouterLink
     v-if="layout === 'tarjetas'"
     :to="to"
-    class="group flex h-full flex-col gap-3 rounded-xl border bg-surface-white p-3 transition-shadow hover:border-outline-gray-3 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+    class="group flex h-full flex-col gap-3 rounded-xl border bg-surface-base p-3 transition-shadow hover:border-outline-gray-3 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     :class="
       focused
         ? 'border-outline-gray-4 ring-1 ring-outline-gray-4'
