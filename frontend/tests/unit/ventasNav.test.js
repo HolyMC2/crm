@@ -17,10 +17,12 @@ vi.mock('@/utils/crmCapabilities', () => ({
   navItemVisible: () => true,
 }))
 
-const { VENTAS_SECTIONS, ventasSection, ventasSectionOf } =
-  await import('@/composables/ventasNav')
-const { navItems, navItemsBottom, navItemAllowed } =
-  await import('@/composables/navModel')
+const { VENTAS_SECTIONS, ventasSection, ventasSectionOf } = await import(
+  '@/composables/ventasNav'
+)
+const { navItems, navItemsBottom, navItemAllowed } = await import(
+  '@/composables/navModel'
+)
 
 const here = dirname(fileURLToPath(import.meta.url))
 const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
