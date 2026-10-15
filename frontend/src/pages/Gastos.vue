@@ -44,7 +44,7 @@
     <div
       v-else
       :ref="(el) => (list.scroller.value = el)"
-      class="min-h-0 flex-1 overflow-y-auto"
+      class="flex min-h-0 flex-1 flex-col overflow-y-auto"
       data-gastos-scroller
       @scroll.passive="list.rememberScroll"
     >
@@ -183,7 +183,7 @@
           @click="retry"
         />
       </div>
-      <div class="pb-6">
+      <div class="flex-1 pb-6">
         <div
           v-if="list.loading.value && !rows.length"
           role="status"
