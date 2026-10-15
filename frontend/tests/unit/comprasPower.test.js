@@ -329,6 +329,16 @@ describe('Compras list as a power app', () => {
     expect(root.querySelector('[data-sheet="bulk"]').dataset.rows).toBe('2')
   })
 
+  it('selects only where a bulk action exists («Por comprar»)', async () => {
+    state.route.query = { segment: 'por-recibir', foco: 'PO-3' }
+    mount()
+    await flush()
+    press('x')
+    await flush()
+    expect(root.querySelector('[data-power-bulkbar]')).toBeNull()
+    expect(root.querySelector('input[type="checkbox"]')).toBeNull()
+  })
+
   it('back from Gastos says the bill is registered, and the URL forgets it', async () => {
     state.route.query = {
       segment: 'por-facturar',

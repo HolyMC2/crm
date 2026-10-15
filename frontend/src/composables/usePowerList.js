@@ -60,6 +60,7 @@ const MAX_PAGE = 100
  * @param {() => object[]} [options.shortcuts]  Alt+H rows for the verbs
  * @param {() => boolean} [options.enabled]  the module is ready (boot)
  * @param {() => boolean} [options.paused]   keys off (guard, another view)
+ * @param {() => boolean} [options.selectable]  this list has a bulk action
  * @param {{doctypes: string[], minIntervalMs?: number}} [options.live]
  */
 export function usePowerList(options) {
@@ -71,6 +72,7 @@ export function usePowerList(options) {
   const focusOf = options.focusOf || rowKey
   const enabled = options.enabled || (() => true)
   const paused = options.paused || (() => false)
+  const selectable = options.selectable || (() => true)
   const verbs = options.verbs || {}
   const pageSize = options.pageSize || PAGE
   const maxPage = options.maxPage || MAX_PAGE
@@ -301,9 +303,9 @@ export function usePowerList(options) {
       next: () => moveTo(1),
       prev: () => moveTo(-1),
       open: () => row && openRow(row),
-      toggle: () => row && toggleRow(row),
-      range: () => extendSelection(),
-      all: () => selectAll(),
+      toggle: () => row && selectable() && toggleRow(row),
+      range: () => selectable() && extendSelection(),
+      all: () => selectable() && selectAll(),
       search: () => focusSearch(),
       escape: () =>
         selected.value.size ? clearSelection() : (focusKey.value = ''),

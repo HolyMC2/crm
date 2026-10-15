@@ -198,7 +198,10 @@
           >
             <div class="flex items-start">
               <label
-                v-if="!list.phone.value || list.selecting.value"
+                v-if="
+                  state.segment === 'por-comprar' &&
+                  (!list.phone.value || list.selecting.value)
+                "
                 class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
                 :aria-label="__('Select {0}', [row.name])"
               >
@@ -213,7 +216,8 @@
                 :href="recordHref(row)"
                 class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
                 :class="
-                  !list.phone.value || list.selecting.value
+                  state.segment === 'por-comprar' &&
+                  (!list.phone.value || list.selecting.value)
                     ? 'pl-2 sm:pl-2'
                     : ''
                 "
@@ -465,6 +469,8 @@ const list = usePowerList({
   shortcuts: () => queueShortcuts(caps.value),
   enabled: () => Boolean(boot.value?.enabled),
   paused: () => Boolean(guard.value),
+  // Confirming several prepared purchases is the bulk action: «Por comprar» only.
+  selectable: () => state.value.segment === 'por-comprar',
   live: { doctypes: LIVE_DOCTYPES, minIntervalMs: 5000 },
 })
 const rows = list.rows

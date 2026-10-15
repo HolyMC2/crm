@@ -632,8 +632,10 @@ function openFromList() {
   const query = { ...route.query }
   delete query.accion
   router.replace({ query })
-  if (actions.value.some((a) => a.key === 'submit' && a.allowed))
-    reviewOpen.value = true
+  const submit = actions.value.find((a) => a.key === 'submit')
+  if (submit?.allowed) reviewOpen.value = true
+  // Not this worker's to register: the reason and «Pedir aprobación».
+  else if (submit) ask(submit.fallback || 'submit', submit.reason)
 }
 
 // ── keyboard: the bill's verbs, never while typing or under a dialog ───────

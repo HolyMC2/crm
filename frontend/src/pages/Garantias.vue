@@ -262,7 +262,10 @@
           >
             <div class="flex items-start">
               <label
-                v-if="!list.phone.value || list.selecting.value"
+                v-if="
+                  state.segment !== 'cerradas' &&
+                  (!list.phone.value || list.selecting.value)
+                "
                 class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
                 :aria-label="__('Select {0}', [row.name])"
               >
@@ -525,6 +528,8 @@ const list = usePowerList({
   shortcuts: () => queueShortcuts(),
   enabled: () => Boolean(boot.value?.enabled),
   paused: () => Boolean(guard.value),
+  // Assigning several cases at once is the bulk action: open cases only.
+  selectable: () => state.value.segment !== 'cerradas',
   live: { doctypes: LIVE_DOCTYPES, minIntervalMs: 5000 },
 })
 const rows = list.rows

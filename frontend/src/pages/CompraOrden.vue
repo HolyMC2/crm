@@ -1377,8 +1377,10 @@ function openFromList() {
   const query = { ...route.query }
   delete query.accion
   router.replace({ query })
-  if (primary.value?.key === 'confirm' && primary.value.allowed)
-    reviewOpen.value = true
+  if (primary.value?.key !== 'confirm') return
+  if (primary.value.allowed) reviewOpen.value = true
+  // Missing data or not this worker's to confirm: its own way out.
+  else if (primary.value.resolve) resolve(primary.value)
 }
 
 // ── keyboard: the order's next steps, never while typing or under a dialog ─

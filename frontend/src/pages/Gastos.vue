@@ -62,7 +62,7 @@
         :entries="phoneEntries"
         :active="state.segment"
         :search-label="__('Search supplier, bill or invoice number')"
-        :selectable="rows.length > 0 && state.segment === 'por-pagar'"
+        :selectable="rows.length > 0 && canSelect"
         :select-label="__('Select bills')"
         :selecting="list.selecting.value"
         :selected-count="list.selected.value.size"
@@ -237,7 +237,7 @@
           >
             <div class="flex items-start">
               <label
-                v-if="!list.phone.value || list.selecting.value"
+                v-if="canSelect && (!list.phone.value || list.selecting.value)"
                 class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
                 :aria-label="__('Select {0}', [row.bill_no || row.name])"
               >
@@ -252,7 +252,7 @@
                 :href="recordHref(row)"
                 class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
                 :class="
-                  !list.phone.value || list.selecting.value
+                  canSelect && (!list.phone.value || list.selecting.value)
                     ? 'pl-2 sm:pl-2'
                     : ''
                 "
@@ -451,6 +451,9 @@ const approval = reactive({ open: false, name: '', action: '', reason: '' })
 const state = computed(() => queueState(route.query, boot.value))
 const caps = computed(() => boot.value?.capabilities || {})
 const billSegment = computed(() => state.value.segment !== 'empleados')
+const canSelect = computed(
+  () => state.value.segment === 'por-pagar' || Boolean(state.value.po),
+)
 
 const list = usePowerList({
   name: 'gastos',
@@ -485,6 +488,8 @@ const list = usePowerList({
   enabled: () => Boolean(boot.value?.enabled),
   // «De empleados» is its own queue (ClaimsQueue): the bill keys rest there.
   paused: () => Boolean(guard.value) || !billSegment.value,
+  // Paying several bills at once is the bulk action: only the bills to pay.
+  selectable: () => canSelect.value,
   live: { doctypes: LIVE_DOCTYPES, minIntervalMs: 5000 },
 })
 const rows = list.rows
