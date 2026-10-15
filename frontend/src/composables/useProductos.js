@@ -167,7 +167,7 @@ export function ledgerReportUrl(item) {
   return `/app/query-report/Stock Ledger?item_code=${encodeURIComponent(item)}&from_date=${HISTORY_FROM}`
 }
 export function salesReportUrl(item) {
-  return `/app/query-report/Item-wise Sales History?item_code=${encodeURIComponent(item)}&from_date=${HISTORY_FROM}`
+  return `/app/query-report/Item-wise Sales Register?item_code=${encodeURIComponent(item)}&from_date=${HISTORY_FROM}`
 }
 
 /** «5 Pza · 2 stores» from the row's stock in the chosen stores. */

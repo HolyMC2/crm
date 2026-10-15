@@ -53,6 +53,6 @@ describe('Productos variants and the product page lists', () => {
     expect(ledgerReportUrl('IPN 1')).toBe(
       '/app/query-report/Stock Ledger?item_code=IPN%201&from_date=2000-01-01',
     )
-    expect(salesReportUrl('IPN1')).toContain('Item-wise Sales History')
+    expect(salesReportUrl('IPN1')).toContain('Item-wise Sales Register')
   })
 })
