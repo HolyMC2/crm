@@ -27,7 +27,7 @@
         {{ initials(name) }}
       </span>
       <div
-        class="flex min-w-0 flex-1 flex-col justify-center self-stretch"
+        class="flex min-w-0 flex-1 flex-col justify-center self-stretch overflow-hidden"
         :class="isMobile ? 'cursor-pointer' : ''"
         :role="isMobile ? 'button' : undefined"
         :tabindex="isMobile ? 0 : undefined"
@@ -122,7 +122,7 @@
       <div class="flex flex-none items-center justify-end gap-1.5 sm:gap-2.5">
         <div
           v-if="responsible && !isMobile"
-          class="flex items-center gap-1.5"
+          class="hidden items-center gap-1.5 xl:flex"
           :title="__('Responsable') + ': ' + responsible.name"
         >
           <span
@@ -135,7 +135,10 @@
             responsible.name.split(' ')[0]
           }}</span>
         </div>
-        <div v-if="!isMobile" class="h-[30px] w-px bg-outline-gray-2" />
+        <div
+          v-if="!isMobile"
+          class="hidden h-[30px] w-px bg-outline-gray-2 xl:block"
+        />
         <!-- «Resolver»: primary once we answered last; the sheet says what happens next.
              Short label beside the other actions (the name keeps its room in the
              three-pane layout); the full «Resolver y siguiente» on wide screens and
