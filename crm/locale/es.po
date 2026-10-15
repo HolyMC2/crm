@@ -24423,3 +24423,55 @@ msgstr "Suma del valor de cada trato abierto × su probabilidad"
 #: frontend/src/components/contactos/ExtraFieldsSettings.vue
 msgid "Active"
 msgstr "Activo"
+#: frontend/src/pages/Inbox.vue
+msgid "Inbox spaces"
+msgstr "Espacios de la bandeja"
+
+
+#: frontend/src/pages/Inbox.vue
+msgid "Deals and activity"
+msgstr "Negocios y actividad"
+
+#: frontend/src/components/shell/PaneState.vue
+msgid "Nothing here yet"
+msgstr "Todavía no hay nada aquí"
+
+#: frontend/src/components/shell/PaneState.vue
+msgid "You do not have access to this"
+msgstr "No tienes acceso a esto"
+
+#: frontend/src/components/shell/PaneState.vue
+msgid "Ask your manager for access, or go back."
+msgstr "Pide acceso a tu encargado o regresa."
+
+#: frontend/src/components/shell/PaneState.vue
+msgid "This could not be loaded"
+msgstr "No se pudo cargar"
+
+#: frontend/src/components/shell/PaneState.vue
+msgid "Check your connection and try again."
+msgstr "Revisa tu conexión e inténtalo de nuevo."
+
+#: frontend/src/components/shell/PaneState.vue
+msgid "Reload"
+msgstr "Recargar"
+
+#: frontend/src/pages/Deal360.vue
+msgid "We could not find this deal"
+msgstr "No encontramos este trato"
+
+#: frontend/src/pages/Deal360.vue
+msgid "You cannot open this deal"
+msgstr "No puedes abrir este trato"
+
+#: frontend/src/pages/Deal360.vue
+msgid "The deal could not be loaded"
+msgstr "No se pudo cargar el trato"
+
+#: frontend/src/pages/Deal360.vue
+msgid "It may have been deleted, or it is not shared with you. Look for it in the list."
+msgstr "Puede que se haya eliminado o que no esté compartido contigo. Búscalo en la lista."
+
+#: frontend/src/pages/Deal360.vue
+msgid "It belongs to another team or seller. Ask your manager for access."
+msgstr "Es de otro equipo o vendedor. Pide acceso a tu encargado."

@@ -226,16 +226,7 @@
       <!-- "Sin asignar": inbound WhatsApp from numbers with no Lead/Deal. Pinned
         above the deals so an unknown customer never goes unseen; clicking opens
         the orphan thread + Crear Lead/Trato. -->
-      <div
-        v-if="
-          visibleUnassigned.length &&
-          inboxTab !== 'comments' &&
-          inboxTab !== 'snoozed' &&
-          !queueTag &&
-          !queueFilterCount
-        "
-        class="mb-1.5"
-      >
+      <div v-if="shownUnassigned.length" class="mb-1.5">
         <div
           class="flex items-center gap-1.5 px-1.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wide text-ink-amber-9"
         >
@@ -673,7 +664,7 @@
       <template v-if="inboxTab !== 'comments' && inboxTab !== 'aprobar'">
         <!-- cold-start skeleton (no cached rows yet) — paints structure instantly -->
         <div
-          v-if="queue.loading && !rows.length && !visibleUnassigned.length"
+          v-if="queue.loading && !rows.length && !shownUnassigned.length"
           aria-hidden="true"
           class="pt-0.5"
         >
@@ -697,7 +688,7 @@
           </div>
         </div>
         <div
-          v-else-if="listError && !rows.length && !visibleUnassigned.length"
+          v-else-if="listError && !rows.length && !shownUnassigned.length"
           class="px-2 py-6 text-center text-xs text-ink-red-7"
         >
           {{ __('No se pudo cargar la bandeja.') }}
@@ -709,7 +700,7 @@
           </button>
         </div>
         <div
-          v-else-if="!rows.length && !visibleUnassigned.length && replying"
+          v-else-if="!rows.length && !shownUnassigned.length && replying"
           class="px-2 py-6 text-center text-xs text-ink-gray-5"
           role="status"
           data-testid="reply-empty"
@@ -721,7 +712,7 @@
           }}
         </div>
         <div
-          v-else-if="!rows.length && !visibleUnassigned.length"
+          v-else-if="!rows.length && !shownUnassigned.length"
           class="px-2 py-6 text-center text-xs text-ink-gray-4"
         >
           {{ __('Sin conversaciones') }}
@@ -1262,6 +1253,19 @@ const visibleUnassigned = computed(() => {
     ),
   )
 })
+
+// The orphans the list actually shows above the deals: hidden on Comentarios
+// and Pospuestos and while a tag or a filter narrows the queue (the default
+// «Abiertos» filter included). The loading, error and empty states count only
+// these, so a hidden orphan never leaves the list blank while the queue loads.
+const shownUnassigned = computed(() =>
+  inboxTab.value === 'comments' ||
+  inboxTab.value === 'snoozed' ||
+  queueTag.value ||
+  queueFilterCount.value
+    ? []
+    : visibleUnassigned.value,
+)
 
 // Archived orphans, same channel-scoping as the live list.
 const archivedRows = computed(() => archived.data || [])

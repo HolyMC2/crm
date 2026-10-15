@@ -19,7 +19,7 @@
     <nav
       v-if="addonAvailable"
       class="flex flex-none gap-4 border-b border-outline-gray-1 px-4 text-sm sm:py-3"
-      aria-label="Espacios de bandeja"
+      :aria-label="__('Inbox spaces')"
     >
       <button
         type="button"
@@ -29,7 +29,7 @@
         :class="!legacy ? 'font-semibold underline' : ''"
         @click="selectWorkspace(false)"
       >
-        Conversaciones
+        {{ __('Conversations') }}
       </button>
       <button
         type="button"
@@ -39,7 +39,7 @@
         :class="legacy ? 'font-semibold underline' : ''"
         @click="selectWorkspace(true)"
       >
-        Negocios y actividad
+        {{ __('Deals and activity') }}
       </button>
     </nav>
     <ConversationLegacyWorkspace v-if="legacy" />
@@ -47,7 +47,7 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, h, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FeatherIcon } from 'frappe-ui'
 import { addonAvailable } from '@/utils/crmCapabilities'
@@ -56,9 +56,17 @@ import { mobileView } from '@/composables/mobileView'
 import { safeReturn } from '@/composables/useCompras'
 import { goToReturn } from '@/utils/atencion'
 import ConversationWorkspace from '@/components/Inbox/ConversationWorkspace.vue'
-const ConversationLegacyWorkspace = defineAsyncComponent(
-  () => import('@/components/Inbox/ConversationLegacyWorkspace.vue'),
-)
+import PaneState from '@/components/shell/PaneState.vue'
+// «Negocios y actividad» is its own chunk: say it is loading (after 200 ms)
+// and offer a reload if the chunk cannot be fetched, never a blank pane.
+const ConversationLegacyWorkspace = defineAsyncComponent({
+  loader: () => import('@/components/Inbox/ConversationLegacyWorkspace.vue'),
+  loadingComponent: { render: () => h(PaneState, { state: 'loading' }) },
+  errorComponent: {
+    render: () => h(PaneState, { state: 'error', reload: true }),
+  },
+  delay: 200,
+})
 const route = useRoute(),
   router = useRouter()
 const pending = ref(false)

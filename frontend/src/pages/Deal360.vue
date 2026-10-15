@@ -27,8 +27,18 @@
         {{ __('Datos y contacto') }}
       </button>
     </nav>
+    <!-- A deal that does not exist, is not this worker's, or could not be
+         checked: say so and offer the way back, never an empty record. -->
+    <PaneState
+      v-if="dealState !== 'ok'"
+      :state="dealState === 'missing' ? 'empty' : dealState"
+      :title="dealStateTitle"
+      :message="dealStateMessage"
+      :action="dealState === 'error' ? __('Retry') : back.label"
+      @retry="dealState === 'error' ? checkDeal() : router.push(back.to)"
+    />
     <!-- desktop: workspace + docked context panel -->
-    <div v-if="!isMobile" class="flex min-h-0 w-full flex-1">
+    <div v-else-if="!isMobile" class="flex min-h-0 w-full flex-1">
       <DealWorkspace />
       <DealContextPanel v-if="activeDeal && showContext" data-deal-context />
     </div>
@@ -65,6 +75,8 @@ import { nextTick } from 'vue'
 import { useFormKeys } from '@/composables/pageKeys'
 import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 import { swipeBackHandlers } from '@/composables/swipeBack'
+import { call } from 'frappe-ui'
+import PaneState from '@/components/shell/PaneState.vue'
 import {
   activeDeal,
   selectDeal,
@@ -81,6 +93,50 @@ const props = defineProps({ dealId: { type: String, default: '' } })
 const route = useRoute()
 const router = useRouter()
 const showContext = ref(false)
+
+// Is the deal there and readable? One small check beside the workspace's own
+// loads (they render meanwhile); only a definite answer replaces the page.
+const dealState = ref('ok') // ok | missing | denied | error
+async function checkDeal() {
+  const id = String(props.dealId || route.params.dealId || '')
+  if (!id) return
+  dealState.value = 'ok'
+  try {
+    const row = await call('frappe.client.get_value', {
+      doctype: 'CRM Deal',
+      filters: { name: id },
+      fieldname: 'name',
+    })
+    dealState.value = row?.name ? 'ok' : 'missing'
+  } catch (error) {
+    dealState.value =
+      error?.exc_type === 'PermissionError' || error?.status === 403
+        ? 'denied'
+        : error?.exc_type === 'DoesNotExistError' || error?.status === 404
+          ? 'missing'
+          : 'error'
+  }
+}
+onMounted(checkDeal)
+const dealStateTitle = computed(
+  () =>
+    ({
+      missing: __('We could not find this deal'),
+      denied: __('You cannot open this deal'),
+      error: __('The deal could not be loaded'),
+    })[dealState.value] || '',
+)
+const dealStateMessage = computed(
+  () =>
+    ({
+      missing: __(
+        'It may have been deleted, or it is not shared with you. Look for it in the list.',
+      ),
+      denied: __(
+        'It belongs to another team or seller. Ask your manager for access.',
+      ),
+    })[dealState.value] || '',
+)
 
 // Shell return protocol (§8.3) and the CRM queue/report/form returnTo: a
 // caller that sent either gets its own back.

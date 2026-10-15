@@ -38,6 +38,7 @@ function mount() {
   const el = document.createElement('div')
   document.body.append(el)
   const app = createApp({ render: () => h(Inbox) })
+  app.config.globalProperties.__ = globalThis.__
   app.mount(el)
   cleanups.push(() => {
     app.unmount()
