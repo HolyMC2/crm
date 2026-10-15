@@ -25,6 +25,7 @@ const HEALTH = {
   waiting: ['Waiting for its first check', 'gray'],
   paused: ['Paused', 'gray'],
   late: ['Running late', 'orange'],
+  capacity: ['Monthly capacity used', 'orange'],
   error: ['Not working', 'red'],
   stopped: ['Stopped on this site', 'red'],
   unlicensed: ['Not in your plan', 'gray'],
