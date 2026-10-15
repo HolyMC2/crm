@@ -711,7 +711,15 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Badge,
@@ -727,7 +735,15 @@ import NoticeDialog from '@/components/garantias/NoticeDialog.vue'
 import SourceDialog from '@/components/garantias/SourceDialog.vue'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { money } from '@/composables/useCompras'
+import { offerUndo, runUndo } from '@/composables/powerUndo'
+import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
+import { hoyLive } from '@/composables/useHoy'
+import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import { keyAction } from '@/utils/powerList'
 import {
+  LIVE_DOCTYPES,
+  RECORD_KEYS,
   actionLabel,
   dueLabel,
   dueTheme,
@@ -739,6 +755,7 @@ import {
   outcomeUnknown,
   primaryAction,
   problemOf,
+  recordShortcuts,
   remedyLabel,
   requestId,
   safeReturn,
@@ -1095,7 +1112,68 @@ watch(
     load()
   },
 )
+// ── keyboard: assign, take, back — never while typing or under a dialog ─────
+registerPageShortcuts(null, () => (claim.value ? recordShortcuts() : []))
+function onKey(event) {
+  if (event.defaultPrevented || !claim.value) return
+  if (document.querySelector('[aria-modal="true"], [role="dialog"]')) return
+  const action = keyAction(event, RECORD_KEYS, { apple: appleKeys })
+  if (!action || isTypingTarget(event.target)) return
+  event.preventDefault()
+  if (action === 'back') return goBack()
+  if (action === 'assign') return (assigning.value = true)
+  if (action === 'take') return takeCase()
+}
+
+/** «Tomar el caso»: assigned to me, with «Deshacer». */
+async function takeCase() {
+  const me = garantiasBoot.value?.user
+  if (!me || !claim.value) return
+  if ((claim.value.assignees || []).some((a) => a.user === me))
+    return toast.success(__('This case is already yours.'))
+  const name = claim.value.name
+  try {
+    claim.value = await garantiasApi('assign', { name, user: me })
+    offerUndo(__('Case {0} is yours', [name]), () =>
+      runUndo(
+        async () =>
+          (claim.value = await garantiasApi('unassign', { name, user: me })),
+        {
+          done: __('Case {0} put back', [name]),
+          describe: (error) => problemOf(error).detail,
+        },
+      ),
+    )
+  } catch (error) {
+    problem.value = problemOf(error)
+  }
+}
+
+// ── live: a colleague moved or assigned this case; it shows here ───────────
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
+useLiveWatch(
+  hoyLive(socket),
+  LIVE_DOCTYPES,
+  () => {
+    // Never under the worker's hands: open forms keep what is typed.
+    const typing =
+      assigning.value ||
+      notifying.value ||
+      repairing.value ||
+      transitioning.value ||
+      pending.value ||
+      picking.value ||
+      outcomeLinking.value ||
+      savingNote.value ||
+      note.value
+    if (!typing && !busy.value && !problem.value && claim.value) load()
+  },
+  { minIntervalMs: 3000 },
+)
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
 onMounted(async () => {
+  window.addEventListener('keydown', onKey)
   await loadGarantiasBoot()
   if (!garantiasBoot.value?.enabled) {
     guard.value = {

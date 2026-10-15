@@ -1,53 +1,54 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('Who works this case') }">
-    <template #body-content>
-      <div class="space-y-4">
-        <ul v-if="assignees.length" class="space-y-1">
-          <li
-            v-for="person in assignees"
-            :key="person.user"
-            class="flex min-h-11 items-center justify-between gap-2 rounded-lg bg-surface-gray-1 px-3"
-          >
-            <span class="truncate text-sm">{{ person.full_name }}</span>
-            <Button
-              :label="__('Remove', null, 'Garantías')"
-              :loading="busy === person.user"
-              @click="remove(person.user)"
-            />
-          </li>
-        </ul>
-        <p v-else class="text-sm text-ink-gray-6">
-          {{ __('Nobody is assigned yet.') }}
-        </p>
-        <ComprasPicker
-          v-model="user"
-          :label="__('Assign to', null, 'Garantías')"
-          :placeholder="__('Search a person')"
-          :empty-text="
-            __('Nobody else can work this case. Ask your manager for access.')
-          "
-          :hint="
-            __('Only people with access to Garantías in this company appear.')
-          "
-          :load="search"
-          clear-on-pick
-          @pick="(option) => add(option.value)"
-        />
-        <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
-          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-        </p>
-      </div>
-    </template>
+  <PowerSheet v-model="open" kind="assign" :title="__('Who works this case')">
+    <div class="space-y-4">
+      <ul v-if="assignees.length" class="space-y-1">
+        <li
+          v-for="person in assignees"
+          :key="person.user"
+          class="flex min-h-11 items-center justify-between gap-2 rounded-lg bg-surface-gray-1 px-3"
+        >
+          <span class="truncate text-sm">{{ person.full_name }}</span>
+          <Button
+            :label="__('Remove', null, 'Garantías')"
+            :loading="busy === person.user"
+            @click="remove(person.user)"
+          />
+        </li>
+      </ul>
+      <p v-else class="text-sm text-ink-gray-6">
+        {{ __('Nobody is assigned yet.') }}
+      </p>
+      <ComprasPicker
+        v-model="user"
+        :label="__('Assign to', null, 'Garantías')"
+        :placeholder="__('Search a person')"
+        :empty-text="
+          __('Nobody else can work this case. Ask your manager for access.')
+        "
+        :hint="
+          __('Only people with access to Garantías in this company appear.')
+        "
+        :load="search"
+        clear-on-pick
+        @pick="(option) => add(option.value)"
+      />
+      <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
+        <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+      </p>
+    </div>
     <template #actions>
-      <div class="flex justify-end">
-        <Button :label="__('Done', null, 'Garantías')" @click="open = false" />
-      </div>
+      <Button
+        class="min-h-11 sm:min-h-8"
+        :label="__('Done', null, 'Garantías')"
+        @click="open = false"
+      />
     </template>
-  </Dialog>
+  </PowerSheet>
 </template>
 <script setup>
 import { ref, watch } from 'vue'
-import { Button, Dialog } from 'frappe-ui'
+import { Button } from 'frappe-ui'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import { garantiasApi, problemOf } from '@/composables/useGarantias'
 

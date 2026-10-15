@@ -15504,6 +15504,199 @@ msgid "Due {0}"
 msgstr "Vence el {0}"
 
 #: frontend/src/pages/Garantias.vue
+msgid "Select cases"
+msgstr "Seleccionar casos"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Overdue"
+msgstr "Vencidos"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "My cases"
+msgstr "Mis casos"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "All"
+msgstr "Todos"
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Unassigned"
+msgstr "Sin asignar"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Needs attention"
+msgstr "Necesita atención"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Show every case"
+msgstr "Ver todos los casos"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Selected cases"
+msgstr "Casos seleccionados"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Open cases assigned to you, oldest first, with their next step."
+msgstr "Casos abiertos asignados a ti, los más antiguos primero, con su siguiente paso."
+
+#: frontend/src/pages/Garantias.vue
+msgid "No case in this list is past its due time."
+msgstr "Ningún caso de esta lista pasó su hora límite."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Every case in this list has someone on it."
+msgstr "Todos los casos de esta lista tienen a alguien atendiéndolos."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Take a case (key T) or ask to be assigned one, and it shows up here."
+msgstr "Toma un caso (tecla T) o pide que te asignen uno y aparece aquí."
+
+#: frontend/src/pages/Garantias.vue
+msgid "Take the case"
+msgstr "Tomar el caso"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Assign the case"
+msgstr "Asignar el caso"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Start the review"
+msgstr "Empezar la revisión"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Case {0} is yours"
+msgstr "El caso {0} es tuyo"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Case {0} put back"
+msgstr "El caso {0} quedó como estaba"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Case {0} is in review"
+msgstr "El caso {0} está en revisión"
+
+#: frontend/src/pages/Garantias.vue
+msgid "1 case assigned"
+msgstr "1 caso asignado"
+
+#: frontend/src/pages/Garantias.vue
+msgid "{0} cases assigned"
+msgstr "{0} casos asignados"
+
+#: frontend/src/pages/Garantias.vue
+msgid "Assignment undone"
+msgstr "Asignación deshecha"
+
+#: frontend/src/pages/Garantia.vue
+msgid "This case is already yours."
+msgstr "Este caso ya es tuyo."
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "Assigned cases"
+msgstr "Casos asignados"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "Assign cases"
+msgstr "Asignar casos"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgctxt "Garantías"
+msgid "Assigned"
+msgstr "Asignados"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "1 case"
+msgstr "1 caso"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "{0} cases"
+msgstr "{0} casos"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "Assign them to me"
+msgstr "Asignármelos"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgctxt "Garantías"
+msgid "you"
+msgstr "ti"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "Assign 1 case"
+msgstr "Asignar 1 caso"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "Assign {0} cases"
+msgstr "Asignar {0} casos"
+
+#: frontend/src/components/garantias/BulkAssignSheet.vue
+msgid "Already assigned"
+msgstr "Ya estaba asignado"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "Opened today"
+msgstr "Abierto hoy"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "Open 1 day"
+msgstr "Abierto hace 1 día"
+
+#: frontend/src/composables/useGarantias.js
+msgctxt "Garantías"
+msgid "Open {0} days"
+msgstr "Abierto hace {0} días"
+
+#: frontend/src/composables/useGarantias.js
+msgid "This case is closed. Open it to reopen it if it came back."
+msgstr "Este caso está cerrado. Ábrelo para reabrirlo si el cliente regresó."
+
+#: frontend/src/composables/useGarantias.js
+msgid "This case is already in progress. Open it for its next step."
+msgstr "Este caso ya está en curso. Ábrelo para ver su siguiente paso."
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: start the review"
+msgstr "Sigue: empezar la revisión"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: decide repair, exchange, refund or supplier"
+msgstr "Sigue: decidir reparación, cambio, reembolso o proveedor"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: follow the repair in Taller"
+msgstr "Sigue: dar seguimiento a la reparación en Taller"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: finish the exchange"
+msgstr "Sigue: terminar el cambio"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: refund at the register"
+msgstr "Sigue: reembolsar en caja"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: send it to the supplier"
+msgstr "Sigue: enviarlo al proveedor"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: follow the remedy chosen"
+msgstr "Sigue: dar seguimiento a la solución elegida"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: mark it resolved"
+msgstr "Sigue: marcarlo como resuelto"
+
+#: frontend/src/composables/useGarantias.js
+msgid "Next: record the supplier's answer"
+msgstr "Sigue: anotar la respuesta del proveedor"
+
+#: frontend/src/pages/Garantias.vue
 msgid "New warranty case"
 msgstr "Nuevo caso de garantía"
 

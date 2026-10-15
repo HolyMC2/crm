@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { comprasApi } from '@/composables/useCompras'
 import { withReturn } from '@/vendor/muelle-shell/contracts'
+import { listKeys, pathWithQuery, textParam } from '@/utils/powerList'
 
 // Garantías: a customer comes back with a product → claim → assign → repair in
 // Taller (or resolve) → notice → back to the queue. The native Warranty Claim
@@ -49,6 +50,8 @@ export function loadGarantiasBoot({ refresh = false } = {}) {
 }
 
 export const SEGMENTS = Object.freeze([
+  // Every open case assigned to me, whatever its state (Helpdesk «My tickets»).
+  { value: 'mis-casos', label: 'My cases', icon: 'user' },
   { value: 'nuevas', label: 'New', icon: 'inbox' },
   { value: 'en-revision', label: 'In review', icon: 'tool' },
   { value: 'con-proveedor', label: 'With supplier', icon: 'truck' },
@@ -230,4 +233,139 @@ export function createPrefill(query) {
   for (const key of CREATE_KEYS)
     if (typeof query?.[key] === 'string' && query[key]) values[key] = query[key]
   return values
+}
+
+// ── Power worklist: URL state, keyboard, attention chips, aging, next step ──
+// Agenda/Cobranza standard plus Helpdesk/RMA parity: «Mis casos», what is past
+// its SLA or has nobody, how old each case is and its one next step; assign
+// several cases at once (each one re-checked), take one with «Deshacer».
+
+// An assignment writes the case (announced by the server); workflow moves save it.
+export const LIVE_DOCTYPES = Object.freeze(['Warranty Claim'])
+
+export const CHIPS = Object.freeze([
+  { value: '', label: 'All' },
+  { value: 'vencidas', label: 'Overdue' },
+  { value: 'sin-asignar', label: 'Unassigned' },
+])
+
+/** The queue's state, read from the URL (the URL is the state). */
+export function queueState(query = {}) {
+  const segment = normalizeSegment(textParam(query.segment))
+  const chip = textParam(query.chip)
+  return {
+    segment,
+    q: textParam(query.q),
+    kind: KINDS.some((k) => k.value === query.kind) ? query.kind : '',
+    mine: query.mine === '1',
+    chip:
+      segment !== 'cerradas' && CHIPS.some((c) => c.value === chip) ? chip : '',
+    foco: textParam(query.foco),
+  }
+}
+
+/** Scroll memory is per list (its filters), never per focused case. */
+export function listMemoryKey(query = {}) {
+  const s = queueState(query)
+  return `muelle:garantias:list:${s.segment}|${s.chip}|${s.kind}|${s.mine}|${s.q}`
+}
+
+/** `/garantias?…` for a query: the record keeps it to come back to the same row. */
+export function listHref(query = {}) {
+  return pathWithQuery('/garantias', query)
+}
+
+/** «Hoy», «1 día», «12 días»: how long the customer has been waiting. */
+export function ageLabel(days) {
+  if (days === null || days === undefined || days === '') return ''
+  const value = Number(days)
+  if (!Number.isFinite(value) || value < 0) return ''
+  if (value === 0) return tr('Opened today', null, CTX)
+  if (value === 1) return tr('Open 1 day', null, CTX)
+  return tr('Open {0} days', [value], CTX)
+}
+export function ageTone(days) {
+  const value = Number(days)
+  return value >= 14 ? 'red' : value >= 7 ? 'orange' : 'gray'
+}
+
+const NEXT_STEPS = {
+  review: 'Next: start the review',
+  decide: 'Next: decide repair, exchange, refund or supplier',
+  resolve: 'Next: mark it resolved',
+  supplier_answer: "Next: record the supplier's answer",
+}
+// The remedy chosen and not done yet: its own next step.
+const REMEDY_STEPS = {
+  Reparación: 'Next: follow the repair in Taller',
+  Cambio: 'Next: finish the exchange',
+  Reembolso: 'Next: refund at the register',
+  Proveedor: 'Next: send it to the supplier',
+}
+/** The case's one next step, in words (the record has the full set). */
+export function nextStepLabel(row) {
+  if (row?.next === 'follow_remedy')
+    return tr(REMEDY_STEPS[row.remedy] || 'Next: follow the remedy chosen')
+  const text = NEXT_STEPS[row?.next]
+  return text ? tr(text) : ''
+}
+
+export const QUEUE_VERBS = Object.freeze({
+  a: 'assign',
+  t: 'take',
+  r: 'review',
+})
+export const QUEUE_KEYS = listKeys(QUEUE_VERBS)
+export const RECORD_KEYS = Object.freeze({
+  a: 'assign',
+  t: 'take',
+  escape: 'back',
+})
+
+/** The queue's own keys for the Alt+H sheet. */
+export function queueShortcuts() {
+  return [
+    { id: 'garantias.assign', keys: ['a'], description: 'Assign the case' },
+    { id: 'garantias.take', keys: ['t'], description: 'Take the case' },
+    { id: 'garantias.review', keys: ['r'], description: 'Start the review' },
+  ]
+}
+export function recordShortcuts() {
+  return [
+    { id: 'garantias.assign', keys: ['a'], description: 'Assign the case' },
+    { id: 'garantias.take', keys: ['t'], description: 'Take the case' },
+    { id: 'garantias.back', keys: ['escape'], description: 'Back to the list' },
+  ]
+}
+
+const open = (row) => row && !['Resuelta', 'Cancelada'].includes(row.state)
+
+/** What a verb does on a row: go ahead, or why not with what to do instead. */
+export function caseStep(row, verb, user = '') {
+  if (!row) return { kind: 'none' }
+  if (!open(row))
+    return {
+      kind: 'closed',
+      text: tr('This case is closed. Open it to reopen it if it came back.'),
+    }
+  if (verb === 'take' && (row.assignees || []).some((a) => a.user === user))
+    return { kind: 'done', text: tr('This case is already yours.') }
+  if (verb === 'review' && row.state !== 'Nueva')
+    return {
+      kind: 'open',
+      text: tr('This case is already in progress. Open it for its next step.'),
+    }
+  return { kind: 'go' }
+}
+
+/** Which selected cases «Asignar» works on: the open ones; the rest, and why. */
+export function bulkAssignPlan(rows = []) {
+  const ready = []
+  const skipped = []
+  for (const row of rows) {
+    const step = caseStep(row, 'assign')
+    if (step.kind === 'go') ready.push(row)
+    else skipped.push({ row, reason: step.text })
+  }
+  return { ready, skipped }
 }
