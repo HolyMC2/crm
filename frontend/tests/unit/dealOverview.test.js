@@ -50,13 +50,18 @@ afterEach(() => {
   cleanup.splice(0).forEach((fn) => fn())
   vi.clearAllMocks()
 })
-async function mount(doc = {}, repairs = []) {
+async function mount(doc = {}, repairs = [], amounts = null) {
   const record = reactive({
     data: { deal_owner: 'ana@example.invalid', ...doc },
     fetch: vi.fn(),
     loading: false,
   })
-  mocks.resources = [record, reactive({ data: repairs, fetch: vi.fn() })]
+  mocks.resources = [
+    record,
+    reactive({ data: repairs, fetch: vi.fn() }),
+    // crm.pipeline.api.get_deal_amounts (metric contract v2)
+    reactive({ data: amounts, fetch: vi.fn() }),
+  ]
   const el = document.createElement('div')
   document.body.appendChild(el)
   const app = createApp(DealOverview, { name: 'DEAL-42' })
@@ -76,6 +81,39 @@ async function mount(doc = {}, repairs = []) {
       ),
   }
 }
+describe('deal overview value (metric contract v2)', () => {
+  it('shows the contract value and its weighted forecast, not the raw field', async () => {
+    const ui = await mount({ expected_deal_value: 0, currency: 'MXN' }, [], {
+      deals: {
+        'DEAL-42': {
+          currency: 'MXN',
+          commercial_value: 1800,
+          weighted_forecast: 900,
+          open: true,
+          outlier: false,
+        },
+      },
+    })
+    expect(ui.el.textContent).toContain('1,800')
+    expect(ui.el.textContent).toContain('Pronóstico ponderado')
+    expect(ui.el.textContent).not.toContain('Sin estimar')
+  })
+  it('marks an outlier instead of passing it off as a normal value', async () => {
+    const ui = await mount({ expected_deal_value: 100000000 }, [], {
+      deals: {
+        'DEAL-42': {
+          currency: 'MXN',
+          commercial_value: null,
+          size: 100000000,
+          open: true,
+          outlier: true,
+        },
+      },
+    })
+    expect(ui.el.textContent).toContain('⚠')
+    expect(ui.el.textContent).not.toContain('Pronóstico ponderado')
+  })
+})
 describe('deal overview follow-up workflow', () => {
   const press = (ui, label) =>
     [...ui.el.querySelectorAll('button')]
