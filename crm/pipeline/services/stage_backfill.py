@@ -158,7 +158,7 @@ def _looks_like_test(row):
 
 
 def _repair_quotes(names):
-	"""Open deals with no amount whose Repair Orders carry a quote (Taller sites only)."""
+	"""Deals with no amount whose Repair Orders carry a quote (Taller sites only)."""
 	if not names or not frappe.db.exists("DocType", "Repair Order"):
 		return {}
 	if not frappe.db.has_column("Repair Order", "quote_amount"):
@@ -200,7 +200,7 @@ def plan(include_repair_quotes=True, names=None):
 		move.amountless = not flt(row.expected_deal_value) and not flt(row.deal_value)
 		moves.append(move)
 	if include_repair_quotes:
-		quotes = _repair_quotes([m.name for m in moves if m.amountless and m.outcome not in ("Won", "Lost")])
+		quotes = _repair_quotes([m.name for m in moves if m.amountless and m.outcome != "Lost"])
 		for move in moves:
 			if move.name in quotes:
 				move.expected_deal_value = quotes[move.name]
