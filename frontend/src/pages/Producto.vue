@@ -659,7 +659,7 @@
                           class="lucide-inbox h-3.5 w-3.5"
                           aria-hidden="true"
                         />{{ cajon.label || cajon.ubicacion
-                        }}<span class="tabular-nums text-ink-gray-6"
+                        }}<span class="ml-1 tabular-nums text-ink-gray-6"
                           >·
                           {{
                             cajon.qty === null || cajon.qty === undefined
