@@ -306,10 +306,12 @@ const tabs = computed(() => {
   return out
 })
 
-const problems = computed(() =>
-  (detail.value?.tasks || []).filter((t) =>
-    ['Failed', 'Uncertain'].includes(t.state),
-  ),
+const problems = computed(
+  () =>
+    detail.value?.problems ||
+    (detail.value?.tasks || []).filter((t) =>
+      ['Failed', 'Uncertain'].includes(t.state),
+    ),
 )
 const OPERATIONS = {
   Import: 'Import of Paperless document {0}',
@@ -407,6 +409,7 @@ function onDetail(value) {
   const connector = { ...(value || {}) }
   delete connector.maps
   delete connector.tasks
+  delete connector.problems
   if (connector.name) emit('updated', connector)
 }
 function onProgress(backfill) {
