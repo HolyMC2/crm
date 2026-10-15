@@ -109,7 +109,7 @@ const ESCANER_PLACES = [
 const VENTAS_PLACES = [
   ['/deals', 'Deals', 'lucide-handshake'],
   ['/leads', 'Leads', 'lucide-users'],
-  ['/inbox', 'Conversations', 'lucide-messages-square'],
+  ['/inbox', 'Inbox', 'lucide-messages-square'],
   ['/inquiries', 'Consultas', 'lucide-message-square-plus'],
   ['/dashboard', 'Dashboard', 'lucide-layout-dashboard'],
   ['/reports', 'Reports', 'lucide-bar-chart-3'],

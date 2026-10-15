@@ -51,7 +51,9 @@ export const VENTAS_SECTIONS = Object.freeze({
 })
 
 // Labels that differ from navModel's (English source, es-MX in crm/locale/es.po).
-const LABELS = { inbox: 'Conversations' }
+// Inbox keeps «Bandeja de entrada», the page's own title: its «Conversaciones»
+// tab is one of the two spaces inside it.
+const LABELS = {}
 // Manager views besides the whole «Configuración» section.
 const MANAGER_ONLY = new Set(['workload', ...VENTAS_SECTIONS.settings])
 // Shell-module entries never shown inside Ventas.

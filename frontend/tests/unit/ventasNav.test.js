@@ -33,12 +33,12 @@ for (const m of po.matchAll(
 const keys = (section) => ventasSection(section).map((item) => item.key)
 
 describe('Ventas navigation (S5.1)', () => {
-  it('opens on three daily lists: Tratos, Prospectos, Conversaciones', () => {
+  it('opens on three daily lists: Tratos, Prospectos, Bandeja de entrada', () => {
     expect(keys('daily')).toEqual(['deals', 'leads', 'inbox'])
     expect(ventasSection('daily').map((item) => item.label)).toEqual([
       'Deals',
       'Leads',
-      'Conversations',
+      'Inbox',
     ])
   })
 
