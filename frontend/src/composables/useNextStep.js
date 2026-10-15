@@ -168,6 +168,11 @@ async function undoSnooze(deal, before, after) {
   }
 }
 
+/** The next-step keys as Alt+H entries (for pages and the page-keys tests). */
+export function nextStepShortcuts() {
+  return NEXT_STEP_SHORTCUTS.map((shortcut) => ({ ...shortcut }))
+}
+
 /** n · p · r · h for one deal: open the dialog, or snooze straight away. */
 export function runNextStep(action, deal) {
   if (!action || !deal) return

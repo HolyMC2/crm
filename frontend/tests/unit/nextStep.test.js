@@ -396,3 +396,13 @@ describe('the deals list (S2.3)', () => {
     ])
   })
 })
+
+describe('nextStepShortcuts', () => {
+  it('lists n · p · r · h for the Alt+H sheet, as copies', async () => {
+    const { nextStepShortcuts } = await import('@/composables/useNextStep')
+    const list = nextStepShortcuts()
+    expect(list.map((s) => s.keys[0])).toEqual(['n', 'p', 'r', 'h'])
+    list[0].keys = ['z']
+    expect(nextStepShortcuts()[0].keys).toEqual(['n'])
+  })
+})
