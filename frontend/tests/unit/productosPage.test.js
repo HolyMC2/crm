@@ -509,7 +509,7 @@ describe('Productos › catálogo', () => {
     await mountAt('/productos?q=a04')
     const text = root.textContent
     expect(text).toContain('Results for “a04”')
-    expect(text).toContain('3 of 1011 variants')
+    expect(text).toContain('3 of 1,011 variants')
     expect(text).toContain('from')
     const link = [...root.querySelectorAll('a')].find((a) =>
       a.textContent.includes('Silicone Case'),

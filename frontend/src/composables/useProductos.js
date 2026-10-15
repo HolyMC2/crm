@@ -136,10 +136,10 @@ export function variantsLabel(variants) {
   const count = Number(variants.count) || 0
   const matching = variants.matching
   if (matching !== null && matching !== undefined && matching < count)
-    return tr('{0} of {1} variants', [matching, count], CTX)
+    return tr('{0} of {1} variants', [qty(matching), qty(count)], CTX)
   return count === 1
     ? tr('1 variant', null, CTX)
-    : tr('{0} variants', [count], CTX)
+    : tr('{0} variants', [qty(count)], CTX)
 }
 
 /** The rows a section shows: the first `limit` until «See all» opens it. */

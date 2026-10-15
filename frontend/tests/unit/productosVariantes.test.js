@@ -12,7 +12,9 @@ describe('Productos variants and the product page lists', () => {
   it('says how many variants a template has, and how many match a search', () => {
     expect(variantsLabel(null)).toBe('')
     expect(variantsLabel({ count: 1, matching: null })).toBe('1 variant')
-    expect(variantsLabel({ count: 1011, matching: null })).toBe('1011 variants')
+    expect(variantsLabel({ count: 1011, matching: null })).toBe(
+      '1,011 variants',
+    )
     expect(variantsLabel({ count: 12, matching: 3 })).toBe('3 of 12 variants')
     // Every variant matching is just «N variants».
     expect(variantsLabel({ count: 3, matching: 3 })).toBe('3 variants')
