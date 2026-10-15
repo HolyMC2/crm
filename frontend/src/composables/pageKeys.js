@@ -27,9 +27,9 @@ const SELECT = ['select.toggle', 'select.range', 'select.page']
  * development and tests, a page whose handlers differ from its row here, so
  * this table, the Alt+H sheet and the handlers cannot drift apart.
  * Cobranza, Compras, Gastos and Garantías are power lists (usePowerList /
- * useCobranza): they answer their list keys themselves and declare them with
- * registerPageShortcuts('list'), so they have no row here; «c» there is the
- * shell's create target of the module.
+ * useCobranza): they answer their list keys themselves and declare exactly
+ * those with powerListPageKeys (utils/powerList), so they have no row here;
+ * «c» there is the shell's create target of the module.
  */
 export const PAGE_KEYS = Object.freeze({
   hoy: ROWS,

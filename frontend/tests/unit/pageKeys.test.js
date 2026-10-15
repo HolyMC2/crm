@@ -6,11 +6,13 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   pageShortcuts,
+  registerPageKeys,
   registerPageShortcuts,
   shellCheatSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
 import { PAGE_KEYS, useFormKeys, useListKeys } from '@/composables/pageKeys'
+import { powerListPageKeys } from '@/utils/powerList'
 
 const LIST_FIXTURE = `
   <input data-list-search aria-label="Buscar" />
@@ -308,8 +310,73 @@ describe('every shell page is wired to its PAGE_KEYS row', () => {
       /function onKey\(event\) {\s*if \(\s*event\.defaultPrevented/,
     )
   })
-  it('power lists keep their own listener and declare the list context', () => {
-    for (const file of ['composables/usePowerList.js', 'pages/Cobranza.vue'])
-      expect(src(file)).toContain("registerPageShortcuts('list'")
+  it('power lists keep their own listener and declare exactly what it answers', () => {
+    for (const file of ['composables/usePowerList.js', 'pages/Cobranza.vue']) {
+      expect(src(file)).toMatch(/registerPageKeys\(\s*powerListPageKeys\(/)
+      expect(src(file)).not.toContain("registerPageShortcuts('list'")
+    }
+    // usePowerList passes the page's bulk-action switch through.
+    expect(src('composables/usePowerList.js')).toMatch(
+      /powerListPageKeys\(\{\s*focusSearch,\s*selectable,/,
+    )
+  })
+})
+
+describe('power lists (Cobranza, Compras, Gastos, Garantías) in Alt+H', () => {
+  it('list j/k/Enter, selection only with a bulk action, never Ctrl+Enter; the shell answers the search', async () => {
+    const selectable = ref(true)
+    const focusSearch = vi.fn(() =>
+      content.querySelector('[data-list-search]').focus(),
+    )
+    mountPage(() =>
+      registerPageKeys(
+        powerListPageKeys({
+          focusSearch,
+          selectable: () => selectable.value,
+          shortcuts: () => [
+            { id: 'cobranza.pay', keys: ['$'], description: 'Record payment' },
+          ],
+        }),
+      ),
+    )
+    await nextTick()
+    expect([...pageShortcuts.value.ids].sort()).toEqual(
+      [
+        'row.next',
+        'row.prev',
+        'row.open',
+        'search',
+        'select.toggle',
+        'select.range',
+        'select.page',
+      ].sort(),
+    )
+    const listed = sheetIds()
+    expect(listed).not.toContain('row.split')
+    expect(listed).toContain('cobranza.pay')
+    selectable.value = false
+    await nextTick()
+    expect(sheetIds()).not.toContain('select.toggle')
+    expect(sheetIds()).not.toContain('select.page')
+    // Ctrl+Shift+K works while typing, as the sheet's «search» row says.
+    const other = document.createElement('input')
+    content.append(other)
+    other.focus()
+    press({ key: 'K', ctrlKey: true, shiftKey: true })
+    expect(focusSearch).toHaveBeenCalledTimes(1)
+    expect(document.activeElement.matches('[data-list-search]')).toBe(true)
+  })
+
+  it('a paused or guarded list lists and answers nothing', async () => {
+    const focusSearch = vi.fn()
+    mountPage(() =>
+      registerPageKeys(
+        powerListPageKeys({ focusSearch, enabled: () => false }),
+      ),
+    )
+    await nextTick()
+    expect(pageShortcuts.value.ids).toEqual([])
+    press({ key: '/' }, document.body)
+    expect(focusSearch).not.toHaveBeenCalled()
   })
 })

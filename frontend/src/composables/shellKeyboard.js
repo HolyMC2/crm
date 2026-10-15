@@ -119,7 +119,8 @@ const PAGE_IDS = new Set(
  *   this page answers before the others.
  * - `enabled`: getter; while false the page answers nothing (its own form open).
  * - `answers`: KEYMAP ids the page answers with its own listener (the power
- *   lists' j/k/x…): listed like `keys`, never called by the shell.
+ *   lists' j/k/x…): listed like `keys`, never called by the shell. A getter
+ *   for ids that depend on state (selection only where a bulk action exists).
  * Called in setup, it lasts until the component unmounts; it also returns the
  * function that removes it.
  */
@@ -142,7 +143,9 @@ export function registerPageKeys({
   const answered = () => [
     ...new Set([
       ...Object.keys(handlers()),
-      ...answers.filter((id) => PAGE_IDS.has(id)),
+      ...(typeof answers === 'function' ? answers() : answers).filter((id) =>
+        PAGE_IDS.has(id),
+      ),
     ]),
   ]
   const entry = {

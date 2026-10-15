@@ -704,9 +704,10 @@ import { isMobile } from '@/composables/breakpoint'
 import {
   appleKeys,
   openShortcutSheet,
-  registerPageShortcuts,
+  registerPageKeys,
 } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
+import { powerListPageKeys } from '@/utils/powerList'
 import {
   AGING,
   AUTO_ACTION_LABELS,
@@ -1407,8 +1408,14 @@ function collectAtRegister(row, invoice) {
 }
 
 // ── keyboard: never while typing, never under a sheet ───────────────────────
-// The Alt+H sheet lists these (the list keys come from the shared keymap).
-registerPageShortcuts('list', () => queueShortcuts(caps.value))
+// The Alt+H sheet lists these and exactly the list keys this page answers.
+registerPageKeys(
+  powerListPageKeys({
+    focusSearch,
+    enabled: () => !guard.value,
+    shortcuts: () => queueShortcuts(caps.value),
+  }),
+)
 
 function searchInput() {
   return document.querySelector(

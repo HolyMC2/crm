@@ -9,7 +9,7 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isMobile } from '@/composables/breakpoint'
-import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
+import { appleKeys, registerPageKeys } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
@@ -20,6 +20,7 @@ import {
   loadLength,
   moveFocus,
   patchQuery,
+  powerListPageKeys,
   rangeKeys,
   readMemory,
   textParam,
@@ -253,8 +254,15 @@ export function usePowerList(options) {
 
   // ── keyboard: never while typing, never under a sheet ─────────────────────
 
-  registerPageShortcuts('list', () =>
-    options.shortcuts ? options.shortcuts() : [],
+  // Alt+H lists exactly what works here: no Ctrl+Enter (no pane beside the
+  // list), selection only with a bulk action, and the shell answers the search.
+  registerPageKeys(
+    powerListPageKeys({
+      focusSearch,
+      selectable,
+      enabled: () => enabled() && !paused(),
+      shortcuts: () => (options.shortcuts ? options.shortcuts() : []),
+    }),
   )
 
   function searchInput() {

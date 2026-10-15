@@ -19,6 +19,40 @@ export const LIST_KEYS = Object.freeze({
   escape: 'escape',
 })
 
+/**
+ * The KEYMAP list ids a power list answers with its own listener, for the
+ * Alt+H sheet: j/k and Enter, and x · Shift+X · Ctrl+A only while it has a
+ * bulk action. Never «Abrir al lado» (Ctrl+Enter, no pane beside the list);
+ * the search («/» and Ctrl+Shift+K) is answered by the shell, see
+ * powerListPageKeys.
+ */
+export function powerListAnswers(selectable = true) {
+  return [
+    'row.next',
+    'row.prev',
+    'row.open',
+    ...(selectable ? ['select.toggle', 'select.range', 'select.page'] : []),
+  ]
+}
+
+/**
+ * registerPageKeys options of a power list: the shell answers its search
+ * (also Ctrl+Shift+K while typing) and lists exactly what the list answers.
+ */
+export function powerListPageKeys({
+  focusSearch,
+  selectable = () => true,
+  enabled = () => true,
+  shortcuts = () => [],
+}) {
+  return {
+    keys: { search: () => focusSearch() },
+    answers: () => powerListAnswers(selectable()),
+    enabled,
+    extra: shortcuts,
+  }
+}
+
 /** The list keys plus a module's own verbs (`{ $: 'pay', r: 'register' }`). */
 export function listKeys(verbs = {}) {
   return Object.freeze({ ...LIST_KEYS, ...verbs })
