@@ -5923,8 +5923,9 @@ msgstr "Clave"
 
 #. Label of the kind (Select) field in DocType 'CRM Product Sync Issue'
 #: crm/fcrm/doctype/crm_product_sync_issue/crm_product_sync_issue.json
+#: frontend/src/pages/Producto.vue
 msgid "Kind"
-msgstr ""
+msgstr "Tipo"
 
 #. Label of the label (Data) field in DocType 'CRM Dropdown Item'
 #. Label of the label (Data) field in DocType 'CRM View Settings'
@@ -21883,3 +21884,386 @@ msgstr "Se quitará el permiso de usuario que te limita a tu propia ficha de emp
 #: frontend/src/pages/Equipo.vue
 msgid "Yes, remove the limit"
 msgstr "Sí, quitar el límite"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Filters"
+msgstr "Filtros"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "View"
+msgstr "Vista"
+
+#: frontend/src/pages/Productos.vue
+msgid "of {0} products"
+msgstr "de {0} productos"
+
+#: frontend/src/pages/Productos.vue
+msgid "products shown, more below"
+msgstr "productos a la vista, hay más abajo"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "products"
+msgstr "productos"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Photo"
+msgstr "Foto"
+
+#: frontend/src/pages/Productos.vue
+msgid "Remove filter {0}"
+msgstr "Quitar el filtro {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Updating…"
+msgstr "Actualizando…"
+
+#: frontend/src/pages/Productos.vue
+msgid "See all products"
+msgstr "Ver todos los productos"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Product"
+msgstr "Producto"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Cards"
+msgstr "Tarjetas"
+
+#: frontend/src/pages/Productos.vue
+msgid "Stock: all"
+msgstr "Existencias: todas"
+
+#: frontend/src/pages/Productos.vue
+msgid "With stock"
+msgstr "Con existencias"
+
+#: frontend/src/pages/Productos.vue
+msgid "Sold out"
+msgstr "Agotado"
+
+#: frontend/src/pages/Productos.vue
+msgid "Photo: all"
+msgstr "Foto: todas"
+
+#: frontend/src/pages/Productos.vue
+msgid "With photo"
+msgstr "Con foto"
+
+#: frontend/src/pages/Productos.vue
+msgid "Without photo"
+msgstr "Sin foto"
+
+#: frontend/src/pages/Productos.vue
+msgid "No photo yet"
+msgstr "Sin foto todavía"
+
+#: frontend/src/pages/Productos.vue
+msgid "Change photo"
+msgstr "Cambiar foto"
+
+#: frontend/src/pages/Productos.vue
+msgid "Add photo"
+msgstr "Agregar foto"
+
+#: frontend/src/pages/Productos.vue
+msgid "Product group"
+msgstr "Grupo del producto"
+
+#: frontend/src/pages/Productos.vue
+msgid "See the products of {0}"
+msgstr "Ver los productos de {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Not for sale"
+msgstr "No se vende"
+
+#: frontend/src/pages/Productos.vue
+msgid "Unit: {0}"
+msgstr "Unidad: {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Brand: {0}"
+msgstr "Marca: {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "per {0}"
+msgstr "por {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "updated {0}"
+msgstr "actualizado {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Carries no stock"
+msgstr "No lleva inventario"
+
+#: frontend/src/pages/Productos.vue
+msgid "in {0} store(s)"
+msgstr "en {0} tienda(s)"
+
+#: frontend/src/pages/Productos.vue
+msgid "Sold out in your stores"
+msgstr "Agotado en tus tiendas"
+
+#: frontend/src/pages/Productos.vue
+msgid "Price lists"
+msgstr "Listas de precios"
+
+#: frontend/src/pages/Productos.vue
+msgid "No price list sells this product yet."
+msgstr "Ninguna lista de precios vende este producto todavía."
+
+#: frontend/src/pages/Productos.vue
+msgid "Valid"
+msgstr "Vigencia"
+
+#: frontend/src/pages/Productos.vue
+msgid "Updated"
+msgstr "Actualizado"
+
+#: frontend/src/pages/Productos.vue
+msgid "Stock by store"
+msgstr "Existencias por tienda"
+
+#: frontend/src/pages/Productos.vue
+msgid "Total {0} {1}"
+msgstr "Total {0} {1}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Service item: it carries no stock. It is sold without counting or filing it."
+msgstr "Artículo de servicio: no lleva inventario. Se vende sin contarlo ni acomodarlo."
+
+#: frontend/src/pages/Productos.vue
+msgid "None in your stores yet. It appears here when it is received, counted or moved in."
+msgstr "Todavía no hay en tus tiendas. Aparece aquí cuando se recibe, se cuenta o se traspasa."
+
+#: frontend/src/pages/Productos.vue
+msgid "Order it"
+msgstr "Pedirlo"
+
+#: frontend/src/pages/Productos.vue
+msgid "Recent stock movements"
+msgstr "Movimientos recientes"
+
+#: frontend/src/pages/Productos.vue
+msgid "A service has no stock movements."
+msgstr "Un servicio no tiene movimientos de inventario."
+
+#: frontend/src/pages/Productos.vue
+msgid "No stock movements yet: sales, purchases, transfers and adjustments appear here."
+msgstr "Sin movimientos de stock: aquí aparecen ventas, compras, traspasos y ajustes."
+
+#: frontend/src/pages/Productos.vue
+msgid "Movement"
+msgstr "Movimiento"
+
+#: frontend/src/pages/Productos.vue
+msgid "Qty"
+msgstr "Cant."
+
+#: frontend/src/pages/Productos.vue
+msgid "Balance"
+msgstr "Saldo"
+
+#: frontend/src/pages/Productos.vue
+msgid "Price changes"
+msgstr "Cambios de precio"
+
+#: frontend/src/pages/Productos.vue
+msgid "Price changes are seen by whoever manages prices."
+msgstr "Los cambios de precio los ve quien administra los precios."
+
+#: frontend/src/pages/Productos.vue
+msgid "No price changes recorded. When someone changes a price, it appears here with who and when."
+msgstr "Sin cambios de precio registrados. Cuando alguien cambie un precio, aparece aquí con quién y cuándo."
+
+#: frontend/src/pages/Productos.vue
+msgid "Cost"
+msgstr "Costo"
+
+#: frontend/src/pages/Productos.vue
+msgid "First price"
+msgstr "Primer precio"
+
+#: frontend/src/pages/Productos.vue
+msgid "Removed"
+msgstr "Quitado"
+
+#: frontend/src/pages/Productos.vue
+msgid "See fewer"
+msgstr "Ver menos"
+
+#: frontend/src/pages/Productos.vue
+msgid "See all {0} changes"
+msgstr "Ver los {0} cambios"
+
+#: frontend/src/pages/Productos.vue
+msgid "Cost and margin"
+msgstr "Costo y margen"
+
+#: frontend/src/pages/Productos.vue
+msgid "managers only"
+msgstr "solo gerentes"
+
+#: frontend/src/pages/Productos.vue
+msgid "No description yet. Add what the customer asks about: model, compatibility, what it includes."
+msgstr "Sin descripción. Agrega lo que pregunta el cliente: modelo, compatibilidad, qué incluye."
+
+#: frontend/src/pages/Productos.vue
+msgid "No description yet."
+msgstr "Sin descripción."
+
+#: frontend/src/pages/Productos.vue
+msgid "Barcodes"
+msgstr "Códigos de barras"
+
+#: frontend/src/pages/Productos.vue
+msgid "No barcodes yet. Add one so the scanner and the POS find it."
+msgstr "Sin códigos de barras. Agrega uno para que el escáner y el punto de venta lo encuentren."
+
+#: frontend/src/pages/Productos.vue
+msgid "No barcodes yet."
+msgstr "Sin códigos de barras."
+
+#: frontend/src/pages/Productos.vue
+msgid "Print label"
+msgstr "Imprimir etiqueta"
+
+#: frontend/src/pages/Productos.vue
+msgid "Opens Etiquetas in Mercado with this product"
+msgstr "Abre Etiquetas en Mercado con este producto"
+
+#: frontend/src/pages/Productos.vue
+msgid "No end date"
+msgstr "Sin fecha de fin"
+
+#: frontend/src/pages/Productos.vue
+msgid "Since {0}"
+msgstr "Desde {0}"
+
+#: frontend/src/pages/Productos.vue
+msgid "Last cost"
+msgstr "Costo último"
+
+#: frontend/src/pages/Productos.vue
+msgid "Valuation"
+msgstr "Valuación"
+
+#: frontend/src/pages/Productos.vue
+msgid "Margin %"
+msgstr "Margen %"
+
+#: frontend/src/pages/Productos.vue
+msgid "Margin $"
+msgstr "Margen $"
+
+#: frontend/src/pages/Productos.vue
+msgid "No margin: the cost is missing."
+msgstr "Sin margen: falta el costo."
+
+#: frontend/src/pages/Productos.vue
+msgid "No margin: the cost or the price is missing."
+msgstr "Sin margen: falta el costo o el precio."
+
+#: frontend/src/pages/Productos.vue
+msgid "Margin over {0}, against the last purchase cost."
+msgstr "Margen sobre {0}, contra el último costo de compra."
+
+#: frontend/src/pages/Productos.vue
+msgid "Margin over {0}, against the valuation."
+msgstr "Margen sobre {0}, contra la valuación."
+
+#: frontend/src/pages/Productos.vue
+msgid "Code"
+msgstr "Código"
+
+#: frontend/src/pages/Productos.vue
+msgid "Unit"
+msgstr "Unidad"
+
+#: frontend/src/pages/Productos.vue
+msgid "For sale"
+msgstr "Se vende"
+
+#: frontend/src/pages/Productos.vue
+msgid "Bought"
+msgstr "Se compra"
+
+#: frontend/src/pages/Productos.vue
+msgid "Changed"
+msgstr "Modificado"
+
+#: frontend/src/pages/Productos.vue
+msgid "Photo saved"
+msgstr "Foto guardada"
+
+#: frontend/src/pages/Productos.vue
+msgid "The photo was not uploaded"
+msgstr "La foto no se subió"
+
+#: frontend/src/pages/Productos.vue
+msgid "Search group"
+msgstr "Buscar grupo"
+
+#: frontend/src/pages/Productos.vue
+msgid "No group matches «{0}»."
+msgstr "Ningún grupo coincide con «{0}»."
+
+#: frontend/src/pages/Productos.vue
+msgid "See all · {0} more"
+msgstr "Ver todos · {0} más"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "All"
+msgstr "Todas"
+
+#: frontend/src/pages/Productos.vue
+msgid "Without stock"
+msgstr "Sin existencias"
+
+#: frontend/src/pages/Productos.vue
+msgid "Service, no stock"
+msgstr "Servicio, sin inventario"
+
+#: frontend/src/pages/Productos.vue
+msgid "{0} in stock"
+msgstr "{0} en stock"
+
+#: frontend/src/pages/Productos.vue
+msgid "today"
+msgstr "hoy"
+
+#: frontend/src/pages/Productos.vue
+msgid "a month ago"
+msgstr "Hace un mes"
+
+#: frontend/src/pages/Productos.vue
+msgid "a year ago"
+msgstr "Hace un año"
+
+#: frontend/src/pages/Productos.vue
+msgid "Ends soon"
+msgstr "Vence pronto"
+
+#: frontend/src/pages/Productos.vue
+msgid "Current"
+msgstr "Vigente"
+
+#: frontend/src/pages/Productos.vue
+msgid "Stocked, by serial number"
+msgstr "Inventariable, con serie"
+
+#: frontend/src/pages/Productos.vue
+msgid "Stocked, by batch"
+msgstr "Inventariable, con lote"
+
+#: frontend/src/pages/Productos.vue
+msgid "Stocked"
+msgstr "Inventariable"
