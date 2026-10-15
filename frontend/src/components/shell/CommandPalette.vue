@@ -3,13 +3,13 @@
        «Buscar o ir a…» and ⌘G / Ctrl+G «Buscar registros». The other key or
        chip switches modes here and keeps the typed text. -->
   <div
+    ref="dialog"
     class="fixed inset-0 z-50 flex justify-center sm:items-start sm:pt-[12vh]"
     role="dialog"
     aria-modal="true"
     data-shell-layer="palette"
     :data-mode="activeMode"
     :aria-label="__('Command palette')"
-    @keydown="onKeydown"
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
     <div
@@ -89,6 +89,7 @@
             :id="`palette-item-${flat.indexOf(item)}`"
             :key="(item.source || '') + item.id"
             role="option"
+            tabindex="-1"
             :aria-selected="flat.indexOf(item) === cursor"
             class="flex min-h-12 w-full items-center gap-3 px-4 text-left"
             :class="flat.indexOf(item) === cursor ? 'bg-surface-gray-2' : ''"
@@ -186,6 +187,7 @@ import {
   openShortcutSheet,
   shellKeymap,
   shellT,
+  useShellLayer,
 } from '@/composables/shellKeyboard'
 
 const props = defineProps({
@@ -198,6 +200,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'update:mode'])
 const router = useRouter()
 const { setTheme } = useShellTheme()
+const dialog = ref(null)
 const input = ref(null)
 const raw = ref('')
 const cursor = ref(0)
@@ -337,21 +340,32 @@ function moduleLabelFor(route) {
   const key = moduleKeyFor(route)
   return SHELL_MODULES.find((module) => module.key === key)?.label
 }
+// Esc, ↑↓ and ↵ answer wherever the focus is while the palette is open; Tab
+// stays inside it (shell layer). A focused chip or button takes its own ↵.
 function onKeydown(event) {
-  if (event.key === 'Escape') {
-    event.preventDefault()
-    close()
-  } else if (event.key === 'ArrowDown') {
-    event.preventDefault()
-    cursor.value = Math.min(cursor.value + 1, flat.value.length - 1)
-  } else if (event.key === 'ArrowUp') {
-    event.preventDefault()
-    cursor.value = Math.max(cursor.value - 1, 0)
+  if (event.isComposing) return
+  const focused = document.activeElement
+  if (event.key === 'Escape') close()
+  else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    const step = event.key === 'ArrowDown' ? 1 : -1
+    cursor.value = Math.max(
+      0,
+      Math.min(cursor.value + step, flat.value.length - 1),
+    )
+    if (focused !== input.value) focusInput()
   } else if (event.key === 'Enter') {
-    event.preventDefault()
+    if (
+      focused !== input.value &&
+      dialog.value?.contains(focused) &&
+      focused.matches('button, a[href]')
+    )
+      return
     choose(flat.value[cursor.value])
-  }
+  } else return
+  event.preventDefault()
+  event.stopPropagation()
 }
+useShellLayer(dialog, { onKeydown })
 const previousFocus = document.activeElement
 watch(() => props.focusKey, focusInput)
 onMounted(focusInput)

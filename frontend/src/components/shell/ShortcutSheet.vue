@@ -3,12 +3,12 @@
        a 224 px section menu beside the rows, two columns from 1000 px; on a
        phone the menu is a scrolling row of tabs above one column. -->
   <div
+    ref="dialog"
     class="fixed inset-0 z-50 flex items-start justify-center"
     role="dialog"
     aria-modal="true"
     data-shell-layer="shortcuts"
     :aria-labelledby="`${uid}-title`"
-    @keydown="onKeydown"
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
     <div
@@ -108,11 +108,13 @@ import {
   shellCheatSheet,
   shellT,
   shortcutSheet,
+  useShellLayer,
 } from '@/composables/shellKeyboard'
 
 const uid = `muelle-kbd-${Math.random().toString(36).slice(2, 8)}`
 // Same breakpoint as the stylesheet below (and Desk's sheet).
 const phone = useMediaQuery('(max-width: 760px)')
+const dialog = ref(null)
 const tabs = ref([])
 const content = ref(null)
 const selected = ref(0)
@@ -148,12 +150,14 @@ function onTabKey(event, index) {
   event.stopPropagation()
   select(next, true)
 }
+// Esc closes from wherever the focus went; Tab stays in the sheet.
 function onKeydown(event) {
   if (event.key !== 'Escape') return
   event.preventDefault()
   event.stopPropagation()
   close()
 }
+useShellLayer(dialog, { onKeydown })
 function close() {
   closeShortcutSheet()
 }

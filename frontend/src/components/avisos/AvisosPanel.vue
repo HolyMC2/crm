@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="fixed inset-0 z-40" @keydown.esc="close">
+    <div v-if="open" class="fixed inset-0 z-40">
       <div
         class="absolute inset-0 bg-black/10 sm:bg-transparent"
         aria-hidden="true"
@@ -10,6 +10,7 @@
         ref="panel"
         role="dialog"
         aria-modal="true"
+        data-shell-layer="avisos"
         :aria-label="__('Avisos')"
         tabindex="-1"
         class="absolute inset-0 flex flex-col bg-surface-base text-ink-gray-9 shadow-2xl outline-none sm:inset-y-0 sm:left-auto sm:right-0 sm:w-[400px] sm:border-l sm:border-outline-gray-2"
@@ -148,6 +149,7 @@ import {
   loadStream,
   useAvisosActions,
 } from '@/composables/useAvisos'
+import { useShellLayer } from '@/composables/shellKeyboard'
 
 const open = defineModel('open', { type: Boolean, default: false })
 const router = useRouter()
@@ -194,9 +196,23 @@ async function load() {
   }
 }
 
+// Esc closes from wherever the focus went and Tab stays in the panel; closed,
+// the focus returns to the bell unless a next page or record already took it.
+let returnFocus = null
+let escaped = false
 function close() {
   open.value = false
 }
+useShellLayer(panel, {
+  open: () => open.value,
+  onKeydown(event) {
+    if (event.key !== 'Escape') return
+    event.preventDefault()
+    event.stopPropagation()
+    escaped = true
+    close()
+  },
+})
 
 async function openGroup(group) {
   await actions.open(group)
@@ -218,7 +234,21 @@ function seeAll(query = {}) {
 }
 
 watch(open, async (value) => {
-  if (!value) return
+  if (!value) {
+    const focused = document.activeElement
+    if (
+      returnFocus?.isConnected &&
+      (escaped ||
+        !focused ||
+        focused === document.body ||
+        panel.value?.contains(focused))
+    )
+      returnFocus.focus?.()
+    returnFocus = null
+    escaped = false
+    return
+  }
+  returnFocus = document.activeElement
   actions.status.value = null
   load()
   await nextTick()

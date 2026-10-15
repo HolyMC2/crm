@@ -192,16 +192,13 @@
   </nav>
 </template>
 <script setup>
-import {
-  computed,
-  defineAsyncComponent,
-  nextTick,
-  onBeforeUnmount,
-  ref,
-  watch,
-} from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { keyLabel, searchEntryHint } from '@/composables/shellKeyboard'
+import {
+  keyLabel,
+  searchEntryHint,
+  useShellLayer,
+} from '@/composables/shellKeyboard'
 import {
   installedSiblings,
   railExpanded,
@@ -256,7 +253,8 @@ const siblingLinks = computed(() => {
 })
 
 // Collapsed: one «Otras apps» button opens them beside the rail. The first
-// app takes the focus; Esc (from anywhere) or another page closes the menu.
+// app takes the focus and Tab stays in the menu; Esc (from anywhere) or
+// another page closes it.
 const appsOpen = ref(false)
 const appsButton = ref(null)
 const appsMenu = ref(null)
@@ -276,21 +274,18 @@ function closeApps() {
   appsOpen.value = false
   nextTick(() => appsButton.value?.focus())
 }
-function onAppsKey(event) {
-  if (event.key !== 'Escape') return
-  event.preventDefault()
-  event.stopPropagation()
-  closeApps()
-}
-watch(appsOpen, (open) =>
-  open
-    ? window.addEventListener('keydown', onAppsKey, true)
-    : window.removeEventListener('keydown', onAppsKey, true),
-)
+useShellLayer(appsMenu, {
+  open: () => appsOpen.value,
+  onKeydown(event) {
+    if (event.key !== 'Escape') return
+    event.preventDefault()
+    event.stopPropagation()
+    closeApps()
+  },
+})
 watch(
   () => route.fullPath,
   () => (appsOpen.value = false),
 )
 watch(railExpanded, () => (appsOpen.value = false))
-onBeforeUnmount(() => window.removeEventListener('keydown', onAppsKey, true))
 </script>

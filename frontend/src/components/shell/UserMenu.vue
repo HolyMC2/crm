@@ -12,7 +12,7 @@
       :aria-expanded="open"
       aria-haspopup="menu"
       data-testid="rail-account"
-      @click="open = !open"
+      @click="toggle"
     >
       <span
         class="flex size-8 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-xs font-semibold text-ink-gray-8"
@@ -39,10 +39,10 @@
     <template v-if="open">
       <div class="fixed inset-0 z-40" @click="open = false" />
       <div
+        ref="menu"
         role="menu"
         class="fixed bottom-3 z-50 w-64 rounded-xl border border-outline-gray-2 bg-surface-base py-1.5 shadow-xl"
         :style="{ left: `${railWidth + 4}px` }"
-        @keydown.esc="close"
       >
         <div class="border-b border-outline-gray-1 px-3.5 pb-2.5 pt-1.5">
           <div class="truncate text-sm font-semibold">
@@ -147,7 +147,7 @@
   </div>
 </template>
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { sessionStore } from '@/stores/session'
 import { openSalesSettings, shellBoot } from '@/composables/muelleShell'
@@ -159,6 +159,8 @@ import {
   keyLabel,
   openShortcutSheet,
   shellT,
+  tabbables,
+  useShellLayer,
 } from '@/composables/shellKeyboard'
 
 defineProps({ ventas: Boolean, expanded: Boolean })
@@ -167,6 +169,7 @@ const session = sessionStore()
 const { theme, setTheme } = useShellTheme()
 const open = ref(false)
 const trigger = ref(null)
+const menu = ref(null)
 const user = computed(() => shellBoot.value?.user || {})
 const initials = computed(() => {
   const parts = String(user.value.full_name || user.value.name || '?')
@@ -174,10 +177,26 @@ const initials = computed(() => {
     .split(/\s+/)
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?'
 })
+// Open, the first entry takes the focus and Tab stays in the menu; Esc from
+// anywhere closes it and returns to the account button.
+function toggle() {
+  if (open.value) return close()
+  open.value = true
+  nextTick(() => tabbables(menu.value)[0]?.focus())
+}
 function close() {
   open.value = false
   trigger.value?.focus()
 }
+useShellLayer(menu, {
+  open: () => open.value,
+  onKeydown(event) {
+    if (event.key !== 'Escape') return
+    event.preventDefault()
+    event.stopPropagation()
+    close()
+  },
+})
 function openSettings() {
   open.value = false
   openSalesSettings(router)

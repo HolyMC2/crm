@@ -6,6 +6,7 @@ import {
   ref,
   shallowRef,
   unref,
+  watch,
 } from 'vue'
 import {
   KEYMAP,
@@ -196,6 +197,89 @@ export function closeShortcutSheet() {
 // Layers the shell owns. Over any other dialog only the search keys reach
 // through (as before); the sheet never opens on top of a foreign dialog.
 const SHELL_LAYER = '[data-shell-layer]'
+
+// --- shell layers keep the focus (palette, sheets, rail menus) ---------------
+
+const TABBABLE =
+  'a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]'
+
+/** What Tab reaches inside `root`, in document order. */
+export function tabbables(root) {
+  if (!root) return []
+  return [...root.querySelectorAll(TABBABLE)].filter(
+    (el) =>
+      el.tabIndex >= 0 &&
+      !el.disabled &&
+      el.type !== 'hidden' &&
+      !el.closest('[hidden], [inert]') &&
+      (typeof el.checkVisibility !== 'function' || el.checkVisibility()),
+  )
+}
+
+function cycleFocus(root, back) {
+  const stops = tabbables(root)
+  if (!stops.length) return root.focus?.()
+  const current = document.activeElement
+  let index = stops.indexOf(current)
+  if (index === -1 && current && current !== root && root.contains(current)) {
+    // A spot Tab skips (a tabindex="-1" panel): the next stop after it.
+    const following = (el) =>
+      current.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING
+    const next = back
+      ? [...stops].reverse().find((el) => !following(el))
+      : stops.find(following)
+    return (next || stops[back ? stops.length - 1 : 0]).focus()
+  }
+  if (index === -1) index = back ? 0 : stops.length - 1
+  stops[(index + (back ? -1 : 1) + stops.length) % stops.length].focus()
+}
+
+// The open layers, the last one on top.
+const layers = []
+
+/**
+ * While `open()` (default: while mounted), the layer at `root` keeps the
+ * keyboard: Tab and Shift+Tab cycle inside it, and `onKeydown` (Esc, arrows,
+ * Enter) answers wherever the focus went, a page link or doco's floating
+ * «Ayuda» included. Only the top layer answers; a foreign dialog
+ * (`aria-modal` without `data-shell-layer`) keeps its own keys.
+ */
+export function useShellLayer(root, { open = () => true, onKeydown } = {}) {
+  const layer = {}
+  let listening = false
+  function handle(event) {
+    if (event.defaultPrevented || layers[layers.length - 1] !== layer) return
+    const el = unref(root)
+    if (!el) return
+    const target = event.target
+    if (
+      target instanceof Element &&
+      !el.contains(target) &&
+      target.closest(`[aria-modal="true"]:not(${SHELL_LAYER})`)
+    )
+      return
+    if (event.key === 'Tab' && !event.altKey && !event.ctrlKey) {
+      event.preventDefault()
+      event.stopPropagation()
+      cycleFocus(el, event.shiftKey)
+    } else onKeydown?.(event)
+  }
+  function start() {
+    if (listening) return
+    listening = true
+    layers.push(layer)
+    window.addEventListener('keydown', handle, true)
+  }
+  function stop() {
+    if (!listening) return
+    listening = false
+    layers.splice(layers.indexOf(layer), 1)
+    window.removeEventListener('keydown', handle, true)
+  }
+  watch(open, (value) => (value ? start() : stop()))
+  onMounted(() => open() && start())
+  onBeforeUnmount(stop)
+}
 
 export function useShellKeyboard({
   openPalette,

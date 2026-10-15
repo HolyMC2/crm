@@ -68,6 +68,7 @@ import {
   searchEntryHint,
   shellCheatSheet,
   shellT,
+  tabbables,
 } from '@/composables/shellKeyboard'
 import { agendaShortcuts } from '@/composables/useAgenda'
 import { bootScope } from '@/vendor/muelle-shell/contracts'
@@ -461,6 +462,20 @@ describe('one frame for every route', () => {
       ).toEqual(['Escáner', 'POS'])
       expect(menu.style.left).toBe('60px')
       // The first app takes the focus; Esc from anywhere closes the menu.
+      expect(document.activeElement?.dataset.sibling).toBe('scan')
+      // Tab stays in the menu: Shift+Tab from the first app goes to the last.
+      const tab = (shiftKey) =>
+        document.activeElement.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'Tab',
+            shiftKey,
+            bubbles: true,
+            cancelable: true,
+          }),
+        )
+      tab(true)
+      expect(document.activeElement?.dataset.sibling).toBe('pos')
+      tab(false)
       expect(document.activeElement?.dataset.sibling).toBe('scan')
       window.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
@@ -1638,6 +1653,123 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     expect(palette().dataset.mode).toBe('records')
     expect(input.value).toBe('ana')
     expect(document.activeElement).toBe(input)
+  })
+
+  it('the palette keeps the focus: Tab cycles inside, Esc closes from anywhere and the focus returns', async () => {
+    await mount('/deals')
+    const field = document.createElement('input')
+    const outside = document.createElement('button')
+    root.append(field, outside)
+    field.focus()
+    press({ key: 'k', ctrlKey: true }, field)
+    const dialog = await until(palette)
+    await settle()
+    const input = dialog.querySelector('input')
+    expect(document.activeElement).toBe(input)
+    // Chips, input and Esc; the results are reached with ↑↓, not Tab.
+    const stops = tabbables(dialog)
+    expect(stops).toContain(input)
+    expect(stops.some((el) => el.getAttribute('role') === 'option')).toBe(false)
+    expect(dialog.querySelector('[role="option"]')).not.toBeNull()
+    // Tab never leaves the dialog: one full round comes back to the input.
+    for (let i = 0; i < stops.length; i++) {
+      press({ key: 'Tab' }, document.activeElement)
+      expect(dialog.contains(document.activeElement)).toBe(true)
+    }
+    expect(document.activeElement).toBe(input)
+    // Shift+Tab on the first stop goes to the last one.
+    stops[0].focus()
+    press({ key: 'Tab', shiftKey: true }, stops[0])
+    expect(document.activeElement).toBe(stops[stops.length - 1])
+    // Focus that slipped out (doco's «Ayuda», a rail link) is pulled back in.
+    outside.focus()
+    press({ key: 'Tab' }, outside)
+    expect(document.activeElement).toBe(stops[0])
+    // ↓ and Esc still answer with the focus outside the dialog.
+    outside.focus()
+    press({ key: 'ArrowDown' }, outside)
+    await nextTick()
+    expect(document.activeElement).toBe(input)
+    outside.focus()
+    press({ key: 'Escape' }, outside)
+    await settle()
+    expect(palette()).toBeNull()
+    expect(document.activeElement).toBe(field)
+  })
+
+  it('the sheet, the Más sheet and the rail menus keep the focus too', async () => {
+    await mount('/deals')
+    const outside = document.createElement('button')
+    root.append(outside)
+    // Alt+H sheet: Tab from outside comes back in, Esc from outside closes.
+    const opener = root.querySelector('[data-testid="rail-search"]')
+    opener.focus()
+    press({ key: 'h', code: 'KeyH', altKey: true }, opener)
+    const dialog = await until(sheet)
+    await settle()
+    const sheetStops = tabbables(dialog)
+    // The roving tabs count once; the hidden panel not at all.
+    expect(
+      sheetStops.filter((el) => el.getAttribute('role') === 'tab'),
+    ).toHaveLength(1)
+    sheetStops[sheetStops.length - 1].focus()
+    press({ key: 'Tab' }, document.activeElement)
+    expect(document.activeElement).toBe(sheetStops[0])
+    outside.focus()
+    press({ key: 'Tab', shiftKey: true }, outside)
+    expect(document.activeElement).toBe(sheetStops[sheetStops.length - 1])
+    outside.focus()
+    press({ key: 'Escape' }, outside)
+    await settle()
+    expect(sheet()).toBeNull()
+    expect(document.activeElement).toBe(opener)
+    // Account menu: the first entry takes the focus, Tab cycles, Esc returns.
+    const account = root.querySelector('[aria-label="Account menu"]')
+    account.click()
+    await settle()
+    const menu = document.querySelector('[role="menu"]')
+    const items = tabbables(menu)
+    expect(document.activeElement).toBe(items[0])
+    items[items.length - 1].focus()
+    press({ key: 'Tab' }, document.activeElement)
+    expect(document.activeElement).toBe(items[0])
+    press({ key: 'Tab', shiftKey: true }, document.activeElement)
+    expect(document.activeElement).toBe(items[items.length - 1])
+    outside.focus()
+    press({ key: 'Escape' }, outside)
+    await settle()
+    expect(document.querySelector('[role="menu"]')).toBeNull()
+    expect(document.activeElement).toBe(account)
+  })
+
+  it('phone Más sheet: Tab stays inside, Esc from anywhere closes, «Más» gets the focus back', async () => {
+    state.mobile.value = true
+    await mount('/contactos')
+    const outside = document.createElement('button')
+    root.append(outside)
+    const more = root.querySelector(
+      'nav[aria-label="Main navigation"] button[aria-haspopup="dialog"]',
+    )
+    more.focus()
+    more.click()
+    const dialog = await until(() =>
+      document.querySelector('[data-shell-layer="more"]'),
+    )
+    await settle()
+    const stops = tabbables(dialog)
+    expect(stops.length).toBeGreaterThan(2)
+    // From the sheet itself (tabindex -1) Tab goes to its first stop.
+    press({ key: 'Tab' }, document.activeElement)
+    expect(document.activeElement).toBe(stops[0])
+    press({ key: 'Tab', shiftKey: true }, document.activeElement)
+    expect(document.activeElement).toBe(stops[stops.length - 1])
+    press({ key: 'Tab' }, document.activeElement)
+    expect(document.activeElement).toBe(stops[0])
+    outside.focus()
+    press({ key: 'Escape' }, outside)
+    await settle()
+    expect(document.querySelector('[data-shell-layer="more"]')).toBeNull()
+    expect(document.activeElement).toBe(more)
   })
 
   it('the rail search names both keys; no hard-coded «Ctrl K»', async () => {

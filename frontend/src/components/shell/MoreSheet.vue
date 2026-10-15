@@ -1,8 +1,10 @@
 <template>
   <div
+    ref="dialog"
     class="fixed inset-0 z-40"
     role="dialog"
     aria-modal="true"
+    data-shell-layer="more"
     :aria-label="__('More')"
   >
     <div class="absolute inset-0 bg-black/30" @click="close" />
@@ -10,7 +12,6 @@
       ref="sheet"
       class="absolute inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-surface-base pb-[env(safe-area-inset-bottom)] shadow-2xl"
       tabindex="-1"
-      @keydown.esc="close"
     >
       <div class="sticky top-0 flex justify-center bg-surface-base pb-1 pt-2">
         <span
@@ -254,7 +255,14 @@
   </div>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+} from 'vue'
 import { Button } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { useRoute, useRouter } from 'vue-router'
@@ -278,6 +286,7 @@ import {
   keyLabel,
   openShortcutSheet,
   shellT,
+  useShellLayer,
 } from '@/composables/shellKeyboard'
 
 const props = defineProps({
@@ -291,6 +300,7 @@ const VentasSections = defineAsyncComponent(
 )
 const session = sessionStore()
 const { theme, setTheme } = useShellTheme()
+const dialog = ref(null)
 const sheet = ref(null)
 const customizing = ref(false)
 const saveMessage = ref('')
@@ -361,5 +371,30 @@ function openSettings() {
   close()
   openSalesSettings(router)
 }
+// Esc closes from wherever the focus went; Tab stays in the sheet. Closed,
+// the focus goes back to «Más» unless the next step (doco's «Ayuda», the
+// shortcut sheet) already took it.
+let escaped = false
+useShellLayer(dialog, {
+  onKeydown(event) {
+    if (event.key !== 'Escape') return
+    event.preventDefault()
+    event.stopPropagation()
+    escaped = true
+    close()
+  },
+})
+const previousFocus = document.activeElement
 onMounted(() => nextTick(() => sheet.value?.focus()))
+onBeforeUnmount(() => {
+  const focused = document.activeElement
+  if (
+    previousFocus?.isConnected &&
+    (escaped ||
+      !focused ||
+      focused === document.body ||
+      dialog.value?.contains(focused))
+  )
+    previousFocus.focus?.()
+})
 </script>
