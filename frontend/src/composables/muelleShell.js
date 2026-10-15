@@ -58,7 +58,7 @@ function dropCachedBoot(key) {
   }
 }
 /** The server answered and refused (signed out, no permission): not a blip. */
-function refused(error) {
+export function refused(error) {
   return (
     [401, 403].includes(error?.status) ||
     /PermissionError|AuthenticationError|SessionExpired/.test(

@@ -5,6 +5,7 @@ import {
   isNeutralModule,
   loadShell,
   moduleKeyFor,
+  refused as shellRefused,
   shellBoot,
   shellBootStale,
 } from '@/composables/muelleShell'
@@ -639,8 +640,11 @@ router.beforeEach(async (to, from, next) => {
       const boot = shellBootStale.value ? shellBoot.value : await loadShell()
       if (!moduleEnabled(boot, 'ventas'))
         return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
-    } catch {
-      return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
+    } catch (error) {
+      // Only a refusal is a permission answer. A server blip (a deploy or a
+      // restart) is not: go on, every Ventas API rechecks the permission.
+      if (shellRefused(error))
+        return next({ name: 'Not Permitted', query: { intended: to.fullPath } })
     }
   }
   const { usersStore } = await import('@/stores/users')
@@ -689,7 +693,10 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  if (isLoggedIn && to.name !== 'Not Permitted' && !isCrmUser()) {
+  // The CRM user list did not load (a deploy or a restart): unknown is not
+  // "no access", and the server still checks every call.
+  const usersKnown = Array.isArray(users.data?.crmUsers)
+  if (isLoggedIn && to.name !== 'Not Permitted' && usersKnown && !isCrmUser()) {
     next({ name: 'Not Permitted' })
   } else if (to.name === 'Home' && isLoggedIn) {
     // FCRM redesign: the omnichannel Inbox is the default landing (handoff §5.1)

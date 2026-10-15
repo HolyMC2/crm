@@ -3,10 +3,13 @@ import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import { retainPreviousBuilds } from './scripts/retain-builds.mjs'
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development'
+  // Deploy-safe chunks: keep the previous builds' assets (scripts/retain-builds.mjs).
+  const retain = retainPreviousBuilds()
   // Silent update: version.json names the entry chunk of this build; open
   // tabs compare it with the entry they booted from (@muelle/live-sync bundle
   // watcher in main.js) and move to a new build at a safe moment.
@@ -14,6 +17,7 @@ export default defineConfig(async ({ mode }) => {
     plugins: [
       vue(),
       vueJsx(),
+      retain,
       {
         name: 'emit-version-json',
         apply: 'build',
@@ -40,6 +44,20 @@ export default defineConfig(async ({ mode }) => {
           // Activities (6.27 MB) and index.css (5.63 MB) must remain available
           // offline. The post-build verifier rejects missing precache entries.
           maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+          // The output keeps previous builds' chunks for open tabs; precache
+          // only this build's.
+          manifestTransforms: [
+            async (entries) => {
+              const current = new Set(retain.files())
+              return {
+                manifest: entries.filter(
+                  (entry) =>
+                    !entry.url.startsWith('assets/') || current.has(entry.url),
+                ),
+                warnings: [],
+              }
+            },
+          ],
         },
         manifest: {
           display: 'standalone',
@@ -180,7 +198,8 @@ export default defineConfig(async ({ mode }) => {
       jinjaBootData: true,
       buildConfig: {
         indexHtmlPath: '../crm/www/crm.html',
-        emptyOutDir: true,
+        // Never empty: tabs opened before this build still load its chunks.
+        emptyOutDir: false,
         sourcemap: true,
       },
     }),
