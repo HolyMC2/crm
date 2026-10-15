@@ -13149,6 +13149,311 @@ msgstr "Preparar compra en borrador"
 
 msgid "From an ERP or mail attachment"
 msgstr "Desde un adjunto del ERP o del correo"
+
+# Archivos: CFDI card and fiscal gaps
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Fiscal invoice"
+msgstr "Factura electrónica (CFDI)"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "This file does not read as a CFDI."
+msgstr "Este archivo no se lee como un CFDI."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "PDF of a fiscal invoice"
+msgstr "PDF de una factura electrónica"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Copy fiscal folio"
+msgstr "Copiar folio fiscal"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "RFC in the text: {0}"
+msgstr "RFC en el texto: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "When the XML of this fiscal folio arrives it joins this PDF, and the full invoice shows here."
+msgstr "Cuando llegue el XML de este folio fiscal se une a este PDF y aquí verás la factura completa."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "{0} at an exchange rate of {1}"
+msgstr "{0} a un tipo de cambio de {1}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Stamped"
+msgstr "Timbrado"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Not stamped"
+msgstr "Sin timbrar"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Issuer on the SAT 69-B list: {0}"
+msgstr "Emisor en la lista 69-B del SAT: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Who"
+msgstr "Quién"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Issuer"
+msgstr "Emisor"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "RFC {0}"
+msgstr "RFC {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Tax regime: {0}"
+msgstr "Régimen: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Receiver"
+msgstr "Receptor"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "CFDI use: {0}"
+msgstr "Uso CFDI: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Customer: {0}"
+msgstr "Cliente: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Supplier: {0}"
+msgstr "Proveedor: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "You do not have this supplier yet"
+msgstr "No tienes a este proveedor"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Add supplier"
+msgstr "Dar de alta proveedor"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "What"
+msgstr "Qué"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Show fewer items"
+msgstr "Ver menos conceptos"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "See all {0} items"
+msgstr "Ver los {0} conceptos"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Showing {0} of {1} items; the XML has all of them."
+msgstr "Se muestran {0} de {1} conceptos; el XML los tiene todos."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "How much"
+msgstr "Cuánto"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Subtotal"
+msgstr "Subtotal"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Discount"
+msgstr "Descuento"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Tax transferred: {0}"
+msgstr "Impuesto trasladado: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Tax withheld: {0}"
+msgstr "Impuesto retenido: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Payment method: {0}"
+msgstr "Método de pago: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Payment form: {0}"
+msgstr "Forma de pago: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Terms: {0}"
+msgstr "Condiciones: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "exempt"
+msgstr "exento"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Payments in this receipt"
+msgstr "Pagos de este comprobante"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Operation {0}"
+msgstr "Operación {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Installment {0}"
+msgstr "Parcialidad {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Paid {0}"
+msgstr "Pagado {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Balance left {0}"
+msgstr "Saldo insoluto {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Related CFDI"
+msgstr "CFDI relacionados"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Fiscal folio"
+msgstr "Folio fiscal"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Fiscal folio copied."
+msgstr "Folio fiscal copiado."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Not stamped: the SAT has not given it a fiscal folio."
+msgstr "Sin timbrar: el SAT no le ha asignado folio fiscal."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Stamped on {0}"
+msgstr "Timbrado el {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Verify at the SAT"
+msgstr "Verificar en el SAT"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Valid at the SAT"
+msgstr "Vigente en el SAT"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Cancelled at the SAT"
+msgstr "Cancelado en el SAT"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "PDF: {0}"
+msgstr "PDF: {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "printed version"
+msgstr "versión impresa"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Records with this fiscal folio"
+msgstr "Registros con este folio fiscal"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Linked automatically"
+msgstr "Vinculado automáticamente"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "This document changed while you were looking at it. Check it and undo again."
+msgstr "Este documento cambió mientras lo veías. Revísalo y vuelve a deshacer."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Open purchase {0}"
+msgstr "Abrir compra {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Create purchase from this CFDI"
+msgstr "Crear compra desde este CFDI"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "We could not create the purchase. Try again in a moment."
+msgstr "No pudimos crear la compra. Inténtalo de nuevo en un momento."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "{0} is not one of your suppliers yet. Add them to continue."
+msgstr "{0} aún no está en tus proveedores. Dalo de alta para continuar."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Ask your manager to add {0} as a supplier."
+msgstr "Pide a tu encargado que dé de alta a {0} como proveedor."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Please add the supplier {0} (RFC {1}) in Muelle so I can register its invoice."
+msgstr "Por favor da de alta al proveedor {0} (RFC {1}) en Muelle para que pueda registrar su factura."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Some lines are not in your products yet. Say which product each one is; Muelle remembers it for this supplier."
+msgstr "Algunas líneas aún no están en tus artículos. Indica qué artículo es cada una; Muelle lo recuerda para este proveedor."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Supplier code {0}"
+msgstr "Clave del proveedor {0}"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "This is the product"
+msgstr "Es este artículo"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "No similar product found."
+msgstr "No encontramos un artículo parecido."
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Add them in Inventario"
+msgstr "Dar de alta en Inventario"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "View XML"
+msgstr "Ver XML"
+
+#: frontend/src/components/archivos/CfdiCard.vue
+msgid "Hide XML"
+msgstr "Ocultar XML"
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "Fiscal gaps"
+msgstr "Huecos fiscales"
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "What is missing between your purchases, your CFDI and the SAT, with the step that fixes it."
+msgstr "Lo que falta entre tus compras, tus CFDI y el SAT, con el paso que lo resuelve."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "Kind of gap"
+msgstr "Tipo de hueco"
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "The checks against the SAT are not available for this company, so cancelled CFDI and the 69-B list do not show here."
+msgstr "La consulta al SAT no está disponible para esta empresa, así que los CFDI cancelados y la lista 69-B no aparecen aquí."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "Choose a company to see its fiscal gaps."
+msgstr "Elige una empresa para ver sus huecos fiscales."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "No purchases without a CFDI. All in order."
+msgstr "Sin compras sin CFDI. Todo en orden."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "No CFDI waiting for its purchase. All in order."
+msgstr "Ningún CFDI espera su compra. Todo en orden."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "No CFDI cancelled at the SAT. All in order."
+msgstr "Ningún CFDI cancelado en el SAT. Todo en orden."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "No issuer on the SAT 69-B list. All in order."
+msgstr "Ningún emisor en la lista 69-B del SAT. Todo en orden."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "Every PDF with a fiscal folio has its XML. All in order."
+msgstr "Cada PDF con folio fiscal tiene su XML. Todo en orden."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "Nothing pending here. All in order."
+msgstr "Nada pendiente aquí. Todo en orden."
+
+#: frontend/src/components/archivos/HuecosFiscales.vue
+msgid "Done. The list is up to date."
+msgstr "Listo. La lista está al día."
 #: frontend/src/components/ventas
 msgid "Resume order"
 msgstr "Reanudar pedido"
