@@ -27,6 +27,20 @@
           </p>
         </div>
         <Button
+          class="min-h-11"
+          :label="__('Customize')"
+          :aria-expanded="customizing ? 'true' : 'false'"
+          data-testid="customize"
+          @click="customizing = !customizing"
+        >
+          <template #prefix>
+            <span
+              class="lucide-sliders-horizontal size-4"
+              aria-hidden="true"
+            />
+          </template>
+        </Button>
+        <Button
           class="hidden min-h-11 sm:inline-flex"
           :label="__('Refresh')"
           :loading="loading"
@@ -122,6 +136,51 @@
         </div>
       </div>
 
+      <div
+        v-if="customizing"
+        class="mt-2 rounded-xl border border-outline-gray-2 p-3"
+        data-testid="customize-panel"
+      >
+        <div class="flex flex-wrap items-center gap-2">
+          <p class="min-w-0 flex-1 text-sm text-ink-gray-7">
+            {{ __('Pick the cards you follow. Only this device remembers it.') }}
+          </p>
+          <Button
+            v-if="hidden.length"
+            variant="ghost"
+            class="min-h-11"
+            :label="__('Show all')"
+            @click="setHidden([])"
+          />
+          <Button
+            variant="ghost"
+            class="min-h-11"
+            :label="__('Done')"
+            @click="customizing = false"
+          />
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <label
+            v-for="key in order"
+            :key="key"
+            class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm"
+            :class="
+              hidden.includes(key)
+                ? 'border-outline-gray-2 text-ink-gray-5'
+                : 'border-outline-gray-3 text-ink-gray-8'
+            "
+          >
+            <input
+              type="checkbox"
+              class="rounded"
+              :checked="!hidden.includes(key)"
+              @change="toggleCard(key)"
+            />
+            {{ cards[key]?.label || cardTitle(key) }}
+          </label>
+        </div>
+      </div>
+
       <form
         v-if="rangeOpen"
         class="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-outline-gray-2 p-3"
@@ -206,7 +265,18 @@
         />
       </section>
       <div
-        v-if="loaded && !shownKeys.length"
+        v-if="loaded && order.length && !shownKeys.length"
+        class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
+      >
+        <p class="text-lg font-semibold">{{ __('Every card is hidden') }}</p>
+        <Button
+          class="mt-3 min-h-11"
+          :label="__('Show all')"
+          @click="setHidden([])"
+        />
+      </div>
+      <div
+        v-else-if="loaded && !shownKeys.length"
         class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
       >
         <p class="text-lg font-semibold">
@@ -236,6 +306,7 @@ import {
   CTX,
   PERIODS,
   SKELETON,
+  cardTitle,
   compareLabel,
   packRows,
   dayText,
@@ -269,10 +340,40 @@ const visibleShops = computed(() =>
 )
 const currency = computed(() => shellBoot.value?.currency || '')
 const back = computed(() => `/crm${route.fullPath}`)
+// Cards this device hides («Personalizar»); the board still loads them so
+// showing one again needs no round-trip.
+const HIDDEN_KEY = 'muelle:resultados:hidden'
+const customizing = ref(false)
+const hidden = ref(readHidden())
+function readHidden() {
+  try {
+    const value = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]')
+    return Array.isArray(value) ? value.filter((v) => typeof v === 'string') : []
+  } catch {
+    return []
+  }
+}
+function setHidden(keys) {
+  hidden.value = keys
+  try {
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify(keys))
+  } catch {
+    // Private mode: the choice lasts for this visit.
+  }
+}
+function toggleCard(key) {
+  setHidden(
+    hidden.value.includes(key)
+      ? hidden.value.filter((k) => k !== key)
+      : [...hidden.value, key],
+  )
+}
 const shownKeys = computed(() =>
   loaded.value
-    ? order.value.map((key) => [key, cards[key]?.size || ''])
-    : SKELETON,
+    ? order.value
+        .filter((key) => !hidden.value.includes(key))
+        .map((key) => [key, cards[key]?.size || ''])
+    : SKELETON.filter(([key]) => !hidden.value.includes(key)),
 )
 const layout = computed(() => packRows(shownKeys.value))
 const shopName = computed(() => {

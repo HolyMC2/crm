@@ -21870,3 +21870,15 @@ msgstr "Hasta un año. La comparación usa el mismo número de días."
 #: frontend/src/pages/ResultadosDocumentos.vue
 msgid "{0} documents"
 msgstr "{0} documentos"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Customize"
+msgstr "Personalizar"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Pick the cards you follow. Only this device remembers it."
+msgstr "Elige las tarjetas que sigues. Solo este dispositivo lo recuerda."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Every card is hidden"
+msgstr "Todas las tarjetas están ocultas"
