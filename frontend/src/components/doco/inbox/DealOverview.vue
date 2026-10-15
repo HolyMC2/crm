@@ -109,14 +109,29 @@
           class="grid grid-cols-2 gap-x-6 gap-y-5 border-b border-outline-gray-2 pb-6 sm:grid-cols-4"
         >
           <div>
-            <dt class="text-sm text-ink-gray-5">{{ __('Valor esperado') }}</dt>
-            <dd class="mt-1 text-xl font-semibold tabular-nums text-ink-gray-9">
+            <!-- metric contract v2: the same value as the list, board and totals -->
+            <dt class="text-sm text-ink-gray-5">{{ __('Valor') }}</dt>
+            <dd
+              class="mt-1 text-xl font-semibold tabular-nums"
+              :class="value.outlier ? 'text-ink-amber-9' : 'text-ink-gray-9'"
+              :title="
+                value.outlier
+                  ? __(
+                      'Unusually large amount: left out of totals and averages. Check the value.',
+                    )
+                  : undefined
+              "
+            >
               {{
-                Number(doc.expected_deal_value)
-                  ? formatMoney(doc.expected_deal_value, doc.currency)
+                value.amount
+                  ? formatMoney(value.amount, value.currency)
                   : __('Sin estimar')
-              }}
+              }}<span v-if="value.outlier"> ⚠</span>
             </dd>
+            <p v-if="value.weighted" class="mt-1 text-xs text-ink-gray-5">
+              {{ __('Pronóstico ponderado') }}
+              {{ formatMoney(value.weighted, value.currency) }}
+            </p>
           </div>
           <div>
             <dt class="text-sm text-ink-gray-5">{{ __('Cierre previsto') }}</dt>
@@ -317,7 +332,28 @@ const repairs = createResource({
     limit_page_length: 20,
   },
 })
+const amounts = createResource({
+  url: 'crm.pipeline.api.get_deal_amounts',
+  params: { names: [props.name] },
+  onError: () => {},
+})
 const doc = computed(() => record.data || {})
+// The contract's value; before it answers (or if it cannot), the deal's own
+// expected amount, so the card never goes blank.
+const value = computed(() => {
+  const a = amounts.data?.deals?.[props.name]
+  if (!a)
+    return {
+      amount: Number(doc.value.expected_deal_value) || 0,
+      currency: doc.value.currency,
+    }
+  return {
+    amount: Number(a.outlier ? a.size : a.commercial_value) || 0,
+    currency: a.currency || doc.value.currency,
+    outlier: !!a.outlier,
+    weighted: a.open ? Number(a.weighted_forecast) || 0 : 0,
+  }
+})
 const closed = computed(() =>
   ['Won', 'Lost'].includes(stages.getDealStatus(doc.value.status)?.type),
 )
@@ -333,6 +369,7 @@ function dateLabel(value) {
 }
 function refresh() {
   record.fetch()
+  amounts.fetch()
   if (hasTaller.value) repairs.fetch()
   if (salesDocsEnabled.value) reloadSalesSummary(props.name)
 }
