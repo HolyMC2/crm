@@ -46,6 +46,32 @@
           </h1>
           <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         </div>
+        <a
+          v-if="scanHref"
+          :href="scanHref"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+          :title="__('Scan a code and open its product (S)', null, 'Productos')"
+        >
+          <span class="lucide-scan-barcode h-4 w-4" aria-hidden="true" />
+          {{ __('Scan', null, 'Productos') }}
+        </a>
+        <Button
+          v-if="catalog && boot?.capabilities?.packs && rows.length"
+          class="min-h-11 sm:min-h-8"
+          :label="__('Build a pack', null, 'Productos')"
+          :title="
+            __(
+              'Images, PDF or a price message of this list, to send',
+              null,
+              'Productos',
+            )
+          "
+          @click="packOpen = true"
+        >
+          <template #prefix>
+            <FeatherIcon name="layers" class="h-4 w-4" aria-hidden="true" />
+          </template>
+        </Button>
         <Button
           v-if="returnTo"
           :label="__('Back to {0}', [returnLabel])"
@@ -53,6 +79,11 @@
           @click="goReturn"
         />
       </header>
+      <PackDialog
+        v-model="packOpen"
+        :filters="packFilters"
+        :label="packLabel"
+      />
       <section
         v-if="inventory && summary?.readable"
         :aria-label="__('Inventory health')"
@@ -607,6 +638,8 @@ import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import CatalogFilters from '@/components/productos/CatalogFilters.vue'
 import CatalogItem from '@/components/productos/CatalogItem.vue'
+import PackDialog from '@/components/productos/PackDialog.vue'
+import { scanPickHref } from '@/composables/shellRail'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
@@ -693,6 +726,20 @@ const inventory = computed(() => isInventoryView(view.value))
 const catalog = computed(() => view.value === 'todos')
 const filterChips = computed(() =>
   catalog.value ? activeFilters(state.value) : [],
+)
+// «Escanear» (S): Escáner reads one code and the shell opens its product,
+// with «Volver» to this list. «Armar pack»: this list, as Mercado renders it.
+const scanHref = computed(() => scanPickHref(route.fullPath, 'Productos'))
+const packOpen = ref(false)
+const packFilters = computed(() => ({
+  search: search.value.trim(),
+  store: store.value,
+  ...catalogArgs(state.value),
+}))
+const packLabel = computed(() =>
+  [search.value.trim(), ...filterChips.value.map((chip) => chip.label)]
+    .filter(Boolean)
+    .join(' · '),
 )
 const layoutOptions = computed(() => [
   { value: 'lista', label: __('List', null, 'Productos'), icon: 'list' },
@@ -1286,6 +1333,9 @@ registerPageShortcuts(null, () => [
   { id: 'row.next', keys: ['j', 'arrowdown'], description: 'Next row' },
   { id: 'row.prev', keys: ['k', 'arrowup'], description: 'Previous row' },
   { id: 'row.open', keys: ['enter'], description: 'Open record' },
+  ...(scanHref.value
+    ? [{ id: 'scan', keys: ['s'], description: 'Scan a code' }]
+    : []),
   ...(inventory.value
     ? [
         { id: 'select.toggle', keys: ['x'], description: 'Toggle selection' },
@@ -1340,6 +1390,7 @@ function onKey(event) {
     x: () => inventory.value && current && toggle(current),
     X: () => inventory.value && current && extendSelection(current),
     Escape: () => selected.value.size && clearSelection(),
+    s: () => scanHref.value && window.location.assign(scanHref.value),
   }
   const action = actions[event.key]
   if (!action) return

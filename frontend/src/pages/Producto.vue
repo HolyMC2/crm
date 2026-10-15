@@ -533,6 +533,11 @@
               </div>
             </section>
 
+            <PhotoGallery
+              ref="gallery"
+              :item="product.name"
+              @changed="load({ quiet: true })"
+            />
             <section
               v-if="!isTemplate"
               id="existencias"
@@ -1377,6 +1382,7 @@ import EditDialog from '@/components/productos/EditDialog.vue'
 import RequestDialog from '@/components/productos/RequestDialog.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import VariantGrid from '@/components/productos/VariantGrid.vue'
+import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
@@ -1441,6 +1447,7 @@ const product = computed(() => data.value?.item || {})
 // A template carries no stock: its page leads to its variants.
 const isTemplate = computed(() => Boolean(data.value?.variants))
 const variantGrid = ref(null)
+const gallery = ref(null)
 const variantSearch = computed(() =>
   typeof route.query.vq === 'string' ? route.query.vq : '',
 )
@@ -1722,6 +1729,7 @@ async function photoUploaded(file) {
     photoBroken.value = false
     toast.success(__('Photo saved'))
     await load()
+    gallery.value?.refresh()
   } catch (error) {
     problem.value = problemOf(error)
   } finally {

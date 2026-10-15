@@ -22964,3 +22964,213 @@ msgstr "1 variante"
 msgctxt "Productos"
 msgid "{0} variants"
 msgstr "{0} variantes"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Scan a code and open its product (S)"
+msgstr "Escanea un código y abre su producto (S)"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Scan"
+msgstr "Escanear"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Build a pack"
+msgstr "Armar pack"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Images, PDF or a price message of this list, to send"
+msgstr "Imágenes, PDF o mensaje de precios de esta lista, para enviar"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "What to build"
+msgstr "Qué armar"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Products per image"
+msgstr "Productos por imagen"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "With prices"
+msgstr "Con precios"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Open image {0}"
+msgstr "Abrir imagen {0}"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Image {0} of the pack"
+msgstr "Imagen {0} del pack"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Open the PDF"
+msgstr "Abrir el PDF"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Price message"
+msgstr "Mensaje de precios"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Share"
+msgstr "Compartir"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Copy"
+msgstr "Copiar"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Build again"
+msgstr "Armar de nuevo"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Build"
+msgstr "Armar"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Images"
+msgstr "Imágenes"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "PDF"
+msgstr "PDF"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Message"
+msgstr "Mensaje"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Gathering the products…"
+msgstr "Reuniendo los productos…"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "{0} selected products."
+msgstr "{0} productos seleccionados."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "The first {0} of {1} products of this list, in its order."
+msgstr "Los primeros {0} de {1} productos de esta lista, en su orden."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "{0} products of this list."
+msgstr "{0} productos de esta lista."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "{0} without a photo."
+msgstr "{0} sin foto."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "{0} image(s) ready."
+msgstr "{0} imagen(es) lista(s)."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "PDF ready."
+msgstr "PDF listo."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Message ready to copy or share."
+msgstr "Mensaje listo para copiar o compartir."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Message copied"
+msgstr "Mensaje copiado"
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Select the message and copy it by hand."
+msgstr "Selecciona el mensaje y cópialo a mano."
+
+#: frontend/src/components/productos/PackDialog.vue
+msgctxt "Productos"
+msgid "Sharing did not work here; open and send the file instead."
+msgstr "Aquí no se pudo compartir; abre el archivo y envíalo."
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Photos"
+msgstr "Fotos"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Story image"
+msgstr "Imagen para historia"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "A ready-to-post image with photo, name and price"
+msgstr "Una imagen lista para publicar con foto, nombre y precio"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Add photo"
+msgstr "Agregar foto"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "No photos yet."
+msgstr "Todavía no hay fotos."
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Main"
+msgstr "Principal"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Make main"
+msgstr "Hacer principal"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Turn right"
+msgstr "Girar a la derecha"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Delete photo"
+msgstr "Borrar foto"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Main photo changed"
+msgstr "Foto principal cambiada"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Delete this photo?"
+msgstr "¿Borrar esta foto?"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Photo deleted"
+msgstr "Foto borrada"
+
+#: frontend/src/components/productos/PhotoGallery.vue
+msgctxt "Productos"
+msgid "Photo added"
+msgstr "Foto agregada"

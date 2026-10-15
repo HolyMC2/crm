@@ -20,6 +20,8 @@ const FILES = [
   'components/productos/CatalogItem.vue',
   'components/productos/ProductThumb.vue',
   'components/productos/VariantGrid.vue',
+  'components/productos/PackDialog.vue',
+  'components/productos/PhotoGallery.vue',
   'composables/useProductos.js',
 ]
 const strings = new Set()
