@@ -535,6 +535,7 @@
               class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
               :style="`grid-template-columns:${GRID};min-height:50px`"
               @click="openDeal(r.name)"
+              @keydown.enter="openDeal(r.name)"
             >
               <input
                 v-if="!isMobile"

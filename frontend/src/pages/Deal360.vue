@@ -55,23 +55,16 @@
 </template>
 
 <script setup>
-import {
-  computed,
-  nextTick,
-  onMounted,
-  onUnmounted,
-  provide,
-  watch,
-  ref,
-} from 'vue'
+import { computed, onMounted, onUnmounted, provide, watch, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { dealReturnLink, dealTab } from '@/utils/ventasRoutes'
 import DealWorkspace from '@/components/doco/inbox/DealWorkspace.vue'
 import DealContextPanel from '@/components/doco/inbox/DealContextPanel.vue'
 import { isMobile } from '@/composables/breakpoint'
-import { swipeBackHandlers } from '@/composables/swipeBack'
+import { nextTick } from 'vue'
 import { useFormKeys } from '@/composables/pageKeys'
 import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
+import { swipeBackHandlers } from '@/composables/swipeBack'
 import {
   activeDeal,
   selectDeal,
@@ -93,6 +86,17 @@ const back = computed(() => dealReturnLink(route.query))
 // The phone header's ‹ leaves the record the same way: to the caller's
 // return_to/returnTo when present, otherwise back to the deals list.
 provide('dealBack', back)
+
+// (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
+// /deal/B remounts this component — onMounted covers every entry.)
+function focus() {
+  const id = props.dealId || route.params.dealId
+  if (id) selectDeal(String(id))
+  activeTab.value = dealTab(route.query.tab) || 'overview'
+  // standalone page starts on the thread pane; DealHeader's ← (mobileBack →
+  // history.back) then leaves the page, which is correct here (no queue pane).
+  mobileView.value = 'thread'
+}
 
 // Keyboard standard on the record: «e» opens «Datos y contacto» (the editable
 // fields; each saves on change, so there is no separate Ctrl+Enter save) with
@@ -125,17 +129,6 @@ useFormKeys({
   },
   when: { edit: () => Boolean(activeDeal.value) },
 })
-
-// (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
-// /deal/B remounts this component — onMounted covers every entry.)
-function focus() {
-  const id = props.dealId || route.params.dealId
-  if (id) selectDeal(String(id))
-  activeTab.value = dealTab(route.query.tab) || 'overview'
-  // standalone page starts on the thread pane; DealHeader's ← (mobileBack →
-  // history.back) then leaves the page, which is correct here (no queue pane).
-  mobileView.value = 'thread'
-}
 
 // ── mobile back-stack (same contract as Inbox.vue, thread↔context only) ────
 // Drilling into context pushes a history entry so hardware/gesture back (and the
