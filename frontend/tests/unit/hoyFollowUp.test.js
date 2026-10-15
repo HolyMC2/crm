@@ -76,7 +76,6 @@ describe('deals without a next step', () => {
       { name: 'CRM-DEAL-1', title: 'iPhone 12 — Ana', status: 'Approved' },
       { name: 'CRM DEAL/2', title: 'Juan', status: null },
     ],
-    view: 40,
   }
 
   it('each row opens its deal and returns to Hoy', () => {
@@ -88,12 +87,12 @@ describe('deals without a next step', () => {
     expect(rows[0].title).toBe('iPhone 12 — Ana')
   })
 
-  it('«See all» opens the list queue, else the deals list', () => {
-    expect(followUpQueueLink(section)).toBe(
-      '/deals/view/list?view=40&return_to=%2Fcrm%2Fhoy&return_label=Hoy',
+  it('«See all» opens the list on «Sin seguimiento», narrowed to me', () => {
+    expect(followUpQueueLink({ ...section, owner: 'ana@x.mx' })).toBe(
+      '/deals?follow_up=missing&owner=ana%40x.mx&return_to=%2Fcrm%2Fhoy&return_label=Hoy',
     )
-    expect(followUpQueueLink({ ...section, view: null })).toBe(
-      '/deals?return_to=%2Fcrm%2Fhoy&return_label=Hoy',
+    expect(followUpQueueLink(section)).toBe(
+      '/deals?follow_up=missing&return_to=%2Fcrm%2Fhoy&return_label=Hoy',
     )
   })
 

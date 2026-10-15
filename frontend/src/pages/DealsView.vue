@@ -917,6 +917,16 @@ if (route.query.report === 'avisos') {
   remembered = dealListState({ deals: Array.isArray(deal) ? deal : [deal] })
   hadRemembered = true
 }
+// A queue drill-down (Hoy «Tratos sin seguimiento»: ?follow_up=missing&owner=me)
+// opens that queue for that owner; the return to Hoy keeps the list's context.
+if (typeof route.query.follow_up === 'string') {
+  const owner = route.query.owner
+  remembered = dealListState({
+    followUp: route.query.follow_up,
+    owner: typeof owner === 'string' && owner ? [owner] : [],
+  })
+  hadRemembered = true
+}
 // A legacy /deals/view/kanban link (router redirect) lands on its layout.
 if (['list', 'board', 'funnel'].includes(route.query.layout))
   remembered = { ...remembered, view: route.query.layout }

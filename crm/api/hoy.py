@@ -63,7 +63,7 @@ def _follow_up():
 	(``crm.api.deal_queues``), narrowed to deals I own, so Hoy and the list never
 	disagree. The count is capped like the other Hoy counts.
 	"""
-	from crm.api.deal_queues import KEY_PREFIX, QUEUES
+	from crm.api.deal_queues import QUEUES
 	from crm.api.list_tokens import resolve_filter_tokens
 
 	if not frappe.has_permission("CRM Deal", "read"):
@@ -91,7 +91,6 @@ def _follow_up():
 		if names
 		else []
 	)
-	view = frappe.db.get_value("CRM View Settings", {"crm_seed_key": KEY_PREFIX + FOLLOW_UP_QUEUE}, "name")
 	return {
 		"available": True,
 		"count": {"value": min(len(names), FOLLOW_UP_CAP), "capped": len(names) > FOLLOW_UP_CAP},
@@ -104,7 +103,7 @@ def _follow_up():
 			}
 			for row in rows
 		],
-		"view": view,
+		"owner": frappe.session.user,
 	}
 
 

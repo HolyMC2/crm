@@ -83,14 +83,12 @@ export function followUpRows(section) {
   }))
 }
 
-/** The deals list's own «Sin seguimiento» queue, with the return to Hoy. */
+/** The deals list on «Sin seguimiento», narrowed to my deals, with the return to Hoy. */
 export function followUpQueueLink(section) {
   if (!section?.available) return null
-  return withReturn(
-    section.view
-      ? `/deals/view/list?view=${encodeURIComponent(section.view)}`
-      : '/deals',
-  )
+  const query = new URLSearchParams({ follow_up: 'missing' })
+  if (section.owner) query.set('owner', section.owner)
+  return withReturn(`/deals?${query}`)
 }
 
 export function saveLanding(key) {
