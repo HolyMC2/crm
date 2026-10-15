@@ -467,6 +467,7 @@ import DecideSheet from '@/components/gastos/DecideSheet.vue'
 import ReimburseDialog from '@/components/gastos/ReimburseDialog.vue'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import { loadGastosBoot } from '@/composables/useGastos'
+import { useRecordPower } from '@/composables/useRecordPower'
 import {
   advanceText,
   claimBack,
@@ -699,6 +700,20 @@ function goBack() {
   if (back.value.route) return router.push(back.value.route)
   window.location.assign(back.value.href)
 }
+
+// Esc back to the same row of the list; a decision or reimbursement made
+// elsewhere shows here, never under an open form.
+useRecordPower({
+  back: () => goBack(),
+  reload: load,
+  idle: () =>
+    !busy.value &&
+    !sheetOpen.value &&
+    !decideOpen.value &&
+    !reimburseOpen.value &&
+    !problem.value,
+  doctypes: ['Expense Claim', 'Payment Entry'],
+})
 
 watch(
   () => props.name,

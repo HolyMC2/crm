@@ -224,6 +224,7 @@ import {
   statusLabel,
 } from '@/composables/useCompras'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
+import { useRecordPower } from '@/composables/useRecordPower'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
@@ -310,6 +311,15 @@ function goBack(done = false) {
   if (list.startsWith('/compras')) return router.push(list)
   router.push({ name: 'Compras' })
 }
+
+// Esc back to the same row of the list; a purchase prepared from this request
+// elsewhere (another tab, a colleague) shows here.
+useRecordPower({
+  back: () => goBack(),
+  reload: load,
+  idle: () => !busy.value && !handoffOpen.value && !problem.value,
+  doctypes: ['Material Request', 'Purchase Order'],
+})
 
 watch(() => props.name, load)
 onMounted(async () => {
