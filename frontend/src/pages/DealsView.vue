@@ -1230,6 +1230,19 @@ watch(
   },
   { deep: true },
 )
+// A drill-down (Hoy's queue, a report, an Avisos digest) is this tab's context
+// from the first render: kept now, so opening a deal and coming back finds the
+// same list even when nothing was changed in between.
+if (
+  typeof route.query.follow_up === 'string' ||
+  ['pipeline', 'avisos'].includes(route.query.report)
+) {
+  try {
+    sessionStorage.setItem(QUEUE_KEY, JSON.stringify(listContext.value))
+  } catch {
+    /* no session store: the drill-down simply lasts this visit */
+  }
+}
 
 const deals = createListResource({
   doctype: 'CRM Deal',
