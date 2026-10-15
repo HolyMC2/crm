@@ -20379,14 +20379,6 @@ msgid "Follow-up put back"
 msgstr "Seguimiento restaurado"
 
 #: frontend/src/pages/Cobranza.vue
-msgid "Clear selection"
-msgstr "Quitar selección"
-
-#: frontend/src/pages/Cobranza.vue
-msgid "{0} selected"
-msgstr "{0} seleccionados"
-
-#: frontend/src/pages/Cobranza.vue
 msgid "1 selected"
 msgstr "1 seleccionado"
 
