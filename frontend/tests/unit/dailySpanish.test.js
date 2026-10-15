@@ -239,7 +239,7 @@ export function translationCalls(src) {
           ? lit[2]
           : ctx === 'null' || !ctx
             ? ''
-            : (constantOf(src, ctx) ?? `?${ctx}`)
+            : constantOf(src, ctx) ?? `?${ctx}`
       }
     }
     calls.push({ fn: m[1], msgid, context, template })
