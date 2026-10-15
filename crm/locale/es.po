@@ -25421,3 +25421,7 @@ msgstr "Actualizar en Paperless"
 
 msgid "Working normally"
 msgstr "Funciona bien"
+
+#: crm/pipeline/services/stage_backfill.py
+msgid "Adopt the sales pipeline «Ventas» first, then move the deals onto it."
+msgstr "Primero adopta el embudo de ventas «Ventas» y después pasa los tratos a él."

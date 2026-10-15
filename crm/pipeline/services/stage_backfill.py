@@ -22,6 +22,7 @@ from collections import defaultdict
 from datetime import datetime
 
 import frappe
+from frappe import _
 from frappe.utils import cint, flt, getdate, now_datetime
 
 from crm.pipeline.services import shop_sales
@@ -253,7 +254,7 @@ def preview(samples=5, include_repair_quotes=True, names=None):
 def apply(include_repair_quotes=True, limit=None, names=None, commit=True):
 	"""Move the mapped deals. Lab only until Marco approves D2 for production."""
 	if not frappe.db.exists("CRM Pipeline", shop_sales.SHOP_SALES_PIPELINE):
-		frappe.throw("Create the shop sales pipeline first (crm.pipeline.services.shop_sales.ensure).")
+		frappe.throw(_("Adopt the sales pipeline «Ventas» first, then move the deals onto it."))
 	probabilities = {
 		row.status: flt(row.probability)
 		for row in frappe.get_all(
