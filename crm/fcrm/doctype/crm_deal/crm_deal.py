@@ -102,7 +102,8 @@ class CRMDeal(Document):
 			self.assign_agent(self.deal_owner)
 		if self.has_value_changed("status"):
 			add_status_change_log(self)
-			if frappe.db.get_value("CRM Deal Status", self.status, "type") == "Won":
+			# Won and Lost are outcomes; both close the deal on the day they happen.
+			if frappe.db.get_value("CRM Deal Status", self.status, "type") in ("Won", "Lost"):
 				self.closed_date = frappe.utils.nowdate()
 		self.validate_forecasting_fields()
 		self.validate_lost_reason()

@@ -24475,3 +24475,6 @@ msgstr "Puede que se haya eliminado o que no esté compartido contigo. Búscalo 
 #: frontend/src/pages/Deal360.vue
 msgid "It belongs to another team or seller. Ask your manager for access."
 msgstr "Es de otro equipo o vendedor. Pide acceso a tu encargado."
+#: crm/pipeline/services/shop_sales.py
+msgid "Stage {0} already exists with outcome {1}; rename it before adopting the sales pipeline."
+msgstr "La etapa {0} ya existe con el resultado {1}; cámbiale el nombre antes de adoptar el embudo de ventas."

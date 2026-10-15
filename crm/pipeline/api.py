@@ -213,3 +213,12 @@ def get_deal_amounts(names: list | str):
 	if not isinstance(names, list) or len(names) > 500:
 		frappe.throw(_("Choose up to 500 deals."))
 	return {"contract": contract_info(), "deals": deal_amounts(names)}
+
+
+@frappe.whitelist(methods=["POST"])
+def adopt_shop_sales_pipeline(make_default: bool = False):
+	"""Create the shop sales pipeline (Nuevo → … → Ganado/Perdido); managers only."""
+	from crm.pipeline.services.shop_sales import ensure
+
+	frappe.only_for("System Manager")
+	return ensure(make_default=frappe.utils.cint(make_default))
