@@ -17,6 +17,7 @@
   />
   <AboutModal v-model="showAboutModal" />
   <FieldLayoutDialogContainer />
+  <NextStepDialog />
 </template>
 <script setup>
 import FieldLayoutDialogContainer from '@/components/Modals/FieldLayoutDialogContainer.vue'
@@ -24,6 +25,7 @@ import ChangePasswordModal from '@/components/Modals/ChangePasswordModal.vue'
 import CreateDocumentModal from '@/components/Modals/CreateDocumentModal.vue'
 import QuickEntryModal from '@/components/Modals/QuickEntryModal.vue'
 import AboutModal from '@/components/Modals/AboutModal.vue'
+import NextStepDialog from '@/components/doco/deals/NextStepDialog.vue'
 import {
   showCreateDocumentModal,
   createDocumentDoctype,

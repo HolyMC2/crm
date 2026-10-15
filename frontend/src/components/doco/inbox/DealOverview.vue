@@ -66,26 +66,32 @@
                       )
                 }}
               </p>
-              <p
-                v-if="taskError"
-                role="alert"
-                class="mt-2 text-sm text-ink-red-8"
-              >
-                {{ taskError }}
-              </p>
             </div>
             <div class="flex flex-wrap gap-2">
               <button
                 v-if="doc.next_activity_task"
                 class="min-h-11 rounded-lg bg-surface-green-3 px-3 py-2 text-sm font-semibold text-ink-green-9 hover:bg-surface-green-2 disabled:opacity-50 sm:min-h-0"
                 :disabled="finishing"
+                :aria-keyshortcuts="'h'"
                 @click="completeTask"
               >
-                {{ finishing ? __('Guardando…') : __('Marcar como hecha') }}
+                {{ __('Marcar como hecha') }}
+                <kbd class="ml-1 text-xs opacity-70">H</kbd>
+              </button>
+              <button
+                v-if="!closed"
+                class="min-h-11 rounded-lg bg-surface-gray-2 px-3 py-2 text-sm font-semibold text-ink-gray-8 hover:bg-surface-gray-3 disabled:opacity-50 sm:min-h-0"
+                :disabled="finishing"
+                :aria-keyshortcuts="'p'"
+                @click="snooze"
+              >
+                {{ __('Snooze one day') }}
+                <kbd class="ml-1 text-xs opacity-70">P</kbd>
               </button>
               <button
                 class="min-h-11 rounded-lg bg-surface-gray-10 px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-gray-9 sm:min-h-0"
                 :disabled="finishing"
+                :aria-keyshortcuts="'n'"
                 @click="schedule"
               >
                 {{
@@ -93,6 +99,7 @@
                     ? __('Editar seguimiento')
                     : __('Programar seguimiento')
                 }}
+                <kbd class="ml-1 text-xs opacity-70">N</kbd>
               </button>
             </div>
           </div>
@@ -252,10 +259,14 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { createResource, call, toast } from 'frappe-ui'
+import { createResource } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
-import { useDoctypeModal } from '@/composables/doctypeModal'
+import {
+  nextStepChanged,
+  openNextStep,
+  snoozeNextStep,
+} from '@/composables/useNextStep'
 import { hasTaller, salesDocsEnabled, reloadQueue } from '@/composables/inbox'
 import { reloadSalesSummary } from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
@@ -276,8 +287,7 @@ const orderHref = (name) =>
     `${window.location.pathname}${window.location.search}`,
   )
 const { getUser } = usersStore(),
-  stages = statusesStore(),
-  { showModal } = useDoctypeModal()
+  stages = statusesStore()
 const record = createResource({
   url: 'frappe.client.get_value',
   params: {
@@ -311,8 +321,7 @@ const doc = computed(() => record.data || {})
 const closed = computed(() =>
   ['Won', 'Lost'].includes(stages.getDealStatus(doc.value.status)?.type),
 )
-const finishing = ref(false),
-  taskError = ref('')
+const finishing = ref(false)
 function dateLabel(value) {
   return value
     ? new Date(value + 'T12:00:00').toLocaleDateString('es-MX', {
@@ -327,43 +336,28 @@ function refresh() {
   if (hasTaller.value) repairs.fetch()
   if (salesDocsEnabled.value) reloadSalesSummary(props.name)
 }
+// One next-step path (crm.api.next_step) for this card, the list and the keys.
 function schedule() {
-  showModal({
-    doctype: 'CRM Task',
-    name: doc.value.next_activity_task || null,
-    title: __('Seguimiento'),
-    defaults: {
-      reference_doctype: 'CRM Deal',
-      reference_docname: props.name,
-      assigned_to: doc.value.deal_owner,
-      status: 'Todo',
-      activity_type: 'Task',
-    },
-    callbacks: { afterInsert: refresh, afterUpdate: refresh },
-  })
+  openNextStep({ deal: props.name, mode: 'schedule' })
 }
-async function completeTask() {
-  if (finishing.value || !doc.value.next_activity_task) return
+function completeTask() {
+  if (!doc.value.next_activity_task) return
+  openNextStep({ deal: props.name, mode: 'complete' })
+}
+async function snooze() {
+  if (finishing.value) return
   finishing.value = true
-  taskError.value = ''
   try {
-    await call('frappe.client.set_value', {
-      doctype: 'CRM Task',
-      name: doc.value.next_activity_task,
-      fieldname: 'status',
-      value: 'Done',
-    })
-    await record.fetch()
-    reloadQueue()
-    toast.success(__('Seguimiento completado'))
-  } catch {
-    taskError.value = __(
-      'No se pudo completar el seguimiento. Reintenta o revisa tu permiso para editar la tarea.',
-    )
+    await snoozeNextStep(props.name)
   } finally {
     finishing.value = false
   }
 }
+watch(nextStepChanged, (change) => {
+  if (change?.deal !== props.name) return
+  record.fetch()
+  reloadQueue()
+})
 onMounted(refresh)
 watch(hasTaller, (enabled) => {
   if (enabled && record.data) repairs.fetch()

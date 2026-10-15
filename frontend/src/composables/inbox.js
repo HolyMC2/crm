@@ -30,6 +30,7 @@ export const queueCollapsed = ref(false) // hide the left queue pane for a wider
 // drill-in as a history entry. Backward nav goes through mobileBack() → the browser
 // back stack, so the in-app ← buttons and the hardware/gesture back behave identically.
 import { mobileView } from './mobileView' // 'list' | 'thread' | 'context'
+import { requestNextStep } from './useNextStep'
 export { mobileView }
 export function openContext() {
   mobileView.value = 'context'
@@ -1112,6 +1113,13 @@ function _patchQueueRow(doctype, name, patch) {
   }
 }
 
+// A stage change on a deal asks for the next dated step (not on Won/Lost:
+// the server answers open=false and nothing opens).
+function askNextStep() {
+  if (activeDealDoctype.value === 'CRM Deal' && activeDeal.value)
+    requestNextStep({ deal: activeDeal.value, reason: 'stage' })
+}
+
 export async function setStage(status) {
   if (!activeDeal.value) return
   // optimistic (spec 3.7): the chip moves NOW; revert + toast if the server says no
@@ -1133,6 +1141,7 @@ export async function setStage(status) {
     return
   }
   scheduleQueueReload()
+  askNextStep()
 }
 
 // Silent stage change ("Cambiar SIN avisar"): the server suppresses campaign
@@ -1158,6 +1167,7 @@ export async function setStageSilent(status) {
     return
   }
   scheduleQueueReload()
+  askNextStep()
 }
 
 // Lost-stage capture. A status whose type is 'Lost' (Deal: Cancelado/Abandonado;

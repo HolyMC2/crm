@@ -156,6 +156,7 @@ import {
   sendQuotationWhatsapp,
   salesRollup,
 } from '@/composables/salesDocs'
+import { requestNextStep } from '@/composables/useNextStep'
 
 const props = defineProps({
   deal: { type: String, required: true },
@@ -224,7 +225,10 @@ async function submit() {
     () => submitQuotation(props.deal, props.quotation),
     __('Cotización emitida.'),
   )
-  if (out) detail.value = out
+  if (out) {
+    detail.value = out
+    requestNextStep({ deal: props.deal, reason: 'quote' })
+  }
 }
 async function accept() {
   const out = await run(() => acceptQuotation(props.deal, props.quotation))
@@ -243,6 +247,9 @@ async function sendWhatsapp() {
       sendQuotationWhatsapp(props.deal, props.quotation, props.to || undefined),
     __('Cotización enviada a la conversación.'),
   )
-  if (out) load()
+  if (out) {
+    load()
+    requestNextStep({ deal: props.deal, reason: 'quote' })
+  }
 }
 </script>

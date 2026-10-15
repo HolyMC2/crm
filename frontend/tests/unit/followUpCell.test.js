@@ -78,8 +78,12 @@ beforeEach(() => {
   toasts.error = []
   saved.length = 0
   rowClicks.count = 0
-  api.behavior = async (method) =>
-    method === 'frappe.client.get_value' ? { ...ACTIVITY } : { name: '77' }
+  api.behavior = async () => ({
+    task: ACTIVITY.next_activity_task,
+    at: ACTIVITY.next_activity_at,
+    title: ACTIVITY.next_activity_title,
+    type: ACTIVITY.next_activity_type,
+  })
 })
 afterEach(() => {
   mounted.splice(0).forEach(({ app, el }) => {
@@ -153,14 +157,13 @@ describe('the follow-up cell on the row', () => {
     button(panel(), 'Guardar').click()
     await flush()
 
-    expect(api.calls[0][0]).toBe('frappe.client.insert')
-    expect(api.calls[0][1].doc).toMatchObject({
-      doctype: 'CRM Task',
-      reference_docname: 'CRM-DEAL-2026-00042',
-      assigned_to: 'ana@example.invalid',
+    expect(api.calls[0][0]).toBe('crm.api.next_step.schedule')
+    expect(api.calls[0][1]).toMatchObject({
+      deal: 'CRM-DEAL-2026-00042',
+      owner: 'ana@example.invalid',
       activity_type: 'Call',
       title: 'Confirmar entrega',
-      due_date: '2026-09-16 09:15:00',
+      at: '2026-09-16 09:15:00',
     })
     expect(saved).toEqual([ACTIVITY])
     expect(panel()).toBeFalsy()
@@ -181,8 +184,12 @@ describe('the follow-up cell on the row', () => {
     expect(panel().querySelector('input[type="time"]').value).toBe('09:15')
     button(panel(), 'Guardar').click()
     await flush()
-    expect(api.calls[0][0]).toBe('frappe.client.set_value')
-    expect(api.calls[0][1]).toMatchObject({ doctype: 'CRM Task', name: '77' })
+    expect(api.calls[0][0]).toBe('crm.api.next_step.schedule')
+    expect(api.calls[0][1]).toMatchObject({
+      deal: 'CRM-DEAL-2026-00042',
+      task: '77',
+    })
+    expect(api.calls[0][1]).not.toHaveProperty('owner')
   })
 
   it('keeps the draft and explains a refused write', async () => {

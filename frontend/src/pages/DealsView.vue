@@ -534,8 +534,11 @@
               :data-row-current="r.name === lastOpened || undefined"
               class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-1"
               :style="`grid-template-columns:${GRID};min-height:50px`"
+              :data-deal="r.name"
+              :aria-keyshortcuts="'n p r h'"
               @click="openDeal(r.name)"
               @keydown.enter="openDeal(r.name)"
+              @keydown="onRowKey($event, r)"
             >
               <input
                 v-if="!isMobile"
@@ -861,6 +864,13 @@ import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import FollowUpCell from '@/components/doco/deals/FollowUpCell.vue'
+import { registerPageShortcuts } from '@/composables/shellKeyboard'
+import { nextStepChanged, runNextStep } from '@/composables/useNextStep'
+import {
+  NEXT_STEP_SHORTCUTS,
+  nextStepAction,
+  rowNextStep,
+} from '@/utils/nextStep'
 import DealGroupHeader from '@/components/doco/deals/DealGroupHeader.vue'
 import SavedViewPicker from '@/components/doco/deals/SavedViewPicker.vue'
 import { isMobile } from '@/composables/breakpoint'
@@ -1574,6 +1584,21 @@ function onFollowUpSaved(row, activity) {
   loadCounts()
   reloadQueue()
 }
+
+// n · p · r · h on the focused row act on that deal's next step; the row takes
+// the saved step in place, so the seller keeps their position in the queue.
+registerPageShortcuts(null, NEXT_STEP_SHORTCUTS)
+function onRowKey(event, row) {
+  if (event.target !== event.currentTarget) return
+  const action = nextStepAction(event)
+  if (!action) return
+  event.preventDefault()
+  runNextStep(action, row.name)
+}
+watch(nextStepChanged, (change) => {
+  const row = (deals.data || []).find((r) => r.name === change?.deal)
+  if (row) onFollowUpSaved(row, rowNextStep(change.state))
+})
 
 let _t = null
 function onSearch(v) {

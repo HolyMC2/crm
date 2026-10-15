@@ -133,6 +133,7 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
+import { requestNextStep } from '@/composables/useNextStep'
 import { call, toast } from 'frappe-ui'
 import {
   OUTCOMES,
@@ -182,8 +183,17 @@ function close() {
   _restoreFocus = null
 }
 
+// Closing a call on a deal asks for the next dated step (unless this sheet
+// just created one).
+function askNextStep(ended, created) {
+  if (!created && ended?.reference_doctype === 'CRM Deal')
+    requestNextStep({ deal: ended.reference_name, reason: 'call' })
+}
+
 function skip() {
+  const ended = payload.value
   close()
+  askNextStep(ended, false)
 }
 
 async function save() {
@@ -200,7 +210,10 @@ async function save() {
     toast.success(
       createTask.value ? __('Guardado — tarea creada') : __('Guardado'),
     )
+    const ended = payload.value
+    const created = createTask.value
     close()
+    askNextStep(ended, created)
   } catch (e) {
     toast.error(e.messages?.[0] || __('No se pudo guardar'))
   } finally {

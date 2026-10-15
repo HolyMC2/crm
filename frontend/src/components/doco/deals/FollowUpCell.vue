@@ -207,7 +207,8 @@ import {
   followUpDraftError,
   followUpParts,
 } from '@/utils/dealFollowUp'
-import { completeFollowUp, saveFollowUp } from '@/utils/followUpService'
+import { saveFollowUp } from '@/utils/followUpService'
+import { openNextStep } from '@/composables/useNextStep'
 
 const props = defineProps({
   // needs: name, deal_owner and the denormalised next_activity_* fields
@@ -333,29 +334,12 @@ async function submit() {
   }
 }
 
-// Done from the list: the hooks move `next_activity_*` to the next open task
-// (or clear it), and the row takes what they left.
-async function complete() {
-  if (saving.value || !props.row.next_activity_task) return
-  saving.value = true
-  error.value = ''
-  try {
-    const activity = await completeFollowUp({
-      deal: props.row.name,
-      task: props.row.next_activity_task,
-    })
-    emit('saved', activity)
-    toast.success(__('Seguimiento completado'))
-    close()
-  } catch (e) {
-    error.value =
-      e?.messages?.[0] ||
-      __(
-        'No se pudo completar el seguimiento. Reintenta o revisa tu permiso para editar la tarea.',
-      )
-  } finally {
-    saving.value = false
-  }
+// Done from the list: the complete dialog closes this step and asks for the
+// next one; the list patches this row when it is saved (nextStepChanged).
+function complete() {
+  if (!props.row.next_activity_task) return
+  close()
+  openNextStep({ deal: props.row.name, mode: 'complete' })
 }
 
 onBeforeUnmount(() => {

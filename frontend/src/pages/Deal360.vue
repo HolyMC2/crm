@@ -74,6 +74,8 @@ import {
   onPresenceEvent,
 } from '@/composables/inbox'
 import { globalStore } from '@/stores/global'
+import { requestNextStep, useNextStepKeys } from '@/composables/useNextStep'
+import { useRecordPower } from '@/composables/useRecordPower'
 
 const props = defineProps({ dealId: { type: String, default: '' } })
 const route = useRoute()
@@ -86,6 +88,11 @@ const back = computed(() => dealReturnLink(route.query))
 // The phone header's ‹ leaves the record the same way: to the caller's
 // return_to/returnTo when present, otherwise back to the deals list.
 provide('dealBack', back)
+
+// The seller's loop by keyboard: n · p · r · h act on this deal's next step,
+// Esc goes back where the deal was opened from (Hoy, the list's queue).
+useNextStepKeys(() => String(props.dealId || route.params.dealId || ''))
+useRecordPower({ back: () => router.push(back.value.to), reload: () => {} })
 
 // (No route.params watch: App.vue keys the router-view on fullPath, so /deal/A →
 // /deal/B remounts this component — onMounted covers every entry.)
@@ -174,10 +181,18 @@ onMounted(() => {
   focus()
   // collision strip works on the standalone deal page too (spec 2.4)
   $socket?.on('doco_marketing:presence', onPresenceEvent)
+  $socket?.on('doco_marketing:call_ended', onCallEnded)
 })
+// A call on this deal just ended: ask for the next dated step.
+function onCallEnded(ended) {
+  const deal = String(props.dealId || route.params.dealId || '')
+  if (ended?.reference_doctype === 'CRM Deal' && ended.reference_name === deal)
+    requestNextStep({ deal, reason: 'call' })
+}
 onMounted(() => window.addEventListener('popstate', onPopState))
 onUnmounted(() => {
   window.removeEventListener('popstate', onPopState)
   $socket?.off('doco_marketing:presence', onPresenceEvent)
+  $socket?.off('doco_marketing:call_ended', onCallEnded)
 })
 </script>

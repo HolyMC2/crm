@@ -1,17 +1,14 @@
 // Writing a deal's follow-up, from the list or anywhere else.
 //
-// The endpoints are the ones Deal 360's «Próximo seguimiento» section already
-// uses: frappe.client.insert for a task that does not exist yet (what the shared
-// CRM Task modal submits) and frappe.client.set_value for one that does. There is
-// deliberately no second write path.
-//
-// `next_activity_*` on CRM Deal is a denormalisation the crm/pipeline hooks keep
-// in step with CRM Task, so nothing here writes those fields: after the task is
-// saved the deal is re-read and the caller refreshes its row with what the hooks
-// derived.
+// One write path: crm.api.next_step, the API Deal 360, the keys and Hoy use. It
+// writes CRM Task; `next_activity_*` on CRM Deal is a denormalisation the
+// crm/pipeline hooks keep in step, so nothing here writes those fields. The
+// server answers with the deal's step as the hooks left it, and the caller
+// refreshes its row with that.
 import { call } from 'frappe-ui'
 
-import { followUpTaskDoc, followUpTaskValues } from './dealFollowUp'
+import { followUpDue } from './dealFollowUp'
+import { rowNextStep } from './nextStep'
 
 export const NEXT_ACTIVITY_FIELDS = [
   'next_activity_task',
@@ -21,14 +18,7 @@ export const NEXT_ACTIVITY_FIELDS = [
 ]
 
 export async function readNextActivity(deal) {
-  const data = await call('frappe.client.get_value', {
-    doctype: 'CRM Deal',
-    filters: deal,
-    fieldname: NEXT_ACTIVITY_FIELDS,
-  })
-  const out = {}
-  for (const field of NEXT_ACTIVITY_FIELDS) out[field] = data?.[field] || ''
-  return out
+  return rowNextStep(await call('crm.api.next_step.get', { deal }))
 }
 
 /**
@@ -37,29 +27,24 @@ export async function readNextActivity(deal) {
  * @returns {Promise<object>} the deal's next-activity fields as the hooks left them
  */
 export async function saveFollowUp(draft) {
-  if (draft?.task) {
-    await call('frappe.client.set_value', {
-      doctype: 'CRM Task',
-      name: draft.task,
-      fieldname: followUpTaskValues(draft),
-    })
-  } else {
-    await call('frappe.client.insert', { doc: followUpTaskDoc(draft) })
-  }
-  return readNextActivity(draft.deal)
+  const state = await call('crm.api.next_step.schedule', {
+    deal: draft.deal,
+    title: String(draft.title || '').trim(),
+    at: followUpDue(draft.date, draft.time),
+    activity_type: draft.type || 'Task',
+    // A new step goes to the deal's owner; an existing one keeps its assignee.
+    ...(draft.task
+      ? { task: draft.task }
+      : { owner: draft.owner || undefined }),
+  })
+  return rowNextStep(state)
 }
 
 /**
- * Mark the deal's follow-up task done, the way Deal 360 does.
+ * Mark the deal's follow-up task done, with no next step.
  * @param {{deal: string, task: string}} target
  * @returns {Promise<object>} the deal's next-activity fields as the hooks left them
  */
 export async function completeFollowUp({ deal, task }) {
-  await call('frappe.client.set_value', {
-    doctype: 'CRM Task',
-    name: task,
-    fieldname: 'status',
-    value: 'Done',
-  })
-  return readNextActivity(deal)
+  return rowNextStep(await call('crm.api.next_step.complete', { deal, task }))
 }

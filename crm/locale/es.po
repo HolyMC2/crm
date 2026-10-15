@@ -23876,3 +23876,146 @@ msgstr "Archivos…"
 #: frontend/src/components/Activities
 msgid "Saved to Files"
 msgstr "Guardado en Archivos"
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Call again"
+msgstr "Volver a llamar"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Call logged. When is the next step?"
+msgstr "Llamada registrada. ¿Cuándo es el siguiente paso?"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Choose a valid kind of step."
+msgstr "Elige un tipo de paso válido."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Choose an active user as the owner of the step."
+msgstr "Elige a un usuario activo como responsable del paso."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Choose the date of the next step."
+msgstr "Elige la fecha del siguiente paso."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Done, then next step"
+msgstr "Hecho y siguiente paso"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Edit next step"
+msgstr "Editar siguiente paso"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Enter saves · Esc closes"
+msgstr "Enter guarda · Esc cierra"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Follow up"
+msgstr "Dar seguimiento"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Follow up on the quote"
+msgstr "Dar seguimiento a la cotización"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "In a week"
+msgstr "En una semana"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Loading the next step…"
+msgstr "Cargando el siguiente paso…"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Next step: {0}"
+msgstr "Siguiente paso: {0}"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Not now"
+msgstr "Ahora no"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Now: {0}"
+msgstr "Ahora: {0}"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Quote sent. When do you follow up?"
+msgstr "Cotización enviada. ¿Cuándo das seguimiento?"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Schedule the next step"
+msgstr "Programar el siguiente paso"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Snooze between 1 and {0} days."
+msgstr "Pospón entre 1 y {0} días."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Snooze one day"
+msgstr "Posponer un día"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Snooze undone"
+msgstr "Se deshizo el aplazamiento"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Snoozed to {0}"
+msgstr "Pospuesto para {0}"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Someone changed this next step a moment ago. Reload the deal to see it."
+msgstr "Alguien cambió este paso hace un momento. Vuelve a cargar el trato para verlo."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Stage changed. What is the next step?"
+msgstr "Cambió la etapa. ¿Cuál es el siguiente paso?"
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Step done. This deal has no next step."
+msgstr "Paso hecho. Este trato no tiene siguiente paso."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "That date is not valid."
+msgstr "Esa fecha no es válida."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "The next step cannot be on a past day."
+msgstr "El siguiente paso no puede ser en un día pasado."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "The next step could not be saved. Retry."
+msgstr "No se pudo guardar el siguiente paso. Reintenta."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "This deal could not load."
+msgstr "No se pudo cargar este trato."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "This deal is closed; it needs no next step."
+msgstr "Este trato está cerrado; no necesita siguiente paso."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "This deal no longer exists."
+msgstr "Este trato ya no existe."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "This next step was deleted. Reload the deal."
+msgstr "Este paso se eliminó. Vuelve a cargar el trato."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "This step belongs to another record."
+msgstr "Este paso pertenece a otro registro."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "This step is already {0}. Reload the deal."
+msgstr "Este paso ya está {0}. Vuelve a cargar el trato."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "What happened? It is saved on the deal."
+msgstr "¿Qué pasó? Se guarda en el trato."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "Write what the next step is."
+msgstr "Escribe cuál es el siguiente paso."
+
+#: frontend/src/components/doco/deals/NextStepDialog.vue
+msgid "You cannot change this deal. Ask its owner or your manager."
+msgstr "No puedes cambiar este trato. Pídeselo a su responsable o a tu gerente."

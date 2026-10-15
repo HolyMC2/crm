@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, nextTick, reactive } from 'vue'
 const mocks = vi.hoisted(() => ({
   call: vi.fn(),
-  modal: vi.fn(),
+  open: vi.fn(),
+  snooze: vi.fn(),
+  changed: null,
   resources: [],
   reload: vi.fn(),
   hasTaller: { value: false },
@@ -18,9 +20,14 @@ vi.mock('@/stores/users', () => ({
 vi.mock('@/stores/statuses', () => ({
   statusesStore: () => ({ getDealStatus: () => ({ type: 'Open' }) }),
 }))
-vi.mock('@/composables/doctypeModal', () => ({
-  useDoctypeModal: () => ({ showModal: mocks.modal }),
-}))
+vi.mock('@/composables/useNextStep', async () => {
+  const { shallowRef } = await import('vue')
+  return {
+    nextStepChanged: (mocks.changed = shallowRef(null)),
+    openNextStep: mocks.open,
+    snoozeNextStep: mocks.snooze,
+  }
+})
 vi.mock('@/composables/inbox', () => ({
   hasTaller: mocks.hasTaller,
   salesDocsEnabled: { value: false },
@@ -70,61 +77,56 @@ async function mount(doc = {}, repairs = []) {
   }
 }
 describe('deal overview follow-up workflow', () => {
-  it('prefills a new task with the current deal and responsible person', async () => {
+  const press = (ui, label) =>
+    [...ui.el.querySelectorAll('button')]
+      .find((b) => b.textContent.trim().startsWith(label))
+      .click()
+
+  it('schedules through the next-step dialog, keys shown on the buttons', async () => {
     const ui = await mount()
     expect(ui.el.textContent).toContain('Sin seguimiento programado')
-    ui.button('Programar seguimiento').click()
-    expect(mocks.modal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        doctype: 'CRM Task',
-        name: null,
-        defaults: expect.objectContaining({
-          reference_doctype: 'CRM Deal',
-          reference_docname: 'DEAL-42',
-          assigned_to: 'ana@example.invalid',
-        }),
-      }),
+    press(ui, 'Programar seguimiento')
+    expect(mocks.open).toHaveBeenCalledWith({
+      deal: 'DEAL-42',
+      mode: 'schedule',
+    })
+    const keys = [...ui.el.querySelectorAll('[aria-keyshortcuts]')].map((b) =>
+      b.getAttribute('aria-keyshortcuts'),
     )
+    expect(keys).toEqual(['p', 'n'])
   })
-  it('completes the canonical next task once and refreshes the queue', async () => {
+
+  it('done asks for the next step; snooze runs once at a time', async () => {
     let finish
-    mocks.call.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finish = resolve
-        }),
+    mocks.snooze.mockImplementation(
+      () => new Promise((resolve) => (finish = resolve)),
     )
     const ui = await mount({
       next_activity_task: 'TASK-9',
       next_activity_title: 'Confirmar presupuesto',
     })
-    const button = ui.button('Marcar como hecha')
-    button.click()
-    button.click()
-    expect(mocks.call).toHaveBeenCalledTimes(1)
-    expect(mocks.call).toHaveBeenCalledWith(
-      'frappe.client.set_value',
-      expect.objectContaining({
-        name: 'TASK-9',
-        fieldname: 'status',
-        value: 'Done',
-      }),
-    )
+    press(ui, 'Marcar como hecha')
+    expect(mocks.open).toHaveBeenCalledWith({
+      deal: 'DEAL-42',
+      mode: 'complete',
+    })
+    press(ui, 'Snooze one day')
+    press(ui, 'Snooze one day')
+    expect(mocks.snooze).toHaveBeenCalledTimes(1)
+    expect(mocks.snooze).toHaveBeenCalledWith('DEAL-42')
     finish()
-    await vi.waitFor(() => expect(mocks.reload).toHaveBeenCalled())
   })
-  it('keeps a failed task actionable and does not claim it was completed', async () => {
-    mocks.call.mockRejectedValue(new Error('PermissionError'))
-    const ui = await mount({
-      next_activity_task: 'TASK-9',
-      next_activity_title: 'Confirmar presupuesto',
-    })
-    ui.button('Marcar como hecha').click()
-    await vi.waitFor(() =>
-      expect(ui.el.querySelector('[role="alert"]')).not.toBeNull(),
-    )
-    expect(mocks.reload).not.toHaveBeenCalled()
-    expect(ui.el.textContent).toContain('Confirmar presupuesto')
+
+  it('reloads the card and the queue when this deal’s step is saved anywhere', async () => {
+    const ui = await mount()
+    ui.record.fetch.mockClear()
+    mocks.changed.value = { deal: 'OTHER', state: {} }
+    await nextTick()
+    expect(ui.record.fetch).not.toHaveBeenCalled()
+    mocks.changed.value = { deal: 'DEAL-42', state: {} }
+    await nextTick()
+    expect(ui.record.fetch).toHaveBeenCalled()
+    expect(mocks.reload).toHaveBeenCalled()
   })
 })
 
