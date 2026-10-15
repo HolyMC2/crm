@@ -1262,11 +1262,19 @@ const rows = computed(() => {
 // renders immediately and fills in when it lands (never blocks the list).
 const display = ref({})
 const displayPending = new Set()
-async function loadDisplay() {
+// The board loads 200 deals: ask in pages of 50 side by side, so each answer
+// stays fast and the cards fill in as each page lands.
+const DISPLAY_PAGE = 50
+function loadDisplay() {
   const names = (deals.data || [])
     .map((d) => d.name)
     .filter((n) => !(n in display.value) && !displayPending.has(n))
-  if (!names.length) return
+  const pages = []
+  for (let i = 0; i < names.length; i += DISPLAY_PAGE)
+    pages.push(names.slice(i, i + DISPLAY_PAGE))
+  return Promise.all(pages.map(loadDisplayPage))
+}
+async function loadDisplayPage(names) {
   names.forEach((n) => displayPending.add(n))
   try {
     const data = await frappeCall('doco_marketing.api.deals.get_deal_display', {
