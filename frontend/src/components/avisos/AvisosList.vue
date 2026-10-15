@@ -21,6 +21,10 @@
             expanded === group.key || needsReason(group) ? 'true' : undefined
           "
           @click="activate(group)"
+          @pointerenter="hover(group)"
+          @pointerleave="unhover"
+          @pointerdown="warm(group)"
+          @focus="warm(group)"
         >
           <span
             class="line-clamp-2 text-base"
@@ -88,7 +92,7 @@
   </ul>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import { Dropdown, FeatherIcon } from 'frappe-ui'
 import { actionLabel, categoryMeta, metaLine } from '@/composables/useAvisos'
 
@@ -97,8 +101,24 @@ defineProps({
   compact: { type: Boolean, default: false },
   label: { type: String, default: 'Avisos' },
 })
-const emit = defineEmits(['open', 'read', 'mute'])
+const emit = defineEmits(['open', 'read', 'mute', 'warm'])
 const expanded = ref('')
+
+// «warm»: the worker is about to open this row, so the parent may fetch the
+// page it leads to. A short hover delay skips rows the pointer only crosses.
+let hoverTimer = null
+function warm(group) {
+  clearTimeout(hoverTimer)
+  if (!needsReason(group)) emit('warm', group)
+}
+function hover(group) {
+  clearTimeout(hoverTimer)
+  hoverTimer = setTimeout(() => warm(group), 120)
+}
+function unhover() {
+  clearTimeout(hoverTimer)
+}
+onBeforeUnmount(unhover)
 const moment = {
   lang: globalThis.window?.lang,
   timezone: globalThis.window?.timezone,

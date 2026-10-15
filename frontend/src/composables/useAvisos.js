@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { call } from 'frappe-ui'
 import { errorKind, formatMoment } from '@/utils/contactos'
+import { prefetchDocument } from '@/utils/speculate'
 
 // English source strings; the es-MX catalog (crm/locale/es.po) translates them.
 const t = (text, replace) =>
@@ -125,6 +126,16 @@ function withReturn(url, returnTo, returnLabel = '') {
 }
 
 /**
+ * Desk answers /app/… with an uncached 301 to /desk/…: link /desk directly so
+ * opening a record skips one server round trip.
+ */
+export function deskPath(href) {
+  return typeof href === 'string'
+    ? href.replace(/^\/app(?=[/?#]|$)/, '/desk')
+    : href
+}
+
+/**
  * Where «Open» goes: an SPA route this build knows, else the sibling app that
  * settles it (Taller, Contador…), both with return_to back to the caller; else
  * the Desk view, else nothing (the reason is shown).
@@ -144,13 +155,13 @@ export function openTarget(group, router, returnTo = '', returnLabel = '') {
   }
   if (typeof target.href === 'string' && /^\/(?!\/)[^\\]*$/.test(target.href)) {
     const url = withReturn(
-      new URL(target.href, 'https://muelle.invalid'),
+      new URL(deskPath(target.href), 'https://muelle.invalid'),
       returnTo,
       returnLabel,
     )
     return { kind: 'app', href: url.pathname + url.search + url.hash }
   }
-  if (target.desk) return { kind: 'desk', href: target.desk }
+  if (target.desk) return { kind: 'desk', href: deskPath(target.desk) }
   return { kind: 'none', reason: target.reason || '' }
 }
 
@@ -237,6 +248,32 @@ export async function markRead({ keys = null, category = null, view } = {}) {
   return result
 }
 
+/**
+ * Mark read on the way out of the page: a keepalive request outlives the full
+ * page load that follows, so the click does not wait for the server first.
+ * Returns false when fetch is unavailable (the caller then awaits markRead).
+ */
+export function markReadOnLeave(keys) {
+  if (typeof fetch !== 'function') return false
+  const headers = {
+    Accept: 'application/json',
+    'Content-Type': 'application/x-www-form-urlencoded',
+  }
+  const token = globalThis.window?.csrf_token
+  if (token) headers['X-Frappe-CSRF-Token'] = token
+  fetch('/api/method/crm.api.avisos.mark_read', {
+    method: 'POST',
+    headers,
+    body: new URLSearchParams({
+      keys: JSON.stringify(keys),
+      view: 'inbox',
+    }).toString(),
+    keepalive: true,
+    credentials: 'same-origin',
+  }).catch(() => {})
+  return true
+}
+
 export async function undoRead(result) {
   await call('crm.api.avisos.mark_unread', {
     native: JSON.stringify(result?.native || []),
@@ -291,19 +328,26 @@ export function useAvisosActions(
   async function open(group) {
     const where = openTarget(group, router, returnTo(), returnLabel)
     if (where.kind === 'none') return where
-    const marking = group.unread
-      ? markRead({ keys: [group.key] }).catch(() => null)
-      : null
     if (where.kind === 'route') {
+      if (group.unread) markRead({ keys: [group.key] }).catch(() => null)
       onNavigate?.()
       await router.push(where.to)
     } else {
-      // Desk and sibling apps are a full page load: keep the read mark from being cut off.
-      await marking
+      // Desk and sibling apps are a full page load: the keepalive mark survives
+      // it, so the page starts loading now instead of after the server answers.
+      if (group.unread && !markReadOnLeave([group.key]))
+        await markRead({ keys: [group.key] }).catch(() => null)
       onNavigate?.()
       globalThis.window?.location.assign(where.href)
     }
     return where
+  }
+
+  /** Pointer resting on a row: fetch the page it opens (full page loads only). */
+  function warm(group) {
+    const where = openTarget(group, router, returnTo(), returnLabel)
+    if (where.kind === 'app' || where.kind === 'desk')
+      prefetchDocument(where.href)
   }
 
   async function read(group) {
@@ -344,5 +388,5 @@ export function useAvisosActions(
     return prefs
   }
 
-  return { status, busy, open, read, readAll, undo, mute }
+  return { status, busy, open, warm, read, readAll, undo, mute }
 }

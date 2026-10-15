@@ -300,6 +300,7 @@
             :label="__('Avisos that need you')"
             compact
             @open="openAviso"
+            @warm="avisoActions.warm"
             @read="readAviso"
             @mute="muteAviso"
           />

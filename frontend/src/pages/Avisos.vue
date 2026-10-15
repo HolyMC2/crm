@@ -129,6 +129,7 @@
           :groups="groups"
           :label="heading"
           @open="actions.open"
+          @warm="actions.warm"
           @read="actions.read"
           @mute="actions.mute"
         />

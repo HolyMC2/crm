@@ -97,6 +97,7 @@
               :groups="data.groups"
               :label="__('Avisos')"
               @open="openGroup"
+              @warm="actions.warm"
               @read="actions.read"
               @mute="actions.mute"
             />

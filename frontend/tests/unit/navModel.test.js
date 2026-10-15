@@ -17,8 +17,8 @@ describe('navModel: suiteApps', () => {
       suiteApps.map((app) => [app.key, app.route]),
     )
     expect(routes).toEqual({
-      mercado: '/mercado/',
-      taller: '/taller/',
+      mercado: '/mercado',
+      taller: '/taller',
       pos: '/posapp',
       desk: '/desk',
     })

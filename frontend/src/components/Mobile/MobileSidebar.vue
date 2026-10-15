@@ -138,6 +138,7 @@
                 v-for="app in appLinks"
                 :key="app.name"
                 :href="app.route"
+                data-muelle-prefetch
                 class="press flex flex-col items-center gap-1 rounded-[10px] px-1 py-2 hover:bg-surface-gray-2"
               >
                 <component
@@ -282,6 +283,7 @@ import {
   DialogOverlay,
 } from '@headlessui/vue'
 import CollapsibleSection from '@/components/CollapsibleSection.vue'
+import { installLinkPrefetch } from '@/utils/speculate'
 import PinIcon from '@/components/Icons/PinIcon.vue'
 import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
 import DealsIcon from '@/components/Icons/DealsIcon.vue'
@@ -427,6 +429,8 @@ const appsScreen = createResource({
         route: app.route,
       })),
 })
+// Pressing a sibling app starts fetching its page (Chrome/Edge).
+installLinkPrefetch()
 const appLinks = computed(() => {
   const suite = visibleSuiteApps(hasApp).map((app) => ({
     name: app.key,

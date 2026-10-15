@@ -232,6 +232,7 @@
             v-for="app in suiteLinks"
             :key="app.key"
             :href="app.route"
+            data-muelle-prefetch
             class="flex w-full items-center gap-2.5 px-3.5 py-[9px] text-[13px] text-ink-gray-8 hover:bg-surface-gray-2"
             @click="showProfile = false"
           >
@@ -256,6 +257,7 @@
 
 <script setup>
 import Notifications from '@/components/Notifications.vue'
+import { installLinkPrefetch } from '@/utils/speculate'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
@@ -396,6 +398,8 @@ const visibleProfileLinks = computed(() =>
 
 // sibling apps — same installed-app gate as the nav (navModel.suiteApps)
 const suiteLinks = computed(() => visibleSuiteApps(hasApp))
+// Hovering a sibling app fetches its page before the click (Chrome/Edge).
+installLinkPrefetch()
 
 function signOut() {
   showProfile.value = false

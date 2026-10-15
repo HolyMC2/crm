@@ -13,6 +13,8 @@ const {
   listEntries,
   metaLine,
   openTarget,
+  deskPath,
+  useAvisosActions,
 } = await import('@/composables/useAvisos')
 
 const page = { render: () => null }
@@ -101,7 +103,7 @@ describe('Avisos targets', () => {
       router,
       '/crm/avisos',
     )
-    expect(where).toEqual({ kind: 'desk', href: '/app/todo/T-1' })
+    expect(where).toEqual({ kind: 'desk', href: '/desk/todo/T-1' })
   })
 
   it('never builds a link without a target and keeps the reason', () => {
@@ -205,7 +207,7 @@ describe('Avisos sibling-app targets', () => {
           router,
           '/crm/avisos',
         ),
-      ).toEqual({ kind: 'desk', href: '/app/x/1' })
+      ).toEqual({ kind: 'desk', href: '/desk/x/1' })
     }
   })
 
@@ -216,5 +218,67 @@ describe('Avisos sibling-app targets', () => {
       '',
     )
     expect(where).toEqual({ kind: 'route', to: '/deals/D-1' })
+  })
+})
+
+describe('Avisos open without waiting', () => {
+  it('links Desk at /desk so the click skips the /app 301', () => {
+    expect(deskPath('/app/sales-invoice/SI-1')).toBe('/desk/sales-invoice/SI-1')
+    expect(deskPath('/app?x=1')).toBe('/desk?x=1')
+    expect(deskPath('/app')).toBe('/desk')
+    expect(deskPath('/apps/x')).toBe('/apps/x')
+    expect(deskPath('/taller/app/1')).toBe('/taller/app/1')
+    const where = openTarget(
+      { target: { href: '/app/asistencia?v=ausencias&request=HR-1' } },
+      router,
+      '/crm/avisos',
+    )
+    const url = new URL(where.href, 'https://x.invalid')
+    expect(url.pathname).toBe('/desk/asistencia')
+    expect(url.searchParams.get('request')).toBe('HR-1')
+  })
+
+  it('leaves for a sibling app at once and marks read with a keepalive request', async () => {
+    const calls = []
+    const assign = vi.fn()
+    vi.stubGlobal('fetch', (url, init) => {
+      calls.push({ url, init })
+      return new Promise(() => {}) // the server never answers before we leave
+    })
+    vi.stubGlobal('window', { csrf_token: 'tok', location: { assign } })
+    const closed = vi.fn()
+    const actions = useAvisosActions(router, {
+      returnTo: () => '/crm/avisos',
+      onNavigate: closed,
+    })
+    await actions.open({
+      key: 'k1',
+      unread: true,
+      target: { href: '/taller/orders/RO-1' },
+    })
+    expect(assign).toHaveBeenCalledTimes(1)
+    expect(assign.mock.calls[0][0]).toMatch(/^\/taller\/orders\/RO-1\?/)
+    expect(closed).toHaveBeenCalled()
+    expect(calls).toHaveLength(1)
+    expect(calls[0].url).toBe('/api/method/crm.api.avisos.mark_read')
+    expect(calls[0].init.keepalive).toBe(true)
+    expect(calls[0].init.headers['X-Frappe-CSRF-Token']).toBe('tok')
+    expect(new URLSearchParams(calls[0].init.body).get('keys')).toBe('["k1"]')
+    vi.unstubAllGlobals()
+  })
+
+  it('does not mark an already read aviso', async () => {
+    const fetchSpy = vi.fn(() => new Promise(() => {}))
+    const assign = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
+    vi.stubGlobal('window', { location: { assign } })
+    await useAvisosActions(router).open({
+      key: 'k2',
+      unread: false,
+      target: { desk: '/app/todo/T-1' },
+    })
+    expect(assign).toHaveBeenCalledWith('/desk/todo/T-1')
+    expect(fetchSpy).not.toHaveBeenCalled()
+    vi.unstubAllGlobals()
   })
 })

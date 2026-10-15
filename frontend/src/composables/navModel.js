@@ -214,20 +214,22 @@ export function routeGroup(path) {
 // declared here and gated per tenant by installed app (crmCapabilities), so a
 // site without e.g. taller never shows a dead link. Routes are the muelle ones:
 // Desk at /desk (the /app→/desk rename), POS Awesome's web entry at /posapp.
+// No trailing slash: /taller/ and /mercado/ answer with a 301 to the bare path,
+// and /app with a 301 to /desk — each one a wasted round trip on every switch.
 // Rendered by the DocoNavRail profile panel and the mobile drawer's apps grid.
 export const suiteApps = [
   {
     key: 'mercado',
     app: 'mercado',
     label: 'Mercado',
-    route: '/mercado/',
+    route: '/mercado',
     icon: MercadoIcon,
   },
   {
     key: 'taller',
     app: 'taller',
     label: 'Taller',
-    route: '/taller/',
+    route: '/taller',
     icon: TallerIcon,
   },
   {
