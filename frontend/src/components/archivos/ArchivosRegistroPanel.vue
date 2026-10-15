@@ -105,6 +105,18 @@
           )
         }}
       </p>
+      <!-- ARC-S3.5: a sale's or payment's stamped CFDI (EMC keeps its XML in a field). -->
+      <div
+        v-if="STAMPED.includes(doctype)"
+        v-show="stamped"
+        class="border-t border-outline-gray-1 px-4 py-4"
+      >
+        <CfdiCard
+          :record-doctype="doctype"
+          :record-name="name"
+          @loaded="stamped = $event.available"
+        />
+      </div>
     </template>
   </section>
 </template>
@@ -112,6 +124,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Badge, FeatherIcon } from 'frappe-ui'
 import ArchivoGuard from './ArchivoGuard.vue'
+import CfdiCard from './CfdiCard.vue'
 import {
   archivosApi,
   archivosHref,
@@ -135,6 +148,9 @@ const props = defineProps({
 const data = ref(null),
   loading = ref(false),
   failure = ref(null)
+// Records EMC stamps; the card hides itself until it reads a stamped CFDI.
+const STAMPED = ['Sales Invoice', 'POS Invoice', 'Payment Entry']
+const stamped = ref(false)
 const target = computed(() => ({ doctype: props.doctype, name: props.name }))
 const here = computed(
   () =>

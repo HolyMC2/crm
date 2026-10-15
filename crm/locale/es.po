@@ -13676,6 +13676,9 @@ msgstr "Dar de alta en Inventario"
 msgid "View XML"
 msgstr "Ver XML"
 
+msgid "Download the CFDI XML"
+msgstr "Descargar el XML del CFDI"
+
 #: frontend/src/components/archivos/CfdiCard.vue
 msgid "Hide XML"
 msgstr "Ocultar XML"

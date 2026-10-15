@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import CfdiCard from '../../src/components/archivos/CfdiCard.vue'
 import HuecosFiscales from '../../src/components/archivos/HuecosFiscales.vue'
+import ArchivosRegistroPanel from '../../src/components/archivos/ArchivosRegistroPanel.vue'
 import {
   fiscalDate,
   money,
@@ -444,6 +445,78 @@ describe('CFDI card', () => {
     stubApi({ '.card': cardResponse() })
     await click(button('Try again'))
     expect(root.textContent).toContain('Refacciones del Norte')
+  })
+})
+
+describe('CFDI card of a sale (record mode)', () => {
+  it('reads the stamped CFDI of the record and offers its XML download', async () => {
+    const xmlUrl =
+      '/api/method/doco.docoutils.documents.fiscal.stamped_xml?reference_doctype=Sales+Invoice&reference_name=SINV-1'
+    const calls = stubApi({
+      '.record_card': cardResponse({
+        document: null,
+        record: { doctype: 'Sales Invoice', name: 'SINV-1' },
+        source: 'stamped',
+        direction: 'issued',
+        party: { doctype: 'Customer', name: 'CLI-1', title: 'Cliente Uno' },
+        purchase: { allowed: false, reason: '', existing: null },
+        xml_url: xmlUrl,
+      }),
+    })
+    await mount(CfdiCard, {
+      recordDoctype: 'Sales Invoice',
+      recordName: 'SINV-1',
+    })
+    expect(calls).toEqual([
+      [
+        `${FISCAL}.record_card`,
+        { reference_doctype: 'Sales Invoice', reference_name: 'SINV-1' },
+      ],
+    ])
+    expect(root.textContent).toContain(UUID)
+    expect(root.textContent).not.toContain('Create purchase from this CFDI')
+    const link = [...root.querySelectorAll('a')].find(
+      (a) => a.textContent.trim() === 'Download the CFDI XML',
+    )
+    expect(link?.getAttribute('href')).toBe(xmlUrl)
+  })
+})
+
+describe('Record panel of a sale', () => {
+  const files = {
+    doctype: 'Sales Invoice',
+    name: 'SINV-1',
+    company: 'Doco',
+    supported: true,
+    evidence: [],
+    evidence_unavailable: false,
+    files: [],
+  }
+  it('shows the stamped CFDI of a sale', async () => {
+    stubApi({
+      '.record_files': files,
+      '.record_card': cardResponse({ source: 'stamped', direction: 'issued' }),
+    })
+    await mount(ArchivosRegistroPanel, {
+      doctype: 'Sales Invoice',
+      name: 'SINV-1',
+    })
+    expect(root.textContent).toContain(UUID)
+  })
+  it('stays quiet for a sale that is not stamped yet', async () => {
+    stubApi({
+      '.record_files': files,
+      '.record_card': {
+        available: false,
+        reason: 'Este registro todavía no tiene un CFDI timbrado.',
+      },
+    })
+    await mount(ArchivosRegistroPanel, {
+      doctype: 'Sales Invoice',
+      name: 'SINV-1',
+    })
+    const card = root.querySelector('[class*="border-t"] section')
+    expect(card?.closest('div')?.style.display).toBe('none')
   })
 })
 

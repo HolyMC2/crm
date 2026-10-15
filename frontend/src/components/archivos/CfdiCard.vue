@@ -652,6 +652,15 @@
           v-text="rawText"
         />
       </div>
+      <!-- A sale's stamped CFDI (record mode): its XML is a field, downloaded here. -->
+      <a
+        v-else-if="data.xml_url"
+        :href="data.xml_url"
+        class="inline-flex min-h-11 items-center gap-1 text-sm text-ink-gray-8 underline sm:min-h-0"
+      >
+        <FeatherIcon name="download" class="h-4 w-4" aria-hidden="true" />
+        {{ __('Download the CFDI XML') }}
+      </a>
     </template>
   </section>
 </template>
@@ -684,10 +693,17 @@ const LEARN = 'doco.docoutils.cfdi_purchase_import.learn_cfdi_line'
 const CONCEPTOS_SHOWN = 10
 
 const props = defineProps({
-  name: { type: String, required: true },
+  // A Doco Document (Archivos) — or, in record mode, a sale or payment whose
+  // stamped CFDI the card shows (recordDoctype + recordName).
+  name: { type: String, default: '' },
+  recordDoctype: { type: String, default: '' },
+  recordName: { type: String, default: '' },
   returnTo: { type: String, default: '' },
   rawText: { type: String, default: '' },
 })
+const recordMode = computed(() =>
+  Boolean(props.recordDoctype && props.recordName),
+)
 // `loaded` tells the host whether the card replaces its preview
 // ({ available, source }); `changed` carries the fresh document detail.
 const emit = defineEmits(['changed', 'loaded'])
@@ -803,7 +819,12 @@ async function load() {
   loading.value = true
   loadProblem.value = null
   try {
-    const result = await archivosApi(`${FISCAL}.card`, { name: props.name })
+    const result = recordMode.value
+      ? await archivosApi(`${FISCAL}.record_card`, {
+          reference_doctype: props.recordDoctype,
+          reference_name: props.recordName,
+        })
+      : await archivosApi(`${FISCAL}.card`, { name: props.name })
     if (mine !== seq) return
     data.value = result || { available: false }
     emit('loaded', {
@@ -817,7 +838,7 @@ async function load() {
   }
 }
 watch(
-  () => props.name,
+  () => [props.name, props.recordDoctype, props.recordName],
   () => {
     data.value = null
     step.value = null
