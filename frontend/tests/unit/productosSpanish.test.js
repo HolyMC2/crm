@@ -27,7 +27,11 @@ for (const file of FILES) {
   for (const m of source.matchAll(
     /\b(?:__|tr)\(\s*'((?:[^'\\]|\\.)*)'\s*(?:,\s*(?:\[[^\]]*\]|null|[\w.[\]]+)\s*,\s*(CTX|'[^']*'))?/g,
   )) {
-    const context = !m[2] ? '' : m[2] === 'CTX' ? 'Productos' : m[2].slice(1, -1)
+    const context = !m[2]
+      ? ''
+      : m[2] === 'CTX'
+        ? 'Productos'
+        : m[2].slice(1, -1)
     strings.add(`${context}\u0004${m[1].replace(/\\'/g, "'")}`)
   }
 }
