@@ -724,14 +724,11 @@ const shownConceptos = computed(() => {
   const all = card.value?.conceptos || []
   return showAll.value ? all : all.slice(0, CONCEPTOS_SHOWN)
 })
-const pdfHints = computed(() => {
-  const d = data.value || {}
-  const hints = d.pdf_hints || d.hints || {}
-  return {
-    uuid: hints.uuid || d.uuid || '',
-    rfcs: hints.rfcs || d.rfcs || [],
-  }
-})
+// source 'pdf': the fiscal folio and RFCs read from the PDF text (top level).
+const pdfHints = computed(() => ({
+  uuid: data.value?.uuid || '',
+  rfcs: Array.isArray(data.value?.rfcs) ? data.value.rfcs : [],
+}))
 const satBadge = computed(() => {
   const estado = data.value?.sat?.estado
   if (estado === 'Cancelado')

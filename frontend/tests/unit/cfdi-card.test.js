@@ -420,7 +420,8 @@ describe('CFDI card', () => {
       '.card': cardResponse({
         source: 'pdf',
         card: null,
-        pdf_hints: { uuid: UUID, rfcs: ['AAA010101AAA'] },
+        uuid: UUID,
+        rfcs: ['AAA010101AAA'],
         purchase: null,
       }),
     })
