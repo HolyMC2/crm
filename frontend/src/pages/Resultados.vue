@@ -22,7 +22,7 @@
           <p class="mt-0.5 text-sm text-ink-gray-6" data-testid="period-range">
             {{ rangeText }}
             <span v-if="generatedAt" class="text-ink-gray-5">
-              · {{ __('updated {0}', [generatedAt]) }}</span
+              · {{ __('updated {0}', [generatedAt], CTX) }}</span
             >
           </p>
         </div>

@@ -20999,6 +20999,177 @@ msgstr "{0} (yo)"
 msgid "Loading what this customer owes…"
 msgstr "Cargando lo que debe este cliente…"
 
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Yesterday"
+msgstr "Ayer"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Last month"
+msgstr "Mes anterior"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Dates"
+msgstr "Fechas"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Tickets"
+msgstr "Tickets"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Average ticket"
+msgstr "Ticket promedio"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Daily average"
+msgstr "Promedio diario"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Daily trend"
+msgstr "Tendencia diaria"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Monthly goal"
+msgstr "Meta del mes"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Discounts"
+msgstr "Descuentos"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Cancellations"
+msgstr "Cancelaciones"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Sales by shop"
+msgstr "Ventas por tienda"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Sales by group"
+msgstr "Mix por grupo"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Top products"
+msgstr "Top artículos"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Sales by seller"
+msgstr "Ventas por vendedor"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Payment methods"
+msgstr "Formas de pago"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Sales by hour"
+msgstr "Ventas por hora"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Sales by weekday"
+msgstr "Por día de la semana"
+
+#: frontend/src/composables/useResultados.js
+msgctxt "Resultados"
+msgid "Hour × day"
+msgstr "Hora × día"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Tickets"
+msgstr "Tickets"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "This period"
+msgstr "Este periodo"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Comparison"
+msgstr "Comparación"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Best day"
+msgstr "Mejor día"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Heading to {0} of the goal at this pace"
+msgstr "A este ritmo llegarías al {0} de la meta"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Show fewer"
+msgstr "Ver menos"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Show {0} more"
+msgstr "Ver {0} más"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Daily sales, best day {0} with {1}"
+msgstr "Ventas por día; mejor día {0} con {1}"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Show only {0}"
+msgstr "Ver solo {0}"
+
+#: frontend/src/components/resultados/ResultadosChart.vue
+msgid "Most sales: {0}"
+msgstr "Más ventas: {0}"
+
+#: frontend/src/components/resultados/ResultadosCard.vue
+msgid "Total {0}"
+msgstr "Total {0}"
+
+#: frontend/src/components/resultados/ResultadosCard.vue
+msgid "before {0}"
+msgstr "antes {0}"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "updated {0}"
+msgstr "actualizado {0}"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Shop"
+msgstr "Tienda"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Show these dates"
+msgstr "Ver estas fechas"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Up to one year. The comparison uses the same number of days."
+msgstr "Hasta un año. La comparación usa el mismo número de días."
+
+#: frontend/src/pages/ResultadosDocumentos.vue
+msgid "{0} documents"
+msgstr "{0} documentos"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Customize"
+msgstr "Personalizar"
+
+#: frontend/src/pages/Resultados.vue
+msgid "Pick the cards you follow. Only this device remembers it."
+msgstr "Elige las tarjetas que sigues. Solo este dispositivo lo recuerda."
+
+#: frontend/src/pages/Resultados.vue
+msgid "Every card is hidden"
+msgstr "Todas las tarjetas están ocultas"
+
 #: frontend/src/components/cobranza/PaymentSheet.vue
 msgid "Invoices this payment settles"
 msgstr "Facturas que abona este pago"
@@ -21712,173 +21883,3 @@ msgstr "Se quitará el permiso de usuario que te limita a tu propia ficha de emp
 #: frontend/src/pages/Equipo.vue
 msgid "Yes, remove the limit"
 msgstr "Sí, quitar el límite"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Yesterday"
-msgstr "Ayer"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Last month"
-msgstr "Mes anterior"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Dates"
-msgstr "Fechas"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Tickets"
-msgstr "Tickets"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Average ticket"
-msgstr "Ticket promedio"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Daily average"
-msgstr "Promedio diario"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Daily trend"
-msgstr "Tendencia diaria"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Monthly goal"
-msgstr "Meta del mes"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Discounts"
-msgstr "Descuentos"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Cancellations"
-msgstr "Cancelaciones"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Sales by shop"
-msgstr "Ventas por tienda"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Sales by group"
-msgstr "Mix por grupo"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Top products"
-msgstr "Top artículos"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Sales by seller"
-msgstr "Ventas por vendedor"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Payment methods"
-msgstr "Formas de pago"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Sales by hour"
-msgstr "Ventas por hora"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Sales by weekday"
-msgstr "Por día de la semana"
-
-#: frontend/src/composables/useResultados.js
-msgctxt "Resultados"
-msgid "Hour × day"
-msgstr "Hora × día"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Tickets"
-msgstr "Tickets"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "This period"
-msgstr "Este periodo"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Comparison"
-msgstr "Comparación"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Best day"
-msgstr "Mejor día"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Heading to {0} of the goal at this pace"
-msgstr "A este ritmo llegarías al {0} de la meta"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Show fewer"
-msgstr "Ver menos"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Show {0} more"
-msgstr "Ver {0} más"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Daily sales, best day {0} with {1}"
-msgstr "Ventas por día; mejor día {0} con {1}"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Show only {0}"
-msgstr "Ver solo {0}"
-
-#: frontend/src/components/resultados/ResultadosChart.vue
-msgid "Most sales: {0}"
-msgstr "Más ventas: {0}"
-
-#: frontend/src/components/resultados/ResultadosCard.vue
-msgid "Total {0}"
-msgstr "Total {0}"
-
-#: frontend/src/components/resultados/ResultadosCard.vue
-msgid "before {0}"
-msgstr "antes {0}"
-
-#: frontend/src/pages/Resultados.vue
-msgid "updated {0}"
-msgstr "actualizado {0}"
-
-#: frontend/src/pages/Resultados.vue
-msgid "Shop"
-msgstr "Tienda"
-
-#: frontend/src/pages/Resultados.vue
-msgid "Show these dates"
-msgstr "Ver estas fechas"
-
-#: frontend/src/pages/Resultados.vue
-msgid "Up to one year. The comparison uses the same number of days."
-msgstr "Hasta un año. La comparación usa el mismo número de días."
-
-#: frontend/src/pages/ResultadosDocumentos.vue
-msgid "{0} documents"
-msgstr "{0} documentos"
-
-#: frontend/src/pages/Resultados.vue
-msgid "Customize"
-msgstr "Personalizar"
-
-#: frontend/src/pages/Resultados.vue
-msgid "Pick the cards you follow. Only this device remembers it."
-msgstr "Elige las tarjetas que sigues. Solo este dispositivo lo recuerda."
-
-#: frontend/src/pages/Resultados.vue
-msgid "Every card is hidden"
-msgstr "Todas las tarjetas están ocultas"
