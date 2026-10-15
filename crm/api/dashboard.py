@@ -169,10 +169,18 @@ def _average_value(from_date, to_date, user, kind, title, definition):
 		eligible |= status.type == "Won"
 	date = deal[date_basis]
 	query = query.where(eligible).where(date >= previous).where(date < end)
+	# Contract v2: a deal without an amount is "not priced yet", not a zero-value
+	# sale; it is counted and named in the note, never averaged in.
+	priced = amounts["commercial_value"] > 0
 	for key, condition in (("current", date >= start), ("previous", date < start)):
 		query = query.select(
-			Avg(Case().when(condition, amounts["commercial_value"]).else_(None)).as_(key),
-			Count(Case().when(condition, amounts["commercial_value"]).else_(None)).as_(f"{key}_count"),
+			Avg(Case().when(condition & priced, amounts["commercial_value"]).else_(None)).as_(key),
+			Count(Case().when(condition & priced, amounts["commercial_value"]).else_(None)).as_(
+				f"{key}_count"
+			),
+			Count(Case().when(condition & (amounts["commercial_value"] == 0), 1).else_(None)).as_(
+				f"{key}_unpriced"
+			),
 			Sum(Case().when(condition, amounts["missing_exchange_rate_count"]).else_(0)).as_(
 				f"{key}_missing"
 			),
@@ -181,7 +189,9 @@ def _average_value(from_date, to_date, user, kind, title, definition):
 	row = query.run(as_dict=True)[0]
 	missing = int(row.current_missing or 0)
 	outliers = int(row.current_outliers or 0)
-	note = " ".join(part for part in (definition, _amount_note(missing, outliers)) if part)
+	unpriced = int(row.current_unpriced or 0)
+	unpriced_note = _("Excludes {0} deals without an amount.").format(unpriced) if unpriced else ""
+	note = " ".join(part for part in (definition, unpriced_note, _amount_note(missing, outliers)) if part)
 	if row.previous_missing:
 		note += " " + _("Previous period excludes {0} deals with missing exchange rates.").format(
 			int(row.previous_missing)
@@ -201,6 +211,7 @@ def _average_value(from_date, to_date, user, kind, title, definition):
 		"sample_count": int(row.current_count or 0),
 		"missing_exchange_rate_count": missing,
 		"outlier_count": outliers,
+		"unpriced_count": unpriced,
 		"previous_sample_count": int(row.previous_count or 0),
 		"previous_missing_exchange_rate_count": int(row.previous_missing or 0),
 		"unavailable": bool((missing or outliers) and not row.current_count),
@@ -339,7 +350,7 @@ def get_average_ongoing_deal_value(from_date=None, to_date=None, user=None):
 		user,
 		"open",
 		_("Avg. ongoing deal value"),
-		_("Open expected amount per active open deal created in the selected period; includes zero amounts."),
+		_("Open expected amount per active open deal with an amount, created in the selected period."),
 	)
 
 
@@ -413,7 +424,7 @@ def get_average_deal_value(from_date=None, to_date=None, user=None):
 		"combined",
 		_("Avg. deal value"),
 		_(
-			"Average ongoing & won commercial amount for active open and won deals created in the selected period; not invoiced or collected."
+			"Average ongoing & won commercial amount for active open and won deals with an amount, created in the selected period; not invoiced or collected."
 		),
 	)
 

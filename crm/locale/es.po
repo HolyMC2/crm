@@ -24312,3 +24312,15 @@ msgstr "Montos atípicos excluidos"
 #: crm/pipeline/api.py
 msgid "Choose up to 500 deals."
 msgstr "Elige hasta 500 tratos."
+
+#: crm/api/dashboard.py
+msgid "Excludes {0} deals without an amount."
+msgstr "Excluye {0} tratos sin monto."
+
+#: crm/api/dashboard.py
+msgid "Open expected amount per active open deal with an amount, created in the selected period."
+msgstr "Monto esperado promedio de los tratos abiertos con monto, creados en el periodo elegido."
+
+#: crm/api/dashboard.py
+msgid "Average ongoing & won commercial amount for active open and won deals with an amount, created in the selected period; not invoiced or collected."
+msgstr "Monto comercial promedio de tratos abiertos y ganados con monto, creados en el periodo elegido; no facturado ni cobrado."

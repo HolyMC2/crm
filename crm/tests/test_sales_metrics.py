@@ -295,7 +295,7 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.assertEqual(current[0]["count"], 1)
 		self.assertEqual(result["total"], 2)
 
-	def test_dashboard_averages_use_per_record_money_and_include_real_zero(self):
+	def test_dashboard_averages_use_per_record_money_and_count_unpriced_deals(self):
 		self.deal(expected=100, value=10, probability=0)
 		self.deal(expected=0, value=900, probability=100)
 		self.deal("On Hold", expected=0, value=0)
@@ -305,8 +305,11 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.deal("Won", expected=600, value=0, closed_date="2040-02-29")
 		self.deal("Lost", expected=9000, probability=100)
 		current = get_average_ongoing_deal_value("2040-02-01", "2040-02-29", self.user)
-		self.assertEqual(current["value"], 252.5)  # (100 + 900 + 0 + 10) / 4 known open amounts.
-		self.assertEqual(current["sample_count"], 4)
+		# (100 + 900 + 10) / 3 priced open amounts; the unpriced On Hold deal is named, not averaged.
+		self.assertAlmostEqual(current["value"], 1010 / 3)
+		self.assertEqual(current["sample_count"], 3)
+		self.assertEqual(current["unpriced_count"], 1)
+		self.assertIn("without an amount", current["metric_note"])
 		self.assertEqual(current["missing_exchange_rate_count"], 1)
 		self.assertIn("Excluded 1", current["metric_note"])
 		self.assertEqual(current["deltaSuffix"], " USD")
@@ -314,8 +317,8 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.assertEqual(won["value"], 700)
 		self.assertEqual(won["sample_count"], 2)
 		combined = get_average_deal_value("2040-02-01", "2040-02-29", self.user)
-		self.assertAlmostEqual(combined["value"], 2410 / 6)
-		self.assertEqual(combined["sample_count"], 6)
+		self.assertAlmostEqual(combined["value"], 2410 / 5)
+		self.assertEqual(combined["sample_count"], 5)
 		# Grouped charts cover every record, including Lost, but expose it as recorded commercial value.
 		for chart in (get_deals_by_territory, get_deals_by_salesperson):
 			result = chart("2040-02-01", "2040-02-29", self.user)
