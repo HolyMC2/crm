@@ -15,3 +15,7 @@ msg::Login to Frappe Cloud?
 msg::Are you sure you want to login to your Frappe Cloud dashboard?
 # Frappe Mail is the name of an email provider the admin picks, like Gmail.
 msg::Frappe Mail Site
+
+# Form Scripts editor (developers write the class there): the field name
+# «trigger» clashes with the script's own trigger() method; the word is literal.
+msg::⚠️ Avoid using "trigger" as a field name — it conflicts with the built-in trigger() method.

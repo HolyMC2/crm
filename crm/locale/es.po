@@ -2706,7 +2706,7 @@ msgstr "Entre"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:195
 msgid "Bidirectional sync of existing CRM Products and ERPNext Items. Runs in the background."
-msgstr "Sincronización en ambos sentidos de los productos del CRM y los artículos de ERPNext. Corre en segundo plano."
+msgstr "Sincronización en ambos sentidos de los productos de Ventas y los artículos del ERP. Corre en segundo plano."
 
 #: frontend/src/components/Settings/Settings.vue:137
 msgid "Brand"
@@ -3041,7 +3041,7 @@ msgstr "No se pueden eliminar elementos estándar {0}"
 
 #: crm/fcrm/doctype/crm_product/crm_product.py:81
 msgid "Cannot delete: linked ERPNext Item {0} is referenced by a Quotation. Remove the reference or delete the Item in ERPNext first."
-msgstr "No se puede eliminar: el artículo de ERPNext vinculado {0} está en una cotización. Quita la referencia o elimina el artículo en ERPNext primero."
+msgstr "No se puede eliminar: el artículo del ERP vinculado {0} está en una cotización. Quita la referencia o elimina primero el artículo en el ERP."
 
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRuleListItem.vue:170
 msgid "Cannot enable rule without adding users in it"
@@ -3402,7 +3402,7 @@ msgstr "Confirmar {0}"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:274
 msgid "Connect ERPNext to Frappe CRM"
-msgstr "Conectar ERPNext con Frappe CRM"
+msgstr "Conectar el ERP con Ventas"
 
 #: frontend/src/pages/Welcome.vue:35
 msgid "Connect your Email"
@@ -3531,7 +3531,7 @@ msgstr "Copiado al portapapeles"
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.py:156
 msgid "Could not create the Frappe CRM custom fields on {0} automatically. If it is running the latest ERPNext, enable <b>Frappe CRM Data Synchronization</b> in its CRM Settings, Otherwise check the Error Log."
-msgstr "No se pudieron crear automáticamente los campos personalizados de Frappe CRM en {0}. Si tiene la versión más reciente de ERPNext, activa <b>Frappe CRM Data Synchronization</b> en su configuración de CRM; si no, revisa el registro de errores."
+msgstr "No se pudieron crear automáticamente los campos de Ventas en {0}. Si el ERP está actualizado, activa la sincronización de datos de Ventas en su configuración de CRM; si no, revisa el registro de errores."
 
 #: frontend/src/components/Settings/Hierarchy/useRemoveNode.js:16
 msgid "Could not remove."
@@ -4300,12 +4300,12 @@ msgstr "Duración"
 #: frontend/src/components/Layouts/AppSidebar.vue:634
 #: frontend/src/components/Settings/Settings.vue:231
 msgid "ERPNext"
-msgstr "ERPNext"
+msgstr "ERP"
 
 #. Name of a DocType
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.json
 msgid "ERPNext CRM Settings"
-msgstr "Configuración de ERPNext CRM"
+msgstr "Configuración del ERP para Ventas"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:3
 #: frontend/src/components/Settings/ERPNextSettings.vue:9
@@ -4601,7 +4601,7 @@ msgstr "Activar la grabación de llamadas entrantes y salientes"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:278
 msgid "Enable the integration to create quotations and auto create customers in ERPNext."
-msgstr "Activa la integración para crear cotizaciones y clientes automáticamente en ERPNext."
+msgstr "Activa la integración para crear cotizaciones y clientes automáticamente en el ERP."
 
 #. Label of the enabled (Check) field in DocType 'CRM Exotel Settings'
 #. Label of the enabled (Check) field in DocType 'CRM Form Script'
@@ -5137,7 +5137,7 @@ msgstr "Se omitió el archivo \"{0}\" porque solo se permiten {1} archivos"
 
 #: frontend/src/components/FilesUploader/FilesUploaderArea.vue:360
 msgid "File \"{0}\" was skipped because only {1} uploads are allowed for DocType \"{2}\""
-msgstr "Se omitió el archivo \"{0}\" porque solo se permiten {1} archivos para el DocType \"{2}\""
+msgstr "Se omitió el archivo «{0}» porque solo se permiten {1} archivos en «{2}»"
 
 #: frontend/src/components/Filter.vue:6
 msgid "Filter"
@@ -5244,11 +5244,11 @@ msgstr "Script de formulario actualizado"
 #. Name of a Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Frappe CRM"
-msgstr "Frappe CRM"
+msgstr "Ventas"
 
 #: frontend/src/components/Layouts/AppSidebar.vue:638
 msgid "Frappe CRM mobile"
-msgstr "Frappe CRM móvil"
+msgstr "Ventas en el celular"
 
 #: frontend/src/components/Settings/emailConfig.js:81
 msgid "Frappe Mail Site"
@@ -5486,7 +5486,7 @@ msgstr "¿Cómo te suelen llegar los prospectos nuevos?"
 
 #: frontend/src/pages/PersonaForm.vue:108
 msgid "How many people will use Frappe CRM?"
-msgstr "¿Cuántas personas usarán Frappe CRM?"
+msgstr "¿Cuántas personas usarán Ventas?"
 
 #. Description of the 'Timeline Timestamp Format' (Select) field in DocType
 #. 'FCRM Settings'
@@ -7973,7 +7973,7 @@ msgstr "Restablecer Cambios"
 
 #: crm/fcrm/doctype/erpnext_crm_settings/erpnext_crm_settings.js:7
 msgid "Reset ERPNext Form Script"
-msgstr "Restablecer el script de formulario de ERPNext"
+msgstr "Restablecer el script de formulario del ERP"
 
 #: frontend/src/components/ColumnSettings.vue:86
 #: frontend/src/pages/Dashboard.vue:28
@@ -8632,7 +8632,7 @@ msgstr "Ajuste activado"
 
 #: frontend/src/components/Settings/emailConfig.js:158
 msgid "Setting up Frappe Mail requires you to have an API key and API Secret of your email account. Read more"
-msgstr "Para configurar Frappe Mail necesitas la clave de API y el secreto de API de tu cuenta de correo. Más información"
+msgstr "Para configurar este correo necesitas la clave y el secreto de acceso de tu cuenta. Más información"
 
 #: frontend/src/components/Settings/emailConfig.js:104
 msgid "Setting up GMail requires you to enable two factor authentication and app specific passwords. Read more"
@@ -8984,7 +8984,7 @@ msgstr "Sincronizar ahora"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:191
 msgid "Sync Products with ERPNext"
-msgstr "Sincronizar productos con ERPNext"
+msgstr "Sincronizar productos con el ERP"
 
 #: frontend/src/components/Settings/LeadSyncing/FailureLogs.vue:132
 msgid "Sync Successful!"
@@ -9780,7 +9780,7 @@ msgstr "Clientes que llegan en persona"
 
 #: frontend/src/components/SalesHierarchyBanner.vue:20
 msgid "We are changing how permissions work in Frappe CRM"
-msgstr "Estamos cambiando cómo funcionan los permisos en Frappe CRM"
+msgstr "Estamos cambiando cómo funcionan los permisos en Ventas"
 
 #: frontend/src/components/Layouts/AppSidebar.vue:593
 msgid "Web Form"
@@ -9833,7 +9833,7 @@ msgstr "Mensaje de bienvenida"
 
 #: frontend/src/pages/PersonaForm.vue:132
 msgid "Welcome to Frappe CRM"
-msgstr "Te damos la bienvenida a Frappe CRM"
+msgstr "Te damos la bienvenida a Ventas"
 
 #: frontend/src/pages/Welcome.vue:4
 msgid "Welcome {0}, lets add your first lead"
@@ -9977,7 +9977,7 @@ msgstr "No tienes un número de Exotel en tu agente de telefonía"
 
 #: frontend/src/pages/NotPermitted.vue:12
 msgid "You do not have enough permissions to access Frappe CRM. Please contact your administrator if you believe this is an error."
-msgstr "No tienes permisos suficientes para usar Frappe CRM. Si crees que es un error, contacta a tu administrador."
+msgstr "No tienes permisos suficientes para usar Ventas. Si crees que es un error, contacta a tu administrador."
 
 #: crm/integrations/exotel/handler.py:92
 msgid "You do not have mobile number set in your Telephony Agent"
@@ -9985,7 +9985,7 @@ msgstr "No tienes un celular en tu agente de telefonía"
 
 #: crm/www/crm.py:18
 msgid "You do not have permission to access Frappe CRM"
-msgstr "No tienes permiso para usar Frappe CRM"
+msgstr "No tienes permiso para usar Ventas"
 
 #: frontend/src/data/document.js:45
 msgid "You do not have permission to access this document"
@@ -10582,7 +10582,7 @@ msgstr "⚠️ No se encontró el método \"{0}\" en la clase."
 
 #: frontend/src/data/script.js:116
 msgid "⚠️ No class found for doctype: {0}, it is mandatory to have a class for the parent doctype. it can be empty, but it should be present."
-msgstr "⚠️ No se encontró una clase para el doctype {0}. La clase del doctype principal es obligatoria; puede estar vacía, pero debe existir."
+msgstr "⚠️ No se encontró una clase para el tipo de documento {0}. La clase del tipo principal es obligatoria; puede estar vacía, pero debe existir."
 
 #: frontend/src/data/script.js:249
 msgid "⚠️ No data found for parent field: {0}"
