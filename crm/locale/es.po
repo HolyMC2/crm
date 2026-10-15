@@ -25058,10 +25058,6 @@ msgid "Correspondents → supplier or customer"
 msgstr "Remitentes → proveedor o cliente"
 
 #: frontend/src/components/archivos/conectores/MappingsPanel.vue
-msgid "RFC {0}"
-msgstr "RFC {0}"
-
-#: frontend/src/components/archivos/conectores/MappingsPanel.vue
 msgid "Supplier or customer for {0}"
 msgstr "Proveedor o cliente para {0}"
 
