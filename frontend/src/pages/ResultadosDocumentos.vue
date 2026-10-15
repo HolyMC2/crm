@@ -93,39 +93,81 @@
           }}
         </p>
       </div>
-      <ul v-else class="divide-y divide-outline-gray-1" data-testid="lens-rows">
-        <li v-for="row in filtered" :key="`${row.doctype}:${row.name}`">
-          <a
-            :href="rowHref(row)"
-            class="flex min-h-14 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
-            @click="open($event, row)"
+      <template v-else>
+        <p
+          class="px-4 pb-2 text-sm text-ink-gray-6 sm:px-6"
+          data-testid="lens-summary"
+        >
+          {{ __('{0} documents', [String(filtered.length)]) }} ·
+          <span class="font-medium tabular-nums text-ink-gray-8">{{
+            money(total, currency)
+          }}</span>
+        </p>
+        <section
+          v-for="group in groups"
+          :key="group.key"
+          :aria-label="group.label || undefined"
+        >
+          <h2
+            v-if="group.label"
+            class="sticky top-0 z-[1] flex items-center justify-between gap-3 border-y border-outline-gray-1 bg-surface-gray-1 px-4 py-1.5 text-xs font-medium text-ink-gray-6 sm:px-6"
           >
-            <span class="min-w-0 flex-1">
-              <span class="block truncate font-medium text-ink-gray-9">{{
-                row.title || row.name
-              }}</span>
-              <span class="block truncate text-sm text-ink-gray-6">
-                {{ row.name }} · {{ row.posting_date }}
-                <template v-if="row.tickets">
-                  · {{ __('{0} purchases', [row.tickets]) }}</template
-                >
-                <template v-if="row.deal">
-                  · {{ __('Sale in Ventas') }}</template
-                >
-              </span>
-            </span>
-            <span
-              class="shrink-0 text-sm font-medium tabular-nums"
-              :class="
-                state.tipo === 'cierres' && row.amount
-                  ? 'text-ink-red-7'
-                  : 'text-ink-gray-9'
-              "
-              >{{ money(row.amount, currency) }}</span
+            <span class="capitalize">{{ group.label }}</span>
+            <span class="tabular-nums"
+              >{{ group.rows.length }} ·
+              {{ money(group.amount, currency) }}</span
             >
-          </a>
-        </li>
-      </ul>
+          </h2>
+          <ul class="divide-y divide-outline-gray-1" data-testid="lens-rows">
+            <li v-for="row in group.rows" :key="`${row.doctype}:${row.name}`">
+              <a
+                :href="rowHref(row)"
+                class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+                @click="open($event, row)"
+              >
+                <span
+                  class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2 text-ink-gray-7"
+                  aria-hidden="true"
+                >
+                  <span :class="rowIcon" class="size-4" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-medium text-ink-gray-9">{{
+                    row.title || row.name
+                  }}</span>
+                  <span class="block truncate text-sm text-ink-gray-6">
+                    {{ row.name }}
+                    <template v-if="!group.label && row.posting_date">
+                      · {{ row.posting_date }}</template
+                    >
+                    <template v-if="row.tickets">
+                      · {{ __('{0} purchases', [row.tickets]) }}</template
+                    >
+                  </span>
+                </span>
+                <span
+                  v-if="row.deal"
+                  class="hidden shrink-0 rounded-full bg-surface-gray-2 px-2 py-0.5 text-xs text-ink-gray-7 sm:inline"
+                  >{{ __('Sale in Ventas') }}</span
+                >
+                <span
+                  class="shrink-0 text-sm font-semibold tabular-nums"
+                  :class="
+                    state.tipo === 'cierres' && row.amount
+                      ? 'text-ink-red-7'
+                      : 'text-ink-gray-9'
+                  "
+                  >{{ money(row.amount, currency) }}</span
+                >
+                <span
+                  class="lucide-chevron-right size-4 shrink-0 text-ink-gray-4"
+                  aria-hidden="true"
+                />
+              </a>
+            </li>
+          </ul>
+        </section>
+      </template>
     </div>
   </ModuleLayout>
 </template>
@@ -202,6 +244,46 @@ const filtered = computed(() => {
         .includes(text),
     ),
   )
+})
+
+const ROW_ICONS = {
+  ventas: 'lucide-receipt',
+  canceladas: 'lucide-circle-x',
+  devoluciones: 'lucide-undo-2',
+  cierres: 'lucide-wallet',
+  clientes: 'lucide-user-round',
+}
+const rowIcon = computed(() => ROW_ICONS[state.value.tipo] || 'lucide-file')
+const total = computed(() =>
+  filtered.value.reduce((sum, row) => sum + (Number(row.amount) || 0), 0),
+)
+// Dated lists read by day, newest first, each day with its count and total.
+const groups = computed(() => {
+  if (state.value.tipo === 'clientes')
+    return [{ key: 'all', label: '', rows: filtered.value, amount: total.value }]
+  const out = []
+  for (const row of filtered.value) {
+    const key = row.posting_date || ''
+    let group = out[out.length - 1]
+    if (!group || group.key !== key) {
+      group = {
+        key,
+        label: key
+          ? new Date(`${key}T12:00:00`).toLocaleDateString(undefined, {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })
+          : '',
+        rows: [],
+        amount: 0,
+      }
+      out.push(group)
+    }
+    group.rows.push(row)
+    group.amount += Number(row.amount) || 0
+  }
+  return out
 })
 
 function dateText(iso) {
