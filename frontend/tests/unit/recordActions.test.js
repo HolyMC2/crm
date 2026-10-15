@@ -226,6 +226,21 @@ describe('deal record actions (DealHeader)', () => {
     expect(f.changeStage.mock.calls).toEqual([['Ganado'], ['Cancelado']])
   })
 
+  it('«Programar seguimiento» comes first, palette only (n is the next-step key)', () => {
+    const schedule = vi.fn()
+    const actions = dealRecordActions({
+      isDeal: true,
+      mobile: '1',
+      stages: STAGES,
+      ...fns(),
+      scheduleNextStep: schedule,
+    })
+    expect(actions[0].id).toBe('deal.next-step')
+    expect(actions[0].keys).toBeUndefined()
+    actions[0].run()
+    expect(schedule).toHaveBeenCalledOnce()
+  })
+
   it('no phone, no «Llamar»; a won deal offers only «Marcar como perdido»', () => {
     const actions = dealRecordActions({
       isDeal: true,

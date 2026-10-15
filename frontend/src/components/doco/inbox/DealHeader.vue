@@ -483,6 +483,7 @@ import {
 import { formatMoney } from '@/composables/crmFormat'
 import { useRecordActions } from '@/composables/recordActions'
 import { dealRecordActions } from '@/utils/dealRecordActions'
+import { openNextStep } from '@/composables/useNextStep'
 
 const { showModal } = useDoctypeModal()
 
@@ -813,6 +814,8 @@ useRecordActions(() =>
     focusReply,
     prepareQuote: () => (activeTab.value = 'items'),
     changeStage,
+    scheduleNextStep: () =>
+      openNextStep({ deal: activeDeal.value, mode: 'schedule' }),
   }),
 )
 

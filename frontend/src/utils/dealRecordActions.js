@@ -18,6 +18,8 @@
  * @param {Function} deal.focusReply   DealHeader focusReply()
  * @param {Function} deal.prepareQuote what «Preparar cotización» does
  * @param {Function} deal.changeStage  DealHeader changeStage(status)
+ * @param {Function} [deal.scheduleNextStep] the next-step dialog (CRM-S2
+ *   openNextStep, mode schedule); its key n is S2's, so none here
  */
 export function dealRecordActions({
   isDeal,
@@ -28,6 +30,7 @@ export function dealRecordActions({
   focusReply,
   prepareQuote,
   changeStage,
+  scheduleNextStep,
 } = {}) {
   if (!isDeal) return []
   const typeOf = (name) => stages.find((stage) => stage.name === name)?.type
@@ -39,6 +42,14 @@ export function dealRecordActions({
   const won = target('Won')
   const lost = target('Lost')
   return [
+    {
+      id: 'deal.next-step',
+      title: 'Schedule follow-up',
+      keywords:
+        'programar seguimiento siguiente paso proximo agendar follow up next step',
+      icon: 'lucide-calendar-clock',
+      run: scheduleNextStep,
+    },
     mobile && {
       id: 'deal.call',
       title: 'Call the contact',
