@@ -1101,8 +1101,7 @@ const statusStore = statusesStore()
 const { getDealStatus } = statusStore
 const { getUser, users: usersList } = usersStore()
 
-// «Nuevo trato» from Ctrl+K anywhere: /deals?create=1 opens the deal dialog.
-const showDealModal = ref(takeCreateRequest(route, router))
+const showDealModal = ref(false)
 const followUp = ref(remembered.followUp)
 const followUpQueues = FOLLOW_UP_QUEUES
 const pipelineF = ref(remembered.pipeline || '')
@@ -1153,6 +1152,8 @@ useListKeys({
     'select.page': () => view.value === 'list' && !isMobile.value,
   },
 })
+// «Nuevo trato» from Ctrl+K anywhere: /deals?create=1 opens the deal dialog.
+if (takeCreateRequest(route, router)) showDealModal.value = true
 const groupBy = ref(remembered.groupBy)
 const viewName = ref(remembered.viewName)
 const collapsed = ref({})
