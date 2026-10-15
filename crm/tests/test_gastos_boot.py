@@ -24,6 +24,7 @@ class TestGastosPaths(TestCase):
 			"/crm/gastos?segment=por-registrar&q=renta",
 			"/crm/gastos?po=PUR-ORD-2026-00001",
 			"/crm/gastos/factura/ACC-PINV-2026-00001",
+			"/crm/gastos/captura/CAP-2026-00001",
 			"/crm/gastos/factura/ACC-PINV-2026-00001?list=%2Fgastos%3Fchip%3Dvencidas",
 			"/crm/gastos?segment=empleados&chip=por-aprobar",
 			"/crm/gastos/gasto/HR-EXP-2026-00001",

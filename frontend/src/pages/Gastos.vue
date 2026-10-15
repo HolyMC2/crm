@@ -71,6 +71,13 @@
         @select-all="list.selectAll"
         @clear-selection="list.clearSelection"
       >
+        <template #actions>
+          <CapturarDocumentoButton
+            variant="appbar"
+            :targets="['Purchase Invoice']"
+            return-label="Gastos"
+          />
+        </template>
         <template v-if="owed.length" #summary>
           <span v-for="total in owed" :key="total.currency"
             >{{ __('Owed', null, 'Gastos') }}
@@ -112,6 +119,10 @@
           >
           {{ __('Keyboard shortcuts') }}
         </button>
+        <CapturarDocumentoButton
+          :targets="['Purchase Invoice']"
+          return-label="Gastos"
+        />
       </header>
       <div
         v-if="state.po"
@@ -407,6 +418,7 @@ import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import BulkPaySheet from '@/components/gastos/BulkPaySheet.vue'
+import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import ClaimsQueue from '@/components/gastos/ClaimsQueue.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'

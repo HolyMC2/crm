@@ -155,6 +155,23 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
   },
   {
+    // «Capturar documento» review (books capture pipeline → a draft record).
+    // It lives under the module it drafts into, so a reload gets that
+    // module's shell (crm/www/crm.py classifies the path server-side).
+    path: '/compras/captura/:name',
+    name: 'CompraCaptura',
+    component: () => import('@/pages/CapturaRevision.vue'),
+    props: true,
+    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+  },
+  {
+    path: '/gastos/captura/:name',
+    name: 'GastoCaptura',
+    component: () => import('@/pages/CapturaRevision.vue'),
+    props: true,
+    meta: { app: 'gastos', title: 'Gastos', listParent: 'Gastos' },
+  },
+  {
     path: '/gastos',
     name: 'Gastos',
     component: () => import('@/pages/Gastos.vue'),

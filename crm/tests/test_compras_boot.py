@@ -23,6 +23,7 @@ class TestComprasPaths(TestCase):
 			"/crm/compras?segment=por-recibir&q=caja",
 			"/crm/compras/nueva?return_to=%2Fposapp%2Fpos",
 			"/crm/compras/orden/PUR-ORD-2026-00001",
+			"/crm/compras/captura/CAP-2026-00001",
 			"/crm/compras/solicitud/MAT-MR-2026-00003?return_to=%2Fcrm%2Fpendientes",
 		):
 			with self.subTest(path=path):

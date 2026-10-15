@@ -13075,6 +13075,279 @@ msgstr "Pago"
 msgid "Journal entry"
 msgstr "Póliza"
 
+#: frontend/src/router.js
+msgid "Capture document"
+msgstr "Capturar documento"
+
+#: frontend/src/pages/GastoFactura.vue
+msgid "Capture payment receipt"
+msgstr "Capturar comprobante de pago"
+
+#: frontend/src/components/gastos/PayDialog.vue
+msgid "Already paid by transfer? Upload the receipt"
+msgstr "¿Ya pagaste por transferencia? Sube el comprobante"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Send a PDF, a photo (JPG, PNG, WEBP or HEIC) or an XML invoice."
+msgstr "Envía un PDF, una foto (JPG, PNG, WEBP o HEIC) o una factura XML."
+
+#: frontend/src/composables/useCaptura.js
+msgid "Purchase order"
+msgstr "Orden de compra"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Item assigned"
+msgstr "Artículo asignado"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Choose the item"
+msgstr "Elige el artículo"
+
+#: frontend/src/composables/useCaptura.js
+msgid "No item yet"
+msgstr "Sin artículo"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Left out"
+msgstr "Fuera del borrador"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Draft created"
+msgstr "Borrador creado"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Reading"
+msgstr "Leyendo"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Discarded"
+msgstr "Descartada"
+
+#: frontend/src/composables/useCaptura.js
+msgctxt "Captura"
+msgid "To review"
+msgstr "Por revisar"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Shipping"
+msgstr "Envío"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Tax"
+msgstr "Impuestos"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Matches"
+msgstr "Cuadra"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Does not match"
+msgstr "No cuadra"
+
+#: frontend/src/composables/useCaptura.js
+msgid "Nothing to compare"
+msgstr "Sin total para comparar"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "We could not open this capture"
+msgstr "No pudimos abrir esta captura"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Loading capture…"
+msgstr "Abriendo captura…"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "You already captured this document; this is that capture."
+msgstr "Ya capturaste este documento; esta es esa captura."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Draft created: {0} {1}"
+msgstr "Borrador creado: {0} {1}"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Open draft"
+msgstr "Abrir borrador"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Reading the document…"
+msgstr "Leyendo el documento…"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "It usually takes 10 to 60 seconds. You can wait here; the capture is saved."
+msgstr "Suele tardar de 10 a 60 segundos. Puedes esperar aquí; la captura ya está guardada."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "It is still being read after 4 minutes. The reading service may be busy; the capture is saved, look again in a moment."
+msgstr "Después de 4 minutos se sigue leyendo. El servicio de lectura puede estar ocupado; la captura está guardada, vuelve a revisar en un momento."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Look again"
+msgstr "Volver a revisar"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "We could not read this document."
+msgstr "No pudimos leer este documento."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "The document says: {0}"
+msgstr "El documento dice: {0}"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "No supplier chosen"
+msgstr "Sin proveedor elegido"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Bill total {0} · owed {1}"
+msgstr "Total de la factura {0} · por pagar {1}"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Company account that paid"
+msgstr "Cuenta de la empresa que pagó"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "This company has no active bank account you can use. Ask for it to be set up."
+msgstr "Esta empresa no tiene una cuenta bancaria activa que puedas usar. Pide que la den de alta."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Amount paid"
+msgstr "Importe pagado"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Save payment details"
+msgstr "Guardar datos del pago"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgctxt "Captura"
+msgid "Reference"
+msgstr "Referencia"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "· {0} waiting for an item"
+msgstr "· {0} sin artículo"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "No description"
+msgstr "Sin descripción"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgctxt "Captura"
+msgid "Change"
+msgstr "Cambiar"
+
+#: frontend/src/composables/useCaptura.js
+#: frontend/src/pages/CapturaRevision.vue
+msgctxt "Captura"
+msgid "Lines"
+msgstr "Renglones"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Is it one of these?"
+msgstr "¿Es alguno de estos?"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "New item name"
+msgstr "Nombre del artículo nuevo"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Create item"
+msgstr "Crear artículo"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Search item"
+msgstr "Buscar artículo"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "No item you can use matches."
+msgstr "Ningún artículo que puedas usar coincide."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Keep {0}"
+msgstr "Conservar {0}"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Leave out"
+msgstr "Quitar"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Choose a warehouse"
+msgstr "Elige un almacén"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Sum"
+msgstr "Suma"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Document total"
+msgstr "Total del documento"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Difference"
+msgstr "Diferencia"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Draft total"
+msgstr "Total del borrador"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "To check"
+msgstr "Por revisar"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Before creating the draft"
+msgstr "Antes de crear el borrador"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Discard this capture?"
+msgstr "¿Descartar esta captura?"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Create draft"
+msgstr "Crear borrador"
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "This capture was discarded."
+msgstr "Esta captura se descartó."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "This draft cannot be opened from here."
+msgstr "Este borrador no se puede abrir desde aquí."
+
+#: frontend/src/pages/CapturaRevision.vue
+msgid "Capture discarded"
+msgstr "Captura descartada"
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "Upload the quote, invoice, ticket or transfer receipt. We read it and you review a draft before anything is recorded."
+msgstr "Sube la cotización, factura, ticket o comprobante de transferencia. Lo leemos y revisas un borrador antes de registrar nada."
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "What do you want to create?"
+msgstr "¿Qué quieres crear?"
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "File or photo"
+msgstr "Archivo o foto"
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "PDF, photo or XML invoice, up to {0} MB."
+msgstr "PDF, foto o factura XML, hasta {0} MB."
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "Anything the reader should know, e.g. «only the first page»"
+msgstr "Lo que deba saber quien lo lea, p. ej. «solo la primera página»"
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "Uploading…"
+msgstr "Subiendo…"
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "Choose what to create."
+msgstr "Elige qué crear."
+
+#: frontend/src/components/captura/CapturarDocumentoButton.vue
+msgid "Choose a company."
+msgstr "Elige una empresa."
+
 #: frontend/src/pages/Archivos.vue
 msgid "Repair order"
 msgstr "Orden de reparación"

@@ -70,6 +70,16 @@
               :class="doc.overdue ? 'text-ink-red-7' : 'text-ink-gray-6'"
               >{{ dueLabel(doc.due_date, boot?.today) }}</span
             >
+            <CapturarDocumentoButton
+              v-if="
+                Number(doc.docstatus) === 1 &&
+                Number(doc.outstanding_amount || 0) > 0
+              "
+              :label="__('Capture payment receipt')"
+              :targets="['Payment Entry']"
+              :invoice="props.name"
+              :return-label="props.name"
+            />
           </div>
         </header>
 
@@ -411,6 +421,7 @@ import { shellBoot } from '@/composables/muelleShell'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
+import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import { hoyLive } from '@/composables/useHoy'
 import {
   LIVE_DOCTYPES,

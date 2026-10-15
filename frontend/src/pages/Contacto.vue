@@ -90,6 +90,13 @@
             __('Book appointment')
           }}</RouterLink
         >
+        <!-- A supplier's quote or invoice becomes a draft order or bill. -->
+        <CapturarDocumentoButton
+          v-if="record.source === 'supplier' && record.name"
+          :targets="['Purchase Order', 'Purchase Invoice']"
+          :supplier="record.name"
+          :return-label="record.title || record.name"
+        />
       </div>
       <div v-if="refs.length > 1" class="c-source-chooser">
         <FormControl
@@ -660,6 +667,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import AddressEditor from '@/components/contactos/AddressEditor.vue'

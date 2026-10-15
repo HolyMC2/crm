@@ -49,8 +49,14 @@
         @select-all="list.selectAll"
         @clear-selection="list.clearSelection"
       >
-        <template v-if="boot?.capabilities?.create" #actions>
+        <template #actions>
+          <CapturarDocumentoButton
+            variant="appbar"
+            :targets="['Purchase Order', 'Purchase Invoice']"
+            return-label="Compras"
+          />
           <button
+            v-if="boot?.capabilities?.create"
             type="button"
             class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
             :aria-label="__('New purchase')"
@@ -96,6 +102,10 @@
           >
           {{ __('Keyboard shortcuts') }}
         </button>
+        <CapturarDocumentoButton
+          :targets="['Purchase Order', 'Purchase Invoice']"
+          return-label="Compras"
+        />
         <Button
           v-if="boot?.capabilities?.create"
           variant="solid"
@@ -388,6 +398,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
+import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import PowerAppBar from '@/components/power/PowerAppBar.vue'
 import PowerBulkBar from '@/components/power/PowerBulkBar.vue'

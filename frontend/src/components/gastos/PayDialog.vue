@@ -163,6 +163,16 @@
       <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
         {{ problem.detail }}
       </p>
+      <!-- Paid outside Muelle: the receipt becomes a draft payment to review. -->
+      <button
+        v-if="canCaptureReceipt && !loading"
+        type="button"
+        class="min-h-11 text-left text-sm text-ink-blue-link underline sm:min-h-0"
+        data-capture-receipt
+        @click="captureReceipt"
+      >
+        {{ __('Already paid by transfer? Upload the receipt') }}
+      </button>
       <p v-if="resumed" role="status" class="text-sm text-ink-gray-7">
         {{
           __(
@@ -187,11 +197,20 @@
       />
     </template>
   </PowerSheet>
+  <CapturarDocumentoButton
+    v-model:open="captureOpen"
+    :trigger="false"
+    :label="__('Capture payment receipt')"
+    :targets="['Payment Entry']"
+    :invoice="name"
+  />
 </template>
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
+import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import PowerSheet from '@/components/power/PowerSheet.vue'
+import { allowedTargets, capturaBoot } from '@/composables/useCaptura'
 import {
   bankSide,
   gastosApi,
@@ -313,6 +332,18 @@ async function pay() {
   } finally {
     busy.value = false
   }
+}
+// The capture sheet lives outside this one: close «Pagar», then open it.
+const captureOpen = ref(false)
+const canCaptureReceipt = computed(
+  () =>
+    Boolean(props.name) &&
+    allowedTargets(capturaBoot.value, ['Payment Entry']).length > 0,
+)
+async function captureReceipt() {
+  open.value = false
+  await nextTick()
+  captureOpen.value = true
 }
 function handOff(next) {
   open.value = false
