@@ -49,6 +49,13 @@ class PaletteSearchTests(IntegrationTestCase):
 		self.addCleanup(frappe.set_user, self.previous_user)
 		self.tag = uuid4().hex[:8]
 		self.phone = "695" + str(uuid4().int)[:7]
+		contact = frappe.new_doc("Contact")
+		contact.first_name, contact.last_name = "Karolina", f"Q{self.tag}"
+		contact.append(
+			"phone_nos",
+			{"phone": f"{self.phone[:3]} {self.phone[3:6]} {self.phone[6:]}", "is_primary_mobile_no": 1},
+		)
+		contact.insert(ignore_permissions=True)
 		deal = frappe.get_doc(
 			{
 				"doctype": "CRM Deal",
@@ -57,7 +64,7 @@ class PaletteSearchTests(IntegrationTestCase):
 				"deal_name": f"Apple iPhone 12 — Karolina Q{self.tag}",
 				"first_name": "Karolina",
 				"last_name": f"Q{self.tag}",
-				"mobile_no": f"{self.phone[:3]} {self.phone[3:6]} {self.phone[6:]}",
+				"contacts": [{"contact": contact.name, "is_primary": 1}],
 			}
 		)
 		deal.flags.ignore_permissions = True

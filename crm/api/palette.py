@@ -30,9 +30,9 @@ TEXT_FIELDS = (
 CLOSED_TYPES = ("Won", "Lost")
 
 
-def _digits_sql(column):
+def _digits_sql(column, table="`tabCRM Deal`"):
 	"""SQL that strips the separators people type in phone numbers."""
-	expr = f"ifnull(`tabCRM Deal`.`{column}`, '')"
+	expr = f"ifnull({table}.`{column}`, '')"
 	for char in (" ", "-", "+", "(", ")", "."):
 		expr = f"replace({expr}, '{char}', '')"
 	return expr
@@ -84,6 +84,15 @@ def _candidates(q):
 		for column in ("mobile_no", "phone"):
 			if _has_column("CRM Deal", column):
 				clauses.append(f"{_digits_sql(column)} like %(digits)s")
+		if frappe.db.table_exists("CRM Contacts"):
+			# CRM Deal.validate derives mobile_no from the primary contact and clears it
+			# otherwise: the number often lives only on the deal's contacts.
+			clauses.append(
+				"exists (select 1 from `tabCRM Contacts` c join `tabContact Phone` p "
+				"on p.parenttype = 'Contact' and p.parent = c.contact "
+				"where c.parenttype = 'CRM Deal' and c.parent = `tabCRM Deal`.name "
+				f"and {_digits_sql('phone', 'p')} like %(digits)s)"
+			)
 	ro_tables = []
 	if frappe.db.table_exists("CRM Deal Repair Order"):
 		ro_tables.append(
