@@ -198,8 +198,7 @@ watch(
 )
 function onPopState(e) {
   if (!isMobile.value) return
-  const depth =
-    e.state?.inboxEpoch === paneEpoch ? (e.state?.inboxDepth ?? 0) : 0
+  const depth = e.state?.inboxEpoch === paneEpoch ? e.state?.inboxDepth ?? 0 : 0
   const target = FROM_DEPTH[Math.min(2, Math.max(0, depth))]
   if (target !== mobileView.value) {
     suppressPush = true // this is a back-walk, don't re-push
