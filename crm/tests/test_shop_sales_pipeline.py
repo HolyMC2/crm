@@ -79,9 +79,16 @@ class TestShopSalesPipeline(IntegrationTestCase):
 		self.assertEqual(deal.probability, 0)
 
 	def test_adopting_refuses_a_same_named_stage_with_another_outcome(self):
-		if frappe.db.exists("CRM Deal Status", "Ganado"):
-			frappe.db.set_value("CRM Deal Status", "Ganado", "type", "Open")
-		else:
-			frappe.get_doc({"doctype": "CRM Deal Status", "deal_status": "Ganado", "type": "Open"}).insert()
-		with self.assertRaises(frappe.ValidationError):
-			shop_sales.ensure()
+		# Tests in a class share one transaction: undo this conflict before the next one.
+		frappe.db.savepoint("shop_sales_conflict")
+		try:
+			if frappe.db.exists("CRM Deal Status", "Ganado"):
+				frappe.db.set_value("CRM Deal Status", "Ganado", "type", "Open")
+			else:
+				frappe.get_doc(
+					{"doctype": "CRM Deal Status", "deal_status": "Ganado", "type": "Open"}
+				).insert()
+			with self.assertRaises(frappe.ValidationError):
+				shop_sales.ensure()
+		finally:
+			frappe.db.rollback(save_point="shop_sales_conflict")
