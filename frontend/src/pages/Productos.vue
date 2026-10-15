@@ -547,7 +547,7 @@
               :row="row"
               layout="tarjetas"
               :to="productRoute(row, listPath, searching)"
-              :lists="catalog ? shownLists : []"
+              :tiers="catalog ? tierLines(row, shownLists) : []"
               :focused="focusKey === legacyKey(row)"
               :eager="index < 12"
               :detail="row.warehouse ? stockLabel(row) : ''"
@@ -579,7 +579,7 @@
               <CatalogItem
                 :row="row"
                 :to="productRoute(row, listPath, searching)"
-                :lists="catalog ? shownLists : []"
+                :tiers="catalog ? tierLines(row, shownLists) : []"
                 :eager="index < 12"
                 :detail="row.warehouse ? stockLabel(row) : ''"
                 @click="leaveFor(row)"
@@ -665,6 +665,7 @@ import {
   loadShownLists,
   saveLayout,
   saveShownLists,
+  tierLines,
   VIEWS,
   daysSince,
   encodeSelection,

@@ -112,7 +112,6 @@ import {
   groupOf,
   money,
   stockBadge,
-  tierLines,
   variantsLabel,
 } from '@/composables/useProductos'
 
@@ -126,10 +125,10 @@ const props = defineProps({
   eager: { type: Boolean, default: false },
   showStock: { type: Boolean, default: true },
   detail: { type: String, default: '' },
-  // Extra price lists to show under the default one («Precios que se muestran»).
-  lists: { type: Array, default: () => [] },
+  // Extra price lists under the default one («Precios que se muestran»):
+  // `tierLines(row, lists)`.
+  tiers: { type: Array, default: () => [] },
 })
-const tiers = computed(() => tierLines(props.row, props.lists))
 const badge = computed(() => (props.showStock ? stockBadge(props.row) : null))
 // A template: «N variants» (while searching, how many of them match).
 const variants = computed(() => variantsLabel(props.row.variants))
@@ -170,7 +169,7 @@ function StockPill({ badge: value }) {
 StockPill.props = ['badge']
 
 function TierLines() {
-  return tiers.value.map((line) =>
+  return props.tiers.map((line) =>
     h(
       'span',
       {
@@ -225,7 +224,7 @@ function PriceFigure(_, { attrs }) {
     },
     __('No price', null, 'Productos'),
   )
-  if (!tiers.value.length) return h('span', { ...attrs }, [empty])
+  if (!props.tiers.length) return h('span', { ...attrs }, [empty])
   return h(
     'span',
     {
