@@ -40,8 +40,9 @@ export const PREFETCH_ATTR = 'data-muelle-prefetch'
 
 let linksInstalled = false
 /**
- * Links marked with `data-muelle-prefetch` (sibling apps, Desk) prefetch on
- * hover or press — Chrome's «moderate» eagerness. Installed once per page.
+ * Links marked with `data-muelle-prefetch` or `data-sibling` (the shell's
+ * sibling apps, Desk) prefetch on hover or press — Chrome's «moderate»
+ * eagerness. Installed once per page.
  */
 export function installLinkPrefetch() {
   if (linksInstalled || typeof document === 'undefined') return false
@@ -51,7 +52,7 @@ export function installLinkPrefetch() {
     prefetch: [
       {
         source: 'document',
-        where: { selector_matches: `a[${PREFETCH_ATTR}]` },
+        where: { selector_matches: `a[${PREFETCH_ATTR}], a[data-sibling]` },
         eagerness: 'moderate',
       },
     ],

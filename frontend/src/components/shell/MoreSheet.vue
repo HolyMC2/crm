@@ -279,6 +279,7 @@ import {
   sortSiblings,
 } from '@/composables/shellRail'
 import { installApp, installAvailable } from '@/composables/shellInstall'
+import { installLinkPrefetch } from '@/utils/speculate'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import {
@@ -288,6 +289,9 @@ import {
   shellT,
   useShellLayer,
 } from '@/composables/shellKeyboard'
+
+// Pressing a sibling app (data-sibling) starts fetching its page.
+installLinkPrefetch()
 
 const props = defineProps({
   modelValue: Boolean,

@@ -208,6 +208,7 @@ import {
   toggleRail,
 } from '@/composables/shellRail'
 import UserMenu from './UserMenu.vue'
+import { installLinkPrefetch } from '@/utils/speculate'
 
 const props = defineProps({
   modules: { type: Array, default: () => [] },
@@ -243,6 +244,8 @@ const avisos = computed(() =>
 // Sibling SPAs (Escáner, POS, Taller…) open with the way back to this page:
 // «Volver a Productos» in Escáner returns to the record the worker left.
 const siblings = sortSiblings(installedSiblings())
+// Hovering a sibling app (data-sibling) fetches its page before the click.
+installLinkPrefetch()
 const siblingLinks = computed(() => {
   const label = props.modules.find(
     (module) => module.key === props.active,

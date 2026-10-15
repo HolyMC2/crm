@@ -60,7 +60,9 @@ describe('speculate', () => {
         prefetch: [
           {
             source: 'document',
-            where: { selector_matches: 'a[data-muelle-prefetch]' },
+            where: {
+              selector_matches: 'a[data-muelle-prefetch], a[data-sibling]',
+            },
             eagerness: 'moderate',
           },
         ],
