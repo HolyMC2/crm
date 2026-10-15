@@ -11,6 +11,7 @@ vi.mock('frappe-ui', async (importOriginal) => ({
 
 import PackDialog from '@/components/productos/PackDialog.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
+import LabelDialog from '@/components/productos/LabelDialog.vue'
 
 const calls = []
 let answers = {}
@@ -128,5 +129,69 @@ describe('Productos › fotos', () => {
     expect(text).not.toContain('Add photo')
     expect(root.querySelectorAll('[aria-label="Turn right"]')).toHaveLength(2)
     expect(root.querySelector('[aria-label="Delete photo"]')).toBeNull()
+  })
+})
+
+describe('Productos › etiquetas', () => {
+  it('prints one label per chosen serial number, with the product data', async () => {
+    answers = {
+      'mercado.api.labels.resolve_label_items': () => ({
+        items: {
+          IPN1: {
+            item_code: 'IPN1',
+            item_name: 'Cel',
+            barcode: '75',
+            price: 10,
+          },
+        },
+      }),
+      'mercado.api.labels.render_label_batch': () => ({ html: '<p>label</p>' }),
+    }
+    const written = []
+    const tab = {
+      document: {
+        open: () => {},
+        write: (html) => written.push(html),
+        close: () => {},
+      },
+      close: vi.fn(),
+    }
+    vi.stubGlobal(
+      'open',
+      vi.fn(() => tab),
+    )
+    window.open = globalThis.open
+    const open = ref(false)
+    mount(LabelDialog, () => ({
+      modelValue: open.value,
+      'onUpdate:modelValue': (value) => (open.value = value),
+      item: 'IPN1',
+      hasSerial: true,
+      onHand: [{ serial: 'SN-1' }, { serial: 'SN-2' }],
+    }))
+    open.value = true
+    await flush()
+    const boxes = document.querySelectorAll('input[type="checkbox"]')
+    expect(boxes).toHaveLength(2)
+    boxes[1].click()
+    await flush()
+    const print = [...document.querySelectorAll('button')].find(
+      (b) => b.textContent.trim() === 'Print',
+    )
+    print.click()
+    await flush()
+    const call = calls.find(([method]) => method.endsWith('render_label_batch'))
+    expect(JSON.parse(call[1].rows)).toEqual([
+      {
+        item_code: 'IPN1',
+        item_name: 'Cel',
+        barcode: '75',
+        price: 10,
+        serial_no: 'SN-1',
+        qty: 1,
+      },
+    ])
+    expect(call[1].auto_print).toBe(1)
+    expect(written).toEqual(['<p>label</p>'])
   })
 })
