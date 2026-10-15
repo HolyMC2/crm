@@ -898,6 +898,7 @@ import BoardView from '@/components/doco/BoardView.vue'
 import BoardLostPrompt from '@/components/Kanban/BoardLostPrompt.vue'
 import { boardStages, stageMove } from '@/utils/pipelineStages'
 import { guardStatusChange } from '@/utils/statusGuard'
+import { requestNextStep } from '@/composables/useNextStep'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
@@ -1487,8 +1488,9 @@ async function moveDeal(row, values) {
   Object.assign(row, values)
   toast.success(__('Etapa actualizada'))
   loadCounts()
-  // TODO(S2.2): after a non-Won/Lost move, ask for the next dated step with
-  // requestNextStep({ deal: row.name, reason: 'stage' }) once useNextStep lands.
+  // S2.2: an open deal always gets its next dated step (skipped for Won/Lost).
+  if (stageMove(boardColumns.value, values.status) === 'flow')
+    requestNextStep({ deal: row.name, reason: 'stage' })
 }
 async function confirmLostDrop(reason, notes) {
   const pending = lostDrop.value
