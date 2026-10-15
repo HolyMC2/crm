@@ -30,6 +30,57 @@
         :label="statusLabel(doc.status)"
       />
     </header>
+    <!-- Where this file stands in receive → link → filed -->
+    <ol
+      v-if="doc"
+      class="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-outline-gray-1 px-4 py-2 text-sm"
+      :aria-label="__('Progress')"
+    >
+      <li
+        v-for="(step, index) in progressSteps"
+        :key="step.label"
+        class="flex shrink-0 items-center gap-2"
+        :aria-current="step.state === 'current' ? 'step' : undefined"
+      >
+        <FeatherIcon
+          v-if="index"
+          name="chevron-right"
+          class="h-3.5 w-3.5 text-ink-gray-4"
+        />
+        <span
+          class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
+          :class="
+            step.state === 'done'
+              ? 'bg-surface-green-2 text-ink-green-7'
+              : step.state === 'current'
+                ? step.problem
+                  ? 'bg-surface-red-2 text-ink-red-7'
+                  : 'bg-surface-gray-10 text-ink-base'
+                : 'bg-surface-gray-2 text-ink-gray-5'
+          "
+        >
+          <FeatherIcon
+            v-if="step.state === 'done'"
+            name="check"
+            class="h-3 w-3"
+          />
+          <FeatherIcon
+            v-else-if="step.problem"
+            name="alert-triangle"
+            class="h-3 w-3"
+          />
+          <template v-else>{{ index + 1 }}</template>
+        </span>
+        <span
+          :class="
+            step.state === 'todo'
+              ? 'text-ink-gray-5'
+              : 'font-medium text-ink-gray-8'
+          "
+          >{{ step.label }}</span
+        >
+      </li>
+    </ol>
 
     <div v-if="loading && !doc" class="space-y-3 p-4" aria-hidden="true">
       <div class="h-48 animate-pulse rounded-lg bg-surface-gray-2" />
@@ -62,8 +113,7 @@
             <pre
               v-else-if="doc.extracted_text"
               class="max-h-[60vh] overflow-auto whitespace-pre-wrap p-3 text-sm text-ink-gray-8"
-              >{{ doc.extracted_text.slice(0, 6000) }}</pre
-            >
+              >{{ doc.extracted_text.slice(0, 6000) }}</pre>
             <p v-else class="p-6 text-center text-sm text-ink-gray-6">
               {{
                 __('No preview for this file. Open the original to check it.')
@@ -495,9 +545,24 @@
             </div>
           </section>
 
+          <p
+            v-if="doc.can_edit && doc.status === 'Review'"
+            class="border-t border-outline-gray-1 pt-3 text-sm text-ink-gray-6"
+          >
+            {{
+              __(
+                'No operation to link it to, such as a contract or a personal receipt? File it without a link: it stays searchable in «Filed».',
+              )
+            }}
+          </p>
           <div
             v-if="doc.can_edit"
-            class="flex flex-wrap gap-2 border-t border-outline-gray-1 pt-3"
+            class="flex flex-wrap gap-2"
+            :class="
+              doc.status === 'Review'
+                ? ''
+                : 'border-t border-outline-gray-1 pt-3'
+            "
           >
             <Button
               v-if="doc.status !== 'Archived'"
@@ -605,6 +670,7 @@ import {
   kindLabel,
   previewKind,
   problem,
+  progressStep,
   recordHref,
   statusLabel,
   statusTheme,
@@ -712,6 +778,26 @@ const extractionFacts = computed(() => {
 const dirty = computed(() =>
   FIELDS.some((k) => (form[k] || '') !== (baseline.value[k] || '')),
 )
+const progressSteps = computed(() => {
+  const status = doc.value?.status
+  const at = progressStep(status)
+  const state = (n) => (n < at ? 'done' : n === at ? 'current' : 'todo')
+  return [
+    {
+      label: status === 'Processing' ? __('Reading the file') : __('Received'),
+      state: at === 1 ? 'current' : 'done',
+      problem: status === 'Error',
+    },
+    { label: __('Link to its operation'), state: state(2) },
+    {
+      label:
+        status === 'Archived'
+          ? __('Filed without link')
+          : __('Linked and filed'),
+      state: at === 3 ? 'done' : 'todo',
+    },
+  ]
+})
 const nextHint = computed(() => {
   if (doc.value?.status === 'Linked')
     return __(

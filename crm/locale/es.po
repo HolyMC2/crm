@@ -23185,3 +23185,174 @@ msgstr "Foto borrada"
 msgctxt "Productos"
 msgid "Photo added"
 msgstr "Foto agregada"
+#: frontend/src/pages/Archivos.vue
+msgid "Where originals are stored and read (OCR), and which mail inboxes send files here."
+msgstr "Dónde se guardan y se leen (OCR) los originales, y qué buzones de correo envían archivos aquí."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Archive settings"
+msgstr "Ajustes del archivo"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Drop to receive for {0}"
+msgstr "Suelta para recibirlo para {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Drop to receive it in {0}"
+msgstr "Suelta para recibirlo en {0}"
+
+#: frontend/src/pages/Archivos.vue
+msgid "You choose who can see it before sending."
+msgstr "Antes de enviarlo eliges quién puede verlo."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Nothing needs attention"
+msgstr "Nada requiere atención"
+
+#: frontend/src/pages/Archivos.vue
+msgid "Files that could not be read or processed show up here with what to do."
+msgstr "Aquí aparecen los archivos que no se pudieron leer o procesar, con lo que hay que hacer."
+
+#: frontend/src/pages/Archivos.vue
+msgid "Once you link or file a document it stays here, searchable by issuer, tag or text."
+msgstr "Cuando vinculas o archivas un documento se queda aquí; puedes buscarlo por emisor, etiqueta o texto."
+
+#: frontend/src/components/archivos/ArchivoDetail.vue
+msgid "Progress"
+msgstr "Avance"
+
+#: frontend/src/components/archivos/ArchivoDetail.vue
+msgid "No operation to link it to, such as a contract or a personal receipt? File it without a link: it stays searchable in «Filed»."
+msgstr "¿No tiene una operación a la cual vincularlo, como un contrato o un comprobante personal? Archívalo sin vincular: podrás buscarlo en «Archivo»."
+
+#: frontend/src/components/archivos/ArchivoDetail.vue
+msgid "Reading the file"
+msgstr "Leyendo el archivo"
+
+#: frontend/src/components/archivos/ArchivoDetail.vue
+msgid "Link to its operation"
+msgstr "Vincular a su operación"
+
+#: frontend/src/components/archivos/ArchivoDetail.vue
+msgid "Filed without link"
+msgstr "Archivado sin vincular"
+
+#: frontend/src/components/archivos/ArchivoDetail.vue
+msgid "Linked and filed"
+msgstr "Vinculado y archivado"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Every receipt next to the operation it proves"
+msgstr "Cada comprobante junto a la operación que respalda"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Archivos keeps the invoices, receipts, bank statements and contracts of {0}. Link each file to its purchase, payment, expense, customer or supplier: whoever opens that record finds the original, and month-end closes without chasing paper."
+msgstr "Archivos guarda las facturas, comprobantes, estados de cuenta y contratos de {0}. Vincula cada archivo a su compra, pago, gasto, cliente o proveedor: quien abra ese registro encuentra el original y el cierre de mes sale sin perseguir papeles."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Drop a file here or"
+msgstr "Suelta un archivo aquí o"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "choose one"
+msgstr "elige uno"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "PDF, JPG or PNG photo, SAT XML, CSV or TXT · up to {0} MB"
+msgstr "PDF, foto JPG o PNG, XML del SAT, CSV o TXT · hasta {0} MB"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "How it works"
+msgstr "Cómo funciona"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "1 file needs attention"
+msgstr "1 archivo requiere atención"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "{0} files need attention"
+msgstr "{0} archivos requieren atención"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Each one shows what went wrong and what to do next."
+msgstr "Cada uno muestra qué falló y qué hacer."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Review them"
+msgstr "Revisarlos"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Tip: customers, suppliers and expenses show «Files on this record». Adding a file there brings you here with the record already chosen, and returns you when it is linked."
+msgstr "Tip: clientes, proveedores y gastos muestran «Archivos de este registro». Al agregar un archivo desde ahí llegas aquí con el registro ya elegido, y regresas cuando queda vinculado."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Take a photo or upload the PDF or SAT XML. The same file is never stored twice."
+msgstr "Toma una foto o sube el PDF o el XML del SAT. El mismo archivo nunca se guarda dos veces."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Link it"
+msgstr "Vincular"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "We suggest the purchase, payment or supplier it matches; you confirm. No match? File it without a link."
+msgstr "Te sugerimos la compra, el pago o el proveedor que coincide; tú confirmas. ¿No hay coincidencia? Archívalo sin vincular."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "{0} to classify"
+msgstr "{0} por clasificar"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Nothing waiting"
+msgstr "Nada pendiente"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Find it"
+msgstr "Encontrarlo"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Filed documents are searchable here and appear on the record they are linked to."
+msgstr "Los documentos archivados se buscan aquí y aparecen en el registro al que están vinculados."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "{0} filed"
+msgstr "{0} archivados"
+
+#: frontend/src/components/archivos/ArchivoUpload.vue
+msgid "When it arrives, confirm the link to this record."
+msgstr "Cuando llegue, confirma el vínculo con este registro."
+
+#: frontend/src/components/archivos/ArchivoUpload.vue
+msgid "It waits in «To classify» until you link it."
+msgstr "Espera en «Por clasificar» hasta que lo vincules."
+
+#: frontend/src/components/archivos/ArchivoUpload.vue
+msgid "Choose another file"
+msgstr "Elegir otro archivo"
+
+#: frontend/src/components/archivos/ArchivoUpload.vue
+msgid "Only me"
+msgstr "Solo yo"
+
+#: frontend/src/components/archivos/ArchivoUpload.vue
+msgid "For personal receipts. You can share it later."
+msgstr "Para comprobantes personales. Puedes compartirlo después."
+
+#: frontend/src/components/archivos/ArchivoUpload.vue
+msgid "A teammate can review and link it for you."
+msgstr "Alguien del equipo puede revisarlo y vincularlo por ti."
+
+#: frontend/src/composables/useArchivos.js
+msgid "Files received and not yet linked to their operation, newest first."
+msgstr "Archivos recibidos que aún no se vinculan a su operación; los más recientes primero."
+
+#: frontend/src/composables/useArchivos.js
+msgid "Need attention"
+msgstr "Requieren atención"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Files that are still being read or could not be processed. Open one to see what to do."
+msgstr "Archivos que se están leyendo o que no se pudieron procesar. Abre uno para ver qué hacer."
+
+#: frontend/src/composables/useArchivos.js
+msgid "Linked or filed documents. Search by issuer, tag or any text in the file."
+msgstr "Documentos vinculados o archivados. Busca por emisor, etiqueta o cualquier texto del archivo."

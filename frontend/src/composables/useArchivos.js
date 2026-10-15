@@ -76,13 +76,40 @@ export function loadArchivosBoot({ refresh = false } = {}) {
   return bootPending
 }
 
+// Each list says in one line what is in it and what the worker does there.
 export const VIEWS = Object.freeze([
-  { value: 'por_clasificar', label: 'To classify', icon: 'inbox' },
-  { value: 'ayuda', label: 'Need help', icon: 'alert-triangle' },
-  { value: 'archivo', label: 'Filed', icon: 'archive' },
+  {
+    value: 'por_clasificar',
+    label: 'To classify',
+    icon: 'inbox',
+    hint: 'Files received and not yet linked to their operation, newest first.',
+  },
+  {
+    value: 'ayuda',
+    label: 'Need attention',
+    icon: 'alert-triangle',
+    hint: 'Files that are still being read or could not be processed. Open one to see what to do.',
+  },
+  {
+    value: 'archivo',
+    label: 'Filed',
+    icon: 'archive',
+    hint: 'Linked or filed documents. Search by issuer, tag or any text in the file.',
+  },
 ])
+function viewEntry(value) {
+  return VIEWS.find((v) => v.value === value) || VIEWS[0]
+}
 export function viewLabel(value) {
-  return tr((VIEWS.find((v) => v.value === value) || VIEWS[0]).label)
+  return tr(viewEntry(value).label)
+}
+export function viewHint(value) {
+  return tr(viewEntry(value).hint)
+}
+/** Sidebar label with its count, the same «Label (n)» the other shell lists use. */
+export function viewCountLabel(value, counts) {
+  const n = counts?.[value]
+  return typeof n === 'number' ? `${viewLabel(value)} (${n})` : viewLabel(value)
 }
 export function normalizeView(value) {
   return VIEWS.some((v) => v.value === value) ? value : 'por_clasificar'
@@ -99,6 +126,18 @@ const KIND_LABELS = {
 }
 export function kindLabel(kind) {
   return tr(KIND_LABELS[kind] || KIND_LABELS.Unknown)
+}
+const KIND_ICONS = {
+  Invoice: 'file-text',
+  Receipt: 'shopping-bag',
+  BankStatement: 'credit-card',
+  Contract: 'edit-3',
+  Delivery: 'truck',
+  Repair: 'tool',
+}
+/** A glanceable icon per document type; unknown types keep the plain file. */
+export function kindIcon(kind) {
+  return KIND_ICONS[kind] || 'file'
 }
 
 const DOCTYPE_LABELS = {
@@ -120,15 +159,26 @@ export function doctypeLabel(doctype) {
 const STATUS = {
   Review: ['To classify', 'orange'],
   Processing: ['Processing', 'blue'],
-  Error: ['Needs help', 'red'],
+  Error: ['Needs attention', 'red'],
   Linked: ['Linked', 'green'],
-  Archived: ['Archived', 'gray'],
+  Archived: ['Filed without link', 'gray'],
 }
 export function statusLabel(status) {
   return tr((STATUS[status] || STATUS.Review)[0])
 }
 export function statusTheme(status) {
   return (STATUS[status] || STATUS.Review)[1]
+}
+
+/**
+ * Where a document stands in the three steps the page explains:
+ * received → linked to its operation → filed. `current` is the step being
+ * worked on; a document that needs attention stays on «received».
+ */
+export function progressStep(status) {
+  if (status === 'Linked' || status === 'Archived') return 3
+  if (status === 'Review') return 2
+  return 1
 }
 
 /** `Doctype/name` from a record-origin entry; names may contain slashes. */
@@ -248,6 +298,19 @@ export function formatDay(value, locale) {
     month: 'short',
     year: 'numeric',
   }).format(date)
+}
+
+/** «today», «yesterday», «3 days ago» or the date: how long a file has waited. */
+export function ageLabel(value, locale, now = new Date()) {
+  if (!value) return ''
+  const date = new Date(String(value).replace(' ', 'T'))
+  if (Number.isNaN(date.getTime())) return ''
+  const day = (d) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
+  const days = Math.round((day(now) - day(date)) / 86400000)
+  if (days <= 0) return tr('today')
+  if (days === 1) return tr('yesterday')
+  if (days < 7) return tr('{0} days ago', [days])
+  return formatDay(value, locale)
 }
 
 /** Where a linked record opens: party records in Contactos, the rest in Desk. */

@@ -48,18 +48,55 @@
     @select="selectView"
   >
     <template #sidebar>
-      <div class="mt-6 space-y-2 px-3 text-sm">
+      <div
+        v-if="boot.can_configure"
+        class="mt-6 border-t border-outline-gray-2 px-3 pt-4 text-sm"
+      >
         <a
-          v-if="boot.can_configure"
           href="/desk/documentos?conectores=1"
           class="flex min-h-11 items-center gap-2 text-ink-gray-6 hover:text-ink-gray-8"
-          ><FeatherIcon name="settings" class="h-4 w-4" />{{
-            __('Document archive connection')
+          :title="
+            __(
+              'Where originals are stored and read (OCR), and which mail inboxes send files here.',
+            )
+          "
+          ><FeatherIcon name="settings" class="h-4 w-4 shrink-0" />{{
+            __('Archive settings')
           }}</a
         >
       </div>
     </template>
-    <div class="flex min-h-0 flex-1 flex-col">
+    <div
+      class="relative flex min-h-0 flex-1 flex-col"
+      @dragenter="onPageDrag"
+      @dragover="onPageDrag"
+    >
+      <!-- A file dragged anywhere on the page is received, not opened by the browser -->
+      <div
+        v-if="pageDragging"
+        class="absolute inset-0 z-20 flex items-center justify-center bg-surface-base p-6"
+        @dragover.prevent
+        @dragleave.self="pageDragging = false"
+        @drop.prevent="onPageDrop"
+      >
+        <div
+          class="pointer-events-none flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-outline-gray-5 px-10 py-12 text-center"
+        >
+          <FeatherIcon name="upload-cloud" class="h-8 w-8 text-ink-gray-7" />
+          <p class="text-lg font-semibold text-ink-gray-9">
+            {{
+              targetCtx?.supported
+                ? __('Drop to receive for {0}', [
+                    targetCtx.title || target?.name,
+                  ])
+                : __('Drop to receive it in {0}', [company])
+            }}
+          </p>
+          <p class="text-sm text-ink-gray-6">
+            {{ __('You choose who can see it before sending.') }}
+          </p>
+        </div>
+      </div>
       <a
         v-if="returnTo"
         :href="returnTo"
@@ -82,19 +119,16 @@
                   {{ viewLabel(view) }}
                 </h1>
                 <p class="text-sm text-ink-gray-6">
-                  {{
-                    __(
-                      'Receive invoices, receipts and contracts; link them to an operation and keep working.',
-                    )
-                  }}
+                  {{ viewHint(view) }}
                 </p>
               </div>
               <Button
                 variant="solid"
                 class="min-h-11 shrink-0 sm:min-h-0"
-                icon-left="upload"
-                :label="__('Receive')"
-                @click="uploadOpen = !uploadOpen"
+                :icon-left="uploadOpen ? 'x' : 'upload'"
+                :label="uploadOpen ? __('Close') : __('Receive')"
+                :aria-expanded="uploadOpen ? 'true' : 'false'"
+                @click="toggleUpload"
               />
             </div>
             <div class="grid gap-2 sm:hidden">
@@ -157,8 +191,9 @@
               :company="company"
               :target="targetCtx?.supported ? targetCtx : null"
               :limit-mb="boot.upload_limit_mb || 10"
+              :initial-file="droppedFile"
               @received="onReceived"
-              @cancel="uploadOpen = false"
+              @cancel="closeUpload"
             />
             <FormControl
               v-model="q"
@@ -206,7 +241,7 @@
                   variant="solid"
                   class="min-h-11 sm:min-h-0"
                   :label="__('Receive file')"
-                  @click="uploadOpen = true"
+                  @click="openUpload"
                 />
                 <a
                   v-if="returnTo && lastDone"
@@ -222,6 +257,16 @@
                   }}</a
                 >
               </div>
+              <!-- Phones have no second pane: explain the app under the empty queue -->
+              <ArchivosOverview
+                v-if="view === 'por_clasificar' && !q"
+                class="mt-6 border-t border-outline-gray-2 !p-0 !pt-6 text-left lg:hidden"
+                :company="company"
+                :counts="counts"
+                :limit-mb="boot.upload_limit_mb || 10"
+                @view="selectView"
+                @file="receiveFile"
+              />
             </div>
             <ul
               v-else
@@ -231,45 +276,61 @@
               <li v-for="row in rows" :key="row.name">
                 <button
                   type="button"
-                  class="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-outline-gray-4"
+                  class="flex min-h-16 w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-outline-gray-4"
                   :class="row.name === documentName ? 'bg-surface-gray-2' : ''"
                   :aria-current="row.name === documentName ? 'true' : undefined"
                   @click="open(row.name)"
                 >
-                  <FeatherIcon
-                    :name="row.visibility === 'Private' ? 'lock' : 'file-text'"
-                    :aria-label="
-                      row.visibility === 'Private'
-                        ? __('Only you can see it')
-                        : undefined
-                    "
-                    class="h-4 w-4 shrink-0 text-ink-gray-5"
-                  />
+                  <span
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2"
+                    :title="kindLabel(row.document_kind)"
+                  >
+                    <FeatherIcon
+                      :name="kindIcon(row.document_kind)"
+                      class="h-4 w-4 text-ink-gray-6"
+                    />
+                  </span>
                   <span class="min-w-0 flex-1">
-                    <span
-                      class="block truncate text-base font-medium text-ink-gray-9"
-                      >{{ row.title }}</span
-                    >
+                    <span class="flex items-center gap-1.5">
+                      <span
+                        class="truncate text-base font-medium text-ink-gray-9"
+                        >{{ row.title }}</span
+                      >
+                      <FeatherIcon
+                        v-if="row.visibility === 'Private'"
+                        name="lock"
+                        class="h-3 w-3 shrink-0 text-ink-gray-5"
+                        :aria-label="__('Only you can see it')"
+                      />
+                    </span>
                     <span class="block truncate text-sm text-ink-gray-6">{{
                       [
-                        kindLabel(row.document_kind),
-                        row.counterparty,
-                        formatDay(row.document_date || row.modified, locale),
+                        row.counterparty || kindLabel(row.document_kind),
+                        row.document_date
+                          ? formatDay(row.document_date, locale)
+                          : '',
                       ]
                         .filter(Boolean)
                         .join(' · ')
                     }}</span>
                   </span>
-                  <Badge
-                    v-if="row.assigned_to_me"
-                    theme="blue"
-                    :label="__('Yours to review')"
-                  />
-                  <Badge
-                    v-else-if="view !== 'por_clasificar'"
-                    :theme="statusTheme(row.status)"
-                    :label="statusLabel(row.status)"
-                  />
+                  <span class="flex shrink-0 flex-col items-end gap-1">
+                    <Badge
+                      v-if="row.assigned_to_me"
+                      theme="blue"
+                      :label="__('Yours to review')"
+                    />
+                    <Badge
+                      v-else-if="view !== 'por_clasificar'"
+                      :theme="statusTheme(row.status)"
+                      :label="statusLabel(row.status)"
+                    />
+                    <span
+                      class="text-xs text-ink-gray-5"
+                      :title="formatDay(row.modified, locale)"
+                      >{{ ageLabel(row.modified, locale) }}</span
+                    >
+                  </span>
                 </button>
               </li>
             </ul>
@@ -300,13 +361,14 @@
             @updated="onUpdated"
             @clear-target="clearTarget"
           />
-          <div
-            v-else
-            class="m-auto max-w-sm p-6 text-center text-sm text-ink-gray-6"
-          >
-            {{
-              __('Choose a file from the list to see the original and link it.')
-            }}
+          <div v-else class="min-h-0 flex-1 overflow-y-auto">
+            <ArchivosOverview
+              :company="company"
+              :counts="counts"
+              :limit-mb="boot.upload_limit_mb || 10"
+              @view="selectView"
+              @file="receiveFile"
+            />
           </div>
         </section>
       </div>
@@ -322,13 +384,16 @@ import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import ArchivoDetail from '@/components/archivos/ArchivoDetail.vue'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import ArchivoUpload from '@/components/archivos/ArchivoUpload.vue'
+import ArchivosOverview from '@/components/archivos/ArchivosOverview.vue'
 import ArchivosRegistroPanel from '@/components/archivos/ArchivosRegistroPanel.vue'
 import {
   VIEWS,
+  ageLabel,
   archivosApi,
   archivosBoot as boot,
   doctypeLabel,
   formatDay,
+  kindIcon,
   kindLabel,
   loadArchivosBoot,
   nextAfter,
@@ -338,6 +403,8 @@ import {
   safeReturn,
   statusLabel,
   statusTheme,
+  viewCountLabel,
+  viewHint,
   viewLabel,
   withDone,
 } from '@/composables/useArchivos'
@@ -374,17 +441,51 @@ const rows = ref([]),
   uploadOpen = ref(false),
   targetCtx = ref(null),
   targetProblem = ref(null),
-  lastDone = ref(null)
+  lastDone = ref(null),
+  pageDragging = ref(false),
+  droppedFile = ref(null)
 
 const viewEntries = computed(() =>
   VIEWS.map((v) => ({
     value: v.value,
     icon: v.icon,
-    label: counts.value[v.value]
-      ? `${viewLabel(v.value)} · ${counts.value[v.value]}`
-      : viewLabel(v.value),
+    label: viewCountLabel(v.value, counts.value),
   })),
 )
+
+// Receiving: the header button, the empty queue, the overview and a file
+// dropped anywhere on the page all open the same intake panel.
+function openUpload() {
+  uploadOpen.value = true
+}
+function closeUpload() {
+  uploadOpen.value = false
+  droppedFile.value = null
+}
+function toggleUpload() {
+  if (uploadOpen.value) closeUpload()
+  else openUpload()
+}
+function receiveFile(file) {
+  droppedFile.value = file
+  // On a phone only one pane shows: bring back the queue, where intake lives.
+  const wide = window.matchMedia?.('(min-width: 1024px)').matches
+  if (documentName.value && !wide) patch({ document: undefined })
+  openUpload()
+}
+function hasFiles(event) {
+  return [...(event.dataTransfer?.types || [])].includes('Files')
+}
+function onPageDrag(event) {
+  if (!hasFiles(event)) return
+  event.preventDefault()
+  pageDragging.value = true
+}
+function onPageDrop(event) {
+  pageDragging.value = false
+  const file = event.dataTransfer?.files?.[0]
+  if (file) receiveFile(file)
+}
 const emptyState = computed(() => {
   if (q.value)
     return {
@@ -395,16 +496,18 @@ const emptyState = computed(() => {
   if (view.value === 'ayuda')
     return {
       icon: 'check-circle',
-      title: __('Nothing needs help'),
+      title: __('Nothing needs attention'),
       body: __(
-        'Files that could not be processed show up here with what to do.',
+        'Files that could not be read or processed show up here with what to do.',
       ),
     }
   if (view.value === 'archivo')
     return {
       icon: 'archive',
       title: __('Nothing filed yet'),
-      body: __('Linked and filed documents stay here, searchable.'),
+      body: __(
+        'Once you link or file a document it stays here, searchable by issuer, tag or text.',
+      ),
     }
   return {
     icon: 'inbox',
@@ -514,7 +617,7 @@ function onReceived(detail, { pending = false } = {}) {
     loadList()
     return
   }
-  uploadOpen.value = false
+  closeUpload()
   toast.success(__('File received'))
   patch({
     company:

@@ -83,9 +83,9 @@ const EQUIPO_PLACES = [
   ['todos', 'Todo el equipo'],
 ]
 const ARCHIVOS_PLACES = [
-  ['', 'Por clasificar'],
-  ['ayuda', 'Requieren ayuda'],
-  ['archivo', 'Archivo'],
+  ['', 'Por clasificar', 'comprobantes facturas recibir subir documentos'],
+  ['ayuda', 'Requieren atención', 'ayuda errores problemas'],
+  ['archivo', 'Archivo', 'archivados vinculados buscar documentos'],
 ]
 // Escáner (scanner_kit) places a worker jumps to from anywhere in the shell;
 // they open in Escáner with «Volver a …» back to the page they left.
@@ -311,11 +311,12 @@ export function createShellProviders({ boot, modules }) {
               href: `/equipo?segment=${segment}`,
             })
       if (moduleEnabled(boot.value, 'archivos'))
-        for (const [view, label] of ARCHIVOS_PLACES)
+        for (const [view, label, keywords] of ARCHIVOS_PLACES)
           items.push({
             id: `archivos.${view || 'por_clasificar'}`,
             group: 'ir_a',
             title: `Archivos › ${label}`,
+            keywords,
             icon: 'lucide-folder',
             href: view ? `/archivos?view=${view}` : '/archivos',
           })

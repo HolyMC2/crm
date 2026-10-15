@@ -4,17 +4,23 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  VIEWS,
+  ageLabel,
   archivosHref,
   bankHandoffUrl,
+  kindIcon,
   nextAfter,
   normalizeView,
   parseTarget,
   previewKind,
   problem,
+  progressStep,
   recordHref,
   safeReturn,
   uploadName,
   uploadProblem,
+  viewCountLabel,
+  viewHint,
   withDone,
 } from '../../src/composables/useArchivos.js'
 import {
@@ -24,6 +30,7 @@ import {
 import ArchivosRegistroPanel from '../../src/components/archivos/ArchivosRegistroPanel.vue'
 import ArchivoUpload from '../../src/components/archivos/ArchivoUpload.vue'
 import ArchivoDetail from '../../src/components/archivos/ArchivoDetail.vue'
+import ArchivosOverview from '../../src/components/archivos/ArchivosOverview.vue'
 
 describe('record-origin target', () => {
   it('splits doctype from names that contain slashes', () => {
@@ -635,5 +642,132 @@ describe('saving details', () => {
       (b) => b.textContent.trim() === 'Save details',
     )
     expect(save.disabled).toBe(false)
+  })
+})
+
+describe('the page explains itself', () => {
+  let app, root
+  afterEach(() => {
+    app?.unmount()
+    root?.remove()
+  })
+  async function mountOverview(props, listeners = {}) {
+    root = document.createElement('div')
+    document.body.append(root)
+    app = createApp({
+      render: () => h(ArchivosOverview, { ...props, ...listeners }),
+    })
+    app.config.globalProperties.__ = globalThis.__
+    app.mount(root)
+    await nextTick()
+  }
+
+  it('every list shows its count and says what is in it', () => {
+    const counts = { por_clasificar: 3, ayuda: 0, archivo: 12 }
+    expect(viewCountLabel('por_clasificar', counts)).toBe('To classify (3)')
+    expect(viewCountLabel('ayuda', counts)).toBe('Need attention (0)')
+    expect(viewCountLabel('archivo', {})).toBe('Filed')
+    for (const view of VIEWS) expect(viewHint(view.value)).toBeTruthy()
+  })
+
+  it('tells how long a file has waited', () => {
+    const now = new Date(2026, 9, 15, 12)
+    expect(ageLabel('2026-10-15 08:00:00', 'en', now)).toBe('today')
+    expect(ageLabel('2026-10-14 23:00:00', 'en', now)).toBe('yesterday')
+    expect(ageLabel('2026-10-12 10:00:00', 'en', now)).toBe('3 days ago')
+    expect(ageLabel('2026-09-01 10:00:00', 'en', now)).toMatch(/2026/)
+    expect(ageLabel('', 'en', now)).toBe('')
+  })
+
+  it('places each status on the receive → link → filed path', () => {
+    expect(progressStep('Processing')).toBe(1)
+    expect(progressStep('Error')).toBe(1)
+    expect(progressStep('Review')).toBe(2)
+    expect(progressStep('Linked')).toBe(3)
+    expect(progressStep('Archived')).toBe(3)
+    expect(kindIcon('Invoice')).toBe('file-text')
+    expect(kindIcon('Whatever')).toBe('file')
+  })
+
+  it('the overview shows the steps with live counts and leads into the lists', async () => {
+    const onView = vi.fn()
+    await mountOverview(
+      {
+        company: 'Doco MX',
+        counts: { por_clasificar: 4, ayuda: 2, archivo: 9 },
+      },
+      { onView },
+    )
+    const text = root.textContent
+    expect(text).toContain('Doco MX')
+    expect(text).toContain('4 to classify')
+    expect(text).toContain('9 filed')
+    expect(text).toContain('2 files need attention')
+    const review = [...root.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('Review them'),
+    )
+    review.click()
+    expect(onView).toHaveBeenCalledWith('ayuda')
+    const toClassify = [...root.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('4 to classify'),
+    )
+    toClassify.click()
+    expect(onView).toHaveBeenLastCalledWith('por_clasificar')
+  })
+
+  it('the overview hides the attention card when nothing needs it and hands over a chosen file', async () => {
+    const onFile = vi.fn()
+    await mountOverview(
+      { company: 'Doco MX', counts: { por_clasificar: 0, ayuda: 0 } },
+      { onFile },
+    )
+    expect(root.textContent).not.toContain('need attention')
+    expect(root.textContent).toContain('Nothing waiting')
+    const input = root.querySelector('input[type="file"]')
+    const file = new File(['x'], 'factura.pdf', { type: 'application/pdf' })
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    input.dispatchEvent(new Event('change'))
+    expect(onFile).toHaveBeenCalledWith(file)
+  })
+
+  it('a file dropped on the page arrives selected in the intake panel', async () => {
+    root = document.createElement('div')
+    document.body.append(root)
+    const file = new File(['x'], 'recibo.pdf', { type: 'application/pdf' })
+    app = createApp({
+      render: () => h(ArchivoUpload, { company: 'Doco MX', initialFile: file }),
+    })
+    app.config.globalProperties.__ = globalThis.__
+    app.mount(root)
+    await nextTick()
+    expect(root.textContent).toContain('recibo.pdf')
+    expect(root.querySelector('button').disabled).toBe(false)
+  })
+
+  it('has an es catalog entry for every string the page, overview, intake and record show', () => {
+    const here = dirname(fileURLToPath(import.meta.url))
+    const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
+    const catalog = new Map()
+    for (const m of po.matchAll(
+      /^msgid "((?:[^"\\]|\\.)*)"\nmsgstr "((?:[^"\\]|\\.)*)"/gm,
+    ))
+      catalog.set(m[1], m[2])
+    const strings = []
+    for (const file of [
+      '../../src/pages/Archivos.vue',
+      '../../src/components/archivos/ArchivosOverview.vue',
+      '../../src/components/archivos/ArchivoUpload.vue',
+      '../../src/components/archivos/ArchivoDetail.vue',
+    ]) {
+      const source = readFileSync(resolve(here, file), 'utf8')
+      strings.push(
+        ...[...source.matchAll(/__\(\s*(['"])((?:(?!\1).)+)\1/gs)].map(
+          (m) => m[2],
+        ),
+      )
+    }
+    for (const view of VIEWS) strings.push(view.label, view.hint)
+    expect(strings.length).toBeGreaterThan(50)
+    for (const text of strings) expect(catalog.get(text), text).toBeTruthy()
   })
 })
