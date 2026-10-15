@@ -68,6 +68,17 @@
         <span v-if="summary.missingFx" class="text-xs text-ink-amber-9">
           {{ __('Missing exchange rate') }}: {{ summary.missingFx }}
         </span>
+        <span
+          v-if="summary.outliers"
+          class="text-xs text-ink-amber-9"
+          :title="
+            __(
+              'Unusually large amount: left out of totals and averages. Check the value.',
+            )
+          "
+        >
+          {{ __('Unusual amounts left out') }}: {{ summary.outliers }}
+        </span>
       </template>
     </div>
 
