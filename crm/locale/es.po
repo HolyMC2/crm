@@ -23516,3 +23516,11 @@ msgstr "Precios que se muestran"
 msgctxt "Productos"
 msgid "{0} always; add other lists to each product."
 msgstr "{0} siempre; agrega otras listas a cada producto."
+
+#: frontend/src/pages/Hoy.vue
+msgid "Deals without a next step"
+msgstr "Tratos sin seguimiento"
+
+#: frontend/src/pages/Hoy.vue
+msgid "Every open deal of yours has a next step."
+msgstr "Todos tus tratos abiertos tienen seguimiento."

@@ -12,6 +12,9 @@ from crm.avisos import stream as avisos
 
 LANDING_DEFAULT = "muelle_landing"
 AVISOS_LIMIT = 3
+FOLLOW_UP_LIMIT = 5
+FOLLOW_UP_CAP = 100
+FOLLOW_UP_QUEUE = "sin_seguimiento"
 
 
 def check_hoy_permission(user: str | None = None) -> bool:
@@ -48,6 +51,75 @@ def _avisos():
 	}
 
 
+def _deal_title(row) -> str:
+	person = " ".join(part for part in (row.get("first_name"), row.get("last_name")) if part)
+	return row.get("deal_name") or row.get("organization") or person or row.get("mobile_no") or row.name
+
+
+def _follow_up():
+	"""My open deals with no next step: the queue a seller clears first.
+
+	The predicate is the deals list's own «Sin seguimiento» queue
+	(``crm.api.deal_queues``), narrowed to deals I own, so Hoy and the list never
+	disagree. The count is capped like the other Hoy counts.
+	"""
+	from crm.api.deal_queues import KEY_PREFIX, QUEUES
+	from crm.api.list_tokens import resolve_filter_tokens
+
+	if not frappe.has_permission("CRM Deal", "read"):
+		return {"available": False, "reason": None}
+	queue = next(queue for queue in QUEUES if queue["key"] == FOLLOW_UP_QUEUE)
+	filters = resolve_filter_tokens({**queue["filters"], "deal_owner": frappe.session.user})
+	# Only sellers: someone who owns no open deal (a technician, a cashier) gets no section.
+	if not frappe.get_list(
+		"CRM Deal", filters={"status": filters["status"], "deal_owner": frappe.session.user}, limit=1
+	):
+		return {"available": False, "reason": None}
+	meta = frappe.get_meta("CRM Deal")
+	wanted = ("deal_name", "organization", "first_name", "last_name", "mobile_no", "status", "modified")
+	fields = ["name", *(field for field in wanted if field == "modified" or meta.has_field(field))]
+	names = frappe.get_list(
+		"CRM Deal", filters=filters, pluck="name", order_by="modified desc", limit=FOLLOW_UP_CAP + 1
+	)
+	rows = (
+		frappe.get_list(
+			"CRM Deal",
+			filters={"name": ["in", names[:FOLLOW_UP_LIMIT]]},
+			fields=fields,
+			order_by="modified desc",
+		)
+		if names
+		else []
+	)
+	view = frappe.db.get_value("CRM View Settings", {"crm_seed_key": KEY_PREFIX + FOLLOW_UP_QUEUE}, "name")
+	return {
+		"available": True,
+		"count": {"value": min(len(names), FOLLOW_UP_CAP), "capped": len(names) > FOLLOW_UP_CAP},
+		"rows": [
+			{
+				"name": row.name,
+				"title": _deal_title(row),
+				"status": row.get("status"),
+				"modified": str(row.modified),
+			}
+			for row in rows
+		],
+		"view": view,
+	}
+
+
+def _section(build):
+	try:
+		return build()
+	except frappe.PermissionError:
+		frappe.clear_last_message()
+		return {"available": False, "reason": None}
+	except Exception:
+		frappe.logger("crm.hoy").exception("Hoy section failed")
+		frappe.clear_last_message()
+		return {"available": False, "failed": True}
+
+
 def _doco_day():
 	try:
 		# A doco older than Hoy (crm updated first) leaves those sections off, not the page.
@@ -66,6 +138,7 @@ def page() -> dict:
 	_require()
 	day = _doco_day()
 	day["avisos"] = _avisos()
+	day["seguimiento"] = _section(_follow_up)
 	day["landing"] = frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 	return day
 

@@ -67,41 +67,79 @@
       <div
         class="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-rows-[auto_auto_auto_1fr] lg:items-start"
       >
-        <!-- 1 · Para ahora -->
-        <HoySection
-          id="ahora"
-          class="lg:col-start-1 lg:row-start-1"
-          :title="__('For now')"
-          icon="lucide-square-check-big"
-          :count="dueCount"
-          :more="
-            pendientes?.available
-              ? { label: __('See all'), to: '/pendientes' }
-              : null
-          "
-          :skeleton="skeleton"
-          :collapsed="dueCollapsed"
-          :failed="Boolean(pendientes?.failed)"
-          @retry="refresh()"
-        >
-          <HoyTask
-            v-for="row in tasks"
-            :key="row.doctype + row.name"
-            :row="row"
-            :today="today"
-            :busy="busy.has(row.doctype + row.name)"
-            @complete="complete"
-            @complete-next="openComplete"
-            @reschedule="reschedule"
-          />
-          <RouterLink
-            v-if="moreTasks"
-            to="/pendientes"
-            class="mx-4 mt-1 flex min-h-11 items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:mx-5"
+        <!-- 1 · Para ahora, and the seller's deals without a next step -->
+        <div class="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
+          <HoySection
+            id="ahora"
+            :title="__('For now')"
+            icon="lucide-square-check-big"
+            :count="dueCount"
+            :more="
+              pendientes?.available
+                ? { label: __('See all'), to: '/pendientes' }
+                : null
+            "
+            :skeleton="skeleton"
+            :collapsed="dueCollapsed"
+            :failed="Boolean(pendientes?.failed)"
+            @retry="refresh()"
           >
-            {{ __('More pendientes due — open Pendientes') }}
-          </RouterLink>
-        </HoySection>
+            <HoyTask
+              v-for="row in tasks"
+              :key="row.doctype + row.name"
+              :row="row"
+              :today="today"
+              :busy="busy.has(row.doctype + row.name)"
+              @complete="complete"
+              @complete-next="openComplete"
+              @reschedule="reschedule"
+            />
+            <RouterLink
+              v-if="moreTasks"
+              to="/pendientes"
+              class="mx-4 mt-1 flex min-h-11 items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:mx-5"
+            >
+              {{ __('More pendientes due — open Pendientes') }}
+            </RouterLink>
+          </HoySection>
+          <!-- 2b · Tratos sin seguimiento (sellers only) -->
+          <HoySection
+            v-if="data?.seguimiento?.available || data?.seguimiento?.failed"
+            id="seguimiento"
+            :title="__('Deals without a next step')"
+            icon="lucide-calendar-clock"
+            :count="followUpCount"
+            :more="
+              followUpQueue ? { label: __('See all'), to: followUpQueue } : null
+            "
+            :collapsed="followUpCollapsed"
+            :failed="Boolean(data?.seguimiento?.failed)"
+            @retry="refresh()"
+          >
+            <ul :aria-label="__('Deals without a next step')">
+              <li v-for="row in followUps" :key="row.name">
+                <RouterLink
+                  :to="row.to"
+                  class="flex min-h-12 items-center gap-3 px-4 py-1.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-link sm:px-5"
+                >
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-base text-ink-gray-9">{{
+                      row.title
+                    }}</span>
+                    <span
+                      v-if="row.status"
+                      class="block truncate text-sm text-ink-gray-6"
+                      >{{ __(row.status) }}</span
+                    >
+                  </span>
+                  <span class="shrink-0 text-sm text-ink-gray-7">{{
+                    __('Schedule')
+                  }}</span>
+                </RouterLink>
+              </li>
+            </ul>
+          </HoySection>
+        </div>
 
         <!-- 2 · Agenda de hoy -->
         <HoySection
@@ -402,10 +440,13 @@ import {
   agendaPlan,
   continuarCards,
   countLabel,
+  createReadGate,
   dayTitle,
   dueMore,
   dueRows,
   eventLink,
+  followUpQueueLink,
+  followUpRows,
   greeting,
   hoyLive,
   landingOptions,
@@ -489,6 +530,19 @@ const cards = computed(() =>
       })
     : [],
 )
+const followUps = computed(() => followUpRows(data.value?.seguimiento))
+const followUpQueue = computed(() => followUpQueueLink(data.value?.seguimiento))
+const followUpCount = computed(() => {
+  const count = data.value?.seguimiento?.count
+  return count?.value ? countLabel(count) : ''
+})
+const followUpCollapsed = computed(() => {
+  const section = data.value?.seguimiento
+  if (!section?.available) return ''
+  return followUps.value.length
+    ? ''
+    : __('Every open deal of yours has a next step.')
+})
 const shortcuts = computed(() => accesos(shellBoot.value))
 const landingChoices = computed(() => landingOptions(shellModules.value))
 
@@ -556,8 +610,10 @@ const avisosCollapsed = computed(() => {
 // ── loading ────────────────────────────────────────────────────────────────
 
 let sequence = 0
+const gate = createReadGate()
 async function refresh({ quiet = false, fresh = true } = {}) {
   const request = ++sequence
+  gate.start()
   loading.value = true
   if (!quiet) problem.value = ''
   const skeletonTimer = setTimeout(() => {
@@ -592,15 +648,18 @@ async function refresh({ quiet = false, fresh = true } = {}) {
       skeleton.value = false
       slow.value = false
     }
+    if (gate.end()) refresh({ quiet: true })
   }
 }
 
 const { pull, refreshing } = usePullRefresh(scroller, () => refresh())
 
-useLiveWatch(hoyLive(socket), [...LIVE_DOCTYPES], () =>
-  refresh({ quiet: true }),
-)
-watch(avisosVersion, () => refresh({ quiet: true }))
+// Live pushes go through the gate: one read per render (see createReadGate).
+function liveRefresh(batch) {
+  if (gate.admit(batch)) refresh({ quiet: true })
+}
+useLiveWatch(hoyLive(socket), [...LIVE_DOCTYPES], liveRefresh)
+watch(avisosVersion, () => liveRefresh())
 
 let clock
 onMounted(() => {

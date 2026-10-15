@@ -38,6 +38,61 @@ export function loadHoy({ fresh = false } = {}) {
   return (!fresh && takeHoy()) || call('crm.api.hoy.page')
 }
 
+// A resync this soon after a read started finds nothing that read did not.
+export const RESYNC_FRESH_MS = 3000
+
+/**
+ * One read per render. The live hub resyncs every view when the socket first
+ * connects, which lands while the page's first read is still in flight: that
+ * read already answers it. A real change during a read reloads once after it.
+ */
+export function createReadGate({ now = () => Date.now() } = {}) {
+  let inFlight = 0
+  let startedAt = -Infinity
+  let pending = false
+  return {
+    start() {
+      inFlight += 1
+      startedAt = now()
+    },
+    /** True when a reload is owed for a change that arrived mid-read. */
+    end() {
+      inFlight = Math.max(0, inFlight - 1)
+      const owed = pending && !inFlight
+      if (owed) pending = false
+      return owed
+    },
+    /** Whether a live batch should read now. */
+    admit(batch) {
+      const change = !batch || batch.reason === 'change'
+      if (inFlight) {
+        if (change) pending = true
+        return false
+      }
+      return change || now() - startedAt >= RESYNC_FRESH_MS
+    },
+  }
+}
+
+/** «Sin seguimiento» rows: each opens its deal and comes back to Hoy. */
+export function followUpRows(section) {
+  if (!section?.available) return []
+  return (section.rows || []).map((row) => ({
+    ...row,
+    to: withReturn(`/deals/${encodeURIComponent(row.name)}`),
+  }))
+}
+
+/** The deals list's own «Sin seguimiento» queue, with the return to Hoy. */
+export function followUpQueueLink(section) {
+  if (!section?.available) return null
+  return withReturn(
+    section.view
+      ? `/deals/view/list?view=${encodeURIComponent(section.view)}`
+      : '/deals',
+  )
+}
+
 export function saveLanding(key) {
   return call('crm.api.hoy.save_landing', { key })
 }
