@@ -21,7 +21,7 @@ export const TOKEN_MASK = '********'
 // --- health ----------------------------------------------------------------
 
 const HEALTH = {
-  ok: ['Working', 'green'],
+  ok: ['Working normally', 'green'],
   waiting: ['Waiting for its first check', 'gray'],
   paused: ['Paused', 'gray'],
   late: ['Running late', 'orange'],

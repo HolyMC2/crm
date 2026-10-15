@@ -41,7 +41,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 describe('health and time', () => {
   it('names each health state with its colour', () => {
-    expect([healthLabel('ok'), healthTheme('ok')]).toEqual(['Working', 'green'])
+    expect([healthLabel('ok'), healthTheme('ok')]).toEqual(['Working normally', 'green'])
     expect(healthTheme('late')).toBe('orange')
     expect(healthTheme('error')).toBe('red')
     expect(healthTheme('paused')).toBe('gray')

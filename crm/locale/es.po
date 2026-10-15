@@ -25422,3 +25422,6 @@ msgstr "Reintentando"
 
 msgid "Update in Paperless"
 msgstr "Actualizar en Paperless"
+
+msgid "Working normally"
+msgstr "Funciona bien"
