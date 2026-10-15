@@ -75,12 +75,7 @@ const SAME_IN_BOTH = new Set([
 
 // Strings another lane adds to es.po; the guard waits for them instead of
 // adding a duplicate entry here (union conflicts would break msgfmt).
-const PENDING_IN_OTHER_LANES = new Set([
-  // added by crm-s5-nav
-  'Other lists',
-  'Social',
-  'Ventas',
-])
+const PENDING_IN_OTHER_LANES = new Set([])
 
 // TODO(ARC-S2): hard-coded English in Inbox files that lane
 // arc-s2-inbox-20261015 is editing; wrap them in __() once it lands.
