@@ -122,10 +122,12 @@ const SIBLING_HOME = Object.freeze({ '/scan/': '/scan/inicio' })
  * The sibling's entry with the shell's return protocol: it can offer «Volver a
  * {label}» back to the page the worker left. `fullPath` is the router path
  * under /crm; an unusable one just opens the sibling without a way back.
+ * The other roots open bare (/taller, /posapp): Frappe answers /taller/ with
+ * an uncached 301, a round trip per switch that also voids the hover prefetch.
  */
 export function siblingHref(app, fullPath, label) {
   const back = `/crm${fullPath && fullPath !== '/' ? fullPath : '/'}`
-  const entry = SIBLING_HOME[app.path] || app.path
+  const entry = SIBLING_HOME[app.path] || app.path.replace(/(.)\/$/, '$1')
   try {
     return withReturn(entry, {
       to: back,
