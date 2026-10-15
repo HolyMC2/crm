@@ -25419,3 +25419,6 @@ msgstr "Página de la carga inicial"
 
 msgid "Trying again"
 msgstr "Reintentando"
+
+msgid "Update in Paperless"
+msgstr "Actualizar en Paperless"

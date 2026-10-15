@@ -62,8 +62,8 @@
         <Button
           variant="solid"
           class="min-h-11 sm:min-h-0"
-          :label="allExist ? __('Already set up') : __('Create in Paperless')"
-          :disabled="!plan.writes_allowed || allExist"
+          :label="allExist ? __('Update in Paperless') : __('Create in Paperless')"
+          :disabled="!plan.writes_allowed"
           :title="!plan.writes_allowed ? plan.guard || undefined : undefined"
           :loading="applying"
           @click="apply"
