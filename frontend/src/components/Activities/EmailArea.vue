@@ -75,7 +75,18 @@
         :key="a.file_url"
         :label="a.file_name"
         :url="a.file_url"
-      />
+      >
+        <template v-if="archivosEnabled" #suffix>
+          <ArchivosAttachmentActions
+            :saved-document="saved[a.name] || ''"
+            :busy="isBusy(a.name)"
+            :target="archivosTarget"
+            :return-label="archivosTarget?.name || ''"
+            @save="saveToArchivos(a)"
+            @link="linkToArchivos(a)"
+          />
+        </template>
+      </AttachmentItem>
     </div>
   </div>
 </template>
@@ -84,6 +95,7 @@ import ReplyIcon from '@/components/Icons/ReplyIcon.vue'
 import ReplyAllIcon from '@/components/Icons/ReplyAllIcon.vue'
 import AttachmentItem from '@/components/AttachmentItem.vue'
 import EmailContent from '@/components/Activities/EmailContent.vue'
+import ArchivosAttachmentActions from '@/components/Activities/ArchivosAttachmentActions.vue'
 import { Badge, Tooltip } from 'frappe-ui'
 import {
   timeAgo,
@@ -91,7 +103,15 @@ import {
   formatDateTime,
   formatTimestampFull,
 } from '@/utils'
-import { reactive, computed } from 'vue'
+import { reactive, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { shellBoot } from '@/composables/muelleShell'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import {
+  useConversationArchivos,
+  emailSaveArgs,
+  collectFileNames,
+} from '@/composables/useConversationArchivos'
 
 const props = defineProps({
   activity: { type: Object, default: () => ({}) },
@@ -99,6 +119,38 @@ const props = defineProps({
 })
 
 const emailBox = reactive(props.emailBox)
+
+// «Guardar en Archivos» / «Vincular a…» on each email attachment (ARC-S2.3):
+// same module gate and the same Deal/Lead target as WhatsAppArea.
+const route = useRoute()
+const archivosEnabled = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos'),
+)
+const archivosTarget = computed(() => {
+  if (route.params.dealId)
+    return { doctype: 'CRM Deal', name: String(route.params.dealId) }
+  if (route.params.leadId)
+    return { doctype: 'CRM Lead', name: String(route.params.leadId) }
+  return null
+})
+const { saved, isBusy, refreshSaved, save, linkTo } = useConversationArchivos()
+watch(
+  () => props.activity?.data?.attachments,
+  (attachments) => {
+    if (archivosEnabled.value)
+      refreshSaved(() => ({ files: collectFileNames(attachments) }))
+  },
+  { immediate: true },
+)
+async function saveToArchivos(attachment) {
+  await save(attachment.name, emailSaveArgs(props.activity, attachment))
+}
+async function linkToArchivos(attachment) {
+  await linkTo(attachment.name, emailSaveArgs(props.activity, attachment), {
+    target: archivosTarget.value,
+    returnLabel: archivosTarget.value?.name || '',
+  })
+}
 
 function reply(email, reply_all = false) {
   emailBox.show = true

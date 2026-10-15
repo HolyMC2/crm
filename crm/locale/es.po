@@ -23539,3 +23539,27 @@ msgstr "Redes sociales"
 #: frontend/src/components/shell/VentasSidebar.vue
 msgid "Ventas"
 msgstr "Ventas"
+
+#: frontend/src/components/Activities
+msgid "In Files"
+msgstr "En Archivos"
+
+#: frontend/src/components/Activities
+msgid "Save to Files"
+msgstr "Guardar en Archivos"
+
+#: frontend/src/components/Activities
+msgid "Link to…"
+msgstr "Vincular a…"
+
+#: frontend/src/components/Activities
+msgid "Files actions"
+msgstr "Acciones de archivos"
+
+#: frontend/src/components/Activities
+msgid "Files…"
+msgstr "Archivos…"
+
+#: frontend/src/components/Activities
+msgid "Saved to Files"
+msgstr "Guardado en Archivos"

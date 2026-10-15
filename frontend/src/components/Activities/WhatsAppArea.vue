@@ -265,11 +265,11 @@
                 @click="() => openFileInAnotherTab(whatsapp.attach)"
               />
               <!-- message is null on media-only rows; guard before .startsWith or
-              the throw blanks the whole thread (Vue aborts the v-for subtree). -->
+              the throw blanks the whole thread (Vue aborts the v-for subtree).
+              Inbound media now saves as a private file, so the body-vs-URL
+              heuristic must also catch '/private/files/'. -->
               <div
-                v-if="
-                  whatsapp.message && !whatsapp.message.startsWith('/files/')
-                "
+                v-if="whatsapp.message && !isFilePath(whatsapp.message)"
                 class="mt-1.5"
                 v-html="formatWhatsAppMessage(whatsapp.message)"
               />
@@ -307,13 +307,20 @@
               />
               <!-- same null guard as the image branch -->
               <div
-                v-if="
-                  whatsapp.message && !whatsapp.message.startsWith('/files/')
-                "
+                v-if="whatsapp.message && !isFilePath(whatsapp.message)"
                 class="mt-1.5"
                 v-html="formatWhatsAppMessage(whatsapp.message)"
               />
             </div>
+            <!-- Archivos: once saved, a small badge links to the Doco Document
+                 for this media attachment. -->
+            <a
+              v-if="archivosEnabled && savedArchivo(whatsapp)"
+              :href="archivosHref({ document: savedArchivo(whatsapp) })"
+              class="inline-flex w-fit items-center gap-1 rounded bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
+            >
+              {{ __('In Files') }}
+            </a>
             <div
               class="-mb-1 ml-auto flex shrink-0 items-end gap-1 text-ink-gray-5"
             >
@@ -434,8 +441,18 @@ import {
 } from '@/utils'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Dropdown, call, createResource, toast } from 'frappe-ui'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { usersStore } from '@/stores/users'
+import { shellBoot } from '@/composables/muelleShell'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { archivosHref } from '@/composables/useArchivos'
+import {
+  useConversationArchivos,
+  whatsappSaveArgs,
+  isWhatsappAttachment,
+  collectFileUrls,
+} from '@/composables/useConversationArchivos'
 
 const { getUser } = usersStore()
 
@@ -497,6 +514,51 @@ const formattedPhone = computed(() => {
   }
   return p.startsWith('+') ? p : `+${d}`
 })
+
+// Inbound media is now private (ARC-S2.1); the old heuristic only skipped a
+// bare "/files/..." body and would show the raw private URL as the caption.
+function isFilePath(message) {
+  return (
+    message.startsWith('/files/') || message.startsWith('/private/files/')
+  )
+}
+
+// «Guardar en Archivos» / «Vincular a…»: only when the Archivos module is on
+// for this user (same boot the rest of the shell reads).
+const route = useRoute()
+const archivosEnabled = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos'),
+)
+// This bubble's conversation record: the Deal/Lead page this area is mounted
+// in, read from the route the same way Deal.vue/Lead.vue load it.
+const archivosTarget = computed(() => {
+  if (route.params.dealId)
+    return { doctype: 'CRM Deal', name: String(route.params.dealId) }
+  if (route.params.leadId)
+    return { doctype: 'CRM Lead', name: String(route.params.leadId) }
+  return null
+})
+const { saved, isBusy, refreshSaved, save, linkTo } = useConversationArchivos()
+function savedArchivo(whatsapp) {
+  return whatsapp.attach ? saved[whatsapp.attach] : ''
+}
+watch(
+  () => props.messages,
+  () => {
+    if (archivosEnabled.value)
+      refreshSaved(() => ({ fileUrls: collectFileUrls(props.messages) }))
+  },
+  { immediate: true, deep: false },
+)
+async function saveToArchivos(whatsapp) {
+  await save(whatsapp.attach, whatsappSaveArgs(whatsapp))
+}
+async function linkToArchivos(whatsapp) {
+  await linkTo(whatsapp.attach, whatsappSaveArgs(whatsapp), {
+    target: archivosTarget.value,
+    returnLabel: props.contact?.name || props.contact?.phone || '',
+  })
+}
 
 const { capture } = useTelemetry()
 
@@ -605,7 +667,7 @@ const reply = defineModel('reply', { type: Object, default: () => ({}) })
 const replyMode = ref(false)
 
 function messageOptions(message) {
-  return [
+  const options = [
     {
       label: 'Reply',
       onClick: () => {
@@ -625,6 +687,23 @@ function messageOptions(message) {
     //   onClick: () => console.log('Delete'),
     // },
   ]
+  if (archivosEnabled.value && isWhatsappAttachment(message)) {
+    options.push(
+      {
+        label: isBusy(message.attach)
+          ? __('Saving…')
+          : __('Save to Files'),
+        disabled: isBusy(message.attach),
+        onClick: () => saveToArchivos(message),
+      },
+      {
+        label: __('Link to…'),
+        disabled: isBusy(message.attach),
+        onClick: () => linkToArchivos(message),
+      },
+    )
+  }
+  return options
 }
 
 function scrollToMessage(name) {

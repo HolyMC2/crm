@@ -137,6 +137,7 @@
           <MessengerArea
             class="min-h-0 min-w-0 flex-1"
             :messages="state.messages"
+            :conversation="state.conversation"
           />
           <p
             v-if="state.messages.some((m) => m.attachment_restricted)"

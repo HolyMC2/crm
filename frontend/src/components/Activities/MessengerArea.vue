@@ -69,6 +69,30 @@
         >
           {{ attachLabel(m.content_type) }}
         </a>
+        <!-- Archivos: only offered when this is a true WhatsApp Message (its
+             `id` resolves there); Webchat/Messenger/Instagram rows are a
+             different doctype the save endpoint does not accept (see
+             conversation_threads._message/_scope, crm/api). -->
+        <div
+          v-if="archivosEnabled && m.attach && isWhatsappInboxMessage(m, conversation)"
+        >
+          <a
+            v-if="saved[m.attach]"
+            :href="archivosHref({ document: saved[m.attach] })"
+            class="mt-1 inline-flex items-center gap-1 rounded bg-surface-green-1 px-1.5 py-0.5 text-2xs font-medium text-ink-green-9 hover:underline"
+          >
+            {{ __('In Files') }}
+          </a>
+          <Dropdown v-else :options="attachmentOptions(m)">
+            <button
+              type="button"
+              class="mt-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs underline opacity-80 hover:opacity-100 disabled:opacity-60"
+              :disabled="isBusy(m.attach)"
+            >
+              {{ isBusy(m.attach) ? __('Saving…') : __('Files…') }}
+            </button>
+          </Dropdown>
+        </div>
         <div
           v-if="m.content"
           class="whitespace-pre-wrap [overflow-wrap:anywhere]"
@@ -92,13 +116,75 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
+import { Dropdown } from 'frappe-ui'
+import { archivosHref } from '@/composables/useArchivos'
+import { shellBoot } from '@/composables/muelleShell'
+import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import {
+  useConversationArchivos,
+  whatsappSaveArgs,
+  isWhatsappInboxMessage,
+  collectFileUrls,
+} from '@/composables/useConversationArchivos'
 
 const props = defineProps({
   messages: { type: Array, default: () => [] },
+  // The conversation this history belongs to ({ provider, ... } from
+  // crm.api.conversation_threads). Optional: without it the Files actions
+  // stay hidden, since only a WhatsApp conversation's message id is a
+  // WhatsApp Message name the save endpoint accepts. ConversationWorkspace.vue
+  // passes it as `:conversation="state.conversation"`.
+  conversation: { type: Object, default: null },
 })
 
 const scrollEl = ref(null)
+
+// «Guardar en Archivos» / «Vincular a…» (ARC-S2.3), gated the same way the
+// rest of the shell reads the Archivos module flag.
+const archivosEnabled = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos'),
+)
+const { saved, isBusy, refreshSaved, save, linkTo } = useConversationArchivos()
+watch(
+  () => [props.messages, props.conversation],
+  () => {
+    if (archivosEnabled.value)
+      refreshSaved(() => ({
+        fileUrls: collectFileUrls(props.messages, (m) =>
+          isWhatsappInboxMessage(m, props.conversation),
+        ),
+      }))
+  },
+  { immediate: true },
+)
+function attachmentOptions(m) {
+  return [
+    {
+      label: __('Save to Files'),
+      onClick: () => save(m.attach, whatsappSaveArgs({ name: m.id, attach: m.attach })),
+    },
+    {
+      label: __('Link to…'),
+      onClick: () =>
+        linkTo(
+          m.attach,
+          whatsappSaveArgs({ name: m.id, attach: m.attach }),
+          {
+            target:
+              props.conversation?.reference_doctype &&
+              props.conversation?.reference_name
+                ? {
+                    doctype: props.conversation.reference_doctype,
+                    name: props.conversation.reference_name,
+                  }
+                : null,
+            returnLabel: __('Conversation'),
+          },
+        ),
+    },
+  ]
+}
 
 function attachLabel(ct) {
   return ct === 'video'
