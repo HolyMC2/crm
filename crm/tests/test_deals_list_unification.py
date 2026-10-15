@@ -284,7 +284,9 @@ class TestVirtualColumns(DealsListTestCase):
 		currency = frappe.db.get_value("CRM Deal", deal, "currency") or frappe.db.get_single_value(
 			"FCRM Settings", "currency"
 		)
-		self.assertEqual(rows[0]["_v_weighted"], fmt_money(250, currency=currency))
+		# Metric contract v2: the forecast weighs the expected amount (100), not the
+		# recorded deal value, so the column agrees with the board and dashboard.
+		self.assertEqual(rows[0]["_v_weighted"], fmt_money(25, currency=currency))
 		future = list_columns_crm.next_step(
 			frappe._dict(next_activity_task="T", next_activity_at=add_to_date(get_datetime(), days=2))
 		)
