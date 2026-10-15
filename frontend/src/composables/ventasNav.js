@@ -33,7 +33,6 @@ export const VENTAS_SECTIONS = Object.freeze({
   more: [
     'dashboard',
     'inquiries',
-    'wa-queue',
     'tasks',
     'calls',
     'reports',

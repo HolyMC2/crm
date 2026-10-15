@@ -24,25 +24,37 @@
       <button
         type="button"
         class="min-h-11 sm:min-h-0"
-        :aria-pressed="!legacy"
+        :aria-pressed="space === 'conversations'"
         :disabled="pending"
-        :class="!legacy ? 'font-semibold underline' : ''"
-        @click="selectWorkspace(false)"
+        :class="space === 'conversations' ? 'font-semibold underline' : ''"
+        @click="selectWorkspace('conversations')"
       >
         {{ __('Conversations') }}
       </button>
       <button
         type="button"
         class="min-h-11 sm:min-h-0"
-        :aria-pressed="legacy"
+        :aria-pressed="space === 'activity'"
         :disabled="pending"
-        :class="legacy ? 'font-semibold underline' : ''"
-        @click="selectWorkspace(true)"
+        :class="space === 'activity' ? 'font-semibold underline' : ''"
+        @click="selectWorkspace('activity')"
       >
         {{ __('Deals and activity') }}
       </button>
+      <button
+        type="button"
+        class="min-h-11 sm:min-h-0"
+        data-testid="inbox-review"
+        :aria-pressed="space === 'review'"
+        :disabled="pending"
+        :class="space === 'review' ? 'font-semibold underline' : ''"
+        @click="selectWorkspace('review')"
+      >
+        {{ __('To approve') }}
+      </button>
     </nav>
-    <ConversationLegacyWorkspace v-if="legacy" />
+    <WhatsAppReviewQueue v-if="space === 'review'" />
+    <ConversationLegacyWorkspace v-else-if="space === 'activity'" />
     <ConversationWorkspace v-else @pending="pending = $event" />
   </div>
 </template>
@@ -55,12 +67,24 @@ import { isMobile } from '@/composables/breakpoint'
 import { mobileView } from '@/composables/mobileView'
 import { safeReturn } from '@/composables/useCompras'
 import { goToReturn } from '@/utils/atencion'
+import { inboxSpace, inboxSpaceQuery } from '@/utils/inboxSpaces'
 import ConversationWorkspace from '@/components/Inbox/ConversationWorkspace.vue'
 import PaneState from '@/components/shell/PaneState.vue'
 // «Negocios y actividad» is its own chunk: say it is loading (after 200 ms)
 // and offer a reload if the chunk cannot be fetched, never a blank pane.
 const ConversationLegacyWorkspace = defineAsyncComponent({
   loader: () => import('@/components/Inbox/ConversationLegacyWorkspace.vue'),
+  loadingComponent: { render: () => h(PaneState, { state: 'loading' }) },
+  errorComponent: {
+    render: () => h(PaneState, { state: 'error', reload: true }),
+  },
+  delay: 200,
+})
+// «Por aprobar» (CRM-S3.4, D4): WhatsApp messages waiting for a person's approval
+// are a filter of the Inbox, not a separate list. The standalone page stays for
+// Pendientes › Por aprobar links.
+const WhatsAppReviewQueue = defineAsyncComponent({
+  loader: () => import('@/pages/WhatsAppQueue.vue'),
   loadingComponent: { render: () => h(PaneState, { state: 'loading' }) },
   errorComponent: {
     render: () => h(PaneState, { state: 'error', reload: true }),
@@ -79,21 +103,9 @@ const returnLabel = computed(() =>
 // Default space is "Negocios y actividad" (Marco 2026-09-15). The native
 // conversation queue opens only when asked for (?workspace=conversations) or
 // when a conversation deep link is present.
-const legacy = computed(
-  () =>
-    addonAvailable.value &&
-    route.query.workspace !== 'conversations' &&
-    (!!route.query.deal || typeof route.query.conversation !== 'string'),
-)
-function selectWorkspace(activity) {
+const space = computed(() => inboxSpace(route.query, addonAvailable.value))
+function selectWorkspace(next) {
   if (pending.value) return
-  router.replace({
-    query: {
-      ...route.query,
-      workspace: activity ? undefined : 'conversations',
-      deal: undefined,
-      conversation: activity ? undefined : route.query.conversation,
-    },
-  })
+  router.replace({ query: inboxSpaceQuery(route.query, next) })
 }
 </script>

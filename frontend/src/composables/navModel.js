@@ -187,7 +187,8 @@ export function routeGroup(path) {
   if (/^\/automations(\/|$)/.test(path)) return 'automations'
   if (/^\/inquiries(\/|$)/.test(path)) return 'inquiries'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
-  if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'wa-queue'
+  // «Por aprobar» is an Inbox space; its standalone page lights the Inbox entry.
+  if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'inbox'
   if (/^\/deals?(\/|$)/.test(path)) return 'deals'
   if (/^\/(campaigns|chatflows)(\/|$)/.test(path)) return 'campaigns'
   if (/^\/forms(\/|$)/.test(path)) return 'forms'

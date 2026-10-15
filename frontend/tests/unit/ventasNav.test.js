@@ -55,7 +55,8 @@ describe('Ventas navigation (S5.1)', () => {
     expect(new Set(all).size).toBe(all.length)
     const expected = [...navItems, ...navItemsBottom]
       .map((item) => item.key)
-      .filter((key) => !['calendar', 'contactos'].includes(key))
+      // «Por aprobar» (wa-queue) is an Inbox space since CRM-S3.4, not a list.
+      .filter((key) => !['calendar', 'contactos', 'wa-queue'].includes(key))
     expect([...all].sort()).toEqual([...expected].sort())
   })
 
@@ -77,7 +78,7 @@ describe('Ventas navigation (S5.1)', () => {
     expect(ventasSectionOf('/leads')).toBe('daily')
     expect(ventasSectionOf('/inbox')).toBe('daily')
     expect(ventasSectionOf('/dashboard')).toBe('more')
-    expect(ventasSectionOf('/whatsapp-queue')).toBe('more')
+    expect(ventasSectionOf('/whatsapp-queue')).toBe('daily')
     expect(ventasSectionOf('/automations/x')).toBe('settings')
     expect(ventasSectionOf('/agenda')).toBe('')
   })
