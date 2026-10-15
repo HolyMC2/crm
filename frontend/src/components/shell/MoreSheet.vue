@@ -49,6 +49,18 @@
         </button>
       </div>
 
+      <!-- Every module page can scan, including those with their own app bar. -->
+      <section v-if="scanHref" class="px-4 pt-4">
+        <a
+          :href="scanHref"
+          class="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-surface-gray-2 text-base font-medium text-ink-gray-9"
+          data-testid="more-scan"
+        >
+          <span class="lucide-scan-barcode size-5" aria-hidden="true" />
+          {{ __('Scan a code') }}
+        </a>
+      </section>
+
       <section class="px-4 pt-4">
         <h2
           class="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
@@ -254,6 +266,7 @@ import {
 } from '@/composables/muelleShell'
 import {
   installedSiblings,
+  scanPickHref,
   siblingHref,
   sortSiblings,
 } from '@/composables/shellRail'
@@ -291,6 +304,12 @@ const initials = computed(() => {
 })
 // Sibling SPAs open with the way back to the page the worker left.
 const route = useRoute()
+const scanHref = computed(() =>
+  scanPickHref(
+    route.fullPath,
+    props.modules.find((module) => module.key === moduleKeyFor(route))?.label,
+  ),
+)
 const siblings = computed(() =>
   sortSiblings(installedSiblings()).map((app) => ({
     ...app,

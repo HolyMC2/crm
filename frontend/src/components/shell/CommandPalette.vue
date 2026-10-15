@@ -118,7 +118,7 @@
               >{{ keyLabel(item.shortcut) }}</kbd
             >
             <span
-              v-if="item.external"
+              v-if="item.external || item.scanPick"
               class="lucide-arrow-up-right size-3.5 flex-none text-ink-gray-5"
               :title="__('Opens in another app')"
               aria-hidden="true"
@@ -171,7 +171,7 @@ import {
   shellBoot,
   shellModules,
 } from '@/composables/muelleShell'
-import { siblingHref } from '@/composables/shellRail'
+import { scanPickHref, siblingHref } from '@/composables/shellRail'
 import {
   createShellProviders,
   loadRecent,
@@ -316,7 +316,12 @@ function choose(item) {
   if (item.action === 'theme') setTheme(item.args?.theme)
   const href = item.href && safeReturn(`/crm${item.href}`, ['/crm/'])
   // Sibling apps (Escáner, POS…) open with «Volver a …» back to this page.
-  const external = item.external && siblingTarget(item.external)
+  const external = item.scanPick
+    ? scanPickHref(
+        router.currentRoute.value.fullPath,
+        moduleLabelFor(router.currentRoute.value),
+      )
+    : item.external && siblingTarget(item.external)
   close()
   // The sheet returns the focus to whatever had it before the palette opened.
   if (item.action === 'shortcuts') openShortcutSheet(previousFocus)

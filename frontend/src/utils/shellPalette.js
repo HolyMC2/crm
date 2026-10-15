@@ -153,6 +153,15 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-shield-check',
           href: '/garantias?create=1',
         })
+      if (installedSiblings().some((app) => app.key === 'scan'))
+        items.push({
+          id: 'escaner.pick',
+          group: 'acciones',
+          title: __('Scan a code'),
+          keywords: 'escanear codigo barras camara scan barcode articulo',
+          icon: 'lucide-scan-barcode',
+          scanPick: true,
+        })
       if (query.text && installedSiblings().some((app) => app.key === 'scan'))
         items.push({
           id: 'escaner.search',

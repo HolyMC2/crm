@@ -495,6 +495,27 @@ describe('one frame for every route', () => {
     }
   })
 
+  it('phone Más offers «Escanear un código» first, for pages with their own app bar too', async () => {
+    state.mobile.value = true
+    window.installed_apps = ['crm', 'scanner_kit']
+    try {
+      await mount('/agenda')
+      root
+        .querySelector(
+          'nav[aria-label="Main navigation"] button[aria-haspopup="dialog"]',
+        )
+        .click()
+      const scan = await until(() =>
+        document.querySelector('[data-testid="more-scan"]'),
+      )
+      const url = new URL(scan.getAttribute('href'), 'https://x.test')
+      expect(url.pathname).toBe('/scan/pick')
+      expect(url.searchParams.get('return_to')).toBe('/crm/agenda?escaneo=1')
+    } finally {
+      delete window.installed_apps
+    }
+  })
+
   it('a scan picked in Escáner opens the artículo in Productos, with the way back', () => {
     const route = (query) => ({ path: '/cobranza', query, hash: '' })
     expect(scanPickTarget(route({ segment: 'vencidas' }))).toBeNull()
@@ -1039,6 +1060,40 @@ describe('palette providers', () => {
       )
       expect(find.external).toBe('/scan/items?q=funda%20roja')
     } finally {
+      delete window.installed_apps
+    }
+  })
+
+  it('«Escanear un código» is an action wherever Escáner is installed, and comes back here', async () => {
+    window.installed_apps = ['crm', 'scanner_kit']
+    const assign = vi.fn()
+    const location = window.location
+    delete window.location
+    window.location = { ...location, assign }
+    try {
+      state.mobile.value = false
+      await mount('/contactos')
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }),
+      )
+      const input = await until(() =>
+        document.querySelector('[aria-label="Command palette"] input'),
+      )
+      input.value = 'escanear'
+      input.dispatchEvent(new Event('input'))
+      const option = await until(() =>
+        [...document.querySelectorAll('[role="option"]')].find((o) =>
+          o.textContent.includes('Scan a code'),
+        ),
+      )
+      option.click()
+      await nextTick()
+      const url = new URL(assign.mock.calls[0][0], 'https://x.test')
+      expect(url.pathname).toBe('/scan/pick')
+      expect(url.searchParams.get('return_to')).toBe('/crm/contactos?escaneo=1')
+      expect(url.searchParams.get('return_label')).toBe('Contactos')
+    } finally {
+      window.location = location
       delete window.installed_apps
     }
   })
