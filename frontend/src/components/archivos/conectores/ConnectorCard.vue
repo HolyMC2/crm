@@ -106,6 +106,46 @@
       <p v-if="actionNote" role="status" class="text-sm text-ink-gray-7">
         {{ actionNote }}
       </p>
+
+      <!-- Failed work never stays a dead end: retry it or open its document -->
+      <div v-if="connector.can_manage && health.failed" class="space-y-2">
+        <Button
+          v-if="!problems.length"
+          variant="ghost"
+          class="min-h-11 sm:min-h-0"
+          icon-left="alert-triangle"
+          :label="__('See what failed')"
+          :loading="detailLoading"
+          @click="refresh"
+        />
+        <ul v-else class="space-y-2" :aria-label="__('What failed')">
+          <li
+            v-for="task in problems"
+            :key="task.name"
+            class="flex flex-wrap items-center gap-2 rounded-lg bg-surface-gray-1 p-3 text-sm"
+          >
+            <span class="min-w-0 flex-1 text-ink-gray-8">
+              {{ taskLabel(task) }}
+              <span class="block text-ink-gray-6">{{
+                task.error_message
+              }}</span>
+            </span>
+            <Button
+              v-if="task.state === 'Failed'"
+              class="min-h-11 sm:min-h-0"
+              :label="__('Try again')"
+              :loading="busy === task.name"
+              @click="retry(task)"
+            />
+            <a
+              v-else-if="task.document"
+              :href="archivosHref({ document: task.document })"
+              class="inline-flex min-h-11 items-center rounded px-3 text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
+              >{{ __('Verify in the document') }}</a
+            >
+          </li>
+        </ul>
+      </div>
     </div>
 
     <!-- Sections: one open at a time so a phone screen stays readable -->
@@ -187,7 +227,7 @@ import BackfillPanel from './BackfillPanel.vue'
 import ConnectorForm from './ConnectorForm.vue'
 import MappingsPanel from './MappingsPanel.vue'
 import SetupPanel from './SetupPanel.vue'
-import { archivosApi, problem } from '@/composables/useArchivos'
+import { archivosApi, archivosHref, problem } from '@/composables/useArchivos'
 import {
   backfillLabel,
   connectorMethod,
@@ -265,6 +305,36 @@ const tabs = computed(() => {
     )
   return out
 })
+
+const problems = computed(() =>
+  (detail.value?.tasks || []).filter((t) =>
+    ['Failed', 'Uncertain'].includes(t.state),
+  ),
+)
+const OPERATIONS = {
+  Import: 'Import of Paperless document {0}',
+  Export: 'Sending to Paperless for OCR',
+  Sync: 'Periodic check',
+  Backfill: 'Initial import page',
+}
+function taskLabel(task) {
+  return __(OPERATIONS[task.operation] || OPERATIONS.Sync, [task.remote_id])
+}
+async function retry(task) {
+  busy.value = task.name
+  actionError.value = ''
+  try {
+    await archivosApi('doco.docoutils.documents.api.retry_task', {
+      name: task.name,
+    })
+    toast.success(__('Trying again'))
+    await refresh()
+  } catch (error) {
+    actionError.value = problem(error).message
+  } finally {
+    busy.value = ''
+  }
+}
 
 function openPanel(value) {
   panel.value = panel.value === value ? '' : value

@@ -25396,5 +25396,26 @@ msgstr "Último error {0}"
 msgid "Connect your Paperless archive and your invoice mailbox, check that they work and run the initial import."
 msgstr "Conecta tu archivo Paperless y tu buzón de facturas, revisa que funcionen y haz la carga inicial."
 
-msgid "Monthly capacity used"
-msgstr "Capacidad del mes usada"
+msgid "See what failed"
+msgstr "Ver lo que falló"
+
+msgid "What failed"
+msgstr "Lo que falló"
+
+msgid "Verify in the document"
+msgstr "Verificar en el documento"
+
+msgid "Import of Paperless document {0}"
+msgstr "Importación del documento {0} de Paperless"
+
+msgid "Sending to Paperless for OCR"
+msgstr "Envío a Paperless para leer su texto"
+
+msgid "Periodic check"
+msgstr "Revisión periódica"
+
+msgid "Initial import page"
+msgstr "Página de la carga inicial"
+
+msgid "Trying again"
+msgstr "Reintentando"
