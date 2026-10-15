@@ -1237,7 +1237,7 @@
             <section
               v-if="data.units"
               id="unidades"
-              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
               <header
                 class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
