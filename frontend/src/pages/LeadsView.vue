@@ -275,7 +275,7 @@
               class="h-[6px] w-[6px] flex-none rounded-full"
               :style="`background:${sourceDot(r.source)}`"
             />
-            {{ r.source }}
+            {{ __(r.source) }}
           </span>
           <!-- own line: the due label plus the task title needs the full width -->
           <div v-if="r.next_activity_at" class="w-full">
@@ -445,7 +445,7 @@
               class="h-[7px] w-[7px] flex-none rounded-full"
               :style="`background:${sourceDot(r.source)}`"
             />
-            <span class="truncate">{{ r.source || '—' }}</span>
+            <span class="truncate">{{ r.source ? __(r.source) : '—' }}</span>
           </div>
           <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">
             {{ timeAgo(r.modified) }}
@@ -1081,7 +1081,7 @@ const sources = createListResource({
   auto: true,
 })
 const sourceOptions = computed(() =>
-  (sources.data || []).map((s) => ({ value: s.name, label: s.name })),
+  (sources.data || []).map((s) => ({ value: s.name, label: __(s.name) })),
 )
 
 // ── chips ────────────────────────────────────────────────────────────────────
@@ -1097,7 +1097,7 @@ const chips = computed(() => {
   for (const v of gradeF.value)
     out.push({ key: `gr:${v}`, type: 'grade', value: v, label: `Score ${v}` })
   for (const v of sourceF.value)
-    out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
+    out.push({ key: `sr:${v}`, type: 'source', value: v, label: __(v) })
   return out
 })
 function removeChip(c) {

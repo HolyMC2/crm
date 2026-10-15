@@ -64,6 +64,15 @@ def plain(value, limit=None):
 	return text
 
 
+def doctype_in_words(title, doctype, translate):
+	"""«Social Post SP-1: …» → «Publicación SP-1: …». A producer that opens its subject with the
+	record's DocType name stored it in English; the worker reads it in their language."""
+	if not (title and doctype and title.startswith(f"{doctype} ")):
+		return title
+	label = translate(doctype)
+	return title if not label or label == doctype else f"{label} {title[len(doctype) + 1 :]}"
+
+
 def display(value, limit=None):
 	"""Worker-facing text: producer dedupe tags and doco's mail-hold note removed."""
 	text = _MAIL_HOLD.sub("", plain(value))

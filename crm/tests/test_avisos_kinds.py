@@ -194,3 +194,16 @@ class TestAvisosNotices(TestCase):
 			),
 			["CRM-DEAL-2026-00248", "CRM-DEAL-2026-00390"],
 		)
+
+	def test_a_subject_that_opens_with_its_doctype_reads_in_words(self):
+		es = {"Social Post": "Publicación"}.get
+		title = "Social Post SP-09771: Auto-cancelada por falta de aprobación a tiempo"
+		self.assertEqual(
+			kinds.doctype_in_words(title, "Social Post", es),
+			"Publicación SP-09771: Auto-cancelada por falta de aprobación a tiempo",
+		)
+		# Only the record's own DocType at the very start; no translation, no change.
+		self.assertEqual(kinds.doctype_in_words("Nuevo Social Post", "Social Post", es), "Nuevo Social Post")
+		self.assertEqual(kinds.doctype_in_words(title, "CRM Deal", es), title)
+		self.assertEqual(kinds.doctype_in_words(title, "Social Post", lambda text: text), title)
+		self.assertEqual(kinds.doctype_in_words("", "Social Post", es), "")

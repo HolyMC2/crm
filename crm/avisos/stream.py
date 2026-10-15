@@ -393,6 +393,7 @@ def _public(group, access):
 	if body == out["title"] or _GENERIC_ASSIGNMENT.search(body) or body == out["target"].get("label"):
 		body = ""
 	out["body"] = body
+	out["title"] = kinds.doctype_in_words(out["title"], group.get("doctype"), _)
 	return out
 
 

@@ -678,7 +678,9 @@
                   class="h-[7px] w-[7px] flex-none rounded-full"
                   :style="`background:${sourceDot(r.source)}`"
                 />
-                <span class="truncate">{{ r.source || '—' }}</span>
+                <span class="truncate">{{
+                  r.source ? __(r.source) : '—'
+                }}</span>
               </div>
               <div v-if="col('modified')" class="text-[12px] text-ink-gray-5">
                 {{ timeAgo(r.modified) }}
@@ -1768,7 +1770,7 @@ const sources = createListResource({
   auto: true,
 })
 const sourceOptions = computed(() =>
-  (sources.data || []).map((s) => ({ value: s.name, label: s.name })),
+  (sources.data || []).map((s) => ({ value: s.name, label: __(s.name) })),
 )
 const ownerOptions = computed(() =>
   (usersList.data?.crmUsers || [])
@@ -1788,7 +1790,7 @@ const chips = computed(() => {
   for (const v of statusF.value)
     out.push({ key: `st:${v}`, type: 'status', value: v, label: stageLabel(v) })
   for (const v of sourceF.value)
-    out.push({ key: `sr:${v}`, type: 'source', value: v, label: v })
+    out.push({ key: `sr:${v}`, type: 'source', value: v, label: __(v) })
   for (const v of ownerF.value)
     out.push({ key: `ow:${v}`, type: 'owner', value: v, label: ownerName(v) })
   if (dealsF.value.length)

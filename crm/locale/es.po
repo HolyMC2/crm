@@ -25425,3 +25425,83 @@ msgstr "Funciona bien"
 #: crm/pipeline/services/stage_backfill.py
 msgid "Adopt the sales pipeline «Ventas» first, then move the deals onto it."
 msgstr "Primero adopta el embudo de ventas «Ventas» y después pasa los tratos a él."
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Walk In"
+msgstr "Visita a la tienda"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Existing Customer"
+msgstr "Cliente existente"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Advertisement"
+msgstr "Publicidad"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Cold Calling"
+msgstr "Llamada en frío"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Exhibition"
+msgstr "Exposición"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Supplier Reference"
+msgstr "Referencia de proveedor"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Mass Mailing"
+msgstr "Envío masivo"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Customer's Vendor"
+msgstr "Proveedor del cliente"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Storefront"
+msgstr "Tienda en línea"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Storefront Newsletter"
+msgstr "Boletín de la tienda en línea"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Storefront Restock"
+msgstr "Aviso de reabastecimiento"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Storefront Carrito Abandonado"
+msgstr "Carrito abandonado"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Referral"
+msgstr "Recomendación"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Cold Call"
+msgstr "Llamada en frío"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Email Campaign"
+msgstr "Campaña de correo"
+
+#. CRM Lead Source record name, shown in the lead and deal lists
+#: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
+msgid "Social Media"
+msgstr "Redes sociales"
