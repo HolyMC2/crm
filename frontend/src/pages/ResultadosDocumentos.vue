@@ -12,9 +12,11 @@
         <a
           :href="backHref"
           data-testid="back-to-board"
-          class="inline-flex min-h-11 items-center text-sm font-medium text-ink-blue-link underline"
+          class="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
-          >← {{ __('Back to {0}', [backLabel]) }}</a
+          ><span class="lucide-arrow-left size-4" aria-hidden="true" />{{
+            __('Back to {0}', [backLabel])
+          }}</a
         >
         <h1 class="truncate text-xl font-semibold text-ink-gray-9">
           {{ tipoLabel(state.tipo) }}
@@ -236,13 +238,15 @@ async function load() {
   loading.value = true
   problem.value = null
   try {
-    const { tipo, periodo, compara, empresa, tienda } = state.value
+    const { tipo, periodo, compara, empresa, tienda, desde, hasta } =
+      state.value
     const out = await resultadosApi('documents', {
       tipo,
       periodo,
       compara,
       empresa,
       tienda,
+      ...(periodo === 'rango' ? { desde, hasta } : {}),
     })
     if (mine !== ticket) return
     rows.value = out.rows || []
@@ -277,6 +281,8 @@ watch(
     state.value.compara,
     state.value.empresa,
     state.value.tienda,
+    state.value.desde,
+    state.value.hasta,
   ],
   () => {
     if (route.name === 'ResultadosDocumentos') load()

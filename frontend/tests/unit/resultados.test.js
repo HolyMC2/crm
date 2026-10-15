@@ -16,7 +16,9 @@ vi.mock('frappe-ui', () => ({
 
 import {
   accessRequest,
+  axisLabel,
   boardHref,
+  cardSpan,
   cardState,
   deltaChip,
   drillHref,
@@ -31,6 +33,7 @@ import { accesos } from '../../src/composables/useHoy.js'
 import { hostedModules } from '../../src/composables/muelleShell.js'
 import { recoveryModule } from '../../src/utils/shellRoutes.js'
 import ResultadosCard from '../../src/components/resultados/ResultadosCard.vue'
+import ResultadosChart from '../../src/components/resultados/ResultadosChart.vue'
 
 describe('period and comparison live in the URL', () => {
   it('reads known values and falls back to Mes vs anterior', () => {
@@ -70,6 +73,44 @@ describe('period and comparison live in the URL', () => {
       tienda: 'T1',
     }
     expect(readQuery(toQuery(state))).toEqual(state)
+  })
+
+  it('Ayer, Mes anterior and a date range; a broken range is Mes', () => {
+    expect(readQuery({ periodo: 'ayer' }).periodo).toBe('ayer')
+    expect(readQuery({ periodo: 'mes_anterior' }).periodo).toBe('mes_anterior')
+    const range = readQuery({
+      periodo: 'rango',
+      desde: '2026-10-09',
+      hasta: '2026-09-20',
+    })
+    expect(range).toMatchObject({
+      periodo: 'rango',
+      desde: '2026-09-20',
+      hasta: '2026-10-09',
+    })
+    expect(toQuery(range)).toEqual({
+      periodo: 'rango',
+      desde: '2026-09-20',
+      hasta: '2026-10-09',
+    })
+    expect(readQuery(toQuery(range))).toEqual(range)
+    for (const [desde, hasta] of [
+      ['2026-10-09', undefined],
+      ['2026-02-30', '2026-03-01'],
+      ['ayer', '2026-03-01'],
+    ]) {
+      const state = readQuery({ periodo: 'rango', desde, hasta })
+      expect(state.periodo).toBe('mes')
+      expect(state).not.toHaveProperty('desde')
+    }
+    expect(
+      readLensQuery({
+        tipo: 'ventas',
+        periodo: 'rango',
+        desde: '2026-09-01',
+        hasta: '2026-09-30',
+      }),
+    ).toMatchObject({ desde: '2026-09-01', hasta: '2026-09-30' })
   })
 
   it('the lens keeps the board query and picks a known list', () => {
@@ -183,6 +224,13 @@ describe('card states and numbers', () => {
       deltaChip({ delta_pct: -1.4, delta_unit: 'pp' }, 'anterior').label,
     ).toMatch(/pp$/)
     expect(deltaChip({ delta_pct: 6 }, 'no')).toBeNull()
+    // More returns is bad news: red, though the arrow still points up.
+    expect(deltaChip({ delta_pct: 20, invert: true }, 'anterior')).toMatchObject(
+      { tone: 'down', arrow: 'up' },
+    )
+    expect(
+      deltaChip({ delta_pct: -20, invert: true }, 'anterior'),
+    ).toMatchObject({ tone: 'up', arrow: 'down' })
     expect(deltaChip({ delta_pct: null }, 'anterior')).toBeNull()
   })
 
@@ -299,6 +347,116 @@ describe('ResultadosCard', () => {
     expect(
       root.querySelector('[data-testid="drill"]').getAttribute('href'),
     ).toContain('group=open')
+  })
+})
+
+describe('board layout helpers', () => {
+  it('wide cards span two columns and full cards the row', () => {
+    expect(cardSpan('')).toBe('')
+    expect(cardSpan('wide')).toBe('sm:col-span-2')
+    expect(cardSpan('full')).toContain('lg:col-span-4')
+  })
+
+  it('weekday 0 is Monday and hours read in the local clock', () => {
+    expect(axisLabel('weekday', 0, true)).toBe(
+      new Date(2024, 0, 1).toLocaleDateString(undefined, { weekday: 'long' }),
+    )
+    expect(axisLabel('hour', 13)).toBe(
+      new Date(2024, 0, 1, 13).toLocaleTimeString(undefined, {
+        hour: 'numeric',
+      }),
+    )
+  })
+})
+
+describe('ResultadosChart', () => {
+  let app
+  afterEach(() => app?.unmount())
+
+  async function mount(props) {
+    const router = createRouter({
+      history: createMemoryHistory('/crm'),
+      routes: [{ path: '/:any(.*)*', component: { render: () => null } }],
+    })
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    app = createApp({ render: () => h(ResultadosChart, props) })
+    app.config.globalProperties.__ = globalThis.__
+    app.use(router)
+    app.mount(root)
+    await nextTick()
+    return root
+  }
+
+  it('draws the trend with its comparison, and drops it without one', async () => {
+    const chart = {
+      type: 'trend',
+      points: [
+        { date: '2026-10-01', value: 100, tickets: 2 },
+        { date: '2026-10-02', value: 300, tickets: 4 },
+      ],
+      prev: [
+        { date: '2026-09-01', value: 50 },
+        { date: '2026-09-02', value: 80 },
+      ],
+    }
+    let root = await mount({ chart, currency: 'MXN' })
+    expect(root.querySelectorAll('[data-testid="chart-trend"] path')).toHaveLength(3)
+    app.unmount()
+    root = await mount({ chart, currency: 'MXN', compara: 'no' })
+    expect(root.querySelectorAll('[data-testid="chart-trend"] path')).toHaveLength(2)
+  })
+
+  it('ranked rows link their record, filter the board, and fold after six', async () => {
+    const onFilter = vi.fn()
+    const rows = Array.from({ length: 8 }, (_, i) => ({
+      label: `Fila ${i}`,
+      value: 100 - i,
+    }))
+    rows[0].drill = { href: '/crm/productos/ABC' }
+    rows[1].filter = { tienda: 'T2' }
+    const root = await mount({
+      chart: { type: 'bars', format: 'money', rows },
+      back: '/crm/resultados',
+      onFilter,
+    })
+    const items = root.querySelectorAll('[data-testid="chart-bars"] > li')
+    expect(items).toHaveLength(7) // six rows and «Show 2 more»
+    const link = items[0].querySelector('a')
+    expect(link.getAttribute('href')).toContain('/crm/productos/ABC')
+    expect(link.getAttribute('href')).toContain('return_to=')
+    items[1].querySelector('button').click()
+    expect(onFilter).toHaveBeenCalledWith({ tienda: 'T2' })
+    items[6].querySelector('button').click()
+    await nextTick()
+    expect(
+      root.querySelectorAll('[data-testid="chart-bars"] > li'),
+    ).toHaveLength(9)
+  })
+
+  it('columns highlight the peak; the heatmap has one row per weekday', async () => {
+    let root = await mount({
+      chart: {
+        type: 'columns',
+        axis: 'hour',
+        format: 'count',
+        rows: [
+          { key: 9, value: 1 },
+          { key: 10, value: 5 },
+        ],
+      },
+    })
+    expect(root.querySelector('[data-testid="chart-columns"]').textContent).toContain('5')
+    app.unmount()
+    root = await mount({
+      chart: {
+        type: 'heatmap',
+        format: 'money',
+        hours: [9, 10],
+        values: Array.from({ length: 7 }, () => [0, 10]),
+      },
+    })
+    expect(root.querySelectorAll('tbody tr')).toHaveLength(7)
   })
 })
 

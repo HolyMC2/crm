@@ -27,8 +27,11 @@ export function resultadosApi(method, args = {}) {
 
 export const PERIODS = Object.freeze([
   { value: 'hoy', label: 'Today' },
+  { value: 'ayer', label: 'Yesterday' },
   { value: 'semana', label: 'This week' },
   { value: 'mes', label: 'This month' },
+  { value: 'mes_anterior', label: 'Last month' },
+  { value: 'rango', label: 'Dates' },
 ])
 export const COMPARES = Object.freeze([
   { value: 'anterior', label: 'vs previous period' },
@@ -56,27 +59,96 @@ export const tipoLabel = (v) =>
 const one = (value) =>
   typeof value === 'string' ? value : Array.isArray(value) ? one(value[0]) : ''
 const text = (value) => one(value).trim().slice(0, 140)
+const ISO = /^\d{4}-\d{2}-\d{2}$/
+const isoDate = (value) => {
+  const v = one(value).trim()
+  if (!ISO.test(v)) return ''
+  const [y, m, d] = v.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return date.getFullYear() === y &&
+    date.getMonth() === m - 1 &&
+    date.getDate() === d
+    ? v
+    : ''
+}
 
-/** The board's state from the URL; unknown values fall back to Mes vs anterior. */
+/** The board's state from the URL; unknown values fall back to Mes vs anterior.
+ * Rango needs both `desde` and `hasta` (ordered); without them it is Mes. */
 export function readQuery(query = {}) {
-  const periodo = one(query.periodo)
+  let periodo = one(query.periodo)
   const compara = one(query.compara)
-  return {
-    periodo: PERIODS.some((p) => p.value === periodo) ? periodo : 'mes',
+  if (!PERIODS.some((p) => p.value === periodo)) periodo = 'mes'
+  const state = {
+    periodo,
     compara: COMPARES.some((c) => c.value === compara) ? compara : 'anterior',
     empresa: text(query.empresa),
     tienda: text(query.tienda),
   }
+  if (periodo === 'rango') {
+    const ends = [isoDate(query.desde), isoDate(query.hasta)]
+    if (ends[0] && ends[1]) {
+      ends.sort()
+      state.desde = ends[0]
+      state.hasta = ends[1]
+    } else state.periodo = 'mes'
+  }
+  return state
 }
 
 /** The URL query for a state: defaults stay out, so links stay short. */
 export function toQuery(state) {
   const q = {}
   if (state.periodo && state.periodo !== 'mes') q.periodo = state.periodo
+  if (state.periodo === 'rango') {
+    q.desde = state.desde
+    q.hasta = state.hasta
+  }
   if (state.compara && state.compara !== 'anterior') q.compara = state.compara
   if (state.empresa) q.empresa = state.empresa
   if (state.tienda) q.tienda = state.tienda
   return q
+}
+
+/** A short local date («14 oct») for an ISO day. */
+export function dayText(iso, options = { day: 'numeric', month: 'short' }) {
+  const [y, m, d] = String(iso || '')
+    .split('-')
+    .map(Number)
+  if (!y) return ''
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, options)
+}
+
+/** «9 h» for an hour, «lun» for a weekday (0 = Monday), in the browser locale. */
+export function axisLabel(axis, key, long = false) {
+  if (axis === 'weekday') {
+    // 2024-01-01 was a Monday.
+    return new Date(2024, 0, 1 + Number(key)).toLocaleDateString(undefined, {
+      weekday: long ? 'long' : 'short',
+    })
+  }
+  if (axis === 'hour') {
+    return new Date(2024, 0, 1, Number(key)).toLocaleTimeString(undefined, {
+      hour: 'numeric',
+    })
+  }
+  return String(key)
+}
+
+/** A compact amount for chart axes and tight cells: «12.4 k», «1.2 M». */
+export function compactValue(value, format, currency) {
+  const n = Number(value)
+  if (Number.isNaN(n)) return '—'
+  if (format !== 'money') return formatValue(n, format, currency)
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency || 'MXN',
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(n)
+  } catch {
+    return formatValue(n, format, currency)
+  }
 }
 
 /** The documents lens state: the board's query plus the list it shows. */
@@ -151,9 +223,12 @@ export function deltaChip(card, compara) {
   const n = Number(card.delta_pct)
   const unit = card.delta_unit === 'pp' ? 'pp' : '%'
   const sign = n > 0 ? '+' : n < 0 ? '−' : ''
+  // `invert`: a rise is bad news (returns, cancellations).
+  const good = card.invert ? n < 0 : n > 0
   return {
     label: `${sign}${Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}`,
-    tone: n > 0 ? 'up' : n < 0 ? 'down' : 'flat',
+    tone: n === 0 ? 'flat' : good ? 'up' : 'down',
+    arrow: n > 0 ? 'up' : n < 0 ? 'down' : 'flat',
   }
 }
 
@@ -176,10 +251,47 @@ export function accessRequest(card) {
 
 const TITLES = {
   ventas: 'Sales',
+  tickets: 'Tickets',
+  ticket_promedio: 'Average ticket',
+  promedio_diario: 'Daily average',
+  tendencia: 'Daily trend',
+  meta: 'Monthly goal',
   margen: 'Margin',
+  descuentos: 'Discounts',
+  devoluciones: 'Returns',
+  cancelaciones: 'Cancellations',
   efectivo: 'Cash',
+  clientes: 'Customers',
   por_cobrar: 'To collect',
   reparaciones: 'Repairs',
+  tiendas: 'Sales by shop',
+  mix_grupos: 'Sales by group',
+  top_articulos: 'Top products',
+  vendedores: 'Sales by seller',
+  formas_pago: 'Payment methods',
+  por_hora: 'Sales by hour',
+  dia_semana: 'Sales by weekday',
+  hora_dia: 'Hour × day',
+}
+
+/** Board order and width while the first answer is on its way. */
+export const SKELETON = Object.freeze([
+  ['ventas', ''],
+  ['tickets', ''],
+  ['ticket_promedio', ''],
+  ['promedio_diario', ''],
+  ['tendencia', 'full'],
+  ['margen', ''],
+  ['efectivo', ''],
+  ['por_cobrar', ''],
+  ['reparaciones', ''],
+])
+
+/** Grid span for a card's `size`: wide is two columns, full the whole row. */
+export function cardSpan(size) {
+  if (size === 'full') return 'sm:col-span-2 lg:col-span-4'
+  if (size === 'wide') return 'sm:col-span-2'
+  return ''
 }
 /** A card's title even when its provider only sent a reason. */
 export function cardTitle(key) {

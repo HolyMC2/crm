@@ -63,6 +63,22 @@ class TestResultadosQuery(TestCase):
 		self.assertEqual((q["periodo"], q["compara"], q["empresa"]), ("mes", "anterior", "C1"))
 		self.assertEqual(len(q["tienda"]), resultados.MAX_TEXT)
 
+	def test_more_periods_and_a_range(self):
+		for periodo in ("ayer", "mes_anterior"):
+			self.assertEqual(resultados.query(periodo)["periodo"], periodo)
+		q = resultados.query("rango", desde="2026-10-09", hasta="2026-09-20")
+		self.assertEqual((q["periodo"], q["desde"], q["hasta"]), ("rango", "2026-09-20", "2026-10-09"))
+		self.assertEqual(
+			resultados.cache_key("a@x", "ventas", q, 1),
+			"resultados:a@x:ventas:rango=2026-09-20..2026-10-09:anterior:::1",
+		)
+		# A range without both valid dates is Mes, never an error.
+		for desde, hasta in (("2026-10-09", None), ("nope", "2026-10-01"), ("2026-13-45", "2026-10-01")):
+			with self.subTest(desde=desde, hasta=hasta):
+				q = resultados.query("rango", desde=desde, hasta=hasta)
+				self.assertEqual(q["periodo"], "mes")
+				self.assertNotIn("desde", q)
+
 	def test_cache_key_names_user_card_query_and_generation(self):
 		q = resultados.query("hoy", "anio", "C1", "T1")
 		self.assertEqual(
@@ -111,7 +127,10 @@ class TestResultadosBoard(TestCase):
 		self.need_mercado()
 		out = resultados.board(periodo="mes")
 		keys = [c["key"] for c in out["cards"]]
-		self.assertEqual(keys[:4], ["ventas", "margen", "efectivo", "por_cobrar"])
+		self.assertEqual(keys[:4], ["ventas", "tickets", "ticket_promedio", "promedio_diario"])
+		order = [k for k in resultados.CARD_ORDER if k in keys]
+		self.assertEqual(keys[: len(order)], order)
+		self.assertEqual(self.card(out, "tendencia")["size"], "full")
 		self.assertEqual(out["query"], {"periodo": "mes", "compara": "anterior", "empresa": "", "tienda": ""})
 		ventas = self.card(out, "ventas")
 		self.assertIsInstance(ventas["value"], float)

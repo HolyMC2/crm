@@ -14,10 +14,39 @@ sale, cash closing or repair order moves after commit.
 import frappe
 from frappe import _
 
-CARD_ORDER = ("ventas", "margen", "efectivo", "por_cobrar", "reparaciones")
-PERIODOS = ("hoy", "semana", "mes")
+CARD_ORDER = (
+	# Headline numbers, one small card each.
+	"ventas",
+	"tickets",
+	"ticket_promedio",
+	"promedio_diario",
+	# The period's shape.
+	"tendencia",
+	# Health of the money.
+	"meta",
+	"margen",
+	"descuentos",
+	"devoluciones",
+	"cancelaciones",
+	"efectivo",
+	"clientes",
+	"por_cobrar",
+	"reparaciones",
+	# Where the sales came from.
+	"tiendas",
+	"mix_grupos",
+	"top_articulos",
+	"vendedores",
+	"formas_pago",
+	"por_hora",
+	"dia_semana",
+	"hora_dia",
+)
+# Hoy, Ayer, Semana (Monday to today), Mes (month to date), Mes anterior and
+# Rango (desde..hasta, both ISO dates, at most a year).
+PERIODOS = ("hoy", "ayer", "semana", "mes", "mes_anterior", "rango")
 COMPARAS = ("anterior", "anio", "no")
-TTL = {"hoy": 60, "semana": 300, "mes": 300}
+TTL = {"hoy": 60, "ayer": 600, "semana": 300, "mes": 300, "mes_anterior": 900, "rango": 300}
 GEN_KEY = "resultados:gen"
 MAX_TEXT = 140
 
@@ -34,14 +63,31 @@ def _text(value):
 	return value.strip()[:MAX_TEXT] if isinstance(value, str) else ""
 
 
-def query(periodo=None, compara=None, empresa=None, tienda=None):
-	"""The normalised board query; unknown values fall back to Mes vs. anterior."""
-	return {
+def _iso(value):
+	"""An ISO date (YYYY-MM-DD) or ""; anything else is dropped, never an error."""
+	value = _text(value)
+	try:
+		return str(frappe.utils.getdate(value)) if len(value) == 10 and value[4] == "-" else ""
+	except Exception:
+		return ""
+
+
+def query(periodo=None, compara=None, empresa=None, tienda=None, desde=None, hasta=None):
+	"""The normalised board query; unknown values fall back to Mes vs. anterior.
+	Rango carries `desde`/`hasta` (ordered); without both it is Mes."""
+	q = {
 		"periodo": periodo if periodo in PERIODOS else "mes",
 		"compara": compara if compara in COMPARAS else "anterior",
 		"empresa": _text(empresa),
 		"tienda": _text(tienda),
 	}
+	if q["periodo"] == "rango":
+		start, end = _iso(desde), _iso(hasta)
+		if not (start and end):
+			q["periodo"] = "mes"
+		else:
+			q["desde"], q["hasta"] = sorted((start, end))
+	return q
 
 
 def generation():
@@ -51,8 +97,11 @@ def generation():
 
 
 def cache_key(user, card, q, gen):
+	periodo = q["periodo"]
+	if periodo == "rango":
+		periodo = "rango={0}..{1}".format(q["desde"], q["hasta"])
 	return "resultados:{0}:{1}:{2}:{3}:{4}:{5}:{6}".format(
-		user, card, q["periodo"], q["compara"], q["empresa"], q["tienda"], gen
+		user, card, periodo, q["compara"], q["empresa"], q["tienda"], gen
 	)
 
 
@@ -133,13 +182,15 @@ def board(
 	empresa: str | None = None,
 	tienda: str | None = None,
 	card: str | None = None,
+	desde: str | None = None,
+	hasta: str | None = None,
 ):
 	"""Every card the caller may see for the query, in board order. `card`
 	reloads one card (its retry). A card the caller may not see is absent or
 	blocked with its reason; it is never a zero."""
 	_require_user()
 	user = frappe.session.user
-	q = query(periodo, compara, empresa, tienda)
+	q = query(periodo, compara, empresa, tienda, desde, hasta)
 	ctx = {"user": user, **q}
 	gen = generation()
 	ttl = TTL[q["periodo"]]
@@ -189,13 +240,16 @@ def documents(
 	compara: str | None = None,
 	empresa: str | None = None,
 	tienda: str | None = None,
+	desde: str | None = None,
+	hasta: str | None = None,
 ):
 	"""The records behind a card for the same query (Mercado's lens), limited
 	to what the caller may read."""
 	_require_user()
-	ctx = {"user": frappe.session.user, "tipo": _text(tipo), **query(periodo, compara, empresa, tienda)}
+	q = query(periodo, compara, empresa, tienda, desde, hasta)
+	ctx = {"user": frappe.session.user, "tipo": _text(tipo), **q}
 	out = _delegate("muelle_resultados_documents", ctx)
-	out["query"] = {k: ctx[k] for k in ("tipo", "periodo", "compara", "empresa", "tienda")}
+	out["query"] = {"tipo": ctx["tipo"], **q}
 	return out
 
 

@@ -13,14 +13,17 @@
       />
       <span class="sr-only">{{ __('Refreshing') }}</span>
     </div>
-    <div class="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6">
-      <header class="flex flex-wrap items-end gap-3">
+    <div class="mx-auto w-full max-w-7xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6">
+      <header class="flex flex-wrap items-start gap-3">
         <div class="min-w-0 flex-1">
-          <h1 class="text-xl font-semibold text-ink-gray-9">
+          <h1 class="text-2xl font-semibold tracking-tight text-ink-gray-9">
             {{ __('Results') }}
           </h1>
-          <p class="text-sm text-ink-gray-6" data-testid="period-range">
+          <p class="mt-0.5 text-sm text-ink-gray-6" data-testid="period-range">
             {{ rangeText }}
+            <span v-if="generatedAt" class="text-ink-gray-5">
+              · {{ __('updated {0}', [generatedAt]) }}</span
+            >
           </p>
         </div>
         <Button
@@ -28,82 +31,149 @@
           :label="__('Refresh')"
           :loading="loading"
           @click="load({ refresh: true })"
-        />
+        >
+          <template #prefix>
+            <span class="lucide-refresh-cw size-4" aria-hidden="true" />
+          </template>
+        </Button>
       </header>
 
-      <div class="mt-4 flex flex-wrap items-center gap-2">
+      <div
+        class="mt-4 flex flex-col gap-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-2 lg:flex-row lg:items-center"
+      >
         <div
           role="radiogroup"
           :aria-label="__('Period')"
-          class="inline-flex rounded-lg bg-surface-gray-2 p-0.5"
+          class="flex gap-0.5 overflow-x-auto rounded-lg bg-surface-gray-2 p-0.5"
         >
           <button
             v-for="p in PERIODS"
             :key="p.value"
             role="radio"
-            :aria-checked="state.periodo === p.value"
+            :aria-checked="periodPicked === p.value"
             :data-testid="`periodo-${p.value}`"
-            class="min-h-11 rounded-md px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+            class="inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
             :class="
-              state.periodo === p.value
+              periodPicked === p.value
                 ? 'bg-surface-base text-ink-gray-9 shadow-sm'
-                : 'text-ink-gray-6'
+                : 'text-ink-gray-6 hover:text-ink-gray-8'
             "
-            @click="update({ periodo: p.value })"
+            @click="pickPeriod(p.value)"
           >
-            {{ periodLabel(p.value) }}
+            <span
+              v-if="p.value === 'rango'"
+              class="lucide-calendar-range size-4"
+              aria-hidden="true"
+            />{{ periodLabel(p.value) }}
           </button>
         </div>
-        <FormControl
-          class="w-full sm:w-56"
-          type="select"
-          data-testid="compara"
+        <div
+          role="radiogroup"
           :aria-label="__('Compare with')"
-          :model-value="state.compara"
-          :options="
-            COMPARES.map((c) => ({
-              label: compareLabel(c.value),
-              value: c.value,
-            }))
-          "
-          @update:model-value="(value) => update({ compara: value })"
-        />
+          class="flex gap-0.5 overflow-x-auto rounded-lg bg-surface-gray-2 p-0.5"
+          data-testid="compara"
+        >
+          <button
+            v-for="c in COMPARES"
+            :key="c.value"
+            role="radio"
+            :aria-checked="state.compara === c.value"
+            :data-testid="`compara-${c.value}`"
+            class="min-h-11 shrink-0 whitespace-nowrap rounded-md px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+            :class="
+              state.compara === c.value
+                ? 'bg-surface-base text-ink-gray-9 shadow-sm'
+                : 'text-ink-gray-6 hover:text-ink-gray-8'
+            "
+            @click="update({ compara: c.value })"
+          >
+            {{ compareLabel(c.value) }}
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2 lg:ml-auto">
+          <FormControl
+            v-if="companies.length > 1"
+            class="w-full sm:w-52"
+            type="select"
+            data-testid="empresa"
+            :aria-label="__('Company')"
+            :model-value="state.empresa"
+            :options="[
+              { label: __('All companies'), value: '' },
+              ...companies.map((x) => ({ label: x, value: x })),
+            ]"
+            @update:model-value="
+              (value) => update({ empresa: value, tienda: '' })
+            "
+          />
+          <FormControl
+            v-if="visibleShops.length > 1 || state.tienda"
+            class="w-full sm:w-60"
+            type="select"
+            data-testid="tienda"
+            :aria-label="__('Shop')"
+            :model-value="state.tienda"
+            :options="[
+              { label: __('All shops'), value: '' },
+              ...visibleShops.map((x) => ({ label: x.label, value: x.name })),
+            ]"
+            @update:model-value="(value) => update({ tienda: value })"
+          />
+        </div>
       </div>
 
-      <div
-        v-if="companies.length > 1 || shops.length > 1"
-        class="mt-3 flex gap-2 overflow-x-auto pb-1"
-        :aria-label="__('Company and shop')"
+      <form
+        v-if="rangeOpen"
+        class="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-outline-gray-2 p-3"
+        data-testid="rango"
+        @submit.prevent="applyRange"
       >
-        <template v-if="companies.length > 1">
-          <button
-            v-for="c in [
-              { value: '', label: __('All companies') },
-              ...companies.map((x) => ({ value: x, label: x })),
-            ]"
-            :key="`c-${c.value}`"
-            class="min-h-11 shrink-0 rounded-full border px-3 text-sm"
-            :class="chipClass(state.empresa === c.value)"
-            :aria-pressed="state.empresa === c.value"
-            @click="update({ empresa: c.value, tienda: '' })"
-          >
-            {{ c.label }}
-          </button>
-          <span class="w-px shrink-0 bg-outline-gray-2" aria-hidden="true" />
-        </template>
-        <template v-if="visibleShops.length > 1">
-          <button
-            v-for="s in [{ name: '', label: __('All shops') }, ...visibleShops]"
-            :key="`s-${s.name}`"
-            :data-testid="`tienda-${s.name || 'todas'}`"
-            class="min-h-11 shrink-0 rounded-full border px-3 text-sm"
-            :class="chipClass(state.tienda === s.name)"
-            :aria-pressed="state.tienda === s.name"
-            @click="update({ tienda: s.name })"
-          >
-            {{ s.label }}
-          </button>
-        </template>
+        <FormControl
+          v-model="draft.desde"
+          class="w-full sm:w-44"
+          type="date"
+          :label="__('From')"
+          :max="draft.hasta || undefined"
+        />
+        <FormControl
+          v-model="draft.hasta"
+          class="w-full sm:w-44"
+          type="date"
+          :label="__('To')"
+          :min="draft.desde || undefined"
+        />
+        <Button
+          type="submit"
+          variant="solid"
+          class="min-h-11"
+          :label="__('Show these dates')"
+          :disabled="!draft.desde || !draft.hasta"
+        />
+        <Button
+          class="min-h-11"
+          variant="ghost"
+          :label="__('Cancel')"
+          @click="rangeOpen = false"
+        />
+        <p class="w-full text-xs text-ink-gray-6">
+          {{ __('Up to one year. The comparison uses the same number of days.') }}
+        </p>
+      </form>
+
+      <div
+        v-if="shopName"
+        class="mt-3 flex flex-wrap items-center gap-2 text-sm text-ink-gray-7"
+      >
+        <span class="lucide-store size-4" aria-hidden="true" />
+        {{ __('Only {0}', [shopName]) }}
+        <button
+          class="inline-flex min-h-11 items-center gap-1 rounded-md px-2 font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+          @click="update({ tienda: '' })"
+        >
+          <span class="lucide-x size-4" aria-hidden="true" />{{
+            __('All shops')
+          }}
+        </button>
       </div>
 
       <div
@@ -116,12 +186,12 @@
       </div>
 
       <section
-        class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        class="mt-4 grid grid-flow-row-dense grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
         :aria-label="__('Numbers for the period')"
         :aria-busy="loading ? 'true' : undefined"
       >
         <ResultadosCard
-          v-for="key in shownKeys"
+          v-for="[key, size] in shownKeys"
           :key="key"
           :card-key="key"
           :card="cards[key] || null"
@@ -129,7 +199,9 @@
           :compara="state.compara"
           :currency="currency"
           :back="back"
+          :skeleton-size="size"
           @retry="retryCard"
+          @filter="(patch) => update(patch)"
         />
       </section>
       <div
@@ -147,9 +219,6 @@
           }}
         </p>
       </div>
-      <p v-if="generatedAt" class="mt-4 text-xs text-ink-gray-5">
-        {{ __('Updated {0}', [generatedAt]) }}
-      </p>
     </div>
   </div>
 </template>
@@ -165,22 +234,14 @@ import {
   COMPARES,
   CTX,
   PERIODS,
+  SKELETON,
   compareLabel,
+  dayText,
   periodLabel,
   readQuery,
   resultadosApi,
   toQuery,
 } from '@/composables/useResultados'
-
-// Every card the board can show, in order; until the first answer arrives
-// they render as skeletons so the page does not jump.
-const SKELETON_KEYS = [
-  'ventas',
-  'margen',
-  'efectivo',
-  'por_cobrar',
-  'reparaciones',
-]
 
 const route = useRoute()
 const router = useRouter()
@@ -206,12 +267,26 @@ const visibleShops = computed(() =>
 )
 const currency = computed(() => shellBoot.value?.currency || '')
 const back = computed(() => `/crm${route.fullPath}`)
-const shownKeys = computed(() => (loaded.value ? order.value : SKELETON_KEYS))
+const shownKeys = computed(() =>
+  loaded.value
+    ? order.value.map((key) => [key, cards[key]?.size || ''])
+    : SKELETON,
+)
+const shopName = computed(() => {
+  const name = state.value.tienda
+  if (!name) return ''
+  return shops.value.find((s) => s.name === name)?.label || name
+})
+const rangeOpen = ref(false)
+const draft = reactive({ desde: '', hasta: '' })
+const periodPicked = computed(() =>
+  rangeOpen.value ? 'rango' : state.value.periodo,
+)
 const rangeText = computed(() => {
   const p = period.value
   if (!p) return periodLabel(state.value.periodo)
   const span = (from, to) =>
-    from === to ? dateText(from) : `${dateText(from)} – ${dateText(to)}`
+    from === to ? dayText(from) : `${dayText(from)} – ${dayText(to)}`
   const main = span(p.from, p.to)
   if (state.value.compara === 'no' || !p.compare_from) return main
   return __('{0} · compared with {1}', [
@@ -220,24 +295,24 @@ const rangeText = computed(() => {
   ])
 })
 
-function dateText(iso) {
-  const [y, m, d] = String(iso || '')
-    .split('-')
-    .map(Number)
-  if (!y) return ''
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-  })
-}
-function chipClass(active) {
-  return active
-    ? 'border-outline-gray-4 bg-surface-gray-3 font-medium text-ink-gray-9'
-    : 'border-outline-gray-2 text-ink-gray-7 hover:bg-surface-gray-1'
-}
-
 function update(patch) {
   router.replace({ query: toQuery({ ...state.value, ...patch }) })
+}
+function pickPeriod(value) {
+  if (value !== 'rango') {
+    rangeOpen.value = false
+    return update({ periodo: value })
+  }
+  // Start from what the board shows now, so «Dates» is one tweak away.
+  draft.desde = state.value.desde || period.value?.from || ''
+  draft.hasta = state.value.hasta || period.value?.to || ''
+  rangeOpen.value = true
+}
+function applyRange() {
+  if (!draft.desde || !draft.hasta) return
+  const [desde, hasta] = [draft.desde, draft.hasta].sort()
+  rangeOpen.value = false
+  update({ periodo: 'rango', desde, hasta })
 }
 
 async function load({ refresh = false } = {}) {
@@ -287,6 +362,8 @@ watch(
     state.value.compara,
     state.value.empresa,
     state.value.tienda,
+    state.value.desde,
+    state.value.hasta,
   ],
   () => {
     if (route.name === 'Resultados') load()
