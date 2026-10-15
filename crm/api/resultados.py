@@ -1,6 +1,8 @@
 """Resultados: the owner's numbers for a period, each one opening its records.
 
-Resultados owns no records and writes nothing. The cards come from the apps
+Resultados owns no records; the only thing it writes is the caller's own
+choice of hidden cards («Personalizar»), a user default that follows them to
+every device. The cards come from the apps
 that own the numbers through the `muelle_resultados_cards` hook: each dotted
 path is one card (its function name is the card key) and returns a card, a card
 blocked with its reason, or None when the card does not apply to the caller.
@@ -10,6 +12,9 @@ card shows its own retry, never takes the board down) and a per-user cache
 keyed by the query and a generation counter that a submitted or cancelled
 sale, cash closing or repair order moves after commit.
 """
+
+import json
+import re
 
 import frappe
 from frappe import _
@@ -49,6 +54,12 @@ COMPARAS = ("anterior", "anio", "no")
 TTL = {"hoy": 60, "ayer": 600, "semana": 300, "mes": 300, "mes_anterior": 900, "rango": 300}
 GEN_KEY = "resultados:gen"
 MAX_TEXT = 140
+# «Personalizar»: the card keys the user hides, as a JSON list in a user
+# default. Keys are card function names; unknown ones are kept (a card the user
+# may not see today stays hidden once they may), malformed ones are dropped.
+HIDDEN_DEFAULT = "muelle_resultados_hidden"
+MAX_HIDDEN = 64
+_CARD_KEY = re.compile(r"^[a-z][a-z0-9_]{0,59}$")
 
 
 def _providers():
@@ -103,6 +114,35 @@ def cache_key(user, card, q, gen):
 	return "resultados:{0}:{1}:{2}:{3}:{4}:{5}:{6}".format(
 		user, card, periodo, q["compara"], q["empresa"], q["tienda"], gen
 	)
+
+
+def clean_hidden(keys):
+	"""Card keys only, once each, in the order given, at most MAX_HIDDEN."""
+	if isinstance(keys, str):
+		try:
+			keys = json.loads(keys)
+		except ValueError:
+			keys = None
+	if not isinstance(keys, list | tuple):
+		return []
+	out = []
+	for key in keys:
+		if isinstance(key, str) and _CARD_KEY.match(key) and key not in out:
+			out.append(key)
+	return out[:MAX_HIDDEN]
+
+
+def saved_hidden(user=None):
+	"""The user's hidden cards, or None when they never chose (the device's
+	own older choice may then be adopted)."""
+	raw = frappe.defaults.get_user_default(HIDDEN_DEFAULT, user=user or frappe.session.user)
+	if not raw:
+		return None
+	try:
+		value = json.loads(raw)
+	except ValueError:
+		return None
+	return clean_hidden(value) if isinstance(value, list) else None
 
 
 def _blocked(key, reason, retry=False):
@@ -218,9 +258,20 @@ def board(
 		"cards": cards,
 		"period": period,
 		"scope": None if card else _scope(ctx),
+		"hidden": None if card else saved_hidden(user),
 		"currency": frappe.defaults.get_global_default("currency"),
 		"generated_at": frappe.utils.now(),
 	}
+
+
+@frappe.whitelist(methods=["POST"])
+def save_hidden(hidden: str | list | None = None):
+	"""The caller's own «Personalizar»: the cards they hide on every device.
+	Only their user default changes; the board still computes every card."""
+	_require_user()
+	clean = clean_hidden(hidden)
+	frappe.defaults.set_user_default(HIDDEN_DEFAULT, json.dumps(clean), user=frappe.session.user)
+	return {"hidden": clean}
 
 
 def _delegate(hook, *args):

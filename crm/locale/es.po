@@ -21164,8 +21164,19 @@ msgid "Customize"
 msgstr "Personalizar"
 
 #: frontend/src/pages/Resultados.vue
-msgid "Pick the cards you follow. Only this device remembers it."
-msgstr "Elige las tarjetas que sigues. Solo este dispositivo lo recuerda."
+msgctxt "Resultados"
+msgid "Pick the cards you follow. Your account remembers them on every device."
+msgstr "Elige las tarjetas que sigues. Tu cuenta las recuerda en todos tus dispositivos."
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Only this device remembers it for now: {0}"
+msgstr "Por ahora solo este dispositivo lo recuerda: {0}"
+
+#: frontend/src/pages/Resultados.vue
+msgctxt "Resultados"
+msgid "Save again"
+msgstr "Guardar de nuevo"
 
 #: frontend/src/pages/Resultados.vue
 msgid "Every card is hidden"

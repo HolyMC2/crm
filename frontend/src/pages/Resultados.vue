@@ -141,7 +141,11 @@
         <div class="flex flex-wrap items-center gap-2">
           <p class="min-w-0 flex-1 text-sm text-ink-gray-7">
             {{
-              __('Pick the cards you follow. Only this device remembers it.')
+              __(
+                'Pick the cards you follow. Your account remembers them on every device.',
+                null,
+                CTX,
+              )
             }}
           </p>
           <Button
@@ -156,6 +160,27 @@
             class="min-h-11"
             :label="__('Done')"
             @click="customizing = false"
+          />
+        </div>
+        <div
+          v-if="saveProblem"
+          role="alert"
+          class="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-surface-amber-1 p-2 text-sm text-ink-amber-8"
+          data-testid="hidden-save-problem"
+        >
+          <span class="min-w-0 flex-1">
+            {{
+              __(
+                'Only this device remembers it for now: {0}',
+                [saveProblem],
+                CTX,
+              )
+            }}
+          </span>
+          <Button
+            class="min-h-11"
+            :label="__('Save again', null, CTX)"
+            @click="saveHidden"
           />
         </div>
         <div class="mt-2 flex flex-wrap gap-2">
@@ -307,14 +332,17 @@ import {
   CTX,
   PERIODS,
   SKELETON,
+  adoptHidden,
   cardTitle,
   compareLabel,
   packRows,
   dayText,
   periodLabel,
+  readHiddenCopy,
   readQuery,
   resultadosApi,
   toQuery,
+  writeHiddenCopy,
 } from '@/composables/useResultados'
 
 const route = useRoute()
@@ -341,28 +369,40 @@ const visibleShops = computed(() =>
 )
 const currency = computed(() => shellBoot.value?.currency || '')
 const back = computed(() => `/crm${route.fullPath}`)
-// Cards this device hides («Personalizar»); the board still loads them so
-// showing one again needs no round-trip.
-const HIDDEN_KEY = 'muelle:resultados:hidden'
+// Cards the user hides («Personalizar»), saved on their account so the phone
+// and the desk show the same board; the board still loads them so showing
+// one again needs no round-trip.
 const customizing = ref(false)
-const hidden = ref(readHidden())
-function readHidden() {
-  try {
-    const value = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]')
-    return Array.isArray(value)
-      ? value.filter((v) => typeof v === 'string')
-      : []
-  } catch {
-    return []
-  }
-}
+const hidden = ref(readHiddenCopy())
+const saveProblem = ref('')
+let saveTimer = null
+let saving = null
 function setHidden(keys) {
   hidden.value = keys
+  writeHiddenCopy(keys)
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(saveHidden, 400)
+}
+async function saveHidden() {
+  saveTimer = null
+  const keys = hidden.value
+  const mine = (saving = resultadosApi('save_hidden', { hidden: keys }))
   try {
-    localStorage.setItem(HIDDEN_KEY, JSON.stringify(keys))
-  } catch {
-    // Private mode: the choice lasts for this visit.
+    await mine
+    if (saving === mine) saveProblem.value = ''
+  } catch (error) {
+    if (saving === mine) saveProblem.value = problemOf(error).detail
+  } finally {
+    if (saving === mine) saving = null
   }
+}
+function adoptSaved(server) {
+  // A choice still on its way to the server is newer than what it sent.
+  if (saveTimer || saving) return
+  const { hidden: keys, push } = adoptHidden(server, hidden.value)
+  hidden.value = keys
+  writeHiddenCopy(keys)
+  if (push) saveHidden()
 }
 function toggleCard(key) {
   setHidden(
@@ -433,6 +473,7 @@ async function load({ refresh = false } = {}) {
     for (const card of out.cards || []) cards[card.key] = card
     order.value = (out.cards || []).map((card) => card.key)
     scope.value = out.scope || { companies: [], shops: [] }
+    adoptSaved(out.hidden)
     period.value = out.period
     generatedAt.value = new Date().toLocaleTimeString(undefined, {
       hour: '2-digit',

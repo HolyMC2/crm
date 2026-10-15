@@ -361,3 +361,41 @@ export function rowRoute(row, lensPath) {
     back,
   )
 }
+
+// «Personalizar»: the cards a user hides follow them to every device (the
+// user default behind crm.api.resultados.save_hidden). This device keeps a
+// copy so the board opens without the hidden cards before the server answers.
+export const HIDDEN_KEY = 'muelle:resultados:hidden'
+
+/** Card keys only, once each; anything else is dropped, never an error. */
+export function cleanHidden(value) {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter((v) => typeof v === 'string' && v))]
+}
+
+export function readHiddenCopy(storage = globalThis.localStorage) {
+  try {
+    return cleanHidden(JSON.parse(storage?.getItem(HIDDEN_KEY) || '[]'))
+  } catch {
+    return []
+  }
+}
+
+export function writeHiddenCopy(keys, storage = globalThis.localStorage) {
+  try {
+    storage?.setItem(HIDDEN_KEY, JSON.stringify(keys))
+  } catch {
+    // Private mode: the account still keeps the choice.
+  }
+}
+
+/**
+ * What the board hides after the server answers. The account's choice wins;
+ * a user who never chose on the server brings this device's older choice
+ * with them (`push`), so nothing they hid before comes back.
+ */
+export function adoptHidden(server, copy) {
+  if (Array.isArray(server)) return { hidden: cleanHidden(server), push: false }
+  const hidden = cleanHidden(copy)
+  return { hidden, push: hidden.length > 0 }
+}
