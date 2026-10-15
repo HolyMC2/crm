@@ -23186,8 +23186,8 @@ msgctxt "Productos"
 msgid "Photo added"
 msgstr "Foto agregada"
 #: frontend/src/pages/Archivos.vue
-msgid "Where originals are stored and read (OCR), and which mail inboxes send files here."
-msgstr "Dónde se guardan y se leen (OCR) los originales, y qué buzones de correo envían archivos aquí."
+msgid "Connect a Paperless archive: originals are sent there for OCR and its documents come in here."
+msgstr "Conecta un archivo Paperless: los originales se envían ahí para OCR y sus documentos llegan aquí."
 
 #: frontend/src/pages/Archivos.vue
 msgid "Archive settings"

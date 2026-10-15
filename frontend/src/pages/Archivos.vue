@@ -57,7 +57,7 @@
           class="flex min-h-11 items-center gap-2 text-ink-gray-6 hover:text-ink-gray-8"
           :title="
             __(
-              'Where originals are stored and read (OCR), and which mail inboxes send files here.',
+              'Connect a Paperless archive: originals are sent there for OCR and its documents come in here.',
             )
           "
           ><FeatherIcon name="settings" class="h-4 w-4 shrink-0" />{{
