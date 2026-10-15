@@ -384,6 +384,8 @@ export function createShellProviders({ boot, modules }) {
       }))
     },
   }
+  // Deals (CRM-S3.3): title, person, phone in any spelling or RO number; open
+  // deals first, then the most recently touched. The server applies permissions.
   const ventas = {
     key: 'ventas',
     label: 'Ventas',
@@ -391,34 +393,42 @@ export function createShellProviders({ boot, modules }) {
     async search(query, signal) {
       if (query.kind === 'empty' || !moduleEnabled(boot.value, 'ventas'))
         return []
-      const like = `%${query.text}%`
-      const rows = await call('frappe.client.get_list', {
-        doctype: 'CRM Deal',
-        fields: ['name', 'organization', 'lead_name', 'status'],
-        or_filters: [
-          ['name', 'like', like],
-          ['organization', 'like', like],
-          ['lead_name', 'like', like],
-        ],
-        order_by: 'modified desc',
-        limit_page_length: 5,
+      const rows = await call('crm.api.palette.search_deals', {
+        q: query.text,
       })
       if (signal.aborted) return []
-      return (rows || []).map((row) => ({
-        id: `deal:${row.name}`,
-        group: 'registros',
-        title: row.organization || row.lead_name || row.name,
-        subtitle: [row.name, row.status].filter(Boolean).join(' · '),
-        icon: 'lucide-handshake',
-        href: `/ventas/deal/${encodeURIComponent(row.name)}`,
-        record: { source: 'deal', name: row.name },
-      }))
+      return (rows || []).map(dealItem)
     },
   }
   const manual = createManualProvider({ boot })
   return [actions, contactos, places, ventas, manual]
 }
 
+/** A deal row from crm.api.palette.search_deals as a palette record. */
+export function dealItem(row) {
+  const title = row.title || row.name
+  const lower = title.toLowerCase()
+  const person = [row.person, row.organization].find(
+    (value) => value && !lower.includes(String(value).toLowerCase()),
+  )
+  return {
+    id: `deal:${row.name}`,
+    group: 'registros',
+    title,
+    subtitle: [
+      person,
+      row.repair_order,
+      row.mobile_no,
+      row.status_label || row.status,
+      row.name,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    icon: row.closed ? 'lucide-archive' : 'lucide-handshake',
+    href: `/ventas/deal/${encodeURIComponent(row.name)}`,
+    record: { source: 'deal', name: row.name },
+  }
+}
 function recentKey() {
   const user = decodeURIComponent(
     document.cookie

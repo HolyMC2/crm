@@ -661,6 +661,7 @@ def _recent_deal(name):
 	doc = frappe.get_doc("CRM Deal", name)
 	if not doc.has_permission("read"):
 		return None
-	person = " ".join(part for part in (doc.get("first_name"), doc.get("last_name")) if part)
-	title = doc.get("organization") or doc.get("lead_name") or person or name
-	return {"source": "deal", "name": name, "title": title}
+	from crm.api.palette import deal_title
+
+	# Same title as the palette's deal search (CRM-S3.3), so a recent reads like the hit.
+	return {"source": "deal", "name": name, "title": deal_title(doc)}

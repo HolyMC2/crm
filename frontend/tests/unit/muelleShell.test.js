@@ -58,6 +58,7 @@ import {
 } from '@/composables/muelleShell'
 import {
   createShellProviders,
+  dealItem,
   loadRecent,
   resolveRecent,
   toRecentRef,
@@ -1165,17 +1166,16 @@ describe('Ventas deals in the palette', () => {
 
   it('finds deals and opens the one deal record', async () => {
     state.call.mockResolvedValue([
-      { name: 'CRM-DEAL-1', organization: 'Acme', status: 'Qualification' },
+      { name: 'CRM-DEAL-1', title: 'Acme', status: 'Qualification' },
     ])
     const ventas = createShellProviders({
       boot: ref(boot()),
       modules: ref(hostedModules),
     }).find((provider) => provider.key === 'ventas')
     const rows = await ventas.search(query, new AbortController().signal)
-    expect(state.call).toHaveBeenCalledWith(
-      'frappe.client.get_list',
-      expect.objectContaining({ doctype: 'CRM Deal' }),
-    )
+    expect(state.call).toHaveBeenCalledWith('crm.api.palette.search_deals', {
+      q: 'acme',
+    })
     expect(rows[0]).toMatchObject({
       group: 'registros',
       title: 'Acme',
@@ -1187,6 +1187,38 @@ describe('Ventas deals in the palette', () => {
       href: '/ventas/deal/CRM-DEAL-1',
       record: { source: 'deal', name: 'CRM-DEAL-1' },
     })
+  })
+
+  it('a customer search shows their deal with person, RO, phone and stage (CRM-S3.3)', () => {
+    expect(
+      dealItem({
+        name: 'CRM-DEAL-2026-03311',
+        title: 'Apple iPhone 12 — Karolina Quevedo',
+        person: 'Karolina Quevedo',
+        repair_order: 'RO-01234',
+        mobile_no: '695 122 3254',
+        status: 'Ready for Pickup',
+        status_label: 'Listo para recoger',
+        closed: false,
+      }),
+    ).toEqual({
+      id: 'deal:CRM-DEAL-2026-03311',
+      group: 'registros',
+      title: 'Apple iPhone 12 — Karolina Quevedo',
+      subtitle:
+        'RO-01234 · 695 122 3254 · Listo para recoger · CRM-DEAL-2026-03311',
+      icon: 'lucide-handshake',
+      href: '/ventas/deal/CRM-DEAL-2026-03311',
+      record: { source: 'deal', name: 'CRM-DEAL-2026-03311' },
+    })
+    const closed = dealItem({
+      name: 'D-2',
+      title: 'Pantalla',
+      person: 'Ana',
+      closed: true,
+    })
+    expect(closed.subtitle).toBe('Ana · D-2')
+    expect(closed.icon).toBe('lucide-archive')
   })
 
   it('Ventas refused: no deal search and deal recents are dropped', async () => {
