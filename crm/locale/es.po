@@ -24344,3 +24344,27 @@ msgstr "Marcar como ganado"
 #: frontend/src/utils/dealRecordActions.js
 msgid "Mark as lost"
 msgstr "Marcar como perdido"
+
+#: crm/pipeline/services/reminders.py
+msgid "Next step due {0}: {1} — {2}"
+msgstr "Siguiente paso a las {0}: {1} — {2}"
+
+#: crm/pipeline/services/reminders.py
+msgid "Overdue since {0}: {1} — {2} ({3})"
+msgstr "Vencido desde {0}: {1} — {2} ({3})"
+
+#: crm/pipeline/services/reminders.py
+msgid "no owner"
+msgstr "sin responsable"
+
+#: crm/pipeline/services/reminders.py
+msgid "No owner"
+msgstr "Sin responsable"
+
+#: crm/pipeline/services/reminders.py
+msgid "Team follow-ups overdue"
+msgstr "Seguimientos vencidos del equipo"
+
+#: crm/pipeline/services/reminders.py
+msgid "No follow-up of your team is overdue."
+msgstr "Ningún seguimiento de tu equipo está vencido."

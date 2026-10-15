@@ -126,3 +126,41 @@ describe('es-MX catalog', () => {
       expect(catalog.has(text), text).toBe(true)
   })
 })
+
+describe('team follow-ups overdue (managers)', () => {
+  it('each owner opens the list on «Vencidos» for them; no owner opens the whole queue', async () => {
+    const { teamOverdueRows } = await import('@/composables/useHoy')
+    const rows = teamOverdueRows({
+      available: true,
+      rows: [
+        { owner: 'ana@x.mx', name: 'Ana', count: 4 },
+        { owner: '', name: '', count: 2 },
+      ],
+    })
+    expect(rows.map((row) => row.to)).toEqual([
+      '/deals?follow_up=overdue&owner=ana%40x.mx&return_to=%2Fcrm%2Fhoy&return_label=Hoy',
+      '/deals?follow_up=overdue&return_to=%2Fcrm%2Fhoy&return_label=Hoy',
+    ])
+    expect(teamOverdueRows({ available: false })).toEqual([])
+  })
+
+  it('its strings are in the es-MX catalog', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { dirname, resolve } = await import('node:path')
+    const { fileURLToPath } = await import('node:url')
+    const here = dirname(fileURLToPath(import.meta.url))
+    const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
+    for (const text of [
+      'Team follow-ups overdue',
+      'No follow-up of your team is overdue.',
+      'No owner',
+      'Next step due {0}: {1} — {2}',
+      'Overdue since {0}: {1} — {2} ({3})',
+    ])
+      expect(po, text).toMatch(
+        new RegExp(
+          `msgid "${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"\\nmsgstr "[^"]+"`,
+        ),
+      )
+  })
+})

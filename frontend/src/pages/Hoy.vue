@@ -139,6 +139,40 @@
               </li>
             </ul>
           </HoySection>
+          <!-- 2c · Seguimientos vencidos del equipo (managers only) -->
+          <HoySection
+            v-if="data?.equipo?.available || data?.equipo?.failed"
+            id="equipo"
+            :title="__('Team follow-ups overdue')"
+            icon="lucide-alarm-clock"
+            :count="teamCount"
+            :more="
+              data?.equipo?.available
+                ? { label: __('See all'), to: teamQueue }
+                : null
+            "
+            :collapsed="teamCollapsed"
+            :failed="Boolean(data?.equipo?.failed)"
+            @retry="refresh()"
+          >
+            <ul :aria-label="__('Team follow-ups overdue')">
+              <li v-for="row in teamRows" :key="row.owner || '-'">
+                <RouterLink
+                  :to="row.to"
+                  class="flex min-h-12 items-center gap-3 px-4 py-1.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-link sm:px-5"
+                >
+                  <span
+                    class="min-w-0 flex-1 truncate text-base text-ink-gray-9"
+                    >{{ row.owner ? row.name : __('No owner') }}</span
+                  >
+                  <span
+                    class="shrink-0 rounded-full bg-surface-red-1 px-2 py-0.5 text-sm font-medium text-ink-red-7"
+                    >{{ row.count }}</span
+                  >
+                </RouterLink>
+              </li>
+            </ul>
+          </HoySection>
         </div>
 
         <!-- 2 · Agenda de hoy -->
@@ -457,7 +491,9 @@ import {
   runSourceAction,
   saveLanding,
   scanDrafts,
+  teamOverdueRows,
   timeText,
+  withReturn,
 } from '@/composables/useHoy'
 import { usePullRefresh } from '@/composables/usePullRefresh'
 import {
@@ -550,6 +586,17 @@ const followUpCollapsed = computed(() => {
     ? ''
     : __('Every open deal of yours has a next step.')
 })
+const teamRows = computed(() => teamOverdueRows(data.value?.equipo))
+const teamQueue = withReturn('/deals?follow_up=overdue')
+const teamCount = computed(() => {
+  const count = data.value?.equipo?.count
+  return count?.value ? countLabel(count) : ''
+})
+const teamCollapsed = computed(() =>
+  data.value?.equipo?.available && !teamRows.value.length
+    ? __('No follow-up of your team is overdue.')
+    : '',
+)
 const shortcuts = computed(() => accesos(shellBoot.value))
 const landingChoices = computed(() => landingOptions(shellModules.value))
 

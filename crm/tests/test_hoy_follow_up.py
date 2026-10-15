@@ -63,3 +63,32 @@ class TestHoyFollowUp(DealsListTestCase):
 				page = hoy.page()
 		self.assertEqual(page["seguimiento"], {"available": False, "failed": True})
 		self.assertIn("avisos", page)
+
+
+class TestHoyTeamOverdue(DealsListTestCase):
+	def overdue(self, owner):
+		from frappe.utils import add_days, nowdate
+
+		frappe.set_user("Administrator")
+		name = self.make_deal(
+			next_activity_task="CRM-TASK-not-checked", next_activity_at=f"{add_days(nowdate(), -2)} 10:00:00"
+		)
+		frappe.db.set_value("CRM Deal", name, "deal_owner", owner, update_modified=False)
+		return name
+
+	def test_managers_see_overdue_steps_per_owner(self):
+		seller = self.make_user("Sales User")
+		self.overdue(seller)
+		self.overdue(seller)
+		self.overdue(None)
+		self.make_deal(next_activity_task="CRM-TASK-x", next_activity_at="2099-01-01 10:00:00")
+		frappe.set_user(self.make_user("Sales Manager"))
+		section = hoy._team_overdue()
+		self.assertTrue(section["available"])
+		mine = {row["owner"]: row["count"] for row in section["rows"]}
+		self.assertEqual(mine.get(seller), 2)
+		self.assertGreaterEqual(mine.get(""), 1)
+
+	def test_sellers_do_not_get_the_team_section(self):
+		frappe.set_user(self.make_user("Sales User"))
+		self.assertEqual(hoy._team_overdue(), {"available": False, "reason": None})

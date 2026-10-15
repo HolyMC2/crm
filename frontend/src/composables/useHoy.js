@@ -83,6 +83,16 @@ export function followUpRows(section) {
   }))
 }
 
+/** Managers: each owner's overdue next steps open the list on «Vencidos» for them. */
+export function teamOverdueRows(section) {
+  if (!section?.available) return []
+  return (section.rows || []).map((row) => {
+    const query = new URLSearchParams({ follow_up: 'overdue' })
+    if (row.owner) query.set('owner', row.owner)
+    return { ...row, to: withReturn(`/deals?${query}`) }
+  })
+}
+
 /** The deals list on «Sin seguimiento», narrowed to my deals, with the return to Hoy. */
 export function followUpQueueLink(section) {
   if (!section?.available) return null

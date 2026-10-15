@@ -296,7 +296,11 @@ scheduler_events = {
 		"* * * * *": ["crm.api.outbox.recover_intents"],
 		"*/5 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes"],
 		"*/10 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_10_minutes"],
-		"*/15 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_15_minutes"],
+		"*/15 * * * *": [
+			"crm.lead_syncing.background_sync.sync_leads_from_sources_15_minutes",
+			"crm.pipeline.services.reminders.remind_due",
+		],
+		"0 9 * * *": ["crm.pipeline.services.reminders.escalate_overdue"],
 	},
 }
 

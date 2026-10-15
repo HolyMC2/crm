@@ -15,6 +15,10 @@ AVISOS_LIMIT = 3
 FOLLOW_UP_LIMIT = 5
 FOLLOW_UP_CAP = 100
 FOLLOW_UP_QUEUE = "sin_seguimiento"
+TEAM_QUEUE = "vencidos"
+TEAM_ROLES = ("Sales Manager", "System Manager")
+TEAM_LIMIT = 5
+TEAM_CAP = 2000
 
 
 def check_hoy_permission(user: str | None = None) -> bool:
@@ -107,6 +111,45 @@ def _follow_up():
 	}
 
 
+def _team_overdue():
+	"""For managers: open deals whose next step is overdue, counted per owner.
+
+	The escalation view of the reminders (crm.pipeline.services.reminders). Same
+	predicate as the list's «Vencidos» queue, read through get_list so the sales
+	hierarchy scopes it: a team lead sees their team, a Sales Manager outside the
+	tree sees everyone.
+	"""
+	from collections import Counter
+
+	from crm.api.deal_queues import QUEUES
+	from crm.api.list_tokens import resolve_filter_tokens
+
+	if not set(frappe.get_roles()) & set(TEAM_ROLES) or not frappe.has_permission("CRM Deal", "read"):
+		return {"available": False, "reason": None}
+	queue = next(queue for queue in QUEUES if queue["key"] == TEAM_QUEUE)
+	owners = frappe.get_list(
+		"CRM Deal", filters=resolve_filter_tokens(queue["filters"]), pluck="deal_owner", limit=TEAM_CAP + 1
+	)
+	counts = Counter(owner or "" for owner in owners[:TEAM_CAP])
+	names = {
+		row.name: row.full_name
+		for row in frappe.get_all(
+			"User",
+			filters={"name": ["in", [owner for owner in counts if owner]]},
+			fields=["name", "full_name"],
+		)
+	}
+	return {
+		"available": True,
+		"count": {"value": min(len(owners), TEAM_CAP), "capped": len(owners) > TEAM_CAP},
+		"rows": [
+			{"owner": owner, "name": names.get(owner) or owner, "count": count}
+			for owner, count in counts.most_common(TEAM_LIMIT)
+		],
+		"owners": len(counts),
+	}
+
+
 def _section(build):
 	try:
 		return build()
@@ -138,6 +181,7 @@ def page() -> dict:
 	day = _doco_day()
 	day["avisos"] = _avisos()
 	day["seguimiento"] = _section(_follow_up)
+	day["equipo"] = _section(_team_overdue)
 	day["landing"] = frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 	return day
 
