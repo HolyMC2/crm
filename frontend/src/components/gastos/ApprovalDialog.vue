@@ -1,71 +1,73 @@
 <template>
-  <Dialog v-model="open" :options="{ title: title }">
-    <template #body-content>
-      <div class="space-y-4">
-        <p v-if="reason" class="text-base text-ink-gray-7">{{ reason }}</p>
-        <p v-if="loading" role="status" class="text-sm text-ink-gray-6">
-          {{ __('Looking for who can help…') }}
-        </p>
-        <template v-else-if="options">
-          <FormControl
-            v-if="options.candidates.length"
-            v-model="assignee"
-            type="select"
-            data-field="assignee"
-            :label="__('Who should do it')"
-            :options="[
-              { label: __('Choose a person'), value: '' },
-              ...options.candidates.map((c) => ({
-                label: c.full_name,
-                value: c.user,
-              })),
-            ]"
-          />
-          <p v-else class="rounded-lg bg-surface-gray-2 p-3 text-sm">
-            {{
-              claim
-                ? __(
-                    'Nobody here can do it yet. The request goes to the administrators with this expense attached.',
-                  )
-                : __(
-                    'Nobody here can do it yet. The request goes to the administrators with this bill attached.',
-                  )
-            }}
-          </p>
-          <FormControl
-            v-model="note"
-            type="textarea"
-            :label="__('Note (optional)')"
-            :placeholder="__('E.g. the landlord asks for it before Friday')"
-          />
-        </template>
-        <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
-          {{ problem }}
-        </p>
-        <p v-if="sent" role="status" class="text-sm text-ink-green-7">
-          {{ sent }}
-        </p>
-      </div>
-    </template>
-    <template #actions>
-      <div class="flex flex-wrap justify-end gap-2">
-        <Button :label="__('Close', null, 'Gastos')" @click="open = false" />
-        <Button
-          v-if="!sent"
-          variant="solid"
-          data-testid="approval-send"
-          :label="__('Send request')"
-          :loading="sending"
-          :disabled="!options || (options.candidates.length && !assignee)"
-          @click="send"
+  <PowerSheet v-model="open" kind="approval" :title="title">
+    <div class="space-y-4">
+      <p v-if="reason" class="text-base text-ink-gray-7">{{ reason }}</p>
+      <p v-if="loading" role="status" class="text-sm text-ink-gray-6">
+        {{ __('Looking for who can help…') }}
+      </p>
+      <template v-else-if="options">
+        <FormControl
+          v-if="options.candidates.length"
+          v-model="assignee"
+          type="select"
+          data-field="assignee"
+          :label="__('Who should do it')"
+          :options="[
+            { label: __('Choose a person'), value: '' },
+            ...options.candidates.map((c) => ({
+              label: c.full_name,
+              value: c.user,
+            })),
+          ]"
         />
-      </div>
+        <p v-else class="rounded-lg bg-surface-gray-2 p-3 text-sm">
+          {{
+            claim
+              ? __(
+                  'Nobody here can do it yet. The request goes to the administrators with this expense attached.',
+                )
+              : __(
+                  'Nobody here can do it yet. The request goes to the administrators with this bill attached.',
+                )
+          }}
+        </p>
+        <FormControl
+          v-model="note"
+          type="textarea"
+          :label="__('Note (optional)')"
+          :placeholder="__('E.g. the landlord asks for it before Friday')"
+        />
+      </template>
+      <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
+        {{ problem }}
+      </p>
+      <p v-if="sent" role="status" class="text-sm text-ink-green-7">
+        {{ sent }}
+      </p>
+    </div>
+    <template #actions>
+      <Button
+        class="min-h-11 sm:min-h-8"
+        :label="__('Close', null, 'Gastos')"
+        @click="open = false"
+      />
+      <Button
+        v-if="!sent"
+        variant="solid"
+        class="min-h-11 sm:min-h-8"
+        data-testid="approval-send"
+        :label="__('Send request')"
+        :loading="sending"
+        :disabled="!options || (options.candidates.length && !assignee)"
+        @click="send"
+      />
     </template>
-  </Dialog>
+  </PowerSheet>
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Button, Dialog, FormControl } from 'frappe-ui'
+import { Button, FormControl } from 'frappe-ui'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import { gastosApi, problemOf, requestId } from '@/composables/useGastos'
 
 // «Pedir aprobación»: assign this exact bill to someone who can do the step

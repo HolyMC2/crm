@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { comprasApi, money, outcomeUnknown, requestId } from './useCompras'
 import { claimsSegmentShown, defaultSegment } from './useGastosEmpleados'
 import { errorKind } from '@/utils/contactos'
+import { listKeys, pathWithQuery, textParam } from '@/utils/powerList'
 
 // Gastos: what the shop owes its suppliers, registered and paid from the bank.
 // The native Purchase Invoice is the bill and the native Payment Entry the
@@ -280,4 +281,165 @@ export async function payBill(api, bill, form) {
     if (!outcomeUnknown(error)) forgetPayment(bill)
     throw error
   }
+}
+
+// ── Power worklist: URL state, keyboard, «Pagar» from the list, bulk ───────
+// Agenda/Cobranza standard: the URL is the list's state (list, chip, order,
+// search, focused bill), the keyboard works the list, a payment can be undone
+// by whom made it, and several bills are paid in one go with one result each.
+
+export const ACTIONS = 'doco.workspaces.payables'
+// A bill changes with its payments; a payment made from another tab or by
+// someone else reloads the rows already shown.
+export const LIVE_DOCTYPES = Object.freeze([
+  'Purchase Invoice',
+  'Payment Entry',
+])
+
+/** The bill queue's state, read from the URL (the URL is the state). */
+export function queueState(query = {}, boot = null) {
+  const segment = normalizeSegment(textParam(query.segment), boot)
+  return {
+    segment,
+    chip: normalizeChip(segment, textParam(query.chip)),
+    po: textParam(query.po),
+    q: textParam(query.q),
+    foco: textParam(query.foco),
+  }
+}
+
+/** Scroll memory is per list (its filters), never per focused bill. */
+export function listMemoryKey(query = {}) {
+  const s = queueState(query)
+  return `muelle:gastos:list:${s.segment}|${s.chip}|${s.po}|${s.q}`
+}
+
+/** `/gastos?…` for a query: the record keeps it to come back to the same row. */
+export function listHref(query = {}) {
+  return pathWithQuery('/gastos', query)
+}
+
+export const QUEUE_VERBS = Object.freeze({
+  $: 'pay',
+  r: 'register',
+  a: 'ask',
+})
+export const QUEUE_KEYS = listKeys(QUEUE_VERBS)
+export const RECORD_KEYS = Object.freeze({
+  $: 'pay',
+  r: 'register',
+  a: 'ask',
+  escape: 'back',
+})
+
+/** The queue's own keys for the Alt+H sheet: only what this worker may do. */
+export function queueShortcuts(caps = {}) {
+  return [
+    {
+      id: 'gastos.pay',
+      keys: ['$'],
+      description: caps.pay ? 'Pay the bill' : 'Ask someone to pay the bill',
+    },
+    caps.submit && {
+      id: 'gastos.register',
+      keys: ['r'],
+      description: 'Review and register the bill',
+    },
+    { id: 'gastos.ask', keys: ['a'], description: 'Ask for approval' },
+  ].filter(Boolean)
+}
+
+/** The bill record's keys. */
+export function recordShortcuts(caps = {}) {
+  return [
+    ...queueShortcuts(caps),
+    { id: 'gastos.back', keys: ['escape'], description: 'Back to the list' },
+  ]
+}
+
+/** What `$` does on a row: pay it, or the reason and the way that resolves it. */
+export function payStep(row, caps = {}) {
+  if (!row) return { kind: 'none' }
+  if (Number(row.docstatus) === 0)
+    return {
+      kind: 'register',
+      text: tr('Register this bill first; then it can be paid.'),
+    }
+  if (Number(row.docstatus) !== 1 || Number(row.outstanding_amount || 0) <= 0)
+    return { kind: 'paid', text: tr('This bill is already paid.') }
+  if (row.on_hold)
+    return {
+      kind: 'held',
+      text: tr('This bill is on hold. Open it to see why and release it.'),
+    }
+  if (!caps.pay)
+    return {
+      kind: 'ask',
+      text: tr('Payments are made by an accounts manager. Ask one to pay it.'),
+    }
+  return { kind: 'pay' }
+}
+
+/**
+ * Which selected bills «Pagar» can pay in one go: registered, owing, not held,
+ * one company and one owed currency (each payment is the bill's own, in full).
+ * `groups` lets the worker keep one company/currency when they are mixed.
+ */
+export function bulkPayPlan(rows = []) {
+  const payable = []
+  const skipped = []
+  for (const row of rows) {
+    const step = payStep(row, { pay: true })
+    if (step.kind === 'pay') payable.push(row)
+    else skipped.push({ row, reason: step.text })
+  }
+  const groups = new Map()
+  for (const row of payable) {
+    const key = `${row.company || ''}\u0000${row.owed_currency || row.currency || ''}`
+    if (!groups.has(key))
+      groups.set(key, {
+        key,
+        company: row.company || '',
+        currency: row.owed_currency || row.currency || '',
+        rows: [],
+      })
+    groups.get(key).rows.push(row)
+  }
+  const list = [...groups.values()]
+  const total = payable.reduce(
+    (sum, row) => sum + Math.round(Number(row.outstanding_amount || 0) * 100),
+    0,
+  )
+  return {
+    payable,
+    skipped,
+    groups: list,
+    mixed: list.length > 1,
+    total: total / 100,
+    currency: list.length === 1 ? list[0].currency : '',
+  }
+}
+
+/** Bulk «Pagar» pays from one account in the bills' own currency (no rate to type). */
+export function bulkAccounts(options, currency) {
+  return (options?.accounts || []).filter((a) => a.currency === currency)
+}
+
+/** What still blocks a bulk payment, as field keys. */
+export function bulkPayMissing(form, accounts) {
+  const missing = []
+  const account = (accounts || []).find((a) => a.account === form.account)
+  if (!account) missing.push('account')
+  if (needsReference(account) && !String(form.reference_no || '').trim())
+    missing.push('reference_no')
+  if (!form.reference_date) missing.push('reference_date')
+  return missing
+}
+
+/** «Deshacer» of a payment just made: ERPNext cancels it (author only). */
+export function cancelPayment(api, payment) {
+  return api('cancel_payment', {
+    request_id: `${payment}:undo`,
+    payment_entry: payment,
+  })
 }

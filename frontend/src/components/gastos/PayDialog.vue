@@ -1,193 +1,197 @@
 <template>
-  <Dialog v-model="open" :options="{ title: __('Pay {0}', [party || name]) }">
-    <template #body-content>
-      <div class="space-y-4">
-        <p v-if="loading" role="status" class="text-sm text-ink-gray-6">
-          {{ __('Loading accounts…') }}
-        </p>
-        <template v-else-if="options">
-          <div
-            v-if="options.refusal"
-            role="alert"
-            class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+  <!-- A bottom sheet on a phone (the list's «$» and the bill's «Pagar»), a
+       dialog on wider screens. -->
+  <PowerSheet v-model="open" kind="pay" :title="__('Pay {0}', [party || name])">
+    <div class="space-y-4">
+      <p v-if="loading" role="status" class="text-sm text-ink-gray-6">
+        {{ __('Loading accounts…') }}
+      </p>
+      <template v-else-if="options">
+        <div
+          v-if="options.refusal"
+          role="alert"
+          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+        >
+          <p>{{ options.refusal.reason }}</p>
+          <Button
+            v-if="options.refusal.fallback === 'release'"
+            :label="__('Release hold')"
+            @click="handOff('release')"
+          />
+          <Button
+            v-else
+            :label="__('Ask for a review')"
+            @click="handOff('review')"
+          />
+        </div>
+        <div
+          v-else-if="options.needs_setup"
+          role="alert"
+          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+        >
+          <p>
+            {{
+              __(
+                'This company has no bank or cash account to pay from yet. Ask for it to be set up; this bill stays here.',
+              )
+            }}
+          </p>
+          <p v-if="options.other_currency?.length">
+            {{ otherCurrencyText }}
+          </p>
+          <Button :label="__('Ask for setup')" @click="askSetup" />
+        </div>
+        <template v-else>
+          <p class="text-sm text-ink-gray-7">
+            {{
+              __('Owed: {0}', [
+                money(options.outstanding_amount, options.currency),
+              ])
+            }}
+          </p>
+          <p
+            v-if="options.fixed_by && account"
+            class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
           >
-            <p>{{ options.refusal.reason }}</p>
-            <Button
-              v-if="options.refusal.fallback === 'release'"
-              :label="__('Release hold')"
-              @click="handOff('release')"
-            />
-            <Button
-              v-else
-              :label="__('Ask for a review')"
-              @click="handOff('review')"
-            />
-          </div>
-          <div
-            v-else-if="options.needs_setup"
-            role="alert"
-            class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm"
+            {{
+              __(
+                'This bill is set to be paid by {0}, so it is paid from {1}.',
+                [options.fixed_by, account.label],
+              )
+            }}
+          </p>
+          <FormControl
+            v-model="form.account"
+            type="select"
+            :disabled="Boolean(options.fixed_by)"
+            :label="__('Pay from')"
+            :options="[
+              { label: __('Choose an account'), value: '' },
+              ...options.accounts.map((a) => ({
+                label: `${a.label} · ${a.type === 'Bank' ? __('Bank') : __('Cash', null, 'Gastos')}`,
+                value: a.account,
+              })),
+            ]"
+          />
+          <p
+            v-if="options.other_currency?.length"
+            class="text-xs text-ink-gray-6"
           >
-            <p>
+            {{ otherCurrencyText }}
+          </p>
+          <FormControl
+            v-model="form.amount"
+            type="number"
+            :label="__('Amount ({0})', [options.currency])"
+            :min="0"
+            :step="0.01"
+          />
+          <template v-if="needsRate(account, options)">
+            <FormControl
+              v-model="form.exchange_rate"
+              type="number"
+              :label="
+                __('Exchange rate ({0} to {1})', [
+                  options.exchange_rate.from,
+                  options.exchange_rate.to,
+                ])
+              "
+              :min="0"
+              :step="0.0001"
+            />
+            <p
+              v-if="options.exchange_rate.missing"
+              role="alert"
+              class="text-sm text-ink-amber-9"
+            >
+              {{ options.exchange_rate.missing }}
+              <a
+                v-if="boot?.capabilities?.desk"
+                class="text-ink-blue-link underline"
+                :href="options.exchange_rate.desk"
+                target="_blank"
+                rel="noopener"
+                >{{ __('Open exchange rates') }}</a
+              >
+              {{ __('You can also type the rate your bank used.') }}
+            </p>
+            <p v-else class="text-xs text-ink-gray-6">
               {{
                 __(
-                  'This company has no bank or cash account to pay from yet. Ask for it to be set up; this bill stays here.',
+                  'Rate on file for {0}: {1}. Change it if your bank used another.',
+                  [options.exchange_rate.date, options.exchange_rate.rate],
                 )
               }}
             </p>
-            <p v-if="options.other_currency?.length">
-              {{ otherCurrencyText }}
-            </p>
-            <Button :label="__('Ask for setup')" @click="askSetup" />
-          </div>
-          <template v-else>
-            <p class="text-sm text-ink-gray-7">
+            <p v-if="bank" class="text-sm text-ink-gray-8">
               {{
-                __('Owed: {0}', [
-                  money(options.outstanding_amount, options.currency),
+                __('{0} leaves the account.', [
+                  money(bank.amount, bank.currency),
                 ])
               }}
             </p>
-            <p
-              v-if="options.fixed_by && account"
-              class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
-            >
-              {{
-                __(
-                  'This bill is set to be paid by {0}, so it is paid from {1}.',
-                  [options.fixed_by, account.label],
-                )
-              }}
-            </p>
-            <FormControl
-              v-model="form.account"
-              type="select"
-              :disabled="Boolean(options.fixed_by)"
-              :label="__('Pay from')"
-              :options="[
-                { label: __('Choose an account'), value: '' },
-                ...options.accounts.map((a) => ({
-                  label: `${a.label} · ${a.type === 'Bank' ? __('Bank') : __('Cash', null, 'Gastos')}`,
-                  value: a.account,
-                })),
-              ]"
-            />
-            <p
-              v-if="options.other_currency?.length"
-              class="text-xs text-ink-gray-6"
-            >
-              {{ otherCurrencyText }}
-            </p>
-            <FormControl
-              v-model="form.amount"
-              type="number"
-              :label="__('Amount ({0})', [options.currency])"
-              :min="0"
-              :step="0.01"
-            />
-            <template v-if="needsRate(account, options)">
-              <FormControl
-                v-model="form.exchange_rate"
-                type="number"
-                :label="
-                  __('Exchange rate ({0} to {1})', [
-                    options.exchange_rate.from,
-                    options.exchange_rate.to,
-                  ])
-                "
-                :min="0"
-                :step="0.0001"
-              />
-              <p
-                v-if="options.exchange_rate.missing"
-                role="alert"
-                class="text-sm text-ink-amber-9"
-              >
-                {{ options.exchange_rate.missing }}
-                <a
-                  v-if="boot?.capabilities?.desk"
-                  class="text-ink-blue-link underline"
-                  :href="options.exchange_rate.desk"
-                  target="_blank"
-                  rel="noopener"
-                  >{{ __('Open exchange rates') }}</a
-                >
-                {{ __('You can also type the rate your bank used.') }}
-              </p>
-              <p v-else class="text-xs text-ink-gray-6">
-                {{
-                  __(
-                    'Rate on file for {0}: {1}. Change it if your bank used another.',
-                    [options.exchange_rate.date, options.exchange_rate.rate],
-                  )
-                }}
-              </p>
-              <p v-if="bank" class="text-sm text-ink-gray-8">
-                {{
-                  __('{0} leaves the account.', [
-                    money(bank.amount, bank.currency),
-                  ])
-                }}
-              </p>
-            </template>
-            <FormControl
-              v-model="form.reference_no"
-              type="text"
-              :label="
-                needsReference(account)
-                  ? __('Transfer or check number')
-                  : __('Reference (optional)')
-              "
-            />
-            <FormControl
-              v-model="form.reference_date"
-              type="date"
-              :label="__('Payment date')"
-            />
-            <p
-              v-if="tried && missing.length"
-              role="alert"
-              class="text-sm text-ink-red-7"
-            >
-              {{ __('Missing: {0}', [missingText]) }}
-            </p>
-            <p
-              v-if="Number(form.amount) > Number(options.outstanding_amount)"
-              class="text-sm text-ink-amber-9"
-            >
-              {{ __('That is more than what is owed on this bill.') }}
-            </p>
           </template>
+          <FormControl
+            v-model="form.reference_no"
+            type="text"
+            :label="
+              needsReference(account)
+                ? __('Transfer or check number')
+                : __('Reference (optional)')
+            "
+          />
+          <FormControl
+            v-model="form.reference_date"
+            type="date"
+            :label="__('Payment date')"
+          />
+          <p
+            v-if="tried && missing.length"
+            role="alert"
+            class="text-sm text-ink-red-7"
+          >
+            {{ __('Missing: {0}', [missingText]) }}
+          </p>
+          <p
+            v-if="Number(form.amount) > Number(options.outstanding_amount)"
+            class="text-sm text-ink-amber-9"
+          >
+            {{ __('That is more than what is owed on this bill.') }}
+          </p>
         </template>
-        <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
-          {{ problem.detail }}
-        </p>
-        <p v-if="resumed" role="status" class="text-sm text-ink-gray-7">
-          {{
-            __(
-              'A payment of this bill was sent and we did not hear back. Check result asks about that same payment; it never pays twice.',
-            )
-          }}
-        </p>
-      </div>
-    </template>
+      </template>
+      <p v-if="problem" role="alert" class="text-sm text-ink-red-7">
+        {{ problem.detail }}
+      </p>
+      <p v-if="resumed" role="status" class="text-sm text-ink-gray-7">
+        {{
+          __(
+            'A payment of this bill was sent and we did not hear back. Check result asks about that same payment; it never pays twice.',
+          )
+        }}
+      </p>
+    </div>
     <template #actions>
-      <div class="flex flex-wrap justify-end gap-2">
-        <Button :label="__('Cancel', null, 'Gastos')" @click="open = false" />
-        <Button
-          v-if="options && !options.needs_setup && !options.refusal"
-          variant="solid"
-          :loading="busy"
-          :label="resumed ? __('Check result') : __('Pay', null, 'Gastos')"
-          @click="pay"
-        />
-      </div>
+      <Button
+        class="min-h-11 sm:min-h-8"
+        :label="__('Cancel', null, 'Gastos')"
+        @click="open = false"
+      />
+      <Button
+        v-if="options && !options.needs_setup && !options.refusal"
+        variant="solid"
+        class="min-h-11 sm:min-h-8"
+        :loading="busy"
+        :label="resumed ? __('Check result') : __('Pay', null, 'Gastos')"
+        @click="pay"
+      />
     </template>
-  </Dialog>
+  </PowerSheet>
 </template>
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { Button, Dialog, FormControl } from 'frappe-ui'
+import { Button, FormControl } from 'frappe-ui'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import {
   bankSide,
   gastosApi,

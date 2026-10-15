@@ -379,16 +379,30 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, Dialog, FeatherIcon, toast } from 'frappe-ui'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import PayDialog from '@/components/gastos/PayDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
+import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
+import { offerUndo, runUndo } from '@/composables/powerUndo'
+import { hoyLive } from '@/composables/useHoy'
 import {
+  LIVE_DOCTYPES,
+  RECORD_KEYS,
   bankLabel,
   bankUrl,
+  cancelPayment,
   dueLabel,
   gastosApi,
   gastosBoot,
@@ -397,9 +411,13 @@ import {
   outcomeUnknown,
   paidLabel,
   problemOf,
+  recordShortcuts,
   requestId,
   statusLabel,
 } from '@/composables/useGastos'
+import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import { keyAction } from '@/utils/powerList'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()
@@ -533,15 +551,28 @@ async function releaseHold() {
   }
 }
 
+// «Deshacer» of the payment just made: ERPNext cancels it (its author only).
+function offerPaymentUndo(result) {
+  if (!result?.can_cancel) return
+  offerUndo(__('Payment {0} saved', [result.payment_entry]), () =>
+    runUndo(() => cancelPayment(gastosApi, result.payment_entry), {
+      done: __('Payment {0} cancelled', [result.payment_entry]),
+      describe: (error) => problemOf(error).detail,
+      reload: load,
+    }),
+  )
+}
+
 // Paid in full: say so and open the next bill of the same list.
 async function paid(result) {
+  offerPaymentUndo(result)
   if (Number(result.outstanding_amount) > 0) {
     notice.value = __('Payment saved. {0} still owed.', [
       money(result.outstanding_amount, result.currency),
     ])
     return load()
   }
-  toast.success(__('Bill paid'))
+  if (!result?.can_cancel) toast.success(__('Bill paid'))
   // From «Por aprobar»: the list shows it settled and moves on to the next request.
   if (back.value) return decided()
   const next = await nextBill()
@@ -594,6 +625,59 @@ function decided() {
   return load()
 }
 
+// «Revisar y registrar» handed over by the list (key R): opened once, then
+// the URL forgets it so a reload does not ask again.
+function openFromList() {
+  if (route.query.accion !== 'registrar') return
+  const query = { ...route.query }
+  delete query.accion
+  router.replace({ query })
+  if (actions.value.some((a) => a.key === 'submit' && a.allowed))
+    reviewOpen.value = true
+}
+
+// ── keyboard: the bill's verbs, never while typing or under a dialog ───────
+registerPageShortcuts(null, () => recordShortcuts(boot.value?.capabilities))
+
+function onKey(event) {
+  if (event.defaultPrevented || !loaded.value) return
+  if (document.querySelector('[aria-modal="true"], [role="dialog"]')) return
+  const action = keyAction(event, RECORD_KEYS, { apple: appleKeys })
+  if (!action || isTypingTarget(event.target)) return
+  const allowed = (key) =>
+    actions.value.find((entry) => entry.key === key) || null
+  const run = {
+    back: () => goBack(),
+    pay: () => {
+      const pay = allowed('pay')
+      if (pay?.allowed) payOpen.value = true
+      else if (pay?.fallback === 'release') releaseHold()
+      else if (pay) ask(pay.fallback || 'pay', pay.reason)
+      else toast.success(paidLabel(doc.value) || statusLabel(doc.value))
+    },
+    register: () => {
+      const submit = allowed('submit')
+      if (submit?.allowed) reviewOpen.value = true
+      else if (submit) ask('submit', submit.reason)
+      else toast.success(__('This bill is already registered.'))
+    },
+    ask: () => ask(Number(doc.value.docstatus) === 0 ? 'submit' : 'pay', ''),
+  }[action]
+  if (!run) return
+  event.preventDefault()
+  run()
+}
+
+// ── live: a payment made elsewhere (another tab, a colleague) shows here ───
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
+function quietLoad() {
+  // Never under the worker's hands: an open form keeps what is typed.
+  if (busy.value || payOpen.value || reviewOpen.value || approval.open) return
+  load()
+}
+useLiveWatch(hoyLive(socket), LIVE_DOCTYPES, quietLoad, {
+  minIntervalMs: 3000,
+})
 watch(
   () => props.name,
   () => {
@@ -605,7 +689,10 @@ watch(
   },
 )
 onMounted(async () => {
+  window.addEventListener('keydown', onKey)
   await loadGastosBoot()
-  load()
+  await load()
+  openFromList()
 })
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
