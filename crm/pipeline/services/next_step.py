@@ -92,7 +92,7 @@ def schedule(
 def snooze(deal: str, *, days: int = 1, task: str | None = None, modified: str | None = None) -> dict:
 	"""Postpone the current step by whole days, or give a deal without one a dated step."""
 	doc = _deal(deal, "write")
-	days = int(days or 1)
+	days = 1 if days is None else int(days)
 	if days < 1 or days > SNOOZE_MAX_DAYS:
 		frappe.throw(_("Snooze between 1 and {0} days.").format(SNOOZE_MAX_DAYS), title=_("Next step"))
 	step = _open_task(deal, task, modified) if task else _current_task(deal)
