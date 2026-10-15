@@ -108,7 +108,10 @@
         :title="group.value"
         @click="emit('update', { grupo: group.value })"
       >
-        <span class="min-w-0 flex-1 truncate">{{ group.value }}</span>
+        <span
+          class="line-clamp-2 min-w-0 flex-1 break-words py-1 leading-snug"
+          >{{ group.value }}</span
+        >
         <span class="shrink-0 text-xs tabular-nums text-ink-gray-5">{{
           group.count.toLocaleString()
         }}</span>
