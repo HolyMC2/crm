@@ -112,6 +112,7 @@ import {
   groupOf,
   money,
   stockBadge,
+  tierLines,
   variantsLabel,
 } from '@/composables/useProductos'
 
@@ -125,7 +126,10 @@ const props = defineProps({
   eager: { type: Boolean, default: false },
   showStock: { type: Boolean, default: true },
   detail: { type: String, default: '' },
+  // Extra price lists to show under the default one («Precios que se muestran»).
+  lists: { type: Array, default: () => [] },
 })
+const tiers = computed(() => tierLines(props.row, props.lists))
 const badge = computed(() => (props.showStock ? stockBadge(props.row) : null))
 // A template: «N variants» (while searching, how many of them match).
 const variants = computed(() => variantsLabel(props.row.variants))
@@ -165,6 +169,18 @@ function StockPill({ badge: value }) {
 }
 StockPill.props = ['badge']
 
+function TierLines() {
+  return tiers.value.map((line) =>
+    h(
+      'span',
+      {
+        class: 'max-w-[10rem] truncate text-xs text-ink-gray-6',
+        title: line.list,
+      },
+      `${line.list} · ${line.text}`,
+    ),
+  )
+}
 function PriceFigure(_, { attrs }) {
   const price = props.row.price
   if (price && price.rate !== null && price.rate !== undefined)
@@ -198,18 +214,25 @@ function PriceFigure(_, { attrs }) {
                 price.price_list,
               )
             : null,
+        ...TierLines(),
       ],
     )
+  const empty = h(
+    'span',
+    {
+      class:
+        'inline-flex h-6 items-center whitespace-nowrap rounded-md border border-dashed border-outline-gray-3 px-2 text-xs text-ink-gray-6',
+    },
+    __('No price', null, 'Productos'),
+  )
+  if (!tiers.value.length) return h('span', { ...attrs }, [empty])
   return h(
     'span',
     {
       ...attrs,
-      class: [
-        'inline-flex h-6 items-center whitespace-nowrap rounded-md border border-dashed border-outline-gray-3 px-2 text-xs text-ink-gray-6',
-        attrs.class,
-      ],
+      class: ['flex flex-col items-end gap-0.5 leading-tight', attrs.class],
     },
-    __('No price', null, 'Productos'),
+    [empty, ...TierLines()],
   )
 }
 PriceFigure.inheritAttrs = false

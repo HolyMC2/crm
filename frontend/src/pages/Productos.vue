@@ -16,6 +16,11 @@
           :sections="['group']"
           @update="filterBy"
         />
+        <PriceListsToggle
+          v-model="shownLists"
+          :lists="boot?.price_lists || []"
+          :main="boot?.default_price_list || ''"
+        />
       </div>
     </template>
     <section
@@ -542,6 +547,7 @@
               :row="row"
               layout="tarjetas"
               :to="productRoute(row, listPath, searching)"
+              :lists="catalog ? shownLists : []"
               :focused="focusKey === legacyKey(row)"
               :eager="index < 12"
               :detail="row.warehouse ? stockLabel(row) : ''"
@@ -573,6 +579,7 @@
               <CatalogItem
                 :row="row"
                 :to="productRoute(row, listPath, searching)"
+                :lists="catalog ? shownLists : []"
                 :eager="index < 12"
                 :detail="row.warehouse ? stockLabel(row) : ''"
                 @click="leaveFor(row)"
@@ -610,6 +617,11 @@
           :loading="facetsLoading"
           @update="filterBy"
         />
+        <PriceListsToggle
+          v-model="shownLists"
+          :lists="boot?.price_lists || []"
+          :main="boot?.default_price_list || ''"
+        />
       </div>
     </BottomSheet>
     <CountDialog
@@ -639,6 +651,7 @@ import CountDialog from '@/components/productos/CountDialog.vue'
 import CatalogFilters from '@/components/productos/CatalogFilters.vue'
 import CatalogItem from '@/components/productos/CatalogItem.vue'
 import PackDialog from '@/components/productos/PackDialog.vue'
+import PriceListsToggle from '@/components/productos/PriceListsToggle.vue'
 import { scanPickHref } from '@/composables/shellRail'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
@@ -649,7 +662,9 @@ import {
   activeFilters,
   catalogArgs,
   loadLayout,
+  loadShownLists,
   saveLayout,
+  saveShownLists,
   VIEWS,
   daysSince,
   encodeSelection,
@@ -731,6 +746,9 @@ const filterChips = computed(() =>
 // with «Volver» to this list. «Armar pack»: this list, as Mercado renders it.
 const scanHref = computed(() => scanPickHref(route.fullPath, 'Productos'))
 const packOpen = ref(false)
+// «Precios que se muestran», remembered per browser user.
+const shownLists = ref([])
+watch(shownLists, (value) => saveShownLists(boot.value?.user, value))
 const packFilters = computed(() => ({
   search: search.value.trim(),
   store: store.value,
@@ -1515,6 +1533,9 @@ useLiveWatch(
 
 async function start() {
   layout.value = loadLayout(boot.value?.user)
+  shownLists.value = loadShownLists(boot.value?.user).filter((list) =>
+    (boot.value?.price_lists || []).includes(list),
+  )
   restoreSelection()
   const returned = await handleDone()
   load()

@@ -631,14 +631,42 @@
                       v-if="row.cajones.length"
                       class="mt-1 flex flex-wrap gap-1"
                     >
-                      <span
+                      <component
+                        :is="data.inventory?.scanner ? 'a' : 'span'"
                         v-for="cajon in row.cajones"
                         :key="cajon.ubicacion"
+                        :href="
+                          data.inventory?.scanner
+                            ? binUrl(cajon.ubicacion)
+                            : undefined
+                        "
+                        :title="
+                          cajon.qty === null || cajon.qty === undefined
+                            ? __('Not counted in this bin', null, 'Productos')
+                            : __(
+                                '{0} in this bin',
+                                [qty(cajon.qty)],
+                                'Productos',
+                              )
+                        "
                         class="inline-flex h-6 items-center gap-1 rounded-md bg-surface-gray-2 px-2 text-xs text-ink-gray-8"
+                        :class="
+                          data.inventory?.scanner
+                            ? 'hover:bg-surface-gray-3'
+                            : ''
+                        "
                         ><span
                           class="lucide-inbox h-3.5 w-3.5"
                           aria-hidden="true"
-                        />{{ cajon.label || cajon.ubicacion }}</span
+                        />{{ cajon.label || cajon.ubicacion
+                        }}<span class="tabular-nums text-ink-gray-6"
+                          >·
+                          {{
+                            cajon.qty === null || cajon.qty === undefined
+                              ? __('not counted', null, 'Productos')
+                              : qty(cajon.qty)
+                          }}</span
+                        ></component
                       >
                     </span>
                     <span
@@ -1207,6 +1235,91 @@
             </section>
 
             <section
+              v-if="data.units"
+              id="unidades"
+              class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
+            >
+              <header
+                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+              >
+                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+                  {{
+                    data.units.serials
+                      ? __('Serial numbers on hand', null, 'Productos')
+                      : __('Batches on hand', null, 'Productos')
+                  }}
+                </h2>
+                <span class="text-sm tabular-nums text-ink-gray-6">{{
+                  qty(unitList.length)
+                }}</span>
+              </header>
+              <p v-if="!unitReadable" class="px-4 py-3 text-sm text-ink-gray-6">
+                {{
+                  __(
+                    'You cannot see serial numbers or batches.',
+                    null,
+                    'Productos',
+                  )
+                }}
+              </p>
+              <p
+                v-else-if="!unitList.length"
+                class="px-4 py-3 text-sm text-ink-gray-6"
+              >
+                {{ __('Nothing on hand in your stores.', null, 'Productos') }}
+              </p>
+              <ul v-else class="divide-y divide-outline-gray-1 text-sm">
+                <li
+                  v-for="row in visibleRows(unitList, unitsAll, 8)"
+                  :key="`${row.serial || row.batch}|${row.warehouse}`"
+                  class="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2"
+                >
+                  <span
+                    class="min-w-0 flex-1 truncate font-mono text-ink-gray-9"
+                    >{{ row.serial || row.batch }}</span
+                  >
+                  <span v-if="row.batch" class="tabular-nums text-ink-gray-7"
+                    >{{ qty(row.qty) }} {{ product.stock_uom }}</span
+                  >
+                  <span
+                    v-if="row.expiry"
+                    class="text-xs"
+                    :class="
+                      row.expired
+                        ? 'font-medium text-ink-red-7'
+                        : 'text-ink-gray-6'
+                    "
+                    >{{
+                      row.expired
+                        ? __('Expired {0}', [row.expiry], 'Productos')
+                        : __('Expires {0}', [row.expiry], 'Productos')
+                    }}</span
+                  >
+                  <span class="w-full truncate text-xs text-ink-gray-5">{{
+                    storeLabel(row.warehouse)
+                  }}</span>
+                </li>
+              </ul>
+              <div
+                v-if="unitList.length > 8"
+                class="border-t border-outline-gray-1 px-4 py-2"
+              >
+                <button
+                  type="button"
+                  class="min-h-11 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8"
+                  :aria-expanded="unitsAll ? 'true' : 'false'"
+                  @click="unitsAll = !unitsAll"
+                >
+                  {{
+                    unitsAll
+                      ? __('Show fewer', null, 'Productos')
+                      : __('See all ({0})', [unitList.length], 'Productos')
+                  }}
+                </button>
+              </div>
+            </section>
+
+            <section
               id="compras"
               class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-base"
             >
@@ -1326,6 +1439,14 @@
       </template>
     </div>
 
+    <LabelDialog
+      v-if="data"
+      v-model="labelOpen"
+      :item="product.name"
+      :has-serial="Boolean(product.has_serial_no)"
+      :has-batch="Boolean(product.has_batch_no)"
+      :sheet-href="data.links?.labels || ''"
+    />
     <PriceDialog
       v-if="data"
       v-model="priceOpen"
@@ -1383,6 +1504,7 @@ import RequestDialog from '@/components/productos/RequestDialog.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import VariantGrid from '@/components/productos/VariantGrid.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
+import LabelDialog from '@/components/productos/LabelDialog.vue'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
@@ -1412,6 +1534,7 @@ import {
   requestId,
   requestedAction,
   salesReportUrl,
+  scannerBinUrl,
   scannerItemUrl,
   scannerMoveUrl,
   shellPath,
@@ -1448,6 +1571,20 @@ const product = computed(() => data.value?.item || {})
 const isTemplate = computed(() => Boolean(data.value?.variants))
 const variantGrid = ref(null)
 const gallery = ref(null)
+const labelOpen = ref(false)
+// Serial numbers or batches on hand, with expiry; eight until «See all».
+const unitsAll = ref(false)
+const unitReadable = computed(() => {
+  const units = data.value?.units
+  return Boolean((units?.serials || units?.batches)?.readable)
+})
+const unitList = computed(() => {
+  const units = data.value?.units
+  return (units?.serials || units?.batches)?.rows || []
+})
+function binUrl(ubicacion) {
+  return scannerBinUrl(ubicacion, recordBack.value)
+}
 const variantSearch = computed(() =>
   typeof route.query.vq === 'string' ? route.query.vq : '',
 )
@@ -1627,13 +1764,13 @@ const heroActions = computed(() => {
     icon: ACTION_ICONS[entry.key] || 'circle',
   }))
   const labels = data.value?.links?.labels
-  if (labels)
+  if (labels && !isTemplate.value)
     list.push({
       key: 'labels',
       label: __('Print label'),
-      href: labels,
+      enabled: true,
       icon: ACTION_ICONS.labels,
-      title: __('Opens Etiquetas in Mercado with this product'),
+      title: __('Print here, in the size you choose', null, 'Productos'),
     })
   return list
 })
@@ -1695,6 +1832,53 @@ const costBasis = computed(() => {
       ])
     : __('Margin over {0}, against the valuation.', [cost.basis_price_list])
 })
+// «Más datos»: supplier, units, lead time, weight, shelf life, end of life.
+const moreFacts = computed(() => {
+  const more = data.value?.more
+  if (!more) return []
+  const item = product.value
+  const days = (value) => __('{0} days', [qty(value)], 'Productos')
+  return [
+    more.supplier && {
+      label: __('Supplier', null, 'Productos'),
+      value: more.supplier_name || more.supplier,
+    },
+    more.sales_uom !== item.stock_uom && {
+      label: __('Sold in', null, 'Productos'),
+      value: more.sales_uom,
+    },
+    more.purchase_uom !== item.stock_uom && {
+      label: __('Bought in', null, 'Productos'),
+      value: more.purchase_uom,
+    },
+    more.conversions?.length && {
+      label: __('Units', null, 'Productos'),
+      value: more.conversions
+        .map((row) => `1 ${row.uom} = ${qty(row.factor)} ${item.stock_uom}`)
+        .join(' · '),
+    },
+    more.lead_time_days && {
+      label: __('Restock time', null, 'Productos'),
+      value: days(more.lead_time_days),
+    },
+    more.safety_stock && {
+      label: __('Safety stock', null, 'Productos'),
+      value: `${qty(more.safety_stock)} ${item.stock_uom}`,
+    },
+    more.weight_per_unit && {
+      label: __('Weight', null, 'Productos'),
+      value: `${qty(more.weight_per_unit)} ${more.weight_uom || ''}`.trim(),
+    },
+    more.shelf_life_in_days && {
+      label: __('Shelf life', null, 'Productos'),
+      value: days(more.shelf_life_in_days),
+    },
+    more.end_of_life && {
+      label: __('End of life', null, 'Productos'),
+      value: more.end_of_life,
+    },
+  ].filter(Boolean)
+})
 const facts = computed(() => {
   const item = product.value
   const yes = __('Yes')
@@ -1710,6 +1894,7 @@ const facts = computed(() => {
     item.brand && { label: __('Brand', null, 'Productos'), value: item.brand },
     { label: __('For sale'), value: item.is_sales_item ? yes : no },
     { label: __('Bought'), value: item.is_purchase_item ? yes : no },
+    ...moreFacts.value,
     item.modified && {
       label: __('Changed'),
       value:
@@ -1797,7 +1982,8 @@ function run(entry) {
   else if (entry.key === 'count') {
     countStore.value = ''
     countOpen.value = true
-  } else if (entry.key === 'variants')
+  } else if (entry.key === 'labels') labelOpen.value = true
+  else if (entry.key === 'variants')
     document
       .getElementById('variantes')
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1934,6 +2120,7 @@ watch(
     photoBroken.value = false
     ledgerAll.value = false
     salesAll.value = false
+    unitsAll.value = false
     await load()
   },
 )

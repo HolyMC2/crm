@@ -22,6 +22,8 @@ const FILES = [
   'components/productos/VariantGrid.vue',
   'components/productos/PackDialog.vue',
   'components/productos/PhotoGallery.vue',
+  'components/productos/LabelDialog.vue',
+  'components/productos/PriceListsToggle.vue',
   'composables/useProductos.js',
 ]
 const strings = new Set()

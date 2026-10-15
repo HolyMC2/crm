@@ -23356,3 +23356,168 @@ msgstr "Archivos que se están leyendo o que no se pudieron procesar. Abre uno p
 #: frontend/src/composables/useArchivos.js
 msgid "Linked or filed documents. Search by issuer, tag or any text in the file."
 msgstr "Documentos vinculados o archivados. Busca por emisor, etiqueta o cualquier texto del archivo."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Not counted in this bin"
+msgstr "Sin contar en este cajón"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "{0} in this bin"
+msgstr "{0} en este cajón"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "not counted"
+msgstr "sin contar"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Serial numbers on hand"
+msgstr "Números de serie en existencia"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Batches on hand"
+msgstr "Lotes en existencia"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "You cannot see serial numbers or batches."
+msgstr "No puedes ver números de serie ni lotes."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Nothing on hand in your stores."
+msgstr "No hay existencias en tus tiendas."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Expired {0}"
+msgstr "Caducó el {0}"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Expires {0}"
+msgstr "Caduca el {0}"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Print here, in the size you choose"
+msgstr "Imprime aquí, en el tamaño que elijas"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "{0} days"
+msgstr "{0} días"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Supplier"
+msgstr "Proveedor"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Sold in"
+msgstr "Se vende en"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Bought in"
+msgstr "Se compra en"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Units"
+msgstr "Unidades"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Restock time"
+msgstr "Tiempo de resurtido"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Safety stock"
+msgstr "Existencia de seguridad"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Weight"
+msgstr "Peso"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Shelf life"
+msgstr "Vida útil"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "End of life"
+msgstr "Fin de vida"
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "Print labels"
+msgstr "Imprimir etiquetas"
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "Size"
+msgstr "Tamaño"
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "Copies"
+msgstr "Copias"
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "One label per serial number on hand. Choose which."
+msgstr "Una etiqueta por número de serie en existencia. Elige cuáles."
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "One label per unit of each batch on hand. Choose which."
+msgstr "Una etiqueta por unidad de cada lote en existencia. Elige cuáles."
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "Looking for what is on hand…"
+msgstr "Buscando lo que hay en existencia…"
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "Nothing on hand to label in your stores."
+msgstr "No hay existencias para etiquetar en tus tiendas."
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "More sizes and sheets in Etiquetas"
+msgstr "Más tamaños y hojas en Etiquetas"
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "Print"
+msgstr "Imprimir"
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "This product cannot be labelled."
+msgstr "Este producto no se puede etiquetar."
+
+#: frontend/src/components/productos/LabelDialog.vue
+msgctxt "Productos"
+msgid "Allow pop-ups to print the label."
+msgstr "Permite las ventanas emergentes para imprimir la etiqueta."
+
+#: frontend/src/components/productos/PriceListsToggle.vue
+msgctxt "Productos"
+msgid "Prices shown"
+msgstr "Precios que se muestran"
+
+#: frontend/src/components/productos/PriceListsToggle.vue
+msgctxt "Productos"
+msgid "{0} always; add other lists to each product."
+msgstr "{0} siempre; agrega otras listas a cada producto."

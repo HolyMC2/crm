@@ -447,6 +447,11 @@ export function scannerItemUrl(item, { back, warehouse, action } = {}) {
   return withReturn(href, back || { to: recordPath(item), label: 'Productos' })
 }
 
+/** Escáner's page of one cajón (what it holds, move, count). */
+export function scannerBinUrl(ubicacion, back) {
+  return withReturn(`/scan/bins/${encodeURIComponent(ubicacion)}`, back)
+}
+
 /** Escáner's mover with the product, the cajón it leaves and its store. */
 export function scannerMoveUrl({ item, from, warehouse }, back) {
   const query = new URLSearchParams()
@@ -893,6 +898,46 @@ export function saveLayout(user, value, storage = globalThis.localStorage) {
   } catch {
     /* convenience only */
   }
+}
+
+/** «Precios que se muestran»: the extra price lists each card shows, under
+ *  the default list's price, remembered per browser user. */
+export function shownListsKey(user) {
+  return `muelle:productos:lists:${user || ''}`
+}
+export function loadShownLists(user, storage = globalThis.localStorage) {
+  try {
+    const value = JSON.parse(storage?.getItem(shownListsKey(user)) || '[]')
+    return Array.isArray(value)
+      ? value.filter((v) => typeof v === 'string')
+      : []
+  } catch {
+    return []
+  }
+}
+export function saveShownLists(user, lists, storage = globalThis.localStorage) {
+  try {
+    storage?.setItem(shownListsKey(user), JSON.stringify(lists || []))
+  } catch {
+    /* convenience only */
+  }
+}
+/** The chosen lists' prices of one row, in the order chosen; a list
+ *  without a price says so. */
+export function tierLines(row, lists) {
+  const tiers = row?.tiers
+  if (!tiers || !lists?.length) return []
+  const currency = row.price?.currency
+  return lists
+    .filter((list) => list !== row.price?.price_list)
+    .map((list) => ({
+      list,
+      rate: tiers[list] ?? null,
+      text:
+        tiers[list] === undefined || tiers[list] === null
+          ? tr('No price', null, CTX)
+          : money(tiers[list], currency),
+    }))
 }
 
 /** Two letters for a product without a photo: the first two words' initials,

@@ -174,10 +174,16 @@ describe('Producto', () => {
     expect(text).toContain('No price')
     expect(text).toContain('Since 2026-05-29')
     expect(text).toContain('Add photo')
-    const label = [...root.querySelectorAll('a')].find((a) =>
-      a.textContent.includes('Print label'),
+    // «Print label» prints here; Etiquetas stays one link away for sheets.
+    const label = [...root.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('Print label'),
     )
-    expect(label.getAttribute('href')).toBe(
+    label.click()
+    await flush()
+    const sheets = [...document.querySelectorAll('a')].find((a) =>
+      a.textContent.includes('More sizes and sheets in Etiquetas'),
+    )
+    expect(sheets.getAttribute('href')).toBe(
       '/mercado/etiquetas?codes=ABIBMEX000130',
     )
     // The price history: old struck through, new, the change.
