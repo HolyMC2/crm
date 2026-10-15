@@ -24485,3 +24485,910 @@ msgstr "La etapa {0} ya existe con el resultado {1}; cámbiale el nombre antes d
 #: frontend/src/composables/ventasNav.js
 msgid "Lead list"
 msgstr "Lista de leads"
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Back to Archivos"
+msgstr "Volver a Archivos"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Connections"
+msgstr "Conexiones"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Where Archivos brings documents from on its own: your Paperless archive and the mailbox where suppliers send invoices."
+msgstr "De dónde trae Archivos documentos por su cuenta: tu archivo Paperless y el correo donde los proveedores mandan facturas."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "New connection"
+msgstr "Nueva conexión"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Monthly capacity used"
+msgstr "Capacidad del mes usada"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "The monthly capacity is used up. New documents wait until next month, or until your plan grows."
+msgstr "Ya se usó la capacidad del mes. Los documentos nuevos esperan al próximo mes o a que amplíes tu plan."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "What do you want to connect?"
+msgstr "¿Qué quieres conectar?"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Nothing connected yet. What do you want to connect?"
+msgstr "Aún no hay nada conectado. ¿Qué quieres conectar?"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "New: {0}"
+msgstr "Nueva: {0}"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "No connections for {0}."
+msgstr "{0} no tiene conexiones."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "See what came in, in Archivos"
+msgstr "Ver lo que llegó en Archivos"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Invoices (XML and PDF) that suppliers send to an email account."
+msgstr "Facturas (XML y PDF) que los proveedores mandan a una cuenta de correo."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Your scanned documents in Paperless, with their text and data."
+msgstr "Tus documentos escaneados en Paperless, con su texto y sus datos."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Connections are stopped on this site. Muelle support turns them back on; your settings are kept."
+msgstr "Las conexiones están detenidas en este sitio. Soporte de Muelle las vuelve a activar; tu configuración se conserva."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Copy message for support"
+msgstr "Copiar mensaje para soporte"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "The connections of Archivos are stopped on my site. Please turn them back on."
+msgstr "Las conexiones de Archivos están detenidas en mi sitio. Por favor, actívenlas de nuevo."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Activate Documents in your plan to connect your archive and your invoice mailbox. Files you already saved stay available."
+msgstr "Activa Documentos en tu plan para conectar tu archivo y tu correo de facturas. Los archivos que ya guardaste siguen disponibles."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Open my plan"
+msgstr "Abrir mi plan"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Copy request for an administrator"
+msgstr "Copiar solicitud para un administrador"
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Please activate Documents in our Muelle plan so Archivos can connect our archive and invoice mailbox."
+msgstr "Por favor, activa Documentos en nuestro plan de Muelle para que Archivos conecte nuestro archivo y el correo de facturas."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Only an administrator can set up connections. Ask an administrator of your company to connect the archive and the mailbox."
+msgstr "Solo un administrador puede configurar conexiones. Pide a un administrador de tu empresa que conecte el archivo y el correo."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Please connect our Paperless archive and our invoice mailbox in Archivos, Connections."
+msgstr "Por favor, conecta nuestro archivo Paperless y el correo de facturas en Archivos, Conexiones."
+
+#: frontend/src/pages/ArchivosConectores.vue
+msgid "Connection saved"
+msgstr "Conexión guardada"
+
+#: frontend/src/components/archivos/ArchivoOcrAction.vue
+msgid "Read text again (OCR)"
+msgstr "Leer el texto otra vez (OCR)"
+
+#: frontend/src/components/archivos/ArchivoOcrAction.vue
+msgid "Read text (OCR)"
+msgstr "Leer texto (OCR)"
+
+#: frontend/src/components/archivos/ArchivoOcrAction.vue
+msgid "The archive is still reading. Check again later."
+msgstr "El archivo sigue leyendo. Revisa más tarde."
+
+#: frontend/src/components/archivos/ArchivoOcrAction.vue
+msgid "The archive found no text in this file."
+msgstr "El archivo no encontró texto en este documento."
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Not checked yet"
+msgstr "Aún no se revisa"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "You can see this connection but not change it. Ask an administrator of this company."
+msgstr "Puedes ver esta conexión, pero no cambiarla. Pídeselo a un administrador de esta empresa."
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Pause"
+msgstr "Pausar"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Test connection"
+msgstr "Probar conexión"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Check now"
+msgstr "Revisar ahora"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Resume the connection first"
+msgstr "Primero reanuda la conexión"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Settings of {0}"
+msgstr "Ajustes de {0}"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "folder {0}"
+msgstr "carpeta {0}"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Initial import: {0}, {1}%"
+msgstr "Carga inicial: {0}, {1}%"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Initial import: {0}"
+msgstr "Carga inicial: {0}"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Initial import"
+msgstr "Carga inicial"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Mappings"
+msgstr "Equivalencias"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Notifications in Paperless"
+msgstr "Avisos en Paperless"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Connection resumed"
+msgstr "Conexión reanudada"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Connection paused"
+msgstr "Conexión en pausa"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "It works: Paperless {0}, API {1}."
+msgstr "Funciona: Paperless {0}, API {1}."
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "It works: {0} emails in the folder {1}."
+msgstr "Funciona: {0} correos en la carpeta {1}."
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Connection works"
+msgstr "La conexión funciona"
+
+#: frontend/src/components/archivos/conectores/ConnectorCard.vue
+msgid "Check requested. New documents show up in Archivos in a few minutes."
+msgstr "Revisión pedida. Los documentos nuevos aparecen en Archivos en unos minutos."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Name on this page"
+msgstr "Nombre en esta página"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Invoice mailbox"
+msgstr "Correo de facturas"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Paperless archive"
+msgstr "Archivo Paperless"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Paperless address"
+msgstr "Dirección de Paperless"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "https://paperless.yourcompany.mx"
+msgstr "https://paperless.tuempresa.mx"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Access token"
+msgstr "Token de acceso"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Saved. Type a new one only to replace it."
+msgstr "Guardado. Escribe uno nuevo solo para cambiarlo."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Paste the token from Paperless"
+msgstr "Pega el token de Paperless"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "In Paperless open My profile and copy the API token of the owner user. It must not be a superuser."
+msgstr "En Paperless abre Mi perfil y copia el token de API del usuario dueño. No debe ser superusuario."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Owner user number"
+msgstr "Número del usuario dueño"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Muelle only reads documents this user owns."
+msgstr "Muelle solo lee los documentos de este usuario."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Intake tag number"
+msgstr "Número de la etiqueta de entrada"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Only documents with this tag come in. 0 brings all of them."
+msgstr "Solo entran los documentos con esta etiqueta. Con 0 entran todos."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Document types to bring"
+msgstr "Tipos de documento que se traen"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "All document types."
+msgstr "Todos los tipos de documento."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Save the connection first to choose from its lists."
+msgstr "Guarda primero la conexión para elegir de sus listas."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Correspondents to bring"
+msgstr "Remitentes que se traen"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "All correspondents."
+msgstr "Todos los remitentes."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Documents per round"
+msgstr "Documentos por vuelta"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "How many documents each check brings, from 1 to 100. 25 is fine."
+msgstr "Cuántos documentos trae cada revisión, de 1 a 100. Con 25 está bien."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Import the archived PDF/A instead of the original"
+msgstr "Traer el PDF/A archivado en lugar del original"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "The archived copy is the one Paperless made searchable. The original is the file as it was scanned or received."
+msgstr "La copia archivada es la que Paperless hizo buscable. El original es el archivo tal como se escaneó o se recibió."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Write back to Paperless"
+msgstr "Anotar en Paperless"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Muelle adds tags and a field with its document number in Paperless, so you can see there what was linked. Nothing is deleted."
+msgstr "Muelle agrega etiquetas y un campo con su número de documento en Paperless, para que ahí veas qué se vinculó. No se borra nada."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "The owner of this Paperless has not allowed Muelle to write yet. Until then Muelle only reads."
+msgstr "El dueño de este Paperless aún no permite que Muelle escriba. Mientras tanto Muelle solo lee."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Advanced"
+msgstr "Avanzado"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Address Paperless uses to reach Muelle"
+msgstr "Dirección que usa Paperless para avisar a Muelle"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "https://muelle.yourcompany.mx"
+msgstr "https://muelle.tuempresa.mx"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Only if Paperless cannot reach this site by its usual address. Write only the server, without a path."
+msgstr "Solo si Paperless no llega a este sitio por su dirección normal. Escribe solo el servidor, sin ruta."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Notices go to: {0}"
+msgstr "Los avisos llegan a: {0}"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Mail server (IMAP)"
+msgstr "Servidor de correo (IMAP)"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Gmail: imaps://imap.gmail.com:993 · Outlook: imaps://outlook.office365.com:993"
+msgstr "Gmail: imaps://imap.gmail.com:993 · Outlook: imaps://outlook.office365.com:993"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Email account"
+msgstr "Cuenta de correo"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "invoices@yourcompany.mx"
+msgstr "facturas@tuempresa.mx"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "App password"
+msgstr "Contraseña de aplicación"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Paste the app password"
+msgstr "Pega la contraseña de aplicación"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Create an app password in the email account settings. Do not use the normal password."
+msgstr "Crea una contraseña de aplicación en los ajustes de la cuenta de correo. No uses la contraseña normal."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Folder"
+msgstr "Carpeta"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "INBOX is the main inbox."
+msgstr "INBOX es la bandeja de entrada principal."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Turn it on when saving"
+msgstr "Activarla al guardar"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Muelle tests the connection first and only saves it if it works."
+msgstr "Muelle prueba primero la conexión y solo la guarda si funciona."
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Save connection"
+msgstr "Guardar conexión"
+
+#: frontend/src/components/archivos/conectores/ConnectorForm.vue
+msgid "Check the fields marked above."
+msgstr "Revisa los campos marcados arriba."
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Which emails come in"
+msgstr "Qué correos entran"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "An email comes in when it matches one rule that is on. Leave the sender empty to accept any sender with that subject."
+msgstr "Un correo entra cuando cumple una regla activa. Deja vacío el remitente para aceptar a cualquiera con ese asunto."
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Rule {0}"
+msgstr "Regla {0}"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Remove rule {0}"
+msgstr "Quitar la regla {0}"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Sender"
+msgstr "Remitente"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "facturas@proveedor.mx or @proveedor.mx"
+msgstr "facturas@proveedor.mx o @proveedor.mx"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Subject contains"
+msgstr "El asunto contiene"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Attachments to keep"
+msgstr "Adjuntos que se guardan"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Who can see what comes in"
+msgstr "Quién ve lo que entra"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Add rule"
+msgstr "Agregar regla"
+
+#: frontend/src/components/archivos/conectores/MailRulesEditor.vue
+msgid "Everyone in the company"
+msgstr "Toda la empresa"
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Only these ({0}):"
+msgstr "Solo estos ({0}):"
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Only {0} chosen. Open «Choose…» to see which."
+msgstr "Solo {0} elegidos. Abre «Elegir…» para ver cuáles."
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Take out {0}"
+msgstr "Quitar {0}"
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Done choosing"
+msgstr "Listo"
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Choose…"
+msgstr "Elegir…"
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Use all"
+msgstr "Usar todos"
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Search in {0}"
+msgstr "Buscar en {0}"
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "Paperless has none yet."
+msgstr "Paperless aún no tiene ninguno."
+
+#: frontend/src/components/archivos/conectores/RemotePicker.vue
+msgid "{0} docs"
+msgstr "{0} docs."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Brings the documents already in Paperless, a few at a time and within your monthly capacity. First try without importing to see what would come in."
+msgstr "Trae los documentos que ya están en Paperless, de a pocos y dentro de tu capacidad del mes. Primero prueba sin importar para ver qué entraría."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Resume the connection to try or run the import."
+msgstr "Reanuda la conexión para probar o hacer la carga."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Import progress"
+msgstr "Avance de la carga"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "{0} of {1} imported ({2}%)"
+msgstr "{0} de {1} importados ({2}%)"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "{0} sent to import"
+msgstr "{0} enviados a importar"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "{0} failed"
+msgstr "{0} con error"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "started {0}"
+msgstr "empezó {0}"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "The capacity for this month is used up. The import continues on its own next month from where it stopped, or sooner if your plan grows."
+msgstr "Ya se usó la capacidad de este mes. La carga sigue sola el próximo mes desde donde se quedó, o antes si amplías tu plan."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Finished {0}: {1} imported."
+msgstr "Terminó el {0}: {1} importados."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Finished: {0} imported."
+msgstr "Terminó: {0} importados."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "New documents keep coming in on their own."
+msgstr "Los documentos nuevos siguen llegando solos."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "The import stopped because of an error. Check the connection and continue."
+msgstr "La carga se detuvo por un error. Revisa la conexión y continúa."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Pause import"
+msgstr "Pausar carga"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Try again without importing"
+msgstr "Probar otra vez sin importar"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Try without importing"
+msgstr "Probar sin importar"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Start over from the beginning"
+msgstr "Empezar otra vez desde el principio"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Try from {0}"
+msgstr "Prueba del {0}"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Document types ({0})"
+msgstr "Tipos de documento ({0})"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Who sends the most ({0})"
+msgstr "Quién manda más ({0})"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "No match yet"
+msgstr "Sin equivalencia aún"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Example of what comes in ({0})"
+msgstr "Ejemplo de lo que entra ({0})"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "No supplier or customer yet"
+msgstr "Aún sin proveedor ni cliente"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "In Paperless"
+msgstr "En Paperless"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Already in Muelle"
+msgstr "Ya en Muelle"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "To import"
+msgstr "Por importar"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Left this month"
+msgstr "Quedan este mes"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Try ready. Nothing was imported."
+msgstr "Prueba lista. No se importó nada."
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Import started"
+msgstr "Carga iniciada"
+
+#: frontend/src/components/archivos/conectores/BackfillPanel.vue
+msgid "Import paused"
+msgstr "Carga en pausa"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Who each Paperless correspondent is in Muelle, and what each document type means. Muelle suggests them; what you choose here always wins."
+msgstr "Quién es en Muelle cada remitente de Paperless y qué es cada tipo de documento. Muelle los sugiere; lo que elijas aquí siempre manda."
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Bring all from Paperless"
+msgstr "Traer todos de Paperless"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Search mappings"
+msgstr "Buscar equivalencias"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Nothing to map yet. They appear after trying the import or receiving the first documents, or bring them all from Paperless."
+msgstr "Aún no hay nada que relacionar. Aparecen al probar la carga o al recibir los primeros documentos; también puedes traerlos todos de Paperless."
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Correspondents → supplier or customer"
+msgstr "Remitentes → proveedor o cliente"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "RFC {0}"
+msgstr "RFC {0}"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Supplier or customer for {0}"
+msgstr "Proveedor o cliente para {0}"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Exact name as it is in Muelle"
+msgstr "Nombre exacto como está en Muelle"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Choose supplier or customer first"
+msgstr "Primero elige proveedor o cliente"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Who is {0} in Muelle"
+msgstr "Quién es {0} en Muelle"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Document types → type in Archivos"
+msgstr "Tipos de documento → tipo en Archivos"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Type in Archivos for {0}"
+msgstr "Tipo en Archivos para {0}"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Save {0} changes"
+msgstr "Guardar {0} cambios"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Save mappings"
+msgstr "Guardar equivalencias"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Undo changes"
+msgstr "Deshacer cambios"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "No one yet"
+msgstr "Nadie aún"
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Save up to 200 changes at a time."
+msgstr "Guarda hasta 200 cambios a la vez."
+
+#: frontend/src/components/archivos/conectores/MappingsPanel.vue
+msgid "Mappings saved"
+msgstr "Equivalencias guardadas"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "With a notice from Paperless, new documents arrive in a minute instead of waiting for the next check. This is what Muelle would set up in Paperless:"
+msgstr "Con un aviso de Paperless, los documentos nuevos llegan en un minuto en lugar de esperar la siguiente revisión. Esto es lo que Muelle prepararía en Paperless:"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Resume the connection to see or create its notices."
+msgstr "Reanuda la conexión para ver o crear sus avisos."
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Already in Paperless"
+msgstr "Ya está en Paperless"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "To create"
+msgstr "Por crear"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Notice address: {0}"
+msgstr "Dirección de avisos: {0}"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Already set up"
+msgstr "Ya está listo"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Create in Paperless"
+msgstr "Crear en Paperless"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "The button turns on when the owner of this Paperless allows Muelle to write in it."
+msgstr "El botón se activa cuando el dueño de este Paperless permite que Muelle escriba en él."
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Notice when a document is added or changed"
+msgstr "Aviso al agregar o cambiar un documento"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Field with the Muelle document number"
+msgstr "Campo con el número de documento de Muelle"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Tags that say what Muelle did"
+msgstr "Etiquetas que dicen qué hizo Muelle"
+
+#: frontend/src/components/archivos/conectores/SetupPanel.vue
+msgid "Notices created in Paperless"
+msgstr "Avisos creados en Paperless"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "{0} min ago"
+msgstr "hace {0} min"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "{0} h ago"
+msgstr "hace {0} h"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "about {0} days ago"
+msgstr "hace {0} días"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "less than a minute"
+msgstr "menos de un minuto"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Paperless {0} · API {1}"
+msgstr "Paperless {0} · API {1}"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Paperless {0}"
+msgstr "Paperless {0}"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Paperless notified Muelle {0}; also checks every {1} min"
+msgstr "Paperless avisó a Muelle {0}; además revisa cada {1} min"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Notices are set up; none received yet. Checks every {0} min"
+msgstr "Los avisos están listos; aún no llega ninguno. Revisa cada {0} min"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Checks every {0} min"
+msgstr "Revisa cada {0} min"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "{0} pending, oldest {1}"
+msgstr "{0} pendientes, el más antiguo {1}"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "{0} pending"
+msgstr "{0} pendientes"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "{0} of {1} documents used this month"
+msgstr "{0} de {1} documentos usados este mes"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Start import"
+msgstr "Iniciar carga"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Resume import"
+msgstr "Reanudar carga"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Import what was added since"
+msgstr "Traer lo que se agregó después"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Continue import"
+msgstr "Continuar carga"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "First try without importing to see what would come in."
+msgstr "Primero prueba sin importar para ver qué entraría."
+
+#: frontend/src/utils/archivosConectores.js
+msgid "The last try is more than a day old. Try again first."
+msgstr "La última prueba tiene más de un día. Vuelve a probar primero."
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Fits in what is left this month"
+msgstr "Cabe en lo que queda de este mes"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Needs about one month of your plan capacity"
+msgstr "Necesita cerca de un mes de la capacidad de tu plan"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Needs about {0} months of your plan capacity"
+msgstr "Necesita cerca de {0} meses de la capacidad de tu plan"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Your plan has no monthly capacity for imports"
+msgstr "Tu plan no tiene capacidad mensual para cargas"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Any sender"
+msgstr "Cualquier remitente"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "subject contains «{0}»"
+msgstr "el asunto contiene «{0}»"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "only for you"
+msgstr "solo para ti"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "for everyone in the company"
+msgstr "para toda la empresa"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Off: {0}"
+msgstr "Apagada: {0}"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Write a full address or @domain.mx"
+msgstr "Escribe un correo completo o @dominio.mx"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Write the mail server address"
+msgstr "Escribe la dirección del servidor de correo"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Write the Paperless address"
+msgstr "Escribe la dirección de Paperless"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Paste the access token"
+msgstr "Pega el token de acceso"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Write the email account to read"
+msgstr "Escribe la cuenta de correo que se leerá"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Add at least one rule that is on"
+msgstr "Agrega al menos una regla activa"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Write the owner user number (1 or more)"
+msgstr "Escribe el número del usuario dueño (1 o más)"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Write a tag number, or 0 for all"
+msgstr "Escribe un número de etiqueta, o 0 para todos"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Between 1 and 100"
+msgstr "Entre 1 y 100"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Sending to the archive…"
+msgstr "Enviando al archivo…"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Reading text…"
+msgstr "Leyendo el texto…"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Text ready"
+msgstr "Texto listo"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "We could not read the text."
+msgstr "No pudimos leer el texto."
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Working"
+msgstr "Funciona"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Waiting for its first check"
+msgstr "Esperando su primera revisión"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Paused"
+msgstr "En pausa"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Running late"
+msgstr "Atrasada"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Not working"
+msgstr "No funciona"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Stopped on this site"
+msgstr "Detenida en este sitio"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Not in your plan"
+msgstr "No está en tu plan"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Not started"
+msgstr "Sin empezar"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Ready to import"
+msgstr "Lista para importar"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Importing"
+msgstr "Importando"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Waiting for next month"
+msgstr "Esperando el próximo mes"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "All imported"
+msgstr "Todo importado"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Stopped by an error"
+msgstr "Detenida por un error"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Automatic by RFC"
+msgstr "Automático por RFC"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "By name"
+msgstr "Por nombre"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Suggested"
+msgstr "Sugerido"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Last checked {0}"
+msgstr "Última revisión {0}"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Last success {0}"
+msgstr "Último éxito {0}"
+
+#: frontend/src/utils/archivosConectores.js
+msgid "Last error {0}"
+msgstr "Último error {0}"

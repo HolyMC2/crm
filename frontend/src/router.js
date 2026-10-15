@@ -319,6 +319,12 @@ const routes = [
     meta: { app: 'archivos', title: 'Archivos', stableKey: true },
   },
   {
+    path: '/archivos/conectores',
+    name: 'ArchivosConectores',
+    component: () => import('@/pages/ArchivosConectores.vue'),
+    meta: { app: 'archivos', title: 'Archivos', listParent: 'Archivos' },
+  },
+  {
     path: '/',
     name: 'Home',
   },
