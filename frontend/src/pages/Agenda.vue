@@ -115,7 +115,7 @@
             role="menuitemradio"
             :aria-checked="state.view === entry.value"
             class="ag-viewmenu__item"
-            @click="((viewMenu = false), setView(entry.value))"
+            @click="(viewMenu = false), setView(entry.value)"
           >
             <span>{{ entry.label }}</span>
             <kbd>{{ entry.key.toUpperCase() }}</kbd>
@@ -500,7 +500,7 @@
               v-if="citas.available && citas.canBook"
               type="button"
               class="ag-drawer__item"
-              @click="((drawer = false), openCitaForm())"
+              @click="(drawer = false), openCitaForm()"
             >
               <span class="lucide-calendar-plus h-5 w-5" aria-hidden="true" />
               {{ __('New appointment') }}
@@ -509,7 +509,7 @@
               v-if="citas.available && citas.canSetUp"
               type="button"
               class="ag-drawer__item"
-              @click="((drawer = false), (citaSettingsOpen = true))"
+              @click="(drawer = false), (citaSettingsOpen = true)"
             >
               <span class="lucide-calendar-cog h-5 w-5" aria-hidden="true" />
               {{ __('Online appointments') }}
@@ -737,7 +737,7 @@
             @save="saveCita"
             @close="citaForm = null"
             @dismiss-guard="citaForm.constraints = []"
-            @open-settings="((citaForm = null), (citaSettingsOpen = true))"
+            @open-settings="(citaForm = null), (citaSettingsOpen = true)"
           />
         </div>
       </template>

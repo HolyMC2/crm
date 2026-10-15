@@ -361,7 +361,7 @@ useListKeys({
     create: () =>
       Boolean(
         boot.value?.capabilities?.create ||
-        boot.value?.capabilities?.create_crm,
+          boot.value?.capabilities?.create_crm,
       ),
   },
 })
