@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { callError, errorKind } from '@/utils/contactos'
+import { listKeys, pathWithQuery, textParam } from '@/utils/powerList'
 import {
   RETURN_PREFIXES as SHELL_RETURN_PREFIXES,
   completeReturn,
@@ -75,6 +76,8 @@ export function loadComprasBoot({ refresh = false } = {}) {
 export const SEGMENTS = Object.freeze([
   { value: 'por-comprar', label: 'To buy', icon: 'shopping-cart' },
   { value: 'por-recibir', label: 'To receive', icon: 'truck' },
+  // What arrived and still waits for the supplier's bill (then Gastos pays it).
+  { value: 'por-facturar', label: 'To bill', icon: 'file-text' },
   { value: 'historial', label: 'History', icon: 'archive' },
 ])
 export function segmentLabel(value) {
@@ -267,18 +270,37 @@ export function parseDone(value) {
   if (index < 1) return null
   const doctype = value.slice(0, index)
   const name = value.slice(index + 1)
-  return ['Purchase Receipt', 'Purchase Order'].includes(doctype) && name
+  return ['Purchase Receipt', 'Purchase Order', 'Purchase Invoice'].includes(
+    doctype,
+  ) && name
     ? { doctype, name }
     : null
 }
 
-/** Escáner's receipt editor, with the way back to this order. */
-export function scannerReceiptUrl(receipt, order) {
+/** The order's record path under the shell; `list` keeps the queue to return to. */
+export function orderPath(order, list = '') {
+  const path = `/crm/compras/orden/${encodeURIComponent(order)}`
+  return list && list.startsWith('/compras')
+    ? `${path}?${new URLSearchParams({ list })}`
+    : path
+}
+
+/** Escáner's receipt editor, with the way back to this order (and its queue). */
+export function scannerReceiptUrl(receipt, order, list = '') {
   const query = new URLSearchParams({
-    return_to: `/crm/compras/orden/${encodeURIComponent(order)}`,
+    return_to: orderPath(order, list),
     return_label: 'Compras',
   })
   return `/scan/docs/PR/${encodeURIComponent(receipt)}?${query}`
+}
+
+/** The supplier bill in Gastos, with the way back here (`/crm/…`). */
+export function billRoute(bill, returnTo) {
+  return {
+    name: 'GastoFactura',
+    params: { name: bill },
+    query: { return_to: returnTo, return_label: 'Compras' },
+  }
 }
 
 /** The request may have committed without us hearing back: no connection, a
@@ -493,4 +515,174 @@ export async function createOrder(api, key, form) {
     if (!outcomeUnknown(error)) forgetPendingSave(key)
     throw error
   }
+}
+
+// ── Power worklist: URL state, keyboard, the next step from the list, bulk ─
+// Agenda/Cobranza standard: the URL is the list's state (list, search,
+// focused purchase), the keyboard works the list and starts each step of the
+// chain (confirm → receive in Escáner → register the supplier's bill), and
+// several prepared purchases are confirmed in one go with one result each.
+
+// Receiving (Escáner saves its draft receipt), billing and requests all change
+// what each queue shows.
+export const LIVE_DOCTYPES = Object.freeze([
+  'Purchase Order',
+  'Material Request',
+  'Purchase Receipt',
+  'Purchase Invoice',
+])
+
+/** The queue's state, read from the URL (the URL is the state). */
+export function queueState(query = {}) {
+  return {
+    segment: normalizeSegment(textParam(query.segment)),
+    q: textParam(query.q),
+    foco: textParam(query.foco),
+  }
+}
+
+/** Scroll memory is per list (its filters), never per focused purchase. */
+export function listMemoryKey(query = {}) {
+  const s = queueState(query)
+  return `muelle:compras:list:${s.segment}|${s.q}`
+}
+
+/** `/compras?…` for a query: the record keeps it to come back to the same row. */
+export function listHref(query = {}) {
+  return pathWithQuery('/compras', query)
+}
+
+/** A row's key in the mixed «Por comprar» list (orders and requests). */
+export function rowKey(row) {
+  return `${row.doctype || (row.kind === 'solicitud' ? 'Material Request' : 'Purchase Order')}:${row.name}`
+}
+
+export const QUEUE_VERBS = Object.freeze({
+  o: 'confirm',
+  r: 'receive',
+  f: 'bill',
+})
+export const QUEUE_KEYS = listKeys(QUEUE_VERBS)
+export const RECORD_KEYS = Object.freeze({
+  o: 'confirm',
+  r: 'receive',
+  f: 'bill',
+  escape: 'back',
+})
+
+/** The queue's own keys for the Alt+H sheet: only what this worker may do. */
+export function queueShortcuts(caps = {}) {
+  return [
+    caps.confirm && {
+      id: 'compras.confirm',
+      keys: ['o'],
+      description: 'Review and confirm the purchase',
+    },
+    caps.receive && {
+      id: 'compras.receive',
+      keys: ['r'],
+      description: 'Receive in Escáner',
+    },
+    {
+      id: 'compras.bill',
+      keys: ['f'],
+      description: "Register the supplier's bill",
+    },
+  ].filter(Boolean)
+}
+
+export function recordShortcuts(caps = {}) {
+  return [
+    ...queueShortcuts(caps),
+    { id: 'compras.back', keys: ['escape'], description: 'Back to the list' },
+  ]
+}
+
+const isOrder = (row) =>
+  row?.kind !== 'solicitud' && row?.doctype !== 'Material Request'
+
+/**
+ * What a verb does on a row: go ahead (`kind: 'go'`) or the reason with the
+ * step that comes first (`kind` names it: open the request, confirm, receive).
+ */
+export function rowStep(row, verb, { caps = {}, scanner = null } = {}) {
+  if (!row) return { kind: 'none' }
+  if (!isOrder(row))
+    return {
+      kind: 'open',
+      text: tr(
+        'A purchase request becomes a purchase first. Open it to prepare one.',
+      ),
+    }
+  const docstatus = Number(row.docstatus)
+  if (verb === 'confirm') {
+    if (docstatus !== 0)
+      return { kind: 'done', text: tr('This purchase is already confirmed.') }
+    if (!caps.confirm)
+      return {
+        kind: 'handoff',
+        action: 'confirm',
+        text: tr(
+          'Confirming purchases is for whoever may confirm them. Ask for it.',
+        ),
+      }
+    return { kind: 'go' }
+  }
+  if (docstatus === 0)
+    return {
+      kind: 'confirm',
+      text: tr(
+        'Confirm this purchase first; then it can be received and billed.',
+      ),
+    }
+  if (docstatus === 2)
+    return { kind: 'done', text: tr('This purchase is cancelled.') }
+  if (verb === 'receive') {
+    if (Number(row.per_received || 0) >= 100)
+      return { kind: 'done', text: tr('Everything on this purchase arrived.') }
+    if (['Closed', 'On Hold'].includes(row.status))
+      return {
+        kind: 'open',
+        text: tr('This purchase is on hold or closed; it cannot be received.'),
+      }
+    if (!caps.receive)
+      return {
+        kind: 'handoff',
+        action: 'receive_access',
+        text: tr('You cannot register receipts yet. Ask for access.'),
+      }
+    if (scanner && !scanner.ready)
+      return {
+        kind: 'handoff',
+        action: 'receive_access',
+        text: scanner.reason || tr('Escáner is not ready for your user.'),
+      }
+    return { kind: 'go' }
+  }
+  if (verb === 'bill') {
+    if (Number(row.per_billed || 0) >= 100)
+      return {
+        kind: 'bills',
+        text: tr('This purchase is billed. Its bills are in Gastos.'),
+      }
+    if (Number(row.per_received || 0) <= 0)
+      return {
+        kind: 'receive',
+        text: tr('Nothing has arrived yet. Receive it in Escáner first.'),
+      }
+    return { kind: 'go' }
+  }
+  return { kind: 'none' }
+}
+
+/** Which selected rows «Confirmar» can confirm: prepared purchases (drafts). */
+export function bulkConfirmPlan(rows = []) {
+  const ready = []
+  const skipped = []
+  for (const row of rows) {
+    const step = rowStep(row, 'confirm', { caps: { confirm: true } })
+    if (step.kind === 'go') ready.push(row)
+    else skipped.push({ row, reason: step.text })
+  }
+  return { ready, skipped }
 }

@@ -96,9 +96,15 @@
         <div
           v-if="doneNotice"
           role="status"
-          class="mb-4 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
+          class="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8"
         >
-          {{ doneNotice }}
+          <span class="min-w-0 flex-1">{{ doneNotice }}</span>
+          <RouterLink
+            v-if="doneBill"
+            class="min-h-11 py-2 text-ink-blue-link underline sm:min-h-0 sm:py-0"
+            :to="billRoute(doneBill, returnHere)"
+            >{{ __('Open bill') }}</RouterLink
+          >
         </div>
 
         <div
@@ -206,6 +212,13 @@
                 :label="__('Edit purchase')"
                 @click="startEditing"
               />
+              <Button
+                v-for="action in secondary"
+                :key="action.key"
+                class="min-h-11"
+                :label="action.allowed ? action.label : action.resolve?.label"
+                @click="action.allowed ? runAction(action) : resolve(action)"
+              />
             </div>
           </template>
           <template v-else>
@@ -228,6 +241,13 @@
                 class="min-h-11"
                 :label="__('Check again')"
                 @click="recheck"
+              />
+              <Button
+                v-for="action in secondary"
+                :key="action.key"
+                class="min-h-11"
+                :label="action.allowed ? action.label : action.resolve?.label"
+                @click="action.allowed ? runAction(action) : resolve(action)"
               />
             </div>
           </template>
@@ -544,6 +564,29 @@
                     : __('Billing starts after the purchase is confirmed.')
               }}
             </p>
+            <ul
+              v-if="data.bills?.length"
+              class="mt-2 space-y-1 text-sm"
+              data-order-bills
+            >
+              <li v-for="b in data.bills" :key="b.name">
+                <RouterLink
+                  class="text-ink-blue-link underline"
+                  :to="billRoute(b.name, returnHere)"
+                  >{{ b.bill_no || b.name }}</RouterLink
+                >
+                ·
+                {{
+                  Number(b.docstatus) === 0
+                    ? __('draft, to register', null, 'Compras')
+                    : Number(b.outstanding_amount) > 0
+                      ? __('{0} to pay', [
+                          money(b.outstanding_amount, b.currency),
+                        ])
+                      : __('paid', null, 'Compras')
+                }}
+              </li>
+            </ul>
             <RouterLink
               v-if="gastosOn && Number(doc.docstatus) === 1"
               class="mt-1 inline-block min-h-11 py-2 text-sm text-ink-blue-link underline sm:min-h-0 sm:py-0"
@@ -644,7 +687,15 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Badge,
@@ -658,11 +709,18 @@ import ComprasPicker from '@/components/compras/ComprasPicker.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
 import { shellBoot } from '@/composables/muelleShell'
+import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
+import { hoyLive } from '@/composables/useHoy'
+import { isTypingTarget } from '@/vendor/muelle-shell/contracts'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
+import { keyAction } from '@/utils/powerList'
 import { orderBillsRoute } from '@/composables/useGastos'
 import { can } from '@/vendor/muelle-shell/contracts'
 import { formatDay } from '@/utils/contactos'
 import {
   MISSING_LABELS,
+  RECORD_KEYS,
+  billRoute,
   clearDraft,
   comprasApi,
   comprasBoot,
@@ -683,6 +741,7 @@ import {
   reapplyRows,
   returnWithDone,
   qty,
+  recordShortcuts,
   requestId,
   safeReturn,
   saveDraft,
@@ -712,7 +771,7 @@ const doneNotice = ref('')
 const draftNotice = ref('')
 const companies = ref([])
 const handoff = reactive({ open: false, action: '', title: '', reason: '' })
-const pending = { save: null, confirm: null, receive: null }
+const pending = { save: null, confirm: null, receive: null, bill: null }
 let lastCall = null
 let rowKey = 0
 
@@ -742,6 +801,29 @@ const companyOptions = computed(() => [
 const primary = computed(() =>
   (data.value.actions || []).find((action) => action.primary),
 )
+// The other next steps (registering the bill while goods still arrive).
+const secondary = computed(() =>
+  (data.value.actions || []).filter(
+    (action) =>
+      !action.primary &&
+      action.key === 'bill' &&
+      (action.allowed || action.resolve),
+  ),
+)
+// The queue this order was opened from, kept through Escáner and Gastos.
+const listQuery = computed(() =>
+  typeof route.query.list === 'string' &&
+  route.query.list.startsWith('/compras')
+    ? route.query.list
+    : '',
+)
+const returnHere = computed(() => {
+  const path = `/crm/compras/orden/${encodeURIComponent(props.name)}`
+  return listQuery.value
+    ? `${path}?${new URLSearchParams({ list: listQuery.value })}`
+    : path
+})
+const doneBill = ref('')
 const statusTheme = computed(() =>
   Number(doc.value.docstatus) === 0
     ? 'orange'
@@ -968,6 +1050,7 @@ function retryLast() {
   if (lastCall.kind === 'save') return save()
   if (lastCall.kind === 'confirm') return confirm()
   if (lastCall.kind === 'receive') return receive()
+  if (lastCall.kind === 'bill') return startBill()
 }
 
 async function save() {
@@ -1063,9 +1146,21 @@ async function receive() {
     const result = await call('receive', 'start_receipt', {
       name: doc.value.name,
     })
-    window.location.assign(scannerReceiptUrl(result.receipt, doc.value.name))
+    window.location.assign(
+      scannerReceiptUrl(result.receipt, doc.value.name, listQuery.value),
+    )
   } catch {
     /* problem shown */
+  }
+}
+
+/** «Registrar factura del proveedor»: the draft bill in Gastos; registering it comes back here. */
+async function startBill() {
+  try {
+    const result = await call('bill', 'start_bill', { name: doc.value.name })
+    router.push(billRoute(result.bill, returnHere.value))
+  } catch {
+    /* problem shown, with «Ask for help» on a permission refusal */
   }
 }
 
@@ -1074,6 +1169,7 @@ function runAction(action) {
     if (editing.value) return
     reviewOpen.value = true
   } else if (action.key === 'receive') receive()
+  else if (action.key === 'bill') startBill()
   else if (action.key === 'edit') startEditing()
 }
 function resolve(action) {
@@ -1197,13 +1293,18 @@ function goBack() {
 async function handleDone() {
   const done = parseDone(route.query.done)
   if (!done) return
+  doneBill.value = done.doctype === 'Purchase Invoice' ? done.name : ''
   doneNotice.value =
     done.doctype === 'Purchase Receipt'
       ? __(
           'Receipt {0} confirmed. Stock is updated; see what is still missing below.',
           [done.name],
         )
-      : __('{0} saved.', [done.name])
+      : done.doctype === 'Purchase Invoice'
+        ? __('Bill {0} registered. Pay it from Gastos when it is due.', [
+            done.name,
+          ])
+        : __('{0} saved.', [done.name])
   const query = { ...route.query }
   delete query.done
   router.replace({ query })
@@ -1266,5 +1367,57 @@ onMounted(async () => {
       .catch(() => {})
   await handleDone()
   await load()
+  openFromList()
 })
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
+// «Revisar y confirmar» handed over by the list (key O): opened once.
+function openFromList() {
+  if (route.query.accion !== 'confirmar') return
+  const query = { ...route.query }
+  delete query.accion
+  router.replace({ query })
+  if (primary.value?.key === 'confirm' && primary.value.allowed)
+    reviewOpen.value = true
+}
+
+// ── keyboard: the order's next steps, never while typing or under a dialog ─
+registerPageShortcuts(null, () =>
+  isNew.value ? [] : recordShortcuts(boot.value?.capabilities),
+)
+function onKey(event) {
+  if (event.defaultPrevented || isNew.value || editing.value || !loaded.value)
+    return
+  if (document.querySelector('[aria-modal="true"], [role="dialog"]')) return
+  const action = keyAction(event, RECORD_KEYS, { apple: appleKeys })
+  if (!action || isTypingTarget(event.target)) return
+  event.preventDefault()
+  if (action === 'back') return goBack()
+  const step = (data.value.actions || []).find((a) => a.key === action)
+  if (!step)
+    return toast.success(
+      {
+        confirm: __('This purchase is already confirmed.'),
+        receive: __('Nothing left to receive on this purchase.'),
+        bill: __('Nothing to bill on this purchase yet.'),
+      }[action],
+    )
+  if (step.allowed) runAction(step)
+  else if (step.resolve) resolve(step)
+}
+window.addEventListener('keydown', onKey)
+
+// ── live: Escáner counting, a receipt or a bill made elsewhere shows here ──
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
+useLiveWatch(
+  hoyLive(socket),
+  ['Purchase Order', 'Purchase Receipt', 'Purchase Invoice'],
+  () => {
+    // Never under the worker's hands: the editor and open dialogs keep their input.
+    if (isNew.value || editing.value || busy.value || reviewOpen.value) return
+    if (handoff.open || conflict.value || problem.value) return
+    load()
+  },
+  { minIntervalMs: 3000 },
+)
 </script>
