@@ -1,7 +1,11 @@
 <template>
-  <section class="flex min-h-0 flex-col" :aria-labelledby="ids.title">
-    <div class="shrink-0 space-y-3 p-4">
-      <div>
+  <section
+    class="flex min-h-0 flex-col"
+    :aria-labelledby="heading ? ids.title : undefined"
+    :aria-label="heading ? undefined : __('Fiscal gaps')"
+  >
+    <div class="shrink-0 space-y-3" :class="heading ? 'p-4' : 'px-4 pb-4'">
+      <div v-if="heading">
         <h2 :id="ids.title" class="text-xl font-semibold text-ink-gray-9">
           {{ __('Fiscal gaps') }}
         </h2>
@@ -170,6 +174,8 @@ const props = defineProps({
   kind: { type: String, default: '' },
   days: { type: Number, default: 7 },
   returnTo: { type: String, default: '' },
+  // Off when the host page already titles the queue (Archivos' list header).
+  heading: { type: Boolean, default: true },
 })
 const emit = defineEmits(['kind-change', 'open-document'])
 

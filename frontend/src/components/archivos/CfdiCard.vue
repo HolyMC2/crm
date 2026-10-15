@@ -683,7 +683,9 @@ const props = defineProps({
   returnTo: { type: String, default: '' },
   rawText: { type: String, default: '' },
 })
-const emit = defineEmits(['changed'])
+// `loaded` tells the host whether the card replaces its preview
+// ({ available, source }); `changed` carries the fresh document detail.
+const emit = defineEmits(['changed', 'loaded'])
 
 const data = ref(null),
   loading = ref(false),
@@ -802,6 +804,10 @@ async function load() {
     const result = await archivosApi(`${FISCAL}.card`, { name: props.name })
     if (mine !== seq) return
     data.value = result || { available: false }
+    emit('loaded', {
+      available: data.value.available !== false,
+      source: data.value.source || '',
+    })
   } catch (error) {
     if (mine === seq) loadProblem.value = problem(error)
   } finally {

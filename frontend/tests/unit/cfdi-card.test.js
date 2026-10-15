@@ -408,7 +408,9 @@ describe('CFDI card', () => {
         reason: 'Este XML no es un CFDI.',
       },
     })
-    await mount(CfdiCard, { name: 'DOC-2', rawText: '<x/>' })
+    const loaded = vi.fn()
+    await mount(CfdiCard, { name: 'DOC-2', rawText: '<x/>', onLoaded: loaded })
+    expect(loaded).toHaveBeenCalledWith({ available: false, source: '' })
     expect(root.textContent.trim()).toBe('Este XML no es un CFDI.')
     expect(root.querySelectorAll('button')).toHaveLength(0)
   })

@@ -13415,6 +13415,10 @@ msgstr "Huecos fiscales"
 msgid "What is missing between your purchases, your CFDI and the SAT, with the step that fixes it."
 msgstr "Lo que falta entre tus compras, tus CFDI y el SAT, con el paso que lo resuelve."
 
+#: frontend/src/composables/useArchivos.js
+msgid "Purchases without their CFDI, CFDI without a purchase, cancellations at the SAT and PDFs without their XML."
+msgstr "Compras sin su CFDI, CFDI sin compra, cancelaciones en el SAT y PDF sin su XML."
+
 #: frontend/src/components/archivos/HuecosFiscales.vue
 msgid "Kind of gap"
 msgstr "Tipo de hueco"
