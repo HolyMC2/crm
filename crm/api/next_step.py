@@ -49,4 +49,3 @@ def complete(
 	if isinstance(next_step, str):
 		next_step = json.loads(next_step) if next_step else None
 	return service.complete(deal, task=task, modified=modified, note=note, next_step=next_step)
-

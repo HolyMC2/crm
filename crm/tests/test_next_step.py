@@ -91,7 +91,11 @@ class TestNextStep(DealsListTestCase):
 		self.assertTrue(
 			frappe.db.exists(
 				"Comment",
-				{"reference_doctype": "CRM Deal", "reference_name": deal, "content": ["like", "%Pidió precio%"]},
+				{
+					"reference_doctype": "CRM Deal",
+					"reference_name": deal,
+					"content": ["like", "%Pidió precio%"],
+				},
 			)
 		)
 		with self.assertRaises(frappe.ValidationError):
