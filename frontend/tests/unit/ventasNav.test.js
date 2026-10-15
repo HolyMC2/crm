@@ -36,10 +36,10 @@ const keys = (section) => ventasSection(section).map((item) => item.key)
 
 describe('Ventas navigation (S5.1)', () => {
   it('opens on three daily lists: Tratos, Prospectos, Bandeja de entrada', () => {
-    expect(keys('daily')).toEqual(['deals', 'leads', 'inbox'])
+    expect(keys('daily')).toEqual(['deals', 'prospectos', 'inbox'])
     expect(ventasSection('daily').map((item) => item.label)).toEqual([
       'Deals',
-      'Leads',
+      'Prospectos',
       'Inbox',
     ])
   })
@@ -75,7 +75,8 @@ describe('Ventas navigation (S5.1)', () => {
 
   it('knows which section a page lives in, so its section opens', () => {
     expect(ventasSectionOf('/deals/view/list')).toBe('daily')
-    expect(ventasSectionOf('/leads')).toBe('daily')
+    expect(ventasSectionOf('/prospectos')).toBe('daily')
+    expect(ventasSectionOf('/leads')).toBe('more')
     expect(ventasSectionOf('/inbox')).toBe('daily')
     expect(ventasSectionOf('/dashboard')).toBe('more')
     expect(ventasSectionOf('/whatsapp-queue')).toBe('daily')
@@ -85,7 +86,12 @@ describe('Ventas navigation (S5.1)', () => {
 
   it('shows every label in Spanish', () => {
     // Labels written in Spanish in navModel are shown as they are.
-    const spanishSource = new Set(['Consultas', 'Embudo', 'Carga de trabajo'])
+    const spanishSource = new Set([
+      'Prospectos',
+      'Consultas',
+      'Embudo',
+      'Carga de trabajo',
+    ])
     const labels = Object.keys(VENTAS_SECTIONS)
       .flatMap((section) => ventasSection(section))
       .map((item) => item.label)
@@ -93,7 +99,7 @@ describe('Ventas navigation (S5.1)', () => {
       .filter((label) => !spanishSource.has(label))
     const missing = labels.filter((label) => !catalog.get(label))
     expect(missing).toEqual([])
-    expect(catalog.get('Leads')).toBe('Prospectos')
+    expect(catalog.get('Lead list')).toBe('Lista de leads')
     expect(catalog.get('Deals')).toBe('Tratos')
   })
 })

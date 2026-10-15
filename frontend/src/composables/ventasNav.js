@@ -25,13 +25,13 @@ const badges = createResource({
   auto: false,
 })
 
-// Keys of navModel entries, in order. «Prospectos» is the Leads list today;
-// when the unified Prospectos list lands (CRM-S3, D4) it replaces `leads` and
-// `inquiries` here.
+// Keys of navModel entries, in order. «Prospectos» (CRM-S3.4, D4) is leads and
+// inquiries in one list; their own lists stay under «Más».
 export const VENTAS_SECTIONS = Object.freeze({
-  daily: ['deals', 'leads', 'inbox'],
+  daily: ['deals', 'prospectos', 'inbox'],
   more: [
     'dashboard',
+    'leads',
     'inquiries',
     'tasks',
     'calls',
@@ -52,7 +52,9 @@ export const VENTAS_SECTIONS = Object.freeze({
 // Labels that differ from navModel's (English source, es-MX in crm/locale/es.po).
 // Inbox keeps «Bandeja de entrada», the page's own title: its «Conversaciones»
 // tab is one of the two spaces inside it.
-const LABELS = {}
+// «Leads» reads «Prospectos» in es-MX, the daily list's name: the old leads
+// list under «Más» says «Lista de leads».
+const LABELS = { leads: 'Lead list' }
 // Manager views besides the whole «Configuración» section.
 const MANAGER_ONLY = new Set(['workload', ...VENTAS_SECTIONS.settings])
 // Shell-module entries never shown inside Ventas.

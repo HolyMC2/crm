@@ -21,6 +21,7 @@ import WebshopIcon from '~icons/lucide/shopping-cart'
 import WorkloadIcon from '~icons/lucide/scale'
 import AutomationsIcon from '~icons/lucide/workflow'
 import InquiriesIcon from '~icons/lucide/message-square-plus'
+import ProspectosIcon from '~icons/lucide/user-plus'
 import MercadoIcon from '~icons/lucide/tag'
 import TallerIcon from '~icons/lucide/wrench'
 import PosIcon from '~icons/lucide/receipt'
@@ -40,6 +41,14 @@ export const navItems = [
     label: 'Dashboard',
     to: '/dashboard',
     group: 'dashboard',
+  },
+  // CRM-S3.4 (D4): leads and inquiries in one capture list.
+  {
+    key: 'prospectos',
+    icon: ProspectosIcon,
+    label: 'Prospectos',
+    to: '/prospectos',
+    group: 'prospectos',
   },
   {
     key: 'leads',
@@ -186,6 +195,7 @@ export function routeGroup(path) {
     return 'contactos'
   if (/^\/automations(\/|$)/.test(path)) return 'automations'
   if (/^\/inquiries(\/|$)/.test(path)) return 'inquiries'
+  if (/^\/prospectos(\/|$)/.test(path)) return 'prospectos'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
   // «Por aprobar» is an Inbox space; its standalone page lights the Inbox entry.
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'inbox'

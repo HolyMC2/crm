@@ -110,7 +110,7 @@ const ESCANER_PLACES = [
 // (composables/ventasNav.js VENTAS_SECTIONS). Agenda is its own module.
 const VENTAS_PLACES = [
   ['/deals', 'Deals', 'lucide-handshake'],
-  ['/leads', 'Leads', 'lucide-users'],
+  ['/prospectos', 'Prospectos', 'lucide-user-plus'],
   ['/inbox', 'Inbox', 'lucide-messages-square'],
   ['/inquiries', 'Consultas', 'lucide-message-square-plus'],
   ['/dashboard', 'Dashboard', 'lucide-layout-dashboard'],
