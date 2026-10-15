@@ -256,12 +256,24 @@
     <!-- Desktop DEAL stage row: flow stages in position order + Ganado / Perdido.
          Full width under the identity row; scrolls sideways when a tenant's
          labels run long instead of squeezing the title. -->
-    <div v-if="!isMobile && isDeal" class="mt-2 overflow-x-auto">
+    <div
+      v-if="!isMobile && isDeal"
+      class="mt-2 flex items-center gap-3 overflow-x-auto"
+    >
       <StageStepper
         :statuses="visibleStages"
         :current="row.status || ''"
         @change="changeStage"
       />
+      <!-- The repair's own state, beside the sale and never as its stage (S1.4). -->
+      <span
+        v-for="ro in repairChips"
+        :key="ro.name"
+        class="inline-flex flex-none items-center gap-1 rounded-full bg-surface-gray-2 px-2 py-0.5 text-xs text-ink-gray-7"
+        :title="ro.name"
+      >
+        {{ __('Reparación') }} · {{ __(ro.status) }}
+      </span>
     </div>
 
     <!-- 🏷 etiquetas manager -->
@@ -460,7 +472,9 @@ import {
   snoozedCount,
   reloadQueue,
   conversationTags,
+  hasTaller,
 } from '@/composables/inbox'
+import { pipelineStages } from '@/utils/pipelineStages'
 import {
   ensureSalesSummary,
   salesOutstanding,
@@ -532,6 +546,7 @@ watch(
               'first_name',
               'lead_name',
               'deal_owner',
+              'pipeline',
             ]
           : [
               'status',
@@ -621,11 +636,44 @@ const stageColor = computed(() => {
 // Visible = the tenant's ACTIVE language set; the store filters the hidden twins
 // out. Read them OFF the store object rather than destructuring: a computed
 // pulled out of a Pinia setup store is unwrapped once and stops updating.
+// A deal moves through ITS pipeline's stages (S1.4): on the shop sales
+// pipeline that is Nuevo … Ganado/Perdido, not the repair taxonomy. Without a
+// known pipeline, the tenant's visible statuses as before.
+const pipelines = createResource({
+  url: 'crm.pipeline.api.get_pipelines',
+  params: { include_archived: true },
+  cache: 'crm-pipelines',
+  auto: true,
+})
 const visibleStages = computed(
   () =>
+    (isDeal.value &&
+      pipelineStages(pipelines.data, dealFetch.data?.pipeline)) ||
     (isDeal.value
       ? statusStore.visibleDealStatuses
-      : statusStore.visibleLeadStatuses) || [],
+      : statusStore.visibleLeadStatuses) ||
+    [],
+)
+const repairOrders = createResource({ url: 'frappe.client.get_list' })
+watch(
+  [activeDeal, isDeal, hasTaller],
+  () => {
+    if (!activeDeal.value || !isDeal.value || !hasTaller.value) {
+      repairOrders.data = null
+      return
+    }
+    repairOrders.submit({
+      doctype: 'Repair Order',
+      filters: { crm_deal: activeDeal.value },
+      fields: ['name', 'status'],
+      order_by: 'creation desc',
+      limit_page_length: 3,
+    })
+  },
+  { immediate: true },
+)
+const repairChips = computed(() =>
+  (repairOrders.data || []).filter((ro) => ro.status),
 )
 
 // Lead stage dropdown (deals use the stepper above; same requestStage path).

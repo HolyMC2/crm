@@ -718,7 +718,7 @@
     <BoardView
       v-else-if="view === 'board'"
       :rows="rows"
-      :groups="stageOptions"
+      :groups="boardColumns"
       :counts="groupCounts"
       group-field="status"
       :format-value="formatMXN"
@@ -862,6 +862,13 @@
       v-model="showDealModal"
       :defaults="pipelineF ? { pipeline: pipelineF } : {}"
     />
+    <BoardLostPrompt
+      :pending="lostDrop"
+      :saving="lostSaving"
+      :pending-error="lostError"
+      @confirm="confirmLostDrop"
+      @cancel="lostDrop = null"
+    />
   </div>
 </template>
 
@@ -888,6 +895,9 @@ import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import { userScopedKey } from '@/utils/storageKeys'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
 import BoardView from '@/components/doco/BoardView.vue'
+import BoardLostPrompt from '@/components/Kanban/BoardLostPrompt.vue'
+import { boardStages, stageMove } from '@/utils/pipelineStages'
+import { guardStatusChange } from '@/utils/statusGuard'
 import FunnelView from '@/components/doco/FunnelView.vue'
 import MobileRecordCard from '@/components/doco/MobileRecordCard.vue'
 import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
@@ -1445,19 +1455,56 @@ function selectView(v) {
   if (v.key !== 'list') loadCounts()
 }
 
-async function onBoardChange(row, status) {
+// Board drop = stage change with the same rules as Deal 360 (S1.4): a Lost
+// stage asks for its reason first, a guarded stage (auto-WhatsApp) asks to
+// confirm, and the server's pipeline rules (allowed stages, required fields)
+// answer in the toast.
+const lostDrop = ref(null) // { row, status } while a Lost drop waits for its reason
+const lostSaving = ref(false)
+const lostError = ref('')
+function onBoardChange(row, status) {
+  const move = stageMove(boardColumns.value, status)
+  if (move === 'lost') {
+    lostError.value = ''
+    lostDrop.value = { row, status }
+    return
+  }
+  guardStatusChange(status, () => moveDeal(row, { status })).catch(() => {})
+}
+async function moveDeal(row, values) {
   try {
     await frappeCall('frappe.client.set_value', {
       doctype: 'CRM Deal',
       name: row.name,
-      fieldname: 'status',
-      value: status,
+      fieldname: values,
     })
-    row.status = status
-    toast.success(__('Etapa actualizada'))
-    loadCounts()
   } catch (e) {
-    toast.error(e.messages?.[0] || __('No se pudo cambiar el stage'))
+    const message =
+      e.messages?.[0] || e.message || __('No se pudo cambiar la etapa')
+    toast.error(message)
+    throw new Error(message, { cause: e })
+  }
+  Object.assign(row, values)
+  toast.success(__('Etapa actualizada'))
+  loadCounts()
+  // TODO(S2.2): after a non-Won/Lost move, ask for the next dated step with
+  // requestNextStep({ deal: row.name, reason: 'stage' }) once useNextStep lands.
+}
+async function confirmLostDrop(reason, notes) {
+  const pending = lostDrop.value
+  if (!pending) return
+  lostSaving.value = true
+  try {
+    await moveDeal(pending.row, {
+      status: pending.status,
+      lost_reason: reason,
+      lost_notes: notes || '',
+    })
+    lostDrop.value = null
+  } catch (e) {
+    lostError.value = e.message
+  } finally {
+    lostSaving.value = false
   }
 }
 
@@ -1672,6 +1719,14 @@ const stageOptions = computed(() =>
     probability: s.probability,
     type: s.type,
   })),
+)
+const boardColumns = computed(() =>
+  boardStages(
+    stageOptions.value,
+    pipelines.data,
+    pipelineF.value,
+    groupCounts.value,
+  ),
 )
 watch(pipelineF, () => {
   statusF.value = []
