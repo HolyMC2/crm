@@ -6,7 +6,43 @@ own screens as they are; **all new work goes into the shell** (polish, improveme
 features). Iterate with targeted local checks and the lab; **run CI once at the end** in one
 batch (`land --train …`), not per change.
 
-## 1. Where things stand (all landed)
+## 0. Update — batches 1–3 implemented (2026-10-15, later the same day)
+
+Three stacked lanes (crm + doco), each verified on doco-mirror in the browser (desktop, phone
+390 px, Spanish via `?_lang=es`):
+
+- `productos-b1-20261015` — Batch 1. Todos lists templates and stand-alone products; variants
+  fold under their template with a «N variantes» chip («3 de 1,011» while searching); an exact
+  variant code or barcode still lists the variant. Search matches every word in any order
+  («silicone a04»). Default order: on hand in the worker's stores, then most recently sold
+  (Stock Ledger sales in the last year), then newest change; exact code first while searching,
+  and the heading becomes «Resultados para “…”». Template page: variant grid with attribute
+  selects and search (`variant_list`), template price note, no stock/movement sections. Variant
+  page: «Variante de <plantilla>» with attribute chips. Movements and sales show 5 rows with
+  «Ver todos» and open their document (Desk; purchases in Compras), plus «Historial completo en
+  Desk» (Stock Ledger) and «Todas en Desk» (Item-wise Sales Register). Live refresh: the list
+  follows Item / Item Price / SLE in place (no reordering); the product page reloads quietly
+  unless a dialog is open.
+- `productos-b2-20261015` — Batch 2. «Armar pack» (images / PDF / message through
+  `mercado.api.exports`; a template contributes its variants; `catalog_codes` keeps list order,
+  cap 240). «Escanear» button and key S on the list hand off to Escáner's `/scan/pick` and the
+  shell opens the product. Photo gallery (`doco.workspaces.product_media`): main first, add,
+  make main, delete (write on Item), turn (Mercado's `_can_fix_items`), story image.
+  `set_photo` now claims the attached File for the `image` field — before, every save copied
+  the photo into a second File.
+- `productos-b3-20261015` — Batch 3. Labels print in place (`render_label_batch`, six sizes,
+  copies; serial/batch items pick units from `list_label_units`), Etiquetas one link away.
+  Serial numbers and batches (expiry, «Caducó») card. «Más datos» rows in Details (supplier,
+  sales/purchase units, conversions, restock time, safety stock, weight, shelf life, end of
+  life). Cajón chips show their quantity and open the cajón in Escáner. «Precios que se
+  muestran» in the filters: other price lists per card (`tiers` per row, lists in
+  `bootstrap.price_lists`, remembered per user).
+
+Gotchas found: `bg-surface-white` paints nothing in the v2 tokens (use `bg-surface-base`; the
+dark-mode lane retires it); Frappe gives identical uploads one URL (tests need distinct bytes);
+`Item-wise Sales History` reads Sales Orders, not invoices.
+
+## 1. Where things stood before this update (all landed)
 
 | Repo | Mainline sha | What landed |
 |---|---|---|
