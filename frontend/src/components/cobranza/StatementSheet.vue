@@ -9,7 +9,7 @@
     <p class="text-sm text-ink-gray-7">
       {{
         __(
-          'Every invoice and payment of the period with the balance, and what is still owed by age (ERPNext’s statement of accounts).',
+          'Every invoice and payment of the period with the balance, and what is still owed by age.',
         )
       }}
     </p>
