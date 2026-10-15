@@ -77,7 +77,6 @@ const SAME_IN_BOTH = new Set([
 // adding a duplicate entry here (union conflicts would break msgfmt).
 const PENDING_IN_OTHER_LANES = new Set([
   // added by crm-s5-nav
-  'Conversations',
   'Other lists',
   'Social',
   'Ventas',

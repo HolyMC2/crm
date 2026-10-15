@@ -265,7 +265,7 @@ msgstr "Embudo"
 
 #: frontend/src/pages/DealsView.vue
 msgid "All stages"
-msgstr "Todas las etapas"
+msgstr "Todas las fases"
 
 #: frontend/src/pages/DealsView.vue
 msgid "Automations"
@@ -6244,7 +6244,7 @@ msgstr "Cargar columnas predeterminadas"
 #: frontend/src/components/Settings/LeadSyncing/LeadSyncSources.vue:114
 #: frontend/src/components/Settings/Users.vue:153
 msgid "Load More"
-msgstr "Carga más"
+msgstr "Cargar más"
 
 #: frontend/src/components/Activities/Activities.vue:19
 #: frontend/src/components/Activities/DataFields.vue:35
@@ -6325,7 +6325,7 @@ msgstr "Las notas de la pérdida son obligatorias cuando el motivo es «Otro»"
 #: frontend/src/components/Modals/LostReasonModal.vue:2
 #: frontend/src/components/Modals/LostReasonModal.vue:14
 msgid "Lost Reason"
-msgstr "Razón de la pérdida"
+msgstr "Motivo de pérdida"
 
 #: frontend/src/components/Modals/LostReasonModal.vue:80
 msgid "Lost Reason is required"
@@ -9915,7 +9915,7 @@ msgstr "Horas de Trabajo"
 #: frontend/src/components/Calendar/CalendarEventPanel.vue:531
 #: frontend/src/components/Filter.vue:601
 msgid "Yes"
-msgstr "Si"
+msgstr "Sí"
 
 #: frontend/src/components/Filter.vue:673
 msgid "Yesterday"
@@ -10128,7 +10128,7 @@ msgstr "días antes"
 #: frontend/src/components/Settings/AssignmentRules/AssigneeRules.vue:135
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue:380
 msgid "deals"
-msgstr "operaciones"
+msgstr "tratos"
 
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue:190
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRuleView.vue:274
@@ -13915,7 +13915,7 @@ msgid "Pendiente reopened"
 msgstr "Pendiente reabierto"
 
 msgid "Moved to {0}"
-msgstr "Movido al {0}"
+msgstr "Movido a {0}"
 
 msgid "Done. Next pendiente scheduled."
 msgstr "Hecho. Siguiente pendiente programado."
