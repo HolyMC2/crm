@@ -118,7 +118,13 @@ const routes = [
     path: '/compras',
     name: 'Compras',
     component: () => import('@/pages/Compras.vue'),
-    meta: { app: 'compras', title: 'Compras', stableKey: true },
+    // Its phone app bar: the list as its title, search, select; totals in sight.
+    meta: {
+      app: 'compras',
+      title: 'Compras',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/compras/nueva',
@@ -144,7 +150,13 @@ const routes = [
     path: '/gastos',
     name: 'Gastos',
     component: () => import('@/pages/Gastos.vue'),
-    meta: { app: 'gastos', title: 'Gastos', stableKey: true },
+    // Its phone app bar: the list as its title, search, select; totals in sight.
+    meta: {
+      app: 'gastos',
+      title: 'Gastos',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/gastos/factura/:name',
@@ -200,7 +212,13 @@ const routes = [
     path: '/garantias',
     name: 'Garantias',
     component: () => import('@/pages/Garantias.vue'),
-    meta: { app: 'garantias', title: 'Garantías', stableKey: true },
+    // Its phone app bar: the list as its title, search, select; SLA in sight.
+    meta: {
+      app: 'garantias',
+      title: 'Garantías',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/garantias/:name',

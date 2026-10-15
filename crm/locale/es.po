@@ -12145,6 +12145,175 @@ msgstr "Proveedor nuevo: se aplicaron su moneda, impuestos y dirección. Revisa 
 msgid "These request rows were removed by someone else and were not added back: {0}. Prepare them again from their request if they are still needed."
 msgstr "Otra persona quitó estos renglones de solicitud y no se volvieron a agregar: {0}. Prepáralos de nuevo desde su solicitud si todavía hacen falta."
 
+#: frontend/src/pages/Compras.vue
+msgid "Select purchases"
+msgstr "Seleccionar compras"
+
+#: frontend/src/pages/Compras.vue
+msgctxt "Compras"
+msgid "To bill"
+msgstr "Por facturar"
+
+#: frontend/src/pages/Compras.vue
+msgid "Open purchase"
+msgstr "Abrir compra"
+
+#: frontend/src/pages/Compras.vue
+msgid "Bill pending"
+msgstr "Factura pendiente"
+
+#: frontend/src/pages/Compras.vue
+msgid "Selected purchases"
+msgstr "Compras seleccionadas"
+
+#: frontend/src/pages/Compras.vue
+msgctxt "Compras"
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: frontend/src/pages/Compras.vue
+msgid "Confirming purchases is for whoever may confirm them. Ask for it."
+msgstr "Confirmar compras le toca a quien tiene permiso de confirmarlas. Pídelo."
+
+#: frontend/src/pages/Compras.vue
+msgid "Goods that arrived and still wait for the supplier's bill."
+msgstr "Mercancía que ya llegó y todavía espera la factura del proveedor."
+
+#: frontend/src/pages/Compras.vue
+msgid "When goods arrive, the purchase waits here for the supplier's bill."
+msgstr "Cuando llega la mercancía, la compra espera aquí la factura del proveedor."
+
+#: frontend/src/pages/Compras.vue
+msgid "Continue receiving"
+msgstr "Continuar recepción"
+
+#: frontend/src/pages/Compras.vue
+msgid "Receive in Escáner"
+msgstr "Recibir en Escáner"
+
+#: frontend/src/pages/Compras.vue
+msgid "Register the supplier's bill"
+msgstr "Registrar la factura del proveedor"
+
+#: frontend/src/pages/Compras.vue
+msgid "See its bills"
+msgstr "Ver sus facturas"
+
+#: frontend/src/pages/Compras.vue
+msgid "Ask for a confirmation"
+msgstr "Pedir confirmación"
+
+#: frontend/src/pages/Compras.vue
+msgid "Ask someone to register the bill"
+msgstr "Pedir que registren la factura"
+
+#: frontend/src/pages/Compras.vue
+msgid "1 purchase confirmed"
+msgstr "1 compra confirmada"
+
+#: frontend/src/pages/Compras.vue
+msgid "{0} purchases confirmed"
+msgstr "{0} compras confirmadas"
+
+#: frontend/src/pages/Compras.vue
+msgid "Bill {0} registered. Pay it from Gastos when it is due."
+msgstr "Factura {0} registrada. Págala desde Gastos cuando venza."
+
+#: frontend/src/pages/Compras.vue
+msgid "Please review and confirm these purchases: {0}."
+msgstr "Por favor revisa y confirma estas compras: {0}."
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "draft, to register"
+msgstr "borrador, por registrar"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "{0} to pay"
+msgstr "{0} por pagar"
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "paid"
+msgstr "pagada"
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "This purchase is already confirmed."
+msgstr "Esta compra ya está confirmada."
+
+#: frontend/src/pages/CompraOrden.vue
+msgid "Nothing to bill on this purchase yet."
+msgstr "Todavía no hay nada por facturar en esta compra."
+
+#: frontend/src/components/compras/BulkConfirmSheet.vue
+msgid "Confirmed purchases"
+msgstr "Compras confirmadas"
+
+#: frontend/src/components/compras/BulkConfirmSheet.vue
+msgctxt "Compras"
+msgid "Confirmed"
+msgstr "Confirmadas"
+
+#: frontend/src/components/compras/BulkConfirmSheet.vue
+msgid "Confirming commits these purchases with their suppliers. Stock moves only when goods are received."
+msgstr "Confirmar compromete estas compras con sus proveedores. El inventario se mueve solo cuando se recibe la mercancía."
+
+#: frontend/src/components/compras/BulkConfirmSheet.vue
+msgid "Confirm 1 purchase"
+msgstr "Confirmar 1 compra"
+
+#: frontend/src/components/compras/BulkConfirmSheet.vue
+msgid "Confirm {0} purchases"
+msgstr "Confirmar {0} compras"
+
+#: frontend/src/components/compras/BulkConfirmSheet.vue
+msgid "It was already confirmed"
+msgstr "Ya estaba confirmada"
+
+#: frontend/src/components/compras/BulkConfirmSheet.vue
+msgid "Confirmed; it now waits in To receive"
+msgstr "Confirmada; ahora espera en Por recibir"
+
+#: frontend/src/composables/useCompras.js
+msgid "A purchase request becomes a purchase first. Open it to prepare one."
+msgstr "Una solicitud de compra primero se convierte en compra. Ábrela para prepararla."
+
+#: frontend/src/composables/useCompras.js
+msgid "Confirm this purchase first; then it can be received and billed."
+msgstr "Primero confirma esta compra; después se puede recibir y facturar."
+
+#: frontend/src/composables/useCompras.js
+msgid "This purchase is cancelled."
+msgstr "Esta compra está cancelada."
+
+#: frontend/src/composables/useCompras.js
+msgid "Everything on this purchase arrived."
+msgstr "Ya llegó todo lo de esta compra."
+
+#: frontend/src/composables/useCompras.js
+msgid "This purchase is on hold or closed; it cannot be received."
+msgstr "Esta compra está en espera o cerrada; no se puede recibir."
+
+#: frontend/src/composables/useCompras.js
+msgid "You cannot register receipts yet. Ask for access."
+msgstr "Todavía no puedes registrar recepciones. Pide acceso."
+
+#: frontend/src/composables/useCompras.js
+msgid "Escáner is not ready for your user."
+msgstr "El Escáner no está listo para tu usuario."
+
+#: frontend/src/composables/useCompras.js
+msgid "This purchase is billed. Its bills are in Gastos."
+msgstr "Esta compra ya está facturada. Sus facturas están en Gastos."
+
+#: frontend/src/composables/useCompras.js
+msgid "Nothing has arrived yet. Receive it in Escáner first."
+msgstr "Todavía no llega nada. Primero recíbelo en el Escáner."
+
+#: frontend/src/composables/useCompras.js
+msgid "Review and confirm the purchase"
+msgstr "Revisar y confirmar la compra"
+
 #: crm/avisos/stream.py
 msgid "Sign in to see your avisos."
 msgstr "Inicia sesión para ver tus avisos."
@@ -14322,6 +14491,131 @@ msgstr "Las cuentas en otra moneda ({0}) todavía no pueden pagar esta factura a
 #: frontend/src/components/gastos/PayDialog.vue
 msgid "exchange rate"
 msgstr "tipo de cambio"
+
+#: frontend/src/pages/Gastos.vue
+msgid "Select bills"
+msgstr "Seleccionar facturas"
+
+#: frontend/src/pages/Gastos.vue
+msgctxt "Gastos"
+msgid "Owed"
+msgstr "Por pagar"
+
+#: frontend/src/pages/Gastos.vue
+msgid "Open bill"
+msgstr "Abrir factura"
+
+#: frontend/src/pages/Gastos.vue
+msgid "Show every bill"
+msgstr "Ver todas las facturas"
+
+#: frontend/src/pages/Gastos.vue
+msgid "Selected bills"
+msgstr "Facturas seleccionadas"
+
+#: frontend/src/pages/Gastos.vue
+msgid "Payments are made by an accounts manager. Ask one to pay it."
+msgstr "Los pagos los hace un administrador de cuentas. Pídele que la pague."
+
+#: frontend/src/pages/Gastos.vue
+msgid "This bill is already registered."
+msgstr "Esta factura ya está registrada."
+
+#: frontend/src/pages/Gastos.vue
+msgid "Registering bills is for whoever may submit them. Ask for it to be reviewed."
+msgstr "Registrar facturas le toca a quien tiene permiso de registrarlas. Pide que la revisen."
+
+#: frontend/src/pages/Gastos.vue
+msgid "Payment {0} saved. {1} still owed."
+msgstr "Pago {0} guardado. Todavía se deben {1}."
+
+#: frontend/src/pages/Gastos.vue
+msgid "Bill {0} paid with {1}"
+msgstr "Factura {0} pagada con {1}"
+
+#: frontend/src/pages/Gastos.vue
+msgid "1 bill paid"
+msgstr "1 factura pagada"
+
+#: frontend/src/pages/Gastos.vue
+msgid "{0} bills paid"
+msgstr "{0} facturas pagadas"
+
+#: frontend/src/pages/Gastos.vue
+msgid "{0} payments cancelled"
+msgstr "{0} pagos cancelados"
+
+#: frontend/src/pages/Gastos.vue
+msgid "Please pay these supplier bills: {0}."
+msgstr "Por favor paga estas facturas de proveedor: {0}."
+
+#: frontend/src/pages/GastoFactura.vue
+msgid "Payment {0} saved"
+msgstr "Pago {0} guardado"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "These bills are of different companies or currencies. Pay them one group at a time:"
+msgstr "Estas facturas son de empresas o monedas distintas. Págalas por grupo:"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "Keep {0} · {1} ({2})"
+msgstr "Dejar {0} · {1} ({2})"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "1 bill · {0} in total"
+msgstr "1 factura · {0} en total"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "{0} bills · {1} in total"
+msgstr "{0} facturas · {1} en total"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "Left out: {0}"
+msgstr "Se quedan fuera: {0}"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "Pay 1 bill"
+msgstr "Pagar 1 factura"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "Pay {0} bills"
+msgstr "Pagar {0} facturas"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "Pay bills"
+msgstr "Pagar facturas"
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "No bank or cash account in {0} can pay these bills here. Pay them one by one from each bill (to type an exchange rate), or ask for an account to be set up."
+msgstr "Ninguna cuenta de banco o efectivo en {0} puede pagar estas facturas aquí. Págalas una por una desde cada factura (para escribir el tipo de cambio) o pide que den de alta una cuenta."
+
+#: frontend/src/components/gastos/BulkPaySheet.vue
+msgid "Paid with {0}"
+msgstr "Pagada con {0}"
+
+#: frontend/src/composables/useGastos.js
+msgid "Register this bill first; then it can be paid."
+msgstr "Primero registra esta factura; después se puede pagar."
+
+#: frontend/src/composables/useGastos.js
+msgid "This bill is already paid."
+msgstr "Esta factura ya está pagada."
+
+#: frontend/src/composables/useGastos.js
+msgid "This bill is on hold. Open it to see why and release it."
+msgstr "Esta factura está retenida. Ábrela para ver por qué y liberarla."
+
+#: frontend/src/composables/useGastos.js
+msgid "Pay the bill"
+msgstr "Pagar la factura"
+
+#: frontend/src/composables/useGastos.js
+msgid "Ask someone to pay the bill"
+msgstr "Pedir que paguen la factura"
+
+#: frontend/src/composables/useGastos.js
+msgid "Review and register the bill"
+msgstr "Revisar y registrar la factura"
 # Cobranza (Muelle shell /crm/cobranza)
 #: frontend/src/pages/Cobranza.vue
 msgid "Cobranza is not available"
@@ -20357,6 +20651,14 @@ msgstr "{0} ya enviados"
 #: frontend/src/composables/useCobranza.js
 msgid "{0} to resolve"
 msgstr "{0} por resolver"
+
+#: frontend/src/components/power/PowerResults.vue
+msgid "{0} already done"
+msgstr "{0} ya estaban hechos"
+
+#: frontend/src/components/power/PowerResults.vue
+msgid "{0} without an answer"
+msgstr "{0} sin respuesta"
 
 #: frontend/src/composables/useCobranza.js
 msgid "{0} skipped"
