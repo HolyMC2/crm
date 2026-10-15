@@ -458,6 +458,8 @@ export function listState(query = {}) {
     days: normalizeDays(query.dias),
     group: text('grupo'),
     brand: text('marca'),
+    stock: catalogChoice(query.existencias),
+    photo: catalogChoice(query.foto),
     selected: decodeSelection(text('sel'), store),
     focus: decodeKey(text('fila'), store),
   }
@@ -767,4 +769,178 @@ export function notifyPriceOpener(query, user, item, win = window) {
 export const ACTIONS = Object.freeze(['precio', 'editar', 'conteo'])
 export function requestedAction(query) {
   return ACTIONS.includes(query?.accion) ? query.accion : null
+}
+
+// ── catálogo: filters, layout, tiles and badges ──────────────────────────
+
+/** «con» / «sin» for the existencias and foto filters; anything else is «all». */
+export const CATALOG_CHOICES = Object.freeze(['con', 'sin'])
+export function catalogChoice(value) {
+  return CATALOG_CHOICES.includes(value) ? value : ''
+}
+
+/** The «Todos» filters for the service, from the list state. */
+export function catalogArgs(state) {
+  return {
+    group: state?.group || '',
+    stock: state?.stock || '',
+    photo: state?.photo || '',
+  }
+}
+
+/** The active catálogo filters as removable chips (`query`: what clears it). */
+export function activeFilters(state) {
+  const chips = []
+  if (state?.group)
+    chips.push({ key: 'grupo', label: state.group, query: { grupo: '' } })
+  if (state?.stock)
+    chips.push({
+      key: 'existencias',
+      label: state.stock === 'con' ? tr('With stock') : tr('Without stock'),
+      query: { existencias: '' },
+    })
+  if (state?.photo)
+    chips.push({
+      key: 'foto',
+      label: state.photo === 'con' ? tr('With photo') : tr('Without photo'),
+      query: { foto: '' },
+    })
+  return chips
+}
+
+/** «Lista» (dense rows) or «Tarjetas» (a card grid), remembered per browser user. */
+export const LAYOUTS = Object.freeze(['lista', 'tarjetas'])
+export function layoutKey(user) {
+  return `muelle:productos:layout:${user || ''}`
+}
+export function loadLayout(user, storage = globalThis.localStorage) {
+  try {
+    const value = storage?.getItem(layoutKey(user))
+    return LAYOUTS.includes(value) ? value : 'lista'
+  } catch {
+    return 'lista'
+  }
+}
+export function saveLayout(user, value, storage = globalThis.localStorage) {
+  if (!LAYOUTS.includes(value)) return
+  try {
+    storage?.setItem(layoutKey(user), value)
+  } catch {
+    /* convenience only */
+  }
+}
+
+/** Two letters for a product without a photo: the first two words' initials,
+ *  or the first two characters of a single word. */
+export function initials(title) {
+  const words = String(title || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+  if (!words.length) return '?'
+  const pick =
+    words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2)
+  return pick.toUpperCase()
+}
+
+// Whole class strings (Tailwind keeps only what it can read in the source).
+export const TILE_TONES = Object.freeze([
+  'bg-surface-blue-2 text-ink-blue-8',
+  'bg-surface-green-2 text-ink-green-8',
+  'bg-surface-amber-2 text-ink-amber-8',
+  'bg-surface-violet-2 text-ink-violet-8',
+  'bg-surface-gray-3 text-ink-gray-8',
+])
+/** A steady tone per product group (or code): the same group, the same colour. */
+export function tileTone(key) {
+  let hash = 0
+  for (const char of String(key || ''))
+    hash = (hash * 31 + char.charCodeAt(0)) | 0
+  return TILE_TONES[Math.abs(hash) % TILE_TONES.length]
+}
+
+/** The stock of a list row in words: «Agotado», «12 en stock», «Servicio,
+ *  sin inventario»; null when the worker cannot read stock. */
+export function stockBadge(row) {
+  if (row?.stock_item === false)
+    return { kind: 'service', text: tr('Service, no stock'), theme: 'gray' }
+  const amount = row?.warehouse ? row.actual_qty : row?.stock?.qty
+  if (
+    amount === undefined ||
+    amount === null ||
+    (!row?.warehouse && !row?.stock)
+  )
+    return null
+  const value = Number(amount)
+  if (value < 0)
+    return {
+      kind: 'negative',
+      text: tr('{0} in stock', [qty(value)]),
+      theme: 'red',
+    }
+  if (value === 0) return { kind: 'out', text: tr('Sold out'), theme: 'red' }
+  return {
+    kind: 'in',
+    text: tr('{0} in stock', [qty(value)]),
+    theme: 'green',
+  }
+}
+
+/** «hoy», «ayer», «hace 6 días», «hace 3 meses» and how fresh that is. */
+export function relativeAge(value, today) {
+  const days = daysSince(value, today)
+  if (days === null) return { text: '', tone: 'never', days: null }
+  const tone =
+    days <= 7 ? 'fresh' : days <= 30 ? 'recent' : days <= 90 ? 'old' : 'stale'
+  let text
+  if (days <= 0) text = tr('today')
+  else if (days === 1) text = tr('yesterday')
+  else if (days < 31) text = tr('{0} days ago', [days])
+  else if (days < 365)
+    text = tr('{0} months ago', [Math.max(1, Math.round(days / 30))])
+  else text = tr('{0} years ago', [Math.max(1, Math.round(days / 365))])
+  return { text, tone, days }
+}
+export const AGE_CLASS = Object.freeze({
+  fresh: 'text-ink-green-7',
+  recent: 'text-ink-gray-7',
+  old: 'text-ink-amber-7',
+  stale: 'text-ink-red-7',
+  never: 'text-ink-gray-5',
+})
+
+/** A price list row's status chip. */
+export function priceStatus(row) {
+  const status =
+    row?.status ||
+    (row?.rate === null || row?.rate === undefined ? 'sin-precio' : 'vigente')
+  return (
+    {
+      'sin-precio': { text: tr('No price', null, CTX), theme: 'gray' },
+      'por-revisar': {
+        text: tr('Price to review', null, CTX),
+        theme: 'orange',
+      },
+      vence: { text: tr('Ends soon'), theme: 'orange' },
+      vigente: { text: tr('Current'), theme: 'green' },
+    }[status] || { text: status, theme: 'gray' }
+  )
+}
+
+/** What kind of product it is: service, plain stock, by serial or by batch. */
+export function productKind(item) {
+  if (!item) return null
+  if (!Number(item.is_stock_item))
+    return { kind: 'service', text: tr('Service, no stock') }
+  if (Number(item.has_serial_no))
+    return { kind: 'serial', text: tr('Stocked, by serial number') }
+  if (Number(item.has_batch_no))
+    return { kind: 'batch', text: tr('Stocked, by batch') }
+  return { kind: 'stock', text: tr('Stocked') }
+}
+
+/** «Todos» filtered by a group, from the product page's group path. */
+export function groupRoute(group) {
+  return { name: 'Productos', query: group ? { grupo: group } : {} }
 }

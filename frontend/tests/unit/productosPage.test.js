@@ -66,17 +66,54 @@ const answers = {
     },
   }),
   queue: (args) => ({
-    rows:
-      args.view === 'negativo'
-        ? [
-            row(9, {
-              actual_qty: -2,
-              cajones: [{ ubicacion: 'CAJ-1', label: 'A-1' }],
-            }),
-          ]
-        : [row(1), row(2), row(3)],
-    has_more: false,
-    view: args.view,
+    ...(args.view === 'todos'
+      ? {
+          rows: [
+            {
+              name: 'IPN1',
+              title: 'Funda roja',
+              item_group: 'Fundas',
+              uom: 'Pza',
+              image: '/files/funda.png',
+              stock_item: true,
+              stock: { qty: 4, projected: 4, stores: 1 },
+              price: {
+                rate: 120,
+                currency: 'MXN',
+                price_list: 'Standard Selling',
+              },
+            },
+            {
+              name: 'REC130',
+              title: 'Recarga 130',
+              item_group: 'Recargas',
+              uom: 'Nos',
+              image: null,
+              stock_item: false,
+              stock: { qty: 0, projected: 0, stores: 0 },
+              price: null,
+            },
+          ],
+          total: 2,
+          has_more: false,
+          view: 'todos',
+        }
+      : {}),
+    ...(args.view === 'todos'
+      ? {}
+      : {
+          rows:
+            args.view === 'negativo'
+              ? [
+                  row(9, {
+                    actual_qty: -2,
+                    cajones: [{ ubicacion: 'CAJ-1', label: 'A-1' }],
+                  }),
+                ]
+              : [row(1), row(2), row(3)],
+          has_more: false,
+          view: args.view,
+        }),
   }),
   counts: () => ({
     'sin-cajon': { count: 3830, more: false },
@@ -93,6 +130,15 @@ const answers = {
     },
     trend: [{ week: 0, start: '2026-10-08', counted: 4, cajones: 2 }],
     week: { counted: 4, cajones: 2 },
+  }),
+  catalog_facets: () => ({
+    total: 2,
+    groups: [
+      { value: 'Fundas', count: 3559 },
+      { value: 'Recargas', count: 709 },
+    ],
+    photo: { con: 1, sin: 1 },
+    stock: { con: 1, sin: 0 },
   }),
   inventory_filters: () => ({
     groups: [{ value: 'Fundas', count: 2815 }],
@@ -372,5 +418,59 @@ describe('Productos › Inventario', () => {
       `IPN3|${W}`,
     )
     answers.queue = original
+  })
+})
+
+describe('Productos › catálogo', () => {
+  it('shows each product with photo or initials, stock in words and price', async () => {
+    localStorage.clear()
+    await mountAt('/productos')
+    const text = root.textContent
+    expect(text).toContain('2 of 2 products')
+    expect(text).toContain('4 in stock')
+    expect(text).toContain('Service, no stock')
+    expect(text).toContain('No price')
+    expect(root.querySelector('img[src="/files/funda.png"]')).toBeTruthy()
+    expect(text).toContain('R1') // Recarga 130's tile
+    expect(last('catalog_facets')).toMatchObject({
+      group: '',
+      stock: '',
+      photo: '',
+    })
+    expect(text).toContain('Fundas')
+    expect(text).toContain('3,559')
+  })
+
+  it('filters through the URL, as chips, and remembers Tarjetas', async () => {
+    localStorage.clear()
+    const router = await mountAt('/productos')
+    const group = [...root.querySelectorAll('aside button')].find((b) =>
+      b.textContent.includes('Recargas'),
+    )
+    group.click()
+    await flush()
+    expect(router.currentRoute.value.query).toEqual({ grupo: 'Recargas' })
+    expect(last('queue')).toMatchObject({ view: 'todos', group: 'Recargas' })
+    expect(last('catalog_facets')).toMatchObject({ group: 'Recargas' })
+    const withStock = [...root.querySelectorAll('aside button')].find((b) =>
+      b.textContent.includes('With stock'),
+    )
+    withStock.click()
+    await flush()
+    expect(router.currentRoute.value.query).toEqual({
+      grupo: 'Recargas',
+      existencias: 'con',
+    })
+    const chip = root.querySelector('[aria-label="Remove filter Recargas"]')
+    chip.click()
+    await flush()
+    expect(router.currentRoute.value.query).toEqual({ existencias: 'con' })
+    const cards = root.querySelector('button[aria-pressed][title="Cards"]')
+    cards.click()
+    await flush()
+    expect(localStorage.getItem('muelle:productos:layout:ana@x.test')).toBe(
+      'tarjetas',
+    )
+    expect(root.querySelector('ul.grid')).toBeTruthy()
   })
 })

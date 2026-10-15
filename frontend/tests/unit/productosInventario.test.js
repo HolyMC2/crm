@@ -74,6 +74,8 @@ describe('list state in the URL', () => {
       days: 30,
       group: 'Fundas',
       brand: 'Generico',
+      stock: '',
+      photo: '',
       selected: [`IPN 1|${W}`, `IPN 2|${W}`, 'OTRO|Centro - GD'],
       focus: `IPN 2|${W}`,
     })

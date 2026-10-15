@@ -7,6 +7,16 @@
     :active-key="view"
     @select="selectView"
   >
+    <template v-if="catalog && !guard" #sidebar>
+      <div class="mt-6 border-t border-outline-gray-2 px-3 pt-5">
+        <CatalogFilters
+          :facets="facets"
+          :state="state"
+          :loading="facetsLoading"
+          @update="filterBy"
+        />
+      </div>
+    </template>
     <section
       v-if="guard"
       role="alert"
@@ -107,14 +117,23 @@
           :options="phoneViews"
           @update:model-value="selectView"
         />
-        <FormControl
-          ref="searchBox"
-          v-model="search"
-          class="min-w-0 flex-1 sm:max-w-xs [&_input]:min-h-11 sm:[&_input]:min-h-0"
-          type="search"
-          :placeholder="__('Search name, code or barcode')"
-          :aria-label="__('Search name, code or barcode')"
-        />
+        <label
+          class="relative flex min-w-0 flex-1 items-center"
+          :class="inventory ? 'sm:max-w-xs' : ''"
+        >
+          <span
+            class="lucide-search pointer-events-none absolute left-3 h-4 w-4 text-ink-gray-5"
+            aria-hidden="true"
+          />
+          <input
+            ref="searchBox"
+            v-model="search"
+            type="search"
+            class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-white pl-9 pr-3 text-base text-ink-gray-9 placeholder:text-ink-gray-4 focus:border-outline-gray-4 focus:ring-0 sm:h-10 sm:text-sm"
+            :placeholder="__('Search name, code or barcode')"
+            :aria-label="__('Search name, code or barcode')"
+          />
+        </label>
         <FormControl
           v-if="storeOptions.length > 2"
           class="h-11 w-full sm:h-auto sm:w-56"
@@ -124,6 +143,45 @@
           :options="storeOptions"
           @update:model-value="selectStore"
         />
+        <button
+          v-if="catalog"
+          type="button"
+          class="inline-flex h-11 items-center gap-2 rounded-lg border border-outline-gray-2 px-3 text-sm text-ink-gray-8 sm:hidden"
+          :aria-expanded="filterSheet"
+          @click="filterSheet = true"
+        >
+          <span class="lucide-sliders-horizontal h-4 w-4" aria-hidden="true" />
+          {{ __('Filters', null, 'Productos') }}
+          <span
+            v-if="filterChips.length"
+            class="rounded-full bg-surface-gray-7 px-1.5 text-xs text-ink-white"
+            >{{ filterChips.length }}</span
+          >
+        </button>
+        <div
+          v-if="!inventory"
+          class="flex h-11 shrink-0 items-center rounded-lg bg-surface-gray-2 p-0.5 sm:h-10"
+          role="group"
+          :aria-label="__('View', null, 'Productos')"
+        >
+          <button
+            v-for="option in layoutOptions"
+            :key="option.value"
+            type="button"
+            class="flex h-full items-center gap-1.5 rounded-md px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+            :class="
+              layout === option.value
+                ? 'bg-surface-white font-medium text-ink-gray-9 shadow-sm'
+                : 'text-ink-gray-6 hover:text-ink-gray-8'
+            "
+            :aria-pressed="layout === option.value"
+            :title="option.label"
+            @click="setLayout(option.value)"
+          >
+            <span :class="option.icon" class="h-4 w-4" aria-hidden="true" />
+            <span class="hidden md:inline">{{ option.label }}</span>
+          </button>
+        </div>
         <div
           v-if="inventory"
           class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"
@@ -156,6 +214,54 @@
             @update:model-value="(value) => update({ marca: value, sel: '' })"
           />
         </div>
+      </div>
+      <div
+        v-if="!inventory && !reason"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pb-3 text-sm sm:px-6"
+      >
+        <p class="text-ink-gray-7" role="status">
+          <template v-if="total !== null">
+            <strong class="font-semibold tabular-nums text-ink-gray-9">{{
+              rows.length.toLocaleString()
+            }}</strong>
+            {{ __('of {0} products', [total.toLocaleString()]) }}
+          </template>
+          <template v-else-if="rows.length">
+            <strong class="font-semibold tabular-nums text-ink-gray-9">{{
+              rows.length.toLocaleString()
+            }}</strong>
+            {{
+              hasMore
+                ? __('products shown, more below')
+                : __('products', null, 'Productos')
+            }}
+          </template>
+        </p>
+        <button
+          v-for="chip in filterChips"
+          :key="chip.key"
+          type="button"
+          class="inline-flex min-h-8 items-center gap-1 rounded-full border border-outline-gray-2 bg-surface-gray-1 py-0.5 pl-3 pr-2 text-xs text-ink-gray-8 hover:bg-surface-gray-2"
+          :aria-label="__('Remove filter {0}', [chip.label])"
+          @click="filterBy(chip.query)"
+        >
+          {{ chip.label }}
+          <span class="lucide-x h-3.5 w-3.5" aria-hidden="true" />
+        </button>
+        <button
+          v-if="filterChips.length > 1"
+          type="button"
+          class="text-xs text-ink-gray-6 underline-offset-2 hover:underline"
+          @click="filterBy({ grupo: '', existencias: '', foto: '' })"
+        >
+          {{ __('Clear filters') }}
+        </button>
+        <span
+          v-if="loading && rows.length"
+          class="text-xs text-ink-gray-5"
+          role="status"
+          >{{ __('Updating…') }}</span
+        >
       </div>
       <div
         v-if="notice"
@@ -230,10 +336,35 @@
         </div>
         <div
           v-else-if="!rows.length"
-          class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
+          class="mx-auto max-w-md px-6 py-12 text-center text-ink-gray-7"
         >
+          <span
+            class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-gray-2"
+            aria-hidden="true"
+            ><span class="lucide-package-search h-6 w-6 text-ink-gray-6"
+          /></span>
           <p class="text-lg font-semibold">{{ emptyTitle }}</p>
           <p class="mt-1 text-sm">{{ emptyBody }}</p>
+          <div class="mt-4 flex flex-wrap justify-center gap-2">
+            <Button
+              v-if="search"
+              class="min-h-11 sm:min-h-8"
+              :label="__('Clear search')"
+              @click="search = ''"
+            />
+            <Button
+              v-if="filterChips.length"
+              class="min-h-11 sm:min-h-8"
+              :label="__('Clear filters')"
+              @click="filterBy({ grupo: '', existencias: '', foto: '' })"
+            />
+            <Button
+              v-if="view !== 'todos' && !inventory"
+              class="min-h-11 sm:min-h-8"
+              :label="__('See all products')"
+              @click="selectView('todos')"
+            />
+          </div>
         </div>
         <ul
           v-else-if="inventory"
@@ -338,72 +469,65 @@
             </div>
           </li>
         </ul>
-        <ul v-else class="divide-y divide-outline-gray-1">
+        <ul
+          v-else-if="layout === 'tarjetas'"
+          class="grid grid-cols-1 gap-3 px-4 pt-1 sm:grid-cols-2 sm:px-6 xl:grid-cols-3 2xl:grid-cols-4"
+          :aria-label="viewLabel(view)"
+        >
           <li
-            v-for="row in rows"
+            v-for="(row, index) in rows"
             :key="`${row.name}:${row.warehouse || ''}`"
             :data-key="legacyKey(row)"
-            :class="focusKey === legacyKey(row) ? 'bg-surface-gray-1' : ''"
+            class="min-w-0"
           >
-            <RouterLink
+            <CatalogItem
+              :row="row"
+              layout="tarjetas"
               :to="productRoute(row, listPath)"
-              class="flex min-h-14 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
-            >
-              <img
-                v-if="row.image"
-                :src="row.image"
-                alt=""
-                class="h-10 w-10 shrink-0 rounded object-cover"
-                loading="lazy"
-              />
-              <FeatherIcon
-                v-else
-                name="package"
-                class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
-              />
-              <span class="min-w-0 flex-1">
-                <span class="block truncate font-medium text-ink-gray-9">
-                  {{ row.title }}
-                </span>
-                <span class="block truncate text-sm text-ink-gray-6">
-                  {{ [row.name, row.item_group].filter(Boolean).join(' · ') }}
-                </span>
-                <span
-                  v-if="stockLabel(row)"
-                  class="mt-0.5 block text-sm text-ink-gray-8"
-                  >{{ stockLabel(row) }}</span
-                >
-                <span class="mt-1 flex flex-wrap gap-1">
-                  <Badge
-                    v-if="row.chip === 'faltan'"
-                    theme="red"
-                    :label="__('Out of stock', null, 'Productos')"
-                  />
-                  <Badge
-                    v-if="row.chip === 'bajo'"
-                    theme="orange"
-                    :label="__('Below minimum', null, 'Productos')"
-                  />
-                  <Badge
-                    v-if="row.price?.review || row.price_review"
-                    theme="orange"
-                    :label="__('Price to review', null, 'Productos')"
-                  />
-                  <Badge
-                    v-if="!row.price && view !== 'precio-revisar'"
-                    theme="gray"
-                    :label="__('No price', null, 'Productos')"
-                  />
-                </span>
-              </span>
-              <span
-                v-if="row.price?.rate !== null && row.price?.rate !== undefined"
-                class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
-                >{{ money(row.price.rate, row.price.currency) }}</span
-              >
-            </RouterLink>
+              :focused="focusKey === legacyKey(row)"
+              :eager="index < 12"
+              :detail="row.warehouse ? stockLabel(row) : ''"
+              @click="leaveFor(row)"
+            />
           </li>
         </ul>
+        <div v-else>
+          <div
+            class="sticky top-0 z-[1] hidden grid-cols-[2.5rem_minmax(0,1fr)_12rem_9rem_8rem] gap-x-3 border-b border-outline-gray-2 bg-surface-white px-6 py-2 text-xs font-medium uppercase tracking-wide text-ink-gray-5 lg:grid"
+            aria-hidden="true"
+          >
+            <span />
+            <span>{{ __('Product', null, 'Productos') }}</span>
+            <span>{{ __('Group', null, 'Productos') }}</span>
+            <span>{{ __('Stock', null, 'Productos') }}</span>
+            <span class="text-right">{{ __('Price', null, 'Productos') }}</span>
+          </div>
+          <ul
+            class="divide-y divide-outline-gray-1"
+            :aria-label="viewLabel(view)"
+          >
+            <li
+              v-for="(row, index) in rows"
+              :key="`${row.name}:${row.warehouse || ''}`"
+              :data-key="legacyKey(row)"
+              :class="focusKey === legacyKey(row) ? 'bg-surface-gray-2' : ''"
+            >
+              <CatalogItem
+                :row="row"
+                :to="productRoute(row, listPath)"
+                :eager="index < 12"
+                :detail="row.warehouse ? stockLabel(row) : ''"
+                @click="leaveFor(row)"
+              />
+            </li>
+          </ul>
+        </div>
+        <div
+          v-if="hasMore && !reason && !inventory"
+          ref="sentinel"
+          class="h-px"
+          aria-hidden="true"
+        />
         <div v-if="hasMore && !reason" class="px-4 py-4 sm:px-6">
           <Button
             :label="__('Load more', null, 'Productos')"
@@ -414,6 +538,22 @@
         </div>
       </div>
     </template>
+    <BottomSheet
+      v-if="catalog"
+      :open="filterSheet"
+      :title="__('Filters', null, 'Productos')"
+      @update:open="(value) => (filterSheet = value)"
+    >
+      <div class="px-4 pb-6">
+        <CatalogFilters
+          touch
+          :facets="facets"
+          :state="state"
+          :loading="facetsLoading"
+          @update="filterBy"
+        />
+      </div>
+    </BottomSheet>
     <CountDialog
       v-model="countDialog.open"
       :groups="countDialog.groups"
@@ -435,15 +575,21 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { BottomSheet, Button, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
+import CatalogFilters from '@/components/productos/CatalogFilters.vue'
+import CatalogItem from '@/components/productos/CatalogItem.vue'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
   DAY_CHOICES,
   SELECTION_URL_MAX,
+  activeFilters,
+  catalogArgs,
+  loadLayout,
+  saveLayout,
   VIEWS,
   daysSince,
   encodeSelection,
@@ -501,10 +647,33 @@ const focusKey = ref('')
 const selected = ref(new Set())
 const known = new Map()
 const countDialog = reactive({ open: false, groups: [], task: null })
+const total = ref(null)
+const facets = ref(null)
+const facetsLoading = ref(false)
+const filterSheet = ref(false)
+const sentinel = ref(null)
+const layout = ref('lista')
 const state = computed(() => listState(route.query))
 const view = computed(() => state.value.view)
 const store = computed(() => state.value.store)
 const inventory = computed(() => isInventoryView(view.value))
+// «Todos» is the catálogo: filters by group, stock and photo, with counts.
+const catalog = computed(() => view.value === 'todos')
+const filterChips = computed(() =>
+  catalog.value ? activeFilters(state.value) : [],
+)
+const layoutOptions = computed(() => [
+  { value: 'lista', label: __('List', null, 'Productos'), icon: 'lucide-list' },
+  {
+    value: 'tarjetas',
+    label: __('Cards', null, 'Productos'),
+    icon: 'lucide-layout-grid',
+  },
+])
+function setLayout(value) {
+  layout.value = value
+  saveLayout(boot.value?.user, value)
+}
 const search = ref(state.value.search)
 const listPath = computed(() => route.fullPath)
 const returnTo = computed(() => safeReturn(route.query.return_to))
@@ -859,6 +1028,7 @@ function leaveFor(row) {
 
 // ── loading ──────────────────────────────────────────────────────────────
 function filterArgs() {
+  if (catalog.value) return catalogArgs(state.value)
   return inventory.value
     ? {
         days: state.value.days,
@@ -892,6 +1062,7 @@ async function load({ more = false, quiet = false } = {}) {
     rows.value = more ? [...rows.value, ...page.rows] : page.rows
     for (const row of page.rows) if (row.key) known.set(row.key, row)
     hasMore.value = page.has_more
+    if (!more) total.value = typeof page.total === 'number' ? page.total : null
     // The list position (focused row or scroll) comes back once per list load.
     if (!more && restorePending) {
       restorePending = false
@@ -934,6 +1105,25 @@ async function loadSummary({ fresh = false } = {}) {
     summary.value = null
   }
 }
+let facetTicket = 0
+async function loadFacets({ fresh = false } = {}) {
+  if (!catalog.value) return
+  const mine = ++facetTicket
+  facetsLoading.value = true
+  try {
+    const found = await productosApi('catalog_facets', {
+      search: search.value.trim(),
+      store: store.value,
+      ...catalogArgs(state.value),
+      fresh: fresh ? 1 : 0,
+    })
+    if (mine === facetTicket) facets.value = found
+  } catch {
+    if (mine === facetTicket) facets.value = null
+  } finally {
+    if (mine === facetTicket) facetsLoading.value = false
+  }
+}
 async function loadFilters() {
   if (!inventory.value || !caps.value) return
   try {
@@ -960,6 +1150,11 @@ function update(query) {
 function selectView(value) {
   focusKey.value = ''
   update({ vista: normalizeView(value), sel: '', fila: '' })
+}
+/** A catálogo filter changed (sidebar, sheet or chip): the list starts over. */
+function filterBy(query) {
+  focusKey.value = ''
+  update({ ...query, sel: '', fila: '' })
 }
 function selectStore(value) {
   update({ tienda: value || '', sel: '', fila: '' })
@@ -1062,7 +1257,7 @@ function onKey(event) {
     ArrowDown: () => move(1),
     k: () => move(-1),
     ArrowUp: () => move(-1),
-    '/': () => searchBox.value?.$el?.querySelector?.('input')?.focus(),
+    '/': () => searchBox.value?.focus(),
     Enter: () => current && openRow(current),
     x: () => inventory.value && current && toggle(current),
     X: () => inventory.value && current && extendSelection(current),
@@ -1141,11 +1336,14 @@ watch(
     route.query.dias,
     route.query.grupo,
     route.query.marca,
+    route.query.existencias,
+    route.query.foto,
   ],
   (now, before) => {
     if (route.name !== 'Productos' || !boot.value?.enabled) return
     if (typeof route.query.q !== 'string' && search.value) search.value = ''
     load()
+    if (catalog.value) loadFacets()
     const filtersChanged =
       now.slice(2).join('|') !== (before || []).slice(2).join('|')
     if (filtersChanged) loadCounts()
@@ -1180,9 +1378,11 @@ useLiveWatch(
 )
 
 async function start() {
+  layout.value = loadLayout(boot.value?.user)
   restoreSelection()
   const returned = await handleDone()
   load()
+  loadFacets({ fresh: returned })
   loadCounts({ fresh: returned })
   loadSummary({ fresh: returned })
   loadFilters()
@@ -1192,7 +1392,27 @@ onMounted(async () => {
   await loadProductosBoot()
   if (boot.value?.enabled) start()
 })
+// Tarjetas and Lista load the next page as it comes into view; the button stays.
+let observer = null
+watch(sentinel, (element) => {
+  observer?.disconnect()
+  observer = null
+  if (!element || typeof IntersectionObserver === 'undefined') return
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries.some((e) => e.isIntersecting) &&
+        hasMore.value &&
+        !loading.value
+      )
+        load({ more: true })
+    },
+    { root: scroller.value, rootMargin: '400px 0px' },
+  )
+  observer.observe(element)
+})
 onBeforeUnmount(() => {
+  observer?.disconnect()
   window.removeEventListener('keydown', onKey)
   window.clearTimeout(searchTimer)
 })
