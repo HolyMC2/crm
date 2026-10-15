@@ -522,7 +522,7 @@ describe('archive delivery that may have happened', () => {
     ])
     expect(calls.some(([m]) => m.endsWith('.retry_task'))).toBe(false)
   })
-  it('legacy OCR and expense-draft actions continue on the Desk page for this document', async () => {
+  it('the expense draft continues on the Desk page; OCR stays in Archivos', async () => {
     const original = detail
     detail = (tasks) => ({
       ...original(tasks),
@@ -539,7 +539,7 @@ describe('archive delivery that may have happened', () => {
       a.getAttribute('href'),
     ])
     const classic = '/desk/documentos?clasico=1&document=DOC-9'
-    expect(links).toContainEqual(['Send to the archive for OCR', classic])
+    expect(links).not.toContainEqual(['Send to the archive for OCR', classic])
     expect(links).toContainEqual(['Prepare purchase draft', classic])
   })
   it('without those actions the Desk continuation is not offered', async () => {

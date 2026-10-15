@@ -591,14 +591,15 @@
               :loading="busy === 'Review'"
               @click="setStatus('Review')"
             />
-            <!-- Not in Archivos yet: the Desk archive page keeps them for this
+            <!-- OCR through the company's Paperless connector (ARC-S4.7); it explains
+                 its own guard when it cannot run. -->
+            <ArchivoOcrAction
+              :document="doc.name"
+              :media-type="doc.media_type"
+              @text="(text) => (doc.extracted_text = text)"
+            />
+            <!-- Not in Archivos yet: the Desk archive page keeps it for this
                  document and returns here. -->
-            <a
-              v-if="doc.can_archive"
-              :href="classicHref"
-              class="inline-flex min-h-11 items-center gap-2 rounded px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-2 sm:min-h-8"
-              >{{ __('Send to the archive for OCR') }}</a
-            >
             <a
               v-if="doc.can_prepare_purchase"
               :href="classicHref"
@@ -672,6 +673,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Badge, Button, Dialog, FeatherIcon, FormControl } from 'frappe-ui'
 import ArchivoGuard from './ArchivoGuard.vue'
+import ArchivoOcrAction from './ArchivoOcrAction.vue'
 import AssignReviewDialog from './AssignReviewDialog.vue'
 import CfdiCard from './CfdiCard.vue'
 import {

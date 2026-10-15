@@ -25392,3 +25392,6 @@ msgstr "Último éxito {0}"
 #: frontend/src/utils/archivosConectores.js
 msgid "Last error {0}"
 msgstr "Último error {0}"
+
+msgid "Connect your Paperless archive and your invoice mailbox, check that they work and run the initial import."
+msgstr "Conecta tu archivo Paperless y tu buzón de facturas, revisa que funcionen y haz la carga inicial."

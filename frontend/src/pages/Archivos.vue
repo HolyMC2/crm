@@ -52,17 +52,20 @@
         v-if="boot.can_configure"
         class="mt-6 border-t border-outline-gray-2 px-3 pt-4 text-sm"
       >
-        <a
-          href="/desk/documentos?conectores=1"
+        <router-link
+          :to="{
+            name: 'ArchivosConectores',
+            query: company ? { company } : {},
+          }"
           class="flex min-h-11 items-center gap-2 text-ink-gray-6 hover:text-ink-gray-8"
           :title="
             __(
-              'Connect a Paperless archive: originals are sent there for OCR and its documents come in here.',
+              'Connect your Paperless archive and your invoice mailbox, check that they work and run the initial import.',
             )
           "
           ><FeatherIcon name="settings" class="h-4 w-4 shrink-0" />{{
             __('Archive settings')
-          }}</a
+          }}</router-link
         >
       </div>
     </template>
