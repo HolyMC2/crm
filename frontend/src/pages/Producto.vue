@@ -150,6 +150,18 @@
                 />
                 {{ kind.text }}
               </span>
+              <a
+                v-if="isTemplate"
+                href="#variantes"
+                class="inline-flex h-6 items-center gap-1.5 rounded-full bg-surface-blue-2 px-2.5 text-xs font-medium text-ink-blue-8 hover:underline"
+              >
+                <FeatherIcon
+                  name="layers"
+                  class="h-3.5 w-3.5"
+                  aria-hidden="true"
+                />
+                {{ variantsLabel({ count: data.variants.count }) }}
+              </a>
               <Badge
                 v-if="product.disabled"
                 theme="red"
@@ -161,6 +173,24 @@
                 :label="__('Not for sale')"
               />
             </div>
+            <p
+              v-if="product.variant_of"
+              class="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-ink-gray-6"
+            >
+              <span>{{ __('Variant of', null, 'Productos') }}</span>
+              <RouterLink
+                :to="templateRoute"
+                class="font-medium text-ink-gray-9 underline-offset-2 hover:underline"
+                >{{ product.template_name || product.variant_of }}</RouterLink
+              >
+              <span
+                v-for="entry in product.attributes"
+                :key="entry.attribute"
+                :title="entry.attribute"
+                class="inline-flex h-6 items-center rounded-full bg-surface-gray-2 px-2.5 text-xs font-medium text-ink-gray-8"
+                >{{ entry.value }}</span
+              >
+            </p>
             <p
               class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-gray-6"
             >
@@ -236,6 +266,24 @@
               </dd>
             </a>
             <a
+              v-if="isTemplate"
+              href="#variantes"
+              class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
+            >
+              <dt class="text-xs text-ink-gray-6">
+                {{ __('Variants', null, 'Productos') }}
+              </dt>
+              <dd
+                class="mt-0.5 text-2xl font-semibold tabular-nums text-ink-gray-9"
+              >
+                {{ qty(data.variants.count) }}
+              </dd>
+              <dd class="text-xs text-ink-gray-6">
+                {{ __('Stock and price per variant', null, 'Productos') }}
+              </dd>
+            </a>
+            <a
+              v-else
               href="#existencias"
               class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
@@ -332,6 +380,15 @@
         >
           <!-- ── main column ─────────────────────────────────────────── -->
           <div class="min-w-0 space-y-4 lg:space-y-5">
+            <VariantGrid
+              v-if="isTemplate"
+              ref="variantGrid"
+              :item="product.name"
+              :count="data.variants.count"
+              :attributes="data.variants.attributes"
+              :initial-search="variantSearch"
+              :list="variantListPath"
+            />
             <section
               id="precios"
               class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
@@ -477,6 +534,7 @@
             </section>
 
             <section
+              v-if="!isTemplate"
               id="existencias"
               class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
             >
@@ -772,6 +830,7 @@
             </section>
 
             <section
+              v-if="!isTemplate"
               id="movimientos"
               class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
             >
@@ -781,6 +840,12 @@
                 <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
                   {{ __('Recent stock movements') }}
                 </h2>
+                <a
+                  v-if="data.ledger.rows.length"
+                  :href="ledgerReportUrl(product.name)"
+                  class="text-sm text-ink-gray-6 underline-offset-2 hover:text-ink-gray-9 hover:underline"
+                  >{{ __('Full history in Desk', null, 'Productos') }}</a
+                >
               </header>
               <p
                 v-if="!data.ledger.rows.length"
@@ -823,17 +888,32 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-outline-gray-1">
-                    <tr v-for="(row, index) in data.ledger.rows" :key="index">
+                    <tr
+                      v-for="(row, index) in visibleRows(
+                        data.ledger.rows,
+                        ledgerAll,
+                      )"
+                      :key="index"
+                    >
                       <td class="whitespace-nowrap px-4 py-2 text-ink-gray-7">
                         {{ row.posting_date }}
                       </td>
                       <td class="px-2 py-2">
-                        <span class="block text-ink-gray-9">{{
-                          __(row.voucher_type)
-                        }}</span>
-                        <span class="block font-mono text-xs text-ink-gray-5">{{
-                          row.voucher_no
-                        }}</span>
+                        <component
+                          :is="documentTag(row.voucher_type, row.voucher_no)"
+                          v-bind="
+                            documentProps(row.voucher_type, row.voucher_no)
+                          "
+                          class="-mx-1 block rounded px-1 hover:bg-surface-gray-2"
+                        >
+                          <span class="block text-ink-gray-9">{{
+                            __(row.voucher_type)
+                          }}</span>
+                          <span
+                            class="block font-mono text-xs text-ink-blue-link"
+                            >{{ row.voucher_no }}</span
+                          >
+                        </component>
                       </td>
                       <td
                         class="max-w-[12rem] truncate px-2 py-2 text-ink-gray-7"
@@ -859,6 +939,7 @@
                     </tr>
                   </tbody>
                 </table>
+                <ShowAll v-model="ledgerAll" :total="data.ledger.rows.length" />
               </div>
             </section>
 
@@ -1184,10 +1265,18 @@
               id="ventas"
               class="scroll-mt-4 rounded-xl border border-outline-gray-2 bg-surface-white"
             >
-              <header class="border-b border-outline-gray-1 px-4 py-3">
-                <h2 class="text-base font-semibold text-ink-gray-9">
+              <header
+                class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-3"
+              >
+                <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
                   {{ __('Recent sales') }}
                 </h2>
+                <a
+                  v-if="data.sales.rows.length"
+                  :href="salesReportUrl(product.name)"
+                  class="text-sm text-ink-gray-6 underline-offset-2 hover:text-ink-gray-9 hover:underline"
+                  >{{ __('All in Desk', null, 'Productos') }}</a
+                >
               </header>
               <p
                 v-if="!data.sales.rows.length"
@@ -1201,26 +1290,31 @@
               </p>
               <ul v-else class="divide-y divide-outline-gray-1">
                 <li
-                  v-for="row in data.sales.rows"
+                  v-for="row in visibleRows(data.sales.rows, salesAll)"
                   :key="row.name"
-                  class="flex flex-wrap items-start gap-3 px-4 py-2 text-sm"
                 >
-                  <span class="min-w-0 flex-1">
-                    <span class="block font-medium">{{
-                      row.customer_name || row.name
+                  <a
+                    :href="documentLink('Sales Invoice', row.name).href"
+                    class="flex min-h-11 flex-wrap items-start gap-3 px-4 py-2 text-sm hover:bg-surface-gray-1"
+                  >
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-medium">{{
+                        row.customer_name || row.name
+                      }}</span>
+                      <span class="block text-ink-gray-6"
+                        >{{ row.name }} · {{ row.posting_date
+                        }}<template v-if="row.is_return">
+                          · {{ __('Return', null, 'Productos') }}</template
+                        ></span
+                      >
+                    </span>
+                    <span class="tabular-nums">{{
+                      money(row.grand_total, row.currency)
                     }}</span>
-                    <span class="block text-ink-gray-6"
-                      >{{ row.name }} · {{ row.posting_date
-                      }}<template v-if="row.is_return">
-                        · {{ __('Return', null, 'Productos') }}</template
-                      ></span
-                    >
-                  </span>
-                  <span class="tabular-nums">{{
-                    money(row.grand_total, row.currency)
-                  }}</span>
+                  </a>
                 </li>
               </ul>
+              <ShowAll v-model="salesAll" :total="data.sales.rows.length" />
             </section>
           </aside>
         </div>
@@ -1267,20 +1361,33 @@
   </div>
 </template>
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  getCurrentInstance,
+  h,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FileUploader, toast } from 'frappe-ui'
 import PriceDialog from '@/components/productos/PriceDialog.vue'
 import EditDialog from '@/components/productos/EditDialog.vue'
 import RequestDialog from '@/components/productos/RequestDialog.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
+import VariantGrid from '@/components/productos/VariantGrid.vue'
+import { hoyLive } from '@/composables/useHoy'
+import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
   AGE_CLASS,
   backTarget,
   deskReconciliationUrl,
+  documentLink,
   escanerDone,
   groupRoute,
   lastCountedLabel,
+  ledgerReportUrl,
   loadProductosBoot,
   money,
   notifyPriceOpener,
@@ -1297,9 +1404,12 @@ import {
   relativeAge,
   requestId,
   requestedAction,
+  salesReportUrl,
   scannerItemUrl,
   scannerMoveUrl,
   shellPath,
+  variantsLabel,
+  visibleRows,
   withoutDone,
 } from '@/composables/useProductos'
 
@@ -1327,6 +1437,56 @@ const request = reactive({
 })
 
 const product = computed(() => data.value?.item || {})
+// A template carries no stock: its page leads to its variants.
+const isTemplate = computed(() => Boolean(data.value?.variants))
+const variantGrid = ref(null)
+const variantSearch = computed(() =>
+  typeof route.query.vq === 'string' ? route.query.vq : '',
+)
+// A variant opened from the grid comes back to this template (and its list).
+const variantListPath = computed(() => {
+  const url = new URL(shellPath(route.fullPath), 'https://muelle.invalid')
+  url.searchParams.delete('done')
+  url.searchParams.delete('accion')
+  return `${url.pathname}${url.search}`
+})
+const templateRoute = computed(() => ({
+  name: 'Producto',
+  params: { item: product.value.variant_of },
+  query: typeof route.query.list === 'string' ? { list: route.query.list } : {},
+}))
+// Movements and sales: five rows until «See all».
+const ledgerAll = ref(false)
+const salesAll = ref(false)
+function documentTag(doctype, name) {
+  const link = documentLink(doctype, name)
+  return link?.to ? 'RouterLink' : link?.href ? 'a' : 'span'
+}
+function documentProps(doctype, name) {
+  const link = documentLink(doctype, name)
+  return link?.to ? { to: link.to } : link?.href ? { href: link.href } : {}
+}
+// «See all (12)» / «Show fewer» under a list cut at five rows.
+function ShowAll(props, { emit }) {
+  if (props.total <= 5) return null
+  return h('div', { class: 'border-t border-outline-gray-1 px-4 py-2' }, [
+    h(
+      'button',
+      {
+        type: 'button',
+        class:
+          'min-h-11 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-8',
+        'aria-expanded': props.modelValue ? 'true' : 'false',
+        onClick: () => emit('update:modelValue', !props.modelValue),
+      },
+      props.modelValue
+        ? __('Show fewer', null, 'Productos')
+        : __('See all ({0})', [props.total], 'Productos'),
+    ),
+  ])
+}
+ShowAll.props = ['modelValue', 'total']
+ShowAll.emits = ['update:modelValue']
 // A link from a line in another unit (`uom=Caja`) never opens the stock-unit
 // price by itself: the worker chooses it, or asks for the other unit's price.
 const unit = computed(() => priceUnit(route.query, data.value?.item))
@@ -1448,6 +1608,7 @@ const ACTION_ICONS = {
   count: 'clipboard',
   scanner: 'maximize',
   labels: 'printer',
+  variants: 'layers',
 }
 // The record's actions, primary first, and «Imprimir etiqueta» in Mercado.
 const heroActions = computed(() => {
@@ -1571,11 +1732,15 @@ function photoFailed(error) {
   }
 }
 
-async function load() {
+async function load({ quiet = false } = {}) {
+  if (quiet && loading.value) return
+  const item = props.item
   loading.value = true
-  problem.value = null
+  if (!quiet) problem.value = null
   try {
-    data.value = await productosApi('record', { item: props.item })
+    const fresh = await productosApi('record', { item })
+    if (item !== props.item) return
+    data.value = fresh
     guard.value = null
   } catch (error) {
     const p = problemOf(error)
@@ -1621,7 +1786,11 @@ function run(entry) {
   else if (entry.key === 'count') {
     countStore.value = ''
     countOpen.value = true
-  } else if (entry.key === 'scanner')
+  } else if (entry.key === 'variants')
+    document
+      .getElementById('variantes')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  else if (entry.key === 'scanner')
     window.location.assign(
       scannerItemUrl(product.value.name, { back: recordBack.value }),
     )
@@ -1752,8 +1921,25 @@ watch(
     data.value = null
     notice.value = null
     photoBroken.value = false
+    ledgerAll.value = false
+    salesAll.value = false
     await load()
   },
+)
+// A price, a sale or an edit by someone else shows up without a reload;
+// never under the worker's hands (an open dialog keeps its input).
+const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
+useLiveWatch(
+  hoyLive(socket),
+  ['Item', 'Item Price', 'Stock Ledger Entry'],
+  () => {
+    if (!data.value || !boot.value?.enabled) return
+    if (priceOpen.value || editOpen.value || countOpen.value || request.open)
+      return
+    load({ quiet: true })
+    if (isTemplate.value) variantGrid.value?.refresh()
+  },
+  { minIntervalMs: 10000 },
 )
 onMounted(async () => {
   await loadProductosBoot()

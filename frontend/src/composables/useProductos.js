@@ -122,13 +122,52 @@ export function normalizeView(value) {
   return VIEWS.some((v) => v.value === value) ? value : 'todos'
 }
 
-/** The product record, remembering the list it was opened from. */
-export function productRoute(row, list) {
-  return {
-    name: 'Producto',
-    params: { item: row.name },
-    query: list ? { list } : {},
-  }
+/** The product record, remembering the list it was opened from; a template
+ * opened from a search keeps that search for its variants («vq»). */
+export function productRoute(row, list, search = '') {
+  const query = list ? { list } : {}
+  if (row.variants && search) query.vq = search
+  return { name: 'Producto', params: { item: row.name }, query }
+}
+
+/** «12 variants», or «3 of 12 variants» while a search narrows them. */
+export function variantsLabel(variants) {
+  if (!variants) return ''
+  const count = Number(variants.count) || 0
+  const matching = variants.matching
+  if (matching !== null && matching !== undefined && matching < count)
+    return tr('{0} of {1} variants', [matching, count], CTX)
+  return count === 1
+    ? tr('1 variant', null, CTX)
+    : tr('{0} variants', [count], CTX)
+}
+
+/** The rows a section shows: the first `limit` until «See all» opens it. */
+export function visibleRows(rows, open, limit = 5) {
+  const list = rows || []
+  return open ? list : list.slice(0, limit)
+}
+
+/** Where a document of a movement or sale opens: the shell's own page for
+ * purchases, the Desk form for everything else. */
+export function documentLink(doctype, name) {
+  if (!doctype || !name) return null
+  if (doctype === 'Purchase Order')
+    return { to: { name: 'CompraOrden', params: { name } } }
+  if (doctype === 'Material Request')
+    return { to: { name: 'CompraSolicitud', params: { name } } }
+  const slug = String(doctype).trim().toLowerCase().replace(/\s+/g, '-')
+  return { href: `/app/${slug}/${encodeURIComponent(name)}` }
+}
+
+// The whole history in Desk, past the rows the page carries: the item's
+// stock ledger and its sales, from the start of the books.
+const HISTORY_FROM = '2000-01-01'
+export function ledgerReportUrl(item) {
+  return `/app/query-report/Stock Ledger?item_code=${encodeURIComponent(item)}&from_date=${HISTORY_FROM}`
+}
+export function salesReportUrl(item) {
+  return `/app/query-report/Item-wise Sales History?item_code=${encodeURIComponent(item)}&from_date=${HISTORY_FROM}`
 }
 
 /** «5 Pza · 2 stores» from the row's stock in the chosen stores. */

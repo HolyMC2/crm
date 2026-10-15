@@ -38,6 +38,7 @@
     <span class="mt-auto flex flex-wrap items-end justify-between gap-2">
       <span class="flex flex-wrap gap-1">
         <StockPill v-if="badge" :badge="badge" />
+        <Badge v-if="variants" theme="blue" :label="variants" />
         <Badge
           v-if="review"
           theme="orange"
@@ -76,10 +77,11 @@
         detail
       }}</span>
       <span
-        v-if="badge || review || chip"
+        v-if="badge || review || chip || variants"
         class="mt-1 flex flex-wrap gap-1 lg:hidden"
       >
         <StockPill v-if="badge" :badge="badge" />
+        <Badge v-if="variants" theme="blue" :label="variants" />
         <Badge v-if="chip" :theme="chip.theme" :label="chip.label" />
         <Badge
           v-if="review"
@@ -93,6 +95,7 @@
     }}</span>
     <span class="hidden flex-wrap gap-1 lg:flex">
       <StockPill v-if="badge" :badge="badge" />
+      <Badge v-if="variants" theme="blue" :label="variants" />
       <Badge v-if="chip" :theme="chip.theme" :label="chip.label" />
       <Badge
         v-if="review"
@@ -107,7 +110,7 @@
 import { computed, h } from 'vue'
 import { Badge } from 'frappe-ui'
 import ProductThumb from '@/components/productos/ProductThumb.vue'
-import { money, stockBadge } from '@/composables/useProductos'
+import { money, stockBadge, variantsLabel } from '@/composables/useProductos'
 
 // One product of a Productos list: photo or initials, name, code and group,
 // its stock in words and its price (or «Sin precio»).
@@ -121,6 +124,8 @@ const props = defineProps({
   detail: { type: String, default: '' },
 })
 const badge = computed(() => (props.showStock ? stockBadge(props.row) : null))
+// A template: «N variants» (while searching, how many of them match).
+const variants = computed(() => variantsLabel(props.row.variants))
 const review = computed(() =>
   Boolean(props.row.price?.review || props.row.price_review),
 )
@@ -170,18 +175,26 @@ function PriceFigure(_, { attrs }) {
         h(
           'span',
           { class: 'text-base font-semibold tabular-nums text-ink-gray-9' },
-          money(price.rate, price.currency),
+          price.from
+            ? __('from {0}', [money(price.rate, price.currency)], 'Productos')
+            : money(price.rate, price.currency),
         ),
-        price.price_list
+        price.inherited
           ? h(
               'span',
-              {
-                class: 'max-w-[8rem] truncate text-xs text-ink-gray-5',
-                title: price.price_list,
-              },
-              price.price_list,
+              { class: 'text-xs text-ink-gray-5' },
+              __('Template price', null, 'Productos'),
             )
-          : null,
+          : price.price_list
+            ? h(
+                'span',
+                {
+                  class: 'max-w-[8rem] truncate text-xs text-ink-gray-5',
+                  title: price.price_list,
+                },
+                price.price_list,
+              )
+            : null,
       ],
     )
   return h(

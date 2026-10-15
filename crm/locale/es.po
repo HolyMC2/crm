@@ -22819,3 +22819,113 @@ msgstr "El manual de la tienda no está instalado. Pide a tu encargado que revis
 #: frontend/src (Manual de la tienda)
 msgid "Ask the owner or the manager to check your user, then retry."
 msgstr "Pide al dueño o al encargado que revise tu usuario y vuelve a intentar."
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Results for “{0}”"
+msgstr "Resultados para «{0}»"
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Exact code first, then what is on hand and selling; variants under their product."
+msgstr "Primero el código exacto, luego lo que hay en existencia y se vende; las variantes, dentro de su producto."
+
+#: frontend/src/pages/Productos.vue
+msgctxt "Productos"
+msgid "Every active product: on hand and selling first, variants under their product."
+msgstr "Todos los productos activos: primero lo que hay en existencia y se vende; las variantes, dentro de su producto."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Variant of"
+msgstr "Variante de"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Variants"
+msgstr "Variantes"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Stock and price per variant"
+msgstr "Existencias y precio por variante"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Full history in Desk"
+msgstr "Historial completo en Desk"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "All in Desk"
+msgstr "Todas en Desk"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Show fewer"
+msgstr "Ver menos"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "See all ({0})"
+msgstr "Ver todos ({0})"
+
+#: frontend/src/components/productos/CatalogItem.vue
+msgctxt "Productos"
+msgid "from {0}"
+msgstr "desde {0}"
+
+#: frontend/src/components/productos/CatalogItem.vue
+msgctxt "Productos"
+msgid "Template price"
+msgstr "Precio de la plantilla"
+
+#: frontend/src/components/productos/VariantGrid.vue
+msgctxt "Productos"
+msgid "This product is a template: each variant has its own code, stock and price. A variant without its own price sells at the template price."
+msgstr "Este producto es una plantilla: cada variante tiene su propio código, existencias y precio. Una variante sin precio propio se vende al precio de la plantilla."
+
+#: frontend/src/components/productos/VariantGrid.vue
+msgctxt "Productos"
+msgid "Search variants"
+msgstr "Buscar variantes"
+
+#: frontend/src/components/productos/VariantGrid.vue
+msgctxt "Productos"
+msgid "Name, code or barcode"
+msgstr "Nombre, código o código de barras"
+
+#: frontend/src/components/productos/VariantGrid.vue
+msgctxt "Productos"
+msgid "Clear"
+msgstr "Limpiar"
+
+#: frontend/src/components/productos/VariantGrid.vue
+msgctxt "Productos"
+msgid "No variant matches these filters."
+msgstr "Ninguna variante coincide con estos filtros."
+
+#: frontend/src/components/productos/VariantGrid.vue
+msgctxt "Productos"
+msgid "This template has no active variants yet."
+msgstr "Esta plantilla todavía no tiene variantes activas."
+
+#: frontend/src/components/productos/VariantGrid.vue
+msgctxt "Productos"
+msgid "Show more variants"
+msgstr "Ver más variantes"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "{0} of {1} variants"
+msgstr "{0} de {1} variantes"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "1 variant"
+msgstr "1 variante"
+
+#: frontend/src/composables/useProductos.js
+msgctxt "Productos"
+msgid "{0} variants"
+msgstr "{0} variantes"

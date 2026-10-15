@@ -42,7 +42,7 @@
       >
         <div class="min-w-0 flex-1">
           <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{ viewLabel(view) }}
+            {{ heading }}
           </h1>
           <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
         </div>
@@ -508,7 +508,7 @@
             <CatalogItem
               :row="row"
               layout="tarjetas"
-              :to="productRoute(row, listPath)"
+              :to="productRoute(row, listPath, searching)"
               :focused="focusKey === legacyKey(row)"
               :eager="index < 12"
               :detail="row.warehouse ? stockLabel(row) : ''"
@@ -539,7 +539,7 @@
             >
               <CatalogItem
                 :row="row"
-                :to="productRoute(row, listPath)"
+                :to="productRoute(row, listPath, searching)"
                 :eager="index < 12"
                 :detail="row.warehouse ? stockLabel(row) : ''"
                 @click="leaveFor(row)"
@@ -653,6 +653,9 @@ const LIVE_DOCTYPES = [
   'Taller Item Ubicacion',
   'Taller Bin Movement',
 ]
+// The catalogue also follows the product and its prices (a price edited in
+// Desk or by a colleague), refreshed in place without reordering the list.
+const CATALOG_LIVE_DOCTYPES = ['Item', 'Item Price', 'Stock Ledger Entry']
 const route = useRoute()
 const router = useRouter()
 const boot = productosBoot
@@ -810,33 +813,49 @@ const guard = computed(() =>
       __('Ask your manager for permission to read items, then retry.')
     : '',
 )
-const subtitle = computed(
-  () =>
-    ({
-      todos: __('Every active product, newest changes first.'),
-      'sin-precio': __('For sale but without a price in the store list.'),
-      'precio-revisar': __(
-        'Prices with dates, units or packs that need a decision.',
-      ),
-      faltan: __('Products with a minimum and nothing on hand in a store.'),
-      'bajo-minimo': __('Still on hand, but below the store minimum.'),
-      'sin-cajon': __(
-        'On hand but not filed in a bin of that store; biggest value first.',
-      ),
-      'sin-contar': __(
-        'On hand and not counted in {0} days (cycle count, bin count or stock adjustment); biggest value first.',
-        [state.value.days],
-      ),
-      negativo: __(
-        'The system says less than zero: something left without being recorded coming in.',
-      ),
-      'por-revisar': __(
-        'Counts with a difference waiting for review, and draft stock adjustments.',
-      ),
-      'conteos-abiertos': __(
-        'Counts asked of someone and not sent yet, oldest first.',
-      ),
-    })[view.value],
+// While searching, the heading names the search and the order is by match.
+const searching = computed(() => search.value.trim())
+const heading = computed(() =>
+  searching.value
+    ? __('Results for “{0}”', [searching.value], 'Productos')
+    : viewLabel(view.value),
+)
+const subtitle = computed(() =>
+  searching.value && view.value === 'todos'
+    ? __(
+        'Exact code first, then what is on hand and selling; variants under their product.',
+        null,
+        'Productos',
+      )
+    : {
+        todos: __(
+          'Every active product: on hand and selling first, variants under their product.',
+          null,
+          'Productos',
+        ),
+        'sin-precio': __('For sale but without a price in the store list.'),
+        'precio-revisar': __(
+          'Prices with dates, units or packs that need a decision.',
+        ),
+        faltan: __('Products with a minimum and nothing on hand in a store.'),
+        'bajo-minimo': __('Still on hand, but below the store minimum.'),
+        'sin-cajon': __(
+          'On hand but not filed in a bin of that store; biggest value first.',
+        ),
+        'sin-contar': __(
+          'On hand and not counted in {0} days (cycle count, bin count or stock adjustment); biggest value first.',
+          [state.value.days],
+        ),
+        negativo: __(
+          'The system says less than zero: something left without being recorded coming in.',
+        ),
+        'por-revisar': __(
+          'Counts with a difference waiting for review, and draft stock adjustments.',
+        ),
+        'conteos-abiertos': __(
+          'Counts asked of someone and not sent yet, oldest first.',
+        ),
+      }[view.value],
 )
 const emptyTitle = computed(() =>
   search.value ? __('No products match') : __('Nothing here'),
@@ -1110,7 +1129,11 @@ async function load({ more = false, quiet = false } = {}) {
     })
     if (mine !== ticket) return
     reason.value = page.reason || ''
-    rows.value = more ? [...rows.value, ...page.rows] : page.rows
+    if (quiet && !more && !inventory.value && rows.value.length) {
+      // In place: the worker's place in the catalogue never jumps.
+      const fresh = new Map(page.rows.map((row) => [legacyKey(row), row]))
+      rows.value = rows.value.map((row) => fresh.get(legacyKey(row)) || row)
+    } else rows.value = more ? [...rows.value, ...page.rows] : page.rows
     for (const row of page.rows) if (row.key) known.set(row.key, row)
     hasMore.value = page.has_more
     if (!more) total.value = typeof page.total === 'number' ? page.total : null
@@ -1425,6 +1448,13 @@ useLiveWatch(
   hoyLive(socket),
   LIVE_DOCTYPES,
   () => (inventory.value && boot.value?.enabled ? refreshAll() : null),
+  { minIntervalMs: 15000 },
+)
+useLiveWatch(
+  hoyLive(socket),
+  CATALOG_LIVE_DOCTYPES,
+  () =>
+    !inventory.value && boot.value?.enabled ? load({ quiet: true }) : null,
   { minIntervalMs: 15000 },
 )
 
