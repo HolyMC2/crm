@@ -252,9 +252,50 @@
           class="flex items-center justify-between gap-2"
         >
           <span class="flex-none text-ink-gray-5">{{ __('Valor') }}</span>
-          <span class="font-semibold text-ink-gray-9">{{
-            dealSummary.value
+          <span
+            class="font-semibold"
+            :class="
+              dealSummary.outlier ? 'text-ink-amber-9' : 'text-ink-gray-9'
+            "
+            :title="
+              dealSummary.outlier
+                ? __(
+                    'Unusually large amount: left out of totals and averages. Check the value.',
+                  )
+                : undefined
+            "
+            >{{ dealSummary.value
+            }}<span v-if="dealSummary.outlier"> ⚠</span></span
+          >
+        </div>
+        <div
+          v-if="dealSummary.weighted"
+          class="flex items-center justify-between gap-2"
+        >
+          <span class="flex-none text-ink-gray-5">{{
+            __('Pronóstico ponderado')
           }}</span>
+          <span class="text-ink-gray-8">{{ dealSummary.weighted }}</span>
+        </div>
+        <div
+          v-if="dealSummary.repairQuoted"
+          class="flex items-center justify-between gap-2"
+        >
+          <span class="flex-none text-ink-gray-5">{{
+            __('Cotizado en reparaciones')
+          }}</span>
+          <span class="text-ink-gray-8">{{ dealSummary.repairQuoted }}</span>
+        </div>
+        <div
+          v-if="dealSummary.invoiced"
+          class="flex items-center justify-between gap-2"
+        >
+          <span class="flex-none text-ink-gray-5">{{
+            __('Facturado · cobrado')
+          }}</span>
+          <span class="text-ink-gray-8"
+            >{{ dealSummary.invoiced }} · {{ dealSummary.collected }}</span
+          >
         </div>
         <div
           v-if="dealSummary.source"
@@ -599,9 +640,27 @@ const probability = computed(() => dealRes.data?.probability)
 // ── deal summary (read-only key facts) + collapsible full-field editor ──────────
 const showAllFields = ref(false)
 
-// "Valor" = total quoted across the deal's Repair Orders (the quote lives on the
-// RO, not the deal). Reuses the same taller endpoint the Reparación tab uses; on a
-// tenant without taller it errors silently and Valor is just omitted.
+// «Valor» is the metric contract's value for this deal (expected amount, or the
+// recorded amount once won) — the same number as the list, board and totals.
+// The Repair Orders' own quotes show beside it when they differ. Reuses the same
+// taller endpoint the Reparación tab uses; on a tenant without taller it errors
+// silently and that line is omitted.
+const dealAmounts = createResource({
+  url: 'crm.pipeline.api.get_deal_amounts',
+  onError: () => {},
+})
+watch(
+  [activeDeal, isDeal],
+  () => {
+    const d = activeDeal.value
+    if (d && isDeal.value) dealAmounts.submit({ names: [d] })
+    else dealAmounts.data = null
+  },
+  { immediate: true },
+)
+const contractAmounts = computed(
+  () => dealAmounts.data?.deals?.[activeDeal.value] || null,
+)
 const repairOrders = createResource({
   url: 'taller.repair.repair_orders.get_deal_repair_orders',
   onError: () => {},
@@ -616,7 +675,7 @@ watch(
   },
   { immediate: true },
 )
-const dealValue = computed(
+const repairQuoted = computed(
   () =>
     (repairOrders.data || []).reduce(
       (s, ro) => s + (Number(ro.quote_amount) || Number(ro.billing_total) || 0),
@@ -637,15 +696,41 @@ function fmtDate(ts) {
   const d = new Date(String(ts).replace(' ', 'T'))
   return isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
 }
-function money(v) {
+function money(v, currency = 'MXN') {
   const n = Number(v)
   return n
     ? n.toLocaleString(undefined, {
         style: 'currency',
-        currency: 'MXN',
+        currency: currency || 'MXN',
         maximumFractionDigits: 0,
       })
     : null
+}
+function contractSummary(amounts, quoted) {
+  const currency = amounts?.currency || 'MXN'
+  // a flagged outlier still shows its own amount here, marked
+  const own = amounts?.outlier ? amounts.size : amounts?.commercial_value
+  const value = money(own, currency)
+  const repair = money(quoted, currency)
+  const invoiced = money(amounts?.invoiced_value, currency)
+  return {
+    value,
+    outlier: !!amounts?.outlier,
+    weighted: amounts?.open ? money(amounts.weighted_forecast, currency) : null,
+    // the repair quotes as their own line only when they say something else
+    repairQuoted: repair && Number(quoted) !== Number(own || 0) ? repair : null,
+    invoiced,
+    collected: invoiced
+      ? money(amounts.collected_value, currency) || money0(currency)
+      : null,
+  }
+}
+function money0(currency) {
+  return (0).toLocaleString(undefined, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  })
 }
 const dealSummary = computed(() => {
   const m = dealRes.data || {}
@@ -654,7 +739,7 @@ const dealSummary = computed(() => {
     status: row.value.status,
     device: m.repair_device || row.value.device,
     orders: m.repair_orders_count,
-    value: money(dealValue.value),
+    ...contractSummary(contractAmounts.value, repairQuoted.value),
     balance: money(dealBalance.value),
     source: m.source,
     created: fmtDate(m.creation),

@@ -33,6 +33,7 @@ describe('summary strip', () => {
           commercial_value: 500,
           weighted_forecast: 250,
           missing_exchange_rate_count: 1,
+          outlier_count: 2,
         },
         {
           status: 'Ganado',
@@ -47,6 +48,7 @@ describe('summary strip', () => {
     expect(s.value).toBe(1700)
     expect(s.weighted).toBe(280)
     expect(s.missingFx).toBe(1)
+    expect(s.outliers).toBe(2)
     expect(s.byStatus.Nuevo.count).toBe(3)
   })
 

@@ -20,12 +20,23 @@ from crm.api.dashboard import (
 	get_pipeline_funnel,
 )
 from crm.api.doc import aggregate_deal_metrics
+from crm.api.list_columns_crm import WEIGHTED, enrich
+from crm.api.sales_reports import get_report
+from crm.pipeline.api import get_deal_amounts
+from crm.pipeline.queries import stages
+
+
+def months(chart):
+	return [{key: row[key] for key in ("month", "forecasted", "actual")} for row in chart["data"]]
 
 
 class TestSalesMetrics(IntegrationTestCase):
 	def setUp(self):
 		super().setUp()
 		frappe.set_user("Administrator")
+		# The tenant-wide outlier guard depends on every deal on the site; these
+		# fixtures pin it off, and the outlier tests pin their own threshold.
+		frappe.flags.crm_metric_outlier_threshold = None
 		frappe.db.set_single_value("FCRM Settings", "currency", "USD")
 		self.key = frappe.generate_hash(length=8)
 		self.user = f"metrics-{self.key}@example.invalid"
@@ -65,6 +76,7 @@ class TestSalesMetrics(IntegrationTestCase):
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
+		frappe.flags.pop("crm_metric_outlier_threshold", None)
 		super().tearDown()
 
 	def deal(self, kind="Ongoing", expected=100, value=0, probability=50, **overrides):
@@ -154,7 +166,7 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.assertEqual(metrics[self.statuses["Open"]].weighted_forecast, 0)
 		self.assertEqual(metrics[self.statuses["On Hold"]].weighted_forecast, 50)
 		chart = get_forecasted_revenue("2040-02-01", "2040-02-29", self.user)
-		self.assertEqual(chart["data"], [{"month": "2040-02-01", "forecasted": 50, "actual": 800}])
+		self.assertEqual(months(chart), [{"month": "2040-02-01", "forecasted": 50, "actual": 800}])
 
 	def test_forecast_honours_both_period_bounds_and_won_closed_date(self):
 		self.deal(expected=100, probability=50, expected_closure_date="2040-02-29")
@@ -163,7 +175,7 @@ class TestSalesMetrics(IntegrationTestCase):
 		self.deal("Won", value=700, closed_date="2040-02-29", expected_closure_date="2040-03-10")
 		self.deal("Won", value=9000, closed_date="2040-03-01", expected_closure_date="2040-02-10")
 		chart = get_forecasted_revenue("2040-02-01", "2040-02-29", self.user)
-		self.assertEqual(chart["data"], [{"month": "2040-02-01", "forecasted": 50, "actual": 700}])
+		self.assertEqual(months(chart), [{"month": "2040-02-01", "forecasted": 50, "actual": 700}])
 
 	def test_foreign_currency_is_converted_and_missing_rate_is_explicit(self):
 		self.deal(expected=200, currency="MXN", exchange_rate=0.05)
@@ -493,3 +505,174 @@ class TestSalesMetrics(IntegrationTestCase):
 					frappe.set_user("Administrator")
 					frappe.db.rollback(save_point="metrics_history_field")
 					frappe.clear_cache(doctype="CRM Status Change Log")
+
+	# ── Metric contract v2 (docs/CRM_METRIC_CONTRACT.md) ─────────────────────
+
+	def reconciliation_fixture(self):
+		"""One small mixed dataset every surface must agree on."""
+		self.deal("Open", expected=1000, probability=10)
+		self.deal("Ongoing", expected=0, value=500, probability=40)
+		self.deal("On Hold", expected=300)  # probability 50
+		self.deal("Won", expected=100, value=800, closed_date="2040-02-20")
+		self.deal("Lost", expected=7000, probability=90)
+		self.deal("Ongoing", expected=400, currency="MXN", exchange_rate=0.05)  # 20 USD
+
+	def test_list_board_funnel_report_dashboard_and_records_reconcile(self):
+		self.reconciliation_fixture()
+		open_expected, weighted, won = 1000 + 500 + 300 + 20, 100 + 200 + 150 + 10, 800
+		# List summary strip and board column totals: one call, per status.
+		rows = self.metrics()
+		self.assertEqual(sum(row.count for row in rows.values()), 6)
+		self.assertEqual(sum(row.open_expected_value for row in rows.values()), open_expected)
+		self.assertEqual(sum(row.weighted_forecast for row in rows.values()), weighted)
+		self.assertEqual(sum(row.won_value for row in rows.values()), won)
+		# Lost adds nothing to the forecast, wherever it is read.
+		self.assertEqual(rows[self.statuses["Lost"]].weighted_forecast, 0)
+		self.assertEqual(rows[self.statuses["Lost"]].open_expected_value, 0)
+		# Funnel: same deals, same stages.
+		funnel = get_pipeline_funnel("2040-02-01", "2040-02-29", {"pipeline": self.pipeline.name})
+		self.assertEqual(funnel["total"], 6)
+		self.assertEqual((funnel["won"], funnel["lost"]), (1, 1))
+		counts = {row["status"]: row["count"] for row in funnel["stages"]}
+		for status, row in rows.items():
+			self.assertEqual(counts[status], row.count)
+		# Report: the same contract sums.
+		report = get_report(
+			{"from_date": "2040-02-01", "to_date": "2040-02-29", "pipeline": self.pipeline.name}
+		)["summary"]
+		self.assertEqual(report["deals"], 6)
+		self.assertEqual(report["open_expected_value"], open_expected)
+		self.assertEqual(report["weighted_forecast"], weighted)
+		self.assertEqual(report["won_value"], won)
+		self.assertEqual((report["won"], report["lost"]), (1, 1))
+		# Dashboard: grouped values and the forecast chart.
+		grouped = get_deals_by_salesperson("2040-02-01", "2040-02-29", self.user)["data"]
+		self.assertEqual(sum(row.weighted_forecast or 0 for row in grouped), weighted)
+		self.assertEqual(sum(row.won_value or 0 for row in grouped), won)
+		self.assertEqual(get_ongoing_deals("2040-02-01", "2040-02-29", self.user)["value"], 4)
+		chart = get_forecasted_revenue("2040-02-01", "2040-02-29", self.user)
+		self.assertEqual(months(chart), [{"month": "2040-02-01", "forecasted": weighted, "actual": won}])
+		# Per deal (rows, Deal 360): base-currency amounts add up to the same totals.
+		names = frappe.get_all("CRM Deal", filters={"pipeline": self.pipeline.name}, pluck="name")
+		per_deal = stages.deal_amounts(names, in_deal_currency=False)
+		self.assertEqual(len(per_deal), 6)
+		self.assertEqual(sum(row.weighted_forecast for row in per_deal.values()), weighted)
+		self.assertEqual(sum(row.open_expected_value for row in per_deal.values()), open_expected)
+
+	def test_per_deal_amounts_are_in_the_deal_currency_and_outcome_aware(self):
+		mxn = self.deal("Ongoing", expected=400, currency="MXN", exchange_rate=0.05, probability=50)
+		lost = self.deal("Lost", expected=7000, probability=90)
+		won = self.deal("Won", expected=100, value=800, closed_date="2040-02-20")
+		result = get_deal_amounts([mxn.name, lost.name, won.name])
+		self.assertEqual(result["contract"]["version"], stages.METRIC_CONTRACT_VERSION)
+		deals = result["deals"]
+		self.assertEqual(deals[mxn.name].currency, "MXN")
+		self.assertEqual(deals[mxn.name].expected_value, 400)
+		self.assertEqual(deals[mxn.name].weighted_forecast, 200)
+		self.assertTrue(deals[mxn.name].open)
+		self.assertEqual(deals[lost.name].weighted_forecast, 0)
+		self.assertFalse(deals[lost.name].open)
+		self.assertEqual(deals[won.name].commercial_value, 800)
+		self.assertEqual(deals[won.name].won_value, 800)
+
+	def test_outlier_is_flagged_counted_and_never_summed_or_averaged(self):
+		self.deal(expected=100)
+		self.deal(expected=300)
+		huge = self.deal(expected=100_000_000)
+		frappe.flags.crm_metric_outlier_threshold = 50_000
+		row = self.metrics()[self.statuses["Ongoing"]]
+		self.assertEqual(row.count, 3)
+		self.assertEqual(row.commercial_value, 400)
+		self.assertEqual(row.weighted_forecast, 200)
+		self.assertEqual(row.outlier_count, 1)
+		self.assertEqual(row.outlier_value, 100_000_000)
+		average = get_average_deal_value("2040-02-01", "2040-02-29", self.user)
+		self.assertEqual(average["value"], 200)
+		self.assertEqual(average["sample_count"], 2)
+		self.assertEqual(average["outlier_count"], 1)
+		self.assertIn("unusually large", average["metric_note"])
+		per_deal = get_deal_amounts([huge.name])["deals"][huge.name]
+		self.assertTrue(per_deal.outlier)
+		self.assertIsNone(per_deal.commercial_value)
+		self.assertEqual(per_deal.size, 100_000_000)
+		self.assertEqual(
+			aggregate_deal_metrics({"pipeline": self.pipeline.name})["contract"]["outlier_threshold"], 50_000
+		)
+		rows = [{"name": huge.name}]
+		enrich("CRM Deal", rows, {WEIGHTED})
+		self.assertIsNone(rows[0][WEIGHTED])
+
+	def test_outlier_threshold_is_100x_the_nearest_rank_p95_of_the_tenant(self):
+		frappe.flags.pop("crm_metric_outlier_threshold", None)
+		frappe.cache.delete_value(stages.OUTLIER_CACHE_KEY)
+		for amount in range(1, 31):
+			self.deal(expected=amount * 10)
+		sizes = sorted(
+			max(row.expected_deal_value or 0, row.deal_value or 0)
+			* (1 if (row.currency or "USD") == "USD" else (row.exchange_rate or 0))
+			for row in frappe.get_all(
+				"CRM Deal", fields=["expected_deal_value", "deal_value", "currency", "exchange_rate"]
+			)
+		)
+		sizes = [size for size in sizes if size > 0]
+		expected = sizes[-(-len(sizes) * 95 // 100) - 1] * stages.OUTLIER_FACTOR
+		self.assertAlmostEqual(stages.outlier_threshold(), expected)
+		# Cached: a new deal does not move it until the cache expires.
+		self.deal(expected=10**9)
+		self.assertAlmostEqual(stages.outlier_threshold(), expected)
+		frappe.cache.delete_value(stages.OUTLIER_CACHE_KEY)
+
+	def test_forecast_chart_has_one_category_per_month_of_the_period(self):
+		self.deal(expected=100, probability=50, expected_closure_date="2040-02-10")
+		chart = get_forecasted_revenue("2040-01-20", "2040-03-05", self.user)
+		self.assertEqual(chart["xAxis"]["type"], "category")
+		self.assertEqual(chart["xAxis"]["key"], "label")
+		self.assertEqual(
+			months(chart),
+			[
+				{"month": "2040-01-01", "forecasted": 0, "actual": 0},
+				{"month": "2040-02-01", "forecasted": 50, "actual": 0},
+				{"month": "2040-03-01", "forecasted": 0, "actual": 0},
+			],
+		)
+		self.assertTrue(all(row["label"] for row in chart["data"]))
+
+	def test_lost_deal_weighted_column_is_zero_in_the_list(self):
+		lost = self.deal("Lost", expected=7000, probability=90)
+		open_deal = self.deal(expected=1000, probability=25)
+		rows = [{"name": lost.name}, {"name": open_deal.name}]
+		enrich("CRM Deal", rows, {WEIGHTED})
+		self.assertEqual(rows[0][WEIGHTED], frappe.utils.fmt_money(0, currency="USD"))
+		self.assertEqual(rows[1][WEIGHTED], frappe.utils.fmt_money(250, currency="USD"))
+
+	def test_invoiced_and_collected_come_from_erp_documents(self):
+		if not (
+			frappe.db.exists("DocType", "Sales Invoice") and frappe.db.has_column("Sales Invoice", "crm_deal")
+		):
+			self.skipTest("ERP invoices are not linked to deals on this site")
+		deal = self.deal("Won", value=800, closed_date="2040-02-20")
+		company = frappe.db.get_value("Company", {"default_currency": "USD"}, "name")
+		if not company:
+			self.skipTest("No company in the CRM base currency")
+		for grand_total, outstanding in ((500, 200), (300, 0)):
+			frappe.get_doc(
+				{
+					"doctype": "Sales Invoice",
+					"company": company,
+					"currency": "USD",
+					"party_account_currency": "USD",
+					"conversion_rate": 1,
+					"crm_deal": deal.name,
+					"docstatus": 1,
+					"base_grand_total": grand_total,
+					"grand_total": grand_total,
+					"outstanding_amount": outstanding,
+					"customer": "_metrics",
+					"posting_date": "2040-02-20",
+				}
+			).db_insert()
+		amounts = get_deal_amounts([deal.name])["deals"][deal.name]
+		self.assertEqual(amounts.invoiced_value, 800)
+		self.assertEqual(amounts.collected_value, 600)
+		row = self.metrics()[self.statuses["Won"]]
+		self.assertEqual((row.invoiced_value, row.collected_value), (800, 600))

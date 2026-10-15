@@ -6,7 +6,7 @@ from frappe.model import get_permitted_fields
 from frappe.utils import add_days, getdate, now_datetime, today
 
 from crm.pipeline.constants import OPEN_TASK_STATUSES
-from crm.pipeline.queries.stages import deal_metrics
+from crm.pipeline.queries.stages import contract_info, deal_metrics
 from crm.utils.query import subquery_sql
 
 KINDS = {"leads": "CRM Lead", "deals": "CRM Deal", "tasks": "CRM Task"}
@@ -209,11 +209,21 @@ def get_report(filters: dict | str | None = None):
 		as_dict=True,
 	):
 		owners.setdefault(row.owner, _owner_row(row.owner)).update(row)
-	amount_names = ("open_expected_value", "weighted_forecast", "won_value", "missing_exchange_rate_count")
+	amount_names = (
+		"open_expected_value",
+		"weighted_forecast",
+		"won_value",
+		"invoiced_value",
+		"collected_value",
+		"missing_exchange_rate_count",
+		"outlier_count",
+	)
 	amounts_available = True
 	try:
 		metrics = deal_metrics(_record_filters("deals", filters))
 		amounts = {key: sum((row.get(key) or 0) for row in metrics) for key in amount_names}
+		if contract_info()["erp_amounts"] is False:
+			amounts["invoiced_value"] = amounts["collected_value"] = None
 	except frappe.PermissionError:
 		amounts_available = False
 		amounts = dict.fromkeys(amount_names)
@@ -248,6 +258,8 @@ def get_report(filters: dict | str | None = None):
 			"age": "Time in the current logged stage; missing or ambiguous history is approximate.",
 			"workload": "Open permitted tasks on permitted cohort records, grouped by current task assignee. Overdue means due before the site timestamp.",
 			"amounts": "Commercial deal values in base currency. They do not establish invoiced, paid or delivered amounts.",
+			"invoiced": "Submitted invoices linked to the deals (ERP), in base currency; collected = invoiced minus outstanding.",
+			"outliers": "Deals above 100 times the tenant's 95th-percentile amount are counted, not summed.",
 			"source": "Current recorded source; blank source is Unknown. It is not campaign attribution.",
 		},
 	}

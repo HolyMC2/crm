@@ -24292,3 +24292,23 @@ msgstr "Escribe cuál es el siguiente paso."
 #: frontend/src/components/doco/deals/NextStepDialog.vue
 msgid "You cannot change this deal. Ask its owner or your manager."
 msgstr "No puedes cambiar este trato. Pídeselo a su responsable o a tu gerente."
+#: crm/api/dashboard.py
+msgid "Excluded {0} deals with an unusually large amount (over 100 times the usual); check their value."
+msgstr "Se excluyeron {0} tratos con un monto inusualmente alto (más de 100 veces lo habitual); revisa su valor."
+
+#: crm/api/dashboard.py
+msgid "No other amounts are available."
+msgstr "No hay otros montos disponibles."
+
+#: frontend/src/pages/DealsView.vue
+#: frontend/src/components/doco/inbox/DealContextPanel.vue
+msgid "Unusually large amount: left out of totals and averages. Check the value."
+msgstr "Monto inusualmente alto: no se suma a totales ni promedios. Revisa el valor."
+
+#: frontend/src/pages/DealsView.vue
+msgid "Unusual amounts left out"
+msgstr "Montos atípicos excluidos"
+
+#: crm/pipeline/api.py
+msgid "Choose up to 500 deals."
+msgstr "Elige hasta 500 tratos."

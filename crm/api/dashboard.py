@@ -147,8 +147,17 @@ def _metric_base(fields, user=None, *, amounts=True):
 	return query.where(deal.name.isin(allowed)), deal, status, expressions
 
 
-def _amount_note(missing):
-	return _("Excluded {0} deals with missing exchange rates.").format(missing) if missing else ""
+def _amount_note(missing, outliers=0):
+	notes = []
+	if missing:
+		notes.append(_("Excluded {0} deals with missing exchange rates.").format(missing))
+	if outliers:
+		notes.append(
+			_(
+				"Excluded {0} deals with an unusually large amount (over 100 times the usual); check their value."
+			).format(outliers)
+		)
+	return " ".join(notes)
 
 
 def _average_value(from_date, to_date, user, kind, title, definition):
@@ -167,10 +176,12 @@ def _average_value(from_date, to_date, user, kind, title, definition):
 			Sum(Case().when(condition, amounts["missing_exchange_rate_count"]).else_(0)).as_(
 				f"{key}_missing"
 			),
+			Sum(Case().when(condition, amounts["outlier_count"]).else_(0)).as_(f"{key}_outliers"),
 		)
 	row = query.run(as_dict=True)[0]
 	missing = int(row.current_missing or 0)
-	note = " ".join(part for part in (definition, _amount_note(missing)) if part)
+	outliers = int(row.current_outliers or 0)
+	note = " ".join(part for part in (definition, _amount_note(missing, outliers)) if part)
 	if row.previous_missing:
 		note += " " + _("Previous period excludes {0} deals with missing exchange rates.").format(
 			int(row.previous_missing)
@@ -189,11 +200,18 @@ def _average_value(from_date, to_date, user, kind, title, definition):
 		"date_basis": date_basis,
 		"sample_count": int(row.current_count or 0),
 		"missing_exchange_rate_count": missing,
+		"outlier_count": outliers,
 		"previous_sample_count": int(row.previous_count or 0),
 		"previous_missing_exchange_rate_count": int(row.previous_missing or 0),
-		"unavailable": bool(missing and not row.current_count),
-		"reason": _amount_note(missing) + " " + _("No amounts can be converted to the base currency.")
-		if missing and not row.current_count
+		"unavailable": bool((missing or outliers) and not row.current_count),
+		"reason": _amount_note(missing, outliers)
+		+ " "
+		+ (
+			_("No amounts can be converted to the base currency.")
+			if not outliers
+			else _("No other amounts are available.")
+		)
+		if (missing or outliers) and not row.current_count
 		else None,
 	}
 
@@ -594,15 +612,21 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 
 	result = daily.run(as_dict=True)
 
-	sales_trend = [
-		{
-			"date": frappe.utils.get_datetime(row.date).strftime("%Y-%m-%d"),
+	by_day = {
+		frappe.utils.get_datetime(row.date).strftime("%Y-%m-%d"): {
 			"leads": row.leads or 0,
 			"deals": row.deals or 0,
 			"won_deals": row.won_deals or 0,
 		}
 		for row in result
-	]
+	}
+	# Every day of the period, zero-filled: a time axis over a few points ticks in hours.
+	start, end = frappe.utils.getdate(from_date), frappe.utils.getdate(to_date)
+	days = [str(frappe.utils.add_days(start, n)) for n in range((end - start).days + 1)]
+	if not by_day or len(days) > 400:
+		days = sorted(by_day)
+	empty = {"leads": 0, "deals": 0, "won_deals": 0}
+	sales_trend = [{"date": day, **by_day.get(day, empty)} for day in days]
 
 	return {
 		"data": sales_trend,
@@ -632,15 +656,34 @@ def get_sales_trend(from_date: str | None = None, to_date: str | None = None, us
 	}
 
 
+def _months(from_date, to_date):
+	"""First day of every month the inclusive period touches."""
+	month = frappe.utils.getdate(from_date).replace(day=1)
+	end = frappe.utils.getdate(to_date)
+	months = []
+	while month <= end:
+		months.append(month)
+		month = frappe.utils.add_months(month, 1)
+	return months
+
+
 def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""Open weighted forecast and commercial wins, never invoiced/collected revenue."""
+	"""Open weighted forecast and commercial wins per month, never invoiced/collected revenue.
+
+	Every month of the period is a category, zero-filled, so a 30-day range
+	draws one or two month labels instead of a time axis that ticks in hours.
+	"""
 	from_date = frappe.utils.getdate(from_date or frappe.utils.get_first_day(frappe.utils.nowdate()))
 	to_date = frappe.utils.getdate(to_date or frappe.utils.get_last_day(frappe.utils.nowdate()))
 	if from_date > to_date:
 		frappe.throw(_("Start date must be before end date."), frappe.ValidationError)
 	base_query, deal, status, amounts = _metric_base(["expected_closure_date", "closed_date"], user)
-	result = {}
-	missing_rates = 0
+	result = {
+		str(month): {"month": str(month), "label": frappe.utils.formatdate(month, "MMM yyyy")}
+		for month in _months(from_date, to_date)
+	}
+	found = {key: set() for key in ("forecasted", "actual")}
+	missing_rates = outliers = 0
 	for key, amount, date_field, outcome in (
 		(
 			"forecasted",
@@ -655,6 +698,7 @@ def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = N
 				DateFormat(date_field, "%Y-%m").as_("month"),
 				Sum(amounts[amount]).as_("value"),
 				Sum(amounts["missing_exchange_rate_count"]).as_("missing_rates"),
+				Sum(amounts["outlier_count"]).as_("outliers"),
 			)
 			.where(outcome)
 			.where(date_field >= from_date)
@@ -665,26 +709,33 @@ def get_forecasted_revenue(from_date: str | None = None, to_date: str | None = N
 			query = exclude_hidden_stages(query, status)
 		for row in query.run(as_dict=True):
 			month = f"{row.month}-01"
-			result.setdefault(month, {"month": month, "forecasted": 0, "actual": 0})[key] = row.value
+			if month in result:
+				result[month][key] = row.value
+				found[key].add(month)
 			missing_rates += row.missing_rates or 0
-
+			outliers += row.outliers or 0
+	if not any(found.values()):
+		data = []
+	else:
+		# A month without deals is a real zero; a month whose deals all lack a
+		# rate stays None (unavailable), as the query returned it.
+		data = [{"forecasted": 0, "actual": 0, **result[month]} for month in sorted(result)]
+	note = _amount_note(missing_rates, outliers)
 	return {
-		"data": [result[month] for month in sorted(result)],
+		"data": data,
 		"title": _("Open forecast and won value"),
 		"metric_note": _(
 			"Open weighted forecast uses expected closure date; won commercial amount uses actual closure date. Neither proves invoicing or collection."
 		)
-		+ (" " + _amount_note(missing_rates) if missing_rates else ""),
+		+ (" " + note if note else ""),
 		"date_basis": {"forecasted": "expected_closure_date", "actual": "closed_date"},
 		"subtitle": _("Open weighted forecast and won deal value; not invoiced or collected amounts")
-		+ (
-			". " + _("Excluded {0} deals with missing exchange rates.").format(missing_rates)
-			if missing_rates
-			else ""
-		),
+		+ (". " + note if note else ""),
 		"currency": frappe.db.get_single_value("FCRM Settings", "currency") or "USD",
 		"missing_exchange_rate_count": missing_rates,
-		"xAxis": {"title": _("Month"), "key": "month", "type": "time", "timeGrain": "month"},
+		"outlier_count": outliers,
+		# Category months: an ECharts time axis over one or two points ticks in hours.
+		"xAxis": {"title": _("Month"), "key": "label", "type": "category"},
 		"yAxis": {"title": _("Deal value") + f" ({get_base_currency_symbol()})"},
 		# Keep stored dashboard series keys compatible; `actual` means won value.
 		"series": [
@@ -928,6 +979,7 @@ def _grouped_deal_values(from_date, to_date, user, field, label):
 				"weighted_forecast",
 				"won_value",
 				"missing_exchange_rate_count",
+				"outlier_count",
 			)
 		)
 	)
@@ -939,8 +991,9 @@ def _grouped_deal_values(from_date, to_date, user, field, label):
 	note = _(
 		"Recorded commercial amount includes lost and historical deals; it is not forecast, invoiced or collected revenue."
 	)
-	if missing:
-		note += " " + _amount_note(missing)
+	outliers = sum(int(row.outlier_count or 0) for row in rows)
+	if missing or outliers:
+		note += " " + _amount_note(missing, outliers)
 	return {
 		"data": rows,
 		"subtitle": _("Deals created in the selected period"),

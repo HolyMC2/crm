@@ -14,6 +14,28 @@ export function displayValue(row, stage = {}) {
   return expected > 0 ? expected : actual
 }
 
+/**
+ * Metric contract v2 outlier guard (server: crm/pipeline/queries/stages.py).
+ * A deal whose larger amount (expected or recorded), in base currency, exceeds
+ * `contract.outlier_threshold` is flagged and left out of every total. Without
+ * a threshold (small tenants) or a usable exchange rate nothing is flagged.
+ */
+export function isOutlier(row, contract) {
+  const threshold = number(contract?.outlier_threshold)
+  if (!threshold) return false
+  const currency = row?.currency || ''
+  let rate = 1
+  if (currency && contract?.currency && currency !== contract.currency) {
+    rate = number(row?.exchange_rate)
+    if (rate <= 0) return false
+  }
+  const size = Math.max(
+    number(row?.expected_deal_value),
+    number(row?.deal_value),
+  )
+  return size * rate > threshold
+}
+
 /** Explicit 0 is meaningful; only absent values inherit the stage probability. */
 export function dealProbability(row, stage = {}) {
   const own = row?.probability

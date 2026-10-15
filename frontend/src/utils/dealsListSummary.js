@@ -17,17 +17,20 @@ export function summarizeDealMetrics(stages = [], statuses = []) {
   let count = 0
   let value = 0
   let missingFx = 0
+  let outliers = 0
   for (const entry of stages || []) {
     byStatus[entry.status || ''] = entry
     count += number(entry.count)
     value += stageValue(entry)
     missingFx += number(entry.missing_exchange_rate_count)
+    outliers += number(entry.outlier_count)
   }
   return {
     count,
     value,
     weighted: weightedTotal(byStatus, statuses),
     missingFx,
+    outliers,
     byStatus,
   }
 }

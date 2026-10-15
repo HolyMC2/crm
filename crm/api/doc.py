@@ -939,9 +939,10 @@ def aggregate_deal_metrics(
 	filters: dict | list | str | None = None, or_filters: dict | list | str | None = None
 ):
 	"""Board totals use the same filters and native permissions as its deal list."""
-	from crm.pipeline.queries.stages import deal_metrics
+	from crm.pipeline.queries.stages import contract_info, deal_metrics
 
 	return {
 		"currency": frappe.db.get_single_value("FCRM Settings", "currency") or "USD",
+		"contract": contract_info(),
 		"stages": deal_metrics(resolve_filter_tokens(filters), resolve_filter_tokens(or_filters)),
 	}

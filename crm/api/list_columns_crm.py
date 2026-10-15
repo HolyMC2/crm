@@ -5,7 +5,8 @@
 
 - ``_v_next_step``: the denormalised ``next_activity_*`` fields as one compact object
   ``{at, task, type, title, overdue, days}``; overdue is measured against site-local now.
-- ``_v_weighted``: deal value x probability, formatted in the deal currency.
+- ``_v_weighted``: the metric contract's weighted forecast (expected amount x probability,
+  zero for Won/Lost, empty for a flagged outlier), formatted in the deal currency.
 
 Both read the deal itself again through ``frappe.get_list`` so the row set is limited
 to what the user may read, and field-level (permlevel) restrictions leave the value
@@ -21,7 +22,7 @@ DOCTYPE = "CRM Deal"
 NEXT_STEP = "_v_next_step"
 WEIGHTED = "_v_weighted"
 NEXT_STEP_FIELDS = ("next_activity_at", "next_activity_task", "next_activity_type", "next_activity_title")
-WEIGHTED_FIELDS = ("deal_value", "probability", "currency")
+WEIGHTED_FIELDS = ("deal_value", "expected_deal_value", "probability", "currency", "exchange_rate")
 
 
 def columns(doctype: str) -> list[dict]:
@@ -58,9 +59,7 @@ def enrich(doctype: str, rows: list[dict], keys: set[str]) -> None:
 	fields = ["name"]
 	if wants_next:
 		fields += NEXT_STEP_FIELDS
-	if wants_weighted:
-		fields += WEIGHTED_FIELDS
-	if len(fields) == 1:
+	if len(fields) == 1 and not wants_weighted:
 		return
 
 	# One query for the page; get_list applies the same row permissions as the list.
@@ -75,9 +74,14 @@ def enrich(doctype: str, rows: list[dict], keys: set[str]) -> None:
 		)
 	}
 	now = now_datetime()
-	base_currency = None
+	amounts = {}
 	if wants_weighted:
-		base_currency = frappe.db.get_single_value("FCRM Settings", "currency")
+		from crm.pipeline.queries.stages import deal_amounts
+
+		try:
+			amounts = deal_amounts(list(source))
+		except frappe.PermissionError:
+			amounts = {}
 	for row in rows:
 		deal = source.get(row.get("name"))
 		if not deal:
@@ -85,7 +89,7 @@ def enrich(doctype: str, rows: list[dict], keys: set[str]) -> None:
 		if wants_next:
 			row[NEXT_STEP] = next_step(deal, now)
 		if wants_weighted:
-			row[WEIGHTED] = weighted(deal, base_currency)
+			row[WEIGHTED] = weighted(amounts.get(deal.name))
 
 
 def next_step(deal, now=None) -> dict | None:
@@ -104,11 +108,11 @@ def next_step(deal, now=None) -> dict | None:
 	}
 
 
-def weighted(deal, base_currency=None) -> str | None:
-	if deal.get("deal_value") is None:
+def weighted(amounts) -> str | None:
+	"""Format the contract's per-deal weighted forecast; None when unknown or flagged."""
+	if not amounts or amounts.get("weighted_forecast") is None:
 		return None
-	amount = flt(deal.get("deal_value")) * flt(deal.get("probability")) / 100
-	return fmt_money(amount, currency=deal.get("currency") or base_currency)
+	return fmt_money(flt(amounts["weighted_forecast"]), currency=amounts.get("currency"))
 
 
 def format_export(doctype: str, key: str, value):

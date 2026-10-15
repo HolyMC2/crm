@@ -621,9 +621,26 @@
               </div>
               <div
                 v-if="col('value')"
-                class="text-[12.5px] font-semibold text-ink-gray-8"
+                class="text-[12.5px] font-semibold"
+                :class="
+                  isOutlier(r, metricsContract)
+                    ? 'text-ink-amber-9'
+                    : 'text-ink-gray-8'
+                "
+                :title="
+                  isOutlier(r, metricsContract)
+                    ? __(
+                        'Unusually large amount: left out of totals and averages. Check the value.',
+                      )
+                    : undefined
+                "
               >
-                {{ formatMXN(r.deal_value, r.currency) }}
+                {{
+                  formatMXN(
+                    displayValue(r, getDealStatus(r.status)),
+                    r.currency,
+                  )
+                }}<span v-if="isOutlier(r, metricsContract)"> ⚠</span>
               </div>
               <div
                 v-if="col('expected_value')"
@@ -718,6 +735,18 @@
           >
             {{ __('Totals unavailable · Retry') }}
           </button>
+          <span
+            v-if="groupCounts[group.value]?.outlier_count"
+            class="text-[10px] text-ink-amber-9"
+            :title="
+              __(
+                'Unusually large amount: left out of totals and averages. Check the value.',
+              )
+            "
+          >
+            {{ __('Unusual amounts left out') }}:
+            {{ groupCounts[group.value].outlier_count }}
+          </span>
           <span
             v-if="groupCounts[group.value]?.missing_exchange_rate_count"
             class="text-[10px] text-ink-orange-6"
@@ -887,6 +916,7 @@ import { money } from '@/utils/numberFormat'
 import {
   displayValue,
   dealProbability,
+  isOutlier,
   stageValue,
   weightedTotal,
 } from '@/utils/pipelineMath'
@@ -1171,6 +1201,7 @@ const deals = createListResource({
     'deal_owner',
     'deal_value',
     'currency',
+    'exchange_rate',
     'modified',
     'creation',
     'expected_deal_value',
@@ -1366,6 +1397,8 @@ function applyFilters() {
 
 // Totals cover all matching records, using each deal's value, probability and FX.
 const metricsCurrency = ref(null)
+// metric contract v2: base currency and the tenant's outlier threshold
+const metricsContract = ref(null)
 const metricsError = ref(false)
 async function loadCounts() {
   const request = ++countsRequest
@@ -1381,6 +1414,7 @@ async function loadCounts() {
       (data.stages || []).map((entry) => [entry.status || '', entry]),
     )
     metricsCurrency.value = data.currency
+    metricsContract.value = data.contract || null
     countsLoaded.value = true
   } catch {
     if (request !== countsRequest) return

@@ -3,6 +3,7 @@ import {
   displayValue,
   dealProbability,
   funnelLadder,
+  isOutlier,
   stageValue,
   weightedTotal,
 } from '@/utils/pipelineMath'
@@ -108,5 +109,26 @@ describe('normal sales funnel', () => {
       ]),
     ).toEqual([])
     expect(funnelLadder()).toEqual([])
+  })
+})
+
+describe('metric contract v2 outlier guard', () => {
+  const contract = { currency: 'MXN', outlier_threshold: 300000 }
+  it('flags the larger of expected and recorded amount above the threshold', () => {
+    expect(isOutlier({ expected_deal_value: 100000000 }, contract)).toBe(true)
+    expect(
+      isOutlier({ expected_deal_value: 10, deal_value: 400000 }, contract),
+    ).toBe(true)
+    expect(isOutlier({ expected_deal_value: 98765 }, contract)).toBe(false)
+  })
+  it('converts foreign amounts and never flags an unconvertible one', () => {
+    const usd = { currency: 'USD', expected_deal_value: 20000 }
+    expect(isOutlier({ ...usd, exchange_rate: 20 }, contract)).toBe(true)
+    expect(isOutlier({ ...usd, exchange_rate: 10 }, contract)).toBe(false)
+    expect(isOutlier({ ...usd, exchange_rate: 0 }, contract)).toBe(false)
+  })
+  it('flags nothing without a tenant threshold', () => {
+    expect(isOutlier({ expected_deal_value: 1e12 }, {})).toBe(false)
+    expect(isOutlier({ expected_deal_value: 1e12 }, null)).toBe(false)
   })
 })

@@ -197,3 +197,19 @@ def change_deal_pipeline(name: str, values: dict, modified: str):
 			doc.set(field, values[field])
 	doc.save()
 	return {"name": doc.name, "pipeline": doc.pipeline, "status": doc.status, "modified": doc.modified}
+
+
+@frappe.whitelist()
+def get_deal_amounts(names: list | str):
+	"""The metric contract per deal (docs/CRM_METRIC_CONTRACT.md), in each deal's currency.
+
+	Rows the actor cannot read are absent; restricted amount fields fail closed.
+	"""
+	from crm.pipeline.queries.stages import contract_info, deal_amounts
+
+	names = frappe.parse_json(names) if isinstance(names, str) and names.startswith("[") else names
+	if isinstance(names, str):
+		names = [names]
+	if not isinstance(names, list) or len(names) > 500:
+		frappe.throw(_("Choose up to 500 deals."))
+	return {"contract": contract_info(), "deals": deal_amounts(names)}
