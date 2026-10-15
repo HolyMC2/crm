@@ -7,7 +7,7 @@
     @pointermove="hover"
     @pointerleave="active = -1"
   >
-    <div class="relative h-48 sm:h-56">
+    <div class="relative mt-2 h-48 sm:h-56">
       <div
         v-for="tick in trendTicks"
         :key="tick.y"
@@ -15,7 +15,7 @@
         :style="{ top: `${tick.y}%` }"
       >
         <span
-          class="absolute -top-2.5 left-0 bg-surface-base pr-1 text-xs tabular-nums text-ink-gray-5"
+          class="absolute -top-2.5 right-0 bg-surface-base pl-1 text-xs tabular-nums text-ink-gray-5"
           >{{ tick.label }}</span
         >
       </div>
@@ -244,7 +244,11 @@
 
   <!-- Columns: sales by hour or by weekday, the peak highlighted. -->
   <div v-else-if="chart.type === 'columns'" data-testid="chart-columns">
-    <div class="flex h-40 items-end gap-1" role="img" :aria-label="columnsSummary">
+    <div
+      class="mt-5 flex h-40 items-end gap-1"
+      role="img"
+      :aria-label="columnsSummary"
+    >
       <div
         v-for="row in chart.rows"
         :key="row.key"
@@ -253,7 +257,7 @@
       >
         <span
           v-if="row.value === columnMax && row.value > 0"
-          class="mb-1 truncate text-center text-xs font-medium tabular-nums text-ink-gray-8"
+          class="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-medium tabular-nums text-ink-gray-8"
           >{{ compactValue(row.value, chart.format, currency) }}</span
         >
         <span
@@ -271,7 +275,7 @@
       <span
         v-for="(row, i) in chart.rows"
         :key="row.key"
-        class="min-w-0 flex-1 truncate text-center"
+        class="min-w-0 flex-1 overflow-visible whitespace-nowrap text-center"
         >{{ columnLabel(row, i) }}</span
       >
     </div>
@@ -283,15 +287,18 @@
     class="overflow-x-auto"
     data-testid="chart-heatmap"
   >
-    <table class="w-full border-separate" style="border-spacing: 3px">
+    <table
+      class="w-full table-fixed border-separate"
+      style="border-spacing: 3px"
+    >
       <thead>
         <tr>
-          <th class="w-10" />
+          <th class="w-12" />
           <th
             v-for="(hour, i) in chart.hours"
             :key="hour"
             scope="col"
-            class="text-center text-xs font-normal text-ink-gray-5"
+            class="whitespace-nowrap text-left text-xs font-normal text-ink-gray-5"
           >
             {{ i % hourStep === 0 ? axisLabel('hour', hour) : '' }}
           </th>
@@ -308,7 +315,7 @@
           <td
             v-for="(value, i) in row"
             :key="i"
-            class="h-6 min-w-4 rounded"
+            class="h-7 rounded"
             :class="value > 0 ? '' : 'bg-surface-gray-2'"
             :style="value > 0 ? heatStyle(value) : undefined"
             :title="`${axisLabel('weekday', day, true)} ${axisLabel('hour', chart.hours[i])} · ${formatValue(value, chart.format, currency)}`"
@@ -438,18 +445,27 @@ const barWidth = (value) =>
   rowMax.value > 0 ? Math.max(1, (Math.max(0, value) / rowMax.value) * 100) : 0
 const rowDelta = (row) => deltaChip(row, props.compara)
 const rowHref = (row) => drillHref(row.drill, props.back)
-const rowTag = (row) => (row.filter ? 'button' : rowHref(row) ? 'a' : 'div')
+// A filter row is a link to this same board narrowed to it (a plain «button»
+// would resolve to frappe-ui's registered Button component).
+function filterHref(row) {
+  const url = new URL(props.back || '/crm/resultados', 'https://x.invalid')
+  for (const [key, value] of Object.entries(row.filter))
+    url.searchParams.set(key, value)
+  return `${url.pathname}${url.search}`
+}
+const rowTag = (row) => (row.filter || rowHref(row) ? 'a' : 'div')
 const rowAttrs = (row) => {
   if (row.filter)
-    return {
-      type: 'button',
-      title: __('Show only {0}', [row.label]),
-    }
+    return { href: filterHref(row), title: __('Show only {0}', [row.label]) }
   const href = rowHref(row)
   return href ? { href } : {}
 }
 function rowClick(event, row) {
-  if (row.filter) return emit('filter', row.filter)
+  if (row.filter) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey) return
+    event.preventDefault()
+    return emit('filter', row.filter)
+  }
   const href = rowHref(row)
   const local = href && routerPath(href)
   if (!local || event.metaKey || event.ctrlKey || event.shiftKey) return
@@ -463,7 +479,10 @@ const columnMax = computed(() =>
 )
 function columnLabel(row, i) {
   const n = props.chart.rows.length
-  if (props.chart.axis === 'hour' && n > 12 && i % 2) return ''
+  if (props.chart.axis === 'hour') {
+    const step = n > 12 ? 3 : n > 6 ? 2 : 1
+    if (i % step) return ''
+  }
   return axisLabel(props.chart.axis, row.key)
 }
 const columnsSummary = computed(() => {

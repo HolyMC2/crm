@@ -353,8 +353,9 @@ describe('ResultadosCard', () => {
 describe('board layout helpers', () => {
   it('wide cards span two columns and full cards the row', () => {
     expect(cardSpan('')).toBe('')
-    expect(cardSpan('wide')).toBe('sm:col-span-2')
-    expect(cardSpan('full')).toContain('lg:col-span-4')
+    expect(cardSpan('wide')).toBe('sm:col-span-2 lg:col-span-2')
+    expect(cardSpan('full')).toBe('sm:col-span-2 lg:col-span-4')
+    expect(cardSpan('', 3)).toBe('lg:col-span-3')
   })
 
   it('weekday 0 is Monday and hours read in the local clock', () => {
@@ -425,7 +426,9 @@ describe('ResultadosChart', () => {
     const link = items[0].querySelector('a')
     expect(link.getAttribute('href')).toContain('/crm/productos/ABC')
     expect(link.getAttribute('href')).toContain('return_to=')
-    items[1].querySelector('button').click()
+    const filter = items[1].querySelector('a')
+    expect(filter.getAttribute('href')).toBe('/crm/resultados?tienda=T2')
+    filter.click()
     expect(onFilter).toHaveBeenCalledWith({ tienda: 'T2' })
     items[6].querySelector('button').click()
     await nextTick()
@@ -487,5 +490,25 @@ describe('shell wiring', () => {
     expect(accesos(boot(true)).map((i) => i.key)).toEqual(['resultados.read'])
     expect(accesos(boot(true))[0].to).toBe('/resultados')
     expect(accesos(boot(false))).toEqual([])
+  })
+})
+
+describe('packRows', () => {
+  it('fills every row of four: a later card moves up, else the last widens', async () => {
+    const { packRows } = await import('../../src/composables/useResultados.js')
+    const { order, spans } = packRows([
+      ['a', ''],
+      ['b', ''],
+      ['c', ''],
+      ['t', 'wide'],
+      ['d', ''],
+      ['w', 'full'],
+      ['e', ''],
+    ])
+    // Row 2: t, then e moves up before w and widens to close the row.
+    expect(order.map(([k]) => k)).toEqual(['a', 'b', 'c', 'd', 't', 'e', 'w'])
+    expect(spans).toEqual({ a: 1, b: 1, c: 1, d: 1, t: 2, e: 2, w: 4 })
+    // Row 2: t + gap of two with nothing left that fits → t widens.
+    expect(packRows([['x', 'wide'], ['y', 'full']]).spans).toEqual({ x: 4, y: 4 })
   })
 })

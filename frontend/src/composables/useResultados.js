@@ -287,11 +287,58 @@ export const SKELETON = Object.freeze([
   ['reparaciones', ''],
 ])
 
-/** Grid span for a card's `size`: wide is two columns, full the whole row. */
-export function cardSpan(size) {
-  if (size === 'full') return 'sm:col-span-2 lg:col-span-4'
-  if (size === 'wide') return 'sm:col-span-2'
-  return ''
+const WIDTH = { '': 1, wide: 2, full: 4 }
+const LG_SPAN = {
+  1: '',
+  2: 'lg:col-span-2',
+  3: 'lg:col-span-3',
+  4: 'lg:col-span-4',
+}
+
+/** Grid span for a card's `size` (wide two columns, full the row); `lg`
+ * overrides the 4-column width when the board widens it to close a gap. */
+export function cardSpan(size, lg = 0) {
+  const sm = size === 'wide' || size === 'full' ? 'sm:col-span-2' : ''
+  const wide = LG_SPAN[lg || WIDTH[size] || 1]
+  return [sm, wide].filter(Boolean).join(' ')
+}
+
+/**
+ * The 4-column layout in board order with no hole at a row's end. When the
+ * next card does not fit, a later card that fits the gap moves up; with none,
+ * the row's last card widens to fill it. `cards` is [[key, size], ...];
+ * returns {order: [[key, size], ...], spans: {key: columns}}.
+ */
+export function packRows(cards, columns = 4) {
+  const width = ([, size]) => Math.min(columns, WIDTH[size] || 1)
+  const queue = [...cards]
+  const order = []
+  const spans = {}
+  let row = []
+  let used = 0
+  const close = () => {
+    if (row.length && used < columns) spans[row[row.length - 1]] += columns - used
+    row = []
+    used = 0
+  }
+  while (queue.length) {
+    let i = 0
+    if (used + width(queue[0]) > columns) {
+      i = queue.findIndex((card) => used + width(card) <= columns)
+      if (i < 0) {
+        close()
+        i = 0
+      }
+    }
+    const [card] = queue.splice(i, 1)
+    order.push(card)
+    spans[card[0]] = width(card)
+    row.push(card[0])
+    used += width(card)
+    if (used === columns) close()
+  }
+  close()
+  return { order, spans }
 }
 /** A card's title even when its provider only sent a reason. */
 export function cardTitle(key) {

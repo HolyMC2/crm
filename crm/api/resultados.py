@@ -20,8 +20,9 @@ CARD_ORDER = (
 	"tickets",
 	"ticket_promedio",
 	"promedio_diario",
-	# The period's shape.
+	# The period's shape, and the shops it came from.
 	"tendencia",
+	"tiendas",
 	# Health of the money.
 	"meta",
 	"margen",
@@ -32,8 +33,7 @@ CARD_ORDER = (
 	"clientes",
 	"por_cobrar",
 	"reparaciones",
-	# Where the sales came from.
-	"tiendas",
+	# What sold, who sold it and how it was paid.
 	"mix_grupos",
 	"top_articulos",
 	"vendedores",

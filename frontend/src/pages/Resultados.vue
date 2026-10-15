@@ -186,12 +186,12 @@
       </div>
 
       <section
-        class="mt-4 grid grid-flow-row-dense grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
         :aria-label="__('Numbers for the period')"
         :aria-busy="loading ? 'true' : undefined"
       >
         <ResultadosCard
-          v-for="[key, size] in shownKeys"
+          v-for="[key, size] in layout.order"
           :key="key"
           :card-key="key"
           :card="cards[key] || null"
@@ -200,6 +200,7 @@
           :currency="currency"
           :back="back"
           :skeleton-size="size"
+          :lg-span="layout.spans[key]"
           @retry="retryCard"
           @filter="(patch) => update(patch)"
         />
@@ -236,6 +237,7 @@ import {
   PERIODS,
   SKELETON,
   compareLabel,
+  packRows,
   dayText,
   periodLabel,
   readQuery,
@@ -272,6 +274,7 @@ const shownKeys = computed(() =>
     ? order.value.map((key) => [key, cards[key]?.size || ''])
     : SKELETON,
 )
+const layout = computed(() => packRows(shownKeys.value))
 const shopName = computed(() => {
   const name = state.value.tienda
   if (!name) return ''

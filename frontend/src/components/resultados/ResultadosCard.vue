@@ -81,7 +81,7 @@
       <div v-if="!isRanked" class="flex items-end gap-3">
         <div class="min-w-0 flex-1">
           <p
-            class="truncate font-semibold tabular-nums tracking-tight text-ink-gray-9"
+            class="font-semibold tabular-nums tracking-tight text-ink-gray-9"
             :class="size === 'full' ? 'text-3xl' : 'text-2xl'"
           >
             {{ formatValue(card.value, card.format, currency) }}
@@ -99,33 +99,33 @@
             {{ prevText }}
           </p>
         </div>
-        <svg
-          v-if="spark"
-          class="h-10 w-24 shrink-0 overflow-visible"
-          viewBox="0 0 100 40"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-          data-testid="spark"
-        >
-          <path
-            v-if="spark.prev"
-            :d="spark.prev"
-            fill="none"
-            stroke="currentColor"
-            class="text-ink-gray-3"
-            stroke-width="1.5"
-            vector-effect="non-scaling-stroke"
-          />
-          <path
-            :d="spark.line"
-            fill="none"
-            stroke="var(--brand)"
-            stroke-width="2"
-            stroke-linejoin="round"
-            vector-effect="non-scaling-stroke"
-          />
-        </svg>
       </div>
+      <svg
+        v-if="spark"
+        class="h-10 w-full overflow-visible"
+        viewBox="0 0 100 40"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        data-testid="spark"
+      >
+        <path
+          v-if="spark.prev"
+          :d="spark.prev"
+          fill="none"
+          stroke="currentColor"
+          class="text-ink-gray-3"
+          stroke-width="1.5"
+          vector-effect="non-scaling-stroke"
+        />
+        <path
+          :d="spark.line"
+          fill="none"
+          stroke="var(--brand)"
+          stroke-width="2"
+          stroke-linejoin="round"
+          vector-effect="non-scaling-stroke"
+        />
+      </svg>
       <dl
         v-if="card.facts?.length"
         class="grid gap-x-4 gap-y-1 text-sm"
@@ -279,6 +279,8 @@ const props = defineProps({
   back: { type: String, default: '' },
   // Width while loading (the card has not said yet).
   skeletonSize: { type: String, default: '' },
+  // Columns on the 4-column grid, when the board widens a card to close a gap.
+  lgSpan: { type: Number, default: 0 },
 })
 defineEmits(['retry', 'filter'])
 const router = useRouter()
@@ -286,7 +288,7 @@ const copied = ref('')
 
 const state = computed(() => cardState(props.card, { loading: props.loading }))
 const size = computed(() => props.card?.size || props.skeletonSize || '')
-const span = computed(() => cardSpan(size.value))
+const span = computed(() => cardSpan(size.value, props.lgSpan))
 const icon = computed(() => ICONS[props.cardKey] || 'lucide-chart-column')
 const isRanked = computed(() => RANKED.has(props.card?.chart?.type))
 const chartHeader = computed(() => {
