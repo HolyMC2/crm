@@ -206,6 +206,15 @@ export function createShellProviders({ boot, modules }) {
             icon: 'lucide-users',
             href: `/contactos?segment=${segment}`,
           })
+      if (moduleEnabled(boot.value, 'contactos'))
+        items.push({
+          id: 'contactos.duplicates',
+          group: 'ir_a',
+          title: 'Contactos › Posibles duplicados',
+          keywords: 'duplicados repetidos fusionar unir merge',
+          icon: 'lucide-copy',
+          href: '/contactos/duplicados',
+        })
       if (moduleEnabled(boot.value, 'agenda'))
         for (const [view, label] of AGENDA_PLACES)
           items.push({

@@ -57,6 +57,8 @@ const READS = new Set([
   'get_followup',
   'list_segments',
   'lookup',
+  'duplicates',
+  'duplicate_preview',
 ])
 // Responses live in memory only, per site and user (never browser storage).
 export const contactosReads = createReadCache({ max: 40 })

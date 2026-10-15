@@ -71,6 +71,13 @@ const routes = [
     meta: { app: 'contactos', title: 'Contactos', stableKey: true },
   },
   {
+    // CRM-S3.2: suggested duplicates, merged only after a person compares them.
+    path: '/contactos/duplicados',
+    name: 'ContactosDuplicados',
+    component: () => import('@/pages/ContactosDuplicados.vue'),
+    meta: { app: 'contactos', title: 'Posibles duplicados' },
+  },
+  {
     path: '/contactos/:source/:name',
     name: 'Contacto',
     component: () => import('@/pages/Contacto.vue'),

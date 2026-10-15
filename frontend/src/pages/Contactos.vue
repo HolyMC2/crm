@@ -687,6 +687,7 @@ const title = computed(
 )
 const segmentOptions = computed(() => [
   ...Object.entries(names).map(([value, label]) => ({ value, label })),
+  { value: 'duplicates', label: 'Posibles duplicados' },
   ...segments.value.map((s) => ({ value: s.name, label: s.title || s.name })),
 ])
 const availableColumns = [
@@ -938,6 +939,8 @@ function resetPage() {
   state.scrollTop = 0
 }
 function selectSegment(value) {
+  // Duplicate review is its own page (CRM-S3.2), not a directory filter.
+  if (value === 'duplicates') return router.push('/contactos/duplicados')
   const selected = segments.value.find((segment) => segment.name === value)
   let scope = { q: '', filters: {} }
   try {

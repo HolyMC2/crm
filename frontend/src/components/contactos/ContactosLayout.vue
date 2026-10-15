@@ -36,5 +36,6 @@ const entries = [
   { value: 'suppliers', label: 'Proveedores', icon: 'truck' },
   { value: 'followups', label: 'Mis seguimientos', icon: 'check-circle' },
   { value: 'addresses', label: 'Direcciones', icon: 'map-pin' },
+  { value: 'duplicates', label: 'Posibles duplicados', icon: 'copy' },
 ]
 </script>
