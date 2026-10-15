@@ -96,6 +96,12 @@ export const VIEWS = Object.freeze([
     icon: 'archive',
     hint: 'Linked or filed documents. Search by issuer, tag or any text in the file.',
   },
+  {
+    value: 'huecos_fiscales',
+    label: 'Fiscal gaps',
+    icon: 'alert-octagon',
+    hint: 'Purchases without their CFDI, CFDI without a purchase, cancellations at the SAT and PDFs without their XML.',
+  },
 ])
 function viewEntry(value) {
   return VIEWS.find((v) => v.value === value) || VIEWS[0]

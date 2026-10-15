@@ -96,6 +96,7 @@
         <!-- Original -->
         <section :aria-label="__('Original')" class="min-w-0 space-y-2">
           <div
+            v-if="showPreview"
             class="overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-gray-1"
           >
             <img
@@ -121,6 +122,15 @@
               }}
             </p>
           </div>
+          <!-- CFDI: the human card replaces the raw XML (one tap away inside
+               it); a CFDI PDF gets the compact card under its preview. -->
+          <CfdiCard
+            v-if="fiscalCard"
+            :name="doc.name"
+            :raw-text="isXml ? doc.extracted_text || '' : ''"
+            @loaded="cfdi = $event"
+            @changed="applyDetail"
+          />
           <a
             :href="doc.file_url"
             target="_blank"
@@ -663,6 +673,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { Badge, Button, Dialog, FeatherIcon, FormControl } from 'frappe-ui'
 import ArchivoGuard from './ArchivoGuard.vue'
 import AssignReviewDialog from './AssignReviewDialog.vue'
+import CfdiCard from './CfdiCard.vue'
 import {
   archivosApi,
   archivosHref,
@@ -715,6 +726,18 @@ const doc = ref(null),
   busy = ref('')
 const isAdmin = computed(() => Boolean(props.boot.can_configure))
 const preview = computed(() => previewKind(doc.value?.media_type))
+// CFDI: XML always gets the card; a PDF only when its text named a fiscal folio.
+const cfdi = ref(null)
+const isXml = computed(() => doc.value?.media_type === 'application/xml')
+const fiscalCard = computed(
+  () =>
+    isXml.value ||
+    (preview.value === 'pdf' && Boolean(doc.value?.extraction?.uuid)),
+)
+// The raw preview stays for anything that is not a readable CFDI XML.
+const showPreview = computed(
+  () => !isXml.value || cfdi.value?.available === false,
+)
 const isBank = computed(() => doc.value?.document_kind === 'BankStatement')
 const hasBankImport = computed(() =>
   doc.value?.links?.some((r) => r.reference_doctype === 'Importacion Bancaria'),

@@ -196,6 +196,7 @@
               @cancel="closeUpload"
             />
             <FormControl
+              v-if="!fiscalView"
               v-model="q"
               data-list-search
               class="[&_input]:min-h-11 sm:[&_input]:min-h-0"
@@ -206,7 +207,18 @@
             />
           </div>
 
-          <div class="min-h-0 flex-1 overflow-y-auto">
+          <!-- Huecos fiscales: its own queue; a document opens on the right -->
+          <HuecosFiscales
+            v-if="fiscalView"
+            class="min-h-0 flex-1"
+            :company="company"
+            :kind="gapsKind"
+            :return-to="gapsReturn"
+            :heading="false"
+            @kind-change="(kind) => patch({ kind })"
+            @open-document="open"
+          />
+          <div v-else class="min-h-0 flex-1 overflow-y-auto">
             <div
               v-if="listLoading && !rows.length"
               class="space-y-2 px-4"
@@ -390,6 +402,7 @@ import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
 import ArchivoUpload from '@/components/archivos/ArchivoUpload.vue'
 import ArchivosOverview from '@/components/archivos/ArchivosOverview.vue'
 import ArchivosRegistroPanel from '@/components/archivos/ArchivosRegistroPanel.vue'
+import HuecosFiscales from '@/components/archivos/HuecosFiscales.vue'
 import {
   VIEWS,
   ageLabel,
@@ -442,6 +455,15 @@ const returnTo = computed(() => safeReturn(String(route.query.return_to || '')))
 const returnLabel = computed(() =>
   String(route.query.return_label || '').slice(0, 40),
 )
+// «Huecos fiscales»: the kind is in the URL; its steps come back to it.
+const fiscalView = computed(() => view.value === 'huecos_fiscales')
+const gapsKind = computed(() => String(route.query.kind || ''))
+const gapsReturn = computed(() => {
+  const params = new URLSearchParams({ view: 'huecos_fiscales' })
+  if (gapsKind.value) params.set('kind', gapsKind.value)
+  if (route.query.company) params.set('company', String(route.query.company))
+  return `/crm/archivos?${params.toString()}`
+})
 const company = computed(
   () =>
     String(route.query.company || '') ||
@@ -547,6 +569,7 @@ function selectView(value) {
   patch({
     view: value === 'por_clasificar' ? undefined : value,
     document: undefined,
+    kind: undefined,
   })
 }
 function selectCompany(value) {
@@ -566,7 +589,7 @@ function clearTarget() {
 
 let requestSeq = 0
 async function loadList({ more = false } = {}) {
-  if (!company.value) return
+  if (!company.value || fiscalView.value) return
   const seq = ++requestSeq
   listLoading.value = true
   listProblem.value = null
