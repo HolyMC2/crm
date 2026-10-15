@@ -13,6 +13,7 @@
           :facets="facets"
           :state="state"
           :loading="facetsLoading"
+          :sections="['group']"
           @update="filterBy"
         />
       </div>
@@ -150,7 +151,7 @@
           :aria-expanded="filterSheet"
           @click="filterSheet = true"
         >
-          <span class="lucide-sliders-horizontal h-4 w-4" aria-hidden="true" />
+          <FeatherIcon name="sliders" class="h-4 w-4" aria-hidden="true" />
           {{ __('Filters', null, 'Productos') }}
           <span
             v-if="filterChips.length"
@@ -178,7 +179,11 @@
             :title="option.label"
             @click="setLayout(option.value)"
           >
-            <span :class="option.icon" class="h-4 w-4" aria-hidden="true" />
+            <FeatherIcon
+              :name="option.icon"
+              class="h-4 w-4"
+              aria-hidden="true"
+            />
             <span class="hidden md:inline">{{ option.label }}</span>
           </button>
         </div>
@@ -237,6 +242,26 @@
             }}
           </template>
         </p>
+        <span v-if="catalog" class="hidden items-center gap-2 sm:flex">
+          <FormControl
+            class="w-48"
+            type="select"
+            size="sm"
+            :aria-label="__('Stock', null, 'Productos')"
+            :model-value="state.stock"
+            :options="stockChoices"
+            @update:model-value="(value) => filterBy({ existencias: value })"
+          />
+          <FormControl
+            class="w-44"
+            type="select"
+            size="sm"
+            :aria-label="__('Photo', null, 'Productos')"
+            :model-value="state.photo"
+            :options="photoChoices"
+            @update:model-value="(value) => filterBy({ foto: value })"
+          />
+        </span>
         <button
           v-for="chip in filterChips"
           :key="chip.key"
@@ -575,7 +600,7 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BottomSheet, Button, FormControl, toast } from 'frappe-ui'
+import { BottomSheet, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import CatalogFilters from '@/components/productos/CatalogFilters.vue'
@@ -663,11 +688,37 @@ const filterChips = computed(() =>
   catalog.value ? activeFilters(state.value) : [],
 )
 const layoutOptions = computed(() => [
-  { value: 'lista', label: __('List', null, 'Productos'), icon: 'lucide-list' },
+  { value: 'lista', label: __('List', null, 'Productos'), icon: 'list' },
   {
     value: 'tarjetas',
     label: __('Cards', null, 'Productos'),
-    icon: 'lucide-layout-grid',
+    icon: 'grid',
+  },
+])
+const facetCount = (value) =>
+  value === undefined || value === null
+    ? ''
+    : ` (${Number(value).toLocaleString()})`
+const stockChoices = computed(() => [
+  { label: __('Stock: all'), value: '' },
+  {
+    label: __('With stock') + facetCount(facets.value?.stock?.con),
+    value: 'con',
+  },
+  {
+    label: __('Sold out') + facetCount(facets.value?.stock?.sin),
+    value: 'sin',
+  },
+])
+const photoChoices = computed(() => [
+  { label: __('Photo: all'), value: '' },
+  {
+    label: __('With photo') + facetCount(facets.value?.photo?.con),
+    value: 'con',
+  },
+  {
+    label: __('Without photo') + facetCount(facets.value?.photo?.sin),
+    value: 'sin',
   },
 ])
 function setLayout(value) {

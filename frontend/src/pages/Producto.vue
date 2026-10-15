@@ -67,8 +67,9 @@
               v-else
               class="flex h-36 w-36 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-outline-gray-3 bg-surface-gray-1 text-center sm:h-40 sm:w-40"
             >
-              <span
-                class="lucide-image h-7 w-7 text-ink-gray-4"
+              <FeatherIcon
+                name="image"
+                class="h-7 w-7 text-ink-gray-4"
                 aria-hidden="true"
               />
               <span class="px-2 text-xs text-ink-gray-6">{{
@@ -100,8 +101,9 @@
                   @click="openFileSelector"
                 >
                   <template #prefix>
-                    <span
-                      class="lucide-image-plus h-4 w-4"
+                    <FeatherIcon
+                      name="camera"
+                      class="h-4 w-4"
                       aria-hidden="true"
                     />
                   </template>
@@ -141,12 +143,8 @@
                     : 'bg-surface-blue-2 text-ink-blue-8'
                 "
               >
-                <span
-                  :class="
-                    kind.kind === 'service'
-                      ? 'lucide-concierge-bell'
-                      : 'lucide-package'
-                  "
+                <FeatherIcon
+                  :name="kind.kind === 'service' ? 'briefcase' : 'package'"
                   class="h-3.5 w-3.5"
                   aria-hidden="true"
                 />
@@ -180,8 +178,8 @@
                   class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-surface-gray-2 px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
                   :title="entry.title || undefined"
                 >
-                  <span
-                    :class="entry.icon"
+                  <FeatherIcon
+                    :name="entry.icon"
                     class="h-4 w-4"
                     aria-hidden="true"
                   />{{ entry.label }}</a
@@ -195,8 +193,8 @@
                   @click="run(entry)"
                 >
                   <template #prefix>
-                    <span
-                      :class="entry.icon"
+                    <FeatherIcon
+                      :name="entry.icon"
                       class="h-4 w-4"
                       aria-hidden="true"
                     />
@@ -212,7 +210,7 @@
           >
             <a
               href="#precios"
-              class="rounded-lg bg-surface-gray-1 px-4 py-3 hover:bg-surface-gray-2"
+              class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
               <dt class="truncate text-xs text-ink-gray-6">
                 {{ defaultPrice?.price_list || __('Price', null, 'Productos') }}
@@ -236,7 +234,7 @@
             </a>
             <a
               href="#existencias"
-              class="rounded-lg bg-surface-gray-1 px-4 py-3 hover:bg-surface-gray-2"
+              class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
               <dt class="text-xs text-ink-gray-6">
                 {{ __('On hand', null, 'Productos') }}
@@ -380,8 +378,9 @@
                 v-else-if="!data.prices.rows.length"
                 class="flex flex-wrap items-center gap-3 px-4 py-4 text-sm text-ink-gray-6"
               >
-                <span
-                  class="lucide-tag h-5 w-5 text-ink-gray-4"
+                <FeatherIcon
+                  name="tag"
+                  class="h-5 w-5 text-ink-gray-4"
                   aria-hidden="true"
                 />
                 <span class="flex-1">{{
@@ -499,8 +498,9 @@
                 v-if="data.stock.service"
                 class="m-4 flex items-start gap-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-7"
               >
-                <span
-                  class="lucide-concierge-bell mt-0.5 h-5 w-5 shrink-0 text-ink-gray-5"
+                <FeatherIcon
+                  name="briefcase"
+                  class="mt-0.5 h-5 w-5 shrink-0 text-ink-gray-5"
                   aria-hidden="true"
                 />
                 <span>{{
@@ -783,8 +783,9 @@
                 v-if="!data.ledger.rows.length"
                 class="flex items-start gap-3 px-4 py-4 text-sm text-ink-gray-6"
               >
-                <span
-                  class="lucide-arrow-left-right mt-0.5 h-4 w-4 shrink-0 text-ink-gray-4"
+                <FeatherIcon
+                  name="repeat"
+                  class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-4"
                   aria-hidden="true"
                 />
                 {{
@@ -891,7 +892,7 @@
               </p>
               <ul v-else class="divide-y divide-outline-gray-1">
                 <li
-                  v-for="(row, index) in history.rows"
+                  v-for="(row, index) in shownHistory"
                   :key="index"
                   class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm"
                 >
@@ -944,6 +945,18 @@
                   </span>
                 </li>
               </ul>
+              <button
+                v-if="history.rows.length > 6"
+                type="button"
+                class="min-h-11 w-full border-t border-outline-gray-1 px-4 py-2 text-left text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-1 sm:min-h-9"
+                @click="historyAll = !historyAll"
+              >
+                {{
+                  historyAll
+                    ? __('See fewer')
+                    : __('See all {0} changes', [history.rows.length])
+                }}
+              </button>
             </section>
           </div>
 
@@ -1053,8 +1066,9 @@
                   :key="code.barcode"
                   class="flex items-center gap-2 px-4 py-2 text-sm"
                 >
-                  <span
-                    class="lucide-barcode h-4 w-4 text-ink-gray-5"
+                  <FeatherIcon
+                    name="hash"
+                    class="h-4 w-4 text-ink-gray-5"
                     aria-hidden="true"
                   />
                   <span
@@ -1420,19 +1434,23 @@ const storesWithStock = computed(
 const history = computed(
   () => data.value?.price_history || { readable: true, rows: [] },
 )
+const historyAll = ref(false)
+const shownHistory = computed(() =>
+  historyAll.value ? history.value.rows : history.value.rows.slice(0, 6),
+)
 const ACTION_ICONS = {
-  price: 'lucide-tag',
-  edit: 'lucide-pencil',
-  purchase: 'lucide-shopping-cart',
-  count: 'lucide-clipboard-check',
-  scanner: 'lucide-scan-barcode',
-  labels: 'lucide-printer',
+  price: 'tag',
+  edit: 'edit-2',
+  purchase: 'shopping-cart',
+  count: 'clipboard',
+  scanner: 'maximize',
+  labels: 'printer',
 }
 // The record's actions, primary first, and «Imprimir etiqueta» in Mercado.
 const heroActions = computed(() => {
   const list = orderedActions.value.map((entry) => ({
     ...entry,
-    icon: ACTION_ICONS[entry.key] || 'lucide-circle',
+    icon: ACTION_ICONS[entry.key] || 'circle',
   }))
   const labels = data.value?.links?.labels
   if (labels)
@@ -1446,6 +1464,7 @@ const heroActions = computed(() => {
   return list
 })
 function validity(row) {
+  if (!hasRate(row)) return '—'
   if (!row.valid_from && !row.valid_upto) return __('No end date')
   if (!row.valid_upto) return __('Since {0}', [row.valid_from])
   return `${row.valid_from || '…'} → ${row.valid_upto}`

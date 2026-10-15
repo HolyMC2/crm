@@ -15,7 +15,10 @@
       </button>
     </div>
 
-    <fieldset v-if="facets?.stock !== null">
+    <fieldset
+      v-if="sections.includes('stock') && facets?.stock !== null"
+      class="min-w-0"
+    >
       <legend
         class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5"
       >
@@ -41,7 +44,7 @@
       </button>
     </fieldset>
 
-    <fieldset>
+    <fieldset v-if="sections.includes('photo')" class="min-w-0">
       <legend
         class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5"
       >
@@ -55,9 +58,9 @@
         :aria-pressed="state.photo === option.value"
         @click="emit('update', { foto: option.value })"
       >
-        <span
+        <FeatherIcon
+          :name="option.icon"
           class="h-4 w-4 shrink-0 text-ink-gray-5"
-          :class="option.icon"
           aria-hidden="true"
         />
         <span class="min-w-0 flex-1 truncate">{{ option.label }}</span>
@@ -67,7 +70,7 @@
       </button>
     </fieldset>
 
-    <fieldset>
+    <fieldset class="min-w-0">
       <legend
         class="mb-1 flex w-full items-center justify-between text-xs font-medium uppercase tracking-wide text-ink-gray-5"
       >
@@ -139,6 +142,7 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
+import { FeatherIcon } from 'frappe-ui'
 
 // «Todos» as a catalogue: what is on hand, what has a photo and which group,
 // each choice with how many products it leaves (the other filters applied).
@@ -147,6 +151,7 @@ const props = defineProps({
   state: { type: Object, required: true },
   loading: { type: Boolean, default: false },
   touch: { type: Boolean, default: false },
+  sections: { type: Array, default: () => ['stock', 'photo', 'group'] },
 })
 const emit = defineEmits(['update'])
 const SHOWN = 10
@@ -182,19 +187,19 @@ const photoOptions = computed(() => [
   {
     value: '',
     label: __('All', null, 'Productos'),
-    icon: 'lucide-images',
+    icon: 'layers',
     count: '',
   },
   {
     value: 'con',
     label: __('With photo'),
-    icon: 'lucide-image',
+    icon: 'image',
     count: count(props.facets?.photo?.con),
   },
   {
     value: 'sin',
     label: __('Without photo'),
-    icon: 'lucide-image-off',
+    icon: 'camera-off',
     count: count(props.facets?.photo?.sin),
   },
 ])

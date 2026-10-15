@@ -897,9 +897,13 @@ export function relativeAge(value, today) {
   if (days <= 0) text = tr('today')
   else if (days === 1) text = tr('yesterday')
   else if (days < 31) text = tr('{0} days ago', [days])
-  else if (days < 365)
-    text = tr('{0} months ago', [Math.max(1, Math.round(days / 30))])
-  else text = tr('{0} years ago', [Math.max(1, Math.round(days / 365))])
+  else if (days < 365) {
+    const months = Math.max(1, Math.round(days / 30))
+    text = months === 1 ? tr('a month ago') : tr('{0} months ago', [months])
+  } else {
+    const years = Math.max(1, Math.round(days / 365))
+    text = years === 1 ? tr('a year ago') : tr('{0} years ago', [years])
+  }
   return { text, tone, days }
 }
 export const AGE_CLASS = Object.freeze({

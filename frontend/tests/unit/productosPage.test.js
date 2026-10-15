@@ -452,7 +452,15 @@ describe('Productos › catálogo', () => {
     expect(router.currentRoute.value.query).toEqual({ grupo: 'Recargas' })
     expect(last('queue')).toMatchObject({ view: 'todos', group: 'Recargas' })
     expect(last('catalog_facets')).toMatchObject({ group: 'Recargas' })
-    const withStock = [...root.querySelectorAll('aside button')].find((b) =>
+    // The phone sheet has every filter.
+    const sheet = [...root.querySelectorAll('button')].find(
+      (b) =>
+        b.getAttribute('aria-expanded') !== null &&
+        b.textContent.includes('Filters'),
+    )
+    sheet.click()
+    await flush()
+    const withStock = [...document.body.querySelectorAll('button')].find((b) =>
       b.textContent.includes('With stock'),
     )
     withStock.click()
