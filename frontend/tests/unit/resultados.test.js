@@ -225,9 +225,9 @@ describe('card states and numbers', () => {
     ).toMatch(/pp$/)
     expect(deltaChip({ delta_pct: 6 }, 'no')).toBeNull()
     // More returns is bad news: red, though the arrow still points up.
-    expect(deltaChip({ delta_pct: 20, invert: true }, 'anterior')).toMatchObject(
-      { tone: 'down', arrow: 'up' },
-    )
+    expect(
+      deltaChip({ delta_pct: 20, invert: true }, 'anterior'),
+    ).toMatchObject({ tone: 'down', arrow: 'up' })
     expect(
       deltaChip({ delta_pct: -20, invert: true }, 'anterior'),
     ).toMatchObject({ tone: 'up', arrow: 'down' })
@@ -402,10 +402,14 @@ describe('ResultadosChart', () => {
       ],
     }
     let root = await mount({ chart, currency: 'MXN' })
-    expect(root.querySelectorAll('[data-testid="chart-trend"] path')).toHaveLength(3)
+    expect(
+      root.querySelectorAll('[data-testid="chart-trend"] path'),
+    ).toHaveLength(3)
     app.unmount()
     root = await mount({ chart, currency: 'MXN', compara: 'no' })
-    expect(root.querySelectorAll('[data-testid="chart-trend"] path')).toHaveLength(2)
+    expect(
+      root.querySelectorAll('[data-testid="chart-trend"] path'),
+    ).toHaveLength(2)
   })
 
   it('ranked rows link their record, filter the board, and fold after six', async () => {
@@ -449,7 +453,9 @@ describe('ResultadosChart', () => {
         ],
       },
     })
-    expect(root.querySelector('[data-testid="chart-columns"]').textContent).toContain('5')
+    expect(
+      root.querySelector('[data-testid="chart-columns"]').textContent,
+    ).toContain('5')
     app.unmount()
     root = await mount({
       chart: {
@@ -509,6 +515,11 @@ describe('packRows', () => {
     expect(order.map(([k]) => k)).toEqual(['a', 'b', 'c', 'd', 't', 'e', 'w'])
     expect(spans).toEqual({ a: 1, b: 1, c: 1, d: 1, t: 2, e: 2, w: 4 })
     // Row 2: t + gap of two with nothing left that fits → t widens.
-    expect(packRows([['x', 'wide'], ['y', 'full']]).spans).toEqual({ x: 4, y: 4 })
+    expect(
+      packRows([
+        ['x', 'wide'],
+        ['y', 'full'],
+      ]).spans,
+    ).toEqual({ x: 4, y: 4 })
   })
 })

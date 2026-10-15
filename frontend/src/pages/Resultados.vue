@@ -34,10 +34,7 @@
           @click="customizing = !customizing"
         >
           <template #prefix>
-            <span
-              class="lucide-sliders-horizontal size-4"
-              aria-hidden="true"
-            />
+            <span class="lucide-sliders-horizontal size-4" aria-hidden="true" />
           </template>
         </Button>
         <Button
@@ -143,7 +140,9 @@
       >
         <div class="flex flex-wrap items-center gap-2">
           <p class="min-w-0 flex-1 text-sm text-ink-gray-7">
-            {{ __('Pick the cards you follow. Only this device remembers it.') }}
+            {{
+              __('Pick the cards you follow. Only this device remembers it.')
+            }}
           </p>
           <Button
             v-if="hidden.length"
@@ -215,7 +214,9 @@
           @click="rangeOpen = false"
         />
         <p class="w-full text-xs text-ink-gray-6">
-          {{ __('Up to one year. The comparison uses the same number of days.') }}
+          {{
+            __('Up to one year. The comparison uses the same number of days.')
+          }}
         </p>
       </form>
 
@@ -348,7 +349,9 @@ const hidden = ref(readHidden())
 function readHidden() {
   try {
     const value = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]')
-    return Array.isArray(value) ? value.filter((v) => typeof v === 'string') : []
+    return Array.isArray(value)
+      ? value.filter((v) => typeof v === 'string')
+      : []
   } catch {
     return []
   }

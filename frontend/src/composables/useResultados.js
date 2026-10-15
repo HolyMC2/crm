@@ -317,7 +317,8 @@ export function packRows(cards, columns = 4) {
   let row = []
   let used = 0
   const close = () => {
-    if (row.length && used < columns) spans[row[row.length - 1]] += columns - used
+    if (row.length && used < columns)
+      spans[row[row.length - 1]] += columns - used
     row = []
     used = 0
   }

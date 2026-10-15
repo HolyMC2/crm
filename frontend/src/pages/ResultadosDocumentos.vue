@@ -260,7 +260,9 @@ const total = computed(() =>
 // Dated lists read by day, newest first, each day with its count and total.
 const groups = computed(() => {
   if (state.value.tipo === 'clientes')
-    return [{ key: 'all', label: '', rows: filtered.value, amount: total.value }]
+    return [
+      { key: 'all', label: '', rows: filtered.value, amount: total.value },
+    ]
   const out = []
   for (const row of filtered.value) {
     const key = row.posting_date || ''

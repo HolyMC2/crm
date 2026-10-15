@@ -33,7 +33,9 @@
         <span
           v-if="delta.arrow !== 'flat'"
           :class="
-            delta.arrow === 'up' ? 'lucide-arrow-up-right' : 'lucide-arrow-down-right'
+            delta.arrow === 'up'
+              ? 'lucide-arrow-up-right'
+              : 'lucide-arrow-down-right'
           "
           class="size-3"
           aria-hidden="true"
@@ -205,11 +207,7 @@
       class="flex flex-1 flex-col items-center justify-center gap-2 py-4 text-center"
       data-testid="empty"
     >
-      <span
-        :class="icon"
-        class="size-5 text-ink-gray-4"
-        aria-hidden="true"
-      />
+      <span :class="icon" class="size-5 text-ink-gray-4" aria-hidden="true" />
       <p class="max-w-xs text-sm text-ink-gray-6">
         {{ card?.note || __('Nothing to show for this period yet.') }}
       </p>

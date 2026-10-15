@@ -175,7 +175,9 @@
           <span class="min-w-0 flex-1">
             <span
               class="block truncate text-sm font-medium text-ink-gray-8"
-              :class="rowTag(row) !== 'div' ? 'group-hover:text-ink-gray-9' : ''"
+              :class="
+                rowTag(row) !== 'div' ? 'group-hover:text-ink-gray-9' : ''
+              "
               >{{ row.label }}</span
             >
             <span
@@ -187,15 +189,19 @@
           <span class="shrink-0 text-right">
             <span
               class="block text-sm font-semibold tabular-nums text-ink-gray-9"
-              >{{ formatValue(row.value, chart.format || 'money', currency) }}</span
+              >{{
+                formatValue(row.value, chart.format || 'money', currency)
+              }}</span
             >
             <span
               v-if="row.share_pct !== undefined || rowDelta(row)"
               class="flex justify-end gap-1.5 text-xs tabular-nums"
             >
-              <span v-if="row.share_pct !== undefined" class="text-ink-gray-5">{{
-                formatValue(row.share_pct, 'percent')
-              }}</span>
+              <span
+                v-if="row.share_pct !== undefined"
+                class="text-ink-gray-5"
+                >{{ formatValue(row.share_pct, 'percent') }}</span
+              >
               <span
                 v-if="rowDelta(row)"
                 :class="
@@ -231,7 +237,9 @@
         @click="expanded = !expanded"
       >
         {{
-          expanded ? __('Show fewer') : __('Show {0} more', [String(hiddenRows)])
+          expanded
+            ? __('Show fewer')
+            : __('Show {0} more', [String(hiddenRows)])
         }}
         <span
           :class="expanded ? 'lucide-chevron-up' : 'lucide-chevron-down'"
@@ -377,9 +385,7 @@ const trend = computed(() => {
   const x = (i) => (n > 1 ? (i / (n - 1)) * 100 : 50)
   const y = (v) => 100 - (Math.max(0, v) / max) * 100
   const path = (rows) =>
-    rows
-      .map((p, i) => `${i ? 'L' : 'M'}${x(i) * 10},${y(p.value)}`)
-      .join(' ')
+    rows.map((p, i) => `${i ? 'L' : 'M'}${x(i) * 10},${y(p.value)}`).join(' ')
   const line = path(points.value)
   return {
     x,
@@ -420,9 +426,7 @@ const trendSummary = computed(() =>
 )
 const tooltipStyle = computed(() => {
   const left = trend.value.x(active.value)
-  return left > 60
-    ? { right: `${100 - left + 2}%` }
-    : { left: `${left + 2}%` }
+  return left > 60 ? { right: `${100 - left + 2}%` } : { left: `${left + 2}%` }
 })
 function hover(event) {
   const n = points.value.length
