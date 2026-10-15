@@ -113,7 +113,8 @@
             <pre
               v-else-if="doc.extracted_text"
               class="max-h-[60vh] overflow-auto whitespace-pre-wrap p-3 text-sm text-ink-gray-8"
-              >{{ doc.extracted_text.slice(0, 6000) }}</pre>
+              >{{ doc.extracted_text.slice(0, 6000) }}</pre
+            >
             <p v-else class="p-6 text-center text-sm text-ink-gray-6">
               {{
                 __('No preview for this file. Open the original to check it.')
