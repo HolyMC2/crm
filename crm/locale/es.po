@@ -23484,11 +23484,6 @@ msgstr "Una etiqueta por unidad de cada lote en existencia. Elige cuáles."
 
 #: frontend/src/components/productos/LabelDialog.vue
 msgctxt "Productos"
-msgid "Looking for what is on hand…"
-msgstr "Buscando lo que hay en existencia…"
-
-#: frontend/src/components/productos/LabelDialog.vue
-msgctxt "Productos"
 msgid "Nothing on hand to label in your stores."
 msgstr "No hay existencias para etiquetar en tus tiendas."
 

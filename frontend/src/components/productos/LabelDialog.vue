@@ -45,11 +45,8 @@
                   )
             }}
           </p>
-          <p v-if="loadingUnits" role="status" class="text-sm text-ink-gray-6">
-            {{ __('Looking for what is on hand…', null, CTX) }}
-          </p>
           <p
-            v-else-if="!unitRows.length"
+            v-if="!unitRows.length"
             class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-7"
           >
             {{ __('Nothing on hand to label in your stores.', null, CTX) }}
@@ -113,6 +110,9 @@ const props = defineProps({
   hasSerial: { type: Boolean, default: false },
   hasBatch: { type: Boolean, default: false },
   sheetHref: { type: String, default: '' },
+  // The product page's units on hand: serials [{serial}] or batches
+  // [{batch, qty, expiry}] in the worker's stores.
+  onHand: { type: Array, default: () => [] },
 })
 const open = defineModel({ type: Boolean, default: false })
 const LABELS = 'mercado.api.labels'
@@ -137,7 +137,6 @@ const size = ref(remembered())
 const copies = ref(1)
 const unitRows = ref([])
 const picked = ref([])
-const loadingUnits = ref(false)
 const printing = ref(false)
 const problem = ref('')
 const units = computed(() => props.hasSerial || props.hasBatch)
@@ -147,28 +146,29 @@ function fail(error) {
   problem.value = [found.title, found.detail].filter(Boolean).join('. ')
 }
 
-async function loadUnits() {
-  loadingUnits.value = true
-  try {
-    const answer = await productosApi(`${LABELS}.list_label_units`, {
-      item_code: props.item,
-    })
-    unitRows.value = answer?.rows || []
-    picked.value = unitRows.value.map((_, index) => index)
-  } catch (error) {
-    fail(error)
-  } finally {
-    loadingUnits.value = false
-  }
+// The units are the ones this page shows (the worker's stores), one label
+// per serial number and one per unit of a batch.
+function loadUnits() {
+  unitRows.value = props.onHand.map((row) =>
+    row.serial
+      ? { serial_no: row.serial, qty: 1 }
+      : {
+          batch_no: row.batch,
+          qty: Math.min(200, Math.max(1, Math.round(Number(row.qty) || 1))),
+          expiry_date: row.expiry || '',
+        },
+  )
+  picked.value = unitRows.value.map((_, index) => index)
 }
 
 async function rowsToPrint() {
-  if (units.value) return picked.value.map((index) => unitRows.value[index])
   const answer = await productosApi(`${LABELS}.resolve_label_items`, {
     codes: JSON.stringify([props.item]),
   })
   const base = answer?.items?.[props.item]
   if (!base) throw new Error(__('This product cannot be labelled.', null, CTX))
+  if (units.value)
+    return picked.value.map((index) => ({ ...base, ...unitRows.value[index] }))
   const count = Math.min(200, Math.max(1, Number(copies.value) || 1))
   return [{ ...base, qty: count }]
 }

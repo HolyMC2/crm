@@ -1446,6 +1446,7 @@
       :has-serial="Boolean(product.has_serial_no)"
       :has-batch="Boolean(product.has_batch_no)"
       :sheet-href="data.links?.labels || ''"
+      :on-hand="unitList"
     />
     <PriceDialog
       v-if="data"

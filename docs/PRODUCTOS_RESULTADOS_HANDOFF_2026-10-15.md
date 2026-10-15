@@ -31,7 +31,9 @@ Three stacked lanes (crm + doco), each verified on doco-mirror in the browser (d
   `set_photo` now claims the attached File for the `image` field — before, every save copied
   the photo into a second File.
 - `productos-b3-20261015` — Batch 3. Labels print in place (`render_label_batch`, six sizes,
-  copies; serial/batch items pick units from `list_label_units`), Etiquetas one link away.
+  copies; serial/batch items pick from the units the page shows — Mercado's
+  `list_label_units` scopes to the Mercado shop, which can differ from the worker's stores),
+  Etiquetas one link away.
   Serial numbers and batches (expiry, «Caducó») card. «Más datos» rows in Details (supplier,
   sales/purchase units, conversions, restock time, safety stock, weight, shelf life, end of
   life). Cajón chips show their quantity and open the cajón in Escáner. «Precios que se
