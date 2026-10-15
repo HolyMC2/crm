@@ -16667,6 +16667,10 @@ msgstr "(Sin título)"
 msgid "Open the full record"
 msgstr "Abrir el registro completo"
 
+#: frontend/src/components/agenda/AgendaEventPanel.vue
+msgid "Open in Clínica"
+msgstr "Abrir en Clínica"
+
 #: frontend/src/pages/Agenda.vue
 msgid "Event color"
 msgstr "Color del evento"

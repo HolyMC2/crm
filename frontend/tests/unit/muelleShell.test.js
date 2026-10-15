@@ -902,6 +902,85 @@ describe('Gastos in the shell', () => {
   })
 })
 
+describe('Clínica in the shell palette', () => {
+  const query = { raw: 'ana', text: 'ana', scope: 'all', kind: 'text' }
+  const CLINICA_ON = {
+    key: 'clinica',
+    enabled: true,
+    capabilities: { read: true },
+  }
+
+  it("asks Clínica for its patients and today's appointments and opens them in /clinica", async () => {
+    state.call.mockImplementation(async (method, args) => {
+      expect(method).toBe('clinica.shell.search')
+      expect(args).toEqual({ q: 'ana' })
+      return {
+        items: [
+          {
+            id: 'patient:PAT-1',
+            title: 'Ana Demo',
+            subtitle: 'Paciente · 1990',
+            href: '/clinica/patients?patient=PAT-1',
+          },
+          {
+            id: 'appointment:APT-1',
+            title: 'Ana Demo',
+            subtitle: 'Cita de hoy · 12:00',
+            icon: 'lucide-calendar-clock',
+            href: '/clinica/agenda?appointment=APT-1&dialog=details',
+          },
+          { id: 'evil', title: 'x', href: 'https://evil.invalid/clinica/' },
+          { id: 'desk', title: 'x', href: '/app/patient/PAT-1' },
+        ],
+      }
+    })
+    const providers = createShellProviders({
+      boot: ref(boot({ modules: { clinica: CLINICA_ON } })),
+      modules: ref(hostedModules),
+    })
+    const clinica = providers.find((p) => p.key === 'clinica')
+    const items = await clinica.search(query, new AbortController().signal)
+    expect(items.map((i) => [i.id, i.group, i.external])).toEqual([
+      ['clinica:patient:PAT-1', 'registros', '/clinica/patients?patient=PAT-1'],
+      [
+        'clinica:appointment:APT-1',
+        'registros',
+        '/clinica/agenda?appointment=APT-1&dialog=details',
+      ],
+    ])
+    expect(items.every((i) => !i.href)).toBe(true)
+  })
+
+  it('stays silent when Clínica is off for this user or the query is empty', async () => {
+    state.call.mockImplementation(async () => {
+      throw new Error('must not be called')
+    })
+    const off = createShellProviders({
+      boot: ref(
+        boot({ modules: { clinica: { ...CLINICA_ON, enabled: false } } }),
+      ),
+      modules: ref(hostedModules),
+    })
+    expect(
+      await off
+        .find((p) => p.key === 'clinica')
+        .search(query, new AbortController().signal),
+    ).toEqual([])
+    const on = createShellProviders({
+      boot: ref(boot({ modules: { clinica: CLINICA_ON } })),
+      modules: ref(hostedModules),
+    })
+    expect(
+      await on
+        .find((p) => p.key === 'clinica')
+        .search(
+          { ...query, kind: 'empty', text: '' },
+          new AbortController().signal,
+        ),
+    ).toEqual([])
+  })
+})
+
 const PRODUCTOS_ON = {
   key: 'productos',
   enabled: true,

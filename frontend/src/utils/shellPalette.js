@@ -375,8 +375,42 @@ export function createShellProviders({ boot, modules }) {
       return (rows || []).map(dealItem)
     },
   }
+  // Clínica answers for its own records (patients, today's appointments) when its module is on
+  // for this user (clinica.shell.module). Items open in /clinica with the way back to here.
+  const clinica = {
+    key: 'clinica',
+    label: 'Clínica',
+    scopes: ['people'],
+    async search(query, signal) {
+      if (query.kind === 'empty' || !moduleEnabled(boot.value, 'clinica'))
+        return []
+      const result = await call('clinica.shell.search', { q: query.text })
+      if (signal.aborted) return []
+      return clinicaItems(result)
+    },
+  }
   const manual = createManualProvider({ boot })
-  return [actions, contactos, places, ventas, manual]
+  return [actions, contactos, places, ventas, clinica, manual]
+}
+
+/** Clínica's palette rows: only links into /clinica/ are kept, opened as a sibling app. */
+export function clinicaItems(result) {
+  return (result?.items || [])
+    .filter(
+      (item) =>
+        item &&
+        typeof item.id === 'string' &&
+        typeof item.href === 'string' &&
+        item.href.startsWith('/clinica/'),
+    )
+    .map((item) => ({
+      id: `clinica:${item.id}`,
+      group: 'registros',
+      title: String(item.title || ''),
+      subtitle: String(item.subtitle || ''),
+      icon: item.icon || 'lucide-stethoscope',
+      external: item.href,
+    }))
 }
 
 /** A deal row from crm.api.palette.search_deals as a palette record. */

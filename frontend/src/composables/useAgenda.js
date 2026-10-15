@@ -502,6 +502,18 @@ const RECORD_ROUTES = {
 // Records owned by a sibling app open in that app.
 const APP_ROUTES = {
   'Repair Order': (name) => `/taller/orders/${encodeURIComponent(name)}`,
+  'Patient Appointment': (name) =>
+    `/clinica/agenda?${new URLSearchParams({ appointment: name, dialog: 'details' })}`,
+}
+
+/** A sibling-app link that brings the worker back to `back` («Volver a {label}»). */
+export function withAgendaReturn(href, back, label = 'Agenda') {
+  const to = safeReturn(back)
+  if (!to || !safeReturn(href)) return href
+  const url = new URL(href, 'https://crm.invalid')
+  url.searchParams.set('return_to', to)
+  url.searchParams.set('return_label', label)
+  return url.pathname + url.search
 }
 
 export function recordLink(doctype, name) {

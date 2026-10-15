@@ -40,6 +40,16 @@
       >
         <span class="lucide-external-link h-4 w-4" aria-hidden="true" />
       </button>
+      <a
+        v-if="clinicLink"
+        class="ag-tool"
+        data-testid="open-in-clinica"
+        :href="clinicLink"
+        :aria-label="__('Open in Clínica')"
+        :title="__('Open in Clínica')"
+      >
+        <span class="lucide-stethoscope h-4 w-4" aria-hidden="true" />
+      </a>
       <button
         type="button"
         class="ag-tool hidden sm:grid"
@@ -371,7 +381,7 @@ import { Badge, Button } from 'frappe-ui'
 import AgendaCitaPanel from '@/components/agenda/AgendaCitaPanel.vue'
 import AgendaGuard from '@/components/agenda/AgendaGuard.vue'
 import { PALETTE, textOn } from '@/components/agenda/agendaColors'
-import { recordLink } from '@/composables/useAgenda'
+import { recordLink, withAgendaReturn } from '@/composables/useAgenda'
 
 const props = defineProps({
   event: { type: Object, required: true },
@@ -481,6 +491,15 @@ const badge = computed(() => {
     return { theme: 'blue', label: __('Appointment') }
   return null
 })
+// A clinic appointment is Clínica's record: open it there, with the way back to this agenda view.
+const clinicLink = computed(() =>
+  props.event.source === 'Patient Appointment' && props.event.id
+    ? withAgendaReturn(
+        recordLink('Patient Appointment', props.event.id).href,
+        window.location.pathname + window.location.search,
+      )
+    : '',
+)
 const referenceLink = computed(() =>
   props.detail?.reference
     ? recordLink(props.detail.reference.doctype, props.detail.reference.name)

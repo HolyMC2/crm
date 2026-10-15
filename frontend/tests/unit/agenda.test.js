@@ -18,6 +18,7 @@ import {
   step,
   toCalendarEvent,
   visibleHours,
+  withAgendaReturn,
   wallToInstant,
   weekStartsOn,
   zoneName,
@@ -336,5 +337,20 @@ describe('return protocol and record links', () => {
     expect(recordLink('Sales Invoice', 'SINV-1')).toEqual({
       href: '/app/sales-invoice/SINV-1',
     })
+  })
+
+  it('opens a clinic appointment in Clínica with the way back to this agenda view', () => {
+    const { href } = recordLink('Patient Appointment', 'HLC-APP 1')
+    expect(href).toBe('/clinica/agenda?appointment=HLC-APP+1&dialog=details')
+    const back = withAgendaReturn(href, '/crm/agenda?view=day&date=2026-10-15')
+    const url = new URL(back, 'https://crm.invalid')
+    expect(url.pathname).toBe('/clinica/agenda')
+    expect(url.searchParams.get('appointment')).toBe('HLC-APP 1')
+    expect(url.searchParams.get('return_to')).toBe(
+      '/crm/agenda?view=day&date=2026-10-15',
+    )
+    expect(url.searchParams.get('return_label')).toBe('Agenda')
+    // An unsafe way back is dropped, never forwarded.
+    expect(withAgendaReturn(href, '//evil.invalid/crm/agenda')).toBe(href)
   })
 })
