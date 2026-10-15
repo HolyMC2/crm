@@ -27,6 +27,20 @@ export interface FrappeCallResponse {
 }
 
 const userSettingsCache: UserSettingsCache = reactive({})
+// One request per doctype at a time: two components asking at mount (the
+// event popup and the notifications panel) share it.
+const pendingGets: Map<string, Promise<string>> = new Map()
+
+function fetchUserSettings(doctype: string): Promise<string> {
+  let pending = pendingGets.get(doctype)
+  if (!pending) {
+    pending = call('frappe.model.utils.user_settings.get', {
+      doctype,
+    }).finally(() => pendingGets.delete(doctype)) as Promise<string>
+    pendingGets.set(doctype, pending)
+  }
+  return pending
+}
 
 export function useUserSettings(): UseUserSettingsReturn {
   const loading: Ref<boolean> = ref(false)
@@ -41,12 +55,7 @@ export function useUserSettings(): UseUserSettingsReturn {
       loading.value = true
       error.value = null
 
-      const response: string = await call(
-        'frappe.model.utils.user_settings.get',
-        {
-          doctype,
-        },
-      )
+      const response: string = await fetchUserSettings(doctype)
 
       const settings: UserSettings = JSON.parse(response || '{}')
       userSettingsCache[doctype] = settings
