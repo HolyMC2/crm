@@ -95,7 +95,7 @@
           />
           <span
             v-if="photo.principal"
-            class="absolute left-1.5 top-1.5 rounded-full bg-surface-white px-2 py-0.5 text-xs font-medium text-ink-gray-8"
+            class="absolute left-1.5 top-1.5 rounded-full bg-surface-white px-2 py-0.5 text-xs font-medium text-ink-gray-8 shadow-sm ring-1 ring-outline-gray-2"
             >{{ __('Main', null, CTX) }}</span
           >
         </a>
@@ -238,6 +238,8 @@ function failed(error) {
   fail(error)
 }
 async function story() {
+  // Opened inside the click, so a popup blocker lets it through.
+  const tab = window.open('', '_blank')
   busy.value = 'share'
   problem.value = ''
   try {
@@ -245,8 +247,11 @@ async function story() {
       item_code: props.item,
       aspect: 'story',
     })
-    if (answer?.file_url) window.open(answer.file_url, '_blank', 'noopener')
+    if (answer?.file_url && tab) tab.location.href = answer.file_url
+    else if (answer?.file_url) window.location.assign(answer.file_url)
+    else tab?.close()
   } catch (error) {
+    tab?.close()
     fail(error)
   } finally {
     busy.value = ''
