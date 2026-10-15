@@ -24324,3 +24324,23 @@ msgstr "Monto esperado promedio de los tratos abiertos con monto, creados en el 
 #: crm/api/dashboard.py
 msgid "Average ongoing & won commercial amount for active open and won deals with an amount, created in the selected period; not invoiced or collected."
 msgstr "Monto comercial promedio de tratos abiertos y ganados con monto, creados en el periodo elegido; no facturado ni cobrado."
+
+#: frontend/src/utils/dealRecordActions.js
+msgid "Call the contact"
+msgstr "Llamar"
+
+#: frontend/src/utils/dealRecordActions.js
+msgid "Write on WhatsApp"
+msgstr "Escribir por WhatsApp"
+
+#: frontend/src/utils/dealRecordActions.js
+msgid "Prepare quotation"
+msgstr "Preparar cotización"
+
+#: frontend/src/utils/dealRecordActions.js
+msgid "Mark as won"
+msgstr "Marcar como ganado"
+
+#: frontend/src/utils/dealRecordActions.js
+msgid "Mark as lost"
+msgstr "Marcar como perdido"

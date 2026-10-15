@@ -59,6 +59,24 @@ export function createTargets(boot) {
   )
 }
 
+/**
+ * `?create=1` («Nuevo trato» in Ctrl+K) on a page keyed on its full path, the
+ * deals list: the query leaves first, marked in that history entry, and the
+ * page mounted again for the clean URL opens its dialog once. Back and reload
+ * never reopen it. True when the page should open its dialog now.
+ */
+export function takeCreateRequest(route, router, history = window.history) {
+  if (route.query.create === '1') {
+    const query = { ...route.query }
+    delete query.create
+    router.replace({ query, state: { muelleCreate: 1 } })
+    return false
+  }
+  if (!history.state?.muelleCreate) return false
+  history.replaceState({ ...history.state, muelleCreate: null }, '')
+  return true
+}
+
 /** The create action of `module` («c» there), or null. */
 export function createTargetFor(boot, module) {
   return createTargets(boot).find((target) => target.module === module) || null

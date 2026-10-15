@@ -5,6 +5,7 @@ import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
 import { createTargets } from '@/utils/shellCreate'
+import { recordActions } from '@/composables/recordActions'
 // Manual de la tienda: one self-contained provider (articles, categories, «Nuevo artículo»).
 import { createManualProvider } from '@/utils/manualPalette'
 
@@ -117,12 +118,29 @@ const VENTAS_PLACES = [
   ['/call-logs', 'Calls', 'lucide-phone'],
 ]
 
+/** An action of the record on screen as a palette row (CommandPalette runs it). */
+export function recordItem(action) {
+  return {
+    id: `record.${action.id}`,
+    group: 'acciones',
+    title: shellT(action.title),
+    // Found by its Spanish title, its English source and its own words.
+    keywords: [action.title, action.keywords].filter(Boolean).join(' '),
+    icon: action.icon || 'lucide-circle-dot',
+    action: 'record',
+    args: { id: action.id },
+    ...(action.keys?.length ? { shortcut: action.keys[0] } : {}),
+  }
+}
+
 export function createShellProviders({ boot, modules }) {
   const actions = {
     key: 'acciones',
     label: 'Actions',
     scopes: ['actions'],
     async search(query) {
+      // The record on screen first (Deal 360: Llamar, WhatsApp…), then create.
+      const own = recordActions.value.map(recordItem)
       const items = []
       for (const target of createTargets(boot.value))
         items.push({
@@ -133,6 +151,16 @@ export function createShellProviders({ boot, modules }) {
           icon: target.icon,
           href: target.href,
           shortcut: 'c',
+        })
+      // Ventas creates in its list's deal dialog; «c» stays the list's own.
+      if (moduleEnabled(boot.value, 'ventas'))
+        items.push({
+          id: 'ventas.create',
+          group: 'acciones',
+          title: __('New Deal'),
+          keywords: 'nuevo trato venta oportunidad negocio new deal',
+          icon: 'lucide-handshake',
+          href: '/deals?create=1',
         })
       if (installedSiblings().some((app) => app.key === 'scan'))
         items.push({
@@ -181,8 +209,10 @@ export function createShellProviders({ boot, modules }) {
         },
       )
       return query.kind === 'empty'
-        ? items.slice(0, 1)
-        : items.filter((item) => match(query.text, item.title, item.keywords))
+        ? [...own, ...items.slice(0, 1)]
+        : [...own, ...items].filter((item) =>
+            match(query.text, item.title, item.keywords),
+          )
     },
   }
   const places = {

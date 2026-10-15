@@ -82,6 +82,7 @@ import {
   tabbables,
 } from '@/composables/shellKeyboard'
 import { agendaShortcuts } from '@/composables/useAgenda'
+import { useRecordActions } from '@/composables/recordActions'
 import { bootScope } from '@/vendor/muelle-shell/contracts'
 
 function boot(overrides = {}) {
@@ -1745,7 +1746,8 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     const input = palette().querySelector('input')
     expect(palette().dataset.mode).toBe('all')
     expect(input.placeholder).toBe('Buscar o ir a…')
-    expect(palette().textContent).toContain('Actions')
+    // Group headings are the standard's es-MX copy even without a catalog.
+    expect(palette().textContent).toContain('Acciones')
     input.value = 'ana'
     input.dispatchEvent(new Event('input'))
     // Ctrl+G fires while typing in the palette's own input.
@@ -2146,6 +2148,75 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
     expect(sidebar).toMatch(
       /:label="shellT\('Keyboard shortcuts'\)"[\s\S]*openShortcutSheet[\s\S]*keyLabel\('alt\+h'\)/,
     )
+  })
+
+  it('Ctrl+K lists the record on screen first, shows only answered keys, and runs the action after closing', async () => {
+    const call = vi.fn()
+    const won = vi.fn(() => palette())
+    const remove = useRecordActions(() => [
+      {
+        id: 'deal.call',
+        title: 'Call the contact',
+        icon: 'lucide-phone',
+        keys: ['l'],
+        run: call,
+      },
+      { id: 'deal.won', title: 'Mark as won', run: won },
+    ])
+    try {
+      await mount('/deals')
+      press({ key: 'k', ctrlKey: true })
+      await until(palette)
+      await settle()
+      const heading = palette().querySelector('[role="listbox"] > div')
+      // «ACCIONES»: the contracts' es-MX heading, upper-cased by CSS.
+      expect(heading.textContent.trim()).toBe('Acciones')
+      const options = [...palette().querySelectorAll('[role="option"]')]
+      expect(options[0].textContent).toContain('Call the contact')
+      expect(options[0].querySelector('kbd').textContent).toBe('L')
+      expect(options[1].textContent).toContain('Mark as won')
+      expect(options[1].querySelector('kbd')).toBeNull()
+      options[1].click()
+      await settle()
+      expect(palette()).toBeNull()
+      // It ran once the palette was gone, not while it was open.
+      expect(won).toHaveBeenCalledTimes(1)
+      expect(won.mock.results[0].value).toBeNull()
+      // «l» outside the palette is the page key.
+      press({ key: 'l' }, document.body)
+      expect(call).toHaveBeenCalledTimes(1)
+      // «Nuevo trato» for a worker with Ventas, after the record's actions.
+      const [actions] = createShellProviders({
+        boot: ref(boot()),
+        modules: ref(hostedModules),
+      })
+      const found = await actions.search({
+        raw: 'trato',
+        text: 'trato',
+        scope: 'all',
+        kind: 'text',
+      })
+      expect(found).toContainEqual(
+        expect.objectContaining({
+          id: 'ventas.create',
+          href: '/deals?create=1',
+        }),
+      )
+      const [none] = createShellProviders({
+        boot: ref(boot({ modules: {} })),
+        modules: ref(hostedModules),
+      })
+      const nothing = await none.search({
+        raw: 'trato',
+        text: 'trato',
+        scope: 'all',
+        kind: 'text',
+      })
+      expect(nothing.map((item) => item.id)).not.toContain('ventas.create')
+    } finally {
+      remove()
+    }
+    expect(pageShortcuts.value.extra).toEqual([])
   })
 })
 

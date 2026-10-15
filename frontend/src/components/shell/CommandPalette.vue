@@ -82,7 +82,7 @@
           <div
             class="px-4 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
           >
-            {{ __(PALETTE_GROUP_LABELS[section.group]) }}
+            {{ shellT(PALETTE_GROUP_LABELS[section.group]) }}
           </div>
           <button
             v-for="item in section.items"
@@ -181,10 +181,12 @@ import {
   toRecentRef,
 } from '@/utils/shellPalette'
 import { useShellTheme } from '@/composables/shellTheme'
+import { runRecordAction } from '@/composables/recordActions'
 import {
   ariaKeys,
   keyLabel,
   openShortcutSheet,
+  pageShortcuts,
   shellCreate,
   shellKeymap,
   shellT,
@@ -247,6 +249,13 @@ const answered = computed(
 )
 function keyShown(item) {
   if (item.shortcut === 'c') return shellCreate.value?.id === item.id
+  // A record action's key: only while the page answers it (keyed and enabled).
+  if (item.action === 'record')
+    return pageShortcuts.value.extra.some(
+      (shortcut) =>
+        shortcut.id === `record.${item.args?.id}` &&
+        shortcut.keys.includes(item.shortcut),
+    )
   return answered.value.has(item.shortcut)
 }
 const placeholder = computed(() =>
@@ -333,6 +342,8 @@ function choose(item) {
   close()
   // The sheet returns the focus to whatever had it before the palette opened.
   if (item.action === 'shortcuts') openShortcutSheet(previousFocus)
+  // The record's action runs once the palette is gone (its focus restored).
+  if (item.action === 'record') nextTick(() => runRecordAction(item.args?.id))
   if (href) router.push(href.replace(/^\/crm/, ''))
   else if (external) window.location.assign(external)
 }

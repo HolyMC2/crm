@@ -467,6 +467,8 @@ import {
   salesRollup,
 } from '@/composables/salesDocs'
 import { formatMoney } from '@/composables/crmFormat'
+import { useRecordActions } from '@/composables/recordActions'
+import { dealRecordActions } from '@/utils/dealRecordActions'
 
 const { showModal } = useDoctypeModal()
 
@@ -750,6 +752,21 @@ function focusReply() {
 function call() {
   if (row.value.mobile_no) makeCall(row.value.mobile_no)
 }
+
+// Ctrl+K and Alt+H: this deal's actions (l · w · q; won/lost from Ctrl+K).
+// «Preparar cotización» is the Resumen link: the Artículos tab.
+useRecordActions(() =>
+  dealRecordActions({
+    isDeal: isDeal.value && !!activeDeal.value,
+    mobile: row.value.mobile_no,
+    status: row.value.status,
+    stages: visibleStages.value,
+    call,
+    focusReply,
+    prepareQuote: () => (activeTab.value = 'items'),
+    changeStage,
+  }),
+)
 
 // ── 🏷 etiquetas (spec 2.2) — optimistic local list; queue refresh reconciles ──
 const showTagsDialog = ref(false)

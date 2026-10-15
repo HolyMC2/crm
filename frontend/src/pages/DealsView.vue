@@ -930,6 +930,7 @@ import {
   isGroupBy,
 } from '@/utils/dealGroups'
 import { dealListState } from '@/utils/dealListState'
+import { takeCreateRequest } from '@/utils/shellCreate'
 const router = useRouter()
 const route = useRoute()
 const QUEUE_KEY = userScopedKey('crm_deal_list_context')
@@ -1100,7 +1101,8 @@ const statusStore = statusesStore()
 const { getDealStatus } = statusStore
 const { getUser, users: usersList } = usersStore()
 
-const showDealModal = ref(false)
+// «Nuevo trato» from Ctrl+K anywhere: /deals?create=1 opens the deal dialog.
+const showDealModal = ref(takeCreateRequest(route, router))
 const followUp = ref(remembered.followUp)
 const followUpQueues = FOLLOW_UP_QUEUES
 const pipelineF = ref(remembered.pipeline || '')
