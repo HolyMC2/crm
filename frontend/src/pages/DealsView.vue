@@ -875,7 +875,7 @@
 <script setup>
 import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Dropdown,
@@ -890,7 +890,6 @@ import { confirmDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
-import DealModal from '@/components/Modals/DealModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import { userScopedKey } from '@/utils/storageKeys'
 import ColumnPicker from '@/components/doco/ColumnPicker.vue'
@@ -1112,6 +1111,11 @@ const statusStore = statusesStore()
 const { getDealStatus } = statusStore
 const { getUser, users: usersList } = usersStore()
 
+// Opens on «New Deal» only; it carries the field layout and the text editor,
+// which the list does not need to paint (bundle budget, SPEC §4).
+const DealModal = defineAsyncComponent(
+  () => import('@/components/Modals/DealModal.vue'),
+)
 const showDealModal = ref(false)
 const followUp = ref(remembered.followUp)
 const followUpQueues = FOLLOW_UP_QUEUES

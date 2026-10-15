@@ -1,6 +1,6 @@
 <template>
-  <TwilioCallUI ref="twilio" />
-  <ExotelCallUI ref="exotel" />
+  <TwilioCallUI v-if="isEnabled('twilio')" ref="twilio" />
+  <ExotelCallUI v-if="isEnabled('exotel')" ref="exotel" />
   <Dialog
     v-model:open="show"
     :title="__('Make Call')"
@@ -43,12 +43,31 @@
   </Dialog>
 </template>
 <script setup>
-import TwilioCallUI from '@/components/Telephony/TwilioCallUI.vue'
-import ExotelCallUI from '@/components/Telephony/ExotelCallUI.vue'
 import { defaultCallingMedium, useTelephony } from '@/composables/telephony'
 import { globalStore } from '@/stores/global'
 import { FormControl, call, toast } from 'frappe-ui'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
+
+// Each calling medium (the Twilio SDK, Exotel's panel with its text editor)
+// loads only when it is enabled, not with every Ventas page (bundle budget).
+const TwilioCallUI = defineAsyncComponent(
+  () => import('@/components/Telephony/TwilioCallUI.vue'),
+)
+const ExotelCallUI = defineAsyncComponent(
+  () => import('@/components/Telephony/ExotelCallUI.vue'),
+)
+
+// The ref of a lazily loaded component is set once its chunk has loaded.
+function loaded(target) {
+  if (target.value) return Promise.resolve(target.value)
+  return new Promise((resolve) => {
+    const stop = watch(target, (value) => {
+      if (!value) return
+      stop()
+      resolve(value)
+    })
+  })
+}
 
 const { setMakeCall } = globalStore()
 const { isEnabled, isAnyEnabled } = useTelephony()
@@ -114,13 +133,9 @@ async function setDefaultCallingMedium() {
 watch(
   isAnyEnabled,
   () =>
-    nextTick(() => {
-      for (const {
-        key,
-        label,
-        ref: integrationRef,
-      } of enabledIntegrations.value) {
-        integrationRef.value.setup()
+    nextTick(async () => {
+      for (const { label, ref: integrationRef } of enabledIntegrations.value) {
+        ;(await loaded(integrationRef)).setup()
         callMedium.value = label
       }
 

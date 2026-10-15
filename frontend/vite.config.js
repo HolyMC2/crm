@@ -171,6 +171,16 @@ export default defineConfig(async ({ mode }) => {
         'prosemirror-transform',
       ],
     },
+    build: {
+      rollupOptions: {
+        output: {
+          // Merge chunks under 2 KB (icons, stores, tiny composables) into
+          // their importers: a first route fetched 70+ files, most under 2 KB
+          // (SPEC §4: ≤ 60 scripts on a daily route).
+          experimentalMinChunkSize: 2 * 1024,
+        },
+      },
+    },
     optimizeDeps: {
       include: [
         'feather-icons',

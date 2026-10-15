@@ -17,7 +17,12 @@ const idle =
     ? (cb) => requestIdleCallback(cb, { timeout: 8000 })
     : (cb) => setTimeout(cb, 2000)
 
-export function prefetchHotChunks() {
+// The first page paints and loads its data first: the warm-up starts this
+// long after mount, so it never counts against the first route's budget
+// (SPEC §4: ≤ 60 scripts, ≤ 2.5 MB) nor competes with its requests.
+export const PREFETCH_DELAY_MS = 4000
+
+export function prefetchHotChunks({ delay = PREFETCH_DELAY_MS } = {}) {
   let i = 0
   const next = () => {
     if (i >= HOT_CHUNKS.length) return
@@ -27,5 +32,5 @@ export function prefetchHotChunks() {
       .catch(() => {})
       .finally(() => idle(next))
   }
-  idle(next)
+  setTimeout(() => idle(next), delay)
 }

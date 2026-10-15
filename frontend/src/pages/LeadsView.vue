@@ -605,7 +605,15 @@
 
 <script setup>
 import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isMobile } from '@/composables/breakpoint'
 import {
@@ -618,8 +626,6 @@ import { confirmDialog, createDialog, inputDialog } from '@/utils/dialogs'
 import LucideSearch from '~icons/lucide/search'
 import { statusesStore } from '@/stores/statuses'
 import { usersStore } from '@/stores/users'
-import LeadModal from '@/components/Modals/LeadModal.vue'
-import ConvertToDealModal from '@/components/Modals/ConvertToDealModal.vue'
 import FilterPopover from '@/components/doco/leads/FilterPopover.vue'
 import { userScopedKey } from '@/utils/storageKeys'
 import { LEAD_STATUS, stageLabel } from '@/utils/stageLabel'
@@ -715,6 +721,14 @@ const statusStore = statusesStore()
 const { getLeadStatus } = statusStore
 const { getUser } = usersStore()
 
+// Opens on «New Lead» only; it carries the field layout and the text editor
+// (bundle budget, SPEC §4).
+const LeadModal = defineAsyncComponent(
+  () => import('@/components/Modals/LeadModal.vue'),
+)
+const ConvertToDealModal = defineAsyncComponent(
+  () => import('@/components/Modals/ConvertToDealModal.vue'),
+)
 const showLeadModal = ref(false)
 const queueKey = userScopedKey('crm_leads_queue_context')
 let remembered = {}

@@ -11,8 +11,12 @@
   />
 </template>
 <script setup>
-import DoctypeModal from '@/components/Modals/DoctypeModal.vue'
+import { defineAsyncComponent } from 'vue'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 
+// Loads when a modal first opens, not with every page (bundle budget).
+const DoctypeModal = defineAsyncComponent(
+  () => import('@/components/Modals/DoctypeModal.vue'),
+)
 const doctypeModal = useDoctypeModal()
 </script>
