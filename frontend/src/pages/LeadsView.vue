@@ -566,7 +566,7 @@
     <section
       v-if="conversionRows.length"
       class="shrink-0 max-h-48 overflow-auto border-t border-outline-gray-2 p-3"
-      aria-label="Conversion results"
+      :aria-label="__('Conversion results')"
     >
       <h3 class="font-semibold">{{ __('Conversion review') }}</h3>
       <ul>
