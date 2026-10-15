@@ -155,10 +155,9 @@
   </div>
 </template>
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Badge, Button, TextInput, call } from 'frappe-ui'
-import LeadModal from '@/components/Modals/LeadModal.vue'
 import {
   KIND_CHIPS,
   KIND_LABELS,
@@ -186,6 +185,11 @@ const start = ref(0)
 const hasMore = ref(false)
 const loading = ref(false)
 const error = ref(null)
+// Opens on «Nuevo prospecto» only; it carries the field layout and the text
+// editor (bundle budget, SPEC §4).
+const LeadModal = defineAsyncComponent(
+  () => import('@/components/Modals/LeadModal.vue'),
+)
 const showLeadModal = ref(false)
 
 const errorText = computed(

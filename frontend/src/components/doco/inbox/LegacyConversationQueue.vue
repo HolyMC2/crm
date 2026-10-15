@@ -958,7 +958,14 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  ref,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+} from 'vue'
 import LucideSearch from '~icons/lucide/search'
 import LucideX from '~icons/lucide/x'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
@@ -990,7 +997,6 @@ import {
 } from '@/composables/push'
 import { isMobile } from '@/composables/breakpoint'
 import { formatMoney } from '@/composables/crmFormat'
-import DealModal from '@/components/Modals/DealModal.vue'
 import { useListKeys } from '@/composables/pageKeys'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'
 import GlobalSearch from '@/components/doco/inbox/GlobalSearch.vue'
@@ -1056,6 +1062,11 @@ const { getDealStatus } = statusesStore()
 
 // the doco DealModal — deal + customer sync, and «Crear y recibir equipo» into taller
 // Intake (not the generic doctype modal, which only creates a bare deal)
+// Loads on «Nuevo trato» only: it carries the field layout and the editor
+// (bundle budget, SPEC §4).
+const DealModal = defineAsyncComponent(
+  () => import('@/components/Modals/DealModal.vue'),
+)
 const showDealModal = ref(false)
 function newDeal() {
   showDealModal.value = true
