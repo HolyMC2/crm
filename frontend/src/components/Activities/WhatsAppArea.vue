@@ -518,9 +518,7 @@ const formattedPhone = computed(() => {
 // Inbound media is now private (ARC-S2.1); the old heuristic only skipped a
 // bare "/files/..." body and would show the raw private URL as the caption.
 function isFilePath(message) {
-  return (
-    message.startsWith('/files/') || message.startsWith('/private/files/')
-  )
+  return message.startsWith('/files/') || message.startsWith('/private/files/')
 }
 
 // «Guardar en Archivos» / «Vincular a…»: only when the Archivos module is on
@@ -690,9 +688,7 @@ function messageOptions(message) {
   if (archivosEnabled.value && isWhatsappAttachment(message)) {
     options.push(
       {
-        label: isBusy(message.attach)
-          ? __('Saving…')
-          : __('Save to Files'),
+        label: isBusy(message.attach) ? __('Saving…') : __('Save to Files'),
         disabled: isBusy(message.attach),
         onClick: () => saveToArchivos(message),
       },

@@ -440,7 +440,9 @@ const route = useRoute()
 const router = useRouter()
 const boot = gastosBoot
 // Files on this record come from Archivos when the worker has it.
-const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
+const archivosEnabled = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos'),
+)
 const data = ref({})
 const loading = ref(false)
 const loaded = ref(false)

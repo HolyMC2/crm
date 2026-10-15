@@ -476,7 +476,9 @@ const onDeal360 = computed(() => route.name === 'Deal 360')
 
 const isDeal = computed(() => activeDealDoctype.value === 'CRM Deal')
 // Files on this record come from Archivos when the worker has it.
-const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
+const archivosEnabled = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos'),
+)
 
 // effective row: the rich inbox queue row when present; else (Deal 360° / deep link,
 // deal not in the queue) a direct deal+lead fetch — same fallback as DealHeader, so

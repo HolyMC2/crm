@@ -60,15 +60,11 @@ describe('eligible attachments', () => {
   })
   it('a unified-inbox message is only eligible on a WhatsApp conversation', () => {
     const message = { content_type: 'image', attach: '/a.jpg' }
-    expect(
-      isWhatsappInboxMessage(message, { provider: 'WhatsApp' }),
-    ).toBe(true)
-    expect(
-      isWhatsappInboxMessage(message, { provider: 'Messenger' }),
-    ).toBe(false)
-    expect(isWhatsappInboxMessage(message, { provider: 'Webchat' })).toBe(
+    expect(isWhatsappInboxMessage(message, { provider: 'WhatsApp' })).toBe(true)
+    expect(isWhatsappInboxMessage(message, { provider: 'Messenger' })).toBe(
       false,
     )
+    expect(isWhatsappInboxMessage(message, { provider: 'Webchat' })).toBe(false)
     expect(isWhatsappInboxMessage(message, null)).toBe(false)
   })
 })
@@ -169,8 +165,7 @@ describe('es catalog has every new msgid this package added', () => {
     }
   })
   it('the introduced strings resolve to a non-empty Spanish string', () => {
-    for (const text of introduced)
-      expect(catalog.get(text), text).toBeTruthy()
+    for (const text of introduced) expect(catalog.get(text), text).toBeTruthy()
   })
 })
 

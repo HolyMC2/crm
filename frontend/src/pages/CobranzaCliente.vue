@@ -629,7 +629,9 @@ const router = useRouter()
 const phone = isMobile
 const boot = cobranzaBoot
 // Files on this record come from Archivos when the worker has it.
-const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
+const archivosEnabled = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos'),
+)
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const scroller = ref(null)
 const data = ref(null)

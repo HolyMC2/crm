@@ -74,7 +74,11 @@
              different doctype the save endpoint does not accept (see
              conversation_threads._message/_scope, crm/api). -->
         <div
-          v-if="archivosEnabled && m.attach && isWhatsappInboxMessage(m, conversation)"
+          v-if="
+            archivosEnabled &&
+            m.attach &&
+            isWhatsappInboxMessage(m, conversation)
+          "
         >
           <a
             v-if="saved[m.attach]"
@@ -162,26 +166,23 @@ function attachmentOptions(m) {
   return [
     {
       label: __('Save to Files'),
-      onClick: () => save(m.attach, whatsappSaveArgs({ name: m.id, attach: m.attach })),
+      onClick: () =>
+        save(m.attach, whatsappSaveArgs({ name: m.id, attach: m.attach })),
     },
     {
       label: __('Link to…'),
       onClick: () =>
-        linkTo(
-          m.attach,
-          whatsappSaveArgs({ name: m.id, attach: m.attach }),
-          {
-            target:
-              props.conversation?.reference_doctype &&
-              props.conversation?.reference_name
-                ? {
-                    doctype: props.conversation.reference_doctype,
-                    name: props.conversation.reference_name,
-                  }
-                : null,
-            returnLabel: __('Conversation'),
-          },
-        ),
+        linkTo(m.attach, whatsappSaveArgs({ name: m.id, attach: m.attach }), {
+          target:
+            props.conversation?.reference_doctype &&
+            props.conversation?.reference_name
+              ? {
+                  doctype: props.conversation.reference_doctype,
+                  name: props.conversation.reference_name,
+                }
+              : null,
+          returnLabel: __('Conversation'),
+        }),
     },
   ]
 }

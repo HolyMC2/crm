@@ -767,7 +767,9 @@ const isNew = computed(() => !props.name)
 // Supplier bills of this order: for bill readers (an employee filing expenses has Gastos too).
 const gastosOn = computed(() => can(shellBoot.value, 'gastos', 'read'))
 // Files on this record come from Archivos when the worker has it.
-const archivosEnabled = computed(() => moduleEnabled(shellBoot.value, 'archivos'))
+const archivosEnabled = computed(() =>
+  moduleEnabled(shellBoot.value, 'archivos'),
+)
 const data = ref({})
 const rows = ref([])
 const loading = ref(false)
