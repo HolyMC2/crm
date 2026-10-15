@@ -1,5 +1,8 @@
 # CRM next session
 
+Muelle shell Productos and Resultados (2026-10-15): state, comparison with Mercado and the next
+three batches are in the [Productos and Resultados handoff](PRODUCTOS_RESULTADOS_HANDOFF_2026-10-15.md).
+
 Current product direction (2026-09-26): build Muelle's product named **CRM**, with a distinct icon,
 that excels at standalone sales, with connected POS/Taller/storefront work and
 optional omnichannel/bot capabilities. Use the
