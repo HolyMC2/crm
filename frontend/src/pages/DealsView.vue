@@ -282,6 +282,11 @@
           @click="selectFollowUp(q.key)"
         >
           {{ __(q.label) }}
+          <span
+            v-if="q.key !== 'all' && queueCounts[q.key] != null"
+            class="ml-1 rounded-full bg-surface-gray-2 px-1.5 tabular-nums text-ink-gray-7"
+            >{{ queueCounts[q.key] }}</span
+          >
         </button>
       </div>
       <p class="mt-1 text-xs text-ink-gray-5">
@@ -341,6 +346,14 @@
       <span class="text-[12.5px] font-semibold text-ink-gray-8"
         >{{ selectedRows.length }} {{ __('seleccionados') }}</span
       >
+      <button
+        class="rounded-md bg-surface-gray-10 px-2.5 py-1 text-[12px] font-semibold text-ink-base hover:bg-surface-gray-9"
+        :aria-keyshortcuts="'n'"
+        @click="bulkSchedule"
+      >
+        {{ __('Programar seguimiento') }}
+        <kbd class="ml-1 opacity-70">N</kbd>
+      </button>
       <button
         class="rounded-md px-2.5 py-1 text-[12px] font-medium text-ink-red-8 hover:bg-surface-red-1"
         @click="bulkDelete"
@@ -432,7 +445,7 @@
     </div>
 
     <template v-if="view === 'list' && !isMobile">
-      <div class="scb min-h-0 flex-1 overflow-auto">
+      <div ref="listScroller" class="scb min-h-0 flex-1 overflow-auto">
         <div :style="isMobile ? '' : `min-width:${MIN_W}px`">
           <!-- table header -->
           <div
@@ -880,7 +893,7 @@
 <script setup>
 import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Dropdown,
@@ -909,11 +922,18 @@ import MobileFilterSheet from '@/components/doco/MobileFilterSheet.vue'
 import NextActivityChip from '@/components/doco/NextActivityChip.vue'
 import FollowUpCell from '@/components/doco/deals/FollowUpCell.vue'
 import { registerPageShortcuts } from '@/composables/shellKeyboard'
-import { nextStepChanged, runNextStep } from '@/composables/useNextStep'
+import {
+  nextStepChanged,
+  openBulkNextStep,
+  runNextStep,
+} from '@/composables/useNextStep'
 import {
   NEXT_STEP_SHORTCUTS,
+  listReturnPageLength,
   nextStepAction,
+  readListReturn,
   rowNextStep,
+  writeListReturn,
 } from '@/utils/nextStep'
 import DealGroupHeader from '@/components/doco/deals/DealGroupHeader.vue'
 import SavedViewPicker from '@/components/doco/deals/SavedViewPicker.vue'
@@ -949,6 +969,8 @@ import { takeCreateRequest } from '@/utils/shellCreate'
 const router = useRouter()
 const route = useRoute()
 const QUEUE_KEY = userScopedKey('crm_deal_list_context')
+const RETURN_KEY = userScopedKey('crm_deal_list_return')
+const listScroller = ref(null)
 let remembered = dealListState()
 // Whether this tab already has a context: a saved default view opens the list
 // only on a fresh session, never on the way back from a deal.
@@ -1237,7 +1259,11 @@ const deals = createListResource({
     '_user_tags',
   ],
   orderBy: 'modified desc',
-  pageLength: remembered.view === 'board' ? 200 : 50,
+  // Back from a deal: load as many rows as were loaded, so its row is there.
+  pageLength:
+    remembered.view === 'board'
+      ? 200
+      : listReturnPageLength(readListReturn(sessionStorage, RETURN_KEY)),
   onSuccess: () => loadDisplay(),
 })
 // Sorting by next activity can't be expressed server-side: frappe-ui has no
@@ -1387,13 +1413,15 @@ function siteDay() {
   return dayjs().tz(timezone).format('YYYY-MM-DD')
 }
 const siteToday = ref(siteDay())
-function buildFilters() {
-  siteToday.value = siteDay()
-  const today = siteToday.value
-  const closed = (statusStore.dealStatuses.data || [])
+function closedStatuses() {
+  return (statusStore.dealStatuses.data || [])
     .filter((s) => ['Won', 'Lost'].includes(s.type))
     .map((s) => s.name)
-  const f = followUpFilters(followUp.value, today, closed)
+}
+function buildFilters(queue = followUp.value) {
+  siteToday.value = siteDay()
+  const today = siteToday.value
+  const f = followUpFilters(queue, today, closedStatuses())
   if (createdFrom.value) f.push(['creation', '>=', createdFrom.value])
   if (createdTo.value)
     f.push([
@@ -1460,12 +1488,37 @@ async function loadCounts() {
     metricsCurrency.value = data.currency
     metricsContract.value = data.contract || null
     countsLoaded.value = true
+    loadQueueCounts()
   } catch {
     if (request !== countsRequest) return
     groupCounts.value = {}
     metricsError.value = true
   }
 }
+// How many deals each follow-up queue holds under the current filters: one
+// call, the same filters the rows use, so «Sin seguimiento 37» is what opens.
+const queueCounts = ref({})
+let queueRequest = 0
+async function loadQueueCounts() {
+  const request = ++queueRequest
+  const today = siteToday.value
+  const queues = Object.fromEntries(
+    followUpQueues
+      .filter((q) => q.key !== 'all')
+      .map((q) => [q.key, followUpFilters(q.key, today, closedStatuses())]),
+  )
+  try {
+    const counts = await frappeCall('crm.api.next_step.queue_counts', {
+      base: buildFilters('all'),
+      queues,
+      or_filters: searchOrFilters(),
+    })
+    if (request === queueRequest) queueCounts.value = counts || {}
+  } catch {
+    if (request === queueRequest) queueCounts.value = {}
+  }
+}
+
 function columnValue(stage) {
   return stageValue(groupCounts.value[stage.value])
 }
@@ -1705,11 +1758,23 @@ function onFollowUpSaved(row, activity) {
 // the saved step in place, so the seller keeps their position in the queue.
 registerPageShortcuts(null, NEXT_STEP_SHORTCUTS)
 function onRowKey(event, row) {
+  // Rows, Enter and selection answer through the shell's list keys (useListKeys);
+  // the next-step keys are this list's own. n with several selected schedules them all.
   if (event.target !== event.currentTarget) return
   const action = nextStepAction(event)
   if (!action) return
   event.preventDefault()
-  runNextStep(action, row.name)
+  if (action === 'schedule' && selectedRows.value.length > 1) bulkSchedule()
+  else runNextStep(action, row.name)
+}
+function bulkSchedule() {
+  if (!selectedRows.value.length) return
+  openBulkNextStep([...selectedRows.value], {
+    onDone: () => {
+      selectedRows.value = []
+      loadQueueCounts()
+    },
+  })
 }
 watch(nextStepChanged, (change) => {
   const row = (deals.data || []).find((r) => r.name === change?.deal)
@@ -1909,10 +1974,34 @@ function toggleRow(name) {
     ? selectedRows.value.filter((n) => n !== name)
     : [...selectedRows.value, name]
 }
+// The way back keeps the seller's place: the row they opened, how far the
+// list was scrolled and how many pages were loaded (filters live in QUEUE_KEY).
 function openDeal(name) {
   lastOpened.value = name
+  writeListReturn(sessionStorage, RETURN_KEY, {
+    deal: name,
+    scrollTop: listScroller.value?.scrollTop || 0,
+    loaded: (deals.data || []).length,
+  })
   router.push({ name: 'Deal 360', params: { dealId: name } })
 }
+const pendingReturn = readListReturn(sessionStorage, RETURN_KEY)
+watch(
+  () => deals.data,
+  async (data) => {
+    if (!pendingReturn.deal || !data) return
+    const target = pendingReturn
+    pendingReturn.deal = ''
+    sessionStorage.removeItem(RETURN_KEY)
+    await nextTick()
+    const scroller = listScroller.value
+    if (scroller) scroller.scrollTop = target.scrollTop
+    const row = scroller?.querySelector(
+      `[data-deal="${CSS.escape(target.deal)}"]`,
+    )
+    row?.focus({ preventScroll: true })
+  },
+)
 function rowMenu(r) {
   return [
     { label: __('Abrir'), onClick: () => openDeal(r.name) },

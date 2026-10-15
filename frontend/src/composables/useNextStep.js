@@ -23,6 +23,8 @@ export const nextStepDialog = reactive({
   reason: '',
   state: null,
   error: '',
+  deals: [],
+  onDone: null,
 })
 
 /** The last saved step: lists and cards patch their row from it. */
@@ -54,6 +56,8 @@ export async function openNextStep({ deal, mode = 'schedule', reason = '' }) {
     reason,
     state: null,
     error: '',
+    deals: [],
+    onDone: null,
   })
   try {
     const state = await nextStepApi('get', { deal })
@@ -91,7 +95,29 @@ export async function requestNextStep({ deal, reason = '', now = Date.now() }) {
     reason,
     state,
     error: '',
+    deals: [],
+    onDone: null,
   })
+}
+
+/** «Programar seguimiento» for the deals selected in the list (one step each). */
+export async function openBulkNextStep(deals, { onDone = null } = {}) {
+  if (!deals?.length) return
+  await openNextStep({ deal: deals[0], mode: 'bulk' })
+  Object.assign(nextStepDialog, { deals: [...deals], onDone })
+}
+
+/** The toast after a bulk schedule: how many, and why any were left out. */
+export function bulkSummary(answer) {
+  const done = answer?.scheduled?.length || 0
+  const skipped = answer?.skipped || []
+  const why = (reason) => skipped.filter((row) => row.reason === reason).length
+  const parts = [t('{0} deals scheduled', [done])]
+  if (why('has_step'))
+    parts.push(t('{0} already had a next step', [why('has_step')]))
+  if (why('closed')) parts.push(t('{0} closed', [why('closed')]))
+  if (why('denied')) parts.push(t('{0} you cannot change', [why('denied')]))
+  return parts.join(' · ')
 }
 
 export async function snoozeNextStep(deal, { days = 1 } = {}) {

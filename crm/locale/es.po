@@ -25505,3 +25505,42 @@ msgstr "Campaña de correo"
 #: frontend/src/pages/LeadsView.vue frontend/src/pages/DealsView.vue
 msgid "Social Media"
 msgstr "Redes sociales"
+#: frontend/src/pages/DealsView.vue
+msgid "Open the deal"
+msgstr "Abrir el trato"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Select row"
+msgstr "Seleccionar fila"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Schedule follow-up for {0} deals"
+msgstr "Programar seguimiento de {0} tratos"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Each deal goes to its own owner."
+msgstr "Cada trato queda con su propio responsable."
+
+#: frontend/src/pages/DealsView.vue
+msgid "{0} deals scheduled"
+msgstr "{0} tratos programados"
+
+#: frontend/src/pages/DealsView.vue
+msgid "{0} already had a next step"
+msgstr "{0} ya tenían siguiente paso"
+
+#: frontend/src/pages/DealsView.vue
+msgid "{0} closed"
+msgstr "{0} cerrados"
+
+#: frontend/src/pages/DealsView.vue
+msgid "{0} you cannot change"
+msgstr "{0} que no puedes cambiar"
+
+#: frontend/src/pages/DealsView.vue
+msgid "Schedule at most {0} deals at once."
+msgstr "Programa como máximo {0} tratos a la vez."
+
+#: crm/api/next_step.py
+msgid "Count at most {0} queues at once."
+msgstr "Cuenta como máximo {0} colas a la vez."

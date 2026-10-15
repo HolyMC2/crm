@@ -112,7 +112,10 @@
               {{ __(kind) }}
             </button>
           </div>
-          <p v-if="ownerName" class="text-sm text-ink-gray-6">
+          <p v-if="draft.mode === 'bulk'" class="text-sm text-ink-gray-6">
+            {{ __('Each deal goes to its own owner.') }}
+          </p>
+          <p v-else-if="ownerName" class="text-sm text-ink-gray-6">
             {{ __('Owner: {0}', [ownerName]) }}
           </p>
         </fieldset>
@@ -156,6 +159,7 @@ import { Button, Dialog, FormControl, toast } from 'frappe-ui'
 import { usersStore } from '@/stores/users'
 import {
   announceNextStep,
+  bulkSummary,
   formatStep,
   nextStepApi,
   nextStepDialog,
@@ -186,6 +190,8 @@ const ownerName = computed(() => {
   return owner ? getUser(owner)?.full_name || owner : ''
 })
 const heading = computed(() => {
+  if (draft.mode === 'bulk')
+    return __('Schedule follow-up for {0} deals', [draft.deals.length])
   if (draft.mode === 'complete') return __('Done, then next step')
   if (draft.mode === 'reschedule') return __('Reschedule')
   return draft.task ? __('Edit next step') : __('Next step')
@@ -220,7 +226,7 @@ function focusFirst() {
 }
 
 watch(
-  () => [nextStepDialog.open, nextStepDialog.state],
+  () => [nextStepDialog.open, nextStepDialog.state, nextStepDialog.deals],
   ([open, current]) => {
     problem.value = ''
     stale.value = false
@@ -230,6 +236,7 @@ watch(
       draftFor(current, {
         mode: nextStepDialog.mode,
         reason: nextStepDialog.reason,
+        deals: nextStepDialog.deals,
       }),
     )
     if (draft.translateTitle) draft.title = __(draft.title)
@@ -258,6 +265,14 @@ async function save() {
   try {
     const [method, args] = draftCall(deal, state.value, draft)
     const answer = await nextStepApi(method, args)
+    if (draft.mode === 'bulk') {
+      for (const row of answer?.scheduled || []) announceNextStep(row.deal, row)
+      const done = nextStepDialog.onDone
+      close()
+      toast.success(bulkSummary(answer))
+      done?.(answer)
+      return
+    }
     announceNextStep(deal, answer)
     close()
     toast.success(

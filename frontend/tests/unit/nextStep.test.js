@@ -337,3 +337,62 @@ describe('es-MX catalog', () => {
     expect(strings.size).toBeGreaterThan(30)
   })
 })
+
+describe('the deals list (S2.3)', () => {
+  it('remembers the opened row and loads enough pages to show it again', async () => {
+    const { readListReturn, writeListReturn, listReturnPageLength } =
+      await import('@/utils/nextStep')
+    const store = new Map()
+    const storage = {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+    }
+    writeListReturn(storage, 'k', { deal: 'D-7', scrollTop: 840, loaded: 120 })
+    const saved = readListReturn(storage, 'k')
+    expect(saved).toEqual({ deal: 'D-7', scrollTop: 840, loaded: 120 })
+    expect(listReturnPageLength(saved)).toBe(150)
+    expect(listReturnPageLength({ deal: 'D', loaded: 40 })).toBe(50)
+    expect(listReturnPageLength({ deal: 'D', loaded: 9000 })).toBe(500)
+    expect(listReturnPageLength(readListReturn(storage, 'none'))).toBe(50)
+    storage.setItem('bad', '{oops')
+    expect(readListReturn(storage, 'bad')).toEqual({ deal: '' })
+  })
+
+  it('bulk scheduling sends the selected deals once, each to its own owner', () => {
+    const draft = draftFor(FRESH, { mode: 'bulk', deals: ['D-1', 'D-2'] })
+    expect(draft).toMatchObject({ mode: 'bulk', owner: '', title: 'Follow up' })
+    expect(draftCall('D-1', FRESH, draft)).toEqual([
+      'schedule_many',
+      {
+        deals: '["D-1","D-2"]',
+        title: 'Follow up',
+        at: '2026-10-16 10:00:00',
+        activity_type: 'Task',
+      },
+    ])
+  })
+
+  it('the bulk toast says how many and why some were left out', async () => {
+    const { bulkSummary } = await import('@/composables/useNextStep')
+    expect(
+      bulkSummary({
+        scheduled: [{}, {}],
+        skipped: [
+          { reason: 'has_step' },
+          { reason: 'closed' },
+          { reason: 'denied' },
+        ],
+      }),
+    ).toBe(
+      '2 deals scheduled · 1 already had a next step · 1 closed · 1 you cannot change',
+    )
+  })
+
+  it('«Sin seguimiento» is the first queue after Todos', async () => {
+    const { FOLLOW_UP_QUEUES } = await import('@/utils/dealFollowUp')
+    expect(FOLLOW_UP_QUEUES.map((q) => q.key).slice(0, 2)).toEqual([
+      'all',
+      'missing',
+    ])
+  })
+})

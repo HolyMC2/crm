@@ -1,8 +1,16 @@
+// «Sin seguimiento» comes first: a deal without a next step is the work to do
+// before anything else (CRM-S2.3).
 export const FOLLOW_UP_QUEUES = [
   {
     key: 'all',
     label: 'Todos',
     description: 'Todos los tratos que coinciden con tus filtros.',
+  },
+  {
+    key: 'missing',
+    label: 'Sin seguimiento',
+    description:
+      'Tratos abiertos sin tarea pendiente. Programa el próximo paso desde el resumen.',
   },
   {
     key: 'overdue',
@@ -21,12 +29,6 @@ export const FOLLOW_UP_QUEUES = [
     label: 'Sin fecha',
     description:
       'Ya tienen una tarea pendiente: abre el trato y asigna una fecha al seguimiento.',
-  },
-  {
-    key: 'missing',
-    label: 'Sin seguimiento',
-    description:
-      'Tratos abiertos sin tarea pendiente. Programa el próximo paso desde el resumen.',
   },
 ]
 

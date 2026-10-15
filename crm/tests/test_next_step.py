@@ -19,13 +19,15 @@ def mirrored(deal):
 	)
 
 
-class TestNextStep(DealsListTestCase):
+class NextStepCase(DealsListTestCase):
 	def tearDown(self):
 		frappe.set_user("Administrator")
 		for deal in self.deals:
 			frappe.db.delete("CRM Task", {"reference_doctype": "CRM Deal", "reference_docname": deal})
 		super().tearDown()
 
+
+class TestNextStep(NextStepCase):
 	def test_default_is_tomorrow_ten_and_the_deal_owner(self):
 		deal = self.make_deal()
 		state = api.get(deal)
@@ -130,3 +132,43 @@ class TestNextStep(DealsListTestCase):
 		frappe.set_user(self.make_user(None))
 		with self.assertRaises(frappe.PermissionError):
 			api.snooze(deal)
+
+
+class TestNextStepBulk(NextStepCase):
+	def test_bulk_gives_each_open_deal_without_a_step_one_owned_by_its_owner(self):
+		seller = self.make_user("Sales User")
+		a, b = self.make_deal(), self.make_deal()
+		frappe.db.set_value("CRM Deal", b, "deal_owner", seller, update_modified=False)
+		has = self.make_deal()
+		api.schedule(has, title="Llamar", at=str(next_step.default_at()))
+		won = self.make_deal(status=terminal_status("Won"))
+		answer = api.schedule_many(
+			deals=f'["{a}", "{b}", "{has}", "{won}", "{a}"]',
+			title="Dar seguimiento",
+			at=str(next_step.default_at()),
+		)
+		self.assertEqual(sorted(row["deal"] for row in answer["scheduled"]), sorted([a, b]))
+		self.assertEqual(
+			sorted((row["deal"], row["reason"]) for row in answer["skipped"]),
+			sorted([(has, "has_step"), (won, "closed")]),
+		)
+		task_b = frappe.db.get_value("CRM Deal", b, "next_activity_task")
+		self.assertEqual(frappe.db.get_value("CRM Task", task_b, "assigned_to"), seller)
+
+	def test_bulk_skips_what_the_user_cannot_change_and_validates_once(self):
+		deal = self.make_deal()
+		with self.assertRaises(frappe.ValidationError):
+			api.schedule_many(deals=f'["{deal}"]', title=" ", at=str(next_step.default_at()))
+		frappe.set_user(self.make_user(None))
+		answer = api.schedule_many(deals=f'["{deal}"]', title="x", at=str(next_step.default_at()))
+		self.assertEqual(answer, {"scheduled": [], "skipped": [{"deal": deal, "reason": "denied"}]})
+
+	def test_queue_counts_follow_the_list_filters(self):
+		missing = self.make_deal()
+		scheduled = self.make_deal()
+		api.schedule(scheduled, title="Llamar", at=str(next_step.default_at()))
+		counts = api.queue_counts(
+			base=f'[["name", "in", ["{missing}", "{scheduled}"]]]',
+			queues='{"missing": [["next_activity_task", "is", "not set"]], "planned": [["next_activity_task", "is", "set"]]}',
+		)
+		self.assertEqual(counts, {"missing": 1, "planned": 1})

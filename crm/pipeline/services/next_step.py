@@ -145,6 +145,43 @@ def complete(
 	return state(deal)
 
 
+BULK_CAP = 200
+
+
+def schedule_many(deals: list[str], *, title: str, at: str, activity_type: str | None = None) -> dict:
+	"""«Programar seguimiento» for many deals at once (the list's «Sin seguimiento» queue).
+
+	Each open deal without a step gets one, assigned to its own owner. A deal that
+	is closed, already has a step or cannot be changed is skipped with the reason,
+	never failing the others.
+	"""
+	title = (title or "").strip()
+	if not title:
+		frappe.throw(_("Write what the next step is."), title=_("Next step"))
+	due, kind = _when(at), _type(activity_type)
+	names = list(dict.fromkeys(name for name in deals or [] if name))
+	if len(names) > BULK_CAP:
+		frappe.throw(_("Schedule at most {0} deals at once.").format(BULK_CAP), title=_("Next step"))
+	scheduled, skipped = [], []
+	for name in names:
+		frappe.db.savepoint("next_step_bulk")
+		try:
+			doc = _deal(name, "write")
+			if not _is_open(doc.status):
+				skipped.append({"deal": name, "reason": "closed"})
+				continue
+			if _current_task(name):
+				skipped.append({"deal": name, "reason": "has_step"})
+				continue
+			_new_task(doc, title=title, due=due, kind=kind, owner=None)
+			scheduled.append(state(name))
+		except (frappe.PermissionError, frappe.DoesNotExistError):
+			frappe.db.rollback(save_point="next_step_bulk")
+			frappe.clear_last_message()
+			skipped.append({"deal": name, "reason": "denied"})
+	return {"scheduled": scheduled, "skipped": skipped}
+
+
 # ── helpers ────────────────────────────────────────────────────────────────
 
 

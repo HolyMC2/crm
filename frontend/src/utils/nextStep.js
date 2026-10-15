@@ -82,7 +82,26 @@ const REASON_TYPES = { call: 'Call' }
  * The dialog's starting draft.
  * mode: schedule (new or edit) · reschedule (same step, new date) · complete.
  */
-export function draftFor(state, { mode = 'schedule', reason = '' } = {}) {
+export function draftFor(
+  state,
+  { mode = 'schedule', reason = '', deals = [] } = {},
+) {
+  if (mode === 'bulk') {
+    const fresh = splitAt(state?.default_at) || { date: '', time: '10:00' }
+    return {
+      mode,
+      deals,
+      task: '',
+      title: 'Follow up',
+      translateTitle: true,
+      date: fresh.date,
+      time: fresh.time,
+      type: 'Task',
+      owner: '',
+      note: '',
+      scheduleNext: true,
+    }
+  }
   const current = state?.task ? splitAt(state.at) : null
   const fresh = splitAt(state?.default_at) || { date: '', time: '10:00' }
   const editing = mode !== 'complete' && Boolean(state?.task)
@@ -109,6 +128,16 @@ export function draftCall(deal, state, draft) {
     activity_type: draft.type || 'Task',
     owner: draft.owner || undefined,
   }
+  if (draft.mode === 'bulk')
+    return [
+      'schedule_many',
+      {
+        deals: JSON.stringify(draft.deals || []),
+        title: step.title,
+        at: step.at,
+        activity_type: step.activity_type,
+      },
+    ]
   if (draft.mode === 'complete')
     return [
       'complete',
@@ -150,4 +179,37 @@ export function rowNextStep(state) {
     next_activity_title: state?.title || '',
     next_activity_type: state?.type || '',
   }
+}
+
+// ── the deals list: the way back to the same place ──────────────────────────
+
+const PAGE = 50
+const MAX_RESTORE_ROWS = 500
+
+export function readListReturn(storage, key) {
+  try {
+    const raw = JSON.parse(storage?.getItem(key) || 'null')
+    if (!raw || typeof raw.deal !== 'string') return { deal: '' }
+    return {
+      deal: raw.deal,
+      scrollTop: Math.max(0, Number(raw.scrollTop) || 0),
+      loaded: Math.max(0, Number(raw.loaded) || 0),
+    }
+  } catch {
+    return { deal: '' }
+  }
+}
+
+export function writeListReturn(storage, key, value) {
+  try {
+    storage?.setItem(key, JSON.stringify(value))
+  } catch {
+    /* no storage: the list simply opens at the top */
+  }
+}
+
+/** Rows to load so the row opened last is on the page again (whole pages). */
+export function listReturnPageLength(saved) {
+  if (!saved?.deal || !saved.loaded) return PAGE
+  return Math.min(MAX_RESTORE_ROWS, Math.ceil(saved.loaded / PAGE) * PAGE)
 }
