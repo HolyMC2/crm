@@ -326,7 +326,10 @@
       {{
         __('No se pudieron cargar los tratos. Tus filtros siguen guardados.')
       }}
-      <button class="font-semibold underline" @click="applyFilters">
+      <button
+        class="font-semibold underline"
+        @click="applyFilters({ force: true })"
+      >
         {{ __('Reintentar') }}
       </button>
     </div>
@@ -1258,11 +1261,13 @@ const rows = computed(() => {
 // taller Repair Order. One batched call per loaded page fills them; the table
 // renders immediately and fills in when it lands (never blocks the list).
 const display = ref({})
+const displayPending = new Set()
 async function loadDisplay() {
   const names = (deals.data || [])
     .map((d) => d.name)
-    .filter((n) => !(n in display.value))
+    .filter((n) => !(n in display.value) && !displayPending.has(n))
   if (!names.length) return
+  names.forEach((n) => displayPending.add(n))
   try {
     const data = await frappeCall('doco_marketing.api.deals.get_deal_display', {
       names: JSON.stringify(names),
@@ -1270,6 +1275,8 @@ async function loadDisplay() {
     display.value = { ...display.value, ...(data || {}) }
   } catch (e) {
     /* enrichment is additive — a failure leaves the base columns intact */
+  } finally {
+    names.forEach((n) => displayPending.delete(n))
   }
 }
 function extra(r) {
@@ -1399,16 +1406,25 @@ function searchOrFilters() {
   for (const fld of SEARCH_FIELDS) orf[fld] = ['LIKE', pat]
   return orf
 }
-function applyFilters() {
-  deals.filters = buildFilters()
-  deals.orFilters = searchOrFilters()
+// The filter watcher fires several times while a page opens (remembered state,
+// the pipeline reset, the stage store arriving) with the same query: one load.
+let appliedQuery = null
+function applyFilters({ force = false } = {}) {
+  const filters = buildFilters()
+  const orFilters = searchOrFilters()
   // see `rows`: next-activity order is finished client-side, the server only has
   // to hand us the scheduled ones first
-  deals.orderBy =
+  const orderBy =
     sort.value.field === 'next_activity_at' &&
     !['overdue', 'today'].includes(followUp.value)
       ? 'next_activity_at desc'
       : `${sort.value.field} ${sort.value.dir}`
+  const query = JSON.stringify([filters, orFilters, orderBy])
+  if (!force && query === appliedQuery && !deals.error) return
+  appliedQuery = query
+  deals.filters = filters
+  deals.orFilters = orFilters
+  deals.orderBy = orderBy
   deals.reload()
   loadCounts()
 }
