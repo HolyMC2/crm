@@ -1,7 +1,12 @@
 import { contactosApi } from '@/composables/useContactos'
 import { identityTypeLabel } from '@/utils/contactos'
 import { call } from 'frappe-ui'
-import { moduleEnabled, can, bootScope } from '@/vendor/muelle-shell/contracts'
+import {
+  moduleEnabled,
+  can,
+  bootScope,
+  safeReturn,
+} from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
 import { createTargets } from '@/utils/shellCreate'
@@ -428,8 +433,62 @@ export function createShellProviders({ boot, modules }) {
       return clinicaItems(result)
     },
   }
+  // Inmobiliaria answers for its units, sales, holds, client files and leases when the app is
+  // installed on this site (the CRM boot's installed_apps; it is not a shell module). Its
+  // records live in Desk: items open their Desk form in this tab.
+  const inmobiliaria = {
+    key: 'inmobiliaria',
+    label: 'Inmobiliaria',
+    scopes: ['people', 'documents'],
+    async search(query, signal) {
+      if (query.kind === 'empty' || !inmobiliariaInstalled()) return []
+      const text = query.text.slice(0, 80)
+      if (text.length < 2) return []
+      const result = await call('inmobiliaria.busqueda.palette', { q: text })
+      if (signal.aborted) return []
+      return inmobiliariaItems(result)
+    },
+  }
   const manual = createManualProvider({ boot })
-  return [actions, contactos, places, ventas, clinica, manual]
+  return [actions, contactos, places, ventas, clinica, inmobiliaria, manual]
+}
+
+/** Whether the inmobiliaria app is installed on this site (the CRM boot's installed_apps). */
+export function inmobiliariaInstalled(
+  apps = globalThis.window?.installed_apps,
+) {
+  return Array.isArray(apps) && apps.includes('inmobiliaria')
+}
+
+// The icons Inmobiliaria may ask for, spelled out so their lucide classes are built.
+const INMOBILIARIA_ICONS = Object.freeze([
+  'lucide-building-2',
+  'lucide-handshake',
+  'lucide-bookmark',
+  'lucide-folder-open',
+  'lucide-key-round',
+])
+
+/** Inmobiliaria's palette rows: only its Desk forms (/desk/…) are kept, opened in this tab. */
+export function inmobiliariaItems(result) {
+  return (result?.items || [])
+    .filter(
+      (item) =>
+        item &&
+        typeof item.id === 'string' &&
+        typeof item.href === 'string' &&
+        safeReturn(item.href, ['/desk/']),
+    )
+    .map((item) => ({
+      id: `inmobiliaria:${item.id}`,
+      group: 'registros',
+      title: String(item.title || ''),
+      subtitle: String(item.subtitle || ''),
+      icon: INMOBILIARIA_ICONS.includes(item.icon)
+        ? item.icon
+        : 'lucide-building-2',
+      desk: item.href,
+    }))
 }
 
 /** Clínica's palette rows: only links into /clinica/ are kept, opened as a sibling app. */

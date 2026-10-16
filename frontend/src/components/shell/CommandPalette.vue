@@ -119,7 +119,7 @@
               >{{ keyLabel(item.shortcut) }}</kbd
             >
             <span
-              v-if="item.external || item.scanPick"
+              v-if="item.external || item.scanPick || item.desk"
               class="lucide-arrow-up-right size-3.5 flex-none text-ink-gray-5"
               :title="__('Opens in another app')"
               aria-hidden="true"
@@ -339,6 +339,8 @@ function choose(item) {
         moduleLabelFor(router.currentRoute.value),
       )
     : item.external && siblingTarget(item.external)
+  // A Desk form (Inmobiliaria's records) opens in this tab; Desk takes no way back.
+  const desk = item.desk && safeReturn(item.desk, ['/desk/'])
   close()
   // The sheet returns the focus to whatever had it before the palette opened.
   if (item.action === 'shortcuts') openShortcutSheet(previousFocus)
@@ -346,6 +348,7 @@ function choose(item) {
   if (item.action === 'record') nextTick(() => runRecordAction(item.args?.id))
   if (href) router.push(href.replace(/^\/crm/, ''))
   else if (external) window.location.assign(external)
+  else if (desk) window.location.assign(desk)
 }
 function siblingTarget(path) {
   if (!safeReturn(path)) return null

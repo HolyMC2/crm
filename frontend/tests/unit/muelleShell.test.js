@@ -982,6 +982,137 @@ describe('Clínica in the shell palette', () => {
   })
 })
 
+describe('Inmobiliaria in the shell palette', () => {
+  const query = { raw: 'garibaldi', text: 'garibaldi', scope: 'all', kind: 'text' }
+  const UNIT = {
+    id: 'unidad:GRB-A-101',
+    title: 'GRB-A-101',
+    subtitle: 'Unidad · DEMO Garibaldi · Disponible · $3.2 MDP',
+    icon: 'lucide-building-2',
+    href: '/desk/unidad-inmobiliaria/GRB-A-101',
+  }
+  const inmobiliaria = () =>
+    createShellProviders({
+      boot: ref(boot()),
+      modules: ref(hostedModules),
+    }).find((p) => p.key === 'inmobiliaria')
+  afterEach(() => delete window.installed_apps)
+
+  it('asks Inmobiliaria for its records when the app is installed and keeps only Desk forms', async () => {
+    window.installed_apps = ['frappe', 'crm', 'inmobiliaria']
+    state.call.mockImplementation(async (method, args) => {
+      expect(method).toBe('inmobiliaria.busqueda.palette')
+      expect(args).toEqual({ q: 'garibaldi' })
+      return {
+        items: [
+          UNIT,
+          {
+            id: 'venta:VTA-2026-00001',
+            title: 'Zacarías Pérez',
+            subtitle: 'Venta · VTA-2026-00001 · GRB-A-102 · En pagos · $5.1 MDP',
+            icon: 'lucide-handshake',
+            href: '/desk/venta-inmobiliaria/VTA-2026-00001',
+          },
+          {
+            id: 'apartado:APT-1',
+            title: 'Ana',
+            icon: 'lucide-skull',
+            href: '/desk/apartado-de-unidad/APT-1',
+          },
+          { id: 'evil', title: 'x', href: 'https://evil.invalid/desk/x' },
+          { id: 'up', title: 'x', href: '/desk/../crm/hoy' },
+          { id: 'crm', title: 'x', href: '/crm/hoy' },
+        ],
+      }
+    })
+    const items = await inmobiliaria().search(
+      query,
+      new AbortController().signal,
+    )
+    expect(items.map((i) => [i.id, i.group, i.icon, i.desk])).toEqual([
+      [
+        'inmobiliaria:unidad:GRB-A-101',
+        'registros',
+        'lucide-building-2',
+        '/desk/unidad-inmobiliaria/GRB-A-101',
+      ],
+      [
+        'inmobiliaria:venta:VTA-2026-00001',
+        'registros',
+        'lucide-handshake',
+        '/desk/venta-inmobiliaria/VTA-2026-00001',
+      ],
+      // an icon outside the known set falls back to the building
+      [
+        'inmobiliaria:apartado:APT-1',
+        'registros',
+        'lucide-building-2',
+        '/desk/apartado-de-unidad/APT-1',
+      ],
+    ])
+    expect(items[0].subtitle).toBe(UNIT.subtitle)
+    expect(items.every((i) => !i.href && !i.external)).toBe(true)
+  })
+
+  it('never calls Inmobiliaria where it is not installed, nor for an empty or one-letter query', async () => {
+    state.call.mockImplementation(async () => {
+      throw new Error('must not be called')
+    })
+    const signal = new AbortController().signal
+    window.installed_apps = ['frappe', 'crm']
+    expect(await inmobiliaria().search(query, signal)).toEqual([])
+    delete window.installed_apps
+    expect(await inmobiliaria().search(query, signal)).toEqual([])
+    window.installed_apps = ['frappe', 'crm', 'inmobiliaria']
+    expect(
+      await inmobiliaria().search(
+        { ...query, kind: 'empty', text: '' },
+        signal,
+      ),
+    ).toEqual([])
+    expect(
+      await inmobiliaria().search({ ...query, raw: 'g', text: 'g' }, signal),
+    ).toEqual([])
+  })
+
+  it('choosing an Inmobiliaria record opens its Desk form in this tab, without a return parameter', async () => {
+    window.installed_apps = ['frappe', 'crm', 'inmobiliaria']
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method === 'inmobiliaria.busqueda.palette') return { items: [UNIT] }
+      throw new Error(`unexpected ${method}`)
+    })
+    const assign = vi.fn()
+    const location = window.location
+    delete window.location
+    window.location = { ...location, assign }
+    try {
+      state.mobile.value = false
+      await mount('/contactos')
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }),
+      )
+      const input = await until(() =>
+        document.querySelector('[aria-label="Command palette"] input'),
+      )
+      input.value = 'garibaldi'
+      input.dispatchEvent(new Event('input'))
+      const option = await until(() =>
+        [...document.querySelectorAll('[role="option"]')].find((o) =>
+          o.textContent.includes('GRB-A-101'),
+        ),
+      )
+      expect(option.textContent).toContain('DEMO Garibaldi')
+      option.click()
+      await nextTick()
+      expect(assign).toHaveBeenCalledTimes(1)
+      expect(assign).toHaveBeenCalledWith('/desk/unidad-inmobiliaria/GRB-A-101')
+    } finally {
+      window.location = location
+    }
+  })
+})
+
 const PRODUCTOS_ON = {
   key: 'productos',
   enabled: true,
