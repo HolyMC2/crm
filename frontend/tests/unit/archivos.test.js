@@ -6,9 +6,11 @@ import { fileURLToPath } from 'node:url'
 import {
   VIEWS,
   ageLabel,
+  archivosBoot,
   archivosHref,
   bankHandoffUrl,
   kindIcon,
+  loadArchivosBoot,
   nextAfter,
   normalizeView,
   parseTarget,
@@ -31,6 +33,31 @@ import ArchivosRegistroPanel from '../../src/components/archivos/ArchivosRegistr
 import ArchivoUpload from '../../src/components/archivos/ArchivoUpload.vue'
 import ArchivoDetail from '../../src/components/archivos/ArchivoDetail.vue'
 import ArchivosOverview from '../../src/components/archivos/ArchivosOverview.vue'
+
+describe('boot that cannot reach the server', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  it('keeps the network reason instead of reading as a missing permission', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch')
+      }),
+    )
+    await loadArchivosBoot({ refresh: true })
+    expect(archivosBoot.value.enabled).toBe(false)
+    expect(archivosBoot.value.failed).toBe(true)
+    expect(archivosBoot.value.problem.code).toBe('network')
+    expect(archivosBoot.value.problem.actions[0].kind).toBe('retry')
+  })
+  it('a server that answers 502 while restarting is not a permission either', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 502, json: async () => ({}) })),
+    )
+    await loadArchivosBoot({ refresh: true })
+    expect(archivosBoot.value.problem.code).not.toBe('permission')
+  })
+})
 
 describe('record-origin target', () => {
   it('splits doctype from names that contain slashes', () => {

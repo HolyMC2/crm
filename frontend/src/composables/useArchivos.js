@@ -71,7 +71,16 @@ export function loadArchivosBoot({ refresh = false } = {}) {
   if (bootPending) return bootPending
   bootPending = archivosApi('boot')
     .then((data) => (archivosBoot.value = data || { enabled: false }))
-    .catch(() => (archivosBoot.value = { enabled: false, failed: true }))
+    // Keep why it failed: a dropped connection or a restarting server is not a
+    // missing permission, and the page must say which one it was.
+    .catch(
+      (error) =>
+        (archivosBoot.value = {
+          enabled: false,
+          failed: true,
+          problem: problem(error),
+        }),
+    )
     .finally(() => (bootPending = null))
   return bootPending
 }

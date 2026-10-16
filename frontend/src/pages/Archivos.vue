@@ -12,7 +12,7 @@
     <h1 class="text-xl font-semibold text-ink-gray-9">
       {{ __('We could not open Archivos') }}
     </h1>
-    <p class="text-base text-ink-gray-7">
+    <p v-if="!bootTrouble" class="text-base text-ink-gray-7">
       {{
         boot.reason ||
         __(
@@ -21,17 +21,19 @@
       }}
     </p>
     <ArchivoGuard
-      :state="{
-        code: 'permission',
-        message: __(
-          'Archivos needs read access to at least one company and its documents.',
-        ),
-        actions: [
-          { label: __('Retry permissions'), kind: 'retry' },
-          { label: __('Ask for access'), kind: 'copy' },
-          { label: __('Back'), kind: 'back' },
-        ],
-      }"
+      :state="
+        bootTrouble || {
+          code: 'permission',
+          message: __(
+            'Archivos needs read access to at least one company and its documents.',
+          ),
+          actions: [
+            { label: __('Retry permissions'), kind: 'retry' },
+            { label: __('Ask for access'), kind: 'copy' },
+            { label: __('Back'), kind: 'back' },
+          ],
+        }
+      "
       :copy-text="
         __(
           'I need access to Archivos in Muelle (documents of my company) to receive and classify receipts.',
@@ -1215,6 +1217,12 @@ async function start({ refresh: again = false } = {}) {
   if (browsing.value) loadBrowse()
   else loadList()
 }
+// A boot that failed for the network or the server (not for permissions) says
+// so (or asks to sign in again); only a real refusal asks for access.
+const bootTrouble = computed(() => {
+  const trouble = boot.value?.failed ? boot.value.problem : null
+  return trouble && trouble.code !== 'permission' ? trouble : null
+})
 function onPageGuard(action) {
   if (action.kind === 'retry') start({ refresh: true })
   if (action.kind === 'back') {
