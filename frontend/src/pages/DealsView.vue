@@ -1999,21 +1999,27 @@ function openDeal(name) {
   router.push({ name: 'Deal 360', params: { dealId: name } })
 }
 const pendingReturn = readListReturn(sessionStorage, RETURN_KEY)
+// Back from a deal: once its row is rendered, the list scrolls where it was and
+// that row has the focus. The rows may already be there when this view mounts
+// (the list keeps its data), so this runs right away and after every render.
+function restoreReturn() {
+  if (!pendingReturn.deal) return
+  const scroller = listScroller.value
+  if (!scroller) return
+  const row = scroller.querySelector(
+    `[data-deal="${CSS.escape(pendingReturn.deal)}"]`,
+  )
+  // Not on the page yet: wait for the load; once it is done, keep the scroll only.
+  if (!row && (deals.loading || !deals.data)) return
+  scroller.scrollTop = pendingReturn.scrollTop
+  row?.focus({ preventScroll: true })
+  pendingReturn.deal = ''
+  sessionStorage.removeItem(RETURN_KEY)
+}
 watch(
-  () => deals.data,
-  async (data) => {
-    if (!pendingReturn.deal || !data) return
-    const target = pendingReturn
-    pendingReturn.deal = ''
-    sessionStorage.removeItem(RETURN_KEY)
-    await nextTick()
-    const scroller = listScroller.value
-    if (scroller) scroller.scrollTop = target.scrollTop
-    const row = scroller?.querySelector(
-      `[data-deal="${CSS.escape(target.deal)}"]`,
-    )
-    row?.focus({ preventScroll: true })
-  },
+  () => [deals.data, deals.loading, listScroller.value],
+  () => nextTick(restoreReturn),
+  { immediate: true, flush: 'post' },
 )
 function rowMenu(r) {
   return [
