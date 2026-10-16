@@ -25544,3 +25544,441 @@ msgstr "Programa como máximo {0} tratos a la vez."
 #: crm/api/next_step.py
 msgid "Count at most {0} queues at once."
 msgstr "Cuenta como máximo {0} colas a la vez."
+#: frontend/src/components/archivos/
+msgid "Drop to file it in {0}"
+msgstr "Suéltalo para guardarlo en {0}"
+
+#: frontend/src/components/archivos/
+msgid "Pick a file to see it here."
+msgstr "Elige un archivo para verlo aquí."
+
+#: frontend/src/components/archivos/
+msgid "Move to…"
+msgstr "Mover a…"
+
+#: frontend/src/components/archivos/
+msgid "Move folder"
+msgstr "Mover carpeta"
+
+#: frontend/src/components/archivos/
+msgid "Moved"
+msgstr "Listo, lo moviste"
+
+#: frontend/src/components/archivos/
+msgid "Send to the trash?"
+msgstr "¿Mandar a la papelera?"
+
+#: frontend/src/components/archivos/
+msgid "{0} files go to the trash. Nothing is deleted."
+msgstr "{0} archivos se van a la papelera. No se borra nada."
+
+#: frontend/src/components/archivos/
+msgid "Send to trash"
+msgstr "Mandar a la papelera"
+
+#: frontend/src/components/archivos/
+msgid "Sent to the trash"
+msgstr "Se fue a la papelera"
+
+#: frontend/src/components/archivos/
+msgid "Restored"
+msgstr "Lo recuperaste"
+
+#: frontend/src/components/archivos/
+msgid "Explore"
+msgstr "Explorar"
+
+#: frontend/src/components/archivos/
+msgid "Folders"
+msgstr "Carpetas"
+
+#: frontend/src/components/archivos/
+msgid "Archivos lists"
+msgstr "Listas de Archivos"
+
+#: frontend/src/components/archivos/
+msgid "Folder actions"
+msgstr "Acciones de la carpeta"
+
+#: frontend/src/components/archivos/
+msgid "New folder"
+msgstr "Nueva carpeta"
+
+#: frontend/src/components/archivos/
+msgid "Who sees it"
+msgstr "Quién la ve"
+
+#: frontend/src/components/archivos/
+msgid "New folder inside"
+msgstr "Nueva carpeta adentro"
+
+#: frontend/src/components/archivos/
+msgid "Breadcrumb"
+msgstr "Dónde estás"
+
+#: frontend/src/components/archivos/
+msgid "Search by name, issuer or text"
+msgstr "Busca por nombre, quien lo hizo o el texto"
+
+#: frontend/src/components/archivos/
+msgid "Channel"
+msgstr "Canal"
+
+#: frontend/src/components/archivos/
+msgid "Grid"
+msgstr "Cuadrícula"
+
+#: frontend/src/components/archivos/
+msgid "Groups"
+msgstr "Grupos"
+
+#: frontend/src/components/archivos/
+msgid "Not everyone sees it"
+msgstr "No todos la ven"
+
+#: frontend/src/components/archivos/
+msgid "{0} files"
+msgstr "{0} archivos"
+
+#: frontend/src/components/archivos/
+msgid "Upload a file"
+msgstr "Sube un archivo"
+
+#: frontend/src/components/archivos/
+msgid "Create a folder"
+msgstr "Crea una carpeta"
+
+#: frontend/src/components/archivos/
+msgid "Files"
+msgstr "Archivos"
+
+#: frontend/src/components/archivos/
+msgid "Selected files"
+msgstr "Archivos elegidos"
+
+#: frontend/src/components/archivos/
+msgid "Any type"
+msgstr "Cualquier tipo"
+
+#: frontend/src/components/archivos/
+msgid "Any channel"
+msgstr "Cualquier canal"
+
+#: frontend/src/components/archivos/
+msgid "Any month"
+msgstr "Cualquier mes"
+
+#: frontend/src/components/archivos/
+msgid "No file matches this search"
+msgstr "Ningún archivo coincide con esta búsqueda"
+
+#: frontend/src/components/archivos/
+msgid "Try another word, or clear the filters."
+msgstr "Prueba con otra palabra o quita los filtros."
+
+#: frontend/src/components/archivos/
+msgid "The trash is empty"
+msgstr "La papelera está vacía"
+
+#: frontend/src/components/archivos/
+msgid "Files you send to the trash stay here until they are purged."
+msgstr "Los archivos que mandas a la papelera se quedan aquí hasta que se depuran."
+
+#: frontend/src/components/archivos/
+msgid "This folder is empty"
+msgstr "Esta carpeta está vacía"
+
+#: frontend/src/components/archivos/
+msgid "Upload a file here, or create a folder inside."
+msgstr "Sube un archivo aquí o crea una carpeta adentro."
+
+
+#: frontend/src/components/archivos/
+msgid "Files you receive or upload show up here."
+msgstr "Los archivos que recibes o subes aparecen aquí."
+
+#: frontend/src/components/archivos/
+msgid "File"
+msgstr "Archivo"
+
+#: frontend/src/components/archivos/
+msgid "This file cannot be shown here. Download it to open it."
+msgstr "Este archivo no se puede ver aquí. Descárgalo para abrirlo."
+
+#: frontend/src/components/archivos/
+msgid "Showing the beginning of the file only."
+msgstr "Solo se muestra el principio del archivo."
+
+#: frontend/src/components/archivos/
+msgid "Share with the company"
+msgstr "Compartir con la empresa"
+
+#: frontend/src/components/archivos/
+msgid "Versions"
+msgstr "Versiones"
+
+#: frontend/src/components/archivos/
+msgid "Classify in the inbox"
+msgstr "Clasificar en la Bandeja"
+
+#: frontend/src/components/archivos/
+msgid "Save to Archivos"
+msgstr "Guardar en Archivos"
+
+#: frontend/src/components/archivos/
+msgid "Upload a new version"
+msgstr "Subir nueva versión"
+
+#: frontend/src/components/archivos/
+msgid "v{0}"
+msgstr "v{0}"
+
+#: frontend/src/components/archivos/
+msgid "Size"
+msgstr "Tamaño"
+
+#: frontend/src/components/archivos/
+msgid "Received by"
+msgstr "Lo recibió"
+
+#: frontend/src/components/archivos/
+msgid "Where it lives"
+msgstr "Dónde está guardado"
+
+#: frontend/src/components/archivos/
+msgid "No folder"
+msgstr "Sin carpeta"
+
+#: frontend/src/components/archivos/
+msgid "We could not read this file. Download it to open it."
+msgstr "No pudimos leer este archivo. Descárgalo para abrirlo."
+
+#: frontend/src/components/archivos/
+msgid "Renamed"
+msgstr "Le cambiaste el nombre"
+
+#: frontend/src/components/archivos/
+msgid "Now everyone in the company can see it."
+msgstr "Ahora todos en la empresa lo pueden ver."
+
+#: frontend/src/components/archivos/
+msgid "Saved to Archivos"
+msgstr "Se guardó en Archivos"
+
+#: frontend/src/components/archivos/
+msgid "New version saved"
+msgstr "Se guardó la nueva versión"
+
+#: frontend/src/components/archivos/
+msgid "Pick where it goes."
+msgstr "Elige a dónde va."
+
+#: frontend/src/components/archivos/
+msgid "There are no folders yet. Create one first."
+msgstr "Todavía no hay carpetas. Crea una primero."
+
+#: frontend/src/components/archivos/
+msgid "Move here"
+msgstr "Mover aquí"
+
+#: frontend/src/components/archivos/
+msgid "Folder name"
+msgstr "Nombre de la carpeta"
+
+#: frontend/src/components/archivos/
+msgid "Contracts, manuals, photos…"
+msgstr "Contratos, manuales, fotos…"
+
+
+#: frontend/src/components/archivos/
+msgid "Anyone who works here can open what is inside."
+msgstr "Cualquiera que trabaje aquí puede abrir lo que tenga adentro."
+
+#: frontend/src/components/archivos/
+msgid "Nobody else sees this folder or what is in it."
+msgstr "Nadie más ve esta carpeta ni lo que tiene adentro."
+
+#: frontend/src/components/archivos/
+msgid "Certain jobs"
+msgstr "Ciertos puestos"
+
+#: frontend/src/components/archivos/
+msgid "Only the jobs you name below."
+msgstr "Solo los puestos que escribas abajo."
+
+#: frontend/src/components/archivos/
+msgid "Jobs that can see it"
+msgstr "Puestos que la pueden ver"
+
+#: frontend/src/components/archivos/
+msgid "Loading jobs…"
+msgstr "Cargando puestos…"
+
+#: frontend/src/components/archivos/
+msgid "Create folder"
+msgstr "Crear carpeta"
+
+#: frontend/src/components/archivos/
+msgid "Rename folder"
+msgstr "Cambiar el nombre de la carpeta"
+
+#: frontend/src/components/archivos/
+msgid "Who sees this folder"
+msgstr "Quién ve esta carpeta"
+
+#: frontend/src/components/archivos/
+msgid "Other files"
+msgstr "Otros"
+
+#: frontend/src/components/archivos/
+msgid "Every file you can see, newest first."
+msgstr "Todos los archivos que puedes ver, los más nuevos primero."
+
+#: frontend/src/components/archivos/
+msgid "Files you keep by hand: contracts, manuals and photos."
+msgstr "Archivos que guardas a mano: contratos, manuales y fotos."
+
+#: frontend/src/components/archivos/
+msgid "By record"
+msgstr "Por registro"
+
+#: frontend/src/components/archivos/
+msgid "Files grouped by the record they belong to."
+msgstr "Archivos agrupados por el registro al que pertenecen."
+
+#: frontend/src/components/archivos/
+msgid "By contact"
+msgstr "Por contacto"
+
+#: frontend/src/components/archivos/
+msgid "Files grouped by the customer or supplier they are about."
+msgstr "Archivos agrupados por el cliente o proveedor del que hablan."
+
+#: frontend/src/components/archivos/
+msgid "By month"
+msgstr "Por mes"
+
+#: frontend/src/components/archivos/
+msgid "Files grouped by the month of the document."
+msgstr "Archivos agrupados por el mes del documento."
+
+#: frontend/src/components/archivos/
+msgid "By type"
+msgstr "Por tipo"
+
+#: frontend/src/components/archivos/
+msgid "Invoices, receipts, bank statements, contracts and photos."
+msgstr "Facturas, tickets, estados de cuenta, contratos y fotos."
+
+#: frontend/src/components/archivos/
+msgid "By channel"
+msgstr "Por canal"
+
+#: frontend/src/components/archivos/
+msgid "Where each file arrived from: WhatsApp, mail, the SAT or an upload."
+msgstr "De dónde llegó cada archivo: WhatsApp, correo, el SAT o una subida."
+
+#: frontend/src/components/archivos/
+msgid "Trash"
+msgstr "Papelera"
+
+#: frontend/src/components/archivos/
+msgid "Files and folders sent to the trash. Nothing is deleted here."
+msgstr "Archivos y carpetas que mandaste a la papelera. Aquí no se borra nada."
+
+#: frontend/src/components/archivos/
+msgid "Bank statements"
+msgstr "Estados de cuenta"
+
+#: frontend/src/components/archivos/
+msgid "Contracts"
+msgstr "Contratos"
+
+#: frontend/src/components/archivos/
+msgid "Telegram"
+msgstr "Telegram"
+
+#: frontend/src/components/archivos/
+msgid "Mail"
+msgstr "Correo"
+
+#: frontend/src/components/archivos/
+msgid "Paperless"
+msgstr "Paperless"
+
+#: frontend/src/components/archivos/
+msgid "SAT"
+msgstr "SAT"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Newest first"
+msgstr "Lo más nuevo primero"
+
+#: frontend/src/components/archivos/ArchivoPreview.vue
+msgid "We could not find this file."
+msgstr "No encontramos este archivo."
+
+#: frontend/src/composables/useArchivos.js
+msgid "Uploaded here"
+msgstr "Subida aquí"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Books capture"
+msgstr "Captura contable"
+
+#: frontend/src/composables/useArchivos.js
+msgid "CFDI from the SAT"
+msgstr "CFDI del SAT"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Repair photo"
+msgstr "Foto de reparación"
+
+
+#: frontend/src/composables/useArchivos.js
+msgid "Purchase receipt"
+msgstr "Recepción de compra"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Supplier quotation"
+msgstr "Cotización de proveedor"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Sales order"
+msgstr "Pedido de venta"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Quotation"
+msgstr "Cotización"
+
+#: frontend/src/composables/useArchivos.js
+msgid "POS sale"
+msgstr "Venta de mostrador"
+
+#: frontend/src/composables/useArchivos.js
+msgid "WhatsApp message"
+msgstr "Mensaje de WhatsApp"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Material request"
+msgstr "Solicitud de material"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Stock entry"
+msgstr "Movimiento de inventario"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Employee"
+msgstr "Empleado"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Project"
+msgstr "Proyecto"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Asset"
+msgstr "Activo"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Warranty claim"
+msgstr "Garantía"

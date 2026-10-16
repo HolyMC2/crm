@@ -77,7 +77,8 @@ export function loadArchivosBoot({ refresh = false } = {}) {
 }
 
 // Each list says in one line what is in it and what the worker does there.
-export const VIEWS = Object.freeze([
+// «Bandeja» is the intake queue: files that still need a hand.
+export const BANDEJA_VIEWS = Object.freeze([
   {
     value: 'por_clasificar',
     label: 'To classify',
@@ -91,20 +92,72 @@ export const VIEWS = Object.freeze([
     hint: 'Files that are still being read or could not be processed. Open one to see what to do.',
   },
   {
-    value: 'archivo',
-    label: 'Filed',
-    icon: 'archive',
-    hint: 'Linked or filed documents. Search by issuer, tag or any text in the file.',
-  },
-  {
     value: 'huecos_fiscales',
     label: 'Fiscal gaps',
     icon: 'alert-octagon',
     hint: 'Purchases without their CFDI, CFDI without a purchase, cancellations at the SAT and PDFs without their XML.',
   },
 ])
+// «Explorar» is the file manager: every file the worker may see, one way in per question.
+export const BROWSE_VIEWS = Object.freeze([
+  {
+    value: 'recientes',
+    label: 'Recent',
+    icon: 'clock',
+    hint: 'Every file you can see, newest first.',
+  },
+  {
+    value: 'carpeta',
+    label: 'Folders',
+    icon: 'folder',
+    hint: 'Files you keep by hand: contracts, manuals and photos.',
+  },
+  {
+    value: 'registro',
+    label: 'By record',
+    icon: 'file-text',
+    hint: 'Files grouped by the record they belong to.',
+  },
+  {
+    value: 'contacto',
+    label: 'By contact',
+    icon: 'users',
+    hint: 'Files grouped by the customer or supplier they are about.',
+  },
+  {
+    value: 'mes',
+    label: 'By month',
+    icon: 'calendar',
+    hint: 'Files grouped by the month of the document.',
+  },
+  {
+    value: 'tipo',
+    label: 'By type',
+    icon: 'tag',
+    hint: 'Invoices, receipts, bank statements, contracts and photos.',
+  },
+  {
+    value: 'canal',
+    label: 'By channel',
+    icon: 'message-square',
+    hint: 'Where each file arrived from: WhatsApp, mail, the SAT or an upload.',
+  },
+  {
+    value: 'papelera',
+    label: 'Trash',
+    icon: 'trash-2',
+    hint: 'Files and folders sent to the trash. Nothing is deleted here.',
+  },
+])
+export const VIEWS = Object.freeze([...BANDEJA_VIEWS, ...BROWSE_VIEWS])
 function viewEntry(value) {
   return VIEWS.find((v) => v.value === value) || VIEWS[0]
+}
+export function isBrowseView(value) {
+  return BROWSE_VIEWS.some((v) => v.value === value)
+}
+export function viewIcon(value) {
+  return viewEntry(value).icon
 }
 export function viewLabel(value) {
   return tr(viewEntry(value).label)
@@ -118,6 +171,9 @@ export function viewCountLabel(value, counts) {
   return typeof n === 'number' ? `${viewLabel(value)} (${n})` : viewLabel(value)
 }
 export function normalizeView(value) {
+  // «Archivo» was the third queue before Archivos became a file manager; its
+  // links keep working and land on «Recientes», which holds the same files.
+  if (value === 'archivo') return 'recientes'
   return VIEWS.some((v) => v.value === value) ? value : 'por_clasificar'
 }
 
@@ -157,6 +213,28 @@ const DOCTYPE_LABELS = {
   Customer: 'Customer',
   Supplier: 'Supplier',
   'Importacion Bancaria': 'Bank import',
+  Item: 'Product',
+  'Captura Contable': 'Books capture',
+  'SAT Received CFDI': 'CFDI from the SAT',
+  'Repair Photo': 'Repair photo',
+  'CRM Deal': 'Deal',
+  'CRM Lead': 'Lead',
+  Contact: 'Contact',
+  'Purchase Order': 'Purchase order',
+  'Purchase Receipt': 'Purchase receipt',
+  'Supplier Quotation': 'Supplier quotation',
+  'Sales Order': 'Sales order',
+  Quotation: 'Quotation',
+  'POS Invoice': 'POS sale',
+  'WhatsApp Message': 'WhatsApp message',
+  Communication: 'Email',
+  'Material Request': 'Material request',
+  'Stock Entry': 'Stock entry',
+  Employee: 'Employee',
+  Task: 'Task',
+  Project: 'Project',
+  Asset: 'Asset',
+  'Warranty Claim': 'Warranty claim',
 }
 export function doctypeLabel(doctype) {
   return DOCTYPE_LABELS[doctype] ? tr(DOCTYPE_LABELS[doctype]) : doctype
@@ -350,6 +428,310 @@ export function archivosHref({ document, target, returnTo, returnLabel } = {}) {
   }
   const query = params.toString()
   return `/crm/archivos${query ? '?' + query : ''}`
+}
+
+// ----------------------------------------------------------------- browsing
+// The file manager over `doco.docoutils.documents.browse`. Pure helpers only:
+// the server owns every permission decision, the client only shapes and names.
+
+export const BROWSE = 'doco.docoutils.documents.browse'
+export const MANAGE = 'doco.docoutils.documents.manage'
+
+export const BROWSE_KINDS = Object.freeze([
+  'factura',
+  'ticket',
+  'estado_cuenta',
+  'contrato',
+  'foto',
+  'otro',
+])
+const BROWSE_KIND_TITLES = {
+  factura: 'Invoices',
+  ticket: 'Receipts',
+  estado_cuenta: 'Bank statements',
+  contrato: 'Contracts',
+  foto: 'Photos',
+  otro: 'Other files',
+}
+export function browseKindLabel(kind) {
+  return BROWSE_KIND_TITLES[kind]
+    ? tr(BROWSE_KIND_TITLES[kind])
+    : String(kind || '') || tr('Other files')
+}
+const BROWSE_KIND_ICONS = {
+  factura: 'file-text',
+  ticket: 'shopping-bag',
+  estado_cuenta: 'credit-card',
+  contrato: 'edit-3',
+  foto: 'image',
+  otro: 'file',
+}
+export function browseKindIcon(kind) {
+  return BROWSE_KIND_ICONS[kind] || 'file'
+}
+
+export const BROWSE_CHANNELS = Object.freeze([
+  'whatsapp',
+  'telegram',
+  'correo',
+  'paperless',
+  'sat',
+  'subida',
+])
+const CHANNEL_TITLES = {
+  whatsapp: 'WhatsApp',
+  telegram: 'Telegram',
+  correo: 'Mail',
+  paperless: 'Paperless',
+  sat: 'SAT',
+  subida: 'Uploaded here',
+}
+export function channelLabel(channel) {
+  return CHANNEL_TITLES[channel]
+    ? tr(CHANNEL_TITLES[channel])
+    : String(channel || '')
+}
+
+export const SORTS = Object.freeze([
+  { value: 'recent', label: 'Newest first' },
+  { value: 'date', label: 'Document date' },
+  { value: 'name', label: 'Name' },
+  { value: 'size', label: 'Size' },
+])
+export function sortLabel(value) {
+  const entry = SORTS.find((s) => s.value === value) || SORTS[0]
+  return tr(entry.label)
+}
+
+/** The big icon a row or card shows when there is no thumbnail. */
+export function previewIcon(preview, kind) {
+  if (preview === 'image') return 'image'
+  if (preview === 'pdf') return 'file-text'
+  if (preview === 'xml') return 'code'
+  if (preview === 'text') return 'file-text'
+  return browseKindIcon(kind)
+}
+
+/** «octubre 2026» from the `YYYY-MM` keys of the month view. */
+export function monthLabel(key, locale) {
+  const match = /^(\d{4})-(\d{2})$/.exec(String(key || ''))
+  if (!match) return String(key || '')
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, 1)
+  const text = new Intl.DateTimeFormat(locale || undefined, {
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** A group row's own name, in the worker's words for the facet views. */
+export function groupLabel(view, group, locale) {
+  if (view === 'mes') return monthLabel(group?.key, locale)
+  if (view === 'tipo') return browseKindLabel(group?.key)
+  if (view === 'canal') return channelLabel(group?.key)
+  if (view === 'registro' && !group?.name) return doctypeLabel(group?.key)
+  return group?.label || group?.key || ''
+}
+
+/** Folder rows (flat, from the server) become the tree the navigation shows. */
+export function folderTree(folders = []) {
+  const byName = new Map()
+  for (const folder of folders)
+    if (folder?.name) byName.set(folder.name, { ...folder, children: [] })
+  const roots = []
+  const rooted = (node) => {
+    const seen = new Set()
+    let current = node
+    for (let guard = 0; current && guard < 64; guard++) {
+      if (seen.has(current.name)) return false
+      seen.add(current.name)
+      const parent = current.parent_folder
+        ? byName.get(current.parent_folder)
+        : null
+      if (!parent) return true
+      current = parent
+    }
+    return false
+  }
+  for (const node of byName.values()) {
+    const parent = node.parent_folder ? byName.get(node.parent_folder) : null
+    // A folder whose parent is hidden, missing or looping is shown at the root
+    // instead of disappearing from the tree.
+    if (parent && parent !== node && rooted(node)) parent.children.push(node)
+    else roots.push(node)
+  }
+  const sort = (list) => {
+    list.sort((a, b) =>
+      String(a.title || '').localeCompare(String(b.title || '')),
+    )
+    for (const node of list) sort(node.children)
+    return list
+  }
+  return sort(roots)
+}
+
+/** The tree as rows to render: `expanded` null opens everything. */
+export function flattenFolders(
+  tree = [],
+  expanded = null,
+  depth = 0,
+  out = [],
+) {
+  for (const node of tree) {
+    out.push({ ...node, depth, hasChildren: node.children.length > 0 })
+    const open = expanded === null || expanded.has?.(node.name)
+    if (open) flattenFolders(node.children, expanded, depth + 1, out)
+  }
+  return out
+}
+
+/** Every folder from `name` up to its root, so a move never nests a folder in itself. */
+export function folderLine(folders = [], name) {
+  const byName = new Map(folders.map((f) => [f.name, f]))
+  const line = []
+  let current = name ? byName.get(name) : null
+  for (let guard = 0; current && guard < 64; guard++) {
+    line.unshift(current)
+    current = current.parent_folder ? byName.get(current.parent_folder) : null
+    if (current && line.some((f) => f.name === current.name)) break
+  }
+  return line
+}
+
+export const SORT_VALUES = Object.freeze(SORTS.map((s) => s.value))
+/** The browse state the URL carries, sanitized; unknown values fall back. */
+export function parseBrowseState(query = {}) {
+  const text = (value, max) => {
+    const raw = String(value ?? '')
+    return raw && !unsafeChars(raw) && raw.length <= max ? raw : ''
+  }
+  const kind = BROWSE_KINDS.includes(query.kind) ? String(query.kind) : ''
+  const channel = BROWSE_CHANNELS.includes(query.channel)
+    ? String(query.channel)
+    : ''
+  const month = /^\d{4}-\d{2}$/.test(String(query.month || ''))
+    ? String(query.month)
+    : ''
+  return {
+    view: normalizeView(query.view),
+    key: text(query.key, 300),
+    file: text(query.file, 220),
+    q: String(query.q ?? '').slice(0, 120),
+    kind,
+    channel,
+    month,
+    sort: SORT_VALUES.includes(query.sort) ? String(query.sort) : 'recent',
+  }
+}
+
+/** The link «Copiar enlace» puts on the clipboard: this file, in this view. */
+export function fileLink(id, { view, key, origin } = {}) {
+  const params = new URLSearchParams()
+  if (view && view !== 'recientes') params.set('view', view)
+  if (key) params.set('key', key)
+  params.set('file', String(id || ''))
+  const base =
+    origin ?? (typeof location !== 'undefined' ? location.origin : '')
+  return `${base}/crm/archivos?${params.toString()}`
+}
+
+export function isDocumentItem(item) {
+  return item?.source === 'document'
+}
+/** Only managed documents the worker may edit move, rename or go to the trash. */
+export function canManageItem(item) {
+  return isDocumentItem(item) && !!item?.can_edit
+}
+
+/** Where a file lives, in one phrase: its folder, its record or its party. */
+export function whereLabel(item) {
+  if (!item) return ''
+  if (item.folder_title) return item.folder_title
+  if (item.attached_to?.title || item.attached_to?.name)
+    return item.attached_to.title || item.attached_to.name
+  const link = item.links?.[0]
+  if (link) return link.title || link.name
+  if (item.counterparty) return item.counterparty
+  return ''
+}
+
+/** Shift-click: every id between the anchor and the row just clicked. */
+export function selectionRange(ids = [], anchor, target) {
+  const to = ids.indexOf(target)
+  if (to < 0) return []
+  const from = ids.indexOf(anchor)
+  if (from < 0) return [target]
+  return from <= to ? ids.slice(from, to + 1) : ids.slice(to, from + 1)
+}
+
+/** Which separator a CSV really uses; exports from the bank vary. */
+function csvDelimiter(text) {
+  const line = String(text || '').split(/\r?\n/, 1)[0] || ''
+  const counts = [',', ';', '\t', '|'].map((sep) => [
+    sep,
+    line.split(sep).length - 1,
+  ])
+  counts.sort((a, b) => b[1] - a[1])
+  return counts[0][1] > 0 ? counts[0][0] : ','
+}
+/** A CSV preview: quoted fields honoured, capped at `maxRows` rows. */
+export function parseCsv(text, maxRows = 200) {
+  const source = String(text || '')
+  if (!source) return []
+  const sep = csvDelimiter(source)
+  const rows = []
+  let row = [],
+    field = '',
+    quoted = false
+  const endRow = () => {
+    row.push(field)
+    rows.push(row)
+    row = []
+    field = ''
+  }
+  for (let i = 0; i < source.length && rows.length < maxRows; i++) {
+    const ch = source[i]
+    if (quoted) {
+      if (ch !== '"') field += ch
+      else if (source[i + 1] === '"') {
+        field += '"'
+        i++
+      } else quoted = false
+      continue
+    }
+    if (ch === '"') quoted = true
+    else if (ch === sep) {
+      row.push(field)
+      field = ''
+    } else if (ch === '\n') endRow()
+    else if (ch !== '\r') field += ch
+  }
+  if (rows.length < maxRows && (field || row.length)) endRow()
+  return rows
+}
+
+/** XML read by a person: one tag per line, nesting indented. */
+export function prettyXml(text, maxLines = 2000) {
+  const flat = String(text || '')
+    .replace(/>\s*</g, '><')
+    .replace(/></g, '>\n<')
+    .split('\n')
+  const out = []
+  let depth = 0
+  for (const line of flat) {
+    if (out.length >= maxLines) break
+    const piece = line.trim()
+    if (!piece) continue
+    if (piece.startsWith('</')) depth = Math.max(0, depth - 1)
+    out.push('  '.repeat(depth) + piece)
+    if (
+      /^<[^!?/]/.test(piece) &&
+      !piece.endsWith('/>') &&
+      !/^<[^>]+>.*<\/[^>]+>$/.test(piece)
+    )
+      depth++
+  }
+  return out.join('\n')
 }
 
 /** Plain-language state for a failed call: the guard when present, else a kind. */

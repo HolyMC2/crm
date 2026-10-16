@@ -43,11 +43,22 @@
   <ModuleLayout
     v-else
     title="Archivos"
-    :entries="viewEntries"
+    :entries="[]"
     :active-key="view"
-    @select="selectView"
+    @select="(value) => go({ view: value })"
   >
     <template #sidebar>
+      <ArchivosNav
+        :view="view"
+        :current-key="browseState.key"
+        :counts="counts"
+        :summary="summary"
+        :folders="folders"
+        @select="go"
+        @new-folder="openNewFolder"
+        @folder-action="onFolderAction"
+        @move-to="onMoveTo"
+      />
       <div
         v-if="boot.can_configure"
         class="mt-6 border-t border-outline-gray-2 px-3 pt-4 text-sm"
@@ -92,7 +103,9 @@
                 ? __('Drop to receive for {0}', [
                     targetCtx.title || target?.name,
                   ])
-                : __('Drop to receive it in {0}', [company])
+                : openFolderTitle
+                  ? __('Drop to file it in {0}', [openFolderTitle])
+                  : __('Drop to receive it in {0}', [company])
             }}
           </p>
           <p class="text-sm text-ink-gray-6">
@@ -108,8 +121,115 @@
           __('Back to {0}', [returnLabel || __('the previous record')])
         }}</a
       >
-      <div class="flex min-h-0 flex-1">
-        <!-- Queue -->
+      <div
+        class="shrink-0 gap-2 border-b border-outline-gray-2 p-3 sm:hidden"
+        :class="documentName || fileId ? 'hidden' : 'grid'"
+      >
+        <ArchivosNav
+          mobile
+          :view="view"
+          :current-key="browseState.key"
+          :counts="counts"
+          :summary="summary"
+          :folders="folders"
+          @select="go"
+        />
+      </div>
+      <div
+        v-if="boot.companies.length > 1"
+        class="shrink-0 border-b border-outline-gray-2 px-3 py-2"
+      >
+        <FormControl
+          class="h-11 sm:h-auto"
+          type="select"
+          :aria-label="__('Company')"
+          :model-value="company"
+          :options="boot.companies.map((c) => ({ value: c, label: c }))"
+          @update:model-value="selectCompany"
+        />
+      </div>
+
+      <!-- Explorar: the file manager -->
+      <div v-if="browsing" class="flex min-h-0 flex-1">
+        <div
+          class="flex min-h-0 w-full flex-col border-outline-gray-2 lg:w-[560px] lg:shrink-0 lg:border-r"
+          :class="fileId ? 'hidden lg:flex' : 'flex'"
+        >
+          <ArchivoUpload
+            v-if="uploadOpen"
+            class="m-3"
+            :company="company"
+            :folder="openFolder"
+            :limit-mb="boot.upload_limit_mb || 10"
+            :initial-file="droppedFile"
+            @received="onReceived"
+            @cancel="closeUpload"
+          />
+          <ArchivosBrowser
+            ref="browser"
+            :view="view"
+            :current-key="browseState.key"
+            :q="browseState.q"
+            :kind="browseState.kind"
+            :channel="browseState.channel"
+            :month="browseState.month"
+            :sort="browseState.sort"
+            :data="browseData"
+            :loading="browseLoading"
+            :problem-state="browseProblem"
+            :active-id="fileId"
+            :locale="locale"
+            @navigate="go"
+            @patch="onFilter"
+            @open="(item) => patch({ file: item.id })"
+            @more="loadBrowse({ more: true })"
+            @retry="loadBrowse()"
+            @move="(items) => askMove(docNames(items))"
+            @trash="(items) => askTrash(docNames(items))"
+            @restore="(items) => doRestore(docNames(items))"
+            @download="download"
+            @upload="openUpload"
+            @new-folder="openNewFolder"
+            @folder-action="onFolderAction"
+            @move-to="onMoveTo"
+            @rename="askRename"
+          />
+        </div>
+        <section
+          class="min-h-0 min-w-0 flex-1 flex-col"
+          :class="fileId ? 'flex' : 'hidden lg:flex'"
+        >
+          <ArchivoPreview
+            v-if="fileId"
+            :id="fileId"
+            :key="`${fileId}:${previewVersion}`"
+            :company="company"
+            :view="view"
+            :current-key="browseState.key"
+            :limit-mb="boot.upload_limit_mb || 10"
+            :locale="locale"
+            :auto-rename="renameWanted === fileId"
+            @close="patch({ file: undefined })"
+            @changed="afterWrite"
+            @move="(item) => askMove(docNames([item]))"
+            @classify="openInBandeja"
+            @open-id="(id) => patch({ file: id })"
+            @redirect="(id) => patch({ file: id })"
+          />
+          <div
+            v-else
+            class="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center"
+          >
+            <FeatherIcon name="folder" class="h-10 w-10 text-ink-gray-4" />
+            <p class="text-base text-ink-gray-7">
+              {{ __('Pick a file to see it here.') }}
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <!-- Bandeja: the intake queue -->
+      <div v-else class="flex min-h-0 flex-1">
         <section
           class="flex min-h-0 w-full flex-col border-outline-gray-2 lg:w-[420px] lg:shrink-0 lg:border-r"
           :class="documentName ? 'hidden lg:flex' : 'flex'"
@@ -134,27 +254,6 @@
                 @click="toggleUpload"
               />
             </div>
-            <div class="grid gap-2 sm:hidden">
-              <FormControl
-                class="h-11"
-                type="select"
-                :aria-label="__('List')"
-                :model-value="view"
-                :options="
-                  viewEntries.map((e) => ({ value: e.value, label: e.label }))
-                "
-                @update:model-value="selectView"
-              />
-            </div>
-            <FormControl
-              v-if="boot.companies.length > 1"
-              class="h-11 sm:h-auto"
-              type="select"
-              :aria-label="__('Company')"
-              :model-value="company"
-              :options="boot.companies.map((c) => ({ value: c, label: c }))"
-              @update:model-value="selectCompany"
-            />
             <div
               v-if="target"
               class="space-y-2 rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3"
@@ -280,7 +379,7 @@
                 :company="company"
                 :counts="counts"
                 :limit-mb="boot.upload_limit_mb || 10"
-                @view="selectView"
+                @view="(value) => go({ view: value })"
                 @file="receiveFile"
               />
             </div>
@@ -384,46 +483,97 @@
               :company="company"
               :counts="counts"
               :limit-mb="boot.upload_limit_mb || 10"
-              @view="selectView"
+              @view="(value) => go({ view: value })"
               @file="receiveFile"
             />
           </div>
         </section>
       </div>
     </div>
+
+    <MoveDialog
+      v-model:open="moveState.open"
+      :folders="folders"
+      :current="moveState.current"
+      :blocked="moveState.blocked"
+      :title="moveState.title"
+      :busy="moveState.busy"
+      :error-text="moveState.error"
+      @choose="onMoveChosen"
+    />
+    <FolderDialog
+      v-model:open="folderState.open"
+      :mode="folderState.mode"
+      :folder="folderState.folder"
+      :busy="folderState.busy"
+      :error-text="folderState.error"
+      @submit="onFolderSubmit"
+    />
+    <Dialog v-model="confirmState.open" :title="confirmState.title" size="sm">
+      <template #default>
+        <p class="text-base text-ink-gray-7">{{ confirmState.body }}</p>
+      </template>
+      <template #actions>
+        <div class="flex justify-end gap-2">
+          <Button :label="__('Cancel')" @click="confirmState.open = false" />
+          <Button
+            variant="solid"
+            theme="red"
+            :label="confirmState.confirm"
+            @click="runConfirm"
+          />
+        </div>
+      </template>
+    </Dialog>
   </ModuleLayout>
 </template>
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
-import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import {
+  Badge,
+  Button,
+  Dialog,
+  FeatherIcon,
+  FormControl,
+  toast,
+} from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { useListKeys } from '@/composables/pageKeys'
 import ArchivoDetail from '@/components/archivos/ArchivoDetail.vue'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
+import ArchivoPreview from '@/components/archivos/ArchivoPreview.vue'
 import ArchivoUpload from '@/components/archivos/ArchivoUpload.vue'
+import ArchivosBrowser from '@/components/archivos/ArchivosBrowser.vue'
+import ArchivosNav from '@/components/archivos/ArchivosNav.vue'
 import ArchivosOverview from '@/components/archivos/ArchivosOverview.vue'
 import ArchivosRegistroPanel from '@/components/archivos/ArchivosRegistroPanel.vue'
+import FolderDialog from '@/components/archivos/FolderDialog.vue'
 import HuecosFiscales from '@/components/archivos/HuecosFiscales.vue'
+import MoveDialog from '@/components/archivos/MoveDialog.vue'
 import {
-  VIEWS,
+  BROWSE,
+  MANAGE,
   ageLabel,
   archivosApi,
   archivosBoot as boot,
+  canManageItem,
   doctypeLabel,
+  folderLine,
   formatDay,
+  isBrowseView,
   kindIcon,
   kindLabel,
   loadArchivosBoot,
   nextAfter,
   normalizeView,
+  parseBrowseState,
   parseTarget,
   problem,
   safeReturn,
   statusLabel,
   statusTheme,
-  viewCountLabel,
   viewHint,
   viewLabel,
   withDone,
@@ -435,24 +585,12 @@ const locale =
   (window.lang || document.documentElement.lang || '').replace('_', '-') ||
   undefined
 
-// URL is state: view, search, company, open document, record target and return.
+// URL is state: view, key, search, filters, company, open file or document.
 const view = computed(() => normalizeView(route.query.view))
+const browsing = computed(() => isBrowseView(view.value))
+const browseState = computed(() => parseBrowseState(route.query))
+const fileId = computed(() => (browsing.value ? browseState.value.file : ''))
 const documentName = computed(() => String(route.query.document || ''))
-// Keyboard standard: search, j/k documents, Enter opens it beside the list,
-// c receives a document, Esc closes the open document.
-useListKeys({
-  page: 'archivos',
-  search: true,
-  rows: true,
-  open: true,
-  create: () => {
-    uploadOpen.value = true
-  },
-  close: () => {
-    if (!documentName.value) return false
-    closeDocument()
-  },
-})
 const target = computed(() => parseTarget(String(route.query.target || '')))
 const returnTo = computed(() => safeReturn(String(route.query.return_to || '')))
 const returnLabel = computed(() =>
@@ -466,6 +604,22 @@ const gapsReturn = computed(() => {
   if (gapsKind.value) params.set('kind', gapsKind.value)
   if (route.query.company) params.set('company', String(route.query.company))
   return `/crm/archivos?${params.toString()}`
+})
+// Keyboard standard: search, j/k rows, Enter opens beside the list, c receives
+// a file, Esc closes the open file or document (Explorar adds its own keys).
+useListKeys({
+  page: 'archivos',
+  search: true,
+  rows: true,
+  open: true,
+  create: () => {
+    uploadOpen.value = true
+  },
+  close: () => {
+    if (fileId.value) return void patch({ file: undefined })
+    if (!documentName.value) return false
+    closeDocument()
+  },
 })
 const company = computed(
   () =>
@@ -489,12 +643,20 @@ const rows = ref([]),
   pageDragging = ref(false),
   droppedFile = ref(null)
 
-const viewEntries = computed(() =>
-  VIEWS.map((v) => ({
-    value: v.value,
-    icon: v.icon,
-    label: viewCountLabel(v.value, counts.value),
-  })),
+// Browse state: the folder tree, the counts and one page of files.
+const folders = ref([]),
+  summary = ref(null),
+  browseData = ref(null),
+  browseLoading = ref(false),
+  browseProblem = ref(null),
+  browsePage = ref(1),
+  browser = ref(null)
+
+const openFolder = computed(() =>
+  view.value === 'carpeta' ? browseState.value.key : '',
+)
+const openFolderTitle = computed(
+  () => folders.value.find((f) => f.name === openFolder.value)?.title || '',
 )
 
 // Receiving: the header button, the empty queue, the overview and a file
@@ -512,9 +674,10 @@ function toggleUpload() {
 }
 function receiveFile(file) {
   droppedFile.value = file
-  // On a phone only one pane shows: bring back the queue, where intake lives.
+  // On a phone only one pane shows: bring back the list, where intake lives.
   const wide = window.matchMedia?.('(min-width: 1024px)').matches
-  if (documentName.value && !wide) patch({ document: undefined })
+  if (!wide && (documentName.value || fileId.value))
+    patch({ document: undefined, file: undefined })
   openUpload()
 }
 function hasFiles(event) {
@@ -545,14 +708,6 @@ const emptyState = computed(() => {
         'Files that could not be read or processed show up here with what to do.',
       ),
     }
-  if (view.value === 'archivo')
-    return {
-      icon: 'archive',
-      title: __('Nothing filed yet'),
-      body: __(
-        'Once you link or file a document it stays here, searchable by issuer, tag or text.',
-      ),
-    }
   return {
     icon: 'inbox',
     title: lastDone.value ? __('All classified') : __('Nothing to classify'),
@@ -562,21 +717,28 @@ const emptyState = computed(() => {
   }
 })
 
+const STICKY = ['company', 'target', 'return_to', 'return_label']
 function patch(query) {
   const next = { ...route.query, ...query }
   for (const key of Object.keys(next))
     if (next[key] === undefined || next[key] === '') delete next[key]
   return router.replace({ query: next })
 }
-function selectView(value) {
-  patch({
-    view: value === 'por_clasificar' ? undefined : value,
-    document: undefined,
-    kind: undefined,
-  })
+/** Change list: a new view or key starts clean, keeping only what follows us. */
+function go({ view: value, key = '' }) {
+  const next = {}
+  for (const name of STICKY)
+    if (route.query[name]) next[name] = route.query[name]
+  if (value && value !== 'por_clasificar') next.view = value
+  if (key) next.key = key
+  q.value = ''
+  router.push({ query: next })
+}
+function onFilter(patchValues) {
+  patch({ ...patchValues, file: undefined })
 }
 function selectCompany(value) {
-  patch({ company: value, document: undefined })
+  patch({ company: value, document: undefined, file: undefined })
 }
 function open(name) {
   router.push({ query: { ...route.query, document: name } })
@@ -589,10 +751,22 @@ function clearTarget() {
   targetProblem.value = null
   patch({ target: undefined })
 }
+/** A browse document continues in the Bandeja, where classifying lives. */
+function openInBandeja(name) {
+  router.push({
+    query: {
+      ...route.query,
+      view: undefined,
+      key: undefined,
+      file: undefined,
+      document: name,
+    },
+  })
+}
 
 let requestSeq = 0
 async function loadList({ more = false } = {}) {
-  if (!company.value || fiscalView.value) return
+  if (!company.value || browsing.value || fiscalView.value) return
   const seq = ++requestSeq
   listLoading.value = true
   listProblem.value = null
@@ -619,10 +793,81 @@ const debouncedSearch = useDebounceFn(() => {
   loadList()
 }, 250)
 watch(q, debouncedSearch)
+
+let browseSeq = 0
+async function loadBrowse({ more = false } = {}) {
+  if (!company.value || !browsing.value) return
+  const state = browseState.value
+  const seq = ++browseSeq
+  browseLoading.value = true
+  browseProblem.value = null
+  try {
+    const data = await archivosApi(`${BROWSE}.files`, {
+      company: company.value,
+      view: state.view,
+      key: state.key || undefined,
+      query: state.q,
+      kind: state.kind || undefined,
+      channel: state.channel || undefined,
+      month: state.month || undefined,
+      page: more ? browsePage.value + 1 : 1,
+      page_size: 50,
+      sort: state.sort,
+    })
+    if (seq !== browseSeq) return
+    if (more && browseData.value)
+      data.items = [...(browseData.value.items || []), ...(data.items || [])]
+    browseData.value = data
+    browsePage.value = data.page || 1
+  } catch (error) {
+    if (seq === browseSeq) browseProblem.value = problem(error)
+  } finally {
+    if (seq === browseSeq) browseLoading.value = false
+  }
+}
+async function loadFolders() {
+  if (!company.value) return
+  try {
+    const data = await archivosApi(`${BROWSE}.folders`, {
+      company: company.value,
+    })
+    folders.value = data?.folders || []
+  } catch {
+    // The tree is a convenience: a refusal must not take down the page.
+    folders.value = []
+  }
+}
+async function loadSummary() {
+  if (!company.value) return
+  try {
+    summary.value = await archivosApi(`${BROWSE}.summary`, {
+      company: company.value,
+    })
+  } catch {
+    summary.value = null
+  }
+}
+
 watch(
-  () => [view.value, company.value],
-  () => loadList(),
+  () => [
+    view.value,
+    browseState.value.key,
+    browseState.value.q,
+    browseState.value.kind,
+    browseState.value.channel,
+    browseState.value.month,
+    browseState.value.sort,
+    company.value,
+  ],
+  () => {
+    if (browsing.value) loadBrowse()
+    else loadList()
+  },
 )
+watch(company, () => {
+  loadFolders()
+  loadSummary()
+})
 
 async function loadTarget() {
   targetCtx.value = null
@@ -657,16 +902,23 @@ function onTargetGuard(action) {
 function onReceived(detail, { pending = false } = {}) {
   if (pending) {
     // Another file was chosen while this one was sending: keep the intake open
-    // on the queue so it can be sent too.
+    // on the list so it can be sent too.
     toast.success(__('File received. Send the next one when ready.'))
-    loadList()
+    refresh()
     return
   }
   closeUpload()
   toast.success(__('File received'))
+  if (browsing.value) {
+    patch({ file: detail.id || 'doc:' + detail.name })
+    refresh()
+    return
+  }
   patch({
     company:
-      detail.company !== company.value ? detail.company : route.query.company,
+      detail.company && detail.company !== company.value
+        ? detail.company
+        : route.query.company,
     view: undefined,
     document: detail.name,
   })
@@ -710,12 +962,258 @@ function onDone(event) {
   loadList()
 }
 
-// A recovered permission reopens the record origin and the queue, not just the boot.
-async function start({ refresh = false } = {}) {
-  await loadArchivosBoot({ refresh })
+// ------------------------------------------------------------- file manager
+function docNames(items = []) {
+  return items.filter(canManageItem).map((item) => item.name)
+}
+function refresh() {
+  if (browsing.value) loadBrowse()
+  else loadList()
+}
+// A write (move, trash, share, new version) re-reads the open file too: the pane
+// must show where the file is now, not where it was.
+const previewVersion = ref(0)
+function afterWrite() {
+  previewVersion.value++
+  refresh()
+  loadFolders()
+  loadSummary()
+}
+// F2 opens the file and asks for its new name in one step.
+const renameWanted = ref('')
+function askRename(item) {
+  renameWanted.value = item.id
+  patch({ file: item.id })
+}
+watch(fileId, (id) => {
+  if (renameWanted.value && renameWanted.value !== id) renameWanted.value = ''
+})
+function download(items = []) {
+  for (const item of items)
+    if (item.file_url) window.open(item.file_url, '_blank', 'noopener')
+}
+
+const moveState = reactive({
+  open: false,
+  names: [],
+  folderName: '',
+  current: '',
+  blocked: [],
+  title: '',
+  busy: false,
+  error: '',
+})
+function askMove(names) {
+  if (!names.length) return
+  Object.assign(moveState, {
+    open: true,
+    names,
+    folderName: '',
+    current: openFolder.value,
+    blocked: [],
+    title: __('Move to…'),
+    busy: false,
+    error: '',
+  })
+}
+function askMoveFolder(folder) {
+  const inside = descendants(folder.name)
+  Object.assign(moveState, {
+    open: true,
+    names: [],
+    folderName: folder.name,
+    current: folder.parent_folder || '',
+    blocked: [folder.name, ...inside],
+    title: __('Move folder'),
+    busy: false,
+    error: '',
+  })
+}
+/** Every folder below `name`, so a folder is never moved inside itself. */
+function descendants(name) {
+  return folders.value
+    .filter((folder) =>
+      folderLine(folders.value, folder.name).some((up) => up.name === name),
+    )
+    .map((folder) => folder.name)
+}
+async function onMoveChosen(folder) {
+  moveState.busy = true
+  moveState.error = ''
+  try {
+    if (moveState.folderName)
+      await archivosApi(`${MANAGE}.move_folder`, {
+        name: moveState.folderName,
+        parent_folder: folder || undefined,
+      })
+    else
+      await archivosApi(`${MANAGE}.move_documents`, {
+        names: moveState.names,
+        folder: folder || undefined,
+      })
+    moveState.open = false
+    toast.success(__('Moved'))
+    browser.value?.clearSelection?.()
+    afterWrite()
+  } catch (error) {
+    moveState.error = problem(error).message
+  } finally {
+    moveState.busy = false
+  }
+}
+async function onMoveTo({ folder, names }) {
+  try {
+    await archivosApi(`${MANAGE}.move_documents`, {
+      names,
+      folder: folder || undefined,
+    })
+    toast.success(__('Moved'))
+    browser.value?.clearSelection?.()
+    afterWrite()
+  } catch (error) {
+    toast.error(problem(error).message)
+  }
+}
+
+const folderState = reactive({
+  open: false,
+  mode: 'create',
+  folder: null,
+  parent: '',
+  busy: false,
+  error: '',
+})
+function openNewFolder(parent = '') {
+  Object.assign(folderState, {
+    open: true,
+    mode: 'create',
+    folder: null,
+    parent: typeof parent === 'string' ? parent : '',
+    busy: false,
+    error: '',
+  })
+}
+function onFolderAction({ action, folder }) {
+  if (action === 'rename')
+    Object.assign(folderState, {
+      open: true,
+      mode: 'rename',
+      folder,
+      parent: '',
+      busy: false,
+      error: '',
+    })
+  else if (action === 'visibility')
+    Object.assign(folderState, {
+      open: true,
+      mode: 'visibility',
+      folder,
+      parent: '',
+      busy: false,
+      error: '',
+    })
+  else if (action === 'move') askMoveFolder(folder)
+  else if (action === 'trash')
+    folderWrite('trash_folder', { name: folder.name })
+  else if (action === 'restore')
+    folderWrite('restore_folder', { name: folder.name })
+}
+async function folderWrite(method, args) {
+  try {
+    await archivosApi(`${MANAGE}.${method}`, args)
+    toast.success(__('Done'))
+    afterWrite()
+  } catch (error) {
+    toast.error(problem(error).message)
+  }
+}
+async function onFolderSubmit({ mode, title, visibility, roles }) {
+  folderState.busy = true
+  folderState.error = ''
+  try {
+    if (mode === 'create')
+      await archivosApi(`${MANAGE}.create_folder`, {
+        company: company.value,
+        title,
+        parent_folder: folderState.parent || undefined,
+        visibility,
+        roles,
+      })
+    else if (mode === 'rename')
+      await archivosApi(`${MANAGE}.rename_folder`, {
+        name: folderState.folder.name,
+        title,
+      })
+    else
+      await archivosApi(`${MANAGE}.set_folder_visibility`, {
+        name: folderState.folder.name,
+        visibility,
+        roles,
+      })
+    folderState.open = false
+    afterWrite()
+  } catch (error) {
+    folderState.error = problem(error).message
+  } finally {
+    folderState.busy = false
+  }
+}
+
+const confirmState = reactive({
+  open: false,
+  title: '',
+  body: '',
+  confirm: '',
+  run: null,
+})
+function askTrash(names) {
+  if (!names.length) return
+  Object.assign(confirmState, {
+    open: true,
+    title: __('Send to the trash?'),
+    body: __('{0} files go to the trash. Nothing is deleted.', [names.length]),
+    confirm: __('Send to trash'),
+    run: () => doTrash(names),
+  })
+}
+function runConfirm() {
+  const action = confirmState.run
+  confirmState.open = false
+  action?.()
+}
+async function doTrash(names) {
+  try {
+    await archivosApi(`${MANAGE}.trash_documents`, { names })
+    toast.success(__('Sent to the trash'))
+    browser.value?.clearSelection?.()
+    if (names.some((name) => 'doc:' + name === fileId.value))
+      patch({ file: undefined })
+    afterWrite()
+  } catch (error) {
+    toast.error(problem(error).message)
+  }
+}
+async function doRestore(names) {
+  if (!names.length) return
+  try {
+    await archivosApi(`${MANAGE}.restore_documents`, { names })
+    toast.success(__('Restored'))
+    browser.value?.clearSelection?.()
+    afterWrite()
+  } catch (error) {
+    toast.error(problem(error).message)
+  }
+}
+
+// A recovered permission reopens the record origin and the list, not just the boot.
+async function start({ refresh: again = false } = {}) {
+  await loadArchivosBoot({ refresh: again })
   if (!boot.value?.enabled) return
   await loadTarget()
-  loadList()
+  loadFolders()
+  loadSummary()
+  if (browsing.value) loadBrowse()
+  else loadList()
 }
 function onPageGuard(action) {
   if (action.kind === 'retry') start({ refresh: true })

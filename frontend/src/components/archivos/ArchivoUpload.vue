@@ -120,6 +120,7 @@ import { computed, ref, watch } from 'vue'
 import { Button, FeatherIcon } from 'frappe-ui'
 import {
   ACCEPT,
+  MANAGE,
   archivosApi,
   formatBytes,
   problem,
@@ -131,6 +132,9 @@ import {
 const props = defineProps({
   company: { type: String, required: true },
   target: { type: Object, default: null },
+  // The open folder in «Explorar»: the file is filed there instead of waiting
+  // in the Bandeja.
+  folder: { type: String, default: '' },
   limitMb: { type: Number, default: 10 },
   // A file dropped on the page before this panel opened.
   initialFile: { type: Object, default: null },
@@ -174,18 +178,27 @@ async function send() {
   // on its way stays selected for its own send instead of being cleared.
   const submitted = file.value,
     company = props.company,
-    shared = visibility.value
+    shared = visibility.value,
+    folder = props.folder
   sending.value = true
   problemText.value = ''
   try {
     // The same bytes always resolve to the same evidence, so a retry after a
     // dropped connection never creates a second original.
-    const detail = await archivosApi('upload', {
+    const args = {
       company,
       filename: uploadName(submitted),
       content: await readBase64(submitted),
       visibility: shared,
-    })
+    }
+    // Inside a folder the file is filed there straight away; everywhere else
+    // it goes to the Bandeja as before.
+    const detail = folder
+      ? {
+          company,
+          ...(await archivosApi(`${MANAGE}.receive`, { ...args, folder })),
+        }
+      : await archivosApi('upload', args)
     const pending = file.value !== submitted
     if (!pending) file.value = null
     emit('received', detail, { pending })

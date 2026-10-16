@@ -112,8 +112,12 @@ describe('queue continuation', () => {
     expect(nextAfter([{ name: 'A' }], 'A')).toBe('')
     expect(nextAfter(rows, 'missing')).toBe('A')
   })
-  it('falls back to the intake view', () => {
-    expect(normalizeView('archivo')).toBe('archivo')
+  it('falls back to the intake view and keeps the old «archivo» links working', () => {
+    // «Archivo» was a queue before Archivos became a file manager; its links
+    // now land on «Recientes», which holds the same files.
+    expect(normalizeView('archivo')).toBe('recientes')
+    expect(normalizeView('carpeta')).toBe('carpeta')
+    expect(normalizeView('papelera')).toBe('papelera')
     expect(normalizeView('bogus')).toBe('por_clasificar')
   })
 })
@@ -666,7 +670,7 @@ describe('the page explains itself', () => {
     const counts = { por_clasificar: 3, ayuda: 0, archivo: 12 }
     expect(viewCountLabel('por_clasificar', counts)).toBe('To classify (3)')
     expect(viewCountLabel('ayuda', counts)).toBe('Need attention (0)')
-    expect(viewCountLabel('archivo', {})).toBe('Filed')
+    expect(viewCountLabel('papelera', {})).toBe('Trash')
     for (const view of VIEWS) expect(viewHint(view.value)).toBeTruthy()
   })
 
@@ -758,6 +762,11 @@ describe('the page explains itself', () => {
       '../../src/components/archivos/ArchivosOverview.vue',
       '../../src/components/archivos/ArchivoUpload.vue',
       '../../src/components/archivos/ArchivoDetail.vue',
+      '../../src/components/archivos/ArchivosNav.vue',
+      '../../src/components/archivos/ArchivosBrowser.vue',
+      '../../src/components/archivos/ArchivoPreview.vue',
+      '../../src/components/archivos/MoveDialog.vue',
+      '../../src/components/archivos/FolderDialog.vue',
     ]) {
       const source = readFileSync(resolve(here, file), 'utf8')
       strings.push(
