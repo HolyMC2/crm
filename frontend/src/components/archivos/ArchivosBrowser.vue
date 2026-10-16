@@ -135,7 +135,11 @@
     </div>
 
     <!-- What is here -->
-    <div ref="scroller" class="min-h-0 flex-1 overflow-y-auto">
+    <div
+      ref="scroller"
+      class="min-h-0 flex-1 overflow-y-auto"
+      @keydown="onListKey"
+    >
       <div
         v-if="loading && !rows.length"
         class="space-y-2 p-4"
@@ -300,6 +304,9 @@
         >
           <li v-for="(item, index) in rows" :key="item.id">
             <div
+              data-key-row
+              :data-index="index"
+              :data-row-current="item.id === activeId || undefined"
               class="flex min-h-16 items-center gap-2 px-2 py-2 hover:bg-surface-gray-1 sm:px-4"
               :class="rowClass(item, index)"
               :draggable="canManageItem(item) ? 'true' : 'false'"
@@ -307,6 +314,7 @@
             >
               <input
                 type="checkbox"
+                data-row-check
                 class="h-5 w-5 shrink-0 rounded border-outline-gray-3"
                 :checked="selected.has(item.id)"
                 :aria-label="__('Select {0}', [item.title])"
@@ -315,7 +323,8 @@
               <button
                 type="button"
                 data-archivos-row
-                data-key-row
+                data-row-link
+                data-row-focus
                 class="flex min-w-0 flex-1 items-center gap-3 text-left"
                 :aria-current="item.id === activeId ? 'true' : undefined"
                 @click="onOpen(item, index)"
@@ -384,6 +393,9 @@
         >
           <li v-for="(item, index) in rows" :key="item.id">
             <div
+              data-key-row
+              :data-index="index"
+              :data-row-current="item.id === activeId || undefined"
               class="relative flex h-full flex-col overflow-hidden rounded-lg border bg-surface-base"
               :class="
                 selected.has(item.id) || item.id === activeId
@@ -395,6 +407,7 @@
             >
               <input
                 type="checkbox"
+                data-row-check
                 class="absolute left-2 top-2 z-10 h-5 w-5 rounded border-outline-gray-3 bg-surface-white"
                 :checked="selected.has(item.id)"
                 :aria-label="__('Select {0}', [item.title])"
@@ -403,7 +416,8 @@
               <button
                 type="button"
                 data-archivos-row
-                data-key-row
+                data-row-link
+                data-row-focus
                 class="flex flex-1 flex-col text-left"
                 @click="onOpen(item, index)"
               >
@@ -494,7 +508,7 @@
   </section>
 </template>
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Badge, Button, Dropdown, FeatherIcon, FormControl } from 'frappe-ui'
 import ArchivoGuard from '@/components/archivos/ArchivoGuard.vue'
@@ -836,51 +850,36 @@ function typing(target) {
   )
 }
 const scroller = ref(null)
-function focusRow(index) {
-  const next = Math.max(0, Math.min(index, rows.value.length - 1))
-  focusIndex.value = next
-  const el = scroller.value?.querySelectorAll('[data-archivos-row]')?.[next]
-  el?.focus?.()
-  el?.scrollIntoView?.({ block: 'nearest' })
+// The shell's keyboard standard (useListKeys on the page) answers /, j/k and the
+// arrows, Enter, x / Shift+X / Ctrl+A and Esc on these rows. The list itself only
+// adds the file-manager keys the standard has no row for, while a row has the
+// focus: Space (toggle), Delete (trash or restore), F2 (rename), Esc (clear).
+function focusedIndex() {
+  const row = document.activeElement?.closest?.('[data-key-row]')
+  const index = Number(row?.dataset?.index)
+  return Number.isInteger(index) ? index : focusIndex.value
 }
-function onWindowKey(event) {
+function onListKey(event) {
   if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey)
     return
   if (typing(event.target)) return
-  if (event.key === '/') {
-    event.preventDefault()
-    document.querySelector('[data-archivos-search] input')?.focus()
-    return
-  }
   if (!rows.value.length) return
-  if (event.key === 'ArrowDown') {
-    event.preventDefault()
-    focusRow(focusIndex.value + 1)
-  } else if (event.key === 'ArrowUp') {
-    event.preventDefault()
-    focusRow(focusIndex.value - 1)
-  } else if (event.key === 'Enter') {
-    const item = rows.value[focusIndex.value]
-    if (item) {
+  const current = rows.value[focusedIndex()]
+  if (event.key === ' ') {
+    if (current) {
       event.preventDefault()
-      emit('open', item)
-    }
-  } else if (event.key === ' ') {
-    const item = rows.value[focusIndex.value]
-    if (item) {
-      event.preventDefault()
-      toggle(item.id)
+      toggle(current.id)
     }
   } else if (event.key === 'Delete') {
     const picked = movable.value.length
       ? movable.value
-      : [rows.value[focusIndex.value]].filter(canManageItem)
+      : [current].filter(canManageItem)
     if (picked.length) {
       event.preventDefault()
       emit(props.view === 'papelera' ? 'restore' : 'trash', picked)
     }
   } else if (event.key === 'F2') {
-    const item = movable.value[0] || rows.value[focusIndex.value]
+    const item = movable.value[0] || current
     if (canManageItem(item)) {
       event.preventDefault()
       emit('rename', item)
@@ -892,8 +891,6 @@ function onWindowKey(event) {
     }
   }
 }
-onMounted(() => window.addEventListener('keydown', onWindowKey))
-onUnmounted(() => window.removeEventListener('keydown', onWindowKey))
 
 defineExpose({ clearSelection, select: (id) => setSelected([id]) })
 </script>

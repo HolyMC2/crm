@@ -614,6 +614,8 @@ useListKeys({
   search: true,
   rows: true,
   open: true,
+  // Explorar's rows carry a checkbox (data-row-check): x, Shift+X, Ctrl+A select.
+  select: true,
   create: () => {
     uploadOpen.value = true
   },

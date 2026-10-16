@@ -281,7 +281,7 @@ describe('every shell page is wired to its PAGE_KEYS row', () => {
       'pages/Pendientes.vue',
       'components/pendientes/PendienteRow.vue',
     ],
-    archivos: ['pages/Archivos.vue'],
+    archivos: ['pages/Archivos.vue', 'components/archivos/ArchivosBrowser.vue'],
     avisos: ['pages/Avisos.vue', 'components/avisos/AvisosList.vue'],
     workload: ['components/Workload/WorkloadQueue.vue'],
     inbox: ['components/doco/inbox/LegacyConversationQueue.vue'],

@@ -37,7 +37,7 @@ export const PAGE_KEYS = Object.freeze({
   ventas: [...LIST, ...SELECT, 'create'],
   deal: ['edit', 'close'],
   pendientes: [...LIST, 'create'],
-  archivos: [...LIST, 'create', 'close'],
+  archivos: [...LIST, ...SELECT, 'create', 'close'],
   avisos: LIST,
   workload: [...ROWS, ...SELECT],
   inbox: [...LIST, 'create'],
