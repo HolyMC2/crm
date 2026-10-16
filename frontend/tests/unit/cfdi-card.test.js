@@ -244,6 +244,25 @@ describe('CFDI card', () => {
     expect(changed).toHaveBeenCalledWith(detail)
   })
 
+  it('«Crear compra» opens the capture review (one engine with «Capturar documento»)', async () => {
+    const open =
+      '/crm/gastos/captura/CAP-0001?return_to=%2Fcrm%2Farchivos%3Fdocument%3DDOC-1&return_label=Archivos'
+    stubApi({
+      '.card': cardResponse(),
+      '.create_purchase': {
+        status: 'capture',
+        capture: 'CAP-0001',
+        open_url: open,
+        detail: { name: 'DOC-1' },
+      },
+    })
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    await mount(CfdiCard, { name: 'DOC-1' })
+    await click(button('Create purchase from this CFDI'))
+    expect(assign).toHaveBeenCalledWith(open)
+  })
+
   it('needs_items: choosing a candidate teaches the line, then retries the purchase', async () => {
     const calls = stubApi({
       '.card': cardResponse(),

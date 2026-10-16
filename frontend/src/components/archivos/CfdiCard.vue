@@ -893,7 +893,9 @@ async function createPurchase() {
   }
 }
 function onPurchase(result) {
-  if (result.status === 'created' || result.status === 'duplicate') {
+  // 'capture': the books capture review (one engine with «Capturar documento»)
+  // drafts the purchase and brings the worker back to this document.
+  if (['created', 'duplicate', 'capture'].includes(result.status)) {
     step.value = null
     if (result.detail) emit('changed', result.detail)
     // Compras opens the purchase and brings the worker back here.
