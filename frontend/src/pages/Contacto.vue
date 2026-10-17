@@ -1,6 +1,29 @@
 <template>
   <ContactosLayout :segments="segments" @select="goList">
-    <header class="c-record-heading">
+    <!-- A phone gets one bar, as a contacts app: up to the list and the pencil.
+         The name is the page's own headline, so the bar carries no title. -->
+    <AppBar
+      v-if="isPhone"
+      :back="backTarget"
+      :back-label="backLabel"
+      title=""
+      data-testid="contacto-appbar"
+    >
+      <template #actions>
+        <button
+          v-if="record?.capabilities?.write"
+          type="button"
+          class="flex size-11 items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
+          :aria-label="
+            record.source === 'address' ? 'Editar dirección' : 'Editar datos'
+          "
+          @click="editIdentity"
+        >
+          <span class="lucide-pencil size-6" aria-hidden="true" />
+        </button>
+      </template>
+    </AppBar>
+    <header v-else class="c-record-heading">
       <Button
         :label="backLabel"
         icon-left="arrow-left"
@@ -37,14 +60,14 @@
           class="c-avatar c-avatar-large"
           :class="{ company: record.kind === 'company' }"
         >
+          <span
+            v-if="record.source !== 'address' && recordInitials"
+            class="text-xl font-semibold"
+            >{{ recordInitials }}</span
+          >
           <FeatherIcon
-            :name="
-              record.source === 'address'
-                ? 'map-pin'
-                : record.kind === 'company'
-                  ? 'briefcase'
-                  : 'user'
-            "
+            v-else
+            :name="record.source === 'address' ? 'map-pin' : 'user'"
             class="h-6 w-6"
           />
         </div>
@@ -58,7 +81,7 @@
           </p>
         </div>
         <Button
-          v-if="record.capabilities?.write"
+          v-if="record.capabilities?.write && !isPhone"
           class="c-title-edit"
           :label="
             record.source === 'address' ? 'Editar dirección' : 'Editar datos'
@@ -91,35 +114,60 @@
           icon-left="check-circle"
           @click="editFollowup(nextTask)"
         />
-        <a
-          v-if="phone"
-          :href="`tel:${phone.replace(/[^+\d]/g, '')}`"
+        <!-- Llamar · Mensaje · Correo · Agendar always sit in the same place;
+             one without data greys out instead of disappearing. -->
+        <component
+          :is="phone ? 'a' : 'span'"
+          :href="phone ? `tel:${phone.replace(/[^+\d]/g, '')}` : undefined"
           class="c-action-link"
+          :class="{ [GREYED]: !phone }"
+          :aria-disabled="!phone || undefined"
+          :title="phone ? undefined : 'Sin teléfono registrado'"
+          data-action="call"
           ><span class="c-action-icon"
             ><FeatherIcon name="phone" class="h-4 w-4" /></span
-          >Llamar</a
+          >Llamar</component
         >
-        <a
-          v-if="email"
-          :href="`mailto:${encodeURIComponent(email)}`"
+        <button
+          type="button"
           class="c-action-link"
+          :class="{ [GREYED]: !canMessage }"
+          :aria-disabled="!canMessage || undefined"
+          :title="canMessage ? undefined : messageHint"
+          data-action="message"
+          @click="openComposer"
+        >
+          <span class="c-action-icon"
+            ><FeatherIcon name="message-circle" class="h-4 w-4" /></span
+          >Mensaje
+        </button>
+        <component
+          :is="email ? 'a' : 'span'"
+          :href="email ? `mailto:${encodeURIComponent(email)}` : undefined"
+          class="c-action-link"
+          :class="{ [GREYED]: !email }"
+          :aria-disabled="!email || undefined"
+          :title="email ? undefined : 'Sin correo registrado'"
+          data-action="email"
           ><span class="c-action-icon"
             ><FeatherIcon name="mail" class="h-4 w-4" /></span
-          >Correo</a
+          >Correo</component
         >
-        <RouterLink v-if="agendaLink" :to="agendaLink" class="c-action-link"
-          ><span class="c-action-icon"
-            ><FeatherIcon name="calendar" class="h-4 w-4" /></span
-          >Agendar</RouterLink
-        >
-        <RouterLink
-          v-if="record.source === 'contact'"
-          :to="citaRoute"
+        <button
+          type="button"
           class="c-action-link"
-          ><span class="c-action-icon"
-            ><FeatherIcon name="clock" class="h-4 w-4" /></span
-          >{{ __('Book appointment') }}</RouterLink
+          :class="{ [GREYED]: !scheduleOptions.length }"
+          :aria-disabled="!scheduleOptions.length || undefined"
+          :title="
+            scheduleOptions.length ? undefined : 'La agenda no está disponible'
+          "
+          data-action="schedule"
+          @click="openSchedule"
         >
+          <span class="c-action-icon"
+            ><FeatherIcon name="calendar" class="h-4 w-4" /></span
+          >Agendar
+        </button>
         <!-- A supplier's quote or invoice becomes a draft order or bill. -->
         <CapturarDocumentoButton
           v-if="record.source === 'supplier' && record.name"
@@ -171,16 +219,21 @@
           compartido no puede revisarse, crea otra dirección para este destino.
         </p>
       </div>
-      <p v-if="customers.length === 1" class="c-chooser-single">
-        <template v-if="sameName(customers[0])"
-          >Cuenta de cliente con el mismo nombre</template
-        ><template v-else
+      <RouterLink
+        v-if="customers.length === 1"
+        :to="contactoRoute(customers[0])"
+        class="c-chooser-single flex min-h-11 items-center gap-2 rounded-lg hover:bg-surface-gray-2"
+        data-testid="contacto-account-link"
+      >
+        <FeatherIcon name="briefcase" class="h-4 w-4" />
+        <span v-if="sameName(customers[0])"
+          >Cuenta de cliente con el mismo nombre</span
+        ><span v-else
           >Cuenta de cliente
-          <strong>{{
-            customers[0].title || customers[0].name
-          }}</strong></template
+          <strong>{{ customers[0].title || customers[0].name }}</strong></span
         >
-      </p>
+        <FeatherIcon name="chevron-right" class="ml-auto h-4 w-4" />
+      </RouterLink>
       <div v-else-if="customers.length > 1" class="c-source-chooser">
         <FormControl
           v-model="selectedCustomer"
@@ -272,18 +325,28 @@
             Hay datos distintos entre los orígenes. Selecciona cada origen para
             revisar sus valores.
           </p>
-          <div class="c-section-heading">
-            <h3>Etiquetas</h3>
-            <Button
-              v-if="record.capabilities?.write"
-              label="Editar etiquetas"
-              variant="ghost"
-              @click="tagsOpen = true"
-            />
-          </div>
-          <div class="c-tags">
-            <span v-for="tag in record.tags || []" :key="tag">{{ tag }}</span>
-          </div>
+          <template v-if="(record.tags || []).length">
+            <div class="c-section-heading">
+              <h3>Etiquetas</h3>
+              <Button
+                v-if="record.capabilities?.write"
+                label="Editar etiquetas"
+                variant="ghost"
+                @click="tagsOpen = true"
+              />
+            </div>
+            <div class="c-tags">
+              <span v-for="tag in record.tags" :key="tag">{{ tag }}</span>
+            </div>
+          </template>
+          <Button
+            v-else-if="record.capabilities?.write"
+            class="c-inline-action"
+            label="Añadir etiqueta"
+            icon-left="tag"
+            variant="ghost"
+            @click="tagsOpen = true"
+          />
           <Button
             v-if="
               record.source === 'contact' &&
@@ -291,7 +354,7 @@
                 capabilities.sources?.supplier?.create)
             "
             class="c-inline-action"
-            label="Añadir rol comercial"
+            label="Hacer cliente o proveedor"
             icon-left="plus"
             variant="ghost"
             @click="roleOpen = true"
@@ -331,21 +394,6 @@
               @click="editFollowup()"
             />
           </div>
-          <div class="c-queue-tabs">
-            <Button
-              label="Pendientes"
-              :variant="taskStatus === 'Open' ? 'subtle' : 'ghost'"
-              @click="showTasks('Open')"
-            /><Button
-              label="Hechos"
-              :variant="taskStatus === 'Closed' ? 'subtle' : 'ghost'"
-              @click="showTasks('Closed')"
-            /><Button
-              label="Cancelados"
-              :variant="taskStatus === 'Cancelled' ? 'subtle' : 'ghost'"
-              @click="showTasks('Cancelled')"
-            />
-          </div>
           <RecoveryMessage
             :error="taskError"
             action="editar mi seguimiento"
@@ -377,26 +425,51 @@
                 @click="complete(task, true)"
               />
             </div>
-            <div
-              v-if="dueLabel(task, boot?.today) === 'Cancelado'"
-              class="c-actions"
-            >
-              <p>Está cancelado. Reabrir conserva esta misma tarea.</p>
-              <Button label="Reabrir seguimiento" @click="reopen(task)" />
-            </div>
           </article>
           <p v-if="!followups.length" class="c-muted">
-            {{
-              taskStatus === 'Open'
-                ? 'No tienes seguimientos pendientes para este registro.'
-                : 'No hay seguimientos completados en esta página.'
-            }}
+            No tienes seguimientos pendientes para este registro.
           </p>
           <Button
             v-if="taskMore"
             label="Cargar más seguimientos"
             @click="loadTasks(true)"
           />
+          <!-- Done and cancelled work folds away under the open list (Tasks). -->
+          <div v-if="doneTasks.length || doneMore" class="mt-2">
+            <button
+              type="button"
+              class="flex min-h-11 w-full items-center gap-2 text-sm font-medium text-ink-gray-7"
+              :aria-expanded="doneOpen"
+              data-testid="followups-done-toggle"
+              @click="doneOpen = !doneOpen"
+            >
+              <FeatherIcon
+                :name="doneOpen ? 'chevron-down' : 'chevron-right'"
+                class="h-4 w-4"
+              />
+              Completados ({{ doneTasks.length }}{{ doneMore ? '+' : '' }})
+            </button>
+            <template v-if="doneOpen">
+              <article
+                v-for="task in doneTasks"
+                :key="task.name"
+                class="c-followup text-ink-gray-6"
+              >
+                <h3>{{ plainText(task.description) }}</h3>
+                <p>
+                  {{ task.status === 'Cancelled' ? 'Cancelado' : 'Completado' }}
+                  ·
+                  {{ formatDay(task.date || task.due_date) || 'Sin fecha' }}
+                </p>
+                <Button
+                  v-if="task.status === 'Cancelled'"
+                  label="Reabrir"
+                  variant="ghost"
+                  @click="reopen(task)"
+                />
+              </article>
+            </template>
+          </div>
         </section>
         <section
           class="c-record-section c-notes-section"
@@ -413,17 +486,37 @@
             action="añadir una nota al origen seleccionado"
             @retry="saveNote"
           />
-          <template v-if="capabilities.notes?.create"
-            ><FormControl
+          <Button
+            v-if="capabilities.notes?.create"
+            class="c-inline-action"
+            label="Añadir nota"
+            icon-left="plus"
+            variant="ghost"
+            data-testid="contacto-add-note"
+            @click="noteOpen = true"
+          />
+          <BottomSheet
+            v-model:open="noteOpen"
+            title="Añadir nota"
+            :dismissible="!noteDraft.text.trim()"
+          >
+            <FormControl
               v-model="noteDraft.text"
               type="textarea"
-              label="Añadir nota"
-              placeholder="Contexto útil para el próximo contacto" /><Button
-              label="Guardar nota"
-              :disabled="!noteDraft.text.trim()"
-              :loading="noteSaving"
-              @click="saveNote"
-          /></template>
+              label="Nota"
+              placeholder="Contexto útil para el próximo contacto"
+            />
+            <template #actions>
+              <Button label="Cancelar" @click="noteOpen = false" />
+              <Button
+                variant="solid"
+                label="Guardar nota"
+                :disabled="!noteDraft.text.trim()"
+                :loading="noteSaving"
+                @click="saveNote"
+              />
+            </template>
+          </BottomSheet>
           <article
             v-for="note in record.notes?.rows || []"
             :key="note.name"
@@ -513,7 +606,7 @@
             <h2>Relaciones</h2>
             <Button
               v-if="record.capabilities?.write"
-              label="Revisar vínculo"
+              label="Vincular"
               icon-left="link"
               variant="ghost"
               @click="relationOpen = true"
@@ -548,7 +641,7 @@
             /><Button
               v-if="relation.native"
               class="c-inline-action"
-              label="Revisar origen"
+              label="Abrir"
               variant="ghost"
               @click="openRelated(relation.left)"
             />
@@ -571,22 +664,19 @@
         v-if="contactName && contactTabs.length"
         class="c-provider-section"
       >
-        <div
-          class="c-provider-tabs"
-          role="tablist"
-          aria-label="Secciones del registro"
-        >
-          <button
-            v-for="tab in contactTabs"
-            :key="tab.name"
-            role="tab"
-            :aria-selected="activeTab === tab.name"
-            :class="{ active: activeTab === tab.name }"
-            @click="activeTab = tab.name"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
+        <Segmented
+          v-if="tabOptions.length <= 4"
+          v-model="activeTab"
+          :options="tabOptions"
+          label="Secciones del registro"
+        />
+        <FilterChips
+          v-else
+          v-model="activeTab"
+          :chips="tabOptions"
+          :deselectable="false"
+          label="Secciones del registro"
+        />
         <ContactTabPanel
           v-if="activePanel"
           :key="contactName + ':' + activePanel.name + ':' + selectedCustomer"
@@ -709,6 +799,25 @@
               @click="unlink"
             /></div></template
       ></Dialog>
+      <ChannelComposer
+        v-if="composerOpen && canMessage"
+        v-model="composerOpen"
+        doctype="Contact"
+        :docname="contactName"
+        :phone="phone"
+        :contact-name="record.title || record.name"
+      />
+      <BottomSheet v-model:open="scheduleOpen" title="Agendar" flush>
+        <ListRow
+          v-for="option in scheduleOptions"
+          :key="option.key"
+          :icon="option.icon"
+          :title="option.label"
+          :subtitle="option.hint"
+          :to="option.to"
+          @click="scheduleOpen = false"
+        />
+      </BottomSheet>
       <div v-if="doneMessage" class="c-success" role="status">
         {{ doneMessage
         }}<Button label="Volver a la lista" variant="ghost" @click="back" />
@@ -717,8 +826,17 @@
   </ContactosLayout>
 </template>
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import {
+  AppBar,
+  BottomSheet,
+  FilterChips,
+  ListRow,
+  Segmented,
+} from '@/components/ui'
+import { isMobile as isPhone } from '@/composables/breakpoint'
+import { initials } from '@/utils/display'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
@@ -762,6 +880,9 @@ import {
   extraFields,
   sectionPosition,
 } from '@/utils/extraFields'
+const ChannelComposer = defineAsyncComponent(
+  () => import('@/components/doco/channel/ChannelComposer.vue'),
+)
 const route = useRoute(),
   router = useRouter()
 const record = ref(null),
@@ -782,6 +903,14 @@ const selectedPanelContact = ref(''),
   tagsOpen = ref(false),
   roleOpen = ref(false)
 const configurationCopied = ref(false)
+// An action without data stays in place, greyed (Google Contacts).
+const GREYED = 'opacity-40 cursor-not-allowed'
+const composerOpen = ref(false),
+  scheduleOpen = ref(false),
+  noteOpen = ref(false)
+const recordInitials = computed(() =>
+  initials(record.value?.title || record.value?.name || ''),
+)
 const addressTargetKey = ref(''),
   addressSource = ref(null)
 const {
@@ -798,6 +927,9 @@ watch(contactTabs, (tabs) => {
   if (!tabs.some((t) => t.name === activeTab.value))
     activeTab.value = tabs[0]?.name || ''
 })
+const tabOptions = computed(() =>
+  contactTabs.value.map((t) => ({ value: t.name, label: t.label })),
+)
 const activePanel = computed(() =>
   contactTabs.value.find((t) => t.name === activeTab.value),
 )
@@ -917,6 +1049,33 @@ const followups = ref([]),
   taskMore = ref(false),
   taskCursor = ref(null)
 const nextTask = computed(() => nextFollowup(openTasks.value))
+// Done and cancelled follow-ups, folded under the open list.
+const doneTasks = ref([]),
+  doneMore = ref(false),
+  doneOpen = ref(false)
+let doneGeneration = 0
+async function loadDone() {
+  const own = ++doneGeneration
+  const source = sourceRef(selectedSource.value || nativeRoute.value)
+  try {
+    const pages = await Promise.all(
+      ['Closed', 'Cancelled'].map((status) =>
+        contactosApi('list_followups', { ...source, status }),
+      ),
+    )
+    if (own !== doneGeneration) return
+    const rows = pages.flatMap((page) =>
+      page.available === false ? [] : page.rows || [],
+    )
+    doneTasks.value = rows.sort((a, b) =>
+      String(b.modified || '').localeCompare(String(a.modified || '')),
+    )
+    doneMore.value = pages.some((page) => page.has_more)
+  } catch {
+    // The open list is what the worker acts on; a failed history stays folded.
+    if (own === doneGeneration) doneTasks.value = []
+  }
+}
 const canFollowup = computed(() => capabilities.value.followups?.create)
 const noteError = ref(null),
   noteSaving = ref(false)
@@ -961,15 +1120,50 @@ const {
 const { id } = useContactosDraft(
   () => `record-actions:${nativeRoute.value.source}:${nativeRoute.value.name}`,
 )
+// «Mensaje»: the authorised channels for this person (the composer asks
+// which one and the worker confirms the send).
+const canMessage = computed(() => !!(phone.value && contactName.value))
+const messageHint = computed(() =>
+  phone.value
+    ? 'Los mensajes se envían desde la ficha de la persona'
+    : 'Sin teléfono registrado',
+)
+function openComposer() {
+  if (canMessage.value) composerOpen.value = true
+}
+// «Agendar»: one action; a sheet offers the appointment or the calendar event.
+const scheduleOptions = computed(() =>
+  [
+    record.value?.source === 'contact' && {
+      key: 'cita',
+      icon: 'lucide-clock',
+      label: 'Cita',
+      hint: 'Reservar un horario con esta persona',
+      to: citaRoute.value,
+    },
+    agendaLink.value && {
+      key: 'evento',
+      icon: 'lucide-calendar',
+      label: 'Evento en la agenda',
+      hint: 'Una llamada, visita o recordatorio',
+      to: agendaLink.value,
+    },
+  ].filter(Boolean),
+)
+function openSchedule() {
+  if (scheduleOptions.value.length === 1)
+    router.push(scheduleOptions.value[0].to)
+  else if (scheduleOptions.value.length) scheduleOpen.value = true
+}
 const relationLabels = {
   same_person: 'Misma persona',
   same_company: 'Misma empresa',
   represents: 'Representa a',
   payer_for: 'Paga por',
-  native_role: 'Rol nativo vinculado',
+  native_role: 'Cuenta vinculada',
   primary_contact: 'Contacto principal',
   representative: 'Representante',
-  crm_deal: 'Oportunidad comercial',
+  crm_deal: 'Trato',
 }
 // Sections a saved order does not list yet («Más datos» for older orders) go last.
 const sectionStyle = (key) => ({
@@ -1034,6 +1228,7 @@ async function reload({ freshBoot = false } = {}) {
         taskFailed(e)
       }
     } else await loadTasks()
+    loadDone()
   } catch (e) {
     if (own === generation) {
       error.value = e
@@ -1088,6 +1283,7 @@ function taskFailed(e) {
 // the next-action card are replaced, never appended (an event payload is not a
 // «load more» request).
 async function refreshFollowups() {
+  loadDone()
   await loadTasks(false)
   if (taskStatus.value === 'Open') return
   try {
@@ -1158,12 +1354,6 @@ async function editIdentity() {
     error.value = e
   }
 }
-// Template handlers stay single calls: Vue only splits inline statements on ';',
-// which Prettier (semi: false) removes.
-function showTasks(status) {
-  taskStatus.value = status
-  loadTasks()
-}
 async function complete(task, scheduleNext = false) {
   try {
     const payload = {
@@ -1200,6 +1390,7 @@ async function saveNote() {
     await contactosApi('add_note', { payload, request_id: noteId(payload) })
     clearNote()
     noteDraft.value.text = ''
+    noteOpen.value = false
     await reload()
     noteError.value = null
   } catch (e) {
@@ -1248,6 +1439,11 @@ const backLabel = computed(() =>
     ? `Volver a ${String(route.query.return_label || '').slice(0, 40) || 'la página anterior'}`
     : 'Volver a la lista',
 )
+const backTarget = computed(() =>
+  returnPath.value
+    ? returnPath.value.replace(/^\/crm/, '') || '/'
+    : { name: 'Contactos' },
+)
 function back() {
   if (returnPath.value)
     router.push(returnPath.value.replace(/^\/crm/, '') || '/')
@@ -1276,10 +1472,31 @@ const hasValue = (field) => {
   if (field.fieldtype === 'Check') return !!value
   return !(value === '' || value == null)
 }
+// Datos does not repeat the headline or the channel rows: name parts already
+// in the name, and a phone or e-mail listed under Teléfonos / Correos.
+const NAME_PARTS = ['first_name', 'middle_name', 'last_name', 'full_name']
+const CHANNEL_FIELDS = ['mobile_no', 'phone', 'email_id']
+const norm = (value) =>
+  String(value ?? '')
+    .toLowerCase()
+    .replace(/[^\p{L}\d@.+]/gu, '')
+const repeated = (field) => {
+  const value = norm(record.value?.fields?.[field.fieldname])
+  if (!value) return false
+  if (NAME_PARTS.includes(field.fieldname))
+    return norm(record.value?.title || record.value?.name).includes(value)
+  if (CHANNEL_FIELDS.includes(field.fieldname))
+    return [
+      ...phoneRows.value.map((r) => r.phone),
+      ...emailRows.value.map((r) => r.email_id),
+    ].some((v) => norm(v) === value)
+  return false
+}
 const shownFields = computed(() =>
-  showEmptyFields.value
+  (showEmptyFields.value
     ? displayFields.value
-    : displayFields.value.filter(hasValue),
+    : displayFields.value.filter(hasValue)
+  ).filter((field) => !repeated(field)),
 )
 const emptyFieldCount = computed(
   () => displayFields.value.filter((f) => !hasValue(f)).length,

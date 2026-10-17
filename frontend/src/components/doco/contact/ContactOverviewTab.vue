@@ -17,89 +17,40 @@
       v-else-if="data"
       class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6"
     >
-      <div
-        v-if="data.contact?.mobile_no"
-        class="mb-4 flex flex-wrap items-center gap-2"
-      >
-        <Button
-          variant="solid"
-          :label="__('Enviar mensaje')"
-          @click="composerOpen = true"
-        />
-        <span class="text-xs text-ink-gray-6">{{
-          __('Elige un canal autorizado; tú confirmas el envío.')
-        }}</span>
-      </div>
-      <ChannelComposer
-        v-if="composerOpen && data.contact?.mobile_no"
-        v-model="composerOpen"
-        doctype="Contact"
-        :docname="docname"
-        :phone="data.contact.mobile_no"
-        :contact-name="data.contact.full_name"
-      />
-
-      <div v-for="rollup in rollups" :key="rollup.currency" class="mb-5">
+      <!-- Only numbers there is something to say about: a zero tile is noise
+           (Shell S4.2). The balance always shows; it is the first question. -->
+      <div v-for="rollup in rollups" :key="rollup.currency" class="mb-4">
         <div
           v-if="rollups.length > 1"
           class="mb-2 text-xs font-semibold text-ink-gray-6"
         >
           {{ rollup.currency }}
         </div>
-        <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <!-- Red means "this person owes money". A settled account is not an
-               alert, so nothing (or a credit, or what was paid) stays neutral. -->
-          <Tile
+        <KpiGrid>
+          <KpiTile
             :label="__('Saldo')"
             :value="money(rollup.outstanding, rollup.currency)"
-            :tone="rollup.outstanding > 0 ? 'red' : 'gray'"
+            :tone="rollup.outstanding > 0 ? 'danger' : 'neutral'"
           />
-          <Tile
-            :label="__('Facturado')"
-            :value="money(rollup.invoiced, rollup.currency)"
+          <KpiTile
+            v-for="tile in moneyTiles(rollup)"
+            :key="tile.label"
+            :label="tile.label"
+            :value="tile.value"
+            :tone="tile.tone"
           />
-          <Tile
-            :label="__('Pagado')"
-            :value="money(rollup.paid, rollup.currency)"
-          />
-          <Tile
-            :label="__('Notas de crédito')"
-            :value="money(rollup.credited, rollup.currency)"
-            :tone="rollup.credited > 0 ? 'amber' : 'gray'"
-          />
-        </div>
+        </KpiGrid>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <Tile
-          :label="__('Tratos')"
-          :value="String(data.counts.deals ?? __('No disponible'))"
+      <KpiGrid v-if="countTiles.length">
+        <KpiTile
+          v-for="tile in countTiles"
+          :key="tile.label"
+          :label="tile.label"
+          :value="tile.value"
+          :tone="tile.tone"
         />
-        <Tile
-          :label="__('Reparaciones')"
-          :value="String(data.counts.repairs ?? __('No disponible'))"
-        />
-        <Tile
-          :label="__('Garantías activas')"
-          :value="String(data.counts.active_warranties ?? __('No disponible'))"
-          :tone="data.counts.active_warranties > 0 ? 'green' : 'gray'"
-        />
-        <Tile
-          :label="__('Facturas')"
-          :value="String(data.counts.invoices ?? __('No disponible'))"
-        />
-        <Tile
-          v-if="data.has_storefront"
-          :label="__('Pedidos tienda')"
-          :value="String(data.counts.storefront_orders ?? __('No disponible'))"
-          :tone="data.counts.open_storefront_orders > 0 ? 'amber' : 'gray'"
-        />
-        <Tile
-          v-if="data.has_saldo"
-          :label="__('Recargas')"
-          :value="String(data.counts.recargas ?? __('No disponible'))"
-        />
-      </div>
+      </KpiGrid>
 
       <div class="mt-5 grid gap-3 lg:grid-cols-2">
         <div
@@ -124,7 +75,7 @@
           </dl>
         </div>
         <div
-          class="rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-4"
+          class="hidden rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-4 lg:block"
         >
           <h3 class="text-sm font-semibold text-ink-gray-9">
             {{ __('Persona y clientes') }}
@@ -151,7 +102,7 @@
             <span
               v-if="!data.customers.length"
               class="text-xs text-ink-gray-6"
-              >{{ __('No linked customer') }}</span
+              >{{ __('Sin cuenta de cliente') }}</span
             >
           </div>
         </div>
@@ -162,19 +113,15 @@
 
 <script setup>
 import SectionAvailability from '@/components/doco/contact/SectionAvailability.vue'
-import { computed, defineComponent, h, ref } from 'vue'
-import { Button, createResource } from 'frappe-ui'
+import { computed, defineComponent, h } from 'vue'
+import { createResource } from 'frappe-ui'
+import { KpiGrid, KpiTile } from '@/components/ui'
 import { sourceHref } from '@/utils/shellRoutes'
-import { defineAsyncComponent } from 'vue'
-const ChannelComposer = defineAsyncComponent(
-  () => import('@/components/doco/channel/ChannelComposer.vue'),
-)
 
 const props = defineProps({
   docname: { type: String, required: true },
   selectedCustomer: { type: String, default: '' },
 })
-const composerOpen = ref(false)
 const resource = createResource({
   url: 'doco_marketing.api.contact360.get_contact_overview',
   params: { contact: props.docname, customer: props.selectedCustomer || null },
@@ -185,34 +132,44 @@ const resource = createResource({
 const data = computed(() => resource.data || null)
 const rollups = computed(() => data.value?.rollup?.by_currency || [])
 
-const Tile = defineComponent({
-  props: {
-    label: String,
-    value: String,
-    tone: { type: String, default: 'gray' },
-  },
-  setup(p) {
-    const tones = {
-      gray: 'bg-surface-gray-1 text-ink-gray-9',
-      red: 'bg-surface-red-1 text-ink-red-8',
-      green: 'bg-surface-green-2 text-ink-green-8',
-      amber: 'bg-surface-amber-1 text-ink-amber-9',
-    }
-    return () =>
-      h('div', { class: `rounded-xl p-3 ${tones[p.tone]}` }, [
-        h(
-          'div',
-          // Sentence case: the value is the thing to read, the label names it.
-          { class: 'text-xs font-medium opacity-75' },
-          p.label,
-        ),
-        h(
-          'div',
-          { class: 'mt-1 truncate text-lg font-bold tabular-nums' },
-          p.value || '—',
-        ),
-      ])
-  },
+// Money besides the balance, only when it is not zero.
+function moneyTiles(rollup) {
+  return [
+    { label: __('Facturado'), amount: rollup.invoiced },
+    { label: __('Pagado'), amount: rollup.paid },
+    { label: __('Notas de crédito'), amount: rollup.credited, tone: 'warning' },
+  ]
+    .filter((t) => Number(t.amount) > 0)
+    .map((t) => ({
+      label: t.label,
+      value: money(t.amount, rollup.currency),
+      tone: t.tone || 'neutral',
+    }))
+}
+const countTiles = computed(() => {
+  const counts = data.value?.counts || {}
+  return [
+    { label: __('Tratos'), n: counts.deals },
+    { label: __('Reparaciones'), n: counts.repairs },
+    {
+      label: __('Garantías activas'),
+      n: counts.active_warranties,
+      tone: 'success',
+    },
+    { label: __('Facturas'), n: counts.invoices },
+    data.value?.has_storefront && {
+      label: __('Pedidos tienda'),
+      n: counts.storefront_orders,
+      tone: counts.open_storefront_orders > 0 ? 'warning' : 'neutral',
+    },
+    data.value?.has_saldo && { label: __('Recargas'), n: counts.recargas },
+  ]
+    .filter((t) => t && Number(t.n) > 0)
+    .map((t) => ({
+      label: t.label,
+      value: String(t.n),
+      tone: t.tone || 'neutral',
+    }))
 })
 const Row = defineComponent({
   props: { label: String, value: String },

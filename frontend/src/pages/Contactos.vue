@@ -12,7 +12,16 @@
         variant="ghost"
         @click="customize = true"
     /></template>
-    <header class="c-page-heading">
+    <!-- A phone's title is the shell bar's «Contactos»; create is the FAB. -->
+    <Button
+      v-if="isPhone && returnTo"
+      :label="`Volver a ${returnLabel}`"
+      icon-left="arrow-left"
+      variant="ghost"
+      data-testid="contactos-return"
+      @click="goToReturn(router, returnTo)"
+    />
+    <header v-if="!isPhone" class="c-page-heading">
       <div>
         <h1>{{ title }}</h1>
         <p>Personas, empresas y tu siguiente acción</p>
@@ -43,11 +52,20 @@
         data-list-search
         class="c-search"
         type="text"
-        placeholder="Buscar nombre, teléfono, correo o RFC"
+        :placeholder="
+          isPhone ? 'Buscar contactos' : 'Buscar nombre, teléfono, correo o RFC'
+        "
         aria-label="Buscar contactos"
       />
       <Button
-        v-if="state.segment !== 'followups'"
+        v-if="state.segment !== 'followups' && isPhone"
+        icon="filter"
+        aria-label="Filtros"
+        :aria-expanded="filtersOpen"
+        @click="filtersOpen = !filtersOpen"
+      />
+      <Button
+        v-else-if="state.segment !== 'followups'"
         label="Filtros"
         icon-left="filter"
         @click="filtersOpen = !filtersOpen"
@@ -283,6 +301,32 @@
           </div>
         </article>
       </template>
+      <!-- Phone rows: a contacts-app list — initials, the name, one way to
+           reach them; no chip, no ID, no «Sin canal». -->
+      <div v-else-if="isPhone" data-testid="contactos-phone-list">
+        <ListRow
+          v-for="row in rows"
+          :key="row.source + ':' + row.name"
+          data-key-row
+          :avatar="row.source === 'address' ? undefined : row.title || ''"
+          :icon="row.source === 'address' ? 'lucide-map-pin' : undefined"
+          :title="row.title || row.name"
+          :subtitle="rowLine(row)"
+          :selected="state.selected === row.source + ':' + row.name"
+          @click="openRow(row)"
+        />
+        <button
+          v-if="hasMore && rows.length"
+          type="button"
+          class="flex min-h-12 w-full items-center justify-center text-base font-medium text-ink-gray-8"
+          :disabled="loadingMore"
+          data-testid="contactos-load-more"
+          @click="loadMore"
+        >
+          {{ loadingMore ? 'Cargando…' : 'Cargar más' }}
+        </button>
+        <div v-if="rows.length" class="h-20" aria-hidden="true" />
+      </div>
       <template v-else>
         <div v-if="rows.length" class="c-list-head" :style="gridStyle">
           <span>Nombre</span
@@ -373,7 +417,7 @@
         </p>
         <div class="c-actions">
           <Button label="Limpiar filtros" @click="clearSearch" /><Button
-            v-if="capabilities.create"
+            v-if="capabilities.create && !isPhone"
             label="Nuevo contacto"
             variant="solid"
             @click="newIdentity = true"
@@ -381,7 +425,15 @@
         </div>
       </div>
     </div>
-    <footer class="c-pagination">
+    <Fab
+      v-if="isPhone && capabilities.create"
+      label="Nuevo contacto"
+      @click="newIdentity = true"
+    />
+    <footer
+      v-if="!isPhone || state.segment === 'followups'"
+      class="c-pagination"
+    >
       <span
         >{{ rows.length }} registros en esta página{{
           partial ? ' · Resultados parciales' : ''
@@ -537,6 +589,8 @@ import {
 import { call } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
+import { Fab, ListRow } from '@/components/ui'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import { focusSearch, useListKeys } from '@/composables/pageKeys'
 import IdentityEditor from '@/components/contactos/IdentityEditor.vue'
 import NativeLinkField from '@/components/contactos/NativeLinkField.vue'
@@ -1017,6 +1071,44 @@ function openTask(task) {
       name: task.reference_name,
     }),
   )
+}
+// Line 2 of a phone row: how to reach them, else where they work. Never the ID.
+function rowLine(row) {
+  const f = row.fields || {}
+  return (
+    f.mobile_no ||
+    f.phone ||
+    f.email_id ||
+    f.company_name ||
+    f.organization ||
+    row.subtitle ||
+    f.designation ||
+    ''
+  )
+}
+// Phones read on instead of paging: the next page is added under the list.
+const loadingMore = ref(false)
+async function loadMore() {
+  if (!hasMore.value || loadingMore.value) return
+  const own = generation
+  loadingMore.value = true
+  try {
+    const [method, args] = listRequest()
+    const result = await contactosApi(method, {
+      ...args,
+      cursor: nextCursor.value,
+    })
+    if (own !== generation) return
+    if (result.available === false)
+      throw new Error(result.reason || 'No se pudo cargar más contactos.')
+    rows.value = [...rows.value, ...(result.rows || [])]
+    hasMore.value = !!result.has_more
+    nextCursor.value = result.next_cursor
+  } catch (e) {
+    if (own === generation) error.value = e
+  } finally {
+    loadingMore.value = false
+  }
 }
 function nextPage() {
   state.cursorStack.push(state.cursor)

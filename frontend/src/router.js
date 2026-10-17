@@ -81,14 +81,24 @@ const routes = [
     path: '/contactos/duplicados',
     name: 'ContactosDuplicados',
     component: () => import('@/pages/ContactosDuplicados.vue'),
-    meta: { app: 'contactos', title: 'Posibles duplicados' },
+    meta: {
+      app: 'contactos',
+      title: 'Posibles duplicados',
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/contactos/:source/:name',
     name: 'Contacto',
     component: () => import('@/pages/Contacto.vue'),
     props: true,
-    meta: { app: 'contactos', title: 'Contactos', stableKey: true },
+    // The record's AppBar: up to the list and the pencil (Shell S4.2).
+    meta: {
+      app: 'contactos',
+      title: 'Contactos',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/pendientes',

@@ -26317,3 +26317,7 @@ msgstr "El correo se configura en los ajustes de notificaciones del sistema."
 #: frontend/src/pages/Avisos.vue
 msgid "More actions"
 msgstr "Más acciones"
+
+#: frontend/src/components/doco/contact/ContactOverviewTab.vue
+msgid "Sin cuenta de cliente"
+msgstr "Sin cuenta de cliente"

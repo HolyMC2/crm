@@ -1,7 +1,16 @@
 <template>
   <ContactosLayout segment="duplicates" @select="selectSegment">
+    <!-- A sub-page of Contactos: up to the list in the one bar (Shell S4.2). -->
+    <AppBar
+      v-if="isPhone"
+      :back="{ name: 'Contactos' }"
+      back-label="Contactos"
+      context="Contactos"
+      title="Posibles duplicados"
+      :loading="loading"
+    />
     <div class="c-dup">
-      <header class="c-dup-head">
+      <header v-if="!isPhone" class="c-dup-head">
         <div>
           <h1>Posibles duplicados</h1>
           <p>
@@ -42,6 +51,9 @@
       <p v-if="total" class="c-dup-count" role="status">
         {{ total === 1 ? '1 grupo' : `${total} grupos` }} por revisar
         <span v-if="partial"> (lista parcial)</span>
+        <span v-if="isPhone" class="block text-ink-gray-6"
+          >Nada se fusiona sin tu confirmación.</span
+        >
       </p>
 
       <ul class="c-dup-list">
@@ -93,12 +105,13 @@
           </div>
           <div class="c-actions">
             <Button
-              variant="solid"
+              :variant="isPhone ? 'subtle' : 'solid'"
               label="Comparar y fusionar"
               :disabled="pair(group).length !== 2"
               @click="openCompare(group)"
             />
             <Button
+              :variant="isPhone ? 'ghost' : 'subtle'"
               label="No son la misma persona"
               :disabled="pair(group).length !== 2"
               :loading="dismissing === group.key"
@@ -255,6 +268,8 @@ import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Badge, Button, Dialog, toast } from 'frappe-ui'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
+import { AppBar } from '@/components/ui'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
 import { contactosApi, useContactosDraft } from '@/composables/useContactos'
 import {
