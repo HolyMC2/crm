@@ -26393,3 +26393,17 @@ msgstr "Por aprobar"
 msgctxt "Equipo"
 msgid "To see the team you need access to employee records. Ask whoever runs the shop to give it to you."
 msgstr "Para ver al equipo necesitas acceso a las fichas del personal. Pídeselo a quien administra la tienda."
+#: frontend/src/components/dinero/NextStepCard.vue
+msgctxt "Dinero"
+msgid "Next step"
+msgstr "Siguiente paso"
+
+#: frontend/src/pages (S5.2)
+msgctxt "Cobranza"
+msgid "Follow-up"
+msgstr "Seguimiento"
+
+#: frontend/src/pages (S5.2)
+msgctxt "Cobranza"
+msgid "Statement"
+msgstr "Estado de cuenta"

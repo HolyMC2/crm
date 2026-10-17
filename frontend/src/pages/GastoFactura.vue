@@ -75,17 +75,6 @@
               :class="doc.overdue ? 'text-ink-red-7' : 'text-ink-gray-6'"
               >{{ dueLabel(doc.due_date, boot?.today) }}</span
             >
-            <CapturarDocumentoButton
-              v-if="
-                Number(doc.docstatus) === 1 &&
-                Number(doc.outstanding_amount || 0) > 0
-              "
-              :label="__('Capture payment receipt')"
-              :targets="['Payment Entry']"
-              :invoice="props.name"
-              :return-label="props.name"
-              class="w-full sm:w-auto"
-            />
           </div>
         </header>
 
@@ -135,27 +124,40 @@
           </div>
         </div>
 
-        <!-- Progress and the next step. -->
-        <section
-          class="mb-4 rounded-xl border border-outline-gray-2 p-4"
-          :aria-label="__('Payment', null, 'Gastos')"
-        >
-          <p
-            v-if="Number(doc.docstatus) === 1"
-            class="text-base font-medium text-ink-gray-9"
-          >
-            {{ paidLabel(doc) }}
-          </p>
-          <p v-else class="text-base text-ink-gray-8">
-            {{
-              Number(doc.docstatus) === 0
+        <!-- The one next step (dinero NextStepCard): where the bill stands,
+             one filled action, then the tonal receipt capture. -->
+        <NextStepCard
+          class="mb-4"
+          :label="__('Payment', null, 'Gastos')"
+          :reason="Number(doc.docstatus) === 1 ? paidLabel(doc) : ''"
+          :detail="
+            Number(doc.docstatus) === 1
+              ? ''
+              : Number(doc.docstatus) === 0
                 ? __(
                     'Draft: review supplier, amounts and taxes, then register it so it can be paid.',
                   )
                 : __('This bill is cancelled.')
+          "
+        >
+          <p
+            v-for="action in actions.filter((a) => a.fallback)"
+            :key="action.key"
+            class="mt-1 text-sm text-ink-gray-7"
+          >
+            {{ action.reason }}
+          </p>
+          <p
+            v-if="data.assignments?.length"
+            class="mt-1 text-sm text-ink-gray-7"
+          >
+            {{
+              __('Waiting on: {0}', [
+                data.assignments.map((a) => a.full_name).join(', '),
+              ])
             }}
           </p>
-          <div class="mt-3 flex flex-wrap gap-2">
+          <template #actions>
             <template v-for="action in actions" :key="action.key">
               <Button
                 v-if="action.key === 'submit' && action.allowed"
@@ -172,9 +174,6 @@
                 @click="payOpen = true"
               />
               <template v-else-if="action.fallback">
-                <p class="w-full text-sm text-ink-gray-7">
-                  {{ action.reason }}
-                </p>
                 <Button
                   v-if="action.fallback === 'release'"
                   variant="solid"
@@ -196,24 +195,24 @@
                 />
               </template>
             </template>
+            <CapturarDocumentoButton
+              v-if="
+                Number(doc.docstatus) === 1 &&
+                Number(doc.outstanding_amount || 0) > 0
+              "
+              :label="__('Capture payment receipt')"
+              :targets="['Payment Entry']"
+              :invoice="props.name"
+              :return-label="props.name"
+            />
             <a
               v-if="boot?.capabilities?.desk"
               class="hidden min-h-11 items-center px-2 text-sm text-ink-blue-link underline sm:inline-flex sm:min-h-8"
               :href="`/app/purchase-invoice/${encodeURIComponent(doc.name)}`"
               >{{ __('Open the full bill form') }}</a
             >
-          </div>
-          <div
-            v-if="data.assignments?.length"
-            class="mt-3 text-sm text-ink-gray-7"
-          >
-            {{
-              __('Waiting on: {0}', [
-                data.assignments.map((a) => a.full_name).join(', '),
-              ])
-            }}
-          </div>
-        </section>
+          </template>
+        </NextStepCard>
 
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">
           <!-- Payments and their bank side (matched in Contador). -->
@@ -436,6 +435,7 @@ import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
+import NextStepCard from '@/components/dinero/NextStepCard.vue'
 import { hoyLive } from '@/composables/useHoy'
 import {
   LIVE_DOCTYPES,

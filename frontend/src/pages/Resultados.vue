@@ -16,7 +16,11 @@
     <div class="mx-auto w-full max-w-7xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6">
       <header class="flex flex-wrap items-start gap-3">
         <div class="min-w-0 flex-1">
-          <h1 class="text-2xl font-semibold tracking-tight text-ink-gray-9">
+          <!-- The shell bar already says «Resultados»: on a phone the heading
+               stays for screen readers only (no doubled title). -->
+          <h1
+            class="sr-only text-2xl font-semibold tracking-tight text-ink-gray-9 sm:not-sr-only"
+          >
             {{ __('Results') }}
           </h1>
           <p class="mt-0.5 text-sm text-ink-gray-6" data-testid="period-range">
@@ -27,8 +31,9 @@
           </p>
         </div>
         <Button
-          class="min-h-11"
-          :label="__('Customize')"
+          class="min-h-11 min-w-11"
+          :label="phone ? '' : __('Customize')"
+          :aria-label="__('Customize')"
           :aria-expanded="customizing ? 'true' : 'false'"
           data-testid="customize"
           @click="customizing = !customizing"
@@ -49,7 +54,70 @@
         </Button>
       </header>
 
+      <!-- Phone: one chip row for the period; comparison, company and shop
+           in the «Filtros» sheet (S1 FilterChips), so the first number is in
+           sight. -->
+      <FilterChips
+        v-if="phone"
+        class="-mx-4 mt-3"
+        data-testid="periodo-chips"
+        :label="__('Period')"
+        :model-value="periodPicked"
+        :chips="periodChips"
+        :deselectable="false"
+        :filters-label="__('Filters')"
+        :filters-count="filtersOn"
+        @update:model-value="pickPeriod"
+      >
+        <template #filters>
+          <div class="space-y-4">
+            <div>
+              <p class="mb-2 text-sm font-medium text-ink-gray-8">
+                {{ __('Compare with') }}
+              </p>
+              <Segmented
+                :label="__('Compare with')"
+                :model-value="state.compara"
+                :options="
+                  COMPARES.map((c) => ({
+                    value: c.value,
+                    label: compareLabel(c.value),
+                  }))
+                "
+                @update:model-value="(value) => update({ compara: value })"
+              />
+            </div>
+            <FormControl
+              v-if="companies.length > 1"
+              type="select"
+              class="[&_select]:min-h-11"
+              :label="__('Company')"
+              :model-value="state.empresa"
+              :options="[
+                { label: __('All companies'), value: '' },
+                ...companies.map((x) => ({ label: x, value: x })),
+              ]"
+              @update:model-value="
+                (value) => update({ empresa: value, tienda: '' })
+              "
+            />
+            <FormControl
+              v-if="visibleShops.length > 1 || state.tienda"
+              type="select"
+              class="[&_select]:min-h-11"
+              :label="__('Shop')"
+              :model-value="state.tienda"
+              :options="[
+                { label: __('All shops'), value: '' },
+                ...visibleShops.map((x) => ({ label: x.label, value: x.name })),
+              ]"
+              @update:model-value="(value) => update({ tienda: value })"
+            />
+          </div>
+        </template>
+      </FilterChips>
       <div
+        v-else
         class="mt-4 flex flex-col gap-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1 p-2 lg:flex-row lg:items-center"
       >
         <div
@@ -323,6 +391,8 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl } from 'frappe-ui'
+import { FilterChips, Segmented } from '@/components/ui'
+import { isMobile } from '@/composables/breakpoint'
 import ResultadosCard from '@/components/resultados/ResultadosCard.vue'
 import { problemOf } from '@/composables/useCobranza'
 import { shellBoot } from '@/composables/muelleShell'
@@ -445,6 +515,21 @@ const rangeText = computed(() => {
 function update(patch) {
   router.replace({ query: toQuery({ ...state.value, ...patch }) })
 }
+const phone = isMobile
+const periodChips = computed(() =>
+  PERIODS.map((p) => ({
+    value: p.value,
+    label: periodLabel(p.value),
+    icon: p.value === 'rango' ? 'lucide-calendar-range' : undefined,
+  })),
+)
+// How many of the sheet's filters move away from the default view.
+const filtersOn = computed(
+  () =>
+    (state.value.compara && state.value.compara !== 'anterior' ? 1 : 0) +
+    (state.value.empresa ? 1 : 0) +
+    (state.value.tienda ? 1 : 0),
+)
 function pickPeriod(value) {
   if (value !== 'rango') {
     rangeOpen.value = false

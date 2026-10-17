@@ -188,16 +188,15 @@
         </section>
 
         <!-- Next action: exactly one primary; a blocked one says why and how. -->
-        <section
+        <NextStepCard
           v-if="primary && !editing"
-          class="mb-5 rounded-xl border border-outline-gray-2 p-4"
-          :aria-label="__('Next step', null, 'Compras')"
+          class="mb-5"
+          :label="__('Next step', null, 'Compras')"
+          :reason="primary.allowed ? '' : primary.reason"
+          :detail="summaryLine"
         >
-          <template v-if="primary.allowed">
-            <p v-if="summaryLine" class="mb-3 text-base text-ink-gray-8">
-              {{ summaryLine }}
-            </p>
-            <div class="flex flex-wrap gap-2">
+          <template #actions>
+            <template v-if="primary.allowed">
               <Button
                 variant="solid"
                 size="md"
@@ -212,23 +211,8 @@
                 :label="__('Edit purchase')"
                 @click="startEditing"
               />
-              <Button
-                v-for="action in secondary"
-                :key="action.key"
-                class="min-h-11"
-                :label="action.allowed ? action.label : action.resolve?.label"
-                @click="action.allowed ? runAction(action) : resolve(action)"
-              />
-            </div>
-          </template>
-          <template v-else>
-            <p class="text-base font-medium text-ink-gray-9">
-              {{ primary.reason }}
-            </p>
-            <p v-if="summaryLine" class="mt-1 text-sm text-ink-gray-6">
-              {{ summaryLine }}
-            </p>
-            <div class="mt-3 flex flex-wrap gap-2">
+            </template>
+            <template v-else>
               <Button
                 v-if="primary.resolve"
                 variant="solid"
@@ -242,16 +226,16 @@
                 :label="__('Check again')"
                 @click="recheck"
               />
-              <Button
-                v-for="action in secondary"
-                :key="action.key"
-                class="min-h-11"
-                :label="action.allowed ? action.label : action.resolve?.label"
-                @click="action.allowed ? runAction(action) : resolve(action)"
-              />
-            </div>
+            </template>
+            <Button
+              v-for="action in secondary"
+              :key="action.key"
+              class="min-h-11"
+              :label="action.allowed ? action.label : action.resolve?.label"
+              @click="action.allowed ? runAction(action) : resolve(action)"
+            />
           </template>
-        </section>
+        </NextStepCard>
         <p
           v-else-if="!editing && !isNew && Number(doc.docstatus) === 1"
           class="mb-5 rounded-xl bg-surface-gray-1 p-4 text-base"
@@ -729,6 +713,7 @@ import { orderBillsRoute } from '@/composables/useGastos'
 import { can } from '@/vendor/muelle-shell/contracts'
 import { formatDay } from '@/utils/contactos'
 import { formatQty } from '@/utils/display'
+import NextStepCard from '@/components/dinero/NextStepCard.vue'
 import {
   MISSING_LABELS,
   RECORD_KEYS,

@@ -6,48 +6,58 @@
   >
     <!-- Phone: the record's own app bar (route meta.ownPhoneHeader): back to
          the same place in the list, who this is, the next customer. -->
-    <header
+    <!-- The shared AppBar (S1): back to the same place in the list, the
+         customer's name on up to two lines with what they owe, the next
+         customer, and the bell. -->
+    <AppBar
       v-if="phone"
-      class="sticky top-0 z-20 flex min-h-14 items-center gap-1 border-b border-outline-gray-1 bg-surface-base px-1 pt-[env(safe-area-inset-top)]"
       data-cobranza-appbar
+      back
+      :back-label="backLabel"
+      @back="
+        (event) => {
+          event?.preventDefault?.()
+          goBack()
+        }
+      "
     >
-      <button
-        type="button"
-        class="flex size-12 shrink-0 items-center justify-center rounded-full text-ink-gray-7"
-        :aria-label="backLabel"
-        @click="goBack"
-      >
-        <FeatherIcon name="arrow-left" class="h-6 w-6" />
-      </button>
-      <div class="min-w-0 flex-1">
-        <p class="truncate text-lg font-semibold leading-tight">
-          {{ data?.customer_name || __('Cobranza', null, CTX) }}
-        </p>
-        <p
-          v-if="data"
-          class="truncate text-xs tabular-nums"
-          :class="
-            data.overdue_amount > 0 ? 'text-ink-red-7' : 'text-ink-gray-6'
-          "
+      <template #title>
+        <div class="min-w-0 flex-1 px-1">
+          <p
+            class="line-clamp-2 break-words text-lg font-semibold leading-snug"
+          >
+            {{ data?.customer_name || __('Cobranza', null, CTX) }}
+          </p>
+          <p
+            v-if="data"
+            class="truncate text-xs tabular-nums"
+            :class="
+              data.overdue_amount > 0 ? 'text-ink-red-7' : 'text-ink-gray-6'
+            "
+          >
+            {{ money(data.outstanding, data.currency) }}
+            <template v-if="data.overdue_amount > 0">
+              ·
+              {{
+                __('{0} overdue', [money(data.overdue_amount, data.currency)])
+              }}
+            </template>
+          </p>
+        </div>
+      </template>
+      <template #actions>
+        <button
+          v-if="data && !returnTo"
+          type="button"
+          class="flex size-12 shrink-0 items-center justify-center rounded-full text-ink-gray-7"
+          :aria-label="__('Next customer')"
+          :disabled="findingNext"
+          @click="goNext"
         >
-          {{ money(data.outstanding, data.currency) }}
-          <template v-if="data.overdue_amount > 0">
-            ·
-            {{ __('{0} overdue', [money(data.overdue_amount, data.currency)]) }}
-          </template>
-        </p>
-      </div>
-      <button
-        v-if="data && !returnTo"
-        type="button"
-        class="flex size-12 shrink-0 items-center justify-center rounded-full text-ink-gray-7"
-        :aria-label="__('Next customer')"
-        :disabled="findingNext"
-        @click="goNext"
-      >
-        <FeatherIcon name="skip-forward" class="h-6 w-6" />
-      </button>
-    </header>
+          <span class="lucide-chevron-right size-6" aria-hidden="true" />
+        </button>
+      </template>
+    </AppBar>
 
     <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
       <nav v-if="!phone" class="mb-3 flex items-center gap-2">
@@ -212,8 +222,43 @@
           </p>
         </header>
 
+        <!-- Phone: the customer's actions as equal tiles with the label under
+             the icon (Contacto's row). Payment is not here: it sits in the
+             thumb bar with the focused invoice. -->
+        <div
+          v-if="phone"
+          class="mb-4 grid auto-cols-fr grid-flow-col gap-2"
+          data-record-actions
+        >
+          <a
+            v-if="data.phones.length"
+            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
+            :href="`tel:${data.phones[0].display.replace(/[^\d+]/g, '')}`"
+          >
+            <FeatherIcon name="phone" class="h-5 w-5" />
+            {{ __('Call', null, CTX) }}
+          </a>
+          <button
+            v-if="caps.assign"
+            type="button"
+            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
+            @click="openFollowup('followup')"
+          >
+            <FeatherIcon name="user-check" class="h-5 w-5" />
+            {{ __('Follow-up', null, CTX) }}
+          </button>
+          <button
+            v-if="caps.statement"
+            type="button"
+            class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
+            @click="statementOpen = true"
+          >
+            <FeatherIcon name="file-text" class="h-5 w-5" />
+            {{ __('Statement', null, CTX) }}
+          </button>
+        </div>
         <!-- The customer's next steps: payment for any invoices, collector, follow-up. -->
-        <div class="mb-4 flex flex-wrap gap-2" data-record-actions>
+        <div v-else class="mb-4 flex flex-wrap gap-2" data-record-actions>
           <Button
             v-if="caps.pay && invoices.length"
             class="min-h-11 sm:min-h-8"
@@ -407,7 +452,9 @@
                 @click="resolve(inv, actionsOf(inv).primary.resolve)"
               />
             </div>
-            <div class="mt-3 flex flex-wrap gap-2">
+            <!-- On a phone the focused invoice's actions sit in the thumb bar:
+                 the card does not repeat them. -->
+            <div v-if="!phone" class="mt-3 flex flex-wrap gap-2">
               <Button
                 v-if="!actionsOf(inv).primary.blocked"
                 variant="solid"
@@ -560,6 +607,7 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { AppBar } from '@/components/ui'
 import { ArchivosRegistroPanel } from '@/components/archivos'
 import CallSheet from '@/components/cobranza/CallSheet.vue'
 import CobranzaSendSheet from '@/components/cobranza/CobranzaSendSheet.vue'
