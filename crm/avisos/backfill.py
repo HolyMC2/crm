@@ -140,5 +140,6 @@ def retranslate_assignments(dry_run=True, samples=3):
 		if not dry_run:
 			frappe.db.set_value("CRM Notification", row.name, values, update_modified=False)
 	if not dry_run:
-		frappe.db.commit()
+		# bench execute commits on success; explicit so a dry_run=False call from a console persists too.
+		frappe.db.commit()  # nosemgrep
 	return report
