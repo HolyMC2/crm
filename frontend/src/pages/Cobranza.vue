@@ -815,21 +815,33 @@ const autoCard = computed(() => {
   }
 })
 
-async function loadAuto() {
+// The mount and the company watcher can both ask on first load (the boot
+// sets the company): one request per company in flight, not two.
+let autoInflight = { target: '', promise: null }
+function loadAuto() {
   const target = autoCompany.value
   if (!target) {
     auto.value = null
-    return
+    return Promise.resolve()
   }
-  try {
-    const data = await cobranzaApi(`${AUTO_API}.get_setup`, {
-      company: target,
-    })
-    if (target === autoCompany.value) auto.value = data
-  } catch {
-    // The lists work without it; the card simply stays hidden.
-    auto.value = null
-  }
+  if (autoInflight.promise && autoInflight.target === target)
+    return autoInflight.promise
+  const promise = (async () => {
+    try {
+      const data = await cobranzaApi(`${AUTO_API}.get_setup`, {
+        company: target,
+      })
+      if (target === autoCompany.value) auto.value = data
+    } catch {
+      // The lists work without it; the card simply stays hidden.
+      auto.value = null
+    } finally {
+      if (autoInflight.promise === promise)
+        autoInflight = { target: '', promise: null }
+    }
+  })()
+  autoInflight = { target, promise }
+  return promise
 }
 
 // The phone row does what the card's button does.
