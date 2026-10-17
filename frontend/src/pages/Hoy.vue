@@ -315,7 +315,8 @@
                 v-for="row in card.rows"
                 :key="card.key + row.key"
                 :title="row.title"
-                :subtitle="row.detail"
+                :subtitle="rowSubtitle(card, row)"
+                :meta="rowReference(card, row)"
                 :subtitle-lines="2"
                 :icon="card.icon"
                 :to="card.source?.action ? undefined : row.to"
@@ -885,6 +886,20 @@ function eventMeta(event) {
 function choicesFor(card, row) {
   const choices = card.source?.action?.choices
   return choices ? choices[row.group] || [] : null
+}
+// Repair rows: the device and the job are the title, the repair order number is a
+// small trailing reference (people quote it), and the detail line drops it. The customer
+// name is not in taller's payload yet (gap for the PM), so it is not shown.
+const REPAIR_SOURCE = 'taller.unassigned_repairs'
+function rowReference(card, row) {
+  return card.key === REPAIR_SOURCE && row.name ? String(row.name) : ''
+}
+function rowSubtitle(card, row) {
+  const prefix = `${row.name} · `
+  if (card.key !== REPAIR_SOURCE || !row.detail) return row.detail
+  return row.detail.startsWith(prefix)
+    ? row.detail.slice(prefix.length)
+    : row.detail
 }
 // «Asignar» opens the choices (technicians) in a sheet; a pick is the action.
 const assignment = ref(null)
