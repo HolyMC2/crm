@@ -98,7 +98,7 @@ describe('deal native conversations', () => {
   it('explains an empty list and offers the conversation queue', async () => {
     call.mockResolvedValue({ items: [], next_cursor: null })
     const { el } = await mount()
-    expect(el.textContent).toContain('No hay conversaciones vinculadas')
+    expect(el.textContent).toContain('todavía no tiene conversaciones')
     expect(el.querySelector('a').getAttribute('href')).toBe(
       '/inbox?workspace=conversations',
     )
@@ -132,7 +132,7 @@ describe('deal native conversations', () => {
     await nextTick()
     expect(empty.el.querySelector('nav').style.display).toBe('none')
     expect(empty.el.textContent).not.toContain(
-      'No hay conversaciones vinculadas',
+      'todavía no tiene conversaciones',
     )
   })
 })

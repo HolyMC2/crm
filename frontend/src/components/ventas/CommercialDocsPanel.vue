@@ -58,7 +58,7 @@
 
     <template v-else-if="model">
       <!-- smart counters (Odoo smart buttons): jump to the group -->
-      <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div v-if="!model.empty" class="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         <button
           v-for="c in model.counters"
           :key="c.key"

@@ -6,7 +6,8 @@
   >
     <header class="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div class="min-w-0">
-        <h1 class="text-xl font-semibold">
+        <!-- a phone has the title in the shell bar -->
+        <h1 v-if="!isMobile" class="text-xl font-semibold">
           {{ selfView ? __('Tu carga de trabajo') : __('Carga de trabajo') }}
         </h1>
         <p v-if="data.as_of && !loading" class="text-xs text-ink-gray-5">
@@ -117,7 +118,7 @@
         :aria-label="__('Resumen')"
       >
         <button
-          v-for="metric in metrics"
+          v-for="metric in shownMetrics"
           :key="metric.key"
           type="button"
           class="flex min-h-16 flex-col items-start justify-between rounded-lg border px-3 py-2 text-left hover:bg-surface-gray-2 disabled:opacity-60"
@@ -432,6 +433,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { call } from 'frappe-ui'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import WorkloadPeople from '@/components/Workload/WorkloadPeople.vue'
+import { isMobile } from '@/composables/breakpoint'
 import WorkloadQueue from '@/components/Workload/WorkloadQueue.vue'
 import WorkloadBulkBar from '@/components/Workload/WorkloadBulkBar.vue'
 import {
@@ -590,6 +592,12 @@ const metrics = computed(() => {
     active: all && metric.kind === kind && metric.bucket === bucket,
   }))
 })
+// A phone drops the tiles that read 0: they say nothing (Shell SPEC, KPI rule)
+const shownMetrics = computed(() =>
+  isMobile.value
+    ? metrics.value.filter((m) => m.value !== 0 || m.active)
+    : metrics.value,
+)
 const countText = computed(
   () => `${queue.value.total || 0} ${__('registros en total')}`,
 )

@@ -101,6 +101,7 @@
           v-for="row in rows"
           :key="row.name"
           :row="row"
+          :hide-status="row.status === status"
           @changed="onChanged"
         />
       </div>
@@ -127,8 +128,11 @@ const filters = [
 const route = useRoute()
 const router = useRouter()
 const status = ref('Pendiente')
-const currentLabel = computed(
-  () => filters.find((f) => f.value === status.value)?.label || status.value,
+const HISTORY = 'Enviado,Cancelado'
+const currentLabel = computed(() =>
+  status.value === HISTORY
+    ? 'Historial'
+    : filters.find((f) => f.value === status.value)?.label || status.value,
 )
 // Opened from Pendientes «Por aprobar» (or Hoy): the way back, validated.
 const back = computed(() => ownerReturn(route.query))
@@ -152,21 +156,22 @@ function badgeCount(filterValue) {
   const c = pendingRes.data || {}
   return { Pendiente: c.pendiente, Fallido: c.fallido }[filterValue] || 0
 }
-// Phone chips: one scrolling row in plain words, counts where they matter.
-const PHONE_LABELS = {
-  Pendiente: 'Por enviar',
-  Fallido: 'Fallidos',
-  Enviado: 'Enviados',
-  Cancelado: 'Cancelados',
-  Todos: 'Todos',
-}
-const phoneChips = computed(() =>
-  filters.map((f) => ({
-    value: f.value,
-    label: __(PHONE_LABELS[f.value]),
-    count: badgeCount(f.value) || undefined,
-  })),
-)
+// Phone chips: three in plain words, counts where they matter. Sent and
+// cancelled are both done, so they read as one «Historial» (the API takes a
+// comma list of statuses).
+const phoneChips = computed(() => [
+  {
+    value: 'Pendiente',
+    label: __('Por enviar'),
+    count: badgeCount('Pendiente') || undefined,
+  },
+  {
+    value: 'Fallido',
+    label: __('Fallidos'),
+    count: badgeCount('Fallido') || undefined,
+  },
+  { value: HISTORY, label: __('Historial') },
+])
 
 watch(status, () => queue.reload())
 

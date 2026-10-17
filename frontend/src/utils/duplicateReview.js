@@ -41,8 +41,11 @@ export function linkLabel(doctype, n) {
   return `${n} ${n === 1 ? one : many}`
 }
 
-/** «7 tratos · 3 facturas · 1 orden de reparación» — business records first. */
-export function linkSummary(links = {}, max = 4) {
+/**
+ * «7 tratos · 3 facturas · 1 orden de reparación» — business records first.
+ * more=false drops the vague «1 tipo más» tail (a card names only what matters).
+ */
+export function linkSummary(links = {}, max = 4, more = true) {
   const entries = Object.entries(links || {}).filter(([, n]) => n > 0)
   entries.sort(([a, na], [b, nb]) => {
     const ia = ORDER.indexOf(a)
@@ -54,7 +57,8 @@ export function linkSummary(links = {}, max = 4) {
     .slice(0, max)
     .map(([doctype, n]) => linkLabel(doctype, n))
   const rest = entries.length - shown.length
-  if (rest > 0) shown.push(rest === 1 ? '1 tipo más' : `${rest} tipos más`)
+  if (rest > 0 && more)
+    shown.push(rest === 1 ? '1 tipo más' : `${rest} tipos más`)
   return shown.length ? shown.join(' · ') : 'Sin registros vinculados'
 }
 

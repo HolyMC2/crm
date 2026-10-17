@@ -103,7 +103,9 @@ describe('WhatsAppReviewCard', () => {
     expect(text).toContain('Trato · Aprobado')
     expect(text).not.toContain('CRM-DEAL')
     expect(text).toContain('Ana Vendedora')
-    expect(text).toContain('equipo_listo')
+    // an id-shaped label from the server reads as words too
+    expect(text).toContain('Equipo listo')
+    expect(text).not.toContain('equipo_listo')
     expect(text).toContain('Pendiente')
     expect(text).toContain('Abrir trato')
     expect(
@@ -187,6 +189,13 @@ describe('WhatsAppReviewCard', () => {
     // A template id is humanized, never shown raw.
     expect(el.textContent).toContain('Equipo listo')
     expect(el.textContent).not.toContain('equipo_listo')
+  })
+
+  it('drops the status chip when the list is already filtered to that status', () => {
+    const shown = mount({ row: dealRow() })
+    expect(shown.textContent).toContain('Pendiente')
+    const hidden = mount({ row: dealRow(), hideStatus: true })
+    expect(hidden.textContent).not.toContain('Pendiente')
   })
 
   it('sends the edited variables with the approval and emits changed', async () => {

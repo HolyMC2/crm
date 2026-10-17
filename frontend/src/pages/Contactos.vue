@@ -58,14 +58,7 @@
         aria-label="Buscar contactos"
       />
       <Button
-        v-if="state.segment !== 'followups' && isPhone"
-        icon="filter"
-        aria-label="Filtros"
-        :aria-expanded="filtersOpen"
-        @click="filtersOpen = !filtersOpen"
-      />
-      <Button
-        v-else-if="state.segment !== 'followups'"
+        v-if="state.segment !== 'followups' && !isPhone"
         label="Filtros"
         icon-left="filter"
         @click="filtersOpen = !filtersOpen"
@@ -76,13 +69,6 @@
         class="c-save-segment"
         icon-left="bookmark"
         @click="segmentOpen = true"
-      />
-      <Button
-        class="c-mobile-actions-toggle"
-        icon="more-horizontal"
-        aria-label="Más acciones de Contactos"
-        :aria-expanded="mobileActions"
-        @click="mobileActions = !mobileActions"
       />
     </div>
     <div v-if="mobileActions" class="c-mobile-actions">
@@ -97,6 +83,8 @@
         @click="openFromMobileMenu('customize')"
       />
     </div>
+    <!-- Phone: the list scope reads as text with its ▾, and the filter and ⋯
+         sit on the same row as icons (Shell S4, contactos #4 #9) -->
     <div class="c-mobile-segment">
       <FormControl
         type="select"
@@ -104,6 +92,22 @@
         :model-value="state.segment"
         :options="segmentOptions"
         @update:model-value="selectSegment"
+      />
+      <Button
+        v-if="state.segment !== 'followups'"
+        variant="ghost"
+        icon="filter"
+        aria-label="Filtros"
+        :aria-expanded="filtersOpen"
+        @click="filtersOpen = !filtersOpen"
+      />
+      <Button
+        class="c-mobile-actions-toggle"
+        variant="ghost"
+        icon="more-vertical"
+        aria-label="Más acciones de Contactos"
+        :aria-expanded="mobileActions"
+        @click="mobileActions = !mobileActions"
       />
     </div>
     <div

@@ -148,7 +148,7 @@
         <ListRow
           v-for="row in rows"
           :key="`${row.kind}:${row.name}`"
-          :avatar="prospectName(row)"
+          :avatar="avatarName(row)"
           :title="prospectName(row)"
           :subtitle="phoneLine(row)"
           :meta="rowMeta(row)"
@@ -256,6 +256,14 @@ import {
 } from '@/utils/prospects'
 
 const PAGE = 30
+// Initials only for a real name: «PN» for «Prospecto sin nombre», or digits
+// from a phone, read as a person who is not there — show the silhouette.
+function avatarName(row) {
+  const name = prospectName(row)
+  return name === 'Prospecto sin nombre' || /^[+\d\s()-]+$|@/.test(name)
+    ? ''
+    : name
+}
 const route = useRoute()
 const router = useRouter()
 const q = ref(typeof route.query.q === 'string' ? route.query.q : '')

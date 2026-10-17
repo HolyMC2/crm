@@ -92,14 +92,19 @@
               <span>
                 <RouterLink
                   :to="`/contactos/contact/${encodeURIComponent(member.name)}`"
+                  class="text-ink-gray-9"
                   ><strong>{{ member.title }}</strong></RouterLink
                 >
                 <small>{{
-                  [member.mobile_no, member.email_id]
+                  [
+                    member.mobile_no && formatPhone(member.mobile_no),
+                    member.email_id,
+                  ]
                     .filter(Boolean)
                     .join(' · ') || 'Sin teléfono principal'
                 }}</small>
-                <small>{{ linkSummary(member.links) }}</small>
+                <!-- the two kinds that matter; the compare sheet lists all -->
+                <small>{{ linkSummary(member.links, 2, false) }}</small>
               </span>
             </label>
           </div>
@@ -270,6 +275,7 @@ import { Badge, Button, Dialog, toast } from 'frappe-ui'
 import ContactosLayout from '@/components/contactos/ContactosLayout.vue'
 import { AppBar } from '@/components/ui'
 import { isMobile as isPhone } from '@/composables/breakpoint'
+import { formatPhone } from '@/composables/crmFormat'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
 import { contactosApi, useContactosDraft } from '@/composables/useContactos'
 import {

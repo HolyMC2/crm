@@ -28,6 +28,10 @@ describe('duplicate review helpers (CRM-S3.2)', () => {
     expect(linkSummary(links)).toBe(
       '7 tratos · 1 orden de reparación · 3 facturas · 5 comentarios · 1 tipo más',
     )
+    // a card names the two that matter, without a vague tail
+    expect(linkSummary(links, 2, false)).toBe(
+      '7 tratos · 1 orden de reparación',
+    )
     expect(linkSummary({})).toBe('Sin registros vinculados')
     expect(linkSummary({ 'CRM Deal': 0 })).toBe('Sin registros vinculados')
   })

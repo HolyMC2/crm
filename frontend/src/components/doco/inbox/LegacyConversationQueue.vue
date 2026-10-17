@@ -4,12 +4,15 @@
     class="flex flex-col bg-surface-base"
     :class="
       isMobile
-        ? 'min-h-0 w-full flex-1'
+        ? 'relative min-h-0 w-full flex-1'
         : 'w-[286px] flex-none border-r border-outline-gray-1'
     "
   >
     <div class="flex-none px-3.5 pb-2.5 pt-3.5">
-      <div class="mb-3 flex items-center justify-between">
+      <!-- Phone: the shell bar already names the page; message search, sound,
+           push and the unattended count live behind ⋯ and «Nuevo trato» is the
+           FAB (Shell S4, inbox #3–#6). -->
+      <div v-if="!isMobile" class="mb-3 flex items-center justify-between">
         <div class="text-[15px] font-bold text-ink-gray-9">
           {{ __('Mi bandeja') }}
         </div>
@@ -93,30 +96,52 @@
           </button>
         </div>
       </div>
-      <div
-        class="mb-3 flex items-center gap-2 rounded-[9px] border border-outline-gray-2 px-2.5 py-[7px] focus-within:border-outline-gray-4 focus-within:ring-1 focus-within:ring-outline-gray-3"
-      >
-        <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
-        <input
-          ref="searchEl"
-          data-list-search
-          :value="queueSearch"
-          :aria-label="__('Buscar en la bandeja')"
-          @input="onSearchInput($event.target.value)"
-          @keydown.esc="clearQueueSearch"
-          :placeholder="
-            __('Buscar equipo, cliente…') + (isMobile ? '' : '  ( / )')
+      <div class="mb-3 flex items-center gap-1">
+        <div
+          class="flex min-w-0 flex-1 items-center gap-2 px-2.5 focus-within:ring-1 focus-within:ring-outline-gray-3"
+          :class="
+            isMobile
+              ? 'min-h-11 rounded-full bg-surface-gray-2 px-4'
+              : 'rounded-[9px] border border-outline-gray-2 py-[7px] focus-within:border-outline-gray-4'
           "
-          class="w-full border-0 bg-transparent text-[12.5px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
-        />
-        <button
-          v-if="queueSearch"
-          class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
-          :aria-label="__('Limpiar búsqueda')"
-          :title="__('Limpiar búsqueda')"
-          @click="clearQueueSearch"
         >
-          <LucideX class="h-3 w-3" />
+          <LucideSearch class="h-3.5 w-3.5 flex-none text-ink-gray-4" />
+          <input
+            ref="searchEl"
+            data-list-search
+            :value="queueSearch"
+            :aria-label="__('Buscar en la bandeja')"
+            @input="onSearchInput($event.target.value)"
+            @keydown.esc="clearQueueSearch"
+            :placeholder="
+              __('Buscar equipo, cliente…') + (isMobile ? '' : '  ( / )')
+            "
+            class="w-full border-0 bg-transparent text-[12.5px] text-ink-gray-8 placeholder:text-ink-gray-4 focus:outline-none focus:ring-0"
+          />
+          <button
+            v-if="queueSearch"
+            class="-my-2 -mr-2 flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-5 hover:bg-surface-gray-3 hover:text-ink-gray-7 sm:my-0 sm:mr-0 sm:size-4"
+            :aria-label="__('Limpiar búsqueda')"
+            :title="__('Limpiar búsqueda')"
+            @click="clearQueueSearch"
+          >
+            <LucideX class="h-3 w-3" />
+          </button>
+        </div>
+        <button
+          v-if="isMobile"
+          type="button"
+          class="relative flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-6 hover:bg-surface-gray-2"
+          :aria-label="__('Más opciones de la bandeja')"
+          data-testid="queue-more"
+          @click="moreOpen = true"
+        >
+          <LucideEllipsisVertical class="size-5" />
+          <span
+            v-if="unattendedTotal"
+            class="absolute right-2 top-2 size-2 rounded-full bg-surface-amber-7"
+            aria-hidden="true"
+          />
         </button>
       </div>
       <!-- omnichannel tabs (Meta-style): Todos | WhatsApp | Messenger | Comentarios.
@@ -298,11 +323,12 @@
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
             <span
               v-if="u.last_message"
-              class="inline-flex flex-none items-center font-semibold"
-              :style="`color: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`"
-            >
-              {{ u.last_channel === 'messenger' ? 'Msgr' : 'WA' }}
-            </span>
+              class="size-1.5 flex-none rounded-full"
+              :style="`background: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`"
+              :title="chName(u.last_channel || 'whatsapp')"
+            /><span v-if="u.last_message" class="sr-only">{{
+              chName(u.last_channel || 'whatsapp')
+            }}</span>
             <span v-if="u.last_message" class="truncate">{{
               u.last_message
             }}</span>
@@ -493,11 +519,12 @@
             >
               <span
                 v-if="u.last_message"
-                class="inline-flex flex-none items-center font-semibold"
-                :style="`color: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`"
-              >
-                {{ u.last_channel === 'messenger' ? 'Msgr' : 'WA' }}
-              </span>
+                class="size-1.5 flex-none rounded-full"
+                :style="`background: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`"
+                :title="chName(u.last_channel || 'whatsapp')"
+              /><span v-if="u.last_message" class="sr-only">{{
+                chName(u.last_channel || 'whatsapp')
+              }}</span>
               <span v-if="u.last_message" class="truncate">{{
                 u.last_message
               }}</span>
@@ -817,13 +844,16 @@
             <div
               class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6"
             >
+              <!-- the channel as a coloured dot, its name for screen readers:
+                   «WA» before every line read as jargon (Shell S4) -->
               <span
                 v-if="r.last_channel && r.last_message"
-                class="inline-flex flex-none items-center font-semibold"
-                :style="`color:${chColor(r.last_channel)}`"
-              >
-                {{ chLabel(r.last_channel) }}
-              </span>
+                class="size-1.5 flex-none rounded-full"
+                :style="`background:${chColor(r.last_channel)}`"
+                :title="chName(r.last_channel)"
+              /><span v-if="r.last_channel && r.last_message" class="sr-only">{{
+                chName(r.last_channel)
+              }}</span>
               <span v-if="r.last_message" class="truncate">{{
                 r.last_message
               }}</span>
@@ -962,6 +992,45 @@
       @open="onGlobalSearchOpen"
       @close="showGlobalSearch = false"
     />
+    <template v-if="isMobile">
+      <Fab :label="__('Nuevo trato')" @click="newDeal" />
+      <BottomSheet v-model:open="moreOpen" :title="__('Bandeja')" flush>
+        <ListRow
+          icon="lucide-inbox"
+          :title="__('{0} sin atender', [unattendedTotal])"
+          :subtitle="__('Sin asignar, vencidos y comentarios nuevos')"
+        />
+        <ListRow
+          icon="lucide-search"
+          :title="__('Buscar en los mensajes')"
+          @click="openMessageSearch"
+        />
+        <ListRow
+          :icon="soundEnabled ? 'lucide-volume-2' : 'lucide-volume-x'"
+          :title="__('Sonido de avisos')"
+          :subtitle="soundEnabled ? __('Activado') : __('Desactivado')"
+          role="switch"
+          :aria-checked="soundEnabled"
+          @click="toggleSound"
+        />
+        <ListRow
+          v-if="!['unsupported', 'unconfigured'].includes(pushState)"
+          :icon="pushState === 'on' ? 'lucide-bell-ring' : 'lucide-bell-off'"
+          :title="__('Avisos en este teléfono')"
+          :subtitle="
+            pushState === 'denied'
+              ? __('Bloqueados en el navegador')
+              : pushState === 'on'
+                ? __('Activados')
+                : __('Desactivados')
+          "
+          role="switch"
+          :aria-checked="pushState === 'on'"
+          :aria-disabled="pushBusy || pushState === 'denied' || undefined"
+          @click="pushState !== 'denied' && !pushBusy && togglePush()"
+        />
+      </BottomSheet>
+    </template>
   </div>
 </template>
 
@@ -975,6 +1044,10 @@ import {
   onBeforeUnmount,
 } from 'vue'
 import LucideSearch from '~icons/lucide/search'
+import LucideEllipsisVertical from '~icons/lucide/ellipsis-vertical'
+import BottomSheet from '@/components/ui/BottomSheet.vue'
+import Fab from '@/components/ui/Fab.vue'
+import ListRow from '@/components/ui/ListRow.vue'
 import LucideX from '~icons/lucide/x'
 import LucideMessageCircleQuestion from '~icons/lucide/message-circle-question'
 import FacebookIcon from '@/components/Icons/FacebookIcon.vue'
@@ -1083,6 +1156,12 @@ function newDeal() {
 // 🔍 global message search (spec 2.6+2.7): the modal owns its own state; a row tap
 // emits open(reference_doctype, reference_name) → selectDeal (already imported).
 const showGlobalSearch = ref(false)
+// phone ⋯ sheet: what the desk header row shows inline
+const moreOpen = ref(false)
+function openMessageSearch() {
+  moreOpen.value = false
+  showGlobalSearch.value = true
+}
 function onGlobalSearchOpen(refDoctype, refName) {
   showGlobalSearch.value = false
   selectDeal(refName, refDoctype || 'CRM Deal')
@@ -1520,13 +1599,13 @@ const commentStatusChips = computed(() => [
 function chColor(key) {
   return CHANNEL_META[key]?.[1] || '#9aa2ae'
 }
-function chLabel(key) {
+function chName(key) {
   return key === 'whatsapp'
-    ? 'WA'
+    ? 'WhatsApp'
     : key === 'messenger'
-      ? 'Msgr'
+      ? 'Messenger'
       : key === 'instagram'
-        ? 'IG'
+        ? 'Instagram'
         : CHANNEL_META[key]?.[0] || key
 }
 // status hue as a small dot only; the label rides a theme-aware ink color so it

@@ -6,6 +6,11 @@ const mocks = vi.hoisted(() => ({
   navigations: [],
 }))
 vi.mock('frappe-ui', () => ({ call: mocks.call }))
+vi.mock('@/composables/breakpoint', async () => {
+  const { ref } = await import('vue')
+  mocks.mobile = ref(false)
+  return { isMobile: mocks.mobile }
+})
 vi.mock('vue-router', async () => {
   const { reactive } = await import('vue')
   const route = reactive({ path: '/workload', query: {} })
@@ -64,7 +69,10 @@ beforeEach(() => {
   mocks.route.query = {}
   sessionStorage.clear()
 })
-afterEach(() => cleanups.splice(0).forEach((cleanup) => cleanup()))
+afterEach(() => {
+  cleanups.splice(0).forEach((cleanup) => cleanup())
+  mocks.mobile.value = false
+})
 
 async function mount() {
   const el = document.createElement('div')
@@ -205,6 +213,42 @@ describe('workload URL state', () => {
     ])
     expect(el.textContent).toContain('1 registros en total')
     expect(mocks.navigations).toEqual([])
+  })
+})
+
+describe('workload on a phone', () => {
+  beforeEach(() => {
+    mocks.mobile.value = true
+    mocks.call.mockImplementation(async (url) =>
+      url.endsWith('get_workload')
+        ? workload
+        : { items: [], total: 0, has_more: false },
+    )
+  })
+
+  it('reads one line per person, worst first, and the row opens their queue', async () => {
+    const el = await mount()
+    const rows = [...el.querySelectorAll('[data-person]')]
+    expect(rows.map((row) => row.getAttribute('data-person'))).toEqual([
+      'late@example.test',
+      'calm@example.test',
+    ])
+    expect(rows[0].textContent).toContain(
+      '2 abiertos · 2 vencidas · 1 vence hoy · 3 tareas',
+    )
+    // zeros say nothing
+    expect(rows[1].textContent).toContain('1 abierto')
+    expect(rows[1].textContent).not.toContain('vencidas')
+    // no per-count buttons in a phone row: the row is the one target
+    expect(rows[0].querySelectorAll('button, a')).toHaveLength(1)
+    rows[0].querySelector('button, a').click()
+    await vi.waitFor(() =>
+      expect(mocks.navigations.at(-1)?.[1]).toMatchObject({
+        owner: 'late@example.test',
+      }),
+    )
+    // the shell bar has the title; the page does not repeat it
+    expect(el.querySelector('h1')).toBeNull()
   })
 })
 

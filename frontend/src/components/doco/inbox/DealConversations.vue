@@ -39,7 +39,7 @@
       <h2 class="text-base font-semibold">
         {{ __('Conversaciones vinculadas') }}
       </h2>
-      <p class="mt-1 text-sm text-ink-gray-5">
+      <p v-if="items.length" class="mt-1 text-sm text-ink-gray-5">
         {{
           __(
             'Abre una conversación para ver su historial y responder desde su cuenta.',
@@ -93,11 +93,7 @@
       </li>
     </ul>
     <p v-else-if="!loading && !error" class="text-sm text-ink-gray-5">
-      {{
-        __(
-          'No hay conversaciones vinculadas disponibles para este registro. Puedes buscar en las cuentas a las que tienes acceso.',
-        )
-      }}
+      {{ __('Este trato todavía no tiene conversaciones.') }}
     </p>
     <button
       v-if="error || cursor"

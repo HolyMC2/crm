@@ -68,6 +68,7 @@
       </div>
       <div class="flex shrink-0 flex-col items-end gap-1">
         <span
+          v-if="!hideStatus"
           class="rounded-full px-2 py-0.5 text-2xs-semibold"
           :class="statusChip.cls"
           >{{ statusChip.label }}</span
@@ -217,6 +218,8 @@ const props = defineProps({
   row: { type: Object, required: true },
   // false inside a conversation, where the page already is the customer
   showContext: { type: Boolean, default: true },
+  // the list is already filtered to this status: the chip would repeat it
+  hideStatus: { type: Boolean, default: false },
 })
 const emit = defineEmits(['changed'])
 
@@ -268,8 +271,11 @@ const openLabel = computed(
 // A template id («equipo_listo») is never shown raw: humanize it when the
 // server sent no label.
 const templateLabel = computed(() => {
-  if (props.row.template_label) return props.row.template_label
-  const id = String(props.row.template || '')
+  const label = props.row.template_label
+  // the server falls back to the id itself («equipo_listo») when a template
+  // has no title: treat that as an id too
+  if (label && !/^[a-z0-9_]+$/.test(label)) return label
+  const id = String(label || props.row.template || '')
     .replace(/_/g, ' ')
     .trim()
   return id ? id.charAt(0).toUpperCase() + id.slice(1) : ''

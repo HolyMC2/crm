@@ -12,7 +12,7 @@
         {{ __('Personas')
         }}<template v-if="!loading"> · {{ totalAgents }}</template>
       </h2>
-      <p v-if="!selfView" class="text-xs text-ink-gray-5">
+      <p v-if="!selfView && !isMobile" class="text-xs text-ink-gray-5">
         {{ __('Primero quien está sobre capacidad o tiene tareas vencidas') }}
       </p>
     </div>
@@ -36,6 +36,27 @@
     >
       {{ __('Nadie en la rotación') }}
     </p>
+
+    <!-- Phone: one line per person, worst first; the row opens their queue
+         (Shell S4, workload #2–#3). The desk grid keeps every count. -->
+    <ul
+      v-else-if="isMobile"
+      class="-mx-4 divide-y divide-outline-gray-1"
+      data-testid="people-rows"
+    >
+      <li v-for="row in rows" :key="row.key" :data-person="row.user">
+        <ListRow
+          :avatar="row.user ? row.label : ''"
+          :title="row.label"
+          :subtitle="phoneLine(row)"
+          :subtitle-tone="row.overdue ? 'danger' : ''"
+          :meta="row.user ? riskText(row.risk) || '' : ''"
+          :meta-tone="row.risk === 'over' ? 'danger' : ''"
+          :selected="activeOwner === row.user"
+          @click="!busy && $emit('open', row.user, 'all', 'keep')"
+        />
+      </li>
+    </ul>
 
     <div v-else class="overflow-hidden rounded-lg border border-outline-gray-2">
       <div
@@ -164,6 +185,8 @@
 
 <script setup>
 import { computed } from 'vue'
+import ListRow from '@/components/ui/ListRow.vue'
+import { isMobile } from '@/composables/breakpoint'
 import {
   barToken,
   barWidth,
@@ -287,6 +310,19 @@ function stats(row) {
       tone: 'text-ink-gray-6',
     },
   ]
+}
+
+// «1381 abiertos · 2 vencidas · 2 tareas»: zeros say nothing, so they go
+function phoneLine(row) {
+  const n = (count, one, many) => __(count === 1 ? one : many, [count])
+  return [
+    n(row.open, '{0} abierto', '{0} abiertos'),
+    row.overdue && n(row.overdue, '{0} vencida', '{0} vencidas'),
+    row.today && n(row.today, '{0} vence hoy', '{0} vencen hoy'),
+    row.tasks && n(row.tasks, '{0} tarea', '{0} tareas'),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 
 function riskText(risk) {

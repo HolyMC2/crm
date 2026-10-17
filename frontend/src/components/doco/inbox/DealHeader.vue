@@ -70,11 +70,11 @@
                sending; this is the tier 0/1 rail for everyone else. -->
           <button
             v-if="row.mobile_no"
-            class="press whitespace-nowrap font-medium text-ink-blue-link underline decoration-dotted underline-offset-2"
+            class="press whitespace-nowrap font-medium text-ink-gray-7 sm:text-ink-blue-link sm:underline sm:decoration-dotted sm:underline-offset-2"
             :title="__('Enviar mensaje')"
             @click.stop="composerOpen = true"
           >
-            {{ row.mobile_no }}
+            {{ formatPhone(row.mobile_no) }}
           </button>
           <template v-if="row.last_message_ts">
             <span class="text-ink-gray-4">·</span>
@@ -483,7 +483,7 @@ import {
   salesOutstanding,
   salesRollup,
 } from '@/composables/salesDocs'
-import { formatMoney } from '@/composables/crmFormat'
+import { formatMoney, formatPhone } from '@/composables/crmFormat'
 import { useRecordActions } from '@/composables/recordActions'
 import { dealRecordActions } from '@/utils/dealRecordActions'
 import { openNextStep } from '@/composables/useNextStep'

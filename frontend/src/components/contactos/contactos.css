@@ -727,8 +727,34 @@
     font-size: 16px;
   }
   .c-mobile-segment {
-    display: block;
-    padding: 0 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px 8px 16px;
+  }
+  .c-mobile-segment > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* the scope is a text menu, not a boxed field */
+  .c-mobile-segment select {
+    width: auto;
+    max-width: 100%;
+    border-color: transparent;
+    background-color: transparent;
+    padding-left: 0;
+    font-weight: 500;
+  }
+  .c-mobile-segment button {
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+  }
+  /* pill search (M3 search bar) */
+  .c-search input {
+    height: 44px;
+    border-radius: 9999px;
+    padding-left: 16px;
   }
   .c-filter-panel {
     padding: 14px 16px;

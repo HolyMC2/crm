@@ -30,6 +30,7 @@
           :key="r.name"
           :title="callTitle(r)"
           :subtitle="callLine(r)"
+          :subtitle-tone="MISSED.includes(r.status) ? 'danger' : ''"
           data-testid="call-row"
           @click="openCall(r.name)"
         >
@@ -54,8 +55,9 @@
               />
             </span>
           </template>
+          <!-- how it went rides line 2 (red when missed): a chip beside the
+               call-back button wrapped the number onto two lines at 305px -->
           <template #trailing>
-            <StatusChip :status="r.status" kind="call" />
             <a
               v-if="dialable(r)"
               :href="`tel:${dialable(r)}`"
@@ -225,7 +227,7 @@ import {
   StatusChip,
 } from '@/components/ui'
 import { formatPhone } from '@/composables/crmFormat'
-import { relativeTime } from '@/utils/display'
+import { relativeTime, statusLabel } from '@/utils/display'
 import { call } from 'frappe-ui'
 
 // phone: direction + contact + outcome + chevron — the desktop track sum
@@ -350,6 +352,7 @@ function callTitle(r) {
 }
 function callLine(r) {
   return [
+    r.status && r.status !== 'Completed' && statusLabel(r.status, 'call'),
     refNames.value[r.reference_docname] && formatPhone(phoneOf(r)),
     relativeTime(r.start_time),
     Number(r.duration) > 0 && fmtDur(r.duration),

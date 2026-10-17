@@ -9,7 +9,7 @@
           <h2 class="text-lg font-semibold text-ink-gray-9">
             {{ __('Resumen del trato') }}
           </h2>
-          <p class="mt-1 text-sm text-ink-gray-5">
+          <p class="mt-1 hidden text-sm text-ink-gray-5 md:block">
             {{ __('Seguimiento, trabajo y documentos del mismo cliente.') }}
           </p>
         </div>
@@ -76,7 +76,7 @@
                 @click="completeTask"
               >
                 {{ __('Marcar como hecha') }}
-                <kbd class="ml-1 text-xs opacity-70">H</kbd>
+                <kbd class="ml-1 hidden text-xs opacity-70 md:inline">H</kbd>
               </button>
               <button
                 v-if="!closed"
@@ -86,7 +86,7 @@
                 @click="snooze"
               >
                 {{ __('Snooze one day') }}
-                <kbd class="ml-1 text-xs opacity-70">P</kbd>
+                <kbd class="ml-1 hidden text-xs opacity-70 md:inline">P</kbd>
               </button>
               <button
                 class="min-h-11 rounded-lg bg-surface-gray-10 px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-gray-9 sm:min-h-0"
@@ -99,7 +99,7 @@
                     ? __('Editar seguimiento')
                     : __('Programar seguimiento')
                 }}
-                <kbd class="ml-1 text-xs opacity-70">N</kbd>
+                <kbd class="ml-1 hidden text-xs opacity-70 md:inline">N</kbd>
               </button>
             </div>
           </div>
@@ -128,7 +128,10 @@
                   : __('Sin estimar')
               }}<span v-if="value.outlier"> ⚠</span>
             </dd>
-            <p v-if="value.weighted" class="mt-1 text-xs text-ink-gray-5">
+            <p
+              v-if="value.weighted"
+              class="mt-1 hidden text-xs text-ink-gray-5 md:block"
+            >
               {{ __('Pronóstico ponderado') }}
               {{ formatMoney(value.weighted, value.currency) }}
             </p>
@@ -158,7 +161,7 @@
             <dd class="mt-1 text-base font-semibold text-ink-gray-9">
               {{ stageLabel(doc.status) || '—' }}
             </dd>
-            <p class="mt-1 text-xs text-ink-gray-5">
+            <p class="mt-1 hidden text-xs text-ink-gray-5 md:block">
               {{ __('El avance del taller se muestra por orden.') }}
             </p>
           </div>
@@ -214,7 +217,11 @@
                     >{{ ro.status }}</span
                   >
                 </div>
-                <p class="mt-1 text-xs text-ink-gray-5">{{ ro.name }}</p>
+                <!-- a phone reads what it is; the folio stays for desk lookups -->
+                <p class="mt-1 text-xs text-ink-gray-5">
+                  <span class="md:hidden">{{ __('Orden de reparación') }}</span
+                  ><span class="hidden md:inline">{{ ro.name }}</span>
+                </p>
                 <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                   <span
                     >{{ __('Cotizado') }}:

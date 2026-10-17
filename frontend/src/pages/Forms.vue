@@ -5,8 +5,10 @@
   Data: crm.api.form.list_forms (manager-only, like the rest of the forms API).
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+  <div class="relative flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+    <!-- a phone has the title in the shell bar and «Nuevo formulario» as the FAB -->
     <div
+      v-if="!isMobile"
       class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 px-5 py-2"
     >
       <div class="flex items-center gap-2">
@@ -62,7 +64,11 @@
         />
       </div>
 
-      <div v-else class="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-5">
+      <div
+        v-else
+        class="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-5"
+        :class="isMobile ? 'pb-24' : ''"
+      >
         <article
           v-for="f in rows"
           :key="f.name"
@@ -162,7 +168,9 @@
             <div class="text-p-sm text-ink-gray-6">
               <template v-if="f.stats?.last_submission">
                 {{
-                  __('Last submission {0}', [timeAgo(f.stats.last_submission)])
+                  __('Last submission {0}', [
+                    relativeTime(f.stats.last_submission),
+                  ])
                 }}
                 <template v-if="outcomeText(f)">
                   · {{ outcomeText(f) }}</template
@@ -170,7 +178,22 @@
               </template>
               <template v-else>{{ __('No submissions yet') }}</template>
             </div>
-            <div class="flex items-center gap-1">
+            <!-- Phone: one ⋯ opens every action in a sheet (three buttons ran
+                 off the card at 305px) -->
+            <button
+              v-if="isMobile"
+              type="button"
+              class="-my-1 -mr-2 flex size-11 items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+              :aria-label="__('More actions for {0}', [f.title])"
+              data-testid="form-actions"
+              @click="openActions(f)"
+            >
+              <span
+                class="lucide-ellipsis-vertical size-5"
+                aria-hidden="true"
+              />
+            </button>
+            <div v-else class="flex items-center gap-1">
               <Button
                 size="sm"
                 variant="ghost"
@@ -212,9 +235,32 @@
         />
       </div>
     </div>
+    <Fab
+      v-if="isMobile && rows.length"
+      :label="__('Nuevo formulario')"
+      @click="openNew(null)"
+    />
   </div>
 
   <NewFormDialog v-model="showNew" :initial-template="newTemplate" />
+  <template v-if="isMobile">
+    <BottomSheet
+      :open="!!actionsFor"
+      :title="actionsFor?.title || ''"
+      flush
+      @update:open="(open) => !open && (actionsFor = null)"
+    >
+      <ListRow
+        v-for="a in phoneActions"
+        :key="a.key"
+        :icon="a.icon"
+        :title="a.label"
+        :subtitle-tone="a.danger ? 'danger' : ''"
+        :subtitle="a.hint || ''"
+        @click="a.run()"
+      />
+    </BottomSheet>
+  </template>
 </template>
 
 <script setup>
@@ -241,7 +287,12 @@ import { addonAvailable } from '@/utils/crmCapabilities'
 import NewFormDialog from '@/components/Forms/NewFormDialog.vue'
 import { outcome, publicUrl } from '@/components/Forms/formModel'
 import { usersStore } from '@/stores/users'
-import { ConfirmDelete, copyToClipboard, timeAgo } from '@/utils'
+import { ConfirmDelete, copyToClipboard } from '@/utils'
+import { relativeTime } from '@/utils/display'
+import { isMobile } from '@/composables/breakpoint'
+import BottomSheet from '@/components/ui/BottomSheet.vue'
+import Fab from '@/components/ui/Fab.vue'
+import ListRow from '@/components/ui/ListRow.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -359,6 +410,98 @@ async function duplicate(f) {
 }
 
 const isConfirmingDelete = ref(false)
+// Phone: the row's actions as one sheet; delete asks once more in place.
+const actionsFor = ref(null)
+const confirmingPhoneDelete = ref(false)
+function openActions(f) {
+  confirmingPhoneDelete.value = false
+  actionsFor.value = f
+}
+function closeActions() {
+  actionsFor.value = null
+}
+const phoneActions = computed(() => {
+  const f = actionsFor.value
+  if (!f) return []
+  const go = (query) => () => {
+    closeActions()
+    router.push({ name: 'Form', params: { formId: f.name }, query })
+  }
+  return [
+    {
+      key: 'copy',
+      icon: 'lucide-link',
+      label: __('Copiar enlace'),
+      run: () => {
+        closeActions()
+        copyLink(f)
+      },
+    },
+    {
+      key: 'qr',
+      icon: 'lucide-qr-code',
+      label: __('Código QR'),
+      run: go({ tab: 'share' }),
+    },
+    { key: 'edit', icon: 'lucide-pencil', label: __('Editar'), run: go() },
+    {
+      key: 'submissions',
+      icon: 'lucide-inbox',
+      label: __('Envíos'),
+      run: go({ tab: 'submissions' }),
+    },
+    {
+      key: 'public',
+      icon: 'lucide-external-link',
+      label: __('Abrir la página pública'),
+      run: () => {
+        closeActions()
+        window.open(publicUrl(window.location.origin, f.route), '_blank')
+      },
+    },
+    {
+      key: 'publish',
+      icon: f.published ? 'lucide-eye-off' : 'lucide-eye',
+      label: f.published ? __('Despublicar') : __('Publicar'),
+      run: () => {
+        closeActions()
+        setPublished(f, !f.published)
+      },
+    },
+    {
+      key: 'duplicate',
+      icon: 'lucide-copy',
+      label: f.incompatible_fields
+        ? __('Duplicar como formulario limpio')
+        : __('Duplicar'),
+      run: () => {
+        closeActions()
+        duplicate(f)
+      },
+    },
+    confirmingPhoneDelete.value
+      ? {
+          key: 'delete',
+          icon: 'lucide-trash-2',
+          label: __('Confirmar: eliminar'),
+          hint: __('No se puede deshacer'),
+          danger: true,
+          run: async () => {
+            closeActions()
+            await call('crm.api.form.delete_form', { name: f.name })
+            forms.reload()
+            toast.success(__('Form deleted'))
+          },
+        }
+      : {
+          key: 'delete',
+          icon: 'lucide-trash-2',
+          label: __('Eliminar'),
+          run: () => (confirmingPhoneDelete.value = true),
+        },
+  ]
+})
+
 function rowMenu(f) {
   return [
     {
