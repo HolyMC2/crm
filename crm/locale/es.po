@@ -25994,3 +25994,31 @@ msgstr "Mandar a la papelera los archivos seleccionados"
 #: frontend/src/composables/useArchivos.js
 msgid "Rename the file"
 msgstr "Cambiar el nombre del archivo"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Every file of the shop, next to the operation it proves"
+msgstr "Cada archivo de la tienda, junto a la operación que respalda"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Archivos keeps the invoices, receipts, contracts and photos of {0}. Explore finds any file you may see; the Inbox holds only what still needs a decision."
+msgstr "Archivos guarda las facturas, tickets, contratos y fotos de {0}. En Explorar encuentras cualquier archivo que puedas ver; la Bandeja solo tiene lo que aún pide una decisión."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Every file you may see: by record, contact, month, type or channel, and in folders."
+msgstr "Todos los archivos que puedes ver: por registro, contacto, mes, tipo o canal, y en carpetas."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Open Explore"
+msgstr "Abrir Explorar"
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Only what needs a decision: files to link to their operation, files with a problem and fiscal gaps."
+msgstr "Solo lo que pide una decisión: archivos por vincular a su operación, los que requieren atención y los huecos fiscales."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "Ask the assistant: «find me the invoice from…», «send it to me» (to your own chat) or «file it in the purchase…»."
+msgstr "Pídeselo al asistente: «búscame la factura de…», «mándamela» (a tu propio chat) o «archívala en la compra…»."
+
+#: frontend/src/components/archivos/ArchivosOverview.vue
+msgid "How Archivos works, in the shop manual"
+msgstr "Cómo funciona Archivos, en el manual de la tienda"

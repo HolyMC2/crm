@@ -135,6 +135,7 @@ const SOURCE_ICONS = {
   'doco.compras': 'lucide-shopping-cart',
   'doco.gastos': 'lucide-receipt',
   'abordo.primeros_pasos': 'lucide-check-check',
+  'doco.archivos': 'lucide-folder',
 }
 
 export function greeting(now = new Date(), timeZone) {

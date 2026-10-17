@@ -744,6 +744,21 @@ describe('the page explains itself', () => {
     )
     toClassify.click()
     expect(onView).toHaveBeenLastCalledWith('por_clasificar')
+    // Explorar holds every file; the Bandeja only what needs a decision.
+    expect(text).toContain('Explore')
+    expect(text).toContain('Only what needs a decision')
+    const explore = [...root.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('9 filed'),
+    )
+    explore.click()
+    expect(onView).toHaveBeenLastCalledWith('recientes')
+    expect(text).toContain('Ask the assistant')
+    const manual = [...root.querySelectorAll('a')].find((a) =>
+      a.textContent.includes('shop manual'),
+    )
+    expect(manual.getAttribute('href')).toBe(
+      '/crm/manual?lugar=archivos&return_to=%2Fcrm%2Farchivos&return_label=Archivos',
+    )
   })
 
   it('the overview hides the attention card when nothing needs it and hands over a chosen file', async () => {

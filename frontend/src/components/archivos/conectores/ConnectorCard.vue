@@ -149,8 +149,10 @@
     </div>
 
     <!-- Sections: one open at a time so a phone screen stays readable -->
+    <!-- Locked (no Documentos in the plan, or stopped): settings talk to the
+         archive, so they wait; the page's guard says what unlocks them. -->
     <div
-      v-if="connector.can_manage"
+      v-if="connector.can_manage && !blocked"
       class="flex flex-wrap gap-1 border-t border-outline-gray-1 px-2 py-2"
       role="group"
       :aria-label="__('Settings of {0}', [connector.title])"
@@ -171,7 +173,7 @@
         <FeatherIcon :name="tab.icon" class="h-4 w-4" />{{ tab.label }}
       </button>
     </div>
-    <div v-if="panel" class="border-t border-outline-gray-1 p-4">
+    <div v-if="panel && !blocked" class="border-t border-outline-gray-1 p-4">
       <ConnectorForm
         v-if="panel === 'edit'"
         :connector="connector"

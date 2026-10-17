@@ -4,12 +4,12 @@
   <div class="mx-auto w-full max-w-2xl space-y-6 p-6 xl:p-10">
     <header class="space-y-2">
       <h2 class="text-2xl font-semibold text-ink-gray-9">
-        {{ __('Every receipt next to the operation it proves') }}
+        {{ __('Every file of the shop, next to the operation it proves') }}
       </h2>
       <p class="text-base text-ink-gray-7">
         {{
           __(
-            'Archivos keeps the invoices, receipts, bank statements and contracts of {0}. Link each file to its purchase, payment, expense, customer or supplier: whoever opens that record finds the original, and month-end closes without chasing paper.',
+            'Archivos keeps the invoices, receipts, contracts and photos of {0}. Explore finds any file you may see; the Inbox holds only what still needs a decision.',
             [company],
           )
         }}
@@ -54,36 +54,30 @@
       />
     </label>
 
-    <!-- The three steps, each with where the work stands now -->
-    <ol class="grid gap-3 sm:grid-cols-3" :aria-label="__('How it works')">
+    <!-- The two halves of Archivos, each with where the work stands now -->
+    <ul class="grid gap-3 sm:grid-cols-2" :aria-label="__('How it works')">
       <li
-        v-for="(step, index) in steps"
-        :key="step.key"
+        v-for="part in parts"
+        :key="part.key"
         class="flex flex-col gap-2 rounded-lg border border-outline-gray-2 p-4"
       >
         <div class="flex items-center gap-2">
-          <span
-            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-gray-3 text-xs font-semibold text-ink-gray-8"
-            aria-hidden="true"
-            >{{ index + 1 }}</span
-          >
-          <FeatherIcon :name="step.icon" class="h-4 w-4 text-ink-gray-6" />
+          <FeatherIcon :name="part.icon" class="h-4 w-4 text-ink-gray-6" />
           <h3 class="text-base font-semibold text-ink-gray-9">
-            {{ step.title }}
+            {{ part.title }}
           </h3>
         </div>
-        <p class="flex-1 text-sm text-ink-gray-7">{{ step.body }}</p>
+        <p class="flex-1 text-sm text-ink-gray-7">{{ part.body }}</p>
         <button
-          v-if="step.view"
           type="button"
           class="inline-flex min-h-11 items-center gap-1 self-start rounded text-sm font-medium text-ink-gray-8 hover:text-ink-gray-9 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-gray-4 sm:min-h-0"
-          @click="$emit('view', step.view)"
+          @click="$emit('view', part.view)"
         >
-          {{ step.action }}
+          {{ part.action }}
           <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" />
         </button>
       </li>
-    </ol>
+    </ul>
 
     <!-- Problems never hide: they lead to the list that explains each one -->
     <div
@@ -114,18 +108,37 @@
       />
     </div>
 
-    <p class="flex gap-2 text-sm text-ink-gray-6">
-      <FeatherIcon name="info" class="mt-0.5 h-4 w-4 shrink-0" />
-      <span>{{
-        __(
-          'Tip: customers, suppliers and expenses show «Files on this record». Adding a file there brings you here with the record already chosen, and returns you when it is linked.',
-        )
-      }}</span>
-    </p>
+    <ul class="space-y-2 text-sm text-ink-gray-6">
+      <li class="flex gap-2">
+        <FeatherIcon name="message-circle" class="mt-0.5 h-4 w-4 shrink-0" />
+        <span>{{
+          __(
+            'Ask the assistant: «find me the invoice from…», «send it to me» (to your own chat) or «file it in the purchase…».',
+          )
+        }}</span>
+      </li>
+      <li class="flex gap-2">
+        <FeatherIcon name="info" class="mt-0.5 h-4 w-4 shrink-0" />
+        <span>{{
+          __(
+            'Tip: customers, suppliers and expenses show «Files on this record». Adding a file there brings you here with the record already chosen, and returns you when it is linked.',
+          )
+        }}</span>
+      </li>
+      <li class="flex gap-2">
+        <FeatherIcon name="book-open" class="mt-0.5 h-4 w-4 shrink-0" />
+        <a
+          :href="MANUAL_HREF"
+          class="inline-flex min-h-11 items-center font-medium text-ink-gray-8 underline hover:text-ink-gray-9 sm:min-h-0"
+          @click="openManual"
+          >{{ __('How Archivos works, in the shop manual') }}</a
+        >
+      </li>
+    </ul>
   </div>
 </template>
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, getCurrentInstance, ref } from 'vue'
 import { Button, FeatherIcon } from 'frappe-ui'
 import { ACCEPT } from '@/composables/useArchivos'
 
@@ -138,42 +151,45 @@ const emit = defineEmits(['view', 'file'])
 const dragging = ref(false)
 
 const attention = computed(() => Number(props.counts?.ayuda) || 0)
-const steps = computed(() => {
+const parts = computed(() => {
   const waiting = Number(props.counts?.por_clasificar) || 0
   const filed = Number(props.counts?.archivo) || 0
   return [
     {
-      key: 'receive',
-      icon: 'upload',
-      title: __('Receive'),
+      key: 'explore',
+      icon: 'folder',
+      title: __('Explore'),
       body: __(
-        'Take a photo or upload the PDF or SAT XML. The same file is never stored twice.',
+        'Every file you may see: by record, contact, month, type or channel, and in folders.',
       ),
+      view: 'recientes',
+      action: filed ? __('{0} filed', [filed]) : __('Open Explore'),
     },
     {
-      key: 'link',
-      icon: 'link',
-      title: __('Link it'),
+      key: 'inbox',
+      icon: 'inbox',
+      title: __('Inbox'),
       body: __(
-        'We suggest the purchase, payment or supplier it matches; you confirm. No match? File it without a link.',
+        'Only what needs a decision: files to link to their operation, files with a problem and fiscal gaps.',
       ),
       view: 'por_clasificar',
       action: waiting
         ? __('{0} to classify', [waiting])
         : __('Nothing waiting'),
     },
-    {
-      key: 'find',
-      icon: 'search',
-      title: __('Find it'),
-      body: __(
-        'Filed documents are searchable here and appear on the record they are linked to.',
-      ),
-      view: 'archivo',
-      action: __('{0} filed', [filed]),
-    },
   ]
 })
+
+// The manual's Archivos chapter (place «archivos»), with the way back here.
+const MANUAL_PATH =
+  '/manual?lugar=archivos&return_to=%2Fcrm%2Farchivos&return_label=Archivos'
+const MANUAL_HREF = `/crm${MANUAL_PATH}`
+const router = getCurrentInstance()?.proxy?.$router
+function openManual(event) {
+  if (!router || event.metaKey || event.ctrlKey || event.shiftKey) return
+  event.preventDefault()
+  router.push(MANUAL_PATH)
+}
 
 function pick(event) {
   const chosen = event.target.files?.[0]
