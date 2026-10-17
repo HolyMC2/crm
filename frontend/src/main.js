@@ -82,7 +82,9 @@ if (import.meta.env.DEV) {
       app.mount('#app')
     })
 } else {
-  loadPrintingRuntime()
+  // The print-job consumer polls every 5 s anyway: it starts once the first
+  // route is up instead of competing with its load (SPEC §4 ≤ 60 scripts).
+  afterFirstRoute(router, loadPrintingRuntime)
   socket = initSocket()
   app.config.globalProperties.$socket = socket
   app.mount('#app')
