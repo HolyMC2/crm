@@ -137,6 +137,7 @@ import { useCobranzaUndo } from '@/composables/useCobranzaActions'
 import { pageShortcuts } from '@/composables/shellKeyboard'
 import Cobranza from '@/pages/Cobranza.vue'
 import CobranzaCliente from '@/pages/CobranzaCliente.vue'
+import { formatDay } from '@/utils/contactos'
 
 const row = (customer, extra = {}) => ({
   customer,
@@ -586,10 +587,14 @@ describe('Cobranza record as a power app', () => {
     mount(CobranzaCliente, { customer: 'Laura' })
     await flush()
     const bar = root.querySelector('[data-cobranza-actionbar]')
-    expect(bar.textContent).toContain('SINV-1')
+    // The bar names the invoice by its date, never by its folio.
+    expect(bar.textContent).toContain(formatDay('2026-09-01'))
+    expect(bar.textContent).not.toContain('SINV-1')
     const buttons = [...bar.querySelectorAll('button')]
     expect(buttons.length).toBe(4)
-    expect(buttons[0].className).toContain('bg-surface-gray-10')
+    expect(buttons.filter((b) => b.dataset.primary === 'true')).toEqual([
+      buttons[0],
+    ])
   })
 })
 

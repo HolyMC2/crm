@@ -112,7 +112,7 @@
             v-if="group.label"
             class="sticky top-0 z-[1] flex items-center justify-between gap-3 border-y border-outline-gray-1 bg-surface-gray-1 px-4 py-1.5 text-xs font-medium text-ink-gray-6 sm:px-6"
           >
-            <span class="capitalize">{{ group.label }}</span>
+            <span>{{ sentence(group.label) }}</span>
             <span class="tabular-nums"
               >{{ group.rows.length }} ·
               {{ money(group.amount, currency) }}</span
@@ -132,17 +132,15 @@
                   <span :class="rowIcon" class="size-4" />
                 </span>
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate font-medium text-ink-gray-9">{{
-                    row.title || row.name
-                  }}</span>
-                  <span class="block truncate text-sm text-ink-gray-6">
-                    {{ row.name }}
-                    <template v-if="!group.label && row.posting_date">
-                      · {{ row.posting_date }}</template
-                    >
-                    <template v-if="row.tickets">
-                      · {{ __('{0} purchases', [row.tickets]) }}</template
-                    >
+                  <span
+                    class="line-clamp-2 break-words font-medium text-ink-gray-9"
+                    >{{ rowTitle(row) }}</span
+                  >
+                  <span
+                    v-if="rowMeta(row, group)"
+                    class="block truncate text-sm text-ink-gray-6"
+                  >
+                    {{ rowMeta(row, group) }}
                   </span>
                 </span>
                 <span
@@ -192,6 +190,34 @@ import {
   tipoLabel,
 } from '@/composables/useResultados'
 import { readReturn } from '@/vendor/muelle-shell/contracts'
+import { formatDay } from '@/utils/contactos'
+import { displayName, kindLabel, personName } from '@/utils/display'
+
+// «miércoles, 14 de octubre» → «Miércoles, 14 de octubre» (CSS capitalize
+// would also raise «De»).
+function sentence(text) {
+  const value = String(text || '')
+  return value ? value[0].toUpperCase() + value.slice(1) : ''
+}
+// The walk-in customer reads with its accent and in sentence case.
+const WALK_IN = /^p[uú]blico en general$/i
+function rowTitle(row) {
+  const name = displayName(row.title || '', row.doctype, {
+    fallback: kindLabel(row.doctype) || __('Document'),
+  })
+  return WALK_IN.test(name) ? __('Público en general') : name
+}
+// Second line: what the worker needs, never the folio.
+function rowMeta(row, group) {
+  return [
+    row.return_against ? __('Return', null, CTX) : '',
+    !group.label && row.posting_date ? formatDay(row.posting_date) : '',
+    row.tickets ? __('{0} purchases', [row.tickets]) : '',
+    row.owner ? personName(row.owner) : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
 
 const route = useRoute()
 const router = useRouter()

@@ -33,7 +33,7 @@
         <header class="mb-4 flex flex-wrap items-start gap-3">
           <div class="min-w-0 flex-1">
             <p class="text-sm text-ink-gray-6">
-              {{ isNew ? __('New purchase') : doc.name }}
+              {{ isNew ? __('New purchase') : __('Orden de compra') }}
               <Badge
                 v-if="!isNew"
                 class="ml-1"

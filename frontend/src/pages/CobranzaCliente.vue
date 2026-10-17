@@ -339,17 +339,13 @@
                 <p
                   class="flex flex-wrap items-baseline gap-x-1 font-medium text-ink-gray-9"
                 >
-                  <!-- A link reads as one: link ink + underline (not the
-                       heading's ink), and a 44 px tap height on phones. -->
+                  <!-- The invoice reads by its date, never its folio; the
+                       folio (Desk link) is a desk-only secondary detail. -->
+                  <span data-invoice-title>{{ invoiceTitle(inv) }}</span>
                   <a
-                    class="inline-flex min-h-11 items-center text-ink-blue-link underline underline-offset-2 sm:min-h-0"
+                    class="hidden text-sm font-normal text-ink-gray-6 underline underline-offset-2 sm:inline"
                     :href="`/app/sales-invoice/${encodeURIComponent(inv.name)}`"
-                    >{{ inv.name }}</a
-                  >
-                  <span
-                    class="whitespace-nowrap text-sm font-normal text-ink-gray-6"
-                  >
-                    · {{ formatDay(inv.posting_date) }}</span
+                    >{{ __('Folio {0}', [inv.name], CTX) }}</a
                   >
                 </p>
                 <p class="text-sm" :class="toneClass(agingTone(inv))">
@@ -480,7 +476,8 @@
       data-cobranza-actionbar
     >
       <p class="mb-1 truncate text-xs text-ink-gray-6">
-        {{ focused.name }} · {{ money(focused.outstanding, owedIn(focused)) }}
+        {{ invoiceTitle(focused) }} ·
+        {{ money(focused.outstanding, owedIn(focused)) }}
       </p>
       <div class="grid grid-cols-4 gap-2">
         <button
@@ -493,6 +490,7 @@
               ? 'bg-surface-gray-10 text-ink-base'
               : 'bg-surface-gray-2 text-ink-gray-8'
           "
+          :data-primary="action.primary ? 'true' : undefined"
           @click="run(focused, action)"
         >
           <FeatherIcon :name="action.icon" class="h-5 w-5" />
@@ -751,6 +749,13 @@ function toneClass(tone) {
 /** The currency an invoice is owed in (its receivable's); older servers: the record's. */
 function owedIn(inv) {
   return inv.currency || data.value?.currency
+}
+
+// An invoice reads by its date («Factura del 28 abr»), never its folio.
+function invoiceTitle(inv) {
+  return inv?.posting_date
+    ? __('Invoice of {0}', [formatDay(inv.posting_date)], CTX)
+    : __('Invoice', null, CTX)
 }
 
 function sheetInvoice(inv) {

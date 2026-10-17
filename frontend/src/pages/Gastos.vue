@@ -282,8 +282,11 @@
                   <span class="block truncate text-sm text-ink-gray-6">
                     {{
                       [
-                        row.bill_no || row.name,
-                        statusLabel(row),
+                        row.bill_no,
+                        // The due line already says «Vencida hace …».
+                        row.overdue && Number(row.docstatus) === 1
+                          ? ''
+                          : statusLabel(row),
                         multiCompany ? row.company : '',
                       ]
                         .filter(Boolean)

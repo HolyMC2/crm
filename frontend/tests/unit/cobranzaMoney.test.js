@@ -242,7 +242,7 @@ describe('Cobranza record of a dollar customer paid in part', () => {
     expect(text).toContain(`≈ ${money(2775, 'MXN')}`)
     expect(text).toContain(`Credit limit ${money(20000, 'MXN')}`)
     expect(text).toContain(`of ${money(200, 'USD')}`)
-    expect(text).toContain(`· ${formatDay('2026-09-28')}`)
+    expect(text).toContain(`Invoice of ${formatDay('2026-09-28')}`)
     expect(text).toContain(`Due ${formatDay('2026-10-10')}`)
     expect(text).toContain(
       `Payment ACC-PAY-2026-00003 · ${money(50, 'USD')} ≈ ${money(950, 'MXN')}`,

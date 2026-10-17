@@ -26277,3 +26277,27 @@ msgid "since {0}"
 msgstr "desde el {0}"
 msgid "{0} de {1}"
 msgstr "{0} de {1}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Invoice of {0}"
+msgstr "Factura del {0}"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Invoice"
+msgstr "Factura"
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgctxt "Cobranza"
+msgid "Folio {0}"
+msgstr "Folio {0}"
+
+#: frontend/src/pages/ResultadosDocumentos.vue
+msgid "Público en general"
+msgstr "Público en general"
+
+#: frontend/src/pages/ResultadosDocumentos.vue
+msgctxt "Resultados"
+msgid "Return"
+msgstr "Devolución"
