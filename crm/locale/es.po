@@ -26459,3 +26459,8 @@ msgstr "hace {0} días"
 msgctxt "Encuestas"
 msgid "Settings"
 msgstr "Ajustes"
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "No answers yet in this period."
+msgstr "Todavía no hay respuestas en este periodo."

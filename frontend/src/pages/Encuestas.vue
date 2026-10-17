@@ -111,7 +111,17 @@
         {{ copied }}
       </p>
 
+      <!-- No answers yet: one plain line instead of empty tiles and formulas. -->
+      <p
+        v-if="noAnswers"
+        role="status"
+        class="mx-4 mb-3 text-sm text-ink-gray-6 sm:mx-6"
+        data-testid="encuestas-no-answers"
+      >
+        {{ __('No answers yet in this period.', null, 'Encuestas') }}
+      </p>
       <section
+        v-else
         class="mx-4 mb-3 grid grid-cols-3 gap-2 sm:mx-6 sm:grid-cols-5"
         :aria-label="__('Would they recommend you?')"
       >
@@ -162,7 +172,6 @@
         >
           <p class="text-sm text-ink-gray-6">
             {{ bucketName(b.value) }}
-            <span class="block text-xs">{{ b.range }}</span>
           </p>
           <p class="text-2xl font-semibold text-ink-gray-9">
             {{ summary ? summary[b.value] : '—' }}
@@ -413,6 +422,13 @@ const view = computed(() => normalizeView(route.query.view))
 const bucket = computed(() => normalizeBucket(route.query.bucket))
 const kind = computed(() => normalizeKind(route.query.kind))
 const period = computed(() => normalizePeriod(route.query.periodo))
+// Nobody answered either survey in the period: the tiles would only show «—».
+const noAnswers = computed(
+  () =>
+    Boolean(summary.value) &&
+    !summary.value.answers &&
+    !summary.value.satisfaction?.answers,
+)
 const mine = computed(() => route.query.mine === '1')
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const listPath = computed(() => route.fullPath)
