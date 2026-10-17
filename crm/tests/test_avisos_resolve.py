@@ -191,6 +191,25 @@ class TestAvisosResolve(IntegrationTestCase):
 		group = self.one("Administrator", f"{full_name} took you off 2 assignments")
 		self.assertEqual(group["count"], 2)
 
+	def test_frappes_assignment_mail_line_is_not_repeated_as_the_body(self):
+		doc = frappe.get_doc(
+			{
+				"doctype": "Notification Log",
+				"for_user": ANA,
+				"from_user": BETO,
+				"type": "Assignment",
+				"subject": "Beto assigned a new task CRM Lead CRM-LEAD-2026-00291 to you",
+				"email_content": "Assignment for CRM Lead CRM-LEAD-2026-00291",
+			}
+		)
+		doc.flags.ignore_permissions = True
+		doc.db_insert()
+		frappe.set_user(ANA)
+		groups = api.get_stream(limit=100)["groups"]
+		frappe.set_user("Administrator")
+		self.assertTrue(groups)
+		self.assertFalse([g for g in groups if "Assignment for" in g["body"]])
+
 	def test_a_workshop_follow_up_opens_its_order_only_when_readable(self):
 		task = self.crm_task()
 		group = {

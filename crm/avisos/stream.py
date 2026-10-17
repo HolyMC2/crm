@@ -29,6 +29,8 @@ _ASSIGNED = re.compile(r"assigned (?:a new task |a |you)|te asignó|asignó", re
 _MENTIONED = re.compile(r"mentioned you|te mencionó", re.I)
 _SHARED = re.compile(r"shared .* with you|compartió", re.I)
 _GENERIC_ASSIGNMENT = re.compile(r"assigned an? \S+(?: \S+)? \S+ to you$")
+# Frappe's assignment e-mail line, stored as the body: «Assignment for CRM Lead CRM-LEAD-2026-00291».
+_ASSIGNMENT_FOR = re.compile(r"^(?:Assignment for|Asignación para) \S+(?: \S+)? \S+$")
 
 
 def _user():
@@ -425,7 +427,12 @@ def _public(group, access):
 	if body.startswith(out["title"]):
 		# Producers that repeat the subject as the first line of the body.
 		body = body[len(out["title"]) :].strip()
-	if body == out["title"] or _GENERIC_ASSIGNMENT.search(body) or body == out["target"].get("label"):
+	if (
+		body == out["title"]
+		or _GENERIC_ASSIGNMENT.search(body)
+		or _ASSIGNMENT_FOR.match(body)
+		or body == out["target"].get("label")
+	):
 		body = ""
 	out["body"] = body
 	out["title"] = kinds.doctype_in_words(out["title"], group.get("doctype"), _)
