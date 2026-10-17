@@ -261,12 +261,17 @@ describe('CRM socket bootstrap ownership', () => {
   )
 
   it('loads the unchanged printing runtime once for an installed Doco owner', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'requestIdleCallback'] })
     vi.stubEnv('DEV', false)
     window.site_name = 'crm-roadmap.localhost'
     window.socketio_port = 18060
     window.installed_apps = ['frappe', 'crm', 'doco']
     await import('@/main')
     expectCanonicalSocket()
+    // It starts after the first route (SPEC §4), not during its load.
+    expect(printingScripts()).toHaveLength(0)
+    await vi.advanceTimersByTimeAsync(20000)
+    vi.useRealTimers()
     expect(printingScripts()).toHaveLength(1)
     expect(printingScripts()[0].getAttribute('src')).toBe(printRuntimeUrl)
   })

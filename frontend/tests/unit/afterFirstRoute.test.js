@@ -34,4 +34,15 @@ describe('afterFirstRoute', () => {
     await vi.advanceTimersByTimeAsync(10000)
     expect(work).toHaveBeenCalledTimes(1)
   })
+
+  it('runs anyway when the first navigation never settles', async () => {
+    vi.useFakeTimers()
+    const work = vi.fn()
+    afterFirstRoute({ isReady: () => new Promise(() => {}) }, work, {
+      delay: 10,
+      maxWait: 1000,
+    })
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(work).toHaveBeenCalledTimes(1)
+  })
 })

@@ -9,6 +9,7 @@ vi.mock('@/utils/crmCapabilities', async () => ({
   addonAvailable: (await import('vue')).ref(false),
 }))
 vi.mock('@/components/Inbox/ConversationWorkspace.vue', async () => ({
+  __esModule: true,
   default: {
     emits: ['pending'],
     setup(_, { emit }) {
@@ -47,9 +48,11 @@ function mount() {
   return el
 }
 describe('one Inbox launcher', () => {
-  it('opens the native workspace without importing or mounting optional activity UI', () => {
+  it('opens the native workspace without importing or mounting optional activity UI', async () => {
     const el = mount()
-    expect(el.querySelector('[data-native]')).not.toBeNull()
+    await vi.waitFor(() =>
+      expect(el.querySelector('[data-native]')).not.toBeNull(),
+    )
     expect(el.querySelector('[data-legacy]')).toBeNull()
     expect(el.querySelector('nav')).toBeNull()
   })
@@ -80,17 +83,26 @@ describe('one Inbox launcher', () => {
       },
     })
   })
-  it('opens the conversation queue on request or on a conversation deep link', () => {
+  it('opens the conversation queue on request or on a conversation deep link', async () => {
     addonAvailable.value = true
     context.route.query = { workspace: 'conversations' }
-    expect(mount().querySelector('[data-native]')).not.toBeNull()
+    const first = mount()
+    await vi.waitFor(() =>
+      expect(first.querySelector('[data-native]')).not.toBeNull(),
+    )
     context.route.query = { conversation: 'a'.repeat(64) }
-    expect(mount().querySelector('[data-native]')).not.toBeNull()
+    const second = mount()
+    await vi.waitFor(() =>
+      expect(second.querySelector('[data-native]')).not.toBeNull(),
+    )
   })
   it('keeps an uncertain command in its native workspace until resolved', async () => {
     addonAvailable.value = true
     context.route.query = { workspace: 'conversations' }
     const el = mount()
+    await vi.waitFor(() =>
+      expect(el.querySelector('[data-native]')).not.toBeNull(),
+    )
     el.querySelector('[data-native]').click()
     await nextTick()
     const buttons = [...el.querySelectorAll('nav button')]

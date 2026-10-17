@@ -68,12 +68,22 @@ import { mobileView } from '@/composables/mobileView'
 import { safeReturn } from '@/composables/useCompras'
 import { goToReturn } from '@/utils/atencion'
 import { inboxSpace, inboxSpaceQuery } from '@/utils/inboxSpaces'
-import ConversationWorkspace from '@/components/Inbox/ConversationWorkspace.vue'
 import PaneState from '@/components/shell/PaneState.vue'
 // «Negocios y actividad» is its own chunk: say it is loading (after 200 ms)
 // and offer a reload if the chunk cannot be fetched, never a blank pane.
 const ConversationLegacyWorkspace = defineAsyncComponent({
   loader: () => import('@/components/Inbox/ConversationLegacyWorkspace.vue'),
+  loadingComponent: { render: () => h(PaneState, { state: 'loading' }) },
+  errorComponent: {
+    render: () => h(PaneState, { state: 'error', reload: true }),
+  },
+  delay: 200,
+})
+// «Conversaciones» loads only when it is the open space, like the other two
+// (bundle budget, SPEC §4: the inbox opened on «Negocios y actividad» fetched
+// it and its order/messenger/archivos helpers anyway).
+const ConversationWorkspace = defineAsyncComponent({
+  loader: () => import('@/components/Inbox/ConversationWorkspace.vue'),
   loadingComponent: { render: () => h(PaneState, { state: 'loading' }) },
   errorComponent: {
     render: () => h(PaneState, { state: 'error', reload: true }),

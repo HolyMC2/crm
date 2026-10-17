@@ -29,10 +29,17 @@ export const PREFETCH_DELAY_MS = 4000
 export function afterFirstRoute(
   router,
   work,
-  { delay = PREFETCH_DELAY_MS } = {},
+  { delay = PREFETCH_DELAY_MS, maxWait = 10000 } = {},
 ) {
-  const start = () => setTimeout(() => idle(work), delay)
+  let started = false
+  const start = () => {
+    if (started) return
+    started = true
+    setTimeout(() => idle(work), delay)
+  }
   Promise.resolve(router?.isReady?.()).then(start, start)
+  // A first navigation that never settles must not hold the work back.
+  setTimeout(start, maxWait)
 }
 
 export function prefetchHotChunks({ delay = PREFETCH_DELAY_MS } = {}) {
