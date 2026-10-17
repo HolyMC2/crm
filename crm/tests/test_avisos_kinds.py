@@ -207,3 +207,61 @@ class TestAvisosNotices(TestCase):
 		self.assertEqual(kinds.doctype_in_words(title, "CRM Deal", es), title)
 		self.assertEqual(kinds.doctype_in_words(title, "Social Post", lambda text: text), title)
 		self.assertEqual(kinds.doctype_in_words("", "Social Post", es), "")
+
+
+class TestAssignmentRemovals(TestCase):
+	"""crm/api/todo.py froze the removal text in the actor's language (English on most sites)."""
+
+	EN_TASK = "Your assignment on task Dar seguimiento has been removed by Administrator"
+	ES_TASK = "Administrator te quitó la asignación de la tarea Dar seguimiento"
+
+	def test_removals_are_recognised_in_either_language(self):
+		self.assertTrue(
+			kinds.is_removal("Your assignment on CRM Task 1079 has been removed by Administrator")
+		)
+		self.assertTrue(kinds.is_removal(None, f"<span>{self.EN_TASK}</span>"))
+		self.assertTrue(kinds.is_removal(self.ES_TASK))
+		self.assertTrue(kinds.is_removal("Tu tarea de CRM Deal CRM-DEAL-1 ha sido eliminada por Ana"))
+		self.assertFalse(kinds.is_removal("Ana assigned a new task Llamar to you", "Ana te asignó «Llamar»"))
+
+	def test_parts_name_what_was_taken_and_who_took_it(self):
+		self.assertEqual(kinds.removal_parts(self.EN_TASK), ("Dar seguimiento", "Administrator", True))
+		self.assertEqual(kinds.removal_parts(self.ES_TASK), ("Dar seguimiento", "Administrator", True))
+		self.assertEqual(
+			kinds.removal_parts("Your assignment on deal Juan Pérez has been removed by Ana"),
+			("Juan Pérez", "Ana", False),
+		)
+		self.assertEqual(
+			kinds.removal_parts("Ana te quitó la asignación de trato Juan Pérez"),
+			("Juan Pérez", "Ana", False),
+		)
+		self.assertIsNone(kinds.removal_parts("Ana assigned a new task Llamar to you"))
+
+	def test_removals_are_quiet_news_folded_per_actor(self):
+		a = row(
+			source="crm", type="Assignment", removed=True, doctype="CRM Deal", docname="D1", from_user="x"
+		)
+		b = row(
+			source="crm",
+			name="N2",
+			type="Assignment",
+			removed=True,
+			doctype="CRM Deal",
+			docname="D2",
+			from_user="x",
+		)
+		c = row(
+			source="crm",
+			name="N3",
+			type="Assignment",
+			removed=True,
+			doctype="CRM Deal",
+			docname="D3",
+			from_user="y",
+		)
+		self.assertEqual(kinds.category(a), "system")
+		self.assertEqual(kinds.visibility("system", kinds.kind_key(a), kinds.normalize_prefs({})), "quiet")
+		self.assertEqual(kinds.group_key(a), kinds.group_key(b))
+		self.assertNotEqual(kinds.group_key(a), kinds.group_key(c))
+		assigned = row(source="crm", type="Assignment", doctype="CRM Deal", docname="D1", from_user="x")
+		self.assertEqual(kinds.category(assigned), "direct")

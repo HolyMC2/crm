@@ -174,6 +174,7 @@ def _native_rows(user, read, since=None, limit=UNREAD_LIMIT, lock=False, names=N
 				"doctype": row.document_type,
 				"docname": row.document_name,
 				"link": _local_link(row.link),
+				"removed": row.type == "Assignment" and kinds.is_removal(row.subject),
 				"from_user": row.from_user,
 				"read": cint(row.read),
 				"creation": row.creation,
@@ -231,6 +232,7 @@ def _crm_rows(user, read, since=None, limit=UNREAD_LIMIT, lock=False, names=None
 		title = kinds.plain(row.notification_text, 240)
 		if not title and row.type == "Mention":
 			title = _("{0} mentioned you").format(_full_name(row.from_user))
+		removed = row.type == "Assignment" and kinds.is_removal(row.message, row.notification_text)
 		doctype, docname, hash = row.reference_doctype, row.reference_name, _crm_hash(row)
 		if hash == "#tasks" and row.notification_type_doc:
 			# The assignment is the task, not the deal it hangs on: open the task itself.
@@ -242,7 +244,9 @@ def _crm_rows(user, read, since=None, limit=UNREAD_LIMIT, lock=False, names=None
 				"type": row.type,
 				"title": title or _("New notification"),
 				"raw_title": title,
-				"body": "" if row.type == "WhatsApp" else kinds.plain(row.message, 280),
+				# A removal's message is the same sentence with the record's ID: «CRM Task 1079».
+				"body": "" if row.type == "WhatsApp" or removed else kinds.plain(row.message, 280),
+				"removed": removed,
 				"doctype": doctype,
 				"docname": docname,
 				"link": None,
@@ -261,7 +265,7 @@ def _crm_hash(row):
 	if row.type == "WhatsApp":
 		return "#whatsapp"
 	if row.type == "Assignment" and row.notification_type_doctype == "CRM Task":
-		return "" if "has been removed by" in (row.message or "") else "#tasks"
+		return "" if kinds.is_removal(row.message, row.notification_text) else "#tasks"
 	return ""
 
 
@@ -317,6 +321,7 @@ def group_rows(rows, prefs):
 				"count": 0,
 				"unread": 0,
 				"rows": [],
+				"removed": bool(row.get("removed")),
 				"mutable": cat in kinds.MUTABLE,
 				"muted": kind in prefs["muted"],
 				"visibility": kinds.visibility(cat, kind, prefs),
@@ -355,6 +360,12 @@ def _matches(group, category, q):
 	return True
 
 
+def _muted_label(key):
+	if key.endswith(kinds.KEY_SEPARATOR + kinds.REMOVED):
+		return _("Assignments taken off you")
+	return kinds.kind_label(key)
+
+
 def badge_count(groups):
 	return sum(1 for group in groups if group["unread"] and group["visibility"] == "badge")
 
@@ -380,12 +391,36 @@ def _direct_title(group, out):
 	return None
 
 
+def _removed_title(group, out):
+	"""«Your assignment on task Dar seguimiento has been removed by Administrator» (stored in the
+	actor's language) → «Administrator te quitó la tarea «Dar seguimiento» de Ana López»."""
+	parts = kinds.removal_parts(group.get("raw_title") or group["title"])
+	what, who, is_task = parts or ("", "", False)
+	who = out["from_name"] or who
+	if group["count"] > 1 and who:
+		return _("{0} took you off {1} assignments").format(who, group["count"])
+	label = out["target"].get("label")
+	if is_task and what and who:
+		if label and label != what:
+			return _("{0} took you off the task «{1}» for {2}").format(who, what, label)
+		return _("{0} took you off the task «{1}»").format(who, what)
+	what = label or what
+	if what and who:
+		return _("{0} took you off «{1}»").format(who, what)
+	return _("An assignment was taken off you")
+
+
 def _public(group, access):
 	out = {key: value for key, value in group.items() if key not in ("rows", "raw_title")}
 	out["latest"] = str(group["latest"])
 	out["from_name"] = _full_name(group.get("from_user")) if group.get("from_user") else ""
 	out["target"] = resolve.target(group, access)
-	out["title"] = _direct_title(group, out) or kinds.display(group["title"], 240) or _("New notification")
+	if group.get("removed"):
+		out["title"] = _removed_title(group, out)
+	else:
+		out["title"] = (
+			_direct_title(group, out) or kinds.display(group["title"], 240) or _("New notification")
+		)
 	body = kinds.display(group["body"], 280)
 	if body.startswith(out["title"]):
 		# Producers that repeat the subject as the first line of the body.
@@ -400,7 +435,9 @@ def _public(group, access):
 # ── reads ────────────────────────────────────────────────────────────────────
 
 
-def stream(view="inbox", category="all", q="", start=0, limit=PAGE):
+def stream(view="inbox", category="all", q="", start=0, limit=PAGE, actionable=False):
+	"""``actionable`` (Hoy «Avisos que piden acción») leaves out quiet system news, such as an
+	assignment someone took off you."""
 	user = _user()
 	view = view if view in VIEWS else "inbox"
 	category = category if category in kinds.CATEGORIES else "all"
@@ -417,11 +454,15 @@ def stream(view="inbox", category="all", q="", start=0, limit=PAGE):
 	for group in unread_groups:
 		if group["unread"] and group["visibility"] != "off":
 			counts[group["category"]] += 1
-	visible = [g for g in groups if _in_view(g, view) and _matches(g, category, q)]
+	visible = [
+		g
+		for g in groups
+		if _in_view(g, view) and _matches(g, category, q) and not (actionable and g["category"] == "system")
+	]
 	access = resolve.Access()
 	page = [_public(group, access) for group in visible[start : start + limit]]
 	muted = [
-		{"kind": key, "category": kinds.key_category(key), "label": kinds.kind_label(key)}
+		{"kind": key, "category": kinds.key_category(key), "label": _muted_label(key)}
 		for key in prefs["muted"]
 	]
 	return {

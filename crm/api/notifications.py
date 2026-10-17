@@ -1,6 +1,8 @@
 import frappe
 from frappe.permissions import has_permission as has_document_permission
 
+from crm.avisos.kinds import is_removal
+
 
 @frappe.whitelist()
 def get_notifications():
@@ -93,6 +95,6 @@ def get_hash(notification):
 
 	if notification.type == "Assignment" and notification.notification_type_doctype == "CRM Task":
 		_hash = "#tasks"
-		if "has been removed by" in notification.message:
+		if is_removal(notification.message, notification.notification_text):
 			_hash = ""
 	return _hash

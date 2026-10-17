@@ -27,11 +27,17 @@
       <header
         class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
       >
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
+        <!-- The title owns its row on phones (basis-full) so the buttons can
+             never squeeze it down to one letter; it wraps between words. -->
+        <div class="min-w-0 basis-full sm:basis-0 sm:flex-1">
+          <h1
+            class="text-xl font-semibold text-ink-gray-9 [overflow-wrap:break-word] [text-wrap:balance]"
+          >
             {{ segmentLabel(state.segment) }}
           </h1>
-          <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
+          <p class="text-sm text-ink-gray-6 [text-wrap:pretty]">
+            {{ subtitle }}
+          </p>
         </div>
         <template v-if="!approvals">
           <Button

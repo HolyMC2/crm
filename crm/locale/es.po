@@ -10017,7 +10017,7 @@ msgstr "{1} te quitó la asignación de la tarea {0}"
 
 #: crm/api/todo.py:47 crm/api/todo.py:88
 msgid "Your assignment on {0} {1} has been removed by {2}"
-msgstr "Tu tarea de {0} {1} ha sido eliminada por {2}"
+msgstr "{2} te quitó la asignación de {0} {1}"
 
 #: crm/templates/emails/helpdesk_invitation.html:6
 msgid "Your login id is"
@@ -26039,3 +26039,26 @@ msgstr "Expandir"
 msgctxt "Bottom sheet"
 msgid "Collapse"
 msgstr "Contraer"
+#: crm/avisos/stream.py
+msgid "{0} took you off {1} assignments"
+msgstr "{0} te quitó {1} asignaciones"
+
+#: crm/avisos/stream.py
+msgid "{0} took you off the task «{1}» for {2}"
+msgstr "{0} te quitó la tarea «{1}» de {2}"
+
+#: crm/avisos/stream.py
+msgid "{0} took you off the task «{1}»"
+msgstr "{0} te quitó la tarea «{1}»"
+
+#: crm/avisos/stream.py
+msgid "{0} took you off «{1}»"
+msgstr "{0} te quitó «{1}»"
+
+#: crm/avisos/stream.py
+msgid "An assignment was taken off you"
+msgstr "Te quitaron una asignación"
+
+#: crm/avisos/stream.py
+msgid "Assignments taken off you"
+msgstr "Asignaciones que te quitaron"

@@ -55,6 +55,44 @@ NOTICES = (
 )
 
 
+# A CRM assignment that was taken off the reader (crm/api/todo.py, cancelled ToDo). The
+# text was frozen in the actor's language when it was stored, so match both.
+_REMOVAL = re.compile(r"has been removed by|te quitó la asignación|ha sido eliminada por|te quitó la tarea")
+_REMOVED_TASK = (
+	re.compile(r"^Your assignment on task (?P<what>.+) has been removed by (?P<who>.+)$"),
+	re.compile(r"^(?P<who>.+?) te quitó la asignación de la tarea (?P<what>.+)$"),
+)
+_REMOVED_RECORD = (
+	re.compile(
+		r"^Your assignment on (?:CRM )?(?:lead|deal|Lead|Deal) (?P<what>.+) has been removed by (?P<who>.+)$"
+	),
+	re.compile(
+		r"^Tu tarea de (?:CRM )?(?:lead|deal|Lead|Deal|trato|prospecto) (?P<what>.+) ha sido eliminada por (?P<who>.+)$"
+	),
+	re.compile(
+		r"^(?P<who>.+?) te quitó la asignación de (?:CRM )?(?:lead|deal|Lead|Deal|trato|prospecto) (?P<what>.+)$"
+	),
+)
+# The kind detail every removal shares, so they fold into one quiet line per actor.
+REMOVED = "removed"
+
+
+def is_removal(*texts):
+	"""True when a CRM assignment notice says the assignment was taken off the reader."""
+	return any(_REMOVAL.search(plain(text)) for text in texts if text)
+
+
+def removal_parts(text):
+	"""(what, who, is_task) from a stored removal text in English or Spanish, else None."""
+	text = plain(text)
+	for patterns, is_task in ((_REMOVED_TASK, True), (_REMOVED_RECORD, False)):
+		for pattern in patterns:
+			found = pattern.match(text)
+			if found:
+				return found.group("what").strip(), found.group("who").strip(), is_task
+	return None
+
+
 def plain(value, limit=None):
 	"""Notification HTML as one line of text (never rendered as HTML)."""
 	text = html.unescape(_TAG.sub(" ", str(value or "")))
@@ -113,6 +151,9 @@ def fold(title):
 def category(row):
 	"""direct · messages · alerts · system for a normalized aviso row."""
 	kind = row.get("type") or ""
+	if row.get("removed"):
+		# Being taken off a task is news, not work: it never badges or asks for action.
+		return "system"
 	if row.get("source") == "crm":
 		if kind in _CRM_MESSAGES:
 			return "messages"
@@ -131,7 +172,10 @@ def _clean(part):
 def kind_key(row, cat=None):
 	"""What a «Silenciar este tipo» mutes: the same kind of alert on any record."""
 	cat = cat or category(row)
-	detail = fold(row.get("title")) if cat in ("alerts", "system") else ""
+	if row.get("removed"):
+		detail = REMOVED
+	else:
+		detail = fold(row.get("title")) if cat in ("alerts", "system") else ""
 	parts = (cat, row.get("source"), row.get("type"), row.get("doctype"), detail)
 	return KEY_SEPARATOR.join(_clean(part) for part in parts)
 
@@ -140,6 +184,9 @@ def group_key(row, cat=None):
 	"""Rows that collapse into one line: same kind on the same record."""
 	cat = cat or category(row)
 	base = kind_key(row, cat)
+	if row.get("removed"):
+		# One line per person who took the work off: «Ana te quitó 60 asignaciones».
+		return base + KEY_SEPARATOR + _clean(row.get("from_user"))
 	if cat == "system":
 		return base
 	record = row.get("docname") or row.get("link")

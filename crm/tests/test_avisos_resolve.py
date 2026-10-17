@@ -150,6 +150,47 @@ class TestAvisosResolve(IntegrationTestCase):
 		if target["route"]:
 			self.assertEqual(target["route"], f"/pendientes/crm-task/{task.name}")
 
+	def removal(self, task, who=BETO, stored_by="Administrator"):
+		"""The row crm/api/todo.py stored when ``stored_by`` (in English) took ``task`` off the reader."""
+		return frappe.get_doc(
+			{
+				"doctype": "CRM Notification",
+				"from_user": who,
+				"to_user": "Administrator",
+				"type": "Assignment",
+				"notification_text": f"<span>Your assignment on task <span>{task.title}</span>"
+				f" has been removed by <span>{stored_by}</span></span>",
+				"message": f"Your assignment on CRM Task {task.name} has been removed by {stored_by}",
+				"notification_type_doctype": "CRM Task",
+				"notification_type_doc": task.name,
+			}
+		).insert(ignore_permissions=True)
+
+	def test_a_removed_assignment_reads_in_the_readers_words_and_never_asks_for_action(self):
+		if not frappe.db.table_exists("CRM Notification"):
+			self.skipTest("CRM Notification is not installed")
+		self.removal(self.crm_task("Dar seguimiento"))
+		full_name = frappe.utils.get_fullname(BETO)
+		group = self.one("Administrator", f"{full_name} took you off the task «Dar seguimiento»")
+		self.assertEqual(group["category"], "system")
+		self.assertEqual(group["visibility"], "quiet")
+		self.assertEqual(group["body"], "")
+		self.assertNotIn("CRM Task", frappe.as_json({k: group[k] for k in ("title", "body")}))
+		self.assertNotIn("removed", group["title"])
+		frappe.set_user("Administrator")
+		self.assertEqual(stream.stream(view="inbox", limit=100)["badge"], 0)
+		actionable = stream.stream(view="inbox", limit=100, actionable=True)["groups"]
+		self.assertFalse([g for g in actionable if g.get("removed")])
+
+	def test_removals_by_one_person_fold_into_one_line(self):
+		if not frappe.db.table_exists("CRM Notification"):
+			self.skipTest("CRM Notification is not installed")
+		self.removal(self.crm_task("Llamar"))
+		self.removal(self.crm_task("Mandar cotización"))
+		full_name = frappe.utils.get_fullname(BETO)
+		group = self.one("Administrator", f"{full_name} took you off 2 assignments")
+		self.assertEqual(group["count"], 2)
+
 	def test_a_workshop_follow_up_opens_its_order_only_when_readable(self):
 		task = self.crm_task()
 		group = {

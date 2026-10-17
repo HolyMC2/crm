@@ -38,7 +38,7 @@ def _require():
 
 def _avisos():
 	try:
-		answer = avisos.stream(view="inbox", limit=AVISOS_LIMIT)
+		answer = avisos.stream(view="inbox", limit=AVISOS_LIMIT, actionable=True)
 	except frappe.PermissionError:
 		frappe.clear_last_message()
 		return {"available": False, "reason": None}

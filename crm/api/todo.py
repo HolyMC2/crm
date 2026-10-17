@@ -44,14 +44,18 @@ def notify_assigned_user(doc, is_cancelled=False):
 
 	# a public form submission assigns as Guest: credit the form, not "Guest"
 	owner = assignment_actor() or frappe.get_cached_value("User", frappe.session.user, "full_name")
-	notification_text = get_notification_text(owner, doc, _doc, is_cancelled)
+	# The row is read by the person assigned, so it is written in their language, not the actor's.
+	lang = recipient_language(doc.allocated_to)
+	notification_text = get_notification_text(owner, doc, _doc, is_cancelled, lang=lang)
 
 	message = (
-		_("Your assignment on {0} {1} has been removed by {2}").format(
+		_("Your assignment on {0} {1} has been removed by {2}", lang=lang).format(
 			doc.reference_type, doc.reference_name, owner
 		)
 		if is_cancelled
-		else _("{0} assigned a {1} {2} to you").format(owner, doc.reference_type, doc.reference_name)
+		else _("{0} assigned a {1} {2} to you", lang=lang).format(
+			owner, doc.reference_type, doc.reference_name
+		)
 	)
 
 	redirect_to_doctype, redirect_to_name = get_redirect_to_doc(doc)
@@ -71,12 +75,22 @@ def notify_assigned_user(doc, is_cancelled=False):
 	)
 
 
-def get_notification_text(owner, doc, reference_doc, is_cancelled=False):
+def recipient_language(user):
+	return (
+		frappe.get_cached_value("User", user, "language")
+		or frappe.db.get_single_value("System Settings", "language")
+		or "en"
+	)
+
+
+def get_notification_text(owner, doc, reference_doc, is_cancelled=False, lang=None):
 	name = doc.reference_name
 	doctype = doc.reference_type
 
 	if doctype.startswith("CRM "):
 		doctype = doctype[4:].lower()
+	# «trato» / «prospecto» in a Spanish sentence, not «deal» / «lead».
+	kind = _(doctype.capitalize(), lang=lang).lower() if doctype in ("lead", "deal") else doctype
 
 	if doctype in ["lead", "deal"]:
 		name = (
@@ -88,8 +102,8 @@ def get_notification_text(owner, doc, reference_doc, is_cancelled=False):
 		if is_cancelled:
 			return f"""
                 <div class="mb-2 leading-5 text-ink-gray-5">
-                    <span>{ _('Your assignment on {0} {1} has been removed by {2}').format(
-                        doctype,
+                    <span>{ _('Your assignment on {0} {1} has been removed by {2}', lang=lang).format(
+                        kind,
                         f'<span class="font-medium text-ink-gray-9">{ name }</span>',
                         f'<span class="font-medium text-ink-gray-9">{ owner }</span>'
                     ) }</span>
@@ -99,8 +113,8 @@ def get_notification_text(owner, doc, reference_doc, is_cancelled=False):
 		return f"""
             <div class="mb-2 leading-5 text-ink-gray-5">
                 <span class="font-medium text-ink-gray-9">{ owner }</span>
-                <span>{ _('assigned a {0} {1} to you').format(
-                    doctype,
+                <span>{ _('assigned a {0} {1} to you', lang=lang).format(
+                    kind,
                     f'<span class="font-medium text-ink-gray-9">{ name }</span>'
                 ) }</span>
             </div>
@@ -110,7 +124,7 @@ def get_notification_text(owner, doc, reference_doc, is_cancelled=False):
 		if is_cancelled:
 			return f"""
                 <div class="mb-2 leading-5 text-ink-gray-5">
-                    <span>{ _('Your assignment on task {0} has been removed by {1}').format(
+                    <span>{ _('Your assignment on task {0} has been removed by {1}', lang=lang).format(
                         f'<span class="font-medium text-ink-gray-9">{ reference_doc.title }</span>',
                         f'<span class="font-medium text-ink-gray-9">{ owner }</span>'
                     ) }</span>
@@ -119,7 +133,7 @@ def get_notification_text(owner, doc, reference_doc, is_cancelled=False):
 		return f"""
             <div class="mb-2 leading-5 text-ink-gray-5">
                 <span class="font-medium text-ink-gray-9">{ owner }</span>
-                <span>{ _('assigned a new task {0} to you').format(
+                <span>{ _('assigned a new task {0} to you', lang=lang).format(
                     f'<span class="font-medium text-ink-gray-9">{ reference_doc.title }</span>'
                 ) }</span>
             </div>
