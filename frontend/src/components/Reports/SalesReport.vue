@@ -44,11 +44,10 @@
       </p>
       <p v-if="report" class="mt-4 text-xs leading-relaxed text-ink-gray-6">
         {{
-          __('Created {0} through {1}; current state as of {2} ({3}).', [
-            report.filters.from_date,
-            report.filters.to_date,
-            report.as_of,
-            report.timezone,
+          __('Created {0} through {1}; current state as of {2}.', [
+            formatDay(report.filters.from_date),
+            formatDay(report.filters.to_date),
+            formatDateTime(report.as_of),
           ])
         }}
       </p>
@@ -59,7 +58,10 @@
         {{
           __(
             'Compared with records created {0} through {1}, as they are now (not as they were then).',
-            [comparisonFilters.from_date, comparisonFilters.to_date],
+            [
+              formatDay(comparisonFilters.from_date),
+              formatDay(comparisonFilters.to_date),
+            ],
           )
         }}
       </p>
@@ -356,8 +358,7 @@
           >
             <div class="min-w-0">
               <h3 class="font-medium break-words">
-                {{ row.pipeline || __('No pipeline') }} ·
-                {{ stageLabel(row.status) }}
+                {{ stageLine(row) }}
               </h3>
               <button
                 class="report-button text-left"
@@ -482,6 +483,20 @@ import ReportBlock from './ReportBlock.vue'
 import ReportChart from './ReportChart.vue'
 import { periodDelta, previousPeriod } from './reportFilters'
 import { stageLabel } from '@/utils/stageLabel'
+import { formatDay } from '@/utils/contactos'
+import { formatDateTime } from '@/utils/display'
+
+// The stage reads first («Negociación»); the pipeline («shop-sales» is its
+// record name) only when the report spans more than one.
+const manyPipelines = computed(
+  () => new Set((report.value?.stages || []).map((r) => r.pipeline)).size > 1,
+)
+function stageLine(row) {
+  const stage = row.status ? stageLabel(row.status) : __('Unknown stage')
+  return manyPipelines.value
+    ? `${stage} · ${row.pipeline || __('No pipeline')}`
+    : stage
+}
 
 const props = defineProps({
   filters: { type: Object, default: () => ({}) },
@@ -539,7 +554,7 @@ const stageRows = computed(() =>
         row.average_age_days != null,
     )
     .map((row) => ({
-      label: `${row.pipeline || __('No pipeline')} · ${row.status || __('Unknown stage')}`,
+      label: stageLine(row),
       value: Math.round(Number(row.average_age_days) * 10) / 10,
       kind: 'deals',
       bucket: { pipeline: row.pipeline, status: row.status },

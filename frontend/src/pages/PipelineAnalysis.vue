@@ -4,8 +4,9 @@
   <div
     class="flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-base"
   >
+    <!-- Phone: the shell bar is the one title; no in-page breadcrumb. -->
     <header
-      class="flex h-12 flex-none items-center gap-2 border-b border-outline-gray-1 px-4 sm:px-5"
+      class="hidden h-12 flex-none items-center gap-2 border-b border-outline-gray-1 px-4 sm:flex sm:px-5"
     >
       <button
         type="button"
@@ -29,7 +30,7 @@
         >
           {{ __('Embudo de ventas') }}
           <select
-            class="h-8 min-w-0 max-w-full rounded border border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
+            class="h-11 min-w-0 max-w-full rounded border sm:h-8 border-outline-gray-2 bg-surface-base px-2 text-sm text-ink-gray-8"
             :value="pipeline"
             data-testid="pipeline-select"
             @change="navigate({ pipeline: $event.target.value })"
@@ -136,7 +137,7 @@
             class="rounded px-3 py-1.5 text-sm text-ink-gray-7 hover:bg-surface-gray-1"
             @click="drill()"
           >
-            {{ __('Abrir tratos del embudo') }} →
+            {{ __('Abrir tratos del embudo') }}
           </button>
         </div>
       </div>
@@ -158,14 +159,14 @@
                 {{ tile.label }}
               </div>
               <div
-                class="mt-1 truncate text-xl font-semibold sm:text-2xl tabular-nums text-ink-gray-9"
+                class="mt-1 break-words text-xl font-semibold sm:text-2xl tabular-nums text-ink-gray-9"
               >
                 {{ tile.value }}
               </div>
               <div
                 class="flex flex-wrap items-center gap-x-2 text-xs text-ink-gray-5"
               >
-                <span v-if="tile.sub" class="truncate">{{ tile.sub }}</span>
+                <span v-if="tile.sub" class="break-words">{{ tile.sub }}</span>
                 <DeltaText
                   :value="tile.delta"
                   :kind="tile.kind || 'count'"

@@ -2,7 +2,7 @@
 <template>
   <div class="flex min-w-0 flex-col gap-2">
     <div
-      class="flex flex-wrap gap-1.5"
+      class="-mx-4 flex flex-nowrap gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
       role="group"
       :aria-label="__('Período')"
     >
@@ -10,7 +10,7 @@
         v-for="p in presets"
         :key="p.key"
         type="button"
-        class="rounded-full px-3 py-1.5 text-sm transition-colors"
+        class="min-h-11 shrink-0 whitespace-nowrap rounded-full px-3 text-sm transition-colors sm:min-h-8"
         :class="
           shown === p.key
             ? 'bg-surface-gray-3 font-medium text-ink-gray-9'

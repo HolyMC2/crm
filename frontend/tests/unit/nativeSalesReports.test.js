@@ -34,6 +34,7 @@ vi.mock('@/components/Controls/Link.vue', () => ({
   },
 }))
 import Reports from '@/pages/Reports.vue'
+import { formatDateTime } from '@/utils/display'
 import Return from '@/components/SalesQueueReturn.vue'
 import { safeQueueReturn } from '@/utils/salesQueueContext'
 import { addonAvailable } from '@/utils/crmCapabilities'
@@ -177,7 +178,10 @@ describe('standalone sales reporting', () => {
     expect(button(el, 'Marketing')).toBeUndefined()
     expect(el.textContent).toContain('Won / (Won + Lost) deals')
     expect(el.textContent).toContain('Task dates do not define this cohort')
-    expect(el.textContent).toContain('America/Mazatlan')
+    // The as-of time reads as the shell shows times: no raw timestamp, no zone.
+    expect(el.textContent).toContain(formatDateTime('2026-09-26 12:00:00'))
+    expect(el.textContent).not.toContain('America/Mazatlan')
+    expect(el.textContent).not.toContain('2026-09-26 12:00:00')
   })
   it('does not load optional marketing metrics until selected even with the addon', async () => {
     addonAvailable.value = true

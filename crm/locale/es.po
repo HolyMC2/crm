@@ -26427,3 +26427,7 @@ msgstr "Por fecha de cierre; el monto es lo acordado, no lo facturado."
 #: crm/resultados_cards.py
 msgid "Open the funnel"
 msgstr "Abrir el embudo"
+
+#: frontend/src/components/Reports/SalesReport.vue
+msgid "Created {0} through {1}; current state as of {2}."
+msgstr "Creados del {0} al {1}; estado actual al {2}."
