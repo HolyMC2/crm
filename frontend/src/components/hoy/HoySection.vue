@@ -4,7 +4,10 @@
     class="rounded-xl border border-outline-gray-2 bg-surface-base"
     :aria-busy="skeleton || undefined"
   >
-    <header class="flex min-h-12 items-center gap-2 px-4 pt-3 sm:px-5">
+    <!-- The title keeps its row; «Ver todos ›» drops below it (right) when both do not fit. -->
+    <header
+      class="flex min-h-12 flex-wrap items-center gap-x-2 px-4 pt-3 sm:px-5"
+    >
       <span
         :class="icon"
         class="size-4 shrink-0 text-ink-gray-6"
@@ -12,19 +15,19 @@
       />
       <h2
         :id="headingId"
-        class="min-w-0 flex-1 text-base font-semibold text-ink-gray-9 [text-wrap:balance]"
+        class="min-w-0 flex-[1_1_9rem] text-base font-semibold text-ink-gray-9 [text-wrap:balance]"
       >
         {{ title }}
         <span
           v-if="count"
-          class="ml-1 rounded-full bg-surface-gray-2 px-2 py-0.5 text-xs font-medium text-ink-gray-7"
+          class="ml-1 whitespace-nowrap rounded-full bg-surface-gray-2 px-2 py-0.5 text-xs font-medium text-ink-gray-7"
           >{{ count }}</span
         >
       </h2>
       <RouterLink
         v-if="more && more.to"
         :to="more.to"
-        class="flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+        class="ml-auto flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
         >{{ more.label }}
         <span class="lucide-chevron-right ml-0.5 size-4" aria-hidden="true"
       /></RouterLink>

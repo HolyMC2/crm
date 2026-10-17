@@ -2945,6 +2945,17 @@ onBeforeUnmount(() => {
   font-weight: 400;
   color: var(--ink-gray-9);
 }
+/* 305px (text zoom): the month keeps its full name beside ☰, search, bell and today. */
+@media (max-width: 360px) {
+  .ag-ptitle {
+    padding: 0 2px 0 6px;
+    font-size: 19px;
+  }
+  .ag-ptop {
+    gap: 0;
+    padding-right: 2px;
+  }
+}
 .ag-ptitle:active {
   background: var(--surface-gray-2);
 }

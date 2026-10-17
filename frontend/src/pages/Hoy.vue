@@ -196,6 +196,7 @@
           v-if="!allClear"
           id="agenda"
           class="lg:col-start-2 lg:row-span-4 lg:row-start-1"
+          :class="agendaCollapsed ? 'max-lg:order-last' : ''"
           :title="__('Today’s agenda')"
           icon="lucide-calendar-days"
           :count="plan.total ? String(plan.total) : ''"
@@ -301,15 +302,21 @@
                 <RouterLink
                   v-if="card.to && card.action"
                   :to="card.to"
-                  class="flex min-h-11 shrink-0 items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
-                  >{{ card.action }}</RouterLink
-                >
+                  :class="MORE_LINK"
+                  >{{ card.action
+                  }}<span
+                    class="lucide-chevron-right ml-0.5 size-4"
+                    aria-hidden="true"
+                /></RouterLink>
                 <a
                   v-else-if="card.href && card.action"
                   :href="card.href"
-                  class="flex min-h-11 shrink-0 items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
-                  >{{ card.action }}</a
-                >
+                  :class="MORE_LINK"
+                  >{{ card.action
+                  }}<span
+                    class="lucide-chevron-right ml-0.5 size-4"
+                    aria-hidden="true"
+                /></a>
               </div>
               <ListRow
                 v-for="row in card.rows"
@@ -346,6 +353,7 @@
                 v-if="!card.rows.length"
                 :title="card.title"
                 :subtitle="card.detail"
+                :subtitle-lines="2"
                 :icon="card.icon"
                 :to="card.to"
                 :href="card.to ? '' : card.href"
@@ -891,6 +899,9 @@ function choicesFor(card, row) {
 // small trailing reference (people quote it), and the detail line drops it. The customer
 // name is not in taller's payload yet (gap for the PM), so it is not shown.
 const REPAIR_SOURCE = 'taller.unassigned_repairs'
+// The same «Ver todos ›» as HoySection's header link.
+const MORE_LINK =
+  'ml-auto flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm font-medium text-ink-gray-7 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8'
 function rowReference(card, row) {
   return card.key === REPAIR_SOURCE && row.name ? String(row.name) : ''
 }

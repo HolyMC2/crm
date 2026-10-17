@@ -164,6 +164,26 @@ describe('Avisos rows', () => {
     expect(line).toBe('5 minutes ago')
   })
 
+  it('names no record whose id is only a hash', () => {
+    const at = {
+      lang: 'en',
+      timezone: { system: 'UTC' },
+      now: Date.UTC(2026, 9, 5, 10, 5),
+    }
+    const group = {
+      count: 1,
+      category: 'alerts',
+      title: 'Pago al SAT confirmado',
+      latest: '2026-10-05 10:00:00',
+    }
+    expect(metaLine({ ...group, docname: '4vv6e0b4bu' }, at)).toBe(
+      '5 minutes ago',
+    )
+    expect(metaLine({ ...group, docname: 'SAT-2026-08' }, at)).toBe(
+      'SAT-2026-08 · 5 minutes ago',
+    )
+  })
+
   it('names the action that resolves the aviso, or none for a dead end', () => {
     expect(
       actionLabel({

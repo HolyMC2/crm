@@ -20,7 +20,7 @@
         <button
           data-row-link
           data-row-focus
-          class="min-w-0 flex-1 rounded py-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+          class="flex min-w-0 flex-1 flex-col rounded py-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           :aria-expanded="
             expanded === group.key || needsReason(group) ? 'true' : undefined
           "
@@ -31,7 +31,7 @@
           @focus="warm(group)"
         >
           <span
-            class="line-clamp-2 block text-base [text-wrap:pretty]"
+            class="line-clamp-2 text-base [text-wrap:pretty]"
             :class="
               group.unread
                 ? 'font-semibold text-ink-gray-9'
@@ -39,12 +39,12 @@
             "
             >{{ group.title }}</span
           >
-          <span class="line-clamp-1 block text-sm text-ink-gray-6">
+          <span class="truncate text-sm text-ink-gray-6">
             {{ metaLine(group, moment) }}
           </span>
           <span
             v-if="showBody(group)"
-            class="mt-0.5 line-clamp-2 block text-sm text-ink-gray-7"
+            class="mt-0.5 line-clamp-2 text-sm text-ink-gray-7"
             >{{ group.body }}</span
           >
         </button>
@@ -122,7 +122,16 @@ function needsReason(group) {
 // The body is shown only when it says something the title does not.
 function showBody(group) {
   if (props.compact || !group.body) return false
-  return expanded.value === group.key || !group.title?.startsWith(group.body)
+  if (expanded.value === group.key) return true
+  // A body that opens like the title (in the same or other words order) repeats it.
+  const words = (text) =>
+    String(text || '')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim()
+  const title = words(group.title).slice(0, 24)
+  const body = words(group.body).slice(0, 24)
+  return !(title && body && (title.startsWith(body) || body.startsWith(title)))
 }
 
 // A group with nowhere to go explains why instead of opening a dead link.

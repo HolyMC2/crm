@@ -98,10 +98,15 @@ export function badgeLabel(badge) {
  * reciente hace 5 minutos». A group shows its newest aviso; the count says how
  * many identical ones it folds.
  */
+const HASH_ID = /^(?=.*\d)[a-z0-9]{8,12}$/
+
 export function metaLine(group, { lang, timezone, now } = {}) {
   const parts = []
   if (group.count > 1) parts.push(t('{0} identical avisos', [group.count]))
-  const record = group.target?.label || group.docname
+  // A record id that is only a hash («4vv6e0b4bu») names nothing for the worker.
+  const record =
+    group.target?.label ||
+    (HASH_ID.test(group.docname || '') ? '' : group.docname)
   if (record && !group.title?.includes(record)) parts.push(record)
   if (group.from_name && group.category === 'direct')
     parts.push(group.from_name)
