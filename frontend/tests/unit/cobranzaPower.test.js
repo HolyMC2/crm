@@ -319,7 +319,6 @@ describe('Spanish for the power worklist', async () => {
   const files = [
     'pages/Cobranza.vue',
     'pages/CobranzaCliente.vue',
-    'components/cobranza/CobranzaSheet.vue',
     'components/cobranza/PromiseSheet.vue',
     'components/cobranza/CallSheet.vue',
     'components/cobranza/FollowupSheet.vue',

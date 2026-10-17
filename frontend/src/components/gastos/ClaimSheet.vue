@@ -1,265 +1,216 @@
 <template>
-  <Teleport to="body">
-    <div
-      v-if="open"
-      class="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="titleId"
-      data-testid="claim-sheet"
-    >
-      <!-- The page behind never scrolls while the sheet is open. -->
-      <div
-        class="absolute inset-0 bg-black/30"
-        aria-hidden="true"
-        @click="close"
-        @wheel.prevent
-        @touchmove.prevent
-      />
-      <div
-        ref="panel"
-        class="relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-base shadow-2xl sm:max-w-lg sm:rounded-2xl"
-        tabindex="-1"
-        @keydown.esc="close"
-      >
-        <header
-          class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-2"
-        >
-          <h2
-            :id="titleId"
-            class="flex-1 text-lg font-semibold text-ink-gray-9"
-          >
-            {{ name ? __('Your expense') : __('New expense') }}
-          </h2>
-          <button
-            type="button"
-            class="flex size-11 items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
-            data-act="sheet-close"
-            :aria-label="__('Close', null, 'Gastos')"
-            @click="close"
-          >
-            <FeatherIcon name="x" class="h-5 w-5" />
-          </button>
-        </header>
-        <div
-          class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4"
-          data-testid="claim-sheet-body"
-        >
-          <p v-if="loading" role="status" class="text-sm text-ink-gray-6">
-            {{ __('Loading…', null, 'Gastos') }}
-          </p>
-          <template v-else-if="options">
-            <ClaimGuard
-              v-if="options.guard && !options.employee"
-              :guard="options.guard"
-            />
-            <template v-else>
-              <p
-                v-if="resumed"
-                role="status"
-                class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
-              >
-                {{
-                  __(
-                    'We did not hear back about the expense you sent. Sending again checks that same expense; it is never filed twice.',
-                  )
-                }}
-              </p>
-              <!-- The receipt: the camera on a phone, a file on a computer. -->
-              <section
-                class="space-y-2"
-                :aria-label="__('Receipt photo')"
-                data-field="photo"
-              >
-                <div class="flex flex-wrap items-center gap-2">
-                  <label
-                    class="relative inline-flex min-h-11 cursor-pointer items-center gap-2 rounded bg-surface-gray-7 px-4 text-base font-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
-                  >
-                    <FeatherIcon name="camera" class="h-4 w-4" />{{
-                      __('Take the receipt photo')
-                    }}
-                    <input
-                      ref="camera"
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      class="sr-only"
-                      @change="pick"
-                    />
-                  </label>
-                  <label
-                    class="relative inline-flex min-h-11 cursor-pointer items-center gap-2 rounded border border-outline-gray-2 px-4 text-base text-ink-gray-8 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4 sm:min-h-8"
-                  >
-                    <FeatherIcon name="upload" class="h-4 w-4" />{{
-                      __('Choose file')
-                    }}
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      class="sr-only"
-                      @change="pick"
-                    />
-                  </label>
-                </div>
-                <div v-if="preview" class="flex items-center gap-3">
-                  <img
-                    :src="preview"
-                    :alt="__('Receipt photo')"
-                    class="h-20 w-20 rounded-lg border border-outline-gray-2 object-cover"
+  <!-- The shared sheet (S1 ui/BottomSheet): handle, scrim, back closes it;
+       the actions full width at the thumb, «Enviar» last. -->
+  <BottomSheet
+    :open="open"
+    :title="name ? __('Your expense') : __('New expense')"
+    :dismissible="!busy"
+    @update:open="(value) => (value ? (open = true) : close())"
+  >
+    <div data-testid="claim-sheet">
+      <div ref="panel" class="space-y-4" data-testid="claim-sheet-body">
+        <p v-if="loading" role="status" class="text-sm text-ink-gray-6">
+          {{ __('Loading…', null, 'Gastos') }}
+        </p>
+        <template v-else-if="options">
+          <ClaimGuard
+            v-if="options.guard && !options.employee"
+            :guard="options.guard"
+          />
+          <template v-else>
+            <p
+              v-if="resumed"
+              role="status"
+              class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+            >
+              {{
+                __(
+                  'We did not hear back about the expense you sent. Sending again checks that same expense; it is never filed twice.',
+                )
+              }}
+            </p>
+            <!-- The receipt: the camera on a phone, a file on a computer. -->
+            <section
+              class="space-y-2"
+              :aria-label="__('Receipt photo')"
+              data-field="photo"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <label
+                  class="relative inline-flex min-h-11 cursor-pointer items-center gap-2 rounded bg-surface-gray-7 px-4 text-base font-medium text-ink-base focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4"
+                >
+                  <FeatherIcon name="camera" class="h-4 w-4" />{{
+                    __('Take the receipt photo')
+                  }}
+                  <input
+                    ref="camera"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    class="sr-only"
+                    @change="pick"
                   />
-                  <span class="min-w-0 truncate text-sm text-ink-gray-7">{{
-                    form.photo?.name
-                  }}</span>
-                </div>
-                <p
-                  v-else-if="form.photo"
-                  class="truncate text-sm text-ink-gray-7"
+                </label>
+                <label
+                  class="relative inline-flex min-h-11 cursor-pointer items-center gap-2 rounded border border-outline-gray-2 px-4 text-base text-ink-gray-8 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-outline-gray-4 sm:min-h-8"
                 >
-                  {{ form.photo.name }}
-                </p>
-                <p v-else-if="photos" class="text-sm text-ink-gray-7">
-                  {{ __('Receipt photos on this expense: {0}', [photos]) }}
-                </p>
-                <p
-                  v-if="tried && missing.includes('photo')"
-                  role="alert"
-                  class="text-sm text-ink-red-7"
-                >
-                  {{ __('Take the photo of the receipt to send it.') }}
-                </p>
-              </section>
-              <FormControl
-                v-model="form.expense_type"
-                type="select"
-                data-field="expense_type"
-                :label="__('Type of expense')"
-                :options="[
-                  { label: __('Choose a type'), value: '' },
-                  ...options.types.map((t) => ({
-                    label: t.ready
-                      ? t.label
-                      : __('{0} (needs setup)', [t.label]),
-                    value: t.value,
-                  })),
-                ]"
-              />
-              <ClaimGuard
-                v-if="chosenType && !chosenType.ready"
-                :guard="{
-                  code: 'setup',
-                  message: chosenType.reason,
-                  actions: [setupAction],
-                }"
-              />
-              <div class="grid grid-cols-2 gap-3">
-                <FormControl
-                  v-model="form.amount"
-                  type="number"
-                  inputmode="decimal"
-                  data-field="amount"
-                  :label="__('Amount ({0})', [options.currency])"
-                  :min="0"
-                  :step="0.01"
-                />
-                <FormControl
-                  v-model="form.expense_date"
-                  type="date"
-                  data-field="expense_date"
-                  :label="__('Date', null, 'Gastos')"
-                />
+                  <FeatherIcon name="upload" class="h-4 w-4" />{{
+                    __('Choose file')
+                  }}
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    class="sr-only"
+                    @change="pick"
+                  />
+                </label>
               </div>
-              <FormControl
-                v-model="form.description"
-                type="text"
-                data-field="description"
-                :label="__('Note (optional)')"
-                :placeholder="__('E.g. taxi to the bank with the deposit')"
-              />
-              <ClaimGuard v-if="options.guard" :guard="options.guard" />
-              <FormControl
-                v-else
-                v-model="form.approver"
-                type="select"
-                data-field="approver"
-                :label="__('Who approves it')"
-                :options="[
-                  { label: __('Choose a person'), value: '' },
-                  ...options.approvers.map((a) => ({
-                    label: a.puesto
-                      ? `${a.full_name} · ${a.puesto}`
-                      : a.full_name,
-                    value: a.user,
-                  })),
-                ]"
-              />
+              <div v-if="preview" class="flex items-center gap-3">
+                <img
+                  :src="preview"
+                  :alt="__('Receipt photo')"
+                  class="h-20 w-20 rounded-lg border border-outline-gray-2 object-cover"
+                />
+                <span class="min-w-0 truncate text-sm text-ink-gray-7">{{
+                  form.photo?.name
+                }}</span>
+              </div>
               <p
-                v-if="options.advance"
-                class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+                v-else-if="form.photo"
+                class="truncate text-sm text-ink-gray-7"
               >
-                {{
-                  __(
-                    'You have an advance of {0} to settle: it is discounted from this expense when approved.',
-                    [
-                      money(
-                        options.advance.remaining,
-                        options.advance.currency,
-                      ),
-                    ],
-                  )
-                }}
+                {{ form.photo.name }}
+              </p>
+              <p v-else-if="photos" class="text-sm text-ink-gray-7">
+                {{ __('Receipt photos on this expense: {0}', [photos]) }}
               </p>
               <p
-                v-if="tried && missing.length"
+                v-if="tried && missing.includes('photo')"
                 role="alert"
                 class="text-sm text-ink-red-7"
               >
-                {{ __('Missing: {0}', [missingText]) }}
+                {{ __('Take the photo of the receipt to send it.') }}
               </p>
-            </template>
+            </section>
+            <FormControl
+              v-model="form.expense_type"
+              type="select"
+              data-field="expense_type"
+              :label="__('Type of expense')"
+              :options="[
+                { label: __('Choose a type'), value: '' },
+                ...options.types.map((t) => ({
+                  label: t.ready ? t.label : __('{0} (needs setup)', [t.label]),
+                  value: t.value,
+                })),
+              ]"
+            />
+            <ClaimGuard
+              v-if="chosenType && !chosenType.ready"
+              :guard="{
+                code: 'setup',
+                message: chosenType.reason,
+                actions: [setupAction],
+              }"
+            />
+            <div class="grid grid-cols-2 gap-3">
+              <FormControl
+                v-model="form.amount"
+                type="number"
+                inputmode="decimal"
+                data-field="amount"
+                :label="__('Amount ({0})', [options.currency])"
+                :min="0"
+                :step="0.01"
+              />
+              <FormControl
+                v-model="form.expense_date"
+                type="date"
+                data-field="expense_date"
+                :label="__('Date', null, 'Gastos')"
+              />
+            </div>
+            <FormControl
+              v-model="form.description"
+              type="text"
+              data-field="description"
+              :label="__('Note (optional)')"
+              :placeholder="__('E.g. taxi to the bank with the deposit')"
+            />
+            <ClaimGuard v-if="options.guard" :guard="options.guard" />
+            <FormControl
+              v-else
+              v-model="form.approver"
+              type="select"
+              data-field="approver"
+              :label="__('Who approves it')"
+              :options="[
+                { label: __('Choose a person'), value: '' },
+                ...options.approvers.map((a) => ({
+                  label: a.puesto
+                    ? `${a.full_name} · ${a.puesto}`
+                    : a.full_name,
+                  value: a.user,
+                })),
+              ]"
+            />
+            <p
+              v-if="options.advance"
+              class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-8"
+            >
+              {{
+                __(
+                  'You have an advance of {0} to settle: it is discounted from this expense when approved.',
+                  [money(options.advance.remaining, options.advance.currency)],
+                )
+              }}
+            </p>
+            <p
+              v-if="tried && missing.length"
+              role="alert"
+              class="text-sm text-ink-red-7"
+            >
+              {{ __('Missing: {0}', [missingText]) }}
+            </p>
           </template>
-          <ClaimGuard v-if="refusal" :guard="refusal" @action="onAction" />
-          <div
-            v-if="problem"
-            role="alert"
-            class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
-          >
-            <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          </div>
-        </div>
-        <footer
-          v-if="options && (options.employee || !options.guard)"
-          class="flex flex-wrap items-center justify-end gap-2 border-t border-outline-gray-1 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+        </template>
+        <ClaimGuard v-if="refusal" :guard="refusal" @action="onAction" />
+        <div
+          v-if="problem"
+          role="alert"
+          class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
         >
-          <span
-            v-if="step"
-            role="status"
-            class="mr-auto text-sm text-ink-gray-6"
-            >{{ step }}</span
-          >
-          <Button
-            class="min-h-11 sm:min-h-8"
-            data-testid="claim-save"
-            :label="__('Save', null, 'Gastos')"
-            :disabled="busy"
-            @click="submit(false)"
-          />
-          <Button
-            variant="solid"
-            class="min-h-11 sm:min-h-8"
-            :loading="busy"
-            :disabled="Boolean(options.guard)"
-            data-testid="claim-send"
-            :label="__('Send for approval')"
-            @click="submit(true)"
-          />
-        </footer>
+          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+        </div>
       </div>
     </div>
-  </Teleport>
+    <template v-if="options && (options.employee || !options.guard)" #actions>
+      <span v-if="step" role="status" class="text-sm text-ink-gray-6">{{
+        step
+      }}</span>
+      <Button
+        class="min-h-11 w-full"
+        data-testid="claim-save"
+        :label="__('Save', null, 'Gastos')"
+        :disabled="busy"
+        @click="submit(false)"
+      />
+      <Button
+        variant="solid"
+        class="min-h-11 w-full"
+        :loading="busy"
+        :disabled="Boolean(options.guard)"
+        data-testid="claim-send"
+        :label="__('Send for approval')"
+        @click="submit(true)"
+      />
+    </template>
+  </BottomSheet>
 </template>
 <script setup>
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Button, FeatherIcon, FormControl } from 'frappe-ui'
+import { BottomSheet } from '@/components/ui'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import FilesUploadHandler from '@/components/FilesUploader/filesUploaderHandler'
 import {
@@ -281,7 +232,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['saved', 'sent'])
 const open = defineModel({ type: Boolean, default: false })
-const titleId = `claim-sheet-${Math.random().toString(36).slice(2)}`
 const panel = ref(null)
 const camera = ref(null)
 const options = ref(null)
@@ -354,8 +304,6 @@ watch(open, async (value) => {
   })
   setPreview(null)
   loading.value = true
-  await nextTick()
-  panel.value?.focus()
   try {
     options.value = await claimsApi('form_options', { name: props.name })
     if (!form.expense_date) form.expense_date = options.value.today || ''

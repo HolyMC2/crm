@@ -1,5 +1,5 @@
 <template>
-  <CobranzaSheet
+  <PowerSheet
     :model-value="modelValue"
     kind="payment"
     size="xl"
@@ -226,12 +226,12 @@
         @click="save"
       />
     </template>
-  </CobranzaSheet>
+  </PowerSheet>
 </template>
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { Button, FormControl, toast } from 'frappe-ui'
-import CobranzaSheet from '@/components/cobranza/CobranzaSheet.vue'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import {
   ACTIONS,
   CTX,

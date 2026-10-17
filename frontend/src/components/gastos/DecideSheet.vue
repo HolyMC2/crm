@@ -1,122 +1,80 @@
 <template>
-  <Teleport to="body">
-    <div
-      v-if="open"
-      class="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="titleId"
-      data-testid="decide-sheet"
-    >
-      <div
-        class="absolute inset-0 bg-black/30"
-        aria-hidden="true"
-        @click="close"
-        @wheel.prevent
-        @touchmove.prevent
+  <!-- The shared sheet (S1 ui/BottomSheet): handle, scrim, back closes it;
+       the actions full width at the thumb, the decision last. -->
+  <BottomSheet
+    :open="open"
+    :title="title"
+    :dismissible="!busy"
+    @update:open="(value) => (value ? (open = true) : close())"
+  >
+    <div class="space-y-4" data-testid="decide-sheet">
+      <p class="text-sm text-ink-gray-7">
+        {{
+          __('{0} asked for {1}.', [
+            claim.employee_name,
+            money(claim.claimed, claim.currency),
+          ])
+        }}
+      </p>
+      <FormControl
+        v-if="mode === 'less'"
+        v-model="amount"
+        type="number"
+        data-field="amount"
+        inputmode="decimal"
+        :label="__('Amount you approve ({0})', [claim.currency])"
+        :min="0"
+        :step="0.01"
       />
+      <FormControl
+        v-model="reason"
+        type="textarea"
+        data-field="reason"
+        :label="reasonLabel"
+        :placeholder="reasonHint"
+      />
+      <p v-if="tried && missing" role="alert" class="text-sm text-ink-red-7">
+        {{ missing }}
+      </p>
+      <ClaimGuard v-if="refusal" :guard="refusal" @action="onAction" />
       <div
-        ref="panel"
-        class="relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface-base shadow-2xl sm:max-w-md sm:rounded-2xl"
-        tabindex="-1"
-        @keydown.esc="close"
+        v-if="problem"
+        role="alert"
+        class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
       >
-        <header
-          class="flex items-center gap-2 border-b border-outline-gray-1 px-4 py-2"
-        >
-          <h2
-            :id="titleId"
-            class="flex-1 text-lg font-semibold text-ink-gray-9"
-          >
-            {{ title }}
-          </h2>
-          <button
-            type="button"
-            class="flex size-11 items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
-            data-act="sheet-close"
-            :aria-label="__('Close', null, 'Gastos')"
-            @click="close"
-          >
-            <FeatherIcon name="x" class="h-5 w-5" />
-          </button>
-        </header>
-        <div
-          class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4"
-        >
-          <p class="text-sm text-ink-gray-7">
-            {{
-              __('{0} asked for {1}.', [
-                claim.employee_name,
-                money(claim.claimed, claim.currency),
-              ])
-            }}
-          </p>
-          <FormControl
-            v-if="mode === 'less'"
-            v-model="amount"
-            type="number"
-            data-field="amount"
-            inputmode="decimal"
-            :label="__('Amount you approve ({0})', [claim.currency])"
-            :min="0"
-            :step="0.01"
-          />
-          <FormControl
-            v-model="reason"
-            type="textarea"
-            data-field="reason"
-            :label="reasonLabel"
-            :placeholder="reasonHint"
-          />
-          <p
-            v-if="tried && missing"
-            role="alert"
-            class="text-sm text-ink-red-7"
-          >
-            {{ missing }}
-          </p>
-          <ClaimGuard v-if="refusal" :guard="refusal" @action="onAction" />
-          <div
-            v-if="problem"
-            role="alert"
-            class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
-          >
-            <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          </div>
-          <p v-if="resumed" role="status" class="text-sm text-ink-gray-7">
-            {{
-              __(
-                'A decision on this expense was sent and we did not hear back. Trying again checks that same decision.',
-              )
-            }}
-          </p>
-        </div>
-        <footer
-          class="flex flex-wrap justify-end gap-2 border-t border-outline-gray-1 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-        >
-          <Button
-            class="min-h-11 sm:min-h-8"
-            :label="__('Cancel', null, 'Gastos')"
-            :disabled="busy"
-            @click="close"
-          />
-          <Button
-            variant="solid"
-            class="min-h-11 sm:min-h-8"
-            :theme="mode === 'reject' ? 'red' : 'gray'"
-            :loading="busy"
-            data-testid="decide-confirm"
-            :label="confirmLabel"
-            @click="decide"
-          />
-        </footer>
+        <strong>{{ problem.title }}.</strong> {{ problem.detail }}
       </div>
+      <p v-if="resumed" role="status" class="text-sm text-ink-gray-7">
+        {{
+          __(
+            'A decision on this expense was sent and we did not hear back. Trying again checks that same decision.',
+          )
+        }}
+      </p>
     </div>
-  </Teleport>
+    <template #actions>
+      <Button
+        class="min-h-11 w-full"
+        :label="__('Cancel', null, 'Gastos')"
+        :disabled="busy"
+        @click="close"
+      />
+      <Button
+        variant="solid"
+        class="min-h-11 w-full"
+        :theme="mode === 'reject' ? 'red' : 'gray'"
+        :loading="busy"
+        data-testid="decide-confirm"
+        :label="confirmLabel"
+        @click="decide"
+      />
+    </template>
+  </BottomSheet>
 </template>
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { Button, FeatherIcon, FormControl } from 'frappe-ui'
+import { Button, FormControl } from 'frappe-ui'
+import { BottomSheet } from '@/components/ui'
 import ClaimGuard from '@/components/gastos/ClaimGuard.vue'
 import {
   claimProblem,
@@ -135,8 +93,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['decided', 'action'])
 const open = defineModel({ type: Boolean, default: false })
-const titleId = `decide-sheet-${Math.random().toString(36).slice(2)}`
-const panel = ref(null)
 const amount = ref('')
 const reason = ref('')
 const busy = ref(false)
@@ -199,8 +155,6 @@ watch(open, async (value) => {
   tried.value = false
   refusal.value = null
   problem.value = null
-  await nextTick()
-  panel.value?.focus()
 })
 
 function close() {

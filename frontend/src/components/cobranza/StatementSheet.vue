@@ -1,5 +1,5 @@
 <template>
-  <CobranzaSheet
+  <PowerSheet
     :model-value="modelValue"
     kind="statement"
     :title="__('Statement of account')"
@@ -71,12 +71,12 @@
         @click="get('download')"
       />
     </template>
-  </CobranzaSheet>
+  </PowerSheet>
 </template>
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
-import CobranzaSheet from '@/components/cobranza/CobranzaSheet.vue'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import { ACTIONS, addDays, problemOf } from '@/composables/useCobranza'
 import { callError } from '@/utils/contactos'
 

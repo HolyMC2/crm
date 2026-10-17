@@ -1,6 +1,6 @@
 <template>
-  <!-- A bottom sheet on a phone, a dialog on wider screens (CobranzaSheet). -->
-  <CobranzaSheet
+  <!-- A bottom sheet on a phone, a dialog on wider screens (PowerSheet). -->
+  <PowerSheet
     :model-value="modelValue"
     kind="send"
     size="xl"
@@ -229,12 +229,12 @@
         @click="send(false)"
       />
     </template>
-  </CobranzaSheet>
+  </PowerSheet>
 </template>
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
-import CobranzaSheet from '@/components/cobranza/CobranzaSheet.vue'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import {
   CTX,
   SEND_ACTION_LABELS,

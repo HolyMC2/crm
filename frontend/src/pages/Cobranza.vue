@@ -275,34 +275,15 @@
         />
       </div>
       <!-- Aging chips: the customer's oldest overdue invoice, as in the receivables report. -->
-      <div
-        class="flex gap-2 overflow-x-auto px-4 pb-3 sm:flex-wrap sm:px-6"
-        role="group"
-        :aria-label="__('Days overdue')"
+      <!-- One chip row (S1 FilterChips): tap a range, tap it again for all. -->
+      <FilterChips
+        class="pb-3"
         data-cobranza-aging
-      >
-        <button
-          v-for="chip in agingChips"
-          :key="chip.value || 'all'"
-          type="button"
-          class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
-          :class="
-            state.edad === chip.value
-              ? 'border-outline-gray-4 bg-surface-gray-10 text-ink-base'
-              : 'border-outline-gray-2 text-ink-gray-8 hover:bg-surface-gray-2'
-          "
-          :aria-pressed="state.edad === chip.value"
-          @click="navigate({ edad: chip.value })"
-        >
-          {{ chip.label }}
-          <span
-            v-if="chip.count !== undefined"
-            class="tabular-nums"
-            :class="state.edad === chip.value ? '' : 'text-ink-gray-6'"
-            >{{ chip.count }}</span
-          >
-        </button>
-      </div>
+        :model-value="state.edad"
+        :chips="agingChips"
+        :label="__('Days overdue')"
+        @update:model-value="(value) => navigate({ edad: value })"
+      />
       <p
         v-if="capped"
         class="mx-4 mb-2 text-sm text-ink-gray-6 sm:mx-6"
@@ -692,6 +673,7 @@ import {
   FormControl,
   toast,
 } from 'frappe-ui'
+import { FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AutoSetupSheet from '@/components/cobranza/AutoSetupSheet.vue'
 import BulkRemindSheet from '@/components/cobranza/BulkRemindSheet.vue'
@@ -1041,14 +1023,13 @@ const entries = computed(() =>
         : segmentLabel(s.value),
   })),
 )
-const agingChips = computed(() => [
-  { value: '', label: __('Any age') },
-  ...AGING.map((chip) => ({
+const agingChips = computed(() =>
+  AGING.map((chip) => ({
     value: chip.value,
     label: agingChipLabel(chip.value),
     count: agingCounts.value[chip.value],
   })),
-])
+)
 const guard = computed(() =>
   boot.value && !boot.value.enabled
     ? boot.value.reason ||

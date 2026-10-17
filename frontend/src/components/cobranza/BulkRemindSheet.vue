@@ -1,5 +1,5 @@
 <template>
-  <CobranzaSheet
+  <PowerSheet
     :model-value="modelValue"
     kind="bulk"
     size="xl"
@@ -104,12 +104,12 @@
         @click="close(false)"
       />
     </template>
-  </CobranzaSheet>
+  </PowerSheet>
 </template>
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { Button, FeatherIcon } from 'frappe-ui'
-import CobranzaSheet from '@/components/cobranza/CobranzaSheet.vue'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import {
   ACTIONS,
   CTX,

@@ -138,26 +138,19 @@
         >
         <Button :label="__('See all bills')" @click="clearOrder" />
       </div>
+      <!-- One chip row (S1 FilterChips), as Cobranza's: tap again for all. -->
+      <FilterChips
+        v-if="state.segment === 'por-pagar' && !state.po"
+        class="pt-2 sm:pt-0"
+        data-gastos-chips
+        :model-value="state.chip"
+        :chips="dueChips"
+        :label="__('Filter by due date')"
+        @update:model-value="(value) => list.navigate({ chip: value })"
+      />
       <div
-        class="flex flex-wrap items-center gap-2 px-4 pb-3 pt-2 sm:px-6 sm:pt-0"
+        class="flex flex-wrap items-center gap-2 px-4 pb-3 pt-2 empty:hidden sm:px-6 sm:pt-0"
       >
-        <div
-          v-if="state.segment === 'por-pagar' && !state.po"
-          role="group"
-          :aria-label="__('Filter by due date')"
-          class="flex flex-wrap gap-1"
-          data-gastos-chips
-        >
-          <Button
-            v-for="c in CHIPS"
-            :key="c.value"
-            class="min-h-11 sm:min-h-8"
-            :variant="state.chip === c.value ? 'solid' : 'subtle'"
-            :aria-pressed="state.chip === c.value"
-            :label="chipLabel(c)"
-            @click="list.navigate({ chip: c.value })"
-          />
-        </div>
         <FormControl
           v-if="!list.phone.value"
           v-model="list.search.value"
@@ -418,6 +411,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import ApprovalDialog from '@/components/gastos/ApprovalDialog.vue'
 import BulkPaySheet from '@/components/gastos/BulkPaySheet.vue'
@@ -538,12 +532,17 @@ const phoneEntries = computed(() =>
 const owed = computed(() =>
   billSegment.value && !state.value.po ? counts.value?.totals || [] : [],
 )
-function chipLabel(c) {
-  const label = __(c.label, null, CTX)
-  if (c.value === 'vencidas' && counts.value?.vencidas)
-    return `${label} · ${countText(counts.value.vencidas)}`
-  return label
-}
+// «Vencida 3» as every chip row counts (FilterChips' trailing number).
+const dueChips = computed(() =>
+  CHIPS.filter((c) => c.value).map((c) => ({
+    value: c.value,
+    label: __(c.label, null, CTX),
+    count:
+      c.value === 'vencidas' && counts.value?.vencidas
+        ? countText(counts.value.vencidas)
+        : undefined,
+  })),
+)
 const guard = computed(() =>
   boot.value && !boot.value.enabled
     ? boot.value.reason ||

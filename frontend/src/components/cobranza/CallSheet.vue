@@ -1,5 +1,5 @@
 <template>
-  <CobranzaSheet
+  <PowerSheet
     :model-value="modelValue"
     kind="call"
     :title="__('Log call')"
@@ -44,12 +44,12 @@
         @click="save"
       />
     </template>
-  </CobranzaSheet>
+  </PowerSheet>
 </template>
 <script setup>
 import { reactive, ref, watch } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
-import CobranzaSheet from '@/components/cobranza/CobranzaSheet.vue'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import { problemOf } from '@/composables/useCobranza'
 import { createRequests } from '@/composables/useCobranzaActions'
 
