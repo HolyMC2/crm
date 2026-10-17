@@ -623,7 +623,19 @@
             <span class="c-type">{{
               relationLabels[relation.kind] || relation.kind
             }}</span>
-            <div class="c-relation-endpoints">
+            <!-- A link reads as the other end, one row you can open; both
+                 names only when neither end is this record. -->
+            <button
+              v-if="otherEnd(relation)"
+              class="c-link flex min-h-11 w-full items-center gap-2 text-left"
+              @click="openRelated(otherEnd(relation))"
+            >
+              <span class="min-w-0 flex-1"
+                ><small>{{ sourceLabel(otherEnd(relation).doctype) }}</small
+                >{{ otherEnd(relation).title || otherEnd(relation).name }}</span
+              ><FeatherIcon name="chevron-right" class="h-4 w-4 flex-none" />
+            </button>
+            <div v-else class="c-relation-endpoints">
               <button class="c-link" @click="openRelated(relation.left)">
                 <small>{{ sourceLabel(relation.left?.doctype) }}</small
                 >{{ relation.left?.title || relation.left?.name }}</button
@@ -638,12 +650,6 @@
               label="Desvincular"
               variant="ghost"
               @click="unlinkTarget = relation"
-            /><Button
-              v-if="relation.native"
-              class="c-inline-action"
-              label="Abrir"
-              variant="ghost"
-              @click="openRelated(relation.left)"
             />
           </article>
           <p v-if="!(record.relations || []).length" class="c-muted">
@@ -1154,6 +1160,17 @@ function openSchedule() {
   if (scheduleOptions.value.length === 1)
     router.push(scheduleOptions.value[0].to)
   else if (scheduleOptions.value.length) scheduleOpen.value = true
+}
+// The end of a relation that is not the record on screen (null when neither is).
+function otherEnd(relation) {
+  const self = (end) =>
+    end?.name === record.value?.name &&
+    (!end?.doctype ||
+      !record.value?.doctype ||
+      end.doctype === record.value.doctype)
+  if (self(relation.left)) return relation.right
+  if (self(relation.right)) return relation.left
+  return null
 }
 const relationLabels = {
   same_person: 'Misma persona',
