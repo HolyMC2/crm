@@ -94,7 +94,19 @@
                   >{{ f.published ? __('Published') : __('Draft') }}</span
                 >
               </div>
-              <div class="mt-1 truncate text-p-sm text-ink-gray-5">
+              <!-- Phone: one line of what matters; the link lives in «Copiar enlace». -->
+              <div class="mt-1 text-p-sm text-ink-gray-5 sm:hidden">
+                {{ __('{0} envíos en 30 días', [f.stats?.last_30_days || 0]) }}
+                ·
+                {{
+                  f.document_type === 'CRM Deal'
+                    ? __('creates deals')
+                    : __('creates leads')
+                }}
+              </div>
+              <div
+                class="mt-1 hidden truncate text-p-sm text-ink-gray-5 sm:block"
+              >
                 /crm-form/{{ f.route }} ·
                 {{
                   f.document_type === 'CRM Deal'
@@ -120,7 +132,9 @@
             </RouterLink>
 
             <!-- numbers: recent use first, then what it turned into -->
-            <dl class="grid grid-cols-3 gap-4 text-center sm:w-72 sm:shrink-0">
+            <dl
+              class="hidden grid-cols-3 gap-4 text-center sm:grid sm:w-72 sm:shrink-0"
+            >
               <div>
                 <dt class="text-xs text-ink-gray-5">{{ __('7 days') }}</dt>
                 <dd class="text-lg font-semibold tabular-nums text-ink-gray-9">

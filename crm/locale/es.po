@@ -560,7 +560,7 @@ msgid "Clean copy created as a draft"
 msgstr "Copia limpia creada como borrador"
 
 msgid "Made outside the builder: {0} fields to clean up"
-msgstr "Hecho fuera del constructor: {0} campos por limpiar"
+msgstr "{0} campos sin revisar · ábrelo en una computadora"
 
 msgid "More tabs"
 msgstr "Más pestañas"
@@ -26321,3 +26321,34 @@ msgstr "Más acciones"
 #: frontend/src/components/doco/contact/ContactOverviewTab.vue
 msgid "Sin cuenta de cliente"
 msgstr "Sin cuenta de cliente"
+#: frontend/src/pages/WorkloadView.vue
+msgid "Actualizado"
+msgstr "Actualizado"
+
+#: frontend/src/pages/WorkloadView.vue
+msgid "Embudo"
+msgstr "Embudo"
+
+#: frontend/src/pages/Forms.vue
+msgid "{0} envíos en 30 días"
+msgstr "{0} envíos en 30 días"
+
+#: frontend/src/pages/CallsView.vue
+msgid "Saliente"
+msgstr "Saliente"
+
+#: frontend/src/pages/CallsView.vue
+msgid "Entrante"
+msgstr "Entrante"
+
+#: frontend/src/pages/CallsView.vue
+msgid "Llamar"
+msgstr "Llamar"
+
+#: frontend/src/pages/CallsView.vue
+msgid "Registrar llamada"
+msgstr "Registrar llamada"
+
+#: frontend/src/pages/CallsView.vue
+msgid "Las llamadas que hagas o recibas aparecerán aquí."
+msgstr "Las llamadas que hagas o recibas aparecerán aquí."

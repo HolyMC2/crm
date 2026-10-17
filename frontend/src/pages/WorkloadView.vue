@@ -10,7 +10,7 @@
           {{ selfView ? __('Tu carga de trabajo') : __('Carga de trabajo') }}
         </h1>
         <p v-if="data.as_of && !loading" class="text-xs text-ink-gray-5">
-          {{ __('Consultado') }}: {{ asOfText }} · {{ data.timezone }}
+          {{ __('Actualizado') }} {{ asTime || asOfText }}
           <span v-if="refreshing" role="status">
             · {{ __('Actualizando…') }}</span
           >
@@ -18,7 +18,7 @@
       </div>
       <div v-if="!loadError" class="flex flex-wrap items-end gap-2">
         <label class="text-xs text-ink-gray-6"
-          >{{ __('Pipeline') }}
+          >{{ __('Embudo') }}
           <select
             class="wl-control"
             :value="state.pipeline"
@@ -519,6 +519,12 @@ const companies = computed(
     ],
 )
 const asOfText = computed(() => formatSiteDate(data.value.as_of, dateFormat))
+// «Actualizado 12:11» (today) — the site's timezone name is not for workers.
+const asTime = computed(() => {
+  const at = String(data.value.as_of || '')
+  const today = new Date().toISOString().slice(0, 10)
+  return at.startsWith(today) ? at.slice(11, 16) : ''
+})
 const selectedKeys = computed(() => selected.value.map(workItemKey))
 const succeeded = computed(() => results.value.filter((row) => row.ok))
 const failed = computed(() => results.value.filter((row) => !row.ok))

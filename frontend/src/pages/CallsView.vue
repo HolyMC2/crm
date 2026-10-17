@@ -3,134 +3,204 @@
   row → call detail drawer. New page; upstream CallLogs.vue kept at /call-logs/view/.
 -->
 <template>
-  <div class="flex min-h-0 w-full flex-1 flex-col bg-surface-base">
-    <!-- stats -->
-    <div
-      class="flex flex-none flex-wrap gap-x-6 gap-y-2 border-b border-outline-gray-1 px-5 py-3"
-    >
-      <Stat :label="__('Llamadas')" :value="rows.length" />
-      <Stat :label="__('Conectadas')" :value="connected" color="var(--brand)" />
-      <Stat :label="__('Perdidas')" :value="missed" color="#e5484d" />
-      <Stat :label="__('Duración prom.')" :value="avgDuration" />
-    </div>
-
-    <!-- toolbar: wraps on phones so the action button drops under the tabs
-         instead of pushing the row past the viewport -->
-    <div
-      class="flex min-h-[48px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 px-5 py-1.5"
-    >
-      <div class="flex flex-wrap items-center gap-1.5">
-        <button
-          v-for="t in tabs"
-          :key="t.key"
-          class="rounded-full px-3 py-1 text-[11.5px] font-semibold"
-          :class="
-            tab === t.key
-              ? 'bg-surface-gray-3 text-ink-gray-9'
-              : 'bg-surface-gray-2 text-ink-gray-6'
-          "
-          @click="tab = t.key"
+  <div class="relative flex min-h-0 w-full flex-1 flex-col bg-surface-base">
+    <!-- Phone: a call history like a phone's — who, when, how it went, and a
+         way to call back. One chip row; «Registrar llamada» is the FAB. -->
+    <template v-if="isMobile">
+      <FilterChips
+        v-model="tab"
+        class="flex-none px-4 py-2"
+        :chips="phoneChips"
+        :deselectable="false"
+        :label="__('Llamadas')"
+      />
+      <div class="scb min-h-0 flex-1 overflow-y-auto pb-24">
+        <EmptyState
+          v-if="calls.loading && !rows.length"
+          state="loading"
+          :title="__('Cargando…')"
+        />
+        <EmptyState
+          v-else-if="!rows.length"
+          :title="__('Sin llamadas')"
+          :message="__('Las llamadas que hagas o recibas aparecerán aquí.')"
+        />
+        <ListRow
+          v-for="r in rows"
+          :key="r.name"
+          :title="callTitle(r)"
+          :subtitle="callLine(r)"
+          data-testid="call-row"
+          @click="openCall(r.name)"
         >
-          {{ t.label }}
-        </button>
+          <template #leading>
+            <span
+              class="flex size-10 flex-none items-center justify-center rounded-full"
+              :class="dirChip(r)"
+              :aria-label="
+                r.type === 'Outgoing' ? __('Saliente') : __('Entrante')
+              "
+            >
+              <span
+                class="size-5"
+                :class="
+                  MISSED.includes(r.status)
+                    ? 'lucide-phone-missed'
+                    : r.type === 'Outgoing'
+                      ? 'lucide-phone-outgoing'
+                      : 'lucide-phone-incoming'
+                "
+                aria-hidden="true"
+              />
+            </span>
+          </template>
+          <template #trailing>
+            <StatusChip :status="r.status" kind="call" />
+            <a
+              v-if="dialable(r)"
+              :href="`tel:${dialable(r)}`"
+              class="flex size-11 flex-none items-center justify-center rounded-full text-ink-gray-8 hover:bg-surface-gray-2"
+              :aria-label="__('Llamar')"
+              @click.stop
+              ><span class="lucide-phone size-5" aria-hidden="true"
+            /></a>
+          </template>
+        </ListRow>
       </div>
-      <button
-        class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
-        style="background: var(--brand)"
+      <Fab
+        :label="__('Registrar llamada')"
+        icon="lucide-phone"
         @click="logCall"
-      >
-        + {{ __('Registrar llamada') }}
-      </button>
-    </div>
-
-    <!-- header -->
-    <div
-      class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
-      :style="`grid-template-columns:${GRID};height:34px`"
-    >
-      <div>{{ __('Dir.') }}</div>
-      <div>{{ __('Contacto') }}</div>
-      <template v-if="!isMobile">
-        <div>{{ __('Hora') }}</div>
-        <div>{{ __('Duración') }}</div>
-      </template>
-      <div>{{ __('Resultado') }}</div>
-      <div />
-    </div>
-
-    <!-- rows -->
-    <div class="scb min-h-0 flex-1 overflow-y-auto">
+      />
+    </template>
+    <template v-else>
+      <!-- stats -->
       <div
-        v-if="calls.loading && !rows.length"
-        class="py-10 text-center text-xs text-ink-gray-4"
+        class="flex flex-none flex-wrap gap-x-6 gap-y-2 border-b border-outline-gray-1 px-5 py-3"
       >
-        {{ __('Cargando…') }}
-      </div>
-      <div
-        v-else-if="!rows.length"
-        class="py-10 text-center text-xs text-ink-gray-4"
-      >
-        {{ __('Sin llamadas') }}
+        <Stat :label="__('Llamadas')" :value="rows.length" />
+        <Stat
+          :label="__('Conectadas')"
+          :value="connected"
+          color="var(--brand)"
+        />
+        <Stat :label="__('Perdidas')" :value="missed" color="#e5484d" />
+        <Stat :label="__('Duración prom.')" :value="avgDuration" />
       </div>
 
+      <!-- toolbar: wraps on phones so the action button drops under the tabs
+         instead of pushing the row past the viewport -->
       <div
-        v-for="r in rows"
-        :key="r.name"
-        class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
-        :style="`grid-template-columns:${GRID};min-height:50px`"
-        @click="openCall(r.name)"
+        class="flex min-h-[48px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 px-5 py-1.5"
       >
-        <div>
-          <span
-            class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold"
-            :class="dirChip(r)"
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button
+            v-for="t in tabs"
+            :key="t.key"
+            class="rounded-full px-3 py-1 text-[11.5px] font-semibold"
+            :class="
+              tab === t.key
+                ? 'bg-surface-gray-3 text-ink-gray-9'
+                : 'bg-surface-gray-2 text-ink-gray-6'
+            "
+            @click="tab = t.key"
           >
-            {{
-              r.type === 'Outgoing'
-                ? '↑ ' + __('Outgoing')
-                : '↓ ' + __('Incoming')
-            }}
-          </span>
-        </div>
-        <div class="min-w-0">
-          <div class="truncate text-[13px] font-semibold text-ink-gray-9">
-            {{ phoneOf(r) }}
-          </div>
-          <div
-            v-if="r.reference_docname"
-            class="truncate text-[11px] text-ink-gray-4"
-          >
-            {{ r.reference_docname }}
-          </div>
-          <!-- phone: time and duration ride under the contact; their columns are gone -->
-          <div v-if="isMobile" class="truncate text-[11px] text-ink-gray-5">
-            {{ timeAgo(r.start_time) }} · {{ fmtDur(r.duration) }}
-          </div>
-        </div>
-        <template v-if="!isMobile">
-          <div class="text-[12px] text-ink-gray-5">
-            {{ timeAgo(r.start_time) }}
-          </div>
-          <div class="text-[12px] font-medium text-ink-gray-7">
-            {{ fmtDur(r.duration) }}
-          </div>
-        </template>
-        <div>
-          <span
-            class="rounded-md px-2 py-[3px] text-[11px] font-semibold"
-            :class="outcomeChip(r.status)"
-            >{{ r.status || '—' }}</span
-          >
+            {{ t.label }}
+          </button>
         </div>
         <button
-          class="text-[14px] text-ink-gray-4"
-          @click.stop="openCall(r.name)"
+          class="rounded-lg px-3.5 py-[7px] text-[12.5px] font-semibold text-white"
+          style="background: var(--brand)"
+          @click="logCall"
         >
-          ›
+          + {{ __('Registrar llamada') }}
         </button>
       </div>
-    </div>
 
+      <!-- header -->
+      <div
+        class="grid flex-none items-center border-b border-outline-gray-1 bg-surface-gray-1 px-5 text-[10.5px] font-semibold uppercase tracking-[.07em] text-ink-gray-4"
+        :style="`grid-template-columns:${GRID};height:34px`"
+      >
+        <div>{{ __('Dir.') }}</div>
+        <div>{{ __('Contacto') }}</div>
+        <template v-if="!isMobile">
+          <div>{{ __('Hora') }}</div>
+          <div>{{ __('Duración') }}</div>
+        </template>
+        <div>{{ __('Resultado') }}</div>
+        <div />
+      </div>
+
+      <!-- rows -->
+      <div class="scb min-h-0 flex-1 overflow-y-auto">
+        <div
+          v-if="calls.loading && !rows.length"
+          class="py-10 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Cargando…') }}
+        </div>
+        <div
+          v-else-if="!rows.length"
+          class="py-10 text-center text-xs text-ink-gray-4"
+        >
+          {{ __('Sin llamadas') }}
+        </div>
+
+        <div
+          v-for="r in rows"
+          :key="r.name"
+          class="grid cursor-pointer items-center border-b border-outline-gray-1 px-5 hover:bg-surface-gray-2"
+          :style="`grid-template-columns:${GRID};min-height:50px`"
+          @click="openCall(r.name)"
+        >
+          <div>
+            <span
+              class="inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[10.5px] font-semibold"
+              :class="dirChip(r)"
+            >
+              {{
+                r.type === 'Outgoing'
+                  ? '↑ ' + __('Outgoing')
+                  : '↓ ' + __('Incoming')
+              }}
+            </span>
+          </div>
+          <div class="min-w-0">
+            <div class="truncate text-[13px] font-semibold text-ink-gray-9">
+              {{ phoneOf(r) }}
+            </div>
+            <div
+              v-if="r.reference_docname"
+              class="truncate text-[11px] text-ink-gray-4"
+            >
+              {{ r.reference_docname }}
+            </div>
+            <!-- phone: time and duration ride under the contact; their columns are gone -->
+            <div v-if="isMobile" class="truncate text-[11px] text-ink-gray-5">
+              {{ timeAgo(r.start_time) }} · {{ fmtDur(r.duration) }}
+            </div>
+          </div>
+          <template v-if="!isMobile">
+            <div class="text-[12px] text-ink-gray-5">
+              {{ timeAgo(r.start_time) }}
+            </div>
+            <div class="text-[12px] font-medium text-ink-gray-7">
+              {{ fmtDur(r.duration) }}
+            </div>
+          </template>
+          <div>
+            <StatusChip :status="r.status" kind="call" />
+          </div>
+          <button
+            class="text-[14px] text-ink-gray-4"
+            @click.stop="openCall(r.name)"
+          >
+            ›
+          </button>
+        </div>
+      </div>
+    </template>
     <CallDetailDrawer
       v-if="selectedCall"
       :name="selectedCall"
@@ -147,6 +217,16 @@ import { timeAgo } from '@/composables/crmFormat'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { isMobile } from '@/composables/breakpoint'
 import CallDetailDrawer from '@/components/doco/calls/CallDetailDrawer.vue'
+import {
+  EmptyState,
+  Fab,
+  FilterChips,
+  ListRow,
+  StatusChip,
+} from '@/components/ui'
+import { formatPhone } from '@/composables/crmFormat'
+import { relativeTime } from '@/utils/display'
+import { call } from 'frappe-ui'
 
 // phone: direction + contact + outcome + chevron — the desktop track sum
 // (396px of fixed columns plus padding) widened every phone past its viewport.
@@ -216,6 +296,71 @@ const avgDuration = computed(() => {
   return fmtDur(Math.round(d.reduce((a, b) => a + b, 0) / d.length))
 })
 
+// Phone chips: the same tabs, the missed count on «Perdidas».
+const phoneChips = computed(() =>
+  tabs.map((t) => ({
+    value: t.key,
+    label: t.label,
+    count: t.key === 'missed' && missed.value ? missed.value : undefined,
+  })),
+)
+// Names for the calls linked to a deal or prospect: one read per kind.
+const refNames = ref({})
+const NAME_FIELDS = {
+  'CRM Deal': ['name', 'lead_name', 'organization'],
+  'CRM Lead': ['name', 'lead_name', 'first_name', 'last_name'],
+}
+watch(rows, async (list) => {
+  for (const doctype of Object.keys(NAME_FIELDS)) {
+    const names = [
+      ...new Set(
+        list
+          .filter(
+            (r) =>
+              r.reference_doctype === doctype &&
+              r.reference_docname &&
+              !(r.reference_docname in refNames.value),
+          )
+          .map((r) => r.reference_docname),
+      ),
+    ]
+    if (!names.length) continue
+    try {
+      const found = await call('frappe.client.get_list', {
+        doctype,
+        filters: { name: ['in', names] },
+        fields: NAME_FIELDS[doctype],
+        limit_page_length: names.length,
+      })
+      const next = { ...refNames.value }
+      for (const name of names) next[name] = ''
+      for (const row of found || [])
+        next[row.name] =
+          row.lead_name ||
+          row.organization ||
+          [row.first_name, row.last_name].filter(Boolean).join(' ')
+      refNames.value = next
+    } catch {
+      // Unreadable links keep the number as the title.
+    }
+  }
+})
+function callTitle(r) {
+  return refNames.value[r.reference_docname] || formatPhone(phoneOf(r))
+}
+function callLine(r) {
+  return [
+    refNames.value[r.reference_docname] && formatPhone(phoneOf(r)),
+    relativeTime(r.start_time),
+    Number(r.duration) > 0 && fmtDur(r.duration),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+function dialable(r) {
+  const digits = String(phoneOf(r)).replace(/[^+\d]/g, '')
+  return digits.length >= 7 ? digits : ''
+}
 function phoneOf(r) {
   return (r.type === 'Outgoing' ? r.to : r.from) || r.from || r.to || '—'
 }
@@ -229,11 +374,6 @@ function dirChip(r) {
   return r.type === 'Outgoing'
     ? 'text-ink-green-8 bg-surface-green-2'
     : 'text-ink-blue-9 bg-surface-blue-1'
-}
-function outcomeChip(status) {
-  if (status === 'Completed') return 'text-ink-green-8 bg-surface-green-2'
-  if (MISSED.includes(status)) return 'text-ink-red-8 bg-surface-red-1'
-  return 'text-ink-gray-6 bg-surface-gray-2'
 }
 function openCall(name) {
   selectedCall.value = name

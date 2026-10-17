@@ -79,7 +79,9 @@
                 >{{ riskText(row.risk) }}</span
               >
               <span
-                v-if="row.shift"
+                v-if="
+                  row.shift && shiftLabel(row.shift) !== __('Turno desconocido')
+                "
                 class="text-ink-gray-5"
                 :title="__(row.shiftReason || '')"
                 >{{ shiftLabel(row.shift) }}</span
@@ -130,9 +132,10 @@
                 >{{ row.open }}/{{ cap }}</span
               >
             </template>
-            <span v-else class="text-xs text-ink-gray-5">{{
-              row.user === '' ? __('Sin responsable') : __('Sin límite')
-            }}</span>
+            <!-- No capacity set: nothing to show (an empty cell, not «Sin límite»). -->
+            <span v-else class="hidden md:inline text-xs text-ink-gray-5"
+              >—</span
+            >
           </div>
         </li>
       </ul>
