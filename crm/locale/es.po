@@ -26388,3 +26388,8 @@ msgstr "Cancelados"
 #: frontend/src/pages/Inbox.vue
 msgid "Por aprobar"
 msgstr "Por aprobar"
+
+#: frontend/src/pages/Equipo.vue
+msgctxt "Equipo"
+msgid "To see the team you need access to employee records. Ask whoever runs the shop to give it to you."
+msgstr "Para ver al equipo necesitas acceso a las fichas del personal. Pídeselo a quien administra la tienda."

@@ -111,6 +111,20 @@ export function lftLabel(status) {
 export function lftTheme(status) {
   return LFT_STATES[status]?.[1] || 'gray'
 }
+/**
+ * The companies Vacaciones de ley offers, and the one it opens on. ERPNext test
+ * companies («_Test Company») are dropped; the default is the current pick if
+ * still offered, else the first Mexican company (the law only applies there).
+ */
+export function vacationCompanies(companies = [], current = '') {
+  const list = (companies || []).filter(
+    (c) => !String(c?.company || '').startsWith('_'),
+  )
+  const pick = list.some((c) => c.company === current)
+    ? current
+    : (list.find((c) => c.mexico) || list[0])?.company || ''
+  return { list, pick }
+}
 /** The people «Asignar» would grant: only rows the server marked ready. */
 export function readyEmployees(rows) {
   return (rows || []).filter((r) => r.status === 'ready').map((r) => r.employee)

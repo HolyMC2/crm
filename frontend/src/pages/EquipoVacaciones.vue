@@ -211,6 +211,7 @@ import {
   problemOf,
   readyEmployees,
   requestId,
+  vacationCompanies,
 } from '@/composables/useEquipo'
 
 const route = useRoute()
@@ -257,13 +258,10 @@ async function load() {
       failure.value = answer
       return
     }
-    // ERPNext's test companies start with «_» («_Test Company»): a worker never
-    // works in one, so they are not offered as the default.
-    companies.value = (answer.companies || []).filter(
-      (c) => !String(c.company || '').startsWith('_'),
-    )
-    if (!companies.value.some((c) => c.company === company.value))
-      company.value = companies.value[0]?.company || ''
+    // No test companies; open on a Mexican one (vacationCompanies).
+    const offered = vacationCompanies(answer.companies, company.value)
+    companies.value = offered.list
+    company.value = offered.pick
     adopt(config.value)
     if (config.value?.guard) await loadLeaveTypes()
   } catch (error) {
