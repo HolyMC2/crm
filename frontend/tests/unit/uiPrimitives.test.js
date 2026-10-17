@@ -444,3 +444,14 @@ describe('the rest', () => {
     )
   })
 })
+
+describe('BottomSheet without a visible title', () => {
+  it('still names the dialog for screen readers', async () => {
+    await mount(BottomSheet, { open: true, ariaLabel: 'Pregúntale a Muelle' })
+    const dialog = document.querySelector('[role="dialog"]')
+    const id = dialog.getAttribute('aria-labelledby')
+    expect(document.getElementById(id).textContent.trim()).toBe(
+      'Pregúntale a Muelle',
+    )
+  })
+})

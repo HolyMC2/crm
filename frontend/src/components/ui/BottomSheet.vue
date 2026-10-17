@@ -63,7 +63,7 @@
                 class="break-words text-xl font-semibold leading-snug [text-wrap:balance]"
                 :class="title ? '' : 'sr-only'"
               >
-                {{ title || __('Options') }}
+                {{ title || ariaLabel || __('Options') }}
               </DialogTitle>
               <p v-if="subtitle" class="pt-0.5 text-sm text-ink-gray-6">
                 {{ subtitle }}
@@ -78,6 +78,9 @@
             </DialogClose>
           </div>
         </div>
+        <DialogTitle v-if="!title && phone" class="sr-only">
+          {{ ariaLabel || __('Options') }}
+        </DialogTitle>
         <!-- Fixed under the title, outside the drag area (a chip, a search field). -->
         <div
           v-if="$slots.header"
@@ -141,6 +144,8 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
+  /** The sheet's name for screen readers when it shows no title. */
+  ariaLabel: { type: String, default: '' },
   /** false: only the sheet's own actions close it (an unsaved form). */
   dismissible: { type: Boolean, default: true },
   /** No side padding in the body: for lists of full-width rows. */

@@ -57,6 +57,38 @@ Everywhere
 14. Inside a section, use flat rows divided by a line. Use cards only for things the worker acts on
     as a unit: a task, a linked record, a KPI.
 
+## Componentes
+
+The shared phone primitives live in `frontend/src/components/ui/` (import from `@/components/ui`)
+and the display helpers in `frontend/src/utils/display.js`. See them live at `/crm/_ui` (dev and
+lab only; `?sheet=1`, `?filtros=1`, `?buscar=1` open the sheets). Build screens from these; if one
+lacks a feature, ask the Shell S1 owner instead of making a private copy.
+
+| Component | Use it for | Do | Don't |
+|---|---|---|---|
+| `AppBar` | The one phone top bar of a page with `meta.ownPhoneHeader`, or of a record. | `back` (a route: up to the list) on records and sub-pages. `context` names the module above the title («Cobranza»). `scopes` + `v-model:scope` turn the title into the list picker (a sheet). At most 3 icons in `#actions`; the bell comes by itself. `#summary` for what must stay in sight. | Don't add a «← Volver a …» row or an in-page H1 under it. Don't put text buttons or a create button in the bar (create is the `Fab`). Don't truncate titles yourself; it wraps to 2 lines and moves to its own row when the icons leave too little room. |
+| `PageHeader` | A heading block inside a page (desktop, or a section page without a list title in the bar). | Title on its own row; one subtitle; actions under the title on a phone. | Don't put the title and buttons in one flex row. Don't use it on phone list pages: their title is in the `AppBar`. |
+| `BottomSheet` | Bounded tasks: a form, a picker, a confirm, filters. | `v-model:open`, a `title`, the actions in `#actions` (stacked, full width, primary last). `#header` for a fixed chip or search; `#footer` for a fixed composer. `dismissible: false` for unsaved input. `flush` for full-width rows. | Don't hand-roll a `<Teleport>` sheet, don't use a centred `Dialog` on a phone, and don't open a sheet from a sheet. Back must close it; don't fight its history entry. |
+| `Segmented` | Two to four views of the same items («Lista · Semana · Mes»). | Short labels; a `label` for screen readers. | Don't use it for filters (chips) or for done/cancelled (fold them into «Completados (n)» at the bottom). No more than four. |
+| `FilterChips` | One row of filters above a list. | Counts on chips; `multiple` when filters combine; the rest in `#filters` with `filtersCount`. | Don't stack selects above a list. Don't let chips wrap to a second row (the row scrolls). Don't repeat the chips as a summary strip. |
+| `ListRow` | Every list row. | `avatar` (a name → coloured initials) for people and companies, `icon` for documents; `subtitle` is one useful line; `meta` is time or amount. `subtitle-tone="danger"` marks overdue. A `StatusChip` in `#trailing` only when it changes the action. | Don't use the ID as title or subtitle (`displayName`). Don't add a «›» or an «Abrir» link: the row is the link (`to`) or button (`@click`). Don't make overdue rows red. |
+| `EmptyState` | An empty, loading, denied or error pane. | Say what is missing and offer the next action (`action`, `@action`). | Don't leave a blank pane or a lone «Sin resultados». |
+| `Fab` | The one create action of a list. | Extended (icon and label) at the bottom end; the page container is `relative`. | Don't also put «Nuevo …» in the header or the empty state on a phone. Records use one filled button, not a FAB. |
+| `KpiTile` + `KpiGrid` | Numbers a worker acts on. | Sentence-case label over the value; `to` makes the whole tile the link; `tone` only when the number asks for action. `KpiGrid` makes them 2-up, 1-up at 305px. | No all-caps labels, no «Ver registros →» link inside, no 5-across grids. |
+| `StatusChip` | A stored status in es-MX. | Pass the raw `status` (and `kind`: `call`, `campaign`, `task` when the word depends on it). | Don't print raw `status` values («Completed», «No Answer»). Don't put a chip on every row. |
+
+`utils/display.js`:
+
+- `displayName(doc, doctype)` names a record from its name fields and never returns an ID
+  (`looksLikeId`) or an email. `kindLabel(doctype)` gives the kind word («Trato», «Orden de
+  compra»). `personName(emailOrUser, people)` gives a person's name instead of an email.
+- `formatDate` («hoy», «ayer», «24 oct», «17 oct 2025»), `formatDateTime` («hoy 12:11»),
+  `relativeTime` («hace 17 min», «en 3 días»), `formatDue` (`{ label, overdue }`). Date-only server
+  values are local days, never UTC midnight. Never show ISO dates or seconds.
+- `unitLabel` / `formatQty`: «Nos» and «Unit» read «pza/pzas». `formatMoney` («$1,400.00», «USD
+  12.00», «—» when unknown), `formatMoneyCompact` («$69.8 mil»).
+- `statusLabel(status, kind)` and `statusTone` are the es-MX status map.
+
 ## Applied so far
 
 - 2026-10-17 · Contacto (`pages/Contacto.vue`): pencil in the top bar, the name gets the whole row,
