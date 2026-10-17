@@ -645,11 +645,11 @@ describe('one frame for every route', () => {
     }
     await scrollTo(200)
     await scrollTo(400)
-    expect(header().style.marginTop).toBe('-48px')
+    expect(header().style.marginTop).toBe('-56px') // AppBar's height
     await scrollTo(380)
     expect(header().style.marginTop).toBe('')
     await scrollTo(600)
-    expect(header().style.marginTop).toBe('-48px')
+    expect(header().style.marginTop).toBe('-56px')
     // near the top the header always shows
     await scrollTo(20)
     expect(header().style.marginTop).toBe('')

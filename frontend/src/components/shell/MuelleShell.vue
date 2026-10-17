@@ -19,47 +19,56 @@
            down and comes back on the first scroll up; drill-down records
            (deal, inbox thread) bring their own identity row instead, and pages
            with `meta.ownPhoneHeader` (the Agenda's calendar app bar) their own. -->
-      <header
+      <!-- The phone's top bar is the shared AppBar. Drill-down records (a
+           Cobranza or Compras record, Producto, Equipo's vacation sheet) take
+           a back arrow to their list, from meta.listParent. -->
+      <AppBar
         v-if="phone && !drillDown && !route.meta.ownPhoneHeader"
         data-testid="shell-header"
-        class="z-10 flex min-h-12 shrink-0 items-center gap-1 border-b border-outline-gray-1 bg-surface-base pl-3 pr-1 pt-[env(safe-area-inset-top)] transition-[margin] duration-200"
+        :back="backTo"
+        :bell-active="activeKey === 'avisos'"
+        class="transition-[margin] duration-200"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
       >
-        <!-- Ventas pages may teleport their own header (breadcrumbs + actions)
-             here; while none arrives the route's title stands in for it. -->
-        <div
-          v-if="activeKey === 'ventas'"
-          id="app-header"
-          class="min-w-0 flex-1 [&:not(:has(*))]:hidden"
-        />
-        <h1
-          data-testid="shell-title"
-          class="min-w-0 flex-1 truncate text-lg font-semibold [#app-header:has(*)+&]:hidden"
-        >
-          {{ headerTitle }}
-        </h1>
-        <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
-        <a
-          v-if="scanHref"
-          :href="scanHref"
-          class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
-          :aria-label="__('Scan a code')"
-          :title="__('Scan a code')"
-          data-testid="shell-scan"
-        >
-          <span class="lucide-scan-barcode size-5" aria-hidden="true" />
-        </a>
-        <button
-          class="flex size-11 flex-none items-center justify-center rounded-lg text-ink-gray-7 hover:bg-surface-gray-2"
-          :aria-label="__('Search')"
-          :title="searchHint"
-          :aria-keyshortcuts="searchKeys"
-          @click="openPalette('all')"
-        >
-          <span class="lucide-search size-5" aria-hidden="true" />
-        </button>
-        <AvisosBell v-if="avisosEnabled" :active="activeKey === 'avisos'" />
-      </header>
+        <template #title>
+          <!-- Ventas pages may teleport their own header (breadcrumbs + actions)
+               here; while none arrives the route's title stands in for it. -->
+          <div
+            v-if="activeKey === 'ventas'"
+            id="app-header"
+            class="min-w-0 flex-1 [&:not(:has(*))]:hidden"
+          />
+          <h1
+            data-testid="shell-title"
+            class="min-w-0 flex-1 truncate text-lg font-semibold [#app-header:has(*)+&]:hidden"
+          >
+            {{ headerTitle }}
+          </h1>
+        </template>
+        <template #actions>
+          <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
+          <a
+            v-if="scanHref"
+            :href="scanHref"
+            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+            :aria-label="__('Scan a code')"
+            :title="__('Scan a code')"
+            data-testid="shell-scan"
+          >
+            <span class="lucide-scan-barcode size-6" aria-hidden="true" />
+          </a>
+          <button
+            type="button"
+            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2"
+            :aria-label="__('Search')"
+            :title="searchHint"
+            :aria-keyshortcuts="searchKeys"
+            @click="openPalette('all')"
+          >
+            <span class="lucide-search size-6" aria-hidden="true" />
+          </button>
+        </template>
+      </AppBar>
       <div
         v-if="!online"
         role="status"
@@ -173,6 +182,7 @@ import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
 import { shellTitle } from '@/utils/shellTitle'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
+import { AppBar } from '@/components/ui'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
 
@@ -210,6 +220,11 @@ const blocked = computed(() =>
     error: shellError.value,
   }),
 )
+// A drill-down record names its list in meta.listParent; its back arrow goes to
+// the module's list page (the route the bottom bar or «Más» opens).
+const backTo = computed(() =>
+  route.meta.listParent ? activeModule.value?.to || true : false,
+)
 const blockedLabel = computed(() => moduleMeta(activeKey.value)?.label || '')
 const blockedFallback = computed(() =>
   __(
@@ -233,7 +248,7 @@ const navVisible = computed(() => !keyboardOpen.value && !drillDown.value)
 
 // Phone header hides on scroll down and returns on scroll up. Only vertical
 // scrolls of the page's own scrollers count (chip rows scroll sideways).
-const HEADER_HEIGHT = 48
+const HEADER_HEIGHT = 56 // AppBar's min-h-14
 const headerHeight = HEADER_HEIGHT
 const headerHidden = ref(false)
 const lastScroll = new WeakMap()

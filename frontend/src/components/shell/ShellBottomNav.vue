@@ -21,13 +21,18 @@
       </span>
       {{ module.label }}
     </RouterLink>
+    <!-- «Más» lights up while the page is a module the bar does not hold: the
+         worker reached it from the sheet, so the way back stays visible. -->
     <button
-      class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-ink-gray-6"
+      class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium"
+      :class="moreLit ? 'text-ink-gray-9' : 'text-ink-gray-6'"
       aria-haspopup="dialog"
+      :aria-current="moreLit ? 'page' : undefined"
       @click="$emit('more')"
     >
       <span
-        class="flex h-7 w-12 items-center justify-center"
+        class="flex h-7 w-12 items-center justify-center rounded-full"
+        :class="moreLit ? 'bg-surface-gray-3' : ''"
         aria-hidden="true"
       >
         <span class="lucide-menu size-5" />
@@ -37,9 +42,14 @@
   </nav>
 </template>
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   slots: { type: Array, default: () => [] },
   active: { type: String, default: '' },
 })
 defineEmits(['more'])
+const moreLit = computed(
+  () => !!props.active && !props.slots.some((m) => m.key === props.active),
+)
 </script>

@@ -111,7 +111,7 @@
           >
             <span class="lucide-square-check-big size-6" aria-hidden="true" />
           </button>
-          <AvisosBell v-if="showBell" />
+          <AvisosBell v-if="showBell" :active="bellActive" />
         </div>
       </template>
     </div>
@@ -216,6 +216,8 @@ const props = defineProps({
   selectedCount: { type: Number, default: 0 },
   /** The Avisos bell is part of every bar; turn it off only where the bar is inside a sheet. */
   bell: { type: Boolean, default: true },
+  /** The bell's «you are here» state, on the Avisos page itself. */
+  bellActive: { type: Boolean, default: false },
 })
 const emit = defineEmits([
   'back',
