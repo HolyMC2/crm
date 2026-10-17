@@ -15,8 +15,9 @@
       />
       <h2
         class="min-w-0 flex-1 truncate text-base font-semibold text-ink-gray-9"
+        :title="item?.title"
       >
-        {{ item?.title || __('File') }}
+        {{ item ? displayTitle(item) : __('File') }}
       </h2>
       <Badge
         v-if="item?.status"
@@ -356,6 +357,7 @@ import {
   browseKindLabel,
   canManageItem,
   channelLabel,
+  displayTitle,
   fileLink,
   formatBytes,
   formatDay,

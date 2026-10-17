@@ -413,7 +413,8 @@
                     <span class="flex items-center gap-1.5">
                       <span
                         class="truncate text-base font-medium text-ink-gray-9"
-                        >{{ row.title }}</span
+                        :title="row.title"
+                        >{{ displayTitle(row) }}</span
                       >
                       <FeatherIcon
                         v-if="row.visibility === 'Private'"
@@ -561,6 +562,7 @@ import {
   archivosApi,
   archivosBoot as boot,
   canManageItem,
+  displayTitle,
   doctypeLabel,
   folderLine,
   formatDay,

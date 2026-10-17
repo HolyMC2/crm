@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { callError, errorGuard, errorKind } from '@/utils/contactos'
+import { looksLikeId } from '@/utils/display'
 
 // Archivos («Bandeja de comprobantes»): one intake queue over Doco evidence.
 // Pure helpers live here so the page, the record panel and tests share them.
@@ -680,6 +681,62 @@ export function whereLabel(item) {
   if (link) return link.title || link.name
   if (item.counterparty) return item.counterparty
   return ''
+}
+
+// Words that stay lower case inside an issuer name («Refacciones del Norte»).
+const LOWER_WORDS = new Set(['DE', 'DEL', 'LA', 'LAS', 'LOS', 'Y', 'E', 'EL'])
+// Legal forms a worker reads as written («S.A. de C.V.», «S. de R.L.»).
+const LEGAL_FORMS = new Set([
+  'S.A.',
+  'S.A',
+  'SA',
+  'C.V.',
+  'CV',
+  'S.A.P.I.',
+  'SAPI',
+  'S.R.L.',
+  'SRL',
+  'R.L.',
+  'S.',
+  'S.C.',
+  'SC',
+  'A.C.',
+  'AC',
+])
+const FILE_NAME = /\.(pdf|png|jpe?g|csv|xml|txt|docx?|xlsx?|heic)$/i
+
+/**
+ * An issuer as a worker reads it. Title case only when the whole name is upper
+ * case; legal forms and RFC-like codes keep their written form.
+ */
+export function issuerName(text) {
+  const value = String(text || '').trim()
+  if (!value || value !== value.toUpperCase() || !/[A-ZÁÉÍÓÚÑ]/.test(value))
+    return value
+  return value
+    .split(/\s+/)
+    .map((word, index) => {
+      if (LEGAL_FORMS.has(word) || /\d/.test(word)) return word
+      if (index > 0 && LOWER_WORDS.has(word)) return word.toLowerCase()
+      return word.charAt(0) + word.slice(1).toLowerCase()
+    })
+    .join(' ')
+}
+
+/**
+ * The title a worker reads for a file. A stored title that is an ID (a UUID, a
+ * hash) or a bare file name gives way to «{kind} de {issuer}» with the date;
+ * a real title is returned as stored. Keep the stored title for «Cambiar nombre».
+ */
+export function displayTitle(item, locale = 'es-MX') {
+  const raw = String(item?.title || '').trim()
+  const bare = looksLikeId(raw) || FILE_NAME.test(raw)
+  if (raw && !bare) return raw
+  const kind = kindLabel(item?.document_kind)
+  const issuer = issuerName(item?.counterparty)
+  const base = issuer ? tr('{0} de {1}', [kind, issuer]) : kind
+  const day = item?.document_date ? formatDay(item.document_date, locale) : ''
+  return [base, day].filter(Boolean).join(' · ') || raw
 }
 
 /** Shift-click: every id between the anchor and the row just clicked. */

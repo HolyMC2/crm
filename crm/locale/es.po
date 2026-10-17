@@ -26275,3 +26275,5 @@ msgstr "{0} me debe {1}{2}. ¿Cómo le cobro? Prepárame el recordatorio para qu
 #: frontend/src/components/assistant/suggestions.js
 msgid "since {0}"
 msgstr "desde el {0}"
+msgid "{0} de {1}"
+msgstr "{0} de {1}"
