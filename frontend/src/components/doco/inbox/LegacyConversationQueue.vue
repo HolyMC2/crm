@@ -302,7 +302,9 @@
             >
               {{ u.last_channel === 'messenger' ? 'Msgr' : 'WA' }}
             </span>
-            <span class="truncate">{{ u.last_message || '—' }}</span>
+            <span v-if="u.last_message" class="truncate">{{
+              u.last_message
+            }}</span>
             <span
               v-if="u.count > 1"
               class="flex-none text-[10px] text-ink-gray-4"
@@ -494,7 +496,9 @@
               >
                 {{ u.last_channel === 'messenger' ? 'Msgr' : 'WA' }}
               </span>
-              <span class="truncate">{{ u.last_message || '—' }}</span>
+              <span v-if="u.last_message" class="truncate">{{
+                u.last_message
+              }}</span>
             </div>
           </button>
         </div>
@@ -818,7 +822,9 @@
               >
                 {{ chLabel(r.last_channel) }}
               </span>
-              <span class="truncate">{{ r.last_message || '—' }}</span>
+              <span v-if="r.last_message" class="truncate">{{
+                r.last_message
+              }}</span>
             </div>
             <div class="mt-[7px] flex flex-wrap gap-1.5">
               <!-- Lead vs Trato (Deal) — leads now share the queue -->
@@ -901,7 +907,7 @@
                 class="inline-flex items-center gap-1 rounded bg-surface-blue-1 px-1.5 py-px text-[9.5px] font-semibold text-ink-blue-8"
                 :title="__('Orden de reparación más reciente de este trato')"
               >
-                🔧 {{ r.repair_order }}
+                🔧 {{ __('Reparación') }}
                 <span v-if="r.repair_status" class="opacity-80"
                   >· {{ r.repair_status }}</span
                 >

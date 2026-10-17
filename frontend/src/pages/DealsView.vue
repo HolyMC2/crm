@@ -1365,7 +1365,8 @@ const showFilterSheet = ref(false)
 // When there's no customer the card title IS the folio, so don't repeat it.
 function mobileSubtitle(r) {
   const parts = []
-  if (customerOf(r)) parts.push(r.name)
+  // Never the deal ID (CRM-DEAL-…): the equipo the customer brought in instead.
+  if (customerOf(r) && deviceOf(r)) parts.push(deviceOf(r))
   const ph = phoneOf(r)
   if (ph) parts.push(formatPhone(ph))
   return parts.join(' · ')

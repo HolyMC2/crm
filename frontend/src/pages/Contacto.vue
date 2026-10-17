@@ -1279,7 +1279,11 @@ function formatted(field, value) {
   if (field.fieldtype === 'Check') return value ? 'Sí' : 'No'
   if (value && typeof value === 'object') return 'Revisar registro'
   if (value === '' || value == null) return 'Sin dato'
-  return field.fieldtype === 'Select' ? optionLabel(value) : String(value)
+  // Gender and Salutation are Link fields, so they never reach the Select branch.
+  const coded =
+    field.fieldtype === 'Select' ||
+    ['gender', 'salutation'].includes(field.fieldname)
+  return coded ? optionLabel(value) : String(value)
 }
 watch(
   nativeRoute,

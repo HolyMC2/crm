@@ -179,7 +179,9 @@ describe('WhatsAppReviewCard', () => {
     })
     expect(el.textContent).toContain('Sin nombre')
     expect(el.textContent).toContain('+521 555 555 0000')
-    expect(el.textContent).toContain('equipo_listo-')
+    // A template id is humanized, never shown raw.
+    expect(el.textContent).toContain('Equipo listo')
+    expect(el.textContent).not.toContain('equipo_listo')
   })
 
   it('sends the edited variables with the approval and emits changed', async () => {

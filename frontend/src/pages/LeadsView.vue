@@ -261,11 +261,11 @@
             {{ stageLabel(r.status, LEAD_STATUS) }}
           </span>
           <span
-            v-if="r.score_grade"
+            v-if="r.score_grade === 'A'"
             class="rounded-md px-1.5 py-[2px] text-[11px] font-bold"
             :style="`color:${gradeColor(r.score_grade)};background:${gradeColor(r.score_grade)}1a`"
           >
-            {{ r.score_grade }} · {{ r.lead_score ?? '—' }}
+            {{ __('Caliente') }}
           </span>
           <span
             v-if="r.source"

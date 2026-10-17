@@ -321,8 +321,8 @@
                 class="h-4 w-4" /></span
             ><span
               ><strong>{{ row.title || row.name }}</strong
-              ><small>{{
-                row.subtitle || row.fields?.designation || row.name
+              ><small v-if="row.subtitle || row.fields?.designation">{{
+                row.subtitle || row.fields?.designation
               }}</small
               ><span v-if="tags(row).length" class="c-tags"
                 ><span v-for="tag in tags(row)" :key="tag">{{

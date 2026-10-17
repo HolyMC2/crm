@@ -118,9 +118,8 @@
       <div
         v-if="row.preview"
         class="whitespace-pre-line px-2.5 py-2 text-[12.5px] leading-snug text-ink-gray-8"
-      >
-        {{ row.preview }}
-      </div>
+        v-html="whatsappHtml(row.preview)"
+      />
       <div
         v-if="editing && vars.length"
         class="flex flex-col gap-1.5 border-t border-outline-gray-1 px-2.5 py-2"
@@ -259,9 +258,39 @@ const openLabel = computed(
       Contact: __('Abrir contacto'),
     })[recordLink.value?.name] || __('Abrir'),
 )
-const templateLabel = computed(
-  () => props.row.template_label || props.row.template || '',
-)
+// A template id («equipo_listo») is never shown raw: humanize it when the
+// server sent no label.
+const templateLabel = computed(() => {
+  if (props.row.template_label) return props.row.template_label
+  const id = String(props.row.template || '')
+    .replace(/_/g, ' ')
+    .trim()
+  return id ? id.charAt(0).toUpperCase() + id.slice(1) : ''
+})
+
+// The stored preview carries WhatsApp markup (*bold*, _italic_, ~strike~).
+// Escape first, then render only those three marks.
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+function whatsappHtml(text) {
+  const mark = (src, open, close, tag) =>
+    src.replace(
+      new RegExp(
+        `(^|[\\s(])${open}([^${open}\\n]+)${close}(?=$|[\\s).,;:!?])`,
+        'g',
+      ),
+      `$1<${tag}>$2</${tag}>`,
+    )
+  let html = escapeHtml(String(text || ''))
+  html = mark(html, '\\*', '\\*', 'strong')
+  html = mark(html, '_', '_', 'em')
+  return mark(html, '~', '~', 's')
+}
 
 // --- variable editor (prefill + dropdown + free-edit) ----------------------
 const editing = ref(false)

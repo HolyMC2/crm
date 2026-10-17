@@ -1,11 +1,11 @@
 // «Prospectos» (CRM-S3.4, decision D4): one capture list for leads and inquiries.
 // Pure helpers for pages/Prospectos.vue; the server (crm.api.prospects) owns the data.
 
-export const KIND_LABELS = { lead: 'Lead', inquiry: 'Consulta' }
+export const KIND_LABELS = { lead: 'Prospecto', inquiry: 'Consulta' }
 
 export const KIND_CHIPS = [
   { value: '', label: 'Todos' },
-  { value: 'lead', label: 'Leads' },
+  { value: 'lead', label: 'Prospectos' },
   { value: 'inquiry', label: 'Consultas' },
 ]
 

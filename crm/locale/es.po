@@ -26062,3 +26062,11 @@ msgstr "Te quitaron una asignación"
 #: crm/avisos/stream.py
 msgid "Assignments taken off you"
 msgstr "Asignaciones que te quitaron"
+
+#: frontend/src/pages/LeadsView.vue
+msgid "Caliente"
+msgstr "Caliente"
+
+#: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
+msgid "Reparación"
+msgstr "Reparación"

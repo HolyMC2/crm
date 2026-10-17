@@ -6,7 +6,7 @@
       <div>
         <h1 class="text-lg font-semibold text-ink-gray-9">Prospectos</h1>
         <p class="text-sm text-ink-gray-6">
-          Leads y consultas que esperan respuesta, del más reciente al más
+          Prospectos y consultas que esperan respuesta, del más reciente al más
           antiguo.
         </p>
       </div>
@@ -18,7 +18,7 @@
         />
         <Button
           variant="solid"
-          label="Nuevo lead"
+          label="Nuevo prospecto"
           icon-left="plus"
           @click="showLeadModal = true"
         />
@@ -122,21 +122,20 @@
               :theme="sourceTheme(row.source)"
               variant="subtle"
             />
-            <span class="w-28 text-sm text-ink-gray-7">{{
+            <span class="hidden w-28 text-sm text-ink-gray-7 sm:block">{{
               row.status_label || row.status
             }}</span>
             <span
-              class="w-40 text-sm"
+              class="flex-none text-sm"
               :class="isOverdue(row) ? 'text-ink-red-4' : 'text-ink-gray-6'"
             >
               {{
                 row.next_action_at
-                  ? (isOverdue(row) ? 'Vencido: ' : 'Próximo: ') +
-                    row.next_action_at.slice(0, 16)
+                  ? formatDue(row.next_action_at).label
                   : 'Sin seguimiento'
               }}
             </span>
-            <span class="w-24 text-right text-sm text-ink-gray-5">{{
+            <span class="flex-none text-right text-sm text-ink-gray-5">{{
               waitingLabel(row.modified)
             }}</span>
           </RouterLink>
@@ -157,6 +156,7 @@
 <script setup>
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { formatDue } from '@/utils/display'
 import { Badge, Button, TextInput, call } from 'frappe-ui'
 import {
   KIND_CHIPS,
