@@ -35,12 +35,12 @@
       >
         <span
           class="line-clamp-2 min-w-0 break-words text-lg font-semibold leading-snug [text-wrap:balance]"
-          >{{ heading }}</span
-        >
-        <span
-          v-if="count !== undefined && count !== null && count !== ''"
-          class="shrink-0 text-base text-ink-gray-6"
-          >({{ count }})</span
+          >{{ heading
+          }}<span
+            v-if="count !== undefined && count !== null && count !== ''"
+            class="ml-1 text-base font-normal text-ink-gray-6"
+            >({{ count }})</span
+          ></span
         >
         <FeatherIcon
           name="chevron-down"
