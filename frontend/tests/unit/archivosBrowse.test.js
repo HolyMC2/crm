@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  EXPLORAR_KEYS,
   BROWSE_CHANNELS,
   BROWSE_KINDS,
   SORTS,
@@ -744,6 +745,24 @@ describe('the preview pane', () => {
 })
 
 describe('every word the file manager shows has a Spanish one', () => {
+  it("lists Explorar's own keys in Alt+H, in Spanish, without asking the shell to run them", () => {
+    const po = readFileSync(
+      resolve(__dirname, '../../../crm/locale/es.po'),
+      'utf8',
+    )
+    for (const shortcut of EXPLORAR_KEYS) {
+      expect(shortcut.run).toBeUndefined()
+      expect(po).toMatch(
+        new RegExp(`msgid "${shortcut.description}"\\nmsgstr "[^"]+"`),
+      )
+    }
+    expect(EXPLORAR_KEYS.map((s) => s.keys[0])).toEqual([
+      'space',
+      'delete',
+      'f2',
+    ])
+  })
+
   it('names every view, type, channel and sort in the catalog', () => {
     const here = dirname(fileURLToPath(import.meta.url))
     const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')

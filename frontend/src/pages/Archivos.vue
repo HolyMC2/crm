@@ -564,6 +564,7 @@ import {
   doctypeLabel,
   folderLine,
   formatDay,
+  EXPLORAR_KEYS,
   isBrowseView,
   kindIcon,
   kindLabel,
@@ -616,6 +617,8 @@ useListKeys({
   open: true,
   // Explorar's rows carry a checkbox (data-row-check): x, Shift+X, Ctrl+A select.
   select: true,
+  // Space, Delete and F2 are Explorar's own; Alt+H lists them only there.
+  extra: () => (browsing.value ? EXPLORAR_KEYS : []),
   create: () => {
     uploadOpen.value = true
   },

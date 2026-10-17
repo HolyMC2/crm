@@ -25982,3 +25982,15 @@ msgstr "Activo"
 #: frontend/src/composables/useArchivos.js
 msgid "Warranty claim"
 msgstr "Garantía"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Select or clear this file"
+msgstr "Seleccionar o quitar este archivo"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Send the selected files to the trash"
+msgstr "Mandar a la papelera los archivos seleccionados"
+
+#: frontend/src/composables/useArchivos.js
+msgid "Rename the file"
+msgstr "Cambiar el nombre del archivo"

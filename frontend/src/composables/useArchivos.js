@@ -159,6 +159,22 @@ export const BROWSE_VIEWS = Object.freeze([
   },
 ])
 export const VIEWS = Object.freeze([...BANDEJA_VIEWS, ...BROWSE_VIEWS])
+
+// Explorar's own keys, answered by the file list on the focused row. Listed in
+// Alt+H «En esta página» only (no `run`): the shell never calls them.
+export const EXPLORAR_KEYS = Object.freeze([
+  {
+    id: 'archivos.toggle',
+    keys: ['space'],
+    description: 'Select or clear this file',
+  },
+  {
+    id: 'archivos.trash',
+    keys: ['delete'],
+    description: 'Send the selected files to the trash',
+  },
+  { id: 'archivos.rename', keys: ['f2'], description: 'Rename the file' },
+])
 function viewEntry(value) {
   return VIEWS.find((v) => v.value === value) || VIEWS[0]
 }
