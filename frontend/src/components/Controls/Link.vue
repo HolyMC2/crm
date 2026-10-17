@@ -180,8 +180,13 @@ function stripHtml(html) {
     .trim()
 }
 
+// The doctype and filters watchers both fire at mount with the same query:
+// one request (SPEC §4: no API called twice for one render).
+let lastQuery = null
 function reload(val, force = false) {
   if (!props.doctype) return
+  const query = JSON.stringify([val, props.doctype, props.filters])
+  if (query === lastQuery && (options.loading || options.data)) return
   if (
     !force &&
     options.data?.length &&
@@ -189,6 +194,7 @@ function reload(val, force = false) {
     props.doctype === options.params?.doctype
   )
     return
+  lastQuery = query
 
   options.update({
     params: {
