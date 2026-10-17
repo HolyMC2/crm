@@ -136,6 +136,7 @@ const SOURCE_ICONS = {
   'doco.gastos': 'lucide-receipt',
   'abordo.primeros_pasos': 'lucide-check-check',
   'doco.archivos': 'lucide-folder',
+  'taller.unassigned_repairs': 'lucide-wrench',
 }
 
 export function greeting(now = new Date(), timeZone) {
