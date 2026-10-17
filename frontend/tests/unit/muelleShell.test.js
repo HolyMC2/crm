@@ -133,6 +133,17 @@ async function mount(path) {
         meta: { app: 'compras', title: 'Compras' },
       },
       {
+        path: '/cobranza/cliente/:customer',
+        component: { render: () => h('p', 'Cobranza customer') },
+        meta: {
+          app: 'cobranza',
+          title: 'Cobranza',
+          listParent: 'Cobranza',
+          ownPhoneHeader: true,
+          ownBottomBar: true,
+        },
+      },
+      {
         path: '/gastos',
         component: { render: () => h('p', 'Gastos page') },
         meta: { app: 'gastos', title: 'Gastos' },
@@ -597,6 +608,17 @@ describe('one frame for every route', () => {
     const nav = root.querySelector('nav[aria-label="Main navigation"]')
     expect(nav.classList).toContain('sticky')
     expect(nav.classList).toContain('bottom-0')
+  })
+
+  it('phone: a record with its own bottom action bar (meta.ownBottomBar) hides the nav', async () => {
+    state.mobile.value = true
+    await mount('/cobranza/cliente/Ana')
+    expect(root.querySelector('nav[aria-label="Main navigation"]')).toBeNull()
+    await router.push('/contactos')
+    await nextTick()
+    expect(
+      root.querySelector('nav[aria-label="Main navigation"]'),
+    ).not.toBeNull()
   })
 
   it('phone Contactos shows its title instead of the Ventas header slot', async () => {

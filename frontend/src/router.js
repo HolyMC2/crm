@@ -148,6 +148,7 @@ const routes = [
       title: 'Cobranza',
       listParent: 'Cobranza',
       ownPhoneHeader: true,
+      ownBottomBar: true,
     },
   },
   {

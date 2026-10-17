@@ -245,7 +245,12 @@ const drillDown = computed(
     /^\/(inbox|(ventas\/)?deal\/)/.test(route.path) &&
     mobileView.value !== 'list',
 )
-const navVisible = computed(() => !keyboardOpen.value && !drillDown.value)
+// A record with its own bottom action bar (route meta.ownBottomBar, e.g. a
+// Cobranza customer's Caja · Pago · Promesa · Llamada) takes the nav's place:
+// one bottom bar, and the AppBar's back arrow leads out.
+const navVisible = computed(
+  () => !keyboardOpen.value && !drillDown.value && !route.meta.ownBottomBar,
+)
 
 // Phone header hides on scroll down and returns on scroll up. Only vertical
 // scrolls of the page's own scrollers count (chip rows scroll sideways).
