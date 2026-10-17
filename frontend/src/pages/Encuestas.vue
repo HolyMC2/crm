@@ -63,12 +63,40 @@
         />
       </div>
 
+      <!-- Both surveys off: one banner, one filled button, not two alarms. -->
       <div
-        v-if="notice"
+        v-if="bothOff"
+        role="status"
+        class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6"
+        data-testid="encuestas-both-off"
+      >
+        <span class="w-full">{{
+          __(
+            'The surveys are off: nobody is asked after buying or after a conversation.',
+            null,
+            'Encuestas',
+          )
+        }}</span>
+        <Button
+          variant="solid"
+          :label="__('Turn on the survey')"
+          class="min-h-11 sm:min-h-8"
+          @click="setupOpen = true"
+        />
+        <Button
+          :label="__('Turn on “How did we do?”')"
+          class="min-h-11 sm:min-h-8"
+          @click="serviceSetupOpen = true"
+        />
+      </div>
+      <div
+        v-if="notice && !bothOff"
         role="status"
         class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-amber-8 sm:mx-6"
       >
-        <span class="min-w-0 flex-1">{{ notice.reason }}</span>
+        <span class="w-full sm:w-auto sm:min-w-0 sm:flex-1">{{
+          notice.reason
+        }}</span>
         <Button
           v-if="notice.action === 'setup'"
           variant="solid"
@@ -84,12 +112,14 @@
         />
       </div>
       <div
-        v-if="serviceNotice"
+        v-if="serviceNotice && !bothOff"
         role="status"
         class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-gray-2 px-3 py-2 text-sm text-ink-gray-8 sm:mx-6"
         data-testid="encuestas-service-notice"
       >
-        <span class="min-w-0 flex-1">{{ serviceNotice.reason }}</span>
+        <span class="w-full sm:w-auto sm:min-w-0 sm:flex-1">{{
+          serviceNotice.reason
+        }}</span>
         <Button
           v-if="serviceNotice.action === 'setup'"
           :label="__('Turn on “How did we do?”')"
@@ -437,6 +467,11 @@ const notice = computed(() =>
 )
 const serviceNotice = computed(() =>
   serviceAskNotice(boot.value?.service_ask, boot.value?.capabilities),
+)
+// Both surveys are off and this worker can turn them on: one banner.
+const bothOff = computed(
+  () =>
+    notice.value?.action === 'setup' && serviceNotice.value?.action === 'setup',
 )
 // «Todas»: every answer, or one question (after buying / after a conversation).
 const kindChips = computed(() => [

@@ -26476,3 +26476,8 @@ msgstr "Las respuestas anteriores no se vuelven a mostrar. Pregunta de nuevo par
 #: frontend/src/components/assistant
 msgid "Muelle cannot answer right now. Try again in a few minutes."
 msgstr "Muelle no puede responder ahora. Reintenta en unos minutos."
+
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "The surveys are off: nobody is asked after buying or after a conversation."
+msgstr "Las encuestas están apagadas: no se le pregunta a nadie después de comprar ni al terminar una conversación."
