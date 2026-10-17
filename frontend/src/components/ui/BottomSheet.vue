@@ -22,6 +22,7 @@
         :style="phone ? dragStyle : undefined"
         v-bind="subtitle ? {} : { 'aria-describedby': undefined }"
         data-ui-sheet
+        :data-shell-layer="layer || undefined"
         :data-expanded="expanded || undefined"
         @escape-key-down="onDismissAttempt"
         @interact-outside="onDismissAttempt"
@@ -156,6 +157,8 @@ const props = defineProps({
   dismissible: { type: Boolean, default: true },
   /** No side padding in the body: for lists of full-width rows. */
   flush: { type: Boolean, default: false },
+  /** The shell's layer name (data-shell-layer): the shortcuts and the keys skip it. */
+  layer: { type: String, default: '' },
 })
 const emit = defineEmits(['update:open', 'closed'])
 

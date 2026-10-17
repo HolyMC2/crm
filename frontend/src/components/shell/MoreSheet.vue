@@ -1,27 +1,13 @@
 <template>
-  <div
-    ref="dialog"
-    class="fixed inset-0 z-40"
-    role="dialog"
-    aria-modal="true"
-    data-shell-layer="more"
+  <BottomSheet
+    :open="modelValue"
+    layer="more"
     :aria-label="__('More')"
+    @update:open="(open) => !open && close()"
   >
-    <div class="absolute inset-0 bg-black/30" @click="close" />
-    <div
-      ref="sheet"
-      class="absolute inset-x-0 bottom-0 max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-surface-base pb-[env(safe-area-inset-bottom)] shadow-2xl"
-      tabindex="-1"
-    >
-      <div class="sticky top-0 flex justify-center bg-surface-base pb-1 pt-2">
-        <span
-          class="h-1 w-10 rounded-full bg-surface-gray-4"
-          aria-hidden="true"
-        />
-      </div>
-      <div
-        class="flex items-center gap-3 border-b border-outline-gray-1 px-4 pb-3"
-      >
+    <template #header>
+      <!-- Who is signed in: the sheet's first line, not a button. -->
+      <div class="flex items-center gap-3 pb-2">
         <span
           class="flex size-10 flex-none items-center justify-center overflow-hidden rounded-full bg-surface-gray-3 text-sm font-semibold"
         >
@@ -41,39 +27,24 @@
             {{ user.puesto }}
           </div>
         </div>
-        <button
-          class="flex size-11 items-center justify-center rounded-lg text-ink-gray-7"
-          :aria-label="__('Close')"
-          @click="close"
-        >
-          <span class="lucide-x size-5" aria-hidden="true" />
-        </button>
       </div>
+    </template>
 
-      <!-- Every module page can scan, including those with their own app bar. -->
-      <section v-if="scanHref" class="px-4 pt-4">
-        <a
-          :href="scanHref"
-          class="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-surface-gray-2 text-base font-medium text-ink-gray-9"
-          data-testid="more-scan"
-        >
-          <span class="lucide-scan-barcode size-5" aria-hidden="true" />
-          {{ __('Scan a code') }}
-        </a>
-      </section>
-
-      <section class="px-4 pt-4">
+    <div class="space-y-6 pb-2">
+      <!-- The bar's modules are not repeated here: only what the bar leaves out. -->
+      <section v-if="extraModules.length" aria-labelledby="more-modules">
         <h2
-          class="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
+          id="more-modules"
+          class="pb-2 text-sm font-semibold text-ink-gray-7"
         >
           {{ __('Modules') }}
         </h2>
         <div class="grid grid-cols-3 gap-2">
           <RouterLink
-            v-for="module in modules"
+            v-for="module in extraModules"
             :key="module.key"
             :to="module.to"
-            class="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-gray-1 text-sm"
+            :class="TILE"
             @click="close"
           >
             <span :class="[module.icon, 'size-5']" aria-hidden="true" />
@@ -82,12 +53,9 @@
         </div>
       </section>
 
-      <!-- Escáner and the other apps right under the modules: on a phone
-           they are the stock tools, not an afterthought below Ventas. -->
-      <section v-if="siblings.length" class="px-4 pt-5">
-        <h2
-          class="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
-        >
+      <!-- Escáner and the other apps: the stock tools next to the modules. -->
+      <section v-if="siblings.length" aria-labelledby="more-apps">
+        <h2 id="more-apps" class="pb-2 text-sm font-semibold text-ink-gray-7">
           {{ __('Other apps') }}
         </h2>
         <div class="grid grid-cols-3 gap-2">
@@ -96,7 +64,7 @@
             :key="app.key"
             :href="app.href"
             :data-sibling="app.key"
-            class="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-gray-1 text-sm"
+            :class="TILE"
           >
             <span :class="[app.icon, 'size-5']" aria-hidden="true" />
             {{ app.label }}
@@ -104,18 +72,35 @@
         </div>
       </section>
 
-      <VentasSections v-if="ventas" @navigate="close" />
+      <!-- Ventas on a phone: the daily lists. The rest sits under Configuración. -->
+      <VentasSections v-if="ventas" part="daily" @navigate="close" />
 
-      <section class="px-4 pt-5">
+      <section aria-labelledby="more-settings" class="space-y-1">
+        <h2
+          id="more-settings"
+          class="pb-1 text-sm font-semibold text-ink-gray-7"
+        >
+          {{ __('Settings') }}
+        </h2>
+        <VentasSections v-if="ventas" part="rest" @navigate="close" />
+
         <button
-          class="flex min-h-11 w-full items-center justify-between rounded-lg text-left"
+          type="button"
+          :class="ROW"
           :aria-expanded="customizing"
           @click="customizing = !customizing"
         >
-          <span class="font-medium">{{ __('Customize bar') }}</span>
-          <span class="lucide-chevron-down size-4" aria-hidden="true" />
+          <span
+            class="lucide-layout-list size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="flex-1">{{ __('Customize bar') }}</span>
+          <span
+            class="lucide-chevron-down size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
         </button>
-        <div v-if="customizing" class="space-y-1 pb-2">
+        <div v-if="customizing" class="space-y-1 pb-2 pl-1">
           <p class="pb-1 text-sm text-ink-gray-6">
             {{
               __(
@@ -130,7 +115,8 @@
           >
             <span class="flex-1">{{ labelOf(key) }}</span>
             <button
-              class="flex size-10 items-center justify-center rounded-lg"
+              type="button"
+              class="flex size-11 items-center justify-center rounded-lg"
               :aria-label="__('Move up {0}', [labelOf(key)])"
               :disabled="index === 0"
               @click="move(index, -1)"
@@ -138,7 +124,8 @@
               <span class="lucide-arrow-up size-4" aria-hidden="true" />
             </button>
             <button
-              class="flex size-10 items-center justify-center rounded-lg"
+              type="button"
+              class="flex size-11 items-center justify-center rounded-lg"
               :aria-label="__('Move down {0}', [labelOf(key)])"
               :disabled="index === order.length - 1"
               @click="move(index, 1)"
@@ -156,34 +143,33 @@
             @click="saveOrder"
           />
         </div>
-      </section>
 
-      <section class="border-t border-outline-gray-1 mt-4 px-4 py-3">
-        <div
-          class="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
-        >
-          {{ __('Theme') }}
+        <div class="flex min-h-11 items-center gap-2.5 px-1 py-1">
+          <span
+            class="lucide-palette size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <span class="flex-1 text-sm">{{ __('Theme') }}</span>
+          <div class="flex gap-1" role="group" :aria-label="__('Theme')">
+            <button
+              v-for="choice in THEME_CHOICES"
+              :key="choice.value"
+              type="button"
+              class="flex size-11 items-center justify-center rounded-lg"
+              :class="theme === choice.value ? 'bg-surface-gray-3' : ''"
+              :aria-label="__(choice.label)"
+              :aria-pressed="theme === choice.value"
+              @click="setTheme(choice.value)"
+            >
+              <span :class="[choice.icon, 'size-4']" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-        <div class="flex gap-2" role="group" :aria-label="__('Theme')">
-          <button
-            v-for="choice in THEME_CHOICES"
-            :key="choice.value"
-            class="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-sm"
-            :class="
-              theme === choice.value
-                ? 'bg-surface-gray-3 font-semibold'
-                : 'bg-surface-gray-1'
-            "
-            :aria-pressed="theme === choice.value"
-            @click="setTheme(choice.value)"
-          >
-            <span :class="[choice.icon, 'size-4']" aria-hidden="true" />
-            {{ __(choice.label) }}
-          </button>
-        </div>
+
         <button
           v-if="helpAvailable"
-          class="mt-2 flex min-h-11 w-full items-center gap-2.5 text-left"
+          type="button"
+          :class="ROW"
           data-testid="more-help"
           @click="openHelp"
         >
@@ -193,28 +179,7 @@
           />
           {{ __('Help') }}
         </button>
-        <button
-          class="flex min-h-11 w-full items-center gap-2.5 text-left"
-          :class="helpAvailable ? '' : 'mt-2'"
-          data-testid="more-shortcuts"
-          :aria-keyshortcuts="ariaKeys('alt+h')"
-          @click="showShortcuts"
-        >
-          <span
-            class="lucide-keyboard size-4 text-ink-gray-6"
-            aria-hidden="true"
-          />
-          <span class="flex-1">{{ shellT('Keyboard shortcuts') }}</span>
-          <kbd
-            class="rounded border border-outline-gray-2 px-1 font-sans text-xs text-ink-gray-6"
-            >{{ keyLabel('alt+h') }}</kbd
-          >
-        </button>
-        <button
-          v-if="ventas"
-          class="flex min-h-11 w-full items-center gap-2.5 text-left"
-          @click="openSettings"
-        >
+        <button v-if="ventas" type="button" :class="ROW" @click="openSettings">
           <span
             class="lucide-settings size-4 text-ink-gray-6"
             aria-hidden="true"
@@ -223,7 +188,8 @@
         </button>
         <button
           v-if="installAvailable"
-          class="flex min-h-11 w-full items-center gap-2.5 text-left"
+          type="button"
+          :class="ROW"
           @click="installApp"
         >
           <span
@@ -232,11 +198,7 @@
           />
           {{ __('Install app') }}
         </button>
-        <a
-          v-if="user.is_admin"
-          href="/desk"
-          class="flex min-h-11 w-full items-center gap-2.5"
-        >
+        <a v-if="user.is_admin" href="/desk" :class="ROW">
           <span
             class="lucide-layout-grid size-4 text-ink-gray-6"
             aria-hidden="true"
@@ -244,7 +206,8 @@
           {{ __('Administration') }}
         </a>
         <button
-          class="flex min-h-11 w-full items-center gap-2.5 text-left text-ink-red-8"
+          type="button"
+          :class="[ROW, 'text-ink-red-8']"
           @click="session.logout.submit()"
         >
           <span class="lucide-log-out size-4" aria-hidden="true" />
@@ -252,20 +215,14 @@
         </button>
       </section>
     </div>
-  </div>
+  </BottomSheet>
 </template>
 <script setup>
-import {
-  computed,
-  defineAsyncComponent,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-} from 'vue'
+import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
+import { useShellLayer } from '@/composables/shellKeyboard'
 import { Button } from 'frappe-ui'
-import { sessionStore } from '@/stores/session'
 import { useRoute, useRouter } from 'vue-router'
+import { sessionStore } from '@/stores/session'
 import {
   moduleKeyFor,
   navSlots,
@@ -282,13 +239,7 @@ import { installApp, installAvailable } from '@/composables/shellInstall'
 import { installLinkPrefetch } from '@/utils/speculate'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
-import {
-  ariaKeys,
-  keyLabel,
-  openShortcutSheet,
-  shellT,
-  useShellLayer,
-} from '@/composables/shellKeyboard'
+import { BottomSheet } from '@/components/ui'
 
 // Pressing a sibling app (data-sibling) starts fetching its page.
 installLinkPrefetch()
@@ -304,8 +255,6 @@ const VentasSections = defineAsyncComponent(
 )
 const session = sessionStore()
 const { theme, setTheme } = useShellTheme()
-const dialog = ref(null)
-const sheet = ref(null)
 const customizing = ref(false)
 const saveMessage = ref('')
 const user = computed(() => props.boot?.user || {})
@@ -316,22 +265,27 @@ const initials = computed(() => {
     .split(/\s+/)
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?'
 })
-// Sibling SPAs open with the way back to the page the worker left.
-const route = useRoute()
-const scanHref = computed(() =>
-  scanPickHref(
-    route.fullPath,
-    props.modules.find((module) => module.key === moduleKeyFor(route))?.label,
+// Modules the bottom bar does not hold; the bar's own are one tap away below.
+const extraModules = computed(() =>
+  props.modules.filter(
+    (module) => !navSlots.value.some((slot) => slot.key === module.key),
   ),
 )
+// Sibling SPAs open with the way back to the page the worker left.
+const route = useRoute()
+const moduleLabel = computed(
+  () =>
+    props.modules.find((module) => module.key === moduleKeyFor(route))?.label,
+)
+// Escáner goes to the picker with the way back to this page (the same link the
+// bar's scan icon uses), wherever the bar is not showing it.
 const siblings = computed(() =>
   sortSiblings(installedSiblings()).map((app) => ({
     ...app,
-    href: siblingHref(
-      app,
-      route.fullPath,
-      props.modules.find((module) => module.key === moduleKeyFor(route))?.label,
-    ),
+    href:
+      app.key === 'scan'
+        ? scanPickHref(route.fullPath, moduleLabel.value)
+        : siblingHref(app, route.fullPath, moduleLabel.value),
   })),
 )
 const order = ref(
@@ -359,6 +313,22 @@ async function saveOrder() {
 function close() {
   emit('update:modelValue', false)
 }
+// The shell's layer keys: Tab cycles inside the sheet and Esc answers from
+// wherever the focus went (the sheet's element is the one with the layer name).
+const dialog = ref(null)
+useShellLayer(dialog, {
+  onKeydown(event) {
+    if (event.key !== 'Escape') return
+    event.preventDefault()
+    event.stopPropagation()
+    close()
+  },
+})
+onMounted(() =>
+  nextTick(() => {
+    dialog.value = document.querySelector('[data-shell-layer="more"]')
+  }),
+)
 // «Ayuda» comes from doco's support launcher when the site has it; on phone
 // the shell hides the floating pill and offers it here.
 const helpAvailable = typeof window.docoSupport?.openHelp === 'function'
@@ -366,39 +336,15 @@ function openHelp() {
   close()
   window.docoSupport.openHelp()
 }
-function showShortcuts() {
-  close()
-  openShortcutSheet()
-}
 const router = useRouter()
 function openSettings() {
   close()
   openSalesSettings(router)
 }
-// Esc closes from wherever the focus went; Tab stays in the sheet. Closed,
-// the focus goes back to «Más» unless the next step (doco's «Ayuda», the
-// shortcut sheet) already took it.
-let escaped = false
-useShellLayer(dialog, {
-  onKeydown(event) {
-    if (event.key !== 'Escape') return
-    event.preventDefault()
-    event.stopPropagation()
-    escaped = true
-    close()
-  },
-})
-const previousFocus = document.activeElement
-onMounted(() => nextTick(() => sheet.value?.focus()))
-onBeforeUnmount(() => {
-  const focused = document.activeElement
-  if (
-    previousFocus?.isConnected &&
-    (escaped ||
-      !focused ||
-      focused === document.body ||
-      dialog.value?.contains(focused))
-  )
-    previousFocus.focus?.()
-})
+
+// One tile style for modules and apps; one row style for settings.
+const TILE =
+  'flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-gray-1 text-sm'
+const ROW =
+  'flex min-h-11 w-full items-center gap-2.5 rounded-lg px-1 text-left text-sm'
 </script>

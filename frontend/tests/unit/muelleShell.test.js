@@ -523,7 +523,7 @@ describe('one frame for every route', () => {
     }
   })
 
-  it('phone Más offers «Escanear un código» first, for pages with their own app bar too', async () => {
+  it('phone Más reaches Escáner as an app tile, for pages with their own app bar too', async () => {
     state.mobile.value = true
     window.installed_apps = ['crm', 'scanner_kit']
     try {
@@ -534,7 +534,9 @@ describe('one frame for every route', () => {
         )
         .click()
       const scan = await until(() =>
-        document.querySelector('[data-testid="more-scan"]'),
+        document.querySelector(
+          '[data-shell-layer="more"] [data-sibling="scan"]',
+        ),
       )
       const url = new URL(scan.getAttribute('href'), 'https://x.test')
       expect(url.pathname).toBe('/scan/pick')
@@ -1612,8 +1614,8 @@ describe('Ventas navigation on every screen', () => {
     await mount(start)
     root.querySelector('nav[aria-label="Main navigation"] button').click()
     const button = await until(() =>
-      [...document.querySelectorAll('[aria-label="More"] button')].find((b) =>
-        b.textContent.includes('Ventas settings'),
+      [...document.querySelectorAll('[data-shell-layer="more"] button')].find(
+        (b) => b.textContent.includes('Ventas settings'),
       ),
     )
     expect(button).toBeTruthy()
@@ -2234,8 +2236,9 @@ describe('keyboard standard: Ctrl+K / Ctrl+G modes and the Alt+H sheet', () => {
       resolve(__dirname, '../../src/components/shell/MoreSheet.vue'),
       'utf8',
     )
-    expect(more).toContain('data-testid="more-shortcuts"')
-    expect(more).toContain("keyLabel('alt+h')")
+    // Phone «Más» has no shortcuts row: the sheet is for touch, the palette has it.
+    expect(more).not.toContain('more-shortcuts')
+    expect(more).toContain('layer="more"')
     // «Ver atajos de teclado» in the palette's Acciones.
     const [actions] = createShellProviders({
       boot: ref(boot()),

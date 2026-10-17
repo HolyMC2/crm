@@ -1,7 +1,8 @@
 <template>
-  <section class="px-4 pt-5">
+  <section>
     <h2
-      class="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
+      v-if="part === 'daily'"
+      class="pb-2 text-sm font-semibold text-ink-gray-7"
     >
       {{ __('Ventas') }}
     </h2>
@@ -51,7 +52,9 @@
          browser or site cannot do it. -->
     <button
       v-if="
-        addonAvailable && !['unsupported', 'unconfigured'].includes(pushState)
+        part === 'rest' &&
+        addonAvailable &&
+        !['unsupported', 'unconfigured'].includes(pushState)
       "
       class="mt-2 flex min-h-11 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-sm"
       role="switch"
@@ -97,13 +100,20 @@ import { addonAvailable } from '@/utils/crmCapabilities'
 defineEmits(['navigate'])
 const route = useRoute()
 const { primary, more, settings, groupOf, badgeFor } = useVentasNav()
-// Phone «Más»: the daily lists first, then «Más» and «Configuración» (managers).
-const sections = computed(() => [
-  { key: 'daily', label: '', items: primary.value },
-  // The sheet itself is «Más», so this heading says «Otras listas».
-  { key: 'more', label: 'Other lists', items: more.value },
-  { key: 'settings', label: 'Settings', items: settings.value },
-])
+// Phone «Más»: `daily` is the three lists a seller works from (Tratos,
+// Prospectos, Bandeja); `rest` is everything else, shown under «Configuración».
+const props = defineProps({
+  part: { type: String, default: 'daily' },
+})
+const sections = computed(() =>
+  props.part === 'daily'
+    ? [{ key: 'daily', label: '', items: primary.value }]
+    : [
+        // The sheet itself is «Más», so this heading says «Otras listas».
+        { key: 'more', label: 'Other lists', items: more.value },
+        { key: 'settings', label: 'Settings', items: settings.value },
+      ],
+)
 watch(addonAvailable, (available) => available && refreshPushState(), {
   immediate: true,
 })
