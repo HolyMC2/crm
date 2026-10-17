@@ -1432,6 +1432,7 @@ useLiveWatch(
 /* 44 px company and date fields on a phone, like the pickers beside them. */
 @media (max-width: 639px) {
   .compra-fields :deep(select),
+  .compra-fields :deep([role='combobox']),
   .compra-fields :deep(input) {
     min-height: 44px;
     font-size: 1rem;

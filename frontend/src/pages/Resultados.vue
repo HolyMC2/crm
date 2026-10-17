@@ -93,7 +93,7 @@
             <FormControl
               v-if="companies.length > 1"
               type="select"
-              class="[&_select]:min-h-11"
+              class="[&_select]:min-h-11 [&_[role=combobox]]:min-h-11"
               :label="__('Company')"
               :model-value="state.empresa"
               :options="[
@@ -107,7 +107,7 @@
             <FormControl
               v-if="visibleShops.length > 1 || state.tienda"
               type="select"
-              class="[&_select]:min-h-11"
+              class="[&_select]:min-h-11 [&_[role=combobox]]:min-h-11"
               :label="__('Shop')"
               :model-value="state.tienda"
               :options="[
