@@ -34,6 +34,9 @@ export default defineConfig(async ({ mode }) => {
       },
       VitePWA({
         registerType: 'autoUpdate',
+        // The service-worker registration inline in the page, not one more
+        // script request on every first load (SPEC §4: ≤ 60 scripts).
+        injectRegister: 'inline',
         devOptions: {
           enabled: true,
         },
