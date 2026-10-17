@@ -16,7 +16,15 @@ import { createManualProvider } from '@/utils/manualPalette'
 // «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 import { formatMoney, kindLabel, statusLabel } from '@/utils/display'
-import { looksLikeQuestion } from '@/components/assistant/assistantText'
+
+// ¿…, …? or an interrogative first word (PM rule, SHELL-S1.2). Narrower than
+// the assistant's looksLikeQuestion, which also counts any 5+ word query.
+const INTERROGATIVE =
+  /^(qu[eé]|c[oó]mo|cu[aá]nt[oa]s?|cu[aá]l(es)?|qui[eé]n(es)?|d[oó]nde|cu[aá]ndo|por ?qu[eé])(?!\p{L})/iu
+export function explicitQuestion(text) {
+  const value = String(text || '').trim()
+  return /^[¿?]/u.test(value) || /\?$/u.test(value) || INTERROGATIVE.test(value)
+}
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -151,9 +159,11 @@ export function createShellProviders({ boot, modules }) {
       // The record on screen first (Deal 360: Llamar, WhatsApp…), then create.
       const own = recordActions.value.map(recordItem)
       const items = []
-      // A question («¿Qué tengo pendiente hoy?») is for «Preguntar a Muelle»:
-      // never offer to file it as a contact's name or an Escáner search.
-      const question = looksLikeQuestion(query.raw ?? query.text)
+      // An explicit question («¿Qué tengo pendiente hoy?») is for «Preguntar a
+      // Muelle»: never offer to file it as a contact's name or an Escáner
+      // search. A long query alone is not: «Jose Oswaldo Rodriguez Estrada
+      // Lopez» is a name, and keeps «Nuevo contacto».
+      const question = explicitQuestion(query.raw ?? query.text)
       for (const target of createTargets(boot.value)) {
         if (question && target.id === 'contactos.create') continue
         items.push({

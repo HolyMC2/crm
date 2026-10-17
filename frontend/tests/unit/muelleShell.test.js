@@ -19,6 +19,8 @@ vi.mock('frappe-ui', async () => {
       setup: (props) => () => h('button', props.label),
     },
     createResource: () => ({ data: null, fetch: vi.fn() }),
+    // The assistant sheet (its own suite) still uses frappe-ui's sheet.
+    BottomSheet: { render: () => null },
   }
 })
 vi.mock('@/composables/breakpoint', async () => {
@@ -1425,12 +1427,24 @@ describe('Ventas deals in the palette', () => {
         (
           await actions.search({ raw, text: raw, scope: 'all', kind: 'text' })
         ).map((item) => item.id)
-      for (const raw of ['¿Qué tengo pendiente hoy?', 'cuánto me debe Ana']) {
+      for (const raw of [
+        '¿Qué tengo pendiente hoy?',
+        'qué tengo hoy',
+        'cuánto me debe Ana',
+        'por qué no llegó',
+        'ya llegó el pedido?',
+      ]) {
         const found = await ids(raw)
-        expect(found).not.toContain('contactos.create')
-        expect(found).not.toContain('escaner.search')
+        expect(found, raw).not.toContain('contactos.create')
+        expect(found, raw).not.toContain('escaner.search')
       }
-      expect(await ids('Ana López')).toContain('contactos.create')
+      // A Mexican full name is long but no question: «Nuevo contacto» stays.
+      for (const raw of [
+        'Ana López',
+        'Jose Oswaldo Rodriguez Estrada Lopez',
+        'Quesada Ruiz',
+      ])
+        expect(await ids(raw), raw).toContain('contactos.create')
     } finally {
       delete window.installed_apps
     }
@@ -1709,6 +1723,43 @@ describe('Ventas navigation on every screen', () => {
     expect(state.toasts[0]).toEqual(['success', 'Muelle will open on Hoy.'])
     expect(shellBoot.value.landing).toBe('hoy')
   })
+
+  it.each([true, false])(
+    'Más: «Pregúntale a Muelle» door only when the assistant is on (%s); it closes Más and opens the assistant',
+    async (enabled) => {
+      const { assistant, _resetAssistant, loadStatus } = await import(
+        '@/components/assistant/useAssistant'
+      )
+      _resetAssistant()
+      state.mobile.value = true
+      state.call.mockImplementation(async (method) => {
+        if (method === 'crm.api.shell.boot') return boot()
+        if (method.endsWith('shell_api.status')) return { enabled }
+        if (method.endsWith('shell_api.history')) return { messages: [] }
+        return null
+      })
+      // The status call is cached per module; ask again for this case.
+      await loadStatus({ refresh: true })
+      const settle = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        await nextTick()
+      }
+      await mount('/contactos')
+      root.querySelector('nav[aria-label="Main navigation"] button').click()
+      await until(() => document.querySelector('[data-shell-layer="more"]'))
+      await settle()
+      const door = document.querySelector('[data-testid="more-assistant"]')
+      if (!enabled) {
+        expect(door).toBeNull()
+        return
+      }
+      expect(door.textContent).toContain('Ask Muelle')
+      door.click()
+      await until(() => assistant.open)
+      await settle()
+      expect(document.querySelector('[data-shell-layer="more"]')).toBeNull()
+    },
+  )
 })
 
 const avisosOnly = {

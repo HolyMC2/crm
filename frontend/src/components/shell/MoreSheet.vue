@@ -31,6 +31,19 @@
     </template>
 
     <div class="space-y-6 pb-2">
+      <!-- Door 2 of «Pregúntale a Muelle» (SHELL-S2, design/ASSISTANT.md):
+           one full-width tonal row at the top, only when the assistant is on. -->
+      <button
+        v-if="assistantEnabled"
+        type="button"
+        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base font-medium"
+        data-testid="more-assistant"
+        @click="askMuelle"
+      >
+        <span class="lucide-sparkles size-5" aria-hidden="true" />
+        {{ __('Ask Muelle') }}
+      </button>
+
       <!-- The bar's modules are not repeated here: only what the bar leaves out. -->
       <section v-if="extraModules.length" aria-labelledby="more-modules">
         <h2
@@ -248,6 +261,11 @@ import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
 import { useShellLayer } from '@/composables/shellKeyboard'
 import { Button, toast } from 'frappe-ui'
 import { landingOptions, saveLanding } from '@/composables/useHoy'
+import {
+  assistantEnabled,
+  loadStatus,
+  openAssistant,
+} from '@/components/assistant/useAssistant'
 import { useRoute, useRouter } from 'vue-router'
 import { sessionStore } from '@/stores/session'
 import {
@@ -387,6 +405,12 @@ onMounted(() =>
     dialog.value = document.querySelector('[data-shell-layer="more"]')
   }),
 )
+// The assistant's door shows once its status says it is on (cached call).
+loadStatus()
+function askMuelle() {
+  close()
+  openAssistant()
+}
 // «Ayuda» comes from doco's support launcher when the site has it; on phone
 // the shell hides the floating pill and offers it here.
 const helpAvailable = typeof window.docoSupport?.openHelp === 'function'
