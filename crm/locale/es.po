@@ -26464,3 +26464,8 @@ msgstr "Ajustes"
 msgctxt "Encuestas"
 msgid "No answers yet in this period."
 msgstr "Todavía no hay respuestas en este periodo."
+
+#: frontend/src/pages/Garantias.vue
+msgctxt "Garantías"
+msgid "Mine"
+msgstr "Míos"

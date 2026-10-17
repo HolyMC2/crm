@@ -59,28 +59,7 @@
             <FeatherIcon name="plus" class="h-6 w-6" />
           </button>
         </template>
-        <template v-if="attention" #summary>
-          <span v-if="slaTracked"
-            >{{ __('Overdue', null, CTX) }}
-            <strong
-              class="tabular-nums"
-              :class="attention.vencidas ? 'text-ink-red-7' : ''"
-              >{{ capText(attention.vencidas) }}</strong
-            ></span
-          >
-          <span
-            >{{ __('Unassigned') }}
-            <strong class="tabular-nums">{{
-              capText(attention['sin-asignar'])
-            }}</strong></span
-          >
-          <span
-            >{{ __('My cases', null, CTX) }}
-            <strong class="tabular-nums">{{
-              countLabel('mis-casos')
-            }}</strong></span
-          >
-        </template>
+        <!-- No counts strip: the chip row under the bar carries the counts. -->
       </PowerAppBar>
       <header
         v-else
@@ -147,29 +126,17 @@
           ]"
           @update:model-value="(value) => list.navigate({ kind: value })"
         />
-        <label
-          v-if="state.segment !== 'mis-casos'"
-          class="flex min-h-11 items-center gap-2 text-sm text-ink-gray-8"
-        >
-          <input
-            type="checkbox"
-            class="rounded"
-            :checked="state.mine"
-            @change="list.navigate({ mine: $event.target.checked ? '1' : '' })"
-          />
-          {{ __('Assigned to me') }}
-        </label>
       </div>
-      <!-- What needs attention: past the SLA, or nobody on it. -->
+      <!-- One filter row: what needs attention (past the SLA, nobody on it)
+           and «Míos» instead of a separate checkbox. -->
       <div
-        v-if="state.segment !== 'cerradas'"
         class="flex gap-2 overflow-x-auto px-4 pb-3 sm:flex-wrap sm:px-6"
         role="group"
         :aria-label="__('Needs attention')"
         data-garantias-chips
       >
         <button
-          v-for="chip in chips"
+          v-for="chip in state.segment !== 'cerradas' ? chips : []"
           :key="chip.value || 'all'"
           type="button"
           class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
@@ -188,6 +155,21 @@
             :class="state.chip === chip.value ? '' : 'text-ink-gray-6'"
             >{{ chip.count }}</span
           >
+        </button>
+        <button
+          v-if="state.segment !== 'mis-casos'"
+          type="button"
+          class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
+          :class="
+            state.mine
+              ? 'border-outline-gray-4 bg-surface-gray-10 text-ink-base'
+              : 'border-outline-gray-2 text-ink-gray-8 hover:bg-surface-gray-2'
+          "
+          :aria-pressed="Boolean(state.mine)"
+          data-garantias-mine
+          @click="list.navigate({ mine: state.mine ? '' : '1' })"
+        >
+          {{ __('Mine', null, CTX) }}
         </button>
       </div>
       <div

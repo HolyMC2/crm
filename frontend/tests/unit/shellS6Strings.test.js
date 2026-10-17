@@ -21,6 +21,7 @@ describe('SHELL-S6 strings read in Spanish', () => {
       'No answers yet in this period.',
       'Todavía no hay respuestas en este periodo.',
     ],
+    ['Garantías', 'Mine', 'Míos'],
   ])('%s «%s»', (ctx, msgid, es) => {
     expect(entry(ctx, msgid)).toBe(es)
   })

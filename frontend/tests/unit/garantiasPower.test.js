@@ -372,10 +372,13 @@ describe('Garantías list as a power app', () => {
     expect(root.querySelector('[data-power-appbar]').textContent).toContain(
       'New',
     )
-    const summary = root.querySelector('[data-power-summary]').textContent
-    expect(summary).toContain('Overdue')
-    expect(summary).toContain('Unassigned')
-    expect(summary).toContain('My cases')
+    // One filter row: no counts strip repeating the chips, and «Mine» is a
+    // chip in that row instead of a checkbox.
+    expect(root.querySelector('[data-power-summary]')).toBeNull()
+    const chips = root.querySelector('[data-garantias-chips]').textContent
+    expect(chips).toContain('Overdue')
+    expect(chips).toContain('Unassigned')
+    expect(root.querySelector('[data-garantias-mine]')).not.toBeNull()
   })
 })
 
