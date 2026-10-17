@@ -26088,3 +26088,154 @@ msgstr "Elige la fecha"
 #: frontend/src/pages/Pendientes.vue
 msgid "Completed ({0})"
 msgstr "Completados ({0})"
+#: frontend/src/components/assistant
+msgid "About: {0}"
+msgstr "Sobre: {0}"
+
+#: frontend/src/components/assistant
+msgid "Allow the microphone to talk to Muelle."
+msgstr "Permite el micrófono para hablarle a Muelle."
+
+#: frontend/src/components/assistant
+msgid "Ask Muelle"
+msgstr "Pregúntale a Muelle"
+
+#: frontend/src/components/assistant
+msgid "Ask Muelle: «{0}»"
+msgstr "Preguntar a Muelle: «{0}»"
+
+#: frontend/src/components/assistant
+msgid "Ask something"
+msgstr "Pregunta algo"
+
+#: frontend/src/components/assistant
+msgid "Ask something…"
+msgstr "Pregunta algo…"
+
+#: frontend/src/components/assistant
+msgid "Change it: "
+msgstr "Cámbialo: "
+
+#: frontend/src/components/assistant
+msgid "Confirmed, saving…"
+msgstr "Confirmado, guardando…"
+
+#: frontend/src/components/assistant
+msgid "Confirming…"
+msgstr "Confirmando…"
+
+#: frontend/src/components/assistant
+msgid "Dismiss suggestion"
+msgstr "Descartar sugerencia"
+
+#: frontend/src/components/assistant
+msgid "Do not use this screen"
+msgstr "No usar esta pantalla"
+
+#: frontend/src/components/assistant
+msgid "Draft a message"
+msgstr "Redactar mensaje"
+
+#: frontend/src/components/assistant
+msgid "Draft a message for this customer."
+msgstr "Redacta un mensaje para este cliente."
+
+#: frontend/src/components/assistant
+msgid "Give me a summary of this record."
+msgstr "Dame un resumen de este registro."
+
+#: frontend/src/components/assistant
+msgid "Hold to talk"
+msgstr "Mantén presionado para hablar"
+
+#: frontend/src/components/assistant
+msgid "It was not applied. Try again."
+msgstr "No se aplicó. Intenta de nuevo."
+
+#: frontend/src/components/assistant
+msgid "Looking…"
+msgstr "Buscando…"
+
+#: frontend/src/components/assistant
+msgid "Muelle could not hear the note. Try again."
+msgstr "Muelle no pudo oír la nota. Intenta de nuevo."
+
+#: frontend/src/components/assistant
+msgid "Muelle did not answer. Check your connection and try again."
+msgstr "Muelle no respondió. Revisa tu conexión e intenta de nuevo."
+
+#: frontend/src/components/assistant
+msgid "Muelle proposes"
+msgstr "Muelle propone"
+
+#: frontend/src/components/assistant
+msgid "Not applied. Tell Muelle what to change."
+msgstr "No se aplicó. Dile a Muelle qué cambiar."
+
+#: frontend/src/components/assistant
+msgid "Not sent."
+msgstr "No se envió."
+
+#: frontend/src/components/assistant
+msgid "Proposed action"
+msgstr "Acción propuesta"
+
+#: frontend/src/components/assistant
+msgid "Release to stop recording"
+msgstr "Suelta para dejar de grabar"
+
+#: frontend/src/components/assistant
+msgid "Schedule a follow-up"
+msgstr "Agendar seguimiento"
+
+#: frontend/src/components/assistant
+msgid "Schedule a follow-up for this record."
+msgstr "Agenda un seguimiento para este registro."
+
+#: frontend/src/components/assistant
+msgid "Search this list"
+msgstr "Busca en esta lista"
+
+#: frontend/src/components/assistant
+msgid "Search this list for: "
+msgstr "Busca en esta lista: "
+
+#: frontend/src/components/assistant
+msgid "Suggestion"
+msgstr "Sugerencia"
+
+#: frontend/src/components/assistant
+msgid "Summary"
+msgstr "Resumen"
+
+#: frontend/src/components/assistant
+msgid "Transcribing…"
+msgstr "Transcribiendo…"
+
+#: frontend/src/components/assistant
+msgid "What does this customer owe, and since when?"
+msgstr "¿Cuánto me debe este cliente y desde cuándo?"
+
+#: frontend/src/components/assistant
+msgid "What do I do first?"
+msgstr "¿Qué hago primero?"
+
+#: frontend/src/components/assistant
+msgid "What do they owe?"
+msgstr "¿Qué debe?"
+
+#: frontend/src/components/assistant
+msgid "What should I do first today?"
+msgstr "¿Qué hago primero hoy?"
+
+#: frontend/src/components/assistant
+msgid "Ask about your customers, sales and to-dos. Muelle prepares the change and you confirm it."
+msgstr "Pregunta por tus clientes, ventas y pendientes. Muelle prepara el cambio y tú lo confirmas."
+
+#: frontend/src/components/assistant
+msgid "This is taking longer than usual. The answer will appear here when it is ready."
+msgstr "Está tardando más de lo normal. La respuesta aparecerá aquí cuando esté lista."
+
+#: frontend/src/components/assistant
+msgid "Ask the assistant"
+msgstr "Preguntar a Muelle"

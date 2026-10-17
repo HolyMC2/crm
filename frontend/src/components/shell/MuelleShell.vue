@@ -116,6 +116,10 @@
         @more="moreOpen = true"
       />
     </div>
+    <!-- «Pregúntale a Muelle» (SHELL-S2): a sheet on phone, a docked panel
+         beside the page on a wide desktop. Staff only; renders nothing until
+         a door opens it. -->
+    <AssistantSheet v-if="shellBoot" />
     <MoreSheet
       v-if="moreOpen"
       v-model="moreOpen"
@@ -177,6 +181,9 @@ const CommandPalette = defineAsyncComponent(
   () => import('./CommandPalette.vue'),
 )
 const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
+const AssistantSheet = defineAsyncComponent(
+  () => import('@/components/assistant/AssistantSheet.vue'),
+)
 const AvisosBell = defineAsyncComponent(
   () => import('@/components/avisos/AvisosBell.vue'),
 )

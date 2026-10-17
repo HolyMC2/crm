@@ -151,6 +151,7 @@
 </template>
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { openAssistant } from '@/components/assistant/useAssistant'
 import { useRouter } from 'vue-router'
 import {
   PALETTE_DEBOUNCE_MS,
@@ -346,6 +347,9 @@ function choose(item) {
   if (item.action === 'shortcuts') openShortcutSheet(previousFocus)
   // The record's action runs once the palette is gone (its focus restored).
   if (item.action === 'record') nextTick(() => runRecordAction(item.args?.id))
+  // «Preguntar a Muelle»: the sheet opens over this screen and asks.
+  if (item.action === 'assistant')
+    nextTick(() => openAssistant({ text: item.args?.text, send: true }))
   if (href) router.push(href.replace(/^\/crm/, ''))
   else if (external) window.location.assign(external)
   else if (desk) window.location.assign(desk)

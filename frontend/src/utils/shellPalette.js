@@ -13,6 +13,8 @@ import { createTargets } from '@/utils/shellCreate'
 import { recordActions } from '@/composables/recordActions'
 // Manual de la tienda: one self-contained provider (articles, categories, «Nuevo artículo»).
 import { createManualProvider } from '@/utils/manualPalette'
+// «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
+import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -450,7 +452,18 @@ export function createShellProviders({ boot, modules }) {
     },
   }
   const manual = createManualProvider({ boot })
-  return [actions, contactos, places, ventas, clinica, inmobiliaria, manual]
+  // The assistant answers questions only; its row lands in Acciones, above
+  // every record, so a question still gets «Preguntar a Muelle» first.
+  return [
+    actions,
+    contactos,
+    places,
+    ventas,
+    clinica,
+    inmobiliaria,
+    manual,
+    createAssistantProvider(),
+  ]
 }
 
 /** Whether the inmobiliaria app is installed on this site (the CRM boot's installed_apps). */
