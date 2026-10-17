@@ -257,7 +257,11 @@ async function load() {
       failure.value = answer
       return
     }
-    companies.value = answer.companies
+    // ERPNext's test companies start with «_» («_Test Company»): a worker never
+    // works in one, so they are not offered as the default.
+    companies.value = (answer.companies || []).filter(
+      (c) => !String(c.company || '').startsWith('_'),
+    )
     if (!companies.value.some((c) => c.company === company.value))
       company.value = companies.value[0]?.company || ''
     adopt(config.value)

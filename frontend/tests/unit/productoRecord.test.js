@@ -207,6 +207,7 @@ describe('Producto', () => {
     const text = root.textContent
     expect(text).toContain('Cost and margin')
     expect(text).toContain('38.5%')
-    expect(text).toContain('Margin over Standard Selling')
+    expect(text).toContain('Margin over Precio de venta')
+    expect(text).not.toContain('Unit: Nos')
   })
 })

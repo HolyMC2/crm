@@ -108,6 +108,7 @@
 import { computed, h } from 'vue'
 import { Badge } from 'frappe-ui'
 import ProductThumb from '@/components/productos/ProductThumb.vue'
+import { priceListLabel, priceListNote } from '@/utils/priceList'
 import {
   groupOf,
   money,
@@ -203,14 +204,14 @@ function PriceFigure(_, { attrs }) {
               { class: 'text-xs text-ink-gray-5' },
               __('Template price', null, 'Productos'),
             )
-          : price.price_list
+          : priceListNote(price.price_list)
             ? h(
                 'span',
                 {
                   class: 'max-w-[8rem] truncate text-xs text-ink-gray-5',
-                  title: price.price_list,
+                  title: priceListLabel(price.price_list),
                 },
-                price.price_list,
+                priceListNote(price.price_list),
               )
             : null,
         ...TierLines(),

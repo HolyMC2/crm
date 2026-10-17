@@ -76,6 +76,21 @@
         <p v-if="asked">{{ asked }}</p>
       </section>
       <section
+        v-if="noAccess"
+        role="status"
+        class="mx-4 mb-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
+      >
+        <p>
+          {{
+            __(
+              'To see the team you need access to employee records. Ask whoever runs the shop to give it to you.',
+              null,
+              'Equipo',
+            )
+          }}
+        </p>
+      </section>
+      <section
         v-if="limit"
         role="status"
         class="mx-4 mb-3 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
@@ -261,6 +276,7 @@ const asking = ref(false)
 const asked = ref('')
 const hrDismissed = ref(false)
 const limit = ref(null)
+const noAccess = ref(false)
 const confirmingLift = ref(false)
 const lifting = ref(false)
 const segment = computed(() =>
@@ -351,7 +367,10 @@ async function load() {
     if (current !== ticket) return
     rows.value = page.rows || []
     counts.value = page.counts || {}
-    limit.value = page.guard || null
+    // No access to employee records: the backend guard is an English role name
+    // and admin copy. The page says it in worker words instead (see noAccess).
+    noAccess.value = page.guard?.code === 'no_employee_access'
+    limit.value = noAccess.value ? null : page.guard || null
   } catch (error) {
     if (current === ticket) problem.value = problemOf(error)
   } finally {

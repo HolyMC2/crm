@@ -195,7 +195,7 @@
               class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-gray-6"
             >
               <span class="font-mono text-ink-gray-8">{{ product.name }}</span>
-              <span>{{ __('Unit: {0}', [product.stock_uom]) }}</span>
+              <span>{{ __('Unit: {0}', [unitName(product.stock_uom)]) }}</span>
               <span v-if="product.brand">{{
                 __('Brand: {0}', [product.brand])
               }}</span>
@@ -243,7 +243,10 @@
               class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
               <dt class="truncate text-xs text-ink-gray-6">
-                {{ defaultPrice?.price_list || __('Price', null, 'Productos') }}
+                {{
+                  priceListLabel(defaultPrice?.price_list) ||
+                  __('Price', null, 'Productos')
+                }}
               </dt>
               <dd
                 class="mt-0.5 text-2xl font-semibold tabular-nums text-ink-gray-9"
@@ -256,7 +259,11 @@
                 }}
               </dd>
               <dd v-if="hasRate(defaultPrice)" class="text-xs text-ink-gray-6">
-                {{ __('per {0}', [defaultPrice.uom || product.stock_uom]) }}
+                {{
+                  __('per {0}', [
+                    unitName(defaultPrice.uom || product.stock_uom),
+                  ])
+                }}
                 <template v-if="defaultAge.text">
                   ·
                   {{
@@ -307,7 +314,7 @@
                 >
                   {{ qty(data.stock.total) }}
                   <span class="text-sm font-medium text-ink-gray-6">{{
-                    product.stock_uom
+                    unitName(product.stock_uom)
                   }}</span>
                 </dd>
                 <dd class="text-xs text-ink-gray-6">
@@ -331,17 +338,19 @@
           {{
             __(
               'This link is for the price per {0}. Here prices change per {1} only; the price per {0} is set by whoever maintains prices.',
-              [unit.requested, unit.stock],
+              [unitName(unit.requested), unitName(unit.stock)],
             )
           }}
           <span class="mt-2 flex flex-wrap gap-2">
             <Button
               v-if="action('price')?.enabled"
-              :label="__('Change the price per {0}', [unit.stock])"
+              :label="__('Change the price per {0}', [unitName(unit.stock)])"
               @click="openPrice"
             />
             <Button
-              :label="__('Ask for the price per {0}', [unit.requested])"
+              :label="
+                __('Ask for the price per {0}', [unitName(unit.requested)])
+              "
               @click="askUnitPrice"
             />
           </span>
@@ -474,11 +483,11 @@
                     >
                       <td class="px-4 py-2.5">
                         <span class="block font-medium text-ink-gray-9">{{
-                          row.price_list
+                          priceListLabel(row.price_list)
                         }}</span>
                         <span class="block text-xs text-ink-gray-5"
                           >{{ row.currency }} ·
-                          {{ row.uom || row.stock_uom }}</span
+                          {{ unitName(row.uom || row.stock_uom) }}</span
                         >
                         <span
                           v-if="row.blocked_reason && row.rate !== null"
@@ -555,7 +564,7 @@
                   >{{
                     __('Total {0} {1}', [
                       qty(data.stock.total),
-                      product.stock_uom,
+                      unitName(product.stock_uom),
                     ])
                   }}</span
                 >
@@ -814,7 +823,7 @@
                     >
                       {{ qty(row.actual_qty) }}
                       <span class="text-xs font-normal text-ink-gray-6">{{
-                        product.stock_uom
+                        unitName(product.stock_uom)
                       }}</span>
                     </span>
                     <Badge
@@ -1015,7 +1024,7 @@
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block font-medium text-ink-gray-9"
-                      >{{ row.price_list }}
+                      >{{ priceListLabel(row.price_list) }}
                       <Badge
                         v-if="row.buying"
                         class="ml-1"
@@ -1279,7 +1288,7 @@
                     >{{ row.serial || row.batch }}</span
                   >
                   <span v-if="row.batch" class="tabular-nums text-ink-gray-7"
-                    >{{ qty(row.qty) }} {{ product.stock_uom }}</span
+                    >{{ qty(row.qty) }} {{ unitName(product.stock_uom) }}</span
                   >
                   <span
                     v-if="row.expiry"
@@ -1506,6 +1515,8 @@ import CountDialog from '@/components/productos/CountDialog.vue'
 import VariantGrid from '@/components/productos/VariantGrid.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import LabelDialog from '@/components/productos/LabelDialog.vue'
+import { unitLabel } from '@/utils/display'
+import { priceListLabel } from '@/utils/priceList'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
@@ -1636,6 +1647,8 @@ ShowAll.emits = ['update:modelValue']
 // A link from a line in another unit (`uom=Caja`) never opens the stock-unit
 // price by itself: the worker chooses it, or asks for the other unit's price.
 const unit = computed(() => priceUnit(route.query, data.value?.item))
+// A unit as a shop says it: «Nos» reads «pza», never the ERPNext UOM.
+const unitName = (uom) => unitLabel(uom)
 const back = computed(() => backTarget(route.query))
 const backLabel = computed(() =>
   back.value.href
@@ -1829,9 +1842,11 @@ const costBasis = computed(() => {
       : __('No margin: the cost or the price is missing.')
   return cost.basis_cost === 'last_cost'
     ? __('Margin over {0}, against the last purchase cost.', [
-        cost.basis_price_list,
+        priceListLabel(cost.basis_price_list),
       ])
-    : __('Margin over {0}, against the valuation.', [cost.basis_price_list])
+    : __('Margin over {0}, against the valuation.', [
+        priceListLabel(cost.basis_price_list),
+      ])
 })
 // «Más datos»: supplier, units, lead time, weight, shelf life, end of life.
 const moreFacts = computed(() => {

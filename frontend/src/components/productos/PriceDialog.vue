@@ -30,7 +30,7 @@
         >
           <div class="flex flex-wrap items-baseline justify-between gap-2">
             <span class="font-medium text-ink-gray-9">{{
-              row.price_list
+              priceListLabel(row.price_list)
             }}</span>
             <span class="text-sm tabular-nums text-ink-gray-7">
               {{
@@ -150,6 +150,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { Button, Dialog, FormControl } from 'frappe-ui'
+import { priceListLabel } from '@/utils/priceList'
 import {
   missingAcks,
   money,
