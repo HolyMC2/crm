@@ -1,11 +1,15 @@
 <template>
   <div class="space-y-2">
-    <FormControl
-      :model-value="modelValue"
-      type="date"
-      :label="__('Due')"
-      @update:model-value="$emit('update:modelValue', $event)"
-    />
+    <!-- The phone's own date picker, shown in the worker's locale (never «2026-10-17»). -->
+    <label class="block space-y-1.5">
+      <span class="block text-xs text-ink-gray-5">{{ __('Due') }}</span>
+      <input
+        type="date"
+        :value="modelValue"
+        class="block min-h-11 w-full rounded border-0 bg-surface-gray-2 px-2 text-base text-ink-gray-8 sm:min-h-8 sm:text-sm"
+        @input="$emit('update:modelValue', $event.target.value)"
+      />
+    </label>
     <div
       class="flex flex-wrap gap-2"
       role="group"
@@ -24,7 +28,7 @@
   </div>
 </template>
 <script setup>
-import { Button, FormControl } from 'frappe-ui'
+import { Button } from 'frappe-ui'
 import { datePresets } from '@/composables/usePendientes'
 
 defineProps({
