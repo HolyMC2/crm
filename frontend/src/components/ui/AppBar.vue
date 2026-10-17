@@ -135,7 +135,7 @@
     </div>
     <!-- The title's scope sheet: the lists (or views) this screen can show. -->
     <BottomSheet
-      v-if="scopes.length"
+      v-if="scopes.length && sheetUsed"
       v-model:open="scopeSheet"
       :title="scopeTitle || __('Choose a list')"
       flush
@@ -184,9 +184,12 @@ import {
 import { RouterLink, useRouter } from 'vue-router'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { shellBoot } from '@/composables/muelleShell'
-import BottomSheet from './BottomSheet.vue'
 import UiTag from './UiTag'
 
+// The scope sheet loads on its first open: the shell header renders this bar
+// on every page, and the sheet (reka Dialog) would otherwise sit in the entry
+// chunk (budget 180 KB gzip).
+const BottomSheet = defineAsyncComponent(() => import('./BottomSheet.vue'))
 const AvisosBell = defineAsyncComponent(
   () => import('@/components/avisos/AvisosBell.vue'),
 )
@@ -237,6 +240,10 @@ const input = ref(null)
 const bar = ref(null)
 const icons = ref(null)
 const scopeSheet = ref(false)
+const sheetUsed = ref(false)
+watch(scopeSheet, (open) => {
+  if (open) sheetUsed.value = true
+})
 const stacked = ref(false)
 
 const showBell = computed(

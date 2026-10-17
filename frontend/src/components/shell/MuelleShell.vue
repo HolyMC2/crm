@@ -182,7 +182,7 @@ import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
 import { shellTitle } from '@/utils/shellTitle'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
-import { AppBar } from '@/components/ui'
+import AppBar from '@/components/ui/AppBar.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
 
