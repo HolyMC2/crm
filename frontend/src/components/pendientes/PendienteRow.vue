@@ -50,8 +50,9 @@
         class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-gray-6"
       >
         <span :class="dueClass">{{ dueText(row, today) }}</span>
-        <span v-if="row.reference_label || row.reference_name" class="truncate"
-          ><span aria-hidden="true">· </span
+        <span
+          v-if="row.reference_label || row.reference_name"
+          class="truncate"
           >{{ row.reference_label || row.reference_name }}</span
         >
         <span
