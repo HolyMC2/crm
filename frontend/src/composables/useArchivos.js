@@ -652,7 +652,9 @@ export function parseBrowseState(query = {}) {
 /** The link «Copiar enlace» puts on the clipboard: this file, in this view. */
 export function fileLink(id, { view, key, origin } = {}) {
   const params = new URLSearchParams()
-  if (view && view !== 'recientes') params.set('view', view)
+  // The page opens the Bandeja without a browse view and ignores `file` there,
+  // so the link always names one («Recientes» when the file came from elsewhere).
+  params.set('view', isBrowseView(view) ? view : 'recientes')
   if (key) params.set('key', key)
   params.set('file', String(id || ''))
   const base =

@@ -145,9 +145,12 @@ describe('the URL says which list is open', () => {
     expect(url.searchParams.get('view')).toBe('carpeta')
     expect(url.searchParams.get('key')).toBe('FOL-1')
     expect(url.searchParams.get('file')).toBe('doc:DOC-1')
-    // «Recientes» is the default list, so it stays out of the link.
+    // Without a browse view the page opens the Bandeja and ignores `file`.
     expect(fileLink('file:F-1', { view: 'recientes', origin: '' })).toBe(
-      '/crm/archivos?file=file%3AF-1',
+      '/crm/archivos?view=recientes&file=file%3AF-1',
+    )
+    expect(fileLink('doc:D-1', { view: 'por_clasificar', origin: '' })).toBe(
+      '/crm/archivos?view=recientes&file=doc%3AD-1',
     )
   })
 })
