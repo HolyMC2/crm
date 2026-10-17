@@ -24,31 +24,32 @@
       </p>
     </section>
     <template v-else>
-      <header
-        class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
-      >
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{ viewLabel(view) }}
-          </h1>
-          <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
-        </div>
-        <Button
-          v-if="boot?.capabilities?.setup"
-          icon-left="settings"
-          :label="__('Survey settings')"
-          class="min-h-11 sm:min-h-8"
-          @click="setupOpen = true"
-        />
-        <Button
-          v-if="boot?.capabilities?.setup"
-          icon-left="message-circle"
-          :label="__('“How did we do?” settings')"
-          class="min-h-11 sm:min-h-8"
-          data-testid="encuestas-service-settings"
-          @click="serviceSetupOpen = true"
-        />
-      </header>
+      <PageHeader :title="viewLabel(view)" :subtitle="subtitle" :level="1">
+        <template v-if="boot?.capabilities?.setup" #actions>
+          <!-- One way into settings: a menu with both surveys. -->
+          <Dropdown
+            :options="[
+              {
+                label: __('Survey settings'),
+                icon: 'settings',
+                onClick: () => (setupOpen = true),
+              },
+              {
+                label: __('“How did we do?” settings'),
+                icon: 'message-circle',
+                onClick: () => (serviceSetupOpen = true),
+              },
+            ]"
+          >
+            <Button
+              icon-left="settings"
+              :label="__('Settings', null, 'Encuestas')"
+              class="min-h-11 sm:min-h-8"
+              data-testid="encuestas-settings"
+            />
+          </Dropdown>
+        </template>
+      </PageHeader>
       <div
         v-if="backTo"
         class="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-md bg-surface-green-2 px-3 py-2 text-sm text-ink-green-8 sm:mx-6"
@@ -351,7 +352,8 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FormControl } from 'frappe-ui'
+import { Badge, Button, Dropdown, FormControl } from 'frappe-ui'
+import { PageHeader } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import SetupDialog from '@/components/encuestas/SetupDialog.vue'
 import {

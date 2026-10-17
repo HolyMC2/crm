@@ -42,48 +42,45 @@
       </p>
     </section>
     <template v-else>
-      <header
-        class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
-      >
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{ heading }}
-          </h1>
-          <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
-        </div>
-        <a
-          v-if="scanHref"
-          :href="scanHref"
-          class="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
-          :title="__('Scan a code and open its product (S)', null, 'Productos')"
-        >
-          <span class="lucide-scan-barcode h-4 w-4" aria-hidden="true" />
-          {{ __('Scan', null, 'Productos') }}
-        </a>
-        <Button
-          v-if="catalog && boot?.capabilities?.packs && rows.length"
-          class="min-h-11 sm:min-h-8"
-          :label="__('Build a pack', null, 'Productos')"
-          :title="
-            __(
-              'Images, PDF or a price message of this list, to send',
-              null,
-              'Productos',
-            )
-          "
-          @click="packOpen = true"
-        >
-          <template #prefix>
-            <FeatherIcon name="layers" class="h-4 w-4" aria-hidden="true" />
-          </template>
-        </Button>
-        <Button
-          v-if="returnTo"
-          :label="__('Back to {0}', [returnLabel])"
-          class="min-h-11 sm:min-h-8"
-          @click="goReturn"
-        />
-      </header>
+      <PageHeader :title="heading" :subtitle="subtitle" :level="1">
+        <template #actions>
+          <!-- On a phone the app bar already carries the scan icon. -->
+          <a
+            v-if="scanHref"
+            :href="scanHref"
+            class="hidden min-h-11 items-center gap-1.5 rounded-md sm:inline-flex bg-surface-gray-2 px-3 text-base text-ink-gray-8 hover:bg-surface-gray-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+            :title="
+              __('Scan a code and open its product (S)', null, 'Productos')
+            "
+          >
+            <span class="lucide-scan-barcode h-4 w-4" aria-hidden="true" />
+            {{ __('Scan', null, 'Productos') }}
+          </a>
+          <Button
+            v-if="catalog && boot?.capabilities?.packs && rows.length"
+            class="min-h-11 sm:min-h-8"
+            :label="__('Build a pack', null, 'Productos')"
+            :title="
+              __(
+                'Images, PDF or a price message of this list, to send',
+                null,
+                'Productos',
+              )
+            "
+            @click="packOpen = true"
+          >
+            <template #prefix>
+              <FeatherIcon name="layers" class="h-4 w-4" aria-hidden="true" />
+            </template>
+          </Button>
+          <Button
+            v-if="returnTo"
+            :label="__('Back to {0}', [returnLabel])"
+            class="min-h-11 sm:min-h-8"
+            @click="goReturn"
+          />
+        </template>
+      </PageHeader>
       <PackDialog
         v-model="packOpen"
         :filters="packFilters"
@@ -646,6 +643,7 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { BottomSheet, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { PageHeader } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import CatalogFilters from '@/components/productos/CatalogFilters.vue'

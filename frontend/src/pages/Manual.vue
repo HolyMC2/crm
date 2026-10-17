@@ -63,26 +63,21 @@
     </section>
 
     <template v-else>
-      <header
-        class="flex flex-wrap items-start gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
+      <a
+        v-if="back"
+        :href="'#'"
+        class="mx-4 mt-2 inline-flex min-h-11 items-center text-sm text-ink-gray-7 hover:text-ink-gray-9 sm:mx-6 sm:min-h-0"
+        data-testid="manual-back"
+        @click.prevent="goBack"
+        >← {{ __('Back to {0}', [back.label], CTX) }}</a
       >
-        <div class="w-full min-w-0 sm:w-auto sm:flex-1">
-          <a
-            v-if="back"
-            :href="'#'"
-            class="mb-1 inline-flex min-h-11 items-center text-sm text-ink-gray-7 hover:text-ink-gray-9 sm:min-h-0"
-            data-testid="manual-back"
-            @click.prevent="goBack"
-            >← {{ __('Back to {0}', [back.label], CTX) }}</a
-          >
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{ TITLE }}
-          </h1>
-          <p class="text-sm text-ink-gray-6">
-            {{ boot?.company || __('How things are done in your shop') }}
-          </p>
-        </div>
-        <template v-if="caps.write">
+      <PageHeader
+        :title="TITLE"
+        :subtitle="boot?.company || __('How things are done in your shop')"
+        :level="1"
+      >
+        <!-- While the manual is empty, its empty state carries these two. -->
+        <template v-if="caps.write && !(emptyManual && !rows.length)" #actions>
           <Button
             icon-left="layers"
             :label="__('Start with templates')"
@@ -99,7 +94,7 @@
             @click="router.push({ name: 'ManualNuevo' })"
           />
         </template>
-      </header>
+      </PageHeader>
 
       <div class="px-4 pb-2 sm:px-6">
         <label class="sr-only" for="manual-search">{{
@@ -118,6 +113,7 @@
 
       <div v-if="caps.write" class="px-4 pb-2 sm:hidden">
         <FormControl
+          class="h-11 w-full"
           type="select"
           :aria-label="__('List', null, CTX)"
           :model-value="state.vista"
@@ -380,6 +376,7 @@
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FormControl } from 'frappe-ui'
+import { PageHeader } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
   CTX,

@@ -23,31 +23,29 @@
       </div>
     </section>
     <template v-else>
-      <header
-        class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
+      <PageHeader
+        :title="segmentLabel(segment)"
+        :subtitle="subtitle"
+        :level="1"
       >
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{ segmentLabel(segment) }}
-          </h1>
-          <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
-        </div>
-        <Button
-          v-if="caps.configure"
-          icon-left="calendar"
-          :label="__('Statutory vacations')"
-          class="min-h-11 sm:min-h-8"
-          @click="router.push({ name: 'EquipoVacaciones' })"
-        />
-        <Button
-          v-if="caps.hire"
-          variant="solid"
-          icon-left="user-plus"
-          :label="__('Add a person', null, 'Equipo')"
-          class="min-h-11 sm:min-h-8"
-          @click="openAlta"
-        />
-      </header>
+        <template v-if="caps.configure || caps.hire" #actions>
+          <Button
+            v-if="caps.configure"
+            icon-left="calendar"
+            :label="__('Statutory vacations')"
+            class="min-h-11 sm:min-h-8"
+            @click="router.push({ name: 'EquipoVacaciones' })"
+          />
+          <Button
+            v-if="caps.hire"
+            variant="solid"
+            icon-left="user-plus"
+            :label="__('Add a person', null, 'Equipo')"
+            class="min-h-11 sm:min-h-8"
+            @click="openAlta"
+          />
+        </template>
+      </PageHeader>
       <section
         v-if="!caps.hr && !hrDismissed"
         role="status"
@@ -125,6 +123,7 @@
       </section>
       <div class="px-4 pb-3 sm:hidden">
         <FormControl
+          class="h-11 w-full"
           type="select"
           :aria-label="__('List', null, 'Equipo')"
           :model-value="segment"
@@ -248,6 +247,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Avatar, Badge, Button, FormControl } from 'frappe-ui'
+import { PageHeader } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
   equipoApi,

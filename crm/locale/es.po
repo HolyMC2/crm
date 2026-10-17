@@ -26455,3 +26455,7 @@ msgstr "hace 1 día"
 #: frontend/src/pages/DealsView.vue
 msgid "hace {0} días"
 msgstr "hace {0} días"
+#: frontend/src/pages/Encuestas.vue
+msgctxt "Encuestas"
+msgid "Settings"
+msgstr "Ajustes"
