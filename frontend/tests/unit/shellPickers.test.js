@@ -18,7 +18,6 @@ function picker(path, model) {
 
 describe('shell pickers never fall back to «Select option»', () => {
   it.each([
-    ['pages/Hoy.vue', 'v-model="picks[card.key + row.key]"'],
     ['components/cobranza/PaymentSheet.vue', 'v-model="form.mode"'],
     ['components/cobranza/AutoSetupSheet.vue', ':model-value="form.account"'],
     ['components/archivos/ArchivoDetail.vue', 'v-model="manual.doctype"'],
@@ -33,9 +32,12 @@ describe('shell pickers never fall back to «Select option»', () => {
     expect(tag).toMatch(/:placeholder="/)
   })
 
-  it('the Hoy technician picker says what to choose, in the catalog’s words', () => {
-    expect(picker('pages/Hoy.vue', 'v-model="picks[')).toContain(
-      ':placeholder="`${card.source.action.field_label || __(\'Choose\')}…`"',
-    )
+  // Hoy has no select for the technician: «Asignar» opens a sheet of choices
+  // whose subtitle says what to choose, in the catalog's words (SHELL-S3.3).
+  it('the Hoy technician picker is a sheet named in the catalog’s words', () => {
+    const text = source('pages/Hoy.vue')
+    expect(text).not.toContain('v-model="picks[')
+    expect(text).toMatch(/<BottomSheet[^>]*:subtitle="assignField"/)
+    expect(text).toContain('action.field_label || action.label')
   })
 })
