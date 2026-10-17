@@ -525,6 +525,41 @@ export function clinicaItems(result) {
     }))
 }
 
+// An empty input opens on Recientes and the modules to go to; a typed query
+// ranks the records (a deal, a customer) above «Nuevo …».
+const SECTION_ORDER = {
+  empty: ['recientes', 'ir_a', 'registros', 'acciones'],
+  typed: ['registros', 'acciones', 'ir_a', 'recientes'],
+}
+
+/**
+ * The palette's sections (from groupPaletteItems) in display order. A question
+ * still gets «Preguntar a Muelle» first (SHELL-S2): that row leads in its own
+ * headerless section (`lead`), then the records, then the other actions.
+ */
+export function orderPaletteSections(grouped, { empty = false } = {}) {
+  const order = SECTION_ORDER[empty ? 'empty' : 'typed']
+  const rank = (group) => {
+    const index = order.indexOf(group)
+    return index < 0 ? order.length : index
+  }
+  const sorted = [...grouped].sort((a, b) => rank(a.group) - rank(b.group))
+  if (empty) return sorted
+  const ask = sorted
+    .flatMap((section) => section.items)
+    .filter((item) => item.action === 'assistant')
+  if (!ask.length) return sorted
+  return [
+    { group: 'acciones', items: ask, lead: true },
+    ...sorted
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => item.action !== 'assistant'),
+      }))
+      .filter((section) => section.items.length),
+  ]
+}
+
 /**
  * A deal row from crm.api.palette.search_deals as a palette record. The title
  * is the deal's name (with its person); the line reads «Trato · Ganado ·

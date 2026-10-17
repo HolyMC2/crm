@@ -64,6 +64,7 @@ import {
   createShellProviders,
   dealItem,
   loadRecent,
+  orderPaletteSections,
   resolveRecent,
   toRecentRef,
 } from '@/utils/shellPalette'
@@ -1411,6 +1412,36 @@ describe('Ventas deals in the palette', () => {
       href: '/ventas/deal/CRM-DEAL-1',
       record: { source: 'deal', name: 'CRM-DEAL-1' },
     })
+  })
+
+  it('palette order: records above «Nuevo …»; a question keeps «Preguntar a Muelle» first; empty opens on Recientes', () => {
+    const actions = {
+      group: 'acciones',
+      items: [
+        { id: 'new.deal', title: 'Nuevo trato' },
+        { id: 'asistente.preguntar', action: 'assistant', title: 'Ask' },
+      ],
+    }
+    const records = { group: 'registros', items: [{ id: 'deal:D-1' }] }
+    const places = { group: 'ir_a', items: [{ id: 'go.hoy' }] }
+    const typed = orderPaletteSections([actions, places, records])
+    expect(typed.map((s) => [s.group, s.items.map((i) => i.id)])).toEqual([
+      ['acciones', ['asistente.preguntar']],
+      ['registros', ['deal:D-1']],
+      ['acciones', ['new.deal']],
+      ['ir_a', ['go.hoy']],
+    ])
+    expect(typed[0].lead).toBe(true)
+    const noQuestion = orderPaletteSections([
+      { group: 'acciones', items: [actions.items[0]] },
+      records,
+    ])
+    expect(noQuestion.map((s) => s.group)).toEqual(['registros', 'acciones'])
+    const empty = orderPaletteSections(
+      [actions, places, { group: 'recientes', items: [{ id: 'r' }] }],
+      { empty: true },
+    )
+    expect(empty.map((s) => s.group)).toEqual(['recientes', 'ir_a', 'acciones'])
   })
 
   it('a customer search shows their deal with person, RO, phone and stage (CRM-S3.3)', () => {

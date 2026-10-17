@@ -78,8 +78,14 @@
         role="listbox"
         class="min-h-0 flex-1 overflow-y-auto py-2"
       >
-        <template v-for="section in sections" :key="section.group">
-          <div class="px-4 pb-1 pt-3 text-sm font-semibold text-ink-gray-6">
+        <template
+          v-for="section in sections"
+          :key="section.group + (section.lead ? ':lead' : '')"
+        >
+          <div
+            v-if="!section.lead"
+            class="px-4 pb-1 pt-3 text-sm font-semibold text-ink-gray-6"
+          >
             {{ shellT(PALETTE_GROUP_LABELS[section.group]) }}
           </div>
           <button
@@ -175,6 +181,7 @@ import { scanPickHref, siblingHref } from '@/composables/shellRail'
 import {
   createShellProviders,
   loadRecent,
+  orderPaletteSections,
   resolveRecent,
   saveRecent,
   toRecentRef,
@@ -261,13 +268,8 @@ const placeholder = computed(() =>
   shellT(PALETTE_MODE_COPY[activeMode.value].placeholder),
 )
 const query = computed(() => parsePaletteQuery(raw.value))
-// Records mode shows Registros, plus Recientes while the input is empty. A
-// typed query ranks the records (a deal, a customer) above «Nuevo …»; an empty
-// input opens on Recientes and the modules to go to.
-const SECTION_ORDER = {
-  empty: ['recientes', 'ir_a', 'registros', 'acciones'],
-  typed: ['registros', 'acciones', 'ir_a', 'recientes'],
-}
+// Records mode shows Registros, plus Recientes while the input is empty
+// (order: orderPaletteSections).
 const sections = computed(() => {
   const empty = query.value.kind === 'empty'
   const grouped = empty
@@ -279,12 +281,7 @@ const sections = computed(() => {
         activeMode.value,
       )
     : groupPaletteItems(states.value, activeMode.value)
-  const order = SECTION_ORDER[empty ? 'empty' : 'typed']
-  const rank = (group) => {
-    const index = order.indexOf(group)
-    return index < 0 ? order.length : index
-  }
-  return [...grouped].sort((a, b) => rank(a.group) - rank(b.group))
+  return orderPaletteSections(grouped, { empty })
 })
 const flat = computed(() => sections.value.flatMap((section) => section.items))
 
