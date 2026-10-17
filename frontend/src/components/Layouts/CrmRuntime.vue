@@ -40,7 +40,6 @@
 </template>
 
 <script setup>
-import NotPermitted from '@/pages/NotPermitted.vue'
 import EventNotificationPopup from '@/components/EventNotificationPopup.vue'
 import DoctypeModals from '@/components/Modals/DoctypeModals.vue'
 import { Dialogs } from '@/utils/dialogs'
@@ -61,6 +60,10 @@ import { syncBrandFavicon } from '@/stores/settings'
 import { prefetchHotChunks } from '@/utils/prefetch'
 import { initTelemetry } from '@/composables/telemetry'
 import { showSettings } from '@/composables/settings'
+// Only for the not-permitted route; most pages never show it.
+const NotPermitted = defineAsyncComponent(
+  () => import('@/pages/NotPermitted.vue'),
+)
 const Settings = defineAsyncComponent(
   () => import('@/components/Settings/Settings.vue'),
 )

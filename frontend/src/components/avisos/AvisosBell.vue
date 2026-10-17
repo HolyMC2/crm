@@ -6,7 +6,9 @@
       class="pointer-events-none absolute left-0 top-0 h-full w-full [&>*]:pointer-events-auto"
     >
       <!-- Ventas adds its calendar reminders to the same panel. -->
-      <VentasNotifications v-if="ventas" />
+      <VentasNotifications
+        v-if="ventas && (notificationsReady || avisosPanelOpen)"
+      />
       <AvisosPanel v-else v-model:open="avisosPanelOpen" />
     </div>
     <button
@@ -49,11 +51,13 @@ import {
   defineAsyncComponent,
   getCurrentInstance,
   onMounted,
+  ref,
   watch,
 } from 'vue'
 import { useRouter } from 'vue-router'
 import AvisosPanel from '@/components/avisos/AvisosPanel.vue'
 import { shellBoot } from '@/composables/muelleShell'
+import { afterFirstRoute } from '@/utils/prefetch'
 import {
   avisosBadge,
   avisosPanelOpen,
@@ -73,8 +77,13 @@ const props = defineProps({
 const VentasNotifications = defineAsyncComponent(
   () => import('@/components/Notifications.vue'),
 )
+// Ventas' panel (calendar reminders) mounts after the first page is up, or at
+// once when the bell is opened sooner (SPEC §4 first-route budget).
+const notificationsReady = ref(false)
 
 const router = useRouter()
+if (props.ventas)
+  afterFirstRoute(router, () => (notificationsReady.value = true))
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const label = computed(() => badgeLabel(avisosBadge.value))
 const ariaLabel = computed(() =>
