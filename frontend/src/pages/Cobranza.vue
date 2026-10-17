@@ -120,8 +120,8 @@
             class="line-clamp-2 block text-sm font-medium text-ink-gray-9"
             >{{ autoCard.title }}</span
           >
-          <span class="block truncate text-sm text-ink-gray-6">{{
-            autoCard.button
+          <span class="block truncate text-sm font-medium text-ink-blue-link">{{
+            autoCard.short || autoCard.button
           }}</span>
         </span>
         <FeatherIcon
@@ -809,6 +809,8 @@ const autoCard = computed(() => {
       'Switch them on and every overdue invoice gets its reminder on day 1, 7 and 15.',
     ),
     button: __('Switch on automatic reminders'),
+    // The phone row's title already says what; its action is one word.
+    short: __('Switch on', null, CTX),
     solid: true,
   }
 })

@@ -30,9 +30,12 @@
             >
           </p>
         </div>
+        <!-- On a phone «Personalizar» lives in the «Filtros» sheet: one door
+             for the page's settings, not a square beside the dates. -->
         <Button
+          v-if="!phone"
           class="min-h-11 min-w-11"
-          :label="phone ? '' : __('Customize')"
+          :label="__('Customize')"
           :aria-label="__('Customize')"
           :aria-expanded="customizing ? 'true' : 'false'"
           data-testid="customize"
@@ -69,7 +72,7 @@
         :filters-count="filtersOn"
         @update:model-value="pickPeriod"
       >
-        <template #filters>
+        <template #filters="{ close }">
           <div class="space-y-4">
             <div>
               <p class="mb-2 text-sm font-medium text-ink-gray-8">
@@ -113,6 +116,20 @@
               ]"
               @update:model-value="(value) => update({ tienda: value })"
             />
+            <Button
+              class="min-h-11 w-full"
+              :label="__('Customize')"
+              :aria-expanded="customizing ? 'true' : 'false'"
+              data-testid="customize"
+              @click="(customizing = true), close()"
+            >
+              <template #prefix>
+                <span
+                  class="lucide-sliders-horizontal size-4"
+                  aria-hidden="true"
+                />
+              </template>
+            </Button>
           </div>
         </template>
       </FilterChips>

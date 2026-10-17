@@ -26492,3 +26492,8 @@ msgstr "Configurar recordatorios"
 #: frontend/src/composables/useCobranza.js
 msgid "Ask a manager"
 msgstr "Pedir a un encargado"
+
+#: frontend/src/pages/Cobranza.vue
+msgctxt "Cobranza"
+msgid "Switch on"
+msgstr "Encender"
