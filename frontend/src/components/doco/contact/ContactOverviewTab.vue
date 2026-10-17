@@ -48,7 +48,7 @@
         </div>
         <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
           <!-- Red means "this person owes money". A settled account is not an
-               alert, so nothing (or a credit) stays neutral. -->
+               alert, so nothing (or a credit, or what was paid) stays neutral. -->
           <Tile
             :label="__('Saldo')"
             :value="money(rollup.outstanding, rollup.currency)"
@@ -61,7 +61,6 @@
           <Tile
             :label="__('Pagado')"
             :value="money(rollup.paid, rollup.currency)"
-            tone="green"
           />
           <Tile
             :label="__('Notas de crédito')"
@@ -203,7 +202,8 @@ const Tile = defineComponent({
       h('div', { class: `rounded-xl p-3 ${tones[p.tone]}` }, [
         h(
           'div',
-          { class: 'text-xs font-bold uppercase tracking-wide' },
+          // Sentence case: the value is the thing to read, the label names it.
+          { class: 'text-xs font-medium opacity-75' },
           p.label,
         ),
         h(

@@ -424,7 +424,15 @@
   min-width: 0;
 }
 .c-record-title h1 {
-  overflow-wrap: anywhere;
+  /* Break between words; a single over-long token may still break. */
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+.c-heading-edit {
+  display: none;
+}
+.c-action-icon {
+  display: inline-flex;
 }
 .c-record-actions {
   display: flex;
@@ -485,6 +493,12 @@
 }
 .c-values dd {
   overflow-wrap: anywhere;
+}
+/* A ghost button inside a section lines its text up with the section's
+   left edge instead of floating 8px in. */
+.c-inline-action {
+  margin-left: -8px;
+  margin-top: 8px;
 }
 .c-detail-channels {
   display: flex;
@@ -567,10 +581,25 @@
 }
 .c-relation-endpoints {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
   margin: 10px 0;
+}
+/* Each end names its kind of record, so two records that share a name
+   (a persona and her cuenta de cliente) still read as two things. */
+.c-relation-endpoints .c-link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  text-decoration: none;
+  font-weight: 500;
+}
+.c-relation-endpoints .c-link small {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--c-muted);
 }
 .c-archivos-panel {
   margin: 0 28px 28px;
@@ -774,20 +803,75 @@
     flex-basis: 100%;
   }
   .c-record-heading {
-    padding: 12px 16px;
+    padding: 4px 8px 0 4px;
   }
+  /* The kind of record is already under the name. */
+  .c-record-heading .c-origin {
+    display: none;
+  }
+  .c-record-heading > .c-heading-edit {
+    display: inline-flex;
+    margin-left: auto;
+  }
+  /* The name gets the whole row; «Editar datos» is the pencil in the top bar. */
   .c-record-title {
-    padding: 8px 16px 16px;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 4px 16px 16px;
+  }
+  .c-record-title .c-avatar-large {
+    width: 44px;
+    height: 44px;
   }
   .c-record-title h1 {
-    font-size: 22px;
+    font-size: 20px;
+    letter-spacing: -0.2px;
   }
-  .c-record-title > button {
-    margin-left: 66px;
+  .c-record-title p {
+    margin-top: 4px;
   }
+  .c-record-title > .c-title-edit {
+    display: none;
+  }
+  /* A phone's contact card: the follow-up spans the row; the quick actions
+     are equal tonal pills with the label under them, sharing each row. */
   .c-record-actions {
-    padding: 0 16px 18px;
+    gap: 12px 8px;
+    padding: 0 16px 20px;
+  }
+  .c-record-actions > :not(.c-action-link) {
+    flex: 1 1 100%;
+  }
+  .c-record-actions > .c-followup-cta {
+    justify-content: center;
+  }
+  .c-record-actions > .c-action-link {
+    flex: 1 1 64px;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .c-record-actions .c-action-icon {
+    align-self: stretch;
+    justify-content: center;
+    align-items: center;
+    height: 44px;
+    border-radius: 22px;
+    background: var(--c-active);
+    color: var(--c-accent);
+  }
+  .c-record-actions .c-action-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .c-record-actions > .c-action-link:active .c-action-icon {
+    background: var(--outline-gray-3);
   }
   .c-chooser-single {
     padding: 10px 16px;

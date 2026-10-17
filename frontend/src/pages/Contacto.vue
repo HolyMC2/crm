@@ -8,7 +8,18 @@
         @click="back"
       /><span v-if="record" class="c-origin">{{
         sourceLabel(selectedSource?.doctype || record.doctype || record.source)
-      }}</span>
+      }}</span
+      ><!-- Phones edit from the top bar, as a contacts app does. -->
+      <Button
+        v-if="record?.capabilities?.write"
+        class="c-heading-edit"
+        :label="
+          record.source === 'address' ? 'Editar dirección' : 'Editar datos'
+        "
+        icon="edit-2"
+        variant="ghost"
+        @click="editIdentity"
+      />
     </header>
     <RecoveryMessage
       :error="error || bootError"
@@ -48,6 +59,7 @@
         </div>
         <Button
           v-if="record.capabilities?.write"
+          class="c-title-edit"
           :label="
             record.source === 'address' ? 'Editar dirección' : 'Editar datos'
           "
@@ -55,9 +67,13 @@
           @click="editIdentity"
         />
       </div>
+      <!-- On a phone the actions read like a phone's contact card: the
+           follow-up spans the row, the quick actions sit under it as equal
+           tonal pills with the label below (Google Contacts, HubSpot). -->
       <div class="c-record-actions">
         <Button
           v-if="canFollowup"
+          class="c-followup-cta"
           :label="
             nextTask
               ? `Seguimiento ${dueLabel(nextTask, boot?.today).toLowerCase()}`
@@ -67,28 +83,34 @@
           icon-left="check-circle"
           @click="editFollowup(nextTask)"
         />
-        <RouterLink v-if="agendaLink" :to="agendaLink" class="c-action-link"
-          ><FeatherIcon name="calendar" class="h-4 w-4" />Agendar</RouterLink
-        >
         <a
           v-if="phone"
           :href="`tel:${phone.replace(/[^+\d]/g, '')}`"
           class="c-action-link"
-          ><FeatherIcon name="phone" class="h-4 w-4" />Llamar</a
+          ><span class="c-action-icon"
+            ><FeatherIcon name="phone" class="h-4 w-4" /></span
+          >Llamar</a
         >
         <a
           v-if="email"
           :href="`mailto:${encodeURIComponent(email)}`"
           class="c-action-link"
-          ><FeatherIcon name="mail" class="h-4 w-4" />Correo</a
+          ><span class="c-action-icon"
+            ><FeatherIcon name="mail" class="h-4 w-4" /></span
+          >Correo</a
+        >
+        <RouterLink v-if="agendaLink" :to="agendaLink" class="c-action-link"
+          ><span class="c-action-icon"
+            ><FeatherIcon name="calendar" class="h-4 w-4" /></span
+          >Agendar</RouterLink
         >
         <RouterLink
           v-if="record.source === 'contact'"
           :to="citaRoute"
           class="c-action-link"
-          ><FeatherIcon name="calendar" class="h-4 w-4" />{{
-            __('Book appointment')
-          }}</RouterLink
+          ><span class="c-action-icon"
+            ><FeatherIcon name="clock" class="h-4 w-4" /></span
+          >{{ __('Book appointment') }}</RouterLink
         >
         <!-- A supplier's quote or invoice becomes a draft order or bill. -->
         <CapturarDocumentoButton
@@ -142,8 +164,14 @@
         </p>
       </div>
       <p v-if="customers.length === 1" class="c-chooser-single">
-        Cuenta de cliente
-        <strong>{{ customers[0].title || customers[0].name }}</strong>
+        <template v-if="sameName(customers[0])"
+          >Cuenta de cliente con el mismo nombre</template
+        ><template v-else
+          >Cuenta de cliente
+          <strong>{{
+            customers[0].title || customers[0].name
+          }}</strong></template
+        >
       </p>
       <div v-else-if="customers.length > 1" class="c-source-chooser">
         <FormControl
@@ -192,13 +220,24 @@
             />
           </div>
           <dl class="c-values">
-            <template v-for="field in displayFields" :key="field.fieldname"
+            <template v-for="field in shownFields" :key="field.fieldname"
               ><dt>{{ field.label || field.fieldname }}</dt>
               <dd>
                 {{ formatted(field, record.fields?.[field.fieldname]) }}
               </dd></template
             >
           </dl>
+          <Button
+            v-if="emptyFieldCount"
+            class="c-inline-action"
+            variant="ghost"
+            :label="
+              showEmptyFields
+                ? 'Ocultar campos sin dato'
+                : `Mostrar ${emptyFieldCount} ${emptyFieldCount === 1 ? 'campo' : 'campos'} sin dato`
+            "
+            @click="showEmptyFields = !showEmptyFields"
+          />
           <div v-if="phoneRows.length" class="c-detail-channels">
             <h3>Teléfonos</h3>
             <a
@@ -243,7 +282,9 @@
               (capabilities.sources?.customer?.create ||
                 capabilities.sources?.supplier?.create)
             "
+            class="c-inline-action"
             label="Añadir rol comercial"
+            icon-left="plus"
             variant="ghost"
             @click="roleOpen = true"
           />
@@ -285,15 +326,15 @@
           <div class="c-queue-tabs">
             <Button
               label="Pendientes"
-              :variant="taskStatus === 'Open' ? 'solid' : 'ghost'"
+              :variant="taskStatus === 'Open' ? 'subtle' : 'ghost'"
               @click="showTasks('Open')"
             /><Button
               label="Hechos"
-              :variant="taskStatus === 'Closed' ? 'solid' : 'ghost'"
+              :variant="taskStatus === 'Closed' ? 'subtle' : 'ghost'"
               @click="showTasks('Closed')"
             /><Button
               label="Cancelados"
-              :variant="taskStatus === 'Cancelled' ? 'solid' : 'ghost'"
+              :variant="taskStatus === 'Cancelled' ? 'subtle' : 'ghost'"
               @click="showTasks('Cancelled')"
             />
           </div>
@@ -355,7 +396,7 @@
         >
           <div class="c-section-heading">
             <h2>Notas</h2>
-            <span class="c-muted">{{
+            <span v-if="refs.length > 1" class="c-muted">{{
               sourceLabel(selectedSource?.doctype || record.doctype)
             }}</span>
           </div>
@@ -483,19 +524,22 @@
             }}</span>
             <div class="c-relation-endpoints">
               <button class="c-link" @click="openRelated(relation.left)">
-                {{ relation.left?.title || relation.left?.name }}</button
-              ><span aria-hidden="true">→</span
+                <small>{{ sourceLabel(relation.left?.doctype) }}</small
+                >{{ relation.left?.title || relation.left?.name }}</button
               ><button class="c-link" @click="openRelated(relation.right)">
-                {{ relation.right?.title || relation.right?.name }}
+                <small>{{ sourceLabel(relation.right?.doctype) }}</small
+                >{{ relation.right?.title || relation.right?.name }}
               </button>
             </div>
             <Button
               v-if="record.capabilities?.write && !relation.native"
+              class="c-inline-action"
               label="Desvincular"
               variant="ghost"
               @click="unlinkTarget = relation"
             /><Button
               v-if="relation.native"
+              class="c-inline-action"
               label="Revisar origen"
               variant="ghost"
               @click="openRelated(relation.left)"
@@ -782,6 +826,14 @@ const uniqueRefs = (doctype) => [
   ).values(),
 ]
 const customers = computed(() => uniqueRefs('Customer'))
+// A customer account named like the record needs no second copy of the name.
+const sameName = (ref) =>
+  String(ref?.title || ref?.name || '')
+    .trim()
+    .toLowerCase() ===
+  String(record.value?.title || record.value?.name || '')
+    .trim()
+    .toLowerCase()
 const panelContacts = computed(() => uniqueRefs('Contact'))
 const addressTargets = computed(() => [
   ...new Map(
@@ -1207,6 +1259,22 @@ async function copyConfiguration() {
     )
   }
 }
+// Like a contacts app, «Datos» lists what is known; empty fields wait behind
+// one toggle (editing still offers every field).
+const showEmptyFields = ref(false)
+const hasValue = (field) => {
+  const value = record.value?.fields?.[field.fieldname]
+  if (field.fieldtype === 'Check') return !!value
+  return !(value === '' || value == null)
+}
+const shownFields = computed(() =>
+  showEmptyFields.value
+    ? displayFields.value
+    : displayFields.value.filter(hasValue),
+)
+const emptyFieldCount = computed(
+  () => displayFields.value.filter((f) => !hasValue(f)).length,
+)
 function formatted(field, value) {
   if (field.fieldtype === 'Check') return value ? 'Sí' : 'No'
   if (value && typeof value === 'object') return 'Revisar registro'

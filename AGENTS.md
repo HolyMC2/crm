@@ -16,6 +16,7 @@ they run as evaluated strings in the browser.
 |---|---|
 | Product priorities and next delivery packages | [CRM product roadmap](./docs/CRM_PRODUCT_ROADMAP.md) |
 | Product naming and icon change | [Identity brief](./docs/CRM_IDENTITY_BRIEF.md) |
+| Any shell screen's layout on phones (record pages, lists, tasks) | [Mobile design references](./docs/design/MOBILE_REFERENCES.md): Google Contacts/Tasks, HubSpot, Pipedrive, with screenshots |
 | Form-scripting technical backlog | [PLAN.md](./.pi/PLAN.md) |
 | Stable API contracts (setFieldProperty, formDialog, helpers) | [SPEC.md](./.pi/SPEC.md) |
 | Why code is the way it is (decisions, bugs fixed, history) | [ARCHIVE.md](./.pi/ARCHIVE.md) |
