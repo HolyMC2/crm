@@ -12,6 +12,8 @@
 // - A navigation started while sheets are open (a link inside a sheet)
 //   replaces the top sheet entry instead of stacking on it, and closes them.
 
+import { sheetGate } from './sheetGate'
+
 const stack = [] // [{ token, onClose, href }]
 let pending = null // our own back(): { resolve, timer }
 let installedOn = null
@@ -62,17 +64,11 @@ function onPopState(event, router) {
   closeAbove(event.state?.uiSheet)
 }
 
-// The popstate listener must run before vue-router's: on `window` Chrome
-// fires listeners in registration order (capture does not jump the queue at
-// the target), so it is registered when this module is imported, and
-// router.js imports it before it creates the router's history.
+// The popstate listener lives in sheetGate.js (in the entry chunk, ahead of
+// vue-router's); this module answers through it once a sheet has mounted.
 let activeRouter = null
-if (typeof window !== 'undefined')
-  window.addEventListener(
-    'popstate',
-    (event) => activeRouter && onPopState(event, activeRouter),
-    { capture: true },
-  )
+sheetGate.onPopState = (event) =>
+  activeRouter && onPopState(event, activeRouter)
 
 /** Once per router: the router the listener checks, and the navigation guard. */
 export function installSheetHistory(router) {
