@@ -16,7 +16,6 @@
 </template>
 <script setup>
 import AvisosPanel from '@/components/avisos/AvisosPanel.vue'
-import EventNotificationsArea from '@/components/EventNotificationsArea.vue'
 import { visible } from '@/stores/notifications'
 import {
   useEventNotificationAlert,
@@ -24,7 +23,12 @@ import {
 } from '@/data/notifications'
 import { globalStore } from '@/stores/global'
 import { startAvisosLive } from '@/composables/useAvisos'
-import { onBeforeUnmount, onMounted } from 'vue'
+import { defineAsyncComponent, onBeforeUnmount, onMounted } from 'vue'
+
+// Shown only inside the open panel (bundle budget, SPEC §4).
+const EventNotificationsArea = defineAsyncComponent(
+  () => import('@/components/EventNotificationsArea.vue'),
+)
 
 const { $socket } = globalStore()
 const { handleEventNotification } = useEventNotificationAlert()

@@ -139,10 +139,9 @@
   </Teleport>
 </template>
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FeatherIcon } from 'frappe-ui'
-import AvisosList from '@/components/avisos/AvisosList.vue'
 import {
   avisosVersion,
   categoryMeta,
@@ -151,6 +150,11 @@ import {
   useAvisosActions,
 } from '@/composables/useAvisos'
 import { useShellLayer } from '@/composables/shellKeyboard'
+
+// The list renders only while the panel is open (bundle budget, SPEC §4).
+const AvisosList = defineAsyncComponent(
+  () => import('@/components/avisos/AvisosList.vue'),
+)
 
 const open = defineModel('open', { type: Boolean, default: false })
 const router = useRouter()

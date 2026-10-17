@@ -22,6 +22,19 @@ const idle =
 // (SPEC §4: ≤ 60 scripts, ≤ 2.5 MB) nor competes with its requests.
 export const PREFETCH_DELAY_MS = 4000
 
+/**
+ * Run `work` in an idle slot once the first route has resolved and
+ * PREFETCH_DELAY_MS have passed: warm-ups never compete with the first page.
+ */
+export function afterFirstRoute(
+  router,
+  work,
+  { delay = PREFETCH_DELAY_MS } = {},
+) {
+  const start = () => setTimeout(() => idle(work), delay)
+  Promise.resolve(router?.isReady?.()).then(start, start)
+}
+
 export function prefetchHotChunks({ delay = PREFETCH_DELAY_MS } = {}) {
   let i = 0
   const next = () => {

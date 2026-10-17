@@ -36,6 +36,7 @@ import { lazyGlobalComponents, prefetchGlobals } from './utils/lazyGlobals'
 // The lucide sprite for Icon.vue / IconPicker loads after first paint (idle).
 import { ensureLucideSprite } from './utils/lucideSprite'
 import { installSilentUpdate } from './utils/silentUpdate'
+import { afterFirstRoute } from './utils/prefetch'
 import { watchInstallPrompt } from './composables/shellInstall'
 
 let globalComponents = {
@@ -96,13 +97,12 @@ if (import.meta.env.DEV) {
 listenForPushNavigation(router)
 watchInstallPrompt()
 
-if (!import.meta.env.DEV)
-  installSilentUpdate(router, import.meta.url)
+if (!import.meta.env.DEV) installSilentUpdate(router, import.meta.url)
 
-  // Warm the icon sprite once the first screen is up (Icon.vue also requests it).
-;(window.requestIdleCallback || ((callback) => setTimeout(callback, 1500)))(
-  () => {
-    ensureLucideSprite()
-    prefetchGlobals()
-  },
-)
+// Warm the icon sprite (~480 KB) and the lazy form widgets once the first
+// route is up, not during its load (Icon.vue requests the sprite itself when an
+// icon renders first). SPEC §4: the first route loads ≤ 60 scripts.
+afterFirstRoute(router, () => {
+  ensureLucideSprite()
+  prefetchGlobals()
+})

@@ -1,6 +1,6 @@
 <template>
-  <TwilioCallUI v-if="isEnabled('twilio')" ref="twilio" />
-  <ExotelCallUI v-if="isEnabled('exotel')" ref="exotel" />
+  <TwilioCallUI v-if="mediaReady && isEnabled('twilio')" ref="twilio" />
+  <ExotelCallUI v-if="mediaReady && isEnabled('exotel')" ref="exotel" />
   <Dialog
     v-model:open="show"
     :title="__('Make Call')"
@@ -47,6 +47,8 @@ import { defaultCallingMedium, useTelephony } from '@/composables/telephony'
 import { globalStore } from '@/stores/global'
 import { FormControl, call, toast } from 'frappe-ui'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { afterFirstRoute } from '@/utils/prefetch'
 
 // Each calling medium (the Twilio SDK, Exotel's panel with its text editor)
 // loads only when it is enabled, not with every Ventas page (bundle budget).
@@ -79,6 +81,10 @@ const callMedium = ref('Twilio')
 const isDefaultMedium = ref(false)
 
 const show = ref(false)
+// The calling SDKs (Twilio is ~185 KB) start once the first page is up, a few
+// seconds after load, never during it (SPEC §4 first-route budget).
+const mediaReady = ref(false)
+afterFirstRoute(useRouter(), () => (mediaReady.value = true))
 const mobileNumber = ref('')
 
 const enabledIntegrations = computed(() =>
