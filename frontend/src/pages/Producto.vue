@@ -242,7 +242,7 @@
               href="#precios"
               class="rounded-lg bg-surface-gray-1 px-4 py-3 ring-1 ring-outline-gray-1 hover:bg-surface-gray-2"
             >
-              <dt class="truncate text-xs text-ink-gray-6">
+              <dt class="text-xs text-ink-gray-6">
                 {{
                   priceListLabel(defaultPrice?.price_list) ||
                   __('Price', null, 'Productos')
