@@ -8,7 +8,7 @@ backfill only matters for other readers of ``notification_text`` (FCRM's own pan
 Dry run first (the default) — it writes nothing and returns a report:
 
     bench --site <site> execute crm.avisos.backfill.retranslate_assignments
-    bench --site <site> execute crm.avisos.backfill.retranslate_assignments --kwargs '{"dry_run": false}'
+    bench --site <site> execute crm.avisos.backfill.retranslate_assignments --kwargs '{"dry_run": False}'
 
 Production needs Marco's go-ahead.
 """
