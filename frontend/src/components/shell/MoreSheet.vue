@@ -180,7 +180,9 @@
         </div>
 
         <!-- Where Muelle opens (was Hoy's footer): a setting, so it lives here. -->
-        <div class="flex min-h-11 items-center gap-2.5 px-1 py-1">
+        <div
+          class="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-1 px-1 py-1"
+        >
           <span
             class="lucide-door-open size-4 text-ink-gray-6"
             aria-hidden="true"
@@ -190,7 +192,7 @@
           }}</label>
           <select
             id="more-landing"
-            class="h-11 max-w-[55%] rounded-lg border-0 bg-surface-gray-2 pl-3 pr-8 text-sm"
+            class="h-11 w-full basis-full rounded-lg border-0 bg-surface-gray-2 pl-3 pr-8 text-sm"
             :value="landing"
             data-testid="more-landing"
             @change="chooseLanding($event.target.value)"
@@ -426,7 +428,7 @@ function openSettings() {
 
 // One tile style for modules and apps; one row style for settings.
 const TILE =
-  'flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-gray-1 text-sm'
+  'flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-gray-1 px-1 text-center text-sm leading-tight'
 const ROW =
   'flex min-h-11 w-full items-center gap-2.5 rounded-lg px-1 text-left text-sm'
 </script>

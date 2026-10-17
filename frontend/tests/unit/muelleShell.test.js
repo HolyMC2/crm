@@ -1477,7 +1477,7 @@ describe('Ventas deals in the palette', () => {
       [actions, places, { group: 'recientes', items: [{ id: 'r' }] }],
       { empty: true },
     )
-    expect(empty.map((s) => s.group)).toEqual(['recientes', 'ir_a', 'acciones'])
+    expect(empty.map((s) => s.group)).toEqual(['recientes', 'acciones', 'ir_a'])
   })
 
   it('a customer search shows their deal with person, RO, phone and stage (CRM-S3.3)', () => {

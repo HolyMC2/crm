@@ -26,6 +26,7 @@
         v-if="phone && !drillDown && !route.meta.ownPhoneHeader"
         data-testid="shell-header"
         :back="backTo"
+        :title="headerTitle"
         :bell-active="activeKey === 'avisos'"
         class="transition-[margin] duration-200"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
@@ -40,7 +41,7 @@
           />
           <h1
             data-testid="shell-title"
-            class="min-w-0 flex-1 truncate text-lg font-semibold [#app-header:has(*)+&]:hidden"
+            class="line-clamp-2 min-w-0 flex-1 self-center break-words px-3 text-lg font-semibold leading-snug [#app-header:has(*)+&]:hidden"
           >
             {{ headerTitle }}
           </h1>

@@ -255,6 +255,8 @@ export function createShellProviders({ boot, modules }) {
         href: module.to,
         shortcut: module.go ? `g ${module.go}` : undefined,
       }))
+      // An empty palette opens on Recientes plus the modules (S1.2).
+      if (query.kind === 'empty') return items
       if (moduleEnabled(boot.value, 'contactos'))
         for (const [segment, label] of CONTACTOS_PLACES)
           items.push({
@@ -395,7 +397,6 @@ export function createShellProviders({ boot, modules }) {
             icon,
             href: path,
           })
-      if (query.kind === 'empty') return []
       return items.filter((item) =>
         match(query.text, item.title, item.keywords),
       )
@@ -545,10 +546,11 @@ export function clinicaItems(result) {
     }))
 }
 
-// An empty input opens on Recientes and the modules to go to; a typed query
+// An empty input opens on Recientes, then the actions for the record on
+// screen (and «Nuevo contacto»), then the modules to go to; a typed query
 // ranks the records (a deal, a customer) above «Nuevo …».
 const SECTION_ORDER = {
-  empty: ['recientes', 'ir_a', 'registros', 'acciones'],
+  empty: ['recientes', 'acciones', 'ir_a', 'registros'],
   typed: ['registros', 'acciones', 'ir_a', 'recientes'],
 }
 

@@ -6,6 +6,8 @@
        data-power-* hooks are the pages' contract (their tests read them). -->
   <AppBar
     data-power-appbar
+    :title="heading"
+    :count="count"
     :loading="loading"
     :searchable="searchable"
     :search="search"
@@ -31,9 +33,10 @@
         data-power-title
         @click="listSheet = true"
       >
-        <span class="min-w-0 truncate text-lg font-semibold">{{
-          heading
-        }}</span>
+        <span
+          class="line-clamp-2 min-w-0 break-words text-lg font-semibold leading-snug [text-wrap:balance]"
+          >{{ heading }}</span
+        >
         <span
           v-if="count !== undefined && count !== null && count !== ''"
           class="shrink-0 text-base text-ink-gray-6"
