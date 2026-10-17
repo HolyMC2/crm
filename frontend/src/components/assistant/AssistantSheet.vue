@@ -1,7 +1,8 @@
 <template>
   <!-- «Pregúntale a Muelle»: one surface for every door (shell-program/design/
        ASSISTANT.md). On a phone it is a modal bottom sheet over the screen the
-       worker is on; on a desktop of 1280px or more it docks as a right panel
+       worker is on (ui/BottomSheet: back, swipe down, Esc and the scrim
+       close it); on a desktop of 1280px or more it docks as a right panel
        and the page reflows beside it. Never a floating bubble. -->
   <aside
     v-if="docked && assistant.open"
@@ -14,18 +15,20 @@
     <AssistantPanel docked @close="closeAssistant" @navigate="onNavigate" />
   </aside>
   <BottomSheet
-    v-else-if="!docked && assistant.open"
+    v-else-if="!docked"
     :open="assistant.open"
+    :aria-label="__('Ask Muelle')"
     @update:open="(open) => !open && closeAssistant()"
   >
-    <div
-      ref="panel"
-      class="flex h-full flex-col"
-      data-shell-layer="assistant"
-      data-testid="assistant-sheet"
-    >
-      <AssistantPanel @close="closeAssistant" @navigate="onNavigate" />
+    <template #header>
+      <AssistantHeader :closable="isMobile" @close="closeAssistant" />
+    </template>
+    <div ref="panel" data-shell-layer="assistant" data-testid="assistant-sheet">
+      <AssistantLog @navigate="onNavigate" />
     </div>
+    <template #footer>
+      <AssistantComposer />
+    </template>
   </BottomSheet>
 </template>
 <script setup>
@@ -39,11 +42,15 @@ import {
 } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
-import { BottomSheet } from 'frappe-ui'
 import { appleKeys, registerPageKeys } from '@/composables/shellKeyboard'
 import { normalizeCombo } from '@/vendor/muelle-shell/contracts'
 import { moduleKeyFor, shellModules } from '@/composables/muelleShell'
 import { shellTitle } from '@/utils/shellTitle'
+import BottomSheet from '@/components/ui/BottomSheet.vue'
+import { isMobile } from '@/composables/breakpoint'
+import AssistantComposer from './AssistantComposer.vue'
+import AssistantHeader from './AssistantHeader.vue'
+import AssistantLog from './AssistantLog.vue'
 import AssistantPanel from './AssistantPanel.vue'
 import {
   assistant,
@@ -114,3 +121,10 @@ function onNavigate() {
   if (!docked.value) closeAssistant()
 }
 </script>
+<style>
+/* doco's floating «Ayuda» launcher sits bottom right, over the dock's send
+   button; while the dock is open «Ayuda» stays in the rail's Más. */
+body:has([data-testid='assistant-dock']) #muelle-support-workflow {
+  display: none !important;
+}
+</style>

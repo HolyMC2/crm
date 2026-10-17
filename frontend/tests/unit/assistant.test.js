@@ -17,6 +17,7 @@ import {
   splitButtons,
   textParts,
   newClientId,
+  normalizeRow,
 } from '@/components/assistant/assistantText'
 import {
   _resetAssistant,
@@ -156,6 +157,40 @@ describe('what a reply says', () => {
     for (const q of ['aaron', 'PUR-ORD-0001', '6671234567', ''])
       expect(looksLikeQuestion(q)).toBe(false)
     expect(questionText('?ventas de hoy')).toBe('ventas de hoy')
+  })
+
+  it('marks an answer doco cannot replay as an earlier answer', () => {
+    const stale = normalizeRow({
+      kind: 'bot',
+      mid: 'm1',
+      message:
+        'Este resultado necesita una consulta nueva con tu acceso actual. Tu mensaje y borrador se conservan.',
+    })
+    expect(stale.stale).toBe(true)
+    expect(
+      normalizeRow({ kind: 'bot', mid: 'm2', message: 'Hola' }).stale,
+    ).toBe(false)
+    expect(
+      normalizeRow({
+        kind: 'user',
+        message: 'Este resultado necesita una consulta nueva',
+      }).stale,
+    ).toBe(false)
+  })
+
+  it('reads a model outage as one line, with the raw provider error too', () => {
+    const row = (message) => normalizeRow({ kind: 'bot', mid: 'x', message })
+    expect(
+      row(
+        'El asistente inteligente no está disponible en este momento por un problema del servicio de IA; ya avisamos a Muelle.',
+      ).down,
+    ).toBe(true)
+    expect(
+      row(
+        'No pude completar la consulta: LLM provider unavailable: provider=openai_compat, status=None, request_id=None.',
+      ).down,
+    ).toBe(true)
+    expect(row('Tienes 3 pendientes.').down).toBe(false)
   })
 
   it('makes client ids api.say accepts', () => {

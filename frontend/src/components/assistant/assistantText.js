@@ -219,14 +219,40 @@ export function isProgress(message) {
 }
 
 /** History rows (doco api.history) and live events → one message shape. */
+// doco's history (chat_usage.for_history) cannot replay an old answer with
+// today's access and writes one of these in its place; the sheet shows it as a
+// quiet note instead of a full answer, once per run of them.
+const NOT_REPLAYED = [
+  'Este resultado necesita una consulta nueva',
+  'Esta respuesta no se vuelve a mostrar',
+]
+export function isNotReplayed(text) {
+  const value = String(text || '').trim()
+  return NOT_REPLAYED.some((start) => value.startsWith(start))
+}
+
+// The brain could not reach its model: doco says so at length (or, on the
+// analytics path, with the raw provider error). The sheet shows one line and
+// its own «Reintentar» instead.
+const DOWN = [
+  /^\s*El asistente inteligente no está disponible/u,
+  /LLM provider unavailable/u,
+]
+export function isServiceDown(text) {
+  return DOWN.some((pattern) => pattern.test(String(text || '')))
+}
+
 export function normalizeRow(row) {
   const bot = row.kind === 'bot' || row.kind === 'answer'
+  const text = row.message ?? row.text ?? ''
   return {
     id: row.mid || row.client_id || `${row.kind}-${row.creation}`,
     mid: row.mid || null,
     role: bot ? 'bot' : 'user',
-    text: row.message ?? row.text ?? '',
+    text,
     buttons: bot ? row.buttons || [] : [],
     at: row.creation || null,
+    stale: bot && isNotReplayed(text),
+    down: bot && isServiceDown(text),
   }
 }

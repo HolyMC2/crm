@@ -30,11 +30,20 @@ const props = defineProps({
 
 loadStatus()
 
+// Contacto's record often carries its doctype only in its refs (the page
+// reads it the same way for its selected source).
+const doctype = computed(
+  () =>
+    props.record?.doctype ||
+    props.refs.find((ref) => ref?.name === props.record?.name)?.doctype ||
+    '',
+)
+
 if (props.screen === 'contacto')
   useAssistantContext(() =>
     props.record
       ? {
-          doctype: props.record.doctype,
+          doctype: doctype.value,
           name: props.record.name,
           title: props.record.title || props.record.name,
         }
@@ -45,7 +54,7 @@ if (props.screen === 'contacto')
 const owed = ref(null)
 const customer = computed(() => {
   if (props.screen !== 'contacto' || !props.record) return ''
-  if (props.record.doctype === 'Customer') return props.record.name
+  if (doctype.value === 'Customer') return props.record.name
   return props.refs.find((ref) => ref?.doctype === 'Customer')?.name || ''
 })
 watch(

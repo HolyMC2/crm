@@ -160,6 +160,18 @@ export function retry(message) {
   return send(message.text)
 }
 
+/** «Reintentar» on a reply that failed: ask the question before it again. */
+export function retryAnswer(message) {
+  const at = assistant.messages.findIndex((m) => m.id === message.id)
+  const question = assistant.messages
+    .slice(0, at)
+    .reverse()
+    .find((m) => m.role === 'user')
+  if (!question) return
+  assistant.messages = assistant.messages.filter((m) => m.id !== message.id)
+  return send(question.text)
+}
+
 function patchMessage(id, patch) {
   assistant.messages = assistant.messages.map((m) =>
     m.id === id ? { ...m, ...patch } : m,

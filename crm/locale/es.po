@@ -26469,3 +26469,10 @@ msgstr "Todavía no hay respuestas en este periodo."
 msgctxt "Garantías"
 msgid "Mine"
 msgstr "Míos"
+#: frontend/src/components/assistant
+msgid "Earlier answers are not shown again. Ask again to see them with your access today."
+msgstr "Las respuestas anteriores no se vuelven a mostrar. Pregunta de nuevo para verlas con tu acceso de hoy."
+
+#: frontend/src/components/assistant
+msgid "Muelle cannot answer right now. Try again in a few minutes."
+msgstr "Muelle no puede responder ahora. Reintenta en unos minutos."
