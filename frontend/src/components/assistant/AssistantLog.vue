@@ -143,6 +143,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import ActionCard from './ActionCard.vue'
 import {
   firstRecordLink,
+  isProgress,
   proseOf,
   splitButtons,
   stripEmoji,
@@ -161,7 +162,10 @@ const end = ref(null)
 const shown = computed(() =>
   assistant.messages.filter(
     (message, i, all) =>
-      !message.stale && !(message.role === 'user' && all[i + 1]?.stale),
+      !message.stale &&
+      !(message.role === 'user' && all[i + 1]?.stale) &&
+      // «Consultando…» shows once, as the status line under the log.
+      !(message.role === 'bot' && isProgress(message)),
   ),
 )
 const hidden = computed(() => assistant.messages.some((m) => m.stale))

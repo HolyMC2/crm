@@ -235,7 +235,7 @@ export function isNotReplayed(text) {
 // analytics path, with the raw provider error). The sheet shows one line and
 // its own «Reintentar» instead.
 const DOWN = [
-  /^\s*El asistente inteligente no está disponible/u,
+  /El asistente inteligente no está disponible/u,
   /LLM provider unavailable/u,
 ]
 export function isServiceDown(text) {

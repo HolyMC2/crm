@@ -182,7 +182,7 @@ describe('what a reply says', () => {
     const row = (message) => normalizeRow({ kind: 'bot', mid: 'x', message })
     expect(
       row(
-        'El asistente inteligente no está disponible en este momento por un problema del servicio de IA; ya avisamos a Muelle.',
+        '⚠️ El asistente inteligente no está disponible en este momento por un problema del servicio de IA; ya avisamos a Muelle.',
       ).down,
     ).toBe(true)
     expect(
