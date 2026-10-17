@@ -206,6 +206,14 @@ def group_key(row, cat=None):
 		return base + KEY_SEPARATOR + _clean(row.get("from_user"))
 	if cat == "system":
 		return base
+	docname = str(row.get("docname") or "")
+	title = plain(row.get("title"))
+	if cat == "alerts" and len(docname) >= 3 and docname in title:
+		# «Social Post SP-1: Auto-cancelada…»: the title names its record only by ID, so the
+		# same notice on many records reads the same once the ID is gone. One line:
+		# «6 avisos iguales», like any repeat; the newest opens.
+		same = _SPACE.sub(" ", title.replace(docname, "")).strip()
+		return base + KEY_SEPARATOR + "~" + _clean(same)[:160]
 	record = row.get("docname") or row.get("link")
 	if not record:
 		# A direct notice with nothing to open stays its own line.

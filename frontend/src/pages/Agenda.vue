@@ -168,7 +168,8 @@
         v-else
         type="button"
         class="ag-iconbtn"
-        :aria-label="__('Main menu')"
+        :aria-label="__('Views and calendars')"
+        :title="__('Views and calendars')"
         :aria-expanded="drawer"
         @click="drawer = true"
       >
@@ -460,7 +461,7 @@
             ref="drawerPanel"
             class="ag-drawer__panel ag-vars"
             role="dialog"
-            :aria-label="__('Agenda menu')"
+            :aria-label="__('Views and calendars')"
             @touchstart.passive="drawerStart"
             @touchmove.passive="drawerMove"
             @touchend="drawerEnd"

@@ -622,7 +622,8 @@ describe('Agenda page', () => {
     months.find((b) => b.dataset.month === '2026-12').click()
     await flush()
     expect(router.currentRoute.value.query.date).toBe('2026-12-01')
-    root.querySelector('button[aria-label="Main menu"]').click()
+    // ☰ is «Vistas y calendarios» (Google Calendar's drawer), not app navigation.
+    root.querySelector('button[aria-label="Views and calendars"]').click()
     await flush()
     const views = [...document.body.querySelectorAll('.ag-drawer__item')]
     expect(views.map((b) => b.textContent.trim())).toEqual(

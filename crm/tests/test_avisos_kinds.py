@@ -41,6 +41,20 @@ class TestAvisosKinds(TestCase):
 		self.assertNotEqual(kinds.group_key(a), kinds.group_key(c))
 		self.assertEqual(kinds.kind_key(a), kinds.kind_key(c))
 
+	def test_the_same_notice_on_records_named_only_by_id_is_one_line(self):
+		text = "Social Post {}: Auto-cancelada por falta de aprobación a tiempo: ZTest autocancel"
+		a = row(title=text.format("SP-09771"), doctype="Social Post", docname="SP-09771")
+		b = row(name="N2", title=text.format("SP-09772"), doctype="Social Post", docname="SP-09772")
+		c = row(
+			name="N3",
+			title="Social Post SP-09773: Auto-cancelada por falta de aprobación a tiempo: Otra",
+			doctype="Social Post",
+			docname="SP-09773",
+		)
+		self.assertEqual(kinds.group_key(a), kinds.group_key(b))
+		# A different subject is a different line.
+		self.assertNotEqual(kinds.group_key(a), kinds.group_key(c))
+
 	def test_direct_without_record_stays_alone(self):
 		a = row(type="Mention", name="M1")
 		b = row(type="Mention", name="M2")

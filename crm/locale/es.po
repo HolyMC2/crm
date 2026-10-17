@@ -26431,3 +26431,7 @@ msgstr "Abrir el embudo"
 #: frontend/src/components/Reports/SalesReport.vue
 msgid "Created {0} through {1}; current state as of {2}."
 msgstr "Creados del {0} al {1}; estado actual al {2}."
+
+#: frontend/src/pages/Agenda.vue
+msgid "Views and calendars"
+msgstr "Vistas y calendarios"

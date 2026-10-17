@@ -191,6 +191,11 @@ class TestAvisosResolve(IntegrationTestCase):
 		group = self.one("Administrator", f"{full_name} took you off 2 assignments")
 		self.assertEqual(group["count"], 2)
 
+	def test_the_admin_user_reads_as_the_system_and_ids_as_no_one(self):
+		self.assertEqual(stream._full_name("Administrator"), frappe._("System"))
+		self.assertEqual(stream._full_name(""), "")
+		self.assertNotEqual(stream._full_name(BETO), BETO)
+
 	def test_frappes_assignment_mail_line_is_not_repeated_as_the_body(self):
 		doc = frappe.get_doc(
 			{

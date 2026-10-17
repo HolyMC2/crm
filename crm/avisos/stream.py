@@ -33,6 +33,8 @@ _GENERIC_ASSIGNMENT = re.compile(r"assigned an? \S+(?: \S+)? \S+ to you$")
 _ASSIGNMENT_FOR = re.compile(r"^(?:Assignment for|Asignación para) \S+(?: \S+)? \S+$")
 # A user id with no name set, such as «4vv6e0b4bu»: one lowercase word with digits, no spaces.
 _HASH_ID = re.compile(r"^(?=.*\d)[a-z0-9]{8,12}$")
+# The built-in admin user, as stored in a sender field or in its English/Spanish removal text.
+_SYSTEM_NAMES = ("Administrator", "Administrador")
 
 
 def _user():
@@ -285,6 +287,9 @@ def _full_name(user):
 	a hash such as «4vv6e0b4bu»): the worker gets no name rather than an id."""
 	if not user:
 		return ""
+	if user in _SYSTEM_NAMES:
+		# Work the system did (or an admin acting as it) reads «Sistema», never «Administrator».
+		return _("System")
 	name = (frappe.utils.get_fullname(user) or "").strip()
 	if not name or name == user or "@" in name or _HASH_ID.match(name):
 		return ""
@@ -407,6 +412,8 @@ def _removed_title(group, out):
 	actor's language) → «Administrator te quitó la tarea «Dar seguimiento» de Ana López»."""
 	parts = kinds.removal_parts(group.get("raw_title") or group["title"])
 	what, who, is_task = parts or ("", "", False)
+	if who in _SYSTEM_NAMES:
+		who = _("System")
 	who = out["from_name"] or who
 	if group["count"] > 1 and who:
 		return _("{0} took you off {1} assignments").format(who, group["count"])
