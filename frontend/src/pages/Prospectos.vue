@@ -1,6 +1,43 @@
 <template>
-  <div class="flex h-full flex-col overflow-hidden">
+  <div class="relative flex h-full flex-col overflow-hidden">
+    <!-- Phone (Shell D4): the one prospects list. Title in the shell bar,
+         one chip row, a «Filtros» sheet for the source, rows on ListRow. -->
+    <div v-if="isPhone" class="flex flex-col gap-2 px-4 pb-2 pt-3">
+      <TextInput
+        v-model="q"
+        type="search"
+        placeholder="Buscar prospectos"
+        aria-label="Buscar prospectos"
+        data-list-search
+        @update:model-value="searchSoon"
+      />
+      <FilterChips
+        :model-value="kind"
+        :chips="phoneChips"
+        :deselectable="false"
+        label="Tipo"
+        :filters-count="source ? 1 : 0"
+        @update:model-value="setKind"
+        @clear-filters="setSource('')"
+      >
+        <template #filters>
+          <p class="pb-1 text-sm text-ink-gray-6">Origen</p>
+          <ListRow
+            v-for="chip in [
+              { key: '', label: 'Todos los orígenes' },
+              ...sources,
+            ]"
+            :key="chip.key || 'all'"
+            :title="chip.label"
+            :meta="chip.count != null ? String(chip.count) : ''"
+            :selected="source === chip.key"
+            @click="setSource(chip.key)"
+          />
+        </template>
+      </FilterChips>
+    </div>
     <header
+      v-if="!isPhone"
       class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3"
     >
       <div>
@@ -25,7 +62,10 @@
       </div>
     </header>
 
-    <div class="flex flex-wrap items-center gap-2 border-b px-5 py-2">
+    <div
+      v-if="!isPhone"
+      class="flex flex-wrap items-center gap-2 border-b px-5 py-2"
+    >
       <TextInput
         v-model="q"
         class="w-full sm:w-64"
@@ -69,7 +109,11 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-auto px-5 py-3" data-testid="prospects-list">
+    <div
+      class="flex-1 overflow-auto"
+      :class="isPhone ? 'pb-24' : 'px-5 py-3'"
+      data-testid="prospects-list"
+    >
       <div v-if="error" class="rounded border p-3 text-sm" role="alert">
         <strong>No se pudo cargar la lista.</strong>
         <p class="text-ink-gray-6">{{ errorText }}</p>
@@ -99,6 +143,29 @@
           label="Quitar filtros"
           @click="clearFilters"
         />
+      </div>
+      <div v-else-if="isPhone">
+        <ListRow
+          v-for="row in rows"
+          :key="`${row.kind}:${row.name}`"
+          :avatar="prospectName(row)"
+          :title="prospectName(row)"
+          :subtitle="phoneLine(row)"
+          :meta="rowMeta(row)"
+          :meta-tone="isOverdue(row) ? 'danger' : ''"
+          :to="prospectRoute(row, { phone: true })"
+          data-testid="prospect-row"
+        />
+        <button
+          v-if="hasMore"
+          type="button"
+          class="flex min-h-12 w-full items-center justify-center text-base font-medium text-ink-gray-8"
+          :disabled="loading"
+          data-testid="prospects-load-more"
+          @click="load(start + PAGE, { append: true })"
+        >
+          {{ loading ? 'Cargando…' : 'Cargar más' }}
+        </button>
       </div>
       <ul v-else class="divide-y">
         <li v-for="row in rows" :key="`${row.kind}:${row.name}`">
@@ -141,7 +208,7 @@
           </RouterLink>
         </li>
       </ul>
-      <div v-if="start > 0 || hasMore" class="mt-3 flex gap-2">
+      <div v-if="!isPhone && (start > 0 || hasMore)" class="mt-3 flex gap-2">
         <Button
           v-if="start > 0"
           label="Anteriores"
@@ -150,6 +217,22 @@
         <Button v-if="hasMore" label="Siguientes" @click="load(start + PAGE)" />
       </div>
     </div>
+    <Fab v-if="isPhone" label="Nuevo prospecto" @click="createNew" />
+    <BottomSheet v-model:open="createOpen" title="Nuevo" flush>
+      <ListRow
+        icon="lucide-user-plus"
+        title="Prospecto"
+        subtitle="Alguien interesado en comprar"
+        @click="newLead"
+      />
+      <ListRow
+        icon="lucide-message-square"
+        title="Consulta"
+        subtitle="Una pregunta que alguien dejó"
+        :to="{ path: '/inquiries', query: { capture: '1' } }"
+        @click="createOpen = false"
+      />
+    </BottomSheet>
     <LeadModal v-if="showLeadModal" v-model="showLeadModal" />
   </div>
 </template>
@@ -158,11 +241,15 @@ import { computed, defineAsyncComponent, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { formatDue } from '@/utils/display'
 import { Badge, Button, TextInput, call } from 'frappe-ui'
+import { BottomSheet, Fab, FilterChips, ListRow } from '@/components/ui'
+import { isMobile as isPhone } from '@/composables/breakpoint'
+import { formatPhone } from '@/composables/crmFormat'
 import {
   KIND_CHIPS,
   KIND_LABELS,
   isOverdue,
   prospectArgs,
+  prospectName,
   prospectRoute,
   sourceTheme,
   waitingLabel,
@@ -191,6 +278,44 @@ const LeadModal = defineAsyncComponent(
   () => import('@/components/Modals/LeadModal.vue'),
 )
 const showLeadModal = ref(false)
+const createOpen = ref(false)
+const inquiriesEnabled = ref(false)
+
+// Phone chips: the kinds with their counts (Consultas only when the shop uses them).
+const phoneChips = computed(() =>
+  KIND_CHIPS.filter(
+    (chip) => chip.value !== 'inquiry' || inquiriesEnabled.value,
+  ).map((chip) => ({
+    value: chip.value,
+    label: chip.label,
+    count: chip.value
+      ? counts.value[chip.value] || 0
+      : counts.value.lead + counts.value.inquiry,
+  })),
+)
+// Line 2: how to reach them and where they came from.
+function phoneLine(row) {
+  return [
+    row.kind === 'inquiry' && 'Consulta',
+    row.phone ? formatPhone(row.phone) : row.email,
+    row.source_label,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+// Trailing meta: the due follow-up, else how long they have waited.
+function rowMeta(row) {
+  if (row.next_action_at) return formatDue(row.next_action_at).label
+  return waitingLabel(row.modified)
+}
+function createNew() {
+  if (inquiriesEnabled.value) createOpen.value = true
+  else showLeadModal.value = true
+}
+function newLead() {
+  createOpen.value = false
+  showLeadModal.value = true
+}
 
 const errorText = computed(
   () =>
@@ -206,7 +331,7 @@ function chipLabel(chip) {
 }
 
 let seq = 0
-async function load(at = 0) {
+async function load(at = 0, { append = false } = {}) {
   const mine = ++seq
   loading.value = true
   error.value = null
@@ -222,8 +347,11 @@ async function load(at = 0) {
       }),
     )
     if (mine !== seq) return
-    rows.value = page.rows || []
+    rows.value = append
+      ? [...rows.value, ...(page.rows || [])]
+      : page.rows || []
     sources.value = page.sources || []
+    inquiriesEnabled.value = !!page.inquiries_enabled
     counts.value = page.counts || { lead: 0, inquiry: 0 }
     hasMore.value = !!page.has_more
     start.value = at

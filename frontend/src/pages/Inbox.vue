@@ -16,10 +16,22 @@
         {{ __('Back to {0}', [returnLabel]) }}
       </button>
     </div>
+    <!-- Phone: the shared Segmented with short labels that fit at 305px. -->
+    <div
+      v-if="addonAvailable && isMobile"
+      class="flex-none border-b border-outline-gray-1 px-4 py-2"
+    >
+      <Segmented
+        :model-value="space"
+        :options="phoneSpaces"
+        :label="__('Espacios de la bandeja')"
+        @update:model-value="selectWorkspace"
+      />
+    </div>
     <nav
-      v-if="addonAvailable"
+      v-else-if="addonAvailable"
       class="flex flex-none gap-4 border-b border-outline-gray-1 px-4 text-sm sm:py-3"
-      :aria-label="__('Inbox spaces')"
+      :aria-label="__('Espacios de la bandeja')"
     >
       <button
         type="button"
@@ -69,6 +81,12 @@ import { safeReturn } from '@/composables/useCompras'
 import { goToReturn } from '@/utils/atencion'
 import { inboxSpace, inboxSpaceQuery } from '@/utils/inboxSpaces'
 import PaneState from '@/components/shell/PaneState.vue'
+import { Segmented } from '@/components/ui'
+const phoneSpaces = [
+  { value: 'conversations', label: __('Chats') },
+  { value: 'activity', label: __('Tratos') },
+  { value: 'review', label: __('Por aprobar') },
+]
 // «Negocios y actividad» is its own chunk: say it is loading (after 200 ms)
 // and offer a reload if the chunk cannot be fetched, never a blank pane.
 const ConversationLegacyWorkspace = defineAsyncComponent({

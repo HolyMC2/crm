@@ -28,11 +28,35 @@ export function sourceTheme(key) {
   return SOURCE_THEMES[key] || 'gray'
 }
 
-/** Where a row opens: the lead page, or the inquiry in Consultas. */
-export function prospectRoute(row) {
+/** Where a row opens: the lead page, or the inquiry in Consultas. On a phone a
+ * lead opens the prospect record (Shell D4), which reads like a contact. */
+export function prospectRoute(row, { phone = false } = {}) {
   if (row.kind === 'inquiry')
     return { name: 'Inquiries', query: { name: row.name } }
+  if (phone) return { name: 'Prospecto', params: { leadId: row.name } }
   return { name: 'Lead', params: { leadId: row.name } }
+}
+
+// A name the system made up («Prospecto 67a3f…», «CRM-LEAD-2026-…») is not a name.
+const GENERATED = /^(prospecto|lead)\s+[0-9a-f]{3,}|^crm-lead-/i
+
+/** The prospect's name, else its phone or e-mail; never a generated id. */
+export function prospectName(row = {}) {
+  const name = String(
+    row.title ||
+      row.lead_name ||
+      [row.first_name, row.last_name].filter(Boolean).join(' ') ||
+      '',
+  ).trim()
+  if (name && !GENERATED.test(name)) return name
+  return row.phone || row.mobile_no || row.email || 'Prospecto sin nombre'
+}
+
+/** «Sitio web», «WhatsApp»: a lead source in the worker's words. */
+export function sourceText(source) {
+  const text = String(source || '').trim()
+  if (!text) return ''
+  return globalThis.__?.(text) || text
 }
 
 /** «hace 3 h», «hace 2 días»: how long the prospect has waited since its last change. */

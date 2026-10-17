@@ -74,3 +74,31 @@ describe('Prospectos helpers (CRM-S3.4)', () => {
       expect(supported).toContain(sourceTheme(key))
   })
 })
+
+describe('prospect record (Shell D4)', () => {
+  it('opens the contact-style record on a phone and the lead page elsewhere', async () => {
+    const { prospectRoute } = await import('@/utils/prospects')
+    expect(
+      prospectRoute({ kind: 'lead', name: 'L-1' }, { phone: true }),
+    ).toEqual({ name: 'Prospecto', params: { leadId: 'L-1' } })
+    expect(prospectRoute({ kind: 'lead', name: 'L-1' })).toEqual({
+      name: 'Lead',
+      params: { leadId: 'L-1' },
+    })
+  })
+  it('never names a prospect with a generated id', async () => {
+    const { prospectName } = await import('@/utils/prospects')
+    expect(prospectName({ title: 'Karla Martínez' })).toBe('Karla Martínez')
+    expect(
+      prospectName({ title: 'Prospecto 67a3f9', phone: '5550001234' }),
+    ).toBe('5550001234')
+    expect(prospectName({ lead_name: 'CRM-LEAD-2026-00012' })).toBe(
+      'Prospecto sin nombre',
+    )
+  })
+  it('says Prospecto, not Lead', async () => {
+    const { KIND_LABELS, KIND_CHIPS } = await import('@/utils/prospects')
+    expect(KIND_LABELS.lead).toBe('Prospecto')
+    expect(KIND_CHIPS.map((c) => c.label)).not.toContain('Leads')
+  })
+})

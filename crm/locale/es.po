@@ -26352,3 +26352,39 @@ msgstr "Registrar llamada"
 #: frontend/src/pages/CallsView.vue
 msgid "Las llamadas que hagas o recibas aparecerán aquí."
 msgstr "Las llamadas que hagas o recibas aparecerán aquí."
+
+#: frontend/src/pages/DealsView.vue
+msgid "Trato sin cliente"
+msgstr "Trato sin cliente"
+
+#: frontend/src/pages/Inbox.vue
+msgid "Espacios de la bandeja"
+msgstr "Espacios de la bandeja"
+
+#: frontend/src/pages/Inbox.vue
+msgid "Chats"
+msgstr "Chats"
+
+#: frontend/src/pages/WhatsAppQueue.vue
+msgid "Estado del mensaje"
+msgstr "Estado del mensaje"
+
+#: frontend/src/pages/WhatsAppQueue.vue
+msgid "Por enviar"
+msgstr "Por enviar"
+
+#: frontend/src/pages/WhatsAppQueue.vue
+msgid "Fallidos"
+msgstr "Fallidos"
+
+#: frontend/src/pages/WhatsAppQueue.vue
+msgid "Enviados"
+msgstr "Enviados"
+
+#: frontend/src/pages/WhatsAppQueue.vue
+msgid "Cancelados"
+msgstr "Cancelados"
+
+#: frontend/src/pages/Inbox.vue
+msgid "Por aprobar"
+msgstr "Por aprobar"

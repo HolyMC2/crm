@@ -25,7 +25,7 @@
             :class="recordLink ? 'hover:underline' : ''"
             >{{ customerName || __('Sin nombre') }}</component
           >
-          <span class="font-mono text-2xs text-ink-gray-6" :title="row.to">{{
+          <span class="text-2xs text-ink-gray-6" :title="row.to">{{
             phone
           }}</span>
         </div>
@@ -42,7 +42,7 @@
             :title="__('Abrir la orden')"
           >
             <FeatherIcon name="tool" class="size-3" />
-            {{ ctx.repair_order
+            {{ __('Reparación')
             }}<span v-if="ctx.repair_status"> · {{ ctx.repair_status }}</span>
           </a>
           <component
@@ -52,8 +52,10 @@
             class="inline-flex items-center gap-1 rounded bg-surface-gray-2 px-1.5 py-0.5 text-2xs text-ink-gray-7"
             :class="refLink ? 'hover:bg-surface-gray-3' : ''"
           >
-            {{ kindLabel }} {{ row.reference_name
-            }}<span v-if="ctx.status"> · {{ ctx.status }}</span>
+            {{ kindLabel
+            }}<template v-if="!looksLikeId(row.reference_name)">
+              {{ row.reference_name }}</template
+            ><span v-if="ctx.status"> · {{ ctx.status }}</span>
           </component>
           <span
             v-if="ctx.owner_name"
@@ -191,8 +193,8 @@
         v-if="showContext && recordLink"
         :to="recordLink"
         class="inline-flex items-center gap-1 text-2xs-semibold text-ink-gray-6 hover:text-ink-gray-9"
-        >{{ openLabel }} <FeatherIcon name="arrow-right" class="size-3"
-      /></RouterLink>
+        >{{ openLabel }}</RouterLink
+      >
     </div>
   </div>
 </template>
@@ -209,6 +211,7 @@ import {
   relativeAge,
 } from '@/utils/reviewCardFormat'
 import { tallerOrderHref } from '@/utils/repairOrders'
+import { looksLikeId, relativeTime } from '@/utils/display'
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -225,8 +228,12 @@ const busy = ref('')
 const ctx = computed(() => props.row.context || {})
 const customerName = computed(() => ctx.value.customer_name || '')
 // the contact's own number reads better than the raw WhatsApp recipient
+// «+521 …» is WhatsApp's old mobile prefix; Mexico dials «+52 …» since 2019.
 const phone = computed(() =>
-  displayPhone(ctx.value.customer_phone || props.row.to),
+  displayPhone(ctx.value.customer_phone || props.row.to).replace(
+    /^\+521 /,
+    '+52 ',
+  ),
 )
 const about = computed(() => aboutLine(ctx.value))
 // the reference's own page (deal / lead) — what the reference chip opens
@@ -397,8 +404,10 @@ const shortError = computed(() => {
 })
 
 const fullTs = computed(() => props.row.creation || '')
-const relTime = computed(() =>
-  relativeAge(props.row.creation, Date.now(), { now: __('ahora') }),
+const relTime = computed(
+  () =>
+    relativeTime(props.row.creation) ||
+    relativeAge(props.row.creation, Date.now(), { now: __('ahora') }),
 )
 
 async function act(kind) {

@@ -10,8 +10,10 @@
   <div
     class="scb flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-surface-gray-2"
   >
-    <!-- toolbar -->
+    <!-- toolbar (a phone has the title in the shell bar and the count on the
+         chip; it keeps only the way back when it was opened from elsewhere) -->
     <div
+      v-if="!isMobile || back"
       class="flex min-h-[52px] flex-none flex-wrap items-center justify-between gap-2 border-b border-outline-gray-1 bg-surface-base px-5 py-1.5"
     >
       <div class="flex min-w-0 items-center gap-2">
@@ -23,16 +25,19 @@
           <FeatherIcon name="arrow-left" class="h-4 w-4" />
           {{ __('Back to {0}', [back.label]) }}
         </button>
-        <span class="truncate text-[15px] font-bold text-ink-gray-9">{{
-          __('Messages to review')
-        }}</span>
         <span
-          v-if="pendingCount"
+          v-if="!isMobile"
+          class="truncate text-[15px] font-bold text-ink-gray-9"
+          >{{ __('Messages to review') }}</span
+        >
+        <span
+          v-if="pendingCount && !isMobile"
           class="rounded-full bg-surface-amber-1 px-2 py-0.5 text-[11px] font-semibold text-ink-amber-9"
           >{{ pendingCount }} {{ __('pendientes') }}</span
         >
       </div>
       <button
+        v-if="!isMobile"
         class="rounded-lg border border-outline-gray-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-gray-7"
         :disabled="queue.loading"
         @click="queue.reload()"
@@ -41,9 +46,17 @@
       </button>
     </div>
 
-    <div class="p-5">
+    <div :class="isMobile ? 'px-4 py-3' : 'p-5'">
+      <FilterChips
+        v-if="isMobile"
+        v-model="status"
+        class="mb-3"
+        :chips="phoneChips"
+        :deselectable="false"
+        :label="__('Estado del mensaje')"
+      />
       <!-- status filter pills -->
-      <div class="mb-4 flex flex-wrap gap-1.5">
+      <div v-else class="mb-4 flex flex-wrap gap-1.5">
         <button
           v-for="f in filters"
           :key="f.value"
@@ -101,6 +114,8 @@ import { createResource, FeatherIcon } from 'frappe-ui'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
+import { FilterChips } from '@/components/ui'
+import { isMobile } from '@/composables/breakpoint'
 
 const filters = [
   { label: 'Pendiente', value: 'Pendiente' },
@@ -137,6 +152,21 @@ function badgeCount(filterValue) {
   const c = pendingRes.data || {}
   return { Pendiente: c.pendiente, Fallido: c.fallido }[filterValue] || 0
 }
+// Phone chips: one scrolling row in plain words, counts where they matter.
+const PHONE_LABELS = {
+  Pendiente: 'Por enviar',
+  Fallido: 'Fallidos',
+  Enviado: 'Enviados',
+  Cancelado: 'Cancelados',
+  Todos: 'Todos',
+}
+const phoneChips = computed(() =>
+  filters.map((f) => ({
+    value: f.value,
+    label: __(PHONE_LABELS[f.value]),
+    count: badgeCount(f.value) || undefined,
+  })),
+)
 
 watch(status, () => queue.reload())
 

@@ -297,6 +297,7 @@
           </div>
           <div class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6">
             <span
+              v-if="u.last_message"
               class="inline-flex flex-none items-center font-semibold"
               :style="`color: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`"
             >
@@ -491,6 +492,7 @@
               class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6"
             >
               <span
+                v-if="u.last_message"
                 class="inline-flex flex-none items-center font-semibold"
                 :style="`color: ${u.last_channel === 'messenger' ? '#0084ff' : '#25d366'}`"
               >
@@ -816,7 +818,7 @@
               class="flex items-center gap-1.5 text-[11.5px] text-ink-gray-6"
             >
               <span
-                v-if="r.last_channel"
+                v-if="r.last_channel && r.last_message"
                 class="inline-flex flex-none items-center font-semibold"
                 :style="`color:${chColor(r.last_channel)}`"
               >

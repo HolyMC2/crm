@@ -646,6 +646,12 @@ import {
 } from '@/composables/crmFormat'
 
 const router = useRouter()
+// Shell D4: on a phone /prospectos is the one prospects list.
+if (isMobile.value)
+  router.replace({
+    name: 'Prospectos',
+    query: router.currentRoute.value.query,
+  })
 const route = useRoute()
 
 // ── column config (per-browser show/hide) ─────────────────────────────────────

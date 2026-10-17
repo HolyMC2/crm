@@ -92,11 +92,16 @@ describe('WhatsAppReviewCard', () => {
       name: 'Deal 360',
       params: { dealId: 'CRM-DEAL-2026-00968' },
     })
-    expect(text).toContain('+521 555 555 0000')
+    // The old «+521» mobile prefix reads as today's «+52».
+    expect(text).toContain('+52 555 555 0000')
     expect(text).toContain('Quitar Virus · Realme C63')
     const ro = el.querySelector('a[href="/taller/orders/RO-00838"]')
     expect(ro.textContent).toContain('Listo para Entregar')
-    expect(text).toContain('Trato CRM-DEAL-2026-00968 · Aprobado')
+    // Workers see words, not folios or deal IDs.
+    expect(ro.textContent).toContain('Reparación')
+    expect(ro.textContent).not.toContain('RO-00838')
+    expect(text).toContain('Trato · Aprobado')
+    expect(text).not.toContain('CRM-DEAL')
     expect(text).toContain('Ana Vendedora')
     expect(text).toContain('equipo_listo')
     expect(text).toContain('Pendiente')
@@ -178,7 +183,7 @@ describe('WhatsAppReviewCard', () => {
       row: dealRow({ context: { kind: 'CRM Deal' }, template_label: null }),
     })
     expect(el.textContent).toContain('Sin nombre')
-    expect(el.textContent).toContain('+521 555 555 0000')
+    expect(el.textContent).toContain('+52 555 555 0000')
     // A template id is humanized, never shown raw.
     expect(el.textContent).toContain('Equipo listo')
     expect(el.textContent).not.toContain('equipo_listo')

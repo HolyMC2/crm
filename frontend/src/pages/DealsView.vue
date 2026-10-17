@@ -18,10 +18,6 @@
         <h1 class="truncate text-lg font-semibold text-ink-gray-9">
           {{ __('Tratos') }}
         </h1>
-        <span
-          class="flex-none rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] font-semibold text-ink-gray-6"
-          >{{ count }}</span
-        >
         <div class="flex-1" />
         <Dropdown :options="mobileMenu">
           <button
@@ -289,7 +285,7 @@
           >
         </button>
       </div>
-      <p class="mt-1 text-xs text-ink-gray-5">
+      <p v-if="!isMobile" class="mt-1 text-xs text-ink-gray-5">
         {{ __(followUpQueues.find((q) => q.key === followUp).description) }}
       </p>
     </section>
@@ -390,7 +386,7 @@
         :key="r.name"
         :title="cardTitle(r)"
         :subtitle="mobileSubtitle(r)"
-        :time="timeAgo(r.modified)"
+        :time="relativeTime(r.modified)"
         :menu="rowMenu(r)"
         @open="openDeal(r.name)"
       >
@@ -407,13 +403,8 @@
             class="rounded-md px-1.5 py-[2px] text-[11px] font-semibold"
             :style="repairChip(extra(r).repair_status)"
           >
-            🔧 {{ extra(r).repair_status }}
+            🔧 {{ sentenceCase(extra(r).repair_status) }}
           </span>
-          <span
-            v-if="deviceOf(r)"
-            class="truncate text-[11px] text-ink-gray-6"
-            >{{ deviceOf(r) }}</span
-          >
           <span
             v-if="displayValue(r, getDealStatus(r.status))"
             class="ml-auto flex-none text-[12px] font-semibold text-ink-gray-8"
@@ -891,6 +882,7 @@
 </template>
 
 <script setup>
+import { looksLikeId, relativeTime } from '@/utils/display'
 import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
@@ -1956,8 +1948,16 @@ function formatDate(v) {
 // Card headline: the deal's own title when the tenant has one, else the customer,
 // else whatever identifies the row. RO-generated deals have no title, which is why
 // the upstream kanban reads "No Title".
+// A card is named for the customer or the deal, never its ID («CRM-DEAL-…»).
 function cardTitle(r) {
-  return r.deal_name || customerOf(r) || label(r)
+  const name = r.deal_name || customerOf(r) || label(r)
+  if (name && !looksLikeId(name)) return name
+  return deviceOf(r) || formatPhone(phoneOf(r)) || __('Trato sin cliente')
+}
+// «Listo para Entregar» → «Listo para entregar» (sentence case).
+function sentenceCase(text) {
+  const value = String(text || '')
+  return value.charAt(0) + value.slice(1).toLowerCase()
 }
 function probabilityOf(r) {
   const policy = (pipelines.data || []).find(

@@ -388,6 +388,14 @@ const routes = [
     meta: { navLabel: 'Prospectos', title: 'Prospectos' },
   },
   {
+    // Shell D4: on a phone a prospect opens a contact-style record.
+    path: '/prospectos/:leadId',
+    name: 'Prospecto',
+    component: () => import('@/pages/Prospecto.vue'),
+    props: true,
+    meta: { title: 'Prospectos', ownPhoneHeader: true },
+  },
+  {
     path: '/inquiries',
     name: 'Inquiries',
     component: () => import('@/pages/Inquiries.vue'),
