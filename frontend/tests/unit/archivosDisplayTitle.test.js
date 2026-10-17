@@ -39,6 +39,30 @@ describe('a file title a worker can read', () => {
     )
   })
 
+  it('replaces a CFDI named «{UUID}.xml» with the kind, issuer and date', () => {
+    const item = {
+      title: `${UUID}.xml`,
+      document_kind: 'Invoice',
+      counterparty: 'REFACCIONES FICTICIAS DEL NORTE SA DE C.V.',
+      document_date: '2026-03-03',
+    }
+    expect(displayTitle(item)).toBe(
+      `${kindLabel('Invoice')} de Refacciones Ficticias del Norte SA de C.V. · ${formatDay('2026-03-03', 'es-MX')}`,
+    )
+  })
+
+  it('keeps a file name that only contains an ID-like part', () => {
+    const named = {
+      title: 'ticket-baterias17fdd795c6b4.jpeg',
+      kind: 'ticket',
+      date: '2026-09-30',
+    }
+    expect(displayTitle(named)).toBe('ticket-baterias17fdd795c6b4.jpeg')
+    expect(
+      displayTitle({ title: 'factura-fixoem-sep.pdf', kind: 'factura' }),
+    ).toBe('factura-fixoem-sep.pdf')
+  })
+
   it('keeps a native attachment’s file name, which is its useful title', () => {
     const item = {
       title: 'ticket-baterias.jpeg',

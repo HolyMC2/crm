@@ -734,7 +734,9 @@ export function issuerName(text) {
  */
 export function displayTitle(item, locale = 'es-MX') {
   const raw = String(item?.title || '').trim()
-  if (raw && !looksLikeId(raw)) return raw
+  // A CFDI arrives named «{UUID}.xml»: the ID test runs on the stem.
+  const stem = raw.replace(/\.[a-z0-9]{2,5}$/i, '')
+  if (raw && !looksLikeId(stem)) return raw
   // No type at all: the record it is attached to is the better name.
   if (!item?.document_kind && !item?.kind && item?.attached_to?.title)
     return item.attached_to.title
