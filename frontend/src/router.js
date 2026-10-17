@@ -39,6 +39,10 @@ async function shouldCapturePersona() {
   return !!enabled
 }
 
+const UI_LAB =
+  import.meta.env.DEV ||
+  /\.lab\./.test(globalThis.window?.location?.hostname || '')
+
 const routes = [
   // Ventas module home in the Muelle shell (contracts basePath).
   { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
@@ -621,6 +625,17 @@ const routes = [
     component: () => import('@/pages/PersonaForm.vue'),
     meta: { title: 'Welcome' },
   },
+  // The shared phone primitives (components/ui), live: dev and lab only.
+  ...(UI_LAB
+    ? [
+        {
+          path: '/_ui',
+          name: 'Ui Lab',
+          component: () => import('@/pages/UiLab.vue'),
+          meta: { app: 'hoy', title: 'Componentes', ownPhoneHeader: true },
+        },
+      ]
+    : []),
   {
     path: '/:invalidpath',
     name: 'Invalid Page',

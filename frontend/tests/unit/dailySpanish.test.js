@@ -34,6 +34,7 @@ const DIRS = [
   'components/hoy',
   'components/contactos',
   'components/pendientes',
+  'components/ui', // the shared phone primitives (Shell S1.1)
 ]
 const EXTRA = [
   // Deal 360 pieces that live outside components/doco/inbox

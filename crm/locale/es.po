@@ -26022,3 +26022,20 @@ msgstr "Pídeselo al asistente: «búscame la factura de…», «mándamela» (a
 #: frontend/src/components/archivos/ArchivosOverview.vue
 msgid "How Archivos works, in the shop manual"
 msgstr "Cómo funciona Archivos, en el manual de la tienda"
+#: frontend/src/components/ui/FilterChips.vue
+msgid "Show results"
+msgstr "Ver resultados"
+
+#: frontend/src/components/ui/FilterChips.vue
+msgid "{0} filters on"
+msgstr "{0} filtros activos"
+
+#: frontend/src/components/ui/BottomSheet.vue
+msgctxt "Bottom sheet"
+msgid "Expand"
+msgstr "Expandir"
+
+#: frontend/src/components/ui/BottomSheet.vue
+msgctxt "Bottom sheet"
+msgid "Collapse"
+msgstr "Contraer"
