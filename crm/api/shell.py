@@ -568,11 +568,21 @@ def boot():
 		"palette": _palette(),
 		"mobile_slots": _saved_slots(),
 		"rail": _saved_rail(),
+		# Where Muelle opens for me (Más › Configuración); the client shows
+		# «Automático» when the saved module is no longer one of mine.
+		"landing": _saved_landing_key(),
 		"modules": modules,
 		# Compatibility for the Contactos pages and NotPermitted (one release).
 		"sales_access": bool(modules.get("ventas", {}).get("enabled")),
 		"capabilities": {"directory": bool(modules.get("contactos", {}).get("enabled"))},
 	}
+
+
+def _saved_landing_key() -> str:
+	"""The raw «Abrir Muelle en» choice; Hoy owns saving it (crm.api.hoy.save_landing)."""
+	from crm.api.hoy import LANDING_DEFAULT
+
+	return frappe.defaults.get_user_default(LANDING_DEFAULT) or ""
 
 
 @frappe.whitelist(methods=["POST"])

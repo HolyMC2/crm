@@ -4,11 +4,15 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const state = vi.hoisted(() => ({ call: vi.fn(), mobile: null }))
+const state = vi.hoisted(() => ({ call: vi.fn(), mobile: null, toasts: [] }))
 vi.mock('frappe-ui', async () => {
   const { h, ref } = await import('vue')
   return {
     call: (...args) => state.call(...args),
+    toast: {
+      success: (text) => state.toasts.push(['success', text]),
+      error: (text) => state.toasts.push(['error', text]),
+    },
     useTheme: () => ({ currentTheme: ref('light'), setTheme: vi.fn() }),
     Button: {
       props: ['label'],
@@ -1624,6 +1628,33 @@ describe('Ventas navigation on every screen', () => {
     expect(showSettings.value).toBe(true)
     expect(router.currentRoute.value.path).toBe(landing)
     showSettings.value = false
+  })
+
+  it('Más › Settings: «Open Muelle on» shows the saved choice and saves a new one', async () => {
+    state.mobile.value = true
+    state.toasts.length = 0
+    state.call.mockImplementation(async (method, args) => {
+      if (method === 'crm.api.shell.boot') return boot({ landing: 'contactos' })
+      if (method === 'crm.api.hoy.save_landing') return { landing: args.key }
+      throw new Error(`unexpected ${method}`)
+    })
+    await mount('/contactos')
+    root.querySelector('nav[aria-label="Main navigation"] button').click()
+    const select = await until(() =>
+      document.querySelector(
+        '[data-shell-layer="more"] [data-testid="more-landing"]',
+      ),
+    )
+    expect(select.value).toBe('contactos')
+    expect([...select.options].map((o) => o.value)).toContain('')
+    select.value = 'hoy'
+    select.dispatchEvent(new Event('change'))
+    await until(() => state.toasts.length)
+    expect(state.call).toHaveBeenCalledWith('crm.api.hoy.save_landing', {
+      key: 'hoy',
+    })
+    expect(state.toasts[0]).toEqual(['success', 'Muelle will open on Hoy.'])
+    expect(shellBoot.value.landing).toBe('hoy')
   })
 })
 

@@ -166,6 +166,32 @@
           </div>
         </div>
 
+        <!-- Where Muelle opens (was Hoy's footer): a setting, so it lives here. -->
+        <div class="flex min-h-11 items-center gap-2.5 px-1 py-1">
+          <span
+            class="lucide-door-open size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          <label for="more-landing" class="flex-1 text-sm">{{
+            __('Open Muelle on')
+          }}</label>
+          <select
+            id="more-landing"
+            class="h-11 max-w-[55%] rounded-lg border-0 bg-surface-gray-2 pl-3 pr-8 text-sm"
+            :value="landing"
+            data-testid="more-landing"
+            @change="chooseLanding($event.target.value)"
+          >
+            <option
+              v-for="option in landingChoices"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
         <button
           v-if="helpAvailable"
           type="button"
@@ -220,7 +246,8 @@
 <script setup>
 import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
 import { useShellLayer } from '@/composables/shellKeyboard'
-import { Button } from 'frappe-ui'
+import { Button, toast } from 'frappe-ui'
+import { landingOptions, saveLanding } from '@/composables/useHoy'
 import { useRoute, useRouter } from 'vue-router'
 import { sessionStore } from '@/stores/session'
 import {
@@ -228,6 +255,7 @@ import {
   navSlots,
   openSalesSettings,
   saveNavSlots,
+  shellBoot,
 } from '@/composables/muelleShell'
 import {
   installedSiblings,
@@ -259,6 +287,36 @@ const customizing = ref(false)
 const saveMessage = ref('')
 const user = computed(() => props.boot?.user || {})
 const ventas = computed(() => moduleEnabled(props.boot, 'ventas'))
+// «Abrir Muelle en»: Automático, Hoy, or one of my modules. A saved module I
+// no longer have reads as Automático (the server falls back the same way).
+const landingChoices = computed(() => landingOptions(props.modules))
+const savedLanding = ref(props.boot?.landing || '')
+const landing = computed(() =>
+  landingChoices.value.some((option) => option.value === savedLanding.value)
+    ? savedLanding.value
+    : '',
+)
+async function chooseLanding(value) {
+  const previous = savedLanding.value
+  savedLanding.value = value
+  try {
+    await saveLanding(value)
+    if (shellBoot.value) shellBoot.value.landing = value
+    toast.success(
+      value
+        ? __('Muelle will open on {0}.', [
+            landingChoices.value.find((option) => option.value === value)
+              ?.label || value,
+          ])
+        : __('Muelle will open where your puesto works.'),
+    )
+  } catch (error) {
+    savedLanding.value = previous
+    toast.error(
+      error?.messages?.[0] || __('Could not save your choice. Retry.'),
+    )
+  }
+}
 const initials = computed(() => {
   const parts = String(user.value.full_name || user.value.name || '?')
     .trim()
