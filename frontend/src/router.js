@@ -21,6 +21,8 @@ import { legacyDealRedirect, legacyVentasRoute } from '@/utils/ventasRoutes'
 import { legacyIdentityRoute, safeIntendedRoute } from '@/utils/shellRoutes'
 import { legacyTasksRoute } from '@/composables/usePendientesRoutes'
 import { prefetchHoy } from '@/utils/hoyPrefetch'
+// Before createWebHistory: its popstate listener must run before the router's.
+import { installSheetHistory } from '@/components/ui/sheetHistory'
 
 let personaChecked = false
 export const PERSONA_DONE_KEY = 'crm_persona_captured'
@@ -658,6 +660,7 @@ let router = createRouter({
   history: createWebHistory('/crm'),
   routes,
 })
+installSheetHistory(router)
 
 router.beforeEach(async (to, from, next) => {
   router.previousRoute = from

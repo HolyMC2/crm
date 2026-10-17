@@ -15,7 +15,6 @@
 const stack = [] // [{ token, onClose, href }]
 let pending = null // our own back(): { resolve, timer }
 let installedOn = null
-let listener = null
 
 function nativeHistory() {
   return typeof window === 'undefined' ? null : window.history
@@ -63,16 +62,24 @@ function onPopState(event, router) {
   closeAbove(event.state?.uiSheet)
 }
 
-/** Once per router: the capture listener and the navigation guard. */
+// The popstate listener must run before vue-router's: on `window` Chrome
+// fires listeners in registration order (capture does not jump the queue at
+// the target), so it is registered when this module is imported, and
+// router.js imports it before it creates the router's history.
+let activeRouter = null
+if (typeof window !== 'undefined')
+  window.addEventListener(
+    'popstate',
+    (event) => activeRouter && onPopState(event, activeRouter),
+    { capture: true },
+  )
+
+/** Once per router: the router the listener checks, and the navigation guard. */
 export function installSheetHistory(router) {
-  if (!router || installedOn === router || typeof window === 'undefined') return
+  if (!router || typeof window === 'undefined') return
+  activeRouter = router
+  if (installedOn === router) return
   installedOn = router
-  // Capture on window runs before vue-router's own popstate listener. A new
-  // router (tests, a remount) replaces the old listener.
-  if (listener)
-    window.removeEventListener('popstate', listener, { capture: true })
-  listener = (event) => onPopState(event, router)
-  window.addEventListener('popstate', listener, { capture: true })
   router.beforeEach(async (to) => {
     await settle()
     const history = nativeHistory()
