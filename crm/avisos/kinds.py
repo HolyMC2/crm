@@ -109,13 +109,23 @@ def plain(value, limit=None):
 	return text
 
 
+_RECORD_ID_PREFIX = re.compile(r"^[A-Z]{1,6}-\d+:?\s*")
+
+
 def doctype_in_words(title, doctype, translate):
-	"""«Social Post SP-1: …» → «Publicación SP-1: …». A producer that opens its subject with the
-	record's DocType name stored it in English; the worker reads it in their language."""
+	"""«Social Post SP-1: texto» → «Publicación: texto». A producer that opens its subject with the
+	record's DocType name stored it in English; the worker reads it in their language. A post's
+	own ID («SP-1») is dropped from the title: the record shows it, the list does not."""
 	if not (title and doctype and title.startswith(f"{doctype} ")):
 		return title
 	label = translate(doctype)
-	return title if not label or label == doctype else f"{label} {title[len(doctype) + 1 :]}"
+	if not label or label == doctype:
+		return title
+	rest = title[len(doctype) + 1 :]
+	if doctype == "Social Post":
+		rest = _RECORD_ID_PREFIX.sub("", rest, count=1)
+		return f"{label}: {rest}" if rest else label
+	return f"{label} {rest}"
 
 
 def display(value, limit=None):

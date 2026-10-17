@@ -12,7 +12,7 @@
       />
       <h2
         :id="headingId"
-        class="min-w-0 flex-1 truncate text-base font-semibold text-ink-gray-9"
+        class="min-w-0 flex-1 text-base font-semibold text-ink-gray-9 [text-wrap:balance]"
       >
         {{ title }}
         <span

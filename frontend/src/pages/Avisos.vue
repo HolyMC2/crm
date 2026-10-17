@@ -18,7 +18,34 @@
       </div>
     </section>
     <template v-else>
+      <!-- Phone: the scope is the bar's title (a sheet picks it), search is an icon,
+           «Mark all as read» and «Preferences» sit in one ⋮ menu. -->
+      <AppBar
+        v-if="phone"
+        v-model:search="search"
+        v-model:search-open="searchOpen"
+        :context="__('Avisos')"
+        :title="heading"
+        :scopes="scopeEntries"
+        :scope="activeEntry(state)"
+        :scope-title="__('Choose a list')"
+        searchable
+        :search-label="__('Search avisos')"
+        @update:scope="select"
+      >
+        <template #actions>
+          <Dropdown :options="pageMenu">
+            <Button
+              variant="ghost"
+              icon="more-vertical"
+              class="min-h-12 min-w-12"
+              :aria-label="__('More actions')"
+            />
+          </Dropdown>
+        </template>
+      </AppBar>
       <header
+        v-else
         class="flex flex-col gap-3 px-4 pb-2 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:px-6 sm:pt-6"
       >
         <!-- On a phone the title gets its own row: it never shares it with the actions. -->
@@ -45,15 +72,10 @@
           />
         </div>
       </header>
-      <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
-        <FormControl
-          class="h-11 w-full sm:hidden"
-          type="select"
-          :aria-label="__('List')"
-          :model-value="activeEntry(state)"
-          :options="entries.map((e) => ({ label: e.label, value: e.value }))"
-          @update:model-value="select"
-        />
+      <div
+        v-if="!phone"
+        class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
+      >
         <FormControl
           v-model="search"
           data-list-search
@@ -163,11 +185,13 @@
 <script setup>
 import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { FeatherIcon } from 'frappe-ui'
+import { Dropdown, FeatherIcon } from 'frappe-ui'
 import { useDebounceFn } from '@vueuse/core'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import { AppBar } from '@/components/ui'
 import AvisosList from '@/components/avisos/AvisosList.vue'
 import AvisosPrefs from '@/components/avisos/AvisosPrefs.vue'
+import { isMobile as phone } from '@/composables/breakpoint'
 import { useListKeys } from '@/composables/pageKeys'
 import {
   activeEntry,
@@ -189,6 +213,7 @@ const router = useRouter()
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const state = computed(() => avisosState(route.query))
 const search = ref(state.value.q)
+const searchOpen = ref(false)
 const data = ref(null)
 const groups = ref([])
 const loading = ref(false)
@@ -203,6 +228,25 @@ const actions = useAvisosActions(router, {
 })
 
 const entries = computed(() => listEntries(data.value?.counts))
+// The bar's scope sheet lists the same entries as the desktop sidebar, without icons.
+const scopeEntries = computed(() =>
+  entries.value.map((e) => ({ value: e.value, label: e.label })),
+)
+const pageMenu = computed(() => {
+  const items = []
+  if (state.value.view === 'inbox' && data.value?.groups?.length)
+    items.push({
+      label: __('Mark all as read'),
+      icon: 'check-circle',
+      onClick: () => actions.readAll(state.value.category, 'inbox'),
+    })
+  items.push({
+    label: __('Preferences'),
+    icon: 'sliders',
+    onClick: () => (prefsOpen.value = true),
+  })
+  return items
+})
 const heading = computed(() => {
   const entry = entries.value.find((e) => e.value === activeEntry(state.value))
   return entry ? entry.label.split(' · ')[0] : __('Avisos')

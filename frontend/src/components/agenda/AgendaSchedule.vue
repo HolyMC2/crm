@@ -215,11 +215,13 @@ const blocks = computed(() => {
     if (!events.length && date !== props.today) continue
     if (date.slice(0, 7) !== month) {
       month = date.slice(0, 7)
-      rows.push({
-        type: 'month',
-        key: `m-${month}`,
-        label: capital(monthFmt.value.format(civil(date))),
-      })
+      // The current month needs no heading: the bar already names it.
+      if (month !== String(props.today || '').slice(0, 7))
+        rows.push({
+          type: 'month',
+          key: `m-${month}`,
+          label: capital(monthFmt.value.format(civil(date))),
+        })
       week = ''
     }
     const first = weekStart(date)

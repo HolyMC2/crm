@@ -104,7 +104,7 @@ def _tool_action(key):
 		"ventas_hygiene": _("Review deals with pending items"),
 		"ventas_drift": _("Review the affected deals"),
 		"agenda_shifts": _("See the shifts"),
-	}.get(key) or _("Open in {0}").format(_("Desk"))
+	}.get(key) or _("Open")
 
 
 class Access:
@@ -239,7 +239,8 @@ def record_label(doctype, name):
 
 
 def _open_in(where):
-	return _("Open in {0}").format(where)
+	"""The row opens the record; the label is only «Abrir», never a jargon «Abrir en Escritorio»."""
+	return _("Open")
 
 
 def _task_source(name):

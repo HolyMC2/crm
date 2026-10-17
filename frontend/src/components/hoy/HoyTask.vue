@@ -35,7 +35,7 @@
       class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
     >
       <p
-        class="truncate text-base text-ink-gray-9"
+        class="text-base text-ink-gray-9 [text-wrap:balance]"
         :class="row.status === 'Closed' ? 'line-through' : ''"
       >
         {{ row.description }}
@@ -52,7 +52,9 @@
           "
           >{{ dueText(row, today) }}</span
         >
-        <span v-if="row.reference_label || row.reference_name" class="truncate"
+        <span
+          v-if="row.reference_label || row.reference_name"
+          class="line-clamp-2"
           >· {{ row.reference_label || row.reference_name }}</span
         >
         <span

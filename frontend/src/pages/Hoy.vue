@@ -22,7 +22,7 @@
         <div class="min-w-0 flex-1">
           <component
             :is="phone ? 'p' : 'h1'"
-            class="truncate text-xl font-semibold text-ink-gray-9 sm:text-2xl"
+            class="text-xl font-semibold text-ink-gray-9 [text-wrap:balance] sm:text-2xl"
           >
             {{ hello }}
           </component>
@@ -66,12 +66,25 @@
         <Button variant="ghost" :label="__('Retry')" @click="refresh()" />
       </p>
 
+      <!-- Nothing overdue, due today or on the agenda: one line instead of two empty cards. -->
+      <p
+        v-if="allClear"
+        role="status"
+        class="mb-4 flex items-center gap-2 rounded-xl border border-outline-gray-2 bg-surface-base px-4 py-3 text-base text-ink-gray-8"
+      >
+        <span
+          class="lucide-circle-check size-5 shrink-0 text-ink-green-8"
+          aria-hidden="true"
+        />
+        {{ __('All clear: nothing overdue, due today or on your agenda.') }}
+      </p>
       <div
         class="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-rows-[auto_auto_auto_1fr] lg:items-start"
       >
         <!-- 1 · Para ahora, and the seller's deals without a next step -->
         <div class="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
           <HoySection
+            v-if="!allClear"
             id="ahora"
             :title="__('For now')"
             icon="lucide-square-check-big"
@@ -125,12 +138,13 @@
                   class="flex min-h-12 items-center gap-3 px-4 py-1.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-link sm:px-5"
                 >
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-base text-ink-gray-9">{{
-                      row.title
-                    }}</span>
+                    <span
+                      class="block text-base text-ink-gray-9 [text-wrap:balance]"
+                      >{{ row.title }}</span
+                    >
                     <span
                       v-if="row.status"
-                      class="block truncate text-sm text-ink-gray-6"
+                      class="line-clamp-2 block text-sm text-ink-gray-6"
                       >{{ __(row.status) }}</span
                     >
                   </span>
@@ -164,7 +178,7 @@
                   class="flex min-h-12 items-center gap-3 px-4 py-1.5 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-link sm:px-5"
                 >
                   <span
-                    class="min-w-0 flex-1 truncate text-base text-ink-gray-9"
+                    class="min-w-0 flex-1 text-base text-ink-gray-9 [text-wrap:balance]"
                     >{{ row.owner ? row.name : __('No owner') }}</span
                   >
                   <span
@@ -179,6 +193,7 @@
 
         <!-- 2 · Agenda de hoy -->
         <HoySection
+          v-if="!allClear"
           id="agenda"
           class="lg:col-start-2 lg:row-span-4 lg:row-start-1"
           :title="__('Today’s agenda')"
@@ -225,12 +240,13 @@
                   }}
                 </span>
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate text-base text-ink-gray-9">{{
-                    event.title
-                  }}</span>
+                  <span
+                    class="block text-base text-ink-gray-9 [text-wrap:balance]"
+                    >{{ event.title }}</span
+                  >
                   <span
                     v-if="eventMeta(event)"
-                    class="block truncate text-sm text-ink-gray-6"
+                    class="line-clamp-2 block text-sm text-ink-gray-6"
                     >{{ eventMeta(event) }}</span
                   >
                 </span>
@@ -269,90 +285,97 @@
           :failed="Boolean(data?.continuar?.failed)"
           @retry="refresh()"
         >
-          <ul class="divide-y divide-outline-gray-1">
-            <li v-for="card in cards" :key="card.key" class="px-4 py-2 sm:px-5">
-              <div class="flex min-h-11 items-center gap-3">
-                <span
-                  :class="card.icon"
-                  class="size-5 shrink-0 text-ink-gray-6"
-                  aria-hidden="true"
-                />
-                <div class="min-w-0 flex-1">
-                  <p class="truncate text-base font-medium text-ink-gray-9">
-                    {{ card.title }}
-                  </p>
-                  <p
-                    v-if="card.detail"
-                    class="truncate text-sm text-ink-gray-6"
+          <div class="pb-1">
+            <template v-for="card in cards" :key="card.key">
+              <!-- A source with documents: one quiet group line, then one row per document. -->
+              <div
+                v-if="card.rows.length"
+                class="flex flex-wrap items-baseline justify-between gap-x-3 px-4 pb-1 pt-3 sm:px-5"
+              >
+                <p class="min-w-0 text-sm font-medium text-ink-gray-7">
+                  {{ card.title }}
+                  <span class="font-normal text-ink-gray-6"
+                    >· {{ card.detail }}</span
                   >
-                    {{ card.detail }}
-                  </p>
-                </div>
-                <component
-                  :is="card.to ? RouterLink : 'a'"
-                  v-if="(card.to || card.href) && card.action"
+                </p>
+                <RouterLink
+                  v-if="card.to && card.action"
                   :to="card.to"
-                  :href="card.to ? undefined : card.href"
-                  class="flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
-                  >{{ card.action }}</component
+                  class="flex min-h-11 shrink-0 items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+                  >{{ card.action }}</RouterLink
+                >
+                <a
+                  v-else-if="card.href && card.action"
+                  :href="card.href"
+                  class="flex min-h-11 shrink-0 items-center text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
+                  >{{ card.action }}</a
                 >
               </div>
-              <ul v-if="card.rows.length" class="mt-1 space-y-1 pl-8">
-                <li
-                  v-for="row in card.rows"
-                  :key="row.key"
-                  class="flex min-h-11 flex-wrap items-center gap-2"
+              <ListRow
+                v-for="row in card.rows"
+                :key="card.key + row.key"
+                :title="row.title"
+                :subtitle="row.detail"
+                :subtitle-lines="2"
+                :icon="card.icon"
+                :to="card.source?.action ? undefined : row.to"
+                :href="card.source?.action ? '' : row.href"
+              >
+                <template v-if="card.source?.action" #trailing>
+                  <Button
+                    v-if="choicesFor(card, row)"
+                    variant="subtle"
+                    class="min-h-11"
+                    :label="card.source.action.label"
+                    :disabled="!choicesFor(card, row).length"
+                    @click="openAssign(card, row)"
+                  />
+                  <Button
+                    v-else
+                    variant="subtle"
+                    class="min-h-11"
+                    :label="card.source.action.label"
+                    :loading="busy.has(card.key + row.key)"
+                    @click="sourceAction(card, row)"
+                  />
+                </template>
+              </ListRow>
+              <!-- A card without documents is itself the row: it opens its app. -->
+              <ListRow
+                v-if="!card.rows.length"
+                :title="card.title"
+                :subtitle="card.detail"
+                :icon="card.icon"
+                :to="card.to"
+                :href="card.to ? '' : card.href"
+              />
+            </template>
+          </div>
+          <!-- The technician (or other choice) picker for a source action: a sheet, not a select. -->
+          <BottomSheet
+            v-model:open="assignOpen"
+            :title="assignment?.row?.title || ''"
+            :subtitle="assignField"
+            flush
+          >
+            <ul class="px-2 pb-3" :aria-label="assignField">
+              <li v-for="choice in assignChoices" :key="choice.value">
+                <button
+                  type="button"
+                  class="flex min-h-12 w-full items-center rounded-xl px-4 text-left text-base hover:bg-surface-gray-1"
+                  @click="pickAssign(choice.value)"
                 >
-                  <component
-                    :is="row.to ? RouterLink : row.href ? 'a' : 'span'"
-                    :to="row.to"
-                    :data-key-row="row.to || row.href ? '' : undefined"
-                    :href="row.to ? undefined : row.href || undefined"
-                    class="flex min-w-0 flex-1 flex-col justify-center self-stretch rounded-lg py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
-                  >
-                    <span class="block truncate text-sm text-ink-gray-9">{{
-                      row.title
-                    }}</span>
-                    <span
-                      v-if="row.detail"
-                      class="block truncate text-xs text-ink-gray-6"
-                      >{{ row.detail }}</span
-                    >
-                  </component>
-                  <template v-if="card.source?.action">
-                    <FormControl
-                      v-if="choicesFor(card, row)"
-                      v-model="picks[card.key + row.key]"
-                      type="select"
-                      class="w-40"
-                      :aria-label="`${card.source.action.field_label || card.source.action.label}: ${row.title}`"
-                      :placeholder="`${card.source.action.field_label || __('Choose')}…`"
-                      :options="[
-                        {
-                          label: `${card.source.action.field_label || __('Choose')}…`,
-                          value: '',
-                        },
-                        ...choicesFor(card, row).map((choice) => ({
-                          label: choice.label || choice.value,
-                          value: choice.value,
-                        })),
-                      ]"
-                    />
-                    <Button
-                      class="min-h-11 sm:min-h-8"
-                      :label="card.source.action.label"
-                      :loading="busy.has(card.key + row.key)"
-                      :disabled="
-                        Boolean(choicesFor(card, row)) &&
-                        !picks[card.key + row.key]
-                      "
-                      @click="sourceAction(card, row)"
-                    />
-                  </template>
-                </li>
-              </ul>
-            </li>
-          </ul>
+                  {{ choice.label || choice.value }}
+                </button>
+              </li>
+            </ul>
+            <p
+              v-if="!assignChoices.length"
+              class="px-4 pb-4 text-sm text-ink-gray-6"
+            >
+              {{ __('No one to assign yet.') }}
+            </p>
+          </BottomSheet>
         </HoySection>
 
         <!-- 4 · Avisos que piden acción -->
@@ -421,7 +444,9 @@
                 class="size-4 shrink-0 text-ink-gray-6"
                 aria-hidden="true"
               />
-              <span class="min-w-0 truncate">{{ item.label }}</span>
+              <span class="line-clamp-2 min-w-0 [text-wrap:balance]">{{
+                item.label
+              }}</span>
             </RouterLink>
           </div>
         </HoySection>
@@ -472,6 +497,7 @@ import { useListKeys } from '@/composables/pageKeys'
 import AvisosList from '@/components/avisos/AvisosList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import { isMobile } from '@/composables/breakpoint'
+import { BottomSheet, ListRow } from '@/components/ui'
 import { shellBoot, shellModules } from '@/composables/muelleShell'
 import {
   HOY_HOME,
@@ -599,6 +625,17 @@ const teamCollapsed = computed(() =>
   data.value?.equipo?.available && !teamRows.value.length
     ? __('No follow-up of your team is overdue.')
     : '',
+)
+// Para ahora and Agenda both empty and both loaded: one «Al día» line instead.
+const allClear = computed(
+  () =>
+    Boolean(data.value) &&
+    pendientes.value?.available === true &&
+    agenda.value?.available === true &&
+    !pendientes.value?.failed &&
+    !agenda.value?.failed &&
+    !tasks.value.length &&
+    !plan.value.rows.length,
 )
 const shortcuts = computed(() => accesos(shellBoot.value))
 const landingChoices = computed(() => landingOptions(shellModules.value))
@@ -848,6 +885,28 @@ function eventMeta(event) {
 function choicesFor(card, row) {
   const choices = card.source?.action?.choices
   return choices ? choices[row.group] || [] : null
+}
+// «Asignar» opens the choices (technicians) in a sheet; a pick is the action.
+const assignment = ref(null)
+const assignOpen = ref(false)
+const assignChoices = computed(() =>
+  assignment.value
+    ? choicesFor(assignment.value.card, assignment.value.row) || []
+    : [],
+)
+const assignField = computed(() => {
+  const action = assignment.value?.card?.source?.action
+  return action ? action.field_label || action.label : ''
+})
+function openAssign(card, row) {
+  assignment.value = { card, row }
+  assignOpen.value = true
+}
+function pickAssign(value) {
+  const { card, row } = assignment.value
+  picks[card.key + row.key] = value
+  assignOpen.value = false
+  sourceAction(card, row)
 }
 async function sourceAction(card, row) {
   const key = card.key + row.key

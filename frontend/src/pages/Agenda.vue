@@ -200,6 +200,8 @@
         :fallback-color="calendarColors.Event"
         @pick="openFound"
       />
+      <!-- The shared bell, as in every shell bar (62 unread was missing here). -->
+      <AvisosBell />
       <button
         type="button"
         class="ag-todaybtn"
@@ -774,6 +776,7 @@ import {
 } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BottomSheet, Button, Dialog, toast } from 'frappe-ui'
+import AvisosBell from '@/components/avisos/AvisosBell.vue'
 import AgendaCitaForm from '@/components/agenda/AgendaCitaForm.vue'
 import AgendaCitasSettings from '@/components/agenda/AgendaCitasSettings.vue'
 import AgendaEventForm from '@/components/agenda/AgendaEventForm.vue'

@@ -6450,7 +6450,7 @@ msgstr "Campo del CRM asignado"
 #: frontend/src/pages/MobileNotification.vue:13
 #: frontend/src/pages/MobileNotification.vue:14
 msgid "Mark all as read"
-msgstr "Marcar todo como leídas"
+msgstr "Marcar todo como leído"
 
 #. Label of the auto_mark_replied_on_response (Check) field in DocType 'FCRM
 #. Settings'
@@ -26301,3 +26301,19 @@ msgstr "Público en general"
 msgctxt "Resultados"
 msgid "Return"
 msgstr "Devolución"
+
+#: frontend/src/pages/Hoy.vue
+msgid "All clear: nothing overdue, due today or on your agenda."
+msgstr "Al día: nada vencido, ni para hoy, ni en tu agenda."
+
+#: frontend/src/pages/Hoy.vue
+msgid "No one to assign yet."
+msgstr "Todavía no hay a quién asignar."
+
+#: frontend/src/components/avisos/AvisosPrefs.vue
+msgid "Email delivery is set in your system notification settings."
+msgstr "El correo se configura en los ajustes de notificaciones del sistema."
+
+#: frontend/src/pages/Avisos.vue
+msgid "More actions"
+msgstr "Más acciones"

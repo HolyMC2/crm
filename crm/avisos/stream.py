@@ -31,6 +31,8 @@ _SHARED = re.compile(r"shared .* with you|compartió", re.I)
 _GENERIC_ASSIGNMENT = re.compile(r"assigned an? \S+(?: \S+)? \S+ to you$")
 # Frappe's assignment e-mail line, stored as the body: «Assignment for CRM Lead CRM-LEAD-2026-00291».
 _ASSIGNMENT_FOR = re.compile(r"^(?:Assignment for|Asignación para) \S+(?: \S+)? \S+$")
+# A user id with no name set, such as «4vv6e0b4bu»: one lowercase word with digits, no spaces.
+_HASH_ID = re.compile(r"^(?=.*\d)[a-z0-9]{8,12}$")
 
 
 def _user():
@@ -279,7 +281,14 @@ def _local_link(value):
 
 
 def _full_name(user):
-	return frappe.utils.get_fullname(user) if user else ""
+	"""The person's name for the reader. A user with no name set comes back as its id (an email or
+	a hash such as «4vv6e0b4bu»): the worker gets no name rather than an id."""
+	if not user:
+		return ""
+	name = (frappe.utils.get_fullname(user) or "").strip()
+	if not name or name == user or "@" in name or _HASH_ID.match(name):
+		return ""
+	return name
 
 
 def _rows(user, view):

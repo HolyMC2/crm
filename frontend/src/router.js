@@ -350,7 +350,13 @@ const routes = [
     path: '/avisos',
     name: 'Avisos',
     component: () => import('@/pages/Avisos.vue'),
-    meta: { app: 'avisos', title: 'Avisos', stableKey: true },
+    // On a phone the page brings its AppBar (the scope as title, search, ⋮ menu).
+    meta: {
+      app: 'avisos',
+      title: 'Avisos',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     // The CRM notifications page merged into Avisos; old links keep working.
