@@ -1,9 +1,10 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.7.0 (c69210f5c8f2). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.8.0 (389c3697e254). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // One keyboard map for every Muelle surface (spec §3.3, §8.2, and the Muelle
 // keyboard standard of 2026-10-10, see README «Keyboard standard»): the same key
 // means the same thing on Desk, the shell and the sibling apps. ⌘K / Ctrl+K is
-// «Buscar o ir a…», ⌘G / Ctrl+G «Buscar registros», Alt+H the cheat sheet.
+// «Buscar o ir a…», ⌘G / Ctrl+G «Buscar registros», ⌘J / Ctrl+J «Preguntar al
+// asistente» (0.8.0), Alt+H the cheat sheet.
 // While typing, only shortcuts marked `whileTyping` fire, and only through a
 // combo with ⌘/Ctrl or Alt (never a bare key, never text editing such as ⌘A).
 // Ctrl/⌘+Shift+G (Frappe's theme switcher) and Alt+digits (module-internal
@@ -41,6 +42,9 @@ export const KEYMAP: readonly Shortcut[] = Object.freeze([
   { id: 'help', keys: ['alt+h', '?'], description: 'Show keyboard shortcuts', context: 'global', whileTyping: true },
   { id: 'palette', keys: ['mod+k'], description: 'Search or go to…', context: 'global', whileTyping: true },
   { id: 'records', keys: ['mod+g'], description: 'Search records', context: 'global', whileTyping: true },
+  // The assistant answers from anywhere, including from inside a field the
+  // worker is typing in — that is where «¿y esto qué es?» gets asked.
+  { id: 'assistant', keys: ['mod+j'], description: 'Ask the assistant', context: 'global', whileTyping: true },
   { id: 'search', keys: ['/', 'mod+shift+k'], description: 'Focus the list search', context: 'list', whileTyping: true },
   ...goTo,
   { id: 'create', keys: ['c'], description: 'Create', context: 'global' },
