@@ -303,6 +303,7 @@
             <FormControl
               v-model="form.schedule_date"
               type="date"
+              :placeholder="__('Elige la fecha', null, 'Compras')"
               :label="__('Delivery date', null, 'Compras')"
             />
           </div>
@@ -495,12 +496,12 @@
                 </p>
               </div>
               <div class="shrink-0 text-right text-sm tabular-nums">
-                <p class="font-medium">{{ qty(row.qty) }} {{ row.uom }}</p>
+                <p class="font-medium">{{ formatQty(row.qty, row.uom) }}</p>
                 <p
                   v-if="row.uom !== row.stock_uom"
                   class="text-xs text-ink-gray-5"
                 >
-                  = {{ qty(row.stock_qty) }} {{ row.stock_uom }}
+                  = {{ formatQty(row.stock_qty, row.stock_uom) }}
                 </p>
                 <p class="text-xs text-ink-gray-5">
                   {{ money(row.amount, doc.currency) }}
@@ -727,6 +728,7 @@ import { keyAction } from '@/utils/powerList'
 import { orderBillsRoute } from '@/composables/useGastos'
 import { can } from '@/vendor/muelle-shell/contracts'
 import { formatDay } from '@/utils/contactos'
+import { formatQty } from '@/utils/display'
 import {
   MISSING_LABELS,
   RECORD_KEYS,

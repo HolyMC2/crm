@@ -538,12 +538,12 @@
           class="flex flex-col gap-1 px-4 pt-4 text-sm sm:px-6"
         >
           <a
-            class="min-h-11 py-2 text-ink-blue-link underline"
+            class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
             href="/app/query-report/Accounts Receivable"
             >{{ __('Receivables report') }}</a
           >
           <a
-            class="min-h-11 py-2 text-ink-blue-link underline"
+            class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
             href="/app/dunning"
             >{{ __('All reminder letters') }}</a
           >

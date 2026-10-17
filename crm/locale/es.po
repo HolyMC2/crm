@@ -26070,3 +26070,17 @@ msgstr "Caliente"
 #: frontend/src/components/doco/inbox/LegacyConversationQueue.vue
 msgid "Reparación"
 msgstr "Reparación"
+
+#: frontend/src/pages/ResultadosDocumento.vue
+msgctxt "Resultados"
+msgid "Lines"
+msgstr "Partidas"
+
+#: frontend/src/pages/GastoFactura.vue
+msgid "Orden de compra"
+msgstr "Orden de compra"
+
+#: frontend/src/pages/CompraOrden.vue
+msgctxt "Compras"
+msgid "Elige la fecha"
+msgstr "Elige la fecha"

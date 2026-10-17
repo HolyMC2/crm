@@ -39,31 +39,36 @@
 
       <template v-else-if="loaded">
         <!-- Header: who, how much, when — and the one next action. -->
-        <header class="mb-4 flex flex-wrap items-start gap-3">
+        <header class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start">
           <div class="min-w-0 flex-1">
-            <p class="text-sm text-ink-gray-6">
-              {{ doc.bill_no ? `${doc.bill_no} · ${doc.name}` : doc.name }}
-              <Badge
-                class="ml-1"
-                :theme="statusTheme"
-                :label="statusLabel(doc)"
-              />
+            <p
+              class="flex flex-wrap items-center gap-1 text-sm text-ink-gray-6"
+            >
+              <span v-if="doc.bill_no" class="break-words">{{
+                doc.bill_no
+              }}</span>
+              <Badge :theme="statusTheme" :label="statusLabel(doc)" />
             </p>
-            <h1 class="truncate text-2xl font-semibold text-ink-gray-9">
+            <h1
+              class="break-words text-2xl font-semibold leading-tight text-ink-gray-9"
+            >
               {{ doc.party || __('Supplier not visible') }}
             </h1>
-            <p class="mt-1 text-sm text-ink-gray-6">
+            <p class="mt-1 break-words text-sm text-ink-gray-6">
               {{
-                [doc.company, doc.date && __('dated {0}', [doc.date])]
+                [doc.company, doc.date && formatDay(doc.date)]
                   .filter(Boolean)
                   .join(' · ')
               }}
             </p>
           </div>
-          <div class="flex flex-col items-end gap-1">
-            <span class="text-xl font-semibold tabular-nums text-ink-gray-9">{{
-              money(doc.total, doc.currency)
-            }}</span>
+          <div
+            class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 sm:flex-col sm:items-end"
+          >
+            <span
+              class="whitespace-nowrap text-xl font-semibold tabular-nums text-ink-gray-9"
+              >{{ money(doc.total, doc.currency) }}</span
+            >
             <span
               v-if="Number(doc.docstatus) === 1"
               class="text-sm"
@@ -79,6 +84,7 @@
               :targets="['Payment Entry']"
               :invoice="props.name"
               :return-label="props.name"
+              class="w-full sm:w-auto"
             />
           </div>
         </header>
@@ -192,7 +198,7 @@
             </template>
             <a
               v-if="boot?.capabilities?.desk"
-              class="inline-flex min-h-11 items-center px-2 text-sm text-ink-blue-link underline sm:min-h-8"
+              class="hidden min-h-11 items-center px-2 text-sm text-ink-blue-link underline sm:inline-flex sm:min-h-8"
               :href="`/app/purchase-invoice/${encodeURIComponent(doc.name)}`"
               >{{ __('Open the full bill form') }}</a
             >
@@ -209,9 +215,9 @@
           </div>
         </section>
 
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div class="grid min-w-0 gap-4 sm:grid-cols-2">
           <!-- Payments and their bank side (matched in Contador). -->
-          <section class="rounded-xl border border-outline-gray-2 p-4">
+          <section class="min-w-0 rounded-xl border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Payments', null, 'Gastos') }}
             </h2>
@@ -219,17 +225,20 @@
               {{ __('No payments yet.') }}
             </p>
             <ul v-else class="space-y-3">
-              <li v-for="p in data.payments" :key="p.name" class="text-sm">
-                <span class="block font-medium tabular-nums text-ink-gray-9">
-                  {{ money(p.amount, p.currency) }} · {{ p.posting_date }}
+              <li
+                v-for="p in data.payments"
+                :key="p.name"
+                class="min-w-0 text-sm"
+              >
+                <span
+                  class="block break-words font-medium tabular-nums text-ink-gray-9"
+                >
+                  {{ money(p.amount, p.currency) }} ·
+                  {{ formatDay(p.posting_date) }}
                 </span>
-                <span class="block text-ink-gray-6">
+                <span class="block break-words text-ink-gray-6">
                   {{
-                    [
-                      p.reference_no,
-                      modeOfPaymentLabel(p.mode_of_payment),
-                      p.name,
-                    ]
+                    [p.reference_no, modeOfPaymentLabel(p.mode_of_payment)]
                       .filter(Boolean)
                       .join(' · ')
                   }}
@@ -263,7 +272,7 @@
           </section>
 
           <!-- Due dates, CFDI and where it came from. -->
-          <section class="rounded-xl border border-outline-gray-2 p-4">
+          <section class="min-w-0 rounded-xl border border-outline-gray-2 p-4">
             <h2 class="mb-2 text-base font-semibold">
               {{ __('Bill details') }}
             </h2>
@@ -273,7 +282,7 @@
                 :key="i"
                 class="flex justify-between gap-2"
               >
-                <span>{{ __('Due {0}', [term.due_date]) }}</span>
+                <span>{{ __('Due {0}', [formatDay(term.due_date)]) }}</span>
                 <span class="tabular-nums">
                   {{ money(term.amount, doc.currency) }}
                   <template v-if="term.outstanding > 0">
@@ -306,7 +315,11 @@
                 :key="o.name"
                 class="mr-2 inline-block min-h-11 py-2 text-sm text-ink-blue-link underline sm:min-h-0 sm:py-0"
                 :to="{ name: 'CompraOrden', params: { name: o.name } }"
-                >{{ o.name }}</RouterLink
+                >{{
+                  displayName(o, 'Purchase Order', {
+                    fallback: __('Orden de compra'),
+                  })
+                }}</RouterLink
               >
             </template>
             <h3 class="mb-1 mt-3 text-sm font-semibold">
@@ -318,10 +331,11 @@
                 :key="i"
                 class="flex justify-between gap-2"
               >
-                <span class="min-w-0 truncate"
-                  >{{ item.qty }} {{ item.uom }} · {{ item.item_name }}</span
+                <span class="min-w-0 break-words"
+                  >{{ formatQty(item.qty, item.uom) }} ·
+                  {{ item.item_name }}</span
                 >
-                <span class="tabular-nums">{{
+                <span class="shrink-0 whitespace-nowrap tabular-nums">{{
                   money(item.amount, doc.currency)
                 }}</span>
               </li>
@@ -445,6 +459,8 @@ import { isTypingTarget, moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import { keyAction } from '@/utils/powerList'
+import { formatDay } from '@/utils/contactos'
+import { displayName, formatQty } from '@/utils/display'
 
 const props = defineProps({ name: { type: String, required: true } })
 const route = useRoute()

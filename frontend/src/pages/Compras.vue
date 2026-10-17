@@ -253,13 +253,11 @@
                   <span
                     class="flex flex-col text-sm text-ink-gray-6 sm:flex-row"
                   >
-                    <span class="min-w-0 truncate"
-                      >{{ row.name }} · {{ statusLabel(row) }}</span
-                    >
+                    <span class="min-w-0 truncate">{{ statusLabel(row) }}</span>
                     <span v-if="row.due_date" class="shrink-0 whitespace-nowrap"
                       ><span class="hidden sm:inline" aria-hidden="true"
                         >&nbsp;·&nbsp;</span
-                      >{{ __('Delivery {0}', [row.due_date]) }}</span
+                      >{{ __('Delivery {0}', [formatDay(row.due_date)]) }}</span
                     >
                   </span>
                   <span
@@ -330,12 +328,12 @@
           class="flex flex-col gap-1 px-4 pt-4 text-sm sm:px-6"
         >
           <a
-            class="min-h-11 py-2 text-ink-blue-link underline"
+            class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
             href="/app/muelle-compras?queue=receipts"
             >{{ __('Receipts, invoices and quotations (Desk)') }}</a
           >
           <a
-            class="min-h-11 py-2 text-ink-blue-link underline"
+            class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
             href="/app/muelle-compras?catalog_section=catalogs"
             >{{ __('Supplier catalogs (Desk)') }}</a
           >
@@ -396,6 +394,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { formatDay } from '@/utils/contactos'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'

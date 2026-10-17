@@ -26,15 +26,19 @@
       <template v-else-if="doc">
         <header class="mt-2 flex flex-wrap items-start gap-3">
           <div class="min-w-0 flex-1">
-            <h1 class="truncate text-xl font-semibold text-ink-gray-9">
+            <h1
+              class="break-words text-xl font-semibold leading-tight text-ink-gray-9"
+            >
               {{
-                doc.header.customer_name || doc.header.pos_profile || doc.name
+                doc.header.customer_name ||
+                doc.header.pos_profile ||
+                kindLabel(props.doctype)
               }}
             </h1>
-            <p class="text-sm text-ink-gray-6">
-              {{ doc.name }} · {{ doc.header.posting_date }}
+            <p class="break-words text-sm text-ink-gray-6">
+              {{ formatDay(doc.header.posting_date) }}
               <template v-if="doc.header.status">
-                · {{ doc.header.status }}</template
+                · {{ statusLabel(doc.header.status, props.doctype) }}</template
               >
             </p>
           </div>
@@ -73,10 +77,10 @@
         <section
           v-if="doc.items?.length"
           class="mt-4"
-          :aria-label="__('Lines')"
+          :aria-label="__('Lines', null, CTX)"
         >
           <h2 class="mb-1 text-sm font-medium text-ink-gray-7">
-            {{ __('Lines') }}
+            {{ __('Lines', null, CTX) }}
           </h2>
           <ul
             class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
@@ -193,6 +197,8 @@ import {
   routerPath,
 } from '@/composables/useResultados'
 import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
+import { formatDay } from '@/utils/contactos'
+import { kindLabel, statusLabel } from '@/utils/display'
 import { readReturn, withReturn } from '@/vendor/muelle-shell/contracts'
 
 const props = defineProps({
