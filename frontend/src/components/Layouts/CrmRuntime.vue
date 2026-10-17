@@ -22,7 +22,7 @@
   </Layout>
   <Settings v-if="session.isLoggedIn && showSettings" />
   <IntermediateStepModal
-    v-if="session.isLoggedIn && onboarding"
+    v-if="session.isLoggedIn && onboarding?.showIntermediateModal.value"
     v-model="onboarding.showIntermediateModal.value"
     :currentStep="onboarding.currentStep.value"
   >
@@ -40,13 +40,10 @@
 </template>
 
 <script setup>
-import EventNotificationPopup from '@/components/EventNotificationPopup.vue'
 import DoctypeModals from '@/components/Modals/DoctypeModals.vue'
 import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
-import { useCrmOnboarding } from '@/composables/onboarding'
 import { setConfig, useTheme } from 'frappe-ui'
-import { IntermediateStepModal } from 'frappe-ui/frappe'
 import {
   defineAsyncComponent,
   nextTick,
@@ -67,15 +64,30 @@ const NotPermitted = defineAsyncComponent(
 const Settings = defineAsyncComponent(
   () => import('@/components/Settings/Settings.vue'),
 )
+// Onboarding, its step modal and the event reminder popup load after the
+// first paint: each pulled its own files into every Ventas route (route
+// budget ≤ 60 scripts, verify-bundle-budget.mjs).
+const IntermediateStepModal = defineAsyncComponent(() =>
+  import('frappe-ui/frappe').then((m) => m.IntermediateStepModal),
+)
+const EventNotificationPopup = defineAsyncComponent(() =>
+  import('@/components/EventNotificationPopup.vue').then((m) => m.default),
+)
 
 const session = sessionStore()
 provide('session', session)
 
 const onboarding = shallowRef(null)
+let onboardingFor = 0
 watch(
   () => session.user,
   () => {
-    onboarding.value = session.isLoggedIn ? useCrmOnboarding() : null
+    const ticket = ++onboardingFor
+    onboarding.value = null
+    if (!session.isLoggedIn) return
+    import('@/composables/onboarding').then(({ useCrmOnboarding }) => {
+      if (ticket === onboardingFor) onboarding.value = useCrmOnboarding()
+    })
   },
   { immediate: true },
 )

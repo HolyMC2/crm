@@ -3,7 +3,6 @@ import { createResource } from 'frappe-ui'
 import router from '@/router'
 import { ref, computed } from 'vue'
 import { safeIntendedRoute } from '@/utils/shellRoutes'
-import { purgeContact360Cache } from '@/utils/contactos'
 
 export const sessionStore = defineStore('crm-session', () => {
   function sessionUser() {
@@ -71,7 +70,10 @@ export const sessionStore = defineStore('crm-session', () => {
       } catch {
         /* storage unavailable — nothing to purge */
       }
-      await purgeContact360Cache()
+      // On demand: utils/contactos is ~4 KB gzip the entry chunk never needs.
+      await import('@/utils/contactos')
+        .then((m) => m.purgeContact360Cache())
+        .catch(() => 0)
       user.value = null
       const intended = safeIntendedRoute(
         window.location.pathname + window.location.search,
