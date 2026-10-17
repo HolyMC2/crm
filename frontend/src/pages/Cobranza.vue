@@ -30,130 +30,53 @@
       data-cobranza-scroller
       @scroll.passive="rememberScroll"
     >
-      <!-- Phone: Cobranza's own app bar (route meta.ownPhoneHeader), like the
-           Agenda's: the list as its title (tap: choose another), search, select. -->
-      <header
-        v-if="phone"
-        class="sticky top-0 z-20 border-b border-outline-gray-1 bg-surface-base pt-[env(safe-area-inset-top)]"
-        data-cobranza-appbar
-      >
-        <div class="flex min-h-14 items-center gap-1 px-1">
-          <template v-if="selecting">
-            <button
-              type="button"
-              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-              :aria-label="__('Clear selection')"
-              @click="clearSelection"
-            >
-              <FeatherIcon name="x" class="h-6 w-6" />
-            </button>
-            <p class="min-w-0 flex-1 truncate text-lg font-semibold">
-              {{
-                selected.size === 1
-                  ? __('1 selected')
-                  : __('{0} selected', [selected.size])
-              }}
-            </p>
-            <button
-              type="button"
-              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-              :aria-label="__('Select the visible page')"
-              @click="selectAll"
-            >
-              <FeatherIcon name="check-square" class="h-6 w-6" />
-            </button>
-          </template>
-          <template v-else-if="searchOpen">
-            <button
-              type="button"
-              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-              :aria-label="__('Close search')"
-              @click="closeSearch"
-            >
-              <FeatherIcon name="arrow-left" class="h-6 w-6" />
-            </button>
-            <input
-              ref="phoneSearch"
-              v-model="search"
-              type="search"
-              enterkeyhint="search"
-              class="h-11 min-w-0 flex-1 rounded-lg border-0 bg-surface-gray-2 px-3 text-base"
-              :placeholder="__('Search customer or invoice')"
-              :aria-label="__('Search customer or invoice')"
-              data-cobranza-search
-            />
-          </template>
-          <template v-else>
-            <button
-              type="button"
-              class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-lg px-3 text-left"
-              :aria-label="__('Choose a list')"
-              :aria-expanded="segmentSheet"
-              data-cobranza-title
-              @click="segmentSheet = true"
-            >
-              <span class="truncate text-lg font-semibold">{{
-                segmentLabel(state.segment)
-              }}</span>
-              <span
-                v-if="counts[state.segment] !== undefined"
-                class="shrink-0 text-base text-ink-gray-6"
-                >({{ counts[state.segment] }})</span
-              >
-              <FeatherIcon
-                name="chevron-down"
-                class="h-5 w-5 shrink-0 text-ink-gray-6"
-              />
-            </button>
-            <FeatherIcon
-              v-if="loading && rows.length"
-              name="loader"
-              class="h-5 w-5 shrink-0 animate-spin text-ink-gray-6"
-              role="status"
-              :aria-label="__('Loading')"
-            />
-            <button
-              type="button"
-              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-              :aria-label="__('Search customer or invoice')"
-              @click="openSearch"
-            >
-              <FeatherIcon name="search" class="h-6 w-6" />
-            </button>
-            <button
-              v-if="rows.length"
-              type="button"
-              class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-              :aria-label="__('Select customers')"
-              @click="selecting = true"
-            >
-              <FeatherIcon name="check-square" class="h-6 w-6" />
-            </button>
-          </template>
-        </div>
-        <!-- What is owed, always in sight while the list scrolls. -->
-        <div
-          v-if="split.length"
-          class="flex flex-wrap gap-x-4 border-t border-outline-gray-1 px-4 py-2 text-sm"
-          :aria-label="__('Totals')"
-          data-cobranza-summary
+      <!-- Phone: the shared module bar (PowerAppBar, over S1's AppBar), as
+           Compras and Gastos: the list as its title (tap: choose another),
+           search, select, the bell; what is owed stays in sight under it. -->
+      <!-- display:contents: the hook stays, the bar stays sticky. -->
+      <div v-if="phone" class="contents" data-cobranza-appbar>
+        <PowerAppBar
+          v-model:search="search"
+          v-model:search-open="searchOpen"
+          :title="segmentLabel(state.segment)"
+          :count="counts[state.segment]"
+          :loading="loading && rows.length > 0"
+          :entries="phoneEntries"
+          :active="state.segment"
+          :search-label="__('Search customer or invoice')"
+          :selectable="rows.length > 0"
+          :select-label="__('Select customers')"
+          :selecting="selecting"
+          :selected-count="selected.size"
+          @select="selectSegment"
+          @start-select="selecting = true"
+          @select-all="selectAll"
+          @clear-selection="clearSelection"
         >
-          <template v-for="part in split" :key="part.currency">
+          <template v-if="split.length" #summary>
             <span
-              >{{ __('Overdue', null, CTX) }}
-              <strong class="tabular-nums text-ink-red-7">{{
-                money(part.overdue, part.currency)
-              }}</strong></span
+              class="contents"
+              :aria-label="__('Totals')"
+              data-cobranza-summary
             >
-            <span
-              >{{ __('Not due yet') }}
-              <strong class="tabular-nums">{{
-                money(part.upcoming, part.currency)
-              }}</strong></span
-            >
+              <template v-for="part in split" :key="part.currency">
+                <span
+                  >{{ __('Overdue', null, CTX) }}
+                  <strong class="tabular-nums text-ink-red-7">{{
+                    money(part.overdue, part.currency)
+                  }}</strong></span
+                >
+                <span
+                  >{{ __('Not due yet') }}
+                  <strong class="tabular-nums">{{
+                    money(part.upcoming, part.currency)
+                  }}</strong></span
+                >
+              </template>
+            </span>
           </template>
-        </div>
-      </header>
+        </PowerAppBar>
+      </div>
       <header
         v-else
         class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
@@ -572,36 +495,6 @@
       </div>
     </div>
 
-    <!-- Phone: the lists, in a sheet from the app bar's title. -->
-    <BottomSheet
-      v-if="phone"
-      :open="segmentSheet"
-      :title="''"
-      @update:open="(value) => (segmentSheet = value)"
-    >
-      <nav class="px-3 pb-6" :aria-label="__('Choose a list')">
-        <button
-          v-for="entry in entries"
-          :key="entry.value"
-          type="button"
-          class="flex min-h-14 w-full items-center gap-3 rounded-xl px-4 text-left text-base"
-          :class="
-            state.segment === entry.value
-              ? 'bg-surface-gray-2 font-semibold'
-              : 'hover:bg-surface-gray-1'
-          "
-          :aria-current="state.segment === entry.value ? 'page' : undefined"
-          @click="selectSegment(entry.value)"
-        >
-          <FeatherIcon :name="entry.icon" class="h-5 w-5 text-ink-gray-6" />
-          <span class="flex-1">{{ segmentLabel(entry.value) }}</span>
-          <span class="tabular-nums text-ink-gray-6">{{
-            counts[entry.value] ?? ''
-          }}</span>
-        </button>
-      </nav>
-    </BottomSheet>
-
     <AutoSetupSheet
       v-model="setupOpen"
       :company="setupCompany"
@@ -665,15 +558,9 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  Badge,
-  BottomSheet,
-  Button,
-  FeatherIcon,
-  FormControl,
-  toast,
-} from 'frappe-ui'
+import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import { FilterChips } from '@/components/ui'
+import PowerAppBar from '@/components/power/PowerAppBar.vue'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AutoSetupSheet from '@/components/cobranza/AutoSetupSheet.vue'
 import BulkRemindSheet from '@/components/cobranza/BulkRemindSheet.vue'
@@ -755,7 +642,6 @@ const boot = cobranzaBoot
 const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 const scroller = ref(null)
 const listbox = ref(null)
-const phoneSearch = ref(null)
 const rows = ref([])
 const counts = ref({})
 const agingCounts = ref({})
@@ -771,7 +657,6 @@ const state = computed(() => queueState(route.query))
 const companies = computed(() => boot.value?.companies || [])
 const search = ref(state.value.q)
 const searchOpen = ref(Boolean(state.value.q))
-const segmentSheet = ref(false)
 const totals = computed(() => statTotals(stats.value))
 const split = computed(() => owedSplit(totals.value))
 const statCards = computed(() => [
@@ -1023,6 +908,13 @@ const entries = computed(() =>
         : segmentLabel(s.value),
   })),
 )
+const phoneEntries = computed(() =>
+  SEGMENTS.map((s) => ({
+    ...s,
+    title: segmentLabel(s.value),
+    count: counts.value[s.value],
+  })),
+)
 const agingChips = computed(() =>
   AGING.map((chip) => ({
     value: chip.value,
@@ -1232,7 +1124,6 @@ function navigate(patch, { replace = false } = {}) {
   return replace ? router.replace({ query }) : router.push({ query })
 }
 function selectSegment(value) {
-  segmentSheet.value = false
   clearSelection()
   navigate({ segment: normalizeSegment(value) })
 }
@@ -1466,8 +1357,8 @@ function moveTo(delta) {
 // ── phone search ──────────────────────────────────────────────────────────
 
 function openSearch() {
+  // PowerAppBar focuses its field when the search opens.
   searchOpen.value = true
-  nextTick(() => phoneSearch.value?.focus())
 }
 function closeSearch() {
   searchOpen.value = false
