@@ -26239,3 +26239,39 @@ msgstr "Está tardando más de lo normal. La respuesta aparecerá aquí cuando e
 #: frontend/src/components/assistant
 msgid "Ask the assistant"
 msgstr "Preguntar a Muelle"
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "Overdue since {0}: {1}"
+msgstr "Vencido desde el {0}: {1}"
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "My pendiente «{0}» is overdue since {1}. What should I do to close it?"
+msgstr "Mi pendiente «{0}» está vencido desde el {1}. ¿Qué hago para cerrarlo?"
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "«{0}» has no next step"
+msgstr "«{0}» no tiene siguiente paso"
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "The deal «{0}» has no next step. Propose a follow-up for it."
+msgstr "El trato «{0}» no tiene siguiente paso. Propónme un seguimiento."
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "Owes {0} since {1}"
+msgstr "Le debe {0} desde el {1}"
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "Owes {0}, overdue"
+msgstr "Le debe {0} vencido"
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "Collect"
+msgstr "Cobrar"
+
+#: frontend/src/components/assistant/suggestions.js
+msgid "{0} owes {1}{2}. How do I collect it? Prepare the reminder for me to confirm."
+msgstr "{0} me debe {1}{2}. ¿Cómo le cobro? Prepárame el recordatorio para que yo lo confirme."
+
+#: frontend/src/components/assistant/suggestions.js
+msgid " since {0}"
+msgstr " desde el {0}"

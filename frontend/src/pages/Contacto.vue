@@ -67,6 +67,14 @@
           @click="editIdentity"
         />
       </div>
+      <!-- «Pregúntale a Muelle»: this record is the sheet's context, and what
+           the customer owes is its one suggestion (SHELL-S2.3). -->
+      <AssistantSuggestion
+        screen="contacto"
+        :record="record"
+        :refs="refs"
+        class="my-3"
+      />
       <!-- On a phone the actions read like a phone's contact card: the
            follow-up spans the row, the quick actions sit under it as equal
            tonal pills with the label below (Google Contacts, HubSpot). -->
@@ -719,6 +727,7 @@ import FollowupEditor from '@/components/contactos/FollowupEditor.vue'
 import RelationEditor from '@/components/contactos/RelationEditor.vue'
 import TagEditor from '@/components/contactos/TagEditor.vue'
 import RecoveryMessage from '@/components/contactos/RecoveryMessage.vue'
+import AssistantSuggestion from '@/components/assistant/AssistantSuggestion.vue'
 import ExtraFieldsPanel from '@/components/contactos/ExtraFieldsPanel.vue'
 import ContactTabPanel from '@/components/doco/contact/ContactTabPanel.vue'
 import { useContact360Tabs } from '@/components/doco/contact/useContact360Tabs'

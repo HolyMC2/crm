@@ -378,3 +378,68 @@ describe('cards and suggestions', () => {
     ).toBeNull()
   })
 })
+
+describe('the suggestion rules', async () => {
+  const { hoySuggestion, contactoSuggestion } = await import(
+    '@/components/assistant/suggestions'
+  )
+  it('Hoy: the oldest overdue pendiente, else a deal without a next step, else nothing', () => {
+    const data = {
+      pendientes: {
+        available: true,
+        overdue: {
+          rows: [
+            {
+              doctype: 'ToDo',
+              name: 'T2',
+              date: '2026-10-10',
+              description: '<p>Llamar a Ana</p>',
+            },
+            {
+              doctype: 'ToDo',
+              name: 'T1',
+              date: '2026-03-02',
+              description: 'Cobrar a Aaron',
+            },
+          ],
+        },
+      },
+      seguimiento: {
+        available: true,
+        rows: [{ name: 'D1', title: 'Galaxy A54' }],
+      },
+    }
+    const s = hoySuggestion(data)
+    expect(s.reason).toBe('Overdue since 2 de marzo: Cobrar a Aaron')
+    expect(s.verb).toBe('Resolve')
+    expect(s.prompt).toContain('Cobrar a Aaron')
+    data.pendientes.overdue.rows = []
+    expect(hoySuggestion(data).reason).toBe('«Galaxy A54» has no next step')
+    expect(
+      hoySuggestion({
+        pendientes: { available: false },
+        seguimiento: { available: true, rows: [] },
+      }),
+    ).toBeNull()
+  })
+
+  it('Contacto: only an overdue balance is a reason', () => {
+    const owed = {
+      customer: 'C1',
+      currency: 'MXN',
+      overdue_amount: 775,
+      invoices: [
+        { overdue_days: 0, next_due: '2026-11-01' },
+        { overdue_days: 200, next_due: '2026-03-15' },
+      ],
+    }
+    const s = contactoSuggestion('Aaron Telez', owed)
+    expect(s.reason).toMatch(/^Owes \$775(\.00)? since 15 de marzo$/)
+    expect(s.verb).toBe('Collect')
+    expect(s.prompt).toContain('Aaron Telez')
+    expect(
+      contactoSuggestion('Aaron', { ...owed, overdue_amount: 0 }),
+    ).toBeNull()
+    expect(contactoSuggestion('Aaron', null)).toBeNull()
+  })
+})

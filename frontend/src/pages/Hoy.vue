@@ -43,6 +43,8 @@
           </template>
         </Button>
       </header>
+      <!-- «Pregúntale a Muelle»: at most one suggestion, with its reason (SHELL-S2.3). -->
+      <AssistantSuggestion v-if="data" screen="hoy" :data="data" class="mb-4" />
 
       <div
         v-if="problem && !data"
@@ -465,6 +467,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import HoySection from '@/components/hoy/HoySection.vue'
 import HoyTask from '@/components/hoy/HoyTask.vue'
+import AssistantSuggestion from '@/components/assistant/AssistantSuggestion.vue'
 import { useListKeys } from '@/composables/pageKeys'
 import AvisosList from '@/components/avisos/AvisosList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
