@@ -26435,3 +26435,23 @@ msgstr "Creados del {0} al {1}; estado actual al {2}."
 #: frontend/src/pages/Agenda.vue
 msgid "Views and calendars"
 msgstr "Vistas y calendarios"
+
+#: frontend/src/pages/DealsView.vue
+msgid "hace 1 min"
+msgstr "hace 1 min"
+
+#: frontend/src/pages/DealsView.vue
+msgid "hace {0} min"
+msgstr "hace {0} min"
+
+#: frontend/src/pages/DealsView.vue
+msgid "hace {0} h"
+msgstr "hace {0} h"
+
+#: frontend/src/pages/DealsView.vue
+msgid "hace 1 día"
+msgstr "hace 1 día"
+
+#: frontend/src/pages/DealsView.vue
+msgid "hace {0} días"
+msgstr "hace {0} días"

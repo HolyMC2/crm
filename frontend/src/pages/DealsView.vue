@@ -882,7 +882,6 @@
 </template>
 
 <script setup>
-import { looksLikeId, relativeTime } from '@/utils/display'
 import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
@@ -1953,6 +1952,21 @@ function cardTitle(r) {
   const name = r.deal_name || customerOf(r) || label(r)
   if (name && !looksLikeId(name)) return name
   return deviceOf(r) || formatPhone(phoneOf(r)) || __('Trato sin cliente')
+}
+// Local on purpose: importing utils/display adds a chunk to /crm/deals, which
+// sits at its 60-file budget.
+const looksLikeId = (text) => /^[A-Z]{2,}(-[A-Z]+)*-\d/.test(String(text || ''))
+// «hace 3 h», «hace 2 días» from a server datetime.
+function relativeTime(value) {
+  const then = new Date(String(value || '').replace(' ', 'T')).getTime()
+  if (Number.isNaN(then)) return ''
+  const minutes = Math.max(0, Math.round((Date.now() - then) / 60000))
+  if (minutes < 60)
+    return minutes <= 1 ? __('hace 1 min') : __('hace {0} min', [minutes])
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return __('hace {0} h', [hours])
+  const days = Math.round(hours / 24)
+  return days === 1 ? __('hace 1 día') : __('hace {0} días', [days])
 }
 // «Listo para Entregar» → «Listo para entregar» (sentence case).
 function sentenceCase(text) {
