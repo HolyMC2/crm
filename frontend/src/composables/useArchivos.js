@@ -399,9 +399,17 @@ export function formatBytes(size) {
   if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`
   return `${(n / 1024 / 1024).toFixed(1)} MB`
 }
+// A date without a time («2026-10-14») is that calendar day, not midnight UTC:
+// read as UTC it showed one day early west of Greenwich (Mazatlán is UTC−7).
+export function parseDay(value) {
+  const text = String(value)
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
+  if (day) return new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3]))
+  return new Date(text.replace(' ', 'T'))
+}
 export function formatDay(value, locale) {
   if (!value) return ''
-  const date = new Date(String(value).replace(' ', 'T'))
+  const date = parseDay(value)
   if (Number.isNaN(date.getTime())) return String(value)
   return new Intl.DateTimeFormat(locale || undefined, {
     day: 'numeric',
@@ -413,7 +421,7 @@ export function formatDay(value, locale) {
 /** «today», «yesterday», «3 days ago» or the date: how long a file has waited. */
 export function ageLabel(value, locale, now = new Date()) {
   if (!value) return ''
-  const date = new Date(String(value).replace(' ', 'T'))
+  const date = parseDay(value)
   if (Number.isNaN(date.getTime())) return ''
   const day = (d) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
   const days = Math.round((day(now) - day(date)) / 86400000)
@@ -478,6 +486,18 @@ const BROWSE_KIND_TITLES = {
   contrato: 'Contracts',
   foto: 'Photos',
   otro: 'Other files',
+}
+// One file of a kind, for a title («Factura de …»); the plural above names the filter.
+const BROWSE_KIND_ONE = {
+  factura: 'Invoice',
+  ticket: 'Receipt',
+  estado_cuenta: 'Bank statement',
+  contrato: 'Contract',
+  foto: 'Photo',
+  otro: 'File',
+}
+export function browseKindName(kind) {
+  return tr(BROWSE_KIND_ONE[kind] || 'File')
 }
 export function browseKindLabel(kind) {
   return BROWSE_KIND_TITLES[kind]
@@ -742,7 +762,7 @@ export function displayTitle(item, locale = 'es-MX') {
     return item.attached_to.title
   const kind = item?.document_kind
     ? kindLabel(item.document_kind)
-    : browseKindLabel(item?.kind)
+    : browseKindName(item?.kind)
   const issuer = issuerName(item?.counterparty)
   const base = issuer ? tr('{0} de {1}', [kind, issuer]) : kind
   const date = item?.document_date || item?.date

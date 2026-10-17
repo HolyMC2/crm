@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ageLabel,
   browseKindLabel,
+  browseKindName,
   displayTitle,
   formatDay,
   issuerName,
   kindLabel,
+  parseDay,
 } from '@/composables/useArchivos'
 
 const UUID = '9F60C154-AE77-4A3D-8F41-5C9EB07D4A11'
@@ -35,7 +38,7 @@ describe('a file title a worker can read', () => {
       date: '2026-03-03',
     }
     expect(displayTitle(item)).toBe(
-      `${browseKindLabel('factura')} de Refacciones Ficticias del Norte SA de C.V. · ${formatDay('2026-03-03', 'es-MX')}`,
+      `${browseKindName('factura')} de Refacciones Ficticias del Norte SA de C.V. · ${formatDay('2026-03-03', 'es-MX')}`,
     )
   })
 
@@ -95,5 +98,27 @@ describe('an issuer as written', () => {
       'Abc Distribuidora S. de R.L.',
     )
     expect(issuerName('XAXX010101000')).toBe('XAXX010101000')
+  })
+})
+
+describe('one file of a kind and its calendar day', () => {
+  it('a title names one file in the singular; the filter keeps its plural', () => {
+    expect(browseKindName('factura')).not.toBe(browseKindLabel('factura'))
+    expect(browseKindName('foto')).toBeTruthy()
+    expect(browseKindName('desconocido')).toBe(browseKindName('otro'))
+  })
+  it('a date without a time stays on its own day in any time zone', () => {
+    const day = parseDay('2026-10-14')
+    expect([day.getFullYear(), day.getMonth(), day.getDate()]).toEqual([
+      2026, 9, 14,
+    ])
+    expect(formatDay('2026-10-14', 'es-MX')).toContain('14')
+    expect(formatDay('2026-10-14', 'es-MX')).not.toContain('13')
+  })
+  it('a file received today reads «today», whatever the time zone', () => {
+    const now = new Date(2026, 9, 14, 23, 30)
+    expect(ageLabel('2026-10-14', 'es-MX', now)).toBe(
+      ageLabel('2026-10-14 09:00:00', 'es-MX', now),
+    )
   })
 })
