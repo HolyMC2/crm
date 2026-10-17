@@ -568,7 +568,7 @@ def boot():
 		"palette": _palette(),
 		"mobile_slots": _saved_slots(),
 		"rail": _saved_rail(),
-		# Where Muelle opens for me (Más › Configuración); the client shows
+		# Where Muelle opens for me (Más > Configuración); the client shows
 		# «Automático» when the saved module is no longer one of mine.
 		"landing": _saved_landing_key(),
 		"modules": modules,
