@@ -983,7 +983,12 @@ describe('Clínica in the shell palette', () => {
 })
 
 describe('Inmobiliaria in the shell palette', () => {
-  const query = { raw: 'garibaldi', text: 'garibaldi', scope: 'all', kind: 'text' }
+  const query = {
+    raw: 'garibaldi',
+    text: 'garibaldi',
+    scope: 'all',
+    kind: 'text',
+  }
   const UNIT = {
     id: 'unidad:GRB-A-101',
     title: 'GRB-A-101',
@@ -1009,7 +1014,8 @@ describe('Inmobiliaria in the shell palette', () => {
           {
             id: 'venta:VTA-2026-00001',
             title: 'Zacarías Pérez',
-            subtitle: 'Venta · VTA-2026-00001 · GRB-A-102 · En pagos · $5.1 MDP',
+            subtitle:
+              'Venta · VTA-2026-00001 · GRB-A-102 · En pagos · $5.1 MDP',
             icon: 'lucide-handshake',
             href: '/desk/venta-inmobiliaria/VTA-2026-00001',
           },
