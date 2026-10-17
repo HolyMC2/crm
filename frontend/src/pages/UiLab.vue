@@ -79,7 +79,7 @@
       </section>
 
       <section id="segmented" class="px-4 pb-4">
-        <h2 :class="LABEL" class="!px-0">Segmented (2–4 vistas)</h2>
+        <h2 :class="LABEL" class="!px-0">Segmented (2–3 opciones)</h2>
         <Segmented v-model="view" :options="views" label="Vista" />
         <div class="h-3" />
         <Segmented v-model="period" :options="periods" label="Periodo" />
@@ -129,7 +129,8 @@
         </FilterChips>
       </section>
 
-      <section id="list-rows">
+      <!-- A list under a Fab keeps clearance: the last row clears the Fab and the bottom bar (pb-24). -->
+      <section id="list-rows" class="pb-24">
         <h2 :class="LABEL">ListRow</h2>
         <div class="divide-y divide-outline-gray-1">
           <ListRow
@@ -328,11 +329,12 @@ const views = [
   { value: 'mes', label: 'Mes' },
 ]
 const view = ref('lista')
+// Three options: at 305px a fourth label («Personalizado») hyphenates, so the
+// long choice opens its own date sheet («Otro…»).
 const periods = [
   { value: 'hoy', label: 'Hoy' },
   { value: '7', label: '7 días' },
-  { value: '30', label: '30 días' },
-  { value: 'otro', label: 'Personalizado' },
+  { value: 'otro', label: 'Otro…' },
 ]
 const period = ref('7')
 
