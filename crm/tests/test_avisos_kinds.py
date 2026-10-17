@@ -235,6 +235,13 @@ class TestAssignmentRemovals(TestCase):
 			kinds.removal_parts("Ana te quitó la asignación de trato Juan Pérez"),
 			("Juan Pérez", "Ana", False),
 		)
+		# doco's es_MX catalog words it differently; es-MX readers get this text.
+		mx = "Administrator eliminó su asignación en la tarea Dar seguimiento"
+		self.assertTrue(kinds.is_removal(mx))
+		self.assertEqual(kinds.removal_parts(mx), ("Dar seguimiento", "Administrator", True))
+		self.assertEqual(
+			kinds.removal_parts("Ana eliminó su asignación en trato Juan Pérez"), ("Juan Pérez", "Ana", False)
+		)
 		self.assertIsNone(kinds.removal_parts("Ana assigned a new task Llamar to you"))
 
 	def test_removals_are_quiet_news_folded_per_actor(self):

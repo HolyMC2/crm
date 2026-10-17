@@ -57,10 +57,14 @@ NOTICES = (
 
 # A CRM assignment that was taken off the reader (crm/api/todo.py, cancelled ToDo). The
 # text was frozen in the actor's language when it was stored, so match both.
-_REMOVAL = re.compile(r"has been removed by|te quitó la asignación|ha sido eliminada por|te quitó la tarea")
+_REMOVAL = re.compile(
+	r"has been removed by|te quitó la asignación|ha sido eliminada por|te quitó la tarea|eliminó su asignación"
+)
 _REMOVED_TASK = (
 	re.compile(r"^Your assignment on task (?P<what>.+) has been removed by (?P<who>.+)$"),
 	re.compile(r"^(?P<who>.+?) te quitó la asignación de la tarea (?P<what>.+)$"),
+	# doco's es_MX catalog (doco/locale/es_MX.po).
+	re.compile(r"^(?P<who>.+?) eliminó su asignación en la tarea (?P<what>.+)$"),
 )
 _REMOVED_RECORD = (
 	re.compile(
@@ -71,6 +75,9 @@ _REMOVED_RECORD = (
 	),
 	re.compile(
 		r"^(?P<who>.+?) te quitó la asignación de (?:CRM )?(?:lead|deal|Lead|Deal|trato|prospecto) (?P<what>.+)$"
+	),
+	re.compile(
+		r"^(?P<who>.+?) eliminó su asignación en (?:CRM )?(?:lead|deal|Lead|Deal|trato|prospecto) (?P<what>.+)$"
 	),
 )
 # The kind detail every removal shares, so they fold into one quiet line per actor.
