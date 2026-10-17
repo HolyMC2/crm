@@ -1,9 +1,32 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+    <!-- Phone: one app bar with up to the list, the task as its title, and the
+         edit pencil (route meta.ownPhoneHeader). -->
+    <AppBar
+      v-if="phone"
+      :back="backTarget"
+      :back-label="backLabel"
+      :context="__('Pendientes')"
+      :title="row?.description || __('Pendiente')"
+    >
+      <template #actions>
+        <button
+          v-if="row?.can_edit"
+          type="button"
+          class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
+          :aria-label="__('Edit task')"
+          :disabled="busy"
+          @click="editTask"
+        >
+          <span class="lucide-pencil size-6" aria-hidden="true" />
+        </button>
+      </template>
+    </AppBar>
     <div
       class="mx-auto w-full max-w-3xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10 sm:pt-6"
     >
       <RouterLink
+        v-if="!phone"
         :to="backTarget"
         class="inline-flex min-h-11 items-center gap-1 rounded-lg text-sm text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:min-h-8"
       >
@@ -82,7 +105,9 @@
               >{{ priorityLabel(row.priority) }}</span
             >
           </div>
-          <h1 class="whitespace-pre-line text-xl font-semibold text-ink-gray-9">
+          <h1
+            class="whitespace-pre-line text-xl font-semibold text-ink-gray-9 [overflow-wrap:break-word] [text-wrap:balance]"
+          >
             {{ row.description }}
           </h1>
         </header>
@@ -155,7 +180,7 @@
             @click="reopen()"
           />
           <Button
-            v-if="row.can_edit"
+            v-if="row.can_edit && !phone"
             class="min-h-11 sm:min-h-8"
             icon-left="edit-2"
             :label="__('Edit task')"
@@ -166,7 +191,7 @@
             v-if="reference"
             class="min-h-11 sm:min-h-8"
             icon-left="external-link"
-            :label="__('Open {0}', [referenceName])"
+            :label="__('Open {0}', [referenceKind.toLowerCase()])"
             @click="openReference"
           />
         </div>
@@ -192,14 +217,21 @@
               class="text-base"
               :class="row.group === 'overdue' ? 'text-ink-red-7' : ''"
             >
-              {{ row.date ? formatDay(row.date) : __('No date') }} ·
-              {{ dueText(row, today) }}
+              <!-- «Sin fecha» once, not «Sin fecha · Sin fecha». -->
+              <template v-if="row.date">
+                {{ formatDay(row.date) }} · {{ dueText(row, today) }}
+              </template>
+              <template v-else>{{ __('No date') }}</template>
             </dd>
           </div>
           <div>
             <dt class="text-sm text-ink-gray-6">{{ __('Assigned to') }}</dt>
             <dd class="text-base">
-              {{ row.mine ? __('You (assignee)') : row.assigned_to || '—' }}
+              {{
+                row.mine
+                  ? __('You (assignee)')
+                  : row.assigned_to_name || personName(row.assigned_to) || '—'
+              }}
             </dd>
           </div>
           <div v-if="row.activity_type">
@@ -207,7 +239,9 @@
             <dd class="text-base">{{ __(row.activity_type) }}</dd>
           </div>
           <div>
-            <dt class="text-sm text-ink-gray-6">{{ __('Record') }}</dt>
+            <dt class="text-sm text-ink-gray-6">
+              {{ reference ? referenceKind : __('Record') }}
+            </dt>
             <dd class="text-base">
               <button
                 v-if="reference"
@@ -272,6 +306,9 @@
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, Dropdown, FeatherIcon, toast } from 'frappe-ui'
+import { AppBar } from '@/components/ui'
+import { isMobile as phone } from '@/composables/breakpoint'
+import { kindLabel, personName } from '@/utils/display'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import CreateDialog from '@/components/pendientes/CreateDialog.vue'
 import { loadShell, shellBoot } from '@/composables/muelleShell'
@@ -326,6 +363,10 @@ const canReopen = computed(
   () => Boolean(row.value?.can_write) && row.value?.status === 'Closed',
 )
 const reference = computed(() => referenceTarget(row.value))
+// «Contacto», «Trato»…: the linked record says what it is (pattern 6).
+const referenceKind = computed(
+  () => kindLabel(row.value?.reference_type) || __('Record'),
+)
 const referenceName = computed(
   () => row.value?.reference_label || row.value?.reference_name || '',
 )

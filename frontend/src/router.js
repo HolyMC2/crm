@@ -94,14 +94,26 @@ const routes = [
     path: '/pendientes',
     name: 'Pendientes',
     component: () => import('@/pages/Pendientes.vue'),
-    meta: { app: 'pendientes', title: 'Pendientes', stableKey: true },
+    // On a phone the list brings its AppBar (list picker as the title, search, bell).
+    meta: {
+      app: 'pendientes',
+      title: 'Pendientes',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/pendientes/:source/:name',
     name: 'Pendiente',
     component: () => import('@/pages/Pendiente.vue'),
     props: true,
-    meta: { app: 'pendientes', title: 'Pendientes', stableKey: true },
+    // The record's AppBar: up to the list, its title, the edit pencil.
+    meta: {
+      app: 'pendientes',
+      title: 'Pendientes',
+      stableKey: true,
+      ownPhoneHeader: true,
+    },
   },
   {
     path: '/cobranza',

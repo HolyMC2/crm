@@ -26084,3 +26084,7 @@ msgstr "Orden de compra"
 msgctxt "Compras"
 msgid "Elige la fecha"
 msgstr "Elige la fecha"
+
+#: frontend/src/pages/Pendientes.vue
+msgid "Completed ({0})"
+msgstr "Completados ({0})"

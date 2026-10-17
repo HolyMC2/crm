@@ -23,8 +23,24 @@
         {{ copied }}
       </p>
     </section>
-    <template v-else>
+    <div v-else class="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <!-- Phone: the list is the app bar's title (a sheet picks another), search
+           is an icon, the bell is in the bar; create is the FAB (Google Tasks). -->
+      <AppBar
+        v-if="phone"
+        v-model:search="search"
+        v-model:search-open="searchOpen"
+        :context="__('Pendientes')"
+        :title="segmentLabel(state.segment)"
+        :scopes="phoneEntries"
+        :scope="state.segment"
+        :scope-title="__('Choose a list')"
+        searchable
+        :search-label="__('Search pendientes')"
+        @update:scope="selectSegment"
+      />
       <header
+        v-else
         class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
       >
         <!-- The title owns its row on phones (basis-full) so the buttons can
@@ -58,15 +74,52 @@
           />
         </template>
       </header>
-      <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
-        <FormControl
-          class="h-11 w-full sm:hidden"
-          type="select"
-          :aria-label="__('List')"
-          :model-value="state.segment"
-          :options="entries.map((e) => ({ label: e.label, value: e.value }))"
-          @update:model-value="selectSegment"
-        />
+      <FilterChips
+        v-if="phone && !approvals"
+        class="py-2"
+        :label="__('Filters')"
+        :model-value="state.source === 'all' ? '' : state.source"
+        :chips="sourceChips"
+        :filters-count="state.priority || state.from || state.to ? 1 : 0"
+        @update:model-value="(value) => update({ source: value || 'all' })"
+        @clear-filters="update({ priority: '', from: '', to: '' })"
+      >
+        <template #filters>
+          <fieldset class="space-y-1">
+            <legend class="pb-1 text-base font-semibold text-ink-gray-9">
+              {{ __('Priority') }}
+            </legend>
+            <label
+              v-for="option in priorityOptions"
+              :key="option.value"
+              class="flex min-h-11 items-center gap-3 text-base text-ink-gray-8"
+            >
+              <input
+                type="radio"
+                name="pendientes-priority"
+                class="size-5"
+                :value="option.value"
+                :checked="state.priority === option.value"
+                @change="update({ priority: option.value })"
+              />
+              {{ option.label }}
+            </label>
+          </fieldset>
+          <button
+            v-if="state.from || state.to"
+            type="button"
+            class="mt-3 flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-base"
+            @click="update({ from: '', to: '' })"
+          >
+            {{ rangeLabel }} <span aria-hidden="true">×</span
+            ><span class="sr-only">{{ __('Remove date range') }}</span>
+          </button>
+        </template>
+      </FilterChips>
+      <div
+        v-else-if="!phone"
+        class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
+      >
         <FormControl
           v-model="search"
           data-list-search
@@ -98,12 +151,7 @@
           type="select"
           :aria-label="__('Priority')"
           :model-value="state.priority"
-          :options="[
-            { label: __('Any priority'), value: '' },
-            { label: __('High'), value: 'High' },
-            { label: __('Medium'), value: 'Medium' },
-            { label: __('Low'), value: 'Low' },
-          ]"
+          :options="priorityOptions"
           @update:model-value="(value) => update({ priority: value })"
         />
         <button
@@ -125,7 +173,7 @@
       </div>
       <div
         ref="scroller"
-        class="min-h-0 flex-1 overflow-y-auto pb-6"
+        class="min-h-0 flex-1 overflow-y-auto pb-24 sm:pb-6"
         @scroll.passive="rememberScroll"
       >
         <!-- «Por aprobar» / «Esperando respuesta»: the owners' rows (useAprobaciones). -->
@@ -157,30 +205,35 @@
               }}
             </p>
             <Button
-              v-if="boot?.capabilities?.create"
+              v-if="boot?.capabilities?.create && !phone"
               class="mt-4"
               :label="__('New pendiente')"
               @click="openCreate()"
             />
             <Button
-              v-else-if="boot?.capabilities?.create_crm"
+              v-else-if="boot?.capabilities?.create_crm && !phone"
               class="mt-4"
               :label="__('New sales task')"
               @click="newSalesTask"
             />
           </div>
           <section
-            v-for="group in GROUPS"
+            v-for="group in shownGroups"
             v-else
             :key="group"
             :aria-labelledby="`pendientes-${group}`"
+            :class="
+              phone
+                ? 'mx-3 mt-3 overflow-hidden rounded-2xl bg-surface-gray-1'
+                : ''
+            "
           >
             <h2
               :id="`pendientes-${group}`"
-              class="sticky top-0 z-10 flex items-center gap-2 border-b border-outline-gray-1 bg-surface-base px-4 py-2 text-sm font-semibold sm:px-6"
-              :class="
-                group === 'overdue' ? 'text-ink-red-7' : 'text-ink-gray-8'
-              "
+              class="sticky top-0 z-10 flex items-center gap-2 border-b border-outline-gray-1 px-4 py-2 text-sm font-semibold sm:px-6"
+              :class="[
+                phone ? 'bg-surface-gray-1 py-3 text-base' : 'bg-surface-base',
+              ]"
             >
               {{ segmentLabel(group) }}
               <span
@@ -209,6 +262,51 @@
             />
             <div v-if="sections[group]?.has_more" class="px-4 py-2 sm:px-6">
               <Button :label="__('See all')" @click="selectSegment(group)" />
+            </div>
+          </section>
+          <!-- Done work folds into one collapsed card under the open groups
+               (Google Tasks «Completed (n)»); it is not a list of its own. -->
+          <section
+            v-if="doneCount"
+            class="mt-3"
+            :class="
+              phone
+                ? 'mx-3 overflow-hidden rounded-2xl bg-surface-gray-1'
+                : 'border-t border-outline-gray-1'
+            "
+          >
+            <button
+              type="button"
+              class="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left text-base font-semibold text-ink-gray-8 sm:px-6"
+              :aria-expanded="String(doneOpen)"
+              aria-controls="pendientes-done"
+              @click="toggleDone"
+            >
+              {{ __('Completed ({0})', [doneCount]) }}
+              <span
+                class="lucide-chevron-down size-5 transition-transform"
+                :class="doneOpen ? 'rotate-180' : ''"
+                aria-hidden="true"
+              />
+            </button>
+            <div v-if="doneOpen" id="pendientes-done">
+              <PendienteRow
+                v-for="row in doneRows"
+                :key="row.doctype + row.name"
+                :row="row"
+                :today="today"
+                :query="returnQuery"
+                :busy="busy.has(row.doctype + row.name)"
+                @complete="undo"
+              />
+              <div class="px-4 py-2 sm:px-6">
+                <Button
+                  variant="ghost"
+                  class="min-h-11 sm:min-h-8"
+                  :label="__('See all')"
+                  @click="selectSegment('done')"
+                />
+              </div>
             </div>
           </section>
         </template>
@@ -241,7 +339,12 @@
           </div>
         </template>
       </div>
-    </template>
+      <Fab
+        v-if="phone && !approvals && canCreate"
+        :label="__('New pendiente')"
+        @click="fabCreate"
+      />
+    </div>
     <CompleteDialog
       v-model="completeOpen"
       :row="selected"
@@ -254,7 +357,9 @@
       v-model="createOpen"
       :today="today"
       :reference="createReference"
+      :sales-task="Boolean(boot?.capabilities?.create_crm)"
       @created="afterCreate"
+      @sales-task="salesFromCreate"
     />
     <DoctypeModals v-if="nativeEditor" />
   </ModuleLayout>
@@ -273,6 +378,8 @@ import {
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Button, FormControl, toast } from 'frappe-ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import { AppBar, Fab, FilterChips } from '@/components/ui'
+import { isMobile as phone } from '@/composables/breakpoint'
 import { useListKeys } from '@/composables/pageKeys'
 import PendienteRow from '@/components/pendientes/PendienteRow.vue'
 import ApprovalList from '@/components/pendientes/ApprovalList.vue'
@@ -338,6 +445,43 @@ const entries = computed(() =>
   }),
 )
 const approvals = computed(() => isApprovalSegment(state.value.segment))
+// On a phone «Hechos» is the «Completados (n)» card, not a list in the picker
+// (a «See all» link from that card still opens it).
+const phoneEntries = computed(() =>
+  entries.value.filter(
+    (entry) => entry.value !== 'done' || state.value.segment === 'done',
+  ),
+)
+const searchOpen = ref(Boolean(state.value.q))
+const priorityOptions = computed(() => [
+  { label: __('Any priority'), value: '' },
+  { label: __('High'), value: 'High' },
+  { label: __('Medium'), value: 'Medium' },
+  { label: __('Low'), value: 'Low' },
+])
+// Source chips only where sources mix (both lists readable, not the team list).
+const sourceChips = computed(() =>
+  boot.value?.sources?.['CRM Task'] && state.value.segment !== 'team'
+    ? [
+        { value: 'ToDo', label: __('Pendientes') },
+        { value: 'CRM Task', label: __('Sales tasks') },
+      ]
+    : [],
+)
+const canCreate = computed(() =>
+  Boolean(
+    boot.value?.capabilities?.create || boot.value?.capabilities?.create_crm,
+  ),
+)
+const doneCount = ref(0),
+  doneOpen = ref(false),
+  doneRows = ref([])
+// Phone: only groups with work show (an empty «Para hoy» card is noise).
+const shownGroups = computed(() =>
+  phone.value
+    ? GROUPS.filter((group) => sections[group]?.rows?.length)
+    : GROUPS,
+)
 const guard = ref(''),
   copied = ref(''),
   problem = ref(null),
@@ -440,6 +584,8 @@ async function load(start = 0) {
     if (current !== generation) return
     if (response.sections) {
       for (const group of GROUPS) sections[group] = response.sections[group]
+      doneCount.value = response.done?.value || 0
+      if (doneOpen.value) loadDone()
     } else {
       rows.value = start ? [...rows.value, ...response.rows] : response.rows
       hasMore.value = response.has_more
@@ -584,6 +730,29 @@ async function reschedule(row, date) {
   } finally {
     busy.delete(key)
   }
+}
+async function loadDone() {
+  try {
+    const response = await pendientesApi(
+      'queue',
+      queueArgs({ ...state.value, segment: 'done' }, 0),
+    )
+    doneRows.value = (response.rows || []).slice(0, 10)
+  } catch (error) {
+    problem.value = pendienteError(error)
+  }
+}
+function toggleDone() {
+  doneOpen.value = !doneOpen.value
+  if (doneOpen.value) loadDone()
+}
+function fabCreate() {
+  if (boot.value?.capabilities?.create) openCreate()
+  else newSalesTask()
+}
+function salesFromCreate() {
+  createOpen.value = false
+  newSalesTask()
 }
 function openComplete(row) {
   selected.value = row

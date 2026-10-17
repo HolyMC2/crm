@@ -14,7 +14,7 @@
       @click="$emit('complete', row)"
     >
       <span
-        class="flex h-5 w-5 items-center justify-center rounded-md border-[1.5px]"
+        class="flex h-5 w-5 items-center justify-center rounded-full border-2"
         :class="
           row.status === 'Closed'
             ? 'border-outline-green-4 bg-surface-green-7 text-white'
@@ -26,6 +26,13 @@
           class="h-3.5 w-3.5"
       /></span>
     </button>
+    <!-- Someone else's work: their initials where the check would be. -->
+    <span
+      v-else-if="showAssignee && assignee"
+      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-gray-3 text-[10px] font-semibold text-ink-gray-8"
+      aria-hidden="true"
+      >{{ initials }}</span
+    >
     <span v-else class="h-6 w-6 shrink-0" aria-hidden="true" />
     <RouterLink
       :to="to"
@@ -44,30 +51,33 @@
       >
         <span :class="dueClass">{{ dueText(row, today) }}</span>
         <span v-if="row.reference_label || row.reference_name" class="truncate"
-          >· {{ row.reference_label || row.reference_name }}</span
+          ><span aria-hidden="true">· </span
+          >{{ row.reference_label || row.reference_name }}</span
         >
         <span
           v-if="row.priority === 'High'"
           class="rounded bg-surface-amber-1 px-1.5 text-xs font-medium text-ink-amber-9"
           >{{ priorityLabel(row.priority) }}</span
         >
+        <!-- The source only matters where sources mix (not in the team list). -->
         <span
-          v-if="row.doctype === 'CRM Task'"
+          v-if="row.doctype === 'CRM Task' && !showAssignee"
           class="rounded bg-surface-gray-2 px-1.5 text-xs text-ink-gray-7"
           >{{ sourceLabel(row) }}</span
         >
-        <span v-if="showAssignee && !row.mine" class="truncate">
-          · {{ __('Assigned to {0}', [row.assigned_to]) }}</span
+        <span v-if="showAssignee && !row.mine && assignee" class="truncate">
+          {{ __('Assigned to {0}', [assignee]) }}</span
         >
       </p>
     </RouterLink>
     <div
       v-if="actionable && row.status === 'Open'"
-      class="hidden shrink-0 sm:flex"
+      class="-my-2 -mr-2 flex shrink-0 sm:my-0 sm:mr-0"
     >
       <Dropdown :options="menu" placement="right">
         <Button
           variant="ghost"
+          class="min-h-11 min-w-11 sm:min-h-7 sm:min-w-7"
           icon="more-horizontal"
           :aria-label="__('More actions for {0}', [row.description])"
         />
@@ -78,6 +88,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Button, Dropdown, FeatherIcon } from 'frappe-ui'
+import { personName } from '@/utils/display'
 import {
   datePresets,
   dueText,
@@ -95,6 +106,18 @@ const props = defineProps({
 })
 const emit = defineEmits(['complete', 'completeNext', 'reschedule'])
 const to = computed(() => pendienteRoute(props.row, props.query))
+// The person, never the login («jeydici01@gmail.com»).
+const assignee = computed(
+  () => props.row.assigned_to_name || personName(props.row.assigned_to),
+)
+const initials = computed(() =>
+  assignee.value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join(''),
+)
 // Team rows open read-only; the owner completes them.
 const actionable = computed(() => props.row.mine && !props.row.cancelled)
 const dueClass = computed(() =>
