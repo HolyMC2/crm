@@ -1,7 +1,9 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div class="mx-auto w-full max-w-5xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell AppBar's back arrow (meta.listParent) is the
+           way back; this link is for the desktop. -->
+      <nav class="mb-3 hidden sm:block">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
@@ -254,14 +256,14 @@
           class="mb-6 space-y-4"
           :aria-label="__('Purchase details', null, 'Compras')"
         >
-          <div class="grid gap-3 sm:grid-cols-2">
+          <div class="compra-fields grid gap-3 sm:grid-cols-2">
             <ComprasPicker
               v-model="form.supplier"
               :display="form.supplier_label"
               :label="__('Supplier', null, 'Compras')"
               :placeholder="__('Search supplier')"
               :empty-text="__('No supplier you can use matches.')"
-              :invalid="missing.includes('supplier')"
+              :invalid="showMissing && missing.includes('supplier')"
               :load="(q) => comprasApi('suppliers', { search: q })"
               @pick="(o) => (form.supplier_label = o.label)"
             />
@@ -277,7 +279,7 @@
               :label="__('Destination warehouse', null, 'Compras')"
               :placeholder="__('Search warehouse')"
               :empty-text="__('No warehouse of this company you can use.')"
-              :invalid="missing.includes('warehouse')"
+              :invalid="showMissing && missing.includes('warehouse')"
               :disabled="!form.company"
               :load="
                 (q) =>
@@ -292,7 +294,7 @@
             />
           </div>
           <p
-            v-if="missing.length && (triedSave || !isNew)"
+            v-if="missing.length && showMissing"
             role="status"
             class="text-sm text-ink-amber-8"
           >
@@ -766,6 +768,8 @@ const problem = ref(null)
 const guard = ref(null)
 const editing = ref(false)
 const triedSave = ref(false)
+// A new purchase starts empty: no red until the user tries to save.
+const showMissing = computed(() => triedSave.value || !isNew.value)
 const reviewOpen = ref(false)
 const conflict = ref(null)
 const doneNotice = ref('')
@@ -1424,3 +1428,13 @@ useLiveWatch(
   { minIntervalMs: 3000 },
 )
 </script>
+<style scoped>
+/* 44 px company and date fields on a phone, like the pickers beside them. */
+@media (max-width: 639px) {
+  .compra-fields :deep(select),
+  .compra-fields :deep(input) {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+}
+</style>

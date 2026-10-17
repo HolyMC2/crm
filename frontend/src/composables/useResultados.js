@@ -195,7 +195,16 @@ export function routerPath(href) {
     : null
 }
 
-/** The value of a card or fact, in the site currency and the browser's locale. */
+// The walk-in customer (ERPNext's «Publico en General») reads with its accent
+// and in sentence case, on the list and on the record.
+const WALK_IN = /^p[uú]blico en general$/i
+export function walkInName(name) {
+  return WALK_IN.test(String(name || '').trim())
+    ? tr('Público en general')
+    : name
+}
+
+/** The value of a card or fact, in the site currency and es-MX numbers. */
 export function formatValue(value, format, currency) {
   if (value === null || value === undefined) return '—'
   const n = Number(value)
@@ -204,12 +213,12 @@ export function formatValue(value, format, currency) {
   if (format === 'signed_money')
     return n > 0 ? `+${money(n, currency)}` : money(n, currency)
   if (format === 'percent')
-    return `${n.toLocaleString(undefined, { maximumFractionDigits: 1 })} %`
+    return `${n.toLocaleString('es-MX', { maximumFractionDigits: 1 })} %`
   if (format === 'hours')
     return tr('{0} h', [
-      n.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+      n.toLocaleString('es-MX', { maximumFractionDigits: 1 }),
     ])
-  return n.toLocaleString(undefined, { maximumFractionDigits: 0 })
+  return n.toLocaleString('es-MX', { maximumFractionDigits: 0 })
 }
 
 /** «+6 %», «−1.4 pp» or null when there is nothing to compare. */
@@ -226,7 +235,7 @@ export function deltaChip(card, compara) {
   // `invert`: a rise is bad news (returns, cancellations).
   const good = card.invert ? n < 0 : n > 0
   return {
-    label: `${sign}${Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: 1 })} ${unit}`,
+    label: `${sign}${Math.abs(n).toLocaleString('es-MX', { maximumFractionDigits: 1 })} ${unit}`,
     tone: n === 0 ? 'flat' : good ? 'up' : 'down',
     arrow: n > 0 ? 'up' : n < 0 ? 'down' : 'flat',
   }

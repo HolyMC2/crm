@@ -390,8 +390,19 @@ function drill(status) {
 }
 
 // ── presentation ────────────────────────────────────────────────────────────
+// «20 jul» (with the year only when it is not this year), not «20-07-2026».
 function day(value) {
-  return formatDate(value, '', true)
+  const iso = String(value || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return formatDate(value, '', true)
+  const [year, month, date] = iso.split('-').map(Number)
+  return new Intl.DateTimeFormat('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    ...(year !== new Date().getFullYear() ? { year: 'numeric' } : {}),
+    timeZone: 'UTC',
+  })
+    .format(new Date(Date.UTC(year, month - 1, date)))
+    .replace('.', '')
 }
 function skeletonWidth(n) {
   return ['w-full', 'w-3/4', 'w-1/2', 'w-1/3'][n - 1]

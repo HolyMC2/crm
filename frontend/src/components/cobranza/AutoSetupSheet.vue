@@ -1,224 +1,224 @@
 <template>
-  <Dialog
+  <!-- PowerSheet: a bottom sheet on a phone, a dialog on wider screens. -->
+  <PowerSheet
     v-model="open"
-    :options="{ title: __('Automatic payment reminders'), size: 'xl' }"
+    :title="__('Automatic payment reminders')"
+    :subtitle="company"
+    size="xl"
+    kind="auto-setup"
   >
-    <template #body-content>
-      <div class="auto-setup space-y-4 text-base" data-auto-setup>
-        <p class="text-sm text-ink-gray-6">{{ company }}</p>
-        <div v-if="loading && !setup" role="status" class="text-sm">
-          {{ __('Loading the reminder settings…') }}
-        </div>
-        <div
-          v-if="problem"
-          role="alert"
-          class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+    <div class="auto-setup space-y-4 text-base" data-auto-setup>
+      <div v-if="loading && !setup" role="status" class="text-sm">
+        {{ __('Loading the reminder settings…') }}
+      </div>
+      <div
+        v-if="problem"
+        role="alert"
+        class="rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7"
+      >
+        <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+        <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load" />
+      </div>
+
+      <template v-if="setup">
+        <p
+          class="rounded-lg p-3 text-sm"
+          :class="
+            setup.paused
+              ? 'bg-surface-amber-1 text-ink-gray-8'
+              : setup.enabled
+                ? 'bg-surface-green-1 text-ink-green-8'
+                : 'bg-surface-gray-1 text-ink-gray-8'
+          "
+          role="status"
         >
-          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-          <Button class="ml-2" :label="__('Retry', null, CTX)" @click="load" />
-        </div>
+          {{ statusText }}
+        </p>
 
-        <template v-if="setup">
-          <p
-            class="rounded-lg p-3 text-sm"
-            :class="
-              setup.paused
-                ? 'bg-surface-amber-1 text-ink-gray-8'
-                : setup.enabled
-                  ? 'bg-surface-green-1 text-ink-green-8'
-                  : 'bg-surface-gray-1 text-ink-gray-8'
-            "
-            role="status"
-          >
-            {{ statusText }}
-          </p>
-
-          <section aria-labelledby="auto-ladder-title">
-            <h3 id="auto-ladder-title" class="text-sm font-semibold">
-              {{ __('What goes out') }}
-            </h3>
-            <ol class="mt-2 space-y-2">
-              <li
-                v-for="level in setup.ladder"
-                :key="level.level"
-                class="rounded-lg border border-outline-gray-2 p-3"
-              >
-                <p class="text-sm font-medium text-ink-gray-9">
-                  {{ __('Day {0} overdue · {1}', [level.days, level.title]) }}
-                </p>
-                <p class="mt-1 text-sm text-ink-gray-7">
-                  {{ level.body }} {{ level.closing }}
-                </p>
-              </li>
-            </ol>
-            <p class="mt-2 text-xs text-ink-gray-6">
-              {{
-                __(
-                  'With the letter as a PDF. No fees and no interest. At most one reminder per customer every {0} days; none after they reply, promise to pay or pay.',
-                  [setup.cap_days],
-                )
-              }}
-            </p>
-          </section>
-
-          <p
-            v-if="setup.mode === 'manual'"
-            class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
-          >
+        <section aria-labelledby="auto-ladder-title">
+          <h3 id="auto-ladder-title" class="text-sm font-semibold">
+            {{ __('What goes out') }}
+          </h3>
+          <ol class="mt-2 space-y-2">
+            <li
+              v-for="level in setup.ladder"
+              :key="level.level"
+              class="rounded-lg border border-outline-gray-2 p-3"
+            >
+              <p class="text-sm font-medium text-ink-gray-9">
+                {{ __('Day {0} overdue · {1}', [level.days, level.title]) }}
+              </p>
+              <p class="mt-1 text-sm text-ink-gray-7">
+                {{ level.body }} {{ level.closing }}
+              </p>
+            </li>
+          </ol>
+          <p class="mt-2 text-xs text-ink-gray-6">
             {{
               __(
-                'Your business sends WhatsApp from its phone: each day the due reminders wait in Cobranza, ready to send from your phone.',
+                'With the letter as a PDF. No fees and no interest. At most one reminder per customer every {0} days; none after they reply, promise to pay or pay.',
+                [setup.cap_days],
               )
             }}
           </p>
+        </section>
 
+        <p
+          v-if="setup.mode === 'manual'"
+          class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-8"
+        >
+          {{
+            __(
+              'Your business sends WhatsApp from its phone: each day the due reminders wait in Cobranza, ready to send from your phone.',
+            )
+          }}
+        </p>
+
+        <FormControl
+          v-if="setup.accounts.length"
+          :model-value="form.account"
+          type="select"
+          :label="__('WhatsApp account')"
+          :placeholder="__('Choose an account')"
+          :options="accountOptions"
+          @update:model-value="chooseAccount"
+        />
+
+        <div v-if="setup.mode === 'api'" class="space-y-2">
           <FormControl
-            v-if="setup.accounts.length"
-            :model-value="form.account"
+            v-model="form.template"
             type="select"
-            :label="__('WhatsApp account')"
-            :placeholder="__('Choose an account')"
-            :options="accountOptions"
-            @update:model-value="chooseAccount"
+            :label="__('Approved template')"
+            :options="templateOptions"
           />
-
-          <div v-if="setup.mode === 'api'" class="space-y-2">
-            <FormControl
-              v-model="form.template"
-              type="select"
-              :label="__('Approved template')"
-              :options="templateOptions"
-            />
-            <!-- The reason shows once: here, unless it is what blocks saving below. -->
-            <p
-              v-if="
-                chosenTemplate?.problem && blocker?.action !== 'choose_template'
-              "
-              role="status"
-              class="rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-gray-8"
-            >
-              {{ chosenTemplate.reason }} {{ __('Choose another template.') }}
-            </p>
-            <a
-              v-if="setup.can_configure"
-              class="inline-flex min-h-11 items-center text-sm text-ink-blue-link underline sm:min-h-0"
-              href="/app/whatsapp-templates/new"
-              target="_blank"
-              rel="noopener"
-              >{{ __('Create a template') }}</a
-            >
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <FormControl
-              v-model="form.from"
-              type="time"
-              :label="__('Send from')"
-            />
-            <FormControl
-              v-model="form.to"
-              type="time"
-              :label="__('Send until')"
-            />
-          </div>
-          <p class="-mt-2 text-xs text-ink-gray-6">
-            {{ __('Monday to Saturday, in the business hours you set here.') }}
-          </p>
-
-          <p class="text-sm text-ink-gray-8">
-            {{ __('They go out in your name ({0}).', [setup.me.full_name]) }}
-            <template
-              v-if="
-                setup.enabled &&
-                setup.sender &&
-                setup.sender.user !== setup.me.user
-              "
-            >
-              {{
-                __(
-                  'Today they go out in the name of {0}; saving makes it you.',
-                  [setup.sender.full_name],
-                )
-              }}
-            </template>
-          </p>
-          <p class="text-sm font-medium text-ink-gray-9">
-            {{ countText }}
-          </p>
-
-          <div
-            v-if="blocker"
-            role="alert"
-            class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+          <!-- The reason shows once: here, unless it is what blocks saving below. -->
+          <p
+            v-if="
+              chosenTemplate?.problem && blocker?.action !== 'choose_template'
+            "
+            role="status"
+            class="rounded-md bg-surface-amber-1 px-3 py-2 text-sm text-ink-gray-8"
           >
-            <p>{{ blocker.text }}</p>
-            <div class="flex flex-wrap gap-2">
-              <Button
-                v-if="blocker.action === 'copy_request'"
-                class="min-h-11 sm:min-h-8"
-                :label="__('Copy request for the owner')"
-                @click="copyRequest"
-              />
-              <Button
-                v-else-if="blocker.action === 'setup_ladder'"
-                class="min-h-11 sm:min-h-8"
-                :label="__(AUTO_ACTION_LABELS.setup_ladder)"
-                :loading="working"
-                @click="setupLadder"
-              />
-              <a
-                v-else-if="blocker.action === 'whatsapp_settings'"
-                class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
-                href="/app/whatsapp-settings"
-                >{{ __(AUTO_ACTION_LABELS.whatsapp_settings) }}</a
-              >
-              <a
-                v-if="
-                  setup.missing.includes('documents_off') && setup.can_configure
-                "
-                class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
-                href="/app/whatsapp-document-settings"
-                >{{ __('Open document sending settings') }}</a
-              >
-            </div>
-          </div>
-          <p v-if="copied" role="status" class="text-sm text-ink-gray-6">
-            {{ copied }}
+            {{ chosenTemplate.reason }} {{ __('Choose another template.') }}
           </p>
-        </template>
-      </div>
-    </template>
+          <a
+            v-if="setup.can_configure"
+            class="inline-flex min-h-11 items-center text-sm text-ink-blue-link underline sm:min-h-0"
+            href="/app/whatsapp-templates/new"
+            target="_blank"
+            rel="noopener"
+            >{{ __('Create a template') }}</a
+          >
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <FormControl
+            v-model="form.from"
+            type="time"
+            :label="__('Send from')"
+          />
+          <FormControl
+            v-model="form.to"
+            type="time"
+            :label="__('Send until')"
+          />
+        </div>
+        <p class="-mt-2 text-xs text-ink-gray-6">
+          {{ __('Monday to Saturday, in the business hours you set here.') }}
+        </p>
+
+        <p class="text-sm text-ink-gray-8">
+          {{ __('They go out in your name ({0}).', [setup.me.full_name]) }}
+          <template
+            v-if="
+              setup.enabled &&
+              setup.sender &&
+              setup.sender.user !== setup.me.user
+            "
+          >
+            {{
+              __('Today they go out in the name of {0}; saving makes it you.', [
+                setup.sender.full_name,
+              ])
+            }}
+          </template>
+        </p>
+        <p class="text-sm font-medium text-ink-gray-9">
+          {{ countText }}
+        </p>
+
+        <div
+          v-if="blocker"
+          role="alert"
+          class="space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-gray-8"
+        >
+          <p>{{ blocker.text }}</p>
+          <div class="flex flex-wrap gap-2">
+            <Button
+              v-if="blocker.action === 'copy_request'"
+              class="min-h-11 sm:min-h-8"
+              :label="__('Copy request for the owner')"
+              @click="copyRequest"
+            />
+            <Button
+              v-else-if="blocker.action === 'setup_ladder'"
+              class="min-h-11 sm:min-h-8"
+              :label="__(AUTO_ACTION_LABELS.setup_ladder)"
+              :loading="working"
+              @click="setupLadder"
+            />
+            <a
+              v-else-if="blocker.action === 'whatsapp_settings'"
+              class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
+              href="/app/whatsapp-settings"
+              >{{ __(AUTO_ACTION_LABELS.whatsapp_settings) }}</a
+            >
+            <a
+              v-if="
+                setup.missing.includes('documents_off') && setup.can_configure
+              "
+              class="inline-flex min-h-11 items-center text-ink-blue-link underline sm:min-h-0"
+              href="/app/whatsapp-document-settings"
+              >{{ __('Open document sending settings') }}</a
+            >
+          </div>
+        </div>
+        <p v-if="copied" role="status" class="text-sm text-ink-gray-6">
+          {{ copied }}
+        </p>
+      </template>
+    </div>
     <template #actions>
-      <div class="flex flex-wrap justify-end gap-2">
-        <Button
-          class="min-h-11 sm:min-h-8"
-          :label="__('Cancel')"
-          @click="open = false"
-        />
-        <Button
-          v-if="setup?.enabled && setup.can_switch_off"
-          class="min-h-11 sm:min-h-8"
-          :label="__('Switch off')"
-          :loading="saving === 'off'"
-          @click="save(false)"
-        />
-        <Button
-          variant="solid"
-          class="min-h-11 sm:min-h-8"
-          :label="
-            setup?.enabled ? __('Save') : __('Switch on automatic reminders')
-          "
-          :disabled="!setup || Boolean(blocker) || loading"
-          :loading="saving === 'on'"
-          @click="save(true)"
-        />
-      </div>
+      <Button
+        class="min-h-11 sm:min-h-8"
+        :label="__('Cancel')"
+        @click="open = false"
+      />
+      <Button
+        v-if="setup?.enabled && setup.can_switch_off"
+        class="min-h-11 sm:min-h-8"
+        :label="__('Switch off')"
+        :loading="saving === 'off'"
+        @click="save(false)"
+      />
+      <!-- On a phone the main action comes first, at the thumb. -->
+      <Button
+        variant="solid"
+        class="order-first min-h-11 sm:order-none sm:min-h-8"
+        :label="
+          setup?.enabled ? __('Save') : __('Switch on automatic reminders')
+        "
+        :disabled="!setup || Boolean(blocker) || loading"
+        :loading="saving === 'on'"
+        @click="save(true)"
+      />
     </template>
-  </Dialog>
+  </PowerSheet>
 </template>
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { Button, Dialog, FormControl, toast } from 'frappe-ui'
+import { Button, FormControl, toast } from 'frappe-ui'
+import PowerSheet from '@/components/power/PowerSheet.vue'
 import {
   AUTO_ACTION_LABELS,
   AUTO_API,

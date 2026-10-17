@@ -5,7 +5,10 @@
     <div class="mx-auto w-full max-w-screen-2xl space-y-4 p-3 sm:p-5">
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-semibold">{{ __('Reports') }}</h1>
+          <!-- On a phone the shell AppBar already says «Reportes». -->
+          <h1 class="sr-only text-2xl font-semibold sm:not-sr-only">
+            {{ __('Reports') }}
+          </h1>
           <p class="mt-1 text-sm text-ink-gray-6">
             {{ __('Results, bottlenecks and the next conversation.') }}
           </p>
@@ -263,5 +266,12 @@ onBeforeUnmount(() => clearTimeout(timer))
 .reports-page :deep([role='combobox']) {
   min-height: 44px;
   max-width: 100%;
+}
+/* The owner and pipeline pickers (frappe-ui Autocomplete, a 28 px button)
+   get the same 44 px target on a phone. */
+@media (max-width: 639px) {
+  .reports-page :deep(button.h-7.w-full) {
+    min-height: 44px;
+  }
 }
 </style>

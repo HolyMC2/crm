@@ -10,6 +10,7 @@ import {
   normalizeSegment,
   orderBillsRoute,
   paidLabel,
+  partlyPaid,
   payBill,
   payMissing,
   pendingPayment,
@@ -183,5 +184,25 @@ describe('one payment per tap', () => {
     const api = vi.fn().mockRejectedValue(refused)
     await expect(payBill(api, 'PI-2', form)).rejects.toBe(refused)
     expect(pendingPayment('PI-2')).toBeNull()
+  })
+})
+
+describe('Gastos row: paid words only when part is paid', () => {
+  const bill = { docstatus: 1, total: 1000, currency: 'MXN' }
+  it('is false with nothing paid, all paid, or a draft', () => {
+    expect(partlyPaid({ ...bill, paid: 0, outstanding_amount: 1000 })).toBe(
+      false,
+    )
+    expect(partlyPaid({ ...bill, paid: 1000, outstanding_amount: 0 })).toBe(
+      false,
+    )
+    expect(partlyPaid({ docstatus: 0, paid: 5, outstanding_amount: 5 })).toBe(
+      false,
+    )
+  })
+  it('is true when some but not all is paid', () => {
+    expect(partlyPaid({ ...bill, paid: 400, outstanding_amount: 600 })).toBe(
+      true,
+    )
   })
 })

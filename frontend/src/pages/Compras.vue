@@ -23,354 +23,371 @@
         {{ copied }}
       </p>
     </section>
-    <div
-      v-else
-      :ref="(el) => (list.scroller.value = el)"
-      class="flex min-h-0 flex-1 flex-col overflow-y-auto"
-      data-compras-scroller
-      @scroll.passive="list.rememberScroll"
-    >
-      <PowerAppBar
-        v-if="list.phone.value"
-        v-model:search="list.search.value"
-        v-model:search-open="list.searchOpen.value"
-        :title="segmentLabel(state.segment)"
-        :count="countLabel(state.segment)"
-        :loading="list.loading.value && rows.length > 0"
-        :entries="phoneEntries"
-        :active="state.segment"
-        :search-label="__('Search supplier or document')"
-        :selectable="rows.length > 0 && state.segment === 'por-comprar'"
-        :select-label="__('Select purchases')"
-        :selecting="list.selecting.value"
-        :selected-count="list.selected.value.size"
-        @select="selectSegment"
-        @start-select="list.selecting.value = true"
-        @select-all="list.selectAll"
-        @clear-selection="list.clearSelection"
+    <!-- relative: the phone's «Nueva compra» FAB sits at its bottom end. -->
+    <div v-else class="relative flex min-h-0 flex-1 flex-col">
+      <div
+        :ref="(el) => (list.scroller.value = el)"
+        class="flex min-h-0 flex-1 flex-col overflow-y-auto"
+        data-compras-scroller
+        @scroll.passive="list.rememberScroll"
       >
-        <template #actions>
+        <PowerAppBar
+          v-if="list.phone.value"
+          v-model:search="list.search.value"
+          v-model:search-open="list.searchOpen.value"
+          :title="segmentLabel(state.segment)"
+          :count="countLabel(state.segment)"
+          :loading="list.loading.value && rows.length > 0"
+          :entries="phoneEntries"
+          :active="state.segment"
+          :search-label="__('Search supplier or document')"
+          :selectable="rows.length > 0 && state.segment === 'por-comprar'"
+          :select-label="__('Select purchases')"
+          :selecting="list.selecting.value"
+          :selected-count="list.selected.value.size"
+          @select="selectSegment"
+          @start-select="list.selecting.value = true"
+          @select-all="list.selectAll"
+          @clear-selection="list.clearSelection"
+        >
+          <template #actions>
+            <CapturarDocumentoButton
+              variant="appbar"
+              :targets="['Purchase Order', 'Purchase Invoice']"
+              return-label="Compras"
+            />
+          </template>
+          <template v-if="counts" #summary>
+            <span
+              >{{ __('To receive', null, CTX) }}
+              <strong class="tabular-nums">{{
+                countLabel('por-recibir')
+              }}</strong></span
+            >
+            <span
+              >{{ __('To bill', null, CTX) }}
+              <strong class="tabular-nums">{{
+                countLabel('por-facturar')
+              }}</strong></span
+            >
+          </template>
+        </PowerAppBar>
+        <header
+          v-else
+          class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
+        >
+          <div class="min-w-0 flex-1">
+            <h1 class="truncate text-xl font-semibold text-ink-gray-9">
+              {{ segmentLabel(state.segment) }}
+            </h1>
+            <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
+          </div>
+          <button
+            type="button"
+            class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
+            :aria-keyshortcuts="'Alt+H'"
+            @click="openShortcutSheet()"
+          >
+            <kbd
+              class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
+              >?</kbd
+            >
+            {{ __('Keyboard shortcuts') }}
+          </button>
           <CapturarDocumentoButton
-            variant="appbar"
             :targets="['Purchase Order', 'Purchase Invoice']"
             return-label="Compras"
           />
-          <button
+          <Button
             v-if="boot?.capabilities?.create"
-            type="button"
-            class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-            :aria-label="__('New purchase')"
-            @click="newPurchase"
-          >
-            <FeatherIcon name="plus" class="h-6 w-6" />
-          </button>
-        </template>
-        <template v-if="counts" #summary>
-          <span
-            >{{ __('To receive', null, CTX) }}
-            <strong class="tabular-nums">{{
-              countLabel('por-recibir')
-            }}</strong></span
-          >
-          <span
-            >{{ __('To bill', null, CTX) }}
-            <strong class="tabular-nums">{{
-              countLabel('por-facturar')
-            }}</strong></span
-          >
-        </template>
-      </PowerAppBar>
-      <header
-        v-else
-        class="flex flex-wrap items-center gap-3 px-4 pb-2 pt-4 sm:px-6 sm:pt-6"
-      >
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-xl font-semibold text-ink-gray-9">
-            {{ segmentLabel(state.segment) }}
-          </h1>
-          <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
-        </div>
-        <button
-          type="button"
-          class="text-sm text-ink-gray-6 hover:text-ink-gray-8"
-          :aria-keyshortcuts="'Alt+H'"
-          @click="openShortcutSheet()"
-        >
-          <kbd
-            class="rounded border border-outline-gray-2 px-1.5 py-0.5 text-xs"
-            >?</kbd
-          >
-          {{ __('Keyboard shortcuts') }}
-        </button>
-        <CapturarDocumentoButton
-          :targets="['Purchase Order', 'Purchase Invoice']"
-          return-label="Compras"
-        />
-        <Button
-          v-if="boot?.capabilities?.create"
-          variant="solid"
-          icon-left="plus"
-          :label="__('New purchase')"
-          class="min-h-11 sm:min-h-8"
-          @click="newPurchase"
-        />
-      </header>
-      <div
-        v-if="!list.phone.value"
-        class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
-      >
-        <FormControl
-          v-model="list.search.value"
-          class="min-w-0 flex-1 sm:max-w-xs"
-          type="search"
-          :placeholder="__('Search supplier or document')"
-          :aria-label="__('Search supplier or document')"
-          :aria-keyshortcuts="'/'"
-          data-power-search
-        />
-      </div>
-      <div
-        v-if="notice"
-        role="status"
-        class="mx-4 my-3 flex flex-wrap items-center gap-2 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
-      >
-        <span class="min-w-0 flex-1">{{ notice.text }}</span>
-        <RouterLink
-          v-if="notice.to"
-          class="min-h-11 py-2 text-ink-blue-link underline sm:min-h-0 sm:py-0"
-          :to="notice.to"
-          >{{ notice.label }}</RouterLink
-        >
-      </div>
-      <div
-        v-if="problem"
-        role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
-      >
-        <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-        <Button
-          v-if="problem.row"
-          class="ml-2"
-          :label="__('Open purchase')"
-          @click="list.openRow(problem.row)"
-        />
-        <Button
-          class="ml-2"
-          :label="__('Retry', null, 'Compras')"
-          @click="retry"
-        />
-      </div>
-      <div class="flex-1 pb-6">
-        <div
-          v-if="list.loading.value && !rows.length"
-          role="status"
-          class="px-6 py-8 text-sm text-ink-gray-6"
-        >
-          {{ __('Loading purchases…') }}
-        </div>
-        <div
-          v-else-if="!rows.length"
-          class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
-        >
-          <p class="text-lg font-semibold">{{ emptyTitle }}</p>
-          <p class="mt-1 text-sm">{{ emptyBody }}</p>
-          <Button
-            v-if="state.segment === 'por-comprar' && boot?.capabilities?.create"
-            class="mt-4"
+            variant="solid"
+            icon-left="plus"
             :label="__('New purchase')"
+            class="min-h-11 sm:min-h-8"
             @click="newPurchase"
           />
-        </div>
-        <ul
-          v-else
-          :ref="(el) => (list.listbox.value = el)"
-          tabindex="0"
-          class="divide-y divide-outline-gray-1 focus:outline-none"
-          role="listbox"
-          :aria-label="segmentLabel(state.segment)"
-          :aria-multiselectable="true"
-          :aria-activedescendant="
-            list.focusKey.value ? list.domId(list.focusKey.value) : undefined
-          "
+        </header>
+        <div
+          v-if="!list.phone.value"
+          class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
         >
-          <li
-            v-for="row in rows"
-            :id="list.domId(rowKey(row))"
-            :key="rowKey(row)"
-            role="option"
-            :aria-selected="list.selected.value.has(rowKey(row))"
-            :data-row-key="rowKey(row)"
-            class="group relative"
-            :class="[
-              list.focusKey.value === rowKey(row) ? 'bg-surface-gray-2' : '',
-              list.selected.value.has(rowKey(row)) ? 'bg-surface-blue-1' : '',
-            ]"
+          <FormControl
+            v-model="list.search.value"
+            class="min-w-0 flex-1 sm:max-w-xs"
+            type="search"
+            :placeholder="__('Search supplier or document')"
+            :aria-label="__('Search supplier or document')"
+            :aria-keyshortcuts="'/'"
+            data-power-search
+          />
+        </div>
+        <div
+          v-if="notice"
+          role="status"
+          class="mx-4 my-3 flex flex-wrap items-center gap-2 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
+        >
+          <span class="min-w-0 flex-1">{{ notice.text }}</span>
+          <RouterLink
+            v-if="notice.to"
+            class="min-h-11 py-2 text-ink-blue-link underline sm:min-h-0 sm:py-0"
+            :to="notice.to"
+            >{{ notice.label }}</RouterLink
           >
-            <div class="flex items-start">
-              <label
-                v-if="
-                  state.segment === 'por-comprar' &&
-                  (!list.phone.value || list.selecting.value)
-                "
-                class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
-                :aria-label="__('Select {0}', [row.name])"
-              >
-                <input
-                  type="checkbox"
-                  class="h-5 w-5 rounded"
-                  :checked="list.selected.value.has(rowKey(row))"
-                  @change="list.toggleRow(row)"
-                />
-              </label>
-              <a
-                :href="recordHref(row)"
-                class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
-                :class="
-                  state.segment === 'por-comprar' &&
-                  (!list.phone.value || list.selecting.value)
-                    ? 'pl-2 sm:pl-2'
-                    : ''
-                "
-                @click="list.onRowClick($event, row)"
-              >
-                <FeatherIcon
-                  :name="
-                    row.kind === 'solicitud' ? 'clipboard' : 'shopping-cart'
-                  "
-                  class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
-                />
-                <span class="min-w-0 flex-1">
-                  <span class="block truncate font-medium text-ink-gray-9">
-                    {{
-                      row.party ||
-                      (row.kind === 'solicitud'
-                        ? __('Purchase request', null, 'Compras')
-                        : __('Supplier not visible'))
-                    }}
-                  </span>
-                  <!-- The delivery date never gets cut off: its own line on
-                       a phone, and on a wide row the number truncates first. -->
-                  <span
-                    class="flex flex-col text-sm text-ink-gray-6 sm:flex-row"
-                  >
-                    <span class="min-w-0 truncate">{{ statusLabel(row) }}</span>
-                    <span v-if="row.due_date" class="shrink-0 whitespace-nowrap"
-                      ><span class="hidden sm:inline" aria-hidden="true"
-                        >&nbsp;·&nbsp;</span
-                      >{{ __('Delivery {0}', [formatDay(row.due_date)]) }}</span
-                    >
-                  </span>
-                  <span
-                    v-if="row.kind === 'orden' && Number(row.docstatus) === 1"
-                    class="mt-0.5 block text-sm text-ink-gray-8"
-                    >{{ progressLabel(row) }}</span
-                  >
-                  <span class="mt-1 flex flex-wrap gap-1">
-                    <Badge
-                      v-if="row.in_receipt"
-                      theme="orange"
-                      :label="__('Receipt in progress')"
-                    />
-                    <Badge
-                      v-if="billPending(row)"
-                      theme="blue"
-                      :label="__('Bill pending')"
-                    />
-                  </span>
-                </span>
-                <span
-                  v-if="
-                    row.grand_total !== undefined && row.grand_total !== null
-                  "
-                  class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
-                  >{{ money(row.grand_total, row.currency) }}</span
-                >
-              </a>
-            </div>
-            <!-- The focused row's next steps, each with its key (desktop; a phone opens the record). -->
-            <div
+        </div>
+        <div
+          v-if="problem"
+          role="alert"
+          class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+        >
+          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+          <Button
+            v-if="problem.row"
+            class="ml-2"
+            :label="__('Open purchase')"
+            @click="list.openRow(problem.row)"
+          />
+          <Button
+            class="ml-2"
+            :label="__('Retry', null, 'Compras')"
+            @click="retry"
+          />
+        </div>
+        <div class="flex-1 pb-6">
+          <div
+            v-if="list.loading.value && !rows.length"
+            role="status"
+            class="px-6 py-8 text-sm text-ink-gray-6"
+          >
+            {{ __('Loading purchases…') }}
+          </div>
+          <div
+            v-else-if="!rows.length"
+            class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
+          >
+            <p class="text-lg font-semibold">{{ emptyTitle }}</p>
+            <p class="mt-1 text-sm">{{ emptyBody }}</p>
+            <Button
               v-if="
-                !list.phone.value &&
-                list.focusKey.value === rowKey(row) &&
-                rowActions(row).length
+                state.segment === 'por-comprar' && boot?.capabilities?.create
               "
-              class="flex flex-wrap justify-end gap-1 px-4 pb-2"
-              data-row-actions
+              class="mt-4"
+              :label="__('New purchase')"
+              @click="newPurchase"
+            />
+          </div>
+          <ul
+            v-else
+            :ref="(el) => (list.listbox.value = el)"
+            tabindex="0"
+            class="divide-y divide-outline-gray-1 focus:outline-none"
+            role="listbox"
+            :aria-label="segmentLabel(state.segment)"
+            :aria-multiselectable="true"
+            :aria-activedescendant="
+              list.focusKey.value ? list.domId(list.focusKey.value) : undefined
+            "
+          >
+            <li
+              v-for="row in rows"
+              :id="list.domId(rowKey(row))"
+              :key="rowKey(row)"
+              role="option"
+              :aria-selected="list.selected.value.has(rowKey(row))"
+              :data-row-key="rowKey(row)"
+              class="group relative"
+              :class="[
+                list.focusKey.value === rowKey(row) ? 'bg-surface-gray-2' : '',
+                list.selected.value.has(rowKey(row)) ? 'bg-surface-blue-1' : '',
+              ]"
             >
-              <Button
-                v-for="action in rowActions(row)"
-                :key="action.key"
-                size="sm"
-                variant="ghost"
-                :label="`${action.label} · ${action.hint}`"
-                :aria-keyshortcuts="action.hint"
-                :loading="busyRow === `${action.key}:${row.name}`"
-                @click="runVerb(action.key, row)"
+              <div class="flex items-start">
+                <label
+                  v-if="
+                    state.segment === 'por-comprar' &&
+                    (!list.phone.value || list.selecting.value)
+                  "
+                  class="flex min-h-14 shrink-0 cursor-pointer items-center pl-5"
+                  :aria-label="__('Select {0}', [row.name])"
+                >
+                  <input
+                    type="checkbox"
+                    class="h-5 w-5 rounded"
+                    :checked="list.selected.value.has(rowKey(row))"
+                    @change="list.toggleRow(row)"
+                  />
+                </label>
+                <a
+                  :href="recordHref(row)"
+                  class="flex min-h-14 min-w-0 flex-1 items-start gap-3 px-4 py-3 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link sm:px-6"
+                  :class="
+                    state.segment === 'por-comprar' &&
+                    (!list.phone.value || list.selecting.value)
+                      ? 'pl-2 sm:pl-2'
+                      : ''
+                  "
+                  @click="list.onRowClick($event, row)"
+                >
+                  <FeatherIcon
+                    :name="
+                      row.kind === 'solicitud' ? 'clipboard' : 'shopping-cart'
+                    "
+                    class="mt-0.5 h-4 w-4 shrink-0 text-ink-gray-5"
+                  />
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate font-medium text-ink-gray-9">
+                      {{
+                        row.party ||
+                        (row.kind === 'solicitud'
+                          ? __('Purchase request', null, 'Compras')
+                          : __('Supplier not visible'))
+                      }}
+                    </span>
+                    <!-- The delivery date never gets cut off: its own line on
+                       a phone, and on a wide row the number truncates first. -->
+                    <span
+                      class="flex flex-col text-sm text-ink-gray-6 sm:flex-row"
+                    >
+                      <span class="min-w-0 truncate">{{
+                        statusLabel(row)
+                      }}</span>
+                      <span
+                        v-if="row.due_date"
+                        class="shrink-0 whitespace-nowrap"
+                        ><span class="hidden sm:inline" aria-hidden="true"
+                          >&nbsp;·&nbsp;</span
+                        >{{
+                          __('Delivery {0}', [formatDay(row.due_date)])
+                        }}</span
+                      >
+                    </span>
+                    <span
+                      v-if="row.kind === 'orden' && Number(row.docstatus) === 1"
+                      class="mt-0.5 block text-sm text-ink-gray-8"
+                      >{{ progressLabel(row) }}</span
+                    >
+                    <span class="mt-1 flex flex-wrap gap-1">
+                      <Badge
+                        v-if="row.in_receipt"
+                        theme="orange"
+                        :label="__('Receipt in progress')"
+                      />
+                      <Badge
+                        v-if="billPending(row)"
+                        theme="blue"
+                        :label="__('Bill pending')"
+                      />
+                    </span>
+                  </span>
+                  <span
+                    v-if="
+                      row.grand_total !== undefined && row.grand_total !== null
+                    "
+                    class="shrink-0 text-right text-sm font-medium tabular-nums text-ink-gray-9"
+                    >{{ money(row.grand_total, row.currency) }}</span
+                  >
+                </a>
+              </div>
+              <!-- The focused row's next steps, each with its key (desktop; a phone opens the record). -->
+              <div
+                v-if="
+                  !list.phone.value &&
+                  list.focusKey.value === rowKey(row) &&
+                  rowActions(row).length
+                "
+                class="flex flex-wrap justify-end gap-1 px-4 pb-2"
+                data-row-actions
               >
-                <template #prefix>
-                  <FeatherIcon :name="action.icon" class="h-4 w-4" />
-                </template>
-              </Button>
-            </div>
-          </li>
-        </ul>
-        <div v-if="list.hasMore.value" class="px-4 py-4 sm:px-6">
-          <Button
-            :label="__('Load more', null, 'Compras')"
-            :loading="list.loading.value"
-            class="min-h-11 w-full sm:w-auto"
-            @click="list.load({ more: true })"
+                <Button
+                  v-for="action in rowActions(row)"
+                  :key="action.key"
+                  size="sm"
+                  variant="ghost"
+                  :label="`${action.label} · ${action.hint}`"
+                  :aria-keyshortcuts="action.hint"
+                  :loading="busyRow === `${action.key}:${row.name}`"
+                  @click="runVerb(action.key, row)"
+                >
+                  <template #prefix>
+                    <FeatherIcon :name="action.icon" class="h-4 w-4" />
+                  </template>
+                </Button>
+              </div>
+            </li>
+          </ul>
+          <div v-if="list.hasMore.value" class="px-4 py-4 sm:px-6">
+            <Button
+              :label="__('Load more', null, 'Compras')"
+              :loading="list.loading.value"
+              class="min-h-11 w-full sm:w-auto"
+              @click="list.load({ more: true })"
+            />
+          </div>
+          <nav
+            v-if="state.segment === 'historial'"
+            :aria-label="__('Other purchase documents')"
+            class="flex flex-col gap-1 px-4 pt-4 text-sm sm:px-6"
+          >
+            <a
+              class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
+              href="/app/muelle-compras?queue=receipts"
+              >{{ __('Receipts, invoices and quotations (Desk)') }}</a
+            >
+            <a
+              class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
+              href="/app/muelle-compras?catalog_section=catalogs"
+              >{{ __('Supplier catalogs (Desk)') }}</a
+            >
+          </nav>
+          <!-- Room under the last row for the FAB. -->
+          <div
+            v-if="list.phone.value && boot?.capabilities?.create"
+            class="h-20"
+            aria-hidden="true"
           />
         </div>
-        <nav
-          v-if="state.segment === 'historial'"
-          :aria-label="__('Other purchase documents')"
-          class="flex flex-col gap-1 px-4 pt-4 text-sm sm:px-6"
-        >
-          <a
-            class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
-            href="/app/muelle-compras?queue=receipts"
-            >{{ __('Receipts, invoices and quotations (Desk)') }}</a
-          >
-          <a
-            class="hidden min-h-11 py-2 text-ink-blue-link underline sm:block"
-            href="/app/muelle-compras?catalog_section=catalogs"
-            >{{ __('Supplier catalogs (Desk)') }}</a
-          >
-        </nav>
-      </div>
 
-      <PowerBulkBar
-        v-if="list.selected.value.size"
-        :count="list.selected.value.size"
-        :label="__('Selected purchases')"
-      >
-        <Button
-          v-if="caps.confirm"
-          variant="solid"
-          class="min-h-12 sm:min-h-8"
-          :label="__('Confirm', null, 'Compras')"
-          @click="bulkOpen = true"
+        <PowerBulkBar
+          v-if="list.selected.value.size"
+          :count="list.selected.value.size"
+          :label="__('Selected purchases')"
         >
-          <template #prefix
-            ><FeatherIcon name="check" class="h-4 w-4"
-          /></template>
-        </Button>
-        <template v-else>
-          <p class="w-full text-sm text-ink-gray-7 sm:w-auto">
-            {{
-              __(
-                'Confirming purchases is for whoever may confirm them. Ask for it.',
-              )
-            }}
-          </p>
           <Button
+            v-if="caps.confirm"
+            variant="solid"
             class="min-h-12 sm:min-h-8"
-            :label="__('Copy request')"
-            @click="copyConfirmRequest"
-          />
-        </template>
-      </PowerBulkBar>
+            :label="__('Confirm', null, 'Compras')"
+            @click="bulkOpen = true"
+          >
+            <template #prefix
+              ><FeatherIcon name="check" class="h-4 w-4"
+            /></template>
+          </Button>
+          <template v-else>
+            <p class="w-full text-sm text-ink-gray-7 sm:w-auto">
+              {{
+                __(
+                  'Confirming purchases is for whoever may confirm them. Ask for it.',
+                )
+              }}
+            </p>
+            <Button
+              class="min-h-12 sm:min-h-8"
+              :label="__('Copy request')"
+              @click="copyConfirmRequest"
+            />
+          </template>
+        </PowerBulkBar>
+      </div>
+      <!-- The one create action of the list (Shell SPEC §2.2.6). -->
+      <Fab
+        v-if="
+          list.phone.value &&
+          boot?.capabilities?.create &&
+          !list.selecting.value
+        "
+        :label="__('New purchase')"
+        @click="newPurchase"
+      />
     </div>
 
     <BulkConfirmSheet
@@ -396,6 +413,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
+import { Fab } from '@/components/ui'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import HandoffDialog from '@/components/compras/HandoffDialog.vue'

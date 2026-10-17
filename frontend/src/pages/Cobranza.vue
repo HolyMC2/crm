@@ -101,8 +101,36 @@
         </button>
       </header>
 
+      <!-- Phone: the reminders setup is one row above the list, not a card
+           that pushes the customers down (audit cobranza #2). -->
+      <button
+        v-if="auto && phone"
+        type="button"
+        class="flex min-h-14 w-full items-center gap-3 border-b border-outline-gray-1 px-4 py-2 text-left"
+        :aria-label="`${autoCard.title}: ${autoCard.button}`"
+        data-auto-card
+        @click="autoAction"
+      >
+        <FeatherIcon
+          :name="auto.paused ? 'pause-circle' : 'send'"
+          class="h-5 w-5 shrink-0 text-ink-gray-6"
+        />
+        <span class="min-w-0 flex-1">
+          <span
+            class="line-clamp-2 block text-sm font-medium text-ink-gray-9"
+            >{{ autoCard.title }}</span
+          >
+          <span class="block truncate text-sm text-ink-gray-6">{{
+            autoCard.button
+          }}</span>
+        </span>
+        <FeatherIcon
+          name="chevron-right"
+          class="h-5 w-5 shrink-0 text-ink-gray-5"
+        />
+      </button>
       <section
-        v-if="auto"
+        v-else-if="auto"
         class="mx-4 my-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-outline-gray-2 p-3 sm:mx-6 sm:mt-0 sm:max-w-3xl"
         :aria-label="__('Automatic payment reminders')"
         data-auto-card
@@ -171,12 +199,10 @@
           </dd>
         </div>
       </dl>
-      <div
-        class="flex flex-wrap items-center gap-2 px-4 pb-2 pt-2 sm:px-6 sm:pt-0"
-      >
+      <div v-if="!phone" class="flex flex-wrap items-center gap-2 px-6 pb-2">
         <FormControl
-          v-if="companies.length > 1"
-          class="h-11 w-full sm:h-auto sm:w-56"
+          v-if="companies.length > 1 && !phone"
+          class="w-56"
           type="select"
           :aria-label="__('Company')"
           :model-value="state.company"
@@ -199,14 +225,48 @@
       </div>
       <!-- Aging chips: the customer's oldest overdue invoice, as in the receivables report. -->
       <!-- One chip row (S1 FilterChips): tap a range, tap it again for all. -->
+      <!-- On a phone the company is a filter in the «Filtros» sheet. -->
       <FilterChips
-        class="pb-3"
+        class="pb-3 pt-2 sm:pt-0"
         data-cobranza-aging
         :model-value="state.edad"
         :chips="agingChips"
         :label="__('Days overdue')"
+        :filters-label="__('Filters')"
+        :filters-count="state.company ? 1 : 0"
         @update:model-value="(value) => navigate({ edad: value })"
-      />
+        @clear-filters="navigate({ company: '' })"
+      >
+        <template v-if="phone && companies.length > 1" #filters="{ close }">
+          <fieldset data-cobranza-company>
+            <legend class="mb-2 text-sm font-medium text-ink-gray-7">
+              {{ __('Company') }}
+            </legend>
+            <button
+              v-for="c in [{ label: __('All companies'), value: '' }].concat(
+                companies.map((name) => ({ label: name, value: name })),
+              )"
+              :key="c.value"
+              type="button"
+              role="radio"
+              :aria-checked="String(state.company === c.value)"
+              class="flex min-h-12 w-full items-center gap-3 text-left text-base text-ink-gray-9"
+              @click="navigate({ company: c.value }), close()"
+            >
+              <span
+                class="size-5 shrink-0 rounded-full border-2"
+                :class="
+                  state.company === c.value
+                    ? 'border-[6px] border-ink-gray-9'
+                    : 'border-outline-gray-3'
+                "
+                aria-hidden="true"
+              />
+              {{ c.label }}
+            </button>
+          </fieldset>
+        </template>
+      </FilterChips>
       <p
         v-if="capped"
         class="mx-4 mb-2 text-sm text-ink-gray-6 sm:mx-6"
@@ -307,7 +367,7 @@
                         ? __('1 invoice')
                         : __('{0} invoices', [row.invoices])
                     }}
-                    <template v-if="companies.length > 1">
+                    <template v-if="mixedCompanies">
                       · {{ row.company }}</template
                     >
                   </span>
@@ -655,6 +715,10 @@ const today = ref('')
 // The URL is the state: list, search, company, aging chip and focused customer.
 const state = computed(() => queueState(route.query))
 const companies = computed(() => boot.value?.companies || [])
+// A row names its company only when the list mixes companies.
+const mixedCompanies = computed(
+  () => new Set(rows.value.map((row) => row.company)).size > 1,
+)
 const search = ref(state.value.q)
 const searchOpen = ref(Boolean(state.value.q))
 const totals = computed(() => statTotals(stats.value))
@@ -764,6 +828,13 @@ async function loadAuto() {
     // The lists work without it; the card simply stays hidden.
     auto.value = null
   }
+}
+
+// The phone row does what the card's button does.
+function autoAction() {
+  if (autoCard.value.href) window.location.assign(autoCard.value.href)
+  else if (autoCard.value.copy) copyWhatsappRequest()
+  else openSetup(autoCompany.value)
 }
 
 function openSetup(target) {

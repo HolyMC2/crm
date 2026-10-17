@@ -35,9 +35,19 @@
               data.overdue_amount > 0 ? 'text-ink-red-7' : 'text-ink-gray-6'
             "
           >
-            {{ money(data.outstanding, data.currency) }}
+            <!-- One figure when all of it is overdue, not «$1,000 · $1,000
+                 vencido». -->
+            <template
+              v-if="
+                !(data.overdue_amount > 0) ||
+                data.overdue_amount < data.outstanding
+              "
+              >{{ money(data.outstanding, data.currency) }}</template
+            >
             <template v-if="data.overdue_amount > 0">
-              ·
+              <template v-if="data.overdue_amount < data.outstanding">
+                ·
+              </template>
               {{
                 __('{0} overdue', [money(data.overdue_amount, data.currency)])
               }}
@@ -235,8 +245,9 @@
             class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl bg-surface-gray-2 px-1 text-center text-xs font-medium text-ink-gray-8"
             :href="`tel:${data.phones[0].display.replace(/[^\d+]/g, '')}`"
           >
-            <FeatherIcon name="phone" class="h-5 w-5" />
-            {{ __('Call', null, CTX) }}
+            <!-- «Llamar» dials; the thumb bar's «Llamada» logs one. -->
+            <FeatherIcon name="phone-outgoing" class="h-5 w-5" />
+            {{ __('Make a Call') }}
           </a>
           <button
             v-if="caps.assign"

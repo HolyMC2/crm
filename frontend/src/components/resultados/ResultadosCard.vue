@@ -301,7 +301,9 @@ const deltaClass = computed(
   () =>
     ({
       up: 'bg-surface-green-2 text-ink-green-8',
-      down: 'bg-surface-red-2 text-ink-red-8',
+      // A drop is news, not an alarm: the arrow says which way it went and
+      // red is kept for things to act on (the returns line, a blocked card).
+      down: 'bg-surface-gray-2 text-ink-gray-8',
       flat: 'bg-surface-gray-2 text-ink-gray-7',
     })[delta.value?.tone] || '',
 )

@@ -31,6 +31,7 @@ import {
   routerPath,
   rowRoute,
   toQuery,
+  walkInName,
   writeHiddenCopy,
 } from '../../src/composables/useResultados.js'
 import { accesos } from '../../src/composables/useHoy.js'
@@ -570,5 +571,22 @@ describe('Personalizar follows the account', () => {
       },
     }
     expect(() => writeHiddenCopy(['margen'], broken)).not.toThrow()
+  })
+})
+
+describe('Resultados: the walk-in customer and es-MX numbers', () => {
+  it('reads «Público en general» on the list and the record', () => {
+    expect(walkInName('Publico en General')).toBe('Público en general')
+    expect(walkInName(' público en general ')).toBe('Público en general')
+    expect(walkInName('CellCity')).toBe('CellCity')
+    expect(walkInName('')).toBe('')
+  })
+  it('formats percents and counts in es-MX whatever the browser locale', () => {
+    expect(formatValue(1234.56, 'percent')).toBe('1,234.6 %')
+    expect(formatValue(2179, 'count')).toBe('2,179')
+    expect(deltaChip({ delta_pct: -84.6 }, 'anterior')).toMatchObject({
+      label: '−84.6 %',
+      tone: 'down',
+    })
   })
 })

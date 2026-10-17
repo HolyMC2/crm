@@ -1,7 +1,9 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell AppBar's back arrow (meta.listParent) is the
+           way back; this link is for the desktop. -->
+      <nav class="mb-3 hidden sm:block">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack()"

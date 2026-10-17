@@ -286,15 +286,21 @@
                         .join(' · ')
                     }}
                   </span>
+                  <!-- Only the due words turn red; «Pagado X de Y» shows only
+                       when part is paid (the amount column already says
+                       what is owed). -->
                   <span
                     v-if="Number(row.docstatus) === 1"
-                    class="mt-0.5 block text-sm"
-                    :class="row.overdue ? 'text-ink-red-7' : 'text-ink-gray-8'"
-                    >{{
-                      [dueLabel(row.due_date, boot?.today), paidLabel(row)]
-                        .filter(Boolean)
-                        .join(' · ')
-                    }}</span
+                    class="mt-0.5 block text-sm text-ink-gray-7"
+                    data-testid="gasto-due"
+                    ><span
+                      :class="
+                        row.overdue ? 'text-ink-red-7' : 'text-ink-gray-8'
+                      "
+                      >{{ dueLabel(row.due_date, boot?.today) }}</span
+                    ><template v-if="partlyPaid(row)">
+                      · {{ paidLabel(row) }}</template
+                    ></span
                   >
                 </span>
                 <span
@@ -438,6 +444,7 @@ import {
   money,
   normalizeSegment,
   paidLabel,
+  partlyPaid,
   payStep,
   problemOf,
   queueShortcuts,

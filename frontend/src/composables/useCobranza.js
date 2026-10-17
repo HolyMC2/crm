@@ -252,10 +252,12 @@ export function invoiceAction(inv, { caps = {}, ladderReady = true } = {}) {
       return {
         key: 'remind',
         label: tr('Send reminder'),
-        blocked: tr('The reminder levels for this company are not set up yet.'),
+        // Plain words, and the setup step only for who can do it (a
+        // manager); everyone else asks one (audit cobranza-record #5).
+        blocked: tr('Automatic reminders are not set up for this company yet.'),
         resolve: caps.setup
-          ? { key: 'setup', label: tr('Set up reminder levels') }
-          : { key: 'copy_request', label: tr('Copy access request') },
+          ? { key: 'setup', label: tr('Set up reminders') }
+          : { key: 'copy_request', label: tr('Ask a manager') },
       }
     return inv.current_dunning
       ? {

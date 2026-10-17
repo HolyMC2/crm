@@ -12,7 +12,7 @@
         <a
           :href="backHref"
           data-testid="back-to-board"
-          class="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9"
+          class="hidden min-h-11 sm:inline-flex items-center gap-1 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
           ><span class="lucide-arrow-left size-4" aria-hidden="true" />{{
             __('Back to {0}', [backLabel])
@@ -24,15 +24,19 @@
         <p class="text-sm text-ink-gray-6">{{ subtitle }}</p>
       </div>
     </header>
-    <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
-      <FormControl
-        class="w-full sm:hidden"
-        type="select"
-        :aria-label="__('List', null, CTX)"
-        :model-value="state.tipo"
-        :options="entries.map((e) => ({ label: e.label, value: e.value }))"
-        @update:model-value="(value) => update({ tipo: value })"
-      />
+    <!-- A phone picks the list on one chip row (S1 FilterChips). -->
+    <FilterChips
+      class="pb-2 sm:hidden"
+      data-testid="lens-tipos"
+      :model-value="state.tipo"
+      :chips="entries.map((e) => ({ label: e.label, value: e.value }))"
+      :deselectable="false"
+      :label="__('List', null, CTX)"
+      @update:model-value="(value) => value && update({ tipo: value })"
+    />
+    <div
+      class="lens-controls flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6"
+    >
       <FormControl
         v-model="search"
         class="min-w-0 flex-1 sm:max-w-xs"
@@ -173,6 +177,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, FormControl } from 'frappe-ui'
+import { FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { problemOf } from '@/composables/useCobranza'
 import { money } from '@/composables/useCompras'
@@ -188,6 +193,7 @@ import {
   routerPath,
   rowRoute,
   tipoLabel,
+  walkInName,
 } from '@/composables/useResultados'
 import { readReturn } from '@/vendor/muelle-shell/contracts'
 import { formatDay } from '@/utils/contactos'
@@ -199,13 +205,12 @@ function sentence(text) {
   const value = String(text || '')
   return value ? value[0].toUpperCase() + value.slice(1) : ''
 }
-// The walk-in customer reads with its accent and in sentence case.
-const WALK_IN = /^p[uú]blico en general$/i
 function rowTitle(row) {
-  const name = displayName(row.title || '', row.doctype, {
-    fallback: kindLabel(row.doctype) || __('Document'),
-  })
-  return WALK_IN.test(name) ? __('Público en general') : name
+  return walkInName(
+    displayName(row.title || '', row.doctype, {
+      fallback: kindLabel(row.doctype) || __('Document'),
+    }),
+  )
 }
 // Second line: what the worker needs, never the folio.
 function rowMeta(row, group) {
@@ -400,3 +405,12 @@ watch(
   { immediate: true },
 )
 </script>
+<style scoped>
+/* A 44 px search field on a phone; the desktop keeps frappe-ui's size. */
+@media (max-width: 639px) {
+  .lens-controls :deep(input) {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+}
+</style>

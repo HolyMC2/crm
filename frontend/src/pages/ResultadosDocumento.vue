@@ -4,9 +4,11 @@
       <a
         :href="backHref"
         data-testid="back-to-list"
-        class="inline-flex min-h-11 items-center text-sm font-medium text-ink-blue-link underline"
+        class="hidden min-h-11 items-center gap-1 text-sm font-medium text-ink-gray-7 hover:text-ink-gray-9 sm:inline-flex"
         @click="goBack"
-        >← {{ __('Back to {0}', [backLabel]) }}</a
+        ><span class="lucide-arrow-left size-4" aria-hidden="true" />{{
+          __('Back to {0}', [backLabel])
+        }}</a
       >
       <div v-if="loading && !doc" role="status" class="mt-4 space-y-3">
         <div class="h-8 w-60 animate-pulse rounded bg-surface-gray-2" />
@@ -30,7 +32,7 @@
               class="break-words text-xl font-semibold leading-tight text-ink-gray-9"
             >
               {{
-                doc.header.customer_name ||
+                walkInName(doc.header.customer_name) ||
                 doc.header.pos_profile ||
                 kindLabel(props.doctype)
               }}
@@ -83,12 +85,12 @@
             {{ __('Lines', null, CTX) }}
           </h2>
           <ul
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 border-y border-outline-gray-1"
           >
             <li
               v-for="(item, i) in doc.items"
               :key="i"
-              class="flex gap-3 px-3 py-2 text-sm"
+              class="flex min-h-12 items-center gap-3 py-2 text-base"
             >
               <span class="min-w-0 flex-1 truncate">{{
                 item.item_name ||
@@ -118,12 +120,12 @@
             {{ __('Payments') }}
           </h2>
           <ul
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 border-y border-outline-gray-1"
           >
             <li
               v-for="(p, i) in payments"
               :key="i"
-              class="flex gap-3 px-3 py-2 text-sm"
+              class="flex min-h-12 items-center gap-3 py-2 text-base"
             >
               <span class="min-w-0 flex-1 truncate">{{
                 modeOfPaymentLabel(p.mode_of_payment)
@@ -146,12 +148,12 @@
             {{ __('Cash count') }}
           </h2>
           <ul
-            class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-2"
+            class="divide-y divide-outline-gray-1 border-y border-outline-gray-1"
           >
             <li
               v-for="(r, i) in doc.reconciliation"
               :key="i"
-              class="grid grid-cols-[1fr_auto] gap-x-3 px-3 py-2 text-sm"
+              class="grid grid-cols-[1fr_auto] gap-x-3 py-3 text-base"
             >
               <span class="truncate">{{
                 modeOfPaymentLabel(r.mode_of_payment)
@@ -195,6 +197,7 @@ import {
   RETURN_LABEL,
   resultadosApi,
   routerPath,
+  walkInName,
 } from '@/composables/useResultados'
 import { modeOfPaymentLabel } from '@/utils/modeOfPayment'
 import { formatDay } from '@/utils/contactos'

@@ -106,6 +106,15 @@ export function paidLabel(doc) {
     : tr('Nothing paid of {0}', [total])
 }
 
+/** A submitted bill with some, but not all, of it paid. */
+export function partlyPaid(doc) {
+  return (
+    Number(doc?.docstatus) === 1 &&
+    Number(doc?.paid || 0) > 0 &&
+    Number(doc?.outstanding_amount || 0) > 0
+  )
+}
+
 /** Due-date wording relative to the site's today (both ISO dates). */
 export function dueLabel(dueDate, today) {
   if (!dueDate) return ''
