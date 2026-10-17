@@ -32,9 +32,10 @@ describe('looksLikeId', () => {
     'MAT-MR-2026-00005',
     'RO-00157',
     'MKCAMP-000003',
-    'SINV-1',
+    'PRJ-0001',
     '8e5fb043-9d66-4f2a-9c1e-0123456789ab',
     'a1b2c3d4e5',
+    'f3e8a90c12',
   ])('%s is an ID', (value) => expect(looksLikeId(value)).toBe(true))
   it.each([
     'XMovil',
@@ -42,6 +43,12 @@ describe('looksLikeId', () => {
     'Refacciones Ficticias S26',
     'Honor X6',
     'Pantalla',
+    'IPHONE-13',
+    'RTX-4090',
+    'LOTE-2026',
+    'COVID-19',
+    '6691234567',
+    'juanperez1',
     '',
   ])('%s is a name', (value) => expect(looksLikeId(value)).toBe(false))
 })
@@ -69,6 +76,9 @@ describe('displayName', () => {
       'x',
     )
     expect(displayName({ name: 'a1b2c3d4e5' })).toBe('Sin nombre')
+    expect(
+      displayName({ name: 'x', lead_name: '6691234567' }, 'CRM Lead'),
+    ).toBe('6691234567')
     expect(displayName('RO-00157', 'Repair Order')).toBe('Reparación')
     expect(displayName('XMovil')).toBe('XMovil')
   })
@@ -181,6 +191,8 @@ describe('units and money', () => {
     expect(formatMoneyCompact(1500)).toBe('$1,500')
     expect(formatMoneyCompact(69800)).toBe('$69.8 mil')
     expect(formatMoneyCompact(2300000)).toBe('$2.3 M')
+    expect(formatMoneyCompact(999950)).toBe('$1 M')
+    expect(formatMoney(-0.004)).toBe('$0.00')
   })
 })
 

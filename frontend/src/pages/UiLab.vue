@@ -3,7 +3,7 @@
        realistic es-MX data, for screenshots at 412/305 px and as a live
        reference. `?sheet=1` opens the bottom sheet, `?filtros=1` the filters
        sheet, `?buscar=1` the bar's search. Not linked from anywhere. -->
-  <div class="relative flex min-h-0 flex-1 flex-col">
+  <div class="relative flex min-h-0 min-w-0 flex-1 flex-col">
     <AppBar
       v-model:scope="scope"
       v-model:search="search"
@@ -62,8 +62,18 @@
           :count="24"
         >
           <template #actions>
-            <Button variant="subtle" label="Ver variantes" />
-            <Button variant="solid" label="Dar de alta" />
+            <Button
+              variant="subtle"
+              size="lg"
+              class="min-h-11"
+              label="Ver variantes"
+            />
+            <Button
+              variant="solid"
+              size="lg"
+              class="min-h-11"
+              label="Dar de alta"
+            />
           </template>
         </PageHeader>
       </section>
@@ -206,7 +216,7 @@
         <Button
           variant="subtle"
           size="lg"
-          class="w-full"
+          class="min-h-11 w-full"
           label="Abrir hoja de ejemplo"
           @click="sheet = true"
         />
@@ -247,14 +257,14 @@
         <Button
           variant="ghost"
           size="lg"
-          class="w-full"
+          class="min-h-11 w-full"
           label="Cancelar"
           @click="sheet = false"
         />
         <Button
           variant="solid"
           size="lg"
-          class="w-full"
+          class="min-h-11 w-full"
           label="Registrar pago"
           @click="sheet = false"
         />
@@ -263,8 +273,8 @@
   </div>
 </template>
 <script setup>
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import {
   AppBar,
@@ -299,7 +309,13 @@ const scopes = [
   { value: 'semana', label: 'Vence esta semana', count: 4 },
   { value: 'todo', label: 'Todo lo que se debe', count: 31 },
 ]
-const scope = ref('vencido')
+const router = useRouter()
+// The list lives in the URL, as a real list page keeps it (and the sheet's
+// closing back must not undo this replace).
+const scope = ref(String(route.query.lista || 'vencido'))
+watch(scope, (value) =>
+  router.replace({ query: { ...route.query, lista: value } }),
+)
 const scopeLabel = computed(
   () => scopes.find((s) => s.value === scope.value)?.label || '',
 )

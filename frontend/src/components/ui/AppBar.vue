@@ -66,9 +66,9 @@
         </button>
       </template>
       <template v-else>
-        <component
-          :is="backTarget ? 'RouterLink' : 'button'"
+        <UiTag
           v-if="back"
+          :as="backTarget ? RouterLink : 'button'"
           :to="backTarget || undefined"
           :type="backTarget ? undefined : 'button'"
           :class="ICON_BUTTON"
@@ -77,7 +77,7 @@
           @click="onBack"
         >
           <span class="lucide-arrow-left size-6" aria-hidden="true" />
-        </component>
+        </UiTag>
         <div v-if="!stacked" class="flex min-w-0 flex-1">
           <slot name="title">
             <AppBarTitle v-bind="titleProps" @pick="scopeSheet = true" />
@@ -180,10 +180,11 @@ import {
   ref,
   watch,
 } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { shellBoot } from '@/composables/muelleShell'
 import BottomSheet from './BottomSheet.vue'
+import UiTag from './UiTag'
 
 const AvisosBell = defineAsyncComponent(
   () => import('@/components/avisos/AvisosBell.vue'),
@@ -279,17 +280,31 @@ const TITLE_MIN = 144
 let observer = null
 function measure() {
   const width = bar.value?.clientWidth || 0
-  const used = (icons.value?.offsetWidth || 0) + (props.back ? 48 : 0) + 8
-  stacked.value = width > 0 && width - used < TITLE_MIN
+  if (!width || !icons.value) return
+  const used =
+    icons.value.offsetWidth +
+    (props.back ? 48 : 0) +
+    (props.loading ? 24 : 0) +
+    16 // the row's padding and gaps
+  stacked.value = width - used < TITLE_MIN
 }
-onMounted(() => {
-  measure()
-  if (typeof ResizeObserver !== 'undefined') {
-    observer = new ResizeObserver(measure)
-    if (bar.value) observer.observe(bar.value)
-    if (icons.value) observer.observe(icons.value)
-  }
-})
+// The icons mount only in the normal mode (not while selecting or
+// searching): observe them whenever they (re)appear.
+watch(
+  icons,
+  (el) => {
+    observer?.disconnect()
+    if (typeof ResizeObserver !== 'undefined' && bar.value) {
+      observer = new ResizeObserver(measure)
+      observer.observe(bar.value)
+      if (el) observer.observe(el)
+    }
+    measure()
+  },
+  { flush: 'post' },
+)
+watch(() => [props.loading, props.back], measure, { flush: 'post' })
+onMounted(measure)
 onBeforeUnmount(() => observer?.disconnect())
 
 // The title: plain, or a button that opens the scope sheet.

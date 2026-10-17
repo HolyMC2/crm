@@ -11,14 +11,16 @@ const LOCALE = 'es-MX'
 
 // ── names, never IDs ──────────────────────────────────────────────────────
 
-// Naming-series IDs (PUR-ORD-2026-00025, ACC-PINV-2025-00016, CRM-DEAL-2025-00086,
-// MAT-MR-2026-00005, RO-00157, MKCAMP-000003, SINV-1), UUIDs, long hex hashes
-// and Frappe hash names (10 lower-case alphanumerics with a digit).
+// Naming-series IDs: a capitalised prefix, then a year and a counter
+// (PUR-ORD-2026-00025, ACC-PINV-2025-00016, CRM-DEAL-2025-00086), or a long
+// or zero-padded counter (RO-00157, MKCAMP-000003, PRJ-0001). Model names
+// (IPHONE-13, RTX-4090, LOTE-2026) are not IDs. Also UUIDs, long hex hashes
+// and Frappe's 10-character hex hashes.
 const SERIES_ID =
-  /^[A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-(?:\.?\d{2,4}-)?\d+(?:-\d+)?$/
+  /^[A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-(?:(?:19|20)\d{2}-\d+|\d{5,}|0\d{2,})(?:-\d+)?$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const HEX = /^[0-9a-f]{16,}$/i
-const FRAPPE_HASH = /^(?=.*\d)[a-z0-9]{10}$/
+const FRAPPE_HASH = /^(?=.*\d)(?=.*[a-f])[0-9a-f]{10}$/
 
 /** True when a value is a document ID a worker should not read as a title. */
 export function looksLikeId(value) {
@@ -164,10 +166,13 @@ const DAY = 86400000
 /**
  * A server value as a Date. «2026-10-17» is a local calendar day (never UTC
  * midnight, which shows the day before in México). «2026-10-17 12:11:24.941958»
- * is a naive server time; it is read as local time unless `timeZone` (IANA,
- * the site's system zone) is given.
+ * is a naive server time in the site's zone (`window.timezone.system`, or
+ * `timeZone`); without one it is read as device time.
  */
-export function parseServerDate(value, { timeZone } = {}) {
+export function parseServerDate(
+  value,
+  { timeZone = globalThis.window?.timezone?.system } = {},
+) {
   if (value == null || value === '') return null
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
   if (typeof value === 'number') return new Date(value)
@@ -390,11 +395,12 @@ export function formatMoney(value, currency = 'MXN', { decimals = 2 } = {}) {
   const n = Number(value)
   if (!Number.isFinite(n)) return '—'
   const code = currency || 'MXN'
+  const rounded = Number(n.toFixed(decimals))
   const number = new Intl.NumberFormat(LOCALE, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(Math.abs(n))
-  const sign = n < 0 ? '-' : ''
+  }).format(Math.abs(rounded))
+  const sign = rounded < 0 ? '-' : ''
   return code === 'MXN' ? `${sign}$${number}` : `${sign}${code} ${number}`
 }
 
@@ -404,8 +410,8 @@ export function formatMoneyCompact(value, currency = 'MXN') {
   const n = Number(value)
   if (!Number.isFinite(n)) return '—'
   const abs = Math.abs(n)
-  if (abs < 10000) return formatMoney(n, currency, { decimals: 0 })
-  const [div, word] = abs >= 1e6 ? [1e6, 'M'] : [1e3, 'mil']
+  if (Math.round(abs) < 10000) return formatMoney(n, currency, { decimals: 0 })
+  const [div, word] = abs >= 999950 ? [1e6, 'M'] : [1e3, 'mil']
   const number = new Intl.NumberFormat(LOCALE, {
     maximumFractionDigits: 1,
   }).format(abs / div)

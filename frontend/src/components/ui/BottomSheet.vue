@@ -20,12 +20,12 @@
             : 'ui-dialog fixed left-1/2 top-1/2 max-h-[85dvh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl',
         ]"
         :style="phone ? dragStyle : undefined"
-        :aria-describedby="undefined"
+        v-bind="subtitle ? {} : { 'aria-describedby': undefined }"
         data-ui-sheet
         :data-expanded="expanded || undefined"
         @escape-key-down="onDismissAttempt"
         @interact-outside="onDismissAttempt"
-        @open-auto-focus="(event) => event.preventDefault()"
+        @open-auto-focus="focusSheet"
       >
         <div
           ref="handle"
@@ -65,9 +65,12 @@
               >
                 {{ title || ariaLabel || __('Options') }}
               </DialogTitle>
-              <p v-if="subtitle" class="pt-0.5 text-sm text-ink-gray-6">
+              <DialogDescription
+                v-if="subtitle"
+                class="pt-0.5 text-sm text-ink-gray-6"
+              >
                 {{ subtitle }}
-              </p>
+              </DialogDescription>
             </div>
             <DialogClose
               v-if="!phone && dismissible"
@@ -132,13 +135,16 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import {
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogOverlay,
   DialogPortal,
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
-import { usePointerSwipe } from '@vueuse/core'
+import { useEventListener, usePointerSwipe } from '@vueuse/core'
+import { useRouter } from 'vue-router'
 import { isMobile } from '@/composables/breakpoint'
+import { closeSheet, installSheetHistory, openSheet } from './sheetHistory'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -163,7 +169,14 @@ const expandable = ref(false)
 const dragY = ref(0)
 const dragging = ref(false)
 const closing = ref(false)
+let closeTimer = 0
 
+// Focus the sheet itself, so a screen reader announces it, without
+// opening the keyboard on its first field.
+function focusSheet(event) {
+  event.preventDefault()
+  event.target?.focus?.({ preventScroll: true })
+}
 function setOpen(value) {
   if (!value && !props.dismissible) return
   emit('update:open', value)
@@ -181,16 +194,18 @@ function measure() {
 }
 watch(
   () => props.open,
-  async (open) => {
+  async (open, was) => {
     resize?.disconnect()
     resize = null
+    clearTimeout(closeTimer)
+    closing.value = false
+    dragging.value = false
+    dragY.value = 0
     if (!open) {
       expanded.value = false
-      emit('closed')
+      if (was) emit('closed')
       return
     }
-    closing.value = false
-    dragY.value = 0
     await nextTick()
     measure()
     if (typeof ResizeObserver !== 'undefined' && content.value) {
@@ -201,50 +216,46 @@ watch(
   { immediate: true },
 )
 
-// ── back closes the sheet (phone): one history entry while it is open ─────
-// The entry keeps vue-router's state and the URL, so the router sees no route
-// change; popstate is the single place that closes on back.
+// ── back closes the sheet: one history entry while it is open ──────────
+// sheetHistory keeps the entries of every open sheet in order and keeps
+// vue-router out of it (see sheetHistory.js).
+installSheetHistory(useRouter())
 const token = `ui-sheet-${Math.random().toString(36).slice(2)}`
-let pushed = false
-function onPopState() {
-  if (!pushed || window.history.state?.uiSheet === token) return
-  pushed = false
-  if (props.open) {
-    if (props.dismissible) emit('update:open', false)
-    else pushEntry() // a guarded sheet stays; keep its entry
-  }
-}
-function pushEntry() {
-  window.history.pushState({ ...window.history.state, uiSheet: token }, '')
-  pushed = true
-}
+let registered = false
 watch(
-  () => props.open && phone.value,
-  (active) => {
-    if (typeof window === 'undefined') return
-    if (active && !pushed) {
-      pushEntry()
-      window.addEventListener('popstate', onPopState)
-    } else if (!active && pushed) {
-      pushed = false
-      window.removeEventListener('popstate', onPopState)
-      // Closed by the UI: drop our entry, unless a navigation already left it.
-      if (window.history.state?.uiSheet === token) window.history.back()
+  () => props.open,
+  (open) => {
+    if (open && !registered) {
+      registered = true
+      openSheet(token, onHistoryClose)
+    } else if (!open && registered) {
+      registered = false
+      closeSheet(token)
     }
   },
   { immediate: true },
 )
+// Back closes it, unless it guards unsaved input; leaving the page always does.
+function onHistoryClose(reason) {
+  registered = false
+  if (!props.open) return
+  if (reason === 'back' && !props.dismissible) {
+    registered = true
+    openSheet(token, onHistoryClose)
+  } else emit('update:open', false)
+}
 onBeforeUnmount(() => {
   resize?.disconnect()
-  window.removeEventListener('popstate', onPopState)
-  if (pushed && window.history.state?.uiSheet === token) window.history.back()
-  pushed = false
+  clearTimeout(closeTimer)
+  if (registered) closeSheet(token)
+  registered = false
 })
 
 // ── drag on the handle and title: up expands, down shrinks or closes ──────
 const CLOSE_RATIO = 0.25
 const FLICK = 0.5 // px per ms
 const MOVE = 48 // px to expand or shrink
+const FLICK_MIN = 16 // px a flick must travel (a tap jitters a few)
 const CLOSE_MS = 240
 let samples = []
 let height = 0
@@ -274,7 +285,7 @@ const dragStyle = computed(() => {
 
 const { distanceY } = usePointerSwipe(handle, {
   pointerTypes: ['touch', 'pen', 'mouse'],
-  threshold: 0,
+  threshold: 6,
   onSwipeStart() {
     samples = []
     height = handle.value?.closest('[data-ui-sheet]')?.offsetHeight || 0
@@ -293,23 +304,33 @@ const { distanceY } = usePointerSwipe(handle, {
     const raw = samples.length ? samples[samples.length - 1].y : 0
     const flick = velocity()
     dragY.value = 0
-    if (raw < -MOVE / 2 || flick < -FLICK) {
+    if (raw < -MOVE / 2 || (flick < -FLICK && raw < -FLICK_MIN)) {
       if (expandable.value) expanded.value = true
       return
     }
     if (raw <= 0) return
-    if (expanded.value && (raw > MOVE || flick > FLICK)) {
+    const flickDown = flick > FLICK && raw > FLICK_MIN
+    if (expanded.value && (raw > MOVE || flickDown)) {
       expanded.value = false
       return
     }
     if (
       props.dismissible &&
-      (raw > (height || 400) * CLOSE_RATIO || flick > FLICK)
+      (raw > (height || 400) * CLOSE_RATIO || flickDown)
     ) {
       closing.value = true
-      window.setTimeout(() => emit('update:open', false), CLOSE_MS + 20)
+      closeTimer = window.setTimeout(
+        () => emit('update:open', false),
+        CLOSE_MS + 20,
+      )
     }
   },
+})
+
+// A cancelled pointer (the system took the gesture) leaves no drag behind.
+useEventListener(handle, 'pointercancel', () => {
+  dragging.value = false
+  dragY.value = 0
 })
 
 defineExpose({ expanded, expandable })

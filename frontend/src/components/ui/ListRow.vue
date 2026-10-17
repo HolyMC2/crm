@@ -3,8 +3,8 @@
        icon, the title (wraps to two lines, never letter by letter), one
        secondary line, trailing meta. The whole row is the tap target, at
        least 44px (56px with a secondary line). -->
-  <component
-    :is="tag"
+  <UiTag
+    :as="tag"
     v-bind="linkAttrs"
     class="flex w-full items-center gap-3 px-4 py-2 text-left"
     :class="[
@@ -64,9 +64,11 @@
       >
       <slot name="trailing" />
     </span>
-  </component>
+  </UiTag>
 </template>
 <script setup>
+import UiTag from './UiTag'
+import { RouterLink } from 'vue-router'
 import { computed, useAttrs } from 'vue'
 import { initials } from '@/utils/display'
 
@@ -92,7 +94,7 @@ const props = defineProps({
 const attrs = useAttrs()
 
 const tag = computed(() =>
-  props.to ? 'RouterLink' : props.href ? 'a' : attrs.onClick ? 'button' : 'div',
+  props.to ? RouterLink : props.href ? 'a' : attrs.onClick ? 'button' : 'div',
 )
 const interactive = computed(() => tag.value !== 'div')
 const linkAttrs = computed(() =>

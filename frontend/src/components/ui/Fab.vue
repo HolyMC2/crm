@@ -3,8 +3,8 @@
        the bottom end of the page, 16px above the bottom nav. It is absolute
        inside the page (give the page `relative`), so it never guesses the
        nav's height. Records use one filled button instead. -->
-  <component
-    :is="to ? 'RouterLink' : 'button'"
+  <UiTag
+    :as="to ? RouterLink : 'button'"
     :to="to || undefined"
     :type="to ? undefined : 'button'"
     class="press absolute bottom-4 z-10 flex h-14 items-center justify-center gap-2 rounded-2xl bg-surface-gray-10 text-base font-semibold text-ink-base shadow-lg"
@@ -18,9 +18,11 @@
   >
     <span :class="[icon, 'size-6 flex-none']" aria-hidden="true" />
     <span v-if="extended" class="whitespace-nowrap">{{ label }}</span>
-  </component>
+  </UiTag>
 </template>
 <script setup>
+import UiTag from './UiTag'
+import { RouterLink } from 'vue-router'
 defineProps({
   label: { type: String, required: true },
   icon: { type: String, default: 'lucide-plus' },

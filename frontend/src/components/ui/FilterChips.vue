@@ -80,14 +80,14 @@
           v-if="filtersCount"
           variant="ghost"
           size="lg"
-          class="w-full"
+          class="min-h-11 w-full"
           :label="__('Clear filters')"
           @click="$emit('clear-filters')"
         />
         <Button
           variant="solid"
           size="lg"
-          class="w-full"
+          class="min-h-11 w-full"
           :label="__('Show results')"
           @click="apply"
         />

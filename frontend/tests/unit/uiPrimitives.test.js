@@ -273,7 +273,8 @@ describe('BottomSheet', () => {
     await mount(BottomSheet, { open: true, title: 'A' })
     const dialog = document.querySelector('[role="dialog"]')
     expect(dialog.querySelector('[aria-label="Close"]')).not.toBeNull()
-    expect(window.history.state?.uiSheet).toBeUndefined()
+    // Back closes it on a tablet or a phone in landscape too.
+    expect(window.history.state?.uiSheet).toMatch(/^ui-sheet-/)
   })
 })
 
@@ -283,17 +284,17 @@ describe('Segmented', () => {
     { value: 'semana', label: 'Semana' },
     { value: 'mes', label: 'Mes' },
   ]
-  it('is a tab list with one selected tab', async () => {
+  it('is a radio group with one checked segment', async () => {
     const { bound } = await mount(Segmented, {
       modelValue: 'lista',
       options,
       label: 'Vista',
     })
-    const tabs = all('[role="tab"]')
+    const tabs = all('[role="radio"]')
     expect(
-      root.querySelector('[role="tablist"]').getAttribute('aria-label'),
+      root.querySelector('[role="radiogroup"]').getAttribute('aria-label'),
     ).toBe('Vista')
-    expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual([
+    expect(tabs.map((t) => t.getAttribute('aria-checked'))).toEqual([
       'true',
       'false',
       'false',
@@ -302,7 +303,7 @@ describe('Segmented', () => {
     await flush()
     expect(bound.modelValue).toBe('mes')
     root
-      .querySelector('[role="tablist"]')
+      .querySelector('[role="radiogroup"]')
       .dispatchEvent(
         new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
       )

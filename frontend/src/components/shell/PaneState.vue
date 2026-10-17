@@ -16,7 +16,7 @@
     <p class="text-base font-medium text-ink-gray-8">{{ heading }}</p>
     <p v-if="detail" class="max-w-sm text-sm text-ink-gray-6">{{ detail }}</p>
     <div v-if="actionLabel" class="mt-2">
-      <Button :label="actionLabel" @click="act" />
+      <Button :label="actionLabel" class="min-h-11" @click="act" />
     </div>
   </div>
 </template>
