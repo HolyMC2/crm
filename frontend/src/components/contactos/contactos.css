@@ -733,11 +733,13 @@
     padding: 0 8px 8px 16px;
   }
   .c-mobile-segment > :first-child {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
+    margin-right: auto;
   }
   /* the scope is a text menu, not a boxed field */
-  .c-mobile-segment select {
+  .c-mobile-segment select,
+  .c-mobile-segment [role='combobox'] {
     width: auto;
     max-width: 100%;
     border-color: transparent;
@@ -745,7 +747,7 @@
     padding-left: 0;
     font-weight: 500;
   }
-  .c-mobile-segment button {
+  .c-mobile-segment > button {
     width: 44px;
     height: 44px;
     border-radius: 9999px;
