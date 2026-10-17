@@ -209,15 +209,6 @@ import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
-import ItemWorkspace from '@/components/doco/inbox/ItemWorkspace.vue'
-import DealHeader from '@/components/doco/inbox/DealHeader.vue'
-import LostStagePrompt from '@/components/doco/inbox/LostStagePrompt.vue'
-import DealOverview from '@/components/doco/inbox/DealOverview.vue'
-import ThreadSummary from '@/components/doco/inbox/ThreadSummary.vue'
-import IntentChips from '@/components/doco/inbox/IntentChips.vue'
-import ThreadSearch from '@/components/doco/inbox/ThreadSearch.vue'
-import DealConversations from '@/components/doco/inbox/DealConversations.vue'
-import RepairOrdersSection from '@/components/doco/RepairOrdersSection.vue'
 import {
   activeDeal,
   activeDealDoctype,
@@ -231,8 +222,36 @@ import {
   salesDocsEnabled,
 } from '@/composables/inbox'
 
-// The timeline (composer, editor, every activity kind) loads with the first
-// open conversation, not with the inbox list (bundle budget, SPEC §4).
+// Everything below renders only for an open conversation; the inbox list and
+// its «Selecciona una conversación» state load without it (SPEC §4), and the
+// timeline (composer, editor, every activity kind) likewise.
+const ItemWorkspace = defineAsyncComponent(
+  () => import('@/components/doco/inbox/ItemWorkspace.vue'),
+)
+const DealHeader = defineAsyncComponent(
+  () => import('@/components/doco/inbox/DealHeader.vue'),
+)
+const LostStagePrompt = defineAsyncComponent(
+  () => import('@/components/doco/inbox/LostStagePrompt.vue'),
+)
+const DealOverview = defineAsyncComponent(
+  () => import('@/components/doco/inbox/DealOverview.vue'),
+)
+const ThreadSummary = defineAsyncComponent(
+  () => import('@/components/doco/inbox/ThreadSummary.vue'),
+)
+const IntentChips = defineAsyncComponent(
+  () => import('@/components/doco/inbox/IntentChips.vue'),
+)
+const ThreadSearch = defineAsyncComponent(
+  () => import('@/components/doco/inbox/ThreadSearch.vue'),
+)
+const DealConversations = defineAsyncComponent(
+  () => import('@/components/doco/inbox/DealConversations.vue'),
+)
+const RepairOrdersSection = defineAsyncComponent(
+  () => import('@/components/doco/RepairOrdersSection.vue'),
+)
 const Activities = defineAsyncComponent(
   () => import('@/components/Activities/Activities.vue'),
 )
