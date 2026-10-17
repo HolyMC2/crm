@@ -15,6 +15,7 @@ import { recordActions } from '@/composables/recordActions'
 import { createManualProvider } from '@/utils/manualPalette'
 // «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
+import { formatMoney, kindLabel, statusLabel } from '@/utils/display'
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -524,23 +525,24 @@ export function clinicaItems(result) {
     }))
 }
 
-/** A deal row from crm.api.palette.search_deals as a palette record. */
+/**
+ * A deal row from crm.api.palette.search_deals as a palette record. The title
+ * is the deal's name (with its person); the line reads «Trato · Ganado ·
+ * $12,000.00» and, for a customer's search, the repair order and phone. No
+ * raw record ID.
+ */
 export function dealItem(row) {
-  const title = row.title || row.name
-  const lower = title.toLowerCase()
-  const person = [row.person, row.organization].find(
-    (value) => value && !lower.includes(String(value).toLowerCase()),
-  )
+  const title = row.title || kindLabel('CRM Deal')
   return {
     id: `deal:${row.name}`,
     group: 'registros',
     title,
     subtitle: [
-      person,
+      kindLabel('CRM Deal'),
+      row.status_label || (row.status ? statusLabel(row.status, 'deal') : ''),
+      row.amount ? formatMoney(row.amount, row.currency || 'MXN') : '',
       row.repair_order,
       row.mobile_no,
-      row.status_label || row.status,
-      row.name,
     ]
       .filter(Boolean)
       .join(' · '),

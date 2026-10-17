@@ -24,7 +24,7 @@
           v-for="chip in chips"
           :key="chip.mode"
           type="button"
-          class="flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm"
+          class="flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm"
           :class="
             chip.mode === activeMode
               ? 'bg-surface-gray-3 font-semibold text-ink-gray-9'
@@ -53,7 +53,7 @@
           type="search"
           enterkeyhint="search"
           autocomplete="off"
-          class="min-h-14 min-w-0 flex-1 border-0 bg-transparent text-base text-ink-gray-9 placeholder-ink-gray-5 focus:ring-0"
+          class="min-h-14 min-w-0 flex-1 border-0 bg-transparent text-base text-ink-gray-9 placeholder-ink-gray-5 focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
           :placeholder="placeholder"
           :aria-label="placeholder"
           role="combobox"
@@ -79,9 +79,7 @@
         class="min-h-0 flex-1 overflow-y-auto py-2"
       >
         <template v-for="section in sections" :key="section.group">
-          <div
-            class="px-4 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-ink-gray-6"
-          >
+          <div class="px-4 pb-1 pt-3 text-sm font-semibold text-ink-gray-6">
             {{ shellT(PALETTE_GROUP_LABELS[section.group]) }}
           </div>
           <button
@@ -263,9 +261,16 @@ const placeholder = computed(() =>
   shellT(PALETTE_MODE_COPY[activeMode.value].placeholder),
 )
 const query = computed(() => parsePaletteQuery(raw.value))
-// Records mode shows Registros, plus Recientes while the input is empty.
-const sections = computed(() =>
-  query.value.kind === 'empty'
+// Records mode shows Registros, plus Recientes while the input is empty. A
+// typed query ranks the records (a deal, a customer) above «Nuevo …»; an empty
+// input opens on Recientes and the modules to go to.
+const SECTION_ORDER = {
+  empty: ['recientes', 'ir_a', 'registros', 'acciones'],
+  typed: ['registros', 'acciones', 'ir_a', 'recientes'],
+}
+const sections = computed(() => {
+  const empty = query.value.kind === 'empty'
+  const grouped = empty
     ? groupPaletteItems(
         [
           ...states.value,
@@ -273,8 +278,14 @@ const sections = computed(() =>
         ],
         activeMode.value,
       )
-    : groupPaletteItems(states.value, activeMode.value),
-)
+    : groupPaletteItems(states.value, activeMode.value)
+  const order = SECTION_ORDER[empty ? 'empty' : 'typed']
+  const rank = (group) => {
+    const index = order.indexOf(group)
+    return index < 0 ? order.length : index
+  }
+  return [...grouped].sort((a, b) => rank(a.group) - rank(b.group))
+})
 const flat = computed(() => sections.value.flatMap((section) => section.items))
 
 let timer = null

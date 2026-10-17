@@ -147,7 +147,16 @@ def search_deals(q: str = "", limit: int = LIMIT):
 		return []
 	fields = ["name", "status", "modified", "mobile_no", "email", "phone"] + [
 		field
-		for field in ("deal_name", "organization", "lead_name", "first_name", "last_name", "repair_order")
+		for field in (
+			"deal_name",
+			"organization",
+			"lead_name",
+			"first_name",
+			"last_name",
+			"repair_order",
+			"deal_value",
+			"currency",
+		)
 		if _has_column("CRM Deal", field)
 	]
 	# The native list applies role permissions, user permissions and CRM's query conditions.
@@ -179,6 +188,8 @@ def search_deals(q: str = "", limit: int = LIMIT):
 			"organization": row.get("organization"),
 			"mobile_no": row.get("mobile_no"),
 			"repair_order": row.get("repair_order"),
+			"amount": row.get("deal_value"),
+			"currency": row.get("currency"),
 			"status": row.status,
 			"status_label": _(row.status) if row.status else None,
 			"closed": row.status in closed,

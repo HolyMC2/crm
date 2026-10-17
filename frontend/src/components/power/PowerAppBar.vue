@@ -1,121 +1,65 @@
 <template>
-  <!-- Phone: the module's own app bar (route meta.ownPhoneHeader), like the
-       Agenda's and Cobranza's: the list as its title (tap: choose another),
-       search, select; what matters stays in sight under it while the list
-       scrolls. -->
-  <header
-    class="sticky top-0 z-20 border-b border-outline-gray-1 bg-surface-base pt-[env(safe-area-inset-top)]"
+  <!-- Phone: the module's own app bar (route meta.ownPhoneHeader). A thin
+       wrapper over the shared AppBar (S1.1): the title reads «Módulo · Lista»
+       and opens the lists sheet; search, select and the bell come with the
+       bar; what matters stays in sight under it while the list scrolls. The
+       data-power-* hooks are the pages' contract (their tests read them). -->
+  <AppBar
     data-power-appbar
+    :loading="loading"
+    :searchable="searchable"
+    :search="search"
+    :search-open="searchOpen"
+    :search-label="searchLabel"
+    :search-input-attrs="{ 'data-power-search': '' }"
+    :selectable="selectable"
+    :select-label="selectLabel"
+    :selecting="selecting"
+    :selected-count="selectedCount"
+    @update:search="(value) => emit('update:search', value)"
+    @update:search-open="(value) => emit('update:searchOpen', value)"
+    @start-select="emit('start-select')"
+    @select-all="emit('select-all')"
+    @clear-selection="emit('clear-selection')"
   >
-    <div class="flex min-h-14 items-center gap-1 px-1">
-      <template v-if="selecting">
-        <button
-          type="button"
-          class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-          :aria-label="__('Clear selection')"
-          @click="$emit('clear-selection')"
+    <template #title>
+      <button
+        type="button"
+        class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-lg px-3 text-left"
+        :aria-label="__('Choose a list')"
+        :aria-expanded="listSheet"
+        data-power-title
+        @click="listSheet = true"
+      >
+        <span class="min-w-0 truncate text-lg font-semibold">{{
+          heading
+        }}</span>
+        <span
+          v-if="count !== undefined && count !== null && count !== ''"
+          class="shrink-0 text-base text-ink-gray-6"
+          >({{ count }})</span
         >
-          <FeatherIcon name="x" class="h-6 w-6" />
-        </button>
-        <p class="min-w-0 flex-1 truncate text-lg font-semibold">
-          {{
-            selectedCount === 1
-              ? __('1 selected')
-              : __('{0} selected', [selectedCount])
-          }}
-        </p>
-        <button
-          type="button"
-          class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-          :aria-label="__('Select the visible page')"
-          @click="$emit('select-all')"
-        >
-          <FeatherIcon name="check-square" class="h-6 w-6" />
-        </button>
-      </template>
-      <template v-else-if="searchOpen && searchable">
-        <button
-          type="button"
-          class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-          :aria-label="__('Close search')"
-          @click="closeSearch"
-        >
-          <FeatherIcon name="arrow-left" class="h-6 w-6" />
-        </button>
-        <input
-          ref="input"
-          :value="search"
-          type="search"
-          enterkeyhint="search"
-          class="h-11 min-w-0 flex-1 rounded-lg border-0 bg-surface-gray-2 px-3 text-base"
-          :placeholder="searchLabel"
-          :aria-label="searchLabel"
-          data-power-search
-          @input="$emit('update:search', $event.target.value)"
-        />
-      </template>
-      <template v-else>
-        <button
-          type="button"
-          class="flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-lg px-3 text-left"
-          :aria-label="__('Choose a list')"
-          :aria-expanded="listSheet"
-          data-power-title
-          @click="listSheet = true"
-        >
-          <span class="truncate text-lg font-semibold">{{ title }}</span>
-          <span
-            v-if="count !== undefined && count !== null && count !== ''"
-            class="shrink-0 text-base text-ink-gray-6"
-            >({{ count }})</span
-          >
-          <FeatherIcon
-            name="chevron-down"
-            class="h-5 w-5 shrink-0 text-ink-gray-6"
-          />
-        </button>
         <FeatherIcon
-          v-if="loading"
-          name="loader"
-          class="h-5 w-5 shrink-0 animate-spin text-ink-gray-6"
-          role="status"
-          :aria-label="__('Loading')"
+          name="chevron-down"
+          class="h-5 w-5 shrink-0 text-ink-gray-6"
         />
-        <slot name="actions" />
-        <button
-          v-if="searchable"
-          type="button"
-          class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-          :aria-label="searchLabel"
-          @click="$emit('update:searchOpen', true)"
-        >
-          <FeatherIcon name="search" class="h-6 w-6" />
-        </button>
-        <button
-          v-if="selectable"
-          type="button"
-          class="flex size-12 items-center justify-center rounded-full text-ink-gray-7"
-          :aria-label="selectLabel"
-          @click="$emit('start-select')"
-        >
-          <FeatherIcon name="check-square" class="h-6 w-6" />
-        </button>
-      </template>
-    </div>
-    <!-- What matters in this list, always in sight while it scrolls. -->
-    <div
-      v-if="$slots.summary"
-      class="flex flex-wrap gap-x-4 border-t border-outline-gray-1 px-4 py-2 text-sm"
-      data-power-summary
-    >
-      <slot name="summary" />
-    </div>
-  </header>
+      </button>
+    </template>
+    <template #actions>
+      <slot name="actions" />
+    </template>
+    <template v-if="$slots.summary" #summary>
+      <div data-power-summary class="contents">
+        <slot name="summary" />
+      </div>
+    </template>
+  </AppBar>
 
   <!-- The lists, in a sheet from the app bar's title. -->
   <BottomSheet
     :open="listSheet"
     :title="''"
+    :aria-label="__('Choose a list')"
     @update:open="(value) => (listSheet = value)"
   >
     <nav class="px-3 pb-6" :aria-label="__('Choose a list')">
@@ -146,11 +90,15 @@
   </BottomSheet>
 </template>
 <script setup>
-import { nextTick, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { BottomSheet, FeatherIcon } from 'frappe-ui'
+import { AppBar } from '@/components/ui'
 
 const props = defineProps({
   title: { type: String, default: '' },
+  /** The module's name above the list: «Cobranza». Defaults to the page's route title. */
+  context: { type: String, default: '' },
   count: { type: [Number, String], default: undefined },
   loading: { type: Boolean, default: false },
   entries: { type: Array, default: () => [] },
@@ -172,22 +120,17 @@ const emit = defineEmits([
   'select-all',
   'clear-selection',
 ])
-const input = ref(null)
+const route = useRoute()
 const listSheet = ref(false)
+
+// «Cobranza · Vencido»: the module, then the list the worker is on.
+const moduleName = computed(() => props.context || route?.meta?.title || '')
+const heading = computed(() =>
+  [moduleName.value, props.title].filter(Boolean).join(' · '),
+)
 
 function choose(value) {
   listSheet.value = false
   emit('select', value)
 }
-function closeSearch() {
-  emit('update:searchOpen', false)
-  if (props.search) emit('update:search', '')
-}
-watch(
-  () => props.searchOpen,
-  (open) => {
-    if (open) nextTick(() => input.value?.focus())
-  },
-  { immediate: true },
-)
 </script>

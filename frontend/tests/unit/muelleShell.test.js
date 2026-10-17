@@ -1425,8 +1425,7 @@ describe('Ventas deals in the palette', () => {
       id: 'deal:CRM-DEAL-2026-03311',
       group: 'registros',
       title: 'Apple iPhone 12 — Karolina Quevedo',
-      subtitle:
-        'RO-01234 · 695 122 3254 · Listo para recoger · CRM-DEAL-2026-03311',
+      subtitle: 'Trato · Listo para recoger · RO-01234 · 695 122 3254',
       icon: 'lucide-handshake',
       href: '/ventas/deal/CRM-DEAL-2026-03311',
       record: { source: 'deal', name: 'CRM-DEAL-2026-03311' },
@@ -1437,7 +1436,8 @@ describe('Ventas deals in the palette', () => {
       person: 'Ana',
       closed: true,
     })
-    expect(closed.subtitle).toBe('Ana · D-2')
+    // No raw record ID on the line; the kind word stands for the deal.
+    expect(closed.subtitle).toBe('Trato')
     expect(closed.icon).toBe('lucide-archive')
   })
 

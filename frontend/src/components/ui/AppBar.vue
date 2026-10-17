@@ -52,6 +52,7 @@
           class="h-11 min-w-0 flex-1 rounded-full border-0 bg-surface-gray-2 px-4 text-base [&::-webkit-search-cancel-button]:hidden"
           :placeholder="searchLabel || __('Search')"
           :aria-label="searchLabel || __('Search')"
+          v-bind="searchInputAttrs"
           data-appbar-search
           @input="$emit('update:search', $event.target.value)"
         />
@@ -218,6 +219,8 @@ const props = defineProps({
   bell: { type: Boolean, default: true },
   /** The bell's «you are here» state, on the Avisos page itself. */
   bellActive: { type: Boolean, default: false },
+  /** Extra attributes for the search field (a page's own hook, e.g. data-power-search). */
+  searchInputAttrs: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits([
   'back',
