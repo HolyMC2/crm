@@ -54,7 +54,7 @@
     </span>
     <span
       v-if="meta || $slots.trailing"
-      class="flex flex-none flex-col items-end gap-1 self-start pt-0.5 text-right"
+      class="flex max-w-[45%] flex-none flex-col items-end gap-1 self-start pt-0.5 text-right"
     >
       <span
         v-if="meta"

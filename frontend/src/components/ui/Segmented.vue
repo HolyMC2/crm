@@ -29,7 +29,7 @@
       @click="select(option.value)"
     >
       <span
-        v-if="option.value === modelValue"
+        v-if="option.value === modelValue && options.length < 4"
         class="lucide-check size-4 flex-none"
         aria-hidden="true"
       />
@@ -38,7 +38,9 @@
         :class="[option.icon, 'size-4 flex-none']"
         aria-hidden="true"
       />
-      <span class="min-w-0 break-words text-center">{{ option.label }}</span>
+      <span class="min-w-0 text-center [hyphens:auto]" lang="es">{{
+        option.label
+      }}</span>
       <span
         v-if="option.count !== undefined && option.count !== null"
         class="tabular-nums text-ink-gray-6"

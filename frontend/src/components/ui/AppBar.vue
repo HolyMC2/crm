@@ -275,8 +275,10 @@ watch(
   { immediate: true },
 )
 
-// The title needs about 9rem beside the icons; below that it takes its own row.
+// The title gets its own row (M3 medium bar) when it would not fit in two
+// lines beside the icons, or when the icons leave it less than 9rem.
 const TITLE_MIN = 144
+const CHAR_PX = 9.5 // text-lg semibold, Inter
 let observer = null
 function measure() {
   const width = bar.value?.clientWidth || 0
@@ -285,8 +287,11 @@ function measure() {
     icons.value.offsetWidth +
     (props.back ? 48 : 0) +
     (props.loading ? 24 : 0) +
-    16 // the row's padding and gaps
-  stacked.value = width - used < TITLE_MIN
+    40 // the row's padding and gaps, and the title's own padding
+  const room = width - used
+  const text = `${props.title} ${props.count ?? ''}`.trim()
+  const needed = text.length * CHAR_PX + (props.scopes.length ? 24 : 0)
+  stacked.value = room < TITLE_MIN || needed > room * 2 * 0.9
 }
 // The icons mount only in the normal mode (not while selecting or
 // searching): observe them whenever they (re)appear.
@@ -303,7 +308,9 @@ watch(
   },
   { flush: 'post' },
 )
-watch(() => [props.loading, props.back], measure, { flush: 'post' })
+watch(() => [props.loading, props.back, props.title, props.count], measure, {
+  flush: 'post',
+})
 onMounted(measure)
 onBeforeUnmount(() => observer?.disconnect())
 
