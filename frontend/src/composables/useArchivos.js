@@ -703,7 +703,6 @@ const LEGAL_FORMS = new Set([
   'A.C.',
   'AC',
 ])
-const FILE_NAME = /\.(pdf|png|jpe?g|csv|xml|txt|docx?|xlsx?|heic)$/i
 
 /**
  * An issuer as a worker reads it. Title case only when the whole name is upper
@@ -724,19 +723,30 @@ export function issuerName(text) {
 }
 
 /**
- * The title a worker reads for a file. A stored title that is an ID (a UUID, a
- * hash) or a bare file name gives way to «{kind} de {issuer}» with the date;
- * a real title is returned as stored. Keep the stored title for «Cambiar nombre».
+ * The title a worker reads for a file. Only a stored title that looks like an
+ * ID (UUID, hash, «DOC-…») gives way to «{kind} de {issuer}» with the date.
+ * A file name stays: a native attachment's title is its file name, and that is
+ * the useful title in a file manager. Keep the stored title for «Cambiar nombre»
+ * and the title attribute.
+ *
+ * Managed documents carry document_kind / document_date; browse items carry
+ * kind (factura, ticket…) / date and attached_to.
  */
 export function displayTitle(item, locale = 'es-MX') {
   const raw = String(item?.title || '').trim()
-  const bare = looksLikeId(raw) || FILE_NAME.test(raw)
-  if (raw && !bare) return raw
-  const kind = kindLabel(item?.document_kind)
+  if (raw && !looksLikeId(raw)) return raw
+  // No type at all: the record it is attached to is the better name.
+  if (!item?.document_kind && !item?.kind && item?.attached_to?.title)
+    return item.attached_to.title
+  const kind = item?.document_kind
+    ? kindLabel(item.document_kind)
+    : browseKindLabel(item?.kind)
   const issuer = issuerName(item?.counterparty)
   const base = issuer ? tr('{0} de {1}', [kind, issuer]) : kind
-  const day = item?.document_date ? formatDay(item.document_date, locale) : ''
-  return [base, day].filter(Boolean).join(' · ') || raw
+  const date = item?.document_date || item?.date
+  const day = date ? formatDay(date, locale) : ''
+  const text = [base, day].filter(Boolean).join(' · ')
+  return text || item?.attached_to?.title || raw
 }
 
 /** Shift-click: every id between the anchor and the row just clicked. */

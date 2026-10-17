@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  browseKindLabel,
   displayTitle,
   formatDay,
   issuerName,
@@ -14,7 +15,7 @@ describe('a file title a worker can read', () => {
     expect(displayTitle(item)).toBe('Factura 4417 de mayo')
   })
 
-  it('replaces a UUID with the kind and the issuer', () => {
+  it('replaces a UUID on a managed document with the kind, issuer and date', () => {
     const item = {
       title: UUID,
       document_kind: 'Invoice',
@@ -26,19 +27,35 @@ describe('a file title a worker can read', () => {
     )
   })
 
-  it('replaces a bare file name, and drops the date when there is none', () => {
+  it('replaces a UUID on a browse item with its kind, issuer and date', () => {
     const item = {
-      title: 'scan_0042.pdf',
-      document_kind: 'Receipt',
-      counterparty: 'Tienda Norte',
+      title: UUID,
+      kind: 'factura',
+      counterparty: 'REFACCIONES FICTICIAS DEL NORTE SA DE C.V.',
+      date: '2026-03-03',
     }
-    expect(displayTitle(item)).toBe(`${kindLabel('Receipt')} de Tienda Norte`)
+    expect(displayTitle(item)).toBe(
+      `${browseKindLabel('factura')} de Refacciones Ficticias del Norte SA de C.V. · ${formatDay('2026-03-03', 'es-MX')}`,
+    )
   })
 
-  it('falls back to the kind alone when there is no issuer', () => {
+  it('keeps a native attachment’s file name, which is its useful title', () => {
+    const item = {
+      title: 'ticket-baterias.jpeg',
+      kind: 'ticket',
+      counterparty: 'Tienda Norte',
+      date: '2026-09-30',
+    }
+    expect(displayTitle(item)).toBe('ticket-baterias.jpeg')
+  })
+
+  it('falls back to the kind alone, or to the attached record when there is no type', () => {
     expect(displayTitle({ title: UUID, document_kind: 'Contract' })).toBe(
       kindLabel('Contract'),
     )
+    expect(
+      displayTitle({ title: UUID, attached_to: { title: 'Pedido 12' } }),
+    ).toBe('Pedido 12')
   })
 })
 

@@ -348,10 +348,7 @@ describe('the browse list', () => {
     })
     expect(root.textContent).toContain('Factura luz')
     expect(root.textContent).toContain('Contratos')
-    // A bare file name is not a title: the row reads its kind, the file name
-    // stays in the title attribute.
-    expect(root.querySelector('[title="ine.jpg"]')).not.toBeNull()
-    expect(root.textContent).not.toContain('ine.jpg')
+    expect(root.textContent).toContain('ine.jpg')
     expect(root.textContent).toContain('Acme SA')
     expect(root.textContent).toContain('2 KB')
     expect(root.textContent).toContain('WhatsApp')
