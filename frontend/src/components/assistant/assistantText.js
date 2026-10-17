@@ -174,7 +174,7 @@ export function chipsFor(context) {
     return [
       {
         label: __('Search this list'),
-        prompt: __('Search this list for: '),
+        prompt: `${__('Search this list for:')} `,
         fill: true,
       },
     ]

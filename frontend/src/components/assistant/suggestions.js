@@ -92,7 +92,7 @@ export function contactoSuggestion(title, owed) {
       [
         title || owed.customer_name || owed.customer,
         total,
-        since ? __(' since {0}', [day(since)]) : '',
+        since ? ` ${__('since {0}', [day(since)])}` : '',
       ],
     ),
   }

@@ -26113,8 +26113,8 @@ msgid "Ask something…"
 msgstr "Pregunta algo…"
 
 #: frontend/src/components/assistant
-msgid "Change it: "
-msgstr "Cámbialo: "
+msgid "Change it:"
+msgstr "Cámbialo:"
 
 #: frontend/src/components/assistant
 msgid "Confirmed, saving…"
@@ -26197,8 +26197,8 @@ msgid "Search this list"
 msgstr "Busca en esta lista"
 
 #: frontend/src/components/assistant
-msgid "Search this list for: "
-msgstr "Busca en esta lista: "
+msgid "Search this list for:"
+msgstr "Busca en esta lista:"
 
 #: frontend/src/components/assistant
 msgid "Suggestion"
@@ -26273,5 +26273,5 @@ msgid "{0} owes {1}{2}. How do I collect it? Prepare the reminder for me to conf
 msgstr "{0} me debe {1}{2}. ¿Cómo le cobro? Prepárame el recordatorio para que yo lo confirme."
 
 #: frontend/src/components/assistant/suggestions.js
-msgid " since {0}"
-msgstr " desde el {0}"
+msgid "since {0}"
+msgstr "desde el {0}"

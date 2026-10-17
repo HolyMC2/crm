@@ -262,7 +262,7 @@ function useChip(chip) {
 function change(card) {
   if (card.change) tap(card.change, card.id)
   else assistant.cards = { ...assistant.cards, [card.id]: 'changed' }
-  assistant.draft = __('Change it: ')
+  assistant.draft = `${__('Change it:')} `
   focusInput()
 }
 
