@@ -1414,6 +1414,28 @@ describe('Ventas deals in the palette', () => {
     })
   })
 
+  it('a question is never offered as «Nuevo contacto «…»» or an Escáner search', async () => {
+    window.installed_apps = ['crm', 'scanner_kit']
+    try {
+      const [actions] = createShellProviders({
+        boot: ref(boot()),
+        modules: ref(hostedModules),
+      })
+      const ids = async (raw) =>
+        (
+          await actions.search({ raw, text: raw, scope: 'all', kind: 'text' })
+        ).map((item) => item.id)
+      for (const raw of ['¿Qué tengo pendiente hoy?', 'cuánto me debe Ana']) {
+        const found = await ids(raw)
+        expect(found).not.toContain('contactos.create')
+        expect(found).not.toContain('escaner.search')
+      }
+      expect(await ids('Ana López')).toContain('contactos.create')
+    } finally {
+      delete window.installed_apps
+    }
+  })
+
   it('palette order: records above «Nuevo …»; a question keeps «Preguntar a Muelle» first; empty opens on Recientes', () => {
     const actions = {
       group: 'acciones',

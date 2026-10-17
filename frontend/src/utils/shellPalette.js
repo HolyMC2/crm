@@ -16,6 +16,7 @@ import { createManualProvider } from '@/utils/manualPalette'
 // «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 import { formatMoney, kindLabel, statusLabel } from '@/utils/display'
+import { looksLikeQuestion } from '@/components/assistant/assistantText'
 
 // Palette providers for the shell (spec §1.4): Contactos records and Ventas deals. Each answers on its own and is
 // cut off by the shared abort signal; the server rechecks every record.
@@ -150,7 +151,11 @@ export function createShellProviders({ boot, modules }) {
       // The record on screen first (Deal 360: Llamar, WhatsApp…), then create.
       const own = recordActions.value.map(recordItem)
       const items = []
-      for (const target of createTargets(boot.value))
+      // A question («¿Qué tengo pendiente hoy?») is for «Preguntar a Muelle»:
+      // never offer to file it as a contact's name or an Escáner search.
+      const question = looksLikeQuestion(query.raw ?? query.text)
+      for (const target of createTargets(boot.value)) {
+        if (question && target.id === 'contactos.create') continue
         items.push({
           id: target.id,
           group: 'acciones',
@@ -160,6 +165,7 @@ export function createShellProviders({ boot, modules }) {
           href: target.href,
           shortcut: 'c',
         })
+      }
       // Ventas creates in its list's deal dialog; «c» stays the list's own.
       if (moduleEnabled(boot.value, 'ventas'))
         items.push({
@@ -179,7 +185,11 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-scan-barcode',
           scanPick: true,
         })
-      if (query.text && installedSiblings().some((app) => app.key === 'scan'))
+      if (
+        query.text &&
+        !question &&
+        installedSiblings().some((app) => app.key === 'scan')
+      )
         items.push({
           id: 'escaner.search',
           group: 'acciones',
