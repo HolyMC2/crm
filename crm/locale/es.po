@@ -26407,3 +26407,23 @@ msgstr "Seguimiento"
 msgctxt "Cobranza"
 msgid "Statement"
 msgstr "Estado de cuenta"
+
+#: crm/resultados_cards.py
+msgid "Ask your manager for permission to read deals."
+msgstr "Pídele a tu encargado permiso para ver los tratos."
+
+#: crm/resultados_cards.py
+msgid "Average won"
+msgstr "Promedio ganado"
+
+#: crm/resultados_cards.py
+msgid "Opened, still open"
+msgstr "Abiertos en el periodo"
+
+#: crm/resultados_cards.py
+msgid "By closing date; the amount is what was agreed, not what was invoiced."
+msgstr "Por fecha de cierre; el monto es lo acordado, no lo facturado."
+
+#: crm/resultados_cards.py
+msgid "Open the funnel"
+msgstr "Abrir el embudo"

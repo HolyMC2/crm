@@ -194,11 +194,8 @@
           data-testid="drill"
           class="group inline-flex min-h-11 items-center gap-1 self-start text-sm font-medium text-ink-gray-8 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           @click="follow($event, drillLink)"
-          >{{ card.drill.label || __('See documents') }}
-          <span
-            class="lucide-arrow-right size-4 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-        /></a>
+          >{{ card.drill.label || __('See documents') }}</a
+        >
       </div>
     </template>
 
@@ -217,9 +214,8 @@
         data-testid="drill"
         class="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-ink-gray-8 hover:text-ink-gray-9"
         @click="follow($event, drillLink)"
-        >{{ card.drill.label || __('See documents') }}
-        <span class="lucide-arrow-right size-4" aria-hidden="true"
-      /></a>
+        >{{ card.drill.label || __('See documents') }}</a
+      >
     </div>
   </article>
 </template>
@@ -246,6 +242,7 @@ const ICONS = {
   tickets: 'lucide-ticket',
   ticket_promedio: 'lucide-shopping-bag',
   promedio_diario: 'lucide-calendar-days',
+  tratos: 'lucide-handshake',
   tendencia: 'lucide-chart-spline',
   meta: 'lucide-target',
   margen: 'lucide-percent',

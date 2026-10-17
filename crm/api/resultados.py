@@ -25,6 +25,8 @@ CARD_ORDER = (
 	"tickets",
 	"ticket_promedio",
 	"promedio_diario",
+	# CRM: deals won in the period (the Dashboard, folded in on a phone).
+	"tratos",
 	# The period's shape, and the shops it came from.
 	"tendencia",
 	"tiendas",

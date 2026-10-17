@@ -388,6 +388,9 @@ filter_link_titles = {
 # "crm.auth.validate"
 # ]
 
+# Resultados (Shell S5.3): the Dashboard's deal numbers as a card on a phone.
+muelle_resultados_cards = ["crm.resultados_cards.tratos"]
+
 after_migrate = [
 	"crm.fcrm.doctype.fcrm_settings.fcrm_settings.after_migrate",
 	"crm.pipeline.services.configuration.sync_legacy_statuses",
