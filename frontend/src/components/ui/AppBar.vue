@@ -276,8 +276,8 @@ watch(
 )
 
 // The title gets its own row (M3 medium bar) when it would not fit in two
-// lines beside the icons, or when the icons leave it less than 9rem.
-const TITLE_MIN = 144
+// lines beside the icons, or when the icons leave it less than 6rem.
+const TITLE_MIN = 96
 const CHAR_PX = 9.5 // text-lg semibold, Inter
 let observer = null
 function measure() {
