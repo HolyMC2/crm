@@ -26518,4 +26518,4 @@ msgstr "Un visitante"
 
 #: crm/avisos/stream.py
 msgid "Return request: {0}"
-msgstr "Solicitud de devolución: {0}"
+msgstr "Devolución: {0}"
