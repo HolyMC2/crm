@@ -18,12 +18,13 @@
     v-else-if="!docked"
     :open="assistant.open"
     :aria-label="__('Ask Muelle')"
+    layer="assistant"
     @update:open="(open) => !open && closeAssistant()"
   >
     <template #header>
       <AssistantHeader :closable="isMobile" @close="closeAssistant" />
     </template>
-    <div ref="panel" data-shell-layer="assistant" data-testid="assistant-sheet">
+    <div ref="panel" data-testid="assistant-sheet">
       <AssistantLog @navigate="onNavigate" />
     </div>
     <template #footer>
@@ -87,9 +88,11 @@ watch(
 )
 
 // ⌘J / Ctrl+J opens or closes it from anywhere, also while typing and over a
-// sheet (muelle shell-contracts f053be0 names the key; until crm re-vendors
-// that contract the sheet listens itself, and declares the key so the Alt+H
-// sheet lists it). Esc closes the dock when the focus is in it.
+// sheet. shell-contracts 0.8.0 names the key (KEYMAP «assistant»), but the
+// shell's keyboard (shellKeyboard.js) only answers its own global ids and
+// stops at an open sheet, so the assistant listens itself (capture phase) and
+// declares the key so the Alt+H sheet lists it. Esc closes the dock when the
+// focus is in it.
 function onKey(event) {
   if (event.defaultPrevented || event.isComposing || !assistantEnabled.value)
     return
