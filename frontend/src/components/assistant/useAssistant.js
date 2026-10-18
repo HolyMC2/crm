@@ -12,7 +12,12 @@ import {
   shallowRef,
 } from 'vue'
 import { call } from 'frappe-ui'
-import { isProgress, newClientId, normalizeRow } from './assistantText'
+import {
+  firstRecordLink,
+  isProgress,
+  newClientId,
+  normalizeRow,
+} from './assistantText'
 import { assistantOn, assistantWanted } from './assistantDoor'
 
 export const ASSISTANT_API = 'doco.docoutils.assistant.shell_api'
@@ -232,9 +237,12 @@ export function onMessage(payload) {
     }
     assistant.messages = next
   } else {
+    // The receipt is the reply that names the saved record; the agent's own
+    // words may land first («Quedó ligado…»), so the card keeps waiting for
+    // the line with the link (SHELL-S2c walk, 305px).
     if (assistant.awaitingReceipt && !isProgress(incoming)) {
       incoming.receiptOf = assistant.awaitingReceipt
-      assistant.awaitingReceipt = null
+      if (firstRecordLink(incoming.text)) assistant.awaitingReceipt = null
     }
     assistant.messages = [...assistant.messages, incoming]
   }

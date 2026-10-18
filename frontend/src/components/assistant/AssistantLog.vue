@@ -157,8 +157,10 @@ function view(message) {
 const receipts = computed(() => {
   const out = {}
   for (const message of assistant.messages)
-    if (message.receiptOf)
-      out[message.receiptOf] = firstRecordLink(message.text) || {}
+    if (message.receiptOf) {
+      const link = firstRecordLink(message.text)
+      if (link || !out[message.receiptOf]) out[message.receiptOf] = link || {}
+    }
   return out
 })
 

@@ -377,12 +377,16 @@ describe('the conversation', () => {
       data: 'agr:RUN-1:p1:a',
     })
     expect(assistant.cards['agr:RUN-1:p1:a']).toBe('confirmed')
+    // the agent's own words may come first; the card waits for the link
+    onMessage({ chat_id: staff.chat_id, mid: 'n1', text: 'Quedó ligado.' })
+    expect(assistant.awaitingReceipt).toBe('agr:RUN-1:p1:a')
     onMessage({
       chat_id: staff.chat_id,
       mid: 'r1',
       text: 'Listo: /app/todo/T-9',
     })
     expect(assistant.messages.at(-1).receiptOf).toBe('agr:RUN-1:p1:a')
+    expect(assistant.awaitingReceipt).toBe(null)
     await tap('agr:RUN-1:p2:r', 'agr:RUN-1:p2:r')
     expect(assistant.cards['agr:RUN-1:p2:r']).toBe('changed')
   })
