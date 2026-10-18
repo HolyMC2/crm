@@ -1,6 +1,7 @@
 <template>
   <div class="space-y-5" :aria-busy="loading || undefined">
-    <div class="flex items-center justify-between gap-2">
+    <!-- In the «Filtros» sheet the sheet has the title and «Borrar filtros». -->
+    <div v-if="!touch" class="flex items-center justify-between gap-2">
       <h2 class="text-sm font-semibold text-ink-gray-9">
         {{ __('Filters', null, 'Productos') }}
       </h2>
@@ -20,7 +21,7 @@
       class="min-w-0"
     >
       <legend
-        class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5"
+        class="mb-1 text-sm text-ink-gray-6"
       >
         {{ __('Stock', null, 'Productos') }}
       </legend>
@@ -46,7 +47,7 @@
 
     <fieldset v-if="sections.includes('photo')" class="min-w-0">
       <legend
-        class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5"
+        class="mb-1 text-sm text-ink-gray-6"
       >
         {{ __('Photo', null, 'Productos') }}
       </legend>
@@ -72,7 +73,7 @@
 
     <fieldset class="min-w-0">
       <legend
-        class="mb-1 flex w-full items-center justify-between text-xs font-medium uppercase tracking-wide text-ink-gray-5"
+        class="mb-1 flex w-full items-center justify-between text-sm text-ink-gray-6"
       >
         <span>{{ __('Group', null, 'Productos') }}</span>
         <span v-if="groups.length" class="tabular-nums normal-case">{{
