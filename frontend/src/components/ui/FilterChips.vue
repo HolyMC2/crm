@@ -163,13 +163,14 @@ function updateFade() {
 function revealOn() {
   const el = row.value
   const on = el?.querySelector('[data-chip][aria-pressed="true"]')
-  if (!on) return
-  const box = el.getBoundingClientRect()
-  const chip = on.getBoundingClientRect()
-  const fadeWidth = 40
-  if (chip.right > box.right - fadeWidth)
-    el.scrollLeft += chip.right - box.right + fadeWidth
-  else if (chip.left < box.left) el.scrollLeft -= box.left - chip.left + 16
+  if (on) {
+    const box = el.getBoundingClientRect()
+    const chip = on.getBoundingClientRect()
+    const fadeWidth = 40
+    if (chip.right > box.right - fadeWidth)
+      el.scrollLeft += chip.right - box.right + fadeWidth
+    else if (chip.left < box.left) el.scrollLeft -= box.left - chip.left + 16
+  }
   updateFade()
 }
 let observer = null
@@ -182,9 +183,10 @@ onMounted(() => {
   }
 })
 onBeforeUnmount(() => observer?.disconnect())
+// Counts arrive after the first paint and widen the chips: reveal again.
 watch(
   () => props.chips,
-  () => nextTick(updateFade),
+  () => nextTick(revealOn),
   { deep: true },
 )
 watch(
