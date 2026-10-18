@@ -242,9 +242,15 @@ watch(warehouse, (value, previous) => {
     threshold.value = suggested(selectedStore.value)
 })
 
-watch(open, (value) => {
-  if (value) load()
-})
+// Immediate: a host that mounts the sheet on first tap (Producto) mounts it
+// already open.
+watch(
+  open,
+  (value) => {
+    if (value) load()
+  },
+  { immediate: true },
+)
 
 async function load() {
   loading.value = true
