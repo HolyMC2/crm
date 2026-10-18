@@ -21,6 +21,7 @@ import {
   saveChanges,
 } from '@/components/ajustes/ajustes'
 import AjustesField from '@/components/ajustes/AjustesField.vue'
+import AjustesLink from '@/components/ajustes/AjustesLink.vue'
 
 const SECTIONS = [
   {
@@ -307,5 +308,50 @@ describe('assistant doors on a record', () => {
     ])
     expect(askPrompts('Customer')).toEqual([])
     expect(askPrompts('')).toEqual([])
+  })
+})
+
+describe('a link value', () => {
+  it('shows the linked record by its title, not its ID', async () => {
+    mocks.call.mockReset()
+    mocks.call.mockImplementation((method, args) =>
+      Promise.resolve(
+        method === `${RECORD_FIELDS}.title` && args.name === 'General'
+          ? 'Público en General'
+          : [],
+      ),
+    )
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    const app = createApp({
+      render: () =>
+        h(AjustesLink, { modelValue: 'General', doctype: 'Customer' }),
+    })
+    app.config.globalProperties.__ = globalThis.__
+    app.mount(el)
+    expect(el.querySelector('input').value).toBe('General')
+    await new Promise((resolve) => setTimeout(resolve))
+    await nextTick()
+    expect(el.querySelector('input').value).toBe('Público en General')
+    expect(mocks.call).toHaveBeenCalledWith(`${RECORD_FIELDS}.title`, {
+      doctype: 'Customer',
+      name: 'General',
+    })
+    app.unmount()
+  })
+
+  it('names units in Spanish without asking the server', async () => {
+    mocks.call.mockReset()
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    const app = createApp({
+      render: () => h(AjustesLink, { modelValue: 'Box', doctype: 'UOM' }),
+    })
+    app.config.globalProperties.__ = globalThis.__
+    app.mount(el)
+    await new Promise((resolve) => setTimeout(resolve))
+    expect(el.querySelector('input').value).toBe('Caja')
+    expect(mocks.call).not.toHaveBeenCalled()
+    app.unmount()
   })
 })

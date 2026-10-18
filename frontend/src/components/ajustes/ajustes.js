@@ -252,6 +252,28 @@ export function linkLabel(doctype, value) {
   return value
 }
 
+const titles = new Map()
+/**
+ * A link value in words from doco: «Público en General» for the customer
+ * «General» (Customer does not show titles in Desk links). Cached per value.
+ */
+export function loadLinkTitle(doctype, value) {
+  if (!value || doctype === 'UOM')
+    return Promise.resolve(linkLabel(doctype, value) || '')
+  const key = `${doctype}\u0000${value}`
+  if (!titles.has(key))
+    titles.set(
+      key,
+      call(`${RECORD_FIELDS}.title`, { doctype, name: value })
+        .then((title) => title || value)
+        .catch(() => {
+          titles.delete(key)
+          return value
+        }),
+    )
+  return titles.get(key)
+}
+
 /** How a pending value reads in the row before it is saved. */
 export function pendingDisplay(field, value) {
   if (field.fieldtype === 'Check') return value ? 'Sí' : 'No'

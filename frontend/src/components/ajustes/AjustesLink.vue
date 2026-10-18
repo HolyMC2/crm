@@ -73,7 +73,7 @@
 <script setup>
 import { call } from 'frappe-ui'
 import { onBeforeUnmount, ref, useId, watch } from 'vue'
-import { UOM_ES, fold, linkLabel } from './ajustes'
+import { UOM_ES, fold, linkLabel, loadLinkTitle } from './ajustes'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -94,9 +94,20 @@ const listId = `ajustes-link-${useId()}`
 let timer = 0
 let generation = 0
 
+// What the box shows for the current value: its title once doco answers.
+const shown = ref('')
 watch(
   () => props.modelValue,
-  (value) => (query.value = linkLabel(props.doctype, value) || ''),
+  (value) => {
+    shown.value = linkLabel(props.doctype, value) || ''
+    query.value = shown.value
+    if (!value) return
+    loadLinkTitle(props.doctype, value).then((title) => {
+      if (props.modelValue !== value || query.value !== shown.value) return
+      shown.value = title
+      query.value = title
+    })
+  },
   { immediate: true },
 )
 
@@ -115,10 +126,7 @@ async function search() {
   try {
     const rows = await call('frappe.desk.search.search_link', {
       doctype: props.doctype,
-      txt:
-        query.value === linkLabel(props.doctype, props.modelValue)
-          ? ''
-          : query.value,
+      txt: query.value === shown.value ? '' : query.value,
       page_length: 20,
     })
     if (own === generation) {
@@ -143,7 +151,8 @@ function withSpanishUnits(rows) {
 }
 function choose(option) {
   emit('update:modelValue', option.value)
-  query.value = linkLabel(props.doctype, option.value)
+  shown.value = option.label || linkLabel(props.doctype, option.value)
+  query.value = shown.value
   expanded.value = false
 }
 function keyDown(event) {
