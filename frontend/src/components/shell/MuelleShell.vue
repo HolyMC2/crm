@@ -43,8 +43,10 @@
           />
           <h1
             data-testid="shell-title"
-            class="min-w-0 flex-1 self-center px-3 text-lg font-semibold leading-snug [#app-header:has(*)+&]:hidden"
-            :class="backTo ? 'truncate' : 'line-clamp-2 break-words'"
+            class="min-w-0 flex-1 self-center text-lg font-semibold leading-snug [#app-header:has(*)+&]:hidden"
+            :class="
+              backTo ? 'truncate pl-1 pr-2' : 'line-clamp-2 break-words px-3'
+            "
           >
             {{ headerTitle }}
           </h1>
