@@ -82,7 +82,9 @@ defineEmits(['confirm', 'change', 'navigate'])
 // when the card's body is the proposal itself (card.detail).
 const heading = computed(() => {
   const head =
-    props.state === 'confirmed' ? __('Receipt') : __('Muelle proposes')
+    props.state === 'confirmed'
+      ? __('Saved', null, 'Assistant card')
+      : __('Muelle proposes')
   return props.card.detail ? `${head} · ${props.card.summary}` : head
 })
 </script>

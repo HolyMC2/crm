@@ -27809,3 +27809,8 @@ msgstr "Cambiar"
 msgctxt "Assistant link"
 msgid "Open"
 msgstr "Abrir"
+
+#: frontend/src/components/assistant/ActionCard.vue
+msgctxt "Assistant card"
+msgid "Saved"
+msgstr "Guardado"
