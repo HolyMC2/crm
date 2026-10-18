@@ -229,7 +229,7 @@ import {
 } from '@/documentos/listState'
 import { loadProfile } from '@/documentos/profiles'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
-import { kindLabel } from '@/utils/display'
+import { kindLabel, statusLabel } from '@/utils/display'
 
 const props = defineProps({
   // Left pane of the desktop split: rows keep the list's query, the open one is lit.
@@ -319,9 +319,12 @@ const emptyMessage = computed(() =>
 // «Registrada», and only when the row's own line does not already say it.
 function showChip(view) {
   if (!view.status || view.tone === 'neutral') return false
-  return !view.subtitle
-    ?.toLowerCase()
-    .includes(String(view.status).toLowerCase())
+  // The line speaks Spanish («Pagada · hoy»): compare the worded state.
+  const words = view.statusLabel || statusLabel(view.status)
+  const line = String(view.subtitle || '').toLowerCase()
+  return ![words, view.status].some(
+    (w) => w && line.includes(String(w).toLowerCase()),
+  )
 }
 
 function recordTo(row) {

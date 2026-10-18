@@ -58,6 +58,15 @@
       :aria-label="field.label"
       @input="emit('update:modelValue', $event.target.value)"
     />
+    <DateField
+      v-else-if="dateMode"
+      :id="id"
+      :model-value="modelValue ? String(modelValue) : ''"
+      :mode="dateMode"
+      :label="field.label"
+      :required="!!field.reqd"
+      @update:model-value="emit('update:modelValue', $event || null)"
+    />
     <input
       v-else
       :id="id"
@@ -73,6 +82,7 @@
 </template>
 <script setup>
 import { computed } from 'vue'
+import DateField from '@/components/ui/DateField.vue'
 import AjustesLink from './AjustesLink.vue'
 import AjustesSwitch from './AjustesSwitch.vue'
 import { controlKind } from './ajustes'
@@ -85,6 +95,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const kind = computed(() => controlKind(props.field.fieldtype))
+// Dates and times in es-MX (dd/mm/aaaa, 24 h), never the browser's US input.
+const dateMode = computed(() => {
+  if (kind.value === 'date') return 'date'
+  if (kind.value === 'datetime') return 'datetime'
+  return props.field.fieldtype === 'Time' ? 'time' : ''
+})
 const inputType = computed(() => {
   if (kind.value === 'number') return 'number'
   if (kind.value === 'date') return 'date'
