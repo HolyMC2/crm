@@ -109,6 +109,11 @@ async function mountAt(path) {
         component: { render: () => null },
       },
       {
+        path: '/productos/movimientos',
+        name: 'InventarioMovimientos',
+        component: { render: () => null },
+      },
+      {
         path: '/productos/:item',
         name: 'Producto',
         component: Producto,
@@ -235,6 +240,42 @@ describe('Producto', () => {
     } finally {
       setWidth(width)
     }
+  })
+
+  it('movements name who moved them and «See all» opens the kardex', async () => {
+    record.item.is_stock_item = 1
+    record.stock.service = false
+    record.ledger.rows = Array.from({ length: 7 }, (_, n) => ({
+      id: `sle-${n}`,
+      kind: 'venta',
+      verb: 'Venta',
+      party: 'Juan Pérez',
+      qty: -1,
+      uom: 'Nos',
+      balance: 6 - n,
+      store: 'Centro',
+      warehouse: 'Centro - D',
+      by: 'Marco Ponce',
+      date: '2026-10-14',
+      time: '12:41',
+      voucher: { doctype: 'Sales Invoice', name: `SINV-${n}`, readable: true },
+      voucher_type: 'Sales Invoice',
+      voucher_no: `SINV-${n}`,
+      actual_qty: -1,
+      qty_after_transaction: 6 - n,
+      posting_date: '2026-10-14',
+    }))
+    await mountAt('/productos/ABIBMEX000130')
+    const list = root.querySelector('[data-producto-movements]')
+    expect(list.querySelectorAll('[data-kardex-row]')).toHaveLength(5)
+    expect(list.textContent).toContain('Venta · Juan Pérez')
+    expect(list.textContent).toContain('Marco Ponce')
+    expect(list.textContent).toContain('−1 pza')
+    expect(list.querySelector('a[href^="/app/"]')).toBeNull()
+    const all = root.querySelector('[data-producto-movements-all]')
+    expect(all.getAttribute('href')).toBe(
+      '/crm/productos/movimientos?articulo=ABIBMEX000130',
+    )
   })
 
   it('cost and margin only when the server sends them', async () => {

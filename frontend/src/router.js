@@ -239,6 +239,19 @@ const routes = [
     meta: { app: 'productos', title: 'Productos', stableKey: true },
   },
   {
+    // Kardex (Shell D4.1). Moves to /inventario/movimientos once the
+    // inventario module (D1.1) is on mainline.
+    path: '/productos/movimientos',
+    name: 'InventarioMovimientos',
+    component: () => import('@/pages/InventarioMovimientos.vue'),
+    meta: {
+      app: 'productos',
+      title: 'Movimientos',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+    },
+  },
+  {
     path: '/productos/:item',
     name: 'Producto',
     component: () => import('@/pages/Producto.vue'),

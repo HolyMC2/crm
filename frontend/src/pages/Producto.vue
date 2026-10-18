@@ -926,12 +926,6 @@
                 <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
                   {{ __('Recent stock movements') }}
                 </h2>
-                <a
-                  v-if="data.ledger.rows.length"
-                  :href="ledgerReportUrl(product.name)"
-                  class="text-sm text-ink-gray-6 underline-offset-2 hover:text-ink-gray-9 hover:underline"
-                  >{{ __('Full history in Desk', null, 'Productos') }}</a
-                >
               </header>
               <p
                 v-if="!data.ledger.rows.length"
@@ -952,81 +946,35 @@
                         )
                 }}
               </p>
-              <div v-else class="overflow-x-auto">
-                <table class="w-full min-w-[32rem] text-sm">
-                  <thead>
-                    <tr
-                      class="text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5"
-                    >
-                      <th class="px-4 py-2 font-medium">{{ __('Date') }}</th>
-                      <th class="px-2 py-2 font-medium">
-                        {{ __('Movement') }}
-                      </th>
-                      <th class="px-2 py-2 font-medium">
-                        {{ __('Store', null, 'Productos') }}
-                      </th>
-                      <th class="px-2 py-2 text-right font-medium">
-                        {{ __('Qty') }}
-                      </th>
-                      <th class="px-4 py-2 text-right font-medium">
-                        {{ __('Balance') }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-outline-gray-1">
-                    <tr
-                      v-for="(row, index) in visibleRows(
-                        data.ledger.rows,
-                        ledgerAll,
-                      )"
-                      :key="index"
-                    >
-                      <td class="whitespace-nowrap px-4 py-2 text-ink-gray-7">
-                        {{ row.posting_date }}
-                      </td>
-                      <td class="px-2 py-2">
-                        <component
-                          :is="documentTag(row.voucher_type, row.voucher_no)"
-                          v-bind="
-                            documentProps(row.voucher_type, row.voucher_no)
-                          "
-                          class="-mx-1 block rounded px-1 hover:bg-surface-gray-2"
-                        >
-                          <span class="block text-ink-gray-9">{{
-                            __(row.voucher_type)
-                          }}</span>
-                          <span
-                            class="block font-mono text-xs text-ink-blue-link"
-                            >{{ row.voucher_no }}</span
-                          >
-                        </component>
-                      </td>
-                      <td
-                        class="max-w-[12rem] truncate px-2 py-2 text-ink-gray-7"
-                      >
-                        {{ storeLabel(row.warehouse) }}
-                      </td>
-                      <td
-                        class="whitespace-nowrap px-2 py-2 text-right font-medium tabular-nums"
-                        :class="
-                          row.actual_qty < 0
-                            ? 'text-ink-red-7'
-                            : 'text-ink-green-7'
-                        "
-                      >
-                        {{ row.actual_qty > 0 ? '+' : ''
-                        }}{{ qty(row.actual_qty) }}
-                      </td>
-                      <td
-                        class="whitespace-nowrap px-4 py-2 text-right tabular-nums text-ink-gray-7"
-                      >
-                        {{ qty(row.qty_after_transaction) }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <ShowAll v-model="ledgerAll" :total="data.ledger.rows.length" />
-              </div>
+              <template v-else>
+                <!-- The newest five in the kardex's words (who, verb, signed
+                     quantity, balance); «Ver todo» opens the kardex on this product. -->
+                <ul
+                  class="divide-y divide-outline-gray-1"
+                  data-producto-movements
+                >
+                  <li
+                    v-for="row in data.ledger.rows.slice(0, LEDGER_PREVIEW)"
+                    :key="row.id || row.voucher_no + row.warehouse"
+                  >
+                    <MovementRow
+                      :row="row"
+                      :show-item="false"
+                      :show-store="(data.stock.rows || []).length > 1"
+                      :when="movementWhen(row)"
+                    />
+                  </li>
+                </ul>
+                <RouterLink
+                  :to="{
+                    name: 'InventarioMovimientos',
+                    query: { articulo: product.name },
+                  }"
+                  class="flex min-h-12 items-center justify-center border-t border-outline-gray-1 px-4 text-sm font-medium text-ink-gray-8 hover:bg-surface-gray-1"
+                  data-producto-movements-all
+                  >{{ __('See all movements', null, 'Productos') }}</RouterLink
+                >
+              </template>
             </section>
 
             <section
@@ -1559,7 +1507,8 @@ import CountDialog from '@/components/productos/CountDialog.vue'
 import VariantGrid from '@/components/productos/VariantGrid.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import LabelDialog from '@/components/productos/LabelDialog.vue'
-import { unitLabel } from '@/utils/display'
+import MovementRow from '@/components/inventario/MovementRow.vue'
+import { formatDate, unitLabel } from '@/utils/display'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { priceListLabel } from '@/utils/priceList'
 import { hoyLive } from '@/composables/useHoy'
@@ -1573,7 +1522,6 @@ import {
   groupRoute,
   isRootGroup,
   lastCountedLabel,
-  ledgerReportUrl,
   loadProductosBoot,
   money,
   notifyPriceOpener,
@@ -1657,8 +1605,14 @@ const templateRoute = computed(() => ({
   params: { item: product.value.variant_of },
   query: typeof route.query.list === 'string' ? { list: route.query.list } : {},
 }))
-// Movements and sales: five rows until «See all».
-const ledgerAll = ref(false)
+// Movements: the newest five, «See all movements» opens the kardex.
+const LEDGER_PREVIEW = 5
+function movementWhen(row) {
+  return [formatDate(row.date || row.posting_date), row.time]
+    .filter(Boolean)
+    .join(' ')
+}
+// Sales: five rows until «See all».
 const salesAll = ref(false)
 function documentTag(doctype, name) {
   const link = documentLink(doctype, name)
@@ -2184,7 +2138,6 @@ watch(
     data.value = null
     notice.value = null
     photoBroken.value = false
-    ledgerAll.value = false
     salesAll.value = false
     unitsAll.value = false
     await load()

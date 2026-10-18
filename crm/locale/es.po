@@ -26535,3 +26535,185 @@ msgstr "Nuevo pedido por WhatsApp"
 #: frontend/src/utils/inboxMessage.js
 msgid "Media file too big to receive"
 msgstr "Archivo demasiado grande para recibirlo"
+
+#: frontend/src/pages/InventarioMovimientos.vue frontend/src/components/inventario
+msgctxt "Inventario"
+msgid "Search a product"
+msgstr "Buscar un producto"
+
+msgctxt "Inventario"
+msgid "Filter movements"
+msgstr "Filtrar movimientos"
+
+msgctxt "Inventario"
+msgid "Filters"
+msgstr "Filtros"
+
+msgctxt "Inventario"
+msgid "Store"
+msgstr "Tienda"
+
+msgctxt "Inventario"
+msgid "Kind of movement"
+msgstr "Tipo de movimiento"
+
+msgctxt "Inventario"
+msgid "Who moved it"
+msgstr "Quién lo movió"
+
+msgctxt "Inventario"
+msgid "From"
+msgstr "Desde"
+
+msgctxt "Inventario"
+msgid "To"
+msgstr "Hasta"
+
+msgctxt "Inventario"
+msgid "Any day"
+msgstr "Cualquier día"
+
+msgctxt "Inventario"
+msgid "Retry"
+msgstr "Reintentar"
+
+msgctxt "Inventario"
+msgid "Loading movements…"
+msgstr "Cargando movimientos…"
+
+msgctxt "Inventario"
+msgid "Time"
+msgstr "Hora"
+
+msgctxt "Inventario"
+msgid "Product"
+msgstr "Producto"
+
+msgctxt "Inventario"
+msgid "Movement"
+msgstr "Movimiento"
+
+msgctxt "Inventario"
+msgid "Quantity"
+msgstr "Cantidad"
+
+msgctxt "Inventario"
+msgid "Balance"
+msgstr "Saldo"
+
+msgctxt "Inventario"
+msgid "Who"
+msgstr "Quién"
+
+msgctxt "Inventario"
+msgid "Unit cost"
+msgstr "Costo unitario"
+
+msgctxt "Inventario"
+msgid "Value"
+msgstr "Valor"
+
+msgctxt "Inventario"
+msgid "captured by {0}"
+msgstr "capturó {0}"
+
+msgctxt "Inventario"
+msgid "See older movements"
+msgstr "Ver movimientos anteriores"
+
+msgctxt "Inventario"
+msgid "Today"
+msgstr "Hoy"
+
+msgctxt "Inventario"
+msgid "7 days"
+msgstr "7 días"
+
+msgctxt "Inventario"
+msgid "In"
+msgstr "Entradas"
+
+msgctxt "Inventario"
+msgid "Out"
+msgstr "Salidas"
+
+msgctxt "Inventario"
+msgid "Adjustments"
+msgstr "Ajustes"
+
+msgctxt "Inventario"
+msgid "All"
+msgstr "Todos"
+
+msgctxt "Inventario"
+msgid "Everyone"
+msgstr "Todas las personas"
+
+msgctxt "Inventario"
+msgid "Movements"
+msgstr "Movimientos"
+
+msgctxt "Inventario"
+msgid "Inventory"
+msgstr "Inventario"
+
+msgctxt "Inventario"
+msgid "Back to the product"
+msgstr "Volver al producto"
+
+msgctxt "Inventario"
+msgid "Back to Productos"
+msgstr "Volver a Productos"
+
+msgctxt "Inventario"
+msgid "You cannot see stock movements"
+msgstr "No puedes ver los movimientos de inventario"
+
+msgctxt "Inventario"
+msgid "Ask your manager for access to the stock ledger."
+msgstr "Pide al encargado acceso a los movimientos de inventario."
+
+msgctxt "Inventario"
+msgid "No movements match"
+msgstr "Ningún movimiento coincide"
+
+msgctxt "Inventario"
+msgid "Try another day or remove a filter."
+msgstr "Prueba otro día o quita un filtro."
+
+msgctxt "Inventario"
+msgid "Show every movement"
+msgstr "Ver todos los movimientos"
+
+msgctxt "Inventario"
+msgid "No movements yet"
+msgstr "Todavía no hay movimientos"
+
+msgctxt "Inventario"
+msgid "Sales, purchases, transfers and adjustments appear here as they are posted."
+msgstr "Aquí aparecen las ventas, compras, traspasos y ajustes en cuanto se registran."
+
+msgctxt "Inventario"
+msgid "We could not load the movements. Check your connection."
+msgstr "No pudimos cargar los movimientos. Revisa tu conexión."
+
+msgctxt "Inventario"
+msgid "to {0}"
+msgstr "a {0}"
+
+msgctxt "Inventario"
+msgid "from {0}"
+msgstr "de {0}"
+
+msgctxt "Inventario"
+msgid "{0} · captured by {1}"
+msgstr "{0} · capturó {1}"
+
+msgctxt "Inventario"
+msgid "{0} left"
+msgstr "quedan {0}"
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "See all movements"
+msgstr "Ver todos los movimientos"
