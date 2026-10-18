@@ -620,30 +620,47 @@
             "
             class="c-relation"
           >
-            <span class="c-type">{{
-              relationLabels[relation.kind] || relation.kind
-            }}</span>
-            <!-- A link reads as the other end, one row you can open; both
-                 names only when neither end is this record. -->
+            <!-- A link reads as the other end, one row you can open: the name,
+                 then «Cliente · Cuenta vinculada» (they ran together as
+                 «ClienteAARON…»). Both names only when neither end is this
+                 record. -->
             <button
               v-if="otherEnd(relation)"
-              class="c-link flex min-h-11 w-full items-center gap-2 text-left"
+              class="c-relation-open flex min-h-11 w-full items-center gap-2 text-left"
               @click="openRelated(otherEnd(relation))"
             >
-              <span class="min-w-0 flex-1"
-                ><small>{{ sourceLabel(otherEnd(relation).doctype) }}</small
-                >{{ otherEnd(relation).title || otherEnd(relation).name }}</span
-              ><FeatherIcon name="chevron-right" class="h-4 w-4 flex-none" />
+              <span class="flex min-w-0 flex-1 flex-col">
+                <span class="text-ink-gray-9">{{
+                  otherEnd(relation).title || otherEnd(relation).name
+                }}</span>
+                <small class="text-ink-gray-6">{{
+                  [
+                    sourceLabel(otherEnd(relation).doctype),
+                    relationLabels[relation.kind] || relation.kind,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                }}</small>
+              </span>
+              <FeatherIcon
+                name="chevron-right"
+                class="h-4 w-4 flex-none text-ink-gray-5"
+              />
             </button>
-            <div v-else class="c-relation-endpoints">
-              <button class="c-link" @click="openRelated(relation.left)">
-                <small>{{ sourceLabel(relation.left?.doctype) }}</small
-                >{{ relation.left?.title || relation.left?.name }}</button
-              ><button class="c-link" @click="openRelated(relation.right)">
-                <small>{{ sourceLabel(relation.right?.doctype) }}</small
-                >{{ relation.right?.title || relation.right?.name }}
-              </button>
-            </div>
+            <template v-else>
+              <span class="c-type">{{
+                relationLabels[relation.kind] || relation.kind
+              }}</span>
+              <div class="c-relation-endpoints">
+                <button class="c-link" @click="openRelated(relation.left)">
+                  <small>{{ sourceLabel(relation.left?.doctype) }}</small
+                  >{{ relation.left?.title || relation.left?.name }}</button
+                ><button class="c-link" @click="openRelated(relation.right)">
+                  <small>{{ sourceLabel(relation.right?.doctype) }}</small
+                  >{{ relation.right?.title || relation.right?.name }}
+                </button>
+              </div>
+            </template>
             <Button
               v-if="record.capabilities?.write && !relation.native"
               class="c-inline-action"
