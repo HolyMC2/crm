@@ -15,6 +15,7 @@ import { call } from 'frappe-ui'
 import {
   firstRecordLink,
   isProgress,
+  mergeHistory,
   newClientId,
   normalizeRow,
 } from './assistantText'
@@ -102,16 +103,10 @@ export function loadStatus({ refresh = false } = {}) {
 export async function loadHistory() {
   try {
     const rows = await call(`${ASSISTANT_API}.history`, { limit: 40 })
-    // A row this page already shows live keeps its live copy: doco's
-    // history cannot replay an answer (it writes «Este resultado necesita una
-    // consulta nueva…» instead), so a reconnect or a route change would turn
-    // a confirmed card and its receipt into that line (SHELL-S2c walk, dock).
-    const live = new Map(
-      assistant.messages.filter((m) => m.mid).map((m) => [m.mid, m]),
+    const known = mergeHistory(
+      (rows || []).map(normalizeRow),
+      assistant.messages,
     )
-    const known = (rows || [])
-      .map(normalizeRow)
-      .map((row) => (row.stale && live.get(row.mid)) || row)
     // Sends the server has not logged yet stay at the end.
     const unsent = assistant.messages.filter(
       (m) => m.role === 'user' && (m.pending || m.failed),

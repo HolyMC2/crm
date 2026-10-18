@@ -22,6 +22,7 @@ import {
   chipsFor,
   inlineParts,
   looksLikeQuestion,
+  mergeHistory,
   proseBlocks,
   visibleMessages,
   proseOf,
@@ -430,6 +431,34 @@ describe('the conversation', () => {
     expect(assistant.messages).toHaveLength(1)
     expect(assistant.messages[0].buttons).toHaveLength(1)
     expect(assistant.messages[0].stale).toBeFalsy()
+  })
+
+  it('a reload keeps a live card the history leaves out, and its receipt', () => {
+    const live = [
+      { id: 'u1', mid: 'u1', role: 'user', text: 'Mañana a las 10' },
+      {
+        id: 'c1',
+        mid: 'c1',
+        role: 'bot',
+        text: '1. Pendiente',
+        buttons: [[{}]],
+      },
+      {
+        id: 'r1',
+        mid: 'r1',
+        role: 'bot',
+        text: 'Creado /app/todo/T',
+        receiptOf: 'agr:R:p:a',
+      },
+    ]
+    const rows = [
+      { id: 'u1', mid: 'u1', role: 'user', text: 'Mañana a las 10' },
+      { id: 'n1', mid: 'n1', role: 'bot', text: 'Listo, dejé el pendiente' },
+      { id: 'r1', mid: 'r1', role: 'bot', text: 'Creado /app/todo/T' },
+    ]
+    const merged = mergeHistory(rows, live)
+    expect(merged.map((m) => m.mid)).toEqual(['u1', 'c1', 'n1', 'r1'])
+    expect(merged[3].receiptOf).toBe('agr:R:p:a')
   })
 
   it('a failed send says so and keeps the text', async () => {

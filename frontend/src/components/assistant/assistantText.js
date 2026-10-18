@@ -389,6 +389,39 @@ export function isServiceDown(text) {
   return DOWN.some((pattern) => pattern.test(String(text || '')))
 }
 
+/**
+ * History rows merged with what this page saw live. doco's history cannot
+ * replay an answer: it writes «Este resultado necesita una consulta nueva…» in
+ * its place, or leaves an action card's row out. So a reload (reconnect, a
+ * route change with the dock open) keeps the live copy of a row it has, keeps
+ * a live action card it lacks after the row it followed, and keeps which card
+ * a receipt belongs to (SHELL-S2c walk: the 1440 return lost its card).
+ */
+export function mergeHistory(rows, live) {
+  const seen = new Map((live || []).filter((m) => m.mid).map((m) => [m.mid, m]))
+  const out = rows.map((row) => {
+    const mine = seen.get(row.mid)
+    if (!mine) return row
+    if (row.stale) return mine
+    return mine.receiptOf ? { ...row, receiptOf: mine.receiptOf } : row
+  })
+  const have = new Set(out.map((m) => m.mid).filter(Boolean))
+  let after = null
+  for (const message of live || []) {
+    if (!message.mid) continue
+    if (have.has(message.mid)) {
+      after = message.mid
+      continue
+    }
+    if (message.role !== 'bot' || !message.buttons?.length) continue
+    const at = after ? out.findIndex((m) => m.mid === after) + 1 : 0
+    out.splice(at, 0, message)
+    have.add(message.mid)
+    after = message.mid
+  }
+  return out
+}
+
 export function normalizeRow(row) {
   const bot = row.kind === 'bot' || row.kind === 'answer'
   const text = row.message ?? row.text ?? ''
