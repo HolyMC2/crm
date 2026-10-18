@@ -333,7 +333,7 @@ describe('entry points', () => {
   it('a submitted bill with a balance captures its payment receipt', () => {
     const text = button('pages/GastoFactura.vue')
     expect(text).toMatch(
-      /<CapturarDocumentoButton\s+v-if="\s*Number\(doc\.docstatus\) === 1 &&\s*Number\(doc\.outstanding_amount \|\| 0\) > 0\s*"\s*:label="__\('Capture payment receipt'\)"\s*:targets="\['Payment Entry'\]"\s*:invoice="props\.name"\s*:return-label="props\.name"/,
+      /<CapturarDocumentoButton\s+v-if="\s*Number\(doc\.docstatus\) === 1 &&\s*Number\(doc\.outstanding_amount \|\| 0\) > 0\s*"\s*:label="__\('Capture receipt'\)"\s*:targets="\['Payment Entry'\]"\s*:invoice="props\.name"\s*:return-label="props\.name"/,
     )
   })
   it('the pay sheet offers the receipt capture for this bill', () => {

@@ -202,7 +202,7 @@
                 Number(doc.docstatus) === 1 &&
                 Number(doc.outstanding_amount || 0) > 0
               "
-              :label="__('Capture payment receipt')"
+              :label="__('Capture receipt')"
               :targets="['Payment Entry']"
               :invoice="props.name"
               :return-label="props.name"

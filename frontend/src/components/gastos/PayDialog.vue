@@ -200,7 +200,7 @@
   <CapturarDocumentoButton
     v-model:open="captureOpen"
     :trigger="false"
-    :label="__('Capture payment receipt')"
+    :label="__('Capture receipt')"
     :targets="['Payment Entry']"
     :invoice="name"
   />

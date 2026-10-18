@@ -13079,9 +13079,10 @@ msgstr "Póliza"
 msgid "Capture document"
 msgstr "Capturar documento"
 
+#: frontend/src/components/gastos/PayDialog.vue
 #: frontend/src/pages/GastoFactura.vue
-msgid "Capture payment receipt"
-msgstr "Capturar comprobante de pago"
+msgid "Capture receipt"
+msgstr "Capturar comprobante"
 
 #: frontend/src/components/gastos/PayDialog.vue
 msgid "Already paid by transfer? Upload the receipt"
