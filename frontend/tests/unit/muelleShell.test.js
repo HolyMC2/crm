@@ -26,7 +26,7 @@ vi.mock('frappe-ui', async () => {
 vi.mock('@/composables/breakpoint', async () => {
   const { ref } = await import('vue')
   state.mobile = ref(false)
-  return { isMobile: state.mobile }
+  return { isMobile: state.mobile, isNarrow: state.mobile }
 })
 vi.mock('@/stores/session', () => ({
   sessionStore: () => ({ logout: { submit: vi.fn() } }),

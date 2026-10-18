@@ -35,10 +35,21 @@ export const VENTAS_SECTIONS = Object.freeze({
 const LABELS = { leads: 'Lead list' }
 // Manager views besides the whole «Configuración» section.
 const MANAGER_ONLY = new Set(['workload', ...VENTAS_SECTIONS.settings])
-// Set-up screens built for a desk (Shell D3): below 768px Más leaves them out
-// and their routes show «Ábrelo en una computadora». «Lista de leads» too: on
-// a phone /leads opens Prospectos (SHELL-S4.3).
-export const DESKTOP_ONLY = new Set(['leads', ...VENTAS_SECTIONS.settings])
+// Screens built for a desk (Shell SPEC D3, an explicit list: not a section):
+// below 768px Más leaves them out and their routes show «Ábrelo en una
+// computadora». Dashboard's numbers fold into Resultados on a phone; «Lista
+// de leads» opens Prospectos there (SHELL-S4.3). The Forms list stays on a
+// phone (S4 reworked it); only its builder (/forms/:formId) is desk-only.
+export const DESKTOP_ONLY = new Set([
+  'leads',
+  'dashboard',
+  'campaigns',
+  'social',
+  'automations',
+  'chatflows',
+  'score-rules',
+  'webshop',
+])
 // Shell-module entries never shown inside Ventas.
 const NOT_IN_VENTAS = new Set(['contactos', 'calendar'])
 

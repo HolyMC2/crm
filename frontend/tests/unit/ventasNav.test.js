@@ -17,9 +17,8 @@ vi.mock('@/utils/crmCapabilities', () => ({
   navItemVisible: () => true,
 }))
 
-const { VENTAS_SECTIONS, ventasSection, ventasSectionOf } = await import(
-  '@/composables/ventasNav'
-)
+const { DESKTOP_ONLY, VENTAS_SECTIONS, ventasSection, ventasSectionOf } =
+  await import('@/composables/ventasNav')
 const { navItems, navItemsBottom, navItemAllowed } = await import(
   '@/composables/navModel'
 )
@@ -118,20 +117,38 @@ describe('legacy screens (Shell D3, S1.3)', () => {
       .filter((item) => item.desktopOnly)
       .map((item) => item.key)
     expect(flagged).toEqual([
+      'dashboard',
       'leads',
       'campaigns',
-      'forms',
       'social',
       'automations',
       'score-rules',
       'webshop',
     ])
+    // Pinned to SPEC D3: Dashboard, Campaigns, Social, Automations, Chatflows,
+    // Score rules, Webshop, the Form builder (route only) and «Lista de leads».
+    expect([...DESKTOP_ONLY].sort()).toEqual(
+      [
+        'automations',
+        'campaigns',
+        'chatflows',
+        'dashboard',
+        'leads',
+        'score-rules',
+        'social',
+        'webshop',
+      ].sort(),
+    )
+    // D3 keeps these on a phone, reworked.
+    for (const key of ['forms', 'reports', 'funnel', 'workload', 'calls'])
+      expect(DESKTOP_ONLY.has(key), key).toBe(false)
+    expect(routeBlock('/forms')).not.toMatch(/desktopOnly/)
     expect(ventasSection('daily').some((item) => item.desktopOnly)).toBe(false)
     for (const path of [
+      '/dashboard',
       '/campaigns',
       '/campaigns/:campaignId',
       '/chatflows',
-      '/forms',
       '/forms/:formId',
       '/automations',
       '/score-rules',
@@ -176,5 +193,9 @@ describe('legacy screens (Shell D3, S1.3)', () => {
       '/call-logs',
       '/reports',
     ])
+    // Dashboard is desk-only (D3): the palette offers it only from 768px.
+    expect(
+      VENTAS_PLACES.filter(([, , , deskOnly]) => deskOnly).map(([p]) => p),
+    ).toEqual(['/dashboard'])
   })
 })

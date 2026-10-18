@@ -33,6 +33,6 @@ const router = useRouter()
 
 function goBack() {
   if (window.history.state?.back) router.back()
-  else router.replace('/deals')
+  else router.replace({ name: 'Home' })
 }
 </script>

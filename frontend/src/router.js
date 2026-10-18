@@ -385,7 +385,8 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/pages/Dashboard.vue'),
-    meta: { title: 'Dashboard' },
+    // Shell D3: desk-only; on a phone its numbers live in Resultados.
+    meta: { desktopOnly: true, title: 'Dashboard' },
   },
   {
     // CRM-S3.4 (D4): leads and inquiries in one capture list.
@@ -594,8 +595,8 @@ const routes = [
     path: '/forms',
     name: 'Forms',
     component: () => import('@/pages/Forms.vue'),
+    // Shell D3: the list stays on a phone (S4); the builder is desk-only.
     meta: {
-      desktopOnly: true,
       navLabel: 'Forms',
       title: 'Forms',
       managerOnly: true,
@@ -627,7 +628,12 @@ const routes = [
     path: '/chatflows',
     name: 'Chatflows',
     component: () => import('@/pages/Chatflows.vue'),
-    meta: { desktopOnly: true, navLabel: 'Campaigns', title: 'Chatflows' },
+    // The page's own name (Chatflows.vue), not «Flujos de chat».
+    meta: {
+      desktopOnly: true,
+      navLabel: 'Campaigns',
+      title: 'Flujos de bot',
+    },
   },
   {
     path: '/tasks',

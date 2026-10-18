@@ -9,6 +9,7 @@ import {
 } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
 import { ventasSection } from '@/composables/ventasSections'
+import { isNarrow } from '@/composables/breakpoint'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
 import { createTargets } from '@/utils/shellCreate'
 import { recordActions } from '@/composables/recordActions'
@@ -136,12 +137,12 @@ const PLACE_ICONS = {
   calls: 'lucide-phone',
   reports: 'lucide-bar-chart-3',
 }
+// The 4th field marks a desk-only place (Dashboard, Shell D3): the palette
+// leaves it out below 768px, where its route says «Ábrelo en una computadora».
 export const VENTAS_PLACES = ['daily', 'more']
   .flatMap(ventasSection)
-  .filter(
-    (item) => !item.managerOnly && !item.desktopOnly && PLACE_ICONS[item.key],
-  )
-  .map((item) => [item.to, item.label, PLACE_ICONS[item.key]])
+  .filter((item) => !item.managerOnly && PLACE_ICONS[item.key])
+  .map((item) => [item.to, item.label, PLACE_ICONS[item.key], item.desktopOnly])
 
 /** An action of the record on screen as a palette row (CommandPalette runs it). */
 export function recordItem(action) {
@@ -397,14 +398,15 @@ export function createShellProviders({ boot, modules }) {
             external: path,
           })
       if (moduleEnabled(boot.value, 'ventas'))
-        for (const [path, label, icon] of VENTAS_PLACES)
-          items.push({
-            id: `ventas.${path}`,
-            group: 'ir_a',
-            title: `Ventas › ${__(label)}`,
-            icon,
-            href: path,
-          })
+        for (const [path, label, icon, deskOnly] of VENTAS_PLACES)
+          if (!(deskOnly && isNarrow.value))
+            items.push({
+              id: `ventas.${path}`,
+              group: 'ir_a',
+              title: `Ventas › ${__(label)}`,
+              icon,
+              href: path,
+            })
       return items.filter((item) =>
         match(query.text, item.title, item.keywords),
       )
