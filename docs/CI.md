@@ -152,11 +152,18 @@ for the native suite.
   rest of the app graph), the shell contracts registry copied next to CRM, then only
   those modules. It uses `SHELL_CI_IMAGE` in `server-tests.yml`, a newer
   `doco-bench` release digest than `CRM_CI_IMAGE`: the audited Server image predates
-  the doco services the shell boots from, so about forty shell tests skip there. The
-  job summary lists what still skips; bump the digest when the shell needs a newer
-  doco. doco is private and crm is public, so the job cannot clone doco's mainline
-  (no read token in this repository, and the self-hosted runner never serves public
-  repositories).
+  the doco services the shell boots from, so 40 shell tests skip there (run
+  39161222934). The job summary counts passed, failed and skipped tests. doco is
+  private and crm is public: the job cannot clone doco's mainline without a read
+  token, and the self-hosted runner never serves public repositories. Marco chose
+  (2026-10-18) the image only, with no token: bump `SHELL_CI_IMAGE` to the newest
+  `doco-bench` release digest after each release.
+- **The Shell APIs job is advisory for now.** On the all-lanes-20261014 image its
+  doco reads `Employee.leave_approver` without HRMS, and 55 of the 72 shell tests
+  error on it (run 39166087010); doco fixed it afterwards (6e8b250). Until a release
+  image carries that fix, the job has `continue-on-error` and the Server gate passes
+  `shell=…:advisory` (reported, never failing). To make it gate: bump the digest, see
+  the job green, then drop both.
 
 ## Gates
 

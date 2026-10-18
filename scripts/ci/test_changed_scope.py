@@ -188,6 +188,13 @@ class GateTests(unittest.TestCase):
 	def test_a_failed_skippable_job_still_fails(self):
 		self.assertFalse(gate.verdict(["test=failure:false"])[0])
 
+	def test_an_advisory_job_is_reported_but_never_fails_the_gate(self):
+		ok, lines = gate.verdict(["changes=success", "shell=failure:true:advisory"])
+		self.assertTrue(ok)
+		self.assertTrue(lines[1].startswith("warn shell: failure"))
+		self.assertTrue(gate.verdict(["shell=skipped:false:advisory"])[0])
+		self.assertFalse(gate.verdict(["changes=failure", "shell=success:true:advisory"])[0])
+
 	def test_no_jobs_is_not_green(self):
 		self.assertFalse(gate.verdict([])[0])
 
