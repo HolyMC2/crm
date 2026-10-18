@@ -249,6 +249,11 @@ describe('what a reply says', () => {
       { text: ': $1,500' },
     ])
     expect(inlineParts('2 ** 3 y **')).toEqual([{ text: '2 ** 3 y **' }])
+    expect(inlineParts('lo puso como *Refacciones S26*, pero 2*3*4')).toEqual([
+      { text: 'lo puso como ' },
+      { text: 'Refacciones S26', em: true },
+      { text: ', pero 2*3*4' },
+    ])
     const blocks = proseBlocks(
       [
         '### Pagos vencidos',

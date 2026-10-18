@@ -19,6 +19,7 @@
     ><strong v-else-if="part.strong" class="font-semibold">{{
       part.text
     }}</strong
+    ><em v-else-if="part.em">{{ part.text }}</em
     ><template v-else>{{ part.text }}</template></template
   >
 </template>

@@ -102,8 +102,18 @@ export function inlineParts(text) {
     .split(/\*\*(?=\S)(.+?\S)\*\*/g)
     .forEach((piece, i) => {
       if (!piece) return
-      for (const part of textParts(piece))
-        parts.push(i % 2 && !part.href ? { ...part, strong: true } : part)
+      // *a name* is emphasis: shown without its asterisks
+      piece
+        .split(/(?<![*\w])\*(?=[^\s*])([^*\n]*?[^\s*])\*(?![*\w])/g)
+        .forEach((bit, j) => {
+          if (!bit) return
+          for (const part of textParts(bit)) {
+            if (part.href) parts.push(part)
+            else if (i % 2) parts.push({ ...part, strong: true })
+            else if (j % 2) parts.push({ ...part, em: true })
+            else parts.push(part)
+          }
+        })
     })
   return parts
 }

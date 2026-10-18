@@ -10,7 +10,7 @@
     data-testid="assistant-log"
   >
     <p
-      v-if="hidden"
+      v-if="hidden && shown.length"
       class="text-center text-sm text-ink-gray-5"
       data-testid="assistant-hidden"
     >
