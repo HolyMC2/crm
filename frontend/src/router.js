@@ -45,6 +45,12 @@ const UI_LAB =
   import.meta.env.DEV ||
   /\.lab\./.test(globalThis.window?.location?.hostname || '')
 
+// A retired screen that lives in Desk now: leave the SPA for it.
+function toDesk(href) {
+  window.location.assign(href)
+  return false
+}
+
 const routes = [
   // Ventas module home in the Muelle shell (contracts basePath).
   { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
@@ -397,8 +403,14 @@ const routes = [
     meta: { title: 'Prospectos', ownPhoneHeader: true },
   },
   {
+    // Shell D3: the Consultas list is retired into Prospectos; an inquiry
+    // link (?name=…, from Prospectos or Social) still opens it here.
     path: '/inquiries',
     name: 'Inquiries',
+    beforeEnter: (to) =>
+      to.query.name
+        ? true
+        : { path: '/prospectos', query: { tipo: 'inquiry' }, replace: true },
     component: () => import('@/pages/Inquiries.vue'),
     meta: { navLabel: 'Consultas', title: 'Consultas' },
   },
@@ -488,32 +500,35 @@ const routes = [
       },
     }),
   },
+  // Shell D3: data import and the welcome page are retired. Imports live in
+  // Desk (the list views' «Importar» opens it there); /welcome opens Hoy.
   {
     path: '/data-import',
     name: 'DataImportList',
-    component: () => import('@/pages/DataImport.vue'),
+    beforeEnter: () => toDesk('/desk/data-import'),
+    component: { render: () => null },
     meta: { title: 'Data Import' },
   },
   {
     path: '/data-import/doctype/:doctype',
     name: 'NewDataImport',
-    component: () => import('@/pages/DataImport.vue'),
-    props: true,
+    beforeEnter: (to) =>
+      toDesk(
+        '/desk/data-import/new?reference_doctype=' +
+          encodeURIComponent(to.params.doctype),
+      ),
+    component: { render: () => null },
     meta: { title: 'Data Import' },
   },
   {
     path: '/data-import/:importName',
     name: 'DataImport',
-    component: () => import('@/pages/DataImport.vue'),
-    props: true,
+    beforeEnter: (to) =>
+      toDesk('/desk/data-import/' + encodeURIComponent(to.params.importName)),
+    component: { render: () => null },
     meta: { title: 'Data Import' },
   },
-  {
-    path: '/welcome',
-    name: 'Welcome',
-    component: () => import('@/pages/Welcome.vue'),
-    meta: { title: 'Welcome' },
-  },
+  { path: '/welcome', name: 'Welcome', redirect: '/hoy' },
   // ── FCRM redesign surfaces (handoff §4.1). Placeholder component until each
   //    phase ships its real page; meta drives the nav-rail label + back label.
   {
@@ -565,39 +580,53 @@ const routes = [
     path: '/campaigns',
     name: 'Campaigns',
     component: () => import('@/pages/Campaigns.vue'),
-    meta: { navLabel: 'Campaigns', title: 'Campaigns' },
+    meta: { desktopOnly: true, navLabel: 'Campaigns', title: 'Campaigns' },
   },
   {
     path: '/campaigns/:campaignId',
     name: 'Campaign',
     component: () => import('@/pages/CampaignDetail.vue'),
     props: true,
-    meta: { navLabel: 'Campaigns', title: 'Campaign' },
+    meta: { desktopOnly: true, navLabel: 'Campaigns', title: 'Campaign' },
   },
   {
     path: '/forms',
     name: 'Forms',
     component: () => import('@/pages/Forms.vue'),
-    meta: { navLabel: 'Forms', title: 'Forms', managerOnly: true },
+    meta: {
+      desktopOnly: true,
+      navLabel: 'Forms',
+      title: 'Forms',
+      managerOnly: true,
+    },
   },
   {
     path: '/forms/:formId',
     name: 'Form',
     component: () => import('@/pages/FormBuilder.vue'),
     props: true,
-    meta: { navLabel: 'Forms', title: 'Form', managerOnly: true },
+    meta: {
+      desktopOnly: true,
+      navLabel: 'Forms',
+      title: 'Form',
+      managerOnly: true,
+    },
   },
   {
     path: '/automations',
     name: 'Automations',
     component: () => import('@/pages/AutomationWorkspace.vue'),
-    meta: { navLabel: 'Automations', title: 'Sales automations' },
+    meta: {
+      desktopOnly: true,
+      navLabel: 'Automations',
+      title: 'Sales automations',
+    },
   },
   {
     path: '/chatflows',
     name: 'Chatflows',
     component: () => import('@/pages/Chatflows.vue'),
-    meta: { navLabel: 'Campaigns', title: 'Chatflows' },
+    meta: { desktopOnly: true, navLabel: 'Campaigns', title: 'Chatflows' },
   },
   {
     path: '/tasks',
@@ -626,13 +655,13 @@ const routes = [
     path: '/score-rules',
     name: 'Score Rules',
     component: () => import('@/pages/ScoreRules.vue'),
-    meta: { navLabel: 'Score Rules', title: 'Score Rules' },
+    meta: { desktopOnly: true, navLabel: 'Score Rules', title: 'Score Rules' },
   },
   {
     path: '/webshop',
     name: 'Webshop',
     component: () => import('@/pages/Webshop.vue'),
-    meta: { navLabel: 'Webshop', title: 'Webshop' },
+    meta: { desktopOnly: true, navLabel: 'Webshop', title: 'Webshop' },
   },
   {
     path: '/whatsapp-queue',
@@ -644,19 +673,23 @@ const routes = [
     path: '/social',
     name: 'Social',
     component: () => import('@/pages/SocialCalendar.vue'),
-    meta: { navLabel: 'Social', title: 'Social' },
+    meta: { desktopOnly: true, navLabel: 'Social', title: 'Social' },
   },
   {
     path: '/social/evergreen',
     name: 'Social Evergreen',
     component: () => import('@/pages/SocialEvergreen.vue'),
-    meta: { navLabel: 'Social', title: 'Biblioteca evergreen' },
+    meta: {
+      desktopOnly: true,
+      navLabel: 'Social',
+      title: 'Biblioteca evergreen',
+    },
   },
   {
     path: '/social/mentions',
     name: 'Social Mentions',
     component: () => import('@/pages/SocialMentions.vue'),
-    meta: { navLabel: 'Social', title: 'Menciones' },
+    meta: { desktopOnly: true, navLabel: 'Social', title: 'Menciones' },
   },
   {
     path: '/onboarding',

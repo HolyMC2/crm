@@ -32,8 +32,6 @@ const STATIC_ROUTES = [
   '/call-logs',
   '/call-logs/view/list',
   '/calendar',
-  '/data-import',
-  '/welcome',
   '/inbox',
   '/pipeline-analysis',
   '/campaigns',

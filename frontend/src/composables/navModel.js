@@ -1,8 +1,6 @@
-// Single source of truth for the FCRM redesign primary nav. Rendered by BOTH the
-// desktop DocoNavRail (58px icon rail) and the mobile drawer (MobileSidebar), so the
-// two never drift — the mobile sidebar was missing Inbox + the new surfaces because
-// it had its own hardcoded list. `to` is a PATH: DocoNavRail does router.push(path),
-// MobileSidebar wraps it as { path } in its own go().
+// Single source of truth for the Ventas nav entries: the shell's Ventas
+// sidebar and phone «Más» (composables/ventasSections.js) and the palette's
+// places read them. `to` is a path.
 import DashboardIcon from '~icons/lucide/layout-dashboard'
 import LeadsIcon from '~icons/lucide/users'
 import DealsIcon from '~icons/lucide/handshake'
@@ -20,7 +18,6 @@ import ScoreRulesIcon from '~icons/lucide/sliders-horizontal'
 import WebshopIcon from '~icons/lucide/shopping-cart'
 import WorkloadIcon from '~icons/lucide/scale'
 import AutomationsIcon from '~icons/lucide/workflow'
-import InquiriesIcon from '~icons/lucide/message-square-plus'
 import ProspectosIcon from '~icons/lucide/user-plus'
 import MercadoIcon from '~icons/lucide/tag'
 import TallerIcon from '~icons/lucide/wrench'
@@ -56,13 +53,6 @@ export const navItems = [
     label: 'Leads',
     to: '/leads',
     group: 'leads',
-  },
-  {
-    key: 'inquiries',
-    icon: InquiriesIcon,
-    label: 'Consultas',
-    to: '/inquiries',
-    group: 'inquiries',
   },
   {
     key: 'inbox',
@@ -194,8 +184,8 @@ export function routeGroup(path) {
   if (/^\/(contactos|contacts|organizations)(\/|$)/.test(path))
     return 'contactos'
   if (/^\/automations(\/|$)/.test(path)) return 'automations'
-  if (/^\/inquiries(\/|$)/.test(path)) return 'inquiries'
-  if (/^\/prospectos(\/|$)/.test(path)) return 'prospectos'
+  // An inquiry opens from Prospectos (the list is retired, Shell D3).
+  if (/^\/(prospectos|inquiries)(\/|$)/.test(path)) return 'prospectos'
   if (/^\/inbox(\/|$)/.test(path)) return 'inbox'
   // «Por aprobar» is an Inbox space; its standalone page lights the Inbox entry.
   if (/^\/whatsapp-queue(\/|$)/.test(path)) return 'inbox'

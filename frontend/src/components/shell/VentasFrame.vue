@@ -28,7 +28,7 @@
 import { isMobile } from '@/composables/breakpoint'
 import AppHeader from '@/components/Layouts/AppHeader.vue'
 import GlobalModals from '@/components/Modals/GlobalModals.vue'
-import OutboxStrip from '@/components/Mobile/OutboxStrip.vue'
+import OutboxStrip from '@/components/shell/OutboxStrip.vue'
 import CallUI from '@/components/Telephony/CallUI.vue'
 import VentasSidebar from './VentasSidebar.vue'
 </script>

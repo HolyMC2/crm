@@ -148,19 +148,10 @@ vi.mock('@/components/shell/VentasSidebar.vue', () => ({
 vi.mock('@/components/Layouts/AppHeader.vue', () => ({
   default: { render: () => null },
 }))
-vi.mock('@/components/Mobile/MobileSidebar.vue', () => ({
-  default: { render: () => h('nav', { 'data-native-layout': 'mobile' }) },
-}))
-vi.mock('@/components/Mobile/MobileAppHeader.vue', () => ({
-  default: { render: () => null },
-}))
-vi.mock('@/components/Mobile/MobileTabBar.vue', () => ({
-  default: { render: () => null },
-}))
 vi.mock('@/components/Telephony/CallUI.vue', () => ({
   default: { render: () => null },
 }))
-vi.mock('@/components/Mobile/OutboxStrip.vue', () => ({
+vi.mock('@/components/shell/OutboxStrip.vue', () => ({
   default: { render: () => h('nav', { 'data-native-layout': 'mobile' }) },
 }))
 vi.mock('@/composables/installNudge', async () => {

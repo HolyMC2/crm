@@ -103,3 +103,77 @@ describe('Ventas navigation (S5.1)', () => {
     expect(catalog.get('Deals')).toBe('Tratos')
   })
 })
+
+describe('legacy screens (Shell D3, S1.3)', () => {
+  const router = readFileSync(resolve(here, '../../src/router.js'), 'utf8')
+  const routeBlock = (path) => {
+    const start = router.indexOf(`path: '${path}',`)
+    expect(start, path).toBeGreaterThan(-1)
+    return router.slice(start, router.indexOf('\n  },', start))
+  }
+
+  it('desk-only set-up screens are flagged in Más and on their routes', () => {
+    const flagged = ['more', 'settings']
+      .flatMap((section) => ventasSection(section))
+      .filter((item) => item.desktopOnly)
+      .map((item) => item.key)
+    expect(flagged).toEqual([
+      'leads',
+      'campaigns',
+      'forms',
+      'social',
+      'automations',
+      'score-rules',
+      'webshop',
+    ])
+    expect(ventasSection('daily').some((item) => item.desktopOnly)).toBe(false)
+    for (const path of [
+      '/campaigns',
+      '/campaigns/:campaignId',
+      '/chatflows',
+      '/forms',
+      '/forms/:formId',
+      '/automations',
+      '/score-rules',
+      '/webshop',
+      '/social',
+      '/social/evergreen',
+      '/social/mentions',
+    ])
+      expect(routeBlock(path), path).toMatch(/desktopOnly: true/)
+  })
+
+  it('the Consultas list, data import and the welcome page are retired', () => {
+    expect(Object.values(VENTAS_SECTIONS).flat()).not.toContain('inquiries')
+    expect([...navItems, ...navItemsBottom].map((i) => i.key)).not.toContain(
+      'inquiries',
+    )
+    // A bare /inquiries opens Prospectos › Consultas; ?name= still opens one.
+    expect(routeBlock('/inquiries')).toMatch(
+      /to\.query\.name\s*\? true\s*: \{ path: '\/prospectos', query: \{ tipo: 'inquiry' \}/,
+    )
+    expect(router).toMatch(
+      /\{ path: '\/welcome', name: 'Welcome', redirect: '\/hoy' \}/,
+    )
+    for (const path of [
+      '/data-import',
+      '/data-import/doctype/:doctype',
+      '/data-import/:importName',
+    ])
+      expect(routeBlock(path), path).toMatch(/toDesk\(/)
+    expect(router).not.toMatch(/pages\/(Welcome|DataImport)\.vue/)
+  })
+
+  it('the palette jumps to the Ventas lists from VENTAS_SECTIONS, never a retired one', async () => {
+    vi.doMock('@/composables/useContactos', () => ({ contactosApi: vi.fn() }))
+    const { VENTAS_PLACES } = await import('@/utils/shellPalette')
+    expect(VENTAS_PLACES.map(([path]) => path)).toEqual([
+      '/deals',
+      '/prospectos',
+      '/inbox',
+      '/dashboard',
+      '/call-logs',
+      '/reports',
+    ])
+  })
+})

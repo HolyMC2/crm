@@ -1,12 +1,13 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createResource } from 'frappe-ui'
+import { navItemAllowed, routeGroup } from '@/composables/navModel'
+import { isNarrow } from '@/composables/breakpoint'
 import {
-  navItemAllowed,
-  navItems,
-  navItemsBottom,
-  routeGroup,
-} from '@/composables/navModel'
+  DESKTOP_ONLY,
+  VENTAS_SECTIONS,
+  ventasSection,
+} from '@/composables/ventasSections'
 import { usersStore } from '@/stores/users'
 import {
   addonAvailable,
@@ -25,54 +26,7 @@ const badges = createResource({
   auto: false,
 })
 
-// Keys of navModel entries, in order. «Prospectos» (CRM-S3.4, D4) is leads and
-// inquiries in one list; their own lists stay under «Más».
-export const VENTAS_SECTIONS = Object.freeze({
-  daily: ['deals', 'prospectos', 'inbox'],
-  more: [
-    'dashboard',
-    'leads',
-    'inquiries',
-    'tasks',
-    'calls',
-    'reports',
-    'funnel',
-    'workload',
-  ],
-  settings: [
-    'campaigns',
-    'forms',
-    'social',
-    'automations',
-    'score-rules',
-    'webshop',
-  ],
-})
-
-// Labels that differ from navModel's (English source, es-MX in crm/locale/es.po).
-// Inbox keeps «Bandeja de entrada», the page's own title: its «Conversaciones»
-// tab is one of the two spaces inside it.
-// «Leads» reads «Prospectos» in es-MX, the daily list's name: the old leads
-// list under «Más» says «Lista de leads».
-const LABELS = { leads: 'Lead list' }
-// Manager views besides the whole «Configuración» section.
-const MANAGER_ONLY = new Set(['workload', ...VENTAS_SECTIONS.settings])
-// Shell-module entries never shown inside Ventas.
-const NOT_IN_VENTAS = new Set(['contactos', 'calendar'])
-
-const ALL = [...navItems, ...navItemsBottom]
-
-/** navModel entries of one section, with the Ventas label and role gate. */
-export function ventasSection(section) {
-  return VENTAS_SECTIONS[section]
-    .map((key) => ALL.find((item) => item.key === key))
-    .filter((item) => item && !NOT_IN_VENTAS.has(item.key))
-    .map((item) => ({
-      ...item,
-      label: LABELS[item.key] || item.label,
-      managerOnly: item.managerOnly || MANAGER_ONLY.has(item.key),
-    }))
-}
+export { DESKTOP_ONLY, VENTAS_SECTIONS, ventasSection }
 
 /** The section that holds `path` («daily», «more», «settings») or ''. */
 export function ventasSectionOf(path) {
@@ -111,7 +65,8 @@ export function useVentasNav() {
     items.filter(
       (item) =>
         navItemVisible(router.resolve(item.to).name, addonAvailable.value) &&
-        navItemAllowed(item, { isManager: isManager() }),
+        navItemAllowed(item, { isManager: isManager() }) &&
+        !(item.desktopOnly && isNarrow.value),
     )
   watch(addonAvailable, (ok) => ok && badges.fetch(), { immediate: true })
   const primary = computed(() => visible(ventasSection('daily')))

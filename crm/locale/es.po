@@ -26498,3 +26498,11 @@ msgstr "Pedir a un encargado"
 msgctxt "Cobranza"
 msgid "Switch on"
 msgstr "Encender"
+
+#: frontend/src/components/shell/DesktopOnly.vue
+msgid "Open it on a computer"
+msgstr "Ábrelo en una computadora"
+
+#: frontend/src/components/shell/DesktopOnly.vue
+msgid "This section needs a wider screen. Open Muelle on a computer to use it."
+msgstr "Esta sección necesita una pantalla más ancha. Abre Muelle en una computadora para usarla."

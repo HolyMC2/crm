@@ -99,16 +99,10 @@ vi.mock('@/components/shell/MuelleShell.vue', async () => {
 vi.mock('@/components/shell/VentasSidebar.vue', () => ({
   default: { render: () => h('nav', { 'data-testid': 'desktop-rail' }) },
 }))
-vi.mock('@/components/Mobile/MobileSidebar.vue', () => ({
-  default: { render: () => null },
-}))
-vi.mock('@/components/Mobile/MobileTabBar.vue', () => ({
-  default: { render: () => h('nav', { 'data-testid': 'mobile-tabs' }) },
-}))
 vi.mock('@/components/Telephony/CallUI.vue', () => ({
   default: { render: () => null },
 }))
-vi.mock('@/components/Mobile/OutboxStrip.vue', () => ({
+vi.mock('@/components/shell/OutboxStrip.vue', () => ({
   default: { render: () => h('header', { 'data-testid': 'mobile-header' }) },
 }))
 vi.mock('@/components/Controls/Link.vue', () => ({

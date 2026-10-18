@@ -18,7 +18,11 @@
         @click="onboarding.retry()"
       />
     </div>
-    <router-view :key="$route.meta.stableKey ? $route.path : $route.fullPath" />
+    <DesktopOnly v-if="$route.meta.desktopOnly && isNarrow" />
+    <router-view
+      v-else
+      :key="$route.meta.stableKey ? $route.path : $route.fullPath"
+    />
   </Layout>
   <Settings v-if="session.isLoggedIn && showSettings" />
   <IntermediateStepModal
@@ -57,9 +61,15 @@ import { syncBrandFavicon } from '@/stores/settings'
 import { prefetchHotChunks } from '@/utils/prefetch'
 import { initTelemetry } from '@/composables/telemetry'
 import { showSettings } from '@/composables/settings'
+import { isNarrow } from '@/composables/breakpoint'
 // Only for the not-permitted route; most pages never show it.
 const NotPermitted = defineAsyncComponent(
   () => import('@/pages/NotPermitted.vue'),
+)
+// Shell D3: a desk-only set-up screen below 768px says «Ábrelo en una
+// computadora» instead.
+const DesktopOnly = defineAsyncComponent(() =>
+  import('@/components/shell/DesktopOnly.vue').then((m) => m.default),
 )
 const Settings = defineAsyncComponent(
   () => import('@/components/Settings/Settings.vue'),

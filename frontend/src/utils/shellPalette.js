@@ -8,6 +8,7 @@ import {
   safeReturn,
 } from '@/vendor/muelle-shell/contracts'
 import { shellT } from '@/composables/shellKeyboard'
+import { ventasSection } from '@/composables/ventasSections'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
 import { createTargets } from '@/utils/shellCreate'
 import { recordActions } from '@/composables/recordActions'
@@ -123,17 +124,24 @@ const ESCANER_PLACES = [
   ['/scan/inbound', 'Recepción', 'lucide-package-open', 'recibir mercancia'],
   ['/scan/tasks', 'Tareas', 'lucide-square-check-big', 'tareas escaneo'],
 ]
-// The Ventas daily lists first, then the «Más» lists people jump to by name
-// (composables/ventasNav.js VENTAS_SECTIONS). Agenda is its own module.
-const VENTAS_PLACES = [
-  ['/deals', 'Deals', 'lucide-handshake'],
-  ['/prospectos', 'Prospectos', 'lucide-user-plus'],
-  ['/inbox', 'Inbox', 'lucide-messages-square'],
-  ['/inquiries', 'Consultas', 'lucide-message-square-plus'],
-  ['/dashboard', 'Dashboard', 'lucide-layout-dashboard'],
-  ['/reports', 'Reports', 'lucide-bar-chart-3'],
-  ['/call-logs', 'Calls', 'lucide-phone'],
-]
+// The Ventas daily lists first, then the «Más» lists people jump to by name,
+// derived from VENTAS_SECTIONS (composables/ventasSections.js) so the palette
+// never offers a retired list. Not the manager or desk-only screens; Tareas
+// is Pendientes and the funnel needs the add-on, so they have no icon here.
+const PLACE_ICONS = {
+  deals: 'lucide-handshake',
+  prospectos: 'lucide-user-plus',
+  inbox: 'lucide-messages-square',
+  dashboard: 'lucide-layout-dashboard',
+  calls: 'lucide-phone',
+  reports: 'lucide-bar-chart-3',
+}
+export const VENTAS_PLACES = ['daily', 'more']
+  .flatMap(ventasSection)
+  .filter(
+    (item) => !item.managerOnly && !item.desktopOnly && PLACE_ICONS[item.key],
+  )
+  .map((item) => [item.to, item.label, PLACE_ICONS[item.key]])
 
 /** An action of the record on screen as a palette row (CommandPalette runs it). */
 export function recordItem(action) {

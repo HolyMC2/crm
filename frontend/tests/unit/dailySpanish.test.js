@@ -45,7 +45,9 @@ const EXTRA = [
   'utils/shellPalette.js',
   'composables/shellKeyboard.js',
   'composables/ventasNav.js',
+  'composables/ventasSections.js',
   'composables/navModel.js',
+  'components/shell/DesktopOnly.vue',
 ]
 export const DAILY_FILES = [
   ...PAGES,
@@ -244,14 +246,11 @@ export function translationCalls(src) {
 }
 
 // Labels the shell passes to __() at render time: navModel's `label: '…'`
-// and shellPalette's VENTAS_PLACES `['/path', 'Label', icon]`.
+// (shellPalette's VENTAS_PLACES are derived from them).
 const navLabels = (src) =>
-  [
-    ...src.matchAll(/^\s*label: '((?:[^'\\]|\\.)*)'/gm),
-    ...(src.match(/const VENTAS_PLACES = \[[\s\S]*?\n\]/)?.[0] ?? '').matchAll(
-      /\['\/[^']*', '([^']+)'/g,
-    ),
-  ].map((m) => m[1].replace(/\\(.)/g, '$1'))
+  [...src.matchAll(/^\s*label: '((?:[^'\\]|\\.)*)'/gm)].map((m) =>
+    m[1].replace(/\\(.)/g, '$1'),
+  )
 
 const STATIC_ATTRS = new Set([
   'placeholder',
