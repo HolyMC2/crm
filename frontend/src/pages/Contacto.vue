@@ -96,7 +96,7 @@
         screen="contacto"
         :record="record"
         :refs="refs"
-        class="my-3"
+        class="mx-4 mb-4 sm:mx-7"
       />
       <!-- On a phone the actions read like a phone's contact card: the
            follow-up spans the row, the quick actions sit under it as equal
