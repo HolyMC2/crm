@@ -389,6 +389,12 @@ describe('Producto', () => {
       channels: [{ key: 'web', label: 'Tienda en línea', on: true }],
     }
     const router = await mountAt('/productos/ABIBMEX000130')
+    // A stocked item offers «Avísame cuando baje» (Shell D5); a service does not.
+    expect(
+      [...root.querySelectorAll('button')].some((b) =>
+        b.textContent.includes('Avísame cuando baje'),
+      ),
+    ).toBe(true)
     const box = root.querySelector('[data-producto-insights]')
     expect(box.textContent).toContain('Sold in 30 days')
     expect(box.textContent).toContain('9 pzas')

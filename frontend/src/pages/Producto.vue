@@ -1416,11 +1416,21 @@
       :store="countStore"
       @sent="counted"
     />
+    <!-- «Avísame cuando baje de N» (Shell D5, DD8): loaded on first open. -->
+    <AvisameSheet
+      v-if="data && avisameMounted"
+      v-model:open="avisameOpen"
+      doctype="Item"
+      :name="product.name"
+      :title="product.item_name || product.name"
+      :warehouses="avisameStores"
+    />
   </div>
 </template>
 <script setup>
 import {
   computed,
+  defineAsyncComponent,
   getCurrentInstance,
   h,
   onMounted,
@@ -1437,6 +1447,9 @@ import CountDialog from '@/components/productos/CountDialog.vue'
 import VariantGrid from '@/components/productos/VariantGrid.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import LabelDialog from '@/components/productos/LabelDialog.vue'
+const AvisameSheet = defineAsyncComponent(
+  () => import('@/components/documentos/AvisameSheet.vue'),
+)
 import MovementRow from '@/components/inventario/MovementRow.vue'
 import ProductInsights from '@/components/productos/ProductInsights.vue'
 import ProductPrices from '@/components/productos/ProductPrices.vue'
@@ -1489,6 +1502,8 @@ const notice = ref(null)
 const priceOpen = ref(false)
 const editOpen = ref(false)
 const countOpen = ref(false)
+const avisameOpen = ref(false)
+const avisameMounted = ref(false)
 const countStore = ref('')
 const focusList = ref('')
 const request = reactive({
@@ -1699,6 +1714,7 @@ const ACTION_ICONS = {
   scanner: 'maximize',
   labels: 'printer',
   variants: 'layers',
+  avisame: 'bell',
 }
 // The record's actions, primary first, and «Imprimir etiqueta» in Mercado.
 // Phone quick actions (Records 3): equal tonal pills, the label under each.
@@ -1746,8 +1762,25 @@ const heroActions = computed(() => {
       icon: ACTION_ICONS.labels,
       title: __('Print here, in the size you choose', null, 'Productos'),
     })
+  // «Avísame cuando baje de N» in one of its stores (Shell D5): the person's
+  // own aviso, so it needs only read access to the item.
+  if (!isTemplate.value && avisameStores.value.length)
+    list.push({
+      key: 'avisame',
+      label: 'Avísame cuando baje',
+      enabled: true,
+      icon: ACTION_ICONS.avisame,
+      title: 'Te aviso cuando baje de la cantidad que elijas en una tienda',
+    })
   return list
 })
+const avisameStores = computed(() =>
+  (data.value?.stock?.rows || []).map((row) => ({
+    warehouse: row.warehouse,
+    label: row.label || row.warehouse,
+    qty: row.actual_qty,
+  })),
+)
 // «Reordenar» on a short store: the purchase flow for that store and quantity.
 function reorder({ warehouse, qty: amount }) {
   router.push(purchaseRoute(product.value.name, { warehouse, qty: amount }))
@@ -1971,7 +2004,10 @@ function run(entry) {
     countStore.value = ''
     countOpen.value = true
   } else if (entry.key === 'labels') labelOpen.value = true
-  else if (entry.key === 'variants')
+  else if (entry.key === 'avisame') {
+    avisameMounted.value = true
+    avisameOpen.value = true
+  } else if (entry.key === 'variants')
     document
       .getElementById('variantes')
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -2120,7 +2156,13 @@ useLiveWatch(
   (batch) => {
     if (!boot.value?.enabled || !readGate.admit(batch)) return
     if (!data.value) return
-    if (priceOpen.value || editOpen.value || countOpen.value || request.open)
+    if (
+      priceOpen.value ||
+      editOpen.value ||
+      countOpen.value ||
+      avisameOpen.value ||
+      request.open
+    )
       return
     load({ quiet: true })
     if (isTemplate.value) variantGrid.value?.refresh()
