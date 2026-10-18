@@ -508,7 +508,9 @@ describe('Productos › catálogo', () => {
       expect(router.currentRoute.value.query).toMatchObject({
         existencias: 'con',
       })
-      button('Otra').click()
+      const store = sheet.querySelector('select[data-productos-store]')
+      store.value = 'Otra - GD'
+      store.dispatchEvent(new Event('change'))
       await flush()
       expect(router.currentRoute.value.query).toMatchObject({
         existencias: 'con',

@@ -180,30 +180,6 @@
         >
           <template #filters>
             <div class="space-y-5 pb-2" data-productos-filters>
-              <section v-if="storeOptions.length > 2">
-                <p class="pb-1 text-sm text-ink-gray-6">
-                  {{ __('Store', null, 'Productos') }}
-                </p>
-                <ListRow
-                  v-for="option in storeOptions"
-                  :key="option.value || 'all'"
-                  :title="option.label"
-                  :selected="store === option.value"
-                  @click="selectStore(option.value)"
-                />
-              </section>
-              <section v-if="!inventory">
-                <p class="pb-1 text-sm text-ink-gray-6">
-                  {{ __('View', null, 'Productos') }}
-                </p>
-                <ListRow
-                  v-for="option in layoutOptions"
-                  :key="option.value"
-                  :title="option.label"
-                  :selected="layout === option.value"
-                  @click="setLayout(option.value)"
-                />
-              </section>
               <template v-if="catalog">
                 <CatalogFilters
                   touch
@@ -218,6 +194,39 @@
                   :main="boot?.default_price_list || ''"
                 />
               </template>
+              <!-- A native select: the phone's own picker, over the sheet. -->
+              <label v-if="storeOptions.length > 2" class="block">
+                <span class="block pb-1 text-sm text-ink-gray-6">{{
+                  __('Store', null, 'Productos')
+                }}</span>
+                <select
+                  class="h-11 w-full rounded-lg border border-outline-gray-2 bg-surface-base px-3 text-base text-ink-gray-9"
+                  :value="store"
+                  data-productos-store
+                  @change="selectStore($event.target.value)"
+                >
+                  <option
+                    v-for="option in storeOptions"
+                    :key="option.value || 'all'"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+              <section v-if="!inventory">
+                <p class="pb-1 text-sm text-ink-gray-6">
+                  {{ __('View', null, 'Productos') }}
+                </p>
+                <ListRow
+                  v-for="option in layoutOptions"
+                  :key="option.value"
+                  :title="option.label"
+                  :selected="layout === option.value"
+                  @click="setLayout(option.value)"
+                />
+              </section>
+
               <div v-if="inventory" class="flex flex-col gap-3">
                 <FormControl
                   v-if="view === 'sin-contar'"
@@ -923,9 +932,14 @@ const sheetCount = computed(
 function clearSheet() {
   filterBy({ grupo: '', marca: '', existencias: '', foto: '', tienda: '' })
 }
+// ERPNext's own test stores («_Test Warehouse…») are not a worker's stores.
 const storeOptions = computed(() => [
   { label: __('All my stores'), value: '' },
-  ...(boot.value?.stores || []),
+  ...(boot.value?.stores || []).filter(
+    (option) =>
+      !String(option.label || option.value).startsWith('_') ||
+      option.value === store.value,
+  ),
 ])
 const dayOptions = computed(() =>
   (caps.value?.days || DAY_CHOICES).map((days) => ({
