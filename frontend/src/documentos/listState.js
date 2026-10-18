@@ -54,14 +54,78 @@ export function writeListQuery(state, { defaultChip = '' } = {}) {
   return query
 }
 
+// «Fechas» in the «Filtros» sheet: presets a worker says, never a date input.
+export const PERIODS = Object.freeze([
+  { value: 'hoy', label: 'Hoy' },
+  { value: '7-dias', label: 'Últimos 7 días' },
+  { value: 'mes', label: 'Este mes' },
+  { value: 'mes-pasado', label: 'El mes pasado' },
+  { value: 'anio', label: 'Este año' },
+])
+
+function isoDay(date) {
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/** A period preset as [from, to] calendar days (local), or null when unknown. */
+export function periodRange(value, now = new Date()) {
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  const today = new Date(y, m, now.getDate())
+  switch (value) {
+    case 'hoy':
+      return [isoDay(today), isoDay(today)]
+    case '7-dias':
+      return [isoDay(new Date(y, m, now.getDate() - 6)), isoDay(today)]
+    case 'mes':
+      return [isoDay(new Date(y, m, 1)), isoDay(new Date(y, m + 1, 0))]
+    case 'mes-pasado':
+      return [isoDay(new Date(y, m - 1, 1)), isoDay(new Date(y, m, 0))]
+    case 'anio':
+      return [isoDay(new Date(y, 0, 1)), isoDay(new Date(y, 11, 31))]
+    default:
+      return null
+  }
+}
+
+/** The options a «Filtros» field offers: its own, or the period presets. */
+export function filterOptions(field) {
+  if (field?.kind === 'period') return field.options || PERIODS
+  return field?.options || []
+}
+
+/**
+ * One «Filtros» value as server filters. A field may say how (`filters(value)`:
+ * a child table such as the sales team); a period becomes a `between` on its
+ * date field; anything else is equality on the field (a link keeps the name).
+ */
+export function fieldFilters(field, key, value, now = new Date()) {
+  if (!value) return []
+  if (typeof field?.filters === 'function') return field.filters(value) || []
+  if (field?.kind === 'period') {
+    const range = periodRange(value, now)
+    return range ? [[field.field || key, 'between', range]] : []
+  }
+  return [[key, '=', value]]
+}
+
 /** The server filters: base list filters, the chip's, «Filtros» and the connection scope. */
-export function listFilters(profile, state) {
+export function listFilters(profile, state, now = new Date()) {
   const out = [...(profile.filters || [])]
   const chipValue = state.chip ?? profile.defaultChip ?? ''
   const chip = (profile.chips || []).find((c) => c.value === chipValue)
   if (chip?.filters) out.push(...chip.filters)
+  const fields = profile.filterFields || []
   for (const [key, value] of Object.entries(state.filters || {}))
-    out.push([key, '=', value])
+    out.push(
+      ...fieldFilters(
+        fields.find((f) => f.fieldname === key),
+        key,
+        value,
+        now,
+      ),
+    )
   if (state.scope?.length) out.push(...state.scope)
   return out
 }

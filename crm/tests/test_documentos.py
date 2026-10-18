@@ -284,3 +284,20 @@ class TestDocumentosERPNext(IntegrationTestCase):
 		for path, _target in documentos.MAKERS.values():
 			fn = frappe.get_attr(path)
 			self.assertIn(fn, frappe.whitelisted, path)
+
+	def test_rows_carry_an_items_summary_when_asked(self):
+		page = documentos.rows("Sales Invoice", limit=5, fields=["_items", "customer"])
+		for row in page["rows"]:
+			self.assertIn("items", row)
+			self.assertLessEqual(len(row["items"]["first"]), documentos.ITEMS_IN_ROW)
+			self.assertGreaterEqual(row["items"]["count"], len(row["items"]["first"]))
+		plain = documentos.rows("Sales Invoice", limit=2)
+		for row in plain["rows"]:
+			self.assertNotIn("items", row)
+
+	def test_rows_filter_on_a_child_table(self):
+		# «Vendedor» filters on the Sales Team child table (D2 profiles).
+		page = documentos.rows(
+			"Sales Order", filters=[["Sales Team", "sales_person", "=", "No existe D2"]], limit=2
+		)
+		self.assertEqual(page["rows"], [])

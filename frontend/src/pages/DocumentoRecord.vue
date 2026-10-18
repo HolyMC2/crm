@@ -91,7 +91,7 @@
               }}</span>
             </p>
             <div
-              v-if="step || canEdit"
+              v-if="step || altSteps.length || canEdit"
               class="flex flex-wrap gap-2 pt-2"
               data-testid="documentos-next"
             >
@@ -111,6 +111,22 @@
                 {{ step.label }}
               </button>
               <button
+                v-for="alt in altSteps"
+                :key="alt.label"
+                type="button"
+                :class="BTN.tonal"
+                :disabled="busy"
+                data-testid="documentos-alt-step"
+                @click="runStep(alt)"
+              >
+                <span
+                  v-if="alt.icon"
+                  :class="[alt.icon, 'size-5']"
+                  aria-hidden="true"
+                />
+                {{ alt.label }}
+              </button>
+              <button
                 v-if="canEdit"
                 type="button"
                 :class="BTN.tonal"
@@ -122,6 +138,14 @@
               </button>
             </div>
           </section>
+          <component
+            :is="panel.component"
+            v-for="panel in heroPanels"
+            :key="panel.key"
+            :record="record"
+            :doctype="doctype"
+            :name="name"
+          />
           <template v-for="key in mainSections" :key="key">
             <ItemsCards
               v-if="key === 'items'"
@@ -145,6 +169,14 @@
           </template>
         </div>
         <aside class="flex min-w-0 flex-col gap-5 pt-5">
+          <component
+            :is="panel.component"
+            v-for="panel in asidePanels"
+            :key="panel.key"
+            :record="record"
+            :doctype="doctype"
+            :name="name"
+          />
           <Conexiones
             v-if="sections.includes('conexiones')"
             :connections="record.connections"
@@ -213,6 +245,7 @@
         :title="pdfTitle"
         :subtitle="scopeTitle"
         :url="link"
+        :curate="profile.printFormats || null"
         @shared="onShared"
       />
       <EditSheet
@@ -384,13 +417,39 @@ const stages = computed(() =>
     ? profile.value.stages(record.value) || null
     : null,
 )
+// A step is offered only when the record allows it (a draft the worker may submit).
+function offered(s) {
+  if (!s) return false
+  if (s.submit && !record.value?.actions?.submit?.allowed) return false
+  return true
+}
 const step = computed(() => {
   if (!record.value || !profile.value?.nextStep) return null
   const s = profile.value.nextStep(record.value)
-  if (!s) return null
-  if (s.submit && !record.value.actions?.submit?.allowed) return null
-  return s
+  return offered(s) ? s : null
 })
+// Other steps of this state (Pedido: «Entregar» filled, «Facturar» tonal).
+const altSteps = computed(() => {
+  if (!record.value || !profile.value?.altSteps) return []
+  return (profile.value.altSteps(record.value) || []).filter(offered)
+})
+
+// Profile panels (the «Creado desde» chain, Atribución): lazy components
+// under the hero (`at: 'hero'`) or at the top of the side column (`aside`).
+const panelCache = new Map()
+function panelsAt(at) {
+  return (profile.value?.panels || [])
+    .filter((p) => (p.at || 'aside') === at && p.load)
+    .filter((p) => !p.when || (record.value && p.when(record.value)))
+    .map((p) => {
+      const key = p.key || p.at
+      if (!panelCache.has(p.load))
+        panelCache.set(p.load, defineAsyncComponent(p.load))
+      return { key, component: panelCache.get(p.load) }
+    })
+}
+const heroPanels = computed(() => (record.value ? panelsAt('hero') : []))
+const asidePanels = computed(() => (record.value ? panelsAt('aside') : []))
 
 // ── tools (DD5) ──
 const toolsOpen = ref(false)

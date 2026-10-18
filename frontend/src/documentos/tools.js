@@ -82,6 +82,38 @@ export function deskUrl(doctype, name) {
   return `/app/${slug}/${encodeURIComponent(name)}`
 }
 
+/**
+ * A profile's say on the print-format picker (Shell D2): `only` keeps just those
+ * formats (when at least one of them exists), `hide` drops internal ones, `labels`
+ * and `hints` give Spanish names and a line, `first` is the default and goes on top.
+ * Without a curation the server's list passes through.
+ */
+export function curateFormats(formats, curate) {
+  const list = Array.isArray(formats) ? formats : []
+  if (!curate) return list
+  const { only, hide = [], labels = {}, hints = {}, first } = curate
+  let out = list.filter((f) => !hide.includes(f.name))
+  if (only?.length) {
+    const kept = out.filter((f) => only.includes(f.name))
+    if (kept.length) out = kept
+  }
+  out = out.map((f) => ({
+    ...f,
+    label: labels[f.name] || f.label,
+    hint: hints[f.name] || f.hint || '',
+  }))
+  const top = first && out.find((f) => f.name === first)
+  if (top) {
+    out = [top, ...out.filter((f) => f !== top)].map((f) => ({
+      ...f,
+      default: f === top,
+    }))
+  } else if (out.length && !out.some((f) => f.default)) {
+    out[0] = { ...out[0], default: true }
+  }
+  return out
+}
+
 /** The PDF of a record in one print format, in Spanish. */
 export function pdfUrl(doctype, name, format = '') {
   const params = new URLSearchParams({ doctype, name, language: 'es-MX' })

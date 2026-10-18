@@ -58,11 +58,20 @@
             class="pb-3"
           >
             <p class="pb-1 text-sm text-ink-gray-6">{{ field.label }}</p>
+            <FilterLink
+              v-if="field.kind === 'link'"
+              :model-value="state.filters[field.fieldname] || ''"
+              :doctype="field.doctype"
+              :label="field.label"
+              @update:model-value="setFilter(field.fieldname, $event)"
+            />
             <ListRow
-              v-for="option in [
-                { value: '', label: 'Todos' },
-                ...field.options,
-              ]"
+              v-for="option in field.kind === 'link'
+                ? []
+                : [
+                    { value: '', label: field.allLabel || 'Todos' },
+                    ...filterOptions(field),
+                  ]"
               :key="option.value || 'all'"
               :title="option.label"
               :selected="
@@ -199,8 +208,10 @@ import { isMobile } from '@/composables/breakpoint'
 import { shellBoot } from '@/composables/muelleShell'
 import { useListKeys } from '@/composables/pageKeys'
 import { docApi, errorText } from '@/documentos/api'
+import FilterLink from '@/components/documentos/FilterLink.vue'
 import {
   chipCountFilters,
+  filterOptions,
   listFilters,
   readListQuery,
   recallScroll,

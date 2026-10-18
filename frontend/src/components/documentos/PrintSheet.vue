@@ -19,7 +19,7 @@
         <ListRow
           icon="lucide-file-text"
           :title="f.label === 'Standard' ? 'Estándar' : f.label"
-          :subtitle="f.default ? 'El de siempre' : ''"
+          :subtitle="f.hint || (f.default ? 'El de siempre' : '')"
           :selected="f.name === format"
           @click="format = f.name"
         />
@@ -56,7 +56,7 @@
 import { computed, ref, watch } from 'vue'
 import { BottomSheet, ListRow } from '@/components/ui'
 import { docApi, errorText } from '@/documentos/api'
-import { BTN, pdfUrl, shareDocument } from '@/documentos/tools'
+import { BTN, curateFormats, pdfUrl, shareDocument } from '@/documentos/tools'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -66,6 +66,9 @@ const props = defineProps({
   subtitle: { type: String, default: '' },
   // The record's shell link, for when the phone cannot send files.
   url: { type: String, default: '' },
+  // The profile's say on the picker: `{ only?, hide?, labels?, hints?, first? }`
+  // (Spanish names, internal formats out, its default first; tools.js).
+  curate: { type: Object, default: null },
 })
 const emit = defineEmits(['update:open', 'shared'])
 const formats = ref([])
@@ -82,9 +85,12 @@ watch(
     if (!open || formats.value.length) return
     loading.value = true
     try {
-      formats.value = (await docApi('print_formats', {
-        doctype: props.doctype,
-      })) || [{ name: 'Standard', label: 'Standard', default: true }]
+      formats.value = curateFormats(
+        (await docApi('print_formats', {
+          doctype: props.doctype,
+        })) || [{ name: 'Standard', label: 'Standard', default: true }],
+        props.curate,
+      )
       format.value = (
         formats.value.find((f) => f.default) || formats.value[0]
       )?.name

@@ -433,11 +433,52 @@ def rows(
 	)
 	out = [_row(doc, display) for doc in found[:limit]]
 	_party_titles(doctype, found[:limit], out)
+	if "_items" in (_parse(fields, []) or []):
+		_items_summary(meta, out)
 	return {
 		"rows": out,
 		"has_more": len(found) > limit,
 		"label": _(doctype),
 	}
+
+
+ITEMS_IN_ROW = 3
+
+
+def _items_summary(meta, rows):
+	"""What each listed document carries, for its row («Concha, 2 pzas y 3 más»): the first
+	items by position and how many there are, one query for the page. The parent rows
+	were already read through Frappe permissions; the child rows follow them."""
+	table = _items_table(meta)
+	if not table or not rows:
+		return
+	child = frappe.get_meta(table.options)
+	name_field = "item_name" if child.has_field("item_name") else "item_code"
+	fields = ["parent", name_field, "idx"]
+	fields += [f for f in ("qty", "uom") if child.has_field(f)]
+	found = frappe.get_all(
+		table.options,
+		filters={
+			"parent": ["in", [row["name"] for row in rows]],
+			"parenttype": meta.name,
+			"parentfield": table.fieldname,
+		},
+		fields=fields,
+		order_by="parent asc, idx asc",
+		limit_page_length=0,
+	)
+	by_parent = {}
+	for item in found:
+		by_parent.setdefault(item.parent, []).append(item)
+	for row in rows:
+		items = by_parent.get(row["name"]) or []
+		row["items"] = {
+			"count": len(items),
+			"first": [
+				{"name": cstr(i.get(name_field)), "qty": i.get("qty"), "uom": i.get("uom")}
+				for i in items[:ITEMS_IN_ROW]
+			],
+		}
 
 
 def _count(doctype, filters, or_filters=None):

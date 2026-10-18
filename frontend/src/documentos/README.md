@@ -71,20 +71,33 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
 
 ## Profile keys
 
-| key                     | type                                                                                    | used by                                                                                                    |
-| ----------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `fields`                | `string[]`                                                                              | extra list columns the row needs (`row.fields.<name>`); only permlevel-0 real fields are returned          |
-| `chips`                 | `{ value, label, filters }[]`                                                           | the one chip row; `value: ''` is «Todas/Todos» with `filters: null`. Filters are Frappe filter triples     |
-| `defaultChip`           | `string`                                                                                | chip on when the URL names none (kept out of the URL)                                                      |
-| `filterFields`          | `{ fieldname, label, options: [{ value, label }] }[]`                                   | the «Filtros» sheet                                                                                        |
-| `sorts`                 | `{ value, label }[]`                                                                    | sort sheet; `value` is `field asc` or `field desc`; `''` = the date field, newest first                    |
-| `sections`              | `string[]`                                                                              | record sections in order: `items`, `totals`, `datos`, `conexiones`, `actividad`, `archivos`                |
-| `owedLabel`             | `string`                                                                                | totals' label for the outstanding amount («Por cobrar», «Por pagar»)                                       |
-| `row(row, { doctype })` | → `{ title, subtitle, subtitleTone?, meta, metaTone?, status, tone, avatar? \| icon? }` | one list row (`ui/ListRow`)                                                                                |
-| `header(record)`        | → `{ title, kind, number, status, tone, amount, date, due }`                            | the record's app bar and hero                                                                              |
-| `nextStep(record)`      | → `null` or a step (below)                                                              | the one filled «siguiente paso» (DD4)                                                                      |
-| `stages(record)`        | → `null` or `[{ label, done, current }]` (`stagesAt(labels, at, finished)`)             | the stepper under the amount (Borrador · Por cobrar · Pagada)                                              |
-| `editFields`            | `string[]` or `null`                                                                    | fields of the edit sheet and `/nuevo`, in order; `null`: the required and list fields the worker may write |
+| key                     | type                                                                                    | used by                                                                                                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fields`                | `string[]`                                                                              | extra list columns the row needs (`row.fields.<name>`); only permlevel-0 real fields are returned. `'_items'` adds `row.items = { count, first: [{ name, qty, uom }] }` (first 3 by position) |
+| `chips`                 | `{ value, label, filters }[]`                                                           | the one chip row; `value: ''` is «Todas/Todos» with `filters: null`. Filters are Frappe filter triples                                                                                        |
+| `defaultChip`           | `string`                                                                                | chip on when the URL names none (kept out of the URL)                                                                                                                                         |
+| `filterFields`          | `{ fieldname, label, options?, kind?, doctype?, field?, filters?, allLabel? }[]`        | the «Filtros» sheet (below)                                                                                                                                                                   |
+| `sorts`                 | `{ value, label }[]`                                                                    | sort sheet; `value` is `field asc` or `field desc`; `''` = the date field, newest first                                                                                                       |
+| `sections`              | `string[]`                                                                              | record sections in order: `items`, `totals`, `datos`, `conexiones`, `actividad`, `archivos`                                                                                                   |
+| `owedLabel`             | `string`                                                                                | totals' label for the outstanding amount («Por cobrar», «Por pagar»)                                                                                                                          |
+| `row(row, { doctype })` | → `{ title, subtitle, subtitleTone?, meta, metaTone?, status, tone, avatar? \| icon? }` | one list row (`ui/ListRow`)                                                                                                                                                                   |
+| `header(record)`        | → `{ title, kind, number, status, tone, amount, date, due }`                            | the record's app bar and hero                                                                                                                                                                 |
+| `nextStep(record)`      | → `null` or a step (below)                                                              | the one filled «siguiente paso» (DD4)                                                                                                                                                         |
+| `stages(record)`        | → `null` or `[{ label, done, current }]` (`stagesAt(labels, at, finished)`)             | the stepper under the amount (Borrador · Por cobrar · Pagada)                                                                                                                                 |
+| `editFields`            | `string[]` or `null`                                                                    | fields of the edit sheet and `/nuevo`, in order; `null`: the required and list fields the worker may write                                                                                    |
+| `altSteps(record)`      | → `step[]`                                                                              | other steps of this state, tonal next to the filled one (Pedido: «Entregar» filled, «Facturar» tonal)                                                                                         |
+| `panels`                | `{ key, at: 'hero' \| 'aside', load: () => import(…), when?(record) }[]`                | lazy components on the record (props `record`, `doctype`, `name`): under the hero or atop the side column                                                                                     |
+| `printFormats`          | `{ only?, hide?, labels?, hints?, first? }`                                             | the «Imprimir o PDF» picker: which formats, Spanish names, the default first (`tools.js` `curateFormats`)                                                                                     |
+
+### «Filtros» fields
+
+- `options: [{ value, label }]`: one choice (`?f_<fieldname>=value`, equality).
+- `kind: 'period'`, `field: 'posting_date'`: Hoy, Últimos 7 días, Este mes, El mes pasado, Este año
+  (`listState.js` `PERIODS`) as a `between` on `field`; never a date input.
+- `kind: 'link'`, `doctype: 'Customer'`: a search over Frappe's `search_link` (only what the
+  worker may read); the value is the record's name.
+- `filters(value) → triples`: how the value filters when it is not equality on the field
+  (the seller: `[['Sales Team', 'sales_person', '=', value]]`, a child table).
 
 `row` input (from `rows`): `{ name, title, status, docstatus, amount, currency, date, due,
 outstanding, modified, fields }`. Dates are ISO strings; format them with `utils/display.js`
