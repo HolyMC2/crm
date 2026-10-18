@@ -1,6 +1,6 @@
 """One boot call for the Muelle shell (spec-muelle-shell §7).
 
-Module providers report native capabilities; they never grant anything. Each
+Module providers report native capabilities; they never grant anything (CI probe). Each
 module route and API still checks its own permissions on every request.
 """
 
