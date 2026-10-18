@@ -418,6 +418,14 @@ const routes = [
     },
   },
   {
+    // Más › Configuración › Disparadores (Shell Wave D, DD8): team recipes on
+    // business events. Lights Avisos, where their avisos land.
+    path: '/disparadores',
+    name: 'Disparadores',
+    component: () => import('@/pages/Disparadores.vue'),
+    meta: { app: 'avisos', title: 'Disparadores', ownPhoneHeader: true },
+  },
+  {
     // The CRM notifications page merged into Avisos; old links keep working.
     path: '/notifications',
     name: 'Notifications',

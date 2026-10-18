@@ -227,6 +227,17 @@
           />
           {{ __('Ventas settings') }}
         </button>
+        <!-- Shell Wave D (DD8): team recipes on business events, for managers. -->
+        <RouterLink
+          v-if="user.is_admin || user.nav_role === 'dueno'"
+          to="/disparadores"
+          :class="ROW"
+          data-testid="more-disparadores"
+          @click="close"
+        >
+          <span class="lucide-zap size-4 text-ink-gray-6" aria-hidden="true" />
+          Disparadores
+        </RouterLink>
         <button
           v-if="installAvailable"
           type="button"
