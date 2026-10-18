@@ -851,10 +851,11 @@
     />
 
     <!-- phone: create sits under the thumb, clear of the nav and dock -->
-    <ListCreateFab
+    <!-- the shell's one FAB (bottom end, like every other list) -->
+    <Fab
       v-if="isMobile"
       :label="__('New Deal')"
-      @create="showDealModal = true"
+      @click="showDealModal = true"
     />
 
     <MobileFilterSheet
@@ -882,7 +883,7 @@
 </template>
 
 <script setup>
-import ListCreateFab from '@/components/ventas/ListCreateFab.vue'
+import Fab from '@/components/ui/Fab.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

@@ -331,7 +331,7 @@
               chName(u.last_channel || 'whatsapp')
             }}</span>
             <span v-if="u.last_message" class="truncate">{{
-              u.last_message
+              lastMessageText(u.last_message)
             }}</span>
             <span
               v-if="u.count > 1"
@@ -527,7 +527,7 @@
                 chName(u.last_channel || 'whatsapp')
               }}</span>
               <span v-if="u.last_message" class="truncate">{{
-                u.last_message
+                lastMessageText(u.last_message)
               }}</span>
             </div>
           </button>
@@ -856,7 +856,7 @@
                 chName(r.last_channel)
               }}</span>
               <span v-if="r.last_message" class="truncate">{{
-                r.last_message
+                lastMessageText(r.last_message)
               }}</span>
             </div>
             <div class="mt-[7px] flex flex-wrap gap-1.5">
@@ -1078,6 +1078,7 @@ import {
   disablePush,
 } from '@/composables/push'
 import { isMobile } from '@/composables/breakpoint'
+import { lastMessageText } from '@/utils/inboxMessage'
 import { formatMoney } from '@/composables/crmFormat'
 import { useListKeys } from '@/composables/pageKeys'
 import AutoAckReview from '@/components/doco/inbox/AutoAckReview.vue'

@@ -26519,3 +26519,14 @@ msgstr "Un visitante"
 #: crm/avisos/stream.py
 msgid "Return request: {0}"
 msgstr "Devolución: {0}"
+#: frontend/src/utils/inboxMessage.js
+msgid "Flow completed"
+msgstr "Flujo de WhatsApp completado"
+
+#: frontend/src/utils/inboxMessage.js
+msgid "New Order Received via WhatsApp"
+msgstr "Nuevo pedido por WhatsApp"
+
+#: frontend/src/utils/inboxMessage.js
+msgid "Media file too big to receive"
+msgstr "Archivo demasiado grande para recibirlo"

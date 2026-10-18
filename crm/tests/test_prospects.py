@@ -43,3 +43,21 @@ class SourceChipTests(TestCase):
 			self.assertRaises(frappe.PermissionError),
 		):
 			prospects.list_prospects()
+
+	def test_kind_chips_count_both_kinds_whatever_kind_is_on(self):
+		# «Consultas» on used to read «Todos 0 · Prospectos 0» over 46 leads.
+		with (
+			patch("crm.api.check_app_permission", return_value=True),
+			patch.object(prospects, "_inquiries_available", return_value=True),
+			patch.object(prospects, "_grouped", return_value={"Website": 40, "Walk In": 6}),
+			patch.object(prospects, "_grouped_inquiries", return_value={"Manual": 2}),
+			patch.object(prospects, "_lead_rows", return_value=[]),
+			patch.object(prospects, "_inquiry_rows", return_value=[]),
+		):
+			for kind in (None, "lead", "inquiry"):
+				with self.subTest(kind=kind):
+					out = prospects.list_prospects(kind=kind)
+					self.assertEqual(out["counts"], {"lead": 46, "inquiry": 2})
+			# the source chips stay within the kind that is on
+			only_inquiries = prospects.list_prospects(kind="inquiry")
+			self.assertEqual([chip["key"] for chip in only_inquiries["sources"]], ["manual"])

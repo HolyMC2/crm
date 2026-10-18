@@ -255,9 +255,13 @@ def list_prospects(
 	q = (q or "").strip()[:120] if isinstance(q, str) else ""
 	want_leads = kind in (None, "", "lead")
 	want_inquiries = kind in (None, "", "inquiry") and _inquiries_available()
-	# Chips: permission-scoped counts per raw source, folded into the small vocabulary.
-	lead_sources = _grouped("CRM Lead", "source", *_lead_filters(q)) if want_leads else {}
-	inquiry_sources = _grouped_inquiries(q) if want_inquiries else {}
+	# Kind chips count both kinds whatever kind is on («Consultas» on read
+	# «Todos 0 · Prospectos 0» with 46 leads); source chips stay within the kind.
+	# Permission-scoped counts per raw source, folded into the small vocabulary.
+	all_lead_sources = _grouped("CRM Lead", "source", *_lead_filters(q))
+	all_inquiry_sources = _grouped_inquiries(q) if _inquiries_available() else {}
+	lead_sources = all_lead_sources if want_leads else {}
+	inquiry_sources = all_inquiry_sources if want_inquiries else {}
 	chips = {}
 	for raw, n in [*lead_sources.items(), *inquiry_sources.items()]:
 		chips[source_key(raw)] = chips.get(source_key(raw), 0) + n
@@ -277,7 +281,7 @@ def list_prospects(
 	return {
 		"rows": rows[start : start + page_length],
 		"has_more": len(rows) > start + page_length,
-		"counts": {"lead": sum(lead_sources.values()), "inquiry": sum(inquiry_sources.values())},
+		"counts": {"lead": sum(all_lead_sources.values()), "inquiry": sum(all_inquiry_sources.values())},
 		"sources": [
 			{"key": key, "label": SOURCE_LABELS[key], "count": n}
 			for key, n in sorted(chips.items(), key=lambda item: (-item[1], item[0]))
