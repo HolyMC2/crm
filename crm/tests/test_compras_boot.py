@@ -24,6 +24,8 @@ class TestComprasPaths(TestCase):
 			"/crm/compras/nueva?return_to=%2Fposapp%2Fpos",
 			"/crm/compras/orden/PUR-ORD-2026-00001",
 			"/crm/compras/captura/CAP-2026-00001",
+			"/crm/compras/surtido",
+			"/crm/compras/surtido?pedido=PC-2026-00001",
 			"/crm/compras/solicitud/MAT-MR-2026-00003?return_to=%2Fcrm%2Fpendientes",
 		):
 			with self.subTest(path=path):
@@ -36,6 +38,8 @@ class TestComprasPaths(TestCase):
 			"/crm/compras-otra",
 			"/crm/compras/recepcion/PR-1",
 			"/crm/compras/orden/1/extra",
+			"/crm/compras/surtido/extra",
+			"/crm/compras/surtidos",
 			"//evil.invalid/crm/compras",
 			"https://evil.invalid/crm/compras",
 			"/crm/compras\\evil",
