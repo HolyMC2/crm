@@ -45,6 +45,7 @@
             v-model="untilDate"
             type="date"
             label="Fecha límite"
+            placeholder="Elige la fecha"
             class="[&_input]:min-h-12"
             :min="today"
           />
