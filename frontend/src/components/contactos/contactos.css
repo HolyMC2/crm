@@ -863,18 +863,21 @@
   }
   /* A phone's contact card: the follow-up spans the row; the quick actions
      are equal tonal pills with the label under them, sharing each row. */
+  /* four equal columns: Llamar · Mensaje · Correo · Agendar stay on one row
+     down to 305px (a flex basis wrapped «Agendar» alone onto a second row) */
   .c-record-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px 8px;
     padding: 0 16px 20px;
   }
   .c-record-actions > :not(.c-action-link) {
-    flex: 1 1 100%;
+    grid-column: 1 / -1;
   }
   .c-record-actions > .c-followup-cta {
     justify-content: center;
   }
   .c-record-actions > .c-action-link {
-    flex: 1 1 64px;
     min-width: 0;
     flex-direction: column;
     gap: 6px;

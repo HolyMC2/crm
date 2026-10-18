@@ -228,7 +228,8 @@
       ref="listEl"
       role="listbox"
       :aria-label="__('Conversaciones')"
-      class="scb flex-1 overflow-y-auto px-2 pb-2.5 pt-0.5"
+      class="scb flex-1 overflow-y-auto px-2 pt-0.5"
+      :class="isMobile ? 'pb-24' : 'pb-2.5'"
       @keydown="onListKeydown"
       @touchstart="ptrStart"
       @touchmove="ptrMove"
@@ -1611,7 +1612,15 @@ function chName(key) {
 // status hue as a small dot only; the label rides a theme-aware ink color so it
 // stays readable in dark (the stored status .color can be a dark hex or a color
 // name like "black"/"gray" — using it as text rendered black-on-black in dark).
+// A stored colour CSS cannot paint (a theme word like «amber») left an empty gap
+// before the label: fall back to grey then.
 function statusColor(status) {
-  return getDealStatus(status)?.color || '#9aa2ae'
+  const color = getDealStatus(status)?.color
+  const paintable =
+    color &&
+    (typeof CSS === 'undefined' ||
+      !CSS.supports ||
+      CSS.supports('color', color))
+  return paintable ? color : '#9aa2ae'
 }
 </script>
