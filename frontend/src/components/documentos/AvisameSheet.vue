@@ -194,7 +194,7 @@ const props = defineProps({
   name: { type: String, required: true },
   // The record's display name (party or item), shown under the title.
   title: { type: String, default: '' },
-  // Item only: [{ warehouse, label, qty }] the user may watch.
+  // Item only: [{ warehouse, label, qty, reorder_level? }] the user may watch.
   warehouses: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['changed'])
@@ -229,6 +229,19 @@ const ready = computed(() => {
   return !chosen.value.needs_date || Boolean(untilDate.value)
 })
 
+// One tap should work: the store's reorder level, else one under what it
+// has now (at least 1).
+function suggested(row) {
+  if (!row) return ''
+  const level = Number(row.reorder_level) || 0
+  if (level > 0) return String(level)
+  return String(Math.max(Math.floor(Number(row.qty) || 0) - 1, 1))
+}
+watch(warehouse, (value, previous) => {
+  if (previous && value !== previous)
+    threshold.value = suggested(selectedStore.value)
+})
+
 watch(open, (value) => {
   if (value) load()
 })
@@ -242,7 +255,7 @@ async function load() {
   try {
     if (isItem.value) {
       warehouse.value = props.warehouses[0]?.warehouse || ''
-      threshold.value = ''
+      threshold.value = suggested(props.warehouses[0])
       active.value = await misAvisos('Item', props.name)
     } else {
       const data = await avisameOptions(props.doctype, props.name)
