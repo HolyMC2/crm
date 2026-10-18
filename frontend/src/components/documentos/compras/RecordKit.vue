@@ -18,7 +18,7 @@
       <Actividad :activity="eventsOnly" :noun="kit.noun" :can-attach="false" />
     </template>
     <input
-      :ref="(el) => (kit.fileInput.value = el)"
+      :ref="setFileInput"
       type="file"
       class="hidden"
       @change="kit.onFile"
@@ -116,7 +116,12 @@ const eventsOnly = computed(() => {
   return activity ? { ...activity, attachments: [] } : null
 })
 
+// The kit's refs are the page's state (useRecordKit), set through it.
+const { fileInput, open } = props.kit
+function setFileInput(el) {
+  fileInput.value = el
+}
 function close(value) {
-  if (!value) props.kit.open.value = ''
+  if (!value) open.value = ''
 }
 </script>

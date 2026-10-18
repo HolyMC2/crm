@@ -80,7 +80,13 @@ export default {
 
   header(record) {
     const view = genericProfile.header(record)
-    const title = requestTitle(record.header?.title)
+    // What it asks for, from its rows (ERPNext's own title is cut mid-word at 140).
+    const rows = record.items?.rows || []
+    const first = rows[0]?.item_name || rows[0]?.item_code || ''
+    const title =
+      rows.length > 1
+        ? `${first} y ${rows.length - 1} más`
+        : first || requestTitle(record.header?.title)
     return {
       ...view,
       title: title || view.title,

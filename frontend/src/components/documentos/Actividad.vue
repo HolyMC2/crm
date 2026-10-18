@@ -88,7 +88,7 @@
 </template>
 <script setup>
 import { computed, ref } from 'vue'
-import { formatDateTime } from '@/utils/display'
+import { formatDateTime, statusEntry } from '@/utils/display'
 
 const LIMIT = 8
 const ICONS = {
@@ -147,7 +147,11 @@ function sentence(event) {
     case 'comment':
       return `${who} comentó`
     default:
-      return event.text ? `${who}: ${event.text}` : who
+      // ERPNext notes a status change with the bare English status («To Receive
+      // and Bill»): say it in the list's words when it is one.
+      return event.text
+        ? `${who}: ${statusEntry(event.text)?.[0] || event.text}`
+        : who
   }
 }
 

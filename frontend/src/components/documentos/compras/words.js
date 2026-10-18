@@ -11,3 +11,13 @@ export function requestTitle(title) {
     .replace(MR_PREFIX, '')
     .trim()
 }
+
+/**
+ * A requisition's title short enough for a line: without the English prefix and,
+ * when ERPNext joined several items («A, B, C, D…» cut at 140), the first and «y más».
+ */
+export function requestShort(title) {
+  const text = requestTitle(title)
+  const parts = text.split(/,\s+/)
+  return parts.length > 1 ? `${parts[0]} y más` : text
+}

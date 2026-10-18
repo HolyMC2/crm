@@ -308,7 +308,7 @@ import {
   toolsFor,
   uploadAttachment,
 } from '@/documentos/tools'
-import { formatDue, kindLabel } from '@/utils/display'
+import { feminineNoun, formatDue, kindLabel } from '@/utils/display'
 
 const CommentSheet = defineAsyncComponent(
   () => import('@/components/documentos/CommentSheet.vue'),
@@ -383,7 +383,7 @@ const overdue = computed(() => {
 const noun = computed(() => {
   const kind = (kindLabel(doctype.value) || 'documento').toLowerCase()
   // Gender from the first word: factura, cotización, solicitud → la.
-  return /(a|ón|d)$/.test(kind.split(' ')[0]) ? `la ${kind}` : `el ${kind}`
+  return feminineNoun(kind) ? `la ${kind}` : `el ${kind}`
 })
 const scopeLabel = computed(() =>
   view.value ? `${noun.value} de ${view.value.title}` : '',
@@ -421,6 +421,9 @@ const stages = computed(() =>
 function offered(s) {
   if (!s) return false
   if (s.submit && !record.value?.actions?.submit?.allowed) return false
+  // A mapper step needs create on what it makes (server: actions.make_<key>).
+  if (s.make && record.value?.actions?.[`make_${s.make}`]?.allowed === false)
+    return false
   return true
 }
 const step = computed(() => {

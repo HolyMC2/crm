@@ -100,3 +100,16 @@ class TestCadenaERPNext(IntegrationTestCase):
 			for doc in stage["docs"]:
 				for person in doc["people"]:
 					self.assertNotIn("@", person["name"])
+
+	def test_a_mapper_step_needs_create_on_its_target(self):
+		name = frappe.db.get_value("Material Request", {"docstatus": 1}, "name")
+		if not name:
+			self.skipTest("No confirmed material request on this site")
+		actions = documentos._actions(frappe.get_doc("Material Request", name))
+		self.assertTrue(actions["make_purchase_order"]["allowed"])
+		self.assertIn("make_supplier_quotation", actions)
+		draft = frappe.db.get_value("Material Request", {"docstatus": 0}, "name")
+		if draft:
+			self.assertNotIn(
+				"make_purchase_order", documentos._actions(frappe.get_doc("Material Request", draft))
+			)

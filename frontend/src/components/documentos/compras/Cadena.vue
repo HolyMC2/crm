@@ -78,6 +78,7 @@ import { documentRoute } from '@/documentos/registry'
 import { shellBoot } from '@/composables/muelleShell'
 import { formatDate, formatMoney, statusLabel } from '@/utils/display'
 import { chainSteps, pendingStep } from './cadena'
+import { requestShort } from './words'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -108,7 +109,9 @@ const steps = computed(() =>
             step.doctype === 'Payment Entry' ? { payment_type: 'Pay' } : null,
         }),
     line: [
-      step.title,
+      step.doctype === 'Material Request'
+        ? requestShort(step.title)
+        : step.title,
       statusLabel(step.status),
       step.date ? formatDate(step.date) : '',
     ]

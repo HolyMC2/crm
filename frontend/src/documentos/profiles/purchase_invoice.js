@@ -93,6 +93,12 @@ export default {
       line,
       tone: due?.overdue ? 'danger' : '',
     })
+    // ERPNext refreshes «Unpaid» to «Overdue» only overnight: past its due date
+    // the chip says Vencida, as the red line does (and as Gasto factura does).
+    if (due?.overdue && view.tone !== 'danger') {
+      view.status = 'Vencida'
+      view.tone = 'danger'
+    }
     if (row.fields?.is_return)
       view.subtitle = `Nota de crédito · ${view.subtitle}`
     return view

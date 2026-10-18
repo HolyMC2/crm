@@ -80,7 +80,7 @@ import {
   profileBySlug,
 } from '@/documentos/registry'
 import { BTN } from '@/documentos/tools'
-import { kindLabel } from '@/utils/display'
+import { feminineNoun, kindLabel } from '@/utils/display'
 
 const route = useRoute()
 const router = useRouter()
@@ -110,7 +110,7 @@ const kind = computed(() => kindLabel(doctype.value) || 'documento')
 // «Nueva factura», «Nuevo cobro»: gender from the noun's first word.
 const title = computed(() => {
   const word = kind.value.toLowerCase()
-  const fem = /(a|ón|d)$/.test(word.split(' ')[0])
+  const fem = feminineNoun(word)
   if (source.value?.amend) return `Modificar ${word}`
   return `${fem ? 'Nueva' : 'Nuevo'} ${word}`
 })

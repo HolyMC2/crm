@@ -25,7 +25,7 @@ import {
   toolsFor,
   uploadAttachment,
 } from '@/documentos/tools'
-import { kindLabel } from '@/utils/display'
+import { feminineNoun, kindLabel } from '@/utils/display'
 
 // Packages that land on their own (same discovery as DocumentoRecord).
 const AVISAME = import.meta.glob('../avisame.js')
@@ -55,7 +55,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
   const recordName = computed(() => String(name?.() || ''))
   const entry = computed(() => profileFor(doctype))
   const kind = kindLabel(doctype) || doctype
-  const noun = /(a|ón|d)$/.test(kind.toLowerCase().split(' ')[0])
+  const noun = feminineNoun(kind)
     ? `la ${kind.toLowerCase()}`
     : `el ${kind.toLowerCase()}`
   const who = computed(() => title?.() || record.value?.header?.title || '')

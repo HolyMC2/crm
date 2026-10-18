@@ -732,6 +732,10 @@ def _actions(doc):
 	put("share", has("share"), no_perm)
 	put("print", has("print"), no_perm)
 	put("email", has("email"), no_perm)
+	# The mappers this document offers («Pedir», «Facturar»): a next step needs create on its target.
+	for (source, key), (_path, target) in MAKERS.items():
+		if source == doc.doctype and docstatus == 1:
+			put(f"make_{key}", frappe.has_permission(target, "create"), no_perm)
 	return out
 
 

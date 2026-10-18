@@ -85,7 +85,7 @@ export function displayName(doc, doctype = doc?.doctype, { fallback } = {}) {
   if (doc == null) return fallback ?? ''
   if (typeof doc !== 'object') {
     const text = clean(doc)
-    return text && !looksLikeId(text) ? text : fallback ?? kindLabel(doctype)
+    return text && !looksLikeId(text) ? text : (fallback ?? kindLabel(doctype))
   }
   const fields = [...(NAME_FIELDS[doctype] || []), ...GENERIC_FIELDS]
   for (const field of fields) {
@@ -529,7 +529,8 @@ const STATUS_IN = {
   },
 }
 
-function statusEntry(status, kind) {
+/** The [label, tone] of a known status, or null (an unknown text is not a status). */
+export function statusEntry(status, kind) {
   const key = clean(status).toLowerCase()
   if (!key) return null
   return STATUS_IN[kind]?.[key] || STATUS[key] || null
@@ -561,4 +562,15 @@ export function initials(name) {
   const first = words[0][0]
   const last = words.length > 1 ? words[words.length - 1][0] : ''
   return (first + last).toUpperCase()
+}
+
+/**
+ * Whether a Spanish document noun is feminine, from its first word: factura,
+ * cotización, solicitud, orden → true; pago, pedido, ajuste → false.
+ */
+export function feminineNoun(kind) {
+  const word = String(kind || '')
+    .toLowerCase()
+    .split(' ')[0]
+  return /(a|ón|d)$/.test(word) || word === 'orden'
 }

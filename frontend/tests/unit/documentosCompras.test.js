@@ -329,3 +329,93 @@ describe('«Creado desde» chain', () => {
     expect(pendingStep(billed).key).toBe('factura')
   })
 })
+
+describe('requisition titles from what it asks for (walk 2026-10-18)', () => {
+  it('the record title reads the rows, not the cut ERPNext title', () => {
+    const r = record(
+      {
+        title: 'Purchase Request for Pantalla A, Pantalla B, Pantalla i',
+        docstatus: 1,
+      },
+      {},
+      {
+        items: {
+          rows: [
+            { item_name: 'Pantalla A' },
+            { item_name: 'Pantalla B' },
+            { item_code: 'X' },
+          ],
+        },
+      },
+    )
+    expect(materialRequest.header(r).title).toBe('Pantalla A y 2 más')
+    const one = record(
+      { title: 'Purchase Request for Pantalla A', docstatus: 0 },
+      {},
+      { items: { rows: [] } },
+    )
+    expect(materialRequest.header(one).title).toBe('Pantalla A')
+  })
+
+  it('the chain shortens a joined requisition title', async () => {
+    const { requestShort } =
+      await import('@/components/documentos/compras/words')
+    expect(
+      requestShort('Purchase Request for Pantalla A, Pantalla B, Pantalla i'),
+    ).toBe('Pantalla A y más')
+    expect(requestShort('Purchase Request for Funda')).toBe('Funda')
+  })
+
+  it('a bare English status in the activity is a known status', async () => {
+    const { statusEntry } = await import('@/utils/display')
+    expect(statusEntry('To Receive and Bill')?.[0]).toBe(
+      'Por recibir y facturar',
+    )
+    expect(statusEntry('Pedí precios al proveedor')).toBeNull()
+  })
+})
+
+describe('an unpaid bill past its due date', () => {
+  it('reads Vencida on the chip as on the red line', () => {
+    const row = purchaseInvoice.row({
+      name: 'ACC-PINV-2026-00048',
+      title: 'Refacciones',
+      status: 'Unpaid',
+      docstatus: 1,
+      amount: 1500,
+      outstanding: 1500,
+      due: iso(-3),
+      date: iso(-10),
+      fields: {},
+    })
+    expect(row.subtitleTone).toBe('danger')
+    expect(row.status).toBe('Vencida')
+    expect(row.tone).toBe('danger')
+    const later = purchaseInvoice.row({
+      name: 'B',
+      title: 'B',
+      status: 'Unpaid',
+      docstatus: 1,
+      amount: 1,
+      outstanding: 1,
+      due: iso(3),
+      fields: {},
+    })
+    expect(later.status).not.toBe('Vencida')
+  })
+})
+
+describe('feminine document nouns', () => {
+  it('orden is la orden; pago is el pago', async () => {
+    const { feminineNoun } = await import('@/utils/display')
+    expect(
+      [
+        'Orden de compra',
+        'factura',
+        'Recepción',
+        'Solicitud de cotización',
+      ].every(feminineNoun),
+    ).toBe(true)
+    expect(['Pago', 'pedido', 'Ajuste'].some(feminineNoun)).toBe(false)
+  })
+})
