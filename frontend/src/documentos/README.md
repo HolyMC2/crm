@@ -2,16 +2,22 @@
 
 Shell SPEC §6 (Wave D). One engine opens any document list and record the worker can read:
 
-| Route                               | Page                        | What                                                                                                     |
-| ----------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `/documentos` (and `/inventario`)   | `pages/DocumentosHub.vue`   | groups Ventas, Compras, Pagos, Inventario with counts; «Todos los tipos» searches every readable doctype |
-| `/documentos/:slug`                 | `pages/DocumentosList.vue`  | a curated list (registry entry + profile)                                                                |
-| `/documentos/:slug/:name`           | `pages/DocumentoRecord.vue` | one record                                                                                               |
-| `/documentos/tipo/:doctype[/:name]` | same pages                  | the **generic floor**: any readable doctype, profile derived from its meta                               |
-| `/inventario/:slug[/:name]`         | same pages                  | entries whose `base` is `/inventario` (the bar lights Inventario)                                        |
+| Route                               | Page                        | What                                                                                                                         |
+| ----------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `/documentos` (and `/inventario`)   | `pages/DocumentosHub.vue`   | groups Ventas, Compras, Pagos, Inventario with counts; «Todos los tipos» searches every readable doctype                     |
+| `/documentos/:slug`                 | `pages/DocumentosList.vue`  | a curated list (registry entry + profile)                                                                                    |
+| `/documentos/:slug/:name`           | `pages/DocumentoRecord.vue` | one record                                                                                                                   |
+| `/documentos/tipo/:doctype[/:name]` | same pages                  | the **generic floor**: any readable doctype, profile derived from its meta                                                   |
+| `/inventario/:slug[/:name]`         | same pages                  | entries whose `base` is `/inventario` (the bar lights Inventario)                                                            |
+| `…/nuevo`                           | `pages/DocumentoNuevo.vue`  | a new draft: blank, prefilled from the query (`?customer=…`), a mapper (`?origen=&desde=&con=`), `?duplicar=`, `?modificar=` |
 
-Server: `crm/api/documentos.py` (`rows`, `counts`, `hub`, `search`, `doctypes`, `record`,
-`connections`, `timeline`). Frappe permissions only, plus `User.block_modules`; the module is on in the
+Lists and records render through `pages/DocumentosSplit.vue`: below 1024px one page at a time; at
+≥1024 list left, record right (master-detail). The list's state lives in the URL query, so it is kept
+on every record link; keys j/k/Enter (list), e (edit a draft), Esc (close the record), c (new).
+
+Server: `crm/api/documentos.py`: reads `rows`, `counts`, `hub`, `search`, `doctypes`, `record`,
+`connections`, `timeline`; editing `form`, `draft`, `save`, `act` (submit, cancel, delete); tools
+`comment`, `assign`, `people`, `print_formats`; mappers on the `MAKERS` allowlist. Frappe permissions only, plus `User.block_modules`; the module is on in the
 boot when the worker reads at least one of its doctypes (`get_capabilities`).
 
 Budgets (DD12): nothing here is imported statically from the router, `main.js` or `MuelleShell`.
@@ -65,18 +71,19 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
 
 ## Profile keys
 
-| key                     | type                                                                                    | used by                                                                                                |
-| ----------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
-| `fields`                | `string[]`                                                                              | extra list columns the row needs (`row.fields.<name>`); only permlevel-0 real fields are returned      |
-| `chips`                 | `{ value, label, filters }[]`                                                           | the one chip row; `value: ''` is «Todas/Todos» with `filters: null`. Filters are Frappe filter triples |
-| `defaultChip`           | `string`                                                                                | chip on when the URL names none (kept out of the URL)                                                  |
-| `filterFields`          | `{ fieldname, label, options: [{ value, label }] }[]`                                   | the «Filtros» sheet                                                                                    |
-| `sorts`                 | `{ value, label }[]`                                                                    | sort sheet; `value` is `field asc                                                                      | desc`, `''` = the date field, newest first |
-| `sections`              | `string[]`                                                                              | record sections in order: `items`, `totals`, `datos`, `conexiones`, `actividad`, `archivos`            |
-| `owedLabel`             | `string`                                                                                | totals' label for the outstanding amount («Por cobrar», «Por pagar»)                                   |
-| `row(row, { doctype })` | → `{ title, subtitle, subtitleTone?, meta, metaTone?, status, tone, avatar? \| icon? }` | one list row (`ui/ListRow`)                                                                            |
-| `header(record)`        | → `{ title, kind, number, status, tone, amount, date, due }`                            | the record's app bar and hero                                                                          |
-| `nextStep(record)`      | → `null` or a step (below)                                                              | the one filled «siguiente paso» (DD4)                                                                  |
+| key                     | type                                                                                    | used by                                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `fields`                | `string[]`                                                                              | extra list columns the row needs (`row.fields.<name>`); only permlevel-0 real fields are returned          |
+| `chips`                 | `{ value, label, filters }[]`                                                           | the one chip row; `value: ''` is «Todas/Todos» with `filters: null`. Filters are Frappe filter triples     |
+| `defaultChip`           | `string`                                                                                | chip on when the URL names none (kept out of the URL)                                                      |
+| `filterFields`          | `{ fieldname, label, options: [{ value, label }] }[]`                                   | the «Filtros» sheet                                                                                        |
+| `sorts`                 | `{ value, label }[]`                                                                    | sort sheet; `value` is `field asc` or `field desc`; `''` = the date field, newest first                    |
+| `sections`              | `string[]`                                                                              | record sections in order: `items`, `totals`, `datos`, `conexiones`, `actividad`, `archivos`                |
+| `owedLabel`             | `string`                                                                                | totals' label for the outstanding amount («Por cobrar», «Por pagar»)                                       |
+| `row(row, { doctype })` | → `{ title, subtitle, subtitleTone?, meta, metaTone?, status, tone, avatar? \| icon? }` | one list row (`ui/ListRow`)                                                                                |
+| `header(record)`        | → `{ title, kind, number, status, tone, amount, date, due }`                            | the record's app bar and hero                                                                              |
+| `nextStep(record)`      | → `null` or a step (below)                                                              | the one filled «siguiente paso» (DD4)                                                                      |
+| `editFields`            | `string[]` or `null`                                                                    | fields of the edit sheet and `/nuevo`, in order; `null`: the required and list fields the worker may write |
 
 `row` input (from `rows`): `{ name, title, status, docstatus, amount, currency, date, due,
 outstanding, modified, fields }`. Dates are ISO strings; format them with `utils/display.js`
@@ -88,7 +95,7 @@ fields, actions, activity, connections, modified, doc }`. `actions[key] = { allo
 `edit submit cancel amend delete duplicate comment assign attach share print email`; a refused action
 carries the sentence that explains it.
 
-### The next step (lands with D1.2)
+### The next step
 
 ```js
 nextStep(record) {
@@ -101,7 +108,25 @@ nextStep(record) {
 
 A step is one of: `{ submit: true }` (confirm the draft), `{ make: '<key>' }` (an ERPNext mapper on
 the server allowlist `MAKERS` in `documentos.py`: the new draft opens prefilled), or `{ to: route }`.
-Only offer a step whose action the record allows; the engine hides it otherwise.
+Only offer a step whose action the record allows; the engine hides it otherwise. `draftStep(record)`
+from `_generic.js` is «Confirmar» for any submittable draft. To add a mapper, add one line to `MAKERS`
+(`(source doctype, key) → (dotted path, target doctype)`; only `@frappe.whitelist()` ERPNext
+functions, a server test checks it) and, for a new key, its target in `form.js` `MAKE_TARGETS`.
+
+## Tools, editing and components
+
+- **Tools sheet** («⋯» on every record, `components/documentos/ToolsSheet.vue`; rules in `tools.js`
+  `toolsFor`): Asignar, Comentar, Adjuntar, Compartir (the PDF where the phone shares files), Imprimir
+  o PDF (format picker), «Avísame…» (D5's `AvisameSheet.vue`, when on the branch), «Todos los ajustes»
+  and «Pregúntale a Muelle sobre esta ficha» (D6), Duplicar, Copiar enlace, Cancelar (confirmed),
+  Modificar (cancelled), Eliminar (not confirmed), «Abrir en escritorio» (≥1024 only). A tool the
+  worker cannot use now stays with the server's reason under it.
+- **Editing**: `EditSheet.vue` (a draft), `DocumentoNuevo.vue` (a new one), both on `EditForm.vue`:
+  one control per field type from D6's `components/ajustes/AjustesControl.vue` (44px, es-MX), then
+  `ItemsEditor.vue` (search by name, code or barcode; a scanner gun types into the search; the camera
+  scans with the browser's BarcodeDetector where it exists; quantity stepper; price optional, else the
+  price list on save). Rows travel as `{ _idx, …changes }` (kept) or `{ item_code, … }` (new).
+- `ConfirmSheet.vue` asks before Confirmar, Cancelar and Eliminar (`tools.js` `confirmCopy`).
 
 ## Complete example: Facturas (`profiles/sales_invoice.js`)
 
