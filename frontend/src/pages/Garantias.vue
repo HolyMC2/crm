@@ -99,7 +99,9 @@
       >
         {{ boot.setup_note }}
       </p>
+      <!-- On a phone the kind is in the chip row's «Filtros» sheet. -->
       <div
+        v-if="!list.phone.value"
         class="flex flex-wrap items-center gap-2 px-4 pb-2 pt-2 sm:px-6 sm:pt-0"
       >
         <FormControl
@@ -129,14 +131,35 @@
       </div>
       <!-- One filter row: what needs attention (past the SLA, nobody on it)
            and «Míos» instead of a separate checkbox. -->
-      <div v-if="chipRow.length" class="pb-3 sm:px-2" data-garantias-chips>
+      <div
+        v-if="chipRow.length || list.phone.value"
+        class="pb-3 sm:px-2"
+        :class="list.phone.value ? 'pt-2' : ''"
+        data-garantias-chips
+      >
         <FilterChips
           multiple
           :model-value="chipModel"
           :chips="chipRow"
           :label="__('Needs attention')"
+          :filters-count="state.kind ? 1 : 0"
           @update:model-value="onChips"
-        />
+          @clear-filters="list.navigate({ kind: '' })"
+        >
+          <template v-if="list.phone.value" #filters>
+            <p class="pb-1 text-sm text-ink-gray-6">
+              {{ __('Kind', null, 'Garantías') }}
+            </p>
+            <ListRow
+              v-for="option in kindOptions"
+              :key="option.value || 'all'"
+              :title="option.label"
+              :selected="state.kind === option.value"
+              data-garantias-kind
+              @click="list.navigate({ kind: option.value })"
+            />
+          </template>
+        </FilterChips>
       </div>
       <div
         v-if="problem"
@@ -382,7 +405,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
-import { FilterChips } from '@/components/ui'
+import { FilterChips, ListRow } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AssignDialog from '@/components/garantias/AssignDialog.vue'
 import BulkAssignSheet from '@/components/garantias/BulkAssignSheet.vue'
@@ -519,6 +542,10 @@ const chips = computed(() =>
     }),
   ),
 )
+const kindOptions = computed(() => [
+  { label: __('All kinds'), value: '' },
+  ...KINDS.map((k) => ({ label: kindLabel(k.value), value: k.value })),
+])
 // One chip row (S1 FilterChips, with its edge fade): the attention chips,
 // one chosen at a time, and «Míos» on top of any of them.
 const chipRow = computed(() => [

@@ -158,14 +158,17 @@ function StockPill({ badge: value }) {
   return h(
     'span',
     {
-      class: `inline-flex h-5 items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-xs font-medium ${PILL[value.theme] || PILL.gray}`,
+      // Never wider than its column: at 305px a long stock line shortens
+      // instead of running under the price.
+      class: `inline-flex h-5 min-w-0 max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-2 text-xs font-medium ${PILL[value.theme] || PILL.gray}`,
+      title: value.text,
     },
     [
       h('span', {
-        class: `h-1.5 w-1.5 rounded-full ${DOT[value.theme] || DOT.gray}`,
+        class: `h-1.5 w-1.5 shrink-0 rounded-full ${DOT[value.theme] || DOT.gray}`,
         'aria-hidden': 'true',
       }),
-      value.text,
+      h('span', { class: 'truncate' }, value.text),
     ],
   )
 }

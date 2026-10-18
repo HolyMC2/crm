@@ -124,35 +124,36 @@
           />
         </div>
 
-        <div v-if="caps.write" class="px-4 pb-2 sm:hidden">
-          <FormControl
-            class="h-11 w-full"
-            type="select"
-            :aria-label="__('List', null, CTX)"
-            :model-value="state.vista"
-            :options="entries.map((e) => ({ label: e.label, value: e.value }))"
-            @update:model-value="selectVista"
-          />
-        </div>
+        <!-- Phone: one chip row for the categories (S1 FilterChips); the
+             list (published, drafts…) is in its «Filtros» sheet. -->
         <div
-          v-if="categories.length"
-          class="flex gap-2 overflow-x-auto px-4 pb-3 sm:hidden"
-          role="group"
-          :aria-label="__('Categories')"
+          v-if="isPhone && (caps.write || categories.length)"
+          class="pb-3"
+          data-manual-chips
         >
-          <button
-            v-for="category in ['', ...categories]"
-            :key="category || 'all'"
-            class="min-h-11 shrink-0 rounded-full border px-4 text-sm"
-            :class="
-              state.categoria === category
-                ? 'border-outline-gray-4 bg-surface-gray-3 font-semibold text-ink-gray-9'
-                : 'border-outline-gray-2 text-ink-gray-7'
-            "
-            @click="selectCategory(category)"
+          <FilterChips
+            :model-value="state.categoria"
+            :chips="categoryChips"
+            :deselectable="false"
+            :label="__('Categories')"
+            :filters-count="state.vista !== 'publicados' ? 1 : 0"
+            @update:model-value="selectCategory"
+            @clear-filters="selectVista('publicados')"
           >
-            {{ category || __('All', null, CTX) }}
-          </button>
+            <template v-if="caps.write" #filters>
+              <p class="pb-1 text-sm text-ink-gray-6">
+                {{ __('List', null, CTX) }}
+              </p>
+              <ListRow
+                v-for="entry in entries"
+                :key="entry.value"
+                :title="entry.label"
+                :selected="state.vista === entry.value"
+                data-manual-vista
+                @click="selectVista(entry.value)"
+              />
+            </template>
+          </FilterChips>
         </div>
 
         <div
@@ -397,8 +398,8 @@
 <script setup>
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Badge, Button, FormControl } from 'frappe-ui'
-import { Fab, PageHeader } from '@/components/ui'
+import { Badge, Button } from 'frappe-ui'
+import { Fab, FilterChips, ListRow, PageHeader } from '@/components/ui'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
@@ -462,6 +463,10 @@ const guard = computed(() =>
       )
     : '',
 )
+const categoryChips = computed(() => [
+  { value: '', label: __('All', null, CTX) },
+  ...categories.value.map((category) => ({ value: category, label: category })),
+])
 const entries = computed(() =>
   vistasFor(Boolean(caps.value.write)).map((vista) => ({
     value: vista.value,

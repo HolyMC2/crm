@@ -28,6 +28,9 @@ vi.mock('vue-router', async () => {
       state.route.query = { ...query }
     }),
     back: vi.fn(),
+    // The «Filtros» sheet (S1 BottomSheet) guards back navigation.
+    beforeEach: vi.fn(() => () => {}),
+    currentRoute: { value: state.route },
   }
   return { useRoute: () => state.route, useRouter: () => state.router }
 })
@@ -397,6 +400,16 @@ describe('Garantías list as a power app', () => {
     await tap('sin-asignar')
     expect(state.route.query.chip || '').toBe('')
     expect(state.route.query).toMatchObject({ mine: '1' })
+    // One filter mechanism: the kind is in the chip row's «Filtros» sheet.
+    expect(root.querySelector('[aria-label="Kind"]')).toBeNull()
+    root.querySelector('[data-garantias-chips] [data-ui-filters-chip]').click()
+    await flush()
+    const kinds = [...document.body.querySelectorAll('[data-garantias-kind]')]
+    expect(kinds.length).toBeGreaterThan(1)
+    kinds[1].click()
+    state.route.query = { ...state.router.push.mock.calls.at(-1)[0].query }
+    await flush()
+    expect(state.route.query.kind).toBeTruthy()
   })
 })
 
