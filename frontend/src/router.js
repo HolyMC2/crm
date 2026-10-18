@@ -176,6 +176,14 @@ const routes = [
     meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
   },
   {
+    // Surtido: supplier price list → budgeted buy plan → supplier reply
+    // (doco.workspaces.sourcing). Query `?pedido=` reopens a Pedido Catalogo.
+    path: '/compras/surtido',
+    name: 'CompraSurtido',
+    component: () => import('@/pages/CompraSurtido.vue'),
+    meta: { app: 'compras', title: 'Compras', listParent: 'Compras' },
+  },
+  {
     path: '/compras/orden/:name',
     name: 'CompraOrden',
     component: () => import('@/pages/CompraOrden.vue'),

@@ -26717,3 +26717,603 @@ msgstr "quedan {0}"
 msgctxt "Productos"
 msgid "See all movements"
 msgstr "Ver todos los movimientos"
+# Surtido (ASI-S4): frontend/src/pages/CompraSurtido.vue
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Ask Muelle"
+msgstr "Pregúntale a Muelle"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Loading supplier lists…"
+msgstr "Cargando listas de proveedores…"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Restock from a supplier list"
+msgstr "Surtir desde la lista del proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The supplier list, a buy plan from your sales and stock that never passes the budget, then the supplier reply."
+msgstr "La lista del proveedor, un plan de compra con tus ventas y tu existencia que nunca pasa el presupuesto, y luego la respuesta del proveedor."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Steps"
+msgstr "Pasos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Supplier lists"
+msgstr "Listas de proveedores"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "No supplier list yet. Upload the first one below."
+msgstr "Aún no hay listas de proveedores. Sube la primera aquí abajo."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} pages"
+msgstr "{0} páginas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} products"
+msgstr "{0} productos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Upload link"
+msgstr "Liga para subir"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Upload the PDF or spreadsheet on this page (big files welcome; the link lasts one day). The list reads itself in the background."
+msgstr "Sube el PDF o la hoja de cálculo en esta página (se aceptan archivos grandes; la liga dura un día). La lista se lee sola en segundo plano."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Open the upload page"
+msgstr "Abrir la página para subir"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "New supplier list"
+msgstr "Nueva lista de proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Supplier"
+msgstr "Proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Search supplier"
+msgstr "Buscar proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Name of the list"
+msgstr "Nombre de la lista"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "October cases"
+msgstr "Fundas de octubre"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Create and get the upload link"
+msgstr "Crear y obtener la liga para subir"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Recent orders to suppliers"
+msgstr "Pedidos recientes a proveedores"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "budget {0}"
+msgstr "presupuesto {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Next: buy plan"
+msgstr "Siguiente: plan de compra"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Budget (MXN)"
+msgstr "Presupuesto (MXN)"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Months of sales"
+msgstr "Meses de ventas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Days to cover"
+msgstr "Días a cubrir"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Product words"
+msgstr "Palabras del producto"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "case, rugged"
+msgstr "funda, uso rudo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Only this model"
+msgstr "Solo este modelo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Only this colour"
+msgstr "Solo este color"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Only what runs low"
+msgstr "Solo lo que tiene pocas piezas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Include new models"
+msgstr "Incluir modelos nuevos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Make a new plan"
+msgstr "Hacer un plan nuevo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Make the plan"
+msgstr "Hacer el plan"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "of {0}"
+msgstr "de {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} lines"
+msgstr "{0} líneas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} left"
+msgstr "quedan {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Budget used"
+msgstr "Presupuesto usado"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Quantity = sales of {0} months over {1} days of cover, minus stock. The plan never passes the budget."
+msgstr "Cantidad = ventas de {0} meses para {1} días de cobertura, menos la existencia. El plan nunca pasa el presupuesto."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Not applied: {0}"
+msgstr "No se aplicó: {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Changes: total {0} → {1}"
+msgstr "Cambios: total {0} → {1}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0}: {1} → {2} pcs"
+msgstr "{0}: {1} → {2} pzas"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Removed: {0}"
+msgstr "Quitada: {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Added: {0} ({1} pcs)"
+msgstr "Agregada: {0} ({1} pzas)"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Plan lines"
+msgstr "Líneas del plan"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "p. {0}"
+msgstr "pág. {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Pieces of {0}"
+msgstr "Piezas de {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Keep {0}"
+msgstr "Conservar {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Remove {0}"
+msgstr "Quitar {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Change colour of {0}"
+msgstr "Cambiar el color de {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Left out of the plan ({0})"
+msgstr "Fuera del plan ({0})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Will add"
+msgstr "Se agregará"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Add"
+msgstr "Agregar"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} changes to apply"
+msgstr "{0} cambios por aplicar"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Apply changes"
+msgstr "Aplicar cambios"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Approve: draft order to the supplier"
+msgstr "Aprobar: pedido en borrador al proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Only the owner approves a plan."
+msgstr "Solo el dueño aprueba un plan."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Approve a plan or open a recent order to see its reply."
+msgstr "Aprueba un plan o abre un pedido reciente para ver su respuesta."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Total {0}"
+msgstr "Total {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "This order passes the budget."
+msgstr "Este pedido pasa el presupuesto."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Draft purchase {0}"
+msgstr "Compra en borrador {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Make the file for the supplier and send it yourself (WhatsApp, email). Muelle never messages the supplier."
+msgstr "Haz el archivo para el proveedor y envíalo tú (WhatsApp, correo). Muelle nunca le escribe al proveedor."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Spreadsheet"
+msgstr "Hoja de cálculo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "PDF"
+msgstr "PDF"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Download {0}"
+msgstr "Descargar {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "A new reply replaces the last one ({0})."
+msgstr "Una respuesta nueva reemplaza la anterior ({0})."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Drop the supplier reply here"
+msgstr "Suelta aquí la respuesta del proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "PDF, photo or spreadsheet; or paste the text."
+msgstr "PDF, foto u hoja de cálculo; o pega el texto."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Choose file"
+msgstr "Elegir archivo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reading the reply…"
+msgstr "Leyendo la respuesta…"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Paste the reply"
+msgstr "Pega la respuesta"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Or paste what the supplier wrote…"
+msgstr "O pega lo que escribió el proveedor…"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Read pasted reply"
+msgstr "Leer la respuesta pegada"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "New in the reply ({0})"
+msgstr "Nuevos en la respuesta ({0})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The shop does not know these yet. Say if each one uses batches and serial numbers, then create the items; or omit them."
+msgstr "La tienda aún no los conoce. Indica si cada uno usa lotes y números de serie y crea los artículos; u omítelos."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Choose {0}"
+msgstr "Elegir {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "ambiguous match"
+msgstr "coincidencia dudosa"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Batches"
+msgstr "Lotes"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Yes"
+msgstr "Sí"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "No"
+msgstr "No"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Serials"
+msgstr "Series"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Omit chosen"
+msgstr "Omitir los elegidos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Create chosen items"
+msgstr "Crear los artículos elegidos"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Say batches and serials for every chosen row."
+msgstr "Indica lotes y series en cada renglón elegido."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Order lines ({0})"
+msgstr "Líneas del pedido ({0})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "{0} of {1} at {2}"
+msgstr "{0} de {1} a {2}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The supplier did not send ({0})"
+msgstr "El proveedor no surtió ({0})"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Create or link the item first"
+msgstr "Primero crea o vincula el artículo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Send to a material request (draft)"
+msgstr "Mandar a una solicitud de material (borrador)"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Draft material request {0}"
+msgstr "Solicitud de material en borrador {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Closing makes the supplier quotation and a draft purchase with what the supplier confirmed."
+msgstr "Al cerrar se crean la cotización del proveedor y una compra en borrador con lo que el proveedor confirmó."
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Close the order"
+msgstr "Cerrar el pedido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Supplier list"
+msgstr "Lista del proveedor"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Plan"
+msgstr "Plan"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reply"
+msgstr "Respuesta"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Waiting for the file"
+msgstr "Esperando archivo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Received"
+msgstr "Recibido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reading"
+msgstr "Leyendo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Read"
+msgstr "Leído"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Ready"
+msgstr "Listo"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Closed"
+msgstr "Cerrado"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Error"
+msgstr "Error"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Draft"
+msgstr "Borrador"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Sent"
+msgstr "Enviado"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Replied"
+msgstr "Cotizado"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Pending"
+msgstr "Pendiente"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Confirmed"
+msgstr "Confirmada"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Not sent"
+msgstr "Sin existencia"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Dropped"
+msgstr "Descartada"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Restocking is not available"
+msgstr "Surtido no está disponible"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Could not open restocking"
+msgstr "No se pudo abrir Surtido"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "New colour for {0}"
+msgstr "Color nuevo para {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Draft order {0} for {1}"
+msgstr "Pedido en borrador {0} para {1}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "File ready; the order is marked sent"
+msgstr "Archivo listo; el pedido quedó como enviado"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "The file did not upload"
+msgstr "El archivo no se subió"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Reply read"
+msgstr "Respuesta leída"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Items created: {0}"
+msgstr "Artículos creados: {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "Order closed; draft purchase {0}"
+msgstr "Pedido cerrado; compra en borrador {0}"
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "In plan {0}, "
+msgstr "En el plan {0}, "
+
+#: frontend/src/pages/CompraSurtido.vue
+msgctxt "Surtido"
+msgid "In order {0}, "
+msgstr "En el pedido {0}, "
+
+#: frontend/src/pages/Compras.vue
+msgctxt "Surtido"
+msgid "Restock from a list"
+msgstr "Surtir desde una lista"

@@ -56,6 +56,13 @@
               :targets="['Purchase Order', 'Purchase Invoice']"
               return-label="Compras"
             />
+            <Button
+              icon="layers"
+              variant="ghost"
+              class="min-h-11 min-w-11"
+              :aria-label="__('Restock from a list', null, 'Surtido')"
+              @click="router.push({ name: 'CompraSurtido' })"
+            />
           </template>
           <template v-if="counts" #summary>
             <span
@@ -97,6 +104,12 @@
           <CapturarDocumentoButton
             :targets="['Purchase Order', 'Purchase Invoice']"
             return-label="Compras"
+          />
+          <Button
+            icon-left="layers"
+            :label="__('Restock from a list', null, 'Surtido')"
+            class="min-h-11 sm:min-h-8"
+            @click="router.push({ name: 'CompraSurtido' })"
           />
           <Button
             v-if="boot?.capabilities?.create"
