@@ -500,90 +500,11 @@
                   __('No price list sells this product yet.')
                 }}</span>
               </div>
-              <div v-else class="overflow-x-auto">
-                <table class="w-full min-w-[34rem] text-sm">
-                  <thead>
-                    <tr
-                      class="text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5"
-                    >
-                      <th class="px-4 py-2 font-medium">
-                        {{ __('List', null, 'Productos') }}
-                      </th>
-                      <th class="px-2 py-2 text-right font-medium">
-                        {{ __('Price', null, 'Productos') }}
-                      </th>
-                      <th class="px-2 py-2 font-medium">{{ __('Valid') }}</th>
-                      <th class="px-2 py-2 font-medium">{{ __('Updated') }}</th>
-                      <th class="px-4 py-2 font-medium">
-                        {{ __('Status', null, 'Productos') }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-outline-gray-1">
-                    <tr
-                      v-for="row in data.prices.rows"
-                      :key="row.price_list"
-                      class="align-top"
-                    >
-                      <td class="px-4 py-2.5">
-                        <span class="block font-medium text-ink-gray-9">{{
-                          priceListLabel(row.price_list)
-                        }}</span>
-                        <span class="block text-xs text-ink-gray-5"
-                          >{{ row.currency }} ·
-                          {{ unitName(row.uom || row.stock_uom) }}</span
-                        >
-                        <span
-                          v-if="row.blocked_reason && row.rate !== null"
-                          class="mt-0.5 block text-xs text-ink-gray-6"
-                          >{{ plain(row.blocked_reason) }}</span
-                        >
-                        <span
-                          v-for="next in row.scheduled || []"
-                          :key="next.name"
-                          class="mt-0.5 block text-xs text-ink-blue-7"
-                          >{{
-                            __('From {0}: {1}', [
-                              next.valid_from,
-                              money(next.rate, row.currency),
-                            ])
-                          }}</span
-                        >
-                      </td>
-                      <td
-                        class="whitespace-nowrap px-2 py-2.5 text-right text-base font-semibold tabular-nums"
-                        :class="
-                          hasRate(row) ? 'text-ink-gray-9' : 'text-ink-gray-5'
-                        "
-                      >
-                        {{
-                          hasRate(row)
-                            ? money(row.rate, row.currency)
-                            : __('No price', null, 'Productos')
-                        }}
-                      </td>
-                      <td class="whitespace-nowrap px-2 py-2.5 text-ink-gray-7">
-                        {{ validity(row) }}
-                      </td>
-                      <td class="whitespace-nowrap px-2 py-2.5">
-                        <span
-                          v-if="age(row).text"
-                          :class="AGE_CLASS[age(row).tone]"
-                          :title="row.updated"
-                          >{{ age(row).text }}</span
-                        >
-                        <span v-else class="text-ink-gray-4">—</span>
-                      </td>
-                      <td class="px-4 py-2.5">
-                        <Badge
-                          :theme="priceStatus(row).theme"
-                          :label="priceStatus(row).text"
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <ProductPrices
+                v-else
+                :rows="data.prices.rows"
+                :today="boot?.today || ''"
+              />
             </section>
 
             <PhotoGallery
@@ -915,6 +836,15 @@
               </p>
             </section>
 
+            <ProductInsights
+              v-if="!isTemplate && data.insights?.readable"
+              :insights="data.insights"
+              :stock="data.stock.rows || []"
+              :purchase="action('purchase')"
+              :currency="defaultPrice?.currency || 'MXN'"
+              @reorder="reorder"
+            />
+
             <section
               v-if="!isTemplate"
               id="movimientos"
@@ -1035,7 +965,7 @@
                       <span :title="row.at">{{
                         relativeAge(row.at, boot?.today).text || row.at
                       }}</span>
-                      · {{ String(row.at).slice(0, 16) }}</span
+                      · {{ formatDateTime(row.at) }}</span
                     >
                   </span>
                   <span class="flex items-baseline gap-2 tabular-nums">
@@ -1390,12 +1320,6 @@
                 <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
                   {{ __('Recent sales') }}
                 </h2>
-                <a
-                  v-if="data.sales.rows.length"
-                  :href="salesReportUrl(product.name)"
-                  class="text-sm text-ink-gray-6 underline-offset-2 hover:text-ink-gray-9 hover:underline"
-                  >{{ __('All in Desk', null, 'Productos') }}</a
-                >
               </header>
               <p
                 v-if="!data.sales.rows.length"
@@ -1412,25 +1336,33 @@
                   v-for="row in visibleRows(data.sales.rows, salesAll)"
                   :key="row.name"
                 >
-                  <a
-                    :href="documentLink('Sales Invoice', row.name).href"
-                    class="flex min-h-11 flex-wrap items-start gap-3 px-4 py-2 text-sm hover:bg-surface-gray-1"
+                  <component
+                    :is="documentTag('Sales Invoice', row.name)"
+                    v-bind="documentProps('Sales Invoice', row.name)"
+                    class="flex min-h-14 items-start gap-3 px-4 py-2 text-sm"
+                    data-producto-sale
                   >
                     <span class="min-w-0 flex-1">
-                      <span class="block font-medium">{{
-                        row.customer_name || row.name
-                      }}</span>
+                      <span
+                        class="block break-words text-base text-ink-gray-9"
+                        >{{
+                          row.customer_name || __('Customer', null, 'Productos')
+                        }}</span
+                      >
                       <span class="block text-ink-gray-6"
-                        >{{ row.name }} · {{ row.posting_date
+                        >{{ formatDate(row.posting_date)
                         }}<template v-if="row.is_return">
                           · {{ __('Return', null, 'Productos') }}</template
+                        ><template v-if="row.is_pos">
+                          ·
+                          {{ __('Point of sale', null, 'Productos') }}</template
                         ></span
                       >
                     </span>
                     <span class="tabular-nums">{{
                       money(row.grand_total, row.currency)
                     }}</span>
-                  </a>
+                  </component>
                 </li>
               </ul>
               <ShowAll v-model="salesAll" :total="data.sales.rows.length" />
@@ -1508,13 +1440,14 @@ import VariantGrid from '@/components/productos/VariantGrid.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import LabelDialog from '@/components/productos/LabelDialog.vue'
 import MovementRow from '@/components/inventario/MovementRow.vue'
-import { formatDate, unitLabel } from '@/utils/display'
+import ProductInsights from '@/components/productos/ProductInsights.vue'
+import ProductPrices from '@/components/productos/ProductPrices.vue'
+import { formatDate, formatDateTime, unitLabel } from '@/utils/display'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import { priceListLabel } from '@/utils/priceList'
-import { hoyLive } from '@/composables/useHoy'
+import { createReadGate, hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
-  AGE_CLASS,
   backTarget,
   deskReconciliationUrl,
   documentLink,
@@ -1527,7 +1460,6 @@ import {
   notifyPriceOpener,
   parseDone,
   plain,
-  priceStatus,
   priceUnit,
   problemOf,
   productKind,
@@ -1538,7 +1470,6 @@ import {
   relativeAge,
   requestId,
   requestedAction,
-  salesReportUrl,
   scannerBinUrl,
   scannerItemUrl,
   scannerMoveUrl,
@@ -1614,13 +1545,14 @@ function movementWhen(row) {
 }
 // Sales: five rows until «See all».
 const salesAll = ref(false)
+// Documents open in the shell only; one without a shell page is plain text,
+// never a Desk (`/app/`) link (Shell SPEC §1.5).
 function documentTag(doctype, name) {
-  const link = documentLink(doctype, name)
-  return link?.to ? 'RouterLink' : link?.href ? 'a' : 'span'
+  return documentLink(doctype, name)?.to ? 'RouterLink' : 'span'
 }
 function documentProps(doctype, name) {
   const link = documentLink(doctype, name)
-  return link?.to ? { to: link.to } : link?.href ? { href: link.href } : {}
+  return link?.to ? { to: link.to } : {}
 }
 // «See all (12)» / «Show fewer» under a list cut at five rows.
 function ShowAll(props, { emit }) {
@@ -1647,7 +1579,7 @@ ShowAll.emits = ['update:modelValue']
 // price by itself: the worker chooses it, or asks for the other unit's price.
 const unit = computed(() => priceUnit(route.query, data.value?.item))
 // A unit as a shop says it: «Nos» reads «pza», never the ERPNext UOM.
-const unitName = (uom) => unitLabel(uom)
+const unitName = (uom, amount = 1) => unitLabel(uom, amount)
 const back = computed(() => backTarget(route.query))
 const backLabel = computed(() =>
   back.value.href
@@ -1792,11 +1724,9 @@ const heroActions = computed(() => {
     })
   return list
 })
-function validity(row) {
-  if (!hasRate(row)) return '—'
-  if (!row.valid_from && !row.valid_upto) return __('No end date')
-  if (!row.valid_upto) return __('Since {0}', [row.valid_from])
-  return `${row.valid_from || '…'} → ${row.valid_upto}`
+// «Reordenar» on a short store: the purchase flow for that store and quantity.
+function reorder({ warehouse, qty: amount }) {
+  router.push(purchaseRoute(product.value.name, { warehouse, qty: amount }))
 }
 function change(row) {
   if (!row.old_rate || row.new_rate === null || row.new_rate === undefined)
@@ -1865,16 +1795,19 @@ const moreFacts = computed(() => {
     },
     more.sales_uom !== item.stock_uom && {
       label: __('Sold in', null, 'Productos'),
-      value: more.sales_uom,
+      value: unitName(more.sales_uom),
     },
     more.purchase_uom !== item.stock_uom && {
       label: __('Bought in', null, 'Productos'),
-      value: more.purchase_uom,
+      value: unitName(more.purchase_uom),
     },
     more.conversions?.length && {
       label: __('Units', null, 'Productos'),
       value: more.conversions
-        .map((row) => `1 ${row.uom} = ${qty(row.factor)} ${item.stock_uom}`)
+        .map(
+          (row) =>
+            `1 ${unitName(row.uom)} = ${qty(row.factor)} ${unitName(item.stock_uom, row.factor)}`,
+        )
         .join(' · '),
     },
     more.lead_time_days && {
@@ -1883,7 +1816,7 @@ const moreFacts = computed(() => {
     },
     more.safety_stock && {
       label: __('Safety stock', null, 'Productos'),
-      value: `${qty(more.safety_stock)} ${item.stock_uom}`,
+      value: `${qty(more.safety_stock)} ${unitName(item.stock_uom, more.safety_stock)}`,
     },
     more.weight_per_unit && {
       label: __('Weight', null, 'Productos'),
@@ -1895,7 +1828,7 @@ const moreFacts = computed(() => {
     },
     more.end_of_life && {
       label: __('End of life', null, 'Productos'),
-      value: more.end_of_life,
+      value: formatDate(more.end_of_life),
     },
   ].filter(Boolean)
 })
@@ -1906,7 +1839,7 @@ const facts = computed(() => {
   return [
     { label: __('Code'), value: item.name },
     { label: __('Kind'), value: kind.value?.text || '' },
-    { label: __('Unit'), value: item.stock_uom },
+    { label: __('Unit'), value: unitName(item.stock_uom) },
     groupPath.value.length > 0 && {
       label: __('Group', null, 'Productos'),
       value: groupPath.value.join(' › '),
@@ -1948,11 +1881,16 @@ function photoFailed(error) {
   }
 }
 
+// The socket's first connect resyncs every view while (or just after) the
+// first read runs; that read already answers it: one record read per open.
+const readGate = createReadGate()
 async function load({ quiet = false } = {}) {
   if (quiet && loading.value) return
   const item = props.item
   loading.value = true
   if (!quiet) problem.value = null
+  readGate.start()
+  let owed
   try {
     const fresh = await productosApi('record', { item })
     if (item !== props.item) return
@@ -1971,7 +1909,9 @@ async function load({ quiet = false } = {}) {
     else problem.value = p
   } finally {
     loading.value = false
+    owed = readGate.end()
   }
+  if (owed && item === props.item) load({ quiet: true })
 }
 
 function action(key) {
@@ -2149,8 +2089,9 @@ const socket = getCurrentInstance()?.appContext.config.globalProperties.$socket
 useLiveWatch(
   hoyLive(socket),
   ['Item', 'Item Price', 'Stock Ledger Entry'],
-  () => {
-    if (!data.value || !boot.value?.enabled) return
+  (batch) => {
+    if (!boot.value?.enabled || !readGate.admit(batch)) return
+    if (!data.value) return
     if (priceOpen.value || editOpen.value || countOpen.value || request.open)
       return
     load({ quiet: true })

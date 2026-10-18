@@ -21,7 +21,11 @@
     </template>
     <template #subtitle>
       <span v-if="showItem" class="block truncate">{{ rowAction(row) }}</span>
-      <span class="block truncate">{{ where }}</span>
+      <!-- On a product's own log the second line is free: who, when and the
+           store wrap instead of losing the date on a narrow phone. -->
+      <span :class="showItem ? 'block truncate' : 'line-clamp-2'">{{
+        where
+      }}</span>
     </template>
     <template #trailing>
       <span
@@ -63,11 +67,11 @@ const link = computed(() => voucherLink(props.row.voucher))
 const title = computed(() =>
   props.showItem ? props.row.item_name : rowAction(props.row),
 )
-// Who and when first: a long store name is what truncates.
+// When, then who: a long name or store is what truncates, never the time.
 const where = computed(() =>
   [
-    rowPeople(props.row),
     props.when || props.row.time,
+    rowPeople(props.row),
     props.showStore ? props.row.store : '',
   ]
     .filter(Boolean)

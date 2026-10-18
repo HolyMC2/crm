@@ -119,6 +119,11 @@ async function mountAt(path) {
         component: Producto,
         props: true,
       },
+      {
+        path: '/compras/nueva',
+        name: 'CompraNueva',
+        component: { render: () => null },
+      },
     ],
   })
   router.push(path)
@@ -177,7 +182,8 @@ describe('Producto', () => {
     expect(text).toContain('6 days ago')
     expect(text).toContain('Current')
     expect(text).toContain('No price')
-    expect(text).toContain('Since 2026-05-29')
+    expect(text).toContain('since 29 may')
+    expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/)
     expect(text).toContain('Add photo')
     // «Print label» prints here; Etiquetas stays one link away for sheets.
     const label = [...root.querySelectorAll('button')].find((b) =>
@@ -276,6 +282,87 @@ describe('Producto', () => {
     expect(all.getAttribute('href')).toBe(
       '/crm/productos/movimientos?articulo=ABIBMEX000130',
     )
+  })
+
+  it('«How it sells»: velocity, last sale, days of stock and «Reorder»', async () => {
+    record.item.is_stock_item = 1
+    record.item.is_purchase_item = 1
+    record.stock = {
+      readable: true,
+      hidden: 0,
+      total: 2,
+      service: false,
+      rows: [
+        {
+          warehouse: 'Centro - D',
+          label: 'Centro',
+          actual_qty: 11,
+          projected_qty: 11,
+          reorder_level: 0,
+          state: 'ok',
+          cajones: [],
+        },
+        {
+          warehouse: 'Bodega - D',
+          label: 'Bodega',
+          actual_qty: 0,
+          projected_qty: 0,
+          reorder_level: 10,
+          reorder_qty: 24,
+          state: 'faltan',
+          cajones: [],
+        },
+      ],
+    }
+    record.actions.push({
+      key: 'purchase',
+      label: 'Pedir',
+      enabled: true,
+      primary: true,
+      warehouse: 'Bodega - D',
+      qty: 24,
+    })
+    record.insights = {
+      readable: true,
+      uom: 'Nos',
+      sold_30: 9,
+      sold_90: 9,
+      per_day: 0.1,
+      last_sale: {
+        date: '2026-10-14',
+        qty: 1,
+        store: 'Centro',
+        party: 'Juan Pérez',
+        rate: 130,
+        voucher: { doctype: 'Sales Invoice', name: 'SINV-1', readable: true },
+      },
+      last_purchase: null,
+      cover: [
+        { warehouse: 'Centro - D', label: 'Centro', days: 110, per_day: 0.1 },
+        { warehouse: 'Bodega - D', label: 'Bodega', days: 0, per_day: 0 },
+      ],
+      channels: [{ key: 'web', label: 'Tienda en línea', on: true }],
+    }
+    const router = await mountAt('/productos/ABIBMEX000130')
+    const box = root.querySelector('[data-producto-insights]')
+    expect(box.textContent).toContain('Sold in 30 days')
+    expect(box.textContent).toContain('9 pzas')
+    expect(box.textContent).toContain('1 every 10 days')
+    expect(box.textContent).toContain('Juan Pérez')
+    expect(box.textContent).toContain('About 110 days')
+    expect(box.textContent).toContain('Out of stock')
+    expect(box.textContent).toContain('Tienda en línea')
+    // Margin by month travels only with cost.
+    expect(box.querySelector('[data-insights-trend]')).toBeNull()
+    const buttons = box.querySelectorAll('[data-insights-reorder]')
+    expect(buttons).toHaveLength(1)
+    buttons[0].click()
+    await flush()
+    expect(router.currentRoute.value.name).toBe('CompraNueva')
+    expect(router.currentRoute.value.query).toMatchObject({
+      warehouse: 'Bodega - D',
+      qty: '24',
+    })
   })
 
   it('cost and margin only when the server sends them', async () => {

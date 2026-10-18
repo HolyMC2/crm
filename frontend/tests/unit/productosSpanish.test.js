@@ -24,6 +24,8 @@ const FILES = [
   'components/productos/PhotoGallery.vue',
   'components/productos/LabelDialog.vue',
   'components/productos/PriceListsToggle.vue',
+  'components/productos/ProductInsights.vue',
+  'components/productos/ProductPrices.vue',
   'composables/useProductos.js',
 ]
 const strings = new Set()

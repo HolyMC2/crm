@@ -27317,3 +27317,107 @@ msgstr "En el pedido {0}, "
 msgctxt "Surtido"
 msgid "Restock from a list"
 msgstr "Surtir desde una lista"
+#: frontend/src/components/productos/ProductInsights.vue frontend/src/components/productos/ProductPrices.vue frontend/src/pages/Producto.vue
+msgctxt "Productos"
+msgid "Customer"
+msgstr "Cliente"
+
+msgctxt "Productos"
+msgid "Point of sale"
+msgstr "Punto de venta"
+
+msgctxt "Productos"
+msgid "How it sells"
+msgstr "Cómo se vende"
+
+msgctxt "Productos"
+msgid "Days of stock per store"
+msgstr "Días de existencia por tienda"
+
+msgctxt "Productos"
+msgid "Reorder"
+msgstr "Reordenar"
+
+msgctxt "Productos"
+msgid "Margin by month"
+msgstr "Margen por mes"
+
+msgctxt "Productos"
+msgid "Offered on"
+msgstr "Se ofrece en"
+
+msgctxt "Productos"
+msgid "listed"
+msgstr "publicado"
+
+msgctxt "Productos"
+msgid "not listed"
+msgstr "sin publicar"
+
+msgctxt "Productos"
+msgid "1 every {0} days"
+msgstr "1 cada {0} días"
+
+msgctxt "Productos"
+msgid "Sold in 30 days"
+msgstr "Vendido en 30 días"
+
+msgctxt "Productos"
+msgid "Sold in 90 days"
+msgstr "Vendido en 90 días"
+
+msgctxt "Productos"
+msgid "Per day"
+msgstr "Al día"
+
+msgctxt "Productos"
+msgid "Last sale {0}"
+msgstr "Última venta {0}"
+
+msgctxt "Productos"
+msgid "No sales in 90 days"
+msgstr "Sin ventas en 90 días"
+
+msgctxt "Productos"
+msgid "Last purchase {0}"
+msgstr "Última compra {0}"
+
+msgctxt "Productos"
+msgid "No purchases received yet"
+msgstr "Todavía no se ha recibido ninguna compra"
+
+msgctxt "Productos"
+msgid "No sales here in 90 days"
+msgstr "Sin ventas aquí en 90 días"
+
+msgctxt "Productos"
+msgid "More than a year"
+msgstr "Más de un año"
+
+msgctxt "Productos"
+msgid "About {0} days"
+msgstr "Alcanza para unos {0} días"
+
+msgctxt "Productos"
+msgid "minimum {0}"
+msgstr "mínimo {0}"
+
+msgctxt "Productos"
+msgid "Updated {0}"
+msgstr "Actualizado {0}"
+
+msgctxt "Productos"
+msgid "From {0}: {1}"
+msgstr "Desde {0}: {1}"
+
+msgctxt "Productos"
+msgid "from {0} to {1}"
+msgstr "del {0} al {1}"
+
+msgctxt "Productos"
+msgid "until {0}"
+msgstr "hasta {0}"
+
+msgctxt "Productos"
+msgid "since {0}"
+msgstr "desde {0}"
