@@ -214,7 +214,10 @@ describe('AvisameSheet on an item', () => {
     })
     bound.open = true
     await flush()
-    expect(root.textContent).toContain('Ahora hay 8 en Centro.')
+    // One store: named with its stock, nothing to choose.
+    expect(root.querySelector('[data-avisame-store]').textContent).toContain(
+      'CentroHay 8',
+    )
     expect(button('Avísame').disabled).toBe(true)
     for (let i = 0; i < 3; i++) root.querySelector('[aria-label="Más"]').click()
     await flush()
