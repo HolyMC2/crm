@@ -39,7 +39,11 @@
             class="size-4 flex-none"
             aria-hidden="true"
           />
-          <span class="min-w-0 flex-1 truncate">{{ __(item.label) }}</span>
+          <!-- At 305px a label wraps to two lines between words (SPEC §1.3)
+               instead of ending in «…». -->
+          <span class="line-clamp-2 min-w-0 flex-1 py-1 leading-tight">{{
+            __(item.label)
+          }}</span>
           <span
             v-if="item.badge && badgeFor(item.badge)"
             class="rounded-full bg-surface-gray-3 px-1.5 text-xs font-semibold"

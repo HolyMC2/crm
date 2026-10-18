@@ -361,6 +361,20 @@ describe('FilterChips', () => {
     await flush()
     expect(events.map((e) => e[0])).toEqual(['clear-filters', 'apply-filters'])
   })
+  it('the chip that is on scrolls into the row, past the end fade (PM, S1.3 shots)', async () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function () {
+        if (this.getAttribute('role') === 'group')
+          return { left: 0, right: 300 }
+        if (this.dataset?.chip === '31-60') return { left: 320, right: 420 }
+        return { left: 0, right: 0 }
+      })
+    await mount(FilterChips, { modelValue: '31-60', chips })
+    await flush()
+    expect(root.querySelector('[role="group"]').scrollLeft).toBe(160)
+    rect.mockRestore()
+  })
   it('no «Filtros» chip without a filters slot', async () => {
     await mount(FilterChips, { modelValue: '', chips })
     expect(root.querySelector('[data-ui-filters-chip]')).toBeNull()

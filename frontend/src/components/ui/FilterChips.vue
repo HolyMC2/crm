@@ -158,8 +158,23 @@ function updateFade() {
   const el = row.value
   fade.value = !!el && el.scrollLeft + el.clientWidth < el.scrollWidth - 4
 }
+// The chip that is on stays in sight: a list that opens on a chip at the end
+// of the row («Consultas» on Prospectos) scrolls the row to it, not the page.
+function revealOn() {
+  const el = row.value
+  const on = el?.querySelector('[data-chip][aria-pressed="true"]')
+  if (!on) return
+  const box = el.getBoundingClientRect()
+  const chip = on.getBoundingClientRect()
+  const fadeWidth = 40
+  if (chip.right > box.right - fadeWidth)
+    el.scrollLeft += chip.right - box.right + fadeWidth
+  else if (chip.left < box.left) el.scrollLeft -= box.left - chip.left + 16
+  updateFade()
+}
 let observer = null
 onMounted(() => {
+  revealOn()
   updateFade()
   if (typeof ResizeObserver !== 'undefined' && row.value) {
     observer = new ResizeObserver(updateFade)
@@ -171,6 +186,10 @@ watch(
   () => props.chips,
   () => nextTick(updateFade),
   { deep: true },
+)
+watch(
+  () => props.modelValue,
+  () => nextTick(revealOn),
 )
 </script>
 <style>
