@@ -1562,8 +1562,11 @@ describe('Ventas deals in the palette', () => {
   })
 })
 
-async function until(find) {
-  for (let i = 0; i < 40; i++) {
+// Async sheets (Más, the palette) import their modules on first open; on a
+// slow CI runner that takes over the old 40 tries (S1d: Más now loads
+// useAssistant itself, the shell no longer does at boot).
+async function until(find, tries = 200) {
+  for (let i = 0; i < tries; i++) {
     await Promise.resolve()
     await nextTick()
     const found = find()
@@ -1864,7 +1867,7 @@ describe('Avisos in the shell', () => {
     })
     state.mobile.value = false
     await mount('/deals')
-    await until(() => false)
+    await until(() => false, 40)
     expect(root.querySelector('button[aria-label^="Avisos"]')).toBeNull()
   })
 
