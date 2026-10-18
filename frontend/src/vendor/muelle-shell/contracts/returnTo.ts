@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.10.0 (d72c76f4251b). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.12.0 (bac5a436a6b6). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Cross-app return protocol (spec-muelle-shell §8.3).
 //
@@ -109,6 +109,7 @@ const DEFAULT_LABELS: ReadonlyArray<readonly [string, string]> = [
   ['/crm/compras', 'Compras'],
   ['/crm/documentos', 'Documentos'],
   ['/crm/encuestas', 'Encuestas'],
+  ['/crm/inmobiliaria', 'Inmobiliaria'],
   ['/crm/inventario', 'Inventario'],
   ['/crm/manual', 'Manual de la tienda'],
   ['/crm/resultados', 'Resultados'],

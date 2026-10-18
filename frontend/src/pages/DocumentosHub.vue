@@ -217,7 +217,7 @@ const groups = computed(() => {
       )
         items.push({
           key: 'almacenes',
-          icon: 'lucide-warehouse',
+          icon: 'lucide-package-open',
           label: 'Almacenes',
           subtitle: 'Tiendas y bodegas',
           to: floorRoute('Warehouse'),

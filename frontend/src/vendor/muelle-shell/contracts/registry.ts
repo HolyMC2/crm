@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.10.0 (d72c76f4251b). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.12.0 (bac5a436a6b6). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -22,6 +22,7 @@ export type ShellModuleKey =
   | 'manual'
   | 'documentos'
   | 'inventario'
+  | 'inmobiliaria'
   | 'avisos'
 
 export type LucideIcon = `lucide-${string}`
@@ -37,7 +38,7 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario, Inmobiliaria; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
@@ -54,8 +55,9 @@ export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'equipo', label: 'Equipo', icon: 'lucide-id-card', basePath: '/equipo', go: 'q' },
   { key: 'archivos', label: 'Archivos', icon: 'lucide-folder', basePath: '/archivos', go: 'f' },
   { key: 'manual', label: 'Manual de la tienda', icon: 'lucide-book-open', basePath: '/manual', go: 'm' },
-  { key: 'documentos', label: 'Documentos', icon: 'lucide-files', basePath: '/documentos', go: 'd' },
-  { key: 'inventario', label: 'Inventario', icon: 'lucide-warehouse', basePath: '/inventario', go: 'k' },
+  { key: 'documentos', label: 'Documentos', icon: 'lucide-file-text', basePath: '/documentos', go: 'd' },
+  { key: 'inventario', label: 'Inventario', icon: 'lucide-package-open', basePath: '/inventario', go: 'k' },
+  { key: 'inmobiliaria', label: 'Inmobiliaria', icon: 'lucide-building-2', basePath: '/inmobiliaria', go: 'l' },
   { key: 'avisos', label: 'Avisos', icon: 'lucide-bell', basePath: '/avisos', go: '' },
 ] as const satisfies readonly ShellModuleMeta[])
 
@@ -108,14 +110,31 @@ export function moduleForPath<M extends Pick<ShellModuleMeta, 'basePath'>>(path:
   return best
 }
 
-/** Puesto classes for the phone bottom nav (§2.1). S1 maps Doco puesto keys onto these. */
-export type NavRole = 'vendedor' | 'recepcion' | 'compras' | 'dueno' | 'fallback'
+/**
+ * Puesto classes for the phone bottom nav (§2.1). The host derives one from the
+ * worker's Doco puesto, else from their roles (0.12.0: almacen, cajero).
+ */
+export type NavRole =
+  | 'vendedor'
+  | 'recepcion'
+  | 'compras'
+  | 'dueno'
+  | 'inmobiliaria'
+  | 'almacen'
+  | 'cajero'
+  | 'fallback'
 
 export const MOBILE_SLOT_DEFAULTS: Readonly<Record<NavRole, readonly ShellModuleKey[]>> = Object.freeze({
   vendedor: ['pendientes', 'contactos', 'ventas'],
   recepcion: ['agenda', 'contactos', 'pendientes'],
   compras: ['compras', 'pendientes', 'contactos'],
   dueno: ['pendientes', 'ventas', 'contactos'],
+  // A real-estate worker (líder de equipo, administrador): their queues, prospects, visits (0.11.0).
+  inmobiliaria: ['inmobiliaria', 'contactos', 'agenda'],
+  // Stock people (Almacén): movements and counts, the catalog, their tasks (0.12.0).
+  almacen: ['inventario', 'productos', 'pendientes'],
+  // The counter (Cajero): prices and stock, tickets and invoices, their tasks (0.12.0).
+  cajero: ['productos', 'documentos', 'pendientes'],
   fallback: ['pendientes', 'agenda', 'contactos'],
 })
 

@@ -4,6 +4,7 @@ Module providers report native capabilities; they never grant anything. Each
 module route and API still checks its own permissions on every request.
 """
 
+import hashlib
 import json
 
 import frappe
@@ -34,7 +35,18 @@ MODULE_KEYS = (
 	"avisos",
 )
 # Doco puesto → phone bottom-nav class (contracts registry NavRole).
-NAV_ROLES = {"Cajero": "vendedor", "Técnico": "recepcion", "Encargado": "dueno", "Dueño": "dueno"}
+NAV_ROLES = {"Cajero": "cajero", "Técnico": "recepcion", "Encargado": "dueno", "Dueño": "dueno"}
+# Without a puesto the class comes from the worker's Frappe roles, first match wins
+# (DD18: the shell keeps no permission list of its own). A shop owner holds the
+# accounting roles; only cashiers hold POS User without a puesto above them.
+ROLE_NAV_ROLES = (
+	("System Manager", "dueno"),
+	("Accounts Manager", "dueno"),
+	("POS User", "cajero"),
+	("Sales User", "vendedor"),
+	("Purchase User", "compras"),
+	("Stock User", "almacen"),
+)
 
 
 def _hoy():
@@ -523,6 +535,53 @@ def _puesto():
 	return puesto_of(frappe.session.user) or None
 
 
+def nav_role(puesto: str | None, roles: list[str] | set[str]) -> str | None:
+	"""Bottom-nav class: the Doco puesto when it maps, else the first matching role."""
+	if puesto and puesto in NAV_ROLES:
+		return NAV_ROLES[puesto]
+	held = set(roles)
+	for role, klass in ROLE_NAV_ROLES:
+		if role in held:
+			return klass
+	return None
+
+
+def scope_hash(user: str | None = None) -> str:
+	"""Short hash of what shapes this user's shell: roles, puesto, blocked modules, User
+	Permissions and the site's permission rules. The client keys its boot copy by it, so a
+	role or permission change never paints the old shell (DD18). Never raises: it runs on
+	every /crm page render."""
+	user = user or frappe.session.user
+	if not user or user == "Guest":
+		return ""
+	try:
+		parts = [
+			sorted(frappe.get_roles(user)),
+			frappe.db.get_value("User", user, "muelle_puesto")
+			if frappe.get_meta("User").has_field("muelle_puesto")
+			else None,
+			sorted(
+				frappe.get_all(
+					"Block Module",
+					filters={"parent": user, "parenttype": "User", "parentfield": "block_modules"},
+					pluck="module",
+				)
+			),
+			sorted(
+				frappe.get_all(
+					"User Permission",
+					filters={"user": user},
+					fields=["allow", "for_value", "applicable_for", "apply_to_all_doctypes"],
+					as_list=True,
+				)
+			),
+			frappe.db.sql("select max(modified) from `tabCustom DocPerm`")[0][0],
+		]
+	except Exception:
+		return ""
+	return hashlib.sha1(json.dumps(parts, default=str).encode()).hexdigest()[:12]
+
+
 def _palette():
 	if "doco" not in frappe.get_installed_apps():
 		return None
@@ -586,9 +645,11 @@ def boot():
 			"full_name": user.get("full_name"),
 			"image": user.get("user_image"),
 			"puesto": puesto,
-			"nav_role": NAV_ROLES.get(puesto) if puesto else None,
+			"nav_role": nav_role(puesto, frappe.get_roles()),
 			"is_admin": "System Manager" in frappe.get_roles(),
 		},
+		# What the client keys its boot copy by (also in the page boot as shell_scope).
+		"scope": scope_hash(),
 		"company": frappe.defaults.get_user_default("company"),
 		"locale": frappe.local.lang,
 		"time_zone": frappe.db.get_value("User", frappe.session.user, "time_zone")

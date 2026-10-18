@@ -351,8 +351,16 @@ def get_boot(neutral=False, module="contactos"):
 				or get_system_timezone(),
 			},
 			"state_options": get_state_options(),
+			"shell_scope": _shell_scope(),
 		}
 	)
+
+
+def _shell_scope() -> str:
+	# The roles+permissions hash the shell keys its saved boot by (crm.api.shell.scope_hash).
+	from crm.api.shell import scope_hash
+
+	return scope_hash()
 
 
 def get_state_options() -> dict[str, list[str]]:

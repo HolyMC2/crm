@@ -42,6 +42,13 @@ function readCachedBoot(key) {
 }
 function writeCachedBoot(key, boot) {
   try {
+    // Copies under this site+user's older roles+permissions scope are dead.
+    const mine = BOOT_CACHE_PREFIX + key.slice(0, key.lastIndexOf(':') + 1)
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const stored = localStorage.key(i)
+      if (stored?.startsWith(mine) && stored !== BOOT_CACHE_PREFIX + key)
+        localStorage.removeItem(stored)
+    }
     localStorage.setItem(
       BOOT_CACHE_PREFIX + key,
       JSON.stringify({ at: Date.now(), boot }),
@@ -73,9 +80,12 @@ function currentScope() {
       .split('; ')
       .find((part) => part.startsWith('user_id='))
       ?.slice(8) || ''
+  // The page boot's roles+permissions hash (crm.api.shell.scope_hash) is part of
+  // the key: after a role, puesto or permission change the old copy is never read.
   return bootScope(
     window.site_name || location.host,
     decodeURIComponent(cookieUser),
+    window.shell_scope || '',
   )
 }
 

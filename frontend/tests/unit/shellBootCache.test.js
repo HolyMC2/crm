@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -102,5 +102,41 @@ describe('the shell boots from the saved boot, then the fresh one', () => {
       'utf8',
     )
     expect(session).toContain("k.startsWith('muelle:boot:')")
+  })
+})
+
+describe('the saved boot follows the roles+permissions scope (DD18)', () => {
+  const site = () => window.site_name || location.host
+  const scoped = (scope) => BOOT_CACHE_PREFIX + bootScope(site(), '', scope)
+  afterEach(() => {
+    delete window.shell_scope
+  })
+
+  it('after a role change the old copy is not painted and is dropped', async () => {
+    localStorage.setItem(
+      scoped('old123'),
+      JSON.stringify({ at: Date.now(), boot: fresh({ company: 'Old' }) }),
+    )
+    window.shell_scope = 'new456'
+    const answer = deferred()
+    state.call.mockReturnValue(answer.promise)
+    const loading = loadShell({ refresh: true })
+    expect(shellBoot.value).toBeNull()
+    answer.resolve(fresh({ company: 'New' }))
+    await loading
+    expect(shellBoot.value.company).toBe('New')
+    expect(localStorage.getItem(scoped('new456'))).not.toBeNull()
+    expect(localStorage.getItem(scoped('old123'))).toBeNull()
+  })
+
+  it('the same scope paints the saved copy at once', () => {
+    window.shell_scope = 'same789'
+    localStorage.setItem(
+      scoped('same789'),
+      JSON.stringify({ at: Date.now(), boot: fresh({ company: 'Saved' }) }),
+    )
+    state.call.mockReturnValue(new Promise(() => {}))
+    loadShell({ refresh: true })
+    expect(shellBoot.value.company).toBe('Saved')
   })
 })

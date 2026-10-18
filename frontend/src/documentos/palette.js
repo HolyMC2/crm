@@ -82,7 +82,7 @@ export function documentosPlaces(boot) {
         key === 'documentos'
           ? 'documentos ventas compras pagos facturas'
           : 'inventario almacen existencias',
-      icon: key === 'documentos' ? 'lucide-files' : 'lucide-warehouse',
+      icon: key === 'documentos' ? 'lucide-file-text' : 'lucide-package-open',
       href: `/${key}`,
     })
   }
