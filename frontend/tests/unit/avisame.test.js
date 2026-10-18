@@ -218,8 +218,11 @@ describe('AvisameSheet on an item', () => {
     expect(root.querySelector('[data-avisame-store]').textContent).toContain(
       'CentroHay 8',
     )
-    expect(button('Avísame').disabled).toBe(true)
-    for (let i = 0; i < 3; i++) root.querySelector('[aria-label="Más"]').click()
+    // Prefilled one under what the store has (no reorder level): one tap works.
+    expect(root.querySelector('input[type="number"]').value).toBe('7')
+    expect(button('Avísame').disabled).toBe(false)
+    for (let i = 0; i < 4; i++)
+      root.querySelector('[aria-label="Menos"]').click()
     await flush()
     button('Avísame').click()
     await flush()

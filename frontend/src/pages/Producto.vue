@@ -1779,6 +1779,7 @@ const avisameStores = computed(() =>
     warehouse: row.warehouse,
     label: row.label || row.warehouse,
     qty: row.actual_qty,
+    reorder_level: row.reorder_level,
   })),
 )
 // «Reordenar» on a short store: the purchase flow for that store and quantity.
