@@ -94,6 +94,7 @@ describe('what a reply says', () => {
       {
         id: 'agr:RUN-1:p1:a',
         summary: 'Crear Seguimiento para AARON mañana 10:00',
+        detail: null,
         confirm: 'agr:RUN-1:p1:a',
         change: 'agr:RUN-1:p1:r',
       },
@@ -102,6 +103,40 @@ describe('what a reply says', () => {
     // the numbered line lives on the card only; the leading emoji goes
     expect(proseOf(message, cards)).toBe(
       'El agente propone y espera tu decisión:\nAl aprobar se guardan los cambios mostrados.',
+    )
+  })
+
+  it("puts an approval's indented detail on its card: what will change", () => {
+    // doco action_cards.render_pending + collab_actions.preview (crear_pendiente)
+    const message = {
+      text: [
+        '⏸ El agente propone y espera tu decisión:',
+        '1. ✅ Pendiente personal',
+        '   «Llamar a este cliente» sobre Customer S2c · para 2026-10-19 10:00',
+        'Al aprobar se guardan los cambios mostrados.',
+      ].join('\n'),
+      buttons: [
+        [
+          { text: '⚡ Aprobar 1', callback_data: 'agr:RUN-2:p9:a' },
+          { text: '❌ Rechazar 1', callback_data: 'agr:RUN-2:p9:r' },
+        ],
+      ],
+    }
+    const { cards } = splitButtons(message)
+    expect(cards[0]).toMatchObject({
+      summary: 'Pendiente personal',
+      detail:
+        '«Llamar a este cliente» sobre Customer S2c · para 2026-10-19 10:00',
+    })
+    expect(proseOf(message, cards)).toBe(
+      'El agente propone y espera tu decisión:\nAl aprobar se guardan los cambios mostrados.',
+    )
+  })
+
+  it('opens links of this site written as http:// behind the https proxy', () => {
+    const host = globalThis.location.host
+    expect(shellPathFor(`http://${host}/crm/pendientes/todo/q3f`)).toBe(
+      '/pendientes/todo/q3f',
     )
   })
 

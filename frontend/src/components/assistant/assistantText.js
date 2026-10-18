@@ -39,9 +39,10 @@ export function shellPathFor(href) {
   } catch {
     return null
   }
+  // Same site: doco may write its links as http:// behind the https proxy.
   if (
     url.origin !== 'https://muelle.invalid' &&
-    url.origin !== globalThis.location?.origin
+    url.host !== globalThis.location?.host
   )
     return null
   const crm = url.pathname.match(/^\/crm(\/.*)$/)
@@ -217,12 +218,20 @@ export function splitButtons(message) {
     const reject = buttons.find((b) => /^agr:.+:r$/.test(b.callback_data))
     if (approve) {
       const n = (approve.text.match(/(\d+)\s*$/) || [])[1]
-      const line = n && lines.find((l) => l.trim().startsWith(`${n}.`))
+      const at = n ? lines.findIndex((l) => l.trim().startsWith(`${n}.`)) : -1
+      const line = at >= 0 ? lines[at] : null
+      // its indented lines are the change itself: «Llamar…» sobre … · para …
+      const more = []
+      for (let i = at + 1; at >= 0 && i < lines.length; i++) {
+        if (!/^\s+\S/.test(lines[i])) break
+        more.push(lines[i].trim())
+      }
       cards.push({
         id: approve.callback_data,
         summary: stripEmoji(
           line ? line.trim().replace(/^\d+\.\s*/, '') : approve.text,
         ),
+        detail: more.length ? stripEmoji(more.join('\n')) : null,
         confirm: approve.callback_data,
         change: reject?.callback_data || null,
       })
@@ -250,13 +259,15 @@ export function splitButtons(message) {
 export function proseOf(message, cards) {
   const text = String(message?.text || '')
   if (!cards.some((card) => card.id.startsWith('agr:'))) return stripEmoji(text)
-  return stripEmoji(
-    text
-      .split('\n')
-      .filter((line) => !/^\s*\d+\.\s/.test(line))
-      .join('\n')
-      .trim(),
-  )
+  // the numbered approval lines and their indented detail are on the cards
+  const kept = []
+  let inItem = false
+  for (const line of text.split('\n')) {
+    if (/^\s*\d+\.\s/.test(line)) inItem = true
+    else if (!(inItem && /^\s+\S/.test(line))) inItem = false
+    if (!inItem) kept.push(line)
+  }
+  return stripEmoji(kept.join('\n').trim())
 }
 
 /**

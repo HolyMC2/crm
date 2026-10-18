@@ -11,7 +11,7 @@
       {{ heading }}
     </p>
     <p class="mt-1 whitespace-pre-line break-words text-base text-ink-gray-9">
-      {{ card.summary }}
+      {{ card.detail || card.summary }}
     </p>
     <div
       v-if="state === 'confirmed'"
@@ -45,7 +45,7 @@
         data-testid="assistant-card-change"
         @click="$emit('change', card)"
       >
-        {{ __('Change') }}
+        {{ __('Change', null, 'Assistant card') }}
       </button>
       <button
         type="button"
@@ -78,7 +78,11 @@ const props = defineProps({
 })
 defineEmits(['confirm', 'change', 'navigate'])
 
-const heading = computed(() =>
-  props.state === 'confirmed' ? __('Receipt') : __('Muelle proposes'),
-)
+// «Muelle propone · Pendiente personal»: the kind of change in the heading
+// when the card's body is the proposal itself (card.detail).
+const heading = computed(() => {
+  const head =
+    props.state === 'confirmed' ? __('Receipt') : __('Muelle proposes')
+  return props.card.detail ? `${head} · ${props.card.summary}` : head
+})
 </script>

@@ -27799,3 +27799,7 @@ msgstr "Foto del artículo"
 #: frontend/src/pages/Producto.vue
 msgid "Use this photo"
 msgstr "Usar esta foto"
+#: frontend/src/components/assistant/ActionCard.vue
+msgctxt "Assistant card"
+msgid "Change"
+msgstr "Cambiar"
