@@ -48,7 +48,9 @@ vi.mock('frappe-ui', async () => {
 })
 vi.mock('@/components/ui', async () => {
   const { h } = await import('vue')
+  const ListRow = (await vi.importActual('@/components/ui/ListRow.vue')).default
   return {
+    ListRow,
     BottomSheet: {
       props: ['open', 'title', 'subtitle'],
       setup:
@@ -66,6 +68,7 @@ vi.mock('@/components/ui', async () => {
 })
 
 import AvisameSheet from '@/components/documentos/AvisameSheet.vue'
+import RecipientsSheet from '@/components/disparadores/RecipientsSheet.vue'
 import {
   cleanThreshold,
   offersAvisame,
@@ -143,7 +146,10 @@ describe('AvisameSheet on a record', () => {
     const radios = [...root.querySelectorAll('[role="radio"]')]
     expect(
       radios.map((r) => r.textContent.replace(/\s+/g, ' ').trim()),
-    ).toEqual(['Cuando se pagueYa lo pediste', 'Si no se paga para el…'])
+    ).toEqual([
+      'Cuando se pagueYa lo pediste',
+      'Si no se paga para el…Eliges la fecha límite',
+    ])
     expect(radios[0].disabled).toBe(true)
     expect(radios[1].getAttribute('aria-checked')).toBe('true')
     expect(root.textContent).toContain('Ya me avisas')
@@ -241,5 +247,48 @@ describe('avisame helpers', () => {
       }).map((chip) => chip.label),
     ).toEqual(['Compras', 'Quien la pidió', 'Ana López'])
     expect(recipientChips({})).toEqual([])
+  })
+})
+
+describe('RecipientsSheet', () => {
+  it('toggles the team and the seller as checkbox rows and saves who receives', async () => {
+    const saved = []
+    root = document.createElement('div')
+    document.body.appendChild(root)
+    app = createApp({
+      render: () =>
+        h(RecipientsSheet, {
+          open: true,
+          recipe: {
+            title: 'Factura vencida',
+            default_roles: ['Accounts Manager'],
+            default_groups: ['Cobranza'],
+            roles: ['Accounts Manager'],
+            seller: false,
+            seller_label: 'Vendedor',
+            people: [{ user: 'ana@x.mx', name: 'Ana López' }],
+          },
+          onSave: (value) => saved.push(value),
+        }),
+    })
+    app.mount(root)
+    await flush()
+    const boxes = [...root.querySelectorAll('[role="checkbox"]')]
+    expect(boxes.map((b) => b.getAttribute('aria-checked'))).toEqual([
+      'true',
+      'false',
+    ])
+    boxes[0].click()
+    boxes[1].click()
+    await flush()
+    expect(
+      [...root.querySelectorAll('[role="checkbox"]')].map((b) =>
+        b.getAttribute('aria-checked'),
+      ),
+    ).toEqual(['false', 'true'])
+    root.querySelector('[aria-label="Quitar a Ana López"]').click()
+    await flush()
+    button('Guardar').click()
+    expect(saved).toEqual([{ people: [], roles: [], seller: 1 }])
   })
 })

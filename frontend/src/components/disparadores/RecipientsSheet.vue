@@ -1,82 +1,99 @@
 <template>
+  <!-- Who receives a recipe: M3 list items (56px), a trailing checkbox for
+       the team and the seller, people as avatar rows with «Quitar». -->
   <BottomSheet
     v-model:open="open"
     title="Quién recibe"
     :subtitle="recipe.title"
     :dismissible="!saving"
+    flush
   >
-    <div class="space-y-4 px-1 pb-2">
-      <fieldset v-if="recipe.default_roles?.length" class="space-y-1">
-        <legend class="pb-1 text-sm font-medium text-ink-gray-7">
+    <div class="pb-2">
+      <section v-if="recipe.default_roles?.length || recipe.seller_label">
+        <h3 class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-7">
           Equipos
-        </legend>
-        <label class="flex min-h-11 items-center gap-3 text-base">
-          <input v-model="useGroups" type="checkbox" class="size-5" />
-          <span>{{ groupsLabel }}</span>
-        </label>
-      </fieldset>
-      <label
-        v-if="recipe.seller_label"
-        class="flex min-h-11 items-center gap-3 text-base"
-      >
-        <input v-model="seller" type="checkbox" class="size-5" />
-        <span>{{ recipe.seller_label || 'Vendedor' }} del documento</span>
-      </label>
+        </h3>
+        <ul>
+          <li v-if="recipe.default_roles?.length">
+            <ListRow
+              role="checkbox"
+              :aria-checked="useGroups ? 'true' : 'false'"
+              :title="groupsLabel"
+              subtitle="Todo el equipo, también quien entre después"
+              data-recipient="groups"
+              @click="useGroups = !useGroups"
+            >
+              <template #trailing>
+                <CheckMark :on="useGroups" />
+              </template>
+            </ListRow>
+          </li>
+          <li v-if="recipe.seller_label">
+            <ListRow
+              role="checkbox"
+              :aria-checked="seller ? 'true' : 'false'"
+              :title="`${recipe.seller_label} del documento`"
+              subtitle="Solo a quien le toca ese documento"
+              data-recipient="seller"
+              @click="seller = !seller"
+            >
+              <template #trailing>
+                <CheckMark :on="seller" />
+              </template>
+            </ListRow>
+          </li>
+        </ul>
+      </section>
 
-      <fieldset class="space-y-1">
-        <legend class="pb-1 text-sm font-medium text-ink-gray-7">
+      <section>
+        <h3 class="px-4 pb-1 pt-3 text-sm font-medium text-ink-gray-7">
           Personas
-        </legend>
-        <ul v-if="people.length" class="space-y-1">
-          <li
-            v-for="person in people"
-            :key="person.user"
-            class="flex min-h-11 items-center gap-2"
-          >
-            <span class="min-w-0 flex-1 break-words text-base">{{
-              person.name || person.user
-            }}</span>
-            <Button
-              variant="ghost"
-              class="min-h-11"
-              label="Quitar"
-              :aria-label="`Quitar a ${person.name || person.user}`"
-              @click="people = people.filter((p) => p.user !== person.user)"
+        </h3>
+        <ul v-if="people.length">
+          <li v-for="person in people" :key="person.user">
+            <ListRow
+              :avatar="person.name || person.user"
+              :title="person.name || person.user"
+            >
+              <template #trailing>
+                <Button
+                  variant="ghost"
+                  class="min-h-11"
+                  label="Quitar"
+                  :aria-label="`Quitar a ${person.name || person.user}`"
+                  @click="people = people.filter((p) => p.user !== person.user)"
+                />
+              </template>
+            </ListRow>
+          </li>
+        </ul>
+        <div class="px-4 pt-1">
+          <FormControl
+            v-model="search"
+            type="text"
+            placeholder="Buscar a alguien del equipo"
+            class="[&_input]:min-h-12"
+            aria-label="Buscar a alguien del equipo"
+          />
+        </div>
+        <ul v-if="matches.length" class="pt-1">
+          <li v-for="person in matches" :key="person.user">
+            <ListRow
+              :avatar="person.name || person.user"
+              :title="person.name || person.user"
+              subtitle="Agregar"
+              @click="add(person)"
             />
           </li>
         </ul>
-        <FormControl
-          v-model="search"
-          type="text"
-          placeholder="Buscar a alguien del equipo"
-          class="[&_input]:min-h-11"
-          aria-label="Buscar a alguien del equipo"
-        />
-        <ul v-if="matches.length" class="space-y-1">
-          <li v-for="person in matches" :key="person.user">
-            <button
-              type="button"
-              class="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left text-base hover:bg-surface-gray-2"
-              @click="add(person)"
-            >
-              <span
-                class="lucide-user-plus size-4 flex-none"
-                aria-hidden="true"
-              />
-              <span class="min-w-0 flex-1 break-words">{{
-                person.name || person.user
-              }}</span>
-            </button>
-          </li>
-        </ul>
-      </fieldset>
-      <p v-if="error" role="alert" class="text-sm text-ink-red-4">
+      </section>
+      <p v-if="error" role="alert" class="px-4 pt-2 text-sm text-ink-red-4">
         {{ error }}
       </p>
     </div>
     <template #actions>
       <Button
-        class="min-h-11 w-full"
+        class="min-h-12 w-full"
         variant="solid"
         label="Guardar"
         :loading="saving"
@@ -89,7 +106,8 @@
 import { computed, ref, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { Button, FormControl } from 'frappe-ui'
-import { BottomSheet } from '@/components/ui'
+import { BottomSheet, ListRow } from '@/components/ui'
+import CheckMark from './CheckMark.vue'
 import { errorText, personas } from '@/components/documentos/avisame'
 
 const open = defineModel('open', { type: Boolean, default: false })
