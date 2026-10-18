@@ -22,232 +22,247 @@
         />
       </div>
     </section>
-    <template v-else>
-      <PageHeader
-        :title="segmentLabel(segment)"
-        :subtitle="subtitle"
-        :level="1"
+    <!-- One scroller, the header inside it (Shell C5), and the page
+         `relative` so the phone's «Dar de alta» FAB sits over the list. -->
+    <div v-else class="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <div
+        class="min-h-0 flex-1 overflow-y-auto"
+        :class="fab ? 'pb-24' : 'pb-6'"
+        data-equipo-scroller
       >
-        <template v-if="caps.configure || caps.hire" #actions>
-          <Button
-            v-if="caps.configure"
-            icon-left="calendar"
-            :label="__('Statutory vacations')"
-            class="min-h-11 sm:min-h-8"
-            @click="router.push({ name: 'EquipoVacaciones' })"
-          />
-          <Button
-            v-if="caps.hire"
-            variant="solid"
-            icon-left="user-plus"
-            :label="__('Add a person', null, 'Equipo')"
-            class="min-h-11 sm:min-h-8"
-            @click="openAlta"
-          />
-        </template>
-      </PageHeader>
-      <section
-        v-if="!caps.hr && !hrDismissed"
-        role="status"
-        class="mx-4 mb-3 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
-      >
-        <p>
-          {{
-            boot?.hr_reason ||
-            __(
-              'Shifts, attendance and vacations need the staff module (HRMS), which this system does not have.',
-            )
-          }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <Button
-            :label="__('Ask to turn it on')"
-            :loading="asking"
-            @click="askHr"
-          />
-          <Button
-            variant="ghost"
-            :label="__('Continue with people and puestos')"
-            @click="hrDismissed = true"
-          />
-        </div>
-        <p v-if="asked">{{ asked }}</p>
-      </section>
-      <section
-        v-if="noAccess"
-        role="status"
-        class="mx-4 mb-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
-      >
-        <p>
-          {{
-            __(
-              'To see the team you need access to employee records. Ask whoever runs the shop to give it to you.',
-              null,
-              'Equipo',
-            )
-          }}
-        </p>
-      </section>
-      <section
-        v-if="limit"
-        role="status"
-        class="mx-4 mb-3 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
-      >
-        <p>{{ limit.message }}</p>
-        <div v-if="limit.actions?.length" class="flex flex-wrap gap-2">
-          <Button
-            v-if="!confirmingLift"
-            :label="limit.actions[0].label"
-            @click="confirmingLift = true"
-          />
-          <template v-else>
-            <p class="w-full">
-              {{
-                __(
-                  'Your user permission limited to your own employee record will be removed. Continue?',
-                )
-              }}
-            </p>
+        <PageHeader
+          :title="segmentLabel(segment)"
+          :subtitle="subtitle"
+          :level="1"
+        >
+          <template v-if="caps.configure || caps.hire" #actions>
             <Button
-              variant="solid"
-              :label="__('Yes, remove the limit')"
-              :loading="lifting"
-              @click="liftLimit"
+              v-if="caps.configure"
+              icon-left="calendar"
+              :label="__('Statutory vacations')"
+              class="min-h-11 sm:min-h-8"
+              @click="router.push({ name: 'EquipoVacaciones' })"
             />
             <Button
-              :label="__('Cancel', null, 'Equipo')"
-              @click="confirmingLift = false"
+              v-if="caps.hire && !fab"
+              variant="solid"
+              icon-left="user-plus"
+              :label="__('Add a person', null, 'Equipo')"
+              class="min-h-11 sm:min-h-8"
+              @click="openAlta"
             />
           </template>
-        </div>
-      </section>
-      <div class="px-4 pb-3 sm:hidden">
-        <FormControl
-          class="h-11 w-full"
-          type="select"
-          :aria-label="__('List', null, 'Equipo')"
-          :model-value="segment"
-          :options="entries.map((e) => ({ label: e.label, value: e.value }))"
-          @update:model-value="selectSegment"
-        />
-      </div>
-      <div
-        v-if="notice"
-        role="status"
-        class="mx-4 mb-3 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
-      >
-        {{ notice }}
-      </div>
-      <div
-        v-if="problem"
-        role="alert"
-        class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
-      >
-        <strong>{{ problem.title }}.</strong> {{ problem.detail }}
-        <Button
-          class="ml-2"
-          :label="__('Retry', null, 'Equipo')"
-          @click="load()"
-        />
-      </div>
-      <div class="min-h-0 flex-1 overflow-y-auto pb-6">
-        <div
-          v-if="loading && !rows.length"
+        </PageHeader>
+        <section
+          v-if="!caps.hr && !hrDismissed"
           role="status"
-          class="px-6 py-8 text-sm text-ink-gray-6"
+          class="mx-4 mb-3 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
         >
-          {{ __('Loading the team…') }}
-        </div>
-        <div
-          v-else-if="!rows.length"
-          class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
+          <p>
+            {{
+              boot?.hr_reason ||
+              __(
+                'Shifts, attendance and vacations need the staff module (HRMS), which this system does not have.',
+              )
+            }}
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <Button
+              :label="__('Ask to turn it on')"
+              :loading="asking"
+              @click="askHr"
+            />
+            <Button
+              variant="ghost"
+              :label="__('Continue with people and puestos')"
+              @click="hrDismissed = true"
+            />
+          </div>
+          <p v-if="asked">{{ asked }}</p>
+        </section>
+        <section
+          v-if="noAccess"
+          role="status"
+          class="mx-4 mb-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
         >
-          <p class="text-lg font-semibold">{{ emptyTitle }}</p>
-          <p class="mt-1 text-sm">{{ emptyBody }}</p>
-          <Button
-            v-if="segment !== 'todos'"
-            class="mt-4"
-            :label="__('See everyone', null, 'Equipo')"
-            @click="selectSegment('todos')"
+          <p>
+            {{
+              __(
+                'To see the team you need access to employee records. Ask whoever runs the shop to give it to you.',
+                null,
+                'Equipo',
+              )
+            }}
+          </p>
+        </section>
+        <section
+          v-if="limit"
+          role="status"
+          class="mx-4 mb-3 space-y-2 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-8 sm:mx-6"
+        >
+          <p>{{ limit.message }}</p>
+          <div v-if="limit.actions?.length" class="flex flex-wrap gap-2">
+            <Button
+              v-if="!confirmingLift"
+              :label="limit.actions[0].label"
+              @click="confirmingLift = true"
+            />
+            <template v-else>
+              <p class="w-full">
+                {{
+                  __(
+                    'Your user permission limited to your own employee record will be removed. Continue?',
+                  )
+                }}
+              </p>
+              <Button
+                variant="solid"
+                :label="__('Yes, remove the limit')"
+                :loading="lifting"
+                @click="liftLimit"
+              />
+              <Button
+                :label="__('Cancel', null, 'Equipo')"
+                @click="confirmingLift = false"
+              />
+            </template>
+          </div>
+        </section>
+        <div class="px-4 pb-3 sm:hidden">
+          <FormControl
+            class="h-11 w-full"
+            type="select"
+            :aria-label="__('List', null, 'Equipo')"
+            :model-value="segment"
+            :options="entries.map((e) => ({ label: e.label, value: e.value }))"
+            @update:model-value="selectSegment"
           />
         </div>
-        <ul v-else class="divide-y divide-outline-gray-1">
-          <li
-            v-for="row in rows"
-            :key="row.name || row.employee || row.user"
-            class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-surface-gray-1 sm:px-6"
-            :class="focus && row.name === focus ? 'bg-surface-gray-1' : ''"
+        <div
+          v-if="notice"
+          role="status"
+          class="mx-4 mb-3 rounded-lg bg-surface-green-1 p-3 text-sm text-ink-green-8 sm:mx-6"
+        >
+          {{ notice }}
+        </div>
+        <div
+          v-if="problem"
+          role="alert"
+          class="mx-4 mb-3 rounded-lg bg-surface-red-1 p-3 text-sm text-ink-red-7 sm:mx-6"
+        >
+          <strong>{{ problem.title }}.</strong> {{ problem.detail }}
+          <Button
+            class="ml-2"
+            :label="__('Retry', null, 'Equipo')"
+            @click="load()"
+          />
+        </div>
+        <div>
+          <div
+            v-if="loading && !rows.length"
+            role="status"
+            class="px-6 py-8 text-sm text-ink-gray-6"
           >
-            <component
-              :is="row.employee ? RouterLink : 'div'"
-              v-bind="
-                row.employee
-                  ? { to: personRoute(row.employee, rowQuery(row)) }
-                  : { role: 'button', tabindex: 0 }
-              "
-              class="flex min-w-0 flex-1 cursor-pointer items-start gap-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
-              @click="row.employee ? null : openPerson(row)"
-              @keydown.enter="row.employee ? null : openPerson(row)"
-            >
-              <Avatar
-                :label="row.full_name || row.employee_name"
-                :image="row.image"
-                size="lg"
-              />
-              <span class="min-w-0 flex-1">
-                <span class="block truncate font-medium text-ink-gray-9">
-                  {{ row.full_name || row.employee_name }}
-                </span>
-                <span class="block truncate text-sm text-ink-gray-6">
-                  {{ rowDetail(row) }}
-                </span>
-                <span class="mt-1 flex flex-wrap gap-1">
-                  <Badge
-                    v-if="row.today"
-                    :theme="todayTheme(row.today.status)"
-                    :label="todayLabel(row.today.status)"
-                  />
-                  <Badge v-if="row.puesto" theme="gray" :label="row.puesto" />
-                  <Badge
-                    v-if="row.status === 'Suspended'"
-                    theme="orange"
-                    :label="__('Suspended', null, 'Equipo')"
-                  />
-                  <Badge
-                    v-if="row.status === 'no_employee'"
-                    theme="orange"
-                    :label="__('No employee record')"
-                  />
-                  <Badge
-                    v-if="row.state_label"
-                    theme="blue"
-                    :label="row.state_label"
-                  />
-                </span>
-                <span
-                  v-if="row.problem"
-                  class="mt-1 block text-sm text-ink-amber-8"
-                  >{{ row.problem }}</span
-                >
-              </span>
-            </component>
+            {{ __('Loading the team…') }}
+          </div>
+          <div
+            v-else-if="!rows.length"
+            class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
+          >
+            <p class="text-lg font-semibold">{{ emptyTitle }}</p>
+            <p class="mt-1 text-sm">{{ emptyBody }}</p>
             <Button
-              v-if="segment === 'sin-horario' && row.employee"
-              :label="__('Assign shift')"
-              class="min-h-11 shrink-0 sm:min-h-8"
-              @click="openShift(row)"
+              v-if="segment !== 'todos'"
+              class="mt-4"
+              :label="__('See everyone', null, 'Equipo')"
+              @click="selectSegment('todos')"
             />
-          </li>
-        </ul>
+          </div>
+          <ul v-else class="divide-y divide-outline-gray-1">
+            <li
+              v-for="row in rows"
+              :key="row.name || row.employee || row.user"
+              class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-surface-gray-1 sm:px-6"
+              :class="focus && row.name === focus ? 'bg-surface-gray-1' : ''"
+            >
+              <component
+                :is="row.employee ? RouterLink : 'div'"
+                v-bind="
+                  row.employee
+                    ? { to: personRoute(row.employee, rowQuery(row)) }
+                    : { role: 'button', tabindex: 0 }
+                "
+                class="flex min-w-0 flex-1 cursor-pointer items-start gap-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+                @click="row.employee ? null : openPerson(row)"
+                @keydown.enter="row.employee ? null : openPerson(row)"
+              >
+                <Avatar
+                  :label="row.full_name || row.employee_name"
+                  :image="row.image"
+                  size="lg"
+                />
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-medium text-ink-gray-9">
+                    {{ row.full_name || row.employee_name }}
+                  </span>
+                  <span class="block truncate text-sm text-ink-gray-6">
+                    {{ rowDetail(row) }}
+                  </span>
+                  <span class="mt-1 flex flex-wrap gap-1">
+                    <Badge
+                      v-if="row.today"
+                      :theme="todayTheme(row.today.status)"
+                      :label="todayLabel(row.today.status)"
+                    />
+                    <Badge v-if="row.puesto" theme="gray" :label="row.puesto" />
+                    <Badge
+                      v-if="row.status === 'Suspended'"
+                      theme="orange"
+                      :label="__('Suspended', null, 'Equipo')"
+                    />
+                    <Badge
+                      v-if="row.status === 'no_employee'"
+                      theme="orange"
+                      :label="__('No employee record')"
+                    />
+                    <Badge
+                      v-if="row.state_label"
+                      theme="blue"
+                      :label="row.state_label"
+                    />
+                  </span>
+                  <span
+                    v-if="row.problem"
+                    class="mt-1 block text-sm text-ink-amber-8"
+                    >{{ row.problem }}</span
+                  >
+                </span>
+              </component>
+              <Button
+                v-if="segment === 'sin-horario' && row.employee"
+                :label="__('Assign shift')"
+                class="min-h-11 shrink-0 sm:min-h-8"
+                @click="openShift(row)"
+              />
+            </li>
+          </ul>
+        </div>
       </div>
-    </template>
+      <Fab
+        v-if="fab"
+        :label="__('Add a person', null, 'Equipo')"
+        icon="lucide-user-plus"
+        @click="openAlta"
+      />
+    </div>
   </ModuleLayout>
 </template>
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Avatar, Badge, Button, FormControl } from 'frappe-ui'
-import { PageHeader } from '@/components/ui'
+import { Fab, PageHeader } from '@/components/ui'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import {
   equipoApi,
@@ -267,6 +282,8 @@ const route = useRoute()
 const router = useRouter()
 const boot = equipoBoot
 const caps = computed(() => boot.value?.capabilities || {})
+// The one create action of the list: a FAB on a phone, a header button else.
+const fab = computed(() => isPhone.value && Boolean(caps.value.hire))
 const rows = ref([])
 const counts = ref({})
 const loading = ref(false)

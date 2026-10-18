@@ -22348,8 +22348,8 @@ msgid "No vacation requests yet. They ask from Asistencia."
 msgstr "Todavía no hay solicitudes de vacaciones. Se piden en Asistencia."
 
 #: frontend/src/pages/EquipoVacaciones.vue
-msgid "Vacation days by law for each year of service ({0}). Each person gets this year’s days; nothing is assigned backwards."
-msgstr "Días de vacaciones de ley por cada año de antigüedad ({0}). Cada persona recibe los días de este año; no se asigna nada hacia atrás."
+msgid "Vacation days by law for each year of service. Each person gets this year’s days; nothing is assigned backwards."
+msgstr "Días de vacaciones que da la ley por cada año de antigüedad. Cada persona recibe los días de este año; no se asigna nada hacia atrás."
 
 #: frontend/src/pages/EquipoVacaciones.vue
 msgctxt "Equipo"

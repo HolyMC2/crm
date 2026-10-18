@@ -38,3 +38,15 @@ describe('Equipo access banner', () => {
     expect(entry?.[1]).not.toMatch(/HR User/)
   })
 })
+
+describe('Vacaciones de ley subtitle', () => {
+  it('says it in plain words, without the article of the law', () => {
+    const here = dirname(fileURLToPath(import.meta.url))
+    const po = readFileSync(resolve(here, '../../../crm/locale/es.po'), 'utf8')
+    const entry = po.match(
+      /msgid "Vacation days by law for each year of service\. [^"]+"\nmsgstr "([^"]+)"/,
+    )
+    expect(entry?.[1]).toMatch(/^Días de vacaciones que da la ley/)
+    expect(entry?.[1]).not.toMatch(/LFT|art\.|\(/)
+  })
+})

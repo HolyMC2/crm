@@ -1,7 +1,8 @@
 <template>
   <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
     <div class="mx-auto w-full max-w-4xl px-4 pb-28 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell's app bar has the back arrow (meta.listParent). -->
+      <nav v-if="!isPhone" class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           @click="goBack"
@@ -10,14 +11,15 @@
           {{ __('Back to Equipo') }}
         </button>
       </nav>
-      <h1 class="text-2xl font-semibold text-ink-gray-9">
+      <h1
+        class="break-words text-2xl font-semibold text-ink-gray-9 [text-wrap:balance]"
+      >
         {{ __('Statutory vacations') }}
       </h1>
       <p class="mb-4 text-sm text-ink-gray-6">
         {{
           __(
-            'Vacation days by law for each year of service ({0}). Each person gets this year’s days; nothing is assigned backwards.',
-            [config?.law || 'LFT'],
+            'Vacation days by law for each year of service. Each person gets this year’s days; nothing is assigned backwards.',
           )
         }}
       </p>
@@ -201,6 +203,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl } from 'frappe-ui'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   AUSENCIAS,
   LFT,
