@@ -257,8 +257,36 @@
         :title="a.label"
         :subtitle-tone="a.danger ? 'danger' : ''"
         :subtitle="a.hint || ''"
-        @click="a.run()"
+        @click="runPhoneAction(a.key)"
       />
+    </BottomSheet>
+    <BottomSheet
+      :open="!!qrFor"
+      :title="__('Código QR')"
+      @update:open="(open) => !open && (qrFor = null)"
+    >
+      <div class="flex flex-col items-center gap-3 pb-2">
+        <p class="text-center text-p-sm text-ink-gray-6">{{ qrFor?.title }}</p>
+        <div
+          class="flex size-56 items-center justify-center rounded-lg border border-outline-gray-2 bg-white p-2"
+        >
+          <img
+            v-if="qrSrc"
+            :src="qrSrc"
+            :alt="__('QR code for {0}', [qrFor?.title || ''])"
+            class="size-full"
+            data-testid="form-qr"
+          />
+          <LoadingIndicator v-else class="size-5 text-ink-gray-5" />
+        </div>
+        <Button
+          size="md"
+          :label="__('Descargar PNG')"
+          icon-left="download"
+          :disabled="!qrSvg"
+          @click="downloadQrPng"
+        />
+      </div>
     </BottomSheet>
   </template>
 </template>
@@ -286,6 +314,7 @@ import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import { addonAvailable } from '@/utils/crmCapabilities'
 import NewFormDialog from '@/components/Forms/NewFormDialog.vue'
 import { outcome, publicUrl } from '@/components/Forms/formModel'
+import { formPhoneActions } from '@/components/Forms/formPhoneActions'
 import { usersStore } from '@/stores/users'
 import { ConfirmDelete, copyToClipboard } from '@/utils'
 import { relativeTime } from '@/utils/display'
@@ -403,7 +432,9 @@ async function duplicate(f) {
   try {
     const doc = await call('crm.api.form.duplicate_form', { name: f.name })
     toast.success(__('Copy created as a draft'))
-    router.push({ name: 'Form', params: { formId: doc.name } })
+    // The builder is desk-only (Shell D3): on a phone the copy shows in the list.
+    if (isMobile.value) forms.reload()
+    else router.push({ name: 'Form', params: { formId: doc.name } })
   } catch (e) {
     toast.error(e?.messages?.[0] || __('Could not duplicate form'))
   }
@@ -420,87 +451,82 @@ function openActions(f) {
 function closeActions() {
   actionsFor.value = null
 }
-const phoneActions = computed(() => {
+// The builder is desk-only (Shell D3), so the phone sheet never routes there
+// (components/Forms/formPhoneActions.js lists what it offers).
+const phoneActions = computed(() =>
+  formPhoneActions(actionsFor.value, {
+    confirmingDelete: confirmingPhoneDelete.value,
+  }),
+)
+async function runPhoneAction(key) {
   const f = actionsFor.value
-  if (!f) return []
-  const go = (query) => () => {
-    closeActions()
-    router.push({ name: 'Form', params: { formId: f.name }, query })
+  if (!f) return
+  if (key === 'delete' && !confirmingPhoneDelete.value) {
+    confirmingPhoneDelete.value = true
+    return
   }
-  return [
-    {
-      key: 'copy',
-      icon: 'lucide-link',
-      label: __('Copiar enlace'),
-      run: () => {
-        closeActions()
-        copyLink(f)
-      },
-    },
-    {
-      key: 'qr',
-      icon: 'lucide-qr-code',
-      label: __('Código QR'),
-      run: go({ tab: 'share' }),
-    },
-    { key: 'edit', icon: 'lucide-pencil', label: __('Editar'), run: go() },
-    {
-      key: 'submissions',
-      icon: 'lucide-inbox',
-      label: __('Envíos'),
-      run: go({ tab: 'submissions' }),
-    },
-    {
-      key: 'public',
-      icon: 'lucide-external-link',
-      label: __('Abrir la página pública'),
-      run: () => {
-        closeActions()
-        window.open(publicUrl(window.location.origin, f.route), '_blank')
-      },
-    },
-    {
-      key: 'publish',
-      icon: f.published ? 'lucide-eye-off' : 'lucide-eye',
-      label: f.published ? __('Despublicar') : __('Publicar'),
-      run: () => {
-        closeActions()
-        setPublished(f, !f.published)
-      },
-    },
-    {
-      key: 'duplicate',
-      icon: 'lucide-copy',
-      label: f.incompatible_fields
-        ? __('Duplicar como formulario limpio')
-        : __('Duplicar'),
-      run: () => {
-        closeActions()
-        duplicate(f)
-      },
-    },
-    confirmingPhoneDelete.value
-      ? {
-          key: 'delete',
-          icon: 'lucide-trash-2',
-          label: __('Confirmar: eliminar'),
-          hint: __('No se puede deshacer'),
-          danger: true,
-          run: async () => {
-            closeActions()
-            await call('crm.api.form.delete_form', { name: f.name })
-            forms.reload()
-            toast.success(__('Form deleted'))
-          },
-        }
-      : {
-          key: 'delete',
-          icon: 'lucide-trash-2',
-          label: __('Eliminar'),
-          run: () => (confirmingPhoneDelete.value = true),
-        },
-  ]
-})
+  closeActions()
+  if (key === 'copy') copyLink(f)
+  else if (key === 'qr') openQr(f)
+  else if (key === 'public')
+    window.open(publicUrl(window.location.origin, f.route), '_blank')
+  else if (key === 'publish') setPublished(f, !f.published)
+  else if (key === 'duplicate') duplicate(f)
+  else if (key === 'delete') {
+    await call('crm.api.form.delete_form', { name: f.name })
+    forms.reload()
+    toast.success(__('Form deleted'))
+  }
+}
+
+// Phone: the form's QR in a sheet (same server SVG as the builder's Share tab).
+const qrFor = ref(null)
+const qrSvg = ref('')
+const qrSrc = computed(() =>
+  qrSvg.value
+    ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrSvg.value)}`
+    : '',
+)
+let qrSeq = 0
+async function openQr(f) {
+  const seq = ++qrSeq
+  qrFor.value = f
+  qrSvg.value = ''
+  try {
+    const svg = await call('crm.api.form.get_form_qr', {
+      name: f.name,
+      url: publicUrl(window.location.origin, f.route),
+    })
+    if (seq === qrSeq) qrSvg.value = svg
+  } catch (e) {
+    if (seq === qrSeq) {
+      qrFor.value = null
+      toast.error(e?.messages?.[0] || __('Could not make the QR code'))
+    }
+  }
+}
+// print-ready PNG: the SVG drawn onto a 1024px canvas
+function downloadQrPng() {
+  const f = qrFor.value
+  const img = new Image()
+  img.onload = () => {
+    const size = 1024
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, size, size)
+    ctx.imageSmoothingEnabled = false
+    ctx.drawImage(img, 0, 0, size, size)
+    const a = document.createElement('a')
+    a.href = canvas.toDataURL('image/png')
+    a.download = `${f?.route || 'form'}-plain-qr.png`
+    a.click()
+    capture('form_qr_downloaded', { channel: 'plain', source: 'list' })
+  }
+  img.src = qrSrc.value
+}
 
 function rowMenu(f) {
   return [
