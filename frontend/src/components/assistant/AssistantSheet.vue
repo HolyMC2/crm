@@ -33,18 +33,10 @@
   </BottomSheet>
 </template>
 <script setup>
-import {
-  computed,
-  getCurrentInstance,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
-import { appleKeys, registerPageKeys } from '@/composables/shellKeyboard'
-import { normalizeCombo } from '@/vendor/muelle-shell/contracts'
+import { registerPageKeys } from '@/composables/shellKeyboard'
 import { moduleKeyFor, shellModules } from '@/composables/muelleShell'
 import { shellTitle } from '@/utils/shellTitle'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
@@ -60,7 +52,6 @@ import {
   closeAssistant,
   loadStatus,
   screenContext,
-  toggleAssistant,
 } from './useAssistant'
 
 // The dock width the contract names (ASSISTANT.md «wider than 1280px»).
@@ -87,36 +78,11 @@ watch(
   { immediate: true },
 )
 
-// ⌘J / Ctrl+J opens or closes it from anywhere, also while typing and over a
-// sheet. shell-contracts 0.8.0 names the key (KEYMAP «assistant»), but the
-// shell's keyboard (shellKeyboard.js) only answers its own global ids and
-// stops at an open sheet, so the assistant listens itself (capture phase) and
-// declares the key so the Alt+H sheet lists it. Esc closes the dock when the
-// focus is in it.
-function onKey(event) {
-  if (event.defaultPrevented || event.isComposing || !assistantEnabled.value)
-    return
-  if (normalizeCombo(event, appleKeys) !== 'mod+j') return
-  event.preventDefault()
-  event.stopPropagation()
-  toggleAssistant()
-}
-onMounted(() => window.addEventListener('keydown', onKey, true))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey, true))
+// ⌘J / Ctrl+J is the shell's (shellKeyboard.js shellAssistant, set by
+// MuelleShell). Esc closes the dock when the focus is in it.
 registerPageKeys({
   root: panel,
   keys: () => (assistant.open && docked.value ? { close: closeAssistant } : {}),
-  extra: () =>
-    assistantEnabled.value
-      ? [
-          {
-            id: 'assistant',
-            keys: ['mod+j'],
-            description: 'Ask the assistant',
-            context: 'global',
-          },
-        ]
-      : [],
 })
 
 // On a phone the record opens full screen; the conversation waits.

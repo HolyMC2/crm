@@ -7,6 +7,16 @@ vi.mock('frappe-ui', () => ({
   call: mocks.call,
   BottomSheet: { render: () => null },
 }))
+// The sheet's frame is S1's (tested there); here only its slots matter.
+vi.mock('@/components/ui/BottomSheet.vue', () => ({
+  default: {
+    props: ['open'],
+    setup:
+      (_, { slots }) =>
+      () =>
+        h('div', [slots.header?.(), slots.default?.(), slots.footer?.()]),
+  },
+}))
 
 import {
   chipsFor,
@@ -32,6 +42,7 @@ import {
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 import ActionCard from '@/components/assistant/ActionCard.vue'
 import SuggestionLine from '@/components/assistant/SuggestionLine.vue'
+import AssistantSheet from '@/components/assistant/AssistantSheet.vue'
 
 const API = 'doco.docoutils.assistant.shell_api'
 const staff = { enabled: true, role: 'staff', chat_id: 'desk:ana@tienda.mx' }
@@ -351,6 +362,22 @@ describe('the palette door', () => {
     expect(
       await provider.search({ raw: '¿qué hago?', text: '¿qué hago?' }),
     ).toEqual([])
+  })
+})
+
+describe('the ⌘J door', () => {
+  it("is the shell's: the sheet itself does not listen for ⌘J", async () => {
+    const { app } = mount(AssistantSheet)
+    await openAssistant()
+    await nextTick()
+    expect(assistant.open).toBe(true)
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'j', ctrlKey: true, bubbles: true }),
+    )
+    await nextTick()
+    // Only shellKeyboard's shellAssistant (MuelleShell) toggles it now.
+    expect(assistant.open).toBe(true)
+    app.unmount()
   })
 })
 
