@@ -58,6 +58,14 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
    | `match`, `filters`      | optional: one doctype, several lists (Payment Entry: `cobros` matches `{ payment_type: 'Receive' }` and lists with `filters`)      |
    | `recordRoute(name)`     | optional: hand the record to a richer existing page (`{ path }`)                                                                   |
 
+   Two rules around `recordRoute`:
+   - `documentRoute(doctype, 'nuevo')` ignores it: a new draft always opens the engine form at
+     `/documentos/<slug>/nuevo`, even for Purchase Order or Purchase Invoice.
+   - When `DocumentosList` opens a record on a richer page (one outside `/documentos` and
+     `/inventario`), it adds `?list=<the list's fullPath>`. That page's back button and the phone
+     app bar arrow (`MuelleShell` `backTo`, which accepts only a safe in-app path) return to that
+     list with its filters and chip.
+
 2. **Server display** in `documentos.py` `DISPLAY[doctype]` (and the doctype in
    `DOCUMENTOS_DOCTYPES` / `INVENTARIO_DOCTYPES` so the module gate counts it): which fields are the
    `title` (party or name, in preference order; never the ID), `amount`, `currency`, `date`, `due`,
