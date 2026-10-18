@@ -148,9 +148,10 @@ describe('legacy screens (Shell D3, S1.3)', () => {
     expect([...navItems, ...navItemsBottom].map((i) => i.key)).not.toContain(
       'inquiries',
     )
-    // A bare /inquiries opens Prospectos › Consultas; ?name= still opens one.
+    // A bare /inquiries opens Prospectos › Consultas; ?name= still opens one
+    // and ?capture=1 («Nueva consulta» from Prospectos) still opens the form.
     expect(routeBlock('/inquiries')).toMatch(
-      /to\.query\.name\s*\? true\s*: \{ path: '\/prospectos', query: \{ tipo: 'inquiry' \}/,
+      /to\.query\.name \|\| to\.query\.capture\s*\? true\s*: \{ path: '\/prospectos', query: \{ tipo: 'inquiry' \}/,
     )
     expect(router).toMatch(
       /\{ path: '\/welcome', name: 'Welcome', redirect: '\/hoy' \}/,

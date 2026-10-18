@@ -404,11 +404,12 @@ const routes = [
   },
   {
     // Shell D3: the Consultas list is retired into Prospectos; an inquiry
-    // link (?name=…, from Prospectos or Social) still opens it here.
+    // link (?name=…, from Prospectos or Social) and «Nueva consulta»
+    // (?capture=1, from Prospectos) still open it here.
     path: '/inquiries',
     name: 'Inquiries',
     beforeEnter: (to) =>
-      to.query.name
+      to.query.name || to.query.capture
         ? true
         : { path: '/prospectos', query: { tipo: 'inquiry' }, replace: true },
     component: () => import('@/pages/Inquiries.vue'),
