@@ -156,6 +156,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { openAssistant } from '@/components/assistant/useAssistant'
+import { openCamera } from '@/components/captura/cameraDoor'
 import { useRouter } from 'vue-router'
 import {
   PALETTE_DEBOUNCE_MS,
@@ -358,6 +359,8 @@ function choose(item) {
   // «Preguntar a Muelle»: the sheet opens over this screen and asks.
   if (item.action === 'assistant')
     nextTick(() => openAssistant({ text: item.args?.text, send: true }))
+  // «Escanear documento»: the camera sheet opens over this screen.
+  if (item.action === 'camera') nextTick(() => openCamera())
   if (href) router.push(href.replace(/^\/crm/, ''))
   else if (external) window.location.assign(external)
   else if (desk) window.location.assign(desk)

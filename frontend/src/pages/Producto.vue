@@ -77,40 +77,62 @@
                 __('No photo yet')
               }}</span>
             </div>
-            <FileUploader
+            <div
               v-if="data.can_edit"
-              file-types="image/*"
-              :upload-args="{
-                doctype: 'Item',
-                docname: product.name,
-                private: false,
-              }"
-              @success="photoUploaded"
-              @failure="photoFailed"
+              class="flex flex-wrap justify-center gap-2 sm:justify-start"
             >
-              <template #default="{ openFileSelector, uploading, progress }">
-                <Button
-                  class="min-h-11 sm:min-h-8"
-                  :loading="uploading || photoSaving"
-                  :label="
-                    uploading
-                      ? __('Uploading {0}%', [progress])
-                      : product.image
-                        ? __('Change photo')
-                        : __('Add photo')
-                  "
-                  @click="openFileSelector"
-                >
-                  <template #prefix>
-                    <FeatherIcon
-                      name="camera"
-                      class="h-4 w-4"
-                      aria-hidden="true"
-                    />
-                  </template>
-                </Button>
-              </template>
-            </FileUploader>
+              <FileUploader
+                file-types="image/*"
+                :upload-args="{
+                  doctype: 'Item',
+                  docname: product.name,
+                  private: false,
+                }"
+                @success="photoUploaded"
+                @failure="photoFailed"
+              >
+                <template #default="{ openFileSelector, uploading, progress }">
+                  <Button
+                    class="min-h-11 sm:min-h-8"
+                    :loading="uploading || photoSaving"
+                    :label="
+                      uploading
+                        ? __('Uploading {0}%', [progress])
+                        : product.image
+                          ? __('Change photo')
+                          : __('Add photo')
+                    "
+                    @click="openFileSelector"
+                  >
+                    <template #prefix>
+                      <FeatherIcon
+                        name="camera"
+                        class="h-4 w-4"
+                        aria-hidden="true"
+                      />
+                    </template>
+                  </Button>
+                </template>
+              </FileUploader>
+              <!-- Shell D7: the shell's camera, one photo as shot (no page crop). -->
+              <Button
+                class="min-h-11 sm:min-h-8"
+                :label="__('Take photo')"
+                :disabled="photoSaving"
+                data-testid="producto-tomar-foto"
+                @pointerenter="loadCameraSheet"
+                @focus="loadCameraSheet"
+                @click="takePhoto"
+              >
+                <template #prefix>
+                  <FeatherIcon
+                    name="aperture"
+                    class="h-4 w-4"
+                    aria-hidden="true"
+                  />
+                </template>
+              </Button>
+            </div>
           </div>
 
           <div class="min-w-0">
@@ -1440,6 +1462,7 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FileUploader, toast } from 'frappe-ui'
+import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
 import PriceDialog from '@/components/productos/PriceDialog.vue'
 import EditDialog from '@/components/productos/EditDialog.vue'
 import RequestDialog from '@/components/productos/RequestDialog.vue'
@@ -1931,6 +1954,34 @@ async function photoUploaded(file) {
   } finally {
     photoSaving.value = false
   }
+}
+// «Tomar foto» (Shell D7): the camera sheet hands back one JPEG; it goes up
+// public on the Item like «Cambiar foto», then the same set_photo.
+function takePhoto() {
+  return openCamera({
+    title: __('Product photo'),
+    photo: true,
+    onFiles: async ([file]) => {
+      const body = new FormData()
+      body.append('file', file, file.name)
+      body.append('is_private', '0')
+      body.append('doctype', 'Item')
+      body.append('docname', product.value.name)
+      const headers = { Accept: 'application/json' }
+      if (window.csrf_token && window.csrf_token !== '{{ csrf_token }}')
+        headers['X-Frappe-CSRF-Token'] = window.csrf_token
+      const response = await fetch('/api/method/upload_file', {
+        method: 'POST',
+        headers,
+        body,
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data.message?.file_url)
+        throw new Error(__('The photo was not uploaded'))
+      await photoUploaded(data.message)
+      return data.message
+    },
+  })
 }
 function photoFailed(error) {
   problem.value = {

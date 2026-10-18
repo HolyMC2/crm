@@ -27538,3 +27538,264 @@ msgstr "Inventario inicial"
 #: crm/api/documentos.py
 msgid "Stock count adjustment"
 msgstr "Ajuste"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Turn off the flash"
+msgstr "Apagar la luz"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Turn on the flash"
+msgstr "Encender la luz"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Fit the whole page inside the frame."
+msgstr "Acomoda toda la hoja dentro del marco."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Retaking page {0}."
+msgstr "Repitiendo la página {0}."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Take the photo with the phone camera"
+msgstr "Tomar la foto con la cámara del teléfono"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Opening the camera…"
+msgstr "Abriendo la cámara…"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Pages"
+msgstr "Páginas"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Page {0}"
+msgstr "Página {0}"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Choose from the gallery or a file"
+msgstr "Elegir de la galería o un archivo"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Done ({0})"
+msgstr "Listo ({0})"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "That is the most pages one document can have ({0})."
+msgstr "Es el máximo de páginas de un documento ({0})."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Move page {0} earlier"
+msgstr "Mover la página {0} antes"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Retake page {0}"
+msgstr "Repetir la página {0}"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Remove page {0}"
+msgstr "Quitar la página {0}"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Move page {0} later"
+msgstr "Mover la página {0} después"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Add page"
+msgstr "Agregar página"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "What is it?"
+msgstr "¿Qué es?"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Your user cannot record any of these documents. Ask whoever manages Muelle for access."
+msgstr "Tu usuario no puede registrar ninguno de estos documentos. Pide acceso a quien administra Muelle."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Which invoice does it pay?"
+msgstr "¿Qué factura paga?"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Balance {0}"
+msgstr "Saldo {0}"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "None of these: only the payment"
+msgstr "Ninguna de estas: solo el pago"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "No open invoice for this amount: only the payment"
+msgstr "No hay factura abierta por este monto: solo el pago"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Which customer sent it?"
+msgstr "¿Qué cliente la mandó?"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Whose is it?"
+msgstr "¿De quién es?"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Search a customer"
+msgstr "Busca un cliente"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Search a contact"
+msgstr "Busca un contacto"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Photos from the gallery"
+msgstr "Fotos de la galería"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "A PDF or an XML invoice"
+msgstr "Un PDF o una factura XML"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "The phone camera"
+msgstr "La cámara del teléfono"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Scan document"
+msgstr "Escanear documento"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Pages ({0})"
+msgstr "Páginas ({0})"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Save to the record"
+msgstr "Guardar en el registro"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Use these pages"
+msgstr "Usar estas páginas"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Save to the customer"
+msgstr "Guardar en el cliente"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Save to the contact"
+msgstr "Guardar en el contacto"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Read exactly from the CFDI."
+msgstr "Leído exacto del CFDI."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Read from the words in the document."
+msgstr "Leído de las palabras del documento."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Read by the assistant; check it."
+msgstr "Lo leyó el asistente; revísalo."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Guessed from the file name; check it."
+msgstr "Adivinado por el nombre del archivo; revísalo."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Muelle does not have permission to use the camera."
+msgstr "Muelle no tiene permiso para usar la cámara."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Tap the lock next to the address and allow the camera, then try again. Or take the photo with the phone camera."
+msgstr "Toca el candado junto a la dirección, permite la cámara y vuelve a intentar. O toma la foto con la cámara del teléfono."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "This device has no camera Muelle can use."
+msgstr "Este equipo no tiene una cámara que Muelle pueda usar."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Choose a photo or a PDF instead."
+msgstr "Elige una foto o un PDF."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Another app is using the camera."
+msgstr "Otra app está usando la cámara."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Close the other app or take the photo with the phone camera."
+msgstr "Cierra la otra app o toma la foto con la cámara del teléfono."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "The camera only opens on a secure address."
+msgstr "La cámara solo abre en una dirección segura."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Take the photo with the phone camera instead."
+msgstr "Toma la foto con la cámara del teléfono."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "The camera did not open."
+msgstr "La cámara no abrió."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Take the photo with the phone camera, or choose a photo or a PDF."
+msgstr "Toma la foto con la cámara del teléfono, o elige una foto o un PDF."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Saved to the customer, then a sales order"
+msgstr "Se guarda en el cliente y sigue el pedido"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Saved to the contact"
+msgstr "Se guarda en el contacto"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Supplier invoice draft"
+msgstr "Borrador de factura de proveedor"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Purchase order draft"
+msgstr "Borrador de orden de compra"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Payment draft"
+msgstr "Borrador de pago"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Journal entry draft"
+msgstr "Borrador de póliza"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "The photo did not come out. Try again."
+msgstr "La foto no salió. Vuelve a intentar."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "That photo could not be opened. Choose another one."
+msgstr "No se pudo abrir esa foto. Elige otra."
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Saved to {0}"
+msgstr "Guardado en {0}"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "Saved to the record"
+msgstr "Guardado en el registro"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "It looks like"
+msgstr "Parece"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "What we read"
+msgstr "Lo que leímos"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgid "We could not tell what it is"
+msgstr "No supimos qué es"
+
+#: frontend/src/components/captura/CameraSheet.vue
+msgctxt "Scan"
+msgid "From"
+msgstr "De"
+
+#: frontend/src/pages/Producto.vue
+msgid "Product photo"
+msgstr "Foto del artículo"
+
+#: frontend/src/pages/Producto.vue
+msgid "Use this photo"
+msgstr "Usar esta foto"

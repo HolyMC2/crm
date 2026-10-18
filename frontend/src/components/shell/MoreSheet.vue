@@ -43,6 +43,17 @@
         <span class="lucide-sparkles size-5" aria-hidden="true" />
         {{ __('Ask Muelle') }}
       </button>
+      <!-- «Escanear documento» (Shell D7): the camera into the capture engine. -->
+      <button
+        type="button"
+        class="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-gray-2 px-4 text-left text-base font-medium"
+        data-testid="more-camera"
+        @pointerenter="loadCameraSheet"
+        @click="scanDocument"
+      >
+        <span class="lucide-camera size-5" aria-hidden="true" />
+        {{ __('Scan document') }}
+      </button>
 
       <!-- The bar's modules are not repeated here: only what the bar leaves out. -->
       <section v-if="extraModules.length" aria-labelledby="more-modules">
@@ -299,6 +310,7 @@ import { installLinkPrefetch } from '@/utils/speculate'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { BottomSheet } from '@/components/ui'
+import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
 
 // Pressing a sibling app (data-sibling) starts fetching its page.
 installLinkPrefetch()
@@ -423,6 +435,10 @@ loadStatus()
 function askMuelle() {
   close()
   openAssistant()
+}
+function scanDocument() {
+  close()
+  openCamera()
 }
 // «Ayuda» comes from doco's support launcher when the site has it; on phone
 // the shell hides the floating pill and offers it here.

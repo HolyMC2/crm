@@ -684,6 +684,7 @@ import {
   pendingLines,
   totalsSummary,
 } from '@/composables/useCaptura'
+import { shellRoute } from '@/components/captura/scanApi'
 
 // «Capturar documento» review: what the books pipeline read from the paper,
 // fixed by the worker, then one draft record (never submitted).
@@ -883,7 +884,7 @@ async function createDraft() {
   if (data?.created) openDraft(data.created)
 }
 
-function openDraft(created) {
+async function openDraft(created) {
   const target = draftTarget(created, {
     returnTo: route.query.return_to,
     returnLabel: route.query.return_label,
@@ -892,8 +893,22 @@ function openDraft(created) {
     problem.value = __('This draft cannot be opened from here.')
     return
   }
-  if (target.kind === 'router') router.push(target.to)
-  else window.location.assign(target.href)
+  if (target.kind === 'router') return router.push(target.to)
+  // A payment or póliza the engine still routes to Desk opens in the shell
+  // when the documentos engine has a page for it (Shell D7; SPEC §1.5).
+  const shell = await shellRoute(created.doctype, created.name)
+  if (shell)
+    return router.push({
+      ...shell,
+      query: {
+        ...(shell.query || {}),
+        ...(route.query.return_to ? { return_to: route.query.return_to } : {}),
+        ...(route.query.return_label
+          ? { return_label: route.query.return_label }
+          : {}),
+      },
+    })
+  window.location.assign(target.href)
 }
 
 async function discard() {

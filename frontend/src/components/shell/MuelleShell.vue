@@ -52,6 +52,22 @@
           </h1>
         </template>
         <template #actions>
+          <!-- «Escanear documento» (Shell D7): the camera reads a paper into the
+               books capture engine; the sheet is a lazy chunk (cameraDoor.js).
+               Under 360px the bar keeps its title: the door is in Más and the palette. -->
+          <button
+            v-if="!backTo && shellBoot"
+            type="button"
+            class="flex size-12 flex-none items-center justify-center rounded-full text-ink-gray-7 hover:bg-surface-gray-2 max-[359px]:hidden"
+            :aria-label="__('Scan document')"
+            :title="__('Scan document')"
+            data-testid="shell-camera"
+            @pointerenter="loadCameraSheet"
+            @focus="loadCameraSheet"
+            @click="openCamera()"
+          >
+            <span class="lucide-camera size-6" aria-hidden="true" />
+          </button>
           <!-- Escáner is the shell's scanner: scan a code, land on its artículo. -->
           <a
             v-if="scanHref"
@@ -135,6 +151,7 @@
          beside the page on a wide desktop. Staff only; it loads when a door
          first opens it (assistantDoor.js). -->
     <AssistantSheet v-if="shellBoot && assistantWanted" />
+    <CameraSheet v-if="camera.wanted" />
     <MoreSheet
       v-if="moreOpen"
       v-model="moreOpen"
@@ -194,6 +211,11 @@ import {
   loadAssistant,
 } from '@/components/assistant/assistantDoor'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
+import {
+  camera,
+  loadCameraSheet,
+  openCamera,
+} from '@/components/captura/cameraDoor'
 import AppBar from '@/components/ui/AppBar.vue'
 import ShellRail from './ShellRail.vue'
 import ShellBottomNav from './ShellBottomNav.vue'
@@ -206,6 +228,7 @@ const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
 const AssistantSheet = defineAsyncComponent(
   () => import('@/components/assistant/AssistantSheet.vue'),
 )
+const CameraSheet = defineAsyncComponent(loadCameraSheet)
 
 const route = useRoute(),
   router = useRouter()

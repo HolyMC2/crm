@@ -12,6 +12,7 @@ import { ventasSection } from '@/composables/ventasSections'
 import { isNarrow } from '@/composables/breakpoint'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
 import { createTargets } from '@/utils/shellCreate'
+import { looksLikeDocument } from '@/components/captura/cameraDoor'
 import { recordActions } from '@/composables/recordActions'
 import {
   createDocumentosProvider,
@@ -199,6 +200,19 @@ export function createShellProviders({ boot, modules }) {
           icon: 'lucide-handshake',
           href: '/deals?create=1',
         })
+      // «Escanear documento» (Shell D7): first when the words say «ticket»,
+      // «factura», «foto»… (cameraDoor.looksLikeDocument).
+      const cameraItem = {
+        id: 'camara.documento',
+        group: 'acciones',
+        title: __('Scan document'),
+        keywords:
+          'escanear documento foto camara ticket factura recibo comprobante transferencia spei cotizacion orden de compra ine identificacion domicilio capturar ocr scan document',
+        icon: 'lucide-camera',
+        action: 'camera',
+      }
+      if (looksLikeDocument(query.text)) items.unshift(cameraItem)
+      else items.push(cameraItem)
       if (installedSiblings().some((app) => app.key === 'scan'))
         items.push({
           id: 'escaner.pick',
