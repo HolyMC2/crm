@@ -29,6 +29,8 @@ MODULE_KEYS = (
 	"equipo",
 	"archivos",
 	"manual",
+	"documentos",
+	"inventario",
 	"avisos",
 )
 # Doco puesto → phone bottom-nav class (contracts registry NavRole).
@@ -321,6 +323,29 @@ def _manual():
 	}
 
 
+def _documents_module(key):
+	# Neutral modules (SPEC §6 DD3): on when the worker can read one of their doctypes and
+	# their module is not blocked; each documentos call re-checks Frappe permissions.
+	from crm.api.documentos import get_capabilities
+
+	answer = get_capabilities(key)
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": key,
+		"enabled": enabled,
+		"reason": None if enabled else answer.get("reason"),
+		"capabilities": (answer.get("capabilities") or {}) if enabled else {},
+	}
+
+
+def _documentos():
+	return _documents_module("documentos")
+
+
+def _inventario():
+	return _documents_module("inventario")
+
+
 def _avisos():
 	# Staff accounts only, independent of Contactos and Ventas; every endpoint re-checks.
 	from crm.api.avisos import get_capabilities
@@ -440,6 +465,8 @@ def _hosted():
 		"equipo": _equipo,
 		"archivos": _archivos,
 		"manual": _manual,
+		"documentos": _documentos,
+		"inventario": _inventario,
 		"avisos": _avisos,
 	}
 
@@ -478,6 +505,8 @@ def _providers():
 		_avisos,
 		_archivos,
 		_manual,
+		_documentos,
+		_inventario,
 	]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))

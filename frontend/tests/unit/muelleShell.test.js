@@ -259,6 +259,8 @@ describe('module registry', () => {
       'equipo',
       'archivos',
       'manual',
+      'documentos',
+      'inventario',
       'avisos',
     ])
     expect(moduleKeyFor({ path: '/hoy', meta: { app: 'hoy' } })).toBe('hoy')
