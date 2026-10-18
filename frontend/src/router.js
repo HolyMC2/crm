@@ -258,6 +258,35 @@ const routes = [
     props: true,
     meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
   },
+  // «Todos los ajustes» of a hard record (Shell SPEC DD13, SHELL-D6).
+  {
+    path: '/productos/:item/ajustes',
+    name: 'ProductoAjustes',
+    component: () => import('@/pages/Ajustes.vue'),
+    props: (route) => ({
+      doctype: 'Item',
+      name: route.params.item,
+      back: { name: 'Producto', params: { item: route.params.item } },
+    }),
+    meta: {
+      app: 'productos',
+      title: 'Productos',
+      listParent: 'Productos',
+      ownPhoneHeader: true,
+      ownBottomBar: true,
+    },
+  },
+  {
+    path: '/ajustes/:slug/:name',
+    name: 'Ajustes',
+    component: () => import('@/pages/Ajustes.vue'),
+    props: (route) => ({ slug: route.params.slug, name: route.params.name }),
+    meta: {
+      title: 'Todos los ajustes',
+      ownPhoneHeader: true,
+      ownBottomBar: true,
+    },
+  },
   {
     path: '/resultados',
     name: 'Resultados',
