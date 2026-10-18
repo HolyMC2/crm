@@ -113,3 +113,14 @@ class TestCadenaERPNext(IntegrationTestCase):
 			self.assertNotIn(
 				"make_purchase_order", documentos._actions(frappe.get_doc("Material Request", draft))
 			)
+
+	def test_an_order_from_an_old_requisicion_is_required_by_today_or_later(self):
+		from frappe.utils import getdate, nowdate
+
+		po = frappe.new_doc("Purchase Order")
+		po.append("items", {"item_code": "X", "schedule_date": "2020-01-10"})
+		po.append("items", {"item_code": "Y", "schedule_date": "2999-01-10"})
+		documentos._header_dates(po)
+		self.assertEqual(getdate(po.schedule_date), getdate(nowdate()))
+		self.assertEqual(getdate(po.items[0].schedule_date), getdate(nowdate()))
+		self.assertEqual(getdate(po.items[1].schedule_date), getdate("2999-01-10"))

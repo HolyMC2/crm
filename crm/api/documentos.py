@@ -16,7 +16,7 @@ from html import unescape
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, get_fullname, strip_html
+from frappe.utils import cint, cstr, get_fullname, getdate, nowdate, strip_html
 
 # The module each curated doctype lights in the shell (SPEC §6 DD3). Order is the hub order.
 DOCUMENTOS_DOCTYPES = (
@@ -804,6 +804,17 @@ _DATOS_SKIP = {
 	"paid_to_account_currency",
 	"paid_from_account_type",
 	"paid_to_account_type",
+	# Purchase documents (D3 walk): printed addresses, the company's own billing address,
+	# reverse charge (not used in Mexico) and the tax subtotals the totals already show.
+	"billing_address",
+	"billing_address_display",
+	"shipping_address_display",
+	"dispatch_address",
+	"dispatch_address_display",
+	"reverse_charge",
+	"recoverable_reverse_charge",
+	"taxes_and_charges_added",
+	"taxes_and_charges_deducted",
 }
 _DATOS_PREFIXES = ("base_", "per_", "total_billing", "in_words", "advance_", "posa_")
 # Bookkeeping links a worker does not read on a document (accounts, price lists, templates).
@@ -1381,6 +1392,7 @@ def _apply(doc, values):
 			)
 
 			doc.expense_account = get_difference_account(doc.purpose, doc.company) or doc.expense_account
+	_header_dates(doc)
 	if hasattr(doc, "set_missing_values"):
 		try:
 			doc.set_missing_values(for_validate=True)
@@ -1414,6 +1426,23 @@ def _mapped(doctype, name, key):
 _NEW_DEFAULTS = {"Stock Reconciliation": {"purpose": "Stock Reconciliation"}}
 
 
+def _header_dates(doc):
+	"""Desk fills an order's «Required By» from its rows (the earliest); ERPNext's mappers
+	(Material Request → Purchase Order) leave the header empty and the save then refuses."""
+	if not doc.is_new() or not doc.meta.has_field("schedule_date") or doc.get("schedule_date"):
+		return
+	table = _items_table(doc.meta)
+	rows = [r for r in (doc.get(table.fieldname) if table else None) or [] if r.get("schedule_date")]
+	if not rows:
+		return
+	# never before today: an old requisición's dates would fail ERPNext's «Required By» checks
+	today = getdate(nowdate())
+	for row in rows:
+		if getdate(row.schedule_date) < today:
+			row.schedule_date = today
+	doc.schedule_date = min(getdate(r.schedule_date) for r in rows)
+
+
 def _source_doc(doctype, source):
 	"""A new, unsaved document from `source`: a mapper `{doctype, name, make}`, a copy
 	`{duplicate: name}` or an amendment `{amend: name}`; else a blank one with defaults."""
@@ -1422,6 +1451,7 @@ def _source_doc(doctype, source):
 		doc = _mapped(source.get("doctype"), source.get("name"), source.get("make"))
 		if doc.doctype != doctype:
 			_no_perm()
+		_header_dates(doc)
 		return doc
 	if source.get("duplicate") or source.get("amend"):
 		original = frappe.get_doc(doctype, source.get("duplicate") or source.get("amend"))

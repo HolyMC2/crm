@@ -247,6 +247,16 @@
                 :label="__('Check again')"
                 @click="recheck"
               />
+              <!-- Escáner is not ready here: the receipt can still be made in
+                   Muelle, as a draft from ERPNext's mapper (the engine's «Recibir»). -->
+              <Button
+                v-if="receiveHere"
+                variant="subtle"
+                class="min-h-11"
+                label="Recibir sin Escáner"
+                data-testid="compra-recibir-aqui"
+                @click="receiveInMuelle"
+              />
             </template>
             <Button
               v-for="action in secondary"
@@ -746,6 +756,7 @@ import StageSteps from '@/components/documentos/StageSteps.vue'
 import RecordKit from '@/components/documentos/compras/RecordKit.vue'
 import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
 import { useRecordKit } from '@/components/documentos/compras/recordKit'
+import { documentRoute } from '@/documentos/registry'
 import {
   MISSING_LABELS,
   RECORD_KEYS,
@@ -1223,6 +1234,26 @@ function runAction(action) {
   } else if (action.key === 'receive') receive()
   else if (action.key === 'bill') startBill()
   else if (action.key === 'edit') startEditing()
+}
+// Receiving without Escáner: when it is the blocked next step and the worker may
+// create receipts (the engine record says so: actions.make_purchase_receipt).
+const receiveHere = computed(
+  () =>
+    primary.value?.key === 'receive' &&
+    !primary.value.allowed &&
+    kit.record.value?.actions?.make_purchase_receipt?.allowed === true,
+)
+function receiveInMuelle() {
+  const to = documentRoute('Purchase Receipt', 'nuevo')
+  if (!to) return
+  router.push({
+    path: to.path,
+    query: {
+      origen: 'Purchase Order',
+      desde: props.name,
+      con: 'purchase_receipt',
+    },
+  })
 }
 function resolve(action) {
   const fix = action.resolve
