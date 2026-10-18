@@ -44,7 +44,6 @@ function submit() {
   const text = assistant.draft
   if (!text.trim()) return
   assistant.draft = ''
-  grow()
   send(text)
 }
 
@@ -70,6 +69,12 @@ function focusInput() {
   })
 }
 
+// The height follows the draft after Vue writes it (a sent long question
+// left a three-line empty box behind: SHELL-S2c walk at 305px).
+watch(
+  () => assistant.draft,
+  () => nextTick(grow),
+)
 // openAssistant, a chip that fills the draft and «Cambiar» ask for the focus.
 watch(() => assistant.focus, focusInput)
 onMounted(focusInput)
