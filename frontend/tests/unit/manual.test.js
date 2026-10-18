@@ -487,3 +487,19 @@ describe('the way back', () => {
     expect(backTarget({ return_to: 'https://evil.invalid/' })).toBeNull()
   })
 })
+
+describe('who changed an article', () => {
+  it('names the person, and the built-in admin as «Sistema»', async () => {
+    const { updatedLine, personName } = await import('@/composables/useManual')
+    expect(personName('Ana López')).toBe('Ana López')
+    expect(personName('Administrator')).toBe('System')
+    expect(personName('Guest')).toBe('System')
+    expect(personName('')).toBe('')
+    const line = updatedLine(
+      { modified: '2026-10-17 10:00:00', modified_by: 'Administrator' },
+      'es-MX',
+    )
+    expect(line).toContain('System')
+    expect(line).not.toContain('Administrator')
+  })
+})

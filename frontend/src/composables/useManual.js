@@ -161,9 +161,20 @@ export function updatedLine(article, lang = locale()) {
     day: 'numeric',
     month: 'short',
   }).format(at)
-  return article.modified_by
-    ? tr('Updated {0} by {1}', [day, article.modified_by], CTX)
+  const by = personName(article.modified_by)
+  return by
+    ? tr('Updated {0} by {1}', [day, by], CTX)
     : tr('Updated {0}', [day], CTX)
+}
+
+// The built-in admin (and Guest) are not a person in the shop: «Sistema»,
+// as the Avisos stream says (SHELL-S3).
+const SYSTEM_USERS = new Set(['Administrator', 'Administrador', 'Guest'])
+/** Who to name for a change: the display name, or «Sistema» for the admin. */
+export function personName(value) {
+  const name = String(value || '').trim()
+  if (!name) return ''
+  return SYSTEM_USERS.has(name) ? tr('System', null, CTX) : name
 }
 
 // ── places: where the step is done ──────────────────────────────────────────

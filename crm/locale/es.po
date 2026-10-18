@@ -23268,6 +23268,11 @@ msgctxt "Manual"
 msgid "Updated {0} by {1}"
 msgstr "Actualizado el {0} por {1}"
 
+#: frontend/src/composables/useManual.js
+msgctxt "Manual"
+msgid "System"
+msgstr "Sistema"
+
 #: frontend/src (Manual de la tienda)
 msgid "Use the current version"
 msgstr "Usar la versión actual"

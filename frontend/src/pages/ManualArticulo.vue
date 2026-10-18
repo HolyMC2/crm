@@ -4,7 +4,8 @@
     data-testid="manual-article-page"
   >
     <div class="mx-auto w-full max-w-3xl px-4 pb-6 pt-4 sm:px-6 sm:pb-10">
-      <nav class="mb-3">
+      <!-- On a phone the shell's app bar has the back arrow (meta.listParent). -->
+      <nav v-if="!isPhone" class="mb-3">
         <button
           class="flex min-h-11 items-center gap-1 text-sm text-ink-gray-7 hover:text-ink-gray-9"
           data-testid="manual-article-back"
@@ -266,6 +267,7 @@ import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon } from 'frappe-ui'
 import { shellBoot } from '@/composables/muelleShell'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   CTX,
   TITLE,

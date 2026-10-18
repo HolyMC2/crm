@@ -44,7 +44,7 @@
               @click="router.push({ name: 'EquipoVacaciones' })"
             />
             <Button
-              v-if="caps.hire && !fab"
+              v-if="caps.hire && !isPhone"
               variant="solid"
               icon-left="user-plus"
               :label="__('Add a person', null, 'Equipo')"
@@ -166,7 +166,7 @@
             {{ __('Loading the team…') }}
           </div>
           <div
-            v-else-if="!rows.length"
+            v-else-if="!rows.length && !noAccess"
             class="mx-auto max-w-md px-6 py-10 text-center text-ink-gray-7"
           >
             <p class="text-lg font-semibold">{{ emptyTitle }}</p>
@@ -283,7 +283,6 @@ const router = useRouter()
 const boot = equipoBoot
 const caps = computed(() => boot.value?.capabilities || {})
 // The one create action of the list: a FAB on a phone, a header button else.
-const fab = computed(() => isPhone.value && Boolean(caps.value.hire))
 const rows = ref([])
 const counts = ref({})
 const loading = ref(false)
@@ -294,6 +293,10 @@ const asked = ref('')
 const hrDismissed = ref(false)
 const limit = ref(null)
 const noAccess = ref(false)
+// Without access to the team the banner is the whole answer: no FAB.
+const fab = computed(
+  () => isPhone.value && Boolean(caps.value.hire) && !noAccess.value,
+)
 const confirmingLift = ref(false)
 const lifting = ref(false)
 const segment = computed(() =>
