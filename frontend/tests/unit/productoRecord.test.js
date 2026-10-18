@@ -225,6 +225,13 @@ describe('Producto', () => {
         ...root.querySelectorAll('[data-hero-pills] [data-action]'),
       ].map((el) => el.dataset.action)
       expect(pills).toEqual(['price', 'edit', 'labels'])
+      // A plain button with its label under the icon, not a frappe-ui Button.
+      const price = root.querySelector(
+        '[data-hero-pills] [data-action="price"]',
+      )
+      expect(price.tagName).toBe('BUTTON')
+      expect(price.className).not.toMatch(/\bh-7\b/)
+      expect(price.textContent.trim()).toBe('Cambiar precio')
     } finally {
       setWidth(width)
     }

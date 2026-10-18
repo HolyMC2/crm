@@ -214,26 +214,35 @@
               class="mt-4 flex flex-wrap gap-x-2 gap-y-3"
               data-hero-pills
             >
-              <component
-                :is="entry.href ? 'a' : 'button'"
-                v-for="entry in heroActions"
-                :key="entry.key"
-                :href="entry.href || undefined"
-                :type="entry.href ? undefined : 'button'"
-                class="flex min-w-0 flex-[1_1_64px] flex-col items-center gap-1.5 rounded-lg text-center text-xs leading-tight text-ink-gray-8 [text-wrap:balance] focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
-                :class="entry.href || entry.enabled ? '' : 'opacity-60'"
-                :title="entry.title || entry.reason || undefined"
-                :data-action="entry.key"
-                @click="entry.href ? null : run(entry)"
-              >
-                <span
-                  class="flex h-11 w-full items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-9 active:bg-surface-gray-3"
-                  aria-hidden="true"
+              <!-- Native tags: a dynamic «button» would resolve to the
+                   globally registered frappe-ui Button. -->
+              <template v-for="entry in heroActions" :key="entry.key">
+                <a
+                  v-if="entry.href"
+                  :href="entry.href"
+                  :class="PILL"
+                  :title="entry.title || undefined"
+                  :data-action="entry.key"
                 >
-                  <FeatherIcon :name="entry.icon" class="h-5 w-5" />
-                </span>
-                {{ entry.label }}
-              </component>
+                  <span :class="PILL_ICON" aria-hidden="true">
+                    <FeatherIcon :name="entry.icon" class="h-5 w-5" />
+                  </span>
+                  {{ entry.label }}
+                </a>
+                <button
+                  v-else
+                  type="button"
+                  :class="[PILL, entry.enabled ? '' : 'opacity-60']"
+                  :title="entry.title || entry.reason || undefined"
+                  :data-action="entry.key"
+                  @click="run(entry)"
+                >
+                  <span :class="PILL_ICON" aria-hidden="true">
+                    <FeatherIcon :name="entry.icon" class="h-5 w-5" />
+                  </span>
+                  {{ entry.label }}
+                </button>
+              </template>
             </div>
             <div v-else class="mt-4 flex flex-wrap gap-2">
               <template v-for="entry in heroActions" :key="entry.key">
@@ -1808,6 +1817,11 @@ const ACTION_ICONS = {
   variants: 'layers',
 }
 // The record's actions, primary first, and «Imprimir etiqueta» in Mercado.
+// Phone quick actions (Records 3): equal tonal pills, the label under each.
+const PILL =
+  'flex min-w-0 flex-[1_1_64px] flex-col items-center gap-1.5 rounded-lg text-center text-xs leading-tight text-ink-gray-8 [text-wrap:balance] focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link'
+const PILL_ICON =
+  'flex h-11 w-full items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-9 active:bg-surface-gray-3'
 const heroActions = computed(() => {
   const list = orderedActions.value.map((entry) => ({
     ...entry,
