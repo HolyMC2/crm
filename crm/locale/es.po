@@ -3231,7 +3231,7 @@ msgstr "Colaborar con mi equipo"
 
 #: frontend/src/components/Layouts/AppSidebar.vue:120
 msgid "Collapse"
-msgstr "Colapso"
+msgstr "Contraer"
 
 #: frontend/src/components/FieldLayoutEditor.vue:465
 msgid "Collapsible"
