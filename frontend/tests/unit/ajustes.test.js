@@ -244,6 +244,10 @@ function mount(props) {
       }),
   })
   app.config.globalProperties.__ = globalThis.__
+  // The app registers frappe-ui's Button globally; a row must not become one.
+  app.component('Button', {
+    render: () => h('span', { 'data-frappe-button': '' }),
+  })
   app.mount(el)
   return { el, events, unmount: () => app.unmount() }
 }
@@ -280,6 +284,10 @@ describe('a field row', () => {
       value: 'Box',
       pending: true,
     })
+    expect(el.querySelector('[data-frappe-button]')).toBeNull()
+    const row = el.querySelector('button')
+    expect(row.getAttribute('type')).toBe('button')
+    expect(row.getAttribute('aria-label')).toContain('Cambiar')
     expect(el.querySelector('[data-ajustes-value]').textContent).toBe('Caja')
     expect(el.textContent).toContain('Sin guardar')
     el.querySelector('button').click()

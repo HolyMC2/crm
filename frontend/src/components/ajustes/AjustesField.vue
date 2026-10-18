@@ -9,8 +9,7 @@
     :data-fieldname="field.fieldname"
   >
     <component
-      :is="tappable ? 'button' : 'div'"
-      :type="tappable ? 'button' : undefined"
+      :is="tappable ? NativeButton : 'div'"
       class="min-w-0 flex-1 text-left"
       :class="tappable ? 'min-h-11 rounded-lg focus-visible:outline-2' : ''"
       :aria-label="tappable ? __('Cambiar {0}', [field.label]) : undefined"
@@ -48,9 +47,9 @@
         />
         <span class="min-w-0 break-words"
           >{{ field.when
-          }}<template v-if="field.applies === false">
-            {{ __('Ahora no aplica.') }}</template
-          ></span
+          }}{{
+            field.applies === false ? ` ${__('Ahora no aplica.')}` : ''
+          }}</span
         >
       </span>
       <span
@@ -84,7 +83,7 @@
 <script setup>
 import { computed } from 'vue'
 import AjustesSwitch from './AjustesSwitch.vue'
-import { pendingDisplay } from './ajustes'
+import { NativeButton, pendingDisplay } from './ajustes'
 
 const props = defineProps({
   field: { type: Object, required: true },

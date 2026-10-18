@@ -59,8 +59,7 @@
       <ul v-if="rows.length" class="divide-y divide-outline-gray-1">
         <li v-for="row in rows" :key="row.name">
           <component
-            :is="field.can_write ? 'button' : 'div'"
-            :type="field.can_write ? 'button' : undefined"
+            :is="field.can_write ? NativeButton : 'div'"
             class="flex min-h-11 w-full items-start gap-3 py-2 text-left"
             @click="field.can_write && openRow(row)"
           >
@@ -116,7 +115,7 @@
 import { computed, reactive, ref, useId } from 'vue'
 import { Button } from 'frappe-ui'
 import AjustesControl from './AjustesControl.vue'
-import { pendingDisplay } from './ajustes'
+import { NativeButton, pendingDisplay } from './ajustes'
 
 const props = defineProps({
   field: { type: Object, required: true },

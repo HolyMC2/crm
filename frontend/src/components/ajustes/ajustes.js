@@ -1,7 +1,18 @@
 // «Todos los ajustes» (Shell SPEC DD13, SHELL-D6): the field guide of one
 // record from doco (assistant/record_fields.py), searched and filtered here,
 // with the worker's pending edits kept as one change set until «Guardar».
+import { h } from 'vue'
 import { call } from 'frappe-ui'
+
+/**
+ * A plain <button>. `<component :is="'button'">` resolves to frappe-ui's
+ * globally registered `Button` (Vue matches `button` → `Button`), which
+ * forces its own height, centring and grey fill onto a multi-line row.
+ */
+export function NativeButton(_, { slots, attrs }) {
+  return h('button', { type: 'button', ...attrs }, slots.default?.())
+}
+NativeButton.inheritAttrs = false
 
 export const RECORD_FIELDS = 'doco.docoutils.assistant.record_fields'
 
