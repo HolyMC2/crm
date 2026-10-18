@@ -13,6 +13,7 @@ import {
 } from 'vue'
 import { call } from 'frappe-ui'
 import { isProgress, newClientId, normalizeRow } from './assistantText'
+import { assistantOn, assistantWanted } from './assistantDoor'
 
 export const ASSISTANT_API = 'doco.docoutils.assistant.shell_api'
 // A turn that stays silent this long gets an honest line and a history check.
@@ -86,6 +87,10 @@ export function loadStatus({ refresh = false } = {}) {
   statusPromise = call(`${ASSISTANT_API}.status`)
     .then((status) => (assistant.status = status || { enabled: false }))
     .catch(() => (assistant.status = { enabled: false }))
+    .then((status) => {
+      assistantOn.value = Boolean(status.enabled)
+      return status
+    })
   return statusPromise
 }
 
@@ -280,13 +285,21 @@ export function bindSocket(socket) {
 export async function openAssistant({ text = '', send: ask = false } = {}) {
   const status = await loadStatus()
   if (!status?.enabled) return false
+  assistantWanted.value = true
   assistant.open = true
   assistant.contextOn = true
   if (!assistant.loaded) await loadHistory()
+  // The first door can ask before the sheet has mounted and named the screen.
+  if (!assistant.context) assistant.context = screenContext(currentRoute())
   if (text && ask) await send(text)
   else if (text) assistant.draft = text
   assistant.focus += 1
   return true
+}
+
+function currentRoute() {
+  const { pathname = '', search = '' } = globalThis.location || {}
+  return { fullPath: `${pathname.replace(/^\/crm(?=\/|$)/u, '')}${search}` }
 }
 
 export function closeAssistant() {
@@ -315,6 +328,8 @@ export function _resetAssistant() {
     loaded: false,
   })
   statusPromise = null
+  assistantWanted.value = false
+  assistantOn.value = null
   boundSocket = null
   pageContexts.value = []
   clearTimeout(silence)

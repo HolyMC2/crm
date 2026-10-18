@@ -33,11 +33,12 @@
       >
         <template #title>
           <!-- Ventas pages may teleport their own header (breadcrumbs + actions)
-               here; while none arrives the route's title stands in for it. -->
+               here; while none arrives the route's title stands in for it.
+               pl-2 lines its first crumb up with the title's px-3. -->
           <div
             v-if="activeKey === 'ventas'"
             id="app-header"
-            class="min-w-0 flex-1 [&:not(:has(*))]:hidden"
+            class="min-w-0 flex-1 pl-2 [&:not(:has(*))]:hidden"
           />
           <h1
             data-testid="shell-title"
@@ -127,9 +128,9 @@
       />
     </div>
     <!-- «Pregúntale a Muelle» (SHELL-S2): a sheet on phone, a docked panel
-         beside the page on a wide desktop. Staff only; renders nothing until
-         a door opens it. -->
-    <AssistantSheet v-if="shellBoot" />
+         beside the page on a wide desktop. Staff only; it loads when a door
+         first opens it (assistantDoor.js). -->
+    <AssistantSheet v-if="shellBoot && assistantWanted" />
     <MoreSheet
       v-if="moreOpen"
       v-model="moreOpen"
@@ -183,6 +184,11 @@ import { createTargetFor } from '@/utils/shellCreate'
 import { applyShellAppearance } from '@/utils/shellAppearance'
 import { moduleRefusal } from '@/utils/shellRoutes'
 import { shellTitle } from '@/utils/shellTitle'
+import {
+  assistantOn,
+  assistantWanted,
+  loadAssistant,
+} from '@/components/assistant/assistantDoor'
 import { moduleEnabled, moduleMeta } from '@/vendor/muelle-shell/contracts'
 import AppBar from '@/components/ui/AppBar.vue'
 import ShellRail from './ShellRail.vue'
@@ -195,9 +201,6 @@ const CommandPalette = defineAsyncComponent(
 const ShortcutSheet = defineAsyncComponent(() => import('./ShortcutSheet.vue'))
 const AssistantSheet = defineAsyncComponent(
   () => import('@/components/assistant/AssistantSheet.vue'),
-)
-const AvisosBell = defineAsyncComponent(
-  () => import('@/components/avisos/AvisosBell.vue'),
 )
 
 const route = useRoute(),
@@ -383,29 +386,35 @@ useShellKeyboard({
   router,
   toggleSidebar,
 })
-// ⌘J opens «Pregúntale a Muelle» through the shell's keyboard, while the
-// assistant is on for this worker (its sheet loads the module at boot).
-let stopAssistant = null
-let unmounted = false
-import('@/components/assistant/useAssistant').then((assistant) => {
-  if (unmounted) return
-  stopAssistant = watch(
-    () => assistant.assistantEnabled.value,
-    (on) => {
-      shellAssistant.value = on
-        ? {
-            isOpen: () => assistant.assistant.open,
-            toggle: assistant.toggleAssistant,
-          }
-        : null
-    },
-    { immediate: true },
-  )
-})
+// ⌘J is the first door to «Pregúntale a Muelle»: nothing of the assistant
+// loads or calls the server at boot (S1d, SPEC §4 route budget). The key loads
+// useAssistant, whose openAssistant asks shell_api.status; a worker without
+// the assistant loses the key (and its Alt+H line) after that answer.
+let assistantModule = null
+const assistantKey = {
+  get listed() {
+    return assistantOn.value === true
+  },
+  isOpen: () => Boolean(assistantModule?.assistant.open),
+  toggle: () =>
+    loadAssistant()
+      .then((module) => {
+        assistantModule = module
+        return module.toggleAssistant()
+      })
+      .then(() => {
+        const { assistant, assistantEnabled } = assistantModule
+        if (
+          assistant.status &&
+          !assistantEnabled.value &&
+          shellAssistant.value === assistantKey
+        )
+          shellAssistant.value = null
+      }),
+}
+shellAssistant.value = assistantKey
 onBeforeUnmount(() => {
-  unmounted = true
-  stopAssistant?.()
-  shellAssistant.value = null
+  if (shellAssistant.value === assistantKey) shellAssistant.value = null
 })
 // Every route names itself through meta.title (English source, es-MX catalog).
 const headerTitle = computed(() => shellTitle(route, activeModule.value))

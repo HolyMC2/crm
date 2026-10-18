@@ -272,7 +272,10 @@ export function shellKeymap(
   page = { ids: [], extra: [] },
   shell = {
     create: Boolean(shellCreate.value),
-    assistant: Boolean(shellAssistant.value),
+    // The shell's lazy ⌘J handle (MuelleShell) answers before anyone asked
+    // shell_api.status; Alt+H lists the key once the answer was yes.
+    assistant:
+      Boolean(shellAssistant.value) && shellAssistant.value.listed !== false,
   },
 ) {
   const reachable = new Set(modules.map((module) => module.key))

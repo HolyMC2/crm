@@ -9,6 +9,7 @@ import { sessionStore } from '@/stores/session'
 import { useBroadcast } from '@/composables/useBroadcast'
 import { showSettings, activeSettingsPage } from '@/composables/settings'
 import { showChangePasswordModal } from '@/composables/modals'
+import { onboardingOwner } from '@/composables/onboardingOwner'
 import router from '@/router'
 import SquareAsterisk from '@/components/Icons/SquareAsterisk.vue'
 import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
@@ -391,6 +392,7 @@ export function useCrmOnboarding() {
     }
   }
   owner = api
+  onboardingOwner.value = api
   void retry()
   return api
 }

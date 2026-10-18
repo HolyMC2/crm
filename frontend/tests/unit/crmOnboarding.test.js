@@ -104,6 +104,9 @@ vi.mock('@/composables/breakpoint', () => ({
   get isMobile() {
     return fixture.mobile
   },
+  get isNarrow() {
+    return fixture.mobile
+  },
 }))
 vi.mock('@/data/document', () => ({
   useDocument: () => ({
@@ -260,14 +263,15 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function mountShell(mobile = false) {
+async function mountShell(mobile = false, { own = true, plain = false } = {}) {
   fixture.mobile.value = mobile
   const { default: LeadModal } = await import(
     '@/components/Modals/LeadModal.vue'
   )
   const { default: App } = await import('@/App.vue')
   const page = defineComponent({
-    setup: () => () => h(LeadModal, { modelValue: true }),
+    setup: () => () =>
+      plain ? h('div', 'Leads') : h(LeadModal, { modelValue: true }),
   })
   fixture.router.addRoute({ path: '/', name: 'Leads', component: page })
   fixture.router.addRoute({
@@ -302,7 +306,7 @@ async function mountShell(mobile = false) {
     await vi.dynamicImportSettled()
     await settle()
   }
-  return api.useCrmOnboarding()
+  return own ? api.useCrmOnboarding() : null
 }
 
 function writes() {
@@ -489,6 +493,21 @@ describe('shared CRM native onboarding owner', () => {
     expect(
       a.steps.value.find((s) => s.name === 'create_first_lead').completed,
     ).toBe(true)
+  })
+  it('the shell loads onboarding on the first tap, not with the page (S1d budget)', async () => {
+    const { onboardingOwner } = await import('@/composables/onboardingOwner')
+    await mountShell(false, { own: false, plain: true })
+    const asked = () =>
+      fixture.request.mock.calls.some(([o]) => o.url.includes('onboarding'))
+    expect(onboardingOwner.value).toBeNull()
+    expect(asked()).toBe(false)
+    window.dispatchEvent(new Event('pointerdown'))
+    for (let i = 0; i < 3; i++) {
+      await vi.dynamicImportSettled()
+      await settle()
+    }
+    expect(onboardingOwner.value?.user).toBe(user)
+    expect(asked()).toBe(true)
   })
   it('does not request onboarding during module import before authenticated bootstrap', () => {
     expect(

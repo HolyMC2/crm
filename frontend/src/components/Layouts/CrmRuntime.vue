@@ -40,7 +40,7 @@
   </IntermediateStepModal>
   <Dialogs />
   <DoctypeModals />
-  <EventNotificationPopup />
+  <EventNotificationPopup v-if="eventAlerts.length" />
 </template>
 
 <script setup>
@@ -49,19 +49,22 @@ import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
 import { setConfig, useTheme } from 'frappe-ui'
 import {
+  computed,
   defineAsyncComponent,
   nextTick,
+  onBeforeUnmount,
   onMounted,
   provide,
-  shallowRef,
   watch,
 } from 'vue'
+import { useStorage } from '@vueuse/core'
 import { useRoute } from 'vue-router'
 import { syncBrandFavicon } from '@/stores/settings'
 import { prefetchHotChunks } from '@/utils/prefetch'
 import { initTelemetry } from '@/composables/telemetry'
 import { showSettings } from '@/composables/settings'
 import { isNarrow } from '@/composables/breakpoint'
+import { onboardingOwner } from '@/composables/onboardingOwner'
 // Only for the not-permitted route; most pages never show it.
 const NotPermitted = defineAsyncComponent(
   () => import('@/pages/NotPermitted.vue'),
@@ -74,9 +77,12 @@ const DesktopOnly = defineAsyncComponent(() =>
 const Settings = defineAsyncComponent(
   () => import('@/components/Settings/Settings.vue'),
 )
-// Onboarding, its step modal and the event reminder popup load after the
-// first paint: each pulled its own files into every Ventas route (route
-// budget ≤ 60 scripts, verify-bundle-budget.mjs).
+// Onboarding, its step modal and the event reminder popup stay out of the
+// first load: each pulled its own files into every Ventas route (SPEC §4,
+// ≤ 60 scripts; crm-pulse counts what loads before the page is quiet).
+// Onboarding loads on the first tap or key (a page that completes a step
+// loads it itself); the popup mounts when a reminder is stored
+// (data/notifications.js keeps them in localStorage).
 const IntermediateStepModal = defineAsyncComponent(() =>
   import('frappe-ui/frappe').then((m) => m.IntermediateStepModal),
 )
@@ -87,20 +93,28 @@ const EventNotificationPopup = defineAsyncComponent(() =>
 const session = sessionStore()
 provide('session', session)
 
-const onboarding = shallowRef(null)
-let onboardingFor = 0
-watch(
-  () => session.user,
-  () => {
-    const ticket = ++onboardingFor
-    onboarding.value = null
-    if (!session.isLoggedIn) return
-    import('@/composables/onboarding').then(({ useCrmOnboarding }) => {
-      if (ticket === onboardingFor) onboarding.value = useCrmOnboarding()
-    })
-  },
-  { immediate: true },
-)
+const eventAlerts = useStorage('eventNotificationAlerts', [])
+
+// The owner a page or the first tap created, for this user only.
+const onboarding = computed(() => {
+  const owner = onboardingOwner.value
+  return session.isLoggedIn && owner?.user === session.user ? owner : null
+})
+const FIRST_USE = ['pointerdown', 'keydown']
+function stopListening() {
+  for (const type of FIRST_USE)
+    window.removeEventListener(type, onFirstUse, true)
+}
+function onFirstUse() {
+  stopListening()
+  if (!session.isLoggedIn) return
+  import('@/composables/onboarding').then(({ useCrmOnboarding }) =>
+    useCrmOnboarding(),
+  )
+}
+for (const type of FIRST_USE)
+  window.addEventListener(type, onFirstUse, { capture: true, passive: true })
+onBeforeUnmount(stopListening)
 
 const route = useRoute()
 watch(

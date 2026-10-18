@@ -1782,6 +1782,40 @@ describe('Ventas navigation on every screen', () => {
       expect(document.querySelector('[data-shell-layer="more"]')).toBeNull()
     },
   )
+
+  it('boot loads nothing of the assistant: no status call, no sheet; ⌘J is the first door (S1d budget)', async () => {
+    const { assistant, _resetAssistant } = await import(
+      '@/components/assistant/useAssistant'
+    )
+    const { assistantWanted } = await import(
+      '@/components/assistant/assistantDoor'
+    )
+    _resetAssistant()
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method.endsWith('shell_api.status')) return { enabled: true }
+      if (method.endsWith('shell_api.history')) return { messages: [] }
+      return null
+    })
+    await mount('/contactos')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const asked = () =>
+      state.call.mock.calls.filter(([m]) => m.endsWith('shell_api.status'))
+    expect(asked()).toHaveLength(0)
+    expect(assistantWanted.value).toBe(false)
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'j',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+    await until(() => assistant.open)
+    expect(asked()).toHaveLength(1)
+    expect(assistantWanted.value).toBe(true)
+    _resetAssistant()
+  })
 })
 
 const avisosOnly = {
