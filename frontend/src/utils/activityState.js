@@ -126,3 +126,4 @@ export function nextStepDisplay(at, { overdue, days, now = new Date() } = {}) {
     label: `${d.getDate()} ${__(MONTHS_SHORT[d.getMonth()])}`,
   }
 }
+// CI probe (SHELL-D10): frontend-only fast path timing; never landed.
