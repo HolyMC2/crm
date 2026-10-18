@@ -89,7 +89,7 @@ function sheetIds() {
     .filter((id) => !['help', 'palette', 'records', 'sidebar'].includes(id))
 }
 
-const isList = (page) => page !== 'deal'
+const isList = (page) => !['deal', 'documento'].includes(page)
 
 describe('every page context: the sheet lists exactly the keys it answers', () => {
   for (const [page, ids] of Object.entries(PAGE_KEYS)) {
@@ -348,6 +348,8 @@ describe('every shell page is wired to its PAGE_KEYS row', () => {
     workload: ['components/Workload/WorkloadQueue.vue'],
     inbox: ['components/doco/inbox/LegacyConversationQueue.vue'],
     'inbox-conversations': ['components/Inbox/ConversationQueue.vue'],
+    documentos: ['pages/DocumentosList.vue'],
+    documento: ['pages/DocumentoRecord.vue'],
   }
   it('lists every page once', () => {
     expect(Object.keys(WIRING).sort()).toEqual(Object.keys(PAGE_KEYS).sort())

@@ -19,7 +19,7 @@
           class="mt-0.5 flex size-8 flex-none items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-7"
           aria-hidden="true"
         >
-          <span :class="[ICONS[event.kind] || 'lucide-dot', 'size-4']" />
+          <span :class="[ICONS[event.kind] || 'lucide-circle-dot', 'size-4']" />
         </span>
         <span class="flex min-w-0 flex-1 flex-col gap-0.5">
           <span class="break-words text-base leading-snug text-ink-gray-9">{{
@@ -44,13 +44,30 @@
     </button>
   </section>
   <section
-    v-if="attachments.length"
+    v-if="attachments.length || canAttach"
     aria-labelledby="doc-archivos"
     class="px-4"
   >
-    <h2 id="doc-archivos" class="pb-1 text-base font-semibold text-ink-gray-9">
-      Archivos ({{ attachments.length }})
-    </h2>
+    <div class="flex items-center justify-between gap-2 pb-1">
+      <h2 id="doc-archivos" class="text-base font-semibold text-ink-gray-9">
+        Archivos<template v-if="attachments.length">
+          ({{ attachments.length }})</template
+        >
+      </h2>
+      <button
+        v-if="canAttach"
+        type="button"
+        class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-base font-medium text-ink-gray-8 hover:bg-surface-gray-2"
+        data-testid="documentos-attach"
+        @click="emit('attach')"
+      >
+        <span class="lucide-paperclip size-5" aria-hidden="true" />
+        Adjuntar
+      </button>
+    </div>
+    <p v-if="!attachments.length" class="pb-2 text-base text-ink-gray-6">
+      Fotos, PDF o comprobantes de este documento.
+    </p>
     <ul class="divide-y divide-outline-gray-1">
       <li v-for="file in attachments" :key="file.name">
         <a
@@ -80,9 +97,9 @@ const ICONS = {
   cancel: 'lucide-circle-x',
   edit: 'lucide-pencil',
   comment: 'lucide-message-square',
-  assignment: 'lucide-user-check',
+  assignment: 'lucide-user-plus',
   attachment: 'lucide-paperclip',
-  share: 'lucide-share-2',
+  share: 'lucide-users',
   workflow: 'lucide-git-branch',
   info: 'lucide-info',
 }
@@ -91,7 +108,10 @@ const props = defineProps({
   activity: { type: Object, default: null },
   // «la factura», «la cotización»: the record in a sentence.
   noun: { type: String, default: 'el documento' },
+  // Show «Adjuntar» (the record allows attaching).
+  canAttach: { type: Boolean, default: false },
 })
+const emit = defineEmits(['attach'])
 const all = ref(false)
 const events = computed(() => props.activity?.events || [])
 const assigned = computed(() => props.activity?.assigned || [])

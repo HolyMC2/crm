@@ -1,4 +1,5 @@
-// Cotizaciones (Quotation): curated profile. D2 owns it after D1.2.
+// Cotizaciones (Quotation): worked profile (rows, chips, next step by state,
+// edit fields). D2 owns it after D1.2.
 import {
   formatDate,
   formatMoney,
@@ -6,7 +7,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/utils/display'
-import { docStatus, titleOf } from './_generic'
+import { docStatus, draftStep, stagesAt, titleOf } from './_generic'
 
 const OPEN = ['Open', 'Replied', 'Partially Ordered']
 
@@ -68,5 +69,32 @@ export default {
       tone: statusTone(status),
       avatar: titleOf(row, 'Quotation'),
     }
+  },
+
+  // The customer (or prospect), how long the prices hold, and the items.
+  editFields: ['party_name', 'transaction_date', 'valid_till'],
+
+  /** Borrador · Enviada · Pedido (none once lost, expired or cancelled). */
+  stages(record) {
+    const h = record.header || {}
+    const labels = ['Borrador', 'Enviada', 'Pedido']
+    if (h.docstatus === 0) return stagesAt(labels, 0)
+    if (h.docstatus === 1 && OPEN.includes(h.status)) return stagesAt(labels, 1)
+    if (h.docstatus === 1 && h.status === 'Ordered')
+      return stagesAt(labels, 2, true)
+    return null
+  },
+
+  /** Draft → «Confirmar»; open → «Crear pedido» (ERPNext's make_sales_order). */
+  nextStep(record) {
+    const h = record.header || {}
+    if (h.docstatus === 0) return draftStep(record)
+    if (h.docstatus === 1 && OPEN.includes(h.status))
+      return {
+        label: 'Crear pedido',
+        icon: 'lucide-clipboard-check',
+        make: 'sales_order',
+      }
+    return null
   },
 }

@@ -38,8 +38,9 @@ export const DAILY_ROUTES = {
   '/crm/dashboard': [...VENTAS, 'Dashboard'],
   // Documentos (Shell SPEC §6 DD12): the hub, a list and a record.
   '/crm/documentos': [...SHELL, 'DocumentosHub'],
-  '/crm/documentos/facturas': [...SHELL, 'DocumentosList'],
-  '/crm/documentos/facturas/:name': [...SHELL, 'DocumentoRecord'],
+  '/crm/documentos/facturas': [...SHELL, 'DocumentosSplit'],
+  '/crm/documentos/facturas/:name': [...SHELL, 'DocumentosSplit'],
+  '/crm/documentos/facturas/nuevo': [...SHELL, 'DocumentoNuevo'],
 }
 export const ADMIN_SCREENS = [
   'Forms',

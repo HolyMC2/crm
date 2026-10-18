@@ -42,6 +42,8 @@ export const PAGE_KEYS = Object.freeze({
   workload: [...ROWS, ...SELECT],
   inbox: [...LIST, 'create'],
   'inbox-conversations': ROWS,
+  documentos: [...LIST, 'create'],
+  documento: ['edit', 'close'],
 })
 
 function checkPage(page, keys) {

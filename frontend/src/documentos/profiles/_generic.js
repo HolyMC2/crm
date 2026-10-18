@@ -32,6 +32,25 @@ export function dueLine(due) {
   return due ? formatDue(due).label : ''
 }
 
+/** A draft's step: «Confirmar» when the doctype is submittable. */
+/**
+ * The stepper under the amount: `labels` in order, `at` the current one;
+ * `finished` marks the last one done too. Profiles return it from stages().
+ */
+export function stagesAt(labels, at, finished = false) {
+  return labels.map((label, i) => ({
+    label,
+    done: i < at || (finished && i === at),
+    current: i === at && !finished,
+  }))
+}
+
+export function draftStep(record) {
+  if (record?.header?.docstatus === 0 && record.submittable)
+    return { label: 'Confirmar', icon: 'lucide-check', submit: true }
+  return null
+}
+
 export const genericProfile = {
   // Extra list columns this profile reads (`row.fields`).
   fields: [],
@@ -95,8 +114,17 @@ export const genericProfile = {
     }
   },
 
-  /** The one filled «siguiente paso» for this state (DD4); null when none. Curated profiles fill it. */
-  nextStep() {
-    return null
+  /**
+   * The one filled «siguiente paso» for this state (DD4); null when none.
+   * `{ label, icon?, submit: true }` confirms the draft, `{ make: key }` runs an
+   * ERPNext mapper on the server allowlist (MAKERS), `{ to: route }` navigates.
+   * Curated profiles fill the confirmed states and call this for the draft.
+   */
+  nextStep(record) {
+    return draftStep(record)
   },
+
+  // Fields the edit sheet and /nuevo ask for, in order (null: the server picks
+  // the required and list fields this worker may write).
+  editFields: null,
 }

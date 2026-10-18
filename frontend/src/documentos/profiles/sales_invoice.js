@@ -1,4 +1,5 @@
-// Facturas (Sales Invoice): the worked example of a curated profile (README.md).
+// Facturas (Sales Invoice): the worked example of a curated profile (README.md):
+// rows, chips, «Filtros», sort, edit fields and the next step by state.
 // D2 owns it after D1.2.
 import {
   formatDate,
@@ -7,7 +8,21 @@ import {
   statusLabel,
   statusTone,
 } from '@/utils/display'
-import { docStatus, titleOf } from './_generic'
+import {
+  docStatus,
+  draftStep,
+  genericProfile,
+  stagesAt,
+  titleOf,
+} from './_generic'
+
+// The seller's words: the customer owes us («Por cobrar»), not «Por pagar».
+const SALE_WORDS = {
+  Unpaid: 'Por cobrar',
+  'Unpaid and Discounted': 'Por cobrar',
+  'Partly Paid': 'Cobro parcial',
+  'Partly Paid and Discounted': 'Cobro parcial',
+}
 
 const OWED = [
   'Unpaid',
@@ -85,8 +100,41 @@ export default {
       subtitleTone: due?.overdue ? 'danger' : '',
       meta: formatMoney(row.amount, row.currency || 'MXN'),
       status,
+      statusLabel: SALE_WORDS[status] || '',
       tone: statusTone(status),
       avatar: titleOf(row, 'Sales Invoice'),
     }
+  },
+
+  // The customer, when it is due, a note; the items in their own editor.
+  editFields: ['customer', 'due_date', 'remarks'],
+
+  header(record) {
+    const view = genericProfile.header(record)
+    return { ...view, statusLabel: SALE_WORDS[view.status] || '' }
+  },
+
+  /** Borrador · Por cobrar · Pagada (none for returns and cancelled ones). */
+  stages(record) {
+    const h = record.header || {}
+    if (h.is_return || h.docstatus === 2) return null
+    const labels = ['Borrador', 'Por cobrar', 'Pagada']
+    if (h.docstatus === 0) return stagesAt(labels, 0)
+    return Number(h.outstanding) > 0
+      ? stagesAt(labels, 1)
+      : stagesAt(labels, 2, true)
+  },
+
+  /** Draft → «Confirmar»; owed → «Registrar cobro» (ERPNext's get_payment_entry). */
+  nextStep(record) {
+    const h = record.header || {}
+    if (h.docstatus === 0) return draftStep(record)
+    if (h.docstatus === 1 && !h.is_return && Number(h.outstanding) > 0)
+      return {
+        label: 'Registrar cobro',
+        icon: 'lucide-hand-coins',
+        make: 'payment',
+      }
+    return null
   },
 }

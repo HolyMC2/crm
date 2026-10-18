@@ -26,7 +26,7 @@ export const PROFILES = Object.freeze([
     slug: 'pedidos',
     group: 'ventas',
     label: 'Pedidos',
-    icon: 'lucide-clipboard-list',
+    icon: 'lucide-clipboard-check',
     hint: 'Lo que un cliente te pidió',
   },
   {
@@ -44,7 +44,7 @@ export const PROFILES = Object.freeze([
     slug: 'facturas',
     group: 'ventas',
     label: 'Facturas',
-    icon: 'lucide-receipt-text',
+    icon: 'lucide-receipt',
     hint: 'Lo que cobras a tus clientes',
   },
   {
@@ -52,7 +52,7 @@ export const PROFILES = Object.freeze([
     slug: 'tickets',
     group: 'ventas',
     label: 'Tickets',
-    icon: 'lucide-receipt',
+    icon: 'lucide-shopping-bag',
     hint: 'Ventas de mostrador en caja',
   },
   {
@@ -69,7 +69,7 @@ export const PROFILES = Object.freeze([
     slug: 'solicitudes-cotizacion',
     group: 'compras',
     label: 'Solicitudes de cotización',
-    icon: 'lucide-mail-question',
+    icon: 'lucide-mail',
     hint: 'Precios que pediste a proveedores',
   },
   {
@@ -98,7 +98,7 @@ export const PROFILES = Object.freeze([
     slug: 'recepciones',
     group: 'compras',
     label: 'Recepciones',
-    icon: 'lucide-package-check',
+    icon: 'lucide-package-open',
     hint: 'Mercancía que llegó de un proveedor',
   },
   {
@@ -107,7 +107,7 @@ export const PROFILES = Object.freeze([
     slug: 'facturas-proveedor',
     group: 'compras',
     label: 'Facturas de proveedor',
-    icon: 'lucide-file-input',
+    icon: 'lucide-receipt',
     hint: 'Lo que debes a tus proveedores',
     recordRoute: (name) => ({
       path: `/gastos/factura/${encodeURIComponent(name)}`,
@@ -128,7 +128,7 @@ export const PROFILES = Object.freeze([
     slug: 'pagos',
     group: 'pagos',
     label: 'Pagos',
-    icon: 'lucide-banknote',
+    icon: 'lucide-wallet',
     hint: 'Dinero que pagaste',
     match: { payment_type: 'Pay' },
     filters: [['payment_type', '=', 'Pay']],
@@ -148,7 +148,7 @@ export const PROFILES = Object.freeze([
     group: 'inventario',
     base: '/inventario',
     label: 'Ajustes',
-    icon: 'lucide-scale',
+    icon: 'lucide-scan-barcode',
     hint: 'Conteos que corrigen la existencia',
   },
 ])

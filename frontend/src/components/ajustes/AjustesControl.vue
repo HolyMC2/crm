@@ -46,6 +46,7 @@
       :model-value="modelValue || ''"
       :doctype="field.link"
       :label="field.label"
+      :required="!!field.reqd"
       @update:model-value="emit('update:modelValue', $event)"
     />
     <textarea

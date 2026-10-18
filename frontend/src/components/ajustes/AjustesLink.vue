@@ -61,7 +61,7 @@
       {{ __('No pude cargar las opciones.') }}
     </p>
     <button
-      v-if="modelValue"
+      v-if="modelValue && !required"
       type="button"
       class="mt-1 min-h-11 text-sm text-ink-gray-7 underline"
       @click="choose({ value: '' })"
@@ -80,6 +80,8 @@ const props = defineProps({
   doctype: { type: String, required: true },
   label: { type: String, default: '' },
   id: { type: String, default: undefined },
+  /** A required link offers no «Dejar vacío». */
+  required: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 const query = ref('')

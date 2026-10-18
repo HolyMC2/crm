@@ -9,11 +9,9 @@
       <div
         v-for="row in visible"
         :key="row.fieldname"
-        class="flex min-h-11 flex-col justify-center gap-0.5 py-2 min-[420px]:flex-row min-[420px]:items-baseline min-[420px]:gap-4"
+        class="datos-row flex min-h-11 flex-col justify-center gap-0.5 py-2"
       >
-        <dt
-          class="text-sm text-ink-gray-6 min-[420px]:w-2/5 min-[420px]:flex-none"
-        >
+        <dt class="datos-label text-sm text-ink-gray-6">
           {{ row.label }}
         </dt>
         <dd class="min-w-0 break-words text-base text-ink-gray-9">
@@ -91,7 +89,8 @@ const rows = computed(() =>
     .map((row) => {
       const linkType = row.fieldtype === 'Link' ? row.options : row.link_doctype
       const to =
-        linkType && row.value
+        // A link to DocType names a kind («Cliente»), not a record.
+        linkType && linkType !== 'DocType' && row.value
           ? documentRoute(linkType, row.value, { boot: props.boot })
           : null
       return {
@@ -106,3 +105,18 @@ const visible = computed(() =>
   all.value ? rows.value : rows.value.slice(0, LIMIT),
 )
 </script>
+<style scoped>
+/* side by side from 420px; scoped so the global sheet stays in budget */
+@media (min-width: 420px) {
+  .datos-row {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .datos-label {
+    width: 40%;
+    flex: none;
+  }
+}
+</style>
