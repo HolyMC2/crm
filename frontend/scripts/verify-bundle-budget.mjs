@@ -36,6 +36,10 @@ export const DAILY_ROUTES = {
   '/crm/prospectos': [...VENTAS, 'Prospectos'],
   '/crm/inbox': [...VENTAS, 'Inbox'],
   '/crm/dashboard': [...VENTAS, 'Dashboard'],
+  // Documentos (Shell SPEC §6 DD12): the hub, a list and a record.
+  '/crm/documentos': [...SHELL, 'DocumentosHub'],
+  '/crm/documentos/facturas': [...SHELL, 'DocumentosList'],
+  '/crm/documentos/facturas/:name': [...SHELL, 'DocumentoRecord'],
 }
 export const ADMIN_SCREENS = [
   'Forms',

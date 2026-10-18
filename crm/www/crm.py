@@ -33,6 +33,7 @@ def _gate(path):
 	from crm.api.cobranza import check_cobranza_permission
 	from crm.api.compras import check_compras_permission
 	from crm.api.contactos import check_contactos_permission, is_contactos_path
+	from crm.api.documentos import check_documentos_permission, check_inventario_permission
 	from crm.api.encuestas import check_encuestas_permission
 	from crm.api.equipo import check_equipo_permission
 	from crm.api.garantias import check_garantias_permission
@@ -48,6 +49,7 @@ def _gate(path):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.documentos_routes import is_documentos_path, is_inventario_path
 	from crm.encuestas_routes import is_encuestas_path
 	from crm.equipo_routes import is_equipo_path
 	from crm.garantias_routes import is_garantias_path
@@ -73,6 +75,8 @@ def _gate(path):
 	manual = is_manual_path(path)
 	avisos = is_avisos_path(path)
 	archivos = is_archivos_path(path)
+	documentos = is_documentos_path(path)
+	inventario = is_inventario_path(path)
 	neutral = (
 		recovery
 		or hoy
@@ -89,6 +93,8 @@ def _gate(path):
 		or manual
 		or avisos
 		or archivos
+		or documentos
+		or inventario
 		or is_contactos_path(path)
 	)
 	if frappe.session.user == "Guest":
@@ -184,6 +190,18 @@ def _gate(path):
 			check_archivos_permission()
 			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
 		)
+	elif documentos:
+		# A work account that reads none of these documents still gets its guard page
+		# (reason, Pedir acceso, Reintentar) from the shell; the boot carries no document.
+		allowed = (
+			check_documentos_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
+	elif inventario:
+		allowed = (
+			check_inventario_permission()
+			or frappe.get_cached_value("User", frappe.session.user, "user_type") == "System User"
+		)
 	else:
 		allowed = check_contactos_permission() if neutral else check_app_permission()
 	if not recovery and not allowed:
@@ -218,6 +236,8 @@ def _gate(path):
 		("manual", manual),
 		("avisos", avisos),
 		("archivos", archivos),
+		("documentos", documentos),
+		("inventario", inventario),
 	):
 		if matched:
 			return neutral, key
@@ -244,6 +264,7 @@ def get_shell_context_for_dev(path: str = "/crm"):
 	from crm.cobranza_routes import is_cobranza_path
 	from crm.compras_routes import is_compras_path
 	from crm.contactos_routes import is_contactos_recovery_path
+	from crm.documentos_routes import is_documentos_path, is_inventario_path
 	from crm.encuestas_routes import is_encuestas_path
 	from crm.equipo_routes import is_equipo_path
 	from crm.garantias_routes import is_garantias_path
@@ -288,6 +309,10 @@ def get_shell_context_for_dev(path: str = "/crm"):
 		return get_boot(neutral=True, module="archivos")
 	if is_manual_path(path):
 		return get_boot(neutral=True, module="manual")
+	if is_documentos_path(path):
+		return get_boot(neutral=True, module="documentos")
+	if is_inventario_path(path):
+		return get_boot(neutral=True, module="inventario")
 	if is_avisos_path(path):
 		from crm.api.avisos import check_avisos_permission
 

@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.8.0 (389c3697e254). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.10.0 (d72c76f4251b). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Source strings are English (spec §4.8); workers see the reviewed es-MX
 // catalog. Apps pass their own `__` so their catalogs stay authoritative, and

@@ -1,7 +1,9 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.8.0 (389c3697e254). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.10.0 (d72c76f4251b). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 export {
   RETURN_PREFIXES,
+  DESK_PREFIXES,
+  RETURN_PREFIXES_WITH_DESK,
   RETURN_MAX_LENGTH,
   RETURN_LABEL_MAX,
   RETURN_TO_PARAM,

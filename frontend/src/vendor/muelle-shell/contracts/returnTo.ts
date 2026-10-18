@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.8.0 (389c3697e254). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.10.0 (d72c76f4251b). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Cross-app return protocol (spec-muelle-shell §8.3).
 //
@@ -17,6 +17,17 @@ export const RETURN_PREFIXES = Object.freeze([
   '/mercado/',
   '/scan/',
 ] as const)
+
+/**
+ * Frappe Desk forms and lists (Frappe 16 serves `/desk/`; `/app/` still redirects there).
+ * Opt-in only: a receiver that takes a hop from Desk (POS, Clínica) passes
+ * `RETURN_PREFIXES_WITH_DESK`. `RETURN_PREFIXES` stays SPA-only because apps also use it to
+ * guard login and intended-route redirects, where a Desk target would be a dead end.
+ */
+export const DESK_PREFIXES = Object.freeze(['/desk/', '/app/'] as const)
+
+/** The SPA prefixes plus Desk, for receivers whose callers include Desk forms. */
+export const RETURN_PREFIXES_WITH_DESK = Object.freeze([...RETURN_PREFIXES, ...DESK_PREFIXES] as const)
 
 export const RETURN_MAX_LENGTH = 2048
 export const RETURN_LABEL_MAX = 40
@@ -96,7 +107,9 @@ const DEFAULT_LABELS: ReadonlyArray<readonly [string, string]> = [
   ['/crm/agenda', 'Agenda'],
   ['/crm/archivos', 'Archivos'],
   ['/crm/compras', 'Compras'],
+  ['/crm/documentos', 'Documentos'],
   ['/crm/encuestas', 'Encuestas'],
+  ['/crm/inventario', 'Inventario'],
   ['/crm/manual', 'Manual de la tienda'],
   ['/crm/resultados', 'Resultados'],
   ['/crm/ventas', 'Ventas'],

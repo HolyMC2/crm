@@ -134,6 +134,22 @@ const COPY = {
     missing:
       'Todavía falta acceso al manual de la tienda. Comparte la solicitud y reintenta después del ajuste.',
   },
+  documentos: {
+    reason:
+      'Para abrir Documentos necesitas permiso de lectura de al menos un tipo de documento (cotizaciones, pedidos, facturas, compras o pagos). Pide al dueño o al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de los documentos de venta, compra o pago que uso (por ejemplo, facturas) para abrir Documentos en Muelle; quiero retomar el documento que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Documentos. Comparte la solicitud y reintenta después del ajuste.',
+  },
+  inventario: {
+    reason:
+      'Para abrir Inventario necesitas permiso de lectura de movimientos de inventario o de almacenes. Pide al encargado que revise tu usuario; después toca Reintentar permisos.',
+    request:
+      'Necesito permiso de lectura de movimientos de inventario (Stock Entry) y almacenes para abrir Inventario en Muelle; quiero retomar lo que intentaba abrir.',
+    missing:
+      'Todavía falta acceso a Inventario. Comparte la solicitud y reintenta después del ajuste.',
+  },
   hoy: {
     reason:
       'Hoy es la página de inicio de las cuentas del equipo. Tu usuario todavía no es una cuenta del equipo activa.',

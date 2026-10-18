@@ -84,6 +84,8 @@ describe('bundle budget', () => {
         '/crm/inbox',
         '/crm/contactos',
         '/crm/prospectos',
+        '/crm/documentos',
+        '/crm/documentos/facturas',
       ]),
     )
     expect(ROUTE_BUDGET).toEqual({ files: 60, bytes: 2.5 * 1024 * 1024 })
