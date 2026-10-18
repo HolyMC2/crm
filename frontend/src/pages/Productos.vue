@@ -41,7 +41,15 @@
         {{ copied }}
       </p>
     </section>
-    <template v-else>
+    <!-- One scroller for the whole page (Shell C5): the header and the
+         controls scroll away with the list instead of staying pinned. -->
+    <div
+      v-else
+      ref="scroller"
+      class="min-h-0 flex-1 overflow-y-auto pb-6"
+      data-productos-scroller
+      @scroll.passive="rememberScroll"
+    >
       <PageHeader :title="heading" :subtitle="subtitle" :level="1">
         <template #actions>
           <!-- On a phone the app bar already carries the scan icon. -->
@@ -91,7 +99,8 @@
         :aria-label="__('Inventory health')"
         class="px-4 pb-3 sm:px-6"
       >
-        <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <!-- On a phone the list chips below already switch to these queues. -->
+        <div v-if="!isPhone" class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
           <button
             v-for="chip in chips"
             :key="chip.view"
@@ -142,15 +151,117 @@
       >
         {{ boot.price_setup.reason }}
       </div>
-      <div class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
-        <FormControl
-          class="h-11 w-full sm:hidden"
-          type="select"
-          :aria-label="__('List', null, 'Productos')"
+      <!-- Phone (Shell C4): one search pill, then one chip row for the list,
+           with the store, the view and every other filter in «Filtros». -->
+      <div v-if="isPhone" class="flex flex-col gap-2 pb-2">
+        <label class="relative mx-4 flex min-w-0 items-center">
+          <span
+            class="lucide-search pointer-events-none absolute left-4 h-4 w-4 text-ink-gray-5"
+            aria-hidden="true"
+          />
+          <input
+            ref="searchBox"
+            v-model="search"
+            type="search"
+            class="h-11 w-full rounded-full border-0 bg-surface-gray-2 pl-10 pr-4 text-base text-ink-gray-9 placeholder:text-ink-gray-5 focus:ring-2 focus:ring-outline-gray-4"
+            :placeholder="__('Search name, code or barcode')"
+            :aria-label="__('Search name, code or barcode')"
+          />
+        </label>
+        <FilterChips
           :model-value="view"
-          :options="phoneViews"
+          :chips="viewChips"
+          :deselectable="false"
+          :label="__('List', null, 'Productos')"
+          :filters-label="__('Filters', null, 'Productos')"
+          :filters-count="sheetCount"
           @update:model-value="selectView"
-        />
+          @clear-filters="clearSheet"
+        >
+          <template #filters>
+            <div class="space-y-5 pb-2" data-productos-filters>
+              <section v-if="storeOptions.length > 2">
+                <p class="pb-1 text-sm text-ink-gray-6">
+                  {{ __('Store', null, 'Productos') }}
+                </p>
+                <ListRow
+                  v-for="option in storeOptions"
+                  :key="option.value || 'all'"
+                  :title="option.label"
+                  :selected="store === option.value"
+                  @click="selectStore(option.value)"
+                />
+              </section>
+              <section v-if="!inventory">
+                <p class="pb-1 text-sm text-ink-gray-6">
+                  {{ __('View', null, 'Productos') }}
+                </p>
+                <ListRow
+                  v-for="option in layoutOptions"
+                  :key="option.value"
+                  :title="option.label"
+                  :selected="layout === option.value"
+                  @click="setLayout(option.value)"
+                />
+              </section>
+              <template v-if="catalog">
+                <CatalogFilters
+                  touch
+                  :facets="facets"
+                  :state="state"
+                  :loading="facetsLoading"
+                  @update="filterBy"
+                />
+                <PriceListsToggle
+                  v-model="shownLists"
+                  :lists="boot?.price_lists || []"
+                  :main="boot?.default_price_list || ''"
+                />
+              </template>
+              <div v-if="inventory" class="flex flex-col gap-3">
+                <FormControl
+                  v-if="view === 'sin-contar'"
+                  class="h-11 w-full"
+                  type="select"
+                  :aria-label="__('Not counted in')"
+                  :model-value="String(state.days)"
+                  :options="dayOptions"
+                  @update:model-value="
+                    (value) => update({ dias: value, sel: '' })
+                  "
+                />
+                <FormControl
+                  v-if="
+                    view !== 'conteos-abiertos' && filterOptions.groups.length
+                  "
+                  class="h-11 w-full"
+                  type="select"
+                  :aria-label="__('Group', null, 'Productos')"
+                  :model-value="state.group"
+                  :options="groupOptions"
+                  @update:model-value="
+                    (value) => update({ grupo: value, sel: '' })
+                  "
+                />
+                <FormControl
+                  v-if="
+                    view !== 'conteos-abiertos' && filterOptions.brands.length
+                  "
+                  class="h-11 w-full"
+                  type="select"
+                  :aria-label="__('Brand', null, 'Productos')"
+                  :model-value="state.brand"
+                  :options="brandOptions"
+                  @update:model-value="
+                    (value) => update({ marca: value, sel: '' })
+                  "
+                />
+              </div>
+            </div>
+          </template>
+        </FilterChips>
+      </div>
+      <div v-else class="flex flex-wrap items-center gap-2 px-4 pb-3 sm:px-6">
         <label
           class="relative flex min-w-0 flex-1 items-center"
           :class="inventory ? 'sm:max-w-xs' : ''"
@@ -177,21 +288,6 @@
           :options="storeOptions"
           @update:model-value="selectStore"
         />
-        <button
-          v-if="catalog"
-          type="button"
-          class="inline-flex h-11 items-center gap-2 rounded-lg border border-outline-gray-2 px-3 text-sm text-ink-gray-8 sm:hidden"
-          :aria-expanded="filterSheet"
-          @click="filterSheet = true"
-        >
-          <FeatherIcon name="sliders" class="h-4 w-4" aria-hidden="true" />
-          {{ __('Filters', null, 'Productos') }}
-          <span
-            v-if="filterChips.length"
-            class="rounded-full bg-surface-gray-9 px-1.5 text-xs text-ink-base"
-            >{{ filterChips.length }}</span
-          >
-        </button>
         <div
           v-if="!inventory"
           class="flex h-11 shrink-0 items-center rounded-lg bg-surface-gray-2 p-0.5 sm:h-10"
@@ -342,11 +438,7 @@
           @click="load()"
         />
       </div>
-      <div
-        ref="scroller"
-        class="min-h-0 flex-1 overflow-y-auto pb-6"
-        @scroll.passive="rememberScroll"
-      >
+      <div>
         <div
           v-if="selected.size"
           class="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-outline-gray-2 bg-surface-base px-4 py-2 sm:px-6"
@@ -599,28 +691,7 @@
           />
         </div>
       </div>
-    </template>
-    <BottomSheet
-      v-if="catalog"
-      :open="filterSheet"
-      :title="__('Filters', null, 'Productos')"
-      @update:open="(value) => (filterSheet = value)"
-    >
-      <div class="px-4 pb-6">
-        <CatalogFilters
-          touch
-          :facets="facets"
-          :state="state"
-          :loading="facetsLoading"
-          @update="filterBy"
-        />
-        <PriceListsToggle
-          v-model="shownLists"
-          :lists="boot?.price_lists || []"
-          :main="boot?.default_price_list || ''"
-        />
-      </div>
-    </BottomSheet>
+    </div>
     <CountDialog
       v-model="countDialog.open"
       :groups="countDialog.groups"
@@ -642,8 +713,9 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BottomSheet, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
-import { PageHeader } from '@/components/ui'
+import { Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { FilterChips, ListRow, PageHeader } from '@/components/ui'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import CountDialog from '@/components/productos/CountDialog.vue'
 import CatalogFilters from '@/components/productos/CatalogFilters.vue'
@@ -729,7 +801,6 @@ const countDialog = reactive({ open: false, groups: [], task: null })
 const total = ref(null)
 const facets = ref(null)
 const facetsLoading = ref(false)
-const filterSheet = ref(false)
 const sentinel = ref(null)
 const layout = ref('lista')
 const state = computed(() => listState(route.query))
@@ -826,14 +897,32 @@ const inventoryEntries = computed(() =>
     label: countLabel(v.value),
   })),
 )
-const phoneViews = computed(() => [
-  ...entries.value.map((e) => ({ label: e.label, value: e.value })),
-  ...inventoryEntries.value.map((e) => ({
-    label: `${__('Inventory', null, 'Productos')} · ${e.label}`,
-    value: e.value,
-  })),
-])
 const chips = computed(() => healthChips(summary.value))
+// Phone: the lists as one chip row, each with its count when known.
+const viewChips = computed(() =>
+  [...entries.value, ...inventoryEntries.value].map((entry) => {
+    const count = counts.value[entry.value]
+    return {
+      value: entry.value,
+      label: viewLabel(entry.value),
+      count: count
+        ? `${count.count.toLocaleString()}${count.more ? '+' : ''}`
+        : undefined,
+    }
+  }),
+)
+// What «Filtros» holds besides the list: the store, then the list's filters.
+const sheetCount = computed(
+  () =>
+    (store.value ? 1 : 0) +
+    filterChips.value.length +
+    (inventory.value
+      ? [state.value.group, state.value.brand].filter(Boolean).length
+      : 0),
+)
+function clearSheet() {
+  filterBy({ grupo: '', marca: '', existencias: '', foto: '', tienda: '' })
+}
 const storeOptions = computed(() => [
   { label: __('All my stores'), value: '' },
   ...(boot.value?.stores || []),

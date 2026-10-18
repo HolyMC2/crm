@@ -22870,7 +22870,7 @@ msgstr "Servicio, sin inventario"
 
 #: frontend/src/pages/Productos.vue
 msgid "{0} in stock"
-msgstr "{0} en stock"
+msgstr "{0} en existencia"
 
 #: frontend/src/pages/Productos.vue
 msgid "today"
