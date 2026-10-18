@@ -535,14 +535,27 @@ def _puesto():
 	return puesto_of(frappe.session.user) or None
 
 
-def nav_role(puesto: str | None, roles: list[str] | set[str]) -> str | None:
-	"""Bottom-nav class: the Doco puesto when it maps, else the first matching role."""
+def nav_role(puesto: str | None, roles: list[str] | set[str], hint: str | None = None) -> str | None:
+	"""Bottom-nav class: the Doco puesto when it maps (a shop worker), else a module
+	provider's hint (Inmobiliaria sets one for its own workers, who also hold Sales User),
+	else the first matching role."""
 	if puesto and puesto in NAV_ROLES:
 		return NAV_ROLES[puesto]
+	if hint:
+		return hint
 	held = set(roles)
 	for role, klass in ROLE_NAV_ROLES:
 		if role in held:
 			return klass
+	return None
+
+
+def _module_nav_hint(modules: dict) -> str | None:
+	# A provider may name the bar class of its own workers (`nav_role` on its DTO, only
+	# when it is enabled for this user); the first provider that names one wins.
+	for dto in modules.values():
+		if dto.get("enabled") and dto.get("nav_role"):
+			return dto["nav_role"]
 	return None
 
 
@@ -645,7 +658,7 @@ def boot():
 			"full_name": user.get("full_name"),
 			"image": user.get("user_image"),
 			"puesto": puesto,
-			"nav_role": nav_role(puesto, frappe.get_roles()),
+			"nav_role": nav_role(puesto, frappe.get_roles(), _module_nav_hint(modules)),
 			"is_admin": "System Manager" in frappe.get_roles(),
 		},
 		# What the client keys its boot copy by (also in the page boot as shell_scope).

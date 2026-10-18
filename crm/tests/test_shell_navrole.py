@@ -33,6 +33,18 @@ class TestNavRole(TestCase):
 		self.assertEqual(shell.nav_role("Repartidor", ["Stock User"]), "almacen")
 		self.assertIsNone(shell.nav_role(None, ["Guest", "All"]))
 
+	def test_a_module_hint_beats_the_roles_but_not_the_puesto(self):
+		# Inmobiliaria workers also hold Sales User; their module names their bar.
+		self.assertEqual(shell.nav_role(None, ["Sales User"], "inmobiliaria"), "inmobiliaria")
+		self.assertEqual(shell.nav_role("Cajero", ["Sales User"], "inmobiliaria"), "cajero")
+		modules = {
+			"inmobiliaria": {"key": "inmobiliaria", "enabled": True, "nav_role": "inmobiliaria"},
+			"ventas": {"key": "ventas", "enabled": True},
+		}
+		self.assertEqual(shell._module_nav_hint(modules), "inmobiliaria")
+		modules["inmobiliaria"]["enabled"] = False
+		self.assertIsNone(shell._module_nav_hint(modules))
+
 	def test_every_class_is_a_contracts_nav_role(self):
 		known = {"vendedor", "recepcion", "compras", "dueno", "inmobiliaria", "almacen", "cajero"}
 		self.assertLessEqual(set(shell.NAV_ROLES.values()), known)
