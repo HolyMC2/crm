@@ -233,6 +233,30 @@ describe('AvisameSheet on an item', () => {
   })
 })
 
+describe('AvisameSheet mounted already open (Producto)', () => {
+  it('loads and prefills with the reorder level', async () => {
+    state.replies.mis_avisos = []
+    mount({
+      open: true,
+      doctype: 'Item',
+      name: 'CONCHA',
+      title: 'Concha',
+      warehouses: [
+        {
+          warehouse: 'Centro - T',
+          label: 'Centro',
+          qty: 18,
+          reorder_level: 19,
+        },
+      ],
+    })
+    await flush()
+    expect(state.calls.map(([m]) => m)).toContain('mis_avisos')
+    expect(root.querySelector('input[type="number"]').value).toBe('19')
+    expect(button('Avísame').disabled).toBe(false)
+  })
+})
+
 describe('avisame helpers', () => {
   it('cleans thresholds and knows which records offer it', () => {
     expect(cleanThreshold('2,5')).toBe(2.5)
