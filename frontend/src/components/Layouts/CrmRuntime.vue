@@ -21,7 +21,7 @@
     <DesktopOnly v-if="$route.meta.desktopOnly && isNarrow" />
     <router-view
       v-else
-      :key="$route.meta.stableKey ? $route.path : $route.fullPath"
+      :key="routeKey($route)"
     />
   </Layout>
   <Settings v-if="session.isLoggedIn && showSettings" />
@@ -45,6 +45,14 @@
 
 <script setup>
 import DoctypeModals from '@/components/Modals/DoctypeModals.vue'
+
+// The page key: a split page (Documentos master-detail ≥1024) keeps one
+// instance while its record changes; `stableKey` pages remount on path only.
+function routeKey(route) {
+  const split = route.meta.splitKey?.(route)
+  if (split) return split
+  return route.meta.stableKey ? route.path : route.fullPath
+}
 import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
 import { setConfig, useTheme } from 'frappe-ui'

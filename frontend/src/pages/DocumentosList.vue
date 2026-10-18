@@ -3,7 +3,10 @@
        (/documentos/facturas) or the generic floor for any readable doctype
        (/documentos/tipo/:doctype). Chip row + «Filtros», search in the bar,
        rows on ListRow; the URL keeps the filters and session memory the scroll. -->
-  <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+  <div
+    ref="root"
+    class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden"
+  >
     <AppBar
       v-model:search="search"
       v-model:search-open="searchOpen"
@@ -29,7 +32,7 @@
         </button>
       </template>
     </AppBar>
-    <div v-if="profile" class="mx-auto w-full max-w-3xl flex-none py-2">
+    <div v-if="profile" class="mx-auto w-full flex-none py-2" :class="width">
       <FilterChips
         :model-value="chipValue"
         :chips="chips"
@@ -94,7 +97,7 @@
       data-testid="documentos-list"
       @scroll.passive="onScroll"
     >
-      <div class="mx-auto w-full max-w-3xl">
+      <div class="mx-auto w-full" :class="width">
         <EmptyState
           v-if="error"
           state="error"
@@ -135,7 +138,12 @@
               row.view.avatar === undefined ? row.view.icon || entryIcon : ''
             "
             :to="recordTo(row)"
+            :selected="pane && row.name === route.params.name"
             :data-row-key="row.name"
+            :data-row-current="
+              row.name === route.params.name ? '' : undefined
+            "
+            data-key-row
             data-testid="documentos-row"
           >
             <template v-if="showChip(row.view)" #trailing>
@@ -155,6 +163,13 @@
         </template>
       </div>
     </div>
+    <Fab
+      v-if="createTo"
+      :label="newLabel"
+      :extended="!pane"
+      :to="createTo"
+      data-testid="documentos-new"
+    />
     <BottomSheet v-model:open="sortOpen" title="Ordenar" flush>
       <ListRow
         v-for="option in profile?.sorts || []"
@@ -173,11 +188,14 @@ import {
   AppBar,
   BottomSheet,
   EmptyState,
+  Fab,
   FilterChips,
   ListRow,
   StatusChip,
 } from '@/components/ui'
 import { isMobile } from '@/composables/breakpoint'
+import { shellBoot } from '@/composables/muelleShell'
+import { useListKeys } from '@/composables/pageKeys'
 import { docApi, errorText } from '@/documentos/api'
 import {
   chipCountFilters,
@@ -189,8 +207,16 @@ import {
 } from '@/documentos/listState'
 import { loadProfile } from '@/documentos/profiles'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
+import { kindLabel } from '@/utils/display'
+
+const props = defineProps({
+  // Left pane of the desktop split: rows keep the list's query, the open one is lit.
+  pane: { type: Boolean, default: false },
+})
 
 const PAGE = 30
+const root = ref(null)
+const width = computed(() => (props.pane ? '' : 'max-w-3xl'))
 const route = useRoute()
 const router = useRouter()
 const phone = isMobile
@@ -275,11 +301,42 @@ function showChip(view) {
 }
 
 function recordTo(row) {
-  return (
+  const to =
     documentRoute(doctype.value, row.name, { hint: row.fields }) ||
     floorRoute(doctype.value, row.name)
-  )
+  // In the split the list lives in the URL's query: keep it on every record.
+  return props.pane && !to.query ? { ...to, query: route.query } : to
 }
+
+// The one primary action: a new document, when this worker may create one.
+const canCreate = computed(() => {
+  const modules = shellBoot.value?.modules
+  if (!modules) return false
+  return ['documentos', 'inventario'].some((key) =>
+    (modules[key]?.capabilities?.create || []).includes(doctype.value),
+  )
+})
+const createTo = computed(() => {
+  if (!canCreate.value) return null
+  const path = entry.value
+    ? `${base.value}/${entry.value.slug}/nuevo`
+    : `${floorRoute(doctype.value).path}/nuevo`
+  return { path }
+})
+const newLabel = computed(() => {
+  const word = (kindLabel(doctype.value) || 'documento').toLowerCase()
+  return `${/(a|ón|d)$/.test(word.split(' ')[0]) ? 'Nueva' : 'Nuevo'} ${word}`
+})
+
+useListKeys({
+  page: 'documentos',
+  root,
+  search: true,
+  rows: true,
+  open: true,
+  create: () => (createTo.value ? router.push(createTo.value) : false),
+  when: { create: () => !!createTo.value },
+})
 
 let seq = 0
 async function load({ append = false, count = 0 } = {}) {

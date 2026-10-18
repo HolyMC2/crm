@@ -228,6 +228,33 @@ def _row(doc, display):
 	}
 
 
+def _party_titles(doctype, docs, rows):
+	"""Rows without a title name their party by its own title (a Lead's name on a quotation),
+	one query per party doctype, never the party's ID."""
+	spec = DISPLAY.get(doctype, {}).get("party")
+	if not spec:
+		return
+	wanted = {}
+	for doc, row in zip(docs, rows):
+		if row["title"]:
+			continue
+		party_type = spec[0] if spec[0][:1].isupper() else doc.get(spec[0])
+		if party_type and doc.get(spec[1]) and _exists(party_type):
+			wanted.setdefault(party_type, set()).add(doc.get(spec[1]))
+	titles = {}
+	for party_type, names in wanted.items():
+		meta = frappe.get_meta(party_type)
+		field = meta.title_field if meta.title_field and meta.has_field(meta.title_field) else None
+		if not field or not frappe.has_permission(party_type, "read"):
+			continue
+		for found in frappe.get_list(party_type, filters={"name": ["in", list(names)]}, fields=["name", field]):
+			titles[(party_type, found.name)] = found.get(field)
+	for doc, row in zip(docs, rows):
+		if not row["title"]:
+			party_type = spec[0] if spec[0][:1].isupper() else doc.get(spec[0])
+			row["title"] = cstr(titles.get((party_type, doc.get(spec[1])))).strip()
+
+
 def _parse(value, default):
 	if value in (None, ""):
 		return default
@@ -256,6 +283,9 @@ def _wanted_fields(meta, display, extra):
 	if not DISPLAY.get(meta.name):
 		fields.update(_list_fields(meta))
 	for key in ("party", "party_type", "payment_type", "purpose", "customer", "supplier", "company", "is_return", "return_against"):
+		if meta.has_field(key):
+			fields.add(key)
+	for key in DISPLAY.get(meta.name, {}).get("party") or ():
 		if meta.has_field(key):
 			fields.add(key)
 	for name in _parse(extra, []) or []:
@@ -301,8 +331,10 @@ def rows(doctype, filters=None, search=None, order_by=None, start=0, limit=30, f
 		limit_start=max(0, cint(start)),
 		limit_page_length=limit + 1,
 	)
+	out = [_row(doc, display) for doc in found[:limit]]
+	_party_titles(doctype, found[:limit], out)
 	return {
-		"rows": [_row(doc, display) for doc in found[:limit]],
+		"rows": out,
 		"has_more": len(found) > limit,
 		"label": _(doctype),
 	}
@@ -617,7 +649,13 @@ def _items(doc):
 		return None
 	rows = []
 	for row in doc.get(table.fieldname) or []:
-		rows.append({"name": row.name, **{f: row.get(f) for f in _ITEM_FIELDS if row.get(f) not in (None, "")}})
+		rows.append(
+			{
+				"name": row.name,
+				"_idx": cint(row.idx),
+				**{f: row.get(f) for f in _ITEM_FIELDS if row.get(f) not in (None, "")},
+			}
+		)
 	return {"fieldname": table.fieldname, "label": _(table.label or "Items"), "rows": rows}
 
 
@@ -816,3 +854,349 @@ def timeline(doctype, name):
 	doc = frappe.get_doc(doctype, name)
 	doc.check_permission("read")
 	return _timeline(doc)
+
+
+# ── Editing, creating and tools (D1.2) ────────────────────────────────────────
+
+# ERPNext mappers a profile may offer as its next step or a contextual create (SPEC §6 DD6).
+# (source doctype, key) → (dotted path, target doctype). Only these run; each is
+# `@frappe.whitelist()` in ERPNext 16. Profiles name the key (`nextStep() → { make: key }`).
+_PE = "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry"
+MAKERS = {
+	("Quotation", "sales_order"): ("erpnext.selling.doctype.quotation.quotation.make_sales_order", "Sales Order"),
+	("Quotation", "sales_invoice"): ("erpnext.selling.doctype.quotation.quotation.make_sales_invoice", "Sales Invoice"),
+	("Sales Order", "delivery_note"): ("erpnext.selling.doctype.sales_order.sales_order.make_delivery_note", "Delivery Note"),
+	("Sales Order", "sales_invoice"): ("erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice", "Sales Invoice"),
+	("Sales Order", "payment"): (_PE, "Payment Entry"),
+	("Delivery Note", "sales_invoice"): ("erpnext.stock.doctype.delivery_note.delivery_note.make_sales_invoice", "Sales Invoice"),
+	("Delivery Note", "return"): ("erpnext.stock.doctype.delivery_note.delivery_note.make_sales_return", "Delivery Note"),
+	("Sales Invoice", "payment"): (_PE, "Payment Entry"),
+	("Sales Invoice", "return"): ("erpnext.accounts.doctype.sales_invoice.sales_invoice.make_sales_return", "Sales Invoice"),
+	("Sales Invoice", "delivery_note"): ("erpnext.accounts.doctype.sales_invoice.sales_invoice.make_delivery_note", "Delivery Note"),
+	("Material Request", "purchase_order"): ("erpnext.stock.doctype.material_request.material_request.make_purchase_order", "Purchase Order"),
+	("Material Request", "request_for_quotation"): (
+		"erpnext.stock.doctype.material_request.material_request.make_request_for_quotation",
+		"Request for Quotation",
+	),
+	("Supplier Quotation", "purchase_order"): (
+		"erpnext.buying.doctype.supplier_quotation.supplier_quotation.make_purchase_order",
+		"Purchase Order",
+	),
+	("Purchase Order", "purchase_receipt"): ("erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_receipt", "Purchase Receipt"),
+	("Purchase Order", "purchase_invoice"): ("erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice", "Purchase Invoice"),
+	("Purchase Order", "payment"): (_PE, "Payment Entry"),
+	("Purchase Receipt", "purchase_invoice"): ("erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice", "Purchase Invoice"),
+	("Purchase Invoice", "payment"): (_PE, "Payment Entry"),
+}
+
+# Field types the edit sheet has a control for (components/documentos/fields).
+_EDIT_TYPES = {
+	"Data", "Link", "Dynamic Link", "Select", "Date", "Datetime", "Time", "Int", "Float", "Currency",
+	"Percent", "Check", "Small Text", "Text", "Long Text", "Text Editor", "Phone",
+}
+# Never offered in the sheet: bookkeeping the server sets, or Desk-only knobs.
+_EDIT_SKIP = {
+	"naming_series", "amended_from", "status", "title", "conversion_rate", "plc_conversion_rate",
+	"price_list_currency", "language", "letter_head", "select_print_heading", "scan_barcode",
+	"set_posting_time", "posting_time", "is_pos", "is_return", "return_against", "update_stock",
+}
+# What a worker changes on an item row; `item_code` only on a new row.
+_ROW_EDIT = ("qty", "rate", "uom", "discount_percentage", "warehouse", "schedule_date", "delivery_date")
+MAX_EDIT_FIELDS = 24
+
+
+def _no_perm():
+	frappe.throw(_("Your user does not have this permission."), frappe.PermissionError)
+
+
+def _select_options(df):
+	options = [o for o in cstr(df.options).split("\n") if o.strip()]
+	return [{"value": o, "label": _(o)} for o in options]
+
+
+def _form_field(df, multi_company):
+	if df.fieldtype not in _EDIT_TYPES or df.hidden or df.read_only or df.permlevel:
+		return None
+	if df.fieldname in _EDIT_SKIP or df.fieldname.startswith(_DATOS_PREFIXES) or df.fetch_from:
+		return None
+	if df.fieldname == "company" and not multi_company:
+		return None
+	row = {
+		"fieldname": df.fieldname,
+		"label": _(df.label) if df.label else df.fieldname,
+		"fieldtype": df.fieldtype,
+		"reqd": cint(df.reqd),
+		"description": _(df.description) if df.description and len(df.description) < 160 else None,
+		"depends_on": df.depends_on or None,
+	}
+	if df.fieldtype == "Select":
+		row["options"] = _select_options(df)
+	elif df.fieldtype in ("Link", "Dynamic Link", "Currency"):
+		row["options"] = df.options
+	return row
+
+
+def _items_table(meta):
+	for df in meta.get_table_fields():
+		if df.fieldname == "items" or frappe.get_meta(df.options).has_field("item_code"):
+			return df
+	return None
+
+
+@frappe.whitelist()
+def form(doctype, fields=None):
+	"""The edit sheet's controls: the fields a profile names (`fields`), else the required and
+	list fields this worker may write, in form order; plus the items table when there is one."""
+	meta = _require(doctype)
+	wanted = [f for f in (_parse(fields, []) or []) if isinstance(f, str)]
+	multi_company = cint(frappe.db.count("Company")) > 1
+	by_name = {}
+	for df in meta.fields:
+		row = _form_field(df, multi_company)
+		if row:
+			by_name[df.fieldname] = (df, row)
+	if wanted:
+		out = [by_name[f][1] for f in wanted if f in by_name]
+	else:
+		out = [
+			row
+			for df, row in by_name.values()
+			if df.reqd or df.in_list_view or df.in_standard_filter or df.bold or df.allow_in_quick_entry
+		]
+	table = _items_table(meta)
+	items = None
+	if table:
+		child = frappe.get_meta(table.options)
+		items = {
+			"fieldname": table.fieldname,
+			"label": _(table.label or "Items"),
+			"fields": [f for f in ("item_code", *_ROW_EDIT) if child.has_field(f)],
+		}
+	return {"fields": out[:MAX_EDIT_FIELDS], "items": items, "submittable": bool(meta.is_submittable)}
+
+
+def _editable(meta, fieldname):
+	df = meta.get_field(fieldname)
+	return bool(df) and df.fieldtype in _EDIT_TYPES and not df.read_only and not df.permlevel
+
+
+def _apply_rows(doc, table, rows):
+	"""Item rows by `_idx` (the row's position before the edit): kept rows take the worker's
+	changes, missing rows go, rows without `_idx` are new (`item_code` + changes)."""
+	child = frappe.get_meta(table.options)
+	existing = {cint(row.idx): row for row in doc.get(table.fieldname) or []}
+	kept = []
+	for wanted in rows or []:
+		if not isinstance(wanted, dict):
+			continue
+		row = existing.get(cint(wanted.get("_idx"))) if wanted.get("_idx") else None
+		if row is None:
+			if not wanted.get("item_code"):
+				continue
+			row = frappe.new_doc(table.options, parent_doc=doc, parentfield=table.fieldname)
+			row.item_code = wanted["item_code"]
+		for field in _ROW_EDIT:
+			if field in wanted and child.has_field(field):
+				row.set(field, wanted[field])
+		kept.append(row)
+	doc.set(table.fieldname, [])
+	for idx, row in enumerate(kept, start=1):
+		row.idx = idx
+		doc.append(table.fieldname, row)
+
+
+def _apply(doc, values):
+	meta = doc.meta
+	table = _items_table(meta)
+	for fieldname, value in (values or {}).items():
+		if table and fieldname == table.fieldname:
+			_apply_rows(doc, table, value if isinstance(value, list) else [])
+		elif fieldname in _STANDARD or fieldname.startswith("_"):
+			continue
+		elif _editable(meta, fieldname):
+			doc.set(fieldname, value)
+	if hasattr(doc, "set_missing_values"):
+		try:
+			doc.set_missing_values(for_validate=True)
+		except TypeError:
+			doc.set_missing_values()
+	if hasattr(doc, "calculate_taxes_and_totals"):
+		doc.calculate_taxes_and_totals()
+
+
+def _maker(doctype, key):
+	spec = MAKERS.get((doctype, cstr(key)))
+	if not spec:
+		_no_perm()
+	return spec
+
+
+def _mapped(doctype, name, key):
+	path, target = _maker(doctype, key)
+	_require(doctype)
+	source = frappe.get_doc(doctype, name)
+	source.check_permission("read")
+	if not readable(target) or not frappe.has_permission(target, "create"):
+		_no_perm()
+	fn = frappe.get_attr(path)
+	return fn(doctype, name) if path == _PE else fn(name)
+
+
+def _source_doc(doctype, source):
+	"""A new, unsaved document from `source`: a mapper `{doctype, name, make}`, a copy
+	`{duplicate: name}` or an amendment `{amend: name}`; else a blank one with defaults."""
+	source = _parse(source, None) or {}
+	if source.get("make"):
+		doc = _mapped(source.get("doctype"), source.get("name"), source.get("make"))
+		if doc.doctype != doctype:
+			_no_perm()
+		return doc
+	if source.get("duplicate") or source.get("amend"):
+		original = frappe.get_doc(doctype, source.get("duplicate") or source.get("amend"))
+		original.check_permission("read")
+		if source.get("amend"):
+			if cint(original.docstatus) != 2:
+				frappe.throw(_("Only a cancelled document can be amended."), frappe.ValidationError)
+			if not original.has_permission("amend"):
+				_no_perm()
+		elif original.meta.allow_copy:
+			_no_perm()
+		doc = frappe.copy_doc(original)
+		if source.get("amend"):
+			doc.amended_from = original.name
+		return doc
+	return frappe.new_doc(doctype)
+
+
+@frappe.whitelist()
+def draft(doctype, source=None):
+	"""The prefill of the create sheet (nothing is saved): the mapped, copied or blank document."""
+	meta = _require(doctype)
+	if not frappe.has_permission(doctype, "create"):
+		_no_perm()
+	doc = _source_doc(doctype, source)
+	data = doc.as_dict(convert_dates_to_str=True)
+	table = _items_table(meta)
+	items = None
+	if table:
+		items = {"fieldname": table.fieldname, "rows": [
+			{"_idx": cint(row.idx), **{f: row.get(f) for f in _ITEM_FIELDS if row.get(f) not in (None, "")}}
+			for row in doc.get(table.fieldname) or []
+		]}
+	return {"doctype": doctype, "doc": data, "items": items, "title": _row(doc, _display(meta))["title"]}
+
+
+@frappe.whitelist(methods=["POST"])
+def save(doctype, values=None, name=None, modified=None, source=None):
+	"""Create (from `source`, see `_source_doc`) or update a draft with the worker's changes.
+	Frappe validates and checks create/write permission and permlevels on save."""
+	meta = _require(doctype)
+	values = _parse(values, {}) or {}
+	if not isinstance(values, dict):
+		frappe.throw(_("The filters could not be read."), frappe.ValidationError)
+	if name:
+		doc = frappe.get_doc(doctype, name)
+		doc.check_permission("write")
+		if cint(doc.docstatus) != 0:
+			frappe.throw(_("Only a draft can be edited."), frappe.ValidationError)
+		if modified and cstr(doc.modified) != cstr(modified):
+			frappe.throw(
+				_("Someone changed this document while you were editing it. Open it again to see their changes."),
+				frappe.TimestampMismatchError,
+			)
+		_apply(doc, values)
+		doc.save()
+	else:
+		if not frappe.has_permission(doctype, "create"):
+			_no_perm()
+		doc = _source_doc(doctype, source)
+		_apply(doc, values)
+		doc.insert()
+	return {"doctype": doctype, "name": doc.name, "docstatus": cint(doc.docstatus), "slug_hint": _hint(doc, meta)}
+
+
+def _hint(doc, meta):
+	return {"payment_type": doc.get("payment_type")} if meta.has_field("payment_type") else None
+
+
+@frappe.whitelist(methods=["POST"])
+def act(doctype, name, action):
+	"""Confirm (submit), cancel or delete one document with the worker's own permissions."""
+	_require(doctype)
+	doc = frappe.get_doc(doctype, name)
+	allowed = _actions(doc)
+	if action not in ("submit", "cancel", "delete") or not allowed.get(action, {}).get("allowed"):
+		frappe.throw((allowed.get(action) or {}).get("reason") or _("Your user does not have this permission."), frappe.PermissionError)
+	if action == "submit":
+		doc.submit()
+	elif action == "cancel":
+		doc.cancel()
+	else:
+		frappe.delete_doc(doctype, name)
+		return {"deleted": True}
+	return {"name": doc.name, "docstatus": cint(doc.docstatus)}
+
+
+@frappe.whitelist()
+def print_formats(doctype):
+	"""Print formats for the PDF picker: the doctype's enabled formats, «Standard» last."""
+	_require(doctype)
+	if not frappe.has_permission(doctype, "print"):
+		_no_perm()
+	default = frappe.get_meta(doctype).default_print_format
+	names = frappe.get_all(
+		"Print Format", filters={"doc_type": doctype, "disabled": 0}, pluck="name", order_by="name asc"
+	)
+	out = [{"name": n, "label": _(n), "default": n == default} for n in names]
+	out.append({"name": "Standard", "label": _("Standard"), "default": not default or default == "Standard"})
+	return out
+
+
+@frappe.whitelist()
+def people(search=None, limit=20):
+	"""Coworkers for Asignar: enabled desk users by full name (never their emails as the label)."""
+	if frappe.session.user == "Guest":
+		_no_perm()
+	term = cstr(search).strip()[:MAX_SEARCH]
+	filters = {"enabled": 1, "user_type": "System User", "name": ["not in", ["Administrator", "Guest"]]}
+	or_filters = {"full_name": ["like", f"%{term}%"], "name": ["like", f"%{term}%"]} if term else None
+	found = frappe.get_all(
+		"User",
+		filters=filters,
+		or_filters=or_filters,
+		fields=["name", "full_name", "user_image"],
+		order_by="full_name asc",
+		limit_page_length=max(1, min(cint(limit) or 20, 50)),
+	)
+	return [{"user": u.name, "name": _person(u.name), "image": u.user_image} for u in found]
+
+
+@frappe.whitelist(methods=["POST"])
+def comment(doctype, name, text):
+	"""Comentar: a comment in the worker's own name; returns the refreshed Actividad."""
+	from frappe.desk.form.utils import add_comment
+	from frappe.utils import escape_html
+
+	_require(doctype)
+	text = cstr(text).strip()[:4000]
+	if not text:
+		frappe.throw(_("Write the comment first."), frappe.ValidationError)
+	user = frappe.session.user
+	add_comment(doctype, name, escape_html(text).replace("\n", "<br>"), user, get_fullname(user))
+	return _timeline(frappe.get_doc(doctype, name))
+
+
+@frappe.whitelist(methods=["POST"])
+def assign(doctype, name, add=None, remove=None):
+	"""Asignar: add or remove coworkers (Frappe's ToDo assignments, with its own checks)."""
+	from frappe.desk.form import assign_to
+
+	_require(doctype)
+	doc = frappe.get_doc(doctype, name)
+	doc.check_permission("read")
+	for user in [u for u in (_parse(remove, []) or []) if isinstance(u, str)][:20]:
+		assign_to.remove(doctype, name, user)
+	users = [u for u in (_parse(add, []) or []) if isinstance(u, str)][:20]
+	if users:
+		assign_to.add({"assign_to": users, "doctype": doctype, "name": name})
+	return _timeline(frappe.get_doc(doctype, name))

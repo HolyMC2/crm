@@ -26764,3 +26764,11 @@ msgstr "Necesito acceso a Documentos en Muelle: permiso de lectura de los docume
 #: frontend/src/components/shell/MuelleShell.vue
 msgid "I need access to Inventario in Muelle: read permission for Stock Entry and Warehouse in my company."
 msgstr "Necesito acceso a Inventario en Muelle: permiso de lectura de movimientos de inventario y almacenes de mi empresa."
+
+#: crm/api/documentos.py
+msgid "Write the comment first."
+msgstr "Escribe primero el comentario."
+
+#: crm/api/documentos.py
+msgid "Someone changed this document while you were editing it. Open it again to see their changes."
+msgstr "Alguien cambió este documento mientras lo editabas. Ábrelo de nuevo para ver sus cambios."

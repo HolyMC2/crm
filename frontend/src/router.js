@@ -51,6 +51,37 @@ function toDesk(href) {
   return false
 }
 
+// Documentos family (Shell SPEC §6 DD2/DD4): list, /nuevo and record under
+// one base. Names keep D1.1's: Documentos{Lista,Tipo}, Documento, DocumentoTipo,
+// InventarioLista, InventarioDocumento, plus …Nuevo.
+const DOCUMENTOS_NAMES = {
+  Lista: ['DocumentosLista', 'DocumentoNuevo', 'Documento'],
+  Tipo: ['DocumentosTipo', 'DocumentoTipoNuevo', 'DocumentoTipo'],
+  InventarioLista: ['InventarioLista', 'InventarioNuevo', 'InventarioDocumento'],
+}
+// ≥1024 a list and its records are one page instance (master-detail).
+function documentosSplitKey(route) {
+  if (typeof window === 'undefined' || window.innerWidth < 1024) return null
+  const depth = route.params.doctype ? 4 : 3
+  return `split:${route.path.split('/').slice(0, depth).join('/')}`
+}
+function documentosRoutes(path, kind, app) {
+  const [list, create, record] = DOCUMENTOS_NAMES[kind]
+  const title = app === 'inventario' ? 'Inventario' : 'Documentos'
+  const meta = { app, title, ownPhoneHeader: true, stableKey: true }
+  const split = () => import('@/pages/DocumentosSplit.vue')
+  return [
+    { path, name: list, component: split, meta: { ...meta, splitKey: documentosSplitKey } },
+    {
+      path: `${path}/nuevo`,
+      name: create,
+      component: () => import('@/pages/DocumentoNuevo.vue'),
+      meta: { ...meta, ownBottomBar: true },
+    },
+    { path: `${path}/:name`, name: record, component: split, meta: { ...meta, splitKey: documentosSplitKey } },
+  ]
+}
+
 const routes = [
   // Ventas module home in the Muelle shell (contracts basePath).
   { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
@@ -361,86 +392,25 @@ const routes = [
     meta: { app: 'manual', title: 'Manual de la tienda', listParent: 'Manual' },
   },
   // Documentos and Inventario (Shell Wave D, SPEC §6 DD2): hub, a profile's
-  // list and record, and the generic floor for any readable doctype. Each page
-  // owns its phone bar (the record's back keeps the list's filters).
+  // list and record, /nuevo, and the generic floor for any readable doctype.
+  // Each page owns its phone bar (the record's back keeps the list's filters).
+  // List and record share DocumentosSplit: ≥1024 they sit side by side and
+  // keep one instance (splitKey), below they are one page each.
   {
     path: '/documentos',
     name: 'Documentos',
     component: () => import('@/pages/DocumentosHub.vue'),
     meta: { app: 'documentos', title: 'Documentos', ownPhoneHeader: true },
   },
-  {
-    path: '/documentos/tipo/:doctype',
-    name: 'DocumentosTipo',
-    component: () => import('@/pages/DocumentosList.vue'),
-    meta: {
-      app: 'documentos',
-      title: 'Documentos',
-      ownPhoneHeader: true,
-      stableKey: true,
-    },
-  },
-  {
-    path: '/documentos/tipo/:doctype/:name',
-    name: 'DocumentoTipo',
-    component: () => import('@/pages/DocumentoRecord.vue'),
-    meta: {
-      app: 'documentos',
-      title: 'Documentos',
-      ownPhoneHeader: true,
-      stableKey: true,
-    },
-  },
-  {
-    path: '/documentos/:slug',
-    name: 'DocumentosLista',
-    component: () => import('@/pages/DocumentosList.vue'),
-    meta: {
-      app: 'documentos',
-      title: 'Documentos',
-      ownPhoneHeader: true,
-      stableKey: true,
-    },
-  },
-  {
-    path: '/documentos/:slug/:name',
-    name: 'Documento',
-    component: () => import('@/pages/DocumentoRecord.vue'),
-    meta: {
-      app: 'documentos',
-      title: 'Documentos',
-      ownPhoneHeader: true,
-      stableKey: true,
-    },
-  },
+  ...documentosRoutes('/documentos/tipo/:doctype', 'Tipo', 'documentos'),
+  ...documentosRoutes('/documentos/:slug', 'Lista', 'documentos'),
   {
     path: '/inventario',
     name: 'Inventario',
     component: () => import('@/pages/DocumentosHub.vue'),
     meta: { app: 'inventario', title: 'Inventario', ownPhoneHeader: true },
   },
-  {
-    path: '/inventario/:slug',
-    name: 'InventarioLista',
-    component: () => import('@/pages/DocumentosList.vue'),
-    meta: {
-      app: 'inventario',
-      title: 'Inventario',
-      ownPhoneHeader: true,
-      stableKey: true,
-    },
-  },
-  {
-    path: '/inventario/:slug/:name',
-    name: 'InventarioDocumento',
-    component: () => import('@/pages/DocumentoRecord.vue'),
-    meta: {
-      app: 'inventario',
-      title: 'Inventario',
-      ownPhoneHeader: true,
-      stableKey: true,
-    },
-  },
+  ...documentosRoutes('/inventario/:slug', 'InventarioLista', 'inventario'),
   {
     path: '/archivos',
     name: 'Archivos',

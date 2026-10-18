@@ -9,3 +9,5 @@ const { width } = useWindowSize()
 export const isMobile = computed(() => width.value < 640)
 /** Too narrow for the desktop-only set-up screens (Shell D3, < 768px). */
 export const isNarrow = computed(() => width.value < 768)
+/** Room for list and record side by side (master-detail, Shell SPEC §6 DD4: ≥ 1024px). */
+export const isWide = computed(() => width.value >= 1024)

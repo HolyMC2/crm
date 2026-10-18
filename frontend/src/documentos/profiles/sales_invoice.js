@@ -1,4 +1,5 @@
-// Facturas (Sales Invoice): the worked example of a curated profile (README.md).
+// Facturas (Sales Invoice): the worked example of a curated profile (README.md):
+// rows, chips, «Filtros», sort, edit fields and the next step by state.
 // D2 owns it after D1.2.
 import {
   formatDate,
@@ -7,7 +8,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/utils/display'
-import { docStatus, titleOf } from './_generic'
+import { docStatus, draftStep, titleOf } from './_generic'
 
 const OWED = [
   'Unpaid',
@@ -88,5 +89,21 @@ export default {
       tone: statusTone(status),
       avatar: titleOf(row, 'Sales Invoice'),
     }
+  },
+
+  // The customer, when it is due, a note; the items in their own editor.
+  editFields: ['customer', 'due_date', 'remarks'],
+
+  /** Draft → «Confirmar»; owed → «Registrar cobro» (ERPNext's get_payment_entry). */
+  nextStep(record) {
+    const h = record.header || {}
+    if (h.docstatus === 0) return draftStep(record)
+    if (h.docstatus === 1 && !h.is_return && Number(h.outstanding) > 0)
+      return {
+        label: 'Registrar cobro',
+        icon: 'lucide-hand-coins',
+        make: 'payment',
+      }
+    return null
   },
 }
