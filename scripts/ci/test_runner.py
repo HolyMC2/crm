@@ -10,7 +10,7 @@ SCRIPTS = Path(__file__).resolve().parent
 
 
 class NativeRunnerTests(unittest.TestCase):
-	def run_runner(self, mode="tests", *, failure="", coverage=False, omit_coverage=False):
+	def run_runner(self, mode="tests", *, failure="", coverage=False, omit_coverage=False, modules=""):
 		with tempfile.TemporaryDirectory() as directory:
 			root = Path(directory)
 			candidate = root / "candidate"
@@ -25,6 +25,9 @@ class NativeRunnerTests(unittest.TestCase):
 				(path / "pyproject.toml").write_text("")
 			(candidate / "scripts/ci/migration-probe.py").write_text("")
 			(candidate / "scripts/ci/site-setup.py").write_text("")
+			registry = candidate / "frontend/src/vendor/muelle-shell/contracts/registry.ts"
+			registry.parent.mkdir(parents=True)
+			registry.write_text("export const SHELL_MODULES = []")
 			python = bench / "env/bin/python"
 			python.write_text("#!/usr/bin/env bash\nexit 0\n")
 			python.chmod(0o755)
@@ -65,10 +68,14 @@ fi
 					"FAIL_COMMAND": failure,
 					"COMMAND_LOG": str(log),
 					"OMIT_COVERAGE": str(omit_coverage).lower(),
+					"CRM_CI_MODULES": modules,
 				},
 				text=True,
 				capture_output=True,
 			)
+			self.registry_copied = (
+				bench / "apps/crm/frontend/src/vendor/muelle-shell/contracts/registry.ts"
+			).exists()
 			return (
 				result,
 				log.read_text().splitlines() if log.exists() else [],
@@ -139,6 +146,35 @@ fi
 	def test_missing_coverage_is_a_failure(self):
 		result, _, _ = self.run_runner(coverage=True, omit_coverage=True)
 		self.assertNotEqual(result.returncode, 0)
+
+	def test_shell_mode_runs_only_the_selected_modules(self):
+		result, commands, _ = self.run_runner(
+			"shell", modules="crm.tests.test_shell_boot crm.tests.test_documentos"
+		)
+		self.assertEqual(result.returncode, 0, result.stderr)
+		runs = [command for command in commands if "run-tests" in command]
+		self.assertEqual(
+			runs,
+			[
+				"head|--site crm-integration.localhost run-tests --app crm --module crm.tests.test_shell_boot",
+				"head|--site crm-integration.localhost run-tests --app crm --module crm.tests.test_documentos",
+			],
+		)
+		self.assertIn("head|--site crm-integration.localhost install-app erpnext", commands)
+		self.assertIn("head|--site crm-integration.localhost execute crm._ci_setup.erp_fields", commands)
+		self.assertTrue(self.registry_copied)
+
+	def test_shell_mode_without_modules_cannot_pass(self):
+		result, commands, _ = self.run_runner("shell")
+		self.assertEqual(result.returncode, 2)
+		self.assertEqual(commands, [])
+
+	def test_shell_module_failure_remains_fatal(self):
+		result, commands, _ = self.run_runner(
+			"shell", modules="crm.tests.a crm.tests.b", failure="crm.tests.a"
+		)
+		self.assertEqual(result.returncode, 17)
+		self.assertFalse(any("crm.tests.b" in command for command in commands))
 
 	def test_unknown_mode_cannot_pass_without_tests(self):
 		result, commands, _ = self.run_runner("invalid")

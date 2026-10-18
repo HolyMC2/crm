@@ -116,6 +116,48 @@ both cohorts; a full-app result alone does not prove standalone operation. The
 same strict log guard rejects skipped or empty standalone results. Relocating
 the three tests does not waive them or establish native passing evidence.
 
+## Fast path and the Shell APIs job
+
+Decided in Shell SPEC §6.4 A6 (2026-10-18): shell APIs stay in crm, so crm CI must
+test them against the doco services they read, and frontend-only lanes must not wait
+for the native suite.
+
+- **Changed scope.** Server and Migration start with a `Changed scope` job that runs
+  `scripts/ci/changed_scope.py` on the diff between the candidate and its merge base
+  with `doco-dev` (a PR uses its base SHA; Migration uses `base_ref`). It skips the
+  native suite and the upgrade only when every changed path is on the fast path:
+  `frontend/**`, `docs/**`, `*.md`, `crm/locale/*.pot`, and `crm/locale/*.po` diffs
+  that only add lines. A changed or removed translation runs everything, because
+  server tests assert Spanish text (`test_pipeline_labels`, `test_form_wiring`).
+  Python, hooks, patches, doctypes, fixtures, `crm/public`, `crm/www`, `pyproject.toml`
+  and CI files always run Server and Migration. A run on `doco-dev` itself, an unknown
+  base or a git failure runs everything.
+- **Gates.** Each of the two workflows ends with an always-run job, `Server gate` and
+  `Migration gate`; they are the required checks in devflow's `repos.toml`.
+  `scripts/ci/gate.py` passes a job that the change did not need only when it was
+  skipped, and fails a needed job that did not succeed, a failed `Changed scope`, or a
+  failed `Undefined names (ruff)`. A cancelled run skips its gate, so devflow
+  re-dispatches it instead of reading red. The workflows have no `paths` filter: a
+  workflow that never starts leaves no check to read.
+- **What a frontend-only lane still runs.** Linters (pre-commit on all files,
+  Semgrep), Frontend (ESLint, Oxlint, production build with
+  `verify-pwa-build.mjs` and the `verify-bundle-budget.mjs` CSS/route budgets, unit
+  tests), `Undefined names (ruff)`, both gates, and devflow's local jargon guard.
+- **Shell APIs (ERPNext + doco image).** A third Server job, in parallel with the
+  native suite, runs when the diff touches `crm/api/shell*`, `crm/api/documentos*`,
+  `crm/tests/test_shell*`, `crm/tests/test_documentos*`, the shell contracts registry,
+  `scripts/ci/**`, `server-tests.yml` or the native setup action, or a test module
+  with a line starting `# ci: shell-apis` (that marker also adds the module to the
+  job). It runs `CRM_CI_MODE=shell`: the same install as Server (ERPNext, doco and the
+  rest of the app graph), the shell contracts registry copied next to CRM, then only
+  those modules. It uses `SHELL_CI_IMAGE` in `server-tests.yml`, a newer
+  `doco-bench` release digest than `CRM_CI_IMAGE`: the audited Server image predates
+  the doco services the shell boots from, so about forty shell tests skip there. The
+  job summary lists what still skips; bump the digest when the shell needs a newer
+  doco. doco is private and crm is public, so the job cannot clone doco's mainline
+  (no read token in this repository, and the self-hosted runner never serves public
+  repositories).
+
 ## Gates
 
 - **Server** installs the candidate and executes the complete discoverable
@@ -125,7 +167,8 @@ the three tests does not waive them or establish native passing evidence.
   coverage wheel is downloaded on the runner and installed offline in the test
   container; the image does not need developer-only packages. A missing coverage
   XML fails the job. Every successful run publishes a coverage artifact. The
-  existing narrow undefined-name gate remains separate.
+  existing narrow undefined-name gate remains separate and runs on every change.
+  Fast-path lanes skip the suite (see above).
 - **Migration** checks out the actual PR base SHA from this fork, installs that
   CRM revision and its native dependencies, and persists an organization, lead
   and linked activity. It replaces CRM with the candidate, checks both cached
@@ -138,7 +181,8 @@ the three tests does not waive them or establish native passing evidence.
   verification failure. Artifact collection is restricted to `.ci-results/`; its
   hidden directory is explicitly included, not other hidden checkout files.
   Manual dispatch requires a distinct `base_ref` (default `doco-dev`); comparing
-  a revision with itself fails instead of masquerading as an upgrade.
+  a revision with itself fails instead of masquerading as an upgrade. Fast-path
+  lanes skip the upgrade (see above).
 - **Frontend** runs the existing full lint, production build and unit test gates.
   `yarn test:coverage` creates `frontend/coverage/lcov.info`; that artifact is
   collected on every successful test run and its absence is an error.

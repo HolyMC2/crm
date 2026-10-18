@@ -4,7 +4,7 @@ set -euo pipefail
 site=crm-integration.localhost
 mode="${CRM_CI_MODE:-tests}"
 case "$mode" in
-  tests) source_root=/candidate ;;
+  tests | shell) source_root=/candidate ;;
   migration) source_root=/candidate/.ci-base/crm ;;
   *) echo "Unknown CRM CI mode: $mode" >&2; exit 2 ;;
 esac
@@ -17,6 +17,17 @@ copy_crm() {
   cp "$1/pyproject.toml" apps/crm/pyproject.toml
 }
 copy_crm "$source_root"
+if [ "$mode" = shell ]; then
+  # Shell APIs job: only CRM_CI_MODULES run. The contracts registry test reads the frontend copy.
+  read -r -a shell_modules <<< "${CRM_CI_MODULES:-}"
+  if [ "${#shell_modules[@]}" -eq 0 ]; then
+    echo "CRM_CI_MODULES is empty: the Shell APIs job has nothing to run" >&2
+    exit 2
+  fi
+  registry=frontend/src/vendor/muelle-shell/contracts/registry.ts
+  mkdir -p "apps/crm/$(dirname "$registry")"
+  cp "/candidate/$registry" "apps/crm/$registry"
+fi
 # Companion apps are checked out at pinned commits by the shared workflow action.
 shopt -s nullglob
 for companion in /candidate/.ci-companions/*/; do
@@ -80,6 +91,10 @@ if [ "${CRM_CI_COVERAGE:-false}" = true ]; then
   bench --site "$site" run-tests --app crm --coverage
   test -s sites/coverage.xml
   cp sites/coverage.xml /results/coverage.xml
+elif [ "$mode" = shell ]; then
+  for module in "${shell_modules[@]}"; do
+    bench --site "$site" run-tests --app crm --module "$module"
+  done
 else
   bench --site "$site" run-tests --app crm
 fi

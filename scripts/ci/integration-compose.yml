@@ -20,6 +20,7 @@ services:
     environment:
       CRM_CI_MODE: ${CRM_CI_MODE:-tests}
       CRM_CI_COVERAGE: ${CRM_CI_COVERAGE:-false}
+      CRM_CI_MODULES: ${CRM_CI_MODULES:-}
     volumes:
       - ../..:/candidate:ro
       - ${CRM_CI_RESULTS_DIR:?Set the disposable artifact directory}:/results

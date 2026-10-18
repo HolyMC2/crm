@@ -3,16 +3,12 @@ name: Migration
 # No doco-dev push trigger or nightly schedule: devflow `land` dispatches this workflow on the lane
 # branch and requires it green on the exact sha it then fast-forwards doco-dev to; a push or
 # nightly run would re-test a proven sha. Run it by hand with workflow_dispatch.
+#
+# Fast path (Shell SPEC §6.4 A6, docs/CI.md «Fast path»): `changes` skips the upgrade only when
+# every changed path is frontend, docs or added translations; Python, hooks, patches, doctypes,
+# fixtures and CI always migrate. The always-run «Migration gate» is the required check.
 on:
     pull_request:
-        paths-ignore:
-            - "**.css"
-            - "**.js"
-            - "**.md"
-            - "**.html"
-            - "**.csv"
-            - "**.po"
-            - "**.pot"
     workflow_dispatch:
         inputs:
             base_ref:
@@ -29,8 +25,29 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    changes:
+        name: Changed scope
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        outputs:
+            server: ${{ steps.scope.outputs.server }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+                  persist-credentials: false
+                  fetch-depth: 0
+                  filter: blob:none
+            - id: scope
+              name: Classify the diff against the base
+              env:
+                  BASE: ${{ github.event.pull_request.base.sha || inputs.base_ref || 'doco-dev' }}
+              run: python3 scripts/ci/changed_scope.py --base "$BASE"
+
     upgrade:
         name: Upgrade base branch -> PR
+        needs: changes
+        if: needs.changes.outputs.server == 'true'
         runs-on: ubuntu-24.04
         timeout-minutes: 60
         steps:
@@ -68,3 +85,23 @@ jobs:
                   path: .ci-results/
                   include-hidden-files: true
                   if-no-files-found: error
+
+    gate:
+        # The required check for this workflow; see server-tests.yml «Server gate».
+        name: Migration gate
+        needs: [changes, upgrade]
+        if: ${{ !cancelled() }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+                  persist-credentials: false
+                  sparse-checkout: scripts/ci/gate.py
+                  sparse-checkout-cone-mode: false
+            - name: Every job this change needs succeeded
+              run: >-
+                  python3 scripts/ci/gate.py
+                  "changes=${{ needs.changes.result }}"
+                  "upgrade=${{ needs.upgrade.result }}:${{ needs.changes.outputs.server }}"

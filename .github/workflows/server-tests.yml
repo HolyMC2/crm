@@ -3,16 +3,13 @@ name: Server
 # No doco-dev push trigger or nightly schedule: devflow `land` dispatches this workflow on the lane
 # branch and requires it green on the exact sha it then fast-forwards doco-dev to; a push or
 # nightly run would re-test a proven sha. Run it by hand with workflow_dispatch.
+#
+# Fast path (Shell SPEC §6.4 A6, docs/CI.md «Fast path»): the workflow always runs, `changes`
+# decides which jobs the diff needs, and the always-run «Server gate» is the required check. It
+# passes a path-skipped job and fails a needed job that did not succeed. No workflow-level `paths`
+# filter: a workflow that never starts leaves no check for devflow or GitHub to read.
 on:
     pull_request:
-        paths-ignore:
-            - "**.css"
-            - "**.js"
-            - "**.md"
-            - "**.html"
-            - "**.csv"
-            - "**.po"
-            - "**.pot"
     workflow_dispatch:
 
 permissions:
@@ -24,10 +21,34 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    changes:
+        name: Changed scope
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        outputs:
+            server: ${{ steps.scope.outputs.server }}
+            shell: ${{ steps.scope.outputs.shell }}
+            modules: ${{ steps.scope.outputs.modules }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+                  persist-credentials: false
+                  # Commits and trees only: enough for merge-base and --numstat.
+                  fetch-depth: 0
+                  filter: blob:none
+            - id: scope
+              name: Classify the diff against doco-dev
+              env:
+                  BASE: ${{ github.event.pull_request.base.sha || 'doco-dev' }}
+              run: python3 scripts/ci/changed_scope.py --base "$BASE"
+
     test:
         # The fork declares Frappe >=16 and ships this source-locked multi-app
         # environment. The upstream README's main/develop table is not a fork matrix.
         name: Tests (supported Frappe 16 image)
+        needs: changes
+        if: needs.changes.outputs.server == 'true'
         runs-on: ubuntu-24.04
         timeout-minutes: 60
         steps:
@@ -120,3 +141,86 @@ jobs:
                     --per-file-ignores '**/doctype/**/*.py:F821' \
                     --per-file-ignores '**/doctype/**/*.py:F722' \
                     crm
+
+    shell:
+        # Shell APIs (Shell SPEC §6.4 A6): crm/api/shell*, crm/api/documentos* and their tests
+        # (changed_scope.SHELL_PATHS, or a test module with a `# ci: shell-apis` line) run on a
+        # newer image than CRM_CI_IMAGE, so the doco services the shell boots from (purchasing,
+        # payables, Archivos, products, …) are installed and those tests run instead of skipping.
+        # CRM_CI_IMAGE stays on the image the migration contract audited (docs/CI.md). Bump
+        # SHELL_CI_IMAGE to a newer ghcr.io/holymc2/doco-bench digest when the shell needs a newer
+        # doco; the skip list in the job summary shows what this image still lacks.
+        name: Shell APIs (ERPNext + doco image)
+        needs: changes
+        if: needs.changes.outputs.shell == 'true'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 45
+        env:
+            # all-lanes-20261014 release image (tag vall-lanes-20261014-c6dbecc87552).
+            SHELL_CI_IMAGE: ghcr.io/holymc2/doco-bench@sha256:d26b30030326db1cb1c93d04fa2ec8dd887f699ac48f6147d5d0d3883bcdcf2a
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+                  persist-credentials: false
+            - uses: ./.github/actions/setup-native-environment
+              with:
+                  image: ${{ env.SHELL_CI_IMAGE }}
+                  registry-token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Shell API tests on the full app graph
+              env:
+                  CRM_CI_IMAGE: ${{ env.SHELL_CI_IMAGE }}
+                  CRM_CI_MODE: shell
+                  CRM_CI_MODULES: ${{ needs.changes.outputs.modules }}
+              run: scripts/ci/run-integration.sh
+            - name: Summarise ran and skipped tests
+              if: always()
+              env:
+                  MODULES: ${{ needs.changes.outputs.modules }}
+              run: |
+                  log=.ci-results/native.log
+                  test -f "$log" || exit 0
+                  plain=$(sed 's/\x1b\[[0-9;]*m//g' "$log")
+                  passed=$(grep -cE '^\s+✔ ' <<< "$plain" || true)
+                  skipped=$(grep -E '^\s+= ' <<< "$plain" | sed -E 's/^\s+=\s+//' || true)
+                  {
+                      echo "### Shell APIs: $passed passed, $(grep -c . <<< "$skipped" || true) skipped"
+                      echo
+                      echo "Modules: $MODULES"
+                      if [ -n "$skipped" ]; then
+                          echo
+                          echo "Skipped (the image lacks the doco service, or the test needs a richer site):"
+                          sed 's/^/- /' <<< "$skipped"
+                      fi
+                  } >> "$GITHUB_STEP_SUMMARY"
+            - name: Preserve the native log
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: shell-apis-native-log
+                  path: .ci-results/native.log
+                  if-no-files-found: ignore
+
+    gate:
+        # The required check for this workflow (devflow repos.toml [repos.crm.required_checks]).
+        # !cancelled(): a superseded run stays cancelled, so devflow re-dispatches it instead of
+        # reading a red gate.
+        name: Server gate
+        needs: [changes, test, shell, undefined-names]
+        if: ${{ !cancelled() }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+                  persist-credentials: false
+                  sparse-checkout: scripts/ci/gate.py
+                  sparse-checkout-cone-mode: false
+            - name: Every job this change needs succeeded
+              run: >-
+                  python3 scripts/ci/gate.py
+                  "changes=${{ needs.changes.result }}"
+                  "undefined-names=${{ needs.undefined-names.result }}"
+                  "test=${{ needs.test.result }}:${{ needs.changes.outputs.server }}"
+                  "shell=${{ needs.shell.result }}:${{ needs.changes.outputs.shell }}"
