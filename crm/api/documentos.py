@@ -897,7 +897,7 @@ _EDIT_TYPES = {
 }
 # Never offered in the sheet: bookkeeping the server sets, or Desk-only knobs.
 _EDIT_SKIP = {
-	"naming_series", "amended_from", "status", "title", "conversion_rate", "plc_conversion_rate",
+	"naming_series", "amended_from", "status", "conversion_rate", "plc_conversion_rate",
 	"price_list_currency", "language", "letter_head", "select_print_heading", "scan_barcode",
 	"set_posting_time", "posting_time", "is_pos", "is_return", "return_against", "update_stock",
 }
@@ -921,6 +921,9 @@ def _form_field(df, multi_company):
 	if df.fieldname in _EDIT_SKIP or df.fieldname.startswith(_DATOS_PREFIXES) or df.fetch_from:
 		return None
 	if df.fieldname == "company" and not multi_company:
+		return None
+	# A sales or purchase `title` is computed from the party; a Note's title is the worker's.
+	if df.fieldname == "title" and not df.reqd:
 		return None
 	row = {
 		"fieldname": df.fieldname,
