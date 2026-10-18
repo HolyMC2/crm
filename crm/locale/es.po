@@ -27114,8 +27114,8 @@ msgstr "Respuesta leída"
 
 #: frontend/src/pages/CompraSurtido.vue
 msgctxt "Surtido"
-msgid "{0} items created"
-msgstr "{0} artículos creados"
+msgid "Items created: {0}"
+msgstr "Artículos creados: {0}"
 
 #: frontend/src/pages/CompraSurtido.vue
 msgctxt "Surtido"

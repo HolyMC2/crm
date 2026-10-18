@@ -61,10 +61,12 @@
               @click="go(s.key)"
             >
               <span
-                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-gray-3 text-xs tabular-nums"
+                class="hidden h-6 w-6 shrink-0 items-center sm:flex justify-center rounded-full bg-surface-gray-3 text-xs tabular-nums"
                 >{{ i + 1 }}</span
               >
-              <span class="min-w-0 truncate">{{ s.label }}</span>
+              <span class="min-w-0 leading-tight sm:truncate">{{
+                s.label
+              }}</span>
             </button>
           </li>
         </ol>
@@ -761,8 +763,14 @@
                   <label class="flex items-center gap-1 text-sm">
                     {{ __('Batches', null, 'Surtido') }}
                     <select
-                      v-model="rowBatch[row.index]"
+                      :value="rowBatch[row.index] ?? ''"
                       class="h-8 rounded border border-outline-gray-2 text-sm"
+                      @change="
+                        rowBatch = {
+                          ...rowBatch,
+                          [row.index]: $event.target.value,
+                        }
+                      "
                     >
                       <option value="">—</option>
                       <option value="1">
@@ -774,8 +782,14 @@
                   <label class="flex items-center gap-1 text-sm">
                     {{ __('Serials', null, 'Surtido') }}
                     <select
-                      v-model="rowSerial[row.index]"
+                      :value="rowSerial[row.index] ?? ''"
                       class="h-8 rounded border border-outline-gray-2 text-sm"
+                      @change="
+                        rowSerial = {
+                          ...rowSerial,
+                          [row.index]: $event.target.value,
+                        }
+                      "
                     >
                       <option value="">—</option>
                       <option value="1">
@@ -1342,7 +1356,7 @@ function createItems() {
   const { rows } = readyRows(picked.value, rowBatch.value, rowSerial.value)
   act('items', 'create_items', { rows: JSON.stringify(rows) }, (out) => {
     const made = (out.created_now || []).filter((r) => r.created).length
-    toast.success(__('{0} items created', [made], 'Surtido'))
+    toast.success(__('Items created: {0}', [made], 'Surtido'))
     resetReply()
   })
 }
