@@ -24,6 +24,11 @@ export default {
       when: (record) => record.header?.docstatus === 1,
     },
   ],
+  printFormats: {
+    labels: {
+      'Request for Quotation with Item Image': 'Solicitud con fotos',
+    },
+  },
   chips: [
     {
       value: 'enviadas',

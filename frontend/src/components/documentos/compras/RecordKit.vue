@@ -66,6 +66,7 @@
         :title="`${kit.kind} ${kit.recordName.value}`"
         :subtitle="kit.scopeTitle.value"
         :url="kit.link.value"
+        :curate="kit.printFormats.value"
         @update:open="close"
         @shared="kit.onShared"
       />

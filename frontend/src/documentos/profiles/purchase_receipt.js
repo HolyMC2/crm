@@ -14,6 +14,11 @@ import { formatDate } from '@/utils/display'
 export default {
   fields: ['supplier', 'set_warehouse', 'per_billed', 'is_return', '_items'],
   panels: [CADENA_PANEL],
+  printFormats: {
+    labels: {
+      'Purchase Receipt Serial and Batch Bundle Print': 'Con series y lotes',
+    },
+  },
   chips: [
     {
       value: 'por-facturar',

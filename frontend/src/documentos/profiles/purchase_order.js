@@ -19,6 +19,18 @@ const TO_BILL = ['To Bill']
 export default {
   fields: ['supplier', 'set_warehouse', 'per_received', 'per_billed', '_items'],
   panels: [CADENA_PANEL],
+  printFormats: {
+    first: 'Orden de compra',
+    hide: ['Drop Shipping Format'],
+    labels: {
+      'Purchase Order Standard': 'Orden sencilla',
+      'Purchase Order with Item Image': 'Orden con fotos',
+    },
+    hints: {
+      'Orden de compra': 'La que mandas al proveedor',
+      'Purchase Order with Item Image': 'Cada artículo con su foto',
+    },
+  },
   chips: [
     {
       value: 'por-recibir',

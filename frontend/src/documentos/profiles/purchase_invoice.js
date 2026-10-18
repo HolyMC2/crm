@@ -26,6 +26,14 @@ export default {
   fields: ['supplier', 'bill_no', 'is_return', 'on_hold', '_items'],
   panels: [CADENA_PANEL],
   owedLabel: 'Por pagar',
+  printFormats: {
+    first: 'Purchase Invoice Standard',
+    hide: ['Purchase Auditing Voucher', 'Purchase eInvoice'],
+    labels: {
+      'Purchase Invoice Standard': 'Factura sencilla',
+      'Purchase Invoice with Item Image': 'Factura con fotos',
+    },
+  },
   chips: [
     {
       value: 'por-pagar',

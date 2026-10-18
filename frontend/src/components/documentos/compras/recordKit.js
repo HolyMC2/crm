@@ -310,6 +310,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
     kind,
     record,
     stages,
+    printFormats: computed(() => profile.value?.printFormats || null),
     tools,
     busy,
     open,

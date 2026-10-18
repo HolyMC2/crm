@@ -14,6 +14,12 @@ import {
 export default {
   fields: ['party_type', 'party', 'mode_of_payment', 'reference_no'],
   panels: [CADENA_PANEL],
+  printFormats: {
+    first: 'Bank and Cash Payment Voucher',
+    // CFDI payment complements are for money received, not paid.
+    hide: ['Complemento de Pago 2.0'],
+    labels: { 'Bank and Cash Payment Voucher': 'Comprobante de pago' },
+  },
   chips: [
     {
       value: 'hechos',
