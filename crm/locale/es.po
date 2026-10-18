@@ -26506,3 +26506,8 @@ msgstr "Ábrelo en una computadora"
 #: frontend/src/components/shell/DesktopOnly.vue
 msgid "This section needs a wider screen. Open Muelle on a computer to use it."
 msgstr "Esta sección necesita una pantalla más ancha. Abre Muelle en una computadora para usarla."
+
+#: frontend/src/components/ventas/CommercialDocsPanel.vue
+msgctxt "Commercial document"
+msgid "Resume"
+msgstr "Reanudar"

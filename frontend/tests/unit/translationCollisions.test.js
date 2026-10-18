@@ -62,12 +62,31 @@ describe('translation collisions (S1.4)', () => {
     expect(missing).toEqual([])
   })
 
+  it('msgids another app translates differently are never called bare', () => {
+    // Frappe merges every app's catalog: a bare «Resume» became «Currículum».
+    const ALWAYS_WITH_CONTEXT = ['Resume']
+    // Archivos owns ConnectorCard; its context hunk is with ARC.
+    const PENDING = new Set([
+      'components/archivos/conectores/ConnectorCard.vue',
+    ])
+    const bareCalls = []
+    for (const file of files(SRC)) {
+      const path = relative(SRC, file)
+      if (PENDING.has(path)) continue
+      const src = readFileSync(file, 'utf8')
+      for (const msgid of ALWAYS_WITH_CONTEXT)
+        if (new RegExp(`\\b__\\(\\s*['"]${msgid}['"]\\s*\\)`).test(src))
+          bareCalls.push(`${path} → ${msgid}`)
+    }
+    expect(bareCalls).toEqual([])
+  })
+
   it('bare msgids that collide keep the reviewed Spanish', () => {
     // «Collapse» was «Colapso» (a breakdown) on the sidebar's toggle.
     expect(bare.get('Collapse')).toBe('Contraer')
-    // «Resume» is always «Reanudar» (a paused connector, a held order);
-    // a summary is «Resumen» (msgid «Summary»), never this msgid.
-    expect(bare.get('Resume')).toBe('Reanudar')
+    // «Resume» means «Reanudar» here, but other apps' catalogs answer the
+    // bare msgid with «Currículum» at runtime: callers carry a context.
+    expect(withContext.get('Resume:Commercial document')).toBe('Reanudar')
     expect(bare.get('Lines')).toBe('Partidas')
     expect(withContext.get('Lines:Captura')).toBe('Renglones')
     expect(withContext.get('Lines:Resultados')).toBe('Partidas')

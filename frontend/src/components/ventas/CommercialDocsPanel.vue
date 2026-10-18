@@ -277,7 +277,7 @@
                   size="sm"
                   variant="solid"
                   class="min-h-11 sm:min-h-7"
-                  :label="__('Resume')"
+                  :label="__('Resume', null, 'Commercial document')"
                   :loading="busyKey === rowKey(row)"
                   @click="confirmAsked(row)"
                 />
