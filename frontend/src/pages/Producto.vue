@@ -5,7 +5,8 @@
     <div
       class="mx-auto w-full max-w-7xl px-4 pb-28 pt-3 sm:px-6 sm:pb-10 lg:px-8"
     >
-      <nav class="mb-2 flex flex-wrap items-center gap-2">
+      <!-- On a phone the shell's app bar has the back arrow (meta.listParent). -->
+      <nav v-if="!isPhone" class="mb-2 flex flex-wrap items-center gap-2">
         <button
           class="flex min-h-11 items-center gap-1 rounded-md pr-2 text-sm text-ink-gray-7 hover:text-ink-gray-9 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
           @click="goBack"
@@ -113,26 +114,32 @@
           </div>
 
           <div class="min-w-0">
+            <h1
+              class="break-words text-2xl font-semibold leading-tight text-ink-gray-9 [text-wrap:balance]"
+            >
+              {{ product.item_name || product.name }}
+            </h1>
+            <!-- Where it lives: one line under the name, in the group's own
+                 case; the parents shorten first, the nearest group stays. -->
             <nav
               v-if="groupPath.length"
               :aria-label="__('Product group')"
-              class="flex flex-wrap items-center gap-x-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5"
+              class="mt-1 flex min-w-0 items-center gap-x-1 whitespace-nowrap text-sm text-ink-gray-6"
+              data-group-path
             >
               <template v-for="(group, index) in groupPath" :key="group">
-                <span v-if="index" aria-hidden="true">›</span>
+                <span v-if="index" class="shrink-0" aria-hidden="true">›</span>
                 <RouterLink
                   :to="groupRoute(group)"
-                  class="rounded hover:text-ink-gray-8 hover:underline"
+                  class="min-w-0 truncate rounded hover:text-ink-gray-8 hover:underline"
+                  :class="
+                    index === groupPath.length - 1 ? 'shrink-0 max-w-full' : ''
+                  "
                   :title="__('See the products of {0}', [group])"
                   >{{ group }}</RouterLink
                 >
               </template>
             </nav>
-            <h1
-              class="mt-1 break-words text-2xl font-semibold leading-tight text-ink-gray-9"
-            >
-              {{ product.item_name || product.name }}
-            </h1>
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span
                 v-if="kind"
@@ -200,7 +207,35 @@
                 __('Brand: {0}', [product.brand])
               }}</span>
             </p>
-            <div class="mt-4 flex flex-wrap gap-2">
+            <!-- Phone (Records 3): the actions are equal tonal pills with the
+                 label under each, sharing the row. -->
+            <div
+              v-if="isPhone"
+              class="mt-4 flex flex-wrap gap-x-2 gap-y-3"
+              data-hero-pills
+            >
+              <component
+                :is="entry.href ? 'a' : 'button'"
+                v-for="entry in heroActions"
+                :key="entry.key"
+                :href="entry.href || undefined"
+                :type="entry.href ? undefined : 'button'"
+                class="flex min-w-0 flex-[1_1_64px] flex-col items-center gap-1.5 rounded-lg text-center text-xs leading-tight text-ink-gray-8 [text-wrap:balance] focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink-blue-link"
+                :class="entry.href || entry.enabled ? '' : 'opacity-60'"
+                :title="entry.title || entry.reason || undefined"
+                :data-action="entry.key"
+                @click="entry.href ? null : run(entry)"
+              >
+                <span
+                  class="flex h-11 w-full items-center justify-center rounded-full bg-surface-gray-2 text-ink-gray-9 active:bg-surface-gray-3"
+                  aria-hidden="true"
+                >
+                  <FeatherIcon :name="entry.icon" class="h-5 w-5" />
+                </span>
+                {{ entry.label }}
+              </component>
+            </div>
+            <div v-else class="mt-4 flex flex-wrap gap-2">
               <template v-for="entry in heroActions" :key="entry.key">
                 <a
                   v-if="entry.href"
@@ -1516,6 +1551,7 @@ import VariantGrid from '@/components/productos/VariantGrid.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import LabelDialog from '@/components/productos/LabelDialog.vue'
 import { unitLabel } from '@/utils/display'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import { priceListLabel } from '@/utils/priceList'
 import { hoyLive } from '@/composables/useHoy'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'

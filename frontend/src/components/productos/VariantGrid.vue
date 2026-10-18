@@ -42,7 +42,7 @@
       <label
         v-for="facet in attributes"
         :key="facet.attribute"
-        class="flex min-w-[9rem] flex-col gap-1 text-xs"
+        class="flex w-full min-w-[9rem] flex-col gap-1 text-xs sm:w-auto"
       >
         <span class="text-ink-gray-6">{{ facet.attribute }}</span>
         <select
@@ -89,6 +89,23 @@
           : __('This template has no active variants yet.', null, 'Productos')
       }}
     </p>
+    <!-- Phone: flat rows (name, model, stock and price), no code line. -->
+    <ul
+      v-else-if="isPhone"
+      class="divide-y divide-outline-gray-1 border-t border-outline-gray-1"
+      :aria-busy="loading ? 'true' : 'false'"
+      data-variant-rows
+    >
+      <li v-for="(row, index) in rows" :key="row.name" class="min-w-0">
+        <CatalogItem
+          :row="row"
+          :to="productRoute(row, list)"
+          :eager="index < 6"
+          :detail="attributesText(row)"
+          hide-code
+        />
+      </li>
+    </ul>
     <ul
       v-else
       class="grid gap-3 px-4 pb-4 sm:grid-cols-2 xl:grid-cols-3"
@@ -118,6 +135,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Button, FeatherIcon } from 'frappe-ui'
 import CatalogItem from '@/components/productos/CatalogItem.vue'
+import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
   problemOf,
   productRoute,

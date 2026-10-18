@@ -67,7 +67,7 @@
       <span class="block truncate text-sm font-medium text-ink-gray-9">{{
         row.title
       }}</span>
-      <span class="block truncate text-xs text-ink-gray-6">
+      <span v-if="!hideCode" class="block truncate text-xs text-ink-gray-6">
         <span class="font-mono">{{ row.name }}</span>
         <span v-if="groupOf(row)" class="lg:hidden"> · {{ groupOf(row) }}</span>
       </span>
@@ -126,6 +126,8 @@ const props = defineProps({
   eager: { type: Boolean, default: false },
   showStock: { type: Boolean, default: true },
   detail: { type: String, default: '' },
+  // A template's variant row: the code and group repeat the template's.
+  hideCode: { type: Boolean, default: false },
   // Extra price lists under the default one («Precios que se muestran»):
   // `tierLines(row, lists)`.
   tiers: { type: Array, default: () => [] },

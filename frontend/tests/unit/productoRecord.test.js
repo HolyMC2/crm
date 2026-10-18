@@ -192,6 +192,44 @@ describe('Producto', () => {
     expect(text).not.toContain('Cost and margin')
   })
 
+  it('on a phone: no in-page back link, one group line, actions as pills', async () => {
+    const width = window.innerWidth
+    const setWidth = (value) => {
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        writable: true,
+        value,
+      })
+      window.dispatchEvent(new Event('resize'))
+    }
+    setWidth(400)
+    try {
+      await mountAt('/productos/ABIBMEX000130')
+      // The shell app bar carries the back arrow (meta.listParent).
+      expect(
+        [...root.querySelectorAll('button')].some((b) =>
+          b.textContent.includes('Productos'),
+        ),
+      ).toBe(false)
+      const path = root.querySelector('[data-group-path]')
+      expect(path.className).not.toMatch(/uppercase/)
+      expect([...path.querySelectorAll('a')].map((a) => a.textContent)).toEqual(
+        ['Recargas y Tiempo Aire', 'Recargas'],
+      )
+      // The group line follows the name.
+      const h1 = root.querySelector('h1')
+      expect(
+        h1.compareDocumentPosition(path) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+      const pills = [
+        ...root.querySelectorAll('[data-hero-pills] [data-action]'),
+      ].map((el) => el.dataset.action)
+      expect(pills).toEqual(['price', 'edit', 'labels'])
+    } finally {
+      setWidth(width)
+    }
+  })
+
   it('cost and margin only when the server sends them', async () => {
     record.cost = {
       last_cost: 80,
