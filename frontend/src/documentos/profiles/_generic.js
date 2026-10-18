@@ -27,6 +27,30 @@ export function titleOf(row, doctype) {
   return kindLabel(doctype) || 'Documento'
 }
 
+// A document with no status field of its own, in the masculine (un movimiento, un ajuste).
+const CONFIRM_WORDS = {
+  Draft: 'Borrador',
+  Submitted: 'Confirmado',
+  Cancelled: 'Cancelado',
+}
+
+/** Borrador · Confirmado · Cancelado by docstatus: `{ status, statusLabel, tone }`. */
+export function confirmState(doc) {
+  const d = Number(doc?.docstatus) || 0
+  const status = d === 2 ? 'Cancelled' : d === 1 ? 'Submitted' : 'Draft'
+  return {
+    status,
+    statusLabel: CONFIRM_WORDS[status],
+    tone: statusTone(status),
+  }
+}
+
+/** «Centro - D» → «Centro»: a warehouse without ERPNext's « - <company abbr>» suffix. */
+export function storeName(warehouse) {
+  const text = String(warehouse || '').trim()
+  return text.replace(/\s+-\s+[^\s-]{1,12}$/u, '') || text
+}
+
 /** «Vence mañana» / «Venció hace 3 días» for a due date (formatDue's words). */
 export function dueLine(due) {
   return due ? formatDue(due).label : ''

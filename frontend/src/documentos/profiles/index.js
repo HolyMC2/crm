@@ -9,6 +9,8 @@ import { genericProfile } from './_generic'
 const CURATED = {
   'Sales Invoice': () => import('./sales_invoice.js'),
   Quotation: () => import('./quotation.js'),
+  'Stock Entry': () => import('./stock_entry.js'),
+  'Stock Reconciliation': () => import('./stock_reconciliation.js'),
 }
 
 /** The merged profile for a registry entry (or a bare doctype on the floor). */

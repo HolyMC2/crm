@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   conteoReviewUrl,
   decodeSelection,
-  deskReconciliationUrl,
+  reconciliationUrl,
   encodeSelection,
   escanerDone,
   healthChips,
@@ -157,8 +157,8 @@ describe('Escáner links carry the way back', () => {
     expect(url.pathname).toBe('/scan/conteo/revision/CC-1')
     expect(url.searchParams.get('row')).toBe('r1')
     expect(url.searchParams.get('wh')).toBe(W)
-    expect(deskReconciliationUrl('MAT-RECO-1')).toBe(
-      '/app/stock-reconciliation/MAT-RECO-1',
+    expect(reconciliationUrl('MAT-RECO-1')).toBe(
+      '/crm/inventario/ajustes/MAT-RECO-1',
     )
   })
   it('says what came back from Escáner', () => {
@@ -231,7 +231,10 @@ describe('row actions', () => {
     expect(keys({ ...task, can_manage: false })).toEqual(['open-task'])
     expect(
       rowActions({ kind: 'reconciliation', name: 'MAT-RECO-1' }, { back })[0],
-    ).toMatchObject({ key: 'desk', external: true })
+    ).toMatchObject({
+      key: 'ajuste',
+      href: '/crm/inventario/ajustes/MAT-RECO-1',
+    })
   })
 })
 

@@ -1,3 +1,4 @@
+import { documentRoute } from '@/documentos/registry'
 import { ref } from 'vue'
 import { errorKind } from '@/utils/contactos'
 import {
@@ -156,8 +157,9 @@ export function documentLink(doctype, name) {
     return { to: { name: 'CompraOrden', params: { name } } }
   if (doctype === 'Material Request')
     return { to: { name: 'CompraSolicitud', params: { name } } }
-  const slug = String(doctype).trim().toLowerCase().replace(/\s+/g, '-')
-  return { href: `/app/${slug}/${encodeURIComponent(name)}` }
+  // Every other document opens in the shell's Documentos (never /app/, §1.5).
+  const to = documentRoute(doctype, name)
+  return to ? { to } : null
 }
 
 // The whole history in Desk, past the rows the page carries: the item's
@@ -475,11 +477,11 @@ export function conteoReviewUrl({ task, warehouse, row }, back) {
   )
 }
 
-/** ERPNext owns stock documents: a draft reconciliation opens in Desk. */
-export function deskReconciliationUrl(name) {
+/** A stock reconciliation opens in Inventario's «Ajustes» (Shell D4.3), never in Desk. */
+export function reconciliationUrl(name) {
   return name
-    ? `/app/stock-reconciliation/${encodeURIComponent(name)}`
-    : '/app/stock-reconciliation/new'
+    ? `/crm/inventario/ajustes/${encodeURIComponent(name)}`
+    : '/crm/inventario/ajustes/nuevo'
 }
 
 // ── Inventario lists: URL state, selection and the way back ────────────────
@@ -744,10 +746,9 @@ export function rowActions(row, { back, caps = {} } = {}) {
       })
   } else if (row.kind === 'reconciliation') {
     actions.push({
-      key: 'desk',
-      label: tr('Open in Desk'),
-      href: deskReconciliationUrl(row.name),
-      external: true,
+      key: 'ajuste',
+      label: tr('Open the adjustment'),
+      href: reconciliationUrl(row.name),
     })
   } else if (row.kind === 'task') {
     if (scanner)

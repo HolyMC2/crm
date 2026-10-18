@@ -757,17 +757,15 @@
                         )
                       }}</span>
                       <span v-if="data.inventory?.stock_adjust" class="block">
-                        {{
-                          __(
-                            'If it is already counted, you may adjust it in Desk:',
-                          )
-                        }}
-                        <a
-                          :href="deskReconciliationUrl()"
-                          target="_blank"
-                          rel="noopener"
+                        {{ __('If it is already counted, you may adjust it:') }}
+                        <RouterLink
+                          :to="{
+                            path: '/inventario/ajustes/nuevo',
+                            query: { set_warehouse: row.warehouse },
+                          }"
                           class="underline"
-                          >{{ __('New stock reconciliation') }}</a
+                          data-producto-ajuste
+                          >{{ __('New stock reconciliation') }}</RouterLink
                         >
                       </span>
                       <span v-else class="block text-ink-gray-7">{{
@@ -1450,7 +1448,6 @@ import { shellBoot } from '@/composables/muelleShell'
 import { useLiveWatch } from '@/vendor/muelle-shell/live-sync/vue'
 import {
   backTarget,
-  deskReconciliationUrl,
   documentLink,
   escanerDone,
   groupRoute,

@@ -367,12 +367,12 @@ const context = computed(() =>
 const backTarget = computed(() =>
   state.value.articulo
     ? { name: 'Producto', params: { item: state.value.articulo } }
-    : { name: 'Productos' },
+    : { name: 'Inventario' },
 )
 const backLabel = computed(() =>
   state.value.articulo
     ? __('Back to the product', null, CTX)
-    : __('Back to Productos', null, CTX),
+    : __('Back to Inventario', null, CTX),
 )
 const groups = computed(() => groupByDay(rows.value))
 // A worker with one store reads its name once, not on every row.

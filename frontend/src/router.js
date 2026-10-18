@@ -292,17 +292,10 @@ const routes = [
     meta: { app: 'productos', title: 'Productos', stableKey: true },
   },
   {
-    // Kardex (Shell D4.1). Moves to /inventario/movimientos once the
-    // inventario module (D1.1) is on mainline.
+    // The kardex lived here until Inventario (Shell D4.1 → D4.3); old links
+    // (assistant answers, bookmarks) keep their filters.
     path: '/productos/movimientos',
-    name: 'InventarioMovimientos',
-    component: () => import('@/pages/InventarioMovimientos.vue'),
-    meta: {
-      app: 'productos',
-      title: 'Movimientos',
-      listParent: 'Productos',
-      ownPhoneHeader: true,
-    },
+    redirect: (to) => ({ name: 'InventarioMovimientos', query: to.query }),
   },
   {
     path: '/productos/:item',
@@ -460,6 +453,19 @@ const routes = [
     name: 'Inventario',
     component: () => import('@/pages/DocumentosHub.vue'),
     meta: { app: 'inventario', title: 'Inventario', ownPhoneHeader: true },
+  },
+  {
+    // Kardex (Shell D4.1, DD10): before /inventario/:slug so «movimientos»
+    // is never read as a document list.
+    path: '/inventario/movimientos',
+    name: 'InventarioMovimientos',
+    component: () => import('@/pages/InventarioMovimientos.vue'),
+    meta: {
+      app: 'inventario',
+      title: 'Movimientos',
+      listParent: 'Inventario',
+      ownPhoneHeader: true,
+    },
   },
   ...documentosRoutes('/inventario/:slug', 'InventarioLista', 'inventario'),
   {

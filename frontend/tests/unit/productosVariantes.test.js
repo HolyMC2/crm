@@ -38,7 +38,7 @@ describe('Productos variants and the product page lists', () => {
     expect(visibleRows(undefined, false)).toEqual([])
   })
 
-  it('opens purchases in Compras and every other document in Desk', () => {
+  it('opens purchases in Compras and every other document in Documentos', () => {
     expect(documentLink('Purchase Order', 'PO-1')).toEqual({
       to: { name: 'CompraOrden', params: { name: 'PO-1' } },
     })
@@ -46,10 +46,13 @@ describe('Productos variants and the product page lists', () => {
       to: { name: 'CompraSolicitud', params: { name: 'MR-1' } },
     })
     expect(documentLink('Sales Invoice', 'ACC-SINV-2026/1')).toEqual({
-      href: '/app/sales-invoice/ACC-SINV-2026%2F1',
+      to: { path: '/documentos/facturas/ACC-SINV-2026%2F1' },
     })
-    expect(documentLink('Stock Reconciliation', 'MAT-RECO-1').href).toBe(
-      '/app/stock-reconciliation/MAT-RECO-1',
+    expect(documentLink('Stock Reconciliation', 'MAT-RECO-1').to).toEqual({
+      path: '/inventario/ajustes/MAT-RECO-1',
+    })
+    expect(documentLink('Journal Entry', 'JV-1').to.path).not.toMatch(
+      /^\/app\//,
     )
     expect(documentLink('', 'X')).toBeNull()
     expect(ledgerReportUrl('IPN 1')).toBe(

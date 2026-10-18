@@ -35,6 +35,42 @@
             data-testid="documentos-hub-row"
           />
         </section>
+        <!-- Inventario's stores (Shell D4.3): what each holds; the value only
+             for whoever may see cost. A row opens the store's movements. -->
+        <section
+          v-if="!isDocumentos && stores.length"
+          aria-labelledby="hub-almacenes"
+          data-testid="inventario-stores"
+        >
+          <h2
+            id="hub-almacenes"
+            class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-6"
+          >
+            Almacenes
+          </h2>
+          <ListRow
+            v-for="store in stocked"
+            :key="store.warehouse"
+            icon="lucide-warehouse"
+            :title="store.label"
+            :subtitle="storeLine(store)"
+            :meta="store.value === undefined ? '' : formatMoney(store.value)"
+            :to="{
+              name: 'InventarioMovimientos',
+              query: { almacen: store.warehouse },
+            }"
+            data-testid="inventario-store"
+          />
+          <!-- Empty stores are one row, not a wall (the lab mirror has dozens). -->
+          <ListRow
+            v-if="emptyStores"
+            icon="lucide-warehouse"
+            :title="`${emptyStores} ${emptyStores === 1 ? 'almacén' : 'almacenes'} sin existencias`"
+            subtitle="Ver todos los almacenes"
+            :to="floorRoute('Warehouse')"
+            data-testid="inventario-stores-empty"
+          />
+        </section>
         <section
           v-if="isDocumentos && enabled"
           aria-labelledby="hub-todos"
@@ -93,6 +129,7 @@ import {
   readableDoctypes,
 } from '@/documentos/registry'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
+import { formatMoney } from '@/utils/display'
 
 const route = useRoute()
 const phone = isMobile
@@ -106,6 +143,17 @@ const moduleLabel = computed(() =>
 const enabled = computed(() => moduleEnabled(shellBoot.value, moduleKey.value))
 
 const stats = ref({})
+const stores = ref([])
+// Stores that hold stock, the most valuable (else the fullest) first.
+const stocked = computed(() =>
+  stores.value
+    .filter((store) => store.items > 0)
+    .sort(
+      (a, b) =>
+        (Number(b.value) || 0) - (Number(a.value) || 0) || b.items - a.items,
+    ),
+)
+const emptyStores = computed(() => stores.value.length - stocked.value.length)
 const typeSearch = ref('')
 const types = ref([])
 const typesLoading = ref(false)
@@ -134,7 +182,39 @@ const groups = computed(() => {
           to: listRoute(p),
         }
       })
-      if (group.key === 'inventario' && readable.has('Warehouse'))
+      // Inventario's own pages (Shell D4.3): who moved what, and what to reorder.
+      if (group.key === 'inventario' && readable.has('Stock Ledger Entry'))
+        items.unshift({
+          key: 'movimientos',
+          icon: 'lucide-history',
+          label: 'Movimientos',
+          subtitle: 'Quién movió qué, y cuándo',
+          to: { name: 'InventarioMovimientos' },
+        })
+      if (
+        group.key === 'inventario' &&
+        moduleEnabled(shellBoot.value, 'productos')
+      )
+        items.push({
+          key: 'bajo-minimo',
+          icon: 'lucide-trending-down',
+          label: 'Bajo mínimo',
+          subtitle: 'Artículos por debajo de su nivel de reorden',
+          to: {
+            name: 'Productos',
+            query: {
+              vista: 'bajo-minimo',
+              return_to: '/crm/inventario',
+              return_label: 'Inventario',
+            },
+          },
+        })
+      // The Inventario hub lists each store below; Documentos keeps one row.
+      if (
+        group.key === 'inventario' &&
+        readable.has('Warehouse') &&
+        (isDocumentos.value || !stores.value.length)
+      )
         items.push({
           key: 'almacenes',
           icon: 'lucide-warehouse',
@@ -161,6 +241,25 @@ async function loadStats() {
     }
   }
   stats.value = out
+  if (!isDocumentos.value) loadStores()
+}
+
+/** «12 productos · 340 piezas» (a store with nothing says so). */
+function storeLine(store) {
+  if (!store.items) return 'Sin existencias'
+  const products = `${store.items.toLocaleString('es-MX')} ${store.items === 1 ? 'producto' : 'productos'}`
+  const units = Number(store.units) || 0
+  return `${products} · ${units.toLocaleString('es-MX')} ${units === 1 ? 'pieza' : 'piezas'}`
+}
+
+async function loadStores() {
+  try {
+    const { kardexApi } = await import('@/components/inventario/kardex')
+    const answer = await kardexApi('stores')
+    stores.value = answer?.readable ? answer.rows || [] : []
+  } catch {
+    stores.value = [] // the hub keeps its one «Almacenes» row
+  }
 }
 
 let timer = null

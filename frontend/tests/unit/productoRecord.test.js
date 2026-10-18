@@ -110,7 +110,7 @@ async function mountAt(path) {
         component: { render: () => null },
       },
       {
-        path: '/productos/movimientos',
+        path: '/inventario/movimientos',
         name: 'InventarioMovimientos',
         component: { render: () => null },
       },
@@ -325,7 +325,7 @@ describe('Producto', () => {
     expect(list.querySelector('a[href^="/app/"]')).toBeNull()
     const all = root.querySelector('[data-producto-movements-all]')
     expect(all.getAttribute('href')).toBe(
-      '/crm/productos/movimientos?articulo=ABIBMEX000130',
+      '/crm/inventario/movimientos?articulo=ABIBMEX000130',
     )
   })
 

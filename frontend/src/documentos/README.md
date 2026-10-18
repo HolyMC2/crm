@@ -100,9 +100,13 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
   (the seller: `[['Sales Team', 'sales_person', '=', value]]`, a child table).
 
 `row` input (from `rows`): `{ name, title, status, docstatus, amount, currency, date, due,
-outstanding, modified, fields }`. Dates are ISO strings; format them with `utils/display.js`
+outstanding, modified, fields }`, plus `lines` (the item row count) when `DISPLAY` names a `lines`
+table (Ajustes). Dates are ISO strings; format them with `utils/display.js`
 (`formatDate`, `formatDue`, `formatMoney`, `statusLabel`, `statusTone`, `kindLabel`). Never show
 `row.name` as the title (`titleOf(row, doctype)` from `_generic.js` falls back to the kind).
+`_generic.js` also has `storeName` («Centro - D» → «Centro») and `confirmState` (Borrador ·
+Confirmado · Cancelado for doctypes without a status field: the Inventario profiles).
+`DISPLAY[...]['stock']` titles stock documents on the server the same way (`_stock_title`).
 
 `record` input (from `record`): `{ doctype, name, label, submittable, header, items, taxes, totals,
 fields, actions, activity, connections, modified, doc }`. `actions[key] = { allowed, reason }` for

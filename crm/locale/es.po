@@ -18236,7 +18236,7 @@ msgstr "Si ya está contado, puedes ajustarlo en el escritorio:"
 
 #: frontend/src/pages/Productos.vue
 msgid "New stock reconciliation"
-msgstr "Nueva conciliación de inventario"
+msgstr "Nuevo ajuste de inventario"
 
 #: frontend/src/pages/Productos.vue
 msgid "Setting the stock directly needs the Stock Reconciliation permission (stock manager); counting it does not."
@@ -26676,6 +26676,10 @@ msgid "Back to Productos"
 msgstr "Volver a Productos"
 
 msgctxt "Inventario"
+msgid "Back to Inventario"
+msgstr "Volver a Inventario"
+
+msgctxt "Inventario"
 msgid "You cannot see stock movements"
 msgstr "No puedes ver los movimientos de inventario"
 
@@ -27486,3 +27490,47 @@ msgstr "Escribe primero el comentario."
 #: crm/api/documentos.py
 msgid "Someone changed this document while you were editing it. Open it again to see their changes."
 msgstr "Alguien cambió este documento mientras lo editabas. Ábrelo de nuevo para ver sus cambios."
+
+#: frontend/src/pages/Producto.vue
+msgid "If it is already counted, you may adjust it:"
+msgstr "Si ya está contado, puedes ajustarlo:"
+
+#: frontend/src/composables/useProductos.js
+msgid "Open the adjustment"
+msgstr "Abrir el ajuste"
+
+#: crm/api/documentos.py
+msgid "Stock in"
+msgstr "Entrada"
+
+#: crm/api/documentos.py
+msgid "Stock out"
+msgstr "Salida"
+
+#: crm/api/documentos.py
+msgid "Stock consumption"
+msgstr "Consumo"
+
+#: crm/api/documentos.py
+msgid "Stock transfer"
+msgstr "Traspaso"
+
+#: crm/api/documentos.py
+msgid "Stock manufacture"
+msgstr "Fabricación"
+
+#: crm/api/documentos.py
+msgid "Stock repack"
+msgstr "Reempaque"
+
+#: crm/api/documentos.py
+msgid "Stock disassembly"
+msgstr "Desarmado"
+
+#: crm/api/documentos.py
+msgid "Opening stock count"
+msgstr "Inventario inicial"
+
+#: crm/api/documentos.py
+msgid "Stock count adjustment"
+msgstr "Ajuste"

@@ -18,10 +18,13 @@ import {
 import {
   docStatus,
   genericProfile,
+  storeName,
   titleOf,
 } from '@/documentos/profiles/_generic'
 import salesInvoice from '@/documentos/profiles/sales_invoice'
 import quotation from '@/documentos/profiles/quotation'
+import stockEntry from '@/documentos/profiles/stock_entry'
+import stockReconciliation from '@/documentos/profiles/stock_reconciliation'
 import { loadProfile } from '@/documentos/profiles'
 import { documentItem, documentosPlaces } from '@/documentos/palette'
 
@@ -233,11 +236,178 @@ describe('documentos profiles', () => {
     expect(row.subtitle).toMatch(/^Válida hasta /)
   })
 
+  it('a movimiento reads by purpose and stores, never its ID', () => {
+    const base = {
+      name: 'MAT-STE-2026-00012',
+      title: 'Material Transfer',
+      docstatus: 1,
+      date: '2020-03-05',
+      amount: 1250,
+      currency: 'MXN',
+    }
+    const traspaso = stockEntry.row({
+      ...base,
+      fields: {
+        purpose: 'Material Transfer',
+        from_warehouse: 'Centro - D',
+        to_warehouse: 'Bodega Norte - D',
+      },
+    })
+    expect(traspaso.title).toBe('Traspaso · Centro → Bodega Norte')
+    expect(traspaso.subtitle).toBe('Confirmado · 5 mar 2020')
+    expect(traspaso.meta).toBe('$1,250.00')
+    expect(traspaso.statusLabel).toBe('Confirmado')
+    expect(traspaso.icon).toBe('lucide-arrow-left-right')
+    const entrada = stockEntry.row({
+      ...base,
+      docstatus: 0,
+      amount: 0,
+      fields: { purpose: 'Material Receipt', to_warehouse: 'Centro - D' },
+    })
+    expect(entrada.title).toBe('Entrada · Centro')
+    expect(entrada.subtitle).toMatch(/^Borrador · /)
+    expect(entrada.meta).toBe('')
+    expect(
+      stockEntry.row({
+        ...base,
+        docstatus: 2,
+        fields: { purpose: 'Material Issue', from_warehouse: 'Bodega - D' },
+      }),
+    ).toMatchObject({ title: 'Salida · Bodega', statusLabel: 'Cancelado' })
+    expect(
+      stockEntry.row({ ...base, fields: { purpose: 'Repack' } }).title,
+    ).toBe('Reempaque')
+    expect(
+      stockEntry.row({
+        ...base,
+        fields: {
+          purpose: 'Material Consumption for Manufacture',
+          from_warehouse: 'Taller - D',
+        },
+      }).title,
+    ).toBe('Consumo · Taller')
+    // Unknown purpose and no server title: the kind, never MAT-STE-…
+    const bare = stockEntry.row({ ...base, title: '', fields: {} })
+    expect(bare.title).toBe('Movimiento de inventario')
+    for (const r of [traspaso, entrada, bare])
+      expect(r.title).not.toContain('MAT-STE')
+  })
+
+  it('a movimiento chip filters by purpose and the header names the kind', () => {
+    const chip = (v) => stockEntry.chips.find((c) => c.value === v)
+    expect(stockEntry.chips.map((c) => c.label)).toEqual([
+      'Borradores',
+      'Entradas',
+      'Salidas',
+      'Traspasos',
+      'Todas',
+    ])
+    expect(chip('traspasos').filters[1][2]).toContain(
+      'Material Transfer for Manufacture',
+    )
+    expect(chip('salidas').filters[1][2]).toContain('Material Issue')
+    const record = {
+      doctype: 'Stock Entry',
+      name: 'MAT-STE-1',
+      submittable: true,
+      header: { docstatus: 0, title: 'Traspaso · Centro → Bodega' },
+      doc: {
+        purpose: 'Send to Subcontractor',
+        from_warehouse: 'Centro - D',
+        to_warehouse: 'Maquila - D',
+      },
+    }
+    const view = stockEntry.header(record)
+    expect(view).toMatchObject({
+      title: 'Centro → Maquila',
+      kind: 'Traspaso',
+      number: 'MAT-STE-1',
+      statusLabel: 'Borrador',
+      amount: '',
+    })
+    expect(stockEntry.nextStep(record)).toMatchObject({ submit: true })
+    expect(stockEntry.stages(record).map((s) => s.current)).toEqual([
+      true,
+      false,
+    ])
+    expect(stockEntry.sections).not.toContain('totals')
+  })
+
+  it('an ajuste reads by its store and counts its rows', () => {
+    const row = stockReconciliation.row({
+      name: 'MAT-RECO-2026-00003',
+      title: 'Stock Reconciliation',
+      docstatus: 1,
+      date: '2020-03-05',
+      lines: 3,
+      fields: { purpose: 'Stock Reconciliation', set_warehouse: 'Centro - D' },
+    })
+    expect(row).toMatchObject({
+      title: 'Ajuste · Centro',
+      subtitle: 'Confirmado · 5 mar 2020',
+      meta: '3 artículos',
+    })
+    const opening = stockReconciliation.row({
+      name: 'MAT-RECO-2026-00004',
+      title: 'Opening Stock',
+      docstatus: 0,
+      date: '2020-03-05',
+      lines: 1,
+      fields: { purpose: 'Opening Stock', set_warehouse: '' },
+    })
+    expect(opening.title).toBe('Inventario inicial')
+    expect(opening.meta).toBe('1 artículo')
+    expect(
+      stockReconciliation.row({
+        name: 'MAT-RECO-2026-00001',
+        docstatus: 0,
+        fields: {},
+      }).title,
+    ).toBe('Ajuste de inventario')
+    expect(stockReconciliation.chips.map((c) => c.label)).toEqual([
+      'Borradores',
+      'Confirmados',
+      'Todos',
+    ])
+    expect(stockReconciliation.editFields).toEqual(['purpose', 'set_warehouse'])
+    expect(
+      stockReconciliation.header({
+        doctype: 'Stock Reconciliation',
+        name: 'MAT-RECO-1',
+        header: { docstatus: 2 },
+        doc: { purpose: 'Opening Stock', set_warehouse: 'Bodega - D' },
+      }),
+    ).toMatchObject({
+      title: 'Bodega',
+      kind: 'Inventario inicial',
+      statusLabel: 'Cancelado',
+    })
+  })
+
+  it('strips the company suffix from a store', () => {
+    expect(storeName('Centro - D')).toBe('Centro')
+    expect(storeName('Bodega - Norte - DM')).toBe('Bodega - Norte')
+    expect(storeName('Stores')).toBe('Stores')
+    expect(storeName(null)).toBe('')
+  })
+
   it('merges a curated profile over the generic one', async () => {
     const p = await loadProfile({ doctype: 'Sales Invoice' })
     expect(p.slug).toBe('facturas')
     expect(p.defaultChip).toBe('por-cobrar')
     expect(p.sections).toEqual(genericProfile.sections)
+    for (const [slug, doctype] of [
+      ['entradas', 'Stock Entry'],
+      ['ajustes', 'Stock Reconciliation'],
+    ]) {
+      const entry = profileBySlug(slug, '/inventario')
+      expect(entry.doctype).toBe(doctype)
+      const inv = await loadProfile({ doctype, entry })
+      expect(inv.slug).toBe(slug)
+      expect(inv.base).toBe('/inventario')
+      expect(inv.defaultChip).toBe('')
+      expect(inv.chips[0].value).toBe('borradores')
+    }
     const floor = await loadProfile({ doctype: 'ToDo' })
     expect(floor.slug).toBeNull()
     expect(floor.chips).toEqual(genericProfile.chips)

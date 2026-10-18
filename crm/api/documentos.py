@@ -116,8 +116,20 @@ DISPLAY = {
 		"outstanding": "outstanding_amount",
 		"party": ("Supplier", "supplier"),
 	},
-	"Stock Entry": {"title": ("title", "stock_entry_type"), "amount": "total_amount", "date": "posting_date"},
-	"Stock Reconciliation": {"title": ("purpose",), "date": "posting_date"},
+	# Stock documents read by what they do and where (`stock`: the fields `_stock_title` reads):
+	# «Traspaso · Centro → Bodega», «Ajuste · Centro». `lines` counts the rows of that table.
+	"Stock Entry": {
+		"title": ("stock_entry_type",),
+		"stock": ("purpose", "from_warehouse", "to_warehouse"),
+		"amount": "total_amount",
+		"date": "posting_date",
+	},
+	"Stock Reconciliation": {
+		"title": ("purpose",),
+		"stock": ("purpose", "set_warehouse"),
+		"lines": "items",
+		"date": "posting_date",
+	},
 	"Stock Ledger Entry": {"title": ("item_code",), "date": "posting_date"},
 	"Warehouse": {"title": ("warehouse_name",)},
 }
@@ -271,8 +283,11 @@ def _display(meta):
 				return name
 		return None
 
+	lines = known.get("lines")
 	return {
 		"title": title,
+		"stock": tuple(f for f in known.get("stock", ()) if meta.has_field(f)),
+		"lines": lines if lines and meta.has_field(lines) else None,
 		"status": status,
 		"amount": field("amount", () if known else ("grand_total",)),
 		"currency": field("currency", ("currency",)),
@@ -291,8 +306,66 @@ def _list_fields(meta):
 	return fields[:6]
 
 
+_ABBR = re.compile(r"\s+-\s+[^\s-]{1,12}$")
+# Stock Entry purposes that only add stock, and those that only take it.
+_STOCK_IN = {"Material Receipt", "Receive from Customer"}
+_STOCK_OUT = {
+	"Material Issue",
+	"Material Consumption for Manufacture",
+	"Return Raw Material to Customer",
+	"Subcontracting Delivery",
+}
+
+
+def _store(warehouse):
+	"""«Centro - D» → «Centro»: a warehouse without ERPNext's company suffix."""
+	text = cstr(warehouse).strip()
+	return _ABBR.sub("", text) or text
+
+
+def _stock_word(purpose):
+	"""The worker's word for a stock document's purpose (frontend profiles say the same)."""
+	return {
+		"Material Receipt": _("Stock in"),
+		"Receive from Customer": _("Stock in"),
+		"Material Issue": _("Stock out"),
+		"Return Raw Material to Customer": _("Stock out"),
+		"Subcontracting Delivery": _("Stock out"),
+		"Material Consumption for Manufacture": _("Stock consumption"),
+		"Material Transfer": _("Stock transfer"),
+		"Material Transfer for Manufacture": _("Stock transfer"),
+		"Send to Subcontractor": _("Stock transfer"),
+		"Manufacture": _("Stock manufacture"),
+		"Repack": _("Stock repack"),
+		"Disassemble": _("Stock disassembly"),
+		"Opening Stock": _("Opening stock count"),
+		"Stock Reconciliation": _("Stock count adjustment"),
+	}.get(cstr(purpose))
+
+
+def _stock_title(doc):
+	"""«Traspaso · Centro → Bodega», «Entrada · Centro», «Ajuste · Bodega»: what the stock
+	document does and where, never its ID; '' when the purpose is unknown."""
+	purpose = cstr(doc.get("purpose"))
+	word = _stock_word(purpose)
+	if not word:
+		return ""
+	source, target = _store(doc.get("from_warehouse")), _store(doc.get("to_warehouse"))
+	if purpose in _STOCK_IN:
+		where = target
+	elif purpose in _STOCK_OUT:
+		where = source
+	elif source and target and source != target:
+		where = f"{source} → {target}"
+	else:
+		where = target or source or _store(doc.get("set_warehouse"))
+	return f"{word} · {where}" if where else word
+
+
 def _row(doc, display):
 	title = next((cstr(doc.get(f)).strip() for f in display["title"] if cstr(doc.get(f)).strip()), "")
+	if display.get("stock"):
+		title = _stock_title(doc) or title
 	return {
 		"name": doc.name,
 		"title": title,
@@ -337,6 +410,25 @@ def _party_titles(doctype, docs, rows):
 			row["title"] = cstr(titles.get((party_type, doc.get(spec[1])))).strip()
 
 
+def _line_counts(meta, display, rows):
+	"""`row.lines` for a list that counts its rows («3 artículos» on an Ajuste): one grouped
+	query on the child table, only for the parents the worker could already list."""
+	if not display["lines"] or not rows:
+		return
+	from crm.api.doc import COUNT_NAME
+
+	field = display["lines"]
+	found = frappe.get_all(
+		meta.get_field(field).options,
+		filters={"parenttype": meta.name, "parentfield": field, "parent": ["in", [r["name"] for r in rows]]},
+		fields=["parent", COUNT_NAME],
+		group_by="parent",
+	)
+	counts = {r.parent: cint(r.total_count) for r in found}
+	for row in rows:
+		row["lines"] = counts.get(row["name"], 0)
+
+
 def _parse(value, default):
 	if value in (None, ""):
 		return default
@@ -359,6 +451,7 @@ def _order_by(meta, display, order_by):
 def _wanted_fields(meta, display, extra):
 	fields = {"name", "docstatus", "modified"}
 	fields.update(display["title"])
+	fields.update(display["stock"])
 	for key in ("status", "amount", "currency", "date", "due", "outstanding"):
 		if display[key]:
 			fields.add(display[key])
@@ -435,6 +528,7 @@ def rows(
 	_party_titles(doctype, found[:limit], out)
 	if "_items" in (_parse(fields, []) or []):
 		_items_summary(meta, out)
+	_line_counts(meta, display, out)
 	return {
 		"rows": out,
 		"has_more": len(found) > limit,
@@ -1253,19 +1347,36 @@ def _apply_rows(doc, table, rows):
 def _apply(doc, values):
 	meta = doc.meta
 	table = _items_table(meta)
-	for fieldname, value in (values or {}).items():
+	given = values or {}
+	for fieldname, value in given.items():
 		if table and fieldname == table.fieldname:
 			_apply_rows(doc, table, value if isinstance(value, list) else [])
 		elif fieldname in _STANDARD or fieldname.startswith("_"):
 			continue
 		elif _editable(meta, fieldname):
 			doc.set(fieldname, value)
+	# Desk fills an item row's store from the document's default one (Ajustes need it).
+	if table and meta.has_field("set_warehouse") and doc.get("set_warehouse"):
+		for row in doc.get(table.fieldname) or []:
+			if row.meta.has_field("warehouse") and not row.get("warehouse"):
+				row.warehouse = doc.set_warehouse
+	# Desk asks ERPNext for an Ajuste's difference account when its purpose changes: an opening
+	# count posts against Temporary Opening, and cannot be saved against Stock Adjustment.
+	if meta.name == "Stock Reconciliation" and doc.get("company") and "expense_account" not in given:
+		if "purpose" in given or not doc.get("expense_account"):
+			from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import (
+				get_difference_account,
+			)
+
+			doc.expense_account = get_difference_account(doc.purpose, doc.company) or doc.expense_account
 	if hasattr(doc, "set_missing_values"):
 		try:
 			doc.set_missing_values(for_validate=True)
 		except TypeError:
 			doc.set_missing_values()
-	if hasattr(doc, "calculate_taxes_and_totals"):
+	# Only documents with sales or purchase totals: ERPNext's calculator reads item rates and
+	# taxes a stock document has not (a Stock Reconciliation row has no `rate`).
+	if hasattr(doc, "calculate_taxes_and_totals") and meta.has_field("grand_total"):
 		doc.calculate_taxes_and_totals()
 
 
@@ -1285,6 +1396,10 @@ def _mapped(doctype, name, key):
 		_no_perm()
 	fn = frappe.get_attr(path)
 	return fn(doctype, name) if path == _PE else fn(name)
+
+
+# Defaults a blank document needs that its meta lacks (a required purpose without one).
+_NEW_DEFAULTS = {"Stock Reconciliation": {"purpose": "Stock Reconciliation"}}
 
 
 def _source_doc(doctype, source):
@@ -1310,7 +1425,11 @@ def _source_doc(doctype, source):
 		if source.get("amend"):
 			doc.amended_from = original.name
 		return doc
-	return frappe.new_doc(doctype)
+	doc = frappe.new_doc(doctype)
+	for fieldname, value in _NEW_DEFAULTS.get(doctype, {}).items():
+		if not doc.get(fieldname):
+			doc.set(fieldname, value)
+	return doc
 
 
 @frappe.whitelist()

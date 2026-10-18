@@ -118,7 +118,11 @@ describe('kardex helpers', () => {
   })
 
   it('opens only shell pages, never Desk', () => {
-    expect(voucherLink(row().voucher)).toBeNull()
+    // A sale opens in Documentos (D1); an unreadable voucher is a plain row.
+    expect(voucherLink(row().voucher)).toEqual({
+      path: '/documentos/facturas/ACC-SINV-2026-00012',
+    })
+    expect(voucherLink({ ...row().voucher, readable: false })).toBeNull()
     expect(
       voucherLink({ doctype: 'Purchase Order', name: 'PO-1', readable: true }),
     ).toEqual({ name: 'CompraOrden', params: { name: 'PO-1' } })
@@ -160,7 +164,17 @@ async function mountAt(path) {
         component: { render: () => null },
       },
       {
-        path: '/productos/movimientos',
+        path: '/inventario',
+        name: 'Inventario',
+        component: { render: () => null },
+      },
+      {
+        path: '/documentos/:slug/:name',
+        name: 'Documento',
+        component: { render: () => null },
+      },
+      {
+        path: '/inventario/movimientos',
         name: 'InventarioMovimientos',
         component: InventarioMovimientos,
       },
@@ -256,7 +270,7 @@ afterEach(() => {
 
 describe('Movimientos page', () => {
   it('shows the log by day with who moved what, and opens shell vouchers only', async () => {
-    await mountAt('/productos/movimientos')
+    await mountAt('/inventario/movimientos')
     const text = root.textContent
     expect(text).toContain('Hoy')
     expect(text).toContain('Ayer')
@@ -267,15 +281,17 @@ describe('Movimientos page', () => {
     expect(text).toContain('5 left')
     const rows = [...root.querySelectorAll('[data-kardex-row]')]
     expect(rows).toHaveLength(2)
-    // A sale has no shell page yet: a plain row, never a Desk link.
-    expect(rows[0].tagName).toBe('DIV')
+    // A sale opens in Documentos, a purchase in Compras; never a Desk link.
+    expect(rows[0].getAttribute('href')).toBe(
+      '/crm/documentos/facturas/ACC-SINV-2026-00012',
+    )
     expect(rows[1].getAttribute('href')).toBe('/crm/compras/orden/PO-7')
     expect(root.querySelector('a[href^="/app/"]')).toBeNull()
   })
 
   it('on a desktop: the same rows as a dense table, cost only when sent', async () => {
     wide = true
-    await mountAt('/productos/movimientos')
+    await mountAt('/inventario/movimientos')
     const table = root.querySelector('[data-kardex-table] table')
     expect(table).not.toBeNull()
     expect(table.textContent).toContain('Marco Ponce')
@@ -284,7 +300,7 @@ describe('Movimientos page', () => {
   })
 
   it('a chip filters through the URL and the service', async () => {
-    const router = await mountAt('/productos/movimientos?articulo=FUNDA-13')
+    const router = await mountAt('/inventario/movimientos?articulo=FUNDA-13')
     expect(calls.find((c) => c.method === 'movements').args.item).toBe(
       'FUNDA-13',
     )
@@ -306,7 +322,7 @@ describe('Movimientos page', () => {
       scope: {},
       rows: [],
     })
-    await mountAt('/productos/movimientos?periodo=hoy')
+    await mountAt('/inventario/movimientos?periodo=hoy')
     expect(root.textContent).toContain('No movements match')
     expect(root.textContent).toContain('Show every movement')
   })
