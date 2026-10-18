@@ -18,7 +18,9 @@
         data-testid="documentos-item-edit"
       >
         <div class="flex items-start gap-2">
-          <p class="min-w-0 flex-1 break-words text-base leading-snug text-ink-gray-9">
+          <p
+            class="min-w-0 flex-1 break-words text-base leading-snug text-ink-gray-9"
+          >
             {{ row.item_name || row.item_code }}
           </p>
           <button
@@ -124,7 +126,13 @@
   </section>
 </template>
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onBeforeUnmount,
+  ref,
+  watch,
+} from 'vue'
 import { call } from 'frappe-ui'
 import { ListRow } from '@/components/ui'
 import { looksLikeId, unitLabel as unitWord } from '@/utils/display'
@@ -186,7 +194,8 @@ function remove(i) {
 function add(itemCode, itemName = '') {
   const list = rows.value.slice()
   const same = list.findIndex((r) => r.item_code === itemCode && !r._idx)
-  if (same >= 0) list[same] = { ...list[same], qty: (num(list[same].qty) || 0) + 1 }
+  if (same >= 0)
+    list[same] = { ...list[same], qty: (num(list[same].qty) || 0) + 1 }
   else list.push(keyed({ item_code: itemCode, item_name: itemName, qty: 1 }))
   commit(list)
   search.value = ''
@@ -266,5 +275,4 @@ async function onCode(code) {
   if (hit) add(hit.item_code, hit.item_name || '')
   else note.value = `Ningún artículo tiene el código ${code}.`
 }
-
 </script>

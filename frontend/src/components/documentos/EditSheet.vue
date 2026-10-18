@@ -91,7 +91,11 @@ function close(value) {
 }
 
 async function save() {
-  const missing = missingRequired(form.value.fields, changes.value, props.record.doc)
+  const missing = missingRequired(
+    form.value.fields,
+    changes.value,
+    props.record.doc,
+  )
   if (missing.length) {
     error.value = `Falta: ${missing.join(', ')}.`
     return

@@ -110,7 +110,9 @@ describe('draft editing', () => {
   it('depends_on: simple shapes evaluate, anything else shows the field', () => {
     expect(dependsOk('customer', { customer: 'A' })).toBe(true)
     expect(dependsOk('customer', {})).toBe(false)
-    expect(dependsOk("eval:doc.quotation_to=='Customer'", { quotation_to: 'Lead' })).toBe(false)
+    expect(
+      dependsOk("eval:doc.quotation_to=='Customer'", { quotation_to: 'Lead' }),
+    ).toBe(false)
     expect(dependsOk('eval:doc.is_return', { is_return: 1 })).toBe(true)
     expect(dependsOk('eval:!doc.is_return', { is_return: 1 })).toBe(false)
     expect(dependsOk('eval:in_list(["a"], doc.x)', {})).toBe(true)

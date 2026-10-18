@@ -140,9 +140,7 @@
             :to="recordTo(row)"
             :selected="pane && row.name === route.params.name"
             :data-row-key="row.name"
-            :data-row-current="
-              row.name === route.params.name ? '' : undefined
-            "
+            :data-row-current="row.name === route.params.name ? '' : undefined"
             data-key-row
             data-testid="documentos-row"
           >

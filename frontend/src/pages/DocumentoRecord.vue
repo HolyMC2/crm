@@ -226,13 +226,7 @@
   </div>
 </template>
 <script setup>
-import {
-  computed,
-  defineAsyncComponent,
-  ref,
-  shallowRef,
-  watch,
-} from 'vue'
+import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import { AppBar, EmptyState, StatusChip } from '@/components/ui'
@@ -455,7 +449,9 @@ async function doConfirm() {
     if (kind === 'delete') {
       toast.success('Borrador eliminado')
       return router.replace(
-        props.pane ? { path: listTo.value.path, query: route.query } : listTo.value,
+        props.pane
+          ? { path: listTo.value.path, query: route.query }
+          : listTo.value,
       )
     }
     await saved(kind === 'submit' ? 'Confirmado' : 'Cancelado')
@@ -503,7 +499,10 @@ function onShared(result) {
 async function onTool(key) {
   const nuevo = (query) => {
     const to = documentRoute(doctype.value, 'nuevo', { hint: record.value.doc })
-    router.push({ path: to?.path || floorRoute(doctype.value, 'nuevo').path, query })
+    router.push({
+      path: to?.path || floorRoute(doctype.value, 'nuevo').path,
+      query,
+    })
   }
   switch (key) {
     case 'assign':

@@ -32,7 +32,7 @@ export function dependsOk(expr, doc = {}) {
 export function valueOf(field, changes, doc) {
   return Object.prototype.hasOwnProperty.call(changes, field.fieldname)
     ? changes[field.fieldname]
-    : (doc?.[field.fieldname] ?? null)
+    : doc?.[field.fieldname] ?? null
 }
 
 /** Required fields still empty, by label («Cliente», «Fecha»). */
@@ -52,7 +52,8 @@ const ROW_KEYS = ['qty', 'rate', 'uom', 'discount_percentage', 'warehouse']
 export function rowsForSave(rows) {
   return (rows || []).map((row) => {
     const out = row._idx ? { _idx: row._idx } : { item_code: row.item_code }
-    for (const key of ROW_KEYS) if (key in row && row[key] !== undefined) out[key] = row[key]
+    for (const key of ROW_KEYS)
+      if (key in row && row[key] !== undefined) out[key] = row[key]
     return out
   })
 }
@@ -71,7 +72,11 @@ const RESERVED = new Set(['origen', 'desde', 'con', 'duplicar', 'modificar'])
 export function sourceFromQuery(query = {}, doctype = '') {
   const one = (v) => (Array.isArray(v) ? v[0] : v) || ''
   if (one(query.con) && one(query.origen) && one(query.desde))
-    return { make: one(query.con), doctype: one(query.origen), name: one(query.desde) }
+    return {
+      make: one(query.con),
+      doctype: one(query.origen),
+      name: one(query.desde),
+    }
   if (one(query.duplicar)) return { duplicate: one(query.duplicar), doctype }
   if (one(query.modificar)) return { amend: one(query.modificar), doctype }
   return null

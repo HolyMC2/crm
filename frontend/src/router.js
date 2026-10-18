@@ -57,7 +57,11 @@ function toDesk(href) {
 const DOCUMENTOS_NAMES = {
   Lista: ['DocumentosLista', 'DocumentoNuevo', 'Documento'],
   Tipo: ['DocumentosTipo', 'DocumentoTipoNuevo', 'DocumentoTipo'],
-  InventarioLista: ['InventarioLista', 'InventarioNuevo', 'InventarioDocumento'],
+  InventarioLista: [
+    'InventarioLista',
+    'InventarioNuevo',
+    'InventarioDocumento',
+  ],
 }
 // ≥1024 a list and its records are one page instance (master-detail).
 function documentosSplitKey(route) {
@@ -71,14 +75,24 @@ function documentosRoutes(path, kind, app) {
   const meta = { app, title, ownPhoneHeader: true, stableKey: true }
   const split = () => import('@/pages/DocumentosSplit.vue')
   return [
-    { path, name: list, component: split, meta: { ...meta, splitKey: documentosSplitKey } },
+    {
+      path,
+      name: list,
+      component: split,
+      meta: { ...meta, splitKey: documentosSplitKey },
+    },
     {
       path: `${path}/nuevo`,
       name: create,
       component: () => import('@/pages/DocumentoNuevo.vue'),
       meta: { ...meta, ownBottomBar: true },
     },
-    { path: `${path}/:name`, name: record, component: split, meta: { ...meta, splitKey: documentosSplitKey } },
+    {
+      path: `${path}/:name`,
+      name: record,
+      component: split,
+      meta: { ...meta, splitKey: documentosSplitKey },
+    },
   ]
 }
 

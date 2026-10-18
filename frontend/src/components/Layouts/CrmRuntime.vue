@@ -19,10 +19,7 @@
       />
     </div>
     <DesktopOnly v-if="$route.meta.desktopOnly && isNarrow" />
-    <router-view
-      v-else
-      :key="routeKey($route)"
-    />
+    <router-view v-else :key="routeKey($route)" />
   </Layout>
   <Settings v-if="session.isLoggedIn && showSettings" />
   <IntermediateStepModal

@@ -28,17 +28,25 @@
         <ListRow
           :avatar="person.name"
           :title="person.name"
-          :subtitle="isAssigned(person.user) ? 'Asignado · toca para quitar' : ''"
+          :subtitle="
+            isAssigned(person.user) ? 'Asignado · toca para quitar' : ''
+          "
           :selected="isAssigned(person.user)"
           :class="busy === person.user ? 'opacity-60' : ''"
           @click="toggle(person)"
         >
           <template v-if="isAssigned(person.user)" #trailing>
-            <span class="lucide-check size-5 text-ink-gray-8" aria-hidden="true" />
+            <span
+              class="lucide-check size-5 text-ink-gray-8"
+              aria-hidden="true"
+            />
           </template>
         </ListRow>
       </li>
-      <li v-if="!loading && !shown.length" class="px-4 py-3 text-base text-ink-gray-6">
+      <li
+        v-if="!loading && !shown.length"
+        class="px-4 py-3 text-base text-ink-gray-6"
+      >
         Nadie se llama así en tu equipo.
       </li>
     </ul>

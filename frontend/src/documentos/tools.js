@@ -10,7 +10,10 @@
  * `wide` (≥1024) adds «Abrir en escritorio»; `avisame` adds «Avísame…»;
  * `extra` are entries other packages add (D6: «Todos los ajustes», «Pregúntale…»).
  */
-export function toolsFor(record, { wide = false, avisame = false, extra = [] } = {}) {
+export function toolsFor(
+  record,
+  { wide = false, avisame = false, extra = [] } = {},
+) {
   if (!record) return []
   const a = record.actions || {}
   const docstatus = record.header?.docstatus ?? record.doc?.docstatus ?? 0
@@ -155,7 +158,13 @@ export async function copyText(text) {
  * else the link through the share sheet, else the link copied.
  * Returns 'shared' | 'copied' | 'cancelled' | 'failed'.
  */
-export async function shareDocument({ doctype, name, title, url, format = '' }) {
+export async function shareDocument({
+  doctype,
+  name,
+  title,
+  url,
+  format = '',
+}) {
   const nav = globalThis.navigator
   try {
     if (nav?.canShare && typeof File !== 'undefined') {
@@ -184,7 +193,12 @@ export async function shareDocument({ doctype, name, title, url, format = '' }) 
 }
 
 /** Adjuntar: upload one file to the record (private by default). */
-export async function uploadAttachment({ doctype, name, file, isPrivate = true }) {
+export async function uploadAttachment({
+  doctype,
+  name,
+  file,
+  isPrivate = true,
+}) {
   const form = new FormData()
   form.append('file', file, file.name)
   form.append('is_private', isPrivate ? '1' : '0')
@@ -193,7 +207,8 @@ export async function uploadAttachment({ doctype, name, file, isPrivate = true }
   form.append('docname', name)
   const headers = { Accept: 'application/json' }
   const token = globalThis.window?.csrf_token
-  if (token && token !== '{{ csrf_token }}') headers['X-Frappe-CSRF-Token'] = token
+  if (token && token !== '{{ csrf_token }}')
+    headers['X-Frappe-CSRF-Token'] = token
   const res = await fetch('/api/method/upload_file', {
     method: 'POST',
     body: form,
@@ -204,8 +219,9 @@ export async function uploadAttachment({ doctype, name, file, isPrivate = true }
     let message = ''
     try {
       const body = await res.json()
-      message = JSON.parse(JSON.parse(body._server_messages || '[]')[0] || '{}')
-        .message
+      message = JSON.parse(
+        JSON.parse(body._server_messages || '[]')[0] || '{}',
+      ).message
     } catch {
       // the generic sentence below
     }

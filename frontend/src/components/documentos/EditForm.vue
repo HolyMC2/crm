@@ -15,9 +15,7 @@
           class="text-sm font-medium text-ink-gray-8"
         >
           {{ field.label
-          }}<span v-if="field.reqd" class="text-ink-red-7">
-            · obligatorio</span
-          >
+          }}<span v-if="field.reqd" class="text-ink-red-7"> · obligatorio</span>
         </label>
         <AjustesControl
           :id="`doc-f-${field.fieldname}`"

@@ -82,8 +82,9 @@ watch(
       formats.value = (await docApi('print_formats', {
         doctype: props.doctype,
       })) || [{ name: 'Standard', label: 'Standard', default: true }]
-      format.value = (formats.value.find((f) => f.default) || formats.value[0])
-        ?.name
+      format.value = (
+        formats.value.find((f) => f.default) || formats.value[0]
+      )?.name
     } catch (e) {
       error.value = errorText(e)
     } finally {
