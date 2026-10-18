@@ -142,9 +142,8 @@ def main(argv=None):
 		print(f"{key}={value}")
 	if args.github_output:
 		# The runner's $GITHUB_OUTPUT file, not a request path.
-		with open(
-			args.github_output, "a", encoding="utf-8"
-		) as handle:  # nosemgrep: frappe-security-file-traversal
+		target = args.github_output
+		with open(target, "a", encoding="utf-8") as handle:  # nosemgrep: frappe-security-file-traversal
 			handle.writelines(f"{key}={value}\n" for key, value in outputs.items())
 	return 0
 
