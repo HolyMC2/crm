@@ -8,7 +8,7 @@
       :to="part.to"
       class="text-ink-blue-link underline"
       @click="$emit('navigate')"
-      >{{ __('Open') }}</RouterLink
+      >{{ __('Open', null, 'Assistant link') }}</RouterLink
     ><a
       v-else-if="part.href"
       :href="part.href"

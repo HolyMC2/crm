@@ -27803,3 +27803,9 @@ msgstr "Usar esta foto"
 msgctxt "Assistant card"
 msgid "Change"
 msgstr "Cambiar"
+
+#: frontend/src/components/assistant/ActionCard.vue
+#: frontend/src/components/assistant/AssistantInline.vue
+msgctxt "Assistant link"
+msgid "Open"
+msgstr "Abrir"

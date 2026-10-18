@@ -28,7 +28,7 @@
         data-testid="assistant-card-open"
         @click="$emit('navigate')"
       >
-        {{ __('Open') }}
+        {{ __('Open', null, 'Assistant link') }}
       </RouterLink>
     </div>
     <p
