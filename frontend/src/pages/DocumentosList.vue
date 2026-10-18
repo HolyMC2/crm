@@ -317,6 +317,10 @@ function recordTo(row) {
   const to =
     documentRoute(doctype.value, row.name, { hint: row.fields }) ||
     floorRoute(doctype.value, row.name)
+  // A richer page (Compra orden, Gasto factura) goes back to this very list,
+  // filters and all, through its `list` query (D3).
+  if (!/^\/(documentos|inventario)\//.test(to.path))
+    return { ...to, query: { ...(to.query || {}), list: route.fullPath } }
   // In the split the list lives in the URL's query: keep it on every record.
   return props.pane && !to.query ? { ...to, query: route.query } : to
 }

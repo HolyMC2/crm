@@ -11,6 +11,14 @@ const CURATED = {
   Quotation: () => import('./quotation.js'),
   'Stock Entry': () => import('./stock_entry.js'),
   'Stock Reconciliation': () => import('./stock_reconciliation.js'),
+  // Compras y pagos (D3)
+  'Material Request': () => import('./material_request.js'),
+  'Request for Quotation': () => import('./request_for_quotation.js'),
+  'Supplier Quotation': () => import('./supplier_quotation.js'),
+  'Purchase Order': () => import('./purchase_order.js'),
+  'Purchase Receipt': () => import('./purchase_receipt.js'),
+  'Purchase Invoice': () => import('./purchase_invoice.js'),
+  'Payment Entry:pagos': () => import('./payment_entry_pay.js'),
 }
 
 /** The merged profile for a registry entry (or a bare doctype on the floor). */

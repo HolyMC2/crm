@@ -452,6 +452,7 @@ const STATUS = {
   paused: ['En pausa', 'warning'],
   stopped: ['Detenida', 'neutral'],
   overdue: ['Vencida', 'danger'],
+  'overdue and discounted': ['Vencida', 'danger'],
   unpaid: ['Por pagar', 'warning'],
   'partly paid': ['Pago parcial', 'warning'],
   'partially paid': ['Pago parcial', 'warning'],

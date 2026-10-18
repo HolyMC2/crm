@@ -102,6 +102,7 @@ export const MAKE_TARGETS = Object.freeze({
   purchase_receipt: 'Purchase Receipt',
   purchase_invoice: 'Purchase Invoice',
   request_for_quotation: 'Request for Quotation',
+  supplier_quotation: 'Supplier Quotation',
 })
 const PAYS_OUT = new Set(['Purchase Order', 'Purchase Invoice'])
 

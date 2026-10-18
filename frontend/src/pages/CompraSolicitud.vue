@@ -22,18 +22,26 @@
         {{ __('Loading request…') }}
       </div>
       <template v-else>
-        <header class="mb-4">
+        <header class="relative mb-4 pr-12">
+          <RecordKitTools
+            v-if="doc.name"
+            class="absolute right-0 top-0"
+            :kit="kit"
+          />
           <p class="text-sm text-ink-gray-6">
             {{ doc.name }} · {{ statusLabel({ ...doc, kind: 'solicitud' }) }}
           </p>
-          <h1 class="text-2xl font-semibold text-ink-gray-9">
-            {{ doc.title || __('Purchase request', null, 'Compras') }}
+          <h1 class="break-words text-2xl font-semibold text-ink-gray-9">
+            {{
+              requestTitle(doc.title) || __('Purchase request', null, 'Compras')
+            }}
           </h1>
           <p class="mt-1 text-sm text-ink-gray-6">
             {{
               [
                 doc.company,
-                doc.schedule_date && __('needed by {0}', [doc.schedule_date]),
+                doc.schedule_date &&
+                  __('needed by {0}', [formatDate(doc.schedule_date)]),
               ]
                 .filter(Boolean)
                 .join(' · ')
@@ -48,6 +56,11 @@
             }}
           </p>
         </header>
+        <StageSteps
+          v-if="kit.stages.value"
+          :stages="kit.stages.value"
+          class="mb-4 py-2"
+        />
 
         <ApprovalAsk
           doctype="Material Request"
@@ -191,6 +204,13 @@
             </li>
           </ul>
         </section>
+        <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones, Actividad and «⋯» sheets. -->
+        <RecordKit
+          v-if="doc.name"
+          class="mt-6 -mx-4 sm:-mx-6"
+          :kit="kit"
+          :title="requestTitle(doc.title)"
+        />
       </template>
     </div>
     <HandoffDialog
@@ -224,6 +244,12 @@ import {
   statusLabel,
 } from '@/composables/useCompras'
 import ApprovalAsk from '@/components/pendientes/ApprovalAsk.vue'
+import StageSteps from '@/components/documentos/StageSteps.vue'
+import RecordKit from '@/components/documentos/compras/RecordKit.vue'
+import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
+import { useRecordKit } from '@/components/documentos/compras/recordKit'
+import { requestTitle } from '@/components/documentos/compras/words'
+import { formatDate } from '@/utils/display'
 import { useRecordPower } from '@/composables/useRecordPower'
 
 const props = defineProps({ name: { type: String, required: true } })
@@ -239,6 +265,13 @@ const handoffOpen = ref(false)
 let prepareId = null
 
 const doc = computed(() => data.value.document || {})
+// The engine's shared record parts (Shell SPEC §6 DD2/DD5): loaded after paint.
+const kit = useRecordKit('Material Request', {
+  name: () => props.name,
+  title: () => requestTitle(doc.value.title),
+  modified: () => doc.value.modified,
+  changed: () => load(),
+})
 const action = computed(() => (data.value.actions || [])[0])
 const returnTo = computed(() => safeReturn(route.query.return_to))
 const backLabel = computed(() =>

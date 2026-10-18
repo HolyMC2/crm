@@ -231,9 +231,15 @@ const blocked = computed(() =>
 )
 // A drill-down record names its list in meta.listParent; its back arrow goes to
 // the module's list page (the route the bottom bar or «Más» opens).
-const backTo = computed(() =>
-  route.meta.listParent ? activeModule.value?.to || true : false,
-)
+// A record opened from a filtered list carries it in `list` (Compras, Gastos,
+// Documentos): the arrow goes back to that list with its filters.
+const backTo = computed(() => {
+  if (!route.meta.listParent) return false
+  const list = route.query.list
+  if (typeof list === 'string' && /^\/[a-z]/.test(list) && !list.includes('//'))
+    return list
+  return activeModule.value?.to || true
+})
 const blockedLabel = computed(() => moduleMeta(activeKey.value)?.label || '')
 const blockedFallback = computed(() =>
   __(

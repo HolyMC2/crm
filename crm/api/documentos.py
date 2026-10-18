@@ -1177,6 +1177,14 @@ MAKERS = {
 		"erpnext.stock.doctype.material_request.material_request.make_request_for_quotation",
 		"Request for Quotation",
 	),
+	("Material Request", "supplier_quotation"): (
+		"erpnext.stock.doctype.material_request.material_request.make_supplier_quotation",
+		"Supplier Quotation",
+	),
+	("Request for Quotation", "supplier_quotation"): (
+		"erpnext.buying.doctype.request_for_quotation.request_for_quotation.make_supplier_quotation_from_rfq",
+		"Supplier Quotation",
+	),
 	("Supplier Quotation", "purchase_order"): (
 		"erpnext.buying.doctype.supplier_quotation.supplier_quotation.make_purchase_order",
 		"Purchase Order",

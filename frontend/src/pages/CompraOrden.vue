@@ -51,12 +51,25 @@
                 [
                   doc.company,
                   doc.set_warehouse && __('to {0}', [doc.set_warehouse]),
-                  doc.schedule_date &&
-                    __('delivery {0}', [formatDay(doc.schedule_date)]),
                 ]
                   .filter(Boolean)
                   .join(' · ')
-              }}
+              }}<template v-if="doc.schedule_date"
+                >{{ doc.company || doc.set_warehouse ? ' · ' : ''
+                }}<span
+                  :class="lateDays ? 'font-medium text-ink-red-7' : ''"
+                  data-testid="compra-entrega"
+                  >{{ __('delivery {0}', [formatDay(doc.schedule_date)])
+                  }}<template v-if="lateDays">
+                    ·
+                    {{
+                      lateDays === 1
+                        ? 'atrasada 1 día'
+                        : `atrasada ${lateDays} días`
+                    }}</template
+                  ></span
+                ></template
+              >
             </p>
           </div>
           <div class="hidden flex-col items-end gap-1 sm:flex">
@@ -69,7 +82,13 @@
               doc.currency
             }}</span>
           </div>
+          <RecordKitTools v-if="!isNew && doc.name" :kit="kit" />
         </header>
+        <StageSteps
+          v-if="!isNew && kit.stages.value"
+          :stages="kit.stages.value"
+          class="mb-4 py-2"
+        />
 
         <!-- What was asked of me on this purchase (Pendientes «Por aprobar»). -->
         <!-- Hidden while editing: the save bar owns the phone's bottom edge then. -->
@@ -610,6 +629,13 @@
             </ul>
           </div>
         </section>
+        <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones, Actividad and «⋯» sheets. -->
+        <RecordKit
+          v-if="!isNew && doc.name"
+          class="mt-6 -mx-4 sm:-mx-6"
+          :kit="kit"
+          :title="doc.party || ''"
+        />
       </template>
     </div>
 
@@ -714,8 +740,12 @@ import { keyAction } from '@/utils/powerList'
 import { orderBillsRoute } from '@/composables/useGastos'
 import { can } from '@/vendor/muelle-shell/contracts'
 import { formatDay } from '@/utils/contactos'
-import { formatQty } from '@/utils/display'
+import { dayDiff, formatQty, parseServerDate } from '@/utils/display'
 import NextStepCard from '@/components/dinero/NextStepCard.vue'
+import StageSteps from '@/components/documentos/StageSteps.vue'
+import RecordKit from '@/components/documentos/compras/RecordKit.vue'
+import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
+import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import {
   MISSING_LABELS,
   RECORD_KEYS,
@@ -793,6 +823,22 @@ const blankForm = () => ({
 })
 const form = reactive(blankForm())
 const doc = computed(() => data.value.document || {})
+// The engine's shared record parts (Shell SPEC §6 DD2/DD5): loaded after paint.
+const kit = useRecordKit('Purchase Order', {
+  name: () => props.name,
+  title: () => doc.value.party || '',
+  modified: () => doc.value.modified,
+  changed: () => load(),
+})
+// A delivery that should have arrived and has not (SPEC §5): red, with the days.
+const lateDays = computed(() => {
+  const d = doc.value
+  if (Number(d.docstatus) !== 1 || Number(d.per_received) >= 100) return 0
+  if (['Closed', 'Completed', 'On Hold'].includes(d.status)) return 0
+  const date = parseServerDate(d.schedule_date)
+  const diff = date ? dayDiff(date) : 0
+  return diff < 0 ? -diff : 0
+})
 const missing = computed(() => missingFields(form))
 const missingText = computed(() =>
   missing.value
@@ -818,7 +864,8 @@ const secondary = computed(() =>
 // The queue this order was opened from, kept through Escáner and Gastos.
 const listQuery = computed(() =>
   typeof route.query.list === 'string' &&
-  route.query.list.startsWith('/compras')
+  (route.query.list.startsWith('/compras') ||
+    route.query.list.startsWith('/documentos/'))
     ? route.query.list
     : '',
 )
@@ -1291,7 +1338,8 @@ function goBack() {
       returnWithDone(returnTo.value, 'Purchase Order', doc.value.name),
     )
   const list = typeof route.query.list === 'string' ? route.query.list : ''
-  if (list.startsWith('/compras')) return router.push(list)
+  if (list.startsWith('/compras') || list.startsWith('/documentos/'))
+    return router.push(list)
   router.push({ name: 'Compras' })
 }
 

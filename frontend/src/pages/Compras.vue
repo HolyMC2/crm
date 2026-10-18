@@ -266,11 +266,16 @@
                       <span
                         v-if="row.due_date"
                         class="shrink-0 whitespace-nowrap"
+                        :class="
+                          lateDays(row) ? 'font-medium text-ink-red-7' : ''
+                        "
+                        data-testid="compras-entrega"
                         ><span class="hidden sm:inline" aria-hidden="true"
                           >&nbsp;·&nbsp;</span
-                        >{{
-                          __('Delivery {0}', [formatDay(row.due_date)])
-                        }}</span
+                        >{{ __('Delivery {0}', [formatDay(row.due_date)])
+                        }}<template v-if="lateDays(row)">
+                          · atrasada</template
+                        ></span
                       >
                     </span>
                     <span
@@ -425,6 +430,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
 import { formatDay } from '@/utils/contactos'
+import { dayDiff, parseServerDate } from '@/utils/display'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import { Fab } from '@/components/ui'
 import BulkConfirmSheet from '@/components/compras/BulkConfirmSheet.vue'
@@ -592,6 +598,16 @@ function recordHref(row) {
   const target = recordRouteFor(row)
   const kind = target.name === 'CompraSolicitud' ? 'solicitud' : 'orden'
   return `/crm/compras/${kind}/${encodeURIComponent(row.name)}?${new URLSearchParams(target.query)}`
+}
+
+// An order that should have arrived and has not (SPEC §5): its delivery in red.
+function lateDays(row) {
+  if (row.kind !== 'orden' || Number(row.docstatus) !== 1) return 0
+  if (Number(row.per_received) >= 100) return 0
+  if (['Closed', 'Completed', 'On Hold'].includes(row.status)) return 0
+  const date = parseServerDate(row.due_date)
+  const diff = date ? dayDiff(date) : 0
+  return diff < 0 ? -diff : 0
 }
 
 function billPending(row) {

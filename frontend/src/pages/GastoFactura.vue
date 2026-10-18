@@ -41,7 +41,9 @@
 
       <template v-else-if="loaded">
         <!-- Header: who, how much, when — and the one next action. -->
-        <header class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start">
+        <header
+          class="relative mb-4 flex flex-col gap-3 pr-12 sm:flex-row sm:items-start sm:pr-0"
+        >
           <div class="min-w-0 flex-1">
             <p
               class="flex flex-wrap items-center gap-1 text-sm text-ink-gray-6"
@@ -78,7 +80,17 @@
               >{{ dueLabel(doc.due_date, boot?.today) }}</span
             >
           </div>
+          <RecordKitTools
+            v-if="doc.name"
+            class="absolute right-2 top-2 sm:static"
+            :kit="kit"
+          />
         </header>
+        <StageSteps
+          v-if="kit.stages.value"
+          :stages="kit.stages.value"
+          class="mb-4 py-2"
+        />
 
         <!-- What was asked of me on this bill (Pendientes «Por aprobar»). -->
         <ApprovalAsk
@@ -358,6 +370,13 @@
           :return-to="`/crm${route.fullPath}`"
           :return-label="__('Gastos', null, 'Gastos')"
         />
+        <!-- Shell SPEC §6 DD2: the engine's «Creado desde», Conexiones, Actividad and «⋯» sheets. -->
+        <RecordKit
+          v-if="doc.name"
+          class="mt-6 -mx-4 sm:-mx-6"
+          :kit="kit"
+          :title="doc.party || ''"
+        />
       </template>
     </div>
 
@@ -438,6 +457,10 @@ import { completeTo, goTo, ownerReturn } from '@/composables/useAprobaciones'
 import { offerUndo, runUndo } from '@/composables/powerUndo'
 import CapturarDocumentoButton from '@/components/captura/CapturarDocumentoButton.vue'
 import NextStepCard from '@/components/dinero/NextStepCard.vue'
+import StageSteps from '@/components/documentos/StageSteps.vue'
+import RecordKit from '@/components/documentos/compras/RecordKit.vue'
+import RecordKitTools from '@/components/documentos/compras/RecordKitTools.vue'
+import { useRecordKit } from '@/components/documentos/compras/recordKit'
 import { hoyLive } from '@/composables/useHoy'
 import {
   LIVE_DOCTYPES,
@@ -486,6 +509,13 @@ let submitRequest = null
 let releaseRequest = null
 
 const doc = computed(() => data.value.document || {})
+// The engine's shared record parts (Shell SPEC §6 DD2/DD5): loaded after paint.
+const kit = useRecordKit('Purchase Invoice', {
+  name: () => props.name,
+  title: () => doc.value.party || '',
+  modified: () => doc.value.modified,
+  changed: () => load(),
+})
 const actions = computed(() => data.value.actions || [])
 const bankAllowed = computed(() =>
   actions.value.some((a) => a.key === 'bank' && a.allowed),
@@ -504,7 +534,9 @@ const statusTheme = computed(() => {
   return doc.value.overdue ? 'red' : 'blue'
 })
 const listPath = computed(() =>
-  typeof route.query.list === 'string' && route.query.list.startsWith('/gastos')
+  typeof route.query.list === 'string' &&
+  (route.query.list.startsWith('/gastos') ||
+    route.query.list.startsWith('/documentos/'))
     ? route.query.list
     : '',
 )
@@ -634,7 +666,8 @@ async function paid(result) {
   goBack()
 }
 async function nextBill() {
-  if (!listPath.value) return null
+  // Opened from a documentos list: back to that list, not Gastos' queue.
+  if (!listPath.value || listPath.value.startsWith('/documentos/')) return null
   const url = new URL(listPath.value, 'https://muelle.invalid')
   const params = Object.fromEntries(url.searchParams)
   try {

@@ -230,7 +230,8 @@ export function documentRoute(
   const entry = profileFor(doctype, hint)
   if (entry) {
     if (readable && !readable.has(doctype)) return null
-    if (entry.recordRoute) return entry.recordRoute(name)
+    // A new draft is the engine's form even when records open a richer page.
+    if (entry.recordRoute && name !== 'nuevo') return entry.recordRoute(name)
     return {
       path: `${baseOf(entry)}/${entry.slug}/${encodeURIComponent(name)}`,
     }
