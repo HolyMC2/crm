@@ -460,22 +460,7 @@
           </div>
         </HoySection>
       </div>
-
-      <footer
-        v-if="data"
-        class="mt-6 flex flex-wrap items-center gap-2 text-sm text-ink-gray-6"
-      >
-        <label for="hoy-landing">{{ __('Open Muelle on') }}</label>
-        <div class="w-60 max-w-full">
-          <FormControl
-            id="hoy-landing"
-            type="select"
-            :model-value="data.landing || ''"
-            :options="landingChoices"
-            @update:model-value="chooseLanding"
-          />
-        </div>
-      </footer>
+      <!-- «Abrir Muelle en» lives in Más › Configuración (SHELL-S1.2), not on a work screen. -->
     </div>
     <CompleteDialog
       v-model="completeOpen"
@@ -498,7 +483,7 @@ import {
   watch,
 } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { Button, FormControl, toast } from 'frappe-ui'
+import { Button, toast } from 'frappe-ui'
 import HoySection from '@/components/hoy/HoySection.vue'
 import HoyTask from '@/components/hoy/HoyTask.vue'
 import AssistantSuggestion from '@/components/assistant/AssistantSuggestion.vue'
@@ -507,7 +492,7 @@ import AvisosList from '@/components/avisos/AvisosList.vue'
 import CompleteDialog from '@/components/pendientes/CompleteDialog.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { BottomSheet, ListRow } from '@/components/ui'
-import { shellBoot, shellModules } from '@/composables/muelleShell'
+import { shellBoot } from '@/composables/muelleShell'
 import {
   HOY_HOME,
   LIVE_DOCTYPES,
@@ -524,10 +509,8 @@ import {
   followUpRows,
   greeting,
   hoyLive,
-  landingOptions,
   loadHoy,
   runSourceAction,
-  saveLanding,
   scanDrafts,
   teamOverdueRows,
   timeText,
@@ -647,7 +630,6 @@ const allClear = computed(
     !plan.value.rows.length,
 )
 const shortcuts = computed(() => accesos(shellBoot.value))
-const landingChoices = computed(() => landingOptions(shellModules.value))
 
 const summary = computed(() => {
   if (!data.value) return ''
@@ -896,8 +878,8 @@ function choicesFor(card, row) {
   return choices ? choices[row.group] || [] : null
 }
 // Repair rows: the device and the job are the title, the repair order number is a
-// small trailing reference (people quote it), and the detail line drops it. The customer
-// name is not in taller's payload yet (gap for the PM), so it is not shown.
+// small trailing reference (people quote it), and the detail line drops it, so it
+// leads with the customer name taller puts first.
 const REPAIR_SOURCE = 'taller.unassigned_repairs'
 // The same «Ver todos ›» as HoySection's header link.
 const MORE_LINK =
@@ -971,28 +953,5 @@ async function muteAviso(group, muted) {
 async function undoAviso() {
   await avisoActions.undo()
   refresh({ quiet: true })
-}
-
-// ── where Muelle opens ─────────────────────────────────────────────────────
-
-async function chooseLanding(value) {
-  const previous = data.value?.landing || ''
-  data.value = { ...data.value, landing: value }
-  try {
-    await saveLanding(value)
-    toast.success(
-      value
-        ? __('Muelle will open on {0}.', [
-            landingChoices.value.find((option) => option.value === value)
-              ?.label || value,
-          ])
-        : __('Muelle will open where your puesto works.'),
-    )
-  } catch (error) {
-    data.value = { ...data.value, landing: previous }
-    toast.error(
-      error?.messages?.[0] || __('Could not save your choice. Retry.'),
-    )
-  }
 }
 </script>
