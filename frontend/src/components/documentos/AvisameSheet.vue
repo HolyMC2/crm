@@ -1,85 +1,102 @@
 <template>
+  <!-- «Avísame…» (Shell SPEC §6 DD8): M3 list items (56px) — the conditions
+       of a record as radio rows, or a store and a quantity for an item —
+       then the avisos already asked, each with «Quitar». -->
   <BottomSheet
     v-model:open="open"
     title="Avísame…"
     :subtitle="title"
     :dismissible="!saving"
+    flush
   >
-    <div class="space-y-4 px-1 pb-2">
-      <p v-if="loading" class="text-base text-ink-gray-6">Cargando…</p>
+    <div class="pb-2">
+      <p v-if="loading" class="px-4 py-3 text-base text-ink-gray-6">
+        Cargando…
+      </p>
 
       <!-- A record: one condition, a date for «si no … para el». -->
-      <fieldset v-else-if="!isItem" class="space-y-1">
-        <legend class="pb-1 text-sm text-ink-gray-7">
-          Te llega un aviso en Avisos. Al cliente no se le escribe.
-        </legend>
-        <button
-          v-for="option in options"
-          :key="option.key"
-          type="button"
-          role="radio"
-          :aria-checked="choice === option.key"
-          :disabled="option.active"
-          class="flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left text-base disabled:opacity-60"
-          :class="choice === option.key ? 'bg-surface-gray-2' : ''"
-          @click="choice = option.key"
+      <section v-else-if="!isItem" aria-labelledby="avisame-when">
+        <h3
+          id="avisame-when"
+          class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-7"
         >
-          <span
-            class="flex size-5 flex-none items-center justify-center rounded-full border-2"
-            :class="
-              choice === option.key
-                ? 'border-ink-gray-9'
-                : 'border-outline-gray-3'
-            "
-            aria-hidden="true"
-          >
-            <span
-              v-if="choice === option.key"
-              class="size-2.5 rounded-full bg-ink-gray-9"
-            />
-          </span>
-          <span class="min-w-0 flex-1 break-words">{{ option.label }}</span>
-          <span v-if="option.active" class="text-sm text-ink-gray-6"
-            >Ya lo pediste</span
-          >
-        </button>
-        <FormControl
-          v-if="chosen?.needs_date"
-          v-model="untilDate"
-          type="date"
-          label="Fecha límite"
-          class="pt-2 [&_input]:min-h-11"
-          :min="today"
-        />
-      </fieldset>
+          Te llega a Avisos. Al cliente no se le escribe.
+        </h3>
+        <ul role="radiogroup" aria-labelledby="avisame-when">
+          <li v-for="option in options" :key="option.key">
+            <ListRow
+              role="radio"
+              :aria-checked="choice === option.key ? 'true' : 'false'"
+              :disabled="option.active"
+              :title="option.label"
+              :subtitle="optionHint(option)"
+              :selected="choice === option.key"
+              :class="option.active ? 'opacity-60' : ''"
+              @click="choice = option.key"
+            >
+              <template #leading>
+                <RadioDot :on="choice === option.key" />
+              </template>
+            </ListRow>
+          </li>
+        </ul>
+        <div v-if="chosen?.needs_date" class="px-4 pt-2">
+          <FormControl
+            v-model="untilDate"
+            type="date"
+            label="Fecha límite"
+            class="[&_input]:min-h-12"
+            :min="today"
+          />
+        </div>
+      </section>
 
       <!-- An item: a store and a quantity. -->
-      <div v-else class="space-y-3">
-        <p class="text-sm text-ink-gray-7">
-          Te aviso una vez cada vez que baje de esa cantidad.
-        </p>
-        <FormControl
+      <section v-else aria-labelledby="avisame-store">
+        <h3
+          id="avisame-store"
+          class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-7"
+        >
+          {{
+            warehouses.length > 1
+              ? 'En qué tienda'
+              : 'Te aviso una vez cada vez que baje de esa cantidad.'
+          }}
+        </h3>
+        <ul
           v-if="warehouses.length > 1"
-          v-model="warehouse"
-          type="select"
-          label="Tienda"
-          class="[&_select]:min-h-11"
-          :options="warehouseOptions"
-        />
-        <p v-else-if="warehouses.length === 1" class="text-base">
-          {{ warehouses[0].label }}
-        </p>
-        <p v-else class="text-base text-ink-gray-6">
+          role="radiogroup"
+          aria-labelledby="avisame-store"
+        >
+          <li v-for="row in warehouses" :key="row.warehouse">
+            <ListRow
+              role="radio"
+              :aria-checked="warehouse === row.warehouse ? 'true' : 'false'"
+              :title="row.label"
+              :subtitle="`Hay ${formatQty(row.qty)}`"
+              :selected="warehouse === row.warehouse"
+              @click="warehouse = row.warehouse"
+            >
+              <template #leading>
+                <RadioDot :on="warehouse === row.warehouse" />
+              </template>
+            </ListRow>
+          </li>
+        </ul>
+        <p
+          v-else-if="!warehouses.length"
+          class="px-4 py-2 text-base text-ink-gray-6"
+        >
           Este artículo no tiene existencias en ninguna tienda todavía.
         </p>
-        <div v-if="warehouses.length" class="space-y-1">
+        <div v-if="warehouses.length" class="space-y-1 px-4 pt-3">
           <label :for="qtyId" class="block text-sm text-ink-gray-7"
             >Cuando baje de</label
           >
           <div class="flex items-center gap-2">
             <button
               type="button"
-              class="flex size-11 flex-none items-center justify-center rounded-lg bg-surface-gray-2"
+              class="flex size-12 flex-none items-center justify-center rounded-full bg-surface-gray-2"
               aria-label="Menos"
               @click="step(-1)"
             >
@@ -91,11 +108,11 @@
               type="number"
               inputmode="decimal"
               min="0"
-              class="min-h-11 w-full min-w-0 rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-center text-base"
+              class="min-h-12 w-full min-w-0 rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-center text-lg"
             />
             <button
               type="button"
-              class="flex size-11 flex-none items-center justify-center rounded-lg bg-surface-gray-2"
+              class="flex size-12 flex-none items-center justify-center rounded-full bg-surface-gray-2"
               aria-label="Más"
               @click="step(1)"
             >
@@ -107,45 +124,41 @@
             {{ selectedStore.label }}.
           </p>
         </div>
-      </div>
+      </section>
 
       <section v-if="active.length" aria-labelledby="avisame-mine">
-        <h3 id="avisame-mine" class="pb-1 text-sm font-semibold">
+        <h3
+          id="avisame-mine"
+          class="px-4 pb-1 pt-3 text-sm font-medium text-ink-gray-7"
+        >
           Ya me avisas
         </h3>
-        <ul class="space-y-1">
-          <li
-            v-for="row in active"
-            :key="row.name"
-            class="flex min-h-11 items-center gap-2"
-          >
-            <span
-              class="lucide-bell-ring size-4 flex-none text-ink-gray-6"
-              aria-hidden="true"
-            />
-            <span class="min-w-0 flex-1 break-words text-base">{{
-              row.condition
-            }}</span>
-            <Button
-              variant="ghost"
-              class="min-h-11"
-              label="Quitar"
-              :aria-label="`Quitar: ${row.condition}`"
-              :loading="removing === row.name"
-              @click="remove(row)"
-            />
+        <ul>
+          <li v-for="row in active" :key="row.name">
+            <ListRow icon="lucide-bell-ring" :title="row.condition">
+              <template #trailing>
+                <Button
+                  variant="ghost"
+                  class="min-h-11"
+                  label="Quitar"
+                  :aria-label="`Quitar: ${row.condition}`"
+                  :loading="removing === row.name"
+                  @click="remove(row)"
+                />
+              </template>
+            </ListRow>
           </li>
         </ul>
       </section>
 
-      <p v-if="note" class="text-sm text-ink-gray-7">{{ note }}</p>
-      <p v-if="error" role="alert" class="text-sm text-ink-red-4">
+      <p v-if="note" class="px-4 pt-2 text-sm text-ink-gray-7">{{ note }}</p>
+      <p v-if="error" role="alert" class="px-4 pt-2 text-sm text-ink-red-4">
         {{ error }}
       </p>
     </div>
     <template #actions>
       <Button
-        class="min-h-11 w-full"
+        class="min-h-12 w-full"
         variant="solid"
         label="Avísame"
         :disabled="!ready"
@@ -158,7 +171,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { Button, FormControl, toast } from 'frappe-ui'
-import { BottomSheet } from '@/components/ui'
+import { BottomSheet, ListRow } from '@/components/ui'
+import RadioDot from './RadioDot.vue'
 import { formatQty } from '@/utils/display'
 import {
   avisame,
@@ -198,15 +212,13 @@ const warehouse = ref('')
 const threshold = ref('')
 
 const chosen = computed(() => options.value.find((o) => o.key === choice.value))
-const warehouseOptions = computed(() =>
-  props.warehouses.map((row) => ({
-    value: row.warehouse,
-    label: `${row.label} · hay ${formatQty(row.qty)}`,
-  })),
-)
 const selectedStore = computed(() =>
   props.warehouses.find((row) => row.warehouse === warehouse.value),
 )
+function optionHint(option) {
+  if (option.active) return 'Ya lo pediste'
+  return option.needs_date ? 'Eliges la fecha límite' : 'Un aviso, cuando pase'
+}
 const ready = computed(() => {
   if (isItem.value)
     return Boolean(warehouse.value) && cleanThreshold(threshold.value) !== null
