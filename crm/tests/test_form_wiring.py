@@ -152,6 +152,28 @@ class TestFormWiring(IntegrationTestCase):
 		)
 		self.assertTrue(todo)
 
+	def test_the_form_credit_is_written_in_the_assignees_language(self):
+		agent = make_user("wf-agent-es@example.com")
+		frappe.db.set_value("User", agent, "language", "es")
+		frappe.clear_cache(user=agent)
+		name = F.create_form(template="contact", title="Contact us", route="wf-wired-es")["name"]
+		cfg = F.get_form_config(name)
+		F.save_form(name, {**cfg, "settings": {"assign_mode": "user", "assign_to": agent}})
+		previous = frappe.local.lang
+		frappe.local.lang = "en"  # the visitor's session language
+		try:
+			lead = submit(name, {"first_name": "Eva", "mobile_no": "5550000009", "crm_form_message": "Hola"})
+		finally:
+			frappe.local.lang = previous
+		texts = frappe.get_all(
+			"CRM Notification",
+			filters={"to_user": agent, "type": "Assignment", "reference_name": lead.name},
+			pluck="notification_text",
+		)
+		self.assertTrue(texts)
+		self.assertTrue(all("Formulario «" in (t or "") for t in texts), texts)
+		self.assertFalse(any("Form «" in (t or "") for t in texts), texts)
+
 	def test_watchers_get_an_in_app_notification(self):
 		watcher = make_user("wf-watcher@example.com")
 		name = F.create_form(template="contact", route="wf-watch")["name"]

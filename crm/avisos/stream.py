@@ -28,7 +28,17 @@ VIEWS = ("inbox", "history", "muted")
 _ASSIGNED = re.compile(r"assigned (?:a new task |a |you)|te asignó|asignó", re.I)
 _MENTIONED = re.compile(r"mentioned you|te mencionó", re.I)
 _SHARED = re.compile(r"shared .* with you|compartió", re.I)
-_GENERIC_ASSIGNMENT = re.compile(r"assigned an? \S+(?: \S+)? \S+ to you$")
+_GENERIC_ASSIGNMENT = re.compile(
+	r"assigned an? \S+(?: \S+)? \S+ to you$|(?:le|te) asignó \S+(?: \S+)? (?:[A-Z][A-Z0-9-]*)?\d+$"
+)
+# A public form submission assigns as Guest. Its stored text opens with the actor in the writer's
+# language: «Guest le asignó …» or «Form «Contacto» le asignó …».
+_FORM_ACTOR = re.compile(r"^(?:Form|Formulario) «(?P<form>[^»]+)»\s+")
+_GUEST_ACTOR = re.compile(r"^(?:Guest|Invitado)\s+")
+# doco storefront's return request (docoutils/storefront/returns.py), stored in Spanish with the
+# order's ID as the only thing that tells two requests apart: the reason does that, the record
+# (customer) goes in the meta line.
+_RETURN_REQUEST = re.compile(r"^Solicitud de devolución — pedido \S+ \((?P<reason>[^)]+)\)$")
 # Frappe's assignment e-mail line, stored as the body: «Assignment for CRM Lead CRM-LEAD-2026-00291».
 _ASSIGNMENT_FOR = re.compile(r"^(?:Assignment for|Asignación para) \S+(?: \S+)? \S+$")
 # A user id with no name set, such as «4vv6e0b4bu»: one lowercase word with digits, no spaces.
@@ -290,6 +300,9 @@ def _full_name(user):
 	if user in _SYSTEM_NAMES:
 		# Work the system did (or an admin acting as it) reads «Sistema», never «Administrator».
 		return _("System")
+	if user == "Guest":
+		# Someone who is not signed in (a public form): «Un visitante», never «Guest».
+		return _("A visitor")
 	name = (frappe.utils.get_fullname(user) or "").strip()
 	if not name or name == user or "@" in name or _HASH_ID.match(name):
 		return ""
@@ -428,16 +441,43 @@ def _removed_title(group, out):
 	return _("An assignment was taken off you")
 
 
+def _actor_name(group):
+	"""The reader's name for who did it. A public form submission (sender Guest) credits the form
+	its stored text names: «Formulario «Contacto»»; otherwise «Un visitante»."""
+	user = group.get("from_user")
+	if not user:
+		return ""
+	if user == "Guest":
+		found = _FORM_ACTOR.match(kinds.plain(group.get("raw_title") or group["title"]))
+		if found:
+			return _("Form «{0}»").format(found.group("form"))
+	return _full_name(user)
+
+
+def _reworded(title, group, out):
+	"""Stored text the stream can say better: a Guest actor in the writer's language, and a return
+	request named by its order ID."""
+	if group.get("from_user") == "Guest" and out["from_name"]:
+		for pattern in (_FORM_ACTOR, _GUEST_ACTOR):
+			found = pattern.match(title)
+			if found:
+				return f"{out['from_name']} {title[found.end() :]}"
+	found = _RETURN_REQUEST.match(title)
+	if found:
+		return _("Return request: {0}").format(found.group("reason"))
+	return title
+
+
 def _public(group, access):
 	out = {key: value for key, value in group.items() if key not in ("rows", "raw_title")}
 	out["latest"] = str(group["latest"])
-	out["from_name"] = _full_name(group.get("from_user")) if group.get("from_user") else ""
+	out["from_name"] = _actor_name(group)
 	out["target"] = resolve.target(group, access)
 	if group.get("removed"):
 		out["title"] = _removed_title(group, out)
 	else:
-		out["title"] = (
-			_direct_title(group, out) or kinds.display(group["title"], 240) or _("New notification")
+		out["title"] = _direct_title(group, out) or _reworded(
+			kinds.display(group["title"], 240) or _("New notification"), group, out
 		)
 	body = kinds.display(group["body"], 280)
 	if body.startswith(out["title"]):

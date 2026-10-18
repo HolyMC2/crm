@@ -196,6 +196,60 @@ class TestAvisosResolve(IntegrationTestCase):
 		self.assertEqual(stream._full_name(""), "")
 		self.assertNotEqual(stream._full_name(BETO), BETO)
 
+	def guest_assignment(self, task, actor):
+		"""The row a public form submission stored before the actor was written in the reader's
+		language: sender Guest, actor «Guest» or «Form «…»» in the visitor's language."""
+		return frappe.get_doc(
+			{
+				"doctype": "CRM Notification",
+				"from_user": "Guest",
+				"to_user": "Administrator",
+				"type": "Assignment",
+				"notification_text": f"<span>{actor}</span> le asignó una nueva tarea {task.title}",
+				"message": f"{actor} le asignó CRM Task {task.name}",
+				"notification_type_doctype": "CRM Task",
+				"notification_type_doc": task.name,
+			}
+		).insert(ignore_permissions=True)
+
+	def test_a_public_form_assignment_names_the_visitor_or_the_form_never_guest(self):
+		if not frappe.db.table_exists("CRM Notification"):
+			self.skipTest("CRM Notification is not installed")
+		self.assertEqual(stream._full_name("Guest"), frappe._("A visitor"))
+		self.guest_assignment(self.crm_task("Llamar al visitante"), "Guest")
+		self.guest_assignment(self.crm_task("Contestar el formulario"), "Form «Contact us»")
+		titles = self.targets("Administrator")
+		visitor = frappe._("{0} assigned you «{1}»").format(frappe._("A visitor"), "Llamar al visitante")
+		form = frappe._("{0} assigned you «{1}»").format(
+			frappe._("Form «{0}»").format("Contact us"), "Contestar el formulario"
+		)
+		self.assertIn(visitor, titles)
+		self.assertIn(form, titles)
+		for title in (visitor, form):
+			self.assertNotIn("Guest", title)
+			# The stored message names the record by ID: never repeated as the body.
+			self.assertEqual(titles[title]["body"], "")
+
+	def test_a_stored_guest_actor_is_reworded_when_no_record_label_is_known(self):
+		group = {"from_user": "Guest", "title": "Guest le asignó una nueva tarea Prospecto"}
+		out = {"from_name": stream._actor_name(group)}
+		self.assertEqual(
+			stream._reworded(group["title"], group, out),
+			f"{frappe._('A visitor')} le asignó una nueva tarea Prospecto",
+		)
+		group = {"from_user": "Guest", "title": "Form «Contact us» le asignó prospecto Ana"}
+		out = {"from_name": stream._actor_name(group)}
+		self.assertEqual(
+			stream._reworded(group["title"], group, out),
+			f"{frappe._('Form «{0}»').format('Contact us')} le asignó prospecto Ana",
+		)
+
+	def test_a_return_request_is_named_by_its_reason_not_the_order_id(self):
+		title = "Solicitud de devolución — pedido SAL-ORD-2026-00019 (equivocado)"
+		reworded = stream._reworded(title, {"from_user": None, "title": title}, {"from_name": ""})
+		self.assertEqual(reworded, frappe._("Return request: {0}").format("equivocado"))
+		self.assertNotIn("SAL-ORD", reworded)
+
 	def test_frappes_assignment_mail_line_is_not_repeated_as_the_body(self):
 		doc = frappe.get_doc(
 			{

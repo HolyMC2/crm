@@ -42,10 +42,13 @@ def notify_assigned_user(doc, is_cancelled=False):
 	_doc = frappe.get_doc(doc.reference_type, doc.reference_name)
 	from crm.forms.wiring import assignment_actor
 
-	# a public form submission assigns as Guest: credit the form, not "Guest"
-	owner = assignment_actor() or frappe.get_cached_value("User", frappe.session.user, "full_name")
 	# The row is read by the person assigned, so it is written in their language, not the actor's.
 	lang = recipient_language(doc.allocated_to)
+	# a public form submission assigns as Guest: credit the form, not "Guest"
+	owner = assignment_actor(lang)
+	if not owner and frappe.session.user == "Guest":
+		owner = _("A visitor", lang=lang)
+	owner = owner or frappe.get_cached_value("User", frappe.session.user, "full_name")
 	notification_text = get_notification_text(owner, doc, _doc, is_cancelled, lang=lang)
 
 	message = (

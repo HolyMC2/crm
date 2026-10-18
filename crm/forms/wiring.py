@@ -215,13 +215,14 @@ def _notify_watchers(doc, form, users) -> list[str]:
 	return sent
 
 
-def assignment_actor() -> str | None:
+def assignment_actor(lang: str | None = None) -> str | None:
 	"""Who to credit in the assignee's notification when a form submission assigns a
-	record: the form, not the anonymous visitor."""
+	record: the form, not the anonymous visitor. In ``lang``, the assignee's language: the
+	visitor's session language is not the reader's."""
 	if not frappe.flags.get("in_web_form"):
 		return None
 	form = submitting_form()
-	return _("Form «{0}»").format(form.title or form.name) if form else None
+	return _("Form «{0}»", lang=lang).format(form.title or form.name) if form else None
 
 
 def send_daily_digests() -> None:

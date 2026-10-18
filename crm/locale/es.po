@@ -26511,3 +26511,11 @@ msgstr "Esta sección necesita una pantalla más ancha. Abre Muelle en una compu
 msgctxt "Commercial document"
 msgid "Resume"
 msgstr "Reanudar"
+
+#: crm/avisos/stream.py crm/api/todo.py
+msgid "A visitor"
+msgstr "Un visitante"
+
+#: crm/avisos/stream.py
+msgid "Return request: {0}"
+msgstr "Solicitud de devolución: {0}"
