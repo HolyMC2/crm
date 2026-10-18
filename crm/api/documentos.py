@@ -12,6 +12,7 @@ doctypes simply drop out where ERPNext is not installed.
 
 import json
 import re
+from html import unescape
 
 import frappe
 from frappe import _
@@ -793,7 +794,7 @@ def _timeline(doc):
 			events.append(event)
 	for c in info.comments:
 		events.append(
-			{"kind": "comment", "at": cstr(c.creation), "who": _person(c.owner), "text": strip_html(cstr(c.content))[:600], "id": c.name}
+			{"kind": "comment", "at": cstr(c.creation), "who": _person(c.owner), "text": unescape(strip_html(cstr(c.content).replace("<br>", "\n")))[:600], "id": c.name}
 		)
 	for key, kind in (("assignment_logs", "assignment"), ("attachment_logs", "attachment"), ("info_logs", "info"), ("shared", "share"), ("workflow_logs", "workflow")):
 		for c in info.get(key) or []:

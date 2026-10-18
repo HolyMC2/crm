@@ -158,6 +158,61 @@ class TestDocumentosAccess(IntegrationTestCase):
 		documentos.rows("Note", order_by="name; drop table x")
 		documentos.rows("Note", order_by="nonexistent desc")
 
+	# ── D1.2: editing, tools ──
+
+	def test_a_draft_is_created_edited_and_deleted_with_the_workers_permissions(self):
+		frappe.set_user(self.email)
+		shape = documentos.form("Note")
+		self.assertIn("title", [f["fieldname"] for f in shape["fields"]])
+		for field in shape["fields"]:
+			self.assertNotIn(field["fieldname"], ("name", "owner", "docstatus"))
+		made = documentos.save("Note", values={"title": "Nota del turno D1", "public": 1})
+		note = frappe.get_doc("Note", made["name"])
+		self.assertEqual(note.owner, self.email)
+		documentos.save("Note", name=note.name, values={"title": "Nota del turno D1 (corregida)"}, modified=str(note.modified))
+		self.assertEqual(frappe.db.get_value("Note", note.name, "title"), "Nota del turno D1 (corregida)")
+		# Someone else saved in between: the worker is told, nothing is overwritten.
+		with self.assertRaises(frappe.TimestampMismatchError):
+			documentos.save("Note", name=note.name, values={"title": "x"}, modified="2000-01-01 00:00:00")
+		# Standard fields never come from the sheet.
+		documentos.save("Note", name=note.name, values={"owner": "Administrator", "docstatus": 1})
+		self.assertEqual(frappe.db.get_value("Note", note.name, "owner"), self.email)
+		self.assertEqual(frappe.db.get_value("Note", note.name, "docstatus"), 0)
+		with self.assertRaises(frappe.PermissionError):
+			documentos.act("Note", note.name, "submit")  # not submittable
+		self.assertTrue(documentos.act("Note", note.name, "delete")["deleted"])
+		self.assertFalse(frappe.db.exists("Note", note.name))
+
+	def test_comment_and_assign_name_people_not_emails(self):
+		frappe.set_user("Administrator")
+		note = frappe.get_doc({"doctype": "Note", "title": "Nota para asignar D1", "public": 1}).insert()
+		frappe.set_user(self.email)
+		activity = documentos.comment("Note", note.name, "Revisar <b>hoy</b>")
+		comment = next(e for e in activity["events"] if e["kind"] == "comment")
+		self.assertEqual(comment["who"], "Lectora Documentos")
+		self.assertIn("Revisar <b>hoy</b>", comment["text"])  # escaped, shown as typed
+		with self.assertRaises(frappe.ValidationError):
+			documentos.comment("Note", note.name, "   ")
+		people = documentos.people("Lectora")
+		self.assertIn(self.email, [p["user"] for p in people])
+		for person in people:
+			self.assertNotIn("@", person["name"])
+		frappe.set_user("Administrator")
+		activity = documentos.assign("Note", note.name, add=[self.email])
+		self.assertIn(self.email, [a["user"] for a in activity["assigned"]])
+		activity = documentos.assign("Note", note.name, remove=[self.email])
+		self.assertNotIn(self.email, [a["user"] for a in activity["assigned"]])
+
+	def test_only_allowlisted_mappers_run(self):
+		frappe.set_user("Administrator")
+		with self.assertRaises(frappe.PermissionError):
+			documentos._maker("Quotation", "frappe.client.delete")
+		with self.assertRaises(frappe.PermissionError):
+			documentos._maker("Note", "sales_order")
+		for (source, key), (path, target) in documentos.MAKERS.items():
+			self.assertTrue(path.startswith("erpnext."), (source, key))
+			self.assertTrue(target)
+
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
 class TestDocumentosERPNext(IntegrationTestCase):
@@ -206,3 +261,21 @@ class TestDocumentosERPNext(IntegrationTestCase):
 	def test_palette_search_needs_two_characters(self):
 		self.assertEqual(documentos.search("a"), [])
 		self.assertIsInstance(documentos.search("Cliente"), list)
+
+	def test_sales_invoice_form_draft_and_print_formats(self):
+		shape = documentos.form("Sales Invoice", fields=["customer", "due_date", "debit_to"])
+		self.assertEqual([f["fieldname"] for f in shape["fields"]][:2], ["customer", "due_date"])
+		self.assertEqual(shape["fields"][0]["options"], "Customer")
+		self.assertEqual(shape["items"]["fieldname"], "items")
+		self.assertIn("qty", shape["items"]["fields"])
+		blank = documentos.draft("Sales Invoice")
+		self.assertEqual(blank["doc"]["doctype"], "Sales Invoice")
+		self.assertEqual(blank["doc"]["docstatus"], 0)
+		formats = documentos.print_formats("Sales Invoice")
+		self.assertEqual(formats[-1]["name"], "Standard")
+		self.assertEqual(sum(1 for f in formats if f["default"]) >= 1, True)
+
+	def test_every_mapper_on_the_allowlist_is_whitelisted_in_erpnext(self):
+		for path, _target in documentos.MAKERS.values():
+			fn = frappe.get_attr(path)
+			self.assertIn(fn, frappe.whitelisted, path)
