@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+from unittest.mock import patch
+
 import frappe
 from frappe.tests import IntegrationTestCase
 
@@ -159,20 +161,21 @@ class TestFormWiring(IntegrationTestCase):
 		name = F.create_form(template="contact", title="Contact us", route="wf-wired-es")["name"]
 		cfg = F.get_form_config(name)
 		F.save_form(name, {**cfg, "settings": {"assign_mode": "user", "assign_to": agent}})
-		previous = frappe.local.lang
-		frappe.local.lang = "en"  # the visitor's session language
-		try:
+
+		# Tag each translation with the language it was asked in: a test site may carry no
+		# compiled crm catalog, so the Spanish words themselves are not what this checks.
+		def tagged(message, lang=None, context=None):
+			return f"[{lang}] {message}"
+
+		with patch.object(wiring, "_", side_effect=tagged):
 			lead = submit(name, {"first_name": "Eva", "mobile_no": "5550000009", "crm_form_message": "Hola"})
-		finally:
-			frappe.local.lang = previous
 		texts = frappe.get_all(
 			"CRM Notification",
 			filters={"to_user": agent, "type": "Assignment", "reference_name": lead.name},
 			pluck="notification_text",
 		)
 		self.assertTrue(texts)
-		self.assertTrue(all("Formulario «" in (t or "") for t in texts), texts)
-		self.assertFalse(any("Form «" in (t or "") for t in texts), texts)
+		self.assertTrue(all("[es] Form «Contact us»" in (t or "") for t in texts), texts)
 
 	def test_watchers_get_an_in_app_notification(self):
 		watcher = make_user("wf-watcher@example.com")
