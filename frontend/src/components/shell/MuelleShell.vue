@@ -34,11 +34,11 @@
         <template #title>
           <!-- Ventas pages may teleport their own header (breadcrumbs + actions)
                here; while none arrives the route's title stands in for it.
-               pl-2 lines its first crumb up with the title's px-3. -->
+               pl-3 lines its first crumb up with the title (16px at 412, measured). -->
           <div
             v-if="activeKey === 'ventas'"
             id="app-header"
-            class="min-w-0 flex-1 pl-2 [&:not(:has(*))]:hidden"
+            class="min-w-0 flex-1 pl-3 [&:not(:has(*))]:hidden"
           />
           <h1
             data-testid="shell-title"
