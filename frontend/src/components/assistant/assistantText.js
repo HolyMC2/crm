@@ -58,6 +58,19 @@ export function shellPathFor(href) {
   return null
 }
 
+// A Desk record link the shell has no screen for reads as its record name
+// («CAP-2026-00087»), not as a long URL that wraps over three lines.
+function linkLabel(href) {
+  try {
+    const url = new URL(href, 'https://muelle.invalid')
+    const desk = url.pathname.match(/^\/(?:app|desk)\/[^/]+\/([^/]+)\/?$/)
+    if (desk) return decodeURIComponent(desk[1])
+  } catch {
+    // not a URL: shown as written
+  }
+  return href
+}
+
 const URL_RX = /(https?:\/\/[^\s<>«»"]+|\/(?:app|desk|crm)\/[^\s<>«»"]+)/g
 
 /** Text → [{ text }] and [{ href, label, to? }] parts, for rendering without v-html. */
@@ -69,11 +82,115 @@ export function textParts(text) {
     const raw = match[0].replace(/[.,;:)]+$/, '')
     if (match.index > last) parts.push({ text: value.slice(last, match.index) })
     const to = shellPathFor(raw)
-    parts.push(to ? { href: raw, label: raw, to } : { href: raw, label: raw })
+    parts.push(
+      to ? { href: raw, label: raw, to } : { href: raw, label: linkLabel(raw) },
+    )
     last = match.index + raw.length
   }
   if (last < value.length) parts.push({ text: value.slice(last) })
   return parts
+}
+
+/**
+ * One line → [{ text, strong? }] and link parts: the model writes `**bold**`
+ * (a key figure, a record) and the sheet shows it bold instead of asterisks.
+ */
+export function inlineParts(text) {
+  const parts = []
+  String(text || '')
+    .split(/\*\*(?=\S)(.+?\S)\*\*/g)
+    .forEach((piece, i) => {
+      if (!piece) return
+      for (const part of textParts(piece))
+        parts.push(i % 2 && !part.href ? { ...part, strong: true } : part)
+    })
+  return parts
+}
+
+const TABLE_ROW = /^\s*\|.*\|\s*$/
+const TABLE_RULE = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/
+const LIST_ITEM = /^\s*(?:([-*•])|(\d{1,2})[.)])\s+(.*)$/
+const HEADING = /^\s*#{1,6}\s+(.*)$/
+const cells = (line) =>
+  line
+    .trim()
+    .replace(/^\||\|$/g, '')
+    .split('|')
+    .map((cell) => inlineParts(cell.trim()))
+
+/**
+ * A reply's prose → blocks the sheet renders without v-html: paragraphs,
+ * headings, list items and tables (the model answers in Markdown; the
+ * worker should read a list, not pipes and asterisks).
+ */
+export function proseBlocks(text) {
+  const blocks = []
+  let para = []
+  const flush = () => {
+    if (para.length)
+      blocks.push({ type: 'p', parts: inlineParts(para.join('\n')) })
+    para = []
+  }
+  const lines = String(text || '').split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (TABLE_ROW.test(line) && TABLE_RULE.test(lines[i + 1] || '')) {
+      flush()
+      const head = cells(line)
+      const rows = []
+      i += 2
+      while (i < lines.length && TABLE_ROW.test(lines[i]))
+        rows.push(cells(lines[i++]))
+      i -= 1
+      blocks.push({ type: 'table', head, rows })
+      continue
+    }
+    const item = line.match(LIST_ITEM)
+    if (item) {
+      flush()
+      blocks.push({
+        type: 'li',
+        marker: item[2] ? `${item[2]}.` : '•',
+        parts: inlineParts(item[3]),
+      })
+      continue
+    }
+    const heading = line.match(HEADING)
+    if (heading) {
+      flush()
+      blocks.push({ type: 'h', parts: inlineParts(heading[1]) })
+      continue
+    }
+    if (!line.trim()) flush()
+    else para.push(line)
+  }
+  flush()
+  return blocks
+}
+
+/**
+ * The messages the log shows. Left out: an answer doco cannot replay (and its
+ * question), the progress lines («Consultando…» shows once, as the status
+ * line), and an outage line that a later answer has made old news (and its
+ * question): «Muelle no puede responder ahora» only while it is still true.
+ */
+export function visibleMessages(messages) {
+  const all = Array.isArray(messages) ? messages : []
+  let answeredAfter = false
+  const oldOutage = new Set()
+  for (let i = all.length - 1; i >= 0; i--) {
+    const message = all[i]
+    if (message.role !== 'bot' || isProgress(message)) continue
+    if (message.down && answeredAfter) oldOutage.add(i)
+    if (!message.down && !message.stale) answeredAfter = true
+  }
+  const hide = (i) => all[i]?.stale || oldOutage.has(i)
+  return all.filter(
+    (message, i) =>
+      !hide(i) &&
+      !(message.role === 'user' && hide(i + 1)) &&
+      !(message.role === 'bot' && isProgress(message)),
+  )
 }
 
 /** The first record link of a reply: the receipt's «Abrir». */

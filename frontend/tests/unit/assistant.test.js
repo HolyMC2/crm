@@ -20,7 +20,10 @@ vi.mock('@/components/ui/BottomSheet.vue', () => ({
 
 import {
   chipsFor,
+  inlineParts,
   looksLikeQuestion,
+  proseBlocks,
+  visibleMessages,
   proseOf,
   questionText,
   shellPathFor,
@@ -202,6 +205,73 @@ describe('what a reply says', () => {
       ).down,
     ).toBe(true)
     expect(row('Tienes 3 pendientes.').down).toBe(false)
+  })
+
+  it("reads the model's Markdown as bold, lists and tables, not asterisks and pipes", () => {
+    expect(inlineParts('Vence **hoy**: $1,500')).toEqual([
+      { text: 'Vence ' },
+      { text: 'hoy', strong: true },
+      { text: ': $1,500' },
+    ])
+    expect(inlineParts('2 ** 3 y **')).toEqual([{ text: '2 ** 3 y **' }])
+    const blocks = proseBlocks(
+      [
+        '### Pagos vencidos',
+        'Lo primero:',
+        '1. **XMovil:** $9,969',
+        '- Refacciones: $1,500',
+        '',
+        '| Cotización | Total |',
+        '|---|---:|',
+        '| SAL-QTN-6 | $1,100 |',
+        '| SAL-QTN-5 | $1,850 |',
+        'Dime cuál.',
+      ].join('\n'),
+    )
+    expect(blocks.map((b) => b.type)).toEqual([
+      'h',
+      'p',
+      'li',
+      'li',
+      'table',
+      'p',
+    ])
+    expect(blocks[2]).toEqual({
+      type: 'li',
+      marker: '1.',
+      parts: [{ text: 'XMovil:', strong: true }, { text: ' $9,969' }],
+    })
+    expect(blocks[3].marker).toBe('•')
+    expect(blocks[4].head).toEqual([
+      [{ text: 'Cotización' }],
+      [{ text: 'Total' }],
+    ])
+    expect(blocks[4].rows).toEqual([
+      [[{ text: 'SAL-QTN-6' }], [{ text: '$1,100' }]],
+      [[{ text: 'SAL-QTN-5' }], [{ text: '$1,850' }]],
+    ])
+    // a Desk link without a shell screen reads as its record name
+    expect(
+      inlineParts('Ver http://x.invalid/desk/captura-contable/CAP-7'),
+    ).toEqual([
+      { text: 'Ver ' },
+      { href: 'http://x.invalid/desk/captura-contable/CAP-7', label: 'CAP-7' },
+    ])
+  })
+
+  it('drops an outage line once a later answer came, with its question', () => {
+    const row = (kind, message, mid) => normalizeRow({ kind, message, mid })
+    const down = 'El asistente inteligente no está disponible en este momento.'
+    const old = [
+      row('user', '¿Facturas del RFC?', 'u1'),
+      row('bot', down, 'b1'),
+      row('user', '¿Qué hago primero hoy?', 'u2'),
+      row('bot', 'Consultando…', 'p2'),
+      row('bot', 'Lo primero: cobrar.', 'b2'),
+    ]
+    expect(visibleMessages(old).map((m) => m.id)).toEqual(['u2', 'b2'])
+    const now = [row('user', 'Hola', 'u3'), row('bot', down, 'b3')]
+    expect(visibleMessages(now).map((m) => m.id)).toEqual(['u3', 'b3'])
   })
 
   it('makes client ids api.say accepts', () => {

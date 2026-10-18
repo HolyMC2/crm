@@ -1,6 +1,7 @@
 <template>
   <!-- The conversation: questions, answers, action cards and choices. -->
   <div
+    ref="root"
     class="space-y-4 py-2"
     :class="
       docked ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4' : ''
@@ -75,32 +76,11 @@
         </button>
       </div>
       <div v-else class="space-y-2" data-role="bot">
-        <p
+        <AssistantProse
           v-if="view(message).prose"
-          class="whitespace-pre-line break-words text-base text-ink-gray-9"
-        >
-          <template
-            v-for="(part, i) in textParts(view(message).prose)"
-            :key="i"
-          >
-            <RouterLink
-              v-if="part.to"
-              :to="part.to"
-              class="text-ink-blue-link underline"
-              @click="$emit('navigate')"
-              >{{ __('Open') }}</RouterLink
-            >
-            <a
-              v-else-if="part.href"
-              :href="part.href"
-              target="_blank"
-              rel="noopener"
-              class="break-all text-ink-blue-link underline"
-              >{{ part.label }}</a
-            >
-            <template v-else>{{ part.text }}</template>
-          </template>
-        </p>
+          :text="view(message).prose"
+          @navigate="$emit('navigate')"
+        />
         <ActionCard
           v-for="card in view(message).cards"
           :key="card.id"
@@ -141,13 +121,13 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import ActionCard from './ActionCard.vue'
+import AssistantProse from './AssistantProse.vue'
 import {
   firstRecordLink,
-  isProgress,
   proseOf,
   splitButtons,
   stripEmoji,
-  textParts,
+  visibleMessages,
 } from './assistantText'
 import { assistant, retry, retryAnswer, tap } from './useAssistant'
 
@@ -157,17 +137,9 @@ defineEmits(['navigate'])
 
 const end = ref(null)
 
-// An answer doco cannot replay (and the question it answered) is left out;
-// one quiet line at the top says so. A live failure still shows in place.
-const shown = computed(() =>
-  assistant.messages.filter(
-    (message, i, all) =>
-      !message.stale &&
-      !(message.role === 'user' && all[i + 1]?.stale) &&
-      // «Consultando…» shows once, as the status line under the log.
-      !(message.role === 'bot' && isProgress(message)),
-  ),
-)
+// What the log shows: no unreplayable answers, no progress lines, no outage
+// line a later answer has made old news (visibleMessages).
+const shown = computed(() => visibleMessages(assistant.messages))
 const hidden = computed(() => assistant.messages.some((m) => m.stale))
 
 // A reply's prose, its action cards and its plain choices, computed once per text.
@@ -199,10 +171,21 @@ function change(card) {
   assistant.focus += 1
 }
 
-// The newest message in view, whichever element scrolls (dock or sheet).
-function toBottom() {
-  nextTick(() => end.value?.scrollIntoView?.({ block: 'end' }))
+// While Muelle works, the status line stays in view. When an answer lands,
+// it is read from its start: the question it answers at the top (Gemini,
+// ChatGPT), not the end of a long answer with its beginning scrolled away.
+const root = ref(null)
+function follow() {
+  nextTick(() => {
+    const rows = root.value?.querySelectorAll?.('[data-role]') || []
+    const last = rows[rows.length - 1]
+    if (assistant.thinking || !last || last.dataset.role !== 'bot')
+      return end.value?.scrollIntoView?.({ block: 'end' })
+    const before = rows[rows.length - 2]
+    const top = before?.dataset.role === 'user' ? before : last
+    top.scrollIntoView?.({ block: 'start' })
+  })
 }
-watch(() => [assistant.messages.length, assistant.thinking], toBottom)
-onMounted(toBottom)
+watch(() => [assistant.messages.length, assistant.thinking], follow)
+onMounted(follow)
 </script>
