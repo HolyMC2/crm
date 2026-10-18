@@ -1,4 +1,7 @@
 .c-workspace {
+  /* the FAB's anchor: without it «Nuevo contacto» anchored to a shell box that
+     runs under the bottom nav and covered Agenda/Contactos/Más */
+  position: relative;
   display: flex;
   flex: 1;
   min-width: 0;
