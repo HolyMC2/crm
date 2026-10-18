@@ -108,7 +108,8 @@
           </template>
         </PageHeader>
 
-        <div class="px-4 pb-2 sm:px-6">
+        <!-- On a phone the header is gone: the search keeps its own top gap. -->
+        <div class="px-4 pb-2 pt-3 sm:px-6 sm:pt-0">
           <label class="sr-only" for="manual-search">{{
             __('Search the shop manual')
           }}</label>
