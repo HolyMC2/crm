@@ -150,6 +150,8 @@ const HOSTED = [
   'equipo',
   'archivos',
   'manual',
+  'documentos',
+  'inventario',
   'avisos',
 ]
 const ROUTE_HOME = { contactos: '/contactos', ventas: '/ventas' }

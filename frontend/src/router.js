@@ -360,6 +360,87 @@ const routes = [
     props: true,
     meta: { app: 'manual', title: 'Manual de la tienda', listParent: 'Manual' },
   },
+  // Documentos and Inventario (Shell Wave D, SPEC §6 DD2): hub, a profile's
+  // list and record, and the generic floor for any readable doctype. Each page
+  // owns its phone bar (the record's back keeps the list's filters).
+  {
+    path: '/documentos',
+    name: 'Documentos',
+    component: () => import('@/pages/DocumentosHub.vue'),
+    meta: { app: 'documentos', title: 'Documentos', ownPhoneHeader: true },
+  },
+  {
+    path: '/documentos/tipo/:doctype',
+    name: 'DocumentosTipo',
+    component: () => import('@/pages/DocumentosList.vue'),
+    meta: {
+      app: 'documentos',
+      title: 'Documentos',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/documentos/tipo/:doctype/:name',
+    name: 'DocumentoTipo',
+    component: () => import('@/pages/DocumentoRecord.vue'),
+    meta: {
+      app: 'documentos',
+      title: 'Documentos',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/documentos/:slug',
+    name: 'DocumentosLista',
+    component: () => import('@/pages/DocumentosList.vue'),
+    meta: {
+      app: 'documentos',
+      title: 'Documentos',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/documentos/:slug/:name',
+    name: 'Documento',
+    component: () => import('@/pages/DocumentoRecord.vue'),
+    meta: {
+      app: 'documentos',
+      title: 'Documentos',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/inventario',
+    name: 'Inventario',
+    component: () => import('@/pages/DocumentosHub.vue'),
+    meta: { app: 'inventario', title: 'Inventario', ownPhoneHeader: true },
+  },
+  {
+    path: '/inventario/:slug',
+    name: 'InventarioLista',
+    component: () => import('@/pages/DocumentosList.vue'),
+    meta: {
+      app: 'inventario',
+      title: 'Inventario',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/inventario/:slug/:name',
+    name: 'InventarioDocumento',
+    component: () => import('@/pages/DocumentoRecord.vue'),
+    meta: {
+      app: 'inventario',
+      title: 'Inventario',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
   {
     path: '/archivos',
     name: 'Archivos',

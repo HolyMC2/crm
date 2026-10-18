@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { call } from 'frappe-ui'
 import { errorKind, formatMoment } from '@/utils/contactos'
 import { prefetchDocument } from '@/utils/speculate'
+import { shellBoot } from '@/composables/muelleShell'
 
 // English source strings; the es-MX catalog (crm/locale/es.po) translates them.
 const t = (text, replace) =>
@@ -118,7 +119,8 @@ export function metaLine(group, { lang, timezone, now } = {}) {
 /** «Resolver en …» under a row, or nothing when the aviso has nowhere to go. */
 export function actionLabel(group) {
   const target = group?.target || {}
-  if (!target.route && !target.href && !target.desk) return ''
+  const document = documentRoute && group?.doctype && group?.docname
+  if (!target.route && !target.href && !target.desk && !document) return ''
   return target.action || t('Open')
 }
 
@@ -165,6 +167,19 @@ export function openTarget(group, router, returnTo = '', returnLabel = '') {
       returnLabel,
     )
     return { kind: 'app', href: url.pathname + url.search + url.hash }
+  }
+  // A business document opens as a shell record (Documentos), not in Desk.
+  const own =
+    documentRoute && group?.doctype && group?.docname
+      ? documentRoute(group.doctype, group.docname, { boot: shellBoot.value })
+      : null
+  if (own?.path) {
+    const url = withReturn(
+      new URL(own.path, 'https://muelle.invalid'),
+      returnTo,
+      returnLabel,
+    )
+    return { kind: 'route', to: url.pathname + url.search }
   }
   if (target.desk) return { kind: 'desk', href: deskPath(target.desk) }
   return { kind: 'none', reason: target.reason || '' }
@@ -233,7 +248,17 @@ export function startAvisosLive(socket) {
 
 // ── server calls ─────────────────────────────────────────────────────────────
 
+// Documentos' resolver loads with the first list of avisos, never with the bell
+// (entry budget, Shell SPEC §6 DD12); «Open» uses it once it is there.
+let documentRoute = null
+export function loadDocumentRoutes() {
+  return import('@/documentos/registry').then((m) => {
+    documentRoute = m.documentRoute
+  })
+}
+
 export function loadStream(state, start = 0) {
+  loadDocumentRoutes().catch(() => {})
   return call('crm.api.avisos.get_stream', {
     view: state.view,
     category: state.category,

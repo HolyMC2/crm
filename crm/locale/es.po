@@ -26717,3 +26717,50 @@ msgstr "quedan {0}"
 msgctxt "Productos"
 msgid "See all movements"
 msgstr "Ver todos los movimientos"
+#: crm/api/documentos.py
+msgid "You cannot open these documents. Ask your manager for access."
+msgstr "No puedes abrir estos documentos. Pide acceso a tu encargado."
+
+#: crm/api/documentos.py
+msgid "Sign in to open your documents."
+msgstr "Inicia sesión para abrir tus documentos."
+
+#: crm/api/documentos.py
+msgid "Your user cannot read any of these documents. Ask the owner or the manager for access."
+msgstr "Tu usuario no puede leer ninguno de estos documentos. Pide acceso al dueño o al encargado."
+
+#: crm/api/documentos.py
+msgid "The filters could not be read."
+msgstr "No se pudieron leer los filtros."
+
+#: crm/api/documentos.py
+msgid "Someone"
+msgstr "Alguien"
+
+#: crm/api/documentos.py
+msgid "Your user does not have this permission."
+msgstr "Tu usuario no tiene este permiso."
+
+#: crm/api/documentos.py
+msgid "Only a draft can be edited."
+msgstr "Solo se puede editar un borrador."
+
+#: crm/api/documentos.py
+msgid "Only a confirmed document can be cancelled."
+msgstr "Solo se puede cancelar un documento confirmado."
+
+#: crm/api/documentos.py
+msgid "Only a cancelled document can be amended."
+msgstr "Solo se puede modificar un documento cancelado."
+
+#: crm/api/documentos.py
+msgid "Cancel it first; a confirmed document cannot be deleted."
+msgstr "Cancélalo primero; un documento confirmado no se puede eliminar."
+
+#: frontend/src/components/shell/MuelleShell.vue
+msgid "I need access to Documentos in Muelle: read permission for the sales, purchase or payment documents I work with (for example Sales Invoice)."
+msgstr "Necesito acceso a Documentos en Muelle: permiso de lectura de los documentos de venta, compra o pago con los que trabajo (por ejemplo, facturas)."
+
+#: frontend/src/components/shell/MuelleShell.vue
+msgid "I need access to Inventario in Muelle: read permission for Stock Entry and Warehouse in my company."
+msgstr "Necesito acceso a Inventario en Muelle: permiso de lectura de movimientos de inventario y almacenes de mi empresa."
