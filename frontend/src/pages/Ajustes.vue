@@ -14,20 +14,7 @@
       :search-label="__('Buscar un ajuste')"
       :bell="false"
       data-testid="ajustes-appbar"
-    >
-      <template v-if="assistantEnabled" #actions>
-        <button
-          type="button"
-          class="flex size-12 flex-none items-center justify-center rounded-full text-lg text-[var(--brand)] hover:bg-surface-gray-2"
-          :aria-label="__('Pregúntale sobre esta ficha')"
-          :title="__('Pregúntale sobre esta ficha')"
-          data-ajustes-ask
-          @click="ask()"
-        >
-          <span aria-hidden="true">✦</span>
-        </button>
-      </template>
-    </AppBar>
+    />
     <div ref="scroller" class="min-h-0 flex-1 overflow-y-auto">
       <div class="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 lg:px-6">
         <nav v-if="!isPhone" class="mb-2">
@@ -72,32 +59,32 @@
             <p class="mt-1 text-sm text-ink-gray-6" data-ajustes-summary>
               {{ summary }}
             </p>
+            <!-- Doors to «Pregúntale a Muelle» (DD13): ask about this record,
+                 or one prepared question. One scrolling row on a phone. -->
             <div
-              v-if="assistantEnabled && (!isPhone || prompts.length)"
-              class="mt-3 flex flex-wrap gap-2"
+              v-if="assistantEnabled"
+              role="group"
+              :aria-label="__('Pregúntale a Muelle')"
+              class="-mx-4 mt-3 flex flex-nowrap gap-2 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:px-0 [&::-webkit-scrollbar]:hidden"
               data-ajustes-prompts
             >
               <button
-                v-if="!isPhone"
                 type="button"
-                class="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
+                class="inline-flex min-h-11 flex-none items-center gap-2 whitespace-nowrap rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
                 data-ajustes-ask
                 @click="ask()"
               >
-                <span class="text-[var(--brand)]" aria-hidden="true">✦</span>
+                <span aria-hidden="true">✦</span>
                 {{ __('Pregúntale sobre esta ficha') }}
               </button>
               <button
                 v-for="prompt in prompts"
                 :key="prompt"
                 type="button"
-                class="inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-outline-gray-2 px-4 py-2 text-left text-sm text-ink-gray-8 hover:bg-surface-gray-2"
+                class="inline-flex min-h-11 flex-none items-center whitespace-nowrap rounded-full border border-outline-gray-2 px-4 text-sm text-ink-gray-8 hover:bg-surface-gray-2"
                 @click="ask(prompt)"
               >
-                <span class="flex-none text-[var(--brand)]" aria-hidden="true"
-                  >✦</span
-                >
-                <span class="min-w-0 break-words">{{ prompt }}</span>
+                {{ prompt }}
               </button>
             </div>
           </header>
