@@ -142,6 +142,32 @@ describe('AppBar', () => {
     expect(back.getAttribute('href')).toBe('/compras')
     expect(back.getAttribute('aria-label')).toBe('Back')
   })
+  it.each([
+    [true, false],
+    [false, true],
+  ])(
+    'at 305px a long title takes its own row (stack %s → beside the arrow: %s)',
+    async (stack, beside) => {
+      const width = vi
+        .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
+        .mockReturnValue(305)
+      const offset = vi
+        .spyOn(HTMLElement.prototype, 'offsetWidth', 'get')
+        .mockReturnValue(144)
+      await mount(AppBar, {
+        title: 'Samsung Galaxy A54 de prueba',
+        back: '/productos',
+        stack,
+      })
+      await flush()
+      const title = root.querySelector('[data-appbar-title]')
+      const row = root.querySelector('[data-appbar-back]').parentElement
+      const sameRow = row.contains(title)
+      expect(Boolean(sameRow)).toBe(beside)
+      width.mockRestore()
+      offset.mockRestore()
+    },
+  )
   it('back: true walks history, or goes home without one', async () => {
     const { events } = await mount(AppBar, { title: 'Pendiente', back: true })
     root.querySelector('[data-appbar-back]').click()

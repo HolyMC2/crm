@@ -27,6 +27,7 @@
         data-testid="shell-header"
         :back="backTo"
         :title="headerTitle"
+        :stack="!backTo"
         :bell-active="activeKey === 'avisos'"
         class="transition-[margin] duration-200"
         :style="headerHidden ? { marginTop: `-${headerHeight}px` } : null"
@@ -42,7 +43,8 @@
           />
           <h1
             data-testid="shell-title"
-            class="line-clamp-2 min-w-0 flex-1 self-center break-words px-3 text-lg font-semibold leading-snug [#app-header:has(*)+&]:hidden"
+            class="min-w-0 flex-1 self-center px-3 text-lg font-semibold leading-snug [#app-header:has(*)+&]:hidden"
+            :class="backTo ? 'truncate' : 'line-clamp-2 break-words'"
           >
             {{ headerTitle }}
           </h1>
