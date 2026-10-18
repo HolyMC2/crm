@@ -57,11 +57,7 @@
           id="avisame-store"
           class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-7"
         >
-          {{
-            warehouses.length > 1
-              ? 'En qué tienda'
-              : 'Te aviso una vez cada vez que baje de esa cantidad.'
-          }}
+          {{ warehouses.length > 1 ? 'En qué tienda' : 'Tienda' }}
         </h3>
         <ul
           v-if="warehouses.length > 1"
@@ -83,10 +79,13 @@
             </ListRow>
           </li>
         </ul>
-        <p
-          v-else-if="!warehouses.length"
-          class="px-4 py-2 text-base text-ink-gray-6"
-        >
+        <ListRow
+          v-else-if="warehouses.length === 1"
+          :title="warehouses[0].label"
+          :subtitle="`Hay ${formatQty(warehouses[0].qty)}`"
+          data-avisame-store
+        />
+        <p v-else class="px-4 py-2 text-base text-ink-gray-6">
           Este artículo no tiene existencias en ninguna tienda todavía.
         </p>
         <div v-if="warehouses.length" class="space-y-1 px-4 pt-3">
@@ -108,6 +107,7 @@
               type="number"
               inputmode="decimal"
               min="0"
+              placeholder="Cantidad"
               class="min-h-12 w-full min-w-0 rounded-lg border border-outline-gray-2 bg-surface-white px-3 text-center text-lg"
             />
             <button
@@ -119,9 +119,12 @@
               <span class="lucide-plus size-4" aria-hidden="true" />
             </button>
           </div>
-          <p v-if="selectedStore" class="text-sm text-ink-gray-6">
-            Ahora hay {{ formatQty(selectedStore.qty) }} en
-            {{ selectedStore.label }}.
+          <p class="text-sm text-ink-gray-6">
+            Te aviso una vez cada vez que baje de esa cantidad<template
+              v-if="selectedStore && warehouses.length > 1"
+            >
+              en {{ selectedStore.label }}</template
+            >.
           </p>
         </div>
       </section>
