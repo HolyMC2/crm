@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.8.0 (389c3697e254). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.10.0 (d72c76f4251b). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Command palette contract (spec §1.4). Providers search independently; one
 // slow or failing provider never blocks another. Clínica and Taller implement

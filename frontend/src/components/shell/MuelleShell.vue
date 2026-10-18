@@ -295,6 +295,14 @@ const MODULE_REQUESTS = {
     __(
       'I need access to Encuestas: read permission for Quality Feedback in my company so I can follow up on unhappy customers.',
     ),
+  documentos: () =>
+    __(
+      'I need access to Documentos in Muelle: read permission for the sales, purchase or payment documents I work with (for example Sales Invoice).',
+    ),
+  inventario: () =>
+    __(
+      'I need access to Inventario in Muelle: read permission for Stock Entry and Warehouse in my company.',
+    ),
 }
 async function copyText(text) {
   try {

@@ -13,6 +13,10 @@ import { isNarrow } from '@/composables/breakpoint'
 import { installedSiblings, sortSiblings } from '@/composables/shellRail'
 import { createTargets } from '@/utils/shellCreate'
 import { recordActions } from '@/composables/recordActions'
+import {
+  createDocumentosProvider,
+  documentosPlaces,
+} from '@/documentos/palette'
 // Manual de la tienda: one self-contained provider (articles, categories, «Nuevo artículo»).
 import { createManualProvider } from '@/utils/manualPalette'
 // «Pregúntale a Muelle»: a question gets «Preguntar a Muelle» first (SHELL-S2).
@@ -397,6 +401,7 @@ export function createShellProviders({ boot, modules }) {
             icon,
             external: path,
           })
+      items.push(...documentosPlaces(boot.value))
       if (moduleEnabled(boot.value, 'ventas'))
         for (const [path, label, icon, deskOnly] of VENTAS_PLACES)
           if (!(deskOnly && isNarrow.value))
@@ -491,6 +496,7 @@ export function createShellProviders({ boot, modules }) {
     contactos,
     places,
     ventas,
+    createDocumentosProvider({ boot }),
     clinica,
     inmobiliaria,
     manual,

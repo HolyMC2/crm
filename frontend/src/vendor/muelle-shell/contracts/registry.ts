@@ -1,4 +1,4 @@
-// Vendored from muelle/workspace/packages/shell-contracts@0.8.0 (389c3697e254). DO NOT EDIT:
+// Vendored from muelle/workspace/packages/shell-contracts@0.10.0 (d72c76f4251b). DO NOT EDIT:
 // change the package, then run its scripts/vendor.mjs against this directory.
 // Module registry types and the shell's fixed module catalog (spec §1.1, §2.1, §4.7).
 // Framework-agnostic: the crm shell instantiates `ShellModule<RouteRecordRaw, …>`.
@@ -20,6 +20,8 @@ export type ShellModuleKey =
   | 'encuestas'
   | 'equipo'
   | 'manual'
+  | 'documentos'
+  | 'inventario'
   | 'avisos'
 
 export type LucideIcon = `lucide-${string}`
@@ -35,7 +37,7 @@ export interface ShellModuleMeta {
   go: string
 }
 
-/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda; Avisos pinned last. */
+/** Rail order: Hoy, Pendientes, Agenda, Contactos, Ventas, Cobranza, Compras, Gastos, Resultados, Productos, Garantías, Encuestas, Equipo, Archivos, Manual de la tienda, Documentos, Inventario; Avisos pinned last. */
 export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'hoy', label: 'Hoy', icon: 'lucide-sun', basePath: '/hoy', go: 'h' },
   { key: 'pendientes', label: 'Pendientes', icon: 'lucide-square-check-big', basePath: '/pendientes', go: 'p' },
@@ -52,6 +54,8 @@ export const SHELL_MODULES: readonly ShellModuleMeta[] = Object.freeze([
   { key: 'equipo', label: 'Equipo', icon: 'lucide-id-card', basePath: '/equipo', go: 'q' },
   { key: 'archivos', label: 'Archivos', icon: 'lucide-folder', basePath: '/archivos', go: 'f' },
   { key: 'manual', label: 'Manual de la tienda', icon: 'lucide-book-open', basePath: '/manual', go: 'm' },
+  { key: 'documentos', label: 'Documentos', icon: 'lucide-files', basePath: '/documentos', go: 'd' },
+  { key: 'inventario', label: 'Inventario', icon: 'lucide-warehouse', basePath: '/inventario', go: 'k' },
   { key: 'avisos', label: 'Avisos', icon: 'lucide-bell', basePath: '/avisos', go: '' },
 ] as const satisfies readonly ShellModuleMeta[])
 
