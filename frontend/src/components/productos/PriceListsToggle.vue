@@ -1,8 +1,6 @@
 <template>
   <fieldset v-if="choices.length" class="mt-5">
-    <legend
-      class="mb-2 text-sm text-ink-gray-6"
-    >
+    <legend class="mb-2 text-sm text-ink-gray-6">
       {{ __('Prices shown', null, CTX) }}
     </legend>
     <p class="mb-2 text-xs text-ink-gray-6">

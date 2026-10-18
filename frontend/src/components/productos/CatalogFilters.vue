@@ -20,9 +20,7 @@
       v-if="sections.includes('stock') && facets?.stock !== null"
       class="min-w-0"
     >
-      <legend
-        class="mb-1 text-sm text-ink-gray-6"
-      >
+      <legend class="mb-1 text-sm text-ink-gray-6">
         {{ __('Stock', null, 'Productos') }}
       </legend>
       <button
@@ -46,9 +44,7 @@
     </fieldset>
 
     <fieldset v-if="sections.includes('photo')" class="min-w-0">
-      <legend
-        class="mb-1 text-sm text-ink-gray-6"
-      >
+      <legend class="mb-1 text-sm text-ink-gray-6">
         {{ __('Photo', null, 'Productos') }}
       </legend>
       <button
