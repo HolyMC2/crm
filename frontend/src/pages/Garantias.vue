@@ -129,48 +129,14 @@
       </div>
       <!-- One filter row: what needs attention (past the SLA, nobody on it)
            and «Míos» instead of a separate checkbox. -->
-      <div
-        class="flex gap-2 overflow-x-auto px-4 pb-3 sm:flex-wrap sm:px-6"
-        role="group"
-        :aria-label="__('Needs attention')"
-        data-garantias-chips
-      >
-        <button
-          v-for="chip in state.segment !== 'cerradas' ? chips : []"
-          :key="chip.value || 'all'"
-          type="button"
-          class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
-          :class="
-            state.chip === chip.value
-              ? 'border-outline-gray-4 bg-surface-gray-10 text-ink-base'
-              : 'border-outline-gray-2 text-ink-gray-8 hover:bg-surface-gray-2'
-          "
-          :aria-pressed="state.chip === chip.value"
-          @click="list.navigate({ chip: chip.value })"
-        >
-          {{ chip.label }}
-          <span
-            v-if="chip.count !== undefined"
-            class="tabular-nums"
-            :class="state.chip === chip.value ? '' : 'text-ink-gray-6'"
-            >{{ chip.count }}</span
-          >
-        </button>
-        <button
-          v-if="state.segment !== 'mis-casos'"
-          type="button"
-          class="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-3 text-sm sm:min-h-8"
-          :class="
-            state.mine
-              ? 'border-outline-gray-4 bg-surface-gray-10 text-ink-base'
-              : 'border-outline-gray-2 text-ink-gray-8 hover:bg-surface-gray-2'
-          "
-          :aria-pressed="Boolean(state.mine)"
-          data-garantias-mine
-          @click="list.navigate({ mine: state.mine ? '' : '1' })"
-        >
-          {{ __('Mine', null, CTX) }}
-        </button>
+      <div v-if="chipRow.length" class="pb-3 sm:px-2" data-garantias-chips>
+        <FilterChips
+          multiple
+          :model-value="chipModel"
+          :chips="chipRow"
+          :label="__('Needs attention')"
+          @update:model-value="onChips"
+        />
       </div>
       <div
         v-if="problem"
@@ -212,7 +178,7 @@
           />
           <Button
             v-else-if="state.segment === 'nuevas' && boot?.capabilities?.create"
-            class="mt-4"
+            class="mt-4 min-h-11 sm:min-h-8"
             :label="__('New case')"
             @click="openCreate()"
           />
@@ -416,6 +382,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Badge, Button, FeatherIcon, FormControl, toast } from 'frappe-ui'
+import { FilterChips } from '@/components/ui'
 import ModuleLayout from '@/components/shell/ModuleLayout.vue'
 import AssignDialog from '@/components/garantias/AssignDialog.vue'
 import BulkAssignSheet from '@/components/garantias/BulkAssignSheet.vue'
@@ -552,6 +519,26 @@ const chips = computed(() =>
     }),
   ),
 )
+// One chip row (S1 FilterChips, with its edge fade): the attention chips,
+// one chosen at a time, and «Míos» on top of any of them.
+const chipRow = computed(() => [
+  ...(state.value.segment !== 'cerradas' ? chips.value : []),
+  ...(state.value.segment !== 'mis-casos'
+    ? [{ value: 'mine', label: __('Mine', null, CTX) }]
+    : []),
+])
+const chipModel = computed(() => [
+  ...(state.value.segment !== 'cerradas' ? [state.value.chip || ''] : []),
+  ...(state.value.mine ? ['mine'] : []),
+])
+function onChips(next) {
+  const mine = next.includes('mine')
+  if (mine !== Boolean(state.value.mine))
+    return list.navigate({ mine: mine ? '1' : '' })
+  const current = state.value.chip || ''
+  const picked = next.find((value) => value !== 'mine' && value !== current)
+  list.navigate({ chip: picked !== undefined ? picked : '' })
+}
 const guard = computed(() =>
   boot.value && !boot.value.enabled
     ? boot.value.reason ||

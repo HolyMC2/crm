@@ -378,7 +378,25 @@ describe('Garantías list as a power app', () => {
     const chips = root.querySelector('[data-garantias-chips]').textContent
     expect(chips).toContain('Overdue')
     expect(chips).toContain('Unassigned')
-    expect(root.querySelector('[data-garantias-mine]')).not.toBeNull()
+    // The shared chip row (edge fade at 305px); «Mine» is one of its chips.
+    expect(
+      root.querySelector('[data-garantias-chips] [data-ui-filter-chips]'),
+    ).not.toBeNull()
+    // «Mine» sits on top of the chosen chip; another chip replaces it.
+    const tap = async (value) => {
+      root
+        .querySelector(`[data-garantias-chips] [data-chip="${value}"]`)
+        .click()
+      state.route.query = { ...state.router.push.mock.calls.at(-1)[0].query }
+      await flush()
+    }
+    await tap('mine')
+    expect(state.route.query).toMatchObject({ mine: '1' })
+    await tap('sin-asignar')
+    expect(state.route.query).toMatchObject({ mine: '1', chip: 'sin-asignar' })
+    await tap('sin-asignar')
+    expect(state.route.query.chip || '').toBe('')
+    expect(state.route.query).toMatchObject({ mine: '1' })
   })
 })
 
