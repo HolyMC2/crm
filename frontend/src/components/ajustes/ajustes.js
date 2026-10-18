@@ -285,3 +285,17 @@ export function controlKind(fieldtype) {
   if (['Data', 'Phone', 'Int', 'Read Only'].includes(fieldtype)) return 'line'
   return 'line'
 }
+
+// Doors to «Pregúntale a Muelle» on one record (DD13, D6.2): the prepared
+// questions a worker can tap; the assistant gets {doctype, name} as context.
+export const ASK_PROMPTS = {
+  Item: [
+    '¿Cómo lo vendo por pieza y lo compro por caja?',
+    'Activar números de serie',
+    '¿Qué me falta para facturarlo?',
+  ],
+}
+
+export function askPrompts(doctype) {
+  return ASK_PROMPTS[doctype] || []
+}

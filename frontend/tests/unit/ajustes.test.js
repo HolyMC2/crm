@@ -9,6 +9,7 @@ vi.mock('frappe-ui', () => ({ call: mocks.call }))
 import {
   RECORD_FIELDS,
   ajustesRoute,
+  askPrompts,
   controlKind,
   createPending,
   currentValue,
@@ -294,5 +295,17 @@ describe('a field row', () => {
     await nextTick()
     expect(events).toEqual([['edit', 'purchase_uom']])
     unmount()
+  })
+})
+
+describe('assistant doors on a record', () => {
+  it('offers the three Item questions and none elsewhere', () => {
+    expect(askPrompts('Item')).toEqual([
+      '¿Cómo lo vendo por pieza y lo compro por caja?',
+      'Activar números de serie',
+      '¿Qué me falta para facturarlo?',
+    ])
+    expect(askPrompts('Customer')).toEqual([])
+    expect(askPrompts('')).toEqual([])
   })
 })

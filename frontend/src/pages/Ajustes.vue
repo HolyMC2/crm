@@ -14,7 +14,20 @@
       :search-label="__('Buscar un ajuste')"
       :bell="false"
       data-testid="ajustes-appbar"
-    />
+    >
+      <template v-if="assistantEnabled" #actions>
+        <button
+          type="button"
+          class="flex size-12 flex-none items-center justify-center rounded-full text-lg text-[var(--brand)] hover:bg-surface-gray-2"
+          :aria-label="__('Pregúntale sobre esta ficha')"
+          :title="__('Pregúntale sobre esta ficha')"
+          data-ajustes-ask
+          @click="ask()"
+        >
+          <span aria-hidden="true">✦</span>
+        </button>
+      </template>
+    </AppBar>
     <div ref="scroller" class="min-h-0 flex-1 overflow-y-auto">
       <div class="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 lg:px-6">
         <nav v-if="!isPhone" class="mb-2">
@@ -59,6 +72,34 @@
             <p class="mt-1 text-sm text-ink-gray-6" data-ajustes-summary>
               {{ summary }}
             </p>
+            <div
+              v-if="assistantEnabled && (!isPhone || prompts.length)"
+              class="mt-3 flex flex-wrap gap-2"
+              data-ajustes-prompts
+            >
+              <button
+                v-if="!isPhone"
+                type="button"
+                class="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-gray-2 px-4 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-3"
+                data-ajustes-ask
+                @click="ask()"
+              >
+                <span class="text-[var(--brand)]" aria-hidden="true">✦</span>
+                {{ __('Pregúntale sobre esta ficha') }}
+              </button>
+              <button
+                v-for="prompt in prompts"
+                :key="prompt"
+                type="button"
+                class="inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-outline-gray-2 px-4 py-2 text-left text-sm text-ink-gray-8 hover:bg-surface-gray-2"
+                @click="ask(prompt)"
+              >
+                <span class="flex-none text-[var(--brand)]" aria-hidden="true"
+                  >✦</span
+                >
+                <span class="min-w-0 break-words">{{ prompt }}</span>
+              </button>
+            </div>
           </header>
 
           <div v-if="!isPhone" class="mb-3 max-w-xl">
@@ -353,9 +394,15 @@ import FilterChips from '@/components/ui/FilterChips.vue'
 import AjustesControl from '@/components/ajustes/AjustesControl.vue'
 import AjustesField from '@/components/ajustes/AjustesField.vue'
 import AjustesTable from '@/components/ajustes/AjustesTable.vue'
-import { useAssistantContext } from '@/components/assistant/useAssistant'
+import {
+  assistantEnabled,
+  loadStatus,
+  openAssistant,
+  useAssistantContext,
+} from '@/components/assistant/useAssistant'
 import { isMobile as isPhone } from '@/composables/breakpoint'
 import {
+  askPrompts,
   createPending,
   currentValue,
   doctypeFromSlug,
@@ -398,6 +445,13 @@ useAssistantContext(() => ({
   name: props.name,
   title: guide.value?.title || props.name,
 }))
+
+// Doors (DD13): ✦ asks about this record; the chips ask a prepared question.
+loadStatus()
+const prompts = computed(() => askPrompts(doctype.value))
+function ask(text = '') {
+  openAssistant(text ? { text, send: true } : {})
+}
 
 async function load() {
   loadError.value = ''
