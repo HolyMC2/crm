@@ -6,7 +6,11 @@
       <p v-if="block.type === 'h'" class="pt-1 font-semibold">
         <AssistantInline :parts="block.parts" @navigate="$emit('navigate')" />
       </p>
-      <div v-else-if="block.type === 'li'" class="flex gap-2 pl-1">
+      <div
+        v-else-if="block.type === 'li'"
+        class="flex gap-2"
+        :class="block.nested ? 'pl-7' : 'pl-1'"
+      >
         <span
           class="flex-none tabular-nums text-ink-gray-6"
           :class="block.marker === '•' ? 'w-3' : 'min-w-5'"

@@ -100,10 +100,14 @@ describe('what a reply says', () => {
       },
     ])
     expect(choices).toEqual([{ label: 'Ver más', data: 'more:1' }])
-    // the numbered line lives on the card only; the leading emoji goes
-    expect(proseOf(message, cards)).toBe(
-      'El agente propone y espera tu decisión:\nAl aprobar se guardan los cambios mostrados.',
-    )
+    // the numbered line lives on the card only, and so does doco's frame
+    expect(proseOf(message, cards)).toBe('')
+    expect(
+      proseOf(
+        { ...message, text: `${message.text}\nLo ves en Pendientes.` },
+        cards,
+      ),
+    ).toBe('Lo ves en Pendientes.')
   })
 
   it("puts an approval's indented detail on its card: what will change", () => {
@@ -128,9 +132,8 @@ describe('what a reply says', () => {
       detail:
         '«Llamar a este cliente» sobre Customer S2c · para 2026-10-19 10:00',
     })
-    expect(proseOf(message, cards)).toBe(
-      'El agente propone y espera tu decisión:\nAl aprobar se guardan los cambios mostrados.',
-    )
+    // the card asks and saves: doco's frame around it is not repeated
+    expect(proseOf(message, cards)).toBe('')
   })
 
   it('opens links of this site written as http:// behind the https proxy', () => {
@@ -279,9 +282,15 @@ describe('what a reply says', () => {
     expect(blocks[2]).toEqual({
       type: 'li',
       marker: '1.',
+      nested: false,
       parts: [{ text: 'XMovil:', strong: true }, { text: ' $9,969' }],
     })
     expect(blocks[3].marker).toBe('•')
+    expect(blocks[3].nested).toBe(false)
+    expect(proseBlocks('2. ¿Cómo?\n   - Cita')[1]).toMatchObject({
+      type: 'li',
+      nested: true,
+    })
     expect(blocks[4].head).toEqual([
       [{ text: 'Cotización' }],
       [{ text: 'Total' }],
@@ -394,6 +403,33 @@ describe('the conversation', () => {
     expect(assistant.awaitingReceipt).toBe(null)
     await tap('agr:RUN-1:p2:r', 'agr:RUN-1:p2:r')
     expect(assistant.cards['agr:RUN-1:p2:r']).toBe('changed')
+  })
+
+  it('a reload of the history keeps the answers this page saw live', async () => {
+    await openAssistant()
+    onMessage({
+      chat_id: staff.chat_id,
+      mid: 'c1',
+      text: '1. ✅ Pendiente personal',
+      buttons: [[{ text: '⚡ Aprobar 1', callback_data: 'agr:R:p:a' }]],
+    })
+    mocks.call.mockImplementation((method) =>
+      method === `${API}.history`
+        ? Promise.resolve([
+            {
+              kind: 'bot',
+              mid: 'c1',
+              message:
+                'Este resultado necesita una consulta nueva con tu acceso actual.',
+            },
+          ])
+        : answer(method),
+    )
+    const { loadHistory } = await import('@/components/assistant/useAssistant')
+    await loadHistory()
+    expect(assistant.messages).toHaveLength(1)
+    expect(assistant.messages[0].buttons).toHaveLength(1)
+    expect(assistant.messages[0].stale).toBeFalsy()
   })
 
   it('a failed send says so and keeps the text', async () => {

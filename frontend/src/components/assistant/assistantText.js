@@ -120,7 +120,7 @@ export function inlineParts(text) {
 
 const TABLE_ROW = /^\s*\|.*\|\s*$/
 const TABLE_RULE = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/
-const LIST_ITEM = /^\s*(?:([-*•])|(\d{1,2})[.)])\s+(.*)$/
+const LIST_ITEM = /^(\s*)(?:([-*•])|(\d{1,2})[.)])\s+(.*)$/
 const HEADING = /^\s*#{1,6}\s+(.*)$/
 const cells = (line) =>
   line
@@ -161,8 +161,10 @@ export function proseBlocks(text) {
       flush()
       blocks.push({
         type: 'li',
-        marker: item[2] ? `${item[2]}.` : '•',
-        parts: inlineParts(item[3]),
+        marker: item[3] ? `${item[3]}.` : '•',
+        // «   - Cita…» under «2. ¿Cómo lo quieres?» stays under it
+        nested: item[1].length >= 2,
+        parts: inlineParts(item[4]),
       })
       continue
     }
@@ -265,17 +267,24 @@ export function splitButtons(message) {
   return { cards, choices }
 }
 
+const APPROVAL_FRAME = [
+  /^\W*El agente propone y espera tu decisión:?\s*$/u,
+  /^\s*Al aprobar se guardan los cambios mostrados\./u,
+]
+
 /** The reply text without the approval lines its cards already show. */
 export function proseOf(message, cards) {
   const text = String(message?.text || '')
   if (!cards.some((card) => card.id.startsWith('agr:'))) return stripEmoji(text)
-  // the numbered approval lines and their indented detail are on the cards
+  // the numbered approval lines and their indented detail are on the cards,
+  // and so is what doco's frame around them says (the card asks, «Confirmar»
+  // saves): «El agente propone…», «Al aprobar se guardan…»
   const kept = []
   let inItem = false
   for (const line of text.split('\n')) {
     if (/^\s*\d+\.\s/.test(line)) inItem = true
     else if (!(inItem && /^\s+\S/.test(line))) inItem = false
-    if (!inItem) kept.push(line)
+    if (!inItem && !APPROVAL_FRAME.some((rx) => rx.test(line))) kept.push(line)
   }
   return stripEmoji(kept.join('\n').trim())
 }

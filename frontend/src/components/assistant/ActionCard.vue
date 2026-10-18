@@ -10,7 +10,9 @@
     <p class="text-xs font-medium text-ink-gray-6">
       {{ heading }}
     </p>
-    <p class="mt-1 whitespace-pre-line break-words text-base text-ink-gray-9">
+    <p
+      class="mt-1 whitespace-pre-line break-words text-base leading-normal text-ink-gray-9"
+    >
       {{ card.detail || card.summary }}
     </p>
     <div
