@@ -8,6 +8,7 @@ import {
   pageShortcuts,
   registerPageKeys,
   registerPageShortcuts,
+  shellAssistant,
   shellCheatSheet,
   useShellKeyboard,
 } from '@/composables/shellKeyboard'
@@ -266,6 +267,67 @@ describe('page keys and the shell', () => {
     expect(event.defaultPrevented).toBe(false)
     expect(rowOf()).toBeUndefined()
     window.removeEventListener('keydown', own)
+  })
+})
+
+describe('⌘J: the shell answers for the assistant', () => {
+  afterEach(() => {
+    shellAssistant.value = null
+    document.querySelectorAll('[data-test-sheet]').forEach((el) => el.remove())
+  })
+  const assistantRows = () =>
+    shellCheatSheet({})
+      .flatMap((section) => section.rows.map((row) => row.id))
+      .filter((id) => id === 'assistant')
+
+  it('opens it from anywhere, also while typing; Alt+H lists it only while it is on', () => {
+    mountPage(() => {})
+    expect(assistantRows()).toEqual([])
+    const ctrlJ = { key: 'j', ctrlKey: true }
+    press(ctrlJ, document.body) // off: nothing answers
+    let open = false
+    const toggle = vi.fn(() => (open = !open))
+    shellAssistant.value = { isOpen: () => open, toggle }
+    expect(assistantRows()).toEqual(['assistant'])
+    content.querySelector('[data-list-search]').focus()
+    press(ctrlJ)
+    expect(toggle).toHaveBeenCalledTimes(1)
+    expect(open).toBe(true)
+    press(ctrlJ, document.body) // ⌘J again closes it
+    expect(open).toBe(false)
+  })
+
+  it('over another sheet: that sheet closes (its own Esc) and the assistant opens', () => {
+    mountPage(() => {})
+    let open = false
+    const toggle = vi.fn(() => (open = !open))
+    shellAssistant.value = { isOpen: () => open, toggle }
+    const sheet = document.createElement('div')
+    sheet.setAttribute('aria-modal', 'true')
+    sheet.setAttribute('data-test-sheet', '')
+    const field = document.createElement('input')
+    sheet.append(field)
+    document.body.append(sheet)
+    const escapes = vi.fn()
+    sheet.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        escapes()
+        sheet.remove()
+      }
+    })
+    field.focus()
+    press({ key: 'j', ctrlKey: true })
+    expect(escapes).toHaveBeenCalledTimes(1)
+    expect(open).toBe(true)
+    // With the assistant's own sheet open, ⌘J only closes it.
+    const own = document.createElement('div')
+    own.setAttribute('aria-modal', 'true')
+    own.setAttribute('data-shell-layer', 'assistant')
+    own.setAttribute('data-test-sheet', '')
+    document.body.append(own)
+    press({ key: 'j', ctrlKey: true }, document.body)
+    expect(open).toBe(false)
+    expect(own.isConnected).toBe(true)
   })
 })
 

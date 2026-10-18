@@ -173,6 +173,7 @@ import {
 import {
   openShortcutSheet,
   searchEntryHint,
+  shellAssistant,
   shellCreate,
   shortcutSheet,
   useShellKeyboard,
@@ -381,6 +382,30 @@ useShellKeyboard({
   modules: shellModules,
   router,
   toggleSidebar,
+})
+// ⌘J opens «Pregúntale a Muelle» through the shell's keyboard, while the
+// assistant is on for this worker (its sheet loads the module at boot).
+let stopAssistant = null
+let unmounted = false
+import('@/components/assistant/useAssistant').then((assistant) => {
+  if (unmounted) return
+  stopAssistant = watch(
+    () => assistant.assistantEnabled.value,
+    (on) => {
+      shellAssistant.value = on
+        ? {
+            isOpen: () => assistant.assistant.open,
+            toggle: assistant.toggleAssistant,
+          }
+        : null
+    },
+    { immediate: true },
+  )
+})
+onBeforeUnmount(() => {
+  unmounted = true
+  stopAssistant?.()
+  shellAssistant.value = null
 })
 // Every route names itself through meta.title (English source, es-MX catalog).
 const headerTitle = computed(() => shellTitle(route, activeModule.value))

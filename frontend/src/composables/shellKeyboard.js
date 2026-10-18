@@ -228,6 +228,33 @@ export const pageShortcuts = computed(() => {
 /** Set by the shell: the current module's create action (the palette's), or null. */
 export const shellCreate = shallowRef(null)
 
+/**
+ * Set by the shell while «Pregúntale a Muelle» is on for this worker:
+ * `{ isOpen(), toggle() }`, or null. ⌘J answers through it from anywhere.
+ */
+export const shellAssistant = shallowRef(null)
+
+// The assistant's own layer (BottomSheet layer="assistant").
+const ASSISTANT_LAYER = '[data-shell-layer="assistant"]'
+
+/** Close every open modal layer but the assistant's, top first (their own Esc). */
+function closeLayersFor(modals) {
+  for (const modal of [...modals].reverse()) {
+    if (modal.matches(ASSISTANT_LAYER) || !modal.isConnected) continue
+    const target = modal.contains(document.activeElement)
+      ? document.activeElement
+      : modal
+    target.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        code: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+  }
+}
+
 // Global keys the shell itself answers. Go-to keys count only for the
 // modules this worker has; `create` only where this module (or the page) has
 // a create action. `[` shows or hides the app names in the desktop rail.
@@ -243,7 +270,10 @@ const SHELL_GLOBAL_IDS = new Set([
 export function shellKeymap(
   modules = [],
   page = { ids: [], extra: [] },
-  shell = { create: Boolean(shellCreate.value) },
+  shell = {
+    create: Boolean(shellCreate.value),
+    assistant: Boolean(shellAssistant.value),
+  },
 ) {
   const reachable = new Set(modules.map((module) => module.key))
   const answered = new Set(page.ids || [])
@@ -254,6 +284,7 @@ export function shellKeymap(
     if (shortcut.module) return reachable.has(shortcut.module)
     if (shortcut.keys.every((key) => claimed.has(key))) return false
     if (shortcut.id === 'create') return answered.has('create') || shell.create
+    if (shortcut.id === 'assistant') return Boolean(shell.assistant)
     return SHELL_GLOBAL_IDS.has(shortcut.id)
   })
 }
@@ -430,6 +461,16 @@ export function useShellKeyboard({
       contexts: [...new Set(live.flatMap((page) => page.contexts()))],
     })
     const modals = [...document.querySelectorAll('[aria-modal="true"]')]
+    // ⌘J: the assistant from anywhere, also over another sheet (that sheet
+    // closes first, so one layer stays) and while typing.
+    if (hit?.id === 'assistant') {
+      const assistant = shellAssistant.value
+      if (!assistant) return
+      event.preventDefault()
+      if (!assistant.isOpen()) closeLayersFor(modals)
+      assistant.toggle()
+      return
+    }
     if (modals.length) {
       // A dialog or sheet owns the keyboard (Esc included: it closes itself),
       // except the search keys, and help while only the shell's own layers
