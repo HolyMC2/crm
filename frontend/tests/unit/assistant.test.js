@@ -46,6 +46,7 @@ import {
 } from '@/components/assistant/useAssistant'
 import { createAssistantProvider } from '@/components/assistant/assistantPalette'
 import ActionCard from '@/components/assistant/ActionCard.vue'
+import AssistantLog from '@/components/assistant/AssistantLog.vue'
 import SuggestionLine from '@/components/assistant/SuggestionLine.vue'
 import AssistantSheet from '@/components/assistant/AssistantSheet.vue'
 
@@ -623,6 +624,43 @@ describe('cards and suggestions', () => {
         .querySelector('[data-testid="assistant-card-open"]')
         .getAttribute('href'),
     ).toBe('/pendientes/todo/T-9')
+  })
+
+  it('a receipt shows «Abrir» once, on its card; without the card the reply keeps it', async () => {
+    const card = {
+      role: 'bot',
+      id: 'b1',
+      text: 'El agente propone y espera tu decisión:\n1. Pendiente personal\n   «Llamar» · para 19 oct',
+      buttons: [
+        [
+          { text: 'Aprobar 1', callback_data: 'agr:R:p1:a' },
+          { text: 'Rechazar 1', callback_data: 'agr:R:p1:r' },
+        ],
+      ],
+    }
+    const receipt = {
+      role: 'bot',
+      id: 'b2',
+      text: 'Pendiente personal creado · para el 19 oct.\n/app/todo/T-9',
+      receiptOf: 'agr:R:p1:a',
+    }
+    assistant.messages = [card, receipt]
+    assistant.cards = { 'agr:R:p1:a': 'confirmed' }
+    const { el, app } = mount(AssistantLog, {})
+    await nextTick()
+    const opens = () =>
+      [...el.querySelectorAll('a')].filter((a) => a.textContent === 'Open')
+    expect(opens()).toHaveLength(1)
+    expect(el.querySelector('[data-testid="assistant-card-open"]')).not.toBe(
+      null,
+    )
+    expect(el.textContent).toContain('Pendiente personal creado')
+    // a reload whose history edited the card away: the reply keeps its link
+    assistant.messages = [{ ...card, buttons: [] }, receipt]
+    await nextTick()
+    expect(el.querySelector('[data-testid="assistant-card-open"]')).toBe(null)
+    expect(opens()).toHaveLength(1)
+    app.unmount()
   })
 
   it('a suggestion asks when tapped and stays dismissed', async () => {

@@ -77,8 +77,8 @@
       </div>
       <div v-else class="space-y-2" data-role="bot">
         <AssistantProse
-          v-if="view(message).prose"
-          :text="view(message).prose"
+          v-if="prose(message)"
+          :text="prose(message)"
           @navigate="$emit('navigate')"
         />
         <ActionCard
@@ -144,21 +144,36 @@ const shown = computed(() => visibleMessages(assistant.messages))
 const hidden = computed(() => assistant.messages.some((m) => m.stale))
 
 // A reply's prose, its action cards and its plain choices, computed once per text.
-// A receipt's record link is the card's «Abrir»; the reply does not repeat it.
 const views = new WeakMap()
 function view(message) {
   const cached = views.get(message)
   if (cached) return cached
   const { cards, choices } = splitButtons(message)
-  const prose = proseOf(message, cards)
-  const link = message.receiptOf ? firstRecordLink(message.text) : null
-  const out = {
-    cards,
-    choices,
-    prose: link ? withoutLink(prose, link.href) : prose,
-  }
+  const out = { cards, choices, prose: proseOf(message, cards) }
   views.set(message, out)
   return out
+}
+
+// A receipt's record link is its card's «Abrir»: the reply does not repeat
+// it while that card is on screen, confirmed, with this link. Without the
+// card (a reload whose history edited it away) the reply keeps its link.
+const shownCards = computed(
+  () =>
+    new Set(
+      shown.value.flatMap((m) =>
+        m.role === 'bot' ? view(m).cards.map((c) => c.id) : [],
+      ),
+    ),
+)
+function prose(message) {
+  const text = view(message).prose
+  const id = message.receiptOf
+  if (!id || assistant.cards[id] !== 'confirmed' || !shownCards.value.has(id))
+    return text
+  const href = receipts.value[id]?.href
+  return href && firstRecordLink(message.text)?.href === href
+    ? withoutLink(text, href)
+    : text
 }
 
 // The receipt of a confirmed card: the first record link of the reply after it.
