@@ -328,6 +328,13 @@ describe('Producto', () => {
     expect(text).toContain("You see no store's movements")
     expect(text).not.toContain('Sold out in your stores')
     expect(text).not.toContain('Total 0')
+    // A shop list it cannot see: the price is unseen, not «No price».
+    record.prices = { readable: true, default_price_list: null, rows: [] }
+    app.unmount()
+    root.remove()
+    await mountAt('/productos/ABIBMEX000130')
+    const tile = root.querySelector('[data-price-unassigned]')
+    expect(tile?.textContent.trim()).toBe('No lo ves')
   })
 
   it('movements name who moved them and «See all» opens the kardex', async () => {

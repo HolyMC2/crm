@@ -314,7 +314,16 @@
                   __('Price', null, 'Productos')
                 }}
               </dt>
+              <!-- No shop, no shop list: the price is unseen, not missing. -->
               <dd
+                v-if="!hasRate(defaultPrice) && data.stock.unassigned"
+                class="mt-0.5 text-base font-semibold text-ink-gray-8"
+                data-price-unassigned
+              >
+                No lo ves
+              </dd>
+              <dd
+                v-else
                 class="mt-0.5 text-2xl font-semibold tabular-nums text-ink-gray-9"
                 :class="hasRate(defaultPrice) ? '' : 'text-ink-gray-5'"
               >
