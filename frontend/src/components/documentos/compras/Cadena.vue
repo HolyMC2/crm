@@ -46,7 +46,7 @@
             <span class="seps text-sm text-ink-gray-7">
               <span class="flex flex-wrap">
                 <span
-                  class="lead min-w-[calc(8ch+1.25em)] flex-1 basis-0 truncate"
+                  class="lead min-w-[calc(8ch+1em)] max-w-max flex-1 basis-0 truncate"
                   >{{ step.lineTitle }}</span
                 >
                 <span v-if="step.lineMeta" class="flex-none whitespace-nowrap"
@@ -220,14 +220,14 @@ defineExpose({ reload: load })
   overflow: hidden;
 }
 .seps > span {
-  margin-left: -1.25em;
+  margin-left: -1em;
 }
 .seps .lead {
-  padding-left: 1.25em;
+  padding-left: 1em;
 }
 .seps .sep {
   display: inline-block;
-  width: 1.25em;
+  width: 1em;
   text-align: center;
 }
 </style>
