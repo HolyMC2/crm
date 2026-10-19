@@ -112,7 +112,7 @@
       <section
         v-else-if="blocked"
         role="alert"
-        class="mx-auto w-full max-w-xl space-y-4 p-6"
+        class="mx-auto min-h-0 w-full max-w-xl flex-1 space-y-4 overflow-y-auto p-6"
       >
         <h1 class="text-xl font-semibold">
           {{ __('We could not open {0}', [blockedLabel]) }}
