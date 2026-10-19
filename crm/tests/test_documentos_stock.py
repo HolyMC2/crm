@@ -293,6 +293,32 @@ class TestDocumentosStock(IntegrationTestCase):
 			f"Inventario inicial · Bodega {self.key}",
 		)
 
+	def test_an_ajuste_from_producto_takes_its_stores_company_and_keeps_the_motivo(self):
+		# Producto's «Ajustar existencia» sheet sends the store, never the company.
+		frappe.set_user(self._stock_manager())
+		made = documentos.save(
+			"Stock Reconciliation",
+			values={
+				"purpose": "Opening Stock",
+				"set_warehouse": self.bodega,
+				"items": [{"item_code": self.item_a, "qty": 3}],
+			},
+			comment="Motivo: Conteo físico",
+		)
+		doc = frappe.get_doc("Stock Reconciliation", made["name"])
+		self.assertEqual(doc.docstatus, 0)
+		self.assertEqual(doc.company, frappe.db.get_value("Warehouse", self.bodega, "company"))
+		notes = frappe.get_all(
+			"Comment",
+			filters={
+				"reference_doctype": "Stock Reconciliation",
+				"reference_name": doc.name,
+				"comment_type": "Comment",
+			},
+			pluck="content",
+		)
+		self.assertEqual(notes, ["Motivo: Conteo físico"])
+
 	def test_a_stock_draft_skips_the_sales_totals_calculator(self):
 		# ERPNext's taxes-and-totals reads item rates a stock row does not have.
 		frappe.set_user("Administrator")

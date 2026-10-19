@@ -719,10 +719,18 @@
                       }}</span
                     >
                     <span
-                      v-if="data.inventory?.scanner && row.warehouse"
+                      v-if="
+                        (data.inventory?.scanner ||
+                          data.inventory?.stock_adjust) &&
+                        row.warehouse
+                      "
                       class="mt-2 flex flex-wrap gap-2"
                     >
-                      <template v-if="data.inventory.scanner_user">
+                      <template
+                        v-if="
+                          data.inventory.scanner && data.inventory.scanner_user
+                        "
+                      >
                         <a
                           :href="countNowUrl(row)"
                           class="inline-flex min-h-11 items-center rounded-md bg-surface-gray-2 px-3 text-sm text-ink-gray-8 hover:bg-surface-gray-3 sm:min-h-7"
@@ -742,6 +750,7 @@
                         >
                       </template>
                       <Button
+                        v-if="data.inventory.scanner"
                         class="min-h-11 sm:min-h-7"
                         :label="
                           row.can_request_count
@@ -749,6 +758,14 @@
                             : __('Ask the manager for a count')
                         "
                         @click="askCount(row)"
+                      />
+                      <!-- «Ajustar existencia» (D4): a draft Ajuste for this store. -->
+                      <Button
+                        v-if="data.inventory.stock_adjust"
+                        class="min-h-11 sm:min-h-7"
+                        label="Ajustar"
+                        data-producto-ajustar
+                        @click="askAdjust(row)"
                       />
                     </span>
                     <span
@@ -804,15 +821,14 @@
                       }}</span>
                       <span v-if="data.inventory?.stock_adjust" class="block">
                         {{ __('If it is already counted, you may adjust it:') }}
-                        <RouterLink
-                          :to="{
-                            path: '/inventario/ajustes/nuevo',
-                            query: { set_warehouse: row.warehouse },
-                          }"
+                        <button
+                          type="button"
                           class="underline"
                           data-producto-ajuste
-                          >{{ __('New stock reconciliation') }}</RouterLink
+                          @click="askAdjust(row)"
                         >
+                          Ajustar existencia
+                        </button>
                       </span>
                       <span v-else class="block text-ink-gray-7">{{
                         __(
@@ -1466,6 +1482,15 @@
       :store="countStore"
       @sent="counted"
     />
+    <!-- «Ajustar existencia» (Shell D4): loaded on first open. -->
+    <AjustarSheet
+      v-if="data && ajustarRow"
+      v-model:open="ajustarOpen"
+      :item="product.name"
+      :item-name="product.item_name || product.name"
+      :row="ajustarRow"
+      @saved="adjusted"
+    />
     <!-- «Avísame cuando baje de N» (Shell D5, DD8): loaded on first open. -->
     <AvisameSheet
       v-if="data && avisameMounted"
@@ -1498,6 +1523,9 @@ import CountDialog from '@/components/productos/CountDialog.vue'
 import VariantGrid from '@/components/productos/VariantGrid.vue'
 import PhotoGallery from '@/components/productos/PhotoGallery.vue'
 import LabelDialog from '@/components/productos/LabelDialog.vue'
+const AjustarSheet = defineAsyncComponent(
+  () => import('@/components/productos/AjustarSheet.vue'),
+)
 const AvisameSheet = defineAsyncComponent(
   () => import('@/components/documentos/AvisameSheet.vue'),
 )
@@ -1709,6 +1737,20 @@ function moveUrl(row) {
     recordBack.value,
   )
 }
+const ajustarOpen = ref(false)
+const ajustarRow = ref(null)
+function askAdjust(row) {
+  ajustarRow.value = row
+  ajustarOpen.value = true
+}
+function adjusted({ name }) {
+  toast.success(
+    'Borrador de ajuste guardado: confírmalo para cambiar la existencia',
+  )
+  if (name)
+    router.push({ path: `/inventario/ajustes/${encodeURIComponent(name)}` })
+}
+
 function askCount(row) {
   countStore.value = row.warehouse
   countOpen.value = true
@@ -2240,6 +2282,7 @@ useLiveWatch(
       priceOpen.value ||
       editOpen.value ||
       countOpen.value ||
+      ajustarOpen.value ||
       avisameOpen.value ||
       request.open
     )

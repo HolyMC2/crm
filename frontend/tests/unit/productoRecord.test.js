@@ -443,6 +443,103 @@ describe('Producto', () => {
     })
   })
 
+  it('«Ajustar» saves a draft ajuste for the store with the motivo, then opens it', async () => {
+    record.item.is_stock_item = 1
+    record.stock = {
+      readable: true,
+      hidden: 0,
+      total: 4,
+      service: false,
+      rows: [
+        {
+          warehouse: 'Centro - D',
+          label: 'Centro',
+          actual_qty: 4,
+          reserved_qty: 1,
+          projected_qty: 3,
+          ordered_qty: 0,
+          reorder_level: null,
+          state: 'ok',
+          cajones: [],
+          last_counted: null,
+          counts_pending: [],
+          can_request_count: true,
+          negative: false,
+        },
+      ],
+    }
+    const adjustButton = () => root.querySelector('[data-producto-ajustar]')
+    // Without the Stock Reconciliation rights: no «Ajustar».
+    await mountAt('/productos/ABIBMEX000130')
+    expect(adjustButton()).toBeNull()
+    app.unmount()
+    root.remove()
+
+    record.inventory.stock_adjust = true
+    const saved = []
+    fetch.mockImplementation(async (url, init) => {
+      const method = String(url).split('.').pop()
+      if (method === 'save') saved.push(JSON.parse(init.body))
+      const message =
+        method === 'record'
+          ? record
+          : method === 'save'
+            ? { name: 'MAT-RECO-0001', docstatus: 0 }
+            : null
+      return {
+        ok: !!message,
+        status: message ? 200 : 404,
+        json: async () => ({ message }),
+      }
+    })
+    const router = await mountAt('/productos/ABIBMEX000130')
+    router.addRoute({
+      path: '/inventario/ajustes/:name',
+      name: 'Ajuste',
+      component: { render: () => null },
+    })
+    adjustButton().click()
+    // The sheet loads on first open.
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-ajustar-sheet]')).not.toBeNull(),
+    )
+    const sheet = document.querySelector('[data-ajustar-sheet]')
+    expect(sheet.textContent).toContain('Original: 4')
+    const qty = document.querySelector('[data-ajustar-qty]')
+    expect(qty.value).toBe('4')
+    // Unchanged: nothing to save.
+    expect(document.querySelector('[data-ajustar-guardar]').disabled).toBe(true)
+    document.querySelector('[data-ajustar-mas]').click()
+    await flush()
+    expect(qty.value).toBe('5')
+    expect(
+      document.querySelector('[data-ajustar-diferencia]').textContent,
+    ).toContain('+1')
+    // Disponible = new count − reserved.
+    expect(
+      document.querySelector('[data-ajustar-resumen]').textContent,
+    ).toMatch(/Disponible\s*4/)
+    document.querySelector('[data-ajustar-motivo]').click()
+    await flush()
+    ;[...document.querySelectorAll('[role="radio"]')]
+      .find((el) => el.textContent.includes('Dañado'))
+      .click()
+    await flush()
+    document.querySelector('[data-ajustar-guardar]').click()
+    await flush()
+    expect(saved).toHaveLength(1)
+    expect(saved[0].doctype).toBe('Stock Reconciliation')
+    expect(JSON.parse(saved[0].values)).toEqual({
+      purpose: 'Stock Reconciliation',
+      set_warehouse: 'Centro - D',
+      items: [{ item_code: 'ABIBMEX000130', warehouse: 'Centro - D', qty: 5 }],
+    })
+    expect(saved[0].comment).toBe('Motivo: Dañado')
+    expect(router.currentRoute.value.path).toBe(
+      '/inventario/ajustes/MAT-RECO-0001',
+    )
+  })
+
   it('cost and margin only when the server sends them', async () => {
     record.cost = {
       last_cost: 80,

@@ -1430,6 +1430,17 @@ def _apply(doc, values):
 		for row in doc.get(table.fieldname) or []:
 			if row.meta.has_field("warehouse") and not row.get("warehouse"):
 				row.warehouse = doc.set_warehouse
+	# A new Ajuste belongs to its store's company (the worker's default company may be another
+	# one: ERPNext then refuses the store), as Desk sets it when the store is picked first.
+	if (
+		meta.name == "Stock Reconciliation"
+		and doc.is_new()
+		and "company" not in given
+		and doc.get("set_warehouse")
+	):
+		company = frappe.db.get_value("Warehouse", doc.set_warehouse, "company")
+		if company:
+			doc.company = company
 	# Desk asks ERPNext for an Ajuste's difference account when its purpose changes: an opening
 	# count posts against Temporary Opening, and cannot be saved against Stock Adjustment.
 	if meta.name == "Stock Reconciliation" and doc.get("company") and "expense_account" not in given:
@@ -1604,9 +1615,11 @@ def save(
 	name: str | None = None,
 	modified: str | None = None,
 	source: str | dict | None = None,
+	comment: str | None = None,
 ):
 	"""Create (from `source`, see `_source_doc`) or update a draft with the worker's changes.
-	Frappe validates and checks create/write permission and permlevels on save."""
+	Frappe validates and checks create/write permission and permlevels on save. `comment`
+	goes to the document's Actividad (an Ajuste's «Motivo»: the doctype has no field for it)."""
 	meta = _require(doctype)
 	values = _parse(values, {}) or {}
 	if not isinstance(values, dict):
@@ -1631,6 +1644,8 @@ def save(
 		doc = _source_doc(doctype, source)
 		_apply(doc, values)
 		doc.insert()
+	if cstr(comment).strip():
+		doc.add_comment("Comment", frappe.utils.escape_html(cstr(comment).strip()[:500]))
 	return {
 		"doctype": doctype,
 		"name": doc.name,
