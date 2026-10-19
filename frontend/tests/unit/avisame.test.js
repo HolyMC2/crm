@@ -198,6 +198,43 @@ describe('AvisameSheet on a record', () => {
   })
 })
 
+describe('AvisameSheet on a record that already did it', () => {
+  it('says so in one line and offers nothing to save', async () => {
+    state.replies.avisame_options = {
+      options: [],
+      active: [],
+      note: 'Esta factura ya está pagada.',
+    }
+    const bound = mount({ doctype: 'Sales Invoice', name: 'ACC-SINV-1' })
+    bound.open = true
+    await flush()
+    expect(root.querySelector('[data-avisame-done]').textContent.trim()).toBe(
+      'Esta factura ya está pagada.',
+    )
+    expect(root.textContent).not.toContain('Te llega a Avisos')
+    expect(root.querySelectorAll('[role="radio"]')).toHaveLength(0)
+    expect(button('Avísame').disabled).toBe(true)
+  })
+
+  it('keeps the note under the conditions still open', async () => {
+    state.replies.avisame_options = {
+      options: [
+        { key: 'entregada', label: 'Cuando se entregue', active: false },
+      ],
+      active: [],
+      note: 'Esta orden ya está facturada.',
+    }
+    const bound = mount({ doctype: 'Sales Order', name: 'SAL-ORD-1' })
+    bound.open = true
+    await flush()
+    expect(root.textContent).toContain('Te llega a Avisos')
+    expect(root.querySelector('[data-avisame-done]').textContent.trim()).toBe(
+      'Esta orden ya está facturada.',
+    )
+    expect(button('Avísame').disabled).toBe(false)
+  })
+})
+
 describe('AvisameSheet on an item', () => {
   it('watches one store below a quantity', async () => {
     state.replies.mis_avisos = []
