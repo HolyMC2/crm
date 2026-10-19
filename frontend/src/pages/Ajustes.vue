@@ -1,5 +1,5 @@
 <template>
-  <!-- «Todos los ajustes» (Shell SPEC DD13): every field of a hard record in
+  <!-- «Ficha completa» (Shell SPEC DD13): every field of a hard record in
        plain-Spanish sections, searchable, with what each one does, its value
        in words, what it depends on, and edits saved as one change set. -->
   <div class="flex min-h-0 min-w-0 flex-1 flex-col" data-ajustes>
@@ -9,9 +9,9 @@
       v-model:search-open="searchOpen"
       :back="backTarget"
       :back-label="__('Volver a la ficha')"
-      :title="__('Todos los ajustes')"
+      :title="__('Ficha completa')"
       searchable
-      :search-label="__('Buscar un ajuste')"
+      :search-label="__('Buscar un dato')"
       :bell="false"
       data-testid="ajustes-appbar"
     />
@@ -34,7 +34,7 @@
           class="mx-auto max-w-xl space-y-3 py-6"
         >
           <h1 class="text-xl font-semibold">
-            {{ __('No pude abrir los ajustes') }}
+            {{ __('No pude abrir la ficha') }}
           </h1>
           <p class="text-base text-ink-gray-7">{{ loadError }}</p>
           <Button class="min-h-11" :label="__('Reintentar')" @click="load" />
@@ -45,7 +45,7 @@
           role="status"
           class="py-10 text-base text-ink-gray-6"
         >
-          {{ __('Abriendo los ajustes…') }}
+          {{ __('Abriendo la ficha…') }}
         </div>
 
         <template v-else>
@@ -94,8 +94,8 @@
               v-model="query"
               type="search"
               class="h-11 w-full rounded-full border-0 bg-surface-gray-2 px-4 text-base"
-              :placeholder="__('Buscar un ajuste: serie, SAT, caja…')"
-              :aria-label="__('Buscar un ajuste')"
+              :placeholder="__('Buscar un dato: serie, SAT, caja…')"
+              :aria-label="__('Buscar un dato')"
               data-ajustes-search
             />
           </div>
@@ -149,7 +149,7 @@
             />
             {{
               __(
-                'Puedes ver estos ajustes, pero no cambiarlos. Pide el cambio a quien administra el catálogo.',
+                'Puedes ver estos datos, pero no cambiarlos. Pide el cambio a quien administra el catálogo.',
               )
             }}
           </p>
@@ -157,11 +157,11 @@
           <EmptyState
             v-if="!visible.length"
             state="empty"
-            :title="__('Ningún ajuste coincide')"
+            :title="__('Ningún dato coincide')"
             :message="
               query
                 ? __('Prueba con otra palabra, como «serie», «SAT» o «caja».')
-                : __('No hay ajustes activados en esta vista.')
+                : __('No hay datos activados en esta vista.')
             "
           />
 
@@ -531,7 +531,7 @@ const totals = computed(() => {
   return { count, active }
 })
 const summary = computed(() =>
-  __('{0} ajustes · {1} activados o con valor', [
+  __('{0} datos · {1} activados o con valor', [
     totals.value.count,
     totals.value.active,
   ]),

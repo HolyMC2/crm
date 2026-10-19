@@ -1,4 +1,4 @@
-// «Todos los ajustes» (Shell SPEC DD13, SHELL-D6): the field guide of one
+// «Ficha completa» (Shell SPEC DD13, SHELL-D6): the field guide of one
 // record from doco (assistant/record_fields.py), searched and filtered here,
 // with the worker's pending edits kept as one change set until «Guardar».
 import { h } from 'vue'
@@ -293,7 +293,7 @@ export function pendingDisplay(field, value) {
   return String(value)
 }
 
-/** The control a fieldtype gets in «Todos los ajustes». */
+/** The control a fieldtype gets in «Ficha completa». */
 export function controlKind(fieldtype) {
   if (fieldtype === 'Check') return 'switch'
   if (fieldtype === 'Select') return 'select'

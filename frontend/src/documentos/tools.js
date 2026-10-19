@@ -9,7 +9,7 @@
  * tools that make no sense for this state are left out.
  * `wide` (≥1024) adds «Abrir en escritorio»; `avisame` adds «Avísame…»;
  * `camera` adds «Tomar foto» next to «Adjuntar» (D7's camera door);
- * `extra` are entries other packages add (D6: «Todos los ajustes», «Pregúntale…»).
+ * `extra` are entries other packages add (D6: «Ficha completa», «Pregúntale…»).
  */
 export function toolsFor(
   record,

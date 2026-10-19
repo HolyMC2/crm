@@ -317,7 +317,7 @@ const routes = [
     props: true,
     meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
   },
-  // «Todos los ajustes» of a hard record (Shell SPEC DD13, SHELL-D6).
+  // «Ficha completa» of a hard record (Shell SPEC DD13, SHELL-D6).
   {
     path: '/productos/:item/ajustes',
     name: 'ProductoAjustes',
@@ -341,7 +341,7 @@ const routes = [
     component: () => import('@/pages/Ajustes.vue'),
     props: (route) => ({ slug: route.params.slug, name: route.params.name }),
     meta: {
-      title: 'Todos los ajustes',
+      title: 'Ficha completa',
       ownPhoneHeader: true,
       ownBottomBar: true,
     },

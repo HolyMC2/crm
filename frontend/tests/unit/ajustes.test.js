@@ -1,4 +1,4 @@
-// «Todos los ajustes» (Shell SPEC DD13, SHELL-D6): search and «Solo lo
+// «Ficha completa» (Shell SPEC DD13, SHELL-D6): search and «Solo lo
 // activado» over the field guide, the pending change set, and the field row.
 import { describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, reactive } from 'vue'

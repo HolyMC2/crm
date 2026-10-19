@@ -28176,3 +28176,4 @@ msgstr "Lo terminó {0}"
 #: frontend/src/components/pendientes/PendienteDetail.vue
 msgid "Add a subtask"
 msgstr "Agregar subtarea"
+msgstr "Ficha completa"

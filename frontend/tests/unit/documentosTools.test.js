@@ -93,7 +93,7 @@ describe('tools sheet (DD5)', () => {
   })
   it('other packages add their entries (D6) before Duplicar', () => {
     const k = keys(record(1), {
-      extra: [{ key: 'ajustes', label: 'Todos los ajustes', allowed: true }],
+      extra: [{ key: 'ajustes', label: 'Ficha completa', allowed: true }],
     })
     expect(k.indexOf('ajustes')).toBeLessThan(k.indexOf('duplicate'))
   })

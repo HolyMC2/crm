@@ -538,7 +538,7 @@ const extraTools = computed(() => {
   if (ajustes.value)
     out.push({
       key: 'ajustes',
-      label: 'Todos los ajustes',
+      label: 'Ficha completa',
       icon: 'lucide-sliders-horizontal',
       allowed: true,
       hint: 'Cada campo con lo que hace',

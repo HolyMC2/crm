@@ -148,7 +148,7 @@ functions, a server test checks it) and, for a new key, its target in `form.js` 
 
 - **Tools sheet** («⋯» on every record, `components/documentos/ToolsSheet.vue`; rules in `tools.js`
   `toolsFor`): Asignar, Comentar, Adjuntar, Compartir (the PDF where the phone shares files), Imprimir
-  o PDF (format picker), «Avísame…» (D5's `AvisameSheet.vue`, when on the branch), «Todos los ajustes»
+  o PDF (format picker), «Avísame…» (D5's `AvisameSheet.vue`, when on the branch), «Ficha completa»
   and «Pregúntale a Muelle sobre esta ficha» (D6), Duplicar, Copiar enlace, Cancelar (confirmed),
   Modificar (cancelled), Eliminar (not confirmed), «Abrir en escritorio» (≥1024 only). A tool the
   worker cannot use now stays with the server's reason under it.
