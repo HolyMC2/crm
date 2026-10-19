@@ -28177,3 +28177,7 @@ msgstr "Lo terminó {0}"
 msgid "Add a subtask"
 msgstr "Agregar subtarea"
 msgstr "Ficha completa"
+
+#: frontend/src/components/pendientes/CreateDialog.vue
+msgid "No time"
+msgstr "Sin hora"

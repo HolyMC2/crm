@@ -32,7 +32,10 @@
             :label="__('What comes next?')"
             :placeholder="__('Call to confirm, send the invoice…')"
           />
-          <DueField v-model="next.date" :today="today" />
+          <div class="space-y-1.5">
+            <span class="block text-xs text-ink-gray-5">{{ __('Due') }}</span>
+            <DateField v-model="next.date" mode="date" :label="__('Due')" />
+          </div>
           <FormControl
             v-model="next.priority"
             type="select"
@@ -86,7 +89,7 @@
 <script setup>
 import { nextTick, reactive, ref, watch } from 'vue'
 import { Button, Dialog, FormControl } from 'frappe-ui'
-import DueField from '@/components/pendientes/DueField.vue'
+import DateField from '@/components/ui/DateField.vue'
 import { stableRequest } from '@/utils/contactos'
 import {
   datePresets,

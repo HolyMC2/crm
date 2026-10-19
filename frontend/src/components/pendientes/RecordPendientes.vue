@@ -27,7 +27,7 @@
       />
     </div>
     <h3
-      v-else-if="rows.length || done.length"
+      v-else-if="rows.length"
       :id="headingId"
       class="pt-2 text-sm font-semibold text-ink-gray-7"
     >
@@ -76,7 +76,11 @@
         :aria-expanded="String(doneOpen)"
         @click="doneOpen = !doneOpen"
       >
-        {{ __('Completed ({0})', [done.length]) }}
+        {{
+          bare && !rows.length && title
+            ? `${title} · ${__('Completed ({0})', [done.length])}`
+            : __('Completed ({0})', [done.length])
+        }}
         <span
           class="lucide-chevron-down size-4 transition-transform"
           :class="doneOpen ? 'rotate-180' : ''"
@@ -161,6 +165,7 @@ const all = ref({ rows: [], done: [], has_more: false }),
   loaded = ref(false),
   problem = ref(''),
   doneOpen = ref(false),
+  refused = ref(false),
   createOpen = ref(false),
   createLoaded = ref(false)
 watch(createOpen, (open) => open && (createLoaded.value = true))
@@ -172,6 +177,7 @@ const hasMore = computed(() => Boolean(all.value.has_more))
 const visible = computed(
   () =>
     Boolean(boot.value?.enabled) &&
+    !refused.value &&
     (!props.bare || rows.value.length || done.value.length),
 )
 
@@ -192,6 +198,7 @@ function dueClass(row) {
 async function reload() {
   if (!boot.value?.enabled || !props.referenceName) return
   problem.value = ''
+  refused.value = false
   try {
     all.value = await pendientesApi('on_record', {
       reference_type: props.referenceType,
@@ -201,6 +208,8 @@ async function reload() {
     // A record I may not read has no pendientes for me; anything else says why.
     const reason = pendienteError(error)
     problem.value = reason.kind === 'permission' ? '' : reason.detail
+    // A record that can't hold pendientes (a Note, a Desk record) hides the card.
+    refused.value = reason.kind === 'permission'
     all.value = { rows: [], done: [], has_more: false }
   } finally {
     loaded.value = true

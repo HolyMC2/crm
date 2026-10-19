@@ -38,22 +38,23 @@
         :placeholder="__('Call to confirm, send the quote…')"
         @keydown.enter.exact.prevent="save"
       />
-      <DueField v-model="form.date" :today="today" />
+      <!-- es-MX date and 24 h time (D1's DateField), never the browser's
+           mm/dd/yyyy; «Quitar» under Vence is «sin fecha». -->
+      <div class="space-y-1.5">
+        <span class="block text-xs text-ink-gray-5">{{ __('Due') }}</span>
+        <DateField v-model="form.date" mode="date" :label="__('Due')" />
+      </div>
       <div v-if="form.date" class="flex flex-wrap items-end gap-3">
-        <label class="block min-w-32 flex-1 space-y-1.5">
+        <div class="space-y-1.5">
           <span class="block text-xs text-ink-gray-5">{{ __('Time') }}</span>
-          <input
-            v-model="form.time"
-            type="time"
-            step="300"
-            class="block min-h-11 w-full rounded border-0 bg-surface-gray-2 px-2 text-base text-ink-gray-8 sm:min-h-8 sm:text-sm"
-          />
-        </label>
+          <DateField v-model="timeValue" mode="time" :label="__('Time')" />
+        </div>
         <Button
+          v-if="form.time"
           variant="ghost"
           class="min-h-11 sm:min-h-8"
-          :label="__('No date')"
-          @click="clearDate"
+          :label="__('No time')"
+          @click="form.time = ''"
         />
       </div>
 
@@ -290,7 +291,7 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Button, FeatherIcon, FormControl, call } from 'frappe-ui'
 import { BottomSheet } from '@/components/ui'
-import DueField from '@/components/pendientes/DueField.vue'
+import DateField from '@/components/ui/DateField.vue'
 import { stableRequest } from '@/utils/contactos'
 import { initials, kindLabel } from '@/utils/display'
 import { shellBoot } from '@/composables/muelleShell'
@@ -472,15 +473,17 @@ function fill(row) {
   initial = { ...form }
 }
 
-function clearDate() {
-  form.date = ''
-  form.time = ''
-  form.remind_at = ''
-}
+// DateField speaks Frappe's «HH:MM:SS»; the form keeps «HH:MM».
+const timeValue = computed({
+  get: () => (form.time ? `${form.time.slice(0, 5)}:00` : ''),
+  set: (value) => (form.time = value ? value.slice(0, 5) : ''),
+})
 watch(
   () => form.date,
   (date) => {
-    if (!date) form.time = ''
+    if (date) return
+    form.time = ''
+    form.remind_at = ''
   },
 )
 
