@@ -27966,7 +27966,7 @@ msgstr "Tu usuario no puede cambiar este correo."
 
 #: frontend/src/pages/Producto.vue
 msgid "All settings"
-msgstr "Todos los ajustes"
+msgstr "Ficha completa"
 # Shell D8 (2026-10-18): Pendientes as strong as sales tasks.
 #: frontend/src/pages/Pendientes.vue
 msgid "Pendiente details"
@@ -28176,7 +28176,6 @@ msgstr "Lo terminó {0}"
 #: frontend/src/components/pendientes/PendienteDetail.vue
 msgid "Add a subtask"
 msgstr "Agregar subtarea"
-msgstr "Ficha completa"
 
 #: frontend/src/components/pendientes/CreateDialog.vue
 msgid "No time"
