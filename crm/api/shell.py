@@ -32,6 +32,7 @@ MODULE_KEYS = (
 	"manual",
 	"documentos",
 	"inventario",
+	"inmobiliaria",
 	"avisos",
 )
 # Doco puesto → phone bottom-nav class (contracts registry NavRole).
