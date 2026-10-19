@@ -24537,8 +24537,8 @@ msgid "Connections"
 msgstr "Conexiones"
 
 #: frontend/src/pages/ArchivosConectores.vue
-msgid "Where Archivos brings documents from on its own: your Paperless archive and the mailbox where suppliers send invoices."
-msgstr "De dónde trae Archivos documentos por su cuenta: tu archivo Paperless y el correo donde los proveedores mandan facturas."
+msgid "Where Archivos brings documents from on its own: the mailbox where suppliers send invoices."
+msgstr "De dónde trae Archivos documentos por su cuenta: el correo donde los proveedores mandan facturas."
 
 #: frontend/src/pages/ArchivosConectores.vue
 msgid "New connection"
@@ -24593,8 +24593,8 @@ msgid "The connections of Archivos are stopped on my site. Please turn them back
 msgstr "Las conexiones de Archivos están detenidas en mi sitio. Por favor, actívenlas de nuevo."
 
 #: frontend/src/pages/ArchivosConectores.vue
-msgid "Activate Documents in your plan to connect your archive and your invoice mailbox. Files you already saved stay available."
-msgstr "Activa Documentos en tu plan para conectar tu archivo y tu correo de facturas. Los archivos que ya guardaste siguen disponibles."
+msgid "Activate Documents in your plan to connect your invoice mailbox. Files you already saved stay available."
+msgstr "Activa Documentos en tu plan para conectar tu correo de facturas. Los archivos que ya guardaste siguen disponibles."
 
 #: frontend/src/pages/ArchivosConectores.vue
 msgid "Open my plan"
@@ -24609,12 +24609,12 @@ msgid "Please activate Documents in our Muelle plan so Archivos can connect our 
 msgstr "Por favor, activa Documentos en nuestro plan de Muelle para que Archivos conecte nuestro archivo y el correo de facturas."
 
 #: frontend/src/pages/ArchivosConectores.vue
-msgid "Only an administrator can set up connections. Ask an administrator of your company to connect the archive and the mailbox."
-msgstr "Solo un administrador puede configurar conexiones. Pide a un administrador de tu empresa que conecte el archivo y el correo."
+msgid "Only an administrator can set up connections. Ask an administrator of your company to connect the invoice mailbox."
+msgstr "Solo un administrador puede configurar conexiones. Pide a un administrador de tu empresa que conecte el correo de facturas."
 
 #: frontend/src/pages/ArchivosConectores.vue
-msgid "Please connect our Paperless archive and our invoice mailbox in Archivos, Connections."
-msgstr "Por favor, conecta nuestro archivo Paperless y el correo de facturas en Archivos, Conexiones."
+msgid "Please connect our invoice mailbox in Archivos, Connections."
+msgstr "Por favor, conecta el correo de facturas en Archivos, Conexiones."
 
 #: frontend/src/pages/ArchivosConectores.vue
 msgid "Connection saved"

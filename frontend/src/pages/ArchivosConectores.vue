@@ -22,7 +22,7 @@
             <p class="text-sm text-ink-gray-6">
               {{
                 __(
-                  'Where Archivos brings documents from on its own: your Paperless archive and the mailbox where suppliers send invoices.',
+                  'Where Archivos brings documents from on its own: the mailbox where suppliers send invoices.',
                 )
               }}
             </p>
@@ -226,7 +226,7 @@ const cap = computed(() =>
   data.value?.automation_enabled ? capacity(data.value) : null,
 )
 const typeOptions = computed(() =>
-  (data.value?.types || ['Paperless', 'Mailbox']).map((value) => ({
+  (data.value?.types || ['Mailbox']).map((value) => ({
     value,
     hint:
       value === 'Mailbox'
@@ -254,7 +254,7 @@ const guards = computed(() => {
     out.push({
       code: 'unlicensed',
       message: __(
-        'Activate Documents in your plan to connect your archive and your invoice mailbox. Files you already saved stay available.',
+        'Activate Documents in your plan to connect your invoice mailbox. Files you already saved stay available.',
       ),
       actions: d.can_configure
         ? [
@@ -273,14 +273,14 @@ const guards = computed(() => {
     out.push({
       code: 'permission',
       message: __(
-        'Only an administrator can set up connections. Ask an administrator of your company to connect the archive and the mailbox.',
+        'Only an administrator can set up connections. Ask an administrator of your company to connect the invoice mailbox.',
       ),
       actions: [
         { label: __('Copy request for an administrator'), kind: 'copy' },
         { label: __('Back to Archivos'), kind: 'back' },
       ],
       copyText: __(
-        'Please connect our Paperless archive and our invoice mailbox in Archivos, Connections.',
+        'Please connect our invoice mailbox in Archivos, Connections.',
       ),
     })
   return out

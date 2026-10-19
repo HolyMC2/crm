@@ -4,7 +4,7 @@
     :aria-label="__('Files on this record')"
   >
     <header class="flex flex-wrap items-center gap-2 px-4 py-3">
-      <h2 class="flex-1 text-base font-semibold text-ink-gray-9">
+      <h2 class="min-w-[12rem] flex-1 text-base font-semibold text-ink-gray-9">
         {{ __('Files on this record') }}
         <span v-if="total" class="font-normal text-ink-gray-6"
           >· {{ total }}</span
