@@ -616,6 +616,14 @@ const routes = [
     meta: { app: 'avisos', title: 'Disparadores', ownPhoneHeader: true },
   },
   {
+    // Más › Configuración › Herramientas del asistente (Shell Wave D, DD17):
+    // the owner turns Pregúntale a Muelle's tools on/off, limits and roles.
+    path: '/asistente/herramientas',
+    name: 'AsistenteHerramientas',
+    component: () => import('@/pages/AsistenteHerramientas.vue'),
+    meta: { title: 'Herramientas del asistente', ownPhoneHeader: true },
+  },
+  {
     // The CRM notifications page merged into Avisos; old links keep working.
     path: '/notifications',
     name: 'Notifications',

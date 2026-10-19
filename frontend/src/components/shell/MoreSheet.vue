@@ -249,6 +249,20 @@
           <span class="lucide-zap size-4 text-ink-gray-6" aria-hidden="true" />
           Disparadores
         </RouterLink>
+        <!-- Shell Wave D (DD17): the assistant's tools, flags edited by the owner. -->
+        <RouterLink
+          v-if="user.is_admin || user.nav_role === 'dueno'"
+          to="/asistente/herramientas"
+          :class="ROW"
+          data-testid="more-herramientas"
+          @click="close"
+        >
+          <span
+            class="lucide-sliders-horizontal size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          Herramientas del asistente
+        </RouterLink>
         <button
           v-if="installAvailable"
           type="button"
