@@ -254,7 +254,11 @@ describe('Producto', () => {
       const edit = root.querySelector('[data-hero-pills] [data-action="edit"]')
       expect(edit.tagName).toBe('BUTTON')
       expect(edit.className).not.toMatch(/\bh-7\b/)
-      await flush()
+      // The bar is its own lazy chunk: wait for it, however busy the runner.
+      await vi.waitFor(
+        () => expect(root.querySelector('[data-producto-bar]')).toBeTruthy(),
+        { timeout: 5000 },
+      )
       const bar = [...root.querySelectorAll('[data-producto-bar] button')]
       expect(bar.map((b) => [b.dataset.action, b.textContent.trim()])).toEqual([
         ['labels', 'Etiqueta'],
