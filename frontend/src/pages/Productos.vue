@@ -142,8 +142,19 @@
           </div>
         </div>
       </section>
+      <!-- No Mercado shop (Shell D4e): the shop's stock and prices read empty;
+           say so once instead of «Agotado» and «Sin precio» on every row. -->
       <div
-        v-if="
+        v-if="boot?.unassigned"
+        role="status"
+        class="mx-4 mb-3 rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-7 sm:mx-6"
+        data-productos-sin-tienda
+      >
+        No tienes una tienda asignada: no ves sus existencias ni sus precios.
+        Pide al encargado que te asigne una.
+      </div>
+      <div
+        v-else-if="
           boot?.price_setup && ['sin-precio', 'precio-revisar'].includes(view)
         "
         role="status"
@@ -646,6 +657,7 @@
               layout="tarjetas"
               :to="productRoute(row, listPath, searching)"
               :tiers="catalog ? tierLines(row, shownLists) : []"
+              :no-store="Boolean(boot?.unassigned)"
               :focused="focusKey === legacyKey(row)"
               :eager="index < 12"
               :detail="row.warehouse ? stockLabel(row) : ''"
@@ -678,6 +690,7 @@
                 :row="row"
                 :to="productRoute(row, listPath, searching)"
                 :tiers="catalog ? tierLines(row, shownLists) : []"
+                :no-store="Boolean(boot?.unassigned)"
                 :eager="index < 12"
                 :detail="row.warehouse ? stockLabel(row) : ''"
                 @click="leaveFor(row)"

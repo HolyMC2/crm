@@ -315,7 +315,13 @@ const routes = [
     name: 'Producto',
     component: () => import('@/pages/Producto.vue'),
     props: true,
-    meta: { app: 'productos', title: 'Productos', listParent: 'Productos' },
+    // Phone: Etiqueta · Conteo · Precios take the nav's place (Shell D4e).
+    meta: {
+      app: 'productos',
+      title: 'Productos',
+      listParent: 'Productos',
+      ownBottomBar: true,
+    },
   },
   // «Ficha completa» of a hard record (Shell SPEC DD13, SHELL-D6).
   {

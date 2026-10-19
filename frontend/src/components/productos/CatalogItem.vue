@@ -131,8 +131,14 @@ const props = defineProps({
   // Extra price lists under the default one («Precios que se muestran»):
   // `tierLines(row, lists)`.
   tiers: { type: Array, default: () => [] },
+  // No Mercado shop (bootstrap.unassigned): the shop's stock and prices read
+  // empty, so a 0 is not «Agotado» and a missing price is not «Sin precio».
+  noStore: { type: Boolean, default: false },
 })
-const badge = computed(() => (props.showStock ? stockBadge(props.row) : null))
+const badge = computed(() => {
+  const value = props.showStock ? stockBadge(props.row) : null
+  return props.noStore && value?.kind === 'out' ? null : value
+})
 // A template: «N variants» (while searching, how many of them match).
 const variants = computed(() => variantsLabel(props.row.variants))
 const review = computed(() =>
@@ -222,6 +228,7 @@ function PriceFigure(_, { attrs }) {
         ...TierLines(),
       ],
     )
+  if (props.noStore && !props.tiers.length) return null
   const empty = h(
     'span',
     {

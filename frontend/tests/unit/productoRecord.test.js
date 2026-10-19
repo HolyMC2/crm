@@ -247,14 +247,22 @@ describe('Producto', () => {
       const pills = [
         ...root.querySelectorAll('[data-hero-pills] [data-action]'),
       ].map((el) => el.dataset.action)
-      expect(pills).toEqual(['price', 'edit', 'labels'])
+      // Etiqueta · Conteo · Precios live in the bottom bar (Shell D4e), so
+      // the pills keep the rest and each action shows once.
+      expect(pills).toEqual(['edit'])
       // A plain button with its label under the icon, not a frappe-ui Button.
-      const price = root.querySelector(
-        '[data-hero-pills] [data-action="price"]',
-      )
-      expect(price.tagName).toBe('BUTTON')
-      expect(price.className).not.toMatch(/\bh-7\b/)
-      expect(price.textContent.trim()).toBe('Cambiar precio')
+      const edit = root.querySelector('[data-hero-pills] [data-action="edit"]')
+      expect(edit.tagName).toBe('BUTTON')
+      expect(edit.className).not.toMatch(/\bh-7\b/)
+      await flush()
+      const bar = [...root.querySelectorAll('[data-producto-bar] button')]
+      expect(bar.map((b) => [b.dataset.action, b.textContent.trim()])).toEqual([
+        ['labels', 'Etiqueta'],
+        ['price', 'Precios'],
+      ])
+      // «Precios» is the solid one, as in Mercado's item card.
+      expect(bar[1].className).toMatch(/bg-surface-gray-10/)
+      expect(bar[0].className).not.toMatch(/bg-surface-gray-10/)
     } finally {
       setWidth(width)
     }

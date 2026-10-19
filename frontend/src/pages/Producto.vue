@@ -238,7 +238,7 @@
             >
               <!-- Native tags: a dynamic «button» would resolve to the
                    globally registered frappe-ui Button. -->
-              <template v-for="entry in heroActions" :key="entry.key">
+              <template v-for="entry in phonePills" :key="entry.key">
                 <a
                   v-if="entry.href"
                   :href="entry.href"
@@ -1462,6 +1462,12 @@
       </template>
     </div>
 
+    <ProductoBar
+      v-if="isPhone && data && barActions.length"
+      :actions="barActions"
+      @run="runBar"
+    />
+
     <LabelDialog
       v-if="data"
       v-model="labelOpen"
@@ -1554,6 +1560,10 @@ const AjustarSheet = defineAsyncComponent(
 )
 const AvisameSheet = defineAsyncComponent(
   () => import('@/components/documentos/AvisameSheet.vue'),
+)
+// Phone: Etiqueta · Conteo · Precios at the thumb (Shell D4e), its own chunk.
+const ProductoBar = defineAsyncComponent(
+  () => import('@/components/productos/ProductoBar.vue'),
 )
 import MovementRow from '@/components/inventario/MovementRow.vue'
 import ProductInsights from '@/components/productos/ProductInsights.vue'
@@ -1898,6 +1908,43 @@ const heroActions = computed(() => {
     })
   return list
 })
+// Phone bottom bar (Shell D4e, Mercado's item card): Etiqueta · Conteo ·
+// Precios. They leave the hero pills, so each action shows once. «Precios»
+// changes a price, or (without that right) goes to the price lists.
+const barActions = computed(() => {
+  const find = (key) => heroActions.value.find((entry) => entry.key === key)
+  const out = []
+  const labels = find('labels')
+  if (labels) out.push({ ...labels, label: 'Etiqueta', primary: false })
+  const count = find('count')
+  if (count)
+    out.push({ ...count, label: 'Conteo', icon: 'box', primary: false })
+  const price = find('price')
+  const canPrice = price && (price.enabled || price.resolve?.kind === 'request')
+  out.push(
+    canPrice
+      ? { ...price, label: 'Precios', primary: true }
+      : {
+          key: 'precios',
+          label: 'Precios',
+          icon: 'tag',
+          enabled: true,
+          primary: true,
+          title: 'Ver las listas de precios',
+        },
+  )
+  return out
+})
+const phonePills = computed(() => {
+  const inBar = new Set(barActions.value.map((entry) => entry.key))
+  return heroActions.value.filter((entry) => !inBar.has(entry.key))
+})
+function runBar(entry) {
+  if (entry.key !== 'precios') return run(entry)
+  document
+    .getElementById('precios')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 const avisameStores = computed(() =>
   (data.value?.stock?.rows || []).map((row) => ({
     warehouse: row.warehouse,

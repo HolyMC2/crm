@@ -441,6 +441,38 @@ describe('Productos › catálogo', () => {
     expect(text).toContain('3,559')
   })
 
+  it('a worker with no shop is told so once, not «Sold out» / «No price» per row', async () => {
+    localStorage.clear()
+    const { bootstrap, queue } = answers
+    answers.bootstrap = () => ({ ...bootstrap(), unassigned: true })
+    answers.queue = (args) => {
+      const page = queue(args)
+      return {
+        ...page,
+        rows: page.rows.map((r) =>
+          r.name === 'IPN1'
+            ? { ...r, stock: { qty: 0, projected: 0, stores: 0 }, price: null }
+            : r,
+        ),
+      }
+    }
+    try {
+      await mountAt('/productos')
+      expect(root.querySelector('[data-productos-sin-tienda]')).toBeTruthy()
+      const rows = [...root.querySelectorAll('li[data-key]')].map(
+        (li) => li.textContent,
+      )
+      const funda = rows.find((t) => t.includes('Funda roja'))
+      expect(funda).toBeTruthy()
+      expect(funda).not.toContain('Sold out')
+      expect(funda).not.toContain('No price')
+      // A service is still a service.
+      expect(rows.join(' ')).toContain('Service, no stock')
+    } finally {
+      Object.assign(answers, { bootstrap, queue })
+    }
+  })
+
   it('filters through the URL, as chips, and remembers Tarjetas', async () => {
     localStorage.clear()
     const router = await mountAt('/productos')
