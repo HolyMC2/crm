@@ -115,6 +115,15 @@ describe('tools sheet (DD5)', () => {
     expect(c.title).toBe('¿Cancelar la factura de Ana López?')
     expect(c.tone).toBe('danger')
     expect(confirmCopy('submit').confirm).toBe('Confirmar')
+    // Each family names what it leaves standing (D3b: no sales words on purchases).
+    const sale = confirmCopy('cancel', { doctype: 'Sales Invoice' }).message
+    const buy = confirmCopy('cancel', { doctype: 'Supplier Quotation' }).message
+    expect(sale).toContain('entregas, cobros')
+    expect(buy).toContain('recepciones, pagos')
+    expect(buy).not.toContain('cobros')
+    expect(confirmCopy('cancel', { doctype: 'Stock Entry' }).message).toContain(
+      'Lo que se creó a partir de él',
+    )
   })
 })
 

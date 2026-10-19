@@ -508,6 +508,7 @@ const confirmCopyFor = computed(() =>
   confirmCopy(confirmKind.value, {
     noun: noun.value,
     title: view.value?.title || '',
+    doctype: doctype.value,
   }),
 )
 

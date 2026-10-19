@@ -126,8 +126,35 @@ export function shellUrl(path, origin = globalThis.location?.origin || '') {
   return `${origin}/crm${path.startsWith('/') ? path : `/${path}`}`
 }
 
+// What a cancelled document leaves standing, in the words of its family.
+const PURCHASE_DOCTYPES = new Set([
+  'Material Request',
+  'Request for Quotation',
+  'Supplier Quotation',
+  'Purchase Order',
+  'Purchase Receipt',
+  'Purchase Invoice',
+])
+const SALES_DOCTYPES = new Set([
+  'Quotation',
+  'Sales Order',
+  'Delivery Note',
+  'Sales Invoice',
+  'POS Invoice',
+])
+function cancelNote(doctype) {
+  if (PURCHASE_DOCTYPES.has(doctype))
+    return 'Lo que salió de él (recepciones, pagos) se cancela aparte.'
+  if (SALES_DOCTYPES.has(doctype))
+    return 'Lo que salió de él (entregas, cobros) se cancela aparte.'
+  return 'Lo que se creó a partir de él se cancela aparte.'
+}
+
 /** «Confirmar», «Cancelar», «Eliminar»: what each asks before it acts. */
-export function confirmCopy(kind, { noun = 'el documento', title = '' } = {}) {
+export function confirmCopy(
+  kind,
+  { noun = 'el documento', title = '', doctype = '' } = {},
+) {
   const who = title ? ` de ${title}` : ''
   if (kind === 'submit')
     return {
@@ -140,8 +167,7 @@ export function confirmCopy(kind, { noun = 'el documento', title = '' } = {}) {
   if (kind === 'cancel')
     return {
       title: `¿Cancelar ${noun}${who}?`,
-      message:
-        'Deja de contar en tus números. Lo que salió de él (entregas, cobros) se cancela aparte.',
+      message: `Deja de contar en tus números. ${cancelNote(doctype)}`,
       confirm: 'Cancelar documento',
       back: 'No cancelar',
       tone: 'danger',
