@@ -51,6 +51,14 @@ export function storeName(warehouse) {
   return text.replace(/\s+-\s+[^\s-]{1,12}$/u, '') || text
 }
 
+/** «Loyal Item» / «Loyal Item y 2 más» from a row's items summary (`fields: ['_items']`); '' without one. */
+export function itemsTitle(items) {
+  const first = String(items?.first?.[0]?.name || '').trim()
+  if (!first) return ''
+  const more = (Number(items.count) || 0) - 1
+  return more > 0 ? `${first} y ${more} más` : first
+}
+
 /** «Vence mañana» / «Venció hace 3 días» for a due date (formatDue's words). */
 export function dueLine(due) {
   return due ? formatDue(due).label : ''

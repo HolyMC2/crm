@@ -127,8 +127,9 @@
       @action="clearAll"
     />
     <template v-else>
-      <!-- Phone and tablet: the log by day, as Escáner's «Historial». -->
-      <div v-if="!wide" data-kardex-log>
+      <!-- Phone, tablet and the Inventario hub's pane: the log by day, as
+           Escáner's «Historial» (the table needs the whole page). -->
+      <div v-if="!wide || pane" data-kardex-log>
         <section
           v-for="group in groups"
           :key="group.day"
@@ -364,10 +365,14 @@ const context = computed(() =>
     ? __('Movements', null, CTX)
     : __('Inventory', null, CTX),
 )
+// Inside the Inventario hub (≥1024, beside its stores) the hub is the way back.
+const props = defineProps({ pane: { type: Boolean, default: false } })
 const backTarget = computed(() =>
-  state.value.articulo
-    ? { name: 'Producto', params: { item: state.value.articulo } }
-    : { name: 'Inventario' },
+  props.pane && !state.value.articulo
+    ? null
+    : state.value.articulo
+      ? { name: 'Producto', params: { item: state.value.articulo } }
+      : { name: 'Inventario' },
 )
 const backLabel = computed(() =>
   state.value.articulo

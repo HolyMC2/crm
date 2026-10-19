@@ -27374,11 +27374,11 @@ msgstr "1 cada {0} días"
 
 msgctxt "Productos"
 msgid "Sold in 30 days"
-msgstr "Vendido en 30 días"
+msgstr "En 30 días"
 
 msgctxt "Productos"
 msgid "Sold in 90 days"
-msgstr "Vendido en 90 días"
+msgstr "En 90 días"
 
 msgctxt "Productos"
 msgid "Per day"

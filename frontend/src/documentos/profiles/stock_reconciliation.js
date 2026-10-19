@@ -1,11 +1,13 @@
 // Ajustes (Stock Reconciliation, /inventario/ajustes): a count that corrects the
-// stock, by its store («Ajuste · Centro»), never by its ID. The server titles the
-// palette the same way and counts the rows (`row.lines`, documentos.py).
+// stock, by what was counted («Loyal Item y 2 más») then the kind, the store and
+// the date; never by its ID (SPEC DD1). The server titles the palette and the
+// record by the store («Ajuste · Centro») and counts the rows (`row.lines`).
 import { formatDate } from '@/utils/display'
 import {
   confirmState,
   draftStep,
   genericProfile,
+  itemsTitle,
   stagesAt,
   storeName,
   titleOf,
@@ -35,7 +37,7 @@ function linesLabel(n) {
 }
 
 export default {
-  fields: ['purpose', 'set_warehouse'],
+  fields: ['purpose', 'set_warehouse', '_items'],
   chips: [
     {
       value: 'borradores',
@@ -54,6 +56,23 @@ export default {
 
   row(row) {
     const state = confirmState(row)
+    const fields = row.fields || {}
+    const things = itemsTitle(row.items)
+    if (things)
+      return {
+        title: things,
+        subtitle: [
+          adjustmentWord(fields.purpose),
+          state.status === 'Submitted' ? '' : state.statusLabel,
+          formatDate(row.date),
+          storeName(fields.set_warehouse || row.items.target),
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        meta: '',
+        ...state,
+        icon: 'lucide-clipboard-check',
+      }
     return {
       title:
         adjustmentTitle(row.fields || {}) ||

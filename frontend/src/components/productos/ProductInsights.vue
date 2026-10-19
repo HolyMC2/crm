@@ -16,11 +16,17 @@
         {{ __('How it sells', null, CTX) }}
       </h2>
     </header>
-    <div class="grid grid-cols-3 gap-px bg-outline-gray-1" data-insights-kpis>
+    <!-- Two columns on a narrow phone (the pace takes the full row), three from sm. -->
+    <div
+      class="grid grid-cols-2 gap-px bg-outline-gray-1 sm:grid-cols-3"
+      data-insights-kpis
+    >
       <div
         v-for="tile in tiles"
         :key="tile.key"
-        class="bg-surface-base px-4 py-3"
+        class="bg-surface-base px-3 py-3 sm:px-4"
+        :class="tile.key === 'day' ? 'col-span-2 sm:col-span-1' : ''"
+        :data-insights-kpi="tile.key"
       >
         <p class="text-sm leading-snug text-ink-gray-6">{{ tile.label }}</p>
         <p

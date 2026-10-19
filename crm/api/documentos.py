@@ -550,6 +550,10 @@ def _items_summary(meta, rows):
 	name_field = "item_name" if child.has_field("item_name") else "item_code"
 	fields = ["parent", name_field, "idx"]
 	fields += [f for f in ("qty", "uom") if child.has_field(f)]
+	# Stock rows say where they moved: a lab or imported entry keeps its stores on the
+	# rows, not the header (Stock Entry Detail s/t_warehouse, Stock Reconciliation Item warehouse).
+	stores = [f for f in ("s_warehouse", "t_warehouse", "warehouse") if child.has_field(f)]
+	fields += stores
 	found = frappe.get_all(
 		table.options,
 		filters={
@@ -564,6 +568,10 @@ def _items_summary(meta, rows):
 	by_parent = {}
 	for item in found:
 		by_parent.setdefault(item.parent, []).append(item)
+
+	def first_store(items, field):
+		return next((cstr(i.get(field)) for i in items if field in stores and i.get(field)), "")
+
 	for row in rows:
 		items = by_parent.get(row["name"]) or []
 		row["items"] = {
@@ -573,6 +581,9 @@ def _items_summary(meta, rows):
 				for i in items[:ITEMS_IN_ROW]
 			],
 		}
+		if stores:
+			row["items"]["source"] = first_store(items, "s_warehouse")
+			row["items"]["target"] = first_store(items, "t_warehouse") or first_store(items, "warehouse")
 
 
 def _count(doctype, filters, or_filters=None):

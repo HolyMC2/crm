@@ -253,8 +253,9 @@ describe('documentos profiles', () => {
         to_warehouse: 'Bodega Norte - D',
       },
     })
-    expect(traspaso.title).toBe('Traspaso · Centro → Bodega Norte')
-    expect(traspaso.subtitle).toBe('Confirmado · 5 mar 2020')
+    // A traspaso reads by its two stores; the kind leads the line.
+    expect(traspaso.title).toBe('Centro → Bodega Norte')
+    expect(traspaso.subtitle).toBe('Traspaso · 5 mar 2020')
     expect(traspaso.meta).toBe('$1,250.00')
     expect(traspaso.statusLabel).toBe('Confirmado')
     expect(traspaso.icon).toBe('lucide-arrow-left-right')
@@ -291,6 +292,53 @@ describe('documentos profiles', () => {
     expect(bare.title).toBe('Movimiento de inventario')
     for (const r of [traspaso, entrada, bare])
       expect(r.title).not.toContain('MAT-STE')
+  })
+
+  it('stock rows read by what moved, then kind · store · date (DD1)', () => {
+    expect(stockEntry.fields).toContain('_items')
+    expect(stockReconciliation.fields).toContain('_items')
+    const base = { name: 'MAT-STE-9', docstatus: 1, date: '2020-03-05' }
+    const items = (count, extra = {}) => ({
+      count,
+      first: [{ name: 'Loyal Item', qty: 2, uom: 'Nos' }],
+      ...extra,
+    })
+    // The lab keeps an entry's store on its rows, not the header.
+    const entrada = stockEntry.row({
+      ...base,
+      amount: 300,
+      currency: 'MXN',
+      fields: { purpose: 'Material Receipt' },
+      items: items(3, { source: '', target: 'Escuinapa - D' }),
+    })
+    expect(entrada).toMatchObject({
+      title: 'Loyal Item y 2 más',
+      subtitle: 'Entrada · 5 mar 2020 · Escuinapa',
+      meta: '$300.00',
+    })
+    const traspaso = stockEntry.row({
+      ...base,
+      docstatus: 0,
+      fields: { purpose: 'Material Transfer' },
+      items: items(1, { source: 'Escuinapa - D', target: 'CCAPI-WH-A - D' }),
+    })
+    expect(traspaso).toMatchObject({
+      title: 'Escuinapa → CCAPI-WH-A',
+      subtitle: 'Traspaso · Borrador · 5 mar 2020 · Loyal Item',
+    })
+    const ajuste = stockReconciliation.row({
+      ...base,
+      name: 'MAT-RECO-9',
+      lines: 3,
+      fields: { purpose: 'Stock Reconciliation', set_warehouse: '' },
+      items: items(3, { target: 'Centro - D' }),
+    })
+    expect(ajuste).toMatchObject({
+      title: 'Loyal Item y 2 más',
+      subtitle: 'Ajuste · 5 mar 2020 · Centro',
+    })
+    for (const r of [entrada, traspaso, ajuste])
+      expect(r.title).not.toMatch(/MAT-|Stock /)
   })
 
   it('a movimiento chip filters by purpose and the header names the kind', () => {

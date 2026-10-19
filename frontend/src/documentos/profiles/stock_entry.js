@@ -1,11 +1,13 @@
 // Entradas y traspasos (Stock Entry, /inventario/entradas): each entry reads by
-// what it did and where («Traspaso · Centro → Bodega»), never by its ID.
-// The server titles the palette the same way (documentos.py `_stock_title`).
+// what moved («Loyal Item y 2 más»; a traspaso by its stores, «Centro → Bodega»),
+// then the kind, the store and the date; never by its ID (SPEC DD1). The server
+// titles the palette and the record by purpose and stores (documentos.py `_stock_title`).
 import { formatDate, formatMoney } from '@/utils/display'
 import {
   confirmState,
   draftStep,
   genericProfile,
+  itemsTitle,
   stagesAt,
   storeName,
   titleOf,
@@ -66,11 +68,31 @@ export function moveTitle(doc = {}) {
   return where ? `${move[0]} · ${where}` : move[0]
 }
 
+/** The header stores, else the first item row's: lab and imported entries keep them on the rows. */
+function withRowStores(doc, items) {
+  if (doc.from_warehouse || doc.to_warehouse || !items) return doc
+  return {
+    ...doc,
+    from_warehouse: items.source || '',
+    to_warehouse: items.target || '',
+  }
+}
+
+/** «Borrador» / «Cancelado» on the row's line; a confirmed one is the usual case and says nothing. */
+const unusualState = (state) =>
+  state.status === 'Submitted' ? '' : state.statusLabel
+
 const amountOf = (value, currency) =>
   Number(value) > 0 ? formatMoney(value, currency || 'MXN') : ''
 
 export default {
-  fields: ['stock_entry_type', 'purpose', 'from_warehouse', 'to_warehouse'],
+  fields: [
+    'stock_entry_type',
+    'purpose',
+    'from_warehouse',
+    'to_warehouse',
+    '_items',
+  ],
   chips: [
     {
       value: 'borradores',
@@ -112,16 +134,41 @@ export default {
   sections: ['items', 'datos', 'conexiones', 'actividad', 'archivos'],
 
   row(row) {
-    const fields = row.fields || {}
+    const fields = withRowStores(row.fields || {}, row.items)
     const state = confirmState(row)
+    const move = MOVES[fields.purpose]
+    const icon = move?.[2] || 'lucide-arrow-left-right'
+    const meta = amountOf(row.amount, row.currency)
+    const things = itemsTitle(row.items)
+    const where = movedWhere(fields)
+    // A traspaso reads by its two stores; anything else by what moved.
+    const transfer = move?.[1] === 'move' && where.includes(' → ')
+    const title = transfer ? where : things
+    if (!title)
+      return {
+        title: moveTitle(fields) || titleOf(row, 'Stock Entry'),
+        subtitle: [state.statusLabel, formatDate(row.date)]
+          .filter(Boolean)
+          .join(' · '),
+        meta,
+        ...state,
+        icon,
+      }
     return {
-      title: moveTitle(fields) || titleOf(row, 'Stock Entry'),
-      subtitle: [state.statusLabel, formatDate(row.date)]
+      title,
+      // Kind, state and date before the store: a long store name truncates
+      // the end of the line, never the date.
+      subtitle: [
+        move?.[0],
+        unusualState(state),
+        formatDate(row.date),
+        transfer ? things : where,
+      ]
         .filter(Boolean)
         .join(' · '),
-      meta: amountOf(row.amount, row.currency),
+      meta,
       ...state,
-      icon: MOVES[fields.purpose]?.[2] || 'lucide-arrow-left-right',
+      icon,
     }
   },
 

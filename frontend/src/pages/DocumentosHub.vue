@@ -4,121 +4,141 @@
        for action; «Todos los tipos» opens any other readable doctype. -->
   <div class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
     <AppBar :title="moduleLabel" :bell="phone" />
-    <div class="min-h-0 flex-1 overflow-y-auto pb-10">
-      <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 pt-2">
-        <EmptyState
-          v-if="!groups.length"
-          state="denied"
-          :title="`No hay listas de ${moduleLabel.toLowerCase()} para tu usuario`"
-          message="Pide al dueño o al encargado que revise tu usuario."
-        />
-        <section
-          v-for="group in groups"
-          :key="group.key"
-          :aria-labelledby="`hub-${group.key}`"
+    <!-- ≥1024 Inventario is master-detail (as Documentos lists): the hub and
+         its stores on the left, the picked store's movements on the right. -->
+    <div class="flex min-h-0 flex-1 overflow-hidden">
+      <div
+        class="min-h-0 overflow-y-auto pb-10"
+        :class="
+          split
+            ? 'inventario-master flex-none border-r border-outline-gray-1'
+            : 'flex-1'
+        "
+        data-testid="hub-master"
+      >
+        <div
+          class="flex w-full flex-col gap-4 pt-2"
+          :class="split ? '' : 'mx-auto max-w-3xl'"
         >
-          <h2
-            :id="`hub-${group.key}`"
-            class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-6"
-          >
-            {{ group.label }}
-          </h2>
-          <ListRow
-            v-for="item in group.items"
-            :key="item.key"
-            :icon="item.icon"
-            :title="item.label"
-            :subtitle="item.subtitle"
-            :subtitle-tone="item.tone"
-            :meta="item.meta"
-            :to="item.to"
-            data-testid="documentos-hub-row"
+          <EmptyState
+            v-if="!groups.length"
+            state="denied"
+            :title="`No hay listas de ${moduleLabel.toLowerCase()} para tu usuario`"
+            message="Pide al dueño o al encargado que revise tu usuario."
           />
-        </section>
-        <!-- Inventario's stores (Shell D4.3): what each holds; the value only
-             for whoever may see cost. A row opens the store's movements. -->
-        <section
-          v-if="!isDocumentos && stores.length"
-          aria-labelledby="hub-almacenes"
-          data-testid="inventario-stores"
-        >
-          <h2
-            id="hub-almacenes"
-            class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-6"
+          <section
+            v-for="group in groups"
+            :key="group.key"
+            :aria-labelledby="`hub-${group.key}`"
           >
-            Almacenes
-          </h2>
-          <ListRow
-            v-for="store in stocked"
-            :key="store.warehouse"
-            icon="lucide-warehouse"
-            :title="store.label"
-            :subtitle="storeLine(store)"
-            :meta="store.value === undefined ? '' : formatMoney(store.value)"
-            :to="{
-              name: 'InventarioMovimientos',
-              query: { almacen: store.warehouse },
-            }"
-            data-testid="inventario-store"
-          />
-          <!-- Empty stores are one row, not a wall (the lab mirror has dozens). -->
-          <ListRow
-            v-if="emptyStores"
-            icon="lucide-warehouse"
-            :title="`${emptyStores} ${emptyStores === 1 ? 'almacén' : 'almacenes'} sin existencias`"
-            subtitle="Ver todos los almacenes"
-            :to="floorRoute('Warehouse')"
-            data-testid="inventario-stores-empty"
-          />
-        </section>
-        <section
-          v-if="isDocumentos && enabled"
-          aria-labelledby="hub-todos"
-          class="pt-2"
-        >
-          <h2
-            id="hub-todos"
-            class="px-4 pb-2 text-sm font-medium text-ink-gray-6"
-          >
-            Todos los tipos
-          </h2>
-          <div class="px-4 pb-1">
-            <TextInput
-              v-model="typeSearch"
-              type="search"
-              placeholder="Buscar un tipo de documento"
-              aria-label="Buscar un tipo de documento"
-              data-testid="documentos-types-search"
+            <h2
+              :id="`hub-${group.key}`"
+              class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-6"
+            >
+              {{ group.label }}
+            </h2>
+            <ListRow
+              v-for="item in group.items"
+              :key="item.key"
+              :icon="item.icon"
+              :title="item.label"
+              :subtitle="item.subtitle"
+              :subtitle-tone="item.tone"
+              :meta="item.meta"
+              :to="item.to"
+              data-testid="documentos-hub-row"
             />
-          </div>
-          <p
-            v-if="
-              typeSearch.trim().length >= 2 && !types.length && !typesLoading
-            "
-            class="px-4 py-3 text-sm text-ink-gray-6"
+          </section>
+          <!-- Inventario's stores (Shell D4.3): what each holds; the value only
+             for whoever may see cost. A row opens the store's movements. -->
+          <section
+            v-if="!isDocumentos && stores.length"
+            aria-labelledby="hub-almacenes"
+            data-testid="inventario-stores"
           >
-            Ningún tipo de documento que puedas abrir se llama así.
-          </p>
-          <ListRow
-            v-for="type in types"
-            :key="type.doctype"
-            icon="lucide-file"
-            :title="type.label"
-            :subtitle="type.module"
-            :to="floorRoute(type.doctype)"
-            data-testid="documentos-type"
-          />
-        </section>
+            <h2
+              id="hub-almacenes"
+              class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-6"
+            >
+              Almacenes
+            </h2>
+            <ListRow
+              v-for="store in stocked"
+              :key="store.warehouse"
+              icon="lucide-warehouse"
+              :title="storeTitle(store)"
+              :subtitle="storeLine(store)"
+              :meta="store.value === undefined ? '' : formatMoney(store.value)"
+              :to="storeTo(store)"
+              :selected="split && route.query.almacen === store.warehouse"
+              data-testid="inventario-store"
+            />
+            <!-- Empty stores fold into one row, not a wall (the lab mirror has dozens). -->
+            <ListRow
+              v-if="emptyStores"
+              icon="lucide-warehouse"
+              :title="`Sin existencias (${emptyStores})`"
+              :subtitle="`${emptyStores === 1 ? 'Un almacén vacío' : 'Almacenes vacíos'}: ver todos los almacenes`"
+              :to="floorRoute('Warehouse')"
+              data-testid="inventario-stores-empty"
+            />
+          </section>
+          <section
+            v-if="isDocumentos && enabled"
+            aria-labelledby="hub-todos"
+            class="pt-2"
+          >
+            <h2
+              id="hub-todos"
+              class="px-4 pb-2 text-sm font-medium text-ink-gray-6"
+            >
+              Todos los tipos
+            </h2>
+            <div class="px-4 pb-1">
+              <TextInput
+                v-model="typeSearch"
+                type="search"
+                placeholder="Buscar un tipo de documento"
+                aria-label="Buscar un tipo de documento"
+                data-testid="documentos-types-search"
+              />
+            </div>
+            <p
+              v-if="
+                typeSearch.trim().length >= 2 && !types.length && !typesLoading
+              "
+              class="px-4 py-3 text-sm text-ink-gray-6"
+            >
+              Ningún tipo de documento que puedas abrir se llama así.
+            </p>
+            <ListRow
+              v-for="type in types"
+              :key="type.doctype"
+              icon="lucide-file"
+              :title="type.label"
+              :subtitle="type.module"
+              :to="floorRoute(type.doctype)"
+              data-testid="documentos-type"
+            />
+          </section>
+        </div>
+      </div>
+      <div
+        v-if="split"
+        class="relative flex min-w-0 flex-1 flex-col overflow-hidden"
+        data-testid="hub-detail"
+      >
+        <InventarioMovimientos pane />
       </div>
     </div>
   </div>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { TextInput } from 'frappe-ui'
 import { AppBar, EmptyState, ListRow } from '@/components/ui'
-import { isMobile } from '@/composables/breakpoint'
+import { isMobile, isWide } from '@/composables/breakpoint'
 import { shellBoot } from '@/composables/muelleShell'
 import { docApi } from '@/documentos/api'
 import {
@@ -130,8 +150,10 @@ import {
 } from '@/documentos/registry'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { formatMoney } from '@/utils/display'
+import InventarioMovimientos from './InventarioMovimientos.vue'
 
 const route = useRoute()
+const router = useRouter()
 const phone = isMobile
 const isDocumentos = computed(() => !route.path.startsWith('/inventario'))
 const moduleKey = computed(() =>
@@ -154,6 +176,40 @@ const stocked = computed(() =>
     ),
 )
 const emptyStores = computed(() => stores.value.length - stocked.value.length)
+// ≥1024 with stores: pick one on the left, its movements on the right.
+const split = computed(
+  () => isWide.value && !isDocumentos.value && stores.value.length > 0,
+)
+// Two stores may share a name across companies (or a company): tell them apart.
+const sharedLabels = computed(() => {
+  const seen = new Map()
+  for (const store of stores.value)
+    seen.set(store.label, (seen.get(store.label) || 0) + 1)
+  return seen
+})
+function storeTitle(store) {
+  if ((sharedLabels.value.get(store.label) || 0) < 2) return store.label
+  const companies = new Set(
+    stores.value.filter((s) => s.label === store.label).map((s) => s.company),
+  )
+  return companies.size > 1 && store.company
+    ? `${store.label} · ${store.company}`
+    : store.warehouse
+}
+// The split opens on the most valuable store: its movements read without a
+// «Tienda» column, and the hub's «Movimientos» row keeps the all-stores page.
+watch(split, (on) => {
+  if (on && !route.query.almacen && stocked.value.length)
+    router.replace({
+      path: route.path,
+      query: { ...route.query, almacen: stocked.value[0].warehouse },
+    })
+})
+function storeTo(store) {
+  return split.value
+    ? { path: route.path, query: { almacen: store.warehouse } }
+    : { name: 'InventarioMovimientos', query: { almacen: store.warehouse } }
+}
 const typeSearch = ref('')
 const types = ref([])
 const typesLoading = ref(false)
@@ -293,3 +349,14 @@ watch(
 )
 onBeforeUnmount(() => clearTimeout(timer))
 </script>
+<style scoped>
+/* scoped, not Tailwind arbitrary values (as DocumentosSplit) */
+.inventario-master {
+  width: 24rem;
+}
+@media (min-width: 1280px) {
+  .inventario-master {
+    width: 28rem;
+  }
+}
+</style>

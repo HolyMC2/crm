@@ -393,6 +393,13 @@ describe('Producto', () => {
     expect(box.textContent).toContain('Sold in 30 days')
     expect(box.textContent).toContain('9 pzas')
     expect(box.textContent).toContain('1 every 10 days')
+    // A narrow phone gets two columns; the pace takes the whole row.
+    expect(box.querySelector('[data-insights-kpis]').className).toMatch(
+      /\bgrid-cols-2\b.*\bsm:grid-cols-3\b/,
+    )
+    expect(box.querySelector('[data-insights-kpi="day"]').className).toContain(
+      'col-span-2',
+    )
     expect(box.textContent).toContain('Juan Pérez')
     expect(box.textContent).toContain('About 110 days')
     expect(box.textContent).toContain('Out of stock')

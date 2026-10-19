@@ -192,6 +192,46 @@ class TestDocumentosStock(IntegrationTestCase):
 		self.assertEqual(found[0]["title"], row["title"])
 		self.assertEqual(documentos.record("Stock Entry", entry.name)["header"]["title"], row["title"])
 
+	def test_stock_rows_carry_what_moved_and_the_row_stores_when_the_header_has_none(self):
+		if not frappe.db.exists("Stock Entry Type", "Material Receipt"):
+			self.skipTest("this site has no «Material Receipt» stock entry type")
+		entry = frappe.get_doc(
+			{
+				"doctype": "Stock Entry",
+				"stock_entry_type": "Material Receipt",
+				"purpose": "Material Receipt",
+				"company": self.company,
+				"items": [
+					{
+						"item_code": code,
+						"qty": 1,
+						"uom": "Nos",
+						"conversion_factor": 1,
+						"t_warehouse": self.centro,
+						"basic_rate": 10,
+					}
+					for code in (self.item_a, self.item_b)
+				],
+			}
+		).insert(ignore_permissions=True)
+		# Desk's form copies a lone store to the header; an import or the lab does not.
+		frappe.db.set_value("Stock Entry", entry.name, {"from_warehouse": None, "to_warehouse": None})
+		count = self._reconciliation([(self.item_a, 5)])
+		frappe.set_user(self._stock_manager())
+		row = documentos.rows(
+			"Stock Entry", filters=[["name", "=", entry.name]], fields=["purpose", "_items"]
+		)["rows"][0]
+		self.assertEqual(row["items"]["count"], 2)
+		self.assertEqual(
+			row["items"]["first"][0]["name"], frappe.db.get_value("Item", self.item_a, "item_name")
+		)
+		self.assertEqual(row["items"]["source"], "")
+		self.assertEqual(row["items"]["target"], self.centro)
+		ajuste = documentos.rows(
+			"Stock Reconciliation", filters=[["name", "=", count.name]], fields=["_items"]
+		)["rows"][0]
+		self.assertEqual(ajuste["items"]["target"], self.centro)
+
 	def test_reconciliation_rows_say_the_store_and_count_only_their_own_rows(self):
 		two = self._reconciliation([(self.item_a, 5), (self.item_b, 3)])
 		one = self._reconciliation([(self.item_a, 7)], purpose="Opening Stock")
