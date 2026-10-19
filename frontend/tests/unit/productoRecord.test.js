@@ -121,6 +121,11 @@ async function mountAt(path) {
         props: true,
       },
       {
+        path: '/productos/:item/ajustes',
+        name: 'ProductoAjustes',
+        component: { render: () => null },
+      },
+      {
         path: '/compras/nueva',
         name: 'CompraNueva',
         component: { render: () => null },
@@ -557,5 +562,14 @@ describe('Producto', () => {
     expect(text).toContain('38.5%')
     expect(text).toContain('Margin over Precio de venta')
     expect(text).not.toContain('Unit: Nos')
+  })
+
+  it('«All settings» opens every setting of the product', async () => {
+    await mountAt('/productos/ABIBMEX000130')
+    const link = root.querySelector('[data-producto-ajustes]')
+    expect(link.textContent).toContain('All settings')
+    expect(link.getAttribute('href')).toBe(
+      '/crm/productos/ABIBMEX000130/ajustes',
+    )
   })
 })

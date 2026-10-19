@@ -1227,6 +1227,22 @@
                   </dd>
                 </div>
               </dl>
+              <!-- Every setting of the product in words (SHELL-D6, DD13). -->
+              <RouterLink
+                :to="{ name: 'ProductoAjustes', params: { item: props.item } }"
+                class="flex min-h-12 items-center gap-3 border-t border-outline-gray-1 px-4 py-2 text-sm font-medium text-ink-gray-9 hover:bg-surface-gray-2"
+                data-producto-ajustes
+              >
+                <span
+                  class="lucide-sliders-horizontal size-4 flex-none text-ink-gray-6"
+                  aria-hidden="true"
+                />
+                <span class="min-w-0 flex-1">{{ __('All settings') }}</span>
+                <span
+                  class="lucide-chevron-right size-4 flex-none text-ink-gray-5"
+                  aria-hidden="true"
+                />
+              </RouterLink>
             </section>
 
             <section
