@@ -9,6 +9,7 @@
       back
       back-label="Más"
       title="Formatos de impresión"
+      :stack="false"
       :loading="loading && groups.length > 0"
       :searchable="groups.length > 0"
       search-label="Buscar formato o documento"
@@ -91,13 +92,15 @@
                     }
               "
             >
-              <template #trailing>
-                <StatusChip v-if="format.broken" label="Dañado" tone="danger" />
-                <StatusChip
-                  v-else-if="format.default"
-                  label="Predeterminado"
-                  tone="success"
-                />
+              <!-- Below 360px the pill joins the subtitle row: beside the
+                   title it squeezed the name onto three lines. -->
+              <template v-if="narrow && pillOf(format)" #subtitle>
+                <StatusChip v-bind="pillOf(format)" class="mr-1.5" />{{
+                  formatSubtitle(format)
+                }}
+              </template>
+              <template v-if="!narrow && pillOf(format)" #trailing>
+                <StatusChip v-bind="pillOf(format)" />
               </template>
             </ListRow>
             <button
@@ -188,6 +191,7 @@
 </template>
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { toast } from 'frappe-ui'
 import {
   AppBar,
@@ -206,6 +210,15 @@ import {
   groupTitle,
   kindIcon,
 } from '@/components/impresion/impresion'
+
+const narrow = useMediaQuery('(max-width: 359px)')
+// «Dañado» wins over «Predeterminado»: a default that fails is the news.
+const pillOf = (format) =>
+  format.broken
+    ? { label: 'Dañado', tone: 'danger' }
+    : format.default
+      ? { label: 'Predeterminado', tone: 'success' }
+      : null
 
 const loading = ref(false)
 const error = ref('')

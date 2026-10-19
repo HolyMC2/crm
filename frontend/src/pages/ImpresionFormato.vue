@@ -13,6 +13,7 @@
           : ''
       "
       :title="data?.label || 'Formato'"
+      :stack="false"
       :loading="loading"
     />
     <div

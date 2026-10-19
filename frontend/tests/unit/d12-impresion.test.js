@@ -235,3 +235,38 @@ describe('Vista previa format chips', () => {
     expect(formatChips([], '')).toEqual([])
   })
 })
+
+describe('Compartir from the preview', () => {
+  it('shares the PDF without the letterhead when «Membrete» is off', async () => {
+    const { shareDocument } = await import('@/documentos/tools')
+    const urls = []
+    const shared = []
+    const prev = { fetch: globalThis.fetch, nav: globalThis.navigator }
+    globalThis.fetch = async (url) => {
+      urls.push(String(url))
+      return { ok: true, blob: async () => new Blob(['%PDF']) }
+    }
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { canShare: () => true, share: async (data) => shared.push(data) },
+    })
+    try {
+      const base = {
+        doctype: 'Sales Invoice',
+        name: 'ACC-1',
+        title: 'Factura ACC-1',
+      }
+      expect(await shareDocument({ ...base, letterhead: false })).toBe('shared')
+      expect(await shareDocument(base)).toBe('shared')
+    } finally {
+      globalThis.fetch = prev.fetch
+      Object.defineProperty(globalThis, 'navigator', {
+        configurable: true,
+        value: prev.nav,
+      })
+    }
+    expect(urls[0]).toContain('no_letterhead=1')
+    expect(urls[1]).not.toContain('no_letterhead')
+    expect(shared[0].files[0].name).toBe('Factura ACC-1.pdf')
+  })
+})
