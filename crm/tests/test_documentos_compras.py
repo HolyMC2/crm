@@ -124,3 +124,18 @@ class TestCadenaERPNext(IntegrationTestCase):
 		self.assertEqual(getdate(po.schedule_date), getdate(nowdate()))
 		self.assertEqual(getdate(po.items[0].schedule_date), getdate(nowdate()))
 		self.assertEqual(getdate(po.items[1].schedule_date), getdate("2999-01-10"))
+
+	def test_rows_without_dates_take_the_requisicion_date(self):
+		from frappe.utils import add_days, getdate, nowdate
+
+		later = add_days(nowdate(), 5)
+		po = frappe.new_doc("Purchase Order")
+		po.append("items", {"item_code": "X"})
+		po.append("items", {"item_code": "Y"})
+		documentos._header_dates(po, later)
+		self.assertEqual([getdate(r.schedule_date) for r in po.items], [getdate(later)] * 2)
+		self.assertEqual(getdate(po.schedule_date), getdate(later))
+		old = frappe.new_doc("Purchase Order")
+		old.append("items", {"item_code": "X"})
+		documentos._header_dates(old, "2020-01-01")
+		self.assertEqual(getdate(old.schedule_date), getdate(nowdate()))

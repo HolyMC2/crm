@@ -1426,21 +1426,27 @@ def _mapped(doctype, name, key):
 _NEW_DEFAULTS = {"Stock Reconciliation": {"purpose": "Stock Reconciliation"}}
 
 
-def _header_dates(doc):
-	"""Desk fills an order's «Required By» from its rows (the earliest); ERPNext's mappers
-	(Material Request → Purchase Order) leave the header empty and the save then refuses."""
-	if not doc.is_new() or not doc.meta.has_field("schedule_date") or doc.get("schedule_date"):
+def _header_dates(doc, fallback=None):
+	"""Desk fills an order's «Required By» (header and rows); ERPNext's Material Request →
+	Purchase Order mapper leaves both empty and the save then refuses. Rows without a date
+	take `fallback` (the requisición's date) or the header's or today; none is before today
+	(an old requisición's dates would fail ERPNext's checks); the header is the earliest row."""
+	if not doc.is_new() or not doc.meta.has_field("schedule_date"):
 		return
 	table = _items_table(doc.meta)
-	rows = [r for r in (doc.get(table.fieldname) if table else None) or [] if r.get("schedule_date")]
-	if not rows:
-		return
-	# never before today: an old requisición's dates would fail ERPNext's «Required By» checks
+	rows = [
+		r for r in (doc.get(table.fieldname) if table else None) or [] if r.meta.has_field("schedule_date")
+	]
 	today = getdate(nowdate())
+	default = fallback or doc.get("schedule_date") or today
+	default = max(getdate(default), today)
 	for row in rows:
-		if getdate(row.schedule_date) < today:
+		if not row.get("schedule_date"):
+			row.schedule_date = default
+		elif getdate(row.schedule_date) < today:
 			row.schedule_date = today
-	doc.schedule_date = min(getdate(r.schedule_date) for r in rows)
+	if not doc.get("schedule_date"):
+		doc.schedule_date = min((getdate(r.schedule_date) for r in rows), default=default)
 
 
 def _source_doc(doctype, source):
@@ -1451,7 +1457,11 @@ def _source_doc(doctype, source):
 		doc = _mapped(source.get("doctype"), source.get("name"), source.get("make"))
 		if doc.doctype != doctype:
 			_no_perm()
-		_header_dates(doc)
+		origin = source.get("doctype")
+		fallback = None
+		if origin and _exists(origin) and frappe.get_meta(origin).has_field("schedule_date"):
+			fallback = frappe.db.get_value(origin, source.get("name"), "schedule_date")
+		_header_dates(doc, fallback)
 		return doc
 	if source.get("duplicate") or source.get("amend"):
 		original = frappe.get_doc(doctype, source.get("duplicate") or source.get("amend"))

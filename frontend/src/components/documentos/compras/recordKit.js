@@ -115,7 +115,7 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
 
   let seq = 0
   async function load() {
-    if (!recordName.value) return
+    if (!recordName.value || recordName.value === 'nuevo') return
     const mine = ++seq
     try {
       const [loaded, own] = await Promise.all([
@@ -298,8 +298,9 @@ export function useRecordKit(doctype, { name, title, changed, modified } = {}) {
       if (now && before && now !== before && record.value) load()
     },
   )
+  // A new order gets its name on save (no name → a name): load then too.
   watch(recordName, (now, before) => {
-    if (now && before && now !== before) {
+    if (now && now !== before && now !== 'nuevo') {
       record.value = null
       load()
     }
