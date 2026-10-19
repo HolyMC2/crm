@@ -108,7 +108,14 @@
     >
       <div class="mx-auto w-full" :class="width">
         <EmptyState
-          v-if="error"
+          v-if="missing"
+          title="Esta lista no existe"
+          message="El enlace es de una lista que no está en Documentos."
+          action="Ir a Documentos"
+          @action="router.push(backTo)"
+        />
+        <EmptyState
+          v-else-if="error"
           state="error"
           title="No se pudo cargar la lista"
           :message="error"
@@ -246,6 +253,8 @@ const entry = computed(() =>
 const doctype = computed(
   () => entry.value?.doctype || String(route.params.doctype || ''),
 )
+// An unknown slug (an old or mistyped link): say so instead of asking the server for ''.
+const missing = computed(() => !doctype.value)
 const moduleLabel = computed(() =>
   base.value === '/inventario' ? 'Inventario' : 'Documentos',
 )
@@ -480,6 +489,7 @@ async function open() {
   denied.value = false
   error.value = ''
   rows.value = []
+  if (missing.value) return
   state.value = readListQuery(route.query)
   search.value = state.value.search
   profile.value = await loadProfile({
