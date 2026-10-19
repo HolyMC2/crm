@@ -455,7 +455,7 @@ const review = computed(() =>
     cuerpo: cuerpo.value,
     pdf: canPdf.value && pdf.value,
     formato: formato.value,
-    adjunto: attachmentName(data.value.etiqueta, data.value.name),
+    adjunto: attachmentName(data.value.name),
   }),
 )
 const sheetTitle = computed(

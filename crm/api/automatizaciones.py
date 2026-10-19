@@ -168,6 +168,12 @@ def lista_y(items):
 	return ", ".join(items[:-1]) + " y " + items[-1]
 
 
+def acciones_texto(labels):
+	"""«Acciones: Aprobar · Rechazar» — each action its own word, never one «Aprobar y Rechazar»."""
+	labels = [cstr(i) for i in labels if cstr(i)]
+	return _("Acciones: {0}").format(" · ".join(labels)) if labels else ""
+
+
 def _label(meta, fieldname):
 	if fieldname == "name":
 		return "Número"
@@ -1429,7 +1435,8 @@ def flujo_aprobaciones(view="decide", limit=20):
 				continue
 			detail = _detalle(doc, state)
 			if mine and not resolved:
-				detail += " · " + lista_y([a["label"] for a in _acciones(mine)])
+				acciones = acciones_texto([a["label"] for a in _acciones(mine)])
+				detail = " · ".join(x for x in (detail, acciones) if x)
 		else:
 			if resolved or _mis_transiciones(doc, workflow):
 				continue

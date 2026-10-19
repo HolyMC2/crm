@@ -1183,7 +1183,9 @@ def _pdf_enviado(comm, files=()):
 		for item in items if isinstance(items, list) else []:
 			if not isinstance(item, dict) or not cint(item.get("print_format_attachment")):
 				continue
-			nombre = f"{cstr(item.get('name') or comm.reference_name)}.pdf"
+			# as frappe.attach_print names it: no spaces, «/» → «-»
+			base = cstr(item.get("name") or comm.reference_name).replace(" ", "").replace("/", "-")
+			nombre = f"{base}.pdf"
 			if any(cstr(f.get("file_name")) == nombre for f in files):
 				return None
 			return {"nombre": nombre, "formato": cstr(item.get("print_format")) or "Standard"}

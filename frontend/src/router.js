@@ -106,6 +106,9 @@ function documentosRoutes(path, kind, app) {
   ]
 }
 
+// Shell D12 pages draw their own phone header.
+const d12 = (meta) => ({ ownPhoneHeader: true, ...meta })
+
 const routes = [
   // Ventas module home in the Muelle shell (contracts basePath).
   { path: '/ventas', name: 'Ventas', redirect: { name: 'Home' } },
@@ -621,75 +624,53 @@ const routes = [
     path: '/correo',
     name: 'Correo',
     component: () => import('@/pages/Correo.vue'),
-    meta: {
-      app: 'documentos',
-      title: 'Correo',
-      ownPhoneHeader: true,
-      stableKey: true,
-    },
+    meta: d12({ app: 'documentos', title: 'Correo', stableKey: true }),
   },
   {
     path: '/correo/:name',
     name: 'CorreoMensaje',
     component: () => import('@/pages/CorreoMensaje.vue'),
     props: true,
-    meta: { app: 'documentos', title: 'Correo', ownPhoneHeader: true },
+    meta: d12({ app: 'documentos', title: 'Correo' }),
   },
   {
     path: '/impresion',
     name: 'Impresion',
     component: () => import('@/pages/Impresion.vue'),
-    meta: {
-      app: 'documentos',
-      title: 'Formatos de impresión',
-      ownPhoneHeader: true,
-    },
+    meta: d12({ app: 'documentos', title: 'Formatos de impresión' }),
   },
   {
     path: '/impresion/:formato',
     name: 'ImpresionFormato',
     component: () => import('@/pages/ImpresionFormato.vue'),
-    meta: {
-      app: 'documentos',
-      title: 'Formato de impresión',
-      ownPhoneHeader: true,
-    },
+    meta: d12({ app: 'documentos', title: 'Formato de impresión' }),
   },
   {
     path: '/automatizaciones/asignacion',
     name: 'AutomatizacionesAsignacion',
     component: () => import('@/pages/AutomatizacionesAsignacion.vue'),
-    meta: {
+    meta: d12({
       app: 'avisos',
       title: 'Reglas de asignación',
-      ownPhoneHeader: true,
       listParent: 'Disparadores',
-    },
+    }),
   },
   {
     path: '/automatizaciones/repeticiones',
     name: 'AutomatizacionesRepeticiones',
     component: () => import('@/pages/AutomatizacionesRepeticiones.vue'),
-    meta: {
+    meta: d12({
       app: 'avisos',
       title: 'Repeticiones',
-      ownPhoneHeader: true,
       listParent: 'Disparadores',
-    },
+    }),
   },
   {
     path: '/scripts',
     name: 'Scripts',
     component: () => import('@/pages/Scripts.vue'),
-    meta: { desktopOnly: true, navLabel: 'Scripts', title: 'Scripts' },
-  },
-  {
-    // Más › Configuración › Herramientas del asistente (Shell Wave D, DD17):
-    // the owner turns Pregúntale a Muelle's tools on/off, limits and roles.
-    path: '/asistente/herramientas',
-    name: 'AsistenteHerramientas',
-    component: () => import('@/pages/AsistenteHerramientas.vue'),
-    meta: { title: 'Herramientas del asistente', ownPhoneHeader: true },
+    // backNav falls back to the route name («Scripts»), so no navLabel.
+    meta: { desktopOnly: true, title: 'Scripts' },
   },
   {
     // The CRM notifications page merged into Avisos; old links keep working.

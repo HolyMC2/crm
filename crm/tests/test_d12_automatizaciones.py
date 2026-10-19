@@ -124,6 +124,11 @@ class TestPalabras(IntegrationTestCase):
 		self.assertEqual(auto.tono("Reject"), "danger")
 		self.assertEqual(auto.tono("Revisar"), "tonal")
 
+	def test_pending_row_names_each_action(self):
+		self.assertEqual(auto.acciones_texto(["Aprobar", "Rechazar"]), "Acciones: Aprobar · Rechazar")
+		self.assertEqual(auto.acciones_texto(["Aprobar"]), "Acciones: Aprobar")
+		self.assertEqual(auto.acciones_texto([]), "")
+
 
 @skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
 class TestAutomatizaciones(IntegrationTestCase):

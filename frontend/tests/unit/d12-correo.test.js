@@ -74,7 +74,7 @@ describe('review before sending', () => {
     cuerpo: 'Hola Ana,\n\nTe compartimos la factura.',
     pdf: true,
     formato: 'Factura CFDI 4.0',
-    adjunto: attachmentName('Factura', 'ACC-SINV-2026-03523'),
+    adjunto: attachmentName('ACC-SINV-2026-03523'),
   }
 
   it('shows exactly what goes, trimmed, with the PDF name', () => {
@@ -82,7 +82,9 @@ describe('review before sending', () => {
     expect(r.ok).toBe(true)
     expect(r.para).toEqual(['ana@x.mx'])
     expect(r.asunto).toBe('Factura ACC-SINV-2026-03523 de Grupo Doco')
-    expect(r.adjunto).toBe('Factura ACC-SINV-2026-03523.pdf')
+    expect(r.adjunto).toBe('ACC-SINV-2026-03523.pdf')
+    // as Frappe's attach_print names it: no spaces, «/» → «-»
+    expect(attachmentName('PAG 2026/07')).toBe('PAG2026-07.pdf')
     expect(reviewOf({ ...base, pdf: false }).adjunto).toBe('')
   })
 

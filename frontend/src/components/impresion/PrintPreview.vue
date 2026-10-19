@@ -243,6 +243,7 @@ async function share() {
     title: props.title,
     url: props.url,
     format: current.value,
+    letterhead: membrete.value, // «Membrete» off in the preview: the shared PDF too
   })
   sharing.value = false
   if (result !== 'cancelled') emit('shared', result)

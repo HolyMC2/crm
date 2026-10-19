@@ -234,11 +234,14 @@ export async function shareDocument({
   title,
   url,
   format = '',
+  letterhead = true,
 }) {
   const nav = globalThis.navigator
   try {
     if (nav?.canShare && typeof File !== 'undefined') {
-      const res = await fetch(pdfUrl(doctype, name, format), {
+      const href =
+        pdfUrl(doctype, name, format) + (letterhead ? '' : '&no_letterhead=1')
+      const res = await fetch(href, {
         credentials: 'same-origin',
       })
       if (res.ok) {

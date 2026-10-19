@@ -95,12 +95,12 @@ export function sentToast(para, suggestions = []) {
 
 // ── compose ──────────────────────────────────────────────────────────────
 
-/** The PDF's file name as the customer will see it: «Factura ACC-SINV-2026-03523.pdf». */
-export function attachmentName(etiqueta, name) {
-  const base = [etiqueta, name]
-    .filter(Boolean)
-    .join(' ')
-    .replace(/[\\/:*?"<>|]+/g, '-')
+/** The PDF's file name as the customer will see it, as Frappe names it when it
+ * attaches the print (`attach_print`): the ID, no spaces, «/» → «-»: «ACC-SINV-2026-03523.pdf». */
+export function attachmentName(name) {
+  const base = String(name || '')
+    .replace(/ /g, '')
+    .replace(/\//g, '-')
   return `${base || 'Documento'}.pdf`
 }
 
