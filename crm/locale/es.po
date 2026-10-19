@@ -26184,6 +26184,10 @@ msgid "Draft a message for this customer."
 msgstr "Redacta un mensaje para este cliente."
 
 #: frontend/src/components/assistant
+msgid "Draft a message for this contact."
+msgstr "Redacta un mensaje para este contacto."
+
+#: frontend/src/components/assistant
 msgid "Give me a summary of this record."
 msgstr "Dame un resumen de este registro."
 

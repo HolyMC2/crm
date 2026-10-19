@@ -46,10 +46,13 @@
       </button>
     </div>
 
+    <!-- On a phone the row runs into the sheet's gutter, so a chip that does
+         not fit shows its edge: there is more to scroll (SHELL-S2c walk, 412). -->
     <div
       v-if="chips.length"
+      ref="row"
       class="flex gap-2 overflow-x-auto pb-1 pt-1 [scrollbar-width:none]"
-      :class="docked ? 'flex-wrap px-4' : ''"
+      :class="docked ? 'flex-wrap px-4' : '-mx-4 px-4'"
       data-testid="assistant-chips"
     >
       <button
@@ -66,7 +69,7 @@
   </div>
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { keyLabel } from '@/composables/shellKeyboard'
 import { chipsFor } from './assistantText'
 import { assistant, send } from './useAssistant'
@@ -87,11 +90,13 @@ const chips = computed(() =>
 )
 
 // A chip that needs a detail fills the composer (which takes the focus);
-// the others ask at once.
+// the others ask at once. The row goes back to its first chip.
+const row = ref(null)
 function useChip(chip) {
   if (chip.fill) {
     assistant.draft = chip.prompt
     assistant.focus += 1
   } else send(chip.prompt)
+  row.value?.scrollTo?.({ left: 0, behavior: 'smooth' })
 }
 </script>

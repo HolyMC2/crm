@@ -212,6 +212,27 @@ export function firstRecordLink(text) {
 }
 
 /**
+ * A receipt's reply without the record link its card already opens: one
+ * «Abrir», on the card (SHELL-S2c walk: «Abrir» on the card and again under
+ * the reply). A line that was only the link goes; «…10:00. <link>.» keeps
+ * its own sentence.
+ */
+export function withoutLink(text, href) {
+  const value = String(text || '')
+  if (!href || !value.includes(href)) return value
+  const esc = href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const rx = new RegExp(
+    `[ \\t]*(?:\\[[^\\]\\n]*\\]\\(${esc}\\)|<${esc}>|${esc})[.,;]?`,
+  )
+  const lines = value.split('\n')
+  const at = lines.findIndex((line) => rx.test(line))
+  const line = lines[at].replace(rx, '').replace(/[\s:→-]+$/u, '')
+  if (/[\p{L}\p{N}]/u.test(line)) lines[at] = line
+  else lines.splice(at, 1)
+  return lines.join('\n').trim()
+}
+
+/**
  * A reply's buttons split into action cards (they change data and need a
  * confirmation) and plain choices. Two shapes of doco's action buttons:
  * `act:<card>` (one proposal, the text is its label) and the run approvals
@@ -289,27 +310,60 @@ export function proseOf(message, cards) {
   return stripEmoji(kept.join('\n').trim())
 }
 
+// Which record chips fit which doctype: a customer owes, a person gets a
+// message, a sale or a purchase gets a follow-up. A pendiente, an Item's
+// settings or a catalog get «Resumen» only (SHELL-S2c walk: «¿Qué debe?» on
+// a pendiente).
+const OWES = new Set(['Customer', 'Contact'])
+const PEOPLE = new Set([
+  'Customer',
+  'Contact',
+  'Lead',
+  'CRM Lead',
+  'CRM Organization',
+  'CRM Deal',
+  'Supplier',
+])
+const FOLLOW_UP = new Set([
+  ...PEOPLE,
+  'Opportunity',
+  'Quotation',
+  'Sales Order',
+  'Delivery Note',
+  'Sales Invoice',
+  'Material Request',
+  'Request for Quotation',
+  'Supplier Quotation',
+  'Purchase Order',
+  'Purchase Invoice',
+])
+
 /**
  * The chips of the screen the sheet opened on (ASSISTANT.md «It knows the
- * screen»): a record, Hoy, a list, or none.
+ * screen»): a record (by its doctype), Hoy, a list, or none.
  */
 export function chipsFor(context) {
-  if (context?.doctype && context?.name)
+  if (context?.doctype && context?.name) {
+    const doctype = context.doctype
     return [
       { label: __('Summary'), prompt: __('Give me a summary of this record.') },
-      {
+      OWES.has(doctype) && {
         label: __('What do they owe?'),
         prompt: __('What does this customer owe, and since when?'),
       },
-      {
+      FOLLOW_UP.has(doctype) && {
         label: __('Schedule a follow-up'),
         prompt: __('Schedule a follow-up for this record.'),
       },
-      {
+      PEOPLE.has(doctype) && {
         label: __('Draft a message'),
-        prompt: __('Draft a message for this customer.'),
+        prompt:
+          doctype === 'Customer'
+            ? __('Draft a message for this customer.')
+            : __('Draft a message for this contact.'),
       },
-    ]
+    ].filter(Boolean)
+  }
   if (/^\/(crm\/)?hoy\b/.test(context?.route || ''))
     return [
       {

@@ -1,7 +1,10 @@
 <template>
-  <!-- The composer: fixed at the bottom of the sheet (#footer) and the dock. -->
+  <!-- The composer: fixed at the bottom of the sheet (#footer) and the dock,
+       on the same gutter as the conversation above it (20px in the sheet,
+       16px in the dock). -->
   <form
-    class="flex items-end gap-1 border-t border-outline-gray-1 px-2 py-2"
+    class="flex items-end gap-1 border-t border-outline-gray-1 pb-3 pt-2"
+    :class="docked ? 'px-4' : 'px-5'"
     @submit.prevent="submit"
   >
     <label class="sr-only" for="assistant-input">{{
@@ -36,6 +39,8 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 import AssistantMic from './AssistantMic.vue'
 import { assistant, send } from './useAssistant'
+
+defineProps({ docked: { type: Boolean, default: false } })
 
 const input = ref(null)
 const multiline = ref(false)

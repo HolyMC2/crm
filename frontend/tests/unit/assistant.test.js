@@ -30,6 +30,7 @@ import {
   shellPathFor,
   splitButtons,
   textParts,
+  withoutLink,
   newClientId,
   normalizeRow,
 } from '@/components/assistant/assistantText'
@@ -197,6 +198,41 @@ describe('what a reply says', () => {
       chipsFor({ route: '/crm/contactos', doctype: 'Contact' })[0].fill,
     ).toBe(true)
     expect(chipsFor({ route: '/crm/agenda' })).toEqual([])
+  })
+
+  it('offers the record chips that fit its doctype', () => {
+    const labels = (doctype) =>
+      chipsFor({ doctype, name: 'X1' }).map((c) => c.label)
+    // a pendiente owes nothing and gets no message (SHELL-S2c walk)
+    expect(labels('ToDo')).toEqual(['Summary'])
+    expect(labels('CRM Task')).toEqual(['Summary'])
+    expect(labels('Item')).toEqual(['Summary'])
+    expect(labels('Sales Invoice')).toEqual(['Summary', 'Schedule a follow-up'])
+    expect(labels('Supplier')).toEqual([
+      'Summary',
+      'Schedule a follow-up',
+      'Draft a message',
+    ])
+    expect(chipsFor({ doctype: 'Supplier', name: 'S1' }).at(-1).prompt).toBe(
+      'Draft a message for this contact.',
+    )
+    expect(chipsFor({ doctype: 'Customer', name: 'C1' }).at(-1).prompt).toBe(
+      'Draft a message for this customer.',
+    )
+  })
+
+  it('a receipt says «Abrir» once: the reply drops the link its card opens', () => {
+    const href = 'http://lab.test/app/todo/T-9'
+    expect(
+      withoutLink(`Pendiente creado · para el 19 oct.\n${href}`, href),
+    ).toBe('Pendiente creado · para el 19 oct.')
+    expect(withoutLink(`Listo, quedó guardado. ${href}.`, href)).toBe(
+      'Listo, quedó guardado.',
+    )
+    expect(withoutLink(`Ábrelo aquí: [Abrir](${href})\nAlgo más.`, href)).toBe(
+      'Ábrelo aquí\nAlgo más.',
+    )
+    expect(withoutLink('Sin liga.', href)).toBe('Sin liga.')
   })
 
   it('knows a question from a search', () => {
@@ -621,9 +657,8 @@ describe('cards and suggestions', () => {
 })
 
 describe('the suggestion rules', async () => {
-  const { hoySuggestion, contactoSuggestion } = await import(
-    '@/components/assistant/suggestions'
-  )
+  const { hoySuggestion, contactoSuggestion } =
+    await import('@/components/assistant/suggestions')
   it('Hoy: the oldest overdue pendiente, else a deal without a next step, else nothing', () => {
     const data = {
       pendientes: {

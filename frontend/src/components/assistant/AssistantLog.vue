@@ -128,11 +128,12 @@ import {
   splitButtons,
   stripEmoji,
   visibleMessages,
+  withoutLink,
 } from './assistantText'
 import { assistant, retry, retryAnswer, tap } from './useAssistant'
 
 // docked: the log scrolls itself; in the sheet the sheet's body scrolls.
-defineProps({ docked: { type: Boolean, default: false } })
+const props = defineProps({ docked: { type: Boolean, default: false } })
 defineEmits(['navigate'])
 
 const end = ref(null)
@@ -143,12 +144,19 @@ const shown = computed(() => visibleMessages(assistant.messages))
 const hidden = computed(() => assistant.messages.some((m) => m.stale))
 
 // A reply's prose, its action cards and its plain choices, computed once per text.
+// A receipt's record link is the card's «Abrir»; the reply does not repeat it.
 const views = new WeakMap()
 function view(message) {
   const cached = views.get(message)
   if (cached) return cached
   const { cards, choices } = splitButtons(message)
-  const out = { cards, choices, prose: proseOf(message, cards) }
+  const prose = proseOf(message, cards)
+  const link = message.receiptOf ? firstRecordLink(message.text) : null
+  const out = {
+    cards,
+    choices,
+    prose: link ? withoutLink(prose, link.href) : prose,
+  }
   views.set(message, out)
   return out
 }
@@ -185,7 +193,11 @@ function follow() {
       return end.value?.scrollIntoView?.({ block: 'end' })
     const before = rows[rows.length - 2]
     const top = before?.dataset.role === 'user' ? before : last
-    top.scrollIntoView?.({ block: 'start' })
+    // The first question: the log from its top, so the «Las respuestas
+    // anteriores…» line above it is read whole, not cut by the header.
+    if (top !== rows[0]) return top.scrollIntoView?.({ block: 'start' })
+    if (props.docked) root.value.scrollTop = 0
+    else root.value.scrollIntoView?.({ block: 'start' })
   })
 }
 watch(() => [assistant.messages.length, assistant.thinking], follow)

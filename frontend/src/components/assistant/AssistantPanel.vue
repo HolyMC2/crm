@@ -4,7 +4,7 @@
   <section class="flex h-full min-h-0 flex-col" :aria-label="__('Ask Muelle')">
     <AssistantHeader docked class="flex-none" @close="$emit('close')" />
     <AssistantLog docked @navigate="$emit('navigate')" />
-    <AssistantComposer class="flex-none" />
+    <AssistantComposer docked class="flex-none" />
   </section>
 </template>
 <script setup>
