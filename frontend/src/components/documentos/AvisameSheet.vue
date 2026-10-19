@@ -14,6 +14,16 @@
         Cargando…
       </p>
 
+      <!-- A record that already did everything (a paid invoice, a cancelled
+           document): the server's one line instead of an empty list. -->
+      <p
+        v-else-if="!isItem && !options.length"
+        class="px-4 py-3 text-base text-ink-gray-7"
+        data-avisame-done
+      >
+        {{ optionsNote || 'No hay nada que avisarte en este documento.' }}
+      </p>
+
       <!-- A record: one condition, a date for «si no … para el». -->
       <section v-else-if="!isItem" aria-labelledby="avisame-when">
         <h3
@@ -40,6 +50,13 @@
             </ListRow>
           </li>
         </ul>
+        <p
+          v-if="optionsNote"
+          class="px-4 pt-1 text-sm text-ink-gray-6"
+          data-avisame-done
+        >
+          {{ optionsNote }}
+        </p>
         <div v-if="chosen?.needs_date" class="px-4 pt-2">
           <FormControl
             v-model="untilDate"
@@ -208,6 +225,9 @@ const saving = ref(false)
 const removing = ref('')
 const error = ref('')
 const note = ref('')
+// What the record already did, from avisame_options («Esta factura ya está
+// pagada.»): those conditions are left out of the list.
+const optionsNote = ref('')
 const options = ref([])
 const active = ref([])
 const choice = ref('')
@@ -257,6 +277,7 @@ async function load() {
   loading.value = true
   error.value = ''
   note.value = ''
+  optionsNote.value = ''
   choice.value = ''
   untilDate.value = ''
   try {
@@ -267,6 +288,7 @@ async function load() {
     } else {
       const data = await avisameOptions(props.doctype, props.name)
       options.value = data?.options || []
+      optionsNote.value = data?.note || ''
       active.value = data?.active || []
       choice.value = options.value.find((o) => !o.active)?.key || ''
     }
