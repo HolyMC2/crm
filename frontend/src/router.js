@@ -615,6 +615,74 @@ const routes = [
     component: () => import('@/pages/Disparadores.vue'),
     meta: { app: 'avisos', title: 'Disparadores', ownPhoneHeader: true },
   },
+  // Shell D12: mail per record and its queue, print formats, the team's
+  // native automations (assignment rules, repeats) and owner-only scripts.
+  {
+    path: '/correo',
+    name: 'Correo',
+    component: () => import('@/pages/Correo.vue'),
+    meta: {
+      app: 'documentos',
+      title: 'Correo',
+      ownPhoneHeader: true,
+      stableKey: true,
+    },
+  },
+  {
+    path: '/correo/:name',
+    name: 'CorreoMensaje',
+    component: () => import('@/pages/CorreoMensaje.vue'),
+    props: true,
+    meta: { app: 'documentos', title: 'Correo', ownPhoneHeader: true },
+  },
+  {
+    path: '/impresion',
+    name: 'Impresion',
+    component: () => import('@/pages/Impresion.vue'),
+    meta: {
+      app: 'documentos',
+      title: 'Formatos de impresión',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/impresion/:formato',
+    name: 'ImpresionFormato',
+    component: () => import('@/pages/ImpresionFormato.vue'),
+    meta: {
+      app: 'documentos',
+      title: 'Formato de impresión',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/automatizaciones/asignacion',
+    name: 'AutomatizacionesAsignacion',
+    component: () => import('@/pages/AutomatizacionesAsignacion.vue'),
+    meta: {
+      app: 'avisos',
+      title: 'Reglas de asignación',
+      ownPhoneHeader: true,
+      listParent: 'Disparadores',
+    },
+  },
+  {
+    path: '/automatizaciones/repeticiones',
+    name: 'AutomatizacionesRepeticiones',
+    component: () => import('@/pages/AutomatizacionesRepeticiones.vue'),
+    meta: {
+      app: 'avisos',
+      title: 'Repeticiones',
+      ownPhoneHeader: true,
+      listParent: 'Disparadores',
+    },
+  },
+  {
+    path: '/scripts',
+    name: 'Scripts',
+    component: () => import('@/pages/Scripts.vue'),
+    meta: { desktopOnly: true, navLabel: 'Scripts', title: 'Scripts' },
+  },
   {
     // Más › Configuración › Herramientas del asistente (Shell Wave D, DD17):
     // the owner turns Pregúntale a Muelle's tools on/off, limits and roles.

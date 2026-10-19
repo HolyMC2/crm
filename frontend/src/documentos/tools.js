@@ -92,6 +92,10 @@ export function curateFormats(formats, curate) {
   const list = Array.isArray(formats) ? formats : []
   if (!curate) return list
   const { only, hide = [], labels = {}, hints = {}, first } = curate
+  // The owner's default (Desk or «Formatos de impresión»: the Property Setter
+  // `default_print_format`, `owner_default` from the server) wins over the
+  // profile's `first` while `only`/`hide` keep it; else `first` (Shell D12).
+  const owner = list.find((f) => f.owner_default)?.name
   let out = list.filter((f) => !hide.includes(f.name))
   if (only?.length) {
     const kept = out.filter((f) => only.includes(f.name))
@@ -102,7 +106,9 @@ export function curateFormats(formats, curate) {
     label: labels[f.name] || f.label,
     hint: hints[f.name] || f.hint || '',
   }))
-  const top = first && out.find((f) => f.name === first)
+  const top =
+    (owner && out.find((f) => f.name === owner)) ||
+    (first && out.find((f) => f.name === first))
   if (top) {
     out = [top, ...out.filter((f) => f !== top)].map((f) => ({
       ...f,

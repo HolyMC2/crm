@@ -16,6 +16,7 @@ from html import unescape
 
 import frappe
 from frappe import _
+from frappe.model.workflow import get_workflow_name
 from frappe.utils import cint, cstr, flt, get_fullname, getdate, nowdate, strip_html
 
 # The module each curated doctype lights in the shell (SPEC §6 DD3). Order is the hub order.
@@ -753,6 +754,11 @@ def _actions(doc):
 				if key == "payment" and source in PAYS_OUT
 				else no_perm,
 			)
+	# Shell D12: «Repetir cada…» (Auto Repeat) with the reason in words when it cannot.
+	from crm.api.automatizaciones import accion_repetir
+
+	repeat_ok, repeat_reason = accion_repetir(doc)
+	put("auto_repeat", repeat_ok, repeat_reason)
 	return out
 
 
@@ -1153,6 +1159,16 @@ def _timeline(doc):
 	return {"events": events[:80], "assigned": assigned, "attachments": attachments}
 
 
+def _workflow_state(doc):
+	"""`{value, label}` of the active Workflow's state on this record, or None."""
+	name = get_workflow_name(doc.doctype)
+	if not name:
+		return None
+	field = frappe.get_cached_value("Workflow", name, "workflow_state_field") or "workflow_state"
+	value = cstr(doc.get(field)).strip()
+	return {"value": value, "label": _(value)} if value else None
+
+
 @frappe.whitelist()
 def record(doctype: str, name: str):
 	"""The record bundle: the document (read fields only), its header, items and totals, the
@@ -1174,6 +1190,10 @@ def record(doctype: str, name: str):
 		"totals": totals,
 		"fields": _data_fields(doc, skip=_header_fields(display)),
 		"actions": _actions(doc),
+		# Shell D12: the record shows its approval steps only when a Workflow is active,
+		# and the hero chip reads the workflow's state («Aprobada»), not the docstatus.
+		"workflow": bool(get_workflow_name(doctype)),
+		"workflow_state": _workflow_state(doc),
 		"activity": _timeline(doc),
 		# Last: Frappe's link counter caps each later query of this request at 1 s.
 		"connections": _connections(doc),
@@ -1693,12 +1713,35 @@ def print_formats(doctype: str):
 	_require(doctype)
 	if not frappe.has_permission(doctype, "print"):
 		_no_perm()
+	# Shell D12: the owner's default is marked (it wins over the profile's order) and
+	# damaged Print Designer formats (saved without their design) are left out.
+	from crm.api.impresion import is_broken
+
 	default = frappe.get_meta(doctype).default_print_format
-	names = frappe.get_all(
-		"Print Format", filters={"doc_type": doctype, "disabled": 0}, pluck="name", order_by="name asc"
+	fields = ["name"]
+	if frappe.get_meta("Print Format").has_field("print_designer"):
+		fields += ["print_designer", "print_designer_settings", "print_designer_body"]
+	found = frappe.get_all(
+		"Print Format", filters={"doc_type": doctype, "disabled": 0}, fields=fields, order_by="name asc"
 	)
-	out = [{"name": n, "label": _(n), "default": n == default} for n in names]
-	out.append({"name": "Standard", "label": _("Standard"), "default": not default or default == "Standard"})
+	out = [
+		{
+			"name": pf.name,
+			"label": _(pf.name),
+			"default": pf.name == default,
+			"owner_default": pf.name == default,
+		}
+		for pf in found
+		if not is_broken(pf)
+	]
+	out.append(
+		{
+			"name": "Standard",
+			"label": _("Standard"),
+			"default": not default or default == "Standard",
+			"owner_default": default == "Standard",
+		}
+	)
 	return out
 
 

@@ -27892,3 +27892,74 @@ msgstr "El monto debe ser mayor que cero."
 #: frontend/src/pages/CobranzaCliente.vue
 msgid "Open invoice"
 msgstr "Ver factura"
+#: crm/api/correo.py
+msgid "This document no longer exists."
+msgstr "Este documento ya no existe."
+
+#: crm/api/correo.py
+msgid "Your user cannot send emails from this document. Ask your manager for access."
+msgstr "Tu usuario no puede enviar correos de este documento. Pide acceso a tu encargado."
+
+#: crm/api/correo.py
+msgid "You cannot open this email. Ask your manager for access."
+msgstr "No puedes abrir este correo. Pide acceso a tu encargado."
+
+#: crm/api/correo.py
+msgid "You cannot use that template. Ask your manager for access."
+msgstr "No puedes usar esa plantilla. Pide acceso a tu encargado."
+
+#: crm/api/correo.py
+msgid "That template could not be filled with this document; the default message is shown."
+msgstr "Esa plantilla no se pudo llenar con este documento; se muestra el mensaje de siempre."
+
+#: crm/api/correo.py
+msgid "There is no email account to send from. Ask the owner to set one up in Ajustes."
+msgstr "No hay una cuenta de correo para enviar. Pide al dueño que configure una en Ajustes."
+
+#: crm/api/correo.py
+msgid "{0} templates could not be filled with this document and are not shown."
+msgstr "{0} plantillas no se pudieron llenar con este documento y no se muestran."
+
+#: crm/api/correo.py
+msgid "Add at least one recipient."
+msgstr "Agrega al menos un destinatario."
+
+#: crm/api/correo.py
+msgid "Send to at most {0} addresses at a time."
+msgstr "Envía a máximo {0} correos a la vez."
+
+#: crm/api/correo.py
+msgid "Check this address: {0}"
+msgstr "Revisa este correo: {0}"
+
+#: crm/api/correo.py
+msgid "Write a subject."
+msgstr "Escribe el asunto."
+
+#: crm/api/correo.py
+msgid "Write the message."
+msgstr "Escribe el mensaje."
+
+#: crm/api/correo.py
+msgid "Your user cannot print this document, so the PDF cannot go."
+msgstr "Tu usuario no puede imprimir este documento, así que el PDF no puede ir."
+
+#: crm/api/correo.py
+msgid "That PDF format is not available for this document."
+msgstr "Ese formato de PDF no está disponible para este documento."
+
+#: crm/api/correo.py
+msgid "(no subject)"
+msgstr "(sin asunto)"
+
+#: crm/api/correo.py
+msgid "System alerts"
+msgstr "Avisos del sistema"
+
+#: crm/api/correo.py
+msgid "Repeated emails"
+msgstr "Correos repetidos"
+
+#: crm/api/correo.py
+msgid "Your user cannot change this email."
+msgstr "Tu usuario no puede cambiar este correo."

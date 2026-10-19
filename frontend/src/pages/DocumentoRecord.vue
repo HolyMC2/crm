@@ -67,8 +67,15 @@
             data-testid="documentos-hero"
           >
             <div class="flex flex-wrap items-center gap-2">
+              <!-- Shell D12: under a Workflow the chip is its state («Aprobada»). -->
               <StatusChip
-                v-if="view.status"
+                v-if="record.workflow && record.workflow_state"
+                :status="record.workflow_state.value"
+                :label="record.workflow_state.label"
+                data-testid="documentos-workflow-state"
+              />
+              <StatusChip
+                v-else-if="view.status"
                 :status="view.status"
                 :label="view.statusLabel || ''"
                 :tone="view.tone"
@@ -139,6 +146,15 @@
                 Editar
               </button>
             </div>
+            <!-- Shell D12: a Workflow's next steps («Aprobar», «Rechazar»). -->
+            <TransicionesBar
+              v-if="record.workflow"
+              :doctype="doctype"
+              :name="name"
+              :title="view?.title || ''"
+              class="pt-2"
+              @done="onWorkflowDone"
+            />
           </section>
           <component
             :is="panel.component"
@@ -190,6 +206,13 @@
             :noun="noun"
             :can-attach="!!record.actions?.attach?.allowed"
             @attach="pickFile"
+          />
+          <CorreoHilo
+            v-if="sections.includes('actividad')"
+            :doctype="doctype"
+            :name="name"
+            :version="correoVersion"
+            @compose="onTool('correo')"
           />
           <component
             :is="recordPendientes"
@@ -250,6 +273,15 @@
         :curate="profile.printFormats || null"
         @shared="onShared"
       />
+      <CorreoSheet
+        v-if="correoMounted"
+        v-model:open="correoOpen"
+        :doctype="doctype"
+        :name="name"
+        :title="view?.title || ''"
+        :curate="profile.printFormats || null"
+        @sent="correoVersion++"
+      />
       <EditSheet
         v-if="canEdit"
         v-model:open="editOpen"
@@ -267,6 +299,14 @@
         :doctype="doctype"
         :name="name"
         :title="view?.title || ''"
+      />
+      <RepetirSheet
+        v-if="repetirOpen"
+        v-model:open="repetirOpen"
+        :doctype="doctype"
+        :name="name"
+        :title="view?.title || ''"
+        @changed="saved()"
       />
     </template>
   </div>
@@ -325,6 +365,20 @@ const PrintSheet = defineAsyncComponent(
 )
 const EditSheet = defineAsyncComponent(
   () => import('@/components/documentos/EditSheet.vue'),
+)
+// Shell D12: «Enviar por correo» and the record's mail, «Repetir cada…», and a
+// Workflow's steps.
+const CorreoSheet = defineAsyncComponent(
+  () => import('@/components/correo/CorreoSheet.vue'),
+)
+const CorreoHilo = defineAsyncComponent(
+  () => import('@/components/correo/CorreoHilo.vue'),
+)
+const RepetirSheet = defineAsyncComponent(
+  () => import('@/components/automatizaciones/RepetirSheet.vue'),
+)
+const TransicionesBar = defineAsyncComponent(
+  () => import('@/components/automatizaciones/TransicionesBar.vue'),
 )
 // Packages that land on their own: D5's «Avísame…» and D6's «Todos los
 // ajustes». A glob finds them when they are on this branch, else nothing.
@@ -470,6 +524,10 @@ const assignOpen = ref(false)
 const printOpen = ref(false)
 const editOpen = ref(false)
 const avisameOpen = ref(false)
+const correoOpen = ref(false)
+const correoMounted = ref(false)
+const correoVersion = ref(0)
+const repetirOpen = ref(false)
 const avisameSheet = shallowRef(null)
 const avisameDoctypes = ref(null)
 const ajustes = shallowRef(null)
@@ -499,6 +557,32 @@ const extraTools = computed(() => {
       label: 'Pregúntale a Muelle sobre esta ficha',
       icon: 'lucide-sparkles',
       allowed: true,
+    })
+  const actions = record.value?.actions || {}
+  if (actions.email)
+    out.push({
+      key: 'correo',
+      label: 'Enviar por correo',
+      icon: 'lucide-mail',
+      allowed: !!actions.email.allowed,
+      reason: actions.email.reason || '',
+      hint: 'Con el PDF y una plantilla',
+    })
+  // «Repetir cada…» shows when it can run, and on a confirmed document with
+  // the reason (the owner can allow it); drafts do not list it.
+  const repeat = actions.auto_repeat
+  const docstatus =
+    record.value?.header?.docstatus ?? record.value?.doc?.docstatus
+  if (
+    repeat &&
+    (repeat.allowed || (record.value?.submittable && docstatus === 1))
+  )
+    out.push({
+      key: 'repetir',
+      label: 'Repetir cada…',
+      icon: 'lucide-refresh-cw',
+      allowed: true,
+      hint: repeat.allowed ? 'Se crea una copia sola' : repeat.reason || '',
     })
   return out
 })
@@ -568,6 +652,14 @@ async function doConfirm() {
 async function saved(message) {
   if (message) toast.success(message)
   await load()
+}
+
+// A Workflow step done: back to «Por aprobar» when the worker came from it.
+async function onWorkflowDone() {
+  const { completeTo, goTo } = await import('@/composables/useAprobaciones')
+  const back = completeTo(route.query.return_to, doctype.value, name.value)
+  if (back) return goTo(router, back)
+  await saved()
 }
 
 function setActivity(activity) {
@@ -650,6 +742,13 @@ async function onTool(key) {
       break
     case 'avisame':
       avisameOpen.value = true
+      break
+    case 'correo':
+      correoMounted.value = true
+      correoOpen.value = true
+      break
+    case 'repetir':
+      repetirOpen.value = true
       break
     case 'duplicate':
       nuevo({ duplicar: name.value })

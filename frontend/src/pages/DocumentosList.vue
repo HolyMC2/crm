@@ -19,6 +19,13 @@
       searchable
       :search-label="`Buscar en ${title.toLowerCase()}`"
       :search-input-attrs="{ 'data-list-search': '' }"
+      :selectable="rows.length > 0"
+      select-label="Seleccionar"
+      :selecting="sel.active"
+      :selected-count="sel.count"
+      @start-select="sel.start()"
+      @select-all="sel.allOnPage(rowNames)"
+      @clear-selection="sel.clear()"
     >
       <template #actions>
         <button
@@ -142,7 +149,7 @@
         />
         <template v-else>
           <ListRow
-            v-for="row in shown"
+            v-for="(row, index) in shown"
             :key="row.name"
             :title="row.view.title"
             :subtitle="row.view.subtitle"
@@ -154,12 +161,39 @@
               row.view.avatar === undefined ? row.view.icon || entryIcon : ''
             "
             :to="recordTo(row)"
-            :selected="pane && row.name === route.params.name"
+            :selected="
+              sel.active
+                ? sel.isSelected(row.name)
+                : pane && row.name === route.params.name
+            "
             :data-row-key="row.name"
             :data-row-current="row.name === route.params.name ? '' : undefined"
             data-key-row
             data-testid="documentos-row"
+            :style="phone ? '-webkit-touch-callout: none' : undefined"
+            v-on="sel.press(row.name, index)"
+            @click.capture="sel.onRowClick($event, row.name, index, rowNames)"
           >
+            <template v-if="sel.active" #leading>
+              <span
+                role="checkbox"
+                :aria-checked="sel.isSelected(row.name) ? 'true' : 'false'"
+                :aria-label="row.view.title"
+                class="flex size-10 flex-none items-center justify-center rounded-full"
+                :class="
+                  sel.isSelected(row.name)
+                    ? 'bg-surface-gray-10 text-ink-base'
+                    : 'border-2 border-outline-gray-4'
+                "
+                data-testid="documentos-row-check"
+              >
+                <span
+                  v-if="sel.isSelected(row.name)"
+                  class="lucide-check size-5"
+                  aria-hidden="true"
+                />
+              </span>
+            </template>
             <template v-if="showChip(row.view)" #trailing>
               <StatusChip
                 :status="row.view.status"
@@ -182,11 +216,24 @@
       </div>
     </div>
     <Fab
-      v-if="createTo"
+      v-if="createTo && !sel.active"
       :label="newLabel"
       :extended="!pane"
       :to="createTo"
       data-testid="documentos-new"
+    />
+    <!-- Shell D12: the selection's actions (mounted on the first selection). -->
+    <BulkBar
+      v-if="bulkUsed"
+      v-show="sel.active"
+      :doctype="doctype"
+      :nombres="sel.names"
+      :total="rows.length"
+      :singular="kindLabel(doctype) || 'documento'"
+      :plural="title"
+      :curate="profile?.printFormats || null"
+      @done="onBulkDone"
+      @clear="sel.clear()"
     />
     <BottomSheet v-model:open="sortOpen" title="Ordenar" flush>
       <ListRow
@@ -200,7 +247,14 @@
   </div>
 </template>
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
+  ref,
+  watch,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   AppBar,
@@ -230,6 +284,12 @@ import {
 import { loadProfile } from '@/documentos/profiles'
 import { documentRoute, floorRoute, profileBySlug } from '@/documentos/registry'
 import { kindLabel, statusLabel } from '@/utils/display'
+import { toast } from 'frappe-ui'
+import { useSeleccion } from '@/components/masivo/useSeleccion'
+
+const BulkBar = defineAsyncComponent(
+  () => import('@/components/masivo/BulkBar.vue'),
+)
 
 const props = defineProps({
   // Left pane of the desktop split: rows keep the list's query, the open one is lit.
@@ -278,6 +338,26 @@ const loading = ref(false)
 const error = ref('')
 const denied = ref(false)
 const scroller = ref(null)
+
+// Selection mode (Shell D12): «Seleccionar», a long press or shift-click pick
+// rows; BulkBar acts on them. At most 100 at a time.
+const sel = useSeleccion({
+  max: 100,
+  onLimit: (max) => toast.error(`Puedes elegir hasta ${max} a la vez.`),
+})
+const bulkUsed = ref(false)
+watch(
+  () => sel.active,
+  (on) => {
+    if (on) bulkUsed.value = true
+  },
+)
+const rowNames = computed(() => rows.value.map((r) => r.name))
+watch(rowNames, (names) => sel.prune(names))
+function onBulkDone() {
+  load({ count: rows.value.length })
+  loadCounts()
+}
 
 const chipValue = computed(
   () => state.value.chip ?? profile.value?.defaultChip ?? '',
@@ -490,6 +570,7 @@ function onScroll() {
 }
 
 async function open() {
+  sel.clear()
   denied.value = false
   error.value = ''
   rows.value = []

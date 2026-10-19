@@ -391,6 +391,10 @@ filter_link_titles = {
 # Resultados (Shell S5.3): the Dashboard's deal numbers as a card on a phone.
 muelle_resultados_cards = ["crm.resultados_cards.tratos"]
 
+# Aprobaciones (Shell D12): open Frappe Workflow Actions in Pendientes «Por aprobar»
+# (contract: doco.pendientes.aprobaciones). Warranty Claim stays with doco Garantías.
+doco_approval_sources = ["crm.api.automatizaciones.flujo_aprobaciones"]
+
 after_migrate = [
 	"crm.fcrm.doctype.fcrm_settings.fcrm_settings.after_migrate",
 	"crm.pipeline.services.configuration.sync_legacy_statuses",

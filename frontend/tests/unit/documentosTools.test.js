@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   confirmCopy,
+  curateFormats,
   deskUrl,
   pdfUrl,
   shellUrl,
@@ -241,5 +242,57 @@ describe('worked profiles: the next step by state (DD4)', () => {
     expect(p.nextStep(record(0)).label).toBe('Confirmar')
     expect(p.nextStep({ ...record(0), submittable: false })).toBeNull()
     expect(p.nextStep(record(1))).toBeNull()
+  })
+})
+
+describe('curateFormats: the owner default wins (Shell D12)', () => {
+  const PRINT = {
+    only: ['Factura CFDI 4.0', 'Sales Invoice Standard', 'Ticket de enganche'],
+    hide: ['Sales Auditing Voucher'],
+    labels: { 'Factura CFDI 4.0': 'Factura (CFDI 4.0)' },
+    first: 'Factura CFDI 4.0',
+  }
+  const server = (owner) =>
+    [
+      'Factura CFDI 4.0',
+      'Sales Auditing Voucher',
+      'Sales Invoice Standard',
+      'Ticket de enganche',
+      'Point of Sale',
+    ]
+      .map((name) => ({
+        name,
+        label: name,
+        default: name === owner,
+        owner_default: name === owner,
+      }))
+      .concat([
+        {
+          name: 'Standard',
+          label: 'Standard',
+          default: !owner,
+          owner_default: false,
+        },
+      ])
+
+  it('puts the owner default first over PRINT.first', () => {
+    const out = curateFormats(server('Ticket de enganche'), PRINT)
+    expect(out[0].name).toBe('Ticket de enganche')
+    expect(out.filter((f) => f.default).map((f) => f.name)).toEqual([
+      'Ticket de enganche',
+    ])
+  })
+  it('falls back to PRINT.first when the owner default is outside only/hide', () => {
+    for (const owner of ['Point of Sale', 'Sales Auditing Voucher']) {
+      const out = curateFormats(server(owner), PRINT)
+      expect(out[0].name).toBe('Factura CFDI 4.0')
+      expect(out[0].label).toBe('Factura (CFDI 4.0)')
+      expect(out.map((f) => f.name)).not.toContain(owner)
+    }
+  })
+  it('keeps PRINT.first without an owner default', () => {
+    const out = curateFormats(server(null), PRINT)
+    expect(out[0].name).toBe('Factura CFDI 4.0')
+    expect(out.filter((f) => f.default)).toHaveLength(1)
   })
 })

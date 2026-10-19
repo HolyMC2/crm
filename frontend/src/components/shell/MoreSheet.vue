@@ -55,8 +55,10 @@
         {{ __('Scan document') }}
       </button>
 
-      <!-- The bar's modules are not repeated here: only what the bar leaves out. -->
-      <section v-if="extraModules.length" aria-labelledby="more-modules">
+      <!-- The bar's modules are not repeated here: only what the bar leaves out.
+           Correo (Shell D12) is for everyone: Frappe shows each worker only
+           the mail they may read. -->
+      <section aria-labelledby="more-modules">
         <h2
           id="more-modules"
           class="pb-2 text-sm font-semibold text-ink-gray-7"
@@ -73,6 +75,15 @@
           >
             <span :class="[module.icon, 'size-5']" aria-hidden="true" />
             {{ module.label }}
+          </RouterLink>
+          <RouterLink
+            to="/correo"
+            :class="TILE"
+            data-testid="more-correo"
+            @click="close"
+          >
+            <span class="lucide-mail size-5" aria-hidden="true" />
+            Correo
           </RouterLink>
         </div>
       </section>
@@ -238,6 +249,30 @@
           />
           {{ __('Ventas settings') }}
         </button>
+        <!-- Shell D12: the owner's print formats; scripts only at a desk. -->
+        <RouterLink
+          v-if="user.is_admin"
+          to="/impresion"
+          :class="ROW"
+          data-testid="more-impresion"
+          @click="close"
+        >
+          <span
+            class="lucide-file-text size-4 text-ink-gray-6"
+            aria-hidden="true"
+          />
+          Formatos de impresión
+        </RouterLink>
+        <RouterLink
+          v-if="user.is_admin && isWide"
+          to="/scripts"
+          :class="ROW"
+          data-testid="more-scripts"
+          @click="close"
+        >
+          <span class="lucide-code size-4 text-ink-gray-6" aria-hidden="true" />
+          Scripts
+        </RouterLink>
         <!-- Shell Wave D (DD8): team recipes on business events, for managers. -->
         <RouterLink
           v-if="user.is_admin || user.nav_role === 'dueno'"

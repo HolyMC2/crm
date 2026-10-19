@@ -25,7 +25,29 @@
         />
       </li>
     </ul>
+    <!-- Shell D12: the PDF as pages, in a sheet of its own (loads on demand). -->
+    <PrintPreview
+      v-if="previewing"
+      v-model:open="previewing"
+      v-model:formato="format"
+      :doctype="doctype"
+      :name="name"
+      :title="title"
+      :subtitle="subtitle"
+      :url="url"
+      :formats="formats"
+      @shared="emit('shared', $event)"
+    />
     <template #actions>
+      <button
+        type="button"
+        :class="BTN.tonal"
+        data-testid="documentos-print-preview"
+        @click="previewing = true"
+      >
+        <span class="lucide-eye size-5" aria-hidden="true" />
+        Vista previa
+      </button>
       <a
         :class="BTN.filled"
         :href="href"
@@ -53,7 +75,7 @@
   </BottomSheet>
 </template>
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { BottomSheet, ListRow } from '@/components/ui'
 import { docApi, errorText } from '@/documentos/api'
 import { BTN, curateFormats, pdfUrl, shareDocument } from '@/documentos/tools'
@@ -71,6 +93,10 @@ const props = defineProps({
   curate: { type: Object, default: null },
 })
 const emit = defineEmits(['update:open', 'shared'])
+const PrintPreview = defineAsyncComponent(
+  () => import('@/components/impresion/PrintPreview.vue'),
+)
+const previewing = ref(false)
 const formats = ref([])
 const format = ref('')
 const loading = ref(false)

@@ -60,6 +60,8 @@
           />
         </li>
       </ul>
+      <!-- Shell D12: the system's own avisos, assignment rules and repeats. -->
+      <AvisosSistema />
     </div>
 
     <RecipientsSheet
@@ -88,6 +90,9 @@ import {
 
 const RecipientsSheet = defineAsyncComponent(
   () => import('@/components/disparadores/RecipientsSheet.vue'),
+)
+const AvisosSistema = defineAsyncComponent(
+  () => import('@/components/automatizaciones/AvisosSistema.vue'),
 )
 
 const { width } = useWindowSize()
