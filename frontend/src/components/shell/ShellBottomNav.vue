@@ -53,7 +53,10 @@ defineEmits(['more'])
 // touches its neighbours. 10 px and tighter tracking keep whole words with air
 // between tabs (measured at 305: «Documentos» 52 px); the ellipsis inside the
 // tab is only a last resort, never an overlap.
-const LABEL = 'block max-w-full truncate tracking-tight max-[359px]:text-[10px]'
+// px-px: with negative tracking the last glyph overhangs its box by a hair,
+// and truncate's overflow:hidden would shave it («Pendiente» + half an s).
+const LABEL =
+  'block max-w-full truncate px-px tracking-tight max-[359px]:text-[10px]'
 
 const moreLit = computed(
   () => !!props.active && !props.slots.some((m) => m.key === props.active),
