@@ -7,6 +7,12 @@ import { genericProfile } from './_generic'
 // doctype → lazy module. Add a line here with your profile file (README.md).
 // Keys may carry a slug when one doctype has several lists: 'Payment Entry:cobros'.
 const CURATED = {
+  // Ventas (D2)
+  'Sales Order': () => import('./sales_order.js'),
+  'Delivery Note': () => import('./delivery_note.js'),
+  'POS Invoice': () => import('./pos_invoice.js'),
+  'Payment Entry:cobros': () => import('./payment_entry_receive.js'),
+
   'Sales Invoice': () => import('./sales_invoice.js'),
   Quotation: () => import('./quotation.js'),
   'Stock Entry': () => import('./stock_entry.js'),

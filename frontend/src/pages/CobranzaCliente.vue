@@ -395,15 +395,18 @@
                 <p
                   class="flex flex-wrap items-baseline gap-x-1 font-medium text-ink-gray-9"
                 >
-                  <!-- The invoice reads by its date, never its folio; the
-                       folio (Desk link) is a desk-only secondary detail. -->
+                  <!-- The invoice reads by its date, never its folio; «Ver
+                       factura» opens it as a shell record (Shell D2). -->
                   <span data-invoice-title>{{ invoiceTitle(inv) }}</span>
-                  <a
-                    class="hidden text-sm font-normal text-ink-gray-6 underline underline-offset-2 sm:inline"
-                    :href="`/app/sales-invoice/${encodeURIComponent(inv.name)}`"
-                    >{{ __('Folio {0}', [inv.name], CTX) }}</a
-                  >
                 </p>
+                <RouterLink
+                  v-if="invoiceTo(inv)"
+                  :to="invoiceTo(inv)"
+                  class="-ml-1 inline-flex min-h-11 items-center px-1 text-sm text-ink-gray-7 underline underline-offset-2"
+                  data-invoice-open
+                  @click.stop
+                  >{{ __('Open invoice') }}</RouterLink
+                >
                 <p class="text-sm" :class="toneClass(agingTone(inv))">
                   {{ agingLabel(inv, data.today) }}
                 </p>
@@ -628,6 +631,7 @@ import PromiseSheet from '@/components/cobranza/PromiseSheet.vue'
 import StatementSheet from '@/components/cobranza/StatementSheet.vue'
 import { isMobile } from '@/composables/breakpoint'
 import { shellBoot } from '@/composables/muelleShell'
+import { documentRoute } from '@/documentos/registry'
 import { appleKeys, registerPageShortcuts } from '@/composables/shellKeyboard'
 import { hoyLive } from '@/composables/useHoy'
 import {
@@ -811,6 +815,11 @@ function owedIn(inv) {
 }
 
 // An invoice reads by its date («Factura del 28 abr»), never its folio.
+// The invoice as a shell record (/documentos/facturas/…), never Desk.
+function invoiceTo(inv) {
+  return documentRoute('Sales Invoice', inv.name, { boot: shellBoot.value })
+}
+
 function invoiceTitle(inv) {
   return inv?.posting_date
     ? __('Invoice of {0}', [formatDay(inv.posting_date)], CTX)

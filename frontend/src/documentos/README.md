@@ -92,6 +92,11 @@ from the shell (§1.5); the only Desk door is «Abrir en escritorio» in the too
 | `header(record)`        | → `{ title, kind, number, status, tone, amount, date, due }`                            | the record's app bar and hero                                                                                                                                                                 |
 | `nextStep(record)`      | → `null` or a step (below)                                                              | the one filled «siguiente paso» (DD4)                                                                                                                                                         |
 | `stages(record)`        | → `null` or `[{ label, done, current }]` (`stagesAt(labels, at, finished)`)             | the stepper under the amount (Borrador · Por cobrar · Pagada)                                                                                                                                 |
+| `kind`                  | `string`                                                                                | the singular word when one doctype has several lists (Payment Entry: «Cobro»): «Nuevo cobro», the app bar                                                                                    |
+| `fieldLabels`           | `{ [fieldname]: string \| { label, reqd } }`                                            | the worker's words in the form; `reqd` marks a field ERPNext requires in its controller (a pedido's `delivery_date`)                                                                          |
+| `moreFields`            | `string[]`                                                                              | fields behind «Más datos» in the form (opened by itself when one of them is missing)                                                                                                          |
+| `defaults`              | `{ [fieldname]: value }`                                                                | values a blank `/nuevo` saves with (cobros: `payment_type: Receive`, `party_type: Customer`); not used on a mapper's draft                                                                    |
+| `creatable`             | `false`                                                                                 | the list offers no «Nuevo» (Tickets come from the POS)                                                                                                                                        |
 | `editFields`            | `string[]` or `null`                                                                    | fields of the edit sheet and `/nuevo`, in order; `null`: the required and list fields the worker may write                                                                                    |
 | `altSteps(record)`      | → `step[]`                                                                              | other steps of this state, tonal next to the filled one (Pedido: «Entregar» filled, «Facturar» tonal)                                                                                         |
 | `panels`                | `{ key, at: 'hero' \| 'aside', load: () => import(…), when?(record) }[]`                | lazy components on the record (props `record`, `doctype`, `name`): under the hero or atop the side column                                                                                     |
@@ -153,6 +158,10 @@ functions, a server test checks it) and, for a new key, its target in `form.js` 
   scans with the browser's BarcodeDetector where it exists; quantity stepper; price optional, else the
   price list on save). Rows travel as `{ _idx, …changes }` (kept) or `{ item_code, … }` (new).
 - `ConfirmSheet.vue` asks before Confirmar, Cancelar and Eliminar (`tools.js` `confirmCopy`).
+- **Opening `/nuevo` from elsewhere** (`form.js`): `?<fieldname>=value` prefills a field the form shows
+  (`?party_name=` for a cotización, `?customer=` for a pedido); `?articulo=<item_code>&cantidad=n`
+  adds the first item (Producto «Cotizar»); `?origen=<doctype>&desde=<name>&con=<mapper>` runs an
+  allowlisted ERPNext mapper (`MAKE_TARGETS`).
 
 ## Complete example: Facturas (`profiles/sales_invoice.js`)
 

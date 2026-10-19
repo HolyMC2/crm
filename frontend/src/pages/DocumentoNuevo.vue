@@ -33,7 +33,9 @@
             v-model:rows="rows"
             :fields="form.fields"
             :items="form.items"
-            :doc="draft?.doc || {}"
+            :doc="startDoc"
+            :more="moreFields"
+            :open-more="openMore"
           />
         </template>
       </div>
@@ -62,15 +64,19 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { call } from 'frappe-ui'
 import { AppBar, EmptyState } from '@/components/ui'
 import EditForm from '@/components/documentos/EditForm.vue'
 import { docApi, errorText } from '@/documentos/api'
 import {
+  itemFromQuery,
   missingRequired,
   prefillFromQuery,
+  relabel,
   rowsChanged,
   rowsForSave,
   sourceFromQuery,
+  wantedFields,
 } from '@/documentos/form'
 import { loadProfile } from '@/documentos/profiles'
 import {
@@ -105,8 +111,23 @@ const loadError = ref('')
 const denied = ref(false)
 const error = ref('')
 const saving = ref(false)
+const profile = ref(null)
+const openMore = ref(false)
+// A profile's fixed values for a blank document (a cobro is «Recibir» from a
+// «Cliente»): sent on save, never shown; a mapper's own values win.
+const defaults = computed(() =>
+  source.value ? {} : { ...(profile.value?.defaults || {}) },
+)
+const startDoc = computed(() => ({
+  ...defaults.value,
+  ...(draft.value?.doc || {}),
+}))
+const moreFields = computed(() => profile.value?.moreFields || [])
 
-const kind = computed(() => kindLabel(doctype.value) || 'documento')
+// A profile may name its kind when one doctype has several lists (Payment Entry: «Cobro»).
+const kind = computed(
+  () => profile.value?.kind || kindLabel(doctype.value) || 'documento',
+)
 // «Nueva factura», «Nuevo cobro»: gender from the noun's first word.
 const title = computed(() => {
   const word = kind.value.toLowerCase()
@@ -138,14 +159,15 @@ async function load() {
   denied.value = false
   form.value = null
   try {
-    const profile = await loadProfile({
+    const own = await loadProfile({
       doctype: doctype.value,
       entry: entry.value,
     })
-    const [shape, made] = await Promise.all([
+    profile.value = own
+    const [loadedShape, made] = await Promise.all([
       docApi('form', {
         doctype: doctype.value,
-        fields: profile.editFields || undefined,
+        fields: wantedFields(own),
       }),
       docApi('draft', {
         doctype: doctype.value,
@@ -153,10 +175,15 @@ async function load() {
       }),
     ])
     if (mine !== seq) return
+    const shape = relabel(loadedShape, own.fieldLabels)
     draft.value = made
     startRows.value = (made.items?.rows || []).map((r) => ({ ...r }))
     rows.value = startRows.value.map((r) => ({ ...r }))
     changes.value = prefillFromQuery(route.query, shape.fields)
+    // ?articulo=<code>[&cantidad=n] (from Producto): the first item of a blank draft.
+    const wantedItem = itemFromQuery(route.query)
+    if (wantedItem && shape.items && !rows.value.length)
+      rows.value = [{ ...wantedItem, ...(await itemDetails(wantedItem)) }]
     form.value = shape
   } catch (e) {
     if (mine !== seq) return
@@ -175,11 +202,15 @@ async function save() {
   )
   if (missing.length) {
     error.value = `Falta: ${missing.join(', ')}.`
+    openMore.value = form.value.fields.some(
+      (f) =>
+        missing.includes(f.label) && moreFields.value.includes(f.fieldname),
+    )
     return
   }
   saving.value = true
   error.value = ''
-  const values = { ...changes.value }
+  const values = { ...defaults.value, ...changes.value }
   if (
     form.value.items &&
     (rowsChanged(startRows.value, rows.value) || !startRows.value.length)
@@ -199,6 +230,22 @@ async function save() {
     error.value = errorText(e)
   } finally {
     saving.value = false
+  }
+}
+
+// The item's name and unit for its card (Producto passes only the code).
+async function itemDetails({ item_code }) {
+  try {
+    const found = await call('frappe.client.get_value', {
+      doctype: 'Item',
+      filters: item_code,
+      fieldname: ['item_name', 'stock_uom'],
+    })
+    return found
+      ? { item_name: found.item_name || '', uom: found.stock_uom || undefined }
+      : {}
+  } catch {
+    return {}
   }
 }
 

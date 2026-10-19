@@ -673,6 +673,13 @@
             Sin relaciones confirmadas. Compartir nombre o teléfono no une
             registros.
           </p>
+          <!-- Shell D2: the customer's sales lists, filtered to them. -->
+          <VentasDelCliente
+            v-for="c in salesCustomers"
+            :key="c.name"
+            :customer="c.name"
+            :title="salesCustomers.length > 1 ? c.title : ''"
+          />
         </section>
       </div>
       <ArchivosRegistroPanel
@@ -903,6 +910,9 @@ import {
   extraFields,
   sectionPosition,
 } from '@/utils/extraFields'
+const VentasDelCliente = defineAsyncComponent(
+  () => import('@/components/documentos/ventas/VentasDelCliente.vue'),
+)
 const ChannelComposer = defineAsyncComponent(
   () => import('@/components/doco/channel/ChannelComposer.vue'),
 )
@@ -1179,6 +1189,26 @@ function openSchedule() {
   else if (scheduleOptions.value.length) scheduleOpen.value = true
 }
 // The end of a relation that is not the record on screen (null when neither is).
+// The customers whose sales this record opens (Shell D2): the record itself
+// when it is a customer, and the customers it is linked to.
+const salesCustomers = computed(() => {
+  if (!moduleEnabled(shellBoot.value, 'documentos')) return []
+  const out = []
+  const seen = new Set()
+  const add = (name, title) => {
+    if (name && !seen.has(name)) {
+      seen.add(name)
+      out.push({ name, title: title || name })
+    }
+  }
+  if (record.value?.source === 'customer')
+    add(record.value.name, record.value.title)
+  for (const relation of record.value?.relations || []) {
+    const end = otherEnd(relation)
+    if (end?.doctype === 'Customer') add(end.name, end.title)
+  }
+  return out.slice(0, 3)
+})
 function otherEnd(relation) {
   const self = (end) =>
     end?.name === record.value?.name &&

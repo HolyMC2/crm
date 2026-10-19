@@ -18,6 +18,7 @@
       :fields="form.fields"
       :items="form.items"
       :doc="record.doc"
+      :more="moreFields || []"
     />
     <template #actions>
       <p v-if="error" role="alert" class="text-base text-ink-red-7">
@@ -40,7 +41,13 @@ import { computed, ref, watch } from 'vue'
 import { BottomSheet, EmptyState } from '@/components/ui'
 import EditForm from './EditForm.vue'
 import { docApi, errorText } from '@/documentos/api'
-import { missingRequired, rowsChanged, rowsForSave } from '@/documentos/form'
+import {
+  missingRequired,
+  relabel,
+  rowsChanged,
+  rowsForSave,
+  wantedFields,
+} from '@/documentos/form'
 import { BTN } from '@/documentos/tools'
 
 const props = defineProps({
@@ -48,6 +55,9 @@ const props = defineProps({
   record: { type: Object, required: true },
   // profile.editFields: the fields this document asks for, in order
   editFields: { type: Array, default: null },
+  // profile.moreFields / fieldLabels: «Más datos» and the worker's words
+  moreFields: { type: Array, default: null },
+  fieldLabels: { type: Object, default: null },
   subtitle: { type: String, default: '' },
 })
 const emit = defineEmits(['update:open', 'saved'])
@@ -75,10 +85,16 @@ watch(
     changes.value = {}
     rows.value = startRows.value.map((r) => ({ ...r }))
     try {
-      form.value = await docApi('form', {
-        doctype: props.record.doctype,
-        fields: props.editFields || undefined,
-      })
+      form.value = relabel(
+        await docApi('form', {
+          doctype: props.record.doctype,
+          fields: wantedFields({
+            editFields: props.editFields,
+            moreFields: props.moreFields,
+          }),
+        }),
+        props.fieldLabels,
+      )
     } catch (e) {
       loadError.value = errorText(e)
     }

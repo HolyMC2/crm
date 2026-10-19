@@ -66,7 +66,44 @@ export function rowsChanged(before, after) {
 }
 
 // Query keys of /nuevo that are not field prefills.
-const RESERVED = new Set(['origen', 'desde', 'con', 'duplicar', 'modificar'])
+const RESERVED = new Set([
+  'origen',
+  'desde',
+  'con',
+  'duplicar',
+  'modificar',
+  'articulo',
+  'cantidad',
+])
+
+/** A profile's worker words for the form's labels (`fieldLabels`: «Cliente», not «Contraparte»). */
+export function relabel(shape, labels) {
+  if (!shape?.fields || !labels) return shape
+  // A label is a string, or `{ label, reqd }` for a field ERPNext requires in its
+  // controller rather than in its meta (a pedido's delivery_date).
+  const own = (f) => {
+    const l = labels[f.fieldname]
+    if (!l) return f
+    if (typeof l === 'string') return { ...f, label: l }
+    return { ...f, label: l.label || f.label, reqd: l.reqd ? 1 : f.reqd }
+  }
+  return { ...shape, fields: shape.fields.map(own) }
+}
+
+/** The fields a profile's form asks the server for: its own, then «Más datos». */
+export function wantedFields(profile) {
+  if (!profile?.editFields) return undefined
+  return [...profile.editFields, ...(profile.moreFields || [])]
+}
+
+/** ?articulo=<code>&cantidad=2 (Producto «Cotizar» / «Vender») → a first item row. */
+export function itemFromQuery(query = {}) {
+  const one = (v) => (Array.isArray(v) ? v[0] : v) || ''
+  const code = String(one(query.articulo)).trim()
+  if (!code) return null
+  const qty = Number(one(query.cantidad))
+  return { item_code: code, qty: Number.isFinite(qty) && qty > 0 ? qty : 1 }
+}
 
 /** /nuevo?origen=Quotation&desde=SAL-QTN-…&con=sales_order → the server's `source`. */
 export function sourceFromQuery(query = {}, doctype = '') {

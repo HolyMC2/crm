@@ -800,6 +800,8 @@ _DATOS_SKIP = {
 	"apply_discount_on",
 	"set_posting_time",
 	"posting_time",
+	"auto_repeat",  # Conexiones shows the repeat; Datos would show its raw ID
+	"transaction_time",  # a pedido's «Hora 16:28:2.303451»: the date says enough
 	"party_account_currency",
 	"is_internal_customer",
 	"is_internal_supplier",
@@ -852,6 +854,8 @@ _DATOS_LINK_SKIP = {
 	"Finance Book",
 	"Accounting Dimension",
 }
+# depends_on of the plain «show when this field is set» kind: eval:doc.is_financed
+_DEPENDS_ON_FIELD = re.compile(r"^eval:\s*doc\.([a-z_][a-z0-9_]*)\s*$")
 # A machine reference (request ids, hashes): no spaces, long, digits and separators.
 _MACHINE_ID = re.compile(r"^(?=.*\d)[A-Za-z0-9]+[-_.][A-Za-z0-9_.-]{10,}$")
 
@@ -869,6 +873,11 @@ def _data_fields(doc, skip=()):
 			or name.startswith(_DATOS_PREFIXES)
 			or name.endswith("_in_words")
 		):
+			continue
+		# A field Desk shows only under a switch (`eval:doc.is_financed`): not when it is off
+		# («Cumplimiento: Faltante» on every invoice that was never financed).
+		gate = _DEPENDS_ON_FIELD.match(df.depends_on or "")
+		if gate and not doc.get(gate.group(1)):
 			continue
 		if name == "currency" and doc.get("currency") == frappe.get_cached_value(
 			"Company", doc.get("company"), "default_currency"
@@ -935,13 +944,21 @@ def _items(doc):
 			break
 	if not table:
 		return None
+	# An invoice's delivered_qty only moves for an Entrega made FROM it; one billed from an
+	# Entrega or a Pedido keeps 0 and would read «Entregado 0». An Entrega's received_qty is
+	# for transfers between own stores («Recibido 0» on a sale). The chain says what moved.
+	skip = {
+		"Sales Invoice": {"delivered_qty"},
+		"POS Invoice": {"delivered_qty"},
+		"Delivery Note": {"received_qty"},
+	}.get(doc.doctype, set())
 	rows = []
 	for row in doc.get(table.fieldname) or []:
 		rows.append(
 			{
 				"name": row.name,
 				"_idx": cint(row.idx),
-				**{f: row.get(f) for f in _ITEM_FIELDS if row.get(f) not in (None, "")},
+				**{f: row.get(f) for f in _ITEM_FIELDS if f not in skip and row.get(f) not in (None, "")},
 			}
 		)
 	return {"fieldname": table.fieldname, "label": _(table.label or "Items"), "rows": rows}
@@ -1428,9 +1445,10 @@ def _apply(doc, values):
 			doc.set_missing_values(for_validate=True)
 		except TypeError:
 			doc.set_missing_values()
-	# Only documents with sales or purchase totals: ERPNext's calculator reads item rates and
-	# taxes a stock document has not (a Stock Reconciliation row has no `rate`).
-	if hasattr(doc, "calculate_taxes_and_totals") and meta.has_field("grand_total"):
+	# Only documents with sales or purchase totals, from item rows: ERPNext's calculator reads
+	# item rates and taxes a stock document has not (a Stock Reconciliation row has no `rate`),
+	# and a Payment Entry has no items at all (its validate sets its amounts).
+	if table and hasattr(doc, "calculate_taxes_and_totals") and meta.has_field("grand_total"):
 		doc.calculate_taxes_and_totals()
 
 

@@ -1,13 +1,7 @@
 // Facturas (Sales Invoice): the worked example of a curated profile (README.md):
-// rows, chips, «Filtros», sort, edit fields and the next step by state.
-// D2 owns it after D1.2.
-import {
-  formatDate,
-  formatDue,
-  formatMoney,
-  statusLabel,
-  statusTone,
-} from '@/utils/display'
+// rows, chips, «Filtros», sort, edit fields and the next step by state. Shell D2:
+// items in the row, cliente/vendedor/tienda/fechas, the chain and attribution.
+import { formatDate, formatDue, formatMoney, statusTone } from '@/utils/display'
 import {
   docStatus,
   draftStep,
@@ -15,6 +9,15 @@ import {
   stagesAt,
   titleOf,
 } from './_generic'
+import {
+  CLIENTE,
+  fechas,
+  itemsLine,
+  PANELS,
+  PRINT,
+  TIENDA,
+  VENDEDOR,
+} from './_ventas'
 
 // The seller's words: the customer owes us («Por cobrar»), not «Por pagar».
 const SALE_WORDS = {
@@ -22,6 +25,13 @@ const SALE_WORDS = {
   'Unpaid and Discounted': 'Por cobrar',
   'Partly Paid': 'Cobro parcial',
   'Partly Paid and Discounted': 'Cobro parcial',
+  Paid: 'Pagada',
+  Overdue: 'Vencida',
+  'Overdue and Discounted': 'Vencida',
+  Return: 'Devolución',
+  'Credit Note Issued': 'Con nota de crédito',
+  Draft: 'Borrador',
+  Cancelled: 'Cancelada',
 }
 
 const OWED = [
@@ -34,7 +44,7 @@ const OWED = [
 ]
 
 export default {
-  fields: ['is_return', 'customer'],
+  fields: ['_items', 'is_return', 'customer', 'pos_profile'],
   chips: [
     {
       value: 'por-cobrar',
@@ -63,6 +73,10 @@ export default {
   defaultChip: 'por-cobrar',
   owedLabel: 'Por cobrar',
   filterFields: [
+    CLIENTE,
+    VENDEDOR,
+    TIENDA,
+    fechas('posting_date'),
     {
       fieldname: 'is_return',
       label: 'Tipo',
@@ -90,10 +104,8 @@ export default {
       subtitle = partial
         ? `${due.label} · debe ${formatMoney(row.outstanding, row.currency || 'MXN')}`
         : due.label
-    } else
-      subtitle = [statusLabel(status), formatDate(row.date)]
-        .filter(Boolean)
-        .join(' · ')
+    } else subtitle = formatDate(row.date)
+    subtitle = [itemsLine(row), subtitle].filter(Boolean).join(' · ')
     return {
       title: titleOf(row, 'Sales Invoice'),
       subtitle,
@@ -108,6 +120,8 @@ export default {
 
   // The customer, when it is due, a note; the items in their own editor.
   editFields: ['customer', 'due_date', 'remarks'],
+  panels: PANELS,
+  printFormats: PRINT['Sales Invoice'],
 
   header(record) {
     const view = genericProfile.header(record)

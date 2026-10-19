@@ -27841,3 +27841,50 @@ msgstr "Abrir"
 msgctxt "Assistant card"
 msgid "Saved"
 msgstr "Guardado"
+#: crm/api/documentos_ventas.py
+msgid "This document has no sales chain."
+msgstr "Este documento no es parte de una venta."
+
+#: crm/api/documentos_ventas.py
+msgid "Online store"
+msgstr "Tienda en línea"
+
+#: crm/api/documentos_ventas.py
+msgid "Order placed on the web shop"
+msgstr "Pedido hecho en la tienda en línea"
+
+#: crm/api/documentos_ventas.py
+msgid "The deal was talked over WhatsApp"
+msgstr "El trato se platicó por WhatsApp"
+
+#: crm/api/documentos_ventas.py
+msgid "Sold at the till ({0})"
+msgstr "Vendido en caja ({0})"
+
+#: crm/api/documentos_ventas.py
+msgid "Counter"
+msgstr "Mostrador"
+
+#: crm/api/documentos_ventas.py
+msgid "Captured by staff"
+msgstr "Lo capturó el equipo"
+
+#: crm/api/documentos_ventas.py
+msgid "That customer does not exist."
+msgstr "Ese cliente no existe."
+
+#: crm/api/documentos_ventas.py
+msgid "Sales are not set up on this site."
+msgstr "Las ventas no están configuradas en este sitio."
+
+#: crm/api/documentos_ventas.py
+msgid "This invoice has nothing left to collect."
+msgstr "A esta factura ya no le queda nada por cobrar."
+
+#: crm/api/documentos_ventas.py
+msgid "The amount must be more than zero."
+msgstr "El monto debe ser mayor que cero."
+
+#: frontend/src/pages/CobranzaCliente.vue
+msgid "Open invoice"
+msgstr "Ver factura"

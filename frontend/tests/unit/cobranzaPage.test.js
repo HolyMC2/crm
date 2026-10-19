@@ -512,6 +512,16 @@ describe('Cobranza record as a power app', () => {
     )
   })
 
+  it('each invoice opens as a shell record, never Desk (Shell D2)', async () => {
+    mount(CobranzaCliente, { customer: 'Laura' })
+    await flush()
+    const rows = root.querySelectorAll('[data-invoice]')
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows)
+      expect(row.querySelector('[data-invoice-open]')).not.toBeNull()
+    expect(root.querySelector('a[href^="/app/sales-invoice"]')).toBeNull()
+  })
+
   it('an action handed over by the list opens on its invoice and leaves the URL', async () => {
     state.route.query = {
       company: 'Tienda',

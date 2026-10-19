@@ -253,6 +253,8 @@
         v-model:open="editOpen"
         :record="record"
         :edit-fields="profile.editFields"
+        :more-fields="profile.moreFields || null"
+        :field-labels="profile.fieldLabels || null"
         :subtitle="scopeTitle"
         @saved="saved('Borrador guardado')"
       />

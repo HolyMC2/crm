@@ -209,7 +209,7 @@ describe('worked profiles: the next step by state (DD4)', () => {
   it('Facturas speak as the seller: «Por cobrar», not «Por pagar»', async () => {
     const p = await loadProfile({ doctype: 'Sales Invoice' })
     expect(p.header(record(1)).statusLabel).toBe('Por cobrar')
-    expect(p.header(record(1, { status: 'Paid' })).statusLabel).toBe('')
+    expect(p.header(record(1, { status: 'Paid' })).statusLabel).toBe('Pagada')
   })
   it('Facturas: draft → Confirmar, owed → Registrar cobro, paid → none', async () => {
     const p = await loadProfile({ doctype: 'Sales Invoice' })

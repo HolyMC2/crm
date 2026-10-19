@@ -348,7 +348,8 @@ const canCreate = computed(() => {
   )
 })
 const createTo = computed(() => {
-  if (!canCreate.value) return null
+  // A profile may keep creation elsewhere (tickets are rung up in the POS).
+  if (!canCreate.value || profile.value?.creatable === false) return null
   const path = entry.value
     ? `${base.value}/${entry.value.slug}/nuevo`
     : `${floorRoute(doctype.value).path}/nuevo`
