@@ -85,7 +85,7 @@ export function displayName(doc, doctype = doc?.doctype, { fallback } = {}) {
   if (doc == null) return fallback ?? ''
   if (typeof doc !== 'object') {
     const text = clean(doc)
-    return text && !looksLikeId(text) ? text : (fallback ?? kindLabel(doctype))
+    return text && !looksLikeId(text) ? text : fallback ?? kindLabel(doctype)
   }
   const fields = [...(NAME_FIELDS[doctype] || []), ...GENERIC_FIELDS]
   for (const field of fields) {

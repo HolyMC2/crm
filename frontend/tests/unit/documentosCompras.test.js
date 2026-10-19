@@ -358,8 +358,9 @@ describe('requisition titles from what it asks for (walk 2026-10-18)', () => {
   })
 
   it('the chain shortens a joined requisition title', async () => {
-    const { requestShort } =
-      await import('@/components/documentos/compras/words')
+    const { requestShort } = await import(
+      '@/components/documentos/compras/words'
+    )
     expect(
       requestShort('Purchase Request for Pantalla A, Pantalla B, Pantalla i'),
     ).toBe('Pantalla A y más')
@@ -455,8 +456,9 @@ describe('a chain step the worker cannot read', () => {
 
 describe('chain titles from the server summary', () => {
   it("keeps «A, B y 3 más» when it is not ERPNext's own title", async () => {
-    const { requestShort } =
-      await import('@/components/documentos/compras/words')
+    const { requestShort } = await import(
+      '@/components/documentos/compras/words'
+    )
     expect(requestShort('Pantalla 13C / POCO C65 y 18 más')).toBe(
       'Pantalla 13C / POCO C65 y 18 más',
     )
