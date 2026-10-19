@@ -695,8 +695,9 @@ describe('cards and suggestions', () => {
 })
 
 describe('the suggestion rules', async () => {
-  const { hoySuggestion, contactoSuggestion } =
-    await import('@/components/assistant/suggestions')
+  const { hoySuggestion, contactoSuggestion } = await import(
+    '@/components/assistant/suggestions'
+  )
   it('Hoy: the oldest overdue pendiente, else a deal without a next step, else nothing', () => {
     const data = {
       pendientes: {
