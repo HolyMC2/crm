@@ -25,9 +25,9 @@
           >
         </span>
         <span
-          v-if="row.resumen || row.descripcion"
+          v-if="row.resumen"
           class="mt-0.5 line-clamp-2 break-words text-sm text-ink-gray-7"
-          >{{ row.resumen || row.descripcion }}</span
+          >{{ row.resumen }}</span
         >
         <span
           v-if="line"

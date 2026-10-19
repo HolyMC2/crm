@@ -103,7 +103,7 @@ const ROWS = [
   {
     herramienta: 'buscar',
     titulo: 'Buscar',
-    descripcion: 'Busca en todo lo que puedes ver.',
+    resumen: 'Busca en todo lo que puedes ver.',
     efecto: 'lectura',
     grupo: 'Registros',
     habilitada: 1,
@@ -116,7 +116,7 @@ const ROWS = [
   {
     herramienta: 'timbrar',
     titulo: 'Timbrar',
-    descripcion: 'Timbra una factura.',
+    resumen: 'Timbra una factura.',
     efecto: 'escritura',
     grupo: 'Fiscal',
     categoria: 'fiscal',
@@ -131,7 +131,7 @@ const ROWS = [
   {
     herramienta: 'cambiar_precio',
     titulo: 'Cambiar precio',
-    descripcion: 'Precio con vigencia.',
+    resumen: 'Precio con vigencia.',
     efecto: 'escritura',
     grupo: 'Inventario',
     habilitada: 1,
@@ -179,6 +179,10 @@ describe('helpers', () => {
     expect(ROWS.filter((r) => matches(r, 'sensibles', '')).length).toBe(1)
     expect(ROWS.filter((r) => matches(r, 'cambiadas', '')).length).toBe(1)
     expect(ROWS.filter((r) => matches(r, 'todas', 'vigencia')).length).toBe(1)
+    // the tool id is not on screen, so it does not match either
+    expect(
+      ROWS.filter((r) => matches(r, 'todas', 'cambiar_precio')).length,
+    ).toBe(0)
   })
 
   it('counts chips and orders groups', () => {
@@ -313,5 +317,24 @@ describe('sheet', () => {
       { roles: ['Puesto Encargado', 'Sales User'] },
     ])
     expect(root.textContent).toContain('Volver a como viene')
+  })
+
+  it('shows the owner line, never the model text or the tool id', async () => {
+    const row = {
+      ...ROWS[2],
+      descripcion:
+        'Cambia precios de venta: lineas [{articulo, precio}]. Úsala para…',
+    }
+    root = document.createElement('div')
+    document.body.appendChild(root)
+    app = createApp({
+      render: () => h(ToolSheet, { open: true, row, mcpOn: true }),
+    })
+    app.mount(root)
+    await flush()
+    expect(root.textContent).toContain('Precio con vigencia.')
+    expect(root.textContent).not.toContain('Úsala')
+    expect(root.textContent).not.toContain('cambiar_precio')
+    expect(root.textContent).not.toContain('Lo que lee el asistente')
   })
 })

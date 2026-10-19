@@ -6,11 +6,8 @@
     @update:open="(value) => $emit('update:open', value)"
   >
     <div class="space-y-4">
-      <p
-        v-if="row.resumen || row.descripcion"
-        class="break-words text-base text-ink-gray-8"
-      >
-        {{ row.resumen || row.descripcion }}
+      <p v-if="row.resumen" class="break-words text-base text-ink-gray-8">
+        {{ row.resumen }}
       </p>
       <p
         v-if="row.categoria"
@@ -126,28 +123,6 @@
           </label>
         </div>
       </div>
-      <details
-        v-if="row.descripcion && row.descripcion !== row.resumen"
-        class="group rounded-lg border border-outline-gray-1"
-      >
-        <summary
-          class="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm font-medium text-ink-gray-7 [&::-webkit-details-marker]:hidden"
-        >
-          <span class="flex-1">Lo que lee el asistente</span>
-          <span
-            class="lucide-chevron-down size-4 transition-transform group-open:rotate-180"
-            aria-hidden="true"
-          />
-        </summary>
-        <p
-          class="whitespace-pre-line break-words px-3 pb-3 text-sm text-ink-gray-7"
-        >
-          {{ row.descripcion }}
-        </p>
-        <p class="break-all px-3 pb-3 text-xs text-ink-gray-5">
-          {{ row.herramienta }}
-        </p>
-      </details>
     </div>
     <template #actions>
       <Button
