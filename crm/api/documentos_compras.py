@@ -200,6 +200,18 @@ def verb_merges(doctype):
 	return doctype in ("Purchase Receipt", "Purchase Invoice", "Payment Entry", "Supplier Quotation")
 
 
+def _hidden(doctype, names, shown):
+	"""How many live documents of this step exist that the caller cannot read (the names stay
+	hidden): «1 que no puedes ver» instead of «todavía no». Cancelled ones and cobros don't count."""
+	if not names or not _exists(doctype):
+		return 0
+	filters = {"name": ("in", list(names)), "docstatus": ("<", 2)}
+	if doctype == "Payment Entry":
+		filters["payment_type"] = "Pay"
+	live = set(frappe.get_all(doctype, filters=filters, pluck="name", limit=MAX_NODES))
+	return len(live - shown)
+
+
 def _docs(doctype, names, here):
 	if not names or not _exists(doctype) or not readable(doctype):
 		return []
@@ -230,7 +242,7 @@ def _docs(doctype, names, here):
 
 
 def chain(doctype, name):
-	"""{stages: [{key, label, docs}], here: {doctype, name}} for a readable purchase document."""
+	"""{stages: [{key, label, docs, hidden}], here: {doctype, name}} for a readable purchase document."""
 	if doctype not in STAGE_OF or not _exists(doctype):
 		return {"stages": [], "here": {"doctype": doctype, "name": name}}
 	if not frappe.has_permission(doctype, "read", name):
@@ -244,10 +256,12 @@ def chain(doctype, name):
 		by_doctype.setdefault(dt, set()).add(dn)
 	stages = []
 	for key, label, doctypes in STAGES:
-		docs = []
+		docs, hidden = [], 0
 		for dt in doctypes:
-			docs += _docs(dt, by_doctype.get(dt), here)
-		stages.append({"key": key, "label": label, "docs": docs})
+			found = _docs(dt, by_doctype.get(dt), here)
+			docs += found
+			hidden += _hidden(dt, by_doctype.get(dt), {d["name"] for d in found})
+		stages.append({"key": key, "label": label, "docs": docs, "hidden": hidden})
 	return {"stages": stages, "here": {"doctype": doctype, "name": name}}
 
 

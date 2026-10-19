@@ -419,3 +419,36 @@ describe('feminine document nouns', () => {
     expect(['Pago', 'pedido', 'Ajuste'].some(feminineNoun)).toBe(false)
   })
 })
+
+describe('a chain step the worker cannot read', () => {
+  it('is counted, never named, and stops the pending guess', () => {
+    const data = {
+      stages: [
+        {
+          key: 'orden',
+          label: 'Orden de compra',
+          docs: [
+            {
+              doctype: 'Purchase Order',
+              name: 'PO-1',
+              docstatus: 1,
+              status: 'To Bill',
+              here: true,
+            },
+          ],
+          hidden: 0,
+        },
+        { key: 'recepcion', label: 'Recepción', docs: [], hidden: 0 },
+        { key: 'factura', label: 'Factura de proveedor', docs: [], hidden: 1 },
+      ],
+    }
+    const steps = chainSteps(data)
+    expect(steps.at(-1)).toMatchObject({
+      stage: 'factura',
+      hidden: 1,
+      title: '1 que no puedes ver',
+    })
+    expect(steps.at(-1).doctype).toBeUndefined()
+    expect(pendingStep(data)).toBe(null)
+  })
+})

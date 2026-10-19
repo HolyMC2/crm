@@ -144,3 +144,13 @@ class TestCadenaERPNext(IntegrationTestCase):
 		self.assertTrue(documentos._may_make("Purchase Invoice", "payment", "Payment Entry"))  # Administrator
 		frappe.set_user("Guest")
 		self.assertFalse(documentos._may_make("Purchase Invoice", "payment", "Payment Entry"))
+
+	def test_hidden_counts_live_documents_the_caller_cannot_read(self):
+		name = frappe.db.get_value("Purchase Order", {"docstatus": 1}, "name")
+		if not name:
+			self.skipTest("No confirmed purchase order on this site")
+		self.assertEqual(documentos_compras._hidden("Purchase Order", {name}, set()), 1)
+		self.assertEqual(documentos_compras._hidden("Purchase Order", {name}, {name}), 0)
+		self.assertEqual(documentos_compras._hidden("Purchase Order", {"NO-EXISTE"}, set()), 0)
+		answer = documentos_compras.cadena("Purchase Order", name)  # Administrator reads everything
+		self.assertTrue(all(stage["hidden"] == 0 for stage in answer["stages"]))

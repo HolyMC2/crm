@@ -101,13 +101,14 @@ const data = ref(null)
 const steps = computed(() =>
   chainSteps(data.value).map((step) => ({
     ...step,
-    to: step.here
-      ? null
-      : documentRoute(step.doctype, step.name, {
-          boot: shellBoot.value,
-          hint:
-            step.doctype === 'Payment Entry' ? { payment_type: 'Pay' } : null,
-        }),
+    to:
+      step.here || step.hidden
+        ? null
+        : documentRoute(step.doctype, step.name, {
+            boot: shellBoot.value,
+            hint:
+              step.doctype === 'Payment Entry' ? { payment_type: 'Pay' } : null,
+          }),
     line: [
       step.doctype === 'Material Request'
         ? requestShort(step.title)

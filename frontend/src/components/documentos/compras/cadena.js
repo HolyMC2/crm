@@ -44,6 +44,20 @@ export function chainSteps(data) {
         label: KIND[doc.doctype] || stage.label,
       })
     }
+    // Documents of this step the worker cannot read: counted, never named.
+    if (stage.hidden > 0)
+      out.push({
+        stage: stage.key,
+        label: stage.label,
+        name: `hidden-${stage.key}`,
+        hidden: stage.hidden,
+        title:
+          stage.hidden === 1
+            ? '1 que no puedes ver'
+            : `${stage.hidden} que no puedes ver`,
+        here: false,
+        people: [],
+      })
   }
   return out
 }
@@ -53,9 +67,13 @@ export function chainSteps(data) {
  * draft or a cancelled document here, or when the last document is a draft.
  */
 export function pendingStep(data) {
-  const stages = (data?.stages || []).filter((s) => (s.docs || []).length)
+  const stages = (data?.stages || []).filter(
+    (s) => (s.docs || []).length || s.hidden > 0,
+  )
   if (!stages.length) return null
   const last = stages[stages.length - 1]
+  // The last step is one the worker cannot read: say nothing about what follows.
+  if (!(last.docs || []).length) return null
   if ((last.docs || []).some((d) => d.docstatus !== 1)) return null
   const here = stages.flatMap((s) => s.docs).find((d) => d.here)
   if (here && here.docstatus !== 1) return null
