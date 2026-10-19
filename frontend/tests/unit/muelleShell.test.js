@@ -722,15 +722,6 @@ describe('one frame for every route', () => {
     mobileView.value = 'list'
   })
 
-  it('Más opens Desk («Administración») only on a wide screen (SPEC §6.3)', () => {
-    const sheet = readFileSync(
-      resolve(__dirname, '../../src/components/shell/MoreSheet.vue'),
-      'utf8',
-    )
-    expect(sheet).toContain('v-if="user.is_admin && isWide" href="/desk"')
-    expect(sheet).not.toMatch(/v-if="user\.is_admin" href="\/desk"/)
-  })
-
   it('phone hides doco’s floating «Ayuda» pill; the Más sheet offers it', () => {
     const source = readFileSync(
       resolve(__dirname, '../../src/components/shell/MuelleShell.vue'),
@@ -1809,6 +1800,28 @@ describe('Ventas navigation on every screen', () => {
     expect(showSettings.value).toBe(true)
     expect(router.currentRoute.value.path).toBe(landing)
     showSettings.value = false
+  })
+
+  it('phone Más never opens Desk, not even for an admin (SPEC §6.3)', async () => {
+    state.mobile.value = true
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot')
+        return boot({
+          user: { name: 'a@x.test', full_name: 'Ana', is_admin: true },
+        })
+      throw new Error(`unexpected ${method}`)
+    })
+    await mount('/contactos')
+    root.querySelector('nav[aria-label="Main navigation"] button').click()
+    const sheet = await until(() =>
+      document.querySelector(
+        '[data-shell-layer="more"] [data-testid="more-landing"]',
+      ),
+    )
+    expect(sheet).toBeTruthy()
+    const more = document.querySelector('[data-shell-layer="more"]')
+    expect(more.querySelector('a[href="/desk"]')).toBeNull()
+    expect(more.textContent).toContain('Sign out')
   })
 
   it('Más › Settings: «Open Muelle on» shows the saved choice and saves a new one', async () => {
