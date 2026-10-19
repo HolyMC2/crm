@@ -8,8 +8,7 @@
       v-model:search-open="searchOpen"
       back
       back-label="Más"
-      title="Formatos de impresión"
-      :stack="false"
+      :title="narrow ? 'Impresión' : 'Formatos de impresión'"
       :loading="loading && groups.length > 0"
       :searchable="groups.length > 0"
       search-label="Buscar formato o documento"
@@ -211,6 +210,8 @@ import {
   kindIcon,
 } from '@/components/impresion/impresion'
 
+// Below 360px: the shorter title fits the bar on one line (the shared AppBar
+// wraps titles to two lines by design), and the pill joins the subtitle row.
 const narrow = useMediaQuery('(max-width: 359px)')
 // «Dañado» wins over «Predeterminado»: a default that fails is the news.
 const pillOf = (format) =>
