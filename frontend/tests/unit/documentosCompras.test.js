@@ -376,6 +376,19 @@ describe('requisition titles from what it asks for (walk 2026-10-18)', () => {
   })
 })
 
+describe('a blank Pago (walk 2026-10-18: «Contraparte», no supplier search)', () => {
+  it('is a payment to a supplier, in the worker words', () => {
+    expect(pago.defaults).toEqual({
+      payment_type: 'Pay',
+      party_type: 'Supplier',
+    })
+    expect(pago.fieldLabels.party).toBe('Proveedor')
+    expect(pago.moreFields).toEqual(['paid_from', 'paid_to', 'remarks'])
+    for (const f of [...pago.editFields, ...pago.moreFields])
+      expect(pago.fieldLabels[f], f).toBeTruthy()
+  })
+})
+
 describe('an unpaid bill past its due date', () => {
   it('reads Vencida on the chip as on the red line', () => {
     const row = purchaseInvoice.row({

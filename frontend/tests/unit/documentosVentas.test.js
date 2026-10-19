@@ -177,7 +177,11 @@ describe('chips and «Filtros» per queue', () => {
       doctype: 'Payment Entry',
       entry: profileFor('Payment Entry', { payment_type: 'Pay' }),
     })
-    expect(pagos.defaults).toBeUndefined()
+    // Pagos keeps its own defaults (Shell D3), never the cobros ones.
+    expect(pagos.defaults).toEqual({
+      payment_type: 'Pay',
+      party_type: 'Supplier',
+    })
     expect(posInvoice.creatable).toBe(false)
   })
 })

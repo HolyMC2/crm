@@ -79,6 +79,20 @@ export default {
     'reference_no',
     'reference_date',
   ],
+  moreFields: ['paid_from', 'paid_to', 'remarks'],
+  fieldLabels: {
+    party: 'Proveedor',
+    paid_amount: 'Monto',
+    mode_of_payment: 'Forma de pago',
+    posting_date: 'Fecha',
+    reference_no: 'Referencia o folio',
+    reference_date: 'Fecha de la referencia',
+    paid_from: 'Cuenta de donde sale el dinero',
+    paid_to: 'Cuenta del proveedor',
+    remarks: 'Nota',
+  },
+  // A blank /nuevo is a payment to a supplier: the party search looks up suppliers.
+  defaults: { payment_type: 'Pay', party_type: 'Supplier' },
 
   /** Borrador · Pagado. */
   stages(record) {
