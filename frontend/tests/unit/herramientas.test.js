@@ -2,6 +2,8 @@
 // assistant tool grouped, filters them (apagadas, escriben, clientes y fiscal,
 // cambiadas), toggles one from its row, and edits confirmation, MCP, the daily
 // limit and the roles in its sheet. A refused load says who may see it.
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 
@@ -168,6 +170,25 @@ afterEach(() => {
   state.calls = []
   state.replies = {}
   state.toasts = []
+})
+
+describe('route', () => {
+  it('Más › Configuración reaches a registered page that lights «Más»', () => {
+    // a router compaction once dropped this route (blank page); without
+    // meta.app the shell counted it as Ventas and lit «Ventas»
+    const router = readFileSync(
+      resolve(__dirname, '../../src/router.js'),
+      'utf8',
+    )
+    const record = router.match(
+      /path: '\/asistente\/herramientas',[\s\S]*?\n {2}\},/,
+    )?.[0]
+    expect(record).toBeTruthy()
+    expect(record).toContain("name: 'AsistenteHerramientas'")
+    expect(record).toContain("import('@/pages/AsistenteHerramientas.vue')")
+    expect(record).toMatch(/app: 'avisos'/)
+    expect(record).toMatch(/ownPhoneHeader: true/)
+  })
 })
 
 describe('helpers', () => {
