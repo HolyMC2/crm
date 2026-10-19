@@ -39,25 +39,35 @@
             </span>
             <!-- party · status · date stay together: the party gives way first
                  (ellipsis, never under ~8 letters); if even that does not fit,
-                 «status · date» moves to its own line as a whole. -->
-            <span class="flex min-w-0 flex-wrap text-sm text-ink-gray-7">
-              <span class="min-w-[8ch] max-w-full flex-1 basis-0 truncate">{{
-                step.lineTitle
-              }}</span>
-              <span v-if="step.lineMeta" class="flex-none whitespace-nowrap"
-                >{{ step.lineTitle ? '&nbsp;·&nbsp;' : ''
-                }}{{ step.lineMeta }}</span
-              >
+                 «status · date» moves to its own line as a whole. Every piece
+                 carries its «·» in front and the row is shifted left by one
+                 separator and clipped, so a piece that wraps starts its line
+                 without a stray «·» (305 px, 2026-10-18). -->
+            <span class="seps text-sm text-ink-gray-7">
+              <span class="flex flex-wrap">
+                <span
+                  class="lead min-w-[calc(8ch+1.25em)] flex-1 basis-0 truncate"
+                  >{{ step.lineTitle }}</span
+                >
+                <span v-if="step.lineMeta" class="flex-none whitespace-nowrap"
+                  ><span class="sep" aria-hidden="true">·</span
+                  >{{ step.lineMeta }}</span
+                >
+              </span>
             </span>
             <span
               v-for="(who, i) in step.people"
               :key="i"
-              class="flex flex-wrap text-sm text-ink-gray-6"
-              ><span class="break-words">{{ who.name }}</span
-              ><span v-if="who.when" class="whitespace-nowrap"
-                >&nbsp;·&nbsp;{{ who.when }}</span
-              ></span
+              class="seps text-sm text-ink-gray-6"
             >
+              <span class="flex flex-wrap"
+                ><span class="lead min-w-0 break-words">{{ who.name }}</span
+                ><span v-if="who.when" class="flex-none whitespace-nowrap"
+                  ><span class="sep" aria-hidden="true">·</span
+                  >{{ who.when }}</span
+                ></span
+              >
+            </span>
           </span>
           <span
             v-if="step.amount"
@@ -200,5 +210,24 @@ defineExpose({ reload: load })
   bottom: -0.5rem;
   width: 2px;
   background: var(--outline-gray-2, #e2e2e2);
+}
+/* Separators that vanish at the start of a wrapped line: the row sits one
+   separator to the left inside a clipping box, the first piece pads itself by
+   that width, and each later piece opens with its own «·». */
+.seps {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+.seps > span {
+  margin-left: -1.25em;
+}
+.seps .lead {
+  padding-left: 1.25em;
+}
+.seps .sep {
+  display: inline-block;
+  width: 1.25em;
+  text-align: center;
 }
 </style>
