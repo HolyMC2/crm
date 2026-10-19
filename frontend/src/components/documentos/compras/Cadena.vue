@@ -37,9 +37,13 @@
                 · este documento</span
               >
             </span>
-            <!-- party · status · date on one line: the party gives way (ellipsis). -->
-            <span class="flex min-w-0 text-sm text-ink-gray-7">
-              <span class="truncate">{{ step.lineTitle }}</span>
+            <!-- party · status · date stay together: the party gives way first
+                 (ellipsis, never under ~8 letters); if even that does not fit,
+                 «status · date» moves to its own line as a whole. -->
+            <span class="flex min-w-0 flex-wrap text-sm text-ink-gray-7">
+              <span class="min-w-[8ch] max-w-full flex-1 basis-0 truncate">{{
+                step.lineTitle
+              }}</span>
               <span v-if="step.lineMeta" class="flex-none whitespace-nowrap"
                 >{{ step.lineTitle ? '&nbsp;·&nbsp;' : ''
                 }}{{ step.lineMeta }}</span
@@ -48,8 +52,11 @@
             <span
               v-for="(who, i) in step.people"
               :key="i"
-              class="break-words text-sm text-ink-gray-6"
-              >{{ who }}</span
+              class="flex flex-wrap text-sm text-ink-gray-6"
+              ><span class="break-words">{{ who.name }}</span
+              ><span v-if="who.when" class="whitespace-nowrap"
+                >&nbsp;·&nbsp;{{ who.when }}</span
+              ></span
             >
           </span>
           <span
@@ -121,9 +128,10 @@ const steps = computed(() =>
     lineMeta: [statusLabel(step.status), step.date ? formatDate(step.date) : '']
       .filter(Boolean)
       .join(' · '),
-    people: (step.people || []).map(
-      (p) => `${p.verb} ${p.name}${p.when ? ` · ${formatDate(p.when)}` : ''}`,
-    ),
+    people: (step.people || []).map((p) => ({
+      name: `${p.verb} ${p.name}`,
+      when: p.when ? formatDate(p.when) : '',
+    })),
     amount:
       step.amount != null && Number(step.amount)
         ? formatMoney(step.amount, step.currency || 'MXN')
