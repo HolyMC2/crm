@@ -901,3 +901,73 @@ class TestRecentDeals(TestCase):
 	def test_record_level_revocation_drops_the_deal(self):
 		with patch("frappe.model.document.Document.has_permission", return_value=False):
 			self.assertEqual(shell.resolve_recent(self._records()), [])
+
+
+@skipIf(not HAS_FRAPPE, "Frappe integration dependency is not installed")
+class TestInmobiliariaModule(TestCase):
+	"""INMO-SH: the real-estate app's shell screens are a module only where the app is installed.
+
+	`frappe.get_installed_apps` is patched only around the provider itself: boot's other providers
+	load every installed app's hooks, and this site has no inmobiliaria to load."""
+
+	def setUp(self):
+		self.previous = frappe.session.user
+		frappe.set_user("Administrator")
+
+	def tearDown(self):
+		frappe.set_user(self.previous)
+
+	def _apps(self, with_app):
+		apps = [a for a in frappe.get_installed_apps() if a != "inmobiliaria"]
+		return patch("frappe.get_installed_apps", return_value=apps + (["inmobiliaria"] if with_app else []))
+
+	def _boot_with(self, dto):
+		with (
+			patch.object(shell, "_inmobiliaria", return_value=dto),
+			patch.object(shell, "_puesto", return_value=None),
+		):
+			return shell.boot()
+
+	def test_absent_without_the_app(self):
+		with self._apps(False):
+			self.assertIsNone(shell._inmobiliaria())
+		data = self._boot_with(None)
+		self.assertNotIn("inmobiliaria", data["modules"])
+
+	def test_older_app_turns_the_module_off_not_the_shell(self):
+		with self._apps(True), patch.dict(sys.modules, {"inmobiliaria.api.shell": None}):
+			module = shell._inmobiliaria()
+		self.assertFalse(module["enabled"])
+		self.assertTrue(module["reason"])
+		self.assertEqual(module["capabilities"], {})
+		data = self._boot_with(module)
+		self.assertFalse(data["modules"]["inmobiliaria"]["enabled"])
+		self.assertTrue(data["modules"]["ventas"]["enabled"])
+
+	def test_the_app_decides_and_gives_its_workers_their_bar(self):
+		import types
+
+		fake = types.ModuleType("inmobiliaria.api.shell")
+		fake.modulo = lambda: {
+			"key": "inmobiliaria",
+			"enabled": True,
+			"capabilities": {"read": True, "board": True},
+			"nav_role": "inmobiliaria",
+		}
+		with self._apps(True), patch.dict(sys.modules, {"inmobiliaria.api.shell": fake}):
+			module = shell._inmobiliaria()
+		self.assertTrue(module["enabled"])
+		self.assertEqual(module["capabilities"], {"read": True, "board": True})
+		self.assertEqual(self._boot_with(module)["user"]["nav_role"], "inmobiliaria")
+
+		fake.modulo = lambda: {
+			"key": "inmobiliaria",
+			"enabled": False,
+			"reason": "No",
+			"nav_role": "inmobiliaria",
+		}
+		with self._apps(True), patch.dict(sys.modules, {"inmobiliaria.api.shell": fake}):
+			module = shell._inmobiliaria()
+		self.assertFalse(module["enabled"])
+		self.assertEqual(module["capabilities"], {})
+		self.assertNotEqual(self._boot_with(module)["user"]["nav_role"], "inmobiliaria")

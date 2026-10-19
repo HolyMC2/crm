@@ -59,6 +59,12 @@ describe('documentos registry', () => {
     expect(documentRoute('Item', 'IPHONE 13')).toEqual({
       path: '/productos/IPHONE%2013',
     })
+    expect(documentRoute('Venta Inmobiliaria', 'VTA-2026-00001')).toEqual({
+      path: '/inmobiliaria/venta/VTA-2026-00001',
+    })
+    expect(documentRoute('Expediente de Cliente', 'Laura Smith')).toEqual({
+      path: '/inmobiliaria/expediente/Laura%20Smith',
+    })
     expect(documentRoute('Stock Entry', 'MAT-STE-1')).toEqual({
       path: '/inventario/entradas/MAT-STE-1',
     })

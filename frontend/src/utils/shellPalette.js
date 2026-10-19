@@ -487,8 +487,8 @@ export function createShellProviders({ boot, modules }) {
     },
   }
   // Inmobiliaria answers for its units, sales, holds, client files and leases when the app is
-  // installed on this site (the CRM boot's installed_apps; it is not a shell module). Its
-  // records live in Desk: items open their Desk form in this tab.
+  // installed on this site (the CRM boot's installed_apps). Its records open their shell
+  // screens under /inmobiliaria (INMO-SH), with the way back.
   const inmobiliaria = {
     key: 'inmobiliaria',
     label: 'Inmobiliaria',
@@ -534,26 +534,33 @@ const INMOBILIARIA_ICONS = Object.freeze([
   'lucide-key-round',
 ])
 
-/** Inmobiliaria's palette rows: only its Desk forms (/desk/…) are kept, opened in this tab. */
+/**
+ * Inmobiliaria's palette rows. A record with a shell screen (`/crm/inmobiliaria/…`,
+ * INMO-SH) opens there and comes back; an older inmobiliaria that still answers
+ * with Desk forms (/desk/…) keeps opening them in this tab.
+ */
 export function inmobiliariaItems(result) {
   return (result?.items || [])
-    .filter(
-      (item) =>
-        item &&
-        typeof item.id === 'string' &&
-        typeof item.href === 'string' &&
-        safeReturn(item.href, ['/desk/']),
-    )
-    .map((item) => ({
-      id: `inmobiliaria:${item.id}`,
-      group: 'registros',
-      title: String(item.title || ''),
-      subtitle: String(item.subtitle || ''),
-      icon: INMOBILIARIA_ICONS.includes(item.icon)
-        ? item.icon
-        : 'lucide-building-2',
-      desk: item.href,
-    }))
+    .map((item) => {
+      if (!item || typeof item.id !== 'string' || typeof item.href !== 'string')
+        return null
+      const shell = item.href.startsWith('/crm/inmobiliaria/')
+        ? safeReturn(item.href, ['/crm/inmobiliaria/'])
+        : null
+      const desk = shell ? null : safeReturn(item.href, ['/desk/'])
+      if (!shell && !desk) return null
+      return {
+        id: `inmobiliaria:${item.id}`,
+        group: 'registros',
+        title: String(item.title || ''),
+        subtitle: String(item.subtitle || ''),
+        icon: INMOBILIARIA_ICONS.includes(item.icon)
+          ? item.icon
+          : 'lucide-building-2',
+        ...(shell ? { href: shell.slice('/crm'.length) } : { desk: item.href }),
+      }
+    })
+    .filter(Boolean)
 }
 
 /** Clínica's palette rows: only links into /clinica/ are kept, opened as a sibling app. */

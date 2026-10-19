@@ -461,6 +461,31 @@ def _agenda():
 	}
 
 
+def _inmobiliaria():
+	"""The real-estate app's screens (/crm/inmobiliaria): only where the app is installed."""
+	if "inmobiliaria" not in frappe.get_installed_apps():
+		return None
+	try:
+		# An inmobiliaria older than its shell screens leaves the module off, not the shell down.
+		from inmobiliaria.api.shell import modulo
+	except ImportError:
+		return {
+			"key": "inmobiliaria",
+			"enabled": False,
+			"reason": _("Ask your manager to update Inmobiliaria to open it here."),
+			"capabilities": {},
+		}
+	answer = modulo() or {}
+	enabled = bool(answer.get("enabled"))
+	return {
+		"key": "inmobiliaria",
+		"enabled": enabled,
+		"reason": None if enabled else answer.get("reason"),
+		"capabilities": (answer.get("capabilities") or {}) if enabled else {},
+		"nav_role": answer.get("nav_role") if enabled else None,
+	}
+
+
 def _hosted():
 	"""Providers of the modules whose screens live in this SPA under /crm/<key>, besides Ventas."""
 	return {
@@ -480,6 +505,7 @@ def _hosted():
 		"manual": _manual,
 		"documentos": _documentos,
 		"inventario": _inventario,
+		"inmobiliaria": _inmobiliaria,
 		"avisos": _avisos,
 	}
 
@@ -520,6 +546,7 @@ def _providers():
 		_manual,
 		_documentos,
 		_inventario,
+		_inmobiliaria,
 	]
 	for path in frappe.get_hooks("muelle_shell_modules") or []:
 		providers.append(frappe.get_attr(path))

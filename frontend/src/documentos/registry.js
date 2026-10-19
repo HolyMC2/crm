@@ -209,8 +209,18 @@ export function floorRoute(doctype, name) {
 }
 
 // Records that already have a richer shell page of their own.
+const inmobiliaria = (tipo) => (name) => ({
+  path: `/inmobiliaria/${tipo}/${encodeURIComponent(name)}`,
+})
 const HANDOFF = {
   Item: (name) => ({ path: `/productos/${encodeURIComponent(name)}` }),
+  // INMO-SH: the real-estate app's records open its own shell screens.
+  'Unidad Inmobiliaria': inmobiliaria('unidad'),
+  'Apartado de Unidad': inmobiliaria('apartado'),
+  'Venta Inmobiliaria': inmobiliaria('venta'),
+  'Expediente de Cliente': inmobiliaria('expediente'),
+  'Contrato de Arrendamiento': inmobiliaria('contrato'),
+  'Solicitud de Mantenimiento': inmobiliaria('mantenimiento'),
 }
 
 /**

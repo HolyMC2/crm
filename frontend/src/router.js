@@ -468,6 +468,49 @@ const routes = [
     },
   },
   ...documentosRoutes('/inventario/:slug', 'InventarioLista', 'inventario'),
+  // Inmobiliaria (INMO-SH): the real-estate app's homes, queues, board and
+  // records. The pages draw what inmobiliaria.api.shell answers.
+  {
+    path: '/inmobiliaria',
+    name: 'Inmobiliaria',
+    component: () => import('@/pages/Inmobiliaria.vue'),
+    meta: { app: 'inmobiliaria', title: 'Inmobiliaria', ownPhoneHeader: true },
+  },
+  {
+    path: '/inmobiliaria/disponibilidad',
+    name: 'InmobiliariaDisponibilidad',
+    component: () => import('@/pages/InmobiliariaDisponibilidad.vue'),
+    meta: {
+      app: 'inmobiliaria',
+      title: 'Disponibilidad',
+      listParent: 'Inmobiliaria',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/inmobiliaria/cola/:cola',
+    name: 'InmobiliariaCola',
+    component: () => import('@/pages/InmobiliariaCola.vue'),
+    props: true,
+    meta: {
+      app: 'inmobiliaria',
+      title: 'Inmobiliaria',
+      listParent: 'Inmobiliaria',
+      ownPhoneHeader: true,
+    },
+  },
+  {
+    path: '/inmobiliaria/:tipo(unidad|apartado|venta|expediente|contrato|mantenimiento)/:name',
+    name: 'InmobiliariaFicha',
+    component: () => import('@/pages/InmobiliariaFicha.vue'),
+    props: true,
+    meta: {
+      app: 'inmobiliaria',
+      title: 'Inmobiliaria',
+      listParent: 'Inmobiliaria',
+      ownPhoneHeader: true,
+    },
+  },
   {
     path: '/archivos',
     name: 'Archivos',

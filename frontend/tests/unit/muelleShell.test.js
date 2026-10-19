@@ -159,6 +159,11 @@ async function mount(path) {
         meta: { app: 'archivos', title: 'Archivos' },
       },
       {
+        path: '/inmobiliaria/:rest(.*)*',
+        component: { render: () => h('p', 'Inmobiliaria page') },
+        meta: { app: 'inmobiliaria', title: 'Inmobiliaria' },
+      },
+      {
         path: '/agenda',
         component: { render: () => h('p', 'Agenda page') },
         meta: { app: 'agenda', title: 'Agenda', ownPhoneHeader: true },
@@ -261,8 +266,15 @@ describe('module registry', () => {
       'manual',
       'documentos',
       'inventario',
+      'inmobiliaria',
       'avisos',
     ])
+    expect(
+      moduleKeyFor({
+        path: '/inmobiliaria/venta/VTA-1',
+        meta: { app: 'inmobiliaria' },
+      }),
+    ).toBe('inmobiliaria')
     expect(moduleKeyFor({ path: '/hoy', meta: { app: 'hoy' } })).toBe('hoy')
     expect(moduleKeyFor({ path: '/archivos', meta: { app: 'archivos' } })).toBe(
       'archivos',
@@ -1029,6 +1041,14 @@ describe('Inmobiliaria in the shell palette', () => {
     icon: 'lucide-building-2',
     href: '/desk/unidad-inmobiliaria/GRB-A-101',
   }
+  const SHELL_UNIT = {
+    id: 'unidad:GRB-A-102',
+    title: 'Departamento 102 · Torre A',
+    subtitle: 'Unidad · DEMO Garibaldi · Disponible · $3.4 MDP',
+    icon: 'lucide-building-2',
+    href: '/crm/inmobiliaria/unidad/GRB-A-102',
+    desk: '/desk/unidad-inmobiliaria/GRB-A-102',
+  }
   const inmobiliaria = () =>
     createShellProviders({
       boot: ref(boot()),
@@ -1036,21 +1056,22 @@ describe('Inmobiliaria in the shell palette', () => {
     }).find((p) => p.key === 'inmobiliaria')
   afterEach(() => delete window.installed_apps)
 
-  it('asks Inmobiliaria for its records when the app is installed and keeps only Desk forms', async () => {
+  it('asks Inmobiliaria for its records: shell screens open in the shell, an older app keeps its Desk forms', async () => {
     window.installed_apps = ['frappe', 'crm', 'inmobiliaria']
     state.call.mockImplementation(async (method, args) => {
       expect(method).toBe('inmobiliaria.busqueda.palette')
       expect(args).toEqual({ q: 'garibaldi' })
       return {
         items: [
+          SHELL_UNIT,
           UNIT,
           {
             id: 'venta:VTA-2026-00001',
             title: 'Zacarías Pérez',
-            subtitle:
-              'Venta · VTA-2026-00001 · GRB-A-102 · En pagos · $5.1 MDP',
+            subtitle: 'Venta · GRB-A-102 · En pagos · $5.1 MDP',
             icon: 'lucide-handshake',
-            href: '/desk/venta-inmobiliaria/VTA-2026-00001',
+            href: '/crm/inmobiliaria/venta/VTA-2026-00001',
+            desk: '/desk/venta-inmobiliaria/VTA-2026-00001',
           },
           {
             id: 'apartado:APT-1',
@@ -1060,6 +1081,7 @@ describe('Inmobiliaria in the shell palette', () => {
           },
           { id: 'evil', title: 'x', href: 'https://evil.invalid/desk/x' },
           { id: 'up', title: 'x', href: '/desk/../crm/hoy' },
+          { id: 'up2', title: 'x', href: '/crm/inmobiliaria/../hoy' },
           { id: 'crm', title: 'x', href: '/crm/hoy' },
         ],
       }
@@ -1068,29 +1090,39 @@ describe('Inmobiliaria in the shell palette', () => {
       query,
       new AbortController().signal,
     )
-    expect(items.map((i) => [i.id, i.group, i.icon, i.desk])).toEqual([
+    expect(items.map((i) => [i.id, i.group, i.icon, i.href, i.desk])).toEqual([
+      [
+        'inmobiliaria:unidad:GRB-A-102',
+        'registros',
+        'lucide-building-2',
+        '/inmobiliaria/unidad/GRB-A-102',
+        undefined,
+      ],
       [
         'inmobiliaria:unidad:GRB-A-101',
         'registros',
         'lucide-building-2',
+        undefined,
         '/desk/unidad-inmobiliaria/GRB-A-101',
       ],
       [
         'inmobiliaria:venta:VTA-2026-00001',
         'registros',
         'lucide-handshake',
-        '/desk/venta-inmobiliaria/VTA-2026-00001',
+        '/inmobiliaria/venta/VTA-2026-00001',
+        undefined,
       ],
       // an icon outside the known set falls back to the building
       [
         'inmobiliaria:apartado:APT-1',
         'registros',
         'lucide-building-2',
+        undefined,
         '/desk/apartado-de-unidad/APT-1',
       ],
     ])
-    expect(items[0].subtitle).toBe(UNIT.subtitle)
-    expect(items.every((i) => !i.href && !i.external)).toBe(true)
+    expect(items[1].subtitle).toBe(UNIT.subtitle)
+    expect(items.every((i) => !i.external)).toBe(true)
   })
 
   it('never calls Inmobiliaria where it is not installed, nor for an empty or one-letter query', async () => {
@@ -1146,6 +1178,48 @@ describe('Inmobiliaria in the shell palette', () => {
       await nextTick()
       expect(assign).toHaveBeenCalledTimes(1)
       expect(assign).toHaveBeenCalledWith('/desk/unidad-inmobiliaria/GRB-A-101')
+    } finally {
+      window.location = location
+    }
+  })
+
+  it('choosing an Inmobiliaria record with a shell screen opens it in the shell, not Desk', async () => {
+    window.installed_apps = ['frappe', 'crm', 'inmobiliaria']
+    state.call.mockImplementation(async (method) => {
+      if (method === 'crm.api.shell.boot') return boot()
+      if (method === 'inmobiliaria.busqueda.palette')
+        return { items: [SHELL_UNIT] }
+      throw new Error(`unexpected ${method}`)
+    })
+    const assign = vi.fn()
+    const location = window.location
+    delete window.location
+    window.location = { ...location, assign }
+    try {
+      state.mobile.value = false
+      await mount('/contactos')
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }),
+      )
+      const input = await until(() =>
+        document.querySelector('[aria-label="Command palette"] input'),
+      )
+      input.value = 'garibaldi'
+      input.dispatchEvent(new Event('input'))
+      const option = await until(() =>
+        [...document.querySelectorAll('[role="option"]')].find((o) =>
+          o.textContent.includes('Departamento 102'),
+        ),
+      )
+      option.click()
+      await until(
+        () =>
+          router.currentRoute.value.path === '/inmobiliaria/unidad/GRB-A-102',
+      )
+      expect(router.currentRoute.value.path).toBe(
+        '/inmobiliaria/unidad/GRB-A-102',
+      )
+      expect(assign).not.toHaveBeenCalled()
     } finally {
       window.location = location
     }
