@@ -293,6 +293,26 @@ describe('Producto', () => {
     expect(quoteButton()).toBeUndefined()
   })
 
+  it('a worker with no store assigned is not told the product is sold out', async () => {
+    record.item.is_stock_item = 1
+    record.stock = {
+      readable: true,
+      rows: [],
+      hidden: 0,
+      total: 0,
+      service: false,
+      unassigned: true,
+    }
+    await mountAt('/productos/ABIBMEX000130')
+    const text = root.textContent
+    expect(text).toContain('You do not see it')
+    expect(text).toContain('Ask your manager to assign you a store')
+    expect(text).toContain('You have no store assigned')
+    expect(text).toContain("You see no store's movements")
+    expect(text).not.toContain('Sold out in your stores')
+    expect(text).not.toContain('Total 0')
+  })
+
   it('movements name who moved them and «See all» opens the kardex', async () => {
     record.item.is_stock_item = 1
     record.stock.service = false

@@ -401,6 +401,12 @@ const empty = computed(() => {
       title: __('You cannot see stock movements', null, CTX),
       text: __('Ask your manager for access to the stock ledger.', null, CTX),
     }
+  // No store assigned (Mercado scope): the ledger reads empty, not «no movements».
+  if (data.value?.unassigned)
+    return {
+      title: __("You see no store's movements", null, CTX),
+      text: __('Ask your manager to assign you a store.', null, CTX),
+    }
   if (narrowed.value)
     return {
       title: __('No movements match', null, CTX),

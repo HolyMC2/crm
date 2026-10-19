@@ -326,4 +326,21 @@ describe('Movimientos page', () => {
     expect(root.textContent).toContain('No movements match')
     expect(root.textContent).toContain('Show every movement')
   })
+
+  it('a worker with no store assigned is told so, not that nothing moved', async () => {
+    answers.movements = () => ({
+      readable: true,
+      cost_visible: false,
+      next: null,
+      scope: {},
+      rows: [],
+      unassigned: true,
+    })
+    await mountAt('/inventario/movimientos')
+    expect(root.textContent).toContain("You see no store's movements")
+    expect(root.textContent).toContain(
+      'Ask your manager to assign you a store.',
+    )
+    expect(root.textContent).not.toContain('No movements yet')
+  })
 })

@@ -17780,6 +17780,33 @@ msgstr "Una cotización nueva con este producto"
 
 #: frontend/src/pages/Producto.vue
 msgctxt "Productos"
+msgid "You do not see it"
+msgstr "No la ves"
+
+#: frontend/src/pages/Producto.vue
+msgid "Ask your manager to assign you a store"
+msgstr "Pide al encargado que te asigne una tienda"
+
+#: frontend/src/pages/Producto.vue
+msgid "You have no store assigned, so you do not see its stock. Ask your manager to assign you one."
+msgstr "No tienes una tienda asignada, por eso no ves su existencia. Pide al encargado que te asigne una."
+
+#: frontend/src/pages/Producto.vue
+msgid "You see no store's movements: ask your manager to assign you a store."
+msgstr "No ves movimientos de ninguna tienda: pide al encargado que te asigne una tienda."
+
+#: frontend/src/pages/InventarioMovimientos.vue
+msgctxt "Inventario"
+msgid "You see no store's movements"
+msgstr "No ves movimientos de ninguna tienda"
+
+#: frontend/src/pages/InventarioMovimientos.vue
+msgctxt "Inventario"
+msgid "Ask your manager to assign you a store."
+msgstr "Pide al encargado que te asigne una tienda."
+
+#: frontend/src/pages/Producto.vue
+msgctxt "Productos"
 msgid "All products"
 msgstr "Todos"
 

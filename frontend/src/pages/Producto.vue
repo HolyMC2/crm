@@ -371,6 +371,16 @@
                   {{ __('Carries no stock') }}
                 </dd>
               </template>
+              <!-- No store assigned (Mercado scope): the read is empty, which
+                   is not «0» nor «agotado»; say what is missing instead. -->
+              <template v-else-if="data.stock.unassigned">
+                <dd class="mt-0.5 text-base font-semibold text-ink-gray-8">
+                  {{ __('You do not see it', null, 'Productos') }}
+                </dd>
+                <dd class="text-xs text-ink-gray-6" data-stock-unassigned>
+                  {{ __('Ask your manager to assign you a store') }}
+                </dd>
+              </template>
               <template v-else-if="data.stock.readable">
                 <dd
                   class="mt-0.5 text-2xl font-semibold tabular-nums"
@@ -546,7 +556,11 @@
                   {{ __('Stock by store') }}
                 </h2>
                 <span
-                  v-if="data.stock.readable && !data.stock.service"
+                  v-if="
+                    data.stock.readable &&
+                    !data.stock.service &&
+                    !data.stock.unassigned
+                  "
                   class="text-sm tabular-nums text-ink-gray-6"
                   >{{
                     __('Total {0} {1}', [
@@ -576,6 +590,16 @@
                 class="px-4 py-4 text-sm text-ink-gray-6"
               >
                 {{ __('You cannot see stock. Ask your manager for access.') }}
+              </p>
+              <p
+                v-else-if="data.stock.unassigned"
+                class="px-4 py-4 text-sm text-ink-gray-6"
+              >
+                {{
+                  __(
+                    'You have no store assigned, so you do not see its stock. Ask your manager to assign you one.',
+                  )
+                }}
               </p>
               <div
                 v-else-if="!data.stock.rows.length"
@@ -889,11 +913,15 @@
                 {{
                   !data.ledger.readable
                     ? __('You cannot see stock movements.')
-                    : data.stock.service
-                      ? __('A service has no stock movements.')
-                      : __(
-                          'No stock movements yet: sales, purchases, transfers and adjustments appear here.',
+                    : data.stock.unassigned
+                      ? __(
+                          "You see no store's movements: ask your manager to assign you a store.",
                         )
+                      : data.stock.service
+                        ? __('A service has no stock movements.')
+                        : __(
+                            'No stock movements yet: sales, purchases, transfers and adjustments appear here.',
+                          )
                 }}
               </p>
               <template v-else>

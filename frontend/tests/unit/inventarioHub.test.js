@@ -6,45 +6,49 @@ import { createApp, h, nextTick } from 'vue'
 import { RouterView, createMemoryHistory, createRouter } from 'vue-router'
 
 vi.mock('@/documentos/api', () => ({ docApi: vi.fn(async () => ({})) }))
+let storesAnswer = null
 vi.mock('@/components/inventario/kardex', () => ({
-  kardexApi: vi.fn(async () => ({
-    readable: true,
-    cost_visible: true,
-    rows: [
-      {
-        warehouse: 'Vacío A - D',
-        label: 'Vacío A',
-        company: 'Doco',
-        items: 0,
-        units: 0,
-        value: 0,
+  kardexApi: vi.fn(
+    async () =>
+      storesAnswer || {
+        readable: true,
+        cost_visible: true,
+        rows: [
+          {
+            warehouse: 'Vacío A - D',
+            label: 'Vacío A',
+            company: 'Doco',
+            items: 0,
+            units: 0,
+            value: 0,
+          },
+          {
+            warehouse: 'Centro - D',
+            label: 'Centro',
+            company: 'Doco',
+            items: 2,
+            units: 5,
+            value: 50,
+          },
+          {
+            warehouse: 'Centro - X',
+            label: 'Centro',
+            company: 'Xolo',
+            items: 1,
+            units: 1,
+            value: 900,
+          },
+          {
+            warehouse: 'Vacío B - D',
+            label: 'Vacío B',
+            company: 'Doco',
+            items: 0,
+            units: 0,
+            value: 0,
+          },
+        ],
       },
-      {
-        warehouse: 'Centro - D',
-        label: 'Centro',
-        company: 'Doco',
-        items: 2,
-        units: 5,
-        value: 50,
-      },
-      {
-        warehouse: 'Centro - X',
-        label: 'Centro',
-        company: 'Xolo',
-        items: 1,
-        units: 1,
-        value: 900,
-      },
-      {
-        warehouse: 'Vacío B - D',
-        label: 'Vacío B',
-        company: 'Doco',
-        items: 0,
-        units: 0,
-        value: 0,
-      },
-    ],
-  })),
+  ),
 }))
 vi.mock('@/pages/InventarioMovimientos.vue', () => ({
   default: {
@@ -120,6 +124,7 @@ beforeEach(() => {
   }
 })
 afterEach(() => {
+  storesAnswer = null
   app?.unmount()
   root?.remove()
   shellBoot.value = null
@@ -165,5 +170,24 @@ describe('Inventario hub', () => {
     await flush()
     expect(router.currentRoute.value.query.almacen).toBe('Centro - X')
     expect(root.querySelector('[data-testid="hub-detail"]')).not.toBeNull()
+  })
+
+  it('a worker with no store assigned reads that, not «Sin existencias»', async () => {
+    setWidth(1440)
+    storesAnswer = {
+      readable: true,
+      cost_visible: false,
+      rows: [],
+      unassigned: true,
+    }
+    await mountAt('/inventario')
+    const note = root.querySelector(
+      '[data-testid="inventario-stores-unassigned"]',
+    )
+    expect(note.textContent).toContain('No tienes almacenes asignados')
+    expect(root.textContent).not.toContain('Sin existencias')
+    // Nothing to pick: no split, and no generic «Almacenes» row either.
+    expect(root.querySelector('[data-testid="hub-detail"]')).toBeNull()
+    expect(root.textContent).not.toContain('Tiendas y bodegas')
   })
 })

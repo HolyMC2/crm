@@ -51,6 +51,24 @@
           </section>
           <!-- Inventario's stores (Shell D4.3): what each holds; the value only
              for whoever may see cost. A row opens the store's movements. -->
+          <!-- No store assigned (Mercado scope): say so, not «Sin existencias». -->
+          <section
+            v-if="!isDocumentos && storesUnassigned"
+            aria-labelledby="hub-almacenes"
+            data-testid="inventario-stores-unassigned"
+          >
+            <h2
+              id="hub-almacenes"
+              class="px-4 pb-1 pt-2 text-sm font-medium text-ink-gray-6"
+            >
+              Almacenes
+            </h2>
+            <ListRow
+              icon="lucide-warehouse"
+              title="No tienes almacenes asignados"
+              subtitle="Pide al encargado que te asigne una tienda"
+            />
+          </section>
           <section
             v-if="!isDocumentos && stores.length"
             aria-labelledby="hub-almacenes"
@@ -166,6 +184,7 @@ const enabled = computed(() => moduleEnabled(shellBoot.value, moduleKey.value))
 
 const stats = ref({})
 const stores = ref([])
+const storesUnassigned = ref(false)
 // Stores that hold stock, the most valuable (else the fullest) first.
 const stocked = computed(() =>
   stores.value
@@ -269,7 +288,8 @@ const groups = computed(() => {
       if (
         group.key === 'inventario' &&
         readable.has('Warehouse') &&
-        (isDocumentos.value || !stores.value.length)
+        (isDocumentos.value ||
+          (!stores.value.length && !storesUnassigned.value))
       )
         items.push({
           key: 'almacenes',
@@ -313,6 +333,7 @@ async function loadStores() {
     const { kardexApi } = await import('@/components/inventario/kardex')
     const answer = await kardexApi('stores')
     stores.value = answer?.readable ? answer.rows || [] : []
+    storesUnassigned.value = !!answer?.unassigned
   } catch {
     stores.value = [] // the hub keeps its one «Almacenes» row
   }
