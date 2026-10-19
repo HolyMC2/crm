@@ -16,7 +16,7 @@ from html import unescape
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, get_fullname, getdate, nowdate, strip_html
+from frappe.utils import cint, cstr, flt, get_fullname, getdate, nowdate, strip_html
 
 # The module each curated doctype lights in the shell (SPEC §6 DD3). Order is the hub order.
 DOCUMENTOS_DOCTYPES = (
@@ -1468,6 +1468,33 @@ def _header_dates(doc, fallback=None):
 		doc.schedule_date = min((getdate(r.schedule_date) for r in rows), default=default)
 
 
+# Orders whose mapped rows come without a price (a requisición has none): Desk's buyer types
+# it; the shell starts from the item's last purchase rate (per stock unit, times the row's factor).
+_LAST_RATE_DOCTYPES = {"Purchase Order", "Supplier Quotation"}
+
+
+def _last_purchase_rates(doc):
+	if doc.doctype not in _LAST_RATE_DOCTYPES or not doc.is_new():
+		return
+	table = _items_table(doc.meta)
+	rows = [r for r in (doc.get(table.fieldname) if table else None) or [] if not flt(r.get("rate"))]
+	codes = sorted({r.item_code for r in rows if r.get("item_code")})
+	if not codes:
+		return
+	last = {
+		i.name: flt(i.last_purchase_rate)
+		for i in frappe.get_all(
+			"Item", filters={"name": ("in", codes)}, fields=["name", "last_purchase_rate"]
+		)
+	}
+	for row in rows:
+		rate = last.get(row.item_code)
+		if rate:
+			row.rate = rate * (flt(row.get("conversion_factor")) or 1)
+	if hasattr(doc, "calculate_taxes_and_totals"):
+		doc.calculate_taxes_and_totals()
+
+
 def _source_doc(doctype, source):
 	"""A new, unsaved document from `source`: a mapper `{doctype, name, make}`, a copy
 	`{duplicate: name}` or an amendment `{amend: name}`; else a blank one with defaults."""
@@ -1481,6 +1508,7 @@ def _source_doc(doctype, source):
 		if origin and _exists(origin) and frappe.get_meta(origin).has_field("schedule_date"):
 			fallback = frappe.db.get_value(origin, source.get("name"), "schedule_date")
 		_header_dates(doc, fallback)
+		_last_purchase_rates(doc)
 		return doc
 	if source.get("duplicate") or source.get("amend"):
 		original = frappe.get_doc(doctype, source.get("duplicate") or source.get("amend"))

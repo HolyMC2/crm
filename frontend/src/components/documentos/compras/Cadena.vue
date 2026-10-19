@@ -37,9 +37,14 @@
                 · este documento</span
               >
             </span>
-            <span class="break-words text-sm text-ink-gray-7">{{
-              step.line
-            }}</span>
+            <!-- party · status · date on one line: the party gives way (ellipsis). -->
+            <span class="flex min-w-0 text-sm text-ink-gray-7">
+              <span class="truncate">{{ step.lineTitle }}</span>
+              <span v-if="step.lineMeta" class="flex-none whitespace-nowrap"
+                >{{ step.lineTitle ? '&nbsp;·&nbsp;' : ''
+                }}{{ step.lineMeta }}</span
+              >
+            </span>
             <span
               v-for="(who, i) in step.people"
               :key="i"
@@ -109,13 +114,11 @@ const steps = computed(() =>
             hint:
               step.doctype === 'Payment Entry' ? { payment_type: 'Pay' } : null,
           }),
-    line: [
+    lineTitle:
       step.doctype === 'Material Request'
         ? requestShort(step.title)
-        : step.title,
-      statusLabel(step.status),
-      step.date ? formatDate(step.date) : '',
-    ]
+        : step.title || '',
+    lineMeta: [statusLabel(step.status), step.date ? formatDate(step.date) : '']
       .filter(Boolean)
       .join(' · '),
     people: (step.people || []).map(

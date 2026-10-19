@@ -32,6 +32,20 @@ class TestConfirmedBy(TestCase):
 		]
 		self.assertEqual(documentos_compras.confirmed_by(versions), ("marco@x.mx", "2026-10-02 09:00"))
 
+	def test_an_untitled_requisicion_reads_by_its_items(self):
+		from unittest.mock import patch
+
+		rows = [
+			frappe._dict(parent="MR-1", item_name="Pantalla Redmi 13C", item_code="A", idx=1),
+			frappe._dict(parent="MR-1", item_name="Pantalla iPhone 13", item_code="B", idx=2),
+			frappe._dict(parent="MR-1", item_name="", item_code="C", idx=3),
+			frappe._dict(parent="MR-2", item_name="", item_code="FUNDA-1", idx=1),
+		]
+		with patch.object(documentos_compras.frappe, "get_all", return_value=rows):
+			titles = documentos_compras._items_titles("Material Request", ["MR-1", "MR-2"])
+		self.assertEqual(titles, {"MR-1": "Pantalla Redmi 13C y 2 más", "MR-2": "FUNDA-1"})
+		self.assertEqual(documentos_compras._items_titles("Purchase Order", ["PO-1"]), {})
+
 	def test_no_confirmation_logged(self):
 		self.assertEqual(documentos_compras.confirmed_by([{"data": "not json"}]), (None, None))
 		self.assertEqual(documentos_compras.confirmed_by([]), (None, None))
@@ -154,3 +168,17 @@ class TestCadenaERPNext(IntegrationTestCase):
 		self.assertEqual(documentos_compras._hidden("Purchase Order", {"NO-EXISTE"}, set()), 0)
 		answer = documentos_compras.cadena("Purchase Order", name)  # Administrator reads everything
 		self.assertTrue(all(stage["hidden"] == 0 for stage in answer["stages"]))
+
+	def test_a_mapped_order_starts_from_the_last_purchase_rate(self):
+		from unittest.mock import patch
+
+		po = frappe.new_doc("Purchase Order")
+		po.append("items", {"item_code": "FUNDA", "qty": 2, "conversion_factor": 10})
+		po.append("items", {"item_code": "MICA", "qty": 1, "rate": 7, "conversion_factor": 1})
+		last = [frappe._dict(name="FUNDA", last_purchase_rate=3)]
+		with (
+			patch.object(documentos.frappe, "get_all", return_value=last),
+			patch.object(type(po), "calculate_taxes_and_totals", lambda self: None),
+		):
+			documentos._last_purchase_rates(po)
+		self.assertEqual([r.rate for r in po.items], [30, 7])

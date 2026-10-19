@@ -212,11 +212,42 @@ def _hidden(doctype, names, shown):
 	return len(live - shown)
 
 
+# Documents without a party read by what they ask for (ERPNext's own Material Request title
+# is English, «Purchase Request for …», cut at 140): «Pantalla Moto G15 y 18 más».
+_ITEMS_TITLED = {
+	"Material Request": "Material Request Item",
+	"Request for Quotation": "Request for Quotation Item",
+}
+
+
+def _items_titles(doctype, names):
+	"""{name: «first item y N más»} from the item rows of documents the caller already read."""
+	child = _ITEMS_TITLED.get(doctype)
+	if not child or not names:
+		return {}
+	rows = frappe.get_all(
+		child,
+		filters={"parenttype": doctype, "parent": ("in", list(names))},
+		fields=["parent", "item_name", "item_code", "idx"],
+		order_by="idx asc",
+	)
+	first, count = {}, {}
+	for row in rows:
+		count[row.parent] = count.get(row.parent, 0) + 1
+		first.setdefault(row.parent, cstr(row.item_name or row.item_code).strip())
+	return {
+		parent: f"{word} y {count[parent] - 1} más" if count[parent] > 1 else word
+		for parent, word in first.items()
+		if word
+	}
+
+
 def _docs(doctype, names, here):
 	if not names or not _exists(doctype) or not readable(doctype):
 		return []
 	fields = ["name", "status", "docstatus", "owner", "creation", *_FIELDS.get(doctype, ())]
 	rows = frappe.get_list(doctype, filters={"name": ("in", list(names))}, fields=fields, limit=MAX_NODES)
+	titles = _items_titles(doctype, [doc.name for doc in rows])
 	out = []
 	for doc in rows:
 		if cint(doc.docstatus) == 2 and (doctype, doc.name) != here:
@@ -227,7 +258,7 @@ def _docs(doctype, names, here):
 			{
 				"doctype": doctype,
 				"name": doc.name,
-				"title": doc.get("title") or "",
+				"title": titles.get(doc.name) or doc.get("title") or "",
 				"status": doc.status or "",
 				"docstatus": cint(doc.docstatus),
 				"date": cstr(doc.get("date") or ""),

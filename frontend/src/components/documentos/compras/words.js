@@ -18,6 +18,8 @@ export function requestTitle(title) {
  */
 export function requestShort(title) {
   const text = requestTitle(title)
+  // Only ERPNext's own joined title is cut; the chain's «A y 18 más» stays as is.
+  if (!MR_PREFIX.test(String(title || '').trim())) return text
   const parts = text.split(/,\s+/)
   return parts.length > 1 ? `${parts[0]} y más` : text
 }

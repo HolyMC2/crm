@@ -452,3 +452,14 @@ describe('a chain step the worker cannot read', () => {
     expect(pendingStep(data)).toBe(null)
   })
 })
+
+describe('chain titles from the server summary', () => {
+  it("keeps «A, B y 3 más» when it is not ERPNext's own title", async () => {
+    const { requestShort } =
+      await import('@/components/documentos/compras/words')
+    expect(requestShort('Pantalla 13C / POCO C65 y 18 más')).toBe(
+      'Pantalla 13C / POCO C65 y 18 más',
+    )
+    expect(requestShort('Cable, USB-C y 3 más')).toBe('Cable, USB-C y 3 más')
+  })
+})
