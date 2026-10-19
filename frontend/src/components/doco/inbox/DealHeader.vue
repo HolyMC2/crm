@@ -468,6 +468,8 @@ import {
   openContext,
   openLedger,
   mobileBack,
+  mobileBackOr,
+  mobileView,
   avatarColor,
   initials,
   timeAgo,
@@ -507,7 +509,16 @@ const backToCaller = computed(() => !!returnTo.value && !!route.query.deal)
 function goBack() {
   if (dealBack.value) router.push(dealBack.value.to)
   else if (backToCaller.value) goToReturn(router, returnTo.value)
-  else mobileBack()
+  // Deep-linked deal: no history to pop, so drop the deal and land on the list.
+  else
+    mobileBackOr(() => {
+      activeDeal.value = null
+      mobileView.value = 'list'
+      router.replace({
+        path: route.path,
+        query: { ...route.query, deal: undefined, conversation: undefined },
+      })
+    })
 }
 const backLabel = computed(() => {
   if (dealBack.value) return dealBack.value.label

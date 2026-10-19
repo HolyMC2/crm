@@ -103,7 +103,15 @@ export function timeAgo(date) {
 export function formatDateTime(date) {
   // Compact, glanceable absolute timestamp (day + time, no year) in local tz —
   // shown next to relative time so the team sees exactly when things happened.
-  return date ? formatDate(date, 'D MMM, h:mm a') : ''
+  // es-MX, not dayjs's English «15 Oct, 10:32 am» (the thread bubbles showed it).
+  return date
+    ? new Intl.DateTimeFormat('es-MX', {
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      }).format(new Date(String(date).replace(' ', 'T')))
+    : ''
 }
 
 export function formatTimestampFull(date) {

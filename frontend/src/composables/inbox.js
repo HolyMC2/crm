@@ -45,6 +45,8 @@ export function pulseSalesDocs() {
 export function mobileBack() {
   window.history.back()
 }
+// Deep links (no history entry) fall back to the list: see utils/historyBack.js.
+export { mobileBackOr } from '@/utils/historyBack'
 
 // A lost connection shows one retry notice instead of uncaught page errors
 // from the many background reads below (utils/networkRecovery).
