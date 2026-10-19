@@ -102,6 +102,7 @@ const ICONS = {
   share: 'lucide-users',
   workflow: 'lucide-git-branch',
   info: 'lucide-info',
+  status: 'lucide-tag',
 }
 
 const props = defineProps({
@@ -146,13 +147,23 @@ function sentence(event) {
     }
     case 'comment':
       return `${who} comentó`
-    default:
-      // ERPNext notes a status change with the bare English status («To Receive
-      // and Bill»): say it in the list's words when it is one.
+    case 'status':
+      // ERPNext notes the new status as written in its writer's language («To
+      // Bill» or «Por facturar»): say it as a change, in the list's words.
       return event.text
-        ? `${who}: ${statusEntry(event.text)?.[0] || event.text}`
-        : who
+        ? `${who} cambió el estado a ${statusWord(event.text)}`
+        : `${who} cambió el estado`
+    default: {
+      // An older server sends status notes as plain «info».
+      const status = event.text && statusEntry(event.text.trim())?.[0]
+      if (status) return `${who} cambió el estado a ${status}`
+      return event.text ? `${who}: ${event.text}` : who
+    }
   }
+}
+
+function statusWord(text) {
+  return statusEntry(text.trim())?.[0] || text.trim()
 }
 
 function when(at) {

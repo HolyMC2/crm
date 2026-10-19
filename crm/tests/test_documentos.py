@@ -159,6 +159,18 @@ class TestDocumentosAccess(IntegrationTestCase):
 		for event in bundle["activity"]["events"]:
 			self.assertNotIn("@", event["who"])
 
+	def test_a_status_label_is_a_status_event_and_other_info_stays_info(self):
+		self._grant("Note")
+		frappe.set_user("Administrator")
+		note = frappe.get_doc({"doctype": "Note", "title": "Estado de Ana", "public": 1}).insert()
+		note.add_comment("Label", "To Bill")
+		note.add_comment("Info", "Pedí precios al proveedor")
+		frappe.set_user(self.email)
+		events = documentos.record("Note", note.name)["activity"]["events"]
+		by_text = {e["text"]: e["kind"] for e in events if e.get("text")}
+		self.assertEqual(by_text.get("To Bill"), "status")
+		self.assertEqual(by_text.get("Pedí precios al proveedor"), "info")
+
 	def test_counts_and_order_are_validated(self):
 		frappe.set_user("Administrator")
 		counts = documentos.counts("Note", {"todos": None, "publicas": [["public", "=", 1]]})

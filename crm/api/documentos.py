@@ -1107,7 +1107,9 @@ def _timeline(doc):
 		for c in info.get(key) or []:
 			events.append(
 				{
-					"kind": kind,
+					# ERPNext's set_status notes the new status as a «Label» comment
+					# («To Bill», or «Por facturar» when written in Spanish).
+					"kind": "status" if c.get("comment_type") == "Label" else kind,
 					"at": cstr(c.creation),
 					"who": _person(c.owner),
 					"text": strip_html(cstr(c.content))[:300],
