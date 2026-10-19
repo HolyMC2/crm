@@ -24,9 +24,13 @@ vi.mock('frappe-ui', async () => {
   }
 })
 vi.mock('@/composables/breakpoint', async () => {
-  const { ref } = await import('vue')
+  const { computed, ref } = await import('vue')
   state.mobile = ref(false)
-  return { isMobile: state.mobile, isNarrow: state.mobile }
+  return {
+    isMobile: state.mobile,
+    isNarrow: state.mobile,
+    isWide: computed(() => !state.mobile.value),
+  }
 })
 vi.mock('@/stores/session', () => ({
   sessionStore: () => ({ logout: { submit: vi.fn() } }),
@@ -716,6 +720,15 @@ describe('one frame for every route', () => {
     expect(root.querySelector('[data-testid="shell-header"]')).toBeNull()
     expect(root.querySelector('nav[aria-label="Main navigation"]')).toBeNull()
     mobileView.value = 'list'
+  })
+
+  it('Más opens Desk («Administración») only on a wide screen (SPEC §6.3)', () => {
+    const sheet = readFileSync(
+      resolve(__dirname, '../../src/components/shell/MoreSheet.vue'),
+      'utf8',
+    )
+    expect(sheet).toContain('v-if="user.is_admin && isWide" href="/desk"')
+    expect(sheet).not.toMatch(/v-if="user\.is_admin" href="\/desk"/)
   })
 
   it('phone hides doco’s floating «Ayuda» pill; the Más sheet offers it', () => {

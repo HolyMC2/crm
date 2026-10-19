@@ -261,7 +261,9 @@
           />
           {{ __('Install app') }}
         </button>
-        <a v-if="user.is_admin" href="/desk" :class="ROW">
+        <!-- SPEC §6.3: Desk opens only from a wide screen; a phone keeps the
+             shell (its settings sit under Configuración). -->
+        <a v-if="user.is_admin && isWide" href="/desk" :class="ROW">
           <span
             class="lucide-layout-grid size-4 text-ink-gray-6"
             aria-hidden="true"
@@ -310,6 +312,7 @@ import { installLinkPrefetch } from '@/utils/speculate'
 import { THEME_CHOICES, useShellTheme } from '@/composables/shellTheme'
 import { moduleEnabled } from '@/vendor/muelle-shell/contracts'
 import { BottomSheet } from '@/components/ui'
+import { isWide } from '@/composables/breakpoint'
 import { loadCameraSheet, openCamera } from '@/components/captura/cameraDoor'
 
 // Pressing a sibling app (data-sibling) starts fetching its page.
